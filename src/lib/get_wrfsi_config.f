@@ -132,6 +132,8 @@ c
         path_to_soiltype_top30s = soiltype_top_30s
         path_to_soiltype_bot30s = soiltype_bot_30s
         path_to_landuse30s = landuse_30s
+        path_to_greenfrac_10m = greenfrac_10m
+        path_to_soiltemp1deg = soiltemp_1deg
 
         c6_maproj=wrftolaps_c6_maprojname(map_proj_name)
         c80_description = simulation_name_cmn
