@@ -264,6 +264,7 @@ c        NGOES = GOES satellite number, e.g. 8 (GOES/I)
       common/tskcof/tbuf(lent)
       common/use/ibuf(lenu)
       dimension cbuf(lenc)
+      save
       character*8 cfile
       data cfile/'GOESRTCF'/
       character*200 fname
