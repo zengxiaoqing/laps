@@ -53,8 +53,8 @@ cdis
 
         call make_fnam_lp(i4time,asc9_tim,istatus)
 
-        write(6,11)directory(1:45),asc9_tim,ext(1:5),var_2d
-11      format(' Reading 2d ',a45,1x,a9,1x,a5,1x,a3)
+        write(6,11)directory(1:45),asc9_tim,ext,var_2d
+11      format(' Reading 2d ',a,1x,a,1x,a,1x,a)
 
         lvl_2d = 0
         lvl_coord_2d = 'MSL'
@@ -452,11 +452,13 @@ c
         include 'lapsparms.inc'
 
         character*150 DIRECTORY
-        character*31 EXT
+cc        character*31 EXT
+        character*(*) EXT, var_2d
 
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
-        character*3 var_3d(kmax),var_2d
+cc        character*3 var_3d(kmax),var_2d
+        character*3 var_3d(kmax)
         integer*4 LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
@@ -468,8 +470,8 @@ c
 
         call make_fnam_lp(i4time,asc9_tim,istatus)
 
-        write(6,11)directory(1:45),asc9_tim,ext(1:5),var_2d
-11      format(' Reading 3D ',a45,1x,a9,1x,a5,1x,a3)
+        write(6,11)directory(1:45),asc9_tim,ext,var_2d
+11      format(' Reading 3D ',a,1x,a,1x,a,1x,a)
 
         do k = 1,kmax
             units_3d(k)   = units_2d
@@ -611,11 +613,13 @@ c
 !       include 'lapsparms.inc'
 
         character*150 DIRECTORY
-        character*31 EXT
+cc        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_2d
         character*10 units_2d
-        character*3 var_2d
+cc        character*3 var_2d
+        character*(*) var_2d
         integer*4 LVL_2d
         character*4 LVL_COORD_2d
 
@@ -623,7 +627,7 @@ c
 
         call get_directory(ext,directory,len_dir)
 
-        write(6,11)directory,ext(1:5),var_2d
+        write(6,11)directory,ext,var_2d
 11      format(' Writing 2d ',a50,1x,a5,1x,a3)
 
         lvl_2d = 0

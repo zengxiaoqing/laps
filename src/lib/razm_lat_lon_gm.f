@@ -31,6 +31,7 @@ cdis
 cdis
         Subroutine RAzm_Lat_Lon_GM(r4_SLat,r4_SLon,r4_Range,
      1          r4_Azimuth,r4_TLat,r4_TLon,Status)
+        include 'trigd.inc'
 C***Given a range and azimuth from some site, calculate the latitude and
 C   longitude.
 

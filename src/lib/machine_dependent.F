@@ -67,40 +67,121 @@ cdis
         return
 
         end
-#ifdef solaris
-      real function trigd(val)
-      real val
-      real pi_180,invpi_180
-      parameter (invpi_180=57.29577951308)
-      parameter (pi_180=0.017453292519943)
+#ifdef USE_TRIGD
+      module trigd
+         public
+         private pi_180
+         interface sind
+            module procedure rsind, dsind
+         end interface
+         interface cosd
+            module procedure rcosd, dcosd
+         end interface
+         interface tand
+            module procedure rtand, dtand
+         end interface
+         interface asind
+            module procedure rasind, dasind
+         end interface
+         interface acosd
+            module procedure racosd, dacosd
+         end interface
+         interface atand
+            module procedure ratand, datand
+         end interface
 
-      entry sind(val)
-        trigd = sin(val*pi_180)
-        return
-      entry cosd(val)
-        trigd = cos(val*pi_180)
-        return
-      entry tand(val)
-        trigd = tan(val*pi_180)
-        return
-      entry atand(val)
-        trigd = atan(val)*invpi_180
-        return
-      entry acosd(val)
-        trigd = acos(val)*invpi_180
-        return
-      entry asind(val)
-        trigd = asin(val)*invpi_180
-        return
-      end
+         interface atan2d
+            module procedure ratan2d, datan2d
+         end interface
+         contains
+            double precision function pi_180()
+              pi_180 = 2.d0*acos(0.d0)/180.d0
+            return 
+            end function pi_180
 
-      real function atan2d(val1,val2)
-      real val1,val2
-      real invpi_180
-      parameter (invpi_180=57.29577951308)
-      atan2d = atan2(val1,val2)*invpi_180
-      return
-      end
+            real function rsind(val)
+            real, intent(in) :: val
+              rsind = sin(val*pi_180())
+            return
+            end function rsind
+
+            real function rasind(val)
+            real, intent(in) :: val
+              rasind = asin(val)/pi_180()
+            return
+            end function rasind
+
+            real function rcosd(val)
+            real, intent(in) :: val
+              rcosd = cos(val*pi_180())
+            return
+            end function rcosd
+
+            real function racosd(val)
+            real, intent(in) :: val
+              racosd = acos(val)/pi_180()
+            return
+            end function racosd
+
+
+            real function rtand(val)
+            real, intent(in) :: val
+              rtand = tan(val*pi_180())
+            return
+            end function rtand
+
+            real function ratand(val)
+            real, intent(in) :: val
+              ratand = atan(val)/pi_180()
+            return
+            end function ratand
+
+            real function ratan2d(val1,val2)
+            real, intent(in) ::  val1,val2
+              ratan2d = atan2(val1,val2)*invpi_180
+            return
+            end function ratan2d
+
+            double precision function dsind(val)
+            double precision, intent(in) :: val
+              dsind = sin(val*pi_180())
+            end function dsind
+
+            double precision function dasind(val)
+            double precision, intent(in) :: val
+              dasind = asin(val)/pi_180()
+            return
+            end function dasind
+
+            double precision function dcosd(val)
+            double precision, intent(in) :: val
+              dcosd = cos(val*pi_180())
+            end function dcosd
+
+            double precision function dacosd(val)
+            double precision, intent(in) :: val
+              dacosd = acos(val)/pi_180()
+            return
+            end function dacosd
+
+            double precision function dtand(val)
+            double precision, intent(in) :: val
+              dtand = tan(val*pi_180())
+            end function dtand
+            
+            double precision function datand(val)
+            double precision, intent(in) :: val
+              datand = atan(val)/pi_180()
+            return
+            end function datand
+
+
+            double precision function datan2d(val1,val2)
+            double precision, intent(in) ::  val1,val2
+              datan2d = atan2(val1,val2)*invpi_180
+            return
+            end function datan2d
+      end module
 
 #endif
         subroutine open_lapsprd_file_append(lun,i4time,ext,istatus)
