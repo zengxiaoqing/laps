@@ -273,9 +273,7 @@ rfill.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
 
 smf_wisp91.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
 
-static_routines.c:  @NETCDFINC@/netcdf.h $(LAPSROOT)/src/include/grid_info.h $(LAPSROOT)/src/include/laps_grid_def.h
-
-wrt_laps_static.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+static_routines.c:  @NETCDFINC@/netcdf.h 
 
 zr.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
 
