@@ -262,6 +262,7 @@ c
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
      .          max_files, lga_status, laps_cycle_time,
      .          bgmodel
+      integer icnt
       real prbot, delpr
       character*(*) lapsroot, laps_domain_file, bgpath, bg_names(2)
      +     , cmodel
@@ -681,6 +682,23 @@ c compute sfc p for NOGAPS background
 c    "      "   for AVN. Takes advantage of LAPS terrain.
 c
       if(bgmodel.eq.6.or.bgmodel.eq.8)then
+
+c check for T > Td before sfc p computation. Due to large scale
+c interpolation we can have slightly larger (fractional) Td than T.
+c
+         icnt=0
+         do j=1,ny_laps
+         do i=1,nx_laps
+            if(sh_sfc(i,j).gt.tp_sfc(i,j))then
+               sh_sfc(i,j)=tp_sfc(i,j)
+               icnt=icnt+1
+            endif
+         enddo
+         enddo
+
+         if(icnt.gt.0)then
+            print*,'Found ',icnt, 'points, Td > T'
+         endif
 
          call sfcprs(tp, sh, ht, tp_sfc, sh_sfc, topo, pr,
      .               nx_laps, ny_laps, nz_laps, pr_sfc)
