@@ -46,7 +46,7 @@ netcdf lsx {
             p:_FillValue = 1.e+37f;
             p:long_name="1500 m reduced pressure";
             p:units="pascals";
-            p:valid_range= 0.f, 1000.f;
+            p:valid_range= 0.f, 1200.f;
             p:LAPS_var="P";
             p:lvl_coord="AGL ";
             p:LAPS_units="PA";
@@ -60,7 +60,7 @@ netcdf lsx {
             t:_FillValue = 1.e+37f;
             t:long_name="surface temperature";
             t:units="degrees kelvin";
-            t:valid_range= -150.f, 150.f;
+            t:valid_range= 0.f, 350.f;
             t:LAPS_var="T";
             t:lvl_coord="AGL ";
             t:LAPS_units="K";
@@ -74,7 +74,7 @@ netcdf lsx {
             td:_FillValue = 1.e+37f;
             td:long_name="surface dewpoint temperature";
             td:units="degrees kelvin";
-            td:valid_range= -75.f, 125.f;
+            td:valid_range= 0.f, 350.f;
             td:LAPS_var="TD";
             td:lvl_coord="AGL ";
             td:LAPS_units="K";
