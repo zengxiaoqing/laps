@@ -312,8 +312,9 @@ c              return
             elseif(c_fname(lend+1:lend+2) .eq. 'nf'.or.
      +             c_fname(lend+1:lend+2) .eq. 're'.or.
      +             c_fname(lend+1:lend+2) .eq. 'gb'.or.
+     +             c_fname(lend+1:lend+2) .eq. 'sb'.or.
      +             c_fname(lend+1:lend+2) .eq. 'gs')then
-               c20_type = 'yyyymmddhh'                            !Taiwan/CWB nfs, gfs, or ts (tropical cyclone) model
+               c20_type = 'yyyymmddhh'                            !Taiwan/CWB nfs, gfs, or sb (tropical cyclone) model
                leni = lend+2
                lent = 10
                return
