@@ -1,4 +1,4 @@
-      subroutine read_dgprep(bgmodel,path,fname,af,nx,ny,nz
+      subroutine read_dgprep(bgmodel,cmodel,path,fname,af,nx,ny,nz
      .                      ,pr,ht,tp,sh,uw,vw
      .                      ,ht_sfc,pr_sfc,td_sfc,tp_sfc
      .                      ,uw_sfc,vw_sfc,mslp
@@ -22,6 +22,7 @@ c
       integer  it
       integer  lun
       integer  iostat,iostatus
+      integer  nclen
 
       logical  lopen,lext
 
@@ -31,17 +32,22 @@ c
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
      .      ,vw(nx,ny,nz)      !v-wind (m/s)
      .      ,pr(nx,ny,nz)      !pressures (mb)
+     .      ,pw(nx,ny,nz)      !precip h2o for /public AVN
      .      ,prk(nz)
 
       real*4 ht_sfc(nx,ny)
      .      ,pr_sfc(nx,ny)
-     .      ,td_sfc(nx,ny)
-     .      ,tp_sfc(nx,ny)
+     .      ,td_sfc(nx,ny)     !for /public AVN this is RH @ 2m agl.
+     .      ,tp_sfc(nx,ny)     !for /public AVN this is T @ 2m agl.
      .      ,uw_sfc(nx,ny)
      .      ,vw_sfc(nx,ny)
      .      ,mslp(nx,ny)
+     .      ,accs(nx,ny)       !accum snow for /public AVN
+     .      ,sfc_dummy(nx,ny)  !only used for /public AVN ... holds T @ sfc
 
       real*4 p_levels(nz,nvarsmax)
+
+      double precision isoLevel(nz),reftime,valtime
 
       real*4 mrsat
       real*4 esat,xe
@@ -56,14 +62,15 @@ c     real*4 rp_init
       real*4 r_missing_data
       real*4 bogus_sh
 c
-      character*(*) path
+      character*(*) path,cmodel
       character*9   fname
       character*4   af
       character*2   gproj
       character*13  fname13_to_FA_filename,
      .              cfname13,cFA_filename
       character*3   c3ext,  c3_FA_ext
-      character*255 filename
+      character*132 origin,model,nav,grid,version
+      character*255 filename,fname_index
 c
 c *** Common block variables for lat-lon grid.
 c
@@ -90,53 +97,60 @@ c ---------------------------------
       bogus_sh = 0.00001
 c
       call get_r_missing_data(r_missing_data,istatus)
-c
-c *** Open and read data index file.
+
+      call s_len(cmodel,nclen)
+
+      lun=10
 c
       if(bgmodel.eq.6.or.bgmodel.eq.8)then
 
-
          call s_len(path,l)
-         filename=path(1:l)//'/'//fname//af//'.index'
+         filename=path(1:l)//'/'//fname//af
          call s_len(filename,l)
-         call readindexfile(filename,nvarsmax,nz,nvars,nlevs
-     +,p_levels,ivarcoord,ivarid,istatus)
-         if(istatus.lt.1)goto 995
 
-         do j=1,nvars
-          if(ivarid(j).eq.11.and.ivarcoord(j).eq.100)then
-            do i=1,nlevs(j)
+         if(cmodel(1:nclen).eq.'AVN_AFWA_DEGRIB')then
+c
+c *** Open and read data index file; and AFWA database thing.
+c
+           fname_index=filename(1:l)//'.index'
+
+           call readindexfile(fname_index,nvarsmax,nz,nvars,nlevs
+     +,p_levels,ivarcoord,ivarid,istatus)
+           if(istatus.lt.1)goto 995
+
+           do j=1,nvars
+            if(ivarid(j).eq.11.and.ivarcoord(j).eq.100)then
+             do i=1,nlevs(j)
                prk(i)=p_levels(i,j)
-            enddo
-          endif
-         enddo
+             enddo
+            endif
+           enddo
 c
 c_______________________________________________________________________________
 c
 c *** Open and read data file.
 c
-         call s_len(path,l)
-         filename=path(1:l)//'/'//fname//af
-         l=l+14
-         print *,'Reading - ',filename(1:l)
-         lun=1
-         open(lun,file=filename(1:l),status='old',
-     .     form='unformatted',err=990)
-         rewind(1)
+           print *,'Reading - ',filename(1:l)
+           open(lun,file=filename(1:l),status='old',
+     .          form='unformatted',err=990)
+           rewind(lun)
 
-         if(bgmodel.eq.6)then
+           if(bgmodel.eq.6)then
 
-            call read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
+              call read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
      +,nvarsmax,nvars,nlevs,ivarcoord,ivarid
      +,ht_sfc,pr_sfc,td_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
 
-         elseif(bgmodel.eq.8)then
+           elseif(bgmodel.eq.8)then
 
-            call read_nogaps(lun,nx,ny,nz
+              call read_nogaps(lun,nx,ny,nz
      + ,nvarsmax,nvars,nlevs,ivarcoord,ivarid
      + ,ht,tp,sh,uw,vw,ht_sfc,pr_sfc,td_sfc,tp_sfc
      + ,uw_sfc,vw_sfc,mslp,istatus)
+
+
+           endif
 
 c        else
 c
@@ -145,6 +159,17 @@ c
 c           call read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
 c    +,ht_sfc,pr_sfc,td_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
 c    +,istatus)
+
+         elseif(cmodel(1:nclen).eq.'AVN_FSL_NETCDF')then
+
+               call read_avn_netcdf(filename, nz, 1, nx, ny,
+     +     version, ACCS, ht , ht_sfc, pr_sfc, mslp, pw, sh, tp,
+     +     tp_sfc, sfc_dummy, uw, vw, td_sfc, isoLevel,
+     +     reftime, valtime, grid, model, nav, origin, istatus)
+
+               call qcmodel_sh(nx,ny,1,td_sfc)  !td_sfc actually = RH for AVN.
+
+               call qcmodel_sh(nx,ny,nz,sh)     !sh actually = RH for AVN.
 
          endif
 
@@ -181,7 +206,8 @@ c    +,istatus)
       endif
  
       if(istatus .ne. 1)then
-         print*,'data not read properly'
+         print*,'Error reading data: ',cmodel(1:nclen),
+     +' ',filename(1:l)
          return
       endif
 c
@@ -190,6 +216,12 @@ c *** Note: sh and td_sfc arrays contain rh from AVN (bgmodel=6)
 c           or FA model (bgmodel=3).
 c
       if(bgmodel.eq.6.or.bgmodel.eq.3)then
+
+         if(cmodel(1:nclen).eq.'AVN_FSL_NETCDF')then
+            do k=1,nz
+              prk(k)=isoLevel(k)
+            enddo
+         endif
 
          print*,'convert rh to q - 3D'
          icm=0
@@ -480,58 +512,11 @@ c
 
 188   continue
 c
-c'set upper level rh to 10%' !This is above 100mb.
-c also have found some rh=0.0 in avn fields.
+c qc for model rh=0.0. 
 c
+      call qcmodel_sh(nx,ny,1,sh_sfc)
 
-      do j=1,ny
-      do i=1,nx
-
-         if(sh_sfc(i,j).le.0.0)then
-            if( (i.gt.1.and.i.lt.nx) .and.
-     .          (j.gt.1.and.j.lt.ny) )then
-
-                 sh_sfc(i,j)=(sh_sfc(i+1,j)+sh_sfc(i-1,j)+
-     .                     sh_sfc(i,j+1)+sh_sfc(i,j-1) )/4.0
-            elseif(i.eq.1)then
-                 sh_sfc(i,j)=sh_sfc(i+1,j)
-            elseif(j.eq.1)then
-                 sh_sfc(i,j)=sh_sfc(i,j+1)
-            elseif(i.eq.nx)then
-                 sh_sfc(i,j)=sh_sfc(i-1,j)
-            elseif(j.eq.ny)then
-                 sh_sfc(i,j)=sh_sfc(i,j-1)
-            endif
-         endif
-      enddo
-      enddo
-
-c     do k=nshl+1,nz
-
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-
-         if(k.gt.nshl)sh(i,j,k)=10.0
-         if(sh(i,j,k).le.0.0)then
-            if( (i.gt.1.and.i.lt.nx) .and.
-     .          (j.gt.1.and.j.lt.ny) )then
- 
-                 sh(i,j,k)=(sh(i+1,j,k)+sh(i-1,j,k)+
-     .                      sh(i,j+1,k)+sh(i,j-1,k) )/4.0
-            elseif(i.eq.1)then
-                 sh(i,j,k)=sh(i+1,j,k)
-            elseif(j.eq.1)then
-                 sh(i,j,k)=sh(i,j+1,k)
-            elseif(i.eq.nx)then
-                 sh(i,j,k)=sh(i-1,j,k)
-            elseif(j.eq.ny)then
-                 sh(i,j,k)=sh(i,j-1,k)
-            endif
-         endif
-      enddo
-      enddo
-      enddo
+      call qcmodel_sh(nx,ny,nz,sh)
 
       istatus=1
       return
@@ -603,5 +588,42 @@ c
       return
 
 50    print*,'error during read'
+      return
+      end
+C
+C
+C
+      subroutine qcmodel_sh(nx,ny,nz,sh)
+
+      implicit none
+
+      integer i,j,k,nx,ny,nz
+
+      real*4  sh(nx,ny,nz)
+
+      do k=1,nz
+      do j=1,ny
+      do i=1,nx
+
+         if(sh(i,j,k).le.0.0)then
+            if( (i.gt.1.and.i.lt.nx) .and.
+     .          (j.gt.1.and.j.lt.ny) )then
+
+                 sh(i,j,k)=(sh(i+1,j,k)+sh(i-1,j,k)+
+     .                      sh(i,j+1,k)+sh(i,j-1,k) )/4.0
+            elseif(i.eq.1)then
+                 sh(i,j,k)=sh(i+1,j,k)
+            elseif(j.eq.1)then
+                 sh(i,j,k)=sh(i,j+1,k)
+            elseif(i.eq.nx)then
+                 sh(i,j,k)=sh(i-1,j,k)
+            elseif(j.eq.ny)then
+                 sh(i,j,k)=sh(i,j-1,k)
+            endif
+         endif
+      enddo
+      enddo
+      enddo
+
       return
       end

@@ -2,6 +2,7 @@
      +     ,max_files,oldest_forecast,max_forecast_delta,use_analysis
      +     ,bg_files,forecast_length,cmodel,NX,NY,NZ,rejected_files
      +     ,rejected_cnt)
+
       implicit none
       include 'netcdf.inc'
       integer bgmodel
@@ -25,6 +26,7 @@ C     integer nf_status, nf_vid, nf_fid, istatus
       logical print_message
       data print_message/.true./
       integer nlapsprds,lens,lentodot
+      integer record
       character*3 lapsprds(4)
       parameter (nlapsprds=4)
       data lapsprds/'lq3','lt1','lsx','lw3'/
@@ -249,20 +251,16 @@ c     +     forecast_length,bg_files,n
       if(bgmodel.eq.0) then
          call get_laps_dimensions(nz,istatus)
          call get_grid_dim_xy(nx,ny,istatus)
-         cmodel = 'LAPS'   
       else if(bgmodel.eq.1) then
          NX = 81
          NY = 62
          NZ = 25        
-         cmodel = 'RUC60_NATIVE'   
       else if(bgmodel.eq.2) then
          call get_eta48_dims(fullname,NX,NY,NZ,istatus)
-         cmodel = 'ETA48_CONUS'        
       else if(bgmodel.eq.3) then
          NX = 91
          NY = 91
          NZ = 16
-         cmodel = 'FA Model (20km)'            
       else if(bgmodel.eq.4) then
          NX = 93
          NY = 65
@@ -273,26 +271,25 @@ c     NX = 151
 c     NY = 113
 c     NZ = 40   
          print*, NX,NY,NZ    
-         cmodel = 'RUC40_NATIVE'            
       else if(bgmodel.eq.6) then
-         NX = 360
-         NY = 181
-         NZ = 26 
-         cmodel = 'AVN_LL_GRIB'
+         if(cmodel .eq. 'AVN_FSL_NETCDF')then
+            call readavnpublicdims(fullname,NX,NY,NZ,record,istatus)
+         else         !this switch for AVN AFWA DEGRIB
+            NX = 360
+            NY = 181
+            NZ = 26 
+         endif
       else if(bgmodel.eq.7) then
          NX = 185
          NY = 129
          NZ = 42
-         cmodel = 'ETA48_GRIB'
       else if(bgmodel.eq.8) then
          NX = 360
          NY = 181
          NZ = 16        
-         cmodel = 'NOGAPS (1.0)'            
       else if(bgmodel.eq.9) then
          call get_conus_dims(fullname,NX,NY,NZ)
          print *,'nws:',NX,NY,NZ
-         cmodel='NWS_CONUS'
       endif
       
       return 
