@@ -4,13 +4,13 @@
  ENDIAN = 1,
  RAOB_RADIUS = 45000.0,
  GOES_SWITCH = 12,
- CLOUD_SWITCH = 0,
+ CLOUD_SWITCH = 1,
  CLOUD_D = 0,
  SOUNDER_SWITCH = 1,
  TIROS_SWITCH = 0,
  SAT_SKIP = 2,
  GVAP_SWITCH = 1,
- IHOP_flag = 1,
+ IHOP_FLAG = 1,
  TIME_DIFF = 9000,
  GPS_SWITCH = 1,
  SFC_MIX = 1,
@@ -43,6 +43,33 @@ c  SFC_MIX = 0,        surface mixing on/off
 c  MOD_4DDA_1 = 0,     4dda airforce compounded drying factor on/off
 c  MOD_4DDA_FACTOR = 0.02,  drying value (+ = drying)
 c  T_REF = -132.0,     reference temp in C where all is ice
+c  PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
+c  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
+c  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
+c  RAOB_SWITCH = 0,    raob on/off
+c  GOES_SWITCH = 8,  goes switch on/off assign sat
+c  CLOUD_SWITCH = 1, cloud usage on/off
+c  SOUNDER_SWITCH = 1,  sounder switch  on/off
+c  TIROS_SWITCH = 0,   use of tiros on/off (inactive)
+c  GVAP_SWITCH = 1,    gvap on/off
+c  SFC_MIX = 0,        surface mixing on/off
+c  MOD_4DDA_1 = 0,     4dda airforce compounded drying factor on/off
+c  MOD_4DDA_FACTOR = 0.02,  drying value (+ = drying)
+c  PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
+c  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
+c  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
+c# PATH_TO_GVAP8 = '/public/data/sat/nesdis/goes8/tpw/sfov_ihop/ascii/',
+c  RAOB_SWITCH = 0,    raob on/off
+c  ENDIAN = 1 (big endian machines [default], =0 little endian machines)
+c  GOES_SWITCH = 12,  goes switch on/off assign sat
+c  CLOUD_SWITCH = 1, cloud usage on/off
+c  SOUNDER_SWITCH = 1,  sounder switch  on/off
+c  TIROS_SWITCH = 0,   use of tiros on/off (inactive)
+c  GVAP_SWITCH = 1,    gvap on/off
+c  IHOP_flag = 1,     (off = 0), (normally on = 1) on for nesdis off for cimss
+c  SFC_MIX = 0,        surface mixing on/off
+c  MOD_4DDA_1 = 0,     4dda airforce compounded drying factor on/off
+c  MOD_4DDA_FACTOR = 0.02,  drying value (+ = drying)
 c  PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
 c  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
 c  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
