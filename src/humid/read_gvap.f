@@ -73,9 +73,12 @@ c     internal variables
       character*9 filefound
       character*120 extension
       integer extension_index
+      integer istatus_8,istatus_10
 
 
 
+      istatus_8=0
+      istatus_10 = 0
       call s_len(path_to_gvap8, ptg_index, istatus)
 
 c     reading goes 8
@@ -110,13 +113,14 @@ c     get most recent file in directory
       nn = i-1
       if (nn .eq. 0) go to 666
       write(6,*) nn, ' number of records read GOES 8'
-      istatus = 1
+      istatus_8 = 1             !assign success to reading goes 8
 c     write(6,*) (wt(i),i=1,nn)
 
       go to 669
 
  668  close (22)
       write(6,*) 'failed reading GOES 8'
+      istatus_8 = 0
       nn = 1
 
  669  continue
@@ -125,6 +129,8 @@ c     reading goes 10
 
 c     get most recent file in directory
 
+      istatus_10 = 1
+
       call s_len(path_to_gvap10, ptg_index, istatus)
 
       call get_newest_file (filename, time_diff,
@@ -132,7 +138,8 @@ c     get most recent file in directory
      1     extension, extension_index, istatus)
 
       if(istatus.ne.1) then     !failure in getting file
-         return
+         istatus_10 = 0
+         go to 667
       endif
 
       const_file = path_to_gvap10(1:ptg_index)//'20'//filefound
@@ -154,6 +161,20 @@ c     get most recent file in directory
 
  667  close(23)
 
+      if (istatus_8.eq.0) then
+         write(6,*) 'GOES 8 failed'
+      endif
+      if (istatus_10.eq.0) then
+         write(6,*) 'GOES 10 failed'
+      endif
+
+      if(istatus_8+istatus_10.eq.0) then
+         return
+      else
+         write(6,*) 'got something,  processing....'
+         istatus = 1
+      endif
+      
       nn = i-1 + nn
       if (nn .eq. 0) go to 666
       write(6,*) i-1, ' number of records read GOES 10'
@@ -166,9 +187,8 @@ c      write(6,*) (wt(i),i=1,nn)
 
  666  if(nn.eq.0) then
          istatus = 0
-         write(6,*) ' no available gvap data'
+         write(6,*) 'process failure...  no available gvap data'
       else
-         write(6,*) 'GOES 10 not avail but GOES 8 data detetected'
          istatus = 1
       endif
 
