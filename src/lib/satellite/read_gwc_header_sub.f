@@ -1,6 +1,7 @@
-      SUBROUTINE read_gwc_header(FILENAME,STRPIX,STRSCNL,STPPIX,STPSCNL,
-     &REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,iwidth,idepth,GOALPHA,istrbdy1,
-     &istrbdy2,istpbdy1,istpbdy2,BEPIXFC,BESCNFC,FSCI,idecimat,IOSTATUS)
+      SUBROUTINE read_gwc_header(FILENAME,l_cell,STRPIX,STRSCNL,STPPIX,
+     &STPSCNL,REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,iwidth,idepth,GOALPHA,
+     &istrbdy1,istrbdy2,istpbdy1,istpbdy2,BEPIXFC,BESCNFC,FSCI,idecimat,
+     &IOSTATUS)
 C
 C***********************************************************************
 C  Purpose:  Read and decode the header information for GVAR data coming
@@ -33,19 +34,18 @@ C***********************************************************************
 cc      character*2 SPARE1     !Spare
       INTEGER   HDRSIZE    !Header Size
       INTEGER DATASTR    !Data Start
-      INTEGER SHPTPTR    !Shipping Table Ptr
-      Integer lun
+      INTEGER SHPTPTR    !Shipping Table Ptr 
+      Integer lun 
       Integer istatus
-
-      INTEGER STRPIX     !Start Pixel
+      INTEGER STRPIX     !Start Pixel 
       INTEGER STRSCNL    !Start Scanline 
-      INTEGER STPPIX     !Stop Pixel
-      INTEGER STPSCNL    !Stop Scanline
-
-      integer n
-
-cc      CHARACTER*6 SATID    !Satellite Identification
-cc      CHARACTER*2 ORGDATTP !Data Type
+      INTEGER STPPIX     !Stop Pixel 
+      INTEGER STPSCNL    !Stop Scanline 
+      integer irdttop(2)
+      integer irdtbot(2)
+      integer n 
+cc    CHARACTER*6 SATID  !Satellite Identification
+cc    CHARACTER*2 ORGDATTP !Data Type
       INTEGER REQOBSTM   !Requested Observation Time
 
 cc      INTEGER DECIMAT    !Decimation Resolution 
@@ -69,6 +69,10 @@ cc      INTEGER GOVISMD    !GOES Vis Mode
       REAL*4 GOLONSBP      !GOES Longitude Subpoint
       REAL*4 GOLATSBP      !GOES Latitude Subpoint
       REAL*4 GOALPHA       !GOES Alpha
+      Integer GOLONSBPI
+      Integer GOLATSBPI
+      Integer GOALPHAI
+
 cc      REAL*4 GODELTA       !GOES Delta
 cc      REAL*4 GOZETA        !GOES Zeta
 cc      REAL*4 GOETA         !GOES Eta
@@ -77,6 +81,7 @@ cc      REAL*4 GOSBSCN       !Scanline of Satellite subpoint
 cc      REAL*4 GOSBSAMP      !Pixel of Satellite subpoint
 cc      REAL*4 GOGEOCAL      !GOES Geoc altitude????     
 cc      INTEGER SPARE2(6)  !Spare Bytes not currently used
+
       INTEGER BEPIXFC    !Begin Pixel First Cell
       INTEGER BESCNFC    !Begin Scaneline First Cell
 
@@ -92,7 +97,6 @@ cc      BYTE REQDC           !Required data complete
 cc      CHARACTER*3 ORTYPE   !Original Type
 cc      CHARACTER*3 ORSTYPE  !Original Subtype
 cc      REAL*8 POLARIN       !Polar Inclination
-      CHARACTER*2 IMGTYPE  !Image Type
 cc      BYTE ORPROJ          !Original Reference Projection
 cc      CHARACTER*1 ORFIELD  !Orientation Field
 cc      REAL*8 GSUBLON       !GOES Subpoint Longitude Spare for DMSP
@@ -104,11 +108,14 @@ cc      REAL*8 ARGPER        !ARG Perigee
 cc      REAL*8 ECCEN         !Eccentricity
 cc      REAL*8 ARGLAT        !ARG Latitude
 cc      REAL*8 DTTOP         !DT Top
-        Integer idttop
 cc      REAL*8 DTBOT         !DT Bottom
         Integer idtbot
 cc      REAL*8 MIDTIME       !Midpoint Time
+
+      Integer idttop
       INTEGER FSCI       !First Scanline of Complete Image
+      CHARACTER*2 IMGTYPE  !Image Type
+ 
 cc      INTEGER STCI       !Start Time of Complete Image
 cc      BYTE CHAN            !Channel 1=IR1, 2=IR2, 3=IR3, 4=Water Vap
 cc      REAL*4 ROTANG        !Rotation Angle between Aries and Greenwich
@@ -120,34 +127,37 @@ cc      REAL*4 SATVEC(3)     !Satellite Position Vector
 cc      REAL*4 RMA           !Role Misalignment Angle
 cc      REAL*4 PMA           !Pitch Misalignment Angle
 
-        real   rdttop(2)
-        real   rdtbot(2)
-
-      character ctime1*9,ctime2*9
-      character cjjj1*3,cjjj2*3
-      character c_hm1*4,c_hm2*4
+      real*8   r8dttop
+      real*8   r8dtbot
+      real     rdttop
+      real     rdtbot
 
       integer   i4time_cur
       integer   i4time_now_gg
       integer   i4time1,i4time2
       integer   i4timediff
+
+      character ctime1*9,ctime2*9
+      character cjjj1*3,cjjj2*3
+      character c_hm1*4,c_hm2*4
       character cfname_cur*9
       character cfname1*9
       character cfname2*9
+
       real*8    r8time
 
-
-
-      integer byteswp2, byteswp4
+      integer   byteswp2, byteswp4
       character input(1024) !just read it all and sort it later!
 
 c      BYTE JUNK512(512)     !Byte array used to 'read over' unneeded
 c                            !data
 c      BYTE JUNK95(95)       !Byte array used to 'read over' unneeded
 c                            !data
-      INTEGER IOSTATUS    !I/O status flag
-      INTEGER I        !Array indices
-      logical lopen
+      INTEGER   IOSTATUS    !I/O status flag
+      INTEGER   I        !Array indices
+
+      logical   l_cell
+      logical   lopen
 C***********************************************************************
 C  Open the file that contains the GVAR header and pixel data.  The 
 C  record length in the direct access read is 1024 bytes (the number of
@@ -187,7 +197,6 @@ C***********************************************************************
       hdrsize = byteswp4(input(9))
       datastr = byteswp4(input(13))
       shptptr = byteswp4(input(17))      
-
         
       PRINT*, DATATYP, ' ',DATASBTP, ' ',HDRSIZE, ' ',
      &   DATASTR, ' ', SHPTPTR
@@ -248,25 +257,49 @@ C***********************************************************************
 C  Perform a 4 byte swap for long integers and a two byte swap for short
 C  integers
 C***********************************************************************
-
       strpix  = BYTESWP4(input(513))
       strscnl = BYTESWP4(input(517))
       stppix  = BYTESWP4(input(521))
       stpscnl = BYTESWP4(input(525))
 c     reqobstm= BYTESWP4(input(537))
 
-      idecimat = BYTESWP2(input(541))
-      istrbdy1  = BYTESWP2(input(546))
+      idecimat  =  BYTESWP2(input(541))
+      istrbdy1  =  BYTESWP2(input(546))
       istrbdy2  =  BYTESWP2(input(548))
-      istpbdy1 =  BYTESWP2(input(550))
-      istpbdy2 =  BYTESWP2(input(552))
+      istpbdy1  =  BYTESWP2(input(550))
+      istpbdy2  =  BYTESWP2(input(552))
+ 
+      irdttop(1)   =  BYTESWP4(input(716))
+      irdttop(2)   =  BYTESWP4(input(720))
+      irdtbot(1)   =  BYTESWP4(input(724))
+      irdtbot(2)   =  BYTESWP4(input(728))
 
-      CALL CNVTVXFL(input(556),GOLONSBP)
-      CALL CNVTVXFL(input(560),GOLATSBP)
-      CALL CNVTVXFL(input(564),GOALPHA)
+      golonsbpi =  BYTESWP4(input(556))
+      golatsbpi =  BYTESWP4(input(560))
+      goalphai  =  BYTESWP4(input(564))
 
-      bepixfc =  BYTESWP4(input(620))
-      bescnfc =  BYTESWP4(input(624))
+      if(l_cell)then
+         CALL CNVTVXFL(input(556),GOLONSBP)
+         CALL CNVTVXFL(input(560),GOLATSBP)
+         CALL CNVTVXFL(input(564),GOALPHA)
+         call cnvtvxfl(input(716),rdttop)
+         call cnvtvxfl(input(724),rdtbot)
+         idttop =int(rdttop)
+         idtbot =int(rdtbot)
+      else
+         CALL convert_to_real(GOLONSBPI,GOLONSBP)
+         CALL convert_to_real(GOLATSBPI,GOLATSBP)
+         CALL convert_to_real(GOALPHAI,GOALPHA)
+         CALL convert_to_double(irdttop(1),irdttop(2),r8dttop)
+         CALL convert_to_double(irdtbot(1),irdtbot(2),r8dtbot)
+         idttop = int(r8dttop)
+         idtbot = int(r8dtbot)
+c        CALL convert_to_real(irdttop(1),rdttop)
+c        CALL convert_to_real(irdtbot(1),rdtbot)
+      endif
+
+      bepixfc  =  BYTESWP4(input(620))
+      bescnfc  =  BYTESWP4(input(624))
       iwidth   =  BYTESWP2(input(628))
       idepth   =  BYTESWP2(input(630))
 
@@ -276,17 +309,6 @@ c     reqobstm= BYTESWP4(input(537))
 
       FSCI   =  BYTESWP4(input(740))
 c
-c appears that all the time info is in array element 1
-c of rdttop1 and rdttop2.
-c
-      call cnvtvxfl(input(716),rdttop(1))
-      call cnvtvxfl(input(720),rdttop(2))
-      call cnvtvxfl(input(724),rdtbot(1))
-      call cnvtvxfl(input(728),rdtbot(2))
-
-      idttop =int(rdttop(1))           !+rdttop(2)
-      idtbot =int(rdtbot(1))           !+rdtbot(2)
-
       write(ctime1,101)idttop
       write(ctime2,101)idtbot
 101      format(i9)
@@ -306,8 +328,6 @@ c
 c
 c   No further header variables are required - return here.
 c
-
-
 C***********************************************************************
 C  If there is an error opening the data file print out a message and
 C  end the program

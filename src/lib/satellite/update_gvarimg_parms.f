@@ -1,5 +1,5 @@
       subroutine update_gvarimg_parms(cd6,
-     &                        cstype,chtype,
+     &                        cstype,l_cell_afwa,chtype,
      &                        cdir_path,
      &                        ewCycles,
      &                        ewIncs,
@@ -58,6 +58,8 @@ c
       Integer   x_res,y_res
       Integer   imci4
       Integer   nch
+
+      logical   l_cell_afwa
 
       REAL*8      orbitAttitude                  (336)
 
@@ -200,8 +202,8 @@ c
          cfname=c_afwa_fname(cd6,chtype)
          filename_cdf=cdir_path(1:n)//cfname
 
-         call read_gwc_header(filename_cdf,strtpix,strtline,
-     &stoppix,stopline,i_obstime,image_type,golatsbp,golonsbp,
+         call read_gwc_header(filename_cdf,l_cell_afwa,strtpix,
+     &strtline,stoppix,stopline,i_obstime,image_type,golatsbp,golonsbp,
      &image_width,image_depth,goalpha,strbdy1,strbdy2,stpbdy1,
      &stpbdy2,bepixfc,bescnfc,fsci,decimat,gstatus)
          if(gstatus.ne.0)then
@@ -226,8 +228,13 @@ c           nw_vis_pix=(bepixfc+goalpha)*8
 c           nw_vis_line=(bescnfc+fsci)*4 
 c        endif
 
-         nx = image_width*256
-         ny = image_depth*64
+         if(l_cell_afwa)then
+            nx = image_width*256
+            ny = image_depth*64
+         else
+            nx = stoppix-strtpix+1
+            ny = stopline-strtline+1
+         endif
          
          write(6,*)'GWC nw_vis_pix/nw_vis_line: ',nw_vis_pix,nw_vis_line
          write(6,*)

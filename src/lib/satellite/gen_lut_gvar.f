@@ -43,6 +43,7 @@ c
       real*8        radtodeg
       real*4        r_img_res_m
       real*4        rls,rle,res,ree
+      real*4        r_thin
       real*4        nwpixabs,nwlinabs
       real*4        nepixabs,nelinabs
       real*4        swpixabs,swlinabs
@@ -172,7 +173,7 @@ c
 c get current nav parameters for file header
 c
       call update_gvarimg_parms(c_sat_id(isat),
-     &                         csattype,
+     &                         csattype,l_cell_afwa,
      &             c_channel_types(kchl,jtype,isat),
      &             path_to_raw_sat(kchl,jtype,isat),
      &                         ewCycles,ewIncs,
@@ -215,15 +216,20 @@ c applied, then the following values should change as well.
 c
       x_step=1.0
       y_step=1.0
+c
+c currently AFWA goespatch is every other pixel and every scan line.
+c
+      r_thin=2.0
+
       if(csattype.eq.'gwc')then
          if(ct(1:nc).eq.'vis')then
-            x_step=float(decimat)*2.0   ! *2.0 because afwa returns every other pixel!
+            x_step=float(decimat)*r_thin   ! *2.0 because afwa returns every other pixel!
             y_step=float(decimat)
          elseif(ct(1:nc).eq.'wv ')then
-            x_step=float(decimat)*2.0
+            x_step=float(decimat)*r_thin
             y_step=float(decimat)
          else
-            x_step=float(decimat)*2.0
+            x_step=float(decimat)*r_thin
             y_step=float(decimat)
          endif
 

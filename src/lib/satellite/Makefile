@@ -37,6 +37,8 @@ SRC=bcd_to_int.f \
     cnvtvxfl.f \
     cnvvxdb.f \
     cmpsatres.f \
+    convert_to_real.f \
+    convert_to_double.f \
     expand_domain.f \
     gen_lut_gvar.f \
     gen_lut_lambert.f \

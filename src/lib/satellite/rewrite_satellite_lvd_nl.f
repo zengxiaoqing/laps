@@ -13,6 +13,8 @@ c
       integer    slen
 
       character  nest7grid*150
+      character  c_cell_afwa*7
+      character  c_national*7
 
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
@@ -25,10 +27,20 @@ c -----
 
       nest7grid = nest7grid(1:len_dir)//'/satellite_lvd.nl'
 
-      lun=100
+      lun=99
       open(lun,file=nest7grid,status='old',form='formatted',err=900)
       rewind(lun)
 
+      if(l_national)then
+         c_national='.TRUE.'
+      else
+         c_national='.FALSE.'
+      endif
+      if(l_cell_afwa)then
+         c_cell_afwa='.TRUE.'
+      else
+         c_cell_afwa='.FALSE.'
+      endif
       nc=0
       do k=1,maxsat
       do j=1,maxtype
@@ -42,7 +54,9 @@ c -----
       if(nc.eq.200)print*,'WARNING! Max string length = ',nc
       write(lun,1,err=950)(((path_to_raw_sat(i,j,k)(1:nc),
      &i=1,maxchannel),j=1,maxtype),k=1,maxsat)
-      write(lun,64)iflag_lvd_common
+c     write(lun,64)iflag_lvd_common
+      write(lun,65)c_cell_afwa
+      write(lun,66)c_national
       write(lun,61)(isats(i),i=1,maxsat)
       write(lun,62)((itypes(i,j),i=1,maxtype),j=1,maxsat)
       write(lun,63)(((ichannels(i,j,k),i=1,maxchannel),j=1,maxtype),
@@ -148,6 +162,8 @@ c    &j=1,maxsat)
 62    format(1x,'ITYPES=',4(i1,","),1x)
 63    format(1x,'ICHANNELS=',5(i1,","),1x)
 64    format(1x,'IFLAG_LVD_COMMON= ',i1,",")
+65    format(1x,'L_CELL_AFWA= ',a,",")
+66    format(1x,'L_NATIONAL= ',a,",")
 2     format(1x,'I_DELTA_SAT_T_SEC=',i5,",")
 3     format(1x,'I_MSNG_SAT_FLAG=',4(i4,","))
 5     format(1x,'SAT_RANGE_M=',4(1x,f11.2,','))       !maxsat = 4
