@@ -2286,7 +2286,9 @@ fint4 *status;
             valtime = reftime + timeoff + diff;
 
             i4time = valtime + 315619200;
-            cv_i4tim_asc_lp(&i4time,f_asctime,&istatus);
+/* commented out cv_i4tim_asc_lp call 4-5-00...will replicate f_asctime passed
+   in to call to write_cdf_v3 in 1hr and 2hr forecasts */
+/*            cv_i4tim_asc_lp(&i4time,f_asctime,&istatus);  */
             fstrncpy(asctime, f_asctime,*asc_len);
           }
 
