@@ -6436,6 +6436,8 @@ c             if(cint.eq.0.0)cint=0.1
      1                             ,i4_valid                ! O
      1                                                            )
 
+        istatus = 1
+
         if(i4_initial .eq. 0 .or. i4_valid .eq. 0)then ! find best fcst
 
             write(6,*)' Looking for best file'
@@ -6462,13 +6464,15 @@ c             if(cint.eq.0.0)cint=0.1
      1                                           ,' ',ext(1:6)
 
             else
-               write(6,*)' Could not find best file'
+               call make_fnam_lp(i4time_ref,a9time,istatus)
+               write(6,*)' Could not find best file valid at: '
+     1                   ,a9time
+               istatus = 0
 
             endif
 
         endif
 
-        istatus = 1
         return
         end
 
@@ -6504,8 +6508,8 @@ c             if(cint.eq.0.0)cint=0.1
         elseif(len_time .eq. 4)then
                 write(6,*)' len_time = ',len_time
 
-                i4time_plot = i4time_ref / laps_cycle_time 
-     1                                   * laps_cycle_time       
+                i4time_plot = i4time_ref ! / laps_cycle_time 
+!    1                                     * laps_cycle_time       
                 call make_fnam_lp(i4time_plot,asc9_tim_t,istatus)
                 write(6,*)' Valid time = ',asc9_tim_t
 
