@@ -244,8 +244,8 @@ cdis
 
         character*33 c33_label
         character*1 c_display
-        character*1 c1_string
-        character*2 c_metacode,c_wind
+        character*1 c1_string,c_wind
+        character*2 c_metacode 
         character*3 c3_string,c3_sta,c3_type
         character*3 c3_ylow,c3_xlow
         character*5 c5_arrival_gate
@@ -658,14 +658,14 @@ c read in laps lat/lon and topo
         NULBLL = 3 ! for conrec (number of lines between labels)
 
         read(lun,1301)c_field
-1301    format(a2)
+1301    format(a3)
 
         istatus = 1
 
-        if(c_field .eq. 'q ')goto9999
+        if(c_field(1:2) .eq. 'q ')goto9999
 
-        c4_log = 'x '//c_field
-        if(lun .eq. 5)call logit(c4_log)
+!       c4_log = 'x '//c_field
+!       if(lun .eq. 5)call logit(c4_log)
 
         write(6,*)' Generating Cross Section'
 
@@ -720,11 +720,11 @@ c read in laps lat/lon and topo
 
         igrid = 1
 
-        if(    c_field .eq. 'di' .or. c_field .eq. 'sp'
-     1    .or. c_field .eq. 'u ' .or. c_field .eq. 'v '
-     1    .or. c_field .eq. 'w ' .or. c_field .eq. 'dv'
-     1    .or. c_field .eq. 'vo' .or. c_field .eq. 'va' 
-     1    .or. c_field .eq. 'vc' .or. c_field .eq. 'om' )then
+        if(    c_field .eq. 'di' .or. c_field      .eq. 'sp'
+     1    .or. c_field .eq. 'u ' .or. c_field      .eq. 'v '
+     1    .or. c_field .eq. 'w ' .or. c_field      .eq. 'dv'
+     1    .or. c_field .eq. 'vo' .or. c_field      .eq. 'va' 
+     1    .or. c_field .eq. 'vc' .or. c_field(1:2) .eq. 'om' )then
 
             call input_product_info(i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
@@ -740,22 +740,22 @@ c read in laps lat/lon and topo
 
             i4time_3dw = i4_valid
 
-            if(c_field .ne. 'w ' .and. c_field .ne. 'om')then
+            if(c_field .ne. 'w ' .and. c_field(1:2) .ne. 'om')then
                 if(c_prodtype .eq. 'N')then
                     c_wind = 'b'
                 else
                     c_wind = 'k'
                 endif
 
-            elseif(c_field .eq. 'om' .and. c_prodtype .eq. 'A')then
+            elseif(c_field(1:2) .eq. 'om' .and. c_prodtype .eq. 'A')then       
                 write(6,105)
 105             format('  Omega field: Kinematic (lw3), '
      1                ,'Cloud Bogused'
      1                  ,' [k,c]  ',7x,'? ',$)
 
-                read(lun,1301)c_wind
-                if(c_wind .eq. 'k' .or. c_wind .eq. 'K')c_wind = 'k'
-                if(c_wind .eq. 'c' .or. c_wind .eq. 'C')c_wind = 'c'
+                read(lun,106)c_wind
+106             format(a)
+                call downcase(c_wind,c_wind)
 
             endif
 
@@ -1615,6 +1615,16 @@ c read in laps lat/lon and topo
      1                           ,NX_P, iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
 
+!           Blank out the edges external to the X-section
+            write(6,*)' Blackening the edges'
+            do i = 1,NX_P
+            do j = 1,NX_P
+                if(field_vert3(i,j) .eq. r_missing_data)then
+                    field_vert3(i,j) = 0.
+                endif
+            enddo ! j
+            enddo ! i
+
             write(6,*)' calling solid fill cloud plot'
             call ccpfil(field_vert3,NX_P,NX_P,0.0,1.0,'linear'
      1                             ,n_image,1e0)       
@@ -1978,7 +1988,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             i_contour = 1
             c33_label = 'LAPS Specific Humidity     x1e3  '
 
-        elseif(c_field .eq. 'rh' .or. c_field .eq. 'rl')then
+        elseif(c_field(1:2) .eq. 'rh' .or. c_field(1:2) .eq. 'rl')then
             call input_product_info(i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,3                       ! I
@@ -1992,9 +2002,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                             ,istatus)                ! O
 
             if(c_prodtype .eq. 'A')then
-                if(c_field .eq. 'rh')then
+                if(c_field(1:2) .eq. 'rh')then
                     var_2d = 'RH3'
-                elseif(c_field .eq. 'rl')then
+                elseif(c_field(1:2) .eq. 'rl')then
                     var_2d = 'RHL'
                 endif
 
@@ -2066,9 +2076,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 ext = 'lh3'
 
-                if(c_field .eq. 'rh')then
+                if(c_field(1:2) .eq. 'rh')then
                     var_2d = 'RH3'
-                elseif(c_field .eq. 'rl')then
+                elseif(c_field(1:2) .eq. 'rl')then
                     var_2d = 'RHL'
                 endif
 
@@ -2100,10 +2110,18 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             enddo ! i
             enddo ! k
 
-            clow = 0.
-            chigh = +100.
-            cint = 10.
-            i_contour = 1
+            if(c_field(3:3) .ne. 'i')then
+                clow = 0.
+                chigh = +100.
+                cint = 10.
+                i_contour = +1
+            else
+                clow = 220.
+                chigh = -40.
+                cint = 10.
+                i_contour = -1
+                scale = 1.
+            endif
 
             NULBLL = 1 ! for conrec (number of lines between labels)
 
@@ -2444,10 +2462,47 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 2017        format(f7.2)
 
+!           Put in "minibox"
+            call get_border(NX_L,NY_L,x_1,x_2,y_1,y_2)
+            size_mini = .05
+            size_mini_x = size_mini * width * 0.8 ! aspect ratio of xsect
+            size_mini_y = size_mini * r_height
+            rleft_mini  = rleft + width    * .68
+            bottom_mini = top   + r_height * .025
+            xl = rleft_mini  + x_1 * size_mini_x
+            xh = rleft_mini  + x_2 * size_mini_x
+            yl = bottom_mini + y_1 * size_mini_y
+            yh = bottom_mini + y_2 * size_mini_y
+            xcoord(1) = xl  ! UL
+            ycoord(1) = yh
+            xcoord(2) = xh  ! UR
+            ycoord(2) = yh
+            xcoord(3) = xh  ! LR
+            ycoord(3) = yl
+            xcoord(4) = xl  ! LL
+            ycoord(4) = yl
+            xcoord(5) = xcoord(1)
+            ycoord(5) = ycoord(1)
+            npts = 5
+            call curve (xcoord, ycoord, npts)
+
+!           Get X-section line segment
+            xfracl = (xlow  - 1.0) / float(NX_L)
+            xfrach = (xhigh - 1.0) / float(NX_L)
+            yfracl = (ylow  - 1.0) / float(NY_L)
+            yfrach = (yhigh - 1.0) / float(NY_L)
+
+            x1 = xl + xfracl*(xh-xl)
+            x2 = xl + xfrach*(xh-xl)
+            y1 = yl + yfracl*(yh-yl)
+            y2 = yl + yfrach*(yh-yl)
+
+            call line(x1,y1,x2,y2)
+
         endif ! i_map .eq. 0
 
 
-        if(i_contour .eq. 1)then
+        if(abs(i_contour) .eq. 1)then
             call set(vxmin, vxmax, vymin, vymax
      1             , rleft, right, bottom, top,1)
 
@@ -2496,11 +2551,19 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                           ,field_vert,field_vert3,r_missing_data)
 
 
-                    call conrec_line
-!    1              (field_vert3(1,ibottom),NX_P,NX_P,NX_P
-     1              (field_vert3,NX_P,NX_P,NX_P
+                    if(i_contour .eq. 1)then
+
+                        call conrec_line
+!    1                  (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+     1                  (field_vert3,NX_P,NX_P,NX_P
      1                             ,clow,chigh,cint,-1,0,-1848,0)
 
+                    else
+                        write(6,*)' calling solid fill cloud plot'
+                        call ccpfil(field_vert3,NX_P,NX_P,clow,chigh
+     1                              ,'hues',n_image,scale)       
+
+                    endif
 
                 endif
 
