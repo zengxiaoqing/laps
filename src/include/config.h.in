@@ -91,4 +91,6 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
-
+#ifdef hpux
+#define _HPUX_SOURCE
+#endif
