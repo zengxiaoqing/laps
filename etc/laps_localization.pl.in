@@ -243,6 +243,17 @@ sub wfo_localization{
   $goes = "g".$goes;
 
 
+#
+# run get sup args here 
+#  
+  my $supfile = "$ENV{FXA_HOME}/data/localizationDataSets/$ENV{FXA_INGEST_SITE}/regional$ENV{FXA_INGEST_SITE}.sup";
+  $supfile =~ s/\.sup/_\.sup/ unless(-e $supfile);
+
+  print "sat sup file is $supfile\n";
+
+  system("$ENV{FXA_HOME}/bin/maksuparg $supfile > $LAPS_DATA_ROOT/static/lvd/geosatfile");
+
+
 }
 #
 # This subroutine test the files $template and $newfile
