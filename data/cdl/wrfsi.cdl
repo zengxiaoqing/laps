@@ -1,0 +1,279 @@
+netcdf static {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+
+//   change these next two variables if grid size is to be adjusted
+	x = 125,
+	y = 105,
+
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	grid latitudes
+
+	float                                  
+            lat(record,z,y,x);
+            lat:navigation_dim = "nav";
+            lat:record = "valtime, reftime";
+            lat:_FillValue = 1.e+37f;
+            lat:long_name="LAPS grid latitudes";
+            lat:units="degrees";
+            lat:valid_range= 0.f, 90.f;
+	    lat:LAPS_units="DEGREES";
+                	        
+        //	grid longitudes
+
+	float                                  
+            lon(record,z,y,x);
+            lon:navigation_dim = "nav";
+            lon:record = "valtime, reftime";
+            lon:_FillValue = 1.e+37f;
+            lon:long_name="LAPS grid longitudes";
+            lon:units="degrees";
+            lon:valid_range= -180.f, 180.f;
+	    lon:LAPS_units="DEGREES";
+
+        //      B-stagger grid latitudes
+
+        float
+            lab(record,z,y,x);
+            lab:navigation_dim = "nav";
+            lab:record = "valtime, reftime";
+            lab:_FillValue = 1.e+37f;
+            lab:long_name="LAPS grid latitudes";
+            lab:units="degrees";
+            lab:valid_range= 0.f, 90.f;
+            lab:LAPS_units="DEGREES";
+
+        //      B-stagger grid longitudes
+
+        float
+            lob(record,z,y,x);
+            lob:navigation_dim = "nav";
+            lob:record = "valtime, reftime";
+            lob:_FillValue = 1.e+37f;
+            lob:long_name="LAPS grid longitudes";
+            lob:units="degrees";
+            lob:valid_range= -180.f, 180.f;
+            lob:LAPS_units="DEGREES";
+
+        //      C-stagger grid latitudes
+
+        float
+            lac(record,z,y,x);
+            lac:navigation_dim = "nav";
+            lac:record = "valtime, reftime";
+            lac:_FillValue = 1.e+37f;
+            lac:long_name="LAPS grid latitudes";
+            lac:units="degrees";
+            lac:valid_range= 0.f, 90.f;
+            lac:LAPS_units="DEGREES";
+
+        //      C-stagger grid longitudes
+
+        float
+            loc(record,z,y,x);
+            loc:navigation_dim = "nav";
+            loc:record = "valtime, reftime";
+            loc:_FillValue = 1.e+37f;
+            loc:long_name="LAPS grid longitudes";
+            loc:units="degrees";
+            loc:valid_range= -180.f, 180.f;
+            loc:LAPS_units="DEGREES";
+
+        //	LAPS grid average elevation 
+
+	float                                  
+            avg(record,z,y,x);
+            avg:navigation_dim = "nav";
+            avg:record = "valtime, reftime";
+            avg:_FillValue = 1.e+37f;
+            avg:long_name="LAPS grid average elevation";
+            avg:units="meters MSL";
+            avg:valid_range= 0.f, 5000.f;
+	    avg:LAPS_units="METERS MSL";
+                	        
+        //	LAPS grid std dev of elevation
+
+	float                                  
+            std(record,z,y,x);
+            std:navigation_dim = "nav";
+            std:record = "valtime, reftime";
+            std:_FillValue = 1.e+37f;
+            std:long_name="LAPS grid std dev of elevation";
+            std:units="meters";
+            std:valid_range= -5000.f, 5000.f;
+	    std:LAPS_units="METERS";
+                	        
+        //	LAPS grid envelope	
+
+	float                                  
+            env(record,z,y,x);
+            env:navigation_dim = "nav";
+            env:record = "valtime, reftime";
+            env:_FillValue = 1.e+37f;
+            env:long_name="LAPS grid envelope";
+            env:units="meters MSL";
+            env:valid_range= -5000.f, 5000.f;
+	    env:LAPS_units="METERS MSL";
+                	        
+        //	elevation for AVS
+
+	float                                  
+            zin(record,z,y,x);
+            zin:navigation_dim = "nav";
+            zin:record = "valtime, reftime";
+            zin:_FillValue = 1.e+37f;
+            zin:long_name="elevation for AVS";
+            zin:units="AVS index";
+            zin:valid_range= 0.f, 20.f;
+	    zin:LAPS_units="none";
+                	        
+        //land fractions	
+
+	float                                  
+            ldf(record,z,y,x);
+            ldf:navigation_dim = "nav";
+            ldf:record = "valtime, reftime";
+            ldf:_FillValue = 1.e+37f;
+            ldf:long_name="land fraction";
+            ldf:units="none";
+            ldf:valid_range= 0.f, 1.f;
+	    ldf:LAPS_units="none";
+                	        
+        //	land use
+
+	float                                  
+            use(record,z,y,x);
+            use:navigation_dim = "nav";
+            use:record = "valtime, reftime";
+            use:_FillValue = 1.e+37f;
+            use:long_name="land use";
+            use:units="none";
+            use:valid_range= 0.f, 20.f;
+	    use:LAPS_units="none";
+                	        
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            n_grids;
+ 
+        float
+	    grid_spacing;
+
+        char
+            lat_comment(record,z,namelen),
+            lon_comment(record,z,namelen),
+            lab_comment(record,z,namelen),
+            lob_comment(record,z,namelen),
+            lac_comment(record,z,namelen),
+            loc_comment(record,z,namelen),
+            avg_comment(record,z,namelen),
+            std_comment(record,z,namelen),
+            env_comment(record,z,namelen),
+            zin_comment(record,z,namelen),
+            ldf_comment(record,z,namelen),
+            use_comment(record,z,namelen),
+            asctime(namelen);
+
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        //      nice name for grid
+        char
+            grid_name(namelen);
+
+        //      nice name for process using static file
+
+        char
+            process_name(namelen);
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_east";
+  
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_east";
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        // end of navigation variables
+
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS static file";
+        :version = 3.1;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS static";
+        x_dim           = "x";
+        y_dim           = "y";
+
+}                       
+
