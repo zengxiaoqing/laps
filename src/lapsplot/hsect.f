@@ -324,13 +324,13 @@ c       include 'satellite_dims_lvd.inc'
      1      /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
      1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1      /
-     1      /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta,th,te'         
-     1      ,',vo,mr,mc,dv-i,ha,ma,sp]'
+     1      /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta'         
+     1      ,',th,te-i,vo,mr,mc,dv-i,ha,ma,sp]'
      1      /'          [cs,vs,tw,fw-i,hi-i,gf-i]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
      1      /'          [bs] Sfc background/forecast'
-     1      /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
-     1      /'          [s] Other Stability Indices'
+     1      /10x,'[li,lw,he-i,pe-i,ne-i] li, li*w, helcty, CAPE, CIN,'
+     1      /10x,'[s] Other Stability Indices'
      1      /
      1      /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
      1      ,',   [pt,pb] Theta, Blnc Theta'
@@ -339,8 +339,8 @@ c       include 'satellite_dims_lvd.inc'
 
         write(6,12)
  12     format(
-     1       /'     [br,fr,lq] Humidity (lga;fua;lq3: [q or rh]) '
-     1       ,' [pw-i] Precipitable Water'       
+     1       /'     HUMIDITY: [br,fr,lq,rb] (lga;fua;lq3;bal)'
+     1       /'               [pw-i] Precipitable H2O'       
      1       /
      1       /'     CLOUDS/PRECIP: [ci] Cloud Ice,'
      1       ,' [ls] Cloud LWC'
@@ -358,7 +358,7 @@ c       include 'satellite_dims_lvd.inc'
      1      //'     Difference field: [di-i] '
      1      //' ',52x,'[q] quit/display ? ',$)
 
- 15     format(a2)
+ 15     format(a3)
 
         read(lun,16)c_type
  16     format(a4)
@@ -406,11 +406,11 @@ c       include 'satellite_dims_lvd.inc'
 
         igrid = 1
 
-        if(    c_type .eq. 'wd' .or. c_type .eq. 'wb'     ! Wind fields
-     1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr'
-     1    .or. c_type .eq. 'wf' .or. c_type .eq. 'bw'
-     1    .or. c_type .eq. 'bo' .or. c_type .eq. 'lo'
-     1    .or. c_type .eq. 'fo' .or. c_type .eq. 'wo'         )then
+        if(    c_type      .eq. 'wd' .or. c_type      .eq. 'wb'  ! Wind fields
+     1    .or. c_type(1:2) .eq. 'co' .or. c_type      .eq. 'wr'
+     1    .or. c_type      .eq. 'wf' .or. c_type      .eq. 'bw'
+     1    .or. c_type(1:2) .eq. 'bo' .or. c_type      .eq. 'lo'
+     1    .or. c_type(1:2) .eq. 'fo' .or. c_type(1:2) .eq. 'wo')then
 
             if(c_type .eq. 'wd')then
                 ext = 'lw3'
@@ -427,10 +427,10 @@ c       include 'satellite_dims_lvd.inc'
 
                 ext = 'fua'
 
-            elseif(c_type .eq. 'co')then
+            elseif(c_type(1:2) .eq. 'co')then
                 ext = 'lco'
 
-            elseif(c_type .eq. 'wo')then
+            elseif(c_type(1:2) .eq. 'wo')then
                 ext = 'lw3'
 
             elseif(c_type .eq. 'lo')then
@@ -484,9 +484,9 @@ c       include 'satellite_dims_lvd.inc'
 
             if(c_type.eq.'bw' .or. c_type.eq.'bo')ext='balance'
 
-            if(c_type.eq.'co' .or. c_type.eq.'bo' .or.
-     1         c_type.eq.'lo' .or. c_type.eq.'fo' .or. 
-     1         c_type.eq.'wo'                                  )then
+            if(c_type(1:2) .eq.'co' .or. c_type(1:2).eq.'bo' .or.
+     1         c_type(1:2) .eq.'lo' .or. c_type(1:2).eq.'fo' .or. 
+     1         c_type(1:2) .eq.'wo'                         )then
                 c_field = 'w'
                 goto115
             endif
@@ -568,8 +568,9 @@ c       include 'satellite_dims_lvd.inc'
                 else if(k_level .gt. 0)then
                     write(6,103)
 103                 format(/
-     1            '  Field [di,sp,u,v,w,dv,vo,va,vc (barbs), ob (obs))]'     
-     1                                          ,18x,'? ',$)
+     1                       '  Field [di,sp-i,u-i,v-i,om-i,dv,vo,va,vc'      
+     1                      ,' (barbs), ob (obs))]'   
+     1                                          ,11x,'? ',$)
                     read(lun,15)c_field
                     write(6,*)' ext = ',ext
 
@@ -630,7 +631,7 @@ c       include 'satellite_dims_lvd.inc'
 
 !  ***      Display Wind Data  ******************************************************
 
-115         if(c_field .eq. 'di' .or. c_field .eq. 'sp')then
+115         if(c_field(1:2) .eq. 'di' .or. c_field(1:2) .eq. 'sp')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     if(u_2d(i,j) .eq. r_missing_data
@@ -650,7 +651,7 @@ c       include 'satellite_dims_lvd.inc'
                 enddo ! i
             endif
 
-            if(c_field .eq. 'di')then
+            if(c_field(1:2) .eq. 'di')then
                 c19_label = ' Isogons   (deg)   '
                 call mklabel33(k_mb,c19_label,c33_label)
 
@@ -658,7 +659,7 @@ c       include 'satellite_dims_lvd.inc'
      1              c33_label,i_overlay,c_display,lat,lon,jdot,       
      1              NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-            else if(c_field .eq. 'sp')then
+            else if(c_field(1:2) .eq. 'sp')then
                 c19_label = ' Isotachs (kt)     '
                 call mklabel33(k_mb,c19_label,c33_label)
 
@@ -672,11 +673,16 @@ c       include 'satellite_dims_lvd.inc'
                 call contour_settings(spds,NX_L,NY_L,clow,chigh,cint
      1                                                  ,zoom,scale)
 
-                call plot_cont(spds,scale,clow,chigh,cint,asc9_tim_3dw,
-     1               c33_label,i_overlay,c_display,lat,lon,jdot,       
-     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+!               call plot_cont(spds,scale,clow,chigh,cint,asc9_tim_3dw,
+!    1               c33_label,i_overlay,c_display,lat,lon,jdot,       
+!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-            else if(c_field .eq. 'u ')then
+                call plot_field_2d(i4time_3dw,c_field,spds,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
+
+            else if(c_field(1:1) .eq. 'u')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' U  Diff        M/S'
                 elseif(c_type .eq. 'wb')then
@@ -695,13 +701,18 @@ c       include 'satellite_dims_lvd.inc'
                 call contour_settings(u_2d,NX_L,NY_L,clow,chigh,cint
      1                                                  ,zoom,scale)
 
-                call plot_cont(u_2d,1e0,clow,chigh,cint,asc9_tim_3dw,
-     1               c33_label,i_overlay,c_display,lat,lon,jdot,
-     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+!               call plot_cont(u_2d,1e0,clow,chigh,cint,asc9_tim_3dw,
+!    1               c33_label,i_overlay,c_display,lat,lon,jdot,
+!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                call plot_field_2d(i4time_3dw,c_field,u_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
                 call move(u_2d,field_2d,NX_L,NY_L)
 
-            else if(c_field .eq. 'v ')then
+            else if(c_field .eq. 'v' .or. c_field .eq. 'vi')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' V  Diff        M/S'
                 elseif(c_type .eq. 'wb')then
@@ -721,9 +732,14 @@ c       include 'satellite_dims_lvd.inc'
      1                                                  ,zoom,scale)
 
 
-                call plot_cont(v_2d,scale,clow,chigh,cint,asc9_tim_3dw,       
-     1               c33_label,i_overlay,c_display,lat,lon,jdot,       
-     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+!               call plot_cont(v_2d,scale,clow,chigh,cint,asc9_tim_3dw,       
+!    1               c33_label,i_overlay,c_display,lat,lon,jdot,       
+!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                call plot_field_2d(i4time_3dw,c_field,v_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
                 call move(v_2d,field_2d,NX_L,NY_L)
 
@@ -772,7 +788,7 @@ c       include 'satellite_dims_lvd.inc'
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
             else if(c_field .eq. 'w' .or. c_field .eq. 'om')then ! Omega 
-                if(c_type .eq. 'co')then
+                if(c_type(1:2) .eq. 'co')then
                     write(6,*)' Reading cloud omega'
                     var_2d = 'COM'
                     ext = 'lco'
@@ -782,7 +798,9 @@ c       include 'satellite_dims_lvd.inc'
                     call mklabel33(k_mb
      1                     ,' Cloud Omega ubar/s',c33_label)       
 
-                elseif(c_type .eq. 'wo')then
+                    i4_valid = i4time_nearest
+
+                elseif(c_type(1:2) .eq. 'wo')then
                     write(6,*)' Reading lw3 omega'
                     var_2d = 'OM'
                     ext = 'lw3'
@@ -792,7 +810,9 @@ c       include 'satellite_dims_lvd.inc'
                     call mklabel33(k_mb
      1                     ,' Anlyz Omega ubar/s',c33_label)       
 
-                else if(c_type .eq. 'bo')then
+                    i4_valid = i4time_nearest
+
+                else if(c_type(1:2) .eq. 'bo')then
                     write(6,*)' Reading balanced omega'
                     var_2d = 'OM'
                     ext = 'lw3'
@@ -805,7 +825,10 @@ c       include 'satellite_dims_lvd.inc'
                     call mklabel33(k_mb
      1                     ,' Balnc Omega ubar/s',c33_label)       
 
-                else if(c_type .eq. 'lo' .or. c_type .eq. 'fo')then
+                    i4_valid = i4time_3dw
+
+                else if(c_type(1:2) .eq. 'lo' .or. 
+     1                  c_type(1:2) .eq. 'fo')then
                     call input_background_info(
      1                              ext                     ! I
      1                             ,directory               ! O
@@ -837,9 +860,18 @@ c       include 'satellite_dims_lvd.inc'
                 enddo ! i
                 enddo ! j
 
-                call plot_cont(w_2d,1e-1,0.,0.,-1.0,asc9_tim_3dw,
-     1              c33_label,i_overlay,c_display,lat,lon,jdot,       
-     1              NX_L,NY_L,r_missing_data,laps_cycle_time)
+!               call plot_cont(w_2d,1e-1,0.,0.,-1.0,asc9_tim_3dw,
+!    1              c33_label,i_overlay,c_display,lat,lon,jdot,       
+!    1              NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                scale = 1e-1
+                cint = -1.0
+                chigh = 50.
+                clow = -50.
+                call plot_field_2d(i4_valid,c_type,w_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
                 call move(w_2d,field_2d,NX_L,NY_L)
 
@@ -849,13 +881,13 @@ c       include 'satellite_dims_lvd.inc'
 
                 c19_label = ' DVRG (CPTD) 1e-5/s'
 
-                if(c_type .eq. 'wf')then
+                if(c_type(1:2) .eq. 'wf')then
                     c19_label = ' DIV  (diff) 1e-5/s'
-                elseif(c_type .eq. 'wb')then
+                elseif(c_type(1:2) .eq. 'wb')then
                     c19_label = ' DIV  (lga)  1e-5/s'
-                elseif(c_type .eq. 'wr')then
+                elseif(c_type(1:2) .eq. 'wr')then
                     c19_label = ' DIV  (fua)  1e-5/s'
-                elseif(c_type .eq. 'bw')then
+                elseif(c_type(1:2) .eq. 'bw')then
                     c19_label = ' DIV  (bal)  1e-5/s'
                 else
                     c19_label = ' DIV  (anal) 1e-5/s'
@@ -876,13 +908,13 @@ c       include 'satellite_dims_lvd.inc'
                 call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
      1                         ,.true.,r_missing_data)
 
-                if(c_type .eq. 'wf')then
+                if(c_type(1:2) .eq. 'wf')then
                     c19_label = ' VORT (diff) 1e-5/s'
-                elseif(c_type .eq. 'wb')then
+                elseif(c_type(1:2) .eq. 'wb')then
                     c19_label = ' VORT (lga)  1e-5/s'
-                elseif(c_type .eq. 'wr')then
+                elseif(c_type(1:2) .eq. 'wr')then
                     c19_label = ' VORT (fua)  1e-5/s'
-                elseif(c_type .eq. 'bw')then
+                elseif(c_type(1:2) .eq. 'bw')then
                     c19_label = ' VORT (bal)  1e-5/s'
                 else
                     c19_label = ' VORT (anal) 1e-5/s'
@@ -1161,7 +1193,7 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,c_display,lat,lon,c_file,iflag
      1                        ,NX_L,NY_L,laps_cycle_time,zoom)
 
-        elseif(c_type .eq. 'he')then
+        elseif(c_type(1:2) .eq. 'he')then
             write(6,*)
 !           write(6,*)'    Looking for 3D laps wind data:'
 !           call get_file_time(c_filespec,i4time_ref,i4time_3dw)
@@ -1188,8 +1220,8 @@ c       include 'satellite_dims_lvd.inc'
 
             c_field = 'he'
             kwind = 0
-            clow = -100.
-            chigh = +100.
+            clow = -500.
+            chigh = +500.
 
             if(abs_max .gt. 1.)then ! new way
                 scale = 1.
@@ -1202,10 +1234,16 @@ c       include 'satellite_dims_lvd.inc'
                 cint = 5.
             endif
 
-            call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_3dw
-     1                   ,c33_label
-     1                   ,i_overlay,c_display,lat,lon,jdot       
-     1                   ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_3dw
+!    1                   ,c33_label
+!    1                   ,i_overlay,c_display,lat,lon,jdot       
+!    1                   ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            scale = 1.
+            call plot_field_2d(i4time_3dw,c_type,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type .eq. 'lv'.or.c_type .eq. 'lr' )then
 
@@ -2325,10 +2363,11 @@ c
                 if(c_type(1:2) .eq. 'pa')then
                     if(accum_2d(i,j)/scale .lt. 0.005)then
                         accum_2d(i,j) = 0.0
+                    elseif(accum_2d(i,j)/scale .gt. .05 .and. 
+     1                     accum_2d(i,j)/scale .lt. 0.5 .and.
+     1                     c_type(1:3) .eq. 'pai'               )then
+                        accum_2d(i,j) = 0.5*scale
                     endif
-!                   if(accum_2d(i,j)/scale .le. 0.0001)then
-!                       accum_2d(i,j) = -1e-6
-!                   endif
                 else
                     if(accum_2d(i,j)/scale .lt. 0.05)then
                         accum_2d(i,j) = 0.0
@@ -2339,11 +2378,6 @@ c
                 endif
             enddo ! i
             enddo ! j
-
-!           call plot_cont(accum_2d,scale,
-!    1             0.,chigh,cint,asc9_tim_r,c33_label,
-!    1             i_overlay,c_display,lat,lon,jdot,
-!    1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             call plot_field_2d(i4time_accum,c_type,accum_2d,scale
      1                        ,clow,chigh,cint,c33_label
@@ -3083,11 +3117,6 @@ c
               chigh = 7200.
               cint = +400.
 
-!             call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t,
-!    1                       c33_label,i_overlay,c_display,
-!    1                       lat,lon,jdot,
-!    1                       NX_L,NY_L,r_missing_data,laps_cycle_time)
-
           elseif(c_type(1:2) .eq. 'ne')then
 !             Change flag value (for now)
               do i = 1,NX_L
@@ -3118,11 +3147,6 @@ c
               chigh = 50.  !  50.
               cint =  50.  ! -10.
 
-!             call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t    
-!    1                      ,c33_label,i_overlay,c_display
-!    1                      ,lat,lon,jdot,NX_L,NY_L,r_missing_data
-!    1                      ,laps_cycle_time)
-
           endif
 
 
@@ -3150,11 +3174,12 @@ c
 c J. Smart - 4/19/99. Updated moisture plotting. In addition, added two
 c                     more switches for lga/fua plotting.
 c
-        elseif(c_type .eq. 'lq')then
+        elseif(c_type(1:2) .eq. 'lq' .or. c_type(1:2).eq.'rb')then
 c
 c J. Smart - 4/19/99. lq is LAPS-lq3 either sh or rh
+c    "       4/25/02  rb is LAPS-BALANCE lq3  "
 c
-            print*,'You selected plotting of lq3 data '
+            print*,'You selected plotting of 3D humidity data '
 
             write(6,1513)
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
@@ -3168,67 +3193,118 @@ c
               var_2d = 'SH '
               ext = 'lq3'
 
-              call get_laps_3dgrid
-     1        (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
-     1          ,ext,var_2d,units_2d,comment_2d
-     1                                  ,field_3d,istatus) ! q_3d
-              if(istatus.ne. 1)then
-                 print*,'No plotting for the requested time period'
-              else   
+              if(c_type(1:2).eq.'rb')then
+                 call get_directory('balance',directory,lend)
+                 directory=directory(1:lend)//'lq3/'
+                 call get_2dgrid_dname(directory
+     1             ,i4time_ref,laps_cycle_time*100,i4time_heights
+     1             ,ext,var_2d,units_2d,comment_2d
+     1             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-              call mklabel33(k_mb,' LAPS Spec Hum x1e3',c33_label)
+                 call mklabel33(k_mb,' Spec Hum  (Bal) ',c33_label)
+              else
+                 call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                             ,i4time_heights
+     1                             ,ext,var_2d,units_2d,comment_2d
+     1                             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-              clow = 0.
-              chigh = +40.
-              cint = 0.2
-c             cint = -1.
-
-              call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
-
-              call plot_cont(field_3d(1,1,k_level),1e-3,clow,chigh,cint, ! q_3d
-     1             asc9_tim_t,c33_label,i_overlay,c_display
-     1             ,lat,lon,jdot,
-     1             NX_L,NY_L,r_missing_data,laps_cycle_time)
-              endif
-
-            elseif(qtype .eq. 'r')then
-
-              write(6,1616)
-1616          format(10x,'plot rh3 or rhl [3/l]? ',$)
-              read(5,*)qtype
-
-              ext = 'lh3'
-
-              if(qtype .eq. '3')then
-                 var_2d = 'RH3'
-                 write(6,*)' Reading rh3 / ',var_2d
-                 call mklabel33(k_mb,' LAPS RH     (rh3) %'
-     1                                 ,c33_label)     
-              elseif(qtype .eq. 'l')then
-                 var_2d = 'RHL'
-                 write(6,*)' Reading rhl / ',var_2d
-                 call mklabel33(k_mb,' LAPS RH     (liq) %'
-     1                                 ,c33_label)     
-              endif
-
-              call get_laps_3dgrid(i4time_ref,1000000,i4time_nearest
-     1                            ,NX_L,NY_L,NZ_L
-     1                            ,ext,var_2d,units_2d,comment_2d
-     1                            ,field_3d,istatus)
+c                call get_laps_3dgrid
+c    1        (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+c    1          ,ext,var_2d,units_2d,comment_2d
+c    1                                  ,field_3d,istatus) ! q_3d
+                 call mklabel33(k_mb,' LAPS Spec Hum x1e3',c33_label)
+              endif   
               if(istatus.ne. 1)then
                  print*,'No plotting for the requested time period'
               else
 
-              clow = 0.
-              chigh = +100.
-              cint = 10.
+                 clow = 0.
+                 chigh = +40.
+                 cint = 0.2
+c             cint = -1.
 
-              call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
+                 call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
-              call plot_cont(field_3d(1,1,k_level),1e0,clow,chigh,cint,       
-     1           asc9_tim_t,c33_label,i_overlay,
-     1           c_display,lat,lon,jdot,
-     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+                 call plot_cont(field_2d,1e-3
+     1               ,clow,chigh,cint,asc9_tim_t,c33_label
+     1               ,i_overlay,c_display,lat,lon,jdot
+     1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+              endif
+
+            elseif(qtype .eq. 'r')then
+
+              ext = 'lh3'
+              if(c_type(1:2).eq.'rb')then
+                 var_2d = 'RHL'
+                 write(6,*)' Reading rhl / ',var_2d
+                 call mklabel33(k_mb,' LAPS RH     (liq) %'
+     1                                 ,c33_label)
+                 call get_directory('balance',directory,lend)
+                 directory=directory(1:lend)//'lh3/'
+                 call get_2dgrid_dname(directory
+     1             ,i4time_ref,laps_cycle_time*100,i4time_heights
+     1             ,ext,var_2d,units_2d,comment_2d
+     1             ,NX_L,NY_L,field_2d,k_mb,istatus)
+
+
+              else
+                 write(6,1616)
+1616             format(10x,'plot rh3 or rhl [3/l]? ',$)
+                 read(5,*)qtype
+
+
+                 if(qtype .eq. '3')then
+                  var_2d = 'RH3'
+                  write(6,*)' Reading rh3 / ',var_2d
+                  call mklabel33(k_mb,' LAPS RH     (rh3) %'
+     1                                 ,c33_label)     
+                 elseif(qtype .eq. 'l')then
+                  var_2d = 'RHL'
+                  write(6,*)' Reading rhl / ',var_2d
+                  call mklabel33(k_mb,' LAPS RH     (liq) %'
+     1                                 ,c33_label)     
+                 endif
+                 call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                             ,i4time_heights
+     1                             ,ext,var_2d,units_2d,comment_2d
+     1                             ,NX_L,NY_L,field_2d,k_mb,istatus)
+
+c                call get_laps_3dgrid(i4time_ref,1000000
+c    1                ,i4time_nearest,NX_L,NY_L,NZ_L
+c    1                ,ext,var_2d,units_2d,comment_2d
+c    1                ,field_3d,istatus)
+                 if(qtype .eq. '3')then
+                    call mklabel33(k_mb,' LAPS RH     (rh3) %'
+     1                                 ,c33_label)
+                 elseif(qtype .eq. 'l')then
+                    call mklabel33(k_mb,' LAPS RH     (liq) %'
+     1                                 ,c33_label)
+                 endif
+              endif 
+              if(istatus.ne. 1)then
+                 print*,'No plotting for the requested time period'
+              else
+
+                clow = 0.
+                chigh = +100.
+                cint = 10.
+
+                call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
+
+!             call plot_cont(field_3d(1,1,k_level),1e0,clow,chigh,cint,       
+!    1           asc9_tim_t,c33_label,i_overlay,
+!    1           c_display,lat,lon,jdot,
+!    1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                scale = 1e0
+                clow = 220.
+                chigh = -40.
+                cint = 10.
+                call plot_field_2d(i4time_heights,c_type
+     1                        ,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
               endif
             endif
@@ -3798,7 +3874,7 @@ c                   cint = -1.
      1                     ,NX_L,NY_L,r_missing_data,laps_cycle_time
      1                     ,jdot)
 
-        elseif(c_type .eq. 'bs')then ! surface backgrounds
+        elseif(c_type .eq. 'bs')then ! surface backgrounds 
             write(6,711)
  711        format('   Background extension [lgb,fsf]',5x,'? ',$)
             read(lun,712)ext
@@ -3887,7 +3963,7 @@ c                   cint = -1.
      1        .or. var_2d .eq. 'MSL' .or. var_2d .eq. 'SLP')then
                 scale = 100.
 
-            elseif(var_2d .eq. 'S01'  .or. var_2d .eq. 'STO')then
+            elseif(var_2d(2:3) .eq. '01' .or. var_2d(2:3) .eq. 'TO')then       
                 scale = 1. / ((100./2.54)) ! DENOM = (IN/M)
 
             else
@@ -3902,7 +3978,7 @@ c                   cint = -1.
 
             write(6,*)' l_image = ',l_image
 
-            if(.not. l_image)then
+            if(.not. l_image)then ! Surface background contours
                 call contour_settings(field_2d,NX_L,NY_L
      1                               ,clow,chigh,cint,zoom,scale)       
 
@@ -3911,7 +3987,7 @@ c                   cint = -1.
      1                        ,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
             
-            else
+            else                  ! Surface background images
                 if(var_2d .eq. 'LLR' .or. var_2d .eq. 'LMR')then
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
      1                         ,n_image,scale) 
@@ -3924,6 +4000,27 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'SWO')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,500.
      1                         ,'linear',n_image,scale) 
+                elseif(var_2d .eq. 'PBE')then
+                    call ccpfil(field_2d,NX_L,NY_L,0.0,7200.
+     1                         ,'cpe',n_image,scale) 
+                elseif(var_2d .eq. 'NBE')then
+                    call ccpfil(field_2d,NX_L,NY_L,-500.,+50.
+     1                         ,'cpe',n_image,scale) 
+                elseif(var_2d .eq. 'THE')then
+                    call ccpfil(field_2d,NX_L,NY_L,250.,370.
+     1                         ,'hues',n_image,scale) 
+                elseif(var_2d .eq. 'RH')then
+                    call ccpfil(field_2d,NX_L,NY_L,220.,-40.
+     1                         ,'hues',n_image,scale) 
+                elseif(var_2d(2:3) .eq. '01' .or. 
+     1                 var_2d(2:3) .eq. 'TO')then
+                    if(var_2d(1:1) .eq. 'R')then
+                        chigh = +10.
+                    else
+                        chigh = +20.
+                    endif
+                    call ccpfil(field_2d,NX_L,NY_L,0.,chigh*scale
+     1                         ,'acc',n_image,scale) 
                 else
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
      1                         ,n_image,scale) 
@@ -4134,7 +4231,7 @@ c                   cint = -1.
      1                    ,lat,lon,jdot,NX_L,NY_L,r_missing_data
      1                    ,laps_cycle_time)
 
-        elseif(c_type .eq. 'te')then
+        elseif(c_type(1:2) .eq. 'te')then
             var_2d = 'THE'
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -4149,17 +4246,23 @@ c                   cint = -1.
 
             c33_label = 'LAPS Sfc Equiv Potl Temp  (Deg K)'
 
-            clow = +240.
-            chigh = +350.
+            clow = +250.
+            chigh = +370.
             cint = 2.
+            scale = 1e0
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint
-     1                    ,asc9_tim_t,c33_label,i_overlay
-     1                    ,c_display
-     1                    ,lat,lon,jdot
-     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
+!           call plot_cont(field_2d,1e-0,clow,chigh,cint
+!    1                    ,asc9_tim_t,c33_label,i_overlay
+!    1                    ,c_display
+!    1                    ,lat,lon,jdot
+!    1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type .eq. 'vo')then
             var_2d = 'VOR'
@@ -4286,7 +4389,7 @@ c                   cint = -1.
      1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'sp')then
+        elseif(c_type(1:2) .eq. 'sp')then
             ext = 'lsx'
             var_2d = 'U'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -4328,15 +4431,22 @@ c                   cint = -1.
             call contour_settings(spds,NX_L,NY_L
      1                           ,clow,chigh,cint,zoom,1.)       
 
-            call plot_cont(spds,1.,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
-     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+            scale = 1.
 
-        elseif(c_type .eq. 'u' .or. c_type .eq. 'v')then
+!           call plot_cont(spds,1.,clow,chigh,cint,
+!    1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+!    1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_pw,c_type,spds,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
+
+        elseif(c_type(1:1) .eq. 'u' .or. c_type(1:1) .eq. 'v')then
             call upcase(c_type,c_type)
 
             ext = 'lsx'
-            var_2d = c_type
+            var_2d = c_type(1:1)
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L,field_2d,0
@@ -4347,7 +4457,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Wind '//c_type//'        (kt)   '
+            c33_label = 'LAPS Sfc Wind '//c_type(1:1)//'        (kt)   '
 
             do i = 1,NX_L
             do j = 1,NY_L
@@ -4362,55 +4472,15 @@ c                   cint = -1.
             call contour_settings(field_2d,NX_L,NY_L
      1                           ,clow,chigh,cint,zoom,1.)       
 
-            call plot_cont(field_2d,1.,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
-     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,1.,clow,chigh,cint,
+!    1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+!    1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'sp')then
-            ext = 'lsx'
-            var_2d = 'U'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
-     1                          ,i4time_pw,ext,var_2d,units_2d
-     1                          ,comment_2d,NX_L,NY_L,u_2d,0,istatus)
-            var_2d = 'V'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
-     1                          ,i4time_pw,ext,var_2d,units_2d
-     1                          ,comment_2d,NX_L,NY_L,v_2d,0,istatus)       
-
-
-            IF(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Surface ',var_2d
-                goto1200
-            endif
-
-            c33_label = 'LAPS Sfc Wind Speed          (kt)'
-
-            do i = 1,NX_L
-            do j = 1,NY_L
-                    if(u_2d(i,j) .eq. r_missing_data
-     1            .or. v_2d(i,j) .eq. r_missing_data)then
-                        dir(i,j)  = r_missing_data
-                        spds(i,j) = r_missing_data
-                    else
-                        call uvgrid_to_disptrue(u_2d(i,j),
-     1                                  v_2d(i,j),
-     1                                  dir(i,j),
-     1                                  spds(i,j),
-     1                                  lat(i,j),
-     1                                  lon(i,j)     )
-                        spds(i,j) = spds(i,j) / mspkt
-                    endif
-            enddo ! j
-            enddo ! i
-
-            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
-
-            call contour_settings(spds,NX_L,NY_L
-     1                           ,clow,chigh,cint,zoom,1.)       
-
-            call plot_cont(spds,1.,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
-     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+            scale = 1.
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type .eq. 'cs')then
             var_2d = 'CSS'
@@ -5711,10 +5781,12 @@ c    1,istatus)
 !       call pwrity(cpux(ix),cpux(iy),c33_label,33,jsize_b,0,0)
         CALL PCHIQU (cpux(ix),cpux(iy),c33_label,rsize,0,-1.0)
 
-        ix = 705
+!       ix = 705
+        ix = 635
         iy = y_1 * 1024
 !       call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,jsize_b,0,0)
-        CALL PCHIQU (cpux(ix),cpux(iy),asc_tim_24(1:17),rsize,0,-1.0)
+        CALL PCHIQU (cpux(ix),cpux(iy),'VALID '//asc_tim_24(1:17)
+     1                                ,rsize,0,-1.0)
 
 
         return
@@ -5763,33 +5835,18 @@ c    1,istatus)
         if(l_parse(ext,'lga') .or. l_parse(ext,'lgb'))go to 900 ! use LGA/LGB
 
 !       Get fdda_model_source from static file
-        call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
- 
+!       call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
+
+!       call get_file_names(directory,n_fdda_models,c_fdda_mdl_src
+!    1                                             ,maxbgmodels,istatus)       
+
+        n_fdda_models = 2
+        c_fdda_mdl_src(1) = 'mm5'
+        c_fdda_mdl_src(2) = 'mm5hot'
+
         call s_len(directory,len_dir)
         cansw='n'
         l=1
-
-!       do while((cansw.eq.'n'.or.cansw.eq.'N').and.l.le.n_fdda_models)
-        do while(.false.)
-           if(l.ne.n_fdda_models)then
-              write(6,108)c_fdda_mdl_src(l)
-108           format(/'  Plot field for FDDA source -> '
-     1               ,a9,'[y/n]',25x,'? ',$)
-              read(5,*)cansw
-              if(cansw.eq.'y'.or.cansw.eq.'Y')then
-                 call s_len(c_fdda_mdl_src(l),lfdda)
-                 cmds=c_fdda_mdl_src(l)(1:lfdda)//'/'
-                 DIRECTORY=directory(1:len_dir)//cmds
-              endif
-              l=l+1
-           else
-              write(6,109)c_fdda_mdl_src(l)
-109           format(/'  Plotting field for FDDA source -> ',a9)
-              call s_len(c_fdda_mdl_src(l),lfdda)
-              cmds=c_fdda_mdl_src(l)(1:lfdda)//'/'
-              cansw='y'
-           endif
-        enddo
 
         if(n_fdda_models.eq.0)then
 !          print*,'fdda is not turned on in static file'
@@ -5920,12 +5977,13 @@ c    1,istatus)
         end
 
 
-        subroutine plot_field_2d(i4time,c_type,field_2d,scale
+        subroutine plot_field_2d(i4time,c_type_in,field_2d,scale
      1                        ,clow_in,chigh_in,cint_in
      1                        ,c33_label,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data,colortable)
 
-        character*(*) c_type, c33_label, c_display, colortable
+        character*(*) c_type_in, c33_label, c_display, colortable
+        character*10 c_type
         character*9 asc9_tim_t
 
         real*4 field_2d(NX_L,NY_L)
@@ -5935,6 +5993,8 @@ c    1,istatus)
 
         common /image/ n_image
         common /zoom/  zoom
+
+        c_type = c_type_in
 
         call make_fnam_lp(i4time,asc9_tim_t,istatus)
 
@@ -5947,14 +6007,20 @@ c    1,istatus)
         endif
 
         if(cint_in .lt. 0.)then
-            clow_img = abs(cint_in)
+!           clow_img = abs(cint_in)
+            clow_img = clow_in
+            chigh_img = chigh_in
         else
             clow_img = clow_in
+            chigh_img = chigh_in
         endif
 
         call s_len(c_type,len_type)
 
+        call downcase(c_type,c_type)
+
         if(c_type(len_type:len_type) .ne. 'i' .or. c_type .eq. 'hi')then       
+            write(6,*)' plot_field_2d - contour plot ',c_type
             if(cint_in .eq. 0.)then
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
      1                                                  ,zoom,scale)
@@ -5968,8 +6034,10 @@ c    1,istatus)
      1                        ,r_missing_data,laps_cycle_time)
 
         else ! image plot
-            call ccpfil(field_2d,NX_L,NY_L,clow_img*scale,chigh_in*scale       
-     1                     ,colortable,n_image,scale)    
+            write(6,*)' plot_field_2d - image plot',c_type
+            call ccpfil(field_2d,NX_L,NY_L
+     1                 ,clow_img*scale,chigh_img*scale      
+     1                 ,colortable,n_image,scale)    
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call setusv_dum(2hIN,7)
             call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
