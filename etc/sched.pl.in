@@ -89,6 +89,8 @@ if($opt_s){ # "surface only"
 		  lsm5.exe qbalpe.exe lapsprep.exe);
 }
 
+my @WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
+
 my $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
 
@@ -166,6 +168,7 @@ my($exenext);
 my($execount);
 my($scriptcount);
 my($scriptnext);
+my($wgi_script);
 my($command);
 my($nodes_last);
 my($nodes_current);
@@ -222,7 +225,25 @@ foreach $exe (@LAPS_EXE){
     $t=gmtime(); 
     my $log = $exe;
     $log =~ s/\..*$/\.log\.$hhmm/;
-    if($opt_q){
+
+    if(! $opt_q){ # Normal run of an executable
+        if($exe eq "qbalpe.exe"){
+            foreach $wgi_script (@WHAT_GOT_IN){
+                print $t." Running what-got-in script $wgi_script.pl\n";
+                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script.wgi 2>&1";
+                &forksub($sys,$lockfile);
+            }
+        }
+
+        if(-x  "$LAPSROOT/bin/$exe"){
+            print $t." Running $exe\n";
+            my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
+            &forksub($sys,$lockfile);
+        }else{
+	    print $t."WARNING: $exe not found\n";
+        }
+
+    }else{ # -q option
 #       Set up QSUB so that each process (one or more executables in each) submits the next qsub process at the end
         $execount = $execount + 1;
         $exenext = $execount + 1;
@@ -281,6 +302,12 @@ foreach $exe (@LAPS_EXE){
         print " Adding to $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable #/nodes $execount $nodes_current $exe\n";
         print TFILE "  \n";
 
+        if($exe eq "qbalpe.exe"){ # Add perl commands to run what-got-in scripts into TFILE
+            foreach $wgi_script (@WHAT_GOT_IN){
+                print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script.wgi 2>&1\n";
+            }
+        }
+
         if($nodes_current > 1){
             print TFILE "$sms_path/bin/smsRun $nodes_current $LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
@@ -290,7 +317,7 @@ foreach $exe (@LAPS_EXE){
         if($execount == $nexe){ # Last on the list
 
             if($opt_w){ # Bigfile option within qsub environment
-                print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
+                print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
             }
 
             print TFILE "  \n";
@@ -308,16 +335,7 @@ foreach $exe (@LAPS_EXE){
 
         $nodes_last = $nodes_current;
 
-    }else{ # no -q option
-        if(-x  "$LAPSROOT/bin/$exe"){
-            print $t." Running $exe\n";
-            my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
-            &forksub($sys,$lockfile);
-        }else{
-	    print $t."WARNING: $exe not found\n";
-        }
-
-    }
+    } # if $opt_q
 
     my $cur_time = time();
     if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)+$extend_time*3600){
