@@ -57,8 +57,8 @@ cdoc  If 'string' is 'none', then do just the QC without conversion
               array_out(i) = k_to_c(array_in(i))
           elseif(string .eq. 'pa_to_mb')then
               array_out(i) = array_in(i) / 100.
-          elseif(string .eq. 'reverse')then
-              array_out(i) = array_in(n+1-i)
+!         elseif(string .eq. 'reverse')then
+!             array_out(i) = array_in(n+1-i)
           elseif(string .eq. 'none')then
               array_out(i) = array_in(i)
           elseif(string .ne. 'reverse')then
