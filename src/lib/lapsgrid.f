@@ -364,7 +364,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         ext = grid_fnam
         call get_directory(ext,directory,len_dir)
 
-        tempchar = directory(1:len_dir)//grid_fnam//'.parms'
+        tempchar = directory(1:len_dir)//'/'//grid_fnam//'.parms'
 
         open(1,file=tempchar,status='old',err=900)
 
@@ -619,7 +619,6 @@ c        end
       include 'lapsparms.cmn' ! c80_description
 
       character*80 c80_description_ret
-
 !     This routine accesses the c80_description variable from the
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
@@ -959,4 +958,25 @@ c        end
 
       istatus = 1
       return
+      end
+      subroutine get_background_info(len,bgpaths,bgmodels)
+      integer maxbgmodels,len
+      parameter (maxbgmodels=4)
+      character*150 nest7grid
+      character*150 bgpaths(maxbgmodels)
+      integer bgmodels(maxbgmodels), len_dir
+      namelist /background_nl/bgpaths,bgmodels
+
+      call get_directory('nest7grid',nest7grid,len_dir)
+
+      nest7grid = nest7grid(1:len_dir)//'/nest7grid.parms'
+
+      open(1,file=nest7grid,status='old',err=900)
+      read(1,background_nl,err=901)
+      close(1)
+      return
+ 900  print*,'error opening file ',nest7grid
+      stop
+ 901  print*,'error reading background_nl in ',nest7grid
+      stop
       end
