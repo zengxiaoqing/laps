@@ -165,12 +165,12 @@ if( $CONFIG_DOMAIN eq "true" ) {
       }
 
       if( !-e $LAPS_DATA_ROOT ){
-         mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";}
-
+         mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";
+      }
       print "Generate lapsdataroot directory structure\n";
       &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
   }else{
-      print "Script will not remove LAPS_DATA_ROOT when all-roots are equal and -c = t\n";
+      print "Script will not remove LAPS_DATA_ROOT when all-roots are equal with -c \n";
       print "Reconsider your command line inputs\n";
       exit;}
 
@@ -184,6 +184,10 @@ if( $CONFIG_DOMAIN eq "true" ) {
            mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
         }else{
            print "Only save lapsprd and log subdirectories\n";
+           if(-e "$LAPS_DATA_ROOT\_save"){
+              print "Error: $LAPS_DATA_ROOT\_save already exists.\n";
+              exit;
+           }
            system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
            rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
            mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
