@@ -92,6 +92,12 @@ c       unable to find .snd data for the current time.
 c     include 'lapsparms.for'
 c     include 'parmtrs.inc'
 
+c     parameterize number of levels and soundings allowed
+
+      integer snd_levels,snd_total
+      parameter (snd_levels = 300)
+      parameter (snd_total = 1000)
+
 
 c     input parameters
 
@@ -101,10 +107,10 @@ c     input parameters
 
 c  dynamic dependent parameters                     
 
-      real  q_r(kk,100)
-      real diff(kk,100)
-      real scale(kk,100)
-      real weight (ii,jj,100)
+      real  q_r(kk,snd_total)
+      real diff(kk,snd_total)
+      real scale(kk,snd_total)
+      real weight (ii,jj,snd_total)
       integer mask(ii,jj)
 
 c  normal internal parameters
@@ -117,11 +123,12 @@ c  normal internal parameters
       character*9 filename
       character*200 fname
       integer idx, len
-      real lat_r(100), lon_r(100)
-      integer  i_r(100), j_r(100)
-      integer lev_r(100), dummy, isound
+      real lat_r(snd_total), lon_r(snd_total)
+      integer  i_r(snd_total), j_r(snd_total)
+      integer lev_r(snd_total), dummy, isound
       real rdummy
-      real p_r(70,100), td_r(70,100), t_r(70,100)
+      real p_r(snd_levels,snd_total), td_r(snd_levels,snd_total), 
+     1     t_r(snd_levels,snd_total)
       real temt, temtd, ssh2
       real r, rmin
       real d2r,pi
