@@ -38,6 +38,11 @@ if($realclean eq "FULLPURGE"){
     $clean_dirs{lcv} = 2.1;
     $clean_dirs{l1s} = 2.1;
     $clean_dirs{lm2} = 1.5;
+    $clean_dirs{v01} = 0.125;
+    $clean_dirs{v02} = 0.125;
+    $clean_dirs{v03} = 0.125;
+    $clean_dirs{v04} = 0.125;
+    $clean_dirs{dprep} = 0.25;
     $clean_dirs{'../log'} = 30.0;
 #
 # Don't ever completely empty the directories 
