@@ -812,8 +812,10 @@ c
       xmax=r*((se(2)-drlonc)*dg2rd)*dcosd(drlatc)
       ymax=r*nw(1)*dg2rd
 
-      if(xmax.eq.xmin)xmax=abs(xmin)
-      if(ymax.eq.ymin)ymax=abs(ymin)
+      diff=xmax-xmin
+      if(diff.lt.0.000001)then
+         xmax=dabs(xmin)
+      endif
 
       dx=(xmax-xmin)/(nx-1)
       dy=(ymax-ymin)/(ny-1)
@@ -853,8 +855,10 @@ c               rlatc= central parallel
       xmax=r*((se(2)-drlonc)*dg2rd)*dcosd(drlatc)
       ymax=r*nw(1)*dg2rd
 
-      if(xmax.eq.xmin)xmax=abs(xmin)
-      if(ymax.eq.ymin)ymax=abs(ymin)
+      diff=xmax-xmin
+      if(diff.lt.0.000001)then
+         xmax=dabs(xmin)
+      endif
 
       dx=(xmax-xmin)/(nx-1)
       dy=(ymax-ymin)/(ny-1)
@@ -1032,20 +1036,21 @@ c
       integer i,j,k
       integer istatus
 c
-      character*(*) cmodel
-      character*2 gproj
+      character*132 cmodel
+      character*2   gproj
 
       integer lenc
 
       integer nxc,nyc,nzc
       real sw(2),ne(2),rota,lat0,lon0
+      real nw(2),se(2),rlatc,rlonc
       real tolx,toly
       real grxdifsum1,grxdifsum2
       real grydifsum1,grydifsum2
       real r_missing_data
 c     parameter (tol=0.10)
       common /psgrid/nxc,nyc,nzc,lat0,lon0,rota,sw,ne
-c_______________________________________________________________________________
+c________________________________________________________________________________
 c
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus.ne. 1)then
@@ -1087,13 +1092,10 @@ c set tolerance based upon the grid spacing as a function of grx/gry
          grydifsum2=grydifsum2+(gry(i,ny_laps-1)-gry(i,ny_laps))
       enddo
 
-      tolx=(abs(grxdifsum1)/ny_laps
-     .+abs(grxdifsum2)/ny_laps)*0.5
-      toly=(abs(grydifsum1)/nx_laps
-     .+abs(grydifsum2)/nx_laps)*0.5
+      tolx=(abs(grxdifsum1)/ny_laps+abs(grxdifsum2)/ny_laps)*0.5
+      toly=(abs(grydifsum1)/nx_laps+abs(grydifsum2)/nx_laps)*0.5
 
       print*,'horiz mapping tolerance x/y: ',tolx,toly
-
 c
 c *** First, check for wrapping if a global data set.
 c
