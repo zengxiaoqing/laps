@@ -30,44 +30,15 @@ cdis
 cdis 
 cdis 
 
-        subroutine put_temp_anal(i4time_needed,ni,nj,nk  ! Input
-     1          ,ni_maps,nj_maps                 ! Input  (no longer needed)
-     1          ,dum1_3d                         ! Dummy
-     1          ,dum2_3d                         ! Dummy
-     1          ,field_3d_maps_2                 ! Dummy  (no longer needed)
-     1          ,local_nx_m,local_ny_m,iden_ratio,bias_3d ! Dummy
-     1          ,array_density_box,n_density_box ! Dummy
-     1          ,r0_array_in,r0_array_out        ! Dummy
-     1          ,dum1_array,dum2_array           ! Dummy
-     1          ,dum3_array,dum4_array           ! Dummy
-     1          ,heights_3d                      ! Output
-     1          ,output_4d                       ! Dummy
-     1          ,lat,lon,topo                    ! Input
-     1          ,temp_sfc_k                      ! Input
-     1          ,pres_sfc_pa                     ! Input
-     1          ,iflag_write                     ! Input
-     1          ,ilaps_cycle_time                ! Input
-     1          ,grid_spacing_m                  ! Input
-     1          ,sh_3d                           ! Local
-     1          ,temp_3d,istatus)                ! Output
-
-        entry put_temp_anal_97(i4time_needed
+        subroutine put_temp_anal(i4time_needed
      1          ,ni,nj,nk                        ! Input
-     1          ,dum1_3d                         ! Dummy
-     1          ,dum2_3d                         ! Dummy
-     1          ,bias_3d                         ! Dummy
-     1          ,r0_array_in,r0_array_out        ! Dummy
-     1          ,dum1_array,dum2_array           ! Dummy
-     1          ,dum3_array,dum4_array           ! Dummy
      1          ,heights_3d                      ! Output
-     1          ,output_4d                       ! Dummy
      1          ,lat,lon,topo                    ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
      1          ,iflag_write                     ! Input
      1          ,ilaps_cycle_time                ! Input
      1          ,grid_spacing_m                  ! Input
-     1          ,sh_3d                           ! Local
      1          ,temp_3d,istatus)                ! Output
 
 !              1991     Steve Albers    Original Version
@@ -176,8 +147,7 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
 
         if(istatus .ne. 1)then
             write(6,*)
-     1     ' Returning from PUT_TEMP_ANAL without writing LT1 (or equiva
-     1lent) file'
+     1     ' Returning from PUT_TEMP_ANAL without writing LT1 file'
             return
         endif
 
@@ -191,8 +161,7 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
 
         if(istatus .ne. 1)then
             write(6,*)
-     1     ' Returning from PUT_TEMP_ANAL without writing LT1 (or equiva
-     1lent) file'
+     1     ' Returning from PUT_TEMP_ANAL without writing LT1 file'
             return
         endif
 
@@ -543,6 +512,23 @@ c       1                               j_diff_thmax,k_diff_thmax
         enddo ! k
 
         I4_elapsed = ishow_timer()
+
+!       QC check the heights against the topo field
+        do i = 1,ni
+        do j = 1,nj
+            if(heights_3d(i,j,1) .gt. topo(i,j))then
+                write(6,*)' QC check failed, lowest height level '
+     1                   ,' extends above terrain field '  
+                write(6,*)'i,j,height,topo'
+     1                    ,i,j,heights_3d(i,j,1),topo(i,j)
+                write(6,*)
+     1          ' Returning from PUT_TEMP_ANAL without writing LT1 file'       
+                istatus = 0
+                return
+            endif
+        enddo ! j
+        enddo ! i
+        write(6,*)' Passed QC check of heights against the topo field'
 
         if(iflag_write .eq. 1)then
             call write_temp_anal(i4time_needed,ni,nj,nk,temp_3d

@@ -84,15 +84,10 @@ cdis
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
-        real*4 sh_3d(NX_L,NY_L,NZ_L)
 
 !  ************ DECLARATIONS **************************************************
 
         real*4 output_4d(NX_L,NY_L,NZ_L,2)
-
-        real*4 bias_3d(NX_L,NY_L,NZ_L)
-        real*4    r0_array_in(NX_L,NY_L)
-        real*4    r0_array_out(NX_L,NY_L)
 
         integer*4 iflag_write
 
@@ -111,15 +106,6 @@ cdis
         character*10  units_2d
         character*125 comment_2d
         character*3 var_2d
-
-!       Dummy arrays 
-        real*4 dum1_3d(NX_L,NY_L,NZ_L)
-        real*4 dum2_3d(NX_L,NY_L,NZ_L)
-
-        real*4 dum1_array(NX_L,NY_L)
-        real*4 dum2_array(NX_L,NY_L)
-        real*4 dum3_array(NX_L,NY_L)
-        real*4 dum4_array(NX_L,NY_L)
 
         character*9 asc9_time
         character*1 cmode
@@ -171,22 +157,15 @@ c read in LAPS_DOMAIN
 
         iflag_write = 1 ! Flag on whether to write out LT1 (0 or 1)
 
-        call put_temp_anal_97(i4time_needed
+        call put_temp_anal(i4time_needed
      1          ,NX_L,NY_L,NZ_L                  ! Input
-     1          ,dum1_3d,dum2_3d                 ! Dummy
-     1          ,bias_3d                         ! Dummy
-     1          ,r0_array_in,r0_array_out        ! Dummy
-     1          ,dum1_array,dum2_array           ! Dummy
-     1          ,dum3_array,dum4_array           ! Dummy
      1          ,heights_3d                      ! Output
-     1          ,output_4d                       ! Dummy
      1          ,lat,lon,topo                    ! Input
      1          ,temp_sfc_k                      ! Input/Output
      1          ,pres_sfc_pa                     ! Input
      1          ,iflag_write                     ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,grid_spacing_m                  ! Input
-     1          ,sh_3d                           ! Local
      1          ,temp_3d,istatus)                ! Output
 
 
