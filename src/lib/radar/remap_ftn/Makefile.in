@@ -74,28 +74,19 @@ distclean: clean
 	rm -f Makefile
 
 
-fill_common.f:  $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
+fill_common.f:  $(LAPSROOT)/src/include/remap_dims.inc $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
 
-get_azimuths_deg.f:  $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
+get_azimuths_deg.f:  $(LAPSROOT)/src/include/remap_dims.inc $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
 
-get_scandata.f:  $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
+get_scandata.f:  $(LAPSROOT)/src/include/remap_dims.inc $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
 
-ld_ray.f:  $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
+ld_ray.f:  $(LAPSROOT)/src/include/remap_dims.inc $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
 
-readdata.f:  $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
+lut_gen.f:  $(LAPSROOT)/src/include/remap_constants.dat $(LAPSROOT)/src/include/remap.cmn@F77INC@
 
-lut_gen.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+readdata.f:  $(LAPSROOT)/src/include/remap_constants.dat $(LAPSROOT)/src/include/remap_dims.inc $(LAPSROOT)/src/include/remap_buffer.cmn@F77INC@
 
-remap_process.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+remap_process.f:  $(LAPSROOT)/src/include/remap_constants.dat $(LAPSROOT)/src/include/remap.cmn $(LAPSROOT)/src/include/remap.inc@F77INC@
 
-lut_gen.f:  $(LAPSROOT)/src/include/remap_constants.dat@F77INC@
-
-readdata.f:  $(LAPSROOT)/src/include/remap_constants.dat@F77INC@
-
-remap_process.f:  $(LAPSROOT)/src/include/remap_constants.dat@F77INC@
-
-lut_gen.f:  $(LAPSROOT)/src/include/remap.cmn@F77INC@
-
-remap_process.f:  $(LAPSROOT)/src/include/remap.cmn@F77INC@
 
 
