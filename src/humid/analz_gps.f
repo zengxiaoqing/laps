@@ -85,10 +85,12 @@ c     foreach n element of wt, determine its location in ii,jj space
       ncount = 0
 
       do n = 1,nn
-         write(6,*) 'GPSTEMP latloncheck', lat(n),lon(n)
-         if (abs(lat(n)) <= 90.000 .or. abs(lon(n)) <= 180.0 ) then
+c         write(6,*) 'GPSTEMP latloncheck', lat(n),lon(n)
+         if (abs(lat(n)) <= 90.000) then
+          if(abs(lon(n)) <= 180.0 ) then
             call  latlon_to_rlapsgrid(lat(n),lon(n),glat,glon,ii,jj,
      1        ri,rj, istatus)
+          endif
          else
             istatus = 0 ! floating point error check for Jet
          endif
