@@ -48,15 +48,18 @@ echo "Running $EXE_DIR/lapsplot.exe"; date -u
 
 head -2 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c2-10     > $SCRATCH_DIR/lapsplot.$prod.tmp
 
-if test -r $SCRATCH_DIR/lapsplot.$prod; then
+if test -r $LAPS_DATA_ROOT/static/www/lapsplot.$prod; then
+    echo "Input to lapsplot.exe (dataroot) = $LAPS_DATA_ROOT/static/www/lapsplot.$prod"
+    cat     $LAPS_DATA_ROOT/static/www/lapsplot.$prod              >> $SCRATCH_DIR/lapsplot.$prod.tmp
+elif test -r $SCRATCH_DIR/lapsplot.$prod; then
     echo "Input to lapsplot.exe (local) = $SCRATCH_DIR/lapsplot.$prod"
     cat     $SCRATCH_DIR/lapsplot.$prod                            >> $SCRATCH_DIR/lapsplot.$prod.tmp
 else
-    echo "Input to lapsplot.exe (non-local) = $LAPS_ETC/lapsplot.$prod"
+    echo "Input to lapsplot.exe (non-local www) = $LAPS_ETC/lapsplot.$prod"
     cat     $LAPS_ETC/lapsplot.$prod                               >> $SCRATCH_DIR/lapsplot.$prod.tmp
 fi
 
-$EXE_DIR/lapsplot.exe                                               < $SCRATCH_DIR/lapsplot.$prod.tmp
+$EXE_DIR/lapsplot.exe                                           < $SCRATCH_DIR/lapsplot.$prod.tmp
 
 ls -l gmeta
 
