@@ -134,7 +134,7 @@ c
      &           alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
      &           store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
 
-100     write(6,*)'     n_obs_b',n_obs_b
+100     write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
 
         if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
             write(6,*)' Too many stations, or no file present'
@@ -149,7 +149,7 @@ c
         zoom_eff = zoom / 3.0
 
 !       At zoom=1-3, make the obs plot larger if there are few obs
-        if(zoom_eff .lt. 1.0 .and. n_obs_b .gt. 30)then
+        if(zoom_eff .lt. 1.0 .and. n_obs_g .gt. 30)then
             zoom_eff = 1.0
         endif
 
@@ -379,7 +379,7 @@ c
                 call plot_mesoob(w1,w2,w3
      1                 ,temp,dewpoint
      1                 ,pressure,xsta,ysta
-     1                 ,lat,lon,ni,nj,relsize,zoom,n_obs_b,11,du2
+     1                 ,lat,lon,ni,nj,relsize,zoom,n_obs_g,11,du2
      1                 ,wx_s(i)
      1                 ,iflag,iflag_cv)
 
