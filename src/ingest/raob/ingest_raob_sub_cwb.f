@@ -1,6 +1,6 @@
       subroutine get_raob_data_cwb ( i4time_sys, ilaps_cycle_time,
      ~             nx_l, ny_l, i4time_raob_earliest, i4time_raob_latest,
-     ~             a9time, filename, istatus )
+     ~             a9_time, filename, istatus )
 
       integer   loopNum, levelNum  
       parameter ( loopNum=20, levelNum=100 )
@@ -8,7 +8,7 @@
       character*(*)  filename
       character*3    reportFlag
       character*2    yy, mo, dd, hh, mn, flag
-      character*9    a9time, a9timeDummy, a10_to_a9, wrout(loopNum)
+      character*9    a9time(loopNum), a9timeDummy, a10_to_a9, a9_time
       character*10   time
 
       real  lat_a(nx_l,ny_l), lon_a(nx_l,ny_l), topo_a(nx_l,ny_l)
@@ -43,7 +43,7 @@
       istatus= 1
 
       do i= 1,loopNum
-         read (1,5,end=99,err=19) reportFlag, wmoIdDummy,elevationDummy,      
+         read (1,5,end=99,err=29) reportFlag, wmoIdDummy,elevationDummy,      
      ~                            latitudeDummy, longitudeDummy,
      ~                            iy, m1, id, ih, m2, logicRecNum
 5        format ( a3, i5, f4.0, 2f5.2, 2x, 5i2, i3 )
@@ -52,9 +52,13 @@
             write (6,*) 
      ~          ' Error reading sounding data of identification -reject'
 	    write (6,*) reportFlag, wmoIdDummy
-            go to 40
-         elseif ( wmoIdDummy .eq. dupliStation )  then
-	    go to 40
+         endif
+
+         if ( reportFlag.ne.'*11' .or. wmoIdDummy.eq.dupliStation ) then
+            jumpNum= logicRecNum -1
+            do 11 k= 1,jumpNum
+11             read (1,*) 
+	    go to 51
          endif
 
 c               ------ creat a9time in yydddhhmm format ------
@@ -84,8 +88,8 @@ c               ------ creat a9time in yydddhhmm format ------
                endif
             endif
 
-         else         ! 00:-9 23:-9 12:-9 11:-9 -> l2:00 as the time in the air
-            m2= 0
+         else         ! 00:-9 23:-9 -> 00:00 as the time in the air
+            m2= 0     ! 12:-9 11:-9 -> 12:00 
 	    if ( ih .eq. 11  .or.  ih .eq. 23 )  ih= ih +1
 
             if ( ih .ge. 24 )  then
@@ -129,19 +133,19 @@ c          ----------    test if raob is within time window    ----------
 	       elevation(inNum)= elevationDummy
 	       latitude(inNum)= latitudeDummy
 	       longitude(inNum)= longitudeDummy
-	       a9time= a9timeDummy
-               wrout(inNum)= a9time
+	       a9time(inNum)= a9timeDummy
 
                layerNum(inNum)= logicRecNum -2
                do j= 1,layerNum(inNum)
-                  read (1,15,err=9,end=99) pressure(inNum,j),
+                  read (1,15,err=19,end=99) pressure(inNum,j),
      ~              height(inNum,j), heightQua(inNum,j),      
      ~              temperature(inNum,j), temperatureQua(inNum,j),        
      ~              tempDewDiff(inNum,j), dewpointQua(inNum,j),
      ~              windDir(inNum,j),windSpeed(inNum,j),windQua(inNum,j)      
-	          go to 10
+15                format ( 2x, f5.1, f5.0, i2, 2(f4.1,i2), 2f3.0, i2 )
+	          go to 20
 
-9                 write (6,*)' Error reading variables of sounding data'
+19                write (6,*)' Error reading variables of sounding data'
                   do k= 1,j
                      write (6,*) pressure(inNum,k),
      ~                    height(inNum,k), heightQua(inNum,k),       
@@ -150,8 +154,7 @@ c          ----------    test if raob is within time window    ----------
      ~                    windDir(inNum,k), windSpeed(inNum,k),
      ~                    windQua(inNum,k)
                   enddo
-10             enddo
-15             format ( 2x, f5.1, f5.0, i2, 2(f4.1,i2), 2f3.0, i2 )
+20             enddo
 
                read (1,*)
     	       goto 50
@@ -166,7 +169,7 @@ c          ----------    test if raob is within time window    ----------
 	    endif
          endif
 
-19       write (6,*) ' Error reading sounding codes of stations -reject'
+29       write (6,*) ' Error reading sounding codes of stations -reject'
 	 write (6,*) reportFlag, wmoIdDummy,
      ~               elevationDummy, latitudeDummy, longitudeDummy,
      ~               iy, m1, id, ih, m2, logicRecNum
@@ -180,7 +183,7 @@ c          ----------    test if raob is within time window    ----------
 41          read (1,*) 
 
 50       recNum= recNum +1
-      enddo
+51    enddo
 
 c      ----------     examing data quality and changing units     ---------    
 c      when elevation is missing, return -999. without change for the sake of 
@@ -206,7 +209,7 @@ c      format f15.0 in snd files
 
       do 900 i= 1,inNum
 	 write(11,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
-     ~                 elevation(i), '     ', wrout(i), 'RAOB'
+     ~                 elevation(i), '     ', a9time(i), 'RAOB'
 895      format (i12, i12, f11.4, f15.4, f15.0, 1x, a5, 3x, a9, 1x, a8)
 
          do 900 j= 1,layerNum(i)
