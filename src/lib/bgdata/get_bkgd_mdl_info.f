@@ -128,11 +128,11 @@ c     USE laps_static
 
 
       print*,'Here: get_bkgd_mdl_info'
+      call s_len(cmodel,nclen)
       print*,'cmodel = ',cmodel(1:nclen)
       print*,'-----------------------'
       istatus=1
       call s_len(fullname,lenfn)
-      call s_len(cmodel,nclen)
 
       if(bgmodel.eq.0)then 
        if(cmodel(1:nclen).eq.'MODEL_FUA')then
