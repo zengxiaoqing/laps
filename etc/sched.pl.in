@@ -37,7 +37,8 @@
 #
 # -Q  P                Use QSUB_WAIT (with SGE on jet/ijet) where P is the project name
 #
-# -M                   Runs just the executables for the Mesowave analysis
+# -M                   Runs just the executables for the Mesowave analysis where M is
+#                      the name of the Mesowave executable
 #
 # -K                   Runs just the executables for the Kalman filter
 #
@@ -72,7 +73,7 @@ use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:Q:K:M:n:A:wslvp:');
+getopts('d:c:a:rm:t:e:q:Q:KM:n:A:wslvp:');
 
 my $initial_time = time();
 
@@ -106,7 +107,7 @@ if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
 
 }elsif(defined $opt_M){ # Mesowave
-    @LAPS_EXE = qw(obs_driver.x sfc_qc.exe mesowave.x);
+    @LAPS_EXE = ("obs_driver\.x", "sfc_qc\.exe", $opt_M);
 
 }elsif($c8_project eq "AIRDROP"){
     @LAPS_EXE = qw(lga.exe
