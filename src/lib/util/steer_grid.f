@@ -130,8 +130,9 @@ c    storm_v
         real*4 steer_u(ni,nj),steer_v(ni,nj),umean(ni,nj),vmean(ni,nj),
      1       storm_u(max_storms),storm_v(max_storms)
 
-        integer*4 i4time_latest,istatus,istorm(max_storms),jstorm(max_st
-     1orms)
+c       integer*4 i4time_latest,istatus,istorm(max_storms),jstorm(max_st
+c    1orms)
+        integer*4 istorm(max_storms),jstorm(max_storms)
 
         real*4 wt_ob(max_storms)
 
