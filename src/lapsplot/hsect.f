@@ -6444,8 +6444,9 @@ c             if(cint.eq.0.0)cint=0.1
      1                             ,i4_valid                ! O
      1                             ,istatus)                ! O
 
-        integer       maxbgmodels
+        integer       maxbgmodels, maxfiles
         parameter     (maxbgmodels=10)
+        parameter     (maxfiles=3000)
 
         integer       n_fdda_models
         integer       l,len_dir,lfdda
@@ -6456,7 +6457,7 @@ c             if(cint.eq.0.0)cint=0.1
         character*20  c_model
         character*10  cmds
         character*1   cansw
-        character*150 c_filenames(1000)
+        character*150 c_filenames(maxfiles)
 
         character*4 fcst_hhmm
         character*9 asc9_tim_t, a9time
@@ -6520,7 +6521,7 @@ c             if(cint.eq.0.0)cint=0.1
  900    continue
 
         call get_file_names(directory,nfiles,c_filenames
-     1                     ,1000,istatus)
+     1                     ,maxfiles,istatus)
 
         write(6,*)' Available files in ',directory(1:len_dir)
         if(nfiles .ge. 1)then
