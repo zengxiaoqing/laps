@@ -79,6 +79,9 @@ char *c_time;
 
     timePtr = gmtime(&valTime);
 
+    timePtr->tm_year = timePtr->tm_year >= 100 ? timePtr->tm_year - 100 
+                       : timePtr->tm_year;
+
     sprintf(c_time,"%02d%03d%02d%02d", timePtr->tm_year,
 	timePtr->tm_yday+1,
         timePtr->tm_hour, timePtr->tm_min);
