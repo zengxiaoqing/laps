@@ -43,7 +43,6 @@ EXEDIRS = src/accum \
           src/ingest/radar/remap \
           src/ingest/radar/vad \
           src/ingest/radar/wsiremap/ln3 \
-          src/ingest/radar/wsiremap/ln3/boundary \
           src/ingest/radar/wsiremap/vrc \
           src/ingest/radar/wsiremap/vrc/table \
           src/ingest/raob \
