@@ -242,6 +242,7 @@ cdis
 
         character*255 c_filespec
         character var*3,comment*125,directory*150,ext*31,units*10
+        character*125 comment_tb8,comment_t39,comment_sst
         character*3 exts(20)
         character*3 var_a(MAX_FIELDS)
         character*125 comment_a(MAX_FIELDS)
@@ -646,9 +647,9 @@ C DO ANALYSIS on SAO and PIREP data
 C READ IN SATELLITE DATA
         call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,
      1                    NX_L,NY_L,r_missing_data,
-     1                    tb8_k,istat_tb8,
-     1                    t39_k,istat_t39,
-     1                    sst_k,istat_sst)
+     1                    tb8_k,istat_tb8,comment_tb8,
+     1                    t39_k,istat_t39,comment_t39,
+     1                    sst_k,istat_sst,comment_sst)
 
 !       Calculate solar altitude
         do j = 1,NY_L
@@ -1134,8 +1135,8 @@ C       EW SLICES
         comment_a(1) = 'LAPS Cloud Cover'
         comment_a(2) = 'LAPS Cloud Analysis Implied Snow Cover'
         comment_a(3) = 'LAPS Clear Sky Water Temp'
-        comment_a(4) = 'Satellite 11u used'
-        comment_a(5) = 'Satellite 3.9u used'
+        comment_a(4) = comment_tb8
+        comment_a(5) = comment_t39
 
         call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
         call move(cvr_snow_cycle,out_array_3d(1,1,2),NX_L,NY_L)

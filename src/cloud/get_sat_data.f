@@ -42,9 +42,9 @@ c
         subroutine get_sat_data(i4time,
      1  i4_sat_window,i4_sat_window_offset,                              ! I
      1  imax,jmax,r_missing_data,                                        ! I
-     1  s8a_k,istat_s8a,                                                 ! O
-     1  s3a_k,istat_s3a,                                                 ! O
-     1  sst_k,istat_sst)                                                 ! O
+     1  s8a_k,istat_s8a,comment_s8a,                                     ! O
+     1  s3a_k,istat_s3a,comment_s3a,                                     ! O
+     1  sst_k,istat_sst,comment_sst)                                     ! O
 
 !       Output
         real*4 s8a_k(imax,jmax)
@@ -55,7 +55,8 @@ c
         data lvd_ext /'lvd'/
 
         character*31 ext
-        character var*3,comment*125,units*10
+        character var*3,units*10
+        character*125 comment_s8a,comment_s3a,comment_sst
 
         write(6,*)' Subroutine get_sat_data...'
 
@@ -65,7 +66,8 @@ c
         ilevel = 0
         call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
      1                     ,i4time_s8a,EXT,var,units
-     1                     ,comment,imax,jmax,s8a_k,ilevel,istat_s8a)
+     1                     ,comment_s8a,imax,jmax,s8a_k,ilevel
+     1                     ,istat_s8a)      
         if(istat_s8a .ne. 1)then
             write(6,*)' No S8A data available'
         endif
@@ -96,7 +98,8 @@ c
         var = 'SST'
         ilevel = 0
         call get_laps_2dgrid(i4time,3600,i4time_nearest,EXT,var
-     1                ,units,comment,imax,jmax,sst_k,ilevel,istat_sst)       
+     1                ,units,comment_sst,imax,jmax,sst_k,ilevel
+     1                ,istat_sst)       
         if(istat_sst .ne. 1)then
             write(6,*)' Note: cannot read sst_k'
         endif
@@ -107,7 +110,8 @@ c
         ilevel = 0
         call get_laps_2dvar(i4time_s8a,0       
      1                     ,i4time_nearest,EXT,var,units
-     1                     ,comment,imax,jmax,s3a_k,ilevel,istat_s3a)
+     1                     ,comment_s3a,imax,jmax,s3a_k,ilevel
+     1                     ,istat_s3a)
         if(istat_s3a .ne. 1)then
             write(6,*)' No S3A data available'
         endif
