@@ -117,6 +117,9 @@ foreach(@cdl){
 close(CDL);
 system("$LAPSROOT/bin/gridgen_model.exe");	
 
+print "gridgen_model.exe complete - building sfc lookup tables\n";
+
+system("$LAPSROOT/bin/gensfclut.exe");
 
 #
 # now install the lvd stuff
