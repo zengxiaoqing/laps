@@ -8,7 +8,7 @@
       character*(*)  filename
       character*3    reportFlag
       character*2    yy, mo, dd, hh, mn, flag
-      character*9    a9time(loopNum), a9timeDummy, a10_to_a9
+      character*9    a9time, a9timeDummy, a10_to_a9, wrout(loopNum)
       character*10   time
 
       real  lat_a(nx_l,ny_l), lon_a(nx_l,ny_l), topo_a(nx_l,ny_l)
@@ -129,7 +129,8 @@ c          ----------    test if raob is within time window    ----------
 	       elevation(inNum)= elevationDummy
 	       latitude(inNum)= latitudeDummy
 	       longitude(inNum)= longitudeDummy
-	       a9time(inNum)= a9timeDummy
+	       a9time= a9timeDummy
+               wrout(inNum)= a9time
 
                layerNum(inNum)= logicRecNum -2
                do j= 1,layerNum(inNum)
@@ -205,7 +206,7 @@ c      format f15.0 in snd files
 
       do 900 i= 1,inNum
 	 write(11,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
-     ~                 elevation(i), '     ', a9time(i), 'RAOB'
+     ~                 elevation(i), '     ', wrout(i), 'RAOB'
 895      format (i12, i12, f11.4, f15.4, f15.0, 1x, a5, 3x, a9, 1x, a8)
 
          do 900 j= 1,layerNum(i)
