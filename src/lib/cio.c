@@ -20,7 +20,7 @@
 #define in_to_im          in_to_im_
 /* #define i4_to_byte        i4_to_byte_ */
 #endif
-
+#define swap2(x) ((((x)>>8)&255)|(((x)&255)<<8))
 
 
 int read_binary_field(char *data, fint4 *in_size, fint4 *out_size, fint4 *nitems,
@@ -69,7 +69,11 @@ int in_to_im(fint4 *insize, fint4 *outsize,char *data, fint4 *nitems)
     j = (fint4 *) data;
     k = (short *) data;
     for(i=(*nitems)-1;i>=0;i--)
+#ifdef WORDS_BIGENDIAN
       j[i]=(fint4) k[i];
+#else
+      j[i]=(fint4) swap2(k[i]);
+#endif
     return 0;
   }
   if(n==sizeof(char) && m==sizeof(fint4)){
