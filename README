@@ -309,6 +309,10 @@
      Color tables are specified in 'static/www/*.lut'. Other user definable
      parameters are located in 'static/lapsplot.nl'.
 
+     Another web related script is our "on-the-fly" page that is contained
+     in 'etc/www/nph-laps.cgi'. This can be made to work on your local system
+     and web server with some modifications arrived at by trail and error.
+
      To run lapsplot you can do the following...
 
      1. setenv LAPS_DATA_ROOT to the correct path
