@@ -155,7 +155,7 @@ C Call Conpack color fill routine
 C      
       icol_offset = 40 ! Offset new colortable to preserve previous low end
 
-      LMAP=MREG*NREG*64 ! 16000000
+      LMAP=MREG*NREG*96 ! 16000000
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,ireverse
      1                               ,LMAP,log_scaling
      1                               ,colortable,ncols,icol_offset)      
