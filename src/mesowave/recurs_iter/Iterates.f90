@@ -15,7 +15,10 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
   REAL,    INTENT(IN) :: ldf(nx,ny),ds(3)
 
   INTEGER :: iter,iobs,i,j,k,no_v,idp,nbqc,numo
-  REAL    :: y0,b(2,3),rms,stdv(nvlaps),amx,amn
+  REAL    :: y0,b(2,3),rms,stdv(nvlaps),amx,amn,tmx,tmn
+
+  REAL :: oo(4,mobs)
+  oo = o
 
   ! Unified analysis of velocity:
   idp = id
@@ -225,12 +228,37 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 
   ENDDO
 
-  PRINT*,'MAX DIFF IN T: ', &
-	MAXVAL(s(nfic+1:nfic+nx,nfic+1:nfic+ny,n(3),1)- &
-	       bkgd(1:nx,1:ny,n(3),1)), &
-	MINVAL(s(nfic+1:nfic+nx,nfic+1:nfic+ny,n(3),1)- &
+  ! Temporature problem:
+  IF (id .EQ. 1) THEN
+
+     ! Compute the max/min differences from background:
+     tmx = MAXVAL(s(nfic+1:nfic+nx,nfic+1:nfic+ny,n(3),1)- &
 	       bkgd(1:nx,1:ny,n(3),1))
-  PRINT*,'NXNYid: ',nx,ny,id,idp,n
+     tmn = MINVAL(s(nfic+1:nfic+nx,nfic+1:nfic+ny,n(3),1)- &
+	       bkgd(1:nx,1:ny,n(3),1))
+
+     PRINT*,'MAX DIFF IN T: ', tmx, tmn
+
+     IF ((tmx .GT. 15.0e0) .OR. (tmn .LT. -15.0e0)) THEN
+
+	OPEN(unit=11,file='badata.dat')
+	WRITE(11,*) nx,ny,n,dm(1,3),dm(2,3)
+	WRITE(11,*) bkgd(1:n(1),1:n(2),1:n(3),1)
+	write(11,*) ldf(1:nx,1:ny)
+	WRITE(11,*) nobs
+	WRITE(11,*) oo(1:4,1:nobs),vid(1:nobs),w(1:nobs)
+	WRITE(11,*) s(1:n(1),1:n(2),1:n(3),1)
+	CLOSE(11)
+	
+        ! DO j=1,ny
+        !   DO i=1,nx
+	!      s(nfic+i,nfic+j,1:n(3),id) = &
+        !        bkgd(i,j,1:n(3),id)
+        !   ENDDO
+        ! ENDDO
+
+     ENDIF
+  ENDIF
 
   ! Land/water weight:
   IF ((id .NE. 6) .AND. (id .NE. 4)) THEN

@@ -154,6 +154,7 @@ SUBROUTINE LSO_Data
   ENDDO
   PRINT*,'MAX TIME: ',maxtime/3600,MOD(maxtime,3600)/60
   PRINT*,'MIN TIME: ',mintime/3600,MOD(mintime,3600)/60
+  PRINT*,'ISTARTTIME: ',istarttime,MOD(istarttime,86400)/3600.0
   IF ((maxtime-mintime)/3600 .GT. 3) THEN
      PRINT*,'LSO_Data_QC: it is hard coded to run'
      PRINT*,' the analysis less than 3 hour!'
@@ -208,8 +209,8 @@ SUBROUTINE LSO_Data
   ENDDO
 
   ! Time interval:
-  dm(1,3) = mintime
-  dm(2,3) = mintime+(ncycles-1)*laps_cycle_time
+  dm(1,3) = MOD(istarttime,86400)  	! Second of the time
+  dm(2,3) = dm(1,3)+(ncycles-1)*laps_cycle_time
 
   ! Spacings: x, y and t
   d(1:3) = (dm(2,1:3)-dm(1,1:3))/FLOAT(n(1:3)-1)
@@ -238,7 +239,7 @@ SUBROUTINE LSO_Data
   ! OPEN(unit=10,file='surface.dat',form='formatted')
 
   ! Domain info:
-  ! WRITE(10,*) dm(1,1),dm(2,1),dm(1,2),dm(2,2),dm(1,3),dm(2,3)
+  PRINT*,'DOMAIN: ', dm(1,1),dm(2,1),dm(1,2),dm(2,2),dm(1,3),dm(2,3)
   vmx = -1000.0
   vmm = 1000.0
   DO ilaps=1,nobs
