@@ -79,6 +79,10 @@ c sfc namelist stuff. for reduced pressure calc
       integer use_lso_qc, skip_internal_qc, itheta
       logical l_require_lso, luse_sfc_bkgd
       real    redp_lvl,del,gam,ak
+      real    bad_t,bad_td,bad_u,bad_v,bad_p
+      real    bad_mp,bad_th,bad_the
+      real    bad_vis,bad_tb8
+      real    thresh_t,thresh_td,thresh_mslp
 c
 c *** Background model grid data.
 c
@@ -1022,8 +1026,13 @@ c
 c..... Compute reduced pressure using reduced pressure level from
 c      surface namelist file
 c
-           call read_sfc_nl(use_lso_qc,skip_internal_qc 
-     1,itheta, redp_lvl, del, gam, ak, l_require_lso)
+           call read_sfc_nl(use_lso_qc,skip_internal_qc
+     1                     ,itheta, redp_lvl, del, gam, ak
+     1                     ,l_require_lso
+     1                     ,bad_t,bad_td,bad_u,bad_v,bad_p
+     1                     ,bad_mp,bad_th,bad_the
+     1                     ,bad_vis,bad_tb8
+     1                     ,thresh_t,thresh_td,thresh_mslp)
 
            allocate (rp_lvl(nx_laps,ny_laps)
      1,rp_tp(nx_laps,ny_laps),rp_sh(nx_laps,ny_laps))
