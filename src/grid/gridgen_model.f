@@ -30,17 +30,21 @@ cdis
 cdis 
 cdis 
 
-	Program Gridmap
+	Program gridgen_model
 C**********************************************************************
 c Portions of the following code were taken from the RAMS software and 
 c   were used by permission of the *ASTER Division/Mission Research 
 c   Corporation. 
 C**********************************************************************
 C*	This program will be used to map model grids based on the RAMS*
-C*  version 2b which uses polar stereographic projections.            *
-c
+C*  version 2b which uses polar stereographic projections. Other      *
+C*  projections have since been added.                                *
+c*                                                                    *
 C*********************************************************************
         integer NX_L,NY_L
+
+        write(6,*)
+        write(6,*)' gridgen_model: start'
 
 	call get_grid_dim_xy(NX_L,NY_L,istatus)
 	if (istatus .ne. 1) then
@@ -49,6 +53,9 @@ C*********************************************************************
 	endif
 
         call Gridmap_sub(NX_L,NY_L)
+
+        write(6,*)' gridgen_model: finish'
+        write(6,*)
 
         end
        
@@ -64,7 +71,7 @@ C*********************************************************************
 	Real xmn(nnxp),ymn(nnyp)
 	Real xtn(nnxp),ytn(nnyp)
 	Real lat(nnxp,nnyp),lon(nnxp,nnyp)
-        Real sw(2),nw(2),ne(2),se(2),pla,plo
+        Real sw(2),nw(2),ne(2),se(2)               ! ,pla,plo
         real  nboundary
         real  topt_30(nnxp,nnyp)
         real  topt_10(nnxp,nnyp)
@@ -72,18 +79,18 @@ C*********************************************************************
         real  topt_pctlfn(nnxp,nnyp)
         real  soil(nnxp,nnyp)
 
-        character*3 swt,twt
         include 'lapsparms.cmn'
 
 c********************************************************************
 
 c       Declarations for wrt_laps_static
-        integer*4    ni,nj,nf
+c       integer*4    ni,nj
 c       parameter (ni = NX_L)
 c       parameter (nj = NY_L)
 c
 c  only 5 used here but 8 needed in put_laps_static
 c
+        integer*4    nf
         parameter (nf = 8)
         
         character*125 comment(nf)
@@ -196,27 +203,30 @@ c calculate delta x and delta y using grid and map projection parameters
         write(6,*)' std_lon = ',std_lon
 
         if(c6_maproj .eq. 'plrstr')then
-            deltax = 2.0 / (1. + sind(std_lat)) * grid_spacing_m
-            deltay = deltax
+!           call get_ps_parms(std_lat,std_lat2,grid_spacing_m,phi0
+!     1                      ,grid_spacing_proj_m)
+
+            deltax = 2.0 / (1. + sind(std_lat)) * grid_spacing_m 
+                                                ! grid_spacing_proj_m
             if(std_lat2 .eq. +90.)then
                 write(6,*)' Note, grid spacing will equal '
      1                    ,grid_spacing_m,' at a latitude of ',std_lat
-                write(6,*)' deltax, deltay ',deltax,deltay
-     1                   ,' at the north pole'
+!               write(6,*)' deltax, deltay ',deltax,deltay
+!    1                   ,' at the north pole'
 
             elseif(std_lat2 .eq. -90.)then
                 write(6,*)' Note, grid spacing will equal '
      1                    ,grid_spacing_m,' at a latitude of ',-std_lat       
-                write(6,*)' deltax, deltay ',deltax,deltay
-     1                   ,' at the south pole'
+!               write(6,*)' deltax, deltay ',deltax,deltay
+!    1                   ,' at the south pole'
 
             else ! abs(std_lat2) .ne. 90. (local stereographic)
                 write(6,*)' The standard latitude ',std_lat,' is'
      1                   ,' relative to where the pole'
                 write(6,*)' of the map projection is: lat/lon '
      1                   ,std_lat2,std_lon
-                write(6,*)' deltax, deltay ',deltax,deltay
-     1                   ,' at the projection pole'
+!               write(6,*)' deltax, deltay ',deltax,deltay
+!    1                   ,' at the projection pole'
                 if(std_lat .ne. +90.)then
                     write(6,*)' Note: std_lat should usually be set'
      1                       ,' to +90. for local stereographic'
@@ -224,13 +234,14 @@ c calculate delta x and delta y using grid and map projection parameters
 
             endif
 
-        else
+        else ! c6_maproj .ne. 'plrstr'
             deltax = grid_spacing_m
-            deltay = deltax
-            write(6,*)' deltax, deltay ',deltax,deltay
-        endif
 
+        endif ! c6_maproj .eq. 'plrstr'
 
+        deltay = deltax
+        write(6,*)' deltax, deltay ',deltax,deltay
+ 
 c*********************************************************************
 c       Get X/Y for lower left corner
         CALL POLAR_GP(mdlat,mdlon,XMN,YMN,DELTAX,DELTAY,
@@ -293,14 +304,14 @@ c
            write(6,*)
            write(6,*)' Processing 2m soil type data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_SOIL2M,1.,1.
+     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_SOIL2M,1.,0.
      +         ,new_DEM,istatus)
 
            if(istatus .ne. 1)then
                write(6,*)' Warning: '
      1                  ,'File(s) missing for 2m soil type data'       
-!              write(6,*)' Static file not created.......STOP'
-!              stop
+!              write(6,*)' Static file not created.......ERROR'
+!              return
            endif
 
            endif ! .false.
@@ -322,13 +333,13 @@ c
            write(6,*)
            write(6,*)' Processing 10m land data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_PCTL10M,1.,1.
+     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_PCTL10M,1.,0.
      +         ,new_DEM,istatus)
 
            if(istatus .ne. 1)then
                write(6,*)' File(s) missing for 10m land data'
-               write(6,*)' Static file not created.......STOP'
-               stop
+               write(6,*)' Static file not created.......ERROR'
+               return
            endif
 
            if (.not.new_DEM) then ! Blend 30" and 10' topo data
@@ -584,9 +595,9 @@ c SG97  splot 'topography.dat'
         call get_directory('cdl',static_dir,len)
 	INQUIRE(FILE=static_dir(1:len)//'nest7grid.cdl',EXIST=exist)
         if(.not.exist) then
-	   print*,'Could not find file '
+	   print*,'Error: Could not find file '
      +           ,static_dir(1:len)//'nest7grid.cdl '
-           stop
+           return
 	endif
 
         call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)
@@ -596,7 +607,7 @@ c SG97  splot 'topography.dat'
         if(istat_chk .eq. 1)then
             write(6,*)'check_domain: status = ',istat_chk
         else
-            write(6,*)'WARNING in check_domain: status = ',istat_chk       
+            write(6,*)'ERROR in check_domain: status = ',istat_chk       
         endif
 
         call put_laps_static(grid_spacing_m,model,comment,data
@@ -604,7 +615,7 @@ c SG97  splot 'topography.dat'
      1       ,c6_maproj,deltax,deltay)
 
 
-	Stop
+	return
 	End
 
       SUBROUTINE GEODAT(n2,n3,erad,rlat,wlon1,xt,yt,deltax,deltay,
@@ -637,7 +648,13 @@ c ****************************
       LB=INDEX(OFN,' ')-1
       TITLE=OFN(1:LB)//'HEADER'
       LB=INDEX(TITLE,' ')-1
-      CALL JCLGET(29,TITLE(1:LB),'FORMATTED',0)
+      CALL JCLGET(29,TITLE(1:LB),'FORMATTED',1,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Error in gridgen_model opening HEADER: check '
+     1             ,'geog paths and HEADER file'
+          stop
+      endif
+
       READ(29,2)IBLKSIZO,NO,ISBEGO,IWBEGO
  2    FORMAT(4I5)
       print *,'title=',title
@@ -683,9 +700,9 @@ C
       real dato(no,no,mof)
       real DATP(NP,NP),DATQ(NIQ,NJQ),DATR(N2,N3)
       real ISO(MOF),IWO(MOF),XT(N2),YT(N3),rlat,wlon1,
-     +    erad,deltallo,deltaxp,deltayp,deltaxq,deltayq,
-     +   wvln,silwt,xq,yq,xp,yp,xcentr,ycentr,pla,plo,glatp,
-     + glonp,rio,rjo,wio2,wio1,wjo2,wjo1,xq1,yq1
+     +     erad,deltallo,deltaxp,deltayp,deltaxq,deltayq,
+     +     wvln,silwt,xq,yq,xp,yp,xcentr,ycentr,glatp,               ! pla,plo,
+     +     glonp,rio,rjo,wio2,wio1,wjo2,wjo1,xq1,yq1
       real xr,yr,rval,sh,sha,rh,rha
       CHARACTER*80 OFN,TITLE3
       CHARACTER*3 TITLE1
@@ -710,7 +727,7 @@ c      stop
          IWO(IOF)=0
   11    continue
       DO 15 JQ=1,NJQ
-       print *,'jq,njq,niq=',jq,njq,niq
+         print *,'jq,njq,niq=',jq,njq,niq
          DO 16 IQ=1,NIQ
             XQ=(FLOAT(IQ)-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
             YQ=(FLOAT(JQ)-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
@@ -785,7 +802,7 @@ c         print *,'rlat,wlon1=',rlat,wlon1
      .              DATO(1,1,NOFR))
                     dem_data=.true.
                   else                                         ! other
-                    CALL JCLGET(29,TITLE3(1:LB),'FORMATTED',0)
+                    CALL JCLGET(29,TITLE3(1:LB),'FORMATTED',0,istatus)      
                     CALL VFIREC(29,DATO(1,1,NOFR),NONO,'LIN')
                     if ((ofn(len-1:len).eq.'U').and.(no.eq.121)) then
                       dem_data=.false.                         ! topo_30s
@@ -838,11 +855,13 @@ C
      +                       +WIO2*(WJO1*DATO(IO2,JO1,JOFR)
      +                             +WJO2*DATO(IO2,JO2,JOFR))
 20               CONTINUE
-18             continue
-17           continue
+18             continue ! IP
+17           continue ! JP
 C
+!           Calculate average and silhouette terrain, then apply SILWT weight
             SHA=0.
             RHA=0.
+
             DO 22 JP=1,NP
                SH=0.
                RH=0.
@@ -850,24 +869,35 @@ C
 !                 Test for missing - then go to 16?
                   SH=max(SH,DATP(IP,JP)) 
                   RH=RH+DATP(IP,JP)
-23            continue
+23             continue ! IP
+
                SHA=SHA+SH/(2.*FLOAT(NP))
                RHA=RHA+RH
-22           continue
+
+22          continue ! JP
+
             RHA=RHA/FLOAT(NP*NP)
-            DO 24 IP=1,NP
+
+            DO 24 IP=1,NP ! The reason for this second SHA loop is unclear
                SH=0.
                DO 25 JP=1,NP
                   SH=max(SH,DATP(IP,JP))
-25              continue
+25             continue ! JP
+
                SHA=SHA+SH/(2.*FLOAT(NP))
-24           continue
+
+24          continue ! IP
+
             DATQ(IQ,JQ)=SHA*SILWT+RHA*(1.-SILWT)
-c        print *,'datq=',datq(iq,jq)
-16       continue
-15     continue
-       print *,'after 15'
-c       stop
+
+c           print *,'datq=',datq(iq,jq)
+
+16      continue ! IQ
+
+15    continue ! JQ
+
+      print *,'after 15'
+c     stop
 C
       XQ1=(1.-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
       YQ1=(1.-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
@@ -917,10 +947,10 @@ C
 112   R(JJ)=A(I,J)
 111   CONTINUE
       YY=STAY-FIYM2
-      CALL BINOM2(1.,2.,3.,4.,R(1),R(2),R(3),R(4),YY,SCR(II))
+      CALL BINOM(1.,2.,3.,4.,R(1),R(2),R(3),R(4),YY,SCR(II))
 100   CONTINUE
       XX=STAX-FIXM2
-      CALL BINOM2(1.,2.,3.,4.,SCR(1),SCR(2),SCR(3),SCR(4),XX,STAVAL)
+      CALL BINOM(1.,2.,3.,4.,SCR(1),SCR(2),SCR(3),SCR(4),XX,STAVAL)
       RETURN
       END
 
@@ -928,8 +958,8 @@ C
 C
       include 'trigd.inc'
        REAL*4 LAT,LON,X,Y,DX,DY,
-     1 ERAD,TLAT,TLON,PLAT,PLON,
-     1 XDIF,YDIF
+     1        ERAD,TLAT,TLON                                      ! ,PLAT,PLON,
+     1        XDIF,YDIF
 C
        INTEGER*4 NX,NY
 C
@@ -959,11 +989,9 @@ C
 C +------------------------------------------------------------------+
       SUBROUTINE JCL
       CHARACTER*(*) FILENM,FORMT
-      CHARACTER CFNAME*16,TEXTSTR*40
-      LOGICAL EXANS
 
 C     -------------------------------------------------------
-      ENTRY JCLGET(IUNIT,FILENM,FORMT,IPRNT)
+      ENTRY JCLGET(IUNIT,FILENM,FORMT,IPRNT,istatus)
 C
 C         This routine access an existing file with the file name of
 C           FILENM and assigns it unit number IUNIT.
@@ -973,10 +1001,14 @@ C
       PRINT*,'         format  ',FORMT
       ENDIF
 
-      OPEN(IUNIT,STATUS='OLD',FILE=FILENM,FORM=FORMT)
+      OPEN(IUNIT,STATUS='OLD',FILE=FILENM,FORM=FORMT,ERR=1)
 
-C
+      istatus=1
       RETURN
+
+ 1    istatus = 0
+      return
+
       END
 c--------------------------------------------------------               
       subroutinevfirec(iunit,a,n,type)                                  

@@ -707,3 +707,30 @@ cdis
       return
       end
 
+
+      subroutine get_ps_parms(slat1,slat2,grid_spacing_m                ! I
+     1                       ,phi0,grid_spacing_proj_m)                 ! O
+
+!     1998 Steve Albers
+
+!     Use secant projection assumption (unless we run into software problems)
+!     Projection is tangent to earth's surface only if phi0 = 90.
+
+      if(slat2 .eq. +90.)then     ! Projection pole is at geographic north pole
+          phi0 = slat1       
+
+      elseif(slat2 .eq. -90.)then ! Projection pole is at geographic south pole
+          phi0 = -slat1
+
+      else
+          phi0 = +90.           ! We ignore standard lat for local sterographic
+                                ! No need for this to be not equal to +90.
+      endif
+
+!     Calculate grid_spacing_proj_m: grid spacing in the projection plane
+
+      grid_spacing_proj_m = grid_spacing_m ! equal to parameter value 
+                                           ! in nest7grid.parms
+
+      return
+      end

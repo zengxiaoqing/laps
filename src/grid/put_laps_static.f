@@ -4,6 +4,8 @@
      1                          ,std_lat,std_lat2,std_lon      
      1                          ,c6_maproj,deltax,deltay)
  
+      include 'trigd.inc' 
+
       integer*4 mkmax                   !This should be 8
 
       INTEGER*4	IMAX,		        !I4time of data
@@ -14,8 +16,7 @@ C
       REAL*4	DATA(imax,jmax,mkmax),	!Raw data to be written
      1		grid_spacing,val
 C
-      CHARACTER*50	DIR_in		!Directory to be written to
-      CHARACTER*50	DIR_out		!Directory to be written to
+      CHARACTER*150     DIR_out		!Directory to be written to
       CHARACTER*31	EXT		!File name ext (up to 31 chars)
       CHARACTER*3	VAR(mkmax)	!3 letter ID of each field
       CHARACTER*10	UNITS(mkmax)	!units of each field
@@ -50,9 +51,28 @@ C
       enddo ! j
       enddo ! i
 
+!     Calculate deltax_cdf and deltay_cdf
+      deltax_cdf = deltax
+      deltay_cdf = deltay
+
+      if(c6_maproj .eq. 'plrstr')then
+          call get_ps_parms(std_lat,std_lat2,grid_spacing,phi0
+     1                     ,grid_spacing_proj_m)
+          phi0=90.                                                  ! temporary
+          if(phi0 .lt. 90.)then
+              write(6,*)' Calculate Polar Stereo NetCDF parameters on'
+     1                 ,' equivalent projection tangent to pole.'
+              write(6,*)' Internal LAPS projection is secant'
+              factor = 2. / (1. + sind(phi0))
+              deltax_cdf = deltax * factor
+              deltay_cdf = deltay * factor
+              write(6,*)' deltax_cdf, deltay_cdf',deltax_cdf,deltay_cdf   
+          endif
+      endif
+
       write(6,*) dir_out(1:len),len
       call wrt_laps_static (dir_out(1:len),laps_dom_file,imax,jmax,
-     1                      kmax,deltax,deltay,std_lon,std_lat,
+     1                      kmax,deltax_cdf,deltay_cdf,std_lon,std_lat,       
      1                      std_lat2,origin,var,comment,
      1                      data,model,grid_spacing,
      1                      c6_maproj,istatus)
