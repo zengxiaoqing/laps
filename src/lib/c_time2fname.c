@@ -44,7 +44,13 @@ Last modified: 3/24/94
 #include <config.h>
 
 #include <stdio.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifndef TM_IN_SYS_TIME
 #include <time.h>
+#endif
+
 
 #ifdef FORTRANUNDERSCORE
 #define c_time2fname  c_time2fname_

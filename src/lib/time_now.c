@@ -48,7 +48,15 @@ c Date:     April 1, 1994
 #include <config.h>
 #include <stdio.h>
 #include <stddef.h>
+
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifndef TM_IN_SYS_TIME
 #include <time.h>
+#endif
+
+
 
 #ifdef FORTRANUNDERSCORE
 #define time_now time_now_

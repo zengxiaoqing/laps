@@ -31,14 +31,11 @@ cdis
 cdis*/
 #include <config.h>
 
-#ifdef hpux
-#include <sys/timeb.h>
-#endif
-
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#else
+#endif
+#ifndef TM_IN_SYS_TIME
 #include <time.h>
 #endif
 
