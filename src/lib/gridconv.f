@@ -694,17 +694,18 @@ c
 c *** Routines to convert from geographical lat, lon to 
 c        lat-lon grid i, j and vice-versa.
 c     snook (11/5/96)
-c
-ccc      implicit none
+c     smart/pw li (04/1/03)
 c
       integer np,n
-c
-      real   glat(np),glon(np)     !Earth lat, lon (deg N, deg +E)
-      real   lli(np),llj(np),      !Lat-lon grid i,j
-     .       diff
-c
       integer nx,ny,nz             !No. of LL domain grid points
-      real*4 lat0,lon0,dlat,dlon     !SW corner lat, lon, lat, lon spacing
+ 
+      real   glat(np),glon(np)     !Earth lat, lon (deg N, deg +E)
+      real   lli(np),llj(np)       !Lat-lon grid i,j
+      real   diff
+c     real   sw(2),ne(2)
+c     common /llgrid/nx,ny,sw,ne,cgrddef
+
+      real   lat0,lon0,dlat,dlon     !SW corner lat, lon, lat, lon spacing
       character*1 cgrddef
       common /llgrid/nx,ny,nz,lat0,lon0,dlat,dlon,cgrddef
 c
@@ -713,6 +714,15 @@ c
       entry latlon_2_llij(np,glat,glon,lli,llj)
 c_______________________________________________________________________________
 c
+
+c pw li code for integration later on.
+c     dlat=(ne(2)-sw(2))/(nx-1)
+c     dlon=(ne(1)-sw(1))/(ny-1)
+c     do i=1,n
+c        lli(i)=(glon(i)-sw(2))/dlon + 1.
+c        llj(i)=(glat(i)-sw(1))/dlat + 1.
+c     enddo
+ 
       dlond=dlon
       dlatd=dlat
       if(cgrddef.eq.'S')then
@@ -904,9 +914,8 @@ cc     implicit none
       PI=acos(-1.)
       deg2rad=PI/180.
 
-c     ymax=R*(tanh(sind(ne(1))))
-      ymax=R*(log(tan(PI/4.+(ne(1)-rlatc)*deg2rad)))
-      ymin=R*(log(tan(PI/4.+(sw(1)-rlatc)*deg2rad)))
+      ymax=R*(log(tan(PI/4.+0.5*(ne(1)-rlatc)*deg2rad)))
+      ymin=R*(log(tan(PI/4.+0.5*(sw(1)-rlatc)*deg2rad)))
 
       xmax=R*(deg2rad*(ne(2)-rlonc))
       xmin=R*(deg2rad*(sw(2)-rlonc))
@@ -920,7 +929,6 @@ c     ymax=R*(tanh(sind(ne(1))))
          if(dlon.gt.180.)dlon=dlon-360.
          if(dlon.lt.-180.)dlon=dlon+360.
          x=R*(deg2rad*dlon)
-c        y=R*(1./tanh(sind(rlat(i))))
          y=R*(log(tan(PI/4.+0.5*(dlat*deg2rad))))
          ri(i)=(x-xmin)/dx + 1.
          rj(i)=(y-ymin)/dy + 1.
@@ -931,6 +939,35 @@ c        y=R*(1./tanh(sind(rlat(i))))
 c
 c===============================================================================
 c
+      subroutine latlon_2_npij(n,rlat,rlon,ri,rj)
+c
+c this is conversion of lat/lon to ri/rj in a
+c lat-lon grid. Very similar to latlon_2_llij.
+c
+      integer n,i
+      integer nx,ny
+      real*4 rlat(n),rlon(n),ri(n),rj(n)
+      real*4 sw(2),ne(2)
+      real*4 dx,dy
+      common /npgrid/nx,ny,sw,ne
+
+c     print *, ' Inside latlon_2_npij'
+c     print *, nx,ny,dx,dy
+c     print *, sw(1), sw(2),ne(1),ne(2)
+
+      dx=(ne(2)-sw(2))/(nx-1)
+      dy=(ne(1)-sw(1))/(ny-1)
+ 
+      do i=1,n
+        ri(i)=(rlon(i)-sw(2))/dx + 1.
+        rj(i)=(rlat(i)-sw(1))/dy + 1.
+      enddo
+ 
+      return
+      end
+
+c -------------------------------------------------------
+
       subroutine init_gridconv_cmn(gproj,nxbg,nybg,nzbg
      &,dlat,dlon,cenlat,cenlon,Lat0,Lat1,Lon0
      &,sw1,sw2,ne1,ne2,cgrddef,istatus)
@@ -980,6 +1017,11 @@ c
       common /psgrid/nx_ps,ny_ps,nz_ps,lat0_ps,lon0_ps
      .              ,rota,sw_ps,ne_ps
 
+      integer nx_np,ny_np
+      real    sw_np(2),ne_np(2)
+      common /npgrid/nx_np,ny_np,sw_np,ne_np
+
+
       if(gproj.eq.'LC')then
          nx_lc=nxbg
          ny_lc=nybg
@@ -991,7 +1033,6 @@ c
          sw_lc(2)=sw2
          ne_lc(1)=ne1
          ne_lc(2)=ne2
-         return
       endif
 
       if(gproj.eq.'LL')then
@@ -1003,7 +1044,6 @@ c
          d_lat=dlat
          d_lon=dlon
          cgrddef_ll=cgrddef
-         return
       endif
 
       if(gproj.eq.'LE')then
@@ -1016,7 +1056,6 @@ c
          se(2)=sw2
          nw(1)=ne1
          nw(2)=ne2
-         return 
       endif
 
       if(gproj.eq.'PS')then
@@ -1029,9 +1068,16 @@ c
          sw_ps(2)=sw2
          ne_ps(1)=ne1
          ne_ps(2)=ne2
-         return
       endif
 
+      if(gproj.eq.'NP')then
+         nx_np=nxbg
+         ny_np=nybg
+         sw_np(1)=sw1
+         sw_np(2)=sw2
+         ne_np(1)=ne1
+         ne_np(2)=ne2
+      endif
 
       return
       end
@@ -1058,6 +1104,7 @@ c
       integer lenc
 
       integer nxc,nyc,nzc
+      integer nx,ny
       real sw(2),ne(2),rota,lat0,lon0
       real nw(2),se(2),rlatc,rlonc
       real tolx,toly
@@ -1089,6 +1136,8 @@ c      print*,nxc,nyc,nzc,lat0,lon0,rota,sw,ne
          call latlon_2_llij(nx_laps*ny_laps,lat,lon,grx,gry)
       elseif (gproj .eq. 'LE') then
          call latlon_2_ceij(nx_laps*ny_laps,lat,lon,grx,gry)
+      elseif (gproj .eq. 'NP') then
+         call latlon_2_npij(nx_laps*ny_laps,lat,lon,grx,gry)
       endif
 c
 c *** Check that all LAPS grid points are within the background data coverage.
