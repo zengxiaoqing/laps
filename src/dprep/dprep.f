@@ -220,8 +220,34 @@ c
      .           p_sfc,uw_sfc,vw_sfc,rh_sfc,th_sfc,
      .           mslp,gproj,2,istatus)
 
+         else if(bgmodel.eq.5) then
+            ext='.RUC'
+            gproj='LC'
+            nx_lc=nx
+            ny_lc=ny
+            lat1=25.0
+            lat2=25.0
+            lon0=-95.0
+
+            sw(1)=16.2810
+            sw(2)=-126.1378
+            ne(1)=55.4818
+            ne(2)=-57.3794
+            call read_ruc2_hybb(fullname,nx,ny,nz
+     +           ,mslp,ht,p,rh,uw,vw,th,ww
+     +           ,istatus)
+            if(istatus.gt.0) then
+               call dprep_ruc2_pub(nx,ny,nz
+     +              ,ht,p,rh,uw,vw,th,gproj)
+               
+
+            endif
 
 
+
+         else 
+            print*, 'ERROR bgmodel may not be supported ',bgmodel
+            stop
          endif
          if(istatus.gt.0) then
             call dprep_output(outdir,fname//af(3:4)//'00'//ext,gproj,
