@@ -157,8 +157,15 @@ C
      +     resolutionV, siteAlt, siteLat, siteLon, unambigRange, 
      +     esEndTime, esStartTime, radialTime, radarName, siteName)
 
-      istatus = 1
-      return
+      if(sitealt .eq. 0. .or. sitelat .eq. 0. .or. sitelon .eq. 0.)then       
+          write(6,*)' Warning, no site info in get_tilt_netcdf_data'       
+          istatus = 0
+          return
+      else
+          write(6,*)' Site info:',siteAlt, siteLat, siteLon       
+          istatus = 1
+          return
+      endif
 
       end
 C
