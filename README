@@ -1737,9 +1737,11 @@ LSO QC process - sfc_qc.exe - QC the ingest surface data
 Input:
 	 lso    ascii
 
-Output:
+Outputs:
          lso_qc	ascii	QC'd LAPS surface obs file: METAR, Mesonet and 
                         Buoy/ship obs. 
+
+         lsq    NetCDF  QC'd LAPS surface obs in NIMBUS NetCDF format
 
 Sample Input/Output: May be available in the test data case.
 </pre>
