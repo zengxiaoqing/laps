@@ -82,7 +82,7 @@ c
         integer*4  i4time_ob_a(maxobs), before, after
         real    lat(ni,nj), lon(ni,nj), k_to_f
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
-        logical l_reject(maxobs)
+        logical l_reject(maxobs), ltest_madis_qc
 c
 	integer*4  wmoid(maxsta)
 	integer    recNum
@@ -158,6 +158,8 @@ c
 c.....	Set jstatus flag for the local data to bad until we find otherwise.
 c
 	jstatus = -1
+
+        ltest_madis_qc = .true.
 
         call get_ibadflag(ibadflag,istatus)
         if(istatus .ne. 1)return
@@ -243,7 +245,7 @@ c
 c
 c.....  Call the read routine.
 c
-            if(.true.)then
+            if(.false.)then
 	      call read_local_obs(nf_fid, recNum, altimeter(ix),
      &         dataProvider(ix), solarRadiation(ix), 
      &         seaSurfaceTemp(ix), soilTemperature(ix),        
@@ -519,7 +521,7 @@ c
 c.....  Temperature, dewpoint and RH.
 c
 	  temp_k = temperature(i) 
-	  if(tempChangeTime(i) .ge. 0.) then ! implies that it is not set to ibadflag
+	  if(tempChangeTime(i) .gt. 0.) then ! implies that it is a good value
 	     if( abs(observationTime(i) - tempChangeTime(i)) 
      1                          .gt. laps_cycle_time) then
 		temp_k = badflag
@@ -531,6 +533,8 @@ c
              temp_f = k_to_f(temp_k)
 	  endif
           call sfc_climo_qc_r('t_f',temp_f)
+          if(ltest_madis_qc)
+     1        call madis_qc_r(temp_f,temperatureDD(i),badflag)
 c       
 	  dewp_k = dewpoint(i)
           call sfc_climo_qc_r('td_k',dewp_k)
@@ -539,15 +543,19 @@ c
 	  else
 	     dewp_f = k_to_f(dewp_k)
 	  endif
+          if(ltest_madis_qc)
+     1        call madis_qc_r(dewp_f,dewpointDD(i),badflag)
 c
 	  rh_p = relHumidity(i) 
 	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
-	  if(rhChangeTime(i) .ge. 0.) then
+	  if(rhChangeTime(i) .gt. 0.) then
 	     if( abs(observationTime(i) - rhChangeTime(i)) 
      1                             .gt. laps_cycle_time) then
 		rh_p = badflag
 	     endif
 	  endif
+          if(ltest_madis_qc)
+     1        call madis_qc_r(rh_p,relHumidityDD(i),badflag)
 c
 c..... Wind speed and direction
 c
@@ -555,8 +563,8 @@ c
           call sfc_climo_qc_r('dir_deg',dir)
 	  spd = windSpeed(i)
           call sfc_climo_qc_r('spd_ms',spd)
-	  if(windDirChangeTime(i).ge.0. .and. 
-     1       windSpeedChangeTime(i).ge.0.     ) then       
+	  if(windDirChangeTime(i).gt.0. .and. 
+     1       windSpeedChangeTime(i).gt.0.     ) then       
 	     if( (abs(observationTime(i) - windDirChangeTime(i)) 
      &                          .gt. laps_cycle_time) .or.
      &           (abs(observationTime(i) - windSpeedChangeTime(i)) 
@@ -571,7 +579,7 @@ c
           call sfc_climo_qc_r('dir_deg',dirgust)
 	  spdgust = windGust(i)
           call sfc_climo_qc_r('spd_ms',spdgust)
-	  if(windGustChangeTime(i) .ne. badflag) then
+	  if(windGustChangeTime(i) .gt. 0.) then
 	     if( abs(observationTime(i) - windGustChangeTime(i)) 
      1                                      .gt. laps_cycle_time) then
 		dirgust = badflag
@@ -584,7 +592,7 @@ c..... Pressure...Station pressure, MSL and altimeter
 c
 	  stn_press = stationPressure(i)
           call sfc_climo_qc_r('stnp_pa',stn_press)
-	  if(stationPressChangeTime(i) .ge. 0.) then
+	  if(stationPressChangeTime(i) .gt. 0.) then
 	     if( abs(observationTime(i) - stationPressChangeTime(i))
      1                               .gt. laps_cycle_time ) then
 		stn_press = badflag
@@ -841,3 +849,18 @@ c
          return
 c
          end
+
+         subroutine madis_qc_r(var,DD,badflag)
+
+         real*4 var
+         character*1 DD
+         real*4 badflag
+
+         if(DD .eq. 'X')then
+             var = badflag
+         endif
+ 
+         return
+         end
+                 
+          
