@@ -1,5 +1,5 @@
-      subroutine get_ln3_parameters(msng_radar,
-     +istart,jstart,iend,jend,istatus)
+      subroutine get_ln3_parameters(msng_radar,ickint,
+     +itotwait,iageth,istart,jstart,iend,jend,istatus)
 c
       implicit none
 
@@ -7,11 +7,13 @@ c
       integer    len_dir
       integer    istart,jstart
       integer    iend,jend
+      integer    ickint,itotwait,iageth
       integer    msng_radar
 
       character  nest7grid*150
 
-      namelist /ln3_nl/ msng_radar,istart,jstart,iend,jend
+      namelist /ln3_nl/ msng_radar,ickint,itotwait,
+     + iageth,istart,jstart,iend,jend
 
       istatus = 1
 
