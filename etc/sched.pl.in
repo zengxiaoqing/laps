@@ -29,7 +29,7 @@
 #
 # -e                   Extend time in hours (allow for long runs beyond cycle time)
 #
-# -q                   Use QSUB (e.g. on 'jet'), no value is needed
+# -q                   Use QSUB (e.g. on 'jet'), the value is the project name
 #
 # -w                   Option for creating the WFO big file when LAPS is 
 #                      running outside of the WFO environment.
@@ -57,7 +57,7 @@ use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_w
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:qwsl');
+getopts('d:c:a:rm:t:e:q:wsl');
 
 my $initial_time = time();
 #
@@ -103,6 +103,7 @@ my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cy
 $cycle_time[0]=~/^(\d+),/;
 my $cycle_time = ($1>0)?$1:3600;
 $cycle_time = $opt_c if($opt_c>0);
+my $cycle_time_min = int($cycle_time/60);
 
 my $delay_time = 0;
 $delay_time = $opt_d if($opt_d > 0);
@@ -250,7 +251,7 @@ foreach $exe (@LAPS_EXE){
                 print $t." Opening $LAPS_LOG_PATH/run_qsub_$scriptcount.sh starting with executable # $execount\n";
                 open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
                 print TFILE "#!/bin/sh\n";
-                print TFILE "#PBS -lnodes=$nodes_current:comp,walltime=60:00 -A oplapb\n";
+                print TFILE "#PBS -lnodes=$nodes_current:comp,walltime=$cycle_time_min:00 -A $opt_q\n";
                 print TFILE "  \n";
 
                 if($nodes_current > 1){
