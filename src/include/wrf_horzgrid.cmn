@@ -12,7 +12,7 @@
       real moad_known_lat, moad_known_lon,
      +       moad_stand_lats(4), moad_stand_lons(4),
      +       moad_delta_x, moad_delta_y,
-     +       silavwt_parm, toptwvl_parm
+     +       silavwt_parm_wrf, toptwvl_parm_wrf
       character*8 moad_known_loc
       character*4 stagger_type
       character*32 map_proj_name
@@ -27,4 +27,4 @@
      +,moad_stand_lats, moad_stand_lons
      +,moad_delta_x, moad_delta_y
      +,moad_known_loc,stagger_type,map_proj_name,latlon_grid
-     +,silavwt_parm, toptwvl_parm
+     +,silavwt_parm_wrf, toptwvl_parm_wrf
