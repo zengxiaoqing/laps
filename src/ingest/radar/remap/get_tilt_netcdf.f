@@ -75,6 +75,8 @@ cdis
 
 !     include 'remap_constants.dat' ! for debugging only
 !     include 'remap.cmn' ! for debugging only
+
+      write(6,*)' get_tilt_netcdf_data: reading ',filename
 C
 C  Open netcdf File for reading
 C

@@ -81,13 +81,12 @@ c     Misc internal variables
 c
       integer i,j,iref_start,ivel_start
 c
-      print *, ' REMAP (FILL_COMMON)'
+      write(6,*)' fill_common: i_tilt = ',i_tilt
       print *, ' ref(1..4) ',
      :             ref(1),ref(2),ref(3),ref(4)
       print *, ' vel(1..4) ',
      :             vel(1),vel(2),vel(3),vel(4)
       print *, ' n_rays = ',n_rays
-      print *, ' i_tilt = ',i_tilt
       print *, ' n_ref_gates = ',n_ref_gates
       print *, ' n_vel_gates = ',n_vel_gates
       print *, ' azim(1..4) = ',azim(1),azim(2),azim(3),azim(4)
