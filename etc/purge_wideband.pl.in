@@ -55,7 +55,7 @@ foreach $radar (@radars){
 #   $yydddhh_high = "0216008";
 
     foreach $file (@files){
-        print "Radar file: $file";
+#       print "Radar file: $file";
 
         $keep = 0;
 
@@ -66,17 +66,17 @@ foreach $radar (@radars){
 
             if($file =~ /^$yydddhh/){
 #           if($file =~ /02/){
-                print " match found keep $yydddhh";
+#               print " match found keep $yydddhh";
                 $keep = 1;
             }
 
 
         }
         if($keep == 0){
-            print " delete file ";
+            print " delete $file \n";
             system("rm -f $file") ;
         }
-        print "\n";
+#       print "\n";
     }
 }
 
