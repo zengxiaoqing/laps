@@ -964,39 +964,94 @@ c
 	end
 c
 c
-        subroutine move_2dto3d(a,b,index,imax,jmax,kmax)
+      subroutine aplot(field, ni, nj)
 c
-c.....  Routine to move (copy) the 2d array 'a' into one level
-c.....  of the 3d array 'b'.  The level is defined by 'index'.
+c======================================================================
 c
-c       Original:  P. Stamus  NOAA/FSL  15 Apr 1997
+c     Routine to do a quick, scaled ASCII plot of a 2-d field.
+c     Based on a version by D. Birkenheuer, NOAA/FSL
 c
-        real*4 a(imax,jmax), b(imax,jmax,kmax)
+c     The variables are:
+c          field      the field to plot
+c          ni, nj     the dimensions of the field
+c          amx, amn   the max/min of the values of the field
 c
-        do j=1,jmax
-        do i=1,imax
-          b(i,j,index) = a(i,j)
-        enddo !i
-        enddo !j
+c     Original: 03-06-98  P. Stamus, NOAA/FSL
 c
-        return
-        end
+c======================================================================
+c
+      real*4 field(ni,nj)
+c
+      character line(ni)*1
 c
 c
-        subroutine move_3dto2d(a,index,b,imax,jmax,kmax)
+c.....  Start by clearing out the line.
 c
-c.....  Routine to move (copy) one level of the 3d array 'a' into 
-c.....  the 2d array 'b'.  The level is defined by 'index'.
+      do i=1,ni
+         line(i) = ' '
+      enddo !i
 c
-c       Original:  P. Stamus  NOAA/FSL  15 Apr 1997
+c.....  Figure out the max and min in the field.
 c
-        real*4 a(imax,jmax,kmax), b(imax,jmax)
+      amax = -9.e20
+      amin =  9.e20
+      do j=1,nj
+      do i=1,ni
+         if(field(i,j) .gt. amax) then
+            amax = field(i,j)
+            i_max = i
+            j_max = j
+         endif
+         if(field(i,j) .lt. amin) then
+            amin = field(i,j)
+            i_min = i
+            j_min = j
+         endif
+      enddo !i
+      enddo !j
 c
-        do j=1,jmax
-        do i=1,imax
-          b(i,j) = a(i,j,index)
-        enddo !i
-        enddo !j
+      print *,' '
+      write(6,901) amax, i_max, j_max, amin, i_min, j_min
+ 901  format(1x,' Field Max: ',f15.6,' at ',i4,',',i4,
+     &       '   Field Min: ',f15.6,' at ',i4,',',i4)
+      print *,' '
+c        
+c.....  Now at each point along the row, scale the value and put
+c.....  the proper character in the line at that point.  Then write
+c.....  the line and move to the next one down (remember to go from
+c.....  the top of the domain to the bottom).
 c
-        return
-        end
+      do j=nj,1,-1
+      do i=1,ni
+c
+	 ifld = nint( field(i,j) )
+	 fld = float( ifld )
+	 ich = ifix( amod(fld, 10.) )
+c
+	 if(ich .eq. 0) then
+	    ich = ifix( amod(fld, 100.) )
+	    ich = ich / 10
+	    write(line(i), 905) ich
+ 905        format(i1)
+	 elseif(ich.ge.1 .and. ich.lt.5) then
+	    line(i) = '.'
+	 elseif(ich.ge.5 .and. ich.le.9) then
+	    line(i) = ':'
+	 else
+	    print *,' Bad value in plot routine'
+	 endif
+c
+      enddo !i
+c
+	 write(6,*) (line(k),k=1,ni)
+c
+      enddo !j
+c
+c.....  That's it...lets go home.
+c
+      print *,' '
+      print *,' '
+      return
+      end
+
+
