@@ -36,22 +36,24 @@
          2.15 .............  OTHER RUNTIME PARAMETERS
          2.16 .............  Reporting Installation Errors
      3.0 ............  Description of LAPS Processes
-         3.1 ..............  WATER VAPOR (HUMIDITY PROCESSING)
-         3.2 ..............  WSR 88-D WIDEBAND RADAR REMAPPER
-         3.3 ..............  WSI - NOWRAD RADAR PREPROCESSING (VRC)
-         3.4 ..............  PROFILERS (PRO)
-         3.5 ..............  RASSs (LRS)
-         3.6 ..............  PIREPS/ACARS
-         3.7 ..............  WIND
-         3.8 ..............  TEMP
-         3.9 ..............  CLOUD
-         3.10 .............  DERIV
-         3.11 .............  ACCUM
-         3.12 .............  LGA
-         3.13 .............  LVD
-         3.14 .............  SFC (LSX)
-         3.15 .............  RAOB (SND)
-         3.16 .............  VAD (PRO)
+         3.1 ..............  Ingest Processes
+         3.1.1 ..................  LGA Model
+         3.1.2 ..................  LVD 
+         3.1.3 ..................  WSR 88-D WIDEBAND RADAR REMAPPER
+         3.1.4 ..................  WSI - NOWRAD RADAR PREPROCESSING (VRC)
+         3.1.5 ..................  PROFILERS (PRO) Ingest
+         3.1.6 ..................  RASSs (LRS) Ingest
+         3.1.7 ..................  PIREPS/ACARS Ingest
+         3.1.8 ..................  RAOB (SND) Ingest
+         3.1.9 ..................  VAD (PRO) Ingest
+         3.2 ..............  Analysis Processes
+         3.2.1 ..................  WIND
+         3.2.2 ..................  SFC (LSX) 
+         3.2.3 ..................  TEMP 
+         3.2.4 ..................  CLOUD
+         3.2.5 ..................  DERIV
+         3.2.6 ..................  WATER VAPOR (HUMIDITY PROCESSING)
+         3.2.7 ..................  ACCUM 
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Variables and netCDF File Organization 
 
@@ -915,7 +917,494 @@ April 1996
    is run according to the flow therein, the necessary inputs will be 
    available. 
 
- ------ 3.1 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
+-------3.1  ------------------  INGEST PROCESSES---------------------------
+
+------ 3.1.1 --------------------LGA-------------------------------------------
+
+Package: lga.exe - ingest model data (author: John Snook - snook@fsl.noaa.gov).
+
+        LGA 	LAPS analysis grids from RUC analysis grids, 50 mb levels 
+                (1 hr files) (vertical interpolation)
+
+Inputs:
+	Model hybrid data 
+
+Outputs: (Feeds LZB, LC3 )
+	lga	grid	maps data analysis/forecast
+
+------ 3.1.2 --------------------LVD-------------------------------------------
+
+LVD process - lvd_driver.exe - takes raw sat. data and puts it on LAPS 
+              grid.
+        (author: John Smart - smart@fsl.noaa.gov)
+
+Input:
+ 	 GOES 8 Data
+
+Output:
+         LVD	grid	LAPS satellite data file
+
+------ 3.1.3 ----------WSR 88-D WIDEBAND RADAR REMAPPER------------------------
+
+Process: REMAP (author: Steve Albers/Keith Brewster - run on "RIDDS BOX")
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Every volume scan
+Initiation: Completion of volume scan
+
+Inputs:
+	Raw WSR-88D Radar Data (reflectivity and velocity in polar form)
+            OLDLAPS: Circular Buffer
+            NEWLAPS: Polar NetCDF files (one per volume)
+
+Outputs (LAPS intermediate files):
+     v01    grids         3-D Radar reflectivity, velocity, and Nyquist vel
+     v02      "                                  "
+     etc. (for each radar)
+
+Source directory: Must be obtained separately from LAPS. This software runs
+                  on SUNOS and uses 'oldlaps' software conventions. The
+                  input is the wide-band data stored in memory as a 
+                  "circular buffer".
+
+                  "Under Construction" is a 'newlaps' version of this remapper
+                  that utilizes wide-band data stored in NetCDF files as input.
+                  The source code for this is in 'src/ingest/radar/remap'.
+
+This 'oldlaps' version runs on special hardware that is connected to the 88D 
+radar. The source code in the LAPS source directory contains the upper level
+cartesian remapping routines. These must be linked with the lower level 
+routines running on the actual RIDDS box to access the raw wideband radar
+data. This hardware is currently being developed by NSSL (contact Mike Jain), 
+and is being fielded on a number of WSR 88-D radars by several people at FSL 
+(including Woody Roberts and Steve Albers). Please see the following
+references from the LAPB home page, (Albers 1995; Brewster et al, 1995;
+Roberts et al, 1995). 
+
+The outputs from this process are currently used by the LAPS wind analysis.
+We may expand this to the cloud and precip accumulation analyses in the
+future (these currently use NOWRAD 'vrc' 2-D radar files).
+
+To build the remapping software on the RIDDS machine, a special section
+of the 'install_laps' script is invoked using a special version of the
+LAPS tar file. One still untars and runs 'install_laps' as normal, but only
+the remapper gets built. When running the remapper, files such as v01, v02,
+etc. are produced depending on which radar is being used. 
+
+To run the remapper software do 'cd nest7grid/exe; ./remapcrt.exe'; 
+the correct LAPS static file must be present (a normal occurrence when LAPS is 
+installed). The remapcrt.exe executable runs continuously, no scheduler is 
+involved. There is a set of environment variables that control such things as 
+data compression and transmission options. There is also a method to ftp the 
+files automatically, but this is more of a kludge and you'll need to contact 
+the author for the gory details.
+
+     Variable:            Contents         
+     ---------            --------
+     RADARNAME            'KFTG' for example                         [required]
+     LAPS_USER            Username for rcp command                   [optional]
+     LAPS_DEST            Destination machine directory name for rcp command
+                                                                     [optional]
+     LAPS_REMOTE          Node name for rcp command                  [optional]
+     LAPS_COMPRESS        'gzip' or 'compress'                       [optional]
+     LAPS_EXT             Set output extension if you have more than one radar 
+                                                                     [optional]
+     LAPS_PURGE           Valid values are non-negative integers. A value 
+                          of '0' disables the purger. Positive integers will
+                          purge the output file directory keeping that number
+                          of files present.
+
+Normally the remapper is compiled and run on the same machine. However, a
+procedure is being tested to allow compilation to occur on one machine with
+executables only being ported to another machine where the remapper is run.
+
+There is another version of the remapper that runs simulated data.
+To run this remapper, do 'cd nest7grid/exe; ./remapc_fake.exe'.
+
+A description of how the remapper software functions including how the 'v01'
+file is produced may be found on the
+World Wide Web at 'http://laps.fsl.noaa.gov/frd/laps/albers/remapper.html'
+
+------ 3.1.4 -------------------VRC--------------------------------------------
+
+Process: VRC (vrc_driver.x) Author John Smart (smart@fsl.noaa.gov)
+
+Inputs:
+        Raw WSI NOWRAD radar reflectivity data
+        v01, v02, etc.                        3-D reflectivity  (proposed)
+
+Outputs (Intermediate data file):
+        vrc     grid                          2-D reflectivity
+        vrz     grid                          3-D reflectivity  (proposed)
+
+The output reflectivity is used by the cloud and precip accumulation analyses.
+                                        
+------ 3.1.5 -----------------PROFILER (PRO)----------------------------------
+
+Processes: PRO - ingest_pro.exe, ingest_blppro.exe - LAPS local data Profiler 
+      wind ingest (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	WPDN profiler wind data in netCDF format (ingest_pro.exe) 
+	Boundary layer profiler wind data in netCDF format (ingest_blppro.exe) 
+        These are in two separate NetCDF directories.
+
+Outputs: (The two executables are run sequentially, feeds wind)
+	pro	inter data	profiler wind direction (degrees) and
+                                              speed     (meters/sec)  (ASCII)
+
+Source directory: laps/nest7grid/source/ingest/profiler
+
+Sample Output: Should be available in the test data case.
+
+------ 3.1.6 ------------------RASS (LRS)-------------------------------------
+
+Process: (ingest_lrs.exe, ingest_blplrs.exe) LAPS local data RASS ingest
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	WPDN RASS temperature data in netCDF format (ingest_lrs.exe) 
+	Boundary layer RASS data in netCDF format (ingest_blplrs.exe) 
+        These are in two separate NetCDF directories.
+
+Outputs: (The two executables are run sequentially, feeds LSX and temp.exe)
+	lrs	inter data	RASS Virtual Temperatures (ASCII)
+
+Source directory: laps/nest7grid/source/ingest/rass
+
+Sample Output: Should be available in the test data case.
+
+------ 3.1.7 ------------------PIREPS/ACARS-----------------------------------
+
+Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	Aircraft voice pireps and ACARS data (separate NetCDF files)
+
+Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
+	pin	inter data	voice pireps/clouds, ACARS/winds
+                                        
+Sample Output: Should be available in the test data case
+
+ 
+------ 3.1.8 -----------------------RAOB--------------------------------------
+
+Process: (ingest_raob.exe) LAPS RAOBs
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	RAOBs in NetCDF format
+
+Outputs: (Feeds temp.exe, humid.exe, wind.exe)
+	snd	inter data	RAOB temp, dewpoint, wind
+                                        
+        Note: If you have good profiler or rass data, you may want to disable
+              the RAOB ingest as they would then perhaps hurt as much as they
+              help (due to raobs being relatively old). This can be done by
+              using a dummy path name for the raw raob data in 
+              'nest7grid.parms'.
+ 
+------ 3.1.9 -----------------------VAD----------------------------------------
+
+Process: (ingest_vad.exe) LAPS RAOBs
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	VADs in NetCDF format
+
+Outputs: (Feeds wind.exe)
+	pro	inter data	VAD wind
+                                        
+        Note: This is one of several processes that write to build up the
+              pro file.
+ 
+------- 3.2  -------------  ANALYSIS PROCESSES --------------------------------
+
+------ 3.2.1 ---------------------WIND-----------------------------------------
+
+Process: wind.exe - WIND analysis and related fields
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+	Generate a preliminary analysis using SAOs, surface mesonet, profiler, 
+	and aircraft reports.  Output of the blance packge from the previous
+	cycle is used as a first guess to do quality control on new 
+        observations. Time tendencies from the MAPS model are used both to 
+        update the older (greater than cycle time) aircraft reports and to 
+        advance the first guess over the LAPS cycle time.
+
+	In a second step, the Doppler radial velocities are mixed in.  The 
+        azimuthal component is estimated by using the results of the first 
+        step.  Radial velocities are taken from the Doppler radars after 
+        dealiasing and other quality control steps are done.
+
+Auxiliary functions:
+	write out graphical products
+		
+Inputs: (from PRO, PIN, LGA/RAM, LSX, LT1)       '*' = essential input
+      * lga/ram grid            model data analysis/forecast
+                                needed for current and previous cycle times
+	pro     inter data      profiler winds
+        snd     inter data      RAOB data including winds
+	pin	inter data      pireps/clouds
+      * lso     inter data      LAPS surface obs file: mesonet & SAO
+	lsx	grid		LAPS surface data grids
+        lt1     grid            LAPS heights
+
+        (remapped from raw radar data)
+	v01-v20 grid            3-D radar reflectivity/radial velocity 
+        vrc/v01/vrz             2-D or 3-D radar reflectivity
+
+Outputs: (LW3 is main output)
+	msg	inter data	mesonet winds  (none of these five really have
+	pig	inter data	acars winds     to be part of the Wind Anlysis,
+	prg	inter data	profiler winds   they are used for lapsplot
+	sag	inter data	SAOs              output)
+	d01-d20 inter data (3d)	derived radar obs
+
+	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
+	lwm	2d grid		mean winds (sfc - 300mb layer)
+                                surface winds
+	lhe	2d grid		helicity (derived from 3-D winds)
+	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
+
+	lmr	2d grid		2-D column max radar ref      
+	lf1	2d grid		2-D column max radar ref history (maximum 
+                                over time since the previous analysis cycle)
+                                        
+Source directory: laps/nest7grid/source/wind
+Compile-time parameters: laps/nest7grid/source/wind/windparms.inc
+
+CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
+
+Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
+           342-352. 
+
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
+
+
+------ 3.2.2 ------------------SFC (LSX)--------------------------------------
+
+Surface processing - laps_sfc.x (LSX and friends) 
+        (author: Pete Stamus - stamus@fsl.noaa.gov)
+
+Surface package collects surface data - SAOs, local mesonet, GOES IR bightness.
+Places surface data on LAPS grid.  Quality Control of Obs.  Also takes previous
+hour's result as input.  Data is collected over a slightly larger than grid to 
+help boundary conditions.  Uses a cubic spline technique for interpolation.
+
+GOES IR gives relative temperatures, not absolute temps.  GOES tempature 
+gradient fields is then interpolated together with surface observations and 
+previous background, etc.  LGA 700 mb temperatures are extrapolated to the 
+surface, compare it with the hard data points.  Use to account for elevation 
+effects.
+
+Constrain surface winds and pressure fields to full equations of motion.  Do an
+interpolation of SAO reports and mesonet reports to get 2-D winds on surface.
+re-analysize wind field based on adjusted pressure field.
+
+Then derived fields are calculated.
+
+For LT1 (3D temps) take 3D temps from the LGA module (orginally MAPS data)
+plus LAPS surface temps and RASS, then the fields are blended.
+
+**********
+
+LSO process - obs_driver.x - Ingest surface data
+        (author: Pete Stamus - stamus@fsl.noaa.gov)
+
+Input:
+	raw SAO data
+	raw mesonet data
+
+Output:
+         LSO	ascii	LAPS surface obs file: mesonet & SAO
+                        The format of this file may be gleaned from looking
+                        at the obs_driver.x code, or by looking at sample LSO 
+                        files in the test data case.
+
+**********
+
+28257	LSX process - LAPS surface data analysis
+        (author: Pete Stamus - stamus@fsl.noaa.gov)
+
+Inputs:
+         LSO    surface observations
+	 LGA	maps data analysis
+	 LSX    (previous hour's LSX)
+         LRS    RASS data
+         LWM    latest surface winds from 3D wind analysis
+
+Outputs: (Feeds L1S, LBA)
+
+ 28257   LSX    LAPS surface data grids (27 packed in one file)
+
+
+------ 3.2.3 ---------------------TEMP----------------------------------------
+
+Process: temp.exe - Temperature-Height analysis
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+	Generate a temperature analysis using model background, sfc temp
+        analysis, and RASS data.
+
+Inputs: (from LGA, LSX, RAM [if available], LRS)       '*' = essential input
+      * lga/ram grid            model data analysis / forecast
+	lrs	inter data      RASS vertical temp profile 
+        snd     inter data      RAOB data including temperatures
+      * lsx     grid            LAPS surface data grids
+
+Outputs: (LW3 used by LBA)
+	lt1	3d grid		3-D temperature (K), 3-D Heights (M-MSL)
+
+Source directory: laps/nest7grid/source/temp
+
+Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
+           Analysis and Prediction System (LAPS): Analyses of clouds, 
+           precipitation, and temperature. Weather and Forecasting, 11, 
+           273-287.
+
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+
+------ 3.2.4 ---------------------CLOUD---------------------------------------
+
+Process: cloud.exe - Cloud analysis package
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+	Several input analyses are combined with SAOs of cloud layers.  These 
+        input analyses are the 3D temperature analysis,  a three-dimensional 
+        LAPS radar reflectivity analysis derived from full volumetric radar 
+        data, and a cloud top analysis derived from GOES IR band eight data.
+
+	Vertical cloud soundings from SAOs and pilot reports are analyzed 
+        horizontally to generate a preliminary three-dimensional analysis.  
+        This step provides information on the vertical location and 
+        approximate horizontal distribution of cloud layers.
+
+	The satellite cloud-top temperature field is converted to a cloud-top 
+        height field using the three-dimensional temperature analysis.  The 
+        cloud-top height field is then inserted into the preliminary cloud 
+        analysis to better define the cloud-top	heights as well as to increase
+        the horizontal spatial information content of the cloud analysis.  
+        A set of rules is employed to resolve conflicts between SAO and
+	satellite data.  Finally, the three-dimensional radar reflectivity 
+        field is inserted to provide additional detail in the analysis.
+
+Inputs:                                          '*' = essential input
+      * lsx	     grid	   LAPS surface data grids
+      * lt1          grid          LAPS 3-d temperature/height grid
+
+      * vrc/v01/vrz  grid          2-D or 3-D radar reflectivity	
+
+      * lvd          grid          Infra-red and Visible satellite data
+	pin	     inter data	   pireps/clouds
+        lm2          grid          composite snow cover (prev hour normally)
+      * lga/ram      grid          model data analysis / forecast
+      * lso          inter data    SAO obs 
+
+Outputs: 
+	lc3     3d grid	(ht)    3d clouds (fractional cover) 
+	lps     3d grid         3D Radar Reflectivity (filled in)
+	lcb     2d grid		cloud base/top (LCB,LCT) - all clouds are
+                                    considered (> .1 cover). Heights are MSL.
+                                cloud ceiling (CCE) -  only areas analyzed
+                                   with a cloud fraction > 0.65 are considered.
+                                   Units are meters AGL.
+
+	lcv     2d grid		column max cloud cover / snow cover
+                                    threshold for cloud cover in CTY is 0.65.
+
+Source directory: laps/nest7grid/source/cloud
+
+Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
+           Analysis and Prediction System (LAPS): Analyses of clouds, 
+           precipitation, and temperature. Weather and Forecasting, 11, 
+           273-287.
+
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+
+------ 3.2.5 ---------------------DERIV---------------------------------------
+
+Process: deriv.exe - Derived products
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+        These derived products are mostly cloud related.
+
+Inputs:                                          '*' = essential input
+      * lc3     3d grid	(ht)    3d clouds (fractional cover) 
+      *	lt1	grid		LAPS 3-d temperature grid
+	lps     3d grid         3D Radar Reflectivity (filled in)
+        lsx     2d grid         sfc pressure, temperature
+	lcv     2d grid		column max cloud cover / snow cover
+        lh3     grid            LAPS 3-d Relative Humidity (normally previous 
+                                                                          file)
+        lso     inter data      SAO obs (for precip type verification)
+
+Outputs: 
+	lcp     3d grid	(pres)	3d clouds (fractional cover) (pressure grid)
+	lwc     3d grid         liquid water content (LWC)
+	lil     2d grid		integrated lwc
+	lct     2d grid		SFC precip type (SPT,PTT) 
+                                    Types are:
+                                       0 - No Precip         
+                                       1 - Rain             "R"
+                                       2 - Snow             "S"
+                                       3 - Freezing Rain    "Z"
+                                       4 - Ice Pellets      "I"
+                                       5 - Hail             "A"
+                                       6 - Drizzle          "L"
+                                       7 - Freezing Drizzle "F"
+                                    SPT uses simple 0 dbz reflectivity 
+                                    threshold to define areas of precip.
+                                    PTT uses a 13 dbz threshold for non-snow
+                                    precip (~.01"/hr), 0 dbz is still used
+                                    for snow though a surface dewpoint
+                                    depression threshold is used to filter out
+                                    areas of snow virga not reaching the ground.
+                                    The latter may be more useful for display
+                                    purposes by end users. PTT also utilizes
+                                    SAO data to delineate areas of drizzle,
+                                    freezing drizzle, rain, freezing rain, 
+                                    and snow - in areas that radar does not 
+                                    detect echoes.
+                                SFC cloud type (SCT)
+                                    This is the type of the lowest cloud layer
+                                    in the LTY (3-D cloud type) file. The 
+                                    cover threshold is 0.65. The presence of 
+                                    a CB higher up has priority. There are
+                                    10 possible cloud types.
+                                    Types are:
+                                       0 - No Cloud
+                                       1 - Stratus          "St"
+                                       2 - Stratocumulus    "Sc"
+                                       3 - Cumulus          "Cu"
+                                       4 - Nimbostratus     "Ns"
+                                       5 - Altocumulus      "Ac"
+                                       6 - Altostratus      "As"
+                                       7 - Cirrostratus     "Cs"
+                                       8 - Cirrus           "Ci"
+                                       9 - Cirrocumulus     "Cc"
+                                      10 - Cumulonimbus     "Cb"
+
+	lmd     3d grid         mean cloud drop diameter 
+	lmt	2d grid	        max echo tops (LMT), 
+                                Low level reflectivity (LLR)
+	lco     3d grid         cloud omega       
+	lrp     3d grid         3D icing index 
+	lty     3d grid         3D cloud & precip type (CTY,PTY) 
+                                    threshold for cloud cover in CTY is 0.65.
+
+Source directory: laps/nest7grid/source/cloud
+
+Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
+           Analysis and Prediction System (LAPS): Analyses of clouds, 
+           precipitation, and temperature. Weather and Forecasting, 11, 
+           273-287.
+
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+
+
+ ------ 3.2.6 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
 
 Last updated: August 1996 by Daniel Birkenheuer
 
@@ -1120,374 +1609,7 @@ SATELLITE ALGORITHM:
      release, the coefficient adjustment is limited to above 500 hPa
      only.
 
------- 3.2 ----------WSR 88-D WIDEBAND RADAR REMAPPER------------------------
-
-Process: REMAP (author: Steve Albers/Keith Brewster - run on "RIDDS BOX")
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-Every volume scan
-Initiation: Completion of volume scan
-
-Inputs:
-	Raw WSR-88D Radar Data (reflectivity and velocity in polar form)
-            OLDLAPS: Circular Buffer
-            NEWLAPS: Polar NetCDF files (one per volume)
-
-Outputs (LAPS intermediate files):
-     v01    grids         3-D Radar reflectivity, velocity, and Nyquist vel
-     v02      "                                  "
-     etc. (for each radar)
-
-Source directory: Must be obtained separately from LAPS. This software runs
-                  on SUNOS and uses 'oldlaps' software conventions. The
-                  input is the wide-band data stored in memory as a 
-                  "circular buffer".
-
-                  "Under Construction" is a 'newlaps' version of this remapper
-                  that utilizes wide-band data stored in NetCDF files as input.
-                  The source code for this is in 'src/ingest/radar/remap'.
-
-This 'oldlaps' version runs on special hardware that is connected to the 88D 
-radar. The source code in the LAPS source directory contains the upper level
-cartesian remapping routines. These must be linked with the lower level 
-routines running on the actual RIDDS box to access the raw wideband radar
-data. This hardware is currently being developed by NSSL (contact Mike Jain), 
-and is being fielded on a number of WSR 88-D radars by several people at FSL 
-(including Woody Roberts and Steve Albers). Please see the following
-references from the LAPB home page, (Albers 1995; Brewster et al, 1995;
-Roberts et al, 1995). 
-
-The outputs from this process are currently used by the LAPS wind analysis.
-We may expand this to the cloud and precip accumulation analyses in the
-future (these currently use NOWRAD 'vrc' 2-D radar files).
-
-To build the remapping software on the RIDDS machine, a special section
-of the 'install_laps' script is invoked using a special version of the
-LAPS tar file. One still untars and runs 'install_laps' as normal, but only
-the remapper gets built. When running the remapper, files such as v01, v02,
-etc. are produced depending on which radar is being used. 
-
-To run the remapper software do 'cd nest7grid/exe; ./remapcrt.exe'; 
-the correct LAPS static file must be present (a normal occurrence when LAPS is 
-installed). The remapcrt.exe executable runs continuously, no scheduler is 
-involved. There is a set of environment variables that control such things as 
-data compression and transmission options. There is also a method to ftp the 
-files automatically, but this is more of a kludge and you'll need to contact 
-the author for the gory details.
-
-     Variable:            Contents         
-     ---------            --------
-     RADARNAME            'KFTG' for example                         [required]
-     LAPS_USER            Username for rcp command                   [optional]
-     LAPS_DEST            Destination machine directory name for rcp command
-                                                                     [optional]
-     LAPS_REMOTE          Node name for rcp command                  [optional]
-     LAPS_COMPRESS        'gzip' or 'compress'                       [optional]
-     LAPS_EXT             Set output extension if you have more than one radar 
-                                                                     [optional]
-     LAPS_PURGE           Valid values are non-negative integers. A value 
-                          of '0' disables the purger. Positive integers will
-                          purge the output file directory keeping that number
-                          of files present.
-
-Normally the remapper is compiled and run on the same machine. However, a
-procedure is being tested to allow compilation to occur on one machine with
-executables only being ported to another machine where the remapper is run.
-
-There is another version of the remapper that runs simulated data.
-To run this remapper, do 'cd nest7grid/exe; ./remapc_fake.exe'.
-
-A description of how the remapper software functions including how the 'v01'
-file is produced may be found on the
-World Wide Web at 'http://laps.fsl.noaa.gov/frd/laps/albers/remapper.html'
-
------- 3.3 ---------------------VRC--------------------------------------------
-
-Process: VRC (vrc_driver.x) Author John Smart (smart@fsl.noaa.gov)
-
-Inputs:
-        Raw WSI NOWRAD radar reflectivity data
-        v01, v02, etc.                        3-D reflectivity  (proposed)
-
-Outputs (Intermediate data file):
-        vrc     grid                          2-D reflectivity
-        vrz     grid                          3-D reflectivity  (proposed)
-
-The output reflectivity is used by the cloud and precip accumulation analyses.
-                                        
------- 3.4 -----------------PROFILER (PRO)-------------------------------------
-
-Processes: PRO - ingest_pro.exe, ingest_blppro.exe - LAPS local data Profiler 
-      wind ingest (author: Steve Albers - albers@fsl.noaa.gov)
-
-Inputs:
-	WPDN profiler wind data in netCDF format (ingest_pro.exe) 
-	Boundary layer profiler wind data in netCDF format (ingest_blppro.exe) 
-        These are in two separate NetCDF directories.
-
-Outputs: (The two executables are run sequentially, feeds wind)
-	pro	inter data	profiler wind direction (degrees) and
-                                              speed     (meters/sec)  (ASCII)
-
-Source directory: laps/nest7grid/source/ingest/profiler
-
-Sample Output: Should be available in the test data case.
-
------- 3.5 ------------------RASS (LRS)---------------------------------------
-
-Process: (ingest_lrs.exe, ingest_blplrs.exe) LAPS local data RASS ingest
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-Inputs:
-	WPDN RASS temperature data in netCDF format (ingest_lrs.exe) 
-	Boundary layer RASS data in netCDF format (ingest_blplrs.exe) 
-        These are in two separate NetCDF directories.
-
-Outputs: (The two executables are run sequentially, feeds LSX and temp.exe)
-	lrs	inter data	RASS Virtual Temperatures (ASCII)
-
-Source directory: laps/nest7grid/source/ingest/rass
-
-Sample Output: Should be available in the test data case.
-
------- 3.6 ------------------PIREPS/ACARS-------------------------------------
-
-Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-Inputs:
-	Aircraft voice pireps and ACARS data (separate NetCDF files)
-
-Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
-	pin	inter data	voice pireps/clouds, ACARS/winds
-                                        
-Sample Output: Should be available in the test data case
- 
------- 3.7 ---------------------WIND-------------------------------------------
-
-Process: wind.exe - WIND analysis and related fields
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-	Generate a preliminary analysis using SAOs, surface mesonet, profiler, 
-	and aircraft reports.  Output of the blance packge from the previous
-	cycle is used as a first guess to do quality control on new 
-        observations. Time tendencies from the MAPS model are used both to 
-        update the older (greater than cycle time) aircraft reports and to 
-        advance the first guess over the LAPS cycle time.
-
-	In a second step, the Doppler radial velocities are mixed in.  The 
-        azimuthal component is estimated by using the results of the first 
-        step.  Radial velocities are taken from the Doppler radars after 
-        dealiasing and other quality control steps are done.
-
-Auxiliary functions:
-	write out graphical products
-		
-Inputs: (from PRO, PIN, LGA/RAM, LSX, LT1)       '*' = essential input
-      * lga/ram grid            model data analysis/forecast
-                                needed for current and previous cycle times
-	pro     inter data      profiler winds
-        snd     inter data      RAOB data including winds
-	pin	inter data      pireps/clouds
-      * lso     inter data      LAPS surface obs file: mesonet & SAO
-	lsx	grid		LAPS surface data grids
-        lt1     grid            LAPS heights
-
-        (remapped from raw radar data)
-	v01-v20 grid            3-D radar reflectivity/radial velocity 
-        vrc/v01/vrz             2-D or 3-D radar reflectivity
-
-Outputs: (LW3 is main output)
-	msg	inter data	mesonet winds  (none of these five really have
-	pig	inter data	acars winds     to be part of the Wind Anlysis,
-	prg	inter data	profiler winds   they are used for lapsplot
-	sag	inter data	SAOs              output)
-	d01-d20 inter data (3d)	derived radar obs
-
-	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
-	lwm	2d grid		mean winds (sfc - 300mb layer)
-                                surface winds
-	lhe	2d grid		helicity (derived from 3-D winds)
-	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
-
-	lmr	2d grid		2-D column max radar ref      
-	lf1	2d grid		2-D column max radar ref history (maximum 
-                                over time since the previous analysis cycle)
-                                        
-Source directory: laps/nest7grid/source/wind
-Compile-time parameters: laps/nest7grid/source/wind/windparms.inc
-
-CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
-
-Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
-           342-352. 
-
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
-
------- 3.8 ---------------------TEMP-------------------------------------------
-
-Process: temp.exe - Temperature-Height analysis
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-	Generate a temperature analysis using model background, sfc temp
-        analysis, and RASS data.
-
-Inputs: (from LGA, LSX, RAM [if available], LRS)       '*' = essential input
-      * lga/ram grid            model data analysis / forecast
-	lrs	inter data      RASS vertical temp profile 
-        snd     inter data      RAOB data including temperatures
-      * lsx     grid            LAPS surface data grids
-
-Outputs: (LW3 used by LBA)
-	lt1	3d grid		3-D temperature (K), 3-D Heights (M-MSL)
-
-Source directory: laps/nest7grid/source/temp
-
-Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
-           Analysis and Prediction System (LAPS): Analyses of clouds, 
-           precipitation, and temperature. Weather and Forecasting, 11, 
-           273-287.
-
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
-
------- 3.9 ---------------------CLOUD------------------------------------------
-
-Process: cloud.exe - Cloud analysis package
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-	Several input analyses are combined with SAOs of cloud layers.  These 
-        input analyses are the 3D temperature analysis,  a three-dimensional 
-        LAPS radar reflectivity analysis derived from full volumetric radar 
-        data, and a cloud top analysis derived from GOES IR band eight data.
-
-	Vertical cloud soundings from SAOs and pilot reports are analyzed 
-        horizontally to generate a preliminary three-dimensional analysis.  
-        This step provides information on the vertical location and 
-        approximate horizontal distribution of cloud layers.
-
-	The satellite cloud-top temperature field is converted to a cloud-top 
-        height field using the three-dimensional temperature analysis.  The 
-        cloud-top height field is then inserted into the preliminary cloud 
-        analysis to better define the cloud-top	heights as well as to increase
-        the horizontal spatial information content of the cloud analysis.  
-        A set of rules is employed to resolve conflicts between SAO and
-	satellite data.  Finally, the three-dimensional radar reflectivity 
-        field is inserted to provide additional detail in the analysis.
-
-Inputs:                                          '*' = essential input
-      * lsx	     grid	   LAPS surface data grids
-      * lt1          grid          LAPS 3-d temperature/height grid
-
-      * vrc/v01/vrz  grid          2-D or 3-D radar reflectivity	
-
-      * lvd          grid          Infra-red and Visible satellite data
-	pin	     inter data	   pireps/clouds
-        lm2          grid          composite snow cover (prev hour normally)
-      * lga/ram      grid          model data analysis / forecast
-      * lso          inter data    SAO obs 
-
-Outputs: 
-	lc3     3d grid	(ht)    3d clouds (fractional cover) 
-	lps     3d grid         3D Radar Reflectivity (filled in)
-	lcb     2d grid		cloud base/top (LCB,LCT) - all clouds are
-                                    considered (> .1 cover). Heights are MSL.
-                                cloud ceiling (CCE) -  only areas analyzed
-                                   with a cloud fraction > 0.65 are considered.
-                                   Units are meters AGL.
-
-	lcv     2d grid		column max cloud cover / snow cover
-                                    threshold for cloud cover in CTY is 0.65.
-
-Source directory: laps/nest7grid/source/cloud
-
-Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
-           Analysis and Prediction System (LAPS): Analyses of clouds, 
-           precipitation, and temperature. Weather and Forecasting, 11, 
-           273-287.
-
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
-
------- 3.10 ---------------------DERIV-----------------------------------------
-
-Process: deriv.exe - Derived products
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-        These derived products are mostly cloud related.
-
-Inputs:                                          '*' = essential input
-      * lc3     3d grid	(ht)    3d clouds (fractional cover) 
-      *	lt1	grid		LAPS 3-d temperature grid
-	lps     3d grid         3D Radar Reflectivity (filled in)
-        lsx     2d grid         sfc pressure, temperature
-	lcv     2d grid		column max cloud cover / snow cover
-        lh3     grid            LAPS 3-d Relative Humidity (normally previous 
-                                                                          file)
-        lso     inter data      SAO obs (for precip type verification)
-
-Outputs: 
-	lcp     3d grid	(pres)	3d clouds (fractional cover) (pressure grid)
-	lwc     3d grid         liquid water content (LWC)
-	lil     2d grid		integrated lwc
-	lct     2d grid		SFC precip type (SPT,PTT) 
-                                    Types are:
-                                       0 - No Precip         
-                                       1 - Rain             "R"
-                                       2 - Snow             "S"
-                                       3 - Freezing Rain    "Z"
-                                       4 - Ice Pellets      "I"
-                                       5 - Hail             "A"
-                                       6 - Drizzle          "L"
-                                       7 - Freezing Drizzle "F"
-                                    SPT uses simple 0 dbz reflectivity 
-                                    threshold to define areas of precip.
-                                    PTT uses a 13 dbz threshold for non-snow
-                                    precip (~.01"/hr), 0 dbz is still used
-                                    for snow though a surface dewpoint
-                                    depression threshold is used to filter out
-                                    areas of snow virga not reaching the ground.
-                                    The latter may be more useful for display
-                                    purposes by end users. PTT also utilizes
-                                    SAO data to delineate areas of drizzle,
-                                    freezing drizzle, rain, freezing rain, 
-                                    and snow - in areas that radar does not 
-                                    detect echoes.
-                                SFC cloud type (SCT)
-                                    This is the type of the lowest cloud layer
-                                    in the LTY (3-D cloud type) file. The 
-                                    cover threshold is 0.65. The presence of 
-                                    a CB higher up has priority. There are
-                                    10 possible cloud types.
-                                    Types are:
-                                       0 - No Cloud
-                                       1 - Stratus          "St"
-                                       2 - Stratocumulus    "Sc"
-                                       3 - Cumulus          "Cu"
-                                       4 - Nimbostratus     "Ns"
-                                       5 - Altocumulus      "Ac"
-                                       6 - Altostratus      "As"
-                                       7 - Cirrostratus     "Cs"
-                                       8 - Cirrus           "Ci"
-                                       9 - Cirrocumulus     "Cc"
-                                      10 - Cumulonimbus     "Cb"
-
-	lmd     3d grid         mean cloud drop diameter 
-	lmt	2d grid	        max echo tops (LMT), 
-                                Low level reflectivity (LLR)
-	lco     3d grid         cloud omega       
-	lrp     3d grid         3D icing index 
-	lty     3d grid         3D cloud & precip type (CTY,PTY) 
-                                    threshold for cloud cover in CTY is 0.65.
-
-Source directory: laps/nest7grid/source/cloud
-
-Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
-           Analysis and Prediction System (LAPS): Analyses of clouds, 
-           precipitation, and temperature. Weather and Forecasting, 11, 
-           273-287.
-
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
-
------- 3.11 ---------------------ACCUM-----------------------------------------
+------ 3.2.7 ---------------------ACCUM---------------------------------------
 
 Process: accum.exe - Snowfall/Liquid Equivalent Precipitation
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1515,118 +1637,6 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            273-287.
 
            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
-
------- 3.12 ---------------------LGA-------------------------------------------
-
-Package: lga.exe - ingest model data (author: John Snook - snook@fsl.noaa.gov).
-
-        LGA 	LAPS analysis grids from RUC analysis grids, 50 mb levels 
-                (1 hr files) (vertical interpolation)
-
-Inputs:
-	Model hybrid data 
-
-Outputs: (Feeds LZB, LC3 )
-	lga	grid	maps data analysis/forecast
-
------- 3.13 ---------------------LVD-------------------------------------------
-
-LVD process - lvd_driver.exe - takes raw sat. data and puts it on LAPS 
-              grid.
-        (author: John Smart - smart@fsl.noaa.gov)
-
-Input:
- 	 GOES 8 Data
-
-Output:
-         LVD	grid	LAPS satellite data file
-
------- 3.14 ------------------SFC (LSX)----------------------------------------
-
-Surface processing - laps_sfc.x (LSX and friends) 
-        (author: Pete Stamus - stamus@fsl.noaa.gov)
-
-Surface package collects surface data - SAOs, local mesonet, GOES IR bightness.
-Places surface data on LAPS grid.  Quality Control of Obs.  Also takes previous
-hour's result as input.  Data is collected over a slightly larger than grid to 
-help boundary conditions.  Uses a cubic spline technique for interpolation.
-
-GOES IR gives relative temperatures, not absolute temps.  GOES tempature 
-gradient fields is then interpolated together with surface observations and 
-previous background, etc.  LGA 700 mb temperatures are extrapolated to the 
-surface, compare it with the hard data points.  Use to account for elevation 
-effects.
-
-Constrain surface winds and pressure fields to full equations of motion.  Do an
-interpolation of SAO reports and mesonet reports to get 2-D winds on surface.
-re-analysize wind field based on adjusted pressure field.
-
-Then derived fields are calculated.
-
-For LT1 (3D temps) take 3D temps from the LGA module (orginally MAPS data)
-plus LAPS surface temps and RASS, then the fields are blended.
-
-**********
-
-LSO process - obs_driver.x - Ingest surface data
-        (author: Pete Stamus - stamus@fsl.noaa.gov)
-
-Input:
-	raw SAO data
-	raw mesonet data
-
-Output:
-         LSO	ascii	LAPS surface obs file: mesonet & SAO
-                        The format of this file may be gleaned from looking
-                        at the obs_driver.x code, or by looking at sample LSO 
-                        files in the test data case.
-
-**********
-
-28257	LSX process - LAPS surface data analysis
-        (author: Pete Stamus - stamus@fsl.noaa.gov)
-
-Inputs:
-         LSO    surface observations
-	 LGA	maps data analysis
-	 LSX    (previous hour's LSX)
-         LRS    RASS data
-         LWM    latest surface winds from 3D wind analysis
-
-Outputs: (Feeds L1S, LBA)
-
- 28257   LSX    LAPS surface data grids (27 packed in one file)
- 
------- 3.15 -----------------------RAOB----------------------------------------
-
-Process: (ingest_raob.exe) LAPS RAOBs
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-Inputs:
-	RAOBs in NetCDF format
-
-Outputs: (Feeds temp.exe, humid.exe, wind.exe)
-	snd	inter data	RAOB temp, dewpoint, wind
-                                        
-        Note: If you have good profiler or rass data, you may want to disable
-              the RAOB ingest as they would then perhaps hurt as much as they
-              help (due to raobs being relatively old). This can be done by
-              using a dummy path name for the raw raob data in 
-              'nest7grid.parms'.
- 
------- 3.16 -----------------------VAD----------------------------------------
-
-Process: (ingest_vad.exe) LAPS RAOBs
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-Inputs:
-	VADs in NetCDF format
-
-Outputs: (Feeds wind.exe)
-	pro	inter data	VAD wind
-                                        
-        Note: This is one of several processes that write to build up the
-              pro file.
 
 ********************************************************************************
 ********************************************************************************
