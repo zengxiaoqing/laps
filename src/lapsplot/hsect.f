@@ -1081,9 +1081,11 @@ c
               vasmn=255.
               do i = 1,NX_L
               do j = 1,NY_L
-                 vas(i,j) = vas(i,j) - 273.15
-                 vasmx=int(max(vas(i,j),vasmx))
-                 vasmn=int(min(vas(i,j),vasmn))
+                 if(vas(i,j).ne.r_missing_data)then
+                    vas(i,j) = vas(i,j) - 273.15
+                    vasmx=int(max(vas(i,j),vasmx))
+                    vasmn=int(min(vas(i,j),vasmn))
+                 endif
               enddo
               enddo
               clow = -80.
