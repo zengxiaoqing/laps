@@ -68,7 +68,12 @@ c	1. Units are not changed in this routine.
 c
 c*******************************************************************************
 c
-	real*4 elev(num_sfc), t(num_sfc), td(num_sfc)
+	implicit none
+	integer num_sfc
+	real a_t, b_t, a_td, b_td, hbar, badflag
+	real elev(num_sfc), t(num_sfc), td(num_sfc)
+	real cnt, cntd, sumht, sumh, sumt, sumh2, sumt2, sumtd, sumhtd
+	integer i
 c
 c.....	Set up storage variables.
 c
@@ -153,8 +158,14 @@ c	Changes:	07-20-88	Changed from subroutine to function.
 c
 c*****************************************************************************
 c
-	data const/0.190284/, const1/5.2553026/		!const1 = 1/const
-	data alapse/0.0065/, tstd/288.15/, amslp/1013.25/
+	implicit none
+	real alt, elev, badflag
+	real term1, term2
+	real const, const1, alapse, tstd, amslp
+	parameter(const=0.190284,const1=1./const, alapse=0.0065,
+     +            tstd=288.15,amslp=1013.25)
+cc	data const/0.190284/, const1/5.2553026/		!const1 = 1/const
+cc	data alapse/0.0065/, tstd/288.15/, amslp/1013.25/
 c
 	badflag = -99.9
 c
@@ -202,9 +213,14 @@ c                       25 Aug 97  Changes for dynamic LAPS.
 c
 c================================================================================
 c
-	real lapse_t, lapse_td
+	implicit none
+	real lapse_t, lapse_td, temp, dewp, pres, elev, redpres, ref_lvl
+	real badflag
+	real gor, ctv
+	parameter(gor=0.03414158,ctv=0.37803)
+	real dz, dz2, t_mean, td_mean, td, e, tkel, tv, esw
 !	DATA GOR,ZBOU,CTV/.03414158,1612.,.37803/
-	data gor,ctv/.03414158,.37803/
+!	data gor,ctv/.03414158,.37803/
 		!GOR= acceleration due to gravity divided by the dry air gas
 		!     constant (9.8/287.04)
 		!F2M= conversion from feet to meters
@@ -243,7 +259,10 @@ c.....  named point i,j.  All points from i-ix to i+ix, and
 c.....	j-jy to j+jy will be zeroed.  This is aimed at processing 
 c.....	Band 8 temperatures to remove cloud edges.
 c
+	implicit none
+	integer imax, jmax, i,j,ix,jy
 	real*4 a(imax,jmax)
+	integer jmx, imx, jmn, imn, ii, jj
 c
 	jmx=j+jy
 	imx=i+ix
@@ -278,6 +297,8 @@ C UComp		 O	R*4	U-component of wind
 C VComp		 O	R*4	V-component of wind
 C Status	 O	I*4	Standard system status
 
+	implicit none
+	real flag, angle
 	parameter	(flag=1e37)
 
 	real*4		dd,ff,ucomp,vcomp
@@ -318,7 +339,15 @@ c     LAPS version:  07-26-94  P. Stamus
 c
 c========================================================================
 c
+      implicit none
+
+      integer ni,nj
       real*4 x(ni,nj)
+      real amean, ave, sum, sum_a, sum_v, sum_sk, sum_kr, range, st_dev
+      real var, amax, amin, pts, dif, dif2, z_max, z_min, coef_sk
+      real coef_kr
+      integer i,j, imax, imin, jmax, jmin
+      
 c
 c..... Start by zeroing some counters.
 c
@@ -416,6 +445,7 @@ c                08-25-97  Changes for dynamic LAPS.   P. Stamus
 c
 c*************************************************************************
 c
+	integer imax, jmax, i, j
 	real*4 t(imax,jmax), tb8(imax,jmax), lapse_t
         real*4 lat(imax,jmax), lon(imax,jmax), topo(imax,jmax)
 c
@@ -513,6 +543,7 @@ c++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 c
 c	implicit none
 c
+	integer ni,nj
 	real*4 lp_10krh(ni,nj), lp_10kt(ni,nj), lp_10kws(ni,nj)
 	real*4 snow_cover(ni,nj), soil_moist(ni,nj), topo(ni,nj)
 	real*4 lp_fire_index(ni,nj)
@@ -692,6 +723,7 @@ c           calculated and the point is set to "badflag".
 c
 c====================================================================
 c
+      integer ni,nj
       real*4 t(ni,nj), rh(ni,nj), hi(ni,nj)
 c
       do j=1,nj
@@ -749,6 +781,7 @@ c     Notes:
 c
 c======================================================================
 c
+	integer ni,nj,mxstn
 	real*4 field(ni,nj), ob(mxstn), interp_ob
 	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
 	integer*4 ii(mxstn), jj(mxstn)
@@ -874,6 +907,7 @@ c
 c
 c..... Arrays for the OBS file input data
 c
+        integer mxstn, ni, nj
 	real*4 lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
 c
 c.....	Grids for the outputs, weights, and stuff 
@@ -1016,6 +1050,7 @@ c     Original: 03-06-98  P. Stamus, NOAA/FSL
 c
 c======================================================================
 c
+      integer ni,nj
       real*4 field(ni,nj)
 c
       character line(ni)*1
@@ -1113,6 +1148,7 @@ c                  Added zero to missing field check.
 c
 c========================================================================
 c
+      integer ni,nj
       real*4 x(ni,nj)
 c
       istatus = 1
@@ -1211,6 +1247,7 @@ c
 c
 c     Routine to check a real 2-d array for NaN's.
 c
+      integer ni,nj
       real*4 x(ni,nj)
 c
       nan_flag = 1
@@ -1233,6 +1270,7 @@ c
 c
 c     Routine to check a real 3-d array for NaN's.
 c
+      integer ni,nj,nk
       real*4 x(ni,nj,nk)
 c
       nan_flag = 1
