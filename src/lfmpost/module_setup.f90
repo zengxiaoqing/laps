@@ -721,7 +721,7 @@ CONTAINS
       status = 1
     ELSE
       ! Get a logical unit number to use
-      find_lun: DO pointunit = 10,99
+      find_lun: DO pointunit = 7,255
         INQUIRE(UNIT=pointunit, OPENED=lunused)
         IF (.NOT.lunused) EXIT find_lun
       ENDDO find_lun
