@@ -559,6 +559,41 @@ c               call stretch(38.,400.,68.,220.,laps_vis_norm(i,j))
 
           endif
 
+       elseif(csatid.eq.'goes09'.and.c_sat_type.eq.'cdf')then 
+
+         isat = 6
+         print*,'Stretch ',csatid,' to goes7 look-a-like'
+         print*,'Two step process:'
+         print*,'1:  stretch ',csatid,'to goes08'
+         print*,'2:  stretch goes08 to look like goes07'
+
+         visin1_cur=vis_cnt_range_in(1,isat)
+         visin2_cur=vis_cnt_range_in(2,isat)
+         visout1_cur=vis_cnt_range_out(1,isat)
+         visout2_cur=vis_cnt_range_out(2,isat)
+
+         print*,'goes09 to goes08 stretch parameters:'
+         print*,'   In:  ',visin1_cur,visin2_cur
+         print*,'   Out: ',visout1_cur,visout2_cur
+
+         do j=1,jmax
+         do i=1,imax
+            if(laps_vis_norm(i,j).ne.r_missing_data)then
+               call stretch(visin1_cur,visin2_cur
+     &                     ,visout1_cur,visout2_cur
+     &                     ,laps_vis_norm(i,j))
+
+c now make it look like goes7
+               call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
+
+c                  call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
+
+            endif
+         enddo
+         enddo
+
        endif 
 c
 c ready to normalize vis counts to local domain
