@@ -2892,17 +2892,20 @@ Process: qbalpe.exe - "Quasi-geostrophic balance between height and wind.
      (author: John McGinley/John Snook/John Smart - smart@fsl.noaa.gov)
 
         LAPS quasi-geostrophic balance of height and wind with temp adjustment.
+        Cloud fields are now balanced with the other fields.
 <pre>
 Inputs: 
       * lw3          grid       LAPS 3-d wind analysis
       * lt1          grid       LAPS 3-d temperature analysis
       * lsx          grid       LAPS 2-d station pressure (PS field)
-        lga          grid       Model 3-d first guess grids
+      * lwc          grid       LAPS 3-d Cloud Liquid/Ice/Precip
         lco          grid       LAPS 3-d Cloud Omega
+        lga          grid       Model 3-d first guess grids
 
 Outputs:
         lt1          3d grid    in lapsprd/balance/lt1 (ht and t field)
         lw3          3d grid    in lapsprd/balance/lw3 (u3, v3 and om field)
+        lh3          3d grid    in lapsprd/balance/lh3 (rh field)
 </pre>
 Source directory: laps/src/balance
 
