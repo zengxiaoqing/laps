@@ -1827,8 +1827,10 @@ float match_level;
  
         if (found == 1) 
           return i;
-        else
+        else {
+          printf("Level %8.2f not found.\n", match_level);
           return -1;
+        }
         
 }
 /************************************************************/
@@ -2274,10 +2276,14 @@ fint4 *status;
             i_level = lvl[i];
             dptr = (data + (i*(*imax)*(*jmax)));
             cptr = (comment + (i*(*comm_len + 1)));
+
             istatus = update_laps_v3(cdfid,i_level,i_record,imax,
                                      jmax,var_id,inv_id,dptr,
                                      comm_id,cptr,name_len);
-            if (istatus == (-1)) missing_grids++;
+            if (istatus == (-1)) {
+              missing_grids++;
+              printf("Variable with error is %s at level %d.\n",vptr,i_level);
+            }
 
             if ((strcmp(ext,"lmr") == 0) || (strcmp(ext,"lf1") == 0))
               i_record++;
