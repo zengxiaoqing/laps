@@ -54,7 +54,7 @@ if ($arg1 == p) then
 #   grep $OLDPERL       *.pl
 #   fix_net $OLDPERL    $NEWPERL   *.pl 
 
-    setenv NEWNETCDF    /usr/local/netcdf/bin
+    setenv NEWNETCDF    /usr/local/netcdf
 
 #   Edit NetCDF paths
 #   setenv OLDNETCDF    /usr/local/apps/netcdf/bin
