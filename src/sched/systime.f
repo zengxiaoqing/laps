@@ -36,7 +36,6 @@ cdis
         character*2 utc_hour,utc_min
         character*5 utc_date
         character*200 fname 
-        include 'lapsparms.for'
 
         call get_laps_config('nest7grid',istatus)
         if(istatus .ne. 1)then
@@ -51,6 +50,8 @@ cdis
             write(6,*)' Error getting laps_cycle_time'
             stop
         endif
+
+!       Write out systime.dat file that has seconds since 1960
 
         call get_directory('time',fname,len_fname)
         open(11,file=fname(1:len_fname)//'systime.dat',status='unknown')
@@ -81,6 +82,17 @@ cdis
 
         write(11,10)utc_date
  10	format(a5)
+
+        close(11)
+
+!       Write out c_time.dat file that has seconds since 1970
+
+        open(11,file=fname(1:len_fname)//'c_time.dat',status='unknown')
+
+	write(11,101)asc_time
+101	format(1x,a9)
+	write(11,102)i4time_sys -315619200
+102	format(1x,i11)
 
         close(11)
 

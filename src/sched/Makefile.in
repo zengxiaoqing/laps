@@ -36,8 +36,8 @@ OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .exe
 
-EXE = systime.exe c_time.exe
-SRC = systime.f c_time.f
+EXE = systime.exe 
+SRC = systime.f 
 
 
 # Define other variables 

@@ -46,9 +46,6 @@ unless($opt_o==1){
 $t=gmtime(); print $t." Running systime.exe\n";
 system("$LAPSROOT/bin/systime.exe");
 
-$t=gmtime(); print $t." Running c_time.exe\n";
-system("$LAPSROOT/bin/c_time.exe > $LAPS_DATA_ROOT/time/c_time.dat");
-
 $t=gmtime(); print $t." Running purger\n";
 system("@PERL@ $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
 
