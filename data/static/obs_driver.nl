@@ -8,7 +8,7 @@
  ick_metar_time=0,
  itime_before=900,
  itime_after=900,
- maxobs=6000,
+ maxobs=20000,
  l_allow_empty_lso=.false.,
  /
 
