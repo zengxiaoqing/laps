@@ -18,9 +18,6 @@ if test -n "$user_fflags"
 then
   FFLAGS="$user_fflags"
 fi
-if test -n "$user_fflags90"
-  FFLAGS90="$user_fflags90"
-fi
 
 if test -n "$user_optimize"
 then
@@ -86,8 +83,9 @@ fi
 LIBPATHFLAG=-L
 if test "$arch" = "hpux" 
 then
-  FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
-  FFLAGS90="$FFLAGS90 +source=free +langlvl=90"
+  FFLAGS="$FFLAGS +U77 +FPVZO -K" 
+  FIXED="+source=fixed"
+  FREE="+source=free +langlvl=90"
   OPTIMIZE="-O"
   LIBPATHFLAG=-Wl,-L
   echo "GCC = $GCC"
@@ -100,14 +98,16 @@ then
 fi
 if test "$arch" = "rs6000" 
 then
-  FFLAGS="$FFLAGS -qfixed"
-  FFLAGS90="$FFLAGS90 -qfree=f90"
+  FFLAGS="$FFLAGS"
+  FIXED="-qfixed"
+  FREE="-qfree=f90"
   OPTIMIZE="-O3 -qstrict"
 fi
 if test "$arch" = "alpha"
 then
-  FFLAGS="$FFLAGS -convert big_endian -fixed"
-  FFLAGS90="$FFLAGS90 -convert big_endian -free"
+  FFLAGS="$FFLAGS -convert big_endian"
+  FIXED="-fixed"
+  FREE="-free"
   OPTIMIZE="-O4"
 fi  
 if test "$arch" = "sun4" 
@@ -139,8 +139,9 @@ then
   if test "$arch" = "solaris"
   then
 dnl module flags for solaris 
-	FFLAGS="$FFLAGS -fixed -M\$(SRCROOT)/src/lib"
-        FFLAGS90="$FFLAGS90 -free -M\$(SRCROOT)/src/lib"
+	FFLAGS="$FFLAGS -M\$(SRCROOT)/src/lib"
+        FIXED="-fixed"
+        FREE="-free"
 dnl
 dnl The solaris cc has a bug in the preprocessor
 dnl 
@@ -161,7 +162,8 @@ then
   if test "$arch" = "i686"
   then
     FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
-    FFLAGS90="$FFLAGS90 -Mfree -byteswapio -i4"
+    FIXED="-Mnofree"
+    FREE="-Mfree"
     CPP="$FC"
     OPTIMIZE="-O2"
   fi
@@ -194,7 +196,8 @@ AC_SUBST(CPPFLAGS)
 AC_SUBST(PERL)
 AC_SUBST(CSH)
 AC_SUBST(FFLAGS)
-AC_SUBST(FFLAGS90)
+AC_SUBST(FREE)
+AC_SUBST(FIXED)
 AC_SUBST(OPTIMIZE)
 AC_SUBST(OTHERLIBS)
 AC_SUBST(ARCHIVE)
@@ -261,6 +264,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/ramrsf.pl
           etc/localize_optran.com
 	  etc/laps_localization.pl
+	  etc/laps_monitor.pl
           etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/sfc.pl
