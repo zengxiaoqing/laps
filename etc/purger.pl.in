@@ -35,6 +35,9 @@ if($realclean eq "FULLPURGE"){
 }else{
     $hist_time = 1.5;
     $clean_dirs{lga} = 0.5;
+    $clean_dirs{lgb} = 0.5;
+    $clean_dirs{ram} = 0.75;
+    $clean_dirs{rsf} = 0.75;
     $clean_dirs{lcv} = 2.1;
     $clean_dirs{l1s} = 2.1;
     $clean_dirs{lm2} = 1.5;

@@ -105,6 +105,21 @@ foreach $exe (@LAPS_EXE){
 	$prevproc = $2;
 	
 	print "WARNING Found LOCK file for sched.pl with pid $jpid and child $cid - killing $prevproc\n";
+        open(PS,"ps -ef |");
+	my @ps = <PS>;
+	close(PS);
+#
+# Kill any children of the child
+#
+	foreach(@ps){
+	    if ($_ =~ /\s+(\d+)\s+$cid\s+/){
+		print "Killing process $1\n";
+		kill -9,$1;
+	    }
+	}
+#
+# Kill the child
+#
 	kill -9,$cid if($cid>0);
 	unlink "$LAPS_LOG_PATH/$_";
     }

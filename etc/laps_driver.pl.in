@@ -90,7 +90,21 @@ foreach(@locks){
     open(LFH,"$LAPS_LOG_PATH/$_");
     my $cid = <LFH>;
     close(LFH);
-    
+    open(PS,"ps -ef |");
+    my @ps = <PS>;
+    close(PS);
+#
+# Kill any children of the child
+#
+    foreach(@ps){
+	if ($_ =~ /\s+(\d+)\s+$cid\s+/){
+	    print "Killing process $1\n";
+	    kill -9,$1;
+	}
+    }
+#
+# Kill the child
+#    
     print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
     kill -9,$cid if($cid>0);
     unlink "$LAPS_LOG_PATH/$_";
