@@ -768,8 +768,8 @@ c
         call get_ref_base(ref_base,istatus)
         if(istatus .ne. 1)return
 
-!       Get column max reflectivity (eventually pass in r_missing_data)
-        call get_max_reflect(field_3d,imax,jmax,kmax,ref_base ! r_missing_data
+!       Get column max reflectivity (now passing in r_missing_data)
+        call get_max_reflect(field_3d,imax,jmax,kmax,r_missing_data
      1                      ,field_2d)
 
         call get_laps_domain(imax,jmax,'nest7grid',lat,lon,topo,istatus)       

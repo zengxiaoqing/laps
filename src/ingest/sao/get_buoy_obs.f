@@ -155,8 +155,8 @@ c
 
 !           Ob times contained in each file
             if(buoy_format(1:len_buoy_format) .eq. 'NIMBUS')then 
-                i4_contains_early = 0 
-                i4_contains_late = 3600
+                i4_contains_early = 900
+                i4_contains_late = 2699
                 i4_file_interval = 3600
 
             elseif(buoy_format(1:len_buoy_format) .eq. 'WFO')then 

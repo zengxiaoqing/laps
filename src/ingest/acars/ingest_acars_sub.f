@@ -58,7 +58,7 @@ C
       real altitude(recNum), heading(recNum), latitude(recNum),
      +     longitude(recNum), maxTurbulence(recNum),
      +     medTurbulence(recNum), temperature(recNum),
-     +     vertAccel(recNum), waterVaporMR(recNum), windDir(recNum),
+     +     vertAccel(recNum), downlinkedRH(recNum), windDir(recNum),
      +     windSpeed(recNum)
       double precision maxSecs, minSecs, timeObs(recNum),
      +     timeReceived(recNum)
@@ -86,7 +86,7 @@ C
      +     speedError, tempError, waterVaporQC, windDirError, 
      +     windSpeedError, altitude, heading, latitude, longitude, 
      +     maxTurbulence, medTurbulence, temperature, vertAccel, 
-     +     waterVaporMR, windDir, windSpeed, maxSecs, minSecs, 
+     +     downlinkedRH, windDir, windSpeed, maxSecs, minSecs, 
      +     timeObs, timeReceived, destAirport, flight, maxDate, 
      +     minDate, origAirport, rptStation, tailNumber)
 C
@@ -200,14 +200,17 @@ C
 
  860      continue
 
-          if(waterVaporMR(i) .ge. 0. .and. 
-     1       waterVaporMR(i) .le. 100.)then
-              write(6,23)waterVaporMR(i)
-              write(11,23)waterVaporMR(i)
- 23           format(' MixR:'/1x,f10.3)
+          if(downlinkedRH(i) .ge. 0.   .and. 
+     1       downlinkedRH(i) .le. 1.00 .and.
+     1       waterVaporQC(i) .le. 2    .and.
+     1       waterVaporQC(i) .ge. 0             )then
+              write(6,23)downlinkedRH(i)
+              write(6,*)' RH QC value = ',waterVaporQC(i)
+              write(11,23)downlinkedRH(i)
+ 23           format(' RH:'/1x,f10.3)
 
           else
-              write(6,*)' water vapor rejected: ',waterVaporMR(i)
+              write(6,*)' RH rejected: ',downlinkedRH(i),waterVaporQC(i)
 
           endif
 
@@ -226,7 +229,7 @@ C
      +     speedError, tempError, waterVaporQC, windDirError, 
      +     windSpeedError, altitude, heading, latitude, longitude, 
      +     maxTurbulence, medTurbulence, temperature, vertAccel, 
-     +     waterVaporMR, windDir, windSpeed, maxSecs, minSecs, 
+     +     downlinkedRH, windDir, windSpeed, maxSecs, minSecs, 
      +     timeObs, timeReceived, destAirport, flight, maxDate, 
      +     minDate, origAirport, rptStation, tailNumber)
 C
@@ -242,7 +245,7 @@ C
       real altitude(recNum), heading(recNum), latitude(recNum),
      +     longitude(recNum), maxTurbulence(recNum),
      +     medTurbulence(recNum), temperature(recNum),
-     +     vertAccel(recNum), waterVaporMR(recNum), windDir(recNum),
+     +     vertAccel(recNum), downlinkedRH(recNum), windDir(recNum),
      +     windSpeed(recNum)
       double precision maxSecs, minSecs, timeObs(recNum),
      +     timeReceived(recNum)
@@ -370,17 +373,17 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      waterVaporMR "water vapor mixing ratio"
+C      downlinkedRH "downlinked relative humidity"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'waterVaporMR',nf_vid)
+        nf_status = NF_INQ_VARID(nf_fid,'downlinkedRH',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'in var waterVaporMR'
+        print *,'in var downlinkedRH'
       endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,waterVaporMR)
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,downlinkedRH)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'in var waterVaporMR'
+        print *,'in var downlinkedRH'
       endif
 C
 C     Variable        NETCDF Long Name

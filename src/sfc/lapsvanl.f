@@ -471,32 +471,32 @@ c          corrected differently from the gridded background by an amount
 c          equivalent to the lapse rates times the deviation of the station
 c          elevation from the LAPS terrain.
 c
-	   ter = elev1(i,j)     ! departures at stn elev
+	   ter_s = elev1(i,j)     ! departures at stn elev
 c
-	   dz = ter - h7(i,j)
+	   dz = ter_s - topo(i,j)
 	   if(t1(i,j) .ne. 0.) then
-	      tts = t7(i,j) + (lapse_t * dz)
+	      tts = (lapse_t * dz)
 	      t1(i,j) = t1(i,j) - tts
 	   endif
 	   if(td1(i,j) .ne. 0.) then
-	      ttds = td7(i,j) + (lapse_td * dz)
+	      ttds = (lapse_td * dz)
 	      td1(i,j) = td1(i,j) - ttds
 	   endif
 c
 c.....    Departures of other stuff on laps topo
 c
-	   ter = topo(i,j)     ! departures on laps topo
+	   ter_g = topo(i,j)     ! departures on laps topo
 c
-	   dz = ter - hbar     ! calc a sfc pressure
+	   dz = ter_g - hbar     ! calc a sfc pressure
 	   tbar = a_t + (lapse_t * (hbar + (dz * .5)))
 	   tbar = (tbar - 32.) * fon + 273.15        ! conv F to K
 	   psfc(i,j) = pbar * exp(-dz * gor / tbar)  ! Has no meteorological 
                                                      ! variation       
 
 !          Use LGA 700mb t/td and lapse rates to estimate sfc t/td
-	   dz = ter - h7(i,j)
-	   tt(i,j) = t7(i,j) + (lapse_t * dz)   
-	   ttd(i,j) = td7(i,j) + (lapse_td * dz)	
+	   dz = ter_g - ter_g
+	   tt(i,j) = (lapse_t * dz)   
+	   ttd(i,j) = (lapse_td * dz)	
 c
 	   if(tb81(i,j) .ne. 0.) then
 	       tb81(i,j) = tb81(i,j) - tt(i,j)
@@ -506,14 +506,14 @@ c.....     Using laps sfc p and background model sfc p,
 c.....     move background temps from background model 
 c.....     terrain to laps terrain.  Use Poisson's eqn.
 c
-	   if(t_bk(i,j).ne.0. .and. back_t.eq.1 .and. .false.)then 
-                                                           ! is this needed?
-	       t_bk_ltopo = 
-     1         t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
-	       t_bk(i,j) = t_bk_ltopo - tt(i,j)
-	   else
+!          if(t_bk(i,j).ne.0. .and. back_t.eq.1 .and. .false.)then 
+!                                                          ! is this needed?
+!              t_bk_ltopo = 
+!    1         t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
+!              t_bk(i,j) = t_bk_ltopo - tt(i,j)
+!          else
 	       t_bk(i,j) = t_bk(i,j) - tt(i,j)
-	   endif
+!	   endif
 
 	   if(td_bk(i,j) .ne. 0.) then
 	       td_bk(i,j) = td_bk(i,j) - ttd(i,j)
