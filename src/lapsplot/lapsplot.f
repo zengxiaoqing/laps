@@ -36,8 +36,10 @@ cdis
 cdis
 cdis   
 cdis
-        subroutine lapsplot(field,ni,nj,clow,chigh,cint,lat,lon
-     1                  ,c_metacode,jdot_in)
+        subroutine lapsplot(field,ni,nj,clow,chigh,cint,plot_parms
+     1                     ,lat,lon,c_metacode,jdot_in)
+
+        include 'lapsplot.inc'
 
         common /supmp1/ dummy,part
         common /supmp6/ umin,umax,vmin,vmax
@@ -139,10 +141,11 @@ cdis
 
             if(cint .ge. 0.)then
                 call conrec_line(field,ni,ni,nj,clow,chigh,cint
-     1                          ,-1,0,-1848,0)
+     1                          ,plot_parms,-1,0,-1848,0)
 
             else ! Special Contouring
-                call conrec_line(field,ni,ni,nj,0.,1e8,1e8,-1,0,-1848,0)       
+                call conrec_line(field,ni,ni,nj,0.,1e8,1e8,plot_parms
+     1                          ,-1,0,-1848,0)       
                 cbase = 1e-4
 
                 do i = 1,N_CONTOURS
@@ -152,9 +155,11 @@ cdis
      1                                                  )then
                         write(6,*)' Contouring at +/-',cvalue
                         call conrec_line(field,ni,ni,nj,cvalue
-     1                                  ,cvalue,1e-6,-1,0,-1848,0)
+     1                                  ,cvalue,1e-6,plot_parms
+     1                                  ,-1,0,-1848,0)
                         call conrec_line(field,ni,ni,nj,-cvalue
-     1                                  ,-cvalue,1e-6,-1,0,-1848,0)
+     1                                  ,-cvalue,1e-6,plot_parms
+     1                                  ,-1,0,-1848,0)
                     endif
                 enddo
             endif
