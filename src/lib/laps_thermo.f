@@ -170,11 +170,11 @@ cdis
         call move(pbe_2d,out_multi_2d(1,1,1),NX_L,NY_L)
         call move(nbe_2d,out_multi_2d(1,1,2),NX_L,NY_L)
         call move(    li,out_multi_2d(1,1,3),NX_L,NY_L)
-        call move(    si,out_multi_2d(1,1,4),NX_L,NY_L)
-        call move(    tt,out_multi_2d(1,1,5),NX_L,NY_L)
-        call move(     k,out_multi_2d(1,1,6),NX_L,NY_L)
-        call move(   lcl,out_multi_2d(1,1,7),NX_L,NY_L)
-        call move(   wb0,out_multi_2d(1,1,8),NX_L,NY_L)
+        call move( si_2d,out_multi_2d(1,1,4),NX_L,NY_L)
+        call move( tt_2d,out_multi_2d(1,1,5),NX_L,NY_L)
+        call move(  k_2d,out_multi_2d(1,1,6),NX_L,NY_L)
+        call move(lcl_2d,out_multi_2d(1,1,7),NX_L,NY_L)
+        call move(wb0_2d,out_multi_2d(1,1,8),NX_L,NY_L)
 
 !       add var arrays
         ext = 'lst'
@@ -199,12 +199,12 @@ cdis
 
         comment_2d_a(1) = 'CAPE'
         comment_2d_a(2) = 'CIN'
-        comment_2d_a(3) = 'Lifted Index'
-        comment_2d_a(4) = 'Showalter Index'
-        comment_2d_a(5) = 'Total Totals'
-        comment_2d_a(6) = 'K Index'
+        comment_2d_a(3) = 'Lifted_Index'
+        comment_2d_a(4) = 'Showalter_Index'
+        comment_2d_a(5) = 'Total_Totals'
+        comment_2d_a(6) = 'K_Index'
         comment_2d_a(7) = 'LCL'
-        comment_2d_a(8) = 'Web Bulb Zero'
+        comment_2d_a(8) = 'Wet_Bulb_Zero'
 
         call put_laps_multi_2d(i4time_needed,ext,var_2d_a,units_2d_a
      1                        ,comment_2d_a,out_multi_2d,NX_L,NY_L,8    
@@ -316,13 +316,13 @@ c       write(6,*)' i = ',i
             k_2d(i,j)  = K_INDEX
 
             if(LCL .ne. r_missing_data)then
-                lcl_2d(i,j) = LCL *304.8006            ! KFT to M
+                lcl_2d(i,j) = LCL                        ! M MSL
             else
                 lcl_2d(i,j) = r_missing_data
             endif
 
             if(HWB0 .ne. r_missing_data)then
-                wb0_2d(i,j) = HWB0*304.8006            ! KFT to M
+                wb0_2d(i,j) = HWB0*304.8006 + topo(i,j)  ! KFT AGL to M MSL
             else
                 wb0_2d(i,j) = r_missing_data
             endif
@@ -359,13 +359,13 @@ c       write(6,*)' i = ',i
  161            ITCONV=INT(TCONV+0.5)
 
                 WRITE(6,62)LCL*.003281,CCL,ITCONV
- 62             FORMAT(' LCL= ',F5.1,' KFT AGL',11X,'CCL=',F5.1
+ 62             FORMAT(' LCL= ',F5.1,' KFT',11X,'CCL=',F5.1
      1                ,' KFT AGL',7X,'CONVECTIVE TEMP=',I4,' DEG F')
 
 !               KK=NINT(K_INDEX)
                 ITMAX=NINT(TMAX)
 
-                WRITE(6,63,err=163)KK,ITMAX,WATER
+                WRITE(6,63,err=163)K_INDEX,ITMAX,WATER
  63             FORMAT(' K INDEX =',I4,16X,'TMAX =',I4,' F',12X
      1                ,'PRECIP. WATER=',F5.2,' IN.')
  163            WRITE(6,*)
@@ -412,7 +412,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
 
 !
         SUBROUTINE SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0
-     1   ,PLCL_PBE,LCL_PBE,CCL  
+     1   ,PLCL_PBE,LCL_PBE_MSL,CCL  
      1   ,TCONV,IO,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50,PBLI,VELNEG
      1   ,WATER,IHOUR)
 
@@ -425,7 +425,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
         COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
      1              ,VEL(20),temdif(70),partem(70),pbe(70)
      1              ,DD85,FF85,DD50,FF50
-        REAL LI,K,LCL_AGL,LCL_PBE
+        REAL LI,K,LCL_AGL,LCL_PBE_MSL
         ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
      1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
 !       TDEW(E)=237.7/((7.5/ALOG10(E/6.11))-1.)
@@ -446,14 +446,43 @@ c       WRITE(6,15)
             write(6,*)' Stop in sindx'
         endif
 
+!       Fill WB array (imported from old code)
+ 	DO 100 N=1,NLEVEL                                            
+            IF(TD(N).EQ.-99.0)THEN                                         
+                Q(N)=-99.                                                      
+                WB(N)=-99.                                                     
+  	        IF(IO.GE.2)WRITE(6,3)N,P(N),T(N),TD(N),Q(N),WB(N)    
+                IFL=1                                                
+                TD(N)=T(N)-15.0                                      
+                IF(T(N).LT.-40.)TD(N)=T(N)                           
+            ENDIF                                                           
+                                                                          
+ 	    Q(N)=(ES(TD(N))*EPSILN)/P(N)                             
+ 	    Q(N)=max(Q(N),0.0001)                                    
+ 	    W(N)=Q(N)/(1.-Q(N))                                      
+ 	    IOUT=IO                                                  
+ 	    IF(N.LE.1)IOUT=IO                                        
+ 	    WB(N)=WTBLB(P(N),T(N),W(N),0)                            
+ 	    IF(WB(N).LT.TD(N))WB(N)=TD(N)                            
+ 	    IF(WB(N).GT.T(N)) WB(N)=T(N)                             
+ 	    IF(IO.GE.2.AND.IFL.EQ.0)WRITE(6,3)N,P(N),T(N),TD(N),Q(N),WB(N) 
+            IFL=0                                                            
+ 3	    FORMAT(' LVL(',I2,')',3F10.1,F11.6,F10.2)                      
+ 100	CONTINUE                                                             
+
 !       Here is the new section imported (from old code) for TT,SI,K
+C                                                                         
+C  CALCULATE LIFTED INDEX                                                 
+ 	CALL ITPLV(P,T,NLEVEL,500.,TMAN50,IO,istatus)                         
+!	WREQ50=ES(TP500)/500.                                                   
+!	IF(WREQ50.LT.WMEAN)GOTO40                                               
 
 C                                                                         
 C  CALCULATE SHOWALTER INDEX                                              
  	SI=0                                                          
  	IF(P(1).GE.850.0)THEN                                                 
- 	    CALL ITPLV(P,T ,NLEVEL,850.,TMAN85,IO)                    
- 	    CALL ITPLV(P,TD,NLEVEL,850.,TDMN85,IO)                    
+ 	    CALL ITPLV(P,T ,NLEVEL,850.,TMAN85,IO,istatus)                    
+ 	    CALL ITPLV(P,TD,NLEVEL,850.,TDMN85,IO,istatus)                    
  	    THETAE=THAE(TMAN85,TDMN85,850.)                           
  	    CALL MSAD5(TP500,500.,THETAE,25.,20.,SLOPE,I1,I2,IA,0)    
 !	    IF(WREQ50.LT.WMEAN)GOTO50                                 
@@ -462,8 +491,8 @@ C  CALCULATE SHOWALTER INDEX
 
 C                                                                         
 C  CALCULATE TOTAL TOTALS AND SWEAT AND K INDICIES                        
- 	    CALL ITPLV(P,T,NLEVEL,700.,TMAN70,IO)        
- 	    CALL ITPLV(P,TD,NLEVEL,700.,TDMN70,IO)       
+ 	    CALL ITPLV(P,T,NLEVEL,700.,TMAN70,IO,istatus)        
+ 	    CALL ITPLV(P,TD,NLEVEL,700.,TDMN70,IO,istatus)       
  	    TT=TMAN85+TDMN85-2.*TMAN50                   
  	    A=max(TDMN85,0.)                             
  	    B=max(TT-49.,0.)                             
@@ -506,23 +535,37 @@ C
 C                                                                         
 C	ENTER NEWTON ITERATION LOOP                                            
  260	CONTINUE                                                             
- 	CALL ITPLV(P, T,NLEVEL,PWB0,TWB0 ,IO)                                     
- 	CALL ITPLV(P,TD,NLEVEL,PWB0,TDWB0,IO)                                   
- 	QQ=ES(TDWB0)*EPSILN/PWB0                                                
- 	WWB0=QQ/(1.-QQ)                                                         
- 	WTBLB0=WTBLB(PWB0,TWB0,WWB0,IOUT)                                       
+
+ 	CALL ITPLV(P, T,NLEVEL,PWB0,TWB0 ,IO,istatus)                         
+        if(istatus .ne. 1)goto390
+
+ 	CALL ITPLV(P,TD,NLEVEL,PWB0,TDWB0,IO,istatus)                          
+        if(istatus .ne. 1)goto390
+
+ 	QQ=ES(TDWB0)*EPSILN/PWB0                                               
+ 	WWB0=QQ/(1.-QQ)                                                        
+ 	WTBLB0=WTBLB(PWB0,TWB0,WWB0,IOUT)                                      
  262    CONTINUE
 
 !   	IF(IO.GE.2)WRITE(6,265)N,PWB0,TWB0,TDWB0,WTBLB0,SLOPE,DELTA          
  265	format(' WTBLB0 LOOP',I3,F12.3,5F12.5)                                
- 	IF(ABS(WTBLB0).LE..05)GOTO300                                           
- 	CALL NEWTN(PWB0,POLD,WTBLB0,WETOLD,SLOPE,ITER,IO,1000.)                 
- 	GOTO260                                                                 
+ 	IF(ABS(WTBLB0).LE..05)GOTO300                                          
+ 	CALL NEWTN(PWB0,POLD,WTBLB0,WETOLD,SLOPE,ITER,IO,1000.,istatus)
+        if(istatus .ne. 1)then
+            goto390
+        else        
+ 	    GOTO260                                                                 
+        endif
 C                                                                         
  300	CONTINUE                                                             
  	CALL BLAYR(P,T,Q,DUM1,DUM2,DUM3,P(1)-PWB0,NLEVEL,HWB0,1,IO)             
 !	IF(IO.GE.1)WRITE(6,351)PWB0,HWB0                                        
  351	format(' WETBULB ZERO IS AT',F6.1,'MB     OR',F6.2,'KFT  AGL')        
+
+        goto400                      ! Normal condition
+
+ 390    HWB0 = r_missing_data        ! Error condition
+        PWB0 = r_missing_data
 
  400    CONTINUE
 
@@ -535,11 +578,11 @@ C
         CALL LCL_fast(P(1),T(1),TD(1),LCL_AGL,TLCL_PBE,PLCL_PBE)
 
 !       This LCL is for the surface parcel passed in
-        LCL_PBE = LCL_AGL + HT(1)
+        LCL_PBE_MSL = LCL_AGL + HT(1)
 
 !       Calculate CAPE/CIN based on sfc parcel
         CALL POTBE(Q,NLEVEL,P(1),T(1),W(1),PLCL_PBE
-     1   ,TLCL_PBE,LCL_PBE,0.,THETAE,ICP,ICT,IO,PBENEG,PBEPOS
+     1   ,TLCL_PBE,LCL_PBE_MSL,0.,THETAE,ICP,ICT,IO,PBENEG,PBEPOS
      1   ,VELNEG)
 C
         DO 600 I=1,ICP
@@ -632,13 +675,12 @@ c                   WRITE(6,*)' DRY ADIABATIC PART'
 c                   WRITE(6,307)TLCL
  307                format(' PARCEL TEMP AT LCL= ',F10.3)
 
-                    CALL ITPLV(P,T,NLEVEL,PLCL,SNTLCL,IO)
+                    CALL ITPLV(P,T,NLEVEL,PLCL,SNTLCL,IO,istatus)
 
                     t_dif_lcl=TLCL-SNTLCL
 
-                    pbe_dry=G*(t_dif_lcl+TEMDIF(N-1))/(SNTLCL+T(N-1)+546
-     1.30)
-     +                  *delta_ht_dry
+                    pbe_dry=G*(t_dif_lcl+TEMDIF(N-1))/
+     1                        (SNTLCL+T(N-1)+546.30) * delta_ht_dry
 
  951                format(' pos_area_max,PSI,NEG,NNG,PBECR',5F9.1,I3)
 
@@ -652,9 +694,8 @@ c                   WRITE(6,*)' MOIST ADIABATIC PART'
                     partem(n) = tmlaps_fast(blthte,P(n))
                     TEMDIF(N)=PARTEM(N)-T(N)
 
-                    pbe_wet = G*(TEMDIF(N)+t_dif_lcl)/(T(N)+SNTLCL+546.3
-     10)
-     #                           *delta_ht_wet
+                    pbe_wet = G*(TEMDIF(N)+t_dif_lcl)/
+     1                          (T(N)+SNTLCL+546.30) * delta_ht_wet
 
                     PBE(N)=PBE(N-1) + pbe_dry + pbe_wet
 
@@ -957,11 +998,18 @@ C
 C
 C
 C
-        SUBROUTINE ITPLV(P,PARAM,NLEVEL,PINT,PARMAN,IO)
+        SUBROUTINE ITPLV(P,PARAM,NLEVEL,PINT,PARMAN,IO,istatus)
 
 !       Steve Albers 1991
 
         DIMENSION P(70),PARAM(70)
+
+        if(p(1) .lt. pint)then
+            write(6,*)' Error in ITPLV: p(1) < pint',p(1),pint
+            istatus = 0
+            return
+        endif
+
         DO 100 N=1,NLEVEL
         IF(P(N)-PINT)300,200,100
  100    CONTINUE
@@ -975,10 +1023,11 @@ C
      #  ,PARAM(N-1)
  666    FORMAT(' INTERPOLATING TO LEVEL',I3,F10.3,F8.5,F8.3,2F7.1,2F6.1)
 C
- 999    RETURN
+ 999    istatus = 1
+        RETURN
         END
 C
-        SUBROUTINE NEWTN(X,XOLD,Y,YOLD,SLOPE,ITER,IO,FENCE)
+        SUBROUTINE NEWTN(X,XOLD,Y,YOLD,SLOPE,ITER,IO,FENCE,istatus)
 
 !       Steve Albers 1991
 
@@ -988,9 +1037,17 @@ C
         XOLD=X
         X=X+DELTA
         ITER=ITER+1
+        if(iter .gt. 100)then
+            write(6,*)' Error in NEWTN: too many iterations',iter
+            istatus = 0
+            return
+        endif
+
         IF(IO.GE.2)WRITE(6,1)ITER,X,XOLD,Y,YOLD,SLOPE,DELTA
  1      FORMAT(' NEWTON ITER',I4,2F11.4,2F11.7,2E11.3)
         YOLD=Y
+
+        istatus = 1
         RETURN
         END
 C
