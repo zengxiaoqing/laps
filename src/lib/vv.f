@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 cdis
-        Subroutine Cloud_bogus_w (cloud_type, height, nk, w)
+        Subroutine Cloud_bogus_w (dx, cloud_type, height, nk, w)
 
 !Original version October 1990.
 
@@ -38,10 +38,17 @@ cdis
 !clouds by a fairly large amount (30 m/s in 10 km Cu to 5 m/s), and the vv max
 !for stratocumulus by a smaller amount (50 cm/s in 4-km Sc to 20 cm/s).
 
+!  Modified June 2002 - Once again reduced the maximum cloud vv magnitude
+!                       and made it dependent on grid spacing.  Also
+!                       changed parabolic vv profile for cumuliform clouds
+!                       to only go down to the cloud base, rather than 
+!                       1/3rd of the cloud depth below base to try and
+!                       and improve elevated convection cases.
+
 !Can be used with either regular LAPS analysis grid or the cloud analysis grid.
         Implicit none
         Integer*4 nk, cloud_type(nk)
-        Real*4 height(nk), w(nk)
+        Real*4 dx, height(nk), w(nk)
 
 !The following specifies the maximum vv in two cloud types as functions
 !of cloud depth.  Make parabolic vv profile, except for stratiform clouds,
@@ -50,7 +57,8 @@ cdis
         Real*4 vv_to_height_ratio_Sc
         Real*4 vv_for_St
 
-        data vv_to_height_ratio_Cu /.0005/
+!       data vv_to_height_ratio_Cu /.0005/
+        data vv_to_height_ratio_Cu /.001/
         data vv_to_height_ratio_Sc /.00005/
         data vv_for_St /.05/                    ! constant 5 cm/s throughout
 
@@ -68,7 +76,7 @@ cdis
         End do
 
 !Put in the vv's for cumuliform clouds (Cu or Cb) first.
-        ratio = vv_to_height_ratio_Cu
+        ratio = vv_to_height_ratio_Cu * 1000. / dx
         Do k = 1, nk
          If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           kbase = k
@@ -161,6 +169,9 @@ cdis
         Real*4 Function Parabolic_vv_profile (zbase, ztop, ratio, z)
 !The vertical velocity is zero at cloud top, peaks one third of the way up
 !from the base, and extends below the base by one third of the cloud depth.
+
+!  JUNE 2002 - No longer extending profile to below cloud base.
+
         Implicit none
         Real*4 zbase, ztop, ratio, z
         Real*4 depth, vvmax, vvspan, halfspan, height_vvmax, x
@@ -172,7 +183,10 @@ cdis
         End if
 
         vvmax = ratio * depth
-        vvspan = depth * 4. / 3.
+! June 2002 - Commented the next line out and replaced with
+!  line following.
+!       vvspan = depth * 4. / 3.
+        vvspan = depth
         halfspan = vvspan / 2.
         height_vvmax = ztop - halfspan
         x = -vvmax/(halfspan*halfspan)
