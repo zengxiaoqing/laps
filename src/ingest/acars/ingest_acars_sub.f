@@ -186,6 +186,16 @@ C
 
           endif
 
+          if(waterVaporMR(i) .ge. 0. .and. 
+     1       waterVaporMR(i) .le. 100.)then
+              write(6,23)waterVaporMR(i)
+              write(11,23)waterVaporMR(i)
+ 23           format(' MixR:'/1x,f10.3)
+
+          else
+              write(6,*)' water vapor rejected: ',waterVaporMR(i)
+
+          endif
 
  900  enddo ! i
 
