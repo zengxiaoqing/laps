@@ -11,6 +11,9 @@ chomp($mach);
 $ENV{XLFRTEOPTS}='namelist=old' if($mach eq 'AIX');
 
 $LAPSROOT=shift || die "LAPS root directory required\n";
+require "$LAPSROOT/etc/fxa.pm";
+
+$fxa_sys =  &Get_env'fxa; #'
 
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
@@ -21,7 +24,7 @@ $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 $hhmm = `date -u +%H%M`;
 chomp($hhmm);
 
-if($ENV{LOG_DIR}){
+if($fxa_sys != 0){
     $yymmdd = `date -u +%y%m%d`;
     chomp($yymmdd);
     $LAPS_LOG_PATH = "$ENV{LOG_DIR}/$yymmdd/laps";
@@ -103,9 +106,9 @@ print LOG "$0 completed at ".`date -u +%H:%M:%S`;
 close(LOG);
 
 
-if($ENV{FXA_HOME}){
+if($fxa_sys!=0){
     print LOG `date -u +%H:%M:%S`." Running wfo postprocessing\n";
-    system("@PERL@ $LAPSROOT/etc/wfo_post.pl 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
+    system("@PERL@ $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
 }
 
 
