@@ -114,15 +114,18 @@ int extractLAPSdata(int *cdfId_in, char *prevFilename, PARAMETER_LIST_T paramInf
                     float **data, short **LAPSinv)
 {
     char filename[80];
-    int cdfId, mode = NC_NOWRITE, status;    
+    int cdfId, mode = NC_NOWRITE, status, nc_status;    
     double d_reftime=0.0, d_valtime=0.0;
     ncopts = 0;
     
+    d_reftime = (double)reftime;
+    d_valtime = (double)valtime;
+
     status = get_LAPS_cdf_filename(paramInfo, r_filename, reftime, filename);
 
     cdfId = *cdfId_in;
     if (strcmp(filename, prevFilename) != 0) {  /* new file */
-      ncclose(cdfId);
+      nc_status = nc_close(cdfId);
 /*    free section   commented out because dies on Linux 10-25-00 LW 
       free(data);
       free(LAPSinv);
@@ -134,8 +137,8 @@ int extractLAPSdata(int *cdfId_in, char *prevFilename, PARAMETER_LIST_T paramInf
         return ERROR;
       }
      
-      cdfId = ncopen ((const char *)filename, mode);     
-      if(cdfId == NC_SYSERR) {
+      nc_status = nc_open(filename, mode, &cdfId); 
+      if (nc_status != NC_NOERR) {
         fprintf(stdout,"Error opening LAPS file %s\n",filename);
         return ERROR;
       }
@@ -162,9 +165,6 @@ int extractLAPSdata(int *cdfId_in, char *prevFilename, PARAMETER_LIST_T paramInf
                paramInfo.LAPS_cdl_varname, *x, *y, *numLevels, 
                level, data, LAPSinv);
     
-/*    reftime = (time_t)d_reftime;
-    valtime = (time_t)d_valtime; */
- 
     if (status == ERROR) {
       return ERROR;
     }
@@ -177,25 +177,45 @@ int extractLAPSdata(int *cdfId_in, char *prevFilename, PARAMETER_LIST_T paramInf
 /******************************************************************/
 int getDataSize(int cdfId, char *level_name, int *x, int *y, int *numLevels)
 {
-    int xId, yId, zId;
+    int xId, yId, zId, nc_status;
     long long_x, long_y, long_lvl;
 
-    xId = ncdimid(cdfId, (const char *)"x");
-    yId = ncdimid(cdfId, (const char *)"y");
-    zId = ncdimid(cdfId, (const char *)level_name);
-    if ((xId == -1) || (yId == -1) || (zId == -1)) {
-      fprintf(stdout, "Error getting x,y or z dimensions from LAPS file.\n");
+    nc_status = nc_inq_dimid(cdfId, "x", &xId);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Error getting x dimension from LAPS file.\n");
+      return ERROR;
+    }
+
+    nc_status = nc_inq_dimid(cdfId, "y", &yId);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Error getting y dimension from LAPS file.\n");
+      return ERROR;
+    }
+
+    nc_status = nc_inq_dimid(cdfId, level_name, &zId);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Error getting z dimension from LAPS file.\n");
       return ERROR;
     }
     
-    ncdiminq(cdfId, xId, (char *) 0, (long *)&long_x);
-    ncdiminq(cdfId, yId, (char *) 0, (long *)&long_y);
-    ncdiminq(cdfId, zId, (char *) 0, (long *)&long_lvl);
- 
-    *x = (int)long_x;
-    *y = (int)long_y;
-    *numLevels = (int)long_lvl;
+    nc_status = nc_inq_dimlen(cdfId, xId, x);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Error getting x dimension from LAPS file.\n");
+      return ERROR;
+    }
 
+    nc_status = nc_inq_dimlen(cdfId, yId, y);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Error getting y dimension from LAPS file.\n");
+      return ERROR;
+    }
+
+    nc_status = nc_inq_dimlen(cdfId, zId, numLevels);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Error getting z dimension from LAPS file.\n");
+      return ERROR;
+    }
+ 
     return SUCCESS;
 }
 
@@ -203,9 +223,12 @@ int getDataSize(int cdfId, char *level_name, int *x, int *y, int *numLevels)
 int getLAPSdata(int cdfId, double reftime, double valtime, const char *variable, 
                 int x, int y, int numLevels, float **level, float **data, short **inv)
 {
-    int varId, invId, levelId, xstatus;
-    long start[5], count[5], invStart[3], invCount[3], levelStart[1], levelCount[1];
+    int varId, invId, levelId, nc_status;
+    size_t start[5], count[5], invStart[3], invCount[3], levelStart[1], levelCount[1];
+    size_t index[1];
     char invVar[15];
+
+    index[0] = 0;
 
     start[0] = 0;
     start[1] = 0;
@@ -217,15 +240,36 @@ int getLAPSdata(int cdfId, double reftime, double valtime, const char *variable,
     count[2] = y;
     count[3] = x;
     
-    varId = ncvarid(cdfId,(const char *)variable);
-    ncvarget(cdfId, varId, (const long *)start, (const long *)count, (void *) *data);
+    nc_status = nc_inq_varid(cdfId, variable, &varId);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Unable to find variable %s in file.\n", variable);
+    } else {
+      nc_status = nc_get_vara_float(cdfId, varId, start, count, *data);
+      if (nc_status != NC_NOERR) {
+        fprintf(stdout, "Unable to retrieve variable %s from file.\n", *variable);
+      }
+    }
 
 /* retrieve 'valtime' and 'reftime' data 
-    varId = ncvarid(cdfId,(const char *)"valtime");
-    ncvarget1(cdfId, varId, (const long *)start, (void *) &valtime);
+    nc_status = nc_inq_varid(cdfId, "valtime", &varId);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Unable to find valtime in file.\n");
+    } else {
+      nc_status = nc_get_var1_double(cdfId, varId, index, &valtime);
+      if (nc_status != NC_NOERR) {
+        fprintf(stdout, "Unable to retrieve valtime from file.\n");
+      }
+    }
 
-    varId = ncvarid(cdfId,(const char *)"reftime");
-    ncvarget1(cdfId, varId, (const long *)start, (void *) &reftime);
+    nc_status = nc_inq_varid(cdfId, "reftime", &varId);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Unable to find reftime in file.\n");
+    } else {
+      nc_status = nc_get_var1_double(cdfId, varId, index, &reftime);
+      if (nc_status != NC_NOERR) {
+        fprintf(stdout, "Unable to retrieve reftime from file.\n");
+      }
+    }
 */
 
 /* make LAPS inventory variable name from "variable" */
@@ -239,28 +283,33 @@ int getLAPSdata(int cdfId, double reftime, double valtime, const char *variable,
     invCount[1] = numLevels;
 
 /* read LAPS inventory data */
-    if ((invId = ncvarid(cdfId,(const char *)invVar)) == -1) {
+    nc_status = nc_inq_varid(cdfId, invVar, &invId);
+    if (nc_status != NC_NOERR) {
       fprintf(stdout,"Error finding LAPS variable %s\n",invVar);
       return ERROR;
     }
-    else if ((ncvarget(cdfId, invId, (const long *)invStart, 
-              (const long *)invCount, (void *) *inv)) == -1) {
-      fprintf(stdout,"Error reading LAPS variable %s\n",invVar);
-      return ERROR;
+    else  {
+      nc_status = nc_get_vara_short(cdfId, invId, invStart,
+                                    invCount, *inv);
+      if (nc_status != NC_NOERR) {
+        fprintf(stdout,"Error reading LAPS variable %s\n",invVar);
+        return ERROR;
+      }
     }
 
 /* read LAPS level data */
     levelStart[0] = 0;
     levelCount[0] = numLevels;
 
-    if ((levelId = ncvarid(cdfId,(const char *)"level")) == -1) {
+    nc_status = nc_inq_varid(cdfId, "level", &levelId);
+    if (nc_status != NC_NOERR) {
       fprintf(stdout,"Error finding LAPS variable level\n");
       return ERROR;
     }
     else {
-      xstatus = ncvarget(cdfId, levelId, (const long *)levelStart, 
-                         (const long *)levelCount, (void *) *level);
-      if (xstatus == -1) {
+      nc_status = nc_get_vara_float(cdfId, levelId, levelStart,
+                                    levelCount, *level);
+      if (nc_status != NC_NOERR) {
         fprintf(stdout,"Error reading LAPS variable level\n");
         return ERROR;
       }
@@ -274,10 +323,10 @@ int getLAPSdata(int cdfId, double reftime, double valtime, const char *variable,
 int openOutputWFOfile(long *index, time_t reftime, long *x, long *y)
 {
     int cdfId, mode = NC_WRITE;
-    int dimId, xstatus;
+    int dimId, nc_status;
     char cdfFilename[80], templateFile[80];
 
-    xstatus = get_WFO_cdf_filename(reftime, cdfFilename, templateFile);
+    nc_status = get_WFO_cdf_filename(reftime, cdfFilename, templateFile);
  
     if( access(cdfFilename, F_OK) != 0 ) {
       if(copyTemplateToNewCDFfile (templateFile, cdfFilename) != SUCCESS) {
@@ -285,8 +334,8 @@ int openOutputWFOfile(long *index, time_t reftime, long *x, long *y)
       }
     }
 
-    cdfId = ncopen ((const char *)cdfFilename, mode);
-    if(cdfId == NC_SYSERR) {
+    nc_status = nc_open((const char *)cdfFilename, mode, &cdfId);
+    if(nc_status != NC_NOERR) {
       fprintf(stdout,"Error opening WFO file %s\n",cdfFilename);
       return (-1);
     }
@@ -295,15 +344,37 @@ int openOutputWFOfile(long *index, time_t reftime, long *x, long *y)
 /*   determine the current value of "record"...use that as index,
        since record == 1 means the 0 index has been used, and the
        next one is 1  */
-      dimId = ncdimid(cdfId, (const char *)"record");
-      ncdiminq(cdfId, dimId, (char *) 0, (long *)index);
+      nc_status = nc_inq_dimid(cdfId, "record", &dimId);
+      if(nc_status != NC_NOERR) {
+        fprintf(stdout, "Error finding record dimension.\n");
+      } else {
+        nc_status = nc_inq_dimlen(cdfId, dimId, (size_t *)index);
+        if(nc_status != NC_NOERR) {
+          fprintf(stdout, "Error reading record dimension.\n");
+        }
+      }
 
 /*    read x and y dimensions in output file     */
-      dimId = ncdimid(cdfId, (const char *)"x");
-      ncdiminq(cdfId, dimId, (char *) 0, (long *)x);
+      nc_status = nc_inq_dimid(cdfId, "x", &dimId);
+      if(nc_status != NC_NOERR) {
+        fprintf(stdout, "Error finding x dimension.\n");
+      } else {
+        nc_status = nc_inq_dimlen(cdfId, dimId, (size_t *)x);
+        if(nc_status != NC_NOERR) {
+          fprintf(stdout, "Error reading x dimension.\n");
+        }
+      }
 
-      dimId = ncdimid(cdfId, (const char *)"y");
-      ncdiminq(cdfId, dimId, (char *) 0, (long *)y);
+      nc_status = nc_inq_dimid(cdfId, "y", &dimId);
+      if(nc_status != NC_NOERR) {
+        fprintf(stdout, "Error finding y dimension.\n");
+      } else {
+        nc_status = nc_inq_dimlen(cdfId, dimId, (size_t *)y);
+        if(nc_status != NC_NOERR) {
+          fprintf(stdout, "Error reading y dimension.\n");
+        }
+      }
+
 
       return cdfId;
     }
@@ -331,15 +402,16 @@ int transferLAPStoWFO(int cdfId, long index, PARAMETER_LIST_T paramInfo,
     
 
 /******************************************************************/
-int storeLAPSdata(long index, int cdfId, double reftime, double valtime,
+int storeLAPSdata(long index, int cdfId, double d_reftime, double d_valtime,
                   char *variable, char *levelName, char *WFO_level,
                   char *WFO_level_value, int x, int y, 
 		  int numLevels, float **level, float **data, short **inv)
 {
     int WFOvarId, WFOinvId, WFOlevelsId, dimId, numWFOlevels, WFOlevelIndex;
-    int varId, i, inv_status;
-    long varStart[4], varCount[4], invStart[2], invCount[2]; 
-    long start[1], count[1], n_valtimes, valtimeMINUSreftime;
+    int varId, i, inv_status, nc_status;
+    size_t varStart[4], varCount[4], invStart[2], invCount[2]; 
+    long  n_valtimes, valtimeMINUSreftime;
+    size_t start[1], count[1];
     char levelsVar[16], invVar[30], inv_char; 
     char *WFOlevels_char; 
     float *data_ptr, *level_ptr;
@@ -349,93 +421,109 @@ int storeLAPSdata(long index, int cdfId, double reftime, double valtime,
     start[0] = index;
 
 /* get value of n_valtimes, used to store inventory" */
-    dimId = ncdimid(cdfId, (const char *)"n_valtimes");
-    ncdiminq(cdfId, dimId, (char *) 0, (long *)&n_valtimes);
+    nc_status = nc_inq_dimid(cdfId, "n_valtimes", &dimId);
+    if(nc_status != NC_NOERR) {
+      fprintf(stdout, "Error finding n_valtimes dimension.\n");
+    } else {
+      nc_status = nc_inq_dimlen(cdfId, dimId,(size_t *) &n_valtimes);
+      if(nc_status != NC_NOERR) {
+        fprintf(stdout, "Error reading n_valtimes dimension.\n");
+      }
+    }
 
     if (index >= n_valtimes) {
       fprintf(stdout,"n_valtimes is less than index in CDL dimensions\n");
       return ERROR;
     }
-    varId = ncvarid(cdfId,(const char *)"valtime");
-    if(varId == -1)
-        {
-        fprintf(stdout,"Variable 'valtime' does not exist\n");
-        return ERROR;
-        }
- 
-    if((ncvarput1 (cdfId, varId, (const long *)start, (void *) &valtime)) == -1)
-        {
-        fprintf(stdout,"Error in ncvarput1 for 'valtime' variable.\n");
-        return ERROR;
-        }
- 
-    varId = ncvarid(cdfId,(const char *)"reftime");
-    if(varId == -1)
-        {
-        fprintf(stdout,"Variable 'reftime' does not exist\n");
-        return ERROR;
-        }
- 
-    if((ncvarput1 (cdfId, varId, (const long *)start, (void *) &reftime)) == -1)
-        {
-        fprintf(stdout,"Error in ncvarput1 for 'reftime' variable.\n");
-        return ERROR;
-        }
- 
-/* commented out 11-06-01 LW variable is filled from cdl file
-    varId = ncvarid(cdfId,(const char *)"valtimeMINUSreftime");
-    if(varId == -1)
-        {
-        fprintf(stdout,"Variable 'valtimeMINUSreftime' does not exist\n");
-        return ERROR;
-        }
- 
-    valtimeMINUSreftime = (long) valtime - reftime;
-    if((ncvarput1 (cdfId, varId, (const long *)start, 
-                   (void *) &valtimeMINUSreftime)) == -1) {
-      fprintf(stdout,"Error in ncvarput1 for 'valtimeMINUSreftime' variable.\n");
+/* write valtime and reftime */
+    nc_status = nc_inq_varid(cdfId, "valtime", &varId);
+    if(nc_status != NC_NOERR) {
+      fprintf(stdout,"Variable 'valtime' does not exist\n");
       return ERROR;
+    } else {
+      nc_status = nc_put_var1_double(cdfId, varId, start, &d_valtime);
+      if(nc_status != NC_NOERR) {
+        fprintf(stdout,"Error in nc_put_var1_double for 'valtime' variable.\n");
+        return ERROR;
+      }
+    }
+
+    nc_status = nc_inq_varid(cdfId, "reftime", &varId);
+    if(nc_status != NC_NOERR) {
+      fprintf(stdout,"Variable 'reftime' does not exist\n");
+      return ERROR;
+    } else {
+      nc_status = nc_put_var1_double(cdfId, varId, start, &d_reftime);
+      if(nc_status != NC_NOERR) {
+        fprintf(stdout,"Error in nc_put_var1_double for 'reftime' variable.\n");
+        return ERROR;
+      }
+    }
+
+/* commented out 11-06-01 LW variable is filled from cdl file 
+    nc_status = nc_inq_varid(cdfId, "valtimeMINUSreftime", &varId);
+    if(nc_status != NC_NOERR) {
+      fprintf(stdout,"Variable 'valtimeMINUSreftime' does not exist\n");
+      return ERROR;
+    } else {
+
+      valtimeMINUSreftime = (long) valtime - reftime;
+      nc_status = nc_put_var1_long(cdfId, dimId, start, &valtimeMINUSreftime);
+      if(nc_status != NC_NOERR) {
+        fprintf(stdout,"Error in nc_put_var1_long for 'valtimeMINUSreftime' variable.\n");
+        return ERROR;
+      }
     }
 */
  
 /* get number of levels in WFO for storing "variable" */
-    dimId = ncdimid(cdfId, (const char *)levelName);
-    ncdiminq(cdfId, dimId, (char *) 0, (long *)&numWFOlevels);
+    nc_status = nc_inq_dimid(cdfId, levelName, &dimId);
+    if(nc_status != NC_NOERR) {
+      fprintf(stdout, "Error finding %s dimension.\n", levelName);
+    } else {
+      nc_status = nc_inq_dimlen(cdfId, dimId,(size_t *) &numWFOlevels);
+      if(nc_status != NC_NOERR) {
+        fprintf(stdout, "Error reading %s dimension.\n", levelName);
+      }
+    }
 
 /* get var id's for "variable", and associated Levels and Inventory variables */
     strcpy(levelsVar, variable);
     strcat(levelsVar, "Levels");
-    WFOlevelsId = ncvarid(cdfId,(const char *)levelsVar);
-    if(WFOlevelsId == -1)
-        {
-        fprintf(stdout,"Error - WFO Variable %s does not exist\n", levelsVar);
-        return ERROR;
-        }
+
+    nc_status = nc_inq_varid(cdfId, levelsVar, &WFOlevelsId);
+    if(nc_status != NC_NOERR) {
+      fprintf(stdout,"Error - WFO Variable %s does not exist\n", levelsVar);
+      return ERROR;
+    }
 
     strcpy(invVar, variable);
     strcat(invVar, "Inventory");
-    WFOinvId = ncvarid(cdfId, (const char *)invVar);
-    if(WFOinvId == -1)
-        {
-        fprintf(stdout,"WFO Variable %s does not exist\n", invVar);
-        return ERROR;
-        }
 
-    WFOvarId = ncvarid(cdfId,(const char *)variable);
-    if(WFOvarId == -1)
-        {
-        fprintf(stdout,"WFO Variable %s does not exist\n", variable);
-        return ERROR;
-        }
-        
+    nc_status = nc_inq_varid(cdfId, invVar, &WFOinvId);
+    if(nc_status != NC_NOERR) {
+      fprintf(stdout,"WFO Variable %s does not exist\n", invVar);
+      return ERROR;
+    }
+
+    nc_status = nc_inq_varid(cdfId, variable, &WFOvarId);
+    if(nc_status != NC_NOERR) {
+      fprintf(stdout,"WFO Variable %s does not exist\n", variable);
+      return ERROR;
+    }
+
 /* generate WFO_level structure from Levels variable */
     invStart[0] = 0;
     invStart[1] = 0;
     invCount[0] = numWFOlevels;
     invCount[1] = CHARS_PER_LEVEL;
     WFOlevels_char = (char *)malloc(numWFOlevels*CHARS_PER_LEVEL*sizeof(char));
-    ncvarget(cdfId, WFOlevelsId, (const long *)invStart, 
-             (const long *)invCount, (void *) WFOlevels_char);
+
+    nc_status = nc_get_vara_text(cdfId, WFOlevelsId, invStart, invCount, WFOlevels_char);
+    if (nc_status != NC_NOERR) {
+      fprintf(stdout, "Unable to retrieve variable %s from file.\n", levelsVar);
+    }
+
     if (fillWFOlevels(numWFOlevels,WFOlevels_char, WFOlevels) != SUCCESS) {
       fprintf(stdout, "Cannot access %s \n", levelsVar);
       free(WFOlevels_char);
@@ -477,9 +565,10 @@ int storeLAPSdata(long index, int cdfId, double reftime, double valtime,
 
           varStart[1] = WFOlevelIndex;
 
-          if((ncvarput(cdfId, WFOvarId, (const long *)varStart, 
-                       (const long *)varCount, (void *) data_ptr)) == -1) { 
-            fprintf(stdout,"Error in ncvarput for WFO %s - level %d\n", variable, (int)*level_ptr);
+          nc_status = nc_put_vara_float(cdfId, WFOvarId, varStart,
+                                        varCount, data_ptr);
+          if (nc_status != NC_NOERR) {
+            fprintf(stdout,"Error in nc_put_vara_float for WFO %s - level %d\n", variable, (int)*level_ptr);
             inv_char = (char)0;  /* this writes a null */
           }
         }
@@ -490,9 +579,10 @@ int storeLAPSdata(long index, int cdfId, double reftime, double valtime,
 
         invStart[1] = WFOlevelIndex;
 
-        if((ncvarput(cdfId, WFOinvId, (const long *)invStart, 
-                     (const long *)invCount, (void *) &inv_char)) == -1) { 
-          fprintf(stdout,"Error in ncvarput for WFO %sInventory - level %d\n", 
+        nc_status = nc_put_vara_text(cdfId, WFOinvId, invStart,
+                                        invCount, &inv_char);
+        if (nc_status != NC_NOERR) {
+          fprintf(stdout,"Error in nc_put_vara_text for WFO %sInventory - level %d\n", 
                   variable, (int)*level_ptr);
         }
       }
@@ -853,22 +943,31 @@ long dayInfo2unixtime(int yr, int mo, int day, int hour, int min, int sec)
 /*************************************************************************/
 int get_n_valtimes(long *n_valtimes)
 {
-        int cdfId, mode = NC_NOWRITE, status, dimId;    
+        int cdfId, mode = NC_NOWRITE, status, dimId, nc_status;    
         char fname[128];
 
         strcpy(fname,getenv("WFO_FCSTPRD"));
         strcat(fname,"/template");
         
-        cdfId = ncopen ((const char *)fname, mode);     
-        if(cdfId == NC_SYSERR) {
+        nc_status = nc_open(fname, mode, &cdfId); 
+        if (nc_status != NC_SYSERR) {
           fprintf(stdout,"Error opening template file %s\n",fname);
           return ERROR;
         }
    
 /* get value of n_valtimes, used to store inventory and tells how many files to check for */
-        dimId = ncdimid(cdfId, (const char *)"n_valtimes");
-        ncdiminq(cdfId, dimId, (char *) 0, (long *)n_valtimes);
-        ncclose(cdfId);
+
+        nc_status = nc_inq_dimid(cdfId, "n_valtimes", &dimId);
+        if(nc_status != NC_NOERR) {
+          fprintf(stdout, "Error finding n_valtimes dimension.\n");
+        } else {
+          nc_status = nc_inq_dimlen(cdfId, dimId, (size_t *)n_valtimes);
+          if(nc_status != NC_NOERR) {
+            fprintf(stdout, "Error reading n_valtimes dimension.\n");
+          }
+        }
+
+        nc_status = nc_close(cdfId);
 
         if (*n_valtimes >= 1)
           return SUCCESS;

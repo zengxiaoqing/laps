@@ -12,7 +12,7 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
                 int numElements, PARAMETER_LIST_T *paramInfo)
 {
     int i, x, y, numLevels, found, fill_status;
-    int cdfId_in, cdfId_out, dimId, varId;
+    int cdfId_in, cdfId_out, dimId, varId, nc_status;
     float *level, *data;
     short *LAPSinv;
     long index;
@@ -21,7 +21,8 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
 #else
     long valtimeMINUSreftime, *vMr_array;
 #endif
-    long start[1], count[1], n_valtimes, x_out, y_out;
+    size_t start[1], count[1];
+    long n_valtimes, x_out, y_out;
     char timeString[MAX_TIMESTRING_LEN];
     char prevFilename[128];
     struct tm *filtime = gmtime (&reftime);
@@ -48,13 +49,14 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
       valtimeMINUSreftime = (long)(valtime - reftime);
 #endif
 
-      dimId = ncdimid(cdfId_out,"n_valtimes");
-      if (dimId == -1) {
+      nc_status = nc_inq_dimid(cdfId_out, "n_valtimes", &dimId);
+      if (nc_status != NC_NOERR) {
         fprintf(stdout,"No dimension 'n_valtimes' in output file.\n ");
         return ERROR;
       }
       else {
-        if (ncdiminq(cdfId_out,dimId, (char *) 0, &n_valtimes) == -1) {
+        nc_status = nc_inq_dimlen(cdfId_out, dimId, (size_t *) &n_valtimes);
+        if (nc_status != NC_NOERR) {
           fprintf(stdout,"Cannot determine value of 'n_valtimes' from output file.\n ");
           return ERROR;
         }
@@ -64,8 +66,8 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
 #else
           vMr_array = (long *)malloc(n_valtimes * sizeof(long));
 #endif
-          varId = ncvarid(cdfId_out,"valtimeMINUSreftime");
-          if (varId == -1) {
+          nc_status = nc_inq_varid(cdfId_out, "valtimeMINUSreftime", &varId);
+          if (nc_status != NC_NOERR) {
             fprintf(stdout,"No variable 'valtimeMINUSreftime' in output file.\n ");
             free(vMr_array);
             return ERROR;
@@ -73,7 +75,12 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
           else {
             start[0] = 0;
             count[0] = n_valtimes;
-            if (ncvarget(cdfId_out,varId,start,count,vMr_array) == -1) {
+#ifdef alpha
+            nc_status = nc_get_vara_int(cdfId_out,varId,start,count,vMr_array);
+#else
+            nc_status = nc_get_vara_long(cdfId_out,varId,start,count,vMr_array);
+#endif
+            if (nc_status != NC_NOERR) {
               fprintf(stdout, "Cannot read 'valtimeMINUSreftime from output file.\n ");
               free(vMr_array);
               return ERROR;
@@ -123,8 +130,8 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
             free(level);
             free(LAPSinv);
             free(data);
-            ncclose(cdfId_in);
-            ncclose(cdfId_out);
+            nc_status = nc_close(cdfId_in);
+            nc_status = nc_close(cdfId_out);
             return ERROR;
           }
 
@@ -153,8 +160,8 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
       free(level);
       free(LAPSinv);
       free(data);
-      ncclose(cdfId_in);
-      ncclose(cdfId_out);
+      nc_status = nc_close(cdfId_in);
+      nc_status = nc_close(cdfId_out);
       return SUCCESS;    
     }   
 }

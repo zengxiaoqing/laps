@@ -14,7 +14,7 @@ int processLAPS(char *r_filename, time_t reftime, time_t valtime,
     int i; 
     long x_out, y_out;
     int x,y,numLevels;
-    int cdfId_in, cdfId_out;
+    int cdfId_in, cdfId_out, nc_status;
     float *data;
     short *LAPSinv; 
     float *level;
@@ -52,8 +52,8 @@ int processLAPS(char *r_filename, time_t reftime, time_t valtime,
             free(level);
             free(LAPSinv);
             free(data);
-            ncclose(cdfId_in);
-            ncclose(cdfId_out);
+            nc_status = nc_close(cdfId_in);
+            nc_status = nc_close(cdfId_out);
             return ERROR;
           }
          
@@ -74,8 +74,8 @@ int processLAPS(char *r_filename, time_t reftime, time_t valtime,
       free(level);
       free(LAPSinv);
       free(data);
-      ncclose(cdfId_in);
-      ncclose(cdfId_out);
+      nc_status = nc_close(cdfId_in);
+      nc_status = nc_close(cdfId_out);
       return SUCCESS;    
     }   
 }
