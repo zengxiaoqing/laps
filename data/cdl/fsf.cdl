@@ -476,7 +476,30 @@ netcdf rsf {
             tgd:LAPS_var="TGD";
             tgd:lvl_coord="AGL";
             tgd:LAPS_units="K";
-     
+
+        //      U-component wind in pbl//
+        //      bigfile name =
+        float
+            upb(record,z,y,x);
+            upb:_FillValue = 1.e+37f;
+            upb:long_name="U-comp wind in PBL";
+            upb:units="meters / second  ";
+            upb:valid_range= -200.f, 200.f;
+            upb:LAPS_var="UPB";
+            upb:lvl_coord="AGL";
+            upb:LAPS_units="M/S   ";
+
+        //      V-component wind in pbl//
+        //      bigfile name =
+        float
+            vpb(record,z,y,x);
+            vpb:_FillValue = 1.e+37f;
+            vpb:long_name="V-comp wind in PBL";
+            vpb:units="meters / second  ";
+            vpb:valid_range= -200.f, 200.f;
+            vpb:LAPS_var="VPB";
+            vpb:lvl_coord="AGL";
+            vpb:LAPS_units="M/S   ";     
         //      Ventilation index      //
         //      bigfile name =      
         float
@@ -578,6 +601,8 @@ netcdf rsf {
             lhf_comment(record,z,namelen),
             blh_comment(record,z,namelen),
             tgd_comment(record,z,namelen),
+            upb_comment(record,z,namelen),
+            vpb_comment(record,z,namelen),
             vnt_comment(record,z,namelen),
             ham_comment(record,z,namelen),
             hah_comment(record,z,namelen),
@@ -741,6 +766,14 @@ netcdf rsf {
         short
             tgd_fcinv(record, z);
             tgd_fcinv:_FillValue= 0s;
+
+        short
+            upb_fcinv(record, z);
+            upb_fcinv:_FillValue= 0s;
+
+        short
+            vpb_fcinv(record, z);
+            vpb_fcinv:_FillValue= 0s;
 
         short
             vnt_fcinv(record, z);
