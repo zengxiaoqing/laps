@@ -75,6 +75,11 @@ print "$0 running $sys\n";
 system($sys);
 chmod 0544, "./install_lvd.csh";
 
+$radar_type = ($sattype eq "wfo")? $sattype:'wsi';
+
+$sys = "./install_vrc.csh $LAPSROOT $LAPS_DATA_ROOT $compile $radar_type";
+
+
 
 sub wfo_localization{
   local($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA) = @_;
