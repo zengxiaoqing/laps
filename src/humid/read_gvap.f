@@ -161,6 +161,12 @@ c     write(6,*) (wt(i),i=1,nn)
  669  continue
 
 c     reading goes 10
+c     skip reading goes 10 if IHOP flag is set to on
+      if(IHOP_flag .eq. 1) then
+         write (6,*) 'IHOP activated, skipping GOES 10'
+         istatus_10 = 0
+         go to 700
+      endif
 
 c     get most recent file in directory
 
@@ -203,7 +209,7 @@ c     get most recent file in directory
 
  667  close(23)
 
-      if (istatus_8.eq.0) then
+ 700  if (istatus_8.eq.0) then
          write(6,*) 'GOES 8 failed'
       endif
       if (istatus_10.eq.0) then
