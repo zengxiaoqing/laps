@@ -187,7 +187,7 @@ C
       if(cmodel(1:nclen).eq.'RUC40_NATIVE')then
          cvars(8)='mmsp'
       elseif(cmodel(1:nclen).eq.'ETA48_CONUS'.or.
-     .       cmodel(1:nclen).eq.'MesoEta_SBN')then
+     .       cmodel(1:7).eq.'MesoEta')then
          cvars(8)='emsp'
       elseif(cmodel(1:nclen).eq.'AVN_SBN_CYLEQ')then
          cvars(8)='pmsl'
@@ -519,7 +519,7 @@ c     if(.not.allocated(prbg_ww))allocate(prbg_ww(mxlvls))
 c
       kskp=1
       if(cmodel.eq.'AVN_SBN_CYLEQ')kskp=2
-      if(cmodel.eq.'MesoEta_SBN')kskp=0
+      if(cmodel(1:7).eq.'MesoEta')kskp=0
 
 
       start(1)=1
@@ -700,7 +700,7 @@ c
       endif
       vw_sfc = data(:,:,1)
       k=0
-      do kk=kskp+1,nzbgsh+kskp
+      do kk=kskp+1,nzbguv+kskp
          k=k+1
          vw(:,:,k)=data(:,:,kk)
       enddo
@@ -765,11 +765,10 @@ c
          if(rcode.gt.-61)then
             print *, NF_STRERROR(rcode)
             print *,'in NF_GET_VAR (p): ',cmodel
-         else
-            print *,'Missing sfc p data detected'
-            print*,' -> continue without; compute in sfcbkgd'
-            lcmpsfcq=.false.
          endif
+         print *,'Missing sfc p data detected'
+         print*,' -> continue without; compute in sfcbkgd'
+         lcmpsfcq=.false.
          print*
 c        return
       endif
@@ -777,7 +776,7 @@ c
 c get mslp (this field name differs from one model to the other)
 c
       if(cmodel.eq.'ETA48_CONUS'.or.
-     .   cmodel.eq.'MesoEta_SBN')then
+     .   cmodel(1:7).eq.'MesoEta')then
 
          cvar='emsp'
          call read_netcdf_real(ncid,cvar,nxbg*nybg,mslp
@@ -787,10 +786,9 @@ c
                print *, NF_STRERROR(rcode)
                print *,'in NF_GET_VAR (emsp): ',cmodel
             else
-               print*,' -> continue without; compute in sfcbkgd'
-               print *,'Missing emsp data detected'
-               lcmpsfcq=.false.
+               print*,'Error status returned from read_netcdf_real'
             endif
+            print *,'Missing emsp data detected'
             print*
             return
          endif
@@ -805,8 +803,9 @@ c
                print *, NF_STRERROR(rcode)
                print *,'in NF_GET_VAR (mmsp): ',cmodel
             else
-               print *,'Missing mmsp data detected'
+               print*,'Error status returned from read_netcdf_real'
             endif
+            print *,'Missing mmsp data detected'
             print*
             return
          endif
@@ -818,11 +817,12 @@ c
      +           ,start,count,rcode)
          if(rcode.ne.NF_NOERR) then
             if(rcode.gt.-61)then
-               print *, NF_STRERROR(rcode)
-               print *,'in NF_GET_VAR (pmsl): ',cmodel
+               print*, NF_STRERROR(rcode)
+               print*,'in NF_GET_VAR (pmsl): ',cmodel
             else
-               print *,'Missing pmsl data detected'
+               print*,'Error status returned from read_netcdf_real'
             endif
+            print*,'Missing pmsl data detected'
             print*
             return
          endif
@@ -891,9 +891,10 @@ c
          enddo
          enddo
 
+         print*,'done computing sfc q'
+
       endif
 
-      print*,'done computing sfc q'
 
       if(ibdtp.gt.0.or.ibduv.gt.0)then
          print*,'Found bad sfc data (tp/uv) ',ibdtp,ibduv

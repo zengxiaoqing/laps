@@ -12,6 +12,7 @@ c     include 'bgdata.inc'
 
       character*200 fullname
       character*132 cmodel
+      character*30  projname
       character*13  fname13
       character*13  fname9_to_wfo_fname13
       character*4   cf
@@ -27,7 +28,7 @@ c     include 'bgdata.inc'
       integer       nzbg_uv
       integer       nzbg_ww
       integer       nz
-      integer       lenfn,nclen
+      integer       lenfn,nclen,lenn
       integer       bgmodel
       integer       record
       integer       n_valtimes
@@ -72,8 +73,9 @@ c     include 'bgdata.inc'
 
         subroutine get_attribute_sbn(cdfname,centralLat,centralLon,
      &rlat00,rlon00,latNxNy,lonNxNy,latdxdy,londxdy,dx,dy,nx,ny,
-     &rotation,istatus)
+     &rotation,projname,istatus)
           character cdfname*200
+          character projname*30
           integer   nx,ny
           real      centralLat
           real      centralLon
@@ -172,7 +174,7 @@ c           fullname=fullname(1:j)//fname13//cf
          print*,'call get_attribute_sbn'
          call get_attribute_sbn(fullname,centralLat
      +,centralLon,rlat00,rlon00,latNxNy,lonNxNy,latdxdy
-     +,londxdy,dx,dy,nx,ny,rotation,istatus)
+     +,londxdy,dx,dy,nx,ny,rotation,projname,istatus)
 
          if(istatus.ne. 1)then
             print*,'Error: get_attribute_sbn'
@@ -180,13 +182,21 @@ c           fullname=fullname(1:j)//fname13//cf
             return
          endif
 
+c set projection type for gridconv.f
+
+         call s_len(projname,lenn)
+         if(projname(1:lenn).eq.'LAMBERT_CONFORMAL')gproj='LC'
+         if(projname(1:lenn).eq.'STEREOGRAPHIC')gproj='PS'
+         if(projname(1:lenn).eq.'CYLINDRICAL_EQUIDISTANT')
+     .gproj='LE'
+
          if(cmodel(1:nclen).eq.'RUC40_NATIVE'.or.
      .      cmodel(1:nclen).eq.'ETA48_CONUS')then
 
-            gproj='LC'
             nzbg_tp=nzbg_tp-1
             nzbg_uv=nzbg_uv-1
             nzbg_sh=nzbg_sh-1
+            print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
 
          elseif(cmodel(1:nclen).eq.'AVN_SBN_CYLEQ')then
 
@@ -194,16 +204,13 @@ c for global AVN, nav code expects grid 1,1 in nw corner
             print*,'set return variables'
             rlat00 =-1.*rlat00
             latNxNY=-1.*latNxNy
-            gproj='LE'
             nzbg_tp=nzbg_tp-2
             nzbg_uv=nzbg_uv-2
             nzbg_sh=nzbg_sh-2
-            print*,'var set ',rlat00,latnxny,gproj,
-     .nzbg_tp,nzbg_uv,nzbg_sh
-         elseif(cmodel(1:nclen).eq. 'MesoEta_SBN')then
-            print*,'MesoEta SBN grids'
-            gproj='LC'
-         else
+            print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
+         elseif(cmodel(1:7).eq.'MesoEta')then
+            print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
+         else 
             print*,'Unknown SBN model type: cmodel = ',cmodel
          endif
 

@@ -1,11 +1,12 @@
       subroutine get_attribute_sbn(cdfname,centralLat,centralLon,
      &rlat00,rlon00,latNxNy,lonNxNy,latdxdy,londxdy,dx,dy,nx,ny,
-     &rotation,istatus)
+     &rotation,projname,istatus)
 C
 C  Open netcdf File for reading
 C
-      character dummy*31
       character cdfname*200
+      character dummy*31
+      character projname*30
       integer   istatus
       integer   dim_id
       integer   nx,ny
@@ -242,6 +243,24 @@ C
 	print *,'rotation'
 	goto 100
 	endif
+C
+C Get projection name
+C
+        nf_status = NF_INQ_ATTID(nf_fid,nf_attid,'projName',nf_attnum)
+        if(nf_status.ne.NF_NOERR) then
+         print*, NF_STRERROR(nf_status)
+         print*, 'projName: attribute id'
+         goto 100
+        endif
+
+        nf_status = NF_GET_ATT_TEXT(nf_fid,nf_attid,'projName'
+     .,projname)
+        if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'projname'
+        goto 100
+        endif
+
 C
       istatus=1
 100   return
