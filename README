@@ -23,19 +23,19 @@
          2.2.4 ..................  Plotting / NCAR graphics library (optional)
          2.2.5 ..................  C Compiler
          2.2.6 ..................  FORTRAN Compiler
-         2.4 ..............  Raw data ingest 
-         2.5 ..............  Running LAPS Analyses 
-         2.6 ..............  Test data case
-         2.7 ..............  Modifying Compiler Flags     
-         2.8 ..............  I/O of LAPS gridded files
-         2.9 ..............  CHANGING THE HORIZONTAL DOMAIN
-         2.10 .............  CHANGING THE VERTICAL DOMAIN
-         2.11 .............  CHANGING THE CYCLE TIME 
-         2.12 .............  SURFACE ANALYSIS CHANGES
-         2.13 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
-         2.14 .............  LVD (SATELLITE INGEST) CHANGES
-         2.15 .............  OTHER RUNTIME PARAMETERS
-         2.16 .............  Detecting and Reporting Installation Errors
+         2.3 ..............  Raw data ingest 
+         2.4 ..............  Running LAPS Analyses 
+         2.5 ..............  Test data case
+         2.6 ..............  Modifying Compiler Flags     
+         2.7 ..............  I/O of LAPS gridded files
+         2.8 ..............  CHANGING THE HORIZONTAL DOMAIN
+         2.9 ..............  CHANGING THE VERTICAL DOMAIN
+         2.10 .............  CHANGING THE CYCLE TIME 
+         2.11 .............  SURFACE ANALYSIS CHANGES
+         2.12 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
+         2.13 .............  LVD (SATELLITE INGEST) CHANGES
+         2.14 .............  OTHER RUNTIME PARAMETERS
+         2.15 .............  Detecting and Reporting Installation Errors
      3.0 ............  Description of LAPS Processes
          3.1 ..............  Ingest Processes
          3.1.1 ..................  LGA Model
@@ -113,7 +113,7 @@
 
                 --- 2.1.3   Ingest Software changes ---
 
-     In this file (mainly Sec 2.4), a number of potential manual changes to 
+     In this file (mainly Sec 2.3), a number of potential manual changes to 
      ingest code are outlined prior to running 'make' and 
      'laps_localization.pl', especially if one is using ingest data formats 
      other than "standard" ones used at FSL. After becoming familiar with 
@@ -143,7 +143,7 @@
      The terrain data files come in compressed tar files separate
      from the rest of the LAPS distribution.  There are two topography 
      databases, one in file 'laps_terrain.tar.gz', the other in our 
-     'world_topo_30s' directory (see section 2.9). You can choose from either 
+     'world_topo_30s' directory (see section 2.8). You can choose from either 
      database. Only one copy of the topo data is required no matter how many 
      data installations you are supporting. The paths to the three main
      subdirectories (topo_30s, topo_10m, and land_10m) are defined as
@@ -154,7 +154,7 @@
 
                 --- 2.1.6   Setting Runtime Parameters ---
 
-     Runtime parameter changes (Sec 2.9) may be needed to specify the 
+     Runtime parameter changes (Sec 2.8) may be needed to specify the 
      domain(s); this includes ingest data path names, grid dimension and
      location and potentially other aspects of the data processing. 
      These changes should be made prior to running the localization. The main 
@@ -264,7 +264,7 @@
      allowing for automatic arrays. LAPS will not work on a strict f77 
      compiler that does not allow automatic arrays.
 
-                  ---  2.4    Raw data ingest   ---
+                  ---  2.3    Raw data ingest   ---
 
      There is a layer of raw data ingest code that may have to be modified
      for the individual location depending on data formats. This is usually
@@ -422,7 +422,7 @@
 
       
 
-               ---  2.5  Running LAPS Analyses  ---
+               ---  2.4  Running LAPS Analyses  ---
 
      LAPS runs under cron; there is a sample cron script in './util/cronfile.in'.
      Referring to this cron, you can see that
@@ -448,7 +448,7 @@
      see the various executables that are run in a certain order. You might 
      want to modify the 'sched.pl' file for your needs.
 
-               ---  2.6  Test data case  ---
+               ---  2.5  Test data case  ---
 
      A tar file containing test data is available that contains a 1 hour
      run of laps data (intermediate files from the 'ingest' code plus outputs
@@ -481,7 +481,7 @@
      on FSL's NIMBUS system, they can be obtained directly from FSL's facility
      division at 'http://www-fd.fsl.noaa.gov/'.
 
-               ---  2.7  Modifying Compiler Flags       ---
+               ---  2.6  Modifying Compiler Flags       ---
 
      The './configure' script automatically modifies the compilation 
      flags by modifying the Makefiles according to what type of platform
@@ -499,7 +499,7 @@
      them to the defaults in configure please let us know via e-mail.
 
 
----------------- 2.8 ------ I/O of LAPS gridded files-------------------------
+---------------- 2.7 ------ I/O of LAPS gridded files-------------------------
 
      Once the laps library is compiled (as outlined above), laps grids can
      be read. There are three levels of software that can access the data.
@@ -520,7 +520,7 @@
      libnetcdf.a
 
 
--------------- 2.9   CHANGING THE HORIZONTAL DOMAIN---------------------------
+-------------- 2.8   CHANGING THE HORIZONTAL DOMAIN---------------------------
 
                         NUMBER OF GRID POINTS
 
@@ -686,7 +686,7 @@
    resolutions ranging from 1000m to 36000m.
 
    
---------- 2.10 ----- CHANGING THE VERTICAL DOMAIN------------------------------
+--------- 2.9  ----- CHANGING THE VERTICAL DOMAIN------------------------------
 
 
    NUMBER OF LEVELS:
@@ -724,7 +724,7 @@
         is made in the code of the pressures of each level in integer 
         millibars.
 
--------- 2.11 ----- CHANGING THE CYCLE TIME -----------------------------------
+-------- 2.10 ----- CHANGING THE CYCLE TIME -----------------------------------
 
       The default cycle time is 60 minutes. To change this, do the following.
    between untarring the tar file and compiling
@@ -732,7 +732,7 @@
      1. Edit runtime parameter file 'data/static/nest7grid.parms' 
         to change the value of 'laps_cycle_time'.
 
---------- 2.12 ------SURFACE ANALYSIS CHANGES---------------------------------
+--------- 2.11 ------SURFACE ANALYSIS CHANGES---------------------------------
 
 	Updated: 16 Jan 1997.  Pete Stamus (stamus@fsl.noaa.gov)
 
@@ -795,7 +795,7 @@
 	areas (like Colorado).
 
 
- ----- 2.13 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
+ ----- 2.12 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
 
 Major Updates (from most recent to oldest mods)
 Last updated: October 1996 by Daniel Birkenheuer
@@ -905,14 +905,14 @@ April 1996
    radiometer data are forever lost.  For now treat this as orphan code, if
    ignored, it will not cause problems.
 
------- 2.14 -------------LVD (SATELLITE INGEST) CHANGES------------------------
+------ 2.13 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
    There may be some parameters in the satellite code that change when 
    the domain is moved. The latest info documented in the file
    './src/ingest/satellite/lvd/README'. Please contact John Smart 
    (smart@fsl.noaa.gov) for more details. 
 
------- 2.15 ----------------OTHER RUNTIME PARAMETERS---------------------------
+------ 2.14 ----------------OTHER RUNTIME PARAMETERS---------------------------
 
    It is worthwhile to check the 'nest7grid.parms' and other namelist
    files in data/static to make sure all the runtime parameters are
@@ -941,7 +941,7 @@ April 1996
                        normalization.
 </pre>
 
------- 2.16 -----Detecting and Reporting Installation Errors-------------------
+------ 2.15 -----Detecting and Reporting Installation Errors-------------------
 
    To determine how well LAPS was installed, verify that all (30 at last check)
    executables were built OK with no errors in the output of 'make'.
