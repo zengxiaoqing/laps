@@ -31,7 +31,7 @@ cdis
 cdis 
         subroutine rdsao(i4time,heights_3d
      1  ,N_SAO,maxstns
-     1  ,lat,lon,sfc_i,sfc_j,sfc_k,sfc_u,sfc_v,n_sfc_obs
+     1  ,lat,lon,n_sfc_obs
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v
      1          ,ni,nj,nk,istatus)
 

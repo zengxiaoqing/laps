@@ -34,7 +34,7 @@ cdis
      1  ,ni,nj,nk
      1  ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                         ! I
      1  ,lat,lon
-     1  ,point_i,point_j,point_k,point_u,point_v
+!    1  ,point_i,point_j,point_k,point_u,point_v
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v
      1  ,istatus)
 
