@@ -2564,8 +2564,8 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 Auxiliary functions:
 	write out graphical products
 		
-Inputs: (from PRO, PIN, LGA/FUA, CDW)       '*' = essential input
-      * lga/ram grid            model data analysis/forecast
+Inputs: '*' = essential input
+      * lga/fua grid            model data analysis/forecast
                                 needed for current and previous cycle times
 	pro     inter data      profiler, VAD, SODAR winds
         snd     inter data      RAOB data including winds
@@ -2574,13 +2574,13 @@ Inputs: (from PRO, PIN, LGA/FUA, CDW)       '*' = essential input
       * lso     inter data      LAPS surface obs file: mesonet & SAO
 
         (remapped from raw radar data)
-	v01-v20 grid            3-D radar reflectivity/radial velocity 
+	v01-vxx grid            3-D radar reflectivity/radial velocity 
 
 Outputs: (LW3 is main output)
 	pig	inter data	acars winds    (prior to QC, true north)
 	prg	inter data	profiler winds (prior to QC, true north)
 	sag	inter data	SAOs           (prior to QC, true north)
-	d01-d20 inter data (3d)	derived radar obs output)
+	d01-dxx inter data (3d)	derived radar obs output)
 
 	lw3	3d grid		3-D winds (U and V are wrt GRID NORTH)
 	lwm	2d grid		surface winds
