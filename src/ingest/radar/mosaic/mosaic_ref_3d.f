@@ -4,7 +4,8 @@
      &                            rlat_radar,rlon_radar,rheight_radar,    ! I
      &                            topo,rheight_laps,grid_ra_ref,          ! I
      &                            imosaic_3d,                             ! I
-     &                            grid_mosaic_3dref,istatus)              ! O
+     &                            grid_mosaic_2dref,grid_mosaic_3dref,    ! I/O
+     &                            closest_radar_m,istatus)                ! O
 c
 c routine mosaics vxx radar files. Uses radar closest to the
 c laps grid point. Depending on the value of l_low_level, uses 
@@ -16,6 +17,7 @@ c
       Real*4    lon(nx,ny)
       Real*4    grid_ra_ref(nx,ny,nz,maxradars)
       Real*4    grid_mosaic_2dref(nx,ny)
+      Real*4    closest_radar_m(nx,ny)
       Real*4    grid_mosaic_3dref(nx,ny,nz)
       Real*4    topo(nx,ny)
       Real*4    rheight_laps(nx,ny,nz)
@@ -38,6 +40,7 @@ c
 
       call get_ref_base(ref_base, istatus)
       call get_r_missing_data(r_missing_data, istatus)
+      call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
 
 !     Initialize
       grid_mosaic_2dref = r_missing_data
@@ -91,11 +94,12 @@ c
                if(rijdist .lt. r_min_dist .and. l_valid)then
                   lr=l
                   r_min_dist = rijdist
+                  closest_radar_m(i,j) = r_min_dist*grid_spacing_cen_m       
                endif
 
             enddo ! l
 
-            if(l_low_level)then
+            if(l_low_level)then ! currently passed in as .false.
 
 c use the altitude of the radar compared to the altitude of the laps
 c level to find the appropriate level within grid_ra_ref as the data
