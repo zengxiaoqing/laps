@@ -820,6 +820,7 @@ c
 
         integer   i
         integer   istatus 
+        integer   jstatus
 
         character comment_2d*125
         character units_2d*10
@@ -827,15 +828,16 @@ c
         character c_sat_id(maxsat)*6   !satellite id's known to system
         character csatid(maxsat)*6   !satellite id's returned from routine
 
+        istatus=0   !No data found
         nsats=0
         do i=1,maxsat
            if(isats(i).eq.1)then
               call get_laps_lvd(c_sat_id(i),
      &                 i4time_needed,i4tol,i4time_nearest,
      &                 var_2d,units_2d,comment_2d,
-     &                 imax,jmax,field_2d,istatus)
+     &                 imax,jmax,field_2d,jstatus)
 
-              if(istatus.ne.1)then
+              if(jstatus.ne.1)then
                  write(6,*)'No data returned from get_laps_lvd',
      &               ' for ',c_sat_id(i)
               else
@@ -850,18 +852,19 @@ c this section can make decisions about which satellite data
 c to return in the event there is more than 1 2d field.
 c
         if(nsats.gt.1)then
-           write(6,*)'Found lvd for ',nsats,' satellites'
-           write(6,*)'Returning lvd for ',csatid(1),' only'
+           write(6,*)'Found data for ',nsats,' satellites'
+           write(6,*)'Returning ',var_2d,' for ',csatid(1),' only'
         elseif(nsats.eq.1)then
-           write(6,*)'Found lvd for ',nsats,' satellite'
+           write(6,*)'Found ',var_2d,' for ',nsats,' satellite'
         elseif(nsats.le.0)then
-           write(6,*)'No lvd fields found. Return with no data'
+           write(6,*)'No lvd fields found. Returning  no data'
            return
         endif
 
 c       call move_3dto2d(field_2d_lvd,1,field_2d,imax,jmax,maxsat)
         call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
 
+        istatus=1
         return
         end
 c
