@@ -319,14 +319,6 @@ C 	read global attribute avgTimePeriod from input file and set lag_time
      1               ,'Error obtaining i4_avg_wdw_sec'
             return
         endif
-C
-C       Open an output file.
-        ext = 'pro'
-        call open_ext(1,i4time_sys,ext,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error opening product file',ext
-            return
-        endif
 
 !       Get the number of levels from the NetCDF file
         status = NF_INQ_DIMID(cdfid,'level',varid)
@@ -557,6 +549,14 @@ C
             i4time_ob = i4_timeObs - lag_time ! i4time_sys - lag_time 
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
+C
+C           Open an output file if needed
+            ext = 'pro'
+            call open_ext(1,i4time_sys,ext,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Error opening product file',ext
+                return
+            endif
 
             write(6,401)wsmr_wmo_id,n_good_levels+n_good_sfc,rlat
      1                 ,rlon,elev,prof_name(ista),a9time_ob,'PROFILER'       
