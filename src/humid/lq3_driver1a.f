@@ -327,11 +327,11 @@ c     sounding data even if it is present.
      1        status = 'old', err = 24)
 
        read(23,moisture_switch,end=24)
-c        raob_switch
-c        read(23,*,end=24) goes_switch
-c        read(23,*,end=24) cloud_switch
-c        read(23,*,end=24) sounder_switch
-c        read(23,*,end=24) tiros_switch
+
+
+        close (23)
+
+
 
 
         if (cloud_switch.eq.0) then
@@ -371,10 +371,6 @@ c        read(23,*,end=24) tiros_switch
          write(6,*) 'USING BOTH TIROS AND GOES DATA IN THIS RUN'
       endif
 
-
-
-
-        close (23)
 
 
 
