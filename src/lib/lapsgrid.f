@@ -422,6 +422,8 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
            ext=grid_fnam
         endif
 
+        fdda_model_source_cmn = '         '
+
         call get_directory(ext,directory,len_dir)
 
 ! this is laps specific for nest7grid.parms ... the laps namelist file.
@@ -1212,9 +1214,9 @@ c     erad = 6367000.
 !     .parms file via the common block. Note the variable name in the
 !     argument list is different in the calling routine
 
-      do i=1,maxbgmodels
-         fdda_model_source_cmn(i) = ' '
-      enddo
+c     do i=1,maxbgmodels
+c        fdda_model_source_cmn(i) = ' '
+c     enddo
  
       call get_laps_config(grid_fnam_common,istatus)
 

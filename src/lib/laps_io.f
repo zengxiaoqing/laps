@@ -124,7 +124,7 @@ cdoc    by calling the new READ_LAPS routine
             return
         endif
 
-        call get_fdda_model_source(fdda_model_source,nfdda,istatus)
+c       call get_fdda_model_source(fdda_model_source,nfdda,istatus)
 
         call s_len(ext,len)
 
@@ -144,11 +144,21 @@ c
               ext_int='lgb'
 
            else
+
 c             do l=1,nfdda
 c                if(directory(len+1:len_dir).eq.
 c    &fdda_model_source(l))then
 
-                    ext_int='fsf'
+              mark=0
+              search_dir: do l=len_dir,1,-1
+                 if(directory(l:l).ne.'/')then
+                    mark=mark+1
+                 else
+                    exit search_dir
+                 endif
+              enddo search_dir
+                    
+              ext_int=directory(len_dir-mark-3:len_dir-mark-1)
 
 c                endif
 c             enddo
@@ -712,7 +722,7 @@ c          endif
      1          imax,jmax,kmax,EXT,var_2d,units_2d,
      1                          comment_2d,field_3d,istatus)
 
-cdoc    Returns a 3-D grid. Inputs include the extension and time window.
+cdoc    Returns a 3-D analysis grid. Inputs include the extension and time window.
 
 !       i4time_needed       Input      Desired i4time
 !       i4tol               Input      Tolerance of accepted file times
@@ -1450,7 +1460,7 @@ c
      1         ,EXT,var_2d,units_2d
      1         ,comment_2d,imax,jmax,kmax,field_3d,istatus)
 
-cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time window.
+cdoc    Returns a 3-D analysis grid. Inputs include a directory, ext, and time window.
 
 !       directory_in        Input      Slash at end is optional
 !       i4time_needed       Input      Desired i4time

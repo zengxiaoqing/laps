@@ -76,7 +76,8 @@ cdoc  Reads static/sat_sounder.nl file.
 c
 c-----------------------------------------------------------
 c
-      subroutine get_balance_nl(lrunbal,istatus)
+      subroutine get_balance_nl(lrunbal,adv_anal_by_t_min
+     .,istatus)
 c
 cdoc  Reads static/balance.nl file.
 
@@ -84,12 +85,13 @@ cdoc  Reads static/balance.nl file.
 
       integer    istatus
       integer    len_dir
+      integer    adv_anal_by_t_min
       logical    lrunbal
       character  nest7grid*150
 
       include   'grid_fname.cmn'       !grid_fnam_common
 
-      namelist /balance_nl/lrunbal
+      namelist /balance_nl/lrunbal,adv_anal_by_t_min
 
       istatus = 0
 

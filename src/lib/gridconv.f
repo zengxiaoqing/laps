@@ -965,16 +965,23 @@ c
 c *** Common block variables for lambert-conformal grid.
 c
       integer   nx_lc,ny_lc,nz_lc
-      real*4    lat1_lc,lat2_lc,lon0_lc,sw(2),ne(2)
+      real*4    lat1_lc,lat2_lc,lon0_lc,sw_lc(2),ne_lc(2)
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1_lc,lat2_lc
-     &,lon0_lc,sw,ne
+     &,lon0_lc,sw_lc,ne_lc
 c
 c *** Common block variables for cyclindrical equidistant grid.
 c
       integer   nx,ny,nz
       real*4    rlatc,rlonc,nw(2),se(2),dx,dy
       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
-
+c
+c *** Common block variables for polar stereographic grid.
+c
+      integer nx_ps,ny_ps,nz_ps    !No. of PS domain grid points
+      real*4 lat0_ps,lon0_ps,rota  !Pol ste. std lat, lon and rotation
+     .      ,sw_ps(2),ne_ps(2)     !SW lat, lon, NE lat, lon
+      common /psgrid/nx_ps,ny_ps,nz_ps,lat0_ps,lon0_ps
+     .              ,rota,sw_ps,ne_ps
 
       if(gproj.eq.'LC')then
          nx_lc=nxbg
@@ -983,10 +990,10 @@ c
          lat1_lc=Lat0
          lat2_lc=Lat1
          lon0_lc=Lon0
-         sw(1)=sw1
-         sw(2)=sw2
-         ne(1)=ne1
-         ne(2)=ne2
+         sw_lc(1)=sw1
+         sw_lc(2)=sw2
+         ne_lc(1)=ne1
+         ne_lc(2)=ne2
          return
       endif
 
@@ -994,8 +1001,8 @@ c
          nx_ll=nxbg
          ny_ll=nybg
          nz_ll=nzbg
-         lat0_ll=lat0
-         lon0_ll=lon0
+         lat0_ll=Lat0
+         lon0_ll=Lon0
          d_lat=dlat
          d_lon=dlon
          cgrddef_ll=cgrddef
@@ -1012,10 +1019,22 @@ c
          se(2)=sw2
          nw(1)=ne1
          nw(2)=ne2
-c        dx=dlon*111100.
-c        dy=dlat*111100.
          return 
       endif
+
+      if(gproj.eq.'PS')then
+         nx_ps=nxbg
+         ny_ps=nybg
+         nz_ps=nzbg
+         lat0_ps=Lat0
+         lon0_ps=Lon0
+         sw_ps(1)=sw1
+         sw_ps(2)=sw2
+         ne_ps(1)=ne1
+         ne_ps(2)=ne2
+         return
+      endif
+
 
       return
       end
