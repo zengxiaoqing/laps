@@ -38,7 +38,8 @@ cdis
 cdis
       subroutine draw_county_map(sw,ne,jproj,polat,polon,rrot,jdot
      1                          ,icol_sta,icol_cou,ni,nj)
-c
+
+      include 'lapsplot.inc'
 c
       real*4 sw(2),ne(2),pl1(2),pl2(2),pl3(2),pl4(2),
      +       polat,polon,rrot
@@ -75,9 +76,7 @@ c
 
       domsize = (max(ni,nj)-1.) * grid_spacing_m / zoom
 
-      call get_lapsplot_parms(latlon_int,continent_line_width
-     1                       ,c3_time_zone,time_zone
-     1                       ,istatus)       
+      call get_lapsplot_parms(namelist_parms,istatus)       
 
 !     Plot Counties
       if(jdot .eq. 1)then
@@ -152,9 +151,9 @@ c
       end
 
  
-       subroutine get_lapsplot_parms(latlon_int,continent_line_width
-     1                              ,c3_time_zone,time_zone
-     1                              ,istatus)
+       subroutine get_lapsplot_parms(namelist_parms,istatus)
+
+       include 'lapsplot.inc'
 
        namelist /lapsplot_nl/ latlon_int,continent_line_width
      1                       ,c3_time_zone,time_zone
@@ -164,10 +163,10 @@ c
        real*4 time_zone
 
 !      Set defaults
-       latlon_int = 0
-       continent_line_width = 1.0
-       c3_time_zone = 'UTC'
-       time_zone = 0.0
+       namelist_parms%latlon_int = 0
+       namelist_parms%continent_line_width = 1.0
+       namelist_parms%c3_time_zone = 'UTC'
+       namelist_parms%time_zone = 0.0
  
        call get_directory('static',static_dir,len_dir)
 
