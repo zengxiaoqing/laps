@@ -212,7 +212,8 @@ c
      1                              l_require_lso,
      1                              bad_t,bad_td,bad_u,bad_v,bad_p,
      1                              bad_mp,bad_th,bad_the,
-     1                              bad_vis,bad_tb8      
+     1                              bad_vis,bad_tb8,
+     1                              thresh_t,thresh_td,thresh_mslp
 c
 c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
@@ -680,7 +681,9 @@ c
 	call qcdata(filename,infile_last,rely,mxstn,
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn3, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
-     &     ni,nj,t_bk,td_bk,mslp_bk,back_t,back_td,back_mp,
+     &     ni,nj,t_bk,td_bk,mslp_bk,
+     &     thresh_t,thresh_td,thresh_mslp,
+     &     back_t,back_td,back_mp,
      &     istatus)
 c
 	if(istatus .eq. 1) then
