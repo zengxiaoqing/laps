@@ -46,9 +46,10 @@ c        bgmodel = 5 ---> RUC (40 km native grid)
 c        bgmodel = 6 ---> AVN (360 x 181 lat-lon grid)
 c        bgmodel = 7 ---> ETA (48 km from grib file)
 c        bgmodel = 8 ---> NOGAPS (1.0 deg)
+c        bgmodel = 9 ---> NWS Conus (RUC, ETA, NGM, AVN)
 c
       integer nbgmodel
-      parameter (nbgmodel=8)
+      parameter (nbgmodel=9)
 c
       integer bgmodel
 c
@@ -90,6 +91,10 @@ c
       parameter (maxbgmodels=4)
       character*150 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), len
+c
+      integer*4 max_files,bg_files
+      parameter (max_files=2000)
+      character*100 names(max_files)
 c
 c-------------------------------------------------------------------------------
 c
@@ -168,6 +173,12 @@ c         len = index(bgpaths(i),' ')
             ny_bg = 181
             nz_bg = 16        
             cmodel = 'NOGAPS (1.0)'            
+         else if(bgmodel.eq.9) then
+            call get_file_names(bgpath,bg_files,names,max_files,istat)
+            if (istat .ne. 1) print *,'Error in get_file_names.'
+            call get_conus_dims(names(1),nx_bg,ny_bg,nz_bg)
+            print *,'nws:',nx_bg,ny_bg,nz_bg
+            cmodel='NWS_CONUS'
          endif
          
 
@@ -604,6 +615,10 @@ c
             call read_dgprep(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg
      .                      ,prbg,htbg,tpbg,shbg,uwbg,vwbg
      .                      ,gproj,istatus)
+         elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
+            call read_conus_nws(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
+     .                          prbg,htbg,tpbg,shbg,uwbg,vwbg,
+     .                          gproj,istatus)
 c
          endif
          if (istatus .ne. 1) then
@@ -633,7 +648,7 @@ c           create small neg values when the field is small to begin with.
 c ****** If bgmodel=4, there exists missing data.  Don't use these points
 c           in the filter.
 c
-         if (bgmodel .eq. 4) then
+         if (bgmodel .eq. 4 .or. bgmodel .eq. 9) then
             do j=1,ny_bg
             do i=1,nx_bg
                if (htvi(i,j,1) .eq. msgflg) then
