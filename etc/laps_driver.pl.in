@@ -29,6 +29,8 @@
 #
 # -e  e1,e2,...        Environment variables (if any) to pass into the executable
 #
+# -l                   Write log files to LAPS_DATA_ROOT/log, even if on AWIPS..
+#
 # third to last arg    Executable name
 #
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
@@ -38,10 +40,10 @@
 #
 
 use strict;
-use vars qw($opt_o $opt_e $opt_q);
+use vars qw($opt_o $opt_e $opt_l $opt_q);
 use Getopt::Std;
 
-getopts('e:q:');
+getopts('e:lq:');
 
 my $exe = shift || die "Program name and LAPS root directory required";
 my $LAPSROOT=shift || die "LAPS root directory required";
@@ -62,7 +64,7 @@ if($opt_e){
 
 
 my($LAPS_LOG_PATH);
-if($fxa_sys!=0){
+if(($fxa_sys!=0)and(! $opt_l)){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";

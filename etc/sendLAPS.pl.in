@@ -17,9 +17,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
+# Options:
+#
+#  -l  Force logs to LAPS_DATA_ROOT/log, even if on FXA system
 #
 use strict;
 use English;
+use vars qw($opt_l);
+use Getopt::Std;
+getopts('l');
 my $LAPSROOT=shift;
 my $LAPS_DATA_ROOT=shift ||
     die "LAPSROOT and LAPS_DATA_ROOT are required inputs";
@@ -41,7 +47,7 @@ my $key = "LAPB.netCDF.$host.SFM.";
 
 my $fxa_sys =  &Get_env'fxa; #'
 my($LAPS_LOG_PATH);
-if($fxa_sys!=0){
+if(($fxa_sys!=0)and(! $opt_l)){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";

@@ -43,10 +43,10 @@
 #   $FXA_HOME/bin.  It requires 5 command-line parameters to run (see info below)
 #
 use strict;
-use vars qw($opt_o $opt_e);
+use vars qw($opt_o $opt_e $opt_l);
 use Getopt::Std;
 
-getopts('e:');
+getopts('e:l');
 
 my $LAPSROOT=shift || die "LAPS root directory required";
 require "$LAPSROOT/etc/fxa.pm";
@@ -68,7 +68,7 @@ if($opt_e){
 }
 
 my($LAPS_LOG_PATH);
-if($fxa_sys!=0){
+if(($fxa_sys!=0)and(! $opt_l)){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
