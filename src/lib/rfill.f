@@ -412,8 +412,9 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                             n_neighbors = n_neighbors + 1
                             ref_sum = ref_sum + ref_3d(ii,jj,k)
                             if(n_add_lvl .le. 20)then
-                                write(6,*)i,j,'neighbor',n_neighbors
-     1                                   ,ii,jj,ref_3d(ii,jj,k)
+                                write(6,10)i,j,n_neighbors
+     1                                    ,ii,jj,ref_3d(ii,jj,k)
+ 10                             format(2i5,' neighbor ',i3,2i5,f9.1)
                             endif
                         endif
 
