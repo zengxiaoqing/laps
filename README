@@ -680,13 +680,8 @@
                        RESOLUTION OF DOMAIN: 
 
      The default value is 10000m. This is one of the items used in 
-   constructing the static file (see above). Resolutions less than about 
-   5km could possibly be run in a nested configuration with the 10km domain. 
-   This depends how much of a scale factor jump is permissable between the 
-   model background and LAPS. A nested configuration (e.g. 10km/2km domains) 
-   could be set up by generating LGA/F files having 2km resolution using 
-   10km LAPS analyses/forecasts as input.
-
+   constructing the static file (see above). To date, we have run LAPS with
+   resolutions ranging from 1000m to 16000m.
 
    
 --------- 2.10 ----- CHANGING THE VERTICAL DOMAIN------------------------------
