@@ -71,10 +71,10 @@ c    .      ,wb(nx,ny,nz)
      .      ,re,rdpdg,po,cappa
      .      ,delo,dt
      .      ,gamo
-     .      ,obert,oberu,oberw,zter
+     .      ,obert,oberu,oberw,zter,moderu,moderv,modert
      .      ,erru(nx,ny,nz),errv(nx,ny,nz),errub(nx,ny,nz)
      .      ,errphi(nx,ny,nz),errphib(nx,ny,nz)
-
+     .      ,slastu,slastv,slastt,cor
       real*4 grid_spacing_actual_m
      .      ,grid_spacing_cen_m
      .      ,pdif,dpbl,dpblf
@@ -88,6 +88,7 @@ c    .      ,wb(nx,ny,nz)
      .      ,ffz
 
       real*4 smsng
+      real*4 rstats(7)
 
 c made 2d 2-20-01 JS.
       real*4  tau(nx,ny)
@@ -113,6 +114,7 @@ c
       integer   lenm
       integer   adv_anal_by_t_min
       integer   k1,k2
+      integer   ij
 c
       logical lrunbal
       logical lrotate/.false./
@@ -135,7 +137,8 @@ c    Added by B. Shaw, 4 Sep 01
       real*4 shsat
       real*4 ubias,vbias,urms,vrms,oberr
 c    Arrays for Airdrop application
-      real, allocatable, dimension(:) :: udrop,vdrop,tdrop,rri,rrj
+      real, allocatable, dimension(:) :: udrop,vdrop,tdrop,rri,rrj,
+     &    rrit,rrjt
 c_______________________________________________________________________________
 c
       call get_balance_nl(lrunbal,adv_anal_by_t_min,istatus)
@@ -370,7 +373,7 @@ c an appropriate tau value.
 c set the resolvable scale based on data nyquist inteval=4 spacing
 c this should be automated to be computed by the actual number of obs/area
 c guess number of obs over grid, put in sldata for now.
-      sldata=200.!number of good upper air obs
+      sldata=9.  !number of good upper air obs (sonde quality)
       sldata=4.*sqrt(float((nx-1)*(ny-1))*dx(nx/2,ny/2)**2/sldata)
 
 
@@ -504,7 +507,6 @@ c put lapsphi into phi, lapsu into u, etc
       om  = omo
       sh  = lapssh
 
-      deallocate(lapsphi,lapsu,lapsv,omo)
 c
       if(larray_diag)then
          print*
@@ -596,12 +598,34 @@ c *** destagger and Write out new laps fields.
 c
 c the non-staggered grids must be input with intact boundaries from background 
 c  the bs arrays are used as dummy arrays to go from stagger to non staggered
-
+      print*,'Destaggering grids back to LAPS A grid' 
       call balstagger(ubs,vbs,phibs,tbs,
      & shbs,ombs,u,v,phi,t,sh,om,nx,ny,nz,p,ps,-1) 
 c   Prior to applying boundary subroutine put non-staggered grids back into
 c   u,v,om,t,sh,phi.
-
+c     write out input laps vs balanced laps at center grid point
+      print*,'Output u and Input u and diff after balance and destagger'
+      do k=1,nz
+       write (6,1111) ubs(nx/2,ny/2,k),lapsu(nx/2,ny/2,k)
+     &        ,ubs(nx/2,ny/2,k)-lapsu(nx/2,ny/2,k)
+      enddo
+      print*,' Output v and Input v after balance and destagger '
+      do k=1,nz
+       write (6,1111) vbs(nx/2,ny/2,k),lapsv(nx/2,ny/2,k)
+     &        ,vbs(nx/2,ny/2,k)-lapsv(nx/2,ny/2,k)
+      enddo
+      print*,' Output T and Input T after balance and destagger '
+      do k=1,nz
+       write (6,1111) tbs(nx/2,ny/2,k),lapstemp(nx/2,ny/2,k)
+     &        ,tbs(nx/2,ny/2,k)-lapstemp(nx/2,ny/2,k)
+      enddo
+      print*,' Output phi and Input phi after balance and destagger '
+      do k=1,nz
+       write (6,1111) phibs(nx/2,ny/2,k),lapsphi(nx/2,ny/2,k)
+     &        ,phibs(nx/2,ny/2,k)-lapsphi(nx/2,ny/2,k)
+      enddo
+ 1111 format(1x,3f9.2)
+      deallocate(lapsphi,lapsu,lapsv,omo)
 c adjust surface temps to account for poor phi estimates below ground 
       call sfctempadj(tb,lapstemp,p,ps,nx,ny,nz,npass)  
 
@@ -620,7 +644,7 @@ c    1                  comment,nx,ny,ps,istatus)
 
       if(lrotate)then
 
-         print*,'rotate u/v back to true north'
+         print*,'rotate u/v analysis and backgrnd to true north'
          print*,'Put geopotential hgt back to m'
          do k = 1, nz
             do j = 1, ny
@@ -726,7 +750,8 @@ c compute dropsone wind difference from background
 c simple solution is to read from .pig and tmg files, then create a
 c truth profile and compute an average analysis error
 
-         write(6,*)' Rotate u/v to true north for AIRDROP analysis'
+         write(6,*)' Rotate u/v analysis and background
+     1    to true north for AIRDROP analysis'
 
          do k = 1, nz
             do j = 1, ny
@@ -737,6 +762,12 @@ c truth profile and compute an average analysis error
      1           ,lon(i,j)           )
                u(i,j,k) = u_true
                v(i,j,k) = v_true
+               call uvgrid_to_uvtrue(
+     1             ub(i,j,k),vb(i,j,k)
+     1            ,u_true   ,v_true
+     1            ,lon(i,j)          )
+            ub(i,j,k)=u_true
+            vb(i,j,k)=v_true
             enddo
             enddo
          enddo
@@ -747,14 +778,17 @@ c compute dropsone wind difference from background
 c     simple solution is to read from .pig and tmg files, then create a 
 c truth profile and compute an average analysis error
 
-         allocate(udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz))
+         allocate(udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz)
+     &   , rrit(nz),rrjt(nz))
 
 c  create dropsond profiles for testing....comment out read pig,tmg
          call readpig(a9_time,nx,ny,lat,lon
-     1,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
+     1,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,nz,istatus)
          if(istatus.eq.-3)then
-            print*,'Error returned: readpig.'
-            print*,'Dropsonde analysis not performed.'
+         print*,'Failure status returned: readpig. istatus=',istatus
+            print*,'Dropsonde data not available; using default '
+     1    ,'dropsonde (profile in center of grid)'
+            go to 99
          elseif(istatus.eq.-1)then
             print*,'Only tmg exists: generate u/v drop profiles
      1 from analysis with gaussian error'
@@ -762,70 +796,104 @@ c  create dropsond profiles for testing....comment out read pig,tmg
              print*,'Only pig exists: generate T drop profile
      1 from analysis with gaussian error'
          endif
-
 c routine to create drop and rr arrays when either pig or tmg
 c do not exist
-         if(istatus.lt.1.and.istatus.gt.-3)then
+         if(istatus.eq.-1)then
+            rri=rrit
+            rrj=rrjt
             iii=382983
+            slastv=0
+            slastu=0
+            cor=.5
             do k=1,nz
                if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
                   ii=rri(k)
                   jj=rrj(k)
-                  if(istatus.eq.-1)then
-                     udrop(k)= u(ii,jj,k) + ffz(iii,20)*3. ! assumed gaussian error 3ms 
-                     vdrop(k)= v(ii,jj,k) + ffz(iii,20)*3
-                  endif
-                  if(istatus.eq.-2)then
-                     tdrop(k)= t(ii,jj,k) + ffz(iii,20)*2.   
-                  endif
+                  slastu= ffz(iii,20,cor,slastu) ! assumed gaussian error 3ms 
+                  udrop(k)= u(ii,jj,k) + slastu*3.
+                  slastv= ffz(iii,20,cor,slastv) ! assumed gaussian error 3ms 
+                  vdrop(k)= v(ii,jj,k) + slastv*3.   
                endif
             enddo
-            last_one=.true.
-            first_one=.true.
-            do k=1,nz
-               if(rri(k).ne.smsng.and.rrj(k).ne.smsng)then
-                  if(first_one)then
-                     k1=k
-                     first_one=.false.
-                  endif
-               endif
-               if(rri(k).eq.smsng.and.rrj(k).eq.smsng)then
-                  if(.not.first_one.and.last_one)then
-                     k2=k-1
-                     last_one=.false.
-                  endif
-               endif
-            enddo
-c we need values above and below for the Airdrop analysis
-            if(k1.gt.1) tdrop(k1-1)=tdrop(k1)
-            if(k2.lt.nz)tdrop(k2+1)=tdrop(k2)
          else
-            print*,'Error:--------------------------------------'
-            print*,'Error:No dropsonde (.pin) or temp (tmg) data'
-            print*,'Error:    unable to perform Airdrop analysis'
-            print*,'Error:--------------------------------------'
-c return to main!
-            return
+            rrit=rri
+            rrjt=rrj
+            iii=382983
+            slastt=0
+            do k=1,nz
+               if(rrit(k).ne.smsng .and. rrjt(k).ne.smsng)then
+                  ii=rrit(k)
+                  jj=rrjt(k)
+                  slastt=ffz(iii,20,cor,slastt)
+                  tdrop(k)= t(ii,jj,k) + slastt*2.      
+               endif
+            enddo
          endif
+c
+c this routine checks all levels for u,v, and t. If missing (either
+c no dropsonde or for levels above dropsonde, dropsonde variables 
+c will be proxied by the analysis at either the dropsonde points
+c (if they exist) otherwise, the center of the grid and
+c gaussian noise will be applied: 3 m/s for wind, 1C for temp
+c this will allow a variance to be provided above dropsonde levels
+c
+ 99      slastu=0
+         slastv=0
+         slastt=0 
+         do k=1,nz
+          if(rri(k).eq.smsng.or.rrj(k).eq.smsng)then
+             ii=nx/2
+             jj=ny/2
+             rri(k)=float(ii)
+             rrj(k)=float(jj)
+          else
+             ii=nint(rri(k))
+             jj=nint(rrj(k))
+          endif
+          slastu=ffz(iii,20,cor,slastu)
+          slastv=ffz(iii,20,cor,slastv)
+          slastt=ffz(iii,20,cor,slastt)
+ 
+          if(udrop(k).eq.smsng) udrop(k)=u(ii,jj,k)+slastu*3.  
+          if(vdrop(k).eq.smsng) vdrop(k)=v(ii,jj,k)+slastv*3.  
+          if(tdrop(k).eq.smsng) tdrop(k)=t(ii,jj,k)+slastt*1.  
+         enddo 
+
 
 c subr profile fills array erru(u),errub(v) with analysis error 
 c here we assume the following for dropsonde error: wind 1m/s, temp .5deg
+c and model error
+         call read_wind3d_wgi(rstats,istatus)
+         if(istatus .ne. 1)then
+            print*,'Using u/v model errors from climo estimates:'
+            moderu=3.
+            moderv=3.
+            modert=1.0
+         else
+            print*,'Using u/v model errors from wind analysis:'
+            moderu=rstats(6)
+            moderv=rstats(7)
+            modert=1.0
+         endif
+         print*,'u/v model error = ',moderu,moderv
          oberu=1.
          obert=.5
          oberw=.05
-
 c  compute TKE
 c  the s arrays are used to hold the turbulent components of u,v, and w
          call turb(u,v,om,t,phi,p,us,vs,oms,ts,ter,nx,ny,nz)
 
+         print*
+         print*,'Calling subroutine profile. '
+         print*
+
          call profile(udrop,vdrop,tdrop,rri,rrj,oberu,oberw
-     &,obert,erru,errv,errw ,errt,u,v,om,
+     &,obert,moderu,moderv,modert,erru,errv,errw ,errt,u,v,om,
      & lapssh,us,vs,oms,t,phi,ub,vb,omb,tb,p
      &,ter,zter,nx,ny,nz,i4time_sys)
 
-         call write_errors(a9_time_airdrop,p,erru,errv,errw,errt,
-     1 nx,ny,nz,rri,rrj,zter)
-
+c           call write_errors(a9_time_airdrop,p,erru,errv,errw,errt,
+c    1 nx,ny,nz,rri,rrj,zter,alt)
 
       endif
 
@@ -1695,9 +1763,11 @@ c        write(9,4000) k,p(k+1)/100.
          dyy=(dy(i-1,j-1)+dy(i,j-1)+dy(i-1,j)+dy(i,j))*.25
          if(ps(i,j).gt.p(k+1)) then
 
-            ang=(lat(i,j))*rdpdg
+            ang=(lat(i,j)+lat(i+1,j))*.5*rdpdg
             sin1=sin(ang)
             f=fo*sin1
+c friction is from perturbation winds only so may not be perfect
+c for diagnosis near ground
             fvv=(fv(i,j,k)+fv(i,j+1,k)+fv(i-1,j+1,k)+fv(i-1,j,k))/4.
             fuu=(fu(i,j,k)+fu(i+1,j,k)+fu(i+1,j-1,k)+fu(i,j-1,k))/4.
             nvv=(nv(i,j,k)+nv(i,j+1,k)+nv(i-1,j+1,k)+nv(i-1,j,k))/4.
@@ -1791,6 +1861,27 @@ c    .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
      . /1x,' momentum resids-u and v eqn:',2e12.4
      . /1x,' rms friction vector        :',2e12.4 
      . /1x,' rms nonlinear term value   :',2e12.4)
+c Write out sample vertical profiles of u, uo, v, vo, phi phio
+c in center of grid
+      Print*, ' U component in middle of grid: adjusted, non adjusted'
+     &          ,' dif output - input'
+      Do k=1,nz
+       write(6,1111) u(nx/2,ny/2,k), uo(nx/2,ny/2,k)
+     &     ,u(nx/2,ny/2,k)-uo(nx/2,ny/2,k)
+      enddo
+      Print*, ' V component in middle of grid: adjusted, non adjusted'
+     &          ,' dif output - input'
+      Do k=1,nz
+       write(6,1111) v(nx/2,ny/2,k), vo(nx/2,ny/2,k)
+     &     ,v(nx/2,ny/2,k)-vo(nx/2,ny/2,k)
+      enddo
+      Print*, ' Geopotentialin middle of grid: adjusted, non adjusted'
+     &          ,' dif output - input'
+      Do k=1,nz
+       write(6,1111) t(nx/2,ny/2,k), to(nx/2,ny/2,k)
+     &     ,t(nx/2,ny/2,k)-to(nx/2,ny/2,k)
+      enddo 
+ 1111 format (1x, 3f8.1)
 c
       return
       end
@@ -2078,7 +2169,7 @@ c
      .      ,ddp(nz),ddp2(nz)
      .      ,dt,dudx,dvdy,dudy,dvdx
      .      ,dudp,dvdp,dudt,dvdt
-     .      ,rmx2d,rmn2d
+     .      ,rmx2d,rmn2d,dps
 
       real*4 gdtvdp_save(nx,ny),gdtudp_save(nx,ny)
       real*4 gdtvdp,gdtudp
@@ -2142,7 +2233,10 @@ c     hzdf=50000.!m2/sec ! this value in haltiner is suspected to be too large
           gdtudp=0.
           if(ps(i,j).gt.p(k+1).and.(ps(i,j)-p(k+1)).le.dp(k))then! we're near sfc
            den=p(k+1)/r/t(i,j,k+1)
-           gdtudp=den*cd*grav*abs(u(i,j,k))*u(i,j,k)/dp(k)       
+c          surface friction term is always scaled for a contact layer of 
+c          5000. pascals. Smaller dps will give values too high, 
+           dps=5000.
+           gdtudp=den*cd*grav*abs(u(i,j,k))*u(i,j,k)/dps         
            gdtudp_save(i,j)=gdtudp
           endif
           fu(i,j,k)=hzdf*(d2udx+d2udy)
@@ -2676,17 +2770,28 @@ c omega is already on the staggered horizontal mesh
 
 c horizontal destagger
 c re compute hydrostatic virtual t from staggered adjusted phis 
-c use a second-order scheme
+c use a third-order scheme. use local dlnp as a constant for
+c scheme for each layer. This avoids precision errors for 
+c terms with dlnp**3. Also 2nd deriv terms vanish
+       nxx=nx/2
+       nyy=ny/2
        do k=2,nz-1
+        alpka1k=alog(p(k+1)/p(k))
+        t1=1./24./alpka1k 
         do j=1,ny
          do i=1,nx
-          fo=(phis(i,j,k)-phis(i,j,k-1))/
+          for=(phis(i,j,k)-phis(i,j,k-1))/
      &                              alog(p(k)/p(k+1))
-          so=0.
-          if(k+2.le.nz.and.k.ge.3) 
-     &    so=.5*((phis(i,j,k+1)-phis(i,j,k-1))/alog(p(k)/p(k+2))-
-     &         (phis(i,j,k)-phis(i,j,k-2))/alog(p(k-1)/p(k+1)))
-         ts(i,j,k)=(fo-so)/r          
+          if(k+2.le.nz.and.k.gt.2) then
+           tor= t1*(phis(i,j,k+1)-3.*phis(i,j,k)+3.*phis(i,j,k-1)-
+     &            phis(i,j,k-2))
+          else
+           tor=0.
+          endif
+         ts(i,j,k)=(for-tor)/r          
+          if(i.eq.nxx.and.j.eq.nyy)
+     &          print*, 'i,j,k, for/r, tor/r temp ',i,j,k,for/r,
+     &                  -tor/r,ts(i,j,k)
          enddo
         enddo
        enddo
@@ -3107,11 +3212,12 @@ cc
 c------------------------------------------------------------
 cc
       subroutine readpig(a9_time,nx,ny,lat,lon
-     &,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
+     &,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,nz,istatus)
 
 c this subroutine reads the .pig and .tmg files to recover observed  
 c u, v, bnd T profiles, the decimal i,j locations at the nz LAPS levels 
-      real udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz), dum2
+      real udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz), 
+     & rrit(nz),rrjt(nz),dum2
 c variables output:
 c     udrop, vdrop tdrop: dropsonde u,v T obs at the nz laps levels
 c     rri, rrj: real grid coordinates of dropsone position in grid space 
@@ -3141,9 +3247,13 @@ c
          return
       endif
 
+c preset all dropsonde output to missing
       istatus=0
       rri=smsng
       rrj=smsng
+      udrop=smsng
+      vdrop=smsng
+      tdrop=smsng
 
       pi=4.*atan(1.)
       rdpdg=pi/180. 
@@ -3161,59 +3271,77 @@ c
         goto 7
 
 1       nsave=n-1 
-        if(nsave.lt.2)then
+        if(nsave.lt.1)then
            print*,'No wind data in pig file'
            istatus=-1
            goto 7
         endif
+
 c convert dd ff to u,v
         do n=1,nsave
-
            call disp_to_uv(dd(n),ff(n),uu(n),vv(n))
-
-c          call rlapsgrid_to_latlon(ri(n),rj(n),lat,lon,nx,ny
-c    1,rlat,rlon,istatll)
-c          call uvtrue_to_uvgrid(
-c    1            uu(n),vv(n)
-c    1           ,uu(n),vv(n)
-c    1           ,rlon)
-
-c        ang=rdpdg*(dd(n)-270.)
-c        uu(n)=ff(n)/.515*cos(ang)
-c        vv(n)=-ff(n)/.515*sin(ang)
-
         enddo
+
 c since dropsonde is reverse order, flip it.
         if(rk(1).gt.rk(nsave))then
            call flip_sonde(mxz,nsave,uu,vv,ri,rj,rk)
         endif
 c now interpolate to the laps levels in rk space
+c if nsave is 1 (one level of data) then assign it to nearest laps level
+c first clear out drop winds, make assignment and then close file
         do k=1,nz
-        rr=k
-        do  n=1,nsave-1
-         iflag=0        
-         if (rr.lt.rk(n+1).and.rr.ge.rk(n)) then ! point is between two dropsonde levels
-          aa=(rr-rk(n))/(rk(n+1)-rk(n))
-          udrop(k)=uu(n)*(1.-aa)+uu(n+1)*aa
-          vdrop(k)=vv(n)*(1.-aa)+vv(n+1)*aa
-          rri(k)=ri(n)*(1.-aa)+ri(n+1)*aa
-          rrj(k)=rj(n)*(1.-aa)+rj(n+1)*aa
-          iflag=1
-          go to 3
-         endif
-        enddo ! on n
-        if(iflag.eq.0) then
          udrop(k)=smsng
          vdrop(k)=smsng
+         rri(k)=smsng
+         rrj(k)=smsng
+        enddo
+        if(nsave.eq.1) then
+         k=rk(1)
+         udrop(k)=uu(1)
+         vdrop(k)=vv(1)
+         rri(k)=ri(1)
+         rrj(k)=rj(1) 
+         go to  44 ! close file 
         endif
+c
+c*** question for JM: this section linearly interpolates
+c*** dropsonde points bounding laps levels. The udrop and
+c*** vdrop are calculated like this:
+c
+c     X<========= dropsonde at rk(n+1)
+c ------- laps level k=rr
+c     X<========= dropsonde at rk(n)
+c
+c I propose we compute average (representative) u/v
+c components bounding each laps level. This may
+c give more uncertainty in the .air file
+c
+        do k=1,nz
+           rr=k
+           do n=1,nsave-1
+              iflag=0        
+              if( rr.lt.rk(n+1).and.rr.ge.rk(n))then !point laps level is between two dropsonde points.
+                 aa=(rr-rk(n))/(rk(n+1)-rk(n))
+                 udrop(k)=uu(n)*(1.-aa)+uu(n+1)*aa
+                 vdrop(k)=vv(n)*(1.-aa)+vv(n+1)*aa
+                 rri(k)=ri(n)*(1.-aa)+ri(n+1)*aa
+                 rrj(k)=rj(n)*(1.-aa)+rj(n+1)*aa
+                 iflag=1
+                 go to 3
+              endif
+           enddo ! on n
+           if(iflag.eq.0)then
+              udrop(k)=smsng
+              vdrop(k)=smsng
+           endif
    3    enddo ! on k
-        close(11)
+   44   close(11)
       else
         print*,'No pig file at this time'
         istatus=-1
       endif
 
-c now read the tmg file to get the dropsone temps
+c now read the tmg file to get the dropsonde temps
 7     call get_directory('tmg',dum,len)
       dum(len+1:len+13)=a9_time//'.tmg'
       nn=0
@@ -3222,10 +3350,10 @@ c now read the tmg file to get the dropsone temps
 
        open (11, file=dum,form='formatted',status='old',err=50) 
        Do n=1,mxz
-       read(11,*,end=2) aa,bb,cc,ee, dum1           
-       if(dum1.eq.'  ') go to 2
-       if(dum1.eq.'ACA') then    
         nn=nn+1
+       read(11,*,end=2) aa,bb,cc,ee, dum1           
+       if(dum1.eq.'  ')  go to 2
+       if(dum1.eq.'ACA') then    
         ri(nn)=aa
         rj(nn)=bb
         rk(nn)=cc
@@ -3233,10 +3361,24 @@ c now read the tmg file to get the dropsone temps
        endif
        enddo
 c since dropsonde is reverse order, flip it.
-2      if(nn.lt.1)then
+2      nn=nn-1
+       if(nn.lt.1)then
           istatus = istatus-2
           deallocate(ri,rj,rk,dd,ff,uu,vv,tt)
           goto 49
+       endif
+       if(nn.eq.1) then! there is only one ob; put at nearest laps level
+         do k=1,nz! clear arrays
+          tdrop(k)=smsng
+          rrit(k)=smsng
+          rrjt(k)=smsng
+         enddo
+         k=rk(1)
+         tdrop(k)=tt(1)
+         rrit(k)=ri(1)
+         rrjt(k)=rj(1) 
+         close (11) ! close file  and return
+         return
        endif
        if(rk(1).gt.rk(nn))then
           call flip_sonde(mxz,nn,uu,vv,ri,rj,rk)
@@ -3291,7 +3433,7 @@ c-------------------------------------------------------------------
          rjj(nk-k+1)=rj(k)
          rkk(nk-k+1)=rk(k)
          u(nk-k+1)=uu(k)
-         v(nk-k+1)=uu(k)
+         v(nk-k+1)=vv(k)
       enddo
       ri=rii
       rj=rjj
@@ -3302,317 +3444,7 @@ c-------------------------------------------------------------------
       return
       end
 c-------------------------------------------------------------------
-      subroutine profile(udrop,vdrop,tdrop,rri,rrj,oberu,oberw,obert
-     1,erru, errv, errw,errt, u,v,om,sh,us,vs,oms,
-     1 t,phi,ub,vb,omb,tb,p,ter,zter,
-     1 nx,ny,nz,i4time)
-c
-c  this routine takes the measured fit between the obs and background
-c  and constructs analysis error estimates based on an estimated
-c  observation error, a projected truth based on gaussian random error.
-c  arrays erru errv errw errt are the output error estimates  
-c  variables are stored in each. Here is the key for each k profile:
-c
-c  erru(1,1,k) background u bias; (2,1,k) backgound variance; (1,5,k) u profile
-c  (1,6,k) turb u comp; (1,2,k) anal bias; (2,2,k) anal var;
-c
-c  errv(1,1,k) background v bias; (2,1,k) backgound variance; (1,5,k) v profile
-c  (1,6,k) turb v comp; (1,2,k) anal bias; (2,2,k) anal var;
-c
-c  errw(1,1,k) background w bias; (2,1,k) backgound variance; (1,5,k) w profile
-c  (1,6,k) turb w comp; (1,2,k) anal bias; (2,2,k) anal var;
-c
-c  errt(1,1,k) background den bias; (2,1,k) backgound variance; (1,5,k)  phi profile
-c  (1,6,k) T profile; (1,7,k) density profile               
-c  (1,2,k) anal bias; (2,2,k) anal var; 
-c  (1,3,k) press anal bias; (2,3,k) press anal var
-c  errv(1,1,k) 
-c  us,vs,oms are the turbulent components here to evaluate covariance
-      real erru(nx,ny,nz),errv(nx,ny,nz),errw(nx,ny,nz),errt(nx,ny,nz)
-     1   ,u(nx,ny,nz), ub(nx,ny,nz), us(nx,ny,nz)
-     1   ,v(nx,ny,nz), vb(nx,ny,nz),vs(nx,ny,nz)
-     1   ,t(nx,ny,nz), tb(nx,ny,nz),oms(nx,ny,nz)
-     1   ,phi(nx,ny,nz),om(nx,ny,nz),omb(nx,ny,nz)
-     1   ,sh(nx,ny,nz)
-     1   ,rri(nz),     rrj(nz), ter(nx,ny)
-      real p(nz),zter
-      real ubias,vbias,urms,vrms
-      real udrop(nz),vdrop(nz),tdrop(nz)  
-c                                        
-      real ffz
-      character*9 dum
-c  variables: udrop vdrop tdrop are the u,v,T from the dropsonde
-c             u,v are the LAPS analyzed velocities
-c             ub,vb are the background grids
-c  create a "truth " profile using gaussian normal distribution of 
-c dropsonde instrument error, oberru
-      real, allocatable, dimension(:) :: ri,rj,rk,dd,ff
-     1,ut,vt,Tt,wt,pht
-
-      logical lfndref
-
-      allocate(ri(300),rj(300),rk(300))
-      allocate(dd(300),ff(300))
-      allocate(ut(nz),vt(nz),Tt(nz),wt(nz),pht(nz))
-      iii=i4time
-      call zero3d(erru,nx,ny,nz)
-      call zero3d(errv,nx,ny,nz)
-      call zero3d(errt,nx,ny,nz)
-      call zero3d(errw,nx,ny,nz)
-
-      call get_r_missing_data(smsng,istatus)
-      r=287.04
-      g=9.808
-      cnt=0
-c recover variable profiles and put them in the error arrays 
-      do k=1,nz
-
-       if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
-        ii=rri(k)
-        jj=rrj(k)  
-        aa=rri(k)-float(ii)
-        bb=rrj(k)-float(jj)
-c these are interpolated (to dropsonde point)
-c  profiles of turbulence and analysis
-        erru(1,6,k)=us(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +us(ii+1,jj,k)*aa*(1.-bb)+
-     1   us(ii,jj+1,k)*bb*(1.-aa)+us(ii+1,jj+1,k)*aa*bb
-        erru(1,5,k)=u(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +u(ii+1,jj,k)*aa*(1.-bb)+
-     1   u(ii,jj+1,k)*bb*(1.-aa)+u(ii+1,jj+1,k)*aa*bb
-        errv(1,6,k)=vs(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +vs(ii+1,jj,k)*aa*(1.-bb)+
-     1   vs(ii,jj+1,k)*bb*(1.-aa)+vs(ii+1,jj+1,k)*aa*bb
-        errv(1,5,k)=v(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +v(ii+1,jj,k)*aa*(1.-bb)+
-     1   v(ii,jj+1,k)*bb*(1.-aa)+v(ii+1,jj+1,k)*aa*bb
-        errt(1,6,k)=t(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +t(ii+1,jj,k)*aa*(1.-bb)+
-     1   t(ii,jj+1,k)*bb*(1.-aa)+t(ii+1,jj+1,k)*aa*bb
-c density
-        errt(1,7,k)=p(k)/r/errt(1,6,k)          
-c specific humidity
-        errt(1,8,k)=sh(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +sh(ii+1,jj,k)*aa*(1.-bb)+
-     1   sh(ii,jj+1,k)*bb*(1.-aa)+sh(ii+1,jj+1,k)*aa*bb
-c height
-        errt(1,5,k)=phi(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +phi(ii+1,jj,k)*aa*(1.-bb)+
-     1   phi(ii,jj+1,k)*bb*(1.-aa)+phi(ii+1,jj+1,k)*aa*bb
-c brute force method for now!
-        if(k.gt.1)then
-         errt(1,5,k-1)=phi(ii,jj,k-1)*(1.-aa)*(1.-bb)
-     1   +phi(ii+1,jj,k-1)*aa*(1.-bb)+
-     1   phi(ii,jj+1,k-1)*bb*(1.-aa)+phi(ii+1,jj+1,k-1)*aa*bb
-        endif
-c terrain
-        zter=ter(ii,jj)*(1.-aa)*(1.-bb)
-     1   +ter(ii+1,jj)*aa*(1.-bb)+
-     1   ter(ii,jj+1)*bb*(1.-aa)+ter(ii+1,jj+1)*aa*bb
-c vertical motion w
-        errw(1,5,k)=-r*errt(1,6,k)/p(k)/g*(om(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +om(ii+1,jj,k)*aa*(1.-bb)+
-     1   om(ii,jj+1,k)*bb*(1.-aa)+om(ii+1,jj+1,k)*aa*bb)
-c turb vv
-        errw(1,6,k)=(oms(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +oms(ii+1,jj,k)*aa*(1.-bb)+
-     1   oms(ii,jj+1,k)*bb*(1.-aa)+oms(ii+1,jj+1,k)*aa*bb)
-
-       endif
-      enddo ! on k
-
-      do n=4,nx ! these are the random estimates for the statistics
-c this creates nx-3 unique truth profiles: nx is used because it is the 
-c first dimension of the err arrays 
-c  do background errors first
-       do k=1,nz
-c       if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
-
-           if(udrop(k).ne.smsng)ut(k)=udrop(k)+oberu*ffz(iii,20)
-           if(vdrop(k).ne.smsng)vt(k)=vdrop(k)+oberu*ffz(iii,20)
-           if(Tt(k).ne.smsng)Tt(k)=tdrop(k)+obert*ffz(iii,20)
-           Wt(k)=oberw*ffz(iii,20)
-
-c       endif
-       enddo 
-
-c for each truth profile compute error and store in the err arrays by
-c height level (k) and truth number (n)
-       do k=1,nz
-        if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
-         ii=rri(k)
-         jj=rrj(k)  
-         aa=rri(k)-float(ii)
-         bb=rrj(k)-float(jj)
-         berru=ub(ii,jj,k)*(1.-aa)*(1.-bb)+ub(ii+1,jj,k)*aa*(1.-bb)+
-     1   ub(ii,jj+1,k)*bb*(1.-aa)+ub(ii+1,jj+1,k)*aa*bb-ut(k)
-         berrv=vb(ii,jj,k)*(1.-aa)*(1.-bb)+vb(ii+1,jj,k)*aa*(1.-bb)+
-     1   vb(ii,jj+1,k)*bb*(1.-aa)+vb(ii+1,jj+1,k)*aa*bb-vt(k)
-         berrt=tb(ii,jj,k)*(1.-aa)*(1.-bb)+tb(ii+1,jj,k)*aa*(1.-bb)+
-     1   tb(ii,jj+1,k)*bb*(1.-aa)+tb(ii+1,jj+1,k)*aa*bb
-         errw(n,1,k)=-r*berrt/p(k)/g*(omb(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +omb(ii+1,jj,k)*aa*(1.-bb)+
-     1   omb(ii,jj+1,k)*bb*(1.-aa)+omb(ii+1,jj+1,k)*aa*bb)-wt(k)
-         berrt=p(k)/r*(1./berrt-1./Tt(k))
-         erru(n,1,k)=berru
-         errv(n,1,k)=berrv
-         errt(n,1,k)=berrt
-        endif
-       enddo! on k
-
-      enddo! on n
-c now analysis errors with a different ensemble of truth estimates
-      do n=4,nx
-       lfndref=.false.
-       do k=1,nz
-c create truth profiles using guassian random numbers
-        if(udrop(k).eq.smsng) go to 2
-        ut(k)=udrop(k)+oberu*ffz(iii,20)
-        vt(k)=vdrop(k)+oberu*ffz(iii,20)
-        Tt(k)=tdrop(k)+obert*ffz(iii,20)
-        Wt(k)=oberw*ffz(iii,20)
-c integrate hypsometric eqn to recover heights
-        if(zter.lt.errt(1,5,k)) then! begin to integrate truth ht
-         tave=.5*(Tt(k)+errt(1,8,k)/6.+Tt(k-1)+errt(1,8,k)/6.)! virt temp
-         if(zter.gt.errt(1,5,k-1)) then
-          pht(k)=errt(1,5,k-1)+r*tave/g*alog(p(k-1)/p(k))
-         else
-          if(.not.lfndref)pht(k-1)=errt(1,5,k-1)
-          pht(k)=pht(k-1)+r*tave/g*alog(p(k-1)/p(k))
-          lfndref=.true.
-         endif
-         
-         
-        endif
-2      enddo 
-
-
-       do k=1,nz
-        if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
-         ii=rri(k)
-         jj=rrj(k)  
-         aa=rri(k)-float(ii)
-         bb=rrj(k)-float(jj)
-         aerru=u(ii,jj,k)*(1.-aa)*(1.-bb)+u(ii+1,jj,k)*aa*(1.-bb)+
-     1   u(ii,jj+1,k)*bb*(1.-aa)+u(ii+1,jj+1,k)*aa*bb-ut(k)
-         aerrv=v(ii,jj,k)*(1.-aa)*(1.-bb)+v(ii+1,jj,k)*aa*(1.-bb)+
-     1   v(ii,jj+1,k)*bb*(1.-aa)+v(ii+1,jj+1,k)*aa*bb-vt(k)
-         aerrtt=t(ii,jj,k)*(1.-aa)*(1.-bb)+t(ii+1,jj,k)*aa*(1.-bb)+
-     1   t(ii,jj+1,k)*bb*(1.-aa)+t(ii+1,jj+1,k)*aa*bb ! temp at drop
-c convert omega errors to w errors
-         errw(n,2,k)=-r*aerrt/p(k)/g*(om(ii,jj,k)*(1.-aa)*(1.-bb)
-     1   +om(ii+1,jj,k)*aa*(1.-bb)+
-     1   om(ii,jj+1,k)*bb*(1.-aa)+om(ii+1,jj+1,k)*aa*bb)-wt(k)
-         aerrt=p(k)/r*(1./aerrtt-1./Tt(k))!density err
-         erru(n,2,k)=aerru
-         errv(n,2,k)=aerrv
-         errt(n,2,k)=aerrt
-         if(errt(1,5,k).gt.zter) then
-          errt(n,4,k)=(errt(1,5,k)-pht(k))  ! ht error
-         endif
-         errt(n,3,k)=g*p(k)/r/aerrtt*errt(n,4,k) ! pressure error from hts               
-        endif
-       enddo! on k
-      enddo ! on n
-c now compute bias error by summing over all nx-4 scenarios
-      do k=1,nz
-       cnt=0
-       sumbeu=0
-       sumbev=0
-       sumbet=0
-       sumaeu=0
-       sumaev=0
-       sumaet=0
-       sumbew=0
-       sumaew=0
-       sumapp=0
-       sumph=0.
-       do n=4,nx
-        cnt=cnt+1.
-        sumbeu=erru(n,1,k)+sumbeu
-        sumbev=errv(n,1,k)+sumbev
-        sumbet=errt(n,1,k)+sumbet
-        sumaeu=erru(n,2,k)+sumaeu
-        sumaev=errv(n,2,k)+sumaev
-        sumaet=errt(n,2,k)+sumaet
-        sumbew=errw(n,1,k)+sumbew
-        sumaew=errw(n,2,k)+sumaew
-        sumapp=errt(n,3,k)+sumapp
-        sumph=errt(n,4,k)+sumph ! ht error
- 1000  format(1x,f4.0,f6.0,6F8.2)
-       enddo ! on n
-
-c     bias estimates
-
-       if(cnt.gt.0)then
-          erru(1,1,k)=sumbeu/cnt
-          errv(1,1,k)=sumbev/cnt
-          errt(1,1,k)=sumbet/cnt
-          erru(1,2,k)=sumaeu/cnt
-          errv(1,2,k)=sumaev/cnt
-          errt(1,2,k)=sumaet/cnt !density
-          errw(1,1,k)=sumbew/cnt
-          errw(1,2,k)=sumaew/cnt
-          errt(1,3,k)=sumapp/cnt! pressure
-          errt(1,4,k)=sumph/cnt !height
-       endif
-      enddo ! on k
-c now compute variance
-      do k=1,nz
-       sumbeu=0
-       sumbev=0
-       sumbet=0
-       sumbew=0
-       sumaeu=0
-       sumaev=0
-       sumaet=0
-       sumaew=0
-       sumapp=0.
-       sumph=0
-       cnt=0.
-       do n=4,nx ! for all truth senarios
-        cnt=cnt+1.
-        sumbeu    =sumbeu+(erru(n,1,k)-erru(1,1,k))**2 !back error variance
-        sumaeu    =sumaeu+(erru(n,2,k)-erru(1,2,k))**2 !analysis error variance
-        sumbev    =sumbev+(errv(n,1,k)-errv(1,1,k))**2 
-        sumaev    =sumaev+(errv(n,2,k)-errv(1,2,k))**2
-        sumbet    =sumbet+(errt(n,1,k)-errt(1,1,k))**2 
-        sumaet    =sumaet+(errt(n,2,k)-errt(1,2,k))**2
-        sumbew    =sumbew+(errw(n,1,k)-errw(1,1,k))**2
-        sumaew    =sumaew+(errw(n,2,k)-errw(1,2,k))**2
-        sumapp    =sumapp+(errt(n,3,k)-errt(1,3,k))**2
-        sumph     =sumph+(errt(n,4,k)-errt(1,4,k))**2
-c covariance calc err ( ,6, ) is the turb component
-        erru(3,2,k)=(erru(n,2,k)-erru(1,2,k))*(erru(n,6,k)*ffz(iii,20))
-     1    +erru(3,2,k)
-        errv(3,2,k)=(errv(n,2,k)-errv(1,2,k))*(errv(n,6,k)*ffz(iii,20))
-     1    +errv(3,2,k)
-        errw(3,2,k)=(errw(n,2,k)-errw(1,2,k))*(errw(n,6,k)*ffz(iii,20))
-     1    +errw(3,2,k)
-       enddo! on n
-c   variance estimates
-       if(cnt.gt.0)then
-          erru(2,1,k)=(sumbeu/cnt)
-          errv(2,1,k)=(sumbev/cnt)
-          errt(2,1,k)=(sumbet/cnt)
-          erru(2,2,k)=(sumaeu/cnt)
-          errv(2,2,k)=(sumaev/cnt)
-          errt(2,2,k)=(sumaet/cnt)! density
-          errw(2,1,k)=(sumbew/cnt)
-          errw(2,2,k)=(sumaew/cnt)
-          errt(2,3,k)=(sumapp/cnt)! pressure
-          erru(3,2,k)=(erru(3,2,k)/cnt)
-          errv(3,2,k)=(errv(3,2,k)/cnt)
-          errw(3,2,k)=(errw(3,2,k)/cnt)
-          errt(2,4,k)=(sumph/cnt)! height
-       endif
-      enddo ! on k
-      return
-      end 
-c
-c------------------------------------------------
-c
-      function ffz(ii,n)
+      function ffz(ii,n,cor,seed)
 c
 c*********************************************************************
 c
@@ -3620,8 +3452,10 @@ c     Pulls out a random value from a unit normal distribution with standard
 c     deviation = 1.  Input is
 c     an integer seed 'ii' and an interation number 'n'. 'n' should
 c     be >20 for best results.
+c     if iswitch is on (1) then value seed is added to the returned 
+c     gaussian number in order to correlate error
 c     
-c     Original: John McGinley, NOAA/FSL  Spring 1998
+c  Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
@@ -3643,16 +3477,83 @@ c
       endif
       ii=ii-1 
       if(ii.ge.0) ii=-ii-1
+      ffz=ffz+cor*seed
 c
       return
       end
 c
 c
-        function ran1(idum)              
+      function rm(sm,st,mg,mmg,iii)
+c this fuction is set up to create a joint pdf for a series of 
+c gaussian pdfs. Means are passed thru sm(mg); std dev thru st(mg)
+c mmg is actual number of combined distributions. rm is a 
+c nonguassian random number times an error
+      real sm(mg),st(mg),xo,sum,sum1
+c compute overall fuction mean
+      fact=1.001 ! ensures that overall function is larger than joint
+      sum1=0 
+      sum2=0
+      sm(mmg+1)=0
+      if(mmg.eq.2) then
+       sum1=st(1)**2+st(2)**2
+       sum2=sm(1)*st(2)**2+sm(2)*st(1)**2
+       sm(mmg+1)=sum2/sum1
+c      print*,'sm1,st1,sm2,st2 ',sm(1),st(1),sm(2),st(2)
+      endif
+      if (mmg.eq.3) then
+       sum1=(st(1)*st(2))**2+(st(2)*st(3))**2+(st(3)*st(1))**2
+       sum2=sm(1)*(st(2)*st(3))**2+sm(2)*(st(1)*st(3))**2+
+     1       sm(3)*(st(1)*st(2))**2
+       sm(mmg+1)=sqrt(sum2/sum1)
+      endif
+      if(mmg.ge.4) print*, 'not set up for four+ distributions'
+c compute mean st
+      if(mmg.eq.2) then
+       sum1=st(1)**2+st(2)**2
+       sum2=(st(1)*st(2))**2
+       st(mmg+1)=sqrt(sum2/sum1)
+c      print*,'over function sm st ', sm(mmg+1), st(mmg+1)
+      endif
+      if (mmg.eq.3) then
+       sum1=(st(1)*st(2))**2+(st(2)*st(3))**2+(st(3)*st(1))**2
+       sum2=(st(1)*st(2)*st(3))**2
+       st(mmg+1)=sqrt(sum2/sum1)
+      endif
+      if(mmg.ge.4) print*, 'not set up for four+ distributions'
+
+         
+c generate gaussian random number
+      icnt=0
+      slast=0
+      cor=.5
+  5   xo=ffz(iii,20,cor,slast)*st(mmg+1) ! offset relative to sm(mmg+1)
+      slast=xo
+      ep=0.
+      do k=1,mmg
+       ep=-(xo+sm(mmg+1)-sm(k))**2/(st(k)*st(k)) + ep
+      enddo
+       ep1=-(xo/fact)**2/(st(mmg+1)*st(mmg+1))
+       rat=ep-ep1
+       cat=alog(ran1(iii))
+c      print*,'xo,ep,ep1,rat,cat,iii', icnt+1,xo,ep,ep1,rat,cat,iii
+       if(cat.lt.rat) then
+        rm=xo+sm(mmg+1)
+        return
+       else
+        icnt=icnt+1
+        if(icnt.eq.100) then
+         print*,'rejection method problems: set rm to consensus mean'
+         rm=sm(mmg+1)
+         return
+        endif
+        go to 5
+       endif
+       end
+
+c ********************************************************************
+      function ran1(idum)              
 c
-c*********************************************************************
-c
-c     Function to generated a random number.  Use this instead of a
+c     Function to generate a random number.  Use this instead of a
 c     machine dependent one. idum must be a negative integer
 c     
 c     Original: Peter Stamus, NOAA/FSL  07 Oct 1998
@@ -3730,6 +3631,7 @@ c            us,vs,ws are the output turbulent components
 
       real, allocatable, dimension(:) :: p1d,u1d,v1d,t1d,z1d
      .,dtf
+
 
       allocate (p1d(nz),u1d(nz),v1d(nz),t1d(nz)
      .,z1d(nz),dtf(nz))
@@ -4062,134 +3964,5 @@ c
 c
       rf = f1*(ri+f2-sqrt(ri*ri+f3*ri+f42))
 c
-      return
-      end
-
-
-      Subroutine write_errors(a9_time,p,erru,errv,errw,errt
-     1,nx,ny,nz,rri,rrj,zter)
-c this routine writes an ascii file to the output log summarizing errors
-      integer lun
-      real p(nz)
-      real erru(nx,ny,nz),errv(nx,ny,nz),errt(nx,ny,nz)
-      real errw(nx,ny,nz)
-      real rri(nz),rrj(nz)
-      character*200 cfname_out
-      character*9   a9_time
-c
-c direct output to lapsprd/balance/air/yyjjjhhmm.air -- ascii output
-c
-      call get_directory('balance',cfname_out,lend)
-      cfname_out=cfname_out(1:lend)//'air/'//a9_time//'.air'
-      call s_len(cfname_out,lend)
-      print*,'Airdrop output filename: ',cfname_out(1:lend)
-      lun = 20
-      open(lun,file=cfname_out,form='formatted',status='unknown'
-     +,err=909)
-
-      r=287.04
-      sum=0
-      sum1=0
-      sum2=0
-
-      write(lun,1011)
- 1011 format(6x,'************AIRDROP OUTPUT**************')
-      write(lun,1012)
- 1012 format(6x,'AIRDROP PROFILES FROM LAPS ANALYSIS')
-      write(lun,1013)
- 1013 format(4x,'P',6x,'HT',6x,'U',8x,'V',8x,'W',8x,'T',7x,'Den')
-      write(lun,1014)
- 1014 format(3x,'mb',7x,'m',5x,'m/sec',4x,'m/sec',4x,'m/sec',6x,'K'
-     +,6x,'kg/m3')
-      do k=1,nz
-       ii=rri(k)
-       jj=rrj(k)
-       if(zter.lt.errt(1,5,k)) then
-        write(lun,1005) p(k)/100., errt(1,5,k),erru(1,5,k),
-     1  errv(1,5,k),errw(1,5,k),errt(1,6,k),errt(1,7,k)
-       endif
-      enddo
-      write(lun,1015)
- 1015 format(/)
-      write(lun,1016)
- 1016 format(8x, 'BIAS ERROR ESTIMATES')
-      write(lun,1002)
-      write(lun,1003)
-      write(lun,1004)
-      do k=1,nz
-       if(zter.lt.errt(1,5,k)) then
-        write(lun,1006) p(k)/100., errt(1,5,k),erru(1,1,k),
-     1  errv(1,1,k),errw(1,1,k),
-     1  erru(1,2,k),errv(1,2,k),errw(1,2,k),sum,sum,sum,
-     1  errt(1,1,k),errt(1,2,k)
-       endif
-      enddo
-      write(lun,1015)
-      write(lun,1016)
-      write(lun,1017)
- 1017 format(1x,'P LVL  HT LVL')
-      write(lun,1009)
-      write(lun,1010)
-      do k=1,nz
-       if(zter.lt.errt(1,5,k)) then
-       write(lun,1008) p(k)/100., errt(1,5,k),errt(1,3,k)/100.
-     &,errt(1,4,k)
-       endif
-      enddo
-   
-      write(lun,1015)
-      write(lun,1018)
- 1018 format(10x,'VARIANCE ESTIMATES')
-      write(lun,1002)
-      write(lun,1003)
-      write(lun,1004)
-      do k=1,nz
-       ii=rri(k)
-       jj=rrj(k)
-       if(zter.lt.errt(1,5,k)) then
-        write(lun,1000) p(k)/100., errt(1,5,k),erru(2,1,k),
-     1  errv(2,1,k),errw(2,1,k),
-     1  erru(2,2,k),errv(2,2,k),errw(2,2,k),erru(1,6,k)**2,
-     1  errv(1,6,k)**2,
-     1  errw(1,6,k)**2,errt(2,1,k),errt(2,2,k)
-       endif
-      enddo
-      write(lun,1015)
-      write(lun,1019)
- 1019 format(3x,'TOTAL VARIANCE ESTIMATES')
-      write(lun,1020)
- 1020 format( '  P     HT     Analysis + Turbulence ')
-      write(lun,1021)
- 1021 format( '                     (m/sec)  ' )
-      write(lun,1007)
- 1007 format(19x,'U',8x,'V',9x,'W',6x,'Den',7x,'P',9x,'HT') 
- 1009 format(19x,'P',8x,'HT')
- 1010 format(19x,'mb',8x,'m')
-      do k=1,nz
-       ii=rri(k)
-       jj=rrj(k)
-c combined variance formula - err(3,2,k) contains covariance
-       sum=erru(2,2,k)+erru(1,6,k)**2+2.*erru(3,2,k) 
-       sum1=errv(2,2,k)+errv(1,6,k)**2+2.*errv(3,2,k)
-       sum2=errw(2,2,k)+errw(1,6,k)**2+2.*errw(3,2,k)
-       if(zter.lt.errt(1,5,k)) then
-        write(lun,1001) p(k)/100., errt(1,5,k),sum,sum1,sum2
-     1,errt(2,2,k),errt(2,3,k)/10000.,errt(2,4,k)
-       endif
-      enddo
-
-      return
-
- 1000 format(1x,f5.0,f8.0,2(f5.1,f5.1,f5.3),3f5.2,2f7.6)
- 1006 format(1x,f5.0,f8.0,2(f5.1,f5.1,f5.3),3f5.2,2f7.4)
- 1002 format(18x,'Background',5x,'Analysis',7x,'Turbulence',4x,
-     1'Density')
- 1003 format(20x,3('(m/sec)',7x),'(kg/m3)')
- 1004 format(3x,'P',7x,'HT  ',3('  U    V    W  '),' Bgnd   Anal')
- 1001 format(1x,f5.0,f8.0,3f9.3,2f9.6,f9.2)
- 1005 format(1x,f5.0,f8.0,5f9.3)
- 1008 format(1x,f5.0,f8.0,2f9.3)
-
-  909 print*,'Error opening airdrop output file'
       return
       end
