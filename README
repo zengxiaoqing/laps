@@ -2106,12 +2106,14 @@ Process: wind.exe - WIND analysis and related fields
 
 Author: Steve Albers (albers@fsl.noaa.gov)
 
-	Generate a preliminary analysis using SAOs, surface mesonet, profiler, 
-	and aircraft reports.  Output of the blance packge from the previous
-	cycle is used as a first guess to do quality control on new 
-        observations. Time tendencies from the MAPS model are used both to 
-        update the older (greater than cycle time) aircraft reports and to 
-        advance the first guess over the LAPS cycle time.
+	Generate a wind analysis using surface observations, profiler, cloud
+        drift wind, and aircraft reports. VAD and SODAR can also be read in.
+        Background model grids are used as a first guess and to do quality 
+        control on new observations. Time tendencies from the background model
+        are applied to the aircraft/cloud-drift wind reports when they are 
+        taken before or after the nominal analysis time. The quality control 
+        rejects any observations deviating from the background by more than a 
+        threshold (~10 m/s). 
 
 	In a second step, the Doppler radial velocities are mixed in.  The 
         azimuthal component is estimated by using the results of the first 
@@ -2229,6 +2231,10 @@ Process: temp.exe - Temperature-Height analysis
 
 	Generate a temperature analysis using model background, sfc temp
         analysis, and RASS data.
+
+        Quality control is applied to the temperature soundings. If any
+        level in a sounding differs from the model background by more than
+        a threshold (~10 deg), the entire sounding is rejected.
 <pre>
 Inputs: (from LGA, LSX, RAM [if available], LRS)       '*' = essential input
       * lga/ram grid            model data analysis / forecast
