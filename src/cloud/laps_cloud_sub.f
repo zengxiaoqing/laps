@@ -131,7 +131,7 @@ cdis
         real*4 solar_alt(NX_L,NY_L)
         real*4 solar_ha(NX_L,NY_L)
 
-        logical l_packed_output, l_use_vis
+        logical l_packed_output, l_use_vis, l_use_39
         logical l_evap_radar
 
         data l_packed_output /.false./
@@ -386,7 +386,7 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,pct_req_lvd_s8a
+        call get_cloud_parms(l_use_vis,l_use_39,pct_req_lvd_s8a
      1                      ,i4_sat_window,i4_sat_window_offset
      1                      ,istatus)
         if(istatus .ne. 1)then
@@ -666,6 +666,7 @@ C READ IN SATELLITE DATA
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
      1       tb8_k,istat_tb8,                                           ! I
      1       sst_k,istat_sst,                                           ! I
+     1       istat_39_a, l_use_39,                                      ! I
      1       tb8_cold_k,                                                ! O
      1       grid_spacing_cen_m,surface_sao_buffer,                     ! I
      1       solar_alt,solar_ha,solar_dec,                              ! I
@@ -826,7 +827,7 @@ C       INSERT VISIBLE SATELLITE DATA
         if(istat_vis .eq. 1)then
             call insert_vis(i4time,clouds_3d,cld_hts
      1        ,topo,cloud_frac_vis_a,albedo,ihist_alb                 ! I
-     1        ,istat_39_a                                             ! I
+     1        ,istat_39_a,l_use_39                                    ! I
      1        ,NX_L,NY_L,KCLOUD,r_missing_data                        ! I
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base

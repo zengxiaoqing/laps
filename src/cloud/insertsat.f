@@ -36,6 +36,7 @@ c
      1  pct_req_lvd_s8a,default_clear_cover,                             ! I
      1  tb8_k,istat_tb8,                                                 ! I
      1  sst_k,istat_sst,                                                 ! I
+     1  istat_39_a, l_use_39,                                            ! I
      1  tb8_cold_k,                                                      ! O
      1  grid_spacing_m,surface_sao_buffer,                               ! I
 !    1  cloud_frac_vis_a,istat_vis,
@@ -117,6 +118,8 @@ c
         real*4 pres_sfc_pa(imax,jmax)
         real*4 heights_3d(imax,jmax,klaps)
 
+        integer*4 istat_39_a(imax,jmax)
+
 !       Output
         real*4 t_gnd_k(imax,jmax)
         real*4 cldtop_m(imax,jmax)
@@ -135,7 +138,7 @@ c
         character*31 ext
         character var*3,comment*125,units*10
 
-        logical  l_tb8,l_cloud_present
+        logical  l_tb8,l_cloud_present,l_use_39
         logical l_co2
         data l_co2 /.false./ ! Attempt to use co2 slicing method?
 
@@ -326,12 +329,12 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1     ,t_gnd_k,pres_sfc_pa
      1     ,thresh_ir_diff1,topo(i,j),r_missing_data
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
-     1     ,n_valid_co2,n_missing_co2
-     1     ,cldtop_m_co2(i,j),l_co2,istat_co2
-     1     ,cldtop_m_tb8(i,j),l_tb8
-     1     ,cldtop_m(i,j),l_cloud_present
-     1     ,sat_cover
-     1                                                          )
+     1     ,istat_39_a(i,j), l_use_39                                     ! I
+     1     ,l_co2                                                         ! I
+     1     ,n_valid_co2,n_missing_co2,cldtop_m_co2(i,j),istat_co2         ! O
+     1     ,cldtop_m_tb8(i,j),l_tb8                                       ! O
+     1     ,cldtop_m(i,j),l_cloud_present                                 ! O
+     1     ,sat_cover)                                                    ! O
 
           if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 slicing method
 
@@ -541,12 +544,14 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1            ,thresh_ir_diff1,topo(i,j),r_missing_data
      1            ,i,j,imax,jmax,klaps,heights_3d,temp_3d
      1            ,k_terrain(i,j),laps_p
-     1            ,n_valid_co2,n_missing_co2
-     1            ,cldtop_m_co2(i,j),l_co2,istat_co2
-     1            ,cldtop_m_tb8(i,j),l_tb8
-     1            ,cldtop_m(i,j),l_cloud_present
-!    1            ,cldtop_m_cold,l_cloud_present
-     1            ,sat_cover)
+     1            ,istat_39_a(i,j), l_use_39                             ! I
+     1            ,l_co2                                                 ! I
+     1            ,n_valid_co2,n_missing_co2,cldtop_m_co2(i,j),istat_co2 ! O
+     1            ,cldtop_m_tb8(i,j),l_tb8                               ! O
+     1            ,cldtop_m(i,j),l_cloud_present                         ! O
+     1            ,sat_cover)                                            ! O
+
+
 
 !             Calculate the cover (opacity) given the brightness temperature,
 !             ground temperature, and assumed ambient cloud-top temperature.
@@ -662,11 +667,13 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 !    1  ,cloud_frac_vis,istat_vis,cloud_frac_co2
      1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p
-     1  ,n_valid_co2,n_missing_co2
-     1  ,cldtop_m_co2,l_co2,istat_co2
-     1  ,cldtop_m_tb8,l_tb8
-     1  ,cldtop_m,l_cloud_present
-     1  ,sat_cover)
+     1  ,istat_39, l_use_39                                            ! I
+     1  ,l_co2                                                         ! I
+     1  ,n_valid_co2,n_missing_co2,cldtop_m_co2,istat_co2              ! O
+     1  ,cldtop_m_tb8,l_tb8                                            ! O
+     1  ,cldtop_m,l_cloud_present                                      ! O
+     1  ,sat_cover)                                                    ! O
+
 
 !       This routine computes the cloud top height given a band 8 brightness
 !       temperature and 3D fields of temp and height. The CO2 method is also
@@ -694,7 +701,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
         real*4 laps_p(klaps)                    ! Input
         integer*4 n_valid_co2,n_missing_co2     ! Input/Output
         real*4 cldtop_m_co2                     ! Output
-        logical l_co2                           ! Input
+        logical l_co2,l_use_39                  ! Input
         integer istat_co2                       ! Output
         real*4 cldtop_m_tb8                     ! Output
         logical l_tb8                           ! Output
@@ -794,16 +801,21 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
             n_valid_co2 = n_valid_co2 + 1
         else
             n_missing_co2 = n_missing_co2 + 1
-            cldtop_m_co2 = r_missing_data ! zeros
+            cldtop_m_co2 = r_missing_data 
         endif
 
 !       This section finds the cloud top using Band 8 data and temperatures
 !       Estimate whether tb8_k - t < threshold
         cldtop_m_tb8 = r_missing_data ! zeros
         if(tb8_k - t_gnd_k(i,j) .lt. -thresh_ir_diff1) then ! probably clds
-
             l_tb8 = .true.
 
+        else ! No clouds according to SATELLITE (Band 8 - 11.2mm)
+            l_tb8 = .false.
+
+        endif
+
+        if(l_tb8 .OR. (l_use_39 .and. istat_39 .eq. 1))then ! get 11u cloud top
             cldtop_temp_k = tb8_k
 
 !           Correct the cloud top temperature for thin clouds using VIS data
@@ -849,10 +861,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 
             enddo ! kl
 
-        else ! No clouds according to SATELLITE (Band 8 - 11.2mm)
-            l_tb8 = .false.
-
-        endif
+        endif ! We will want to use a 11u determined cloud top
 
 !       Set variables depending on whether in Band 8 or CO2 mode
 !       if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method

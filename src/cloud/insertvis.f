@@ -182,7 +182,7 @@ cdis
 
         subroutine insert_vis(i4time,clouds_3d,cld_hts
      1      ,topo,cloud_frac_vis_a,albedo,ihist_alb                   ! I
-     1      ,istat_39_a                                               ! I
+     1      ,istat_39_a,l_use_39                                      ! I
      1      ,ni,nj,nk,r_missing_data                                  ! I
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz                ! I
      1      ,istat_radar,radar_ref_3d,klaps,ref_base
@@ -202,6 +202,7 @@ cdis
         integer*4 ihist_colmaxin_sat(-10:20,-10:20)
         integer*4 ihist_colmaxout_sat(-10:20,-10:20)
         integer*4 istat_39_a(ni,nj)
+        logical l_use_39
         real*4 albedo(ni,nj)
         real*4 topo(ni,nj)
         real*4 dbz_max_2d(ni,nj)
@@ -245,14 +246,14 @@ cdis
         do i = 1,ni
         do j = 1,nj
 
+!         Calculate upper bound to cloud cover (through the column)
           if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then
               cloud_frac_uprb = cloud_frac_vis_a(i,j)
           else
               n_missing_albedo =  n_missing_albedo + 1
   
-              if(istat_39_a(i,j) .eq. -1)then
-!                 cloud_frac_uprb = 0.
-                  cloud_frac_uprb = r_missing_data
+              if(istat_39_a(i,j) .eq. -1 .and. l_use_39)then
+                  cloud_frac_uprb = 0.
               else
                   cloud_frac_uprb = r_missing_data
               endif
