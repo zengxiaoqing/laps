@@ -31,25 +31,18 @@ cdis
 cdis*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
-#ifdef FORTRANUNDERSCORE
+#ifdef rtu
 #define fstrncpy fstrncpy_
 #define nstrncpy nstrncpy_
-#endif
-#ifdef FORTRANDOUBLEUNDERSCORE
-#define fstrncpy fstrncpy__
-#define nstrncpy nstrncpy__
-#endif
-#ifdef FORTRANCAPS
-#define fstrncpy FSTRNCPY
-#define nstrncpy NSTRNCPY
 #endif
 
 /*************************************************************************
 *       fstrncpy  -  copy function used to copy strings with embedded blanks
 *************************************************************************/
 #ifdef __STDC__
-void fstrncpy (char *target,char *source,long maxlen)
+static void fstrncpy (char *target,char *source,long maxlen)
 #else
 void fstrncpy (target,source,maxlen)
 char *target;           /* space to be copied into */
@@ -66,7 +59,7 @@ long maxlen;            /* max length of *source   */
 *       nstrncpy  -  copy function used to copy strings terminated with blanks
 *************************************************************************/
 #ifdef __STDC__
-void nstrncpy (char *target,char *source,long maxlen)
+static void nstrncpy (char *target,char *source,long maxlen)
 #else
 void nstrncpy (target,source,maxlen)
 char *target;           /* space to be copied into */
@@ -78,3 +71,68 @@ long maxlen;            /* max length of *source   */
           *target++ = *source++;
         *target = '\0';
 }
+/***********************************************************************/
+#ifdef __STDC__
+void downcase_c(char *instr,char *outstr)
+#else
+void downcase_c(instr,outstr)
+char *instr;
+char *outstr;
+#endif
+{
+        char *inptr, *tempout;
+        short i,len_in;
+        char outchar[2];
+
+        outchar[1] = '\0';
+	len_in = strlen(instr);
+        tempout = (char *) malloc(len_in + 1); 
+        tempout[0] = '\0';
+        tempout[1] = '\0';
+        inptr = instr;
+ 
+        for (i = 0; i < len_in; i++) {
+          outchar[0] = tolower(*inptr);
+          if (i == 0)
+            strncpy(tempout,outchar,1);
+          else
+            strncat(tempout,outchar,1);
+          inptr++;
+        }
+        
+        strcpy(outstr,tempout);
+        free(tempout);
+}
+/***********************************************************************/
+#ifdef __STDC__
+void upcase_c(char *instr,char *outstr)
+#else
+void upcase_c(instr,outstr)
+char *instr;
+char *outstr;
+#endif
+{
+        char *inptr, *tempout;
+        short i,len_in;
+        char outchar[2];
+
+        outchar[1] = '\0';
+	len_in = strlen(instr);
+        tempout = (char *) malloc(len_in + 1); 
+        tempout[0] = '\0';
+        tempout[1] = '\0';
+        inptr = instr;
+ 
+        for (i = 0; i < len_in; i++) {
+          outchar[0] = toupper(*inptr);
+          if (i == 0)
+            strncpy(tempout,outchar,1);
+          else
+            strncat(tempout,outchar,1);
+          inptr++;
+        }
+        
+        strcpy(outstr,tempout);
+        free(tempout);
+}
+/***********************************************************************/
