@@ -30,7 +30,7 @@
 #define c_swap4 c_swap4_
 #define c_view4 c_view4_
 
-#elif defined(ALPHA) || defined(DEC)
+#elif defined(ALPHA) || defined(DEC) || defined(alpha)
 
 #define c_pause c_pause__
 #define iralloc iralloc__
