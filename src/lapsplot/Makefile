@@ -13,7 +13,7 @@ include $(LAPSROOT)/src/include/makefile.inc
 
 NCARGFC=ncargf77
 
-
+FFLAGS=$(DBFLAGS)
 
 
 
