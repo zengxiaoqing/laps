@@ -504,6 +504,8 @@ C
           l_loop = .false.
       endif
 
+      if(colortable(1:3) .eq. 'lin')l_loop = .false.
+
       call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
       xlow =  0.40 ! 0.35
@@ -637,7 +639,8 @@ c     Restore original color table
 
       endif
 
-      if(colortable .eq. 'spectral' .or. colortable .eq. 'acc')then
+      if(colortable .eq. 'spectral' .or. colortable .eq. 'acc'
+     1                              .or. colortable(1:3) .eq. 'lin')then       
 
 !         Other fractions
           do frac = 0.25,0.75,0.50
@@ -659,9 +662,9 @@ c     Restore original color table
                   rlabel = rarg / scale
               endif
 
-              if(rlabel .lt. 0.2)then
+              if(rlabel .lt. 0.999)then
                   write(ch_frac,3)rlabel
-              elseif(rlabel .lt. 2.0)then
+              elseif(rlabel .lt. 2.0 .or. rlabel .ne. nint(rlabel))then       
                   write(ch_frac,2)rlabel
               else
                   write(ch_frac,1)nint(rlabel)
