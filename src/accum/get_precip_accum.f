@@ -511,9 +511,12 @@ cdis
 
             do j = 1,jmax
             do i = 1,imax
-                if(precip_rate(i,j) .ne. r_missing_data)then
+                if(precip_rate(i,j)    .ne. r_missing_data .and.
+     1             precip_rateave(i,j) .ne. r_missing_data    )then
                     precip_rateave(i,j) = precip_rateave(i,j)
      1                                  + precip_rate(i,j) * frac(ifile)       
+                else
+                    precip_rateave(i,j) = r_missing_data
                 endif
             enddo ! i
             enddo ! j
@@ -525,8 +528,13 @@ cdis
 
             do j = 1,jmax
             do i = 1,imax
-                snow_accum_pd(i,j) = snow_accum_pd(i,j)
-     1                             + snow_rate(i,j) * frac(ifile)
+                if(snow_rate(i,j)     .ne. r_missing_data .and.
+     1             snow_accum_pd(i,j) .ne. r_missing_data    )then
+                    snow_accum_pd(i,j) = snow_accum_pd(i,j)
+     1                                 + snow_rate(i,j) * frac(ifile)
+                else
+                    snow_accum_pd(i,j) = r_missing_data
+                endif
             enddo ! i
             enddo ! j
 
@@ -544,7 +552,10 @@ cdis
 !       Add in snow accumulation from final period; first define the mask
         do j = 1,jmax
         do i = 1,imax
-            if(snow_accum_pd(i,j) .gt. 1e-10)l_mask(i,j) = .true.
+            if(snow_accum_pd(i,j) .gt. 1e-10 .and. 
+     1         snow_accum_pd(i,j) .ne. r_missing_data)then
+                l_mask(i,j) = .true.
+            endif
         enddo
         enddo
 
