@@ -8,15 +8,17 @@ my($opt_o);
 getopt();
 
 umask 002;
-
+my $cycle_time = 3600;
+my $initial_time = time();
 #
 # List here the laps products to be executed in the order that they should 
 # be executed.
 #
 
-my @LAPS_EXE = qw(lga.exe systime.exe obs_driver.x ingest_lrs.exe ingest_blplrs.exe
-		  ingest_raob.exe laps_sfc.x  temp.exe ingest_pireps.exe
-		  ingest_acars.exe ingest_pro.exe ingest_blppro.exe 
+my @LAPS_EXE = qw(lga.exe systime.exe obs_driver.x 
+                  ingest_lrs.exe ingest_blplrs.exe ingest_raob.exe laps_sfc.x temp.exe 
+                  ingest_pireps.exe ingest_acars.exe 
+                  ingest_pro.exe ingest_blppro.exe ingest_vad.exe
 		  wind.exe cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe ingest_lsr_tiros.exe);
 
@@ -63,6 +65,11 @@ foreach $exe (@LAPS_EXE){
     my $log = $exe;
     $log =~ s/\..*$/\.log\.$hhmm/;
     system("$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1");
+    my $cur_time = time();
+    if($cur_time-$initial_time>$cycle_time){
+	print "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
+	exit -1;
+    }
 }
 
 $t = gmtime;
