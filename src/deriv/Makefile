@@ -24,6 +24,8 @@ EXE = deriv.exe
 SRC=laps_deriv.f  \
     laps_deriv_sub.f \
     cloud_deriv_subs.f \
+    fireweatherindex.f \
+    hainesindex.f \
     put_derived_wind_prods.f \
     rfill_evap.f \
     schultz.f
