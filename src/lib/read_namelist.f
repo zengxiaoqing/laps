@@ -411,3 +411,73 @@ c
 
 101    return
        end
+c
+c --------------------------------------------------------------
+c
+       subroutine read_verif_nl(type_obs,path_to_raw_profiler,
+     1path_to_raw_raob, raob_process_lag,  raob_process_lag_bal,
+     1                          max_verif, verif_output_dir,
+     1                          verif_missing_data, n_verif, istatus)
+
+       implicit none
+
+       include 'grid_fname.cmn'                          !grid_fnam_common
+
+       integer          max_verif
+       character*1	type_obs
+       character*150	path_to_raw_profiler
+       character*150	path_to_raw_raob
+       integer*4	raob_process_lag_Bal
+       integer*4	raob_process_lag
+       integer          n_verif
+       integer          i,len
+       character*150	verif_output_dir(4)
+       real*4		verif_missing_data
+       integer		istatus
+       
+       namelist /verif_nl/ type_obs,path_to_raw_profiler,
+     1path_to_raw_raob, raob_process_lag, raob_process_lag_bal,
+     1                  verif_output_dir,
+     1                  verif_missing_data
+
+       character*150    static_dir,filename
+       integer		len_dir
+
+       istatus = 0
+       call get_directory(grid_fnam_common,static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/verif.nl'
+
+       open(1,file=filename,status='old',err=900)
+       read(1,verif_nl,err=901)
+       close(1)
+
+       n_verif=0
+       do i=1,max_verif
+          call s_len(verif_output_dir(i),len)
+          if(len.gt.0)then
+             n_verif=n_verif+1
+          endif
+       enddo
+       if(n_verif.le.0)then
+          print*,'Error! Check namelist verif.nl variable'
+          print*,'verif_output_dir. It appears to be empty'
+          return
+       endif
+c      print*,'Number of verification types from verif.nl: ',n_verif
+c      call s_len(verif_output_dir(1),len)
+c      do i=1,n_verif
+c         print*,i,' ',verif_output_dir(i)(1:len)
+c      enddo
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       return
+
+  901  print*,'error reading verif_nl in ',filename
+       write(*,verif_nl)
+       return
+
+       end
