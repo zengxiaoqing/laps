@@ -28,12 +28,9 @@ INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
            $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
-           $(LAPSROOT)/src/lib/util/libutil.a  
 
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a  
-
 
 OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
 
@@ -68,13 +65,6 @@ exe: $(ARCHIVE) $(EXE)
 $(EXE): $(ARCHIVE) $(MAIN)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
-
-#$(EXE.F): $(MAIN) $(ARCHIVE)
-#	rm -f $*.f
-#	$(CPP) $(CPPFLAGS) $*.F 
-#	mv $*.i $*.f
-#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
-#	rm -f *.o $*.f
 
 debug: clean 
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -C -g'

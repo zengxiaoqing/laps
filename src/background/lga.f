@@ -116,7 +116,7 @@ c      istat = index(laps_domain_file,' ')-1
 
       call get_background_info(150,bgpaths,bgmodels,oldest_forecast
      +                      ,use_analysis) 
-
+      lga_status = 0
       do while(lga_status.eq.0 .and. i.le.nbgmodel)
          bgmodel = bgmodels(i)
          if(bgmodel .eq. 0) goto 965
