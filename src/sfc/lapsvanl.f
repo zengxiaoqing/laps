@@ -165,6 +165,7 @@ c                               01-19-99  Temp. turn off all splines, replace
 c                                           with Barnes.
 c                               01-28-99  Rm Barnes calls. Add check for t,td
 c                                           bkgs, if none use tt, ttd.
+c                               06-18-99  Remove LI, CAPE, CIN calcs.
 c
 c*****************************************************************************
 cx
@@ -886,10 +887,11 @@ c
 c.....	Now convert some stuff, then call the thermo routines.
 c
 	call multcon(p_a,0.01,imax,jmax)
-	call zero(d1,ni,nj)
-	sflag = 0.
+cc	call zero(d1,ni,nj)
+cc	sflag = 0.
 !	sflag = 2.e6	! this means li_laps will read 500 T from a file
-	call li_laps(t,td,psfc,d1,i4time,imax,jmax,li,sflag,istatus)
+cc	call li_laps(t,td,psfc,d1,i4time,imax,jmax,li,sflag,istatus)
+	call constant(li,fill_val,imax,jmax)
 c
 	call make_cssi(t,td,mslp,u_a,v_a,cssi,imax,jmax,badflag)
 c
@@ -982,6 +984,10 @@ c
 c
 c.....	Now calculate PBE and NBE.  First fix up the .LT1 file....
 c
+	call constant(pbe_2d,fill_val,imax,jmax)
+	call constant(nbe_2d,fill_val,imax,jmax)
+	go to 888   !skip over all this 3-d stuff....
+
 	print *,' PBE/NBE calcs...'
 	no_3d_t = 1	! flag for if 3-d temps missing: 1-there,0-missing
 	jstatus(4) = 1
