@@ -243,6 +243,7 @@ c
                 obs_point(nobs_point)%valuef(2) = sfc_v(n_sfc_obs)
                 obs_point(nobs_point)%weight = weight_sfc
                 obs_point(nobs_point)%type   = 'sfc'
+                obs_point(nobs_point)%file   = 'lso'
 
             else
                 write(6,20)n_sfc_obs,stations(i)(1:5)
