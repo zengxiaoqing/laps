@@ -714,10 +714,6 @@
      in 'configure' please let us know via e-mail. Some examples based on
      our experience are shown as follows...
 
-     For Solaris platforms, remove the "-Wl" from LIBPATHFLAG in 
-     'src/include/makefile.inc', as well as where it occurs in 
-     'src/ingest/sfc_qc/Makefile'. This is done after running 'configure'.
-    
      For SGI platforms, certain flags may be needed. '-mips3' seems to help
      on IRIX64 v6.2.
 
