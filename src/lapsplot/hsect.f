@@ -5996,6 +5996,38 @@ c             if(cint.eq.0.0)cint=0.1
      1                             ,i4_valid                ! O
      1                                                            )
 
+        if(i4_initial .eq. 0 .or. i4_valid .eq. 0)then ! find best fcst
+
+            write(6,*)' Looking for best file'
+
+            call get_best_fcst(maxfiles,i4time_ref,nfiles
+     1                        ,c_filenames,i_best_file)
+            if(i_best_file .gt. 0)then ! File for this ext exists with proper
+               i = i_best_file
+               call get_directory_length(c_filenames(i),lend)
+               call get_time_length(c_filenames(i),lenf)
+               a13_time = c_filenames(i)(lend+1:lenf)
+
+               write(6,*)' Found file for: ',c_filenames(i)(lend+1:lenf)       
+     1                                     ,' ',ext(1:6)
+
+               call get_fcst_times(a13_time,i4_initial,i4_valid,i4_fn)
+               write(6,*)' a13_time = ',a13_time
+               fcst_hhmm = a13_time(10:13)
+               call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
+               write(6,*)' Valid time = ',asc9_tim_t
+
+
+               write(6,*)' Found file for: ',c_filenames(i)(lend+1:lenf)
+     1                                           ,' ',ext(1:6)
+
+            else
+               write(6,*)' Could not find best file'
+
+            endif
+
+        endif
+
         istatus = 1
         return
         end
@@ -6013,7 +6045,8 @@ c             if(cint.eq.0.0)cint=0.1
         character*13 a13_time
 
  1200   write(6,211)
- 211    format(/'  Enter yydddhhmmHHMM or HHMM for file: ',$)
+ 211    format(/'  Enter yydddhhmmHHMM or HHMM for file, '
+     1         ,'or blank for best fcst: ',$)
 
         read(5,221)a13_time
  221    format(a13)
@@ -6048,6 +6081,11 @@ c             if(cint.eq.0.0)cint=0.1
 
                 a13_time = a9time//fcst_hhmm
                 write(6,*)' Modified a13_time = ',a13_time
+
+        elseif(len_time .eq. 0)then
+                write(6,*)' Input fcst time was blank'
+                i4_initial = 0
+                i4_valid = 0
 
         else
                 write(6,*)' Try again, len_time = ',len_time
