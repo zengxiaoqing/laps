@@ -188,7 +188,7 @@ c calculate delta x and delta y using grid and map projection parameters
             else
                 write(6,*)' This latitude is relative to where the pole'
      1                   ,' of the map projection is: lat/lon '
-     1                   ,std_lat,std_lon
+     1                   ,std_lat2,std_lon
                 write(6,*)' deltax, deltay ',deltax,deltay
      1                   ,' at the projection pole'
             endif
@@ -241,21 +241,17 @@ c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
         print *,' lat,lon at 1,1 =',lat(1,1),lon(1,1)
         print *,' lat,lon at nnxp,nnyp =',lat(nnxp,nnyp),lon(nnxp,nnyp)   
 
-        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,5,istat_chk)  
+        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)  
+
+        write(6,*)'deltax = ',deltax
+
+        write(6,*)'check_domain:status = ',istat_chk
+
 c
 C*****************************************************************
 c calculate topography
 c
        if(iplttopo.eq.1)then
-
-           call get_standard_longitude(std_lon,istatus)
-           if(istatus .ne. 1)then
-               write(6,*)' Error calling laps routine'
-               stop 
-           endif
-
-           write(6,*)' Standard lon = ',std_lon
-
            write(6,*)
            write(6,*)' Processing 30s topo data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
@@ -444,11 +440,6 @@ c
 	   se(2) = lon(nnxp,1) + rbord
 
 !	   Call opngks
-!          call get_standard_longitude(std_lon,istatus)
-!          if(istatus .ne. 1)then
-!              write(6,*)' Error calling laps routine'
-!              stop 
-!          endif
 !          Call Map(90.,std_lon,sw,nw,ne,se)
 !          print *,'ipltgrid=',ipltgrid
 !          if(ipltgrid.eq.1)then
@@ -531,7 +522,7 @@ c SG97  splot 'topography.dat'
            stop
 	endif
 
-        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,5,istat_chk)
+        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)
 
         write(6,*)'deltax = ',deltax
 
