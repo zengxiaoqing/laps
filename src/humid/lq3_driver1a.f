@@ -474,12 +474,13 @@ c  attempt to get data from the ramsfile
      1        ramscomments(1),data,istatus)
 
         if (istatus.eq.1) then
-             call check_nan3(data,ii,jj,kk,istatus)
-             if(istatus.ne.1) then
-               write(6,*) 'NaN detected from rams...abort'
-               return
-             endif
-             go to 151 !skip the lga background, doing 4dda
+           write(6,*) 'Acquired RAMS data for 4DDA run'
+           call check_nan3(data,ii,jj,kk,istatus)
+           if(istatus.ne.1) then
+              write(6,*) 'NaN detected from rams...abort'
+              return
+           endif
+           go to 151            !skip the lga background, doing 4dda
         endif
 
         enddo
