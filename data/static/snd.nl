@@ -4,6 +4,7 @@
  path_to_raw_tower='/data/fxa/LDAD/mesonet/met-tower/netCDF',
  path_to_raw_drpsnd='/null/public/data/dropsonde/netcdf',
  path_to_raw_satsnd='/data/lapb/import/lapsdat/afwa/tx/satsnd',
+ path_to_raw_radiometer='/null/public/data/madis/point/radiometer/netcdf',
  /
 c SOUNDING ingest (ingest_sounding.exe)
 c
