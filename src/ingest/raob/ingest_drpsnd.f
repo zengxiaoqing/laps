@@ -1,5 +1,6 @@
 
-      subroutine ingest_drpsnd(path_to_raw_drpsnd,c8_drpsnd_format)       
+      subroutine ingest_drpsnd(path_to_raw_drpsnd,c8_drpsnd_format
+     1                        ,lun_out)       
 
 !     Steve Albers FSL   2003     Original Version
 
@@ -208,10 +209,7 @@
 !    1                ,filename_in,istatus)
 !tt -- Tiziana: Sep, 27
               elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
-!                Open output SND file
-                 call open_ext(11,i4time_sys,'snd',istatus)
-
-                 call avapsread_sub(filename_in, istatus)
+                  call avapsread_sub(filename_in, lun_out, istatus)
 
               elseif(c8_drpsnd_format(1:3) .eq. 'RSA')then
 
@@ -223,13 +221,10 @@
 !    1                ,filename_in,istatus)
 
               elseif(c8_drpsnd_format(1:3) .eq. 'CWB')then
-!                 Open output SND file 
-                  call open_ext(11,i4time_sys,'snd',istatus)
-
                   call get_drpsnd_data_cwb(i4time_sys, ilaps_cycle_time,       
      ~                 NX_L, NY_L, 
      ~                 i4time_drpsnd_earliest,i4time_drpsnd_latest,
-     ~                 a9_time, filename_in, istatus)
+     ~                 a9_time, filename_in, lun_out, istatus)
 
               else
                   write(6,*)' Error - Invalid c8_drpsnd_format '
