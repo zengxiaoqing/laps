@@ -1475,7 +1475,15 @@ c
 c
 c.....	Try the previous LSX.
 c
- 300	ilaps_bk = 1
+ 300	if(.true.)return ! Using the previous LSX analysis as a background can
+                         ! promote gradient overshoots so we'll turn this off
+                         ! for now. One future option would be a climo field or
+                         ! to analyze only on larger scales with this type of
+                         ! cycling. The latter could be accomplished by setting
+                         ! an artifically high value to the rms iteration 
+                         ! thresholds.
+
+        ilaps_bk = 1
 	ilaps_loop = 1
 	print *,' Trying for previous LSX background '
 c	bkg_dir = '../lapsprd/lsx/'
