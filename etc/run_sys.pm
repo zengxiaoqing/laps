@@ -32,13 +32,14 @@ sub run_sys{
     if($rc == 0){
 	print "$sys completed \n";
     }elsif($rc == 0xff00){
-	die "$rc Command $sys failed: $! ";
+	print "ERROR: $rc Command $sys failed: $! ";
+	exit;
     }elsif($rc > 0x80){
 	$rc >>= 8; 
-	print "$sys returned non-zero exit status $rc\n";
+	print "ERROR: $sys returned non-zero exit status $rc\n";
         exit;
     }else{
-	print "$sys ran with ";
+	print "ERROR: $sys ran with ";
 	if($rc & 0x80){
 	    $rc &= ~0x80;
 	    print "coredump from ";
@@ -46,4 +47,6 @@ sub run_sys{
 	print "signal $rc\n";
 	exit -1;
     }
+    return 1;
 }
+1;

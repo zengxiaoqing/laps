@@ -10,10 +10,10 @@ use strict;
 my $timeout=60;
 my $LAPSROOT=shift;
 my $LAPS_DATA_ROOT=shift;
-use lib "$LAPSROOT/etc";
-use run_sys;
-use Get_env'fxa; #'
-#require "$LAPSROOT/etc/fxa.pm";
+require "$LAPSROOT/etc/run_sys.pm";
+require "$LAPSROOT/etc/fxa.pm";
+
+
 
 my $fxa_sys =  &Get_env'fxa; #'
 my($LAPS_LOG_PATH);
@@ -42,8 +42,8 @@ select(STDOUT); $| = 1;
 
 $ENV{PATH}.=":@NETCDFBIN@";
 print "$0 running  for $fname\n";
-
-for(my $ftime=0;$ftime<=$flast;$ftime+=$ffreq){
+my $ftime;
+for($ftime=0;$ftime<=$flast;$ftime+=$ffreq){
 
     my $head = "$modelout/$fname.a$ftime"."s.head";
     my $size = 0;
@@ -77,7 +77,7 @@ for(my $ftime=0;$ftime<=$flast;$ftime+=$ffreq){
     }
     close(LPTR);
 
-    &run_sys($makeprods);
+    run_sys::run_sys($makeprods);
 #
 # Insert command to send files to remote machine here.
 #
@@ -90,27 +90,5 @@ for(my $ftime=0;$ftime<=$flast;$ftime+=$ffreq){
 }
 
 
-sub run_sys{
-    my($sys) = @_;
-    my $rc = 0xffff & system($sys);
-    if($rc == 0){
-	print "$sys completed \n";
-    }elsif($rc == 0xff00){
-	print "$rc Command $sys failed: $! ";
-    }elsif($rc > 0x80){
-	$rc >>= 8; 
-	print "$sys returned non-zero exit status $rc\n";
-#        exit;
-    }else{
-	print "$sys ran with ";
-	if($rc & 0x80){
-	    $rc &= ~0x80;
-	    print "coredump from ";
-	    exit -1;
-	}
-	print "signal $rc\n";
-
-    }
-}
 
 
