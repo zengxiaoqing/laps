@@ -144,8 +144,8 @@ CONTAINS
 
   ! Record 2 - Time and dimension information
 
-  WRITE(output_unit, '(I4.4,2I4,I6,I4,2I4)') valid_yyyy, valid_mm, &
-                                               valid_hh*100+valid_min, &
+  WRITE(output_unit, '(I4.4,2I4,I6,4I4)') valid_yyyy, valid_mm, &
+                                      valid_dd,valid_hh*100+valid_min, &
                                                vt_increment, z3, x, y
 
   ! Record 3 - Projection info
@@ -167,6 +167,7 @@ CONTAINS
        PRINT '(A)', 'This is a local stereographic, so I quit.'
        stop 'unsupported projection'
     ELSE
+      proj_flag = 2
       If (latin2 .EQ. -90) THEN
         latin1_out = -89.99999
       ELSE
