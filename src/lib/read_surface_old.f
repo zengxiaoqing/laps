@@ -208,9 +208,9 @@ c
         n_sao_g = 0            ! # of saos in the laps grid
         n_sao_pos_g = 0        ! total # of saos possible in laps grid
         n_sao_b = n_obs_b      ! # of saos in the box
-        n_sao_pos_b = 0        ! total # of saos possible in the box
-        n_obs_pos_g = 0        ! total # of obs psbl in the laps grid
-        n_obs_pos_b = 0        ! total # of obs possible in the box
+        n_sao_pos_b = n_obs_b  ! total # of saos possible in the box
+        n_obs_pos_g = n_obs_g  ! total # of obs psbl in the laps grid
+        n_obs_pos_b = n_obs_b  ! total # of obs possible in the box
 c
 c.....  Now the station data.
 c
