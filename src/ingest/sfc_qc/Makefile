@@ -9,9 +9,15 @@ SRCROOT=../../..
 include $(SRCROOT)/src/include/makefile.inc
 
 
-LAPSLIBS=$(BGDATALIB) $(UTILLIB) $(LAPSLIB) $(MTHERMOLIB)
-DBLAPSLIBS=$(DBBGDATALIB) $(DBUTILLIB) $(DBLAPSLIB) $(DBMTHERMOLIB)
+LAPSLIBS = $(SRCROOT)/src/lib/bgdata/libbgdata.a \
+           $(SRCROOT)/src/lib/util/libutil.a \
+           $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a
 
+DBLAPSLIBS = $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a \
+             $(SRCROOT)/src/lib/util/libdebugutil.a \
+             $(SRCROOT)/src/lib/libdebuglaps.a   \
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a
 
 EXE = sfc_qc.exe
 
