@@ -123,7 +123,12 @@ c
               endif
 
               call get_grid_spacing(Dx,istatus)
-              call get_domain_origin_parent(i_orig,j_orig,istatus)
+C             call get_domain_origin_parent(i_orig,j_orig,istatus)
+c             call get_domain_origin(i_orig,j_orig,uri_orig,urj_orig
+c    +,istatus)
+              i_orig=1
+              j_orig=1
+
 
               print*,'grid_spacing(m)  = ',Dx
               print*,'grid dims        = ',nx_l,ny_l
