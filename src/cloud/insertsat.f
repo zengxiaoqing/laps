@@ -675,7 +675,8 @@ c
 211               format(1x,2i4,' AVG/COLD',2f7.1,2x,2f7.0,f9.3)
 212           endif
 
-            elseif(ht_sao_base .gt. cldtop_m(i,j))then ! Satellite top below 
+            elseif(ht_sao_base .gt. cldtop_m(i,j) .and. .false.)then        
+                                                    ! Satellite top below 
                                                     ! ceiling (lowest SAO base)
               mode_sao = 4
               cover=sat_cover
@@ -683,6 +684,38 @@ c
               htbase = htbase_init
               cldtop_old = cldtop_m(i,j)
               cldtop_m(i,j) = htbase_init + thk_def
+
+!             Find a thinner value for cloud cover consistent with the new
+!             higher cloud top and the known brightness temperature.
+!             This works OK if tb8_k is warmer than T at the assumed cloud top
+              if(.true.)then ! Should this depend on co2?
+
+!                 Note that cover is not really used here as an input
+                  call correct_cover(cover,cover_new,cldtop_old
+     1                              ,cldtop_m(i,j)
+     1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
+     1                              ,heights_3d
+     1                              ,imax,jmax,klaps,i,j,istatus)
+                  if(istatus .ne. 1)then
+                      write(6,*)' Correct_cover: tb8_k < t_cld'
+                      write(6,*)cldtop_old,cldtop_m(i,j)
+     1                         ,htbase_init,thk_def,cover
+                      write(6,*)(heights_3d(i,j,k),k=1,klaps)
+!                     return
+                  endif
+                  cover = cover_new
+              endif ! .true.
+
+            elseif(ht_sao_top .gt. cldtop_m(i,j) .and. 
+     1             ht_sao_top .ne. 1e30 .and. .true.)then 
+                                                    ! Satellite top below 
+                                                    ! ceiling (lowest SAO base)
+              mode_sao = 4
+              cover=sat_cover
+              cldtop_old = cldtop_m(i,j)
+              cldtop_m(i,j) = ht_sao_top
+              htbase_init = ht_sao_base
+              htbase = ht_sao_top - thk_def
 
 !             Find a thinner value for cloud cover consistent with the new
 !             higher cloud top and the known brightness temperature.
