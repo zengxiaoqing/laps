@@ -42,6 +42,8 @@ c
       write(cjjj,13)jjj
  13   format(i3)
 
+      if(cyr(1:1) .eq. ' ') cyr(1:1)='0'
+      if(cyr(2:2) .eq. ' ') cyr(2:2)='0' 
       if(cjjj(1:1).eq. ' ') cjjj(1:1)= '0'
       if(cjjj(2:2).eq. ' ') cjjj(2:2)= '0'
       if(cjjj(3:3).eq. ' ') cjjj(3:3)= '0'
