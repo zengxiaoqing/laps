@@ -156,11 +156,10 @@ c
 c ---------------------------------------------------------
 c
       subroutine mosaic_radar_nl(c_radar_mosaic_type,n_radars,
-     & c_radar_ext,i_window,imosaic_3d,istatus)
+     & c_radar_ext,i_window,imosaic_3d,
+     & n_radars_wideband,n_radars_narrowband,istatus)
 c
 cdoc  Reads static/radar_mosaic.nl file
-
-      implicit none
 
       include    'radar_mosaic_dim.inc'
       include    'grid_fname.cmn'              !grid_fnam_common
@@ -175,7 +174,8 @@ cdoc  Reads static/radar_mosaic.nl file
       character  nest7grid*150
 
       namelist /radar_mosaic_nl/c_radar_mosaic_type,n_radars,
-     & c_radar_ext,i_window,imosaic_3d
+     & c_radar_ext,i_window,imosaic_3d,
+     & n_radars_wideband,n_radars_narrowband
 
       istatus = 0
 
