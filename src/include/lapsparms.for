@@ -38,5 +38,8 @@ c       Background
         integer*4  MAX_BACKGROUND_FILES
         parameter (MAX_BACKGROUND_FILES = 2000)     
 
+c       Maximum number of LAPS grid levels
+        integer*4 MXLVLS
+        parameter (MXLVLS=150)
 
 
