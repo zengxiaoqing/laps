@@ -294,7 +294,7 @@ CONTAINS
     CHARACTER(LEN=*),INTENT(IN)      :: fname
     INTEGER,INTENT(OUT)                :: funit
     LOGICAL                            :: opened 
-    unitloop: DO funit=7,255
+    unitloop: DO funit=7,1023
       INQUIRE(UNIT=funit,OPENED=opened) 
       IF (.NOT.opened) EXIT unitloop
     ENDDO unitloop
