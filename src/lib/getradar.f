@@ -769,6 +769,11 @@ cdoc                            calls read_multiradar_3dref.
                     radar_name = 'WSI '
                     write(6,*)' Read radar ',radar_name
      1                       ,' Low Level Mosaic'    
+                elseif(l_parse(comment_2d,'Radar mosaic'))then
+                    radar_name = '    '
+                    write(6,*)
+     1                ' Read radar Narrowband Mosaic: # radars = '
+     1                ,comment_2d(26:28)
                 else
                     len_comment = 37
                     radar_name = comment_2d(len_comment-3:len_comment)       
