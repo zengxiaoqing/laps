@@ -117,6 +117,8 @@ c
       write(cmin,12)imin
  12   format(i2)
 
+      if(cyr(1:1) .eq. ' ') cyr(1:1) = '0'
+      if(cyr(2:2) .eq. ' ') cyr(2:2) = '0'
       if(cmm(1:1) .eq. ' ') cmm(1:1) = '0'
       if(cdy(1:1) .eq. ' ') cdy(1:1) = '0'
       if(chh(1:1) .eq. ' ') chh(1:1) = '0'
