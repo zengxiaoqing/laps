@@ -175,6 +175,8 @@ c                               08-13-99  Change spline call to allow diff wts
 c                                           for diff variables.  Fix for SGI..
 c                                           constants passed to subroutines.
 c                               09-19-99  Turn off range check for p_a on output.
+c                               11-23-99  Change pbar calc...check for a bad one.
+c                                           Fix error with grid spacing.
 c
 c*****************************************************************************
 cx
@@ -224,7 +226,7 @@ c
 	real u(ni,nj), v(ni,nj)
 	real rp(ni,nj), psfc(ni,nj), vis(ni,nj)
 	real t(ni,nj), theta(ni,nj), thetae(ni,nj), tb8(ni,nj)
-	real td(ni,nj), ceil(ni,nj), mslp(ni,nj)
+	real td(ni,nj), mslp(ni,nj)
 c
 c.....	Grids for the variational analyses of rp, u, v
 c
@@ -301,7 +303,7 @@ c
 c
 c.....	Start...set up constants, initialize arrays, etc.
 c
-	call tagit('laps_vanl', 19990813)
+	call tagit('laps_vanl', 19991123)
 	zcon = 0.
 	ibt = 1      !assume have sat data...code cks later.
 	grid_fnam_common = laps_domain
@@ -352,21 +354,15 @@ c
 c
 c.....	set up some other stuff (including grid intervals, etc.)
 c
-	do j=1,jmax-1
+	do j=1,jmax
 	do i=1,imax
-	  dlat = lat(i,j+1) - lat(i,j)
-	  alat = (lat(i,j+1) + lat(i,j)) * .5
-	  dy(i,j) = dlat * rdpdg * re
-	  dx(i,j) = dy(i,j) * cos( rdpdg * alat )
-	  a(i,j) = -(1. + fo2(i,j) * del) * gam * rho2 / del
+	   call get_grid_spacing_actual(lat(i,j),lon(i,j)
+     &             ,grid_spacing_actual_m,istatus)
+	   dy(i,j) = grid_spacing_actual_m
+	   dx(i,j) = grid_spacing_actual_m
+	   a(i,j) = -(1. + fo2(i,j) * del) * gam * rho2 / del
 	enddo !i
 	enddo !j
-c
-	do i=1,imax
-	  dy(i,jmax) = dy(i,jmax-1)
-	  dx(i,jmax) = dx(i,jmax-1)
-	  a(i,jmax) = -(1. + fo2(i,jmax) * del) * gam * rho2 / del
-	enddo !i
 c
 cz..... Compute T on the surface using the LGA (or equiv) 700 T and HT.
 c
@@ -438,9 +434,21 @@ c
 c
 c.....  Get lapse rate (usually std), and mean pressure.
 c
+	print *,' '
 	call mean_lapse(n_obs_b,elev_s,t_s,td_s,a_t,lapse_t,a_td,
      &                  lapse_td,hbar,badflag)
-	call mean_pres(n_obs_b,pstn_s,pbar)
+	print *,' '
+cc	call mean_pres(n_obs_b,pstn_s,pbar)
+	call mean_pressure(pstn_s,n_obs_b,sp_bk,imax,jmax,badflag,pbar)
+	if(pbar .le. 0.) then
+	   print *,'  ERROR. Mean pressure is: ', pbar
+	   print *,'    Setting pbar to 925 mb so we can continue...',
+     &             'the analyses may not be any good.'
+	   print *,'    Check your pressure obs and backgrounds.'
+	   pbar = 925.
+	else
+	   print *,'  Mean pressure from the obs or bkg is: ', pbar
+	endif
 c
 c.....  Calculate the terrain est temps and pressure.
 c.....  If no t or td background, make one.
