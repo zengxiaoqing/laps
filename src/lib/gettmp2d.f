@@ -34,7 +34,7 @@ cdis
 
 !       Steve Albers            1990
 
-        include 'lapsparms.inc'
+        logical ltest_vertical_grid
 
         character*150 DIRECTORY
         character*31 EXT
@@ -66,12 +66,17 @@ cdis
         endif
 
         units_2d  = 'K'
-        if(vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
             lvl_2d = zcoord_of_level(k)/10
             lvl_coord_2d = 'MSL'
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             lvl_2d = ilevel_mb
             lvl_coord_2d = 'MB'
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
         endif
 
         var_t = 'T3'  ! newvar = 'T3', oldvar = 'T'

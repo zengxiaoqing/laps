@@ -1145,3 +1145,35 @@ c
       write(*,vrc_nl)
       return
       end
+
+      function ltest_vertical_grid(c_vertical_grid)
+
+!     The input c_vertical_grid is a string you are testing
+!     The output (.true. OR .false.) states whether the input vertical_grid 
+!     name equals the vertical_grid in the Namelist
+
+      include 'lapsparms.cmn' ! vertical_grid
+
+      logical ltest_vertical_grid
+      character*(*) c_vertical_grid
+
+      call get_laps_config('nest7grid',istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ltest_vertical_grid: Error detected in '
+     1             ,'calling get_laps_config'
+          ltest_vertical_grid = .false.
+          return
+      endif
+
+      call s_len(vertical_grid,len_cmn)
+      call s_len(c_vertical_grid,len_in)
+
+      if(vertical_grid(1:len_cmn) .eq. c_vertical_grid(1:len_in))then
+          ltest_vertical_grid = .true.
+      else
+          ltest_vertical_grid = .false.
+      endif
+
+      return
+      end

@@ -35,7 +35,7 @@ cdis
 
 !       Steve Albers            1990
 
-        include 'lapsparms.inc' ! obsolete
+        logical ltest_vertical_grid
 
         character*150 DIRECTORY
         character*31 EXT     ! Input extension of file (normally 3 characters)
@@ -57,24 +57,23 @@ cdis
         do k = 1,kmax
             units_3d(k)   = 'PA/S'
             comment_3d(k) = '3DWIND'
-            if(vertical_grid .eq. 'HEIGHT')then
+            if(ltest_vertical_grid('HEIGHT'))then
                 lvl_3d(k) = zcoord_of_level(k)/10
                 lvl_coord_3d(k) = 'MSL'
-            elseif(vertical_grid .eq. 'PRESSURE')then
+            elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(k) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(k) = 'HPA'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
             endif
 
-            if(i4time .gt. 954547200)then
-                if(ext(1:3) .eq. 'lco')then
-                    var_w(k) = 'COM' ! newvar = 'COM', oldvar = 'OM'
-                else
-                    var_w(k) = 'OM'
-                endif
+            if(ext(1:3) .eq. 'lco')then
+                var_w(k) = 'COM' ! newvar = 'COM', oldvar = 'OM'
             else
-                write(6,*)' Setting L_convert to .false.'
-                l_convert = .false.
-                var_w(k) = 'W'
+                var_w(k) = 'OM'
             endif
 
         enddo ! k

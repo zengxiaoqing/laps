@@ -36,7 +36,7 @@ cdis
 
 !       iflag = 0 (Potential Temperature K), iflag = 1 (Temperature K)
 
-        include 'lapsparms.inc'
+        logical ltest_vertical_grid
 
         character*150 DIRECTORY
         character*31 EXT
@@ -57,8 +57,7 @@ cdis
 !       TDA_K(T_K,P_PA) = TDA( T_K-273.15 , P_PA/100. )  + 273.15
 
         write(6,*)
-        write(6,*)' Getting 3_D Temperature Analysis (LT1 or equivalent)
-     1'
+        write(6,*)' Getting 3_D Temperature Analysis (LT1)'
 
         EXT = 'lt1'
         call get_directory(ext,directory,len_dir)
@@ -68,18 +67,17 @@ cdis
 
         do k = 1,kmax
             units_3d(k)   = 'K'
-            if(vertical_grid .eq. 'HEIGHT')then
+            if(ltest_vertical_grid('HEIGHT'))then
                 lvl_3d(k) = zcoord_of_level(k)/10
                 lvl_coord_3d(k) = 'MSL'
-            elseif(vertical_grid .eq. 'PRESSURE')then
-              if(i4time_nearest .gt. 963350000)then
+            elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(k) = nint(zcoord_of_level(k))/100
-              else ! Read offset old files
-                lvl_3d(k) = nint(zcoord_of_level(k+1))/100
-              endif
-
-              lvl_coord_3d(k) = 'MB'
-
+                lvl_coord_3d(k) = 'MB'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
             endif
 
             var_t(k) = 'T3' ! newvar = 'T3', oldvar = 'T'
