@@ -276,13 +276,17 @@ foreach $exe (@LAPS_EXE){
         print TFILE "  \n";
 
         if($nodes_current > 1){
-#           print TFILE "$sms_path/bin/smsRun $nodes_current $LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
-            print TFILE "$sms_path/bin/smsRun $nodes_current /projects/oplapb/builds_sms/laps/bin/wind.exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            print TFILE "$sms_path/bin/smsRun $nodes_current $LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
             print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }
        
         if($execount == $nexe){ # Last on the list
+
+            if($opt_w){ # Bigfile option within qsub environment
+                print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
+            }
+
             print TFILE "  \n";
             print TFILE "date >> $LAPS_LOG_PATH/runtime.log\n";
             print TFILE "  \n";
@@ -323,7 +327,7 @@ print LOG "$t\n";
 
 
 
-if($fxa_sys!=0 || $opt_w){
+if($fxa_sys!=0 || ($opt_w && (! $opt_q) ) ){
     print LOG $t." Running wfo postprocessing\n";
 
     if($opt_w){
