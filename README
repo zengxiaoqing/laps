@@ -188,7 +188,8 @@
      To build the lapsplot process, access to an NCAR graphics library is 
      needed to be able to run the 'ncargf77' command. Lapsplot is an optional 
      plotting program, thus NCAR graphics is optional. You might wish to check
-     the following World Wide Web location for more info...
+     the following World Wide Web location for more info on this licensed
+     software...
 
                    http://ngwww.ucar.edu
 
@@ -226,9 +227,15 @@
 
      Please note that 'lapsplot' is provided to help you check out how your
      LAPS implementation is working. The LAPB Branch does not have any other 
-     plotting or visualization packages available with LAPS at this time. 
-     One note of interest is that LAPS is visualized as an integral part of 
-     the AWIPS system.
+     plotting or visualization packages available for distribution with LAPS 
+     at this time. Many users have interfaced LAPS with their own display 
+     software (e.g. VIS5D, AVS, GEMPAK). Feel free to post questions about 
+     these to the 'laps-users' bulletin board Web Page. NCAR graphics in no 
+     way is essential to the successful running of LAPS to create output grids.
+      
+     Another note of interest is that LAPS is visualized as an integral part of
+     the AWIPS system. If you have AWIPS, then LAPS should be running on it
+     and you can view its output on the workstation.
 
 
      ------------- 2.2 Installation Procedure Summary ------------------
