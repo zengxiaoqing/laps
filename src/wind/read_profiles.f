@@ -427,10 +427,10 @@ c
      1                                ,istatus)
                     v_diff = -v_diff_term
 
-                    u_diff = u_maps_inc(i_ob,j_ob,level) 
-     1                                              * rcycles_pr(i_pr)       
-                    v_diff = v_maps_inc(i_ob,j_ob,level) 
-     1                                              * rcycles_pr(i_pr)
+!                   u_diff = u_maps_inc(i_ob,j_ob,level) 
+!    1                                              * rcycles_pr(i_pr)       
+!                   v_diff = v_maps_inc(i_ob,j_ob,level) 
+!    1                                              * rcycles_pr(i_pr)
 
                     call interp_prof(ob_pr_ht_obs,ob_pr_u_obs,
      1                             ob_pr_v_obs,
