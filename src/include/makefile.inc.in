@@ -17,9 +17,9 @@ FC       = @FC@
 NCARGFC  = @NCARGFC@
 
 FFLAGS = @FFLAGS@ $(INC) @OPTIMIZE@
-FREEF = @FREEF@ $(INC) @OPTIMIZE@
+FREE = @FREE@
+FIXED = @FIXED@
 DBFLAGS = @FFLAGS@ $(INC) @DBFLAGS@ 
-DBFREEF = @FREEF@ $(INC) @DBFLAGS@
 
 # Define pre-processor command line options for .F files.
 
