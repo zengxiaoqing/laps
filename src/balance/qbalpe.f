@@ -578,7 +578,10 @@ c
      .         ,nxm1,nym1,nzm1
      .         ,itmax,icon,ks,kf,ittr
      .         ,ibnd(nx,ny,nz)
+     .         ,iwp(nx*ny)
      .         ,i,j,k,is,ip,js,jp,kp,it,itt
+     .         ,icnt,iwpt,istatus
+     .         ,ucnt,vcnt,uwpt,vwpt
 c
       real*4 t(nx,ny,nz),to(nx,ny,nz)
      .      ,u(nx,ny,nz),uo(nx,ny,nz)
@@ -596,7 +599,13 @@ c
      .      ,dudy,dvdx,dnudx,dnvdy,snv,tt,uot,vot,tot
      .      ,dt2dx2,dt2dy2,slap,force,rest,bcr,cot
      .      ,cotma1,cotm5,rho,cotm0,erf,dtdx,dtdy,nuu,nvv
-     .      ,dldp,dldx,dldy,sum,cnt  
+     .      ,dldp,dldx,dldy,sum,cnt,tsum,r_missing_data
+     .      ,usum,vsum
+
+      real*4 ttemp(nx,ny,nz)
+      real*4 utemp(nx,ny,nz)
+      real*4 vtemp(nx,ny,nz)
+
 c_______________________________________________________________________________
 c
       print *,'balcon'
@@ -804,8 +813,369 @@ c     if (icon .eq. 1) call prt(om,sc,ci,nx,ny,8,nz,4h om ,4h    )
       do j=1,ny
       do i=1,nx
          t(i,j,k)=t(i,j,k)/g
+         ttemp(i,j,k)=t(i,j,k)
+         utemp(i,j,k)=u(i,j,k)
+         vtemp(i,j,k)=v(i,j,k)
       enddo
       enddo
+      enddo
+c
+c insure that we don't have boundary pressure gradients due to
+c boundary terrain/pressure intersections.
+c
+      call get_r_missing_data(r_missing_data,istatus)
+
+      do k=1,nz-1
+c w/e sides
+         do j=2,ny-1
+            if(ps(1,j).le.p(k+1)) then 
+               t(1,j,k)=r_missing_data
+               u(1,j,k)=r_missing_data
+               v(1,j,k)=r_missing_data
+            endif
+            if(ps(nx,j).le.p(k+1))then
+               t(nx,j,k)=r_missing_data
+               u(nx,j,k)=r_missing_data
+               v(nx,j,k)=r_missing_data
+            endif
+         enddo
+c s/n sides
+         do i=2,nx-1
+            if(ps(i,1).le.p(k+1)) then
+               t(i,1,k)=r_missing_data
+               u(i,1,k)=r_missing_data
+               v(i,1,k)=r_missing_data
+            endif
+            if(ps(i,ny).le.p(k+1))then
+               t(i,ny,k)=r_missing_data
+               u(i,ny,k)=r_missing_data
+               v(i,ny,k)=r_missing_data
+            endif
+         enddo
+      enddo
+c
+      do k=1,nz-1
+c western boundary
+         iwpt=0
+         do j=1,ny
+            if(t(1,j,k).eq.r_missing_data)then
+               tsum=0.0
+               usum=0.0
+               vsum=0.0
+               icnt=0
+               ucnt=0
+               vcnt=0
+               jp=1
+               if(j.ne.ny.or.j.ne.1)jp=0
+               if(ps(1,j+jp).gt.p(k))then
+                  if(t(1,j+jp,k).ne.r_missing_data)then
+                     tsum=t(1,j+jp,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(1,j+jp,k).ne.r_missing_data)then
+                     usum=u(1,j+jp,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(1,j+jp,k).ne.r_missing_data)then
+                     vsum=v(1,j+jp,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(ps(1,j-jp).gt.p(k))then
+                  if(t(1,j-jp,k).ne.r_missing_data)then
+                     tsum=t(1,j-jp,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(1,j-jp,k).ne.r_missing_data)then
+                     usum=u(1,j-jp,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(1,j-jp,k).ne.r_missing_data)then
+                     vsum=v(1,j-jp,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(ps(2,j).gt.p(k))then
+                  if(t(2,j,k).ne.r_missing_data)then
+                     tsum=t(2,j,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(2,j,k).ne.r_missing_data)then
+                     usum=u(2,j,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(2,j,k).ne.r_missing_data)then
+                     vsum=v(2,j,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+
+               if(icnt.gt.0)then
+                  t(1,j,k)=tsum/float(icnt)
+               else
+                  t(1,j,k)=ttemp(1,j,k)
+                  iwpt=iwpt+1
+                  iwp(iwpt)=j
+               endif
+               if(ucnt.gt.0)then
+                  u(1,j,k)=usum/float(ucnt)
+               else
+                  u(1,j,k)=utemp(1,j,k)
+                  uwpt=uwpt+1
+               endif
+               if(vcnt.gt.0)then
+                  v(1,j,k)=vsum/float(vcnt)
+               else
+                  v(1,j,k)=vtemp(1,j,k)
+                  vwpt=vwpt+1
+               endif
+            endif
+         enddo
+c        print*,'weird hgt pts on western bndry = ',iwpt
+c        print*,'weird u pts on western bndry = ',uwpt
+c        print*,'weird v pts on western bndry = ',vwpt
+c eastern boundary
+         iwpt=0
+         uwpt=0
+         vwpt=0
+         do j=1,ny
+            if(t(nx,j,k).eq.r_missing_data)then
+               tsum=0.0
+               usum=0.0
+               vsum=0.0
+               icnt=0
+               ucnt=0
+               vcnt=0
+               jp=1
+               if(j.eq.ny.or.j.eq.1)jp=0
+               if(ps(nx,j+jp).gt.p(k))then
+                  if(t(nx,j+jp,k).ne.r_missing_data)then
+                     tsum=t(nx,j+jp,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(nx,j+jp,k).ne.r_missing_data)then
+                     usum=u(nx,j+jp,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(nx,j+jp,k).ne.r_missing_data)then
+                     vsum=v(nx,j+jp,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(ps(nx,j-jp).gt.p(k))then
+                  if(t(nx,j-jp,k).ne.r_missing_data)then
+                     tsum=t(nx,j-jp,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(nx,j-jp,k).ne.r_missing_data)then
+                     usum=u(nx,j-jp,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(nx,j-jp,k).ne.r_missing_data)then
+                     vsum=v(nx,j-jp,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(ps(nx-1,j).gt.p(k))then
+                  if(t(nx-1,j,k).ne.r_missing_data)then
+                     tsum=t(nx-1,j,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(nx-1,j,k).ne.r_missing_data)then
+                     usum=u(nx-1,j,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(nx-1,j,k).ne.r_missing_data)then
+                     vsum=v(nx-1,j,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+
+               if(icnt.gt.0)then
+                  t(nx,j,k)=tsum/float(icnt)
+               else
+                  t(nx,j,k)=ttemp(nx,j,k)
+                  iwpt=iwpt+1
+                  iwp(iwpt)=j
+               endif
+               if(ucnt.gt.0)then
+                  u(nx,j,k)=usum/float(ucnt)
+               else
+                  u(nx,j,k)=utemp(nx,j,k)
+                  uwpt=uwpt+1
+               endif
+               if(vcnt.gt.0)then
+                  v(nx,j,k)=vsum/float(vcnt)
+               else
+                  v(nx,j,k)=vtemp(nx,j,k)
+                  vwpt=vwpt+1
+               endif
+            endif
+         enddo
+c        print*,'weird pts on eastern bndry = ',iwpt
+c        print*,'weird u pts on eastern bndry = ',uwpt
+c        print*,'weird v pts on eastern bndry = ',vwpt
+c southern boundary
+         iwpt=0
+         do i=1,nx
+            if(t(i,1,k).eq.r_missing_data)then
+               tsum=0.0
+               usum=0.0
+               vsum=0.0
+               icnt=0
+               ucnt=0
+               vcnt=0
+               ip=1
+               if(i.eq.nx.or.i.eq.1)ip=0
+               if(ps(i+ip,1).gt.p(k))then
+                  if(t(i+ip,1,k).ne.r_missing_data)then
+                     tsum=t(i+ip,1,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(i+ip,1,k).ne.r_missing_data)then
+                     usum=u(i+ip,1,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(i+ip,1,k).ne.r_missing_data)then
+                     vsum=v(i+ip,1,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(ps(i-ip,1).gt.p(k))then
+                  if(t(i-ip,1,k).ne.r_missing_data)then
+                     tsum=t(i-ip,1,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(i-ip,1,k).ne.r_missing_data)then
+                     usum=u(i-ip,1,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(i-ip,1,k).ne.r_missing_data)then
+                     vsum=v(i-ip,1,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(ps(i,2).gt.p(k))then
+                  if(t(i,2,k).ne.r_missing_data)then
+                     tsum=t(i,2,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(i,2,k).ne.r_missing_data)then
+                     usum=u(i,2,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(i,2,k).ne.r_missing_data)then
+                     vsum=v(i,2,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+
+               if(icnt.gt.0)then
+                  t(i,1,k)=tsum/float(icnt)
+               else
+                  t(i,1,k)=ttemp(i,1,k)
+                  iwpt=iwpt+1
+                  iwp(iwpt)=j
+               endif
+               if(ucnt.gt.0)then
+                  u(i,1,k)=usum/float(ucnt)
+               else
+                  u(i,1,k)=utemp(i,1,k)
+                  uwpt=uwpt+1
+               endif
+               if(vcnt.gt.0)then
+                  v(i,1,k)=vsum/float(vcnt)
+               else
+                  v(i,1,k)=vtemp(i,1,k)
+                  vwpt=vwpt+1
+               endif
+            endif
+         enddo
+c        print*,'weird hgt pts on southern bndry = ',iwpt
+c        print*,'weird u pts on southern bndry = ',uwpt
+c        print*,'weird v pts on southern bndry = ',vwpt
+c northern boundary
+         iwpt=0
+         uwpt=0
+         vwpt=0
+         do i=1,nx
+            if(t(i,ny,k).eq.r_missing_data)then
+               tsum=0.0
+               usum=0.0
+               vsum=0.0
+               icnt=0
+               ucnt=0
+               vcnt=0
+               ip=1
+               if(i.eq.nx.or.i.eq.1)ip=0
+               if(ps(i+ip,ny).ge.p(k))then
+                  if(t(i+ip,ny,k).ne.r_missing_data)then
+                     tsum=t(i+ip,ny,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(i+ip,ny,k).ne.r_missing_data)then
+                     usum=u(i+ip,ny,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(i+ip,ny,k).ne.r_missing_data)then
+                     vsum=v(i+ip,ny,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(ps(i-ip,ny).ge.p(k))then
+                  if(t(i-ip,1,k).ne.r_missing_data)then
+                     tsum=t(i-ip,ny,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(i-ip,1,k).ne.r_missing_data)then
+                     usum=t(i-ip,ny,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(i-ip,1,k).ne.r_missing_data)then
+                     vsum=t(i-ip,ny,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(ps(i,ny-1).ge.p(k))then
+                  if(t(i,ny-1,k).ne.r_missing_data)then
+                     tsum=t(i,ny-1,k)+tsum
+                     icnt=icnt+1
+                  endif
+                  if(u(i,ny-1,k).ne.r_missing_data)then
+                     usum=u(i,ny-1,k)+usum
+                     ucnt=ucnt+1
+                  endif
+                  if(v(i,ny-1,k).ne.r_missing_data)then
+                     vsum=v(i,ny-1,k)+vsum
+                     vcnt=vcnt+1
+                  endif
+               endif
+               if(icnt.gt.0)then
+                  t(i,ny,k)=tsum/float(icnt)
+               else
+                  t(i,ny,k)=ttemp(i,ny,k)
+                  iwpt=iwpt+1
+                  iwp(iwpt)=j
+               endif
+               if(ucnt.gt.0)then
+                  u(i,ny,k)=usum/float(ucnt)
+               else
+                  u(i,ny,k)=utemp(i,ny,k)
+                  uwpt=uwpt+1
+               endif
+               if(vcnt.gt.0)then
+                  v(i,ny,k)=vsum/float(vcnt)
+               else
+                  v(i,ny,k)=vtemp(i,ny,k)
+                  vwpt=vwpt+1
+               endif
+            endif
+         enddo
+c        print*,'weird hgt pts on northern bndry = ',iwpt
+c        print*,'weird u pts on northern bndry = ',uwpt
+c        print*,'weird v pts on northern bndry = ',vwpt
+c        print*,'--------------------------------------'
+c        print*
       enddo
 c
       return
@@ -1000,6 +1370,39 @@ c  These are AFWA changes
       enddo
       enddo
 c
+      do k=2,nz
+         do j=1,ny
+            if(ps(1,j) .le. p(k)) then
+c  These are AFWA changes
+               u(1,j,k)=bnd
+               v(1,j,k)=bnd
+               om(1,j,k)=bnd
+               om(1,j,k-1)=bnd
+            endif
+            if(ps(nx,j) .le. p(k)) then
+               u(nx,j,k)=bnd
+               v(nx,j,k)=bnd
+               om(nx,j,k)=bnd
+               om(nx,j,k-1)=bnd
+            endif
+         enddo
+
+         do i=1,nx
+            if(ps(i,1) .le. p(k)) then
+c  These are AFWA changes
+               u(i,1,k)=bnd
+               v(i,1,k)=bnd
+               om(i,1,k)=bnd
+               om(i,1,k-1)=bnd
+            endif
+            if(ps(i,ny) .le. p(k)) then
+               u(i,ny,k)=bnd
+               v(i,ny,k)=bnd
+               om(i,ny,k)=bnd
+               om(i,ny,k-1)=bnd
+            endif
+         enddo
+      enddo
       return
       end
 c
