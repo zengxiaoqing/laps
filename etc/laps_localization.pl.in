@@ -128,7 +128,7 @@ foreach(@cdl_list){
 	}elsif(/^(\s+)y\s*=/){
 	    print CDL "$1y = $ydim,\n" ;
 	}elsif(/^(\s+)z\s*=\s*(\d+)/){
-	    if($2>1){
+	    if($2>5  && $2!=42){
 		print CDL "$1z = $zdim,\n" ;
 	    }else{
 		print CDL $_ ;
