@@ -1,0 +1,127 @@
+#!@PERL@
+# @configure_input@
+#  Script that is used to wait for a lapsprep output
+#  to appear before exiting.  
+#
+#  Usage:
+#
+#    wait4lapsprep.pl [options] subdir maxwait_minutes
+#
+#      subdir = "mm5", "wrf",  or "cdf"
+#
+#      maxwait_minute = number of minutes to wait before giving up
+#      Options:
+#
+#         -d LAPS_DATA_ROOT (expects env. var if not set)
+#
+#         -o OFFSET (hours before/after current hour to set
+#                    valid time of file being waited on)
+#
+#         -t TIME (specific time to look for in YYYYMMDDHHMM)
+#
+#
+
+use strict;
+use vars qw($opt_d $opt_o $opt_t);
+use Getopt::Std;
+use Time::Local;
+getopts('d:o:t:');
+
+# Get arguments
+my $nargs = @ARGV;
+if ($nargs ne 2) {
+  print "Script requires 2 arguments:\n";
+  print "  wait4lapsprep.pl {subdir} {wait_time}\n";
+  print "    subdir = mm5 wrf cdf";
+  print "    wait_time is max time to wait in minutes.\n";
+  die;
+}
+
+my ($subdir, $maxwait_minutes) = @ARGV;
+
+# Set the LAPS data root
+my $laps_data_root;
+if ($opt_d) {
+  $laps_data_root = $opt_d;
+}else{
+  if ($ENV{LAPS_DATA_ROOT}){
+    $laps_data_root = $ENV{LAPS_DATA_ROOT};
+  }else{
+    die "No LAPS_DATA_ROOT set in environment, and -d not present!\n";
+  }
+}
+
+if ( ($subdir ne "wrf") and ($subdir ne "mm5") and ($subdir ne "cdf")){
+  die "Unsupported lapsprep subdirectory: $subdir\n";
+}
+
+my $searchdir = "$laps_data_root/lapsprd/lapsprep/$subdir";
+if (! -d "$searchdir"){
+  die "$searchdir does not exist!\n";
+}
+
+# Figure out valid time
+my ($year, $month, $day, $hour, $minute);
+if ($opt_t) {
+  if ($opt_t =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/){
+     $year = $1;
+     $month = $2;
+     $day = $3;
+     $hour = $4;
+     $minute = $5;
+  }else{
+    die "Invalid -s option, should be YYYYMMDDHHmm\n";
+  }
+}else{
+  my $timenow = time;
+  if ($opt_o) {
+    $timenow = $timenow + ($opt_o * 3600); 
+  }
+  # Round to nearest hour
+  $timenow = $timenow - ($timenow % 3600);
+  # Convert to normal time parameters
+  my ($cycsec,$cycmin,$cychour,$cycmday,$cycmon,$cycyear,$cycwday,$cycyday,
+      $cycisdt) = gmtime($timenow);
+  my $cycyear2 = $cycyear-100;
+  $year = $cycyear+1900;
+  $cycyday++;
+  $cycyday = "0".$cycyday while(length($cycyday)<3);
+  $month = $cycmon + 1;
+  $month = "0".$month while(length($month)<2);
+  $day = $cycmday;
+  $day = "0".$day while(length($day)<2);
+  $hour = $cychour;
+  $hour = "0".$hour while(length($hour)<2);
+  $minute = $cycmin;
+  $minute = "0".$minute while(length($minute)<2);
+}
+
+# Now we need to determine the file name, which depends on the subdir
+# name and the time information
+
+my ($prefix, $suffix);
+$prefix = "LAPS:";
+if (($subdir eq "mm5") or ($subdir eq "wrf")){
+  $suffix = $year."-".$month."-".$day."_".$hour;
+}else{
+  $suffix = $year."-".$month."-".$day."-".$hour.$minute;
+}
+
+# Start search
+my $waitfile = $searchdir."/".$prefix.$suffix;
+print "Awaiting $waitfile\n";
+my $elapsed = 0;
+my $maxtime = $maxwait_minutes * 60;
+my $sleeptime = 10;
+while ((! -f $waitfile) and ($elapsed <= $maxtime)){
+  sleep $sleeptime;
+  $elapsed = $elapsed + $sleeptime;
+}
+
+if (-f $waitfile) {
+  print "Found after $elapsed sec\n";
+}else{
+  print "Not found after $elapsed sec!\n";
+  die;
+}
+exit;
