@@ -50,6 +50,16 @@ cdis
 !                         mask input(s) can be used for cloud clearing,
 !                         especially if it applies throughout the column.
 
+!       Visible satellite implied cloud fraction is used as an upper bound 
+!       to clear out clouds.
+
+!       Visible satellite is reconciled with the radar data in the course 
+!       of using satellite to clear out clouds. If the visible satellite 
+!       says no cloud and the radar echo is non-existent or <30 dBZ, then the 
+!       echo (along with any pre-existing cloud) is blanked out. If the radar 
+!       echo is strong then visible is overruled and a minimal value of cloud 
+!       fraction of 0.2 is left in.
+
         integer*4 ihist_alb(-10:20)
         integer*4 ihist_frac_sat(-10:20)
         integer*4 ihist_frac_in(-10:20)
