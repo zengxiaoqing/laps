@@ -813,10 +813,12 @@ c
             if(htbase      .lt. topo(i,j)     .or. 
      1         abs(htbase) .gt. 100000.       .or.
      1         cover       .le. 0.01              )then
-                write(6,*)' WARNING: htbase/cover = '
-     1                   ,htbase,cover,i,j,mode_sao
-     1                   ,cldtop_m(i,j),l_no_sao_vis
-     1                   ,istat_vis_potl_a(i,j)
+                write(6,322,err=323)i,j,mode_sao,htbase,cover
+     1                   ,cldtop_m(i,j),ht_sao_top
+     1                   ,l_no_sao_vis,istat_vis_potl_a(i,j)
+322             format(1x,2i4,' WARNING: htbase/cover = '
+     1                ,i2,f7.0,f7.2,2f7.0,l2,i2)       
+323             continue
             endif
 
 !           Add satellite cloud to array
