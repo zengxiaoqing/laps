@@ -897,7 +897,7 @@ c
 
 !           Correct the cloud top temperature for thin clouds using VIS data
             call correct_cldtop_t_rad(tb8_k,t_gnd_k(i,j)               ! I
-     1                           ,cloud_frac_vis_a(i,j)                ! I
+     1                           ,cloud_frac_vis_s(i,j)                ! I
      1                           ,istat_vis_potl                       ! I
      1                           ,cldtop_temp_k,istatus)               ! O
 
