@@ -9,13 +9,13 @@ use strict;
 umask 002;
 use Getopt::Long;
 
-my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$REMOTE_DATA_ROOT,$schedtime,$numfiles,$qsubproj,$followup,$LAPS_SRC_ROOT,$webdir);
+my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$REMOTE_DATA_ROOT,$schedtime,$numfiles,$qsubproj,$followup,$LAPS_SRC_ROOT,$webdir,$logdir);
 my $result = GetOptions(
    "installroot=s" => \$LAPSINSTALLROOT, # (required)
    "dataroot=s" => \$LAPS_DATA_ROOT,     # (required)
    "schedtime=s" => \$schedtime,         # e.g. 20,50 (optional)
    "qsubproj=s" => \$qsubproj,           # qsub project (if qsub is being used)
-   "followup=s" => \$followup,           # domain name for running followup_ncarg.com script (optional - FSL only)
+   "followup=s" => \$followup,           # domain name for running followup_ncarg.com script (optional)
    "remoteroot=s" => \$REMOTE_DATA_ROOT, # needed with followup on a remote machine
    "numfiles=s" => \$numfiles            # number of files to keep with purger (optional, except needed with followup on a remote machine)
                                          );          
@@ -71,11 +71,12 @@ if(-e "$LAPS_DATA_ROOT/cronfile"){
        if( /\@followup\@/ ){
            if(defined($followup)){
                $webdir="/usr/nfs/common/lapb/www";
-               if(-d "$webdir"){ # We're on gizmo, run followup_ncarg.com
-                   s/\@followup\@/\; $webdir\/followup_ncarg.com $LAPS_DATA_ROOT $followup $LAPSINSTALLROOT 1> $webdir\/followup_$followup\.log 2> $webdir\/followup_$followup\.err /;
-
-               }else{            # We're on a remote machine, run followup_ncarg_remote.sh
+               $logdir="$LAPS_DATA_ROOT\/log";
+               if(-d "/public" && !-d "$webdir"){ # We're on a remote machine at FSL, run followup_ncarg_remote.sh 
                    s/\@followup\@/\; $LAPSINSTALLROOT\/etc\/followup_ncarg_remote.sh $LAPS_DATA_ROOT $REMOTE_DATA_ROOT $followup $numfiles 1> $LAPS_DATA_ROOT\/followup_$followup\.log 2> $LAPS_DATA_ROOT\/followup_$followup\.err /;
+
+               }else{                             # Run followup_ncarg.sh
+                   s/\@followup\@/\; $LAPSINSTALLROOT\/etc\/www\/followup_ncarg.sh $LAPS_DATA_ROOT $followup $LAPSINSTALLROOT 1> $logdir\/followup_$followup\.log 2> $logdir\/followup_$followup\.err /;
 
                }
 
