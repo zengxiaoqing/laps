@@ -39,7 +39,7 @@ cdis
      1               ,ilaps_cycle_time              ! Input
      1               ,l_use_raob                    ! Input
      1               ,weight_bkg_const              ! Input
-     1               ,rms_thresh                    ! Input
+     1               ,rms_thresh_norm               ! Input
      1               ,ni,nj,nk                      ! Input
      1               ,max_snd,max_obs               ! Input
      1               ,grid_spacing_m                ! Input
@@ -319,7 +319,7 @@ cdis
      1      ,grid_spacing_m,max_snd                            ! I
      1      ,temp_obs,max_obs,n_obs                            ! I
      1      ,r_missing_data                                    ! I
-     1      ,l_3d,rms_thresh                                   ! I
+     1      ,l_3d,rms_thresh_norm                              ! I
      1      ,igrid_tsnd,jgrid_tsnd,bias_tsnd                   ! I
      1      ,temp_3d                                           ! I/O
      1      ,istatus)                                          ! O
@@ -339,7 +339,7 @@ cdis
      1      ,grid_spacing_m,max_snd                               ! I
      1      ,temp_obs,max_obs,n_obs                               ! I
      1      ,r_missing_data                                       ! I
-     1      ,l_3d,rms_thresh                                      ! I
+     1      ,l_3d,rms_thresh_norm                                 ! I
      1      ,igrid_tsnd,jgrid_tsnd,bias_tsnd                      ! I
      1      ,temp_3d                                              ! I/O
      1      ,istatus)                                             ! I
@@ -388,7 +388,8 @@ cdis
      1               ,bias_tsnd                              ! Input
      1               ,temp_obs,max_obs,n_obs                 ! Input
      1               ,bias_3d                                ! Output
-     1               ,l_analyze,l_3d,rms_thresh              ! Output
+     1               ,l_analyze                              ! Output
+     1               ,l_3d,rms_thresh_norm                   ! Input
      1               ,igrid_tsnd,jgrid_tsnd                  ! Inputs
      1               ,weight_bkg_const                       ! Input
      1               ,n_fnorm                                ! Input
@@ -432,7 +433,8 @@ cdis
      1                   ,bias_tsnd                              ! Input
      1                   ,temp_obs,max_obs,n_obs                 ! Input
      1                   ,bias_3d                                ! Output
-     1                   ,l_analyze,l_3d,rms_thresh              ! Output/Input
+     1                   ,l_analyze                              ! Output
+     1                   ,l_3d,rms_thresh_norm                   ! Input
      1                   ,igrid_tsnd,jgrid_tsnd                  ! Inputs
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
@@ -520,9 +522,15 @@ cdis
             write(6,*)' n_obs_valid,rms_inst = ',n_obs_valid,rms_inst       
 
         else
-            write(6,*)' WARNING: n_obs_valid .ne. n_obs'
+            write(6,*)' ERROR: n_obs_valid .ne. n_obs'
      1                          ,n_obs_valid,n_obs
         endif
+
+!       Set the rms threshold for iteration cutoff, based on instrument error
+        rms_thresh = rms_thresh_norm * rms_inst
+
+        write(6,*)'rms_thresh_norm,rms_thresh'
+     1            ,rms_thresh_norm,rms_thresh      
 
 !       ncnt_total = ncnt_total + ncnt
 
