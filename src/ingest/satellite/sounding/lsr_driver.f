@@ -2,15 +2,13 @@
 c
       include      'lsr_dims.inc'
 
-      integer     n_elems(max_sat)
-      integer     n_lines(max_sat)
-      integer     ismsng
       
       real*4        r_channel_wavelengths(max_ch,max_sat)
       character     c_sat_id(max_sat)*6
       character     c_sounding_path(max_sat)*200
 
-      integer     nx,ny
+      integer       nx,ny
+      integer       ismsng
 
       call get_grid_dim_xy(nx,ny,istatus)
       if (istatus .ne. 1) then
@@ -20,30 +18,34 @@ c
 c
 c get the number of satellites and channels data/static/sat_sounder.nl
 c
-      call get_sat_sounder_info(n_sat,c_sat_id,
-     &n_channels,c_sounding_path,n_elems,n_lines,r_channel_wave
-     &lengths,ismsng,pct_req_lsr,istatus)
+      call get_sat_sounder_info(n_sat,c_sat_id
+     &,n_channels,c_sounding_path,r_channel_wavelengths
+     &,ismsng,pct_req_lsr,istatus)
 
       if(istatus.ne.1)then
-         write(6,*)'Error returned from get_sat_sounder_info'
+         print*,'Error returned from get_sat_sounder_info'
          goto 1000
       endif
 
       do i=1,n_sat
 
          call lsr_driver_sub(nx,ny,n_channels,
-     &     n_elems(i),n_lines(i),ismsng,c_sat_id(i),c_sounding_path(i),
-     &     r_channel_wavelengths(i,1),pct_req_lsr,istatus)
-         if(istatus.ne.1)then
+     &ismsng,c_sat_id(i),c_sounding_path(i),
+     &r_channel_wavelengths(i,1),pct_req_lsr,istatus)
+
+         print*
+         if(istatus.ne.0)then
             if(i.eq.n_sat)then
-               write(6,*)'No data processed in lsr_driver_sub'
-               write(6,*)'Finished in lsr_driver'
+               print*,'Data was not processed in lsr_driver_sub'
+               print*,'Finished in lsr_driver'
             else
-               write(6,*)'Try for another satellite'
+               print*,'Data was not processed in lsr_driver_sub'
+               print*,'Try for another satellite'
             endif
          else
-            write(6,*)'Data processed in lsr_driver_sub'
+            print*,'Data was processed in lsr_driver_sub'
          endif
+         print*
 
       enddo
 
@@ -53,7 +55,7 @@ c
 c=======================================================
 c
       subroutine lsr_driver_sub(nx_l,ny_l,n_channels,
-     &nelems,nlines,ismsng,c_sat_id,c_sounding_path,rch_wvlngth,
+     &ismsng,c_sat_id,c_sounding_path,rch_wvlngth,
      &pct_req_lsr,istatus)
 c
       implicit none
@@ -61,21 +63,21 @@ c
       integer     i_sat
       integer     nlines
       integer     nelems
-      integer     nx_l,ny_l
       integer     n_channels
+      integer     nx_l,ny_l
 
       integer     icnt(n_channels)
       integer     jcnt(n_channels)
       integer     icount
       integer     ismsng
 
-      integer     ndimx(nlines)
-      integer     ndimy,ndimch
+      integer     ndimx,ndimy,ndimch
 
       Real*8        orbitAttitude(336)
-      Real*8        lineTimeBeg(nlines,n_channels)
-      Real*8        lineTimeEnd(nlines,n_channels)
       Real*8        t, f_time
+
+      Real*8,       allocatable :: lineTimeBeg(:,:)
+      Real*8,       allocatable :: lineTimeEnd(:,:)
 
       real*4        lat(nx_l,ny_l)
       real*4        lon(nx_l,ny_l)
@@ -94,7 +96,6 @@ c
       real*4        data(nx_l,ny_l,2)
       real*4        rline(nx_l,ny_l)
       real*4        rpix(nx_l,ny_l)
-      real*4        sndr_rad(nelems,nlines,n_channels)
       real*4        result
       real*4        xconv,yconv
       real*4        rch_wvlngth(n_channels)
@@ -103,8 +104,10 @@ c
       real*4        rltb,rlte
       real*4        pct_req_lsr
 
-      real*4        scalingBias(nlines,n_channels)
-      real*4        scalingGain(nlines,n_channels)
+      real*4,       allocatable :: sndr_rad(:,:,:)
+      real*4,       allocatable :: scalingBias(:,:)
+      real*4,       allocatable :: scalingGain(:,:)
+      Integer,      allocatable :: isndrdata(:,:,:)
 
       Integer     ewCycles,ewIncs
       Integer     nsCycles,nsIncs
@@ -113,7 +116,7 @@ c
       Integer     istatus
       Integer     iostatus
       Integer     mstatus
-      Integer     i,j,k,n
+      Integer     i,j,k,n,lf
       Integer     lend
       Integer     time_spec(2)
       Integer     imcI4
@@ -126,17 +129,22 @@ c
       Integer     iminimum(n_channels)
       Integer     i2_missing_data
       Integer     ltindex
+      Integer     itstatus
+      Integer     init_timer
+      Integer     ishow_timer
 c
-      Integer     instr
-      Integer     isndrdata(nelems,nlines,n_channels)
+      Integer       instr
       REAL*8        wavelength(n_channels)
       Character*1   imc(4)
-      Character*100 filename
       Character*255 c_filename_sat
-      Character*200 c_sounding_path
       Character*255 datapath
+      character*200 c_dataroot
+      Character*200 c_sounding_path
       character*125 comment_ll(2)
+      Character*100 filename
+      character*10  c10_grid_fname
       character*10  units_ll(2)
+      character*9   c_filetime_sat
       character*3   var_ll(2)
       character*2   cch
       character*150 dir_static
@@ -146,20 +154,50 @@ c
 c
 c =============================================================
 c =============================================================
-c                get sndr data
+c      get sounder dimensions data for current sounder file
 c =============================================================
 c
+      call find_domain_name(c_dataroot,c10_grid_fname,istatus)
+      call s_len(c10_grid_fname,lf)
+
       n=index(c_sounding_path,' ')-1
       write(*,*)'Data pathname: ',c_sounding_path(1:n)
 
-      call get_sounding_data_cdf(c_sat_id,
+      call get_sounding_info_cdf(c_sat_id,
      &                         c_sounding_path,
      &                         i4time_data,
      &                         c_filename_sat,
-     &                         ires_x,ires_y, 
-     &                         nelems,
-     &                         nlines,
-     &                         n_channels,
+     &                         ndimx,ndimy,ndimch,
+     &                         istatus)
+      if(istatus.eq.1)then
+         write(6,*)'Satellite data obtained'
+         write(6,*)
+      else
+         write(6,*)'Data NOT obtained for ',c_sounding_path(1:n)
+         goto 1000
+      endif
+c =============================================================
+c read sounder data
+c =============================================================
+c
+      write(6,*)'Read sounder database '
+
+      if(.not.allocated(isndrdata))then
+         print*,'Allocate raw sounder data arrays'
+         allocate (isndrdata(ndimx,ndimy,ndimch)
+     &         ,linetimebeg(ndimy,ndimch)
+     &         ,linetimeend(ndimy,ndimch)
+     &         ,scalingBias(ndimy,ndimch)
+     &         ,scalingGain(ndimy,ndimch) )
+      endif
+
+      itstatus=init_timer()
+      itstatus=ishow_timer()
+
+      isndrdata=0
+
+      Call Read_sounder_db_cdf(c_filename_sat,
+     &                         ndimx,ndimy,ndimch,
      &                         isndrdata,
      &                         wavelength,
      &                         scalingBias,
@@ -172,18 +210,22 @@ c
      &                         nsIncs,
      &                         f_time,
      &                         lineTimeBeg,lineTimeEnd,
-     &                         imcI4,
+     &                         imc,ires_x,ires_y,
      &                         orbitAttitude,
-     &                         ndimx,ndimy,ndimch,
      &                         istatus)
-      if(istatus.eq.1)then
-         write(6,*)'Satellite data obtained'
-         write(6,*)
-      else
-         write(6,*)'Data NOT obtained for ',c_sounding_path(1:n)
-         goto 1000
+
+      if(istatus.ne.1)then
+         print*,'Failed to read sounder data '
+         return
       endif
 
+      where (isndrdata .lt. 0) isndrdata=isndrdata+65535
+
+      itstatus=ishow_timer()
+      write(6,*)'Elapsed time (sec): ',itstatus
+c
+c !for sounder data the image motion compensation is off (ie.,=1)
+c
       call get_i2_missing_data(i2_missing_data,iostatus)
       if(iostatus.ne.1)then
          write(6,*)'Error getting i2_missing_data'
@@ -195,7 +237,6 @@ c
       do i=1,n_channels
          write(6,*)'Channel # ',i
          call set_missing_sndr(isndrdata(1,1,i),
-     &               nelems,nlines,
      &               ndimx,ndimy,
      &               ismsng,
      &               i2_missing_data,
@@ -219,23 +260,19 @@ c
       var_ll(2) = 'LON'
 
       write(*,*)'Get LAPS lat/lon grid'
-      call rd_laps_static(dir_static,'nest7grid',nx_l,ny_l,2,
+      call rd_laps_static(dir_static,c10_grid_fname,nx_l,ny_l,2,
      &var_ll,units_ll,comment_ll,data,grid_spacing,istatus)
 
       if(istatus.eq.1)then
-         write(*,*)'LAPS lat/lon grid obtained'
-         write(*,*)
-         do j=1,ny_l
-            do i=1,nx_l
-               lat(i,j)=data(i,j,1)
-               lon(i,j)=data(i,j,2)
-            end do
-         end do
+         print*,'LAPS lat/lon grid obtained'
+         lat(:,:)=data(:,:,1)
+         lon(:,:)=data(:,:,2)
       else
-         write(*,*)'Unable to get lat/lon data'
-         write(*,*)'sounding process terminating'
+         print*,'Unable to get lat/lon data'
+         print*,'sounding process terminating'
          stop
       end if
+
       grid_spacing_km=grid_spacing/1000.
 c
 c =================================================================
@@ -243,15 +280,20 @@ c       generate satellite-to-laps remapping table
 c =================================================================
 c
       write(6,*)'Compute sat-2-laps look-up-table'
-      call gen_gvrsndr_lut_lsr(c_filename_sat,nlines,nelems,wavelength,
+      call gen_gvrsndr_lut_lsr(c_filename_sat,ndimy,ndimx,wavelength,
      &ires_x,ires_y,r_sndr_res_km,nw_pix,nw_line,se_pix,se_line,
-     &ewCycles,ewIncs,nsCycles,nsIncs,f_time,orbitattitude,n_channels,
+     &ewCycles,ewIncs,nsCycles,nsIncs,f_time,orbitattitude,ndimch,
      &nx_l,ny_l,lat,lon,r_llij_lut_ri,r_llij_lut_rj,pct_req_lsr,istatus)
 
       if(istatus.eq.0)then
          write(6,*)'Sounder Nav computed'
       else
-         write(6,*)'Found too many points outside of domain '
+
+         print*,'Found too many points outside of domain '
+
+c        deallocate (isndrdata,lineTimeBeg,lineTimeEnd
+c    &,scalingBias,scalingGain)
+
          goto 1000
       endif
 c
@@ -259,13 +301,13 @@ c ===================================================================
 c       compute count to radiance look up table
 c ===================================================================
 c
-      call count_range(ndimx,ndimy,ndimch,nelems,nlines,n_channels,
-     &isndrdata,imaximum,iminimum,istatus)
+      if(.not. allocated(sndr_rad))then
+         print*,'Allocate real sndr_rad array'
+         allocate (sndr_rad(ndimx,ndimy,n_channels))
+      endif
 
-c     write(6,*)'Compute count2radiance lut'
-c     call count2radiance_lut(n_channels,nlines,maxcnt,scalingBias,
-c    &scalingGain,imaximum,iminimum,cnt2rad)
-c
+      call count_range(ndimx,ndimy,ndimch,isndrdata
+     &,imaximum,iminimum,istatus)
 c
       write(6,*)'Image motion Comp ',imc
       write(6,*)'framsStartTime: ',f_time
@@ -277,7 +319,7 @@ c
       write(6,*)
 c
 c ===================================================================
-c               scale sounder counts to radiances.
+c scale sounder counts to radiances. load channels desired for proc.
 c ===================================================================
 c
       call get_r_missing_data(r_missing_data,iostatus)
@@ -287,7 +329,7 @@ c
       do k=1,n_channels
 
         do j=1,ndimy
-        do i=1,ndimx(j)
+        do i=1,ndimx
            sndr_rad(i,j,k)=r_missing_data
         enddo
         enddo
@@ -297,14 +339,14 @@ c
         rsb=scalingBias(1,k)
         rsg=scalingGain(1,k)
 
-c       if(rsg.gt.1.0e-10)then                     !vis channel rsg is small. no rad conversion.
-c                                                   this test doesn't work on linux-alpha (jet).
+c       if(rsg.gt.1.0e-10)then           !vis channel rsg is small. no rad conversion.
+c                                         this test doesn't work on linux-alpha (jet).
 
-        if(k.lt.n_channels)then                    !the last channel is visible, so no radiance calc.
+        if(k.lt.n_channels)then          !the last channel is visible, so no radiance calc.
 
            write(6,*)'Scaling Bias/Gain ',k,rsb,rsg
            do j=1,ndimy
-           do i=1,ndimx(j)
+           do i=1,ndimx
 
               rcount=float( isndrdata(i,j,k) )
               if(rcount.ge.imaximum(k).or.rcount.le.0.0)then  !this would include i2_missing_data (=-99)
@@ -357,6 +399,10 @@ c
       else
          i4time_data=int(rmintime)+315619200
       endif
+
+c     deallocate (isndrdata,lineTimeBeg,lineTimeEnd
+c    &,scalingBias,scalingGain)
+
 c
 c ================================================================
 c        Remap to laps domain
@@ -373,8 +419,8 @@ c
      &                  sndr_rad(1,1,i),
      &                  r_llij_lut_ri,
      &                  r_llij_lut_rj,
-     &                  nlines, ! sndr array dimensions
-     &                  nelems, !       "
+     &                  ndimy,        ! sndr array dimensions
+     &                  ndimx,        !       "
      &                  sa,sc,st,
      &                  istatus)
      

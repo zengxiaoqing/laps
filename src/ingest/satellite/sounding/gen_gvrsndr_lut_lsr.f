@@ -52,11 +52,7 @@ c
       Integer     resolution_x
       Integer     resolution_y
 
-
       Integer     i1,j1
-      Integer     ndsize_ch
-      Integer     ndsize_x(nlines)
-      Integer     ndisze_y
       Integer     cstatus
       Integer     istatus
       Integer     mstatus
@@ -84,58 +80,6 @@ c ---------------------------------------------------------
 c read static information for gvarimage navigation
 c
       istatus = -1 
-c
-c need a loop for this from i=1,nch
-c
-c        ctype=c_sndrch_types(i,isat)
-c        filename_parm=cname(1:n2)//ctype//'.parms'
-c        call read_sndr_parmfile(filename_parm,
-c    &                         sBsG_OA_read,
-c    &                         ewCycles,
-c    &                         ewIncs,
-c    &                         nsCycles,
-c    &                         nsIncs,
-c    &                         f_time,
-c    &                         imc,
-c    &                         start_line,
-c    &                         start_pix,
-c    &                         nlines,
-c    &                         scalingBias,
-c    &                         scalingGain,
-c    &                         orbAt,
-c    &                         SatSubLAT,
-c    &                         SatSubLON,
-c    &                         wavelength(i),
-c    &                         rsndr_res_m,
-c    &                         nstatus)
-
-c        if(nstatus.ne.0)then
-c
-c Find files for GOES-8 sounding data.
-c
-c     call Read_sounder_db_cdf_header(c_filename_sat,nlines,
-c    &                               nelems,ndsize_x,nch,
-c    &                               wavelength,
-c    &                               resolution_x,
-c    &                               resolution_y,
-c    &                               start_pix,start_line,
-c    &                               end_pix,end_line,
-c    &                               ewCycles,
-c    &                               ewIncs,
-c    &                               nsCycles,
-c    &                               nsIncs,
-c    &                               f_time,
-c    &                               c_imc,
-c    &                               orbAt,
-c    &                               scalingBias,
-c    &                               scalingGain,
-c    &                               ndsize_ch,
-c    &                               istatus)
-
-c     if(istatus .ne.0)then
-c        write(6,*)'No sounder netcdf file'
-c        goto 901
-c     endif
 
       call get_r_missing_data(r_missing_data,istatus)
 

@@ -1,4 +1,4 @@
-      subroutine count_range(ndimx,ndimy,ndimch,imax,jmax,nch,
+      subroutine count_range(ndimx,ndimy,ndimch,
      &isndrdata,imaximum,iminimum,istatus)
 c
 c routine determines the range for count values for each sounding
@@ -7,16 +7,15 @@ c
       implicit none
 
       integer i,j,k
-      integer imax,jmax,nch
-      integer ndimch,ndimy,ndimx(jmax)
+      integer ndimch,ndimy,ndimx
       integer istatus
-      integer isndrdata(imax,jmax,nch)
-      integer imaximum(nch)
-      integer iminimum(nch)
+      integer isndrdata(ndimx,ndimy,ndimch)
+      integer imaximum(ndimch)
+      integer iminimum(ndimch)
       integer i2_missing_data
       integer maxthresh
-      integer icntm(nch)
-      integer icnteth(nch)
+      integer icntm(ndimch)
+      integer icnteth(ndimch)
 
       call get_i2_missing_data(i2_missing_data,istatus)
       if(istatus.ne.1)goto 999
@@ -32,7 +31,7 @@ c
 
          do j=1,ndimy
 
-           do i=1,ndimx(j)
+           do i=1,ndimx
 
              if(isndrdata(i,j,k).ne.i2_missing_data.and.
      &          isndrdata(i,j,k).lt.maxthresh)then

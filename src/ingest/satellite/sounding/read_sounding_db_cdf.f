@@ -16,7 +16,6 @@
      &                               lineTimeBegin,lineTimeEnd,
      &                               imc,ires_x,ires_y,
      &                               orbitAttitude,
-     &                               ndsize_x,ndsize_y,ndsize_ch,
      &                               istatus)
 c
 c
@@ -64,9 +63,6 @@ c
       Real*8      ltrec(irec_max)
 
       Integer Istatus
-      Integer ndsize_x(jmax)
-      Integer ndsize_y
-      Integer ndsize_ch
       Integer ndsize_sb(nch)
       Integer ndsize_ltb(nch)
       Integer ndsize_lte(nch)
@@ -97,8 +93,8 @@ c get dimensions for sounding array (x,y,lambda) [lambda is # of wavelengths]
 c This code has now been subroutine-ized; rdimg_line_elem_sub.f.
 c
 c
-      call rddata_line_elem(ncid,imax,jmax,nch,
-     &ndsize_x,ndsize_y,ndsize_ch,sounding,istatus)
+      call rddata_line_elem(ncid,imax,jmax,nch,sounding,istatus)
+
       if(istatus .ne. 1)then
          write(6,*)'Error reading sounding - rddata_img_line_elem'
          return
@@ -494,3 +490,92 @@ C
 
       Return
       END
+c
+c get x/y dimensions for satellite data
+c
+      subroutine get_line_elem_sounder_cdf(filename,nelems,nlines
+     &,nchannels,istatus)
+
+      implicit none
+
+      integer nlines
+      integer nelems
+      integer nchannels
+      integer istatus
+      integer ln
+      integer ncid
+      integer dim_id_x
+      integer dim_id_y
+      integer rcode
+
+      character    filename*(*)
+      character*31 dummy
+
+      include 'netcdf.inc'
+c
+c open file for reading
+c
+      istatus = 0
+
+      call s_len(filename,ln)
+      print*,'open file for x/y/ch dimension read'
+      print*,'filename: ',filename(1:ln)
+      RCODE=NF_OPEN(filename,NF_NOWRITE,NCID)
+      if(rcode.ne.0)then
+         print*,'Error openning netCDF file'
+         print*,'filename: ',filename(1:ln)
+         return
+      endif
+c
+c This is the number of lines
+c
+      dim_id_y = NCDID(ncid, 'y', rcode)
+      if(rcode.ne.0)then
+         print*,'Error getting y id code - returning'
+         return
+      endif
+      CALL NCDINQ(NCID, dim_id_y,dummy,nlines,RCODE)
+      if(rcode.ne.0)then
+         print*,'Error getting y dimension - nlines'
+         return
+      endif
+c
+c get x dimension id
+c
+      dim_id_x = NCDID(ncid, 'x', rcode)
+      if(rcode.ne.0)then
+         print*,'Error getting x id code - returning'
+         return
+      endif
+
+      call NCDINQ(NCID,dim_id_x,dummy,nelems,RCODE)
+      if(rcode.ne.0)then
+         print*,'Error getting x dimension - nelems'
+         return
+      endif
+c
+c get wavelength dimension id (this is the number of channels)
+c
+      dim_id_x = NCDID(ncid, 'wavelength', rcode)
+      if(rcode.ne.0)then
+         print*,'Error getting wavelength id code - returning'
+         return
+      endif
+
+      call NCDINQ(NCID,dim_id_x,dummy,nchannels,RCODE)
+      if(rcode.ne.0)then
+         print*,'Error getting wavelength dimension - nchannels'
+         return
+      endif
+
+      rcode = nf_close(ncid)
+      if(rcode.ne.NF_NOERR) then
+        print *, NF_STRERROR(rcode)
+        print *,'nf_close'
+        return
+      endif
+
+      istatus = 1
+
+      return
+      end

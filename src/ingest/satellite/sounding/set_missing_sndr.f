@@ -30,7 +30,6 @@ cdis
 cdis 
 cdis 
        subroutine set_missing_sndr(image_in,
-     &               nx,ny,
      &               ndimx,ndimy,
      &               ismsng,
      &               i2_missing_data,
@@ -43,16 +42,16 @@ c                        addition to missing sat pixels
 c
         implicit none
 c
-        integer nx,ny,i,j,n
+        integer i,j,n
         integer ii,jj
-        integer ndimx(ny)
+        integer ndimx
         integer ndimy
         integer istatus
         integer mstatus
         integer istat_status
         integer imiss_status
-        integer image_in(nx,ny)
-        integer image_temp(nx,ny)
+        integer image_in(ndimx,ndimy)
+        integer image_temp(ndimx,ndimy)
         real*4    data(125)
         real*4    ave,adev,sdev,var,skew,curt
         integer ismsng
@@ -64,13 +63,13 @@ c
         imiss_status=0
 
         do j=1,ndimy
-        do i=1,ndimx(j)
+        do i=1,ndimx
            image_temp(i,j)=0
         enddo
         enddo
 
         do j=2,ndimy-1
-        do i=2,ndimx(j)-1
+        do i=2,ndimx-1
 
            if(image_in(i,j).le.ismsng)then
               n=0
@@ -107,7 +106,7 @@ c
         end do
 
         do j=2,ndimy-1
-        do i=2,ndimx(j)-1
+        do i=2,ndimx-1
            image_in(i,j)=image_temp(i,j)
         enddo
         enddo
@@ -117,18 +116,16 @@ c
               image_in(1,j)=i2_missing_data
               imiss_status=imiss_status-1
            endif
-           if(image_in(ndimx(j),j).eq.0)then
-              image_in(ndimx(j),j)=i2_missing_data
+           if(image_in(ndimx,j).eq.0)then
+              image_in(ndimx,j)=i2_missing_data
               imiss_status=imiss_status-1
            endif
         enddo
-        do i=1,ndimx(1)
+        do i=1,ndimx
            if(image_in(i,1).eq.0)then
               image_in(i,1)=i2_missing_data
               imiss_status=imiss_status-1
            endif
-        enddo
-        do i=1,ndimx(ndimy)
            if(image_in(i,ndimy).eq.0)then
               image_in(i,ndimy)=i2_missing_data
               imiss_status=imiss_status-1
