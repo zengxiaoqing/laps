@@ -3841,7 +3841,7 @@ Process lga.exe (background model):
                      U3   u       21  Model u wind component (grid north)
                      V3   v       21  Model v wind component (grid east)
 
-                LGB                   Sfc grids (winds are grid north)
+                LGB                   Sfc grids (U and V are grid north)
 
 Process LH1: 	LH1  PW   pw	   1  Precipitable Water Vapor
 
