@@ -677,7 +677,7 @@ calandar_date(jdate,day,month,year)
 	int	jdate;
 	int	*day,*month,*year;
 {
-	long	a,b,c,d,e,z,alpha;
+	long	a,b,c,d,e,z,alph;
 
 	z = jdate +1;
 
@@ -685,8 +685,8 @@ calandar_date(jdate,day,month,year)
 	if (z < 2299161) { 
 		a = z; 
 	} else {
-		alpha = (long) ((z - 1867216.25) / 36524.25);
-		a = z + 1 + alpha - alpha / 4;
+		alph = (long) ((z - 1867216.25) / 36524.25);
+		a = z + 1 + alph - alph / 4;
 	}
 
 	b = a + 1524;
