@@ -94,8 +94,9 @@ then
 fi
 if test "$arch" = "sun4" 
 then
-  FFLAGS="$FFLAGS -native -xl -i4 -fnonstd"
-  OPTIMIZE="-O"
+    AC_MSG_ERROR(LAPS no longer supports the sun4 OS)
+dnl  FFLAGS="$FFLAGS -native -xl -i4 -fnonstd"
+dnl   OPTIMIZE="-O"
 fi
 if ! test "$FC"
 then
@@ -205,6 +206,7 @@ AC_OUTPUT(src/lib/Makefile
           src/lib/nav/Makefile
           src/lib/powell/Makefile
           src/lib/radar/remap_ftn/Makefile
+          src/lib/satellite/Makefile
           src/lib/temp/Makefile
           src/lib/util/Makefile
           src/accum/Makefile 
@@ -226,8 +228,8 @@ AC_OUTPUT(src/lib/Makefile
           src/ingest/rass/blp/Makefile
           src/ingest/sao/Makefile
           src/ingest/satellite/cloud_drift/Makefile
-          src/ingest/satellite/goes8/lambert/Makefile
-          src/ingest/satellite/goes8/lambert/table/Makefile
+          src/ingest/satellite/lvd/Makefile
+          src/ingest/satellite/lvd/table/Makefile
           src/ingest/satellite/sounding/Makefile
           src/lapsplot/Makefile
           src/sched/Makefile
