@@ -37,10 +37,11 @@ cdis
 cdis   
 cdis
 
-        subroutine vert_wind(uanl,vanl,u_sfc,v_sfc,ni,nj,nk,wanl
-     1          ,topo,lat,lon,grid_spacing_m,istatus
-     1          ,r_missing_data
-     1          ,l_grid_north)
+        subroutine vert_wind(uanl,vanl,u_sfc,v_sfc,ni,nj,nk         ! I
+     1          ,wanl                                               ! O
+     1          ,topo,lat,lon,grid_spacing_m                        ! I
+     1          ,rk_terrain,r_missing_data,l_grid_north             ! I
+     1          ,istatus)                                           ! O
 
 !      ~1990        Steve Albers  Orig version
 !       1997 Jun    Ken Dritz     Added ni and nj as dummy
@@ -63,6 +64,7 @@ cdis
 
         logical l_grid_north ! Sfc & 3D winds
 
+        real rk_terrain(ni,nj)
         integer k_terrain(ni,nj)
 
         DATA scale/1./
@@ -201,15 +203,7 @@ cdis
 
         do j = 1,nj
         do i = 1,ni
-            k_terrain(i,j) = 
-     1          max(nint(height_to_zcoord(topo(i,j),istatus)),1)
-
-            if(istatus .ne. 1)then
-                write(6,*)' Error: Bad istatus returned from '
-     1                   ,'height_to_zcoord',i,j,topo(i,j)
-                return
-            endif
-
+            k_terrain(i,j) = max( nint(rk_terrain(i,j)) ,1 )
         enddo ! i
         enddo ! j
 
@@ -222,8 +216,11 @@ cdis
      1                ,uanl(1,1,k),vanl(1,1,k),one,conv,lat,lon
      1                ,flu,flv,sigma,r_missing_data)
 
-            if(k.gt.1)z_interval
-     1              = abs(zcoord_of_level(k) - zcoord_of_level(k-1))        
+            if(k.gt.1)then
+                z_interval=abs(zcoord_of_level(k)-zcoord_of_level(k-1))    
+            else
+                z_interval=abs(zcoord_of_level(2)-zcoord_of_level(2-1))    
+            endif
 
             do j = 1,nj
             do i = 1,ni
@@ -235,7 +232,7 @@ cdis
 
                 elseif(k .eq. k_terr)then !
                     wsum(i,j)   = terrain_w(i,j)
-     1       - (conv(i,j) + vanl(i,j,k) * beta_factor(i,j)) * z_interval
+!    1       - (conv(i,j) + vanl(i,j,k) * beta_factor(i,j)) * z_interval
                     wanl(i,j,k) = wsum(i,j)
 
 
@@ -256,7 +253,7 @@ cdis
                     istatus = 0
                 endif
 
-                if(j .eq. 29 .and. k .le. 7 .and. i .eq. 29)then
+                if(j .eq. 29 .and. i .eq. 29)then
                     write(6,111)i,j,k,terrain_w(i,j)
      1              ,conv(i,j),wanl(i,j,k),beta_factor(i,j)*vanl(i,j,k)       
 111                 format(3i3,4e12.3)
