@@ -112,8 +112,9 @@ c
       call get_laps_3d(i4time,nx,ny,nz,'lt1','T3',units,comment,tp,
      .     istatus)
       if (istatus .ne. 1) then
-         print *,'Error getting LAPS temperature data...Abort.'
-         stop
+         print *,'Error getting LAPS temperature data'
+         return
+c         stop
       endif
 c
 c *** Get LAPS 3d heights.
@@ -121,8 +122,9 @@ c
       call get_laps_3d(i4time,nx,ny,nz,'lt1','HT',units,comment,ht,
      .     istatus)
       if (istatus .ne. 1) then
-         print *,'Error getting LAPS temperature data...Abort.'
-         stop
+         print *,'Error getting LAPS height data'
+         return
+c         stop
       endif
 c
 c *** Get LAPS 3d specific humidity.
@@ -131,8 +133,9 @@ c
      .     istatus)
 
       if (istatus .ne. 1) then
-         print *,'Error getting LAPS moisture data.,,Abort.'
-         stop
+         print *,'Error getting LAPS moisture data.'
+         return
+c         stop
       endif
 
 c
@@ -142,8 +145,9 @@ c
      .     istatus)
 
       if (istatus .ne. 1) then
-         print *,'Error getting LAPS wind data...Abort.'
-         stop
+         print *,'Error getting LAPS wind data.'
+         return
+c         stop
       endif
 c
 c *** Get LAPS V winds.
@@ -152,8 +156,9 @@ c
      .     istatus)
 
       if (istatus .ne. 1) then
-         print *,'Error getting LAPS wind data...Abort.'
-         stop
+         print *,'Error getting LAPS wind data.'
+         return
+c         stop
       endif
 
 
@@ -165,8 +170,9 @@ c
       call get_laps_sfc(datadir,i4time,'lsx',nx,ny,
      .                  spr,slp,sth,smr,suw,svw,istatus)
       if (istatus .ne. 1) then
-         print *,'Error getting LAPS surface data...Abort.'
-         stop
+         print *,'Error getting LAPS surface data.'
+         return
+c         stop
       endif
 
 

@@ -22,7 +22,7 @@ c
       integer bgmodel, oldest_forecast, max_forecast_delta
       logical use_analysis, outdir_defined, bgpath_defined
       character*9 a9
-      integer i4time_now, lendr
+      integer i4time_now, lendr, itime, ntime
       character*180 bgpath, topofname, outdir
       character*180 initbgpaths(maxdprepmodels)
      +             ,bndybgpaths(maxdprepmodels)
@@ -73,67 +73,83 @@ c
 
       filesfound = 0
       i = 1
-      do while(filesfound.le.0 .and. i.le.maxdprepmodels)
-         bgpath_defined=.false.
-         bgmodel = initbgmodels(i)
-         bgpath = initbgpaths(i)
-         call s_len(bgpath,len)
-         if(len.gt.0) inquire(FILE=bgpath,EXIST=bgpath_defined)
-         if(bgmodel.eq.0.and..not.bgpath_defined) then
-            bgpath=laps_data_root(1:lendr)
-         else if(.not.bgpath_defined) then
-            print*,'Could not find directory ',bgpath
-            stop
-         endif
+      call get_systime(i4time_now,a9,istat)
 
-
-
-         call get_systime(i4time_now,a9,istat)
-         call get_acceptable_files(i4time_now,bgpath,bgmodel
-     +         ,bgfnames,max_files,oldest_forecast,0,use_analysis,bgfcnt
-     +         ,-1,cmodel,nx,ny,nz,reject_files,reject_cnt)
-
-         i=i+1
-         if(bgfcnt.ge.1) then
-c            print*,nx,ny,nz,i4time_now,bgmodel,bgpath,
-c     +         bgfnames,bgfcnt,outdir,filesfound,bgfcnt
-            call dprep_sub(nx,ny,nz,i4time_now,bgmodel,bgpath,
-     +         bgfnames,bgfcnt,outdir,filesfound)
-         endif
-
-         
-      enddo
-
-
-      if(filesfound.le.0) then
-         print*,'ERROR: Could not find suitable file to initialize'
-         stop
-      endif
-
-      filesfound=0
-      i=1
-      do while(filesfound.le.0 .and. i.le.maxdprepmodels)
-         bgmodel = bndybgmodels(i)
-         bgpath = bndybgpaths(i)
-
-         call get_acceptable_files(i4time_now,bgpath,bgmodel,
-     +        bgfnames,max_files,oldest_forecast,max_forecast_delta,
-     +        use_analysis,bgfcnt,
-     +        fcstlengths(i),cmodel,nx,ny,nz,reject_files,reject_cnt)
-
-
-         print *, nx,ny,nz
-         
-         i=i+1
-         if(bgfcnt.gt.0) then
-            call dprep_sub(nx,ny,nz,i4time_now,bgmodel
-     +         ,bgpath,bgfnames,bgfcnt,outdir,filesfound)
-         endif
-         
-      enddo
-
-
+      read(a9(6:7),'(i2)') ntime
+      itime=1
+      do while(inittimes(itime).ne.ntime .and. itime.lt.maxtimes)
+         itime=itime+1
+      enddo   
       
+
+      if(inittimes(itime).eq.ntime) then 
+         print*, 'Dprep at time ',inittimes(itime),'for forecast of',
+     +        fcstlengths(itime), ' hours'
+
+         do while(filesfound.le.0 .and. i.le.maxdprepmodels)
+            bgpath_defined=.false.
+            bgmodel = initbgmodels(i)
+            bgpath = initbgpaths(i)
+            call s_len(bgpath,len)
+            if(len.gt.0) inquire(FILE=bgpath,EXIST=bgpath_defined)
+            if(bgmodel.eq.0.and..not.bgpath_defined) then
+               bgpath=laps_data_root(1:lendr)
+            else if(.not.bgpath_defined) then
+               print*,'Could not find directory ',bgpath
+               stop
+            endif
+
+
+
+
+            call get_acceptable_files(i4time_now,bgpath,bgmodel
+     +           ,bgfnames,max_files,oldest_forecast,0,use_analysis,
+     +           bgfcnt,-1,cmodel,nx,ny,nz,reject_files,reject_cnt)
+
+            i=i+1
+            if(bgfcnt.ge.1) then
+c     print*,nx,ny,nz,i4time_now,bgmodel,bgpath,
+c     +         bgfnames,bgfcnt,outdir,filesfound,bgfcnt
+               call dprep_sub(nx,ny,nz,i4time_now,bgmodel,bgpath,
+     +              bgfnames,bgfcnt,outdir,filesfound)
+            endif
+
+         
+         enddo
+
+
+         if(filesfound.le.0) then
+            print*,'ERROR: Could not find suitable file to initialize'
+c            stop
+         endif
+
+         filesfound=0
+         i=1
+         do while(filesfound.le.0 .and. i.le.maxdprepmodels)
+            bgmodel = bndybgmodels(i)
+            bgpath = bndybgpaths(i)
+
+
+
+            call get_acceptable_files(i4time_now,bgpath,bgmodel,
+     +           bgfnames,max_files,oldest_forecast,max_forecast_delta,
+     +           use_analysis,bgfcnt,fcstlengths(itime),cmodel,nx,ny,nz,
+     +           reject_files,reject_cnt)
+
+
+            print *, nx,ny,nz
+         
+            i=i+1
+            if(bgfcnt.gt.0) then
+               call dprep_sub(nx,ny,nz,i4time_now,bgmodel
+     +              ,bgpath,bgfnames,bgfcnt,outdir,filesfound)
+            endif
+         
+         enddo
+
+      else
+         print*, 'No dprep request for this time'
+      endif
       stop
  900  print *, 'ERROR: Could not open file ',nl_file,' to read'
       stop
@@ -187,11 +203,15 @@ c
             call get_laps_data(bgpath,
      .           i4time,nx,ny,nz,p,ht,th,uw,vw,rh,
      .           ht_sfc,p_sfc,mslp,th_sfc,rh_sfc,uw_sfc,vw_sfc,istatus)
-            call dprep_laps(i4time,nx,ny,nz,p,ht,th,uw,vw,rh,
-     .           ht_sfc,p_sfc,mslp,th_sfc,rh_sfc,uw_sfc,vw_sfc,istatus)
-            call get_standard_latitudes(lat1,lat2,istatus)
-            call get_standard_longitude(lon0,istatus)
-            call get_laps_corners(nx,ny,sw,ne)
+            if(istatus.eq.1) then
+               call dprep_laps(i4time,nx,ny,nz,p,ht,th,uw,vw,rh,
+     .              ht_sfc,p_sfc,mslp,th_sfc,rh_sfc,uw_sfc,vw_sfc,
+     .              istatus)
+            
+               call get_standard_latitudes(lat1,lat2,istatus)
+               call get_standard_longitude(lon0,istatus)
+               call get_laps_corners(nx,ny,sw,ne)
+            endif
          else if(bgmodel.eq.2) then
             ext = '.E48'
             gproj='LC'
