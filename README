@@ -264,7 +264,7 @@
 
      <pre>
      /home_disk/
-         raw_data/
+         raw_data/                                              (raw test data)
          geog/
              laps_terrain.tar
          laps-m-n-o.tar
@@ -305,7 +305,7 @@
      /data_disk/
          geog/
              laps_terrain.tar
-         raw_data/
+         raw_data/                                              (raw test data)
          laps/                         ($INSTALLROOT / --prefix in 'configure')
              etc/                                                (laps scripts)
              bin/                                                 (executables)
@@ -522,7 +522,7 @@
      (with a unique dataroot) for each domain if there is more than one. 
 
      prompt> cd $INSTALLROOT/etc
-     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT
+     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$INSTALLROOT
 
      The localization involves several operations.  The parameter files are 
      merged/updated with the repository versions if needed. The dimensions
@@ -882,10 +882,14 @@
                 ----  2.5.2  Ingest + Analysis Test ---
 
      For this type of test, you will want to download the 'rawdata*' tar files
-     into your raw data directory to start the processing of LAPS. Recall
-     that the raw data directory is on a separate tree than $LAPS_DATA_ROOT.
+     into your 'raw_data' directory to start the processing of LAPS. Recall
+     that the 'raw_data' directory is on a separate tree than $LAPS_DATA_ROOT.
      The time information will be needed in the form of 'data/time/systime.dat';
      this can be extracted from the 'lapsdata*' tar file.
+
+     The 'raw_data' directory is a convenient place to store test data. User
+     supplied raw data for operational runs can be stored anywhere on your
+     system, often outside of the LAPS trees.
 
      Note that the 'lapsdata*' tar files contain intermediate plus analysis
      output files only. The 'rawdata*' tar files supply much of the "raw" data
@@ -1088,11 +1092,11 @@
         'gridgen_model.exe'. This contains grids of latitude, longitude, 
         elevation, and land (vs. water) fraction.
 
-        The following error message, "FILE /U50N119W DOES NOT EXIST",
-        does not necessarily mean there is a problem. It signifies that 
+        The following output message, "topo_30s file /U50N119W does not exist",
+        does not necessarily mean there is a problem. It may signify that 
         your domain runs outside the available 30" data, and should still be 
-        covered by the 10' worldwide data, if your are using the 'topo_30s'
-        dataset.
+        covered by the 10' worldwide data, if you are using the 'topo_30s'
+        dataset. Other WARNINGs or ERRORs may be more significant.
 
           ----  2.7.2.1 MAP PROJECTION FUNCTIONALITY/LIMITATIONS  ---
 
