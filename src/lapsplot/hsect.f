@@ -1432,10 +1432,10 @@ c
             if(c_field .eq. 'mr')then ! Reflectivity data
 
 !               if(lapsplot_pregen)then
-                if(.false.)then
+                if(.true.)then
                     write(6,*)' Getting pregenerated radar data file'
 
-                    var_2d = 'R00'
+                    var_2d = 'R'
                     ext = 'lmr'
                     i4time_hour = (i4time_radar+laps_cycle_time/2)
      1                          /laps_cycle_time * laps_cycle_time
@@ -2710,9 +2710,13 @@ c             cint = -1.
               if(qtype .eq. '3')then
                  var_2d = 'RH3'
                  write(6,*)' Reading rh3 / ',var_2d
+                 call mklabel33(k_level,' LAPS RH     (rh3) %'
+     1                                 ,c33_label)     
               elseif(qtype .eq. 'l')then
                  var_2d = 'RHL'
                  write(6,*)' Reading rhl / ',var_2d
+                 call mklabel33(k_level,' LAPS RH     (liq) %'
+     1                                 ,c33_label)     
               endif
 
               call get_laps_3dgrid(i4time_ref,1000000,i4time_nearest
@@ -2722,8 +2726,6 @@ c             cint = -1.
               if(istatus.ne. 1)then
                  print*,'No plotting for the requested time period'
               else
-
-              call mklabel33(k_level,' LAPS Rel Humidity %',c33_label)
 
               clow = 0.
               chigh = +100.
@@ -3387,7 +3389,7 @@ c                   cint = -1.
 
             endif
 
-            c33_label = 'LAPS Sfc Background  '//fcst_hhmm//' '
+            c33_label = 'LAPS Sfc Bkgnd/Fcst  '//fcst_hhmm//' '
      1                  //ext(1:3)//'/'//var_2d(1:3)
 
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
@@ -4032,8 +4034,8 @@ c                   cint = -1.
                 if(asc_tim_9 .ne. '         ')then
                     call i4time_fname_lp(asc9_tim,I4time_lbl,istatus)       
                     call cv_i4tim_asc_lp(i4time_lbl,asc_tim_24,istatus)      
-                    asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)
-     1                                           //' '      
+!                   asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)
+!    1                                           //' '      
                 else
                     asc_tim_24 = '                        '
                 endif
@@ -4159,7 +4161,7 @@ c                   cint = -1.
         if(asc_tim_9 .ne. '         ')then
             call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
             call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
-            asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
+!           asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
         else
             asc_tim_24 = '                        '
         endif
@@ -4324,7 +4326,7 @@ c                   cint = -1.
 
         call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
         call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
-        asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
+!       asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
 !       Set Map Background stuff
         if(c_display .eq. 'r' .and. i_overlay .eq. 0)then
@@ -4555,7 +4557,7 @@ c                   cint = -1.
 
         call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
         call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
-        asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
+!       asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
 !       Set Map Background stuff
         if(c_display .eq. 'r' .and. i_overlay .eq. 0)then
@@ -4616,7 +4618,7 @@ c                   cint = -1.
 
         call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
         call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
-        asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
+!       asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
         call setusv_dum(2hIN,icolors(i_overlay))
 
@@ -4680,7 +4682,7 @@ c                   cint = -1.
 
         call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
         call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
-        asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
+!       asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
 !       Set Map Background stuff
         if(c_display .eq. 'r' .and. i_overlay .eq. 0)then
@@ -4733,7 +4735,7 @@ c                   cint = -1.
 
         call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
         call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
-        asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
+!       asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
         call setusv_dum(2hIN,icolors(i_overlay))
 
@@ -4746,8 +4748,13 @@ c                   cint = -1.
 !    1                (cpux(320),cpux(ity),c33_label,33,2,0,0)
 !                call pwrity
 !    1                (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
-     1                                                      ,i_overlay)
+
+!                if(iflag .ge. 1)then
+!                    c33_label = 'Sfc Obs'
+!                endif
+
+!                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+!    1                                                      ,i_overlay)
             endif
 
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
@@ -4775,7 +4782,8 @@ c                   cint = -1.
                 write(6,*)' Calling plot_station_locations: 5 '
      1                   ,iflag,c_metacode       
                 call plot_station_locations(i4time_file,lat,lon
-     1                      ,NX_L,NY_L,iflag,maxstns,c_field,zoom)       
+     1                      ,NX_L,NY_L,iflag,maxstns,c_field,zoom
+     1                      ,asc_tim_24,c33_label,i_overlay)       
             endif
 
         endif
@@ -4822,8 +4830,9 @@ c                   cint = -1.
         return
         end
 
-        subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag,
-     1                                    maxstns,c_field,zoom)
+        subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag
+     1                                   ,maxstns,c_field,zoom,atime
+     1                                   ,c33_label,i_overlay)
 
 !       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
@@ -4842,7 +4851,7 @@ c                   cint = -1.
         character stations(maxstns)*3, wx_s(maxstns)*8      ! c5_stamus
 
 c
-        character atime*24, infile*255
+        character atime*24, infile*255, c33_label*33
         character directory*150,ext*31
         character*255 c_filespec
         character*9 c9_string, asc_tim_9
@@ -4913,8 +4922,6 @@ c
         zoom_eff = max((zoom / 3.0),1.0)
         du2 = du / zoom_eff
 
-        call get_border(ni,nj,x_1,x_2,y_1,y_2)
-        call set(x_1,x_2,y_1,y_2,1.,float(ni),1.,float(nj))
 !       call setusv_dum(2HIN,11)
 
         write(6,*)' plot_station_locations... ',iflag
@@ -4926,7 +4933,21 @@ c
      1            ,4x,'default=none      ? ',$)
             read(5,14)c3_presob
  14         format(a)
+
+            if(c_field(1:1) .eq. 'q')then ! LSO_QC file
+                c33_label = 'Sfc QC Obs   ('//c3_presob//' pres)'
+            else
+                c33_label = 'Sfc Obs      ('//c3_presob//' pres)'
+            endif
+
+            call upcase(c33_label,c33_label)
+            call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+            call write_label_lplot(ni,nj,c33_label,atime,i_overlay)       
+
         endif
+
+        call get_border(ni,nj,x_1,x_2,y_1,y_2)
+        call set(x_1,x_2,y_1,y_2,1.,float(ni),1.,float(nj))
 
         call get_r_missing_data(r_missing_data,istatus)
         call get_sfc_badflag(badflag,istatus)
@@ -5075,13 +5096,15 @@ c
         end
 
 
-        subroutine write_label_lplot(ni,nj,c33_label,asc_tim_24
+        subroutine write_label_lplot(ni,nj,c33_label,asc_tim_24_in
      1                                                      ,i_overlay)        
 
         character*33 c33_label
-        character*24 asc_tim_24
+        character*24 asc_tim_24,asc_tim_24_in
 
         common /image/ n_image
+
+        asc_tim_24 = asc_tim_24_in(1:14)//asc_tim_24_in(16:17)//' '      
 
         i_label = i_overlay + n_image
 
