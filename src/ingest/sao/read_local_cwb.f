@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
       subroutine read_local_cwb ( inpath, maxobs_in, badflag, ibadflag,
-     ~           i4time_sys, stname, lats, lons, elev,
+     ~           i4time_sys, rptTp, stnTp, stname, lats, lons, elev,
      ~           t, t24max, t24min, td, rh, pcp1hr, pcp3hr, pcp6hr,
      ~           pcp24hr, dd, ff, wgdd, wgff, p, mslp, pcc, pc, sr, st,
      ~           num, istatus )
@@ -48,7 +48,8 @@ cdis
       integer, parameter :: maxShp = 110
 
       character(*)  stname(maxobs), inpath
-      integer        pcc(maxobs)
+      character(6)  rptTp(maxobs), stnTp(maxobs)
+      integer       pcc(maxobs)
       real  lats(maxobs), lons(maxobs), elev(maxobs)
       real  t(maxobs), t24max(maxobs), t24min(maxobs), td(maxobs)
       real  rh(maxobs), pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
@@ -57,6 +58,7 @@ cdis
       real  sr(maxobs), st(maxobs)
 
       stname = '     '
+      rptTp  = 'LDAD'
       pcc    = ibadflag
       lats   = badflag
       lons   = badflag
@@ -91,19 +93,25 @@ cdis
       nq= maxAgr
 
       call read_agr_cwb (inpath, maxAgr, badflag, i4time_sys,
-     ~     stname(np:nq), lats(np:nq), lons(np:nq), elev(np:nq), 
-     ~     t(np:nq), t24max(np:nq), t24min(np:nq), td(np:nq), rh(np:nq),       
-     ~     pcp1hr(np:nq), pcp3hr(np:nq), pcp6hr(np:nq), pcp24hr(np:nq),
-     ~     ff(np:nq), wgff(np:nq), wgdd(np:nq), p(np:nq), sr(np:nq), 
-     ~     st(np:nq), numAgr, istatusAgr)
+     ~                   stnTp(np:nq), stname(np:nq), 
+     ~                   lats(np:nq), lons(np:nq), elev(np:nq), 
+     ~                   t(np:nq), t24max(np:nq), t24min(np:nq), 
+     ~                   td(np:nq), rh(np:nq),       
+     ~                   pcp1hr(np:nq), pcp3hr(np:nq), 
+     ~                   pcp6hr(np:nq), pcp24hr(np:nq),
+     ~                   ff(np:nq), wgff(np:nq), wgdd(np:nq), 
+     ~                   p(np:nq), sr(np:nq), st(np:nq),
+     ~                   numAgr, istatusAgr)
 
       np= np +numAgr
       nq= np +maxCum
 
       call read_cum_cwb (inpath, maxCum, badflag, i4time_sys,
-     ~     stname(np:nq), lats(np:nq), lons(np:nq), elev(np:nq),
-     ~     pcp1hr(np:nq), pcp3hr(np:nq), pcp6hr(np:nq), pcp24hr(np:nq),
-     ~     numCum, istatusCum)
+     ~                   stnTp(np:nq), stname(np:nq), 
+     ~                   lons(np:nq), lats(np:nq), elev(np:nq),
+     ~                   pcp1hr(np:nq), pcp3hr(np:nq), 
+     ~                   pcp6hr(np:nq), pcp24hr(np:nq),
+     ~                   numCum, istatusCum)
 
       npC= np
       num= numAgr +numCum
@@ -111,14 +119,17 @@ cdis
       nq=  np +maxShp
 
       call read_shp_cwb (inpath, maxShp, badflag, i4time_sys,
-     ~     stname(np:nq), lats(np:nq), lons(np:nq), elev(np:nq),
-     ~     p(np:nq), t(np:nq), dd(np:nq), ff(np:nq), numShp, istatusShp)       
+     ~                   stnTp(np:nq), stname(np:nq),
+     ~                   lons(np:nq), lats(np:nq), elev(np:nq),
+     ~                   p(np:nq), t(np:nq), dd(np:nq), ff(np:nq), 
+     ~                   numShp, istatusShp)       
 
       nt= numAgr +numCum +numShp
 
       do j= np,nt
       do i= npC,num
          if ( stname(i) == stname(j) ) then
+            stnTp(i)= stnTp(j)
             p(i)= p(j)
             t(i)= t(j)
             dd(i)= dd(j)
@@ -126,6 +137,9 @@ cdis
          endif
       enddo 
       enddo 
+      do i= 1,num
+         write(*,*) i,rptTp(i), stnTp(i), stname(i), lats(i), lons(i)
+      enddo
 
       if ( istatusAgr == 1 .and. istatusCum == 1 
      ~                     .and. istatusShp == 1 ) then
@@ -141,7 +155,7 @@ cdis
 
 
       subroutine read_agr_cwb (inpath, maxobs, badflag, i4time_sys,
-     ~                         stname, lats, lons, elev,
+     ~                         stnTp, stname, lats, lons, elev,
      ~                         t, t24max, t24min, td, rh,               ! O
      ~                         pcp1hr, pcp3hr, pcp6hr, pcp24hr,         ! O
      ~                         ff, wgff, wgdd, p, sr, st,               ! O
@@ -163,9 +177,9 @@ c======================================================================
 
       integer  istart(30), iend(30)
  
-      character(*)  :: stname(maxobs), inpath
+      character(*)  :: stnTp(maxobs), stname(maxobs), inpath
       character(13) :: cvt_i4time_wfo_fname13, a13time_eat
-      character     :: filename*80, line*180, c5_blank*5
+      character     :: filename*80, line*180
  
 c                        Stuff for the agricultural data.
       real :: lat_master(maxobs),lon_master(maxobs),elev_master(maxobs)
@@ -180,8 +194,8 @@ c               Get the agricultural metadata (station information).
          return
       endif
 
-      c5_blank= '     '
-      stname=  c5_blank
+      stnTp=   'AGR'
+      stname=  '     '
       t=       badflag
       t24max=  badflag
       t24min=  badflag
@@ -782,7 +796,7 @@ c               stop reading and open another file when meet ^M
 
 
       subroutine read_cum_cwb (inpath, maxobs, badflag, i4time_sys,
-     ~                         stname, lats, lons, elev, 
+     ~                         stnTp, stname, lats, lons, elev, 
      ~                         pcp1hr, pcp3hr, pcp6hr, pcp24hr,      ! O
      ~                         num, istatus)                         ! O
 c
@@ -801,7 +815,7 @@ c
 
       integer :: dataMin(maxobs), dMin(maxobs,num23), d(12), flag
  
-      character(*)  :: stname(maxobs), inpath
+      character(*)  :: stnTp(maxobs), stname(maxobs), inpath
       character(80) :: filename
       character(13) :: cvt_i4time_wfo_fname13, a13time_sys
       character(4)  :: stn(maxobs,num23)
@@ -829,12 +843,13 @@ c            Get the rain gauge metadata (station information).
 c   fill the output arrays with something, then open the file to read
       istatus= 0
       flag=    0
+      stnTp=   'CUM'
+      stn=     '     '
+      stname=  '     '
       p1hrQ=   ' '
       pcp1hrQ= ' '
       pcp3hrQ= ' '
       pcp6hrQ= ' '
-      stn=     '     '
-      stname=  '     '
       p1hr=    badflag
       pcp1hr=  badflag
       pcp3hr=  badflag
@@ -1068,11 +1083,9 @@ c                        Hit end of file...that's it.
  
 
 
-      subroutine read_shp_cwb (inpath, maxobs, badflag,
-     ~                         i4time_sys, stname,      
-     ~                         lats, lons, elev,                      ! O
-     ~                         p, t, dd, ff,                          ! O
-     ~                         num, istatus)                          ! O
+      subroutine read_shp_cwb (inpath, maxobs, badflag, i4time_sys,
+     ~                         stnTp, stname, lats, lons, elev,       ! O
+     ~                         p, t, dd, ff, num, istatus)            ! O
  
 c======================================================================
 c
@@ -1084,13 +1097,13 @@ c======================================================================
       real lats(maxobs), lons(maxobs), elev(maxobs)
       real p(maxobs), t(maxobs), dd(maxobs), ff(maxobs)
 
-      character(*)  :: stname(maxobs), inpath
+      character(*)  :: stnTp(maxobs), stname(maxobs), inpath
       character(80) :: filename
       character(13) :: cvt_i4time_wfo_fname13, a13time_eat
 
 c                         stuff for the shp metadata.
       real  lat_master(maxobs), lon_master(maxobs), elev_master(maxobs)       
-      character(5) :: stn_name_master(maxobs), c5_blank
+      character(5) :: stn_name_master(maxobs)
       character(4) :: stn_id_master(maxobs), stn_id(maxobs)
  
 c                    Get the shp metadata (station information).
@@ -1106,8 +1119,8 @@ c                    Get the shp metadata (station information).
 c   fill the output arrays with something, then open the file to read
  
       istatus= 0
-      c5_blank= '     '
-      stname= c5_blank 
+      stnTp=    'SHP'
+      stname=   '     '
       p=  badflag
       t=  badflag
       dd= badflag
