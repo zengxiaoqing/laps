@@ -607,6 +607,18 @@ c read in laps lat/lon and topo
 
             if(.not. l_sta)then ! Get I,J of Waypoint
                 read(c20_sta,*,err=85)xsta,ysta
+
+                write(6,86)xsta,ysta
+
+!               Convert from (0-1) space to gridpoint space
+                if(xsta .ge. 0.0 .and. xsta .lt. 1.0)then
+                    xsta = 1.0 + xsta * float(NX_L-1)
+                endif
+
+                if(ysta .ge. 0.0 .and. ysta .lt. 1.0)then
+                    ysta = 1.0 + ysta * float(NY_L-1)
+                endif
+
                 write(6,86)xsta,ysta
 86              format(/2x,'Waypt x,y = ',2f7.2)
 
