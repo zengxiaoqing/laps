@@ -836,10 +836,12 @@ c
 
        I4_elapsed = ishow_timer()
 
-       write(6,*)' Elapsed time / nobs = ',i4_elapsed,n_obs_b
+       i4t_since_sys = i4time_now_gg() - i4time_sys
 
-       if(n_obs_b    .lt. local_obs_thresh .and. 
-     1    i4_elapsed .lt. i4wait_local_obs_max       )then
+       write(6,*)' i4t_since_sys / nobs = ',i4t_since_sys,n_obs_b
+
+       if(n_obs_b       .lt. local_obs_thresh .and. 
+     1    i4t_since_sys .lt. i4wait_local_obs_max       )then
            write(6,*)' Waiting 60 sec for more obs'
            call snooze_gg(60.,istatus)
            go to 10
