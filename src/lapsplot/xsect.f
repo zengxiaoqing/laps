@@ -668,6 +668,8 @@ c read in laps lat/lon and topo
      1  /
      1  /'           TEMP: [t,pt,tb,pb] (T, Theta, T Blnc, Theta Blnc)'       
      1  /
+     1  /'           HT: [ht] (Height)'       
+     1  /
      1  /'           HUMID: sh,rh,rl (Specific/Relative Humidity)'
      1  /
      1  /'           ts (Thetae Sat), tw (wetbulb)'
@@ -1945,6 +1947,71 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             cint = 5. / density
             i_contour = 1
             c_label = 'LAPS Potl Temp (Balanced)     K  '
+
+        elseif(c_field .eq. 'ht')then ! height field
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+            if(c_prodtype .eq. 'A')then
+                iflag_temp = 1 ! Returns Ambient Temp (K)
+
+!               Obtain height field
+                ext = 'lt1'
+                var_2d = 'HT'
+                call get_laps_3dgrid(
+     1                   i4time_ref,10000000,i4time_ht,
+     1                   NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,field_3d,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Error locating height field'
+                    go to 100
+                endif
+
+                c_label = 'LAPS Height    Vert X-Sect  dm'
+
+                call make_fnam_lp(i4time_nearest,a9time,istatus)
+
+            elseif(c_prodtype .eq. 'B' .or. 
+     1             c_prodtype .eq. 'F')then
+                var_2d = 'HT'
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+                if(c_prodtype .eq. 'B')then
+                    c_label = 'LAPS  Bkgnd   HT     '//fcst_hhmm
+     1                                                 //'  dm'
+                elseif(c_prodtype .eq. 'F')then
+                    c_label = 'LAPS  FUA     HT     '//fcst_hhmm
+     1                                                 //'  dm'
+                endif
+
+            else
+                write(6,*)' Sorry, not yet supported'
+                goto100
+
+            endif
+
+            call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            clow = -100.
+            chigh = +2000.
+            cint = 100. / density
+            i_contour = 1
+            scale = 10.
 
         elseif(c_field .eq. 't ')then
             call input_product_info(i4time_ref              ! I
