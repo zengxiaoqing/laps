@@ -1055,6 +1055,11 @@ c---------------------------------------------------------------
           return
       endif
 
+      if(lli_orig_cmn.eq.0)lli_orig_cmn=1
+      if(llj_orig_cmn.eq.0)llj_orig_cmn=1
+      if(uri_orig_cmn.eq.0)uri_orig_cmn=1
+      if(urj_orig_cmn.eq.0)urj_orig_cmn=1
+
       lli_orig=lli_orig_cmn
       llj_orig=llj_orig_cmn
       uri_orig=uri_orig_cmn
@@ -1082,6 +1087,7 @@ c
           return
       endif
 
+      if(ratio_to_parent_cmn.eq.0)ratio_to_parent_cmn=1
       iratio=ratio_to_parent_cmn
 
       istatus = 1
@@ -1108,6 +1114,7 @@ c
           return
       endif
 
+      if(parent_id_cmn.eq.0)parent_id_cmn=1
       parent_id=parent_id_cmn
 
       istatus = 1
@@ -1480,8 +1487,9 @@ c
 
       subroutine get_earth_radius(erad,istatus)
 
-c     erad = 6367000.
-      erad = 6371200.
+      include 'constants.inc'
+
+      erad = eradius
 
       istatus = 1
 
