@@ -15,7 +15,7 @@
          2.1.4 ..................  C Compiler
          2.1.5 ..................  FORTRAN Compiler
          2.1.6 ..................  Disk Space
-         2.1.7 ..................  Memory Etc.
+         2.1.7 ..................  Memory Etc. (ulimit)
          2.1.8 ..................  Plotting / NCAR graphics library (optional)
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
@@ -184,14 +184,16 @@
      and 'idt'.
 
      'Lapsplot' is designed to work with version 3.2 (or higher) of NCAR 
-     graphics. The environment variable $NCARG_ROOT may need to be set. 
-     Check that 'ncargf77' or 'ncargf90' is in your path, as appropriate.
-     The script 'ncargf90' (if you're using this one) should be using the 
-     appropriate FORTRAN compiler; you may have to edit the script.
+     graphics. The environment variable $NCARG_ROOT should be set when
+     compiling or running 'lapsplot.exe'. 
 
-     Lapsplot is built as a special option to make, simply type 
+     Lapsplot is built as a special option to 'make', simply type 
      'make lapsplot' or 'make install_lapsplot'. 
      It is not built with a plain run of 'make'.
+     Check that 'ncargf77' or 'ncargf90' is in your path, depending on which
+     FORTRAN compiler you are using.
+     The script 'ncargf90' (if you're using this one) should be using the 
+     appropriate FORTRAN compiler; you may have to edit the script.
 
      'Lapsplot' can be modified to show political boundaries outside of the 
      U.S. The following data files are relevant from the 'static/ncarg' 
@@ -689,18 +691,24 @@
      flags by modifying 'src/include/makefile.inc' according to what type of 
      platform you are on. Hopefully the flags will work OK on your particular
      platform. If you want to change the flags from the default set, you 
-     can provide command line arguments to either the 'configure' script or
-     to the Makefile.  For more information on flags to 'configure' run 
+     can provide command line arguments to the 'configure' script.
+     For more information on passing in command line flags to 'configure' run
      $ ./configure --help
 
-     If you find that the default compiler flags don't work for your
-     platform or that your platform has no default, you'll need to experiment 
-     to find the right set of flags.  Experiment (after running configure) in 
-     'src/include/makefile.inc' as this will automatically control the flags 
-     used throughout laps. If you find flags that work for your platform and 
-     would like us to add them to the defaults in 'configure' please let us 
-     know via e-mail.
+     A second method of modifying the flags is to edit 
+     'src/include/makefile.inc'. If you find that the default compiler flags 
+     don't work for your platform or that your platform has no default, you'll
+     need to experiment to find the right set of flags.  Experiment (after 
+     running 'configure') in 'src/include/makefile.inc' as this will 
+     automatically control the flags used throughout laps. If you find flags 
+     that work for your platform and would like us to add them to the defaults
+     in 'configure' please let us know via e-mail. Some examples based on
+     our experience are shown as follows...
 
+     For Solaris platforms, remove the "-Wl" from LIBPATHFLAG in 
+     'src/include/makefile.inc', as well as where it occurs in 
+     'src/ingest/sfc_qc/Makefile'. This is done after running 'configure'.
+    
 ---------------- 2.7 ------ I/O of LAPS gridded files -------------------------
 
      Once the laps library is compiled (as outlined above), laps grids can
