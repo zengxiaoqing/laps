@@ -161,6 +161,8 @@ c
 
         write(6,*)' Subroutine insert_sat...'
 
+        r_missing_ht = 1e30
+
         idelt_max = nint(50000. / grid_spacing_m)
 
         idelt(1) = -idelt_max
@@ -520,8 +522,8 @@ c
             htbase = htbase_init
 
 !           Initialize lowest SAO cloud base & highest SAO/CO2 top
-            ht_sao_base = 1e30
-            ht_sao_top  = 1e30
+            ht_sao_base = r_missing_ht
+            ht_sao_top  = r_missing_ht
 
 !           Locate lowest SAO cloud base
             cldcv_below = 0.
@@ -551,7 +553,8 @@ c
  186        continue
 
 !           if(.false.)then ! Search for nearby SAO cloud layers
-            if(ht_sao_base .eq. 1e30)then ! Search for nearby SAO cloud layers
+            if(ht_sao_base .eq. r_missing_ht)then 
+                                          ! Search for nearby SAO cloud layers
                                           ! because the satellite says cloud
                                           ! and the SAO doesn't
               n_no_sao1 = n_no_sao1 + 1
@@ -575,7 +578,7 @@ c
                       cldcv_below = cldcv_sao(ii,jj,k)
                     enddo ! k
 
- 191                if(ht_sao_base .ne. 1e30)then
+ 191                if(ht_sao_base .ne. r_missing_ht)then
                         i_sao = ii
                         j_sao = jj
                         goto201
@@ -594,8 +597,8 @@ c
             if(        ( istat_vis_added_a(i,j) .eq. 1   ! Vis/3.9 Sat present 
      1              .or. istat_39_add_a(i,j)    .eq. 1 )
      1                                .AND.              ! and
-     1                 ( ht_sao_base .eq. 1e30 .or.      ! No obvious SAO base
-     1                   ht_sao_base .gt. cldtop_m(i,j) )
+     1                 ( ht_sao_base .eq. r_missing_ht   ! No obvious SAO base
+     1              .or. ht_sao_base .gt. cldtop_m(i,j) )
      1                                                      )then 
               n_no_sao_vis = n_no_sao_vis + 1
               l_no_sao_vis = .true.
@@ -611,7 +614,8 @@ c
      1                     ,i,j,mode_sao     
               endif
 
-            elseif(ht_sao_base .eq. 1e30)then ! Non-vis Sat with no SAO cloud
+            elseif(ht_sao_base .eq. r_missing_ht)then 
+                                                ! Non-vis Sat with no SAO cloud
               n_no_sao2 = n_no_sao2 + 1
               mode_sao = 2
               cover=sat_cover
@@ -707,7 +711,7 @@ c
               endif ! .true.
 
             elseif(ht_sao_top .gt. cldtop_m(i,j) .and. 
-     1             ht_sao_top .ne. 1e30 .and. .true.)then 
+     1             ht_sao_top .ne. r_missing_ht .and. .true.)then 
                                                     ! Satellite top below 
                                                     ! ceiling (lowest SAO base)
               mode_sao = 4
