@@ -189,16 +189,24 @@ if ($6 != p) then
 
     rm -rf $LAPS_DATA_ROOT/*_save
 
+    if (-e /home/oplapb/jet) then
+        setenv QSPN "-q usfsfire"
+    else if (-e /home/oplapb/ijet) then
+        setenv QSPN "-q usfsfire"
+    else
+        setenv QSPN " "
+    endif
+
     if (-e $LAPS_DATA_ROOT/lapsprd) then
         setenv config_domain f
         echo " "
         echo "Calling window_domain_rt.pl, config_domain = f"
-        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl    -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT -w laps
+        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl    -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT -w laps $QSPN
     else
         setenv config_domain t
         echo " "
         echo "Calling window_domain_rt.pl, config_domain = t"
-        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl -c -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT -w laps
+        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl -c -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT -w laps $QSPN
     endif
 
 #   cd $LAPS_SRC_ROOT
