@@ -5,11 +5,18 @@
  bgmodels=5,2,0,
  max_forecast_delta=6,
  oldest_forecast=12,
- forecast_length=1,
+ forecast_length=12,
  use_analysis=.false.,
  cmodel='RUC40_NATIVE','ETA48_CONUS','LAPS',
  itime_inc =0,
  smooth_fields = .false.,
+ /
+ &interp_controls
+ max_delta_interp=6,
+ oldest_fcst_interp=12,
+ fcst_len_interp=1,
+ use_anal_interp=.false.,
+ itime_inc_interp=0,
  /
 c
 c bgpaths is a list of paths to background models in order of preference
