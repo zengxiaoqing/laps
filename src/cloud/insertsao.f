@@ -74,7 +74,7 @@ cdis
         data lso_ext /'lso'/
         logical l_try_again
 
-        logical l_dry
+        logical l_dry, l_auto
 
 !       Arrays for reading in the SAO data from the LSO files
         Real*4   elev(maxstns),t(maxstns),td(maxstns),dd(maxstns)
@@ -203,8 +203,10 @@ c place station at proper laps grid point
      1                                          )then  ! New LSO file format
               if(obstype(i)(8:8) .eq. 'A')then         ! Automated Station 
                                                        ! (12000' limit)
+                  l_auto = .true.
                   ht_defined = elev(i) + 12000./3.281
               else                                     ! Non-Automated
+                  l_auto = .false.
                   ht_defined = 99999.
               endif
 
@@ -213,7 +215,7 @@ c place station at proper laps grid point
      1                 ,'cloud layers - reject: ',obstype(i)
      1                 ,' ',c_stations(i)
 
-              goto 125
+              goto 125                                 ! Loop to next station
 
 !             if(obstype(i)(5:5) .ne. ' ' .and.
 !    1           obstype(i)(4:7) .ne. 'AMOS')then      ! Automated Station 
@@ -247,12 +249,8 @@ c place station at proper laps grid point
               l_out_of_bounds = .true.
           else
               l_out_of_bounds = .false.
-              name_array(ilaps,jlaps            )=c_stations(i)(1:1)
-!             name_array(ilaps,min(jlaps+1,nj))  =c_stations(i)(1:1)
-!             name_array(ilaps,max(jlaps-1,1   ))=c_stations(i)(1:1)
+              name_array(ilaps,jlaps)=c_stations(i)(1:1)
           endif
-
-!         if(l .gt. 0)n_cld_snd = n_cld_snd + 1
 
           cvr_snd(n_cld_snd) = 0.
 
@@ -305,7 +303,7 @@ c place station at proper laps grid point
 
                 endif ! Clouds
 
-              endif
+              endif ! ht_base > ht_defined
 
 C CLOUDS ARE NOW IN MSL
 !             Fill in clear for entire column for METAR or up to ht_base for 
@@ -326,6 +324,18 @@ C CLOUDS ARE NOW IN MSL
                   write(6,*)' Filled in ',amt_ret(i,l),' from bottom'
      1                     ,' of domain up to '
      1                     ,nint(min(ht_base,ht_defined)),' meters'     
+
+                  if(.false.)then                         ! SKC is not yet used
+                      if(amt_ret(i,l) .eq. ' CLR' .and. 
+     1                                            .not. l_auto)then
+                          write(6,*)' WARNING: CLR reported for '
+     1                             ,'non-automated station'
+                      elseif(amt_ret(i,l) .eq. ' SKC' .and.          ! Converse
+     1                                                  l_auto)then
+                          write(6,*)' WARNING: SKC reported for '
+     1                             ,'automated station'
+                      endif
+                  endif ! .false.
 
 !                 go to 125 ! Loop to next station
               endif
@@ -349,7 +359,7 @@ C CLOUDS ARE NOW IN MSL
               enddo
 
               if(amt_ret(i,l).eq.' FEW')then
-                  cover=.05
+                  cover=.125
                   ht_top=ht_base+1000.
                   do k=1,nk
 
@@ -382,7 +392,7 @@ C CLOUDS ARE NOW IN MSL
               endif
 
               if(amt_ret(i,l).eq.' SCT')then
-                  cover=.25 ! .3
+                  cover=.44
                   ht_top=ht_base+1000.
                   do k=1,nk
 
@@ -448,7 +458,7 @@ C CLOUDS ARE NOW IN MSL
               ENDIF
 
               if(amt_ret(i,l).eq.' BKN')then
-                  cover=.7
+                  cover=.75
                   ht_top=ht_base+cld_thk(ht_base) ! 1500.
 
                   do k=1,nk
