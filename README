@@ -85,7 +85,10 @@
      $ ./configure --prefix=/usr/local/laps --datadir=/data/fxa/laps
      
      Data directories for laps can be specified at runtime and a single set of
-     binaries can support several data directories.
+     binaries can support several data directories. Note that the data 
+     directory is currently restricted to 38 characters in length. We
+     hope to increase this in the future.
+
 
      The terrain data files now come in a seperate tar file from the
      rest of the LAPS distribution.  This is file laps_terrain.tar.gz
