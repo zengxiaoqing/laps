@@ -59,6 +59,8 @@
            call ingest_raob(path_to_raw_raob,c8_raob_format,i4time_sys
      1                     ,lun_out)
 
+           call s_len(c8_project,lenc8)
+
 !          Read Dropsonde data
            if(c8_project .eq. 'CWB')then       
                c8_raob_format = c8_project
@@ -67,7 +69,7 @@
                call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format
      1                           ,lun_out)
 
-           elseif(c8_project .eq. 'AIRDROP')then       
+           elseif(c8_project(1:min(3,lenc8)) .eq. 'AIR')then       
                c8_raob_format = 'SND'
                write(6,*)
                write(6,*)' Call ingest_drpsnd, format=',c8_raob_format       
