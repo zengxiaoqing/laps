@@ -155,14 +155,12 @@
      IBM rs6000 AIX3.25 and AIX4.
      HP         HPUX 10.20
      SunOS (Solaris) 5.6     requires f90
-     IRIX64          6.4     works using f77 but requires namelist end delimiter 
+     IRIX64          6.4     works using f77 but requires namelist end delimiter
                              be changed from / to $
 
-     other platforms may be supported.
-
-
-     We welcome suggestions on how to modify LAPS for other platforms, though 
-     we cannot guarantee the portability of LAPS to these additional platforms.
+     We are working on adding more supported platforms. We welcome suggestions
+     on how to modify LAPS for other platforms, though we cannot yet guarantee
+     the portability of LAPS to these additional platforms.
 
                       --- 2.2.1   NetCDF library   ---
  
@@ -221,11 +219,6 @@
      90 compiler, or at least an f77 compiler that has f90 extensions
      allowing for automatic arrays. LAPS will not work on a strict f77 
      compiler that does not allow automatic arrays.
-
-     The f77 compiler with f90 extensions may in fact be the best option at the
-     moment as we are still getting some bugs out that show up with the f90
-     compiler.
-
 
                   ---  2.4    Raw data ingest   ---
 
