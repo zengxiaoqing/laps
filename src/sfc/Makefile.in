@@ -30,7 +30,7 @@ LAPSLIBS = $(LAPSROOT)/src/lib/temp/libtemp.a  \
            $(LAPSROOT)/src/lib/liblaps.a  \
            $(LAPSROOT)/src/lib/mthermo/libmthermo.a
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/temp/libtemp.a  \
+DBLAPSLIBS = $(LAPSROOT)/src/lib/temp/libdebugtemp.a  \
              $(LAPSROOT)/src/lib/libdebuglaps.a  \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  
 
@@ -58,7 +58,7 @@ SRC   = mdatlaps.f \
 	laps_routines.f \
 	qc_data.f 
 
-MAIN=laps_sfc.f
+MAIN=laps_sfc.f $(LAPSROOT)/src/lib/block_data.f
 
 
 
