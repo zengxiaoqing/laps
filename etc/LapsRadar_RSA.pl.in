@@ -225,6 +225,7 @@ if($fxa_sys!=0){
     $radar = $lapsrad[$i];
     chomp($radar);
     $radar =~ tr/A-Z/a-z/;
+    print "Checking radar: $radar i = $i\n";
     opendir(RADAR, "/data/fxa/radar/$radar/Z/elev0_5/res2/level16");
     @files = readdir(RADAR);
     closedir(RADAR);
@@ -237,12 +238,12 @@ if($fxa_sys!=0){
           $count += 1;
         }
       }
-      if ($count > 0) {
-        $found = $true;
-      } 
-      if (($i == 1) && ($found == $false)) {
-        print "Home Radar $homeRadar_U is not on line at this time.\n"
-      }
+    }
+    if ($count > 0) {
+      $found = $true;
+    } 
+    if (($i == 0) && ($found == $false)) {
+      print "Home Radar $homeRadar_U is not on line at this time.\n"
     }
     $i++;
   }
