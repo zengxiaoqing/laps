@@ -16,6 +16,8 @@ c
           sequence
 
           real rms_wind
+          real rms_temp
+          real rms_dewpoint
 
 	end type sfc_nl_type
 
