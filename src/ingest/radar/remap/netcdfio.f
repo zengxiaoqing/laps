@@ -59,7 +59,7 @@ cdis
        character*13 a9_to_rsa13
 
        save a9_time, i_nbr_files_raw, i_nbr_files_2nd
-       save i4times_raw
+       save i4times_raw, i4times_lapsprd, i_nbr_lapsprd_files
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
@@ -130,6 +130,8 @@ c      Determine filename extension
                call get_file_names(c_filespec,i_nbr_files_2nd,c_fnames
      1                            ,max_files,istatus)
                if(istatus .ne. 1)then
+                   write(6,*)' istatus returned from get_file_names ='        
+     1                      ,istatus
                    return
                endif
            endif
@@ -187,8 +189,23 @@ c      Determine filename extension
            write(6,*)' Output filespec = ',c_filespec(1:lenspec)
 
 !          Get i4times of output files 
-           call get_file_times(c_filespec,max_files,c_fnames
-     1                   ,i4times_lapsprd,i_nbr_lapsprd_files,istatus)
+           if(itimes .eq. 1)then
+               call get_file_times(c_filespec,max_files,c_fnames
+     1                            ,i4times_lapsprd,i_nbr_lapsprd_files       
+     1                            ,istatus)
+
+           else ! more efficiency for subsequent radars
+               i_nbr_lapsprd_files = i_nbr_lapsprd_files + 1
+               i4times_lapsprd(i_nbr_lapsprd_files) = i4time_process
+               if(i4time_process .eq. 0)then
+                   write(6,*)' WARNING: i4time_process = 0'
+               else
+                   write(6,*)' adding to i4times_lapsprd:'
+     1                      ,i4times_lapsprd(i_nbr_lapsprd_files)
+               endif
+
+           endif
+               
            write(6,*)' # of output files = ',i_nbr_lapsprd_files
            
            i4time_process = 0
