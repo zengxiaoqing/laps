@@ -674,12 +674,13 @@ c
 c     Original:  07-18-95  P. Stamus, NOAA/FSL
 c     Changes:  P. Stamus  08-25-97  Return badflag if Temp < 75F
 c                                    Change units returned to K.
+c                          01-20-98  T in as deg K.
 c
 c     Notes:
 c
 c       1.  Inputs:
 c                    rh = Relative Humidity (0 to 100 %)
-c                    t  = Temperature (deg F)
+c                    t  = Temperature (deg K)
 c	             ni, nj  = Grid dimensions
 c                    badflag = Bad flag value
 c
@@ -696,13 +697,15 @@ c
       do j=1,nj
       do i=1,ni
 c
-	 if(t(i,j) .lt. 75.) then
+	 temp = ( 1.8 * (t(i,j) - 273.15) ) + 32.         ! K to F
+c
+	 if(temp .lt. 75.) then
 	    hi(i,j) = badflag
 
 	 else
 	    rh1 = rh(i,j)                                  ! %
 	    rh2 = rh1 * rh1
-	    t1 = ( 1.8 * (t(i,j) - 273.15) ) + 32.         ! K to F
+	    t1 = temp          
 	    t2 = t1 * t1
 c
 	    heat = -42.379 + (2.04901523  * t1)
