@@ -243,6 +243,7 @@ c
      :               vel_thr_rtau,
      :               r_missing_data,       ! Input
      :               gate_spacing_m_ret,   ! Output
+     :               i_scan_mode,
      :               Num_sweeps,
      :               Elevation_deg,
      :               n_rays,

@@ -41,6 +41,7 @@ cdis
      :               vel_thr_rtau,
      :               r_missing_data,
      :               gate_spacing_m_ret,   ! Output
+     :               i_scan_mode,
      :               num_sweeps,
      :               elevation_deg,
      :               n_rays,
