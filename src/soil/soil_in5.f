@@ -61,7 +61,7 @@ C
       istatus = 0
       return
 
-664   write(*,*)'Using Default Soil Types'
+664   write(6,*)'Using Default Soil Types'
       do J = 1 , Jmax
          do I = 1, Imax
             soiltype(I,J) = 5
