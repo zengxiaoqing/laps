@@ -16,8 +16,9 @@ C  Open netcdf File for reading
 C
       nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN 20031230_1900'
+        print *, NF_STRERROR(nf_status),filename
+        istatus=0
+        return
       endif
 C
 C  Fill all dimension values
@@ -136,6 +137,16 @@ C
       character*30 staticIds(maxStaticIds)
       character*10 QCT
 
+!     Declarations for 'write_snd' call
+      real stalat(level),stalon(level)
+      character c5_staid*5,a9time_ob(level)*9,c8_obstype*8
+      real height_m(level)
+      real pressure_mb(level)
+      real temp_c(level)
+      real dewpoint_c(level)
+      real dir_deg(level)
+      real spd_mps(level)
+
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
@@ -179,10 +190,55 @@ C
 C The netcdf variables are filled - your snd write call may go here
 C
       do iob = 1,recNum
-!         call 'write_snd' for a single ob
-!         call write_snd(
-!    +                   lun_out
-!    +                  )
+
+!         Convert arrays for a single sounding
+          iwmostanum = 0
+          stalat = latitude(iob)
+          stalon = longitude(iob)
+          staelev = elevation(iob)
+          c5_staid = staticIds(iob)(1:5)
+          if(abs(observationTime(iob)) .le. 1e10)then
+              i4time_ob = idint(observationTime(iob))+315619200
+              call make_fnam_lp(i4time_ob,a9time_ob,istatus)
+          endif
+
+          c8_obstype = 'RADIOMTR'
+
+          call convert_array(levels(iob,:),height_m,level
+     1                      ,'none',r_missing_data,istatus)
+
+          call add_miss(height_m,staelev,height_m,level,1)
+
+!         Only station pressure is given
+          pressure_mb = r_missing_data
+          call convert_array(pressure(iob),pressure_mb(1),level
+     1                      ,'pa_to_mb',r_missing_data,istatus)
+
+          call convert_array(temperature(iob,:),temp_c,level
+     1                      ,'k_to_c',r_missing_data,istatus)
+
+!         call 'write_snd' for a single sounding
+          call get_nlevels_snd(pressure_mb,height_m,r_missing_data
+     +                        ,level,nlevels_snd)
+
+          if(nlevels_snd .gt. 0)then
+              call open_ext(lun_out,i4time_sys,'snd',istatus)
+
+              call write_snd(lun_out                         ! I
+     +                      ,1,nlevels_snd,1                 ! I
+     +                      ,iwmostanum                      ! I
+     +                      ,stalat,stalon,staelev           ! I
+     +                      ,c5_staid,a9time_ob,c8_obstype   ! I
+     +                      ,nlvl                            ! I
+     +                      ,height_m                        ! I
+     +                      ,pressure_mb                     ! I
+     +                      ,temp_c                          ! I
+     +                      ,dewpoint_c                      ! I
+     +                      ,dir_deg                         ! I
+     +                      ,spd_mps                         ! I
+     +                      ,istatus)                        ! O
+          endif ! valid sounding
+
       enddo ! iob
       return
       end
