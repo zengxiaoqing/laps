@@ -101,8 +101,11 @@ cdis
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 sh_3d_dum(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
+        real*4 pres_3d(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L)
+        real*4 pbl_top_pa(NX_L,NY_L)
+        real*4 pbl_depth_m(NX_L,NY_L)
 
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)
@@ -168,27 +171,47 @@ c read in LAPS_DOMAIN
      1          ,iflag_write                     ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,grid_spacing_m                  ! Input
-     1          ,temp_3d,istatus)                ! Output
+     1          ,temp_3d,pres_3d,istatus)        ! Output
 
-!  ************ STABILITY TEST STUFF ******************************************
-
-!       This code is here just in case we need it due to a change in stability
-!       index strategy.
+!  ******************** PBL SECTION ******************************************
 
         if(.false. .and. istatus .eq. 1)then
-            call put_stability(
-     1           i4time_needed                   ! Input
-     1          ,NX_L,NY_L,NZ_L                  ! Input
-     1          ,heights_3d                      ! Input
-     1          ,topo                            ! Input
-     1          ,laps_cycle_time                 ! Input
-     1          ,temp_3d                         ! Input
-     1          ,sh_3d_dum                       ! Input
-     1          ,temp_sfc_k                      ! Input
-     1          ,pres_sfc_pa                     ! Input
-     1          ,istatus)                        ! Output
+            write(6,*)' Start PBL Section'
+            call ghbry (i4time_needed,pres_3d,pres_sfc_pa,temp_3d     ! I
+     1                 ,pbl_top_pa                                    ! O
+     1                 ,NX_L,NY_L,NZ_L                                ! I
+     1                 ,istatus)                                      ! O
+            if(istatus .ne. 1)then
+                write(6,*)' ERROR: on PBL istatus returned from ghbry'       
+                return
+            endif
+
+!           Convert to PBL height AGL
+
+!           Note that the 'pres_to_ht' call uses a linear interpolation that
+!           can be upgraded (within the routine) to logp interpolation
+
+!           The 'pressure_to_height' call uses log interpolation but will
+!           become an unusable routine if we switch away from a constant
+!           pressure vertical grid.
+
+            do i = 1,NX_L
+            do j = 1,NY_L
+                call pres_to_ht(pbl_top_pa(i,j),pres_3d,heights_3d
+     1                         ,NX_L,NY_L,NZ_L,i,j,pbl_top_m,istatus)       
+
+!               call pressure_to_height(pbl_top_pa(i,j),heights_3d
+!    1                                 ,NX_L,NY_L,NZ_L,i,j
+!    1                                 ,pbl_top_m,istatus)       
+
+                pbl_depth_m(i,j) = max(pbl_top_m - topo(i,j),0.)
+            enddo ! j
+            enddo ! i
+
+!           Write PBL file
+    
         else
-            write(6,*)' No stability calculation done for LST file'
+            write(6,*)' No PBL calculation done for PBL file'
 
         endif
 
