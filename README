@@ -470,15 +470,18 @@
         b) If you are in the vicinity of a land border of the Continental 
            United States (e.g. Southern Canada or Northern Mexico).
 
-        The './src/grid/gridgen_model.f' program utilizes two terrain data sets 
-        (distributed as a seperate tar file available from the laps www site). 
-        One is a worldwide 10' dataset, the other is 30" data and
-        covers the continental U.S.  The software automatically 
+        The './src/grid/gridgen_model.f' program normally utilizes two 
+        terrain data sets (distributed as a seperate tar file available from 
+        the laps www site). One is a worldwide 10' dataset, the other is 30" 
+        data and covers the continental U.S.  The software automatically 
         chooses the higher resolution data if it covers the domain of interest,
         otherwise it defaults to the lower resolution data. A ~0.2 degree wide
         transition zone is used for blending at the boundary between the
-        two datasets. If for some reason you need to change this strategy, you
-        would want to modify 'gridgen_model.f'.
+        two datasets. 
+
+        There is another option to use a global 30" terrain dataset that we
+        have here at FSL. You can inquire directly about this as the data is 
+        not yet on the Web due to its size.
 
         Prior to running laps_localization.pl, set the following parameters
         in 'data/static/nest7grid.parms' (needed only if you are outside 
