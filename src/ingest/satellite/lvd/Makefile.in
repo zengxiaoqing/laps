@@ -66,7 +66,6 @@ SRC = lvd_driver_sub.f \
   rdcdfblock.f \
   get_gwc_oa.f \
   getcdf_satdat.f \
-  getascii_satdat.f \
   getsat_attributes.f \
   getsat_boundary.f \
   getafgwc_satdat.f \
@@ -88,8 +87,6 @@ SRC = lvd_driver_sub.f \
   genbtemplut.f \
   btempconvert.f \
   btempconv_asc.f \
-  loadarray_i2r.f \
-  ldarray_i2r_gwc.f \
   wait_for_satdat.f \
   wait_for_wfo_satdat.f \
   setvisflag.f \
@@ -136,44 +133,3 @@ distclean: clean
 	mv $*.i $*.f
 
 %.o : %.F
-
-
-
-
-
-
-
-
-
-getascii_satdat.f:  $(LAPSROOT)/src/include/satsector.inc@F77INC@
-
-getcdf_satdat.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-getwfo_satdat.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-lvd_driver.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
-
-readispan_vis.f:  $(LAPSROOT)/src/include/satsector.inc@F77INC@
-
-readlut.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-readsatdat.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
-
-satdatfill.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
-
-satfill1.f:  $(LAPSROOT)/src/include/satsector.inc@F77INC@
-
-satir_process.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-satvis2laps.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-satvis_process.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-set_missing_sat.f:  $(LAPSROOT)/src/include/satsector.inc@F77INC@
-
-setmissingflag.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
-
-wait_for_satdat.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-wait_for_wfo_satdat.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
