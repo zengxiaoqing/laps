@@ -4558,7 +4558,7 @@ c                   cint = -1.
      1           asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,       
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
-                call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'ref'
+                call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'cpe'
      1                     ,n_image,1.)      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -4743,9 +4743,10 @@ c                   cint = -1.
         elseif(c_type(1:2) .eq. 'gg')then
 
            if(.not. allocated (static_grid))then
-              print*,'allocating static grid'
               allocate (static_grid(NX_L,NY_L))
            endif
+
+           call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
 
            write(6,219)
 219        format(5x,'Select STATIC field:'
@@ -4757,14 +4758,15 @@ c                   cint = -1.
               clow = -400.
               chigh = +5000.
               cint = +200.
-              c33_label = '                                 '
-              asc9_tim_t = '         '
+              c33_label = 'Static Terrrain (m)        '
 
               if(cstatic .eq. 'tni')then
                 write(6,*)' calling solid fill plot'
                 scale = 3000.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image
      1                                                       ,1e0)            
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(topo,1e0,
@@ -4789,13 +4791,14 @@ c                   cint = -1.
               clow = .5
               chigh = .5
               cint = .5
-              c33_label = '                                 '
-              asc9_tim_t = '         '
+              c33_label = 'Static Land Fraction         '
               if(cstatic .eq. 'lfi')then
                 write(6,*)' calling solid fill plot'
                 scale = 1.
                 call ccpfil(static_grid,NX_L,NY_L,0.0,scale,'linear'
      1                     ,n_image,1e0)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
 
@@ -4817,8 +4820,7 @@ c                   cint = -1.
               clow = 0.
               chigh = 20.
               cint = 1.
-              c33_label = 'Land Use                        '
-              asc9_tim_t = '         '
+              c33_label = 'Static Land Use           '
               call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
@@ -4827,10 +4829,6 @@ c                   cint = -1.
 
            elseif(cstatic(1:2) .eq. 'al')then
 
-c             var_2d='ALB'
-c             call read_static_grid(nx_l,ny_l,var_2d,static_grid
-c    1,istatus)
-
               call get_static_field_interp('albedo',i4time_ref
      1,nx_l,ny_l,static_grid,istatus)
               if(istatus .ne. 1)then
@@ -4838,25 +4836,74 @@ c    1,istatus)
                  return
               endif
 
-              clow = 0.
-              chigh = 1.0
-              cint = .05
+              call get_mxmn_2d(NX_L,NY_L,static_grid,chigh
+     1                        ,clow,imx,jmx,imn,jmn)
+              cint = (chigh-clow)/10.
+              if(cint.eq.0.0)cint=.05
+
+c             clow = 0.
+c             chigh = 1.0
+c             cint = .05
+
               c33_label = 'Interpolated Albedo     '
-              asc9_tim_t = '         '
+              asc9_tim_t=asc9_tim_t(1:5)//'1800'
 
               if(cstatic .eq. 'ali')then
                 write(6,*)' calling solid fill plot'
-                call ccpfil(static_grid,NX_L,NY_L,0.0,0.5,'linear'
+                call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'linear'
      1                     ,n_image,1e0)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
-                call plot_cont(field_2d,1e0,
+                call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
               call move(static_grid,field_2d,NX_L,NY_L) ! Supports diff option
               i4time_topo = 0
+
+           elseif(cstatic(1:2) .eq. 'gn')then
+
+              call get_static_field_interp('green',i4time_ref
+     1,nx_l,ny_l,static_grid,istatus)
+              if(istatus .ne. 1)then
+                 print*,' Warning: could not read static-albedo'
+                 return
+              endif
+
+              static_grid=static_grid/100.
+
+c             call get_mxmn_2d(NX_L,NY_L,static_grid,chigh
+c    1                        ,clow,imx,jmx,imn,jmn)
+c             cint = (chigh-clow)/10.
+c             if(cint.eq.0.0)cint=0.1
+
+              clow = 4.0
+              chigh = -2.0
+
+              c33_label = 'Interpolated Green Fraction     '
+              call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
+              asc9_tim_t=asc9_tim_t(1:5)//'1800'
+
+              if(cstatic .eq. 'gni')then
+
+                write(6,*)' calling solid fill plot'
+                call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'hues'
+     1                     ,n_image,1e0)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                          ,i_overlay,'hsect')
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+              else
+                clow = 0.0
+                chigh = 1.0
+                cint = .10
+                call plot_cont(static_grid,1e0,
+     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+              endif
 
            elseif(cstatic(1:2) .eq. 'ts')then
 
@@ -4873,13 +4920,14 @@ c    1,istatus)
      1                        ,clow,imx,jmx,imn,jmn)
 
               cint = (chigh-clow)/10.
-              c33_label = 'Mean Annual Soil Temp    '
-              asc9_tim_t = '         '
+              c33_label = 'Mean Annual Soil Temp (K)  '
 
               if(cstatic .eq. 'tsi')then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh
      1               ,'hues',n_image,1e0)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
@@ -4898,14 +4946,10 @@ c    1,istatus)
                  print*,' Warning: could not read static-slope-lon'
                  return
               endif
-
-              print*,'plotting longitude-component:terrain slope'
-
               clow = -1.
               chigh = 1.0
               cint = .025
-              c33_label = 'long-comp terrain slope                    '
-              asc9_tim_t = '         '
+              c33_label = 'Longitude component terrain slope '
 
               if(cstatic .eq. 'sni')then
                 write(6,*)' calling solid fill plot'
@@ -4913,6 +4957,8 @@ c    1,istatus)
      1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image,1e0)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
@@ -4931,13 +4977,10 @@ c    1,istatus)
                  print*,' Warning: could not read static-slope-lon'
                  return
               endif
-
-              print*,'plotting latitude-component:terrain slope'
               clow = -1.
               chigh = 1.0
               cint = .025
-              c33_label = 'lat-comp terrain slope                    '
-              asc9_tim_t = '         '
+              c33_label = 'Latitude component terrain slope  '
 
               if(cstatic .eq. 'sli')then
                 write(6,*)' calling solid fill plot'
@@ -4945,6 +4988,8 @@ c    1,istatus)
      1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image,1e0)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
