@@ -406,7 +406,7 @@ C
 
       if(colortable(1:3) .eq. 'lin')then
           if(colortable .eq. 'linear_reduced')then
-              ncols = 8
+              ncols = 10
           else
               ncols = 20
           endif
@@ -487,13 +487,11 @@ C
      1                            ,istatus)
 
       elseif(            colortable .eq. 'spectral' 
-     1              .or. colortable .eq. 'spectralr'     
-     1              .or. colortable .eq. 'acc'            )then       
+     1              .or. colortable .eq. 'spectralr'      )then       
 
           if(.not. l_set_contours)then
               if(.not. l_discrete)then
-                  if(            colortable .eq. 'acc' 
-     1                      .or. colortable .eq. 'spectralr'     
+                  if(            colortable .eq. 'spectralr'     
      1                      .or. MREG*NREG .gt. 62500)then       
                       ncols = 20
                   else
@@ -544,6 +542,10 @@ C
      1                   ,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.7)                ! Red
+
+      elseif(colortable .eq. 'acc')then       
+          call generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                            ,istatus)
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable
