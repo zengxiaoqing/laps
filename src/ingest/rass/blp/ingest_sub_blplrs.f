@@ -99,9 +99,6 @@ C
         integer*4       len_dir
         character*6 prof_name(max_profilers)
 
-!       data prof_name /'ASTOR ','BRICO ','BSNOR ','FRACO ','GBYCO '
-!    1                 ,'MEDOR ','MCGQU ','FTMCO ','NPTOR ','PLTC2 '/
-
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
@@ -140,10 +137,6 @@ C       For VMS systems, you must explicitly put in a period after the oh if
 C       you don't want a file extension, thus the string used in the open call.
 C
 
-
-!       dir_in = '/public/data/rass/netcdf/'
-!       dir_in = path_to_raw_blprass
-
         c_vars_req = 'path_to_raw_blprass'
         call get_static_info(c_vars_req,c_values_req,1,istatus)
         if(istatus .eq. 1)then
@@ -164,8 +157,6 @@ C
         endif
 
 C       Wait for the data
-
-!       len_dir_in = 25
         c_filespec = dir_in(1:len_dir_in)//'*0100o'
 
         write(6,*)c_filespec(1:80)
@@ -383,6 +374,8 @@ C
 !           write surface temperature (and other data) as first level
 !           write(1,*)elev,t_sfc,' ',i_qc_sfc,rh_sfc,di_sfc,sp_sfc,prs
 
+            rms = 1.0
+
             do i = 1, n_levels
                 iqc_flag  = byte_to_i4(qc_flag(i))
                 iqc_flag2 = byte_to_i4(qc_flag(i))
@@ -399,7 +392,7 @@ C
                 else ! Cover other cases too
                         iqc = 0
                 endif
-!               write(1,*)i,temp(i),' ',qc_char(j)
+
                 height_msl = rlevels(i) + elev
 
                 if(temp(i) .gt. r_missing_data)then
@@ -413,8 +406,9 @@ C
                     iqc = 0
                 endif
 
-                write(1,*)height_msl,temp_out,' ',iqc
-                write(6,*)height_msl,temp_out,' ',iqc,iqc_flag,iqc_flag2
+                write(1,*)height_msl,temp_out,' ',iqc,rms
+                write(6,*)height_msl,temp_out,' ',iqc,rms
+     1                                           ,iqc_flag,iqc_flag2     
             enddo
 
 C

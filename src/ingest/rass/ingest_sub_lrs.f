@@ -402,8 +402,13 @@ C
             write(6,*)'virtualTemp'
 c           write(1,*)'virtualTemp'
 
+            rms = 1.0
+
 !           write surface temperature (and other data) as first level
-            write(1,*)elev,t_sfc,' ',i_qc_sfc,rh_sfc,di_sfc,sp_sfc,prs      
+            write(1,*)elev,t_sfc,' ',i_qc_sfc,rms
+     1                              ,rh_sfc,di_sfc,sp_sfc,prs      
+            write(6,*)elev,t_sfc,' ',i_qc_sfc,rms
+     1                              ,rh_sfc,di_sfc,sp_sfc,prs      
 
             do i = 1, n_levels
                 iqc_flag  = byte_to_i4(qc_flag(i))
@@ -421,7 +426,7 @@ c           write(1,*)'virtualTemp'
                 else ! Cover other cases too
                         iqc = 0
                 endif
-!               write(1,*)i,temp(i),' ',qc_char(j)
+
                 height_msl = float(level(i)) + elev
 
                 if(temp(i) .gt. r_missing_data)then
@@ -430,8 +435,9 @@ c           write(1,*)'virtualTemp'
                     temp_out = temp(i)
                 endif
 
-                write(1,*)height_msl,temp_out,' ',iqc
-                write(6,*)height_msl,temp_out,' ',iqc,iqc_flag,iqc_flag2
+                write(1,*)height_msl,temp_out,' ',iqc,rms
+                write(6,*)height_msl,temp_out,' ',iqc,rms
+     1                                           ,iqc_flag,iqc_flag2       
             enddo ! i (level)
 
           else !
