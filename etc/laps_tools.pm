@@ -278,11 +278,17 @@ sub laps_data_root{
 sub mkdatadirs{
 
   my ($LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$domain_type);
+
   $LAPS_DATA_ROOT = shift or die "no $LAPS_DATA_ROOT specified to mkdatadirs\n";
+  $LAPS_SRC_ROOT  = shift or die "no $LAPS_SRC_ROOT input to mkdatadirs\n";
   $domain_type    = shift or die "no domain_type specified to mkdatadirs\n";
 
-  $LAPS_SRC_ROOT  = $ENV{LAPS_SRC_ROOT};
-# $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if ! $LAPS_DATA_ROOT;
+  if(! -e $LAPS_DATA_ROOT){die "$LAPS_DATA_ROOT does not exist\n";}
+  if(! -e $LAPS_SRC_ROOT) {die "$LAPS_SRC_ROOT  does not exist\n";}
+
+  if($domain_type ne "laps" || $domain_type ne "wrfsi"){
+     die "Unknown domain type input to mkdatadirs = $domain_type\n";
+  }
 
   my ($datadirs, $lapsprddirs);
   my (@datadirs, @lapsprddirs);
@@ -350,8 +356,8 @@ verif verif/noBal verif/Bal verif/Bkgd);
      $ii=0;
      foreach (@bkgd_dirs){
               $ii++;
-              @lga_dirs[$ii]=$lga_dirs[0]."/".$_;
-              @lgb_dirs[$ii]=$lgb_dirs[0]."/".$_;
+              $lga_dirs[$ii]=$lga_dirs[0]."/".$_;
+              $lgb_dirs[$ii]=$lgb_dirs[0]."/".$_;
      }
      print "lga dirs: @lga_dirs\n";
      print "lgb dirs: @lgb_dirs\n";

@@ -10,16 +10,38 @@ umask 002;
 use Getopt::Long;
 
 my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$SYSTEM_TYPE,$cleandirs);
+
 my $result = GetOptions("installroot=s"  => \$LAPSINSTALLROOT,
                         "dataroot=s"     => \$LAPS_DATA_ROOT,
                         "srcroot=s"      => \$LAPS_SRC_ROOT,
                         "system_type=s"  => \$SYSTEM_TYPE,
-                        "cleandirs"      => \$cleandirs);
+                        "cleandirs"      => \$cleandirs,
+                        "help"           => \&help_sub,
+                        "<>"             => \&help_sub);
+
+sub help_sub{
+    print "$0 command line options (default values)\n";
+    print "   --install_root = Root directory of the installed binaries (eg., @prefix@)\n";
+    print "   --dataroot     = Root directory of the installed data (eg., @prefix@/data)\n";
+    print "   --srcroot      = Root directory of the source code    (eg., @top_srcdir@)\n";
+    print "   --system_type  = System type; either LAPS or WRFSI\n";
+    print "   --cleandirs    = No argument needed. Removes lapsprd and rebuilds it.\n";
+    print "   --help         = print this message and exit\n";
+    exit;
+}
 
 $LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if(! $LAPS_SRC_ROOT);
+if(!defined $LAPS_SRC_ROOT){
+   print "LAPS_SRC_ROOT not defined in makedatadirs\n";
+   exit;
+}
 print "LAPS_SRC_ROOT = $LAPS_SRC_ROOT\n";
 
 $LAPSINSTALLROOT = $LAPS_SRC_ROOT if(! $LAPSINSTALLROOT);
+if(!defined $LAPSINSTALLROOT){
+   print "LAPSINSTALLROOT not defined in makedatadirs\n";
+   exit;
+}
 print "LAPSINSTALLROOT = $LAPSINSTALLROOT \n";
 
 $LAPS_DATA_ROOT = "$LAPSINSTALLROOT/data" if(! $LAPS_DATA_ROOT);
@@ -37,5 +59,7 @@ if( defined($cleandirs)){
 require "$LAPSINSTALLROOT/etc/laps_tools.pm";
 print "Use mkdatadir to generate lapsdataroot directories\n";
 print "system type = $SYSTEM_TYPE \n";
-laps_tools::mkdatadirs($LAPS_DATA_ROOT,$SYSTEM_TYPE);
+
+laps_tools::mkdatadirs($LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$SYSTEM_TYPE);
+
 exit;
