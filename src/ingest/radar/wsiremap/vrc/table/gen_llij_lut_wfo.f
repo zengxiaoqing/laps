@@ -33,7 +33,7 @@ cdis
 c
       implicit none
 
-      include 'lapsparms.for'
+ccc      include 'lapsparms.for'
 
       integer*4 imax,jmax
 
@@ -59,10 +59,10 @@ c
       real*4    dxterm
       real*4    dyterm
 
-      real*4    ri(nx_l,ny_l)
-      real*4    rj(nx_l,ny_l)
-      real*4    u(nx_l,ny_l)
-      real*4    v(nx_l,ny_l)
+      real*4    ri(imax,jmax)
+      real*4    rj(imax,jmax)
+      real*4    u(imax,jmax)
+      real*4    v(imax,jmax)
 
       integer*4 i,j,n,nn
       integer*4 n1,n2
@@ -148,32 +148,32 @@ c
             call uv_ij (ny3,u_orig,v_orig,du,dv,
      &       u1,v1,ri1,rj1)
 
-         latterm=(lat(nx_l,1)*pi)/180.
-         lonterm=(lon(nx_l,1)*pi)/180.
+         latterm=(lat(imax,1)*pi)/180.
+         lonterm=(lon(imax,1)*pi)/180.
 
          call getuv_lam (lapterm,lovterm,
      &       latterm,lonterm,u1,v1)
             call uv_ij (ny3,u_orig,v_orig,du,dv,
      &       u1,v1,ri2,rj2)
 
-         latterm=(lat(1,ny_l)*pi)/180.
-         lonterm=(lon(1,ny_l)*pi)/180.
+         latterm=(lat(1,jmax)*pi)/180.
+         lonterm=(lon(1,jmax)*pi)/180.
 
          call getuv_lam (lapterm,lovterm,
      &       latterm,lonterm,u1,v1)
             call uv_ij (ny3,u_orig,v_orig,du,dv,
      &       u1,v1,ri3,rj3)
 
-         latterm=(lat(nx_l,ny_l)*pi)/180.
-         lonterm=(lon(nx_l,ny_l)*pi)/180.
+         latterm=(lat(imax,jmax)*pi)/180.
+         lonterm=(lon(imax,jmax)*pi)/180.
 
          call getuv_lam (lapterm,lovterm,
      &       latterm,lonterm,u1,v1)
             call uv_ij (ny3,u_orig,v_orig,du,dv,
      &       u1,v1,ri4,rj4)
 c
-         write(6,*)'Sat ri/rj corners for domain: ',
-     &laps_domain_file
+         write(6,*)'Sat ri/rj corners for domain: '
+ccc     &laps_domain_file
          write(6,*)'ri1/rj1 (SW) ',ri1,rj1
          write(6,*)'ri2/rj2 (SE) ',ri2,rj2
          write(6,*)'ri3/rj3 (NW) ',ri3,rj3
@@ -182,8 +182,8 @@ c
 c
 c first get uv in lambert grid
 c
-         do j = 1, ny_l
-         do i = 1, nx_l
+         do j = 1, jmax
+         do i = 1, imax
 
             latterm=(lat(i,j)*pi)/180.
             lonterm=(lon(i,j)*pi)/180.
@@ -197,8 +197,8 @@ c
 c compute ri, rj look uptables for ispan file (for each point in 
 c LAPS domain)
 c
-         do i = 1, nx_l
-         do j = 1, ny_l
+         do i = 1, imax
+         do j = 1, jmax
 
             call uv_ij (ny3,u_orig,v_orig,du,dv,
      &       u(i,j),v(i,j),ri(i,j),rj(i,j))
@@ -206,8 +206,8 @@ c
          enddo
          enddo
 
-         do i = 1,nx_l,10
-         do j = 1,ny_l,10
+         do i = 1,imax,10
+         do j = 1,jmax,10
 
             write(6,*)'i,j,ri,rj: ',i,j,ri(i,j),rj(i,j)
 
@@ -219,7 +219,7 @@ c
          n1=index(table_path,' ')
          write(6,*)table_path(1:n1)
 
-         call write_table (table_path,nx_l,ny_l,lat,lon,ri,rj,istatus)
+         call write_table (table_path,imax,jmax,lat,lon,ri,rj,istatus)
          if(istatus .ne. 1)then
             write(6,*)'Error writing look-up table'
             goto 900

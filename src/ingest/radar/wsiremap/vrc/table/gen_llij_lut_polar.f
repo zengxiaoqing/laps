@@ -29,7 +29,8 @@ cdis
 cdis 
 cdis 
 cdis 
-       subroutine gen_llij_lut_polar(irad,imax,jmax,lat,lon,istatus)
+      subroutine gen_llij_lut_polar(irad,imax,jmax,lat,lon
+     +    ,c_raddat_type,istatus)
 c
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -41,15 +42,15 @@ c confines.
 c
        implicit none
 
-       include 'lapsparms.for'
+ccc       include 'lapsparms.for'
        include 'vrc.inc'
 
        integer*4 imax,jmax
-
+       character*3 c_raddat_type
        real*4 lat(imax,jmax)
        real*4 lon(imax,jmax)
-       real*4 ri(nx_l,ny_l)
-       real*4 rj(nx_l,ny_l)
+       real*4 ri(imax,jmax)
+       real*4 rj(imax,jmax)
        real*4 wsi_lat(nelems,nlines)
        real*4 wsi_lon(nelems,nlines)
 
@@ -142,7 +143,7 @@ c
 c  First guess so that all 3661 x 1837 points do not have to be
 c  searched.
 c
-      call  get_radar_bounds(lat,lon,nx_l,ny_l,nlines,nelems,
+      call  get_radar_bounds(lat,lon,imax,jmax,nlines,nelems,
      &wsi_lat,wsi_lon,istart,jstart,iend,jend)
 
       write(6,*)'Got the wsi lat/lon get_radar_bounds'
@@ -153,11 +154,11 @@ c
       itstatus=init_timer()
       itstatus=ishow_timer()
 
-      do j = ny_l,1,-1
+      do j = jmax,1,-1
          jline = float(j)/10.
          jdiff = jline - int(jline)
 
-      do i = 1,nx_l
+      do i = 1,imax
          iline = float(i)/10.
          idiff = iline - int(iline)
 
@@ -237,22 +238,22 @@ c
 c
 c output
 c
-       do i = 1,nx_l,10
-       do j = 1,ny_l,10
+       do i = 1,imax,10
+       do j = 1,jmax,10
 
           write(6,*)'i,j,ri,rj: ',i,j,ri(i,j),rj(i,j)
 
        enddo
        enddo
 
-       cname='wsi_llij_lut_'//c_raddat_types(irad)
+       cname='wsi_llij_lut_'//c_raddat_type
        n2=index(cname,' ')-1
        file = path(1:n1)//cname(1:n2)//'.lut'
        n=index(file,' ')
        write(6,*)'Write lat/lon to i/j look up table'
        write(6,*)file(1:n)
 
-       call write_table (file,nx_l,ny_l,lat,lon,ri,rj,istatus)
+       call write_table (file,imax,jmax,lat,lon,ri,rj,istatus)
        if(istatus .ne. 1)then
           write(6,*)'Error writing look-up table'
           goto 900

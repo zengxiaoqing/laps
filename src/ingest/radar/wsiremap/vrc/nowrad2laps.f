@@ -45,14 +45,14 @@ c Nowrad data is then remapped to LAPS domain given lat/lon of domain.
 c Routine automatically moves the boundary for any domain with the nowrad
 c confines.
 c
-       include 'lapsparms.for'
+ccc       include 'lapsparms.for'
        include 'vrc.inc'
 
        real*4 lat(imax,jmax)
        real*4 lon(imax,jmax)
        real*4 rdbz(imax,jmax)
-       real*4 r_llij_lut_ri(nx_l,ny_l)
-       real*4 r_llij_lut_rj(nx_l,ny_l)
+       real*4 r_llij_lut_ri(imax,jmax)
+       real*4 r_llij_lut_rj(imax,jmax)
        real*4 grid_spacing_m
        real*8 valTime
 
@@ -114,7 +114,7 @@ c
 c
 c get remapping look-up-table
 c
-      call readvrclut(c_raddat_types(1),nx_l,ny_l,
+      call readvrclut(c_raddat_type,imax,jmax,
      &r_llij_lut_ri,r_llij_lut_rj,istatus)
 c
 c compute grid ratio 
@@ -124,7 +124,7 @@ c
 c
 c  Remap NOWrad onto LAPS grid.
 c
-       Call process_nowrad_z(nx_l,ny_l,
+       Call process_nowrad_z(imax,jmax,
      &                  r_grid_ratio,
      &                  image_to_dbz,
      &                  image,

@@ -50,7 +50,7 @@ c					    reflectivity data.
 c
 	implicit none
 
-        include 'lapsparms.for'
+        include 'lapsparms.cmn'
         include 'vrc.inc'
 
 	integer*4 max_elem,max_line
@@ -171,7 +171,7 @@ c
 
                 else   
 
-                   rdbz=ref_base
+                   rdbz=ref_base_cmn
                    fcount=fcount+1
 
                 endif
@@ -183,7 +183,7 @@ c
                    if(pixsum.gt.0)then
                       laps_dbz(i,j) = pixsum / float(npix)
                    else
-                      laps_dbz(i,j) = ref_base
+                      laps_dbz(i,j) = ref_base_cmn
                    endif
 
                 elseif(rdbz.gt.0.0)then
@@ -192,7 +192,7 @@ c
 
                 else
 
-                   laps_dbz(i,j) = ref_base
+                   laps_dbz(i,j) = ref_base_cmn
 
                 endif ! npix .gt. 1
 
@@ -223,7 +223,7 @@ c
      &.ge.0)then
                 wsi_dbz_data(i,j)=image_to_dbz(image_data(i,j))
              else
-                wsi_dbz_data(i,j)=r_missing_data
+                wsi_dbz_data(i,j)=r_missing_data_cmn
              endif
           enddo
           enddo
@@ -234,7 +234,7 @@ c
             IF(laps_dbz(I,J).NE.0.) GO TO 20
 c
 c bilinear_interp_extrap checks on boundary conditions and
-c uses ref_base if out of bounds.
+c uses ref_base_cmn if out of bounds.
 c
             call bilinear_laps(
      &           r_llij_lut_ri(i,j),
@@ -242,14 +242,14 @@ c
      &           elem_dim,line_dim,wsi_dbz_data,
      &           result,istatus)
 
-	    if(result .ne. r_missing_data .and.
+	    if(result .ne. r_missing_data_cmn .and.
      &         result .gt. 0.0)then
 
 	        laps_dbz(i,j) = result
 
             else
 
-                laps_dbz(i,j) = ref_base
+                laps_dbz(i,j) = ref_base_cmn
 
             endif
 

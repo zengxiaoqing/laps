@@ -29,14 +29,29 @@ cdis
 cdis 
 cdis 
 cdis 
-       Program vrc_driver
+       program vrc_driver
+       include 'lapsparms.cmn'
+
+       Call get_laps_config(laps_domain_file,IStatus)
+       if(istatus.eq.1)then
+         write(*,*)'LAPS Parameters obtained'
+       else
+          write(*,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
+          write(*,*)'Terminating LAPS-VRC. WSI remapping'
+          stop
+       end if
+       call vrc_driver_sub(NX_L_CMN,NY_L_CMN,c_raddat_type)
+       stop
+       end
+
+       subroutine vrc_driver_sub(nx_l,ny_l,c_raddat_type)
 c
 c Program drives transformation of NOWRAD high density (hd) radar to LAPS
 c domain (subroutine NOWRAD_to_LAPS). 'hd' files are assumed to reside in
 c /public/data/radar/wsi/nowrad/netcdf.  The pathway to these data can be
 c changed pretty easily.
 c
-       include 'lapsparms.for'
+ccc       include 'lapsparms.for'
 
        integer extreme_thrsh_70
        integer extreme_thrsh_47
@@ -91,14 +106,6 @@ c
      
        data lvl_2d/0/
 
-       Call get_laps_config(laps_domain_file,IStatus)
-       if(istatus.eq.1)then
-         write(*,*)'LAPS Parameters obtained'
-       else
-          write(*,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
-          write(*,*)'Terminating LAPS-VRC. WSI remapping'
-          stop
-       end if
 c
 c set filename. wfo data is 13 character. HOWEVER, if reading from /public
 c then we must fool the wfo filename to still be 9 characters.
@@ -106,7 +113,7 @@ c
        i4time_cur = i4time_now_gg()
        c_fname_cur_temp = cvt_i4time_wfo_fname13(i4time_cur)
 
-       if(c_raddat_types(1).eq.'wfo'.and.wsi_dir_path(2:7).ne.
+       if(c_raddat_type.eq.'wfo'.and.wsi_dir_path(2:7).ne.
      1'public')then
           c_fname_cur = c_fname_cur_temp
        else
@@ -143,7 +150,7 @@ c
 c
 c new code to accomodate the submission of this code by "at"
 c
-       if(c_raddat_types(1).eq.'wfo')then
+       if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
        else
           c_filespec=wsi_dir_path(1:n-1)//'*_hd'
@@ -185,7 +192,7 @@ c
           i4time_latest_vrc = i4time_latest_vrc + 900
 
           n=index(wsi_dir_path,' ')
-          if(c_raddat_types(1).eq.'wfo')then
+          if(c_raddat_type.eq.'wfo')then
              c_filespec=wsi_dir_path(1:n-1)//'*'
           else
              c_filespec=wsi_dir_path(1:n-1)//'*_hd'
@@ -220,17 +227,17 @@ c nfiles > 1.
 c
        nfiles=1
        n=index(wsi_dir_path,' ')
-       if(c_raddat_types(1).eq.'wfo')then
+       if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
-          c_raddat_type=c_raddat_types(1)
+c          c_raddat_type=c_raddat_types(1)
        else
           c_filespec=wsi_dir_path(1:n-1)//'*_hd'
-          c_raddat_type=c_raddat_types(1)
+c          c_raddat_type=c_raddat_types(1)
        endif
 
        call get_latest_file_time(c_filespec,i4time_latest_wsi)
 
-       if(c_raddat_types(1).eq.'wfo'.and.wsi_dir_path(2:7).ne.'public'
+       if(c_raddat_type.eq.'wfo'.and.wsi_dir_path(2:7).ne.'public'
      1)then
           c_filetime=cvt_i4time_wfo_fname13(i4time_latest_wsi)
           nn=index(c_filetime,' ')-1
@@ -254,11 +261,11 @@ c Definitions needed for acquiring LAPS latitude and longitude arrays.
 c
 c       dir_static='../static/'
        call get_directory('static',dir_static,len)
-       laps_dom_file=laps_domain_file
+ccc       laps_dom_file=laps_domain_file
        var_ll(1)='LAT'
        var_ll(2)='LON'
 
-       call rd_laps_static(dir_static, laps_dom_file, nx_l, ny_l, 2,
+       call rd_laps_static(dir_static, 'nest7grid', nx_l, ny_l, 2,
      &     var_ll, units_ll, comment_ll, data, grid_spacing,
      &     istatus)
 

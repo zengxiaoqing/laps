@@ -4,7 +4,7 @@ c
 
       implicit none
 
-      include 'lapsparms.for'
+ccc      include 'lapsparms.for'
 
       integer*4 nx,ny
       integer*4 istatus
@@ -13,7 +13,7 @@ c
 
       real*4    ri(nx,ny)
       real*4    rj(nx,ny)
-      real*4    rdummy(nx_l,ny_l)
+      real*4    rdummy(nx,ny)
 
       character*20  cnm
       character*50  path
@@ -27,9 +27,9 @@ c
       cnm='wsi_llij_lut_'
       n2=index(cnm,' ')-1
 
-      do i = 1,n_radar_types
+ccc      do i = 1,n_radar_types
 
-         if(cradtype.eq.c_raddat_types(i))then
+ccc        if(cradtype.eq.c_raddat_types(i))then
 
          table_path=path(1:n1)//cnm(1:n2)//cradtype//'.lut'
          n=index(table_path,' ')
@@ -38,8 +38,8 @@ c
      &rdummy,rdummy,ri,rj,istatus)
 
 
-         endif
-      enddo
+ccc         endif
+ccc      enddo
 
       goto 1000
 

@@ -29,14 +29,32 @@ cdis
 cdis 
 cdis 
 cdis 
-       program gen_vrc_llij_lut
+      program gen_vrc_llij_lut
+      implicit none
+      include 'lapsparms.cmn'      
+      integer istatus
+      Call get_laps_config('nest7grid',IStatus)
+      if(IStatus.eq.1)then
+         write(6,*)'LAPS Parameters obtained'
+      else
+          write(6,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
+          write(6,*)'Terminating LAPS-LVD. ISPAN Satellite remapping'
+          stop
+      end if
+c
+
+      call gen_vrc_llij_lut_sub(nx_l_cmn,ny_l_cmn,c_raddat_type)
+
+      stop
+      end
+      subroutine gen_vrc_llij_lut_sub(nx_l,ny_l,c_raddat_type)
 c
 c
 c
       implicit none
-
-      include 'lapsparms.for'
-
+      integer nx_l, ny_l
+ccc      include 'lapsparms.for'
+      character*3 c_raddat_type
       real*4    lat(nx_l,ny_l)
       real*4    lon(nx_l,ny_l)
       real*4    grid_spacing
@@ -53,28 +71,18 @@ c
       character*10 units_ll(2)
       character*3 var_ll(2)
       character*200 dir_static
-      character*11 laps_dom_file
-c
-      Call get_laps_config(laps_domain_file,IStatus)
-      if(IStatus.eq.1)then
-         write(6,*)'LAPS Parameters obtained'
-      else
-          write(6,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
-          write(6,*)'Terminating LAPS-LVD. ISPAN Satellite remapping'
-          stop
-      end if
 c
 c
 c Definitions needed for acquiring LAPS latitude and longitude arrays.
 c -------------------------------------------------------------------
 c      dir_static = '../static/'
       call get_directory('static',dir_static,len)
-      laps_dom_file = laps_domain_file
+
       var_ll(1) = 'LAT'
       var_ll(2) = 'LON'
 
       write(6,*)'Get LAPS lat/lon grid'
-      call rd_laps_static(dir_static,laps_dom_file,nx_l,ny_l, 2,
+      call rd_laps_static(dir_static,'nest7grid',nx_l,ny_l, 2,
      &     var_ll, units_ll, comment_ll, data, grid_spacing,
      &     istatus)
 
@@ -94,9 +102,10 @@ c      dir_static = '../static/'
       end if
 c
 c
-      do i=1,n_radar_types
+c      do i=1,n_radar_types
+      
 
-      if(c_raddat_types(i).eq.'wfo')then
+      if(c_raddat_type.eq.'wfo')then
 
          write(6,*)'Gen LUT netCDF Conus_c wsi (WFO) data '
          call gen_vrc_wfo_cdf_lut(ich,nx_l,ny_l,lat,lon,istatus)
@@ -108,21 +117,24 @@ c
             goto 901
          endif
 
-      elseif(c_raddat_types(i).eq.'wsi')then
+      elseif(c_raddat_type.eq.'wsi')then
 
          write(6,*)'Gen LUT for wsi - polar stereo'
 
-         call gen_llij_lut_polar(i,nx_l,ny_l,lat,lon,istatus)
+         call gen_llij_lut_polar(i,nx_l,ny_l,lat,lon,c_raddat_type
+     +                        ,istatus)
          if(istatus.eq.1)then
             write(6,*)'CDF look-up table generated'
          else
             write(6,*)'Error generating look-up-table'
             goto 901
          endif
-
+      else
+        print*, 'Error in nest7grid.parms c_raddat_type:',c_raddat_type
+        goto 901
       endif
 
-      enddo
+c      enddo
 c
       goto 900
 
