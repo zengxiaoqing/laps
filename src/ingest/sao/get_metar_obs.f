@@ -554,6 +554,7 @@ c
 	else
            temp_f = k_to_f(temp_k)
 	endif
+        call sfc_climo_qc_r('t_f',temp_f)
 c
 	dewp_k = ttd(i)                        !set to dp_from_tenths
 	if(dewp_k .eq. badflag) dewp_k = td(i) !no dp_from_tenths, set to dp
@@ -821,6 +822,14 @@ c
         elseif(c_var .eq. 'stnp_pa')then
             if(arg .gt. 110000.)arg = badflag
             if(arg .lt.  40000.)arg = badflag
+
+        elseif(c_var .eq. 't_f')then
+            if(arg .gt. +145.)arg = badflag
+            if(arg .lt. -145.)arg = badflag
+
+        elseif(c_var .eq. 'td_k')then
+            if(arg .gt. 320.)arg = badflag
+            if(arg .lt. 210.)arg = badflag
 
         else
             write(6,*)' Warning: unknown variable in sfc_climo_qc_r'
