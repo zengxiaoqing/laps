@@ -33,7 +33,8 @@ c
       equivalence (sqo(1),sqdep(1,3)),(tauo(1),tauc(1,3))
       real fast_coef(30000)
       equivalence (fast_coef(1), coef(1,1,1,1) )
-      character*8 cfile/'GOESRTCF'/
+      character*8 cfile
+      data cfile/'GOESRTCF'/
       character*200 fname
       integer len
 c
@@ -262,7 +263,8 @@ c        NGOES = GOES satellite number, e.g. 8 (GOES/I)
       common/tskcof/tbuf(lent)
       common/use/ibuf(lenu)
       dimension cbuf(lenc)
-      character*8 cfile/'GOESRTCF'/
+      character*8 cfile
+      data cfile/'GOESRTCF'/
       character*200 fname
       integer len
 c
