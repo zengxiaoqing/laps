@@ -35,7 +35,7 @@ $max_age{lcv} = 48.0;
 
 #Set up directories and parameters for the radars in a loop
 my $iradar = 0;
-for $radar (01..02) {
+for $radar ("01".."09") {
 
     @vxx[$iradar] = "v$radar";
     @dxx[$iradar] = "d$radar";
