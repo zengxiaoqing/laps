@@ -1021,7 +1021,7 @@ C
 !       1991    Steve Albers
 
         character*31 ext
-        character*50 directory
+        character*150 directory
         integer*4 len_dir
 
         integer*4 pres2_low,pres2_high,pres2_interval,n_pres2
@@ -1156,7 +1156,7 @@ c101    format(1x,3f10.2,f10.4)
 !       1991    Steve Albers
 
         character*31 ext
-        character*50 directory
+        character*150 directory
         integer*4 len_dir
 
         integer*4 thetae_low,thetae_high,thetae_interval,n_thetae
