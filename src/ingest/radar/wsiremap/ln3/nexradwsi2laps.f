@@ -30,6 +30,7 @@ cdis
 cdis 
 cdis 
        subroutine NEXRADWSI_to_LAPS(filename,
+     &                    msng_radar,
      &                    nlines,nelements,nlev,
      &                    imax,jmax,
      &                    lat,lon,
@@ -69,6 +70,7 @@ c
        character c_data_type*2
        character level_prefix(nlev)*50
        character lprefix(nlev)*2
+       character cpathwsi3d*200
 
        real*4 dgtord
        real*4 rlat1, rlon1
@@ -102,19 +104,10 @@ c
       call get_ref_base_useable(ref_base_useable,iostatus)
       call get_r_missing_data(r_missing_data,iostatus)
 c
-c read ln3 namelist
-c
-      call get_ln3_parameters(msng_radar,ickint,itotwait,iageth,
-     &                        lstatus)
-      if(lstatus.ne.0)then
-         print*,'Error getting ln3 parameters'
-         return
-      endif
-
-      write(6,*)'Reading: ',filename(1:n)
-c
 c read nimbus netCDF file
 c
+      write(6,*)'Reading: ',filename(1:n)
+
       call rd_wsi_3dradar_cdf(filename,nlines,nelements,
      &rdlat,rdlon,rlat1,rlon1,rlat2,rlon2,centerlon,
      &validTime,nlev,data_levels,num_levels,level_prefix,

@@ -39,23 +39,22 @@ c with names yyjjjhhmm_ll _lm and _lh, for layer low (ll), layer middle (lm) and
 c layer high (lh). Echo Tops (et) and VIL (vi).
 c
 
-       include 'lapsparms.cmn'
-       
-       Call get_laps_config('nest7grid',IStatus)
+       call get_grid_dim_xy(nx_l,ny_l,istatus)
        if(istatus.eq.1)then
-         write(*,*)'LAPS Parameters obtained'
+         write(*,*)'nx_l and ny_l Parameters obtained'
        else
           write(*,*)'IStatus = ',IStatus,' Error - Get_laps_config'
-          write(*,*)'Terminating LAPS-Satellite Sounder Ingest.'
+          write(*,*)'Terminating WSI 3d radar ingest (ln3).'
           stop
        end if
-       call ln3_driver_sub(NX_L_CMN,NY_L_CMN,PATH_TO_WSI_3D_RADAR_CMN)
+
+       call ln3_driver_sub(NX_L,NY_L)
        stop
        end
 c
 c------------------------------------------------------------------------------
 c
-       subroutine ln3_driver_sub(nx_l,ny_l,cpathwsi3d)
+       subroutine ln3_driver_sub(nx_l,ny_l)
 
        implicit none
        integer   nx_l,ny_l
@@ -97,7 +96,7 @@ c
        real*4 ref_base
        real*4 rdum
 
-       integer   n,k,j,i,nn
+       integer   n,k,j,i,nn,id
        integer   i4time_cur
        integer   i4time_diff
        integer   min_i4time
@@ -129,13 +128,16 @@ c
        character c_type_found_p(n_data_types)*2
        character ctype_cur*2
        character c_filespec*255
-       character cpathwsi3d*(*)
+       character cpathwsi3d*200
        character c_filenames_proc(max_files)*200
 c
 c eventually these should be runtime parameters placed in
 c either static/ln3/ln3_parms.dat or nest7grid.parms
 c
        data c_data_types /'ll','lm','lh','et','cr','vi'/
+
+       call get_ln3_parameters(cpathwsi3d,msng_radar
+     +,id,id,id,istatus)
 
        call get_r_missing_data(r_missing_data,istatus)
        call get_ref_base(ref_base,istatus)
@@ -171,7 +173,7 @@ c     &.and.(i4time_nearest-i4time_nearest_ln3).lt.1500)then
        if(nfiles.lt.n_data_types.and.nfiles.gt.0)then !we know that some data_types have not updated
 
           call wait_for_wsi_3d_radar(nfiles,n_data_types,
-     &cpathwsi3d,c_data_types,c_type_found,i4time_data)
+     &c_data_types,c_type_found,i4time_data)
  
           nfiles_p=nfiles
           do i=1,nfiles_p
@@ -300,6 +302,7 @@ c
           write(6,*)'ctype data: ',ctype_data
 
           call NEXRADWSI_to_LAPS(c_filenames_proc(k),
+     &                 msng_radar,
      &                 lines,elements,nlevs,
      &                 nx_l,ny_l,
      &                 lat,

@@ -1,6 +1,6 @@
 
        subroutine wait_for_wsi_3d_radar(nfiles,n_data_types,
-     &c_data_path,c_data_types,c_type_found,i4time_data)
+     &c_data_types,c_type_found,i4time_data)
 c
 c
        implicit none
@@ -22,14 +22,14 @@ c
        character*2   c_data_types(n_data_types)
        character*2   c_type_found(n_data_types)
        character*150 cdir_static
-       character*(*) c_data_path
+       character*200 c_data_path
        character*255 path
 
        logical   foundit(4)
 c
 c get wait parameters in case we need to wait for the data
 c
-       call get_ln3_parameters(msng,i4_check_interval,
+       call get_ln3_parameters(c_data_path,msng,i4_check_interval,
      +i4_total_wait,i4_thresh_age,id,id,id,id,istatus)
        if(istatus.ne.1)then
           print*,'Error getting wait parms from ln3.nl'
