@@ -58,7 +58,7 @@ C
           log_scaling = .false.
       endif
 
-      if(colortable .eq. 'haines')then
+      if(colortable .eq. 'haines' .or. colortable .eq. 'cwi')then
           l_discrete = .true.
       else
           l_discrete = .false.
@@ -81,6 +81,11 @@ C
           ireverse = 1
           scale_l = scale_h_in * scale
           scale_h = scale_l_in * scale
+      endif
+
+      if(l_discrete)then
+          scale_l = scale_l - 0.5 * scale
+          scale_h = scale_h + 0.5 * scale
       endif
 
       write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
@@ -198,7 +203,7 @@ c     Call local colorbar routine
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
       call colorbar(MREG, NREG, ncols, ireverse_colorbar, log_scaling,
      1              scale_l, scale_h, colortable, scale,icol_offset,
-     1              c5_sect)
+     1              c5_sect, l_discrete)
 
       jdot = 1
       
@@ -227,7 +232,7 @@ C Set up color table
       write(6,*)' ccpfil_sub - scale = ',scale
 C      
       CALL set_image_colortable(IWKID,ncols,ireverse,colortable
-     1                                     ,log_scaling,icol_offset)
+     1                         ,MREG,NREG,log_scaling,icol_offset)
 C      
 C Initialize Areas
 C      
@@ -281,14 +286,13 @@ C
       END
       
       SUBROUTINE set_image_colortable(IWKID,ncols,ireverse,colortable
-     1                               ,log_scaling,icol_offset)    
+     1                               ,MREG,NREG,log_scaling,icol_offset)    
 
       character*(*) colortable
       logical log_scaling
 C 
 C BACKGROUND COLOR
 C BLACK
-
 C
 !     CALL GSCR(IWKID,0,0.,0.,0.)
 
@@ -314,8 +318,15 @@ C
 
       elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref'
      1                              .or. colortable .eq. 'cpe')then       
-          ncols1 = 50
-          ncols = 60
+
+          if(colortable .eq. 'cpe' .and. MREG*NREG .gt. 62500)then       
+              ncols1 = 25
+              ncols = 30
+          else
+              ncols1 = 50
+              ncols = 60
+          endif
+
           call color_ramp(1,ncols1/8,IWKID,icol_offset
      1                   ,0.5,0.15,0.6                ! Pink
      1                   ,0.5,0.5,0.7)                ! Violet
@@ -356,7 +367,11 @@ C
                   call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
               enddo 
 
-              ncols = 48
+              if(MREG*NREG .gt. 62500)then       
+                  ncols = 24
+              else
+                  ncols = 48
+              endif
 
 !             call GSCR(IWKID, ncols+icol_offset, 0.3, 0.3, 0.3)
 
@@ -430,7 +445,12 @@ C
      1                   ,1.5,1.0,0.7)                ! Aqua
 
       elseif(colortable .eq. 'spectral' .or. colortable .eq. 'acc')then       
-          ncols = 40
+          if(colortable .eq. 'acc' .or. MREG*NREG .gt. 62500)then       
+              ncols = 20
+          else
+              ncols = 40
+          endif
+
           call color_ramp(1,35*ncols/100
      1                   ,IWKID,icol_offset
      1                   ,0.6,0.7,0.4                 ! Violet
@@ -480,6 +500,17 @@ C
      1                   ,IWKID,icol_offset
      1                   ,1.0,0.0,1.0                 ! White
      1                   ,1.0,0.0,1.0)                ! White
+
+      elseif(colortable .eq. 'cwi')then       
+          ncols = 2 
+          call color_ramp(1,1
+     1                   ,IWKID,icol_offset
+     1                   ,0.6,0.7,0.4                 ! Violet
+     1                   ,0.6,0.7,0.4)                ! Violet
+          call color_ramp(2,2
+     1                   ,IWKID,icol_offset
+     1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,3.0,0.9,0.7)                ! Red
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable
@@ -565,7 +596,8 @@ C
 
       subroutine colorbar(ni,nj,ncols,ireverse,log_scaling
      1                   ,scale_l,scale_h
-     1                   ,colortable,scale,icol_offset,c5_sect)
+     1                   ,colortable,scale,icol_offset,c5_sect
+     1                   ,l_discrete)     
 
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
@@ -577,7 +609,7 @@ C
       range = abs(scale_h - scale_l) / scale
 
       if(scale_l .eq. -20. .or. scale_h .eq. 7200. 
-     1                     .or. colortable .eq. 'haines' ! HAH, HAM
+     1                     .or. l_discrete               ! e.g. HAH, HAM, CWI
      1                     .or. colortable .eq. 'tpw'    ! TPW
      1                     .or. colortable .eq. 'vnt'    ! VNT
      1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
@@ -587,12 +619,6 @@ C
       endif
 
       if(colortable(1:3) .eq. 'lin')l_loop = .false.
-
-      if(colortable .eq. 'haines')then
-          l_discrete = .true.
-      else
-          l_discrete = .false.
-      endif
 
       call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
