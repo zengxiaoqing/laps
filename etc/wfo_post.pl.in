@@ -63,7 +63,7 @@ chomp($filetime); chomp($utc_hour); chomp($utc_min);
 $filetime =~ s/ *//;  #fortran write may have added leading spaces
 $filetime= $filetime - 315619200;
 
-run_sys( "$LAPSROOT/bin/xfer_laps.exe");
+run_sys::run_sys( "$LAPSROOT/bin/xfer_laps.exe");
 
 $mon++;
 ($ss,$mm,$hh,$dd,$mon,$yy) = gmtime($filetime);
@@ -77,7 +77,7 @@ cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename") if(-d $FXA_DATA_BA
 
 $sys = "/bin/csh -c \'$ENV{FXA_HOME}/bin/GridNotify Laps $filetime 0\'";
 print "running $sys\n";
-run_sys("$sys");
+run_sys::run_sys("$sys");
 
 
 

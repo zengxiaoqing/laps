@@ -72,7 +72,7 @@ if(-d "$LAPS_SRC_ROOT/data"){
 	}
         my $sys ="cp -r $LAPS_SRC_ROOT/data $LAPS_DATA_ROOT";
         print $sys;
-	run_sys $sys;
+	run_sys::run_sys($sys);
     }
     &update_nl("$LAPS_SRC_ROOT/data","$LAPS_DATA_ROOT");
 
@@ -110,7 +110,7 @@ if($xdim <=0 || $ydim <= 0 || $zdim<=0){
 #
 unless(-d "$LAPS_DATA_ROOT/cdl"){
     if(-d "$LAPS_SRC_ROOT/data/cdl") {
-	run_sys("cp -r $LAPS_SRC_ROOT/data/cdl $LAPS_DATA_ROOT/cdl");
+	run_sys::run_sys("cp -r $LAPS_SRC_ROOT/data/cdl $LAPS_DATA_ROOT/cdl");
     }else{
 	die "Could not find or create cdl directory in $LAPS_DATA_ROOT/cdl";
     }
@@ -148,11 +148,11 @@ foreach(@cdl_list){
 }
 
 
-run_sys("$LAPSROOT/bin/gridgen_model.exe");	
+run_sys::run_sys("$LAPSROOT/bin/gridgen_model.exe");	
 
 print "gridgen_model.exe complete - building sfc lookup tables\n";
 
-run_sys("$LAPSROOT/bin/gensfclut.exe");
+run_sys::run_sys("$LAPSROOT/bin/gensfclut.exe");
 
 #
 # Generate new vrc lookup tables
@@ -161,7 +161,7 @@ run_sys("$LAPSROOT/bin/gensfclut.exe");
 if(-x "$LAPSROOT/bin/genvrclut.exe"){
   print "Running $LAPSROOT/bin/genvrclut.exe with stdout to $LAPS_DATA_ROOT/log/genvrclut.log\n";
   print "This could take an hour or more...\n" unless($sattype eq "wfo"); 
-  run_sys("$LAPSROOT/bin/genvrclut.exe 1> $LAPS_DATA_ROOT/log/genvrclut.log 2>&1");
+  run_sys::run_sys("$LAPSROOT/bin/genvrclut.exe 1> $LAPS_DATA_ROOT/log/genvrclut.log 2>&1");
 }else{
   print "$0 Failed to make genvrclut.exe, check $LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc/table/make.out\n";
   exit -1;
@@ -172,14 +172,14 @@ if(-x "$LAPSROOT/bin/genvrclut.exe"){
 # Clean out any pre-existing radar remapper look-up tables
 #
 print "cleaning out static/vxx directory of any old luts\n";
-run_sys("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
+run_sys::run_sys("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
 print "cleaning out static/lvd directory of any old luts\n";
-run_sys("rm -f $LAPS_DATA_ROOT/static/lvd/*.lut");
+run_sys::run_sys("rm -f $LAPS_DATA_ROOT/static/lvd/*.lut");
 
 #
 # finally initialize the systime.dat file
 #
-run_sys("$LAPSROOT/bin/systime.exe");
+run_sys::run_sys("$LAPSROOT/bin/systime.exe");
 print "$0 complete\n";
 
 
@@ -236,7 +236,7 @@ sub update_nl{
 	    }
 	}
 
-        run_sys("cp $dataroot/static/$nl_file $dataroot/static/$nl_file.bak");
+        run_sys::run_sys("cp $dataroot/static/$nl_file $dataroot/static/$nl_file.bak");
     }
     
     opendir(TDIR,"$srcroot/static");
@@ -320,13 +320,13 @@ sub safe_cp{
 		&safe_cp("$indir/$file","$outdir/$file");
 	    }else{
                 print "Copying Directory $indir/$file to $outdir/$file\n";
-		run_sys("cp -r $indir/$file $outdir/$file");
+		run_sys::run_sys("cp -r $indir/$file $outdir/$file");
 	    }
 	    next;
 	}
 	next if(-e "$outdir/$file");
         print "Copying file $indir/$file to $outdir/$file\n";
-	run_sys("cp $indir/$file $outdir/$file");
+	run_sys::run_sys("cp $indir/$file $outdir/$file");
     }	
 }
 
