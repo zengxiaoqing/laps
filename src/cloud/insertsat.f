@@ -111,6 +111,7 @@ c
         real*4 topo(imax,jmax)
         real*4 rlaps_land_frac(imax,jmax)
         real*4 cloud_frac_vis_a(imax,jmax)   ! Used for cloud building with vis
+        real*4 cloud_frac_vis_s(imax,jmax)   ! Used for cloud building with vis
         real*4 solar_alt(imax,jmax)
         real*4 solar_ha(imax,jmax)
         real*4 temp_3d(imax,jmax,klaps)
@@ -169,6 +170,9 @@ c
         jdelt(3) = -idelt_max
 
         iwrite = 0
+
+        call filter_2dx_array(cloud_frac_vis_a,r_missing_data,imax,jmax       
+     1                       ,cloud_frac_vis_s)              
 
         do k = 1,klaps
             zcoords_1d(k) = zcoord_of_level(k)
@@ -327,7 +331,8 @@ c
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
      1     ,istat_39_a(i,j), l_use_39                                     ! I
      1     ,istat_39_add_a(i,j),istat_vis_added_a(i,j)                    ! O
-     1     ,cloud_frac_vis_a(i,j),istat_vis_potl_a(i,j)                   ! I
+     1     ,cloud_frac_vis_a,istat_vis_potl_a(i,j)                        ! I
+     1     ,cloud_frac_vis_s                                              ! I
      1     ,lstat_co2_a(i,j)                                              ! I
      1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
      1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
@@ -612,7 +617,8 @@ c
      1            ,k_terrain(i,j),laps_p
      1            ,istat_39_a(i,j), l_use_39                             ! I
      1            ,istat_39_add_dum,istat_vis_added_dum                  ! O
-     1            ,cloud_frac_vis_a(i,j),istat_vis_potl_a(i,j)           ! I
+     1            ,cloud_frac_vis_a,istat_vis_potl_a(i,j)                ! I
+     1            ,cloud_frac_vis_s                                      ! I
      1            ,lstat_co2_a(i,j)                                      ! I
      1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
      1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
@@ -787,7 +793,8 @@ c
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p       ! I
      1  ,istat_39, l_use_39                                            ! I
      1  ,istat_39_add,istat_vis_added                                  ! O
-     1  ,cloud_frac_vis,istat_vis_potl                                 ! I
+     1  ,cloud_frac_vis_a,istat_vis_potl                               ! I
+     1  ,cloud_frac_vis_s                                              ! I
      1  ,lstat_co2                                                     ! I
      1  ,n_valid_co2,n_missing_co2,cldtop_co2_m,istat_co2              ! O
      1  ,cldtop_tb8_m,l_tb8                                            ! O
@@ -807,7 +814,8 @@ c
         integer*4 init_co2                      ! Input
         integer*4 i4time                        ! Input
         real*4 tb8_k                            ! Input
-        real*4 cloud_frac_vis                   ! Input (vis cloud building)
+        real*4 cloud_frac_vis_a(imax,jmax)      ! Input (vis cloud building)
+        real*4 cloud_frac_vis_s(imax,jmax)      ! Input (vis cloud building)
         integer*4 i,j,imax,jmax,klaps           ! Input
         real*4 t_gnd_k(imax,jmax)               ! Input
         real*4 pres_sfc_pa(imax,jmax)           ! Input
@@ -888,12 +896,13 @@ c
      1       (l_use_39 .and. istat_39 .eq. 1)
      1                     .OR. 
      1       (istat_vis_potl .eq. 1 .and. 
-     1        cloud_frac_vis .ne. r_missing_data)       
+     1        cloud_frac_vis_a(i,j) .ne. r_missing_data)       
      1                                              )then ! get 11u cloud top
             cldtop_temp_k_before = tb8_k
 
 !           Correct the cloud top temperature for thin clouds using VIS data
-            call correct_cldtop_t(tb8_k,t_gnd_k(i,j),cloud_frac_vis    ! I
+            call correct_cldtop_t(tb8_k,t_gnd_k(i,j)                   ! I
+     1                           ,cloud_frac_vis_a(i,j)                ! I
      1                           ,istat_vis_potl                       ! I
      1                           ,cldtop_temp_k,istatus)               ! O
 
@@ -966,8 +975,8 @@ c
             istat_39_add = 1
 
         elseif( (.not. l_tb8) .AND. istat_vis_potl .eq. 1 
-     1                        .AND. cloud_frac_vis .ne. r_missing_data        
-     1                        .AND. cldtop_tb8_m .ne. r_missing_data 
+     1                .AND. cloud_frac_vis_a(i,j) .ne. r_missing_data        
+     1                .AND. cldtop_tb8_m          .ne. r_missing_data        
      1                                                            ) then      
 
 !           Band 8 (11mm) threshold says no but visible says yes
@@ -975,7 +984,7 @@ c
 
             l_cloud_present = .true.
             cldtop_m = cldtop_tb8_m
-            sat_cover = cloud_frac_vis 
+            sat_cover = cloud_frac_vis_a(i,j) 
             istat_vis_added = 1
 
         else                          ! Using Band 8 (11.2mm) data only
@@ -986,8 +995,11 @@ c
         endif
 
         if(l_cloud_present .and. cldtop_m .eq. r_missing_data)then
-            write(6,*)' Warning in cloud_top: ',l_cloud_present,cldtop_m       
-     1               ,i,j
+            write(6,*)' Warning in cloud_top: ',i,j,l_cloud_present
+     1               ,istat_vis_added,istat_39_add,cldtop_m       
+     1               ,t_gnd_k(i,j),tb8_k,cloud_frac_vis_a(i,j)
+     1               ,cloud_frac_vis_s(i,j)
+     1               ,cldtop_temp_k
         endif
 
         return
@@ -1636,6 +1648,28 @@ c
                 istatus = 1                
             endif
         endif
+
+        return
+        end
+
+        subroutine filter_2dx_array(array_in,r_missing_data,ni,nj
+     1                             ,array_out)              
+
+        real*4 array_in(ni,nj)
+        real*4 array_out(ni,nj)
+
+        do i = 1,ni
+        do j = 1,nj       
+            if(array_in(i,j) .eq. r_missing_data)then
+                array_out(i,j) = 0.
+            else
+                array_out(i,j) = array_in(i,j)
+            endif
+        enddo ! j
+        enddo ! i
+
+        call filter_2dx(array_out,ni,nj,1,+0.5)
+        call filter_2dx(array_out,ni,nj,1,-0.5)
 
         return
         end
