@@ -130,10 +130,9 @@ cdis
       if(c1_plottype .eq. 'y')then
 
           icol = min(max(  110. + vel / 2.0   ,  100.  )  ,120.)
+          write(6,*)i,j,vel,icol
           call setusv_dum(2hIN,icol)
 !         call setusv_dum(2hIN,40)
-
-          write(6,*)i,j
 
           if(n_plotted .eq. 1)then
               do uu = u-du/2.,u+du/2.,du/25.
