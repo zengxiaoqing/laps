@@ -38,15 +38,15 @@ c
 c..... Now write out the time.
 c
       write(cyr,12) iyr
- 12   format(i2)
+ 12   format(i2.2)
       write(cjjj,13)jjj
- 13   format(i3)
+ 13   format(i3.3)
 
-      if(cyr(1:1) .eq. ' ') cyr(1:1)='0'
-      if(cyr(2:2) .eq. ' ') cyr(2:2)='0' 
-      if(cjjj(1:1).eq. ' ') cjjj(1:1)= '0'
-      if(cjjj(2:2).eq. ' ') cjjj(2:2)= '0'
-      if(cjjj(3:3).eq. ' ') cjjj(3:3)= '0'
+!     if(cyr(1:1) .eq. ' ') cyr(1:1)='0'
+!     if(cyr(2:2) .eq. ' ') cyr(2:2)='0' 
+!     if(cjjj(1:1).eq. ' ') cjjj(1:1)= '0'
+!     if(cjjj(2:2).eq. ' ') cjjj(2:2)= '0'
+!     if(cjjj(3:3).eq. ' ') cjjj(3:3)= '0'
 
       wfo_fname13_to_fname9 = cyr//cjjj//wfo_fname13(10:13)
 c
@@ -115,16 +115,16 @@ c
       write(cdy,12) idy
       write(chh,12) ihh
       write(cmin,12)imin
- 12   format(i2)
+ 12   format(i2.2)
 
-      if(cyr(1:1) .eq. ' ') cyr(1:1) = '0'
-      if(cyr(2:2) .eq. ' ') cyr(2:2) = '0'
-      if(cmm(1:1) .eq. ' ') cmm(1:1) = '0'
-      if(cdy(1:1) .eq. ' ') cdy(1:1) = '0'
-      if(chh(1:1) .eq. ' ') chh(1:1) = '0'
-      if(chh(2:2) .eq. ' ') chh(2:2) = '0'
-      if(cmin(1:1).eq. ' ') cmin(1:1)= '0'
-      if(cmin(2:2).eq. ' ') cmin(2:2)= '0'
+!     if(cyr(1:1) .eq. ' ') cyr(1:1) = '0'
+!     if(cyr(2:2) .eq. ' ') cyr(2:2) = '0'
+!     if(cmm(1:1) .eq. ' ') cmm(1:1) = '0'
+!     if(cdy(1:1) .eq. ' ') cdy(1:1) = '0'
+!     if(chh(1:1) .eq. ' ') chh(1:1) = '0'
+!     if(chh(2:2) .eq. ' ') chh(2:2) = '0'
+!     if(cmin(1:1).eq. ' ') cmin(1:1)= '0'
+!     if(cmin(2:2).eq. ' ') cmin(2:2)= '0'
       if(iyr.lt.90)then
          cyyyy='20'//cyr
       else
