@@ -62,16 +62,21 @@ cdis
 !          "         "         - Incorporate namelist parameter fdda_model_source to
 !                                determine the subdirectory in which fdda model bckgnd
 !                                exist.  Remove 'ram' as fdda extension.
+!       Jan 2001     "         - Obtain 2d fields from fsf or lgb when kmax = 1.
+!                                New jacket routine get_modelfg_2d.
 
         include 'bgdata.inc'
 
         real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
 
+        logical      lgab
+
         character*3  var_2d
+        character*3  c_bkgd_ext(2)
         character*9  a9_time
         character*31 ext_a(maxbgmodels)
         character*31 subdir(maxbgmodels)
-        character*15 fdda_model_source(maxbgmodels)
+        character*9 fdda_model_source(maxbgmodels)
 
 !       ****************** RAMS SECTION ***************************************
 
@@ -79,6 +84,14 @@ cdis
 
 !       1) No time interpolation is performed
 !       2) FDDA/LGA file must be available valid at i4time/i4time_needed
+
+        if(kmax.eq.1)then
+           c_bkgd_ext(1)='fsf'
+           c_bkgd_ext(2)='lgb'
+        else
+           c_bkgd_ext(1)='fua'
+           c_bkgd_ext(2)='lga'
+        endif
 
         i4time_needed = i4time
 
@@ -89,27 +102,44 @@ cdis
            return
         endif
 
+        lgab=.false.
         if(n_fdda_models .eq. 0)then
            n_fdda_models = 1
-           subdir(n_fdda_models)='lga'
-           ext_a(n_fdda_models) ='lga'
+           subdir(n_fdda_models)=c_bkgd_ext(2)
+           ext_a(n_fdda_models) =c_bkgd_ext(2)
+           lgab=.true.
+
+c if lga is the first in the list then we'll force this to be the
+c only possible background returned from get_modelfg_2/3d..
+        elseif(fdda_model_source(1).eq.'lga')then
+           n_fdda_models = 1
+           subdir(n_fdda_models)=c_bkgd_ext(2)
+           ext_a(n_fdda_models) =c_bkgd_ext(2)
+           lgab=.true.
         else
            do i=1,n_fdda_models
               subdir(i)=fdda_model_source(i)
-              ext_a(i) ='fua'
+              if(subdir(i).eq.'lga')then        !.or.subdir(i).eq.'lgb')then
+                 ext_a(i) =c_bkgd_ext(2)
+                 lgab=.true.
+              else
+                 ext_a(i) =c_bkgd_ext(1)
+              endif
            enddo
+        endif
+c this part adds lga/b to the list since it isn't already  part of it.
+        if(.not.(lgab))then
            if(n_fdda_models.lt.maxbgmodels)then
               n_fdda_models = n_fdda_models + 1
-              subdir(n_fdda_models)='lga'
-              ext_a(n_fdda_models) ='lga'
+              subdir(n_fdda_models)=c_bkgd_ext(2)
+              ext_a(n_fdda_models) =c_bkgd_ext(2)
            else
               print*,'*** WARNING *** '
-              print*,'Cannot add lga to model background list in'
+              print*,'Cannot add lga/b to model background list in'
      .,'get_modelfg_3d'
            endif
         endif
            
-
 
 
         do isource = 1,n_fdda_models
@@ -160,7 +190,7 @@ cdis
 
 
         call get_directory(ext_a,directory,lend)
-        if(ext_a.ne.'lga')then
+        if(ext_a.ne.'lga'.and.ext_a.ne.'lgb')then
            call s_len(subdir,ld)
            directory = directory(1:lend)//subdir(1:ld)//'/'
            lend=lend+ld+1
@@ -208,14 +238,24 @@ c
      1                      ,imax,jmax,kmax,field_3d_laps,istatus)
 
            elseif(lenf - lend .eq. 13)then
+
+               if(kmax.gt.1)then
 c
 c new: changed variable name "ext" to "directory".
-               call get_lapsdata_3d(i4_initial,i4_valid,imax
+                  call get_lapsdata_3d(i4_initial,i4_valid,imax
      1                 ,jmax,kmax,directory,var_2d
      1                 ,units_2d,comment_2d,field_3d_laps,istatus)
 
+                else
+
+                  call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1              ,var_2d,units_2d,comment_2d,imax,jmax
+     1              ,field_3d_laps(1,1,1),istatus)
+
+                endif
+
            else
-               write(6,*)' Error, illegal length of lga filename'
+               write(6,*)' Error, illegal length of bckgd filename'
      1                 ,lend,lenf
                istatus = 0
 
@@ -223,7 +263,7 @@ c new: changed variable name "ext" to "directory".
 
            if(istatus .ne. 1)then
               write(6,*)'get_modelfg_3d_sub: Warning - could not read'
-     1                 ,' 3-D file'
+     1                 ,' model file'
            else ! istatus = 1
                call qc_field_3d(var_2d,field_3d_laps
      1                         ,imax,jmax,kmax,istatus)            
@@ -336,6 +376,36 @@ c
                endif ! Smallest forecast time?
             endif ! Correct valid time
         enddo ! i
+
+        return
+        end
+c
+c-------------------------------------------------------------------------
+        subroutine get_modelfg_2d(i4time,var_2d,imax,jmax
+     1                          ,field_2d_laps,istatus)
+
+c
+c routine requires kmax = 1
+c
+        include 'bgdata.inc'
+
+        integer imax,jmax
+
+        real*4 field_2d_laps(imax,jmax)       ! Output array
+
+        character*3  var_2d
+        character*9  a9_time
+        character*9  fdda_model_source(maxbgmodels)
+        character*31 ext_a(maxbgmodels)
+        character*31 subdir(maxbgmodels)
+
+        call get_modelfg_3d(i4time,var_2d,imax,jmax,1
+     1                          ,field_2d_laps,istatus)
+
+        if(istatus.ne.1)then
+           print*,'error getting 2d field from get_modelfg_2d'
+           return
+        endif
 
         return
         end

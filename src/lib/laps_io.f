@@ -81,8 +81,8 @@ cdoc    Used to read in a surface grid with inputs of time and ext
         return
         end
 
-        subroutine get_lapsdata_2d(i4time,i4_valid,EXT,var_2d,units_2d,
-     1                  comment_2d,imax,jmax,field_2d,istatus)
+        subroutine get_lapsdata_2d(i4time,i4_valid,EXT
+     1,var_2d,units_2d,comment_2d,imax,jmax,field_2d,istatus)
 
 !       Returns a 2D laps grid
 !       i4time              Input      Desired i4time initial
@@ -103,6 +103,7 @@ cdoc    by calling the new READ_LAPS routine
         character*9 asc9_tim
         character*150 DIRECTORY
         character*(*) EXT
+        character*31  EXT_INT
 
         character*125 comment_2d
         character*10 units_2d
@@ -118,19 +119,46 @@ cdoc    by calling the new READ_LAPS routine
             return
         endif
 
-        call get_directory(ext,directory,len_dir)
+        call s_len(ext,len)
+
+        if(len.gt.3)then
+           directory = ext
+           call s_len(directory,len_dir)
+           if(directory(len_dir:len_dir).eq.'/')then
+              len_dir=len_dir-1
+              directory=directory(1:len_dir)
+           endif
+           call get_directory_length(directory,len)
+           if(directory(len+1:len_dir).eq.'lgb')then
+              ext_int='lgb'
+           elseif(directory(len+1:len_dir).eq.'fsf')then
+              ext_int='fsf'
+           else
+              print*,'Unknown lapsprd extension'
+     &,directory(1:len_dir)
+              istatus = 0
+              return
+           endif
+           len=3
+           len_dir=len_dir+1
+           directory(len_dir:len_dir)='/'
+        else
+           call get_directory(ext,directory,len_dir)
+           ext_int=ext
+        endif
 
         call make_fnam_lp(i4time,asc9_tim,istatus)
 
-        write(6,11)directory(1:45),asc9_tim,ext(1:5),var_2d
-11      format(' Reading 2d ',a45,1x,a9,1x,a5,1x,a3)
+        write(6,11)directory(1:len_dir),ext_int(1:len)
+     1,var_2d
+11      format(' Reading 2d ',a,1x,a5,1x,a3)
 
         lvl_2d = 0
         lvl_coord_2d = 'MSL'
 
-        CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,imax,jmax,
-     1  1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
-     1                     COMMENT_2D,field_2d,ISTATUS)
+        CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT_INT
+     1,imax,jmax,1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D
+     1, COMMENT_2D,field_2d,ISTATUS)
 
 !       Check for missing data
         do j = 1,jmax
@@ -529,10 +557,11 @@ cdoc    Returns a 3-D grid. Inputs include the extension and time.
         return
         end
 
-        subroutine get_lapsdata_3d(i4time,i4_valid,imax,jmax,kmax
-     1  ,EXT,var_2d,units_2d,comment_2d,field_3d,istatus)
+        subroutine get_lapsdata_3d(i4time,i4_valid
+     1,imax,jmax,kmax,EXT,var_2d,units_2d,comment_2d
+     1,field_3d,istatus)
 
-cdoc    Returns a 3-D fcst grid. Inputs include ext, initial and valid time.
+cdoc    Returns a 3-D fcst grid. Inputs include directory, initial and valid time.
 
 !       i4time              Input      Desired i4time initial
 !       i4_valid            Input      i4time for valid data time
@@ -545,38 +574,62 @@ cdoc    Returns a 3-D fcst grid. Inputs include ext, initial and valid time.
 
 !       Steve Albers            1990
 
+        include      'bgdata.inc'
+
         character*150 DIRECTORY
         character*(*) EXT
         character*31  EXT_INT
 
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
-        character*3 var_3d(kmax),var_2d,ctemp
-        integer*4 LVL_3d(kmax)
+        character*15 fdda_model_source(maxbgmodels)
+        character*3  var_3d(kmax),var_2d
+
+        integer     LVL_3d(kmax)
+        integer     nfdda,l
         character*4 LVL_COORD_3d(kmax)
 
         real*4 field_3d(imax,jmax,kmax)
 
         logical ltest_vertical_grid
 
-        call s_len(ext,len)
+        call get_fdda_model_source(fdda_model_source,nfdda,istatus)
 
-        ctemp=ext(len-3:len-1)
-        if(len.gt.3)then
+        call s_len(ext,len)
+        if(len.gt.3)then    !this tests whether ext is truely an extension or not.
            directory = ext
            call s_len(directory,len_dir)
-           if(ext(len-3:len-1).eq.'lga')then
+           if(directory(len_dir:len_dir).eq.'/')then
+              len_dir=len_dir-1
+              directory=directory(1:len_dir)
+           endif
+           call get_directory_length(directory,len)
+           if(directory(len+1:len_dir).eq.'lga')then
               ext_int='lga'
            else
-              ext_int='fua'
+              do l=1,nfdda
+                 if(directory(len+1:len_dir).eq.
+     &fdda_model_source(l))then
+                    ext_int='fua'
+                 endif
+              enddo
+           endif
+           if(ext_int.eq.' ')then
+              print*,'Unknown lapsprd extension'
+     &,directory(1:len_dir)
+              istatus = 0
+              return
            endif
            len=3
+           len_dir=len_dir+1
+           directory(len_dir:len_dir)='/'
         else
            call get_directory(ext,directory,len_dir)
            ext_int=ext
         endif
 
-        write(6,11)directory(1:len_dir),ext_int(1:len),var_2d
+        write(6,11)directory(1:len_dir),ext_int(1:len)
+     1,var_2d
 11      format(' Reading 3d ',a,1x,a5,1x,a3)
 
         do k = 1,kmax
@@ -1036,8 +1089,12 @@ c
         integer   i4time_nearest
         integer   i4tol
         integer   i4timedata(maxsat)
+        integer   i4time_min
+        integer   i4time_sys
+        integer   min_i4time
 
         integer   i
+        integer   imn
         integer   istatus 
         integer   jstatus
 
@@ -1048,7 +1105,11 @@ c
         character c_sat_id(maxsat)*6   !satellite id's known to system
         character csatid(maxsat)*6   !satellite id's returned from routine
 
-        istatus=0   !No data found
+        integer   i4time_first
+        data      i4time_first/0/
+        save      i4time_first
+
+        istatus=1   !data was found
         nsats=0
         do i=1,maxsat
            if(isats(i).eq.1)then
@@ -1072,21 +1133,57 @@ c
 c this section can make decisions about which satellite data
 c to return in the event there is more than 1 2d field.
 c
-        call make_fnam_lp(i4timedata(1),asc9_tim,istatus)
-
         if(nsats.gt.1)then
            write(6,*)'Found data for ',nsats,' satellites'
-           write(6,*)'Returning ',var_2d,' for ',csatid(1),' ',asc9_tim
+           do i=1,nsats
+              if(i4timedata(i).eq.i4time_first)then
+                 call make_fnam_lp(i4timedata(i),asc9_tim,istatus)
+                 call move(field_2d_lvd(1,1,i),field_2d,imax,jmax)
+                 write(6,*)'Returning ',var_2d,' for ',csatid(i),
+     &' ',asc9_tim
+                 return
+              endif
+           enddo
+
+           call get_systime_i4(i4time_sys,istatus)
+           min_i4time=i4time_sys
+           do i=1,nsats
+              i4time_min=abs(i4timedata(i)-i4time_sys)
+              if(i4time_min.lt.min_i4time)then
+                 imn=i
+              endif
+           enddo
+
+           if(imn.ne.0)then
+              i4time_first=i4timedata(imn)
+              call make_fnam_lp(i4timedata(imn),asc9_tim,istatus)
+              call move(field_2d_lvd(1,1,imn),field_2d,imax,jmax)
+              write(6,*)'Returning ',var_2d,' for ',csatid(imn),
+     &' ',asc9_tim
+              return
+
+           else
+c default
+              i4time_first=i4timedata(1)
+              call make_fnam_lp(i4time_first,asc9_tim,istatus)
+              call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
+              write(6,*)'Returning ',var_2d,' for ',csatid(1),
+     &' ',asc9_tim
+              return
+           endif
+
         elseif(nsats.eq.1)then
+           i4time_first=i4timedata(1)
+           call make_fnam_lp(i4time_first,asc9_tim,istatus)
+           call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
            write(6,*)'Returning ',var_2d,' for ',csatid(1),' ',asc9_tim
+           return
         elseif(nsats.le.0)then
            write(6,*)'No lvd fields found. Returning  no data'
-           return
         endif
 
-        call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
 
-        istatus=1
+        istatus=0
         return
         end
 c
