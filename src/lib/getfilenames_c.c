@@ -90,6 +90,8 @@ numfiles will be reported as 0.
 
 
 **----------------------------------------------------------------------------*/
+#ifndef _getfilenames_c_
+#define _getfilenames_c_
 #include <config.h>
 
 #include <sys/types.h>
@@ -315,5 +317,5 @@ int *status;
  
     }
  
-
+#endif
   

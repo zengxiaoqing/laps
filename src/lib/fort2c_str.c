@@ -29,6 +29,8 @@ cdis
 cdis  
 cdis 
 cdis*/
+#ifndef _fort2c_str_
+#define _fort2c_str_
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -146,3 +148,4 @@ char *outstr;
         free(tempout);
 }
 /***********************************************************************/
+#endif

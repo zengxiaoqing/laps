@@ -80,6 +80,12 @@ c get NX_L and NY_L from nest7grid.parms
       
       print*,'map_len ', map_len
 
+      file_name(132:132) = char(0)
+      cdl_dir(132:132) = char(0)
+      asctime(24:24) = char(0)
+      map_projection(30:30) = char(0)
+
+
       call write_cdf_static(file_name,f_len,asctime,cdl_dir
      1     ,cdl_dir_len,var,var_len,comment,com_len
      1     ,laps_dom_file,dom_len,imax,jmax,n_grids
