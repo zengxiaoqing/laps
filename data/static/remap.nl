@@ -6,6 +6,7 @@
  min_ref_samples=-1,
  min_vel_samples=-1,
  dgr=1.1,
+ abs_vel_min=2.0,
  path_to_radar_a=
 '/public/data/radar/wsr88d/wideband/kama/netcdf',
 '/public/data/radar/wsr88d/wideband/kcys/netcdf',
@@ -68,3 +69,6 @@ c                      -1 defaults to letting the software make the choice
 c
 c 'dgr'              - Maximum gap in degrees of azimuth upon which the 
 c                      horizontal reflectivity averaging is performed
+c
+c 'abs_vel_min'      - Minimum absolute value of velocity needed for gate
+c                      to be used
