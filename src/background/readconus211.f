@@ -1,5 +1,5 @@
       subroutine open_sbn_netcdf(path, fname, ncid
-     +                        , ntbg, istatus)  
+     +                        , nrecs, istatus)  
       implicit none
       integer istatus
       include 'netcdf.inc'
@@ -9,10 +9,10 @@
       character*255 cdfname
       character*31 dummy
       integer*4 ncid, slen, ndims, nvars, recdim, nrecs,ngatts
-      integer*4 rcode, ntbg
+      integer*4 rcode
 
       if(len(path)+13.gt.len(cdfname)) then
-        print*,'path too long in open)sbn_netcdf'
+        print*,'path too long in open_sbn_netcdf'
         stop
       endif
 
@@ -24,7 +24,7 @@
       ncid=ncopn(cdfname,ncnowrit,rcode)
       call ncinq(ncid,ndims,nvars,ngatts,recdim,rcode)
       call ncdinq(ncid,recdim,dummy,nrecs,rcode)
-      if (nrecs .lt. ntbg) then
+      if (nrecs .le. 1) then
          print *,'Not enough records in netcdf file.'
          istatus=0
          call ncclos(ncid,istatus)
@@ -34,7 +34,40 @@
       return
       end
 
-      subroutine read_ruc60_conus(path,fname,af,nx,ny,nz,
+      subroutine get_sbn_dims(ncid,nxbg,nybg,nzbg,ntbg,ivaltimes)
+      integer*4 ncid,nxbg,nybg,nzbg(5),ntbg
+      integer*4 id_fields(5), i, istat, vdims(10)
+      integer ivaltimes(ntbg)      
+      character*31 dummy
+      data id_fields/1,4,7,10,13/
+        
+      i = ncvid(ncid,'valtimeMINUSreftime            ',istat)
+      call ncvgt(ncid,i,1,ntbg,ivaltimes,istat)
+      print *, ivaltimes
+      do i=1,5
+        call ncvinq(ncid,id_fields(i),dummy,ntp,nvdim,vdims,nvs,istat)
+
+        call ncdinq(ncid,vdims(1),dummy,nxbg,rcode)
+c        print *,'ndsize = ', ndsize
+        call ncdinq(ncid,vdims(2),dummy,nybg,rcode)
+c        print *,'ndsize = ', ndsize
+        call ncdinq(ncid,vdims(3),dummy,nzbg(i),rcode)
+c        print *,'ndsize = ', ndsize
+cc        call ncdinq(ncid,vdims(4),dummy,ntbg,rcode)
+c        print *,'ndsize = ', ndsize
+        
+c        print*, 'ntp = ',ntp
+c        print*, 'nvdim = ',nvdim
+c        print*, 'vdims = ',vdims
+c        print*, 'nvs = ',nvs
+      enddo
+c      stop
+      return 
+      end
+
+
+      subroutine read_conus_211(path,fname,af,nx,ny,nz,
+     .                            nxbg,nybg,nzbg,ntbg,
      .                            pr,ht,tp,sh,uw,vw,gproj,istatus)
 
 c
@@ -46,21 +79,21 @@ c
       include 'netcdf.inc'
 c
       integer*4 nx,ny,nz
-
+      integer*4 nxbg,nybg,nzbg(5),ntbg
 c
       integer*4 rcode
 c
 c *** Netcdf arrays.
 c
-      integer nxbg, nybg, nzbg1,nzbg2, nzbg3, nzbg4, ntbg
-      parameter(nxbg=75,nybg=56,nzbg1=35,nzbg2=38,nzbg3=39)
-      parameter(nzbg4=40,ntbg=5)
+cc      integer nxbg, nybg, nzbg1,nzbg2, nzbg3, nzbg4, ntbg
+cc      parameter(nxbg=75,nybg=56,nzbg1=35,nzbg2=38,nzbg3=39)
+cc      parameter(nzbg4=40,ntbg=5)
 
-      real*4 htn(nxbg,nybg,nzbg1,ntbg),
-     .       tpn(nxbg,nybg,nzbg2,ntbg),
-     .       rhn(nxbg,nybg,nzbg3,ntbg),
-     .       uwn(nxbg,nybg,nzbg4,ntbg),
-     .       vwn(nxbg,nybg,nzbg4,ntbg),
+      real*4 htn(nxbg,nybg,nzbg(1),ntbg),
+     .       tpn(nxbg,nybg,nzbg(2),ntbg),
+     .       rhn(nxbg,nybg,nzbg(3),ntbg),
+     .       uwn(nxbg,nybg,nzbg(4),ntbg),
+     .       vwn(nxbg,nybg,nzbg(5),ntbg),
      .       prn(19)
 c
       data prn/1000.,950.,900.,850.,800.,750.,700.,650.,600.,550.,
@@ -103,14 +136,14 @@ c
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
 c
-      save htn,tpn,rhn,uwn,vwn,prn,oldfname
+ccc      save htn,tpn,rhn,uwn,vwn,prn,oldfname
 c_______________________________________________________________________________
 c
       msgflg=1.e30
 c
 c *** Open the netcdf file.
 c
-      if (fname .ne. oldfname) then
+ccc      if (fname .ne. oldfname) then
 
          call open_sbn_netcdf(path,fname,ncid,ntbg,rcode)
          if(rcode.ne.1) return
@@ -127,7 +160,7 @@ c
             count(j)=ndsize
          enddo
          if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg1.or.count(4).ne.ntbg) then
+     +      count(3).ne.nzbg(1).or.count(4).ne.ntbg) then
             goto 900
          endif         
          call ncvgt(ncid,1,start,count,htn,rcode)
@@ -143,7 +176,7 @@ c
             count(j)=ndsize
          enddo
          if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg3.or.count(4).ne.ntbg) then
+     +      count(3).ne.nzbg(2).or.count(4).ne.ntbg) then
             goto 900
          endif         
          call ncvgt(ncid,4,start,count,rhn,rcode)
@@ -159,7 +192,7 @@ c
             count(j)=ndsize
          enddo
          if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg2.or.count(4).ne.ntbg) then
+     +      count(3).ne.nzbg(3).or.count(4).ne.ntbg) then
             goto 900
          endif         
          call ncvgt(ncid,7,start,count,tpn,rcode)
@@ -175,7 +208,7 @@ c
             count(j)=ndsize
          enddo
          if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg4.or.count(4).ne.ntbg) then
+     +      count(3).ne.nzbg(4).or.count(4).ne.ntbg) then
             goto 900
          endif         
 
@@ -192,7 +225,7 @@ c
             count(j)=ndsize
          enddo
          if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg4.or.count(4).ne.ntbg) then
+     +      count(3).ne.nzbg(5).or.count(4).ne.ntbg) then
             goto 900
          endif         
          call ncvgt(ncid,13,start,count,vwn,rcode)
@@ -201,7 +234,7 @@ c *** Close netcdf file.
 c
       call ncclos(ncid,rcode)
 c
-      endif
+ccc      endif
 
 c
 c *** Fill ouput arrays.
@@ -220,8 +253,17 @@ c
       enddo
       enddo
 c         
-      ip=13
-      jp=4 
+c  For ruc the actual domain is smaller than the conus 211 projection
+c  so nxbg and nybg are smaller than nx and ny
+c
+      if(nxbg.lt.nx.and.nybg.lt.ny) then
+         ip=13
+         jp=4 
+      else
+         ip=0
+         jp=0
+      endif
+
       read(af,'(i4)') n
       n=n/3+1
       istatus=0
@@ -284,17 +326,17 @@ c
 c
 c *** Convert ruc winds from grid north to true north.
 c
-      do j=1,ny
-      do i=1,nx
-         lci(i,j)=float(i)
-         lcj(i,j)=float(j)
-      enddo
-      enddo
-      call lcij_2_latlon(nx*ny,lci,lcj,lat,lon)
+cc      do j=1,ny
+cc      do i=1,nx
+cc         lci(i,j)=float(i)
+cc         lcj(i,j)=float(j)
+cc      enddo
+cc      enddo
+cc      call lcij_2_latlon(nx*ny,lci,lcj,lat,lon)
 c
-      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
+cc      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
 c
-      oldfname=fname
+cc      oldfname=fname
       istatus=1
       return
  900  print*,'ERROR: bad dimension specified in netcdf file'

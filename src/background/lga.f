@@ -41,7 +41,7 @@ c
 c        bgmodel = 1 ---> RUC (60 km native grid)
 c        bgmodel = 2 ---> ETA (48 km conus-c grid)
 c        bgmodel = 3 ---> NOGAPS
-c        bgmodel = 4 ---> RUC (60 km conus-c grid)
+c        bgmodel = 4 ---> SBN Conus211 (Eta or RUC)
 c        bgmodel = 5 ---> RUC (40 km native grid)
 c
       integer*4 nbgmodel
@@ -141,7 +141,7 @@ c         len = index(bgpaths(i),' ')
             nx_bg = 93
             ny_bg = 65
             nz_bg = 19        
-            cmodel = 'RUC60_NATIVE'   	   
+            cmodel = 'SBN CONUS211'   	   
          else if(bgmodel.eq.5) then
             nx_bg = 151
             ny_bg = 113
@@ -311,6 +311,7 @@ c
       character*12  cmodel
       integer*4 ncid       
       integer len_dir, ntime, last_time,next_time, nf
+      integer nxbg, nybg, nzbg(5),ntbg, ivaltimes(20)
 c
       data msgflg/1.e30/
       data ntime/0/
@@ -363,9 +364,26 @@ c         j=index(names(i),' ')-14
             if (names(i)(j+1:j+1) .eq. '1' .or. 
      .          names(i)(j+1:j+1) .eq. '9') then
 	        if (bgmodel .eq. 4) then
-                  do k=1,5
-                     fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
-                     write(af,'(i4.4)') (k-1)*3
+                   fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
+
+                   call open_sbn_netcdf(bgpath,fname,ncid,ntbg
+     +                  ,istatus)
+                   if(istatus.eq.0) then
+                      print*,'Not enough records in file ',fname
+                      istatus=0
+                      ntime=0
+                   endif
+                   call get_sbn_dims(ncid,nxbg,nybg,nzbg,ntbg,ivaltimes)
+                   if(nxbg.lt.nx_bg.and.nybg.lt.ny_bg)then
+                      cmodel='RUC 60 SBN'
+                   else
+                      cmodel='ETA SBN'
+                   endif
+
+                   call ncclos(ncid,istatus)
+
+                   do k=1,ntbg
+                     write(af,'(i4.4)') ivaltimes(k)/3600
                      ct4=ct4+1
                      bg_names(ct4)=fname//af
                   enddo
@@ -465,17 +483,20 @@ c
          if(ntime.eq.0) then
             ntime = bgtime
          endif   
-         if(bgmodel.eq.4) then         
-            call open_sbn_netcdf(bgpath,fname,ncid,5,istatus)
-            if(istatus.eq.0) then
-              print*,'Not enough records in file ',fname
-              istatus=0
-              ntime=0
-              goto 40
-            endif
-            call ncclos(ncid,istatus)
 
-         endif
+cc         if(bgmodel.eq.4.and.n.eq.bg_files) then         
+cc            call open_sbn_netcdf(bgpath,fname,ncid,ivaltimes,istatus)
+cc            if(istatus.eq.0) then
+cc              print*,'Not enough records in file ',fname
+cc              istatus=0
+cc              ntime=0
+cc              goto 40
+cc            endif
+cc            call get_sbn_dims(ncid,nxbg,nybg,nzbg,ntbg)
+cc
+cc            call ncclos(ncid,istatus)
+cc
+cc         endif
 
          if(bgtime+ihour*3600.gt.i4time_now.and.
      +        bgtime+ihour*3600.lt.next_time) then
@@ -531,18 +552,18 @@ c
      .                             gproj,istatus)
  
          elseif (bgmodel .eq. 2) then ! Process 48 km ETA conus-c grid data
-            print *, 'eta48 code disabled'
-c           call read_eta48_conus(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
-c     .                            prbg,htbg,tpbg,shbg,uwbg,vwbg,
-c     .                            gproj,istatus)
-c
+           call read_eta_conusC(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
+     .                          prbg, htbg,tpbg,shbg,uwbg,vwbg,
+     .                          gproj,istatus)
+
          elseif (bgmodel .eq. 3) then ! Process NOGAPS data
             call read_nogaps(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .                       prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .                       gproj,istatus)
  
-         elseif (bgmodel .eq. 4) then ! Process 60 km RUC conus-c grid data
-            call read_ruc60_conus(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
+         elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
+            call read_conus_211(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
+     .                            nxbg,nybg,nzbg,ntbg,
      .                            prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .                            gproj,istatus)
 c

@@ -282,16 +282,16 @@ c
          var(k)='HT '
          kk=k+nz
          ip(kk)=int(pr(k))
-         var(kk)='T  '
+         var(kk)='T3 '
          kk=k+2*nz
          ip(kk)=int(pr(k))
          var(kk)='SH '
          kk=k+3*nz
          ip(kk)=int(pr(k))
-         var(kk)='U  '
+         var(kk)='U3 '
          kk=k+4*nz
          ip(kk)=int(pr(k))
-         var(kk)='V  '
+         var(kk)='V3 '
       enddo
 c
       call read_laps(time1,time1+fcst1,dir,ext,
