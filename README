@@ -1654,7 +1654,7 @@ Process cloud:	LC3  LC3  camt    42  Fractional Cloud Cover (levels 1-42)
          	LCB  LCB  cbas     1  Cloud base 
 		     LCT  ctop     1  Cloud Top
            	     CCE  cce      1  Cloud Ceiling
-        	LCT  SPT  spt      1  Sfc Precip Type
+        	LCT  PTY  spt      1  Sfc Precip Type
                      PTT  ptt      1  LAPS Sfc Precip Type
                      SCT  sct      1  Sfc Cloud Type
          	LCV  LCV  ccov     1  Cloud Cover
