@@ -136,11 +136,19 @@ cdis
         subroutine cpt_concentration(rate,fall_velocity,concentration)
 
 !       This gets m**3 of water per m**3 of volume (non-dimensional)
-        concentration = rate / fall_velocity
 
-        rho = 1e3   ! mass in kilograms of a cubic meter of water
+C LSW   STOP if fall_velocity = 0
+        if (fall_velocity.eq.0) then
+          write(6,*) 'fall_velocity=',fall_velocity
+          write(6,*)' Error src/lib/pcpcnc.f, cpt_concentration, STOP'
+          stop
+        else
+          concentration = rate / fall_velocity
 
-        concentration = concentration * rho
+          rho = 1e3   ! mass in kilograms of a cubic meter of water
+
+          concentration = concentration * rho
+        endif
 
         return
 
