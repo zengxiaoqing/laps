@@ -502,11 +502,3 @@ c
 	 end
 c
 c
-	function c2f(temp_c)
-c
-c       Takes a single value in deg C and returns deg F.
-c
-	c2f = (temp_c * 9./5.) + 32.
-c
-	return
-	end

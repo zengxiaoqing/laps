@@ -191,15 +191,15 @@ c
 c
 c..... Figure out report type
 c
-      if(rtype .eq. 2.and.astype.eq.2) type(n)(1:5) = 'METAR'
+      if(rtype .eq. 2.and.astype.eq.2) type(n) = 'METAR'
 
-      if(rtype .eq. 3.and.astype.eq.2) type(n)(1:5) = 'SPECI'
+      if(rtype .eq. 3.and.astype.eq.2) type(n) = 'SPECI'
 
-      if(rtype .eq. 2.and.astype.eq.4) type(n)(1:5) = 'METAR'
+      if(rtype .eq. 2.and.astype.eq.4) type(n) = 'METAR'
 
-      if(rtype .eq. 2.and.astype.eq.9) type(n)(1:4) = 'BUOY'
+      if(rtype .eq. 2.and.astype.eq.9) type(n) = 'BUOY'
 
-      if(rtype .eq. 2.and.astype.eq.0) type(n)(1:5) = 'SYNOP'
+      if(rtype .eq. 2.and.astype.eq.0) type(n) = 'SYNOP'
 c
 c..... Auto station?  
 c
