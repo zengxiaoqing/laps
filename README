@@ -3225,9 +3225,10 @@ Source directory: 'laps/src/lapsprep'
 LAPS Variables and netCDF File Organization
         (author: Linda Wharton - wharton@fsl.noaa.gov)
 
-LAPS output is written in NetCDF format as summarized below.
-Note that additional info on the units of the fields, etc. are contained in the
-'data/*.cdl' files.
+LAPS output is written in NetCDF format as summarized below. Each file 
+extension goes into a separate directory under '$LAPS_DATA_ROOT/lapsprd/'.
+Note that NetCDF information on the units of the fields, etc. is contained in 
+the '$LAPS_DATA_ROOT/cdl/*.cdl' files.
 
 
                 File LAPS CDF    Num
