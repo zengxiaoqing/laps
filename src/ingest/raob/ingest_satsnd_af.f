@@ -74,7 +74,8 @@
 
  101      format(6(i9,2x))
 
-          nlvls = I_A1NLVL
+!         nlvls = I_A1NLVL
+          nlvls = 16          ! Hardwired as per AFWA documentation
 
           iblk = 1
           do lvl = 1,nlvls
@@ -194,24 +195,29 @@
           spd = r_missing_data
 
           do lvl = 1,nlvls
-              if(abs(temp_k(lvl)) .gt. 400.)then
-                  temp_c = r_missing_data
-              else
-                  temp_c = temp_k(lvl) - 273.15
+              if(abs(rheight(lvl)) .gt. 100000.)then
+                  rheight(lvl) = r_missing_data
               endif
 
-!             Convert rh(lvl) to dewpoint?
-              if(rh(lvl) .gt. 0. .and. rh(lvl) .le. 100.)then
+              if(abs(pressure(lvl)) .gt. 100000.)then
+                  pressure(lvl) = r_missing_data
+              endif
+
+              if(temp_k(lvl) .ge. 150. .and. temp_k(lvl) .le. 400.)then       
+                  temp_c = temp_k(lvl) - 273.15
+              else
+                  temp_c = r_missing_data
+              endif
+
+!             Convert rh(lvl) to dewpoint
+              if(rh(lvl) .gt. 0. .and. rh(lvl) .le. 100.
+     1                           .and. temp_c .ne. r_missing_data)then       
                   dewpoint_c = dwpt(temp_c,rh(lvl))
               else
                   dewpoint_c = r_missing_data
               endif
 
-              if(abs(rheight(lvl)) .gt. 100000.)then
-                  rheight(lvl) = r_missing_data
-              endif
-
-              write(6,*)rheight(lvl),pressure(lvl)
+              if(i .le. 100)write(6,*)rheight(lvl),pressure(lvl)
      1              ,temp_c
      1              ,dewpoint_c
      1              ,ilvl

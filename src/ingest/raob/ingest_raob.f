@@ -32,8 +32,9 @@
 
       call get_systime(i4time_sys,a9_time,istatus)
       if(istatus .ne. 1)go to 999
+      write(6,*)' systime = ',a9_time
 
-      i4time_sys = (i4time_sys/i4_snd_interval) * i4_snd_interval ! For testing only
+!     i4time_sys = (i4time_sys/i4_snd_interval) * i4_snd_interval ! For testing only
 
       call get_grid_dim_xy(NX_L,NY_L,istatus)
       if (istatus .ne. 1) then

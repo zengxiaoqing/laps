@@ -35,12 +35,6 @@ C
           write (6,*) 'Error getting r_missing_data'
           return
       endif
-      call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a,   
-     1            topo_a,1.0,rnorth,south,east,west,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' Error in get_domain_perimeter'
-          return
-      endif
 
       c8_obstype = 'RAOB'
 
