@@ -701,6 +701,7 @@ CONTAINS
     INTEGER                  :: nestpt, i
     CHARACTER(LEN=13)        :: odate,ndate 
     CHARACTER(LEN=24)        :: tempdate
+    CHARACTER(LEN=3)         :: model_title
     status = 0
     num_points = 0
     pointfile = TRIM(lfmprd_dir) // '/../static/lfmpost_points.txt'
@@ -770,27 +771,34 @@ CONTAINS
             points_temp(num_points) = point 
             OPEN(FILE=outfile, UNIT=outunit, FORM='FORMATTED', &
                ACCESS='SEQUENTIAL')
-            WRITE(outunit, '("****************************************&
-                             &****************************************")')
+            WRITE(outunit,'("****************************************", &
+                           &"****************************************")')
             WRITE(outunit,&
               '("LOCATION: ",A,2x,"LAT: ",F8.4,2x,"LON: ",F9.4,2x, &
              &"I: ",F7.2,2x,"J: ",F7.2)') point%id, point%lat, &
                    point%lon, point%i,point%j
+            IF (mtype(1:3) .EQ. 'mm5') THEN 
+              model_title = 'MM5'
+            ELSEIF (mtype(1:3) .EQ. 'wrf') THEN
+              model_title = 'WRF'
+            ELSE
+              model_title = 'UNK'
+            ENDIF
             WRITE(outunit,  &
-               '("FORECAST CYCLE: ",A,2x,"DOM: ",I2,2x,&
-               &"MODEL ELEVATION: ",I4)') &
-                 cyclestr, domain_num, point%elevation
-            WRITE(outunit, '("****************************************&
-                           &****************************************")')
+               '(A3,1x,F4.1," km    FORECAST CYCLE: ",A,2x,"DOM: ",&
+               & I2,2x,"MODEL ELEVATION: ",I4)') &
+                 model_title,grid_spacing/1000.,cyclestr, domain_num, point%elevation
+            WRITE(outunit,'("****************************************", &
+                           &"****************************************")')
             WRITE(outunit, &
-     '("DATE       TIME  TEMP   DEWPT  RH  WIND    CEI VIS   WEATHER  PRECP SNOW  Fsbrg")')
+     '("DATE       TIME  TMP DPT RH  WIND   CEI VIS  WEATHER  PRECP SNOW VENT  HM HH Fbg")')
             WRITE(outunit, &
-     '(A3,"        ",A3,"   ",A1,"      ",A1,"      %   Deg@",A3," hft miles          in    in    Fire")') & 
+     '(A3,8x,A3,3x,A1,3x,A1,3x,"%",3x,"Dg@",A3,1x,"hft mile",10x,"in",4x,"in",3x,"m^2/s")') & 
          point_tz_label, point_tz_label,point_temp_units,&
          point_temp_units, point_windspd_units
 
             WRITE(outunit, &
-     '("---------- ----- ------ ------ --- ------- --- ----- -------- ----- ----- -----")')
+     '("---------- ----- --- --- --- ------ --- ---- -------- ----- ---- ----- -- -- ---")')
 
           ELSE
             PRINT *, 'Point location ',TRIM(point%id),' outside of domain!'

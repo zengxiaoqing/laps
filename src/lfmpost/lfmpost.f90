@@ -446,7 +446,7 @@ PROGRAM lfmpost
         dir_pt = NINT(dir_pt_r/10.)*10  ! Integer to nearest 10 degrees
        
         ! Convert wind speed
-        IF (point_windspd_units .EQ. 'KTS') THEN
+        IF (point_windspd_units .EQ. 'KT ') THEN
           spd_pt = NINT(spd_pt_r * 1.9425) ! Convert to knots
         ELSEIF (point_windspd_units .EQ. 'MPH') THEN
           spd_pt = NINT(spd_pt_r * 2.2369)
@@ -503,9 +503,10 @@ PROGRAM lfmpost
         snow_pt =bint(point_rec(pt)%i,point_rec(pt)%j,snow_inc,nx,ny)*39.37
 
         WRITE(point_rec(pt)%output_unit, &
-        '(A,2F7.1,1x,I3,1x,I4.3,"/",I2.2,1x,I3.3,1x,F5.2,1x,A,2F6.2,1x,F5.1)') &
-        date_str,t_pt,td_pt,rh_pt,dir_pt,spd_pt,ceiling_pt,vis_pt,wx_pt, &
-        pcp_pt,snow_pt,fwi_index(ip,jp)
+        '(A,3I4,1x,I3.3,"/",I2.2,1x,I3.3,1x,F4.1,1x,A,1x,F5.2,1x,F4.1,1x,I5,2I3,1x,I3)') &
+           date_str,NINT(t_pt),NINT(td_pt),rh_pt,dir_pt,spd_pt,ceiling_pt,vis_pt,wx_pt, &
+           pcp_pt,snow_pt,NINT(vnt_index(ip,jp)),NINT(ham_index(ip,jp)), &
+           NINT(hah_index(ip,jp)),NINT(fwi_index(ip,jp))
    
         IF (t_pt .GT. point_rec(pt)%hi_temp)  THEN
            point_rec(pt)%hi_temp = t_pt
