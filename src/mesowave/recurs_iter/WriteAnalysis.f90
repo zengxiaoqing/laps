@@ -47,10 +47,13 @@ SUBROUTINE WriteAnalysis(a,n)
   vunits(7) = 'K  '
   varnames(8) = 'DIV'	! Divergence
   vunits(8) = '/S '
-  varnames(9) = 'TH '	! Divergence
+  varnames(9) = 'TH '	! Potential temperature
   vunits(9) = 'K  '
-  varnames(10) = 'MRC '	! Divergence
+  varnames(10) = 'MRC '	! Moisture convergence
   vunits(10) = '/S  '
+  varnames(11) = 'PP  '	! Reduced Pressure change
+  vunits(11) = 'PA  '
+  comment(11)(1:28) = '0  M REDUCED PRESSURE CHANGE'
 
   DO it=1,nvlaps+9
      lvl(it) = 0
@@ -97,8 +100,13 @@ SUBROUTINE WriteAnalysis(a,n)
 	           data(1,1,n(4)+5),data(1,1,n(4)+4),data(1,1,n(4)+6), &
                    data(1,1,n(4)+7),data(1,1,n(4)+8),nx,ny)
 
+     ! Reduced Pressure Change:
+     data(1:nx,1:ny,11) = a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3),6)- &
+			  a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3)-1,6)
+     PRINT*,'Test PP: ',data(1:3,1,11)
+
      CALL write_laps_data(istarttime+(it-1)*laps_cycle_time, &
-                          dir_s,ext,nx,ny,n(4)+4,n(4)+4,varnames, &
+                          dir_s,ext,nx,ny,n(4)+5,n(4)+5,varnames, &
                           lvl,lvl_coord,vunits,comment,data,istatus)
      write(6,*)' LSX file write completed, istatus = ',istatus,nx,ny
 

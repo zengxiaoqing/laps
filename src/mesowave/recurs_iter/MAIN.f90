@@ -16,7 +16,7 @@ PROGRAM MAIN
 
   ! Local variable:
   INTEGER :: id
-  REAL    :: ds(2)
+  REAL    :: ds(3)
 
   CALL LapsInfo
   CALL LSO_Data
@@ -30,6 +30,7 @@ PROGRAM MAIN
   !CALL Minimize
   ds(1) = grid_spacingx
   ds(2) = grid_spacingy
+  ds(3) = d(3)
   DO id=1,n(4)
      IF (id .NE. 301) THEN  ! 3 means no analysis for v
         CALL Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)

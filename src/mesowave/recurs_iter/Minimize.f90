@@ -11,7 +11,7 @@ SUBROUTINE Minimize(id,ds)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: id
-  REAL,    INTENT(IN) :: ds(2)
+  REAL,    INTENT(IN) :: ds(3)
 
   ! LBFGS_B variables:
   INCLUDE 'LBFGSB.f90'

@@ -40,8 +40,7 @@ SRC=MAIN.f90 \
     Writeout.f90 \
     routines.o \
     lso_reader_meso.o \
-    get_laps_info.o \
-    QC_tools.o 
+    get_laps_info.o 
 #\
 #    laps_routines.o
 
@@ -98,6 +97,8 @@ MINIMIZATN = \
         Minimizatn.f90 \
         Functn.f90 \
         Functn_ad.f90 \
+        FunctnDiv.f90 \
+        FunctnDiv_ad.f90 \
         Iterates.f90 \
         Minimize.f90 \
         RF1D.f90 \

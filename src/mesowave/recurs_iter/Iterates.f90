@@ -1,26 +1,31 @@
-SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
+SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 
 !*************************************************
 !  This routine iteratively solves data analysis
 !  problem.
 !
 !  HISTORY: FEB. 2004 by YUANFU XIE.
+!           Sep. 2004 by YUANFU XIE penalizing div.
 !*************************************************
 
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: id,nx,ny,ncycles,nvlaps,nfic
   REAL,    INTENT(IN) :: bkgd(nx,ny,ncycles,nvlaps)
-  REAL,    INTENT(IN) :: ldf(nx,ny)
+  REAL,    INTENT(IN) :: ldf(nx,ny),ds(3)
 
-  INTEGER :: iter,iobs,i,j,k,no_v
+  INTEGER :: iter,iobs,i,j,k,no_v,idp
   REAL    :: y0,b(2,3),rms
 
-  s(1:n(1),1:n(2),1:n(3),id) = 0.0
+  ! Unified analysis of velocity:
+  idp = id
+  IF (id .EQ. 201) idp = id+1
+
+  s(1:n(1),1:n(2),1:n(3),id:idp) = 0.0
 
   DO iter=1,nrf(id)
 
-     a(1:n(1),1:n(2),1:n(3),id) = 0.0
+     a(1:n(1),1:n(2),1:n(3),id:idp) = 0.0
 
      ! QC: bound check:
      IF (((id .EQ. 1) .OR. (id .EQ. 5)) .AND. (iter .EQ. 1)) THEN
@@ -61,22 +66,22 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
      ENDIF
 
      IF (iter .GT. 1) THEN
-        CALL Minimize(id)
+        CALL Minimize(id,ds)
      ELSE
-	a(nfic+1:n(1)-nfic,nfic+1:n(2)-nfic,1:n(3),id) = &
-                                 bkgd(1:nx,1:ny,1:n(3),id)
+	a(nfic+1:n(1)-nfic,nfic+1:n(2)-nfic,1:n(3),id:idp) = &
+                                 bkgd(1:nx,1:ny,1:n(3),id:idp)
 
 	! Fictitious points:
 	DO i=1,nfic
-	   a(i,nfic+1:n(2)-nfic,1:n(3),id) = &
-                      a(nfic+1,nfic+1:n(2)-nfic,1:n(3),id)
-	   a(n(1)-nfic+i,nfic+1:n(2)-nfic,1:n(3),id) = &
-                      a(n(1)-nfic,nfic+1:n(2)-nfic,1:n(3),id)
+	   a(i,nfic+1:n(2)-nfic,1:n(3),id:idp) = &
+                      a(nfic+1,nfic+1:n(2)-nfic,1:n(3),id:idp)
+	   a(n(1)-nfic+i,nfic+1:n(2)-nfic,1:n(3),id:idp) = &
+                      a(n(1)-nfic,nfic+1:n(2)-nfic,1:n(3),id:idp)
 	ENDDO
 	DO i=1,nfic
-	   a(1:n(1),i,1:n(3),id) = a(1:n(1),nfic+1,1:n(3),id)
-	   a(1:n(1),n(2)-nfic+i,1:n(3),id) = &
-             a(1:n(1),n(2)-nfic,1:n(3),id)
+	   a(1:n(1),i,1:n(3),id:idp) = a(1:n(1),nfic+1,1:n(3),id:idp)
+	   a(1:n(1),n(2)-nfic+i,1:n(3),id:idp) = &
+             a(1:n(1),n(2)-nfic,1:n(3),id:idp)
 	ENDDO
      ENDIF
 
@@ -85,7 +90,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
 
      DO iobs=1,nobs
 
-	IF (id .EQ. vid(iobs)) THEN
+	IF ((id .EQ. vid(iobs)) .OR. (idp .EQ. vid(iobs))) THEN
 
            y0 = 0.0
         
@@ -121,31 +126,32 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
         IF (id .EQ. 6) THEN
 	   al(1:3,id) = al(1:3,id)*0.9
         ELSE
-           al(1:3,id) = al(1:3,id)*0.8
+           al(1:3,id:idp) = al(1:3,id:idp)*0.8
 	ENDIF
      ENDIF
 
      ! Accumulate:
-     s(1:n(1),1:n(2),1:n(3),id) = s(1:n(1),1:n(2),1:n(3),id)+ &
-                                  a(1:n(1),1:n(2),1:n(3),id)
+     s(1:n(1),1:n(2),1:n(3),id:idp) = &
+	s(1:n(1),1:n(2),1:n(3),id:idp)+ &
+        a(1:n(1),1:n(2),1:n(3),id:idp)
 
   ENDDO
 
   ! Land/water weight:
   IF (id .NE. 6) THEN
-  DO j=1,ny
-     DO i=1,nx
-  	s(nfic+i,nfic+j,1:n(3),id) = &
-		ldf(i,j)*s(nfic+i,nfic+j,1:n(3),id)+ &
-                (1.0-ldf(i,j))*bkgd(i,j,1:n(3),id)
+     DO j=1,ny
+        DO i=1,nx
+  	   s(nfic+i,nfic+j,1:n(3),id:idp) = &
+		ldf(i,j)*s(nfic+i,nfic+j,1:n(3),id:idp)+ &
+                 (1.0-ldf(i,j))*bkgd(i,j,1:n(3),id:idp)
+        ENDDO
      ENDDO
-  ENDDO
   ELSE 
-  DO j=1,ny
-     DO i=1,nx
+     ! DO j=1,ny
+     !    DO i=1,nx
         ! s(nfic+i,nfic+j,1:n(3),id) = bkgd(i,j,1:n(3),id)
-     ENDDO
-  ENDDO
+     !    ENDDO
+     ! ENDDO
   ENDIF
 
 END SUBROUTINE Iterates

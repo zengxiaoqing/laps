@@ -13,6 +13,8 @@ CONTAINS
   
   INCLUDE 'Functn.f90'
   INCLUDE 'Functn_ad.f90'
+  INCLUDE 'FunctnDiv.f90'
+  INCLUDE 'FunctnDiv_ad.f90'
   INCLUDE 'Iterates.f90'
   INCLUDE 'Minimize.f90'
   INCLUDE 'RF1D.f90'

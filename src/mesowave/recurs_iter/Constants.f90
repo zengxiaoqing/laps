@@ -9,6 +9,6 @@
 !  Dimensions:
 !===================
 
-INTEGER, PARAMETER :: mx=551,my=451,mt=11,mv=6
+INTEGER, PARAMETER :: mx=551,my=451,mt=14,mv=6
 
 INCLUDE 'OBSCommon.f90'
