@@ -397,7 +397,7 @@ c =============================================
        endif
 
        istatus_a = 1
-       call vis_to_albedo(i4time,
+       call vis_to_albedo(i4time,c_sat_id,
      &                    laps_vis_norm,
      &                    lat,lon,
      &                    imax,jmax,
