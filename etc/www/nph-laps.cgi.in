@@ -940,6 +940,13 @@ foreach $source (@sources) {
                         printf LAPSPLOT "r\n"; 
                         printf LAPSPLOT "-132.\n"; 
 
+                    }elsif("$field" eq "pcp_typ" ) { 
+                        printf LAPSPLOT "py\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
                     }elsif("$field" eq "wind" ) { 
                         printf LAPSPLOT "wr\n"; 
                         printf LAPSPLOT "$level\n"; 
@@ -1442,17 +1449,17 @@ foreach $source (@sources) {
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "ob\n"; 
-                        printf LAPSPLOT "1\n"; 
-                        printf LAPSPLOT "n\n"; 
-                        printf LAPSPLOT "\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "r\n"; 
 
                     }elsif("$field" eq "v" ) { 
                         printf LAPSPLOT "wd\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "ob\n"; 
-                        printf LAPSPLOT "1\n"; 
-                        printf LAPSPLOT "n\n"; 
-                        printf LAPSPLOT "\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "r\n"; 
 
                     }elsif("$field" eq "reflct" ) { 
                         printf LAPSPLOT "rv\n"; 
