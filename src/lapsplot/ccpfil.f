@@ -205,7 +205,12 @@ C
               l_discrete = .true.
           elseif(colortable .eq. 'spectral' .or. 
      1           colortable .eq. 'spectralr')then
-              l_discrete = namelist_parms%l_discrete
+!             Test for isotachs 
+              if(scale_h_in .eq. 50. .and. scale_l_in .eq. 0.)then 
+                  l_discrete = .true. 
+              else
+                  l_discrete = namelist_parms%l_discrete
+              endif
           elseif(colortable .eq. 'moist')then
               l_discrete = namelist_parms%l_discrete
           elseif(colortable .eq. 'tpw')then
@@ -1044,15 +1049,38 @@ c     Restore original color table
 
  101  continue
 
-      do i = 1,nramp-1
-          i1 = 1 + nint(frac_a(i  ) * float(ncols-1))
-          i2 = 1 + nint(frac_a(i+1) * float(ncols-1))
+      if(.true.)then ! For each color, interpolate from the ramp elements
+          do i = 1,ncols
+              frac_color = float(i-1) / float(ncols-1)
+              do j = 1,nramp-1
+                  if(frac_a(j)   .le. frac_color .and. 
+     1               frac_a(j+1) .ge. frac_color      )then !interpolate
+                      frac_ramp = (frac_color  - frac_a(j)) / 
+     1                            (frac_a(j+1) - frac_a(j))
+                      hue_col  = hue_a(j)    * (1. - frac_ramp) 
+     1                         + hue_a(j+1)  *       frac_ramp
+                      sat_col  = sat_a(j)    * (1. - frac_ramp) 
+     1                         + sat_a(j+1)  *       frac_ramp
+                      rint_col = rint_a(j)   * (1. - frac_ramp) 
+     1                         + rint_a(j+1) *       frac_ramp
+                      call color_ramp(i,i,IWKID,icol_offset
+     1                               ,hue_col,sat_col,rint_col
+     1                               ,hue_col,sat_col,rint_col)
+                  endif
+              enddo ! j
+          enddo ! i
+      else ! For each ramp element - assign a range of colors
+          do i = 1,nramp-1
+              i1 = 1 + nint(frac_a(i  ) * float(ncols-1))
+              i2 = 1 + nint(frac_a(i+1) * float(ncols-1))
      
-          call color_ramp(i1,i2,IWKID,icol_offset
-     1                   ,hue_a(i  ),sat_a(i  ),rint_a(i  )
-     1                   ,hue_a(i+1),sat_a(i+1),rint_a(i+1) )
+              call color_ramp(i1,i2,IWKID,icol_offset
+     1                       ,hue_a(i  ),sat_a(i  ),rint_a(i  )
+     1                       ,hue_a(i+1),sat_a(i+1),rint_a(i+1) )
 
-      enddo ! i
+          enddo ! i
+
+      endif
 
       close(lun)
 
