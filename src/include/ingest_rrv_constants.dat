@@ -5,6 +5,8 @@ c
 c Currently rrv ingests 3 radars however for testing purposes
 c radar #2 does not exist.
 c
-      data radar_la1    /  38.2892,  0.0,  36.55,   36.9252/
-      data radar_lo1    /-107.948,   0.0,-104.8627,-107.948/
+      data radar_la1    /  38.2892,  0.0,  36.55,    36.925/
+      data radar_lo1    /-107.948,   0.0,-104.8627,-107.644/
+      data radlat       /  41.152,   0.0,-999.9,     39.787/
+      data radlon       /-104.806,   0.0,-999.9,   -104.546/
       data c_radar_name /'KCYS',   'NULL', 'KGLD',   'KFTG'/
