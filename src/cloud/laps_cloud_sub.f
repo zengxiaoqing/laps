@@ -130,7 +130,7 @@ cdis
 
         real*4 vis_radar_thresh_cvr,vis_radar_thresh_dbz
         parameter (vis_radar_thresh_cvr = 0.2)  ! 0.2, 0.0
-        parameter (vis_radar_thresh_dbz = 10.)  ! 5. , -99.
+        parameter (vis_radar_thresh_dbz = 30.)  ! 10., 5. , -99.
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
