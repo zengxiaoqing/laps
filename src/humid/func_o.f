@@ -137,6 +137,10 @@ c     Science common block
       common/cost_science/cost_comment_switch
       integer cost_comment_switch
 
+c     Radiance display common block
+      common /cost_display/ display_btemps
+      real, dimension (1000) :: display_btemps
+
 c     local analogs to common block variables for input to parameters
 
       integer kk
@@ -185,6 +189,7 @@ c     externals
       
 c     code
 
+      tbest = 0.0 ! initialize tbest array to zero each call (no carryover)
       cloud_integral = 0.0
 
 c     simulate current variational code... remove when new cloud
@@ -484,31 +489,6 @@ c     GPS SECTION
          continue
       endif
 
-c     avoid using gps where we have cloud (cloud_integral .ne. 0)
-
-c     if( max_func_cloud < max_func_gps) then
-c      if (cloud_integral == 0.0) then
-c         if(cost_comment_switch.eq.1) then
-c            write(6,*) 'TEMU gps cloud', max_func_gps, max_func_cloud,
-c     1           cloud_integral
-c            cost_comment_switch = 0
-c         endif
-c         func = func + max_func_gps
-c      else
-c         if(cost_comment_switch == 1) then
-c            write(6,*) 'TEMS gps cloud', max_func_gps, max_func_cloud,
-c     1           cloud_integral
-c            cost_comment_switch = 0
-c         endif
-c      endif
-
-
-
-
-
-
-
-
 
 c     RAOB SECTION (SND)
 
@@ -527,11 +507,9 @@ c     RAOB SECTION (SND)
       func = func + max_func_snd
 
 
+c     fill display_btemps section for later display
 
-
-
-
-
+      display_btemps(1:7) = tbest (1:7)
 
 
 

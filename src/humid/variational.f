@@ -263,6 +263,11 @@ c     SND common block
 c     Science common block
       common/cost_science/cost_comment_switch
       integer cost_comment_switch
+
+c     Display common block
+      common /cost_display/ display_btemps
+      real, dimension(1000) :: display_btemps
+      real, dimension(Nchan,ii,jj) :: field_display_btemps
       
 c     analysis of the factor field
       integer pn
@@ -823,6 +828,8 @@ c     executed variational search
 c     check output of variational search for fret of 0.0 that
 c     indicates no convergence (fret is result of func)  we assume
 c     that the func will never be non-zero in real search.
+
+            field_display_btemps (1:7,i,j) = display_btemps(1:7)
             
             if (fret.eq.0.0) then ! assume that func set to no
                                 !convergence
@@ -1139,7 +1146,13 @@ c     modify lq3 field low  level
                
             enddo
          enddo
-      enddo      
+      enddo  
+
+c     fill field_display_btemps with missing data flag where not zero
+
+      where (field_display_btemps == 0.0)
+         field_display_btemps = mdf
+      endwhere
       
       
       
