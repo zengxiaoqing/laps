@@ -115,4 +115,6 @@ c     convert data_out to incremental weighted adjustment
 
       istatus = 1
 
+      return
+
       end
