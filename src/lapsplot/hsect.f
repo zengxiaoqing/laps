@@ -159,10 +159,14 @@ cdis
 
 !       real*4 omega_3d(NX_L,NY_L,NZ_L)
         real*4 grid_ra_ref(NX_L,NY_L,NZ_L,L_RADARS)
-        real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
+
+!       real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
+!       real*4 grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
+        real*4, allocatable, dimension(:,:,:,:) :: grid_ra_vel
+        real*4, allocatable, dimension(:,:,:,:) :: grid_ra_nyq
+
         real*4 grid_ra_ref_dum(1,1,1,1)
         real*4 grid_ra_vel_dum(1,1,1,1)
-        real*4 grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
         real*4 field_3d(NX_L,NY_L,NZ_L)
         real*4 pres_3d(NX_L,NY_L,NZ_L)
 
@@ -263,6 +267,8 @@ c       include 'satellite_dims_lvd.inc'
         data mode_lwc/2/
 
         call find_domain_name(c_dataroot,c10_grid_fname,istatus)
+
+        ialloc_vel = 0
 
         icen = NX_L/2+1
         jcen = NY_L/2+1
@@ -1018,7 +1024,7 @@ c       include 'satellite_dims_lvd.inc'
             chigh = 50.
 
             call plot_cont(liw,1e0,0.0,50.0,-0.5,asc9_tim_3dw,
-     1              'LAPS sfc LI X 600mb omega  Pa-K/s',i_overlay
+     1              'sfc LI X 600mb omega  Pa-K/s     ',i_overlay
      1              ,c_display,lat,lon,jdot
      1              ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -1047,7 +1053,7 @@ c       include 'satellite_dims_lvd.inc'
             call make_fnam_lp(i4time_nearest,asc9_tim_n,istatus)
 
             call plot_cont(field_2d,1e-0,-20.,+40.,2.,asc9_tim_n,
-     1          'LAPS    SFC Lifted Index     (K) ',i_overlay
+     1          '    SFC Lifted Index     (K)     ',i_overlay
      1          ,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -1082,17 +1088,14 @@ c       include 'satellite_dims_lvd.inc'
 
             if(len_units .gt. 0)then
                 if(units_2d(1:len_units) .eq. 'M')then
-                    c33_label = 'LAPS '
-     1                      //comment_2d(1:len_comment)
-     1                      //'   ('//units_2d(1:len_units)//'-MSL)'
+                    c33_label = comment_2d(1:len_comment)
+     1                   //'   ('//units_2d(1:len_units)//'-MSL)    '
                 else
-                    c33_label = 'LAPS '
-     1                      //comment_2d(1:len_comment)
-     1                      //'   ('//units_2d(1:len_units)//')'
+                    c33_label = comment_2d(1:len_comment)
+     1                      //'   ('//units_2d(1:len_units)//')    '
                 endif
             else
-                c33_label = 'LAPS '
-     1                      //comment_2d(1:len_comment)
+                c33_label = comment_2d(1:len_comment)
             endif
 
             scale = 1.
@@ -1158,7 +1161,7 @@ c       include 'satellite_dims_lvd.inc'
 
 
             call plot_cont(field_2d,1e-0,-30.,+30.,2.,asc9_tim_n,
-     1                    'LAPS    SFC Wetbulb (approx) (C) '
+     1                    '    SFC Wetbulb (approx) (C)     '
      1                    ,i_overlay,c_display,lat,lon,jdot,
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -1228,12 +1231,11 @@ c       include 'satellite_dims_lvd.inc'
 
             if(abs_max .gt. 1.)then ! new way
                 scale = 1.
-!               c33_label = 'LAPS Helicity sfc-500mb m**2/s**2'           
-                c33_label = 'LAPS Storm Rel Helicity m**2/s**2'           
+                c33_label = 'Storm Rel Helicity m**2/s**2     '           
                 cint = 40.
             else                    ! old way
                 scale = 1e-4
-                c33_label = 'LAPS Helicity  sfc-500 1e-4m/s**2'          
+                c33_label = 'Helicity  sfc-500 1e-4m/s**2     '          
                 cint = 5.
             endif
 
@@ -1316,7 +1318,7 @@ c
              endif
 
              if(ilvd.gt.1)then
-              c33_label='LAPS B-Temps (C): '//c_sat_id(k)//'/'//var_2d
+              c33_label='B-Temps (C): '//c_sat_id(k)//'/'//var_2d
               vasmx=-255.
               vasmn=255.
               do i = 1,NX_L
@@ -1335,16 +1337,16 @@ c
               scale_l = +40.          ! for image plots
               scale_h = -50.          ! for image plots
              elseif(var_2d.eq.'ALB')then
-              c33_label='LAPS Albedo '//c_sat_id(k)
+              c33_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
               cloud_albedo = .4485300
               scale_h = cloud_albedo  ! for image plots
              elseif(var_2d.eq.'SVS')then
-              c33_label='LAPS VIS counts (raw) - '//c_sat_id(k)
+              c33_label='VIS counts (raw) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 100.          ! for image plots
              else
-              c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
+              c33_label='VIS counts (normalized) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 230.          ! for image plots
              endif
@@ -1402,8 +1404,7 @@ c
             write(6,*)' Cant find ALB Analysis'
             goto1200
          endif
-!        c33_label = 'LAPS VIS Cloud Fraction   -'//c_sat_id(k)
-         c33_label = 'LAPS VIS Cld Frac (tenths) '//c_sat_id(k)
+         c33_label = 'VIS Cld Frac (tenths) '//c_sat_id(k)
          clow  =  -6.
          chigh = +16.
          cint = 2.0
@@ -1432,7 +1433,7 @@ c
             write(6,*)' Cant find VAS/S8A Analysis'
             goto1200
          endif
-         c33_label = 'LAPS SFC T - Band 8  (K)  -'//c_sat_id(k)
+         c33_label = 'SFC T - Band 8  (K)  -'//c_sat_id(k)
          clow = -8.0
          chigh = 20.
          cint = 4.
@@ -1497,7 +1498,7 @@ c
           if(cchan(1:1).eq.' ')cchan(1:1)='0'
           if(cchan(2:2).eq.' ')cchan(2:2)='0'
 
-          c33_label = 'LAPS Polar Orbiter Channel '//cchan//' deg C'
+          c33_label = 'Polar Orbiter Channel '//cchan//' deg C'
 
           call plot_cont(vas,1e0,clow,chigh,cint,asc9_tim,
      1       c33_label,i_overlay,c_display,lat,lon,jdot,
@@ -1556,8 +1557,7 @@ c
 
             endif
 
-!           c33_label='LAPS LCV/'//var_2d_in(1:3)//' '//comment_2d(1:20)
-            c33_label='LAPS LCV '//comment_2d(1:24)
+            c33_label='LCV '//comment_2d(1:24)
 
             if(var_2d_in .eq. 'S8A' .or. var_2d_in .eq. 'S3A')then
               vasmx=-255.
@@ -1578,20 +1578,20 @@ c
               scale_l = +40.          ! for image plots
               scale_h = -50.          ! for image plots
             elseif(var_2d_in.eq.'ALB')then
-!             c33_label='LAPS Albedo '//c_sat_id(k)
+!             c33_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
               cloud_albedo = .4485300
               scale_h = cloud_albedo  ! for image plots
             elseif(var_2d_in.eq.'SVS')then
-              c33_label='LAPS VIS counts (raw) - '//c_sat_id(k)
+              c33_label='VIS counts (raw) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 100.          ! for image plots
             elseif(var_2d_in.eq.'D39')then
-              c33_label='LAPS   3.9u - 11u difference  (K)'
+              c33_label='3.9u - 11u difference  (K)'
               scale_l = -10           ! for image plots
               scale_h = +10.          ! for image plots
             else
-!             c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
+!             c33_label='VIS counts (normalized) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 230.          ! for image plots
             endif
@@ -1708,14 +1708,36 @@ c
 
                   write(6,*)' Reading velocity data from the radars'
 
+                  if(ialloc_vel .eq. 0)then ! allocate 4D radar arrays
+                      allocate(grid_ra_vel(imax,jmax,kmax,max_radars)       
+     1                        ,STAT=istat_alloc)
+                      if(istat_alloc .ne. 0)then
+                          write(6,*)
+     1                        ' ERROR: Could not allocate grid_ra_vel'
+                          stop
+                      endif
+
+                      allocate(grid_ra_nyq(imax,jmax,kmax,max_radars)       
+     1                        ,STAT=istat_alloc)
+                      if(istat_alloc .ne. 0)then
+                          write(6,*)
+     1                        ' ERROR: Could not allocate grid_ra_nyq'
+                          stop
+                      endif
+
+                      ialloc_vel = 1
+
+                  endif ! ialloc_vel
+
                   call get_multiradar_vel(
-     1            i4time_get,100000000,i4time_radar_a
-     1           ,max_radars,n_radars,ext_radar_a,r_missing_data
-     1           ,.true.,NX_L,NY_L,NZ_L
-     1           ,grid_ra_vel,grid_ra_nyq,v_nyquist_in_a
-     1           ,n_vel_grids_a
-     1           ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a      
-     1           ,istat_radar_vel,istat_radar_nyq)
+     1                i4time_get,100000000,i4time_radar_a
+     1               ,max_radars,n_radars,ext_radar_a,r_missing_data       
+     1               ,.true.,NX_L,NY_L,NZ_L
+     1               ,grid_ra_vel,grid_ra_nyq,v_nyquist_in_a
+     1               ,n_vel_grids_a
+     1               ,rlat_radar_a,rlon_radar_a,rheight_radar_a
+     1               ,radar_name_a      
+     1               ,istat_radar_vel,istat_radar_nyq)
 
                   if(istat_radar_vel .eq. 1)then
                     write(6,*)' Radar 3d vel data successfully read in'       
@@ -1847,17 +1869,17 @@ c
      1                                  ,NX_L,NY_L,radar_array,0
      1                                  ,istatus)
 
-                    c33_label = 'LAPS Col. Max Reflectivity (lmr) '    
+                    c33_label = 'Col. Max Reflectivity (lmr) '    
 
                 elseif(c_type .eq. 'ra')then
                     radar_array = field_2d
-                    c33_label = 'LAPS Col. Max Ref (interim-vrc)  '    
+                    c33_label = 'Col. Max Ref (interim-vrc)  '    
 
                 else
                     write(6,*)' Calling get_max_ref'
                     call get_max_reflect(grid_ra_ref,NX_L,NY_L,NZ_L
      1                                  ,r_missing_data,radar_array)
-                    c33_label = 'LAPS Col. Max Ref (intermediate) '    
+                    c33_label = 'Col. Max Ref (intermediate) '    
 
                 endif
 
@@ -1896,11 +1918,11 @@ c
 
                     call make_fnam_lp(i4time_lr,asc9_tim_r,istatus)
 
-                    c33_label = 'LAPS Low LVL Ref   (Anlyzd/DBZ)  '
+                    c33_label = 'Low LVL Ref   (Anlyzd/DBZ)  '
 
                 elseif(c_type .eq. 'ra')then
                     radar_array = field_2d
-                    c33_label = 'LAPS Low Lvl Ref  (interim-vrc)  '    
+                    c33_label = 'Low Lvl Ref  (interim-vrc)  '    
 
                 else
                     write(6,*)' error: unknown c_type'
@@ -2058,7 +2080,7 @@ c
      1                          ,cont_low,cont_high,cint
                 call plot_cont(radar_array,1e0,cont_low
      1                        ,cont_high,cint,asc9_tim_r
-     1                        ,'LAPS Max Echo Tops    (km MSL)   '
+     1                        ,'Max Echo Tops    (km MSL)        '
      1                        ,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data
      1                        ,laps_cycle_time)
@@ -2081,7 +2103,7 @@ c
 
 !               Display Advected Reflectivity Field
                 call plot_cont(radar_array_adv,1e0,0.,chigh,cint_ref
-     1         ,asc9_tim_r,'LAPS Max Reflectivity  1 HR Fcst',
+     1         ,asc9_tim_r,'Max Reflectivity  1 HR Fcst    ',
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2139,10 +2161,7 @@ c
             call zs(radar_array,temp_2d,td_2d,pres_2d,tw_sfc_k,NX_L,NY_L
      1                                                  ,snow_2d)
 
-!           c33_label = 'LAPS Snow Rate (liq equiv) in/hr '
-!           scale = 1. / ((100./2.54) * 3600.) ! DENOM = (IN/HR) / (M/S)
-
-            c33_label = 'LAPS Snowfall Rate         in/hr '
+            c33_label = 'Snowfall Rate         in/hr      '
             scale = 1. / (10. * (100./2.54) * 3600.) ! DENOM = (IN snow/HR) / (M/S)
 
             call plot_cont(snow_2d,scale,
@@ -2199,9 +2218,9 @@ c
                 write(c7_string,2017)min(num_hr_accum,999)
 2017            format(i4,' Hr')
                 if(c_type(1:2) .eq. 'sa')then
-                    c33_label = 'LAPS Stm Tot Snow Acc (in)'//c7_string
+                    c33_label = 'Stm Tot Snow Acc (in)'//c7_string
                 else
-                    c33_label = 'LAPS Stm Tot Prcp Acc (in)'//c7_string
+                    c33_label = 'Stm Tot Prcp Acc (in)'//c7_string
                 endif
 
             else ! Near Realtime - look for snow accumulation files
@@ -2328,11 +2347,9 @@ c
 2029            format(f5.1,' Hr ')
 
                 if(c_type(1:2) .eq. 'sa')then
-                    c33_label = 'LAPS '//c9_string//' Snow Accum  (in)
-     1'
+                    c33_label = c9_string//' Snow Accum  (in)       '
                 else
-                    c33_label = 'LAPS '//c9_string//' Prcp Accum  (in)
-     1'
+                    c33_label = c9_string//' Prcp Accum  (in)       '
                 endif
 
             endif
@@ -2396,7 +2413,7 @@ c
             write(c9_string,2029)r_hours
 !2029        format(f5.1,' Hr ')
 
-            c33_label = 'LAPS '//c9_string//' Reflctvty History '
+            c33_label = c9_string//' Reflctvty History      '
 
             if(istatus .ne. 1)goto1200
 
@@ -2539,7 +2556,7 @@ c
             endif
 
             write(c33_label,1516)nint(temp_in_c)
-1516        format('LAPS Height of ',i3,'C Lvl (hft MSL)')
+1516        format('Height of ',i3,'C Lvl (hft MSL)     ')
 
             do j = 1,NY_L
             do i = 1,NX_L
@@ -2590,7 +2607,7 @@ c
                     call mklabel33(k_mb,
      1          ' Adiabt LWC  g/m^3 ',c33_label)
                 else
-                    c33_label = 'LAPS Maximum Adiabatic LWC g/m^3 '
+                    c33_label = 'Maximum Adiabatic LWC g/m^3      '
                 endif
 
             elseif(c_type .eq. 'lj')then
@@ -2599,7 +2616,7 @@ c
                     call mklabel33(k_mb,
      1          ' Adjstd LWC  g/m^3 ',c33_label)
                 else
-                    c33_label = 'LAPS Maximum Adjusted  LWC g/m^3 '
+                    c33_label = 'Maximum Adjusted  LWC g/m^3      '
                 endif
 
             elseif(c_type .eq. 'sj')then
@@ -2608,7 +2625,7 @@ c
                     call mklabel33(k_mb,
      1          ' Adjstd SLWC g/m^3 ',c33_label)
                 else
-                    c33_label = 'LAPS Maximum Adjusted SLWC g/m^3 '
+                    c33_label = 'Maximum Adjusted SLWC g/m^3      '
                 endif
 
             elseif(c_type .eq. 'ls')then
@@ -2617,7 +2634,7 @@ c
                     call mklabel33(k_mb,
      1                             ' Cloud LWC g/m^3   ',c33_label)
                 else
-                    c33_label = 'LAPS Column Max LWC        g/m^3 '
+                    c33_label = 'Column Max LWC        g/m^3      '
                 endif
 
             elseif(c_type .eq. 'ci')then
@@ -2627,7 +2644,7 @@ c
 !    1                             ' Smt-Fed ICE g/m^3 ',c33_label)
      1                             ' Cloud ICE g/m^3   ',c33_label)
                 else
-                    c33_label = 'LAPS Max Smith-Feddes  ICE g/m^3 '
+                    c33_label = 'Max Smith-Feddes  ICE g/m^3      '
                 endif
 
             endif
@@ -2763,7 +2780,7 @@ c
                     call mklabel33(k_mb
      1                            ,'     MVD     m^-6  ',c33_label)     
                 else
-                    c33_label = 'LAPS Mean Volume Diameter  m^-6  '
+                    c33_label = 'Mean Volume Diameter  m^-6       '
                 endif
 
                 write(6,*)' Getting pregenerated LMD file'
@@ -2954,10 +2971,10 @@ c
                 call mklabel33(k_mb,'    Precip Type    ',c33_label)
                 ndim=3
             elseif(k_level .eq.  0)then
-                c33_label = 'LAPS Sfc Precip Type   (nothresh)'
+                c33_label = 'Sfc Precip Type   (nothresh)     '
                 ndim=2
             elseif(k_level .eq. -1)then
-                c33_label = 'LAPS Sfc Precip Type   (thresh)  '
+                c33_label = 'Sfc Precip Type   (thresh)       '
                 ndim=2
             endif
 
@@ -3068,7 +3085,7 @@ c
      1                         NX_L,NY_L,column_max,0,istatus)
 
           call make_fnam_lp(i4time_cloud,asc9_tim_t,istatus)
-          c33_label = 'LAPS Integrated LWC         (mm) '
+          c33_label = 'Integrated LWC         (mm)      '
 
           clow = 0.
           chigh = +0.
@@ -3107,7 +3124,7 @@ c
           if(c_type(1:2) .eq. 'pe')then
               call condition_cape(NX_L,NY_L,c_type,field_2d)
 
-              c33_label = 'LAPS CAPE                (J/KG)  '
+              c33_label = 'CAPE                (J/KG)       '
               clow = 0.
               chigh = 7200.
               cint = +400.
@@ -3137,7 +3154,7 @@ c
               enddo ! j
               enddo ! i
 
-              c33_label = 'LAPS CIN                 (J/KG)  '
+              c33_label = 'CIN                 (J/KG)       '
               clow = -500  !   0.
               chigh = 50.  !  50.
               cint =  50.  ! -10.
@@ -3618,7 +3635,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Total Precipitable Water  cm'
+            c33_label = 'Total Precipitable Water  cm     '
 
             clow = 5.50
             chigh = -1.00
@@ -3660,7 +3677,7 @@ c                   cint = -1.
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'LAPS Sfc Temperature     (F)     '
+                c33_label = 'Sfc Temperature     (F)          '
 
             elseif(c_type(1:2) .eq. 'gf')then
                 do i = 1,NX_L
@@ -3668,7 +3685,7 @@ c                   cint = -1.
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'LAPS Ground Temperature  (F)     '
+                c33_label = 'Ground Temperature  (F)          '
 
             elseif(c_type(1:2) .eq. 'tc')then
                 do i = 1,NX_L
@@ -3676,7 +3693,7 @@ c                   cint = -1.
                     field_2d(i,j) = k_to_c(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'LAPS Sfc Temperature     (C)     '
+                c33_label = 'Sfc Temperature     (C)          '
             endif
 
             IF(istatus .ne. 1)THEN
@@ -3726,14 +3743,14 @@ c                   cint = -1.
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'LAPS Sfc Dew Point       (F)     '
+                c33_label = 'Sfc Dew Point       (F)          '
             else
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_c(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'LAPS Sfc Dew Point       (C)     '
+                c33_label = 'Sfc Dew Point       (C)          '
             endif
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
@@ -3780,7 +3797,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Heat Index          (F)     '
+            c33_label = 'Heat Index          (F)          '
 
             scale = 1.
 
@@ -3806,7 +3823,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Mstr Flux Conv  (x 1e-4)'
+            c33_label = 'Sfc Mstr Flux Conv  (x 1e-4)     '
 
             clow = -100.
             chigh = +100.
@@ -3835,7 +3852,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Surface Wind            (kt)'
+            c33_label = 'Surface Wind            (kt)     '
 
             nxz = float(NX_L) / zoom
             nyz = float(NY_L) / zoom
@@ -3952,7 +3969,6 @@ c                   cint = -1.
                 enddo ! i
 
                 scale = 1.
-!               c33_label = 'LAPS Sfc Temperature     (F)     '
 
             elseif(var_2d .eq. 'PS'  .or. var_2d .eq. 'PSF'
      1        .or. var_2d .eq. 'MSL' .or. var_2d .eq. 'SLP')then
@@ -3966,7 +3982,7 @@ c                   cint = -1.
 
             endif
 
-            c33_label = 'LAPS Sfc Bkgnd/Fcst  '//fcst_hhmm//' '
+            c33_label = 'Sfc Bkgnd/Fcst  '//fcst_hhmm//' '
      1                  //ext(1:3)//'/'//var_2d(1:3)
 
             call make_fnam_lp(i4_valid,asc9_tim,istatus)
@@ -4053,9 +4069,9 @@ c                   cint = -1.
             endif
 
             if(c_type .eq. 'p')then
-                c33_label = 'LAPS '//comment_2d(1:23)//' (mb)'       
+                c33_label = comment_2d(1:23)//' (mb)     '       
             else
-                c33_label = 'LAPS MSL Pressure            (mb)'
+                c33_label = 'MSL Pressure            (mb)     '
             endif
 
             clow = 0.
@@ -4069,7 +4085,7 @@ c                   cint = -1.
 
             pres_high_mb = pres_high_pa / scale
             pres_low_mb  = pres_low_pa / scale
-            range = (pres_high_pa - pres_low_pa) / scale
+            range = ((pres_high_pa - pres_low_pa) / scale) / sqrt(zoom)       
 
             if(range .gt. 30.)then
                 cint = 4.
@@ -4103,7 +4119,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Surface Pressure        (mb)'
+            c33_label = 'Surface Pressure        (mb)     '
 
             scale = 100.
 
@@ -4129,7 +4145,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Vert Velocity     (cm/s)'
+            c33_label = 'Sfc Vert Velocity     (cm/s)     '
 
             clow = -200.
             chigh = +200.
@@ -4155,8 +4171,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-!           c33_label = 'LAPS Sfc  Rel Hum       (PERCENT)'
-            c33_label = 'LAPS Sfc Rel Humidity   (PERCENT)'
+            c33_label = 'Sfc Rel Humidity   (PERCENT)     '
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -4193,7 +4208,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Temp Adv (x 1e-5 Dg K/s)'
+            c33_label = 'Sfc Temp Adv (x 1e-5 Dg K/s)     '
 
             clow = -100.
             chigh = +100.
@@ -4218,7 +4233,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Potential Temp   (Deg K)'
+            c33_label = 'Sfc Potential Temp   (Deg K)     '
 
             clow = +240.
             chigh = +320.
@@ -4244,7 +4259,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Equiv Potl Temp  (Deg K)'
+            c33_label = 'Sfc Equiv Potl Temp  (Deg K)     '
 
             clow = +250.
             chigh = +370.
@@ -4277,7 +4292,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Rel Vorticity   (1e-5/s)'
+            c33_label = 'Sfc Rel Vorticity   (1e-5/s)     '
 
             clow = -100.
             chigh = +100.
@@ -4303,7 +4318,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Mixing Ratio      (g/kg)'
+            c33_label = 'Sfc Mixing Ratio      (g/kg)     '
 
             clow = -100.
             chigh = +100.
@@ -4328,7 +4343,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Divergence  (x 1e-5 s-1)'
+            c33_label = 'Sfc Divergence  (x 1e-5 s-1)     '
 
             scale = 1e-5
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
@@ -4352,7 +4367,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Theta Adv   (x 1e-5 K/s)'
+            c33_label = 'Sfc Theta Adv   (x 1e-5 K/s)     '
 
             clow = -100.
             chigh = +100.
@@ -4377,7 +4392,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Mstr Adv (x 1e-5 g/kg/s)'
+            c33_label = 'Sfc Mstr Adv (x 1e-5 g/kg/s)     '
 
             clow = -100.
             chigh = +100.
@@ -4406,7 +4421,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Wind Speed          (kt)'
+            c33_label = 'Sfc Wind Speed          (kt)     '
 
             do i = 1,NX_L
             do j = 1,NY_L
@@ -4457,7 +4472,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Wind '//c_type(1:1)//'        (kt)   '
+            c33_label = 'Sfc Wind '//c_type(1:1)//'        (kt)        '       
 
             do i = 1,NX_L
             do j = 1,NY_L
@@ -4495,7 +4510,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS  Colorado Severe Storm Index'
+            c33_label = 'Colorado Severe Storm Index     '
 
             clow = 0.
             chigh = +100.
@@ -4520,7 +4535,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Visibility       (miles)'
+            c33_label = 'Sfc Visibility       (miles)     '
 
             clow = 0.
             chigh = +100.
@@ -4545,7 +4560,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Fire Weather          (0-20)'
+            c33_label = 'Fire Weather          (0-20)     '
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -4558,7 +4573,7 @@ c                   cint = -1.
      1           asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,       
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
-                call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'cpe'
+                call ccpfil(field_2d,NX_L,NY_L,-8.0,20.0,'cpe'
      1                     ,n_image,1.)      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -4572,11 +4587,11 @@ c                   cint = -1.
             if(c_type(1:2) .eq. 'sc')then
                 var_2d = 'SC'
                 ext = 'lm2'
-                c33_label = 'LAPS Snow Cover        (TENTHS)  '
+                c33_label = 'Snow Cover        (TENTHS)       '
             else
                 var_2d = 'CSC'
                 ext = 'lcv'
-                c33_label = 'LAPS SatObs Snow Cover (TENTHS)  '
+                c33_label = 'SatObs Snow Cover (TENTHS)       '
             endif
 
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -4606,7 +4621,7 @@ c                   cint = -1.
 
             if(c_type(1:2) .eq. 'cb')then ! Cloud Base
                 var_2d = 'LCB'
-                c33_label = 'LAPS Cloud Base         m   MSL  '
+                c33_label = 'Cloud Base         m   MSL       '
                 clow = 0.
                 chigh = 10000.
                 chigh_img = 8000.
@@ -4614,7 +4629,7 @@ c                   cint = -1.
 
             elseif(c_type(1:2) .eq. 'ct')then
                 var_2d = 'LCT'
-                c33_label = 'LAPS Cloud Top          m   MSL  '
+                c33_label = 'Cloud Top          m   MSL       '
                 clow = 0.
                 chigh = 20000.
                 chigh_img = 14000.
@@ -4622,7 +4637,7 @@ c                   cint = -1.
 
             elseif(c_type .eq. 'cc')then ! Cloud Ceiling
                 var_2d = 'CCE'
-                c33_label = 'LAPS Cloud Ceiling      m   AGL  '
+                c33_label = 'Cloud Ceiling      m   AGL       '
                 clow = 0.
                 chigh = 0.
                 cint = -100.
@@ -4699,16 +4714,16 @@ c                   cint = -1.
 3515            format(e20.8)
 
                 write(c33_label,3516)nint(cloud_height)
-3516            format('LAPS ',i5,'  M MSL   Cloud Cover  ')
+3516            format(i5,'  M MSL   Cloud Cover       ')
 
                 write(6,*)' LVL_CLD = ',lvl_cld
 
             elseif(k_level .eq. 0)then
-                c33_label = 'LAPS Cloud Cover                 '
+                c33_label = 'Cloud Cover                      '
 
             else ! k_level .lt. 0
                 write(c33_label,3517)-k_level
-3517            format('LAPS ',i5,'  MB    Cloud Cover    ')
+3517            format(i5,'  MB    Cloud Cover         ')
 
             endif
 
@@ -5706,7 +5721,7 @@ c             if(cint.eq.0.0)cint=0.1
         if(k_level .gt. 0)then
 !            if(VERTICAL_GRID .eq. 'HEIGHT')then
 !                write(c33_label,101)k_level,c19_label
-!101             format('LAPS',I5,' km ',a19)
+!101             format(I5,' km ',a19,5x)
 
 !            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
                 if(k_level .gt. 50)then ! k_level is given in pressure (mb)
@@ -5718,16 +5733,16 @@ c             if(cint.eq.0.0)cint=0.1
                 endif
 
                 write(c33_label,102)ipres,c19_label
-102             format('LAPS',I5,' hPa',a19)
+102             format(I5,' hPa',a19,4x)
 
 !            endif
         else if(k_level .eq. 0)then
             write(c33_label,103)c19_label
-103         format('LAPS  Surface',a19)
+103         format('Surface',a19,6x)
 
         else if(k_level .eq. -1)then
             write(c33_label,104)
-104         format('LAPS Steering Winds              ')
+104         format('Steering Winds                   ')
 
         endif
 
@@ -5821,10 +5836,10 @@ c             if(cint.eq.0.0)cint=0.1
 
         call setusv_dum('  ',7)
 
-        ix = 135
+        ix = 170 ! 135
         iy = y_2 * 1024
 !       call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
-        CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL',rsize,0,0)
+        CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL LAPS',rsize,0,0)   
 
 !       if(c5_sect .eq. 'sound')then
 !           call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
@@ -5839,6 +5854,7 @@ c             if(cint.eq.0.0)cint=0.1
         if(c5_sect .eq. 'hsect')then
             vspace=.0065
             v1=.0040
+            if(i_label .ge. 3)i_label = 3 - i_label ! Add labels on top
         else
             vspace=.0075
             v1=.0045
@@ -5860,10 +5876,12 @@ c             if(cint.eq.0.0)cint=0.1
         CALL PCHIQU (cpux(ix),cpux(iy),c33_label,rsize,0,-1.0)
 
 !       ix = 705
-        ix = 635
+!       ix = 635
+        ix = 672
         iy = y_1 * 1024
 !       call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,jsize_b,0,0)
-        CALL PCHIQU (cpux(ix),cpux(iy),'VALID '//asc_tim_24(1:17)
+        call downcase(asc_tim_24(5:10),asc_tim_24(5:10))
+        CALL PCHIQU (cpux(ix),cpux(iy),'VT '//asc_tim_24(1:17)
      1                                ,rsize,0,-1.0)
 
 
@@ -6104,6 +6122,7 @@ c             if(cint.eq.0.0)cint=0.1
      1                                                  ,zoom,scale)
             else
                 cint = cint_in
+                chigh = chigh + 5. * cint ! Add 5 extra contours
             endif
 
             call plot_cont(field_2d,scale,clow,chigh,cint
@@ -6112,7 +6131,7 @@ c             if(cint.eq.0.0)cint=0.1
      1                        ,r_missing_data,laps_cycle_time)
 
         else ! image plot
-            write(6,*)' plot_field_2d - image plot',c_type
+            write(6,*)' plot_field_2d - image plot ',c_type
             call ccpfil(field_2d,NX_L,NY_L
      1                 ,clow_img*scale,chigh_img*scale      
      1                 ,colortable,n_image,scale)    
