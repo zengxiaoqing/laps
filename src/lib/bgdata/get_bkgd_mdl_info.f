@@ -5,7 +5,7 @@
 c
 c JSmart 04-2001
 c
-      USE laps_static
+c     USE laps_static
 
       implicit none
 
@@ -126,7 +126,7 @@ c
      &then
          call find_domain_name(generic_data_root,grid_fnam_common,
      &istatus)
-         call get_horiz_grid_spec(generic_data_root)
+c        call get_horiz_grid_spec(generic_data_root)
          call s_len(grid_type,leng)
          if(grid_type(1:5).eq. 'polar')gproj='PS'
          if(grid_type(1:17).eq.'lambert conformal')gproj='LC'

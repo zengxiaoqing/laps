@@ -203,7 +203,8 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
 	 if(bg_len.gt.0.and.bg_len.le.13)then
 	    if(bg_names(n)(1:1).eq.'0'.or.
      +         bg_names(n)(1:1).eq.'1'.or.
-     +         bg_names(n)(1:1).eq.'2')then
+     +         bg_names(n)(1:1).eq.'2'.or.
+     +         bg_names(n)(1:1).eq.'9')then
                   fname=bg_names(n)(1:9)
                   af=bg_names(n)(10:13)
                   read(af,'(i4)',err=888) ihour
