@@ -49,8 +49,8 @@ c       output -- info on getting field
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'lapsparms.for'
+c        include 'parmtrs.inc'
 
 
 c parameter variables
@@ -62,7 +62,7 @@ c parameter variables
 
 c dynamically dependent variables
 
-      real data(igrid,jgrid,1)
+      real data(ii,jj,1)
 
 c internal variables
 
@@ -93,7 +93,7 @@ c internal variables
         var(1) = 'td'
         kmax = 1
 
-        call read_laps (i4time,i4time,dir,ext,igrid,jgrid,
+        call read_laps (i4time,i4time,dir,ext,ii,jj,
      1  kmax,1,var,lvl,
      1  lvl_coord,units,comment,data,istatus)
 
