@@ -395,6 +395,17 @@ netcdf fsf {
             fd:lvl_coord="AGL";
             fd:LAPS_units="NONE";
 
+        //      Model Topography                    //
+        //      bigfile name = 
+        float
+            ter(record,z,y,x);
+            ter:_FillValue = 1.e+37f;
+            ter:long_name="terrain height";
+            ter:units="meters";
+            ter:valid_range= -200.f, 20000.f;
+            ter:LAPS_var="TER";
+            ter:lvl_coord="MSL";
+            ter:LAPS_units="METERS";           
 
         //	LAPS variables
                 	        
@@ -437,6 +448,7 @@ netcdf fsf {
             hi_comment(record,z,namelen),
             vis_comment(record,z,namelen),
             fd_comment(record,z,namelen),
+            ter_comment(record,z.namelen),
             asctime(record,namelen);
 
 			
@@ -570,6 +582,9 @@ netcdf fsf {
             fd_fcinv(record, z);
             fd_fcinv:_FillValue= 0s;
 
+        short
+            ter_fcinv(record, z);
+            ter_fcinv:_FillValue= 0s;   
 
         //	list of grid levels
 
