@@ -32,11 +32,11 @@ cdis
 C
         SUBROUTINE i4time_fname_lp (FNAME_IN, I4TIME, ISTATUS)
 C
-C       This routine converts a standard PROFS file name, i.e. yydddhhmm,
+C       This routine converts several different file name types (i.e. yydddhhmm)
 C       into the corresponding I4 time.
 C
 C       ON INPUT
-C          FILE_NAME - The PROFS style file name.
+C          FILE_NAME - The file name including the directory path if wanted.
 C
 C       ON OUTPUT
 C          I4TIME - The corresponding I4 time of the file name.
@@ -45,6 +45,7 @@ C
 C================================================================
 C
         CHARACTER*9 wfo_fname13_to_fname9, rsa13_to_a9, a8_to_a9
+        CHARACTER*9 a7_to_a9_time
         CHARACTER*9 FILE_NAME
         CHARACTER*(*) FNAME_IN
         CHARACTER*20 c20_type
@@ -56,7 +57,7 @@ C
 C================================================================
 C
 C       Check the length of FILE_NAME to be sure that it is valid.
-C
+C 
         call get_filetime_type(fname_in,c20_type,leni,lent)
 
         if(c20_type .eq. 'yyjjjhhmm')then                   ! NIMBUS/LAPS type
@@ -71,11 +72,14 @@ C
         elseif(c20_type .eq. 'yymmddhh')then                ! AFWA RAOB type
            file_name = a8_to_a9(fname_in(leni+1:leni+lent))
 
+        elseif(c20_type .eq. 'ymmddhh')then               ! Taiwan FA Model
+           file_name = a7_to_a9_time(fname_in(leni+1:leni+lent))
         else                                                ! Unrecognized type
-           write(6,*)' error in i4time_fname_lp: ',fname_in,' ',c20_type
-           go to 1000
+           write(6,*)'i4time_fname_lp: unable to convert to i4time',
+     1'    type = ',c20_type
+           istatus = 0
+           return
         endif
-
 C
 C       Split the file name into individual integers, checking for invalid
 C       characters in the file name.

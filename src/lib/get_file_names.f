@@ -158,21 +158,23 @@ c       sort data
         call get_directory_length(names(1),lenf)
 
         do i = 1,number
-            names_buf = names(i)
-            call filter_non_numeric_fnames(names_buf,1,num_out,1
-     1                                    ,istatus)      
-            if(istatus .ne. 1)then
-                write(6,*)' sort_fn: error status returned from '
-     1                   ,'filter_non_numeric_fnames'
-                return
-            endif
+c           names_buf = names(i)
+c           call filter_non_numeric_fnames(names_buf,1,num_out,1
+c    1                                    ,istatus)      
+c           if(istatus .ne. 1)then
+c               write(6,*)' sort_fn: error status returned from '
+c    1                   ,'filter_non_numeric_fnames'
+c               return
+c           endif
 
-            if(num_out .eq. 1)then ! Calculate i4time(i)
+c           if(num_out .eq. 1)then ! Calculate i4time(i)
+c---------------------------
                 call i4time_fname_lp(names(i),i4time(i),istatus)
-            else
-                i4time(i) = 0      ! File is non-numeric and has no i4time
-                n_non_numeric = n_non_numeric + 1
-            endif
+c---------------------------
+c           else
+c               i4time(i) = 0      ! File is non-numeric and has no i4time
+c               n_non_numeric = n_non_numeric + 1
+c           endif
 
         enddo ! i
 

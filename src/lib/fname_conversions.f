@@ -157,4 +157,121 @@ c
 
         return
         end
+ 
+c---------------------------------------------------------------------------- 
+      function a7_to_a9_time(a7_time)
 
+c
+c Routine takes fa model intial time, as described below, and converts it
+c to 9 character ascii format for laps. Routines below this (make_fa_valtime,
+c a9_to_a7_time, make_fa_ext, and fname13_to_FA_filename) take the FA model
+c filename extension and coverts it to a 4 character valid time, or vice versa.
+c
+c===========================================================================
+cFA Model File description :
+c===========================================================================
+c   nf9093000.12m : Sample data file 1.
+c                   9093000(YMMDDhh) => 1999/09/30/00z
+c                   12m => 12hr fcst major-run(first cut)
+c   nf9093012.12m : Sample data file 2.
+c                   9093012(YMMDDhh) => 1999/09/30/12z
+c===========================================================================
+
+      implicit none
+
+      integer istatus
+      integer i4time_sys
+c
+c note: fname_in is 7 characters (ymmddhh)
+c
+      character*(*) a7_time
+      character*8   a8_time
+      character*9   a8_to_a9
+      character*9   a7_to_a9_time
+      character*9   a9_time
+
+      call get_systime(i4time_sys,a9_time,istatus)
+
+      a8_time=a9_time(1:1)//a7_time
+      a9_time=a8_to_a9(a8_time)
+
+      a7_to_a9_time = a9_time
+
+      return
+      end
+c
+c ---------------------------------------------------------------------------
+c
+      function a9_to_a7_time(a9_time)
+
+      implicit none
+
+      character*9  a9_time
+      character*8  a9_to_a8
+      character*8  a8_time
+      character*7  a9_to_a7_time
+
+      a8_time=a9_to_a8(a9_time)
+      a9_to_a7_time=a8_time(2:8)
+
+      return
+      end
+c
+c ---------------------------------------------------------------------------
+c
+      function fname13_to_FA_filename(fname13)
+
+      implicit none
+
+      character*13 fname13
+      character*13 fname13_to_FA_filename
+      character*9  a9_string
+      character*7  fname7,a9_to_a7_time
+      character*3  c3_FA_ext,c3_ext
+      character*4  a4_string
+
+      a9_string=fname13(1:9)
+      a4_string=fname13(10:13)
+
+      fname7=a9_to_a7_time(a9_string)
+      c3_ext=c3_FA_ext(a4_string)
+
+      fname13_to_FA_filename='nf'//fname7//'.'//c3_ext
+
+      return
+      end
+
+c ---------------------------------------------------------------------------
+c
+      function c4_FA_valtime(c_FA_ext)
+
+      implicit none
+
+      character*3 c_FA_ext
+      character*4 c4_FA_valtime
+
+      c4_FA_valtime='0000'
+      c4_FA_valtime(3:4)=c_FA_ext(1:2)
+
+      return
+      end
+
+c ---------------------------------------------------------------------------
+c
+      function c3_FA_ext(a4_string)
+
+      implicit none
+
+      integer number
+      character*4 a4_string
+      character*3 c3_FA_ext
+
+      read(a4_string,'(i4)')number
+      if(number.lt.10)then
+         c3_FA_ext='0'//a4_string(4:4)//'m'
+      else
+         c3_FA_ext=a4_string(3:4)//'m'
+      endif
+
+      return
+      end

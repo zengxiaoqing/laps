@@ -7,22 +7,26 @@
 c
 c JSmart  9-9-96
 c       Routine takes the result of get_file_names and filters
-c       it for non-numeric filenames. Test the first two characters
-c       to determine if they are characters. A filename of this type
-c       is disqualified.
-c       - i_nbr_files_in is reduced. The number of
-c       files returned (i_nbr_files_out) are files with only numerals
-c       in the filename.
+c       it for certain filename types. It tests the first two characters
+c       to determine if they are allowed in i4time_fname_lp. A
+c       filename of allowable types qualifies. If not then
+c       i_nbr_files_in is reduced and this filename type is discarded from
+c       the list. The number of
+c       files returned (i_nbr_files_out) are files allowed in i4time_fname_lp.
 c
-c       This routine is used in the source get_file_time.f that can
-c       only deal with numeric filenames (particularly of the form
-c       yyjjjhhmm and yyyymmdd_hhmm).
+c       This routine is used in the source get_file_time.f. LAPS can
+c       only deal with specific filename types. See i4time_fname_lp for
+c       more details of the types allowed.
+c   
+c      File type starting with the two characters 'nf' is now allowed since
+c      this represents the FA (Taiwan) filename type for the the FA model.
 c
-
        implicit none
 
-       integer*4 max_char
-       parameter(max_char = 10)
+       integer*4 max_numeric_char
+       parameter(max_numeric_char = 10)
+       integer*4 max_2letter_strings
+       parameter(max_2letter_strings = 1)
        integer*4 max_files_filtered
        parameter(max_files_filtered=3000)
 
@@ -35,14 +39,17 @@ c
        integer*4 istatus
        integer*4 i,k,n
 
-       logical found_qualifying_char
+       logical found_qualifying
 
        character*(*) c_fnames(max_files)
        character*255 c_files_qualifying(max_files_filtered)
-       character*1   c_qualifying_char(max_char)
+       character*1   c_qualifying_numeric_char(max_numeric_char)
+       character*2   c_qualifying_2letter_string(max_2letter_strings)
        character*255 c_fnames_filtered(max_files_filtered)
 
-       data c_qualifying_char/'0','1','2','3','4','5','6','7','8','9'/ 
+       data c_qualifying_numeric_char/'0','1','2','3','4','5'
+     &,'6','7','8','9'/
+       data c_qualifying_2letter_string/'nf'/ 
 
        i_fnames_filtered = 0
        i_files_qualifying= 0
@@ -51,15 +58,19 @@ c
 
           call get_directory_length(c_fnames(i),lend)
 
-          found_qualifying_char=.false.
-          do k=1,max_char
+          found_qualifying=.false.
 
-             if(c_fnames(i)(lend+1:lend+1).eq.c_qualifying_char(k))
-     1found_qualifying_char=.true.
-
+          do k=1,max_numeric_char
+             if(c_fnames(i)(lend+1:lend+1).eq.c_qualifying_
+     1numeric_char(k))found_qualifying=.true.
           enddo
 
-          if(found_qualifying_char)then
+          do k=1,max_2letter_strings
+             if(c_fnames(i)(lend+1:lend+2).eq.c_qualifying_
+     12letter_string(k)(1:2))found_qualifying=.true.
+          enddo
+
+          if(found_qualifying)then
              i_files_qualifying = i_files_qualifying+1
              c_files_qualifying(i_files_qualifying)=c_fnames(i)
           else

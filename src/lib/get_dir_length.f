@@ -264,47 +264,62 @@ C       1998          Steve Albers
         integer*4 leni ! Length of the initial non-filetime portion.
                        ! This is often but not always the directory length.
 
-        call s_len(c_fname,len_fname)
-        call get_directory_length(c_fname,lend)
-        lenf = len_fname - lend
+        call filter_non_numeric_fnames(c_fname,1,num_out,1
+     1                                    ,istatus)
 
-        if(lenf .eq. 20)then
+c initialize
+        c20_type = 'unknown'
+
+        if(num_out.eq.1)then
+
+           call s_len(c_fname,len_fname)
+           call get_directory_length(c_fname,lend)
+           lenf = len_fname - lend
+
+           if(lenf .eq. 20)then
             if(c_fname(lend+14:lend+14) .eq. '_')then
                c20_type = 'yyyyjjjhhmmss'                         ! RSA radar type
                leni = lend
                lent=13
                return
             endif
-        endif
+           endif
 
-        if(lenf .eq. 13)then
-           if(c_fname(lend+1:lend+5) .eq. 'raob.')then
-              c20_type = 'yymmddhh'                              ! AFWA raob
-              leni = lend+5
-              lent=8
-              return
+           if(lenf .eq. 13)then
+            if(c_fname(lend+1:lend+5) .eq. 'raob.')then
+               c20_type = 'yymmddhh'                              ! AFWA raob
+               leni = lend+5
+               lent=8
+               return
+            elseif(c_fname(lend+1:lend+2) .eq. 'nf')then         ! Taiwan FA model
+               c20_type = 'ymmddhh'
+               leni = lend+2
+               lent = 7
+               return
             endif
-        endif
+           endif
 
-        if(lenf .ge. 13)then
-           if(c_fname(lend+9:lend+9) .eq. '_')then
-              c20_type = 'yyyymmdd_hhmm'                         ! WFO type
+           if(lenf .ge. 13)then
+            if(c_fname(lend+9:lend+9) .eq. '_')then
+               c20_type = 'yyyymmdd_hhmm'                         ! WFO type
+               leni = lend
+               lent=13
+               return
+            endif
+           endif
+
+           if(lenf .ge. 9)then ! assume 9 chars for time portion of filename
+              c20_type = 'yyjjjhhmm'                             ! NIMBUS/LAPS
               leni = lend
-              lent=13
+              lent=9
               return
            endif
-        endif
 
-        if(lenf .ge. 9)then ! assume 9 chars for time portion of filename
-           c20_type = 'yyjjjhhmm'                             ! NIMBUS/LAPS
+           c20_type = 'unknown'
            leni = lend
-           lent=9
-           return
-        endif
+           lent = lenf
 
-        c20_type = 'unknown'
-        leni = lend
-        lent = lenf
+        endif
 
 !       write(6,*)'Time portion of string = ',c20_type
 !    1                                       ,c_fname(leni+1:leni+lent)
