@@ -3824,7 +3824,9 @@ Intermediate LAPS files:
 
 Process vrc_driver:
                 VRC  REF  ref      1  NOWRAD 2D radar reflectivity
-                VRZ               21  (Proposed 3D reflectivity mosaic)
+
+Process mosaic_radar:
+                VRZ               21  (3D reflectivity mosaic)
  
 Process remap:  V01  REF  refd    21  Radar reflectivity
                      VEL  veld    21  Radial Velocity    
