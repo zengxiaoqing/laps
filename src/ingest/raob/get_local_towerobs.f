@@ -570,7 +570,7 @@ c
 	 store_3(nn,4) = spdgust                ! wind gust speed (kt)
 c
          store_4(nn,1) = alt(i)                 ! altimeter setting (mb)
-         store_4(nn,2) = stn_press              ! station pressure (mb)
+!        store_4(nn,2) = stn_press              ! station pressure (mb)
          store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
          store_4(nn,4) = badflag                ! 3-h press change character
          store_4(nn,5) = badflag                ! 3-h press change (mb)

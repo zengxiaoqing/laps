@@ -178,7 +178,8 @@ cdis
 
       call radar_init(i_radar,i_tilt_proc,i_last_scan,istatus)
       if(istatus .ne. 1)then
-          write(6,*)' remap_sub: ERROR returned from radar_init'      
+          write(6,*)' remap_sub: istatus returned from radar_init ='
+     1              ,istatus      
           return
       endif
 
