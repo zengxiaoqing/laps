@@ -1,0 +1,105 @@
+#!@CSH@
+
+setenv LAPS_ROOT $1
+setenv LAPS_BIN  $2/bin
+setenv LAPS_DATA_ROOT $3
+setenv RUN $4
+setenv BUILD_DIR $5
+setenv PLATFORM $6
+
+echo " "
+echo "List of file update times and building errors..."
+
+setenv TZ GMT
+cd $1
+
+echo " "
+echo "checking executables - should be 32 (counting lapsplot.exe)"
+cd $LAPS_BIN
+ls -lrt *.x *.exe
+echo " Actual number is... `ls -l *.x *.exe | wc -l`"
+
+echo " "
+echo "checking make.out"
+setenv FILE $1/make.out
+grep -i " error " $FILE ; grep -i "^error " $FILE
+grep '(E)' $FILE
+grep '(S)' $FILE
+grep -i undefined $FILE
+grep -i stop $FILE
+grep -i warning $FILE
+grep -i "No rule" $FILE
+ls -l $FILE
+
+echo " "
+echo "checking make_install.out"
+setenv FILE $1/make_install.out
+grep -i Error $FILE
+grep '(E)' $FILE
+grep '(S)' $FILE
+ls -l $FILE
+
+echo " "
+echo "checking install_laps_builds.out"
+grep build_laps.pl         $BUILD_DIR/install_laps_builds_$PLATFORM*
+#tail -1                   $BUILD_DIR/build.log*
+ls -l                      $BUILD_DIR/install_laps_builds_$PLATFORM*
+
+echo " "
+echo "checking static.nest7grid"
+ls -l $LAPS_DATA_ROOT/static/static.nest7grid
+
+echo " "
+echo "checking localization output"
+grep -i error            $3/log/laps_localization.log
+grep -i warning          $3/log/laps_localization.log
+grep -i cannot           $3/log/laps_localization.log
+grep -i exceeds          $3/log/laps_localization.log
+tail -1                  $3/log/laps_localization.log
+ls -l                    $3/log/laps_localization.log
+
+#echo " "
+#echo "checking oplapb update_operational.log"
+#grep error                 /home/lapb/oplapb/update_operational.log
+#grep warning               /home/lapb/oplapb/update_operational.log
+#grep cannot                /home/lapb/oplapb/update_operational.log
+#grep failed:               /home/lapb/oplapb/update_operational.log
+#grep 'could not'           /home/lapb/oplapb/update_operational.log
+#grep 'cannot update'       /home/lapb/oplapb/update_operational.log
+#grep coredump              /home/lapb/oplapb/update_operational.log
+#grep non-zero              /home/lapb/oplapb/update_operational.log
+#tail -1                    /home/lapb/oplapb/update_operational.log
+#ls -l                      /home/lapb/oplapb/update_operational.log
+
+#echo "RUN="$RUN
+
+if ($RUN == "run_yes") then
+
+  echo " "
+  echo " Listing of any key products that are unavailable at `head -5 /w3/lapb/domain_co/anal3d/recent/systime_www_avs_anal.out | tail -1`z ..."
+  head -3 /usr/nfs/common/avs_fsl/net/laps/lapslabel.txt | tail -1 | cut -c-38 | grep N/A
+  head -4 /usr/nfs/common/avs_fsl/net/laps/lapslabel.txt | tail -1 | cut -c-38 | grep N/A
+  head -5 /usr/nfs/common/avs_fsl/net/laps/lapslabel.txt | tail -1 | cut -c-38 | grep N/A
+  head -5 /usr/nfs/common/avs_fsl/net/laps/lapslabel.txt | tail -1 | cut -c-38 | grep radar
+  head -6 /usr/nfs/common/avs_fsl/net/laps/lapslabel.txt | tail -1 | cut -c-38 | grep N/A
+  head -7 /usr/nfs/common/avs_fsl/net/laps/lapslabel.txt | tail -1 | cut -c-38 | grep N/A
+  head -7 /usr/nfs/common/avs_fsl/net/laps/lapslabel.txt | tail -1 | cut -c-38 | grep no
+  head -8 /usr/nfs/common/avs_fsl/net/laps/lapslabel.txt | tail -1 | cut -c-38 | grep N/A
+
+  echo " "
+  echo "......................... if more info is needed ......................."
+  echo " "
+  echo " Check the LAPS Product Monitor on the Web"
+  echo " "
+  echo " Check the FD File Monitor on the Web"
+  echo " "
+  echo " Check logs for errors and warnings"
+  echo " "
+  echo " Check the REVISIONS file for the week's software updates"
+  echo " "
+  echo " Check if it is more than a month since the last release on "`head -2 /w3/lapb/software/newlaps_tarversions.txt | tail -1`
+  echo " "
+ 
+endif
+
+

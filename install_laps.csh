@@ -55,7 +55,7 @@ if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
         endif
     end
 
-    $LAPS_SRC_ROOT/util/fix_net .environs  .youll_never_find_this_file fxa.pm
+    ./util/fix_net .environs  .youll_never_find_this_file etc/fxa.pm
 
 #   This section does what "make install" would normally do on a precompiled tar file,
 #   (i.e. a substitution for section 2.2.4 in the README)
