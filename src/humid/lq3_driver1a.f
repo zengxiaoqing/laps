@@ -300,10 +300,11 @@ c
         integer sounder_switch
         integer sat_skip
         integer gvap_switch
+	integer sfc_mix
         namelist /moisture_switch/ raob_switch,
      1       raob_lookback, goes_switch, cloud_switch
      1       ,tiros_switch, sounder_switch, sat_skip
-     1       ,gvap_switch
+     1       ,gvap_switch, sfc_mix
 
         integer len
         character*200 cdomain
@@ -347,6 +348,7 @@ c set namelist parameters to defaults (no satellite)
         tiros_switch = 0
         sat_skip = 0
         gvap_switch = 0
+        sfc_mix = 0
 
         call get_directory('static',fname,len)
         open (23, file=fname(1:len)//'moisture_switch.nl',
@@ -407,6 +409,12 @@ c set namelist parameters to defaults (no satellite)
            write(6,*) 'Using goes derived pw, assume data connection'
         else
            write(6,*) 'GVAP not used... nominal state'
+      endif
+
+      if (sfc_mix .eq. 1) then
+           write(6,*) 'Mixing moisture from sfc'
+         else
+           write(6,*) 'Sfc moisture field ignored'
       endif
 
 
@@ -709,12 +717,29 @@ c ****  get laps cloud data. used for cloud, bl, goes
 
 c ***   insert bl moisture
 
+
+
         print*, 'calling lsin'
 c     insert boundary layer data
         call lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
      1       kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
 
         print*, 'finished with routine lsin'
+       if( sfc_mix.eq.1)then
+          write(6,*) 'Lsin allowed to modify data field'
+        else
+          write(6,*) 'Lsin and sfc mixing step skipped'
+
+        do k = 1,kk
+           do i = 1,ii
+              do j = 1,jj
+                 data(i,j,k) = data_in(i,j,k)
+              enddo
+           enddo
+        enddo
+
+
+        endif
 
 
 
