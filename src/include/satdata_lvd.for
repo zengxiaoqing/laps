@@ -16,9 +16,12 @@
       C_SAT_TYPES(2,1)='wfo'
       C_SAT_TYPES(3,1)='cdf'
       C_SAT_TYPES(4,1)='gwc'
+
       C_SAT_TYPES(4,2)='gwc'
+
       C_SAT_TYPES(1,3)='gvr'
       C_SAT_TYPES(2,3)='wfo'
+
       C_SAT_TYPES(4,3)='gwc'
       C_SAT_TYPES(4,4)='gwc'
 c ----
