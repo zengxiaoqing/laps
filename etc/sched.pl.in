@@ -6,6 +6,10 @@ require "getopt.pl";
 
 umask 002;
 
+$mach=`uname`;
+chomp($mach);
+$ENV{XLFRTEOPTS}='namelist=old' if($mach eq 'AIX');
+
 $LAPSROOT=shift || die "LAPS root directory required\n";
 
 $ENV{LAPS_DATA_ROOT} = shift ;
