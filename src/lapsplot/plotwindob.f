@@ -51,6 +51,11 @@ cdis
       call get_border(imax,jmax,x_1,x_2,y_1,y_2)
       call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
 
+      if(nint(ri).gt.imax.or.nint(rj).gt.jmax)then
+          write(6,*)' plot_windob: skipping ob at ',ri,rj
+          goto 1
+      endif
+
       rot = (standard_longitude - lon(nint(ri),nint(rj))) / 57.295
 
       rot = projrot_latlon(lat(nint(ri),nint(rj))

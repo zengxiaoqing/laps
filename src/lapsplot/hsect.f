@@ -151,7 +151,7 @@ cdis
 
         real*4 u_3d(NX_L,NY_L,NZ_L) ! WRT True North
         real*4 v_3d(NX_L,NY_L,NZ_L) ! WRT True North
-        real*4 omega_3d(NX_L,NY_L,NZ_L)
+!       real*4 omega_3d(NX_L,NY_L,NZ_L)
         real*4 grid_ra_ref(NX_L,NY_L,NZ_L)
         real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
         real*4 grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
@@ -168,9 +168,7 @@ cdis
         real*4 temp_col_max(NX_L,NY_L)
         real*4 rh_3d(NX_L,NY_L,NZ_L)
         real*4 pressures_mb(NZ_L)
-        real*4 q_3d(NX_L,NY_L,NZ_L)
-        real*4 slwc_3d(NX_L,NY_L,NZ_L)
-        real*4 cice_3d(NX_L,NY_L,NZ_L)
+!       real*4 q_3d(NX_L,NY_L,NZ_L)
 
 !       real*4 slwc_int(NX_L,NY_L)
         real*4 column_max(NX_L,NY_L)
@@ -201,7 +199,7 @@ cdis
 
 
         character cldpcp_type_3d(NX_L,NY_L,NZ_L)
-        real*4 mvd_3d(NX_L,NY_L,NZ_L)
+!       real*4 mvd_3d(NX_L,NY_L,NZ_L)
         integer*4 iarg
 
         real*4 cloud_cvr(NX_L,NY_L)
@@ -2175,11 +2173,11 @@ c
                   if(c_type .ne. 'ci')then
                     call get_laps_3dgrid(i4time_ref,86400,i4time_cloud,
      1                                   NX_L,NY_L,NZ_L,ext,var_2d
-     1                            ,units_2d,comment_2d,slwc_3d,istatus)       
+     1                            ,units_2d,comment_2d,field_3d,istatus) ! slwc_3d
                   else
                     call get_laps_3dgrid(i4time_ref,86400,i4time_cloud,
      1                                   NX_L,NY_L,NZ_L,ext,var_2d
-     1                            ,units_2d,comment_2d,cice_3d,istatus)
+     1                            ,units_2d,comment_2d,field_3d,istatus) ! cice_3d
                   endif
 
                 else ! Get 2D horizontal slice from 3D Grid
@@ -2195,8 +2193,6 @@ c
                   endif
 
                 endif
-
-            else ! Calculate on the Fly
 
             endif ! L_pregen
 
@@ -2215,31 +2211,14 @@ c
      1                           ,c_display,'nest7grid',lat,lon,jdot
      1                           ,NX_L,NY_L,r_missing_data
      1                           ,laps_cycle_time)
-!                else
-!                  call plot_cont(slwc_3d(1,1,k_level),1e-3
-!    1                           ,clow,chigh,cint,asc9_tim_t
-!    1                           ,c33_label,i_overlay,c_display
-!    1                           ,'nest7grid',lat,lon,jdot
-!    1                           ,NX_L,NY_L,r_missing_data
-!    1                           ,laps_cycle_time)
-!                endif
 
                else ! c_type .ne. 'ci'
-!                if(l_pregen)then
                    call subcon(cice_2d,1e-30,field_2d,NX_L,NY_L)
                    call plot_cont(field_2d,1e-3,clow,chigh,cint
      1                           ,asc9_tim_t,c33_label,i_overlay
      1                           ,c_display,'nest7grid',lat,lon,jdot
      1                           ,NX_L,NY_L,r_missing_data
      1                           ,laps_cycle_time)
-!                else
-!                  call plot_cont(cice_3d(1,1,k_level),1e-3
-!    1                           ,clow,chigh,cint,asc9_tim_t
-!    1                           ,c33_label,i_overlay,c_display
-!    1                           ,'nest7grid',lat,lon,jdot
-!    1                           ,NX_L,NY_L,r_missing_data
-!    1                           ,laps_cycle_time)
-!                endif
 
                endif ! c_type
 
@@ -2250,12 +2229,12 @@ c
                    if(c_type .ne. 'ci')then
                      do k = 1,NZ_L
                        column_max(i,j) = 
-     1                 max(column_max(i,j),slwc_3d(i,j,k))
+     1                 max(column_max(i,j),field_3d(i,j,k)) ! slwc_3d
                      enddo ! k
                    else
                      do k = 1,NZ_L
                        column_max(i,j) = 
-     1                 max(column_max(i,j),cice_3d(i,j,k))
+     1                 max(column_max(i,j),field_3d(i,j,k)) ! cice_3d
                      enddo ! k
                    endif
                enddo ! i
@@ -2313,7 +2292,7 @@ c
                 call get_laps_3dgrid(i4time_ref,10000000
      1                                  ,i4time_cloud
      1                                  ,NX_L,NY_L,NZ_L,ext,var_2d
-     1                                  ,units_2d,comment_2d,slwc_3d
+     1                                  ,units_2d,comment_2d,field_3d ! slwc_3d
      1                                  ,istatus)
 
             else ! Get 2D horizontal slice from 3D Grid
@@ -2341,7 +2320,7 @@ c
      1                   i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
                    else
-                       call plot_cont(mvd_3d(1,1,k_level),0.9999e-6,
+                       call plot_cont(field_3d(1,1,k_level),0.9999e-6, ! mvd_3d
      1                   clow,chigh,cint,asc9_tim_t,c33_label,
      1                   i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2353,7 +2332,7 @@ c
                        column_max(i,j) = -1e-30
                        do k = 1,NZ_L
                            column_max(i,j) = max(column_max(i,j)
-     1                                          ,mvd_3d(i,j,k))
+     1                                          ,field_3d(i,j,k))      ! mvd_3d
                        enddo ! k
                    enddo ! i
                    enddo ! j
@@ -2386,8 +2365,8 @@ c
                        do i = 1,NX_L
                            column_max(i,j) = -1e-30
                            do k = 1,NZ_L
-                               if(slwc_3d(i,j,k) .gt. 0.)column_max(i,j)
-     1                     = max(column_max(i,j),slwc_3d(i,j,k)+.01)
+                            if(field_3d(i,j,k) .gt. 0.)column_max(i,j) ! slwc_3d
+     1                     = max(column_max(i,j),field_3d(i,j,k)+.01)       
                            enddo ! k
                        enddo ! i
                        enddo ! j
@@ -2728,9 +2707,9 @@ c
               ext = 'lq3'
 
               call get_laps_3dgrid
-     1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+     1        (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
      1          ,ext,var_2d,units_2d,comment_2d
-     1                                  ,q_3d,istatus)
+     1                                  ,field_3d,istatus) ! q_3d
               if(istatus.ne. 1)then
                  print*,'No plotting for the requested time period'
               else   
@@ -2744,15 +2723,7 @@ c             cint = -1.
 
               call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
-!           do i = 1,NX_L
-!           do j = 1,NY_L      
-!               if(q_3d(i,j,k_level) .eq. r_missing_data)then
-!                   q_3d(i,j,k_level) = 0.
-!               endif              
-!           enddo ! j
-!           enddo ! i
-
-              call plot_cont(q_3d(1,1,k_level),1e-3,clow,chigh,cint,
+              call plot_cont(field_3d(1,1,k_level),1e-3,clow,chigh,cint, ! q_3d
      1             asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
      1             ,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2831,7 +2802,7 @@ c
 
             var_2d = 'SH '
             call get_modelfg_3d_sub(i4_valid,var_2d,ext
-     1             ,nx_l,ny_l,nz_l,q_3d,istatus)
+     1             ,nx_l,ny_l,nz_l,field_3d,istatus)             ! q_3d
             if(istatus.ne.1)then
                print*,var_2d, ' not obtained from ',ext(1:3)
                print*,'no plotting of data for requested time period'
@@ -2853,15 +2824,7 @@ c             cint = -1.
 
               call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
-!             do i = 1,NX_L
-!             do j = 1,NY_L
-!                 if(q_3d(i,j,k_level) .eq. r_missing_data)then
-!                     q_3d(i,j,k_level) = 0.
-!                 endif
-!             enddo ! j
-!             enddo ! i
-
-              call plot_cont(q_3d(1,1,k_level),1e-3,clow,chigh,cint,
+              call plot_cont(field_3d(1,1,k_level),1e-3,clow,chigh,cint, ! q_3d
      1             asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
      1             ,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2895,8 +2858,8 @@ c             cint = -1.
               do i = 1,NX_L
               do j = 1,NY_L
                 rh_3d(i,j,k_level)=make_rh(float(k_mb)
-     1                              ,temp_3d(i,j,k_level)-273.15
-     1                              ,q_3d(i,j,k_level)*1000.,t_ref)*100.      
+     1                         ,temp_3d(i,j,k_level)-273.15
+     1                         ,field_3d(i,j,k_level)*1000.,t_ref)*100. ! q_3d
               enddo ! j
               enddo ! i
 

@@ -753,7 +753,7 @@ C
      +     wvln,silwt,xq,yq,xp,yp,xcentr,ycentr,glatp,               ! pla,plo,
      +     glonp,rio,rjo,wio2,wio1,wjo2,wjo1,xq1,yq1
       real xr,yr,rval,sh,sha,rh,rha
-      CHARACTER*180 OFN,TITLE3
+      CHARACTER*180 OFN,TITLE3,TITLE3_last_read,TITLE3_last_inquire
       CHARACTER*3 TITLE1
       CHARACTER*4 TITLE2
       LOGICAL L1,L2,dem_data,l_string_contains
@@ -774,7 +774,11 @@ c      stop
       DO 11 IOF=1,MOF
          ISO(IOF)=0
          IWO(IOF)=0
-  11    continue
+  11  continue
+
+      TITLE3_last_read    = '/dev/null'
+      TITLE3_last_inquire = '/dev/null'
+
       DO 15 JQ=1,NJQ
          print *,'jq,njq,niq=',jq,njq,niq
          DO 16 IQ=1,NIQ
@@ -790,7 +794,7 @@ c      stop
 c                 call xy_to_latlon(XP,YP,erad,rlat,wlon1,GLATP,GLONP) 
                   call xy_to_latlon(XP,YP,erad,GLATP,GLONP) 
 
-c         print *,'rlat,wlon1=',rlat,wlon1
+c                 print *,'rlat,wlon1=',rlat,wlon1
                   ISOC=(INT((GLATP-FLOAT(ISBEGO))/FLOAT(IBLKSIZO)+200.)
      +                -200)*IBLKSIZO+ISBEGO
                   IWOC=(INT((GLONP-FLOAT(IWBEGO))/FLOAT(IBLKSIZO)+400.)
@@ -821,7 +825,12 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   LB=INDEX(OFN,' ')-1
                   TITLE3=OFN(1:LB)//TITLE1//TITLE2
                   LB=INDEX(TITLE3,' ')-1
-                  INQUIRE(FILE=TITLE3(1:LB),EXIST=L1,OPENED=L2)
+
+                  if(TITLE3 .ne. TITLE3_last_inquire)then
+                     INQUIRE(FILE=TITLE3(1:LB),EXIST=L1,OPENED=L2)
+                     TITLE3_last_inquire = TITLE3
+                  endif
+
                   IF(.NOT.L1)THEN
                      iwrite = 0
 
@@ -882,24 +891,33 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   len=index(ofn,' ')
 
 !                 Read the tile
-                  if( (ofn(len-1:len).eq.'U').and.(no.eq.1200) )then
-                    CALL READ_DEM(29,TITLE3(1:LB),no,no,2,4,   ! world topo_30s
-     .              DATO(1,1,NOFR))
-                    dem_data=.true.
-                  elseif( (ofn(len-1:len).eq.'O') )then        ! soil
-                    CALL READ_DEM(29,TITLE3(1:LB),no,no,1,4,
-     .              DATO(1,1,NOFR))
-                    dem_data=.true.
-                  else                                         ! other
-                    CALL JCLGET(29,TITLE3(1:LB),'FORMATTED',0,istatus)      
-                    CALL VFIREC(29,DATO(1,1,NOFR),NONO,'LIN')
-                    if ((ofn(len-1:len).eq.'U').and.(no.eq.121)) then
-                      dem_data=.false.                         ! topo_30s
+                  if(TITLE3 .ne. TITLE3_last_read)then
+                    if( (ofn(len-1:len).eq.'U').and.(no.eq.1200) )then
+                      CALL READ_DEM(29,TITLE3(1:LB),no,no,2,4, ! world topo_30s
+     .                              DATO(1,1,NOFR))
+                      dem_data=.true.
+                    elseif( (ofn(len-1:len).eq.'O') )then      ! soil
+                      CALL READ_DEM(29,TITLE3(1:LB),no,no,1,4,
+     .                              DATO(1,1,NOFR))
+                      dem_data=.true.
+                    else                                       ! other
+                      CALL JCLGET(29,TITLE3(1:LB),'FORMATTED',0,istatus)      
+                      CALL VFIREC(29,DATO(1,1,NOFR),NONO,'LIN')
+                      if ((ofn(len-1:len).eq.'U').and.(no.eq.121)) then
+                        dem_data=.false.                       ! topo_30s
+                      endif
                     endif
-                  endif
 
-c              print *,'nofr,dato=',nofr,dato(1,1,nofr)
-                  CLOSE(29)
+                    TITLE3_last_read = TITLE3
+
+c                   print *,'nofr,dato=',nofr,dato(1,1,nofr)
+                    CLOSE(29)
+
+                  else
+                    write(6,*)' We have made the code more efficient'
+
+                  endif ! Is this a new file we haven't read yet?
+
                   ISO(NOFR)=ISOC
                   IWO(NOFR)=IWOC
 10		  continue
