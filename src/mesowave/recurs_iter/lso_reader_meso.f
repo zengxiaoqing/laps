@@ -94,6 +94,8 @@ c
 c
            call get_systime(i4time,filename,istatus)
            call i4time_fname_lp(filename,i4time,status)
+
+	PRINT*,'I4TIME: ',i4time,MOD(i4time,86400)
 c
 c.....  Set the data cycle in seconds and figure out the 
 c.....  previous time variables and filenames.
