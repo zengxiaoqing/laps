@@ -120,7 +120,7 @@ c
           endif
 
         else
-          print*,'sat id = ',c_sat_id(k), 'no lut needed'
+          print*,'sat id = ',c_sat_id(k), ': LUT not needed'
         endif
 c
 c ================================================================

@@ -244,11 +244,13 @@ c
 c save the unnormalized counts.
 c Note: this raw vis data now looks like raw goes-7 counts and we must reverse the stretch.
 c
-             call stretch(0., 255., 0., 303.57, laps_vis_norm(i,j))  !reverse the stretch 
-             laps_vis_raw(i,j)=laps_vis_norm(i,j)                    !OK, save these. This is svs!
+             if(laps_vis_norm(i,j).ne.r_missing_data)then
+               call stretch(0., 255., 0., 303.57, laps_vis_norm(i,j))  !reverse the stretch 
+               laps_vis_raw(i,j)=laps_vis_norm(i,j)                    !OK, save these. This is svs!
 c for goes8 - make it look like goes7
-             call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+               call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
 c laps_vis_norm is now ready for local normalization
+             endif
 
           enddo
           enddo
@@ -308,18 +310,22 @@ c 						       or goes-8!
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
              do i=1,imax
+               if(laps_vis_norm(i,j).ne.r_missing_data)then
 c for goes8 - make it look like goes7
-                call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+                 call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+               endif
              enddo
              enddo
           elseif(c_sat_id.eq.'goes09')then
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
              do i=1,imax
+               if(laps_vis_norm(i,j).ne.r_missing_data)then
 c for goes9 - make it look like goes8
-                call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
+                  call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
 c for goes8 - make it look like goes7
-                call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+                  call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+               endif
              enddo
              enddo
           endif
@@ -347,8 +353,10 @@ c
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
              do i=1,imax
+                if(laps_vis_norm(i,j).ne.r_missing_data)then
 c for goes8 - make it look like goes7
-                call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+                   call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
+                endif
              enddo
              enddo
           elseif(c_sat_id.eq.'goes09')then
@@ -356,10 +364,12 @@ c for goes8 - make it look like goes7
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
              do i=1,imax
+                if(laps_vis_norm(i,j).ne.r_missing_data)then
 c for goes9 - make it look like goes8
-                call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
+                   call stretch(0., 255., 0.,193.,laps_vis_norm(i,j))
 c for goes8 - make it look like goes7
-                call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+                   call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
+                endif
              enddo
              enddo
 

@@ -222,9 +222,9 @@ c ---------------------------------------------
 c --------------------------------------------------------------------
 c Read look-up table for mapping lat/lon data pixels to real i/j pairs
 c --------------------------------------------------------------------
-c     if(csatid.ne.'gmssat')then
+      if(csatid.ne.'gmssat')then
 
-      call readlut(csatid,csattype,maxchannels,nchannels,
+         call readlut(csatid,csattype,maxchannels,nchannels,
      &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
 
       if(istatus.eq.1)then
@@ -288,10 +288,7 @@ c              goto 910
 c           endif
 
       endif
-
-c     else
-c        print*,'sat id = ',csatid, 'no lut needed'
-c     endif
+      endif
 c
 c -------------------------------------------------------------------------
 c Determine solar-altitude and set flag for visible sat data availability.
@@ -496,7 +493,7 @@ c
      &   image_ir,image_39,image_12,image_67,image_vis,
      &   r_image_status)
 
-      else
+      elseif(csatid.ne.'gmssat')then
 
          write(6,*)'TEST = skipping satfill section'
          write(6,*)'==============================='

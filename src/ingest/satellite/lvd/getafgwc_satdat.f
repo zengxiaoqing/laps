@@ -53,8 +53,6 @@ c
      &                    max_channels,nchannels,chtype,
      &                    i4time_current,lvis_flag,
      &                    nirlines, nirelem,
-     &                    nvislines,nviselem,
-     &                    nwvlines,nwvelem,
      &                    ntm,max_files,c_type,
      &                    image_11,image_vis,
      &                    image_12,           !image_39,
@@ -63,7 +61,6 @@ c
      &                    istatus)
           if(istatus.ne.0)then
              print*,'Error returned from getgmsdata'
-             istatus=1
           endif
 
        else
@@ -81,7 +78,6 @@ c
      &                     istatus)
           if(istatus.ne.0)then 
              print*,'Error returned from getgoesdata'
-             istatus=1
           endif
 
        endif
@@ -350,9 +346,7 @@ c
       subroutine getgmsdata(isat,jtype,
      &                      max_channels,nchannels,chtype,
      &                      i4time_current,lvis_flag,
-     &                      nirlines, nirelem,
-     &                      nvislines,nviselem,
-     &                      nwvlines,nwvelem,
+     &                      nlines, nelem,
      &                      ntm,max_files,c_type,
      &                      image_11,image_vis,
      &                      image_12,           !no image_39 data!,
@@ -368,15 +362,12 @@ c
       include 'satellite_common_lvd.inc'
 
       integer isat,jtype
-      integer i,j,nf,np
+      integer i,j,k,l,m
+      integer nf,nc,np
       integer ierr
       integer ntm
-      integer nirelem
-      integer nirlines
-      integer nwvelem
-      integer nwvlines
-      integer nviselem
-      integer nvislines
+      integer nelem
+      integer nlines
       integer nchannels
       integer max_channels
       integer lvdindex,lstatus
@@ -384,6 +375,7 @@ c
       integer nfiles
       integer npixgms,nlingms
       integer max_files
+      integer nxny(2)
 
       integer i4time_current
       integer i4time_data
@@ -391,13 +383,13 @@ c
 
       integer istatus
       integer fstatus
-      integer iostatus
+      integer gstatus
 
-      real image_11  (nirelem,nirlines)
-      real image_12  (nirelem,nirlines)
-c     real image_39  (nirelem,nirlines)
-      real image_67  (nwvelem,nwvlines)
-      real image_vis (nviselem,nvislines)
+      real image_11  (nelem,nlines)
+      real image_12  (nelem,nlines)
+      real image_67  (nelem,nlines)
+      real image_vis (nelem,nlines)
+      integer image_gms (nelem*nlines+8)
 
       logical   lvis_flag
 
@@ -416,18 +408,30 @@ c     real image_39  (nirelem,nirlines)
       character cfilenames(max_files)*255
 
       print*,'Subroutine getgmsdata'
-      print*,'This is just a test subroutine currently'
+
+      istatus=1
 
 c get latest lvd file in lvd directory
 
       call get_directory('lvd',cdir_lvd,lend)
-      cdir_lvd=cdir_lvd(1:lend)//c_sat_id(isat)//'/*'
       call make_fnam_lp(i4time_current,cfname_cur,istatus)
-      call get_latest_file_time(cdir_lvd,cfiletime)
-      call i4time_fname_lp(cfiletime,i4time_latest_lvd,istatus)
-      cjjjhr=cfname_cur(3:7)
+      cdir_lvd=cdir_lvd(1:lend)//c_sat_id(isat)
+      call get_file_names(cdir_lvd,nfiles,cfilenames,max_files
+     +,gstatus)
 
+      if(nfiles.gt.0)then
+         call get_directory_length(cfilenames(nfiles),lenf)
+         call get_latest_file_time(cfilenames(nfiles)(1:lenf),cfiletime)
+         call i4time_fname_lp(cfiletime,i4time_latest_lvd,istatus)
+      else
+         i4time_latest_lvd=0
+      endif
+
+      cjjjhr=cfname_cur(3:7)
       ntm=0
+ 
+c hardwire for testing
+      cjjjhr='19607'
 
       do i=1,nchannels
 
@@ -465,7 +469,7 @@ c       do j=1,nfiles
           cjjjhhmm=cfilenames(nfiles)(lenf+5:lenf+11)
           cfd=cfname_cur(1:2)//cjjjhhmm
           call i4time_fname_lp(cfd,i4time_data,istatus)
-          if(istatus.ne.0)then
+          if(istatus.ne.1)then
             print*,'error returned from i4time_fname_lp'
             return
           endif
@@ -473,47 +477,70 @@ c       do j=1,nfiles
           if(i4time_data .gt. i4time_latest_lvd)then
 c
             print*,'opening ',cfilenames(nfiles)
-            open(111,file=cfilenames(nfiles),access='sequential',
-     +               form='unformatted',err=995,iostat=ierr)
 
-            read(111)npixgms,nlingms
+            call s_len(cfilenames(nfiles),lenf)
+            call read_binary_field(nxny,4,4,2,cfilenames(nfiles),lenf)
+            npixgms=nxny(1)
+            nlingms=nxny(2)
 
-            goto(21,22,23,24,24)lvdindex
-21          if(npixgms.ne.nviselem.or.nlingms.ne.nvislines)goto 900
-            goto 29
-23          if(npixgms.ne.nwvelem.or.nlingms.ne.nwvlines)goto 900
-            goto 29
-24          if(npixgms.ne.nirelem.or.nlingms.ne.nirlines)goto 900
+            if(npixgms.ne.nelem.or.nlingms.ne.nlines)goto 900
 
-22          print*,'Error: there shouldnt be 3.9u ir gms data'
-            goto 1000
+            print*,'reading npix/nline gms ',npixgms,nlingms
 
-29          print*,'reading npix/nline gms ',npixgms,nlingms
-c
+c =====================================================================
+            m=8
+            call read_binary_field(image_gms,1,4,npixgms*nlingms+8,
+     +cfilenames(nfiles),lenf)
+
             goto(10,1000,13,14,15)lvdindex
-10          read(111,err=88)image_vis
+10          do k=1,nlingms
+            do l=1,npixgms
+               m=m+1
+               image_vis(l,k)=float(image_gms(m))
+            enddo
+            enddo
             goto 19
-13          read(111,err=88)image_67
-            goto 19
-14          read(111,err=88)image_11
-            goto 19
-15          read(111,err=88)image_12
 
-19          close(111)
-            ntm=ntm+1
+13          do k=1,nlingms
+            do l=1,npixgms
+               m=m+1
+               image_67(l,k)=float(image_gms(m))
+            enddo
+            enddo
+            goto 19
+
+14          do k=1,nlingms
+            do l=1,npixgms
+               m=m+1
+               image_11(l,k)=float(image_gms(m))
+            enddo
+            enddo
+            goto 19
+
+15          do k=1,nlingms
+            do l=1,npixgms
+               m=m+1
+               image_12(l,k)=float(image_gms(m))
+            enddo
+            enddo
+
+19          ntm=ntm+1
             c_type(ntm)=ct
             call make_fnam_lp(i4time_data,c_fname_data(ntm),fstatus)
 
-88          print*,'error reading file ',cfilenames(nfiles)(1:nf)
           endif
  
 c       enddo
 
+        goto 100
+
 90    print*,'lvis_flag set = true '
-      enddo
+
+100   enddo
 c
 c might want to put wait for data functionality in here (or near here).
 c
+      istatus=0
       goto 1000
 900   print*,'Error: Mismatch between elem/lines for gms data'
       goto 1000

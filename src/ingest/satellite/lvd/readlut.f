@@ -185,28 +185,32 @@ c
      &                          chtype(i),rlat00,rlon00,dx,dy,nx,ny,
      &                          istatus)
 
-         ilat00=nint(rlat00*1000.)
-         ilon00=nint(rlon00*1000.)
-         i_la1 =nint(r_la1(jtype,isat)*1000.)
-         i_lo1 =nint(r_lo1(jtype,isat)*1000.)
-         iresx =nint(resx)
-         iresy =nint(resy)
-         idx   =nint(dx)
-         idy   =nint(dy)
+         if(istatus.eq.0)then
 
-         if((ilat00.ne.i_la1).or.
-     &      (ilon00.ne.i_lo1) )then
-            write(6,*)'rlat00/rlon00/r_la1/rlo1 ',rlat00,rlon00,
+           ilat00=nint(rlat00*1000.)
+           ilon00=nint(rlon00*1000.)
+           i_la1 =nint(r_la1(jtype,isat)*1000.)
+           i_lo1 =nint(r_lo1(jtype,isat)*1000.)
+           iresx =nint(resx)
+           iresy =nint(resy)
+           idx   =nint(dx)
+           idy   =nint(dy)
+
+           if((ilat00.ne.i_la1).or.
+     &        (ilon00.ne.i_lo1) )then
+             write(6,*)'rlat00/rlon00/r_la1/rlo1 ',rlat00,rlon00,
      &r_la1(jtype,isat),r_lo1(jtype,isat)
-            l_lut_flag=.true.
-         endif
-         if( idx.ne.iresx .or. idy.ne.iresy )then
-            write(6,*)'dx/dy/resx/resy/ ',dx,dy,resx,resy
-            l_lut_flag=.true.
-         endif
-         if( nlin.ne.ny .or. npix.ne.nx )then
-            write(6,*)'nx/ny/npix/nlin ',nx,ny,npix,nlin
-            l_lut_flag=.true.
+              l_lut_flag=.true.
+           endif
+           if( idx.ne.iresx .or. idy.ne.iresy )then
+              write(6,*)'dx/dy/resx/resy/ ',dx,dy,resx,resy
+              l_lut_flag=.true.
+           endif
+           if( nlin.ne.ny .or. npix.ne.nx )then
+              write(6,*)'nx/ny/npix/nlin ',nx,ny,npix,nlin
+              l_lut_flag=.true.
+           endif
+
          endif
 
       elseif(c_sat_types(jtype,isat).eq.'gwc')then

@@ -56,6 +56,7 @@ c                                          as function of input/output ratio
 
        Integer imax, jmax
        Integer line_dim, elem_dim
+
        Real*4 sv(IMAX,JMAX)
        Real*4 t_array(max_line*max_elem)
        Real*4 image_vis(elem_dim,line_dim)
@@ -63,6 +64,10 @@ c                                          as function of input/output ratio
        Real*4 r_llij_lut_rj(imax,jmax)
        Real*4 elem_mn,elem_mx
        Real*4 line_mn,line_mx
+
+c      Integer i_s(imax*jmax)
+c      Integer j_s(imax*jmax)
+
        Integer npix
        Integer maxpix
        Integer i,j,ii,jj
@@ -128,8 +133,13 @@ c
 c              write(*,*)'insufficient data for visible lat/lon sector'
 c              write(*,1020)i,j
 c1020	       format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
+
                insufdata=insufdata+1
                sv(i,j)=r_missing_data
+
+c              i_s(insufdata)=i
+c              j_s(insufdata)=j
+
  	    else
  
 c **** FIND THE AVERAGE VISIBLE PIXELS AROUND GRID POINT
@@ -178,7 +188,9 @@ Cd             endif
 
             end if
 
-          endif
+            else
+              sv(i,j)=r_missing_data
+            endif
 
    10     CONTINUE ! I,J
 
@@ -238,6 +250,12 @@ C       WRITE(6,1234) IB,I4VTIME,ICT
         if(insufdata.gt.0)then
            print*,'Found ',insufdata,' points that are too'
            print*,'close to data edge to compute average'
+
+c          do i=1,insufdata,10
+c             write(6,55)(i_s(j),j_s(j),j=i,i+9)
+c55            format(1x,'i/j ',10(i3,',',i3,1x))
+c          enddo
+
         endif
 
         istatus = 1

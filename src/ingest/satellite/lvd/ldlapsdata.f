@@ -35,8 +35,9 @@ c
       character units_lvd(n_lvd_fields_max)*10
       character csatid*(*)
 
-      istatus=1
       do i=1,ntm
+
+         istatus=0
 
          call lvd_file_specifier(c_type(i),ispec,lstatus)
          if(lstatus.ne.0)goto 900
@@ -55,7 +56,7 @@ c           c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE - RAW'
 c           units_lvd(nlf) = 'COUNTS'
 c and more
 c
-c goes only has 3.9u
+c only goes has 3.9u
 c
 11       if(csatid.ne.'gmssat'.or.csatid.ne.'metsat')then
             if(r_image_status(i).le.0.3333)then
@@ -118,11 +119,12 @@ c
             write(6,*)'12u image not processed: missing data'
          endif
 
+         goto 99
+
+900      print*,'error returned from lvd_file_specifier'
+         istatus=1
+
 99    enddo
-
-      istatus=0
-
-900   print*,'error in lvd_file_specifier'
 
       return
       end

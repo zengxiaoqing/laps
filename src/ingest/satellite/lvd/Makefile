@@ -77,7 +77,7 @@ SRC = lvd_driver_sub.f \
   setvisflag.f \
   decellularize_gwc_image.f
 
-MAIN=lvd_sat_ingest.f $(LAPSROOT)/src/lib/block_data.f
+MAIN=lvd_sat_ingest.f
 
 LIB=liblvd.a
 
