@@ -79,7 +79,7 @@ cdis
       character*1       type_obs
       character*8       c8_project
       character*150     path_to_raw_profiler
-      character*150     path_to_raw_raob
+      character*150     path_to_raw_sounding
       integer  		raob_process_lag 
       integer  		raob_process_lag_bal
       integer           adv_anal_by_t_min
@@ -98,7 +98,7 @@ C
 C     read verify.nl to get raob directory and output directory
       write(6,*) 'in gen_sub'
       call read_verif_nl(type_obs,path_to_raw_profiler
-     1                  ,path_to_raw_raob, raob_process_lag
+     1                  ,path_to_raw_sounding, raob_process_lag
      1                  ,raob_process_lag_bal 
      1                  ,max_verif, verif_output_dir
      1                  ,verif_missing_data, n_verif, istatus)
@@ -226,7 +226,7 @@ C     write(6,*) 'Raob time window= ',i4time_raob_earliest,
 C    1           ' - ',i4time_raob_latest
  
 C     set raob_dir
-      raob_dir = path_to_raw_raob
+      raob_dir = path_to_raw_sounding
       call s_len(raob_dir,dir_len)
 
 C     Loop through raob files

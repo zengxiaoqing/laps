@@ -49,7 +49,7 @@ cdis
       parameter        (max_verif=4)
       integer           i,n_verif
       character*150     path_to_raw_profiler
-      character*150     path_to_raw_raob
+      character*150     path_to_raw_sounding
       character*150     verif_output_dir(max_verif)
       character*1       type_obs
       integer           raob_process_lag_Bal
@@ -115,7 +115,7 @@ C     get the directory for nl_dir (static directory)
 
 C     get verif info from verif.nl
       call read_verif_nl(type_obs,path_to_raw_profiler,
-     1 path_to_raw_raob, raob_process_lag,raob_process_lag_bal,
+     1 path_to_raw_sounding, raob_process_lag,raob_process_lag_bal,
      1                   max_verif, verif_output_dir,
      1                   verif_missing_data, n_verif, istatus)
       if (istatus .ne. 1) then
