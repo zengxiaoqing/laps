@@ -250,7 +250,7 @@ c     NZ = 40
       else if(bgmodel.eq.6) then
          NX = 360
          NY = 181
-         NZ = 26 
+         NZ = 27 
          cmodel = 'AVN_LL_GRIB'
       else if(bgmodel.eq.7) then
          NX = 185

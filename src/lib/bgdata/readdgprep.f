@@ -208,14 +208,14 @@ c
       enddo
       read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read RH'
-      do k=nz-8,2,-1
+      do k=nz-10,2,-1    !27-10=17 -> prk(17)=300mb = first moisture level.
          read(lun,err=50) ((sh(i,j,k-1),i=1,nx),j=1,ny)
       enddo
 c
-c As at AFWA, rh above level 8 (300mb)=10%
+c As at AFWA, rh above level  (300mb)=10%
 c
 c     print*,'set upper level rh to 10%'
-      do k=9,nz-1
+      do k=18,nz
       do j=1,ny
       do i=1,nx
          sh(i,j,k)=10.0
