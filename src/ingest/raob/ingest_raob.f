@@ -1,5 +1,6 @@
 
-      subroutine ingest_raob(path_to_raw_raob,c8_raob_format,lun_out)
+      subroutine ingest_raob(path_to_raw_raob,c8_raob_format,i4time_sys
+     1                      ,lun_out)
 
 !     Steve Albers FSL   1999       Original Version
 
@@ -31,21 +32,6 @@
       parameter (i4_snd_interval = 3600)
 
       iopen = 0
-
-      call GETENV('LAPS_A9TIME',a9_time)
-      call s_len(a9_time,ilen)
-
-      if(ilen .eq. 9)then
-          write(6,*)' systime (from env) = ',a9_time
-          call i4time_fname_lp(a9_time,i4time_sys,istatus)
-      else
-          call get_systime(i4time_sys,a9_time,istatus)
-          if(istatus .ne. 1)go to 999
-          write(6,*)' systime = ',a9_time
-      endif
-
-
-!     i4time_sys = (i4time_sys/i4_snd_interval) * i4_snd_interval ! For testing only
 
       call get_grid_dim_xy(NX_L,NY_L,istatus)
       if (istatus .ne. 1) then
