@@ -239,14 +239,14 @@
      Various "root" directories are mentioned in the form of environment 
      variables for easy reference. The three main environment variables are:
  
-     $SRCROOT - The location of the LAPS tar file / source code.
+     $SRCROOT - The full path of the LAPS tar file / source code.
 
-     $LAPSROOT - The location of installed binaries and scripts (bin and etc).
+     $LAPSROOT - The full path of installed binaries and scripts (bin and etc).
 
-     $LAPS_DATA_ROOT - The location of output data and namelists. This includes
-     lapsprd subdirectories containing both LAPS output grids and intermediate
-     data files. Input data in its "raw" form is stored outside the 
-     $LAPS_DATA_ROOT tree.
+     $LAPS_DATA_ROOT - The full path of output data and namelists. This 
+     includes lapsprd subdirectories containing both LAPS output grids and 
+     intermediate data files. Input data in its "raw" form is stored outside 
+     the $LAPS_DATA_ROOT tree.
 
      All three of these environment variables can either be part of one
      directory tree or split out into separate trees as discussed at various
@@ -436,13 +436,16 @@
 
      For each domain you wish to create, run... 
 
-     prompt> make DATAROOT=/data_disk/laps/datax mkdatadirs
+     prompt> make DATAROOT=$LAPS_DATA_ROOT mkdatadirs
 
-     where the subdirectory name 'datax' must be a unique name for each
-     data domain. Then follow the setup and localization steps below.
+     where the path name $LAPS_DATA_ROOT must be named differently for each 
+     data domain if there is more than one. Recall that each domain can be set
+     up in a separate subdirectory under '/data_disk/laps'. Next, follow the 
+     setup and localization steps below.
 
      If a DATAROOT is not supplied, the dataroot tree location will default
-     to where the LAPS binaries are installed via configure.
+     to where the LAPS binaries are installed via configure. Thus, the
+     default value of $LAPS_DATA_ROOT is '$LAPSROOT/data'.
 
      
             ----   2.2.5  Untarring the geography databases  ---
@@ -505,7 +508,7 @@
      (with a unique dataroot) for each domain if there is more than one. 
 
      prompt> cd $LAPSROOT/etc
-     prompt> perl laps_localization.pl --dataroot=/data_disk/laps/data --srcroot=$SRCROOT
+     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$SRCROOT
 
      The localization involves several operations.  The parameter files are 
      merged/updated with the repository versions if needed. The dimensions
@@ -774,33 +777,35 @@
 
                ---  2.5  Test data case  ---
 
-     Tar files containing test data are available that contain successive runs
-     of laps data on the Colorado domain (intermediate files from the 'ingest' 
-     code plus outputs from the 'analysis' code). Several consecutive analysis
-     cycles are posted, one file per cycle. Included are the contents of the 
-     'lapsprd', 'time', 'static', and 'log' subdirectories under 'data'. The 
+     Tar files containing test data (called 'lapsdata*') are available that 
+     contain successive runs of laps data on the Colorado domain 
+     (intermediate files from the 'ingest' code plus outputs from the 
+     'analysis' code). Several consecutive analysis cycles are posted, one 
+     file per cycle. Included are the contents of the 'lapsprd', 'time', 
+     'static', and 'log' subdirectories under 'data' or $LAPS_DATA_ROOT. The 
      log files are useful for diagnosing any differences in output you may 
-     observe. The contents of the various directories are outlined elsewhere in
-     this README file. The data was created using the latest software release.
-     Our users can download this data at 
+     observe. The contents of the various directories are outlined elsewhere  
+     in this README file. The data was created using the latest software 
+     release. Our users can download this data at 
      'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
      If you want to test the localization procedure, make sure the paths
      to the geography data are correct in 'data/static/nest7grid.parms'.
 
      You might initiate individual executables (bin directory) listed in the 
-     'sched.pl' to run for the test data using the time supplied in the
-     'data/time/systime.dat and c_time.dat'. Note that for any given process
-     or set of processes, deviations from the FSL output may be caused by
-     differences in the inputs as well as machine roundoff error. Any such 
-     differences can be tracked down by recompiling specific analyses with 
-     the '-g' option. This can be done by typing 'make debug' in the 
-     appropriate directories. Various debuggers can then be used such as 'dbx'.
-     Examination of the log files again is helpful.
+     'sched.pl' to run for the test data. The time of the run is specified
+     in 'data/time/systime.dat'. This can be modified if needed if you want
+     to try a slightly different time from the one supplied. Note that for 
+     any given process or set of processes, deviations from the FSL output 
+     may be caused by differences in the inputs as well as machine roundoff 
+     error. Any such differences can be tracked down by recompiling specific 
+     analyses with the '-g' option. This can be done by typing 'make debug' 
+     in the appropriate directories. Various debuggers can then be used such 
+     as 'dbx'. Examination of the log files again is helpful.
 
-     When running LAPS as a whole for the archived data, the 'etc/sched.pl' 
-     script can be used with the -t command line argument. The value
-     should be the number of seconds since 0000UTC Jan 1, 1970. This is
+     As a future enhancement, when running LAPS as a whole for the archived 
+     data, the 'etc/sched.pl' script will accept a -t command line argument. 
+     The value will be the number of seconds since 0000UTC Jan 1, 1970. This is
      also the value found in line 2 of 'data/time/c_time.dat'. 
 
                 ----  2.5.1  Analysis Only Test ---
@@ -825,14 +830,20 @@
 
                 ----  2.5.2  Ingest + Analysis Test ---
 
+     For this type of test, you will want to download the 'rawdata*' tar file
+     into your raw data directory to start the processing of LAPS. Recall
+     that the raw data directory is on a separate tree than $LAPS_DATA_ROOT.
+     The time information will be needed in the form of 'data/time/systime.dat';
+     this can be extracted from the 'lapsdata*' tar file.
+
      Note that the 'lapsdata*' tar files contain intermediate plus analysis
-     output files only. We also have 'rawdata*' tar files that supply
-     some of the "raw" data that are inputted to the ingest processes.
-     The times for the raw data match the 'lapsdata*' output approximately but
-     not always exactly. In many cases, a user would independently generate 
-     the intermediate data files (ingest output) and could then compare them 
-     with ours. If other "raw" files are needed as they appear on FSL's NIMBUS 
-     system, they can be obtained directly from FSL's facility division at 
+     output files only. The 'rawdata*' tar files supply much of the "raw" data
+     that are inputted to the ingest processes. The times for the raw data 
+     match the 'lapsdata*' output approximately but not always exactly. In 
+     many cases, a user could independently generate the intermediate data 
+     files (ingest output) and could then compare them with ours. If other 
+     "raw" files are needed as they appear on FSL's NIMBUS system, they can 
+     be obtained directly from FSL's facility division at 
      'http://www-fd.fsl.noaa.gov/'.
 
 ---------------- 2.6 ------ I/O of LAPS gridded files -------------------------
