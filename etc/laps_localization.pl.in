@@ -69,7 +69,7 @@ if(-d $FXA_DATA){
 
 chdir($thisdir);
 chmod 0755, "./install_lvd.csh";
-$sys = "./install_lvd.csh $LAPS_DATA_ROOT $compile $sattype $satid ";
+$sys = "./install_lvd.csh $LAPSROOT $LAPS_DATA_ROOT $compile $sattype $satid ";
 
 print "$0 running $sys\n";
 system($sys);
