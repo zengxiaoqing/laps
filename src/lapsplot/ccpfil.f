@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
       subroutine ccpfil(field_in,MREG,NREG,scale_l_in,scale_h_in
-     1                 ,colortable,n_image)       
+     1                 ,colortable,n_image,scale)       
 
 C 
 C Define error file, Fortran unit number, and workstation type,
@@ -69,7 +69,7 @@ C
       write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
 
 !     Apply scaling to the array
-      scale = scale_h - scale_l
+      scale_loc = scale_h - scale_l
       call addcon(field_in,-scale_l,ZREG,MREG,NREG)
 
       call get_r_missing_data(r_missing_data,istatus)
@@ -80,13 +80,15 @@ C
 !             Test for 'linear' is proxy for rejecting X-sects
 !             We only want to color missing data values for H-sects
               if(colortable(1:3) .ne. 'lin')then
-                  ZREG(i,j) = scale * 0.96
+                  ZREG(i,j) = scale_loc * 0.96
               endif
           elseif(ireverse .eq. 1)then
-              ZREG(i,j) = scale - ZREG(i,j)
+              ZREG(i,j) = scale_loc - ZREG(i,j)
           endif
       enddo 
       enddo
+
+      ireverse_colorbar = ireverse
 
       ireverse = 0  ! Turn off later use of ireverse
 C      
@@ -102,7 +104,7 @@ C
 C      
 C Call Conpack color fill routine
 C      
-      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale,ireverse
+      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,ireverse
      1                                        ,colortable,ncols)      
 C      
 C Close frame
@@ -118,10 +120,8 @@ C
 c     Call local colorbar routine
       write(6,*)' Drawing colorbar: ',MREG,NREG
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-      call colorbar(MREG, NREG, ncols)
-
-c     Restore original color table
-      call color
+      call colorbar(MREG, NREG, ncols, ireverse_colorbar, 
+     1              scale_l, scale_h, colortable, scale)
 
       jdot = 1
       
@@ -330,12 +330,16 @@ C
       end
 
 
-      subroutine colorbar(ni,nj,ncols)
+      subroutine colorbar(ni,nj,ncols,ireverse,scale_l,scale_h
+     1                   ,colortable,scale)
+
+      character*8 ch_low, ch_high, ch_mid
+      character*(*)colortable
 
       call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
-      xlow =  0.3
-      xhigh = 0.8
+      xlow =  0.35
+      xhigh = 0.85
       ylow =  y_2 + .01
       yhigh = y_2 + .03
 
@@ -345,20 +349,71 @@ C
       xrange = xhigh - xlow
       irange = ihigh - ilow
 
+!     Put Colorbar
       do i = ilow,ihigh
           frac = float(i-ilow) / float(irange)
           x1   = xlow + frac*xrange 
           x2   = xlow + frac*xrange 
-          rcol = 1.0 + float(ncols-1) * frac
+
+          if(ireverse .eq. 0)then
+              rcol = 1.0 + float(ncols-1) * frac
+          else
+              rcol = 1.0 + float(ncols-1) * (1.0 - frac)
+          endif
+
           icol = nint(rcol)
 
           call setusv_dum(2hIN,icol)
 
-!         Put Colorbar
           y1 = ylow
           y2 = yhigh
           call line(x1,y1,x2,y2)
       enddo ! i
+
+c     Restore original color table
+      call color
+
+!     Write labels at middle and ends of colorbar
+      call setusv_dum(2hIN,34) ! Gray
+
+      call line(xlow,ylow,xhigh,ylow)
+      call line(xlow,yhigh,xhigh,yhigh)
+      call line(xlow,ylow,xlow,yhigh)
+      call line(xhigh,ylow,xhigh,yhigh)
+
+      call setusv_dum(2hIN,7)  ! Yellow
+
+      rsize = .008
+      iy = (y_2+.021) * 1024
+
+!     Left Edge
+      write(ch_low, 1)nint(scale_l/scale)
+      call right_justify(ch_low)
+
+      ixl = 353
+      CALL PCHIQU (  cpux(ixl),cpux(iy),ch_low,rsize ,0,+1.0)
+
+!     Right Edge
+      write(ch_high,1)nint(scale_h/scale)
+      call left_justify(ch_high)
+ 1    format(i8)
+
+      ixh = 878
+      CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
+
+!     Midpoint
+      rmid = ((scale_l+scale_h) / scale)/2.0
+      if(abs(rmid) .gt. 1.0)then
+          write(ch_mid,1)nint(rmid)
+      else
+          write(ch_mid,2)rmid
+ 2        format(f8.1)
+      endif 
+      call left_justify(ch_mid)
+      call s_len(ch_mid,len_mid)
+
+      ixm = (ixl+ixh)/2
+      CALL PCHIQU (cpux(ixm),cpux(iy),ch_mid(1:len_mid),rsize,0 , 0.0)       
 
       return
       end 
