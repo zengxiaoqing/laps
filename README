@@ -2358,7 +2358,22 @@ Parameter namelist file: 'static/surface_analysis.nl'
         ones are outliers relative to the other observations. Also, the
         MSL pressures are checked to see if they deviate from the background
         field by more than a threshold amount. The output from these checks
-        is in both 'laps_sfc.log' and 'sfcqc.log'.
+        is in both 'laps_sfc.log' and 'sfcqc.log'. The 'sfcqc.log' file 
+        contains the 'rely' (positive=retain, negative=reject) values 
+        designated as follows:
+<pre>
+               |  STANDARD DEVIATION CHECK (against other obs)
+               |
+         CLIMO |  PASS   N/A    FAIL 
+               |____________________________
+               |
+          PASS |   +35    10    -15
+               |
+          FAIL |   -99   -99    -99
+          
+           -25        failed model background comparison
+           -99        observation was missing
+</pre>
 
         If you wish to skip over this step, you can change the 
         'surface_analysis.nl' namelist file. This is recommended when using 
@@ -2369,7 +2384,8 @@ Parameter namelist file: 'static/surface_analysis.nl'
         temporally and fills in predicted values for an observation when it 
         is only intermittently available. This helps compensate for temporal 
         changes in data density. The log file for this new program is in 
-        'sfc_qc.log'.
+        'sfc_qc.log'. 
+
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
 
