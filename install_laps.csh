@@ -184,6 +184,8 @@ if ($6 != p) then
         endif
     endif
 
+    rm -rf $LAPS_DATA_ROOT/*_save
+
     if (-e $LAPS_DATA_ROOT/lapsprd) then
         setenv config_domain f
         echo " "
