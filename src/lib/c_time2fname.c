@@ -44,7 +44,7 @@ Last modified: 3/24/94
 #include <config.h>
 
 #include <stdio.h>
-#if defined(HAVE_SYS_TIME_H) || defined(TM_IN_SYS_TIME)
+#if defined(TM_IN_SYS_TIME)
 #  include <sys/time.h>
 #else
 #  include <time.h>
