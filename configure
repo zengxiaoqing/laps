@@ -156,6 +156,7 @@ Compilers:
   --cflags=CFLAGS         options to the C compiler [preset based on arch]
   --fc=f90                name of the Fortran compiler to use [guessed]
   --fflags=FFLAGS         options to the Fortran compiler [preset based on arch]
+  --fflags90=FFLAGS90     options for free-form Fortran 90 code
   --optimization=OPT      optimization options passed to both C and fortran compilers  
   
 Directory and file names:
@@ -511,6 +512,10 @@ fi
 if test -n "$user_fflags"
 then
   FFLAGS="$user_fflags"
+fi
+if test -n "$user_fflags90"
+then
+  FFLAGS90="$user_fflags90"
 fi
 
 if test -n "$user_optimize"
@@ -1171,6 +1176,7 @@ LIBPATHFLAG=-L
 if test "$arch" = "hpux" 
 then
   FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
+  FFLAGS90="$FFLAGS90 +source=free +langlvl=90"
   OPTIMIZE="-O"
   LIBPATHFLAG=-Wl,-L
   echo "GCC = $GCC"
@@ -1184,6 +1190,7 @@ fi
 if test "$arch" = "rs6000" 
 then
   FFLAGS="$FFLAGS -qfixed"
+  FFLAGS90="$FFLAGS90 -qfree=f90"
   OPTIMIZE="-O3 -qstrict"
 fi
 if test "$arch" = "sun4" 
@@ -1408,6 +1415,7 @@ then
   if test "$arch" = "solaris"
   then
 	FFLAGS="$FFLAGS -fixed -M\$(SRCROOT)/src/lib"
+        FFLAGS90="$FFLAGS90 -free -M\$(SRCROOT)/src/lib"
 	CPP="/usr/ucb/cc -P"
 else
 	FFLAGS="$FFLAGS -I\$(SRCROOT)/src/lib"
@@ -2853,6 +2861,7 @@ s%@USECPP@%$USECPP%g
 s%@NCARGFC@%$NCARGFC%g
 s%@LIBPATHFLAG@%$LIBPATHFLAG%g
 s%@FFLAGS@%$FFLAGS%g
+s%@FFLAGS90@%$FFLAGS90%g
 s%@OPTIMIZE@%$OPTIMIZE%g
 s%@OTHERLIBS@%$OTHERLIBS%g
 s%@ARCHIVE@%$ARCHIVE%g
