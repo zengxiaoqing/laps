@@ -2055,11 +2055,12 @@ and time, will still be stored in the LSO file.  However, the selected variables
 (up to "ALL" of them) will be set to the 'badflag' value and skipped in the
 analyses.
 
-To actually get this stuff working, edit a file called "Blacklist.dat" in the
-'data/static' directory.  Format the file *exactly* as the 'Blacklist.example'
-file (using your station information, of course).  Save the file, and the next 
-time 'obs_driver' runs, it will use the blacklist information.  This will be 
-noted in the 'obs_driver.log' file.  
+To actually get this stuff working, edit the file called "Blacklist.dat" in the
+'data/static' directory. The "Blacklist.dat" being used at FSL is supplied in
+this directory as a default. Format the file *exactly* as the 
+'Blacklist.example' file (using your station information, of course).  Save the
+file, and the next time 'obs_driver' runs, it will use the blacklist 
+information.  This will be noted in the 'obs_driver.log' file.  
 
 ------- 3.3  -------------  ANALYSIS PROCESSES --------------------------------
 
