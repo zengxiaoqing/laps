@@ -1470,30 +1470,39 @@ c               07-jun-84       source code from wang
 c                               (not on u. of w. source tape)
 c
 c               dd      - dewpoint depression
-        dimension p(*), t(*), dd(*), w(*)
+c     modified dimension structure for sun machine warning error 1/16/02 DB
+      
+        integer nl
+        dimension p(nl), t(nl), dd(nl), w(nl)
         do 130 i = 1, nl
-        td = t(i) - dd(i)
-        if (td .gt. 253.0) go to 110
-        es = vpice(td)
-        go to 120
-110     es = satvap(td)
-120     w(i) = 622.0 * es / p(i)
-130     continue
+           td = t(i) - dd(i)
+           if (td .gt. 253.0) go to 110
+           es = vpice(td)
+           go to 120
+ 110       es = satvap(td)
+ 120       w(i) = 622.0 * es / p(i)
+ 130    continue
         return
         end
+
       function wsat(p, t)
-c
-c            1 4-may-84 added from csu vas code
-c                               (not on u. of w. source tape)
-c
-      call wmix(p,t,0.,w,1)
+c     
+c     1 4-may-84 added from csu vas code
+c     (not on u. of w. source tape)
+c     modified by adding dd(1) to make compliant with revised
+c     function parameter list 1/16/02 db
+      real dd(1)
+      dd(1) = 0.0
+c     
+      call wmix(p,t,dd,w,1)
       wsat=w
-c
-c            1 4-may-84 return added
-c
-        return
+c     
+c     1 4-may-84 return added
+c     
+      return
       end
-        function vpice(temp)
+      
+      function vpice(temp)
 c
 c               07-jun-84       source code from wong
 c                               (not on u. of w. source tape)
