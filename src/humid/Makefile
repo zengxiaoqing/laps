@@ -10,8 +10,6 @@ include $(SRCROOT)/src/include/makefile.inc
 
 #FFLAGS+=-pg
 
-
-
 DBFFLAGS+=-pg
 
 LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
