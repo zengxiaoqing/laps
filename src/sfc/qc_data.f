@@ -281,11 +281,41 @@ c
 c.....  model background check (for MSLP)
 c
         c_field = 'MSLP'
-        if(iback_mp .eq. 1)then
+        ifld = 14
+        thresh = 10.
+
+        call bkg_chk(iback_mp,c_field,ifld,thresh,pmsl_s
+     1              ,ii,jj,mslp_bk_mb,rely,badflag,n_obs_curr
+     1              ,stn,mxstn,ni,nj,istatus)
+
+c
+c.....  qc finished
+c
+	jstatus = 1
+ 999	write(60,*) ' ** qc of surface data complete. ** '
+        write(6,*)  ' ** qc of surface data complete. ** '
+c
+	return
+	end
+
+c ---------------------------------------------------------------------------
+c
+c
+
+        subroutine bkg_chk(iback,c_field,ifld,thresh,ob_s
+     1              ,ii,jj,background_a,rely,badflag,n_obs_curr
+     1              ,stn,mxstn,ni,nj,istatus)
+
+ 	real*4 ob_s(mxstn), background_a(ni,nj)
+        real*4 badflag
+	integer rely(26,mxstn), ii(mxstn), jj(mxstn)
+        character*(*) c_field
+	character stn(mxstn)*3
+
+        if(iback .eq. 1)then
             write(6,*)' BKG '//c_field//' check'
-            thresh = 10.
             do j = 1,n_obs_curr
-                observation = pmsl_s(j)
+                observation = ob_s(j)
 
                 if(observation .ne. badflag)then
                     ista = ii(j)
@@ -293,7 +323,7 @@ c
 
                     if(ista .ge. 1 .and. ista .le. ni .and. 
      1                 jsta .ge. 1 .and. jsta .le. nj)then ! Inside the domain
-                        background = mslp_bk_mb(ista,jsta)
+                        background = background_a(ista,jsta)
                         diff = observation - background
 
                         if(abs(diff) .le. thresh)then
@@ -306,6 +336,8 @@ c
      1                                  background, diff       
  912                        format('QC: ',i5,1x,a3,1x,3f9.1
      1                            ,' Exceeds threshold')     
+
+                            rely(ifld,j) = -25 ! Set to reject
 
                         endif
 
@@ -320,15 +352,9 @@ c
 
         endif
 
-c
-c.....  qc finished
-c
-	jstatus = 1
- 999	write(60,*) ' ** qc of surface data complete. ** '
-        write(6,*)  ' ** qc of surface data complete. ** '
-c
-	return
-	end
+        return
+        end
+
 c ---------------------------------------------------------------------------
 c
 c

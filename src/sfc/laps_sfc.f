@@ -365,11 +365,25 @@ c
 	call find_ij(lat_s,lon_s,lat,lon,n_obs_b,mxstn,
      &               ni,nj,ii,jj,rii,rjj)
 c
-        do ista=1,n_obs_b
-           write(6,999) ista,stations(ista)(1:5), reptype(ista)(1:6), 
-     &                  autostntype(ista)(1:6), rii(ista), rjj(ista)
+        do ista=1,n_obs_b ! Write station info including elevation
+           if(       ii(ista) .ge. 1 .and. ii(ista) .le. ni
+     1         .and. jj(ista) .ge. 1 .and. jj(ista) .le. nj )then ! in domain
+
+               elev_diff = elev_s(ista) - topo(ii(ista),jj(ista))
+               write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
+     &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)
+     &                    ,elev_s(ista),topo(ii(ista),jj(ista))
+     &                    ,elev_diff
+
+           else
+               write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
+     &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)
+
+           endif
+
         enddo !ista
- 999    format(i4,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1)
+ 999    format(i4,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1
+     1        ,2x,3f8.0)
 c
         call zero(wt, ni,nj)
 	call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
@@ -588,18 +602,22 @@ c
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 121
 	  if(rely(7,nn) .lt. 0) then	! temperature
-	   print *, 'QC: Bad T at ',stations(mm),' with value ',t_s(mm)
-	    t_s(mm) = badflag
+	     print *, 'QC: Bad T at ',stations(mm),' with value '
+     1              ,t_s(mm)
+	     t_s(mm) = badflag
 	  endif
  121	enddo  !mm
+
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 122
 	  if(rely(8,nn) .lt. 0) then	! dewpt
-	   print *, 'QC: Bad TD at ',stations(mm),' with value ',td_s(mm)
-	    td_s(mm) = badflag
+	      print *, 'QC: Bad TD at ',stations(mm),' with value '
+     1               ,td_s(mm)
+	      td_s(mm) = badflag
 	  endif
  122	enddo  !mm
+
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 123
@@ -608,30 +626,47 @@ c
 	    dd_s(mm) = badflag
 	  endif
  123	enddo  !mm
+
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 124
 	  if(rely(10,nn) .lt. 0) then	! wind speed
-	   print *, 'QC: Bad SPD at ',stations(mm),' with value ',ff_s(mm)
-	    ff_s(mm) = badflag
+	      print *, 'QC: Bad SPD at ',stations(mm),' with value '
+     1               ,ff_s(mm)
+	      ff_s(mm) = badflag
 	  endif
  124	enddo  !mm
+
+	do mm=1,n_obs_b
+	  nn = ivals1(mm)
+	  if(nn .lt. 1) go to 125
+          if(rely(14,nn) .lt. 0) then	! mslp
+	      print *, 'QC: Bad MSLP at ',stations(mm),' with value '
+     1               ,pmsl_s(mm)
+	      pmsl_s(mm) = badflag
+	  endif
+ 125	enddo  !mm
+
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 126
-	 if(rely(15,nn) .lt. 0) then	! altimeter 
-	  print *, 'QC: Bad ALT at ',stations(mm),' with value ',alt_s(mm)
-	    alt_s(mm) = badflag
+	  if(rely(15,nn) .lt. 0) then	! altimeter 
+	      print *, 'QC: Bad ALT at ',stations(mm),' with value '
+     1               ,alt_s(mm)
+	      alt_s(mm) = badflag
 	  endif
  126	enddo  !mm
+
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 128
-	 if(rely(25,nn) .lt. 0) then	! visibility 
-	  print *, 'QC: Bad VIS at ',stations(mm),' with value ',vis_s(mm)
-	    vis_s(mm) = badflag
+          if(rely(25,nn) .lt. 0) then	! visibility 
+	      print *, 'QC: Bad VIS at ',stations(mm),' with value '
+     1               ,vis_s(mm)
+	      vis_s(mm) = badflag
 	  endif
  128	enddo  !mm
+
  521	continue                          
 c
 c.....  QC the backgrounds.  If Td > T, set Td = T...temporary fix until LGB
