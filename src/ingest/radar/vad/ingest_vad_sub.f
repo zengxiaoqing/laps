@@ -69,7 +69,7 @@ C
 !.............................................................................
 
       include 'netcdf.inc'
-      integer maxLevels, recNum,nf_fid, nf_vid, nf_status
+      integer maxLevels, recNum,nf_fid
       integer numLevels(recNum), windDir( maxLevels, recNum)
       real obHeight( maxLevels, recNum), staElev(recNum),
      +     staLat(recNum), staLon(recNum), windSpeed( maxLevels,
@@ -149,11 +149,11 @@ C
 
           write(6,401)id_num,numlevels(ista),
      1                stalat(ista),stalon(ista),staelev_out,
-     1                c4_staname,a9time_ob
+     1                c4_staname,a9time_ob,'VAD     '
           write(2,401)id_num,numlevels(ista),
      1                stalat(ista),stalon(ista),staelev_out,
-     1                c4_staname,a9time_ob
-401       format(i12,i12,f11.3,f15.3,f15.0,5x,a4,5x,a9)
+     1                c4_staname,a9time_ob,'VAD     '
+401       format(i12,i12,f11.3,f15.3,f15.0,5x,a4,5x,a9,1x,a8)
 
 !         Set the rms error
           rms = 10.

@@ -170,11 +170,9 @@ C
         if(laps_cycle_time .le. 1800)then
 !       if(.true.)then
             c5_data_interval = '0006o'
-            lag_time = 180
             write(6,*)' Using 6 minute data'
         else
             c5_data_interval = '0100o'
-            lag_time = 1800
             write(6,*)' Using hourly data'
         endif
         c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
@@ -210,7 +208,7 @@ C       Wait for the data
 
 C       READ IN THE RAW RASS DATA
 
-        fnam_in = dir_in(1:len_dir_in)//asc9_tim//'0100o'
+        fnam_in = dir_in(1:len_dir_in)//asc9_tim//c5_data_interval
         call s_len(fnam_in,len_fnam_in)
         write(6,*)fnam_in(1:len_fnam_in)
         CALL PROF_CDF_OPEN(fnam_in(1:len_fnam_in),cdfid,status)
@@ -227,6 +225,16 @@ C
                 return
         endif
 
+! added to read from file and set lag_time LW 8-27-98
+C 	read global attribute avgTimePeriod from input file and set lag_time
+        call prof_i4_avg_wdw(i4_avg_wdw_sec,cdfid,istatus)
+        if(istatus .eq. 1)then
+            lag_time = i4_avg_wdw_sec/2
+        else
+            write(6,*)' ingest_sub_lrs: '
+     1               ,'Error obtaining i4_avg_wdw_sec'
+            return
+        endif
 C
 C       Open an output file.
 C
@@ -364,9 +372,11 @@ C
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
+            write(6,401)wsmr_wmo_id/100,n_levels+1,rlat,rlon,elev
+     1                 ,staname(1:5),a9time_ob,'RASS    '
             write(1,401)wsmr_wmo_id/100,n_levels+1,rlat,rlon,elev
-     1                 ,staname(1:5),a9time_ob
-401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9)
+     1                 ,staname(1:5),a9time_ob,'RASS    '
+401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9,1x,a8)
 C
 C           Get the array of RASS virtual temperatures for the profiler station.
 C           For this call, we'll use the WMO

@@ -13,10 +13,6 @@
 
 !     Output file
       character*31    ext
-      integer*4       len_dir
-
-      character*40 c_vars_req
-      character*100 c_values_req
 
       call get_systime(i4time_sys,a9_time,istatus)
       if(istatus .ne. 1)go to 999
@@ -35,11 +31,9 @@
           stop
       endif
 
-      lag_time_report = 4 * 3600
+      iopen = 0
 
-!     Open output PIN file
-      ext = 'pro' ! 'vad'
-      call open_lapsprd_file_append(2,i4time_sys,ext(1:3),istatus)
+      lag_time_report = 4 * 3600
 
 !     Get List of input /public NetCDF files
       call get_vad_parms(dir_in,istatus)
@@ -73,6 +67,15 @@
           else
               write(6,*)' File is in time window ',a9_time,i
               write(6,*)' Input file ',filename_in
+
+              if(iopen .eq. 0)then
+!                 Open output PRO file
+                  iopen = 1
+                  ext = 'pro' ! 'vad'
+                  call open_lapsprd_file_append(2,i4time_sys,ext(1:3)
+     1                                         ,istatus)
+                  if(istatus .ne. 1)stop
+              endif
 
 !             Read from the NetCDF pirep file and write to the opened PIN file
               call get_vad_data(i4time_sys,ilaps_cycle_time

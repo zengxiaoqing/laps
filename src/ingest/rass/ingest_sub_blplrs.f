@@ -335,11 +335,11 @@ C
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
-            write(*,401)ista,n_levels_tot,rlat,rlon,elev
-     1                 ,prof_name(ista)(1:5),a9time_ob
+            write(6,401)ista,n_levels_tot,rlat,rlon,elev
+     1                 ,prof_name(ista)(1:5),a9time_ob,'RASS    '
             write(1,401)ista,n_levels_tot,rlat,rlon,elev
-     1                 ,prof_name(ista)(1:5),a9time_ob
-401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9)
+     1                 ,prof_name(ista)(1:5),a9time_ob,'RASS    '
+401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9,1x,a8)
 C
 C           Get the array of RASS virtual temperatures for the profiler station.
 C

@@ -88,9 +88,6 @@ C       NOTE: Profiler winds are written out in KNOTS
         data qc_char/'G','B','M'/
         integer*4 byte_to_i4
 
-        character*6 staname
-        character*1 submode
-
         character*100 fnam_in
         character*80 dir_in
         character*255 c_filespec
@@ -121,7 +118,7 @@ C
         character*9 asc9_tim,a9time_ob
 
         character*31    ext
-        integer*4       len_dir,len_dir_in
+        integer*4       len_dir_in
 
         character*40 c_vars_req
         character*100 c_values_req
@@ -533,10 +530,10 @@ C
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
             write(*,401)wsmr_wmo_id,n_good_levels+n_good_sfc,rlat
-     1                 ,rlon,elev,prof_name(ista),a9time_ob
+     1                 ,rlon,elev,prof_name(ista),a9time_ob,'PROFILER'
             write(1,401)wsmr_wmo_id,n_good_levels+n_good_sfc,rlat
-     1                 ,rlon,elev,prof_name(ista),a9time_ob
-401         format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9)
+     1                 ,rlon,elev,prof_name(ista),a9time_ob,'PROFILER'
+401         format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
 
             rms = 1.0
 

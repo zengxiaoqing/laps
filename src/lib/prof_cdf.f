@@ -749,3 +749,96 @@ C
 C
         return
         end
+
+
+        subroutine prof_i4_avg_wdw(i4_avg_wdw_sec, cdfid, istatus)
+!  modified to pass in cdfid, and actually read file for data LW 8-27-98
+
+        integer cdfid
+	character*20 timestr
+        character*13 attname
+	integer*4    lenstr, sp_loc, units_loc, to_seconds, itime
+
+C       netCDF file is opened, and accessed via cdfid
+C	read "avgTimePeriod" global attribute into timestr 
+
+        lenstr = len(timestr)  
+        attname = 'avgTimePeriod'
+C looking for a character string
+	CALL NCAGTC(cdfid,ncglobal,attname,timestr,lenstr,istatus)
+
+	if (istatus .ne. 0) then   !didn't get a character string....look for an integer
+	  CALL NCAGT(cdfid,ncglobal,attname,itime,istatus)
+
+	  if (istatus .ne. 0) then   !error retrieving avgTimePeriod from file
+            istatus = 0
+            return
+          endif
+	  
+C  units assumed to be minutes
+	  to_seconds = 60
+
+        else  !got character string
+
+C	  format of avgTimeString should be a number followed by a space and
+C           then a lower case string of units, ie. "60 minutes" or "6 minutes"
+C	    Verify that the units are minutes, seconds or hour, and convert
+C	    the number string into an integer.  Return value is via i4_avg_wdw_sec
+C  	    and is in seconds 
+
+	  sp_loc = index(timestr,' ')  !everything to the left should be number
+	
+C	  convert numerical string to number
+101	  format(i1)
+102	  format(i2)
+103	  format(i3)
+104	  format(i4)
+          itime = -1 ! check at end to see if set
+
+	  if (sp_loc .eq. 2) then !one digit number
+ 	    read(timestr(1:1),101)itime
+          endif
+
+	  if (sp_loc .eq. 3) then !two digit number
+ 	    read(timestr(1:2),102)itime
+          endif
+
+	  if (sp_loc .eq. 4) then !three digit number
+ 	    read(timestr(1:3),103)itime
+          endif
+
+	  if (sp_loc .eq. 5) then !four digit number
+ 	    read(timestr(1:4),104)itime
+          endif
+
+	  if (itime .eq. -1) then   ! couldn't convert timestr to itime, return error
+            write(6,*)
+     1' Error: couldnt convert avgTimePeriod string to integer: ', timestr
+	    istatus = 0
+            return
+	  endif
+
+C	  determine units in timestr
+          to_seconds = 0 !will check after looking for units to see if set
+   	  units_loc = index(timestr,'minute')
+          if (units_loc .gt. 0) to_seconds = 60
+ 
+	  units_loc = index(timestr,'second')
+          if (units_loc .gt. 0) to_seconds = 1
+ 
+	  units_loc = index(timestr,'hour')
+          if (units_loc .gt. 0) to_seconds = 3600
+
+        endif
+
+	if (to_seconds .eq. 0) then   ! couldn't identify units, return error
+          write(6,*)' Error: couldnt decode avgTimePeriod from file ', timestr
+	  istatus = 0
+          return
+        else
+          i4_avg_wdw_sec = itime * to_seconds
+          istatus = 1
+	endif
+        
+        return
+        end
