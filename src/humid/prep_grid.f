@@ -31,7 +31,7 @@ cdis
 cdis
 
 
-        subroutine prep_grid(m,n,data,points,pn)
+        subroutine prep_grid(m,n,data,pn_max,points,pn)
 
 c       $log: prep_grid.for,v $
 c revision 1.1  1996/08/30  20:48:53  birk
@@ -40,9 +40,9 @@ c
 
         implicit none
 
-        integer m,n,pn
+        integer m,n,pn,pn_max
 
-        real points(m*n,3),data(m,n),weight_t,dist,weight
+        real points(pn_max,3),data(m,n),weight_t,dist,weight
 
 
         integer i,j,k

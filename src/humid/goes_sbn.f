@@ -197,6 +197,7 @@ c       powell specific arrays
 
 c  analysis of the factor field
       integer pn
+      integer pn_max
       real points(ii*jj,3)
       real data_anal(ii,jj)
       real ave,adev,sdev,var,skew,curt
@@ -262,6 +263,7 @@ c       constants
         pi = acos(-1.0)
         d2r = pi/180.
         blank = '  '
+        pn_max = ii*jj
 
 
 
@@ -849,7 +851,7 @@ c     derive field statistics to determine outliers
 
       if (pn.ne.0) then
 
-         call prep_grid(ii,jj,data_anal,points,pn)
+         call prep_grid(ii,jj,data_anal,pn_max,points,pn)
          call slv_laplc (data_anal,mask,ii,jj)
          call smooth_grid2 (ii,jj,data_anal,1)
          call two_d_stats(ii,jj,data_anal,rmd)
@@ -938,7 +940,7 @@ c     derive field statistics to determine outliers
 
       if (pn.ne.0) then
 
-         call prep_grid(ii,jj,data_anal,points,pn)
+         call prep_grid(ii,jj,data_anal,pn_max,points,pn)
          call slv_laplc (data_anal,mask,ii,jj)
          call smooth_grid2 (ii,jj,data_anal,1)
          call two_d_stats(ii,jj,data_anal,rmd)
