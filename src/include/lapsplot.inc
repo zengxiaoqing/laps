@@ -9,6 +9,7 @@
           integer latlon_int
 
           character*3  c3_time_zone
+          character*9 c_institution
 
 	end type namelist_type
 
