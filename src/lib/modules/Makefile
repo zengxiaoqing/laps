@@ -56,7 +56,7 @@ ARCHIVE = ar rv
 			$(ARCHIVE) $(LIB) $(<:.f=.o)
 
 
-FMOD = module_horiz_interp.o module_laps_static.o
+FMOD = module_horiz_interp.o
 
 all:			lib
 
