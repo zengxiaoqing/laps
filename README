@@ -1830,7 +1830,7 @@ Outputs:
                                    
                                    'LAT'       latitude in degrees
                                    'LON'       longitude in degrees
-                                   'AVE'       mean elevation MSL
+                                   'AVG'       mean elevation MSL
                                    'LDF'       land fraction (0=water,1=land)
                                    'USE'       usgs 30s (24 vegetation categories)
                                                landuse data (currently dominant category
@@ -3576,7 +3576,7 @@ gridgen_model.exe: creates file 'static.nest7grid'
 
                      LAT           1  Latitude (degrees)
                      LON           1  Longitude (degrees)
-                     AVE           1  Mean elevation MSL (m)
+                     AVG           1  Mean elevation MSL (m)
                      STD           1  Unused
                      ENV           1  Unused
                      ZIN           1  Z coordinate - used for plotting in AVS
