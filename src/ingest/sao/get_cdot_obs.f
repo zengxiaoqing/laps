@@ -62,7 +62,7 @@ c
 	real*4  idd(maxobs), iddg(maxobs)
 c
 	integer*4  itime60, before, after
-	integer*2  rtime
+	integer    rtime
 c
 	character  stname(maxobs)*5, timech*9, time*4
 	character  store_amt(maxsta,5)*4, store_emv(maxsta,5)*1

@@ -19,7 +19,7 @@ c.......................................................................
 c
        include 'netcdf.inc'
 c      
-       integer*4 lenstr
+       integer lenstr
        parameter (lenstr=MAXNCNAM)
 c
 c.....  Variables for the data.
@@ -32,26 +32,26 @@ c
        real*4 slp(maxsta), alt(maxsta), vis(maxsta)
        real*4 ht(6,maxsta), precip1(maxsta), dp(maxsta)
 c
-       integer*2 dpchar(maxsta)
+       integer dpchar(maxsta)
        character cvr(6,maxsta)*8, weather(maxsta)*25
        character stanam(maxsta)*5, rptype(maxsta)*6, atype(maxsta)*6
 c
 c.....  NETCDF variables
 c
-       integer*4 cdfid, rcode, recdim
-       integer*4 ndims, natts, nvars
-       integer*4 dimsiz(MAXNCDIM)
-       integer*4 vdtype, adtype(MAXNCATT)
-       integer*4 attlen(MAXNCATT), namlen
-       integer*4 nvdims, vdims(MAXVDIMS), nvatts
+       integer cdfid, rcode, recdim
+       integer ndims, natts, nvars
+       integer dimsiz(MAXNCDIM)
+       integer vdtype, adtype(MAXNCATT)
+       integer attlen(MAXNCATT), namlen
+       integer nvdims, vdims(MAXVDIMS), nvatts
        character*(MAXNCNAM) dimnam(MAXNCDIM),varnam,
      &                      attnam(MAXNCATT),
      &                      string(MAXNCATT)
-       integer*4 varid
+       integer varid
        real*8 value(MAXNCATT)
 c
-       integer*4 START(MAXVDIMS),COUNT(MAXVDIMS)
-       integer*4 status, cnt
+       integer START(MAXVDIMS),COUNT(MAXVDIMS)
+       integer status, cnt
        character data_path*80 
        integer min_stations,minutes_to_wait_for_metars
        parameter(minutes_to_wait_for_metars=10)
@@ -66,7 +66,7 @@ c
        do while(nsta.lt.min_stations.and.
      +           cnt.lt.minutes_to_wait_for_metars)
 
-          cdfid = ncopn(data_path,ncnowrit,rcode)
+          rcode=NF_OPEN(data_path,NF_NOWRITE,cdfid)
           if(rcode.ne.0 .or. cdfid.lt.0) then
              status = rcode
              if(status .eq. 0) status = 0
@@ -78,13 +78,13 @@ c
 c.....  Find out the number of dimensions, variables, attributes
 c.....     and record dimensions
 c
-          call ncinq(cdfid,ndims,nvars,natts,recdim,rcode)
+          call NCINQ(cdfid,ndims,nvars,natts,recdim,rcode)
 
 c 
 c.....  Inquire about dimension names and sizes
 c
           do k=1,ndims
-             call ncdinq(cdfid,k,dimnam(k),dimsiz(k),rcode)
+             call NCDINQ(cdfid,k,dimnam(k),dimsiz(k),rcode)
              if(dimnam(k).eq.'recNum') nsta=dimsiz(k)
           enddo                 !k
 
@@ -92,7 +92,7 @@ c
           if(nsta.lt.min_stations.and.
      +        cnt.lt.minutes_to_wait_for_metars-1) then
              print*,'Waiting for more stations'
-             call ncclos(cdfid,rcode)
+             rcode= NF_CLOSE(cdfid)
              call waiting_c(60)
              cnt = cnt+1
           endif
@@ -111,21 +111,21 @@ c.....  Inquire about variables- datatype, name, number of dimensions,
 c.....     dimensions, number of attributes
 c
        do 20 k=1,nvars
-         call ncvinq(cdfid,k,varnam,vdtype,nvdims,vdims,
-     &               nvatts,rcode)
+         call NCVINQ(cdfid,k,varnam,vdtype,nvdims,vdims,nvatts,rcode)
+
 c      
 c.....  Get the attributes' name, length, and value for each variable
 c
          do 25 j=1,nvatts       
-           call ncanam (cdfid,k,j,attnam(j),rcode)        
-           call ncainq (cdfid,k,attnam(j),adtype(j),attlen(j),rcode)
+           call NCANAM (cdfid,k,j,attnam(j),rcode)        
+           call NCAINQ (cdfid,k,attnam(j),adtype(j),attlen(j),rcode)
 c
 c.....  Make sure you call the right routine to get the attribute string/value
 c
-           If(adtype(j).ne.NCCHAR) then
-             call ncagt (cdfid,k,attnam(j),value(j),rcode)
+           If(adtype(j).ne.NF_CHAR) then
+          rcode=NF_GET_ATT_REAL(cdfid,k,attnam(j),value(j))
            Else
-             call ncagtc (cdfid,k,attnam(j),string(j),lenstr,rcode)
+             call NCAGTC (cdfid,k,attnam(j),string(j),lenstr,rcode)
            Endif
 c           
 c.....  Find out which index matches the desired variable
@@ -138,14 +138,14 @@ c
 c
              If(string(j)(1:attlen(j)).eq.
      &                     'alphanumeric station identification') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                namlen=1
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                  namlen=namlen*dimsiz(vdims(i))
                enddo !I
-               call ncvgtc(cdfid,varid,start,count,stanam,namlen,rcode)
+               rcode= NF_GET_VARA_TEXT(cdfid,varid,start,count,stanam)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
@@ -160,219 +160,218 @@ c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                          'longitude') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,long,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,long)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                          'elevation') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,elev,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,elev)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                          'time of observation') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,timeobs,rcode)
+               rcode=NF_GET_VARA_DOUBLE(cdfid,varid,start,count,timeobs)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                        'report type') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                namlen=1
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                  namlen=namlen*dimsiz(vdims(i))
                enddo !I
-               call ncvgtc(cdfid,varid,start,count,rptype,namlen,rcode)
+               rcode= NF_GET_VARA_TEXT(cdfid,varid,start,count,rptype)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                              'automated station type') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                namlen=1
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                  namlen=namlen*dimsiz(vdims(i))
                enddo !I
-               call ncvgtc(cdfid,varid,start,count,atype,namlen,rcode)
+               rcode= NF_GET_VARA_TEXT(cdfid,varid,start,count,atype)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq. 'sky cover') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                namlen=1
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                  namlen=namlen*dimsiz(vdims(i))
                enddo !I
-               call ncvgtc(cdfid,varid,start,count,cvr,namlen,rcode)
+               rcode= NF_GET_VARA_TEXT(cdfid,varid,start,count,cvr)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                               'sky cover layer base') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,ht,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,ht)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                         'visibility') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,vis,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,vis)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                    'present weather') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                namlen=1
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                  namlen=namlen*dimsiz(vdims(i))
                enddo !I
-               call ncvgtc(cdfid,
-     &                     varid,start,count,weather,namlen,rcode)
+               rcode= NF_GET_VARA_TEXT(cdfid,varid,start,count,weather)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                 'sea level pressure') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,slp,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,slp)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                        'temperature') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,t,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,t)
 c
 c
              ElseIf(string(j)(1:attlen(j)).eq.
      &       'temperature from tenths of a degree Celsius') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,tt,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,tt)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq. 'dewpoint') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,td,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,td)
 c
 c
              ElseIf(string(j)(1:attlen(j)).eq.
      &       'dewpoint from tenths of a degree Celsius') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,ttd,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,ttd)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                   'wind direction') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,dd,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,dd)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                       'wind speed') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,ff,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,ff)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                       'wind gust') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,ffg,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,ffg)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                'altimeter setting') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,alt,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,alt)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                                '1 hour precipitation') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,precip1,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,precip1)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                     'character of pressure change') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,dpchar,rcode)
+               rcode=NF_GET_VARA_INT(cdfid,varid,start,count,dpchar)
 c
 c
              ElseIf(string(j)(1:attlen(j)) .eq.
      &                           '3 hour pressure change') then
-               varid=ncvid(cdfid,varnam,rcode)
+               rcode=NF_INQ_VARID(cdfid,varnam,varid)
                Do I=1,nvdims
                  START(I)=1
                  COUNT(I)=dimsiz(vdims(i))
                enddo !I
-               call ncvgt(cdfid,varid,start,count,dp,rcode)
+               rcode=NF_GET_VARA_REAL(cdfid,varid,start,count,dp)
 c
 c
              EndIf
@@ -383,7 +382,7 @@ c
 c
 c.....  Close the netCDF file
 c
-       call ncclos (cdfid,rcode)
+       rcode= NF_CLOSE (cdfid)
 c
 c.....  Set the return status to be the return code
 c

@@ -63,7 +63,8 @@ c
 c
 	integer*4  correction(maxobs), itime60
 	integer*4  before, after
-	integer*2  rtime, dpchar(maxobs), dp(maxobs)
+	integer    rtime, dpchar(maxobs)
+        real       dp(maxobs)
 c
 	character  stname(maxobs)*5, atype(maxobs)*6, timech*9, time*4
 	character  weather(maxobs)*25 
@@ -381,12 +382,10 @@ c.....  is a bug in the NetCDF SAO files, such that pressure changes
 c.....  over 9.9 mb are not recorded properly.  When this is fixed in
 c.....  the NetCDF files, this section of code will have to be changed.
 c
-	dp(i) = dp(i) * 0.01
-	if(dpchar(i).le.-1 .or. dpchar(i).gt.9 .or. 
-     &                                 dp(i).lt.-999) then
+	if(dpchar(i).le.-1.or.dpchar(i).gt.9.or.abs(dp(i)).gt.99900) then
 	   rdp3 = badflag
 	else
-	   rdp3 = float((dpchar(i) * 100) + dp(i))
+	   rdp3 = real((dpchar(i) * 100) + dp(i)*0.01)
 	endif
 c
 c..... Output the data to the storage arrays
