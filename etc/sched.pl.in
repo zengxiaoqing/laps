@@ -150,29 +150,46 @@ $extend_time = $opt_e if($opt_e >0);
 my $archive_time = 0;
 $archive_time = $opt_a if($opt_a > 0);
 
+my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+
 if(defined $opt_A){
    if(length($opt_A) != 16){
       print "USEAGE: use -A to input time with the following format\n";
       print "dd-mmm-yyyy-hhmm. Eg., 28-Aug-2002-1200 \n";
       exit;
    }
+   my $mon=0;
+   my ($day, $month, $year, $hoursmin)=split /\-/, $opt_A;
+   my $hours   = substr($hoursmin,0,2);
+   my $minutes = substr($hoursmin,2,2);
+   foreach (@MON){
+       if($_ eq (uc $month)){last;}
+       $mon++;
+   }
+   $mon=$mon+1;
+   $mon="0".$mon if(length($mon)<2);
 
-   $archive_time = &seconds_since_1970($opt_A,$LAPSROOT,$LAPS_DATA_ROOT);
+   $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
+
+#  $archive_time = &seconds_since_1970($opt_A,$LAPSROOT,$LAPS_DATA_ROOT);
 }
-   
-#print "$opt_a $archive_time\n";
 
 if(defined $opt_p){
    &laps_tools::update_nl($LAPS_DATA_ROOT,"balance.nl","ADV_ANAL_BY_T_MIN",$opt_p);
 }
 
 my $node_type = "comp";
+
 #
-#  The second argument is the time delay in hours to 
+#  - The second argument is the time delay in hours to 
 #  set the systime.dat file, if you're data arrives more than 1 hour 
 #  behind it's valid time set this variable to delay the laps cycle.
 #
-my $yyjjjhhmm=&systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
+#  - The '1' (last input) tells sub systime to write ctime.dat and systime.dat; otherwise, not. 
+#
+#  - If archive time is defined and set to i4time70, then yyjjjhhmm corresponds exactly to archive_time
+#
+my $yyjjjhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time,'1');
 #
 # This sends the stdout to the run log file
 #
@@ -511,78 +528,9 @@ sub forksub{
       }
   }
 }
-
-
-sub systime{
-    use Time::Local;
-    my($DATAROOT,$delay,$cycle_time,$archive_time) = @_;
-
-#   See if -t option was used to pass in archive time in calling routine
-    my $ctime = 0;    # Initial declaration outside the scope of the if test
-    if($archive_time > 0) {
-#       print "Archive data time is being set to a ctime of $archive_time...\n";
-        $ctime = $archive_time;
-    }else{
-#       print "Setting ctime based on clock time and delay of $delay in hours...\n";
-        $ctime = time - $delay*3600;
-    }
-
-#   print "ctime = $ctime\n";
-
-    my($sec,$min,$hour,$mday,$mon,$year) = gmtime($ctime);
-    my $yyyy = 1900+$year;
-    my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
-    $year= $year-100 if($year>99);
-    $year='0'.$year if(length($year)<2);
-    $mday = '0'.$mday if(length($mday)<2);
-
-    require "$LAPSROOT/etc/laps_tools.pm";
-    my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project_common",$DATAROOT);
-    my $c8_project = uc @c8_project[0];
 #
-#   This resets to the top of the cycle
+#------------------------------------------------------------------------
 #
-    if($c8_project ne "AIRDROP"){
-       my $minute=$min;
-       my $i=0;
-       while($i<60){
-       my $mod = $i%int($cycle_time/60);
-	$min = $i if($i<$minute && $mod==0);
-	$i++;
-	#     print "$i $mod\n";
-       }
-    }
-    
-    $ctime = timegm(0,$min,$hour,$mday,$mon,$yyyy-1900);
-
-    my $ftime = $ctime +  315619200;
-    $min = '0'.$min if(length($min)<2);
-    $hour = '0'.$hour if(length($hour)<2);
-
-    my $jjj = &laps_tools::julian($year,$mon+1,$mday);
-
-    $jjj="0".$jjj while(length($jjj)< 3);
-
-    my $yyjjjhhmm = "$year$jjj$hour$min";
-      
-    open(TFILE,">$DATAROOT/time/c_time.dat");
-    print TFILE " $year$jjj$hour$min\n";
-    print TFILE "   $ctime\n";
-    close(TFILE);
-
-    open(TFILE,">$DATAROOT/time/systime.dat");
-    print TFILE "  $ftime\n";
-    print TFILE " $year$jjj$hour$min\n";
-    print TFILE "$hour\n";
-    print TFILE "$min\n";
-    print TFILE "$mday-$MON[$mon]-$yyyy $hour$min\n";
-    print TFILE "$year$jjj\n";
-    close(TFILE);
-
-    return ($yyjjjhhmm);
-}
-
-
 sub parse_namelist{
     my($namelist,@variables) = @_;
     my(@ans);
@@ -612,54 +560,4 @@ sub parse_namelist{
 	}	
     }
     return(@ans);
-}
-
-sub seconds_since_1970{
-
-# format for input dd-mmm-yyyy-hhmm
-
-    my ($input_time,$LAPSINSTALLROOT,$LAPS_DATA_ROOT)=@_;
-
-    require "$LAPSINSTALLROOT/etc/run_sys.pm";
-
-    my $i4time_1970 = 315619200;
-    my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
-    my ($sec,$min,$hour,$day,$mon,$dmon,$yr);
-    my @date_parts;
-
-    if(length($input_time)==16){
-       @date_parts = split('-',$input_time);
-       $dmon = uc @date_parts[1];
-       $day = @date_parts[0];
-       $min = substr(@date_parts[3],2,2);
-       $hour = substr(@date_parts[3],0,2);
-       $yr = substr(@date_parts[2],2,2);
-       $mon;
-       for($mon=0;$mon<=$#MON;){
-          if(@MON[$mon] eq $dmon){last;}
-          $mon++;
-       }
-       $mon=$mon+1;
-       $mon="0".$mon if(length($mon)<2);
-    }elsif(length($input_time)==4){
-       print "input time hhmm not functional yet\n";
-       return;
-    }
-    my $command = "$EXECUTABLE_NAME $LAPSINSTALLROOT/etc/systime.pl ";
-    $command .= "$yr ";
-    $command .= "$mon ";
-    $command .= "$day ";
-    $command .= "$hour ";
-    $command .= "$min > $LAPS_DATA_ROOT/systime_sys.dat";
-
-    run_sys::run_sys($command,1);
-    open(SYS,"$LAPS_DATA_ROOT/systime_sys.dat");
-    my @date_types = <SYS>;
-    close (SYS);
-    unlink "$LAPS_DATA_ROOT/systime_sys.dat";
-    my $i4time_sys = @date_types[0];
-    my $seconds_since_1970 = $i4time_sys-$i4time_1970;
-#   print "seconds since 1970 = $seconds_since_1970\n";
-
-    return ($seconds_since_1970);
 }
