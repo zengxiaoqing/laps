@@ -50,14 +50,15 @@
       filename_out = directory(1:len_dir)
      1                            //filename13(i4time_sys,ext(1:3))     
       write(6,*)' Output file ',filename_out
-      open(11,file=filename_out,status='unknown',err=999)
+      open(11,file=filename_out,status='unknown',err=999,
+     +     position='append')
 
 
 !     Read to end of PIN file so we can append to it
-      do i = 1,100000
-          read(11,*,end=30)
-      enddo ! i
- 30   write(6,*)' Appending to end of PIN file: # lines = ',i
+c      do i = 1,100000
+c          read(11,*,end=30)
+c      enddo ! i
+c 30   write(6,*)' Appending to end of PIN file: # lines = ',i
 
 
 !     Get List of input /public NetCDF files
