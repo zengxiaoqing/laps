@@ -209,8 +209,6 @@ c
 
 c_______________________________________________________________________________
 c
-c *** Read in the two existing .lga files.
-c
       if(ext.eq.'lga') then
          do k=1,nz
             ip(k)=int(pr(k))
@@ -233,8 +231,9 @@ c
          var(1,7)='DSF'
       endif
 
-      newfcst=fcst2-(i4time_valid1-i4time_now)
-      weight=float(fcst2-newfcst)/float(fcst2-fcst1)
+      newfcst=fcst1-(i4time_valid2-i4time_now)
+      weight=float(i4time_valid2-i4time_now)/
+     .       float(i4time_valid2-i4time_valid1)
       print*,'Time interp weight = ',weight
 
       write(af,'(i4.4)') fcst1/3600
@@ -271,9 +270,6 @@ c
 c
 c *** Do interpolation with time for each new file.
 c
-
-c     weight=float(newfcst)/float(i4time_valid1-i4time_valid2)
-
          do k=1,nz
          do j=1,ny
             do i=1,nx
@@ -286,11 +282,8 @@ c     weight=float(newfcst)/float(i4time_valid1-i4time_valid2)
                   gridn(i,j,k) = missingflag
                else
                
-c                 gridn(i,j,k)= (1.-weight)*grid1(i,j,k) +
-c    +                 weight*grid2(i,j,k)
-
-                  gridn(i,j,k)= weight*grid1(i,j,k) +
-     +                      (1.-weight)*grid2(i,j,k)
+                  gridn(i,j,k)= (1.- weight)*grid1(i,j,k) +
+     +                               weight *grid2(i,j,k)
 
                endif
 

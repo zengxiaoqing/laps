@@ -90,13 +90,15 @@ c  and should match the value in lib/lapsgrid.f
 c 
       character*256 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), bglen
-
+      integer istatus
+ 
       character*13 cvt_i4time_wfo_fname13
 c
       character*9 a9
       integer i4time_now,i4time_latest
+      integer i4time_now_lga
       integer*4 max_files,bg_files
-      parameter (max_files=250)
+      parameter (max_files=200)
       character*256 names(max_files)
       character*256 reject_files(max_files)
       integer reject_cnt
@@ -116,7 +118,7 @@ c
       character*255 cfname
       include 'lapsparms.cmn'
       integer oldest_forecast, max_forecast_delta
-      logical use_analysis
+      logical use_analysis,time_plus_one,time_minus_one
 c_______________________________________________________________________________
 c
 c Read background model from nest7grid.parms
@@ -134,9 +136,11 @@ c      istat = index(laps_domain_file,' ')-1
 
       i=1
 
-      call get_background_info(bgpaths,bgmodels
-     +,oldest_forecast,max_forecast_delta,use_analysis,cmodel) 
-      lga_status = 0
+      call get_background_info(bgpaths,bgmodels,oldest_forecast
+     +,max_forecast_delta,use_analysis,cmodel)
+
+      time_plus_one=.true.
+      time_minus_one=.true.
 c
 c *** Initialize esat table.
 c
@@ -146,7 +150,9 @@ c
 c *** Get current time from systime.dat
 c
       call get_systime(i4time_now,a9,lga_status)
+
       lga_status = 0 
+      i4time_now_lga=i4time_now
 
       no_infinite_loops=0
       do while(lga_status.le.0 .and. i.le.maxbgmodels
@@ -173,7 +179,7 @@ c
             stop
          endif
 
-         call get_acceptable_files(i4time_now,bgpath,bgmodel
+         call get_acceptable_files(i4time_now_lga,bgpath,bgmodel
      +        ,names,max_files,oldest_forecast,max_forecast_delta
      +        ,use_analysis,bg_files,0,cmodel(i),ntbg
      +        ,nx_bg,ny_bg,nz_bg,reject_files,reject_cnt)
@@ -199,18 +205,27 @@ ccc   print *, lapsroot
 c
 c *** Call lga driver.
 c
-
            call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .          laps_cycle_time,lapsroot,laps_domain_file,
-     .          bgmodel,bgpath,names,cmodel(i),max_files,
-     .          nx_bg,ny_bg,nz_bg, 5*nz_laps, lga_status)
+     .          bgmodel,bgpath,names,cmodel(i),max_files,bg_files,
+     .          nx_bg,ny_bg,nz_bg,i4time_now_lga,  lga_status)
 
            if(lga_status.lt.0) then
               reject_cnt=reject_cnt+1
               reject_files(reject_cnt)=names(-lga_status)
            endif
 
+           if(lga_status.eq.1.and.time_minus_one)then
+              lga_status = 0
+              i4time_now_lga = i4time_now-laps_cycle_time
+              time_minus_one = .false.
+           endif
 
+           if(lga_status.eq.1.and.time_plus_one)then
+              lga_status = 0
+              i4time_now_lga = i4time_now + laps_cycle_time
+              time_plus_one = .false.
+           endif
 
         endif
         
@@ -262,8 +277,8 @@ c===============================================================================
 c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .     laps_cycle_time,lapsroot,laps_domain_file,
-     .     bgmodel,bgpath,bg_names,cmodel,max_files,
-     .     nx_bg,ny_bg,nz_bg, kdim, lga_status)
+     .     bgmodel,bgpath,bg_names,cmodel,max_files,bg_files,
+     .     nx_bg,ny_bg,nz_bg,i4time_now, lga_status)
 
 c
       implicit none
@@ -273,7 +288,7 @@ c
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
      .          max_files, lga_status,
      .          laps_cycle_time,
-     .          bgmodel
+     .          bgmodel,nbg
       integer icnt
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
       real diff, diff_mx, diff_mn
@@ -318,7 +333,6 @@ c
 c
 c *** Background data interpolated to LAPS grid.
 c
-      integer kdim
       real*4    ht(nx_laps,ny_laps,nz_laps), !Height (m)
      .          tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
      .          sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
@@ -348,17 +362,25 @@ c
       integer   ct,
      .          ihour,imin,
      .          lga_files,lga_times(max_files),
-     .          lga_valid(max_files),
+     .          lga_valid,
      .          i4time_lga_valid(max_files),i4time_now,
-     .          bg_times(max_files),
-     .          bgtime,bgvalid,
-     .          i,ic,ii,j,jj,k,kk,l,
+     .          bg_times(max_files),bg_files,
+     .          i4time_bg_valid(max_files),
+     .          bg_valid(max_files),
+     .          valid_bg(max_files),time_bg(max_files),
+     .          bgvalid,
+     .          i,ic,ii,j,jj,k,kk,l,ldl,
      .          istatus
+
+      integer   i4lgatime(max_files)
+      integer   i4bgtime
+      integer   nlga
 c
       character*255 lgapath
       character*256 lga_names(max_files)
+      character*256 names(max_files)
+      character*256 fname_bg(max_files)
       character*13  fname13,fname9_to_wfo_fname13
-      character*9   fname,a9
       character*2   gproj
       character*256 fullname,outdir
       character*31  ext
@@ -366,7 +388,7 @@ c     character*3   var(nz_laps)
 c     character*4   lvl_coord(nz_laps)
 c     character*10  units(nz_laps)
       character*125 comment(nz_laps)
-      character*4   af(max_files)
+      character*4   af_bg(max_files)
       integer len_dir,ntime, nf
       integer nxbg, nybg, nzbg(5),ntbg
 c
@@ -378,8 +400,6 @@ c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
       lga_status=0
-
-      call get_systime(i4time_now,a9,lga_status)
 
       call get_directory('static',outdir,len_dir)    
 
@@ -400,45 +420,63 @@ c
          pr(k)=prbot-delpr*float(k-1)
       enddo
 c
-c *** Get .lga file names.
+c *** Determine which of these "names" has not already been processed
 c
-      lgapath=outdir(1:len_dir)//'/*.lga'
-      call get_file_names(lgapath,lga_files,lga_names,max_files,istatus)
-      do i=1,lga_files
-c         j=index(lga_names(i),' ')-18
-         call s_len(lga_names(i),j)
-         j=j-17
- 
-         if (j .ge. 0) lga_names(i)=lga_names(i)(j+1:j+13)
-ccc         print *,i,lga_names(i)
+      do j=1,max_files
+         names(j)=bg_names(j)
       enddo
-c
+      call get_directory('lga',lgapath,ldl)
+      call get_file_times(lgapath,max_files,lga_names
+     1                      ,lga_times,nlga,istatus)
+      if(nlga.gt.0)then
+         k=1
+         do while (k.le.nlga)
 
+            read(lga_names(k)(ldl+10:ldl+11),'(i2)')ihour
+            read(lga_names(k)(ldl+12:ldl+13),'(i2)')imin
+            lga_valid=ihour*3600+imin*60
+
+            do j=1,bg_files
+               call i4time_fname_lp(names(j)(1:9),bg_times(j),istatus)
+               i4time_bg_valid(j)=bg_times(j)
+               read(bg_names(j)(12:13),'(i2)')ihour
+               bg_valid(j)=ihour*3600
+               if(bg_times(j).eq.lga_times(k).and.
+     1            bg_valid(j).eq.lga_valid)then
+                  names(j)=' '
+               endif
+            enddo
+            k=k+1
+         enddo
+      endif
+      nbg=0
+      do j=1,bg_files
+         if(names(j).ne.' ')then
+            nbg = nbg+1
+            fname_bg(nbg)=bg_names(j)
+            af_bg(nbg)=bg_names(j)(10:13)
+            time_bg(nbg)=bg_times(j)
+            valid_bg(nbg)=bg_valid(j)
+         endif
+      enddo
+
+      if(nbg.eq.0)print*,'No new model background to process'
 c
 c ****** Read background model data.
 c
-      do nf=1,2
-
-         call s_len(bg_names(nf),j)
-         j=j-13
-         fname = bg_names(nf)(j+1:j+9)
-         af(nf) = bg_names(nf)(j+10:j+13)
-         call i4time_fname_lp(fname,bgtime,istatus)
-         bg_times(nf)=bgtime
-
-c
+      do nf=1,nbg
+ 
 c Removal of this loop causes already existing lga files to be overwritten
 c possibly with the same data.  However the error frequency on SBN may warrent
 c this extra work.  
-c
          if(.false.) then
             do i=1,lga_files
-               if (fname .eq. lga_names(i)(1:9) .and.
-     .              af(nf)(3:4) .eq. lga_names(i)(10:11)) then
+               if (fname_bg(nf) .eq. lga_names(i)(1:9) .and.
+     .              af_bg(nf)(3:4) .eq. lga_names(i)(10:11)) then
                   
-                  print *,i,lga_names(i),':',fname,':',af(nf)
+                  print *,i,lga_names(i),':',fname_bg(nf),':',af_bg(nf)
                   call get_lga_source(nx_laps,ny_laps,nz_laps
-     +                 ,fname,af(nf),comment(1))
+     +                 ,fname_bg(nf),af_bg(nf),comment(1))
                   call s_len(cmodel,ic)
 
                   if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
@@ -455,13 +493,13 @@ c
             enddo          
          endif     
 
-
          call s_len(bgpath,i)
-         fullname = bgpath(1:i)//'/'//bg_names(nf)
+c        fullname = bgpath(1:i)//'/'//bg_names(nf)
+         fullname = bgpath(1:i)//'/'//fname_bg(nf)
          if (bgmodel .eq. 1) then     ! Process 60 km RUC data
-            call read_ruc60_native(bgpath,fname,af(nf),nx_bg,ny_bg,
-     .                       nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .                       gproj,istatus)
+            call read_ruc60_native(bgpath,fname_bg(nf),af_bg(nf),
+     .               nx_bg,ny_bg,nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
+     .               gproj,istatus)
  
          elseif (bgmodel .eq. 2) then ! Process 48 km ETA conus-c grid data
             call read_eta_conusC(fullname,nx_bg,ny_bg,nz_bg,
@@ -478,13 +516,13 @@ c
          elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
             ntbg=10 
             
-            fname13 = fname9_to_wfo_fname13(fname)
+            fname13 = fname9_to_wfo_fname13(fname_bg(nf)(1:9))
 
             call get_sbn_dims(bgpath,fname13,nxbg,nybg,nzbg,ntbg)
 
             print*,'entering read_conus_211'
-            call read_conus_211(bgpath,fname,af(nf),nx_bg,ny_bg,nz_bg,
-     .           nxbg,nybg,nzbg,ntbg,
+            call read_conus_211(bgpath,fname_bg(nf)(1:9),af_bg(nf),
+     .           nx_bg,ny_bg,nz_bg, nxbg,nybg,nzbg,ntbg,
      .           prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .           prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc,tpbg_sfc,
      .           mslpbg,gproj,1,istatus)
@@ -509,17 +547,16 @@ c
      .           bgmodel .eq. 6 .or.
      .           bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
 
-            call read_dgprep(bgmodel,cmodel,bgpath,fname,af(nf)
-     .                      ,nx_bg,ny_bg,nz_bg
-     .                      ,prbg,htbg,tpbg,shbg,uwbg,vwbg
-     .                      ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     .                      ,uwbg_sfc,vwbg_sfc,mslpbg
-     .                      ,gproj,istatus)
+            call read_dgprep(bgmodel,cmodel,bgpath
+     .                  ,fname_bg(nf),af_bg(nf),nx_bg,ny_bg,nz_bg
+     .                  ,prbg,htbg,tpbg,shbg,uwbg,vwbg
+     .                  ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     .                  ,uwbg_sfc,vwbg_sfc,mslpbg,gproj,istatus)
 
          elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
-            call read_conus_nws(bgpath,fname,af(nf),nx_bg,ny_bg,nz_bg,
-     .                          prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .                          gproj,istatus)
+            call read_conus_nws(bgpath,fname_bg(nf),af_bg(nf),
+     .                 nx_bg,ny_bg,nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
+     .                 gproj,istatus)
 c
          endif
          
@@ -528,9 +565,9 @@ c            l=index(bgpath,' ')-1
 
             call s_len(bgpath,l)
             if (bgmodel .gt. 1 .and. bgmodel .le. 3) then
-               fname13=fname//af(nf)
+               fname13=fname_bg(nf)//af_bg(nf)
             elseif (bgmodel .eq. 4) then
-               fname13=fname9_to_wfo_fname13(fname)
+               fname13=fname9_to_wfo_fname13(fname_bg(nf))
             endif
             print *,'Error reading background model data for: ',
      .         bgpath(1:l)//'/'//fname13
@@ -808,22 +845,15 @@ c
          endif
       enddo
       enddo
- 
-      read(af(nf),'(i4)') ihour
-      bgvalid=bgtime+ihour*3600
 c
 c Write LGA
 c ---------
-      call write_lga(nx_laps,ny_laps,nz_laps,bgtime,bgvalid,
-     .cmodel,missingflag,pr,ht,tp,sh,uw,vw,istatus)
+      bgvalid=time_bg(nf)+valid_bg(nf)
+      call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
+     .bgvalid,cmodel,missingflag,pr,ht,tp,sh,uw,vw,istatus)
       if(istatus.ne.1)then
          print*,'Error writing lga - returning to main'
          return
-      endif
-
-      if(bgmodel.eq.4) then
-         lga_names(3-nf) = fname//af(nf)(3:4)//'00.'//ext
-         lga_files=2
       endif
 c         
 c Write LGB
@@ -845,9 +875,9 @@ c              sfcgrid(i,j,kk+4)=missingflag
          enddo
          enddo
 
-         call write_lgb(nx_laps,ny_laps,bgtime,bgvalid,cmodel
-     .,missingflag,uw_sfc,vw_sfc,tp_sfc,qsfc,pr_sfc,mslp,sh_sfc
-     .,istatus)
+         call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
+     .,cmodel,missingflag,uw_sfc,vw_sfc,tp_sfc,qsfc,pr_sfc,mslp
+     .,sh_sfc,istatus)
          if(istatus.ne.1)then
             print*,'Error writing lgb - returning to main'
             return
@@ -864,63 +894,29 @@ c
 c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
 c
-c *** Get existing .lga file names.
-c
-c     if(bgmodel.eq.4) then
-
       call s_len(bg_names(1),j)
       print*,bg_names(1)(1:j)
       print*,bg_names(2)(1:j)
-
-c     else
-c        call get_file_names(lgapath,lga_files,lga_names,max_files,
-c    +        istatus)
-
-c     endif
-c
-c *** Convert file names to i4times and sort into one array.
-c
-      do i=1,2                        !!lga_files
-c        call s_len(bg_names(i),j)
-c        j=j-17
-c        if (j .ge. 0) then
-            call i4time_fname_lp(bg_names(i)(1:9),
-     .                           lga_times(i),istatus)
-
-c           read(bg_names(i)(10:11),'(i2)') ihour
-
-            read(bg_names(i)(12:13),'(i2)') ihour
-            lga_valid(i)=ihour*3600+imin*60
-            i4time_lga_valid(i)=bg_times(i)+lga_valid(i)
-
-c        endif
-      enddo
 c
 c *** Determine if new file needs to be created and perform
 c        linear interpolation.
-c
-c     do i=2,1,-1    !!lga_files,2,-1
-      i=2
-      print*,i,lga_files,lga_times(i),lga_times(i-1),
-     +     lga_valid(i),lga_valid(i-1),laps_cycle_time,
-     +     i4time_lga_valid(i),i4time_lga_valid(i-1)
-c        if (lga_times(i) .eq. lga_times(i-1) .and.
-c    .       lga_valid(i)-lga_valid(i-1) .gt.laps_cycle_time .or.
-         if
-     .      (i4time_lga_valid(i-1)  .gt.i4time_now.and.
-     .       i4time_lga_valid(i).lt.i4time_now     )then
+
+      i=2  !nbg
+      print*,i,bg_files,bg_times(i),bg_times(i-1),
+     +     bg_valid(i),bg_valid(i-1),laps_cycle_time,
+     +     i4time_bg_valid(i),i4time_bg_valid(i-1)
+
+         if(i4time_bg_valid(i-1) .gt.i4time_now.and.
+     .      i4time_bg_valid(i).lt.i4time_now     )then
             ext = 'lga'
             call get_directory(ext,outdir,len_dir) 
             print*,outdir,ext,nz_laps
 
             call time_interp(outdir,ext,
      .           nx_laps,ny_laps,nz_laps,5,pr,
-     .           i4time_lga_valid(i),i4time_lga_valid(i-1),
-     .           i4time_now,lga_times(i-1),lga_valid(i-1),
-     .           lga_times(i  ),lga_valid(i  ))
-
-c           if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.5
-c    +         .or.bgmodel.eq.6.or.bgmodel.eq.8.or.bgmodel.eq.9)then
+     .           i4time_bg_valid(i),i4time_bg_valid(i-1),
+     .           i4time_now,bg_times(i-1),bg_valid(i-1),
+     .           bg_times(i  ),bg_valid(i  ))
 
             if(bgmodel.ne.1.or.bgmodel.ne.7)then
                ext = 'lgb'
@@ -929,22 +925,18 @@ c    +         .or.bgmodel.eq.6.or.bgmodel.eq.8.or.bgmodel.eq.9)then
 
                call time_interp(outdir,ext,
      .           nx_laps,ny_laps,1,7,pr(1),
-     .           i4time_lga_valid(i),i4time_lga_valid(i-1),
-     .           i4time_now,lga_times(i-1),lga_valid(i-1),
-     .           lga_times(i  ),lga_valid(i  ))
+     .           i4time_bg_valid(i),i4time_bg_valid(i-1),
+     .           i4time_now,bg_times(i-1),bg_valid(i-1),
+     .           bg_times(i  ),bg_valid(i  ))
 
             endif
+            lga_status = 1
+         else
+            print*,'Time Interpolation Not Necessary!'
+            lga_status = 1
          endif
 
-c     enddo
-c
       return
-c
-c *** Error traps.
-c
-900   print *,'Could not find systime.dat.'
-      stop
-c
       end
 
       subroutine get_lga_source(nx,ny,nz,fname,af,source)
