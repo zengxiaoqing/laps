@@ -714,13 +714,15 @@ if($fxa_sys!=0){
 # run remap_polar_netcdf.exe process
 #
 
+  print "Running remap_polar_netcdf.exe process\n";
+
   $exe = "remap_polar_netcdf.exe";
   $log = $exe;
   $log =~ s/\..*$/\.log\.$hhmm/;
-  open(SAVEOUT,">>&STDOUT");
-  open(SAVEERR,">>&STDERR");
-  open(STDOUT, ">>$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
-  open(STDERR, ">>&STDOUT") || die "Can't dup stdout";
+  open(SAVEOUT,">&STDOUT");
+  open(SAVEERR,">&STDERR");
+  open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
+  open(STDERR, ">&STDOUT") || die "Can't dup stdout";
   select(STDERR); $| = 1;
   select(STDOUT); $| = 1;
 
