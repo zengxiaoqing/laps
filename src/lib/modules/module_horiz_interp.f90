@@ -141,7 +141,7 @@ CONTAINS
     REAL, INTENT(IN)              :: data_src(nx_src,ny_src)
     INTEGER, INTENT(IN)           :: nx_out, ny_out
     REAL, INTENT(IN)              :: lmask_out(nx_out,ny_out)
-    REAL, INTENT(OUT)             :: data_out(nx_out,ny_out)
+    REAL, INTENT(INOUT)             :: data_out(nx_out,ny_out)
     REAL, INTENT(IN)              :: isrcr(nx_out,ny_out)
     REAL, INTENT(IN)              :: jsrcr(nx_out,ny_out)
     LOGICAL, INTENT(IN)           :: make_srcmask
@@ -173,7 +173,6 @@ CONTAINS
     REAL                          :: stl(4,4)
     REAL                          :: valb
     REAL                          :: srcmask(nx_src,ny_src)
-    REAL                          :: stlmean, stlsum
 
     ! Can we use the source data land mask that was input, or do we need to make it
     ! from the min_val/max_val arguments?  
@@ -248,7 +247,10 @@ CONTAINS
               ENDIF 
             ELSE
               ! The output grid does not require a value for this point
-              data_out(i,j) = 0.
+              ! But do not zero out in case this is a field begin
+              ! done twice (once for water and once for land, e.g.
+              ! SKINTEMP
+              !data_out(i,j) = 0.
               points_skipped = points_skipped + 1
             ENDIF
           ENDDO out_i_loop_1
@@ -347,7 +349,8 @@ CONTAINS
               ENDIF 
             ELSE
               ! The output grid does not require a value for this point
-              data_out(i,j) = 0.
+              ! But do not zero out in case this is a field begin                             ! done twice (once for water and once for land, e.g.                            ! SKINTEMP
+              !data_out(i,j) = 0.
               points_skipped = points_skipped + 1
             ENDIF
           ENDDO out_i_loop_2
@@ -382,8 +385,7 @@ CONTAINS
               djy = jsrcr(i,j) - jlo
               IF ( (ABS(dix).GT.0.0001).OR.(ABS(djy).GT.0.0001) ) THEN
                 ! Do the interpolation loop
-                stl(:,:) = -9999.
-                stlsum = 0.
+                stl(:,:) = 0.
                 loop_16_1: DO k = 1,4
                   kk = ilo + k - 2
                   IF ((kk .LT. 1).OR.(kk .GT. nx_src)) CYCLE loop_16_1
@@ -397,20 +399,17 @@ CONTAINS
                     stl(k,l) = data_src(kk,ll) 
                     IF ( (stl(k,l) .EQ. 0.).AND.(min_val.LE.0.).AND. &
                                                 (max_val.GE.0.) ) THEN
-                      stl(k,l) = 1.E-5
+                      stl = 1.E-5
                     ENDIF
                     close_pts = close_pts + 1
-                    stlsum = stlsum + stl(k,l)
                   ENDDO loop_16_2
                 ENDDO loop_16_1
   
                 ! Did we find any valid points?
 
-                IF  (close_pts .GT. 0) THEN
-                  ! Fill any missing points with the mean value
-                  ! of the non-missing points 
-                  stlmean = stlsum / FLOAT(close_pts)
-                  WHERE(stl .EQ. -9999.) stl = stlmean 
+                IF ( (close_pts .GT. 0).AND. ( &
+                  (stl(2,2).GT.0.).AND.(stl(2,3).GT.0.).AND. &
+                  (stl(3,2).GT.0.).AND.(stl(3,3).GT.0.)  ) ) THEN
                   a = oned(dix,stl(1,1),stl(2,1),stl(3,1),stl(4,1))
                   b = oned(dix,stl(1,2),stl(2,2),stl(3,2),stl(4,2))
                   c = oned(dix,stl(1,3),stl(2,3),stl(3,3),stl(4,3))
@@ -423,8 +422,7 @@ CONTAINS
                     h = oned(djy,stl(4,1),stl(4,2),stl(4,3),stl(4,4))
                     valb = (valb+oned(dix,e,f,g,h)) * 0.5
                   ENDIF
-                  ! Ensure we cap the values to their min/max
-                  data_out(i,j) = MAX(MIN(valb,max_val),min_val)
+                  data_out(i,j) = valb
             
                 ELSE
                   bad_points_flag = .true.
@@ -443,7 +441,7 @@ CONTAINS
               ENDIF
             ELSE
               ! The output grid does not require a value for this point
-              data_out(i,j) = 0.
+              !data_out(i,j) = 0.
               points_skipped = points_skipped + 1      
             ENDIF
           ENDDO out_i_loop_3
