@@ -32,6 +32,20 @@ cdis
 
         subroutine lapsplot_3d()
 
+!       97-Aug-14     Ken Dritz     Added calls to get_grid_dim_xy,
+!                                   get_laps_dimensions, and get_max_radars
+!       97-Aug-14     Ken Dritz     Added call to get_r_missing_data
+!       97-Aug-14     Ken Dritz     Added call to get_maxstns
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NZ_L, MAX_RADARS,
+!                                   r_missing_data, laps_cycle_time, and
+!                                   maxstns to lapswind_plot
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NZ_L to xsect
+!       97-Aug-14     Ken Dritz     Pass 61 to dummy argument NX_C of xsect
+!                                   and NZ_L to dummy argument NZ_C of xsect
+!       97-Aug-14     Ken Dritz     Pass r_missing_data, laps_cycle_time
+!                                   to xsect
+!       97-Aug-14     Ken Dritz     Pass maxstns to xsect
+
         character*1 c_display
         integer*4 SYS$TRNLOG,ASKI4T
         character*9 asc9_tim
@@ -50,6 +64,36 @@ cdis
 !       common /get_packed_data2/ nk
 
 !       nk = 17 ! A temporary fix as the blockdata won't work
+
+        call get_grid_dim_xy(NX_L,NY_L,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting horizontal domain dimensions'
+           stop
+        endif
+
+        call get_laps_dimensions(NZ_L,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting vertical domain dimension'
+           stop
+        endif
+
+        call get_max_radars(MAX_RADARS,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting value of MAX_RADARS'
+           stop
+        endif
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting value of r_missing_data'
+           stop
+        endif
+
+        call get_maxstns(maxstns,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting value of maxstns'
+           stop
+        endif
 
 !       read(5,2)c_display
 2       format(a1)
@@ -116,14 +160,16 @@ cdis
         IF(c_section .eq. 'h' .or. c_section .eq. 'H' .or. c_section .eq
      1. '1'
      1                                                          )THEN
-            call lapswind_plot(c_display,i4time_ref,lun)
+            call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
+     1                         MAX_RADARS,r_missing_data,
+     1                         laps_cycle_time,maxstns)
             call frame
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
      1                                  .or. c_section .eq. '2')THEN
             l_atms = .false.
             call xsect(c_display,i4time_ref,lun,l_atms,standard_longitud
-     1e)
+     1e,NX_L,NY_L,NZ_L,61,NZ_L,r_missing_data,laps_cycle_time,maxstns)
 
         endif ! c_section
 

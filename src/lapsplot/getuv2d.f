@@ -29,9 +29,13 @@ cdis
 cdis
 cdis
 cdis
+
         subroutine get_uv_2d(i4time,k_level,uv_2d,ext,imax,jmax,istatus)
 
-        include 'lapsparms.for'
+!       97-Aug-17     Ken Dritz     Used commenting to (temporarily) hardwire
+!                                   VERTICAL_GRID to 'PRESSURE' (without
+!                                   accessing VERTICAL_GRID)
+!       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 
         character*50 DIRECTORY
         character*31 EXT
@@ -52,13 +56,13 @@ cdis
           comment_2d(k) = '3DWIND'
 
           if(k_level .gt. 0)then
-            if(vertical_grid .eq. 'HEIGHT')then
-                lvl_2d(k) = zcoord_of_level(k_level)/10
-                lvl_coord_2d(k) = 'MSL'
-            elseif(vertical_grid .eq. 'PRESSURE')then
+!           if(vertical_grid .eq. 'HEIGHT')then
+!               lvl_2d(k) = zcoord_of_level(k_level)/10
+!               lvl_coord_2d(k) = 'MSL'
+!           elseif(vertical_grid .eq. 'PRESSURE')then
                 lvl_2d(k) = zcoord_of_level(k_level)/100
                 lvl_coord_2d(k) = 'HPA'
-            endif
+!           endif
             var(1) = 'U3' ! newvar 'U3', oldvar = 'U'
             var(2) = 'V3' ! newvar 'V3', oldvar = 'V'
 

@@ -31,9 +31,10 @@ cdis
 cdis
 
         subroutine divergence(uanl,vanl,div,lat,lon,ni,nj
-     1  ,one,dum1,dum2,dum3,uanl_grid,vanl_grid)
+     1  ,one,dum1,dum2,dum3,uanl_grid,vanl_grid,r_missing_data)
 
-        include 'lapsparms.for'
+!       97-Aug-17     Ken Dritz     Added r_missing_data as dummy argument
+!       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 
         real m ! Grid points per meter
 

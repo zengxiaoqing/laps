@@ -31,15 +31,38 @@ cdis
 cdis
 
         subroutine xsect(c_display,i4time_ref,lun,l_atms,standard_longit
-     1ude)
+     1ude,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data,laps_cycle_time,
+     1maxstns)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
+!       97-Aug-14     Ken Dritz     Added NX_C, NZ_C as dummy arguments
+!       97-Aug-14     Ken Dritz     Removed PARAMETER declarations for
+!                                   NX_C, NZ_C (commented them out)
+!       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
+!                                   as dummy arguments
+!       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
+!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NZ_L, NX_C, NZ_C
+!                                   to interp_3d
+!       97-Aug-14     Ken Dritz     Pass r_missing_data to interp_3d
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NZ_L, NX_C, NZ_C
+!                                   to interp_3dn
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NZ_L, NX_C, NZ_C
+!                                   to interp_3d_spread
+!       97-Aug-14     Ken Dritz     Pass r_missing_data to interp_3d_spread
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NX_C, r_missing_data
+!                                   to interp_2d
+!       97-Aug-14     Ken Dritz     Pass maxstns to label_other_stations
+!       97-Aug-25     Steve Albers  Removed /lapsplot_cmn1/
+!       97-Aug-25     Steve Albers  Removed /lapsplot_cmn2/
+!       97-Aug-25     Steve Albers  Removed equivalence of pcp_type_3d,rh_3d.
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
 
         integer*4 NX_C,NZ_C,NZ_B
-        parameter (NX_C = 61)   ! NX_L ! Number of horizontal points in X-Sect
-        parameter (NZ_C = NZ_L) ! Number of vertical levels in LAPS
+!       parameter (NX_C = 61)   ! NX_L ! Number of horizontal points in X-Sect
+!       parameter (NZ_C = NZ_L) ! Number of vertical levels in LAPS
 
         parameter (NZ_B = 5)    ! Bottom Level of ATMS X-Sect
 
@@ -48,7 +71,7 @@ cdis
         real*4 clouds_3d(NX_L,NY_L,KCLOUD)
         byte b_dum(NX_L,NY_L,KCLOUD)
 
-        common/lapsplot_cmn2/clouds_3d,b_dum
+!       common/lapsplot_cmn2/clouds_3d,b_dum
         common/lapsplot_omega/l_convert
 
         logical l_sta,l_convert,lapsplot_pregen,l_atms,l_pregen,l_arriva
@@ -112,7 +135,7 @@ cdis
 !       real*4 grid_ra_rfill(NX_L,NY_L,NZ_L)
 
         real*4 pcp_type_3d(NX_L,NY_L,NZ_L)
-        equivalence(pcp_type_3d,rh_3d)
+!       equivalence(pcp_type_3d,rh_3d)
 
 !       real*4 pcp_type_2d(NX_C,NZ_C)
 !       equivalence(pcp_type_2d,rh_2d)
@@ -241,9 +264,9 @@ cdis
 
         character*80 c80_domain
 
-        common /lapsplot_cmn1/u_3d,v_3d,omega_3d,temp_3d,rh_3d,q_3d,slwc
-     1_3d,
-     1               cice_3d,grid_ra_ref,grid_ra_vel
+!       common /lapsplot_cmn1/u_3d,v_3d,omega_3d,temp_3d,rh_3d,q_3d,slwc
+!    1_3d,
+!    1               cice_3d,grid_ra_ref,grid_ra_vel
 
 !       sizem = 1.0
         sizel = 2.0
@@ -258,14 +281,14 @@ cdis
         lapsplot_pregen = .false.
 
 c read in laps lat/lon and topo
-        call get_laps_domain(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo,ist
+        call get_laps_domain(NX_L,NY_L,'nest7grid',lat,lon,topo,ist
      1atus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
             return
         endif
 
-        if(lun .eq. 5)call logit(LAPS_DOMAIN_FILE)
+        if(lun .eq. 5)call logit('nest7grid')
 
         i_graphics_overlay = 0
         i_map = 0
@@ -319,7 +342,7 @@ c read in laps lat/lon and topo
 !       Define Segment for Cross Section on LAPS Grid
 80      continue
 
-        c80_domain = laps_domain_file
+        c80_domain = 'nest7grid'
         if(c80_domain(1:4) .eq. 'nest')then
             write(6,102)
 102         format(/
@@ -556,7 +579,8 @@ c read in laps lat/lon and topo
 
 !           Calculate endpoints of X-Sect from Waypoint and Azimuth
             call xsect_endpoints
-     1  (xsta,ysta,azi_xsect,xlow,ylow,xhigh,yhigh,pos_sta,istatus)
+     1  (xsta,ysta,azi_xsect,xlow,ylow,xhigh,yhigh,pos_sta,istatus,
+     1   NX_L,NY_L,NX_C)
 
             goto90
 
@@ -603,10 +627,13 @@ c read in laps lat/lon and topo
 
         i_image = 0
 
-        call interp_2d(lat,lat_1d,xlow,xhigh,ylow,yhigh)
-        call interp_2d(lon,lon_1d,xlow,xhigh,ylow,yhigh)
+        call interp_2d(lat,lat_1d,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
+        call interp_2d(lon,lon_1d,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
 
-        call interp_2d(topo,terrain_vert1d,xlow,xhigh,ylow,yhigh)
+        call interp_2d(topo,terrain_vert1d,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
 
         if(    c_field .eq. 'di' .or. c_field .eq. 'sp'
      1  .or. c_field .eq. 'u ' .or. c_field .eq. 'v '
@@ -700,9 +727,12 @@ c read in laps lat/lon and topo
         if(c_field .eq. 'vc')then
 
 !           Remap from 3d grid to Vert Xsect grid
-            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
-            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
-            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
 
             i_contour = 2
             c33_label = 'LAPS Wind      Vert X-Sect  (kt) '
@@ -720,14 +750,16 @@ c read in laps lat/lon and topo
 
                     call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
                     call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh
-     1)
+     1,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
 !                   Read Cloud Base and Ceiling Data
                     call get_clouds_3dgrid(i4time_ref,i4time_cloud,NX_L,
      1NY_L,KCLOUD
      1         ,ext,clouds_3d,cld_hts,cld_pres,istatus)
                     call interp_3dc
-     1              (clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh)
+     1              (clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh,
+     1               NX_L,NY_L,NX_C,r_missing_data)
 
 !                   Read in sfc pressure
                     i4time_tol = 10000000
@@ -743,7 +775,8 @@ c read in laps lat/lon and topo
                         goto100
                     endif
                     call interp_2d
-     1             (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh)
+     1             (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
 
                     write(6,*)' Getting laps hydrostatic heights'
                     call get_heights_hydrostatic(temp_2d,pres_1d,terrain
@@ -783,7 +816,8 @@ c read in laps lat/lon and topo
                     enddo ! k
 
                     call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow
-     1                            ,yhigh)
+     1                            ,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
                 endif ! (Read Pregenerated File)
 
@@ -802,7 +836,8 @@ c read in laps lat/lon and topo
 
             else ! Not LCO field
                 call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow,yhigh
-     1)
+     1,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
                 do k = NZ_C,1,-1
                 do i = 1,NX_C
@@ -834,9 +869,12 @@ c read in laps lat/lon and topo
 
 
         elseif(c_field .eq. 'u ' )then
-            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
-            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
-            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
             do k = NZ_C,1,-1
             do i = 1,NX_C
                 if(u_vert(i,k) .ne. r_missing_data)then
@@ -853,9 +891,12 @@ c read in laps lat/lon and topo
             c33_label = 'LAPS  U        Vert X-Sect  (kt) '
 
         elseif(c_field .eq. 'v ' )then
-            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
-            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
-            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
             do k = NZ_C,1,-1
             do i = 1,NX_C
                 if(v_vert(i,k) .ne. r_missing_data)then
@@ -872,9 +913,12 @@ c read in laps lat/lon and topo
             c33_label = 'LAPS  V        Vert X-Sect  (kt) '
 
         elseif(c_field .eq. 'sp' )then
-            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
-            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
-            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
             do k = NZ_C,1,-1
             do i = 1,NX_C
                 if(v_vert(i,k) .ne. r_missing_data)then
@@ -895,9 +939,12 @@ c read in laps lat/lon and topo
             c33_label = 'LAPS Isotachs  Vert X-Sect  (kt) '
 
         elseif(c_field .eq. 'di' )then
-            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
-            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
-            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
             do k = NZ_C,1,-1
             do i = 1,NX_C
                 if(u_vert(i,k) .ne. r_missing_data)then
@@ -932,7 +979,8 @@ c read in laps lat/lon and topo
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
 
-1310        call interp_3d(grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh)
+1310        call interp_3d(grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
             clow = 0.
             chigh = +100.
             cint = 10.
@@ -990,10 +1038,12 @@ c read in laps lat/lon and topo
 
             if(c_field .ne. 'rs')then
                 call interp_3d(grid_ra_ref,field_vert,xlow,xhigh,ylow,yh
-     1igh)
+     1igh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
             else ! Get Spread Out Data
                 call interp_3d_spread
-     1          (grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh)
+     1          (grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh,
+     1           NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
             endif
 
             call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
@@ -1096,7 +1146,8 @@ c read in laps lat/lon and topo
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
 
-            call interp_3dc(clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3dc(clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh,
+     1               NX_L,NY_L,NX_C,r_missing_data)
 
             niii = 12 ! horizontal resolution of cloud plot
 
@@ -1214,7 +1265,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !           if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             clow = 200.
             chigh = +500.
@@ -1229,7 +1281,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !           if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             do k = 1,NZ_L
             do i = 1,NX_C
@@ -1250,7 +1303,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !           if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             do k = 1,NZ_L
             do i = 1,NX_C
@@ -1272,7 +1326,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !           if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             var_2d = 'RHL'
             ext = 'lh3'
@@ -1282,7 +1337,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                                  ,rh_3d,istatus)
             if(istatus .ne. 1)goto100
 
-            call interp_3d(rh_3d,field_vert2,xlow,xhigh,ylow,yhigh)
+            call interp_3d(rh_3d,field_vert2,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             do k = 1,NZ_L
             do i = 1,NX_C
@@ -1315,7 +1371,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-            call interp_3d(q_3d,field_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(q_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             do k = NZ_C,1,-1
             do i = 1,NX_C
@@ -1342,7 +1399,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-            call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             do k = NZ_C,1,-1
             do i = 1,NX_C
@@ -1370,7 +1428,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-            call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             clow = 0.
             chigh = +1.
@@ -1427,7 +1486,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,slwc_3d,istatus)
 
-            call interp_3d(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             do k = 1,NZ_C
             do i = 1,NX_C
@@ -1461,7 +1521,7 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,slwc_3d,istatus)
                 call interp_3dn(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh
-     1)
+     1,NX_L,NY_L,NZ_L,NX_C,NZ_C)
 
                 do k = 1,NZ_C
                 do i = 1,NX_C
@@ -1493,7 +1553,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !               if(istatus .ne. 1)goto100
 
                 call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-                call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh)
+                call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
 !               Read Cloud Base and Ceiling Data
                 ext = 'lc3'
@@ -1501,7 +1562,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1,KCLOUD
      1          ,ext,clouds_3d,cld_hts,cld_pres,istatus)
                 call interp_3dc
-     1          (clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh)
+     1          (clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh,
+     1               NX_L,NY_L,NX_C,r_missing_data)
 
 !               Read in sfc pressure
                 i4time_tol = 10000000
@@ -1516,7 +1578,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                     goto100
                 endif
                 call interp_2d
-     1     (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh)
+     1     (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
 
                 write(6,*)' Getting laps hydrostatic heights'
                 call get_heights_hydrostatic(temp_2d,pres_1d,terrain_ver
@@ -1573,7 +1636,7 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1          ,units_2d,comment_2d,pcp_type_3d,istatus)
 
                 call interp_3dn(pcp_type_3d,field_2d,xlow,xhigh,ylow,yhi
-     1gh)
+     1gh,NX_L,NY_L,NZ_L,NX_C,NZ_C)
 
             else ! Calculate Cloud Type on the Fly
 
@@ -1583,7 +1646,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !               if(istatus .ne. 1)goto100
 
                 call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-                call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh)
+                call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
 !               Read Cloud Base and Ceiling Data
                 ext = 'lc3'
@@ -1591,7 +1655,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1,KCLOUD
      1          ,ext,clouds_3d,cld_hts,cld_pres,istatus)
                 call interp_3dc(clouds_3d,clouds_vert,xlow,xhigh,ylow,yh
-     1igh)
+     1igh,
+     1               NX_L,NY_L,NX_C,r_missing_data)
 
 
 !               Read in sfc pressure
@@ -1607,7 +1672,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                     goto100
                 endif
 
-                call interp_2d(pres_2d,pres_1d,xlow,xhigh,ylow,yhigh)
+                call interp_2d(pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
 
                 write(6,*)' Getting laps hydrostatic heights'
                 call get_heights_hydrostatic(temp_2d,pres_1d,terrain_ver
@@ -1654,7 +1720,7 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1          ,units_2d,comment_2d,pcp_type_3d,istatus)
 
                 call interp_3dn(pcp_type_3d,field_2d,xlow,xhigh,ylow,yhi
-     1gh)
+     1gh,NX_L,NY_L,NZ_L,NX_C,NZ_C)
 
             else ! Calculate Precip Type on the Fly
 
@@ -2002,7 +2068,8 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             istat_sfc_pres = 0
         else
             call interp_2d
-     1     (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh)
+     1     (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
             istat_sfc_pres = 1
         endif
 
@@ -2060,7 +2127,7 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                call label_other_stations(i4time_label,standard_longitude
      1        ,y,xsta,lat,lon,NX_L,NY_L
-     1  ,xlow,xhigh,ylow,yhigh,NX_C,bottom,r_height)
+     1  ,xlow,xhigh,ylow,yhigh,NX_C,bottom,r_height,maxstns)
 
            endif
 
@@ -2181,7 +2248,7 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                call label_other_stations(i4time_label,standard_longitude
      1,y,xsta,lat,lon,NX_L,NY_L
-     1  ,xlow,xhigh,ylow,yhigh,NX_C,bottom,r_height)
+     1  ,xlow,xhigh,ylow,yhigh,NX_C,bottom,r_height,maxstns)
 
            endif
 
@@ -2193,74 +2260,104 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         end
 
 
-        subroutine interp_3d(array_in,array_out,xlow,xhigh,ylow,yhigh)
+        subroutine interp_3d(array_in,array_out,xlow,xhigh,ylow,yhigh,
+     1                       NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L, NX_C, NZ_C as
+!                                   dummy arguments
+!       97-Aug-14     Ken Dritz     Added r_missing_data as dummy argument
+!       97-Aug-14     Ken Dritz     Removed (commented out) parameter
+!                                   declarations for NX_C, NZ_C
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NX_C, r_missing_data
+!                                   to interp_2d
 
         integer*4 NX_C,NZ_C
-        parameter (NX_C = 61) ! NX_L
-        parameter (NZ_C = NZ_L)
+!       parameter (NX_C = 61) ! NX_L
+!       parameter (NZ_C = NZ_L)
 
         real*4 array_in(NX_L,NY_L,NZ_L)
         real*4 array_out(NX_C,NZ_C)
 
         do k = 1,NZ_L
              call interp_2d(array_in(1,1,k),array_out(1,k)
-     1                                 ,xlow,xhigh,ylow,yhigh)
+     1                                 ,xlow,xhigh,ylow,yhigh,
+     1                 NX_L,NY_L,NX_C,r_missing_data)
         enddo ! i
 
         return
         end
 
-        subroutine interp_3dn(array_in,array_out,xlow,xhigh,ylow,yhigh)
+        subroutine interp_3dn(array_in,array_out,xlow,xhigh,ylow,yhigh,
+     1                        NX_L,NY_L,NZ_L,NX_C,NZ_C)
+
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L, NX_C, NZ_C as
+!                                   dummy arguments
+!       97-Aug-14     Ken Dritz     Removed (commented out) parameter
+!                                   declarations for NX_C, NZ_C
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NX_C to interp_2dn
 
 !       Nearest neighbor interpolation of a vertical X-sect
 
-        include 'lapsparms.for'
-
         integer*4 NX_C,NZ_C
-        parameter (NX_C = 61) ! NX_L
-        parameter (NZ_C = NZ_L)
+!       parameter (NX_C = 61) ! NX_L
+!       parameter (NZ_C = NZ_L)
 
         real*4 array_in(NX_L,NY_L,NZ_L)
         real*4 array_out(NX_C,NZ_C)
 
         do k = 1,NZ_L
              call interp_2dn(array_in(1,1,k),array_out(1,k)
-     1                                 ,xlow,xhigh,ylow,yhigh)
+     1                                 ,xlow,xhigh,ylow,yhigh,
+     1                       NX_L,NY_L,NX_C)
         enddo ! i
 
         return
         end
 
         subroutine interp_3d_spread(array_in,array_out,xlow,xhigh,ylow,y
-     1high)
+     1high,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L, NX_C, NZ_C as
+!                                   dummy arguments
+!       97-Aug-14     Ken Dritz     Added r_missing_data as dummy argument
+!       97-Aug-14     Ken Dritz     Removed (commented out) parameter
+!                                   declarations for NX_C, NZ_C
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NX_C, r_missing_data
+!                                   to interp_2d_spread
 
         integer*4 NX_C,NZ_C
-        parameter (NX_C = 61) ! NX_L
-        parameter (NZ_C = NZ_L)
+!       parameter (NX_C = 61) ! NX_L
+!       parameter (NZ_C = NZ_L)
 
         real*4 array_in(NX_L,NY_L,NZ_L)
         real*4 array_out(NX_C,NZ_C)
 
         do k = 1,NZ_L
              call interp_2d_spread(array_in(1,1,k),array_out(1,k)
-     1                                 ,xlow,xhigh,ylow,yhigh)
+     1                                 ,xlow,xhigh,ylow,yhigh,
+     1                             NX_L,NY_L,NX_C,r_missing_data)
         enddo ! i
 
         return
         end
 
 
-        subroutine interp_2d(array_in,array_out,xlow,xhigh,ylow,yhigh)
+        subroutine interp_2d(array_in,array_out,xlow,xhigh,ylow,yhigh,
+     1                       NX_L,NY_L,NX_C,r_missing_data)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NX_C, and r_missing_data
+!                                   as dummy arguments
+!       97-Aug-14     Ken Dritz     Removed (commented out) parameter
+!                                   declarations for NX_C, NZ_C (the latter
+!                                   was unused)
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         integer*4 NX_C,NZ_C
-        parameter (NX_C = 61) ! NX_L
-        parameter (NZ_C = NZ_L)
+!       parameter (NX_C = 61) ! NX_L
+!       parameter (NZ_C = NZ_L)
 
         real*4 array_in(NX_L,NY_L)
         real*4 array_out(NX_C)
@@ -2311,15 +2408,20 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         end
 
 
-        subroutine interp_2dn(array_in,array_out,xlow,xhigh,ylow,yhigh)
+        subroutine interp_2dn(array_in,array_out,xlow,xhigh,ylow,yhigh,
+     1                        NX_L,NY_L,NX_C)
+
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NX_C as dummy arguments
+!       97-Aug-14     Ken Dritz     Removed (commented out) parameter
+!                                   declarations for NX_C, NZ_C (the latter
+!                                   was unused)
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
 !       Nearest neighbor interpolation of a 2d array to a line.
 
-        include 'lapsparms.for'
-
         integer*4 NX_C,NZ_C
-        parameter (NX_C = 61) ! NX_L
-        parameter (NZ_C = NZ_L)
+!       parameter (NX_C = 61) ! NX_L
+!       parameter (NZ_C = NZ_L)
 
         real*4 array_in(NX_L,NY_L)
         real*4 array_out(NX_C)
@@ -2344,13 +2446,18 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 
         subroutine interp_2d_spread(array_in,array_out,xlow,xhigh,ylow,y
-     1high)
+     1high,NX_L,NY_L,NX_C,r_missing_data)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NX_C, r_missing_data
+!                                   as dummy arguments
+!       97-Aug-14     Ken Dritz     Removed (commented out) parameter
+!                                   declarations for NX_C and NZ_C (the
+!                                   latter was unused)
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         integer*4 NX_C,NZ_C
-        parameter (NX_C = 61) ! NX_L
-        parameter (NZ_C = NZ_L)
+!       parameter (NX_C = 61) ! NX_L
+!       parameter (NZ_C = NZ_L)
 
         real*4 array_in(NX_L,NY_L)
         real*4 array_out(NX_C)
@@ -2400,22 +2507,31 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         return
         end
 
-        subroutine interp_3dc(array_in,array_out,xlow,xhigh,ylow,yhigh)
+        subroutine interp_3dc(array_in,array_out,xlow,xhigh,ylow,yhigh,
+     1                        NX_L,NY_L,NX_C,r_missing_data)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NX_C, r_missing_data
+!                                   as dummy arguments
+!       97-Aug-14     Ken Dritz     Removed (commented out) parameter
+!                                   declarations for NX_C, NZ_C (the
+!                                   latter was unused)
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NX_C, r_missing_data
+!                                   to interp_2d
 
         include 'laps_cloud.inc'
 
         integer*4 NX_C,NZ_C
-        parameter (NX_C = 61) ! NX_L
-        parameter (NZ_C = kcloud)
+!       parameter (NX_C = 61) ! NX_L
+!       parameter (NZ_C = kcloud)
 
         real*4 array_in(NX_L,NY_L,kcloud)
         real*4 array_out(NX_C,kcloud)
 
         do k = 1,kcloud
              call interp_2d(array_in(1,1,k),array_out(1,k)
-     1                                 ,xlow,xhigh,ylow,yhigh)
+     1                                 ,xlow,xhigh,ylow,yhigh,
+     1                      NX_L,NY_L,NX_C,r_missing_data)
         enddo ! i
 
         return
@@ -2423,15 +2539,20 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 
         subroutine xsect_endpoints(xsta,ysta,azi_xsect,
-     1                  xlow,ylow,xhigh,yhigh,pos_sta,istatus)
+     1                  xlow,ylow,xhigh,yhigh,pos_sta,istatus,
+     1                  NX_L,NY_L,NX_C)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NX_C as dummy arguments
+!       97-Aug-14     Ken Dritz     Removed (commented out) parameter
+!                                   declarations for NX_C, NZ_C (the latter
+!                                   was unused)
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         logical l_left, l_right, l_top, l_bottom
 
         integer*4 NX_C,NZ_C
-        parameter (NX_C = 61) ! NX_L
-        parameter (NZ_C = NZ_L)
+!       parameter (NX_C = 61) ! NX_L
+!       parameter (NZ_C = NZ_L)
 
         ANGDIF(X,Y)=MOD(X-Y+540.,360.)-180.
         COTAND(X) = TAND(90.-X)
@@ -2569,11 +2690,13 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         subroutine label_other_stations(i4time,standard_longitude,y,xsta
      1,lat,lon,ni,nj
-     1          ,xlow,xhigh,ylow,yhigh,nx_c,bottom,r_height)
+     1          ,xlow,xhigh,ylow,yhigh,nx_c,bottom,r_height,maxstns)
+
+!       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+!       97-Aug-25     Steve Albers  Removed /read_sfc_cmn/.
 
 !       This routine labels stations on the X-sect in a logical manner
-
-        include 'lapsparms.for'
 
         real*4 stapos_a(maxstns+1)
 
@@ -2600,9 +2723,9 @@ d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         Character   obstype(maxstns)*8
      1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
 
-        common /read_sfc_cmn/ lat_s,lon_s,elev_s,cover_s,hgt_ceil,hgt_lo
-     1w
-     1                ,t_s,td_s,pr_s,sr_s,dd_s,ff_s,ddg_s,ffg_s,vis_s
+!       common /read_sfc_cmn/ lat_s,lon_s,elev_s,cover_s,hgt_ceil,hgt_lo
+!    1w
+!    1                ,t_s,td_s,pr_s,sr_s,dd_s,ff_s,ddg_s,ffg_s,vis_s
 c
         character atime*24, infile*70
         character directory*50,ext*31

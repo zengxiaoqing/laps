@@ -30,14 +30,36 @@ cdis
 cdis
 cdis
 
-        subroutine lapswind_plot(c_display,i4time_ref,lun)
+        subroutine lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,
+     1                           NZ_L, MAX_RADARS,r_missing_data,
+     1                           laps_cycle_time,maxstns)
 
 !       1995        Steve Albers         Original Version
 !       1995 Dec 8  Steve Albers         Automated pressure range
-
-
-        include 'lapsparms.for'
-
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy args
+!       97-Aug-14     Ken Dritz     Added MAX_RADARS as dummy arg
+!       97-Aug-14     Ken Dritz     Added r_missing_data as dummy arg
+!       97-Aug-14     Ken Dritz     Added laps_cycle_time as dummy arg
+!       97-Aug-14     Ken Dritz     Added maxstns as dummy arg
+!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, r_missing_data, and
+!                                   laps_cycle_time to plot_cont
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L (a second time) and
+!                                   r_missing_data, laps_cycle_time to
+!                                   plot_barbs
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, and laps_cycle_time to
+!                                   plot_grid
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, and laps_cycle_time to
+!                                   plot_cldpcp_type
+!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, and laps_cycle_time to
+!                                   plot_stations
+!       97-Aug-14     Ken Dritz     Pass maxstns to plot_station_locations
+!       97-Aug-17     Ken Dritz     Pass r_missing_data to divergence
+!       97-Aug-25     Steve Albers  Removed equivalence for uv_2d.
+!                                   Removed equivalence for slwc_int.
+!                                   Removed equivalence for slwc_2d.
+!                                   Removed /lapsplot_cmn1/ and /lapsplot_cmn2/
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
         real*4 rlaps_land_frac(NX_L,NY_L)
@@ -101,7 +123,7 @@ cdis
         real*4 vas(NX_L,NY_L)
         real*4 cint
         real*4 uv_2d(NX_L,NY_L,2)
-        equivalence (uv_2d(1,1,1),u_2d),(uv_2d(1,1,2),v_2d)
+!       equivalence (uv_2d(1,1,1),u_2d),(uv_2d(1,1,2),v_2d)
 
         real*4 div(NX_L,NY_L)
         real*4 dir(NX_L,NY_L)
@@ -142,15 +164,15 @@ cdis
         real*4 slwc_3d(NX_L,NY_L,NZ_L)
         real*4 cice_3d(NX_L,NY_L,NZ_L)
 
-        real*4 slwc_int(NX_L,NY_L)
+!       real*4 slwc_int(NX_L,NY_L)
         real*4 column_max(NX_L,NY_L)
         byte pcp_type_2d(NX_L,NY_L)
         byte b_array(NX_L,NY_L)
-        equivalence (slwc_int,column_max)
+!       equivalence (slwc_int,column_max)
 
         real*4 slwc_2d(NX_L,NY_L)
         real*4 field_2d(NX_L,NY_L)
-        equivalence (slwc_2d,field_2d)
+!       equivalence (slwc_2d,field_2d)
 
         real*4 snow_2d(NX_L,NY_L)
         real*4 snow_2d_buf(NX_L,NY_L)
@@ -216,11 +238,11 @@ cdis
         character*80 grid_fnam_common
         common / grid_fnam_cmn / grid_fnam_common
 
-        common/lapsplot_cmn1/heights_3d,slwc_3d,cice_3d,q_3d,rh_3d,temp_
-     13d,
-     1              u_3d,v_3d,omega_3d,grid_ra_ref,grid_ra_vel
+!       common/lapsplot_cmn1/heights_3d,slwc_3d,cice_3d,q_3d,rh_3d,temp_
+!    13d,
+!    1              u_3d,v_3d,omega_3d,grid_ra_ref,grid_ra_vel
 
-        common/lapsplot_cmn2/clouds_3d,b_dum
+!       common/lapsplot_cmn2/clouds_3d,b_dum
 
         common /supmp1/ dummy,part
 
@@ -235,20 +257,20 @@ cdis
         ioffm = 1 ! Don't plot label stuff in conrec
 
 c read in laps lat/lon and topo
-c       call get_laps_domain_95(NX_L,NY_L,LAPS_DOMAIN_FILE
+c       call get_laps_domain_95(NX_L,NY_L,'nest7grid'
 c    1                         ,lat,lon,topo,rlaps_land_frac
 c    1                         ,rspacing_dum,istatus)
 
-!       call get_laps_config(laps_domain_file,istatus)
+!       call get_laps_config('nest7grid',istatus)
 !       if(istatus .ne. 1)then
 !           write(6,*)' Error in get_laps_config'
 !           return
 !       endif
 
 
-        grid_fnam_common = laps_domain_file  ! Used in get_directory to modify
+        grid_fnam_common = 'nest7grid'  ! Used in get_directory to modify
                                       ! extension based on the grid domain
-        ext = laps_domain_file
+        ext = 'nest7grid'
 
 !       Get the location of the static grid directory
         call get_directory(ext,directory,len_dir)
@@ -289,7 +311,7 @@ c    1                         ,rspacing_dum,istatus)
             return
         endif
 
-        if(lun .eq. 5)call logit(LAPS_DOMAIN_FILE)
+        if(lun .eq. 5)call logit('nest7grid')
 
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  '
@@ -416,6 +438,8 @@ c    1                         ,rspacing_dum,istatus)
                     if(c_field .ne. 'w ')then
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,
      1                                          ext,NX_L,NY_L,istatus)
+                      call move(uv_2d(1,1,1),u_2d,NX_L,NY_L)
+                      call move(uv_2d(2,1,1),v_2d,NX_L,NY_L)
                     endif
 
                 endif
@@ -466,7 +490,8 @@ c    1                         ,rspacing_dum,istatus)
      1      (k_level,' Isogons   (deg)   ',c33_label)
 
                 call plot_cont(dir,1e0,clow,chigh,30.,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'sp')then
                 call mklabel33
@@ -478,21 +503,24 @@ c    1                         ,rspacing_dum,istatus)
                 endif
 
                 call plot_cont(spds,1e0,0.,300.,cint,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'u ')then
                 call mklabel33
      1      (k_level,' U - Component      ',c33_label)
 
                 call plot_cont(u_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'v ')then
                 call mklabel33
      1      (k_level,' V - Component      ',c33_label)
 
                 call plot_cont(v_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 call mklabel33
@@ -508,8 +536,9 @@ c    1                         ,rspacing_dum,istatus)
 
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,interval,asc
      19_tim_3dw
-     1  ,c33_label,c_field,k_level,i_overlay,c_display,laps_domain_file
-     1  ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel)
+     1  ,c33_label,c_field,k_level,i_overlay,c_display,'nest7grid'
+     1  ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
+     1  ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'w')then ! Display W fields
 !               if(lapsplot_pregen .and. k_level .eq. 7)then
@@ -542,16 +571,18 @@ c    1                         ,rspacing_dum,istatus)
                 enddo ! j
 
                 call plot_cont(w_2d,1e-1,0.,0.,-1.0,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'dv')then ! Display Divergence Field
                 call divergence(u_2d,v_2d,div,lat,lon,NX_L,NY_L
      1  ,dum1_array,dum2_array
-     1  ,dum3_array,dum4_array,dummy_array,radar_array)
+     1  ,dum3_array,dum4_array,dummy_array,radar_array,r_missing_data)
                 call mklabel33(k_level,' DVRGNC  1e-5 s(-1)',c33_label)
 
                 call plot_cont(div,1e-5,0.,0.,0.,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             endif
 
@@ -623,7 +654,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(liw,1e0,0.0,50.0,-0.5,asc9_tim_3dw,
      1   'LAPS sfc LI X 600mb omega  Pa-K/s',i_overlay,c_display
-     1          ,laps_domain_file,lat,lon,jdot)
+     1          ,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'li')then ! Read in Li field from 3d grids
             if(lapsplot_pregen)then
@@ -652,7 +684,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(lifted,1e-0,-20.,+40.,2.,asc9_tim_n,
      1      'LAPS    SFC Lifted Index     (K) ',i_overlay
-     1  ,c_display,laps_domain_file,lat,lon,jdot)
+     1  ,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'tw')then
             i4time_temp = i4time_ref / laps_cycle_time * laps_cycle_time
@@ -709,7 +742,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(field_2d,1e-0,-30.,+30.,2.,asc9_tim_n,
      1      'LAPS    SFC Wetbulb (approx) (C) '
-     1  ,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  ,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ms' .or. c_type .eq. 'ob'
      1                          .or. c_type .eq. 'st'   )then
@@ -725,7 +759,8 @@ c    1                         ,rspacing_dum,istatus)
             c33_label = '                                 '
 
             call plot_stations(asc_tim_9,c33_label,c_field,i_overlay
-     1   ,c_display,lat,lon,c_file,iflag)
+     1   ,c_display,lat,lon,c_file,iflag
+     1   ,NX_L,NY_L,laps_cycle_time)
 
         elseif(c_type .eq. 'he')then
             write(6,*)
@@ -770,7 +805,8 @@ c    1                         ,rspacing_dum,istatus)
             chigh = +100.
             call plot_cont(helicity,1e-4,clow,chigh,5.,asc9_tim_3dw,
      1    'LAPS Helicity  sfc-500mb 1e-4m/s**2'
-     1  ,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  ,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'v1' .or. c_type .eq. 'v2'
      1    .or. c_type .eq. 'v3' .or. c_type .eq. 'v4'
@@ -890,7 +926,8 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
             call plot_cont(vas,1e0,clow,chigh,cint,asc9_tim,
-     1    c33_label,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1    c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif( c_type .eq. 'ra' .or. c_type .eq. 'gc'
      1    .or.  c_type .eq. 'rr'
@@ -1032,7 +1069,8 @@ c    1                         ,rspacing_dum,istatus)
 
                 call plot_cont(radar_array,1e0,0.,chigh,cint_ref,
      1        asc9_tim_r,'LAPS  Column Max Reflectivity    ',
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'lr')then ! Low Lvl Reflectivity data
                 i4time_hour = (i4time_radar+laps_cycle_time/2)
@@ -1052,7 +1090,8 @@ c    1                         ,rspacing_dum,istatus)
                 call plot_cont(radar_array,1e0,0.,chigh,cint_ref,
 !    1        asc9_tim_r,'LAPS Low Level Reflectivity      ',
      1        asc9_tim_r,'LAPS Low LVL Reflectivity   (DBZ)',
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 've')then
                 call mklabel33(k_level,'  Radial Vel  (kt) ',c33_label)
@@ -1066,7 +1105,8 @@ c    1                         ,rspacing_dum,istatus)
 
                 call plot_cont(grid_ra_vel(1,1,k_level,i_radar),.518,
      1               clow,chigh,5.,asc9_tim_r,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'vi')then
                 call mklabel33(k_level,'  Radial Vel  (kt) ',c33_label)
@@ -1083,7 +1123,8 @@ c    1                         ,rspacing_dum,istatus)
 
                 call plot_cont(grid_ra_ref(1,1,k_level),1e0,
      1             0.,chigh,cint_ref,asc9_tim_r,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'vl')then ! Do VIL
 
@@ -1109,7 +1150,8 @@ c    1                         ,rspacing_dum,istatus)
 
                 call plot_cont(radar_array,1e0,clow,chigh,10.,
      1        asc9_tim_r,'LAPS DUMMY VIL                   ',
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'mt')then ! Do Max Tops
 
@@ -1149,7 +1191,8 @@ c    1                         ,rspacing_dum,istatus)
                 call plot_cont(radar_array,1e0,cont_low,
      1            cont_high,cint,asc9_tim_r,
      1          'LAPS Max Echo Tops    (km MSL)   ',
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'f1')then ! Fcst Max Reflectivity
 
@@ -1201,7 +1244,8 @@ c    1                         ,rspacing_dum,istatus)
 !               Display Advected Reflectivity Field
                 call plot_cont(radar_array_adv,1e0,0.,chigh,cint_ref
      1         ,asc9_tim_r,'LAPS Max Reflectivity  1 HR Fcst',
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
 !           elseif(c_field .eq. 'nt')then
 !               l_radar_read = .false.
@@ -1267,7 +1311,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(snow_2d,scale,
      1             0.,0.,-0.1,asc9_tim_r,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif( c_type .eq. 'sa' .or. c_type .eq. 'pa' )then
             if(c_type .eq. 'sa')then
@@ -1335,7 +1380,7 @@ c    1                         ,rspacing_dum,istatus)
             else ! Near Realtime - look for snow accumulation files
                 if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
                    !Find latest time of radar data
-                    if(LAPS_DOMAIN_FILE .ne. 'STORMFEST')then ! Read MHR packed data
+                    if('nest7grid' .ne. 'STORMFEST')then ! Read MHR packed data
                         c_filespec = c_filespec_ra
                     else
                         c_filespec = c_filespec_src
@@ -1514,7 +1559,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(accum_2d,scale,
      1             0.,chigh,cint,asc9_tim_r,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif( c_type .eq. 'rx')then
             write(6,1311)
@@ -1562,7 +1608,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(radar_array,scale,
      1             0.,80.,cint_ref,asc9_tim_r,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 't' .or. c_type .eq. 'pt')then
             write(6,1513)
@@ -1623,7 +1670,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(temp_2d,1e0,clow,chigh,cint,asc9_tim_t,c33_la
      1bel,
-     1  i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hh')then
             write(6,1515)
@@ -1670,7 +1718,8 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
             call plot_cont(height_2d,1e2,clow,chigh,cint,asc9_tim_t,
-     1  c33_label,i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'la' .or. c_type .eq. 'lj' .or.
      1       c_type .eq. 'sj' .or. c_type .eq. 'ls' .or.
@@ -1777,7 +1826,7 @@ c    1                         ,rspacing_dum,istatus)
                   if(c_type .ne. 'ci')then
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
      1                  ext,var_2d
-     1            ,units_2d,comment_2d,NX_L,NY_L,slwc_2d,k_mb,istatus)
+     1            ,units_2d,comment_2d,NX_L,NY_L,field_2d,k_mb,istatus)
                   else
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
      1                  ext,var_2d
@@ -1799,23 +1848,27 @@ c    1                         ,rspacing_dum,istatus)
             if(k_level .gt. 0)then ! Plot SLWC on const pressure sfc
                if(c_type .ne. 'ci')then
                  if(l_pregen)then
-                   call plot_cont(slwc_2d,1e-3,
+                   call plot_cont(field_2d,1e-3,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
                  else
                    call plot_cont(slwc_3d(1,1,k_level),1e-3,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
                  endif
                else ! c_type .ne. 'ci'
                  if(l_pregen)then
                    call plot_cont(cice_2d,1e-3,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
                  else
                    call plot_cont(cice_3d(1,1,k_level),1e-3,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
                  endif
                endif ! c_type
 
@@ -1838,7 +1891,8 @@ c    1                         ,rspacing_dum,istatus)
                enddo ! j
                call plot_cont(column_max,1e-3,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             endif
 
@@ -1894,7 +1948,7 @@ c    1                         ,rspacing_dum,istatus)
                     call get_laps_2dgrid(i4time_ref,10000000,i4time_clou
      1d,
      1                  ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,slwc_2d,k_mb,istatus)
+     1          ,units_2d,comment_2d,NX_L,NY_L,field_2d,k_mb,istatus)
 
                 endif
 
@@ -1940,8 +1994,8 @@ c    1                         ,rspacing_dum,istatus)
      1                          iflag_cloud_type,cldpcp_type_3d,
      1                          iflag_mvd,mvd_3d,
      1                          iflag_icing_index,icing_index_3d,
-     1                                iflag_bogus_w,omega_3d,istatus)
-!       1                               iflag_snow_potential,snow_2d,lwc_res_3d)
+     1                          iflag_bogus_w,omega_3d,istatus)
+!    1                          iflag_snow_potential,snow_2d,lwc_res_3d)
                 if(istatus .ne. 1)goto1200
 
             endif ! L_pregen
@@ -1957,11 +2011,13 @@ c    1                         ,rspacing_dum,istatus)
                    if(l_pregen)then
                        call plot_cont(mvd_2d,0.9999e-6,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
                    else
                        call plot_cont(mvd_3d(1,1,k_level),0.9999e-6,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
                    endif
 
                 else ! Find Maximum value in column
@@ -1976,7 +2032,8 @@ c    1                         ,rspacing_dum,istatus)
                    enddo ! j
                    call plot_cont(column_max,0.9999e-6,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                 endif
 
@@ -1987,22 +2044,24 @@ c    1                         ,rspacing_dum,istatus)
 
                 if(k_level .gt. 0)then ! Plot SLWC on const pressure sfc
                    if(l_pregen)then
-                       call plot_cont(slwc_2d,1e0,clow,chigh,cint,asc9_t
-     1im_t
-     1         ,c33_label,i_overlay,c_display,laps_domain_file,
-     1                              lat,lon,jdot)
+                       call plot_cont(field_2d,1e0,clow,chigh,cint
+     1                               ,asc9_tim_t
+     1         ,c33_label,i_overlay,c_display,'nest7grid',
+     1                              lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                    else ! Calculated on the Fly
                        do j = 1,NY_L
                        do i = 1,NX_L
-                           slwc_2d(i,j) = icing_index_3d(i,j,k_level)
+                           field_2d(i,j) = icing_index_3d(i,j,k_level)
                        enddo ! i
                        enddo ! j
 
-                       call plot_cont(slwc_2d,1e0,clow,chigh,cint,asc9_t
-     1im_t
-     1         ,c33_label,i_overlay,c_display,laps_domain_file,
-     1                              lat,lon,jdot)
+                       call plot_cont(field_2d,1e0,clow,chigh,cint
+     1                               ,asc9_tim_t,c33_label,i_overlay
+     1                               ,c_display,'nest7grid',lat,lon,jdot
+     1                               ,NX_L,NY_L,r_missing_data
+     1                               ,laps_cycle_time)
 
                    endif
 
@@ -2034,7 +2093,8 @@ c    1                         ,rspacing_dum,istatus)
 
                    call plot_cont(column_max,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                 endif ! k_level
 
@@ -2074,7 +2134,8 @@ c    1                         ,rspacing_dum,istatus)
                 c33_label = '      LAPS    2-D Cloud Type     '
                 call plot_cldpcp_type(b_array
      1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1     ,lat,lon,idum1_array,laps_domain_file)
+     1     ,lat,lon,idum1_array,'nest7grid'
+     1     ,NX_L,NY_L,laps_cycle_time)
 
             else ! OLD ARCHAIC CODE
 
@@ -2142,8 +2203,8 @@ c    1                         ,rspacing_dum,istatus)
      1                          iflag_cloud_type,cldpcp_type_3d,
      1                          iflag_mvd,mvd_3d,
      1                          iflag_icing_index,icing_index_3d,
-     1                                iflag_bogus_w,omega_3d,istatus)
-!       1                               iflag_snow_potential,snow_2d,lwc_res_3d)
+     1                          iflag_bogus_w,omega_3d,istatus)
+!       1                       iflag_snow_potential,snow_2d,lwc_res_3d)
                 if(istatus .ne. 1)goto1200
 
                 call make_fnam_lp(i4time_cloud,asc9_tim,istatus)
@@ -2151,7 +2212,8 @@ c    1                         ,rspacing_dum,istatus)
                 if(k_level .gt. 0)then ! Plot Cloud Type on const pressure sfc
                 call plot_cldpcp_type(cldpcp_type_3d(1,1,k_level)
      1     ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
-     1     ,lat,lon,idum1_array,laps_domain_file)
+     1     ,lat,lon,idum1_array,'nest7grid'
+     1     ,NX_L,NY_L,laps_cycle_time)
 
                 elseif(k_level .eq. -1)then ! Find lowest cloud in column
                     do j = 1,NY_L
@@ -2166,7 +2228,8 @@ c    1                         ,rspacing_dum,istatus)
                     enddo ! j
                     call plot_cldpcp_type(b_array
      1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1     ,lat,lon,idum1_array,laps_domain_file)
+     1     ,lat,lon,idum1_array,'nest7grid'
+     1     ,NX_L,NY_L,laps_cycle_time)
 
                 elseif(k_level .eq. -2)then ! Find highest cloud in column
                     do j = 1,NY_L
@@ -2181,7 +2244,8 @@ c    1                         ,rspacing_dum,istatus)
                     enddo ! j
                     call plot_cldpcp_type(b_array
      1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1     ,lat,lon,idum1_array,laps_domain_file)
+     1     ,lat,lon,idum1_array,'nest7grid'
+     1     ,NX_L,NY_L,laps_cycle_time)
 
                 endif ! k_level
 
@@ -2243,12 +2307,14 @@ c    1                         ,rspacing_dum,istatus)
 
                     call plot_cldpcp_type(pcp_type_2d
      1         ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
-     1         ,lat,lon,idum1_array,laps_domain_file)
+     1         ,lat,lon,idum1_array,'nest7grid'
+     1     ,NX_L,NY_L,laps_cycle_time)
 
                 else
                     call plot_cldpcp_type(cldpcp_type_3d(1,1,k_level)
      1         ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
-     1         ,lat,lon,idum1_array,laps_domain_file)
+     1         ,lat,lon,idum1_array,'nest7grid'
+     1     ,NX_L,NY_L,laps_cycle_time)
 
                 endif
 
@@ -2314,7 +2380,8 @@ c    1                         ,rspacing_dum,istatus)
 
                 call plot_cldpcp_type(pcp_type_2d
      1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1     ,lat,lon,idum1_array,laps_domain_file)
+     1     ,lat,lon,idum1_array,'nest7grid'
+     1     ,NX_L,NY_L,laps_cycle_time)
 
             endif ! k_level
 
@@ -2344,7 +2411,7 @@ c    1                         ,rspacing_dum,istatus)
             var_2d = 'LIL'
             call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
      1                  ext,var_2d
-     1            ,units_2d,comment_2d,NX_L,NY_L,slwc_int,0,istatus)
+     1            ,units_2d,comment_2d,NX_L,NY_L,column_max,0,istatus)
 
             call make_fnam_lp(i4time_cloud,asc9_tim_t,istatus)
             c33_label = 'LAPS Integrated Smith-Fed LWC mm '
@@ -2355,10 +2422,11 @@ c    1                         ,rspacing_dum,istatus)
           chigh = +0.
           cint = -0.1
 
-          call plot_cont(slwc_int,1e3,
+          call plot_cont(column_max,1e3,
      1          clow,chigh,cint,asc9_tim_t,c33_label,
-     1                  i_overlay,c_display,laps_domain_file,lat,lon,jdo
-     1t)
+     1                  i_overlay,c_display,'nest7grid',lat,lon,jdo
+     1t,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'pe' .or. c_type .eq. 'ne')then
           if(lapsplot_pregen)then ! Pregenerated version
@@ -2451,8 +2519,9 @@ c    1                         ,rspacing_dum,istatus)
               cint = +400.
               call plot_cont(pbe_2d,scale,clow,chigh,cint,asc9_tim_t,c33
      1_label,
-     1                  i_overlay,c_display,laps_domain_file,lat,lon,jdo
-     1t)
+     1                  i_overlay,c_display,'nest7grid',lat,lon,jdo
+     1t,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
           elseif(c_type .eq. 'ne')then
 !             Change flag value (for now)
@@ -2471,8 +2540,9 @@ c    1                         ,rspacing_dum,istatus)
               cint = 50.  ! -10.
               call plot_cont(nbe_2d,scale,clow,chigh,cint,asc9_tim_t,c33
      1_label,
-     1                  i_overlay,c_display,laps_domain_file,lat,lon,jdo
-     1t)
+     1                  i_overlay,c_display,'nest7grid',lat,lon,jdo
+     1t,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
           endif
 
         elseif(c_type .eq. 'sh')then
@@ -2508,8 +2578,9 @@ c    1                         ,rspacing_dum,istatus)
 !           enddo ! i
 
             call plot_cont(q_3d(1,1,k_level),1e-3,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'rh')then
             write(6,1513)
@@ -2544,7 +2615,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(rh_3d(1,1,k_level),1e0,clow,chigh,cint,
      1  asc9_tim_t,c33_label,i_overlay
-     1          ,c_display,laps_domain_file,lat,lon,jdot)
+     1          ,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hy')then
             write(6,1513)
@@ -2588,8 +2660,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
             call plot_cont(heights_3d(1,1,k_level),1e1,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hb')then
             write(6,1513)
@@ -2626,8 +2699,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e1,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                  ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                  ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ht')then
             write(6,1513)
@@ -2660,8 +2734,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e1,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'pw')then
             var_2d = 'TPW'
@@ -2685,8 +2760,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-2,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'tt')then
             var_2d = 'T'
@@ -2717,8 +2793,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hi')then
             var_2d = 'HI'
@@ -2749,8 +2826,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'td')then
             var_2d = 'TD'
@@ -2781,8 +2859,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'mc')then
             var_2d = 'MRC'
@@ -2806,8 +2885,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-4,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
         elseif(c_type .eq. 'ws')then ! surface wind
             ext = 'lsx'
             var_2d = 'U'
@@ -2855,8 +2935,9 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,interval,asc9_ti
      1m_t
-     1  ,c33_label,c_field,k_level,i_overlay,c_display,laps_domain_file
-     1  ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel)
+     1  ,c33_label,c_field,k_level,i_overlay,c_display,'nest7grid'
+     1  ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
+     1  ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'p')then ! 1500m Pressure (or other hight level)
             var_2d = 'P'
@@ -2892,8 +2973,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e+2,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ps')then ! Surface Pressure
             var_2d = 'PS'
@@ -2917,8 +2999,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e+2,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'vv')then
             var_2d = 'VV'
@@ -2942,8 +3025,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-2,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
         elseif(c_type .eq. 'hu')then
             var_2d = 'RH'
             ext = 'lsx'
@@ -2967,8 +3051,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ta')then
             var_2d = 'TAD'
@@ -2992,8 +3077,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'th')then
             var_2d = 'TH'
@@ -3017,8 +3103,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'te')then
             var_2d = 'THE'
@@ -3042,8 +3129,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'vo')then
             var_2d = 'VOR'
@@ -3067,8 +3155,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'mr')then
             var_2d = 'MR'
@@ -3092,8 +3181,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'dv')then
             var_2d = 'DIV'
@@ -3117,8 +3207,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ha')then ! Theta Advection
             var_2d = 'THA'
@@ -3142,8 +3233,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ma')then
             var_2d = 'MRA'
@@ -3167,8 +3259,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'sp')then
             ext = 'lsx'
@@ -3215,8 +3308,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(spds,1.,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'cs')then
             var_2d = 'CSS'
@@ -3240,8 +3334,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'vs')then
             var_2d = 'VIS'
@@ -3265,8 +3360,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1600.,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'fw')then
             var_2d = 'FWX'
@@ -3290,8 +3386,9 @@ c    1                         ,rspacing_dum,istatus)
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1.,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'sc')then
             var_2d = 'SC'
@@ -3319,8 +3416,9 @@ c    1                         ,rspacing_dum,istatus)
 
 !           call plot_cont(field_2d,1e-2,clow,chigh,cint,
             call plot_cont(field_2d,1e-1,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,laps_domain_file
-     1                                          ,lat,lon,jdot)
+     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1                                          ,lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'cb' .or. c_type .eq. 'cc')then
 
@@ -3367,7 +3465,8 @@ c    1                         ,rspacing_dum,istatus)
 
             call plot_cont(cloud_ceil,1e0,
      1               clow,chigh,cint,asc9_tim,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ct')then
             var_2d = 'LCT'
@@ -3388,7 +3487,8 @@ c    1                         ,rspacing_dum,istatus)
             cint = 1000.
             call plot_cont(cloud_top,1e0,
      1               clow,chigh,cint,asc9_tim,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'cv')then
             write(6,2514)
@@ -3446,7 +3546,8 @@ c    1                         ,rspacing_dum,istatus)
             cint = 0.2
             call plot_cont(cloud_cvr,1e0,
      1               clow,chigh,cint,asc9_tim,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'tr')then
             clow = -400.
@@ -3456,12 +3557,14 @@ c    1                         ,rspacing_dum,istatus)
             asc9_tim_t = '         '
             call plot_cont(topo,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             i4time_topo = 0
 
         elseif(c_type .eq. 'gr')then
-            call plot_grid(i_overlay,c_display,lat,lon)
+            call plot_grid(i_overlay,c_display,lat,lon,
+     1                     NX_L,NY_L,laps_cycle_time)
 
         elseif(c_type .eq. 'lf')then
             clow = .5
@@ -3471,7 +3574,8 @@ c    1                         ,rspacing_dum,istatus)
             asc9_tim_t = '         '
             call plot_cont(rlaps_land_frac,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,laps_domain_file,lat,lon,jdot)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             i4time_topo = 0
 
@@ -3502,9 +3606,14 @@ c    1                         ,rspacing_dum,istatus)
 
 
         subroutine plot_cont(array,scale,clow,chigh,cint,
-     1    asc_tim_9,c33_label,i_overlay,c_display,c_file,lat,lon,jdot)
+     1    asc_tim_9,c33_label,i_overlay,c_display,c_file,lat,lon,jdot,
+     1    NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
+!       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
+!                                   as dummy arguments
+!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         common /MCOLOR/mini,maxi
 
@@ -3577,7 +3686,7 @@ c    1                         ,rspacing_dum,istatus)
         elseif(c_display .eq. 'p')then ! Generate a Map background only
             c_metacode = 'm'
             call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint,lat,lon
-     1          ,c_metacode,c_file,laps_domain_file,jdot)
+     1          ,c_metacode,c_file,'nest7grid',jdot)
             goto990
         else
             c_metacode = 'c'
@@ -3592,7 +3701,7 @@ c    1                         ,rspacing_dum,istatus)
             if(c_display .eq. 'r')then
                 call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint,lat,l
      1on
-     1          ,c_metacode,c_file,laps_domain_file,jdot)
+     1          ,c_metacode,c_file,'nest7grid',jdot)
             endif
 
             c_metacode = 'c '
@@ -3604,7 +3713,7 @@ c    1                         ,rspacing_dum,istatus)
 
             iflag = 0
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
-     1lag)
+     1lag,maxstns)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
@@ -3640,7 +3749,7 @@ c    1                         ,rspacing_dum,istatus)
             endif
 
             call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint,lat,lon
-     1          ,c_metacode,c_file,laps_domain_file,jdot)
+     1          ,c_metacode,c_file,'nest7grid',jdot)
         endif
 
 990     return
@@ -3648,12 +3757,17 @@ c    1                         ,rspacing_dum,istatus)
 
 
 
-        subroutine plot_barbs(u,v,lat,lon,topo,size,interval,asc_tim_9,c
-     133_label,
+        subroutine plot_barbs(u,v,lat,lon,topo,size,interval,asc_tim_9,
+     1  c33_label,
      1  c_field,k_level,i_overlay,c_display,c_file,imax,jmax,kmax,
-     1  grid_ra_ref,grid_ra_vel)
+     1  grid_ra_ref,grid_ra_vel,NX_L,NY_L,r_missing_data,
+     1  laps_cycle_time)      
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
+!       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
+!                                   as dummy arguments
+!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
@@ -3710,7 +3824,7 @@ c    1                         ,rspacing_dum,istatus)
             if(c_display .eq. 'r')then
                 call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint,lat,l
      1on
-     1          ,c_metacode,c_file,laps_domain_file,jdot)
+     1          ,c_metacode,c_file,'nest7grid',jdot)
             endif
 
             c_metacode = 'c '
@@ -3722,7 +3836,7 @@ c    1                         ,rspacing_dum,istatus)
 
             iflag = 0
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
-     1lag)
+     1lag,maxstns)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
@@ -3774,9 +3888,13 @@ c    1                         ,rspacing_dum,istatus)
         end
 
 
-        subroutine plot_grid(i_overlay,c_display,lat,lon)
+        subroutine plot_grid(i_overlay,c_display,lat,lon,
+     1                       NX_L,NY_L,laps_cycle_time)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
+!       97-Aug-14     Ken Dritz     Added laps_cycle_time as dummy argument
+!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
@@ -3819,7 +3937,7 @@ c    1                         ,rspacing_dum,istatus)
             if(c_display .eq. 'r')then
                 call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint,lat,l
      1on
-     1          ,c_metacode,c_file,laps_domain_file,jdot)
+     1          ,c_metacode,c_file,'nest7grid',jdot)
             endif
 
             c_metacode = 'c '
@@ -3867,9 +3985,12 @@ c    1                         ,rspacing_dum,istatus)
 
         subroutine plot_cldpcp_type(cldpcp_type_2d
      1     ,asc_tim_9,c33_label,c_field,k_level,i_overlay,c_display
-     1     ,lat,lon,ifield_2d,c_file)
+     1     ,lat,lon,ifield_2d,c_file
+     1     ,NX_L,NY_L,laps_cycle_time)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, laps_cycle_time as
+!                                   dummy arguments
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
@@ -3939,7 +4060,7 @@ c    1                         ,rspacing_dum,istatus)
 
             iflag = 0
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
-     1lag)
+     1lag,maxstns)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
@@ -3987,9 +4108,12 @@ c    1                         ,rspacing_dum,istatus)
         end
 
         subroutine plot_stations(asc_tim_9,c33_label,c_field,i_overlay
-     1   ,c_display,lat,lon,c_file,iflag)
+     1   ,c_display,lat,lon,c_file,iflag
+     1   ,NX_L,NY_L,laps_cycle_time)
 
-        include 'lapsparms.for'
+!       97-Aug-14     Ken Dritz     Added NX_L, NY_L, laps_cycle_time as
+!                                   dummy arguments
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
@@ -4048,7 +4172,7 @@ c    1                         ,rspacing_dum,istatus)
 
             write(6,*)' Call plot_station_locations ',c_metacode
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
-     1lag)
+     1lag,maxstns)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
@@ -4085,7 +4209,7 @@ c    1                         ,rspacing_dum,istatus)
 
             write(6,*)' Call plot_station_locations ',c_metacode
             call plot_station_locations(i4time_file,lat,lon,NX_L,NY_L,if
-     1lag)
+     1lag,maxstns)
             endif
 
         endif
@@ -4096,19 +4220,22 @@ c    1                         ,rspacing_dum,istatus)
 
         subroutine mklabel33(k_level,c19_label,c33_label)
 
-        include 'lapsparms.for'
+!       97-Aug-17     Ken Dritz     Lines commented to (temporarily) hardwire
+!                                   VERTICAL_GRID at 'PRESSURE' (without
+!                                   accessing VERTICAL_GRID)
+!       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 
         character c19_label*19,c33_label*33
 
         if(k_level .gt. 0)then
-            if(VERTICAL_GRID .eq. 'HEIGHT')then
-                write(c33_label,101)k_level,c19_label
-101             format('LAPS',I5,' km ',a19)
-            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
+!            if(VERTICAL_GRID .eq. 'HEIGHT')then
+!                write(c33_label,101)k_level,c19_label
+!101             format('LAPS',I5,' km ',a19)
+!            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
                 write(c33_label,102)
      1      int(zcoord_of_level(K_Level)/100.),c19_label
 102             format('LAPS',I5,' hPa',a19)
-            endif
+!            endif
         else if(k_level .eq. 0)then
             write(c33_label,103)c19_label
 103         format('LAPS  Surface',a19)
@@ -4120,11 +4247,14 @@ c    1                         ,rspacing_dum,istatus)
         return
         end
 
-        subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag)
+        subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag,
+     1                                    maxstns)
+
+!       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
+!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+!       97-Aug-25     Steve Albers  Removed /read_sfc_cmn/.
 
 !       This routine labels station locations on the H-sect
-
-        include 'lapsparms.for'
 
         real*4 lat(ni,nj),lon(ni,nj)
 
@@ -4136,9 +4266,9 @@ c    1                         ,rspacing_dum,istatus)
         real*4 vis_s(maxstns)
         character stations(maxstns)*3, wx_s(maxstns)*8      ! c5_stamus
 
-        common /read_sfc_cmn/ lat_s,lon_s,elev_s,cover_s,hgt_ceil,hgt_lo
-     1w
-     1                ,t_s,td_s,pr_s,sr_s,dd_s,ff_s,ddg_s,ffg_s,vis_s
+!       common /read_sfc_cmn/ lat_s,lon_s,elev_s,cover_s,hgt_ceil,hgt_lo
+!    1w
+!    1                ,t_s,td_s,pr_s,sr_s,dd_s,ff_s,ddg_s,ffg_s,vis_s
 c
         character atime*24, infile*70
         character directory*50,ext*31

@@ -58,7 +58,6 @@ SRC= lapsplot_main.f \
      xsect.f \
      divergence.f \
      lapsplot.f \
-     fflxc.f \
      frame2.f \
      getuv2d.f \
      logit.f \

@@ -34,6 +34,9 @@ cdis
       subroutine conrec_line
      1  (field,ni,nii,nj,clow_in,chigh_in,cint_in,i1,i2,i3,i4)
 
+!     97-Aug-17     Ken Dritz     Commented out assignment to r_missing_data
+!                                 and inserted call to get_r_missing_data
+
       real field(ni,nj)
 
       character*48 c_blank
@@ -47,7 +50,12 @@ cdis
 
 !     call color
 
-      r_missing_data = 1.e37
+!     r_missing_data = 1.e37
+      call get_r_missing_data(r_missing_data,istatus)
+      if (istatus .ne. 1) then
+         write (6,*) 'Error getting r_missing_data in conrec_line'
+         stop
+      endif
 
       ihl = 2
 

@@ -743,7 +743,7 @@ c    4          MPCOL4,LDash4   /255,'1777'O/   !Perimeter
       CLING(X) = FLOOR(X)+1.
 
 
-      call get_directory('static',submap_dir,lsdir)
+      call get_directory('static',supmap_dir,lsdir)
 
       supmap_dir = supmap_dir(1:lsdir)//'/ncarg/'
 c        supmap_dir = '../static/ncarg/'
