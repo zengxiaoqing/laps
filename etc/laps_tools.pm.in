@@ -61,7 +61,7 @@ sub get_nl_value{
 
                 @nlcomps = split /\,/,$_;
                 $nlcomps = @nlcomps;
-                push @nl_values, split(",",$nlcomps[0]);
+                push @nl_values, split(',',$nlcomps[0]);
 
          }elsif($search_for_equal == 1 && $pattern == 1){
               $continue_adding_lines = 0;
