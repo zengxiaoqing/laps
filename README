@@ -2774,6 +2774,7 @@ Inputs:
                     - or -
          LWM    (background sfc wind from 3-D analysis - used for wind only)
 
+         SND    Soundings (possibly containing surface obs)
          LC3    Cloud cover (for visibility)
 	 LM1    Soil moisture (for fire wx calc)
          LM2    Snow cover (for fire wx calc)
