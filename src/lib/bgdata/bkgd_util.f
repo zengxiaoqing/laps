@@ -5,63 +5,93 @@
       implicit none
       integer nx,ny,nz
       integer i,j,k
+      integer istatus
       logical ldir
-      real*4  u_rot,v_rot
+      real*4  u_true,v_true
+      real*4  u_grid,v_grid
       real*4  lon(nx,ny)
       real*4  uw3d(nx,ny,nz)
       real*4  vw3d(nx,ny,nz)
       real*4  uw2d(nx,ny)
       real*4  vw2d(nx,ny)
+      real*4  angle(nx,ny,2)  !both grid to true N and true to grid N.
+      real*4  latitude
+      real*4  projrot_latlon
+c
+c build look-up-tables for rotation vector 2D grid and
+c apply this to all 3D/2D grid winds
+c
+      latitude = -999. ! Since lat is not yet passed in
+      do j = 1, ny
+      do i = 1, nx
 
-      if(ldir)then   !from grid north to true north
+         angle(i,j,1)= -projrot_latlon(latitude,lon(i,j),istatus)
+         angle(i,j,2)= -angle(i,j,1)
+
+      enddo
+      enddo
+
+      if(ldir)then   !from grid to true North
 c 3d
          do k = 1, nz
          do j = 1, ny
          do i = 1, nx
-            call uvgrid_to_uvtrue(
-     1            uw3d(i,j,k),vw3d(i,j,k)
-     1           ,u_rot ,v_rot
-     1           ,lon(i,j)       )
-            uw3d(i,j,k) = u_rot
-            vw3d(i,j,k) = v_rot
+
+            call     rotate_vec(uw3d(i,j,k),
+     1                          vw3d(i,j,k),
+     1                          u_true,
+     1                          v_true,
+     1                          angle(i,j,1))
+            uw3d(i,j,k) = u_true
+            vw3d(i,j,k) = v_true
+
          enddo
          enddo
          enddo
 c 2d
          do j = 1, ny
          do i = 1, nx
-            call uvgrid_to_uvtrue(
-     1            uw2d(i,j),vw2d(i,j)
-     1           ,u_rot   ,v_rot
-     1           ,lon(i,j)       )
-            uw2d(i,j) = u_rot
-            vw2d(i,j) = v_rot
+
+            call     rotate_vec(uw2d(i,j),
+     1                          vw2d(i,j),
+     1                          u_true,
+     1                          v_true,
+     1                          angle(i,j,1))
+
+            uw2d(i,j) = u_true
+            vw2d(i,j) = v_true
+
          enddo
          enddo
 
-      else
+      else !rotate from true to grid N.
 c 3d
          do k = 1, nz
          do j = 1, ny
          do i = 1, nx
-            call uvtrue_to_uvgrid(
-     1            uw3d(i,j,k),vw3d(i,j,k)
-     1           ,u_rot   ,v_rot
-     1           ,lon(i,j)       )
-            uw3d(i,j,k) = u_rot
-            vw3d(i,j,k) = v_rot
+
+            call     rotate_vec(uw3d(i,j,k),
+     1                          vw3d(i,j,k),
+     1                          u_grid,
+     1                          v_grid,
+     1                          angle(i,j,2))
+            uw3d(i,j,k) = u_grid
+            vw3d(i,j,k) = v_grid
+
          enddo
          enddo
          enddo
 c 2d
          do j = 1, ny
          do i = 1, nx
-            call uvtrue_to_uvgrid(
-     1            uw2d(i,j),vw2d(i,j)
-     1           ,u_rot   ,v_rot
-     1           ,lon(i,j)       )
-            uw2d(i,j) = u_rot
-            vw2d(i,j) = v_rot
+            call     rotate_vec(uw2d(i,j),
+     1                          vw2d(i,j),
+     1                          u_grid,
+     1                          v_grid,
+     1                          angle(i,j,2))
+
+            uw2d(i,j) = u_grid
+            vw2d(i,j) = v_grid
          enddo
          enddo
 
@@ -191,7 +221,7 @@ c ----------------------------------------------------------------
 
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'Rotate Bkgd winds: true-north to grid-north'
+            print*,'Rotate Bkgd winds: grid-north to true-north'
             call rotate_lga_winds(.true.,nx,ny,nz,lon
      +,uw,vw,uw_sfc,vw_sfc)
              print*,'Rotate again: true-north to LAPS grid-north'
