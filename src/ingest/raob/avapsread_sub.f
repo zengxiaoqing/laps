@@ -1,5 +1,7 @@
 
-        subroutine avapsread_sub(filename, lun_out, istatus)
+        subroutine avapsread_sub(filename, lun_out
+     1                          ,i4time_drpsnd_earliest
+     1                          ,i4time_drpsnd_latest,istatus)
 
         integer maxlvl
         parameter (maxlvl=10000)
@@ -212,15 +214,20 @@ c
 
         enddo ! isort
 
-!       Call write_snd for this sounding
-200     lat_a = lat_s
-        lon_a = lon_s
+200     continue
 
-        i_snd_out = i_snd_out + 1
-        write(c5_staid,201)i_snd_out
-201     format('AVP',i2.2)
+        if(i4time_launch .ge. i4time_drpsnd_earliest .and.
+     1     i4time_launch .le. i4time_drpsnd_latest        )then
 
-        call write_snd    (lun_out                         ! I
+!           Call write_snd for this sounding
+            lat_a = lat_s
+            lon_a = lon_s
+
+            i_snd_out = i_snd_out + 1
+            write(c5_staid,201)i_snd_out
+201         format('AVP',i2.2)
+
+            call write_snd(lun_out                         ! I
      1                    ,1,lvl_out,1                     ! I
      1                    ,iwmostanum                      ! I
      1                    ,lat_a,lon_a,staelev             ! I
@@ -233,6 +240,11 @@ c
      1                    ,wd_out                          ! I
      1                    ,ws_out                          ! I
      1                    ,istatus)                        ! O
+
+        else
+            write(6,*)' This dropsonde is outside time window'
+
+        endif ! within time window
 
         write(6,*)' Looping back to look for rest of new sounding'
         go to 40
