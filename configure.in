@@ -299,5 +299,6 @@ AC_OUTPUT(src/include/trigd.inc
           etc/wind3d.pl
           etc/window_domain_rt.pl
           etc/wait4lapsprep.pl
+          etc/wrfpost.pl
           etc/xferData.pl)
 
