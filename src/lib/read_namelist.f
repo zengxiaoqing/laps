@@ -266,8 +266,9 @@ cdoc  Reads static/osse.nl file.
                n_sim_obs = n_sim_obs + 1
             endif
          enddo
+         nsimobs=n_sim_obs
       endif
-      nsimobs=n_sim_obs
+      n_sim_obs=nsimobs
       print*,'n_sim_obs types from namelist= ',n_sim_obs
       istatus = 1
      
