@@ -474,10 +474,14 @@ c
 	 stations(nn)(1:len) = stname(i)(1:len) ! station name
 c
 	 call s_len(atype_in(i), len)
-	 atype(nn)(1:len) = atype_in(i)(1:len)  ! auto stn type
+	 if(len .ne. 0) then
+	    atype(nn)(1:len) = atype_in(i)(1:len) ! auto stn type
+	 endif
 c
 	 call s_len(reptype_in(i), len)
-	 reptype(nn)(1:len) = reptype_in(i)(1:len)  ! report type
+	 if(len .ne. 0) then
+	    reptype(nn)(1:len) = reptype_in(i)(1:len) ! report type
+	 endif
 c
 	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
 	 provider(nn)(1:11) = 'NWS        '     ! data provider (all from NWS)

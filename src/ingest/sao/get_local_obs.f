@@ -441,8 +441,10 @@ c
 	 provider(nn)(1:len) = pro(i)(1:len)    ! data provider
 c
 	 call s_len(stn_type(i), len)
-	 ilen = min(len, 6)
-	 atype(nn)(1:ilen) = stn_type(i)(1:ilen) ! auto stn type
+	 if(len .ne. 0) then
+	    ilen = min(len, 6)
+	    atype(nn)(1:ilen) = stn_type(i)(1:ilen) ! auto stn type
+	 endif
 c
 	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
 	 reptype(nn)(1:6) = 'LDAD  '            ! report type
