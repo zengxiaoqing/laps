@@ -357,7 +357,9 @@
      $ make install          1> make_install.out 2>&1 
      $ make install_lapsplot 1> make_install_lapsplot.out 2>&1   
 
-     Check the executables in the 'bin' directory.
+     Check that the executables have been placed into the 'bin' directory.
+     The total number should be the number of EXEDIRS in 'laps_root/Makefile'
+     plus 2; this includes 'lapsplot.exe'.
 
      Lapsplot can be installed only if you have NCAR graphics.
 
