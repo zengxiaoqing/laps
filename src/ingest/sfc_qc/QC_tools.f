@@ -537,6 +537,7 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       04 Aug 1999  Add missing calls to 'regress'.
 c
 c     Notes:
 c
@@ -555,6 +556,8 @@ c
         c2=hcutoff**2/vcutoff**2
         thmx=8./1000.           ! C/m
         thmn=-1./1000.
+        call regress(elev,theta,maxsta,m,thlapse,sint,thmx,thmn)
+        call regress(elev,t,maxsta,m,lapse,sintt,tmx,tmn)
 c     compute avg variable 
         tbar=0
         ebar=0
