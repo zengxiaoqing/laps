@@ -123,6 +123,7 @@ PROGRAM wfoprep
   INTEGER                   :: n_goodtimes
   CHARACTER(LEN=10)         :: mslname
   INTEGER, ALLOCATABLE      :: time_index(:) 
+  INTEGER                   :: nfssttimes
   TYPE(proj_info)           :: proj
   REAL                      :: weight1
   ! Data arrays
@@ -137,8 +138,12 @@ PROGRAM wfoprep
   REAL, ALLOCATABLE         :: v3d(:,:,:),v3d1(:,:,:),v3d2(:,:,:)
   REAL, ALLOCATABLE         :: vsf(:,:),vsf1(:,:),vsf2(:,:)
   REAL, ALLOCATABLE         :: slp(:,:),slp1(:,:),slp2(:,:)
+  REAL, ALLOCATABLE         :: fsstsum(:,:), fsst(:,:)
   REAL, ALLOCATABLE         :: topo(:,:)
   REAL, ALLOCATABLE         :: data3d_temp(:,:,:)
+  REAL                      :: tdsf_c, psf_mb
+  REAL, EXTERNAL            :: dwpt_laps, twet_fast
+  INTEGER                   :: ix,jy
   LOGICAL                   :: fixvar1, fixvar2
 
   istatus = 1
@@ -693,6 +698,10 @@ PROGRAM wfoprep
       ALLOCATE (vsf     (proj%nx,proj%ny) )
       ALLOCATE (vsf1    (proj%nx,proj%ny) )
       ALLOCATE (vsf2    (proj%nx,proj%ny) ) 
+      ALLOCATE (fsstsum (proj%nx,proj%ny) )
+      ALLOCATE (fsst    (proj%nx,proj%ny) )
+      fsstsum = 0.
+      nfssttimes = 0
     ENDIF    
 
 
@@ -757,6 +766,7 @@ PROGRAM wfoprep
                               rh_ksfc,rh_ksfc,rhsf1,istatus)
       CALL read_wfomodel_data(nfid,rh_id,proj,time_index(ta+1), &
                               rh_ksfc,rh_ksfc,rhsf2,istatus)       
+
     ENDIF
     ALLOCATE(topo(proj%nx,proj%ny))
     CALL get_wfomodel_topo(nfid,proj,topo,istatus) 
@@ -1152,9 +1162,44 @@ PROGRAM wfoprep
         PRINT *,'Unrecognized output format requested: ', output_type
         STOP
       ENDIF
-  
+   
+      ! If we have surface data, compute a fake SST field
+      ! from the wet bulb temperature for this time.  However,
+      ! we want to average wet bulb T over all time periods and write
+      ! one SST field per run
+      IF ( (model_code(m) .EQ. 1) .OR. (model_code(m).EQ.3))THEN 
+        fsst(:,:) = 300. ! initialize to something not too bad
+        DO jy = 1,proj%ny
+          DO ix = 1,proj%nx
+            ! Compute tdsf (deg C)
+            tdsf_c = dwpt_laps(tsf(ix,jy)-273.15,rhsf(ix,jy))
+           
+            ! Estimate psf from topo 
+            psf_mb = 1013.25*(1.-(topo(ix,jy)*2.257e-5))**(5.259)
+            
+            ! Compute fsst (wet bulb T) from tsf/rhsf/psf 
+            fsst(ix,jy) = twet_fast(tsf(ix,jy)-273.15,tdsf_c,psf_mb)+273.15
+          ENDDO
+        ENDDO 
+        ! Add fsst to fsstsum and increment nfssttimes
+        fsstsum(:,:) = fsstsum(:,:) + fsst(:,:) 
+        nfssttimes = nfssttimes + 1 
+      ENDIF
     ENDDO output_time_loop 
+ 
+    ! If nfssttimes > 0, compute mean fsst and output   
+    IF (nfssttimes .GT. 0) THEN
 
+      fsst(:,:) = fsstsum(:,:)/FLOAT(nfssttimes)
+      print *, 'Min/Max Fake SST: ', minval(fsst),maxval(fsst)
+
+      ! Call output routine for specific model
+      IF (output_type(1:3) .EQ. 'mm5') THEN
+        CALL output_mm5v3_fsst(i4time_cycle,i4time_cycle, proj, &
+               fsst, ext_data_path, output_name(m), MM5MODE_NEW,istatus)
+
+      ENDIF
+    ENDIF
     ! Deallocate 3 arrays for each state variable.  Two will be needed for the
     ! data at two times bounding the time of interest.  The third is where
     ! the time interpolated values will be saved.
@@ -1192,6 +1237,8 @@ PROGRAM wfoprep
       DEALLOCATE (vsf)
       DEALLOCATE (vsf1)
       DEALLOCATE (vsf2)
+      DEALLOCATE (fsst)
+      DEALLOCATE (fsstsum)
     ENDIF                                                            
     ! Show this cycle for this model as having been processed.
     PRINT '(2A)', '    Updating process log:',TRIM(proclog)

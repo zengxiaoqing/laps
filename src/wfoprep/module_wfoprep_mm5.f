@@ -375,6 +375,75 @@ CONTAINS
     RETURN
   END SUBROUTINE output_mm5v3_sfc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE output_mm5v3_fsst(i4time_cycle,i4time_valid,proj, &
+                              fsst,ext_data_path,output_name, mode, istatus)
+
+    IMPLICIT NONE
+
+    INTEGER,INTENT(IN)                     :: i4time_cycle
+    INTEGER,INTENT(IN)                     :: i4time_valid
+    TYPE(proj_info),INTENT(IN)             :: proj
+    REAL,INTENT(IN)                        :: fsst(:,:)
+    CHARACTER(LEN=256),INTENT(IN)          :: ext_data_path
+    CHARACTER(LEN=32),INTENT(IN)           :: output_name
+    INTEGER,INTENT(IN)                     :: mode
+    INTEGER,INTENT(OUT)                    :: istatus
+
+    CHARACTER(LEN=256)                     :: outfile
+
+    CHARACTER (LEN=24) :: hdate
+    CHARACTER (LEN=9)  :: field
+    CHARACTER (LEN=25) :: units
+    CHARACTER (LEN=46) :: desc  
+    REAL               :: xfcst   
+    REAL, PARAMETER    :: sfc_level = 200100.0
+    istatus = 1
+
+    outfile = TRIM(ext_data_path) // TRIM(output_name) // &
+               ':FSST' 
+
+    ! Compute xfcst
+    xfcst = FLOAT(i4time_valid - i4time_cycle)/3600.
+
+    ! Compute hdate
+    CALL make_hdate_from_i4time(i4time_valid,hdate)
+    ! Open the file, using the mode dependency
+
+    PRINT *, 'Opening file: ', TRIM(outfile)
+    IF (mode .EQ. MM5MODE_NEW) THEN
+      OPEN ( FILE   = TRIM(outfile)    , &
+             UNIT   = output_unit        , &
+             FORM   = 'UNFORMATTED' , &
+             STATUS = 'REPLACE'     , &
+             ACCESS = 'SEQUENTIAL'    )
+    ELSE IF (mode .EQ. MM5MODE_APPEND) THEN
+      OPEN ( FILE   = TRIM(outfile)    , &
+             UNIT   = output_unit        , &
+             FORM   = 'UNFORMATTED' , &
+             STATUS = 'UNKNOWN'     , &
+             ACCESS = 'SEQUENTIAL', &
+             POSITION = 'APPEND'    )
+    ELSE
+      PRINT *, 'Uknown open mode for MM5v3 Output: ',mode
+      istatus = 0
+      RETURN
+    ENDIF
+
+    ! Output temperature
+    field = 'SST      '
+    units = 'K                        '
+    desc  = 'Sea-surface Temperature (faked)               '
+    CALL write_pregrid_header(proj,field,units,desc,sfc_level,hdate,xfcst)
+    WRITE ( output_unit ) fsst
+    IF (verbose) THEN
+      PRINT '(A,x,A,A,F9.1,A,F5.1,A,F5.1)',field,units, &
+           'Level (Pa):',sfc_level,' Min: ', &
+           MINVAL(fsst),' Max: ', MAXVAL(fsst)
+    ENDIF
+    CLOSE (output_unit)
+    RETURN
+  END SUBROUTINE output_mm5v3_fsst
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE make_pregrid_filename(ext_data_path,output_name,i4time,filename)
 
     IMPLICIT NONE
