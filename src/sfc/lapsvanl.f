@@ -547,8 +547,8 @@ c
 	    gamma = 5.
 	    if(ibt .eq. 0) gamma = 0.
             call spline(t,t1_f,t_bk,alf,alf2a,beta,gamma,tb81,cormax,
-     &        err,imax,jmax,rms_thresh_norm,bad_tm,imiss,mxstn,
-     &        obs_error_t,name,topo,ldf)
+     &        err,imax,jmax,rms_thresh_norm*sfc_nl_parms%rms_temp,
+     &        bad_tm,imiss,mxstn,obs_error_t,name,topo,ldf)
         else ! use data structures for handling obs
             call barnes_multivariate_sfc_jacket('t',obs,mxstn,t_bk
      1                                     ,badflag,imax,jmax
@@ -566,8 +566,8 @@ c
 	    alf2a = 0.
 	    beta = 100.  
             call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,
-     &        err,imax,jmax,rms_thresh_norm*1.2,bad_tmd,imiss,mxstn,
-     &        obs_error_td,name,topo,ldf)
+     &        err,imax,jmax,rms_thresh_norm*sfc_nl_parms%rms_dewpoint,
+     &        bad_tmd,imiss,mxstn,obs_error_td,name,topo,ldf)
         else ! use data structures for handling obs
             call barnes_multivariate_sfc_jacket('td',obs,mxstn,td_bk
      1                                     ,badflag,imax,jmax
