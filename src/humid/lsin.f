@@ -222,9 +222,7 @@ c     jump out of loop
          write(6,*) 'detected after boundary layer adjust'
          return
       endif
-      
-      
-      
+
 c     compute the total precipitable water and bias correct total 3-d field to
 c     radiometer data
       
