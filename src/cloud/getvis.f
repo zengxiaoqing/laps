@@ -37,13 +37,14 @@ cdis
 cdis   
 cdis
 
-        subroutine get_vis(i4time,solar_alt,l_use_vis,lat          ! Input
-     1                    ,i4_sat_window,i4_sat_window_offset      ! Input
-     1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb   ! Output
-     1                    ,comment                                 ! Output
-     1                    ,ni,nj,nk,r_missing_data                 ! Input
-     1                    ,istat_vis_a                             ! Output
-     1                    ,istatus)                                ! Output
+        subroutine get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add ! I
+     1                    ,lat                                      ! I
+     1                    ,i4_sat_window,i4_sat_window_offset       ! I
+     1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb    ! O
+     1                    ,comment                                  ! O
+     1                    ,ni,nj,nk,r_missing_data                  ! I
+     1                    ,istat_vis_a                              ! O
+     1                    ,istatus)                                 ! O
 
 !       Steve Albers 1997
 
@@ -69,7 +70,7 @@ cdis
         character var*3,comment*125,units*10
         logical l_use_vis, l_use_vis_add
 
-        l_use_vis_add = .false.
+!       l_use_vis_add = .false.
         icount_vis_add_potl = 0
 
 !       Initialize histograms

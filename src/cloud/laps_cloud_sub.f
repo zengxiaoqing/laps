@@ -138,7 +138,7 @@ cdis
         real*4 solar_alt(NX_L,NY_L)
         real*4 solar_ha(NX_L,NY_L)
 
-        logical l_packed_output, l_use_vis, l_use_39
+        logical l_packed_output, l_use_vis, l_use_vis_add, l_use_39
         logical l_use_co2_mode1, l_use_co2_mode2
         logical l_evap_radar
 
@@ -391,7 +391,8 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,l_use_39,latency_co2
+        call get_cloud_parms(l_use_vis,l_use_vis_add
+     1                      ,l_use_39,latency_co2
      1                      ,pct_req_lvd_s8a
      1                      ,i4_sat_window,i4_sat_window_offset
      1                      ,istatus)
@@ -693,7 +694,7 @@ C READ IN SATELLITE DATA
         enddo
         enddo
 
-        call get_vis(i4time,solar_alt,l_use_vis,lat                      ! I
+        call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add,lat        ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,comment_alb                                         ! O
