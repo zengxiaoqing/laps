@@ -9,14 +9,14 @@ netcdf lsr {
         namelen = 132;
 		
     variables:
-        //	GOES-9 14.71 micron sounding radiance //
+        //	14.71 micron sounding radiance //
 
 	float                                  
             s01(record,z,y,x);
             s01:navigation_dim = "nav";
             s01:record = "valtime, reftime";
             s01:_FillValue = 1.e+37f;
-            s01:long_name="GOES-9 14.71 micron sounding radiance";
+            s01:long_name="14.71 micron sounding radiance";
             s01:units="W/(m*-2 sec sterradian cm*-1)";
             s01:wavelen_in_cm=14.71e-4;
             s01:valid_range= 0.f, 100.f;
@@ -24,14 +24,14 @@ netcdf lsr {
             s01:lvl_coord="NONE";
 	    s01:LAPS_units="RADIANCE";
 
-        //	GOES-9 14.37 micron sounding radiance //
+        //	14.37 micron sounding radiance //
 
 	float                                  
             s02(record,z,y,x);
             s02:navigation_dim = "nav";
             s02:record = "valtime, reftime";
             s02:_FillValue = 1.e+37f;
-            s02:long_name="GOES-9 14.37 micron sounding radiance";
+            s02:long_name="14.37 micron sounding radiance";
             s02:units="W/(m*-2 sec sterradian cm*-1)";
             s02:wavelen_in_cm=14.37e-4;
             s02:valid_range= 0.f, 100.f;
@@ -39,14 +39,14 @@ netcdf lsr {
             s02:lvl_coord="NONE";
 	    s02:LAPS_units="RADIANCE";
 
-        //	GOES-9 14.06 micron sounding radiance //
+        //	14.06 micron sounding radiance //
 
 	float                                  
             s03(record,z,y,x);
             s03:navigation_dim = "nav";
             s03:record = "valtime, reftime";
             s03:_FillValue = 1.e+37f;
-            s03:long_name="GOES-9 14.06 micron sounding radiance";
+            s03:long_name="14.06 micron sounding radiance";
             s03:units="W/(m*-2 sec sterradian cm*-1)";
             s03:wavelen_in_cm=14.06e-4;
             s03:valid_range= 0.f, 100.f;
@@ -54,14 +54,14 @@ netcdf lsr {
             s03:lvl_coord="NONE";
 	    s03:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 13.64 micron sounding radiance //
+        //	13.64 micron sounding radiance //
 
 	float                                  
             s04(record,z,y,x);
             s04:navigation_dim = "nav";
             s04:record = "valtime, reftime";
             s04:_FillValue = 1.e+37f;
-            s04:long_name="GOES-9 13.64 micron sounding radiance";
+            s04:long_name="13.64 micron sounding radiance";
             s04:units="W/(m*-2 sec sterradian cm*-1)";
             s04:wavelen_in_cm=13.64e-4;
             s04:valid_range= 0.f, 100.f;
@@ -69,14 +69,14 @@ netcdf lsr {
             s04:lvl_coord="NONE";
 	    s04:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 13.37 micron sounding radiance //
+        //	13.37 micron sounding radiance //
 
 	float                                  
             s05(record,z,y,x);
             s05:navigation_dim = "nav";
             s05:record = "valtime, reftime";
             s05:_FillValue = 1.e+37f;
-            s05:long_name="GOES-9 13.37 micron sounding radiance";
+            s05:long_name="13.37 micron sounding radiance";
             s05:units="W/(m*-2 sec sterradian cm*-1)";
             s05:wavelen_in_cm=13.37e-4;
             s05:valid_range= 0.f, 100.f;
@@ -84,14 +84,14 @@ netcdf lsr {
             s05:lvl_coord="NONE";
 	    s05:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 12.66 micron sounding radiance //
+        //	12.66 micron sounding radiance //
 
 	float                                  
             s06(record,z,y,x);
             s06:navigation_dim = "nav";
             s06:record = "valtime, reftime";
             s06:_FillValue = 1.e+37f;
-            s06:long_name="GOES-9 12.66 micron sounding radiance";
+            s06:long_name="12.66 micron sounding radiance";
             s06:units="W/(m*-2 sec sterradian cm*-1)";
             s06:wavelen_in_cm=12.66e-4;
             s06:valid_range= 0.f, 100.f;
@@ -99,14 +99,14 @@ netcdf lsr {
             s06:lvl_coord="NONE";
 	    s06:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 12.02 micron sounding radiance //
+        //	12.02 micron sounding radiance //
 
 	float                                  
             s07(record,z,y,x);
             s07:navigation_dim = "nav";
             s07:record = "valtime, reftime";
             s07:_FillValue = 1.e+37f;
-            s07:long_name="GOES-9 12.02 micron sounding radiance";
+            s07:long_name="12.02 micron sounding radiance";
             s07:units="W/(m*-2 sec sterradian cm*-1)";
             s07:wavelen_in_cm=12.02e-4;
             s07:valid_range= 0.f, 100.f;
@@ -114,14 +114,14 @@ netcdf lsr {
             s07:lvl_coord="NONE";
 	    s07:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 11.03 micron sounding radiance //
+        //	11.03 micron sounding radiance //
 
 	float                                  
             s08(record,z,y,x);
             s08:navigation_dim = "nav";
             s08:record = "valtime, reftime";
             s08:_FillValue = 1.e+37f;
-            s08:long_name="GOES-9 11.03 micron sounding radiance";
+            s08:long_name="11.03 micron sounding radiance";
             s08:units="W/(m*-2 sec sterradian cm*-1)";
             s08:wavelen_in_cm=11.03e-4;
             s08:valid_range= 0.f, 100.f;
@@ -129,14 +129,14 @@ netcdf lsr {
             s08:lvl_coord="NONE";
 	    s08:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 9.71 micron sounding radiance //
+        //	9.71 micron sounding radiance //
 
 	float                                  
             s09(record,z,y,x);
             s09:navigation_dim = "nav";
             s09:record = "valtime, reftime";
             s09:_FillValue = 1.e+37f;
-            s09:long_name="GOES-9 9.71 micron sounding radiance";
+            s09:long_name="9.71 micron sounding radiance";
             s09:units="W/(m*-2 sec sterradian cm*-1)";
             s09:wavelen_in_cm=9.71e-4;
             s09:valid_range= 0.f, 100.f;
@@ -144,14 +144,14 @@ netcdf lsr {
             s09:lvl_coord="NONE";
 	    s09:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 7.43 micron sounding radiance //
+        //	7.43 micron sounding radiance //
 
 	float                                  
             s10(record,z,y,x);
             s10:navigation_dim = "nav";
             s10:record = "valtime, reftime";
             s10:_FillValue = 1.e+37f;
-            s10:long_name="GOES-9 7.43 micron sounding radiance";
+            s10:long_name="7.43 micron sounding radiance";
             s10:units="W/(m*-2 sec sterradian cm*-1)";
             s10:wavelen_in_cm=7.43e-4;
             s10:valid_range= 0.f, 100.f;
@@ -159,14 +159,14 @@ netcdf lsr {
             s10:lvl_coord="NONE";
 	    s10:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 7.02 micron sounding radiance //
+        //	7.02 micron sounding radiance //
 
 	float                                  
             s11(record,z,y,x);
             s11:navigation_dim = "nav";
             s11:record = "valtime, reftime";
             s11:_FillValue = 1.e+37f;
-            s11:long_name="GOES-9 7.02 micron sounding radiance";
+            s11:long_name="7.02 micron sounding radiance";
             s11:units="W/(m*-2 sec sterradian cm*-1)";
             s11:wavelen_in_cm=7.02e-4;
             s11:valid_range= 0.f, 100.f;
@@ -174,14 +174,14 @@ netcdf lsr {
             s11:lvl_coord="NONE";
 	    s11:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 6.51 micron sounding radiance //
+        //	6.51 micron sounding radiance //
 
 	float                                  
             s12(record,z,y,x);
             s12:navigation_dim = "nav";
             s12:record = "valtime, reftime";
             s12:_FillValue = 1.e+37f;
-            s12:long_name="GOES-9 6.51 micron sounding radiance";
+            s12:long_name="6.51 micron sounding radiance";
             s12:units="W/(m*-2 sec sterradian cm*-1)";
             s12:wavelen_in_cm=6.51e-4;
             s12:valid_range= 0.f, 100.f;
@@ -189,14 +189,14 @@ netcdf lsr {
             s12:lvl_coord="NONE";
 	    s12:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 4.57 micron sounding radiance //
+        //	4.57 micron sounding radiance //
 
 	float                                  
             s13(record,z,y,x);
             s13:navigation_dim = "nav";
             s13:record = "valtime, reftime";
             s13:_FillValue = 1.e+37f;
-            s13:long_name="GOES-9 4.57 micron sounding radiance";
+            s13:long_name="4.57 micron sounding radiance";
             s13:units="W/(m*-2 sec sterradian cm*-1)";
             s13:wavelen_in_cm=4.57e-4;
             s13:valid_range= 0.f, 100.f;
@@ -204,14 +204,14 @@ netcdf lsr {
             s13:lvl_coord="NONE";
 	    s13:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 4.52 micron sounding radiance //
+        //	4.52 micron sounding radiance //
 
 	float                                  
             s14(record,z,y,x);
             s14:navigation_dim = "nav";
             s14:record = "valtime, reftime";
             s14:_FillValue = 1.e+37f;
-            s14:long_name="GOES-9 4.52 micron sounding radiance";
+            s14:long_name="4.52 micron sounding radiance";
             s14:units="W/(m*-2 sec sterradian cm*-1)";
             s14:wavelen_in_cm=4.52e-4;
             s14:valid_range= 0.f, 100.f;
@@ -219,14 +219,14 @@ netcdf lsr {
             s14:lvl_coord="NONE";
 	    s14:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 4.45 micron sounding radiance //
+        //	4.45 micron sounding radiance //
 
 	float                                  
             s15(record,z,y,x);
             s15:navigation_dim = "nav";
             s15:record = "valtime, reftime";
             s15:_FillValue = 1.e+37f;
-            s15:long_name="GOES-9 4.45 micron sounding radiance";
+            s15:long_name="4.45 micron sounding radiance";
             s15:units="W/(m*-2 sec sterradian cm*-1)";
             s15:wavelen_in_cm=4.45e-4;
             s15:valid_range= 0.f, 100.f;
@@ -234,14 +234,14 @@ netcdf lsr {
             s15:lvl_coord="NONE";
 	    s15:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 4.13 micron sounding radiance //
+        //	4.13 micron sounding radiance //
 
 	float                                  
             s16(record,z,y,x);
             s16:navigation_dim = "nav";
             s16:record = "valtime, reftime";
             s16:_FillValue = 1.e+37f;
-            s16:long_name="GOES-9 4.13 micron sounding radiance";
+            s16:long_name="4.13 micron sounding radiance";
             s16:units="W/(m*-2 sec sterradian cm*-1)";
             s16:wavelen_in_cm=4.13e-4;
             s16:valid_range= 0.f, 100.f;
@@ -249,14 +249,14 @@ netcdf lsr {
             s16:lvl_coord="NONE";
 	    s16:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 3.98 micron sounding radiance //
+        //	3.98 micron sounding radiance //
 
 	float                                  
             s17(record,z,y,x);
             s17:navigation_dim = "nav";
             s17:record = "valtime, reftime";
             s17:_FillValue = 1.e+37f;
-            s17:long_name="GOES-9 3.98 micron sounding radiance";
+            s17:long_name="3.98 micron sounding radiance";
             s17:units="W/(m*-2 sec sterradian cm*-1)";
             s17:wavelen_in_cm=3.98e-4;
             s17:valid_range= 0.f, 100.f;
@@ -264,14 +264,14 @@ netcdf lsr {
             s17:lvl_coord="NONE";
 	    s17:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 3.74 micron sounding radiance //
+        //	3.74 micron sounding radiance //
 
 	float                                  
             s18(record,z,y,x);
             s18:navigation_dim = "nav";
             s18:record = "valtime, reftime";
             s18:_FillValue = 1.e+37f;
-            s18:long_name="GOES-9 3.74 micron sounding radiance";
+            s18:long_name="3.74 micron sounding radiance";
             s18:units="W/(m*-2 sec sterradian cm*-1)";
             s18:wavelen_in_cm=3.74e-4;
             s18:valid_range= 0.f, 100.f;
@@ -279,14 +279,14 @@ netcdf lsr {
             s18:lvl_coord="NONE";
 	    s18:LAPS_units="RADIANCE";
                 	        
-        //	GOES-9 0.67 micron visible counts //
+        //	0.67 micron visible counts //
 
 	float                                  
             s19(record,z,y,x);
             s19:navigation_dim = "nav";
             s19:record = "valtime, reftime";
             s19:_FillValue = 1.e+37f;
-            s19:long_name="GOES-9 0.67 micron sounding radiance";
+            s19:long_name="0.67 micron sounding radiance";
             s19:units="W/(m*-2 sec sterradian cm*-1)";
             s19:wavelen_in_cm=0.67e-4;
             s19:valid_range= 0.f, 100.f;
@@ -505,5 +505,5 @@ netcdf lsr {
         process_name    = "LAPS - Local Analysis and Prediction System";
         x_dim           = "x";
         y_dim           = "y";
-        sat_name        = "GOES-9";
+        sat_name        = "      ";
 }                       
