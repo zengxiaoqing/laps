@@ -982,7 +982,7 @@ sub julian {
     my($yr,$mo,$dy) = @_;
  
     my($b,$g,$d,$e,$f,$today,$first_of_year);
-    ($yr < 70) ? $yr += 2000 : $yr += 1900;
+    $yr = ($yr < 70) ? $yr + 2000 : $yr + 1900;
  
     # Use temporary vars to compute num of days since Oct 1, 1582 to today
     $b = int ( ($mo - 14) / 12 );
