@@ -467,7 +467,7 @@ c     lpw and cost are in mm tpw.  layer 1 is weighted very low since
 c     it seems to always disagree with model computations by a significant
 c     amount.  this are under research
 
-            max_func_gvap1 = 0.0  ! give layer 1 no influence
+c            max_func_gvap1 = 0.0  ! give layer 1 no influence
             
             max_func_gvap = (max_func_gvap1+max_func_gvap2
      1           +max_func_gvap3)
