@@ -20,7 +20,7 @@ DBFLAGS = @FFLAGS@ $(INC) -g -C
 
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
-
+@USECPP@
 # Define include paths.
 NETCDF=@NETCDF@
 INC = -I$(LAPSROOT)/src/include -I$(NETCDF)/include
