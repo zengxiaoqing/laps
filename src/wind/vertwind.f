@@ -46,6 +46,7 @@ cdis
 !       1997 Oct    Steve Albers  Pass lon to fflxc. Misc Cleanup.
 !       1997 Dec    Steve Albers  Changed NX_L_MAX/NY_L_MAX to ni/nj
 
+      include 'trigd.inc'
         real m ! Grid points per meter
 
         real*4 wsum(ni,nj)
