@@ -181,6 +181,7 @@ c     lcal variables
       integer kan(18)
       real w(Nlevel)
       real tbest(nchan)
+      real radest(nchan)
       logical first_time,first_gvap
       save first_time, first_gvap
       data first_time /.true./
@@ -322,7 +323,7 @@ c     time-consuming part of the code.
          
          call ofm ( kk, p, t_l, 
      1        mr_l, tskin, psfc,
-     1        julian_day, lat, theta, tbest, 
+     1        julian_day, lat, theta, tbest, radest,
      1        sec_za,sfc_emis,
      1        sfc_refl,
      1        sec_solar) 

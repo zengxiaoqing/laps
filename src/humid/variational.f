@@ -173,7 +173,7 @@ c     forward model variarles
       
 c     new optran variables
       
-      real :: tbest(n_snd_ch)
+      real :: tbest(n_snd_ch), radest(n_snd_ch)
       
 c     old gimtau.f variables
       
@@ -572,6 +572,8 @@ c     here use goes 8 for reference (goes 10 not avail)
       
 c     do for each gridpoint
 
+c      write(29,*) 'i j diff ',(' ob',i,' est',i,i=1,18)
+
       do j = 1,jj,sat_skip
          do i = 1,ii,sat_skip
             
@@ -595,6 +597,7 @@ c     channels used in this algorithm.
      1           mr_l(1,i,j), sfc_data(i,j)%sfc_temp, 
      1           psfc(i,j),
      1           julian_day, sfc_data(i,j)%lat, theta(i,j), tbest,
+     1           radest,
      1           sfc_data(i,j)%secza(sat_index),
      1           sfc_data(i,j)%sfc_emiss(1),
      1           sfc_data(i,j)%sfc_refl(1),
@@ -621,12 +624,28 @@ c     channels used in this algorithm.
                
             endif               ! end SOUNDER computation
  864        continue
+c            if (rads(i,j,1) .ne. mdf .and.
+c     1           abs(sfc_data(i,j)%sfc_temp - tbest(8)).lt. 5.0) then 
+c               write (29, *)i,j,
+c     1              (rads(i,j,8)-radest(8)),
+c     1              (rads(i,j,kan),radest(kan),kan=1,18)
+
+c            endif
          enddo                  ! j
       enddo                     ! i
+
+      close (29)
 
  865  continue
       
 c     Execute powell method correction of layer humidity in clear areas
+
+c     at this point in the code, both the forward model and measured radiances
+c     are in arrays.  They can be printed out at this point as optional files
+
+c     compare rads with new variable of modeled radiances for compare.
+c     channels
+
       
       failures = 0
       

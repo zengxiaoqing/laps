@@ -35,6 +35,7 @@ cdis
       subroutine ofm (kk,laps_p,laps_t,laps_q,laps_sfc_t,
      1     psfc, jday, lat, ZA,
      1                                Tbest, 
+     1     radest,
      1     sec_za,              !optran 90 variable 
      1     sfc_emis,            !optran 90 variable
      1     sfc_refl,            !optran 90 variable
@@ -116,6 +117,7 @@ c     satellite number
       Real O(Nlevel)
       
       Real Tbest(Nchan)         ! Brightness temps from estimated tau
+      real radest(nchan)
       
       integer ichan
       
@@ -123,6 +125,14 @@ c     satellite number
      &     / 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 /
       
       integer i
+
+c     optran 90 coefficient data information
+
+      character*256 sndr_coeff, sndr_trans
+      integer sndr_coeff_len, sndr_trans_len
+      common /optn_coef/ sndr_coeff, sndr_trans, sndr_coeff_len,
+     1     sndr_trans_len
+
       
 c     ----------------------do ozone first call ----
 
@@ -266,14 +276,19 @@ c      if (nk .eq. 10000) then
      1        flux_tau,
      1        solar_tau,
      1        upwelling_radiance,
-     1        brightness_temperature
+     1        brightness_temperature,
+     1        sndr_coeff,
+     1        sndr_trans,
+     1        sndr_coeff_len,
+     1        sndr_trans_len
      1        )
          
          
          
          Do Ichan = 1 , Mchan
             
-            TbEst (Ichan) = brightness_temperature (ichan)   
+            TbEst (Ichan) = brightness_temperature (ichan) 
+            radest (ichan) = upwelling_radiance(ichan)
             
          EndDo
          
