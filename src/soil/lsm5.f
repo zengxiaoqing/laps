@@ -33,7 +33,7 @@ cdis
 
       implicit none
 
-      integer*4  istatus
+      integer    istatus
       integer    nx_l,ny_l
        
       call get_grid_dim_xy(NX_L,NY_L,istatus)
@@ -63,7 +63,7 @@ C     			  UNIX platform.  Set up LAPS standard I/O.
 C                         Enhanced modularity.
 C     J Smart    9/22/97  Adapt for dynamic array memory allocation
 C
-      integer*4 imax,jmax
+      integer   imax,jmax
 
       Include 'soilm.inc'
 C
@@ -75,10 +75,10 @@ C     Created by Groves.
 
       REAL 	KSAT,LAMDA,IN
       DATA 	DAY,SUMR,IN,OLDWEA/4*0./
-      Integer*4 IStatus, i, j, ii
-      Integer*4 Istatus_precip, istatus_m
-      Integer*4 Istatus_w,Istatus_n,Istatus_e
-      Integer*4 SoilType(Imax,Jmax)
+      Integer   IStatus, i, j, ii
+      Integer   Istatus_precip, istatus_m
+      Integer   Istatus_w,Istatus_n,Istatus_e
+      Integer   SoilType(Imax,Jmax)
       REAL      Laps_u(Imax,Jmax)     !u-component
       REAL      Laps_v(Imax,Jmax)     !v-component
       REAL      Laps_T(Imax,Jmax)     !Temperature
@@ -96,11 +96,12 @@ c     REAL      Laps_SM(Imax,Jmax)    !Snow Melt, undefined currently
       REAL      Laps_SMC_3D(Imax,Jmax,3)!Three layer Soil Moisture Content
       REAL      soilm_field_cap(Imax,Jmax)!Field cap soil moistr (m**3/m**3)
       REAL      soilm_sat(Imax,Jmax) !Saturated soil moistr (m**3/m**3)
-      REAL*4    data(Imax,Jmax,7)    !Holds LM2 output data - current time.
-      REAL*4    data_s(Imax,Jmax,4)  !Holds LSX input data - current time
+      REAL      data(Imax,Jmax,7)    !Holds LM2 output data - current time.
+      REAL      data_s(Imax,Jmax,4)  !Holds LSX input data - current time
 
       Logical   Griddry,Filefound
-      Integer*4 i4time_smcur, i4time_smpre(25),
+      Integer   loop_bound
+      Integer   i4time_smcur, i4time_smpre(25),
      &          lvl_s(4),lvl_1(3),lvl_2(7),lvl_l
       Character ftime_smcur*9
 c laps precip
@@ -109,6 +110,8 @@ c laps precip
 c laps surface
       Character ext_s*31, dir_s*150, var_s(4)*3, lvl_coord_s(4)*4,
      &          units_s(4)*10, comment_s(4)*125
+c background
+      Character var_bkg(4)*3
 c laps lm1...3-layer % soil saturation
       Character dir_1*150, ext1*31, var_1(3)*3, lvl_coord1(3)*4,
      &          units1(3)*10, comment1(3)*125
@@ -123,6 +126,7 @@ c laps lm2...variety of soil characteristic variables
       DATA	ext1/'lm1'/
       DATA	ext2/'lm2'/
       DATA      var_s/'U  ','V  ','T  ','TD '/
+      DATA      var_bkg/'USF','VSF','TSF','DSF'/
       DATA      var_l/'R01'/
       DATA      var_1/'LSM', 'LSM', 'LSM'/
       DATA      var_2/'CIV', 'DWF', 'MWF', 'WX ', 'EVP', 'SC ', 'SM'/
@@ -150,15 +154,11 @@ c
  22   format(1x,a9)
       close(11)
 c -------------------------
-c open log file
-c removed internal logfile output: 10-2-97 J. Smart.
-c logfile is now redirected to lsm5.log.
-c
-      write(6,*)'file time: ',ftime_smcur,' i4time: ',i4time_smcur
+      print*,'systime: ',ftime_smcur,' i4time: ',i4time_smcur
+
 C**** Read soil description and simulation time step 
 
       call get_directory('lm1',dir_1,len)
-c      dir_1 = '../lapsprd/lm1/'
 
       Call Soil_In5(imax,jmax,SoilType,IStatus)   	! Get soil texture group
       if(IStatus.ne.1)then
@@ -173,18 +173,18 @@ c  Get the current and previous i4time and ascii times. Allow for 4 previous
 c  times for the previous soil moisture product.  Mandatory to have 1 previous
 c  time so if the 4th previous time is the current time then the 5th is prev.
 
+      loop_bound=5
       icnt=0
-      do i=1,25
+      do i=1,loop_bound
          i4time_smpre(i) = i4time_smcur - 3600*icnt
          call cv_i4tim_asc_lp(i4time_smpre(i),
      &                        atime_smpre(i),IStatus)
          icnt = icnt + 1
       end do
-      write(6,*)'current time:',i4time_smpre(1)
+      print*,'current time: ',atime_smpre(1)
 
 c  Get current surface data: LAPS LSX; u- v-component, temp and dew point.
        call get_directory('lsx',dir_s,len)
-c       dir_s = '../lapsprd/lsx/'
        do i=1,4
           lvl_s(i)=0
        end do
@@ -200,21 +200,35 @@ c       dir_s = '../lapsprd/lsx/'
          if(IStatus.eq.1)then
             Write(6,*)'LAPS Surface data retrieved'
             write(6,*)'Sfc Directory [dir_s] = ',dir_s
-            write(6,*)'time retrieved:',i4time_smpre(ii)
+            write(6,*)'time retrieved:',atime_smpre(ii)
             Filefound = .true.
-            do j=1,Jmax
-            do i=1,Imax
-                Laps_u(i,j)=data_s(i,j,1)
-                Laps_v(i,j)=data_s(i,j,2)
-                Laps_T(i,j)=data_s(i,j,3)
-                Laps_TD(i,j)=data_s(i,j,4)
-            end do
-            end do
-         elseif(ii .ge. 25)then
+
+            Laps_u=data_s(:,:,1)
+            Laps_v=data_s(:,:,2)
+            Laps_T=data_s(:,:,3)
+            Laps_TD=data_s(:,:,4)
+
+         elseif(ii .ge. loop_bound)then
             Filefound = .true.
             Write(6,*)'LAPS Surface data not available'
-            Write(6,*)'Terminating LAPS Soil Moisture'
-            stop
+            print*,'Lets try model bkg for surface u/v/T/Td'
+            call get_modelfg_2d(i4time_smcur,var_bkg(1)
+     1,imax,jmax,Laps_u,istatus)
+            if(istatus.ne.1)goto 59
+            call get_modelfg_2d(i4time_smcur,var_bkg(2)
+     1,imax,jmax,Laps_v,istatus)
+            if(istatus.ne.1)goto 59
+            call get_modelfg_2d(i4time_smcur,var_bkg(3)
+     1,imax,jmax,Laps_T,istatus)
+            if(istatus.ne.1)goto 59
+            call get_modelfg_2d(i4time_smcur,var_bkg(4)
+     1,imax,jmax,Laps_Td,istatus)
+
+59          if(istatus.ne.1)then
+               print*,'Failed to get background in get_modelfg_2d'
+               print*,'Terminating LAPS Soil Moisture'
+               return
+            endif
          end if
        end do
 c
