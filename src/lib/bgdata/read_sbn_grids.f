@@ -246,6 +246,10 @@ c        endif
 
       subroutine get_nvaltimes(cdfname,nvaltimes,ivaltimes,istatus)
 
+      implicit none
+
+      include 'netcdf.inc'
+
       integer       nf_fid,nf_status,nf_vid
       integer       nvaltimes
       integer       ivaltimes(100)
