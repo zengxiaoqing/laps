@@ -238,11 +238,13 @@ c
         real*4 rp_bk(ni,nj), mslp_bk(ni,nj), sp_bk(ni,nj)
         real*4 wt_rp(ni,nj), wt_mslp(ni,nj)
         real*4 vis_bk(ni,nj), wt_vis(ni,nj)
+	real*4 tb8_bk(ni,nj)
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
 c
 c.....	Grids for other stuff.
 c
+        real*4 fnorm(0:ni-1,0:nj-1)
 	real*4 ddiv(ni,nj), vort(ni,nj) 
 	real*4 f(ni,nj), fu(ni,nj), fv(ni,nj), div(ni,nj)
 	real*4 a(ni,nj), z(ni,nj), dx(ni,nj), dy(ni,nj)
@@ -481,12 +483,24 @@ c
 c
 c.....	Now call the solution algorithm for the tb8 data.
 c
-	print *,'  At spline call for tb8'
-	name = 'TB8   '	
-	call zero(tb8, imax,jmax)
-        call spline(tb8,tb81,z,alf,z,beta,0.,z,cormax,.3,imax,jmax,
-     &        roi,bad_tb8,imiss,mxstn,obs_error_tb8,name)
-	if(imiss .ne. 0) ibt = 0 ! all zeros in tb8 array
+c	print *,'  Fill in tb8 field using smooth Barnes'
+c
+c	n_obs_var = 0
+c       fill_val = 1.e37
+c       smsng = 1.e37
+c	npass = 1
+c	rom2 = 0.005
+c	call zero(tb8, imax,jmax)
+c	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+c       print *,' Got the weights'
+c	call barnes2(tb8,imax,jmax,tb81,smsng,mxstn,npass,fnorm)
+c	call check_field_2d(tb8,imax,jmax,fill_val,istatus)
+c	if(istatus .eq. 0) ibt = 0       !empty field
+c
+c	name = 'TB8   '	
+c        call spline(tb8,tb81,tb8_bk,alf,z,beta,0.,z,cormax,.3,imax,jmax,
+c     &        roi,bad_tb8,imiss,mxstn,obs_error_tb8,name)
+c	if(imiss .ne. 0) ibt = 0 ! all zeros in tb8 array
 c
 c.....	Now force the t analysis with the tb8 and background data.
 c
@@ -498,8 +512,9 @@ c
 	endif
 	bad_tm = bad_t
 	if(back_t .ne. 1) bad_tm = bad_t * 2.
+	print *,' '
 	print *,'  At spline call for t'
-        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb8,cormax,.3,imax,
+        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb81,cormax,.3,imax,
      &        jmax,roi,bad_tm,imiss,mxstn,obs_error_t,name)
 c
 c.....	Now call the solution algorithm for the dew point.
