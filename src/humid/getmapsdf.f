@@ -162,6 +162,8 @@ c     figure iterations to go back 48 hours
         do i = 0,iter
 
            i4time1 = i4time - i*laps_cycle_time
+           if (laps_cycle_time.gt.3600) i4time1 = i4time - i*3600
+           
 
 
 c     attempt reading data for this time pair
