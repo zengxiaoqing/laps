@@ -78,7 +78,7 @@ c
 	character  timech*9, time*4
         character  provider(maxobs)*11
         character  weather(maxobs)*25
-        character  reptype(maxobs)*6, atype(maxobs)*6
+        character  reptype_l(maxobs)*6, atype_l(maxobs)*6
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_dupe(maxobs)
 c
@@ -94,6 +94,7 @@ c
      &         store_cldht(maxsta,5)
 
         character  stations(maxsta)*20
+        character  reptype(maxsta)*6, atype(maxsta)*6
         character  store_cldamt(maxsta,5)*4
 c
 c.....  Start.
@@ -151,10 +152,13 @@ c
      1                 ,maxobs,maxobs_in
 
             call read_local_cwb ( path_to_local_data, maxobs_in,
-     ~         badflag, ibadflag,i4time_file, stname, lons, lats, elev,
-     ~         t, t24max, t24min, td, rh, pcp1hr, pcp3hr, pcp6hr,
-     ~         pcp24hr, dd, ff, wgdd, wgff, stnp, mslp, pcc, pc, sr, st,
-     ~         num, istatus )
+     ~                      badflag, ibadflag, i4time_file, 
+     ~                      reptype_l, atype_l, stname, lats, lons,       
+     ~                      elev, t, t24max, t24min, td, rh, 
+     ~                      pcp1hr, pcp3hr, pcp6hr, pcp24hr,
+     ~                      dd, ff, wgdd, wgff, 
+     ~                      stnp, mslp, pcc, pc, sr, st,
+     ~                      num, istatus )
 
 c           call read_local_cwb(path_to_local_data,maxobs_in
 c    1                 ,badflag,ibadflag,i4time_file                     ! I
@@ -180,15 +184,6 @@ c           ix = ix + n_local_time
         enddo ! i4time_file
 
 !       This might make the lines shorter when reading with 'vi'
-        write(*,*)path_to_local_data,maxobs,badflag,ibadflag
-        write(*,*)i4time_sys ! ,stname
-!       write(*,*)lats,lons,elev                      ! O
-!       write(*,*)i4time_ob_a,t,td,rh,pcp1hr          ! O
-!       write(*,*)stnp,mslp,dd,ff                     ! O
-!       write(*,*)wgdd,wgff,pcc,pc,sr,st              ! O
-        write(*,*)num,istatus                         ! O
-
-
 c       n_local_all = ix - 1
         n_local_all = num
         write(6,*)' n_local_all = ',n_local_all
@@ -357,9 +352,9 @@ c
  101	      format(i5,15x)
           endif
 c
-	  atype(nn)(1:6) = 'MESONT'
+          atype(nn) = atype_l(i)
 c
-	  reptype(nn)(1:6) = 'UNK   '
+          reptype(nn) = reptype_l(i)
 c
 	  weather(nn)(1:25) = 'UNK                     '
 	  provider(nn)(1:11) = 'CWB        '
