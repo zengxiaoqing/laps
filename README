@@ -273,16 +273,20 @@
      you are using 'f77'. If you are using another compiler, check after
      running 'configure' to see that the right thing was done by inspecting 
      'NCARGFC' and 'FC' within 'src/include/makefile.inc'. If configure wants 
-     you to use 'ncargf90', you may consider linking 'ncargf90' to 'ncargf77' 
-     on your system, or editing your own version of 'ncargf90' patterned after
-     'ncargf77', if needed. A possible alternative to fixing 
-     'ncargf77/ncargf90' is to edit 'src/include/makefile.inc' with the full 
-     path for 'NCARGFC', and appropriate compiler for 'FC' (and possibly 
-     compiler flags) for your system (after running configure).
+     you to use 'ncargf90', you may consider soft linking 'ncargf90' to the
+     'ncargf77' script or copying 'ncargf77' to a new location and calling
+     it 'ncargf90'.
 
      Lapsplot is built as a special option to 'make', simply type 
      'make lapsplot' or 'make install_lapsplot'. It is not built with a plain 
      run of 'make'.
+
+     In order to get 'lapsplot' to compile and link properly it may be 
+     necessary to edit your own version of 'ncargf90' or even the original 
+     'ncargf77' script. A possible alternative to fixing 'ncargf77/ncargf90' 
+     is to edit 'src/include/makefile.inc' with the full path for 'NCARGFC', 
+     and appropriate compiler for 'FC' (and possibly compiler flags) for your 
+     system (after running configure).
 
      At times the linking of 'lapsplot' may show undefined references to 
      library routines. This often represets a mismatch between NCAR graphics 
