@@ -148,7 +148,8 @@ c
 
         do i = 1,n_obs_b 
 
-          if(dd_s(i) .ge. 0.0)then
+          if(dd_s(i) .ge. 0.0 .and.
+     1       ff_s(i) .ge. 0.0       )then ! Note badflag = -99.9
 
             n_sao_obs = n_sao_obs + 1
 
