@@ -15,7 +15,8 @@
          2.1.4 ..................  C Compiler
          2.1.5 ..................  FORTRAN Compiler
          2.1.6 ..................  Disk Space
-         2.1.7 ..................  Plotting / NCAR graphics library (optional)
+         2.1.7 ..................  Memory Etc.
+         2.1.8 ..................  Plotting / NCAR graphics library (optional)
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
          2.2.2 ..................  Running Configure
@@ -89,8 +90,6 @@
 <pre>
      IBM rs6000      AIX3.25 and AIX4. NFS mounted disks should be mounted with
                                        NFS version 2 instead of 3.
-                                       'ulimit' settings should be placed at
-                                       'unlimited' if possible.
      HP              HPUX 10.20
      SunOS (Solaris) 5.6               Requires f90
      IRIX64          6.4               Works using f77 but requires namelist 
@@ -155,8 +154,14 @@
      needed for executable binaries. 500MB to 1GB are typically needed for 
      12-24 hours worth of output data. A similar amount of space is needed
      for the raw input data.
+
+                    ---  2.1.7  Memory Etc. ---
+
+     'ulimit' settings should be placed at 'unlimited' if possible. Memory
+     requirements vary for LAPS. As a general guide, 128MB is needed and
+     256MB is preferred. More is needed for large domains.
    
-            ---  2.1.7  Plotting / NCAR graphics library (optional)  ---
+            ---  2.1.8  Plotting / NCAR graphics library (optional)  ---
 
      To build the lapsplot process, access to an NCAR graphics library is 
      needed to be able to run the 'ncargf77' command. Lapsplot is an optional 
@@ -197,7 +202,7 @@
      and beyond.
 
      <pre>
-     /machine_root/
+     /home_disk/
          raw_data/
          geog/
          laps-m-n-o.tar
@@ -205,7 +210,7 @@
              Makefile
              src/
                  ingest/
-             etc/                                                (laps scripts)                    
+             etc/                                                (laps scripts)
              bin/                                                 (executables)
              data/                   (=LAPS_DATA_ROOT, can be moved/duplicated)
                  lapsprd/
@@ -260,7 +265,7 @@
 
             ----   2.2.1  Untarring the Source Code  ---
 
-     Place the tar file in a directory we can label as 'machine_root'.
+     Place the tar file in the directory '/home_disk' or '/home_disk/src'.
      Untar the laps source code using a command like...
      $ zcat laps-m-n-o.tar.gz | tar xf -
  
@@ -276,8 +281,8 @@
      Go to the laps root directory and run...
      $ ./configure
 
-     You may want to save the output from 'configure' in a log for future
-     reference.
+     The output from 'configure' is automatically saved in 
+     '(laps_root)/config.log' for future reference.
 
      'configure' supports many options, the most important is the
      --prefix option which tells make where to install the laps system.
@@ -392,6 +397,13 @@
 
      $ cd (laps_root)
      $ make DATAROOT=/data/fxa/laps/data localize
+
+     The localization involves several operations. This includes the creation
+     of the 'data' directory tree if needed. The parameter files are then 
+     merged/updated with the repository versions if needed. The dimensions
+     in the 'cdl' files are also adjusted. Then several executable programs are
+     run including 'gridgen_model.exe', 'gensfclut.exe', and 'genvrclut.exe' 
+     as per section 3.1.
 
      If you have multiple domains, 'make' can be run for each domain with
      different values of 'DATAROOT'. 
@@ -612,8 +624,17 @@
      the time found in 'data/time/systime.dat' supplied, making sure any 
      outputs from this time are not present. Only the 'ingest' outputs from 
      this time should then be present. You may also want to comment the ingest
-     processes from the sched.pl for this test, since the ingest outputs are 
-     already present.
+     processes from the 'sched.pl' for this test, since the ingest outputs 
+     will already be present.
+
+     One way to supply the inputs is as follows for each input from your list:
+
+     $cp testdata/lapsprd/input1/*           data/lapsprd/lapsprd/input1
+
+                                   OR
+
+     $cd data/lapsprd
+     $ln -s testdata/lapsprd/input1/*        input1
 
      When running LAPS for archived data in this manner, the 
      'data/time/systime.dat' should be updated manually by the user, instead 
@@ -1166,10 +1187,11 @@ April 1996
    laps-bugs@fsl.noaa.gov   Include in your mail:
 <pre>
    The type of system (often, uname -a)
+   The system limits (ulimit -a)
    The applicable compiler versions (often a -v or -V option to the compiler)
-   The output of configure
-   The output of make
-   The output of laps_localization.pl
+   The entire output of configure (config.log)
+   The entire output of make
+   The entire output of laps_localization.pl (i.e. make localize)
 </pre>
 
 ----------  3.0 DESCRIPTION OF LAPS PROCESSES  --------------------------------
@@ -1223,11 +1245,12 @@ Outputs:
 Source directory: laps/src/grid
 
 Sample Output: Should be available in the test data case. The grids start with
-               the SW corner of the domain and end with the NE corner. The
-               bottom (southernmost) row of the domain is written first (I 
-               increases with consecutive grid points, then J increases). I 
-               increases as you're moving east on the grid, J increases as 
-               you're moving north.
+               gridpoint (1,1) in southwest corner of the domain and end with 
+               gridpoint (ni,nj) in the northeast corner. The bottom 
+               (southernmost) row of the domain is written first (I increases 
+               with consecutive grid points, then J increases). I increases as
+               you're moving east on the grid, J increases as you're moving 
+               north.
 
 
 ------- 3.2  ------------------  INGEST PROCESSES---------------------------
