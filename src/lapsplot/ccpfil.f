@@ -277,7 +277,8 @@ C
           rcols = ncols - 1
           do i = 1,ncols+10 ! 255-icol_offset
               if(colortable .eq. 'linear_reduced')then
-                  rintens = min(max( (float(i) / rcols) - 0.4 ,0.),1.)       
+!                 rintens = min(max( (float(i) / rcols) - 0.4 ,0.),1.)       
+                  rintens = min(max(float(i-1) / rcols,0.),1.)
               else
                   rintens = min(max(float(i-2) / rcols,0.),1.)
               endif
