@@ -253,7 +253,7 @@
     laps_data(:,:,startind:stopind) = rh3
     varname(startind:stopind) = 'RH3'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Relative Humidity    .                    '
+    varcomment(startind:stopind) = 'Relative Humidity                         '
 
     ! Cloud liquid content in kg/m2
     startind=stopind+1
