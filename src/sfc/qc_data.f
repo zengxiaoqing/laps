@@ -32,11 +32,8 @@ cdis
 c
 c
 	subroutine qcdata(filename,infile_l,rely,ivals1,mxstn,
-     &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, ddg_s, 
-     &     ffg_s, pstn_s, pmsl_s, alt_s, cover_s, hgt_ceil, 
-     &     hgt_low, solar_s, store_hgt, vis_s, kloud_s, idp3_s, 
-     &     obstime, stn, obstype, wx_s, store_emv, store_amt,
-     &     rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
+     &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
+     &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
      &     istatus)
 c
 c=========================================================================
@@ -48,45 +45,42 @@ c       Changes:
 c           P.Stamus  20 Dec 1996  Porting changes for go anywhere LAPS
 c                     25 Aug 1997  Changes for dynamic LAPS.
 c                     17 Nov 1997  Fill empty arrays (HP compiler prob).
-c       
+c                     13 Jul 1999  Remove some variables not used in sfc.
+c                                  Rm *4 from all declarations.
+c
 c=========================================================================
 c
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
-	real*4 lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
-	real*4 t_s(mxstn), td_s(mxstn), dd_s(mxstn), ff_s(mxstn)
-	real*4 ddg_s(mxstn), ffg_s(mxstn)
-	real*4 pstn_s(mxstn), pmsl_s(mxstn), alt_s(mxstn)
-	real*4 cover_s(mxstn), hgt_ceil(mxstn), hgt_low(mxstn)
-	real*4 solar_s(mxstn), store_hgt(mxstn,5), vis_s(mxstn)
-	real*4 rii(mxstn), rjj(mxstn)
+	real t_s(mxstn), td_s(mxstn), dd_s(mxstn), ff_s(mxstn)
+	real ddg_s(mxstn), ffg_s(mxstn), vis_s(mxstn)
+	real pstn_s(mxstn), pmsl_s(mxstn), alt_s(mxstn)
+	real rii(mxstn), rjj(mxstn)
 c
-	integer*4 kloud_s(mxstn),idp3_s(mxstn),obstime(mxstn)
-	integer*4 ii(mxstn), jj(mxstn)
+	integer ii(mxstn), jj(mxstn)
 c
-	character stn(mxstn)*3,obstype(mxstn)*8,wx_s(mxstn)*8
-	character store_emv(mxstn,5)*1, store_amt(mxstn,5)*4
+	character stn(mxstn)*3
 c
 c..... Arrays for the prev hour's OBS file input data
 c                            
-	real*4 lat_l(mxstn),lon_l(mxstn),elev_l(mxstn)
-	real*4 td_l(mxstn),t_l(mxstn)
-	real*4 dd_l(mxstn),ff_l(mxstn),ddg_l(mxstn),ffg_l(mxstn)
-	real*4 pstn_l(mxstn),pmsl_l(mxstn),alt_l(mxstn)
-	real*4 store_hgt_l(mxstn,5),ceil_l(mxstn),lowcld_l(mxstn)
-	real*4 cover_l(mxstn),vis_l(mxstn),rad_l(mxstn)
-	Integer*4  obstime_l(mxstn),kloud_l(mxstn),idp3_l(mxstn)
+	real lat_l(mxstn),lon_l(mxstn),elev_l(mxstn)
+	real td_l(mxstn),t_l(mxstn)
+	real dd_l(mxstn),ff_l(mxstn),ddg_l(mxstn),ffg_l(mxstn)
+	real pstn_l(mxstn),pmsl_l(mxstn),alt_l(mxstn)
+	real store_hgt_l(mxstn,5),ceil_l(mxstn),lowcld_l(mxstn)
+	real cover_l(mxstn),vis_l(mxstn),rad_l(mxstn)
+	Integer obstime_l(mxstn),kloud_l(mxstn),idp3_l(mxstn)
 	Character  infile_l*256, atime_l*24, stn_l(mxstn)*3
 	character  obstype_l(mxstn)*8,wx_l(mxstn)*8
 	character  store_emv_l(mxstn,5)*1, store_amt_l(mxstn,5)*4
 c
 c	Other files for internal use...
 c
-	integer*4 rely(26,mxstn), ivals(mxstn)
-	integer*4 ivals1(mxstn), ivals2(mxstn)
-	integer*4 rely_l(26,mxstn) 
-	integer*4 istatus, jstatus
+	integer rely(26,mxstn), ivals(mxstn)
+	integer ivals1(mxstn), ivals2(mxstn)
+	integer rely_l(26,mxstn) 
+	integer istatus, jstatus
 	character filename*9, outfile*256
 c
 c
@@ -150,11 +144,8 @@ c
 c	 ** no climatological check on STN **       rely(01,m)=imissing 
 c	 ** no climatological check on OBSTYPE **   rely(02,m)=imissing
 c	 ** no climatological check on LAT_S **     rely(03,m)=imissing
-c	 ** no climatological check on LON_s **     rely(04,m)=imissing
-c
-	 if(elev_s(n) .ge. -400.          .and. 
-     &      elev_s(n) .le. 4000.               ) rely(05,m)=10
-c
+c	 ** no climatological check on LON_S **     rely(04,m)=imissing
+c	 ** no climatological check on ELEV_S **    rely(05,m)=imissing
 c	 ** no climatological check on WX **        rely(06,m)=imissing
 c
 	 if(t_s(n)    .ge.  -50.          .and.
@@ -184,42 +175,20 @@ c
 	 if(alt_s(n)  .ge.  900.          .and.
      &      alt_s(n)  .le. 1200.               ) rely(15,m)=10 
 c
-	 if(kloud_s(n) .ge.   0           .and.
-     &      kloud_s(n) .le.   5                ) rely(16,m)=10 
+c	 ** no climatological check on KLOUD_S **   rely(16,m)=imissing 
+c	 ** no climatological check on HGT_CEIL **  rely(17,m)=imissing 
+c	 ** no climatological check on HGT_LOW **   rely(18,m)=imissing 
+c	 ** no climatological check on COVER_S **   rely(19,m)=imissing 
+c	 ** no climatological check on SOLAR_S **   rely(20,m)=imissing 
+c	 ** no climatological check on IDP3_S **    rely(21,m)=imissing 
+c	 ** no climatological check on STORE_EMV ** rely(22,m)=imissing 
+c	 ** no climatological check on STORE_AMT ** rely(23,m)=imissing
+c	 ** no climatological check on STORE_HGT ** rely(24,m)=imissing
 c
-	 if(hgt_ceil(n)  .ge.     0.      .and.
-     &      hgt_ceil(n)  .le. 22500.           ) rely(17,m)=10 
+	 if(vis_s(n)  .ge.    0.          .and.
+     &      vis_s(n)  .le.  200.               ) rely(25,m) = 10
 c
-	 if(hgt_low(n)   .ge.     0.      .and. 
-     &      hgt_low(n)   .le. 22500.           ) rely(18,m)=10 
-c
-	 if(cover_s(n)   .ge.     0.      .and.
-     &      cover_s(n)   .le.     1.           ) rely(19,m)=10 
-c
-	 if(solar_s(n)   .ge.     0.      .and.
-     &      solar_s(n)   .le.  1500.           ) rely(20,m)=10 
-c
-	 if(idp3_s(n)    .ge.     0       .and.
-     &      idp3_s(n)    .lt.   999            ) rely(21,m)=10 
-c
-	 if(kloud_s(n) .gt. 0) then
-	    do k=1,kloud_s(n)
-	       if(store_emv(n,k) .eq. ' '   .or. 
-     &            store_emv(n,k) .eq. 'E'   .or.
-     &            store_emv(n,k) .eq. 'M'   .or. 
-     &            store_emv(n,k) .eq. 'V'      ) rely(22,m)=10 
-c
-c	 ** no climatological check on STORE_AMT **  rely(23,m)=imissing
-c
-	       if(store_hgt(n,k) .ge.     0.   .and.
-     &            store_hgt(n,k) .le. 22500.        ) rely(24,m)=10 
-	    enddo !k
-	 endif
-c
-	 if(vis_s(n)     .ge.     0.      .and.
-     &      vis_s(n)     .le.   200.           ) rely(25,m)=10 
-c
-c	 ** no climatological check on OBSTIME **    rely(26,m)=imissing
+c	 ** no climatological check on OBSTIME **   rely(26,m)=imissing
 c
  10	continue
 c
@@ -231,10 +200,7 @@ c	 ** no climatological check on STN_L **      rely_l(01,m)=imissing
 c	 ** no climatological check on OBSTYPE_L **  rely_l(02,m)=imissing
 c	 ** no climatological check on LAT_L **      rely_l(03,m)=imissing
 c	 ** no climatological check on LON_L **      rely_l(04,m)=imissing
-c
-	 if(elev_l(n)     .ge.  -400.      .and. 
-     &      elev_l(n)     .le.  4000.           ) rely_l(05,m)=10
-c
+c	 ** no climatological check on ELEV_L **     rely_l(05,m)=imissing
 c	 ** no climatological check on WX_L **           rely_l(06,m)=imissing
 c
 	 if(t_l(n)        .ge.   -50.      .and.
@@ -255,36 +221,21 @@ c
      &      pmsl_l(n)     .le.  1200.           ) rely_l(14,m)=10
 	 if(alt_l(n)      .ge.   900.      .and.
      &      alt_l(n)      .le.  1200.           ) rely_l(15,m)=10 
-	 if(kloud_l(n)    .ge.     0       .and.
-     &      kloud_l(n)    .le.     5            ) rely_l(16,m)=10 
-	 if(ceil_l(n)     .ge.     0.      .and.
-     &      ceil_l(n)     .le. 22500.           ) rely_l(17,m)=10 
-	 if(lowcld_l(n)   .ge.     0.      .and.
-     &      lowcld_l(n)   .le. 22500.           ) rely_l(18,m)=10 
-	 if(cover_l(n)    .ge.     0.      .and.
-     &      cover_l(n)    .le.     1.           ) rely_l(19,m)=10 
-	 if(rad_l(n)      .ge.     0.      .and.
-     &      rad_l(n)      .le.  1500.           ) rely_l(20,m)=10 
-	 if(idp3_l(n)     .ge.     0       .and.
-     &      idp3_l(n)     .lt.   999            ) rely_l(21,m)=10 
-	 if(kloud_l(n) .gt. 0) then
-	    do k=1,kloud_l(n)
-	      if(store_emv_l(n,k) .eq. ' '   .or. 
-     &           store_emv_l(n,k) .eq. 'E'   .or. 
-     &           store_emv_l(n,k) .eq. 'M'   .or. 
-     &           store_emv_l(n,k) .eq. 'V'       ) rely_l(22,m)=10 
 c
-c	 ** no climatological check on STORE_AMT_L **  rely_l(23,m)=imissing
+c	 ** no climatological check on KLOUD_L **     rely_l(16,m)=imissing 
+c	 ** no climatological check on CEIL_L **      rely_l(17,m)=imissing 
+c	 ** no climatological check on LOWCLD_L **    rely_l(18,m)=imissing 
+c	 ** no climatological check on COVER_L **     rely_l(19,m)=imissing 
+c	 ** no climatological check on RAD_L **       rely_l(20,m)=imissing 
+c	 ** no climatological check on IDP3_L **      rely_l(21,m)=imissing 
+c	 ** no climatological check on STORE_EMV_L ** rely_l(22,m)=imissing 
+c	 ** no climatological check on STORE_AMT_L ** rely_l(23,m)=imissing
+c	 ** no climatological check on STORE_HGT_L ** rely_l(24,m)=imissing
 c
-	      if(store_hgt_l(n,k) .ge.      0. .and. 
-     &           store_hgt_l(n,k) .le.  22500.      ) rely_l(24,m)=10 
-	    enddo !k
-	 endif
 	 if(vis_l(n)      .ge.     0.      .and.
-     &      vis_l(n)      .le.   200.           ) rely_l(25,m)=10 
-c
-c	 ** no climatological check on OBSTIME_L **   rely_l(26,m)=imissing
-c
+     &      vis_l(n)      .le.   200.           ) rely_l(25,m) = 10 
+c 
+c        ** no climatological check on OBSTIME_L ** rely_l(26,m)=imissing c
  12	continue
 c
 	write(60,*) '  '
@@ -298,8 +249,8 @@ c
 c.....  standard deviation check
 c
 	call time_ck(stn,n_obs_b,stn_l,n_obs_b_l,ivals)
-	call dev_ck( 5, n_meso_pos, n_obs_b, elev_s, rely, ivals1,
-     +	       n_obs_b_l, elev_l, rely_l, ivals, n_obs_curr)
+cc	call dev_ck( 5, n_meso_pos, n_obs_b, elev_s, rely, ivals1,
+cc     +	       n_obs_b_l, elev_l, rely_l, ivals, n_obs_curr)
 	call dev_ck( 7, n_meso_pos, n_obs_b, t_s, rely, ivals1,
      +	       n_obs_b_l, t_l, rely_l, ivals, n_obs_curr)
 	call dev_ck( 8, n_meso_pos, n_obs_b, td_s, rely, ivals1,
