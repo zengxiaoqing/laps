@@ -418,24 +418,21 @@
 
                         NUMBER OF GRID POINTS
 
-     Laps will soon allow you to change the horizontal domain at runtime, however
-     at this release you are still required to edit a few files before compiling 
-     (the make step).
+     In general, Laps will allow you to change the horizontal domain at 
+     runtime. Below is a list of the relevant files that need to be changed.
  
-     1. Edit src/include/lapsparms.for 
+     1. Check 'src/include/lapsparms.inc'. 
 
-        Change the parameters NX_L, NY_L to be the number of grid points
-        (default is 61 x 61). Make sure they are <= NX_L_MAX and NY_L_MAX. 
+        NX_L_MAX and NY_L_MAX are the maximum allowed dimensions for LAPS.
+        If your dynamic adjustment of the dimensions will exceed these values,
+        then 'lapsparms.inc' should be modified at compile time (before
+        running make).. 
 
-        If NX_L_MAX and NY_L_MAX need to be changed, they must also then be 
-        changed in another file, namely 'src/include/lapsparms.inc'. Note that 
-        'src/include/lapsparms.inc' file has different contents (basically a 
-        subset of) the 'src/include/lapsparms.for' file. 
+        Note also that NX_L_MAX is the dimension counting from W to E. 
+        NY_L_MAX is the dimension counting from S to N.
 
-        Note also that NX_L is the dimension counting from W to E. NY_L is the 
-        dimension counting from S to N.
-
-     2. Adjust the horizontal dimensions in 'src/include/laps_grid_def.h'.
+     2. Adjust the horizontal dimensions in 
+                                   './data/static/nest7grid.parms'.
 
      3. Edit the file './data/static/nest7grid.cdl' to modify
 	the domain size from the Colorado (61x61) to your domain size.
@@ -454,9 +451,6 @@
            by ./etc/laps_localization.pl using the values found in 
            './data/static/nest7grid.parms'.
 
-
-     4. Adjust the horizontal dimensions in 
-                                   './data/static/nest7grid.parms'.
 
              LOCATION OF DOMAIN (STATIC FILES, TERRAIN, etc.):
 
