@@ -92,12 +92,13 @@ CONTAINS
             vent_ind(i,j) = pblhgt(i,j) * spmean
 
           ELSE
-            PRINT *, 'No wind levels within boundary layer in ventilation'
-            PRINT *, 'I/J/PBLHGT : ', i,j,pblhgt(i,j)
-            vent_ind(i,j) = 0.
+            ! PBL height is lower than the lowest model level...use
+            ! lowest model wind
+            spmean = SQRT(usig(i,j,1)**2 + vsig(i,j,1)**2)
+            vent_ind(i,j) = pblhgt(i,j) * spmean
           ENDIF
         ELSE
-          PRINT *, 'PBL Height <=0 in ventilation index'
+          PRINT *, 'WARNING:  PBL Height <=0 in ventilation index'
           vent_ind(i,j) = 0.
         ENDIF
       ENDDO
