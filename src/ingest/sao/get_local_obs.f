@@ -89,6 +89,7 @@ c
 	real*4  t(maxobs), td(maxobs), rh(maxobs), stnp(maxobs)
 	real*4  dd(maxobs), ff(maxobs), ddg(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs), alt(maxobs), vis(maxobs)
+        real*4  sea_temp(maxobs)
         integer*4  i4time_ob_a(maxobs), before, after
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_dupe(maxobs)
@@ -199,13 +200,16 @@ c
             if(recnum .gt. maxobs-ix+1)then
                 write(6,*)
      1              ' ERROR: exceeded maxobs limits in get_local_obs'
+     1              ,ix-1,recnum,(ix-1)+recnum,maxobs
+                write(6,*)' Try increasing "maxobs" in obs_driver.nl'
                 go to 590
             endif
 c
 c.....  Call the read routine.
 c
-	    call read_local(nf_fid, recNum, alt(ix),
-     &         pro(ix), td(ix), elev(ix), lats(ix), lons(ix),
+	    call read_local_obs(nf_fid, recNum, alt(ix),
+     &         pro(ix), sea_temp(ix), td(ix), 
+     &         elev(ix), lats(ix), lons(ix),       
      &         timeobs(ix), wx(ix), rh(ix), rh_time(ix),
      &         mslp(ix), stname(ix), p_time(ix), stnp(ix), 
      &         stn_type(ix), t_time(ix), t(ix), vis(ix),
@@ -295,14 +299,15 @@ c
 	   if( nanf( ff_time(i)   ) .eq. 1 ) ff_time(i)   = ibadflag
 	   if( nanf( gust_time(i) ) .eq. 1 ) gust_time(i) = ibadflag
 c
-	   if( nanf( vis(i)  ) .eq. 1 ) vis(i)   = badflag
-	   if( nanf( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
-	   if( nanf( t(i)    ) .eq. 1 ) t(i)     = badflag
-	   if( nanf( td(i)   ) .eq. 1 ) td(i)    = badflag
-	   if( nanf( dd(i)   ) .eq. 1 ) dd(i)    = badflag
-	   if( nanf( ff(i)   ) .eq. 1 ) ff(i)    = badflag
-	   if( nanf( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
-	   if( nanf( alt(i)  ) .eq. 1 ) alt(i)   = badflag
+	   if( nanf( vis(i)  ) .eq. 1 )    vis(i)   = badflag
+	   if( nanf( mslp(i) ) .eq. 1 )    mslp(i)  = badflag
+	   if( nanf( t(i)    ) .eq. 1 )    t(i)     = badflag
+	   if( nanf( td(i)   ) .eq. 1 )    td(i)    = badflag
+	   if( nanf( sea_temp(i)) .eq. 1 ) sea_temp(i) = badflag
+	   if( nanf( dd(i)   ) .eq. 1 )    dd(i)    = badflag
+	   if( nanf( ff(i)   ) .eq. 1 )    ff(i)    = badflag
+	   if( nanf( ffg(i)  ) .eq. 1 )    ffg(i)   = badflag
+	   if( nanf( alt(i)  ) .eq. 1 )    alt(i)   = badflag
 c
 	enddo !i
 c
@@ -490,6 +495,16 @@ c
 	   vis(i) = vis(i) * .001      !m to km
 	   vis(i) = 0.621371 * vis(i)  !km to miles
 	 endif
+
+c
+c..... Sea Surface Temperature
+c
+         seatemp_k = sea_temp(i)                         
+         if(seatemp_k .le. badflag) then          !  t bad?
+            seatemp_f = badflag                   !  bag
+         else
+            seatemp_f = k_to_f(seatemp_k)
+         endif
 c
 c
 c..... Fill the expected accuracy arrays.  Values are based on information
@@ -584,7 +599,7 @@ c
 c..... Other stuff.  
 c
 	 store_5ea(nn,2) = 0.0             ! solar radiation 
-	 store_5ea(nn,3) = 0.0             ! soil/water temperature
+	 store_5ea(nn,3) = 1.0 * fon       ! soil/water temperature (F)
 	 store_5ea(nn,4) = 0.0             ! soil moisture
 c
 	 store_6ea(nn,1) = 0.0             ! precipitation (in)
@@ -642,7 +657,7 @@ c
 c
          store_5(nn,1) = vis(i)                 ! visibility (miles)
          store_5(nn,2) = badflag                ! solar radiation 
-         store_5(nn,3) = badflag                ! soil/water temperature
+	 store_5(nn,3) = seatemp_f              ! soil/water temperature (F)
          store_5(nn,4) = badflag                ! soil moisture 
 c
          store_6(nn,1) = badflag                ! 1-h precipitation
