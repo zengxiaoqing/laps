@@ -242,28 +242,7 @@ sub wfo_localization{
   
   $goes = "g".$goes;
 
-#
-#  Lets make sure the (sample) cronfile for wfo is setup properly
-#  
-  if($ENV{FXA_HOME}){
-      if(-f "$LAPS_SRC_ROOT/util/cronfile"){
-	  open(CRON,"$LAPS_SRC_ROOT/util/cronfile");
-	  @cron = <CRON>;
-	  close(CRON);
-	  open(CRON,">$LAPS_SRC_ROOT/util/cronfile");
-          $match = "@PERL@";
-          foreach(@cron){
-	      if(/readenv\.sh/){
-		  print CRON $_ ;
-		  next;
-	      }
-	      $_ =~ s/($match\s+.*$)/\(\. \.\/readenv\.sh \; $1\)/;
-		 print CRON $_;
-	     
-	  }
-	  close(CRON);
-      }
-  }
+
 }
 #
 # This subroutine test the files $template and $newfile

@@ -59,7 +59,7 @@ $filename = sprintf "%4.4d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
 
 use File::Copy 'cp';
 
-cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename");
+cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename") if(-d $FXA_DATA_BACKUP);
 
 $sys = "$ENV{FXA_HOME}/bin/GridNotify.script Laps $filetime 0";
 print "running $sys\n";
