@@ -1296,7 +1296,7 @@ c
 c	ver_file = '../log/qc/laps_sfc.ver.'//filename(6:9)
 	ver_file = ver_file(1:len)//'qc/laps_sfc.ver.'//filename(6:9)
 	call s_len(ver_file, len)
-	open(iunit,file=ver_file(1:len),status='unknown')
+	open(iunit,file=ver_file(1:len),status='unknown',err=999)
 c
 	title = 'Temperature (deg F)'
 	ea = 1.00
@@ -1362,6 +1362,8 @@ c
 c.....  That's it.  Let go home.
 c
 	print *,' Normal completion of LAPSVANL'
+	return
+ 999	print *,'ERROR opening ',ver_file(1:len)
 	return
 c
 	end
