@@ -10,7 +10,7 @@
  SFC_MIX = 0,
  MOD_4DDA_1 = 0,
  MOD_4DDA_FACTOR = 0.02,
- T_REF = -47.0,
+ T_REF = -132.0,
  
  /
 c   
