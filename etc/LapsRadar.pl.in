@@ -92,14 +92,42 @@ select(STDOUT); $| = 1;
 #declare "my" variables
   my $true = 0;
   my $false = 1;
+  my $loc;
+
   my $FXA_HOME = $ENV{FXA_HOME};
+  if ($FXA_HOME eq "") {
+    $FXA_HOME = "/awips/fxa";
+  }
 
   my $FXA_LOCALIZATION_ROOT = $ENV{FXA_LOCALIZATION_ROOT};
+  if ($FXA_LOCALIZATION_ROOT eq "") {
+    $FXA_LOCALIZATION_ROOT = "/awips/fxa/data/localizationDataSets";
+  }
+
   my $FXA_INGEST_SITE = $ENV{FXA_INGEST_SITE};
+  if ($FXA_INGEST_SITE eq "") {
+    $loc = index($LAPS_DATA_ROOT, "KSC");
+    if ($loc != -1) {
+      $FXA_INGEST_SITE = "ER";
+    }    
+    $loc = index($LAPS_DATA_ROOT, "VDB");
+    if ($loc != -1) {
+      $FXA_INGEST_SITE = "WR";
+    }    
+    if ($FXA_INGEST_SITE eq "") {
+      print "Cannot identify Localization from $LAPS_DATA_ROOT...aborting";
+      exit;
+    }
+  }
+
   my $FXA_DATA = $ENV{FXA_DATA};
+  if ($FXA_DATA eq "") {
+    $FXA_DATA = "/data/fxa";
+  }
 
   my @oldrad;
   my $name;
+  my $value;
   my $homeRadar_U;
   my $homeRadar;
   my $prevRadar;
@@ -107,6 +135,7 @@ select(STDOUT); $| = 1;
   my @allrad;
   my @portinfo;
   my @lapsrad;
+  my $lapsradCnt;
   my $port;
   my $radNo;
   my $radNo_c;
@@ -116,23 +145,73 @@ select(STDOUT); $| = 1;
   my $currName;
   my $currName_U;
 
+  my @avail_radars;
+  my $avail_radar;
+  my $connect;
+  my $num_avail;
+  my $num_direct;
+  my $radname;
+  my @direct;
   my @latlon;
   my $line;
+  my $new_radar;
+  my @dir_radars;
+  my $radno;
+  my $numfiles;
+  my $dir_open;
+  my $curr_avail;
+  my @radars;
   my $radar;
   my $lat;
   my $lon;
   my $junk;
   my $junk1;
+  my $dist; 
   my $closest;
   my $lat_diff;
   my $lon_diff;
+  my @diff;
+  my @dir_diff;
+  my @sort_diff;
   my $lat_laps;
   my $lon_laps;
   my $found;
+  my $found_lat;
+  my $found_lon;
+  my $min;
+  my $loc_min;
+  my $radar_selected;
 
   my $version = 4;  # AWIPS base version number
   my $endWin = time;
   my $startWin = $endWin - 3600;  #look back 1 hour 
+  my $yr;
+  my $mo;
+  my $cmo;
+  my $day;
+  my $hr;
+  my $chr;
+  my $cmin;
+  my $cday;
+  ($junk, $min, $hr, $day, $mo, $yr, $junk, $junk, $junk) = gmtime($startWin);
+  $yr += 1900;
+  $mo += 1;
+  $cmo = sprintf("%02d", $mo);
+  $chr = sprintf("%02d", $hr);
+  $cmin = sprintf("%02d", $min);
+  $cday = sprintf("%02d", $day);
+  my $cStartWin = $yr.$cmo.$cday."_".$chr.$cmin;
+  print "Start of time window: $cStartWin\n";
+  ($junk, $min, $hr, $day, $mo, $yr, $junk, $junk, $junk) = gmtime($endWin);
+  $yr += 1900;
+  $mo += 1;
+  $cmo = sprintf("%02d", $mo);
+  $chr = sprintf("%02d", $hr);
+  $cmin = sprintf("%02d", $min);
+  $cday = sprintf("%02d", $day);
+  my $cEndWin = $yr.$cmo.$cday."_".$chr.$cmin;
+  print "End of time window: $cEndWin\n";
+
   my $inputDir;
   my $outputDir = "$LAPS_DATA_ROOT/lapsprd/rdr/001/raw";
 #=====================================================================
@@ -186,6 +265,171 @@ if($fxa_sys!=0){
   $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
 
 #=====================================================================
+# read file $LAPS_DATA_ROOT/static/vxx/radar.lst to determine $homeRadar and radars LAPS knows about
+  open(RADARLST, "$LAPS_DATA_ROOT/static/vxx/radar.lst");
+  
+  while (<RADARLST>) {
+    chomp($_);
+    push @lapsrad, $_;
+  }
+  my $lapsradarNo = scalar(@lapsrad);  # get number of elements in @lapsrad
+  close(RADARLST);
+
+  if ($lapsradarNo < 1) { #no radar.lst file, generate file with 10 radars closest to LAPS centerpoint
+                          #with the closest being first, and the 10th closest being last in the list
+
+#   open $LAPS_DATA_ROOT/static/nest7grid.parms and read grid_cen_lat_cmn and grid_cen_lon_cmn
+    open(LAPSCTR, "$LAPS_DATA_ROOT/static/nest7grid.parms") 
+      or die "Can't read $LAPS_DATA_ROOT/static/nest7grid.parms";
+    $found_lat = 0;
+    $found_lon = 0;
+    while (<LAPSCTR>) {
+      chomp $_;
+      $_ =~ tr/A-Z/a-z/;
+      ($name, $value) = split("=");
+
+      $loc = index($name, "grid_cen_lat_cmn");
+      if ($loc != -1) {
+        $found_lat = 1;
+        $lat_laps = $value;
+      }       
+     
+      $loc = index($name, "grid_cen_lon_cmn");
+      if ($loc != -1) {
+        $found_lon = 1;
+        $lon_laps = $value;
+      }       
+     
+      if ($found_lat == 1 && $found_lon == 1) {
+        last;
+      }
+    }
+    close(LAPSCTR);
+
+#   open file $FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt and read $lat_laps, $lon_laps
+#    open(LAPSCTR, "$FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt") or die "Can't get LAPS Center";
+#    while (<LAPSCTR>) {
+#      ($lat_laps, $lon_laps) = split(" ");
+#    }
+#    close(LAPSCTR);
+
+#   open file $FXA_HOME/data/localizationDataSets/$FXA_INGEST_SITE/radarsInUse.txt 
+#     to see which radars site has access to 
+    open(AVAIL,"$FXA_HOME/data/localizationDataSets/$FXA_INGEST_SITE/radarsInUse.txt") 
+      or die "Can't read radarsInUse.txt";
+    foreach (<AVAIL>) {
+      ($avail_radar, $junk, $connect) = split(" ");
+      $avail_radar =~ tr/a-z/A-Z/;
+      if ($connect eq "2") {
+        push @direct, $avail_radar;
+      } else { 
+        push @avail_radars, $avail_radar;
+      }
+    }
+    close(AVAIL);
+    $num_avail = @avail_radars;
+
+#   open file $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt (contains lat and lon of all radars)
+    open(LATLON,"$FXA_HOME/data/localization/nationalData/radarInfoMaster.txt") or die "Can't read radarInfoMaster.txt";
+    foreach (<LATLON>) {
+      ($new_radar, $lat, $lon, $junk) = split(" ");
+      $new_radar =~ tr/a-z/A-Z/;
+#     find $new_radar in @avail_radars
+      foreach $radname (@avail_radars) {
+        if ($radname eq $new_radar) {
+          $lat_diff = abs($lat_laps - $lat); 
+          $lon_diff = abs($lon_laps - $lon);
+          push @radars, $new_radar;
+          push @diff, ($lat_diff + $lon_diff);
+          last;
+        } 
+      }
+
+#     find $new_radar in @direct
+      foreach $radname (@direct) {
+        if ($radname eq $new_radar) {
+          $lat_diff = abs($lat_laps - $lat); 
+          $lon_diff = abs($lon_laps - $lon);
+          push @dir_radars, $new_radar;
+          push @dir_diff, ($lat_diff + $lon_diff);
+          last;
+        } 
+      }
+    }
+    close(LATLON);
+    $num_direct = @dir_radars;  #number elements in @dir_radars
+
+# now have @radars and @diff for radars in radarsInUse.txt
+# look for closest radar in @direct to use as home radar...it's direct connect
+    $min = 999999999.0;
+    for ($radno = 0; $radno < $num_direct; $radno++) {
+      if ($dir_diff[$radno] < $min) {
+        $loc_min = $radno;
+        $min = $dir_diff[$radno];
+      }
+    }
+
+    push @lapsrad, $dir_radars[$loc_min];
+    $lapsradCnt = @lapsrad;
+    $homeRadar_U = $dir_radars[$loc_min];
+
+#   add rest of radars (if they exist) from dir_radars to @radars
+    for ($radno = 0; $radno < $num_direct; $radno++) {
+      if ($radno != $loc_min) {
+        push @radars, $dir_radars[$radno];
+        push @diff, $dir_diff[$radno];
+      }
+    }
+
+    my $nRadars = 0;
+    my $radCnt = @radars;  #number elements in @radars
+    my $diffCnt = @diff;   #number of elements in @diff
+    if ($radCnt != $diffCnt) {
+      print "@radars and @diff have different number of elements!\n";
+      print "$LAPS_DATA_ROOT/static/vxx/radar.lst may be corrupt!\n";
+    }
+
+    $min = 999999999.0;
+    while($lapsradCnt < $radCnt + 1) {
+      $loc_min = -1;
+      $min = 99999999.0;
+      $loc = 0;
+
+      while ($loc < $radCnt) {
+        if ($diff[$loc] < $min) {
+          $loc_min = $loc;
+          $min = $diff[$loc];
+        }
+        $loc++;
+      }
+      if ($loc_min != -1) {
+        push @lapsrad, $radars[$loc_min];
+        $lapsradCnt = @lapsrad;
+        $diff[$loc_min] = 999999999.0;
+      }
+    }  
+
+# write  radars out to file $LAPS_DATA_ROOT/static/vxx/radar.lst 
+# @lapsrad should have the radars in radarsInUse.txt ordered by distance from Laps_Center_Point
+    open(RADARLST, ">$LAPS_DATA_ROOT/static/vxx/radar.lst");  # open for write 
+    foreach (@lapsrad) {
+      print RADARLST "$_\n";
+    }
+    close(RADARLST);
+
+  } 
+
+  $homeRadar_U = @lapsrad[0];
+  $homeRadar = $homeRadar_U;
+  $homeRadar =~ tr/A-Z/a-z/;
+  $lapsradarNo = scalar(@lapsrad);  # get number of elements in @lapsrad
+
+  print "homeRadar_U: $homeRadar_U\n";
+  print "Current Radars: @currad \n";
+
+  $radar_selected = 0;
+  $curr_avail = 0;
+#---------------------------------------------------------------------
 # read file ${FXA_LOCALIZATION_ROOT}/${FXA_INGEST_SITE}/portInfo.txt to see what radars on-line
   open(PORTINFO, "$FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/portInfo.txt") or die "Can't open portInfo.txt";
   my $lineNo = 1;
@@ -202,188 +446,203 @@ if($fxa_sys!=0){
   $numrad = scalar(@portinfo);  # get number of elements in @portinfo
 
   if ($numrad < 1) {
-    print "No radars available to process.\n";
-    exit;
+    print "No radars in portInfo.txt\n";
   } else {
     print "Radars on line: @portinfo \n";
-  }
 
 #---------------------------------------------------------------------
 # Determine which radars have "current" RPS lists 
 
-  opendir(RPS,"$FXA_DATA/radar/lists") or die "Can't open directory $FXA_DATA/radar/lists\n";
-  @allrad = readdir(RPS);
-  closedir(RPS);
+    opendir(RPS,"$FXA_DATA/radar/lists") or die "Can't open directory $FXA_DATA/radar/lists\n";
+    @allrad = readdir(RPS);
+    closedir(RPS);
 
-  my $newadd = 0;
-  my $status;
-  foreach (@portinfo) {
-    $port = $_;
-    foreach (@allrad) {
-      ($currName_U, $status) = split /\./;
-      if (($status eq "current") && ($currName_U eq $port)) {
-        @currad[$newadd] = $currName_U;
-        $newadd += 1;
+    my $newadd = 0;
+    my $status;
+    foreach (@portinfo) {
+      $port = $_;
+      foreach (@allrad) {
+        ($currName_U, $status) = split /\./;
+        if (($status eq "current") && ($currName_U eq $port)) {
+          @currad[$newadd] = $currName_U;
+          $newadd += 1;
+        }
       }
     }
-  }
-  $numrad = scalar(@currad);  # get number of elements in @currad
+    $numrad = scalar(@currad);  # get number of elements in @currad
 
-  if ($numrad < 1) {
-    print "No radars with current RPS lists to process.\n";
-    exit;
-  } else {
-    print "Radars available: @currad \n";
-  }
-
-#---------------------------------------------------------------------
-# read file $LAPS_DATA_ROOT/static/vxx/radar.lst to determine $homeRadar and radars LAPS knows about
-  open(RADARLST, "$LAPS_DATA_ROOT/static/vxx/radar.lst");
-  
-  while (<RADARLST>) {
-    chomp($_);
-    push @lapsrad, $_;
-  }
-  my $lapsradarNo = scalar(@lapsrad);  # get number of elements in @lapsrad
-  close(RADARLST);
-  open(RADARLST, ">>$LAPS_DATA_ROOT/static/vxx/radar.lst");  # open for append
-
-  if ($lapsradarNo < 1) { #no radar.lst file, generate file with radar closest to LAPS centerpoint
-
-#   open file $FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt and read $lat_laps, $lon_laps
-    open(LAPSCTR, "$FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt") or die "Can't get LAPS Center";
-    while (<LAPSCTR>) {
-      ($lat_laps, $lon_laps) = split(" ");
+    if ($numrad < 1) {
+      print "No radars with current RPS lists to process.\n";
+    } else {
+      print "Radars available: @currad \n";
+      $radar_selected = 1;
     }
-    close(LAPSCTR);
-
-#   open file $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt (contains lat and lon of all radars)
-    open(LATLON,"$FXA_HOME/data/localization/nationalData/radarInfoMaster.txt") or die "Can't read radarInfoMaster.txt";
-    $lat_diff = 91;
-    $lon_diff = 361;
-    foreach (<LATLON>) {
-      ($radar, $lat, $lon, $junk) = split(" ");
-      if ((abs($lat_laps - $lat) <= $lat_diff) && (abs($lon_laps - $lon) <= $lon_diff)) {
-        $closest = $radar;
-        $lat_diff = abs($lat_laps - $lat);
-        $lon_diff = abs($lon_laps - $lon);
-      }
-    }
-    close(LATLON);
-    $closest =~ tr/a-z/A-Z/;
-
-# write closest radar out to file $LAPS_DATA_ROOT/static/vxx/radar.lst
-    print RADARLST "$closest\n";
-    push @lapsrad, $closest;
-    $homeRadar_U = $closest;
-
-  } else {  #file radar.lst already exists and @lapsrad is full
-    $homeRadar_U = @lapsrad[0];
   }
-
-  $homeRadar = $homeRadar_U;
-  $homeRadar =~ tr/A-Z/a-z/;
-  $lapsradarNo = scalar(@lapsrad);  # get number of elements in @lapsrad
-
-  print "homeRadar_U: $homeRadar_U\n";
-  print "Current Radars: @currad \n";
-
-  $endWin = time;
-  $startWin = $endWin - 3600;  #look back 1 hour 
 
 #---------------------------------------------------------------------
   if ($version == 4) { 
-#   see if $homeRadar is on line, if not, choose closest radar to Laps Center
     $found = $false;
-    foreach (@currad) {
-      chomp($_);
-      if (($homeRadar_U eq $_) && ($found == $false)) {
-        $found = $true;
-      }
-    }
-
-    if ($found == $false) {  #$homeRadar is not on line...choose closest on-line radar to Laps Center
-# open file $FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt and read $lat_laps, $lon_laps
-      open(LAPSCTR, "$FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt") or die "Can't get LAPS Center";
-      while (<LAPSCTR>) {
-        ($lat_laps, $lon_laps) = split(" ");
-      }
-      close(LAPSCTR);
-
-# open file $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt (contains lat and lon of all radars)
-      open(LATLON,"$FXA_HOME/data/localization/nationalData/radarInfoMaster.txt") or die "Can't read radarInfoMaster.txt";
-      $lat_diff = 91;
-      $lon_diff = 361;
+    if ($radar_selected == 1) {  # radars are connected to port
+#     see if $homeRadar is on line, if not, choose closest radar to Laps Center
       foreach (@currad) {
         chomp($_);
-        $currName = $_;
-        $currName =~ tr/A-Z/a-z/;
-        seek (LATLON, 0, 0);
-        while ($line = <LATLON>) {
-          ($radar, $lat, $lon, $junk) = split(" ", $line);
-          if ($radar eq $currName) {
-            if ((abs($lat_laps - $lat) <= $lat_diff) && (abs($lon_laps - $lon) <= $lon_diff)) {
-              $closest = $radar;
-              $lat_diff = abs($lat_laps - $lat);
-              $lon_diff = abs($lon_laps - $lon);
+        if (($homeRadar_U eq $_) && ($found == $false)) {
+#         check to see files available and current
+          $radar = $_;
+          $radar =~ tr/A-Z/a-z/;
+          $dir_open = opendir(RADARDIR,"$FXA_DATA/radar/$radar/Z/elev0_5/res2/level16");
+          if (! $dir_open) {
+            print "Can't open directory $FXA_DATA/radar/$radar/Z/elev0_5/res2/level16\n";
+            next;
+          } else {
+            @allrad = readdir(RADARDIR);
+            closedir(RADARDIR);
+
+            $numfiles = 0;
+            foreach (@allrad) {
+              if ((substr($_,0,1) ne ".") && ($_ =~ /^\d/)) {
+                $numfiles++;
+              }
+            }
+            if ($numfiles > 0) {
+              $found = $true;
+#             see if files are within time window
+              foreach (@allrad) {
+                if ((substr($_,0,1) ne ".") && ($_ =~ /^\d/)) {
+                  if ((substr($_,0,13) ge $cStartWin) &&
+                      (substr($_,0,13) le $cEndWin)) {
+                    print "File in time window\n";
+                    $curr_avail = 1;
+                    $#currad = -1;
+                    $currad[0] = $homeRadar_U;
+                    $radar = $homeRadar_U;
+                    last;
+                  }
+                }
+              }
+              if ($curr_avail == 1)  {
+                last;
+              }
+            }
+          }
+        }
+      }
+
+      if ($found == $false) {  #$homeRadar is not on line...choose closest on-line radar from @lapsrad
+        print "homeRadar is not on line\n";
+        for ($radno = 0; $radno < $numrad; $radno++) {
+          foreach (@lapsrad) {
+            chomp($_);
+            if (($currad[$radno] eq $_) &&  ($_ ne $homeRadar_U) && ($found == $false)) {
+#             check to see files available and current
+              $radar = $_;
+              $radar =~ tr/A-Z/a-z/;
+              $dir_open = opendir(RADARDIR,"$FXA_DATA/radar/$radar/Z/elev0_5/res2/level16");
+              if (! $dir_open) {
+                print "Can't open directory $FXA_DATA/radar/$radar/Z/elev0_5/res2/level16\n";
+                next;
+              } else {
+                @allrad = readdir(RADARDIR);
+                closedir(RADARDIR);
+
+                $numfiles = 0;
+                foreach (@allrad) {
+                  print "$radar $_\n";
+                  if ((substr($_,0,1) ne ".") && ($_ =~ /^\d/)) {
+                    $numfiles++;
+                  }
+                }
+                if ($numfiles > 0) {
+#                 see if files are within time window
+                  foreach (@allrad) {
+                    if ((substr($_,0,1) ne ".") && ($_ =~ /^\d/)) {
+                      if ((substr($_,0,13) ge $cStartWin) &&
+                          (substr($_,0,13) le $cEndWin)) {
+                        print "File in time window\n";
+                        $closest = $currad[$radno];
+                        $#currad = -1;
+                        $closest =~ tr/a-z/A-Z/;
+                        $currad[0] = $closest;
+                        $radar = $closest;
+                        $found = $true;
+                        $curr_avail = 1;
+                        last;
+                      }
+                    }
+                  }
+                  if ($curr_avail == 1) {
+                    last;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }  # if $radar_selected == 1
+
+    if ($found == $false) {  # no known radars connected via port...check out SBN connections
+
+      foreach (@lapsrad) {
+        $radar = $_;
+        $radar =~ tr/A-Z/a-z/;
+        $dir_open = opendir(RADARDIR,"$FXA_DATA/radar/$radar/Z/elev0_5/res2/level16"); 
+        if (! $dir_open) {
+          print "Can't open directory $FXA_DATA/radar/$radar/Z/elev0_5/res2/level16\n";
+          next;
+        } else {
+          @allrad = readdir(RADARDIR);
+          closedir(RADARDIR);
+
+          $numfiles = 0;
+          foreach (@allrad) {
+            if ((substr($_,0,1) ne ".") && ($_ =~ /^\d/)) {
+              $numfiles++;
+            }
+          }
+
+          if ($numfiles > 0) {
+#           see if files are within time window
+            foreach (@allrad) {
+              if ((substr($_,0,1) ne ".") && ($_ =~ /^\d/)) {
+                if ((substr($_,0,13) ge $cStartWin) &&
+                    (substr($_,0,13) le $cEndWin)) {
+                  print "File in time window\n";
+                  $curr_avail = 1;
+                  last;
+                }
+              }
+            }
+            if ($curr_avail == 1) {
+              $#currad = -1;
+              $radar =~ tr/a-z/A-Z/;
+              $currad[0] = $radar;
+              $radar_selected = 1;
               last;
             }
           }
         }
       }
-      close(LATLON);
-
-      if($closest eq ''){
-        print "Error finding @currad in $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt\n";
-        print "No radar processed.\n";
-        exit;
-      } else {
-        $#currad = -1;
-        $closest =~ tr/a-z/A-Z/;
-        @currad[0] = $closest;
-      }
-
-    } else {  #$homeRadar is on-line
-      $#currad = -1;
-      @currad[0] = $homeRadar_U;
     }
   }  #if version == 4
 
 #---------------------------------------------------------------------
-  foreach (@currad) {
-    $radar = $_;
-
-#   find $radar in @lapsrad...if not there, add it
-    $lineNo = 0;
-    $radNo = 0;
-    foreach (@lapsrad) {
-      $lineNo++;
-      if ($radar eq $_) {
-        $radNo = $lineNo;
-      }
-    }
+  if ($radar_selected == 1) {  # radar identified...name is in @currad
     
-    if ($radNo == 0) {  # $radar not in @lapsrad...add it to radar.lst and @lapsrad
-      $lineNo++;
-      $radNo = $lineNo;
-      print RADARLST "$radar\n";
-      push @lapsrad, $radar;
-      $lapsradarNo++;
-    } 
-   
     $radar =~ tr/A-Z/a-z/;
     $inputDir = "$FXA_DATA/radar/$radar/Z/elev0_5/res2/level16";
 
-    if ($radNo < 10) {
-      $radNo_c = "00".$radNo;
-    } elsif ($radNo < 100) {
-      $radNo_c = "0".$radNo;
-    } else {
-      $radNo_c = $radNo."/";
-      chop($radNo_c);
-    }
     if ($version == 4) {
       $radNo_c = "001";
+    } else {
+      if ($radNo < 10) {
+        $radNo_c = "00".$radNo;
+      } elsif ($radNo < 100) {
+        $radNo_c = "0".$radNo;
+      } else {
+        $radNo_c = $radNo."/";
+        chop($radNo_c);
+      }
     }
 
     $outputDir = "$LAPS_DATA_ROOT/lapsprd/rdr/$radNo_c/raw";
@@ -402,74 +661,76 @@ if($fxa_sys!=0){
     $sys = "$FXA_HOME/bin/$exe $radar $startWin $endWin $inputDir $outputDir";
     &forksub($sys,$lockfile);
 
-  }  # end while (@currad)
-
-  close(RADARLST);
 #---------------------------------------------------------------------
   
-}
 #=====================================================================
 #
 # run remap_polar_netcdf.exe process
 #
 
-$exe = "remap_polar_netcdf.exe";
-$log = $exe;
-$log =~ s/\..*$/\.log\.$hhmm/;
-open(SAVEOUT,">&STDOUT");
-open(SAVEERR,">&STDERR");
-open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
-open(STDERR, ">&STDOUT") || die "Can't dup stdout";
-select(STDERR); $| = 1;
-select(STDOUT); $| = 1;
+    $exe = "remap_polar_netcdf.exe";
+    $log = $exe;
+    $log =~ s/\..*$/\.log\.$hhmm/;
+    open(SAVEOUT,">&STDOUT");
+    open(SAVEERR,">&STDERR");
+    open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
+    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+    select(STDERR); $| = 1;
+    select(STDOUT); $| = 1;
 #
 # Make sure the requested program exists
 #
-unless(-x "$LAPSROOT/bin/$exe"){
-    die "Program $LAPSROOT/bin/$exe not found or not executable";
-}
+    unless(-x "$LAPSROOT/bin/$exe"){
+      die "Program $LAPSROOT/bin/$exe not found or not executable";
+    }
 #
 # Look for a previous lock for this exe in the log directory
 #
 
-my(@locks);
-opendir(LOCKDIR,"$LAPS_LOG_PATH");
-@locks = grep /^\.lock$exe/, readdir(LOCKDIR);
-closedir(LOCKDIR);
+    my(@locks);
+    opendir(LOCKDIR,"$LAPS_LOG_PATH");
+    @locks = grep /^\.lock$exe/, readdir(LOCKDIR);
+    closedir(LOCKDIR);
 
-foreach(@locks){
-    $_ =~ /^\.lock$exe\.(\d+)$/;
-    my $jpid = $1;
-    open(LFH,"$LAPS_LOG_PATH/$_");
-    my $cid = <LFH>;
-    close(LFH);
-    next unless ($cid>1);
-    open(PS,"ps -ef |");
-    my @ps = <PS>;
-    close(PS);
+    foreach(@locks){
+      $_ =~ /^\.lock$exe\.(\d+)$/;
+      my $jpid = $1;
+      open(LFH,"$LAPS_LOG_PATH/$_");
+      my $cid = <LFH>;
+      close(LFH);
+      next unless ($cid>1);
+      open(PS,"ps -ef |");
+      my @ps = <PS>;
+      close(PS);
 #
 # Kill any children of the child
 #
-    foreach(@ps){
-	if ($_ =~ /\s+(\d+)\s+$cid\s+/){
-	    print "Killing process $1\n";
-	    kill -9,$1;
-	}
-    }
+      foreach(@ps){
+        if ($_ =~ /\s+(\d+)\s+$cid\s+/){
+          print "Killing process $1\n";
+          kill -9,$1;
+        }
+      }
 #
 # Kill the child
 #    
-    print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
-    kill -9,$cid if($cid>0);
-    unlink "$LAPS_LOG_PATH/$_";
+      print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
+      kill -9,$cid if($cid>0);
+      unlink "$LAPS_LOG_PATH/$_";
+    }
+
+    $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
+
+    $sys = "$LAPSROOT/bin/$exe ";
+
+    &forksub($sys,$lockfile);
+
+  } else { #if $radar_selected == 1
+    print "No radar data available.\n";
+  }
+
+  exit;
 }
-
-$lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
-
-$sys = "$LAPSROOT/bin/$exe ";
-
-&forksub($sys,$lockfile);
-exit;
 
 #=====================================================================
 
