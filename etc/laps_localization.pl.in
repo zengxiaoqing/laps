@@ -407,7 +407,7 @@ sub wfo_localization{
       
       foreach (@template)
       {
-	  $_ =~ s/\$FXA_DATA/$FXA_DATA/;
+	  $_ =~ s/\$FXA_DATA/$FXA_DATA/g;
 	  if(/standard_latitude\s*=/){
 	      print OUTFILE " standard_latitude=$lat,\n";
 	  }elsif(/standard_longitude\s*=/){

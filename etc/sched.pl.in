@@ -48,9 +48,9 @@ my @LAPS_EXE = qw(lga.exe obs_driver.x sfc_qc.exe
 my $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
 
-$ENV{PATH}.=":@NETCDF@/bin";
 
 my $fxa_sys =  &Get_env'fxa; #'
+$ENV{PATH}.=":@NETCDF@/bin";
 
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};

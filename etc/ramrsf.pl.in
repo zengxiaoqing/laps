@@ -45,47 +45,72 @@ print "$0 running  for $fname\n";
 my $ftime;
 for($ftime=0;$ftime<=$flast;$ftime+=$ffreq){
 
-    my $head = "$modelout/$fname.a$ftime"."s.head";
-    my $size = 0;
-    my($cnt) = 0;
-    while($size < 4400){
-        $cnt++;
+  my $head = "$modelout/$fname.a$ftime"."s.head";
+  my $size = 0;
+  my($cnt) = 0;
+  while($size < 4400){
+    $cnt++;
 #        print "Looking for $head\n";
-	stat($head);
-        $size = -s _;
-        sleep(60) if($size < 4400 && $cnt < $timeout);
-        last if($cnt>=$timeout);
-    }
-    if($cnt>=$timeout){
-      print "Timed out while waiting for file $head"; 
-      last;
-    }
-    chdir("$LAPSROOT/model/usr");
+    stat($head);
+    $size = -s _;
+    sleep(60) if($size < 4400 && $cnt < $timeout);
+    last if($cnt>=$timeout);
+  }
+  if($cnt>=$timeout){
+    print "Timed out while waiting for file $head"; 
+    last;
+  }
+  chdir("$LAPSROOT/model/usr");
 
-    open(LPTR,"lapsinterface.nl");
-    my @lapsinterface=<LPTR>;
-    close(LPTR);
-    open(LPTR,">lapsinterface.nl");
-    foreach(@lapsinterface){
-	if(/^\s*anpref_in/){
-            my $anpref = $head;
-	    $anpref =~ s/\.head//;
-	    print LPTR " anpref_in=\'$anpref\',\n";
-	    next;
-	}
-	print LPTR $_;
-    }
-    close(LPTR);
+  open(LPTR,"lapsinterface.nl");
+  my @lapsinterface=<LPTR>;
+  close(LPTR);
+  my $i;
+    
+  for($i=0;$i<=$#lapsinterface;$i++){
+    next if($lapsinterface[$i] =~ /^\s*&/);
+    next if($lapsinterface[$i] =~ /^\s*\//);
+    next if($lapsinterface[$i] =~ /^[\!c]/i);
 
-    run_sys::run_sys($makeprods);
+    
+    if($lapsinterface[$i] =~ /^\s+use_for_display\s*=(.*)$/i){
+      my $val = $1;
+      $i++;
+      while($lapsinterface[$i++]=~/^\s*([\.\S\.,].*)$/){
+	$val.=$1;
+      }
+      $i--;
+      @use_for_display = split(',',$val);
+    }
+
+  }
+  
+  open(LPTR,">lapsinterface.nl");
+  foreach(@lapsinterface){
+    if(/^\s*anpref_in/){
+      my $anpref = $head;
+      $anpref =~ s/\.head//;
+      print LPTR " anpref_in=\'$anpref\',\n";
+      next;
+    }
+    print LPTR $_;
+  }
+  close(LPTR);
+
+  run_sys::run_sys($makeprods);
+
+
 #
 # Insert command to send files to remote machine here.
 #
+#  foreach(@use_for_display){
+#    if($_=~ /true/){
 #    $sys = "/bin/sh -c /awips/fxa/etc/sendLAPS.sh";
 #    &run_sys($sys);
 #    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/xferData.pl";
 #    &run_sys($sys);
-    
+#    }
+#  }
 
 }
 

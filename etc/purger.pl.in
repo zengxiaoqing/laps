@@ -52,8 +52,10 @@ if($opt_r){
 if($min_files>0){
     $clean_dirs{lga} = (0.5<$hist_time)?0.5:$hist_time;
     $clean_dirs{lgb} = (0.5<$hist_time)?0.5:$hist_time;
-    $clean_dirs{ram} = (0.75<$hist_time)?0.75:$hist_time;
-    $clean_dirs{rsf} = (0.75<$hist_time)?0.75:$hist_time;
+    $clean_dirs{ram} = (0.5<$hist_time)?0.5:$hist_time;
+    $clean_dirs{rsf} = (0.5<$hist_time)?0.5:$hist_time;
+    $clean_dirs{fua} = (0.5<$hist_time)?0.5:$hist_time;
+    $clean_dirs{fsf} = (0.5<$hist_time)?0.5:$hist_time;
 
     $clean_dirs{lcv} = 2.1;
     $clean_dirs{l1s} = 2.1;
@@ -108,7 +110,7 @@ foreach $dir (keys(%clean_dirs)){
     foreach $file (sort @filelist){
         stat("$dir/$file");
         $age = -M _;
-
+	next if(-d "$dir/$file");
 #        print "$file $age\n";
 
         if($age > $clean_dirs{$dir} && $i >= $min_files){

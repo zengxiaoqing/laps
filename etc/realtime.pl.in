@@ -348,7 +348,7 @@ unless($opt_q>0){
     for($i=1;$i<=$#ingrid;$i++){
 	if($ingrid[$i]>$ingrid[$i-1]){
 	    my $cnt=0;
-	    while($cnt<30 && ! defined($nfiles{0})){
+	    while($cnt<15 && ! defined($nfiles{0})){
 		sleep(60) if($cnt>0);
 		%nfiles = &valid_bndys($rtime,$runlength,"$lapsdataroot[$i]/lapsprd/dprep","LPS");
 		$cnt++;
