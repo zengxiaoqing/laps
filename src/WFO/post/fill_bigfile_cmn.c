@@ -123,9 +123,11 @@ int extractLAPSdata(int *cdfId_in, char *prevFilename, PARAMETER_LIST_T paramInf
     cdfId = *cdfId_in;
     if (strcmp(filename, prevFilename) != 0) {  /* new file */
       ncclose(cdfId);
+/*    free section   commented out because dies on Linux 10-25-00 LW 
       free(data);
       free(LAPSinv);
       free(level);
+*/
 
       if( access(filename, F_OK) != 0 ) {
         fprintf(stdout,"The LAPS file %s does not exist\n",filename);
