@@ -500,9 +500,13 @@ c
      1                       ,bad_t,bad_td,bad_u,bad_v,bad_p
      1                       ,bad_mp,bad_th,bad_the
      1                       ,bad_vis,bad_tb8
-     1                       ,thresh_t,thresh_td,thresh_mslp)
+     1                       ,thresh_t,thresh_td,thresh_mslp
+     1                       ,sfc_nl_parms,istatus)
 
        implicit none
+
+       real    badflag
+       include 'laps_sfc.inc'
 
        include 'grid_fname.cmn'                          !grid_fnam_common
        integer use_lso_qc, skip_internal_qc, itheta
@@ -512,6 +516,7 @@ c
        real    bad_mp,bad_th,bad_the
        real    bad_vis,bad_tb8
        real    thresh_t,thresh_td,thresh_mslp
+       real    rms_wind
 
        integer istatus
        
@@ -521,7 +526,8 @@ c
      1                              bad_t,bad_td,bad_u,bad_v,bad_p,
      1                              bad_mp,bad_th,bad_the,
      1                              bad_vis,bad_tb8,
-     1                              thresh_t,thresh_td,thresh_mslp
+     1                              thresh_t,thresh_td,thresh_mslp,
+     1                              rms_wind
 
        character*150    static_dir,filename
        integer len_dir
@@ -534,6 +540,8 @@ c
        open(1,file=filename,status='old',err=900)
        read(1,surface_analysis,err=901)
        close(1)
+
+       sfc_nl_parms%rms_wind = rms_wind
 
        istatus = 1
        return
