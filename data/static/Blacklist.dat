@@ -1,4 +1,4 @@
- 00050
+ 00054
  KFCS                  003  ALT  STP  MSL
  WGGNS                 003  TMP  DEW  HUM
  SABS2                 001  ALT  
@@ -18,6 +18,10 @@
  KMRF                  003  ALT  STP  MSL
  KGDP                  003  ALT  STP  MSL
  FLU                   003  ALT  STP  MSL
+ CRL                   003  ALT  STP  MSL
+ RVF                   003  ALT  STP  MSL
+ SMT                   003  ALT  STP  MSL
+ CHPTA                 003  ALT  STP  MSL
  FMNTN                 003  ALT  STP  MSL
  AP408                 001  ALT
  CMP01                 001  ALT
