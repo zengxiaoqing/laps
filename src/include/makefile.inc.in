@@ -1,4 +1,4 @@
-# 
+# Used by configure to create makefile.inc 
 # 
 #
 INSTALLROOT=@prefix@
