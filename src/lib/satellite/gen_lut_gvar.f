@@ -82,8 +82,9 @@ c
       Integer     nijout
       Integer     ispec
       Integer     lend
-      Integer     iwrite 
-      data iwrite/1/
+
+      logical     lwrite 
+      data lwrite/.false./
 
       Integer     linestart,lineend
       Integer     elemstart,elemend
@@ -424,7 +425,7 @@ c
          print*,'Found ',nijout,' points outside domain'
       endif
 
-      if(iwrite.eq.1)then
+      if(lwrite)then
 
          do j = 1,ny_l,10
          do i = 1,nx_l,10

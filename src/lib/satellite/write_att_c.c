@@ -1,3 +1,6 @@
+#ifdef hpux
+#define _INCLUDE_POSIX_SOURCE
+#endif
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -19,12 +19,13 @@ C
       include 'netcdf.inc'
 
       lenf=index(filename,' ')-1
+      print*,'opening ',filename(1:lenf)
       nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
 
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ',filename(1:lenf)
-        istatus=-1
+        istatus=1
         goto 100
       endif
 C
@@ -132,7 +133,7 @@ c
          goto 100
       endif
 C
-      istatus = 0
+      istatus=0
 100   return
       end
 c

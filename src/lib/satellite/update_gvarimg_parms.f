@@ -344,10 +344,13 @@ c
 c
 c read header of current 11u gvarimage
 c
-      write(6,*)'Reading wfo cdf header = ',chtype(1:nn)
+      write(6,*)'calling get_attribute_wfo ',chtype(1:nn)
       call get_attribute_wfo(cfname_sat,rlat,rlon,dx,dy,nx,ny,lstatus)
-      if(lstatus .ne. 0)then
+      if(lstatus .lt. 0)then
          write(6,*)'Error getting wfo attributes = ',chtype(1:nn)
+         goto 900
+      elseif(lstatus.gt.0)then
+c        print*,'No attributes returned from get_attribute_wfo'
          goto 900
       endif
 

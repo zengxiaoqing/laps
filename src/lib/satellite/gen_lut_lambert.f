@@ -107,6 +107,8 @@ c
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
 
+      logical     lwrite
+      data lwrite /.false./
       logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98)
       data lfirst /.false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false.,
@@ -130,9 +132,10 @@ c
          call get_wfo_nav_parms(path_to_raw_sat(kchl,jtype,isat),
      &ct,rla1,rlo1,dx,dy,nx3,ny3,istatus_wp)
 
-         if(istatus_wp.le.0)then
+         if(istatus_wp.eq.1)then
 
             print*,'Warning, using namelist values for wfo mapping'
+            print*,'because new wfo nav parameters were not obtained'
             rla1 = r_la1(jtype,isat)
             rlo1 = r_lo1(jtype,isat)
 
@@ -163,7 +166,9 @@ c
 
 55          continue
 
-         elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
+         elseif(istatus_wp.eq.0)then
+
+            if(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
             if(.not.lfirst(jtype,isat))then
                 ct='ir'
@@ -173,6 +178,11 @@ c
                 goto 1000
             endif
 
+            endif
+
+         else
+            print*,'Error returned from get_wfo_nav_parms'
+            goto 1000
          endif
 
 c not wfo data type
@@ -338,11 +348,13 @@ c
       enddo
       enddo
 
-      do i = 1,nx_l,10
-      do j = 1,ny_l,10
-         write(6,*)'i,j,ri,rj: ',i,j,ri_laps(i,j),rj_laps(i,j)
-      enddo
-      enddo
+      if(lwrite)then
+        do i = 1,nx_l,10
+        do j = 1,ny_l,10
+          print*,'i,j,ri,rj: ',i,j,ri_laps(i,j),rj_laps(i,j)
+        enddo
+        enddo
+      endif
 
       call get_directory('static',path,n1)
       path=path(1:n1)//'/lvd/'
