@@ -52,13 +52,13 @@ sub help_sub{
     print "   --which_type = Specifies localization for either LAPS or WRFSI\n";
     print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
     print "   --satid    = g8 or g10 (guessed based on -100.0W)\n";
-    print "   --no_ggm   = if defined (ie., ='t') then localization does not run gridgen_model\n";
+    print "   --no_ggm   = if defined then localization does not run gridgen_model\n";
     print "   --quiet    = Do not query user for verification\n";
     print "   --help     = print this message and exit\n";
     exit;
 }
-umask 002;
 
+umask 002;
 
 my $thisdir = 'pwd';
 chomp($thisdir);
@@ -76,28 +76,28 @@ $DATA_ROOT = "@prefix@/data" unless($DATA_ROOT);
 $INSTALL_ROOT="@prefix@" unless($INSTALL_ROOT);
 
 my $namelist;
+
 if( $WHICH_TYPE eq "laps"){
 
    print "Preparing a LAPS localization \n";
-
    $ENV{LAPS_DATA_ROOT} = $DATA_ROOT;
    $namelist = "nest7grid.parms";
 
 }elsif( $WHICH_TYPE eq "wrfsi"){
    
    print "Preparing a WRFSI localization \n";
-
    $ENV{MOAD_DATAROOT}=$DATA_ROOT;
    $namelist = "wrfsi.nl";
 
 }else{
 
-   print "input and environment variables are insufficient to decide\n";
-   print "which localization is desired. Terminating\n";
+   print "You need to use --which_type to decide\n";
+   print "which localization you desire (laps or wrfsi). Terminating\n";
    exit;
 }
 
 require "$INSTALL_ROOT/etc/run_sys.pm";
+require "$INSTALL_ROOT/etc/laps_tools.pm";
 
 my $FXA_DATA = $ENV{"FXA_DATA"};
 
@@ -151,6 +151,20 @@ if($xdim <=0 || $ydim <= 0 || $zdim<=0){
   exit -1;
 }
 
+my @plines;
+if( $WHICH_TYPE eq "laps"){
+    if(-e "$DATA_ROOT/static/pressures.nl"){
+       open(PRES,"$DATA_ROOT/static/pressures.nl");
+       @plines = <PRES>;
+       close (PRES);
+       $zdim = $#plines-2;
+       &laps_tools::update_nl($DATA_ROOT,"nest7grid.parms","NK_LAPS",$zdim);
+    }else{
+       print " ********** WARNING ***************\n";
+       print "could not find file pressures.nl in $DATA_ROOT/static\n";
+       print "check nest7grid.parms to insure nk_laps is properly set\n";
+    }
+}
 #
 # Edit the cdl files for xdim and ydim
 #
@@ -527,7 +541,7 @@ sub static_parms_to_cdl{
    foreach (@nav_stuff) {
      $sys="ncdump -v grid_type $LAPS_DATA_ROOT/static/static.nest7grid | grep $_ 1> $OUT_FILE ";
      run_sys::run_sys($sys,1);
-     if(-e "$LAPS_DATA_ROOT/log/nav.dat"){ last;}
+     if(-e "$LAPS_DATA_ROOT/log/nav.dat" && -s "$LAPS_DATA_ROOT/log/nav.dat"){ last;}
    }
 #reformat the grid_type output in nav.dat
    open(NAV,"$LAPS_DATA_ROOT/log/nav.dat");
@@ -542,7 +556,7 @@ sub static_parms_to_cdl{
    my $cdfvar;
    foreach (@nav_stuff) {
       $cdfvar = "\"$_ =\"";
-      print "cdfvar = $cdfvar\n";
+#     print "cdfvar = $cdfvar\n";
       $sys="ncdump -v $_ $LAPS_DATA_ROOT/static/static.nest7grid | grep $cdfvar 1>> $OUT_FILE ";
       run_sys::run_sys($sys,1);
    }

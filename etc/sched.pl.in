@@ -24,7 +24,11 @@
 #
 # -a                   Run for archive time, specified by number of seconds since
 #                      Jan 1 1970 at 0000 UTC
-#             
+#
+# -A                   Run for input analysis time specified as dd-mmm-yyyy-hhmm
+#                      which can also be a substitute input for archive time
+#                      Eg., 28-Aug-2002-1200
+#
 # -d                   Delay in hours (lag time or displaced real-time)
 #
 # -e                   Extend time in hours (allow for long runs beyond cycle time)
@@ -46,6 +50,8 @@
 # -l                   Write logs in LAPS_DATA_ROOT/log, even if on AWIPS
 #
 # -p T                 Advance analyses by T minutes for balanced output at systime + T
+#
+# -v                   Run verification binaries 
 
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
@@ -56,13 +62,24 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p);
+            $opt_s $opt_l $opt_p $opt_v $opt_A);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:n:wslp:');
+getopts('d:c:a:rm:t:e:q:n:A:wslvp:');
 
 my $initial_time = time();
+
+my $LAPSROOT=shift || die "LAPS root directory required\n";
+
+$ENV{LAPS_DATA_ROOT} = shift ;
+$ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
+my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+
+require "$LAPSROOT/etc/laps_tools.pm";
+my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project_common",$LAPS_DATA_ROOT);
+my $c8_project = uc @c8_project[0];
+
 #
 # List here the laps products to be executed in the order that they should 
 # be executed.
@@ -79,6 +96,15 @@ if($opt_s){ # "surface only"
                   ingest_lrs.exe lvd_sat_ingest.exe 
                   laps_sfc.x);
 
+}elsif($c8_project eq "AIRDROP"){
+    @LAPS_EXE = qw(lga.exe
+                   wind.exe laps_sfc.x
+                   temp.exe cloud.exe
+                   lq3driver.x deriv.exe
+                   lsm5.exe
+                   qbalpe.exe);
+
+
 }else{      # Full product set
     @LAPS_EXE = qw(lga.exe 
                   ingest_pro.exe obs_driver.x sfc_qc.exe
@@ -91,18 +117,17 @@ if($opt_s){ # "surface only"
 		  lsm5.exe qbalpe.exe lapsprep.exe);
 }
 
+if(defined $opt_v){
+   push(@LAPS_EXE,"gen_verif_prof.exe");
+   push(@LAPS_EXE,"gen_verif_prof_bal.exe");
+   push(@LAPS_EXE,"gen_verif_raob.exe");
+}
 my @WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
 
-my $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
-
 
 my $fxa_sys =  &Get_env'fxa; #'
 $ENV{PATH}.=":@NETCDF@/bin";
-
-$ENV{LAPS_DATA_ROOT} = shift ;
-$ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
-my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 
 my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cycle_time_cmn');
 $cycle_time[0]=~/^(\d+),/;
@@ -118,9 +143,19 @@ $extend_time = $opt_e if($opt_e >0);
 
 my $archive_time = 0;
 $archive_time = $opt_a if($opt_a > 0);
+
+if(defined $opt_A){
+   if(length($opt_A) != 16){
+      print "USEAGE: use -A to input time with the following format\n";
+      print "dd-mmm-yyyy-hhmm. Eg., 28-Aug-2002-1200 \n";
+      exit;
+   }
+
+   $archive_time = &seconds_since_1970($opt_A,$LAPSROOT);   
+}
+   
 #print "$opt_a $archive_time\n";
 
-require "$LAPSROOT/etc/laps_tools.pm";
 if(defined $opt_p){
    &laps_tools::update_nl($LAPS_DATA_ROOT,"balance.nl","ADV_ANAL_BY_T_MIN",$opt_p);
 }
@@ -457,7 +492,6 @@ sub systime{
     $min = '0'.$min if(length($min)<2);
     $hour = '0'.$hour if(length($hour)<2);
 
-
     my $jjj = &laps_tools::julian($year,$mon+1,$mday);
 
     $jjj="0".$jjj while(length($jjj)< 3);
@@ -511,4 +545,54 @@ sub parse_namelist{
 	}	
     }
     return(@ans);
+}
+
+sub seconds_since_1970{
+
+# format for input dd-mmm-yyyy-hhmm
+
+    my ($input_time,$LAPSINSTALLROOT)=@_;
+
+    require "$LAPSINSTALLROOT/etc/run_sys.pm";
+
+    my $i4time_1970 = 315619200;
+    my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+    my ($sec,$min,$hour,$day,$mon,$dmon,$yr);
+    my @date_parts;
+
+    if(length($input_time)==16){
+       @date_parts = split('-',$input_time);
+       $dmon = uc @date_parts[1];
+       $day = @date_parts[0];
+       $min = substr(@date_parts[3],2,2);
+       $hour = substr(@date_parts[3],0,2);
+       $yr = substr(@date_parts[2],2,2);
+       $mon;
+       for($mon=0;$mon<=$#MON;){
+          if(@MON[$mon] eq $dmon){last;}
+          $mon++;
+       }
+       $mon=$mon+1;
+       $mon="0".$mon if(length($mon)<2);
+    }elsif(length($input_time)==4){
+       print "input time hhmm not functional yet\n";
+       return;
+    }
+    my $command = "$EXECUTABLE_NAME $LAPSINSTALLROOT/etc/systime.pl ";
+    $command .= "$yr ";
+    $command .= "$mon ";
+    $command .= "$day ";
+    $command .= "$hour ";
+    $command .= "$min > $LAPSINSTALLROOT/systime_sys.dat";
+
+    run_sys::run_sys($command,1);
+    open(SYS,"$LAPSINSTALLROOT/systime_sys.dat");
+    my @date_types = <SYS>;
+    close (SYS);
+    unlink "$LAPSINSTALLROOT/systime_sys.dat";
+    my $i4time_sys = @date_types[0];
+    my $seconds_since_1970 = $i4time_sys-$i4time_1970;
+#   print "seconds since 1970 = $seconds_since_1970\n";
+
+    return ($seconds_since_1970);
 }
