@@ -41,7 +41,8 @@ cdis
      1    (imax,jmax,kmax                                         ! Input
      1    ,NX_L,NY_L,NZ_L                                         ! Input
      1    ,max_radars,r_missing_data                              ! Input
-     1    ,i4time_sys)                                            ! Input
+     1    ,i4time_sys                                             ! Input
+     1    ,uanl,vanl)                                             ! Output
 
 !       1997 Jun     Ken Dritz      Added NX_L, NY_L, NZ_L, and max_radars
 !                                   as dummy arguments, making arrays
