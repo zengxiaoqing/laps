@@ -240,8 +240,8 @@ c NOTE: nw_line and nw_pix are hardwired by src/include/satdata_lvd.f
 c       however, gen_lut_gvar.f uses the new values for these variables.
 c       this will always trip the lut regeneration unless nw_line/pix match.
 c
-            istrtline = nw_vis_line_gwc(chtype(i),bescnfc,fsci)
-            istrtpix =  nw_vis_pix_gwc(chtype(i),bepixfc,goalpha)
+            istrtline=nw_vis_line_gwc(chtype(i),idecimat,bescnfc,fsci)
+            istrtpix=nw_vis_pix_gwc(chtype(i),idecimat,bepixfc,goalpha)
             if(istrtline.ne.nw_line.or.istrtpix.ne.nw_pix)then
                l_lut_flag=.true.
             endif
