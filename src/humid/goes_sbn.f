@@ -210,14 +210,14 @@ c  laplace solver variables
 c  misc variables
       integer failures
       character*4 blank
-d        integer*4 mlevel(kk)
-d        character*125 commentline
-d        character*64 dummy_string
-d        real research_output (ii,jj,kk)
-d        real s_btemp(ii,jj,18)  !sounder b_temp
-d        real s_radiance(ii,jj,18)  ! sounder radiance
-d        real w_model (39)  ! forward model weighting function
-d        real p_dm (39)  ! derivate pressures
+cdline        integer*4 mlevel(kk)
+cdline        character*125 commentline
+cdline        character*64 dummy_string
+cdline        real research_output (ii,jj,kk)
+cdline        real s_btemp(ii,jj,18)  !sounder b_temp
+cdline        real s_radiance(ii,jj,18)  ! sounder radiance
+cdline        real w_model (39)  ! forward model weighting function
+cdline        real p_dm (39)  ! derivate pressures
       real rads (ii,jj,18)
 
         data local_model_p/.1,.2,.5,1.,1.5,2.,3.,4.,5.,7.,10.,15.,
@@ -256,9 +256,9 @@ c       constants
         d2r = pi/180.
         blank = '  '
 
-d              do i = 1,kk
-d              mlevel(i) = p(i)
-d              enddo
+cdline              do i = 1,kk
+cdline              mlevel(i) = p(i)
+cdline              enddo
 
 
 
@@ -589,16 +589,16 @@ c perform forward model computation for radiance
               endif             ! SOUNDER computation
 
 
-d          do kan = 1,18 !sounder channels for research
+cdline          do kan = 1,18 !sounder channels for research
 
-d        call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
-d    1                  theta(i,j),ngoes,kan,tau)
-d        call weight_func (tau,model_p,40,w_model,p_dm,39)
-d        s_radiance(i,j,kan) = gimrad(tau,model_t(1,i,j),tskin(i,j),
-d    1                              kan,lsfc(i,j),psfc(i,j),emiss)
-d        s_btemp(i,j,kan) = britgo(s_radiance(i,j,kan),kan)
+cdline        call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
+cdline    1                  theta(i,j),ngoes,kan,tau)
+cdline        call weight_func (tau,model_p,40,w_model,p_dm,39)
+cdline        s_radiance(i,j,kan) = gimrad(tau,model_t(1,i,j),tskin(i,j),
+cdline    1                              kan,lsfc(i,j),psfc(i,j),emiss)
+cdline        s_btemp(i,j,kan) = britgo(s_radiance(i,j,kan),kan)
 
-d          enddo ! Kan for sounder
+cdline          enddo ! Kan for sounder
 
 
       enddo
@@ -606,28 +606,28 @@ d          enddo ! Kan for sounder
 
 c  generate table of clear sounder btemps, computed and observed
 
-d       open (34,file='sounder.out',form='formatted')
+cdline       open (34,file='sounder.out',form='formatted')
 
-d       do j = 1, jj
-d       do i = 1, ii
+cdline       do j = 1, jj
+cdline       do i = 1, ii
 
-d        do kan = 1,18
-d        if(rads(i,j,kan).gt.0.0 .and. rads(i,j,kan).lt.500.) then
-d        rads(i,j,kan) = britgo(rads(i,j,kan),kan)
-d        endif
-d        enddo ! kan
+cdline        do kan = 1,18
+cdline        if(rads(i,j,kan).gt.0.0 .and. rads(i,j,kan).lt.500.) then
+cdline        rads(i,j,kan) = britgo(rads(i,j,kan),kan)
+cdline        endif
+cdline        enddo ! kan
 
 
-d          write(34,77) i,j,(s_btemp(i,j,kan), rads(i,j,kan) 
-d    1                      ,kan=1,18)
-d77        format (i2,1x,i2,1x,36(f7.3,1x))
+cdline          write(34,77) i,j,(s_btemp(i,j,kan), rads(i,j,kan) 
+cdline    1                      ,kan=1,18)
+cdline77        format (i2,1x,i2,1x,36(f7.3,1x))
 
 cd          write(34,*) i,j,ch4(i,j),rads(i,j,8)
 
-d       enddo
-d       enddo
+cdline       enddo
+cdline       enddo
 
-d       close(34)
+cdline       close(34)
 
 
 
@@ -772,33 +772,33 @@ c  analyze top level adjustments.
 
 c  d-lines that follow are for  RESEARCH purposes!
 
-d        commentline = 'Early version without satellite input'
-d        path='/data/mdlg/birk/lq3_before/'
-d         do k = 1,kk
-d         do j = 1,jj
-d         do i = 1,ii
-d             if(sh(i,j,k) .le. 0.0 ) then
-d                 research_output(i,j,k) = rmd
-d             else
-d                 research_output(i,j,k) = sh(i,j,k)
-d             endif
-d         enddo
-d         enddo
-d         enddo
-d        call writef_sp
-d    1          (i4time,commentline,mlevel,path,research_output,
-d    1            ii,jj,kk,istatus)
+cdline        commentline = 'Early version without satellite input'
+cdline        path='/data/mdlg/birk/lq3_before/'
+cdline         do k = 1,kk
+cdline         do j = 1,jj
+cdline         do i = 1,ii
+cdline             if(sh(i,j,k) .le. 0.0 ) then
+cdline                 research_output(i,j,k) = rmd
+cdline             else
+cdline                 research_output(i,j,k) = sh(i,j,k)
+cdline             endif
+cdline         enddo
+cdline         enddo
+cdline         enddo
+cdline        call writef_sp
+cdline    1          (i4time,commentline,mlevel,path,research_output,
+cdline    1            ii,jj,kk,istatus)
 
 
-d        call opngks
-d        call plotfield(sh(1,1,17),ii,jj)
+cdline        call opngks
+cdline        call plotfield(sh(1,1,17),ii,jj)
 
       if (pn.ne.0) then
 
          call prep_grid(ii,jj,data_anal,points,pn)
          call slv_laplc (data_anal,mask,ii,jj)
          call smooth_grid2 (ii,jj,data_anal,1)
-d        call plotfield (data_anal,ii,jj)
+cdline        call plotfield (data_anal,ii,jj)
 
 
 
@@ -824,28 +824,28 @@ c       modify lq3 field  top level
 
 
 
-d        call plotfield(sh(1,1,17),ii,jj)
-d        call clsgks
+cdline        call plotfield(sh(1,1,17),ii,jj)
+cdline        call clsgks
 
-d        dummy_string = 'mv gmeta /data/mdlg/birk/gmeta/'//filename
+cdline        dummy_string = 'mv gmeta /data/mdlg/birk/gmeta/'//filename
 
-d        call system (dummy_string)
-d        commentline = 'Final version with satellite input'
-d        path='/data/mdlg/birk/lq3_after/'
-d         do k = 1,kk
-d         do j = 1,jj
-d         do i = 1,ii
-d             if(sh(i,j,k) .le. 0.0 ) then
-d                 research_output(i,j,k) = rmd
-d             else
-d                 research_output(i,j,k) = sh(i,j,k)
-d             endif
-d         enddo
-d         enddo
-d         enddo
-d        call writef_sp
-d    1     (i4time,commentline,mlevel,path,research_output,
-d    1       ii,jj,kk, istatus)
+cdline        call system (dummy_string)
+cdline        commentline = 'Final version with satellite input'
+cdline        path='/data/mdlg/birk/lq3_after/'
+cdline         do k = 1,kk
+cdline         do j = 1,jj
+cdline         do i = 1,ii
+cdline             if(sh(i,j,k) .le. 0.0 ) then
+cdline                 research_output(i,j,k) = rmd
+cdline             else
+cdline                 research_output(i,j,k) = sh(i,j,k)
+cdline             endif
+cdline         enddo
+cdline         enddo
+cdline         enddo
+cdline        call writef_sp
+cdline    1     (i4time,commentline,mlevel,path,research_output,
+cdline    1       ii,jj,kk, istatus)
 
 
 
