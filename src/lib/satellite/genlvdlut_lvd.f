@@ -152,6 +152,35 @@ c              endif
 
 c           enddo
 
+          elseif(c_sat_types(it,js).eq.'hko')then
+
+            print*,'Compute mapping lut for merc ll - hko'
+            do lc=1,maxchannel
+
+               if(ichannels(lc,it,js).eq.1)then
+
+                  write(6,59)c_sat_id(js),c_sat_types(it,js),
+     &c_channel_types(lc,it,js)
+
+                  call gen_lut_mercator(js,it,lc,nx_l,ny_l,
+     &                     lat,lon,istatus)
+
+                  if(istatus.eq.1)then
+                     write(6,*)'LUT generated'
+                  elseif(istatus.eq.0)then
+                     write(*,*)'ir LUT already generated'
+                  else
+                     write(6,*)'Error! LUT not generated ',
+     &c_sat_id(js),'/',c_sat_types(it,js),'/',c_channel_types(lc,it,js)
+                  endif
+
+               else
+                  write(6,49)c_sat_id(js),c_sat_types(it,js),
+     &c_channel_types(lc,it,js)
+               endif
+
+            enddo
+
           elseif(c_sat_types(it,js).ne.'     ')then
 
            write(6,*)'Unknown satellite data type! '

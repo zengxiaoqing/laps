@@ -30,6 +30,7 @@ SRC=bcdtoint.F \
     fc01_conv_pts_el_to_met_1.f \
     gen_lut_gvar.f \
     gen_lut_lambert.f \
+    gen_lut_mercator.f \
     genlvdlut_sub.f \
     genlvdlut_lvd.f \
     get_attr_satellite.f \
