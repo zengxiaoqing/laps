@@ -62,7 +62,7 @@ cdis
           go to 999
       endif
 
-      max_times = 2
+      max_times = 3
 
       do i_radar = 1,n_radars_remap
           call get_remap_parms(i_radar,n_radars_remap,path_to_radar
@@ -192,6 +192,13 @@ cdis
       write(6,*)' Radar altitude (m): ',radar_alt  
       write(6,*)' Radar latitude (degrees): ',radar_lat  
       write(6,*)' Radar longitude (degrees): ',radar_lon  
+
+      if(radar_alt .eq. 0. .and. 
+     1   radar_lat .eq. 0. .and. radar_lon .eq. 0.)then
+          write(6,*)' ERROR: radar coords not initialized'
+          istatus = 0
+          return
+      endif
 
 !     call lut_gen FORTRAN routine 
       call lut_gen(rname_ptr,radar_lat,radar_lon,radar_alt
