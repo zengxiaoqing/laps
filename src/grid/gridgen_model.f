@@ -278,7 +278,7 @@ c
            write(6,*)
            write(6,*)' Processing 10m land data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_PCTL10M,TOPTWVL,SILAVWT
+     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_PCTL10M,1.,1.
      +         ,new_DEM,istatus)
 
            if(istatus .ne. 1)then
@@ -287,10 +287,10 @@ c
                stop
            endif
 
-         if (.not.new_DEM) then
+           if (.not.new_DEM) then
 
-         do i = 1,nnxp
-           do j = 1,nnyp
+             do i = 1,nnxp
+             do j = 1,nnyp
 
 !              Select 30s or 10m topo data for this grid point (or a blend)
 
@@ -420,19 +420,22 @@ c
 
                    endif ! Test to see if we blend the data
 
-               endif
+               endif ! 30s data check
 
-           enddo ! j
-           enddo ! i
-         else
-           do j=1,nnyp
+             enddo ! j
+             enddo ! i
+
+           else ! new_DEM
+             do j=1,nnyp
              do i=1,nnxp
                topt_out(i,j)=topt_30(i,j)
              enddo
-           enddo
-           icount_30=nnyp*nnxp
-         endif
-       endif
+             enddo
+             icount_30=nnyp*nnxp
+
+           endif ! new_DEM
+
+       endif ! iplttopo = 1
 
        write(6,*)
        print *,'topt_30    =',topt_30(1,1),topt_30(nnxp,nnyp)
@@ -545,7 +548,11 @@ c SG97  splot 'topography.dat'
 
         write(6,*)'deltax = ',deltax
 
-        write(6,*)'check_domain:status = ',istat_chk
+        if(istat_chk .eq. 1)then
+            write(6,*)'check_domain: status = ',istat_chk
+        else
+            write(6,*)'WARNING in check_domain: status = ',istat_chk       
+        endif
 
         call put_laps_static(grid_spacing_m,model,comment,data
      1       ,nnxp,nnyp,nf,std_lat,std_lat2,std_lon
@@ -702,8 +709,8 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   IF(.NOT.L1)THEN
                      if(icnt .le. 100 .or. 
      1                  icnt .eq. (icnt/1000)*1000 )then     
-                        PRINT*, ' FILE',TITLE3(1:LB),' DOES NOT EXIST '
-     1                        ,icnt
+                        PRINT*, ' WARNING: ',TITLE3(1:LB)
+     1                        ,' DOES NOT EXIST ',icnt
                      endif ! icnt
                      icnt = icnt + 1
                      DATP(IP,JP) = 0. ! set to missing?

@@ -580,8 +580,23 @@ cdis
 
       if(abs(lat(icen,jcen)) .lt. 89.)then ! should be reasonably accurate
           write(6,*)
-     1    ' grid spacing on earths surface at domain center is:',dist       
+     1   ' measured grid spacing on earths surface at domain center is:'       
+     1     ,dist       
       endif
+
+!...........................................................................
+
+      call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
+     1                                  ,dist_calc,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)
+     1    ' Error calling get_grid_spacing_actual from check_domain'       
+          return
+      endif
+
+      write(6,*)
+     1 ' calculated grid spacing on earths surface at domain center is:'       
+     1     ,dist_calc
 
 !...........................................................................
 
@@ -642,3 +657,26 @@ cdis
 
       return
       end
+
+      subroutine get_grid_spacing_actual(rlat,rlon
+     1                                  ,grid_spacing_actual_m,istatus)
+
+      call get_grid_spacing(grid_spacing_m,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)
+     1    ' Error calling get_grid_spacing from get_grid_spacing_actual'       
+          return
+      endif
+
+      call get_sigma(rlat,rlon,sigma,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)
+     1    ' Error calling get_sigma from get_grid_spacing_actual'       
+          return
+      endif
+
+      grid_spacing_actual_m = grid_spacing_m / sigma
+
+      return
+      end
+
