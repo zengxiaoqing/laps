@@ -85,7 +85,7 @@ c                     Allowed values are 'NIMBUS', 'WFO', 'AFWA', 'CWB'.
 c
 c radarext_3d_cmn - Determines input radar source for the cloud analysis.
 c                   Intermediate files used are already on the LAPS grid.
-c                   'all' first use 'v01', then merge in 'vrc'
+c                   'all' first use 'vrz' 3D mosaic, then merge in 'lapsprd/vrc'
 c                   'v01' (radar #1  volume data)
 c                   'v02' (radar #2  volume data)
 c                   'vxx' (radar #xx volume data)
@@ -93,12 +93,12 @@ c                   'vrc' (2d radar data [e.g. NOWRAD, NEXRAD Lvl 3 narrowband])
 c
 c radarext_3d_accum_cmn - Determines input radar source for precip accum analysis.
 c                         Intermediate files used are already on the LAPS grid.
-c                         'vrc' (2d radar data [e.g. NOWRAD, NEXRAD Lvl 3 
-c                                                                   narrowband])
+c                         'vrc' (2d radar data in lapsprd directory [e.g. NOWRAD, 
+c                                                     NEXRAD Lvl 3, narrowband]  )
 c                         'v01' (radar #1  volume data)
 c                         'v02' (radar #2  volume data)
 c                         'vxx' (radar #xx volume data)
-c                         'all' first use 'v01', then merge in 'vrc'
+c                         'all' first use 'v01', then merge in 'lapsprd/vrc'
 c
 c ref_base_cmn - Reflectivity dbZ value assigned to areas with no echoes.
 c
