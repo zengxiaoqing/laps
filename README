@@ -195,6 +195,9 @@
      LAPS implementation is working. We do not have any other plotting or 
      visualization packages available with LAPS at this time.
 
+     Lapsplot is designed to work with version 3.2 of NCAR graphics, it may
+     not yet work with version 4.
+
                ---  2.4    Raw data ingest   ---
 
      There is a layer of raw data ingest code that may have to be modified
