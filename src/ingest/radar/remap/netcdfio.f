@@ -38,7 +38,7 @@ cdis
 cdis
 
  
-       subroutine radar_init(i_radar,path_to_radar,path_to_vrc          ! I
+       subroutine radar_init(i_radar,path_to_radar,path_to_vrc,itimes   ! I
      1                      ,i_tilt_proc                                ! I/O
      1                      ,i_last_scan,istatus)                       ! O
  
@@ -54,10 +54,11 @@ cdis
        character*2 c2_tilt
        character*3 laps_radar_ext, c3_radar_subdir
        character*8 radar_subdir, c8_fname_format
-       logical l_multi_tilt,l_exist,l_output
+       logical l_multi_tilt,l_exist,l_output,l_realtime
        character*13 a9_to_rsa13
 
-       save a9_time
+       save a9_time, i_nbr_files_raw, i_nbr_files_2nd
+       save i4times_raw
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
@@ -80,6 +81,15 @@ cdis
        call get_systime_i4(i4time_sys,istatus)
        if(istatus .ne. 1)then ! use wall clock time if systime is not available
            i4time_sys = i4time_now_gg()
+           l_realtime = .true.
+
+       else ! success reading 'systime.dat'
+           i4_age = i4time_now_gg() - i4time_sys
+           if(i4_age .gt. 43200)then ! archive case assumed
+               l_realtime = .false.
+           else
+               l_realtime = .true.
+           endif
        endif
 
        call get_laps_cycle_time(laps_cycle_time,istatus)   
@@ -114,15 +124,17 @@ c      Determine filename extension
 !          Get filecount of 02 elevation raw files
            c2_tilt = '02'
            c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
-           call get_file_names(c_filespec,i_nbr_files_raw,c_fnames
+           call get_file_names(c_filespec,i_nbr_files_2nd,c_fnames
      1                        ,max_files,istatus)
            if(istatus .ne. 1)then
                return
            endif
 
-           write(6,*)' # of 2nd tilt raw files = ',i_nbr_files_raw
+           write(6,*)' # of 2nd tilt raw files = ',i_nbr_files_2nd
 
-           if(i_nbr_files_raw .gt. 0)then
+           I4_elapsed = ishow_timer()
+
+           if(i_nbr_files_2nd .gt. 0)then
                l_multi_tilt = .true.
                write(6,*)' We have multiple tilt data'
            else
@@ -137,6 +149,9 @@ c      Determine filename extension
      1                        ,i4times_raw,i_nbr_files_raw,istatus)
 
            write(6,*)' # of 1st tilt raw files = ',i_nbr_files_raw
+
+           I4_elapsed = ishow_timer()
+
            if(istatus .ne. 1 .or. i_nbr_files_raw .eq. 0)then
                istatus = 0
                return
@@ -168,27 +183,19 @@ c      Determine filename extension
            
            i4time_process = 0
 
+           if(l_realtime)then
+               needed_raw_files = 2
+               latest_raw_file = i_nbr_files_raw-1
+           else
+               needed_raw_files = 1
+               latest_raw_file = i_nbr_files_raw
+           endif
+
+           write(6,*)' l_realtime/needed/latest'
+     1                ,l_realtime,needed_raw_files,latest_raw_file
+
 !          Get input filetime to process
-           if(.false.)then                   ! process latest or 2nd latest time
-               if(l_multi_tilt .and. i_nbr_files_raw .ge. 2)then
-                   i4time_process = i4times_raw(i_nbr_files_raw-1)
-                   write(6,*)' Processing second latest input file'
-
-!                  Compare output files with input filetime to process
-                   do i = 1,i_nbr_lapsprd_files
-                       if(i4time_process .eq. i4times_lapsprd(i))then
-                           write(6,*)' Product file already exists '
-     1                              ,a9_time      
-                           istatus = 0
-                           return
-                       endif
-                   enddo ! i
-               else
-                   i4time_process = i4times_raw(i_nbr_files_raw)
-                   write(6,*)' Processing latest input file'
-               endif
-
-           elseif(i_nbr_files_raw .ge. 2)then ! process earliest time
+           if(i_nbr_files_raw .ge. needed_raw_files)then ! use earliest time
                i4_earliest_window = i4time_sys - laps_cycle_time - 1800       
                call make_fnam_lp(i4_earliest_window,a9_time,istatus)
 
@@ -196,8 +203,8 @@ c      Determine filename extension
      1           ' Looking for earliest unprocessed input file back to '       
      1           ,a9_time
 
-               do i = i_nbr_files_raw-1,1,-1
-                   if(i .eq. i_nbr_files_raw-1)then ! Write latest raw filetime
+               do i = latest_raw_file,1,-1
+                   if(i .eq. latest_raw_file)then ! Write latest raw filetime
                        call make_fnam_lp(i4times_raw(i),a9_time,istatus)
                        write(6,*)' Latest raw filetime = ',a9_time
                    endif
