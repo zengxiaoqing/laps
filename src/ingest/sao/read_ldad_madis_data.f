@@ -39,24 +39,24 @@ C
      +     stationPressChangeTime(recNum), tempChangeTime(recNum),
      +     windDirChangeTime(recNum), windGustChangeTime(recNum),
      +     windSpeedChangeTime(recNum)
-      character*51 stationName(recNum)
-      character*11 dataProvider(recNum)
-      character*12 providerId(recNum)
-      character pressChange3HourDD(recNum)
       character temperatureDD(recNum)
       character precipAccumDD(recNum)
-      character*25 presWeather(recNum)
-      character seaLevelPressureDD(recNum)
-      character windDirDD(recNum)
-      character*11 stationType(recNum)
-      character precipRateDD(recNum)
-      character visibilityDD(recNum)
-      character altimeterDD(recNum)
-      character relHumidityDD(recNum)
-      character stationPressureDD(recNum)
-      character windSpeedDD(recNum)
-      character*6 stationId(recNum)
       character dewpointDD(recNum)
+      character*6 stationId(recNum)
+      character pressChange3HourDD(recNum)
+      character relHumidityDD(recNum)
+      character*25 presWeather(recNum)
+      character*12 providerId(recNum)
+      character visibilityDD(recNum)
+      character windDirDD(recNum)
+      character*11 dataProvider(recNum)
+      character altimeterDD(recNum)
+      character*51 stationName(recNum)
+      character precipRateDD(recNum)
+      character*11 stationType(recNum)
+      character stationPressureDD(recNum)
+      character seaLevelPressureDD(recNum)
+      character windSpeedDD(recNum)
 
 
 C   Variables of type REAL
@@ -74,16 +74,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for altimeter'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - altimeter'
+       else
+        call ck_array_real(altimeter,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(altimeter,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - altimeter'
+       else
+        call ck_array_real(altimeter,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(altimeter,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -99,16 +105,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for dewpoint'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - dewpoint'
+       else
+        call ck_array_real(dewpoint,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(dewpoint,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - dewpoint'
+       else
+        call ck_array_real(dewpoint,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(dewpoint,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -124,16 +136,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for elevation'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - elevation'
+       else
+        call ck_array_real(elevation,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(elevation,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - elevation'
+       else
+        call ck_array_real(elevation,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(elevation,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -149,16 +167,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for latitude'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - latitude'
+       else
+        call ck_array_real(latitude,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(latitude,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - latitude'
+       else
+        call ck_array_real(latitude,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(latitude,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -174,16 +198,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for longitude'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - longitude'
+       else
+        call ck_array_real(longitude,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(longitude,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - longitude'
+       else
+        call ck_array_real(longitude,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(longitude,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -199,16 +229,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for meanWeightedTemperature'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - meanWeightedTemperature'
+       else
+        call ck_array_real(meanWeightedTemperature,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(meanWeightedTemperature,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - meanWeightedTemperature'
+       else
+        call ck_array_real(meanWeightedTemperature,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(meanWeightedTemperature,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -224,16 +260,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for precipAccum'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - precipAccum'
+       else
+        call ck_array_real(precipAccum,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(precipAccum,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - precipAccum'
+       else
+        call ck_array_real(precipAccum,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(precipAccum,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -249,16 +291,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for precipRate'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - precipRate'
+       else
+        call ck_array_real(precipRate,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(precipRate,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - precipRate'
+       else
+        call ck_array_real(precipRate,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(precipRate,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -274,16 +322,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for pressChange3Hour'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - pressChange3Hour'
+       else
+        call ck_array_real(pressChange3Hour,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(pressChange3Hour,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - pressChange3Hour'
+       else
+        call ck_array_real(pressChange3Hour,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(pressChange3Hour,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -299,16 +353,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for relHumidity'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - relHumidity'
+       else
+        call ck_array_real(relHumidity,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(relHumidity,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - relHumidity'
+       else
+        call ck_array_real(relHumidity,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(relHumidity,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -324,16 +384,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for seaLevelPressure'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - seaLevelPressure'
+       else
+        call ck_array_real(seaLevelPressure,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(seaLevelPressure,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - seaLevelPressure'
+       else
+        call ck_array_real(seaLevelPressure,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(seaLevelPressure,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -349,16 +415,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for seaSurfaceTemp'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - seaSurfaceTemp'
+       else
+        call ck_array_real(seaSurfaceTemp,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(seaSurfaceTemp,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - seaSurfaceTemp'
+       else
+        call ck_array_real(seaSurfaceTemp,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(seaSurfaceTemp,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -374,16 +446,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for soilMoisture'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - soilMoisture'
+       else
+        call ck_array_real(soilMoisture,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(soilMoisture,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - soilMoisture'
+       else
+        call ck_array_real(soilMoisture,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(soilMoisture,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -399,16 +477,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for soilTemperature'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - soilTemperature'
+       else
+        call ck_array_real(soilTemperature,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(soilTemperature,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - soilTemperature'
+       else
+        call ck_array_real(soilTemperature,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(soilTemperature,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -424,16 +508,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for solarRadiation'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - solarRadiation'
+       else
+        call ck_array_real(solarRadiation,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(solarRadiation,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - solarRadiation'
+       else
+        call ck_array_real(solarRadiation,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(solarRadiation,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -449,16 +539,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for stationPressure'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - stationPressure'
+       else
+        call ck_array_real(stationPressure,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(stationPressure,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - stationPressure'
+       else
+        call ck_array_real(stationPressure,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(stationPressure,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -474,16 +570,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for temperature'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - temperature'
+       else
+        call ck_array_real(temperature,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(temperature,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - temperature'
+       else
+        call ck_array_real(temperature,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(temperature,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -499,16 +601,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for visibility'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - visibility'
+       else
+        call ck_array_real(visibility,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(visibility,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - visibility'
+       else
+        call ck_array_real(visibility,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(visibility,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -524,16 +632,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for windDir'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - windDir'
+       else
+        call ck_array_real(windDir,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(windDir,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - windDir'
+       else
+        call ck_array_real(windDir,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(windDir,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -549,16 +663,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for windDirMax'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - windDirMax'
+       else
+        call ck_array_real(windDirMax,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(windDirMax,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - windDirMax'
+       else
+        call ck_array_real(windDirMax,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(windDirMax,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -574,16 +694,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for windGust'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - windGust'
+       else
+        call ck_array_real(windGust,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(windGust,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - windGust'
+       else
+        call ck_array_real(windGust,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(windGust,recNum,misval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -599,16 +725,22 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for windSpeed'
        endif
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - windSpeed'
+       else
+        call ck_array_real(windSpeed,recNum,valfil
+     1                    ,badflag)
        endif
-       call ck_array_real(windSpeed,recNum,filval,badflag)
-       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+       nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - windSpeed'
+       else
+        call ck_array_real(windSpeed,recNum,valmis
+     1                    ,badflag)
        endif
-       call ck_array_real(windSpeed,recNum,misval,badflag)
       endif
 
 C   Variables of type INT
@@ -735,17 +867,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for observationTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - observationTime'
+       else
+        call ck_array_dble(observationTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(observationTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - observationTime'
+       else
+        call ck_array_dble(observationTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(observationTime,recNum,dmisval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -761,17 +899,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for receivedTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - receivedTime'
+       else
+        call ck_array_dble(receivedTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(receivedTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - receivedTime'
+       else
+        call ck_array_dble(receivedTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(receivedTime,recNum,dmisval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -787,17 +931,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for reportTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - reportTime'
+       else
+        call ck_array_dble(reportTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(reportTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - reportTime'
+       else
+        call ck_array_dble(reportTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(reportTime,recNum,dmisval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -813,17 +963,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for rhChangeTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - rhChangeTime'
+       else
+        call ck_array_dble(rhChangeTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(rhChangeTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - rhChangeTime'
+       else
+        call ck_array_dble(rhChangeTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(rhChangeTime,recNum,dmisval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -839,17 +995,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for stationPressChangeTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - stationPressChangeTime'
+       else
+        call ck_array_dble(stationPressChangeTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(stationPressChangeTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - stationPressChangeTime'
+       else
+        call ck_array_dble(stationPressChangeTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(stationPressChangeTime,recNum,dmisval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -865,17 +1027,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for tempChangeTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - tempChangeTime'
+       else
+        call ck_array_dble(tempChangeTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(tempChangeTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - tempChangeTime'
+       else
+        call ck_array_dble(tempChangeTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(tempChangeTime,recNum,dmisval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -891,17 +1059,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for windDirChangeTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - windDirChangeTime'
+       else
+        call ck_array_dble(windDirChangeTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(windDirChangeTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - windDirChangeTime'
+       else
+        call ck_array_dble(windDirChangeTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(windDirChangeTime,recNum,dmisval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -917,17 +1091,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for windGustChangeTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - windGustChangeTime'
+       else
+        call ck_array_dble(windGustChangeTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(windGustChangeTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - windGustChangeTime'
+       else
+        call ck_array_dble(windGustChangeTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(windGustChangeTime,recNum,dmisval,badflag)
       endif
 C
 C     Variable        NETCDF Long Name
@@ -943,17 +1123,23 @@ C
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for windSpeedChangeTime'
        endif
-       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
+       nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dvalfil)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for _FillValue'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for _FillValue - windSpeedChangeTime'
+       else
+        call ck_array_dble(windSpeedChangeTime,recNum,dvalfil
+     1                    ,badflag)
        endif
-       call ck_array_dble(windSpeedChangeTime,recNum,dfilval,badflag)
        nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value'
-     1                            ,dmisval)
+     1                            ,dvalmis)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for missing_value'
+        print *, NF_STRERROR(nf_status)
+     1         ,' for missing_value - windSpeedChangeTime'
+       else
+        call ck_array_dble(windSpeedChangeTime,recNum,dvalmis
+     1                    ,badflag)
        endif
-       call ck_array_dble(windSpeedChangeTime,recNum,dmisval,badflag)
       endif
 
 
