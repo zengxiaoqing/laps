@@ -120,7 +120,7 @@
 
 !****************END DECLARATIONS *********************************************
 
-      l_3d = .true. ! .false.
+      l_3d = .false.
 
       rms_thresh_norm = rms_thresh_wind          ! Not used if l_3d = .false.
 
