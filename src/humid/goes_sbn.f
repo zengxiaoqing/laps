@@ -688,9 +688,9 @@ c   and compare these to the forward model radiances
 
 c  this is a diagnostic output for plotting with psiplot (fort24.dat)
 
-                  write (24, *) ch4(i,j), btemp(i,j,2)
-                  write (23, *) ch3(i,j), btemp(i,j,1)
-                  write (25, *) ch5(i,j), btemp(i,j,3)
+c                  write (24, *) ch4(i,j), btemp(i,j,2)
+c                  write (23, *) ch3(i,j), btemp(i,j,1)
+c                  write (25, *) ch5(i,j), btemp(i,j,3)
 
 
 
