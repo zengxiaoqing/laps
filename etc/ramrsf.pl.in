@@ -102,18 +102,19 @@ for($ftime=0;$ftime<=$flast;$ftime+=$ffreq){
   }
   close(LPTR);
 
-  run_sys::run_sys($makeprods);
+  run_sys::run_sys($makeprods,1);
 
 
 #
 # Insert command to send files to remote machine here.
 #
+#  my $sys;
 #  foreach(@use_for_display){
 #    if($_=~ /true/){
 #    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/sendLAPS.pl $LAPSROOT $LAPS_DATA_ROOT";
-#    &run_sys($sys);
+#    run_sys::run_sys($sys,1);
 #    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/xferData.pl";
-#    &run_sys($sys);
+#    run_sys::run_sys($sys,1);
 #    }
 #  }
 
