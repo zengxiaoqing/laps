@@ -23,10 +23,15 @@ setenv LAPS_SRC_ROOT      /pj/fsl/albers/src/laps-0-8-19
 setenv LAPSINSTALLROOT    /pj/fsl/albers/data_disk/laps
 setenv LAPS_DATA_ROOT     /pj/fsl/albers/data_disk/laps/data
 setenv TEMPLATEDIR        /pj/fsl/albers/src/template
-setenv NEWPERL            /pj/fsl/albers/bin/perl
+#setenv NEWPERL            /pj/fsl/albers/bin/perl
+setenv NEWPERL            `which perl`
 
-#This section does what "configure" would normally do for a precompiled tar file
+#Configure/install a precompiled tar file
 if ($arg1 == p) then
+
+#   This section does what "configure" would normally do on a precompiled tar file,
+#   (i.e. a substitution for section 2.2.2 in the README)
+
     echo "Configuring precompiled scripts in $LAPSINSTALLROOT/etc"
     cd $LAPSINSTALLROOT/etc
 
@@ -58,18 +63,44 @@ if ($arg1 == p) then
     foreach file (*.pl)
         if (-e $file.in) then
             cp $file.in $file
-            fix_net @PERL@                   $NEWPERL            $file
-            fix_net @NETCDF@                 $NEWNETCDF          $file
-            fix_net @prefix@                 $LAPSINSTALLROOT    $file
-            fix_net @datadir@                $LAPS_DATA_ROOT     $file
-            fix_net @top_srcdir@             $LAPS_SRC_ROOT      $file
-            fix_net @CSH@                    /bin/csh            $file
+            $LAPS_SRC_ROOT/util/fix_net @PERL@                   $NEWPERL            $file
+            $LAPS_SRC_ROOT/util/fix_net @NETCDF@                 $NEWNETCDF          $file
+            $LAPS_SRC_ROOT/util/fix_net @prefix@                 $LAPSINSTALLROOT    $file
+            $LAPS_SRC_ROOT/util/fix_net @datadir@                $LAPS_DATA_ROOT     $file
+            $LAPS_SRC_ROOT/util/fix_net @top_srcdir@             $LAPS_SRC_ROOT      $file
+            $LAPS_SRC_ROOT/util/fix_net @CSH@                    /bin/csh            $file
 
 #           This edit is specific to Taiwan's @INC problem though it probably doesn't do much harm in other installations
-            fix_net \$EXECUTABLE_NAME        $NEWPERL            $file
+            $LAPS_SRC_ROOT/util/fix_net \$EXECUTABLE_NAME        $NEWPERL            $file
 
         endif
     end
+
+#   This section does what "make install" would normally do on a precompiled tar file,
+#   (i.e. a substitution for section 2.2.4 in the README)
+
+    mkdir -p $LAPSINSTALLROOT
+
+    if ($LAPS_SRC_ROOT != $LAPSINSTALLROOT) then
+        echo "We have a split directory tree"
+
+        cd $LAPS_SRC_ROOT
+
+        if (-e bin) then
+            echo "Moving $LAPS_SRC_ROOT/bin directory to $LAPSINSTALLROOT"
+            mv bin  $LAPSINSTALLROOT
+        endif
+
+        if (-e etc) then
+            echo "Moving $LAPS_SRC_ROOT/etc directory to $LAPSINSTALLROOT"
+            mv etc  $LAPSINSTALLROOT
+        endif
+
+        if (-e util) then
+            echo "Moving $LAPS_SRC_ROOT/util directory to $LAPSINSTALLROOT"
+            mv util  $LAPSINSTALLROOT
+        endif
+    endif
 
 else
     echo "Skipping configure/install step for precompiled tar file"
@@ -84,6 +115,7 @@ endif
 #                                                      and there is no $LAPS_SRC_ROOT/data/static/*.nl
 #                                                      and there is no $LAPS_SRC_ROOT/data/cdl/*.cdl
 #                                                      (e.g. precompiled tar file setup at CWB with split tree)
+#See the README section 2.2.6.2
 if ($arg2 == w) then
     echo "Starting the window setup step"
 
@@ -148,14 +180,14 @@ if ($arg2 == w) then
     echo "checking static.nest7grid..."
     ls -l $LAPS_DATA_ROOT/static/static.nest7grid
 
-#   Now we can edit the cronfile
+#   Now we can edit the cronfile (README section 2.4)
     echo " "
     echo "Setting up a cronfile in $LAPS_DATA_ROOT/cronfile..."
     cp $LAPSINSTALLROOT/util/cronfile.in $LAPS_DATA_ROOT/cronfile
     cd $LAPS_DATA_ROOT
-    fix_net @PERL@    $NEWPERL         cronfile
-    fix_net @prefix@  $LAPSINSTALLROOT cronfile
-    fix_net @datadir@ $LAPS_DATA_ROOT  cronfile
+    $LAPS_SRC_ROOT/util/fix_net @PERL@    $NEWPERL         cronfile
+    $LAPS_SRC_ROOT/util/fix_net @prefix@  $LAPSINSTALLROOT cronfile
+    $LAPS_SRC_ROOT/util/fix_net @datadir@ $LAPS_DATA_ROOT  cronfile
 
 else
     echo "Skipping window setup step"
