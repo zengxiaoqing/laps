@@ -89,8 +89,12 @@ cdis
         real*4 heights_3d(NX_L,NY_L,NZ_L)
         real*4 u_3d(NX_L,NY_L,NZ_L)
         real*4 v_3d(NX_L,NY_L,NZ_L)
+
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L)
+        real*4 rh_sfc_pct(NX_L,NY_L)
+        real*4 u_sfc_ms(NX_L,NY_L)
+        real*4 v_sfc_ms(NX_L,NY_L)
 
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)
@@ -186,6 +190,39 @@ cdis
             go to 999
         endif
 
+!       Read in surface rh data
+        var_2d = 'RH'
+        ext = 'lsx'
+        call get_laps_2d(i4time,ext,var_2d,units_2d,comment_2d
+     1                  ,NX_L,NY_L,rh_sfc_pct,istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' LAPS Sfc RH not available'
+            go to 999
+        endif
+
+!       Read in surface u component
+        var_2d = 'U'
+        ext = 'lsx'
+        call get_laps_2d(i4time,ext,var_2d,units_2d,comment_2d
+     1                  ,NX_L,NY_L,u_sfc_ms,istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' LAPS Sfc U not available'
+            go to 999
+        endif
+
+!       Read in surface v component
+        var_2d = 'V'
+        ext = 'lsx'
+        call get_laps_2d(i4time,ext,var_2d,units_2d,comment_2d
+     1                  ,NX_L,NY_L,v_sfc_ms,istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' LAPS Sfc V not available'
+            go to 999
+        endif
+
         write(6,*)
         write(6,*)' Calling laps_deriv_sub'
         call laps_deriv_sub(i4time,              ! I
@@ -255,7 +292,7 @@ cdis
             call fire_fields(NX_L,NY_L,NZ_L,temp_3d,td_3d_k          ! I
      1                      ,u_3d,v_3d                               ! I
      1                      ,temp_sfc_k,pres_sfc_pa                  ! I
-!    1                      ,rh_sfc,u_sfc,v_sfc                      ! I
+     1                      ,rh_sfc_pct,u_sfc_ms,v_sfc_ms            ! I
      1                      ,r_missing_data,i4time                   ! I
      1                      ,istatus)                                ! O
 
