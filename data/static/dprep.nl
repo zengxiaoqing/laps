@@ -1,10 +1,10 @@
  &dprep_nl
- initbgpaths=
- initbgmodels=
- bndybgpaths=
- bndybgmodels=
- inittimes=
- fcstlengths=
- max_forecast_delta=
- oldest_forecast=
+ initbgpaths='',
+ initbgmodels=0,
+ bndybgpaths='/public/data/grids/eta/48km_nat_isobaric/netcdf',
+ bndybgmodels=2,
+ inittimes=0,12,
+ fcstlengths=12,12,
+ max_forecast_delta=6,
+ oldest_forecast=18,
  /
