@@ -2228,11 +2228,12 @@ in the temperature analysis.
 The analysis uses variational techniques to constrain the surface winds and 
 reduced pressures (P) to the full equations on motion. In contrast, mean sea 
 level pressure (MSL) is a direct analysis of the observations of MSLP. Station
-pressure (PS) is calculated by starting with a mean pressure value. This comes
-from either altimeter setting observations, reduced to the station elevation
-giving actual pressure measurements, or the model background gridded 'PS'
-field. The mean pressure is adjusted with Poisson's equation for each grid 
-point by considering the mean layer temperature and grid point elevation.
+pressure (PS) is calculated by starting with a constant mean pressure value
+(averaged over the domain). This comes from either altimeter setting 
+observations, reduced to the station elevation giving actual pressure 
+measurements, or the model background gridded 'PS' field. The mean pressure is
+adjusted with Poisson's equation for each grid point by considering the mean 
+layer temperature and grid point elevation.
 
 Several derived variables are calculated before the LSX file is written.  Also,
 a dependent data validation is done by interpolating several variables back to
