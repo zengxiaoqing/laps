@@ -124,7 +124,8 @@ c
         rmn2d=      r_missing_data
         do j=1,ny
         do i=1,nx
-           if(array_2d(i,j).gt.rmx2d)then
+           if(array_2d(i,j).gt.rmx2d.and.
+     .        array_2d(i,j).ne.r_missing_data)then
               rmx2d=array_2d(i,j)
               imx=i
               jmx=j
