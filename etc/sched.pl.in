@@ -248,7 +248,7 @@ foreach $exe (@LAPS_EXE){
         $execount = $execount + 1;
         $exenext = $execount + 1;
 
-        $sms_path = "/home/schaffer/sms.steve";
+        $sms_path = "/home/schaffer/sms-2.6.0";
 
         if($exe =~ "wind"){
             $nodes_current = 1; # 4
