@@ -99,7 +99,7 @@ cdis
 
 !     Obtain and/or iterate for value of nskip
       nskip = nint(20000. / grid_spacing_m)
-      nskip = max(nskip,1)
+      nskip = min(max(nskip,1),4)
 
 100   rden_ratioi = ((float(imax)-1.)/float(nskip))
       rden_ratioj = ((float(jmax)-1.)/float(nskip))
