@@ -328,11 +328,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       std_lon = standard_longitude
@@ -349,11 +348,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     This routine accesses the standard_longitude variable from the
 !     .parms file via the common block.
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       grid_spacing_m = grid_spacing_m_cmn
@@ -370,11 +368,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     This routine accesses the standard_longitude variable from the
 !     .parms file via the common block.
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       grid_cen_lat = grid_cen_lat_cmn
@@ -392,11 +389,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       std_lat = standard_latitude
@@ -414,11 +410,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       std_lat1 = standard_latitude
@@ -437,11 +432,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       maxstns = maxstns_cmn
@@ -461,11 +455,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       c8_project = c8_project_common
@@ -485,11 +478,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       c6_maproj_ret = c6_maproj
@@ -508,11 +500,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       c80_description_ret = c80_description
@@ -530,18 +521,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' get_laps_dimensions: calling get_laps_config'
-
-          call get_laps_config('nest7grid',istatus)
-          if(istatus .ne. 1 .or. iflag_lapsparms_cmn .ne. 1)then
-              write(6,*)' Error detected in calling get_laps_config'
-              istatus = 0
-              return
-          else
-              write(6,*)' Success in calling get_laps_config'
-          endif
-
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
       endif
 
       nk = nk_laps
@@ -559,18 +542,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' get_laps_cycle_time: calling get_laps_config'
-
-          call get_laps_config('nest7grid',istatus)
-          if(istatus .ne. 1 .or. iflag_lapsparms_cmn .ne. 1)then
-              write(6,*)' Error detected in calling get_laps_config'
-              istatus = 0
-              return
-          else
-              write(6,*)' Success in calling get_laps_config'
-          endif
-
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
       endif
 
       laps_cycle_time = laps_cycle_time_cmn
@@ -588,18 +563,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' get_grid_dim_xy: calling get_laps_config'
-
-          call get_laps_config('nest7grid',istatus)
-          if(istatus .ne. 1 .or. iflag_lapsparms_cmn .ne. 1)then
-              write(6,*)' Error detected in calling get_laps_config'
-              istatus = 0
-              return
-          else
-              write(6,*)' Success in calling get_laps_config'
-          endif
-
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
       endif
 
       NX_L = NX_L_CMN
@@ -618,18 +585,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' get_topo_parms: calling get_laps_config'
-
-          call get_laps_config('nest7grid',istatus)
-          if(istatus .ne. 1 .or. iflag_lapsparms_cmn .ne. 1)then
-              write(6,*)' Error detected in calling get_laps_config'
-              istatus = 0
-              return
-          else
-              write(6,*)' Success in calling get_laps_config'
-          endif
-
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
       endif
 
       silavwt_parm = silavwt_parm_cmn
@@ -648,11 +607,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       n_meso  = maxstns_cmn
@@ -671,11 +629,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       max_radars = max_radars_cmn
@@ -692,11 +649,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       maxstns = maxstns_cmn
@@ -722,11 +678,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       vert_rad_pirep = vert_rad_pirep_cmn
@@ -746,11 +701,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       r_missing_data = r_missing_data_cmn
@@ -767,11 +721,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       i2_missing_data = i2_missing_data_cmn
@@ -789,11 +742,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       i_perimeter = i_perimeter_cmn
@@ -811,11 +763,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       ref_base = ref_base_cmn
@@ -832,11 +783,10 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 !     .parms file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       ref_base_useable = ref_base_useable_cmn
