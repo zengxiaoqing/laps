@@ -889,7 +889,7 @@ c     executed variational search
             ftol = 0.01
 
             cost_comment_switch = 1 ! turn on for one print of gps&cloud
-            write (24,*) '-  ',i,j
+c            write (24,*) '-  ',i,j
             call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
             
 c     check output of variational search for fret of 0.0 that
