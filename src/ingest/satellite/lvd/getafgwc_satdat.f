@@ -4,7 +4,7 @@
      &                        nirlines, nirelem,
      &                        nvislines,nviselem,
      &                        nwvlines,nwvelem,
-     &                        ntm,max_files,c_type,
+     &                        nft,ntm,max_files,c_type,
      &                        image_11,image_vis,
      &                        image_12,image_39,image_67,
      &                        i4time_data,
@@ -22,7 +22,6 @@ c
        include 'satellite_common_lvd.inc'
 
        integer isat,jtype
-       integer ntm
        integer nirelem
        integer nirlines
        integer nwvelem
@@ -32,7 +31,8 @@ c
        integer nchannels
        integer max_channels
        integer max_files
-       integer i4time_data
+       integer i4time_data(max_files)
+       integer nft,ntm(max_files)
        integer i4time_current
        integer istatus
 
@@ -56,7 +56,7 @@ c GMS data
      &                    max_channels,nchannels,chtype,
      &                    i4time_current,lvis_flag,
      &                    nirlines, nirelem,
-     &                    ntm,max_files,c_type,
+     &                    nft,ntm,max_files,c_type,
      &                    image_11,image_vis,
      &                    image_12,           !image_39,
      &                    image_67,
@@ -77,7 +77,7 @@ c GOES08, GOES10, and METEOSAT.
      &                     nirlines, nirelem,
      &                     nvislines,nviselem,
      &                     nwvlines,nwvelem,
-     &                     ntm,max_files,c_type,
+     &                     nft,ntm,max_files,c_type,
      &                     image_11,image_vis,
      &                     image_12,image_39,image_67,
      &                     i4time_data,
@@ -98,7 +98,7 @@ c =====================================================================
      &                        nirlines, nirelem,
      &                        nvislines,nviselem,
      &                        nwvlines,nwvelem,
-     &                        ntm,max_files,c_type,
+     &                        nft,ntm,max_files,c_type,
      &                        image_11,image_vis,
      &                        image_12,image_39,image_67,
      &                        i4time_data,
@@ -120,7 +120,6 @@ c                   name from getgoesdata to getsdhsdata.
        integer isat,jtype
        integer i,j,n,nn,il
        integer nt
-       integer ntm
        integer nirelem
        integer nirlines
        integer nwvelem
@@ -137,10 +136,12 @@ c                   name from getgoesdata to getsdhsdata.
        integer jsave
        integer itm
        integer max_files
+       integer nft,ntm(max_files)
 
        integer i4time_current
-       integer i4time_data
+       integer i4time_data(max_files)
        integer i4time_data_io
+       integer i4time_diff
        integer i4time_diff1
        integer i4time_diff2
        integer i4time_diff_min
@@ -156,14 +157,12 @@ c                   name from getgoesdata to getsdhsdata.
        real image_67  (nwvelem,nwvlines)
        real image_vis (nviselem,nvislines)
 
-       real*4    r4time_data_ir
-       real*4    r4time_data_wv
-       real*4    r4time_data_vis
+       real r4timedata
 
        logical   lvis_flag
        logical   lfound1
 
-       character c_type(max_files)*3
+       character c_type(max_channels,max_files)*3
        character chtype(max_channels)*3
        character cid4*4
        character cmt*3
@@ -178,9 +177,12 @@ c                   name from getgoesdata to getsdhsdata.
        character cfilename*255
 c
       istatus = -1   !bad status return
-      ntm=0
 
 c     cid4='go'//c_sat_id(isat)(5:6)
+
+      do i=1,nft
+         ntm(i)=0
+      enddo
 
       do i = 1,nchannels
 
@@ -225,13 +227,14 @@ c     cid4='go'//c_sat_id(isat)(5:6)
 
          endif
 
+
          if(iostatus .eq. 1)then
-            ntm=ntm+1
-            c_type(ntm)=chtype(i)
-            i4time_data_int(ntm)=i4time_data_io
-            call make_fnam_lp(i4time_data_io,c_fname_data(ntm)
+            ntm(nft)=ntm(nft)+1
+            c_type(ntm(nft),nft)=chtype(i)
+            i4time_data_int(ntm(nft))=i4time_data_io
+            call make_fnam_lp(i4time_data_io,c_fname_data(ntm(nft))
      &,fstatus)
-            write(6,*)'gwc data loaded: ',c_type(ntm)
+            write(6,*)'gwc data loaded: ',c_type(ntm(nft),nft)
          else
             write(6,*)'No data loaded - ',chtype(i)
             goto 1000
@@ -240,31 +243,31 @@ c     cid4='go'//c_sat_id(isat)(5:6)
       enddo
 c
 c In this section we determine the i4time of the data and also check
-c whether the i4times satisfy i_delta_sat_t_sec criterion.
+c whether the i4times satisfy i_delta_sat_t_sec criterion. Furthermore,
+c we can check to see if the AFWA data files are unique times suggesting
+c nft increment in accordance. nft comes in as 1 by default for AFWA.
 c
-c sort times in ascending order
-c
-      if(ntm.gt.2)then
+      if(ntm(nft).gt.2)then
 
-         do j=2,ntm
+         do j=2,ntm(nft)
             itm=i4time_data_int(j)
             cfd=c_fname_data(j)
-            cmt=c_type(j)
+            cmt=c_type(j,nft)
             do i=j-1,1,-1
                if(i4time_data_int(i).le.itm)goto 100
                i4time_data_int(i+1)=i4time_data_int(i)
                c_fname_data(i+1)=c_fname_data(i)
-               c_type(i+1)=c_type(i)
+               c_type(i+1,nft)=chtype(i)
             enddo
             i=0
 100         i4time_data_int(i+1)=itm
             c_fname_data(i+1)=cfd
-            c_type(i+1)=cmt
+            c_type(i+1,nft)=cmt
          enddo
 
          lfound1=.false.
          jsave=0
-         do j=1,ntm
+         do j=1,ntm(nft)
             i4time_diff1=(i4time_data_int(j)-i4time_current)
             if(i4time_diff1.ge.i_delta_sat_t_sec.and.
      &(.not.lfound1))then
@@ -275,57 +278,92 @@ c
 
          i4time_diff_min=100000.
          if(jsave.gt.0)then
-          ntm=jsave
-          do i=2,ntm
+          ntm(nft)=jsave
+          do i=2,ntm(nft)
             i4time_diff1=abs(i4time_data_int(i-1)-i4time_data_int(i))
             if(i4time_diff1.gt.600)then
                write(6,*)'Warning: Sat data not concurrent'
             endif
             if(i4time_diff1.lt.i4time_diff_min)then
                i4time_diff_min = i4time_diff1
-               i4time_data = i4time_data_int(i)
+               i4time_data(1) = i4time_data_int(i)
             endif
           enddo
          else
-          i4time_data=i4time_data_int(1)
+          i4time_data(1)=i4time_data_int(1)
          endif
 
-      elseif(ntm.eq.2)then
+      elseif(ntm(nft).eq.2)then  !most likely vis and 1 ir (11u) channel.
 
          i4time_diff1=i4time_data_int(1)-i4time_data_int(2)
          if(i4time_diff1.eq.0)then
             i4time_diff1=abs(i4time_data_int(1)-i4time_current)
             if(i4time_diff1.lt.i_delta_sat_t_sec)then
-               i4time_data=i4time_data_int(1)
+               i4time_data(1)=i4time_data_int(1)
             else
-               write(6,*)'Data is old'
-               i4time_data=i4time_data_int(1)
+               write(6,*)'WARNING: Both data file times exceed',
+     &' i_delta_sat_t_sec but are the same' 
+               i4time_data(1)=i4time_data_int(1)
                istatus=1
             endif
+
          else
 
             i4time_diff1=abs(i4time_current-i4time_data_int(1))
             i4time_diff2=abs(i4time_current-i4time_data_int(2))
+            i4time_diff=abs(i4time_data_int(1)-i4time_data_int(2))
 
-            if(i4time_diff1.gt.i_delta_sat_t_sec)then
-               if(i4time_diff2.gt.i_delta_sat_t_sec)then
-                  istatus=1
-                  write(6,*)'N files = ',ntm, 'Data too old'
+            if(i4time_diff1.le.i_delta_sat_t_sec.and.i4time_diff2.le.
+     &i_delta_sat_t_sec)then
+               if(i4time_diff.lt.500)then
+                  i4time_data(1)=i4time_data_int(1)
                else
-                  ntm=ntm-1
-                  i4time_data=i4time_data_int(2)
-                  c_type(ntm)=c_type(2)
+                  c_type(1,nft)=chtype(1)            !most likely visible
+                  i4time_data(1)=i4time_data_int(1)
+                  ntm(nft)=1
+                  nft=2
+                  ntm(nft)=1
+                  c_type(1,nft)=chtype(2)            !ir (most likely 11u)
+                  i4time_data(nft)=i4time_data_int(2)
                endif
-            elseif(i4time_diff2.le.i_delta_sat_t_sec)then
+            elseif(i4time_diff1.gt.i_delta_sat_t_sec.and.i4time_diff2
+     &.gt.i_delta_sat_t_sec)then
+               print*,'WARNING: Data times for both files exceed',
+     &' i_delta_sat_t_sec.'
+               if(i4time_diff1.ne.i4time_diff2)then
+                  print*,'WARNING: Data times are different'
+                  print*,'Set i4time_data separately for each'
+                  nft=2
+                  ntm(1)=1
+                  ntm(2)=1
+                  i4time_data(1)=i4time_data_int(1)
+                  i4time_data(2)=i4time_data_int(2)
+                  c_type(1,2)=c_type(2,1)
+               endif
+            elseif(i4time_diff1.gt.i_delta_sat_t_sec)then
+               print*,'WARNING: Data time for first file exceeds',
+     &' i_delta_sat_t_sec'
+               ntm(1)=1
+               ntm(nft)=ntm(nft)-1
+               i4time_data(1)=i4time_data_int(2)
+               c_type(ntm(nft),nft)=c_type(1,2)
+            elseif(i4time_diff2.gt.i_delta_sat_t_sec)then
+               print*,'WARNING: Data time for second file exceeds',
+     &' i_delta_sat_t_sec'
+               ntm(nft)=ntm(nft)-1
+               i4time_data(1)=i4time_data_int(1)
+               c_type(ntm(nft),nft)=c_type(1,1)
                write(6,*)'Found ',ntm,' current files'
-            else
-               ntm=ntm-1
-               i4time_data=i4time_data_int(1)
-               c_type(ntm)=c_type(1)
+            elseif(i4time_diff.gt.900)then
+               if(i4time_diff1.lt.i4time_diff2)then
+                  ntm(nft)=ntm(nft)-1
+                  i4time_data(1)=i4time_data_int(1)
+                  c_type(ntm(nft),nft)=c_type(1,1)
+               endif
             endif
          endif
       else   !ntm = 1
-         i4time_data=i4time_data_int(1)
+         i4time_data(1)=i4time_data_int(1)
       endif
 
       istatus = 0  !successful return status
@@ -338,7 +376,7 @@ c
      &                      max_channels,nchannels,chtype,
      &                      i4time_current,lvis_flag,
      &                      nlines, nelem,
-     &                      ntm,max_files,c_type,
+     &                      nft,ntm,max_files,c_type,
      &                      image_11,image_vis,
      &                      image_12,           !no image_39 data!,
      &                      image_67,
@@ -356,7 +394,7 @@ c
       integer i,j,k,l,m
       integer nf,nc,np
       integer ierr
-      integer ntm
+      integer nft,ntm(nft)
       integer nelem
       integer nlines
       integer nchannels
@@ -369,7 +407,7 @@ c
       integer nxny(2)
 
       integer i4time_current
-      integer i4time_data
+      integer i4time_data(nft)
       integer i4time_latest_lvd
 
       integer istatus
@@ -466,13 +504,13 @@ c       do j=1,nfiles
           call get_directory_length(cfilenames(nfiles),lenf)
           cjjjhhmm=cfilenames(nfiles)(lenf+5:lenf+11)
           cfd=cfname_cur(1:2)//cjjjhhmm
-          call i4time_fname_lp(cfd,i4time_data,istatus)
+          call i4time_fname_lp(cfd,i4time_data(1),istatus)
           if(istatus.ne.1)then
             print*,'error returned from i4time_fname_lp'
             return
           endif
 
-          if(i4time_data .gt. i4time_latest_lvd)then
+          if(i4time_data(1) .gt. i4time_latest_lvd)then
 c
             print*,'opening ',cfilenames(nfiles)
 
@@ -529,7 +567,7 @@ c =====================================================================
 
           ntm=ntm+1
           c_type(ntm)=ct
-          call make_fnam_lp(i4time_data,c_fname_data(ntm),fstatus)
+          call make_fnam_lp(i4time_data(1),c_fname_data(ntm),fstatus)
 
          endif
  

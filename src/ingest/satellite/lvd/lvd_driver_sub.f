@@ -183,7 +183,7 @@ c
       integer istatus_vis(3)
       integer itstatus
       integer lvd_status
-      integer nft,ntm(max_files)
+      integer nft,ntm(max_files),nft_prior
 
       data rcal/0.106178/  !as specified by EUMETSAT User Services 5-May-99.
 
@@ -230,67 +230,13 @@ c --------------------------------------------------------------------
          call readlut(csatid,csattype,maxchannels,nchannels,
      &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
 
-      if(istatus.eq.1)then
-
-         write(6,*)'LUT not obtained: ',csatid,'/',csattype
-
-c           write(6,*)'Computing lut using genlvdlut_lvd'
-c        call genlvdlut_sub(nx_l,ny_l,gstatus)
-c           call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
-c    +gstatus)
-c           if(gstatus.lt.0)then
-c              write(6,*)'Error generating LUT - terminating'
-c              goto 910
-c           else
-c              write(6,*)'rewrite satellite_lvd.nl'
-c              write(6,*)
-c              call rewrite_satellite_lvd_nl(istatus)
-c              call readlut(csatid,csattype,maxchannels,nchannels,
-c    &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-c              if(istatus.eq.1)then
-c                 write(6,*)'Error reading new luts - terminating'
-c                 goto 909
-c              endif
-c           endif
-
-      else
-         write(6,*)'Got the mapping look-up-tables '
-
-c           write(6,*)'Check if luts are up-to-date'
-
-c           call check_luts(c_fname_cur,isat,jtype,
-c    &chtype,maxchannels,nchannels,l_lut_flag,istatus)
-
-c           if(l_lut_flag.and.istatus.eq.0)then
-c              print*,'*******************************************'
-c              write(6,*)'Found difference in nav parms',
-c    +' - rebuild the lut'
-c              print*,'*******************************************'
-c              call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
-c    +gstatus)
-c              if(gstatus.lt.0)then
-c                 write(6,*)'Error generating LUT - terminating'
-c                 goto 910
-c              else
-c                 write(6,*)'**********************************'
-c                 write(6,*)
-c                 call rewrite_satellite_lvd_nl(istatus)
-c                 call readlut(csatid,csattype,maxchannels,nchannels,
-c    &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-c                 if(istatus.eq.1)then
-c                    print*,'Error reading new luts - terminating'
-c                    goto 909
-c                 endif
-c              endif
-c           elseif(istatus.eq.0)then
-c              write(6,*)'Lut checked out ok'
-c              write(6,*)
-c           else
-c              write(6,*)'Error status returned from check_lut'
-c              goto 910
-c           endif
-
-      endif
+         if(istatus.eq.1)then
+            write(6,*)'LUT not obtained: ',csatid,'/',csattype
+            istatus = -1
+            return
+         else
+            write(6,*)'Got the mapping look-up-tables '
+         endif
       endif
 c
 c -------------------------------------------------------------------------
@@ -372,18 +318,28 @@ c
          write(6,*)'Search for data: ',csattype
          write(6,*)'Using getafgwc_satdat routine'
 
-         nft=1
+         nft=1    !default to start. can change within this routine depending on AFWA file times.
+         nft_prior=nft
          call getafgwc_satdat(isat,jtype,
      &                        maxchannels,nchannels,chtype,
      &                        i4time_cur,lvis_flag,
      &                        n_ir_lines,n_ir_elem,
      &                        n_vis_lines,n_vis_elem,
      &                        n_wv_lines,n_wv_elem,
-     &                        ntm(nft),max_files,c_type,
+     &                        nft,ntm,max_files,c_type,
      &                        image_ir,image_vis,
      &                        image_12,image_39,image_67,
-     &                        i4time_data(nft),
+     &                        i4time_data,
      &                        istatus)
+
+         if(nft.gt.nft_prior.and.nft.lt.3)then
+            print*,'nft incremented in getafgwc_satdat.'
+     &,' Move image_ir(1,1,1) to image_ir(1,1,2)'
+         call move(image_ir(1,1,1),image_ir(1,1,2),n_ir_elem,n_ir_lines)
+         elseif(nft.ge.3)then
+            print*,'nft > 2. lvd for AFWA cannot handle this. terminate'
+            stop
+         endif
 
          if(istatus.ne.0)then
             write(6,*)'Did not get data for ',c_fname_cur

@@ -197,20 +197,20 @@ c
        else
           write(6,*)'All laps vis data checked out ok'
        endif
+
+       do j=1,jmax
+       do i=1,imax
+          laps_vis_norm(i,j)=laps_vis_raw(i,j)
+       enddo
+       enddo
 c
 c.....       Normalize the VIS data.
 c
-c For locally produced (ground station ispan look-alike) visible we
+c For locally produced (ground station SBN look-alike) visible we
 c want to reverse the already applied normalization (national scale
 c normalization) and then "re-normalized" for the local domain.
 c
 c
-       do j=1,jmax
-       do i=1,imax
-          laps_vis_norm(i,j)=laps_vis_raw(i,j)
-       enddo 
-       enddo
-
        if(c_sat_id.eq.'goes08'.and.c_sat_type.eq.'cdf')then    !this switch is for gvar conus /public data
 c 	  						       that is a pre-normalized display-ready image.
 
@@ -229,7 +229,7 @@ c have been normalized with l_national = .true.
           write(6,*)'Reverse the normalization'
 
           call normalize_brightness(i4time,lat,lon,laps_vis_norm
-     &,imax,jmax,sublat_d,sublon_d,range_m,.true.,iskip_bilin
+     &,imax,jmax,sublat_d,sublon_d,range_m,.true.,iskip_bilin         !note: l_national is hardwired true here.
      &,r_missing_data,6,i_dir,phase_angle_d,specular_ref_angle_d
      &,emission_angle_d,istatus_n)
 c
@@ -240,15 +240,13 @@ c
              write(*,*)'Visible image successfully un-normalized'
           endif
 c
-c at this point the counts are goes7 look-a-like.
-c So the standard for svs is to save the raw satellite vis counts.
+c The standard is to save the raw (true) satellite vis counts (svs).
 c
-
           do j=1,jmax
           do i=1,imax
 c
-c save the unnormalized counts.
-c Note: this raw vis data now looks like raw goes-7 counts; we must reverse the stretch.
+c Since this data looks like raw goes-7 counts (due to normalization by
+c FD), we must reverse the stretch.
 c
              if(laps_vis_norm(i,j).ne.r_missing_data)then
                call stretch(0., 255., 0., 303.57, laps_vis_norm(i,j))  !reverse the stretch 
@@ -285,13 +283,14 @@ c for goes8 - make it look like goes7
              do j=1,jmax
              do i=1,imax
                if(laps_vis_norm(i,j).ne.r_missing_data)then
-c for goes9 - make it look like goes8; no goes09. New stretch for goes10
+c New stretch for goes10
 c J. Smart 2-23-99.
 c                 call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
 c          3-08-99 commented out and added new stretch parameters for goes10.
-c                 call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
+c          8-27-99 re-activated the 305 stretch for WFO.
+                  call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
 
-                  call stretch(0.,295.,0.,255.,laps_vis_norm(i,j))
+c                 call stretch(0.,295.,0.,255.,laps_vis_norm(i,j))
 
 c for goes8 - make it look like goes7
                   call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))

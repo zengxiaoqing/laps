@@ -167,6 +167,7 @@ c -------------------------------------------
             elseif(ispec.eq.1)then
 c -------------------------------------------
             c_satdir=sat_dir_path(ispec)  !Particularly wfo! The channel types are in order.
+            if(csat_type.eq.'cdf')smsng=0.
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_vis(1,1,i),nvis_elem,nvis_lines,
      &               smsng,r_missing_data,

@@ -82,7 +82,7 @@ c
          rhigh=255.
       endif
 
-      if(csatid.ne.'gmssat')then
+      if(csatid.ne.'gmssat'.and.csatid.ne.'meteos')then
          if(csattype.eq.'gvr'.or.csattype.eq.'gwc')then
             rhigh = 1023.
             if(chtype.eq.'4u ')rlow=69.
@@ -94,13 +94,6 @@ c
 
       istat_status=0
       imiss_status=0
-
-c     if(csattype.eq.'gwc')then
-c        call setmsng_gwc(rlow,rhigh,smsng,nx,ny,image_in,
-c    &r_missing_data,imiss_status)
-c        print*,'N msng found in setmsng_gwc: ',imiss_status
-c        goto 1000
-c     endif
 
       do j=2,jbnd-1
       do i=2,ibnd-1
@@ -206,26 +199,4 @@ c
       istatus=imiss_status+istat_status
 
 1000  return
-      end
-c
-c===============================================================
-c
-      subroutine setmsng_gwc(rlow,rhigh,smsng,nx,ny,image_in,
-     &r_missing_data,imiss_status)
-
-      real*4 rlow,rhigh,smsng,r_missing_data
-      integer nx,ny,imiss_status
-      real*4 image_in(nx,ny)
-
-      do j=1,ny
-      do i=1,nx
-         if(image_in(i,j).eq.smsng.or.
-     &image_in(i,j).lt.rlow.or.image_in(i,j).gt.rhigh)then
-            image_in(i,j)=r_missing_data
-            imiss_status=imiss_status-1
-         endif
-      enddo
-      enddo
-
-      return
       end
