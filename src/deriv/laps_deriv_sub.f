@@ -601,7 +601,7 @@ c read in laps lat/lon and topo
 
                 call read_radar_3dref(i4time_radar,
 !    1                 1200,i4time_radar,
-     1                 .true.,
+     1                 .true.,ref_base,                                 ! I
      1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,
      1                 lat,lon,topo,.true.,.true.,
      1                 heights_3d,

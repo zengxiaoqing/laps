@@ -442,9 +442,11 @@ cdis
             write(6,*)
 
 !           Repeat read in radar data with low level reflectivities filled in
-            call read_radar_3dref(i4time_radar,
-!    1       0,i4_dum,
-     1       .true.,imax,jmax,kmax,
+            call get_ref_base(ref_base,istatus)
+            if(istatus .ne. 1)return
+
+            call read_radar_3dref(i4time_radar,                 ! I
+     1       .true.,ref_base,imax,jmax,kmax,                    ! I
      1       radarext_3d_accum,lat,lon,topo,
      1       .true.,.false.,
      1       height_3d,

@@ -177,8 +177,14 @@
 
             if(ext_radar .ne. 'vrc')then 
 
+                call get_ref_base(ref_base,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Error getting ref_base'
+                    return
+                endif
+
                 call read_radar_3dref(i4time_radar,
-     1                 .true.,
+     1                 .true.,ref_base,
      1                 NX_L,NY_L,NZ_L,ext_radar,
      1                 lat,lon,topo,.true.,.true.,
      1                 heights_3d,

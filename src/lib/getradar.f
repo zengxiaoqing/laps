@@ -33,36 +33,36 @@ cdis
 
 !       File: getradar.f
 !
-!       Module Summary:
-!
-!       get_multiradar_vel
-!           now called from wind/lplot
-!
-!       get_radar_ref
-!           now called from lplot
-!
-!       read_radar_3dref
-!           now called from deriv
-!           now called from accum
-!           now called from lplot
-!           now called from get_radar_ref
-!           now called from mosaic_radar
-!
-!       read_multiradar_3dref
-!           now called from cloud
-!           now called from read_radar_3dref
-!
-!       read_radar_2dref
-!           now called directly from wind-derived
-!           now called from (wind-derived via) get_radar_max_pd
-!
-!       read_radar_vel
-!           now called from (wind/lplot via) get_multiradar_vel
-!
-!       read_nowrad_3dref
-!           now called from read_multiradar_3dref
-!
-!
+cdoc    Module Summary:
+cdoc
+cdoc    get_multiradar_vel
+cdoc        now called from wind/lplot
+cdoc
+cdoc    get_radar_ref
+cdoc        now called from lplot
+cdoc
+cdoc    read_radar_3dref
+cdoc        now called from deriv
+cdoc        now called from accum
+cdoc        now called from lplot
+cdoc        now called from get_radar_ref
+cdoc        now called from mosaic_radar
+cdoc
+cdoc    read_multiradar_3dref
+cdoc        now called from cloud
+cdoc        now called from read_radar_3dref
+cdoc
+cdoc    read_radar_2dref
+cdoc        now called directly from wind-derived
+cdoc        now called from (wind-derived via) get_radar_max_pd
+cdoc
+cdoc    read_radar_vel
+cdoc        now called from (wind/lplot via) get_multiradar_vel
+cdoc
+cdoc    read_nowrad_3dref
+cdoc        now called from read_multiradar_3dref
+cdoc
+cdoc
 !       1996 Aug    S. Albers FSL
 
 
@@ -75,8 +75,8 @@ cdis
      1  ,istatus_multi_vel,istatus_multi_nyq)
 
 
-!       Returns Velocity from multiple radars.
-!       Called from wind/lapsplot
+cdoc    Returns Velocity from multiple radars.
+cdoc    Called from wind/lapsplot
 
 
 !       i4time_ref          Input   Desired i4time
@@ -251,8 +251,8 @@ cdis
      1        ,rlat_radar,rlon_radar,rheight_radar
      1        ,istatus_2dref,istatus_3dref)
 
-!       This routine returns 3D radar ref data from the LAPS radar files
-!       Called from lapsplot
+cdoc    This routine returns 3D radar ref data from the LAPS radar files
+cdoc    Called from lapsplot
 
 !       i4time_ref          Input   Desired i4time
 !       i4time_tol          Input   Half Width of allowable time window
@@ -387,7 +387,7 @@ cdis
             istatus_2dref = 0
             istatus_3dref = 0
 
-        else
+        else ! Radar data is in time window
 
             if(l_conus_ref .or. l_nowrad_3dref)then
 
@@ -404,17 +404,25 @@ cdis
 
             else ! Attempt to get reflectivity from V01/VRC
 
-                call read_radar_3dref(i4time_radar,l_apply_map,
-     1               imax,jmax,kmax,radarext,
-     1               lat,lon,topo,l_low_fill,l_high_fill,
-     1               heights_3d,
-     1               grid_ra_ref,
-     1               rlat_radar,rlon_radar,rheight_radar,radar_name,
-     1               n_ref,istatus_2dref,istatus_3dref)
+                call get_ref_base(ref_base,istatus)
+                if(istatus .ne. 1)then
+                    istatus_2dref = 0
+                    istatus_3dref = 0
+                    return
+                endif
+
+                call read_radar_3dref(i4time_radar,l_apply_map,       ! I
+     1               ref_base,                                        ! I
+     1               imax,jmax,kmax,radarext,                         ! I
+     1               lat,lon,topo,l_low_fill,l_high_fill,             ! I
+     1               heights_3d,                                      ! I
+     1               grid_ra_ref,                                     ! O
+     1               rlat_radar,rlon_radar,rheight_radar,radar_name,  ! O
+     1               n_ref,istatus_2dref,istatus_3dref)               ! O
 
             endif
 
-        endif
+        endif ! Radar data is not in time window
 
         return
         end
@@ -422,7 +430,7 @@ cdis
 
         subroutine read_radar_3dref(i4time_radar,                        ! I
 !    1   i4_tol,i4_ret,
-     1   l_apply_map,                                                    ! I
+     1   l_apply_map,ref_missing,                                        ! I
      1   imax,jmax,kmax,radarext,                                        ! I
      1   lat,lon,topo,l_low_fill,l_high_fill,                            ! I
      1   heights_3d,                                                     ! I
@@ -430,9 +438,9 @@ cdis
      1   rlat_radar,rlon_radar,rheight_radar,radar_name,                 ! O
      1   n_ref_grids,istatus_2dref,istatus_3dref)                        ! O
 
-!       Steve Albers Feb 1998   This routine will read in a 3D radar
-!                               reflectivity field. It is a jacket that
-!                               calls read_multiradar_3dref.
+cdoc    Steve Albers Feb 1998   This routine will read in a 3D radar
+cdoc                            reflectivity field. It is a jacket that
+cdoc                            calls read_multiradar_3dref.
 
 
         real*4 grid_ra_ref(imax,jmax,kmax)
@@ -483,7 +491,7 @@ cdis
         endif
 
         call read_multiradar_3dref(i4time_radar,
-     1   l_apply_map,ref_base,
+     1   l_apply_map,ref_missing,
      1   imax,jmax,kmax,radarext,
      1   lat,lon,topo,l_low_fill,l_high_fill,
      1   heights_3d,
