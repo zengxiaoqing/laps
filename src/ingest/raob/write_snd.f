@@ -24,7 +24,7 @@
       integer iwmostanum(maxsnd),nlvl(maxsnd)
       real stalat(maxsnd),stalon(maxsnd),staelev(maxsnd)
       character c5_staid(maxsnd)*5,a9time_ob(maxsnd)*9
-     1         ,c8_obstype(maxsnd)*8,c_line*150
+     1         ,c8_obstype(maxsnd)*8,c_line*132
 
       real height_m(maxsnd,maxlvl)
       real pressure_pa(maxsnd,maxlvl)
