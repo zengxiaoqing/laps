@@ -100,3 +100,31 @@ c
 c
         return
         end
+c
+c------------------------------------------------------------------
+c
+        subroutine get_mxmn_2d(nx,ny,array_2d,rmx2d,rmn2d)
+
+        implicit none
+        integer  nx,ny
+        real     array_2d(nx,ny)
+        integer  i,j,istatus
+        real     rmx2d,rmn2d
+        real     r_missing_data
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus.ne.1)then
+           print*,'get_mxmn_2d: Error getting r_missing_data'
+           stop
+        endif
+
+        rmx2d=(-1.)*r_missing_data
+        rmn2d=      r_missing_data
+        do j=1,ny
+        do i=1,nx
+           rmx2d=max(rmx2d,array_2d(i,j))
+           rmn2d=min(rmn2d,array_2d(i,j))
+        enddo
+        enddo
+        return
+        end

@@ -272,6 +272,13 @@ c
            narg = iargc()
            if(narg.gt.0)then
               call getarg(narg,generic_data_root)
+              call s_len(generic_data_root,len_root)
+              if(generic_data_root(len_root-1:len_root).eq.'.x'.or.
+     1generic_data_root(len_root-3:len_root).eq.'.exe')then 
+                 print*,'Not a typical dataroot on command line'
+                 print*,'Trying LAPS_DATA_ROOT environment variable'
+                 call GETENV('LAPS_DATA_ROOT',generic_data_root)
+              endif
            else
               call GETENV('LAPS_DATA_ROOT',generic_data_root)
            endif

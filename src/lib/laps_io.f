@@ -1035,6 +1035,7 @@ c
         integer   i4time_needed
         integer   i4time_nearest
         integer   i4tol
+        integer   i4timedata(maxsat)
 
         integer   i
         integer   istatus 
@@ -1062,6 +1063,7 @@ c
               else
                  nsats=nsats+1
                  csatid(nsats)=c_sat_id(i)
+                 i4timedata(nsats)=i4time_nearest
                  call move(field_2d,field_2d_lvd(1,1,nsats),imax,jmax)
               endif
            endif
@@ -1070,7 +1072,7 @@ c
 c this section can make decisions about which satellite data
 c to return in the event there is more than 1 2d field.
 c
-        call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
+        call make_fnam_lp(i4timedata(1),asc9_tim,istatus)
 
         if(nsats.gt.1)then
            write(6,*)'Found data for ',nsats,' satellites'
