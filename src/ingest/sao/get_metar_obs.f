@@ -107,6 +107,7 @@ c
 	character  data_file*150, timech*9, time*4, metar_format*(*)
 	character  filename13*13, fname9_to_wfo_fname13*13
         character  path_to_metar*(*), a9time*9, a8time*8, a9_to_a8*8
+        character  path_to_local_cwb*150
 	character  cvr(6,maxobs)*8
 	character  stations(maxsta)*20, provider(maxsta)*11
      1                                , c11_provider*11
@@ -334,13 +335,15 @@ c
 	    data_file = 
      1          path_to_metar(1:len_path)//'synop'//a8time//'.dat'
 
+            path_to_local_cwb = path_to_metar(1:len_path)//'../loc/'
+
             call s_len(data_file,len_file)
             write(6,*)' CWB Synop/Local Data: ',data_file(1:len_file)       
 
             n_synop_cwb = 0
 
             call read_synop_cwb(data_file , maxSkyCover, recNum, 
-     &         i4time_sys, path_to_metar,
+     &         i4time_sys, path_to_local_cwb,
      &         alt(ix), atype_in(ix), td(ix), ttd(ix), elev(ix),
      &         lats(ix), lons(ix), max24t(ix), min24t(ix),
      &         pcp1(ix), pcp24(ix), pcp3(ix), pcp6(ix),
