@@ -6,7 +6,6 @@
      1            i4time_lapswind,heights_3d,heights_1d,            ! I
      1            MAX_PR,MAX_PR_LEVELS,weight_prof,                 ! I
      1            lat,lon,                                          ! I
-     1            u_mdl_diff,v_mdl_diff,                            ! I
      1            u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,            ! I
      1            grid_laps_u,grid_laps_v,grid_laps_wt,             ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
@@ -24,7 +23,6 @@
 
         include 'get_wind_obs.inc'
 
-        dimension u_mdl_diff(NX_L,NY_L,NZ_L),v_mdl_diff(NX_L,NY_L,NZ_L)
         dimension u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
 
@@ -58,7 +56,6 @@
      1            ob_pr_u_obs , ob_pr_v_obs ,                       ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            n_vel_grids,                                      ! I
-     1            u_mdl_diff,v_mdl_diff,                            ! I
      1            u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,            ! I
      1            ilaps_cycle_time,r_missing_data,                  ! I
      1            NX_L,NY_L,NZ_L,                                   ! I

@@ -212,37 +212,11 @@
 
 !       1998    Steve Albers - FSL
 
-        logical l_rt     ! Realtime OR Batch Test Mode?
-        data l_rt/.true./
-
-        character*31 ext_fg
-
         dimension u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
         dimension u_laps_fg(NX_L,NY_L,NZ_L),v_laps_fg(NX_L,NY_L,NZ_L)
 
         character*3 var_2d
-
-!       Control which LAPS background can be read in
-        if(l_rt)then
-            ext_fg = 'ram'  ! Use RAMS first guess
-!           ext_fg = 'lw4'  ! Use MAPS first guess (dummy extension)
-!           ext_fg = 'lw3'  ! Use LAPS persistance first guess
-            itime_start = 0
-            itime_stop  = 4
-            write(6,*)' 3D option ',ext_fg(1:3)
-        else ! Non-Realtime
-!           ext_fg = 'lw3'            ! Previous LAPS Wind analysis
-!           itime_start = 0
-!           itime_stop  = 2
-!           write(6,*)' 4D option ',ext_fg(1:3)
-
-            ext_fg = 'lw4'  ! Use MAPS first guess (dummy extension)
-            itime_start = 0
-            itime_stop  = 4
-            write(6,*)' 3D option ',ext_fg(1:3)
-
-        endif
 
         write(6,*)
         write(6,*)' Obtain wind tendency from model first guesses:'
@@ -298,69 +272,12 @@
 
         enddo ! NT
 
-        write(6,*)
-        write(6,*)' Obtain wind from model first guess:'
-
-!       Get previous LAPS analysis for first guess
-        if(ext_fg(1:3) .eq. 'ram')then
-            istat_persist = 0
-
-        else ! Use persistance LAPS analysis as first guess
-            i4time_fg = i4time_lapswind - ilaps_cycle_time
-
-            write(6,*)' Reading in LAPS wind analysis'
-     1      ,' from previous cycle for 1st Guess ',ext_fg(1:3)
-            write(6,*)' Model forecast cycles are ',itime_start
-     1                                            ,itime_stop
-
-            call get_uv_3d(i4time_fg,NX_L,NY_L,NZ_L,u_laps_fg,v_laps_fg       
-     1                          ,ext_fg,istat_persist)
-
-        endif
-
         I4_elapsed = ishow_timer()
-        if(istat_persist .ne. 1)then
-            write(6,*)' No Persistance Winds used: ',ext_fg
-            write(6,*)' Using Model Winds for LAPS first guess field'       
 
-            do k = 1,NZ_L
-            do j = 1,NY_L
-            do i = 1,NX_L
-                u_laps_fg(i,j,k) = u_mdl_bkg_4d(i,j,k,0)
-                v_laps_fg(i,j,k) = v_mdl_bkg_4d(i,j,k,0)
-            enddo ! i
-            enddo ! j
-            enddo ! k
+        write(6,*)' Using Model Winds for u/v_laps_fg'       
 
-        else ! Add Model time tendency to LAPS first guess
-            write(6,*)' Adding Model time tendency to LAPS first guess'      
-
-            write(6,*)'u_laps_fg(NX_L/2+1,NY_L/2+1,1) = '
-     1                ,u_laps_fg(NX_L/2+1,NY_L/2+1,1)
-            write(6,*)'v_laps_fg(NX_L/2+1,NY_L/2+1,1) = '
-     1                ,v_laps_fg(NX_L/2+1,NY_L/2+1,1)
-
-            do k = NZ_L,1,-1
-            do j = 1,NY_L
-            do i = 1,NX_L
-                if(u_laps_fg(i,j,k) .ne. 1e-30)then
-                    u_laps_fg(i,j,k) = u_laps_fg(i,j,k) 
-     1                               + u_mdl_bkg_4d(i,j,k,0)
-     1                               - u_mdl_bkg_4d(i,j,k,-1)
-                    v_laps_fg(i,j,k) = v_laps_fg(i,j,k) 
-     1                               + v_mdl_bkg_4d(i,j,k,0)
-     1                               - v_mdl_bkg_4d(i,j,k,-1)
-
-                else ! Fill in missing data below the terrain
-                    u_laps_fg(i,j,k) = u_laps_fg(i,j,k+1)
-                    v_laps_fg(i,j,k) = v_laps_fg(i,j,k+1)
-
-                endif
-            enddo ! i
-            enddo ! j
-            enddo ! k
-
-        endif
+        call move_3d(u_mdl_bkg_4d(1,1,1,0),u_laps_fg,NX_L,NY_L,NZ_L)       
+        call move_3d(v_mdl_bkg_4d(1,1,1,0),v_laps_fg,NX_L,NY_L,NZ_L)
 
         write(6,*)'u_laps_fg(NX_L/2+1,NY_L/2+1,1) = '
      1            ,u_laps_fg(NX_L/2+1,NY_L/2+1,1)

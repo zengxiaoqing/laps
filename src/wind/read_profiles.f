@@ -12,7 +12,6 @@
      1                   ob_pr_u_obs ,ob_pr_v_obs ,                 ! O
      1                   rlat_radar,rlon_radar,rheight_radar,       ! I
      1                   n_vel_grids,                               ! I
-     1                   u_maps_inc,v_maps_inc,                     ! I
      1                   u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,     ! I
      1                   ilaps_cycle_time,r_missing_data,           ! I
      1                   imax,jmax,kmax,                            ! I
@@ -65,11 +64,6 @@ c                             time of the current LAPS analysis time.
 !*****************************************************************************
 
         real*4 heights_3d(imax,jmax,kmax)
-
-!       These two arrays (not used yet) serve for incrementing the out of
-!       date profiler obs according to the model rates of change.
-        real*4 u_maps_inc(imax,jmax,kmax)
-        real*4 v_maps_inc(imax,jmax,kmax)
 
         dimension u_mdl_bkg_4d(imax,jmax,kmax,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(imax,jmax,kmax,NTMIN:NTMAX)
@@ -426,11 +420,6 @@ c
      1                                ,v_time_interp,v_diff_term
      1                                ,istatus)
                     v_diff = -v_diff_term
-
-!                   u_diff = u_maps_inc(i_ob,j_ob,level) 
-!    1                                              * rcycles_pr(i_pr)       
-!                   v_diff = v_maps_inc(i_ob,j_ob,level) 
-!    1                                              * rcycles_pr(i_pr)
 
                     call interp_prof(ob_pr_ht_obs,ob_pr_u_obs,
      1                             ob_pr_v_obs,
