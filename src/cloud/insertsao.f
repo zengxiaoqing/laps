@@ -29,11 +29,11 @@ cdis
 cdis
 cdis
 cdis
-        subroutine insert_sao(i4time,cldcv,cf_modelfg,t_modelfg
-     1          ,cld_hts,lat,lon,topo,t_sfc_k,wtcldcv
+        subroutine insert_sao(i4time,cldcv,cf_modelfg,t_modelfg,cld_hts   ! I
+     1          ,default_clear_cover,lat,lon,topo,t_sfc_k,wtcldcv         ! I
      1          ,name_array,l_perimeter,ista_snd,cvr_snd,cld_snd
      1          ,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
-     1          ,ni,nj,nk
+     1          ,ni,nj,nk                                                 ! I
      1          ,n_obs_pos_b,lat_sta_ret,lon_sta_ret,c_stations
      1          ,wx,t,td,obstype
      1          ,elev
@@ -202,8 +202,8 @@ c place station at proper laps grid point
      1        .or. obstype(i)(1:5) .eq. 'SYNOP' )then  ! New LSO file format
 
               if(  obstype(i)(8:8) .eq. 'A'
-     1        .or. obstype(i)(1:5) .eq. 'SYNOP' )then  ! Automated Station 
-                                                       ! (12000' limit)
+     1        .or. obstype(i)(8:8) .eq. 'U' )then      ! Automated Station 
+                                                       ! (12000' limit) or UNK
                   l_auto = .true.
                   ht_defined = elev(i) + 12000./3.281
 
@@ -316,9 +316,9 @@ C CLOUDS ARE NOW IN MSL
 !             AWOS or up to ht_base for VV.
               if(l_parse(amt_ret(i,l),'CLR')    .or.
      1           l_parse(amt_ret(i,l),'SKC')    .or.
-     1           amt_ret(i,l).eq.'  VV'          )then
+     1           l_parse(amt_ret(i,l),'VV')         )then
 
-                  cover=.01
+                  cover=default_clear_cover
                   if(istatus .ne. 1)goto125 ! go to next station
 
                   do k=1,nk
@@ -663,7 +663,7 @@ C CLOUDS ARE NOW IN MSL
 
 !       Fill in other clear layers outside of clouds, below the ceiling,
 !                        and within defined height range of sensor.
-1001    cover = .01
+1001    cover = default_clear_cover
 
         ht_fill = min(ht_defined,cld_hts(k_ceil))
 

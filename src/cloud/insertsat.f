@@ -32,13 +32,15 @@ cdis
 c
 c
         subroutine insert_sat(i4time,cldcv,cldcv_sao,cld_hts,rlat,rlon,
-     1  pct_req_lvd_s8a,
+     1  pct_req_lvd_s8a,default_clear_cover,                             ! I
      1  tb8_cold_k,tb8_k,grid_spacing_m,surface_sao_buffer,
      1  cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
-     1  cloud_frac_co2_a,rlaps_land_frac,
-     1  topo,heights_3d,temp_3d,t_sfc_k,t_gnd_k,sst_k,pres_sfc_pa,
-     1  cldtop_m_co2,cldtop_m_tb8,cldtop_m,cvr_snow,imax,jmax,
-     1  kcld,klaps,istatus,r_missing_data)
+     1  cloud_frac_co2_a,                                                ! O
+     1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
+     1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
+     1  t_gnd_k,sst_k,                                                   ! O
+     1  cldtop_m_co2,cldtop_m_tb8,cldtop_m,                              ! O
+     1  istatus)                                                         ! O
 c
 c*************************************************************************
 c
@@ -346,7 +348,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
               if(cldcv(i,j,k) .gt. .04)then ! Efficiency test
                 if(cldtop_m_co2(i,j) .ne. r_missing_data)then
                   if(cld_hts(k) .gt. cldtop_m_co2(i,j))then
-                    cldcv(i,j,k) = .01 ! Include surface buffer?
+                    cldcv(i,j,k) = default_clear_cover ! Include surface buffer?
                   endif
                 endif
               endif
@@ -409,8 +411,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
                   tb8_calculated = rad_to_temp(tb8_calculated_rad)
 
                   tb8_calculated_test = temp_grid_point *  cldcv(i,j,k) 
-     1+
-     1                           t_gnd_k(i,j) * (1.-cldcv(i,j,k))
+     1                                + t_gnd_k(i,j) * (1.-cldcv(i,j,k))
                 else
                   tb8_calculated = t_gnd_k(i,j)
                 endif
@@ -423,12 +424,12 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 !                 Don't touch points within buffer of surface
                   if(cld_hts(k) - topo(i,j) .gt. surface_sao_buffer)then
                     if(.false.)then
-                      cldcv(i,j,k)=.01
+                      cldcv(i,j,k)=default_clear_cover
                     else ! .true.
 !                     Does satellite still imply at least some cloud?
                       if(t_gnd_k(i,j) - tb8_k(i,j)  .gt. 8.0)then ! Some cloud
                         if(cldcv(i,j,k) .gt. 0.9)then ! Lower top of solid cld
-                            cldcv(i,j,k)=.01
+                            cldcv(i,j,k)=default_clear_cover
                         else                          ! Cover < 0.9, correct it
                             cldcv(i,j,k) = band8_cover( tb8_k(i,j)
      1                          ,t_gnd_k(i,j),temp_grid_point)
@@ -445,7 +446,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1                            min(t_gnd_k(i,j),t_sfc_k(i,j)-10.0)       
                         if(temp_grid_point .lt. temp_thresh)then
 !                       if(temp_grid_point .lt. t_gnd_k(i,j))then
-                            cldcv(i,j,k)=.01 ! not in inversion, clear it out
+                            cldcv(i,j,k)=default_clear_cover ! not in inversion, 
+                                                             ! clear it out
                         endif
                       endif ! IR signature present
                     endif ! .true.

@@ -127,7 +127,8 @@ c     call OUTPUT(CLDTYP,WATR,XMVD,AINDEX,HINDEX,ICP,NDECKS,TITLE)
 !     write(6,*)' height  LWC  %Liquid'
       i = 1
       n1 = watr(i,1,1)
-        do k = 3,0 ! 260
+        iscript = 0
+        do k = 3,iscript ! 260
             r_height = (k+n1-2)*100.
             if(watr(i,1,k) .gt. 0.)
      1  write(6,101)r_height,(watr(i,j,k),j=1,2)

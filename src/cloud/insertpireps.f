@@ -30,9 +30,10 @@ cdis
 cdis
 cdis
         subroutine insert_pireps(i4time,cldcv,cld_hts,wtcldcv
+     1        ,default_clear_cover
      1        ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
-     1  ,lat,lon,ni,nj,nk,ix_low,ix_high,iy_low,iy_high,max_pireps
-     1  ,istatus)
+     1        ,lat,lon,ni,nj,nk,ix_low,ix_high,iy_low,iy_high,max_pireps
+     1        ,istatus)
 
         real*4 lat(ni,nj),lon(ni,nj)
 
@@ -143,7 +144,7 @@ cdis
                             l_good_pirep = .true.
                         endif
 
-                        cover = .01
+                        cover = default_clear_cover
 
 !                       Fill in clear buffer under cloud layer
                         if(cld_hts(k) .ge. cbuf_low .and.
@@ -193,7 +194,7 @@ cdis
                             l_good_pirep = .true.
                         endif
 
-                        cover = .01
+                        cover = default_clear_cover
 
 !                       Fill in clear buffer under cloud layer
                         if(cld_hts(k) .ge. cbuf_low .and.
@@ -233,7 +234,7 @@ cdis
                             l_good_pirep = .true.
                         endif
 
-                        cover = .01
+                        cover = default_clear_cover
 
 !                       Fill in clear buffer above cloud layer
                         if(cld_hts(k) .ge. ctop_m .and.

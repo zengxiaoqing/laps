@@ -508,16 +508,15 @@ C READ IN RADAR DATA
 
         if(abs(i4time - i4time_radar) .le. 1200)then
 
-            call read_multiradar_3dref(i4time_radar,
-!    1                 1200,i4time_radar,
-     1                 .true.,
-     1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,
-     1                 lat,lon,topo,.true.,.true.,
-     1                 heights_3d,
-     1                 radar_ref_3d,
-     1                 rlat_radar,rlon_radar,rheight_radar,radar_name,     
-     1                 n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a,       
-     1                 istat_radar_3dref_a)       
+            call read_multiradar_3dref(i4time_radar,                     ! I
+     1                 .true.,ref_base,                                  ! I
+     1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,                 ! I
+     1                 lat,lon,topo,.true.,.true.,                       ! I
+     1                 heights_3d,                                       ! I
+     1                 radar_ref_3d,                                     ! O
+     1                 rlat_radar,rlon_radar,rheight_radar,radar_name,   ! O
+     1                 n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a,  ! O  
+     1                 istat_radar_3dref_a)                              ! O
 
         else
             write(6,*)'radar data outside time window'
@@ -554,12 +553,12 @@ C READ IN AND INSERT SAO DATA
         write(6,*)
         write(6,*)' Call Ingest/Insert SAO routines'
         n_cld_snd = 0
-        call insert_sao(i4time,cldcv1,cf_modelfg,t_modelfg
-     1  ,cld_hts
+        call insert_sao(i4time,cldcv1,cf_modelfg,t_modelfg             ! I
+     1  ,cld_hts,default_clear_cover                                   ! I
      1  ,lat,lon,topo,t_sfc_k,wtcldcv
      1  ,c1_name_array,l_perimeter,ista_snd
      1  ,cvr_snd,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
-     1  ,NX_L,NY_L,KCLOUD
+     1  ,NX_L,NY_L,KCLOUD                                              ! I
      1  ,n_obs_pos_b,lat_s,lon_s,c_stations    ! returned for precip type comp
      1  ,wx_s,t_s,td_s,obstype                 !    "      "    "     "
      1  ,elev_s                                ! ret for comparisons
@@ -575,6 +574,7 @@ C READ IN PIREPS
         write(6,*)' Using Pireps stored in LAPS realtime system'
 
         call insert_pireps(i4time,cldcv1,cld_hts,wtcldcv
+     1      ,default_clear_cover
      1      ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1      ,lat,lon,NX_L,NY_L,KCLOUD,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH
      1      ,N_PIREP,istatus)
@@ -651,13 +651,16 @@ C READ IN SATELLITE DATA
      1              ,istat_vis)                                          ! I
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
-     1        pct_req_lvd_s8a,
-     1        tb8_cold_k,tb8_k,grid_spacing_cen_m,surface_sao_buffer,
-     1        cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
-     1        cloud_frac_co2_a,rlaps_land_frac,
-     1        topo,heights_3d,temp_3d,t_sfc_k,t_gnd_k,sst_k,pres_sfc_pa,       
-     1        cldtop_m_co2,cldtop_m_tb8,cldtop_m,cvr_snow,
-     1        NX_L,NY_L,KCLOUD,NZ_L,istatus,r_missing_data)
+     1       pct_req_lvd_s8a,default_clear_cover,                       ! I
+     1       tb8_cold_k,tb8_k,grid_spacing_cen_m,surface_sao_buffer,
+     1       cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
+     1       cloud_frac_co2_a,                                          ! O
+     1       rlaps_land_frac,                                           ! I
+     1       topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,               ! I
+     1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,             ! I
+     1       t_gnd_k,sst_k,                                             ! O
+     1       cldtop_m_co2,cldtop_m_tb8,cldtop_m,                        ! O
+     1       istatus)                                                   ! O
 
         if(istatus .ne. 1)then
             write(6,*)' Error: Bad status returned from insert_sat'
@@ -766,6 +769,8 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
             istat_radar_3dref = 0
         endif
 
+!       Note, if orig data is a mixture of 2d and 3d, the istat here gets set
+!       to 3d.
         if(n_radar_3dref_orig .ge. 1)then
             istat_radar_3dref_orig = 1
         else
