@@ -396,7 +396,7 @@ c
         call get_r_missing_data(r_missing_data,istatus)
 
         do ista=1,n_obs_b ! Write station info including elevation
-                          ! Insert info into obs data structure
+                          ! Insert elev/ldf info into obs data structure
            obs(ista)%ri = rii(ista)
            obs(ista)%rj = rjj(ista)
            obs(ista)%i = ii(ista)
@@ -409,21 +409,23 @@ c
                write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
      &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)
      &                    ,elev_s(ista),topo(ii(ista),jj(ista))
-     &                    ,elev_diff
+     &                    ,elev_diff,ldf(ii(ista),jj(ista))
 
                obs(ista)%elev_diff = elev_diff
+               obs(ista)%ldf       = ldf(ii(ista),jj(ista))
 
            else
                write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
      &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)
 
                obs(ista)%elev_diff = r_missing_data
+               obs(ista)%ldf       = r_missing_data
 
            endif
 
         enddo !ista
  999    format(i5,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1
-     1        ,2x,3f8.0)
+     1        ,2x,3f8.0,2x,f8.3)
 c
         call zero(wt, ni,nj)
         if(n_obs_b .gt. 0.)then
