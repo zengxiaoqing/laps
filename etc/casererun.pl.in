@@ -37,6 +37,7 @@ sub help_sub
     print "                  Enter (lvd, vrc, lsr, ln3, remap, or all) depending on your needs.\n";
     print "                  You will get the intermediate ingest files between each cycle.\n";
     print "-wideband_2_nc:   Runs archive II to netcdf conversion - enter path to wideband root.\n";
+    print "                  This converter software only runs on Linux machines.\n";
     print " NOTES:\n";
     print " 1. the number of cycles for post analysis depends on the input beginning, ending, and\n";
     print "    the cycle time (see dataroot/static/nest7grid.parms LAPS_CYCLE_TIME)\n";
@@ -52,6 +53,10 @@ if (!$INSTALL_ROOT||!$DATA_ROOT)
        print "Environment Variables LAPSINSTALLROOT or LAPS_DATA_ROOT not set\n";
        &help_sub;
     }
+}
+
+if(length $wideband_2_netcdf == 0){
+   die "you must enter the wideband path (or root): -wideband_2_nc='path'\n";
 }
 
 require "$INSTALL_ROOT/etc/laps_tools.pm";
@@ -139,8 +144,8 @@ print "beginning/ending i4time70. $i4time70_beg, $i4time70_end\n";
 
 if($i4time70_beg > $i4time70_end)
 {
-   print "The beginning and ending times are equal!\n";
-   print "Reconsider the input beginning and ending times and try again\n";
+   print "The beginning time is greater than the ending time!\n";
+   print "Reconsider the input times and try again\n";
    exit;
 }
 
@@ -155,11 +160,13 @@ my @laps_driver_exe = qw(vrc_driver.x lvd_sat_ingest.exe lsr_driver.exe ln3_driv
 my $i4time70=$i4time70_beg;
 my ($year, $yr, $mo, $dy, $hr, $mn, $sc);
 my ($yr2, $mo2, $dy2, $hr2, $mn2, $sc2);
-my ($year2,$mon2);
+my ($yrw,$yearw, $mow, $dyw, $hrw, $mnw, $scw);
+my ($year2,$mon2,$dddw,$monw);
 my ($i,$j,$k,$mon,$command);
 my ($laps_driver_exe, $min_ld, $com_ld, $ldexe);
-my ($driver_incr, $driver_cycles, $i4time70_driver);
+my ($driver_incr, $driver_cycles, $i4time70_driver, $i4time70_wideband);
 my $i4time70_driver_end;
+my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
 
 while ($i4time70<=$i4time70_end)
 {
@@ -188,19 +195,40 @@ while ($i4time70<=$i4time70_end)
         $dddp1='0'.$dddp1 while(length($dddp1)<3);
         $purgewh = "$yr$dddp1".'12';
 
-#       Run purge_wideband first
+#       Run purge_wideband first - not needed in the loop
         $command = "@PERL@ $INSTALL_ROOT/etc/purge_wideband.pl $purgewl $purgewh $wideband_2_netcdf";
         print "Running $command\n";
-        run_sys::run_sys($command);
+#       run_sys::run_sys($command);
 
-#       Run wideband_2_netcdf 
-        $command = "/home/lapb/albers/ihop/radar_scripts/wideband2nc.csh $year $mo $dy $hr $yr$ddd yes";
-        print "Running $command\n";
-        run_sys::run_sys($command);
+        $i4time70_wideband = $i4time70 - 2*$cycle_time;
+        while ($i4time70_wideband <= $i4time70){
+              ($yearw,$mow,$dyw,$hrw,$mnw,$scw) = &laps_tools::i4time_to_date($i4time70_wideband);
+               $monw=$MON[$mow];
+               $mow++;
+               $dddw = &laps_tools::julian($yearw, $mow, $dyw);
+               $dyw='0'.$dyw while(length($dyw)<2);
+               $mow='0'.$mow while(length($mow)<2);
+               $hrw='0'.$hrw while(length($hrw)<2);
+               $mnw='0'.$mnw while(length($mnw)<2);
+               $scw='0'.$scw while(length($scw)<2);
+               $yrw=substr($yearw,2,2);
+
+#  Run wideband_2_netcdf 
+               open(WDBND_COM, ">/usr/nfs/common/lapb/parallel/laps/etc/wideband2nc.com") or die "cant open wideband2nc.com: $!\n";
+               print WDBND_COM "/home/lapb/albers/ihop/radar_scripts/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$ddd yes";
+               close WDBND_COM;
+               sleep 5;
+               chmod 0755, "/usr/nfs/common/lapb/parallel/laps/etc/wideband2nc.com";
+               $command = "ssh -i /home/lapb/oplapb/.ssh/wideband_convert_cumulus_dsa cumulus";
+               print "Running $command\n";
+               $result = system("$command");
+
+#              run_sys::run_sys($command);
+
+               $i4time70_wideband+=$cycle_time;
+        }
 
      }
-
-     my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
 
      if($#run_ld >= 0)
      {
@@ -210,9 +238,6 @@ while ($i4time70<=$i4time70_end)
            {
               if(substr($laps_driver_exe,0,3) eq substr($ldexe,0,3))
               {
-
-                $command = "@PERL@ $INSTALL_ROOT/etc/systime.pl $yr $mo $dy $hr $mn > $DATA_ROOT/time/systime.dat";
-                run_sys::run_sys($command);
 
                 if($laps_driver_exe =~ /^vrc/){
                    $driver_incr=15;                  #minutes
@@ -230,10 +255,9 @@ while ($i4time70<=$i4time70_end)
 #               print "Use laps_driver to run $laps_driver_exe: Increment: $driver_incr; Cycles: $driver_cycles \n";
 
                 $i4time70_driver=$i4time70-($driver_incr*$driver_cycles*60);
-                $i4time70_driver_end=$i4time70+($driver_incr*$driver_cycles*60);
+#               $i4time70_driver_end=$i4time70+($driver_incr*$driver_cycles*60);
 
-
-                while ($i4time70_driver <= $i4time70_driver_end)   #$k<$driver_cycles)
+                while ($i4time70_driver <= $i4time70)   #$k<$driver_cycles)
                 {
                      ($year2,$mo2,$dy2,$hr2,$mn2,$sc2) = &laps_tools::i4time_to_date($i4time70_driver);
                      $mon2=$MON[$mo2];
@@ -249,9 +273,10 @@ while ($i4time70<=$i4time70_end)
                      run_sys::run_sys($com_ld);
 
                      $com_ld="@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -L $dy2-$mon2-$year2-$hr2$mn2 $laps_driver_exe $INSTALL_ROOT $DATA_ROOT";
+                     print "Running: $com_ld\n";
                      run_sys::run_sys($com_ld);
 
-                     $i4time70_driver=$i4time70_driver+($driver_incr*60);
+                     $i4time70_driver+=($driver_incr*60);
                 }
               }
            } 
