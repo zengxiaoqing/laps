@@ -31,7 +31,7 @@ cdis
 cdis 
 
 
-
+#ifndef solaris
         function i4_to_byte(i4_in)
 
         integer*4 i4_in,i4
@@ -68,8 +68,27 @@ cdis
         return
 
         end
+#endif
+#ifdef solaris
+      real function trigd(val)
+      real val
+      real pi_180
+      parameter (pi_180=0.017453292519943)
+      entry sind(val)
+        trigd = sin(val*pi_180)
+        return
+      entry cosd(val)
+        trigd = cos(val*pi_180)
+        return
+      entry tand(val)
+        trigd = tan(val*pi_180)
+        return
+      entry atand(val)
+        trigd = atan(val)/pi_180
+        return
+      end
 
+#endif
 
-
-
-
+      
+      
