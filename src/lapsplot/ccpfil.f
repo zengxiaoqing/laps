@@ -164,6 +164,14 @@ C
               endif
             endif
 
+            if(c5_sect .eq. 'xsect')then
+              if(ZREG(i,j) .gt. scale_loc      .and. 
+     1           ZREG(i,j) .ne. r_missing_data .and.
+     1             (.not. l_integral)               )then
+                ZREG(i,j) = scale_loc
+              endif
+            endif
+
             if(ZREG(i,j) .lt. 0.0      )then
               ZREG(i,j) = 0.0
             endif
