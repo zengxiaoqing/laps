@@ -104,6 +104,7 @@ c                               09-19-99  Check T/Td bkgs until LGB can do it.
 c                               12-01-99  Rotate bkg winds to grid north.
 c                               12-17-99  Add option to use either LSO or the
 c                                           Kalman estimate LSO_QC.
+c                               01-23-00  Make that option readable via namelist.
 c
 c
 c       Notes:
@@ -192,12 +193,18 @@ c
 	real rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
 	real vis1(ni,nj), elev1(ni,nj)
 c
+c.....  Namelist stuff
+c
+	integer use_lso_qc
+	character nl_file*256
+c
+	namelist /surface_analysis/ use_lso_qc
 c
 c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
 c*************************************************************
 c
-	call tagit('laps_sfc',19991217)
+	call tagit('laps_sfc',20000123)
 	narg = iargc()
 cc	print *,' narg = ', narg
 c
@@ -241,12 +248,40 @@ c
 	gam = .0008
 	ak = 1.e-6
 c
-c.....	Get the LAPS lat/lon and topo data here so we can pass them to the 
-c.....	routines that need them.
+c.....  Set the namelist variables to their defaults.  If there's a problem reading
+c.....  the namelist, at least we can continue.
+c
+	use_lso_qc = 0   !use normal LSO
+c
+c.....  Read the namelist and get that info, then get the LAPS lat/lon and topo 
+c.....  data so we can pass them to the routines that need them. 
 c
 cc	dir_s = '../static/' 
 	call get_directory('static', dir_s, len)
 	ext_s = laps_domain
+	nl_file = dir_s(1:len) // 'surface_analysis.nl'
+	call s_len(nl_file, len)
+c
+	open(20,file=nl_file(1:len),status='old',err=930)
+	read(20,surface_analysis,end=930)
+	close(20)
+	go to 501
+c
+c.....  Skip here if there are problems with the namelist.
+c
+ 930	continue
+	print *,' '
+	print *,' WARNING.  Problem reading the surface analysis ',
+     &          'namelist file.'
+	print *,'    Check to see if ', nl_file(1:len)
+        print *,'         is there and correct.'
+	print *,'    Continuing with default values for namelist ',
+     &          'variables.'
+	print *,' '
+c
+c.....  Continue...get static stuff.
+c
+ 501	continue
 	var_s = 'LAT'
         call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
      &                      lat ,grid_spacing,istatus)
@@ -264,17 +299,17 @@ c.....	READ IN THE SURFACE OBS:  dd/ff in deg/kt, t and td in F, elev in m,
 c.....	                          and the pressure variable. cld hts are msl.
 c
 c
-	if(use_kalman .eq. 0) then
-	   use = 'LSO   '
-	else
+	if(use_lso_qc .eq. 1) then
 	   use = 'LSO_QC'
+	else
+	   use = 'LSO   '
 	endif
 c
 	write(6,305) filename(1:9), use
  305	format(' Getting surface data at: ',a9,' from ',a6)
 c
-	if(use_kalman .eq. 0) then
-	   call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b,
+	if(use_lso_qc .ne. 1) then
+	   call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b,      !regular LSO
      &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
      &       lat_s,lon_s,elev_s,t_s,td_s,rh,dd_s,ff_s,ddg_s,ffg_s,
      &       alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
@@ -283,7 +318,7 @@ c
      &       sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
      &       istatus)
 	else
-	   call read_surface_dataqc(i4time,atime_s,n_obs_g,n_obs_b,
+	   call read_surface_dataqc(i4time,atime_s,n_obs_g,n_obs_b,    !QC'd LSO
      &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
      &       lat_s,lon_s,elev_s,t_s,td_s,rh,dd_s,ff_s,ddg_s,ffg_s,
      &       alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
@@ -650,5 +685,6 @@ c.....	That's about it...let's go home.
 c
 	print *,' End of LAPS Surface Analysis'
 	return
+c
 	end
 
