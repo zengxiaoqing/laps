@@ -104,7 +104,7 @@ c
            enddo
         endif
       enddo
-      print*,'Did not find mslp data!'
+      print*,'Did not find sfc p data!'
 
 188   continue
       endif

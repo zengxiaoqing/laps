@@ -1,6 +1,6 @@
       subroutine read_dgprep(bgmodel,path,fname,af,nx,ny,nz
      .                      ,pr,ht,tp,sh,uw,vw
-     .                      ,ht_sfc,pr_sfc,sh_sfc,tp_sfc
+     .                      ,ht_sfc,pr_sfc,td_sfc,tp_sfc
      .                      ,uw_sfc,vw_sfc,mslp
      .                      ,gproj,istatus)
 
@@ -31,7 +31,7 @@ c
 
       real*4 ht_sfc(nx,ny)
      .      ,pr_sfc(nx,ny)
-     .      ,sh_sfc(nx,ny)
+     .      ,td_sfc(nx,ny)
      .      ,tp_sfc(nx,ny)
      .      ,uw_sfc(nx,ny)
      .      ,vw_sfc(nx,ny)
@@ -43,6 +43,9 @@ c
       real*4 esat,xe
 c     real*4 rp_init
       real*4 prsfc
+      real*4 qsfc
+      real*4 make_td
+      real*4 make_ssh
 c
       character*(*) path
       character*9   fname
@@ -69,7 +72,7 @@ c and number of levels for each model variable in file.  (J. Smart 7-6-98).
 c
 c_______________________________________________________________________________
 c
-c *** Open data file.
+c *** Open and read data index file.
 c
       call s_len(path,l)
       filename=path(1:l)//'/'//fname//af//'.index'
@@ -88,7 +91,7 @@ c
 c
 c_______________________________________________________________________________
 c
-c *** Open data file.
+c *** Open and read data file.
 c
       call s_len(path,l)
       filename=path(1:l)//'/'//fname//af
@@ -98,29 +101,19 @@ c
       open(lun,file=filename(1:l),status='old',
      .     form='unformatted',err=990)
       rewind(1)
-c     read(1) nxf,nyf,nzf
-c     if (nx .ne. nxf .or. ny .ne. nyf .or.
-c    .    nz .ne. nzf ) then
-c        print *,'Grid dimension mismatch.'
-c        print *,'   LAPS BG  nx, ny, nz =',nx,ny,nz
-c        print *,'   DGPREP   nx, ny, nz =',nxf,nyf,nzf
-c        print *,'abort ...'
-c        stop
-c     endif
-c     read(1) prk
 
       if(bgmodel.eq.6)then
 
          call read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
      +,nvarsmax,nvars,nlevs,ivarcoord,ivarid
-     +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
+     +,ht_sfc,pr_sfc,td_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
 
       elseif(bgmodel.eq.8.or.bgmodel.eq.3)then
 
          call read_nogaps(lun,nx,ny,nz
      + ,nvarsmax,nvars,nlevs,ivarcoord,ivarid
-     + ,ht,tp,sh,uw,vw,ht_sfc,pr_sfc,sh_sfc,tp_sfc
+     + ,ht,tp,sh,uw,vw,ht_sfc,pr_sfc,td_sfc,tp_sfc
      + ,uw_sfc,vw_sfc,mslp,istatus)
 
 c      else
@@ -128,7 +121,7 @@ c
 c eta ingest currently disabled. J. Smart (9-2-98)
 c
 c        call read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
-c    +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
+c    +,ht_sfc,pr_sfc,td_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
 c    +,istatus)
 
       endif
@@ -138,44 +131,56 @@ c    +,istatus)
          return
       endif
 c
-c *** Fill pressure array and
-c *** Convert rh to specific humidity.
+c *** Fill pressure array and convert rh to specific humidity. 
+c *** Note: sh and td_sfc arrays contain rh from AVN
 c
       if(bgmodel.eq.6)then
 
-      print*,'convert rh to sh'
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-         pr(i,j,k)=prk(k)
-         it=tp(i,j,k)*100
-         it=min(45000,max(15000,it))
-         xe=esat(it)
-         mrsat=0.00622*xe/(prk(k)-xe)        !Assumes that rh units are %
-         sh(i,j,k)=sh(i,j,k)*mrsat           !rh --> mr
-         sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
-      enddo
-      enddo
-      enddo
+         print*,'convert rh to q - 3D'
+         do k=1,nz
+         do j=1,ny
+         do i=1,nx
 
-      do j=1,ny
-      do i=1,nx
-         prsfc=pr_sfc(i,j)/100.
-         it=tp_sfc(i,j)*100
-         it=min(45000,max(15000,it))
-         xe=esat(it)
-         mrsat=0.00622*xe/(prsfc-xe)         !Assumes that rh units are %
-         sh_sfc(i,j)=sh_sfc(i,j)*mrsat             !rh --> mr
-         sh_sfc(i,j)=sh_sfc(i,j)/(1.+sh_sfc(i,j))  !mr --> sh
-      enddo
-      enddo
+            sh(i,j,k)=make_ssh(prk(k),
+     .                         tp(i,j,k)-273.15,
+     .                         sh(i,j,k)/100.,0.)*0.001
+
+            pr(i,j,k)=prk(k)
+
+c           it=tp(i,j,k)*100
+c           it=min(45000,max(15000,it)) 
+c           xe=esat(it)
+c           mrsat=0.00622*xe/(prk(k)-xe)        !Assumes that rh units are %
+c           sh(i,j,k)=sh(i,j,k)*mrsat           !rh --> mr
+c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
+
+         enddo
+         enddo
+         enddo
+ 
+         print*,'convert rh to Td - sfc'
+         do j=1,ny
+         do i=1,nx
+
+            prsfc=pr_sfc(i,j)/100.
+            qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.,0.)
+            td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc,0.)+273.15
+
+c           it=tp_sfc(i,j)*100
+c           it=min(45000,max(15000,it))
+c           xe=esat(it)
+c           mrsat=0.00622*xe/(prsfc-xe)         !Assumes that rh units are %
+c           td_sfc(i,j)=td_sfc(i,j)*mrsat             !rh --> mr
+c           td_sfc(i,j)=td_sfc(i,j)/(1.+td_sfc(i,j))  !mr --> sh
+
+         enddo
+         enddo
 
       elseif(bgmodel.eq.8.or.bgmodel.eq.3)then
-
-c *** Convert dew point to specific humidity.
-c *** Fill pressure array.
 c
-         print*,'Convert Td to q'
+c *** Convert Td to sh and fill 3D pressure array.
+c
+         print*,'Convert Td to q - 3D'
          do k=1,nz
          do j=1,ny
          do i=1,nx
@@ -192,19 +197,6 @@ c
          enddo
          enddo
          enddo
-
-         if(.false.)then
-         do j=1,ny
-         do i=1,nx
-            pr_sfc(i,j)=pr_sfc(i,j)/100.
-            it=sh_sfc(i,j)*100
-            it=min(45000,max(15000,it))
-            xe=esat(it)
-            sh_sfc(i,j)=0.622*xe/(pr_sfc(i,j)-xe)
-            sh_sfc(i,j)=sh_sfc(i,j)/(1.+sh_sfc(i,j))
-         enddo
-         enddo
-         endif
 
       endif
 c

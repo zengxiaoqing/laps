@@ -45,7 +45,9 @@ c
       REAL       tbarv,dz,tvsfc,tvk,tbar
       REAL       qsfc,xe,psfc1
       REAL       esat
+      REAL       r_log_p,t_sfc,p_sfc
       REAL       TER         ( IMX , JMX )
+      REAL       rterm
 
       do j=1,jmx
       do i=1,imx
@@ -61,18 +63,38 @@ c
 c first guess psfc without moisture consideration
                tbar=(tsfc(i,j)+t(i,j,k))*0.5
                dz=height(i,j,k)-ter(i,j)
-               psfc1=p(k)*exp(G/(R*tbar)*dz)
+               p_sfc=p(k)*exp(G/(R*tbar)*dz)
 
 c recompute psfc with moisture consideration
                it=tdsfc(i,j)*100.
                it=min(45000,max(15000,it))
                xe=esat(it)
-               qsfc=0.622*xe/(psfc1-xe)
+               qsfc=0.622*xe/(p_sfc-xe)
                qsfc=qsfc/(1.+qsfc)
                tvsfc=tsfc(i,j)*(1.+0.608*qsfc)
                tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
                tbarv=(tvsfc+tvk)*.5
-               psfc(i,j)=(p(k)*exp(G/(R*tbarv)*dz))*100.    !return units = pascals
+               p_sfc=(p(k)*exp(G/(R*tbarv)*dz))
+c
+c recompute sfc T with new sfc p. "devirtualize" and return dry T.
+c No noticeable change in t_sfc when doing this so presently turned off.
+c
+               if(.true.)then
+
+                  r_log_p = log(p_sfc/p(k))
+                  rterm   = (2.*G*dz)/(R*r_log_p)
+                  tvsfc   = rterm - tvk
+                  t_sfc   = tvsfc/(1.+0.608*qsfc)
+
+c                 r_log_p = log(p(k)/p_sfc)
+c                 tbarv   = -(G*dz/R)/r_log_p
+c                 tvsfc = tbarv*2.-tvk
+c                 t_sfc   = tvsfc/(1.+0.608*qsfc)
+
+                  tsfc(i,j)=t_sfc               
+               endif
+
+               psfc(i,j)=p_sfc*100.      !return p units = pascals
 
             endif
             if(k.eq.kx)lfndz=.true.
