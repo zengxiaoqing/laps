@@ -37,22 +37,22 @@ cdis
 cdis   
 cdis
 
-       subroutine laps_anl(uobs,vobs,n_radars
-     1     ,istat_radar_vel                                      ! Input
-     1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in
-!    1     ,upass1,vpass1                                        ! Output
-     1     ,n_var,n_fnorm_dum                                    ! Input
-     1     ,uanl,vanl                                            ! Output
-     1     ,wt_p,weight_bkg_const,rms_thresh_wind                ! Input/Local
-     1     ,max_radars
-     1     ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar
-     1     ,u_laps_bkg,v_laps_bkg                                ! Input/Local
-     1     ,imax,jmax,kmax,lat,lon
-     1     ,i4time,grid_spacing_m
-     1     ,r_missing_data
-     1     ,i_3d                                                 ! Input
-     1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
-     1     ,n_iter_wind_in
+       subroutine laps_anl(uobs,vobs
+     1     ,n_radars,istat_radar_vel                                   ! I
+     1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in                         ! I
+!    1     ,upass1,vpass1                                              ! O
+     1     ,n_var                                                      ! I
+     1     ,uanl,vanl                                                  ! O
+     1     ,wt_p,weight_bkg_const,rms_thresh_wind                      ! I/L
+     1     ,max_radars                                                 ! I
+     1     ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar ! I
+     1     ,u_laps_bkg,v_laps_bkg                                      ! I/L
+     1     ,imax,jmax,kmax,lat,lon                                     ! I
+     1     ,i4time,grid_spacing_m                                      ! I
+     1     ,r_missing_data                                             ! I
+!    1     ,i_3d                                                       ! I
+     1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding  ! I
+!    1     ,n_iter_wind_in
      1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar
      1     ,istatus)
 
@@ -614,8 +614,8 @@ csms$>                    rms_thresh, out>:default=ignore)  begin
 
               write(6,*)' Calling barnes with single radar obs added'       
 
-              call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
-              call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
+!             call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
+!             call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
@@ -702,8 +702,8 @@ csms$>                    rms_thresh, out>:default=ignore)  begin
  401          format(1x,' Analyzing with ',i5
      1                 ,' multi-doppler grid points')     
 
-              call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
-              call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
+!             call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
+!             call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
@@ -796,8 +796,8 @@ csms$>                                     :default=ignore)  begin
 
           write(6,*)' Calling barnes with single+multi radar obs added'       
 
-          call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
-          call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
+!         call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
+!         call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
@@ -824,6 +824,9 @@ csms$insert      print *, 'got to 10 processor=',me
      1       ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const  ! I
      1       ,topo_dum,rland_frac_dum,1,1                             ! I
      1       ,n_obs_lvl,istatus)                                      ! O
+
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 11 processor=',me
 
 csms$serial(default=ignore)  begin              
 
