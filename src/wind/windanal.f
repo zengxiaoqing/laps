@@ -122,6 +122,8 @@
 
       l_3d = .false.
 
+      rms_thresh = 0.5                            ! Not used if l_3d = .false.
+
       if(l_3d)then
           n_iter_wind = 1
       else
@@ -417,7 +419,7 @@
      1        ,imax,jmax,kmax,grid_spacing_m
      1        ,varobs_diff_spread
      1        ,wt_p_spread,fnorm,n_fnorm
-     1        ,l_analyze,l_3d,weight_bkg_const
+     1        ,l_analyze,l_3d,rms_thresh,weight_bkg_const
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
 
@@ -525,7 +527,7 @@
      1       ,imax,jmax,kmax,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,l_3d,weight_bkg_const
+     1       ,l_analyze,l_3d,rms_thresh,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
@@ -586,7 +588,7 @@
      1       ,imax,jmax,kmax,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,l_3d,weight_bkg_const
+     1       ,l_analyze,l_3d,rms_thresh,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
@@ -672,7 +674,7 @@
      1       ,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,l_3d,weight_bkg_const
+     1       ,l_analyze,l_3d,rms_thresh,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)

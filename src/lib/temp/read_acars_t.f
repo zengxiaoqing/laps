@@ -137,7 +137,7 @@ cdis
      1              / float(ilaps_cycle_time)
 
 !           Climo QC check
-            if(temp .lt. 500. .and. i_qc .eq. 1)then
+            if(temp_ob .lt. 500. .and. i_qc .eq. 1)then
 
                 call latlon_to_rlapsgrid(xlat,xlon,lat,lon,ni,nj
      1                                  ,ri,rj,istatus)
@@ -150,20 +150,29 @@ cdis
 !                   ACARS is in horizontal domain
 
                     if(ext_in .eq. 'pin')then
-!                       Assume ACARS elev is geometric height MSL
-                        rk = height_to_zcoord2(elev,heights_3d
-     1                       ,ni,nj,nk,i_grid,j_grid,istatus_rk)
-                        if(istatus_rk .ne. 1)then
-                            write(6,*)' WARNING: rejecting ACARS ',
-     1                      'apparently above top of domain ',elev
+!                       Assume ACARS elev is pressure altitude MSL
+                        arg = ztopsa(elev)
+
+                        if(abs(arg) .lt. 90000.)then ! Within flag value
+                            pres = arg * 100.
+                            rk = zcoord_of_logpressure(pres)
+                            rk_pspace = zcoord_of_pressure(pres)
+                            istatus_rk = 1
+                        else
+                            istatus_rk = 0
                         endif
 
-                    else ! ssd ?
+!                       rk = height_to_zcoord2(elev,heights_3d
+!    1                       ,ni,nj,nk,i_grid,j_grid,istatus_rk)
+
+                        if(istatus_rk .ne. 1)then
+                            write(6,*)' WARNING: rejecting ACARS ',
+     1                      'elevation questionable ',elev
+                        endif
+
+                    else 
                         istatus = 0
                         return
-
-!                       rk = zcoord_of_pressure(pres)
-!                       istatus_rk = 1
 
                     endif
 
@@ -232,25 +241,29 @@ cdis
                         endif
 
 
-                        write(6,20,err=21)n_acars_obs
+                        if(iwrite .eq. 1)write(6,20,err=21)
+     1                                    n_acars_read,n_acars_obs       
      1                                   ,i_grid,j_grid,k_grid       
+     1                                   ,rk,rk_pspace
      1                                   ,temp_ob,t_interp,bias
-20                      format(i5,1x,3i4,2x,3f7.1)
+20                      format(2i5,1x,3i4,2x,2f8.3,2x,3f7.1)
 21                      continue
 
                     else
-                        write(6,*)' WARNING: Out of vertical Bounds'       
+                        write(6,*)' Note: Out of vertical Bounds'
+     1                             ,n_acars_read       
 
                     endif ! In vertical bounds
 
                 else
-                    write(6,*)' Out of horizontal bounds',i_grid,j_grid        
+                    write(6,*)' Out of horizontal bounds'
+     1                        ,n_acars_read,i_grid,j_grid        
 
                 endif ! In horizontal bounds
             endif ! Good data
 
         else
-            write(6,*)' Out of temporal bounds'
+            write(6,*)' Out of temporal bounds',n_acars_read
      1                              ,abs(i4time_acars - i4time)
 
         endif ! In temporal bounds

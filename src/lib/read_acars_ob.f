@@ -46,7 +46,7 @@
         if(string(2:5) .eq. 'Temp' .and. c_obtype .eq. 'temp')then
             read(lun,302)temp
  302        format (1x,f10.1)
-            write(6,302)temp
+            if(iwrite .eq. 1)write(6,302)temp
             arg1 = temp
             return
         endif

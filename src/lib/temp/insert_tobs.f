@@ -89,6 +89,8 @@ cdis
 
         l_3d = .true.
 
+        rms_thresh = 0.5
+
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error getting r_missing_data'
@@ -341,7 +343,7 @@ cdis
      1      ,grid_spacing_m,max_snd_grid                       ! I
      1      ,temp_obs,max_obs,n_obs                            ! I
      1      ,r_missing_data                                    ! I
-     1      ,l_3d                                              ! I
+     1      ,l_3d,rms_thresh                                   ! I
      1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd           ! I
      1      ,temp_3d                                           ! I/O
      1      ,istatus)                                          ! O
@@ -361,7 +363,7 @@ cdis
      1      ,grid_spacing_m,max_snd_grid                          ! I
      1      ,temp_obs,max_obs,n_obs                               ! I
      1      ,r_missing_data                                       ! I
-     1      ,l_3d                                                 ! I
+     1      ,l_3d,rms_thresh                                      ! I
      1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd              ! I
      1      ,temp_3d                                              ! I/O
      1      ,istatus)                                             ! I
@@ -410,7 +412,7 @@ cdis
      1               ,bias_tsnd                              ! Input
      1               ,temp_obs,max_obs,n_obs                 ! Input
      1               ,bias_3d                                ! Output
-     1               ,l_analyze,l_3d                         ! Output
+     1               ,l_analyze,l_3d,rms_thresh              ! Output
      1               ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1               ,weight_bkg_const                       ! Input
      1               ,n_fnorm                                ! Input
@@ -454,7 +456,7 @@ cdis
      1                   ,bias_tsnd                              ! Input
      1                   ,temp_obs,max_obs,n_obs                 ! Input
      1                   ,bias_3d                                ! Output
-     1                   ,l_analyze,l_3d                         ! Output/Input
+     1                   ,l_analyze,l_3d,rms_thresh              ! Output/Input
      1                   ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
@@ -583,7 +585,7 @@ cdis
      1                     ,n_var                           ! Input
      1                     ,ni,nj,nk,grid_spacing_m         ! Inputs
      1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm ! Inputs
-     1                     ,l_analyze,l_3d                  ! Input
+     1                     ,l_analyze,l_3d,rms_thresh       ! Input
      1                     ,weight_bkg_const                ! Input
      1                     ,n_obs_lvl,istatus)              ! Outputs
 
