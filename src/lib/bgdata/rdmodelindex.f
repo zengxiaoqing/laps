@@ -26,7 +26,7 @@ c
 
       character cfname*(*)
 
-      istatus=0  !default error return
+      istatus=1  !default error return (1=failure)
       lun=120
       ifl=index(cfname,' ')-1
 
@@ -49,7 +49,7 @@ c
       enddo
 
 502   close(lun)
-      istatus=1
+      istatus=0  !success reading index file
       return
 
 500   print*,'error opening file ',cfname(1:ifl)

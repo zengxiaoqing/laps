@@ -16,7 +16,7 @@ c
       integer   nvars
 
       integer   bgmodel,nx,ny,nz
-     .         ,i,j,k,l,istatus
+     .         ,i,j,k,l,n,istatus
      .         ,icm
 c
       integer  it
@@ -95,6 +95,7 @@ c Td or rh liq/ice phase temp thresh
 c ---------------------------------
       t_ref=-47.0
       bogus_sh = 0.00001
+      istatus = 0
 c
       call get_r_missing_data(r_missing_data,istatus)
 
@@ -117,7 +118,7 @@ c
 
            call readindexfile(fname_index,nvarsmax,nz,nvars,nlevs
      +,p_levels,ivarcoord,ivarid,istatus)
-           if(istatus.lt.1)goto 995
+           if(istatus.eq.1)goto 995
 
            do j=1,nvars
             if(ivarid(j).eq.11.and.ivarcoord(j).eq.100)then
@@ -177,24 +178,14 @@ c    +,istatus)
       elseif(bgmodel.eq.3)then
 
          cfname13=fname//af
-         cFA_filename=fname13_to_FA_filename(cfname13)
+         cFA_filename=fname13_to_FA_filename(cfname13,cmodel)
          call s_len(path,l)
          filename=path(1:l)//'/'//cFA_filename
          call s_len(filename,l)
 
-         inquire(file=filename,exist=lext,opened=lopen,number=lun)
-         if(.not.lext)then
-            print*,'File does not exist: ',filename(1:l)
-            goto 990
-         endif
-         if(lopen)then
-            print*,'File is already open: ',filename(1:l)
-            goto 990
-         endif
-
          print*,'open and read FA file: ',filename(1:l)
          open(lun,file=filename(1:l),status='old'
-     +,IOSTAT=IOSTATUS,err=991)
+     +,IOSTAT=IOSTATUS,err=990)
 
          call read_fa(lun,filename                      ! I
      .               ,nx,ny,nz                          ! I
@@ -206,8 +197,8 @@ c    +,istatus)
 
       endif
  
-      if(istatus .ne. 1)then
-         print*,'Error reading data: ',cmodel(1:nclen),
+      if(istatus .eq. 1)then
+         print*,'Error reading dgprep data file: ',cmodel(1:nclen),
      +' ',filename(1:l)
          return
       endif
@@ -407,15 +398,29 @@ c
       istatus=1
       return
 c
-990   continue
-      print *,'Error finding dgprep file.'
+
+990   print *,'Error finding readdgprep file.'
+
+      IF (IOSTATUS .NE. 0)THEN
+         PRINT *,'ERROR READING ',FILENAME(1:l),' IO status is',
+     &  IOSTATUS
+      END IF
+
+      inquire(file=filename,exist=lext,opened=lopen,number=n)
+      if(.not.lext)then
+         print*,'File does not exist: ',filename(1:l)
+      endif
+      if(lopen)then
+         print*,'File is already open: ',filename(1:l)
+      endif
+      if(n .lt. 0)then
+         print*,'No unit number associated with file '
+     &                ,filename(1:l)
+      endif
+
       return
 995   print*,'Error reading model index file.',filename(1:l)
       return
-991   IF (IOSTATUS .NE. 0)THEN
-         PRINT *,'ERROR READING ',FILENAME(1:l),' IO status is', 
-     &  IOSTATUS
-      END IF
 
       end
 c
@@ -454,7 +459,7 @@ c
 
       real*4 dummy(nx,ny,nz)
 
-      istatus=0
+      istatus=1
 
       print*,'read 3-d variables'
 c nvar = 1
@@ -519,7 +524,7 @@ c
 
       call qcmodel_sh(nx,ny,nz,sh)
 
-      istatus=1
+      istatus=0
       return
 
 50    print*,'error during read'

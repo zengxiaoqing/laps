@@ -274,6 +274,7 @@ c     NZ = 40
       else if(bgmodel.eq.6) then
          if(cmodel .eq. 'AVN_FSL_NETCDF')then
             call readavnpublicdims(fullname,NX,NY,NZ,record,istatus)
+            if(istatus .ne. 0)print*,'Error reading AVN public dims'
          else         !this switch for AVN AFWA DEGRIB
             NX = 360
             NY = 181

@@ -40,7 +40,7 @@ c     real*4 xe,esat
       common /estab/esat(15000:45000)
 c_______________________________________________________________________________
 
-      istatus = 0
+      istatus = 1
 c
 c *** Open nogaps file.
 c NOGAPS file already open, only need to read it (J. Smart 9-4-98)
@@ -132,8 +132,7 @@ c return dewpoint temperature in "sh" arrays
       enddo
       enddo
 c
-      istatus=1
-      print*
+      istatus=0
       print*
 
       return
