@@ -132,7 +132,7 @@ c  normal internal parameters
         integer look_back_time
         integer raob_i4time  ! actual time of raob data used
         integer numoffiles, istatus, maxfiles
-        character*50 c_filenames(200),pathname_in
+        character*256 c_filenames(200),pathname_in
         character*9 filename
         character*200 fname
         integer idx, len

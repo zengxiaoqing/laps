@@ -51,7 +51,7 @@ c parameter variables
 
 
 
-        character*50 dir
+        character*256 dir
         character*31 ext
         integer lapsp(1)
         character*3     var(1)

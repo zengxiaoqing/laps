@@ -233,8 +233,8 @@ c        include 'setup.inc'
 c lat lon variables
 
 
-        character*50  directory
-        character*50 grid_fnam_common
+        character*256  directory
+        character*256 grid_fnam_common
         real lat(ii, jj), lon(ii, jj)
         real rspacing_dum
         character*125 comment_2d

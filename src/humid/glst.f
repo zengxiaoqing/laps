@@ -67,7 +67,7 @@ c internal variables
 
       integer i,j
 
-      character*50 dir
+      character*256 dir
       character*31 ext
       character*3 var (1)
       integer lvl (1)

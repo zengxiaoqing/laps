@@ -65,7 +65,7 @@ c variables with dynamic dependence
 c internal variables
 
         integer*4 i,j
-        character*50 dir
+        character*256 dir
         character*31 ext
         character*3 var (1)
         integer*4 lvl (1)
