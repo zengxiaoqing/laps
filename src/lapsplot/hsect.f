@@ -480,18 +480,13 @@ c       include 'satellite_dims_lvd.inc'
      1    .or. c_type_i(1:2) .eq. 'fo' .or. c_type_i(1:2) .eq. 'wo')then       
 
             if(c_type_i .eq. 'wd')then
-                ext = 'lw3'
-!               call get_directory(ext,directory,len_dir)
-!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+                ext = 'lwm'
 
             elseif(c_type_i .eq. 'wb')then
                 call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
-
                 ext = 'lga'
 
             elseif(c_type_i .eq. 'wr')then
-!               call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
-
                 ext = 'fua'
 
             elseif(c_type_i(1:2) .eq. 'co')then
@@ -508,8 +503,6 @@ c       include 'satellite_dims_lvd.inc'
 
             elseif(c_type_i .eq. 'wf')then
                 ext = 'lw3'
-!               call get_directory(ext,directory,len_dir)
-!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
             elseif(c_type_i .eq. 'bw'.or.c_type_i.eq.'bo')then
                 ext = 'balance'
             endif
@@ -641,6 +634,11 @@ c       include 'satellite_dims_lvd.inc'
      1                      ,' (barbs), ob (obs))]'   
      1                                          ,14x,'? ',$)
                     read(lun,15)c_field
+
+                    if(ext(1:3) .eq. 'lwm')then
+                      ext = 'lw3'
+                    endif
+
                     write(6,*)' ext = ',ext
 
                     call make_fnam_lp(i4time_3dw,asc9_tim_3dw,istatus)      
