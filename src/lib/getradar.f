@@ -441,9 +441,6 @@ cdis
 
         Include   'lapsparms.inc' ! ref_base, msg data
 
-        integer*4  NPTS_MAX
-        PARAMETER (NPTS_MAX = NX_L_MAX * NY_L_MAX)
-
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
@@ -587,9 +584,6 @@ cdis
         real*4 height_3d(imax,jmax,kmax)
 
         Include   'lapsparms.inc' ! ref_base, msg data
-
-        integer*4  NPTS_MAX
-        PARAMETER (NPTS_MAX = NX_L_MAX * NY_L_MAX)
 
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
@@ -801,9 +795,6 @@ cdis
 
         Include   'lapsparms.inc' ! ref_base, msg data
 
-        integer*4  NPTS_MAX
-        PARAMETER (NPTS_MAX = NX_L_MAX * NY_L_MAX)
-
         character*3 var_2d
         character*31  ext
         character*10  units_2d
@@ -976,10 +967,10 @@ cdis
 
         include 'lapsparms.inc'
 
-        real*4 ref_2d_04(NX_L_MAX,NY_L_MAX)
-        real*4 ref_2d_48(NX_L_MAX,NY_L_MAX)
-        real*4 ref_2d_8c(NX_L_MAX,NY_L_MAX)
-        real*4 ref_2d_et(NX_L_MAX,NY_L_MAX)
+        real*4 ref_2d_04(imax,jmax)
+        real*4 ref_2d_48(imax,jmax)
+        real*4 ref_2d_8c(imax,jmax)
+        real*4 ref_2d_et(imax,jmax)
 
         write(6,*)' Subroutine read_nowrad_3dref'
 

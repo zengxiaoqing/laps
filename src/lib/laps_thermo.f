@@ -210,7 +210,7 @@ C   PRESSURE FOR DRY AIR.
 !       Returns PBE and NBE in Joules, Parcel is lifted from lowest level
 !                                                            i.e. sfc
 
-        include 'lapsparms.inc' ! NZ_L_MAX probably
+        include 'lapsparms.inc' ! nothing
 
         real*4 t_sfc_k(ni,nj)
         real*4 td_sfc_k(ni,nj)
@@ -219,19 +219,19 @@ C   PRESSURE FOR DRY AIR.
         real*4 t_3d_k(ni,nj,nk)
         real*4 ht_3d_m(ni,nj,nk)
         real*4 p_1d_pa(nk)
-        real*4 p_1d_mb(NZ_L_MAX)
+        real*4 p_1d_mb(nk)                   ! Local
         real*4 pbe_2d(ni,nj)
         real*4 nbe_2d(ni,nj)
 
-        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2),V
-     1EL(20)
+        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
+     1  ,VEL(20)
      1  ,temdif(70),partem(70),pbe(70)
      #  ,DD85,FF85,DD50,FF50
         REAL LCL,LI,K_INDEX
 
-        EXTERNAL        LIB$INIT_TIMER,
-     1          LIB$SHOW_TIMER,
-     1          my_show_timer
+        EXTERNAL LIB$INIT_TIMER,
+     1           LIB$SHOW_TIMER,
+     1           my_show_timer
 
         ISTAT = LIB$INIT_TIMER()
 C

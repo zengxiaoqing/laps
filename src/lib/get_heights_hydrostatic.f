@@ -46,8 +46,7 @@ cdis
 !           1996        Steve Albers    Expanded 'esat_lut' array from -100C
 !                                       to the colder value of -120
 
-        include 'lapsparms.inc' ! NZ_L_MAX (different library
-                                           ! required for old vertical grids)
+        include 'lapsparms.inc' ! obsolete
 
 c       EXTERNAL        LIB$SHOW_TIMER
 
@@ -63,8 +62,8 @@ c       EXTERNAL        LIB$SHOW_TIMER
         real*4 pres_sfc_mb(ni,nj)
         real*4 z_correction(ni,nj)
 
-        real*4 p_1d_mb(NZ_L_MAX)
-        real*4 alog_array(NZ_L_MAX)
+        real*4 p_1d_mb(nk)                        ! Local
+        real*4 alog_array(nk)                     ! Local
 
         real*4 C2
         PARAMETER (C2 = 14.64285)

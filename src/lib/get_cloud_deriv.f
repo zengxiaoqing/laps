@@ -80,18 +80,18 @@ cdis
 
 !       real*4 snow_2d(ni,nj)               ! Output
 
-        real*4 temp_1d(NZ_L_MAX)            ! Local
-        real*4 slwc_1d(NZ_L_MAX)
-        real*4 cice_1d(NZ_L_MAX)
-        real*4 heights_1d(NZ_L_MAX)
-        real*4 pressures_mb(NZ_L_MAX)
-        real*4 pressures_pa(NZ_L_MAX)
-        real*4 rlwc_laps1d(NZ_L_MAX)
-        real*4 w_1d(NZ_L_MAX)
-        real*4 lwc_res_1d(NZ_L_MAX)
-        real*4 prob_laps(NZ_L_MAX)
-        real*4 d_thetae_dz_1d(NZ_L_MAX)
-        integer*4 cloud_type_1d(NZ_L_MAX)
+        real*4 temp_1d(nk)                  ! Local
+        real*4 slwc_1d(nk)
+        real*4 cice_1d(nk)
+        real*4 heights_1d(nk)
+        real*4 pressures_mb(nk)
+        real*4 pressures_pa(nk)
+        real*4 rlwc_laps1d(nk)
+        real*4 w_1d(nk)
+        real*4 lwc_res_1d(nk)
+        real*4 prob_laps(nk)
+        real*4 d_thetae_dz_1d(nk)
+        integer*4 cloud_type_1d(nk)
 
         integer*4 iarg
 
@@ -550,7 +550,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
         endif ! iflag icing index
 
+        istatus = 1
         return
+
         end
 
 
@@ -559,6 +561,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
      1  ,ni,nj,nk,cldpcp_type_3d,istatus)
 
 !       1991    Steve Albers
+!       1997    Steve Albers - Allow for supercooled precip generation
+!                            - Misc streamlining of logic
 
 !       This program modifies the most significant 4 bits of the integer
 !       array by inserting multiples of 16.
@@ -624,92 +628,94 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                     t_wb_c = twet_fast(t_c,td_c,pressure_mb)
 
-                    if(t_wb_c .lt. 0.)then
-                        if(iflag_melt .eq. 1)then
+                    if(t_wb_c .lt. 0.    .and. 
+     1                 iflag_melt .eq. 1)then ! integrate refreezing eq.
 
-!                           Integrate below freezing temperature times column
-!                           thickness - ONLY for portion of layer below freezing
+!                       Integrate below freezing temperature times column
+!                       thickness - ONLY for portion of layer below freezing
 
-                            temp_lower_c = t_wb_c
-                            k_upper = min(k+1,nk)
+                        temp_lower_c = t_wb_c
+                        k_upper = min(k+1,nk)
 
-!                           For simplicity and efficiency, the assumption is
-!                           here made that the wet bulb depression is constant
-!                           throughout the level.
+!                       For simplicity and efficiency, the assumption is
+!                       here made that the wet bulb depression is constant
+!                       throughout the level.
 
-                            temp_upper_c = t_wb_c +
+                        temp_upper_c = t_wb_c +
      1                  (temp_3d(i,j,k_upper) - temp_3d(i,j,k))
 
-                            if(temp_upper_c .le. 0.)then
-                                frac_below_zero = 1.0
-                                tbar_c = 0.5 *
-     1                              (temp_lower_c + temp_upper_c)
+                        if(temp_upper_c .le. 0.)then
+                            frac_below_zero = 1.0
+                            tbar_c = 0.5 * (temp_lower_c + temp_upper_c)
 
-                            else ! Layer straddles the freezing level
-                                frac_below_zero = temp_lower_c
-     1                                  / (temp_lower_c - temp_upper_c)
-                                tbar_c = 0.5 * temp_lower_c
+                        else ! Layer straddles the freezing level
+                            frac_below_zero = temp_lower_c
+     1                                   / (temp_lower_c - temp_upper_c)
+                            tbar_c = 0.5 * temp_lower_c
 
-                            endif
+                        endif
 
-                            rlayer_refreez = rlayer_refreez
+                        rlayer_refreez = rlayer_refreez
      1             + abs(tbar_c * PRESSURE_INTERVAL_L * frac_below_zero)
 
-!                           if(rlayer_refreez .ge. 75000.)then
-                            if(rlayer_refreez .ge. 25000.)then
-                                iflag_refreez = 1
-                            endif
+!                       if(rlayer_refreez .ge. 75000.)then
+                        if(rlayer_refreez .ge. 25000.)then
+                            iflag_refreez = 1
+                        endif
 
-                            rlayer_refreez_max =
+                        rlayer_refreez_max =
      1                          max(rlayer_refreez_max,rlayer_refreez)
 
-                        endif ! iflag_melt = 1
-
-                    else ! Temp > 0C
+                    else ! Temp > 0C or iflag_melt = 0
                         iflag_refreez = 0
                         rlayer_refreez = 0.0
 
                     endif ! Temp is freezing
 
-!                   Set melting flag
-                    if(t_wb_c .ge. thresh_melt_c)then
-                        iflag_melt = 1
-                    endif
-
                     if(radar_3d(i,j,k) .lt. 50.)then
-                        if(t_wb_c .ge. thresh_melt_c)then  ! Melted to Rain
+                        if(t_wb_c .ge. thresh_melt_c)then     ! Warm, got rain
                             iprecip_type = 1
+                            iflag_melt = 1
 
-                        else ! Check if below zero_c (Refrozen Precip or Snow)
-                            if(t_wb_c .lt. 0.0)then
-                                if(iflag_melt .eq. 1)then
-                                    if(iflag_refreez .eq. 0)then ! Freezing Rain
-                                        n_zr = n_zr + 1
-                                        if(n_zr .lt. 30)then
-                                            write(6,5)i,j,k,t_wb_c
-     1                                  ,temp_3d(i,j,k),rh_3d_pct(i,j,k)
-5                                           format('zr',3i3,2f8.2,f8.1)
-                                        endif
-                                        iprecip_type = 3
+                        elseif(t_wb_c .ge. 0.0)then ! Between 0C and Melt threshold
+                            if(iprecip_type_last .eq. 0)then  ! Generating lyr
+                                iprecip_type = 1              ! Rain
 
-                                    else  ! (iflag_refreez = 1)  ! Sleet
-                                        n_sl = n_sl + 1
-                                        iprecip_type = 4
-
-                                    endif
-
-                                else                             ! Snow
-                                    iprecip_type = 2
-
-                                endif ! iflag_melt = 1
-                           else ! Temp between 0C and Melting threshold
+                            else                              ! Unchanged pcp
                                 iprecip_type = iprecip_type_last
                                 n_last = n_last + 1
                                 if(n_last .lt. 5)then
                                     write(6,*)'Unchanged Precip'
      1                                        ,i,j,k,t_wb_c
                                 endif
-                           endif
+                            endif
+
+                        else ! below 0C (Freezing Precip or Snow)
+                            if(iprecip_type_last .eq. 0 .and. ! Generating lyr
+     1                                    t_wb_c .ge. -6.)then! Supercooled pcp
+                                iflag_melt = 1
+                            endif
+
+                            if(iflag_melt .eq. 1)then         ! Refreezing Scenario
+                                if(iflag_refreez .eq. 0)then  ! Freezing Rain
+                                    n_zr = n_zr + 1
+                                    if(n_zr .lt. 30)then
+                                        write(6,5)i,j,k,t_wb_c
+     1                                  ,temp_3d(i,j,k),rh_3d_pct(i,j,k) 
+5                                       format('zr',3i3,2f8.2,f8.1)
+                                    endif
+                                    iprecip_type = 3
+
+                                else  ! (iflag_refreez = 1)   ! Sleet
+                                    n_sl = n_sl + 1
+                                    iprecip_type = 4
+
+                                endif
+
+                            else                             ! Snow
+                                iprecip_type = 2
+
+                            endif ! iflag_melt = 1
                         endif
 
                     else ! >= 50 dbz
@@ -953,7 +959,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
         real*4 slwc(imax,jmax,kmax)
         real*4 slwc_int(imax,jmax) ! Output in g/m**2 (~10**-3 mm or microns)
-        real*4 depth(NZ_L_MAX)
+        real*4 depth(kmax)         ! Local
 
         do k = 1,kmax-1
             depth(k) = height_of_level(k+1) - height_of_level(k)
@@ -1083,11 +1089,11 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
 !       This routine returns stability at a given level given 1D array inputs
 
-        real*4 temp_1d(nk)
-        real*4 heights_1d(nk)
-        real*4 pressures_mb(nk)
-        real*4 d_thetae_dz_1d(nk)
-        real*4 thetae_1d(NZ_L_MAX)
+        real*4 temp_1d(nk)                  ! Input
+        real*4 heights_1d(nk)               ! Input
+        real*4 pressures_mb(nk)             ! Input
+        real*4 d_thetae_dz_1d(nk)           ! Output
+        real*4 thetae_1d(nk)                ! Local
 
 !       Calculate Stability
         klow  = max(kbottom-1,1)

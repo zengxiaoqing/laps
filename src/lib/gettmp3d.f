@@ -41,19 +41,15 @@ cdis
         character*150 DIRECTORY
         character*31 EXT
 
-        character*125 comment_3d(NZ_L_MAX)
-        character*10 units_3d(NZ_L_MAX)
-        character*3 var_t(NZ_L_MAX)
-        integer*4 LVL_3d(NZ_L_MAX)
-        character*4 LVL_COORD_3d(NZ_L_MAX)
+        character*125 comment_3d(kmax)
+        character*10 units_3d(kmax)
+        character*3 var_t(kmax)
+        integer*4 LVL_3d(kmax)
+        character*4 LVL_COORD_3d(kmax)
 
         real*4 temp_3d(imax,jmax,kmax)
 
-        real*4 theta(NZ_L_MAX)
-
-!       real*4 temp_std(NZ_L_MAX)/283.15,279.55,275.80,272.75,270.20,
-!       1       267.45,263.10,258.65,253.75,248.20,242.85,235.35,
-!       1       226.55,223.65,225.35,221.05,221.15/
+        real*4 theta(kmax)
 
         character*255 c_filespec
 

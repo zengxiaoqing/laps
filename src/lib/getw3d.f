@@ -35,16 +35,16 @@ cdis
 
 !       Steve Albers            1990
 
-        include 'lapsparms.inc'
+        include 'lapsparms.inc' ! obsolete
 
         character*150 DIRECTORY
         character*31 EXT     ! Input extension of file (normally 3 characters)
 
-        character*125 comment_3d(NZ_L_MAX)
-        character*10 units_3d(NZ_L_MAX)
-        character*3 var_w(NZ_L_MAX)
-        integer*4 LVL_3d(NZ_L_MAX)
-        character*4 LVL_COORD_3d(NZ_L_MAX)
+        character*125 comment_3d(kmax)
+        character*10 units_3d(kmax)
+        character*3 var_w(kmax)
+        integer*4 LVL_3d(kmax)
+        character*4 LVL_COORD_3d(kmax)
 
         logical l_convert
 
