@@ -120,6 +120,30 @@ netcdf static {
             alb:valid_range= 0.f, 1.f;
             alb:LAPS_units="none";
 
+        //      lon component mean terrain slope
+
+        float
+            sln(record,z,y,x);
+            sln:navigation_dim = "nav";
+            sln:record = "valtime, reftime";
+            sln:_FillValue = 1.e+37f;
+            sln:long_name="mean longitudinal slope";
+            sln:units="m/m";
+            sln:valid_range= -1.f, 1.f;
+            sln:LAPS_units="M/M";
+
+        //      lat component mean terrain slope
+
+        float
+            slt(record,z,y,x);
+            slt:navigation_dim = "nav";
+            slt:record = "valtime, reftime";
+            slt:_FillValue = 1.e+37f;
+            slt:long_name="mean latitudinal slope";
+            slt:units="m/m";
+            slt:valid_range= -1.f, 1.f;
+            slt:LAPS_units="M/M";
+
         //	LAPS variables
 
         long
@@ -140,6 +164,8 @@ netcdf static {
             ldf_comment(record,z,namelen),
             use_comment(record,z,namelen),
             alb_comment(record,z,namelen),
+            sln_comment(record,z,namelen),
+            slt_comment(record,z,namelen),
             asctime(namelen);
 
         //      validtime of the grid 
