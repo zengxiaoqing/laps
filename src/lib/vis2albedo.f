@@ -129,23 +129,14 @@ c
 
         function albedo_to_cloudfrac(albedo)
 
-!       This version assumes 0.15 land albedo and 0.85 cloud albedo if
-!       the albedo fields are tuned properly.
-!       cloud_frac_vis = (albedo - 0.15) / (0.85 - 0.15)
+        clear_albedo = .2097063
+        cloud_albedo = .4485300
 
-!       This version assumes 0.15 land albedo and 0.556 cloud albedo to
-!       compensate for a bias in the albedo fields.
-!       New value of "Cloud counts" should be 156 in normalize_laps.
-!       to fix the problem.
-        cloud_frac_vis = (albedo - 0.15) / (0.556 - 0.15)
+        arg = albedo
 
-!       Move out by 30% on either side
-        cloud_frac_vis = 0.5 + (cloud_frac_vis - 0.5) * 1.7
+        call stretch2(clear_albedo,cloud_albedo,0.,1.,arg)
 
-!       Add a 10% fudge factor to compensate for a drift in sensitivity
-        cloud_frac_vis = cloud_frac_vis + 0.10
-
-        albedo_to_cloudfrac = cloud_frac_vis
+        albedo_to_cloudfrac = arg
 
         return
         end
@@ -156,3 +147,19 @@ c
 
         return
         end
+
+C-------------------------------------------------------------------------------
+        Subroutine Stretch2(IL,IH,JL,JH,rArg)
+
+        Implicit        None
+
+        Real*4          A,B,IL,IH,JL,JH,rarg
+
+        a = (jh - jl) / (ih - il)
+        b =  jl - il * a
+
+        rarg = a * rarg + b
+
+        return
+        end
+
