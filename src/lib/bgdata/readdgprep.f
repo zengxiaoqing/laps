@@ -222,6 +222,7 @@ c              print*,'k mx/mn ww ',k,rmx2d,rmn2d
 c           enddo
 
             ww=ww/36.
+
          endif
 
          nzsh=nz
@@ -234,6 +235,9 @@ c           enddo
          return
       endif
 
+      call tcbogus(nx,ny,nz,ht,tp,sh,uw,vw,ht_sfc,
+     +             tp_sfc,td_sfc,uw_sfc,vw_sfc,mslp,
+     +             prk,filename,bgmodel)
 c qc 
 
       do k=1,nz
