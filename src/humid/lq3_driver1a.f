@@ -596,7 +596,7 @@ c     ****  execute raob step if switch is on
       
       if(raob_switch.eq.1) then
          write (6,*) 'begin raob insertion'
-         call raob_step (i4time,data,plevel, raob_lookback,
+         call raob_step (i4time,data,p_3d, raob_lookback,
      1        lat,lon, lt1dat, ii,jj,kk)
          
          

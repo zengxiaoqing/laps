@@ -32,7 +32,6 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
 cdis
 cdis
 cdis
@@ -42,7 +41,8 @@ cdis
 cdis
 cdis
 cdis
-      subroutine raob_step (i4time, data, laps_pressure, 
+cdis
+      subroutine raob_step (i4time, data, p_3d, 
      1     raob_lookback,
      1     lat,lon,  laps_t, ii,jj,kk)
 
@@ -101,7 +101,7 @@ c     parameters for sounding max and mins
 c     input parameters
 
       integer i4time, ii,jj,kk, raob_lookback
-      real data(ii,jj,kk), laps_pressure (kk)
+      real data(ii,jj,kk), p_3d (ii,jj,kk)
       real lat(ii, jj), lon(ii, jj)
       real laps_t (ii,jj,kk)  ! laps temp field for QC checking
 
@@ -272,22 +272,9 @@ c     reject on time condition (one hour lookback)
             else
                write(6,*) 'accepting.. ', r_filename(isound),
      1              snd_type(isound)
-                                !COMMENTING OUT RAOB SPECIFIC
-                                !1.21 MOD  8/6/99 BEGIN TEST D.B.
-c     test for non-RAOB type sounding
-c               if (snd_type(isound) .ne. "RAOB    ") then ! reject (wrong type)
-c                  write(6,*) 'rejecting ', snd_type(isound)
-c                  isound = isound -1
-c               endif
             endif
          else                   ! accept implicitly
             write(6,*) 'accepting.. time exact ', snd_type(isound)
-c     test for non-RAOB type sounding
-c            if (snd_type(isound) .ne. "RAOB    ") then ! reject (wrong type)
-c               write(6,*) 'rejecting ', snd_type(isound)
-c               isound = isound -1
-c            endif
-
          endif
 
 
@@ -395,7 +382,7 @@ c     pressure levels
 
          do k = 1,kk            ! each laps pressure level (ks)
 
-            call locate(p_r(1,is),lev_r(is),laps_pressure(k),ks)
+            call locate(p_r(1,is),lev_r(is),p_3d(i_r(is),j_r(is),k),ks)
 
             if(ks.eq.0  .or. ks.eq.lev_r(is)) then
 
@@ -403,18 +390,19 @@ c     pressure levels
 
             else                ! interpolate to the desired level
 
-               call interp (log(laps_pressure(k)),
+               call interp (log(p_3d(i_r(is),j_r(is),k)),
      1              log(p_r(ks,is)),log(p_r(ks+1,is)),
      1              t_r(ks,is),t_r(ks+1,is),temt)
 
-               call interp (log(laps_pressure(k)),
+               call interp (log(p_3d(i_r(is),j_r(is),k)),
      1              log(p_r(ks,is)),log(p_r(ks+1,is)),
      1              td_r(ks,is),td_r(ks+1,is),temtd)
 
 c     adjustment to t_ref for sounding data assuming now Td WRT liq at
 c     temps below freezing, DB  1.20 change
 
-               q_r(k,is) = ssh2 (laps_pressure(k),temt,temtd,-129.)/1000.
+               q_r(k,is) = ssh2 (p_3d(i_r(is),j_r(is),k),temt,
+     1              temtd,-129.)/1000.
 
 c     accept only valid raob data (temp must be > -40 c
 c     and +/- 3c temp check on laps background to raob temp)  DB 1.18 change
@@ -423,7 +411,7 @@ c     and +/- 3c temp check on laps background to raob temp)  DB 1.18 change
      1              abs(temt+273.-laps_t(i_r(is),j_r(is),k)).ge. 3.0
      1              ) then  !qc failure on temp
                   write(6,*) 'qc failure on temp, raob_step 1.18 mod'
-                  write(6,*) laps_pressure(k), temt,
+                  write(6,*) p_3d(i_r(is),j_r(is),k), temt,
      1                 abs(temt+273.-laps_t(i_r(is),j_r(is),k)), is
                   q_r(k,is) = rmd
                endif
@@ -545,11 +533,11 @@ c     call climo routine for middle latitude
 c     interpolate from climo coordinates to laps coords for w
 
       do k = 1, kk  ! fill all laps levels from climo data
-         call locate(standard_press,40,laps_pressure(k),ks)
+         call locate(standard_press,40,p_3d(ii/2,jj/2,k),ks)
          if(ks.eq.0  .or. ks.eq.40) then
             climo_w(k) = rmd
          else                   !interpolate
-            call interp(log(laps_pressure(k)),
+            call interp(log(p_3d(ii/2,jj/2,k)),
      1              log(standard_press(ks)),log(standard_press(ks+1)),
      1              mixratio_guess(ks),mixratio_guess(ks+1),climo_w(k))
          endif
@@ -564,7 +552,7 @@ c     compute all ratios of clim_w(k) to diffs
          if( ave(k) .ne. rmd) then
             write(6,*) (abs( ave(k))+3.*sdev(k)) / climo_w (k)*1.e-3
      1           /x_sum_save(k) ,
-     1           laps_pressure(k)
+     1           p_3d(ii/2,jj/2,k)
             if ((abs( ave(k))+3.*sdev(k)) / climo_w (k)*1.e-3
      1           /x_sum_save(k) .gt. 0.5e-6) then ! reject criteria
                write(6,*) 'Climo Q QC reject criteria met 1.19 ', k
