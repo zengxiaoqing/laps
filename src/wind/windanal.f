@@ -120,7 +120,7 @@
 
 !****************END DECLARATIONS *********************************************
 
-      l_3d = .false.
+      l_3d = .true. ! .false.
 
       rms_thresh_norm = 0.5                      ! Not used if l_3d = .false.
 
