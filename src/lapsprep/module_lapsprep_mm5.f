@@ -104,6 +104,7 @@ CONTAINS
   
   INTEGER            :: valid_mm, valid_dd
   CHARACTER (LEN=256):: output_file_name
+  CHARACTER(LEN=256)  :: sstfile
   REAL, ALLOCATABLE  :: d2d(:,:)
   REAL, ALLOCATABLE  :: p_pa(:)
   INTEGER            :: k,yyyyddd
@@ -274,17 +275,6 @@ CONTAINS
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', slp_level, ' Min: ', MINVAL(slp),&
             ' Max: ', MAXVAL(slp)
 
-  ! Skin temperature field
-  field = 'SKINTEMP '
-  units = 'K                        '
-  desc  = 'Skin temperature                              '
-  PRINT *, 'FIELD = ', field
-  PRINT *, 'UNITS = ', units
-  PRINT *, 'DESC =  ',desc
-  CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
-  WRITE ( output_unit ) tskin
-  PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', & 
-      MINVAL(tskin), ' Max: ', MAXVAL(tskin) 
 
   ! Snow cover
   IF ((MINVAL(snocov) .GE. 0.).AND.(MAXVAL(snocov) .LT. 1.1)) THEN
@@ -403,6 +393,23 @@ CONTAINS
   ENDIF
 
   CLOSE (output_unit)
+
+  ! Change for RSA to write skin temp out as a LAPS:TSKIN file
+  ! Skin temperature field
+  sstfile = TRIM(output_prefix) // ':TSKIN'
+  OPEN(UNIT=output_unit, FILE=sstfile,FORM='UNFORMATTED',ACCESS='SEQUENTIAL')
+  field = 'SKINTEMP '
+  units = 'K                        '
+  desc  = 'Skin temperature                              '
+  PRINT *, 'FIELD = ', field
+  PRINT *, 'UNITS = ', units
+  PRINT *, 'DESC =  ',desc
+  CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
+  WRITE ( output_unit ) tskin
+  PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', &
+      MINVAL(tskin), ' Max: ', MAXVAL(tskin)
+  CLOSE(output_unit)
+
   DEALLOCATE (d2d)
   DEALLOCATE (p_pa)
   RETURN
