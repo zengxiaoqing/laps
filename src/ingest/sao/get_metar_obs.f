@@ -585,8 +585,12 @@ c
 c
 c..... Wind speed and direction
 c
-        if(ff(i) .lt. 0. .or. ff(i) .gt. 500.)ff(i) = badflag
+        call sfc_climo_qc_r('dir_deg',dd(i))
+        call sfc_climo_qc_r('spd_ms',ff(i))
 	if(ff(i)  .ne. badflag) ff(i)  = 1.94254 * ff(i)   !m/s to kt
+
+        call sfc_climo_qc_r('dir_deg',ddg(i))
+        call sfc_climo_qc_r('spd_ms',ffg(i))
 	if(ffg(i) .ne. badflag) then
 	   ffg(i) = 1.94254 * ffg(i) !m/s to kt
 	   if(ddg(i) .eq. badflag)ddg(i) = dd(i)
@@ -848,6 +852,14 @@ c
         elseif(c_var .eq. 'td_k')then
             if(arg .gt. 320.)arg = badflag
             if(arg .lt. 210.)arg = badflag
+
+        elseif(c_var .eq. 'dir_deg')then
+            if(arg .gt. 360.)arg = badflag
+            if(arg .lt.   0.)arg = badflag
+
+        elseif(c_var .eq. 'spd_ms')then
+            if(arg .gt. 500.)arg = badflag
+            if(arg .lt.   0.)arg = badflag
 
         else
             write(6,*)' Warning: unknown variable in sfc_climo_qc_r'
