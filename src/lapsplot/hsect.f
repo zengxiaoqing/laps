@@ -101,7 +101,7 @@ cdis
         integer*4 itop_array(NX_L,NY_L)
 
         character*2 c_field,c_metacode,c_type
-        character*33 c33_label
+        character c19_label*19,c33_label*33
 
 !       integer*4 ity,ily,istatus
 !       data ity/35/,ily/1010/
@@ -156,7 +156,7 @@ cdis
         real*4 grid_ra_ref(NX_L,NY_L,NZ_L)
         real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
         real*4 grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
-!       real*4 grid_ra_rfill(NX_L,NY_L,NZ_L)
+        real*4 field_3d(NX_L,NY_L,NZ_L)
 
         real*4 lifted(NX_L,NY_L)
         real*4 height_2d(NX_L,NY_L)
@@ -316,10 +316,10 @@ cdis
 
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  '
-     1       /'     [wd] Wind, [wb,wr] Background Wind, [co] Cloud Omega
-     1'
-     1       /'     [lw] li*w, [li] li, [he] helicity, [pe] CAPE, [ne] C
-     1AP'
+     1       /'     [wd] Wind, [wb,wr,wf] Background Wind, '
+     1       ,'[co] Cloud Omega'
+     1       /'     [lw] li*w, [li] li, [he] helicity, [pe] CAPE,'
+     1       ,' [ne] CIN'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
@@ -356,12 +356,14 @@ cdis
 
 !  ***  Ask for wind field ! ***************************************************
         if(    c_type .eq. 'wd' .or. c_type .eq. 'wb'
-     1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr')then
+     1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr'
+     1    .or. c_type .eq. 'wf')then
 
             if(c_type .eq. 'wd')then
                 ext = 'lw3'
                 call get_directory(ext,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+
             elseif(c_type .eq. 'wb')then
                 call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
 
@@ -382,6 +384,12 @@ cdis
                 ext = 'lco'
                 call get_directory(ext,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+
+            elseif(c_type .eq. 'wf')then
+                ext = 'lw3'
+                call get_directory(ext,directory,len_dir)
+                c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+
             endif
 
             write(6,*)
@@ -440,14 +448,38 @@ cdis
                     if(c_field .ne. 'w ')then
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,
      1                                          ext,NX_L,NY_L,istatus)
-                      call move(uv_2d(1,1,1),u_2d,NX_L,NY_L)
-                      call move(uv_2d(1,1,2),v_2d,NX_L,NY_L)
-                    endif
+
+                      if(c_type .eq. 'wf')then
+
+!                       Calculate wind difference vector (lw3 - model first guess)
+                        var_2d = 'U3'
+                        call get_modelfg_3d(i4time_3dw,var_2d
+     1                           ,NX_L,NY_L,NZ_L,field_3d,istatus) 
+                        call multcon(field_3d(1,1,k_level),-1.
+     1                        ,NX_L,NY_L)      
+                        call add(field_3d(1,1,k_level),uv_2d(1,1,1),u_2d
+     1                        ,NX_L,NY_L)      
+
+                        var_2d = 'V3'
+                        call get_modelfg_3d(i4time_3dw,var_2d
+     1                           ,NX_L,NY_L,NZ_L,field_3d,istatus) 
+                        call multcon(field_3d(1,1,k_level),-1.
+     1                                       ,NX_L,NY_L)      
+                        call add(field_3d(1,1,k_level),uv_2d(1,1,2),v_2d       
+     1                                   ,NX_L,NY_L)      
+
+                      else ! c_type .ne. 'wf'
+                        call move(uv_2d(1,1,1),u_2d,NX_L,NY_L)
+                        call move(uv_2d(1,1,2),v_2d,NX_L,NY_L)
+
+                      endif ! c_type .eq. 'wf'
+
+                    endif ! c_field = 'w'
 
                 endif
 
 
-            elseif(k_level .eq. -1)then ! Calculate mean winds from 3d grids
+            elseif(k_level .eq. -1)then ! Read mean winds from 3d grids
 
                 write(6,*)' Getting pregenerated mean wind file'
 
@@ -472,7 +504,7 @@ cdis
                 do i = 1,NX_L
                 do j = 1,NY_L
                     if(u_2d(i,j) .eq. r_missing_data
-     1    .or. v_2d(i,j) .eq. r_missing_data)then
+     1            .or. v_2d(i,j) .eq. r_missing_data)then
                         dir(i,j)  = r_missing_data
                         spds(i,j) = r_missing_data
                     else
@@ -488,16 +520,17 @@ cdis
             endif
 
             if(c_field .eq. 'di')then
-                call mklabel33
-     1      (k_level,' Isogons   (deg)   ',c33_label)
+                c19_label = ' Isogons   (deg)   '
+                call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(dir,1e0,clow,chigh,30.,asc9_tim_3dw,
      1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'sp')then
-                call mklabel33
-     1              (k_level,' Isotachs (kt)     ',c33_label)
+                c19_label = ' Isotachs (kt)     '
+                call mklabel33(k_level,c19_label,c33_label)
+
                 if(k_level .gt. 0 .and. k_mb .le. 500)then
                     cint = 10.
                 else
@@ -505,28 +538,40 @@ cdis
                 endif
 
                 call plot_cont(spds,1e0,0.,300.,cint,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1           c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,       
+     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'u ')then
-                call mklabel33
-     1      (k_level,' U - Component      ',c33_label)
+                if(c_type .eq. 'wf')then
+                    c19_label = ' U - Diff      '
+                else
+                    c19_label = ' U - Component '
+                endif
+                call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(u_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1           c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'v ')then
-                call mklabel33
-     1      (k_level,' V - Component      ',c33_label)
+                if(c_type .eq. 'wf')then
+                    c19_label = ' V - Diff      '
+                else
+                    c19_label = ' V - Component '
+                endif
+                call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(v_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1           c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,       
+     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
-                call mklabel33
-     1      (k_level,' WINDS    (kt)     ',c33_label)
+                if(c_type .eq. 'wf')then
+                    c19_label = ' WIND diff (kt)    '
+                else
+                    c19_label = ' WINDS    (kt)     '
+                endif
+                call mklabel33(k_level,c19_label,c33_label)
 
                 if(max(NX_L,NY_L) .gt. 50)then
                     interval = 2
@@ -539,7 +584,7 @@ cdis
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,interval
      1               ,asc9_tim_3dw
      1               ,c33_label,c_field,k_level,i_overlay,c_display       
-     1               ,'nest7grid',NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel      
+     1               ,'nest7grid',NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel       
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
             else if(c_field .eq. 'w')then ! Display W fields
@@ -561,8 +606,7 @@ cdis
 
                 endif
 
-                call mklabel33
-     1      (k_level,' Omega    (ubar/s) ',c33_label)
+                call mklabel33(k_level,' Omega    (ubar/s) ',c33_label)       
 
                 do j = 1,NY_L
                 do i = 1,NX_L
@@ -573,18 +617,19 @@ cdis
                 enddo ! j
 
                 call plot_cont(w_2d,1e-1,0.,0.,-1.0,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1          c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,       
+     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'dv')then ! Display Divergence Field
                 call divergence(u_2d,v_2d,div,lat,lon,NX_L,NY_L
-     1  ,dum1_array,dum2_array
-     1  ,dum3_array,dum4_array,dummy_array,radar_array,r_missing_data)
+     1                         ,dum1_array,dum2_array
+     1                         ,dum3_array,dum4_array,dummy_array
+     1                         ,radar_array,r_missing_data)
                 call mklabel33(k_level,' DVRGNC  1e-5 s(-1)',c33_label)
 
                 call plot_cont(div,1e-5,0.,0.,0.,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1           c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,        
+     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             endif
 
@@ -797,12 +842,14 @@ cdis
             if(abs_max .gt. 1.)then ! new way
                 scale = 1.
                 c33_label = 'LAPS Helicity sfc-500mb m**2/s**2'           
+                cint = 40.
             else                    ! old way
                 scale = 1e-4
                 c33_label = 'LAPS Helicity  sfc-500 1e-4m/s**2'          
+                cint = 5.
             endif
 
-            call plot_cont(helicity,scale,clow,chigh,5.,asc9_tim_3dw
+            call plot_cont(helicity,scale,clow,chigh,cint,asc9_tim_3dw
      1                   ,c33_label
      1                   ,i_overlay,c_display,'nest7grid',lat,lon,jdot       
      1                   ,NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -4181,8 +4228,13 @@ cdis
 !101             format('LAPS',I5,' km ',a19)
 
 !            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
-                write(c33_label,102)
-     1          nint(zcoord_of_level(K_Level)/100.),c19_label
+                if(k_level .gt. 50)then ! k_level is given in pressure
+                    ipres = nint(zcoord_of_level(K_Level)/100.)
+                else                    ! k_level is level number
+                    ipres = nint(pressure_of_level(K_Level)/100.)
+                endif
+
+                write(c33_label,102)ipres,c19_label
 102             format('LAPS',I5,' hPa',a19)
 
 !            endif

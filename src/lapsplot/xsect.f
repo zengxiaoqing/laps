@@ -1535,63 +1535,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
             if(.false.)then ! Calculate on the Fly
-                iflag_temp = 1 ! Returns Ambient Temp (K)
-                call get_temp_3d(i4time_lwc,i4time_nearest,iflag_temp
-     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-!               if(istatus .ne. 1)goto100
-
-                call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-                call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh,
-     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
-
-!               Read Cloud Base and Ceiling Data
-                ext = 'lc3'
-                call get_clouds_3dgrid(i4time_lwc,i4time_cloud,NX_L,NY_L
-     1,KCLOUD
-     1          ,ext,clouds_3d,cld_hts,cld_pres,istatus)
-                call interp_3dc
-     1          (clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh,
-     1               NX_L,NY_L,NX_C,r_missing_data)
-
-!               Read in sfc pressure
-                i4time_tol = 10000000
-                var_2d = 'PS'
-                ext = 'lsx'
-                call get_laps_2dgrid(i4time_lwc,i4time_tol,i4time_neares
-     1t,
-     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,pres_2d,0,istatus)
-                IF(istatus .ne. 1)THEN
-                    write(6,*)' Error Reading Surface Pressure Analysis'
-                    goto100
-                endif
-                call interp_2d
-     1     (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
-     1                 NX_L,NY_L,NX_C,r_missing_data)
-
-                write(6,*)' Getting laps hydrostatic heights'
-                call get_heights_hydrostatic(temp_2d,pres_1d,terrain_ver
-     1t1d,
-     1          dum1_array,dum2_array,dum3_array,dum4_array,
-     1                                  NX_C,1,NZ_C,heights_2d)
-
-                iflag_mvd = .true.
-                iflag_icing_index = .false.
-                iflag_cloud_type = .false.
-                iflag_bogus_w = .false.
-!               iflag_snow_potential = .false.
-
-                call get_cloud_deriv(NX_C,1,NZ_C,clouds_vert,cld_hts,
-     1                          temp_2d,rh_2d,heights_2d,
-     1                          istat_radar,radar_2d,
-     1                          l_mask_pcptype,ibase_array,itop_array,
-     1                          iflag_slwc,slwc_2d,cice_2d,
-     1                          iflag_cloud_type,cldpcp_type_2d,
-     1                          iflag_mvd,field_vert,
-     1                          iflag_icing_index,icing_index_2d,
-     1                                iflag_bogus_w,w_2d,istatus)
-!       1                               iflag_snow_potential,snow_1d,lwc_res_2d)
-                if(istatus .ne. 1)goto100
 
             else
                 write(6,*)' Reading pregenerated MVD'
