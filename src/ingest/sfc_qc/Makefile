@@ -8,10 +8,7 @@ LAPSROOT=../../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
-LAPSLIBS = -Wl,-L$(LAPSROOT)/src/lib -llaps
-
-
-DBLAPSLIBS = -Wl,-L$(LAPSROOT)/src/lib -ldebuglaps  
+LAPSLIBS=$(LAPSLIB)
 
 
 EXE = sfc_qc.exe
