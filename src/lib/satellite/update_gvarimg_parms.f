@@ -198,7 +198,7 @@ c
             goto 999
          endif
 c
-c === gwc switch ===
+c ====================== gwc switch =======================
 c
       elseif(cstype .eq. 'gwc')then
 
@@ -243,12 +243,12 @@ c        endif
          write(6,*)'GWC nw_vis_pix/nw_vis_line: ',nw_vis_pix,nw_vis_line
          write(6,*)
 
-         filename_cdf=cdir_path(1:n)//'GOI_*_OA_01.DAT'
+         filename_cdf=cdir_path(1:n)//'*_OA_01.DAT'
          nf=index(filename_cdf,' ')-1
          call get_file_names(filename_cdf,numoffiles,c_filenames
      1        ,max_files,istatus)
 
-         if(istatus.eq.0.and.numoffiles.gt.0)then
+         if(istatus.eq.1.and.numoffiles.gt.0)then
 
          call get_gwc_oa(c_filenames(1),c_imc,orbitAttitude,336,
      &gstatus)
@@ -267,7 +267,8 @@ c        endif
          else
 c           call make_fnam_lp(i4time_nearest,c_fname,istatus)
 c           filename_cdf=cdir_path(1:n)//c_fname//'.oad'
-c           write(6,*)'Using: ',filename_cdf(1:100)
+c           ld=index(c_filespec, ' ')-1
+c           write(6,*)'Using: ',filename_cdf(1:ld)
             write(6,*)'gwc O&A obtained '
          endif
 
