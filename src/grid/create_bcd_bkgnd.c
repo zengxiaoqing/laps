@@ -44,16 +44,58 @@ void dclose(FILE * fp)
         fclose(fp);
 }
 
-void dump_record_to_gnuplot(FILE * fp, struct bcdRecord * record)
+void eliminate_short_lines(struct bcdRecord *record, float cornertocorner)
+{
+  int i, npts;
+  int cnt=0;
+
+  if (record->npts<2) return;
+
+  npts=record->npts-2;
+
+  for(i=0;i<npts;i++){
+    while(((record->pts[i]).lon-(record->pts[i+1]).lon)*
+	  ((record->pts[i]).lon-(record->pts[i+1]).lon)+
+	  ((record->pts[i]).lat-(record->pts[i+1]).lat)*
+	  ((record->pts[i]).lat-(record->pts[i+1]).lat) <
+	  0.0000001*cornertocorner && record->npts>3) {
+      (record->pts[i+1]).lon=(record->pts[i+2]).lon;
+      (record->pts[i+1]).lat=(record->pts[i+2]).lat;
+      record->npts--;
+      cnt++;
+    }
+  }
+  /*
+  if(cnt>2) eliminate_short_lines(record,cornertocorner);
+  */
+  
+}
+
+
+
+void dump_record_to_gnuplot(FILE * fp, struct bcdRecord * record, float cornertocorner)
 {
     int i;
+
+    /*
+    eliminate_short_lines(record,cornertocorner);
+    */
     if (record->npts<2) return;
 
     /* add code to eliminate "short vectors" */
     for(i=0;i<record->npts-1;i++){
-      fprintf(fp,"set arrow from %f,%f to %f,%f nohead ls 2\n"
-	     ,(record->pts[i]).lon,(record->pts[i]).lat
-	     ,(record->pts[i+1]).lon,(record->pts[i+1]).lat);
+      
+      /*      if(((record->pts[i]).lon-(record->pts[i+1]).lon)*
+         ((record->pts[i]).lon-(record->pts[i+1]).lon)+
+	 ((record->pts[i]).lat-(record->pts[i+1]).lat)*
+         ((record->pts[i]).lat-(record->pts[i+1]).lat) >
+	 0.00001*cornertocorner) 
+      */{
+      
+	  fprintf(fp,"set arrow from %f,%f to %f,%f nohead ls 2\n"
+		  ,(record->pts[i]).lon,(record->pts[i]).lat
+		  ,(record->pts[i+1]).lon,(record->pts[i+1]).lat);
+	}
     }
 
 } /* end dump_record_to_gnuplot */
@@ -75,6 +117,7 @@ void create_bcd_bkgnd(int * proj_idx,
   struct bcdRecord oneRecord;
   struct bcdRecord clipRec;
   FILE *ifp, *ofp;
+  float cornertocorner;
   float x1,x2,y1,y2;
   float x[MAXPTS],y[MAXPTS];
   float xx,yy,lat,lon;
@@ -105,6 +148,9 @@ void create_bcd_bkgnd(int * proj_idx,
   get_proj_parm(&my_proj);
   get_area_limits(&x1, &x2, &y1, &y2, &my_proj);
 
+
+  cornertocorner=(*x1lat1-*y1lat2)*(*x1lat1-*y1lat2)+(*x2lon1-*y2lon2)*(*x2lon1-*y2lon2);
+  printf("cornertocorner = %f\n",cornertocorner);
 
   minlat = 90.0;
   minlon = 180.0;
@@ -149,8 +195,8 @@ void create_bcd_bkgnd(int * proj_idx,
       minlon = min(minlon,minreclon);
       maxlat = max(maxlat,maxreclat);
       maxlon = max(maxlon,maxreclon);
-      
-      dump_record_to_gnuplot(ofp,&oneRecord); 
+
+      dump_record_to_gnuplot(ofp,&oneRecord,cornertocorner); 
       continue;
     } else if (allout)
       continue;
@@ -196,11 +242,11 @@ void create_bcd_bkgnd(int * proj_idx,
 	clipRec.pts[clipRec.npts].lat = oneRecord.pts[ii].lat;
 	clipRec.pts[clipRec.npts++].lon = oneRecord.pts[ii].lon;
       } else {
-	dump_record_to_gnuplot(ofp,&clipRec); 
+	dump_record_to_gnuplot(ofp,&clipRec,cornertocorner); 
 	clipRec.npts = 0;
       }/*endif*/
     }/*end for ii*/
-    if (clipRec.npts>1) dump_record_to_gnuplot(ofp,&clipRec);
+    if (clipRec.npts>1) dump_record_to_gnuplot(ofp,&clipRec,cornertocorner);
     
   }/*end while*/
   if(maxlat-minlat>maxlon-minlon){

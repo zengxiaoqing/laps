@@ -137,7 +137,7 @@ c      write(2,*) 'plot "centerpoint" ls 3'
       mode = 0
       call get_directory('nest7grid',directory,len)
       fname = directory(1:len)//'grid.nl'
-      open(3,file=fname,err=101)
+      open(3,file=fname,status='old',err=101)
       read(3,grid_nl,err=101,end=101)
       close(3)
 
