@@ -101,9 +101,9 @@ C
 C
       character*4    fcst_hh_mm
       character*9    gtime
-      character*128  file_name
-      character*128  cdl_path
-      character*128  static_path
+      character*150  file_name
+      character*150  cdl_path
+      character*150  static_path
       character*9    laps_dom_file
       character*24   asctime
 C
@@ -197,6 +197,8 @@ C
 
       call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,
      1                  file_name,fn_length,istatus)
+      if (istatus .eq. error(2)) goto 930
+
 
       called_from = 0    !called from FORTRAN
       append = 0         ! only one analysis time allowed per file
@@ -233,6 +235,11 @@ C
 999     RETURN
 C
 C ****  Error trapping.
+C
+930     IF (FLAG .NE. 1)
+     1    write (6,*) 'file_name variable too short...write aborted.'
+        ISTATUS=ERROR(2)
+        GOTO 999
 C
 940     IF (FLAG .NE. 1)
      1    write (6,*) 'Error opening file to be written to...write abort
