@@ -1,5 +1,5 @@
 20                      * * * *  @PERL@ @prefix@/etc/sched.pl                          @prefix@ @datadir@
-03,19,34,49             * * * *  @PERL@ @prefix@/etc/laps_driver.pl vrc_driver.x       @prefix@ @datadir@
+03,10,19,26,34,39,49,55 * * * *  @PERL@ @prefix@/etc/laps_driver.pl vrc_driver.x       @prefix@ @datadir@
 08,14,23,29,38,45,53,59 * * * *  @PERL@ @prefix@/etc/laps_driver.pl lvd_sat_ingest.exe @prefix@ @datadir@
 22,30                   * * * *  @PERL@ @prefix@/etc/laps_driver.pl lsr_driver.exe     @prefix@ @datadir@
 00,05,10,15,20,25,30,45 * * * *  @PERL@ @prefix@/etc/laps_driver.pl ingest_rrv.exe     @prefix@ @datadir@
