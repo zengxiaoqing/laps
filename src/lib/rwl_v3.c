@@ -1087,10 +1087,10 @@ fint4 lm1_levels;
 int get_static_info_v3(char *static_grid, float *Dx, float *Dy, 
                       float *La1, float *Lo1, float *LoV, 
                       float *Latin1, float *Latin2, char *map_proj, 
-                      char *origin, int name_len)
+                      char *origin, int name_len, char* ldf)
 #else
 int get_static_info_v3(static_grid, Dx, Dy, La1, Lo1, LoV, Latin1,
-                       Latin2, map_proj, origin, name_len)
+                       Latin2, map_proj, origin, name_len, ldf)
 char *static_grid; 
 float *Dx; 
 float *Dy; 
@@ -1102,6 +1102,7 @@ float *Latin2;
 char *map_proj; 
 char *origin;
 int name_len;
+char *ldf;
 #endif
 {
         int cdfid_stat, dimid, varid, istatus, ret_status;
@@ -1123,7 +1124,7 @@ int name_len;
         if (istatus != NC_NOERR) {
           namelen = 132;
           printf("Variables map_proj and origin may be incorrect.\n");
-          printf("Unable to read dimension namelen from static.nest7grid.\n");
+          printf("Unable to read dimension namelen from static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
@@ -1131,7 +1132,7 @@ int name_len;
           if (istatus != NC_NOERR) {
             namelen = 132;
             printf("Variables map_proj and origin may be incorrect.\n");
-            printf("Unable to read dimension namelen from static.nest7grid.\n");
+            printf("Unable to read dimension namelen from static.%s\n", *ldf);
             ret_status = -1;
           }
         }
@@ -1143,13 +1144,13 @@ int name_len;
 /* read Dx */
         istatus = nc_inq_varid(cdfid_stat,"Dx",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading Dx from  static.nest7grid.\n");
+          printf("Error reading Dx from  static.%s\n",*ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_var1_float (cdfid_stat,varid,mindex,Dx);
           if (istatus != NC_NOERR) {
-            printf("Error reading Dx from  static.nest7grid.\n");
+            printf("Error reading Dx from  static.%s\n", *ldf);
             ret_status = -1;
           }
         }
@@ -1157,13 +1158,13 @@ int name_len;
 /* read Dy */
         istatus = nc_inq_varid(cdfid_stat,"Dy",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading Dy from  static.nest7grid.\n");
+          printf("Error reading Dy from  static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_var1_float (cdfid_stat,varid,mindex,Dy);
           if (istatus != NC_NOERR) {
-            printf("Error reading Dy from  static.nest7grid.\n");
+            printf("Error reading Dy from  static.%s\n", *ldf);
             ret_status = -1;
           }
         }
@@ -1171,13 +1172,13 @@ int name_len;
 /* read La1 */
         istatus = nc_inq_varid(cdfid_stat,"La1",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading La1 from  static.nest7grid.\n");
+          printf("Error reading La1 from  static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_var1_float (cdfid_stat,varid,mindex,La1);
           if (istatus != NC_NOERR) {
-            printf("Error reading La1 from  static.nest7grid.\n");
+            printf("Error reading La1 from  static.%s\n", *ldf);
             ret_status = -1;
           }
         }
@@ -1185,13 +1186,13 @@ int name_len;
 /* read Lo1 */
         istatus = nc_inq_varid(cdfid_stat,"Lo1",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading Lo1 from  static.nest7grid.\n");
+          printf("Error reading Lo1 from  static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_var1_float (cdfid_stat,varid,mindex,Lo1);
           if (istatus != NC_NOERR) {
-            printf("Error reading Lo1 from  static.nest7grid.\n");
+            printf("Error reading Lo1 from  static.%s\n", *ldf);
             ret_status = -1;
           }
         }
@@ -1199,13 +1200,13 @@ int name_len;
 /* read LoV */
         istatus = nc_inq_varid(cdfid_stat,"LoV",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading LoV from  static.nest7grid.\n");
+          printf("Error reading LoV from  static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_var1_float (cdfid_stat,varid,mindex,LoV);
           if (istatus != NC_NOERR) {
-            printf("Error reading LoV from  static.nest7grid.\n");
+            printf("Error reading LoV from  static.%s\n", *ldf);
             ret_status = -1;
           }
         }
@@ -1213,13 +1214,13 @@ int name_len;
 /* read Latin1 */
         istatus = nc_inq_varid(cdfid_stat,"Latin1",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading Latin1 from  static.nest7grid.\n");
+          printf("Error reading Latin1 from  static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_var1_float (cdfid_stat,varid,mindex,Latin1);
           if (istatus != NC_NOERR) {
-            printf("Error reading Latin1 from  static.nest7grid.\n");
+            printf("Error reading Latin1 from  static.%s\n", *ldf);
             ret_status = -1;
           }
         }
@@ -1227,13 +1228,13 @@ int name_len;
 /* read Latin2 */
         istatus = nc_inq_varid(cdfid_stat,"Latin2",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading Latin2 from  static.nest7grid.\n");
+          printf("Error reading Latin2 from  static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_var1_float (cdfid_stat,varid,mindex,Latin2);
           if (istatus != NC_NOERR) {
-            printf("Error reading Latin2 from  static.nest7grid.\n");
+            printf("Error reading Latin2 from  static.%s\n", *ldf);
             ret_status = -1;
           }
         }
@@ -1251,13 +1252,13 @@ int name_len;
 /* read grid_type */
         istatus = nc_inq_varid(cdfid_stat,"grid_type",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading grid_type from static.nest7grid.\n");
+          printf("Error reading grid_type from static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_vara_text (cdfid_stat, varid,start_g,count_g,map_proj);
           if (istatus != NC_NOERR) {
-            printf("Error reading grid_type from  static.nest7grid.\n");
+            printf("Error reading grid_type from  static.%s\n", *ldf);
             ret_status = -1;
           }
           if (name_len < namelen) map_proj[name_len-1] = '\0';
@@ -1274,13 +1275,13 @@ int name_len;
 /* read origin_name */
         istatus = nc_inq_varid(cdfid_stat,"origin_name",&varid);
         if (istatus != NC_NOERR) {
-          printf("Error reading origin_name from  static.nest7grid.\n");
+          printf("Error reading origin_name from  static.%s\n", *ldf);
           ret_status = -1;
         }
         else {
           istatus = nc_get_vara_text (cdfid_stat,varid,start,count,origin);
           if (istatus != NC_NOERR) {
-            printf("Error reading origin_name from  static.nest7grid.\n");
+            printf("Error reading origin_name from  static.%s\n", *ldf);
             ret_status = -1;
           }
           if (name_len < namelen) origin[name_len-1] = '\0';
@@ -1948,7 +1949,8 @@ int name_len;
 #ifdef __STDC__
 void write_cdf_v3 (char *f_filename, char *f_ext, char *f_var, 
                    char *f_comment, char *f_asctime, char *f_cdl_path,
-                   char *f_static_path, fint4 *fn_length, fint4 *ext_len, 
+                   char *f_static_path, char *f_ldf, fint4 *ldf_len, 
+                   fint4 *fn_length, fint4 *ext_len, 
                    fint4 *var_len, fint4 *comm_len, fint4 *asc_len, 
                    fint4 *cdl_path_len, fint4 *stat_len, fint4 *i_reftime, 
                    fint4 *i_valtime, fint4 *imax, fint4 *jmax, fint4 *kmax, 
@@ -1957,10 +1959,10 @@ void write_cdf_v3 (char *f_filename, char *f_ext, char *f_var,
                    fint4 *called_from, fint4 *append, fint4 *status)
 #else
 void write_cdf_v3 (f_filename, f_ext, f_var, f_comment, f_asctime, 
-                   f_cdl_path, f_static_path, fn_length, ext_len, 
-                   var_len, comm_len,  asc_len, cdl_path_len, stat_len, 
-                   i_reftime, i_valtime, imax, jmax, kmax, kdim, lvl, 
-                   data, pr, n_levels, cdl_levels,
+                   f_cdl_path, f_static_path, f_ldf,ldf_len, fn_length, 
+                   ext_len, var_len, comm_len,  asc_len, cdl_path_len, 
+                   stat_len, i_reftime, i_valtime, imax, jmax, kmax, 
+                   kdim, lvl, data, pr, n_levels, cdl_levels,
                    called_from, append, status)
 char *f_filename; 
 char *f_ext; 
@@ -1969,6 +1971,8 @@ char *f_comment;
 char *f_asctime;
 char *f_cdl_path;
 char *f_static_path;
+char *f_ldf;
+fint4 *ldf_len;
 fint4 *fn_length; 
 fint4 *ext_len; 
 fint4 *var_len; 
@@ -1994,7 +1998,7 @@ fint4 *status;
 {
 	int i, j, istatus, cdl_len, cdfid, i_record, var_id;
         int dim_id, comm_id, old_record, int1, int2, name_len;
-        int missing_grids, inv_id, lc3_levels, lm1_levels;
+        int missing_grids, inv_id, lc3_levels, lm1_levels,xyz;
         fint4 i_level, i4time;
         size_t mindex[1], dim_len;
         long num_record;
@@ -2002,7 +2006,7 @@ fint4 *status;
         double timeoff, reftime, valtime, diff;
         static char *fvptr, *vptr, *cptr;
         static char *var, *comment, *filename, *ext; 
-        char *map_proj, *origin;
+        char *map_proj, *origin, *ldf;
         static char *asctime, *syscmd, *cdlfile, *comm_var, *inv_var;
         static char *static_grid;
         char char1[3];
@@ -2012,7 +2016,9 @@ fint4 *status;
 
 /* convert fortran f_file_name into C string filename and f_ext into C ext  */
         filename = malloc(*fn_length + 1);
+        ldf = malloc(*ldf_len + 1);
         nstrncpy(filename,f_filename,*fn_length);
+        nstrncpy(ldf, f_ldf, *ldf_len);
 	ext = malloc((*ext_len + 1) * sizeof(char));
         nstrncpy(ext,f_ext,*ext_len);
         downcase_c(ext,ext);
@@ -2196,15 +2202,16 @@ fint4 *status;
 /* get info from static.nest7grid for writing to output files */
 	    static_grid = malloc((*stat_len + 20) * sizeof(char));
             nstrncpy(static_grid,f_static_path,*stat_len);
-            strcat(static_grid,"static.nest7grid");
+            strcat(static_grid,"static.");
+            strcat(static_grid,ldf);
 
             istatus = get_static_info_v3(static_grid, &Dx, &Dy, &La1, &Lo1, 
                                        &LoV, &Latin1, &Latin2, map_proj, 
-                                       origin, name_len);
+                                       origin, name_len, ldf);
             free(static_grid);
 
             if (istatus == -1) {
-              printf("Error reading info from static.nest7grid.\n");
+              printf("Error reading info from static.%s\n", *ldf);
               printf("  Some navigation data will be missing from file.\n");
             }
           }

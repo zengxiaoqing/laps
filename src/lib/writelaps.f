@@ -84,6 +84,7 @@ C
      1               error(2),
      1               i,j,n7g_nx, n7g_ny,
      1               lgfc,
+     1               ldf_len,
      1               fn_length,
      1               var_len,
      1               comm_len,
@@ -121,14 +122,23 @@ C
       error(1)=1
       error(2)=0
 C
-C ****  Specify laps domain name
+C
+C ****  call get_config to setup to read nest7grid.parms
+C
+      call get_config(istatus)
+
+C ****  Setup laps domain name
 C
       call s_len(grid_fnam_common,lgfc)
-      laps_dom_file = grid_fnam_common(1:lgfc)
-C
-C ****  call get_laps_config to read nest7grid.parms
-C
-      call get_laps_config(laps_dom_file,istatus)
+      if (lgfc .gt. 0) then
+        laps_dom_file = grid_fnam_common(1:lgfc)
+      else
+        laps_dom_file = grid_fnam_common
+        write(6,*) 'Domain name not retrieved by get_config'
+        write(6,*) 'Navigation info will not be written to',
+     1' output file'
+      endif
+
       n_levels = nk_laps
       n7g_nx = NX_L_CMN 
       n7g_ny =  NY_L_CMN
@@ -234,6 +244,7 @@ C
       called_from = 0    !called from FORTRAN
       append = 0         ! only one analysis time allowed per file
 
+      call s_len(laps_dom_file,ldf_len)
       var_len = len(var(1))
       comm_len = len(comment(1))
       lvl_coord_len = len(lvl_coord(1))
@@ -247,7 +258,8 @@ C
       print*,'Writing file: ',file_name
 
       call write_cdf_v3 (file_name,ext,var,comment,asctime,cdl_path, 
-     1                   static_path,fn_length,ext_len,var_len, 
+     1                   static_path,laps_dom_file,ldf_len,fn_length,
+     1                   ext_len,var_len, 
      1                   comm_len, asc_len, cdl_path_len, stat_len,
      1                   i_reftime, i_valtime,imax, jmax, kmax, kdim, 
      1                   lvl, data, pr, n_levels, cdl_levels,

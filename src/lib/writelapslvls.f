@@ -118,20 +118,27 @@ C-------------------------------------------------------------------------------
 C
       error(1)=1
       error(2)=0
-C
-C ****  Specify laps domain name
-C
-      call s_len(grid_fnam_common,lgfc)
-      laps_dom_file = grid_fnam_common(1:lgfc)
 C 
+C ****  Check if ext is fua or fsf or pbl
       if ((ext .eq. 'fua') .or. (ext .eq. 'fsf') .or.
      1 (ext .eq. 'pbl'))  then
-C ****  Skip get_laps_config and check if ext is fua or fsf or pbl
+C ****  Skip get_config 
       else
 C
-C ****  call get_laps_config to read nest7grid.parms
+C ****  call get_config to read nest7grid.parms
 C
-        call get_laps_config(laps_dom_file,istatus)
+        call get_config(istatus)
+
+        call s_len(grid_fnam_common,lgfc)
+        if (lgfc .gt. 0) then
+          laps_dom_file = grid_fnam_common(1:lgfc)
+        else
+          laps_dom_file = grid_fnam_common
+          write(6,*) 'Domain name not retrieved by get_config'
+          write(6,*) 'Navigation info will not be written to',
+     1' output file'
+        endif
+
         n_levels = nk_laps
         n7g_nx = NX_L_CMN 
         n7g_ny =  NY_L_CMN
@@ -139,10 +146,10 @@ C
 
 	if (v_g .ne. 'PRESSURE') goto 920
 
-      call get_pres_1d(valtime,n_levels,pr,istatus)
-      do j = 1,n_levels
-         pr(j)=pr(j)/100.
-      enddo
+        call get_pres_1d(valtime,n_levels,pr,istatus)
+        do j = 1,n_levels
+          pr(j)=pr(j)/100.
+        enddo
 C
 C ****  Various checks on input data.
 C
@@ -219,7 +226,8 @@ C
 C **** write out netCDF file
 C
       call write_cdf_v3 (file_name,ext,var,comment,asctime,cdl_path, 
-     1                   static_path,fn_length,ext_len,var_len, 
+     1                   static_path,laps_dom_file, lgfc, fn_length,
+     1                   ext_len,var_len, 
      1                   comm_len, asc_len, cdl_path_len, stat_len,
      1                   i_reftime, i_valtime,imax, jmax, kmax, kdim, 
      1                   lvl, data, pr, n_levels, cdl_levels,
@@ -240,7 +248,7 @@ C
 C ****  Error trapping.
 C
 920     IF (FLAG .NE. 1) THEN
-          write(6,*) 'write_laps ABORTED!'
+          write(6,*) 'write_laps_lvls ABORTED!'
           write(6,*) ' LAPS will currently only work on a PRESSURE'
      1,' vertical grid'
           write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
