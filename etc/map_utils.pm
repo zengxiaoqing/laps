@@ -13,9 +13,17 @@
 #          a.  TYPE:Projection type ("LC", "PS", "LL", or "ME" for
 #              Lambert Conformal, Polar-Stereographic, Lat/lon cylindrical
 #              equidistant, or mercator, respectively.
-#          b.  LATSW:  The latitude in deg N of the origin (i,j)=(1,1), which
-#              should be the SW corner of the grid
-#          c.  LONSW:  The longitude in deg E of the origin (i,j)=(1,1), which
+#          b.  KNOWN_LAT/KNOWN_LON:  You need to know the lat/lon (deg N/E)   
+#              of one point on your grid.  Typically, this will be the center
+#              or SW corner point, but the module allows the use of any
+#              known point on the grid.
+#          c.  KNOWN_RI/KNOWN_RJ:  You have to know the real (i,j) coordinate
+#              of your known lat/lon.  The value ranges from (1:nx,1:ny), 
+#              where nx and ny are the number of grid points in the E-W and
+#              N-S direction, respectively.  For example, if KNOWN_LAT/
+#              KNOWN_LON represent the SW corner, then KNOWN_RI/KNOWN_RJ
+#              should be set to (1.0,1.0).  If you are providing the
+#              center point, you should use ( 0.5*(nx+1), 0.5*(ny+1) ).
 #              should be the SW corner of the grid
 #          d.  DX:The grid spacing in meters at the true latitude (not used
 #              for lat/lon grids)
@@ -29,14 +37,17 @@
 #              for lat/lon 
 #              grids the standard longitude is set to the longitudinal
 #              grid increment in degrees
-#          i.  NX:The number of east-west points
-#          j.  NY:The number of north south points
+#          h.  NX:The number of east-west points
+#          i.  NY:The number of north south points
+#            
+
 #
 #    2.  Once you know all of the above, you call the map_set subroutine,
 #        passing in all of the above arguments (even if not used for your
 #        particular projection type.  This routine returns a hash:
 #
-#       my %proj = &map_utils::map_set($TYPE,$LATSW,$LONSW,$DX,$STDLON,
+#       my %proj = &map_utils::map_set($TYPE,$KNOWNLAT,$KNOWNLON, 
+#                   KNOWN_RI, KNOWN_RJ,$DX,$STDLON,
 #                   $TRUELAT1,$TRUELAT2,$NX,$NY);
 #   
 #    3.  The %proj hash is then used as an input argument to the 
@@ -96,6 +107,14 @@ sub map_hash {
   my %map_hash = ( proj => "XX",
                    latsw => -999.9,
                    lonsw => -999.9,
+                   latne => -999.9,
+                   lonne => -999.9,
+                   latnw => -999.9,
+                   lonnw => -999.9,
+                   latse => -999.9,
+                   lonse => -999.9,
+                   latcen => -999.9,
+                   loncen => -999.9,
                    dx => -999.9,
                    stdlon => -999.9, 
                    truelat1 => -999.9,
@@ -113,11 +132,36 @@ sub map_hash {
   return %map_hash;
 
 } 
+###########################################################################
+#  Main map_set driver to set up map proj hash table
+##########################################################################
+sub map_set($$$$$$$$$$$) {
+
+  # Get the input parameters
+  my ($type, $knownlat, $knownlon, $kri, $krj, $dx, $stdlon, 
+      $truelat1, $truelat2, $nx, $ny) = @_;
+
+  my %proj = map_set_sub($type, $knownlat, $knownlon, $dx, $stdlon,
+                         $truelat1,$truelat2,$nx,$ny);
+
+  if (($kri != 1.000) or ($krj != 1.000)) {
+    my $rswi = 2.0 - $kri;
+    my $rswj = 2.0 - $krj; 
+    my ($latsw,$lonsw) = ij_to_latlon($rswi,$rswj,%proj);
+    
+    # Call map_set again...
+    %proj = map_set_sub($type, $latsw, $lonsw, $dx, $stdlon,
+                         $truelat1,$truelat2,$nx,$ny);
+  }
+  return %proj;
+}
+
+
 # -------------------------------------------------------------------------
 #  Sub for setting up hash table defining map structure
 # -------------------------------------------------------------------------
 
-sub map_set($$$$$$$$$) {
+sub map_set_sub($$$$$$$$$) {
 
   # Get the input parameters
   my ($type, $latsw, $lonsw, $dx, $stdlon, $truelat1, $truelat2,
@@ -150,7 +194,7 @@ sub map_set($$$$$$$$$) {
   # Ensure latitude of southwest corner is between -90 and 90 degrees
 
   if (abs($latsw) > 90.0) {
-    print "map_set: Invalide SW corner lat: $latsw\n";
+    print "map_set: Invalide lat: $latsw\n";
     print "  -90.0 <= latsw <= 90.\n";
     die;
   }else{
@@ -255,7 +299,6 @@ sub map_set($$$$$$$$$) {
   # Case-dependent calls for final setup
 
   if ($type eq "PS") {   
-    print "Completing Polar Stereographic map setup\n";
     ${proj{cone}} = 1.0;
     my $reflon = ${proj{stdlon}} + 90.;
     my $scale_top = 1. + ${proj{hemi}} * sin(deg2rad(${proj{truelat1}}));
@@ -267,10 +310,8 @@ sub map_set($$$$$$$$$) {
     my $alo1 = deg2rad(${proj{lonsw}} - $reflon);
     ${proj{polei}} = 1. - ${proj{rsw}} * cos($alo1);
     ${proj{polej}} = 1. - ${proj{hemi}} * ${proj{rsw}} * sin($alo1);
-    print "pole i/j = ${proj{polei}}  ${proj{polej}}\n";
     
   } elsif ($type eq "LC" ) {
-    print "Completing Lambert-Conformal map setup\n";
     
     # Make sure truelat1 <= truelat2
     if ($truelat1 > $truelat2) {
@@ -299,7 +340,6 @@ sub map_set($$$$$$$$$) {
     ${proj{polej}} = 1. + ${proj{rsw}} * cos($param1); 
    
   }elsif($type eq "ME") {
-    print "Completing Mercator map setup\n";
     my $clain = cos(deg2rad(${proj{truelat1}}));
     ${proj{dellon}} = ${proj{dx}} / ( $earth_radius_m * $clain);
     ${proj{rsw}} =0.;
@@ -308,12 +348,18 @@ sub map_set($$$$$$$$$) {
     }
 
   }elsif($type eq "LL") {
-    print "Completing Lat-Lon (cylindrical equidistant) map setup\n";
     if (${proj{lonsw}} < 0.) { ${proj{lonsw}} = ${proj{lonsw}} + 360. }
   }else{
     print "Unknown projection: $type\n";
     return;
-  }    
+  } 
+
+  # Call ij_to_latlon to fill in corners/center
+  (${proj{latnw}},${proj{lonnw}}) = ij_to_latlon(1.,$ny,%proj);
+  (${proj{latne}},${proj{lonne}}) = ij_to_latlon($nx,$ny,%proj);
+  (${proj{latse}},${proj{lonse}}) = ij_to_latlon($nx,1.,%proj);
+  (${proj{latcen}},${proj{loncen}}) = ij_to_latlon(($nx+1.)*.5,
+                                                   ($ny+1.)*.5, %proj);
   return %proj;
 
 }
