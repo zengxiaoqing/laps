@@ -440,7 +440,7 @@ sub get_system_type {
 
     my $wrfsystem=0;
     my $lapssystem=0;
-    my @dirs = readdir DIR;
+    @dirs = readdir DIR;
     foreach (@dirs) {
 #      print "'$_',\n";
        if($_ eq "siprd"   || $_ eq "silog"){$wrfsystem=1;}
@@ -454,5 +454,30 @@ sub get_system_type {
     }else{
        print "Welcome to LAPS\n";
     }
+}
+1;
+
+# given coordinates of two places in radians, compute distance in meters
+sub great_circle_distance {
+    my ($lat1,$long1,$lat2,$long2) = @_;
+
+    # approx radius of Earth in meters.  True radius varies from
+    # 6357km (polar) to 6378km (equatorial).
+    #my $earth_radius = 6367000;
+#JS: modified to be in synch with the LAPS definition
+    my $earth_radius = 6371200;
+
+    my $dlon = $long2 - $long1;
+    my $dlat = $lat2 - $lat1;
+    my $a = (sin($dlat / 2)) ** 2 
+            + cos($lat1) * cos($lat2) * (sin($dlon / 2)) ** 2;
+    my $d = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+    # This is a simpler formula, but it's subject to rounding errors
+    # for small distances.  See http://www.census.gov/cgi-bin/geo/gisfaq?Q5.1
+    # my $d = &acos(sin($lat1) * sin($lat2)
+    #               + cos($lat1) * cos($lat2) * cos($long1-$long2));
+
+    return $earth_radius * $d;
 }
 1;
