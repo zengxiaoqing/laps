@@ -37,6 +37,11 @@ if (-e /w3/lapb) then
     setenv WWW_DOMAIN domains/$DOMAIN_SUFFIX
     setenv LAPS_GIFS     $WEB_ROOT/www/anal2d
 
+#   Set up soft link for on-the-fly program
+    cd /w3/lapb/domains/$DOMAIN_SUFFIX
+    rm -f data
+    ln -s $LAPS_DATA_ROOT data
+
 else
 #   External to FSL
     setenv SERVER_ROOT $LAPS_DATA_ROOT                
@@ -73,6 +78,7 @@ if (-e $SERVER_ROOT/looper) then
     ln -s $WWW_DIR/anal2d/loop pub_$DOMAIN_SUFFIX
 endif
 
+#Set up scripts for pregenerated pages
 if (-e /home/lapb/albers) then
     echo $DOMAIN_SUFFIX > /home/lapb/albers/www/laps_anal/domain_$DOMAIN_SUFFIX
     chmod 666 /home/lapb/albers/www/laps_anal/domain_$DOMAIN_SUFFIX
@@ -218,7 +224,3 @@ echo `head -2 $TIME_DIR/c_time.dat | tail -1`" 7200" > $WWW_DIR/anal2d/recent/ti
 echo "Running purger of LAPS gif files, AGE = "$AGE
 $SERVER_ROOT/purgers/laps_purge.com $WWW_DIR $AGE > $SERVER_ROOT/purgers/$DOMAIN_SUFFIX.out
 
-# Set up soft link for on-the-fly program
-cd $WWW_DIR
-rm -f data
-ln -s $LAPS_DATA_ROOT data
