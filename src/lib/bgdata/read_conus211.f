@@ -127,19 +127,21 @@ c      stop
       end
 C
 C
-
       subroutine read_conus_211(path,fname,af,nx,ny,nz,
-     .                            nxbg,nybg,nzbg,ntbg,
-     .                            pr,ht,tp,sh,uw,vw,gproj,istatus)
+     .     nxbg,nybg,nzbg,ntbg,pr,ht,tp,sh,uw,vw,
+     .     pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp
+     .     ,gproj,istatus)
 
 c
       implicit none
 c
       include 'netcdf.inc'
+      include 'bgdata.inc'
+
       integer ncid, lenstr, ntp, nvdim, nvs, ndsize
 c
       integer nx,ny,nz
-      integer nxbg,nybg,nzbg(5),ntbg
+      integer nxbg,nybg,nzbg(5),ntbg,ivaltimes(20)
 c
       integer rcode
 c
@@ -153,9 +155,13 @@ cc      parameter(nzbg4=40,ntbg=5)
      .       rhn(nxbg,nybg,nzbg(2)),
      .       tpn(nxbg,nybg,nzbg(3)),
      .       uwn(nxbg,nybg,nzbg(4)),
-     .       vwn(nxbg,nybg,nzbg(5)),
-     .       prn(19)
+     .       vwn(nxbg,nybg,nzbg(5))
+
+      real   pr_sfc(nxbg,nybg),uw_sfc(nxbg,nybg),vw_sfc(nxbg,nybg)
+     +     ,sh_sfc(nxbg,nybg),tp_sfc(nxbg,nybg),mslp(nxbg,nybg)
+
 c
+      real prn(19)
       data prn/1000.,950.,900.,850.,800.,750.,700.,650.,600.,550.,
      .               500.,450.,400.,350.,300.,250.,200.,150.,100./
 c
@@ -176,13 +182,15 @@ c
       integer vdims(10) 
       character*31 dummy
 c
-      integer i,j,k,n,ip,jp,ii,jj,kp1,it,istatus, slen
+      integer i,j,k,n,ip,jp,ii,jj,kp1,it,istatus,slen
 c
       character*(*) path
+      character*9   fname,oldfname,model
+      character*13  fname13,fname9_to_wfo_fname13
       character*4   af
       character*2   gproj
+      character*200 cdfname
 c
-      real*4 msgflg
 c
       real*4 xe,esat,mrsat
       common /estab/esat(15000:45000)
@@ -193,23 +201,21 @@ c
       real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
-      character*13 fname13,fname9_to_wfo_fname13
-      character*9 fname
-      character*255 cdfname
 c
 ccc      save htn,tpn,rhn,uwn,vwn,prn,oldfname
 c_______________________________________________________________________________
 c
-      msgflg=1.e30
-c
 c *** Open the netcdf file.
 c
 ccc      if (fname .ne. oldfname) then
+      if(nxbg.lt.nx.and.nybg.lt.ny) then
+         model='RUC'
+      else
+         model='ETA'
+      endif
 
 
-C
-C  Open netcdf File for reading
-C
+      istatus=0
       fname13=fname9_to_wfo_fname13(fname)
 
       call s_len(path,slen)
@@ -221,103 +227,131 @@ C
          print *,'NF_OPEN ',cdfname
       endif
 
+      read(af,'(i4)') n
+      n=n/3+1
+      if(n.gt.ntbg) return
+
+
 c
 c ****** Read netcdf data.
 c ****** Statements to fill htn.
 c
-         read(af,'(i4)') n
-         n=n/3+1
-         if(n.gt.ntbg) return
 
-         call NCVINQ(ncid,1,dummy,ntp,nvdim,vdims,nvs,rcode)
-         lenstr=1
-         do j=1,nvdim
-            call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
-            lenstr=lenstr*ndsize
-            start(j)=1
-            count(j)=ndsize
-         enddo
-         
-         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg(1).or.count(4).ne.ntbg) then
-            goto 900
-         endif         
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=19
          start(4)=n
          count(4)=1
-      rcode=NF_GET_VARA_REAL(ncid,1,start,count,htn)
+
+         call read_netcdf_real(ncid,'gh',nxbg*nybg*count(3),htn,start
+     +     ,count,rcode)
+
 c
 c ****** Statements to fill rhn.                           
 c
-         call NCVINQ(ncid,4,dummy,ntp,nvdim,vdims,nvs,rcode)
-         lenstr=1
-         do j=1,nvdim
-            call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
-            lenstr=lenstr*ndsize
-            start(j)=1
-            count(j)=ndsize
-         enddo
-         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg(2).or.count(4).ne.ntbg) then
-            goto 900
-         endif         
+
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=20
          start(4)=n
          count(4)=1
-      rcode=NF_GET_VARA_REAL(ncid,4,start,count,rhn)
+
+         call read_netcdf_real(ncid,'rh',nxbg*nybg*count(3),rhn,start
+     +     ,count,rcode)
+
+
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=19
+         start(4)=n
+         count(4)=1
+
+         call read_netcdf_real(ncid,'gh',nxbg*nybg*count(3),htn,start
+     +     ,count,rcode)
 
 c
 c ****** Statements to fill tpn.                              
 c
-         call NCVINQ(ncid,7,dummy,ntp,nvdim,vdims,nvs,rcode)
-         lenstr=1
-         do j=1,nvdim
-            call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
-            lenstr=lenstr*ndsize
-            start(j)=1
-            count(j)=ndsize
-         enddo
-         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg(3).or.count(4).ne.ntbg) then
-            goto 900
-         endif         
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=20
          start(4)=n
          count(4)=1
-      rcode=NF_GET_VARA_REAL(ncid,7,start,count,tpn)
+
+         call read_netcdf_real(ncid,'t',nxbg*nybg*count(3),tpn,start
+     +     ,count,rcode)
+
+
 c
 c ****** Statements to fill uwn.                           
 c
-         call NCVINQ(ncid,10,dummy,ntp,nvdim,vdims,nvs,rcode)
-         lenstr=1
-         do j=1,nvdim
-            call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
-            lenstr=lenstr*ndsize
-            start(j)=1
-            count(j)=ndsize
-         enddo
-         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg(4).or.count(4).ne.ntbg) then
-            goto 900
-         endif         
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=20
          start(4)=n
          count(4)=1
-      rcode=NF_GET_VARA_REAL(ncid,10,start,count,uwn)
+
+         call read_netcdf_real(ncid,'uw',nxbg*nybg*count(3),uwn,start
+     +     ,count,rcode)
+
+
 c
 c ****** Statements to fill vwn.                           
 c
-         call NCVINQ(ncid,13,dummy,ntp,nvdim,vdims,nvs,rcode)
-         lenstr=1
-         do j=1,nvdim
-            call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
-            lenstr=lenstr*ndsize
-            start(j)=1
-            count(j)=ndsize
-         enddo
-         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
-     +      count(3).ne.nzbg(5).or.count(4).ne.ntbg) then
-            goto 900
-         endif         
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=20
          start(4)=n
          count(4)=1
-      rcode=NF_GET_VARA_REAL(ncid,13,start,count,vwn)
+
+         call read_netcdf_real(ncid,'vw',nxbg*nybg*count(3),vwn,start
+     +     ,count,rcode)
+c
+c get sfc pressure field
+c
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=1
+         start(4)=n
+         count(4)=1
+      
+         call read_netcdf_real(ncid,'p',nxbg*nybg,pr_sfc,start
+     +     ,count,rcode)
+
+c
+c get mslp (this field name differs from one model to the other)
+c
+         if(model.eq.'ETA') then
+            call read_netcdf_real(ncid,'emsp',nxbg*nybg,mslp
+     +           ,0,0,rcode)
+         else
+            call read_netcdf_real(ncid,'mmsp',nxbg*nybg,mslp
+     +           ,0,0,rcode)
+         endif
+
+
+
 c
 c *** Close netcdf file.
 c
@@ -333,11 +367,11 @@ c
       do j=1,ny
       do i=1,nx
          pr(i,j,k)=prn(k)
-         ht(i,j,k)=msgflg
-         tp(i,j,k)=msgflg
-         sh(i,j,k)=msgflg
-         uw(i,j,k)=msgflg
-         vw(i,j,k)=msgflg
+         ht(i,j,k)=missingflag
+         tp(i,j,k)=missingflag
+         sh(i,j,k)=missingflag
+         uw(i,j,k)=missingflag
+         vw(i,j,k)=missingflag
       enddo
       enddo
       enddo
@@ -345,7 +379,7 @@ c
 c  For ruc the actual domain is smaller than the conus 211 projection
 c  so nxbg and nybg are smaller than nx and ny
 c
-      if(nxbg.lt.nx.and.nybg.lt.ny) then
+      if(model.eq.'RUC') then
          ip=13
          jp=4 
       else
@@ -356,48 +390,58 @@ c
       n=1
       istatus=0
       do k=1,19
-      do j=1,nybg
-      do i=1,nxbg
-         ii=i+ip
-         jj=j+jp
-         kp1=k+1
-         if (htn(i,j,k) .gt. -1000. .and. 
-     .       htn(i,j,k) .lt. 99999.) then
-            ht(ii,jj,k)=htn(i,j,k)
-            tp(ii,jj,k)=tpn(i,j,kp1)
-            sh(ii,jj,k)=rhn(i,j,kp1)
-            it=tp(ii,jj,k)*100
-            it=min(45000,max(15000,it))
-            xe=esat(it)
-            mrsat=0.00622*xe/(prn(k)-xe)
-            sh(ii,jj,k)=sh(ii,jj,k)*mrsat
-            sh(ii,jj,k)=sh(ii,jj,k)/(1.+sh(ii,jj,k))
-            uw(ii,jj,k)=uwn(i,j,kp1)
-            vw(ii,jj,k)=vwn(i,j,kp1)
-            istatus = 1
-         endif
+         do j=1,nybg
+            do i=1,nxbg
+               ii=i+ip
+               jj=j+jp
+               kp1=k+1
+               if (htn(i,j,k) .gt. -1000. .and. 
+     .              htn(i,j,k) .lt. 99999.) then
+                  ht(ii,jj,k)=htn(i,j,k)
+                  tp(ii,jj,k)=tpn(i,j,kp1)
+                  sh(ii,jj,k)=rhn(i,j,kp1)
+                  it=tp(ii,jj,k)*100
+                  it=min(45000,max(15000,it))
+                  xe=esat(it)
+                  mrsat=0.00622*xe/(prn(k)-xe)
+                  sh(ii,jj,k)=sh(ii,jj,k)*mrsat
+                  sh(ii,jj,k)=sh(ii,jj,k)/(1.+sh(ii,jj,k))
+                  uw(ii,jj,k)=uwn(i,j,kp1)
+                  vw(ii,jj,k)=vwn(i,j,kp1)
+                  istatus = 1
+               endif
+            enddo
+         enddo
       enddo
-      enddo
-      enddo
+
+     
+
+
       if(istatus .eq. 0) then
         print*, 'No valid data found for',fname, af
         return
       endif
-cc      do jj=5,nybg
-cc        do ii=14,nxbg
-cc          if(uw(ii,jj,19).ge.msgflg .and. uw(ii,jj,18).lt.msgflg)
-cc     +   then
-cc            print*,'Filling top u level wind at ',ii,jj
-cc            uw(ii,jj,19) = uw(ii,jj,18)
-ccc          endif
-cc          if(vw(ii,jj,19).ge.msgflg .and. vw(ii,jj,18).lt.msgflg)
-cc     +   then
-cc            print*,'Filling top v level wind at ',ii,jj
-cc            vw(ii,jj,19) = vw(ii,jj,18)
-cc          endif
-cc
-cc        enddo
-cc      enddo
+
+      do j=1,nybg
+         do i=1,nxbg
+            ii=i+ip
+            jj=j+jp
+            tp_sfc(ii,jj)=tpn(i,j,1)
+            sh_sfc(ii,jj)=rhn(i,j,1)
+            it=tp_sfc(ii,jj)*100
+            it=min(45000,max(15000,it))
+            xe=esat(it)
+            mrsat=0.00622*xe/(pr_sfc(i,j)*0.01-xe)
+            sh_sfc(ii,jj)=sh_sfc(ii,jj)*mrsat
+            sh_sfc(ii,jj)=sh_sfc(ii,jj)/(1.+sh_sfc(ii,jj))
+            uw_sfc(ii,jj)=uwn(i,j,1)
+            vw_sfc(ii,jj)=vwn(i,j,1)
+            istatus = 1
+         enddo
+      enddo
+
+
+
 c
 c *** Fill Lambert-conformal common block variables.
 c
@@ -414,6 +458,17 @@ c
 c
 c *** Convert ruc winds from grid north to true north.
 c
+cc      do j=1,ny
+cc      do i=1,nx
+cc         lci(i,j)=float(i)
+cc         lcj(i,j)=float(j)
+cc      enddo
+cc      enddo
+cc      call lcij_2_latlon(nx*ny,lci,lcj,lat,lon)
+c
+cc      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
+c
+cc      oldfname=fname
       istatus=1
       return
 

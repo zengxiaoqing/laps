@@ -1,13 +1,14 @@
       subroutine get_acceptable_files(i4time_now,bgpath,bgmodel,names
-     +     ,max_files,oldest_forecast,use_analysis,bg_files
-     +     ,forecast_length,cmodel,NX,NY,NZ,rejected_files,rejected_cnt)
+     +     ,max_files,oldest_forecast,max_forecast_delta,use_analysis
+     +     ,bg_files,forecast_length,cmodel,NX,NY,NZ,rejected_files
+     +     ,rejected_cnt)
       implicit none
       include 'netcdf.inc'
       integer bgmodel, max_files, NX,NY,NZ
       character*(*) names(max_files), cmodel, bgpath
      +     ,rejected_files(rejected_cnt)
       integer oldest_forecast, bg_files, forecast_length, i, j, k
-     + ,rejected_cnt
+     + ,rejected_cnt, max_forecast_delta
       integer ivaltimes(20), ntbg
       character*4   af
       character*100 bg_names(max_files), fullname
@@ -161,7 +162,9 @@ c               print *, '2: ',next_time,accepted_files,bg_names(n)
             endif
             if(bgtime+ihour*3600.lt.i4time_now.and.
      +           bgtime+ihour*3600.gt.previous_time) then
-               if(next_time.lt.bigint) then
+               if(next_time.lt.bigint.and. 
+     +              (next_time-(bgtime+ihour*3600))
+     +              .le.max_forecast_delta*3600) then
                   previous_time = bgtime+ihour*3600
                   accepted_files=accepted_files+1
                   names(accepted_files) = bg_names(n)

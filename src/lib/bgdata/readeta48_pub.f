@@ -137,7 +137,7 @@ C
 C     Variable        NETCDF Long Name
 C      p            "isobaric levels" 
 C
-      call read_netcdf_real(nf_fid,'isoLevel',nz,p,nf_status)
+      call read_netcdf_real(nf_fid,'isoLevel',nz,p,0,0,nf_status)
 
 c
 c If p is going from top to bottom, reverse it and set a flag to 
@@ -158,7 +158,7 @@ C
 C     Variable        NETCDF Long Name
 C      ht           "geopotential height" 
 C
-      call read_netcdf_real(nf_fid,'gh',nxnynz,ht,nf_status)
+      call read_netcdf_real(nf_fid,'gh',nxnynz,ht,0,0,nf_status)
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the height field is missing'
          print*, 'ABORTING file processing for eta file ',fname
@@ -171,7 +171,7 @@ C
 C     Variable        NETCDF Long Name
 C      rh           "relative humidity" 
 C
-      call read_netcdf_real(nf_fid,'rh',nxnynz,rh,nf_status)
+      call read_netcdf_real(nf_fid,'rh',nxnynz,rh,0,0,nf_status)
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the rh field is missing'
          print*, 'ABORTING file processing for eta file ',fname
@@ -185,7 +185,7 @@ C
 C     Variable        NETCDF Long Name
 C      t            "temperature" 
 C
-      call read_netcdf_real(nf_fid,'t',nxnynz,t,nf_status)
+      call read_netcdf_real(nf_fid,'t',nxnynz,t,0,0,nf_status)
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the temp field is missing'
          print*, 'ABORTING file processing for eta file ',fname
@@ -199,7 +199,7 @@ C
 C     Variable        NETCDF Long Name
 C      uw           "u-component of wind" 
 C
-      call read_netcdf_real(nf_fid,'uw',nxnynz,uw,nf_status)
+      call read_netcdf_real(nf_fid,'uw',nxnynz,uw,0,0,nf_status)
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the u-wind field is missing'
          print*, 'ABORTING file processing for eta file ',fname
@@ -213,7 +213,7 @@ C
 C     Variable        NETCDF Long Name
 C      vw           "v-component of wind" 
 C
-      call read_netcdf_real(nf_fid,'vw',nxnynz,vw,nf_status)
+      call read_netcdf_real(nf_fid,'vw',nxnynz,vw,0,0,nf_status)
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the v-wind field is missing'
          print*, 'ABORTING file processing for eta file ',fname
@@ -228,42 +228,42 @@ C     Variable        NETCDF Long Name
 C      MSLP         "ETA mean sea level pressure" 
 C
 
-      call read_netcdf_real(nf_fid,'emspMSL',nxny,mslp,nf_status)
+      call read_netcdf_real(nf_fid,'emspMSL',nxny,mslp,0,0,nf_status)
 
 C
 C     Variable        NETCDF Long Name
 C      ht_sfc       "surface geopotential height" 
 C
-      call read_netcdf_real(nf_fid,'gh_sfc',nxny,ht_sfc,nf_status)
+      call read_netcdf_real(nf_fid,'gh_sfc',nxny,ht_sfc,0,0,nf_status)
 
 C
 C     Variable        NETCDF Long Name
 C      p_sfc        "surface pressure" 
 C
-      call read_netcdf_real(nf_fid,'p_sfc',nxny,p_sfc,nf_status)
+      call read_netcdf_real(nf_fid,'p_sfc',nxny,p_sfc,0,0,nf_status)
 
 C
 C     Variable        NETCDF Long Name
 C      rh_sfc       "relative humidity 2m fixed height abv ground" 
 C
-      call read_netcdf_real(nf_fid,'rh_2mFH',nxny,rh_sfc,nf_status)
+      call read_netcdf_real(nf_fid,'rh_2mFH',nxny,rh_sfc,0,0,nf_status)
 
 C
 C     Variable        NETCDF Long Name
 C      t_sfc        "temperature 2m fixed height abv ground" 
 C
-      call read_netcdf_real(nf_fid,'t_2mFH',nxny,t_sfc,nf_status)
+      call read_netcdf_real(nf_fid,'t_2mFH',nxny,t_sfc,0,0,nf_status)
 
 C
 C     Variable        NETCDF Long Name
 C      uw_sfc       "u wind component 10m fixed height abv ground" 
 C
-      call read_netcdf_real(nf_fid,'uw_10mFH',nxny,uw_sfc,nf_status)
+      call read_netcdf_real(nf_fid,'uw_10mFH',nxny,uw_sfc,0,0,nf_status)
 C
 C     Variable        NETCDF Long Name
 C      vw_sfc       "v wind component 10m fixed height abv ground" 
 C
-      call read_netcdf_real(nf_fid,'vw_10mFH',nxny,vw_sfc,nf_status)
+      call read_netcdf_real(nf_fid,'vw_10mFH',nxny,vw_sfc,0,0,nf_status)
 
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
