@@ -31,7 +31,8 @@ cdis
 cdis
 
         subroutine divergence(uanl,vanl,div,lat,lon,ni,nj
-     1  ,one,dum1,dum2,dum3,uanl_grid,vanl_grid,r_missing_data)
+     1  ,one,dum1,dum2,dum3,uanl_grid,vanl_grid,l_grid_north
+     1  ,r_missing_data)
 
 !      ~90            Steve Albers  Original Version
 !       97-Aug-17     Ken Dritz     Added r_missing_data as dummy argument
@@ -52,6 +53,8 @@ cdis
         real*4 div(ni,nj)
 
         character*6 c6_maproj
+
+        logical l_grid_north
 
 !       grid_spacing_m = sqrt(
 !    1                 (  lat(1,2) - lat(1,1)                  )**2
@@ -90,8 +93,16 @@ cdis
 !           uanl(i,j) = 0.
 !           vanl(i,j) = 500.0
             one(i,j) = 1.0
-            call uvtrue_to_uvgrid(uanl(i,j),vanl(i,j)
-     1          ,uanl_grid(i,j),vanl_grid(i,j),lon(i,j))
+
+            if(l_grid_north)then
+                uanl_grid(i,j) = uanl(i,j)
+                vanl_grid(i,j) = vanl(i,j)
+            else
+                call uvtrue_to_uvgrid(uanl(i,j),vanl(i,j)
+     1                               ,uanl_grid(i,j),vanl_grid(i,j)
+     1                               ,lon(i,j))
+            endif
+
         enddo ! i
         enddo ! j
 

@@ -428,11 +428,15 @@ c Dynamically adjust the heights of the cloud levels to the terrain
             topo_min = min(topo_min,topo(i,j))
         enddo
         enddo
-        write(6,*)'    OLD ht   NEW ht       Lowest terrain point = '
+
+        topo_min_buff = topo_min - .005 ! Put in a slight buffer so that
+                                        ! cloud height grid extends below topo
+
+        write(6,*)'      OLD ht     NEW ht      Lowest terrain point = '       
      1           ,topo_min
 
         range_orig = cld_hts(KCLOUD) - cld_hts(1)
-        range_new =  cld_hts(KCLOUD) - topo_min
+        range_new =  cld_hts(KCLOUD) - topo_min_buff
         range_ratio = range_new / range_orig
 
         do k = 1,KCLOUD
@@ -440,9 +444,14 @@ c Dynamically adjust the heights of the cloud levels to the terrain
             cld_hts(k) = cld_hts(KCLOUD)
      1                - (cld_hts(KCLOUD)-cld_hts_orig) * range_ratio
             write(6,21)k,cld_hts_orig,cld_hts(k)
-21          format(1x,i3,2f8.1)
+21          format(1x,i3,2f10.3)
         enddo ! k
 
+        if(cld_hts(1) .ge. topo_min)then
+            write(6,*)' Error: topo extends at or below edge of '
+     1               ,'cloud height grid',topo_min,cld_hts(1)
+            return
+        endif
 
         write(6,*)' Initializing fields'
 c initialize the fields

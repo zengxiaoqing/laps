@@ -774,8 +774,8 @@ c       include 'satellite_dims_lvd.inc'
                 call divergence(u_2d,v_2d,div,lat,lon,NX_L,NY_L
      1                         ,dum1_array,dum2_array
      1                         ,dum3_array,dum4_array,dummy_array
-     1                         ,radar_array,r_missing_data)
-                call mklabel33(k_level,' DVRGNC  1e-5 s(-1)',c33_label)
+     1                         ,radar_array,.true.,r_missing_data)
+                call mklabel33(k_level,' DVRG (CPTD) 1e-5/s',c33_label)
 
                 scale = 1e-5
 

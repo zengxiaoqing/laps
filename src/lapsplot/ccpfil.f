@@ -118,29 +118,6 @@ C
       RETURN
       END
       
-      SUBROUTINE FILL (XWRK,YWRK,NWRK,IAREA,IGRP,NGRPS)
-C 
-      DIMENSION XWRK(*),YWRK(*),IAREA(*),IGRP(*)
-      
-      DO 10, I=1,NGRPS
-         IF (IGRP(I).EQ.3) IAREA3=IAREA(I)
- 10   CONTINUE
-      
-      IF (IAREA3 .GT. 0) THEN
-C      
-C If the area is defined by 3 or more points, fill it
-C      
-         CALL GSFACI(IAREA3+1)
-         CALL GFA(NWRK,XWRK,YWRK)
-      ENDIF
-C      
-C Otherwise, do nothing
-C      
-      RETURN
-      END
-
-
-      
       SUBROUTINE set_image_colortable(IWKID,ncols,ireverse,colortable)    
 
       character*(*) colortable

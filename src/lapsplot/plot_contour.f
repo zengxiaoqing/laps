@@ -305,8 +305,8 @@ C If the area is defined by 3 or more points, fill it
            CALL GSFACI(IAREA3+1)
            CALL GFA(NWRK,XWRK,YWRK)
         ENDIF
-      return
-      end
+        return
+        end
 
       SUBROUTINE COLOR
 !     write(6,*)' White or Black background. [Enter 1/2]    ?   :'

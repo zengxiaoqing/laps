@@ -32,7 +32,7 @@
       read(1,*)               ! Skip header line
  40   read(1,11,err=50,end=990)c2_sat_type,a6_time,a4_time
      1                        ,rlat,rlon,ipres,spd,idir
- 11   format(a2,13x,a6,2x,a4,f8.2,f9.2,i6,f7.1,i5)
+ 11   format(a2,15x,a6,2x,a4,f8.2,f9.2,i6,f7.1,i5)
  50   continue
 
       i = i+1

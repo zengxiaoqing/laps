@@ -1,0 +1,14 @@
+MODULE NAME                                              FILENAME
+-----------                                              --------
+
+main                                                     laps_accum.f
+    laps_accum                                           laps_accum_sub.f
+        get_precip_accum                                 get_precip_accum.f
+            get_fracs                                           "
+            cpt_pcp_type_3d
+            get_sfc_preciptype
+            nowrad_virga_correction
+            read_radar_3dref
+            get_low_ref
+            zr
+            zs
