@@ -1,9 +1,8 @@
 &lapsprep_nl
   hotstart = .true.,
   balance  = .true., 
-  adjust_rh = .true., 
-  output_format = 'mm5','wrf','rams'
+  output_format = 'mm5',
   snow_thresh = 1.1,
-  lwc_scale = 1.0,
+  lwc2vapor_thresh = 1.1,
 /
   
