@@ -1,0 +1,121 @@
+#!@PERL@
+#
+#
+#Program either localizes (new) or re-localizes (existing)
+#a laps domain
+#J.Smart 8-20-99
+#
+use strict;
+use English;
+use vars qw($opt_s $opt_i $opt_d $opt_t $opt_c);
+use Getopt::Std;
+use File::Copy 'cp';
+
+getopts('s:i:d:t:c:');
+
+#
+# opt_d is LAPS_DATA_ROOT (eg., /data/lapb/parallel/laps/data)
+#
+# opt_t is template subdirectory (eg., /usr/nfs/common/lapb/parallel/laps/template/"name")
+#          name is usually the same as the domain name in LAPS_DATA_ROOT
+# opt_c controls the removal of entire data root (=t, for true) or saves the
+# log and lapsprd directories (=f, for false)
+#
+# In some cases LAPSINSTALLROOT = LAPS_SRC_ROOT. This is made possible
+# by perl module makedatadirs.pm that removes the Makefile dependence.
+#
+my $LAPS_SRC_ROOT ; my $LAPSINSTALLROOT; my $LAPS_DATA_ROOT;
+$LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if( $ENV{LAPS_SRC_ROOT});
+$LAPSINSTALLROOT = $ENV{LAPSINSTALLROOT} if( $ENV{LAPSINSTALLROOT});
+$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if( $ENV{LAPS_DATA_ROOT});
+$LAPS_SRC_ROOT = $opt_s if( $opt_s);
+$LAPSINSTALLROOT = $opt_i if( $opt_i);
+$LAPS_DATA_ROOT = $opt_d if( $opt_d);
+
+my $LAPS_TEMPLATE;
+my $CONFIG_DOMAIN;
+
+if($opt_t){
+   $LAPS_TEMPLATE = $opt_t;
+}else{
+   print "-t (path to template) command line input needed \n";
+   exit;
+}
+if($opt_c){
+   $CONFIG_DOMAIN = $opt_c;
+}else{
+   print "-c command line not specified. Default set to false \n";
+   $CONFIG_DOMAIN = "f";
+}
+
+print "Laps Src Root = $LAPS_SRC_ROOT\n";
+print "Install_Root = $LAPSINSTALLROOT \n";
+print "Laps_Data_Root = $LAPS_DATA_ROOT\n";
+print "Laps Template = $LAPS_TEMPLATE \n";
+print "Config Domain = $CONFIG_DOMAIN \n";
+
+if( $CONFIG_DOMAIN eq "t") {
+  print "Removing entire dataroot: $LAPS_DATA_ROOT\n";
+  system("rm -rf $LAPS_DATA_ROOT");
+  mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";
+  }
+else {
+  print "Keep lapsprd and log subdirectories\n";
+  system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
+  rename ("$LAPS_DATA_ROOT/lapsprd", "$LAPS_DATA_ROOT/lapsprd_save");
+  rename ("$LAPS_DATA_ROOT/log",     "$LAPS_DATA_ROOT/log_save");
+  }
+
+require "makedatadirs.pm";
+print "Using makedatadir.pm to generate dataroot directory structure\n";
+makedatadirs::makedatadirs($LAPSINSTALLROOT,$LAPS_DATA_ROOT);
+
+#print "Using make "; my $path_to_make = `which make`; print "$path_to_make\n";
+#print "Running make mkdatadirs for: $ENV{LAPS_DATA_ROOT}\n";
+#chdir "$INSTALL_ROOT" or die "Can't cd to $INSTALL_ROOT: $!\n";
+#if(-e "$INSTALL_ROOT/Makefile" ) {
+#   system("cd $INSTALL_ROOT; make DATAROOT=$LAPS_DATA_ROOT mkdatadirs > $LAPS_DATA_ROOT/makedatadirs.out");
+#}else{
+#   print "cannot find Makefile in $INSTALL_ROOT. Terminating \n";
+#   exit;
+#}
+
+print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
+system("cp $LAPS_TEMPLATE/nest7grid.parms $LAPS_DATA_ROOT/static/.");
+system("cp $LAPS_TEMPLATE/*.nl $LAPS_DATA_ROOT/static/");
+
+print "Running laps_localization.pl\n";
+chdir "$LAPSINSTALLROOT/etc" or die "Can't cd to $LAPSINSTALLROOT: $!\n";
+system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/log/localization.out");
+
+print ("Checking for static.nest7grid");
+system("ls -l $LAPS_DATA_ROOT/static/static.nest7grid"); print "\n";
+print "checking localization.out\n";
+open(LOC,"$LAPS_DATA_ROOT/log/localization.out");
+my @loc=<LOC>;
+close(LOC);
+
+my $world_topo_warn_lines = 0;
+#foreach(@loc){print $_ if(/error/i || /warning/i || /cannot/i);}
+foreach(@loc){if(/world/i && /warning/i){$world_topo_warn_lines = 1;}}
+
+my $error_lines = grep /error/i,@loc;
+my $cannot_lines = grep /cannot/i,@loc;
+#my $warning_lines = grep /warning/i,@loc;
+#my $world_topo_warn_lines = grep /"world_topo"/i,@loc;
+
+if($error_lines gt 0){print "Lines with error found in localization.out\n";}
+if($cannot_lines gt 0){print "Lines with cannot found in localization.out\n";}
+if($world_topo_warn_lines gt 0){print "Lines with both world_topo and warning found in localization.out\n";}
+
+#if($warning_lines gt 0){print "Lines with warning found in localization.out\n";}
+
+system ("tail -1               $LAPS_DATA_ROOT/log/localization.out");
+system ("ls -l                 $LAPS_DATA_ROOT/log/localization.out");
+
+if( $CONFIG_DOMAIN eq "f")
+  {system("cp $LAPS_DATA_ROOT/log/localization.out $LAPS_DATA_ROOT/data/log_save/.");
+   system("mv $LAPS_DATA_ROOT/lapsprd_save $LAPS_DATA_ROOT/lapsprd");
+   system("mv $LAPS_DATA_ROOT/log_save     $LAPS_DATA_ROOT/log");
+  }
+exit;
