@@ -104,6 +104,8 @@ if($opt_s){ # "surface only"
                    lsm5.exe
                    qbalpe.exe);
 
+}elsif($c8_project eq "RRV"){
+    @LAPS_EXE = qw(mosaic_radar.x);
 
 }else{      # Full product set
     @LAPS_EXE = qw(lga.exe 
@@ -119,9 +121,7 @@ if($opt_s){ # "surface only"
 
 if(defined $opt_v){
    push(@LAPS_EXE,"gen_verif_prof.exe");
-   push(@LAPS_EXE,"gen_verif_prof_bal.exe");
    push(@LAPS_EXE,"gen_verif_raob.exe");
-   push(@LAPS_EXE,"gen_verif_raob_bal.exe");
 }
 my @WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
 
