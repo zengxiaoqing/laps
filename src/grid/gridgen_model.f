@@ -1217,14 +1217,15 @@ c
 
         if(istatus_alb.ne.1)then
          print*
-         print*,'Error: Max Snow Albedo not processed completely'
          if(c10_grid_fname(1:lf).eq.'wrfsi')then
-            print*,' Error: Static file not created '
+            print*,'--------------- WRFSI ------------------'
+            print*,'Error: Max Snow Albedo not processed completely'
+            print*,'Error: Static file not created '
             print*
             istatus=0
             return
          else
-            print*,'Warning: File(s) missing for max snow albedo'
+            print*,'Warning: Max Snow Albedo not processed completely'
          endif
         endif
 c
