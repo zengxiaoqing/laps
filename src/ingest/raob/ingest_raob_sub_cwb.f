@@ -25,6 +25,10 @@
       integer recNum, inNum, jumpNum, logicRecNum
       integer d(12), wmoIdDummy, dupliStation
 
+      real latitude_out(levelNum)
+      real longitude_out(levelNum)
+      character*9 a9time_out(levelNum)
+
       data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
       data  dupliStation / 58968 /
 
@@ -207,15 +211,34 @@ c      format f15.0 in snd files
          endif
 100   continue
 
-      do 900 i= 1,inNum
-	 write(11,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
-     ~                 elevation(i), '     ', a9time(i), 'RAOB'
-895      format (i12, i12, f11.4, f15.4, f15.0, 1x, a5, 3x, a9, 1x, a8)
+!     do 900 i= 1,inNum
+! write(11,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
+!    ~                 elevation(i), '     ', a9time(i), 'RAOB'
+!895      format (i12, i12, f11.4, f15.4, f15.0, 1x, a5, 3x, a9, 1x, a8)
 
-         do 900 j= 1,layerNum(i)
-            write (11,*) height(i,j), pressure(i,j), temperature(i,j),
-     ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
-900   continue
+!        do 900 j= 1,layerNum(i)
+!           write (11,*) height(i,j), pressure(i,j), temperature(i,j),
+!    ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
+!900   continue
+
+      latitude_out = latitude(i)
+      longitude_out = longitude(i)
+      a9time_out = a9time(i)
+
+!     Call write_snd routine
+      call write_snd(      11                                 ! I
+     1                    ,1,layerNum(i),1                    ! I
+     1                    ,wmoId(i)                           ! I
+     1                    ,latitude_out,longitude_out,staelev ! I
+     1                    ,'     ',a9time_ob,'RAOB    '       ! I
+     1                    ,layerNum(i)                        ! I
+     1                    ,height(i,:)                        ! I
+     1                    ,pressure(i,:)                      ! I
+     1                    ,temperature(i,:)                   ! I
+     1                    ,dewpoint(i,:)                      ! I
+     1                    ,windDir(i,:)                       ! I
+     1                    ,windSpeed(i,:)                     ! I
+     1                    ,istatus)                           ! O
 
       write (6,*) ' found', inNum, 
      ~            'stations available within time window in',
