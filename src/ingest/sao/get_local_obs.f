@@ -102,7 +102,7 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
       include 'netcdf.inc'
       integer maxSensor, maxobs,nf_fid, nf_vid, nf_status
       parameter (maxSensor=2) ! Manually added
-      integer filterSetNum, firstOverflow, globalInventory,
+      integer firstOverflow, globalInventory,
      +     nStaticIds, numPST, numericWMOid(maxobs), precipIntensity(
      +     maxSensor, maxobs), precipType( maxSensor, maxobs),
      +     pressChangeChar(maxobs)
@@ -123,8 +123,6 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
      +     windSpeedChangeTime(maxobs)
       character windDirDD(maxobs)
       character*11 stationType(maxobs)
-      character*51 test1(maxobs)
-      character*24 staticIds
       character windSpeedDD(maxobs)
       character relHumidityDD(maxobs)
       character stationPressureDD(maxobs)
@@ -245,7 +243,8 @@ c
 c
 c.....  Call the read routine.
 c
-	    call read_local_obs(nf_fid, recNum, altimeter(ix),
+            if(.true.)then
+	      call read_local_obs(nf_fid, recNum, altimeter(ix),
      &         dataProvider(ix), solarRadiation(ix), 
      &         seaSurfaceTemp(ix), soilTemperature(ix),        
      &         dewpoint(ix),        
@@ -260,16 +259,46 @@ c
      &         windGust(ix), windGustChangeTime(ix), 
      &         windSpeed(ix), windSpeedChangeTime(ix), badflag, istatus)       
  
-	    if(istatus .ne. 1)then
+	      if(istatus .ne. 1)then
                 write(6,*)
      1          '     Warning: bad status return from READ_LOCAL'       
                 n_local_file = 0
 
-            else
+              else
                 n_local_file = recNum
                 write(6,*)'     n_local_file = ',n_local_file
 
+              endif
+
+            else
+              call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
+     +     firstOverflow, globalInventory, nStaticIds, 
+     +     numPST, numericWMOid, precipIntensity, precipType, 
+     +     pressChangeChar, altimeter(ix), dewpoint(ix), 
+     +     elevation(ix), latitude(ix), longitude(ix), 
+     +     meanWeightedTemperature(ix), precipAccum(ix), 
+     +     precipRate(ix), pressChange3Hour(ix), rawPrecip(ix), 
+     +     relHumidity(ix), seaLevelPressure(ix), seaSurfaceTemp(ix), 
+     +     soilMoisture(ix), soilTemperature(ix), solarRadiation(ix), 
+     +     stationPressure(ix), temperature(ix), visibility(ix), 
+     +     windDir(ix), windDirMax(ix), windGust(ix), windSpeed(ix), 
+     +     altimeterDD(ix), dataProvider(ix), dewpointDD(ix), 
+     +     precipAccumDD(ix), precipRateDD(ix), presWeather(ix), 
+     +     pressChange3HourDD(ix), providerId(ix), relHumidityDD(ix), 
+     +     seaLevelPressureDD(ix), stationId(ix), 
+     +     stationName(ix), stationPressureDD(ix), stationType(ix), 
+     +     temperatureDD(ix), visibilityDD(ix), 
+     +     windDirDD(ix), windSpeedDD(ix), observationTime(ix), 
+     +     receivedTime(ix), reportTime(ix), rhChangeTime(ix), 
+     +     stationPressChangeTime(ix), tempChangeTime(ix), 
+     +     windDirChangeTime(ix), windGustChangeTime(ix), 
+     +     windSpeedChangeTime(ix),badflag)
+
+              n_local_file = recNum
+              write(6,*)'     n_local_file = ',n_local_file
+
             endif
+
 
             ix = ix + n_local_file
 
@@ -491,7 +520,7 @@ c.....  Temperature, dewpoint and RH.
 c
 	  temp_k = temperature(i) 
 	  if(tempChangeTime(i) .ge. 0.) then ! implies that it is not set to ibadflag
-	     if( (observationTime(i) - tempChangeTime(i)) 
+	     if( abs(observationTime(i) - tempChangeTime(i)) 
      1                          .gt. laps_cycle_time) then
 		temp_k = badflag
 	     endif
@@ -514,7 +543,7 @@ c
 	  rh_p = relHumidity(i) 
 	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
 	  if(rhChangeTime(i) .ge. 0.) then
-	     if( (observationTime(i) - rhChangeTime(i)) 
+	     if( abs(observationTime(i) - rhChangeTime(i)) 
      1                             .gt. laps_cycle_time) then
 		rh_p = badflag
 	     endif
@@ -528,9 +557,9 @@ c
           call sfc_climo_qc_r('spd_ms',spd)
 	  if(windDirChangeTime(i).ge.0. .and. 
      1       windSpeedChangeTime(i).ge.0.     ) then       
-	     if( ((observationTime(i) - windDirChangeTime(i)) 
+	     if( (abs(observationTime(i) - windDirChangeTime(i)) 
      &                          .gt. laps_cycle_time) .or.
-     &           ((observationTime(i) - windSpeedChangeTime(i)) 
+     &           (abs(observationTime(i) - windSpeedChangeTime(i)) 
      &                          .gt. laps_cycle_time)      ) then
 		dir = badflag
 		spd = badflag
@@ -539,11 +568,11 @@ c
 	  if(spd .ne. badflag) spd = 1.94254 * spd !m/s to kt
 c
 	  dirgust = windDirMax(i)
-          call sfc_climo_qc_r('dir_deg',dir_gust)
+          call sfc_climo_qc_r('dir_deg',dirgust)
 	  spdgust = windGust(i)
-          call sfc_climo_qc_r('spd_ms',spd_gust)
+          call sfc_climo_qc_r('spd_ms',spdgust)
 	  if(windGustChangeTime(i) .ne. badflag) then
-	     if( (observationTime(i) - windGustChangeTime(i)) 
+	     if( abs(observationTime(i) - windGustChangeTime(i)) 
      1                                      .gt. laps_cycle_time) then
 		dirgust = badflag
 		spdgust = badflag
@@ -556,8 +585,8 @@ c
 	  stn_press = stationPressure(i)
           call sfc_climo_qc_r('stnp_pa',stn_press)
 	  if(stationPressChangeTime(i) .ge. 0.) then
-	     if( (observationTime(i) - stationPressChangeTime(i)) .gt. 
-     1                                         laps_cycle_time ) then
+	     if( abs(observationTime(i) - stationPressChangeTime(i))
+     1                               .gt. laps_cycle_time ) then
 		stn_press = badflag
 	     endif
 	  endif
@@ -725,12 +754,14 @@ c
          if(len .ne. 0) then
 	     provider(nn)(1:len) = dataProvider(i)(1:len)    ! data provider
          endif
+         call filter_string(provider(nn))
 c
          call s_len(stationType(i), len)
          if(len .ne. 0) then
             ilen = min(len, 6)
             atype(nn)(1:ilen) = stationType(i)(1:ilen) ! auto stn type
          endif
+         call filter_string(atype(nn))
 c
          weather(nn)(1:25) = presWeather(i)(1:25) ! present weather
          call filter_string(weather(nn))
