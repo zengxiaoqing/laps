@@ -145,6 +145,6 @@ print "\n";
 
 @greplines = grep /Returning S8W/, @lines;
 ($dummy1,$dummy2,$dummy3,$dummy4,$satellite) = split /\s+/, $greplines[0];
-print "Using satellite IR data from $satellite to enhance sfc temperature analysis.";
+print "Using satellite IR data from $satellite to verify sfc temperature analysis.";
 
 print "\n";
