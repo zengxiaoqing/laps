@@ -96,13 +96,7 @@ c find max and min
 
       ihigh = imax
 
-!     if(imax .gt. 80)then
-!         iskip = 2
-!     else
-!         iskip = 1
-!     endif
-
-      iskip = max(imax/60,1)
+      iskip = max(imax/48,1)
 
       nplot = (ihigh - 1) / iskip + 1
 
@@ -113,11 +107,7 @@ c find max and min
 
       nspace = 3
 
-      if(jmax .le. 70)then
-          jskip = 2
-      else
-          jskip = jmax/35 ! 3
-      endif
+      jskip = max(jmax/32,2)
 
       do j = 1,jmax
       do i = 1,ihigh,iskip
