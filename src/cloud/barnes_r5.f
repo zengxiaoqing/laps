@@ -65,6 +65,8 @@ cdis
       integer*4 i_snd(max_cld_snd)
       integer*4 j_snd(max_cld_snd)
 
+      real*4 sum_a(imax,jmax)
+      real*4 sumwt_a(imax,jmax)
 
       real iiilut(-NX_DIM_LUT:NX_DIM_LUT,-NY_DIM_LUT:NY_DIM_LUT)
       integer nlast(KCLOUD)
@@ -78,6 +80,15 @@ cdis
           istatus = 0
           return
       endif 
+
+!     Note that this routine is considerably longer than it might need to
+!     be to allow maximum efficiency. 'nskip' controls how many points
+!     to skip in the i & j directions during the looping/analysis. The
+!     remaining points are filled in later by a faster bilinear interpolation
+!     step. Also, l_analyze(k) controls which levels are analyzed. If the
+!     obs at a given level are a repeat of the obs at the next lower level,
+!     the looping again is skipped and the relevant summations are copied
+!     up from the lower level.
 
 !     Obtain and/or iterate for value of nskip
       nskip = nint(20000. / grid_spacing_m)
@@ -246,7 +257,7 @@ cdis
 
 !         height_level = height_of_level(k)
 
-!         Analyze every other grid point
+!         Analyze every few grid points
           do j=1,jmax,nskip
           do i=1,imax,nskip
             sum=0.
@@ -270,9 +281,17 @@ cdis
                 enddo ! n
             endif
 
+!           Save ob weight sums for possible later reuse
+            sum_a(i,j) = sum
+
+!           Add in model first guess as an ob
             sum   = sum   + weight_modelfg * cf_modelfg(i,j,k)
             sumwt = sumwt + weight_modelfg
 
+!           Save ob weight sums for possible later reuse
+            sumwt_a(i,j) = sumwt
+
+!           Divide weights to get analysis = f(obs + background)
             if (sumwt.eq.0.)then
               t(i,j,k) = r_missing_data
               istatus = 0
@@ -284,13 +303,19 @@ cdis
           enddo ! j
 
 !         Bilinearly interpolate to fill in rest of domain
+!         Fills in final analysis value and weights from obs alone
+!         We may have to extrapolate at the N and E edges
           do i = 1,imax
               lowi_lut(i) = (i-1)/nskip*nskip + 1
-              if(i .eq. imax)lowi_lut(i) = lowi_lut(i) - nskip
+              il = lowi_lut(i)
+              ih = il + nskip
+              if(ih .gt. imax)lowi_lut(i) = lowi_lut(i) - nskip
           enddo ! i
           do j = 1,jmax
               lowj_lut(j) = (j-1)/nskip*nskip + 1
-              if(j .eq. jmax)lowj_lut(j) = lowj_lut(j) - nskip
+              jl = lowj_lut(j)
+              jh = jl + nskip
+              if(jh .gt. jmax)lowj_lut(j) = lowj_lut(j) - nskip
           enddo ! i
 
           do j=1,jmax
@@ -303,6 +328,7 @@ cdis
                   ih = il + nskip
                   fraci = float(i-il)/float(nskip)
 
+!                 Calculate interpolated cloud cover
                   Z1=t(il,jl,k)
                   Z2=t(ih,jl,k)
                   Z3=t(ih,jh,k)
@@ -311,19 +337,55 @@ cdis
                   t(i,j,k) =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
      1                - (Z2+Z4-Z3-Z1)*fraci*fracj
 
+!                 Calculate interpolated ob summation
+                  Z1=sum_a(il,jl)
+                  Z2=sum_a(ih,jl)
+                  Z3=sum_a(ih,jh)
+                  Z4=sum_a(il,jh)
+
+                  sum_a(i,j) =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
+     1                        - (Z2+Z4-Z3-Z1)*fraci*fracj
+
+!                 Calculate interpolated ob weight summation
+                  Z1=sumwt_a(il,jl)
+                  Z2=sumwt_a(ih,jl)
+                  Z3=sumwt_a(ih,jh)
+                  Z4=sumwt_a(il,jh)
+
+                  sumwt_a(i,j) =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
+     1                        - (Z2+Z4-Z3-Z1)*fraci*fracj
+
               enddo ! i
           enddo ! j
 
-        elseif(nobs .gt. 0)then ! Obs are identical; Cpy analysis fm 1 lvl below
+        elseif(nobs .gt. 0)then ! Obs are identical to lvl below; 
+                                ! Use analysis weights from last analyzed level
           write(6,51)k,nstart,nstop,nobs
 51        format(' lvl,nstart,nstop,nobs=',4i5,
-     1                  ' Identical Obs; Copy from 1 lvl down')
+     1           ' Identical Obs; Copy wts from last analyzed lvl')       
 
           km1 = k - 1
 
           do j=1,jmax
           do i=1,imax
-              t(i,j,k) = t(i,j,km1)
+
+!             Recover weight summations from last analyzed level below
+              sum = sum_a(i,j)
+              sumwt = sumwt_a(i,j)
+
+!             Add in model first guess as an ob to 'sum'
+!             Note that sumwt does not need to be modified
+
+              sum   = sum   + weight_modelfg * cf_modelfg(i,j,k)
+
+!             Divide weights to get analysis = f(obs + background)
+              if (sumwt.eq.0.)then
+                t(i,j,k) = r_missing_data
+                istatus = 0
+              ELSE
+                t(i,j,k)=sum/sumwt
+              end if
+
           enddo ! i
           enddo ! j
 
