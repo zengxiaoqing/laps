@@ -284,6 +284,8 @@ c
         logical l_boundary(imax,jmax)
 
         integer analysis_mode
+
+        lun_s = 6
 c
 !       Analysis mode controls the strategy of doing the analysis
 !
@@ -404,7 +406,7 @@ c
 	endif
 c
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
-	  write(9,912)
+	  write(lun_s,912)
  912	  format('  data passed into spline:')
 	endif
 c
@@ -715,7 +717,7 @@ c
 	enddo !j
 c
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
-	   write(9,923)
+	   write(lun_s,923)
  923	   format(1x,' solution after spline')
 	endif
 	if(cormax.lt.err .and. it.eq.1) return
@@ -947,13 +949,13 @@ c
 	  if(ipass .eq. 2) then
 	    call move(h2,to,imax,jmax)
 	    call diff(h1,t,t,imax,jmax)
-!	    write(9,915)
+!	    write(lun_s,915)
 !915	    format(' after 2nd barnes pass')
-!	    write(9,909) rom2
+!	    write(lun_s,909) rom2
 !909	    format(' radm2 = ',f8.4)
 	    go to 550
 	  endif
-!	  write(9,912)
+!	  write(lun_s,912)
 912	  format(' after 1st barnes pass')
 	  if(npass .eq. 1) go to 550
 	  call move(t,h1,imax,jmax)
@@ -985,6 +987,9 @@ c
 	integer iob(mxstn), job(mxstn), ii(mxstn), jj(mxstn)
 	integer dx, dy 
 c
+
+        lun_s = 6
+
 !	print *,' *** In BARNES_wide ***'
 	istatus = -1
 	call zero(h1,imax,jmax)
@@ -1053,13 +1058,13 @@ c
 c
 	  if(ipass .eq. 2) then
 	    call diff(h1,t,t,imax,jmax)
-!	    write(9,915)
+!	    write(lun_s,915)
 !915	    format(' after 2nd barnes pass')
-!	    write(9,909) rom2
+!	    write(lun_s,909) rom2
 !909	    format(' radm2 = ',f8.4)
 	    go to 550
 	  endif
-!	  write(9,912)
+!	  write(lun_s,912)
 912	  format(' after 1st barnes pass')
 	  if(npass .eq. 1) go to 550
 	  call move(t,h1,imax,jmax)
