@@ -53,8 +53,8 @@
          3.2.2 ..................  SFC (LSX) 
          3.2.3 ..................  TEMP 
          3.2.4 ..................  CLOUD
-         3.2.5 ..................  DERIV
-         3.2.6 ..................  WATER VAPOR (HUMIDITY PROCESSING)
+         3.2.5 ..................  WATER VAPOR (HUMIDITY PROCESSING)
+         3.2.6 ..................  DERIV
          3.2.7 ..................  ACCUM 
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Variables and netCDF File Organization 
@@ -1338,109 +1338,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 
            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
 
------- 3.2.5 ---------------------DERIV---------------------------------------
-
-Process: deriv.exe - Derived products
-     (author: Steve Albers - albers@fsl.noaa.gov)
-
-        These derived products are mostly cloud related.
-<pre>
-Inputs:                                          '*' = essential input
-      * lc3     3d grid	(ht)    3d clouds (fractional cover) 
-      *	lt1	grid		LAPS 3-d temperature grid
-	lps     3d grid         3D Radar Reflectivity (filled in)
-        lsx     2d grid         sfc pressure, temperature
-	lcv     2d grid		column max cloud cover / snow cover
-        lh3     grid            LAPS 3-d Relative Humidity (normally previous 
-                                                                          file)
-        lso     inter data      SAO obs (for precip type verification)
-
-	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
-	lwm	2d grid		surface winds
-        vrc/v01/vrz             2-D or 3-D radar reflectivity
-
-Outputs: 
-	lcp     3d grid	(pres)	3d clouds (fractional cover) (pressure grid)
-	lwc     3d grid         liquid water content (LWC)
-	lil     2d grid		integrated lwc
-	lct     2d grid		SFC precip type (SPT,PTT) 
-                                    Types are:
-                                       0 - No Precip         
-                                       1 - Rain             "R"
-                                       2 - Snow             "S"
-                                       3 - Freezing Rain    "Z"
-                                       4 - Ice Pellets      "I"
-                                       5 - Hail             "A"
-                                       6 - Drizzle          "L"
-                                       7 - Freezing Drizzle "F"
-                                    SPT uses simple 0 dbz reflectivity 
-                                    threshold to define areas of precip.
-                                    PTT uses a 13 dbz threshold for non-snow
-                                    precip (~.01"/hr), 0 dbz is still used
-                                    for snow though a surface dewpoint
-                                    depression threshold is used to filter out
-                                    areas of snow virga not reaching the ground.
-                                    The latter may be more useful for display
-                                    purposes by end users. PTT also utilizes
-                                    SAO data to delineate areas of drizzle,
-                                    freezing drizzle, rain, freezing rain, 
-                                    and snow - in areas that radar does not 
-                                    detect echoes.
-                                SFC cloud type (SCT)
-                                    This is the type of the lowest cloud layer
-                                    in the LTY (3-D cloud type) file. The 
-                                    cover threshold is 0.65. The presence of 
-                                    a CB higher up has priority. There are
-                                    10 possible cloud types.
-                                    Types are:
-                                       0 - No Cloud
-                                       1 - Stratus          "St"
-                                       2 - Stratocumulus    "Sc"
-                                       3 - Cumulus          "Cu"
-                                       4 - Nimbostratus     "Ns"
-                                       5 - Altocumulus      "Ac"
-                                       6 - Altostratus      "As"
-                                       7 - Cirrostratus     "Cs"
-                                       8 - Cirrus           "Ci"
-                                       9 - Cirrocumulus     "Cc"
-                                      10 - Cumulonimbus     "Cb"
-
-	lmd     3d grid         mean cloud drop diameter 
-	lmt	2d grid	        max echo tops (LMT), 
-                                Low level reflectivity (LLR)
-	lco     3d grid         cloud omega       
-	lrp     3d grid         3D icing index (integers 0-6)
-
-                                0 is no icing
-                                1 is light continuous
-                                2 is mod   continuous
-                                3 is heavy continuous
-                                4 is light intermittent
-                                5 is mod   intermittent
-                                6 is heavy intermittent
-
-	lty     3d grid         3D cloud & precip type (CTY,PTY) 
-                                    threshold for cloud cover in CTY is 0.65.
-
-	lwm	2d grid		mean winds (sfc - 300mb layer)
-                                surface winds
-	lhe	2d grid		helicity (derived from 3-D winds)
-	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
-	lmr	2d grid		2-D column max radar ref      
-	lf1	2d grid		2-D column max radar ref history (maximum 
-                                over time since the previous analysis cycle)
-</pre>
-Source directory: laps/nest7grid/source/cloud
-
-Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
-           Analysis and Prediction System (LAPS): Analyses of clouds, 
-           precipitation, and temperature. Weather and Forecasting, 11, 
-           273-287.
-
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
-
-
- ------ 3.2.6 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
+ ------ 3.2.5 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
 
 Last updated: August 1996 by Daniel Birkenheuer
 
@@ -1644,6 +1542,108 @@ SATELLITE ALGORITHM:
      then advanced to the final analysis step.  In this August 1996
      release, the coefficient adjustment is limited to above 500 hPa
      only.
+
+------ 3.2.6 ---------------------DERIV---------------------------------------
+
+Process: deriv.exe - Derived products
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+        These derived products are mostly cloud related.
+<pre>
+Inputs:                                          '*' = essential input
+      * lc3     3d grid	(ht)    3d clouds (fractional cover) 
+      *	lt1	grid		LAPS 3-d temperature grid
+	lps     3d grid         3D Radar Reflectivity (filled in)
+        lsx     2d grid         sfc pressure, temperature
+	lcv     2d grid		column max cloud cover / snow cover
+        lh3     grid            LAPS 3-d Relative Humidity (normally previous 
+                                                                          file)
+        lso     inter data      SAO obs (for precip type verification)
+
+	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
+	lwm	2d grid		surface winds
+        vrc/v01/vrz             2-D or 3-D radar reflectivity
+
+Outputs: 
+	lcp     3d grid	(pres)	3d clouds (fractional cover) (pressure grid)
+	lwc     3d grid         liquid water content (LWC)
+	lil     2d grid		integrated lwc
+	lct     2d grid		SFC precip type (SPT,PTT) 
+                                    Types are:
+                                       0 - No Precip         
+                                       1 - Rain             "R"
+                                       2 - Snow             "S"
+                                       3 - Freezing Rain    "Z"
+                                       4 - Ice Pellets      "I"
+                                       5 - Hail             "A"
+                                       6 - Drizzle          "L"
+                                       7 - Freezing Drizzle "F"
+                                    SPT uses simple 0 dbz reflectivity 
+                                    threshold to define areas of precip.
+                                    PTT uses a 13 dbz threshold for non-snow
+                                    precip (~.01"/hr), 0 dbz is still used
+                                    for snow though a surface dewpoint
+                                    depression threshold is used to filter out
+                                    areas of snow virga not reaching the ground.
+                                    The latter may be more useful for display
+                                    purposes by end users. PTT also utilizes
+                                    SAO data to delineate areas of drizzle,
+                                    freezing drizzle, rain, freezing rain, 
+                                    and snow - in areas that radar does not 
+                                    detect echoes.
+                                SFC cloud type (SCT)
+                                    This is the type of the lowest cloud layer
+                                    in the LTY (3-D cloud type) file. The 
+                                    cover threshold is 0.65. The presence of 
+                                    a CB higher up has priority. There are
+                                    10 possible cloud types.
+                                    Types are:
+                                       0 - No Cloud
+                                       1 - Stratus          "St"
+                                       2 - Stratocumulus    "Sc"
+                                       3 - Cumulus          "Cu"
+                                       4 - Nimbostratus     "Ns"
+                                       5 - Altocumulus      "Ac"
+                                       6 - Altostratus      "As"
+                                       7 - Cirrostratus     "Cs"
+                                       8 - Cirrus           "Ci"
+                                       9 - Cirrocumulus     "Cc"
+                                      10 - Cumulonimbus     "Cb"
+
+	lmd     3d grid         mean cloud drop diameter 
+	lmt	2d grid	        max echo tops (LMT), 
+                                Low level reflectivity (LLR)
+	lco     3d grid         cloud omega       
+	lrp     3d grid         3D icing index (integers 0-6)
+
+                                0 is no icing
+                                1 is light continuous
+                                2 is mod   continuous
+                                3 is heavy continuous
+                                4 is light intermittent
+                                5 is mod   intermittent
+                                6 is heavy intermittent
+
+	lty     3d grid         3D cloud & precip type (CTY,PTY) 
+                                    threshold for cloud cover in CTY is 0.65.
+
+	lwm	2d grid		mean winds (sfc - 300mb layer)
+                                surface winds
+	lhe	2d grid		helicity (derived from 3-D winds)
+	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
+	lmr	2d grid		2-D column max radar ref      
+	lf1	2d grid		2-D column max radar ref history (maximum 
+                                over time since the previous analysis cycle)
+</pre>
+Source directory: laps/nest7grid/source/cloud
+
+Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
+           Analysis and Prediction System (LAPS): Analyses of clouds, 
+           precipitation, and temperature. Weather and Forecasting, 11, 
+           273-287.
+
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+
 
 ------ 3.2.7 ---------------------ACCUM---------------------------------------
 
