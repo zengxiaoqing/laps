@@ -427,6 +427,7 @@ c     terscl=sqrt(sumt/(nx*ny))
       integer rejected_cnt
       integer laps_cycle_time
       logical use_analysis
+      logical smooth_fields
 
       integer i4time_sys_sonde
      .       ,i4time_sys_drop
@@ -479,7 +480,7 @@ c
 
       call get_background_info(bgpaths,bgmodels,oldest_forecast
      +,max_forecast_delta,forecast_length,use_analysis,cmodels
-     +,itime_inc)
+     +,itime_inc,smooth_fields)
 
       call s_len(cmodels(1),lenm)
 
@@ -509,7 +510,7 @@ c
       call lga_driver(nx,ny,nz,laps_cycle_time
      .         ,bgmodels(1),bgpaths(1),cmodels(1),rejected_cnt
      .         ,reject_names,names,max_files,accepted_files
-     .         ,i4time_sys_drop, lga_status)
+     .         ,i4time_sys_drop,smooth_fields,lga_status)
 
       if(lga_status.ne.1)then
          print*,'error returned from lga_driver'

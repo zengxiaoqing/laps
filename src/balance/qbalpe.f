@@ -715,23 +715,31 @@ c truth profile and compute an average analysis error
 
 c  create dropsond profiles for testing....comment out read pig,tmg
          call readpig(a9_time,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
-         if(istatus.ne.1)then
+         if(istatus.eq.0.or.istatus.eq.-3)then
             print*,'Error returned: readpig.'
             print*,'Dropsonde analysis not performed.'
             goto 89
+         elseif(istatus.eq.-1)then
+            print*,'Only tmg exists: generate u/v drop profiles
+     1 from analysis with gaussian error'
+         elseif(istatus.eq.-2)then
+             print*,'Only pig exists: generate T drop profile
+     1 from analysis with gaussian error'
          endif
 
 c routine to create drop and rr arrays:
          iii=382983
          do k=1,nz
             if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
-c           rri(k)=nx/2+.5
-c           rrj(k)=ny/2+.5
                ii=rri(k)
                jj=rrj(k)
-c           udrop(k)= u(ii,jj,k) + ffz(iii,20)*3. ! assumed gaussian error 3ms 
-c           vdrop(k)= v(ii,jj,k) + ffz(iii,20)*3
-               tdrop(k)= t(ii,jj,k) + ffz(iii,20)*2.   
+               if(istatus.eq.-1)then
+                  udrop(k)= u(ii,jj,k) + ffz(iii,20)*3. ! assumed gaussian error 3ms 
+                  vdrop(k)= v(ii,jj,k) + ffz(iii,20)*3
+               endif
+               if(istatus.eq.-2)then
+                  tdrop(k)= t(ii,jj,k) + ffz(iii,20)*2.   
+               endif
             endif
          enddo
          last_one=.true.
@@ -750,6 +758,7 @@ c           vdrop(k)= v(ii,jj,k) + ffz(iii,20)*3
              endif
           endif
          enddo
+c we should always do this?
          if(k1.gt.1) tdrop(k1-1)=tdrop(k1)
          if(k2.lt.nz)tdrop(k2+1)=tdrop(k2)
 
@@ -768,7 +777,7 @@ c  the s arrays are used to hold the turbulent components of u,v, and w
      & lapssh,us,vs,oms,t,phi,ub,vb,omb,tb,p
      &,ter,zter,nx,ny,nz,i4time_sys)
 
-         call write_errors(p,erru,errv,errw,errt,
+         call write_errors(a9_time_airdrop,p,erru,errv,errw,errt,
      1 nx,ny,nz,rri,rrj,zter)
 
 89       i4time_sys = i4time_airdrop
@@ -3073,6 +3082,7 @@ c
       Character*9 a9_time
       Character*3 dum1
       integer len,istatus
+      logical lexist
       real, allocatable, dimension(:) :: ri,rj,rk,dd,ff
      1,tt,uu,vv
       
@@ -3080,7 +3090,7 @@ c
       allocate(dd(3000),ff(3000),tt(3000))
       allocate(uu(3000),vv(3000))
 
-      istatus=0
+      istatus=1
       call get_r_missing_data(smsng,istatus)
       if(istatus.ne.1)then
          print*,'Error: returned from get_r_missing_data'
@@ -3094,50 +3104,59 @@ c
       rdpdg=pi/180. 
       call get_directory('pig',dum,len)
       dum(len+1:len+13)=a9_time//'.pig'
-      open (11, file=dum,form='formatted',status='old',err=50) 
-      Do n=1,3000
-      read(11,*,end=1) ri(n),rj(n),rk(n),dd(n),ff(n),dum1
-       if(dum1.eq.'  ') go to 1
-      enddo
-         print*, 'Suspect read in the pig file'
-         istatus=1
-         deallocate(ri,rj,rk,dd,ff)
-         deallocate (uu,vv,tt)
-         return
+      inquire(file=dum,exist=lexist)
+      if(lexist)then
+        open (11, file=dum,form='formatted',status='old',err=50) 
+        Do n=1,3000
+         read(11,*,end=1) ri(n),rj(n),rk(n),dd(n),ff(n),dum1
+         if(dum1.eq.'  ') go to 1
+        enddo
+        print*, 'Suspect read in the pig file'
+        istatus=0
+        deallocate(ri,rj,rk,dd,ff)
+        deallocate (uu,vv,tt)
+        return
   1   nsave=n-1 
 c convert dd ff to u,v
-      do n=1,nsave
-      ang=rdpdg*(dd(n)-270.)
-       uu(n)=ff(n)/.515*cos(ang)
-       vv(n)=-ff(n)/.515*sin(ang)
-      enddo
+        do n=1,nsave
+        ang=rdpdg*(dd(n)-270.)
+         uu(n)=ff(n)/.515*cos(ang)
+         vv(n)=-ff(n)/.515*sin(ang)
+        enddo
 
 c now interpolate to the laps levels in rk space
-      do k=1,nz
-       rr=k
-       do  n=1,nsave-1
-        iflag=0        
-        if (rr.lt.rk(n+1).and.rr.ge.rk(n)) then ! point is between two dropsonde levels
-         aa=(rr-rk(n))/(rk(n+1)-rk(n))
-         udrop(k)=uu(n)*(1.-aa)+uu(n+1)*aa
-         vdrop(k)=vv(n)*(1.-aa)+vv(n+1)*aa
-         rri(k)=ri(n)*(1.-aa)+ri(n+1)*aa
-         rrj(k)=rj(n)*(1.-aa)+rj(n+1)*aa
-         iflag=1
-         go to 3
+        do k=1,nz
+        rr=k
+        do  n=1,nsave-1
+         iflag=0        
+         if (rr.lt.rk(n+1).and.rr.ge.rk(n)) then ! point is between two dropsonde levels
+          aa=(rr-rk(n))/(rk(n+1)-rk(n))
+          udrop(k)=uu(n)*(1.-aa)+uu(n+1)*aa
+          vdrop(k)=vv(n)*(1.-aa)+vv(n+1)*aa
+          rri(k)=ri(n)*(1.-aa)+ri(n+1)*aa
+          rrj(k)=rj(n)*(1.-aa)+rj(n+1)*aa
+          iflag=1
+          go to 3
+         endif
+        enddo ! on n
+        if(iflag.eq.0) then
+         udrop(k)=smsng
+         vdrop(k)=smsng
         endif
-       enddo ! on n
-       if(iflag.eq.0) then
-        udrop(k)=smsng
-        vdrop(k)=smsng
-       endif
-   3  enddo ! on k
-      close(11)
+   3    enddo ! on k
+        close(11)
+      else
+        print*,'No pig file at this time'
+        istatus=-1
+      endif
 c now read the tmg file to get the dropsone temps
       call get_directory('tmg',dum,len)
       dum(len+1:len+13)=a9_time//'.tmg'
       nn=0
-      open (11, file=dum,form='formatted',status='old',err=50) 
+      inquire(file=dum,exist=lexist)
+      if(lexist)then
+
+       open (11, file=dum,form='formatted',status='old',err=50) 
        Do n=1,3000
        read(11,*,end=2) aa,bb,cc,ee, dum1           
        if(dum1.eq.'  ') go to 2
@@ -3148,9 +3167,9 @@ c now read the tmg file to get the dropsone temps
         rk(nn)=cc
         tt(nn)=ee  
        endif
-      enddo
+       enddo
 c now interpolate to the laps levels in rk space
- 2    do k=1,nz
+ 2     do k=1,nz
        rr=k
        do  n=1,nn-1
         iflag=0        
@@ -3164,7 +3183,12 @@ c now interpolate to the laps levels in rk space
        if(iflag.eq.0) then
         tdrop(k)=smsng
        endif
-   4  enddo
+   4   enddo
+
+      else
+       print*,'No tmg file for this time'
+       istatus=istatus-2
+      endif
       deallocate(ri,rj,rk,dd,ff)
       deallocate (uu,vv,tt)
 
@@ -3263,6 +3287,12 @@ c recover variable profiles and put them in the error arrays
         errt(1,5,k)=phi(ii,jj,k)*(1.-aa)*(1.-bb)
      1   +phi(ii+1,jj,k)*aa*(1.-bb)+
      1   phi(ii,jj+1,k)*bb*(1.-aa)+phi(ii+1,jj+1,k)*aa*bb
+c brute force method for now!
+        if(k.gt.1)then
+         errt(1,5,k-1)=phi(ii,jj,k-1)*(1.-aa)*(1.-bb)
+     1   +phi(ii+1,jj,k-1)*aa*(1.-bb)+
+     1   phi(ii,jj+1,k-1)*bb*(1.-aa)+phi(ii+1,jj+1,k-1)*aa*bb
+        endif
         zter=ter(ii,jj)*(1.-aa)*(1.-bb)
      1   +ter(ii+1,jj)*aa*(1.-bb)+
      1   ter(ii,jj+1)*bb*(1.-aa)+ter(ii+1,jj+1)*aa*bb
@@ -3912,74 +3942,102 @@ c
       end
 
 
-      Subroutine write_errors(p,erru,errv,errw,errt
+      Subroutine write_errors(a9_time,p,erru,errv,errw,errt
      1,nx,ny,nz,rri,rrj,zter)
 c this routine writes an ascii file to the output log summarizing errors
+      integer lun
       real p(nz)
       real erru(nx,ny,nz),errv(nx,ny,nz),errt(nx,ny,nz)
       real errw(nx,ny,nz)
       real rri(nz),rrj(nz)
-       r=287.04
-       sum=0
-       sum1=0
-       sum2=0
-      print*, '************AIRDROP OUTPUT**************   '
-      print*, 'AIRDROP PROFILES FROM LAPS ANALYSIS   '
-      print*, '  P       HT      U        V        W        T       Den'   
-      print*, ' mb       m      m/sec   m/sec    m/sec    deg K   kg/m3'
-      do k=1,nz                                               
+      character*200 cfname_out
+      character*9   a9_time
+c
+c direct output to lapsprd/balance/air/yyjjjhhmm.air -- ascii output
+c
+      call get_directory('balance',cfname_out,lend)
+      cfname_out=cfname_out(1:lend)//'air/'//a9_time//'.air'
+      call s_len(cfname_out,lend)
+      print*,'Airdrop output filename: ',cfname_out(1:lend)
+      lun = 20
+      open(lun,file=cfname_out,form='formatted',status='unknown'
+     +,err=909)
+
+      r=287.04
+      sum=0
+      sum1=0
+      sum2=0
+
+      write(lun,1011)
+ 1011 format(6x,'************AIRDROP OUTPUT**************')
+      write(lun,1012)
+ 1012 format(6x,'AIRDROP PROFILES FROM LAPS ANALYSIS')
+      write(lun,1013)
+ 1013 format(4x,'P',6x,'HT',6x,'U',8x,'V',8x,'W',8x,'T',7x,'Den')
+      write(lun,1014)
+ 1014 format(3x,'mb',7x,'m',5x,'m/sec',4x,'m/sec',4x,'m/sec',6x,'K'
+     +,6x,'kg/m3')
+      do k=1,nz
        ii=rri(k)
        jj=rrj(k)
        if(zter.lt.errt(1,5,k)) then
-        write(6,1005) p(k)/100., errt(1,5,k),erru(1,5,k),
+        write(lun,1005) p(k)/100., errt(1,5,k),erru(1,5,k),
      1  errv(1,5,k),errw(1,5,k),errt(1,6,k),errt(1,7,k)
        endif
       enddo
-      print*, '   '
-      print*, 'BIAS ERROR ESTIMATES'
-      write(6,1002)
-      write(6,1003)
-      write(6,1004)
+      write(lun,1015)
+ 1015 format(/)
+      write(lun,1016)
+ 1016 format(8x, 'BIAS ERROR ESTIMATES')
+      write(lun,1002)
+      write(lun,1003)
+      write(lun,1004)
       do k=1,nz
        if(zter.lt.errt(1,5,k)) then
-        write(6,1006) p(k)/100., errt(1,5,k),erru(1,1,k),
+        write(lun,1006) p(k)/100., errt(1,5,k),erru(1,1,k),
      1  errv(1,1,k),errw(1,1,k),
      1  erru(1,2,k),errv(1,2,k),errw(1,2,k),sum,sum,sum,
      1  errt(1,1,k),errt(1,2,k)
        endif
       enddo
-      print*, '   '
-      print*, 'BIAS ERROR ESTIMATES'
-      print*, 'P LVL  HT LVL '
-      write(6,1009)
-      write(6,1010)
+      write(lun,1015)
+      write(lun,1016)
+      write(lun,1017)
+ 1017 format(1x,'P LVL  HT LVL')
+      write(lun,1009)
+      write(lun,1010)
       do k=1,nz
        if(zter.lt.errt(1,5,k)) then
-       write(6,1008) p(k)/100., errt(1,5,k),errt(1,3,k)/100.,errt(1,4,k)
+       write(lun,1008) p(k)/100., errt(1,5,k),errt(1,3,k)/100.
+     &,errt(1,4,k)
        endif
       enddo
    
-      print*, '   '
-      print*, 'VARIANCE ESTIMATES'
-      write(6,1002)
-      write(6,1003)
-      write(6,1004)
+      write(lun,1015)
+      write(lun,1018)
+ 1018 format(10x,'VARIANCE ESTIMATES')
+      write(lun,1002)
+      write(lun,1003)
+      write(lun,1004)
       do k=1,nz
        ii=rri(k)
        jj=rrj(k)
        if(zter.lt.errt(1,5,k)) then
-        write(6,1000) p(k)/100., errt(1,5,k),erru(2,1,k),
+        write(lun,1000) p(k)/100., errt(1,5,k),erru(2,1,k),
      1  errv(2,1,k),errw(2,1,k),
      1  erru(2,2,k),errv(2,2,k),errw(2,2,k),erru(1,6,k)**2,
      1  errv(1,6,k)**2,
      1  errw(1,6,k)**2,errt(2,1,k),errt(2,2,k)
        endif
       enddo
-      print*, '   '
-      print*, 'TOTAL VARIANCE ESTIMATES'
-      print*, '  P     HT     Analysis + Turbulence '
-      print*, '                     (m/sec)  ' 
-      write(6,1007)
+      write(lun,1015)
+      write(lun,1019)
+ 1019 format(3x,'TOTAL VARIANCE ESTIMATES')
+      write(lun,1020)
+ 1020 format( '  P     HT     Analysis + Turbulence ')
+      write(lun,1021)
+ 1021 format( '                     (m/sec)  ' )
+      write(lun,1007)
  1007 format(19x,'U',8x,'V',9x,'W',6x,'Den',7x,'P',9x,'HT') 
  1009 format(19x,'P',8x,'HT')
  1010 format(19x,'mb',8x,'m')
@@ -3991,10 +4049,13 @@ c combined variance formula - err(3,2,k) contains covariance
        sum1=errv(2,2,k)+errv(1,6,k)**2+2.*errv(3,2,k)
        sum2=errw(2,2,k)+errw(1,6,k)**2+2.*errw(3,2,k)
        if(zter.lt.errt(1,5,k)) then
-        write(6,1001) p(k)/100., errt(1,5,k),sum,sum1,sum2,errt(2,2,k),
-     1   errt(2,3,k)/10000.,errt(2,4,k)
+        write(lun,1001) p(k)/100., errt(1,5,k),sum,sum1,sum2
+     1,errt(2,2,k),errt(2,3,k)/10000.,errt(2,4,k)
        endif
       enddo
+
+      return
+
  1000 format(1x,f5.0,f8.0,2(f5.1,f5.1,f5.3),3f5.2,2f7.6)
  1006 format(1x,f5.0,f8.0,2(f5.1,f5.1,f5.3),3f5.2,2f7.4)
  1002 format(18x,'Background',5x,'Analysis',7x,'Turbulence',4x,
@@ -4004,5 +4065,7 @@ c combined variance formula - err(3,2,k) contains covariance
  1001 format(1x,f5.0,f8.0,3f9.3,2f9.6,f9.2)
  1005 format(1x,f5.0,f8.0,5f9.3)
  1008 format(1x,f5.0,f8.0,2f9.3)
+
+  909 print*,'Error opening airdrop output file'
       return
       end
