@@ -149,7 +149,8 @@ c
 c -------------------------------------------------------------
 c
       subroutine get_background_info(bgpaths,bgmodels
-     +,oldest_forecast,max_forecast_delta,use_analysis,cmodel)
+     +,oldest_forecast,max_forecast_delta,use_analysis,cmodel
+     +,itime_inc)
       implicit none
 
       include 'bgdata.inc'
@@ -158,13 +159,12 @@ c
       character*132 cmodel(maxbgmodels)
       integer bgmodels(maxbgmodels), len_dir
       integer oldest_forecast, max_forecast_delta
+      integer itime_inc
       logical use_analysis
       namelist /background_nl/bgpaths,bgmodels
      +,oldest_forecast,max_forecast_delta,use_analysis,cmodel
+     +,itime_inc
 
-      max_forecast_delta=6
-      oldest_forecast=18
-      use_analysis=.false.
       call get_directory('nest7grid',nest7grid,len_dir)
       if(nest7grid(len_dir:len_dir).ne.'/') then
         len_dir=len_dir+1

@@ -309,7 +309,8 @@ c              return
                leni = lend
                lent=13
                return
-            elseif(c_fname(lend+1:lend+2) .eq. 'nf')then
+            elseif(c_fname(lend+1:lend+2) .eq. 'nf'.or.
+     +             c_fname(lend+1:lend+2) .eq. 're' )then
                c20_type = 'yyyymmddhh'                            !Taiwan/CWB FA model
                leni = lend+2
                lent = 10
