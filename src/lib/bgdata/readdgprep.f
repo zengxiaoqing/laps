@@ -66,12 +66,8 @@ c
 c
 c reads model ".index" file. returns pressure of levels, variable id
 c and number of levels for each model variable in file.  (J. Smart 7-6-98).
-c
 c_______________________________________________________________________________
 c
-c *** Open data file.
-c
-      call s_len(path,l)
       filename=path(1:l)//'/'//fname//af//'.index'
       call s_len(filename,l)
       call readindexfile(filename,nvarsmax,nz,nvars,nlevs
@@ -160,22 +156,35 @@ c     read(1) prk
       endif
 c
 c *** Fill pressure array and
-c *** Convert rh to specific humidity.
 c
       print*,'convert rh to sh'
       do k=1,nz
       do j=1,ny
       do i=1,nx
          pr(i,j,k)=prk(k)
-         it=tp(i,j,k)*100
-         it=min(45000,max(15000,it))
-         xe=esat(it)
-         mrsat=0.00622*xe/(prk(k)-xe)        !Assumes that rh units are %
-         sh(i,j,k)=sh(i,j,k)*mrsat           !rh --> mr
-         sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
       enddo
       enddo
       enddo
+c
+c *** convert rh to specific humidity.
+c
+      if(bgmodel.eq.6)then
+         do k=1,nz
+         do j=1,ny
+         do i=1,nx
+            it=tp(i,j,k)*100
+            it=min(45000,max(15000,it))
+            xe=esat(it)
+            mrsat=0.00622*xe/(prk(k)-xe)        !Assumes that rh units are %
+            sh(i,j,k)=sh(i,j,k)*mrsat           !rh --> mr
+            sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
+         enddo
+         enddo
+         enddo
+      else       !then it is nogaps
+c convert nogaps dewpoint to sh
+
+      endif
 
       do j=1,ny
       do i=1,nx
@@ -237,6 +246,7 @@ c ********************************************************
       integer   nx,ny,nz
      .         ,i,j,k,l,istatus
      .         ,nvarsmax,nvars
+     .         ,nshl
      .         ,nlevs(nvarsmax)
      .         ,ivarcoord(nvarsmax)
      .         ,ivarid(nvarsmax)
@@ -288,13 +298,15 @@ c = 4
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
 c     print*,'Read RH'
 c = 5
-      do k=1,nz-10+1    ! -> prk(17)=300mb = last moisture level.
+      nshl=nlevs(5)
+      do k=1,nshl  !  adjust number of rh levels using index info.
          read(lun,err=50) ((sh(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c
 c read sfc avn variables
 c
 c = 6,7,8,9,10,11
+c
       print*,'read sfc variables'
       read(lun,err=50) ((tp_sfc(i,j),i=1,nx),j=ny,1,-1)
       read(lun,err=50) ((uw_sfc(i,j),i=1,nx),j=ny,1,-1)
@@ -302,6 +314,7 @@ c = 6,7,8,9,10,11
       read(lun,err=50) ((ht_sfc(i,j),i=1,nx),j=ny,1,-1)
       read(lun,err=50) ((sh_sfc(i,j),i=1,nx),j=ny,1,-1)
       read(lun,err=50) ((mslp(i,j),i=1,nx),j=ny,1,-1)
+c
 c nvar = 12
 c
       do l=12,nvars
@@ -314,20 +327,24 @@ c
            enddo
         endif
       enddo
-      print*,'Did not find mslp data!'
+      print*,'Did not find surface pressure data!'
 
 188   continue
 c
 c As at AFWA, rh above level  (300mb)=10%
 c
 c     print*,'set upper level rh to 10%'
-      do k=18,nz
-      do j=1,ny
-      do i=1,nx
-         sh(i,j,k)=10.0
-      enddo
-      enddo
-      enddo
+      if(nshl.lt.nz)then
+
+         do k=nshl+1,nz
+         do j=1,ny
+         do i=1,nx
+            sh(i,j,k)=10.0
+         enddo
+         enddo
+         enddo
+
+      endif
 
       istatus=0
       return
