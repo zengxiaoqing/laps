@@ -13,7 +13,8 @@ c
 c  n_radars_wideband: corresponds to the number of vxx files
 c            if set to -1, then switch over to value of 'max_radars_cmn'
 c 
-c  n_radars_narrowband: corresponds to the number of rdr files
+c  n_radars_narrowband: corresponds to the number of narrowband radars
+c                       in the 'rdr/xxx/vrc' directories
 c
 c  i_window: number of seconds to allow data to be mosaic'ed. Currently
 c      set high because we only get data about once or twice per hour.
