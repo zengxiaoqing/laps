@@ -332,12 +332,20 @@ sub wfo_localization{
 	      print OUTFILE " grid_cen_lon_cmn=$lon,\n";
 	  }elsif(/\sISATS\s*=/){
 	      if($goes==8){
-		  print OUTFILE " ISATS = 1,0,\n";
+		  print OUTFILE " ISATS = 1,0,0,\n";
 	      }else{
-		  print OUTFILE " ISATS = 0,1,\n";
+		  print OUTFILE " ISATS = 0,1,0,\n";
 	      }
+	      
           }elsif(/\sgoes_switch\s*=/){
 	      print OUTFILE " goes_switch = $goes,\n";
+	  }elsif(/\sITYPES\s*=/){
+	      if($goes==8){
+		  print OUTFILE " ITYPES = 0,1,0,0,0,0,0,0,0,0,0,0,\n";
+	      }else{
+		  print OUTFILE " ITYPES = 0,0,0,0,0,1,0,0,0,0,0,0,\n";
+	      }
+
 	  }else{
 	      print OUTFILE $_;
 	  }
