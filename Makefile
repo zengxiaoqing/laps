@@ -22,6 +22,7 @@ LIBDIRS = src/lib \
           src/lib/lapack \
           src/lib/mthermo \
           src/lib/nav \
+          src/lib/opt90 \
           src/lib/powell  \
           src/lib/radar/remap_ftn \
           src/lib/radar/wsi_ingest \
@@ -58,6 +59,7 @@ EXEDIRS = src/accum \
           src/sfc/table \
           src/soil \
           src/temp \
+          src/verif/point \
           src/wind \
           src/WFO/post
 
