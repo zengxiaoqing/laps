@@ -800,15 +800,22 @@
      to the geography data are correct in 'data/static/nest7grid.parms'.
 
      You might initiate individual executables (bin directory) listed in the 
-     'sched.pl' to run for the test data. The time of the run is specified
-     in 'data/time/systime.dat'. This can be modified if needed if you want
-     to try a slightly different time from the one supplied. Note that for 
-     any given process or set of processes, deviations from the FSL output 
-     may be caused by differences in the inputs as well as machine roundoff 
-     error. Any such differences can be tracked down by recompiling specific 
-     analyses with the '-g' option. This can be done by typing 'make debug' 
-     in the appropriate directories. Various debuggers can then be used such 
-     as 'dbx'. Examination of the log files again is helpful.
+     'sched.pl' to run for the test data. Note that $LAPS_DATA_ROOT needs to
+     be set as an environment variable when executables are run individually.
+     The time of the run is specified in 'data/time/systime.dat'. This can be 
+     modified if needed if you want to try a slightly different time from 
+     the one supplied. 
+
+     Note that for any given process or set of processes, deviations from the 
+     FSL output may be caused by differences in the inputs as well as machine 
+     roundoff error. Having all of the data history from 'lapsprd' may also be
+     an issue; this may be less of a problem if you run laps for the latest 
+     hour of data that is supplied. The history is then supplied from earlier
+     'lapsdata*/lapsprd' output. Output differences can be tracked down 
+     by recompiling specific analyses with the '-g' option. This can be done by
+     typing 'make debug' in the appropriate 'src' directories. Various 
+     debuggers can then be used such as 'dbx'. Examination of the log files 
+     again is helpful.
 
      As a future enhancement, when running LAPS as a whole for the archived 
      data, the 'etc/sched.pl' script will accept a -t command line argument. 
@@ -837,7 +844,7 @@
 
                 ----  2.5.2  Ingest + Analysis Test ---
 
-     For this type of test, you will want to download the 'rawdata*' tar file
+     For this type of test, you will want to download the 'rawdata*' tar files
      into your raw data directory to start the processing of LAPS. Recall
      that the raw data directory is on a separate tree than $LAPS_DATA_ROOT.
      The time information will be needed in the form of 'data/time/systime.dat';
@@ -1497,12 +1504,17 @@ Source directory: The source code for this is in 'src/background'.
 
 Library directory: Associated library modules are in 'src/lib/bgdata'.
 
+Parameter file: 'static/background.nl'
+
 Sample Input/Output: May be available in the test data case.
 
 This software currently supports nearly 10 different models. If additional
 models are required, then software mods may be needed, potentially a new 
 source file added to 'src/lib/bgdata/read*.f'. A key variable that 
 relates to which model you're using is 'bgmodel'.
+
+Note that time interpolation is used if the required LAPS analysis time(s) are
+between the valid forecast times for two of the set of input files.
 
 ------ 3.2.2 -------------------- LVD ----------------------------------------
 
