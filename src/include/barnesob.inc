@@ -17,6 +17,7 @@
           real elev                   ! Used for sfc obs
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
+          integer i4time              ! I4time of ob
           character*12 type           ! Observation type
           character*12 file           ! Observation (intermediate) file
 	end type barnesob
@@ -35,6 +36,7 @@
           real elev                   ! Used for sfc obs
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
+          integer i4time              ! I4time of ob
           logical qc
           character*12 type           ! Observation type
           character*12 file           ! Observation (intermediate) file
