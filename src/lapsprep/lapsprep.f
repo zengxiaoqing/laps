@@ -88,7 +88,7 @@
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , t , rh , ht, &   
                                              lwc,rai,sno,pic,ice, sh, mr, & 
                                              virtual_t, rho
-    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d 
+    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin 
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
     REAL , PARAMETER                       :: tiny = 1.0e-20
     
@@ -232,6 +232,7 @@
         ALLOCATE ( slp ( x , y         ) )
         ALLOCATE ( psfc (x , y         ) )
         ALLOCATE ( d2d ( x , y         ) )
+        ALLOCATE ( tskin ( x , y       ) )
         ALLOCATE ( p   (         z3 + 1 ) ) 
         ! The followin variables are not "mandatory"
         ALLOCATE ( lwc ( x , y , z3 ) ) 
@@ -327,6 +328,8 @@
             CALL NCVGT ( cdfid , vid , start , count , slp           , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'ps ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , psfc          , rcode )
+          ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'tgd') THEN
+            CALL NCVGT ( cdfid , vid , start , count , tskin         , rcode )
           END IF
 
         END DO var_lsx
@@ -487,14 +490,14 @@
       select_output: SELECT CASE (output_format(out_loop))
         CASE ('mm5 ')
           CALL output_pregrid_format(p, t, ht, u, v, rh, slp, &
-                            lwc, rai, sno, ice, pic,snocov)
+                            lwc, rai, sno, ice, pic,snocov, tskin)
 
         CASE ('wrf ')
           CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
-                             lwc, rai, sno, ice, pic,snocov)
+                             lwc, rai, sno, ice, pic,snocov, tskin)
      
         CASE ('rams') 
-          CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snocov)
+          CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snocov, tskin)
         CASE ('sfm ')
           PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
 

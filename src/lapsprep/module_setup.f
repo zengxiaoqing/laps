@@ -75,14 +75,14 @@ MODULE setup
                            (/ 'ht ' , 't3 ' , 'xxx' , 'xxx' , 'xxx' , & 
                               'u3 ' , 'v3 ' , 'xxx' , 'xxx' , 'xxx' , & 
                               'rhl' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
-                              'u  ' , 'v  ' , 't  ' , 'rh ' , 'xxx' , &
+                              'u  ' , 'v  ' , 't  ' , 'rh ' , 'tgd' , &
                               'ps ',  'msl' , 'xxx' , 'xxx' , 'xxx' , &
                               'lwc' , 'rai' , 'sno' , 'pic' , 'ice' , &
                               'sh ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
                               'sc ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' /) , &
                                                (/ 5 , num_ext /) )
 
-   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,2,1,4,2,5,1,1/) 
+   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,2,1,5,2,5,1,1/) 
 
 CONTAINS
 

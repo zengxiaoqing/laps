@@ -76,7 +76,7 @@ MODULE lapsprep_wrf
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE output_gribprep_format(p, t, ht, u, v, rh, slp, psfc, &
-                               lwc, rai, sno, ice, pic, snocov)
+                               lwc, rai, sno, ice, pic, snocov,tskin)
 
   !  Subroutine of lapsprep that will build a file the
   !  WRFSI "gribprep" format that can be read by hinterp
@@ -99,7 +99,8 @@ CONTAINS
   REAL, INTENT(IN)                   :: ice(:,:,:)  ! Ice (kg/kg)
   REAL, INTENT(IN)                   :: pic(:,:,:)  ! Graupel (kg/kg)
   REAL, INTENT(IN)                   :: snocov(:,:) ! Snow cover (fract)
-
+  REAL, INTENT(IN)                   :: tskin(:,:)  ! Skin temperature
+  
   ! Local Variables
   
   INTEGER            :: valid_mm, valid_dd
@@ -263,6 +264,18 @@ CONTAINS
   WRITE ( output_unit ) d2d
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
+
+  ! Skin temperature
+  field = 'SKINTEMP '
+  units = 'K                        '
+  desc  = 'Skin temperature                              '
+  PRINT *, 'FIELD = ', field
+  PRINT *, 'UNITS = ', units
+  PRINT *, 'DESC =  ',desc
+  CALL write_gribprep_header(field,units,desc,p_pa(z3+1))
+  WRITE ( output_unit ) tskin
+  PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), &
+       ' Min: ', MINVAL(tskin), ' Max: ', MAXVAL(d2d)
 
   ! Sea-level Pressure field
   field = 'PMSL     '

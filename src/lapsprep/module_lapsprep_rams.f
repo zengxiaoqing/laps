@@ -62,10 +62,10 @@ MODULE lapsprep_rams
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  SUBROUTINE output_ralph2_format(p, u, v, t, ht, rh, slp, psfc, snocov)
+  SUBROUTINE output_ralph2_format(p, u, v, t, ht, rh, slp, psfc, snocov,tskin)
 
-  ! Subroutine to output data in RAMS 4.x "RALPH 2" format. We do not have 
-  ! SST data in LAPS yet, so that is not included for now.  
+  ! Subroutine to output data in RAMS 4.x "RALPH 2" format. The skin temp from
+  ! LAPS (lsx/tgd) is used for SST.
  
   ! Note that the P array has a bogus 2001 mb value as the last entry
   ! to designate the surface for MM5 applications.  The surface values
@@ -99,7 +99,7 @@ CONTAINS
   REAL, INTENT(IN)               :: slp(:,:)  !MSL Pressure in Pa
   REAL, INTENT(IN)               :: psfc(:,:) !Surface Pressure in Pa
   REAL, INTENT(IN)               :: snocov(:,:)! Snow cover (fract)
-
+  REAL, INTENT(IN)               :: tskin(:,:) ! Skin temp
   ! Local Variables
 
   INTEGER, PARAMETER             :: marker = 999999
@@ -217,9 +217,8 @@ CONTAINS
    WRITE(output_unit,'(8F10.3)') (( slp(i,j)*.01,i=1,x),j=1,y)
    WRITE(output_unit,'(8F10.3)') (( psfc(i,j)*.01,i=1,x),j=1,y)
    WRITE(output_unit,'(8F10.3)') (( t(i,j,z3+1),i=1,x),j=1,y)
-!   IF (MAXVAL(snocov).GE.0) THEN
-!     WRITE(output_unit,'(8F10.4)') (( snocov(i,j),i=1,x),j=1,y)
-!   ENDIF
+   WRITE(output_unit,'(8F10.4)') (( snocov(i,j),i=1,x),j=1,y)
+   WRITE(output_unit,'(8F10.4)') (( tskin(i,j),i=1,x),j=1,y)
   ! Close the file
   
   CLOSE(output_unit)

@@ -76,7 +76,7 @@ MODULE lapsprep_mm5
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE output_pregrid_format(p, t, ht, u, v, rh, slp, &
-                               lwc, rai, sno, ice, pic, snocov)
+                               lwc, rai, sno, ice, pic, snocov, tskin)
 
   !  Subroutine of lapsprep that will build a file in the
   !  MM5v3 pregrid format that can be read by REGRID
@@ -98,6 +98,7 @@ CONTAINS
   REAL, INTENT(IN)                   :: ice(:,:,:)  ! Ice (kg/kg)
   REAL, INTENT(IN)                   :: pic(:,:,:)  ! Graupel (kg/kg)
   REAL, INTENT(IN)                   :: snocov(:,:) ! Snow cover (fract)
+  REAL, INTENT(IN)                   :: tskin(:,:)  ! Skin temperature
 
   ! Local Variables
   
@@ -273,6 +274,19 @@ CONTAINS
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', slp_level, ' Min: ', MINVAL(slp),&
             ' Max: ', MAXVAL(slp)
 
+  ! Skin temperature field
+  field = 'SKINTEMP '
+  units = 'K                        '
+  desc  = 'Skin temperature                              '
+  PRINT *, 'FIELD = ', field
+  PRINT *, 'UNITS = ', units
+  PRINT *, 'DESC =  ',desc
+  CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
+  WRITE ( output_unit ) tskin
+  PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', p_pa(z3+1), ' Min: ', & 
+      MINVAL(tskin), ' Max: ', MAXVAL(tskin) 
+
+  ! Snow cover
   IF ((MINVAL(snocov) .GE. 0.).AND.(MAXVAL(snocov) .LT. 1.1)) THEN
     ! Water equivalent snow depth
     field = 'SNOWCOVR '
