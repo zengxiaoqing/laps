@@ -86,7 +86,7 @@ c
       integer*4 i4time,error(2),i,j,k,istatus
 c
       character*(*) laps_data_root
-      character*100 datadir
+      character*256 datadir
       character*10 units
       character*125 comment
 c     character*3 sfcfields(6)

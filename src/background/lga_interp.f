@@ -298,7 +298,7 @@ c
       subroutine erase_file(inittime,validtime,dir,ext)
       integer inittime,validtime, istatus, rename
       character*(*) dir, ext
-      character*200 filename
+      character*256 filename
       character*13 fname
 
       call make_fnam13_lp(inittime,validtime, fname, istatus)

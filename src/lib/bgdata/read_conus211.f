@@ -65,7 +65,7 @@ C
       include 'netcdf.inc'
       integer slen, nf_status,nf_fid, i, istat
       character*(*) path, fname
-      character*100 cdfname
+      character*200 cdfname
       integer nxbg,nybg,nzbg(5),ntbg , mtbg
 C     integer ntp, nvdim, nvs, lenstr, ndsize
       integer ntp, nvdim, nvs

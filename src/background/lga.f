@@ -82,7 +82,7 @@ c *** Read from standard input.
 c *** Each line contains the background data directory path for each
 c        corresponding bgmodel defined above.
 c
-      character*150 bgpath
+      character*256 bgpath
 
 c
 c  This is the max number of paths allowed in nest7grid.parms
@@ -90,15 +90,15 @@ c  and should match the value in lib/lapsgrid.f
 c 
       integer maxbgmodels
       parameter (maxbgmodels=10)
-      character*150 bgpaths(maxbgmodels)
+      character*256 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), bglen
 c
       character*9 a9
       integer i4time_now
       integer*4 max_files,bg_files
       parameter (max_files=500)
-      character*100 names(max_files)
-      character*100 reject_files(max_files)
+      character*256 names(max_files)
+      character*256 reject_files(max_files)
       integer reject_cnt
       data reject_cnt/0/
 
@@ -331,11 +331,11 @@ c
      .          istatus
 c
       character*255 lgapath
-      character*100 lga_names(max_files)
+      character*256 lga_names(max_files)
       character*13  fname13,fname9_to_wfo_fname13
       character*9   fname
       character*2   gproj
-      character*150  outdir, fullname
+      character*256  outdir, fullname
       character*31  ext
       character*3   var(kdim)
       character*4   af

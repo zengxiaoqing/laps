@@ -13,10 +13,10 @@ c
       character*132 cmodel
 c     integer i, filesfound, nf_fid, len
       integer i, filesfound, len
-      character*180 nl_file, laps_data_root
+      character*256 nl_file, laps_data_root
       integer bgfcnt, max_files, istat
       parameter (max_files=500)
-      character*200 bgfnames(max_files)
+      character*256 bgfnames(max_files)
       integer maxdprepmodels, maxtimes
       parameter (maxdprepmodels=10)
       parameter (maxtimes=24)
@@ -25,12 +25,12 @@ c     integer i, filesfound, nf_fid, len
       logical use_analysis, outdir_defined, bgpath_defined
       character*9 a9
       integer i4time_now, lendr, itime, ntime
-      character*180 bgpath, topofname, outdir
-      character*180 initbgpaths(maxdprepmodels)
+      character*256 bgpath, topofname, outdir
+      character*256 initbgpaths(maxdprepmodels)
      +             ,bndybgpaths(maxdprepmodels)
       integer initbgmodels(maxdprepmodels),bndybgmodels(maxdprepmodels)
                  
-      character*100 reject_files(max_files)
+      character*256 reject_files(max_files)
       integer reject_cnt
       data reject_cnt/0/
       data max_forecast_delta/18/
@@ -171,7 +171,7 @@ c     integer bgmodel, istatus, bgfcnt, k, len, filesfound
       real sw(2), ne(2)
 
       character*(*) bgpath, bgfnames(bgfcnt), outdir
-      character*132 fullname
+      character*256 fullname
       character*4 ext, gproj, af
       character*9 fname
 c     character*13 fname13
@@ -297,7 +297,7 @@ c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ),
      +     vw_sfc, mslp, lat1, lat2, lon0, istatus)
       implicit none
       character*(*) outdir, fname, gproj
-      character*200 outfile
+      character*256 outfile
       integer nx,ny,nz, nsfcfld, istatus, ip, jp, n
       real lat1, lat2, lon0, rota
       real sw(2), ne(2)

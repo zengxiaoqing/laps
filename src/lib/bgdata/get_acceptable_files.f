@@ -12,7 +12,7 @@
      + , max_forecast_delta
       integer ivaltimes(10), ntbg
       character*4   af
-      character*100 bg_names(max_files), fullname
+      character*200 bg_names(max_files), fullname
 C     integer nf_status, nf_vid, nf_fid, istatus
       integer istatus
       logical use_analysis
