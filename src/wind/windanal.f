@@ -47,6 +47,8 @@ cdis
      1     ,wt_p,weight_bkg_const,rms_thresh_wind                      ! I/L
      1     ,max_radars                                                 ! I
      1     ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar ! I
+     1     ,thresh_2_radarobs_lvl_unfltrd                              ! I
+     1     ,thresh_4_radarobs_lvl_unfltrd                              ! I
      1     ,u_laps_bkg,v_laps_bkg                                      ! I/L
      1     ,imax,jmax,kmax,lat,lon                                     ! I
      1     ,i4time,grid_spacing_m                                      ! I
@@ -129,6 +131,9 @@ cdis
 !     Location of each radar
       real*4 rlat_radar(max_radars),rlon_radar(max_radars)             ! Input
      1                     ,rheight_radar(max_radars)
+
+      integer*4 thresh_2_radarobs_lvl_unfltrd                          ! Input
+     1         ,thresh_4_radarobs_lvl_unfltrd
 
 !     # of radar obs before filtering for each radar (modified by QC)
       integer*4 n_radarobs_tot_unfltrd(max_radars)                     ! Input/Modified
@@ -719,6 +724,8 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
      1        ,vr_obs_unfltrd                             ! Input
+     1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
+     1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1        ,i4time                                     ! Input
      1        ,lat,lon                                    ! Input
      1        ,rlat_radar,rlon_radar                      ! Input
@@ -826,6 +833,8 @@ csms$>                    out>:default=ignore) begin
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
      1        ,vr_obs_unfltrd                             ! Input
+     1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
+     1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1        ,i4time                                     ! Input
      1        ,lat,lon                                    ! Input
      1        ,rlat_radar,rlon_radar                      ! Input
@@ -954,6 +963,8 @@ csms$>                                     :default=ignore)  begin
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
      1        ,vr_obs_unfltrd                             ! Input
+     1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
+     1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1        ,i4time                                     ! Input
      1        ,lat,lon                                    ! Input
      1        ,rlat_radar,rlon_radar                      ! Input
@@ -1149,6 +1160,8 @@ csms$serial end
      1  ,imax,jmax,kmax                             ! Input
      1  ,r_missing_data                             ! Input
      1  ,vr_obs_unfltrd                             ! Input
+     1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
+     1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar                      ! Input
@@ -1180,6 +1193,8 @@ csms$serial end
       real*4   vpass1_buf(imax,jmax,kmax)                            ! Local
 
       integer*4 idx_radar_a(max_radars)
+      integer*4 thresh_2_radarobs_lvl_unfltrd
+     1         ,thresh_4_radarobs_lvl_unfltrd
 
       logical  l_good_multi_doppler_ob(imax,jmax,kmax)               ! Local
       logical  l_analyze(kmax),l_derived_output,l_grid_north
@@ -1214,6 +1229,8 @@ csms$ignore begin
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar_a(i_radar)               ! Input
      1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input
+     1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
+     1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar(i_radar),rlon_radar(i_radar)    ! Input
@@ -1236,6 +1253,8 @@ csms$ignore begin
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar_a(i_radar)               ! Input
      1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input
+     1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
+     1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar(i_radar),rlon_radar(i_radar)    ! Input
@@ -1342,6 +1361,8 @@ csms$ignore end
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar                          ! Input
      1  ,vr_obs_unfltrd                             ! Input
+     1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
+     1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar,rheight_radar        ! Input
@@ -1368,6 +1389,9 @@ csms$ignore end
 
       logical  l_good_multi_doppler_ob(imax,jmax,kmax),l_derived_output
       logical  l_grid_north
+
+      integer*4 thresh_2_radarobs_lvl_unfltrd
+     1         ,thresh_4_radarobs_lvl_unfltrd
 
       character*31 ext
 
@@ -1402,6 +1426,8 @@ csms$ignore begin
      1                  n_radarobs_lvl_unfltrd,       ! Input
      1                  imax,jmax,                    ! Input
      1                  vr_obs_unfltrd(1,1,k),        ! Input
+     1                  thresh_2_radarobs_lvl_unfltrd,! Input
+     1                  thresh_4_radarobs_lvl_unfltrd,! Input
      1                  r_missing_data,               ! Input
      1                  vr_obs_fltrd(1,1,k),          ! Input/Output
      1                  intvl_rad)                    ! Output
@@ -1559,7 +1585,7 @@ c  convert radar obs into u & v by using tangential component of first pass
 
           endif ! Not missing data
         enddo ! i
-        enddo ! j
+        enddo ! j     
       enddo ! k
 
       if(l_derived_output)then
@@ -1576,6 +1602,8 @@ csms$ignore end
      1                  n_radarobs_lvl_unfltrd,       ! Input
      1                  imax,jmax,                    ! Input
      1                  vr_obs_unfltrd,               ! Input
+     1                  thresh_2_radarobs_lvl_unfltrd,! Input
+     1                  thresh_4_radarobs_lvl_unfltrd,! Input
      1                  r_missing_data,               ! Input
      1                  vr_obs_fltrd,                 ! Input/Output
      1                  intvl_rad)                    ! Output
@@ -1587,8 +1615,8 @@ csms$ignore end
 !       Threshold number of radar obs on a given level
         integer*4 thresh_2_radarobs_lvl_unfltrd
      1           ,thresh_4_radarobs_lvl_unfltrd
-        parameter (thresh_2_radarobs_lvl_unfltrd = 300)
-        parameter (thresh_4_radarobs_lvl_unfltrd = 600)
+!       parameter (thresh_2_radarobs_lvl_unfltrd = 300)
+!       parameter (thresh_4_radarobs_lvl_unfltrd = 600)
 
         integer*4 n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
         real*4 vr_obs_unfltrd(imax,jmax)
