@@ -49,8 +49,10 @@ c                     01-15-97  Check CDOT filename (pub vs wfo).
 c                     03-27-97  Add ability to do interactive runs (removes
 c                                 the need for 'obs_driveri').  Remove equivs.
 c
-c      J. Edwards     07-14-97  Made dynamic and moved data paths 
+c          J. Edwards 07-14-97  Made dynamic and moved data paths 
 c                               to nest7grid.parms
+c          P. Stamus  04-20-98  Changed 'data_file_c' to 'data_file_l' (for
+c                               local).  Changed filename for local data.
 c
 c       Notes:
 c         1. When run "operationally", 'obs_driver.x' uses the time from
@@ -96,7 +98,7 @@ c
 	character filename13*13
 	character filename9*9
         character fname9_to_wfo_fname13*13
-	character data_file_m*80, data_file_c*80
+	character data_file_m*80, data_file_l*80
         integer cnt, minutes_to_wait_for_metars
         parameter(minutes_to_wait_for_metars=10)
 	logical exists
@@ -183,21 +185,22 @@ c
 	n_obs_pos_g = 0
 	n_meso_old = 0
 	n_meso_pos = 0
-	n_cdot = 0
+	n_local = 0
 c
 c.....  Call the routine that reads the METAR data files, then get
-c.....  the METAR data.
+c.....  the METAR data.  Same for local data.  Set up data paths first.
 c
         do while(.not. exists .and. 
-     +            cnt .lt. minutes_to_wait_for_metars)
+     &            cnt .lt. minutes_to_wait_for_metars)
         
 c	if(idata_config .eq. 1) then   ! /public at FSL
 	   len_path = index(path_to_METAR,' ') - 1
 	   data_file_m = 
-     1	      path_to_METAR(1:len_path)//filename9(1:9)// '0100o'
+     &	      path_to_METAR(1:len_path)//filename9(1:9)// '0100o'
 	   len_path = index(path_to_local_data,' ') - 1
-	   data_file_c = 
-     1	      path_to_local_data(1:len_path)//filename9(1:9)//'0015r'
+	   filename13=fname9_to_wfo_fname13(filename9(1:9))
+	   data_file_l = 
+     &	      path_to_local_data(1:len_path)//filename13    !9(1:9)//'0015r'
 	   INQUIRE(FILE=data_file_m,EXIST=exists)
 	   if(.not. exists) then
 	      filename13=fname9_to_wfo_fname13(filename9(1:9))
@@ -205,22 +208,22 @@ c	if(idata_config .eq. 1) then   ! /public at FSL
 	      data_file_m = 
      &           path_to_METAR(1:len_path) // filename13
 	      len_path = index(path_to_local_data,' ') - 1
-	      data_file_c = 
+	      data_file_l = 
      &           path_to_local_data(1:len_path) // filename13
 	      INQUIRE(FILE=data_file_m,EXIST=exists)
 	      if(.not. exists) then
-                 print*,'Waiting for file ',data_file_m
+                 print*,'Waiting for file ', data_file_m
                  call waiting_c(60)
                  cnt = cnt+1               
 	      endif
 	   endif
 	enddo
 	if(.not.exists) then
-	   print *,' ERROR. File not Found: ',data_file_m
+	   print *,' ERROR. File not Found: ', data_file_m
 	   stop 'Config error'
         endif
 
-	print*,'Getting surface data ',data_file_m
+	print*,'Getting METAR data ', data_file_m
 c	elseif(idata_config .eq. 2) then ! WFO-adv data
 c	   data_file_m = 
 c     &        path_to_METAR(1:len_path) // filename_wfo
@@ -233,25 +236,21 @@ c
      &                   store_emv,store_amt,store_hgt,
      &                   num_var,jstatus) 
 c
-c.....  Set up the local_data filename, then call the routine that reads 
-c.....  the local_data data files.
+c.....  Call the routine that reads the local_data data files.
 c
         
-
-        
-	print*, 'Getting local data',data_file_c
-
+	print*, 'Getting local data', data_file_l
 c
-	call get_local_obs(maxobs,maxsta,i4time,data_file_c,
+	call get_local_obs(maxobs,maxsta,i4time,data_file_l,
      &                   grid_east,grid_west,grid_north,
-     &                   grid_south,nn,n_cdot,
+     &                   grid_south,nn,n_local,
      &                   stations,store,wx,obstype,
      &                   store_emv,store_amt,store_hgt,
      &                   num_var,jstatus) 
 c
 c.....  Finish the obs counts, then call the routine to write the LSO file.
 c
-	n_obs_g = n_sao_g + n_cdot
+	n_obs_g = n_sao_g + n_local
 	n_obs_b = nn
 	n_obs_pos_g = n_sao_pos_g + n_meso_pos
 	n_obs_pos_b = n_sao_pos_b + n_meso_pos
