@@ -62,15 +62,13 @@ c.....  Local variables/arrays
 c
 	real lat(ni,nj), lon(ni,nj)
 	real lats(maxobs), lons(maxobs), elev(maxobs)
-        real t(maxobs), td(maxobs), rh(maxobs)
-        real t24max(maxobs), t24min(maxobs)
-        real stnp(maxobs)
-        real pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
+        real t(maxobs), t24max(maxobs), t24min(maxobs), td(maxobs)
+	real rh(maxobs), pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
         real dd(maxobs), ff(maxobs), wgdd(maxobs), wgff(maxobs)
-        real mslp(maxobs) 
-        real pcc(maxobs), pc(maxobs), sr(maxobs), st(maxobs)       
+        real stnp(maxobs), mslp(maxobs), pc(maxobs)
+        real sr(maxobs), st(maxobs)
 
-        integer    wmoid(maxobs)
+        integer    wmoid(maxobs), pcc(maxobs)
         integer    rtime
         integer*4  i4time_ob_a(maxobs), before, after
 
@@ -148,20 +146,23 @@ c
 
             write(6,*)' maxobs/maxobs_in ',maxobs,maxobs_in
 
-            call read_local_cwb(path_to_local_data,maxobs_in
-     1                 ,badflag,ibadflag,i4time_file                     ! I
-     1                 ,stname(ix)                                       ! O
-     1                 ,lats(ix),lons(ix),elev(ix)                       ! O
-     1                 ,t(ix),t24max(ix),t24min(ix),td(ix),rh(ix)        ! O
-     1                 ,pcp1hr(ix),pcp3hr(ix),pcp6hr(ix)                 ! O
-     1                 ,dd(ix),ff(ix),wgdd(ix),wgff(ix)                  ! O
-     1                 ,stnp(ix),mslp(ix)                                ! O
-     1                 ,pcc(ix),pc(ix),sr(ix),st(ix)                     ! O
-     1                 ,num,istatus)                                     ! O
+            call read_local_cwb ( path_to_local_data, maxobs_in,
+     ~         badflag, ibadflag,i4time_file, stname, lats, lons, elev,
+     ~         t, t24max, t24min, td, rh, pcp1hr, pcp3hr, pcp6hr,
+     ~         pcp24hr, dd, ff, wgdd, wgff, stnp, mslp, pcc, pc, sr, st,
+     ~         num, istatus )
+
+c           call read_local_cwb(path_to_local_data,maxobs_in
+c    1                 ,badflag,ibadflag,i4time_file                     ! I
+c    1                 ,stname(ix)                                       ! O
+c    1                 ,lats(ix),lons(ix),elev(ix)                       ! O
+c    1                 ,i4time_ob_a(ix),t(ix),td(ix),rh(ix)              ! O
+c    1                 ,pcp(ix),stnp(ix),mslp(ix),dd(ix),ff(ix)          ! O
+c    1                 ,num,istatus)                                     ! O
 
 	    if(istatus .ne. 1)then
                 write(6,*)
-     1          '     Warning: bad status return from READ_LOCAL_CWB'       
+     1          '     Warning: bad status return from READ_LOCAL'       
                 n_local_file = 0
 
             else
@@ -170,11 +171,20 @@ c
 
             endif
 
-            ix = ix + n_local_file
+c           ix = ix + n_local_file
 
         enddo ! i4time_file
+        write(*,*)inpath,maxobs,badflag,ibadflag
+     ~                            ,i4time_sys,stname
+     ~                            ,lats,lons,elev                      ! O
+     ~                            ,i4time_ob_a,t,td,rh,pcp             ! O
+     ~                            ,stnp,mslp,dd,ff                     ! O
+     ~                            ,wgdd,wgff,pcc,pc,sr,st              ! O
+     ~                            ,num,istatus                         ! O
 
-        n_local_all = ix - 1
+
+c       n_local_all = ix - 1
+        n_local_all = num
         write(6,*)' n_local_all = ',n_local_all
 
         max_write = 100
@@ -366,7 +376,7 @@ c
          store_4(nn,1) = badflag                ! altimeter setting (mb)
          store_4(nn,2) = stnp(i)                ! station pressure (mb)
          store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
-         store_4(nn,4) = pcc(i)                 ! 3-h press change character
+         store_4(nn,4) = badflag                ! 3-h press change character
          store_4(nn,5) = pc(i)                  ! 3-h press change (mb)
 c
          store_5(nn,1) = badflag                ! visibility (miles)
@@ -381,8 +391,8 @@ c
          store_6(nn,5) = badflag                ! snow cover
 c
          store_7(nn,1) = float(kkk)             ! number of cloud layers
-         store_7(nn,2) = badflag                ! 24-h max temperature
-         store_7(nn,3) = badflag                ! 24-h min temperature
+         store_7(nn,2) = t24max(i)              ! 24-h max temperature
+         store_7(nn,3) = t24min(i)              ! 24-h min temperature
 c
 c.....  That's it for this station.
 c
@@ -404,11 +414,3 @@ c
 c
          end
 
-
-        subroutine get_box_size(box_size,istatus)
-
-        istatus = 1
-        box_size = 1.1
-
-        return
-        end
