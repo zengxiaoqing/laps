@@ -52,15 +52,17 @@ cdis
 
 !The following specifies the maximum vv in two cloud types as functions
 !of cloud depth.  Make parabolic vv profile, except for stratiform clouds,
-!which get a constant value.
+!which get a constant value.  The values are tuned to give values that
+!an NWP model would typically produce.  
         Real*4 vv_to_height_ratio_Cu
         Real*4 vv_to_height_ratio_Sc
         Real*4 vv_for_St
 
-!       data vv_to_height_ratio_Cu /.0005/
-        data vv_to_height_ratio_Cu /.001/
-        data vv_to_height_ratio_Sc /.00005/
-        data vv_for_St /.05/                    ! constant 5 cm/s throughout
+        ! Values below are the max VVs expected on a 10km grid for a 
+        ! cloud 10km deep
+        data vv_to_height_ratio_Cu /4.0/       
+        data vv_to_height_ratio_Sc /0.5/      
+        data vv_for_St /.05/                  
 
         Real*4 ratio, vv, Parabolic_vv_profile
 
@@ -76,7 +78,7 @@ cdis
         End do
 
 !Put in the vv's for cumuliform clouds (Cu or Cb) first.
-        ratio = vv_to_height_ratio_Cu * 1000. / dx
+        ratio = vv_to_height_ratio_Cu / dx
         Do k = 1, nk
          If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           kbase = k
@@ -116,7 +118,7 @@ cdis
         End do
 
 !Now do the stratocumulus or similar clouds (Sc, Ac, Cc, Ns).
-100     ratio = vv_to_height_ratio_Sc
+100     ratio = vv_to_height_ratio_Sc/dx
         Do k = 1, nk
          If (cloud_type(k) .eq. 2  .OR.  cloud_type(k) .eq. 4  .OR.
      1     cloud_type(k) .eq. 5  .OR.  cloud_type(k) .eq. 9) then
@@ -183,10 +185,7 @@ cdis
         End if
 
         vvmax = ratio * depth
-! June 2002 - Commented the next line out and replaced with
-!  line following.
-!       vvspan = depth * 4. / 3.
-        vvspan = depth
+        vvspan = depth * 1.1    
         halfspan = vvspan / 2.
         height_vvmax = ztop - halfspan
         x = -vvmax/(halfspan*halfspan)
