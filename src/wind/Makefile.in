@@ -71,7 +71,6 @@ SRC= main_sub.f \
      comp_laps1_laps2.f \
      comp_laps_maps.f \
      vertwind.f \
-     fflxc.f \
      rdpirep.f \
      rdmeso.f \
      rdsao.f \
@@ -134,8 +133,6 @@ distclean: clean
 
 
 comp_laps1_laps2.f:  $(LAPSROOT)/src/include/windparms.inc@F77INC@
-
-fflxc.f:  $(LAPSROOT)/src/include/lapsparms.cmn@F77INC@
 
 get_wind_obs.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/windparms.inc $(LAPSROOT)/src/include/get_wind_obs.inc@F77INC@
 
