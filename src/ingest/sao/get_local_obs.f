@@ -469,16 +469,24 @@ c
 c..... Output the data to the storage arrays
 c
 	 call s_len(stname(i), len)
-	 stations(nn)(1:len) = stname(i)(1:len) ! station name
+         if(len .ne. 0)then
+             stations(nn)(1:len) = stname(i)(1:len) ! station name
+         else
+             write(6,*)' Error in get_local_obs: blank station name'
+             write(6,*)' STOP without writing LSO'
+             stop
+         endif
 c
 	 call s_len(pro(i), len)
-	 provider(nn)(1:len) = pro(i)(1:len)    ! data provider
+         if(len .ne. 0) then
+	     provider(nn)(1:len) = pro(i)(1:len)    ! data provider
+         endif
 c
-	 call s_len(stn_type(i), len)
-	 if(len .ne. 0) then
-	    ilen = min(len, 6)
-	    atype(nn)(1:ilen) = stn_type(i)(1:ilen) ! auto stn type
-	 endif
+         call s_len(stn_type(i), len)
+         if(len .ne. 0) then
+            ilen = min(len, 6)
+            atype(nn)(1:ilen) = stn_type(i)(1:ilen) ! auto stn type
+         endif
 c
 	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
 	 reptype(nn)(1:6) = 'LDAD  '            ! report type

@@ -172,6 +172,7 @@ c
 
         else
             recNum=150
+            maxSkyCover=10
             call read_metar_cwb(data_file , maxSkyCover, recNum, alt,    
      &         atype_in, td, ttd, elev,
      &         lats, lons, max24t, min24t,
