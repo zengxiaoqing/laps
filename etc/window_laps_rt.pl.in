@@ -64,15 +64,18 @@ print "Laps_Data_Root = $LAPS_DATA_ROOT\n";
 print "Laps Template = $LAPS_TEMPLATE \n";
 print "Config Domain = $CONFIG_DOMAIN \n";
 
-# WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_HOME/../laps/data) before removing it.
-my $FXA_HOME = $ENV{"FXA_HOME"};
-if(-d $FXA_HOME && ! -d "$FXA_HOME/../laps/data"){
-   mkdir "$FXA_HOME/../laps/data", 0777 or die "Can't make directory $FXA_HOME/../laps/data";
-   system("mv $LAPS_DATA_ROOT/static $FXA_HOME/../laps/data/.");
-   system("mv $LAPS_DATA_ROOT/cdl $FXA_HOME/../laps/data/.");
+# WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_DATA/laps_data) before removing it.
+#                 softlink data to laps_data appropriately.
+my $FXA_DATA = $ENV{"FXA_DATA"}; my $LAPS_HOME = $ENV{"LAPS_HOME"};
+if(-d $FXA_DATA && ! -d "$FXA_DATA/laps_data"){
+   mkdir "$FXA_DATA/laps_data", 0777 or die "Can't make directory $FXA_DATA/laps_data";
+   system("cp -r $LAPS_DATA_ROOT/static $FXA_DATA/laps_data/.");
+   system("cp -r $LAPS_DATA_ROOT/cdl $FXA_DATA/laps_data/.");
+   chdir $LAPS_HOME;
+   system("ln -s $FXA_DATA/laps_data data");
 }
 
-require "makedatadirs.pm";
+require "$LAPSINSTALLROOT/etc/makedatadirs.pm";
 
 if( $CONFIG_DOMAIN eq "t") {
   print "Removing entire dataroot: $LAPS_DATA_ROOT\n";
