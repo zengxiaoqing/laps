@@ -25,50 +25,31 @@ cdis    (softwaremgr@fsl.noaa.gov) should be notified.
 cdis
 cdis
 cdis
-cdis
-cdis
-cdis
-cdis
-      SUBROUTINE WRITE_LAPS(REFTIME,VALTIME,DIR,EXT,IMAX,JMAX,
-     1   KMAX,KDIM,VAR,LVL,LVL_COORD,UNITS,COMMENT,DATA,
-     1   ISTATUS)
+      subroutine write_laps(i4_reftime,i4_valtime,dir,ext,
+     1   imax,jmax,kmax,kdim,var,lvl,lvl_coord,units,
+     1   comment,data,istatus)
 
 C**********************************************************************
 C
 C      This file contains the following FORTRAN subroutines:
-C            writelapsdata
-C            cvt_str_data
+C            write_laps
 C
-C      The writelapsdata subroutine reads the following FORTRAN
-C      subroutines from the readlapsdata.for file:
+C      The write_laps_data subroutine reads the following FORTRAN
+C      subroutines from the readlapsdata.f file:
+C            cvt_fname_v3
 C
-C            cvt_fname_data
-C
-C      The writelapsdata subroutine reads the following C subroutines
-C      from the readwritelaps.c file:
-C            make_c_fname
-C            write_cdf_file
-C            cre_lw3, cre_lh1, cre_lh2, cre_lh3, cre_lh4, cre_lq3,
-C            cre_lsx, cre_lwm, cre_lt1, cre_lhe, cre_liw, cre_lmt,
-C            cre_lmr, cre_lf1, cre_l1s, cre_lps, cre_lrp, cre_lba,
-C            cre_lc3, cre_lwc, cre_lil, cre_lcb, cre_lct, cre_lcv,
-C            cre_lmd, cre_lco, cre_lty, cre_lcp
-C            write_header_cdf
-C            cdf_update_laps
-C            cdf_get_index
-C            cdf_get_coord
-C            cdf_dim_size
-C            cdf_write_grid
-C            cdf_update_laps_inv
+C      The write_laps_data subroutine reads the following C subroutines
+C      from the rwl_v3.c file:
+C            write_cdf_v3
 C
 C**********************************************************************
 C
-C      Subroutine WRITE_LAPS_DATA
+C      Subroutine WRITE_LAPS
 C
 C      Author:    John Snook
-C      Modified:  To write netCDF data files      1/93 Linda Wharton
-C                 To remove BYTE arrays           4/94 Linda Wharton
-C                 To remove downcase of filename  9/95 Linda Wharton
+C      Modified:  To write netCDF data files  1/93 Linda Wharton
+C                 To remove BYTE arrays       4/94 Linda Wharton
+C                 To accept netCDF ver. 3 data files  9/97 Linda Wharton
 C
 C      Writes data in arrays DATA and COMMENT to the netCDF file name
 C      specified by I4TIME, DIR and EXT.  The data in VAR, LVL, LVL_COORD,
@@ -77,96 +58,158 @@ C      when it is created.  ISTATUS is returned.
 C
 C**********************************************************************
 C
-        IMPLICIT        NONE
+        implicit  none
 C
-        INTEGER*4        ML
-        PARAMETER       (ML=10000)
+      integer*4      i4_reftime,           !INPUT I4time of run
+     1               i4_valtime,           !INPUT I4time data is valid
+     1               imax,jmax,kmax,       !INPUT # cols, # rows, # fields
+     1               kdim,                 !INPUT K dimension of DATA array
+     1               lvl(kdim),            !INPUT Level of each field 
+     1               istatus               !OUTPUT
 
-        INTEGER*2       FN_LENGTH
+      real*4         data(imax,jmax,kdim)  !INPUT Raw data to be written
+      character*(*)  dir                   !INPUT Directory to be written to
+      character*(*)  ext                   !INPUT File name ext
+      character*(*)  var(kdim)             !INPUT 3 letter ID of each field
+      character*(*)  lvl_coord(kdim)       !INPUT Vertical coordinate of fields
+      character*(*)  units(kdim)           !INPUT units of each field
+      character*(*)  comment(kdim)         !INPUT Comments for each field
 C
-        INTEGER*4       REFTIME,         !model runtime of data
-     1          VALTIME,         !valid time of data
-     1          IMAX,JMAX,KMAX, !# cols, # rows, # fields
-     1          KDIM,           !K dimension of DATA array
-     1          LVL(*),         !Level of each field (4 digit max)
-     1          FLAG,
-     1          ERROR(2),
-     1          I,ISTATUS
+      integer*4      flag,                 !Print flag (1 = off)
+     1               i_reftime,            !UNIX time of data
+     1               i_valtime,            !UNIX time of data
+     1               fcst_sec,
+     1               error(2),
+     1               i,n7g_nx, n7g_ny,
+     1               fn_length,
+     1               var_len,
+     1               comm_len,
+     1               ext_len,
+     1               asc_len,
+     1               lvl_coord_len,
+     1               units_len,
+     1               cdl_path_len,
+     1               stat_len,
+     1               n_levels,
+     1               called_from,          !0=FORTRAN, 1=C
+     1               append                !0=no, 1=yes
 C
-        REAL*4          DATA(IMAX,JMAX,KDIM)    !Raw data to be written
+      real*4         base,                 !bottom of LAPS levels
+     1               interval              !interval of LAPS levels
 C
-        CHARACTER*(*)    DIR             !Directory to be written to
-        CHARACTER*31    EXT             !File name ext (up to 31 chars)
-        CHARACTER*31    EXT_IN          !INPUT File name ext (up to 31 chars)
-        CHARACTER*3     VAR(*)          !3 letter ID of each field
-        CHARACTER*3     VAR_IN(300)     !INPUT 3 letter ID of requested fields
-        CHARACTER*4     LVL_COORD(*)    !Vertical coordinate for each field
-        CHARACTER*10    UNITS(*)        !units of each field
-        CHARACTER*125   COMMENT(*)      !Comments for each field
-        CHARACTER*9     GTIME
-        CHARACTER*4     fcst_hh_mm
-        CHARACTER*91    FILE_NAME
-        CHARACTER*11    LAPS_DOM_FILE   !Name of domain file e.g. NEST7GRID
-        CHARACTER*24    ASCTIME
+      character*4    fcst_hh_mm
+      character*9    gtime
+      character*9    g_reftime
+      character*128  file_name
+      character*128  cdl_path
+      character*128  static_path
+      character*9    laps_dom_file
+      character*24   asctime
 C
-        COMMON          /PRT/FLAG
+      common         /prt/flag
+C
+      include 'lapsparms.cmn'
 C
 C-------------------------------------------------------------------------------
 C
-        ERROR(1)=1
-        ERROR(2)=0
-        ext_in = ext
+      error(1)=1
+      error(2)=0
 C
+C ****  Specify laps domain name
+C
+      laps_dom_file = 'nest7grid'
+C
+C ****  call get_laps_config to read nest7grid.parms
+C
+      call get_laps_config(laps_dom_file,istatus)
+      n_levels = nk_laps
+      base = PRESSURE_BOTTOM_L / 100.0
+      interval = PRESSURE_INTERVAL_L / 100.0
+      n7g_nx = NX_L_CMN 
+      n7g_ny =  NY_L_CMN
+
 C ****  Various checks on input data.
 C
-        IF (KMAX .GT. KDIM) THEN
-                IF (FLAG .NE. 1)
-     1   write (6,*) 'Illegal K dimension in DATA array...write aborted.
-     1'
-                ISTATUS=ERROR(2)
-                RETURN
-        ENDIF
+      if (kmax .gt. kdim) then
+        if (flag .ne. 1)
+     1write (6,*) 'Illegal K dimension in DATA array...write aborted.'
+        istatus=error(2)
+        return
+      endif
 C
-C ****  Create ascii time variables.
+      if (imax .ne. n7g_nx) then
+        if (flag .ne. 1)
+     1write (6,*) 
+     1'imax passed in does not match nest7grid.parms...write aborted.'
+        istatus=error(2)
+        return
+      endif
 C
-        CALL CV_I4TIM_ASC_LP(VALTIME,ASCTIME,ISTATUS)
+      if (jmax .ne. n7g_ny) then
+        if (flag .ne. 1)
+     1write (6,*) 
+     1'jmax passed in does not match nest7grid.parms...write aborted.'
+        istatus=error(2)
+        return
+      endif
 C
-C ****  Specify LAPS_DOM_FILE
+C ****  Get cdl_path
 C
-        LAPS_DOM_FILE = 'nest7grid'
+      call get_directory('cdl',cdl_path, cdl_path_len)
+C
+C ****  Get static_path
+C
+      call get_directory('static',static_path, stat_len)
 C
 C ****  Specify file name
 C
-        CALL MAKE_FNAM_LP(REFTIME,GTIME,ISTATUS)
-        IF (ISTATUS .ne. 1) THEN
-!               CALL LOG_ERROR_GG(' ',ISTATUS,
-!       1         'Error converting i4time to file name...save aborted.',0,0)
-                ISTATUS=ERROR(2)
-                RETURN
-        ENDIF
+      call make_fnam_lp(i4_reftime,gtime,istatus)
+      if (istatus .ne. 1) then
+        write (6,*)
+     1'Error converting i4time to file name...write aborted.'
+        istatus=error(2)
+        return
+      endif
 
-        call make_fcst_time(valtime,reftime,fcst_hh_mm,istatus)
+      call make_fcst_time(i4_valtime,i4_reftime,
+     1                    fcst_hh_mm,istatus)
 
-        do i=1,kdim
-          call upcase(var(i),var_in(i))
-        enddo
+C
+C ****  Create ascii time variables.
+C
+      call cv_i4tim_asc_lp(i4_valtime,asctime,istatus)
 
-        call cvt_fname_data(dir,gtime,fcst_hh_mm,ext,
-     1                    file_name,fn_length,istatus)
-        call upcase(ext,ext_in)
+      call s_len(ext, ext_len)
 
+      call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,
+     1                  file_name,fn_length,istatus)
+
+      called_from = 0    !called from FORTRAN
+      append = 0         ! only one analysis time allowed per file
+
+      var_len = len(var(1))
+      comm_len = len(comment(1))
+      lvl_coord_len = len(lvl_coord(1))
+      units_len = len(units(1))
+      asc_len = len(asctime)
+      i_reftime = i4_reftime - 315619200
+      i_valtime = i4_valtime - 315619200
 C
 C **** write out netCDF file
 C
-      CALL WRITE_CDF_FILE(FILE_NAME,FN_LENGTH,LAPS_DOM_FILE,
-     1                   ASCTIME,EXT_IN,VAR_IN,LVL_COORD,UNITS,
-     1                   COMMENT,IMAX,JMAX,KMAX,KDIM,LVL,DATA,ISTATUS)
+      call write_cdf_v3 (file_name,ext,var,comment,asctime,cdl_path, 
+     1                   static_path,fn_length,ext_len,var_len, 
+     1                   comm_len, asc_len, cdl_path_len, stat_len,
+     1                   i_reftime, i_valtime,imax, jmax, kmax, kdim, 
+     1                   lvl, data,base,interval, n_levels, 
+     1                   called_from, append, istatus)
 C
-      if (ISTATUS .gt. 0) goto 980
-      IF (ISTATUS .eq. -2) GOTO 940
-      IF (ISTATUS .eq. -3) GOTO 950
-      IF (ISTATUS .eq. -4) GOTO 960
-      IF (ISTATUS .eq. -5) GOTO 970
+      if (istatus .gt. 0) goto 980
+      IF (istatus .eq. -2) goto 940
+      IF (istatus .eq. -3) goto 950
+      IF (istatus .eq. -4) goto 960
+      IF (istatus .eq. -5) goto 970
+      IF (istatus .eq. -6) goto 990
 C
 C ****  Return normally.
 C
@@ -182,7 +225,7 @@ C
         GOTO 999
 C
 950     IF (FLAG .NE. 1)
-     1    write (6,*) 'Error in imax,jmax,kmax, or kdim ...write aborted
+     1    write (6,*) 'Error in imax,jmax,or n_levels...write aborted
      1.'
         ISTATUS=ERROR(2)
         GOTO 999
@@ -204,7 +247,12 @@ C
         ISTATUS=ERROR(2)
         GOTO 999
 C
+990     IF (FLAG .NE. 1)
+     1    write (6,*) 'File already exists for analysis time...write
+     1aborted.'
+        ISTATUS=ERROR(2)
+        GOTO 999
+C
         END
 
 C##########################################################################
-
