@@ -81,6 +81,7 @@ c
       goto 1000
 
 23    write(6,*)'Error reading or eof ll/ij lookup table'
+      close(12)
       goto 1000
 
 101   write(6,*)'Error opening file ',file(1:n)
