@@ -11,7 +11,7 @@ use vars qw($opt_s $opt_i $opt_d $opt_t $opt_c $opt_m);
 use Getopt::Std;
 use File::Copy 'cp';
 
-getopts('s:i:d:t:c:m:');
+getopts('s:i:d:t:mc');
 
 umask 002;
 
@@ -26,8 +26,8 @@ umask 002;
 #       If there is no -t option, then it is assumed to be the same as
 #       LAPS_SRC_ROOT and -ct is disabled.
 #
-# opt_c controls the removal of entire data root (=t, for true) or saves the
-# log and lapsprd directories (=f, for false)
+# opt_c controls the removal of entire data root (use command line "-c") or
+# saves the log and lapsprd directories          (do not use command line "-c")
 #
 # opt_m controls laps_localization.pl no_ggm switch. ggm = gridgen_model.
 #       if $opt_m is not defined then laps_localization updates the namelists
@@ -97,10 +97,10 @@ if($opt_t){
    print "Use LAPS_SRC_ROOT for namelists\n";
 }
 if($opt_c){
-   $CONFIG_DOMAIN = $opt_c;
+   $CONFIG_DOMAIN = "true";
 }else{
 #   print "-c command line not specified. Default set to false \n";
-   $CONFIG_DOMAIN = "f";
+   $CONFIG_DOMAIN = "false";
 }
 
 print "Laps Src Root  = $LAPS_SRC_ROOT\n";
@@ -109,26 +109,38 @@ print "Laps_Data_Root = $LAPS_DATA_ROOT\n";
 print "Laps Template  = $LAPS_TEMPLATE \n";
 print "Config Domain  = $CONFIG_DOMAIN \n";
 
-# WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_DATA/laps_data) before removing it.
-#                 softlink data to laps_data appropriately.
-#      otherwise: if link has been broken re-establish it.
-my $FXA_DATA = $ENV{"FXA_DATA"}; my $LAPS_HOME = $ENV{"LAPS_HOME"};
-if(-d $FXA_DATA ){
-   if( ! -d "$FXA_DATA/laps_data"){
-       mkdir "$FXA_DATA/laps_data", 0777 or die "Can't make directory $FXA_DATA/laps_data";
-       system("cp -r $LAPS_DATA_ROOT/static $FXA_DATA/laps_data/.");
-       system("cp -r $LAPS_DATA_ROOT/cdl $FXA_DATA/laps_data/.");
-       chdir $LAPS_HOME;
-       system("ln -s $FXA_DATA/laps_data data");
-   }elsif( ! -l "$LAPS_HOME/data" ){
-       print "re-establish softlink $LAPS_HOME/data -> $FXA_DATA/laps_data \n";
-       chdir $LAPS_HOME;
-       if( -d data ){system("rmdir -rf data");}
-       system("ln -s $FXA_DATA/laps_data data");
+# WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_LOCAL_DATA/laps_data) before removing it.
+#                 softlink data to laps_data appropriately (make "repository" data subdirectory..
+#                 otherwise: test if softlink has been broken re-establish it.
+if(defined $ENV{FXA_DATA}){
+   my $FXA_DATA = $ENV{FXA_DATA};
+   my $curdir = Cwd::getcwd();
+   chdir "$FXA_DATA/laps";
+   my $FXA_LOCAL_DATA = Cwd::getcwd();
+   chdir "$curdir";
+   chomp $FXA_LOCAL_DATA;
+   my $slen=length($FXA_LOCAL_DATA);
+   $FXA_LOCAL_DATA = substr($FXA_LOCAL_DATA,0,$slen-5);
+   my $LAPS_HOME = $ENV{"LAPS_HOME"};
+   if( ! -d "$FXA_LOCAL_DATA/laps_data"){
+       mkdir "$FXA_LOCAL_DATA/laps_data", 0777 or die "Can't make directory $FXA_LOCAL_DATA/laps_data";
+       system("cp -pr $LAPS_DATA_ROOT/static $FXA_LOCAL_DATA/laps_data/.");
+       system("cp -pr $LAPS_DATA_ROOT/cdl $FXA_LOCAL_DATA/laps_data/.");
+       system("rm -f $FXA_LOCAL_DATA/laps_data/static/lvd/goes-llij\*.lut");
+       system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+   }elsif(-e "$LAPS_HOME/data" && ! -l "$LAPS_HOME/data" ){
+       print "re-establish softlink $LAPS_HOME/data -> $FXA_LOCAL_DATA/laps_data \n";
+       if( -e "$LAPS_HOME/data" ){system("rm -rf $LAPS_HOME/data");}
+       system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+   }elsif(!-e "$LAPS_HOME/data" ){
+       print "re-establish softlink $LAPS_HOME/data -> $FXA_LOCAL_DATA/laps_data \n";
+       system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
    }
+   $LAPS_DATA_ROOT = $FXA_LOCAL_DATA."/laps";
 }
 
-if( $CONFIG_DOMAIN eq "t" ) {
+
+if( $CONFIG_DOMAIN eq "true" ) {
   if( $all_roots_equal eq "F" ){
 
       print "Removing dataroot: $LAPS_DATA_ROOT\n";
@@ -183,11 +195,12 @@ if( defined($LAPS_TEMPLATE) ){
     if( -e $LAPS_TEMPLATE ){
        if( $all_roots_equal eq "F"){
            print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
-           opendir(DIR, $LAPS_TEMPLATE);
-           my @filelist = readdir DIR;
+           opendir(TEMPDIR, $LAPS_TEMPLATE);
+           my @filelist = readdir TEMPDIR;
+           closedir TEMPDIR;
            foreach (@filelist){
               if( ! /^\./){
-                 system("cp $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static/");
+                 system("cp -p $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
               }
            }
        }else{
@@ -206,9 +219,9 @@ if( defined($LAPS_TEMPLATE) ){
 }else{print "No template subdirectory. All roots equal(?): $all_roots_equal.\n";}
 
 if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
-    print "Running $LAPSINSTALLROOT/laps_localization.pl\n";
+    print "Running $LAPSINSTALLROOT/etc/laps_localization.pl\n";
 }elsif ( -e "LAPS_SRC_ROOT/etc") {chdir "$LAPS_SRC_ROOT/etc" or die "Can't chdir to LAPS INSTALL or SRC_ROOTs $!\n";
-    print "Running $LAPS_SRC_ROOT/laps_localization.pl\n";
+    print "Running $LAPS_SRC_ROOT/etc/laps_localization.pl\n";
 }
 # ***** Run laps_localization.pl *****
 # ------------------------------------
