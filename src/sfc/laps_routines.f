@@ -196,10 +196,10 @@ c       Changes:
 c
 c======================================================================
 c
-	real*4 lat_s(mxsta), lon_s(mxsta)
-        real*4 lat(ni,nj), lon(ni,nj)
-	integer*4 ii(mxsta), jj(mxsta)
-        real*4 rii(mxsta), rjj(mxsta)
+	real lat_s(mxsta), lon_s(mxsta)
+        real lat(ni,nj), lon(ni,nj)
+        real rii(mxsta), rjj(mxsta)
+	integer ii(mxsta), jj(mxsta)
 c
 	do ista=1,numsta
           call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat,lon,
@@ -222,7 +222,7 @@ c.....	Band 8 temperatures to remove cloud edges.
 c
 	implicit none
 	integer imax, jmax, i,j,ix,jy
-	real*4 a(imax,jmax)
+	real a(imax,jmax)
 	integer jmx, imx, jmn, imn, ii, jj
 c
 	jmx=j+jy
@@ -262,8 +262,8 @@ C Status	 O	I*4	Standard system status
 	real flag, angle
 	parameter	(flag=1e37)
 
-	real*4		dd,ff,ucomp,vcomp
-	integer*4	status
+	real		dd,ff,ucomp,vcomp
+	integer	status
 
 	Status = 1
 
@@ -303,7 +303,7 @@ c
       implicit none
 
       integer ni,nj
-      real*4 x(ni,nj)
+      real x(ni,nj)
       real amean, ave, sum, sum_a, sum_v, sum_sk, sum_kr, range, st_dev
       real var, amax, amin, pts, dif, dif2, z_max, z_min, coef_sk
       real coef_kr
@@ -409,11 +409,11 @@ c
 c*************************************************************************
 c
 	integer imax, jmax, i, j
-	real*4 t(imax,jmax), tb8(imax,jmax)
-        real*4 lat(imax,jmax), lon(imax,jmax), topo(imax,jmax)
+	real t(imax,jmax), tb8(imax,jmax)
+        real lat(imax,jmax), lon(imax,jmax), topo(imax,jmax)
 c
-        real*4 cvr_snow(imax,jmax), t_gnd_k(imax,jmax)  !work arrays
-	real*4 t_est(imax,jmax), dtb8(imax,jmax)        !work arrays
+        real cvr_snow(imax,jmax), t_gnd_k(imax,jmax)  !work arrays
+	real t_est(imax,jmax), dtb8(imax,jmax)        !work arrays
 c
 c
 	call zero(t_est,imax,jmax)
@@ -509,11 +509,11 @@ c
 c	implicit none
 c
 	integer ni,nj
-	real*4 lp_10krh(ni,nj), lp_10kt(ni,nj), lp_10kws(ni,nj)
-	real*4 snow_cover(ni,nj), soil_moist(ni,nj), topo(ni,nj)
-	real*4 lp_fire_index(ni,nj)
+	real lp_10krh(ni,nj), lp_10kt(ni,nj), lp_10kws(ni,nj)
+	real snow_cover(ni,nj), soil_moist(ni,nj), topo(ni,nj)
+	real lp_fire_index(ni,nj)
 c
-	integer*4 i_lp,	j_lp, i_rh, i_temp, i_wspeed, i_soil,
+	integer i_lp,	j_lp, i_rh, i_temp, i_wspeed, i_soil,
      &            i_status
 c
 c	...BEGIN...
@@ -689,7 +689,7 @@ c
 c====================================================================
 c
       integer ni,nj
-      real*4 t(ni,nj), rh(ni,nj), hi(ni,nj)
+      real t(ni,nj), rh(ni,nj), hi(ni,nj)
 c
       do j=1,nj
       do i=1,ni
@@ -747,16 +747,16 @@ c
 c..... Arrays for the OBS file input data
 c
         integer mxstn, ni, nj
-	real*4 lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
+	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
 c
 c.....	Grids for the outputs, weights, and stuff 
 c
-	real*4 wt(ni,nj), gpmean(ni,nj)
+	real wt(ni,nj), gpmean(ni,nj)
 c
 c..... LAPS Lat/lon grids.
 c
-	real*4 lat(ni,nj), lon(ni,nj), topo(ni,nj)
-	real*4 rii(mxstn), rjj(mxstn)
+	real lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	real rii(mxstn), rjj(mxstn)
 c
 c
 c.....  Set up constants.  Open file for background info.
@@ -890,7 +890,7 @@ c
 c======================================================================
 c
       integer ni,nj
-      real*4 field(ni,nj)
+      real field(ni,nj)
 c
       character line(ni)*1
 c
@@ -991,7 +991,7 @@ c
 c========================================================================
 c
       integer ni,nj
-      real*4 x(ni,nj)
+      real x(ni,nj)
 c
       istatus = 1
 c
@@ -1097,7 +1097,7 @@ c
 c     Routine to check a real 2-d array for NaN's.
 c
       integer ni,nj
-      real*4 x(ni,nj)
+      real x(ni,nj)
 c
       nan_flag = 1
 c
@@ -1120,7 +1120,7 @@ c
 c     Routine to check a real 3-d array for NaN's.
 c
       integer ni,nj,nk
-      real*4 x(ni,nj,nk)
+      real x(ni,nj,nk)
 c
       nan_flag = 1
 c
@@ -1164,6 +1164,7 @@ c                   12-02-98  Change 'istatus' to 'bkg_status' in call list.
 c                   01-28-99  Skip LGB until can figure out how to deal 
 c                               with bias in its fields.
 c                   06-11-99  Turn LGB back on.
+c                   07-25-99  Set LGB MSL variable to MSL so won't use for now.
 c
 c
 c       Notes:
@@ -1183,15 +1184,15 @@ c
 c*****************************************************************************
 c
 	integer ni,nj
-	real*4 bkg_field(ni,nj)
+	real bkg_field(ni,nj)
 c
-	integer*4 i4time_in, lvl_in, bkg_time, bkg_status
+	integer i4time_in, lvl_in, bkg_time, bkg_status
 c
 	character bkg_ext*31, var_in*4, var(3)*3
 	character bkg_dir*256, filename*9
 	character units*10, lvlc*4, comment*125
 c
-	integer*4 max_files
+	integer max_files
 	parameter(max_files = 300)
 	character fnames(max_files)*256
 	character filespec*255, filename13*13
@@ -1218,7 +1219,8 @@ c
 	   var(3) = 'PS '  ! LSX variable
 	elseif(var_in .eq. 'MSLP') then
 	   var(1) = 'MSL'  ! SFM variable
-	   var(2) = 'SLP'  ! LGB variable
+c	   var(2) = 'SLP'  ! LGB variable
+	   var(2) = 'MSL'  ! LGB variable
 	   var(3) = 'MSL'  ! LSX variable
 	elseif(var_in .eq. 'DEWP') then
 	   var(1) = 'TD '  ! SFM variable
@@ -1458,15 +1460,15 @@ c
 c*****************************************************************************
 c
 	integer ni,nj
-	real*4 bkg_u(ni,nj), bkg_v(ni,nj)
+	real bkg_u(ni,nj), bkg_v(ni,nj)
 c
-	integer*4 i4time_in, lvl_in, bkg_time, bkg_status
+	integer i4time_in, lvl_in, bkg_time, bkg_status
 c
 	character bkg_ext*31, var_u*3, var_v*3
 	character bkg_dir*256
 	character units*10, lvlc*4, comment*125
 c
-	integer*4 max_files
+	integer max_files
 	parameter(max_files = 300)
 	character fnames(max_files)*256
 	character filespec*255, filename13*13
