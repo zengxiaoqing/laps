@@ -938,9 +938,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
            The surface data, including all the types mentioned above, over much
            of the U.S. is available in realtime from FSL with some restrictions. 
-           This data is in 'WFO/AWIPS' NetCDF format. Please contact Patty 
-           Miller at miller@fsl.noaa.gov for more information on the MADIS
-           data distribution project.   
+           This data, in 'WFO/AWIPS' NetCDF format, is distributed via FSL's
+           MADIS project at http://www-sdd.fsl.noaa.gov/MADIS/
       
                       ----   2.3.4  Profiler / RASS ---
 
@@ -983,9 +982,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 </pre>                 
 
            The profiler data is also available via another route from FSL with
-           some restrictions. This data is in 'WFO/AWIPS' NetCDF format. 
-           Please contact Patty Miller at miller@fsl.noaa.gov for more 
-           information on the MADIS data distribution project.   
+           some restrictions. This data, in 'WFO/AWIPS' NetCDF format, is 
+           distributed via FSL's MADIS project at 
+           http://www-sdd.fsl.noaa.gov/MADIS/
 
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
@@ -1004,9 +1003,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      RAOBs (snd):
            FSL NIMBUS, WFO Advanced, CWB, or AFWA databases. 
            These are available in real-time from FSL with some restrictions. 
-           The data is supplied in 'WFO/AWIPS' NetCDF format. Please contact 
-           Patty Miller at miller@fsl.noaa.gov for more information on the
-           MADIS data distribution project.   
+           This data, in 'WFO/AWIPS' NetCDF format, is distributed via FSL's
+           MADIS project at http://www-sdd.fsl.noaa.gov/MADIS/
 
                       ----   2.3.7  Other Data Sources ---
 
