@@ -2016,10 +2016,11 @@ Initiation: Completion of volume scan
 
 Inputs:
 	Wideband Radar Data (reflectivity and velocity in polar coordinates,
-        in NetCDF format, one file per tilt). This can for example 
-        be obtained from a WSR 88-D Level-II data feed. 
-        A description of how we obtain these Polar NetCDF files for Level-II 
-        is at 'http://laps.fsl.noaa.gov/albers/remapper_raw.html'.
+        in NetCDF format) These have one tilt per file and at least 4 tilts
+        per volume scan (all with the same volume timestamp in the filenames).
+        This data can be obtained from a WSR 88-D Level-II data feed or the
+        equivalent. A description of how we obtain these Polar NetCDF files 
+        for Level-II is at 'http://laps.fsl.noaa.gov/albers/remapper_raw.html'.
 
         Note that narrowband data (e.g. WSR 88D Level-III RPG)
         can also be used as long as it is converted to the required polar 
