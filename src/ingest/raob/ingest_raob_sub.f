@@ -11,7 +11,8 @@
 
       include 'netcdf.inc'
       integer mTropNum, mWndNum, manLevel, recNum, sigTLevel,
-     +     sigWLevel,nf_fid, nf_vid, nf_status
+     +     sigWLevel,staNameLen, nf_fid, nf_vid, nf_status,
+     +     nlvl_out
 
 C
 C  Open netcdf File for reading
@@ -102,8 +103,23 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim sigWLevel'
       endif
+C
+C Get size of staNameLen
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'staNameLen',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim staNameLen'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,staNameLen)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim staNameLen'
+      endif
+
+      nlvl_out = manLevel + sigTLevel + sigWLevel
       call main_sub(nf_fid, mTropNum, mWndNum, manLevel, recNum,
-     +     sigTLevel, sigWLevel
+     +     sigTLevel, sigWLevel, staNameLen, nlvl_out
 !.............................................................................
      1                        ,i4time_sys,ilaps_cycle_time,NX_L,NY_L
      1                        ,i4time_raob_earliest,i4time_raob_latest       
@@ -116,7 +132,7 @@ C
 C
 C
       subroutine main_sub(nf_fid, mTropNum, mWndNum, manLevel, recNum,
-     +     sigTLevel, sigWLevel
+     +     sigTLevel, sigWLevel, staNameLen, nlvl_out
 !.............................................................................
      1                        ,i4time_sys,ilaps_cycle_time,NX_L,NY_L
      1                        ,i4time_raob_earliest,i4time_raob_latest       
@@ -125,7 +141,7 @@ C
 
       include 'netcdf.inc'
       integer mTropNum, mWndNum, manLevel, recNum, sigTLevel,
-     +     sigWLevel,nf_fid, nf_vid, nf_status
+     +     sigWLevel,staNameLen, nlvl_out, nf_fid, nf_vid, nf_status
       integer numMand(recNum), numMwnd(recNum), numSigT(recNum),
      +     numSigW(recNum), numTrop(recNum), sondTyp(recNum),
      +     wmoStaNum(recNum)
@@ -141,13 +157,8 @@ C
      +     manLevel, recNum), wsMaxW( mWndNum, recNum), wsSigW(
      +     sigWLevel, recNum), wsTrop( mTropNum, recNum)
       double precision relTime(recNum), synTime(recNum)
-      character*601 rawTTCC(recNum)
       character*6 staName(recNum)
-      character*601 rawTTDD(recNum)
-      character*601 rawPPDD(recNum)
-      character*601 rawTTAA(recNum)
-      character*601 rawTTBB(recNum)
-      character*601 rawPPBB(recNum)
+      character   staNameFile(recNum,staNameLen)
 !..............................................................................
 
       real*4 lat_a(NX_L,NY_L)
@@ -172,13 +183,13 @@ C
 
 
       call read_netcdf(nf_fid, mTropNum, mWndNum, manLevel, recNum, 
-     +     sigTLevel, sigWLevel, numMand, numMwnd, numSigT, numSigW, 
+     +     sigTLevel, sigWLevel, staNameLen, numMand, numMwnd, numSigT, 
+     +     numSigW, 
      +     numTrop, sondTyp, wmoStaNum, htMan, htSigW, prMan, prMaxW, 
      +     prSigT, prTrop, staElev, staLat, staLon, tdMan, tdSigT, 
      +     tdTrop, tpMan, tpSigT, tpTrop, wdMan, wdMaxW, wdSigW, 
      +     wdTrop, wsMan, wsMaxW, wsSigW, wsTrop, relTime, synTime, 
-     +     rawPPBB, rawPPDD, rawTTAA, rawTTBB, rawTTCC, rawTTDD, 
-     +     staName)
+     +     staNameFile, staName)
 C
 C The netcdf variables are filled - your code goes here
 C
@@ -270,8 +281,8 @@ C
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
      1                       ,numsigt,prsigt,tpsigt,tdsigt
-     1                       ,numsigw,htsigw,wdsigw,wssigw
-     1                       ,istatus)
+     1                       ,numsigw,htsigw,wdsigw,wssigw,nlvl_out 
+     1                       ,manLevel,sigTLevel,sigWLevel,istatus)
 
           go to 999
 
@@ -291,9 +302,13 @@ C
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
      1                       ,numsigt,prsigt,tpsigt,tdsigt
-     1                       ,numsigw,htsigw,wdsigw,wssigw
-     1                       ,istatus)
+     1                       ,numsigw,htsigw,wdsigw,wssigw,nlvl_out
+     1                       ,manLevel,sigTLevel,sigWLevel,istatus)
 
+      integer     NLVL_OUT
+      integer     manLevel
+      integer     sigTLevel
+      integer     sigWLevel
       INTEGER*4   wmoStaNum                      (NREC)
       CHARACTER*1 staName                        (   6,NREC)
       REAL*4      staLat                         (NREC)
@@ -301,24 +316,23 @@ C
       REAL*4      staElev                        (NREC)
 
       INTEGER*4   numMand                        (NREC)
-      REAL*4      prMan                          (  22,NREC)
-      REAL*4      htMan                          (  22,NREC)
-      REAL*4      tpMan                          (  22,NREC)
-      REAL*4      tdMan                          (  22,NREC)
-      REAL*4      wdMan                          (  22,NREC)
-      REAL*4      wsMan                          (  22,NREC)
+      REAL*4      prMan                          (manLevel ,NREC)
+      REAL*4      htMan                          (manLevel ,NREC)
+      REAL*4      tpMan                          (manLevel ,NREC)
+      REAL*4      tdMan                          (manLevel ,NREC)
+      REAL*4      wdMan                          (manLevel ,NREC)
+      REAL*4      wsMan                          (manLevel ,NREC)
 
       INTEGER*4   numsigt                        (NREC)
-      REAL*4      prSigT                         ( 150,NREC)
-      REAL*4      tpSigT                         ( 150,NREC)
-      REAL*4      tdSigT                         ( 150,NREC)
+      REAL*4      prSigT                         (sigTLevel,NREC)
+      REAL*4      tpSigT                         (sigTLevel,NREC)
+      REAL*4      tdSigT                         (sigTLevel,NREC)
 
       INTEGER*4   numsigw                        (NREC)
-      REAL*4      htSigW                         (  75,NREC)
-      REAL*4      wdSigW                         (  75,NREC)
-      REAL*4      wsSigW                         (  75,NREC)
+      REAL*4      htSigW                         (sigWLevel,NREC)
+      REAL*4      wdSigW                         (sigWLevel,NREC)
+      REAL*4      wsSigW                         (sigWLevel,NREC)
 
-      PARAMETER (NLVL_OUT=   150)         
       integer*4   indx(NLVL_OUT)  
       REAL*4      prout                          (NLVL_OUT)
       REAL*4      htout                          (NLVL_OUT)
@@ -373,6 +387,25 @@ C
           endif
       enddo
 
+      write(6,*)' Subroutine sort_and_write - sig T data'       
+      do ilevel = 1,numsigt(isnd)
+          if(prsigt(ilevel,isnd) .lt. 2000. .and.
+     1       prsigt(ilevel,isnd) .gt. 0.            )then
+              n_good_levels = n_good_levels + 1
+              write(6,*) r_missing_data,prsigt(ilevel,isnd)
+     1                  ,tpsigt(ilevel,isnd),tdsigt(ilevel,isnd)
+     1                  ,r_missing_data,r_missing_data
+
+              indx(n_good_levels) = n_good_levels
+              htout(n_good_levels) = r_missing_data
+              prout(n_good_levels) = prsigt(ilevel,isnd)
+              tpout(n_good_levels) = tpsigt(ilevel,isnd)
+              tdout(n_good_levels) = tdsigt(ilevel,isnd)
+              wdout(n_good_levels) = r_missing_data
+              wsout(n_good_levels) = r_missing_data
+          endif
+      enddo
+
 !     Bubble sort the levels by height
  400  iswitch = 0
       do i = 2,n_good_levels
@@ -399,7 +432,7 @@ C
   511 format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9,1x,a8)
 
 
-!     Write out all sorted data for mandatory + sigw levels. 
+!     Write out all sorted data for mandatory + sigw + sigt levels. 
 !     T and Td are in deg C
       do i = 1,n_good_levels
           ilevel = indx(i)
@@ -448,17 +481,17 @@ C
 C  Subroutine to read the file "RAOB data : selected by ob time : time range from 887191200 to 887202000" 
 C
       subroutine read_netcdf(nf_fid, mTropNum, mWndNum, manLevel, 
-     +     recNum, sigTLevel, sigWLevel, numMand, numMwnd, numSigT, 
-     +     numSigW, numTrop, sondTyp, wmoStaNum, htMan, htSigW, 
+     +     recNum, sigTLevel, sigWLevel, staNameLen, numMand, numMwnd, 
+     +     numSigT, numSigW, 
+     +     numTrop, sondTyp, wmoStaNum, htMan, htSigW, 
      +     prMan, prMaxW, prSigT, prTrop, staElev, staLat, staLon, 
      +     tdMan, tdSigT, tdTrop, tpMan, tpSigT, tpTrop, wdMan, 
      +     wdMaxW, wdSigW, wdTrop, wsMan, wsMaxW, wsSigW, wsTrop, 
-     +     relTime, synTime, rawPPBB, rawPPDD, rawTTAA, rawTTBB, 
-     +     rawTTCC, rawTTDD, staName)
+     +     relTime, synTime, staNameFile, staName)
 C
       include 'netcdf.inc'
       integer mTropNum, mWndNum, manLevel, recNum, sigTLevel, 
-     +     sigWLevel,nf_fid, nf_vid, nf_status
+     +     sigWLevel,staNameLen, nf_fid, nf_vid, nf_status
       integer numMand(recNum), numMwnd(recNum), numSigT(recNum),
      +     numSigW(recNum), numTrop(recNum), sondTyp(recNum),
      +     wmoStaNum(recNum)
@@ -474,13 +507,8 @@ C
      +     manLevel, recNum), wsMaxW( mWndNum, recNum), wsSigW(
      +     sigWLevel, recNum), wsTrop( mTropNum, recNum)
       double precision relTime(recNum), synTime(recNum)
-      character*601 rawTTCC(recNum)
-      character*6 staName(recNum)
-      character*601 rawTTDD(recNum)
-      character*601 rawPPDD(recNum)
-      character*601 rawTTAA(recNum)
-      character*601 rawTTBB(recNum)
-      character*601 rawPPBB(recNum)
+      character*6 staName(recNum), name
+      character   staNameFile(recNum,staNameLen)
 
 
 C   Variables of type REAL
@@ -942,103 +970,34 @@ C
 
 C   Variables of type CHAR
 C
-C
-C     Variable        NETCDF Long Name
-C      rawPPBB      "PPBB: Sig level wrt W up to 100 mb"
-C
-        nf_status = NF_INQ_VARID(nf_fid,'rawPPBB',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawPPBB'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawPPBB)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawPPBB'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      rawPPDD      "PPDD: Sig level wrt W above 100mb"
-C
-        nf_status = NF_INQ_VARID(nf_fid,'rawPPDD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawPPDD'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawPPDD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawPPDD'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      rawTTAA      "TTAA: Std isobaric sfcs up to 100 mb"
-C
-        nf_status = NF_INQ_VARID(nf_fid,'rawTTAA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawTTAA'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawTTAA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawTTAA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      rawTTBB      "TTBB: Sig level wrt T up to 100 mb"
-C
-        nf_status = NF_INQ_VARID(nf_fid,'rawTTBB',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawTTBB'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawTTBB)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawTTBB'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      rawTTCC      "TTCC: Std isobaric sfcs above 100 mb"
-C
-        nf_status = NF_INQ_VARID(nf_fid,'rawTTCC',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawTTCC'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawTTCC)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawTTCC'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      rawTTDD      "TTDD: Sig level wrt T above 100 mb"
-C
-        nf_status = NF_INQ_VARID(nf_fid,'rawTTDD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawTTDD'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawTTDD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawTTDD'
-      endif
-C
 C     Variable        NETCDF Long Name
 C      staName      "Station Identifier"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'staName',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'staName',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var staName'
       endif
+
+      if (staNameLen .eq. 6) then  !read directly into staName variable
         nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,staName)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var staName'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var staName'
+        endif
+      else
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,staNameFile)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var staName'
+        endif
+
+        do i = 1, recNum
+          do j = 1, 6
+            name(j:j) = staNameFile(i,j)
+          enddo
+          staName(i) = name
+        enddo
       endif
 
       nf_status = nf_close(nf_fid)
