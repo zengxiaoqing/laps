@@ -311,7 +311,7 @@ c       include 'satellite_dims_lvd.inc'
      1      ,',vo,mr,mc,dv-i,ha,ma,sp]'
      1      /'          [cs,vs,tw,fw-i,hi-i,gf-i]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
-     1      ,'  [bs] Sfc background'
+     1      /'          [bs] Sfc background/forecast'
      1      /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
      1      /'          [s] Other Stability Indices'
      1      /
@@ -3810,7 +3810,8 @@ c                   cint = -1.
  725           format(/'  SELECT FIELD (var_2d-i):  '
      1          /
      1          /'  SFC: [usf,vsf,psf,tsf,dsf,rh,slp,th,the'       
-     1                 ,',pbe,nbe,lhe,llr,lmr,lcv,s01,sto] ? ',$)       
+     1                 ,',pbe,nbe,lhe,llr,lmr,lcv,s01,sto,'
+     1                 /20x,'                     lwo,swo] ? ',$)       
 
             endif
 
@@ -3900,6 +3901,12 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'TSF' .or. var_2d .eq. 'DSF')then
                     call ccpfil(field_2d,NX_L,NY_L,-20.0,125.0,'hues'
      1                         ,n_image) 
+                elseif(var_2d .eq. 'LWO')then
+                    call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
+     1                         ,'linear',n_image) 
+                elseif(var_2d .eq. 'SWO')then
+                    call ccpfil(field_2d,NX_L,NY_L,0.0,500.
+     1                         ,'linear',n_image) 
                 else
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
      1                         ,n_image) 
@@ -4281,9 +4288,85 @@ c                   cint = -1.
 
             c33_label = 'LAPS Sfc Wind Speed          (kt)'
 
-            clow = 0.
-            chigh = +100.
-            cint = 10.
+            do i = 1,NX_L
+            do j = 1,NY_L
+                    if(u_2d(i,j) .eq. r_missing_data
+     1            .or. v_2d(i,j) .eq. r_missing_data)then
+                        dir(i,j)  = r_missing_data
+                        spds(i,j) = r_missing_data
+                    else
+                        call uvgrid_to_disptrue(u_2d(i,j),
+     1                                  v_2d(i,j),
+     1                                  dir(i,j),
+     1                                  spds(i,j),
+     1                                  lat(i,j),
+     1                                  lon(i,j)     )
+                        spds(i,j) = spds(i,j) / mspkt
+                    endif
+            enddo ! j
+            enddo ! i
+
+            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
+
+            call contour_settings(spds,NX_L,NY_L
+     1                           ,clow,chigh,cint,zoom,1.)       
+
+            call plot_cont(spds,1.,clow,chigh,cint,
+     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+        elseif(c_type .eq. 'u' .or. c_type .eq. 'v')then
+            call upcase(c_type,c_type)
+
+            ext = 'lsx'
+            var_2d = c_type
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,field_2d,0
+     1                          ,istatus)
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading Surface ',var_2d
+                goto1200
+            endif
+
+            c33_label = 'LAPS Sfc Wind '//c_type//'        (kt)   '
+
+            do i = 1,NX_L
+            do j = 1,NY_L
+                if(field_2d(i,j) .ne. r_missing_data)then
+                    field_2d(i,j) = field_2d(i,j) / mspkt
+                endif
+            enddo ! j
+            enddo ! i
+
+            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
+
+            call contour_settings(field_2d,NX_L,NY_L
+     1                           ,clow,chigh,cint,zoom,1.)       
+
+            call plot_cont(field_2d,1.,clow,chigh,cint,
+     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+        elseif(c_type .eq. 'sp')then
+            ext = 'lsx'
+            var_2d = 'U'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,u_2d,0,istatus)
+            var_2d = 'V'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,v_2d,0,istatus)       
+
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading Surface ',var_2d
+                goto1200
+            endif
+
+            c33_label = 'LAPS Sfc Wind Speed          (kt)'
 
             do i = 1,NX_L
             do j = 1,NY_L
@@ -4305,6 +4388,9 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
+            call contour_settings(spds,NX_L,NY_L
+     1                           ,clow,chigh,cint,zoom,1.)       
+
             call plot_cont(spds,1.,clow,chigh,cint,
      1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -4312,10 +4398,10 @@ c                   cint = -1.
         elseif(c_type .eq. 'cs')then
             var_2d = 'CSS'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
@@ -4576,7 +4662,7 @@ c                   cint = -1.
 
            write(6,219)
 219        format(5x,'Select STATIC field:'
-     1/' [tn-i,lf,gr,lu,al-i,sn-i,sl-i]'
+     1/' [tn-i,lf-i,gr,lu,al-i,sn-i,sl-i]'
      1/'  Ter/LndFrac/Grid/Use/Alb/Slp ? ',$)
            read(lun,*)cstatic
 
@@ -4617,13 +4703,20 @@ c                   cint = -1.
               cint = .5
               c33_label = '                                 '
               asc9_tim_t = '         '
-              call plot_cont(static_grid,1e0,
+              if(cstatic .eq. 'lfi')then
+                write(6,*)' calling solid fill plot'
+                scale = 1.
+                call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+              else
+
+                call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-              i4time_topo = 0
-
+                i4time_topo = 0
+              endif
            elseif(cstatic(1:2) .eq. 'lu')then
               var_2d='USE'
               call read_static_grid(nx_l,ny_l,var_2d,static_grid
