@@ -144,7 +144,7 @@ c
        character*3   var_2d
        character*3   c_sat_type
        character*6   c_sat_id
-       character*50  directory
+       character*150  directory
        character*31  ext
        character*10  units_2d
        character*125 comment_2d
