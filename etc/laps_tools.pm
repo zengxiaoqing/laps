@@ -430,7 +430,7 @@ sub write_namelist {
     foreach (@nl_values){
        print "value = $_\n";
        if($first_time == 1){
-          if(/^\d+/ || /^\s*\.\D+\./ || /^\s*\-\d+/){
+          if(/^\d+/ || /^\s*\.\D+\./ || /^\s*\-\d+/ || /^\'/){
              print NLF " ".$nl_var."=".$_.",";          #this for digits, .true./.false., neg #'s
              $first_time = 0;
           }elsif($first_time eq 1){
