@@ -69,8 +69,8 @@ c recompute psfc with moisture consideration
                xe=esat(it)
                qsfc=0.622*xe/(psfc1-xe)
                qsfc=qsfc/(1.+qsfc)
-               tvsfc=tsfc(i,j)*(1.+0.608 * qsfc)
-               tvk=t(i,j,k)*(1.+0.608 * q(i,j,k))
+               tvsfc=tsfc(i,j)*(1.+0.608*qsfc)
+               tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
                tbarv=(tvsfc+tvk)*.5
                psfc(i,j)=p(k)*exp(G/(R*tbarv)*dz)
 
