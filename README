@@ -42,12 +42,13 @@
          3.1.2 ..................  LVD 
          3.1.3 ..................  Polar Coordinate Radar Data (e.g. Wideband)
          3.1.4 ..................  WSI - NOWRAD RADAR PREPROCESSING (VRC)
-         3.1.5 ..................  PROFILERS (PRO) Ingest
-         3.1.6 ..................  VAD (PRO) Ingest
-         3.1.7 ..................  RASSs (LRS) Ingest
-         3.1.8 ..................  PIREPS/ACARS Ingest
-         3.1.9 ..................  RAOB (SND) Ingest
-         3.1.10 .................  Cloud Drift Wind (CDW) Ingest
+         3.1.5 ..................  Radar Mosaic (Under development)
+         3.1.6 ..................  PROFILER (PRO) Ingest
+         3.1.7 ..................  VAD (PRO) Ingest
+         3.1.8 ..................  RASSs (LRS) Ingest
+         3.1.9 ..................  PIREPS/ACARS Ingest
+         3.1.10 .................  RAOB (SND) Ingest
+         3.1.11 .................  Cloud Drift Wind (CDW) Ingest
          3.2 ..............  Analysis Processes
          3.2.1 ..................  WIND
          3.2.2 ..................  SFC (LSX) 
@@ -1078,17 +1079,32 @@ the country.
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
------- 3.1.5 -----------------PROFILER (PRO)----------------------------------
-
-Processes: PRO - ingest_pro.exe, ingest_blppro.exe - LAPS local data Profiler 
-      wind ingest (author: Steve Albers - albers@fsl.noaa.gov)
+------ 3.1.5 ----------------RADAR MOSAIC (under development)-----------------
+<pre>
+Process: (mosaic_radar.exe) Author John Smart (smart@fsl.noaa.gov)
 
 Inputs:
-	WPDN profiler wind data in netCDF format (ingest_pro.exe) 
-	Boundary layer profiler wind data in netCDF format (ingest_blppro.exe) 
-        These are in two separate NetCDF directories.
+        v01, v02, etc.                        3-D reflectivity  
 
-Outputs: (The two executables are run sequentially, feeds wind)
+Outputs (Intermediate data file):
+        vrc     grid                          2-D reflectivity
+        vrz     grid                          3-D reflectivity  
+</pre>
+
+
+The output reflectivity is used by the cloud and precip accumulation analyses.
+                                        
+------ 3.1.6 -----------------PROFILER (PRO)----------------------------------
+
+Processes: PRO (ingest_pro.exe) LAPS Profiler wind ingest 
+                                  (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs: (located in two separate NetCDF directories)
+	WPDN 404-MHz profiler wind data in netCDF format 
+	Boundary layer 915-MHz profiler wind data in netCDF format
+        
+
+Output: (feeds wind)
 	pro	inter data	profiler wind direction (degrees) and
                                               speed     (meters/sec)  (ASCII)
 
@@ -1097,7 +1113,7 @@ Source directory: laps/nest7grid/source/ingest/profiler
 Sample Output: Should be available in the test data case.
 
  
------- 3.1.6 -----------------------VAD----------------------------------------
+------ 3.1.7 -----------------------VAD----------------------------------------
 
 Process: (ingest_vad.exe) LAPS RAOBs
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1111,7 +1127,7 @@ Outputs: (Feeds wind.exe)
         Note: This is one of several processes that write to build up the
               pro file.
  
------- 3.1.7 ------------------RASS (LRS)-------------------------------------
+------ 3.1.8 ------------------RASS (LRS)-------------------------------------
 
 Process: (ingest_lrs.exe, ingest_blplrs.exe) LAPS local data RASS ingest
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1128,7 +1144,7 @@ Source directory: laps/nest7grid/source/ingest/rass
 
 Sample Output: Should be available in the test data case.
 
------- 3.1.8 ------------------PIREPS/ACARS-----------------------------------
+------ 3.1.9 ------------------PIREPS/ACARS-----------------------------------
 
 Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1142,7 +1158,7 @@ Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
 Sample Output: Should be available in the test data case
 
  
------- 3.1.9 -----------------------RAOB--------------------------------------
+------ 3.1.10 -----------------------RAOB--------------------------------------
 
 Process: (ingest_raob.exe) LAPS RAOBs
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1159,7 +1175,7 @@ Outputs: (Feeds temp.exe, humid.exe, wind.exe)
               using a dummy path name for the raw raob data in 
               'nest7grid.parms'.
 
------- 3.1.10 ----------Cloud Drift Wind (CDW) Ingest--------------------------
+------ 3.1.11 ----------Cloud Drift Wind (CDW) Ingest--------------------------
 
 Process: (ingest_cloud_drift.exe) LAPS Cloud Drift Winds
      (author: Steve Albers - albers@fsl.noaa.gov)
