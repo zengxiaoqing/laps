@@ -422,20 +422,20 @@ c
                           ! Insert elev/ldf info into obs data structure
            obs(ista)%ri = rii(ista)
            obs(ista)%rj = rjj(ista)
-           obs(ista)%i = ii(ista)
-           obs(ista)%j = jj(ista)
+           obs(ista)%i = nint(rii(ista)) ! non-staggered "major" grid
+           obs(ista)%j = nint(rjj(ista)) ! non-staggered "major" grid
 
-           if(       ii(ista) .ge. 1 .and. ii(ista) .le. ni
-     1         .and. jj(ista) .ge. 1 .and. jj(ista) .le. nj )then ! in domain
+           if(       obs(ista)%i .ge. 1 .and. obs(ista)%i .le. ni
+     1         .and. obs(ista)%j .ge. 1 .and. obs(ista)%j .le. nj )then ! in domain
 
-               elev_diff = elev_s(ista) - topo(ii(ista),jj(ista))
+               elev_diff = elev_s(ista) - topo(obs(ista)%i,obs(ista)%j)
                write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
-     &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)
-     &                    ,elev_s(ista),topo(ii(ista),jj(ista))
-     &                    ,elev_diff,ldf(ii(ista),jj(ista))
+     &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)       
+     &                    ,elev_s(ista),topo(obs(ista)%i,obs(ista)%j)
+     &                    ,elev_diff,ldf(obs(ista)%i,obs(ista)%j)
 
                obs(ista)%elev_diff = elev_diff
-               obs(ista)%ldf       = ldf(ii(ista),jj(ista))
+               obs(ista)%ldf       = ldf(obs(ista)%i,obs(ista)%j)
 
            else
                write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
