@@ -3783,15 +3783,16 @@ LAPS Fcst Model:
 		     T3	  rt	  21  Fcst Model Temperature
 		     SH	  rsh	  21  Fcst Model Specific Humidity
 		
-		FSF  U	  rus 	   1  Fcst Model Surface wind u (grid north)
-	             V	  rvs 	   1  Fcst Model Surface wind v (grid east)
-		     T	  rts 	   1  Fcst Model Surface Temperature
-		     P	  rps 	   1  Fcst Model 1500m pressure
-		     TD	  rtd 	   1  Fcst Model Dewpoint                 
+		FSF  USF  usf 	   1  Fcst Model Surface wind u (grid north)
+	             VSF  vsf 	   1  Fcst Model Surface wind v (grid east)
+		     TSF  tsf 	   1  Fcst Model Surface Temperature
+		     DSF  dsf 	   1  Fcst Model Dewpoint                 
                      RH   rh       1  Fcst Model Relative humidity 
                      LCB  lcb      1  Fcst Model Cloud base
                      LCT  lct      1  Fcst Model Cloud top
-                     MSL  msl      1  Fcst Model MSL pressure
+		     P	  p 	   1  Fcst Model 1500m pressure
+                     SLP  slp      1  Fcst Model MSL pressure
+                     PSF  psf      1  Fcst Model Surface pressure
                      LIL  lil      1  Fcst Model Integrated cloud liquid water
                      TPW  tpw      1  Fcst Model Total precipitable water vapor
                      R01  r01      1  Fcst Model Liquid accum cycle     
