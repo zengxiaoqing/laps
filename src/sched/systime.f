@@ -52,7 +52,7 @@ cdis
             stop
         endif
 
-        call get_directory('etc',fname,len_fname)
+        call get_directory('time',fname,len_fname)
         open(11,file=fname(1:len_fname)//'systime.dat',status='unknown')
 
 	i4time = i4time_now_gg()

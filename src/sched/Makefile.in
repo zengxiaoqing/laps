@@ -36,8 +36,8 @@ OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .exe
 
-EXE = purger.exe systime.exe c_time.exe
-SRC = purger.f systime.f c_time.f
+EXE = systime.exe c_time.exe
+SRC = systime.f c_time.f
 
 
 # Define other variables 
@@ -75,15 +75,6 @@ distclean: clean
 	rm -f Makefile
 
 
-
-
-
-
-
-
-
-
-purger.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
 
 systime.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
 
