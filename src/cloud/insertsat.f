@@ -391,11 +391,16 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1                          + temp_3d(i,j,iz_temp+1)  * frac
 
                 if(cldcv(i,j,k) .ne. r_missing_data)then
-                  if(cldcv(i,j,k) .gt. 1.0001)then
-                      write(6,*)' Error in insert_sat, cldcv > 1.0001'
+                  if(cldcv(i,j,k) .gt. 1.002)then   ! excessively over 1.0
+                      write(6,*)' Error in insert_sat, cldcv > 1.002'
      1                         ,i,j,k,cldcv(i,j,k)
                       istatus = 0
                       return
+                  elseif(cldcv(i,j,k) .gt. 1.0)then ! slightly over 1.0
+                      write(6,*)' Warning in insert_sat, cldcv > 1.0'       
+     1                         ,i,j,k,cldcv(i,j,k)
+                      write(6,*)' Resetting cloud cover to 1.0'
+                      cldcv(i,j,k) = 1.0
                   endif
 
                   tb8_calculated_rad = 

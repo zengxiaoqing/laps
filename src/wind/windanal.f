@@ -1,7 +1,8 @@
 
-       subroutine laps_anl(uobs,vobs,n_radars,
-     1      vr_obs_unfltrd,vr_nyq,v_nyquist_in
-     1     ,upass1,vpass1                                        ! Output
+       subroutine laps_anl(uobs,vobs,n_radars
+     1     ,istat_radar_vel                                      ! Input
+     1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in
+!    1     ,upass1,vpass1                                        ! Output
      1     ,n_var,n_fnorm                                        ! Input
      1     ,uanl,vanl                                            ! Output
      1     ,wt_p,weight_bkg_const,rms_thresh_wind                ! Input/Local
@@ -43,11 +44,11 @@
       integer*4 n_radars   ! Actual number of radars having data     Input
 
 !     First pass analyzed winds
-      real*4 upass1(imax,jmax,kmax), vpass1(imax,jmax,kmax)        ! Output
+!     real*4 upass1(imax,jmax,kmax), vpass1(imax,jmax,kmax)        ! Output
 
 !     Final pass analyzed winds
       real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)             ! Output
-      real*4 varbuff(imax,jmax,kmax,n_var)                          ! Equiv Abv
+      real*4 varbuff(imax,jmax,kmax,n_var)                         ! Equiv Abv
 
 !     3D array of observation weights, depends on data type
 !     The choices are outlined below
@@ -84,11 +85,12 @@
 
 !--------------------------------------------------------------------------------
 
-      real*4    density_array_in(imax,jmax)                            ! Local
+!     real*4 uobs_diff(imax,jmax,kmax),vobs_diff(imax,jmax,kmax)       ! Local
+      real*4, allocatable, dimension(:,:,:) :: uobs_diff               ! Local
+      real*4, allocatable, dimension(:,:,:) :: vobs_diff               ! Local
+      real*4, allocatable, dimension(:,:,:) :: upass1                  ! Local
+      real*4, allocatable, dimension(:,:,:) :: vpass1                  ! Local
 
-      real*4 uobs_diff(imax,jmax,kmax),vobs_diff(imax,jmax,kmax)       ! Local
-!     real*4 uobs_diff_spread(imax,jmax,kmax)                          ! Local
-!     real*4 vobs_diff_spread(imax,jmax,kmax)                          ! Local
       real*4 varobs_diff_spread(imax,jmax,kmax,n_var)                  ! Local
 
       integer*4 n_obs_lvl(kmax)                                        ! Local
@@ -165,6 +167,18 @@
       iwrite = 1
 
       qc_thresh = 30. ! Threshold speed for throwing out the ob
+
+      allocate( uobs_diff(imax,jmax,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate uobs_diff'
+          stop
+      endif
+
+      allocate( vobs_diff(imax,jmax,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate vobs_diff'
+          stop
+      endif
 
       do j=1,jmax
       do i=1,imax
@@ -356,6 +370,9 @@
       enddo ! i
       enddo ! j
 
+      deallocate(uobs_diff)
+      deallocate(vobs_diff)
+
       write(6,*)
       write(6,*)' QC info for non-radar data (after remapping to grid)'       
       write(6,601)n_qc_pirep_good,n_qc_pirep_bad
@@ -401,13 +418,6 @@
           l_analyze(k) = .true.
       enddo ! k
 
-      call move_3d(upass1,varbuff(1,1,1,1),imax,jmax,kmax)
-      call move_3d(vpass1,varbuff(1,1,1,2),imax,jmax,kmax)
-!     call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
-!    1                             ,imax,jmax,kmax)
-!     call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
-!    1                             ,imax,jmax,kmax)
-
       call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
@@ -419,12 +429,29 @@
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
 
+      if(iter .eq. 1)then
+          write(6,*)' Allocating upass1,vpass1'
+
+          allocate( upass1(imax,jmax,kmax), STAT=istat_alloc )
+          if(istat_alloc .ne. 0)then
+              write(6,*)' ERROR: Could not allocate upass1'
+     1                 ,istat_alloc,imax,jmax,kmax
+              stop
+          endif
+!         call maxminavIJK(upass1,imax,jmax,kmax)
+
+          allocate( vpass1(imax,jmax,kmax), STAT=istat_alloc )
+          if(istat_alloc .ne. 0)then
+              write(6,*)' ERROR: Could not allocate vpass1'
+     1                 ,istat_alloc,imax,jmax,kmax
+              stop
+          endif
+!         call maxminavIJK(vpass1,imax,jmax,kmax)
+
+      endif ! iter = 1
+
       call move_3d(varbuff(1,1,1,1),upass1,imax,jmax,kmax)
       call move_3d(varbuff(1,1,1,2),vpass1,imax,jmax,kmax)
-!     call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
-!    1                             ,imax,jmax,kmax)
-!     call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
-!    1                             ,imax,jmax,kmax)
 
       I4_elapsed = ishow_timer()
 
@@ -482,7 +509,7 @@
           mode = 1 ! All radar obs (in this case single Doppler)
 
 !         Take the data from all the radars and add the derived radar obs into
-!         uobs_diff_spread and vobs_diff_spread
+!         uobs_diff_spread and vobs_diff_spread (varobs_diff_spread)
           call insert_derived_radar_obs(
      1         mode                                       ! Input
      1        ,n_radars,max_radars                        ! Input
@@ -512,11 +539,6 @@
               call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
               call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-!             call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
-!    1                             ,imax,jmax,kmax)
-!             call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
-!    1                             ,imax,jmax,kmax)
-
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
@@ -529,10 +551,6 @@
 
               call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
               call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
-!             call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread       
-!    1                                 ,imax,jmax,kmax)
-!             call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
-!    1                                 ,imax,jmax,kmax)
 
               if(istatus .ne. 1)return
 
@@ -545,7 +563,7 @@
           mode = 2 ! Only multi-Doppler obs
 
 !         Take the data from all the radars and add the derived radar obs into
-!         uobs_diff_spread and vobs_diff_spread
+!         uobs_diff_spread and vobs_diff_spread (varobs_diff_spread)
           call insert_derived_radar_obs(
      1         mode                                       ! Input
      1        ,n_radars,max_radars                        ! Input
@@ -577,11 +595,6 @@
           call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
           call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-!         call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
-!    1                             ,imax,jmax,kmax)
-!         call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
-!    1                             ,imax,jmax,kmax)
-
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
@@ -594,10 +607,6 @@
 
           call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
           call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
-!         call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
-!    1                             ,imax,jmax,kmax)
-!         call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
-!    1                             ,imax,jmax,kmax)
 
           if(istatus .ne. 1)return
 
@@ -666,11 +675,6 @@
           call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
           call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-!         call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
-!    1                             ,imax,jmax,kmax)
-!         call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
-!    1                             ,imax,jmax,kmax)
-
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
@@ -683,10 +687,6 @@
 
           call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
           call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
-!         call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
-!    1                             ,imax,jmax,kmax)
-!         call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
-!    1                             ,imax,jmax,kmax)
 
           if(istatus .ne. 1)return
 
@@ -744,7 +744,27 @@
 
       enddo ! n_iter_wind
 
+      write(6,*)' Calling comparisons'
+
+      call comparisons(
+     1            upass1,vpass1,istat_radar_vel,max_radars,
+     1            vr_obs_unfltrd,
+     1            rlat_radar,rlon_radar,rheight_radar,
+     1            lat,lon,
+     1            uanl,vanl,u_laps_bkg,v_laps_bkg,
+     1            istat_bal,
+     1            imax,jmax,kmax,r_missing_data,
+     1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
+     1            uobs,vobs,wt_p,
+     1            n_radars)
+
+      deallocate(upass1)
+      deallocate(vpass1)
+
       istatus = 1
+
+      write(6,*)' End of subroutine laps_anl'
+
       return
       end
 
@@ -1484,3 +1504,30 @@ c  convert radar obs into u & v by using tangential component of first pass
       return
       end
       
+
+      subroutine maxminavIJK(fld,nx,ny,nlev)
+c
+      dimension fld(nx,ny,nlev)
+c
+      do l=1,nlev
+c
+      amax = -1.e30
+      amin = 1.e30
+      sum = 0.
+c
+      do i=1,nx
+      do j=1,ny
+      sum = sum + fld(i,j,l)
+      if(fld(i,j,l).ge.amax) amax = fld(i,j,l)
+      if(fld(i,j,l).le.amin) amin = fld(i,j,l)
+      enddo
+      enddo
+c
+      print*,'at level=',l,'  max=',amax,'  min=',amin
+      avfld = sum/float(nx*ny)
+      print*,' average=',avfld
+c
+      enddo
+c
+      return
+      end

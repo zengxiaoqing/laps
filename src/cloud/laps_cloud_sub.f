@@ -203,21 +203,8 @@ cdis
        
         real*4 heights_3d(NX_L,NY_L,NZ_L)
 
-        real*4 mvd_3d(NX_L,NY_L,NZ_L)
-!       real*4 lwc_res_3d(NX_L,NY_L,NZ_L)
-        real*4 w_3d(NX_L,NY_L,NZ_L)
-
-        integer icing_index_3d(NX_L,NY_L,NZ_L)
-
-        integer cldpcp_type_3d(NX_L,NY_L,NZ_L) ! Also contains 3D precip type
-
 !       Output array declarations (equivalences are used to share space)
-        real*4 out_array_4d(NX_L,NY_L,NZ_L,3)
-        real*4 out_array_3d(NX_L,NY_L,NZ_L)
-
-        real*4 slwc(NX_L,NY_L,NZ_L),slwc_int(NX_L,NY_L)
-        real*4 cice(NX_L,NY_L,NZ_L)
-        real*4 pcpcnc(NX_L,NY_L,NZ_L)
+        real*4 out_array_3d(NX_L,NY_L,3)
 
 !       real*4 snow_2d(NX_L,NY_L)
 
@@ -263,7 +250,6 @@ cdis
         integer*4 istat_39_a(NX_L,NY_L)
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
 
         real*4 t_sfc_k(NX_L,NY_L)
         real*4 t_gnd_k(NX_L,NY_L)

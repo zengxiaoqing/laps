@@ -23,7 +23,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/cloud/libdebugcloud.a  \
 
 EXE = deriv.exe
 
-SRC=laps_deriv.f      laps_deriv_sub.f      put_derived_wind_prods.f 
+SRC=laps_deriv.f  laps_deriv_sub.f   cloud_deriv_subs.f  put_derived_wind_prods.f 
 
 all: exe
 
