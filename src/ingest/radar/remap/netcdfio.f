@@ -61,17 +61,17 @@ cdis
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
-!      include 'remap_constants.dat' ! for debugging only
+       include 'remap_constants.dat' ! for debugging only? (also for structure)
 !      include 'remap.cmn' ! for debugging only
 
 !      This call is still needed for return of 'laps_radar_ext/c3_radar_subdir'
 !      We could change this to pass these in through the 'radar_init' call
-       call get_remap_parms(i_radar,n_radars_remap
-     1                    ,max_times,path_to_radar     
-     1                    ,laps_radar_ext,c3_radar_subdir
-     1                    ,path_to_vrc
-     1                    ,ref_min,min_ref_samples,min_vel_samples,dgr
-     1                    ,istatus)       
+       call get_remap_parms(i_radar,n_radars_remap                        ! I/O
+     1                    ,max_times,path_to_radar                        ! O
+     1                    ,laps_radar_ext,c3_radar_subdir                 ! O
+     1                    ,path_to_vrc                                    ! O
+     1                    ,ref_min,min_ref_samples,min_vel_samples,dgr    ! O
+     1                    ,namelist_parms,istatus)                        ! O
        if(istatus .ne. 1)then
            write(6,*)'Warning: bad status return from get_remap_parms'       
            return
