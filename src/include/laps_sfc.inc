@@ -14,13 +14,6 @@ c..........................................................................
 c..... Here are parameters to adjust FOR THE SURFACE ANALYSIS ONLY.
 c..........................................................................
 c
-c.......... Quality control:  
-c
-c..........     Internal QC routine:  Set to 1 to skip the QC step, 
-c..........                           0 to do the QC.
-c
-	parameter(iskip = 0)	
-c
 c
 c.......... Pressure reduction:  The main pressure analysis that LAPS produces
 c..........     is a reduction to this elevation (m).  For example, the 
