@@ -29,286 +29,295 @@ cdis
 cdis
 cdis
 cdis
-        subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
+      subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
 
 
 
-        implicit none
+      implicit none
 
 c     parameter variables
 
-        integer ii,jj,kk
-        real mdf
-        integer lct
-
-
-        integer*4
-     1       jstatus(3)
-
-
-        integer
-     1       istatus,
-     1       t_istatus,
-     1       i4time,
-     1       i4timep,
-     1       c_istatus,
-     1       save_i4time,
-     1       ramsi4time
-
-        real
-     1       ssh2               !function
+      integer ii,jj,kk
+      real mdf
+      integer lct
+      
+      
+      integer*4
+     1     jstatus(3)
+      
+      
+      integer
+     1     istatus,
+     1     t_istatus,
+     1     i4time,
+     1     i4timep,
+     1     c_istatus,
+     1     save_i4time,
+     1     ramsi4time
+      
+      real
+     1     ssh2                 !function
 c     1        make_ssh !function type
-
-
-        real*4
-     1        data(ii,jj,kk),
-     1        tpw(ii,jj),
-     1        tempsh
-
-        integer kstart (ii,jj)
-        real qs(ii,jj)
-        real ps(ii,jj)
-
-        real bias_one
-
-c        include 'setup.inc'
-
-
-        real*4 mask (ii,jj),cg(ii,jj,kk)
-
-        real*4 lt1dat(ii,jj,kk)
-
-        character
-     1        dirlt1*250,dir*250,rhdir*250,dirpw*250,dir3*250,
-     1        extlt1*31,ext*50,rhext*50,extpw*50,ext3*50,
-     1        varlt1(kk)*3,
-     1        lvl_coordlt1(kk)*4,
-     1        unitslt1(kk)*10,
-     1        commentlt1(kk)*125
-
-c lat lon variables
-
-
-        character*256  directory
-        character*256 grid_fnam_common
-        real lat(ii, jj), lon(ii, jj)
-        real rspacing_dum
-        character*125 comment_2d
-        character*10  units_2d
-        character*3 var_2d
-        integer len_dir
-        character*200 fname
-        real factor
- 
-c rams stuff--------
-        character*9
-     1        filename,savefilename,ramsfile
-        character ramsvar(kk)*3, ramslvlcoord(kk)*4,
-     1        ramsunits(kk)*10, ramscomments(kk)*125
-        character rams_dir*250, rams_ext*31
-
-c ------------------
-
-        real data_in(ii,jj,kk), delta_moisture(kk), avg_moisture(kk)
-        real data_pre_bound (ii,jj,kk)
-        real diff_data(ii*jj)
-        real ave,adev,sdev,var,skew,curt
-
-
-        character*125 commentline
-
-
-        integer*4
-     1        i,j,k
-
-        integer*4 counter
-
-        integer*4 lvllm(kk)
-
-        real*4 maps_rh(ii,jj,kk)
-
-c       real*4 maps_sh(ii,jj,kk)
-
-
-        character*3 desired_field
-
-c       external ss$_normal,rtsys_bad_prod,rtsys_good_prod
-c       external rtsys_no_data, rtsys_abort_prod
-
-        real*4 plevel(kk)
-        integer*4 mlevel(kk)
-
-c
-c
-c      gvap variables
-c
- 	real gvap_data(ii,jj)
-
-        real pressure_of_level  !function call
-
-        integer  raob_switch
-        integer  raob_lookback
-        integer goes_switch
-        integer cloud_switch
-        integer tiros_switch
-        integer sounder_switch
-        integer sat_skip
-        integer gvap_switch
-	integer sfc_mix
-        integer mod_4dda_1
-        real    mod_4dda_factor
-        real    t_ref
-        character*256 path_to_gvap8,path_to_gvap10
-        namelist /moisture_switch/ raob_switch,
-     1       raob_lookback, goes_switch, cloud_switch
-     1       ,tiros_switch, sounder_switch, sat_skip
-     1       ,gvap_switch, sfc_mix, mod_4dda_1,mod_4dda_factor,
-     1       t_ref,path_to_gvap8,path_to_gvap10
-
-        integer len
-        character*200 cdomain
-
-        data extpw/'lh1'/
-        data ext3/'lh2'/
-        data extlt1/'lt1'/
-        data ext /'lq3'/
-        data rhext /'lh3'/
-
-c        real eslo,esice
-
-
-
-c----------------------    code   ------------------
-c        initialize laps field
-
-        write (6,*) 'version 1.32; 7/8/99; increase cloud thresh (.6)'
-
-c call get_laps congif to fill common block used in pressure assignment
-c                                                               routine
-
-        call get_directory(extpw,dirpw,len)
-        call get_directory(ext3,dir3,len)
-        call get_directory(extlt1,dirlt1,len)
-        call get_directory(ext,dir,len)
-        call get_directory(rhext,rhdir,len)
-
-        call get_laps_config('nest7grid',istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' error in get_laps_config'
-            return
-        endif
-
-c *** check to see if we are set up to do this at all
+      
+      
+      real*4
+     1     data(ii,jj,kk),
+     1     tpw(ii,jj),
+     1     tempsh
+      
+      integer kstart (ii,jj)
+      real qs(ii,jj)
+      real ps(ii,jj)
+      
+      real bias_one
+      
+c     include 'setup.inc'
+      
+      
+      real*4 mask (ii,jj),cg(ii,jj,kk)
+      
+      real*4 lt1dat(ii,jj,kk)
+      
+      character
+     1     dirlt1*250,dir*250,rhdir*250,dirpw*250,dir3*250,
+     1     extlt1*31,ext*50,rhext*50,extpw*50,ext3*50,
+     1     varlt1(kk)*3,
+     1     lvl_coordlt1(kk)*4,
+     1     unitslt1(kk)*10,
+     1     commentlt1(kk)*125
+      
+c     lat lon variables
+      
+      
+      character*256  directory
+      character*256 grid_fnam_common
+      real lat(ii, jj), lon(ii, jj)
+      real rspacing_dum
+      character*125 comment_2d
+      character*10  units_2d
+      character*3 var_2d
+      integer len_dir
+      character*200 fname
+      real factor
+      
+c     rams stuff--------
+      character*9
+     1     filename,savefilename,ramsfile
+      character ramsvar(kk)*3, ramslvlcoord(kk)*4,
+     1     ramsunits(kk)*10, ramscomments(kk)*125
+      character rams_dir*250, rams_ext*31
+      
+c     ------------------
+      
+      real data_in(ii,jj,kk), delta_moisture(kk), avg_moisture(kk)
+      real data_pre_bound (ii,jj,kk)
+      real diff_data(ii*jj)
+      real ave,adev,sdev,var,skew,curt
+      
+      
+      character*125 commentline
+      
+      
+      integer*4
+     1     i,j,k
+      
+      integer*4 counter
+      
+      integer*4 lvllm(kk)
+      
+      real*4 maps_rh(ii,jj,kk)
+      
+c     real*4 maps_sh(ii,jj,kk)
+      
+      
+      character*3 desired_field
+      
+c     external ss$_normal,rtsys_bad_prod,rtsys_good_prod
+c     external rtsys_no_data, rtsys_abort_prod
+      
+      real*4 plevel(kk)
+      integer*4 mlevel(kk)
+      
+c     
+c     
+c     gvap variables
+c     
+      real gvap_data(ii,jj)
+      
+      real pressure_of_level    !function call
+      
+      integer  raob_switch
+      integer  raob_lookback
+      integer goes_switch
+      integer cloud_switch
+      integer tiros_switch
+      integer sounder_switch
+      integer sat_skip
+      integer gvap_switch
+      integer time_diff         !time allowed for latency (sec)
+      integer sfc_mix
+      integer mod_4dda_1
+      real    mod_4dda_factor
+      real    t_ref
+      character*256 path_to_gvap8,path_to_gvap10
+      namelist /moisture_switch/ raob_switch,
+     1     raob_lookback, goes_switch, cloud_switch
+     1     ,tiros_switch, sounder_switch, sat_skip
+     1     ,gvap_switch, time_diff
+     1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
+     1     t_ref,path_to_gvap8,path_to_gvap10
+      
+      integer len
+      character*200 cdomain
+      
+      data extpw/'lh1'/
+      data ext3/'lh2'/
+      data extlt1/'lt1'/
+      data ext /'lq3'/
+      data rhext /'lh3'/
+      
+c     real eslo,esice
+      
+      
+      
+c----------------------code   ------------------
+c     initialize laps field
+      
+      write (6,*) 'version 1.32; 7/8/99; increase cloud thresh (.6)'
+      
+c     call get_laps congif to fill common block used in pressure assignment
+c     routine
+      
+      call get_directory(extpw,dirpw,len)
+      call get_directory(ext3,dir3,len)
+      call get_directory(extlt1,dirlt1,len)
+      call get_directory(ext,dir,len)
+      call get_directory(rhext,rhdir,len)
+      
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+         write(6,*)' error in get_laps_config'
+         return
+      endif
+      
+c     *** check to see if we are set up to do this at all
 c     this mode check enables this routine to run without using
 c     sounding data even if it is present.
-c
+c     
 c     perform test for rh
-c
-c        do i = 1,350
-c
-c           tempsh = esice(100. - float(i))/eslo(100.-float(i)) 
-
-c           write(6,*) 100.-float(i),tempsh
-
-c       enddo
-
-c       stop
-
-
-
-c
-c set namelist parameters to defaults 
-        cloud_switch = 1
-        raob_switch = 0
-        raob_lookback = 0
-        goes_switch = 0
-        sounder_switch = 0
-        tiros_switch = 0
-        sat_skip = 0
-        gvap_switch = 0
-        sfc_mix = 0
-        mod_4dda_1 = 0
-        mod_4dda_factor = 0.02
-        t_ref = -132.0
-        path_to_gvap8 = ' '
-        path_to_gvap10 = ' '
-
-        call get_directory('static',fname,len)
-        open (23, file=fname(1:len)//'moisture_switch.nl',
-     1       status = 'old', err = 24)
-
-        read(23,moisture_switch,end=24)
-
-
-        close (23)
-
-
-        if (cloud_switch.eq.0) then
-           write(6,*) 'Cloud switch off, ignore clouds'
-           write(6,*) 'If available, clouds will be used in GOES adjust'
-        else
-           write (6,*) 'Clouds will be used in the analysis'
-        endif
-
-        if (raob_switch.eq.0) then
-           write(6,*) 'raob switch off, ignoring raobs (.snd files)'
-        else
-           write (6,*) 'Raob switch on... will use raobs if present'
-        endif
-
-        write(6,*) 'RAOB look back set to ', raob_lookback, 'seconds'
-
-        if (goes_switch.eq.0) then
-           write(6,*) 'GOES switch off, ignoring goes data'
-        else
-           write(6,*) 'GOES switch on, attempting GOES ', goes_switch
-        endif
-
+c     
+c     do i = 1,350
+c     
+c     tempsh = esice(100. - float(i))/eslo(100.-float(i)) 
+      
+c     write(6,*) 100.-float(i),tempsh
+      
+c     enddo
+      
+c     stop
+      
+      
+      
+c     
+c     set namelist parameters to defaults 
+      cloud_switch = 1
+      raob_switch = 0
+      raob_lookback = 0
+      goes_switch = 0
+      sounder_switch = 0
+      tiros_switch = 0
+      sat_skip = 0
+      gvap_switch = 0
+      time_diff = 0
+      sfc_mix = 0
+      mod_4dda_1 = 0
+      mod_4dda_factor = 0.02
+      t_ref = -132.0
+      path_to_gvap8 = ' '
+      path_to_gvap10 = ' '
+      
+      call get_directory('static',fname,len)
+      open (23, file=fname(1:len)//'moisture_switch.nl',
+     1     status = 'old', err = 24)
+      
+      read(23,moisture_switch,end=24)
+      
+      
+      close (23)
+      
+      
+      if (cloud_switch.eq.0) then
+         write(6,*) 'Cloud switch off, ignore clouds'
+         write(6,*) 'If available, clouds will be used in GOES adjust'
+      else
+         write (6,*) 'Clouds will be used in the analysis'
+      endif
+      
+      if (raob_switch.eq.0) then
+         write(6,*) 'raob switch off, ignoring raobs (.snd files)'
+      else
+         write (6,*) 'Raob switch on... will use raobs if present'
+      endif
+      
+      write(6,*) 'RAOB look back set to ', raob_lookback, 'seconds'
+      
+      if (goes_switch.eq.0) then
+         write(6,*) 'GOES switch off, ignoring goes data'
+      else
+         write(6,*) 'GOES switch on, attempting GOES ', goes_switch
+      endif
+      
       if (sounder_switch.eq.0) then
          write(6,*) 'Sounder switch off'
          write(6,*) 'Using IMAGER data only'
       else
          write(6,*) 'Sounder ON using Sounder data'
       endif
-
+      
       if (tiros_switch.eq.0) then
          write(6,*) 'tiros switch off'
-         else 
-            write (6,*) 'Attempting to run tiros data from NOAA-',  
-     1           tiros_switch
+      else 
+         write (6,*) 'Attempting to run tiros data from NOAA-',  
+     1        tiros_switch
       endif
-
+      
       if (tiros_switch.ne.0 .and. goes_switch.ne.0) then
          write(6,*) 'USING BOTH TIROS AND GOES DATA IN THIS RUN'
       endif
-
+      
       if (sat_skip .eq. 1) then
-          write(6,*) 'Use full resolution satellite'
-        else
-          write(6,*) 'Using partial satellite resolution ',sat_skip
+         write(6,*) 'Use full resolution satellite'
+      else
+         write(6,*) 'Using partial satellite resolution ',sat_skip
       endif
-
+      
       if (gvap_switch .eq. 1) then
-           write(6,*) 'Using goes derived pw, assume data connection'
-        else
-           write(6,*) 'GVAP not used... nominal state'
+         write(6,*) 'Using goes derived pw, assume data connection'
+      else
+         write(6,*) 'GVAP not used... nominal state'
       endif
-
+      
+      if (time_diff .ne. 0) then
+         write(6,*) 'GVAP latency assigned to ',time_diff, 'seconds'
+      else
+         write(6,*) 'NO latency assinged to GVAP data'
+      endif
+      
       if (sfc_mix .eq. 1) then
-           write(6,*) 'Mixing moisture from sfc'
-         else
-           write(6,*) 'Sfc moisture field ignored'
+         write(6,*) 'Mixing moisture from sfc'
+      else
+         write(6,*) 'Sfc moisture field ignored'
       endif
-
+      
       if (mod_4dda_1 .eq.1) then
          write(6,*) 'Mod 4dda active, modifying moisture on output'
          write(6,*) 'Mod 4dda factor is set to, ',mod_4dda_factor
       else
          write(6,*) 'Mod 4dda turned off ... nominal state'
       endif
-
+      
       write(6,*) 'T_ref is set to: ',t_ref
-
+      
       if (path_to_gvap8 .eq. ' '.and. path_to_gvap10 .eq. ' ')then
          write(6,*) 'Path to gvap not assigned, assigning gvap switch 0'
          gvap_switch = 0
@@ -317,12 +326,12 @@ c set namelist parameters to defaults
          write(6,*) 'Path is ', path_to_gvap8, ' ',path_to_gvap10
          write(6,*) 'GVAP switch is set to ',gvap_switch
       endif
-
-
+      
+      
       
 c     initialize field to lq3 internal missing data flag.
 c     initialize total pw to laps missing data flag
-
+      
       do i = 1,ii
          do j = 1,jj
             do k = 1,kk
@@ -830,7 +839,8 @@ c     gvap data insertion step (currently under test)
       if (gvap_switch.eq.1) then
          
          call process_gvap(ii,jj,gvap_data,tpw,
-     1        lat,lon,path_to_gvap8,path_to_gvap10,filename,istatus)
+     1        lat,lon,time_diff,
+     1        path_to_gvap8,path_to_gvap10,filename,istatus)
          
          if(istatus.eq.1) then  ! apply gvap weights
             

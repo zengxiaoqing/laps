@@ -30,7 +30,7 @@ cdis
 cdis
 cdis
       subroutine read_gvap (filename, nstations, path_to_gvap8,
-     1     path_to_gvap10,
+     1     path_to_gvap10,time_diff,
      1     lat,lon, wt,w1,w2,w3,
      1     nn, istatus)
 
@@ -55,6 +55,7 @@ c     input variables
       character*9 filename
       integer nstations,nn,istatus,idummy,idummy2
       character*256 path_to_gvap8,path_to_gvap10
+      integer time_diff         !time allowed for latency (sec)
       real lat(nstations)
       real lon(nstations)
       real wt(nstations)
@@ -72,9 +73,8 @@ c     internal variables
       character*9 filefound
       character*120 extension
       integer extension_index
-      integer time_diff         !time allowed for latency (sec)
 
-      time_diff = 3600*4        ! 4-hour latency allowed
+
 
       call s_len(path_to_gvap8, ptg_index, istatus)
 
