@@ -1909,8 +1909,10 @@ analyses. One output file is written per volume scan.
 When running the remapper, files such as v01, v02, vrc, etc. are produced 
 depending on which radar is being used and on the input parameters. 
 A further description of how the remapper software functions may be found on 
-the World Wide Web at 
-'http://laps.fsl.noaa.gov/albers/remapper_laps.html'.
+the World Wide Web at 'http://laps.fsl.noaa.gov/albers/remapper_laps.html'.
+Also recall the flow chart showing the inputs and outputs for 
+'remap_polar_netcdf.exe' at 
+'http://laps.fsl.noaa.gov/albers/laps/radar/laps_radar_ingest.html'.
 
 Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
