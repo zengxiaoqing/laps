@@ -65,6 +65,8 @@ c
 c                  revc: 2/27/90 Correct error in code.  Zero-out slwc when grid
 c                        temperature (GT) > 0.
 c
+c                  revd: 1/27/99 Correct apparent error in test for I_STATUS1
+c                        (Steve Albers)
 c
 c
 c        OUTPUTS:  ADIABATIC_LWC
@@ -120,10 +122,7 @@ c
 c
 c     Set I_STATUS1 = F if 0 < cld top < -20 C (for stratus).
 c
-!     We are defining GT here since it is not defined above.
-!     This test might not be set up properly.
-      GT = 0.
-      If(GT.GE.0..OR.CTT.lt.-20.) I_STATUS1=0
+      If(CTT.GE.0..OR.CTT.LE.-20.) I_STATUS1=0
 c
       TK=T0+273.15
       E=VAPOR(T0)
