@@ -54,8 +54,14 @@ c
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+
+        include 'laps_cloud.inc'
+
+	integer cloud_levels
+	parameter (cloud_levels = kcloud)
+
+	character*31 cloud_ext
+	data cloud_ext/'lc3'/
 
 c parameter variables
 
@@ -68,10 +74,10 @@ c parameter variables
 
 c variables dependent on dynamic allocation
 
-      integer lvl(kgrid)
-      real lma_ht(igrid,jgrid,kgrid)
-      real heights(igrid,jgrid,kgrid)
-      real clouds_3d(igrid,jgrid,cloud_levels),cld_hts(cloud_levels)
+      integer lvl(kk)
+      real lma_ht(ii,jj,kk)
+      real heights(ii,jj,kk)
+      real clouds_3d(ii,jj,cloud_levels)
       real cld_pres(cloud_levels)
 
 c internal variables
