@@ -2224,7 +2224,8 @@ Outputs: (LW3 is main output)
 
 </pre>                                        
 Source directory: laps/src/wind (contains a README file)
-Compile-time parameters: laps/src/include/windparms.inc
+
+Parameter namelist file: 'static/wind.nl'
 
 CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
 
@@ -2485,7 +2486,7 @@ Outputs:
 </pre>
 Source directory: laps/src/cloud
 
-Parameter namelist file: static/nest7grid.parms 
+Parameter namelist files: static/cloud.nl, static/nest7grid.parms 
 
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
