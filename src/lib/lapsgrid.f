@@ -315,6 +315,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         character*(*) grid_fnam   ! Input (Warning: trailing blanks won't work)
         character*150  directory
         character*31  ext
+        character*8 a8
         character*200 tempchar
 
         character*80 grid_fnam_common
@@ -368,9 +369,12 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         else
           tempchar = directory(1:len_dir)//grid_fnam//'.parms'
         endif
-        open(1,file=tempchar,status='old',err=900)
-
-        read(1,lapsparms_nl,err=910)
+        call s_len(tempchar,len_dir)
+ 
+        open(92,file=tempchar(1:len_dir),status='old',err=900)
+        inquire(unit=92,read=a8)
+        print*, a8
+        read(92,lapsparms_nl,err=910)
          print *,'here ',iflag_lapsparms_cmn
 
 1       format(a)
@@ -390,24 +394,24 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         write(6,*)tempchar
         iflag_lapsparms_cmn = 0
         istatus = 0
-        close(1)
+        close(92)
         return
 
 910     write(6,*)' Read error in get_laps_config'
         write(6,*)' Check runtime parameter file ',tempchar
-        close(1)
+        close(92)
         iflag_lapsparms_cmn = 0
         istatus = 0
         return
 
 920     write(6,*)' Read error in get_laps_config'
         write(6,*)' Truncated runtime parameter file ',tempchar
-        close(1)
+        close(92)
         iflag_lapsparms_cmn = 0
         istatus = 0
         return
 
-999     close(1)
+999     close(92)
 
 !       Obtain standard_latitude and standard_longitude, maproj from static file
 !       if(istatus_static .ne. 1)then
@@ -977,3 +981,52 @@ c        end
  901  print*,'error reading background_nl in ',nest7grid
       stop
       end
+      subroutine get_satellite_parameters(path_to_raw_sat_wfo_vis,
+     +              path_to_raw_sat_wfo_i39,
+     +              path_to_raw_sat_wfo_iwv,
+     +              path_to_raw_sat_wfo_i11,
+     +              path_to_raw_sat_wfo_i12,
+     +              path_to_raw_satellite_gvr,
+     +              path_to_raw_satellite_cdf,
+     +       i_delta_sat_t_sec,r_msng_sat_flag_cdf
+     +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
+     +       ,max_sat,max_sat_channel, max_images)
+
+      integer len_dir
+      character*150 nest7grid
+      character*200 path_to_raw_sat_wfo_vis,
+     +              path_to_raw_sat_wfo_i39,
+     +              path_to_raw_sat_wfo_iwv,
+     +              path_to_raw_sat_wfo_i11,
+     +              path_to_raw_sat_wfo_i12,
+     +              path_to_raw_satellite_gvr,
+     +              path_to_raw_satellite_cdf
+
+      integer i_delta_sat_t_sec,r_msng_sat_flag_cdf
+     +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
+     +       ,max_sat,max_sat_channel, max_images
+      namelist /satellite_nl/ path_to_raw_sat_wfo_vis,
+     +                        path_to_raw_sat_wfo_i39,
+     +                        path_to_raw_sat_wfo_iwv,
+     +                        path_to_raw_sat_wfo_i11,
+     +                        path_to_raw_sat_wfo_i12,
+     +                        path_to_raw_satellite_gvr,
+     +                        path_to_raw_satellite_cdf,
+     +       i_delta_sat_t_sec,r_msng_sat_flag_cdf
+     +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
+     +       ,max_sat,max_sat_channel, max_images
+ 
+      call get_directory('nest7grid',nest7grid,len_dir)
+
+      nest7grid = nest7grid(1:len_dir)//'/nest7grid.parms'
+
+      open(1,file=nest7grid,status='old',err=900)
+      read(1,satellite_nl,err=901)
+      close(1)
+      return
+ 900  print*,'error opening file ',nest7grid
+      stop
+ 901  print*,'error reading satellite_nl in ',nest7grid
+      write(*,satellite_nl)
+      stop
+      end 
