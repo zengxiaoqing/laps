@@ -1,0 +1,393 @@
+#!@PERL@
+# @configure_input@
+#
+# Insures that no more than $plimit  processes with the same name exist(s)  
+# exits with a warning to stderr if the limit is exceeded  
+#
+# Adapted from laps_driver.pl.in, written by James P. Edwards by Linda Wharton
+# Copyright (C) 1998  James P. Edwards
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#
+# This script reads binary radar files in AWIPS and writes out netCDF files
+#   for LAPS to ingest.  This script should be called with $LAPSROOT following
+#   LapsRadar.pl on the command line.  $LAPS_DATA_ROOT may also follow $LAPSROOT
+#   on the command line, but is not required if $LAPS_DATA_ROOT is $LAPSROOT/data.
+#
+# The script determines what radar had been previously been used as a $homeRadar
+#   by reading the file extensions in $LAPS_DATA_ROOT/static/vxx.  If no files
+#   exist in that directory, $prevRadar is given "none" and the closest radar to
+#   the Laps Center Point that is on-line is used.  The closest radar is also 
+#   calculated if the $prevRadar is not on line.
+#
+# Radars are determined to be on-line if they have a current RPS list in
+#   $FXA_DATA/radar/lists (indicated by an XXXX.current file, where XXXX is the radar).
+#   If $homeRadar is different from the previous radar, the files in 
+#   $LAPS_DATA_ROOT/static/vxx are deleted, so new look-up-tables can be generated.
+#
+# The executable "tfrNarrowband2netCDF" is built in the AWIPS tree, and resides in
+#   $FXA_HOME/bin.  It requires 5 command-line parameters to run (see info below)
+#
+use strict;
+use vars qw($opt_o $opt_e $opt_l);
+use Getopt::Std;
+
+getopts('e:l');
+
+my $LAPSROOT=shift || die "LAPS root directory required";
+require "$LAPSROOT/etc/fxa.pm";
+umask 002;
+my $fxa_sys =  &Get_env'fxa; #'
+$ENV{PATH}.=":@NETCDF@/bin";
+$ENV{LAPS_DATA_ROOT} = shift ;
+$ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
+my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+
+my $sys;
+my $lockfile;
+
+if($opt_e){
+    foreach(split(/,/,$opt_e)){
+	/^(\w+)=(\w+)$/;
+	$ENV{$1} = $2;
+    }
+}
+
+my($LAPS_LOG_PATH);
+if(($fxa_sys!=0)and(! $opt_l)){
+    $LAPS_LOG_PATH = &Set_logdir'fxa; #'
+}else{
+    $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
+}
+
+my $exe;
+my $log;
+my $hh = (gmtime)[2];
+my $mm = (gmtime)[1];
+my $hhmm = 100*$hh+$mm;
+$hhmm = "0".$hhmm while(length($hhmm)<4);
+$exe = "tfrNarrowband2netCDF";
+$log = "LapsRadar\.log\.$hhmm";
+open(SAVEOUT,">&STDOUT");
+open(SAVEERR,">&STDERR");
+open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
+open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+select(STDERR); $| = 1;
+select(STDOUT); $| = 1;
+#=====================================================================
+#declare "my" variables
+  my $true = 0;
+  my $false = 1;
+  my $FXA_HOME = $ENV{FXA_HOME};
+
+  my $FXA_LOCALIZATION_ROOT = $ENV{FXA_LOCALIZATION_ROOT};
+  my $FXA_INGEST_SITE = $ENV{FXA_INGEST_SITE};
+  my $FXA_DATA = $ENV{FXA_DATA};
+
+  my @oldrad;
+  my $name;
+  my $homeRadar_U;
+  my $homeRadar;
+  my $prevRadar;
+
+  my @allrad;
+  my @portinfo;
+  my @lapsrad;
+  my $port;
+  my $radNo;
+  my $radNo_c;
+  my $numrad;
+
+  my @currad;
+  my $currName;
+  my $currName_U;
+
+  my @latlon;
+  my $line;
+  my $radar;
+  my $lat;
+  my $lon;
+  my $junk;
+  my $junk1;
+  my $closest;
+  my $lat_diff;
+  my $lon_diff;
+  my $lat_laps;
+  my $lon_laps;
+  my $found;
+
+  my $version = 4;  # AWIPS base version number
+  my $endWin = time;
+  my $startWin = $endWin - 3600;  #look back 1 hour 
+  my $inputDir;
+  my $outputDir = "$LAPS_DATA_ROOT/lapsprd/rdr/001/raw";
+#=====================================================================
+if($fxa_sys!=0){
+#
+# PROCESS FXA binary radar files
+#
+#
+# Make sure the requested program exists
+#
+  unless(-x "/$FXA_HOME/bin/$exe"){
+    die "Program $exe not found or not executable";
+  }
+
+#
+# Look for a previous lock for this exe in the log directory
+#
+
+  my(@locks);
+  opendir(LOCKDIR,"$LAPS_LOG_PATH");
+  @locks = grep /^\.lock$exe/, readdir(LOCKDIR);
+  closedir(LOCKDIR);
+
+  foreach(@locks){
+    $_ =~ /^\.lock$exe\.(\d+)$/;
+    my $jpid = $1;
+    open(LFH,"$LAPS_LOG_PATH/$_");
+    my $cid = <LFH>;
+    close(LFH);
+    next unless ($cid>1);
+    open(PS,"ps -ef |");
+    my @ps = <PS>;
+    close(PS);
+#
+# Kill any children of the child
+#
+    foreach(@ps){
+	if ($_ =~ /\s+(\d+)\s+$cid\s+/){
+	    print "Killing process $1\n";
+	    kill -9,$1;
+	}
+    }
+#
+# Kill the child
+#    
+    print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
+    kill -9,$cid if($cid>0);
+    unlink "$LAPS_LOG_PATH/$_";
+  }
+
+  $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
+
+#=====================================================================
+# File ${FXA_LOCALIZATION_ROOT}/${FXA_INGEST_SITE}/portInfo.txt not read...radars via SBN 
+
+#---------------------------------------------------------------------
+# Radars via SBN...no "current" RPS lists, so lists not read 
+
+#---------------------------------------------------------------------
+# read file $LAPS_DATA_ROOT/static/vxx/radar.lst to determine $homeRadar and radars LAPS knows about
+# ORDERING OF RADARS IN LIST IS PREFERRED ORDER OF RETRIEVAL 
+  open(RADARLST, "$LAPS_DATA_ROOT/static/vxx/radar.lst");
+  
+  while (<RADARLST>) {
+    chomp($_);
+    push @lapsrad, $_;
+  }
+  my $lapsradarNo = scalar(@lapsrad);  # get number of elements in @lapsrad
+  close(RADARLST);
+
+  $homeRadar_U = @lapsrad[0];
+
+  $homeRadar = $homeRadar_U;
+  $homeRadar =~ tr/A-Z/a-z/;
+  $lapsradarNo = scalar(@lapsrad);  # get number of elements in @lapsrad
+
+  print "homeRadar_U: $homeRadar_U\n";
+
+  $endWin = time;
+  $startWin = $endWin - 3600;  #look back 1 hour 
+
+# determine which radars available and have files within time window
+# return name of radar to use
+  
+  $found = $false;
+  my $i = 0;
+  my $count = 0;
+  my $unixtime;
+  my @files;
+  while (( $i < $lapsradarNo) && ($ found == $false)) {
+    $radar = $lapsrad[$i];
+    chomp($radar);
+    $radar =~ tr/A-Z/a-z/;
+    opendir(RADAR, "/data/fxa/radar/$radar/Z/elev0_5/res2/level16");
+    @files = readdir(RADAR);
+    closedir(RADAR);
+    $count = 0;
+    foreach (@files) {
+      chomp($_);
+      if (substr($_,0,1) ne ".") {
+        $unixtime = &tfrTime($_);
+        if (($unixtime <= $endWin) && ($unixtime >= $startWin)) {
+          $count += 1;
+        }
+      }
+      if ($count > 0) {
+        $found = $true;
+      } 
+      if (($i == 1) && ($found == $false)) {
+        print "Home Radar $homeRadar_U is not on line at this time.\n"
+      }
+    }
+    $i++;
+  }
+
+  if ($found == $true) {
+    $inputDir = " /data/fxa/radar/$radar/Z/elev0_5/res2/level16";
+    print "Radar to process: $radar \n";
+    print "$count files available in time window.\n";
+  } else {
+    print "No radars have data in /data/fxa/radar/*/Z/elev0_5/res2/level16 \n";
+    print "  where * is the radar identifier....no Laps radar processed\n";
+    exit;
+}
+
+#---------------------------------------------------------------------
+
+  $outputDir = "$LAPS_DATA_ROOT/lapsprd/rdr/001/raw";
+
+#---------------------------------------------------------------------
+# tfrNarrowband2netCDF requires $radar, $startWin, $endWin, $inputDir, $outputDir on command line
+#---------------------------------------------------------------------
+
+  print "Calling parameters:\n";
+  print "  radar = $radar\n";
+  print "  startWin = $startWin\n";
+  print "  endWin = $endWin\n";
+  print "  inputDir = $inputDir\n";
+  print "  outputDir = $outputDir\n";
+
+  $sys = "$FXA_HOME/bin/$exe $radar $startWin $endWin $inputDir $outputDir";
+  &forksub($sys,$lockfile);
+
+#---------------------------------------------------------------------
+  
+}
+#=====================================================================
+#
+# run remap_polar_netcdf.exe process
+#
+
+$exe = "remap_polar_netcdf.exe";
+$log = $exe;
+$log =~ s/\..*$/\.log\.$hhmm/;
+open(SAVEOUT,">&STDOUT");
+open(SAVEERR,">&STDERR");
+open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
+open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+select(STDERR); $| = 1;
+select(STDOUT); $| = 1;
+#
+# Make sure the requested program exists
+#
+unless(-x "$LAPSROOT/bin/$exe"){
+    die "Program $LAPSROOT/bin/$exe not found or not executable";
+}
+#
+# Look for a previous lock for this exe in the log directory
+#
+
+my(@locks);
+opendir(LOCKDIR,"$LAPS_LOG_PATH");
+@locks = grep /^\.lock$exe/, readdir(LOCKDIR);
+closedir(LOCKDIR);
+
+foreach(@locks){
+    $_ =~ /^\.lock$exe\.(\d+)$/;
+    my $jpid = $1;
+    open(LFH,"$LAPS_LOG_PATH/$_");
+    my $cid = <LFH>;
+    close(LFH);
+    next unless ($cid>1);
+    open(PS,"ps -ef |");
+    my @ps = <PS>;
+    close(PS);
+#
+# Kill any children of the child
+#
+    foreach(@ps){
+	if ($_ =~ /\s+(\d+)\s+$cid\s+/){
+	    print "Killing process $1\n";
+	    kill -9,$1;
+	}
+    }
+#
+# Kill the child
+#    
+    print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
+    kill -9,$cid if($cid>0);
+    unlink "$LAPS_LOG_PATH/$_";
+}
+
+$lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
+
+$sys = "$LAPSROOT/bin/$exe ";
+
+&forksub($sys,$lockfile);
+exit;
+
+#=====================================================================
+
+sub forksub{
+    my($sys,$lockfile) = @_;
+  FORK: {      
+      my $pid;
+      if($pid = fork) {
+	  # parent process
+	  open(LOCK,">$lockfile");
+	  print LOCK "$pid\n";
+	  close(LOCK);
+	
+	  waitpid $pid,0;
+	  unlink "$lockfile";
+
+
+      }elsif (defined $pid) { 
+	  #child here
+	  exec($sys);
+	  unlink "$lockfile";
+	  exit;
+      }elsif ($! =~ /No more process/){
+	  # EAGAIN, recoverable fork error
+	  sleep 5;
+	  redo FORK;
+      }else{
+	  die "Can't fork: $!\n";
+      }
+  }
+}
+
+#=====================================================================
+
+sub tfrTime{
+
+    use Time::Local;
+
+    my($c_time) = @_;
+    my $c_yr = substr($c_time,0,4);
+    $c_yr -= 1900;
+    my $c_mo = substr($c_time,4,2);
+    $c_mo--;
+    my $c_dy = substr($c_time,6,2);
+    my $c_hr = substr($c_time,9,2);
+    my $c_min = substr($c_time,11,2);
+    my $sec = 0;
+    my $unixtime = timegm($sec,$c_min,$c_hr,$c_dy,$c_mo,$c_yr);
+    return $unixtime;
+} 
+#=====================================================================
