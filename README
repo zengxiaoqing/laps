@@ -609,28 +609,27 @@
                ---  2.4  Running LAPS Analyses  ---
 
      LAPS runs under cron; there is a sample cron script in './util/cronfile.in'.
-     Referring to this cron, you can see that
-     once each hour (or other cycle time), the main './etc/sched.pl' runs.
-     As an example, at FSL, we run the 'sched.pl' hourly at :20 after the 
-     top of the hour.  On many unix systems jobs run in cron do not have 
-     access to the environment defined by the user, instead they use a system 
-     default environment defined in '/etc/profile', thus 'perl' may not be in the
-     path. Specifying the full path to 'perl' in your cron insures that this 
-     will not be a problem.  Each of these scripts requires the path to laps 
-     as a command line argument, a second optional argument specifies the path
-     to the laps data directory structure - this path defaults to 
-     '/fullpathto/laps/data' if not provided.
+     Referring to this cron, you can see that once each hour (or other cycle 
+     time), the main './etc/sched.pl' runs. As an example at FSL, we run the 
+     'sched.pl' hourly at :20 after the top of the hour. By inspecting the 
+     'sched.pl' file you can see the various executables that are run in a 
+     certain order. You might want to modify the 'sched.pl' file for your 
+     needs.
 
-     In the sample cron script, several ingest processes are run separately
-     from the 'sched.pl'. For example, the satellite ingest (lvd) is run 
+     In the sample cron script several ingest processes are run separately
+     from the 'sched.pl'. For example the satellite ingest (lvd) is run 
      several times per hour and utilizes './etc/laps_driver.pl'. NOWRAD 
-     Radar ingest (vrc), is also run at more frequent intervals. 
-     You might also choose to run 'remap_polar_netcdf.exe' for radar ingest
-     in this manner.
-     
-     By inspecting the 'sched.pl' file which runs everything else, you can 
-     see the various executables that are run in a certain order. You might 
-     want to modify the 'sched.pl' file for your needs.
+     Radar ingest (vrc) is also run at more frequent intervals. You might also
+     choose to run 'remap_polar_netcdf.exe' for radar ingest in this manner.
+
+     On many unix systems jobs that run in cron do not have access to the 
+     environment defined by the user. They instead they use a system default 
+     environment defined in '/etc/profile'; thus 'perl' may not be in the path.
+     Specifying the full path to 'perl' in your cron ensures that this will 
+     not be a problem. Each script in the cron requires the path to laps 
+     as a command line argument. A second optional argument specifies the path
+     to the laps data directory structure; this path defaults to 
+     '/fullpathto/laps/data' if not provided.
 
                ---  2.5  Test data case  ---
 
@@ -708,6 +707,9 @@
      'src/include/makefile.inc', as well as where it occurs in 
      'src/ingest/sfc_qc/Makefile'. This is done after running 'configure'.
     
+     For SGI platforms, certain flags may be needed. '-mips3' seems to help
+     on IRIX64 v6.2.
+
 ---------------- 2.7 ------ I/O of LAPS gridded files -------------------------
 
      Once the laps library is compiled (as outlined above), laps grids can
