@@ -556,7 +556,8 @@ c       include 'satellite_dims_lvd.inc'
                 if(k_level .eq. 0)then ! SFC Winds
                     write(6,102)
 102                 format(/
-     1          '  Field [di,sp,u,v,vc (barbs), ob (obs)]',30x,'? ',$)
+     1                  '  Field [di,sp,u,v,dv,vc (barbs),ob (obs)]'
+     1                  ,27x,'? ',$)
                     read(lun,15)c_field
 
                     if(c_type_i .eq. 'wd')then
@@ -875,7 +876,8 @@ c       include 'satellite_dims_lvd.inc'
                     call mklabel33(k_mb,c19_label,c_label)
 
                 elseif(c_type_i.eq.'wb')then
-                    c19_label = ' WIND lga '//fcst_hhmm//'   kt'
+                    c19_label = ' WIND '//ext(1:3)//' '
+     1                                      //fcst_hhmm//'   kt'
                     call mklabel33(k_mb,c19_label,c_label)
 
                 elseif(c_type_i.eq.'wr')then
@@ -1036,7 +1038,9 @@ c       include 'satellite_dims_lvd.inc'
                 if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' DIV  (diff) 1e-5/s'
                 elseif(c_type_i(1:2) .eq. 'wb')then
-                    c19_label = ' DIV  (lga)  1e-5/s'
+                    c19_label = ' DIV  ('//ext(1:3)//')  1e-5/s'
+                elseif(c_type_i(1:2) .eq. 'wd')then
+                    c19_label = ' DIV  ('//ext(1:3)//')  1e-5/s'
                 elseif(c_type_i(1:2) .eq. 'wr')then
                     c19_label = ' DIV  (fua)  1e-5/s'
                 elseif(c_type_i(1:2) .eq. 'bw')then
