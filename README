@@ -1782,7 +1782,9 @@ since 3 layers are routinely available from NESDIS.
    failed in the past.
 
    Check the log files in the 'log' directory for occurrences of the string
-   'error' and 'warning'. The errors are generally more significant.
+   'error' and 'warning'. The errors are generally more significant. If any
+   core dumps occur they can usually be flagged by searching for the 'sh:'
+   string in 'sched.log.*'.
 
    To check what data got into the analyses as well as some QC and error
    statistics, you can run a series of perl scripts located in
