@@ -36,6 +36,7 @@ EXEDIRS = src/accum \
 	  src/dprep \
           src/grid \
           src/humid \
+          src/humid/optran_setup \
           src/ingest/acars \
           src/ingest/profiler \
           src/ingest/radar/ingest_rrv \
