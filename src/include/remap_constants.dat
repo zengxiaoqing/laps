@@ -101,6 +101,7 @@ c
 
           logical l_line_ref_qc
           logical l_hybrid_first_gate
+          logical l_unfold
 
       end type namelist_type
 
