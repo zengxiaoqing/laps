@@ -320,9 +320,9 @@ C
           call color_ramp(73*ncols1/120,70*ncols1/100,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
 !    1                   ,2.5,0.65,0.55)              ! Yellow Orig
-     1                   ,2.45,0.95,0.65)             ! Yellow New
+     1                   ,2.45,0.95,0.60)             ! Yellow New
           call color_ramp(70*ncols1/100,82*ncols1/100,IWKID,icol_offset
-     1                   ,2.45,0.95,0.65              ! Yellow 
+     1                   ,2.45,0.95,0.60              ! Yellow 
      1                   ,2.72,0.9,0.7)               ! Orange
           call color_ramp(82*ncols1/100,90*ncols1/100,IWKID,icol_offset
      1                   ,2.72,0.9,0.7                ! Orange 
@@ -368,9 +368,9 @@ C
           call color_ramp(36,42,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
 !    1                   ,2.5,0.65,0.55)              ! Yellow Orig
-     1                   ,2.45,0.95,0.65)             ! Yellow New
+     1                   ,2.45,0.95,0.60)             ! Yellow New
           call color_ramp(42,49,IWKID,icol_offset
-     1                   ,2.45,0.95,0.65              ! Yellow 
+     1                   ,2.45,0.95,0.60              ! Yellow 
      1                   ,2.72,0.9,0.7)               ! Orange
           call color_ramp(49,54,IWKID,icol_offset
      1                   ,2.72,0.9,0.7                ! Orange 
@@ -389,9 +389,9 @@ C
      1                   ,2.75,0.9,0.7)               ! Orange
           call color_ramp(12,18,IWKID,icol_offset
      1                   ,2.75,0.9,0.7                ! Orange
-     1                   ,2.5,0.95,0.65)              ! Yellow
+     1                   ,2.5,0.95,0.60)              ! Yellow
           call color_ramp(18,29,IWKID,icol_offset
-     1                   ,2.5,0.95,0.65               ! Yellow
+     1                   ,2.5,0.95,0.60               ! Yellow
      1                   ,2.0,0.4,0.4)                ! Green
           call color_ramp(29,36,IWKID,icol_offset       
      1                   ,2.0,0.4,0.4                 ! Green
@@ -413,9 +413,9 @@ C
      1                   ,2.75,0.9,0.7)               ! Orange
           call color_ramp(17,30,IWKID,icol_offset
      1                   ,2.75,0.9,0.7                ! Orange
-     1                   ,2.5,0.95,0.65)              ! Yellow
+     1                   ,2.5,0.95,0.60)              ! Yellow
           call color_ramp(30,47,IWKID,icol_offset
-     1                   ,2.5,0.95,0.65               ! Yellow
+     1                   ,2.5,0.95,0.60               ! Yellow
      1                   ,2.0,0.4,0.4)                ! Green
           call color_ramp(47,60,IWKID,icol_offset       
      1                   ,2.0,0.4,0.4                 ! Green
@@ -431,13 +431,13 @@ C
      1                   ,IWKID,icol_offset       
      1                   ,1.5,1.0,0.7                 ! Aqua
      1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(55*ncols/100,78*ncols/100
+          call color_ramp(55*ncols/100,74*ncols/100
      1                   ,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
-     1                   ,2.5,0.95,0.65)              ! Yellow
-          call color_ramp(78*ncols/100,91*ncols/100
+     1                   ,2.5,0.95,0.60)              ! Yellow
+          call color_ramp(74*ncols/100,91*ncols/100
      1                   ,IWKID,icol_offset
-     1                   ,2.5,0.95,0.65               ! Yellow
+     1                   ,2.5,0.95,0.60               ! Yellow
      1                   ,2.75,0.9,0.7)               ! Orange
           call color_ramp(91*ncols/100,ncols
      1                   ,IWKID,icol_offset
@@ -445,24 +445,24 @@ C
      1                   ,3.0,0.9,0.7)                ! Red
 
       elseif(colortable .eq. 'haines')then       
-          ncols = 160
-          call color_ramp(1,20*ncols/100
+          ncols = 5 ! 160
+          call color_ramp(1,1
      1                   ,IWKID,icol_offset
      1                   ,0.6,0.7,0.4                 ! Violet
      1                   ,0.6,0.7,0.4)                ! Violet
-          call color_ramp(20*ncols/100,40*ncols/100
+          call color_ramp(2,2
      1                   ,IWKID,icol_offset       
      1                   ,1.0,0.85,0.55               ! Blue
      1                   ,1.0,0.85,0.55)              ! Blue
-          call color_ramp(40*ncols/100,60*ncols/100
+          call color_ramp(3,3
      1                   ,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
      1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(60*ncols/100,80*ncols/100
+          call color_ramp(4,4
      1                   ,IWKID,icol_offset
-     1                   ,2.5,0.95,0.65               ! Yellow
-     1                   ,2.5,0.95,0.65)              ! Yellow
-          call color_ramp(80*ncols/100,ncols
+     1                   ,2.5,0.95,0.60               ! Yellow
+     1                   ,2.5,0.95,0.60)              ! Yellow
+          call color_ramp(5,5
      1                   ,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.7)                ! Red
@@ -493,7 +493,11 @@ C
       write(6,*)' Subroutine color_ramp.. ',ncol1,ncol2
 
       do icol = ncol1,ncol2
-          frac = float(icol-ncol1) / float(ncol2-ncol1)
+          if(ncol2 .ne. ncol1)then
+              frac = float(icol-ncol1) / float(ncol2-ncol1)
+          else
+              frac = 0.0
+          endif   
 
           hue     = (1.0 - frac) * hue1     + frac * hue2  
           sat     = (1.0 - frac) * sat1     + frac * sat2
@@ -601,9 +605,9 @@ C
           x2   = xlow + frac*xrange 
 
           if(ireverse .eq. 0)then
-              rcol = 1.0 + float(ncols-1) * frac
+              rcol = 0.5 + float(ncols) * frac
           else
-              rcol = 1.0 + float(ncols-1) * (1.0 - frac)
+              rcol = 0.5 + float(ncols) * (1.0 - frac)
           endif
 
           icol = nint(rcol)
