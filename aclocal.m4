@@ -574,6 +574,7 @@ then
   if test -n "$netcdf"
   then
     netcdf=`echo "$netcdf" | sed 's/\/bin\/ncdump//'`;
+    NETCDFBIN="$netcdf/bin"
   fi
 fi
 NETCDFLIB="$netcdf/lib"
@@ -583,6 +584,7 @@ then
   AC_MSG_RESULT(Great Found all netcdf libraries and include files in $NETCDFLIB and $NETCDFINC)
 else
   netcdf="/usr/local/netcdf"
+  NETCDFBIN="$netcdf/bin"
   NETCDFLIB="$netcdf/lib"	
   NETCDFINC="$netcdf/include"
   if test -f $NETCDFLIB/libnetcdf.a && test -f $NETCDFINC/netcdf.h && test -f $NETCDFINC/netcdf.inc  
@@ -602,7 +604,8 @@ then
              root using the --netcdf argument to configure)
 fi
 
-             
+
+AC_SUBST(NETCDFBIN)             
 AC_SUBST(NETCDFINC)
 AC_SUBST(NETCDFLIB)
 
