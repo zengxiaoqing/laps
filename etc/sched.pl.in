@@ -23,16 +23,10 @@ $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 #
 $hhmm = `date -u +%H%M`;
 chomp($hhmm);
-
-if($fxa_sys != 0){
-    $yymmdd = `date -u +%y%m%d`;
-    chomp($yymmdd);
-    $LAPS_LOG_PATH = "$ENV{LOG_DIR}/$yymmdd/laps";
-    if(! -d $LAPS_LOG_PATH){
-	mkdir $LAPS_LOG_PATH, 0777 || die "Could not create Log directory $LAPS_LOG_PATH";
-    }
+if($fxa_sys!=0){
+    $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
-    $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
+    $LAPS_LOG_PATH = "LAPS_DATA_DIR/log";
 }
 
 unless($opt_o==1){
