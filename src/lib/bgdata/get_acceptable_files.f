@@ -5,11 +5,11 @@
       implicit none
       include 'netcdf.inc'
       integer bgmodel
-      integer max_files, NX,NY,NZ
+      integer max_files, NX,NY,NZ,rejected_cnt
       character*(*) names(max_files), cmodel, bgpath
      +     ,rejected_files(rejected_cnt)
       integer oldest_forecast, bg_files, forecast_length, i, j, k
-     + ,rejected_cnt, max_forecast_delta
+     + , max_forecast_delta
       integer ivaltimes(10), ntbg
       character*4   af
       character*100 bg_names(max_files), fullname
