@@ -1,5 +1,5 @@
 c
-        subroutine get_local_towerobs(maxsta,i4time_sys,
+        subroutine get_local_towerobs(maxsta,i4time_sys,lun_out,
      &                 path_to_local_data,local_format,
      &                 itime_before,itime_after,
      &                 lat,lon,ni,nj, nsta, istatus)
@@ -271,7 +271,6 @@ c
 c
 c.....  Call the routine to write the SND file.
 c
-        lun_out = 11
         if(nsta .gt. 0)then
             call open_ext(lun_out,i4time_sys,'snd',istatus)
         endif
@@ -715,6 +714,7 @@ c       read var stationName(obno,staNamLen) -> stationName
 
 c       truncate stname(obno)  
         call left_justify(stationName)
+        call remove_blanks(stationName)
         stname(obno) = stationName(1:6)
 
 c       read var stationId(recNum,providerIDLen) -> c_staid 
@@ -898,3 +898,25 @@ c           read var windDir(recNum,level) -> dd(lvl,obno)
 
       return
       end
+
+      subroutine remove_blanks(string)
+
+      character*(*)string
+
+      len1 = len(string)
+      call s_len2(string,len2)
+
+      len_loop = min(len2,len1-1)
+
+      do i = 1,len_loop
+          if(string(i:i) .eq. ' ')then ! blank found
+!             ip1 = i+1
+!             len1m1 = len1-1
+              string(i:len1-1) = string(i+1:len1)
+              string(len1:len1) = ' '
+          endif
+      enddo ! i
+
+      return
+      end
+
