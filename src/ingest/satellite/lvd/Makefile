@@ -30,6 +30,7 @@ SRC = lvd_driver_sub.f \
   readsatdat.f \
   read_ascii_satdat.f \
   read_gwc_satdat.f \
+  read_gms_taiwan.f \
   readlut.f \
   read_gvarimg_cnt2btemp_lut.f \
   rdcdfblock.f \

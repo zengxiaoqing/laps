@@ -82,7 +82,7 @@ c                                     used for variable in include 'satellite_co
       integer   n_lvd_fields_max
       parameter (n_lvd_fields_max = 14)
       integer   max_files
-      parameter (max_files=1500)
+      parameter (max_files=500)
  
       integer   len_lvd
 
@@ -193,6 +193,12 @@ c
       itstatus=init_timer()
       itstatus=ishow_timer()
 
+      do i=1,nimages
+         call zero(image_ir(1,1,i),n_ir_elem,n_ir_lines)
+         call zero(image_vis(1,1,i),n_vis_elem,n_vis_lines)
+         call zero(image_67(1,1,i),n_wv_elem,n_wv_lines)
+      enddo
+
       call find_domain_name(c_generic_dataroot,c_gridfname,istatus)
 
       csatid = c_sat_id(isat)
@@ -226,7 +232,7 @@ c ---------------------------------------------
 c --------------------------------------------------------------------
 c Read look-up table for mapping lat/lon data pixels to real i/j pairs
 c --------------------------------------------------------------------
-      if(csatid.ne.'gmssat')then
+      if(csatid.ne.'gmssat'.or.csattype.eq.'twn')then
 
          call readlut(csatid,csattype,maxchannels,nchannels,
      &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
@@ -238,6 +244,10 @@ c --------------------------------------------------------------------
          else
             write(6,*)'Got the mapping look-up-tables '
          endif
+         if(csattype.eq.'twn')then
+            where (r_llij_lut_ri .lt. 0.5)r_llij_lut_ri=1.0
+            where (r_llij_lut_rj .lt. 0.5)r_llij_lut_rj=1.0
+         endif 
       endif
 c
 c -------------------------------------------------------------------------
@@ -248,7 +258,7 @@ c
       lvis_flag = .false.   !assume that it is available
       call set_vis_flag(i4time_cur,lat,lon,nx_l,ny_l,lvis_flag)
       if(lvis_flag)then
-         write(6,*)'lvis_flag set: do not to wait for vis data'
+         write(6,*)'lvis_flag set: do not wait for vis data'
       endif
 c
 c --------------------------------------------------------------------------
@@ -348,6 +358,21 @@ c
             goto 998
          endif 
 
+c June 2001 added Taiwan (gms) sat ingest
+
+      elseif(csattype.eq.'twn')then
+
+         call read_gms_taiwan(path_to_raw_sat(1,jtype,isat)
+     &,400,400,maxchannels,max_files,nchannels,csatid,csattype
+     &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
+     &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
+     &,image_67,nimages,nft,ntm,c_type,i4time_data,istatus)
+
+         if(istatus.ne.1)then
+            print*,'Error returned: read_gms_taiwan'
+            return
+         endif
+
       endif
 c --------------------------------------------------------------------
 c Get image resolution information
@@ -411,7 +436,7 @@ c
          enddo
 
       elseif(csattype.eq.'gvr'
-     &.or.csattype.eq.'gwc')then
+     &.or.csattype.eq.'gwc'.or.csattype.eq.'twn')then
 
          write(6,*)'get gvarimage count to btemp lut'
          write(6,*)'and gvarimage vis count-to-count lut'
@@ -453,7 +478,8 @@ c check for and fill-in for any missing data in current images
 c ------------------------------------------------------------
 c
       lsatqc=.true.
-      if(csattype.eq.'asc'.or.csattype.eq.'gwc')lsatqc=.false.
+      if(csattype.eq.'asc'.or.csattype.eq.'gwc'.or.
+     &csattype.eq.'twn')lsatqc=.false.
       
       if(lsatqc)then
 
@@ -665,7 +691,7 @@ c
 
 c
 c ----------  GMS SATELLITE SWITCH -------
-         if(csatid.eq.'gmssat')goto 310
+         if(csatid.eq.'gmssat'.and.csattype.ne.'twn')goto 310
 
 
          do j = 1,ntm(i)

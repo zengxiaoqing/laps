@@ -41,7 +41,6 @@ c
 c ========================== START ==============================
 c 
       call get_grid_dim_xy(nx_l,ny_l,istatus)
-      call get_config(istatus)
       if(istatus.ne.1)then
          print*,'Error returned from get_config'
          goto 1000
@@ -102,11 +101,7 @@ c
         write(6,40)(chtype(i),i=1,nchannels)
 40      format(1x,'Satellite CHANNELS:',5(1x,a3))
 
-        write(6,*)'line/elem dimensions: '
-        write(6,*)'VIS: ',nlinesvis,nelemvis
-        write(6,*)'IR:  ',nlinesir,nelemir
-        write(6,*)'WV:  ',nlineswv,nelemwv
-c
+ 
         if( (nlinesvis.eq.0.and.nelemvis.eq.0).and.
      +      (nlinesir .eq.0.and.nelemir .eq.0).and.
      +      (nlineswv .eq.0.and.nelemwv .eq.0) ) then
@@ -115,7 +110,25 @@ c
              stop
         endif
 
-        if(c_sat_id(k).ne.'gmssat')then
+        if(nlinesir.eq.0.or.nelemir.eq.0)then
+             nlinesir=1
+             nelemir =1
+        endif
+        if(nlinesvis.eq.0.or.nelemvis.eq.0)then
+             nlinesvis=1
+             nelemvis =1
+        endif
+        if(nlineswv.eq.0.or.nelemwv.eq.0)then
+             nlineswv=1
+             nelemwv =1
+        endif
+
+        write(6,*)'line/elem dimensions: '
+        write(6,*)'VIS: ',nlinesvis,nelemvis
+        write(6,*)'IR:  ',nlinesir,nelemir
+        write(6,*)'WV:  ',nlineswv,nelemwv
+
+        if(c_sat_id(k).ne.'foolit')then
 
 c         if(nlinesvis.eq.0.and.nelemvis.eq.0)then
 c            nav_status=1
