@@ -13,11 +13,15 @@
       REAL    , PARAMETER :: c_2          = cp * rcv
  
       REAL    , PARAMETER :: p1000mb      = 100000.
+      REAL    , PARAMETER :: psamslpa     = 101325.
+      REAL    , PARAMETER :: tmpsaK       = 288.15
+      REAL    , PARAMETER :: gamma        = 0.0065           !deg K/m
+      REAL    , PARAMETER :: g_Rgamma     = grav/(r_d*gamma) !5.258644
       REAL    , PARAMETER :: cpovcv       = cp/(cp-r_d)
       REAL    , PARAMETER :: cvovcp       = 1./cpovcv
       REAL    , PARAMETER :: rvovrd       = r_v/r_d
   
-      REAL    , PARAMETER :: reradius     = 1./6370.e03
+      REAL    , PARAMETER :: eradius      = 6371200.
 
       REAL    , PARAMETER :: asselin      = .025
 !     REAL    , PARAMETER :: asselin      = .0
