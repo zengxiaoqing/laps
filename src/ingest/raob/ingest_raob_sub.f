@@ -328,6 +328,13 @@ C
       REAL*4      wdMan                          (manLevel ,NREC)
       REAL*4      wsMan                          (manLevel ,NREC)
 
+      REAL*4      prMan_good                     (manLevel)
+      REAL*4      htMan_good                     (manLevel)
+      REAL*4      tpMan_good                     (manLevel)
+      REAL*4      tdMan_good                     (manLevel)
+      REAL*4      wdMan_good                     (manLevel)
+      REAL*4      wsMan_good                     (manLevel)
+
       INTEGER*4   numsigt                        (NREC)
       REAL*4      prSigT                         (sigTLevel,NREC)
       REAL*4      tpSigT                         (sigTLevel,NREC)
@@ -342,13 +349,19 @@ C
       REAL*4      prout                          (NLVL_OUT)
       REAL*4      htout                          (NLVL_OUT)
       REAL*4      tpout                          (NLVL_OUT)
+      REAL*4      tpout_sort_c                   (NLVL_OUT)
+      REAL*4      tpout_c_z                      (NLVL_OUT)
       REAL*4      tdout                          (NLVL_OUT)
+      REAL*4      tdout_sort_c                   (NLVL_OUT)
+      REAL*4      tdout_c_z                      (NLVL_OUT)
       REAL*4      wdout                          (NLVL_OUT)
       REAL*4      wsout                          (NLVL_OUT)
 
+      real*4 k_to_c
+
       character*9 a9time_raob
       character*8 c8_obstype
-      character*150 c_line
+      character*132 c_line
 
 !     Generate info for Sorting/QC, write original mandatory data to log file
       write(6,*)
@@ -359,25 +372,66 @@ C
       write(6,*)' Subroutine sort_and_write - initial mandatory data'       
       if(nummand(isnd) .le. manLevel)then
         do ilevel = 1,nummand(isnd)
-          if(htman(ilevel,isnd) .lt. 90000.)then
+          if(htman(ilevel,isnd) .lt. 90000. .and.
+     1       htman(ilevel,isnd) .ge. staelev(isnd) )then ! valid height AGL
               n_good_levels = n_good_levels + 1
               write(6,*) htman(ilevel,isnd),prman(ilevel,isnd)
      1                  ,tpman(ilevel,isnd),tdman(ilevel,isnd)
      1                  ,wdman(ilevel,isnd),wsman(ilevel,isnd)
 
+              htman_good(n_good_levels) = htman(ilevel,isnd)
+              prman_good(n_good_levels) = prman(ilevel,isnd)
+              tpman_good(n_good_levels) = tpman(ilevel,isnd)
+              tdman_good(n_good_levels) = tdman(ilevel,isnd)
+              wdman_good(n_good_levels) = wdman(ilevel,isnd)
+              wsman_good(n_good_levels) = wsman(ilevel,isnd)
               indx(n_good_levels) = n_good_levels
-              htout(n_good_levels) = htman(ilevel,isnd)
-              prout(n_good_levels) = prman(ilevel,isnd)
-              tpout(n_good_levels) = tpman(ilevel,isnd)
-              tdout(n_good_levels) = tdman(ilevel,isnd)
-              wdout(n_good_levels) = wdman(ilevel,isnd)
-              wsout(n_good_levels) = wsman(ilevel,isnd)
           endif
         enddo
       else
         write(6,*)' Note: nummand(isnd) > manLevel'
      1                   ,nummand(isnd),manLevel      
       endif
+
+      n_good_man = n_good_levels
+
+!     Bubble sort the mandatory levels by height
+ 300  iswitch = 0
+      do i = 2,n_good_man
+          if(htman_good(indx(i)) .lt. htman_good(indx(i-1)))then
+              izz = indx(i-1)
+              indx(i-1) = indx(i)
+              indx(i) = izz
+              iswitch = 1
+          endif
+      enddo
+
+      if(iswitch .eq. 1)go to 300
+
+      do i = 1,n_good_man
+          ilevel = indx(i)
+          htout(i) = htman_good(ilevel)
+          prout(i) = prman_good(ilevel)
+          tpout(i) = tpman_good(ilevel)
+          tdout(i) = tdman_good(ilevel)
+          wdout(i) = wdman_good(ilevel)
+          wsout(i) = wsman_good(ilevel)
+      enddo
+
+!     Generate best current sounding for subsequent use in height integration
+      n_good_z = 0
+      do i = 1,n_good_man
+          if(abs(tpout(i)) .le. 500.)then ! good t value
+              tpout_c_z(i) = k_to_c(tpout(i))
+              n_good_z = n_good_z + 1
+
+              if(abs(tdout(i)) .le. 500.)then ! good td value
+                  tdout_c_z(i) = k_to_c(tdout(i))
+              else ! generate approximate moisture value for height integration
+                  tdout_c_z(i) = tpout_c_z(i) - 10.
+              endif ! good td value
+          endif ! good t value
+      enddo ! i
 
       write(6,*)' Subroutine sort_and_write - sig wind data'       
       if(numsigw(isnd) .le. sigWLevel)then
@@ -408,18 +462,29 @@ C
         do ilevel = 1,numsigt(isnd)
           if(prsigt(ilevel,isnd) .lt. 2000. .and.
      1       prsigt(ilevel,isnd) .gt. 0.            )then
-              n_good_levels = n_good_levels + 1
-              write(6,*) r_missing_data,prsigt(ilevel,isnd)
-     1                  ,tpsigt(ilevel,isnd),tdsigt(ilevel,isnd)
-     1                  ,r_missing_data,r_missing_data
 
-              indx(n_good_levels) = n_good_levels
-              htout(n_good_levels) = r_missing_data
-              prout(n_good_levels) = prsigt(ilevel,isnd)
-              tpout(n_good_levels) = tpsigt(ilevel,isnd)
-              tdout(n_good_levels) = tdsigt(ilevel,isnd)
-              wdout(n_good_levels) = r_missing_data
-              wsout(n_good_levels) = r_missing_data
+!           Attempt to calculate height based on good mandatory level data
+            if(n_good_z .gt. 0)then
+                ht_calc = z(prsigt(ilevel,isnd)
+     1                     ,prout,tpout_c_z,tdout_c_z,n_good_z)
+
+                if(ht_calc .ne. -1.0)then ! valid height returned
+                    ht_calc = ht_calc + htout(1)
+
+                    n_good_levels = n_good_levels + 1
+                    write(6,*) ht_calc,prsigt(ilevel,isnd)
+     1                        ,tpsigt(ilevel,isnd),tdsigt(ilevel,isnd)
+     1                        ,r_missing_data,r_missing_data
+
+                    indx(n_good_levels) = n_good_levels
+                    htout(n_good_levels) = ht_calc
+                    prout(n_good_levels) = prsigt(ilevel,isnd)
+                    tpout(n_good_levels) = tpsigt(ilevel,isnd)
+                    tdout(n_good_levels) = tdsigt(ilevel,isnd)
+                    wdout(n_good_levels) = r_missing_data
+                    wsout(n_good_levels) = r_missing_data
+                endif
+            endif
           endif
         enddo
       else
@@ -427,7 +492,11 @@ C
      1                   ,numsigt(isnd),sigTLevel      
       endif
 
-!     Bubble sort the levels by height
+!     Bubble sort all the levels by height
+      do i = 1,n_good_levels
+          indx(i) = i
+      enddo ! i
+
  400  iswitch = 0
       do i = 2,n_good_levels
           if(htout(indx(i)) .lt. htout(indx(i-1)))then
@@ -439,67 +508,107 @@ C
       enddo
 
       if(iswitch .eq. 1)go to 400
+      
+!     Remove duplicate height levels
+      i = 2
+      do while(i .le. n_good_levels)
+          if(htout(indx(i)) .eq. htout(indx(i-1)))then          
+              write(6,*)' Remove duplicate level ',i,htout(indx(i))
+              do j = i,n_good_levels-1
+                htout(indx(j)) = htout(indx(j+1))
+                prout(indx(j)) = prout(indx(j+1))
+                tpout(indx(j)) = tpout(indx(j+1))
+                tdout(indx(j)) = tdout(indx(j+1))
+                wdout(indx(j)) = wdout(indx(j+1))
+                wsout(indx(j)) = wsout(indx(j+1))
+              enddo ! j
+              n_good_levels = n_good_levels - 1
+          endif
+          i = i+1
+      enddo ! i
 
       call open_ext(11,i4time_sys,'snd',istatus)
 
-      write(6,*)
-      write(6,511,err=998)
+      if(.true.)then ! QC, convert units, & write out the sounding
+
+          write(6,*)
+          write(6,511,err=998)
      1             wmostanum(isnd),n_good_levels,stalat(isnd)
      1            ,stalon(isnd),staelev(isnd),(staname(ic,isnd),ic=1,5)       
      1            ,a9time_raob,c8_obstype
-      write(11,511,err=998)
+          write(11,511,err=998)
      1             wmostanum(isnd),n_good_levels,stalat(isnd)
      1            ,stalon(isnd),staelev(isnd),(staname(ic,isnd),ic=1,5)       
      1            ,a9time_raob,c8_obstype
 
-  511 format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9,1x,a8)
+  511     format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9,1x,a8)
 
 
-!     Write out all sorted data for mandatory + sigw + sigt levels. 
-!     T and Td are in deg C
-      do i = 1,n_good_levels
-          ilevel = indx(i)
+!         Write out all sorted data for mandatory + sigw + sigt levels. 
+!         T and Td are in deg C
+          do i = 1,n_good_levels
+              ilevel = indx(i)
 
-          if(tpout(ilevel) .eq. 99999. .or.
-     1       tpout(ilevel) .eq. r_missing_data     )then
-              t_c = r_missing_data
-          else
-              t_c = tpout(ilevel) - 273.15
-          endif
+              if(tpout(ilevel) .eq. 99999. .or.
+     1           tpout(ilevel) .eq. r_missing_data     )then
+                  tpout_sort_c(i) = r_missing_data
+              else
+                  tpout_sort_c(i) = k_to_c(tpout(ilevel))
+              endif
 
-          if(tpout(ilevel) .eq. 99999. .or.
-     1       tdout(ilevel) .eq. 99999. .or. t_c .eq. r_missing_data)then       
-              td_c = r_missing_data
-          else
-              td_c = tpout(ilevel) - 273.15 - tdout(ilevel)
-          endif
+              if(tpout(ilevel) .eq. 99999. .or.
+     1           tdout(ilevel) .eq. 99999. .or. 
+     1                                    t_c .eq. r_missing_data)then       
+                  tdout_sort_c(i) = r_missing_data
+              else
+                  tdout_sort_c(i) = k_to_c(tpout(ilevel)) 
+     1                            - tdout(ilevel)      
+              endif
 
-          if(abs(wdout(ilevel)) .ge. 99999. .or.
-     1       abs(wsout(ilevel)) .ge. 99999.)then
-              wdout(ilevel) = r_missing_data
-              wsout(ilevel) = r_missing_data
-          endif
+              if(abs(wdout(ilevel)) .ge. 99999. .or.
+     1           abs(wsout(ilevel)) .ge. 99999.)then
+                  wdout(ilevel) = r_missing_data
+                  wsout(ilevel) = r_missing_data
+              endif
 
-          write(c_line,*) htout(ilevel),prout(ilevel)
-     1              ,t_c
-     1              ,td_c
+              write(c_line,*) htout(ilevel),prout(ilevel)
+     1              ,tpout_sort_c(i)
+     1              ,tdout_sort_c(i)
      1              ,wdout(ilevel),wsout(ilevel),ilevel
-          write(6,521)c_line
+              write(6,521)c_line
 
-          write(c_line,*)htout(ilevel),prout(ilevel)
-     1              ,t_c
-     1              ,td_c
+              write(c_line,*)htout(ilevel),prout(ilevel)
+     1              ,tpout_sort_c(i)
+     1              ,tdout_sort_c(i)
      1              ,wdout(ilevel),wsout(ilevel) 
-          write(11,521)c_line
- 521      format(a)
+              write(11,521)c_line
+ 521          format(a)
 
-      enddo
+          enddo
 
-      go to 999
+          go to 999
 
- 998  write(6,*)' Error writing out RAOB'
+ 998      write(6,*)' Error writing out RAOB'
 
- 999  continue
+ 999      continue
+
+      else ! call write_snd for single sounding
+
+          call write_snd  (11                                     ! I
+     1                    ,maxsnd,maxlvl,1                        ! I
+     1                    ,iwmostanum                             ! I
+     1                    ,stalat,stalon,staelev                  ! I
+     1                    ,staname(1,isnd),a9time_raob,c8_obstype ! I
+     1                    ,n_good_levels                          ! I
+     1                    ,htout                                  ! I
+     1                    ,prout                                  ! I
+     1                    ,tpout_sort_c                           ! I
+     1                    ,tdout_sort_c                           ! I
+     1                    ,wdout                                  ! I
+     1                    ,wsout                                  ! I
+     1                    ,istatus)                               ! O
+
+      endif
 
       return
       end
