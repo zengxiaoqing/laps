@@ -391,8 +391,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1                          + temp_3d(i,j,iz_temp+1)  * frac
 
                 if(cldcv(i,j,k) .ne. r_missing_data)then
-                  if(cldcv(i,j,k) .gt. 1.010)then   ! excessively over 1.0
-                      write(6,*)' Error in insert_sat, cldcv > 1.010'
+                  if(cldcv(i,j,k) .gt. 1.020)then   ! excessively over 1.0
+                      write(6,*)' Error in insert_sat, cldcv > 1.020'
      1                         ,i,j,k,cldcv(i,j,k)
                       istatus = 0
                       return

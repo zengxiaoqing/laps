@@ -193,7 +193,7 @@ cdis
         real*4 cvr_snow_cycle(NX_L,NY_L)
         real*4 cvr_water_temp(NX_L,NY_L)
         real*4 cvr_snow(NX_L,NY_L)
-        real*4 band8_mask(NX_L,NY_L)
+        real*4 plot_mask(NX_L,NY_L)
 
         character*4 radar_name
         character*31 radarext_3d_cloud
@@ -997,10 +997,10 @@ C       EW SLICES
         do i = 1,NX_L
         do j = 1,NY_L
             if(cldtop_m(i,j)  .ne. r_missing_data .and.
-     1       cvr_max(i,j)   .ge. 0.1                            )then
-                band8_mask(i,j) = cldtop_m(i,j)
+     1         cvr_max(i,j)   .ge. 0.1                            )then       
+                plot_mask(i,j) = cldtop_m(i,j)               ! Set Band 8 mask
             else
-                band8_mask(i,j) = r_missing_data
+                plot_mask(i,j) = r_missing_data
             endif
         enddo ! j
         enddo ! i
@@ -1010,8 +1010,26 @@ C       EW SLICES
         write(6,1001)
 1001    format('  Cloud Top (km)             Band 8                ',
      1            20x,'              Final Analysis')
-        CALL ARRAY_PLOT(cldtop_m_tb8,band8_mask,NX_L,NY_L,'HORZ CV'
-     1                  ,c1_name_array,KCLOUD,cld_hts,scale)
+        CALL ARRAY_PLOT(cldtop_m_tb8,plot_mask,NX_L,NY_L,'HORZ CV'
+     1                  ,c1_name_array,KCLOUD,cld_hts,scale) ! Plot Band 8 mask
+
+
+        write(6,1101)
+1101    format('  Max Cloud Cover              3.9 micron         ',
+     1            20x,'              Final Analysis')
+
+!       Set 3.9 micron mask
+        do i = 1,NX_L
+        do j = 1,NY_L
+            plot_mask(i,j) = 0.5 + float(istat_39_a(i,j)) * .4
+        enddo ! j
+        enddo ! i
+
+        scale = 1.
+        CALL ARRAY_PLOT(plot_mask,cvr_max,NX_L,NY_L,'HORZ CV'
+     1                 ,c1_name_array,KCLOUD,cld_hts,scale)  ! Plot 3.9u mask
+
+
 
 !       Write out LCB file (Cloud Base, Top, and Ceiling fields)
         ext = 'lcb'

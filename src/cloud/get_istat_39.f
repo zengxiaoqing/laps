@@ -104,7 +104,7 @@
         do i = 1,ni
         do j = 1,nj
             if(tb8_k(i,j)  .ne. r_missing_data .and.
-     1         t39_k(i,j) .ne. r_missing_data      )then
+     1         t39_k(i,j)  .ne. r_missing_data      )then
                 t39_c = k_to_c(t39_k(i,j))
                 tb8_c = k_to_c(tb8_k(i,j))
 
