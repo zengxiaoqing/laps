@@ -66,7 +66,10 @@ cdis
        call get_remap_parms(i_radar,n_radars_remap,path_to_radar       
      1                    ,ext_out,c3_radar_subdir
      1                    ,path_to_vrc,istatus) 
-       if(istatus .ne. 1)return      
+       if(istatus .ne. 1)then
+           write(6,*)'Warning: bad status return from get_remap_parms'       
+           return
+       endif
 
        call get_systime_i4(i4time_sys,istatus)
        if(istatus .ne. 1)return   

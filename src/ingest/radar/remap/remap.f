@@ -57,6 +57,10 @@ cdis
 !     This first call returns only 'n_radars_remap'
       call get_remap_parms(0,n_radars_remap,path_to_radar
      1       ,ext_dum,radar_subdir_dum,path_to_vrc,istatus)       
+      if(istatus .ne. 1)then
+          write(6,*)'Warning: bad status return from get_remap_parms'       
+          go to 999
+      endif
 
       max_times = 2
 
@@ -64,6 +68,11 @@ cdis
           call get_remap_parms(i_radar,n_radars_remap,path_to_radar
      1                  ,ext_dum,radar_subdir_dum
      1                  ,path_to_vrc,istatus)       
+          if(istatus .ne. 1)then
+              write(6,*)
+     1            'Warning: bad status return from get_remap_parms'       
+              go to 999
+          endif
 
           do itimes = 1,max_times
               write(6,*)
