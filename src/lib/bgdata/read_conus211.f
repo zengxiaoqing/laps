@@ -131,7 +131,7 @@ C
       subroutine read_conus_211(path,fname,af,nx,ny,nz,
      .     nxbg,nybg,nzbg,ntbg,pr,ht,tp,sh,uw,vw,
      .     pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp
-     .     ,gproj,istatus)
+     .     ,gproj,model_out,istatus)
 
 c
       implicit none
@@ -139,8 +139,10 @@ c
       include 'netcdf.inc'
       include 'bgdata.inc'
 
-      integer ncid, lenstr, ntp, nvdim, nvs, ndsize
+      integer ncid, lenstr, ntp, nvdim, nvs, ndsize, model_out
 c
+c     model_out=1  => lga
+c     model_out=2  => dprep
       integer nx,ny,nz
       integer nxbg,nybg,nzbg(5),ntbg
       
@@ -207,6 +209,8 @@ c
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
       integer nf_vid,nn
+      real cp,rcp, factor
+      parameter (cp=1004.,rcp=287./cp)
 c
 ccc      save htn,tpn,rhn,uwn,vwn,prn,oldfname
 c_______________________________________________________________________________
@@ -431,8 +435,22 @@ c
             enddo
          enddo
       enddo
-
-     
+      if(model_out.eq.2) then
+c
+c Compute exner and convert temp to theta
+c
+         do k=1,19
+            do j=1,nybg
+               do i=1,nxbg
+                  if(tp(i,j,k).ne.missingflag) then
+                     factor=(1000./pr(i,j,k))**rcp
+                     tp(i,j,k) = tp(i,j,k)*factor
+                     pr(i,j,k) = cp/factor
+                  endif
+               enddo
+            enddo
+         enddo
+      endif
 
 
       if(istatus .eq. 0) then
