@@ -21,13 +21,12 @@
 #
 use strict;
 use Getopt::Long;
-my($LAPSROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$quiet,$localization_site,$sattype,$satid);
+my($LAPSROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$quiet,$sattype,$satid);
 
 my $result = GetOptions("lapsroot=s" => \$LAPSROOT,
 			"dataroot=s" => \$LAPS_DATA_ROOT,
 			"srcroot=s"  => \$LAPS_SRC_ROOT,
 			"quiet" => \$quiet, 
-			"site=s" => \$localization_site,
 			"sattype=s" => \$sattype,
 			"satid=s" => \$satid,
 			"help" => \&help_sub,
@@ -38,9 +37,8 @@ sub help_sub{
     print "   --lapsroot = Root directory of the installed laps binarys (@prefix@)\n";
     print "   --dataroot = Root directory of the installed laps data (@datadir@)\n";
     print "   --srcroot  = Root directory of the laps source code    (@top_srcdir@)\n";
-    print "   --site     = localization site (guessed)\n";
     print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
-    print "   --satid    = g8 or g9 (guessed based on site)\n";
+    print "   --satid    = g8 or g9 (guessed based on -100.0W)\n";
     print "   --quiet    = Do not query user for verification\n";
     print "   --help     = print this message and exit\n";
     exit;
