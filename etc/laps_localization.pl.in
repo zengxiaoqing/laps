@@ -174,11 +174,20 @@ if(-x "$LAPSROOT/bin/genvrclut.exe"){
 #
 # Clean out any pre-existing radar remapper look-up tables
 #
-print "cleaning out static/vxx directory of any old luts\n";
-run_sys::run_sys("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
-print "cleaning out static/lvd directory of any old luts\n";
-run_sys::run_sys("rm -f $LAPS_DATA_ROOT/static/lvd/*.lut");
-
+if(-d "$LAPS_DATA_ROOT/static/vxx"){
+    print "cleaning out static/vxx directory of any old luts\n";
+  run_sys::run_sys("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
+}else{
+    print "Creating directory $LAPS_DATA_ROOT/static/vxx\n";
+  run_sys::run_sys("mkdir $LAPS_DATA_ROOT/static/vxx");
+}
+if(-d "$LAPS_DATA_ROOT/static/lvd"){
+    print "cleaning out static/lvd directory of any old luts\n";
+  run_sys::run_sys("rm -f $LAPS_DATA_ROOT/static/lvd/*.lut");
+}else{
+    print "Creating directory $LAPS_DATA_ROOT/static/lvd\n";
+  run_sys::run_sys("mkdir $LAPS_DATA_ROOT/static/lvd");
+}
 print "$0 complete\n";
 
 
