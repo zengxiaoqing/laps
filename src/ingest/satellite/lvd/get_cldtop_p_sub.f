@@ -1,47 +1,4 @@
-      program get_cloud_top_p
 
-      implicit none
-
-      character path_to_ctp*256
-      integer   istatus
-      integer   nxl,nyl
-      integer   iwindow_ctp_s
-      
-      real,    allocatable  :: rlctp(:,:)
-      real,    allocatable  :: rlca(:,:)
-      real,    allocatable  :: rlct(:,:)
-      real,    allocatable  :: ri4time_ob(:,:)
-
-      call get_grid_dim_xy(nxl,nyl,istatus)
-      if(istatus.ne.1)then
-         print*,'Error returned: get_grid_dim_xy. Terminating'
-         stop
-      endif
-
-      path_to_ctp='/public/data/sat/nesdis/goes8/cloudtop/ascii'
-
-      allocate (rlctp(nxl,nyl),rlca(nxl,nyl),rlct(nxl,nyl))
-      allocate (ri4time_ob(nxl,nyl))
-
-      iwindow_ctp_s=900
-
-      call read_cld_top_p(nxl,nyl,path_to_ctp
-     &,rlctp,rlca,rlct,ri4time_ob,iwindow_ctp_s,istatus)
-
-      if(istatus .ne. 1)then
-         print*,'error returned from read_cld_top_p'
-         print*,'no data returned'
-      endif
-
-      print*,'finished in get_clod_top_p'
-
-      deallocate (rlctp,rlca,rlct,ri4time_ob)
-
-      stop
-      end
-c
-c--------------------------------------------------------
-c
       subroutine check_for_new_ctp(itime_ctp_window,istatus)
 
       implicit none
@@ -277,16 +234,21 @@ c make and save i4time
         enddo
         enddo
         pctobs=float(inobs)/float(nxl*nyl)
-        i4time_data=int((rtimesum/inobs)*1.0e6)
-        call cv_i4tim_asc_lp(i4time_data,a24time_data,istatus)
-        call make_fnam_lp(i4time_data,a9time_data,istatus)
-
-        print*,'num/pct obs for domain ',inobs,pctobs
-        print*,'time of data: ',a24time_data,' ',i4time_data
-        print*,'returning data to main: fname data = ',a9time_data
+        if(pctobs.gt.0.0)then
+           i4time_data=int((rtimesum/inobs)*1.0e6)
+           call cv_i4tim_asc_lp(i4time_data,a24time_data,istatus)
+           call make_fnam_lp(i4time_data,a9time_data,istatus)
+           print*,'num/pct obs for domain ',inobs,pctobs
+           print*,'time of data: ',a24time_data,' ',i4time_data
+           print*,'returning data to main: fname data = ',a9time_data
+        else
+           istatus=0
+           print*,'no cloud top p data in domain'
+           print*,'no data processed for ctp: return to main'
+        endif
       else
         istatus=0
-        print*,'no current cloud top p files'
+        print*,'no current cloud top p files: return to main'
         print*,'no data processed'
       endif
       return

@@ -239,50 +239,53 @@ ccd           endif
           write(6,*)'Number of LAPS gridpoints missing',
      &fcount
 
-        elseif(r_grid_ratio .lt. 1.0)then
+C       elseif(r_grid_ratio .lt. 1.0)then
 c       ---------------------------------------
+
 c input image resolution is somewhat large relative to output grid.
 c this section uses bilinear interpolation to map
 c the four surrounding input pixels to the output grid.
 c
-          write(6,*)'Image res .ge. output grid spacing'
-          write(6,*)'Using bilinear interp for IR Tb'
-          DO 20 J=1,JMAX
-          DO 20 I=1,IMAX
+
+C         write(6,*)'Image res .ge. output grid spacing'
+C         write(6,*)'Using bilinear interp for IR Tb'
+C         DO 20 J=1,JMAX
+C         DO 20 I=1,IMAX
 
 c            if(i_found_it .ne. 1)then
 c              write(6,*)'Enter i and j point'
 c              read(5,*)ipt,jpt
 c              i_found_it = 1
 c            end if
-            IF(ST(I,J).NE.0.) GO TO 20
+C           IF(ST(I,J).NE.0.) GO TO 20
 c
 c line/elem are floating point i/j positions for input lat/lon
 c
 c bilinear_interp_extrap checks on boundary conditions and
 c uses r_missing_data if out of bounds.
 c
-            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
-     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 
-               call  bilinear_interp_extrap(
-     &              r_llij_lut_ri(i,j),
-     &              r_llij_lut_rj(i,j),
-     &              elem_dim,line_dim,image_ir,
-     &              result,istatus)
+C           if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+C    &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 
-	       if(result .ne. r_missing_data .and.
-     &            result .gt. 0.0)then
+C              call  bilinear_interp_extrap(
+C    &              r_llij_lut_ri(i,j),
+C    &              r_llij_lut_rj(i,j),
+C    &              elem_dim,line_dim,image_ir,
+C    &              result,istatus)
 
-	          sa(i,j) = result
+C              if(result .ne. r_missing_data .and.
+C    &            result .gt. 0.0)then
 
-               else
+C                 sa(i,j) = result
 
-                  sa(i,j) = r_missing_data
+C              else
 
-               endif
-               sc(i,j)=sa(i,j)
-               sT(i,j)=sa(i,j)
+C                 sa(i,j) = r_missing_data
+
+C              endif
+C              sc(i,j)=sa(i,j)
+C              sT(i,j)=sa(i,j)
 
 c            if(i.eq.ipt .and. j.eq.jpt)then
 c               write(29,39)ipt,jpt
@@ -292,9 +295,9 @@ c 39          format(1x,'ipt = ',i3,2x,'jpt = ',i3)
 c 49      format(1x,'ir_count = ',1x,f6.1,/,'--------------------',//)
 c            end if
 
-            endif  !lut's = r_missing_data
+C           endif  !lut's = r_missing_data
 
-   20     CONTINUE ! I,J
+C  20     CONTINUE ! I,J
 c          close(29)
 
         else      ! here the input data resolution is course relative to

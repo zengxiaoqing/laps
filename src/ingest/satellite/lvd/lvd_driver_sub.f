@@ -755,10 +755,10 @@ c ----------  GMS SATELLITE SWITCH -------
                   endif
                   if(istatus.eq.1)then
 
-                     if(csattype.eq.'twn')then
+c                    if(csattype.eq.'twn')then
                         call filter_2dx(ta8,nx_l,ny_l,1, 0.5)
                         call filter_2dx(ta8,nx_l,ny_l,1,-0.5)
-                     endif
+c                    endif
 
                      nlf=nlf+1
                      call move(ta8,laps_data(1,1,nlf),nx_l,ny_l)
@@ -1039,8 +1039,10 @@ c been mapped to the laps domain. AFWA's GMS so far.
      &,rlctp,rlca,rlct,ri4time_ob,iwindow_ctp,i4time_ctp_data
      &,fname_ctp,istatus)
             if(istatus.ne. 1)then
-               print*,'error returned from read_cld_top_p'
-               print*,'no data returned'
+               print*,'returned from read_cld_top_p'
+               print*,'no data returned from read_cld_top_p'
+               print*,'no ctp made for this time'
+               print*
             else
 c
 c setup for writing ctp
