@@ -278,9 +278,9 @@ c
       print *,'Writing - ',fname//af,'.'//ext//' (Backfill)'
       comment(1)='LI: '//comment(1)
 
-      do k=1,kdim
-         print*,k,gridn(1,1,k)
-      enddo
+c      do k=1,kdim
+c         print*,k,gridn(1,1,k)
+c      enddo
 
 
       call write_laps(time1,time1+newfcst,dir,ext,

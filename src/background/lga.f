@@ -794,6 +794,12 @@ c
          call get_directory(ext,outdir,len_dir) 
          print *,'Writing - ',fname//af(3:4),'00.',ext
 
+         if(bgmodel.eq.4) then
+            lga_names(3-nf) = fname//af(3:4)//'00.'//ext
+            lga_files=2
+         endif
+            
+
          call write_laps(bgtime,bgvalid,outdir,ext,
      .                   nx_laps,ny_laps,nz_laps,kdim,var,
      .                   ip,lvl_coord,units,comment,grid,istatus)
@@ -879,7 +885,12 @@ c-------------------------------------------------------------------------------
 c
 c *** Get existing .lga file names.
 c
-      call get_file_names(lgapath,lga_files,lga_names,max_files,istatus)
+      if(bgmodel.eq.4) then
+         print*,lga_files,lga_names(1),lga_names(2)
+      else
+         call get_file_names(lgapath,lga_files,lga_names,max_files,
+     +        istatus)
+      endif
 c
 c *** Convert file names to i4times and sort into one array.
 c
@@ -901,6 +912,9 @@ c *** Determine if new file needs to be created and perform
 c        linear interpolation.
 c
       do i=lga_files,2,-1
+      print*,i,lga_files,lga_times(i),lga_times(i-1),
+     +     lga_valid(i),lga_valid(i-1),laps_cycle_time
+         
          if (lga_times(i) .eq. lga_times(i-1) .and.
      .       lga_valid(i)-lga_valid(i-1) .gt. laps_cycle_time) then
             ext = 'lga'
@@ -911,7 +925,8 @@ c
      .           pr,laps_cycle_time,
      .           lga_times(i-1),lga_valid(i-1),
      .           lga_times(i  ),lga_valid(i  ))
-            if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.6) then
+            if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.5
+     +         .or.bgmodel.eq.6.or.bgmodel.eq.8) then
                ext = 'lgb'
                call get_directory(ext,outdir,len_dir) 
                print*,outdir,ext
