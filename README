@@ -317,11 +317,11 @@
      Radar: The following are intermediate files for various forms of radar
             data.
 
-           (vrc)                 - single low-level reflectivity, possibly a 
-                                   mosaic from multiple radars. For example, 
-                                   our ingest at FSL processes WSI-NOWRAD, 
-                                   stored at FSL in NetCDF, to create the 'vrc'
-                                   intermediate file.
+           (vrc)                 - low-level reflectivity from single or 
+                                   multiple radars. For example, our ingest 
+                                   at FSL processes WSI-NOWRAD, stored at FSL 
+                                   in NetCDF, to create the 'vrc' intermediate 
+                                   file.
 
            (v01, v02, ... )      - WSR-88Ds or other radar data stored as
                                    a full volume in sparse arrays.
@@ -335,7 +335,26 @@
                                    ('vxx' files). This file has horizontal and 
                                    vertical gaps filled in.
 
-           (ln3)                 - Layer reflectivity and echo tops
+           (ln3)                 - Layer reflectivity and echo tops, from a
+                                   single radar or mosaiced from multiple 
+                                   radars. For example, WSI sends put a variety
+                                   of derived products from the WSR-88D's 
+                                   which we call nexrad products. These 
+                                   include 3 layer reflectivity products, 
+                                   a composite reflectivity, echo tops, and 
+                                   vil.  FD also decodes these and writes 
+                                   netCDF files. We have an experimental 
+                                   process called 'ln3' that ingests these 
+                                   data that we haven't yet approved for 
+                                   release in our tar. This will probably 
+                                   happen shortly though as the need 
+                                   to further test/use this 3D reflectivity in
+                                   LAPS is increasing.
+
+                                   The key fields from 'ln3' which are used
+                                   in the analyses are the Layer reflectivity
+                                   (0-4 km MSL, 4-8 km MSL, and >8 km MSL), as
+                                   well as echo tops (MSL).
 </pre>
 
      More details about radar data usage in LAPS are on the World Wide Web at:
@@ -432,7 +451,7 @@
      In the above cron example several ingest processes are run separately
      from the 'sched.pl'. For example, the background model ingest (lga) 
      is nominally run at :50 after. The satellite ingest (lvd) is run 
-     at ~6 minute intervals. NOWRAD Radar ingest (vrc), is run at ~10 minute 
+     at ~6 minute intervals. NOWRAD Radar ingest (vrc), is run at 15 minute 
      intervals.
      
      By inspecting the 'sched.pl' file which runs everything else , you can 
@@ -1058,6 +1077,16 @@ Outputs (Intermediate data file):
         vrc     grid                          2-D reflectivity
         vrz     grid                          3-D reflectivity  (proposed)
 </pre>
+
+The WSI data are decoded by our Facilities Division and written as
+netCDF files. The vrc_driver.x process reads these netCDF files.
+WSI sends out many types of radar data. We use the files
+that are labeled "_hd" (15 min freq). They also send out an "_hf"
+(5 min freq) file.  We use hd because WSI hand edits these for
+ground clutter. The hf files are not edited. The hd and hf files
+are composites of "low-level" elevation scans from the 88D's around
+the country.
+
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
 ------ 3.1.5 -----------------PROFILER (PRO)----------------------------------
