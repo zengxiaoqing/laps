@@ -107,9 +107,13 @@ cdoc    grid.
         i = nint(ri)
         if(j .lt. jmax .and. j .gt. 1 .and.
      &     i .lt. imax .and. i .gt. 1)then
+
+           fraci = ri - i
+           fracj = rj - j
+           if(j.gt.rj)fracj=j-rj
+           if(i.gt.ri)fraci=i-ri
+
 c standard bilinear interpolation
-              fraci = ri - i
-              fracj = rj - j
 
               Z1=array_2d(i  , j  )
               Z2=array_2d(i+1, j  )
