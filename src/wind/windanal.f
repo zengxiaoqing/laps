@@ -11,7 +11,7 @@
      1     ,imax,jmax,kmax,lat,lon
      1     ,i4time,grid_spacing_m
      1     ,r_missing_data
-     1     ,l_good_multi_doppler_ob,l_analyze
+     1     ,l_analyze
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
      1     ,n_iter_wind_in
      1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar     
@@ -76,9 +76,6 @@
 !     Nyquist velocity (if known and constant) for each radar
       real*4 v_nyquist_in(max_radars)                                  ! Input
 
-!     3D Radial velocity for a given radar after filtering
-      real*4 vr_obs_fltrd(imax,jmax,kmax)                              ! Local
-
 !     Location of each radar
       real*4 rlat_radar(max_radars),rlon_radar(max_radars)             ! Input
      1                     ,rheight_radar(max_radars)
@@ -96,9 +93,6 @@
       real*4 varobs_diff_spread(imax,jmax,kmax,n_var)                  ! Local
 
       integer*4 n_obs_lvl(kmax)                                        ! Local
-      real*4 upass1_buf(imax,jmax,kmax)                                ! Local
-      real*4 vpass1_buf(imax,jmax,kmax)                                ! Local
-      logical l_good_multi_doppler_ob(imax,jmax,kmax)                  ! Local
       logical  l_analyze(kmax) ! This depends on presence of radar obs ! Local
       logical  l_derived_output ! Flag for producing derived output    ! Input
       logical  l_grid_north     ! Flag for grid north or true north    ! Input
@@ -506,13 +500,11 @@
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_spread                                ! Input/Output
      1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1        ,l_analyze                                  ! Output
+     1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
-     1        ,vr_obs_fltrd                               ! Local
-     1        ,upass1_buf,vpass1_buf                      ! Local
-     1        ,l_good_multi_doppler_ob                    ! Local
      1        ,istatus                                    ! Input/Output
      1                                                          )
+          if(icount_radar_total .gt. 0 .or. .not. l_3d)then
 
           I4_elapsed = ishow_timer()
 
@@ -547,6 +539,8 @@
 
           I4_elapsed = ishow_timer()
 
+          endif ! There is any radar data
+
       else ! n_radars .ne. 1
 
           mode = 2 ! Only multi-Doppler obs
@@ -569,13 +563,12 @@
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_spread                                ! Input/Output
      1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1        ,l_analyze                                  ! Output
+     1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
-     1        ,vr_obs_fltrd                               ! Local
-     1        ,upass1_buf,vpass1_buf                      ! Local
-     1        ,l_good_multi_doppler_ob                    ! Local
      1        ,istatus                                    ! Input/Output
      1                                                          )
+
+          if(icount_radar_total .gt. 0 .or. .not. l_3d)then
 
           I4_elapsed = ishow_timer()
 
@@ -609,10 +602,12 @@
 
           if(istatus .ne. 1)return
 
+          endif
+
 !         Make sure each level of uanl and vanl is initialized in the event it
 !         was not analyzed.
           do k = 1,kmax
-              if(n_obs_lvl(k) .eq. 0)then
+              if(n_obs_lvl(k) .eq. 0 .and. .not. l_3d)then
                   write(6,411)k
 411               format(1x,' No obs at lvl',i3,
      1                  ' Insert Zero array into uanl,vanl')
@@ -622,7 +617,8 @@
                       vanl(i,j,k) = 0.
                   enddo ! i
                   enddo ! j
-              elseif(.not. l_analyze(k))then
+              elseif(.not. l_analyze(k) 
+     1               .or. icount_radar_total .eq. 0)then
                    write(6,412)k
 412                format(' No multi-radar obs at lvl',i3,
      1                          ' Insert 1st pass into uanl,vanl')
@@ -659,11 +655,8 @@
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_spread                                ! Input/Output
      1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1        ,l_analyze                                  ! Output
+     1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
-     1        ,vr_obs_fltrd                               ! Local
-     1        ,upass1_buf,vpass1_buf                      ! Local
-     1        ,l_good_multi_doppler_ob                    ! Local
      1        ,istatus                                    ! Input/Output
      1                                                          )
 
@@ -723,7 +716,8 @@
           enddo ! j
 
 
-          if(l_analyze(k))then ! This depends on the presence of radar obs
+          if(l_analyze(k) .OR. (l_3d .and. icount_radar_total .gt. 0)  
+     1                         )then ! This depends on the presence of radar obs
               write(6,511)k
 511           format(' Use 2nd Pass for lvl',i3)
 
@@ -772,11 +766,8 @@
      1  ,l_derived_output,l_grid_north              ! Input
      1  ,wt_p_spread                                ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1  ,l_analyze                                  ! Output
+     1  ,l_analyze,icount_radar_total               ! Output
      1  ,n_radarobs_tot_unfltrd                     ! Input
-     1  ,vr_obs_fltrd                               ! Local
-     1  ,upass1_buf,vpass1_buf                      ! Local
-     1  ,l_good_multi_doppler_ob                    ! Local
      1  ,istatus                                    ! Input/Output
      1                                                          )
 
@@ -790,12 +781,11 @@
       real*4   uobs_diff_spread(imax,jmax,kmax)
      1        ,vobs_diff_spread(imax,jmax,kmax)
       real*4   wt_p_spread(imax,jmax,kmax)
-      real*4   vr_obs_fltrd(imax,jmax,kmax)
 
-      real*4 upass1_buf(imax,jmax,kmax)
-      real*4 vpass1_buf(imax,jmax,kmax)
-
-      logical  l_good_multi_doppler_ob(imax,jmax,kmax)
+      real*4   vr_obs_fltrd(imax,jmax,kmax)                          ! Local
+      real*4   upass1_buf(imax,jmax,kmax)                            ! Local
+      real*4   vpass1_buf(imax,jmax,kmax)                            ! Local
+      logical  l_good_multi_doppler_ob(imax,jmax,kmax)               ! Local
       logical  l_analyze(kmax),l_derived_output,l_grid_north
 
       write(6,*)' Entering insert_derived_radar_obs, mode =',mode
@@ -897,6 +887,8 @@
 
       enddo ! i_radar
 
+      icount_radar_total = 0
+
 !     Use only multiple Doppler obs if mode = 2, use all obs if mode = 1
       do k = 1,kmax
           icount_good_lvl = 0
@@ -934,7 +926,13 @@
 505           format(' LVL',i3,' # multi = ',i6,l2)
           endif
 
+          icount_radar_total = icount_radar_total + icount_good_lvl
+
       enddo ! k
+
+      write(6,*)
+     1     ' Finished insert_derived_radar_obs, icount_radar_total = ' 
+     1    ,icount_radar_total
 
       return
       end
@@ -1456,31 +1454,32 @@ c  convert radar obs into u & v by using tangential component of first pass
       write(6,*)' subroutine get_inst_err...'
 
       n_obs_total = 0
-      wt_p_total = 0.
+      wt_p_inv_total = 0.
 
       do i = 1,imax
       do j = 1,jmax
       do k = 1,kmax
           if(wt_p_spread(i,j,k) .ne. r_missing_data)then
               n_obs_total = n_obs_total + 1
-              wt_p_total = wt_p_total + wt_p_spread(i,j,k)
+              wt_p_inv_total = wt_p_inv_total + 1.0 / wt_p_spread(i,j,k)
           endif
       enddo ! k
       enddo ! j
       enddo ! i
 
       if(n_obs_total .gt. 0)then
-          wt_p_ave = wt_p_total / float(n_obs_total)
-          rms_inst = sqrt(1./wt_p_ave)
+          wt_p_inv_ave = wt_p_inv_total / float(n_obs_total)
+          rms_inst = sqrt(wt_p_inv_ave)
       else
-          wt_p_ave = 0.
+          wt_p_inv_ave = 0.
           rms_inst = 0.
       endif
 
       rms_thresh = rms_inst * rms_thresh_norm
 
       write(6,*)' n_obs_total = ',n_obs_total
-      write(6,*)' wt_p_total,wt_p_ave = ',wt_p_total,wt_p_ave
+      write(6,*)' wt_p_inv_total,wt_p_inv_ave = '
+     1           ,wt_p_inv_total,wt_p_inv_ave        
       write(6,*)' rms_inst, rms_thresh = ',rms_inst,rms_thresh
 
       return
