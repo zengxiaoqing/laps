@@ -36,7 +36,7 @@ c
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
      &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,
-     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, sp_bk, vis_bk, 
+     &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,sp_bk,vis_bk,tgd_bk,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
      &     u1, v1, rp1, t1_f, td1_f, sp1, tb81, mslp1, vis1, elev1,
@@ -252,6 +252,7 @@ c
         real rp_bk(ni,nj), mslp_bk(ni,nj), sp_bk(ni,nj)
         real wt_rp(ni,nj), wt_mslp(ni,nj)
         real vis_bk(ni,nj), wt_vis(ni,nj)
+	real tgd_bk(ni,nj)
 	real tb8_bk(ni,nj)
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
@@ -294,7 +295,7 @@ c
 c
 c.....	Stuff for LAPS outputs (i.e., standard forms).
 c
-	parameter(num_var = 23)
+	parameter(num_var = 24)
 	real data(ni,nj,num_var)
 	integer imax,jmax,lvl(num_var)
 	character dir*256,ext*31,var(num_var)*3,lvl_coord(num_var)*4
@@ -1232,6 +1233,10 @@ c
      &      'INDEX: 0-NONE, 5-SLGT, 10-MDT, 15-HI, 20-EXTREME'
 	call move_2dto3d(  fire, data, 23, imax, jmax, num_var)
 c
+	var(24) = 'TGD'		! Ground Temperature
+	units(24) = ' '
+	call move_2dto3d(  tgd_bk, data, 24, imax, jmax, num_var)
+c
 	print *,' ======================================================='
 c
 c.....  Now actually write the LSX file.
@@ -1256,14 +1261,14 @@ c	ver_file = '../log/qc/laps_sfc.ver.'//filename(6:9)
 	open(iunit,file=ver_file(1:len),status='unknown',err=999)
 c
 	title = 'Temperature (deg F)'
-	ea = 1.00
+	ea = 1.50
 	call zero(d1,imax,jmax)
 	call conv_k2f(t,d1,imax,jmax)
 	call verify(d1,t_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c	
 	title = 'Temperature background (deg F)'
-	ea = 1.00
+	ea = 1.50
 	call zero(d1,imax,jmax)
 	call move(t_bk,d1,imax,jmax)
 	call verify(d1,t_s,stn,n_obs_b,title,iunit,
