@@ -150,7 +150,7 @@ c     managed at runtime.
            return
          endif
 
-        do i = 0,30
+        do i = 0,48
 
         i4time1 = i4time - i*laps_cycle_time
 
