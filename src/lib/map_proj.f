@@ -478,8 +478,8 @@ C
 
           call lambert_parms(slat1,slat2,n,s,rconst)
 
-          u = x * (erad * rconst)
-          v = y * (erad * rconst)
+          x = u * (erad * rconst)
+          y = v * (erad * rconst)
 
       elseif(c6_maproj .eq. 'merctr')then ! Haltiner & Williams 1-8-2
           x = u * erad
