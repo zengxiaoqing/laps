@@ -12,7 +12,7 @@ WEB_DATA=$LAPS_DATA_ROOT/www
 #Input LAPS_ROOT ($LAPSINSTALLROOT)
 LAPS_ROOT=$2
 
-WEB_NFS=$LAPS_ROOT
+WEB_NFS=$LAPS_ROOT/etc
 
 SCHED="$LAPS_DATA_ROOT/time"
 cd $SCHED
@@ -71,7 +71,7 @@ echo $RESOLUTION
 mkdir -p $WEB_DATA 
 mkdir -p $WEB_DATA/anal2d
 AGE=+7 
-$WEB_NFS/www/anal2d/laps_gifs.com $LAPS_DATA_ROOT $WEB_NFS $WINDOW $RESOLUTION $2 $AGE $LAPS_ROOT/bin \
+$WEB_NFS/www/anal2d/laps_gifs.csh $LAPS_DATA_ROOT $WEB_NFS $WINDOW $RESOLUTION $2 $AGE $LAPS_ROOT/bin \
        1> $WEB_DATA/anal2d/laps_gifs.log 2> $WEB_DATA/anal2d/laps_gifs.err
 
 rm -f /tmp/GSEG0*
