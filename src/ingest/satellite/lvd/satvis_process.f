@@ -326,8 +326,11 @@ c for goes8 - make it look like goes7
 c for goes9 - make it look like goes8; no goes09. New stretch for goes10
 c J. Smart 2-23-99.
 c                 call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
+c          3-08-99 commented out and added new stretch parameters for goes10.
+c                 call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
 
-                  call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
+                  call stretch(0.,295.,0.,255.,laps_vis_norm(i,j))
+
 c for goes8 - make it look like goes7
                   call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
                endif
