@@ -694,8 +694,11 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 iflag_cv = 0
 
+                nobs_dum = 500
+
                 call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
-     1                          ,lat,lon,imax,jmax,size_temp,zoom
+     1                          ,lat,lon,imax,jmax,size_temp
+     1                          ,zoom,nobs_dum
      1                          ,icol_in,du_loc,wx
      1                          ,iflag,iflag_cv)
 

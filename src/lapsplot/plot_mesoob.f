@@ -146,7 +146,13 @@ c
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
         du = float(ni) / 300.
 
-        zoom_eff = max((zoom / 3.0),1.0)
+        zoom_eff = zoom / 3.0
+
+!       At zoom=1-3, make the obs plot larger if there are few obs
+        if(zoom_eff .lt. 1.0 .and. n_obs_b .gt. 30)then
+            zoom_eff = 1.0
+        endif
+
         du2 = du / zoom_eff
 
 !       call setusv_dum(2HIN,11)
@@ -372,7 +378,7 @@ c
                 call plot_mesoob(w1,w2,w3
      1                 ,temp,dewpoint
      1                 ,pressure,xsta,ysta
-     1                 ,lat,lon,ni,nj,relsize,zoom,11,du2
+     1                 ,lat,lon,ni,nj,relsize,zoom,nobs,11,du2
      1                 ,wx_s(i)
      1                 ,iflag,iflag_cv)
 
@@ -401,7 +407,7 @@ c
 c
 c
         subroutine plot_mesoob(dir,spd,gust,t,td,p,ri,rj
-     1                        ,lat,lon,imax,jmax,relsize_in,zoom
+     1                        ,lat,lon,imax,jmax,relsize_in,zoom,nobs
      1                        ,icol_in,du2,wx,iflag,iflag_cv)
 
         include 'lapsparms.cmn'
@@ -415,7 +421,13 @@ c
 !       write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
  1234   format(1x,4i5,4e12.4,i4)
 
-        zoom_eff = max((zoom / 3.0),1.0)
+        zoom_eff = zoom / 3.0
+
+!       At zoom=1-3, make the obs plot larger if there are few obs
+        if(zoom_eff .lt. 1.0 .and. nobs .gt. 30)then
+            zoom_eff = 1.0
+        endif
+
         relsize = relsize_in / zoom_eff
 
         du_b=(imax)/300. * relsize
