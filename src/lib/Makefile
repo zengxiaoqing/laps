@@ -23,7 +23,6 @@ SRC	= machine_dependent.F \
 	  rwl_v3.c \
           fort2c_str.c \
           static_routines.c \
-          unpkfgge_a.c \
           waiting_c.c  \
           fsystem_dum.f \
           add.f \

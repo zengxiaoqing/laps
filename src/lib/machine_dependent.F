@@ -218,6 +218,212 @@ cdis
 C Below are some Taiwan FGGE routines
 
 #if defined(hpux) || defined(alpha)
+
+      subroutine read_fa(lun,filename                   ! I
+     .               ,nx,ny,nz                          ! I
+     .               ,r_missing_data                    ! I
+     .               ,pressures_pa                      ! O
+     .               ,ht,tp,rh,uw,vw                    ! O
+     .               ,mslp                              ! O
+     .               ,istatus)                          ! O
+
+      parameter ( i_record=86 )
+
+      PARAMETER ( MAX_BUF=320000,MAX_PTS=160000 )
+      CHARACTER FGGE_TEMP*80,FGGE_NAME*40,FGGE_IPT*30,ANS
+      BYTE      FGGE_BUF(MAX_BUF)
+      REAL*4    FDATA(MAX_PTS)
+ 
+      STRUCTURE /FGGE_HEAD/
+#ifdef alpha
+        INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
+#else
+        INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
+#endif
+      END STRUCTURE
+      RECORD /FGGE_HEAD/HEADER
+
+      character*255 filename
+      real*4 r_missing_data    ! Missing data value
+ 
+c     3D fields (pressure grid OR sigma grid. What are the level values?)
+      real*4 ht(nx,ny,nz),     ! FA height (m)
+     .       tp(nx,ny,nz),     ! FA temperature (K)
+     .       rh(nx,ny,nz),     ! FA relative humidity (%)
+     .       uw(nx,ny,nz),     ! FA u-wind (m/s) (grid north or TRUE north?)
+     .       vw(nx,ny,nz),     ! FA v-wind (m/s) (grid north or TRUE north?)
+     .       pressures_pa(nz)  ! Pressures of each level
+
+c                           Sfc field
+      real*4 mslp(nx,ny)
+
+      integer     c1(nz), e1(nz)
+      integer     var1(5)
+      character*3 var2(5)
+
+      read (1,'(i5,i3)')  ( c1(i), e1(i), i=1,nz )
+      read (2,'(i4,a3)')  ( var1(i), var2(i), i=1,5 )
+
+      CALL OPEN_FGGE_FILE(filename,ISTAT)
+      IF( ISTAT .NE. 0 ) STOP 'open_fgge_file error !!!'
+ 
+      DO I=1,i_record
+ 
+         CALL READ_FGGE_RECORD(FGGE_BUF,ISTAT)
+         IF( ISTAT .NE. 0 ) STOP 'read_fgge_record error !!!'
+ 
+         CALL DECODE_FGGE_HEADER(FGGE_BUF,HEADER,ISTAT)
+         IF( ISTAT .NE. 0 ) STOP 'decode_fgge_header error !!!'
+         CALL read_FGGE_HEADER( nx, ny, nz,
+     .                          ht, tp, uw, vw, rh, mslp, 
+     .                          fgge_buf, header, fdata,
+     .                          c1, e1,
+     .                          var1, var2,
+     .                          k )
+ 
+      enddo
+
+      CALL CLOSE_FGGE_FILE(ISTAT)
+
+      RETURN
+      END
+
+
+
+      SUBROUTINE read_FGGE_HEADER( nx, ny, nz,
+     .                             ht, tp, uw, vw, rh, mslp,
+     .                             fgge_buf, header, fdata,
+     .                             c1, e1,
+     .                             var1, var2,
+     .                             k )
+      
+      PARAMETER ( MAX_BUF=320000,MAX_PTS=160000 )
+      CHARACTER FGGE_TEMP*80,FGGE_NAME*40,FGGE_IPT*30,ANS
+      BYTE      FGGE_BUF(MAX_BUF)
+      REAL*4    FDATA(MAX_PTS)
+
+      STRUCTURE /FGGE_HEAD/
+#ifdef alpha
+        INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
+#else
+	INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
+#endif
+      END STRUCTURE
+      RECORD /FGGE_HEAD/HEADER
+
+      real*4 ht(nx,ny,nz),     ! FA height (m)
+     .       tp(nx,ny,nz),     ! FA temperature (K)
+     .       rh(nx,ny,nz),     ! FA relative humidity (%)
+     .       uw(nx,ny,nz),     ! FA u-wind (m/s) (grid north or TRUE north?)
+     .       vw(nx,ny,nz),     ! FA v-wind (m/s) (grid north or TRUE north?)
+     .       pressures_pa(nz)  ! Pressures of each level
+
+c                              Sfc field
+      real*4 mslp(nx,ny)
+
+      integer     c1(nz), e1(nz)
+      integer     var1(5)
+      character*3 var2(5)
+
+      if ( header.s1 .eq. 1 )  then
+         CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+         do 10 j= 1,ny
+         do 10 i= 1,nx
+   10       mslp(i,j)= fdata( i +nx*(j-1) )
+      endif
+
+      do k= 1,nz
+         if ( header.c1 .eq. c1(k)  .and.  header.e1 .eq. e1(k) )  then
+            CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+            call read_fgge_data( nx, ny, nz,
+     .                           ht, tp, uw, vw, rh, mslp, 
+     .                           fgge_buf, header, fdata,
+     .                           var1, var2,
+     .                           k )
+         endif
+      enddo
+
+      return
+      end
+
+
+
+      subroutine read_fgge_data( nx, ny, nz,
+     .                           ht, tp, uw, vw, rh, mslp,
+     .                           fgge_buf, header, fdata,
+     .                           var1, var2,
+     .                           k )
+ 
+
+      PARAMETER ( MAX_BUF=320000,MAX_PTS=160000 )
+      CHARACTER FGGE_TEMP*80,FGGE_NAME*40,FGGE_IPT*30,ANS
+      BYTE      FGGE_BUF(MAX_BUF)
+      REAL*4    FDATA(MAX_PTS)
+
+      STRUCTURE /FGGE_HEAD/
+#ifdef alpha
+        INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
+#else
+	INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
+#endif
+      END STRUCTURE
+      RECORD /FGGE_HEAD/HEADER
+
+c       3D fields (pressure grid OR sigma grid. What are the level values?)
+      real*4 ht(nx,ny,nz),     ! FA height (m)
+     .       tp(nx,ny,nz),     ! FA temperature (K)
+     .       rh(nx,ny,nz),     ! FA relative humidity (%)
+     .       uw(nx,ny,nz),     ! FA u-wind (m/s) (grid north or TRUE north?)
+     .       vw(nx,ny,nz),     ! FA v-wind (m/s) (grid north or TRUE north?)
+     .       pressures_pa(nz)  ! Pressures of each level
+
+c                              Sfc field
+      real*4 mslp(nx,ny)
+
+      integer     var1(5)
+      character*3 var2(5)
+
+      if ( header.q .eq. var1(1) )  then
+         do 10 j= 1,ny
+         do 10 i= 1,nx
+            ht(i,j,k)= fdata( i +nx*(j-1) )
+  10     continue
+      
+      elseif ( header.q .eq. var1(2) )  then
+         do 20 j= 1,ny
+         do 20 i= 1,nx
+            tp(i,j,k)= fdata( i +nx*(j-1) )
+  20     continue
+
+      elseif ( header.q .eq. var1(3) )  then
+         do 30 j= 1,ny
+         do 30 i= 1,nx
+            uw(i,j,k)= fdata( i +nx*(j-1) )
+  30     continue
+
+      elseif ( header.q .eq. var1(4) )  then
+         do 40 j= 1,ny
+         do 40 i= 1,nx
+            vw(i,j,k)= fdata( i +nx*(j-1) )
+  40     continue
+
+      elseif ( header.q .eq. var1(5) )  then
+         do 50 j= 1,ny
+         do 50 i= 1,nx
+            rh(i,j,k)= fdata( i +nx*(j-1) )
+  50     continue
+      endif
+
+      return 
+      end
+
+
 C---------------------------------------------------------------------------
 C PURPOSE :
 C   DEMOSTRATION PROGRAM TO USE FGGE DECODE LIBRARY ON ULTRIX 
@@ -369,25 +575,17 @@ C---------------------------------------------------------------------------
 
 #else
 C
-C     Dummy routines for other platforms
+C     Dummy routine for other platforms
 
-      SUBROUTINE TEST_2
+      subroutine read_fa(lun,filename                   ! I
+     .               ,nx,ny,nz                          ! I
+     .               ,r_missing_data                    ! I
+     .               ,pressures_pa                      ! O
+     .               ,ht,tp,rh,uw,vw                    ! O
+     .               ,mslp                              ! O
+     .               ,istatus)                          ! O
       x = 1.0
-      write(6,*)' WARNING: routine TEST_2 not supported '
-     1         ,'on this platform'
-      RETURN
-      END
-
-      SUBROUTINE PRT_FGGE_HEADER(HEADER)
-      x = 1.0
-      write(6,*)' WARNING: routine PRT_FGGE_HEADER not supported '
-     1         ,'on this platform'
-      RETURN
-      END
-
-      SUBROUTINE PRT_FGGE_DATA(HEADER,FDATA,N)
-      x = 1.0
-      write(6,*)' WARNING: routine PRT_FGGE_DATA not supported '
+      write(6,*)' WARNING: routine read_fa not supported '
      1         ,'on this platform'
       RETURN
       END
