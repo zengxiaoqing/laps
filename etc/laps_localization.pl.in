@@ -88,11 +88,11 @@ if($xdim <=0 || $ydim <= 0){
 }
 
 
-open(CDL,"$LAPS_DATA_ROOT/static/nest7grid.cdl");
+open(CDL,"$LAPS_DATA_ROOT/cdl/nest7grid.cdl");
 @cdl = <CDL>;
 close(CDL);
 
-open(CDL,">$LAPS_DATA_ROOT/static/nest7grid.cdl");
+open(CDL,">$LAPS_DATA_ROOT/cdl/nest7grid.cdl");
 foreach(@cdl){
     if(/^\s+x\s*=/){
 	print CDL "      x = $xdim,\n" ;
@@ -132,43 +132,6 @@ system($sys);
 chmod 0544, "./install_lvd.csh";
 chmod 0544, "./update_nav_file.csh";
 
-#$radar_type = ($sattype eq "wfo")? $sattype:'wsi';
-#chmod 0755, "./install_vrc.csh";
-#$sys = "./install_vrc.csh $LAPSROOT $LAPS_DATA_ROOT $compile $radar_type";
-#system($sys);
-#chmod 0544, "./install_vrc.csh";
-
-if($sattype eq 'wfo' && $compile eq 'compile'){
-#
-#  reinstall vrc with corrected parameters
-#
-  open(VRC,">$LAPS_SRC_ROOT/src/include/vrc.inc");
-  print VRC "      integer*4     nelems,nlines\n";
-  print VRC "      parameter     (nelems=1201,nlines=897)\n";
-  close(VRC);
-  chdir("$LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc/table");
-  system("make clean 1>make.out 2>&1");
-  system("make install 1>>make.out 2>&1");
-  
-  chdir("$LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc");
-  system("make clean 1>make.out 2>&1");
-  system("make install 1>>make.out 2>&1");
-#
-# install wfo postprocessing 
-#
-  open(SCHED,"$LAPSROOT/etc/sched.pl");
-  @sched = <SCHED>;
-  close (SCHED);
-  unless(grep(/wfo_post/,@sched)>0){
-    open(SCHED,">>$LAPSROOT/etc/sched.pl");
-    print SCHED "print LOG \`date -u +%H:%M:%S\`.\"\\nRunning wfo post processing\\n\";\n";
-    print SCHED "system(\". $ENV{FXA_HOME}/readenv.sh; @PERL@ \$LAPSROOT/etc/wfo_post.pl \$LAPSROOT \$LAPS_DATA_ROOT 1>\$LAPS_DATA_ROOT/log/wfo_post.log.\$hhmm 2>&1\");\n";
-    close(SCHED);
-  }
-  chdir("$LAPS_SRC_ROOT/src/WFO/post");      
-  system("make install");
-  
-}  
 
 #
 # Generate new vrc lookup tables
@@ -181,6 +144,9 @@ if(-x "$LAPSROOT/bin/genvrclut.exe"){
   print "$0 Failed to make genvrclut.exe, check $LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc/table/make.out\n";
   exit -1;
 }  
+
+
+
 
 #
 # finally initialize the systime.dat file
@@ -273,8 +239,29 @@ sub wfo_localization{
   
   $goes = "g".$goes;
 
+#
+#  Lets make sure the (sample) cronfile for wfo is setup properly
+#  
+  if($ENV{FXA_HOME}){
+      if(-f "$LAPS_SRC_ROOT/util/cronfile"){
+	  open(CRON,"$LAPS_SRC_ROOT/util/cronfile");
+	  @cron = <CRON>;
+	  close(CRON);
+	  open(CRON,">$LAPS_SRC_ROOT/util/cronfile");
+          $match = "@PERL@";
+          foreach(@cron){
+	      if(/readenv\.sh/){
+		  print CRON $_ ;
+		  next;
+	      }
+	      $_ =~ s/($match\s+.*$)/\(\. \.\/readenv\.sh \; $1\)/;
+		 print CRON $_;
+	     
+	  }
+	  close(CRON);
+      }
+  }
 }
-
 #
 # This subroutine test the files $template and $newfile
 # if neither file exists an empty var is returned 

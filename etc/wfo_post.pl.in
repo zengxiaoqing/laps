@@ -29,14 +29,13 @@ $CDL_PATH="$FXA_DATA/Grid/FSL/CDL";
 
 
 #Export environment variables for use in xfer_laps.
-%ENV = (
-       "XFR_HOME",    $XFR_HOME,
-       "FCSTPRD",     $FCSTPRD,
-       "WFO_FCSTPRD", $WFO_FCSTPRD,
-       "TRANS_TBL",   $TRANS_TBL,
-       "LAPSTIME",    $LAPSTIME,
-       "CDL_PATH",    $CDL_PATH
-       );
+$ENV{"XFR_HOME"} =   $XFR_HOME;
+$ENV{"FCSTPRD"} =    $FCSTPRD;
+$ENV{"WFO_FCSTPRD"} =$WFO_FCSTPRD;
+$ENV{"TRANS_TBL"} =  $TRANS_TBL;
+$ENV{"LAPSTIME"} =   $LAPSTIME;
+$ENV{"CDL_PATH"} =   $CDL_PATH;
+      
 
 open(LAPSTIME,$LAPSTIME) or die "Can't open $LAPSTIME";
 ($filetime,$dummy,$utc_hour,$utc_min) = <LAPSTIME>;
@@ -55,15 +54,25 @@ system "$LAPSROOT/bin/xfer_laps.exe";
 $mon++;
 ($ss,$mm,$hh,$dd,$mon,$yy) = gmtime($filetime);
 $mon++;
-$filename = sprintf "%2.2d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
+$yy += 1900;
+$filename = sprintf "%4.4d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
 
 use File::Copy 'cp';
 
 cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename");
 
-system "$ENV{FXA_HOME}/bin/GridNotify.script Laps $filetime 0";
+$sys = "$ENV{FXA_HOME}/bin/GridNotify.script Laps $filetime 0";
+print "running $sys\n";
+
+system $sys;
 
 
+if($ENV{FXA_LOCAL_SITE} eq "FSL"){
+    print "Copying file $WFO_FCSTPRD/$filename to yarmouth\n";
+    $sys = "rcp $WFO_FCSTPRD/$filename yarmouth:$WFO_FCSTPRD";
+    print $sys;
+    system $sys;
+}
 
 
 

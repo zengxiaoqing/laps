@@ -17,10 +17,21 @@ $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 $hhmm = `date -u +%H%M`;
 chomp($hhmm);
 
+if($ENV{LOG_DIR}){
+    $yymmdd = `date -u +%y%m%d`;
+    chomp($yymmdd);
+    $LAPS_LOG_PATH = "$ENV{LOG_DIR}/$yymmdd/laps";
+    if(! -d $LAPS_LOG_PATH){
+	mkdir $LAPS_LOG_PATH, 0777 || die "Could not create Log directory $LAPS_LOG_PATH";
+    }
+}else{
+    $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
+}
+
 unless($opt_o==1){
     open(SAVEOUT,">&STDOUT");
     open(SAVEERR,">&STDERR");
-    open(STDOUT, ">$LAPS_DATA_ROOT/log/sched.log.$hhmm") || die "Can't redirect stdout";
+    open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm") || die "Can't redirect stdout";
     open(STDERR, ">&STDOUT") || die "Can't dup stdout";
     select(STDERR); $| = 1;
     select(STDOUT); $| = 1;
@@ -36,59 +47,62 @@ print `date -u +%H:%M:%S`." Running purger\n";
 system("@PERL@ $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
 
 print `date -u +%H:%M:%S`." Running obs_driver\n";
-system("$LAPSROOT/bin/obs_driver.x 1> $LAPS_DATA_ROOT/log/obs_driver.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/obs_driver.x 1> $LAPS_LOG_PATH/obs_driver.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running rass ingest\n";
-system("$LAPSROOT/bin/ingest_lrs.exe 1> $LAPS_DATA_ROOT/log/rass.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/ingest_lrs.exe 1> $LAPS_LOG_PATH/rass.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running BLP rass ingest\n";
-system("$LAPSROOT/bin/ingest_blplrs.exe 1> $LAPS_DATA_ROOT/log/rass_blp.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/ingest_blplrs.exe 1> $LAPS_LOG_PATH/rass_blp.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running ingest_pro\n";
-system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_DATA_ROOT/log/ingest_pro.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_LOG_PATH/ingest_pro.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running ingest_blppro\n";
-system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_DATA_ROOT/log/ingest_blppro.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_LOG_PATH/ingest_blppro.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running raob ingest\n";
-system("$LAPSROOT/bin/ingest_raob.exe 1> $LAPS_DATA_ROOT/log/raob.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/ingest_raob.exe 1> $LAPS_LOG_PATH/raob.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running laps_sfc\n";
-system("$LAPSROOT/bin/laps_sfc.x 1> $LAPS_DATA_ROOT/log/laps_sfc.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/laps_sfc.x 1> $LAPS_LOG_PATH/laps_sfc.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running temp.exe\n";
-system("$LAPSROOT/bin/temp.exe 1> $LAPS_DATA_ROOT/log/temp.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/temp.exe 1> $LAPS_LOG_PATH/temp.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running ingest_pireps\n";
-system("$LAPSROOT/bin/ingest_pireps.exe 1> $LAPS_DATA_ROOT/log/ingest_pireps.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/ingest_pireps.exe 1> $LAPS_LOG_PATH/ingest_pireps.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running ingest_acars\n";
-system("$LAPSROOT/bin/ingest_acars.exe 1> $LAPS_DATA_ROOT/log/ingest_acars.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/ingest_acars.exe 1> $LAPS_LOG_PATH/ingest_acars.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running wind\n";
-system("$LAPSROOT/bin/wind.exe 1> $LAPS_DATA_ROOT/log/wind.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/wind.exe 1> $LAPS_LOG_PATH/wind.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running cloud\n";
-system("$LAPSROOT/bin/cloud.exe 1> $LAPS_DATA_ROOT/log/cloud.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/cloud.exe 1> $LAPS_LOG_PATH/cloud.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running lq3driver\n";
-system("$LAPSROOT/bin/lq3driver.x 1> $LAPS_DATA_ROOT/log/lq3.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/lq3driver.x 1> $LAPS_LOG_PATH/lq3.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running deriv\n";
-system("$LAPSROOT/bin/deriv.exe 1> $LAPS_DATA_ROOT/log/deriv.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/deriv.exe 1> $LAPS_LOG_PATH/deriv.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running accum\n";
-system("$LAPSROOT/bin/accum.exe 1> $LAPS_DATA_ROOT/log/accum.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/accum.exe 1> $LAPS_LOG_PATH/accum.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running lsm5\n";
-system("$LAPSROOT/bin/lsm5.exe 1> $LAPS_DATA_ROOT/log/lsm5.log.$hhmm 2>&1");
+system("$LAPSROOT/bin/lsm5.exe 1> $LAPS_LOG_PATH/lsm5.log.$hhmm 2>&1");
 
-open(LOG,">>$LAPS_DATA_ROOT/log/runtime.log");
+open(LOG,">>$LAPS_LOG_PATH/runtime.log");
 print LOG "$0 completed at ".`date -u +%H:%M:%S`;
 close(LOG);
 
 
-
+if($ENV{FXA_HOME}){
+    print LOG `date -u +%H:%M:%S`." Running wfo postprocessing\n";
+    system("@PERL@ $LAPSROOT/etc/wfo_post.pl 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
+}
 
 
 
