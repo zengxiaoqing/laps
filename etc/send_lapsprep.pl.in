@@ -56,13 +56,13 @@ if ($timestr =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)$/ ) {
 
 my ($filename, $localfile, $remotefile);
 if ($model eq 'mm5'){
-  $filename = 'mm5_laps:'.$year.'-'.$month.'-'.$day.'_'.$hour;
+  $filename = 'mm5/LAPS:'.$year.'-'.$month.'-'.$day.'_'.$hour;
 }elsif($model eq 'wrf'){
-  $filename = 'wrf_laps:'.$year.'-'.$month.'-'.$day.'_'.$hour;
+  $filename = 'wrf/LAPS:'.$year.'-'.$month.'-'.$day.'_'.$hour;
 }elsif($model eq 'rams'){
-  $filename = 'rams_laps:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
+  $filename = 'rams/LAPS:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
 }elsif($model eq 'cdf') {
-  $filename = 'cdf_laps:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
+  $filename = 'cdf/LAPS:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
 }
 
 $localfile = $localdir.'/'.$filename;
@@ -84,7 +84,7 @@ open(FS,">$ftpscript");
 print FS "#!/bin/sh\n";
 print FS "set -x \n";
 print FS "ftp -v $remotehost << !\n";
-print FS "cd $remotedir\n";
+print FS "cd $remotedir/$model\n";
 print FS "bin\n";
 print FS "put $filename\n";
 print FS "bye \n";
