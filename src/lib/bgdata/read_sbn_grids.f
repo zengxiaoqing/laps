@@ -344,6 +344,8 @@ c     model_out=2  => dprep
       integer ntbg
       integer rcode
       integer ivaltimes(100)
+
+      logical lcmpsfcq
 c
 c *** sfc output arrays.
 c
@@ -504,7 +506,9 @@ c     if(.not.allocated(prbg_sh))allocate(prbg_sh(mxlvls))
 c     if(.not.allocated(prbg_uv))allocate(prbg_uv(mxlvls))
 c     if(.not.allocated(prbg_ww))allocate(prbg_ww(mxlvls))
 
-      allocate (data(nxbg,nybg,100))       !<-- overkill but ok for now.
+      print*,'allocating data array for i/o'
+
+      if(.not.allocated(data))allocate (data(nxbg,nybg,60)) 
 c
 c ****** Read netcdf data.
 c ****** Statements to fill ht.
@@ -743,6 +747,8 @@ c
       count(4)=1
 
       print*,'read p'
+
+      lcmpsfcq=.true.
       
       cvar='p'
       call read_netcdf_real(ncid,cvar,nxbg*nybg,pr_sfc,start
@@ -753,10 +759,12 @@ c
             print *, NF_STRERROR(rcode)
             print *,'in NF_GET_VAR (p): ',cmodel
          else
-            print *,'Missing p data detected'
+            print *,'Missing sfc p data detected'
+            print*,' -> continue without; compute in sfcbkgd'
+            lcmpsfcq=.false.
          endif
          print*
-         return
+c        return
       endif
 c
 c get mslp (this field name differs from one model to the other)
@@ -771,7 +779,9 @@ c
                print *, NF_STRERROR(rcode)
                print *,'in NF_GET_VAR (emsp): ',cmodel
             else
+               print*,' -> continue without; compute in sfcbkgd'
                print *,'Missing emsp data detected'
+               lcmpsfcq=.false.
             endif
             print*
             return
@@ -843,8 +853,11 @@ c for laps-lgb
 
       print*,'ctype ',ctype(1:lent)
 
-      if(ctype(1:lent).eq.'lapsb')then
+c since we may not have pr_sfc at this point lets not
+c do this comp here and instead let sfcbkgd do it later.
+      if(ctype(1:lent).eq.'lapsb' .and. lcmpsfcq)then
 
+         print*,' computing sfc q '
          ibdtp=0
          ibduv=0
          do j=1,nybg

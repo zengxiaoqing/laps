@@ -103,8 +103,9 @@ c
      .   ,nx,ny,nz
      .   ,pr,ht,tp,sh,uw,vw,ww
      .   ,ht_sfc,pr_sfc,td_sfc,tp_sfc
-     .   ,uw_sfc,vw_sfc,mslp
-     .   ,gproj,lon0,lat1,lat2,istatus)
+     .   ,uw_sfc,vw_sfc,mslp,istatus)
+
+c     .   ,gproj,lon0,lat1,lat2,istatus)
 
          integer bgmodel
          integer nx,ny,nz
@@ -126,14 +127,14 @@ c
          real*4 vw_sfc(nx,ny)
          real*4 mslp(nx,ny)
 
-	 real*4 lon0
-	 real*4 lat1,lat2
+c        real*4 lon0
+c        real*4 lat1,lat2
 
          character cmodel*132
          character path*256
          character fname*200
          character af*4
-         character gproj*2
+c        character gproj*2
  
          end subroutine
 
@@ -235,8 +236,7 @@ c
      .,fname_bg,af_bg,nx_bg,ny_bg,nzbg_ht
      .,prbght,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     .,uwbg_sfc,vwbg_sfc,mslpbg
-     .,gproj,lon0,lat1,lat2,istatus)
+     .,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
 
              if(istatus.ne.0)goto 99
 

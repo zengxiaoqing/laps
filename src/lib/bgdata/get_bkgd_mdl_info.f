@@ -323,6 +323,34 @@ c -----------------------
          ne(2)=+131.60
       endif
 
+c     if (bgmodel .eq. 7) then
+c        gproj='LC'
+c        nx_lc=nx
+c        ny_lc=ny
+c        nz_lc=nz
+c        lat1=25.0
+c        lat1_lc=lat1
+c        lat2=25.0
+c        lat2_lc=lat2
+c        lon0=-95.0
+c        lon0_lc=lon0
+c        sw(1)=12.19
+c        sw(2)=-133.459
+c        ne(1)=57.29
+c        ne(2)=-49.3849
+c     elseif (bgmodel.eq.8)then
+c        gproj='LL'
+c        nx_ll=nx
+c        ny_ll=ny
+c        nz_ll=nz
+c        lat0=-90.0
+c        lon0=0.0
+c        lon0_lc=lon0
+c        dlat=1.0
+c        dlon=1.0
+c     endif
+
+
 c     print*,'done in get_bkgd_mdl_info'
 c     print*,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
 

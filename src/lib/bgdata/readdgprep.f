@@ -1,8 +1,7 @@
       subroutine read_dgprep(bgmodel,cmodel,path,fname,af,nx,ny,nz
      .                      ,pr,ht,tp,sh,uw,vw,ww
      .                      ,ht_sfc,pr_sfc,td_sfc,tp_sfc
-     .                      ,uw_sfc,vw_sfc,mslp
-     .                      ,gproj,lon0,lat1,lat2,istatus)
+     .                      ,uw_sfc,vw_sfc,mslp,istatus)
 
 c
       implicit none
@@ -83,20 +82,6 @@ c
       character*132 origin,model,nav,grid,version
       character*255 filename,fname_index
 c
-c *** Common block variables for lat-lon grid.
-c
-      integer*4 nx_ll,ny_ll,nz_ll
-      real*4 lat0,lon0_ll,dlat,dlon
-      common /llgrid/nx_ll,ny_ll,nz_ll,lat0,lon0_ll,dlat,dlon
-c
-c *** Common block variables for lambert-conformal grid.
-c
-      integer*4 nx_lc,ny_lc,nz_lc
-      real*4 lat1_lc,lat2_lc,lon0_lc,sw(2),ne(2)
-      common /lcgrid/nx_lc,ny_lc,nz_lc,lat1_lc,lat2_lc,lon0_lc,sw,ne
-      real*4 lon0       !returned for wind rotations
-      real*4 lat1,lat2  !   "
-c
       common /estab/esat(15000:45000)
 c
 c reads model ".index" file. returns pressure of levels, variable id
@@ -121,7 +106,7 @@ c
       if(bgmodel.eq.6.or.bgmodel.eq.8)then
 
          call s_len(path,l)
-         filename=path(1:l)//'/'//fname(1:nflen)//af
+         filename=path(1:l)//'/'//fname(1:nflen)   !//af
          call s_len(filename,l)
 
          if(cmodel(1:nclen).eq.'AVN_AFWA_DEGRIB'.or.
@@ -489,50 +474,6 @@ c
          print*,'#/% 2D points filled: ',icm_sfc,icm_sfc/(nx*ny)
       endif
 
-c
-c *** Fill the common block variables.
-c
-      if (bgmodel .eq. 6) then
-         gproj='LL'
-         nx_ll=nx
-         ny_ll=ny
-         nz_ll=nz
-         lon0=0.0
-         lon0_ll=lon0
-         dlat=1.0
-         dlon=1.0
-         if(cmodel(1:nclen).eq.'AVN_AFWA_DEGRIB')then
-            lat0 = -90.0
-         elseif(cmodel(1:nclen).eq.'AVN_FSL_NETCDF')then
-            lat0 =  90.0
-         endif
-      elseif (bgmodel .eq. 7) then
-         gproj='LC'
-         nx_lc=nx
-         ny_lc=ny
-         nz_lc=nz
-         lat1=25.0
-         lat1_lc=lat1
-         lat2=25.0
-         lat2_lc=lat2
-         lon0=-95.0
-         lon0_lc=lon0
-         sw(1)=12.19
-         sw(2)=-133.459
-         ne(1)=57.29
-         ne(2)=-49.3849
-      elseif (bgmodel.eq.8)then
-         gproj='LL'
-         nx_ll=nx
-         ny_ll=ny
-         nz_ll=nz
-         lat0=-90.0
-         lon0=0.0
-         lon0_lc=lon0
-         dlat=1.0
-         dlon=1.0
-      endif
-c
       istatus=0
       return
 c
