@@ -455,17 +455,17 @@
 
      Place the tar file in the directory '/home_disk' or '/home_disk/builds'.
      Untar the laps source code using a command like...
-     prompt> gzcat laps-m-n-o.tar.gz | tar xf -
+     prompt> gzcat laps-m-n-o.tgz | tar xf -
  
      OR...
 
-     prompt> gunzip laps-m-n-o.tar.gz
+     prompt> gunzip laps-m-n-o.tgz
      prompt> tar -xf laps-m-n-o.tar
 
      The $LAPS_SRC_ROOT directory will be set up one level below the tar file.
 
      If you are having trouble running 'gunzip', the problem could be that
-     the 'laps-m-n-o.tar.gz' file was corrupted during the download. In that
+     the 'laps-m-n-o.tgz' file was corrupted during the download. In that
      case simply try downloading again.
 
                 ----   2.2.2  Running Configure ---
@@ -564,7 +564,7 @@
      recommended that you develop a method to save the hand edited files in a 
      "safe" place outside of the laps directory structure, or by using a 
      revision control system such as CVS.  This strategy would make it easier 
-     to update your implementation of LAPS with the latest 'laps-m-n-o.tar.gz'
+     to update your implementation of LAPS with the latest 'laps-m-n-o.tgz'
      file from FSL, while minimizing the hassle involved with software 
      modifications for your local implementation.
 
@@ -737,14 +737,15 @@
      however, -s, -i, and -d command-line inputs override those environment 
      variables as necessary depending on user needs.  The -t command-line input
      specifies the domain template directory and the script saves the log/lapsprd 
-     history if command line switch '-c' is not used; or, completely 
-     removes $LAPS_DATA_ROOT if '-c' is supplied. The '-w laps' is always
-     required. The window script can be run manually when configuring or 
-     reconfiguring localizations. Window copies the domain template namelists 
-     (partial nest7grid.parms or *.nl's) into a new "static" subdirectory which,
-     in turn, are merged with the full namelists by script localize_domain.pl.
-     Recall, $LAPSINSTALLROOT contains bin/ and etc/ and $LAPS_SRC_ROOT contains
-     the untarred full namelists from the repository.  
+     history if command line switch '-c' is not used; or, completely removes 
+     $LAPS_DATA_ROOT, then does a 'mkdir $LAPS_DATAROOT' if '-c' is supplied. 
+     The '-w laps' is always required. The window script can be run manually 
+     when configuring or reconfiguring localizations. Window copies the domain 
+     template namelists (partial nest7grid.parms or *.nl's) into a new "static" 
+     subdirectory which, in turn, are merged with the full namelists by script 
+     localize_domain.pl. Recall that $LAPSINSTALLROOT contains bin/ and etc/ 
+     while $LAPS_SRC_ROOT contains the untarred full namelists from the 
+     repository.  
 
      In the event that $LAPS_SRC_ROOT does not exist, a data/ subdirectory 
      containing static/ and cdl/ must be available for use by 
@@ -763,7 +764,7 @@
 <pre>
 setenv LAPS_SRC_ROOT /usr/nfs/common/lapb/operational/laps
 setenv LAPSINSTALLROOT /usr/nfs/lapb/operational/laps
-setenv LAPS_DATA_ROOT "any existing LAPS_DATA_ROOT" 
+setenv LAPS_DATA_ROOT "any new or existing LAPS_DATA_ROOT" 
 
 a) window_domain_rt.pl -w laps:   
 
