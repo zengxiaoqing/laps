@@ -2366,15 +2366,16 @@ Inputs: (located in separate NetCDF directories)
             NetCDF CDLs from both FSL-NIMBUS and AWIPS are accepted. 
 
 	Boundary layer 915-MHz profiler wind data in netCDF format
-            NetCDF CDL from FSL-NIMBUS/DD. 
+            (FSL-NIMBUS/DD and AWIPS/LDAD CDLs).
+
+        50-MHz profiler in NetCDF (AWIPS/LDAD CDL). 
 
 	Doppler Radar VADs in NetCDF (FSL-NIMBUS CDL) format
 
-        SODAR data in NetCDF format similar to profiler.
+        SODAR data in NetCDF format (AWIPS/LDAD CDL).
 
 Output: (feeds wind)
-	pro	inter data	wind profile direction (degrees) and
-                                              speed     (meters/sec)  (ASCII)
+	pro	inter data	wind profile direction and speed (ASCII)
 </pre>
 
 Source directory: laps/src/ingest/profiler
