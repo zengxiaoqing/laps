@@ -32,7 +32,7 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
+cdis
 cdis
 cdis
 cdis
@@ -96,7 +96,7 @@ c     i perimeter set
             if(weight_t > 1.e-9) then
                data(i,j) = data(i,j) / weight_t
             else
-               write(6,*) 'error in divide'
+               continue
             endif
             
  22         continue
@@ -146,7 +146,7 @@ c     j perimeter set
             if(weight_t > 1.e-9) then
                data(i,j) = data(i,j) / weight_t
             else
-               write (6,*) 'error in divide'
+               continue
             endif
             
  23         continue
