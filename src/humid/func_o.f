@@ -614,26 +614,27 @@ C     END GPS SECTION
 
 
 
-ccc   ????????????????????????  double check error term
 c     RAOB SECTION (SND)
+
+c     Error term computation revised 4/30/04 db 
+c     now uses a 5% approximation in RH converted to approximate 
+c     SH units
 
       if (cost_snd_istatus == 1) then
          
          do i = 1, cost_kk      ! all laps levels
             
             if (mr_l(i) .ne. 0.0) then
-            max_func_snd = max_func_snd +
-     1           (mr_l(i)-cost_snd_data(i))**2 * 
-     1           cost_snd_wt(i) !weighted squared difference
-     1           / (0.05*mr_l(i))**2
+               max_func_snd = max_func_snd +
+     1              (mr_l(i)-cost_snd_data(i))**2 * 
+     1              cost_snd_wt(i) !weighted squared difference
+     1              / (0.05*mr_l(i))**2
             endif
-
-         enddo
             
+         enddo
+         
       endif
-
-c      max_func_snd = max_func_snd/(0.5**2) ! error in q as 0.5K td error, 5% rh
-
+      
       func = func + max_func_snd 
       if (max_func_snd .ne. 0.0) then
          min_func_snd = min(min_func_snd,max_func_snd)
