@@ -48,7 +48,7 @@ cdis
      1            lat,lon,                                          ! I
      1            NTMIN,NTMAX,                                      ! I
      1            u_laps_fg,v_laps_fg,                              ! O
-     1            grid_laps_u,grid_laps_v,grid_laps_wt,             ! O
+     1            grid_laps_u,grid_laps_v,grid_laps_wt,             ! I/O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            istat_radar_vel,n_vel_grids,                      ! I
      1            grid_ra_vel,                                      ! I
@@ -163,7 +163,7 @@ cdis
 
         call remap_profiler(
      1           ob_pr_u,ob_pr_v                                  ! I
-     1          ,grid_laps_u,grid_laps_v,grid_laps_wt             ! O
+     1          ,grid_laps_u,grid_laps_v,grid_laps_wt             ! I/O
      1          ,lat,lon                                          ! I
      1          ,NX_L,NY_L,NZ_L,MAX_PR                            ! I
      1          ,nlevels_obs_pr,lat_pr,lon_pr                     ! I
@@ -204,12 +204,13 @@ cdis
            return
 	endif
 
-        call rdsfc(i4time_lapswind,heights_3d
-     1            ,N_SFC,maxstns
-     1            ,lat,lon
-     1            ,n_sfc_obs
-     1            ,grid_laps_wt,grid_laps_u,grid_laps_v
-     1            ,NX_L,NY_L,NZ_L,istatus)
+        call rdsfc(i4time_lapswind,heights_3d                            ! I
+     1            ,N_SFC,maxstns                                         ! I
+     1            ,lat,lon,r_missing_data                                ! I
+     1            ,n_sfc_obs                                             ! O
+     1            ,grid_laps_wt,grid_laps_u,grid_laps_v                  ! I/O
+     1            ,NX_L,NY_L,NZ_L                                        ! I
+     1            ,istatus)                                              ! O
         if(istatus .ne. 1)then
             write(6,*)
      1     ' Aborting from get_wind_obs - Error reading sfc obs'
@@ -233,7 +234,8 @@ cdis
      1  ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                         ! I
      1  ,lat,lon
 !    1  ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
-     1  ,grid_laps_wt,grid_laps_u,grid_laps_v,istatus)
+     1  ,grid_laps_wt,grid_laps_u,grid_laps_v                          ! I/O
+     1  ,istatus)                                                      ! O
 
         if(istatus .ne. 1)then
             write(6,*)
@@ -256,7 +258,8 @@ cdis
      1      ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                     ! I
      1      ,lat,lon
 !    1      ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
-     1      ,grid_laps_wt,grid_laps_u,grid_laps_v,istatus)
+     1      ,grid_laps_wt,grid_laps_u,grid_laps_v                      ! I/O
+     1      ,istatus)                                                  ! O
 
             if(istatus .ne. 1)then
                 write(6,*)
@@ -276,7 +279,7 @@ cdis
 
         subroutine remap_profiler(
      1           ob_pr_u,ob_pr_v                                     ! I
-     1          ,grid_laps_u,grid_laps_v,grid_laps_wt                ! O
+     1          ,grid_laps_u,grid_laps_v,grid_laps_wt                ! I/O
      1          ,lat,lon                                             ! I
      1          ,ni,nj,nk,MAX_PR                                     ! I
      1          ,nlevels_obs_pr,lat_pr,lon_pr                        ! I
