@@ -14,7 +14,7 @@ cp $LAPS_SRC_ROOT/src/include/directives.inc .
 
 foreach filename (*.f)
     setenv file `echo $filename | cut -f 1 -d .`
-    setenv nsms `grep -i sms $file.f | wc -l`
+    setenv nsms `grep -i csms $file.f | wc -l`
     echo "$file.f $nsms"
 
 #   Translate with PPP only those files with SMS directives within

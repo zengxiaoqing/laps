@@ -107,6 +107,9 @@ c       1994 Steve Albers
 
 !       directory = ''
 
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+
         var = 'LAT'
         call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
      1                                 ,lat,grid_spacing_m,istatus)
@@ -128,6 +131,13 @@ c       1994 Steve Albers
      1                                  ,topo,grid_spacing_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading AVG (topo) field'
+            return
+        endif
+       
+        call array_minmax(topo,ni,nj,rmin,rmax,r_missing_data)
+        if(rmin .lt. -1000. .or. rmax .gt. 9000.)then
+            write(6,*)' Error, topo range out of bounds',rmin,max
+            istatus = 0
             return
         endif
 
@@ -1317,3 +1327,21 @@ c
 
       return
       end
+
+
+       subroutine array_minmax(a,ni,nj,rmin,rmax,r_missing_data)
+
+       real*4 a(ni,nj)
+
+       rmin =  abs(r_missing_data)
+       rmax = -abs(r_missing_data)
+
+       do i = 1,ni
+       do j = 1,nj
+           rmin = min(rmin,a(i,j))
+           rmax = max(rmax,a(i,j))
+       enddo ! j
+       enddo ! i
+
+       return
+       end
