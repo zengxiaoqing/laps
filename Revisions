@@ -1,0 +1,454 @@
+
+file(s): lib/normalize.f
+changed by: Steve Albers
+date:  6-25-1997 2300 UTC
+changes: Improved error handling and comments for 'iskip_bilin' parameter.
+
+file(s): lib/lapsgrid.f
+         lib/doit
+         static/laps_static_parameters.inc
+changed by: Steve Albers
+date:  6-28-1997 0130 UTC
+changes: lapsgrid.f/get_laps_cycle_time - mods to obtain LAPS_DOMAIN_NAME 
+                    parameter from include file 'laps_static_parameter.inc'
+         lapsgrid.f/get_laps_dimensions - added better error handling and 
+                    "recovery" call to 'get_laps_config'
+         lapsgrid.f/get_grid_dim_xy - added better error handling and 
+                    "recovery" call to 'get_laps_config'
+         lapsgrid.f/get_topo_parms - added better error handling and 
+                    "recovery" call to 'get_laps_config'
+         lib/doit - added soft link to laps_static_parameters.inc
+         laps_static_parameters.inc - removed some of Linda's parameters
+
+file(s): source/accum/{laps_accum,laps_accum_sub}.f
+         source/accum/doit
+changed by: Ken Dritz / Steve Albers
+date:  6-30-1997 1900 UTC
+changes: Made resizable by adding calls to the main program in laps_accum.f to
+         get the grid dimensions, which are then passed to subroutine
+         laps_accum in laps_accum_sub.f as NX_L, NY_L, and NZ_L.  In the
+         latter, non-dummy arrays dimensioned by NX_L, NY_L, and NZ_L
+         (previously obtained statically from 'lapsparms.for') thus become
+         automatic arrays.  Changed include of 'lapsparms.for' to
+         'laps_static_parameters.inc' in subroutine laps_accum.
+
+file(s): ./humid/analq.f
+changed by: Dan Birkenheuer
+date:  7/1/97 16:00 ut
+changes: Enabled automatic dynamic allocation in this module.  It is now
+         independent from lapsparms.for.
+
+file(s): source/cloud/insertradar.f
+         source/cloud/laps_cloud_sub.f
+         source/deriv/insertradar.f
+         source/deriv/laps_cloud_sub.f
+         lib/get_systime.f
+         lib/Makefile
+changed by: Steve Albers
+date:  7-1-1997 2040 UTC
+changes: Removed include of 'lapsparms.for' in subroutine 'insert_radar'. 
+         Variable 'ref_base' is now passed into subroutine 'insert_radar'.
+         New library routine (at least for 'oldlaps') 'get_systime' to allow
+         better interchangeability with 'newlaps' software. The 'newlaps'
+         version of 'get_systime' will need to be synced with the 'oldlaps'
+         version.
+
+file(s): source/temp/puttmpanal_drv.f
+changed by: Ken Dritz / Steve Albers
+date:  7-2-1997 1800 UTC
+changes: Made resizable by adding calls to the main program in puttmpanal_drv.f
+         to get the grid dimensions, which are then passed to subroutine
+         laps_temp in the same file (as NX_L, NY_L, NZ_L).  In the latter,
+         non-dummy arrays dimensioned by NX_L, NY_L, and NZ_L (previously
+         obtained statically from 'lapsparms.for') thus become automatic
+         arrays.  Added include of 'laps_static_paramters.inc' to the main
+         program, and changed include of 'lapsparms.for' to
+         'laps_static_parameters.inc' in subroutine laps_temp.
+         Used new 'get_systime' routine call.
+
+file(s): source/temp/puttmpanal.f
+changed by: Ken Dritz
+date:  7-2-1997 1800 UTC
+changes: Made resizable by changing NZ_L_MAX to nk in declarations of theta and
+         height, thus making those arrays automatic.  Removed include of
+         'lapsparms.for'.
+
+file(s): source/temp/insert_tsnd.f
+changed by: Ken Dritz
+date:  7-2-1997 1800 UTC
+changes: Made resizable by changing NZ_L_MAX to nk in subroutines insert_tsnd,
+         analyze_tsnd, and barnes_univariate_shell, thus making some arrays
+         automatic; by calling get_r_missing_data in insert_tsnd to obtain the
+         value of r_missing_data, and by passing the latter from insert_tsnd to
+         read_tsnd and analyze_tsnd, and from analyze_tsnd to
+         barnes_univariate_shell; and by removing include of 'lapsparms.for' in
+         insert_tsnd, analyze_tsnd, and barnes_univariate_shell.
+
+file(s): source/temp/read_tsnd.f
+changed by: Ken Dritz
+date:  7-2-1997 1800 UTC
+changes: Made resizable by changing NZ_L_MAX to kmax in declaration of ob_pr_t,
+         thus making this array automatic.  Added r_missing_data as dummy
+         argument (passed by insert_tsnd).  Removed include of 'lapsparms.for'.
+
+file(s): source/wind/main.f
+changed by: Ken Dritz / Steve Albers (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Made resizable by changing program laps_wind into subroutine
+         laps_wind_sub and creating a new program laps_wind.  The latter calls
+         get_laps_config, get_grid_dim_xy, and get_laps_dimensions to get the
+         values of NX_L, NY_L, and NZ_L, which are passed to laps_wind_sub.
+         The arrays declared there, with these bounds, thus become automatic
+         arrays.  Removed include of 'lapsparms.for' from subroutine
+         laps_wind_sub.  Pass NX_L, NY_L, and NZ_L from laps_wind_sub to
+         lapswind_anal (in main_sub.f).  In laps_wind_sub, added calls to
+         get_max_radars, get_meso_sao_pirep, get_r_missing_data, and
+         get_i2_missing_data to obtain the values of max_radars, N_MESO, N_SAO,
+         N_PIREP, r_missing_data, and i2_missing_data, which are also passed to
+         lapswind_anal.  Max_radars and r_missing_data are passed to
+         put_derived_wind_prods as well, and NX_L, NY_L, and NZ_L are passed a
+         second time to put_derived_wind_prods (so that they are available
+         there under those names as well as under the names imax, jmax, and
+         kmax, ALL of which are used as dimensions of arrays that are now
+         becoming automatic arrays in put_derived_wind_prods).
+
+file(s): source/wind/main_sub.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Made resizable by adding NX_L, NY_L, NZ_L, max_radars, N_MESO, N_SAO,
+         and N_PIREP as dummy arguments, thus making arrays declared with those
+         dimensions (including in 'main_sub.inc') automatic.  Changed include
+         of 'lapsparms.for' to include of 'laps_static_parameters.inc'.
+         Removed NZ_L_MAX from the argument list in the call to get_fg_wind,
+         where it is not actually used.  Changed RETURN statement to STOP
+         statement in handling of istatus .ne. 1 after return from call to
+         get_domain_laps (bug fix).  Removed PARAMETER declarations of NPTS and
+         K_3D (defined in terms of NX_L, NY_L, NZ_L), which were unused.  Also
+         added r_missing_data and i2_missing_data as dummy arguments.  Pass
+         N_MESO twice in the call to rdmeso (once to dummy argument N_MESO and
+         once to maxstns, both newly added).  Pass N_SAO twice in the call to
+         rdsao (once to dummy argument N_SAO and once to maxstns, both newly
+         added).  Pass N_PIREP in the call to rdpirep.  Pass NX_L and NY_L a
+         second time in the call to vert_wind (once to ni,nj and once to newly
+         added dummy arguments NX_L_MAX and NY_L_MAX).  Pass r_missing_data to
+         vert_wind.
+
+file(s): source/wind/put_derived_wind_prods.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Made resizable by adding NX_L, NY_L, NZ_L and max_radars as dummy
+         arguments, thus making arrays declared with those dimensions
+         automatic.  Also added r_missing_data as dummy argument.  Changed
+         include of 'lapsparms.for' into include of
+         'laps_static_parameters.inc'.
+
+file(s): source/wind/get_fg_wind.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Removed NZ_L_MAX from the dummy argument list (it is unused).
+
+file(s): source/wind/get_wind_obs.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Made resizable by adding NX_L, NY_L, NZ_L as dummy arguments in
+         subroutine get_wind_3d_obs, thus making arrays declared with those
+         dimensions (including in 'get_wind_obs.inc') automatic.  Also added
+         r_missing_data and i2_missing_data as dummy arguments of
+         get_wind_3d_obs.
+
+file(s): source/wind/rdmeso.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Made resizable by adding N_MESO and maxstns as dummy arguments, thus
+         making arrays dimensioned therewith automatic.
+
+file(s): source/wind/rdsao.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Made resizable by adding N_SAO and maxstns as dummy arguments, thus
+         making arrays dimensioned therewith automatic.
+
+file(s): source/wind/rdpirep.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Made resizable by adding N_PIREP as dummy argument, thus making arrays
+         dimensioned therewith automatic.
+
+file(s): source/wind/vertwind.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-7-1997 2100 UTC
+changes: Made resizable by adding NX_L_MAX and NY_L_MAX as dummy arguments,
+         thus making arrays dimensioned by them automatic.  Also added
+         r_missing_data as dummy argument.  Removed include of
+         'lapsparms.for'.
+
+file(s): source/wind/[weight_vertical.f, Makefile]
+changed by: Steve Albers
+date:  7-7-1997 2100 UTC
+changes: Filename deleted from Makefile, no longer needed.
+
+file(s): source/accum/laps_accum.f
+changed by: Steve Albers
+date:  7-8-1997 2300 UTC
+changes: Changed erroneous 'return' statements to 'go to 999'. Now uses
+         a call to 'get_systime'.
+
+file(s): source/ingest/rass/ingest_lrs.f
+changed by: Ken Dritz / Steve Albers
+date:  7-9-1997 1840 UTC
+changes: Made resizable by calling get_grid_dim_xy to get the values of
+         NX_L and NY_L and by passing them to ingest_lrs (in file
+         ingest_sub_lrs.f).
+
+file(s): source/ingest/rass/ingest_sub_lrs.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-9-1997 1840 UTC
+changes: Made resizable by adding NX_L, NY_L as dummy arguments in subroutine
+         ingest_lrs.  Removed include of 'lapsparms.for'. Added call to 
+         get_r_missing_data.
+
+file(s): source/ingest/rass/blp/ingest_lrs.f
+changed by: Ken Dritz / Steve Albers
+date:  7-9-1997 1840 UTC
+changes: Made resizable by calling get_grid_dim_xy to get the values of
+         NX_L and NY_L and by passing them to ingest_blplrs (in file
+         ingest_sub_blplrs.f).
+
+file(s): source/ingest/rass/blp/ingest_sub_blplrs.
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-9-1997 1840 UTC
+changes: Made resizable by adding NX_L, NY_L as dummy arguments in subroutine
+         ingest_lrs.  Removed include of 'lapsparms.for'. Added call to 
+         get_r_missing_data.
+
+file(s): source/ingest/profiler/ingest_sub_pro.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-14-1997 1800 UTC
+changes: Made resizable by adding NX_L, NY_L as dummy arguments in subroutine
+         ingest_pro.  Changed include of 'lapsparms.for' to include of
+         'laps_static_parameters.inc'.  Added call to get_r_missing_data.
+
+file(s): source/ingest/profiler/ingest_pro.f
+changed by: Ken Dritz / Steve Albers
+date:  7-14-1997 1800 UTC
+changes: Made resizable by calling get_grid_dim_xy to get the values of
+         NX_L and NY_L and by passing them to ingest_pro (in file
+         ingest_sub_pro.f).
+
+file(s): source/ingest/profiler/blp/ingest_pro.f
+changed by: Ken Dritz / Steve Albers
+date:  7-14-1997 1800 UTC
+changes: Made resizable by calling get_grid_dim_xy to get the values of
+         NX_L and NY_L and by passing them to ingest_blppro (in file
+         ingest_sub_blppro.f).
+
+file(s): source/ingest/profiler/blp/ingest_sub_blppro.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-14-1997 1800 UTC
+changes: Made resizable by adding NX_L, NY_L as dummy arguments in subroutine
+         ingest_blppro.  Changed include of 'lapsparms.for' to include of
+         'laps_static_parameters.inc'.  Added call to get_r_missing_data.
+
+file(s): source/grid/model/gridgen_model.f
+         source/grid/model/put_laps_static.f
+changed by: Steve Albers / Jim Edwards
+date:  7-15-1997 1900 UTC
+changes: Started with partially dynamicized version from 'newlaps'. This also
+         had additional 'get_directory' calls. Completed dynamizing, both
+         for grid dimensions and other parameters available at runtime.
+
+file(s): source/grid/model/doit_compile
+         nest7grid/static/doit_run
+         install_laps
+changed by: Steve Albers
+date:  7-15-1997 1900 UTC
+changes: Made changes associated with moving the creation of files from
+         the 'static/model' directory to the 'static' directory.
+
+file(s): source/ingest/pireps/ingest_pireps.f
+changed by: Ken Dritz / Steve Albers
+date:  7-18-1997 2000 UTC
+changes: Made the pireps ingest resizable by (among other things) adding a call
+         to get_grid_dim_xy to get the values of NX_L and NY_L, which are then
+         passed to get_pirep_data in file ingest_pireps_sub.f. Also fixed some
+         things to make the handling of i4time within the routine more 
+         straightforward.
+
+file(s): source/ingest/pireps/ingest_pireps_sub.f
+changed by: Ken Dritz / Steve Albers
+date:  7-18-1997 2000 UTC
+changes: Made resizable by adding NX_L, NY_L as dummy arguments; changing
+         LAPS_DOMAIN_FILE to 'nest7grid'; and removing the include of
+         lapsparms.for.
+
+file(s): lib/libnav/write_table.f
+changed by: John Smart
+date:  7-18-1997 2000 UTC
+changes: Added routine write_table.f.  This routine is used by several
+	others and is appropriately placed in this subdirectory. Also,
+	"newlaps" library has this routine in its "nav" library.
+
+file(s): static/nest7grid.parms
+changed by: Steve Albers
+date:  7-21-97 1900 UTC
+changes: Appended new runtime parameters: c8_project_common, standard_latitude2
+
+file(s): include/lapsparms.cmn
+changed by: Steve Albers
+date:  7-21-97 1900 UTC
+changes: Added declarations of runtime parameters: c8_project_common, 
+         standard_latitude2
+
+file(s): lib/lapsgrid.f
+changed by: Steve Albers
+date:  7-21-97 1900 UTC
+changes: Added reads in 'get_laps_config' for runtime parameters: 
+         c8_project_common, standard_latitude2.
+         Added access routines: get_maxstns, get_standard_latitudes, 
+         get_c8_project.
+
+file(s): source/ingest/acars/ingest_acars.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-22-97 1830 UTC
+changes: Made the acars ingest resizable by (among other things) adding a call
+         to get_grid_dim_xy to get the values of NX_L and NY_L, which are then
+         passed to get_acars_data in file ingest_acars_sub.f.
+
+file(s): source/ingest/pireps/ingest_acars_sub.f
+changed by: Ken Dritz / Steve Albers
+date:  7-22-97 1830 UTC
+changes: Made resizable by adding NX_L, NY_L as dummy arguments; changing
+         LAPS_DOMAIN_FILE to 'nest7grid'; and removing the include of
+         lapsparms.for.
+
+file(s): source/wind/*.f
+changed by: Steve Albers
+date:  7-23-97 1800 UTC
+changes: Removed references to 'laps_static_parameters.inc'. Took some 
+         unnecessary arrays out of argument lists. This saves memory in light
+         of using dynamic memory allocation. Added in call to 'get_maxstns'.
+
+file(s): source/humid/ghbry.f
+changed by: Dan Birkenheuer
+date:  7-23-97 2000 UTC
+changes: Modifed for dynamic memory allocation.  Removed dependency on 
+         lapsparms.for. 
+
+file(s): source/humid/func.f
+changed by: Dan Birkenheuer
+date:  7-25-97 1800 UTC
+changes: Fixed bug.
+
+file(s): source/humid/goes_sbn.f
+changed by: Dan Birkenheuer
+date:  7-25-97 1900 UTC
+changes: Fixed bugs and cleaned up code.
+
+file(s): lib/latlon_to_rlaps.f
+changed by: Steve Albers
+date:  7-25-97 2030 UTC
+changes: Changes to include secant lambert and mercator projections. 
+         Redesign of routines to make them more flexible.
+
+file(s): lib/prof_cdf.f
+         lib/prof_cdf_common.inc
+changed by: Steve Albers
+date:  7-25-97 2030 UTC
+changes: Rename of include file to be consistent with newlaps.
+
+file(s): source/wind/*.f
+changed by: Steve Albers
+date:  7-28-97 1900 UTC
+changes: Removed 'varpass1' array from argument list for passing into
+         subroutine 'laps_anl', to save memory. Also some bug fixes for
+         Solaris/f90.
+
+file(s): source/humid/glsp.f
+changed by: Dan Birkenheuer
+date:  7-29-97 2000 UTC
+changes: Modifed for dynamic memory allocation.  Removed dependency on 
+         lapsparms.for. 
+
+file(s): source/ingest/profiler/ingest_sub_pro.f
+changed by: Steve Albers
+date:  7-30-97 1900 UTC
+changes: Now determines data format from 'c8_project' runtime parameter.
+         New functionality added so that we can experiment with the 6 minute 
+         wind data once it becomes available.
+
+file(s): source/ingest/raob/ingest_raob.f
+changed by: Ken Dritz / Steve Albers
+date:  7-31-97 2030 UTC
+changes: Made the raob ingest resizable by (among other things) adding a call
+         to get_grid_dim_xy to get the values of NX_L and NY_L, which are then
+         passed to get_raob_data and get_raob_data_af in files
+         ingest_raob_sub.f and ingest_raob_sub_af.f, respectively.
+         Added call to get_systime.
+
+file(s): source/ingest/raob/ingest_raob_sub.f    
+         source/ingest/raob/ingest_raob_sub_af.f 
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  7-31-97 2030 UTC
+changes: Made resizable by adding NX_L, NY_L as dummy arguments; changing
+         LAPS_DOMAIN_FILE to 'nest7grid'; adding a call to get_r_missing_data;
+         removing the include of lapsparms.for; and removing an obsolescent
+         comment about non-automatic declarations (they are now automatic).
+
+file(s): source/grid/model/gridgen_model.f
+         source/grid/model/map_proj.f
+         source/grid/model/Makefile
+changed by: Steve Albers
+date:  8-1-97 1830 UTC
+changes: Subroutines in gridgen_model.f rearranged and some are split off into
+         a new file (map_proj.f). Makefile is accordingly modified. This lays
+         some groundwork for future mods with added projections. The output
+         of gridgen_model.exe should be unaffected by this change.
+         
+         Some new subroutines:
+             latlon_to_xy     - combines getops and pstoxy
+             xy_to_latlon     - combines xytops and pstoge
+             xy_to_uv         - not used yet
+             uv_to_xy         - not used yet
+             latlon_to_xy_exp - not used yet 
+
+file(s): source/humid/glst.f
+changed by: Dan Birkenheuer
+date:  8-1-97 2000 UTC
+changes: Modifed for dynamic memory allocation.  Removed dependency on 
+         lapsparms.for. 
+
+file(s): lib/lapsgrid.f
+changed by: Steve Albers
+date:  8-4-97 2100 UTC
+changes: New subroutine 'get_c6_maproj' added.
+
+file(s): source/raob/ingest_raob.f
+changed by: Steve Albers
+date:  8-5-97 2100 UTC
+changes: Now automatically determines whether we are using NIMBUS or AFGWC
+         formats by keying on the filenames. Output files now always go in
+         'snd' directory, soft link to 'snd_af' directory no longer needed.
+         Now reports an error if it cannot open the output 'snd' file.
+
+file(s): source/cloud/laps_cloud.f
+         source/cloud/laps_cloud_sub.f
+         source/cloud/insertsao.f
+         source/cloud/barnes_r5.f
+         source/cloud/insertsat.f
+         source/cloud/array_plot.f
+         source/cloud/rfill_evap.f
+changed by: Ken Dritz (tested and integrated by Steve Albers)
+date:  8-6-97 1800 UTC
+changes: Made resizable by changes noted in comments at the top of each source
+         file. All parameters formerly obtained from 'lapsparms.for' are now
+         obtained at runtime. Analogous changes were made to the files
+         in 'source/deriv'.
+
+file(s): src/lib/lapsgrid.f
+changed by: Steve Albers
+date:  8-11-97 1900 UTC
+changes: Uncommented the line in 'get_laps_config' that tests for 
+         'iflag_lapsparms_cmn'. This is more efficient if 'get_laps_config'
+         is called multiple times.
+         Added new parameter access subroutine 'get_c80_description'.
+
