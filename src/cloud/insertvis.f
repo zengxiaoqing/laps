@@ -181,11 +181,17 @@ cdis
         end
 
         subroutine insert_vis(i4time,clouds_3d,cld_hts
-     1      ,topo,cloud_frac_vis_a,albedo,ihist_alb
-     1      ,ni,nj,nk,r_missing_data
-     1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
+     1      ,topo,cloud_frac_vis_a,albedo,ihist_alb                   ! I
+     1      ,istat_39_a                                               ! I
+     1      ,ni,nj,nk,r_missing_data                                  ! I
+     1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz                ! I
      1      ,istat_radar,radar_ref_3d,klaps,ref_base
      1      ,dbz_max_2d,surface_sao_buffer,istatus)
+
+!       Steve Albers 1999 Added 3.9u cloud clearing step in NULL Mode
+!                         This can be turned on if desired or another cloud
+!                         mask input(s) can be used for cloud clearing,
+!                         especially if it applies throughout the column.
 
         integer*4 ihist_alb(-10:20)
         integer*4 ihist_frac_sat(-10:20)
@@ -195,6 +201,7 @@ cdis
         integer*4 ihist_frac_in_sat(-10:20,-10:20)
         integer*4 ihist_colmaxin_sat(-10:20,-10:20)
         integer*4 ihist_colmaxout_sat(-10:20,-10:20)
+        integer*4 istat_39_a(ni,nj)
         real*4 albedo(ni,nj)
         real*4 topo(ni,nj)
         real*4 dbz_max_2d(ni,nj)
@@ -207,7 +214,7 @@ cdis
         integer*4 mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
 
-        write(6,*)' Insert VIS data routine'
+        write(6,*)' subroutine insert_vis...'
 
 !       Initialize histograms
         do i = -10,20
@@ -225,7 +232,9 @@ cdis
         enddo ! i
 
         n_missing_albedo = 0
+        n_missing_uprb = 0
         n_vis_mod = 0
+        n_39_mod = 0
 
         diffin_sum  = 0.
         diffout_sum = 0.
@@ -237,19 +246,31 @@ cdis
         do j = 1,nj
 
           if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then
+              cloud_frac_uprb = cloud_frac_vis_a(i,j)
+          else
+              n_missing_albedo =  n_missing_albedo + 1
+  
+              if(istat_39_a(i,j) .eq. -1)then
+!                 cloud_frac_uprb = 0.
+                  cloud_frac_uprb = r_missing_data
+              else
+                  cloud_frac_uprb = r_missing_data
+              endif
 
-            cloud_frac_vis = cloud_frac_vis_a(i,j)
+          endif
 
-            iscr_frac_sat = nint(cloud_frac_vis*10.)
+          if(cloud_frac_uprb .ne. r_missing_data)then
+
+            iscr_frac_sat = nint(cloud_frac_uprb*10.)
             iscr_frac_sat = min(max(iscr_frac_sat,-10),20)
             ihist_frac_sat(iscr_frac_sat) = 
      1      ihist_frac_sat(iscr_frac_sat) + 1
 
 !           Make sure satellite cloud fraction is between 0 and 1
-            if(cloud_frac_vis .le. 0.0)cloud_frac_vis = 0.0
-            if(cloud_frac_vis .ge. 1.0)cloud_frac_vis = 1.0
+            if(cloud_frac_uprb .le. 0.0)cloud_frac_uprb = 0.0
+            if(cloud_frac_uprb .ge. 1.0)cloud_frac_uprb = 1.0
 
-            iscr_frac_sat = nint(cloud_frac_vis*10.)
+            iscr_frac_sat = nint(cloud_frac_uprb*10.)
 
             colmaxin = 0.
             colmaxout = 0.
@@ -258,7 +279,15 @@ cdis
             iset_vis = 0
 
             do k = 1,nk
-                cloud_frac_in = min(clouds_3d(i,j,k),1.0)
+                if(clouds_3d(i,j,k) .gt. 1.0)then
+!                   cloud_frac_in = 1.0
+                    cloud_frac_in = clouds_3d(i,j,k)
+                    write(6,*)' Warning, clouds_3d > 1'
+     1                       ,i,j,k,clouds_3d(i,j,k)
+!                   stop
+                else
+                    cloud_frac_in = clouds_3d(i,j,k)
+                endif
 
 !               Modify the cloud field with the vis input - allow .3 vis err?
                 if(cld_hts(k) .gt. topo(i,j) + surface_sao_buffer)then
@@ -267,9 +296,9 @@ cdis
                     cushion = 0.0
                 endif
 
-!               if(cloud_frac_in - cloud_frac_vis .gt. cushion)then
-                if(clouds_3d(i,j,k) - cloud_frac_vis .gt. cushion)then
-                   cloud_frac_out = cloud_frac_vis
+!               if(cloud_frac_in - cloud_frac_uprb .gt. cushion)then
+                if(clouds_3d(i,j,k) - cloud_frac_uprb .gt. cushion)then     
+                   cloud_frac_out = cloud_frac_uprb
 
 !                  Determine if we need to reconcile VIS with radar
                    if(      istat_radar .eq. 1
@@ -293,7 +322,11 @@ cdis
                    endif
 
                    if(cloud_frac_in - cloud_frac_out .gt. .01)then
-                       n_vis_mod = n_vis_mod + 1
+                       if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then
+                           n_vis_mod = n_vis_mod + 1
+                       else
+                           n_39_mod = n_39_mod + 1
+                       endif
                    endif
 
                    clouds_3d(i,j,k) = cloud_frac_out   ! Modify the output
@@ -328,7 +361,7 @@ cdis
 
                 if(colmaxout .le. vis_radar_thresh_cvr)then
                     write(6,1)i,j,colmaxout,dbz_max_2d(i,j)
-     1                       ,cloud_frac_vis
+     1                       ,cloud_frac_uprb
 1                   format(
      1              ' VIS_RDR - Blank out radar: cvr/dbz/vis      < '       
      1                    ,2i4,f8.2,f8.1,f8.2)
@@ -338,7 +371,7 @@ cdis
                      ! May not show up in comparisons
 
                     write(6,2)i,j,colmaxout,dbz_max_2d(i,j)
-     1                       ,cloud_frac_vis
+     1                       ,cloud_frac_uprb
 2                   format(
      1              ' VIS_RDR - Blank out radar: cvr/dbz/vis-s    < '
      1                    ,2i4,f8.2,f8.1,f8.2)
@@ -357,7 +390,7 @@ cdis
 
                 if(colmaxout .le. vis_radar_thresh_cvr)then
                     write(6,3)i,j,colmaxout,dbz_max_2d(i,j)
-     1                       ,cloud_frac_vis,vis_radar_thresh_cvr
+     1                       ,cloud_frac_uprb,vis_radar_thresh_cvr
 3                   format(
      1              ' VIS_RDR - Reset vis:       cvr/dbz/vis/thr* > '
      1                    ,2i4,f8.2,f8.1,2f8.2)
@@ -368,7 +401,7 @@ cdis
                      ! Is resetting the VIS perhaps not necessary?
 
                     write(6,4)i,j,colmaxout,dbz_max_2d(i,j)
-     1                       ,cloud_frac_vis,vis_radar_thresh_cvr
+     1                       ,cloud_frac_uprb,vis_radar_thresh_cvr
 4                   format(
      1              ' VIS_RDR - Reset vis:       cvr/dbz/vis/thr-s> '
      1                    ,2i4,f8.2,f8.1,2f8.2)
@@ -392,24 +425,26 @@ cdis
             ihist_colmaxout_sat(iscr_colmaxout,iscr_frac_sat)
      1    = ihist_colmaxout_sat(iscr_colmaxout,iscr_frac_sat) + 1
 
-            diffin  = colmaxin  - cloud_frac_vis
-            diffout = colmaxout - cloud_frac_vis
+            diffin  = colmaxin  - cloud_frac_uprb
+            diffout = colmaxout - cloud_frac_uprb
             diffin_sum  = diffin_sum  + diffin
             diffout_sum = diffout_sum + diffout
             diffin_sumsq  = diffin_sumsq  + diffin**2
             diffout_sumsq = diffout_sumsq + diffout**2
 
-          else
-            n_missing_albedo =  n_missing_albedo + 1
+          else ! missing upper bound data
+            n_missing_uprb =  n_missing_uprb + 1
 
-          endif
+          endif ! if upper bound value is missing
 
         enddo ! i
         enddo ! j
 
         write(6,*)
         write(6,*)' N_MISSING_ALBEDO = ',n_missing_albedo
+        write(6,*)' N_MISSING_UPRB = ',n_missing_uprb
         write(6,*)' N_VIS_MOD = ',n_vis_mod
+        write(6,*)' N_39_MOD = ',n_39_mod
         write(6,*)
 
         write(6,*)'              HISTOGRAMS'
@@ -458,7 +493,7 @@ cdis
             write(6,21)(ihist_colmaxout_sat(i,j),j=0,10)
         enddo ! i
 
-        r_present = ni*nj - n_missing_albedo
+        r_present = ni*nj - n_missing_uprb
         if(r_present .gt. 0.)then ! write stats
             write(6,31)diffin_sum/r_present,sqrt(diffin_sumsq/r_present)
 31          format(' VIS STATS: Mean/RMS input residual  = ',2f8.3)

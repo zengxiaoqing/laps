@@ -825,9 +825,10 @@ C INSERT RADAR DATA
 C       INSERT VISIBLE SATELLITE DATA
         if(istat_vis .eq. 1)then
             call insert_vis(i4time,clouds_3d,cld_hts
-     1        ,topo,cloud_frac_vis_a,albedo,ihist_alb
-     1        ,NX_L,NY_L,KCLOUD,r_missing_data
-     1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
+     1        ,topo,cloud_frac_vis_a,albedo,ihist_alb                 ! I
+     1        ,istat_39_a                                             ! I
+     1        ,NX_L,NY_L,KCLOUD,r_missing_data                        ! I
+     1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz              ! I
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base
      1        ,dbz_max_2d,surface_sao_buffer,istatus)
         endif
