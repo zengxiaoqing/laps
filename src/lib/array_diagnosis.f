@@ -103,12 +103,14 @@ c
 c
 c------------------------------------------------------------------
 c
-        subroutine get_mxmn_2d(nx,ny,array_2d,rmx2d,rmn2d)
+        subroutine get_mxmn_2d(nx,ny,array_2d,rmx2d,rmn2d
+     &,imx,jmx,imn,jmn)
 
         implicit none
         integer  nx,ny
         real     array_2d(nx,ny)
         integer  i,j,istatus
+        integer  imx,jmx,imn,jmn
         real     rmx2d,rmn2d
         real     r_missing_data
 
@@ -122,8 +124,16 @@ c
         rmn2d=      r_missing_data
         do j=1,ny
         do i=1,nx
-           rmx2d=max(rmx2d,array_2d(i,j))
-           rmn2d=min(rmn2d,array_2d(i,j))
+           if(array_2d(i,j).gt.rmx2d)then
+              rmx2d=array_2d(i,j)
+              imx=i
+              jmx=j
+           endif
+           if(array_2d(i,j).lt.rmn2d)then
+              rmn2d=array_2d(i,j)
+              imn=i
+              jmn=j
+           endif
         enddo
         enddo
         return
