@@ -1,4 +1,6 @@
 
+      subroutine ingest_vad(istatus)
+
 !     Steve Albers      Dec-1997        
 
 !     Input file 
@@ -28,7 +30,8 @@
           write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
       else
           write(6,*)' Error getting laps_cycle_time'
-          stop
+          istatus = 0
+          return
       endif
 
       iopen = 0
@@ -41,7 +44,8 @@
           write(6,*)'dir_in = ',dir_in
       else
           write(6,*)' Error getting dir_in'
-          stop   
+          istatus = 0
+          return
       endif
 
       call s_len(dir_in,len_dir_in)
@@ -74,7 +78,7 @@
                   ext = 'pro' ! 'vad'
                   call open_lapsprd_file_append(2,i4time_sys,ext(1:3)
      1                                         ,istatus)
-                  if(istatus .ne. 1)stop
+                  if(istatus .ne. 1)return
               endif
 
 !             Read from the NetCDF pirep file and write to the opened PIN file
@@ -88,8 +92,10 @@
 
  999  continue
 
-      write(6,*)' End of vad ingest program'
+      write(6,*)' End of ingest_vad subroutine'
 
+      istatus = 1
+      return
       end
  
  

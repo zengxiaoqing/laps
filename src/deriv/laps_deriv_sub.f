@@ -316,7 +316,7 @@ cdis
         real*4 r_cld_type_2d(NX_L,NY_L)
 
         character*40 c_vars_req
-        character*100 c_values_req
+        character*180 c_values_req
 
         character*3 lso_ext
         data lso_ext /'lso'/

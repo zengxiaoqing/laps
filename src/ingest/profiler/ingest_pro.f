@@ -60,6 +60,11 @@ cdis
         call ingest_blppro(i4time,NX_L,NY_L,j_status)
         write(6,*)' Return from BLP (NIMBUS) profiler ingest'
 
+        write(6,*)
+        write(6,*)' Running VAD (NIMBUS) ingest'
+        call ingest_vad(istatus)
+        write(6,*)' Return from VAD (NIMBUS) ingest'
+
  999    continue
 
         end

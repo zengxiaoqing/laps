@@ -96,7 +96,7 @@ C
         character*31    ext
 
         character*40 c_vars_req
-        character*100 c_values_req
+        character*180 c_values_req
 
         character*9 a9_timeObs
         double precision timeObs

@@ -19,7 +19,9 @@ EXE = ingest_pro.exe
 
 SRC=ingest_pro.f \
     ingest_sub_pro.f \
-    ingest_sub_blppro.f
+    ingest_sub_blppro.f \
+    ingest_vad.f \
+    ingest_vad_sub.f
 
 all: exe
 

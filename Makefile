@@ -41,7 +41,6 @@ EXEDIRS = src/accum \
           src/ingest/profiler \
           src/ingest/radar/ingest_rrv \
           src/ingest/radar/remap \
-          src/ingest/radar/vad \
           src/ingest/radar/wsiremap/ln3 \
           src/ingest/radar/wsiremap/vrc \
           src/ingest/raob \

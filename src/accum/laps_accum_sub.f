@@ -89,7 +89,7 @@ c       character*80 c80_domain_file
         integer j_status(20),iprod_number(20)
 
         character*40 c_vars_req
-        character*100 c_values_req
+        character*180 c_values_req
 
         ISTAT = INIT_TIMER()
 

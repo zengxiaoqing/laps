@@ -38,7 +38,7 @@ my $initial_time = time();
 my @LAPS_EXE = qw(lga.exe obs_driver.x sfc_qc.exe
                   ingest_raob.exe 
                   ingest_cloud_drift.exe ingest_pireps.exe ingest_acars.exe 
-                  ingest_pro.exe ingest_vad.exe
+                  ingest_pro.exe
 		  wind.exe 
                   ingest_lrs.exe lvd_sat_ingest.exe 
                   laps_sfc.x temp.exe 
