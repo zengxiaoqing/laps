@@ -192,9 +192,6 @@ c
 
       goto 1000
 
-997   write(6,*)'Error get_static_info r_msng_sat_flag'
-      goto 1000
-
 998   write(6,*)'Not using prev image to fill'
 
 1000  return
