@@ -70,6 +70,8 @@ c
 c
 c now loop through past 48 hours, looking only at csc files
 c
+        rmxlcv=0.0
+        rmnlcv=100.
         icsc=0
         ncycle_times=48*int(3600./float(laps_cycle_time))
         do itime=1,ncycle_times
@@ -95,6 +97,8 @@ c
                 nrpts=nrpts+1
                 csctot(i,j)=0.0
              endif
+             rmxlcv=max(lcv(i,j),rmxlcv)
+             rmnlcv=min(lcv(i,j),rmnlcb)
            enddo
            enddo
            nmpts=(imax*jmax)-nspts-nrpts
@@ -171,7 +175,8 @@ c
            IF (ISTATUS .NE. 1)goto 51
            do j=1,jmax
            do i=1,imax
-              snow_total(i,j)=snow_total(i,j)+snow_accum(i,j)
+              snow_total(i,j)=snow_total(i,j)
+     & +(snow_accum(i,j)*(float(itime)/float(ncycle_times)))
            enddo
            enddo
  51        continue
@@ -187,6 +192,12 @@ c   if snowfall total between 1 and 2cm, then ramp snow cover 0.5 to 1.
             if(snow_total(i,j) .ge. 0.02)cscnew(i,j)=1.0
             if((snow_total(i,j).ge.0.01).and.(snow_total(i,j).lt.0.02))
      1         cscnew(i,j)=snow_total(i,j)/0.02
+
+c           if(snow_total(i,j).ge.0.02.and.cscnew(i,j).gt.0.25)
+c    1cscnew(i,j)=1.0
+c           if((snow_total(i,j).ge.0.01).and.(snow_total(i,j).lt.0.02))
+c    1cscnew(i,j)=snow_total(i,j)/0.02
+
            enddo
            enddo     
 c
