@@ -17,7 +17,7 @@
       integer oldest_forecast, bg_files,forecast_length
       integer i, j, k, kk
       integer max_forecast_delta
-      integer ntbg
+      integer ntbg,nvt
       parameter (ntbg=100)
       integer ivaltimes(ntbg)
       integer nvaltimes
@@ -81,6 +81,7 @@ C
 
       elseif(bgmodel.eq.3)then
 
+         nvt=0
          call s_len(cmodel,nc)
          cwb_model_type = cmodel(nc-1:nc)
          call downcase(cwb_model_type,cwb_model_type)
@@ -95,10 +96,12 @@ C
          endif
 
          print*,'bg_files = ',bg_files
+
          do i=1,bg_files
             call get_directory_length(names(i),lend)
             call s_len(names(i),j)
             if(names(i)(lend+1:lend+2).eq.cwb_model_type)then
+               nvt=nvt+1
 c              print*
 c              print*,'i/names(i) = ',i,names(i)(1:j)
                call i4time_fname_lp(names(i),i4time_fa,istatus)
@@ -106,10 +109,12 @@ c              print*,'i/names(i) = ',i,names(i)(1:j)
                lentodot=index(names(i),'.')
                c_fa_ext=names(i)(lentodot+1:j)
                c4valtime=c4_FA_valtime(c_fa_ext)
-               bg_names(i)=fname9//c4valtime
-c              print*,'i/bg_names(i) ',i,bg_names(i)(1:14)
+               bg_names(nvt)=fname9//c4valtime
+c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
             endif
          enddo
+
+         bg_files=nvt
 
       else
 
