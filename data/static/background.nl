@@ -9,6 +9,7 @@
  use_analysis=.false.,
  cmodel='RUC40_NATIVE','ETA48_CONUS','LAPS',
  itime_inc =0,
+ smooth_fields = .false.,
  /
 c
 c bgpaths is a list of paths to background models in order of preference
@@ -61,3 +62,7 @@ c
 c itime_inc = controls time increment for model background.
 c     itime_inc = 0   produce background at the analysis time (t)
 c     this parameter is not neccessarily used and should be = 0 for now.
+c 
+c smooth_fields  
+c     Set to .true. to turn on 2dx smoother (should not normally be
+c     required).
