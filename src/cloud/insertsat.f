@@ -868,7 +868,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 !       else                                 ! Using Band 8 (11.2mm) data
             l_cloud_present = l_tb8
             cldtop_m = cldtop_m_tb8
-            sat_cover = 1.1
+            sat_cover = 1.0 ! 1.1
 
 !       endif
 
