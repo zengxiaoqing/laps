@@ -1,5 +1,6 @@
  
-        subroutine read_profiles(i4time,heights_3d,lat_pr,lon_pr,   ! I
+        subroutine read_profiles(i4time_sys,heights_3d,             ! I
+     1                   lat_pr,lon_pr,                             ! O
      1                   lat,lon,                                   ! I
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
      1                   l_use_raob,                                ! I
@@ -65,14 +66,14 @@ c                             time of the current LAPS analysis time.
 
         character*255 c_filespec
         character ext*31
-        character*5 c5_name
+        character*5 c5_name, c5_name_a(MAX_PR)
         character*9 a9time_ob
 
         logical l_use_raob
 
         r_mspkt = .518
 
-        write(6,*)' Subroutine read_profiles: i4time = ',i4time
+        write(6,*)' Subroutine read_profiles: i4time = ',i4time_sys
 
 !       Initialize
 
@@ -94,7 +95,7 @@ c                             time of the current LAPS analysis time.
             enddo
         enddo
 
-        i4time_prg = i4time
+        i4time_prg = i4time_sys
 
         ext = 'prg'
         call open_lapsprd_file(32,i4time_prg,ext,istatus)
@@ -106,89 +107,25 @@ c                             time of the current LAPS analysis time.
 !       Open nearest PRO file to the LAPS analysis time
         ext = 'pro'
         call get_filespec(ext,2,c_filespec,istatus)
-        call get_file_time(c_filespec,i4time,i4time_prof)
-        call open_lapsprd_file_read(12,i4time_prof,ext,istatus)
-        if(istatus .ne. 1)go to 420
+        call get_file_time(c_filespec,i4time_sys,i4time_prof)
 
-        do i_pr = 1,max_pr
-
-            read(12,401,err=430,end=450)
-     1         ista,nlevels_obs_pr(i_pr),lat_pr(i_pr),lon_pr(i_pr)
-     1         ,elev_pr(i_pr),c5_name,a9time_ob,obstype(i_pr)
-401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,1x,3x,a9,1x,a8)
-
-            if(nlevels_obs_pr(i_pr) .gt. MAX_PR_LEVELS)then
-                write(6,*)' ERROR: too many profiler (.pro) levels '
-     1                   ,i_pr,nlevels_obs_pr(i_pr),MAX_PR_LEVELS
-                goto430
-            endif
-
-!           obstype(i_pr) = 'PROFILER'
-
-            call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
-            i4time_ob_pr(i_pr) = i4time_ob
-
-            rcycles_pr(i_pr) = float(i4time - i4time_ob)       
-     1                                      / float(ilaps_cycle_time)
-
-
-            write(6,407)i_pr,ista,nlevels_obs_pr(i_pr),lat_pr(i_pr)
-     1                 ,lon_pr(i_pr)
-     1                 ,elev_pr(i_pr),rcycles_pr(i_pr),c5_name,a9time_ob       
-     1                 ,obstype(i_pr)
-407         format(/' Profile #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a6,3x,a9
-     1                          ,1x,a8)
-
-            do level = 1,nlevels_obs_pr(i_pr)
-
-                read(12,*,err=312)ob_pr_ht_obs(i_pr,level)
-     1           ,ob_pr_di_obs(level)
-     1           ,ob_pr_sp_obs(level)
-
-                ob_pr_sp_obs(level) = ob_pr_sp_obs(level)
-!    1                                          * r_mspkt
-
-                call disp_to_uv(ob_pr_di_obs(level),
-     1                  ob_pr_sp_obs(level),
-     1                  ob_pr_u_obs(i_pr,level),
-     1                  ob_pr_v_obs(i_pr,level))
-
-!d              write(6,311,err=312)ista,i_pr
-!d      1                ,ob_pr_ht_obs(i_pr,level)
-!d      1                ,ob_pr_di_obs(level)
-!d      1                ,ob_pr_sp_obs(level)
-!d      1                ,ob_pr_u_obs(i_pr,level)
-!d      1                ,ob_pr_v_obs(i_pr,level)
-311             format(1x,2i4,5f8.1)
-312             continue
-            enddo ! level
-        enddo ! profiler site
-
-        write(6,*)' ERROR: # of profilers has reached'
-     1           ,' dimensions of MAX_PR ',MAX_PR
-
-        n_profiles=MAX_PR
-        GO TO 500
-c
-c       Profiler reading error handling
-c
-  420   write(6,*) ' Warning, could not open PRO file'
-        n_profiles=0
-        GO TO 500
-
-  430   write(6,*) ' Error during read of PRO file'
-        write(6,*) ' While reading profiler number ',i_pr
-        n_profiles=i_pr-1
-        GO TO 500
-c
-  450   CONTINUE ! Used for end of file
-        n_profiles=i_pr-1
-
-        close(12)
-
-  500   CONTINUE
+        lun = 12
+        call read_pro_data(lun,i4time_prof,ext
+     1                         ,MAX_PR,MAX_PR_LEVELS      
+     1                         ,n_profiles
+     1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr
+     1                         ,c5_name_a,i4time_ob_pr,obstype
+     1                         ,ob_pr_ht_obs
+     1                         ,ob_pr_u_obs,ob_pr_v_obs
+     1                         ,istatus)
 
         n_profilers = n_profiles
+
+        do i_pr = 1,n_profilers
+            rcycles_pr(i_pr) = float(i4time_sys - i4time_ob_pr(i_pr))       
+     1                                      / float(ilaps_cycle_time)
+
+        enddo
 c
 c ***   Read in sonde data    ***************************************
 c
@@ -204,9 +141,9 @@ c
 
       ext = 'snd'
       call get_filespec(ext,2,c_filespec,istatus)
-      call get_file_time(c_filespec,i4time,i4time_nearest)
+      call get_file_time(c_filespec,i4time_sys,i4time_nearest)
 
-      i4time_diff = abs(i4time - i4time_nearest)
+      i4time_diff = abs(i4time_sys - i4time_nearest)
       if(i4time_diff .le. i4time_raob_file_window)then
           write(6,*)' Nearest SND file is within time window'
      1                ,i4time_diff,i4time_raob_file_window
@@ -242,7 +179,8 @@ c
         call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
         i4time_ob_pr(i_pr) = i4time_ob
 
-        rcycsnd = float(i4time - i4time_ob) / float(ilaps_cycle_time)
+        rcycsnd = float(i4time_sys - i4time_ob) 
+     1          / float(ilaps_cycle_time)      
         rcycles_pr(i_pr) = rcycsnd ! max(min(rcycsnd,1.0),-1.0)
 
         if(iwrite .eq. 1)write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)       
@@ -419,7 +357,7 @@ c
                     call get_time_term(u_mdl_bkg_4d,imax,jmax,kmax
      1                                ,NTMIN,NTMAX
      1                                ,i_ob,j_ob,level
-     1                                ,i4time,i4time_ob_pr(i_pr)
+     1                                ,i4time_sys,i4time_ob_pr(i_pr)
      1                                ,u_time_interp,u_diff_term
      1                                ,istatus)
                     u_diff = -u_diff_term
@@ -427,7 +365,7 @@ c
                     call get_time_term(v_mdl_bkg_4d,imax,jmax,kmax
      1                                ,NTMIN,NTMAX
      1                                ,i_ob,j_ob,level
-     1                                ,i4time,i4time_ob_pr(i_pr)
+     1                                ,i4time_sys,i4time_ob_pr(i_pr)
      1                                ,v_time_interp,v_diff_term
      1                                ,istatus)
                     v_diff = -v_diff_term
@@ -479,3 +417,5 @@ c       1                ,ob_pr_t(i_pr,level)
         istatus=0
         return
         end
+
+
