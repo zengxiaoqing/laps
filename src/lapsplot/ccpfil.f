@@ -48,7 +48,7 @@ C
       character*(*)colortable
       character*5 c5_sect
 
-      logical log_scaling
+      logical log_scaling, l_discrete
 
       write(6,*)' Subroutine ccpfil for solid fill plot...'
 
@@ -56,6 +56,12 @@ C
           log_scaling = .true.
       else
           log_scaling = .false.
+      endif
+
+      if(colortable .eq. 'haines')then
+          l_discrete = .true.
+      else
+          l_discrete = .false.
       endif
 
       n_image = n_image + 1
@@ -110,8 +116,6 @@ C
 
               if(c5_sect .eq. 'hsect')then
 
-!               Test for 'linear' used to be proxy for rejecting X-sects?
-!               We may only want to color missing data values for H-sects
                 if(colortable(1:3) .eq. 'lin')then
                   ZREG(i,j) = scale_loc * 0.50 ! e.g. CSC 
 
@@ -119,6 +123,9 @@ C
                   if(scale_h_in .eq. 7200. .or. scale_h_in .eq. 50.)then 
                       ZREG(i,j) = scale_loc * 0.00 ! ! cape/cin for hsect
                   endif
+
+                elseif(l_discrete)then ! e.g. Haines
+                  ZREG(i,j) = scale_loc * 100. ! 1.2 
 
                 else
 
@@ -132,10 +139,11 @@ C
 
             endif
 
-!           Prevent overshoot beyond colortable (except for CAPE/CIN)
+!           Prevent overshoot beyond colortable (except for CAPE/CIN/discrete)
             if(c5_sect .eq. 'hsect')then
-              if(ZREG(i,j) .gt. scale_loc .and. 
-     1         colortable(1:3) .ne. 'cpe'     )then
+              if(ZREG(i,j) .gt. scale_loc     .and. 
+     1             colortable(1:3) .ne. 'cpe' .and.
+     1             (.not. l_discrete)               )then
                 ZREG(i,j) = scale_loc
               endif
             endif
@@ -445,7 +453,7 @@ C
      1                   ,3.0,0.9,0.7)                ! Red
 
       elseif(colortable .eq. 'haines')then       
-          ncols = 5 ! 160
+          ncols = 5 
           call color_ramp(1,1
      1                   ,IWKID,icol_offset
      1                   ,0.6,0.7,0.4                 ! Violet
@@ -466,6 +474,12 @@ C
      1                   ,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.7)                ! Red
+
+!         Extra color at the top for r_missing_data
+          call color_ramp(6,6
+     1                   ,IWKID,icol_offset
+     1                   ,1.0,0.0,1.0                 ! White
+     1                   ,1.0,0.0,1.0)                ! White
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable
