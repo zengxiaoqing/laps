@@ -30,7 +30,8 @@ cdis
 cdis
 cdis
 
-        subroutine get_uv_2d(i4time,k_level,uv_2d,ext,imax,jmax,istatus)
+        subroutine get_uv_2d(i4time,k_level,uv_2d,ext,imax,jmax
+     1                      ,fcst_hhmm,istatus)
 
 !       97-Aug-17     Ken Dritz     Used commenting to (temporarily) hardwire
 !                                   VERTICAL_GRID to 'PRESSURE' (without
@@ -45,7 +46,8 @@ cdis
         character*10 units_2d(2)
         character*3 var(2)
         integer*4 LVL_2d(2)
-        character*4 LVL_COORD_2d(2)
+        character*4 LVL_COORD_2d(2), fcst_hhmm
+        character*9 a9time
         character*13 a13_time
 
         real*4 uv_2d(imax,jmax,2)
@@ -97,19 +99,31 @@ cdis
 
             endif
 
-            write(6,211)ext(1:3)
- 211        format(/'  Enter yydddhhmmHHMM for ',a3,' file: ',$)
+            write(6,*)' Using ',ext(1:3),' file'
 
-            read(5,1)a13_time
- 1          format(a13)
-            call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+            call get_laps_cycle_time(laps_cycle_time,istatus)
 
-            CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,imax,jmax,2,2,       
-     1          VAR,LVL_2d,LVL_COORD_2d,UNITS_2d,COMMENT_2d,
-     1          uv_2d,ISTATUS)
+            call input_model_time(i4time                  ! I
+     1                           ,laps_cycle_time         ! I
+     1                           ,a9time                  ! O
+     1                           ,fcst_hhmm               ! O
+     1                           ,i4_initial              ! O
+     1                           ,i4_valid                ! O
+     1                                                            )
+
+!           write(6,211)ext(1:3)
+!211        format(/'  Enter yydddhhmmHHMM for ',a3,' file: ',$)
+
+!           read(5,1)a13_time
+!1          format(a13)
+!           call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+
+            CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
+     1                    ,imax,jmax,2,2,VAR,LVL_2d,LVL_COORD_2d
+     1                    ,UNITS_2d,COMMENT_2d,uv_2d,ISTATUS)
             IF(ISTATUS .ne. 1)THEN
                 write(6,*)
-     1          ' Sorry, file has not yet been generated this hour'
+     1          ' Sorry, file has not yet been generated this cycle'
                 stop
             else
                 write(6,*)

@@ -458,15 +458,15 @@ c       include 'satellite_dims_lvd.inc'
                     endif
 
                     if(ext(1:3) .eq. 'lgb' .or. ext(1:3) .eq. 'fsf')then       
-                        write(6,211)ext(1:3)
-                        read(5,221)a13_time
+                        write(6,*)' Using ',ext(1:3),' file'
 
-                        call get_fcst_times(a13_time,I4TIME,i4_valid
-     1                                                     ,i4_fn)
-
-                        call make_fnam_lp(i4_valid,asc9_tim_3dw,istatus)      
-                        write(6,*)' Valid time = ',asc9_tim_3dw
-
+                        call input_model_time(i4time_ref    ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_3dw            ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                                                            )
                         call get_directory(ext,directory,len_dir)
 
                         level=0
@@ -480,8 +480,8 @@ c       include 'satellite_dims_lvd.inc'
                         write(6,*)' Reading sfc wind data from: '
      1                            ,ext(1:3),' ',var_2d
 
-                        CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,
-     1                                 NX_L,NY_L,1,1,       
+                        CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
      1                                 VAR_2d,level,LVL_COORD_2d,
      1                                 UNITS_2d,COMMENT_2d,
      1                                 u_2d,ISTATUS)
@@ -495,14 +495,12 @@ c       include 'satellite_dims_lvd.inc'
                         write(6,*)' Reading sfc wind data from: '
      1                            ,ext(1:3),' ',var_2d
 
-                        CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,
-     1                                 NX_L,NY_L,1,1,       
+                        CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
      1                                 VAR_2d,level,LVL_COORD_2d,
      1                                 UNITS_2d,COMMENT_2d,
      1                                 v_2d,ISTATUS)
 
-                        write(6,*)' Valid time = ',asc9_tim_3dw
-                        call make_fnam_lp(i4_valid,asc9_tim_3dw,istatus)      
                         write(6,*)' Valid time = ',asc9_tim_3dw
 
                     else ! lwm
@@ -531,10 +529,10 @@ c       include 'satellite_dims_lvd.inc'
                     write(6,*)' ext = ',ext
                     if(c_field .ne. 'w ')then
                       write(6,*)' Calling get_uv_2d for ',ext
-                      call get_uv_2d(i4time_3dw,k_level,uv_2d,
-     1                                          ext,NX_L,NY_L,istatus)
+                      call get_uv_2d(i4time_3dw,k_level,uv_2d,ext
+     1                              ,NX_L,NY_L,fcst_hhmm,istatus)
 
-                      write(6,*)' Initial time = ',asc9_tim_3dw
+!                     write(6,*)' Initial time = ',asc9_tim_3dw
                       call make_fnam_lp(i4time_3dw,asc9_tim_3dw,istatus)      
                       write(6,*)' Valid time = ',asc9_tim_3dw
 
@@ -669,9 +667,9 @@ c       include 'satellite_dims_lvd.inc'
                 if(c_type .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
                 elseif(c_type.eq.'wb'                       )then
-                    c19_label = ' WIND  (lga)    kt'
+                    c19_label = ' WIND lga '//fcst_hhmm//'   kt'
                 elseif(c_type.eq.'wr'                       )then
-                    c19_label = ' WIND  (fua)    kt'
+                    c19_label = ' WIND fua '//fcst_hhmm//'   kt'
                 elseif(c_type.eq.'bw'                       )then
                     c19_label = ' WIND  (bal)    kt'
                 else
@@ -2853,8 +2851,6 @@ c             cint = -1.
                 var_2d = 'T3'
             endif
 
-            call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
-
             if(c_type(2:2) .eq. 'b')then
                 ext = 'lga'
                 call get_directory(ext,directory,len_dir)
@@ -2875,44 +2871,27 @@ c             cint = -1.
 
             endif
 
-            write(6,211)ext(1:3)
- 211        format(/' Enter yydddhhmmHHMM for ',a3,' file: ',$)
+            write(6,*)' Using ',ext(1:3),' file'
 
-            read(5,221)a13_time
- 221        format(a13)
+            call   input_model_time(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_t              ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                                                            )
 
-            call s_len(a13_time,len_time)
-
-            if(len_time .eq. 13)then
-                call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
-                call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,field_3d
-     1                          ,istatus)
-                fcst_hhmm = a13_time(10:13)
-
-            elseif(len_time .eq. 4)then
-                write(6,*)' Try again, len_time = ',len_time
-                fcst_hhmm = a13_time(1:4)
-                goto1200
-
-            else
-                write(6,*)' Try again, len_time = ',len_time
-                goto1200
-
-            endif
+            call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,field_3d,istatus)       
 
             write(6,1513)
             read(lun,*)k_mb
             k_level = nint(zcoord_of_pressure(float(k_mb*100)))
             k_mb    = nint(field_3d(icen,jcen,k_level) / 100.)
 
-            CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,NX_L,NY_L,1,1,       
+            CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT,
+     1          NX_L,NY_L,1,1,       
      1          VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d,COMMENT_2d,
      1          field_2d,ISTATUS)
-
-!           call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,
-!    1              i4time_heights,
-!    1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-!    1                                     ,field_2d,k_mb,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Grid ',var_2d,' ',ext,istatus
@@ -2950,8 +2929,11 @@ c             cint = -1.
                 endif
 
             else  
-                call mklabel33(k_level,' LAPS '//ext(1:3)//' Temp    C'
-     1                        ,c33_label)
+!               call mklabel33(k_level,' LAPS '//ext(1:3)//' Temp    C'
+!    1                        ,c33_label)
+
+                call mklabel33(k_level,' '//fcst_hhmm
+     1                         //' '//ext(1:3)//' Temp    C',c33_label)
 
                 scale = 1.
 
@@ -3257,13 +3239,23 @@ c             cint = -1.
 
             call get_directory(ext,directory,len_dir)
 
-            write(6,716)ext(1:3)
- 716        format(/' Enter yydddhhmmHHMM for ',a3,' file: ',$)
+            write(6,*)' Using ',ext(1:3),' file'
 
-            read(5,717)a13_time
- 717        format(a13)
+            call input_model_time(i4time_ref    ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_t              ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                                                            )
 
-            call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+!           write(6,716)ext(1:3)
+!716        format(/' Enter yydddhhmmHHMM for ',a3,' file: ',$)
+
+!           read(5,717)a13_time
+!717        format(a13)
+
+!           call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
 
             if(ext.eq.'lgb')then
                write(6,723)
@@ -3282,9 +3274,9 @@ c             cint = -1.
             call upcase(var_2d,var_2d)
 
             level=0
-            CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,NX_L,NY_L,1,1,       
-     1          VAR_2d,level,LVL_COORD_2d,UNITS_2d,COMMENT_2d,
-     1          field_2d,ISTATUS)
+            CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
+     1         ,NX_L,NY_L,1,1,VAR_2d,level,LVL_COORD_2d
+     1         ,UNITS_2d,COMMENT_2d,field_2d,ISTATUS)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Grid ',var_2d,' ',ext,istatus       
@@ -3317,7 +3309,7 @@ c             cint = -1.
 
             endif
 
-            c33_label = 'LAPS Sfc Background       '
+            c33_label = 'LAPS Sfc Background  '//fcst_hhmm//' '
      1                  //ext(1:3)//'/'//var_2d(1:3)
 
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
@@ -4025,6 +4017,9 @@ c             cint = -1.
                 call frame
             endif
         endif
+
+ 211    format(/' Enter yydddhhmmHHMM or HHMM for file: ',$)
+ 221    format(a13)
 
         return
         end
@@ -4963,6 +4958,65 @@ c
         iy = y_1 * 1024
         call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,jsize_b,0,0)
 
+
+        return
+        end
+
+
+        subroutine input_model_time(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_t              ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                                                            )
+
+        character*4 fcst_hhmm
+        character*9 asc9_tim_t, a9time
+        character*13 a13_time
+
+ 1200   write(6,211)
+ 211    format(/' Enter yydddhhmmHHMM or HHMM for file: ',$)
+
+        read(5,221)a13_time
+ 221    format(a13)
+
+        call s_len(a13_time,len_time)
+
+        if(len_time .eq. 13)then
+                write(6,*)' len_time = ',len_time
+                call get_fcst_times(a13_time,i4_initial,i4_valid,i4_fn)
+                write(6,*)' a13_time = ',a13_time
+                fcst_hhmm = a13_time(10:13)
+                call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
+                write(6,*)' Valid time = ',asc9_tim_t
+
+        elseif(len_time .eq. 4)then
+                write(6,*)' len_time = ',len_time
+
+                i4time_plot = i4time_ref / laps_cycle_time 
+     1                                   * laps_cycle_time       
+                call make_fnam_lp(i4time_plot,asc9_tim_t,istatus)
+                write(6,*)' Valid time = ',asc9_tim_t
+
+                fcst_hhmm = a13_time(1:4)
+
+              ! Get fcst interval
+                a13_time = asc9_tim_t//fcst_hhmm
+                call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn) 
+                i4_interval = i4_valid - I4TIME
+                i4_initial = I4TIME - i4_interval ! Reset initial time
+                i4_valid = i4_valid - i4_interval
+                call make_fnam_lp(i4_initial,a9time,istatus)
+
+                a13_time = a9time//fcst_hhmm
+                write(6,*)' Modified a13_time = ',a13_time
+
+        else
+                write(6,*)' Try again, len_time = ',len_time
+                goto1200
+
+        endif
 
         return
         end
