@@ -117,12 +117,18 @@ cdis
         endif
 
 
-        if(istatus .eq. 1 .and. l_waited 
-     1                    .and. c8_project(1:3) .eq. 'WFO')then       
-            write(6,*)' Doing additional wait to allow full file update'      
-            call snooze_gg(60.0,istatus)
+        if(istatus .eq. 1 .and. c8_project(1:3) .eq. 'WFO')then       
+            if(l_waited)then
+                r_additional_wait = 60.
+            else
+                r_additional_wait = 30.
+            endif
+
+            write(6,*)' Doing wait to allow full file update: '
+     1               ,r_additional_wait
+            call snooze_gg(r_additional_wait,istatus)
             if(istatus .ne. 1)then
-                write(6,*)' ERROR in wait_for_data from snooze'
+                write(6,*)' ERROR in wait_for_data returned from snooze'
                 return
             endif
         endif

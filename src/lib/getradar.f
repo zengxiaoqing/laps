@@ -611,8 +611,6 @@ cdoc                            calls read_multiradar_3dref.
      1                    ,units_2d,comment_2d,grid_ra_ref,istatus)
 
             if(istatus .eq. 1)then
-                istatus_2dref_a = 1
-
                 read(comment_2d,558)rlat_radar,rlon_radar,rheight_radar
      1                             ,n_ref_grids
 558             format(2f9.3,f8.0,i7)
@@ -626,15 +624,12 @@ cdoc                            calls read_multiradar_3dref.
 
                     if(istatus_rfill .eq. 1)then
                         write(6,*)' Reflectivity data filled in'
-                        istatus_3dref_a = 1
                     else
                         write(6,*)' Reflectivity data fill error'
-                        istatus_3dref_a = 0
                     endif
 
                 else
                     write(6,*)' Reflectivity not filled in'
-                    istatus_3dref_a = 1
 
                 endif
  
@@ -652,17 +647,20 @@ cdoc                            calls read_multiradar_3dref.
                     do k = 1,kmax
                     do j = 1,jmax
                     do i = 1,imax
-                        if(grid_ra_ref(i,j,k) .eq. r_missing_data)then
+                        if(grid_ra_ref(i,j,k) .ne. r_missing_data)then
 
 !                           Set status for this gridpoint to missing
-                            istatus_2dref_a(i,j) = 0
-                            istatus_3dref_a(i,j) = 0
+                            istatus_2dref_a(i,j) = 1
+                            istatus_3dref_a(i,j) = 1
+
+
+!                       else
 
 !               We may want to remove this line eventually to allow calling
 !               routines to utilize the missing data flag in reflectivities.
 !               They are generally not set up to do this at present.
 
-                            grid_ra_ref(i,j,k) = ref_base
+!                           grid_ra_ref(i,j,k) = ref_base
                         endif
                     enddo ! i
                     enddo ! j

@@ -3,9 +3,10 @@
 # Program to check status of laps output data and report in an html table format.
 #
 # Note that this monitor is set up for an example of 5 windows being run
-# concurrently. You may want to edit this script for your particular windows
-# and $LAPS_DATA_ROOT paths. The main lines to edit are the %lapsprds and
-# the @order.
+# concurrently. You may want to edit this script for your particular window(s)
+# and $LAPS_DATA_ROOT path(s). The main lines to edit are the %lapsprds (for
+# the paths) and the @order (for domain names). The @laps_data_root@ path can 
+# also be edited automatically by 'cronfile.pl'.
 
 select STDOUT; $|=1;
 $ENV{PATH}="";
@@ -13,7 +14,7 @@ my(%lapsprds)=( "FSLD" =>   '/data/fxa2/fxa_local/laps/lapsprd',
                 "WFO30" =>  '/data/lapb/wfo/data/lapsprd',
                 "WFO5KM" => '/data/lapb/wfo5km/data/lapsprd', 
                 "TW/FSL" => '/data/lapb/tw/fsl/data/lapsprd',
-  	        "TW/CWB" => '/data/lapb/tw/cwb/data/lapsprd');
+  	        "TW/CWB" => '@laps_data_root@');
 
 # This defines the order of the sources in the table
 #

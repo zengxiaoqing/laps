@@ -22,11 +22,22 @@ print "LAPSINSTALLROOT = $LAPSINSTALLROOT \n";
 $LAPS_DATA_ROOT = "$LAPSINSTALLROOT/data" if(! $LAPS_DATA_ROOT);
 print "LAPS_DATA_ROOT = $LAPS_DATA_ROOT\n";
 
+
+# Note that the @laps_data_root@ is only set up now for a single window
+# In the future, this construct could be expanded to allow the
+# cronfile and laps_monitor.pl scripts to handle multiple windows.
+
 #Make a copy of the cronfile that is unique for this LAPS_DATA_ROOT
 system("cp $LAPSINSTALLROOT/util/cronfile $LAPS_DATA_ROOT/cronfile");
 
 #String edit the cronfile to set the proper LAPS_DATA_ROOT path
 system("$LAPSINSTALLROOT/util/fix_net \@laps_data_root@ $LAPS_DATA_ROOT $LAPS_DATA_ROOT/cronfile");
+
+#Make a copy of the laps_monitor.pl that is unique for this LAPS_DATA_ROOT
+system("cp $LAPSINSTALLROOT/etc/laps_monitor.pl $LAPS_DATA_ROOT/laps_monitor.pl");
+
+#String edit the laps_monitor.pl to set the proper LAPS_DATA_ROOT path
+system("$LAPSINSTALLROOT/util/fix_net \@laps_data_root@ $LAPS_DATA_ROOT $LAPS_DATA_ROOT/laps_monitor.pl");
 
 print "schedtime = $schedtime\n";
 if(defined($schedtime)){ 
