@@ -494,9 +494,7 @@ C*****************************************************************
 ! options.
         if(mode.eq.2) then
 
-	   call showgrid(lats(1,1,ns),lons(1,1,ns),nnxp,nnyp
-     1,grid_spacing_m,c6_maproj,std_lat,std_lat2,std_lon
-     1,mdlat,mdlon)
+           print*,'We no longer run showgrid in gridgen_model'
            return
 
         elseif(mode.eq.3)then
@@ -720,10 +718,13 @@ c ----------------------------------------------------------------
         print*
 c
         GEODAT2D(:,:)=1.- GEODAT3D(:,:,16)
-        call filter_2dx(geodat2d,nnxp,nnyp,2, 0.5)
-        call filter_2dx(geodat2d,nnxp,nnyp,2,-0.5)
 
-        istatus_ldf=1
+        print*,'Filter land fraction with 2dx'
+
+        do k=1,2
+           call filter_2dx(geodat2d,nnxp,nnyp,1, 0.5)
+           call filter_2dx(geodat2d,nnxp,nnyp,1,-0.5)
+        enddo
 
 c JS: 1-10-03:
 c These calls might become obsolete and the land_10m geog
@@ -736,12 +737,11 @@ c       print*,'Calling proc_geodat - land fraction'
 c       call proc_geodat(nnxp,nnyp,1,path_to_pctl10m
 c    +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
 c    +,GEODAT2D,istatus_ldf)
-
-        if(istatus_ldf .ne. 1)then
-           write(6,*)' File(s) missing for 10m land frac data'
-           write(6,*)' Static file not created.......ERROR'
-           return
-        endif
+c       if(istatus_ldf .ne. 1)then
+c          write(6,*)' File(s) missing for 10m land frac data'
+c          write(6,*)' Static file not created.......ERROR'
+c          return
+c       endif
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
            idx=10

@@ -1,5 +1,3 @@
-!     subroutine proc_geodat(nx,ny,lat,lon,)
-
 !1.     given lat/lon points of analysis domain
 !2.     determine the domain subset corner points (lat0 and lon0
 !       lat0=lat(1,1)
@@ -120,7 +118,6 @@ c-----------------------------------------------
 !model grid point
 
 !     real    cat_pct(nx_dom,ny_dom,ncat)
-
 !     integer, allocatable :: num_raw_points_total (:,:)
 !     integer, allocatable :: num_raw_points_cat(:,:,:)
 
@@ -258,7 +255,7 @@ c original create from Brent Shaw pseudocode
       if(NO .GT. 0)then
          DELTALLO=FLOAT(IBLKSIZO)/FLOAT(NO)
       else
-         print *,'NO <= 0 ... error '
+         print *,'ERROR:  NO <= 0 ... '
          stop
       endif
 
@@ -284,15 +281,13 @@ c original create from Brent Shaw pseudocode
       min_lon = MINVAL(dom_lons)
       max_lon = MAXVAL(dom_lons)
 
-! apply offsets here since we need to concern ourselves with
-! which data points in the tiles map to the domain.
-      min_lat =  max(-89.9999,min(89.9999,min_lat + rsoff))
-      max_lat =  max(-89.9999,min(89.9999,max_lat)+ rsoff)
-      min_lon =  max(-359.9999,min(359.9999,min_lon + rwoff))
-      max_lon =  max(-359.9999,min(359.9999,max_lon + rwoff))
+! no offsets needed here since these are the tiles, not the points
+! in the tiles.
+      min_lat =  max(-89.9999,min(89.9999,min_lat))  ! + rsoff))
+      max_lat =  max(-89.9999,min(89.9999,max_lat))  ! + rsoff))
+      min_lon =  max(-359.9999,min(359.9999,min_lon))! + rwoff))
+      max_lon =  max(-359.9999,min(359.9999,max_lon))! + rwoff))
 
-c     min_lon =  max(-359.9999,min(359.9999,min_lon))! + rwoff))
-c     max_lon =  max(-359.9999,min(359.9999,max_lon))! + rwoff))
       deallocate(dom_lats,dom_lons)
 
 !  Compute a list of tiles needed to fulfill lat/lon range just computed
@@ -309,7 +304,7 @@ c     max_lon =  max(-359.9999,min(359.9999,max_lon))! + rwoff))
      1,ntn,ctile_name_list,istatus)
 
       if(istatus.ne.1)then
-         print*,'Error:  returned from get_tile_list'
+         print*,'ERROR:  returned from get_tile_list'
          return
       endif
 
@@ -580,6 +575,11 @@ c     endif
 
       deallocate (data_proc,lmask_src)
 
+! --------------------------------------------------------
+! ---- we are not yet processing categorical data (like
+! ---- landuse or soil type, so this section is commented
+! ---- for now.
+! --------------------------------------------------------
 ! Loop over the raw data points in the tile
 
 !       DO jt = 1, ny_tile

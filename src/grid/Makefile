@@ -16,15 +16,11 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
              $(SRCROOT)/src/lib/util/libdebugutil.a \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
-.SUFFIXES: .o .c .f .a .F .i .exe
+.SUFFIXES: .o .f .a .F .i .exe
 
 EXE = gridgen_model.exe
 
-SRC   = get_tile_list.f gridgen_utils.f put_laps_static.f \
-        proc_geodat.f showgrid.f \
-        create_bcd_bkgnd.c setsup.c \
-        getarealim.c \
-        xy_to_ll.c ll_to_xy.c 
+SRC   = get_tile_list.f gridgen_utils.f proc_geodat.f put_laps_static.f
 
 MAIN=gridgen_model.f 
 
@@ -43,7 +39,7 @@ $(EXE): $(ARCHIVE) $(MAIN)
 debug: $(SRC) ;
 	$(RM) $(EXE) ;
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' \
-	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
+	  FFLAGS='$(DBFLAGS)'
 
 install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
