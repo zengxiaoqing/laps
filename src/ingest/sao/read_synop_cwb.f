@@ -103,8 +103,6 @@
 
       do i= 1,numSynop
          write(stnNo(i),'(i5)') wmoId(i)      
-c        write(*,*) i,stnNo(i),rptTp(i),stnTp(i), timeObs(i)
-         write(*,*) i,stnNo(i),stname(i)
       enddo
 
       np= numSynop +1
@@ -124,7 +122,6 @@ c                    combine synop data and mesonet data
       do i= 1,numMso
          flag= 0
 
-c write(*,*) i,stnNoMso(i),rptTpMso(i),stnTpMso(i),timeObsMso(i)
          do j= 1,numSynop
             if ( stnNoMso(i) .eq. stnNo(j) ) then
                rh(j)=   rhMso(i)
@@ -148,6 +145,7 @@ c write(*,*) i,stnNoMso(i),rptTpMso(i),stnTpMso(i),timeObsMso(i)
             rptTp(k)=   rptTpMso(i)
             stnTp(k)=   stnTpMso(i)
             stnNo(k)=   stnNoMso(i)
+            stname(k)=  stnNoMso(i)
             wmoId(k)=   ibadflag
             td(k)=      tdMso(i)
             tdTths(k)=  tdMso(i)
@@ -176,10 +174,6 @@ c write(*,*) i,stnNoMso(i),rptTpMso(i),stnTpMso(i),timeObsMso(i)
          endif
       enddo
 
-      do i= 1,k
-      write(*,*) i,stnNo(i),timeObs(i),rptTp(i),stnTp(i),
-     ~           stname(i),wmoId(i), stnNo(i)
-      enddo
       num = k
 
       end
@@ -346,6 +340,7 @@ c     --- eliminate duplicate data coming from international broadcast ---
             enddo
          endif
 100   continue
+      write(*,*) 'SYNOP staNum=', staNum
 
 c      ----------       examine data quality and change units       ---------
       do j= 1,staNum
