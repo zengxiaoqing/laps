@@ -122,6 +122,7 @@ c          not currently used.  They are included because they might be in
 c          the future.
 c
 c*****************************************************************************
+	include 'laps_sfc.inc'
 c
 	real lat(ni,nj), lon(ni,nj), topo(ni,nj), ldf(ni,nj)
 	real x1a(ni), x2a(nj), y2a(ni,nj)
@@ -271,46 +272,34 @@ c
 	skip_internal_qc = 0    ! use internal QC routine
 
 c       QC parms: # of standard deviations 
-        bad_p  = 2.5 	        ! for reduced pressure
-        bad_mp = 4.0 	        ! for MSL pressure
-        bad_t  = 2.5 	        ! for temperature
-        bad_td = 2.0 	        ! for dewpoint
-        bad_u  = 4.0 	        ! for u-wind
-        bad_v  = 4.0 	        ! for v-wind
-        bad_th = 3.5 	        ! for theta
+        bad_p  = 2.5            ! for reduced pressure
+        bad_mp = 4.0            ! for MSL pressure
+        bad_t  = 2.5            ! for temperature
+        bad_td = 2.0            ! for dewpoint
+        bad_u  = 4.0            ! for u-wind
+        bad_v  = 4.0            ! for v-wind
+        bad_th = 3.5            ! for theta
         bad_the = 2.5           ! for theta-e
         bad_vis = 500. 	        ! for visibility
-        bad_tb8 = 5.0 	        ! for tb8 Brightness temps.
-c
-c.....  Read the namelist and get that info, then get the LAPS lat/lon and topo 
-c.....  data so we can pass them to the routines that need them. 
-c
-cc	dir_s = '../static/' 
-	call get_directory('static', dir_s, len)
-	ext_s = laps_domain
-	nl_file = dir_s(1:len) // 'surface_analysis.nl'
-	call s_len(nl_file, len)
-c
-	open(20,file=nl_file(1:len),status='old',err=930)
-	read(20,surface_analysis,end=930)
-	close(20)
-	go to 501
-c
-c.....  Skip here if there are problems with the namelist.
-c
- 930	continue
-	print *,' '
-	print *,' WARNING.  Problem reading the surface analysis ',
-     &          'namelist file.'
-	print *,'    Check to see if ', nl_file(1:len)
-        print *,'         is there and correct.'
-	print *,'    Continuing with default values for namelist ',
-     &          'variables.'
-	print *,' '
+        bad_tb8 = 5.0           ! for tb8 Brightness temps.
+
+        call read_sfc_nl(     use_lso_qc,skip_internal_qc 
+     1                       ,itheta, redp_lvl, del, gam, ak
+     1                       ,l_require_lso
+     1                       ,bad_t,bad_td,bad_u,bad_v,bad_p
+     1                       ,bad_mp,bad_th,bad_the
+     1                       ,bad_vis,bad_tb8
+     1                       ,thresh_t,thresh_td,thresh_mslp
+     1                       ,sfc_nl_parms,istatus)
+
 c
 c.....  Continue...get static stuff.
 c
  501	continue
+
+	call get_directory('static', dir_s, len)
+	ext_s = laps_domain
+
 	var_s = 'LAT'
         call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
      &                      lat ,grid_spacing,istatus)
@@ -808,10 +797,11 @@ c                                t  in F
 c                                td in F
 c                                u  in kt
 c                                v  in kt
+c                                dd in kt
 	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,
-     &     itheta,redp_lvl,laps_cycle_time,
+     &     itheta,redp_lvl,sfc_nl_parms,laps_cycle_time,
      &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, laps_domain,
-     &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
+     &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s,       
      &     pred_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g, obs,
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,stnp_bk,vis_bk,tgd_bk_f,   
