@@ -335,47 +335,47 @@ c       include 'satellite_dims_lvd.inc'
         endif
 
 1200    write(6,11)
-11      format(//'  SELECT FIELD: (-i means append with "i" for image)',       
-     1      /'     [wd,wb-i,wr-i,wf,bw] Wind'
+11      format(//'  SELECT FIELD: (append with "i" for image)',       
+     1      /'     [wd,wb,wr,wf,bw] Wind'
      1      ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, BAL), '
-     1      /'     [wo,co,bo,lo-i,fo-i] '      
+     1      /'     [wo,co,bo,lo,fo] '      
      1      ,'Anlyz/Cloud/Balance/Bkg/Fcst Omega'      
      1      /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
      1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1      /
-     1      /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,wp,vv,hu-i,ta'         
-     1      ,',th,te-i,vo,mr,mc,dv-i,ha,ma]'
-     1      /'          [sp,cs,vs,tw,fw-i,hi-i,gf-i]'
+     1      /'     SFC: [p,pm,ps,tf,tc,df,dc,ws,wp,vv,hu,ta'         
+     1      ,',th,te,vo,mr,mc,dv,ha,ma]'
+     1      /'          [sp,cs,vs,tw,fw,hi,gf]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
      1      /'          [st,mw] obs/mesowx locations'    
      1      /'          [bs] Sfc background/forecast'
-     1      /10x,'[li,lw,he-i,pe-i,ne-i] li, li*w, helcty, CAPE, CIN,'
+     1      /10x,'[li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
      1      /10x,'[s] Other Stability Indices'
      1      /
-     1      /'     TEMP: [t,tb-i,tr-i,to,bt] (LAPS,LGA,FUA,OBS,BAL)'       
+     1      /'     TEMP: [t,tb,tr,to,bt] (LAPS,LGA,FUA,OBS,BAL)'       
      1      ,', [pt,pb] Theta, Bal Theta'
-     1      /'     HGTS: [ht,hb-i,hr-i,bh] (LAPS,LGA,FUA,BAL),'
-     1      /'           [hh,bl-i,lf-i] Ht of Temp Sfc, PBL, Fire Wx')
+     1      /'     HGTS: [ht,hb,hr,bh] (LAPS,LGA,FUA,BAL),'
+     1      /'           [hh,bl,lf] Ht of Temp Sfc, PBL, Fire Wx')
 
         write(6,12)
  12     format(
-     1       /'     HUMIDITY: [br-i,fr-i,lq,rb] (lga;fua;lq3;bal)'
-     1       /'               [pw-i] Precipitable H2O'       
+     1       /'     HUMIDITY: [br,fr,lq,rb] (lga;fua;lq3;bal)'
+     1       /'               [pw] Precipitable H2O'       
      1       /
-     1       /'     CLOUDS/PRECIP: [ci-i] Cloud Ice,'
-     1       ,' [ls-i] Cloud LWC'
+     1       /'     CLOUDS/PRECIP: [ci] Cloud Ice,'
+     1       ,' [ls] Cloud LWC'
      1       /'         [is] Integrated Cloud LWC  '
      1       /'         [mv] Mean Volume Drop Diam,   [ic] Icing Index,'       
      1       /'         [cc] Cld Ceiling (AGL),'
-     1       ,' [cb-i,ct-i] Cld Base/Top (MSL)'      
+     1       ,' [cb,ct] Cld Base/Top (MSL)'      
      1       /'         [cv/cg] Cloud Cover (2-D)'
      1       ,' [cy,py] Cloud/Precip Type'
-     1       /'         [sa-i/pa-i] Snow/Pcp Accum,'
-     1       ,' [sc-i/csc-i] Snow Cvr'
+     1       /'         [sa/pa] Snow/Pcp Accum,'
+     1       ,' [sc/csc] Snow Cvr'
      1      //'     STATIC INFO: [gg] '
-     1       /'     [lv(d),lr(lsr),v3,v5,po,lc-i] lvd; lsr; VCF; '             
+     1       /'     [lv(d),lr(lsr),v3,v5,po,lc] lvd; lsr; VCF; '             
      1       ,'Tsfc-11u; Polar Orbiter, lcv'
-     1      //'     Difference field: [di-i] '
+     1      //'     Difference field: [di] '
      1      //' ',52x,'[q] quit/display ? ',$)
 
  15     format(a3)
@@ -388,6 +388,8 @@ c       include 'satellite_dims_lvd.inc'
 
         if(c_type(len_type:len_type) .eq. 'i' 
      1                  .and. c_type .ne. 'di'
+     1                  .and. c_type .ne. 'li'
+     1                  .and. c_type .ne. 'cwi'
      1                  .and. c_type .ne. 'ci')then
             i_image = 1
             c_type_i = c_type(1:len_type-1)
@@ -1140,7 +1142,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ,c_display,lat,lon,jdot
      1              ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'li')then ! Read in Li 'field_2d' from 3d grids
+        elseif(c_type_i .eq. 'li')then ! Read in Li 'field_2d' from 3d grids
             if(lapsplot_pregen)then
                 write(6,*)' Getting li from LST'
 !               Read in LI data
@@ -1164,11 +1166,20 @@ c       include 'satellite_dims_lvd.inc'
 
             call make_fnam_lp(i4time_nearest,asc9_tim_n,istatus)
 
-            call plot_cont(field_2d,1e-0,-20.,+40.,2.,asc9_tim_n,
-     1          namelist_parms,
-     1          '    SFC Lifted Index     (K)     ',i_overlay
-     1          ,c_display,lat,lon,jdot,
-     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,1e-0,-20.,+40.,2.,asc9_tim_n,
+!    1          namelist_parms,
+!    1          '    SFC Lifted Index     (K)     ',i_overlay
+!    1          ,c_display,lat,lon,jdot,
+!    1          NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            c_label = '    SFC Lifted Index     (K)     '
+
+            call plot_field_2d(i4time_nearest,c_type,field_2d,1.0
+     1                        ,namelist_parms
+     1                        ,+10.,-10.,2.,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'spectral')
+
 
         elseif(c_type .eq. 's')then ! Read in LST data generically
             ext = 'lst'
@@ -1369,7 +1380,7 @@ c       include 'satellite_dims_lvd.inc'
             write(6,826)
  826        format(/'  SELECT FIELD (VAR_2D):  '
      1       /
-     1       /'     PBL | FIREWX: [ptp,pdm | vnt,ham,hah,fwi] ? ',$)       
+     1       /' PBL | FIREWX: [ptp,pdm | vnt,ham,hah,fwi,cwi] ? ',$)       
 
             read(lun,824)var_2d
 !824        format(a)
@@ -2650,14 +2661,14 @@ c
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif( c_type .eq. 't'  .or. c_type .eq. 'pt'
-     1     .or. c_type .eq. 'bt' .or. c_type .eq. 'pb')then
+        elseif( c_type_i .eq. 't'  .or. c_type_i .eq. 'pt'
+     1     .or. c_type_i .eq. 'bt' .or. c_type_i .eq. 'pb')then
 
             write(6,1513)
 1513        format('     Enter Level in mb',48x,'? ',$)
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)     
 
-            if(c_type .eq. 'pt')then
+            if(c_type_i .eq. 'pt')then
                 iflag_temp = 0 ! Returns Potential Temperature
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
@@ -2671,7 +2682,7 @@ c
                 enddo ! j
                 enddo ! i
 
-            elseif(c_type .eq. 'pb')then
+            elseif(c_type_i .eq. 'pb')then
                 iflag_temp = 3 ! Returns Balanced Potential Temperature
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
@@ -2685,7 +2696,7 @@ c
                 enddo ! j
                 enddo ! i
 
-            elseif(c_type .eq. 't ')then
+            elseif(c_type_i .eq. 't ')then
                 call get_temp_2d(i4time_ref,7200,i4time_nearest
      1                          ,k_mb,NX_L,NY_L,temp_2d,istatus)
 
@@ -2698,7 +2709,7 @@ c
                 call mklabel33(k_mb,' Temperature      C'
      1                        ,c33_label)       
 
-            elseif(c_type.eq. 'bt')then
+            elseif(c_type_i .eq. 'bt')then
                 var_2d = 'T3'
                 ext='lt1'
 
@@ -2739,10 +2750,17 @@ c
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
      1                           ,zoom,density,scale)
 
-            call plot_cont(field_2d,scale,clow,chigh,cint,
-     1                     asc9_tim_t,namelist_parms,c33_label,
-     1                     i_overlay,c_display,lat,lon,jdot,
-     1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,scale,clow,chigh,cint,
+!    1                     asc9_tim_t,namelist_parms,c33_label,
+!    1                     i_overlay,c_display,lat,lon,jdot,
+!    1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_nearest,c_type
+     1                        ,field_2d,scale
+     1                        ,namelist_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
             i4time_temp = i4time_nearest
 
@@ -4397,8 +4415,18 @@ c                   cint = -1.
 
                     call ccpfil(field_2d,NX_L,NY_L,0.,chigh ! *scale
      1                         ,'acc',n_image,scale,'hsect') 
-                else
+
+                elseif(var_2d .eq. 'LCV')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
+     1                         ,n_image,scale,'hsect') 
+                elseif(var_2d .eq. 'LHF')then
+                    call ccpfil(field_2d,NX_L,NY_L,-100.,+500.
+     1                         ,'spectral',n_image,scale,'hsect') 
+                else
+                    call array_range(field_2d,NX_L,NY_L,rmin,rmax
+     1                              ,r_missing_data)
+
+                    call ccpfil(field_2d,NX_L,NY_L,rmin,rmax,'spectral'       
      1                         ,n_image,scale,'hsect') 
                 endif
 
@@ -4819,7 +4847,7 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
-        elseif(c_type(1:1) .eq. 'u' .or. c_type(1:1) .eq. 'v')then
+        elseif(c_type_i .eq. 'u' .or. c_type_i .eq. 'v')then
             call upcase(c_type,c_type)
 
             ext = 'lsx'
@@ -4882,13 +4910,13 @@ c                   cint = -1.
      1        c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'vs')then
+        elseif(c_type_i .eq. 'vs')then
             var_2d = 'VIS'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
@@ -4897,16 +4925,23 @@ c                   cint = -1.
 
             c33_label = 'Sfc Visibility       (miles)     '
 
-            clow = 0.
-            chigh = +100.
+            clow = 100.
+            chigh = +0.
             cint = -0.1
+            scale = 1600.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1600.,clow,chigh,cint,
-     1        asc9_tim_t,namelist_parms,
-     1        c33_label,i_overlay,c_display,lat,lon,jdot,
-     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,scale,clow,chigh,cint,
+!    1        asc9_tim_t,namelist_parms,
+!    1        c33_label,i_overlay,c_display,lat,lon,jdot,
+!    1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'linear')
 
         elseif(c_type(1:2) .eq. 'fw')then
             var_2d = 'FWX'
