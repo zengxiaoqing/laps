@@ -425,11 +425,12 @@
 
      A tar file containing test data is available that contains a 1 hour
      run of laps data (intermediate files from the 'ingest' code plus outputs
-     from the 'analysis' code). The sched.pl was run for a particular date. 
-     This is the contents of the 'data/lapsprd', 'data/time' and 'data/log' 
-     directories from an FSL machine. The contents of the various directories 
-     are outlined below in this README file. The data was created with the 
-     latest software release. Our users can download this data at 
+     from the 'analysis' code). If we have enough disk space, then several
+     consecutive hours are posted, one hour per file. Included are the 
+     contents of the 'data/lapsprd', 'data/time' and 'data/log' directories 
+     from an FSL machine. The contents of the various directories are outlined 
+     below in this README file. The data was created with the latest software 
+     release. Our users can download this data at 
      'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
      If you want to test the 'analysis' code only, you might initiate
