@@ -29,18 +29,23 @@ cdis
 cdis 
 cdis 
 cdis 
-         subroutine readcsc(i4time,imax,jmax,cscnew)
+         subroutine readcsc(i4time_cur,imax,jmax,cscnew)
 C
          integer*4  imax,jmax
 
          real*4 csc(imax,jmax),lcv(imax,jmax),csctot(imax,jmax)
          real*4 snow_total(imax,jmax)
+         real*4 snow_accum(imax,jmax)
          real*4 missval,cscnew(imax,jmax)
-         integer*4 i4time
+         integer*4 i4time,i4time_cur
          CHARACTER*24 TIME
-c         data missval/1.0e37/
-c
 c ************************************************************
+c
+         do j=1,jmax
+            do i=1,imax
+               snow_total(i,j)=0.0
+            enddo
+         enddo
         call get_laps_cycle_time(laps_cycle_time,istatus)
         if(istatus.ne.1)then
            write(6,*)'Error - get_laps_cycle_time'
@@ -51,7 +56,9 @@ c ************************************************************
            write(6,*)'Error - get_r_missing_data'
            return
         endif
-        i4time=i4time-48*3600 !force 48 hours 
+
+        i4time=i4time_cur-48*3600 !force 48 hours 
+
 c ************************************************************
 c first set csctot to all missing values
 c
@@ -64,7 +71,7 @@ c
 c now loop through past 48 hours, looking only at csc files
 c
         icsc=0
-        ncycle_times=48*int(3600./float(laps_cycle_time))+1
+        ncycle_times=48*int(3600./float(laps_cycle_time))
         do itime=1,ncycle_times
 c
            call cv_i4tim_asc_lp(i4time,time,istatus)
@@ -76,28 +83,38 @@ c
 	   IF (ISTATUS .NE. 1)go to 522
 
            icsc=icsc+1
+           nspts=0
+           nrpts=0
            do i=1,imax
            do j=1,jmax
-             if(csc(i,j).le.1.1)csctot(i,j)=csc(i,j)  
-	     if(csc(i,j).le.0.1)csctot(i,j)=0.0
+             if(csc(i,j).le.1.1)then
+                csctot(i,j)=csc(i,j)
+                nspts=nspts+1
+             endif
+             if(csc(i,j).le.0.1)then
+                nrpts=nrpts+1
+                csctot(i,j)=0.0
+             endif
            enddo
            enddo
+           nmpts=(imax*jmax)-nspts-nrpts
+           nspts=nspts-nrpts
+           print*,'Cycle ',itime,'nmiss/nsnow/nreject ',nmpts,
+     &nspts,nrpts
  522       continue
 c
            i4time=i4time+laps_cycle_time
         enddo
  101    format(1x,'First csc loop data search time: ',a17)
 c
-         if(icsc.eq.0)then
-         write(6,*) '**** No lcv data available over 48 hours ****'
-           do i=1,imax
-           do j=1,jmax
+        if(icsc.eq.0)then
+        write(6,*) '**** No lcv data available over 48 hours ****'
+          do i=1,imax
+          do j=1,jmax
              csctot(i,j)=missval
-           enddo
-           enddo
-         endif
-c
-        i4time=i4time-laps_cycle_time
+          enddo
+          enddo
+        endif
 c
         call analyze(csctot,cscnew,imax,jmax,missval)
 c
@@ -106,8 +123,8 @@ c  latest csc obs. snow_total only applies to a point - it is not
 c  spread horizontally. If there are then any later csc obs at that 
 c  point, then the csctot point is set to the csc ob.
 c
-        i4time=i4time-48*3600
-        ncycle_times=48*int(3600./float(laps_cycle_time))+1
+        i4time=i4time_cur-48*3600
+        ncycle_times=48*int(3600./float(laps_cycle_time))
         write(6,*)'---------------------------------------'
         write(6,*)
 
@@ -130,14 +147,38 @@ c   write over any previous time's snow_total obs.
            enddo
            enddo
  52        continue
+           i4time=i4time+laps_cycle_time
+        enddo
 c
 c now get snow_total obs
+c J.Smart (11-3-97). Compute 6 hour snow accumulation instead of
+c                    snow total to avoid false snow cover from "old"
+c                    snow total accumulation.
 c
-	   CALL GETLAPSL1S(I4TIME,snow_total,imax,jmax,1,
-     &ISTATUS)
-	   IF (ISTATUS .NE. 1)goto 51
+        i4time=i4time_cur-48*3600
+        ncycle_times=48*int(3600./float(laps_cycle_time))
+        write(6,*)
+        write(6,*)'Accumulate hrly Snow for 48 hour total '
+        write(6,*)'---------------------------------------'
 
-c Adjust snow cover field based upon snow total 
+        do itime=1,ncycle_times
+
+           call cv_i4tim_asc_lp(i4time,time,istatus)
+           write(6,103)time
+
+           CALL GETLAPSL1S(I4TIME,snow_accum,imax,jmax,1,
+     &ISTATUS)
+           IF (ISTATUS .NE. 1)goto 51
+           do j=1,jmax
+           do i=1,imax
+              snow_total(i,j)=snow_total(i,j)+snow_accum(i,j)
+           enddo
+           enddo
+ 51        continue
+           i4time=i4time+laps_cycle_time
+        enddo
+c
+c Adjust snow cover field based upon snow total. ------
 c   if snowfall total >= 2cm, then set snow cover to 1.
 c   if snowfall total  = 1cm, then set snow cover to 0.5
 c   if snowfall total between 1 and 2cm, then ramp snow cover 0.5 to 1.
@@ -148,12 +189,9 @@ c   if snowfall total between 1 and 2cm, then ramp snow cover 0.5 to 1.
      1         cscnew(i,j)=snow_total(i,j)/0.02
            enddo
            enddo     
- 51        continue
 c
-           i4time=i4time+laps_cycle_time
-        enddo
  102    format(1x,'Second loop data search time: ',a17)
-          i4time=i4time-laps_cycle_time
+ 103    format(1x,'Snow Accum data search time: ',a17)
 c
 c        do j=jmax,1,-1
 c          write(6,76)j,(cscnew(i,j),i=1,18)
@@ -233,14 +271,14 @@ C
 C
 C-------------------------------------------------------------------------------
 C
-      SUBROUTINE GETLAPSL1S(I4TIME,snow_total,imax,jmax,kmax,
+      SUBROUTINE GETLAPSL1S(I4TIME,snow_accum,imax,jmax,kmax,
      &ISTATUS)
 C
       integer*4 imax,jmax,kmax
 c
       INTEGER*4 I4TIME,LVL(KMAX),I,J,ERROR(2),ISTATUS
 C
-      REAL*4 snow_total(imax,jmax),readv(imax,jmax,kmax)		
+      REAL*4 snow_accum(imax,jmax),readv(imax,jmax,kmax)		
 C
       CHARACTER*50 LDIR
       CHARACTER*31 EXT
@@ -257,7 +295,7 @@ C
         call get_directory('l1s',ldir,len)
 
 	EXT='L1S'
-	VAR(1)='STO'
+	VAR(1)='S01'
 	LVL(1)=0
 C
 C ****  Read LAPS l1s
@@ -272,22 +310,10 @@ C
 C
         do j=1,jmax
         do i=1,imax
-          snow_total(i,j)=readv(i,j,1)
+          snow_accum(i,j)=readv(i,j,1)
         enddo
         enddo
 c
-c        print *,' '
-c        print *,'lcv field'
-c        do j=1,jmax
-c          write(6,20)j,(lcv(i,j),i=21,40)
-c        enddo
-c        print *,' '
-c        print *,'csc field'
-c        do j=1,jmax
-c          write(6,20)j,(csc(i,j),i=21,40)
-c        enddo
-c        print *,'csc(21,55)=',csc(21,55)
-c 20     format(1x,i2,1x,20f4.1)
 c
 	ISTATUS=ERROR(1)
 	RETURN
@@ -334,6 +360,11 @@ c        box, apply average to missing points (modify cscnew grid).
 c   3) Divide grid into 9 boxes. Take average from original grid 
 c        in each box. If there are some non-missing points in the
 c        box, apply average to missing points (modify cscnew grid).
+c     -> Actually do this again for 36 and 100 box subdivisions.
+c        Thus the cscnew grid will contain the average values from
+c        the smallest boxes (from the 100 box subdivision). The
+c        missing grid points receive this value while the non-missing
+c        grid points get overwritten with the original csc values.
 c   4) Apply original grid non-missing values to cscnew grid.
 c
        do nrun=1,nruns
@@ -417,8 +448,8 @@ c           print *,'nn,idir,inc=',nn,idir,inc
            enddo
 c           do nbox=1,nbtot(nn)
 c             write(6,10)nn,nbox,inc,iimin(nn,nbox),iimax(nn,nbox),
-c     1        jjmin(nn,nbox),jjmax(nn,nbox)
-c 10          format(1x,'nn,nbox,inc=',3i3,'imin,max,jmin,max=',4i4)
+c    1        jjmin(nn,nbox),jjmax(nn,nbox)
+c10          format(1x,'nn,nbox,inc=',3i3,'imin,max,jmin,max=',4i4)
 c           enddo
          enddo
 c

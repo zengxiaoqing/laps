@@ -71,7 +71,7 @@ C
         Enddo
       Enddo
       IStatus = 1
-c     Write(*,*) 'Completed Evaporation Calc'
+c     Write(6,*) 'Completed Evaporation Calc'
 
       Return
       End
