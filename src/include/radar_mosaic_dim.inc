@@ -1,2 +1,2 @@
       integer max_radars_mosaic
-      parameter (max_radars_mosaic=10)
+      parameter (max_radars_mosaic=30)
