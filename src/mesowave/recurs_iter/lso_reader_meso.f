@@ -135,13 +135,13 @@ c       Background: time order is reverse of LAPS reading order - YUANFU.
 	   STOP
 	ENDIF
 	print*,'TEMP BKGD: ',bkgd(1,1,ncycles-n+1,1),bkg_time
-        call get_background_sfc(i4prev(n),'SFCP',bkg_ext,bkg_time,
+        call get_background_sfc(i4prev(n),'MSLP',bkg_ext,bkg_time,
      &       bkgd(1,1,ncycles-n+1,4),laps_cycle_time,nx,ny,jstatus)
         IF (jstatus .EQ. 0) THEN
 	   PRINT*,'lso_reader_meso: error in reading SFCP background'
 	   STOP
 	ENDIF
-	print*,'SFCP BKGD: ',bkgd(1,1,ncycles-n+1,4),bkg_time
+	print*,'MSLP BKGD: ',bkgd(1,1,ncycles-n+1,4),bkg_time
         call get_bkgwind_sfc(i4prev(n),bkg_ext,bkg_time,
      &       bkgd(1,1,ncycles-n+1,2),bkgd(1,1,ncycles-n+1,3),
      &       laps_cycle_time,nx,ny,jstatus)

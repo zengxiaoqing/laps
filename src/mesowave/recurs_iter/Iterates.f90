@@ -46,6 +46,8 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
               b(1,1:3) = 1.0-coe(1:3,iobs)
               b(2,1:3) = coe(1:3,iobs)
               DO k=1,2
+		 IF ((idx(3,iobs)+k-1 .GE. 1) .AND. &
+		     (idx(3,iobs)+k-1 .LE. n(3))) THEN
                  DO j=1,2
                     DO i=1,2
                        Y0 = Y0 + bkgd(idx(1,iobs)+i-1-nfic, &
@@ -54,6 +56,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
                                  b(i,1)*b(j,2)*b(k,3)
                     ENDDO   
                  ENDDO
+		 ENDIF
               ENDDO
 
 	      stdv(id) = stdv(id)+(o(1,iobs)-y0)**2
@@ -73,11 +76,11 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 
 	stdv(id) = SQRT(stdv(id))/no_v
 
-	! IF (no_v .GT. 0) THEN
-	!    PRINT*,'Standard Deviation: ',stdv(id),id
-	! ELSE
-	!    PRINT*,'Standard Deviation: no observation'
-	! ENDIF
+	!IF (no_v .GT. 0) THEN
+        !   PRINT*,'Standard Deviation: ',stdv(id),id
+	!ELSE
+	!   PRINT*,'Standard Deviation: no observation'
+	!ENDIF
 
 	! Standard deviation check: with 4.0*stdv
         DO iobs=1,nobs
@@ -93,6 +96,8 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
               b(1,1:3) = 1.0-coe(1:3,iobs)
               b(2,1:3) = coe(1:3,iobs)
               DO k=1,2
+		 IF ((idx(3,iobs)+k-1 .GE. 1) .AND. &
+		     (idx(3,iobs)+k-1 .LE. n(3))) THEN
                  DO j=1,2
                     DO i=1,2
                        Y0 = Y0 + bkgd(idx(1,iobs)+i-1-nfic, &
@@ -101,6 +106,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
                                  b(i,1)*b(j,2)*b(k,3)
                     ENDDO   
                  ENDDO
+		 ENDIF
               ENDDO
 
               IF (ABS(o(1,iobs)-y0) .GT. 4.0*stdv(id)) THEN
@@ -148,6 +154,8 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
            b(1,1:3) = 1.0-coe(1:3,iobs)
            b(2,1:3) = coe(1:3,iobs)
            DO k=1,2
+	      IF ((idx(3,iobs)+k-1 .GE. 1) .AND. &
+		  (idx(3,iobs)+k-1 .LE. n(3))) THEN
               DO j=1,2
                  DO i=1,2
                     Y0 = Y0 + a(idx(1,iobs)+i-1,idx(2,iobs)+j-1, &
@@ -155,6 +163,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
                               b(i,1)*b(j,2)*b(k,3)
                  ENDDO
               ENDDO
+	      ENDIF
            ENDDO
         
            o(1,iobs) = o(1,iobs)-y0

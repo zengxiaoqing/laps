@@ -104,7 +104,6 @@ SUBROUTINE WriteAnalysis(a,n)
      data(1:nx,1:ny,11) = 0.0 
 	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3),6)- &
 	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3)-1,6)
-     PRINT*,'Test PP: ',data(1:3,1,11)
 
      CALL write_laps_data(istarttime+(it-1)*laps_cycle_time, &
                           dir_s,ext,nx,ny,n(4)+5,n(4)+5,varnames, &
