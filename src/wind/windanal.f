@@ -262,7 +262,8 @@
               endif
 
               if(speed_bkg .gt. 200.)then
-                  write(6,*)' Bad first guess winds > 200. m/s detected'
+                  write(6,*)
+     1                ' Error: first guess winds > 200. m/s detected'
                   istatus = 0
                   return
               endif

@@ -72,9 +72,8 @@ cdis
         real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
         real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
         real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns), ffg_s(maxst
-     1ns)
-        real*4 vis_s(maxstns)
+        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)  
+        real*4 ffg_s(maxstns), vis_s(maxstns)
 c
         character stations(maxstns)*3, wx_s(maxstns)*8        ! c5_stamus
         character atime*24, infile*270
@@ -82,11 +81,10 @@ c
 
 !       Declarations for new read_surface routine
 !       New arrays.f reading in the SAO data from the LSO files
-        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns),store_hgt(maxs
-     1tns,5)
-        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns),vis(maxs
-     1tns)
-     1                                          ,rad(maxstns)
+        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
+     1          ,store_hgt(maxstns,5)
+        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
+     1          ,vis(maxstns),rad(maxstns)
 
         Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
 
@@ -114,13 +112,12 @@ c
 !     &        hgt_low,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pr_s,sr_s,vis_s,istatus)
 
         call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
-     &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_p
-     1os_g,
-     &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
-     &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
-     &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
-     1store_emv,
-     &           store_amt,store_hgt,vis,obstime,istatus)
+     1           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
+     1           n_obs_pos_g,
+     1           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
+     1           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
+     1           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
+     1           store_emv,store_amt,store_hgt,vis,obstime,istatus)
 
 
 100     write(6,*)'num_saos',n_sao_b
@@ -138,8 +135,8 @@ c
         endif
 
         if(istatus .ne. 1)then
-            write(6,*)' Bad ISTATUS from read_sfc',istatus
-            istatus = 0
+            write(6,*)' Warning: Bad istatus from read_sfc',istatus       
+            istatus = 1
             return
         endif
 

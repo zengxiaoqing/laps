@@ -84,7 +84,7 @@ cdis
 
 !       Open input intermediate data file
         lun_in = 31
-        call open_lapsprd_file(lun_in,i4time,ext_in,istatus)
+        call open_lapsprd_file_read(lun_in,i4time,ext_in,istatus)
         if(istatus .ne. 1)go to 999
 
         lun_pig = 32

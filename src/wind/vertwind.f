@@ -182,8 +182,8 @@ cdis
      1          max(nint(height_to_zcoord(topo(i,j),istatus)),1)
 
             if(istatus .ne. 1)then
-                write(6,*)' Bad istatus returned from height_to_zcoord'
-     1                                                  ,i,j,topo(i,j)
+                write(6,*)' Error: Bad istatus returned from '
+     1                   ,'height_to_zcoord',i,j,topo(i,j)
                 return
             endif
 
