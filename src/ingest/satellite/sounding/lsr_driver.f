@@ -298,7 +298,10 @@ c
         rsb=scalingBias(1,k)
         rsg=scalingGain(1,k)
 
-        if(rsg.gt.1.0e-10)then                     !vis channel rsg is small. no rad conversion.
+c       if(rsg.gt.1.0e-10)then                     !vis channel rsg is small. no rad conversion.
+c                                                   this test doesn't work on linux-alpha (jet).
+
+        if(k.lt.n_channels)then                    !the last channel is visible, so no radiance calc.
 
            write(6,*)'Scaling Bias/Gain ',k,rsb,rsg
            do j=1,ndimy

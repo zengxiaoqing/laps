@@ -235,7 +235,7 @@ c           write(6,*)'Lat/Lon ', lat(k,j),lon(k,j)
             write(6,*)'Percent of domain covered = ',pct_covered
          endif
       else
-         write(6,*)'100% Percent of domain covered = ',pct_covered
+         write(6,*)'100% Percent of domain covered '
       endif
 c
 c     do j = 1,nyl,20
