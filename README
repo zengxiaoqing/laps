@@ -375,12 +375,14 @@
                 --- 2.2.4.1 Creating multiple data domains ---
 
      If you intend to run multiple data domains you will want to use the 
-     --datadir option to configure when installing the first one 
-     (see 2.2.2 above).  Then, for each additional domain you wish to 
-     create, run 
-     make DATAROOT=/data_disk/laps mkdatadirs
-     where /data_disk/laps is replaced with a unique directory name.  
-     Then follow the setup and localization steps below.
+     '--datadir=/data_disk/laps/data1' option to configure when installing the
+     first one (see 2.2.2 above).  Then, for each additional domain you wish 
+     to create, run... 
+
+     $ make DATAROOT=/data_disk/laps/data2 mkdatadirs
+
+     where the subdirectory name 'data2' can be given a unique name for each
+     additional domain. Then follow the setup and localization steps below.
 
      
             ----   2.2.5  Untarring the geography databases  ---
@@ -434,12 +436,12 @@
 
      Finally, you can create the static data files and look up tables specific 
      to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
-     other runtime parameter files. Other subdirectories under 'data' are 
-     also created if they're not already there. Shown below is an example of 
-     running the localization for a particular laps domain. 
+     other runtime parameter files. Shown below is an example of running the 
+     localization for a particular laps domain. This should be repeated for
+     each domain if there is more than one. 
 
      $ cd (laps_root)/etc
-     $ perl laps_localization.pl --dataroot=/data/fxa/laps/data 
+     $ perl laps_localization.pl --dataroot=/data_disk/laps/data 
 
      The localization involves several operations.  The parameter files are 
      merged/updated with the repository versions if needed. The dimensions
