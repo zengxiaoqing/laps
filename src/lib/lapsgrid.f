@@ -375,12 +375,6 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
 2       format(a6)
 3       format(//a)
 
-        if(c6_maproj .ne. 'plrstr' .and. c6_maproj .ne. 'lmbrt1')then
-            write(6,*)' Error: invalid map projection ',c6_maproj
-            write(6,*)' Should be plrstr or lmbrt1'
-            goto 910
-        endif
-
         if(iflag_lapsparms_cmn .ne. 1)goto910
 
         PRESSURE_0_L = PRESSURE_BOTTOM_L + PRESSURE_INTERVAL_L
@@ -959,6 +953,7 @@ c        end
       istatus = 1
       return
       end
+
       subroutine get_background_info(len,bgpaths,bgmodels)
       integer maxbgmodels,len
       parameter (maxbgmodels=4)

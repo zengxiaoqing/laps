@@ -37,6 +37,7 @@ cdis
 !       1994            Steve Albers - partially added lambert option
 !       1997            Steve Albers - Added both kinds of lambert projections
 !                                    - as well as mercator projection
+!       1997            Steve Albers - Added local stereographic
 
 !       This routine assumes a polar stereographic, lambert conformal,
 !       or mercator projection.
@@ -190,10 +191,18 @@ cdis
         end
 
 
-        subroutine latlon_to_uv_ps(rlat,rlon,slat,polat,slon,u,v)
+        subroutine latlon_to_uv_ps(rlat_in,rlon_in,slat,polat,slon,u,v)
 
-        if(polat .ne. +90.)then
-            write(6,*)' latlon_to_uv_ps: ERROR, polat .ne. +90 ',polat      
+        if(.true.)then ! Rotate considering where the projection pole is
+            polon = slon
+            call GETOPS(rlat,rlon,rlat_in,rlon_in,polat,polon)
+            rlon = rlon - 270.
+!           rlon = rlon - polon
+
+        else
+            rlat = rlat_in
+            rlon = rlon_in
+
         endif
 
         a=90.-rlat
@@ -221,7 +230,7 @@ cdis
 
         if(slat1 .eq. slat2)then ! tangent lambert
             n = cosd(90.-slat1)
-        else                       ! two standard latitudes
+        else                     ! two standard latitudes
             n = alog(cosd(slat1)/cosd(slat2))/
      1          alog(tand(45.-s*slat1/2.)/tand(45.-s*slat2/2.))
         endif
@@ -300,11 +309,8 @@ cdis
         return
         end
 
-        subroutine uv_to_latlon_ps(u,v,slat,polat,slon,rlat,rlon)
-
-        if(polat .ne. +90.)then
-            write(6,*)' uv_to_latlon_ps: ERROR, polat .ne. +90 ',polat      
-        endif
+        subroutine uv_to_latlon_ps(u,v,slat,polat,slon
+     1                                         ,rlat_out,rlon_out)
 
         r=sqrt(u**2+v**2)
 
@@ -321,17 +327,28 @@ c
 
             else
                 if (u .gt. 0.) then
-                    rlon=atand(v/u)      + slon
+                    rlon=atand(v/u)      
                 else
-                    rlon=atand(v/u)+180. + slon
+                    rlon=atand(v/u)+180. 
                 endif
 
-                rlon=amod(rlon+630.,360.) - 180.
+                rlon=rlon + 90.
 
             endif
 
         endif
-c
+
+        if(.true.)then ! Rotate considering where the projection pole is
+            polon = slon
+!           This routine will rotate the longitude even if polat = +90.
+            call PSTOGE(rlat,rlon,rlat_out,rlon_out,polat,polon)
+        else
+            rlat_out = rlat
+            rlon_out = rlon + slon
+        endif
+
+        rlon_out = amod(rlon_out+540.,360.) - 180. ! Convert to -180/+180 range
+
         return
         end
 
@@ -382,7 +399,14 @@ c
 
         function projrot_laps(rlon)
 
+!       1997 Steve Albers       Calculate map projection rotation, this is the
+!                               angle between the y-axis "grid north" and
+!                               true north.
+
         real*4 n
+
+        save init
+        data init/0/
 
         include 'lapsparms.cmn'
 
@@ -394,8 +418,29 @@ c
             stop
         endif
 
-        if(    c6_maproj .eq. 'plrstr')then ! polar stereographic
-            projrot_laps = standard_longitude - rlon
+        if(c6_maproj .eq. 'plrstr')then ! polar stereographic
+
+            if(polat .eq. +90.)then
+                projrot_laps = standard_longitude - rlon
+
+            else
+                polat = standard_latitude2
+
+                if(init .eq. 0)then
+                    write(6,*)' WARNING: polar stereo pole lat in'
+     1                       ,' function "projrot_laps" should be +90.'       
+                    write(6,*)' Using approximation for "projrot_laps",'
+     1                       ,' accurate calculation not yet in place.'
+                    write(6,*)' Check standard_latitude2 in'
+     1                       ,' "nest7grid.parms".'
+                    init = 1
+                endif
+
+                n = cosd(90.-polat)
+                projrot_laps_exp = n * angdif(standard_longitude,rlon)       
+                projrot_laps = projrot_laps_exp
+
+            endif
 
         elseif(c6_maproj .eq. 'lambrt')then ! lambert conformal
 
@@ -408,15 +453,12 @@ c
                 s = +1.
             endif
 
-            if(slat1 .eq. slat2)then ! tangent lambert
+            if(slat1 .eq. slat2)then        ! tangent lambert
                 n = cosd(90.-slat1)
-            else                       ! two standard latitudes
+            else                            ! two standard latitudes
                 n = alog(cosd(slat1)/cosd(slat2))/
      1              alog(tand(45.-s*slat1/2.)/tand(45.-s*slat2/2.))
             endif
-
-            n = cosd(90.-standard_latitude)
-
 
             projrot_laps = n * angdif(standard_longitude,rlon)
 
@@ -459,7 +501,11 @@ c
           call latlon_to_rlapsgrid(lat(i,j),lon(i,j),lat,lon,ni,nj
      1                                              ,ri,rj,istat)
 
-          if(istat .ne. 1)return
+          if(istat .ne. 1)then
+              write(6,*)' Bad status from latlon_to_rlapsgrid'
+              istatus = 0
+              return
+          endif
 
           diff_gridi = ri - float(i)
           diff_gridj = rj - float(j)
@@ -493,7 +539,11 @@ c
           call rlapsgrid_to_latlon(ri,rj,lat,lon,ni,nj
      1                                  ,rlat,rlon,istat)
 
-          if(istat .ne. 1)return
+          if(istat .ne. 1)then
+              write(6,*)' Bad status from rlapsgrid_to_latlon'
+              istatus = 0
+              return
+          endif
 
           diff_lli =  rlat - lat(i,j)
           diff_llj = (rlon - lon(i,j)) * cosd(lat(i,j))
@@ -528,7 +578,9 @@ c
 
       dist = sqrt((x2-x1)**2 + (y2-y1)**2)
 
-      write(6,*)'grid_spacing_m according to latlon_to_xy is:',dist
+      write(6,*)
+     1 ' grid spacing on projection plane using "latlon_to_xy" is:'      
+     1 ,dist
       
 !...........................................................................
 
