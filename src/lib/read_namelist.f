@@ -226,6 +226,10 @@ cdoc  Reads static/osse.nl file.
       integer        ifcst_intrvl
       integer        isim_time_hr
 
+      integer        nsimobs
+      data           nsimobs/0/
+      save           nsimobs
+
       character      nest7grid*150
       character      path_to_model*150
       character      c_obs_types(max_ob_types)*15
@@ -255,11 +259,15 @@ cdoc  Reads static/osse.nl file.
       open(1,file=nest7grid,status='old',err=900)
       read(1,osse_nl,err=901)
       close(1)
-      do i = 1,max_ob_types
-         if(c_obs_types(i).ne.' ')then
-            n_sim_obs = n_sim_obs + 1
-         endif
-      enddo
+
+      if(nsimobs.eq.0)then
+         do i = 1,max_ob_types
+            if(c_obs_types(i).ne.' ')then
+               n_sim_obs = n_sim_obs + 1
+            endif
+         enddo
+      endif
+      nsimobs=n_sim_obs
       print*,'n_sim_obs types from namelist= ',n_sim_obs
       istatus = 1
      
