@@ -329,7 +329,7 @@ c
           if(idebug .eq. 1)then
               write(6,111,err=112)i,j,k_to_f(tb8_k(i,j))
      1                               ,k_to_f(t_gnd_k(i,j))
-111           format(1x,'tb8/sfc',2i4,11x,f8.1,8x,f8.1)
+111           format(1x,2i4,' tb8/sfc',12x,f8.1,8x,f8.1)
 112       endif
 
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
@@ -612,11 +612,23 @@ c
                   buffer = surface_ir_buffer ! Weed out IR tops w/higher buffer
               endif
 
-!             Calculate new cloud top and cover (based on filtered tb8)
+!             Calculate new cloud top and cover (based on filtered tb8/11u)
 !             This gives a cloud edge with more uniform height for an isolated
 !             cloud when the edge has a "soft" appearance in the imagery.
+!             This helps account for thin clouds by assuming that a thicker
+!             cloud nearby will exist with the same cloud top height. This
+!             technique might be compared with clustering and a histogram 
+!             slope approach using 11u and 6.7u IR.
 
               cldtop_m_avg = cldtop_m(i,j)
+
+!             Compare brightness temp to surface temperature
+              if(idebug .eq. 1)then
+                  write(6,206,err=207)i,j,k_to_f(tb8_k(i,j))
+     1                                   ,k_to_f(t_gnd_k(i,j))
+206               format(1x,2i4,'tb8_cold/sfc',6x,f8.1,8x,f8.1)
+207           endif
+
               call cloud_top(init_co2,i4time,tb8_cold_k(i,j),idebug
      1            ,cloud_frac_co2_a(i,j)                                 ! I
      1            ,t_gnd_k,pres_sfc_pa
@@ -649,7 +661,7 @@ c
      1                   ,cldtop_m_avg,cldtop_m(i,j)
 !       1                        ,cldtop_m_avg,cldtop_m_cold
      1                   ,cover
-211               format(' AVG/COLD',2i4,2f7.1,2x,2f7.0,f9.3)
+211               format(1x,2i4,' AVG/COLD',2f7.1,2x,2f7.0,f9.3)
 212           endif
 
             elseif(ht_sao_base .gt. cldtop_m(i,j))then ! Satellite top below ceiling
@@ -725,6 +737,10 @@ c
 
             endif ! Satellite top below SAO ceiling
 
+            if(idebug .eq. 1)then
+                write(6,291)i,j,mode_sao
+291             format(1x,2i4,' mode_sao =',i2)
+            endif
 
 301         if(htbase .ne. htbase_init)then
 !                write(6,*)' Satellite ceiling reset by SAO',i,j,htbase
@@ -946,7 +962,7 @@ c
      1                           ,k_to_f(cldtop_temp_k)
      1                           ,arg,topo,k_to_f(temp_3d(i,j,kl))
      1                           ,k_to_f(temp_above)
-122                     format(1x,'cldtp_t',3i4,f8.3,2f8.1,f11.1
+122                     format(1x,2i4,' cldtp_t',i4,f8.3,2f8.1,f11.1
      1                           ,f21.1,2f6.1)
 123                 endif
 
@@ -1261,14 +1277,16 @@ c
         tb8_a_clr_sn_sumsq = 0.
 
         do j = 1,jmax
-          if(j .eq. int(j-9)/10*10+9)then
+        do i = 1,imax
+
+          jp10 = j+10
+          if(jp10 .eq. (jp10/20)*20 .and. i .eq. (i/4)*4)then
             l_output = .true.
           else
             l_output = .false.
           endif
 
-          do i = 1,imax
-           if(tb8_k(i,j) .ne. r_missing_data)then
+          if(tb8_k(i,j) .ne. r_missing_data)then
             do k = 1,kcld
                 cldcv_1d(k) = cldcv(i,j,k)
             enddo
@@ -1375,7 +1393,7 @@ c
      1               ,t_effective
      1               ,tdiff,frac_clouds,i_correct
      1               ,(a_new(l),l=nlyr_new-1,1,-1)
-911                 format(1x,2i3,i3,2f7.0,f7.1,f7.3,i2,'  ',10f6.2)
+911                 format(1x,2i4,i3,2f7.0,f7.1,f7.3,i2,'  ',10f6.2)
 912             endif
 
                 if(i_correct .eq. 1 .and. iter .lt. iter_max
@@ -1413,8 +1431,8 @@ c
                 endif
 
 !               if(iwrite .le. 100 .and. l_output)write(6,913)delta_cover,tdiff
-                if(iter .gt. 0 .and. l_output)write(6,913)delta_cover,td
-     1iff
+                if(iter .gt. 0 .and. l_output)write(6,913)delta_cover
+     1                                                   ,tdiff
 913             format(70x,'Best delta_cover/tdiff = ',f6.2,f6.1)
 
 !               Apply correction to 3D cloud cover field
@@ -1432,8 +1450,8 @@ c
                 tdiff_corr_sumsq2 = tdiff_corr_sumsq2 + tdiff**2
             endif
 
-           endif ! tb8_k(i,j) is valid
-          enddo ! i
+          endif ! tb8_k(i,j) is valid
+        enddo ! i
         enddo ! j
 
 !       Write out statistics on consistency of Band 8 data and cloud cover
