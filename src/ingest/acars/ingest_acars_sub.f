@@ -88,7 +88,7 @@ C
 
 !............................................................................
 
-      l_use_tamdar = .true.
+      l_use_tamdar = .false. ! applies to non-WFO, non_RSA runs
 
       if (c8_project(1:3) .eq. 'WFO' .or. 
      1    c8_project(1:3) .eq. 'RSA'      ) then     
