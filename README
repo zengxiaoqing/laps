@@ -43,7 +43,7 @@
          2.7.4 ..................  Terrain Databases
          2.7.5 ..................  Terrain Smoothing/Filtering  
          2.8 ..............  CHANGING THE VERTICAL DOMAIN
-         2.9 .............  CHANGING THE CYCLE TIME 
+         2.9 ..............  CHANGING THE CYCLE TIME 
          2.10 .............  SURFACE ANALYSIS CHANGES
          2.11 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
          2.12 .............  LVD (SATELLITE INGEST) CHANGES
@@ -210,7 +210,10 @@
      'Lapsplot' can be modified to show political boundaries outside of the 
      U.S. The following data files are relevant from the 'static/ncarg' 
      directory: 'continent_minus_us.dat', 'state_from_counties.dat', and 
-     'uscounty.dat'.
+     'uscounty.dat'. These political boundary files are stored in big_endian
+     format. These would need to be converted manually prior to using 
+     'lapsplot', if your machine is expecting little_endian. We will consider 
+     automating this in the future. 
 
      Please note that 'lapsplot' is provided to help you check out how your
      LAPS implementation is working. The LAPB Branch does not have any other 
@@ -1812,12 +1815,9 @@ Outputs: (LW3 used by LBA)
 </pre>
 Source directory: laps/src/temp
 
-Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
-           Analysis and Prediction System (LAPS): Analyses of clouds, 
-           precipitation, and temperature. Weather and Forecasting, 11, 
-           273-287.
+Further description and reference is at:
 
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+http://laps.fsl.noaa.gov/albers/laps/talks/temp/sld001.htm
 
 ------ 3.3.4 ---------------------CLOUD---------------------------------------
 
