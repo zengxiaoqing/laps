@@ -3209,7 +3209,7 @@ Source directory: 'laps/src/dprep'
 
 ------ 3.4.2 --------------LAPSPREP------------------------------------------
 
-Process: lapsprep.exe - Post-processes LAPS analsysis files into formats
+Process: lapsprep.exe - Post-processes LAPS analysis files into formats
                         that can be used to initialize a local forecast
                         model (e.g., MM5, RAMS, WRF)
    
