@@ -496,15 +496,15 @@
 
         3) c6_maproj:
                 Polar stereographic: 
-                    Set to 'plrstr'. Polar stereographic is currently the only 
-                    fully supported map projection. See the note below 
-                    regarding limited support for other projections.
+                    Set to 'plrstr'. 
 
                 Lambert Conformal:
-                    Set to 'lambrt'. Limited support for now.
+                    Set to 'lambrt'.
 
                 Mercator:
-                    Set to 'merctr'. Limited support for now.
+                    Set to 'merctr'.
+
+                See the note below regarding current map projection limitations.
 
         4) standard_longitude:
                 Polar Stereographic:
@@ -555,22 +555,17 @@
         When you run ./etc/laps_localization.pl, the NetCDF static 
         file 'static.nest7grid' will be automatically generated (we hope). 
 
-        If you see the following error message: 
-
-        FILE../static/model/topo_30s/U50N119W DOES NOT EXIST
-
-        it does not necessarily mean there is a problem, it signifies that 
-        your domain runs outside the 30" data, but will still be covered by 
-        the 10' worldwide data.
+        The following error message, "FILE /U50N119W DOES NOT EXIST",
+        does not necessarily mean there is a problem. It signifies that 
+        your domain runs outside the available 30" data, and should still be 
+        covered by the 10' worldwide data, if available.
 
                         MAP PROJECTION LIMITATIONS
 
      Run-time testing for the various projections is in progress; initial 
    results are promising. Please let us know of any problems you encounter. 
 
-     The lambert projection may have problems in the southern hemisphere.
-
-     'Gridgen_model' has scaling problems for the lambert map projection. This
+     'Gridgen_model' does not yet work for the lambert map projection. This
    however should not impact the AFGWC port as they are presumably not using
    this module.
 
