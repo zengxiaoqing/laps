@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
 
-        subroutine insert_tsnd(i4time               ! Input
+        subroutine insert_tobs(i4time               ! Input
      1               ,lat,lon                       ! Input
      1               ,heights_3d                    ! Input
      1               ,sh_3d                         ! Input
@@ -280,7 +280,7 @@ cdis
                         temp_obs(n_obs,i_i) = igrid_tsnd(i_tsnd)
                         temp_obs(n_obs,i_j) = jgrid_tsnd(i_tsnd)
                         temp_obs(n_obs,i_k) = k
-                        temp_obs(n_obs,i_temp) = 
+                        temp_obs(n_obs,i_ob_grid) = 
      1                  temp_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)       
      1                                            + bias_tsnd(i_tsnd,k)
                         temp_obs(n_obs,i_wt) = wt_tsnd(i_tsnd,k)
@@ -309,16 +309,34 @@ cdis
 
         write(6,*)' # of TSND stations passing QC = ',n_good_tsnd
         write(6,*)' # of TSND stations failing QC = ',n_bad_tsnd
+        write(6,*)' % of TSND stations failing QC = '
+     1                      ,pct_rejected(n_good_tsnd,n_bad_tsnd)
 
         write(6,*)' # of obs in data structure (tsnds only) = '
      1            ,n_obs
 
 !       Read ACARS Temps
+        n_obs_before = n_obs
+
+        call get_meso_sao_pirep(dum,dum,MAX_ACARS,istatus)
+        if(istatus .ne. 1)return
+
+        call rd_acars_t(i4time,heights_3d,temp_3d                   ! I
+     1                       ,MAX_ACARS                             ! I
+     1                       ,n_good_acars                          ! O
+     1                       ,'pin'                                 ! I
+!    1                       ,u_maps_inc,v_maps_inc                 ! I
+     1                       ,ni,nj,nk                              ! I
+     1                       ,lat,lon                               ! I
+     1                       ,temp_obs,max_obs,n_obs                ! I/O
+     1                       ,istatus)                              ! O
+
+        n_obs = n_obs_before   ! Temporary for testing
 
         write(6,*)' # of obs in data structure (tsnds + acars) = '
      1            ,n_obs
 
-        call analyze_tsnd(n_tsnd,ni,nj,nk,l_good_tsnd          ! I
+        call analyze_tobs(n_tsnd,ni,nj,nk,l_good_tsnd          ! I
      1      ,weight_bkg_const                                  ! I
      1      ,grid_spacing_m,max_snd_grid                       ! I
      1      ,temp_obs,max_obs,n_obs                            ! I
@@ -329,7 +347,7 @@ cdis
      1      ,istatus)                                          ! O
 
         if(istatus .ne. 1)then
-            write(6,*)' Bad istatus returned from analyze_tsnd'
+            write(6,*)' Bad istatus returned from analyze_tobs'
             return
         endif
 
@@ -338,7 +356,7 @@ cdis
         end
 
 
-        subroutine analyze_tsnd(n_tsnd,ni,nj,nk,l_good_tsnd       ! I     
+        subroutine analyze_tobs(n_tsnd,ni,nj,nk,l_good_tsnd       ! I     
      1      ,weight_bkg_const                                     ! I
      1      ,grid_spacing_m,max_snd_grid                          ! I
      1      ,temp_obs,max_obs,n_obs                               ! I

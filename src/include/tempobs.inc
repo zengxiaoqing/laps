@@ -6,7 +6,7 @@
 !       in case we need them for increased accuracy in the analysis.
 
         integer*4 n_fields
-        parameter (n_fields=9)
+        parameter (n_fields=10)
 
         real*4 temp_obs(max_obs,n_fields)
 
@@ -17,6 +17,7 @@
         parameter (i_i = 4)
         parameter (i_j = 5)
         parameter (i_k = 6)
-        parameter (i_temp = 7)
-        parameter (i_bias = 8)
-        parameter (i_wt = 9)
+        parameter (i_ob_raw = 7)
+        parameter (i_ob_grid = 8)
+        parameter (i_bias = 9)
+        parameter (i_wt = 10)

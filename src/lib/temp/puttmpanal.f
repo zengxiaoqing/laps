@@ -213,7 +213,7 @@ cdis
             return
         endif
 
-        call insert_tsnd(i4time_needed        ! Input
+        call insert_tobs(i4time_needed        ! Input
      1                  ,lat,lon              ! Input
      1                  ,heights_3d           ! Input
      1                  ,sh_3d                ! Input
@@ -227,7 +227,7 @@ cdis
      1                  ,grid_spacing_m       ! Input
      1                  ,istatus)             ! Output
         if(istatus .ne. 1)then
-            write(6,*)' Error: Bad status returned from insert_tsnd'       
+            write(6,*)' Error: Bad status returned from insert_tobs'       
             return
         endif
 

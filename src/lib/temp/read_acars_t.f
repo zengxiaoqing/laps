@@ -29,16 +29,17 @@ cdis
 cdis 
 cdis 
 cdis 
-        subroutine rd_acars_t(i4time,heights_3d
-     1  ,N_ACARS,n_acars_obs,ext_in
-     1  ,u_maps_inc,v_maps_inc,ni,nj,nk
-     1  ,lat,lon
-     1  ,acars_i,acars_j,acars_ht,acars_temp
-     1  ,temp_obs,max_obs,n_obs                         ! temp data structure
-     1                                                  ,istatus)
+        subroutine rd_acars_t(i4time,heights_3d,temp_bkg_3d         ! I
+     1                       ,MAX_ACARS                             ! I
+     1                       ,n_good_acars                          ! O
+     1                       ,ext_in                                ! I
+!    1                       ,u_maps_inc,v_maps_inc                 ! I
+     1                       ,ni,nj,nk                              ! I
+     1                       ,lat,lon                               ! I
+     1                       ,temp_obs,max_obs,n_obs                ! I/O
+     1                       ,istatus)                              ! O
 
-!       1998        Steve Albers  Called Sequentially for acars temps, 
-!                                 then satellite sounding temps.
+!       1999        Steve Albers, FSL      Called for acars temps
 
 !******************************************************************************
 
@@ -50,14 +51,16 @@ cdis
 
 !       Acars
 
-        integer acars_i(N_ACARS)  ! X acars coordinates
-        integer acars_j(N_ACARS)  ! Y acars coordinates
-        integer acars_ht(N_ACARS) ! HT acars
-        real    acars_temp(N_ACARS)  ! u acars component
+        integer acars_i(MAX_ACARS)     ! I acars gridpoint
+        integer acars_j(MAX_ACARS)     ! J acars gridpoint
+        integer acars_ht(MAX_ACARS)    ! HT acars
+        real    acars_temp(MAX_ACARS)  ! acars temp
 
 !******************************************************************************
 
         real*4 heights_3d(ni,nj,nk)
+        real*4 temp_bkg_3d(ni,nj,nk)
+
         real*4 u_maps_inc(ni,nj,nk)
         real*4 v_maps_inc(ni,nj,nk)
 
@@ -66,6 +69,11 @@ cdis
 
         logical l_eof
 
+        write(6,*)
+        write(6,*)' Subroutine rd_acars_t...'
+
+        n_acars_read = 0
+        n_acars_obs = 0
         n_good_acars = 0
         n_bad_acars = 0
 
@@ -76,6 +84,7 @@ cdis
 
         lun_tmg = 32
         ext = 'tmg'
+        close(lun_tmg)
 
 !       Open output intermediate graphics file
         call open_lapsprd_file_append(lun_tmg,i4time,ext,istatus)       
@@ -100,20 +109,24 @@ cdis
         write(6,*)
         write(6,*)'             Reading ACARS Obs: ',ext_in
         write(6,*)
-     1  '   n   i  j  k   temp    azi    ran '
+     1  '   n   i  j  k   temp    '
 
 10      i_qc = 1
 
-!       if(ext_in .eq. 'pin')then
-            call read_laps_acars_temp(lun_in,xlat,xlon,elev,temp
-     1                                          ,asc9_tim_acars,l_eof)
-            if(elev .eq. 0.)i_qc = 0
-!       else
-!           call read_laps_ssd_temp(lun_in,xlat,xlon,pres,temp
-!    1                                          ,asc9_tim_acars,l_eof)
-!       endif
+        if(n_acars_read .le. 200)then
+            iwrite = 1
+        else
+            iwrite = 0
+        endif
+
+        call read_acars_ob(lun_in,'temp',xlat,xlon,elev,temp_ob,arg2
+     1                                  ,asc9_tim_acars,iwrite,l_eof)
 
         if(l_eof)goto900
+
+        if(elev .eq. 0.)i_qc = 0
+
+        n_acars_read = n_acars_read + 1
 
         call cv_asc_i4time(asc9_tim_acars,i4time_acars)
 
@@ -144,7 +157,7 @@ cdis
      1                      'apparently above top of domain ',elev
                         endif
 
-                    else ! ssd
+                    else ! ssd ?
                         istatus = 0
                         return
 
@@ -161,9 +174,9 @@ cdis
 
                         n_acars_obs = n_acars_obs + 1
 
-                        if(n_acars_obs .gt. N_ACARS)then
+                        if(n_acars_obs .gt. MAX_ACARS)then
                            write(6,*)' Warning: Too many acarss, '
-     1                              ,'limit is ',N_ACARS
+     1                              ,'limit is ',MAX_ACARS
                            istatus = 0
                            return
                         endif
@@ -176,16 +189,16 @@ cdis
                         t_diff = 0.
 !                       call get_time_term(t_diff)
 
-!                       call interp_tobs_to_laps(
-!    1                             elev,temp,                            ! I
-!    1                             t_diff,temp_bkg_3d,                   ! I
-!    1                             t_interp,                             ! O
-!    1                             1,iwrite,level,.true.,                ! I
-!    1                             1,                                    ! I
-!    1                             lat_pr,lon_pr,i_grid,j_grid,          ! I
-!    1                             ni,nj,nk,                             ! I
-!    1                             1,1,r_missing_data,                   ! I
-!    1                             heights_3d)                           ! I
+                        call interp_tobs_to_laps(
+     1                             elev,temp_ob,                         ! I
+     1                             t_diff,temp_bkg_3d,                   ! I
+     1                             t_interp,                             ! O
+     1                             1,iwrite,level,.true.,                ! I
+     1                             1,                                    ! I
+     1                             lat_pr,lon_pr,i_grid,j_grid,          ! I
+     1                             ni,nj,nk,                             ! I
+     1                             1,1,r_missing_data,                   ! I
+     1                             heights_3d)                           ! I
 
                         write(lun_tmg,*)ri-1.,rj-1.,rk-1.,t_interp
 
@@ -200,8 +213,20 @@ cdis
 !                       QC check of bias
                         if(abs(bias) .le. 10.)then
                             n_good_acars = n_good_acars + 1            
+                            n_obs = n_obs + 1
 
 !                           Insert ob into data structure
+                            temp_obs(n_obs,i_ri) = i_grid
+                            temp_obs(n_obs,i_rj) = j_grid
+                            temp_obs(n_obs,i_rk) = rk
+                            temp_obs(n_obs,i_ob_raw) = temp_ob
+                            temp_obs(n_obs,i_i) = i_grid
+                            temp_obs(n_obs,i_j) = j_grid
+                            temp_obs(n_obs,i_k) = k_grid
+                            temp_obs(n_obs,i_ob_grid) = t_interp
+                            temp_obs(n_obs,i_wt) = 1.0
+                            temp_obs(n_obs,i_bias) = bias
+ 
 
                         else
                             n_bad_acars = n_bad_acars + 1            
@@ -212,12 +237,10 @@ cdis
                     endif ! In vertical bounds
 
 
-                    write(6,20)n_acars_obs,
-     1                 acars_i(n_acars_obs),
-     1                 acars_j(n_acars_obs),
-     1                 acars_ht(n_acars_obs),
-     1                 acars_temp(n_acars_obs)
-20                  format(i4,1x,3i3,2f7.1,2x,2f7.1,2x,f7.1)
+                    write(6,20,err=21)n_acars_obs,i_grid,j_grid,k_grid       
+     1                        ,temp_ob,t_interp
+20                  format(i5,1x,3i4,2x,2f7.1)
+21                  continue
 
                 else
                     write(6,*)' Out of horizontal bounds',i_grid,j_grid        
@@ -235,10 +258,12 @@ cdis
 
 900     write(6,*)' End of ACARS ',ext_in,' file'
 
-        write(6,*)' # of ACARS read in = ',n_acars_obs
-        write(6,*)' # of ACARS passing gross climo check= ',n_acars_obs       
-        write(6,*)' # of ACARS passing QC check= ',n_good_acars
-        write(6,*)' # of ACARS failing QC check= ',n_bad_acars
+        write(6,*)' # of ACARS read in = ',n_acars_read
+        write(6,*)' # of ACARS passing bounds checks = ',n_acars_obs      
+        write(6,*)' # of ACARS passing QC check = ',n_good_acars
+        write(6,*)' # of ACARS failing QC check = ',n_bad_acars
+        write(6,*)' % of ACARS failing QC check = ',
+     1                     pct_rejected(n_good_acars,n_bad_acars)
 
         close(lun_in)
         close(lun_tmg)
@@ -259,74 +284,4 @@ cdis
 
         end
 
-
-        subroutine read_laps_ssd_temp(lun,xlat,xlon,pres,temp
-     1                                          ,asc9_tim_acars,l_eof)
-
-        real*4 pres ! pa
-        real*4 temp ! degrees K  (99999. is missing)
-
-        character*9 asc9_tim_acars
-
-        logical l_eof
-
-        l_eof = .false.
-
-100     read(lun,895,err=100,end=900)xlat,xlon,pres,dd,ff,asc9_tim_acars       
-895     FORMAT(f8.3,f10.3,f8.0,f6.0,f6.1,2x,a9)
-
-        return
-
- 900    l_eof = .true.
-
-        return
-        end
-
-        subroutine read_laps_acars_temp(lun,xlat,xlon,elev,temp
-     1                                          ,asc9_tim_acars,l_eof)
-
-        real*4 elev ! meters
-        real*4 temp ! degrees K  (99999. is missing)
-
-        character*9 asc9_tim_acars,asc9_tim_rcvd
-        character*80 string
-
-        logical l_eof
-
-        dd = 99999.
-        ff = 99999.
-
-        l_eof = .false.
-
-5       read(lun,101,end=900,err=5)string(1:6)
-101     format(a6)
-
-        if(string(2:5) .eq. 'Time')then
-!           a9time = string(30:39)
-            read(lun,151)asc9_tim_acars,asc9_tim_rcvd
-151         format(1x,a9,2x,a9)
-            write(6,151)asc9_tim_acars,asc9_tim_rcvd
-        endif
-
-        if(string(2:4) .eq. 'Lat')then
-            read(lun,201)xlat,xlon,elev
-201         format(2(f8.3,2x), f6.0,2i5)
-        endif
-
-        if(string(2:5) .eq. 'Temp')then
-            read(lun,202)temp
- 202        format (1x, i3,7x, f6.1)
- 220        format (' ', i3, ' deg @ ', f6.1, ' m/s')
-            write(6,220)temp
-            temp = temp
-            return
-        endif
-
-500     goto5
-
-900     l_eof = .true.
-
-        return
-
-        end
 
