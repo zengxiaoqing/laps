@@ -162,7 +162,6 @@ c
       Integer       lvl_3d(nz_l)
 c
       Character     c_filename_vxx(maxfiles,n_radars)*200
-      Character     c_ra_filename(n_radars)*200
       Character     path_rdr*200
       Character     path*200
       Character     fname*9
@@ -341,7 +340,6 @@ c              write(6,*)c_filename_vxx(l,i)(1:nn)
                       i_ra_count=i_ra_count+1
                       c_ra_ext(i_ra_count) = c_radar_ext(i)
 
-                      c_ra_filename(i_ra_count) = c_filename_vxx(l,i)
                       i4_file_closest(i_ra_count) = i4timefile_vxx(l,i)
                       i4_diff_min = abs(i4timefile_vxx(l,i)-i4time_mos)       
                       call make_fnam_lp(i4timefile_vxx(l,i),
@@ -351,7 +349,6 @@ c              write(6,*)c_filename_vxx(l,i)(1:nn)
                            ! within window. Determine closest
                       i4_diff = abs(i4timefile_vxx(l,i)-i4time_mos)
                       if(i4_diff .lt. i4_diff_min)then
-                        c_ra_filename(i_ra_count)=c_filename_vxx(l,i)
                         i4_file_closest(i_ra_count)=i4timefile_vxx(l,i)      
                         i4_diff_min = i4_diff
                         call make_fnam_lp(i4timefile_vxx(l,i),
