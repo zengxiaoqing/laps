@@ -15,7 +15,7 @@
         real*4       standard_latitude
         real*4       standard_latitude2
         real*4       standard_longitude
-        logical*1    l_highres,l_pad1,l_pad2,l_pad3
+        logical*1    l_compress_radar,l_pad1,l_pad2,l_pad3
         integer    NX_L_CMN
         integer    NY_L_CMN
         integer    I_PERIMETER_CMN
@@ -78,7 +78,7 @@
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
      1  ,nk_laps,standard_latitude,standard_latitude2       
      1  ,standard_longitude,NX_L_CMN, NY_L_CMN, I_PERIMETER_CMN
-     1  ,l_highres,l_pad1,l_pad2,l_pad3
+     1  ,l_compress_radar,l_pad1,l_pad2,l_pad3
      1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
      1  ,laps_cycle_time_cmn, min_to_wait_for_metars_cmn
      1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
