@@ -2269,7 +2269,18 @@ Inputs:
 
 Output: 
 
- 28257   LSX    LAPS surface data grids (23 2-d fields packed in one file)
+         LSX    LAPS surface data grids (23 2-d fields packed in one file)
+
+                Includes various fields such as...
+
+         Fire Danger: 
+             Relates things like temp, humidity and wind to fire potential.
+
+         Colorado Severe Storms Index: 
+             Severe storm potential mostly geared to the Colorado area.
+
+         Heat Index:
+             A function of temperature and humidity for discomfort due to heat.
 </pre>
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
@@ -2595,6 +2606,7 @@ Outputs:
 	lwc     3d grids        Cloud liquid water content (LWC)
 	                        Cloud ice content (ICE)
 	                        Hydrometeor Concentration (PCN)
+                                    Rain+Snow+Precipitation Ice Concentration
 	                        Rain Concentration        (RAI)
 	                        Snow Concentration        (SNO)
 	                        Precipitating Ice Conc.   (PIC)
