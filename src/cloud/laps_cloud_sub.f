@@ -208,6 +208,7 @@ cdis
         real*4 cvr_water_temp(NX_L,NY_L)
         real*4 cvr_snow(NX_L,NY_L)
         real*4 plot_mask(NX_L,NY_L)
+        real*4 plot_maskr(NX_L,NY_L)
 
         character*4 radar_name
         character*31 radarext_3d_cloud
@@ -882,20 +883,41 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
         I4_elapsed = ishow_timer()
 
+!       Generate field of radar coverage (2D/3D)
+        do i = 1,NX_L
+        do j = 1,NY_L
+            if(lstat_radar_3dref_orig_a(i,j))then
+                plot_maskr(i,j) = 30.0 ! 3D original data
+            elseif(istat_radar_2dref_a(i,j) .eq. 1)then
+                plot_maskr(i,j) = 20.0 ! 2D data
+            else                    
+                plot_maskr(i,j) = 0.0  ! no data
+            endif
+        enddo ! j
+        enddo ! i
+
 C INSERT RADAR DATA
         if(n_radar_3dref .gt. 0)then
             call get_max_reflect(radar_ref_3d,NX_L,NY_L,NZ_L,ref_base       
      1                          ,dbz_max_2d)
+ 
+!           Generate ASCII prelim reflectivity plot
+            write(6,1201)
+1201        format('                  Radar Coverage',50x
+     1                              ,'Prelim Radar Max Reflectivity')       
+            scale = 0.01
+            CALL ARRAY_PLOT(plot_maskr,dbz_max_2d,NX_L,NY_L,'HORZ CV'
+     1                     ,c1_name_array,KCLOUD,cld_hts,scale) ! Plot radar 
 
             call insert_radar(i4time,clouds_3d,cld_hts
      1          ,temp_3d,t_sfc_k,grid_spacing_cen_m,NX_L,NY_L,NZ_L
      1          ,KCLOUD,cloud_base,ref_base
      1          ,topo,r_missing_data                                 ! I
-     1          ,radar_ref_3d,dbz_max_2d
+     1          ,radar_ref_3d,dbz_max_2d                             ! I/O
      1          ,vis_radar_thresh_dbz                                ! I
      1          ,l_unresolved                                        ! O
      1          ,heights_3d                                          ! I
-     1          ,istatus)                               ! istat_radar_3dref_a
+     1          ,istatus)                                            ! O
 
             if(istatus .ne. 1)then
                 write(6,*)
@@ -1242,25 +1264,12 @@ C       EW SLICES
      1                                                ,NX_L,NY_L,NZ_L)
             j_status(n_lps) = ss_normal
 
-!           Generate ASCII plot
-            write(6,1201)
-1201        format('                  Radar Coverage',55x
-     1                              ,'Radar Reflectivity')
-
-            do i = 1,NX_L
-            do j = 1,NY_L
-                if(lstat_radar_3dref_orig_a(i,j))then
-                    plot_mask(i,j) = 30.0 ! 3D original data
-                elseif(istat_radar_2dref_a(i,j) .eq. 1)then
-                    plot_mask(i,j) = 20.0 ! 2D data
-                else                    
-                    plot_mask(i,j) = 0.0  ! no data
-                endif
-            enddo ! j
-            enddo ! i
-
+!           Generate ASCII final reflectivity plot
+            write(6,1202)
+1202        format('                  Radar Coverage',50x
+     1                              ,'Final Radar Max Reflectivity')
             scale = 0.01
-            CALL ARRAY_PLOT(plot_mask,dbz_max_2d,NX_L,NY_L,'HORZ CV'
+            CALL ARRAY_PLOT(plot_maskr,dbz_max_2d,NX_L,NY_L,'HORZ CV'
      1                     ,c1_name_array,KCLOUD,cld_hts,scale) ! Plot radar 
 
         endif ! n_radar_3dref
