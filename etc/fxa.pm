@@ -1,5 +1,5 @@
 package fxa;
-
+sub Get_env'fxa{ #'
     local($fxa_env_file) = "/awips/fxa/.environs";
     open(FXA,"$fxa_env_file") || return 0;
 
@@ -16,7 +16,6 @@ package fxa;
     return 1;
 }
 
-<<<<<<< fxa.pm
 1;
 
 sub Set_logdir'fxa{
@@ -38,8 +37,7 @@ sub Set_logdir'fxa{
     }else{
 	die "Could not find log dir $ENV{LOG_DIR}";
     }
-	
+    return $LAPS_LOG_PATH;	
 }
-=======
->>>>>>> 1.3
+
 1;
