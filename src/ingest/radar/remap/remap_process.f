@@ -390,12 +390,11 @@ c
               IF (abs(vel_value) .lt. VEL_MIS_CHECK .and.
      :            abs(vel_value) .gt. namelist_parms%abs_vel_min ) THEN
 
-                IF(ngrids_vel(i,j,k).eq.0) THEN
-
+                IF(ngrids_vel(i,j,k).eq.0 .or. 
+     1             vel_nyquist .eq. r_missing_data) THEN
                   rvel =  vel_value
 
-                ELSE
-
+                ELSEIF(vel_nyquist .ne. r_missing_data) THEN ! .and. ngrids > 0
                   avgvel=grid_rvel(i,j,k)/float(ngrids_vel(i,j,k))
                   nycor=nint(0.5*(avgvel-vel_value)/
      :                     vel_nyquist)
@@ -407,8 +406,12 @@ c
                 grid_rvel(i,j,k) = grid_rvel(i,j,k) + rvel
                 grid_rvel_sq(i,j,k) =
      :          grid_rvel_sq(i,j,k) + rvel*rvel
-                grid_nyq(i,j,k)=grid_nyq(i,j,k)+vel_nyquist
+
                 ngrids_vel(i,j,k) = ngrids_vel(i,j,k) + 1
+
+                if(vel_nyquist .ne. r_missing_data)then
+                    grid_nyq(i,j,k)=grid_nyq(i,j,k)+vel_nyquist
+                endif
 
               END IF
 
@@ -500,7 +503,11 @@ c
 
                   n_vel_grids_final = n_vel_grids_final + 1
                   grid_rvel(i,j,k) = grid_rvel(i,j,k)/vknt
-                  grid_nyq(i,j,k) = grid_nyq(i,j,k)/vknt
+                  if(vel_nyquist .ne. r_missing_data)then
+                      grid_nyq(i,j,k) = grid_nyq(i,j,k)/vknt
+                  else
+                      grid_nyq(i,j,k) = r_missing_data
+                  endif
 
                 ELSE ! Failed VEL QC test
 
