@@ -1,6 +1,6 @@
        Subroutine getlapsvxx(imax,jmax,kmax,maxradar,c_radar_id,         ! I
      &      n_radars,c_extension_proc,i4timefile_proc,i4_tol,rheight_3d, ! I   
-     &      lat,lon,topo,                                                ! I
+     &      lat,lon,topo,i4_file_closest,                                ! I
      &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,          ! O
      &      grid_ra_ref,grid_ra_vel,istatus)                             ! O
 c
@@ -9,7 +9,6 @@ c
        Integer       maxfiles
        Integer       i,j,k
        Integer       lvl_3d(kmax)
-       Integer       len_dir
        Integer       i4time
        Integer       i4_tol
        Integer       n_radars
@@ -20,6 +19,7 @@ c
        Integer       level
 
        Integer       i4timefile_proc
+       Integer       i4_file_closest(n_radars)
 
        Real*4          grid_ra_ref(imax,jmax,kmax,maxradar)
        Real*4          grid_ra_vel(imax,jmax,kmax,maxradar)
@@ -36,7 +36,7 @@ c
 c
 c readlaps stuff
 c
-       Character ext*31, directory*50, var_3d(kmax)*3,
+       Character ext*31, var_3d(kmax)*3,
      &lvl_coord_3d(kmax)*4,units_3d(kmax)*10,
      &comment_3d(kmax)*125
 
@@ -72,29 +72,26 @@ c
 
          I4_elapsed = ishow_timer()
 
-         k = k+1
+         EXT = c_extension_proc(kcount)
 
-         call get_directory(c_extension_proc(k),directory,len_dir)
+         i4_diff = i4timefile_proc - i4_file_closest(kcount)
 
-         EXT = c_extension_proc(k)
+         k = k+1      ! Used for output arrays
+         write(6,*)' radar #, i4_diff = ',kcount,k,i4_diff
 
-         call get_file_time(directory,i4timefile_proc,i4time_nearest)       
-         i4_diff = i4timefile_proc - i4time_nearest
-         write(6,*)' radar #, i4_diff = ',k,i4_diff
-
-         call read_radar_3dref(i4timefile_proc,
+         call read_radar_3dref(i4_file_closest(kcount),               ! I
 !    1   i4_tol,i4_ret,
      1   l_apply_map,r_missing_data,
-     1   imax,jmax,kmax,ext,
+     1   imax,jmax,kmax,ext,                                          ! I
      1   lat,lon,topo,l_low_fill,l_high_fill,
      1   rheight_3d,
-     1   grid_ra_ref(1,1,1,k),
-     1   rlat_radar(k),rlon_radar(k),rheight_radar(k),c_radar_id(k),
-     1   n_ref_grids,istatus_2dref,istatus_3dref)
+     1   grid_ra_ref(1,1,1,k),                                        ! O
+     1   rlat_radar(k),rlon_radar(k),rheight_radar(k),c_radar_id(k),  ! O
+     1   n_ref_grids,istatus_2dref,istatus_3dref)                     ! O
 
 c check laps analysis values
          if(istatus_3dref.ne.1 .and. istatus_3dref.ne.-1)then
-            write(6,*)'Unsuccessful reading radar ',kcount,k,ext
+            write(6,*)'ERROR: Unsuccessful reading radar ',kcount,k,ext       
             k=k-1
          else
             write(6,*)'Successful reading radar ',kcount,k,ext
