@@ -85,13 +85,41 @@ cdis
 
         if(c2_field .eq. 'tc')then
             nc = 2
+
+            if(imax .gt. 110 .or. jmax .gt. 110)then
+                isize = 0
+                iskip = 3
+            elseif(imax .gt. 75 .or. jmax .gt. 75)then
+                isize = 0
+                iskip = 2
+            else
+                isize = 1
+                iskip = 2
+            endif
+
         elseif(c2_field .eq. 'tp')then
             nc = 1
+
+            if(imax .gt. 110 .or. jmax .gt. 110)then
+                iskip = 2
+                isize = 0
+            elseif(imax .gt. 90 .or. jmax .gt. 90)then
+                iskip = 2
+                isize = 1
+            elseif(imax .gt. 75 .or. jmax .gt. 75)then
+                iskip = 1
+                isize = 0
+            else
+                iskip = 1
+                isize = 1
+            endif
+
         endif
 
+        write(6,*)' isize,iskip',isize,iskip
 
-        do j = 1,jmax,nc
-        do i = 1,imax,nc
+        do j = 1,jmax,iskip
+        do i = 1,imax,iskip
 
             alat = lat(i,j)
             alon = lon(i,j)
@@ -113,7 +141,7 @@ cdis
      
                 ri = i
                 rj = j
-                call plot_typeob(c2_type,nc,ri,rj,relsize,imax,jmax)
+                call plot_typeob(c2_type,nc,ri,rj,isize,imax,jmax)
             endif
 
         enddo ! i
@@ -122,7 +150,7 @@ cdis
         return
         end
 
-        subroutine plot_typeob(c_type,nc,ri,rj,relsize,imax,jmax)
+        subroutine plot_typeob(c_type,nc,ri,rj,isize,imax,jmax)
 
         include 'lapsparms.cmn'
 
@@ -135,12 +163,6 @@ cdis
 
         call get_border(imax,jmax,x_1,x_2,y_1,y_2)
         call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
-
-        if(imax .gt. 75 .or. jmax .gt. 75)then
-            isize = 0
-        else
-            isize = 1
-        endif
 
         call pwrity (ri, rj, c_type, nc, isize, 0, 0)
 

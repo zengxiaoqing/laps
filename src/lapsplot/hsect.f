@@ -60,6 +60,8 @@ cdis
 !                                   Removed equivalence for slwc_int.
 !                                   Removed equivalence for slwc_2d.
 !                                   Removed /lapsplot_cmn1/ and /lapsplot_cmn2/
+!       97-Sep-24     John Smart    Added display funtionality for
+!                                   polar orbiter (lrs).
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
         real*4 rlaps_land_frac(NX_L,NY_L)
@@ -130,6 +132,8 @@ cdis
         real*4 spds(NX_L,NY_L)
         real*4 umean(NX_L,NY_L) ! WRT True North
         real*4 vmean(NX_L,NY_L) ! WRT True North
+
+        real*4 sndr_po(19,NX_L,NY_L)
 
         character*4 radar_name
 
@@ -219,6 +223,8 @@ cdis
      1        '/data/laps/nest7grid/lapsprd/vrc/*.vrc'/
         character*255 c_filespec_src/'*.src'/
         character*255 c_filespec
+        character*255 cfname
+        character*2   cchan
 
         logical lapsplot_pregen,l_precip_pregen,l_pregen,l_radar_read
         data lapsplot_pregen /.true./
@@ -315,24 +321,25 @@ cdis
      1       /'          [ob,st] obs plot/station locations'
      1       /
      1       /'     [t]  Temperature, [pt] Potential Temperature,'
-     1       ,' [hh] Height of Const Temp Sfc'
+     1       ,'  [hh] Height of Const Temp Sfc'
      1       /
      1       /4x,' [ci] Cloud Ice     ',22x,'  [ls] Smith - Feddes Cloud
      1 LWC'
      1       /'     [is] Smith - Feddes Integrated Cloud LWC  '
      1       /'     [mv] Mean Volume Drop Diam,   [ic] Icing Index,'
-     1       ,'   [tc,tp] Cloud/Precip Type'
+     1       ,' [tc,tp] Cloud/Precip Type'
      1       /
      1       /'     [cc] Cld Ceiling (AGL), [cb] Lowest Cld Base (MSL)'
-     1       ,', [ct] Highest Cld Top'
+     1       ,',  [ct] Highest Cld Top'
      1       /'     [cv] Cloud Cover (2-D), [pw] Precipitable Water'
      1       /
      1       /'     [ht,hb,hy] Hts (LAPS,Bkgnd,Hydrstc),'
      1       ,' [sa/pa] Snow/Pcp Accum'
      1       /'     [sc] Snow Cover'
      1       /'     [sh,rh] Specific/Rel Humidity'
-     1       ,' [tr,lf,gr] Terrain/Land Frac/Grid, '
-     1       /'     [v1,v2,v3,v4,v5] Band 8 Twm/av; VCF/VIS; Tsfc-Band8'
+     1       ,'     [tr,lf,gr] Terrain/Land Frac/Grid, '
+     1       /'     [v1,v2,v3,v4,v5,po] 11u Twm/av; VCF/VIS; Tsfc-11u'
+     1        '; Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? '$)
         read(lun,12)c_type
 12      format(a2)
@@ -427,7 +434,7 @@ cdis
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,
      1                                          ext,NX_L,NY_L,istatus)
                       call move(uv_2d(1,1,1),u_2d,NX_L,NY_L)
-                      call move(uv_2d(2,1,1),v_2d,NX_L,NY_L)
+                      call move(uv_2d(1,1,2),v_2d,NX_L,NY_L)
                     endif
 
                 endif
@@ -916,6 +923,51 @@ cdis
             call plot_cont(vas,1e0,clow,chigh,cint,asc9_tim,
      1    c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+        elseif( c_type .eq. 'po' )then
+
+          call make_fnam_lp(i4time_ref,asc9_tim,istatus)
+          ext = 'lsr'
+          call get_directory(ext,directory,len_dir)
+          cfname=directory(1:len_dir)//asc9_tim//'_12.lsr'
+          open(14,file=cfname,form='unformatted',status='old',err=18)
+          goto 27
+18        cfname=directory(1:len_dir)//asc9_tim//'_14.lsr'
+          open(14,file=cfname,form='unformatted',status='old',err=19)
+
+          n=index(cfname,' ')-1
+          write(6,*)'Reading ',cfname(1:n)
+          goto 28
+27        write(6,*)'Reading ',cfname(1:n)
+28        read(14)sndr_po
+          write(6,*)'Enter the channel [1-19]'
+          read(5,25)ichan
+25        format(i2)
+          do j=1,NY_L
+          do i=1,NX_L
+             if(sndr_po(ichan,i,j).ne.r_missing_data)then
+                vas(i,j)=sndr_po(ichan,i,j)-273.15
+             endif
+          enddo
+          enddo
+
+          clow = -80.
+          chigh = +40.
+          cint = 5.
+          write(cchan,111)ichan
+ 111      format(i2)
+          if(cchan(1:1).eq.' ')cchan(1:1)='0'
+          if(cchan(2:2).eq.' ')cchan(2:2)='0'
+
+          c33_label = 'LAPS Polar Orbiter Channel '//cchan//' deg C'
+
+          call plot_cont(vas,1e0,clow,chigh,cint,asc9_tim,
+     1    c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+          goto 21
+19        write(6,*)'Not able to open an lsr file ', asc9_tim
+21        continue
 
         elseif( c_type .eq. 'ra' .or. c_type .eq. 'gc'
      1    .or.  c_type .eq. 'rr'
