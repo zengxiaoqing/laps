@@ -36,8 +36,8 @@ c
 	subroutine vortdiv(u,v,vort,div,imax,jmax,dx,dy)
 c this routine computes vorticity and divergence from u and v winds
 c using centered differences.
-	real*4 u(imax,jmax),v(imax,jmax),vort(imax,jmax)
-	real*4 div(imax,jmax),dx(imax,jmax),dy(imax,jmax)
+	real u(imax,jmax),v(imax,jmax),vort(imax,jmax)
+	real div(imax,jmax),dx(imax,jmax),dy(imax,jmax)
 c
 	do j=2,jmax-1
 	do i=2,imax-1
@@ -69,12 +69,12 @@ c       Changes:    P. Stamus  26 Aug 1997  Changes for dynamic LAPS
 c
 c=====================================================================
 c
-	real*4 u(imax,jmax),v(imax,jmax),z(imax,jmax)
-	real*4 dx(imax,jmax),dy(imax,jmax),top(imax,jmax),topo(imax,jmax)
-	real*4 div(imax,jmax)
+	real u(imax,jmax),v(imax,jmax),z(imax,jmax)
+	real dx(imax,jmax),dy(imax,jmax),top(imax,jmax),topo(imax,jmax)
+	real div(imax,jmax)
 c
-	real*4 phi(imax,jmax),ter(imax,jmax),du(imax,jmax),dv(imax,jmax)
-	real*4 dpbl(imax,jmax),b(imax,jmax),c(imax,jmax)
+	real phi(imax,jmax),ter(imax,jmax),du(imax,jmax),dv(imax,jmax)
+	real dpbl(imax,jmax),b(imax,jmax),c(imax,jmax)
 c
 	call zero(phi,imax,jmax)	! zero the work arrays
 	call zero(ter,imax,jmax)
@@ -133,8 +133,8 @@ c
 c
 	subroutine frict(fu,fv,u,v,uo,vo,imax,jmax,ak,akk)
 c
-	real*4 fu(imax,jmax),fv(imax,jmax),u(imax,jmax),v(imax,jmax)
-	real*4 vo(imax,jmax),uo(imax,jmax),akk(imax,jmax)
+	real fu(imax,jmax),fv(imax,jmax),u(imax,jmax),v(imax,jmax)
+	real vo(imax,jmax),uo(imax,jmax),akk(imax,jmax)
 c
 	do j=1,jmax
 	do i=1,imax
@@ -151,8 +151,8 @@ c
 c
 	subroutine nonlin(nu,nv,u,v,uo,vo,imax,jmax,dx,dy)
 c
-	real*4 nu(imax,jmax),nv(imax,jmax),u(imax,jmax),v(imax,jmax)
-	real*4 uo(imax,jmax),vo(imax,jmax),dx(imax,jmax),dy(imax,jmax)
+	real nu(imax,jmax),nv(imax,jmax),u(imax,jmax),v(imax,jmax)
+	real uo(imax,jmax),vo(imax,jmax),dx(imax,jmax),dy(imax,jmax)
 c
 	do j=2,jmax-1
 	do i=2,imax-1
@@ -182,9 +182,9 @@ c
 	subroutine leib(sol,force,itmax,erf,imax,jmax,a,b,c,d,e,
      &                   dx,dy,dz)
 c
-	real*4 sol(imax,jmax),force(imax,jmax),a(imax,jmax)
-	real*4 b(imax,jmax),c(imax,jmax),d(imax,jmax),e(imax,jmax)
-	real*4 dx(imax,jmax), dy(imax,jmax)
+	real sol(imax,jmax),force(imax,jmax),a(imax,jmax)
+	real b(imax,jmax),c(imax,jmax),d(imax,jmax),e(imax,jmax)
+	real dx(imax,jmax), dy(imax,jmax)
 c
 	ovr = 1.
 	reslmm = 0.
@@ -266,14 +266,16 @@ c                                 t, to, and s arrays on exit.
 c         P. Stamus     09-29-98  Calc std dev from just obs (not boundaries+obs)
 c                       01-28-99  Temp. replace spline section with Barnes. Fix
 c                                   boundary normalization.
+c                       07-24-99  Turn spline back on, rm Barnes.  Adj weights.
+c                                   Turn satellite back on.
 c
 c*******************************************************************************
 c
-	real*4 t(imax,jmax), to(imax,jmax), s(imax,jmax), s_in(imax,jmax)
-	real*4 RESS(100), tb(imax,jmax) , alf2(imax,jmax)
+	real t(imax,jmax), to(imax,jmax), s(imax,jmax), s_in(imax,jmax)
+	real RESS(1000), tb(imax,jmax) , alf2(imax,jmax)
 c
-	real*4 fnorm(0:imax-1,0:jmax-1)
-c	real*4 alf2o(imax,jmax)  !work array
+	real fnorm(0:imax-1,0:jmax-1)
+c	real alf2o(imax,jmax)  !work array
 c
 	character name*10
 	logical iteration
@@ -428,11 +430,11 @@ c
 c
 c.....  Set the weights for the spline.
 c
-	alf = 1.
+	alf = 10000.       !wt on obs
+	alf2a = 10.        !wt on background
 	beta = 100.
-	a =  0.
+	a =  50.            !wt on gradients
 	if(isat_flag .eq. 0) a = 0.
-	alf2a = 0.0 !(1./9.) * alf
 c
 	write(6,9995) alf, beta, alf2a, a
  9995	format(5x,'Using spline wts: alf, beta, alf2a, a = ',4f10.4)
@@ -440,21 +442,21 @@ c
 c.....  Now do the spline.
 c
 	rom2 = 0.025
-	npass = 1
-	mxstn = 0
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
+	npass = 2
+	idum = 0
+cc	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	call barnes2(t,imax,jmax,to,smsng,idum,npass,fnorm)
 c	
-	go to 876
+cc	go to 876
 c
 	iteration = .true.
 
-	itmax = 100
+	itmax = 500
 
 	do it=1,itmax
 	  cormax = 0.
 	  if(iteration) then
-	print *,' it = ', it
+c	print *,' it = ', it
 	     do j=3,jmax-2
 	     do i=3,imax-2
 		alfo = alf
@@ -566,11 +568,11 @@ c				04-10-91  Bugs, bugs, bugs....sign/unit errs.
 c
 c*****************************************************************************
 c
-	real*4 dx(ni,nj), dy(ni,nj)
+	real dx(ni,nj), dy(ni,nj)
 c
-	real*4 p(ni,nj), td(ni,nj), u(ni,nj), v(ni,nj), thadv(ni,nj)
-	real*4 qcon(ni,nj), q(ni,nj), theta(ni,nj), qadv(ni,nj)
-	real*4 t(ni,nj), tadv(ni,nj)
+	real p(ni,nj), td(ni,nj), u(ni,nj), v(ni,nj), thadv(ni,nj)
+	real qcon(ni,nj), q(ni,nj), theta(ni,nj), qadv(ni,nj)
+	real t(ni,nj), tadv(ni,nj)
 c
 c
 c.....	Calculate mixing ratio.
@@ -658,11 +660,11 @@ c
 c
 	subroutine barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
 c
-	real*4 to(imax,jmax), t(imax,jmax), val(imax*jmax)
-	real*4 fnorm(0:imax-1,0:jmax-1)
-	real*4 h1(imax,jmax), h2(imax,jmax)  !work arrays
+	real to(imax,jmax), t(imax,jmax), val(imax*jmax)
+	real fnorm(0:imax-1,0:jmax-1)
+	real h1(imax,jmax), h2(imax,jmax)  !work arrays
 c
-	integer*4 iob(imax*jmax), job(imax*jmax), dx, dy
+	integer iob(imax*jmax), job(imax*jmax), dx, dy
 c
 c
 	call zero(h1,imax,jmax)
@@ -764,12 +766,12 @@ c
 c       Changes:  P.Stamus NOAA/FSL  7 Jan 1999  Add status flag.
 c
 
-	real*4 t(imax,jmax), t_ob(mxstn) 
-	real*4 fnorm(0:imax-1,0:jmax-1)
-	real*4 h1(imax,jmax), val(mxstn)
+	real t(imax,jmax), t_ob(mxstn) 
+	real fnorm(0:imax-1,0:jmax-1)
+	real h1(imax,jmax), val(mxstn)
 c	
-	integer*4 iob(mxstn), job(mxstn), ii(mxstn), jj(mxstn)
-	integer*4 dx, dy 
+	integer iob(mxstn), job(mxstn), ii(mxstn), jj(mxstn)
+	integer dx, dy 
 c
 !	print *,' *** In BARNES_wide ***'
 	istatus = -1
@@ -867,7 +869,7 @@ c
 c.....	Routine to fill in the boundaries of an array.  Just uses the
 c.....	interior points for now.
 c
-	real*4 x(imax,jmax)
+	real x(imax,jmax)
 c
 	do i=1,imax
 	  x(i,1) = x(i,2)
@@ -902,10 +904,10 @@ c                         08-26-97  Changes for dynamic LAPS
 c
 c======================================================================
 c
-	real*4 t(ni,nj), td(ni,nj), pmsl(ni,nj), u(ni,nj), v(ni,nj)
-	real*4 cssi(ni,nj)
+	real t(ni,nj), td(ni,nj), pmsl(ni,nj), u(ni,nj), v(ni,nj)
+	real cssi(ni,nj)
 c
-	real*4 spd(ni,nj), dir(ni,nj)  !work arrays
+	real spd(ni,nj), dir(ni,nj)  !work arrays
 c
 c.....	Start.  Convert u,v in m/s to spd/dir in kts.
 c
@@ -964,8 +966,8 @@ c       2.  Units are not changed in this routine.
 c
 c======================================================================
 c
-	real*4  uwind(ni,nj), vwind(ni,nj)
-	real*4  direction(ni,nj), speed(ni,nj)
+	real  uwind(ni,nj), vwind(ni,nj)
+	real  direction(ni,nj), speed(ni,nj)
 c
 	do j=1,nj
 	do i=1,ni
@@ -1016,8 +1018,8 @@ c              in this routine.
 c
 c==============================================================================
 c
-        real*4 vis(ni,nj), hum(ni,nj), topo(ni,nj)
-        real*4 vismod(ni,nj)  !work array
+        real vis(ni,nj), hum(ni,nj), topo(ni,nj)
+        real vismod(ni,nj)  !work array
 c
         print *,' In enhance_vis routine...'
 c
@@ -1066,11 +1068,11 @@ c	           08-19-98  Initialize k_hold array.
 c
 c==============================================================================
 c
-        real*4 hum(ni,nj), vismod(ni,nj), topo(ni,nj)
-	real*4 cld_hts(kcloud), cld_pres(kcloud)
-        real*4 clouds_3d(ni,nj,kcloud)
+        real hum(ni,nj), vismod(ni,nj), topo(ni,nj)
+	real cld_hts(kcloud), cld_pres(kcloud)
+        real clouds_3d(ni,nj,kcloud)
 c
-        integer*4 k_hold(ni,nj), lvl(kcloud)
+        integer k_hold(ni,nj), lvl(kcloud)
 c
         character ext*31, var(kcloud)*3, comment(kcloud)*125
         character units(kcloud)*10, lvl_coord(kcloud)*4, dir*256
@@ -1224,8 +1226,8 @@ c                         0.50     R = 0.53002d
 c
 c=====================================================================
 c
-	real*4 fnorm(0:imax-1,0:jmax-1)
-	integer*4 dx, dy
+	real fnorm(0:imax-1,0:jmax-1)
+	integer dx, dy
 c
 c.... First, find the area that each ob covers in gridpt space (this
 c.... of course assumes a uniform coverage).
@@ -1388,16 +1390,18 @@ c     Changes:
 c               P.Stamus  08-14-95  Added mean.
 c                         08-25-97  Changes for dynamic LAPS
 c                         05-13-98  Added expected accuracy counts.
+c                         07-13-99  Change stn character arrays.
+c                                     Rm *4 from declarations.
 c
 c     Notes:
 c
 c======================================================================
 c
 	integer ni,nj,mxstn
-	real*4 field(ni,nj), ob(mxstn), interp_ob
-	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
-	integer*4 ii(mxstn), jj(mxstn)
-	character title*40, stn(mxstn)*3, stn_mx*3, stn_mn*3
+	real field(ni,nj), ob(mxstn), interp_ob
+	real x1a(ni), x2a(nj), y2a(ni,nj)
+	integer ii(mxstn), jj(mxstn)
+	character title*40, stn(mxstn)*20, stn_mx*5, stn_mn*5
 c
 c.... Start.
 c
@@ -1441,11 +1445,11 @@ c
 c
 	      if(adiff .gt. diff_mx) then
 		 diff_mx = adiff
-		 stn_mx = stn(i)
+		 stn_mx = stn(i)(1:5)
 	      endif
 	      if(adiff .lt. diff_mn) then
 		 diff_mn = adiff
-		 stn_mn = stn(i)
+		 stn_mn = stn(i)(1:5)
 	      endif
 c
 c.....  Count how many stns are within the exp accuracy (and multiples)
@@ -1456,8 +1460,8 @@ c
 c
 	   endif
 c
-	   write(iunit,905) i, stn(i), interp_ob, ob(i), diff
- 905	   format(5x,i3,1x,a3,1x,3f10.2)
+	   write(iunit,905) i, stn(i)(1:5), interp_ob, ob(i), diff
+ 905	   format(5x,i3,1x,a5,1x,3f10.2)
 c
  500	enddo !i
 c
@@ -1472,9 +1476,9 @@ c
 	write(iunit,910) ave_diff, num
  910	format(' Average difference: ',f10.2,' over ',i4,' stations.')
 	write(iunit,920) diff_mx, stn_mx
- 920	format(' Maximum difference of ',f10.2,' at ',a3)
+ 920	format(' Maximum difference of ',f10.2,' at ',a5)
 	write(iunit,925) diff_mn, stn_mn
- 925	format(' Minimum difference of ',f10.2,' at ',a3)
+ 925	format(' Minimum difference of ',f10.2,' at ',a5)
 	write(iunit, 930)
  930	format(' ')
 c
