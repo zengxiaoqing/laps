@@ -9,11 +9,12 @@ use strict;
 umask 002;
 use Getopt::Long;
 
-my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$cleandirs);
-my $result = GetOptions("installroot=s" => \$LAPSINSTALLROOT,
-                        "dataroot=s" => \$LAPS_DATA_ROOT,
-                        "srcroot=s"  => \$LAPS_SRC_ROOT,
-                        "cleandirs" => \$cleandirs);
+my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$SYSTEM_TYPE,$cleandirs);
+my $result = GetOptions("installroot=s"  => \$LAPSINSTALLROOT,
+                        "dataroot=s"     => \$LAPS_DATA_ROOT,
+                        "srcroot=s"      => \$LAPS_SRC_ROOT,
+                        "system_type=s"  => \$SYSTEM_TYPE,
+                        "cleandirs"      => \$cleandirs);
 
 $LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if(! $LAPS_SRC_ROOT);
 print "LAPS_SRC_ROOT = $LAPS_SRC_ROOT\n";
@@ -32,7 +33,9 @@ if( defined($cleandirs)){
     system("rm -rf $LAPS_DATA_ROOT/lapsprd");
     mkdir "$LAPS_DATA_ROOT/lapsprd", 0777 or die "Can't make directory in $LAPS_DATA_ROOT/lapsprd $!\n"
 }
+
 require "$LAPSINSTALLROOT/etc/laps_tools.pm";
 print "Use mkdatadir to generate lapsdataroot directories\n";
-laps_tools::mkdatadirs($LAPS_DATA_ROOT);
+print "system type = $SYSTEM_TYPE \n";
+laps_tools::mkdatadirs($LAPS_DATA_ROOT,$SYSTEM_TYPE);
 exit;
