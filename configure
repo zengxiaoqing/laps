@@ -2776,7 +2776,6 @@ trap 'rm -fr `echo "src/lib/Makefile
           src/temp/Makefile
           src/wind/Makefile
           src/WFO/post/Makefile
-          util/Makefile
           util/cronfile
           Makefile
           etc/laps_driver.pl
@@ -2921,7 +2920,6 @@ CONFIG_FILES=\${CONFIG_FILES-"src/lib/Makefile
           src/temp/Makefile
           src/wind/Makefile
           src/WFO/post/Makefile
-          util/Makefile
           util/cronfile
           Makefile
           etc/laps_driver.pl
