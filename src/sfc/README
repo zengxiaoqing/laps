@@ -17,7 +17,9 @@ main                                           laps_sfc.f
         mdat_laps                              mdatlaps.f
             splie2                                  "
             splin2                                  "
-            put_thermo                              "
+            alt_2_sfc_p                        lib/laps_routines.f
+            reduce_p                                "
+            put_thermo                         mdatlaps.f
             procar                                  "
             set_boundary                            "
                 dynamic_wts                    lapsvanl_sub.f
@@ -50,13 +52,17 @@ main                                           laps_sfc.f
                 splin2                              "
 
 
-.........................PLEASE IGNORE THE INTERNAL NOTES BELOW.....................
+
+The initial constant threshold QC is done with 'qc_data.f' with the background 
+comparison happening in 'bkg_chk'
 
 If 'barnes_multivariate_sfc_jacket' is called the stddev QC ob flagging
 is performed within that routine.
 
 If 'spline' is called the stddev QC ob flagging is performed in the 'spline'
 routine.
+
+.........................PLEASE IGNORE THE INTERNAL NOTES BELOW.....................
 
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
 lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
