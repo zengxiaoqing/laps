@@ -212,8 +212,8 @@ cdis
 
         integer cldpcp_type_3d(NX_L,NY_L,NZ_L) ! Also contains 3D precip type
 
-!       Output array declarations (equivalences are used to share space)
-        real*4 out_array_4d(NX_L,NY_L,NZ_L,3)
+!       Output array declarations
+        real*4 out_array_4d(NX_L,NY_L,NZ_L,6)
         real*4 out_array_3d(NX_L,NY_L,NZ_L)
 
         real*4 slwc(NX_L,NY_L,NZ_L),slwc_int(NX_L,NY_L)
@@ -925,7 +925,7 @@ c read in laps lat/lon and topo
 
             I4_elapsed = ishow_timer()
 
-            nf = 3
+            nf = 6
 
         else
             nf = 2
@@ -950,17 +950,32 @@ c read in laps lat/lon and topo
         var_a(1) = 'LWC'
         var_a(2) = 'ICE'
         var_a(3) = 'PCN'
+        var_a(4) = 'RAI'
+        var_a(5) = 'SNO'
+        var_a(6) = 'PIC'
+
         ext = 'lwc'
+
         units_a(1) = 'KG/M**3'
         units_a(2) = 'KG/M**3'
         units_a(3) = 'KG/M**3'
+        units_a(4) = 'KG/M**3'
+        units_a(5) = 'KG/M**3'
+        units_a(6) = 'KG/M**3'
+
         comment_a(1) = 'Cloud Liquid Water Content - LAPS Smith Feddes'       
         comment_a(2) = 'Cloud Ice Content - LAPS Smith Feddes'
         comment_a(3) = 'Precipitate Content'
+        comment_a(4) = 'Rain Content'
+        comment_a(5) = 'Snow Content'
+        comment_a(6) = 'Precipitating Ice Content'
 
         call move_3d(slwc(1,1,1)  ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L)       
         call move_3d(cice(1,1,1)  ,out_array_4d(1,1,1,2),NX_L,NY_L,NZ_L)
         call move_3d(pcpcnc(1,1,1),out_array_4d(1,1,1,3),NX_L,NY_L,NZ_L)
+        call move_3d(raicnc(1,1,1),out_array_4d(1,1,1,4),NX_L,NY_L,NZ_L)
+        call move_3d(snocnc(1,1,1),out_array_4d(1,1,1,5),NX_L,NY_L,NZ_L)
+        call move_3d(piccnc(1,1,1),out_array_4d(1,1,1,6),NX_L,NY_L,NZ_L)
 
         call put_laps_multi_3d(i4time,ext,var_a,units_a,comment_a
      1                        ,out_array_4d,NX_L,NY_L,NZ_L,nf,istatus)

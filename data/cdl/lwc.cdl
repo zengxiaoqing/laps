@@ -17,11 +17,11 @@ netcdf lwc {
             lwc:record = "valtime, reftime";
             lwc:_FillValue = 1.e+37f;
             lwc:long_name="cloud liquid water";
-            lwc:units="grams/meter**3";
+            lwc:units="kg/meter**3";
             lwc:valid_range= 0.f, 100.f;
             lwc:LAPS_var="LWC";
             lwc:lvl_coord="HPA";
-	    lwc:LAPS_units="G/M**3";
+	    lwc:LAPS_units="KG/M**3";
                 	        
         //	cloud ice
 
@@ -31,12 +31,51 @@ netcdf lwc {
             ice:record = "valtime, reftime";
             ice:_FillValue = 1.e+37f;
             ice:long_name="cloud ice";
-            ice:units="grams/meter**3";
+            ice:units="kg/meter**3";
             ice:valid_range= 0.f, 100.f;
             ice:LAPS_var="ICE";
             ice:lvl_coord="HPA";
-	    ice:LAPS_units="G/M**3";
+	    ice:LAPS_units="KG/M**3";
                 	        
+       //      snow content
+        float
+            sno(record,z,y,x);
+            sno:navigation_dim = "nav";
+            sno:record = "valtime, reftime";
+            sno:_FillValue = 1.e+37f;
+            sno:long_name="snow content";
+            sno:units="kg/meter**3";
+            sno:valid_range= 0.f, .1f;
+            sno:LAPS_var="SNO";
+            sno:lvl_coord="HPA";
+	    sno:LAPS_units="KG/M**3";
+
+        //      rain content
+        float
+            rai(record,z,y,x);
+            rai:navigation_dim = "nav";
+            rai:record = "valtime, reftime";
+            rai:_FillValue = 1.e+37f;
+            rai:long_name="rain content";
+            rai:units="kg/meter**3";
+            rai:valid_range= 0.f, .1f;
+            rai:LAPS_var="RAI";
+            rai:lvl_coord="HPA";
+	    rai:LAPS_units="KG/M**3";
+
+       //      precipitating ice content (graupel,hail,sleet)
+        float
+            pic(record,z,y,x);
+            pic:navigation_dim = "nav";
+            pic:record = "valtime, reftime";
+            pic:_FillValue = 1.e+37f;
+            pic:long_name="precipitating ice content";
+            pic:units="kg/meter**3";
+            pic:valid_range= 0.f, .1f;
+            pic:LAPS_var="PIC";
+            pic:lvl_coord="HPA";
+	    pic:LAPS_units="KG/M**3";
+
         //	hydrometeor concentration
 
 	float                                  
@@ -45,11 +84,11 @@ netcdf lwc {
             pcn:record = "valtime, reftime";
             pcn:_FillValue = 1.e+37f;
             pcn:long_name="hydrometeor concentration";
-            pcn:units="grams/meter**3";
+            pcn:units="kg/meter**3";
             pcn:valid_range= 0.f, 100.f;
             pcn:LAPS_var="PCN";
             pcn:lvl_coord="HPA";
-	    pcn:LAPS_units="G/M**3";
+	    pcn:LAPS_units="KG/M**3";
                 	        
         //	LAPS variables
 
@@ -62,6 +101,9 @@ netcdf lwc {
         char
             lwc_comment(record,z,namelen),
             ice_comment(record,z,namelen),
+            sno_comment(record,z,namelen),
+            rai_comment(record,z,namelen),
+            pic_comment(record,z,namelen),
             pcn_comment(record,z,namelen),
             asctime(record,namelen);
 
@@ -75,6 +117,18 @@ netcdf lwc {
         short
             ice_fcinv(record, z);
             ice_fcinv:_FillValue= 0s;
+              	
+        short
+            sno_fcinv(record, z);
+            sno_fcinv:_FillValue= 0s;
+              	
+        short
+            rai_fcinv(record, z);
+            rai_fcinv:_FillValue= 0s;
+              	
+        short
+            pic_fcinv(record, z);
+            pic_fcinv:_FillValue= 0s;
               	
         short
             pcn_fcinv(record, z);
