@@ -1,0 +1,31 @@
+#!@PERL@
+#
+# installroot is location of binaries (bin), scripts (etc),
+# and installed data (data); otherwise it can be srcroot.
+# laps_data_root is location of static, lapsprd, cdl, and
+# so forth.
+
+use strict;
+umask 002;
+
+my $LAPS_SRC_ROOT; $LAPS_SRC_ROOT = shift;
+$LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if(! $LAPS_SRC_ROOT);
+print "LAPS_SRC_ROOT = $LAPS_SRC_ROOT\n";
+
+my $LAPSINSTALLROOT; $LAPSINSTALLROOT = shift;
+$LAPSINSTALLROOT = $ENV{LAPS_SRC_ROOT} if ! $LAPSINSTALLROOT;
+print "LAPSINSTALLROOT = $LAPSINSTALLROOT \n";
+
+my $LAPS_DATA_ROOT = shift;
+$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if( ! $LAPS_DATA_ROOT);
+print "LAPS_DATA_ROOT = $LAPS_DATA_ROOT\n";
+
+if( ! -d $LAPS_DATA_ROOT ){
+    print "copy $LAPS_SRC_ROOT/data to $LAPS_DATA_ROOT\n";
+    system("cp -r $LAPS_SRC_ROOT/data $LAPS_DATA_ROOT");}
+
+require "$LAPSINSTALLROOT/etc/mkdatadirs.pm";
+print "Using mkdatadir.pm to generate lapsdataroot directories\n";
+mkdatadirs::mkdatadirs($LAPS_DATA_ROOT);
+
+exit;
