@@ -42,6 +42,9 @@ DBLAPSLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib -ldebuglaps
 BGDATALIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/bgdata -lbgdata
 DBBGDATALIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/bgdata -ldebugbgdata
 
+GRIBLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib -lgrib
+DBGRIBLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib -ldebuggrib
+
 MTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -lmthermo
 DBMTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -ldebugmthermo
 
