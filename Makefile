@@ -148,7 +148,7 @@ mkdirs:
 
 mkdatadirs:
 	$(PERL) $(SRCROOT)/etc/makedatadirs.pl --srcroot=$(SRCROOT) --installroot=$(INSTALLROOT) \
-                         --dataroot=$(DATAROOT)
+                         --dataroot=$(DATAROOT) --system_type='laps'
 
 
 clean:
