@@ -491,3 +491,55 @@ c      enddo
        return
 
        end
+c
+c --------------------------------------------------------------
+c
+       subroutine read_sfc_nl(use_lso_qc,skip_internal_qc 
+     1                       ,itheta, redp_lvl, del, gam, ak
+     1                       ,l_require_lso)
+c    1                              bad_t,bad_td,bad_u,bad_v,bad_p,
+c    1                              bad_mp,bad_th,bad_the,
+c    1                              bad_vis,bad_tb8
+
+       implicit none
+
+       include 'grid_fname.cmn'                          !grid_fnam_common
+       integer use_lso_qc, skip_internal_qc, itheta
+       logical l_require_lso
+       real    redp_lvl,del,gam,ak
+       real    bad_t,bad_td,bad_u,bad_v,bad_p
+       real    bad_mp,bad_th,bad_the
+       real    bad_vis,bad_tb8
+
+       integer istatus
+       
+       namelist /surface_analysis/ use_lso_qc,skip_internal_qc,
+     1                              itheta, redp_lvl, del, gam, ak,
+     1                              l_require_lso,
+     1                              bad_t,bad_td,bad_u,bad_v,bad_p,
+     1                              bad_mp,bad_th,bad_the,
+     1                              bad_vis,bad_tb8
+
+       character*150    static_dir,filename
+       integer len_dir
+
+       istatus = 0
+       call get_directory(grid_fnam_common,static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/surface_analysis.nl'
+
+       open(1,file=filename,status='old',err=900)
+       read(1,surface_analysis,err=901)
+       close(1)
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       return
+
+  901  print*,'error reading verif_nl in ',filename
+       write(*,surface_analysis)
+       return
+
+       end
