@@ -226,8 +226,8 @@
                      product_list/                                (laps output)
                  log/
                  static/
-                     nest7grid.parms
-                     *.nl
+                     nest7grid.parms                      (namelist parameters)
+                     *.nl                                 (namelist parameters)
                      static.nest7grid                      (gridded topography)
                  time/
              testdata/                             (optional, can be relocated)
@@ -247,8 +247,7 @@
              laps-m-n-o/                                            (laps_root)
                  Makefile
                  src/                                             (source code)
-                 etc/                                            (laps scripts)
-                     ingest
+                     ingest/
          laps/   ----------------->  soft linked to /data_disk/laps/
 
      /data_disk/
@@ -256,14 +255,15 @@
              laps_terrain.tar
          raw_data/
          laps/                                        (--prefix in 'configure')
+             etc/                                                (laps scripts)
              bin/                                                 (executables)
              data*/                         (LAPS_DATA_ROOT, can be duplicated)
                  lapsprd/
                      product_list/                                (laps output)
                  log/
                  static/
-                     nest7grid.parms
-                     *.nl
+                     nest7grid.parms                      (namelist parameters)
+                     *.nl                                 (namelist parameters)
                      static.nest7grid                      (gridded topography)
                  time/
 
@@ -301,7 +301,8 @@
      operational laps system can require up to 1 GB of disk space,
      this will vary depending on domain size and purge interval (more
      on this later).  You can also separate the data (read/write) from
-     the binary executables (read only) using the --datadir option.  
+     the binary executables, (i.e. /bin, /etc - read only) using the --datadir 
+     option.  
 
      For example, to install laps in directory '/data_disk/laps' with data 
      in '/data_disk/laps/data' use... 
