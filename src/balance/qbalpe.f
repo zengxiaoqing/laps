@@ -33,6 +33,7 @@ c accuracy and adjustment potential
 c
       include 'trigd.inc'
       implicit none
+      include 'bgdata.inc'
 c
       integer   nx,ny,nz
 c
@@ -77,15 +78,16 @@ c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
      .      ,sumtscl,sumkf,sumks,sldata,den,sumom2
 
 c made 2d 2-20-01 JS.
-      real*4 terscl(nx,ny)
-      real*4 tau(nx,ny)
-      real*4 ro(nx,ny)
+      real*4  terscl(nx,ny)
+      real*4  tau(nx,ny)
+      real*4  ro(nx,ny)
       integer ks(nx,ny)
       integer kf(nx,ny)
       integer ksij,kfij
 c
       integer   itmax,lmax
-     .         ,masstime,windtime,sfctime,omtime
+     .         ,npass
+     .         ,i4time_sys
      .         ,i,j,k,ll,istatus
 
       integer   itstatus
@@ -95,6 +97,8 @@ c
       integer   lend
       integer   lends
       integer   lenvg
+      integer   lenm
+      integer   adv_anal_by_t_min
 c
       logical lrunbal
       logical lrotate/.false./
@@ -107,6 +111,7 @@ c
       character*31  staticext,sfcext
       character*10  units
       character*9   a9_time
+      character*8   c8_project
 
 c    Added by B. Shaw, 4 Sep 01
       real*4, allocatable :: lapsrh(:,:,:)
@@ -114,7 +119,7 @@ c    Added by B. Shaw, 4 Sep 01
       real*4 shsat
 c_______________________________________________________________________________
 c
-      call get_balance_nl(lrunbal,istatus)
+      call get_balance_nl(lrunbal,adv_anal_by_t_min,istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
          stop
@@ -131,12 +136,12 @@ c
 c
 c *** Get times of mass, wind and surface data.
 c
-      call get_systime(masstime,a9_time,istatus)
+      call get_systime(i4time_sys,a9_time,istatus)
       if(istatus .ne. 1)go to 999
 c
 c get pressures and determine pressure intervals.
 c
-      call get_pres_1d(masstime,nz,p,istatus)
+      call get_pres_1d(i4time_sys,nz,p,istatus)
       call get_vertical_grid(vertical_grid,istatus)
 
       call s_len(vertical_grid,lenvg)
@@ -162,15 +167,6 @@ c        print*,(p(i),dp(i),i=1,nz)
       g=9.80665
       bnd=1.e-30 !value of winds on the terrain face 
       itmax=200  !max iterations for relaxation
-c
-      windtime=(masstime+1800)/3600*3600
-      sfctime=windtime
-      omtime=windtime/10800*10800
-c
-c *** Get laps grid lat, lons and grid spacings.
-c
-c     call get_laps_lat_lon(staticdir,staticext
-c    .                     ,nx,ny,lat,lon,istatus)
 
       call get_domain_laps(nx,ny,staticext,lat,lon,ter
      1                    ,grid_spacing_cen_m,istatus)
@@ -189,34 +185,63 @@ c
          
       enddo
       enddo
-c *** Get LGA fields
-      call get_modelfg_3d(masstime,'U3 ',nx,ny,nz,ub,istatus)
-      call get_modelfg_3d(masstime,'V3 ',nx,ny,nz,vb,istatus)
-      call get_modelfg_3d(masstime,'T3 ',nx,ny,nz,tb,istatus)
-      call get_modelfg_3d(masstime,'HT ',nx,ny,nz,phib,istatus)
-      call get_modelfg_3d(masstime,'SH ',nx,ny,nz,shb,istatus)
-      call get_modelfg_3d(masstime,'OM ',nx,ny,nz,omb,istatus)
-
-c convert background sh to rh
-c  COMMENTED OUT...Now do everything in specific humidity
-c     do k=1,nz
-c        do j=1,ny
-c        do i=1,nx
-c           rhb(i,j,k)=make_rh(p(k)/100.,tb(i,j,k)-273.15
-c    .,rhb(i,j,k)*1000.,-132.)*100.
-c        enddo
-c        enddo
-c     enddo
-
 c
-c *** Get laps analysis grids.
+c *** Get background grids
 c
-      call get_laps_analysis_data(masstime,nx,ny,nz
+      call get_modelfg_3d(i4time_sys,'U3 ',nx,ny,nz,ub,istatus)
+      call get_modelfg_3d(i4time_sys,'V3 ',nx,ny,nz,vb,istatus)
+      call get_modelfg_3d(i4time_sys,'T3 ',nx,ny,nz,tb,istatus)
+      call get_modelfg_3d(i4time_sys,'HT ',nx,ny,nz,phib,istatus)
+      call get_modelfg_3d(i4time_sys,'SH ',nx,ny,nz,shb,istatus)
+      call get_modelfg_3d(i4time_sys,'OM ',nx,ny,nz,omb,istatus)
+
+c     check to see that omb is not missing
+      where(abs(omb) .gt. 100.) omb=0.
+c
+c *** Get analysis grids.
+c
+      call get_laps_analysis_data(i4time_sys,nx,ny,nz
      +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,istatus)
 c omo is the cloud vertical motion from lco
       if (istatus .ne. 1) then
          print *,'Error getting LAPS analysis data...Abort.'
          stop
+      endif
+c
+c *** Get laps surface pressure.
+c
+      call get_laps_2d(i4time_sys,sfcext,'PS ',units,
+     1                  comment,nx,ny,ps,istatus)
+c
+c *** for Airdrop-LAPS project we want to advance background and
+c *** analysis grids to the time of payload release as specified
+c *** by namelist variable adv_anal_by_t_min
+c
+      call get_c8_project(c8_project,istatus)
+      call upcase(c8_project,c8_project)
+
+      if(c8_project .eq. 'AIRDROP')then
+
+         print*
+         print*,' ************************'
+         print*,' *** Airdrop project *** '
+         print*,' ************************'
+         print*
+         print*,' Advance systime by ',
+     +adv_anal_by_t_min*60, ' seconds '
+
+         i4time_sys=i4time_sys+adv_anal_by_t_min*60
+
+c advance laps (analysis) grid to payload drop time
+
+         call advance_grids(i4time_sys,nx,ny,nz
+     .,ub,vb,tb,phib,shb,omb,lapsphi,lapstemp,lapsu,lapsv
+     .,lapssh,omo,ps,istatus)
+         if(istatus.ne.1)then
+            print*,'Error returned: advance_grids '
+            return
+         endif
+
       endif
 
 c *** Not considering non-linear terms for now, so no need to read t0-dt. 
@@ -274,7 +299,7 @@ c    .                      ,ter,istatus)
 c
 c *** Get laps surface pressure.
 c
-      call get_laps_2d(masstime,sfcext,'PS ',units,
+      call get_laps_2d(i4time_sys,sfcext,'PS ',units,
      1                  comment,nx,ny,ps,istatus)
 c
 c all pressure is in pascals
@@ -365,6 +390,7 @@ c
 c vertical motions in clear areas come in as the missing data parameter.
 c replace missing cloud vv's with background vv's. Unless there is cloud
 c we seek to replicate the background vertical motions
+            if(abs(omb(i,j,k)).gt.100.)omb(i,j,k)=0. ! check for missing omb
             if(abs(omo(i,j,k)).gt.100.)omo(i,j,k)=omb(i,j,k)
          enddo
       enddo
@@ -386,8 +412,12 @@ c we seek to replicate the background vertical motions
          ksij=ks(i,j)
          dpp=p(ksij)-p(kfij)
 c scale tau as of 1/(omega)**2 where omega is the background rms omega              
-         tau(i,j)= 1./sumom2 
-
+c if background is missing sumom2 will be 0. Assume a nominal .5Pa/s vv
+        if(sumom2.ne.0.) then
+          tau(i,j)= 1./sumom2 
+        else
+          tau(i,j)=1./0.5**2
+        endif
 
       enddo
       enddo
@@ -510,6 +540,9 @@ c
 c   Prior to applying boundary subroutine put non-staggered grids back into
 c   u,v,om,t,sh,phi.
 
+c adjust surface temps to account for poor phi estimates below ground 
+      call sfctempadj(tb,lapstemp,p,ps,nx,ny,nz,npass)  
+
       call move_3d(phib,phi,nx,ny,nz)
       call move_3d(ub,u,nx,ny,nz)
       call move_3d(vb,v,nx,ny,nz)
@@ -517,7 +550,7 @@ c   u,v,om,t,sh,phi.
       call move_3d(omb,om,nx,ny,nz)
       call move_3d(shb,sh,nx,ny,nz)
 
-      call get_laps_2d(masstime,sfcext,'PS ',units,
+      call get_laps_2d(i4time_sys,sfcext,'PS ',units,
      1                  comment,nx,ny,ps,istatus)
 
       if(lrotate)then
@@ -578,9 +611,8 @@ c       the saturation value for this temperature
 
         lapssh(i,j,k) = MIN(shsat,lapssh(i,j,k))
 c
-c       Rediagnose RH wrt liquid from the 
-c       modified sh field, but do not let RH go below a very
-c       small value (1%)
+c       Finally, rediagnose RH wrt liquid from the 
+c       modified sh field
 
         lapsrh(i,j,k) = make_rh(p(k)*0.01,t(i,j,k)-273.15
      .                    ,lapssh(i,j,k)*1000.,-132.)*100.         
@@ -588,8 +620,24 @@ c       small value (1%)
       enddo
       enddo
       enddo     
+c
+c     New section added by to replicate the values of u/v at 
+c     from the lowest p-level still above ground to all levels
+c     below ground  (B. Shaw, 12 Apr 02) 
 
-      call write_bal_laps(masstime,phi,u,v,t,om,lapsrh,lapssh
+c     do j = 1,ny
+c       do i = 1, nx
+c         findsfclev:  do k = 1,nz
+c           IF (phi(i,j,k) .GT. ter(i,j)) EXIT findsfclev
+c         enddo findsfclev
+c         IF (k .gt. 1) THEN
+c           u(i,j,1:k-1) = u(i,j,k)
+c           v(i,j,1:k-1) = v(i,j,k)
+c         ENDIF
+c       enddo
+c     enddo
+
+      call write_bal_laps(i4time_sys,phi,u,v,t,om,lapsrh,lapssh
      .                   ,nx,ny,nz
      .                   ,p,istatus)
       if(istatus.ne.1)then
@@ -600,7 +648,76 @@ c       small value (1%)
  999  return
       end
 
-c
+      subroutine sfctempadj(t,to,p,ps,nx,ny,nz,npass)
+c routine is designed to correct surface temperatures which have been computed 
+c employing the hyposometric equation using geopotential heights of pressure 
+c surfaces below ground. 'to' is the laps lt1 which uses surface data near the 
+c ground. We want these estimates to be in the 3-D fields rather than  fictional
+c hydrostatic estimates from phi. Above the ground balanced temps are good.
+c Both the temp mmediately above and below ground are given the lt1. 
+c There is a super-adiabatic check in the vertical and adjustments made if 
+c necessary.
+
+      integer nx,ny,nz
+      real t(nx,ny,nz),to(nx,ny,nz),p(nz),ps(nx,ny)
+      cappa=2./7.
+      sum=0.
+      sum2=0.
+      cnt2=0
+      cnt=0.
+      do j=1,ny  
+      do i=1,nx
+       do k=2,nz
+        if(ps(i,j).ge.p(k)) then
+         temp=to(i,j,k)-t(i,j,k)
+         sum=temp+sum
+         sum2=temp**2+sum2
+         cnt=cnt+1
+c   put lt1 temps at the levels below the surface
+         ksave=k-1
+         do l = ksave,1,-1
+          t(i,j,l)=to(i,j,l)
+         enddo
+c   check for superadiabatic layers
+c        potemp=t(i,j,k)*(100000./p(k))**cappa   
+c        cnt1=0
+c        sum1=0
+c        do l=k+1,nz
+c         potempk=t(i,j,l)*(100000./p(l))**cappa  
+c         if(potemp.gt.potempk) then
+c          cnt1=cnt1+1.
+c          sum1=sum1+(potemp-potempk)
+c          cnt2=cnt2+1
+c         else
+c          lsave=l-1
+c          go to 1 ! reached top of adiabatic layer 
+c         endif
+c        enddo ! on l
+c  1     continue
+c        potemp=potemp-sum1/(cnt+1.)
+c        t(i,j,k)=potemp*(p(k)/100000.)**cappa
+c        do ll=k+1,lsave
+c         t(i,j,ll)=potemp*(p(ll)/100000.)**cappa
+c        enddo ! on ll
+c        go to 2 ! go to a new grid point
+        endif ! the ps gt p check
+       enddo ! on k
+c run smoother on temps below ground
+       do n=1,npass
+        do k=2,ksave
+         t(i,j,k)=.5*t(i,j,k)+.25*(t(i,j,k+1)+t(i,j,k-1))
+        enddo
+       enddo
+   2  enddo ! on i
+      enddo ! on j
+      print*, 'LT1 Temp Adjust Summary '
+      print*, 'Bias ',sum/cnt, ' RMS ',sqrt(sum2/cnt) 
+c     print*, cnt2 , ' Temps had to be adj for sup-adi lapse rates'
+      return
+      end 
+
+
+
 c===============================================================================
 c
       subroutine momres(u,v,phi,nu,nv,fu,fv,wa,delo
@@ -1050,7 +1167,7 @@ c
       call diagnose(to,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT GEOPOTENTIALS')
       call diagnose(uo,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT U-COMPONENT  ')
       call diagnose(vo,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT V-COMPONENT  ')
-      call diagnose(omo,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT OMEGA')
+      call diagnose(omo,nx,ny,nz,ismx,jsmx,ksmx+1,7,'INPUT OMEGA')
 
 c     write(9,1000) it,cotmax,ovr,cotma1
 c     erf=0.
@@ -1228,7 +1345,7 @@ c
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz),dp(nz)
 
-      real*4 dldx,dldy,dldp,sum,cnt
+      real*4 dldx,dldy,dldp,sum,sum1,cnt
      .,a,erf,bnd
       real*4 tau(nx,ny)
 
@@ -1262,6 +1379,7 @@ c
 c ****** Compute new u, v, omega by adding the lagrange multiplier terms.
 co
       sum=0
+      sum1=0
       cnt=0
       do k=1,nz
       ks=1
@@ -1273,11 +1391,12 @@ co
          dldp=(slam(i,j,k)-slam(i,j,k+1))/dp(k+ks)
          dldx=(slam(i+1,j+1,k+1)-slam(i,j+1,k+1))/dx(i,j)
          dldy=(slam(i+1,j+1,k+1)-slam(i+1,j,k+1))/dy(i,j)
-         if (u(i,j,k) .ne. bnd) u(i,j,k)=uo(i,j,k)+.5*dldx/a
-         if (v(i,j,k) .ne. bnd) v(i,j,k)=vo(i,j,k)+.5*dldy/a
+         if (u(i,j,k) .ne. bnd) u(i,j,k)=uo(i,j,k)+dldx/a
+         if (v(i,j,k) .ne. bnd) v(i,j,k)=vo(i,j,k)+dldy/a
          if (omo(i,j,k).ne.bnd) om(i,j,k)=omo(i,j,k)+
      &     .5*dldp/tau(i,j)
        sum=sum+(u(i,j,k)-uo(i,j,k))**2+(v(i,j,k)-vo(i,j,k))**2
+       sum1=sum1+(om(i,j,k)-omo(i,j,k))**2
        cnt=cnt+1.
       enddo
       enddo
@@ -1285,7 +1404,7 @@ co
          a=2.*erru(i,ny,k)
          dldp=(slam(i,ny,k)-slam(i,ny,k+1))/dp(k+ks)
          dldy=(slam(i+1,ny+1,k+1)-slam(i+1,ny,k+1))/dy(i,ny)
-         if (v(i,ny,k) .ne. bnd) v(i,ny,k)=vo(i,ny,k)+.5*dldy/a
+         if (v(i,ny,k) .ne. bnd) v(i,ny,k)=vo(i,ny,k)+dldy/a
          if (omo(i,ny,k).ne.bnd) om(i,ny,k)=omo(i,ny,k)+
      &     .5*dldp/tau(i,ny)
       enddo
@@ -1293,14 +1412,16 @@ co
          a=2.*erru(nx,j,k)
          dldp=(slam(nx,j,k)-slam(nx,j,k+1))/dp(k+ks)
          dldx=(slam(nx+1,j+1,k+1)-slam(nx,j+1,k+1))/dx(nx,j)
-         if (u(nx,j,k) .ne. bnd) u(nx,j,k)=uo(nx,j,k)+.5*dldx/a
+         if (u(nx,j,k) .ne. bnd) u(nx,j,k)=uo(nx,j,k)+dldx/a
          if (omo(nx,j,k).ne.bnd) om(nx,j,k)=omo(nx,j,k)+
      &     .5*dldp/tau(nx,j)
       enddo
       enddo
 c   print out rms vector adjustment
-      print*, 'RMS Vector adjustment after continuity applied ' 
+      print*, 'RMS Vector(m/s) adjustment after continuity applied ' 
       print*, sqrt(sum/cnt)
+      print*, 'RMS omega (Pa/s)adjustment after continuity applied ' 
+      print*, sqrt(sum1/cnt)
 
       deallocate (slam,f3,h)
 
@@ -2028,23 +2149,22 @@ c
          dpp=dp(k)
          do j=2,ny
          do i=2,nx
-            js=1
-            if (j .eq. 2) js=0
-            dyy=dy(i,j)*float(js+1)
-            is=1
-            if (i .eq. 2) is=0
-            dxx=dx(i,j)*float(is+1)
-            h(i,j,k)=erru(i,j,k)/(tau(i,j))
+            h(i,j,k)=erru(i,j,k)/tau(i,j)
             f3(i,j,k)=-2.*erru(i,j,k)*
      &    ((u(i,j-1,k-1)-u(i-1,j-1,k-1))/dx(i,j)
-     .    +(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dy(i,j))
-     .    -h(i,j,k)*(om(i,j,k-1)-om(i,j,k))/dpp
+     .    +(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dy(i,j)
+     .    +(om(i,j,k-1)-om(i,j,k))/dpp)
            if (abs(f3(i,j,k)) .ge. formax) then
                formax=abs(f3(i,j,k))
+               is=i
+               js=j
+               ks=k
             endif
          enddo
          enddo
       enddo
+      print*, 'f3: Maximum forcing function for lamda ',formax
+      print*, 'at ',is,js,ks                                  
 c
       return
       end

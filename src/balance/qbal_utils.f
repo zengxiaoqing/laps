@@ -378,3 +378,84 @@ c     terscl=sqrt(sumt/(nx*ny))
 
       return
       end
+
+      subroutine advance_grids(i4time_sys,nx,ny,nz,ub,vb,tb,phib
+     .,shb,omb,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,ps,istatus)
+
+      implicit none
+
+      include 'bgdata.inc'
+
+      integer nx,ny,nz
+
+      real    phib(nx,ny,nz)
+     .       ,tb(nx,ny,nz)
+     .       ,ub(nx,ny,nz)
+     .       ,vb(nx,ny,nz)
+     .       ,shb(nx,ny,nz)
+     .       ,omb(nx,ny,nz)
+
+      real    lapsu(nx,ny,nz)
+     .       ,lapsv(nx,ny,nz)
+     .       ,lapssh(nx,ny,nz)
+     .       ,lapstemp(nx,ny,nz)
+     .       ,lapsphi(nx,ny,nz)
+     .       ,omo(nx,ny,nz)
+     .       ,ps(nx,ny)
+
+      character*256 bgpaths(maxbgmodels)
+      character*132 cmodels(maxbgmodels)
+      integer   bgmodels(maxbgmodels)
+      integer   itime_inc
+
+      character(len=256), allocatable :: names(:)
+      character(len=256), allocatable :: reject_names(:)
+      character(len=256), allocatable :: bg_names(:)
+
+      integer   max_files
+      parameter (max_files=200)
+      integer accepted_files
+      integer bg_files
+      integer oldest_forecast
+      integer forecast_length
+      integer max_forecast_delta
+      integer rejected_cnt
+      logical use_analysis
+
+      integer i4time_sys
+     .       ,lenm
+     .       ,istatus
+
+      print*,'Test subroutine advance_grid: doesnt do much yet.'
+
+c     1. use readbgdata with input (advanced) i4time_sys and
+c        path to do bgdata to read LAPS_FUA. Because this routine
+c        expects a full path/filename, we must determine this apriori
+c        which is a lga/get_acceptable_files function.
+
+      call get_background_info(bgpaths,bgmodels,oldest_forecast
+     +,max_forecast_delta,forecast_length,use_analysis,cmodels
+     +,itime_inc)
+
+      call s_len(cmodels(1),lenm)
+
+      if(cmodels(1).ne.'LAPS_FUA')then
+         print*,' Error: analysis and background grids are'
+     .,' advanced in time only when background model is LAPS_FUA'
+     .,' as specified in background.nl'
+            print*,' Current background: ',cmodels(1)(1:lenm)
+         return
+      endif
+
+      allocate (names(max_files),reject_names(max_files)
+     .         ,bg_names(max_files))
+
+      call get_acceptable_files(i4time_sys,bgpaths(1),bgmodels(1)
+     +        ,names,max_files,oldest_forecast,max_forecast_delta
+     +        ,use_analysis,bg_files,accepted_files,forecast_length
+     +        ,cmodels(1),nx,ny,nz,reject_names,rejected_cnt)
+
+      deallocate (names,reject_names,bg_names)
+
+      return
+      end
