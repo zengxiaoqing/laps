@@ -21,7 +21,8 @@
          2.2.2 ..................  Perl
          2.2.3 ..................  make
          2.2.4 ..................  Plotting / NCAR graphics library (optional)
-         2.2.5 ..................  FORTRAN Compiler
+         2.2.5 ..................  C Compiler
+         2.2.6 ..................  FORTRAN Compiler
          2.4 ..............  Raw data ingest 
          2.5 ..............  Running LAPS Analyses 
          2.6 ..............  Test data case
@@ -246,7 +247,20 @@
      Lapsplot is designed to work with version 3.2 of NCAR graphics, it may
      not yet work with version 4.
 
-                  ---  2.2.5  FORTRAN Compiler ---
+                    ---  2.2.5  C Compiler ---
+
+     In general, an ANSI compliant C compiler (e.g. 'cc') should be used.
+     It is recommended that a GNU C compiler ('gcc') be used           
+     for some platforms. An alternative is that 'cc' can be used with
+     compiler flags added to 'cc' for ANSI "C" compatability (if needed).
+     This appears to be most relevant for an HP; an example follows:
+
+     1) add +z and -g for CCFLAGS and F77FLAGS
+     2) use ld -b instead of ar rc to create the library
+     3) replace gcc with cc +z -Aa -D_HPUX_SOURCE
+
+
+                  ---  2.2.6  FORTRAN Compiler ---
 
      Please note that LAPS uses dynamic memory within the FORTRAN code in
      the form of automatic arrays. This implies that you will need a FORTRAN
