@@ -4,7 +4,7 @@
  ref_min=0.0,
  min_ref_samples=4,
  min_vel_samples=4,
- dgr=1.6,
+ dgr=1.1,
  path_to_radar_a=
 '/public/data/radar/wsr88d/wideband/kama/netcdf',
 '/public/data/radar/wsr88d/wideband/kcys/netcdf',
