@@ -101,6 +101,8 @@ c
         call make_fnam_lp(i4time,asc_tim_9,istatus)
 
         write(6,*)' Reading SFC Obs: Calling read_sfc ',asc_tim_9
+        write(6,*)' N_SAO, maxstns = ',N_SAO, maxstns
+
         ext = 'lso'
         call get_directory(ext,directory,len_dir) ! Returns top level directory
 

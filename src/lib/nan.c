@@ -7,10 +7,11 @@
 */
 
 /* defined for the IBM jpe */
+/* DOUBLEUNDERSCORE use of only one underscore is set for HPC */
 #if defined(FORTRANUNDERSCORE)
 #  define nan nan_
 #elif defined(FORTRANDOUBLEUNDERSCORE)
-#  define nan nan__
+#  define nan nan_
 #elif defined(FORTRANCAPS)
 #  define nan NAN
 #endif

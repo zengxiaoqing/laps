@@ -37,10 +37,6 @@ SRC	= machine_dependent.F \
           bilinear_interp.f \
           block_data.f \
           c_time2fname.c \
-          check_nan.f \
-          check_nan1.f \
-          check_nan2.f \
-          check_nan3.f \
           climate_sm.f \
           constant.f \
           convc2f.f \
@@ -106,7 +102,7 @@ SRC	= machine_dependent.F \
           multar.f \
           multcon.f \
           my_show_timer.f \
-          nanf.f \
+          nan_routines.f \
           newreadobs.f \
           normalize.f \
           pcpcnc.f \
