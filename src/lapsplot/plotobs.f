@@ -507,7 +507,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1  ,status='old',err=911)
 
         do while (.true.)
-            read(32,*,end=41)ri,rj,rk,dir,speed_ms
+            read(32,*,end=41,err=39)ri,rj,rk,dir,speed_ms
             ri = ri ! + 1.
             rj = rj ! + 1.
             rk = rk ! + 1.
@@ -530,10 +530,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_prof,'true')
-                write(6,111,err=121)alat,alon,dir,spd_kt
-121             continue
+                write(6,111,err=38)alat,alon,dir,spd_kt
+38              continue
 
             endif ! k .eq. k_level
+
+39          continue
 
         enddo
 
