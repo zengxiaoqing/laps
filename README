@@ -307,8 +307,8 @@
 
      To introduce this section, here is a hierarchical listing of some primary 
      directories and files in the laps tree. The default LAPS structure is
-     shown. These are created/addressed in various portions of section 2.2 
-     and beyond. 
+     shown in the first tree below. These directories are created/addressed in
+     various portions of section 2.2 and beyond. 
 
      Various "root" directories are mentioned in the form of environment 
      variables. These can optionally be set to make it easier to follow the 
@@ -374,25 +374,28 @@
 
      In many UNIX environments, large data files are stored on a "data" disk 
      and the source code is stored on a smaller "home" disk. Below is a
-     typical laps directory structure for that setup. 
+     typical laps directory structure for that setup. We recommend using
+     something like this setup, especially if you are constructing and
+     localizing with your own domain and parameters that are different from 
+     our default Colorado setup.
 
      <pre>
      /home_disk/
          builds/
              laps-m-n-o.tar
-             laps-m-n-o/                                       ($LAPS_SRC_ROOT)
+             laps-m-n-o/                    ($LAPS_SRC_ROOT = $LAPSINSTALLROOT)
                  Makefile
                  src/                                             (source code)
                      ingest/
+                 etc/                                            (laps scripts)
+                 bin/                                             (executables)
              template                                    ($TEMPLATE parameters)
 
      /data_disk/
          geog/
              laps_terrain.tar
          raw_data/                                     (optional raw test data)
-         laps/                     ($LAPSINSTALLROOT / --prefix in 'configure')
-             etc/                                                (laps scripts)
-             bin/                                                 (executables)
+         laps/                     
              data*/                        ($LAPS_DATA_ROOT, can be duplicated)
                  lapsprd/
                      product_list/                                (laps output)
@@ -539,8 +542,13 @@
      
             ----   2.2.5  Geography databases  ---
 
-     Currently there are three mandatory geography databases required to
-     localize a LAPS domain. These are: 1) terrain, 2) landuse, and 3) albedo. 
+     Currently there are four mandatory geography databases required to
+     localize a LAPS domain. These are: 
+
+		1) terrain elevation 
+		2) land fraction
+		3) landuse category 
+		4) albedo climatology. 
 
      The 30" terrain data is found in one of two tar files; 'world_topo_30s'
      and 'topo_30s'. topo_30s is in file 'laps_terrain.tar.gz'. You must
@@ -549,7 +557,8 @@
      topo data is being phased out in favor of the 30 sec terrain data.
      Either topo_30s or world_topo_30s work well; however topo_30s does
      not cover the entire globe and we recommend using world_topo_30s
-     data instead. Still, you must get 'laps_terrain.tar.gz'.
+     data instead. Still, you must get 'laps_terrain.tar.gz' which contains
+     database 1) and 2).
 
      The landuse data is global 30" data and required to compute a
      land/water mask. The mask is used during localization to force consistency
