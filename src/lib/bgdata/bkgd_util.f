@@ -1,93 +1,3 @@
-      subroutine uvgrid_to_uvtrue_a(u,v,lon,std_lon,nx,ny,nz)
-c
-c *** Convert grid north winds to true north winds.
-c
-      
-c
-      integer nx,ny,nz,i,j
-c
-      real*4    u(nx,ny,nz),
-     .          v(nx,ny,nz),
-     .          lon(nx,ny),
-     .          std_lon,
-     .          angle(nx,ny)
-c_______________________________________________________________________________
-c
-      do j=1,ny
-      do i=1,nx
-         angle(i,j)=lon(i,j)-std_lon
-      enddo
-      enddo
-c
-      call rotate_vec_a(u,v,angle,nx,ny,nz)
-c
-      return
-      end
-c
-c===============================================================================
-c
-      subroutine uvtrue_to_uvgrid_a(u,v,lon,std_lon,nx,ny,nz)
-c
-c *** Convert true north winds to grid north winds.
-c
-c
-      
-c
-      integer nx,ny,nz,i,j
-c
-      real*4    u(nx,ny,nz),
-     .          v(nx,ny,nz),
-     .          lon(nx,ny),
-     .          std_lon,
-     .          angle(nx,ny)
-c_______________________________________________________________________________
-c
-      do j=1,ny
-      do i=1,nx
-         angle(i,j)=std_lon-lon(i,j)
-      enddo
-      enddo
-c
-      call rotate_vec_a(u,v,angle,nx,ny,nz)
-c
-      return
-      end
-c
-c===============================================================================
-c
-      subroutine rotate_vec_a(u,v,angle,nx,ny,nz)
-c
-      include 'trigd.inc'
-      
-c
-      integer nx,ny,nz,i,j,k
-c
-      real*4    u(nx,ny,nz),
-     .          v(nx,ny,nz),
-     .          angle(nx,ny),
-     .          utmp
-c_______________________________________________________________________________
-c
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-         if (u(i,j,k) .gt. -400. .and. u(i,j,k) .lt. 400. .and.
-     .       v(i,j,k) .gt. -400. .and. v(i,j,k) .lt. 400.) then
-            utmp    =+u(i,j,k)*cosd(angle(i,j))
-     .               +v(i,j,k)*sind(angle(i,j))
-            v(i,j,k)=-u(i,j,k)*sind(angle(i,j))
-     .               +v(i,j,k)*cosd(angle(i,j))
-            u(i,j,k)=utmp
-         endif
-      enddo
-      enddo
-      enddo
-c
-      return
-      end
-c
-c==================================================================================
-c
       subroutine rotate_lga_winds(ldir,nx,ny,nz,lon
      1,uw3d,vw3d,uw2d,vw2d)
 
@@ -190,12 +100,16 @@ c
       print*,'Rotate u/v components'
       print*
 
+c ----------------------------------------------------------------
       if(c6_maproj.eq.'merctr')then
+c ----------------------------------------------------------------
+
          if(gproj.eq.'MC'.or.gproj.eq.'LL')then
 
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
             print*,'no rotation required for background'
+
          else
 c rotate from grid north to LAPS true north (this subroutine uses
 c std_lon by virtue of library routines.
@@ -207,42 +121,61 @@ c std_lon by virtue of library routines.
      +                   ,uw,vw,uw_sfc,vw_sfc)
          endif
 
+c ----------------------------------------------------------------
       elseif(c6_maproj.eq.'plrstr')then
+c ----------------------------------------------------------------
 
          if(gproj.eq.'MC'.or.gproj.eq.'LL'.or.gproj.eq.'LE')then
 
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'Rotate from true-north to grid-north only'
+
+            print*,'Rotate Bkgd winds: true-north to grid-north'
 
             call rotate_lga_winds(.false.,nx,ny,nz,lon
      +                   ,uw,vw,uw_sfc,vw_sfc)
 
-         elseif( (gproj.eq.'PS').and.(slon0.eq.std_lon) )then
+         elseif(gproj.eq.'PS')then
 
-            call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
+             if(slon0.eq.std_lon)then
+
+                call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'no rotation required for background'
+                print*,'no rotation required for background'
+
+             else
+
+                call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
+     +,std_lon,std_lat1,std_lat2)
+
+                print*,'Rotate Bkgd winds: grid-north to true-north'
+                call rotate_lga_winds(.true.,nx,ny,nz,lon
+     +,uw,vw,uw_sfc,vw_sfc)
+
+                print*,'Rotate again: true-north to LAPS grid-north'
+                call rotate_lga_winds(.false.,nx,ny,nz,lon
+     +,uw,vw,uw_sfc,vw_sfc)
+
+             endif
 
          else
 
-c rotate from native grid north to true north
-            call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
+c background is lambert
+             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'Rotate from bkgd grid-north to LAPS true-north'
-            print*,'Rotate from LAPS true-north to LAPS grid-north'
 
-            call uvgrid_to_uvtrue_a(uw,vw,lon,slon0
-     +,nx,ny,nz)
-            call uvgrid_to_uvtrue_a(uw_sfc,vw_sfc,lon,slon0
-     +,nx,ny,1)
-
-c rotate from true north to LAPS grid north
-            call rotate_lga_winds(.false.,nx,ny,nz,lon
+             print*,'Rotate Bkgd winds: grid-north to true-north'
+             call rotate_lga_winds(.true.,nx,ny,nz,lon
      +                   ,uw,vw,uw_sfc,vw_sfc)
+             print*,'Rotate again: true-north to LAPS grid-north'
+             call rotate_lga_winds(.false.,nx,ny,nz,lon
+     +,uw,vw,uw_sfc,vw_sfc)
+
          endif
 
-      else                         !if(c6_maproj.eq.'lambrt')then
+c ----------------------------------------------------------------
+      else     !LAPS is Lambert --- if(c6_maproj.eq.'lambrt')then
+c ----------------------------------------------------------------
 
          if(gproj.eq.'MC' .or.
      +      gproj.eq.'LL' .or.
@@ -250,36 +183,21 @@ c rotate from true north to LAPS grid north
 
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'Rotate from true-north to grid-north only'
-
+            print*,'Rotate Bkgd winds: true-north to grid-north'   ! because MC/LL/LE grids are true north
             call rotate_lga_winds(.false.,nx,ny,nz,lon
      +                   ,uw,vw,uw_sfc,vw_sfc)
 
-         elseif(gproj.eq.'LC' .and.
-     +         (std_lon.eq.slon0).and.
-     +         (std_lat1.eq.slat1).and.
-     +         (std_lat2.eq.slat2) )then
+         elseif(gproj.eq.'PS'.or.gproj.eq.'LC')then
 
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'no rotation required for background'
+            print*,'Rotate Bkgd winds: true-north to grid-north'
+            call rotate_lga_winds(.true.,nx,ny,nz,lon
+     +,uw,vw,uw_sfc,vw_sfc)
+             print*,'Rotate again: true-north to LAPS grid-north'
+             call rotate_lga_winds(.false.,nx,ny,nz,lon
+     +,uw,vw,uw_sfc,vw_sfc)
 
-         else   !background model is polar stereo
-
-            call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
-     +,std_lon,std_lat1,std_lat2)
-            print*,'Rotate from bkgd grid-north to LAPS true-north'
-            print*,'Rotate from LAPS true-north to LAPS grid-north'
-
-c rotate from native grid-north to true north
-            call uvgrid_to_uvtrue_a(uw,vw,lon,slon0
-     +,nx,ny,nz)
-            call uvgrid_to_uvtrue_a(uw_sfc,vw_sfc,lon,slon0
-     +,nx,ny,1)
-
-c rotate from true north to LAPS grid-north
-            call rotate_lga_winds(.false.,nx,ny,nz,lon
-     +                   ,uw,vw,uw_sfc,vw_sfc)
          endif
 
       endif
