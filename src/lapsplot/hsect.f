@@ -362,8 +362,8 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     HUMIDITY: [br-i,fr-i,lq,rb] (lga;fua;lq3;bal)'
      1       /'               [pw-i] Precipitable H2O'       
      1       /
-     1       /'     CLOUDS/PRECIP: [ci] Cloud Ice,'
-     1       ,' [ls] Cloud LWC'
+     1       /'     CLOUDS/PRECIP: [ci-i] Cloud Ice,'
+     1       ,' [ls-i] Cloud LWC'
      1       /'         [is] Integrated Cloud LWC  '
      1       /'         [mv] Mean Volume Drop Diam,   [ic] Icing Index,'       
      1       /'         [cc] Cld Ceiling (AGL),'
@@ -383,16 +383,17 @@ c       include 'satellite_dims_lvd.inc'
         read(lun,16)c_type
  16     format(a4)
 
-        i_image = 0
-        c_type_i = c_type
-
         call s_len(c_type,len_type)
         if(len_type .eq. 0)goto1200
 
         if(c_type(len_type:len_type) .eq. 'i' 
-     1                  .and. c_type .ne. 'dii')then
+     1                  .and. c_type .ne. 'di'
+     1                  .and. c_type .ne. 'ci')then
             i_image = 1
             c_type_i = c_type(1:len_type-1)
+        else
+            i_image = 0
+            c_type_i = c_type
         endif
 
         if(c_type(1:2) .eq. 'di')then
@@ -2736,9 +2737,9 @@ c
      1       namelist_parms,c33_label,i_overlay,c_display,lat,lon,jdot,       
      1       NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'la' .or. c_type .eq. 'lj' .or.
-     1         c_type .eq. 'sj' .or. c_type .eq. 'ls' .or.
-     1         c_type .eq. 'ci'       )then
+        elseif(c_type .  eq. 'la' .or. c_type   .eq. 'lj' .or.
+     1         c_type   .eq. 'sj' .or. c_type_i .eq. 'ls' .or.
+     1         c_type_i .eq. 'ci'       )then
             write(6,1514)
 1514        format('     Enter Level in mb; OR [-1] for max in column'
      1                          ,21x,'? ',$)
@@ -2774,7 +2775,7 @@ c
                     c33_label = 'Maximum Adjusted SLWC g/m^3      '
                 endif
 
-            elseif(c_type .eq. 'ls')then
+            elseif(c_type_i .eq. 'ls')then
                 iflag_slwc = 13 ! Returns New Smith - Feddes LWC
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
@@ -2783,7 +2784,7 @@ c
                     c33_label = 'Column Max LWC        g/m^3      '
                 endif
 
-            elseif(c_type .eq. 'ci')then
+            elseif(c_type_i .eq. 'ci')then
                 iflag_slwc = 13 ! Returns Cloud Ice
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
@@ -2807,7 +2808,7 @@ c
      1                             ,i4_valid                ! O
      1                             ,istatus)                ! O
 
-            if(c_type .ne. 'ci')then
+            if(c_type_i .ne. 'ci')then
                 var_2d = 'LWC'
             else
                 var_2d = 'ICE'
@@ -2819,7 +2820,7 @@ c
                 call get_directory(ext,directory,len_dir)
 
                 if(k_mb .eq. -1)then ! Get 3D Grid
-                  if(c_type .ne. 'ci')then
+                  if(c_type_i .ne. 'ci')then
                     call get_laps_3dgrid(i4time_ref,86400,i4time_cloud,
      1                                   NX_L,NY_L,NZ_L,ext,var_2d
      1                            ,units_2d,comment_2d,field_3d,istatus) ! slwc_3d
@@ -2830,7 +2831,7 @@ c
                   endif
 
                 else ! Get 2D horizontal slice from 3D Grid
-                  if(c_type .ne. 'ci')then
+                  if(c_type_i .ne. 'ci')then
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
      1                                   ext,var_2d,units_2d,
      1                                   comment_2d,NX_L,NY_L,field2_2d,       
@@ -2842,7 +2843,6 @@ c
                   endif
 
                 endif
-
 
             elseif(c_prodtype .eq. 'F')then
                 call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
@@ -2856,35 +2856,51 @@ c
                 c33_label(11:33) = ' FUA Cld '//var_2d(1:4)
      1                             //fcst_hhmm//' g/m^3'
 
+                i4time_cloud = i4_valid
+
             else
                 goto1200
 
             endif
 
-            call make_fnam_lp(i4time_lwc,asc9_tim_t,istatus)
+            call make_fnam_lp(i4time_cloud,asc9_tim_t,istatus)
 
             clow = 0.
-            chigh = 0.
+            chigh = 1.0
             cint = -0.1
 
             if(k_level .gt. 0)then ! Plot SLWC on const pressure sfc
-               if(c_type .ne. 'ci')then
+               if(c_type_i .ne. 'ci')then
                    call subcon(field2_2d,1e-30,field_2d,NX_L,NY_L)
-                   call plot_cont(field_2d,1e-3,clow,chigh,cint
-     1                           ,asc9_tim_t,namelist_parms
-     1                           ,c33_label,i_overlay
-     1                           ,c_display,lat,lon,jdot
-     1                           ,NX_L,NY_L,r_missing_data
-     1                           ,laps_cycle_time)
+!                  call plot_cont(field_2d,1e-3,clow,chigh,cint
+!    1                           ,asc9_tim_t,namelist_parms
+!    1                           ,c33_label,i_overlay
+!    1                           ,c_display,lat,lon,jdot
+!    1                           ,NX_L,NY_L,r_missing_data
+!    1                           ,laps_cycle_time)
 
-               else ! c_type .ne. 'ci'
+                   call plot_field_2d(i4time_lwc,c_type
+     1                        ,field_2d,1e-3
+     1                        ,namelist_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'linear')
+
+               else ! c_type .eq. 'ci'
                    call subcon(cice_2d,1e-30,field_2d,NX_L,NY_L)
-                   call plot_cont(field_2d,1e-3,clow,chigh,cint
-     1                           ,asc9_tim_t,namelist_parms
-     1                           ,c33_label,i_overlay
-     1                           ,c_display,lat,lon,jdot
-     1                           ,NX_L,NY_L,r_missing_data
-     1                           ,laps_cycle_time)
+!                  call plot_cont(field_2d,1e-3,clow,chigh,cint
+!    1                           ,asc9_tim_t,namelist_parms
+!    1                           ,c33_label,i_overlay
+!    1                           ,c_display,lat,lon,jdot
+!    1                           ,NX_L,NY_L,r_missing_data
+!    1                           ,laps_cycle_time)
+
+                   call plot_field_2d(i4time_lwc,c_type
+     1                        ,field_2d,1e-3
+     1                        ,namelist_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'linear')
 
                endif ! c_type
 
@@ -2892,7 +2908,7 @@ c
                do j = 1,NY_L
                do i = 1,NX_L
                    column_max(i,j) = 0.
-                   if(c_type .ne. 'ci')then
+                   if(c_type_i .ne. 'ci')then
                      do k = 1,NZ_L
                        column_max(i,j) = 
      1                 max(column_max(i,j),field_3d(i,j,k)) ! slwc_3d
@@ -4203,9 +4219,14 @@ c                   cint = -1.
             if(ext(1:3) .eq. 'fsf')then
                 len_fcst = min(len_fcst,30)
                 if(fcst_hhmm(3:4) .eq. '00')then
-                    c_label = comment_2d(1:len_fcst)//' ('
+                    if(len_units .gt. 0)then
+                        c_label = comment_2d(1:len_fcst)//' ('
      1                                       //units_2d(1:len_units)
      1                                       //')   '
+                    else
+                        c_label = comment_2d(1:len_fcst)
+                    endif
+
                     c_label(ist:ist+5) = fcst_hhmm(1:2)//'Hr '
                     c_label(ist+5:ist+11+len_model) = 
      1                            c_model(1:len_model)//' Fcst'       
@@ -6118,6 +6139,8 @@ c             if(cint.eq.0.0)cint=0.1
 
 !       call upcase(c_label,c_label)
 
+        write(6,*)' write_label_lplot:',c_label
+
         call s_len2(c_label,len_label)
         do i = 1,len_label
             if(c_label(i:i) .eq. ':')then
@@ -6213,8 +6236,13 @@ c             if(cint.eq.0.0)cint=0.1
         endif
 
         iy = y_1 * 1024
-        CALL PCHIQU (cpux(ix),cpux(iy),c_label(1:len_label)
-     1              ,rsize,0,-1.0)      
+
+        if(len_label .gt. 0)then
+            CALL PCHIQU (cpux(ix),cpux(iy),c_label(1:len_label)
+     1                  ,rsize,0,-1.0)      
+        else
+            write(6,*)' Note that label has zero length...'
+        endif
 
 !       Time on Bottom Right
         if(c5_sect .eq. 'hsect')then
@@ -6505,9 +6533,9 @@ c             if(cint.eq.0.0)cint=0.1
 
         call downcase(c_type,c_type)
 
-        if( (c_type(len_type:len_type)  .ne. 'i' .or. c_type  .eq. 'hi')       
-     1                          .AND. 
-     1                     i_image .eq. 0                          )then       
+!       if( (c_type(len_type:len_type)  .ne. 'i' .or. c_type  .eq. 'hi')       
+!    1                          .AND. 
+        if(                   i_image .eq. 0                       )then       
             write(6,*)' plot_field_2d - contour plot ',c_type
             if(cint_in .eq. 0.)then
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
