@@ -152,11 +152,6 @@
      One caution here is that you might want to check for any updates FSL has 
      made in this file.
 
-     Note that the namelist format for 'nest7grid.parms' works on most 
-     platforms. On the IBM/AIX however, you may need to set an environment
-     variable as follows: XLFRTEOPTS=namelist=old
-
-
                   --- 2.2   NetCDF library   ---
  
      The NetCDF package is required for laps, it is available via internet at 
