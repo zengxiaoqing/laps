@@ -249,6 +249,7 @@ cdis
 
         integer*4 istat_39_a(NX_L,NY_L)
         integer*4 istat_39_add_a(NX_L,NY_L)
+        integer*4 istat_vis_a(NX_L,NY_L)
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
 
@@ -644,7 +645,7 @@ C READ IN SATELLITE DATA
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
-     1              ,istat_vis)                                          ! O
+     1              ,istat_vis_a,istat_vis)                              ! O
 
         call get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data
      1                   ,NX_L,NY_L,istat_39_a)
