@@ -25,10 +25,6 @@
         real*4 grid_cen_lat_cmn
         real*4 grid_cen_lon_cmn
         integer*4    laps_cycle_time_cmn
-        integer*4    i_delta_sat_t_sec_cmn
-        real*4       r_msng_sat_flag_cdf_cmn
-        real*4       r_msng_sat_flag_gvr_cmn
-        real*4       r_msng_sat_flag_asc_cmn
         character*8  radarext_3d_cmn
         character*8  radarext_3d_accum_cmn
         character*100 path_to_raw_pirep_cmn
@@ -36,15 +32,6 @@
         character*100 path_to_raw_profiler_cmn
         character*100 path_to_raw_blprass_cmn
         character*100 path_to_raw_blpprofiler_cmn
-        character*100 path_to_raw_satellite_cdf_cmn
-        character*100 path_to_raw_satellite_gvr_cmn
-        character*100 path_to_raw_sat_wfo_vis_cmn
-        character*100 path_to_raw_sat_wfo_i39_cmn
-        character*100 path_to_raw_sat_wfo_iwv_cmn
-        character*100 path_to_raw_sat_wfo_i11_cmn
-        character*100 path_to_raw_sat_wfo_i12_cmn
-        character*100 path_to_ruc_cmn
-        character*100 path_to_ngm_cmn
         character*100 path_to_wsi_2d_radar_cmn
         character*100 path_to_wsi_3d_radar_cmn
         character*100 path_to_qc_acars_cmn
@@ -65,7 +52,6 @@
         real*4 silavwt_parm_cmn
         real*4 toptwvl_parm_cmn
         character*8 c8_project_common
-        integer laps_background_model_cmn
         integer maxstations_cmn, maxobs_cmn
         character*3 c_raddat_type
         character*80 c80_description
@@ -78,26 +64,18 @@
      1  ,l_highres,l_pad1,l_pad2,l_pad3
      1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
      1  ,laps_cycle_time_cmn
-     1  ,i_delta_sat_t_sec_cmn,r_msng_sat_flag_cdf_cmn
      1  ,radarext_3d_cmn,radarext_3d_accum_cmn
      1  ,path_to_raw_pirep_cmn
      1  ,path_to_raw_rass_cmn,path_to_raw_profiler_cmn
      1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
-     1  ,path_to_raw_satellite_cdf_cmn,path_to_raw_satellite_gvr_cmn
-     1  ,path_to_ruc_cmn,path_to_ngm_cmn
      1  ,path_to_wsi_2d_radar_cmn,path_to_wsi_3d_radar_cmn
      1  ,path_to_qc_acars_cmn,path_to_raw_raob_cmn
      1  ,path_to_metar_data_cmn,path_to_local_data_cmn
-     1  ,r_msng_sat_flag_gvr_cmn,r_msng_sat_flag_asc_cmn
-     1  ,path_to_raw_sat_wfo_vis_cmn,path_to_raw_sat_wfo_i39_cmn
-     1  ,path_to_raw_sat_wfo_iwv_cmn,path_to_raw_sat_wfo_i11_cmn
-     1  ,path_to_raw_sat_wfo_i12_cmn
      1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
      1  ,ref_base_cmn,ref_base_useable_cmn,maxstns_cmn,N_PIREP_CMN
      1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
      1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
-     1  ,laps_background_model_cmn
      1  ,maxstations_cmn,maxobs_cmn
      1  ,c_raddat_type, c80_description
 
