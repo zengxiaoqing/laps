@@ -269,7 +269,7 @@ c                           Sfc field
       data var1  / 1001, 1016, 1048, 1049, 1088 /
 
       do 10 i= 1,nz
-10       pressures_pa(i)= c1(i) *10.**e1(i)
+10       pressures_pa(i)= c1(i) *10.**e1(i)*100.  !pa
  
       CALL OPEN_FGGE_FILE(filename,ISTAT)
       IF( ISTAT .NE. 0 ) STOP 'open_fgge_file error !!!'
@@ -286,7 +286,7 @@ c                           Sfc field
             CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
             do 50 j= 1,ny
             do 50 i= 1,nx
-50             mslp(i,j)= fdata( i +nx*(j-1) )*100.
+50             mslp(i,j)= fdata( i +nx*(j-1) )*100.  !pa
          endif
 
          do k= 1,nz
