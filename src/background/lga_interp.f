@@ -258,6 +258,9 @@ c
                if(nan(grid1(i,j,k))+nan(grid2(i,j,k)).gt.0 .or.
      +              grid1(i,j,k).ge.missingflag .or.
      +              grid2(i,j,k).ge.missingflag) then
+
+                  print*,'Missingflag at ',i,j,k,grid1(i,j,k),
+     +                 grid2(i,j,k)
                   gridn(i,j,k) = missingflag
                else
                

@@ -319,6 +319,7 @@ c
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
+     .          Tdsfc,qsfc,
      .          htave,tpave,shave,uwave,vwave
 c
       integer   ct,
@@ -343,13 +344,15 @@ c
       character*125 comment(kdim)
       integer len_dir, ntime, nf
       integer nxbg, nybg, nzbg(5),ntbg
-      integer nsfc_fields
+      integer nsfc_fields, warncnt
       real make_td
       parameter (nsfc_fields=7)
 c
 
       data ntime/0/
       data ext/'lga'/
+
+      warncnt=0 
 c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
@@ -446,15 +449,6 @@ c
      +              tpbg_sfc,prbg_sfc,shbg_sfc,gproj,istatus)
             endif
 c
-c NOGAPS ingest now in readdgprep.f  (J. Smart 9-4-98).
-c        elseif (bgmodel .eq. 3 .or.
-c    .           bgmodel .eq. 8) then ! Process NOGAPS data
-c           call read_nogaps(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg,
-c    .                       prbg,htbg,tpbg,shbg,uwbg,vwbg,
-c    .                       htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,
-c    .                       uwbg_sfc,vwbg_sfc,mslpbg,
-c    .                       gproj,istatus)
-c 
          elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
             ntbg=10 
             
@@ -483,11 +477,13 @@ c Also, NOGAPS 2.5 degree obsolete.
 c
          elseif (bgmodel .eq. 6 .or.
      .           bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
+
             call read_dgprep(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg
      .                      ,prbg,htbg,tpbg,shbg,uwbg,vwbg
      .                      ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
      .                      ,uwbg_sfc,vwbg_sfc,mslpbg
      .                      ,gproj,istatus)
+
          elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
             call read_conus_nws(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .                          prbg,htbg,tpbg,shbg,uwbg,vwbg,
@@ -625,7 +621,6 @@ c
          call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,tpvi,tp,bgmodel)
 
-
 c
 c ****** Horizontally interpolate background surface data to LAPS grid points.
 c
@@ -679,20 +674,19 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
       enddo
 c
 c compute sfc p for NOGAPS background
+c    "      "   for AVN. Takes advantage of LAPS terrain.
 c
-      if(bgmodel.eq.8)then
-
+      if(bgmodel.eq.6.or.bgmodel.eq.8)then
 
          call sfcprs(tp, sh, ht, tp_sfc, sh_sfc, topo, pr,
      .               nx_laps, ny_laps, nz_laps, pr_sfc)
 
       endif
-
 c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
 c
-         do k=1,nz_laps
+      do k=1,nz_laps
          do j=1,ny_laps
          do i=1,nx_laps
             shsat=ssh2(pr(k),tp(i,j,k)-273.15,
@@ -700,9 +694,10 @@ c
             sh(i,j,k)=max(1.0e-6,min(sh(i,j,k),shsat))
          enddo
          enddo
-         enddo
+      enddo
 c
 c
+      if(bgmodel.ne.6.and.bgmodel.ne.8)then
          do j=1,ny_laps
          do i=1,nx_laps
             shsat=ssh2(pr_sfc(i,j)*0.01,tp_sfc(i,j)-273.15,
@@ -710,6 +705,7 @@ c
             sh_sfc(i,j)=max(1.0e-6,min(sh_sfc(i,j),shsat))
          enddo
          enddo
+      endif
 c
 c ****** Fill grid for LAPS write routine.
 c
@@ -720,6 +716,11 @@ c         i=index(cmodel,' ')-1
             do j=1,ny_laps
             do i=1,nx_laps
                grid(i,j,k)=ht(i,j,k)
+               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+                  print*,'Missingflag at ',i,j,k,' in ht'
+                  warncnt=warncnt+1
+               endif
             enddo
             enddo
             ip(k)=int(pr(k))
@@ -734,6 +735,11 @@ c
             do j=1,ny_laps
             do i=1,nx_laps
                grid(i,j,kk)=tp(i,j,k)
+               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+                  print*,'Missingflag at ',i,j,k,' in tp'
+                  warncnt=warncnt+1
+               endif
             enddo
             enddo
             ip(kk)=int(pr(k))
@@ -748,6 +754,11 @@ c
             do j=1,ny_laps
             do i=1,nx_laps
                grid(i,j,kk)=sh(i,j,k)
+               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+                  print*,'Missingflag at ',i,j,k,' in sh'
+                  warncnt=warncnt+1
+               endif
             enddo
             enddo
             ip(kk)=int(pr(k))
@@ -762,6 +773,11 @@ c
             do j=1,ny_laps
             do i=1,nx_laps
                grid(i,j,kk)=uw(i,j,k)
+               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+                  print*,'Missingflag at ',i,j,k,' in uw'
+                  warncnt=warncnt+1
+               endif
             enddo
             enddo
             ip(kk)=int(pr(k))
@@ -776,6 +792,11 @@ c
             do j=1,ny_laps
             do i=1,nx_laps
                grid(i,j,kk)=vw(i,j,k)
+               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+                  print*,'Missingflag at ',i,j,k,' in vw'
+                  warncnt=warncnt+1
+               endif
             enddo
             enddo
             ip(kk)=int(pr(k))
@@ -784,8 +805,6 @@ c
             units(kk)='m/s'
             comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
          enddo
-
-
 c
          read(af,'(i4)') ihour
          bgvalid=bgtime+ihour*3600
@@ -798,7 +817,7 @@ c
             lga_names(3-nf) = fname//af(3:4)//'00.'//ext
             lga_files=2
          endif
-            
+         
 
          call write_laps(bgtime,bgvalid,outdir,ext,
      .                   nx_laps,ny_laps,nz_laps,kdim,var,
@@ -843,16 +862,40 @@ c
                   grid(i,j,kk+4) = sh_sfc(i,j)
                   grid(i,j,kk+5) = pr_sfc(i,j)
                   grid(i,j,kk+6) = mslp(i,j)
-
+               enddo
+            enddo
+c
+c sfc Td already taken care of in readdgprep for AFWA AVN and NOGAPS.
+c However, we need sh_sfc since we have Td in sh_sfc array.
+c
+            if(bgmodel.ne.6.and.bgmodel.ne.8)then
+               do j=1,ny_laps
+               do i=1,nx_laps
                   if(pr_sfc(i,j) .lt. missingflag) then
                      grid(i,j,kk+7) = make_td(pr_sfc(i,j)/100.,
      +                 tp_sfc(i,j)-273.15,sh_sfc(i,j)*1000.0,0.0)+273.15
                   else
                      grid(i,j,kk+7) = missingflag
                   endif
-
                enddo
-            enddo
+               enddo
+            else
+               do j=1,ny_laps
+               do i=1,nx_laps
+                  Tdsfc=sh_sfc(i,j)
+                  qsfc=ssh2(pr_sfc(i,j)*0.01,
+     +                          tp_sfc(i,j)-273.15,
+     +                          Tdsfc-273.15,0.)*0.001
+                  shsat=ssh2(pr_sfc(i,j)*0.01,tp_sfc(i,j)-273.15,
+     .                       tp_sfc(i,j)-273.15,0.0)*0.001
+                  qsfc=max(1.0e-6,min(qsfc,shsat))
+
+                  grid(i,j,kk+7)=Tdsfc
+                  grid(i,j,kk+4)=qsfc
+               enddo
+               enddo
+            endif
+
             do kk=1,nsfc_fields
                ip(kk)=0
             enddo
