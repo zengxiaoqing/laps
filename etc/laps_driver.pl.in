@@ -49,6 +49,9 @@ use Getopt::Std;
 
 getopts('e:lq:Q:n:');
 
+#flush buffer; ie., prevent buffering of output
+$|=1;
+
 my $exe = shift || die "Program name and LAPS root directory required";
 my $LAPSROOT=shift || die "LAPS root directory required";
 require "$LAPSROOT/etc/fxa.pm";
