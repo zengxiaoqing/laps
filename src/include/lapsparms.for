@@ -137,10 +137,10 @@ cdis
         parameter (max_images=2)
 
 !       Radar (vrc) parameters controlling the number of radar data types
-        integer*4 n_radar_types
-        parameter (n_radar_types=1)
-        character*3 c_raddat_types(n_radar_types)
-        data c_raddat_types /'wsi'/ !'wfo'/
+!       integer*4 n_radar_types
+!        parameter (n_radar_types=1)
+!        character*3 c_raddat_types(n_radar_types)
+!        data c_raddat_types /'wsi'/ !'wfo'/
 
 !       Parameters for terrain field (generated within static file)
         real*4 silavwt_parm,toptwvl_parm
