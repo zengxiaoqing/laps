@@ -151,7 +151,7 @@ c
       call get_file_time(c_lsr_dir,i4time_proc,
      +i4time_nearest_lsr)
 
-      if(i4time_latest-i4time_nearest_lsr.le.0)then
+      if(i4time_latest-i4time_nearest_lsr.eq.0)then
          write(6,*)'lsr has already processed this sounder data.'
          write(6,*)'Return to main without new data.'
          istatus = -1
