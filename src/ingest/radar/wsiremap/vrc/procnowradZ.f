@@ -211,6 +211,10 @@ cccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
 cccd5555         format(1x,2i4,2f10.2,2i5,f10.2)
 cccd           endif
 
+            else !laps grid point outside wsi nowrad domain
+
+               laps_dbz(i,j) = r_missing_data
+
             endif            !r_llij's = r_missing_data
 
          enddo
@@ -249,7 +253,7 @@ c           if(r_llij_lut_ri(i,j).ne.r_missing_data.or.
 c    &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 c
 c bilinear_interp_extrap checks on boundary conditions and
-c uses ref_base if out of bounds.
+c uses ref_base if out of bounds. NO; out-of-bounds now = r_missing_data
 c
                call  bilinear_interp_extrap(
      &               r_llij_lut_ri(i,j),
@@ -259,10 +263,12 @@ c
 
                if(result .ne. r_missing_data .and.
      &            result .gt. 0.0)then
+
                   laps_dbz(i,j) = result
 
-c              else
-c                 laps_dbz(i,j) = ref_base
+               else
+
+                  laps_dbz(i,j) = r_missing_data
 
                endif
 
