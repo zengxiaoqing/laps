@@ -11,7 +11,7 @@
 #define julian_date julian_date
 #define calandar_date calander_date
 
-#elif defined(SUN) || defined(SGI) || defined(i686)
+#elif defined(SUN) || defined(SGI) || defined(i686) || defined(solaris)
 
 #define c_pause c_pause_
 #define c_open_g c_open_g_
