@@ -1,12 +1,12 @@
   &satellite_lvd_nl
  PATH_TO_RAW_SAT='/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
-'/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
-'/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
-'/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
-'/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
+ '/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
+ '/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
+ '/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
+ '/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/ ',
 
 '/data/fxa/sat/SBN/netCDF/eastCONUS/conus_vis/regClip/     ',
-'/data/fxa/sat/SBN/netCDF/eastCONUS/conus_i39/regClip/     ',
+ '/data/fxa/sat/SBN/netCDF/eastCONUS/conus_i39/regClip/     ',
 '/data/fxa/sat/SBN/netCDF/eastCONUS/conus_iwv/regClip/     ',
 '/data/fxa/sat/SBN/netCDF/eastCONUS/conus_i11/regClip/     ',
 '/data/fxa/sat/SBN/netCDF/eastCONUS/conus_i12/regClip/     ',
