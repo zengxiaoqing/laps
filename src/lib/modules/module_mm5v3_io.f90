@@ -116,7 +116,7 @@ CONTAINS
     
     lun = -1
     ! Find an available unit number
-    find_lun: DO i = 10,99
+    find_lun: DO i = 7,255
       INQUIRE (UNIT=i, OPENED=used)
       IF(used) THEN
         CYCLE find_lun
