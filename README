@@ -713,7 +713,7 @@
 </pre>                 
 
      Radar VAD Algorithm winds (pro)
-           FSL NIMBUS database.
+           FSL NIMBUS database, from WSR-88D algorithm output.
 
      SODAR data (pro) - This is treated in a similar manner to wind profilers 
            and can be processed by LAPS ingest to appear in the PRO file.
@@ -1617,7 +1617,42 @@ Source directory: laps/src/ingest/profiler
 
 Sample Input/Output: Should be available in the test data case.
 
- 
+For the 'pro' output, each profile starts with an ASCII header and the
+formatted entries are defined in sequence...
+
+<pre>
+1)  WMO ID or other ID number. The use of this is optional and zero can
+    be used if you don't know the number.
+
+2)  Total number of levels for which data is provided. This can include
+    the surface data as the first level.  
+
+3)  Latitude (degrees)
+
+4)  Longitude (degrees)
+
+5)  Station Elevation (meters MSL)
+
+6)  Station Name
+
+7)  Time of observation (UTC). This is the middle of the observation period
+    if time averaging is used. 
+
+8)  Data type. Can be either "PROFILER" or "VAD"
+</pre>
+
+After the header, the data entered for each level is as follows...
+
+<pre>
+1)  Elevation (meters MSL)
+
+2)  Wind Direction (degrees)
+
+3)  Wind Speed (meters/second)
+
+4)  Estimated Root Mean Square (RMS) error of measurement
+</pre> 
+
 ------ 3.2.7 ----------------- RASSs (LRS) Ingest -----------------------------
 
 Process: (ingest_lrs.exe) LAPS local data RASS ingest
