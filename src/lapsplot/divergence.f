@@ -47,7 +47,7 @@ cdis
 
         include 'trigd.inc'
 
-        real m ! Grid points per meter
+        real*4 m ! Grid points per meter
 
         DATA scale/1./
 
@@ -141,6 +141,8 @@ cdis
         real*4 lat(ni,nj),lon(ni,nj)
         real*4 uanl(ni,nj),vanl(ni,nj)
         real*4 coriolis(ni,nj)
+        real*4 vort(ni,nj)
+        real*4 div(ni,nj)
         real*4 dx(ni,nj), dy(ni,nj)
 
         call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
@@ -163,10 +165,10 @@ c
         integer nx,ny
         integer i,j
 
-        real    lat(nx,ny)
-        real    coriolis_rotation(nx,ny)
+        real*4  lat(nx,ny)
+        real*4  coriolis_rotation(nx,ny)
 
-        real    omega_ear
+        real*4  omega_ear
         data    omega_ear/7.292e-5/
 
         do j=1,ny
