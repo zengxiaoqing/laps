@@ -101,6 +101,9 @@ c                               07-07-99  General upgrades and cleanup.  Change
 c                                           read_surface_obs to read_surface_data.
 c                                           Rm *4 from all declarations.
 c                               09-19-99  Check T/Td bkgs until LGB can do it.
+c                               12-01-99  Rotate bkg winds to grid north.
+c                               12-17-99  Add option to use either LSO or the
+c                                           Kalman estimate LSO_QC.
 c
 c
 c       Notes:
@@ -124,11 +127,12 @@ c
 	integer*4 i4time
 	integer jstatus(20)		! 20 is standard for prodgen drivers
 	integer narg, iargc
+	integer use_kalman              ! Flag for LSO/LSO_QC selection
 c
 	character atime*24, filename*9, filename_last*9
 	character infile_last*256
 	character dir_s*256,ext_s*31,units*10,comment*125,var_s*3
-	character laps_domain*9
+	character laps_domain*9, use*6
 c
 c.....  Stuff for backgrounds.
 c
@@ -194,6 +198,7 @@ c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
 c*************************************************************
 c
+	call tagit('laps_sfc',19991217)
 	narg = iargc()
 cc	print *,' narg = ', narg
 c
@@ -259,29 +264,44 @@ c
 c.....	READ IN THE SURFACE OBS:  dd/ff in deg/kt, t and td in F, elev in m,
 c.....	                          and the pressure variable. cld hts are msl.
 c
-c 	infile1 = '../lapsprd/lso/'//filename//'.lso' 
-cc	call get_directory('lso',infile1,len)
-cc	infile1 = infile1(1:len) // filename(1:9) // '.lso'
 c
-	write(6,305) filename(1:9)
- 305	format(' Getting surface data at: ',a9)
+	if(use_kalman .eq. 0) then
+	   use = 'LSO   '
+	else
+	   use = 'LSO_QC'
+	endif
 c
-        call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b,obstime,
-     &    wmoid,stations,provider,wx_s,reptype,autostntype,lat_s,lon_s,
-     &    elev_s,t_s,td_s,rh,dd_s,ff_s,ddg_s,ffg_s,alt_s,pstn_s,pmsl_s,
-     &    delpch,delp,vis_s,solar_s,sfct,sfcm,pcp1,pcp3,pcp6,pcp24,snow,
-     &    kloud_s,max24t,min24t,t_ea,td_ea,rh_ea,dd_ea,ff_ea,alt_ea,
-     &    p_ea,vis_ea,solar_ea,sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,
-     &    store_hgt,mxstn,istatus)
+	write(6,305) filename(1:9), use
+ 305	format(' Getting surface data at: ',a9,' from ',a6)
+c
+	if(use_kalman .eq. 0) then
+	   call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b,
+     &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
+     &       lat_s,lon_s,elev_s,t_s,td_s,rh,dd_s,ff_s,ddg_s,ffg_s,
+     &       alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
+     &       pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
+     &       td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
+     &       sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
+     &       istatus)
+	else
+	   call read_surface_dataqc(i4time,atime_s,n_obs_g,n_obs_b,
+     &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
+     &       lat_s,lon_s,elev_s,t_s,td_s,rh,dd_s,ff_s,ddg_s,ffg_s,
+     &       alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
+     &       pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
+     &       td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
+     &       sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
+     &       istatus)
+	endif
 c
 	if(istatus.ne.1 .or. n_obs_b.eq.0) then	  !surface obs not available
 	  jstatus(1) = 0
-	  stop 'No sfc obs from LSO'
+	  stop 'No surface obs available'
 	endif
 c
 	print *,' '
-	write(6,320) atime_s,n_obs_g,n_obs_b
-320	format(' LSO data vaild time: ',a24,' Num obs: ',2i6)
+	write(6,320) use,atime_s,n_obs_g,n_obs_b
+320	format(1x,a6,' data vaild time: ',a24,' Num obs: ',2i6)
 c
 	if(n_obs_b .lt. 1) then
 	   jstatus(1) = -2
@@ -356,6 +376,19 @@ c
 	   write(6,951) ext_bk(1:6), back
 	   call move(wt, wt_u, ni,nj)
 	   call move(wt, wt_v, ni,nj)
+c
+c.....  Rotate background winds from true north to grid north.
+c
+	   do j=1,nj
+	   do i=1,ni
+	      utrue = u_bk(i,j)
+	      vtrue = v_bk(i,j)
+	      call uvtrue_to_uvgrid(utrue, vtrue, ugrid, vgrid,lon(i,j))
+	      u_bk(i,j) = ugrid
+	      v_bk(i,j) = vgrid
+	   enddo !i
+	   enddo !j
+c
 	   call conv_ms2kt(u_bk,u_bk,ni,nj)
 	   call conv_ms2kt(v_bk,v_bk,ni,nj)
 	   back_uv = 1
