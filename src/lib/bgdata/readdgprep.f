@@ -108,7 +108,8 @@ c
          filename=path(1:l)//'/'//fname//af
          call s_len(filename,l)
 
-         if(cmodel(1:nclen).eq.'AVN_AFWA_DEGRIB')then
+         if(cmodel(1:nclen).eq.'AVN_AFWA_DEGRIB'.or.
+     +      cmodel(1:nclen).eq.'NOGAPS_AFWA_DEGRIB')then
 c
 c *** Open and read data index file; and AFWA database thing.
 c
