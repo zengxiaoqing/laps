@@ -713,22 +713,38 @@
            data to translate the wind, temperature and humidity obs and 
            append them to our intermediate "PIN" file.
 
-     Profilers/RASS (pro/lrs) - These are obtained from FSL's NIMBUS database
-           and/or AWIPS in NetCDF format where they are stored in 4 different 
-           directories. These data come in turn from FSL's demonstration 
-           division from two main networks. The 30+ WPDN profiler network is 
-           located mostly in the central U.S. We are also using a network of   
-           experimental boundary (NOAAnet) layer profilers for both wind and 
-           temperature. The profiler data for wind goes into the 'pro' file, 
-           and RASS temperature profiles go into the 'lrs' file. 
+     Profilers/RASS (pro/lrs) - The raw data are obtained from FSL's NIMBUS 
+           database and/or AWIPS in NetCDF format where they are stored in 
+           four different directories. The data originally come from FSL's 
+           Demonstration Division (DD) from two main networks. The 30+ NPN 
+           (National Profiler Network - NOAAnet) profiler network is located 
+           mostly in the central U.S. 
+
+           We are also using a network of experimental boundary layer profilers
+           (BLP - external directory) for both wind and temperature. These
+           are available over the internet directly from FSL/DD at the 
+           following location...
+           ftp://oak.fsl.noaa.gov/outgoing/blp/ 
+
+           The profiler data for wind goes into the 'pro' intermediate file, 
+           and RASS temperature profiles go into the 'lrs' intermediate file. 
+
            To summarize...
 <pre>
-             Network       Database(s)       file        frequency
-             -------       -----------       ----        ---------
-           WPDN wind       NIMBUS/AWIPS      PRO          404 MHz
-           WPDN RASS       NIMBUS            LRS
-           NOAAnet wind    NIMBUS            PRO          915 MHz
-           NOAAnet RASS    NIMBUS            LRS
+            Network        Database(s)       file   frequency     cdl(s)
+            -------        -----------       ----   ---------  -----------
+           NPN wind        NIMBUS/AWIPS      PRO     404 MHz     wpdn60.cdl
+                                                                 wpdn06.cdl
+
+           NPN RASS        NIMBUS            LRS                 rass60.cdl
+                                                                 rass06.cdl
+
+           BLP wind        NIMBUS/internet   PRO     915 MHz     wpdn60.cdl
+                                                                 wpdn06.cdl
+
+           BLP RASS        NIMBUS/internet   LRS                 rass60.cdl
+                                                                 rass06.cdl
+
 </pre>                 
 
      Radar VAD Algorithm winds (pro)
