@@ -596,7 +596,7 @@ c read in laps lat/lon and topo
 95     format(
      1  /'  Field:  [WIND: di,sp,u,v,om,vc (barbs)'
      1  /
-     1  /'           TEMP: t (Temp), pt (Potl Temp), bt (Balanced temp)'       
+     1  /'           TEMP: [t,pt,tb,pb] (T, Theta, T Blnc, Theta Blnc)'       
      1  /
      1  /'           HUMID: sh,rh,rl (Specific/Relative Humidity)'
      1  /
@@ -1352,7 +1352,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         elseif(c_field .eq. 'pt')then
             iflag_temp = 0 ! Returns Potential Temperature
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1  ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+     1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 !           if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
@@ -1364,6 +1364,22 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             cint = 5.
             i_contour = 1
             c33_label = 'LAPS Potl Temp Vert X-Sect    K  '
+
+        elseif(c_field .eq. 'pb')then
+            iflag_temp = 3 ! Returns Balanced Potential Temperature
+            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+!           if(istatus .ne. 1)goto100
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            clow = 200.
+            chigh = +500.
+            cint = 5.
+            i_contour = 1
+            c33_label = 'LAPS Potl Temp (Balanced)     K  '
 
         elseif(c_field .eq. 't ')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
@@ -1387,7 +1403,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             i_contour = 1
             c33_label = 'LAPS Temp      Vert X-Sect  Deg C'
 
-        elseif(c_field .eq. 'bt')then
+        elseif(c_field .eq. 'tb')then
             var_2d = 'T3'
             call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
             ext='lt1'

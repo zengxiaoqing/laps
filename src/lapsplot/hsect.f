@@ -341,10 +341,10 @@ c       include 'satellite_dims_lvd.inc'
 !    1       /'          [ob,st] obs plot/station locations'
      1       ,'  [bs] Sfc background'
      1       /
-     1       /'     [t,tb,tr,to,bt] Temp (LAPS,LGA,RAM,OBS,QBAL)'      
-     1       ,',   [pt] Pot Temp'
-     1       /'     [ht,hb,hr,hy,bh] Hgts (LAPS,LGA,RAM,Hydrstc,QBAL),'
-     1       /'     [hh] Height of Const Temp Sfc')
+     1       /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,RAM,OBS,QBAL)'      
+     1       ,',   [pt,pb] Theta, Blnc Theta'
+     1       /'     HGTS: [ht,hb,hr,hy,bh] (LAPS,LGA,RAM,Hydrstc,QBAL),'
+     1       /'           [hh] Height of Const Temp Sfc')
 
         write(6,12)
  12     format(/4x,' [ci] Cloud Ice     ',22x
@@ -671,12 +671,13 @@ c       include 'satellite_dims_lvd.inc'
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
-                elseif(c_type.eq.'wb'.or.c_type.eq.'wr'.or.
-     1                 c_type.eq.'bw')then
-                    c19_label = ' WIND- (bal) (kt) '
+                elseif(c_type.eq.'wb' .or. c_type.eq.'wr'.or.
+     1                 c_type.eq.'bw'                       )then
+                    c19_label = ' WIND  (bal)    kt'
                 else
-                    c19_label = ' WINDS (anl) (kt) '
+                    c19_label = ' WIND  (anl)    kt'
                 endif
+
                 call mklabel33(k_level,c19_label,c33_label)
 
                 interval = (max(NX_L,NY_L) / 50) + 1
@@ -1618,10 +1619,10 @@ c
 !           Read in surface temp data
             var_2d = 'T'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_radar,laps_cycle_time,i4time_tem
-     1p,
-     1      ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,temp_2d,0,istatus)
+            call get_laps_2dgrid(
+     1          i4time_radar,laps_cycle_time,i4time_temp
+     1         ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1         ,temp_2d,0,istatus)
 
             if(istatus .ne. 1)then
                 write(6,*)' LAPS Sfc Temp not available'
@@ -1966,25 +1967,40 @@ c
      1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq.'t'.or.c_type.eq.'pt'.or.c_type.eq.'bt')then
+        elseif( c_type .eq. 't'  .or. c_type .eq. 'pt'
+     1     .or. c_type .eq. 'bt' .or. c_type .eq. 'pb')then
             write(6,1513)
 1513        format('     Enter Level in mb',48x,'? ',$)
-            read(lun,*)k_level
+            read(lun,*)level_mb
 
 !           if(istatus .ne. 1)goto1200
 
+            if(level_mb .gt. 0)then
+                k_level = nint(zcoord_of_pressure(float(level_mb*100)))       
+!           else
+!               k_level = level_mb
+            endif
+
             if(c_type .eq. 'pt')then
                 iflag_temp = 0 ! Returns Potential Temperature
-
-                if(k_level .gt. 0)then
-                    k_level = 
-     1                  nint(zcoord_of_pressure(float(k_level*100)))
-                endif
-
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
                 call mklabel33(k_level,'  Potential Temp  K',c33_label)
+
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    temp_2d(i,j) = temp_3d(i,j,k_level)
+                enddo ! j
+                enddo ! i
+
+            elseif(c_type .eq. 'pb')then
+                iflag_temp = 3 ! Returns Balanced Potential Temperature
+                call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+
+                call mklabel33(k_level,'  Balanced Theta  K',c33_label)
+
                 do i = 1,NX_L
                 do j = 1,NY_L
                     temp_2d(i,j) = temp_3d(i,j,k_level)
@@ -1992,40 +2008,23 @@ c
                 enddo ! i
 
             elseif(c_type .eq. 't ')then
-
                 call get_temp_2d(i4time_ref,7200,i4time_nearest
-     1                          ,k_level,NX_L,NY_L,temp_2d,istatus)
+     1                          ,level_mb,NX_L,NY_L,temp_2d,istatus)
 
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    temp_2d(i,j) = temp_2d(i,j) - 273.15
-                enddo ! j
-                enddo ! i
-
-                if(k_level .gt. 0)then
-                    k_level = nint(zcoord_of_pressure(float(k_level*100)
-     1))
-                endif
-
-                call mklabel33(k_level,'  Temperature     C',c33_label)
+                call mklabel33(k_level,' Temperature      C',c33_label)       
 
              elseif(c_type.eq. 'bt')then
-
                 var_2d = 'T3'
-                call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
                 ext='lt1'
 
                 call get_directory('balance',directory,lend)
                 directory=directory(1:lend)//'lt1/'
-                call get_2dgrid_dname(directory,i4time_ref
-     1           ,laps_cycle_time*10000,i4time_heights,ext,var_2d
-     1           ,units_2d,comment_2d,NX_L,NY_L,temp_2d,k_level,istatus)       
+                call get_2dgrid_dname(directory
+     1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
+     1           ,ext,var_2d,units_2d,comment_2d
+     1           ,NX_L,NY_L,temp_2d,level_mb,istatus)       
 
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    temp_2d(i,j) = temp_2d(i,j) - 273.15
-                enddo ! j
-                enddo ! i
+                call mklabel33(k_level,' Temp (Bal)       C',c33_label)
 
             endif
 
@@ -2604,22 +2603,6 @@ c
 
             endif ! k_level
 
-
-!       elseif(c_type .eq. 'cl')then
-!           iflag_temp = 1 ! Returns Ambient Temp (K)
-!            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-!       1                               ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-!           if(istatus .ne. 1)goto1200
-
-!           call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
-
-!           write(6,*)' Site?'
-
-!           read(lun,701)c3_site
-!701         format(a3)
-
-!           call compare_classdat(temp_3d,asc9_tim_t,i4time_ref,c3_site)
-
         elseif(c_type .eq. 'ia' .or. c_type .eq. 'ij'
      1                          .or. c_type .eq. 'is')then
 
@@ -3063,30 +3046,31 @@ c             cint = -1.
 
             var_2d = 'HT'
 
-            call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
-
             ext='lt1'
 
             if(c_type .eq. 'bh' )then
                call get_directory('balance',directory,lend)
                directory=directory(1:lend)//'lt1/'
                call get_2dgrid_dname(directory
-     1     ,i4time_ref,laps_cycle_time*100,i4time_heights,ext,var_2d
-     1     ,units_2d,comment_2d,NX_L,NY_L,field_2d,k_mb,istatus)
+     1             ,i4time_ref,laps_cycle_time*100,i4time_heights
+     1             ,ext,var_2d,units_2d,comment_2d
+     1             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-            else
+               call mklabel33(k_level,' Height  (Bal)   dm',c33_label)       
+
+            else ! 'ht'
                call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
-     1             ,i4time_heights,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,k_mb,istatus)
+     1                             ,i4time_heights
+     1                             ,ext,var_2d,units_2d,comment_2d
+     1                             ,NX_L,NY_L,field_2d,k_mb,istatus)       
+               call mklabel33(k_level,' Height          dm',c33_label)       
+
             endif
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading LAPS Height Analysis'
                 goto1200
             endif
-
-            call mklabel33(k_level,' LAPS Heights    dm',c33_label)
 
             scale = 10.
 

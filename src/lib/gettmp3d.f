@@ -30,11 +30,19 @@ cdis
 cdis
 cdis
         subroutine get_temp_3d(i4time_needed,i4time_nearest,iflag,
-     1                          imax,jmax,kmax,temp_3d,istatus)
+     1                          imax,jmax,kmax,field_3d,istatus)
 
-!       Steve Albers            1990
+cdoc    Returns 3-D temperature (or ht) field within a time window. Has options
+cdoc    for theta and/or balanced fields depending on the 'iflag' input.
 
-!       iflag = 0 (Potential Temperature K), iflag = 1 (Temperature K)
+!       Steve Albers            2000
+
+!       iflag = 0 (Potential Temperature K)
+!       iflag = 1 (Temperature K)
+!       iflag = 2 (Height m)
+!       iflag = 3 (Balanced Pot'l Temperature K)
+!       iflag = 4 (Balanced Temperature K)
+!       iflag = 5 (Balanced Height m)
 
         logical ltest_vertical_grid
 
@@ -43,13 +51,11 @@ cdis
 
         character*125 comment_3d(kmax)
         character*10 units_3d(kmax)
-        character*3 var_t(kmax)
+        character*3 var_t
         integer*4 LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
-        real*4 temp_3d(imax,jmax,kmax)
-
-        real*4 theta(kmax)
+        real*4 field_3d(imax,jmax,kmax)
 
         character*255 c_filespec
 
@@ -57,67 +63,46 @@ cdis
 !       TDA_K(T_K,P_PA) = TDA( T_K-273.15 , P_PA/100. )  + 273.15
 
         write(6,*)
-        write(6,*)' Getting 3_D Temperature Analysis (LT1)'
+        write(6,*)' Subroutine get_temp_3d: iflag=',iflag
 
         EXT = 'lt1'
-        call get_directory(ext,directory,len_dir)
-        c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
 
-        call get_file_time(c_filespec,i4time_needed,i4time_nearest)
-
-        do k = 1,kmax
-            units_3d(k)   = 'K'
-            if(ltest_vertical_grid('HEIGHT'))then
-                lvl_3d(k) = zcoord_of_level(k)/10
-                lvl_coord_3d(k) = 'MSL'
-            elseif(ltest_vertical_grid('PRESSURE'))then
-                lvl_3d(k) = nint(zcoord_of_level(k))/100
-                lvl_coord_3d(k) = 'MB'
-            else
-                write(6,*)' Error, vertical grid not supported,'
-     1                   ,' this routine supports PRESSURE or HEIGHT'
-                istatus = 0
-                return
-            endif
-
-            var_t(k) = 'T3' ! newvar = 'T3', oldvar = 'T'
-
-        enddo ! k
-
-!       write(6,*)' LVL_3d = ',LVL_3d
-
-!       Read in 3d T array
-        CALL READ_LAPS_DATA(I4TIME_NEAREST,DIRECTORY,
-     1          EXT,imax,jmax,kmax,kmax,
-     1          var_t,LVL_3d,LVL_COORD_3d,UNITS_3d,COMMENT_3d,
-     1          temp_3d,ISTATUS)
-
-!       ISTATUS = .false. ! Just for testing
-
-!       Test for bad temperatures
-        if(temp_3d(29,29,17) .lt. 173.)istatus = 0
-
-        IF(ISTATUS .ne. 1)THEN
-            write(6,*)' Error Reading in 3d Temperature Analysis'
-!       1            ,', Using Canned Sounding'
-!           do k = 1,kmax
-!           do j = 1,jmax
-!           do i = 1,imax
-!               temp_3d(i,j,k) = temp_std(k)
-!           enddo
-!           enddo
-!           enddo
+        if(iflag .lt. 3)then ! 'temp.exe' analysis
+            call get_directory(ext,directory,len_dir)
+        else
+            call get_directory('balance',directory,lend)
+            directory=directory(1:lend)//'lt1/'
         endif
 
+        if(iflag .eq. 2 .or. iflag .eq. 5)then
+            var_t = 'HT'
+        else
+            var_t = 'T3'
+        endif
+
+        call get_3dgrid_dname(directory
+     1           ,i4time_needed,1000000,i4time_nearest
+     1           ,ext,var_t,units_3d
+     1           ,comment_3d,imax,jmax,kmax,field_3d,istatus)       
+
+
+!       Test for bad temperatures
+        if(var_t .eq. 'T3')then
+            if(field_3d(29,29,17) .lt. 173.)istatus = 0
+        endif
+
+        IF(ISTATUS .ne. 1)THEN
+            write(6,*)' Error Reading in 3d lt1 field ',var_t
+        endif
 
 !       Convert from T to Theta
         do i = 1,imax
         do j = 1,jmax
 
-        if(iflag .eq. 0)then
+        if(iflag .eq. 0 .or. iflag .eq. 3)then
             do k = 1,kmax
-                theta(k) = O_K(temp_3d(i,j,k),zcoord_of_level(k))
-                temp_3d(i,j,k) = theta(k)
+                theta = O_K(field_3d(i,j,k),zcoord_of_level(k))
+                field_3d(i,j,k) = theta
             enddo ! k
         endif
 
