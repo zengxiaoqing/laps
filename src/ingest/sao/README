@@ -1,0 +1,27 @@
+
+  Tree diagram outlining the source code for 'obs_driver.x'
+
+  Subroutine Name                              File Name:
+  ---------------                              ----------
+ 
+main                                           obs_driver.f
+    obs_driver_sub                                  "
+        get_metar_obs                          get_metar_obs.f 
+            read_metar                         read_metar.f 
+            read_metar_cwb                     read_metar_cwb.f
+            read_synop_cwb                     read_synop_cwb.f
+
+        get_local_obs                          get_local_obs.f 
+            read_local                         read_local.f 
+
+        get_local_cwb                          get_local_cwb.f
+            read_tmeso_stntbl                       "
+            read_tmeso                              "
+
+        get_buoy_obs                           get_buoy_obs.f   (maritime obs)
+            read_buoy                          read_buoy.f 
+            read_buoy_cwb                      read_buoy_cwb.f
+            read_ship_cwb                      read_ship_cwb.f
+
+        write_surface_obs                      obs_driver.f
+

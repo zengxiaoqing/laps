@@ -78,10 +78,9 @@ c
         character*200 path_to_gps_data
         character*8   metar_format
 
-        include 'lapsparms.cmn' ! Do we still need this?
         call get_laps_config('nest7grid',istatus)
 	if (istatus .ne. 1) then
-           write (6,*) 'Error getting horizontal domain dimensions'
+           write (6,*) 'Error returned from get_laps_config'
 	   stop
 	endif
 
@@ -90,6 +89,12 @@ c
            write (6,*) 'Error getting horizontal domain dimensions'
 	   stop
 	endif
+
+        call get_max_stations(maxsta, istatus)
+        if(istatus .ne. 1)stop
+
+        call get_laps_cycle_time(laps_cycle_time,istatus)
+        if(istatus .ne. 1)stop
 
         call get_obs_driver_parms(
      1                            path_to_metar
@@ -104,11 +109,8 @@ c
      1                           ,istatus)
         if(istatus .ne. 1)stop
 
-        call get_max_stations(maxsta, istatus)
-        if(istatus .ne. 1)stop
-
         call obs_driver_sub(      nx,ny
-     1                           ,maxobs,laps_cycle_time_cmn
+     1                           ,maxobs,laps_cycle_time
      1                           ,path_to_metar
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
@@ -296,56 +298,66 @@ c
         call s_len(metar_format,len_metar_format)
 
         if(metar_format(1:len_metar_format) .eq. 'FSL')then
+!           Select the hourly METAR file best suited to our obs time window
+!           Note that an hourly raw file contains obs from 15 before to 45 after
+            i4time_midwindow = i4time_sys + 
+     1                         (itime_after - itime_before) / 2      
+            i4time_metar_file = ((i4time_midwindow+900) / 3600) * 3600
 
-!         Select the hourly METAR file best suited to our obs time window
-!         Note that an hourly raw file contains obs from 15 before to 45 after
-          i4time_midwindow = i4time_sys + (itime_after - itime_before)/2       
-          i4time_metar_file = ((i4time_midwindow+900) / 3600) * 3600
+            call make_fnam_lp(i4time_metar_file,a9time_metar_file
+     1                       ,istatus)
+            if(istatus .ne. 1)return
 
-          call make_fnam_lp(i4time_metar_file,a9time_metar_file,istatus)
-          if(istatus .ne. 1)return
-
-          do while(.not. exists .and. 
-     &              cnt .le. minutes_to_wait_for_metars)
+            do while(.not. exists .and. 
+     &                cnt .le. minutes_to_wait_for_metars)
 c        
-	    len_path = index(path_to_METAR,' ') - 1
-	    data_file_m = 
-     &	      path_to_METAR(1:len_path)//a9time_metar_file// '0100o'       
+	        len_path = index(path_to_METAR,' ') - 1
+	        data_file_m = 
+     &	          path_to_METAR(1:len_path)//a9time_metar_file// '0100o'       
 c
-	    len_path = index(path_to_local_data,' ') - 1
-	    filename13=fname9_to_wfo_fname13(filename9(1:9))
-	    data_file_l = 
-     &	      path_to_local_data(1:len_path)//filename13
+	        len_path = index(path_to_local_data,' ') - 1
+	        filename13=fname9_to_wfo_fname13(filename9(1:9))
+	        data_file_l = 
+     &	          path_to_local_data(1:len_path)//filename13
 c
- 	    len_path = index(path_to_buoy_data,' ') - 1
-	    filename13=fname9_to_wfo_fname13(filename9(1:9))
-	    data_file_b = 
-     &	      path_to_buoy_data(1:len_path)//filename13  
+ 	        len_path = index(path_to_buoy_data,' ') - 1
+	        filename13=fname9_to_wfo_fname13(filename9(1:9))
+	        data_file_b = 
+     &	          path_to_buoy_data(1:len_path)//filename13  
 c
-	    INQUIRE(FILE=data_file_m,EXIST=exists)
-	    if(.not. exists) then
-	      filename13=fname9_to_wfo_fname13(filename9(1:9))
-	      len_path = index(path_to_METAR,' ') - 1
-	      data_file_m = 
-     &           path_to_METAR(1:len_path) // filename13
-	      len_path = index(path_to_local_data,' ') - 1
-	      data_file_l = 
-     &           path_to_local_data(1:len_path) // filename13
-	      len_path = index(path_to_buoy_data,' ') - 1
-	      data_file_b = 
-     &           path_to_buoy_data(1:len_path) // filename13
-	      INQUIRE(FILE=data_file_m,EXIST=exists)
-	      if(.not. exists) then
-                 print*,'Waiting for file ', data_file_m
-                 call waiting_c(60)
-                 cnt = cnt+1               
-	      endif
-	    endif
-	  enddo
-	  if(.not.exists) then
-	    print *,' ERROR. File not Found: ', data_file_m
-	    stop 
-          endif
+	        INQUIRE(FILE=data_file_m,EXIST=exists)
+
+	        if(.not. exists) then ! Try WFO format
+	            filename13=fname9_to_wfo_fname13(a9time_metar_file)       
+
+	            len_path = index(path_to_METAR,' ') - 1
+	            data_file_m = path_to_METAR(1:len_path)//filename13       
+
+	            len_path = index(path_to_local_data,' ') - 1
+	            data_file_l = 
+     &                path_to_local_data(1:len_path) // filename13
+
+	            len_path = index(path_to_buoy_data,' ') - 1
+	            data_file_b = 
+     &                path_to_buoy_data(1:len_path) // filename13
+
+	            INQUIRE(FILE=data_file_m,EXIST=exists)
+	            if(.not. exists) then
+                        if(cnt .lt. minutes_to_wait_for_metars)then
+                            print*,'Waiting for file ', data_file_m
+                            call waiting_c(60)
+                        endif
+                        cnt = cnt+1               
+	            endif
+
+	        endif
+
+	    enddo ! While in waiting loop
+
+	    if(.not.exists) then
+	        print *,' ERROR. File not Found: ', data_file_m
+	        stop 
+            endif
 
         elseif(metar_format(1:len_metar_format) .eq. 'CWB')then
             continue
@@ -378,6 +390,11 @@ c
 	   print *, ' WARNING. Bad status return from GET_METAR_OBS'
 	   print *,' '
 	endif
+
+        if(nn .gt. maxsta)then
+           write(6,*)' ERROR: nn > maxsta ',nn,maxsta
+           return
+        endif
 c
 c.....  Call the routine that reads the mesonet data files, then get the data.
 c
@@ -416,6 +433,11 @@ c
 	   print *, ' WARNING. Bad status return from GET_LOCAL_...'
 	   print *,' '
 	endif
+
+        if(nn .gt. maxsta)then
+           write(6,*)' ERROR: nn > maxsta ',nn,maxsta
+           return
+        endif
 c
 c.....  Call the routine that reads the Buoy data files, then get
 c.....  the data.
@@ -440,6 +462,11 @@ c
 	   print *, ' WARNING. Bad status return from GET_BUOY_OBS'
 	   print *,' '
 	endif
+
+        if(nn .gt. maxsta)then
+           write(6,*)' ERROR: nn > maxsta ',nn,maxsta
+           return
+        endif
 c
 c.....  Call the routine that reads the GPS data files, then get
 c.....  the data.
@@ -464,6 +491,11 @@ c
 	       print *, ' WARNING. Bad status return from GET_GPS_OBS'
 	       print *,' '
 	    endif
+
+            if(nn .gt. maxsta)then
+               write(6,*)' ERROR: nn > maxsta ',nn,maxsta
+               return
+            endif
 
         endif
 c

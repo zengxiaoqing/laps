@@ -46,7 +46,7 @@
  MAX_RADARS_CMN=3,        
  ref_base_cmn=-10.,       
  ref_base_useable_cmn=0., 
- maxstns_cmn=2000,         
+ maxstns_cmn=600,         
  N_PIREP_CMN=3000,         
  vert_rad_meso_cmn=1,     
  vert_rad_sao_cmn=1,      
