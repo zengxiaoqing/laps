@@ -8,23 +8,37 @@ LAPSROOT=../../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
-LAPSLIBS = 
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
 
-DBLAPSLIBS = 
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .exe
 
-EXE = xfer_laps.exe
+EXE = xfer_laps.exe \
+      xfer_model.exe \
+      fname2unixtime.exe
 
-SRC = xfer_laps.c fill_laps.c
+SRC = xfer_laps.c \
+      fill_laps.c \
+      fill_bigfile_cmn.c \
+      xfer_model.c \
+      fill_model.c \
+      fname2unixtime.c  
+LIB = lapscdf.a
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 
 all: exe
 
-exe: $(EXE)
+exe: $(ARCHIVE) $(EXE)
 
-$(EXE): $(SRC)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(SRC)  $(OTHERLIBS) -o $@
+%.exe: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $*.c $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+%.exe: %.f
+	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
@@ -40,6 +54,5 @@ install: exe
 
 clean:
 	rm -f $(EXE)  *.o *~ *#
-
 
 distclean: clean

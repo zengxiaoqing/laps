@@ -1,10 +1,11 @@
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "fill_laps.h"
+#include "fill_bigfile.h"
 
 main()
 {
@@ -25,12 +26,12 @@ main()
        if ((fp = fopen(filename, "r")) == (FILE *) 0) {
          /* fprintf(stderr, "s", strerror(errno));
          fprintf(stderr, "\n"); */
-         fprintf(stderr, "Unable to open %s file.\n", filename);
+         fprintf(stdout, "Unable to open %s file.\n", filename);
        }
        else {
 
 /* read in parameter file for passing into processLAPS */
-         xstatus = get_Laps_to_WFO_parameter_list(paramInfo, &numElements);
+         xstatus = get_transfer_parameter_list(paramInfo, &numElements);
 
 /* open laps/nest7grid/sched/systime.dat */
 
@@ -39,7 +40,7 @@ main()
          if ((fp = fopen(filename, "r")) == (FILE *) 0) {
         /*   fprintf(stderr, "s", strerror(errno));
            fprintf(stderr, "\n"); */
-           fprintf(stderr, "Unable to open LAPS %s file.\n", filename);
+           fprintf(stdout, "Unable to open LAPS %s file.\n", filename);
          }
          else {
 
