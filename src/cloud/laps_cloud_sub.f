@@ -903,23 +903,39 @@ C       EW SLICES
         enddo ! i
         enddo ! j
 
-!       Log info on cloud holes
+!       Log info on cloud holes with cover at least .10 less than all neighbors
         do i = 2,NX_L-1
         do j = 2,NY_L-1
-            if(cvr_max(i,j) .lt. 0.65         .and.
-     1         cvr_max(i-1,j-1)   .gt. 0.65    .and.
-     1         cvr_max(i  ,j-1)   .gt. 0.65   .and.
-     1         cvr_max(i+1,j-1)   .gt. 0.65   .and.
-     1         cvr_max(i-1,j  )   .gt. 0.65   .and.
-     1         cvr_max(i+1,j  )   .gt. 0.65   .and.
-     1         cvr_max(i-1,j+1)   .gt. 0.65   .and.
-     1         cvr_max(i  ,j+1)   .gt. 0.65   .and.
-     1         cvr_max(i+1,j+1)   .gt. 0.65              )then
-                write(6,*)' WARNING, hole detected ',i,j,cvr_max(i,j)
+            isign_hole = 0
+            do ii = i-1,i+1
+            do jj = j-1,j+1
+                if(ii .ne. i .or. jj .ne. j)then
+                    diff = cvr_max(i,j) - cvr_max(ii,jj)
+                    isign_hole = isign_hole + int(sign(1.0,diff+.10))
+
+                endif ! not at the center point
+
+            enddo ! jj
+            enddo ! ii
+
+            if(isign_hole .eq. -8)then
+                write(6,*)' hole detected ',i,j,cvr_max(i,j)
 
                 do jj = j+1,j-1,-1
-                    write(6,*)nint(tb8_k(i-1,jj)),nint(tb8_k(i,jj))
-     1                       ,nint(tb8_k(i+1,jj))                
+                    write(6,511)
+     1                        nint(cvr_max(i-1,jj)*100)
+     1                       ,nint(cvr_max(i  ,jj)*100)
+     1                       ,nint(cvr_max(i+1,jj)*100)
+     1                       ,nint(tb8_k(i-1,jj)),nint(tb8_k(i,jj))
+     1                       ,nint(tb8_k(i+1,jj))
+     1                       ,nint(t_gnd_k(i-1,jj)),nint(t_gnd_k(i,jj))        
+     1                       ,nint(t_gnd_k(i+1,jj))
+     1                       ,nint(tb8_k(i-1,jj)-t_gnd_k(i-1,jj))
+     1                       ,nint(tb8_k(i  ,jj)-t_gnd_k(i  ,jj))
+     1                       ,nint(tb8_k(i+1,jj)-t_gnd_k(i+1,jj))
+     1                       ,nint(topo(i-1,jj)),nint(topo(i,jj))        
+     1                       ,nint(topo(i+1,jj))
+ 511                format(1x,3i3,4x,3i4,4x,3i4,4x,3i4,4x,3i5)
                 enddo ! jj
 
             endif ! cloud hole detected
