@@ -392,7 +392,10 @@ c =============================================
      &NORMALIZE LAPS VIS'
           istatus(2) = istatus_n
        else
-          write(*,*)'Visible image normalized of local domain'
+          write(*,*)'Visible image normalized for local domain'
+          call check(laps_vis_norm
+     &              ,r_missing_data,istatus_n,imax,jmax)
+          istatus(2)=istatus_n  
        endif
 c =============================================
        ext = 'nest7grid'
