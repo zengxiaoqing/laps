@@ -56,7 +56,7 @@ c                     Modify to accept both goes8 and goes9.
       character*9   c_filetime_sat
       character*9   c_filetime_lsr
       character*9   c_fname
-      character*5   csat_id
+      character*6   csat_id
 
       integer*4     i,j,k,n,jj
       integer*4     istatus
@@ -107,8 +107,6 @@ c the _sdr file at ~ 45 or 46 past the hour..
 c
       i4time_proc=i4time_now_gg()
 
-      call get_directory('lsr',c_lsr_dir,lend)
-
       n=index(c_sounding_path,' ')-1
       c_filename_sat=c_sounding_path(1:n)//'*_sdr'
       call get_file_names(c_filename_sat,numoffiles,c_filename
@@ -117,14 +115,14 @@ c
       do i = 1,numoffiles
          j=index(c_filename(i),' ')-5
          jj=j-8
-         if(csat_id.eq.'goes8')then
+         if(csat_id.eq.'goes08')then
             if(c_filename(i)(j-1:j-1).eq.'4')then
                call cv_asc_i4time(c_filename(i)(jj:j),i4time)
                if(i4time.gt.i4time_latest)then
                   i4time_latest = i4time
                endif
             endif
-         elseif(csat_id.eq.'goes9')then
+         elseif(csat_id.eq.'goes09')then
             if(c_filename(i)(j-1:j-1).eq.'0')then
                call cv_asc_i4time(c_filename(i)(jj:j),i4time)
                if(i4time.gt.i4time_latest)then
@@ -152,8 +150,10 @@ c
       endif
 c
 c We have "current" data. Determine if it has already been processed.
-c Get latest lsr file (ie., in lapsprd/lsr)
+c Get latest lsr file (ie., in lapsprd/lsr/"csat_id")
 c
+      call get_directory('lsr',c_lsr_dir,lend)
+      c_lsr_dir=c_lsr_dir(1:lend)//'/'//csat_id
       call get_file_time(c_lsr_dir,i4time_proc,
      +i4time_nearest_lsr)
 
