@@ -122,7 +122,7 @@ c
      1          iwvmr(20,5,2),          !3-dimen relative hum array
      1          ihite(5,2),             !height array( 5 levels )
      1          lr(15),
-     1          is2,                    !in line function
+c     1          is2,                    !in line function not used
      1          jlat,
      1          jl,kk,i,j,k,jl1,jl2,
      1          it1,it2,iz1,iz2,iw1,iw2,kday,nmon,imon,
@@ -244,7 +244,7 @@ c------------------------------------------------------------------------------
 c    in line function definitions
 c------------------------------------------------------------------------------
         fs2(i)=.01*(i) ! replaced float with mixed mode 2/23/99 db
-        is2(f)=100.*f+.5
+c        is2(f)=100.*f+.5  !not used
 c...............................begin climate........................................
 
         alat=abs(v_lat)
@@ -291,7 +291,8 @@ c.......set temporary values for future computation
         enddo   !i loop
 
         do i=1,20
-            mixratio_guess(i) = .001
+c            mixratio_guess(i) = .001  !old statement
+            mixratio_guess(i) = .001 + (i-1)*.000052631 !ramp up
             mixratio_guess(i+20)=temp_mixrat(i,1)
         enddo   !i loop
 
@@ -345,7 +346,9 @@ c.......calculate guess temperatures and set to variable name
         do i=1,20
             j=i+20
             wx=wt1*temp_mixrat(i,1)+wt2*temp_mixrat(i,2)
-            mixratio_guess(i) = 0.001
+c            mixratio_guess(i) = 0.001  !old statement
+c            mixratio_guess(i) = .001 + (i-1)*.000052631 !ramp up
+            mixratio_guess(i) = 0.0
             mixratio_guess(j)=wx
         enddo   !i loop
 
