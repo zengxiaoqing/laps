@@ -56,12 +56,6 @@ C
       endif
       laps_dom_file = c10_grid_fname(1:len_fname)
 
-c     var(1)    = 'LAT'
-c     var(2)    = 'LON'
-c     var(3)    = 'AVG'
-c     var(4)    = 'LDF'
-c     var(5)    = 'USE' ! Actually, this is soil type
-c     var(kmax) = 'ZIN'
       avgelem=3
       if(c10_grid_fname(1:lf).eq.'wrfsi')avgelem=7
 

@@ -192,10 +192,8 @@ c ------------------------------------------------------------
 c
       subroutine get_coriolis_components(nx,ny,lat,coriolis_parms)
 c
-
-      implicit none
-
       include 'trigd.inc'
+      implicit none
 
       integer nx,ny
       integer i,j
@@ -215,10 +213,13 @@ c
 
       return
       end
-
+c
+c ----------------------------------------------------------
+c
       subroutine get_projrot_grid(nx,ny,lat,lon,projrot_grid
      +,istatus)
 
+      include 'trigd.inc'
       implicit none
 
       integer nx,ny
@@ -253,6 +254,53 @@ c
 c
 c--------------------------------------------------------
 c
+      subroutine get_static_albedo(nx,ny,lat,lon,landfrac
+     +,static_albedo,istatus)
+
+      implicit none
+
+      integer nx,ny
+      real    lat(nx,ny),lon(nx,ny)
+      real    landfrac(nx,ny)
+      real    static_albedo(nx,ny)
+      real    water_albedo_cmn
+      real    r_missing_data
+      integer istatus
+      integer i,j
+      integer nwater
+
+      data water_albedo_cmn/0.04/
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne.1)then
+         print*,'Error returned: get_r_missing_data'
+         return
+      endif
+
+      nwater = 0
+      do j=1,ny
+      do i=1,nx
+         if(landfrac(i,j).le.0.01)then
+            nwater = nwater+1
+            static_albedo(i,j)=water_albedo_cmn
+         else
+            static_albedo(i,j)=r_missing_data
+         endif
+      enddo
+      enddo
+      if(nwater .gt. 0)then
+         print*,'static_albedo ',water_albedo_cmn,' used ',
+     +'at ',nwater,' grid points '
+      else
+         print*,'No water grid points for water_albedo',
+     +' in this domain'
+      endif
+
+      return
+      end
+c
+c--------------------------------------------------------
+c
       subroutine get_gridgen_var(nf,ngrids,var,comment)
 
       implicit none
@@ -261,22 +309,24 @@ c
       character*(*)  var(nf)
       character*(*)  comment(nf)
 
-      if(ngrids.eq.6)then
+      if(ngrids.eq.7)then
 
          var(1)    = 'LAT'
          var(2)    = 'LON'
          var(3)    = 'AVG'
          var(4)    = 'LDF'
          var(5)    = 'USE'
-         var(6)    = 'ZIN'
+         var(6)    = 'ALB'
+         var(7)    = 'ZIN'
 
-         comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
-         comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
+         comment(1) = 'Lat: From MODEL by J. Snook/ S. Albers 1-95\0'
+         comment(2) = 'Lon: From MODEL by J. Snook/ S. Albers 1-95\0'
          comment(3) = 'Average terrain elevation (m) \0'
-         comment(4) = '\0'
-         comment(5) = '\0'
+         comment(4) = 'Land Fraction \0'
+         comment(5) = 'Soil Type (Missing) \0'
+         comment(6) = 'Clear Sky Albedo - fixed at .4 over water\0'
 
-      elseif(ngrids.eq.17)then
+      elseif(ngrids.eq.18)then
 
          var(1)    = 'LAT'  ! non-staggered (A-grid) lats
          var(2)    = 'LON'  ! non-staggered (A-grid) lons
@@ -294,7 +344,8 @@ c
          var(14)   = 'MFC'  ! Map factor c-stagger grid
          var(15)   = 'CPH'  ! Horizontal component of coriolis parameter
          var(16)   = 'CPV'  ! Vertical component of coriolis parameter
-         var(17)   = 'ZIN'
+         var(17)   = 'ALB'  ! Static (climatological) albedo
+         var(18)   = 'ZIN'
 
          comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
          comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
@@ -312,7 +363,8 @@ c
          comment(14)= 'Map Factor c-stagger grid \0'
          comment(15)= 'Horizontal component coriolis parameter \0'
          comment(16)= 'Vertical component coriolis parameter \0'
-         comment(17)= '\0'
+         comment(17)= 'Static Albedo (%) valid only over water atm \0'
+         comment(18)= '\0'
 
       endif
       return

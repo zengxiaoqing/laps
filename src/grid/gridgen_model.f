@@ -82,6 +82,7 @@ C*********************************************************************
         real  topt_out(nnxp,nnyp)
         real  topt_pctlfn(nnxp,nnyp)
         real  soil(nnxp,nnyp)
+        real  static_albedo(nnxp,nnyp)
 
         real lats(nnxp,nnyp,n_staggers)
         real lons(nnxp,nnyp,n_staggers)
@@ -93,10 +94,10 @@ c       integer*4    ni,nj
 c       parameter (ni = NX_L)
 c       parameter (nj = NY_L)
 c
-c  either 6 (nest7gird) or 10 (wrfsi) used here but 12 needed in put_laps_static
+c  either 7 (nest7gird) or 20 (wrfsi) used here but 18 needed in put_laps_static
 c
         integer*4    nf
-        parameter (nf = 19)
+        parameter (nf = 20)
         
         character*3   var(nf)
         character*125 comment(nf)
@@ -651,6 +652,12 @@ c SG97  splot 'topography.dat'
             write(666,'()')
         enddo
         close(666)
+c
+c retrieve climatological albedo. Currently this is a fixed water albedo
+c that is a namelist value (nest7grid.parms - water_albedo_cmn)
+c
+        call get_static_albedo(nnxp,nnyp,lat,lon,topt_pctlfn
+     +,static_albedo,istatus)
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
 
@@ -691,7 +698,9 @@ c
            call move(coriolis_parms(1,1,2),data(1,1,16)
      +,nnxp,nnyp)
 
-           ngrids=17
+           call move(static_albedo,data(1,1,17),nnxp,nnyp)
+
+           ngrids=18
            call get_gridgen_var(nf,ngrids,var,comment)
 
         else
@@ -701,7 +710,8 @@ c
            call move(topt_out,data(1,1,3),nnxp,nnyp)       ! KWD
            call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
            call move(soil,data(1,1,5),nnxp,nnyp)           ! SA
-           ngrids=6
+           call move(static_albedo,data(1,1,6),nnxp,nnyp)  ! JS
+           ngrids=7
            call get_gridgen_var(nf,ngrids,var,comment)
  
         endif
