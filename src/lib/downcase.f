@@ -62,24 +62,17 @@ cc        enddo
 
 10      continue
 
-        l=len(output)
-c        do i=1,l
-c                output(i:i)=' '
-c        enddo
+        len_in =len(input)
+        len_out=len(output)
+        nchar=min(len_in,len_out)
 
-        call s_len(input,nchar)
-        if(nchar.gt.l) then
-          write(6,*) 'error in downcase: input string length '
-     +              ,'greater than output string length'
-          stop
-        endif
         do i=1,nchar
-cc                chr=ichar(string(i:i))
                 chr=ichar(input(i:i))
                 if (chr .ge. 65 .and. chr .le. 90) chr=chr+32
                 output(i:i)=char(chr)
         enddo
-        do i=nchar+1,l
+
+        do i=nchar+1,len_out
           output(i:i)=' '
         enddo
 

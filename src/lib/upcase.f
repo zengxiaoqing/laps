@@ -62,19 +62,17 @@ cc        enddo
 
 10      continue
 
-        l=len(output)
-        call s_len(input,nchar)  
-        if(nchar.gt.l) then
-          write(6,*) 'error in upcase: input string length '
-     +              ,'greater than output string length'
-          stop
-        endif
+        len_in =len(input)
+        len_out=len(output)
+        nchar=min(len_in,len_out)
+
         do i=1,nchar
                 chr=ichar(input(i:i))
                 if (chr .ge. 97 .and. chr .le. 122) chr=chr-32
                 output(i:i)=char(chr)
         enddo
-        do i=nchar+1,l
+
+        do i=nchar+1,len_out
           output(i:i)=' '
         enddo
 
