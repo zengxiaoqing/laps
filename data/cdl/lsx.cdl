@@ -3,8 +3,8 @@ netcdf lsx {
     dimensions:
         record = unlimited,
         z = 1,
-	x = 493,
-	y = 387,
+	x = 125,
+	y = 105,
         nav = 1,
         namelen = 132;
 		
@@ -37,30 +37,30 @@ netcdf lsx {
             v:lvl_coord="AGL";
             v:LAPS_units="M/S";
  
-        //      1500 M Reduced Pressure         //
+        //      Reference Level Reduced Pressure         //
 
         float
             p(record,z,y,x);
             p:navigation_dim = "nav";
             p:record = "valtime, reftime";
             p:_FillValue = 1.e+37f;
-            p:long_name="1500 m reduced pressure";
+            p:long_name="reference level reduced pressure";
             p:units="pascals";
-            p:valid_range= 0.f, 1200.f;
+            p:valid_range= 0.f, 120000.f;
             p:LAPS_var="P";
             p:lvl_coord="AGL ";
             p:LAPS_units="PA";
  
-        //      1500 M Reduced Pressure Change  //
+        //      Reference Level Reduced Pressure Change  //
 
         float
             pp(record,z,y,x);
             pp:navigation_dim = "nav";
             pp:record = "valtime, reftime";
             pp:_FillValue = 1.e+37f;
-            pp:long_name="1500 m reduced pressure change";
+            pp:long_name="reference level reduced pressure change";
             pp:units="pascals";
-            pp:valid_range= -100.0f, 100.f;
+            pp:valid_range= -10000.0f, 10000.f;
             pp:LAPS_var="PP";
             pp:lvl_coord="AGL ";
             pp:LAPS_units="PA";
@@ -131,7 +131,7 @@ netcdf lsx {
             msl:_FillValue = 1.e+37f;
             msl:long_name="MSL pressure";
             msl:units="pascals";
-            msl:valid_range= -20000.f, 20000.f;
+            msl:valid_range= 0.f, 120000.f;
             msl:LAPS_var="MSL";
             msl:lvl_coord="AGL";
             msl:LAPS_units="PA";
@@ -187,7 +187,7 @@ netcdf lsx {
             ps:_FillValue = 1.e+37f;
             ps:long_name="surface pressure";
             ps:units="pascals";
-            ps:valid_range= -20000.f, 20000.f;
+            ps:valid_range= 0.f, 120000.f;
             ps:LAPS_var="PS";
             ps:lvl_coord="AGL";
             ps:LAPS_units="PA";
