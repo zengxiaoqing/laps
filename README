@@ -565,13 +565,12 @@
      LAPS runs with the polar stereographic, lambert, and mercator projections.
    Run-time testing for the various projections is in progress and initial 
    results are promising. Please let us know of any problems you encounter;
-   the known limitations are as follows. 
+   the known limitations (which are being worked on) are as follows. 
 
-     'Gridgen_model' does not yet work for the lambert map projection. This
-   however should not impact the AFGWC port as they are presumably not using
-   this module.
+     The lambert projection is constrained to operate in the northern
+   hemisphere.
 
-     'Lapsplot' works only for the polar stereographic projection at this time.
+     'Lapsplot' has problems with the lambert projection.
 
      The polar stereographic projection has a pole constrained to be at the
    earth's north geographic pole. Setting the pole to the South Pole or
