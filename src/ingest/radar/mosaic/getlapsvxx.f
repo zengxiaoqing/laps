@@ -1,10 +1,8 @@
        Subroutine getlapsvxx(imax,jmax,kmax,maxradar,c_radar_id,
-     &nfiles,c_extension_proc,i4timefile_proc,rheight_3d,
+     &nfiles,c_extension_proc,i4timefile_proc,i4_tol,rheight_3d,
      &lat,lon,topo,rlat_radar,rlon_radar,rheight_radar,
      &grid_ra_ref,grid_ra_vel,istatus)
 c
-       IMPLICIT        NONE
-
        Integer       imax,jmax,kmax  !same as imax,jmax,kmax in lapsparms.for
        Integer       maxradar
        Integer       maxfiles
@@ -12,7 +10,7 @@ c
        Integer       lvl_3d(kmax)
        Integer       len_dir
        Integer       i4time
-       Integer       i4time_tol
+       Integer       i4_tol
        Integer       n_radars
        Integer       n_ref_grids
        Integer       istatus
@@ -21,7 +19,7 @@ c
        Integer       level
 
        Integer       nfiles
-       Integer       i4timefile_proc(maxradar)
+       Integer       i4timefile_proc
 
        Real*4          grid_ra_ref(imax,jmax,kmax,maxradar)
        Real*4          grid_ra_vel(imax,jmax,kmax,maxradar)
@@ -57,12 +55,13 @@ c
 c ========================================================
 c Read intermediate radar file
 c
-      i4time_tol=300
       l_apply_map=.true.
       l_low_fill = .true.
       l_high_fill= .true.
 
-      write(6,*)'Reading v-file Reflectivity'
+      write(6,*)
+      write(6,*)'get_laps_vxx: Reading v-file Reflectivity, ',
+     1          '# of radars = ',nfiles
 
       do k=1,nfiles
 
@@ -70,11 +69,11 @@ c
 
          EXT = c_extension_proc(k)
 
-c 12-10-97: This routine no longer being enhanced by Albers.
-c           Suggest going to read_radar_3dref.
-c
+         call get_file_time(directory,i4timefile_proc,i4time_nearest)       
+         i4_diff = i4timefile_proc - i4time_nearest
+         write(6,*)' radar #, i4_diff = ',k,i4_diff
 
-         call read_radar_3dref(i4timefile_proc(k),
+         call read_radar_3dref(i4timefile_proc,
 !    1   i4_tol,i4_ret,
      1   l_apply_map,r_missing_data,
      1   imax,jmax,kmax,ext,
@@ -84,13 +83,6 @@ c
      1   rlat_radar(k),rlon_radar(k),rheight_radar(k),c_radar_id(k),
      1   n_ref_grids,istatus_2dref,istatus_3dref)
 
-c        call read_radar_ref(i4timefile_proc(k),l_apply_map,
-c    1   imax,jmax,kmax,ext,
-c    1   lat,lon,topo,l_low_fill,l_high_fill,
-c    1   grid_ra_ref(1,1,1,k),
-c    1   rlat_radar(k),rlon_radar(k),rheight_radar(k),c_radar_id(k),
-c    1   n_ref_grids,istatus_2dref,istatus_3dref)
-c
 c check laps analysis values
 c100       write(6,*)'Which output level do you want? [1-21]'
 c          read(5,*)level
@@ -113,7 +105,7 @@ c          read(5,*)level
          do j=1,jmax,10
          do i=1,imax,10
             write(6,30)i,j,lat(i,j),lon(i,j),topo(i,j)
-     &,grid_ra_ref(i,j,level,k)
+     &                ,grid_ra_ref(i,j,level,k)
          end do
          end do
 

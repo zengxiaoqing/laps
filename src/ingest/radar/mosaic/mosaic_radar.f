@@ -91,7 +91,7 @@ c
       Integer       nn,nc
       Integer       lprdr,lenp
       Integer       i4time_data
-      Integer       i4tol
+      Integer       i4_tol
       Integer       min_i4time
       Integer       max_i4time
       Integer       itime_diff
@@ -196,9 +196,11 @@ c
 c
 c get current time. Make the time window.
 c --------------------------------------------------------
-      i4time_cur = i4time_now_gg()
+!     i4time_cur = i4time_now_gg()
+      call get_systime_i4(i4time_cur,istatus)
+
       i4time_window_beg = i4time_cur-i_window_size
-      i4time_window_end = i4time_cur
+      i4time_window_end = i4time_cur+i_window_size
       call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
 c
 c get lat/lon/topo data
@@ -229,6 +231,7 @@ c
 
 c        call make_fnam_lp(i4time_pre,c_fname_pre,istatus)
 
+!        Should this be simplified with a call to 'get_file_times'?
          call get_file_names(path,
      &                    numoffiles,
      &                    c_filename_vxx(1,i),
@@ -247,7 +250,7 @@ c
                nn=index(c_filename_vxx(l,i),' ')
 c              write(6,*)c_filename_vxx(l,i)(1:nn)
                call cv_asc_i4time(c_filename_vxx(l,i)(nn-13:nn-5),
-     &i4timefile_vxx(l,i))
+     &                            i4timefile_vxx(l,i))
             end do
             nfiles_vxx(i)=numoffiles
          else
@@ -283,9 +286,9 @@ c
                   found_data=.true.
                   first_time=.false.
                   i_ra_count=i_ra_count+1
-                  c_ra_filename(i_ra_count)=c_filename_vxx(l,i)
-                  c_ra_ext(i_ra_count)=c_radar_ext(i)
-                  i_ra_i4time(i_ra_count)=i4timefile_vxx(l,i)
+                  c_ra_filename(i_ra_count) = c_filename_vxx(l,i)
+                  c_ra_ext(i_ra_count) = c_radar_ext(i)
+                  i_ra_i4time(i_ra_count) = i4timefile_vxx(l,i)
                   call make_fnam_lp(i4timefile_vxx(l,i),
      &                              c_ra_ftime(i_ra_count),istatus) 
                   min_i4time = min(min_i4time,
@@ -293,7 +296,7 @@ c
                   max_i4time = max(max_i4time,
      &                             i_ra_i4time(i_ra_count))
                else   !this switch= if more than one file for same radar within window. Take lastest
-c if files are alread time ordered then the latest time will be loaded into array c_ra_filename.
+c if files are already time ordered then the latest time will be loaded into array c_ra_filename.
 c                 i_ra_count=i_ra_count+1
                   c_ra_filename(i_ra_count)=c_filename_vxx(l,i)
                   c_ra_ext(i_ra_count)=c_radar_ext(i)
@@ -304,8 +307,9 @@ c                 i_ra_count=i_ra_count+1
      &                             i_ra_i4time(i_ra_count))
                endif
             endif
-         enddo
-      enddo
+         enddo ! file
+         write(6,*)c_radar_ext(i), ' found radar = ', .not. first_time       
+      enddo ! radar
 
       if(.not.found_data)then
          write(6,*)'No files in any vxx directories'
@@ -325,7 +329,8 @@ c
          enddo
          print*,'Data filetime: ',c_ftime_data
       elseif(i_ra_count.eq.1)then
-         i4time_data=max_i4time
+!        i4time_data=max_i4time
+         i4time_data=i4time_cur
          call make_fnam_lp(i4time_data,c_ftime_data,istatus)
          print*,'Radar filetime: ',c_ra_ftime(1)
          print*,'Data filetime: ',c_ftime_data
@@ -355,8 +360,8 @@ c
          write(6,*)'Reading Analysis Heights'
 
          var_2d = 'HT'
-         i4tol = 7200
-         call get_laps_3dgrid(i4time_data,i4tol,i4time_nearest,
+         i4_tol = 7200
+         call get_laps_3dgrid(i4time_data,i4_tol,i4time_nearest,
      1          nx_l,ny_l,nz_l,EXT,var_2d,units_2d,
      1                          comment_2d,rheight_laps,istatus)
 c
@@ -376,18 +381,23 @@ c These subroutines could be in loop (do i=1,n_mosaics).
 c ----------------------------------------------------------
       if(c_mosaic_type(1:3).eq.'vxx')then
 
+!        Read 'vxx' file within 300s tolerance of 'i4time_cur'
+
          call getlapsvxx(nx_l,ny_l,nz_l,n_radars,c_radar_id,
-     & i_ra_count,c_ra_ext,i_ra_i4time,rheight_laps,lat,lon,topo,
-     & rlat_radar,rlon_radar,rheight_radar,grid_ra_ref,grid_ra_vel,
-     & istatus)
+     &      i_ra_count,c_ra_ext,i4time_cur,i_window_size,
+     &      rheight_laps,lat,lon,topo,
+     &      rlat_radar,rlon_radar,rheight_radar,grid_ra_ref,grid_ra_vel,       
+     &      istatus)
 
       elseif(c_mosaic_type(1:3).eq.'rdr')then
+
+!        Should this be simplified to read 'vrc' files on the LAPS grid?
 
          call get_rdr_dims(c_ra_filename(1),x,y,z,record,istatus)
 
          call get_laps_rdr(nx_l,ny_l,nz_l,z,record,i_ra_count,
-     & c_ra_filename,c_radar_id,rlat_radar,rlon_radar,rheight_radar,
-     & grid_ra_ref,istatus)
+     &     c_ra_filename,c_radar_id,rlat_radar,rlon_radar,rheight_radar,
+     &     grid_ra_ref,istatus)
 
          if(istatus.ne.1)then
             print*,'Error reading ',c_ra_filename(i)(1:nc)
