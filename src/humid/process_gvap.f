@@ -43,7 +43,7 @@ cdis
 cdis
 cdis
       subroutine  process_gvap (ii,jj,data_out,data_weights,
-     1     gw1,gw2,gw3,gww1,gww2,gww3,mdf,
+     1     gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
      1     glat,glon,time_diff,
      1     path_to_gvap8,path_to_gvap10,filetime,istatus)
 
@@ -59,6 +59,7 @@ c     input variables
       real gw2(ii,jj),gww2(ii,jj)
       real gw3(ii,jj),gww3(ii,jj)
       real glat(ii,jj), glon(ii,jj)
+      real gvap_p (ii,jj)
       real mdf
       integer i4time
       character*256 path_to_gvap8,path_to_gvap10
@@ -72,7 +73,7 @@ c     input variables
       real w1(nstations)
       real w2(nstations)
       real w3(nstations)
-      real gvap_p(nstations)    !surface pressure for sigma coord
+      real gvap_pres(nstations)    !surface pressure for sigma coord
 
 
 
@@ -93,7 +94,7 @@ c     input variables
 
 
       call read_gvap (filename, nstations, path_to_gvap8,path_to_gvap10,
-     1     time_diff, lat,lon, wt,w1,w2,w3, gvap_p, nn,
+     1     time_diff, lat,lon, wt,w1,w2,w3, gvap_pres, nn,
      1     istatus)
 
       if (
@@ -122,12 +123,12 @@ c     correct longitute to negative for west
          do i = 1,nn
             lon(i) = lon(i) * (-1.0)
          enddo
-         write(6,*) w3(nn)
 
       endif
 
-      call analz_gvap (lat,lon,wt,w1,w2,w3,nn,glat,glon,data_out,
-     1     gw1,gw2,gw3,gww1,gww2,gww3,
+      call analz_gvap (lat,lon,wt,w1,w2,w3,gvap_pres,nn,
+     1     glat,glon,data_out,
+     1     gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,
      1     data_weights,ii,jj,istatus)
 
       if(istatus.ne.1) then ! failure to get data

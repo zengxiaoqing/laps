@@ -159,6 +159,7 @@ c
       real gw1(ii,jj),gww1(ii,jj)
       real gw2(ii,jj),gww2(ii,jj)
       real gw3(ii,jj),gww3(ii,jj)
+      real gvap_p (ii,jj)
       integer istatus_gvap
       
       real pressure_of_level    !function call
@@ -373,28 +374,30 @@ c     initialize total pw to laps missing data flag
       jstatus(2) = 0            !%loc(rtsys_abort_prod)
       jstatus(3) = 0
 
+      call get_pres_3d (i4time,ii,jj,kk,p_3d,istatus)
 
+      if(istatus.ne.1) then
+         write (6,*) 'error in getting 3d pressures'
+         write (6,*) 'aborting'
+         istatus = 0
+         return
+      endif
+
+c     dependence here now remains to one dimension
 
       do k = 1,kk
-         lvllm(k) = nint( pressure_of_level(k)  * .01 )
+         do j = 1,jj
+            do i = 1,ii
+               p_3d(i,j,k) = p_3d(i,j,k) * 0.01  ! convert to hpa
+            enddo
+         enddo
+         lvllm(k) = nint (p_3d(1,1,k))
       enddo
-
 
       do k = 1,kk
          plevel(k) = float ( lvllm(k)  )
          mlevel(k) = plevel(k)
       enddo
-
-c     preliminary assignment of 3_d pressure here
-
-      do j = 1,jj
-         do i = 1,ii
-            do k = 1, kk
-               p_3d(i,j,k) = plevel(k)
-            enddo
-         enddo
-      enddo
-
 
 c     mark the maps gridpoints
 
@@ -744,7 +747,7 @@ c     gvap data insertion step
             write(6,*) 
             
             call process_gvap(ii,jj,gvap_data,gvap_w,
-     1           gw1,gw2,gw3,gww1,gww2,gww3,mdf,
+     1           gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
      1           lat,lon,time_diff,
      1           path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
 
@@ -758,6 +761,7 @@ c     gvap data insertion step
 
             if(istatus_gvap.eq.1 .and. istatus_gps.eq.1) then ! correct gvap
                continue  ! placeholder for correction call
+               write(6,*) 'gvap/gps correction currently disabled'
             endif  
             
          else

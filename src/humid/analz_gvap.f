@@ -42,17 +42,19 @@ cdis
 cdis
 cdis
 cdis
-      subroutine analz_gvap (lat,lon,wt,w1,w2,w3,nn,glat,glon,data_out,
-     1     gw1,gw2,gw3,gww1,gww2,gww3,
+      subroutine analz_gvap (lat,lon,wt,w1,w2,w3,gvap_pres,nn,
+     1     glat,glon,data_out,
+     1     gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,
      1     data_weights,ii,jj,istatus)
 
       implicit none
 
       integer ii,jj,nn,istatus
-      real lat(nn),lon(nn),wt(nn),w1(nn),w2(nn),w3(nn)
+      real lat(nn),lon(nn),wt(nn),w1(nn),w2(nn),w3(nn),gvap_pres(nn)
       real gw1(ii,jj),gww1(ii,jj)
       real gw2(ii,jj),gww2(ii,jj)
       real gw3(ii,jj),gww3(ii,jj)
+      real gvap_p(ii,jj)
       real data_out(ii,jj)
       real data_weights(ii,jj)
       real glat(ii,jj)
@@ -101,6 +103,7 @@ c     foreach n element of wt, determine its location in ii,jj space
             gw1(i,j) = w1(n)
             gw2(i,j) = w2(n)
             gw3(i,j) = w3(n)
+            gvap_p(i,j) = gvap_pres(n)
             gww1(i,j) = 1.
             gww2(i,j) = 1.
             gww3(i,j) = 1.
