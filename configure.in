@@ -265,7 +265,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/localize_optran.com
 	  etc/laps_localization.pl
 	  etc/laps_monitor.pl
-          etc/laps_tools.pl
+          etc/laps_tools.pm
           etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/sfc.pl
