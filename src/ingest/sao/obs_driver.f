@@ -528,7 +528,7 @@ c
 	n_obs_b = nn
 
 c       Call subroutine to blacklist the stations in the "store" arrays
-        call apply_blacklist(      maxsta,n_obs_b,stations
+        call apply_blacklist(      maxsta,n_obs_b,stations,provider
      1                            ,store_1,store_2,store_3
      1                            ,store_4,store_5,store_6
      1                            ,store_7,badflag)
@@ -689,7 +689,7 @@ c
        end
 
 
-        subroutine apply_blacklist(maxsta,n_obs_b,stations
+        subroutine apply_blacklist(maxsta,n_obs_b,stations,provider
      1                            ,store_1,store_2,store_3
      1                            ,store_4,store_5,store_6
      1                            ,store_7,badflag)
@@ -701,8 +701,7 @@ c
 
 	character  dir_b*256, black_path*256, stations_b(maxsta)*20
 	character  var_b(maxsta,max_bvar)*3 
-        character  stations(maxsta)*20
-
+        character  stations(maxsta)*20,provider(maxsta)*11
 	real    store_1(maxsta,4), 
      &          store_2(maxsta,3), 
      &          store_3(maxsta,4), 
@@ -711,7 +710,7 @@ c
      &          store_6(maxsta,5), 
      &          store_7(maxsta,3)
 
-	logical exists
+	logical exists, l_provider, l_match
         data exists/.false./
 c
 c.....  Check for a blacklist file.  If one exists, read it
@@ -743,16 +742,38 @@ c
 	   read(11,903) stations_b(i), num_varb(i), 
      &                  (var_b(i,j), j=1,max_bvar)
 	enddo !i
-cc 903	format(1x,a20,2x,i3,<max_bvar>(2x,a3))
  903	format(1x,a20,2x,i3,20(2x,a3))
 c
 c.....  Have blacklist info.  Now flag the var_b's at each station_b as bad.
 c
-	do ibl=1,num_black  !loop over the blacklist stations
+	do ibl=1,num_black ! loop over the blacklist stations
 
-	   do i=1,n_obs_b  !loop over all stations
+           if(num_varb(ibl) .gt. 100)then
+              num_varb(ibl) = num_varb(ibl) - 100
+              l_provider = .true.
+           else
+              l_provider = .false.
+           endif           
 
-	      if(stations(i) .eq. stations_b(ibl)) then  !found a match
+	   do i=1,n_obs_b ! loop over all stations
+
+              if(l_provider)then
+	          if(provider(i) .eq. stations_b(ibl)) then ! found a match
+                      l_match = .true.
+                  else
+                      l_match = .false.
+                  endif
+
+              else
+	          if(stations(i) .eq. stations_b(ibl)) then ! found a match
+                      l_match = .true.
+                  else
+                      l_match = .false.
+                  endif
+
+              endif
+
+              if(l_match)then
 
 		 do j=1,num_varb(ibl)
 
@@ -826,9 +847,9 @@ c
 		    endif
 c
 		 enddo !j
-	      endif
-	   enddo !i
-	enddo !ibl
+	      endif ! match found
+	   enddo ! i (station loop)
+	enddo ! ibl (blacklist loop)
 
 	print *,' '
 	print *,'  Done with blacklisting.'
