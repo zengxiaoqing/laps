@@ -172,6 +172,11 @@ c           slon = standard_longitude
                print*,'Error returned from get_standard_latitudes'
                return
             endif
+            if(abs(slat2).eq.90. .and. slat2.ne.slat1)then
+               print*,'Error: lambert slat2 = 90.'
+               istatus=1
+               return
+            endif
             call get_standard_longitude(slon,istatus)
             if(istatus.ne.1)then
                print*,'Error returned from get_standard_longitude'
