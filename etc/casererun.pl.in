@@ -55,7 +55,7 @@ if (!$INSTALL_ROOT||!$DATA_ROOT)
     }
 }
 
-if(length $wideband_2_netcdf == 0){
+if(length $wideband_2_netcdf == 0 && defined $wideband_2_netcdf){
    die "you must enter the wideband path (or root): -wideband_2_nc='path'\n";
 }
 
@@ -78,9 +78,8 @@ if(!defined $lapsdriver)
    print "\n";
 }
 
-#1. the beginning and ending time period for post analysis
-#   format dd-mmm-yyyy-hhmm
-#-------------------------------------------------------------
+# the beginning and ending time period for post analysis format dd-mmm-yyyy-hhmm
+#-------------------------------------------------------------------------------------
 my ($dd_beg, $mmm_beg, $year_beg, $hour_beg, $min_beg, $jjj_beg, $hhmm_beg);
 my ($dd_end, $mmm_end, $year_end, $hour_end, $min_end, $jjj_end, $hhmm_end);
 
@@ -98,7 +97,7 @@ if(length ($beg_time) != 16 || length ($end_time) != 16)
 else
 {
    ($dd_beg,$mmm_beg,$year_beg,$hhmm_beg)=split('-',$beg_time);
-   ($dd_end,$mmm_end,$year_end,$hhmm_end)=split('-',$beg_time);
+   ($dd_end,$mmm_end,$year_end,$hhmm_end)=split('-',$end_time);
 
    $hour_beg = substr($beg_time,12,2);
    $min_beg  = substr($beg_time,14,2);
@@ -108,7 +107,7 @@ else
 }
 
 my @remap_times = "00";
-my @lvd_times = qw(00 10 20 30 40 50); #
+my @lvd_times = qw(00 10 20 30 40 50);
 my @vrc_times = qw(00 10 20 30 40 50);
 my @ln3_times = qw(00 10 20 30 40 50);
 my @lsr_times = qw(00 30);
@@ -118,7 +117,7 @@ $mmm_beg=uc $mmm_beg;
 $mmm_end=uc $mmm_end;
 
 print "start time: $beg_time ---> $year_beg,$mmm_beg,$dd_beg,$hour_beg,$min_beg \n";
-print "end time:   $end_time ---> $year_end,$mmm_end,$dd_beg,$hour_end,$min_end \n";
+print "end time:   $end_time ---> $year_end,$mmm_end,$dd_end,$hour_end,$min_end \n";
 
 my ($imobeg,$imoend);
 while ($mmm_beg ne $months[$imobeg])
@@ -137,7 +136,8 @@ print "cycle time (seconds): $cycle_time \n";
 print "beginning month  = $months[$imobeg]\n";
 print "ending    month  = $months[$imoend]\n";
 
-#convert beg/end times to i4time since Jan. 1, 1970
+# convert beg/end times to i4time since Jan. 1, 1970
+#--------------------------------------------------------
 my $i4time70_beg=&laps_tools::date_to_i4time($year_beg,$imobeg,$dd_beg,$hour_beg,$min_beg,'0');
 my $i4time70_end=&laps_tools::date_to_i4time($year_end,$imoend,$dd_end,$hour_end,$min_end,'0');
 print "beginning/ending i4time70. $i4time70_beg, $i4time70_end\n";
@@ -165,8 +165,29 @@ my ($year2,$mon2,$dddw,$monw);
 my ($i,$j,$k,$mon,$command);
 my ($laps_driver_exe, $min_ld, $com_ld, $ldexe);
 my ($driver_incr, $driver_cycles, $i4time70_driver, $i4time70_wideband);
+my ($success, $new_casedate, $day_prev, $datatype);
 my $i4time70_driver_end;
-my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+#
+# define and establish casedate link corresponding to the current run
+#----------------------------------------------------------------------------
+$success = &mktmplinks($i4time70);
+if($success != 1){
+   print "Failed to make /tmp links for ingest data\n";
+   die;
+}
+#oh yea this. Make sure it has the correct permissions
+if(!-d "/tmp/time"){
+   mkdir "/tmp/time", 0777;
+}elsif(-W "/tmp/time"){
+   die " /tmp/time may not have correct permissions \n";
+}
+
+#-------------------------
+# main loop for casererun
+#-------------------------
+
+$imobeg='0'.$imobeg while(length($imobeg)<2);
+$dd_beg='0'.$dd_beg while(length($dd_beg)<2);
 
 while ($i4time70<=$i4time70_end)
 {
@@ -195,15 +216,16 @@ while ($i4time70<=$i4time70_end)
         $dddp1='0'.$dddp1 while(length($dddp1)<3);
         $purgewh = "$yr$dddp1".'12';
 
-#       Run purge_wideband first - not needed in the loop
+# purge_wideband first - not needed in the loop
+#-------------------------------------------------------
         $command = "@PERL@ $INSTALL_ROOT/etc/purge_wideband.pl $purgewl $purgewh $wideband_2_netcdf";
         print "Running $command\n";
-#       run_sys::run_sys($command);
+        run_sys::run_sys($command);
 
         $i4time70_wideband = $i4time70 - 2*$cycle_time;
         while ($i4time70_wideband <= $i4time70){
               ($yearw,$mow,$dyw,$hrw,$mnw,$scw) = &laps_tools::i4time_to_date($i4time70_wideband);
-               $monw=$MON[$mow];
+               $monw=$months[$mow];
                $mow++;
                $dddw = &laps_tools::julian($yearw, $mow, $dyw);
                $dyw='0'.$dyw while(length($dyw)<2);
@@ -213,17 +235,27 @@ while ($i4time70<=$i4time70_end)
                $scw='0'.$scw while(length($scw)<2);
                $yrw=substr($yearw,2,2);
 
-#  Run wideband_2_netcdf 
-               open(WDBND_COM, ">/usr/nfs/common/lapb/parallel/laps/etc/wideband2nc.com") or die "cant open wideband2nc.com: $!\n";
-               print WDBND_COM "/home/lapb/albers/ihop/radar_scripts/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$ddd yes";
-               close WDBND_COM;
-               sleep 5;
-               chmod 0755, "/usr/nfs/common/lapb/parallel/laps/etc/wideband2nc.com";
-               $command = "ssh -i /home/lapb/oplapb/.ssh/wideband_convert_cumulus_dsa cumulus";
-               print "Running $command\n";
-               $result = system("$command");
+# Run wideband_2_netcdf 
+#-------------------------------------------------------
+               if(uc $ENV{MACHINE} eq 'AIX')
+               {
+                  unlink "$INSTALL_ROOT/etc/wideband2nc.com" or die "cant remove $INSTALL_ROOT/etc/wideband2nc.com $!";
+                  open(WDBND_COM, ">$INSTALL_ROOT/etc/wideband2nc.com") or die "cant open $INSTALL_ROOT/wideband2nc.com: $!\n";
+#                 print WDBND_COM "/home/lapb/albers/ihop/radar_scripts/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$dddw $wideband_2_netcdf yes";
+                  print WDBND_COM "$INSTALL_ROOT/etc/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$dddw $wideband_2_netcdf yes";
+                  close WDBND_COM;
+                  sleep 5;
+                  chmod 0755, "$INSTALL_ROOT/etc/wideband2nc.com";
+                  $command = "ssh -i /home/lapb/oplapb/.ssh/wideband_convert_cumulus_dsa cumulus";
+               }
+               else
+               {
+#                 $command ="/home/lapb/albers/ihop/radar_scripts/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$dddw $wideband_2_netcdf yes";
+                  $command ="$INSTALL_ROOT/etc/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$dddw $wideband_2_netcdf yes";
+               }
 
-#              run_sys::run_sys($command);
+               print "Running $command\n";
+               run_sys::run_sys($command);
 
                $i4time70_wideband+=$cycle_time;
         }
@@ -257,10 +289,12 @@ while ($i4time70<=$i4time70_end)
                 $i4time70_driver=$i4time70-($driver_incr*$driver_cycles*60);
 #               $i4time70_driver_end=$i4time70+($driver_incr*$driver_cycles*60);
 
+                $day_prev= $dy;
+
                 while ($i4time70_driver <= $i4time70)   #$k<$driver_cycles)
                 {
                      ($year2,$mo2,$dy2,$hr2,$mn2,$sc2) = &laps_tools::i4time_to_date($i4time70_driver);
-                     $mon2=$MON[$mo2];
+                     $mon2=$months[$mo2];
                      $dy2='0'.$dy2 while(length($dy2)<2);
                      $mo2++;
                      $mo2='0'.$mo2 while(length($mo2)<2);
@@ -268,13 +302,29 @@ while ($i4time70<=$i4time70_end)
                      $mn2='0'.$mn2 while(length($mn2)<2);
                      $sc2='0'.$sc2 while(length($sc2)<2);
                      $yr2=substr($year2,2,2);
+ 
+#if the current i4time70_driver yields a date that crosses the day boundary
+#then redo the "casedate" link to let the ingest routines know we are
+#looking for data from a different subdirectory (only relevant to the IHOP reruns)
 
-                     $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > $DATA_ROOT/time/systime.dat";
+                     if($dy2 ne $day_prev)
+                     {
+                        $success = &mktmplinks($i4time70_driver);
+                        if($success != 1){
+                           print "Failed to make /tmp links for ingest data\n";
+                           die;
+                        }
+                     }
+
+#                    $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > $DATA_ROOT/time/systime.dat";
+                     $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > $/tmp/time/systime.dat";
                      run_sys::run_sys($com_ld);
 
                      $com_ld="@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -L $dy2-$mon2-$year2-$hr2$mn2 $laps_driver_exe $INSTALL_ROOT $DATA_ROOT";
                      print "Running: $com_ld\n";
                      run_sys::run_sys($com_ld);
+
+                     $day_prev=$dy2;
 
                      $i4time70_driver+=($driver_incr*60);
                 }
@@ -283,7 +333,8 @@ while ($i4time70<=$i4time70_end)
         }
      }
 
-     $command = "@PERL@ $INSTALL_ROOT/etc/systime.pl $yr $mo $dy $hr $mn > $DATA_ROOT/time/systime.dat";
+#    $command = "@PERL@ $INSTALL_ROOT/etc/systime.pl $yr $mo $dy $hr $mn > $DATA_ROOT/time/systime.dat";
+     $command = "@PERL@ $INSTALL_ROOT/etc/systime.pl $yr $mo $dy $hr $mn > /tmp/time/systime.dat";
      print "\n";
      print " ***** Reset or Initialize systime.dat for sched ***** \n";
      run_sys::run_sys($command);
@@ -305,3 +356,64 @@ while ($i4time70<=$i4time70_end)
      $i4time70+=$cycle_time;
 }
 exit;
+#
+# ******************************************************************************
+#
+sub mktmplinks
+{
+
+# define and establish casedate link corresponding to the current run
+#----------------------------------------------------------------------------
+
+  my $i4time70 = @_;
+  my  @day;
+  my  @mon;
+  my ($year,$month,$day,$hour,$min,$sec)=&laps_tools::i4time_to_date($i4time70);
+
+# this is not generic and only designed for IHOP 15May to 26Jun.
+  my ($i,$ii);
+  if($day == 1){
+   $day[0] = "31";
+   $day[1] = "01";
+   $day[2] = "02";
+   $mon[0] = "05";
+   $mon[1] = "06";
+   $mon[2] = "06";
+  }elsif($day == 31){
+   $day[0]  = "30";
+   $day[1]  = "31";
+   $day[2]  = "01";
+   $mon[0]  = "05";
+   $mon[1]  = "05";
+   $mon[2]  = "06";
+  }else{
+   $ii=0;
+   for ($i=$day-1;$i<=$day+1;$i++){
+
+#      if($i < 10){$day[$ii]="0".$i
+#      }else{
+#"0".$month;}
+       $day[$ii] = "$i";
+       $mon[$ii] = "0".$month while( length($month) < 2);
+       $ii++;
+   }
+  }
+
+  my @datatypes=qw(acars dropsonde fsl gpsmet grids laps ldad maritime metar pirep profiler radar raob sao sat);
+  my $datatype;
+  system("rm -rf /tmp/casedate");  # or die "Failed to remove /tmp/casedate $! \n";
+  mkdir "/tmp/casedate", 0777;
+  foreach $datatype (@datatypes){
+          $i=0;
+          foreach (@day){
+                   system("mkdir -p /tmp/casedate/$datatype/$mon[$i]");
+                   if(-e "/data/ihop/$mon[$i]/$_/data/$datatype"){
+                      system("ln -sf /data/ihop/$mon[$i]/$_/data/$datatype  /tmp/casedate/$datatype/$mon[$i]/$_");#or die "cannot make sym link $!";
+                   }
+                   $i++;
+          }
+  }
+
+return 1;
+
+}
