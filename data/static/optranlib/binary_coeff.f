@@ -7,7 +7,7 @@
 
 	Integer i,j,k,Ichan
 
-	Open(12,file='g08coef.dat',
+	Open(12,file='coef.dat',
      &		form='formatted')
 	Open(42,file='wet_coeff.dat',
      &          form='unformatted')
