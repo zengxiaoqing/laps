@@ -716,7 +716,7 @@ CONTAINS
         IF (secs_waited .GE. max_wait_sec) THEN
           PRINT *, 'IO_WAIT:  Timeout waiting for file: ', TRIM(filename)
           PRINT '(A,I5,A)', '    Maximum wait time set to ', max_wait_sec, 's'
-          CALL ABORT
+          STOP 'io_wait'
         ENDIF
       ELSE 
         ! Give a little slop time to make sure file is completely written
