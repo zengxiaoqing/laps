@@ -204,14 +204,16 @@ C
 !         QC and write out the sounding
           i4time_raob = 0
 
-          if(abs(syntime(isnd)) .lt. 1e10)then
+          if(abs(syntime(isnd)) .lt. 1e10 .and.
+     1       abs(syntime(isnd)) .gt.    0.      )then
               i4time_syn  = idint(syntime(isnd))+315619200
               i4time_raob = i4time_syn
           else
               i4time_syn = 0
           endif
 
-          if(abs(reltime(isnd)) .lt. 1e10)then
+          if(abs(reltime(isnd)) .lt. 1e10 .and.
+     1       abs(reltime(isnd)) .gt.    0.      )then
               i4time_release = idint(reltime(isnd))+315619200
 
               i4time_diff = i4time_release - i4time_sys
@@ -258,6 +260,9 @@ C
      1                                .AND.      
      1       stalon(isnd) .ge. west   .and. stalon(isnd) .le. east      
      1                                                            )then       
+
+!         if(.true.)then      ! for testing
+
               write(6,*)' Raob is inside domain lat/lon perimeter'
           else
               write(6,*)
@@ -275,8 +280,8 @@ C
               endif
           endif
 
-          call sort_and_write(
-     1                        recNum,isnd,r_missing_data,a9time_raob
+          call sort_and_write(i4time_sys
+     1                       ,recNum,isnd,r_missing_data,a9time_raob
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
@@ -296,8 +301,8 @@ C
       end
 
 
-      subroutine sort_and_write(
-     1                        NREC,isnd,r_missing_data,a9time_raob
+      subroutine sort_and_write(i4time_sys
+     1                       ,NREC,isnd,r_missing_data,a9time_raob
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
@@ -310,7 +315,7 @@ C
       integer     sigTLevel
       integer     sigWLevel
       INTEGER*4   wmoStaNum                      (NREC)
-      CHARACTER*1 staName                        (   6,NREC)
+      CHARACTER*1 staName                        (6,NREC)
       REAL*4      staLat                         (NREC)
       REAL*4      staLon                         (NREC)
       REAL*4      staElev                        (NREC)
@@ -351,7 +356,8 @@ C
       c8_obstype = 'RAOB'
 
       write(6,*)' Subroutine sort_and_write - initial mandatory data'       
-      do ilevel = 1,nummand(isnd)
+      if(nummand(isnd) .le. manLevel)then
+        do ilevel = 1,nummand(isnd)
           if(htman(ilevel,isnd) .lt. 90000.)then
               n_good_levels = n_good_levels + 1
               write(6,*) htman(ilevel,isnd),prman(ilevel,isnd)
@@ -366,10 +372,15 @@ C
               wdout(n_good_levels) = wdman(ilevel,isnd)
               wsout(n_good_levels) = wsman(ilevel,isnd)
           endif
-      enddo
+        enddo
+      else
+        write(6,*)' Note: nummand(isnd) > manLevel'
+     1                   ,nummand(isnd),manLevel      
+      endif
 
       write(6,*)' Subroutine sort_and_write - sig wind data'       
-      do ilevel = 1,numsigw(isnd)
+      if(numsigw(isnd) .le. sigWLevel)then
+        do ilevel = 1,numsigw(isnd)
           if(htsigw(ilevel,isnd) .lt. 90000. .and.
      1       htsigw(ilevel,isnd) .ne. 0.            )then
               n_good_levels = n_good_levels + 1
@@ -385,10 +396,15 @@ C
               wdout(n_good_levels) = wdsigw(ilevel,isnd)
               wsout(n_good_levels) = wssigw(ilevel,isnd)
           endif
-      enddo
+        enddo
+      else
+        write(6,*)' Note: numsigw(isnd) > sigWLevel'
+     1                   ,numsigw(isnd),sigWLevel      
+      endif
 
       write(6,*)' Subroutine sort_and_write - sig T data'       
-      do ilevel = 1,numsigt(isnd)
+      if(numsigt(isnd) .le. sigTLevel)then
+        do ilevel = 1,numsigt(isnd)
           if(prsigt(ilevel,isnd) .lt. 2000. .and.
      1       prsigt(ilevel,isnd) .gt. 0.            )then
               n_good_levels = n_good_levels + 1
@@ -404,7 +420,11 @@ C
               wdout(n_good_levels) = r_missing_data
               wsout(n_good_levels) = r_missing_data
           endif
-      enddo
+        enddo
+      else
+        write(6,*)' Note: numsigt(isnd) > sigTLevel'
+     1                   ,numsigt(isnd),sigTLevel      
+      endif
 
 !     Bubble sort the levels by height
  400  iswitch = 0
@@ -418,6 +438,8 @@ C
       enddo
 
       if(iswitch .eq. 1)go to 400
+
+      call open_ext(i4time_sys,'snd',11,istatus)
 
       write(6,*)
       write(6,511,err=998)
