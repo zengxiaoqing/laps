@@ -36,7 +36,6 @@ SRC=fill_common.f\
     rcptoremote.f\
     readdata.f\
     ref_fill_horz.f\
-    remap_process.f\
     timconv.f
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
