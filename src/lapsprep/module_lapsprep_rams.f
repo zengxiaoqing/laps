@@ -169,9 +169,9 @@ CONTAINS
     ELSE
       proj_flag = 2
       If (latin2 .EQ. -90) THEN
-        latin1_out = -89.99999
+        latin1_out = -90.00000
       ELSE
-        latin1_out = 89.999999
+        latin1_out = 90.000000
       ENDIF
     ENDIF
   ELSE
