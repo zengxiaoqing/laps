@@ -86,7 +86,8 @@ C
 
 !............................................................................
 
-      if (c8_project(1:3) .eq. 'WFO') then
+      if (c8_project(1:3) .eq. 'WFO' .or. 
+     1    c8_project(1:3) .eq. 'RSA'      ) then     
         call read_acars_netcdf_wfo(nf_fid, recNum, airline, bounceError, 
      +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
      +     interpolatedTime, missingInputMinutes, rollFlag, 
