@@ -11,18 +11,20 @@
       integer oldest_forecast, bg_files, forecast_length, i, j, k
      + , max_forecast_delta
       integer ivaltimes(10), ntbg
-      character*4   af
+      character*4   af,c4valtime,c4_FA_valtime
+      character*3   c_fa_ext
       character*100 bg_names(max_files), fullname
 C     integer nf_status, nf_vid, nf_fid, istatus
       integer istatus
+      integer i4time_fa
       logical use_analysis
-      character*9   fname,wfo_fname13_to_fname9
+      character*9   fname,wfo_fname13_to_fname9,fname9
       integer i4time_now, bgtime, bgtime2,previous_time, next_time, len
       integer bigint, ihour, n, accepted_files, final_time
       parameter(bigint=2000000000)
       logical print_message
       data print_message/.true./
-      integer nlapsprds
+      integer nlapsprds,lens,lentodot
       character*3 lapsprds(4)
       parameter (nlapsprds=4)
       data lapsprds/'lq3','lt1','lsx','lw3'/
@@ -52,7 +54,27 @@ C
             bg_names(bg_files)(10:13) = '0000'
             bg_names(bg_files)(14:14) = char(0)
          enddo
+
+      elseif(bgmodel.eq.3)then
+
+         next_time=bigint
+         final_time=i4time_now+3600*max(0,forecast_length)
+         call get_file_names(bgpath,bg_files,names,max_files,istatus)
+
+         do i=1,bg_files
+            call i4time_fname_lp(names(i),i4time_fa,istatus)
+            if(istatus.eq.1)then
+               call make_fnam_lp(i4time_fa,fname9,istatus)
+               call s_len(names(i),lens)
+               lentodot=index(names(i),'.')
+               c_fa_ext=names(i)(lentodot+1:lens)
+               c4valtime=c4_FA_valtime(c_fa_ext)
+               bg_names(i)=fname9//c4valtime
+            endif
+         enddo
+
       else
+
          next_time=bigint
          final_time = i4time_now+3600*max(0,forecast_length)
          call get_file_names(bgpath,bg_files,names,max_files,istatus)
@@ -108,23 +130,18 @@ c      print *,bg_names(bg_files),bg_files
             if(bg_names(n).eq.rejected_files(i)) goto 40
          enddo
             
-
          fname=bg_names(n)(1:9)
          af=bg_names(n)(10:13)
          read(af,'(i4)') ihour
          call i4time_fname_lp(fname,bgtime,istatus)
 
-
-         if(bgtime.lt.bgtime2) then
+         if(bgtime.lt.bgtime2.and. .not.use_analysis) then
             print*, 'Trying earlier forecast ',bgtime,bgtime2,fname,af
             bgtime2=bgtime
             accepted_files=0
             previous_time=0
             next_time=bigint
          endif
-
-
-         
 c     
 c *** File names are returned sorted from newest to oldest ***
 c     process only the newest which is at least as old as the laps time
@@ -233,7 +250,6 @@ c     +     forecast_length,bg_files,n
          call get_laps_dimensions(nz,istatus)
          call get_grid_dim_xy(nx,ny,istatus)
          cmodel = 'LAPS'   
-
       else if(bgmodel.eq.1) then
          NX = 81
          NY = 62
@@ -243,10 +259,11 @@ c     +     forecast_length,bg_files,n
          call get_eta48_dims(fullname,NX,NY,NZ,istatus)
          cmodel = 'ETA48_CONUS'        
       else if(bgmodel.eq.3) then
-         NX = 144
-         NY = 73
-         NZ = 16        
-         cmodel = 'NOGAPS (2.5)'            
+         NX = 91
+         NY = 91
+         NZ = 14   !this is a guess 11-15-99
+
+         cmodel = 'FA Model'            
       else if(bgmodel.eq.4) then
          NX = 93
          NY = 65

@@ -21,6 +21,9 @@ c
 c
       integer  it
       integer  lun
+      integer  iostat,iostatus
+
+      logical  lopen,lext
 
       real*4 ht(nx,ny,nz)      !height (m)
      .      ,tp(nx,ny,nz)      !temperature (K)
@@ -51,11 +54,15 @@ c     real*4 rp_init
       real*4 t_ref
       real*4 pcnt
       real*4 r_missing_data
+      real*4 bogus_sh
 c
       character*(*) path
       character*9   fname
       character*4   af
       character*2   gproj
+      character*13  fname13_to_FA_filename,
+     .              cfname13,cFA_filename
+      character*3   c3ext,  c3_FA_ext
       character*255 filename
 c
 c *** Common block variables for lat-lon grid.
@@ -80,60 +87,98 @@ c
 c Td or rh liq/ice phase temp thresh
 c ---------------------------------
       t_ref=-47.0
+      bogus_sh = 0.00001
+c
+      call get_r_missing_data(r_missing_data,istatus)
 c
 c *** Open and read data index file.
 c
-      call s_len(path,l)
-      filename=path(1:l)//'/'//fname//af//'.index'
-      call s_len(filename,l)
-      call readindexfile(filename,nvarsmax,nz,nvars,nlevs
-     +,p_levels,ivarcoord,ivarid,istatus)
-      if(istatus.lt.1)goto 995
+      if(bgmodel.eq.6.or.bgmodel.eq.8)then
 
-      do j=1,nvars
-         if(ivarid(j).eq.11.and.ivarcoord(j).eq.100)then
+
+         call s_len(path,l)
+         filename=path(1:l)//'/'//fname//af//'.index'
+         call s_len(filename,l)
+         call readindexfile(filename,nvarsmax,nz,nvars,nlevs
+     +,p_levels,ivarcoord,ivarid,istatus)
+         if(istatus.lt.1)goto 995
+
+         do j=1,nvars
+          if(ivarid(j).eq.11.and.ivarcoord(j).eq.100)then
             do i=1,nlevs(j)
                prk(i)=p_levels(i,j)
             enddo
-         endif
-      enddo
-
-      call get_r_missing_data(r_missing_data,istatus)
+          endif
+         enddo
 c
 c_______________________________________________________________________________
 c
 c *** Open and read data file.
 c
-      call s_len(path,l)
-      filename=path(1:l)//'/'//fname//af
-      l=l+14
-      print *,'Reading - ',filename(1:l)
-      lun=1
-      open(lun,file=filename(1:l),status='old',
+         call s_len(path,l)
+         filename=path(1:l)//'/'//fname//af
+         l=l+14
+         print *,'Reading - ',filename(1:l)
+         lun=1
+         open(lun,file=filename(1:l),status='old',
      .     form='unformatted',err=990)
-      rewind(1)
+         rewind(1)
 
-      if(bgmodel.eq.6)then
+         if(bgmodel.eq.6)then
 
-         call read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
+            call read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
      +,nvarsmax,nvars,nlevs,ivarcoord,ivarid
      +,ht_sfc,pr_sfc,td_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
 
-      elseif(bgmodel.eq.8.or.bgmodel.eq.3)then
+         elseif(bgmodel.eq.8)then
 
-         call read_nogaps(lun,nx,ny,nz
+            call read_nogaps(lun,nx,ny,nz
      + ,nvarsmax,nvars,nlevs,ivarcoord,ivarid
      + ,ht,tp,sh,uw,vw,ht_sfc,pr_sfc,td_sfc,tp_sfc
      + ,uw_sfc,vw_sfc,mslp,istatus)
 
-c      else
+c        else
 c
 c eta ingest currently disabled. J. Smart (9-2-98)
 c
-c        call read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
+c           call read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
 c    +,ht_sfc,pr_sfc,td_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
 c    +,istatus)
+
+         endif
+
+      elseif(bgmodel.eq.3)then
+
+         cfname13=fname//af
+         cFA_filename=fname13_to_FA_filename(cfname13)
+         call s_len(path,l)
+         filename=path(1:l)//'/'//cFA_filename
+         call s_len(filename,l)
+
+         inquire(file=filename,exist=lext,opened=lopen,number=lun)
+         if(.not.lext)then
+            print*,'File does not exist: ',filename(1:l)
+            goto 990
+         endif
+         if(lopen)then
+            print*,'File is already open: ',filename(1:l)
+            goto 990
+         endif
+
+         print*,'open and read FA file: ',filename(1:l)
+         open(lun,file=filename,status='old',IOSTAT=IOSTATUS,err=991)
+c
+         call read_fa(lun,filename                      ! I
+     .               ,nx,ny,nz                          ! I
+     .               ,r_missing_data                    ! I
+     .               ,prk                               ! O
+     .               ,ht,tp,sh,uw,vw                    ! O
+     .               ,mslp                              ! O
+     .               ,istatus)                          ! O
+c
+c
+         istatus=0
 
       endif
  
@@ -143,9 +188,10 @@ c    +,istatus)
       endif
 c
 c *** Fill pressure array and convert rh to specific humidity. 
-c *** Note: sh and td_sfc arrays contain rh from AVN
+c *** Note: sh and td_sfc arrays contain rh from AVN (bgmodel=6)
+c           or FA model (bgmodel=3).
 c
-      if(bgmodel.eq.6)then
+      if(bgmodel.eq.6.or.bgmodel.eq.3)then
 
          print*,'convert rh to q - 3D'
          icm=0
@@ -154,14 +200,14 @@ c
          do i=1,nx
 
             pr(i,j,k)=prk(k)
-            if(sh(i,j,k).ne.0)then
+            if(sh(i,j,k).gt.0.0 .and. sh(i,j,k).le.100.)then
                sh(i,j,k)=make_ssh(prk(k)
      .                        ,tp(i,j,k)-273.15
      .                        ,sh(i,j,k)/100.,t_ref)*0.001
 
             else
                icm=icm+1
-               sh(i,j,k)=r_missing_data
+               sh(i,j,k)=bogus_sh
             endif
                
 c           it=tp(i,j,k)*100
@@ -177,7 +223,9 @@ c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
 
          if(icm.gt.0)then
             pcnt=float(icm)/float(nx*ny*nz)
-            print*,'WARNING: bad 3d AVN rh data ',icm,pcnt
+            print*,'WARNING: suspect 3d rh data (#/%): ',icm,pcnt
+     &,' Bogus Q used for these points'
+
          endif
  
          print*,'convert rh to Td - sfc'
@@ -185,15 +233,16 @@ c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
          do j=1,ny
          do i=1,nx
 
-            if(td_sfc(i,j).ne.0)then
+            if(td_sfc(i,j).gt.0.0 .and. td_sfc(i,j).le.100.)then
                prsfc=pr_sfc(i,j)/100.
                qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.
      &,t_ref)
                td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc,t_ref)
      &+273.15
             else
+               td_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
+     &,bogus_sh,t_ref)+273.15
                icm=icm+1
-               td_sfc(i,j)=r_missing_data
             endif
 
 c           it=tp_sfc(i,j)*100
@@ -208,10 +257,11 @@ c           td_sfc(i,j)=td_sfc(i,j)/(1.+td_sfc(i,j))  !mr --> sh
 
          if(icm.gt.0)then
             pcnt=float(icm)/float(nx*ny)
-            print*,'WARNING: missing 2d AVN rh data ',icm,pcnt
+            print*,'WARNING: suspect 2d rh data (#/%): ',icm,pcnt
+     &,' Bogus Q used for these points'
          endif
 
-      elseif(bgmodel.eq.8.or.bgmodel.eq.3)then
+      elseif(bgmodel.eq.8)then
 c
 c *** Convert Td to sh and fill 3D pressure array.
 c
@@ -233,8 +283,7 @@ c              sh(i,j,k)=0.622*xe/(pr(i,j,k)-xe)
 c              sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
 
             else
-               sh(i,j,k)=r_missing_data
-               if (pr(i,j,k) .lt. 300.) sh(i,j,k)=0.00001
+               sh(i,j,k)=bogus_sh
                icm=icm+1
             endif
          enddo
@@ -287,20 +336,15 @@ c
          sw(2)=-133.459
          ne(1)=57.29
          ne(2)=-49.3849
-      elseif (bgmodel.eq.3.or.bgmodel.eq.8)then
+      elseif (bgmodel.eq.8)then
          gproj='LL'
          nx_ll=nx
          ny_ll=ny
          nz_ll=nz
          lat0=-90.0
          lon0_ll=0.0
-         if(bgmodel.eq.8)then
-            dlat=1.0
-            dlon=1.0
-         else
-            dlat=2.5
-            dlon=2.5
-         endif
+         dlat=1.0
+         dlon=1.0
       endif
 c
       istatus=1
@@ -311,6 +355,11 @@ c
       return
 995   print*,'Error reading model index file.',filename(1:l)
       return
+991   IF (IOSTATUS .NE. 0)THEN
+         PRINT *,'ERROR READING ',FILENAME(1:l),' IO status is', 
+     &  IOSTATUS
+      END IF
+
       end
 c
 c ********************************************************

@@ -256,7 +256,11 @@ ccc      if (fname .ne. oldfname) then
          n=n+1
       enddo
       if(ivaltimes(n)/3600.ne.nn) then
-         print*,'ERROR: No record valid at time ',nn,af
+c        print*,'ERROR: No record valid at time ',nn,af
+         print*,'ERROR: No record valid at requested time '
+      print*,'nn/af/n/ivaltimes(n) ',nn,' ',af,' ',n,
+     &' ',ivaltimes(n)
+
          rcode= NF_CLOSE(ncid)
          goto 999
       endif

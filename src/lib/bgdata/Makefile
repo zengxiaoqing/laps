@@ -23,7 +23,7 @@ DEBUGLIB = libdebugbgdata.a
 SRC= get_bkgnd_dims.f   readeta48_pub.f readconusnws.f \
      readruc2_pub.f get_acceptable_files.f read_netcdf_field.f\
      read_conus211.f readdgprep.f readnogaps.f readruc60native.f \
-     es_table.f rdmodelindex.f sfcbkgd.f
+     es_table.f rdmodelindex.f sfcbkgd.f unpkfgge_a.c
 
 
 
