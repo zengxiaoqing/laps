@@ -2335,9 +2335,8 @@ C       EW SLICES
                     if(iwrite .eq. iwrite/20*20)then
                         write(6,*)
                         write(6,*)'Sta  VIS frac tb8_k  '
-!    1                  //'t_gnd_k t_sfc_k  cvr_max  SAO  frac/ht'
-     1                  //'t_gnd_k t_sfc_k  cldsnd cv_sa_mx cvr_max '
-     1                  //'frac/ht      9pt    25pt'
+     1                  //'t_gnd_k t_sfc_k  cldsnd cv_sa_mx cvr_mx '
+     1                  //'snd-ht        9pt    25pt'
                     endif
 
 !                   Calculate 9pt cover
