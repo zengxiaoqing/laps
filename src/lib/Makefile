@@ -70,6 +70,7 @@ SRC	= machine_dependent.F \
           get_maxref.f \
           get_maxtops.f \
           get_pres_3d.f \
+          get_radar_deriv.f \
           get_radar_max_pd.f \
           get_static_info.f \
           get_systime.f \
