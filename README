@@ -513,8 +513,7 @@
      (with a unique dataroot) for each domain if there is more than one. 
 
      prompt> cd $INSTALLROOT/etc
-     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT \
-                                       --srcroot=$LAPS_SRC_ROOT
+     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT
 
      The localization involves several operations.  The parameter files are 
      merged/updated with the repository versions if needed. The dimensions
