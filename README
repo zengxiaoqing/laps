@@ -2178,27 +2178,30 @@ More information is in the NWP conference paper on Kalman Filtering
 
 ------ 3.2.2.3   How to Blacklist stations ---
 
-     (author: Pete Stamus )
-     (description updated: 20 Dec 1999)
+     (author: Steve Albers/Pete Stamus)
+     (description updated: Sept 2003)
 
 As part of the 'obs_driver' code, a Blacklisting function has been added.  This
-allows users to tell LAPS to skip stations with known bad variables (one or several),
-or to skip a station completely.  As of this writing, the user will have to edit
-a "Blacklist.dat" file...in the future we hope to include this function in the 
-LAPS GUI.
+allows users to tell LAPS to skip stations with known bad variables (one or 
+several), or to skip a station completely.  As of this writing, the user will 
+have to edit a "Blacklist.dat" file...in the future we hope to include this 
+function in the LAPS GUI.
 
-An example file, called "Blacklist.example" has been included in the same directory
-as this README file.  It shows the format that *must* be followed for the Blacklist
-to work properly.  An error in the format will either allow the bad station(s)
-through, or crash the program completely.  Let's decode the "Blacklist.example" 
-file:
-     The first line is the number of obs to blacklist...in this case, 4.
+An example file, called "Blacklist.example" has been included in the same 
+directory as this README file.  It shows the format that *must* be followed for
+the Blacklist to work properly.  An error in the format will either allow the 
+bad station(s) through, or crash the program completely.  Let's decode the 
+"Blacklist.example" file:
+
+     The first line is the number of obs to blacklist...in this case, 5.
      Each station goes on a new line.  The number of variables to blacklist
-     for that station is next, then the codes for the variable follow.  For
+     for that station is next, then the codes for the variable(s) follow.  For
      the first station (KFCS), we are blacklisting the 3 pressure variables.
      To blacklist the entire station (KDTW) use 1 for the number of variables,
-     and "ALL" as the variable.  The last two examples show 1 and 2 individual
-     variables, respectively.
+     and "ALL" as the variable. All the stations from a particular provider can
+     be blacklisted by adding 100 to the number of variables (third example). 
+     The last two examples show 1 and 2 individual variables, respectively. 
+
 
 These are the valid codes for variables to blacklist:
 
@@ -2220,20 +2223,25 @@ These are the valid codes for variables to blacklist:
         "SWM" - Set soil moisture to bad (if reported)
 </pre>
 
-An incorrect variable code generates a warning message, and the code should
-continue without acting on the station in question.
+You might keep in mind that some variables act as a group. For example
+both "HUM" and "DEW" variables feed into the LAPS dewpoint analysis so
+consideration should be given as to whether to blacklist one or both of
+these variables. "ALT", "STP" and "MSL" are a similar group of pressure
+variables. An incorrect variable code generates a warning message, and 
+the code should hopefully continue without acting on the station in question.
 
-Note that when a station is blacklisted, its name, latitude, longitude, elevation,
-and time, will still be stored in the LSO file.  However, the selected variables
-(up to "ALL" of them) will be set to the 'badflag' value and skipped in the
-analyses.
+Note that when a station is blacklisted, its name, latitude, longitude, 
+elevation, and time, will still be stored in the LSO file.  However, the 
+selected variables (up to "ALL" of them) will be set to the 'badflag' value 
+and skipped in the analyses.
 
 To actually get this stuff working, edit the file called "Blacklist.dat" in the
-'data/static' directory. The "Blacklist.dat" being used at FSL is supplied in
-this directory as a default. Format the file *exactly* as the 
-'Blacklist.example' file (using your station information, of course).  Save the
-file, and the next time 'obs_driver' runs, it will use the blacklist 
-information.  This will be noted in the 'obs_driver.log' file.  
+'data/static' (or template) directory. The "Blacklist.dat" being used at FSL is
+supplied in this directory as a default, and this provides additional examples.
+Format the file *exactly* as the 'Blacklist.example' file (using your station 
+information, of course).  Save the file, and the next time 'obs_driver' runs, 
+it will use the blacklist information.  This will be noted in the 
+'obs_driver.log' file.  
 
 ------ 3.2.3 --- Polar Radar Data (e.g. WSR 88D Level II, Level III) ---
 
