@@ -87,7 +87,7 @@ c    .      ,wb(nx,ny,nz)
      .      ,sumtscl,sumkf,sumks,sldata,den,sumom2
      .      ,ffz,sumu,sumv
 
-      real*4 smsng
+      real*4 smsng,rdum,dd,ddmin,cx,cy
       real*4 rstats(7)
 
 c made 2d 2-20-01 JS.
@@ -95,13 +95,13 @@ c made 2d 2-20-01 JS.
       real*4  ro(nx,ny)
       real,   allocatable,dimension (:,:) :: terscl
       integer,allocatable,dimension (:,:) :: ks,kf
-      integer ksij,kfij,k8,k5
+      integer ksij,kfij,k8,k5,lmin
 c
       integer   itmax,lmax
      .         ,npass
      .         ,i4time_sys
      .         ,i4time_airdrop
-     .         ,i,j,k,kk,ll,istatus
+     .         ,i,j,k,kk,l,ll,istatus
      .         ,ii,jj,iii,icount
 
       integer   itstatus
@@ -116,11 +116,15 @@ c
       integer   k1,k2
       integer   kfirst,klast
       integer   ij
+      integer   idum
+      integer   max_pr
+      integer   n_snd,nsnd,mxz
 c
       logical lrunbal
       logical lrotate/.false./
       logical larray_diag/.false./
       logical frstone,lastone
+      logical l_dum
 
       character*255 staticdir,sfcdir
 c     character*255 generic_data_root
@@ -131,6 +135,7 @@ c     character*255 generic_data_root
       character*9   a9_time
       character*9   a9_time_airdrop
       character*8   c8_project
+      character*3   cpads_type
 
 c    Added by B. Shaw, 4 Sep 01
       real*4, allocatable :: lapsrh(:,:,:)
@@ -138,11 +143,12 @@ c    Added by B. Shaw, 4 Sep 01
       real*4 shsat
       real*4 ubias,vbias,urms,vrms,oberr
 c    Arrays for Airdrop application
-      real, allocatable, dimension(:) :: udrop,vdrop,tdrop,rri,rrj,
-     &    rrit,rrjt,rrii,rrjj
+      real, allocatable, dimension(:,:) :: udrop,vdrop,tdrop,rri,rrj,
+     &    rrk,rrit,rrjt,rrkt,rrii,rrjj
+      real, allocatable, dimension (:) :: udropc,vdropc,tdropc,rric,rrjc
 c_______________________________________________________________________________
 c
-      call get_balance_nl(lrunbal,adv_anal_by_t_min,istatus)
+      call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
          stop
@@ -247,7 +253,7 @@ c
      .         ,lapsphi(nx,ny,nz)
      .         ,omo(nx,ny,nz))
 
-      call get_laps_analysis_data(i4time_sys,nx,ny,nz
+      call get_laps_3d_analysis_data(i4time_sys,nx,ny,nz
      +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,istatus)
 c omo is the cloud vertical motion from lco
       if (istatus .ne. 1) then
@@ -777,21 +783,48 @@ c truth profile and compute an average analysis error
             enddo
             enddo
          enddo
-c ----------------------------------------------------------------
-c  AIRDROP ANALYSIS ERROR SECTION
-c Output required: turbulent compontents of u, v, and w; analysis error of u,v,wc t, rh
-c compute dropsone wind difference from background
-c     simple solution is to read from .pig and tmg files, then create a 
-c truth profile and compute an average analysis error
 
-         allocate(udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz)
-     &   , rrit(nz),rrjt(nz),rrii(nz),rrjj(nz))
+         call get_wind_parms(l_dum,l_dum,l_dum
+     1,rdum,rdum,rdum,rdum,max_pr,idum,idum,istatus)
 
-c  create dropsond profiles for testing....comment out read pig,tmg
-         call readpig(a9_time,nx,ny,lat,lon
-     1,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,nz,istatus)
+         if(cpads_type.eq.'pin')then
+            nsnd=1
+            mxz=500
+         else
+            nsnd=max_pr
+            mxz=nz
+         endif
+
+         allocate(udrop(nsnd,mxz),udropc(mxz)
+     &           ,vdrop(nsnd,mxz),vdropc(mxz)
+     &           ,tdrop(nsnd,mxz),tdropc(mxz)
+     &           ,rri(nsnd,mxz),rrj(nsnd,mxz),rrk(nsnd,mxz)
+     &           ,rrit(nsnd,mxz),rrjt(nsnd,mxz),rrkt(nsnd,mxz)
+     &           ,rrii(nsnd,mxz),rrjj(nsnd,mxz)
+     &           ,rric(mxz),rrjc(mxz))
+
+         if(cpads_type.eq.'pin')then
+
+            call readpig(a9_time,nx,ny,nz,lat,lon
+     1,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,mxz,istatus)
+
+         elseif(cpads_type.eq.'snd')then
+
+            call readprg(a9_time,nx,ny,nz,nsnd
+     1,udrop,vdrop,tdrop,rri,rrj,rrk,rrit,rrjt,rrkt,n_snd,istatus)
+
+         else
+
+            print*,'********************************************'
+            print*,'   !!! Error: No PADS type indicated !!!'
+            print*,'Check static/balance.nl; variable cpads_type'
+            print*,'********************************************'
+            return
+
+         endif
+
          if(istatus.eq.-3)then
-         print*,'Failure status returned: readpig. istatus=',istatus
+         print*,'Failure status: ',cpads_type,' istatus=',istatus
             print*,'Dropsonde data not available; using default '
      1    ,'dropsonde (profile in center of grid)'
             go to 99
@@ -799,10 +832,10 @@ c  create dropsond profiles for testing....comment out read pig,tmg
             print*,'Only tmg exists: generate u/v drop profiles
      1 from analysis with gaussian error'
          elseif(istatus.eq.-2)then
-             print*,'Only pig exists: generate T drop profile
+             print*,'Only prg exists: generate T drop profile
      1 from analysis with gaussian error'
          endif
-c routine to create drop and rr arrays when either pig or tmg
+c routine to create drop and rr arrays when either prg or tmg
 c do not exist
          if(istatus.eq.-1)then
             rri=rrit
@@ -811,28 +844,32 @@ c do not exist
             slastv=0
             slastu=0
             cor=.5
+            do l=1,n_snd
             do k=1,nz
-               if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
-                  ii=rri(k)
-                  jj=rrj(k)
+               if(rri(l,k).ne.smsng .and. rrj(l,k).ne.smsng)then
+                  ii=rri(l,k)
+                  jj=rrj(l,k)
                   slastu= ffz(iii,20,cor,slastu) ! assumed gaussian error 3ms 
-                  udrop(k)= u(ii,jj,k) + slastu*3.
+                  udrop(l,k)= u(ii,jj,k) + slastu*3.
                   slastv= ffz(iii,20,cor,slastv) ! assumed gaussian error 3ms 
-                  vdrop(k)= v(ii,jj,k) + slastv*3.   
+                  vdrop(l,k)= v(ii,jj,k) + slastv*3.   
                endif
             enddo
-         else
+            enddo
+         else ! this is the istatus= -2 option
             rrit=rri
             rrjt=rrj
             iii=382983
             slastt=0
+            do l=1,n_snd
             do k=1,nz
-               if(rrit(k).ne.smsng .and. rrjt(k).ne.smsng)then
-                  ii=rrit(k)
-                  jj=rrjt(k)
+               if(rrit(l,k).ne.smsng .and. rrjt(l,k).ne.smsng)then
+                  ii=rrit(l,k)
+                  jj=rrjt(l,k)
                   slastt=ffz(iii,20,cor,slastt)
-                  tdrop(k)= t(ii,jj,k) + slastt*2.      
+                  tdrop(l,k)= t(ii,jj,k) + slastt*2.      
                endif
+            enddo
             enddo
          endif
 c
@@ -850,72 +887,93 @@ c
       sumv=0
       print*,'k rri rrj, udrop, vdrop, u and v at drop point'
       icount=0
-      do k=1,nz
-         if(rri(k).eq.smsng.or.rrj(k).eq.smsng)then
-            icount=icount+1
-         endif
-      enddo
-
-      if(icount.ne.nz)then
-         frstone=.true.
-         lastone=.true.
-         do k=1,nz
-          if(rri(k).ne.smsng)then
-             if(frstone)then
-                frstone=.false.
-                kfirst=k
-                if(k.gt.1)then
-                   do kk=1,k-1
-                      rri(kk)=rri(k)
-                      rrj(kk)=rrj(k)
-                   enddo
-                endif
-             endif
-          elseif(.not.frstone)then
-             if(lastone)then
-                lastone=.false.
-                klast=k-1
-                rri(k)=rri(klast)
-                rrj(k)=rrj(klast)
-             else
-                rri(k)=rri(klast)
-                rrj(k)=rrj(klast)
-             endif
+      do l=1,n_snd
+       do k=1,nz
+        if(rri(l,k).eq.smsng.or.rrj(l,k).eq.smsng)then
+         icount=icount+1
+        endif
+       enddo
+       if(icount.ne.nz)then
+        frstone=.true.
+        lastone=.true.
+        do k=1,nz
+         if(rri(l,k).ne.smsng)then
+          if(frstone)then
+           frstone=.false.
+           kfirst=k
+           if(k.gt.1)then
+            do kk=1,k-1
+             rri(l,kk)=rri(l,k)
+             rrj(l,kk)=rrj(l,k)
+            enddo
+           endif
           endif
-         enddo
-      else
-         rri(1:nz)=float(nx)/2.
-         rrj(1:nz)=float(ny)/2.
-      endif
-
-      do k=1,nz
-         ii=nint(rri(k))
-         jj=nint(rrj(k))
-
-         if(udrop(k).eq.smsng.or.vdrop(k).eq.smsng)then
-            slastu=ffz(iii,20,cor,slastu)
-            slastv=ffz(iii,20,cor,slastv)
- 
-            udrop(k)=u(ii,jj,k)+slastu*3.  
-            vdrop(k)=v(ii,jj,k)+slastv*3.  
+         elseif(.not.frstone)then
+          if(lastone)then
+           lastone=.false.
+           klast=k-1
+           rri(l,k)=rri(l,klast)
+           rrj(l,k)=rrj(l,klast)
+          else
+           rri(l,k)=rri(l,klast)
+           rrj(l,k)=rrj(l,klast)
+          endif
          endif
-         if(tdrop(k).eq.smsng)then
-            slastt=ffz(iii,20,cor,slastt)
-            tdrop(k)=t(ii,jj,k)+slastt*1.  
+        enddo
+       else
+        rri(l,1:nz)=float(nx)/2.
+        rrj(l,1:nz)=float(ny)/2.
+       endif
+       do  k=1,nz
+        ii=nint(rri(l,k))
+        jj=nint(rrj(l,k))
+        if(udrop(l,k).eq.smsng.or.vdrop(l,k).eq.smsng)then
+         slastu=ffz(iii,20,cor,slastu)
+         slastv=ffz(iii,20,cor,slastv)
+         udrop(l,k)=u(ii,jj,k)+slastu*3.  
+         vdrop(l,k)=v(ii,jj,k)+slastv*3.  
+        endif
+        if(tdrop(l,k).eq.smsng)then
+         slastt=ffz(iii,20,cor,slastt)
+         tdrop(l,k)=t(ii,jj,k)+slastt*1.  
+        endif
+        if(.false.)then
+         write(6,1112) k,rri(l,k),rrj(l,k),udrop(l,k),vdrop(l,k),
+     &   u(50,16,k),v(50,16,k),u(50,16,k)-udrop(l,k),v(50,16,k)-
+     &   vdrop(l,k)
+         if(rri(l,k).ne.50) sumu=u(50,16,k)-udrop(l,k)+sumu!only sum over sonde
+         if(rri(l,k).ne.50) sumv=v(50,16,k)-vdrop(l,k)+sumv
+        endif
+       enddo 
+1112   format (1x,i3,8f6.2)
+       print*,' snond ',l, 'ballistic u v diff ',sumu,sumv
+      enddo ! on l for each sonde
+
+c -----------------------------------------------------------------
+c routine to find closest sonde to cneter of grid (drop point) for
+c error estimation
+      cx=nx/2+.5 
+      cy=ny/2+.5
+      do k=1,mxz
+       ddmin=1.e30
+       lmin=0
+       do l=1,n_snd
+        if(rri(l,k).ne.smsng.and.rrj(l,k).ne.smsng) then      
+         dd=(cx-rri(l,k))**2+(cy-rrj(l,k))**2
+         if(dd.lt.ddmin) then
+          lmin=l
+          ddmin=dd
          endif
-
-         if(.false.)then
-           write(6,1112) k,rri(k),rrj(k),udrop(k),vdrop(k),
-     &     u(50,16,k),v(50,16,k),u(50,16,k)-udrop(k),v(50,16,k)-
-     &     vdrop(k)
-           if(rri(k).ne.50) sumu=u(50,16,k)-udrop(k)+sumu!only sum over sonde
-           if(rri(k).ne.50) sumv=v(50,16,k)-vdrop(k)+sumv
-         endif
-      enddo 
-1112  format (1x,i3,8f6.2)
-
-      print*,' ballistic u v diff ',sumu,sumv
-
+        endif
+       enddo 
+       if(lmin.ne.0) then
+        udropc(k)=udrop(lmin,k)
+        vdropc(k)=vdrop(lmin,k)
+        tdropc(k)=tdrop(lmin,k)
+        rric(k)=rri(lmin,k)
+        rrjc(k)=rrj(lmin,k)
+       endif
+      enddo ! on k all levels
 c subr profile fills array erru(u),errub(v) with analysis error 
 c here we assume the following for dropsonde error: wind 1m/s, temp .5deg
 c and model error
@@ -945,7 +1003,7 @@ c  the s arrays are used to hold the turbulent components of u,v, and w
       print*,'Calling subroutine profile. '
       print*
 
-      call profile(udrop,vdrop,tdrop,rri,rrj,oberu,oberw
+      call profile(udropc,vdropc,tdropc,rric,rrjc,oberu,oberw
      &,obert,moderu,moderv,modert,erru,errv,errw ,errt,u,v,om,
      & lapssh,us,vs,oms,t,phi,ub,vb,omb,tb,p
      &,ter,zter,nx,ny,nz,i4time_sys)
@@ -3272,8 +3330,242 @@ c--------------------------------------------------
 cc
 c------------------------------------------------------------
 cc
-      subroutine readpig(a9_time,nx,ny,lat,lon
-     &,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,nz,istatus)
+      subroutine readprg(a9_time,nx,ny,nz,max_pr
+     &,udrop,vdrop,tdrop,ri,rj,rk,rit,rjt,rkt,nsnd,istatus)
+
+c this subroutine reads the .prg and .tmg files to recover observed  
+c u, v, bnd T profiles, the decimal i,j locations at the nz LAPS levels 
+
+      real udrop(max_pr,nz)
+      real vdrop(max_pr,nz)
+      real tdrop(max_pr,nz)
+      real ri(max_pr,nz)
+      real rj(max_pr,nz)
+      real rit(max_pr,nz)
+      real rjt(max_pr,nz)
+      real rk(max_pr,nz)
+      real rkt(max_pr,nz)
+      real dum2
+
+c variables output:
+c     udrop, vdrop tdrop: dropsonde u,v T obs at the nz laps levels
+c     ri, rj: real grid coordinates of dropsone position in grid space
+c     rit,rjt: real position of temperature sonde in grid space
+c
+c Note: arrays udrop, vdrop, tdrop
+c       must be 2d to allow more than 1.
+c
+      Character*180 dum
+      Character*9 a9_time
+      Character*255 dum1
+      integer len,istatus,nstar,nblank,ncnt,iflag,ngood
+      logical lexist
+      real, allocatable, dimension(:,:) :: dd,ff
+     1,tt,uu,vv
+
+      integer max_pr
+
+      integer ngoodlevs(max_pr)
+
+      allocate(dd(max_pr,nz),ff(max_pr,nz),tt(max_pr,nz))
+      allocate(uu(max_pr,nz),vv(max_pr,nz))
+
+      call get_r_missing_data(smsng,istatus)
+      if(istatus.ne.1)then
+         print*,'Error: returned from get_r_missing_data'
+         return
+      endif
+
+c preset all dropsonde output to missing
+      istatus=0
+      ri=smsng
+      rj=smsng
+      rk=smsng
+      rkt=smsng
+      rit=smsng
+      rjt=smsng
+      udrop=smsng
+      vdrop=smsng
+      tdrop=smsng
+      dd=smsng
+      ff=smsng
+      ngoodlevs=0
+
+      pi=4.*atan(1.)
+      rdpdg=pi/180. 
+      call get_directory('prg',dum,len)
+      dum(len+1:len+13)=a9_time//'.prg'
+      inquire(file=dum,exist=lexist)
+      if(lexist)then
+        open (11, file=dum,form='formatted',status='old',err=50)
+        iflag=0
+        nlev=1
+        nsnd=1
+        do n=1,nz*max_pr
+
+         read(11,1000,end=1) riin,rjin,rkin,dum1(1:20)
+ 1000    format(f11.5,2f10.5,a20)
+
+         ri(nsnd,nlev)=riin
+         rj(nsnd,nlev)=rjin
+         rk(nsnd,nlev)=rkin
+
+         if(dum1(1:1).eq.'*'.and.iflag.eq.0 ) then  !the first level of first sounding
+
+          ri(nsnd,nlev)=smsng
+          rj(nsnd,nlev)=smsng
+          rk(nsnd,nlev)=smsng
+          nlev=nlev+1
+
+         elseif(dum1(1:1).eq.'*'.and.iflag.eq.1)then !could be the end of existing sounding or
+c                                                     missing levels within existing sounding.
+          if(nlev.gt.nz)then
+             nsnd=nsnd+1
+             nlev=1
+             ri(nsnd,nlev)=smsng
+             rj(nsnd,nlev)=smsng
+             rk(nsnd,nlev)=smsng
+             nlev=nlev+1
+             iflag=0
+          else
+             ri(nsnd,nlev)=smsng
+             rj(nsnd,nlev)=smsng
+             rk(nsnd,nlev)=smsng
+             if(nlev.eq.nz)then
+                nlev=1
+                nsnd=nsnd+1
+             else
+                nlev=nlev+1
+             endif
+          endif
+
+         else
+
+          read(dum1(4:10),100)dd(nsnd,nlev)
+100       format(f7.3)
+          read(dum1(15:20),101)ff(nsnd,nlev)
+101       format(f6.3)
+          ri(nsnd,nlev)=ri(nsnd,nlev)+1
+          rj(nsnd,nlev)=rj(nsnd,nlev)+1
+          ngoodlevs(nsnd)=ngoodlevs(nsnd)+1
+          iflag=1
+          nlev=nlev+1
+         endif
+        enddo
+
+1       if(ngoodlevs(nsnd).eq.0)nsnd=nsnd-1
+
+        if(nsnd.lt.1)then
+           print*,'No wind data in prg file'
+           istatus=-1
+           goto 7
+        else
+           print*,'Found ',nsnd,' Soundings'
+           print*,'------------------------'
+           do i=1,nsnd
+             print*,' Snd#: ',i,' Number of Good Levels = ',ngoodlevs(i)
+           enddo
+        endif
+
+c convert dd ff to u,v
+        do n=1,nsnd 
+         do k=1,nz
+           if(dd(n,k).ne.smsng)then
+           call disp_to_uv(dd(n,k),ff(n,k),udrop(n,k),vdrop(n,k))
+           endif
+         enddo
+        enddo
+
+c if dropsonde is reverse order, flip it.
+c       if(rk(1).gt.rk(nsave))then
+c          call flip_sonde(mxz,ncnt ,uu,vv,ri,rj,rk)
+c       endif
+   44   close(11)
+      else !on lexist
+       print*,'No prg file at this time'
+       istatus=-1
+      endif
+
+7     continue
+c now read the tmg file to get the dropsonde temps
+c     call get_directory('tmg',dum,len)
+c     dum(len+1:len+13)=a9_time//'.tmg'
+c     nn=0
+c     inquire(file=dum,exist=lexist)
+c     if(lexist)then
+c      continue
+c      open (11, file=dum,form='formatted',status='old',err=50) 
+c      Do n=1,mxz
+c       nn=nn+1
+c       read(11,*,end=2) aa,bb,cc,ee, dum1           
+c       if(dum1.eq.'  ')  go to 2
+c       if(dum1.eq.'ACA') then    
+c        rit(nn)=aa
+c        rjt(nn)=bb
+c        rkt(nn)=cc
+c        tt(nn)=ee  
+c       endif
+c      enddo
+c since dropsonde is reverse order, flip it.
+c 2    nn=nn-1
+c      if(nn.lt.1)then
+c         istatus = istatus-2
+c         deallocate(ri,rj,rk,dd,ff,uu,vv,tt)
+c         goto 49
+c      endif
+c      if(nn.eq.1) then! there is only one ob; put at nearest laps level
+c        do k=1,nz! clear arrays
+c         tdrop(k)=smsng
+c         rit(k)=smsng
+c         rjt(k)=smsng
+c        enddo
+c        k=rk(1)
+c        tdrop(k)=tt(1)
+c        rit(k)=ri(1)
+c        rjt(k)=rj(1) 
+c        close (11) ! close file  and return
+c        return
+c      endif
+c      if(rk(1).gt.rk(nn))then
+c         call flip_sonde(mxz,nn,uu,vv,rit,rjt,rk)
+c      endif
+c now interpolate to the laps levels in rk space
+c      do k=1,nz
+c       rr=k
+c       do  n=1,nn-1
+c        iflag=0        
+c        if (rr.lt.rk(n+1).and.rr.ge.rk(n)) then ! point is between two dropsonde levels
+c          aa=(rr-rk(n))/(rk(n+1)-rk(n))
+c          tdrop(k)=tt(n)*(1.-aa)+tt(n+1)*aa
+c          iflag=1
+c          go to 4
+c        endif
+c      enddo 
+c      if(iflag.eq.0) then
+c       tdrop(k)=smsng
+c      endif
+c  4   enddo
+c     close 11
+c     else ! on lexist
+       print*,'No tmg file for this time'
+       istatus=istatus-2
+c     endif
+
+
+      deallocate(dd,ff)
+      deallocate (uu,vv,tt)
+
+      return
+
+c49    print*,'No temp data in tmg file'
+c     return
+
+50    print*,'Error opening file: ',dum(1:len+13)
+      return
+      end
+c-------------------------------------------------------------------
+      subroutine readpig(a9_time,nx,ny,nz,lat,lon
+     &,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,mxz,istatus)
 
 c this subroutine reads the .pig and .tmg files to recover observed  
 c u, v, bnd T profiles, the decimal i,j locations at the nz LAPS levels 
@@ -3296,7 +3588,6 @@ c
       real lat(nx,ny),lon(nx,ny)
 
       integer mxz
-      parameter(mxz=500)
       
       allocate(ri(mxz),rj(mxz),rk(mxz))
       allocate(dd(mxz),ff(mxz),tt(mxz))
@@ -3368,19 +3659,6 @@ c first clear out drop winds, make assignment and then close file
          rrj(k)=rj(1) 
          go to  44 ! close file 
         endif
-c
-c*** question for JM: this section linearly interpolates
-c*** dropsonde points bounding laps levels. The udrop and
-c*** vdrop are calculated like this:
-c
-c     X<========= dropsonde at rk(n+1)
-c ------- laps level k=rr
-c     X<========= dropsonde at rk(n)
-c
-c I propose we compute average (representative) u/v
-c components bounding each laps level. This may
-c give more uncertainty in the .air file
-c
         do k=1,nz
            rr=k
            do n=1,nsave-1

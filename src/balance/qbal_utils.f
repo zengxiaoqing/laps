@@ -576,7 +576,7 @@ c
       call get_systime(i4time_sys,a9_time,istatus)
       if(istatus.ne.1)return
 
-      filename=logdir(1:len)//'/wind3d.wgi.'//a9_time
+      filename=logdir(1:len)//'/wind.wgi.'//a9_time
       call s_len(filename,len)
       print*,'filename = ',filename(1:len)
       inquire(file=filename,exist=lexist)
@@ -589,7 +589,7 @@ c
             read(11,*,err=1)  !this one to read the column labels
             do while (.not.found_line)
                read(11,100,err=1)dum1
-               if(dum1(1:6).eq."   PIN")then
+               if(dum1(1:6).eq."   PIN".or.dum1(1:8).eq."  DROPSN")then
                   found_line=.true.
                endif
             enddo
@@ -613,6 +613,7 @@ c
 
       var=' '
       i=7
+      if(dum1(1:8).eq."  DROPSN")i=9
       do while (i.ne.0)
          if(dum1(i:i).ne.' ')then
             is=i
