@@ -47,86 +47,94 @@ c revision 1.1  1994/04/25  15:05:17  birk
 c initial revision
 c
 
-c       module writes laps data base file of specific humidity at the
-c       various levels
+c     module writes laps data base file of specific humidity at the
+c     various levels
 
-c       author d. birkenheuer
-c       changed to pressure coords  14 aug. 89
+c     author d. birkenheuer
+c     changed to pressure coords  14 aug. 89
 
-c       24 april 1989
-c       updated for unix 19 oct 1992  db
+c     24 april 1989
+c     updated for unix 19 oct 1992  db
 
         implicit none
 
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c     include 'lapsparms.for'
+c     include 'parmtrs.inc'
 
 
 
-c  parameter variables
+c     parameter variables
 
-      integer ii,jj,kk
-      real data(ii,jj,kk)
-      integer i4time 
-      character*125 commentline
-      integer lvl (kk)
-      integer istatus
+        integer ii,jj,kk
+        real data(ii,jj,kk)
+        integer i4time 
+        character*125 commentline
+        integer lvl (kk)
+        integer istatus
 
-c  variables relying on lapsparms.inc
+c     variables relying on dynamic initialization
 
-      character  var(kdim)*3,
-     1  lvl_coord(kdim)*4,
-     1  units(kdim)*10,
-     1  comment(kdim)*125
+        character  var(kk)*3,
+     1       lvl_coord(kk)*4,
+     1       units(kk)*10,
+     1       comment(kk)*125
 
-        data var/kdim*'sh '/
-        data lvl_coord/kdim*'hpa'/
-        data units/kdim*'          '/
+c        data var/kk*'sh '/
+c        data lvl_coord/kk*'hpa'/
+c        data units/kk*'          '/
 
 
-c  internal variables
+c     internal variables
 
-      integer kmax
-      character
-     1  dirlt1*50,dir*50,rhdir*50,dirpw*50,dir3*50,
-     1  extlt1*31,ext*50,rhext*50,extpw*50,ext3*50
-      integer k
+        integer kmax
+        character
+     1       dirlt1*50,dir*50,rhdir*50,dirpw*50,dir3*50,
+     1       extlt1*31,ext*50,rhext*50,extpw*50,ext3*50
+        integer k
 
-      data extpw/'lh1'/
-      data ext3/'lh2'/
-      data extlt1/'lt1'/
-      data ext /'lq3'/
-      data rhext /'lh3'/
-      integer len
+        data extpw/'lh1'/
+        data ext3/'lh2'/
+        data extlt1/'lt1'/
+        data ext /'lq3'/
+        data rhext /'lh3'/
+        integer len
 
-c      call get_directory(extpw,dirpw,len)
-c      call get_directory(ext3,dir3,len)
-c      call get_directory(extlt1,dirlt1,len)
-      call get_directory(ext,dir,len)
-c      call get_directory(rhext,rhdir,len)
+
+        do k = 1,kk
+           var(k) = 'sh '
+           units(k) = '          '
+           lvl_coord(k) = 'hpa'
+        enddo
+
+
+c     call get_directory(extpw,dirpw,len)
+c     call get_directory(ext3,dir3,len)
+c     call get_directory(extlt1,dirlt1,len)
+        call get_directory(ext,dir,len)
+c     call get_directory(rhext,rhdir,len)
 
 
         kmax = kk
 
         do k  = 1,kk
-        comment(k) = commentline
+           comment(k) = commentline
         enddo
 
         call write_laps (i4time,i4time,
-     1  dir,
-     1  ext,
-     1  ii,
-     1  jj,
-     1  kk,
-     1  kk,
-     1  var,
-     1  lvl,
-     1  lvl_coord,
-     1  units,
-     1  comment,
-     1  data,
-     1  istatus)
+     1       dir,
+     1       ext,
+     1       ii,
+     1       jj,
+     1       kk,
+     1       kk,
+     1       var,
+     1       lvl,
+     1       lvl_coord,
+     1       units,
+     1       comment,
+     1       data,
+     1       istatus)
 
         print*, ext, istatus, dir(1:len), len
 
