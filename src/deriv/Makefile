@@ -26,6 +26,7 @@ SRC=laps_deriv.f  \
     cloud_deriv_subs.f \
     fireweatherindex.f \
     hainesindex.f \
+    fire_fields.f \
     put_derived_wind_prods.f \
     rfill_evap.f \
     schultz.f
