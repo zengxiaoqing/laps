@@ -17,7 +17,7 @@
       character*8 c8_raob_format
 
 !     Output file
-      character*13 filename13
+      character*13 filename13, cvt_i4time_wfo_fname13
       character*31    ext
       integer*4       len_dir
 
@@ -64,6 +64,11 @@
 
       if(c8_raob_format(1:6) .eq. 'NIMBUS')then
           c_filespec = dir_in(1:len_dir_in)//'/*0300o'
+          call get_file_times(c_filespec,max_files,c_fnames
+     1                       ,i4times,i_nbr_files_ret,istatus)
+
+      elseif(c8_raob_format(1:6) .eq. 'WFO')then
+          c_filespec = dir_in(1:len_dir_in)
           call get_file_times(c_filespec,max_files,c_fnames
      1                       ,i4times,i_nbr_files_ret,istatus)
 
@@ -128,6 +133,12 @@
               filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'0300o'       
 !             i4_raob_window = 60000  ! Temporary for testing
               i4_contains_early = 10800
+              i4_contains_late  = 0
+
+          elseif(c8_raob_format(1:6) .eq. 'WFO')then
+              filename13 = cvt_i4time_wfo_fname13(i4times(i))
+              filename_in = dir_in(1:len_dir_in)//'/'//filename13      
+              i4_contains_early = 43200
               i4_contains_late  = 0
 
           elseif(      l_parse(c8_raob_format,'AFGWC')

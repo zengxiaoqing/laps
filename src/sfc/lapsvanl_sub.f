@@ -282,7 +282,7 @@ c
 !       3) Use barnes_multivariate routine as complete substitute to spline.
 !          Not yet coded.
 
-        analysis_mode = 1
+        analysis_mode = 2
 
  	write(6,910)analysis_mode
  910	format(' subroutine spline: analysis_mode = ',i3)
