@@ -394,8 +394,8 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m
      1  ,path_to_soiltype_top30s, path_to_soiltype_bot30s
-     1  ,path_to_landuse30s,path_to_greenfrac_10m
-     1  ,path_to_soiltemp1deg
+     1  ,path_to_landuse30s,path_to_greenfrac
+     1  ,path_to_soiltemp1deg,path_to_albedo,path_to_sst
      1  ,fdda_model_source_cmn
 
 
@@ -1369,16 +1369,16 @@ c     erad = 6367000.
       end
 c
 c-------------------------------------------------------------
-      subroutine get_path_to_green_frac_10m(path_to_green_frac_10m
+      subroutine get_path_to_green_frac(path_to_green_frac
      &,istatus)
 
-      include 'lapsparms.cmn' ! path_to_green_frac10m
+      include 'lapsparms.cmn' ! path_to_green_frac
       include 'grid_fname.cmn'! grid_fnam_common
 
-!     This routine accesses the path_to_green_frac10m variable from the
+!     This routine accesses the path_to_green_frac variable from the
 !     .parms file via the common block.
 
-      character*200 path_to_green_frac_10m
+      character*200 path_to_green_frac
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1387,7 +1387,7 @@ c-------------------------------------------------------------
           return
       endif
 
-      path_to_green_frac_10m =  path_to_greenfrac_10m
+      path_to_green_frac =  path_to_greenfrac
 
       return
       end
@@ -1416,7 +1416,128 @@ c---------------------------------------------------------------
       return
       end
 c
-c --------------------------------------------------------------
+c---------------------------------------------------------------
+      subroutine get_path_to_albedo(path_to_albedo_ret,istatus)
+
+      include 'lapsparms.cmn' ! path_to_albedo
+      include 'grid_fname.cmn'! grid_fnam_common
+
+!     This routine accesses the path_to_albedo  variable from the
+!     .parms file via the common block.
+
+      character*200 path_to_albedo_ret
+
+      call get_laps_config(grid_fnam_common,istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      path_to_albedo_ret =  path_to_albedo
+
+      return
+      end
+c
+
+c---------------------------------------------------------------
+      subroutine get_path_to_sst(path_to_sst_ret,istatus)
+
+      include 'lapsparms.cmn' ! path_to_sst
+      include 'grid_fname.cmn'! grid_fnam_common
+
+!     This routine accesses the path_to_sst  variable from the
+!     .parms file via the common block.
+
+      character*200 path_to_sst_ret
+
+      call get_laps_config(grid_fnam_common,istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      path_to_sst_ret =  path_to_sst
+
+      return
+      end
+c--------------------------------------------------------------
+      subroutine get_n_staggers(n_staggers,istatus)
+!
+! currently we do not carry an "n_staggers" variable in
+! nest7grid.parms
+!
+      include 'lapsparms.cmn' ! path_to_sst
+      include 'grid_fname.cmn'! grid_fnam_common
+
+      integer istatus
+      integer n_staggers
+      call get_laps_config(grid_fnam_common,istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      call s_len(grid_fnam_common,nf)
+      if(grid_fnam_common(1:nf).eq.'nest7grid')then
+         n_staggers=1
+      else
+         n_staggers=4
+      endif
+      return
+      end
+c--------------------------------------------------------------
+      subroutine get_stagger_index(istag,istatus)
+!
+! currently we do not carry an "n_staggers" variable in
+! nest7grid.parms
+!
+      include 'lapsparms.cmn'           ! for STAGGER_TYPE
+      include 'grid_fname.cmn'          ! grid_fnam_common
+
+      integer istatus
+      integer istag
+      character*4 STAGGER_TYPE          !variable soon to be in .cmn
+
+      call get_laps_config(grid_fnam_common,istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      call s_len(grid_fnam_common,nf)
+      if(grid_fnam_common(1:nf).eq.'nest7grid')then
+         istag=1
+      else
+!        STAGGER_TYPE='A-c'             !hardwire testing for now
+         STAGGER_TYPE='a'
+         call s_len(STAGGER_TYPE,ls)
+         if(ls.eq.0 .or. ls.gt.4)then
+            print*,'Error detected in STAGGER_TYPE variable'
+            if(ls.ne.0)print*,'Stagger type = ',stagger_type(1:ls)
+            if(ls.eq.0)print*,'Stagger type variable has 0 length'
+            istatus = 0
+            return
+         else
+            call downcase(STAGGER_TYPE,STAGGER_TYPE)
+            if(STAGGER_TYPE(1:ls).eq.'a-c')then
+               istag=4
+            elseif(STAGGER_TYPE(1:ls).eq.'a')then
+               istag=1
+            else
+               print*,' Cannot set istag in get_stagger_index'
+               print*,' STAGGER_TYPE = ',STAGGER_TYPE
+               istatus = 0
+            endif
+         endif
+      endif
+
+      return
+      end
+c -----------------------------------------------------------------
       subroutine array_minmax(a,ni,nj,rmin,rmax,r_missing_data)
 
       real*4 a(ni,nj)

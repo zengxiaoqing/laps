@@ -3,7 +3,6 @@
 c
 c routine returns a common set of variables that describe a domain projection.
 c
-
         implicit none
 c
 c all these include files are needed to marry and namelist besides nest7grid.parms
@@ -47,7 +46,7 @@ c       include 'wrf_dims.inc'
 
 c       include 'wrf_laps_analysis.cmn'
 
- 
+        integer       num_staggers
         integer       i,nest,lvc,ltyp
         integer       istatus
 
@@ -132,8 +131,10 @@ c
         path_to_soiltype_top30s = soiltype_top_30s
         path_to_soiltype_bot30s = soiltype_bot_30s
         path_to_landuse30s = landuse_30s
-        path_to_greenfrac_10m = greenfrac_10m
+        path_to_greenfrac = greenfrac
         path_to_soiltemp1deg = soiltemp_1deg
+        path_to_albedo = albedo_ncep
+        path_to_sst  = sstemp
 
         c6_maproj=wrftolaps_c6_maprojname(map_proj_name)
         c80_description = simulation_name_cmn
@@ -153,6 +154,8 @@ c
         nk_laps = nz_l                     ! moad_nz
 
         nest = 1
+        num_staggers=num_staggers_wrf
+
         if(c_analysis_type(1:ltyp).eq.'laps')then   ! this means that the grid dimensions for lapsparms.cmn
                                                     ! will be configured using laps_analysis_control
            nx_l_cmn = nx_l

@@ -90,8 +90,6 @@
 !-------------------------------
       subroutine read_wrfsi_hgridspec (istatus)
 
-
-
       implicit none
 
       include 'wrf_horzgrid.cmn'
@@ -117,7 +115,7 @@
      +         ,moad_stand_lats, moad_stand_lons 
      +         ,moad_delta_x, moad_delta_y
      +         ,silavwt_parm_wrf, toptwvl_parm_wrf
-
+     +         ,num_staggers_wrf
 
       istatus = 0
       call s_len(generic_data_root,lenr)
@@ -190,7 +188,7 @@
 
       namelist /sfcfiles/ topo_30s, topo_10m, pctland_10m
      &,landuse_30s, soiltype_top_30s, soiltype_bot_30s
-     &,greenfrac_10m, soiltemp_1deg
+     &,greenfrac, soiltemp_1deg, albedo_ncep, sstemp
 
       character*80 filename
 
