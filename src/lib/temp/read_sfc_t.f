@@ -139,6 +139,8 @@ c
 
           temp_ob = sfc_temp(i)
 
+          elev_in = sfc_elev(i)
+
           if(elev_in .eq. 0.)i_qc = 0
 
           n_sfc_read = n_sfc_read + 1
