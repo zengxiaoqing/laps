@@ -144,9 +144,8 @@ c
      1                                 ,imax,jmax,kmax,i,j,ctop_m
      1                                 ,istatus)       
 
-                cbase_m = ctop_m - 500.
-
-                cbuf_high = ctop_m + 500.
+                cbase_m = ctop_m - cld_thk(ctop_m)
+                cbuf_low = cbase_m - 500.
 
                 cover_rpt = cloud_frac_co2_a(i,j)
 
@@ -175,9 +174,9 @@ c
 
                     cover = default_clear_cover
 
-!                   Fill in clear buffer above cloud layer
-                    if(cld_hts(k) .ge. ctop_m .and.
-     1                 cld_hts(k) .lt. cbuf_high               )then      
+!                   Fill in clear buffer below cloud layer
+                    if(cld_hts(k) .lt. cbase_m .and.
+     1                 cld_hts(k) .ge. cbuf_low               )then      
                         call spread2(cld_snd,wt_snd,i_snd,j_snd
      1                              ,n_cld_snd,max_cld_snd
      1                              ,kcloud,i,j,k,cover,1.)
