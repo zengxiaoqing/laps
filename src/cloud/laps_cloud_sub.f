@@ -909,14 +909,30 @@ C       HORIZONTAL SLICES
         ENDDO ! k
 
 C       EW SLICES
-        DO J=9,NY_L,10
-!       DO J=NY_L/2+1,NY_L/2+1
+        write(6,*)
+        DO J=10,NY_L,20
+            CALL SLICE(cf_modelfg,NX_L,NY_L,KCLOUD,CVEW1
+     1                ,NX_L,KCLOUD,0,1,0,0,J,0)
+            CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,CVEW2
+     1                ,NX_L,KCLOUD,0,1,0,0,J,0)
+            write(6,501)j
+501         format(5x,'  J =',i4,10x,'  Model First Guess Only       ',
+     1          21x,'           With Point Data Added')
+
+            scale = 1.
+            CALL ARRAY_PLOT(CVEW1,cvew2,NX_L,KCLOUD,'VERT CV'
+     1                     ,c1_name_array,KCLOUD,cld_hts,scale)
+        ENDDO ! j
+
+C       EW SLICES
+        write(6,*)
+        DO J=10,NY_L,20
             CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,CVEW1
      1                ,NX_L,KCLOUD,0,1,0,0,J,0)
             CALL SLICE(clouds_3d,NX_L,NY_L,KCLOUD,CVEW2
      1                ,NX_L,KCLOUD,0,1,0,0,J,0)
-            write(6,501)j
-501         format(5x,'  J =',i4,10x,'  Before Satellite/Radar       ',
+            write(6,502)j
+502         format(5x,'  J =',i4,10x,'  Before Satellite/Radar       ',
      1          21x,'           After Satellite/Radar')
 
             scale = 1.
