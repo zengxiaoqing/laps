@@ -161,12 +161,28 @@ cdis
 !                   Point ob is in horizontal domain
 
                     if(ext_in .eq. 'pin')then
-!                       Assume ACARS elev is geometric height MSL
-                        rk = height_to_zcoord2(elev,heights_3d
-     1                       ,ni,nj,nk,i_grid,j_grid,istatus_rk)
-                        if(istatus_rk .ne. 1)then
-                            write(6,*)' WARNING: rejecting ACARS ',
-     1                      'apparently above top of domain ',elev
+                        if(.false.)then
+!                           Assume ACARS elev is geometric height MSL
+                            rk = height_to_zcoord2(elev,heights_3d
+     1                           ,ni,nj,nk,i_grid,j_grid,istatus_rk)
+                            if(istatus_rk .ne. 1)then
+                                write(6,*)' WARNING: rejecting ACARS ',       
+     1                          'apparently above top of domain ',elev
+                            endif
+
+                        else ! do this instead
+!                           Assume ACARS elev is pressure altitude
+                            if(abs(elev) .lt. 90000.)then
+                                pres_mb = ztopsa(elev)
+                                pres_pa = pres_mb * 100.
+                                rk = zcoord_of_pressure(pres_pa)
+                                istatus_rk = 1
+                            else
+                                write(6,*)' WARNING: rejecting ACARS ',       
+     1                          'apparently above top of domain ',elev
+                                istatus_rk = 0
+                            endif
+
                         endif
 
                         weight_ob = weight_pirep
