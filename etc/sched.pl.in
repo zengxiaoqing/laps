@@ -44,6 +44,8 @@
 # -s                   runs surface (all LSX variables) and 3-D wind analyses only
 #
 # -l                   Write logs in LAPS_DATA_ROOT/log, even if on AWIPS
+#
+# -p T                 Advance analyses by T minutes for balanced output at systime + T
 
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
@@ -54,11 +56,11 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_n $opt_w 
-            $opt_s $opt_l);
+            $opt_s $opt_l $opt_p);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:n:wsl');
+getopts('d:c:a:rm:t:e:q:n:wsl:p:');
 
 my $initial_time = time();
 #
@@ -117,6 +119,11 @@ $extend_time = $opt_e if($opt_e >0);
 my $archive_time = 0;
 $archive_time = $opt_a if($opt_a > 0);
 #print "$opt_a $archive_time\n";
+
+require "$LAPSROOT/etc/laps_tools.pm";
+if(defined $opt_p){
+   &laps_tools::update_nl($LAPS_DATA_ROOT,"balance.nl","ADV_ANAL_BY_T_MIN",$opt_p);
+}
 
 my $node_type = "comp";
 #
@@ -282,7 +289,7 @@ foreach $exe (@LAPS_EXE){
                 print TFILE "  \n";
 
                 if($node_type eq "rt"){
-                    print TFILE "export PBS_SERVER_LIST=/usr/local/fsl/lib/server.rt\n";
+                    print TFILE "export PBS_SERVER_LIST=/PBSHOME/lib/server.rt\n";
                     print TFILE "  \n";
                 }
 
@@ -426,18 +433,22 @@ sub systime{
     $year='0'.$year if(length($year)<2);
     $mday = '0'.$mday if(length($mday)<2);
 
+    require "$LAPSROOT/etc/laps_tools.pm";
+    my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project_common",$DATAROOT);
+    my $c8_project = uc @c8_project[0];
 #
-#  This resets to the top of the cycle
+#   This resets to the top of the cycle
 #
-    my $minute=$min;
-    my $i=0;
-    while($i<60){
-	my $mod = $i%int($cycle_time/60);
+    if($c8_project ne "AIRDROP"){
+       my $minute=$min;
+       my $i=0;
+       while($i<60){
+       my $mod = $i%int($cycle_time/60);
 	$min = $i if($i<$minute && $mod==0);
 	$i++;
 	#     print "$i $mod\n";
+       }
     }
-  
     
     $ctime = timegm(0,$min,$hour,$mday,$mon,$yyyy-1900);
 
@@ -445,7 +456,6 @@ sub systime{
     $min = '0'.$min if(length($min)<2);
     $hour = '0'.$hour if(length($hour)<2);
 
-    require "$LAPSROOT/etc/laps_tools.pm";
 
     my $jjj = &laps_tools::julian($year,$mon+1,$mday);
 
