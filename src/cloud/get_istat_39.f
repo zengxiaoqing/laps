@@ -82,7 +82,13 @@ cdis
 
                     istat_39_a(i,j) = 0                       ! Indeterminate
 
-                    if(t39_diff .le. -2.5)then ! Sufficient diff
+                    if(
+     1                  (t39_diff .le. -2.5 .and. 
+     1                                    rlaps_land_frac(i,j) .gt. 0.5)      
+     1                                 .OR.
+     1                  (t39_diff .le. -2.0 .and. 
+     1                                    rlaps_land_frac(i,j) .le. 0.5)      
+     1                                             )then ! Sufficient diff     
                         istat_39_a(i,j) = +1
 
                         if(icount(1) .le. 20)then             ! Log output
