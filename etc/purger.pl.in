@@ -28,20 +28,13 @@ if($realclean eq "FULLPURGE"){
 }
 print "Running $0 for data in $DATAROOT $realclean\n";
 
-chdir($DATAROOT);
-
-opendir(DIR,$DATAROOT); 
-
-foreach(grep(!/^\.\.?$/,readdir(DIR))){
+chdir($DATAROOT) || die "could not chdir to $DATAROOT";
+@subdirs = &dodir('.','.');
+foreach (@subdirs){
+    next if($_ eq '.');
+    $_ =~ s/^\.\///;
     $clean_dirs{$_} = $hist_time if(-d $_  && !$clean_dirs{$_});
 }
-
-closedir(DIR);
-#
-# List directories in which to keep files for a longer or shorter time here.
-#
-
-
 
 
 foreach $dir (keys(%clean_dirs)){
@@ -50,24 +43,69 @@ foreach $dir (keys(%clean_dirs)){
     closedir(DIR);
     print "Purging in $dir\n";
     next if($#filelist < $min_files);
-    $i=0;
+    $i=$#filelist;
     foreach $file (sort @filelist){
         stat("$dir/$file");
         $age = -M _;
 
 #        print "$file $age\n";
 
-        if($age > $clean_dirs{$dir}){
+        if($age > $clean_dirs{$dir} && $i >= $min_files){
             $i--;
             print "Removing file $dir/$file $age $clean_dirs{$dir}\n";
             system("rm -f $dir/$file") ;
-        }else{
-	    last if($i++ > $min_files);
 	}         
 
     }
 }
 
+sub dodir {
+    local($dir,$pattern,$nlink) = @_;
+    local($dev,$ino,$mode,$subcount);
+    local(@dirlist);
+    ($dev,$ino,$mode,$nlink) = stat('.') unless $nlink;
+
+
+    opendir(DIR,'.');
+    local(@filenames) = readdir(DIR);
+    closedir(DIR);
+
+    if($nlink==2){                  # directory with no subs
+	for (@filenames){
+	    next if(/^[\.]+$/);
+#            print $_,"\n";
+            if($_ =~ $pattern){
+#		print "$dir/$_\n";
+		push(@dirlist,$dir);
+		last;
+	    }
+	}
+    }else{
+	$subcount = $nlink-2;
+        local($found)=0;
+	for(@filenames) {
+	    next if(/^[\.]+$/);
+	    $name = "$dir/$_";
+	    if(($_ =~ $pattern) && $found==0){
+#		print $name,"\n";
+                $found++;
+		push(@dirlist,$dir);
+		
+	    }
+	    next if $subcount == 0;
+
+	    ($dev,$ino,$mode,$nlink) = lstat($_);
+
+	    next unless -d _;
+	    
+	    chdir $_ || die "Can't cd to $name\n";
+	    push(@dirlist,&dodir($name,$pattern,$nlink));
+	    chdir '..';
+	    --$subcount;
+	}
+    }
+    return(@dirlist);
+}
 
 
 
