@@ -73,11 +73,10 @@ cdis
         real*4 u_maps_inc(ni,nj,nk)
         real*4 v_maps_inc(ni,nj,nk)
 
-        character*13 filename13,c13_fname
-        character*100 c100_fname
+        character*13 filename13
 
         character*9 asc9_tim_pirep
-        character directory*50,ext*31
+        character ext*31
 
         logical l_eof
 
@@ -87,16 +86,12 @@ cdis
         n_pirep_obs = 0
 
         ext = 'pin'
-        call get_directory(ext,directory,len_dir)
-        c13_fname = filename13(i4time,ext(1:3))
-        c100_fname = directory(1:len_dir)//c13_fname
-        open(lun_pin,file=c100_fname,err=999,status='old')
+        call open_lapsprd_file(lun_pin,i4time,ext,istatus)
+        if(istatus .ne. 1)go to 999
 
         ext = 'pig'
-        call get_directory(ext,directory,len_dir)
-        c13_fname = filename13(i4time,ext(1:3))
-        c100_fname = directory(1:len_dir)//c13_fname
-        open(lun_pig,file=c100_fname,err=888,status='unknown')
+        call open_lapsprd_file(lun_pig,i4time,ext,istatus)
+        if(istatus .ne. 1)go to 888
 
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)

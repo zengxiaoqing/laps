@@ -80,7 +80,7 @@ cdis
 !       real*4 t_maps_inc(imax,jmax,kmax)
 
         character*13 filename13
-        character directory*50,ext*31
+        character ext*31
         character*5 c5_name
 
 !       Initialize
@@ -110,16 +110,15 @@ cdis
 ! ***   Read in rass data    ***************************************
 
         ext = 'lrs'
-        call get_directory(ext,directory,len_dir)
-        open(12,file=directory(1:len_dir)
-     1  //filename13(i4time_rass,ext(1:3)),err=390,status='old')
+        call open_lapsprd_file(12,i4time_rass,ext,istatus)
+        if(istatus .ne. 1)go to 390
         goto400
 
 390     write(6,*)' Trying for RASS data from previous cycle'
         i4time_rass = i4time_rass - ilaps_cycle_time
 
-        open(12,file=directory(1:len_dir)
-     1  //filename13(i4time_rass,ext(1:3)),err=890,status='old')
+        call open_lapsprd_file(12,i4time_rass,ext,istatus)
+        if(istatus .ne. 1)go to 890
 
 400     do i_pr = 1,max_rs
 

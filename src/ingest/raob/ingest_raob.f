@@ -18,10 +18,8 @@
       character*8 c8_project
 
 !     Output file
-      character*70 filename_out
       character*13 filename13
       character*31    ext
-      character*50    directory
       integer*4       len_dir
 
       character*40 c_vars_req
@@ -133,14 +131,8 @@
 !             Open output SND file
               if(iopen .eq. 0)then
                   ext = 'snd'
-                  call get_directory(ext,directory,len_dir)
-
-                  filename_out = directory(1:len_dir)
-     1                            //filename13(i4time_sys,ext(1:3))     
-
-                  write(6,*)
-                  write(6,*)' Output file ',filename_out
-                  open(11,file=filename_out,status='unknown',err=998)
+                  call open_lapsprd_file(11,i4time_sys,ext,istatus)
+                  if(istatus .ne. 1)go to 998
                   iopen = 1
               endif
 
@@ -167,7 +159,7 @@
 
       go to 999
 
- 998  write(6,*)' Error opening output sounding file: ',filename_out       
+ 998  write(6,*)' Error opening output sounding file: '
 
  999  continue
 

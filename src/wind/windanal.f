@@ -878,10 +878,8 @@
       logical  l_good_multi_doppler_ob(imax,jmax,kmax),l_derived_output
       logical  l_grid_north
 
-      character*13 filename13,c13_fname
-      character*100 c100_fname
+      character*13 filename13
       character*31 ext
-      character*50 directory
 
       write(6,*)' Filtering radar obs into superobs',rlat_radar,rlon_rad
      1ar
@@ -954,11 +952,7 @@ c  convert radar obs into u & v by using tangential component of first pass
           if(i_radar .eq. 2)ext = 'd02'
           if(i_radar .eq. 3)ext = 'd03'
           if(i_radar .eq. 4)ext = 'd04'
-          call get_directory(ext,directory,len_dir)
-          c13_fname = filename13(i4time,ext(1:3))
-          c100_fname = directory(1:len_dir)//c13_fname
-          open(61,file=c100_fname,status='unknown',err=1)
-1         continue
+          call open_lapsprd_file(61,i4time,ext,istatus)
       endif
 
       height_grid = 0. ! This approximation won't hurt the azimuth

@@ -260,7 +260,7 @@ cdis
         parameter (MAX_FIELDS = 10)
 
         character*255 c_filespec
-        character var*3,comment*125,directory*50,ext*31,units*10
+        character var*3,comment*125,directory*150,ext*31,units*10
         character*3 exts(20)
         character*3 var_a(MAX_FIELDS)
         character*125 comment_a(MAX_FIELDS)
@@ -469,7 +469,6 @@ c read in laps lat/lon and topo
 
 
         ext = 'lc3'
-        call get_directory(ext,directory,len_dir) ! Returns top level directory
 
 c Dynamically adjust the heights of the cloud levels to the terrain
         write(6,*)' Fitting cloud heights to the terrain'
@@ -545,8 +544,7 @@ C OBTAIN MODEL FIRST GUESS CLOUD COVER FIELD
 
 C READ IN RADAR DATA
 !       Get time of radar file of the indicated appropriate extension
-        call get_directory(radarext_3d_cloud(1:3),directory,len_dir)
-        c_filespec = directory(1:len_dir)//'*.'//radarext_3d_cloud(1:3)       
+        call get_filespec(radarext_3d_cloud(1:3),2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_radar)
 
         if(abs(i4time - i4time_radar) .le. 1200)then
@@ -1270,7 +1268,6 @@ C       EW SLICES
 
         var = 'LIL'
         ext = 'lil'
-        call get_directory(ext,directory,len_dir)
         units = 'G/M**2'
         comment = 'no comment'
         call put_laps_2d(i4time,ext,var,units,comment
@@ -1287,10 +1284,8 @@ C       EW SLICES
      1ll'
 
 !               Get time of radar file of the indicated appropriate extension
-                call get_directory(radarext_3d_cloud(1:3)
-     1                                              ,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//
-     1                                           radarext_3d_cloud(1:3)
+                call get_filespec(radarext_3d_cloud(1:3),2,c_filespec
+     1                                                    ,istatus)
                 call get_file_time(c_filespec,i4time,i4time_radar)
 
                 call read_radar_3dref(i4time_radar,
@@ -1747,14 +1742,13 @@ C       EW SLICES
 
 
 
-        subroutine put_clouds_2d(i4time,DIRECTORY,ext,imax,jmax,field_2d
-     1cloud
-     1                                                  ,istatus)
+        subroutine put_clouds_2d(i4time,DIRECTORY,ext,imax,jmax
+     1                          ,field_2dcloud,istatus)
 
         integer*4  nfields
         parameter (nfields = 3)
 
-        character*50 DIRECTORY
+        character*(*) DIRECTORY
         character*31 ext
 
         character*125 comment_2d(nfields)
@@ -1801,7 +1795,7 @@ C       EW SLICES
 !       1997 Jul 31 K. Dritz  - Removed include of lapsparms.for, which was
 !                               not actually needed for anything.
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 ext
 
         integer*4 NZ_CLOUD_MAX

@@ -51,7 +51,6 @@ cdis
         character*13 filename13
 
         character*31    ext
-        character*50    directory
         integer*4       len_dir
 
         logical l_good_pirep
@@ -62,9 +61,8 @@ cdis
 
         lun = 11
         ext = 'pin'
-        call get_directory(ext,directory,len_dir)
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1  ,status='old',err=998)
+        call open_lapsprd_file(lun,i4time,ext,istatus)
+        if(istatus .ne. 1)go to 998
 
         n_cloud = 0
         num_pirep = 0

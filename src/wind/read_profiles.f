@@ -69,10 +69,9 @@ c
         real*4 u_maps_inc(imax,jmax,kmax)
         real*4 v_maps_inc(imax,jmax,kmax)
 
-        character*13 filename13,c13_fname
-        character*100 c100_fname
+        character*13 filename13
         character*255 c_filespec
-        character directory*50,ext*31
+        character ext*31
         character*5 c5_name
         character*9 a9time_ob
 
@@ -103,22 +102,18 @@ c
         i4time_prg = i4time
 
         ext = 'prg'
-        call get_directory(ext,directory,len_dir)
-        c13_fname = filename13(i4time_prg,ext(1:3))
-        c100_fname = directory(1:len_dir)//c13_fname
-        open(32,file=c100_fname,err=880,status='unknown')
+        call open_lapsprd_file(32,i4time_prg,ext,istatus)
+        if(istatus .ne. 1)go to 880
 
 
 ! ***   Read in profiler data    ***************************************
 
 !       Open nearest PRO file to the LAPS analysis time
         ext = 'pro'
-        call get_directory(ext,directory,len_dir)
-        c_filespec = directory(1:len_dir)//'*.pro'
+        call get_filespec(ext,2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_prof)
-        c13_fname = filename13(i4time_prof,ext(1:3))
-        c100_fname = directory(1:len_dir)//c13_fname
-        open(12,file=c100_fname,err=420,status='old')
+        call open_lapsprd_file(12,i4time_prof,ext,istatus)
+        if(istatus .ne. 1)go to 420
 
         do i_pr = 1,max_pr
 
@@ -172,14 +167,12 @@ c       Profiler reading error handling
 c
   420   CONTINUE
         write(6,*) ' Error opening PRO (or equivalent) file'
-        write(6,*) directory(1:len_dir)
         i_pr=1
         GO TO 450
 
   430   CONTINUE
         write(6,*) ' Error during read of PRO (or equivalent) file'
         write(6,*) ' While reading profiler number ',i_pr
-        write(6,*) directory(1:len_dir)
 c
   450   CONTINUE
         n_pr=i_pr-1
@@ -192,9 +185,7 @@ c
 !     i4time_raob_window = ilaps_cycle_time
 
       ext = 'snd'
-      call get_directory(ext,directory,len_dir)
-
-      c_filespec = directory(1:len_dir)//'*.snd'
+      call get_filespec(ext,2,c_filespec,istatus)
       call get_file_time(c_filespec,i4time,i4time_nearest)
 
       i4time_diff = abs(i4time - i4time_nearest)
@@ -209,8 +200,8 @@ c
 
       i4time_snd = i4time_nearest
 
-      open(12,file=directory(1:len_dir)
-     1  //filename13(i4time_snd,ext(1:3)),err=520,status='old')
+      call open_lapsprd_file(12,i4time_snd,ext,istatus)
+      if(istatus .ne. 1)go to 520
 
       lag_time = 0 ! Middle of sonde sampling period
       rcycsnd = float(i4time - i4time_snd + lag_time)
@@ -303,14 +294,12 @@ c     Sounding reading error handling
 c
   520 CONTINUE
       write(6,*) ' Error opening SND (or equivalent) file'
-      write(6,*) directory(1:len_dir)
       isnd=n_pr+1
       GO TO 550
 
   530 CONTINUE
       write(6,*) ' Error during read of SND (or equivalent) file'
       write(6,*) ' While reading sounding number ',(isnd-n_pr)
-      write(6,*) directory(1:len_dir)
 
   550 CONTINUE
 
@@ -423,7 +412,6 @@ c       1                ,ob_pr_t(i_pr,level)
 
   880   CONTINUE
         write(6,*) ' Error opening PRG file'
-        write(6,*) directory(1:len_dir)
         istatus=0
         return
         end

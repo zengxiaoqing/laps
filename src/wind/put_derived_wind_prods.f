@@ -76,7 +76,6 @@
         character*10 units_2d,units_a(0:10)
         character*3 var_2d,var_a(0:10)
 
-        character*50 directory
         character*31 ext
 
         write(6,*)
@@ -157,8 +156,7 @@
 
         else
             ext_radar = 'vrc'
-            call get_directory(ext_radar,directory,len_dir)
-            c_filespec = directory(1:len_dir)//'*.'//ext_radar
+            call get_filespec(ext_radar,2,c_filespec,istatus)
             call get_file_time(c_filespec,i4time_sys,i4time_radar)
             if(abs(i4time_radar - i4time_sys) .le. i4_tol)then
 
@@ -414,7 +412,6 @@
                 var_a(0) = 'LIW'
                 var_a(1) = 'W'
                 ext = 'liw'
-!               call get_directory(ext,directory,len_dir)
                 units_a(0) = 'K-Pa/s'
                 units_a(1) = 'Pa/s  '
                 comment_a(0) = 'Log LAPS Li * 600mb Omega'

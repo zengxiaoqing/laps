@@ -88,10 +88,9 @@ c                           not exactly match the LAPS analysis time.
 !       date rass obs according to the model rates of change.
 !       real*4 t_maps_inc(imax,jmax,kmax)
 
-        character*13 filename13, c13_fname
-        character directory*50,ext*31
+        character*13 filename13
+        character ext*31
         character*255 c_filespec
-        character*100 c100_fname
 
 !       Initialize
 
@@ -118,12 +117,10 @@ c                           not exactly match the LAPS analysis time.
 ! ***   Read in rass data from nearest filetime ******************************
 
         ext = 'lrs'
-        call get_directory(ext,directory,len_dir)
-        c_filespec = directory(1:len_dir)//'*.lrs'
+        call get_filespec(ext,2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_rassfile)
-        c13_fname = filename13(i4time_rassfile,ext(1:3))
-        c100_fname = directory(1:len_dir)//c13_fname
-        open(12,file=c100_fname,err=590,status='old')
+        call open_lapsprd_file(12,i4time_rassfile,ext,istatus)
+        if(istatus .ne. 1)go to 590
 
         lag_time = 0 ! Middle of rass hourly sampling period
         i4time_rass_offset = i4time - (i4time_rassfile + lag_time)
@@ -297,9 +294,7 @@ c
 ! ***   Read in Sonde data  ***************************************
 
         ext = 'snd'
-        call get_directory(ext,directory,len_dir)
-
-        c_filespec = directory(1:len_dir)//'*.snd'
+        call get_filespec(ext,2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_nearest)
 
         i4time_diff = abs(i4time - i4time_nearest)
@@ -314,8 +309,8 @@ c
 
         i4time_snd = i4time_nearest
 
-        open(12,file=directory(1:len_dir)
-     1  //filename13(i4time_snd,ext(1:3)),err=890,status='old')
+        call open_lapsprd_file(12,i4time_snd,ext,istatus)
+        if(istatus .ne. 1)go to 890
 
         do i_pr = n_rass+1,max_snd
 

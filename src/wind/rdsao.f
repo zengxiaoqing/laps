@@ -66,7 +66,6 @@ cdis
         real*4 heights_3d(ni,nj,nk)
 
         character*13 filename13,c13_fname
-        character*100 c100_fname
 
         character asc_tim_9*9,asc_tim_vol*24
 
@@ -78,8 +77,8 @@ cdis
         real*4 vis_s(maxstns)
 c
         character stations(maxstns)*3, wx_s(maxstns)*8        ! c5_stamus
-        character atime*24, infile*70
-        character directory*50,ext*31
+        character atime*24, infile*270
+        character directory*250,ext*31
 
 !       Declarations for new read_surface routine
 !       New arrays.f reading in the SAO data from the LSO files
@@ -98,11 +97,8 @@ c
         n_sao_obs = 0
 
         ext = 'sag'
-        call get_directory(ext,directory,len_dir)
-
-        c13_fname = filename13(i4time,ext(1:3))
-        c100_fname = directory(1:len_dir)//c13_fname
-        open(32,file=c100_fname,err=888,status='unknown')
+        call open_lapsprd_file(32,i4time,ext,istatus)
+        if(istatus .ne. 1)go to 888
 
         call make_fnam_lp(i4time,asc_tim_9,istatus)
 
