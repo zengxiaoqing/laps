@@ -121,7 +121,7 @@ c     Variables for NetCDF I/O
 c
       character*150 dir
 
-      character*9 gtime
+      character*9 a9time
       character*4 fhh
       character*31 ext,ext_in
       character*3 var_a(max_fields)
@@ -563,9 +563,6 @@ c
 c     Prepare to write out data
 c
         I4_elapsed = ishow_timer()
-
-        write(6,865) c4_radarname,ext(1:3)
-  865   format(' REMAP_PROCESS > Calling write_laps_data ',a4,2x,a3)       
 c
         var_a(1) = 'REF'
         var_a(2) = 'VEL'
@@ -662,6 +659,13 @@ c
             endif
 
             I4_elapsed = ishow_timer()
+
+            call make_fnam_lp(i_product_i4time,a9time,istatus)
+            if(istatus .ne. 1)return
+
+            write(6,865) c4_radarname,ext(1:3),a9time
+  865       format(' REMAP_PROCESS > Calling put_laps_multi_3d '
+     1             ,a4,2x,a3,2x,a9)          
 
             call put_laps_multi_3d(i_product_i4time,ext,var_a,units_a,       
      1              comment_a,out_array_4d,NX_L,NY_L,NZ_L,nf,istatus)
