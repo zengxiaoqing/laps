@@ -47,7 +47,7 @@ C
         call get_directory('cdl',cdlfile, cdl_len)
         if (cdlfile(cdl_len:cdl_len) .eq. '/') then
         else
-          cdlfile = cdlfile//'/'
+          cdlfile = cdlfile(1:cdl_len)//'/'
           cdl_len = cdl_len + 1
         endif
         cdlfile = cdlfile(1:cdl_len)//'orb.cdl'
@@ -55,6 +55,7 @@ C
 C
 C **** call c program write_att_c to write file
 C
+        print*,'calling write_att_c'
         call write_att_c(filename, filename_len, cdlfile, cdl_len, 
      1                   sat_name_in, sat_name_len, num_atts, orb_att, 
      1                   istatus)

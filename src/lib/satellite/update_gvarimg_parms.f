@@ -51,7 +51,7 @@ c     Integer   max_channels
       Real*4      golonsbp
       Real*4      golatsbp
       Real*4      goalpha
-      CHARACTER*1 imc                            (4)
+      CHARACTER*1 imc(4)
       CHARACTER*4 c_imc
       INTEGER   ewCycles                 
       INTEGER   ewIncs                   
@@ -184,8 +184,8 @@ c
 c
 c compute satellite sub latitude and sub longitude.
 c
-         read(imc(4),100)imci4
-100      format(i1)
+c        if(imc(4).eq.' ')imc(4)='0'
+c        read(imc(4),'(i1)')imci4
 cc
 c the bottom line:
 c

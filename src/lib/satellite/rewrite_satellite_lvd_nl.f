@@ -57,6 +57,7 @@ c -----
 c     write(lun,64)iflag_lvd_common
       write(lun,65)c_cell_afwa
       write(lun,66)c_national
+      write(lun,67)iskip_bilin
       write(lun,61)(isats(i),i=1,maxsat)
       write(lun,62)((itypes(i,j),i=1,maxtype),j=1,maxsat)
       write(lun,63)(((ichannels(i,j,k),i=1,maxchannel),j=1,maxtype),
@@ -164,6 +165,7 @@ c    &j=1,maxsat)
 64    format(1x,'IFLAG_LVD_COMMON= ',i1,",")
 65    format(1x,'L_CELL_AFWA= ',a,",")
 66    format(1x,'L_NATIONAL= ',a,",")
+67    format(1x,'ISKIP_BILIN= ',i1,",")
 2     format(1x,'I_DELTA_SAT_T_SEC=',i6,",")
 3     format(1x,'I_MSNG_SAT_FLAG=',4(i4,","))
 5     format(1x,'SAT_RANGE_M=',4(1x,f11.2,','))       !maxsat = 4
