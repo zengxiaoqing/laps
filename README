@@ -532,8 +532,9 @@
 
         6) standard_latitude2:
                 Polar Stereographic:
-                    This must be set to +90. and defines the pole latitude of 
-                    the polar stereographic projection (Earth's North Pole). 
+                    This must be set to +90. or -90. and defines the pole 
+                    latitude of the polar stereographic projection 
+                    (Earth's North or South Pole). 
 
                 Lambert:
                     For a tangent lambert (e.g. CONUS), set this equal to
@@ -562,13 +563,11 @@
                 MAP PROJECTION FUNCTIONALITY / LIMITATIONS
 
      LAPS runs with the polar stereographic, lambert, and mercator projections.
-   Please let us know if you encounter any problems; the known limitations 
-   (which are being worked on) are as follows. 
+   Please let us know if you encounter any problems.
 
-     The polar stereographic projection has a pole constrained to be at the
-   earth's north geographic pole. Setting the pole to the South Pole or
-   an arbitrary lat/lon (local stereographic) are anticipated future 
-   enhancements.
+     The polar stereographic projection has a pole that may be set to either
+   earth's north or south geographic poles. Setting the pole to an arbitrary 
+   lat/lon (local stereographic) is an anticipated future enhancement.
 
 
                        RESOLUTION OF DOMAIN: 
