@@ -154,21 +154,6 @@ cdis
             return
         endif
 
-!       QC check for bad temperatures
-        do k = 1,nk
-        do j = 1,nj
-        do i = 1,ni
-            if(temp_3d(i,j,k) .lt. 173. .or.
-     1         temp_3d(i,j,k) .gt. 400.      )then
-                write(6,*)' Error: Bad data from interpolated'     
-     1               ,' Background Temps LGA/RAM, no LT1 output written'
-                istatus = 0
-                return
-            endif
-        enddo ! i
-        enddo ! j
-        enddo ! k
-
         write(6,*)' Getting BACKGROUND MODEL heights'
 
         var_2d = 'HT'

@@ -169,7 +169,7 @@ cdis
                 endif
 
                 if(istatus .ne. 1)then
-                    write(6,*)'get_maps_laps_4d: Error reading 3-D file'
+                    write(6,*)'get_modelfg_3d: Error reading 3-D file'
                 else ! istatus = 1
                     call qc_field_3d(var_2d,field_3d_laps
      1                              ,imax,jmax,kmax,istatus)            
@@ -195,7 +195,7 @@ cdis
         enddo ! isource
 
         write(6,*)
-        write(6,*)' No Good Files: exiting get_maps_laps_4d'
+        write(6,*)' No Good Files: exiting get_modelfg_3d'
 
         istatus = 0
         return
