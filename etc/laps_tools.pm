@@ -286,7 +286,7 @@ sub mkdatadirs{
   if(! -e $LAPS_DATA_ROOT){die "$LAPS_DATA_ROOT does not exist\n";}
   if(! -e $LAPS_SRC_ROOT) {die "$LAPS_SRC_ROOT  does not exist\n";}
 
-  if($domain_type ne "laps" || $domain_type ne "wrfsi"){
+  if($domain_type ne "laps" && $domain_type ne "wrfsi"){
      die "Unknown domain type input to mkdatadirs = $domain_type\n";
   }
 
