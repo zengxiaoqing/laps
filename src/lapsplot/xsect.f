@@ -66,6 +66,8 @@ cdis
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
         real*4 rlaps_land_frac(NX_L,NY_L)
+        real*4 dx(NX_L,NY_L)
+        real*4 dy(NX_L,NY_L)
 
         integer*4 NX_C,NZ_C,NZ_B
 !       parameter (NX_C = 61)   ! NX_L ! Number of horizontal points in X-Sect
@@ -291,13 +293,17 @@ cdis
         vymax2 = .50 + (vymax-.50) * 1.25
 
         if(vymin .eq. .10)then
-            iyl_remap = 13
-            iyh_remap = 8
+!           iyl_remap = 13
+!           iyh_remap = 8
+            iyl_remap = 10
+            iyh_remap = 10
         elseif(vymin .eq. .20)then
             ixl_remap = nint(float(NX_P) * .0580)
             ixh_remap = nint(float(NX_P) * .0575)
-            iyl_remap = nint(float(NX_P) * .174)
-            iyh_remap = nint(float(NX_P) * .162)
+!           iyl_remap = nint(float(NX_P) * .174)
+!           iyh_remap = nint(float(NX_P) * .162)
+            iyl_remap = nint(float(NX_P) * .168)
+            iyh_remap = nint(float(NX_P) * .168)
         else
             write(6,*)' Error, invalid vymin ',vymin
         endif
@@ -620,7 +626,7 @@ c read in laps lat/lon and topo
 
 100    write(6,95)
 95     format(
-     1  /'  Field:  [WIND: di,sp,u,v,om,vc (barbs)'
+     1  /'  Field:  [WIND: di,sp,u,v,om,vo,va,vc (barbs)'
      1  /
      1  /'           TEMP: [t,pt,tb,pb] (T, Theta, T Blnc, Theta Blnc)'       
      1  /
@@ -670,8 +676,8 @@ c read in laps lat/lon and topo
         if(    c_field .eq. 'di' .or. c_field .eq. 'sp'
      1    .or. c_field .eq. 'u ' .or. c_field .eq. 'v '
      1    .or. c_field .eq. 'w ' .or. c_field .eq. 'dv'
-     1    .or. c_field .eq. 'vo' .or. c_field .eq. 'vc' 
-     1    .or. c_field .eq. 'om'                        )then
+     1    .or. c_field .eq. 'vo' .or. c_field .eq. 'va' 
+     1    .or. c_field .eq. 'vc' .or. c_field .eq. 'om' )then
 
             call input_product_info(i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
@@ -1198,6 +1204,48 @@ c read in laps lat/lon and topo
                 c33_label = 'LAPS Abs Vort  (Bkgnd)   [1e-5/s]'
             elseif   (c_prodtype .eq. 'F')then
                 c33_label = 'LAPS Abs Vort  (Fcst)    [1e-5/s]'
+            endif
+
+        elseif(c_field .eq. 'va' )then
+            call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
+            do k = 1,NZ_L
+                call vorticity_abs(u_3d(1,1,k),v_3d(1,1,k)
+     1                            ,field_2d,lat,lon
+     1                            ,NX_L,NY_L,.true.,r_missing_data)       
+
+                call cpt_advection(field_2d,u_3d(1,1,k),v_3d(1,1,k)
+     1                            ,dx,dy,NX_L,NY_L
+     1                            ,field_3d(1,1,k))
+
+            enddo
+
+            call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            do k = NZ_C,1,-1
+              do i = 1,NX_C
+                if(field_vert(i,k) .eq. r_missing_data)then
+                    field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                else
+                    field_vert(i,k) = field_vert(i,k) * 1e8
+                endif
+              enddo ! i
+            enddo ! k
+
+            clow = -100.
+            chigh = +1000.
+            cint = 5.
+
+            i_contour = 1
+
+            if       (c_prodtype .eq. 'N')then
+                c33_label = 'LAPS Vort Adv  (Bal)   [1e-8/s^2]'
+            elseif   (c_prodtype .eq. 'A')then
+                c33_label = 'LAPS Vort Adv  (Anal)  [1e-8/s^2]'
+            elseif   (c_prodtype .eq. 'B')then
+                c33_label = 'LAPS Vort Adv  (Bkgnd) [1e-8/s^2]'
+            elseif   (c_prodtype .eq. 'F')then
+                c33_label = 'LAPS Vort Adv  (Fcst)  [1e-8/s^2]'
             endif
 
         elseif(c_field .eq. 'rf' .or. c_field .eq. 'rg'
@@ -2261,7 +2309,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 
                     call conrec_line
-     1              (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+!    1              (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+     1              (field_vert3,NX_P,NX_P,NX_P
      1                             ,clow,chigh,cint,-1,0,-1848,0)
 
 
@@ -2572,10 +2621,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         real*4 array_in(NX_L,NY_L,NZ_L)
         real*4 array_out(NX_C,NZ_C)
 
+!       array_out = r_missing_data
+
         do k = 1,NZ_L
              call interp_2d(array_in(1,1,k),array_out(1,k)
-     1                                 ,xlow,xhigh,ylow,yhigh,
-     1                 NX_L,NY_L,NX_C,r_missing_data)
+     1                     ,xlow,xhigh,ylow,yhigh
+     1                     ,NX_L,NY_L,NX_C,r_missing_data)
         enddo ! i
 
         return

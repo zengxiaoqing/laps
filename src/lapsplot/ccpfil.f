@@ -108,7 +108,7 @@ C
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
      1                                                    ,colortable)      
       
-      PARAMETER (LRWK=150000,LIWK=150000,LMAP=1000000,NWRK=150000
+      PARAMETER (LRWK=300000,LIWK=300000,LMAP=2000000,NWRK=300000
      1          ,NOGRPS=5)       
       REAL ZREG(MREG,NREG),RWRK(LRWK), XWRK(NWRK), YWRK(NWRK)
       INTEGER MREG,NREG,IWRK(LIWK)

@@ -347,9 +347,9 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [ra/rf] Radar Interm./Anal. Data,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
-     1       /'     SFC: [p,pm,ps,tf-i,tc,df,dc,ws,vv,hu,ta,th,te,vo'  
+     1       /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu,ta,th,te,vo'        
      1       ,',mr,mc,dv,ha,ma,sp]'
-     1       /'          [cs,vs,tw,fw,hi]'
+     1       /'          [cs,vs,tw,fw-i,hi]'
      1       /'          [of,oc,ov,os,op,qf,qc,qv,qs,qp] obs plots'       
      1       ,'  [bs] Sfc background'
      1       /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
@@ -901,7 +901,7 @@ c       include 'satellite_dims_lvd.inc'
                 call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
                 call cpt_advection(field_2d,u_2d,v_2d,dx,dy,NX_L,NY_L
      1                            ,field2_2d)
-                call mklabel33(k_mb,' VORT ADV    1e-9/s',c33_label)
+                call mklabel33(k_mb,' VORT ADV 1e-9/s**2',c33_label)
 
                 scale = 1e-9
                 call contour_settings(field2_2d,NX_L,NY_L
@@ -3392,6 +3392,58 @@ c                   cint = -1.
 
             endif
 
+        elseif(c_type(1:2) .eq. 'td' .or. c_type(1:2) .eq. 'df'
+     1                               .or. c_type(1:2) .eq. 'dc')then
+            var_2d = 'TD'
+            ext = 'lsx'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1             ,i4time_pw
+     1             ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                                     ,field_2d,0,istatus)
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading Surface Td'
+                goto1200
+            endif
+
+            if(c_type .ne. 'dc')then
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_f(field_2d(i,j))
+                enddo ! j
+                enddo ! i
+                c33_label = 'LAPS Sfc Dew Point       (F)     '
+            else
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_c(field_2d(i,j))
+                enddo ! j
+                enddo ! i
+                c33_label = 'LAPS Sfc Dew Point       (C)     '
+            endif
+
+            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
+
+            if(c_type(3:3) .ne. 'i')then ! contour plot
+                call contour_settings(field_2d,NX_L,NY_L
+     1                               ,clow,chigh,cint,zoom,1.)       
+
+                call plot_cont(field_2d,1e-0,clow,chigh,cint
+     1               ,asc9_tim_t,c33_label,i_overlay,c_display
+     1               ,lat,lon,jdot
+     1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            else ! image plot
+                call ccpfil(field_2d,NX_L,NY_L,-20.,100.,'hues'
+     1                     ,n_image)    
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                                    ,i_overlay)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+            endif
+
         elseif(c_type .eq. 'hi')then
             var_2d = 'HI'
             ext = 'lsx'
@@ -3428,50 +3480,6 @@ c                   cint = -1.
      1                    ,asc9_tim_t,c33_label,i_overlay,c_display
      1                    ,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
-
-        elseif(c_type .eq. 'td' .or. c_type .eq. 'df'
-     1                          .or. c_type .eq. 'dc')then
-            var_2d = 'TD'
-            ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
-     1             ,i4time_pw
-     1             ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
-
-            IF(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Surface Td'
-                goto1200
-            endif
-
-            if(c_type .ne. 'dc')then
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    field_2d(i,j) = k_to_f(field_2d(i,j))
-                enddo ! j
-                enddo ! i
-                c33_label = 'LAPS Sfc Dew Point       (F)     '
-            else
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    field_2d(i,j) = k_to_c(field_2d(i,j))
-                enddo ! j
-                enddo ! i
-                c33_label = 'LAPS Sfc Dew Point       (C)     '
-            endif
-
-
-!           clow = -50.
-!           chigh = +120.
-!           cint = 5.
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                         ,zoom,1.)       
-
-            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
-
-            call plot_cont(field_2d,1e-0,clow,chigh,cint
-     1           ,asc9_tim_t,c33_label,i_overlay,c_display
-     1           ,lat,lon,jdot
-     1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'mc')then
             var_2d = 'MRC'
@@ -4109,13 +4117,13 @@ c                   cint = -1.
      1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'fw')then
+        elseif(c_type(1:2) .eq. 'fw')then
             var_2d = 'FWX'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(
+     1               i4time_ref,laps_cycle_time*100,i4time_pw,
+     1               ext,var_2d,units_2d,comment_2d,NX_L,NY_L,
+     1               field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
@@ -4124,15 +4132,26 @@ c                   cint = -1.
 
             c33_label = 'LAPS Fire Weather          (0-20)'
 
-            clow = 0.
-            chigh = +20.
-            cint = 2.0
-
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1.,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
-     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+            if(c_type(3:3) .ne. 'i')then
+                clow = 0.
+                chigh = +20.
+                cint = 2.0
+
+                call plot_cont(field_2d,1.,clow,chigh,cint,
+     1           asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,       
+     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+            else
+                call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'cpe'
+     1                     ,n_image)      
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                                    ,i_overlay)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+            endif
 
         elseif(c_type(1:2) .eq. 'sc')then
             var_2d = 'SC'
@@ -4147,15 +4166,12 @@ c                   cint = -1.
                 goto1200
             endif
 
-!           c33_label = 'LAPS Snow Cover       (PERCENT)  '
             c33_label = 'LAPS Snow Cover       (TENTHS)   '
 
             call make_fnam_lp(i4time_pw,asc9_tim,istatus)
 
             if(c_type(3:3) .ne. 'i')then
                 clow = 0.
-!               chigh = +100.
-!               cint = 20.
                 chigh = +10.
                 cint = 2.
 

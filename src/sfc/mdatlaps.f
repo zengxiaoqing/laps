@@ -224,7 +224,10 @@ c
 	      uu(i) = badflag
 	      vv(i) = badflag
 	   else
-	      dd_rot = dd_s(i) - projrot_laps( lon_s(i) )
+              rlat_dum = -999.
+	      dd_rot = dd_s(i) - projrot_latlon( rlat_dum , lon_s(i)
+     1                                                    ,istatus )
+
 	      dd_rot = mod( (dd_rot + 360.), 360.)
 	      call decompwind_gm(dd_rot,ff_s(i),uu(i),vv(i),istatus)     
 	      if(uu(i).lt.-150. .or. uu(i).gt.150.) uu(i) = badflag

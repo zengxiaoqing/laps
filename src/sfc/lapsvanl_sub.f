@@ -268,11 +268,25 @@ c	real alf2o(imax,jmax)  !work array
 c
 	character name*10
 	logical iteration
-c
-!	write(9,910)
-!910	format(' in spline routine')
 
-	call tagit('spline', 19991123)
+        integer analysis_mode
+c
+!       Analysis mode controls the strategy of doing the analysis
+!
+!       1) Method in place early 2001. Start spline with constant field based
+!          on mean of observation increments.
+!
+!       2) Start spline with incremental field as analyzed by 
+!          'barnes_multivariate' routine. Coding is in progress.
+!
+!       3) Use barnes_multivariate routine as complete substitute to spline.
+!          Not yet coded.
+
+        analysis_mode = 1
+
+ 	write(6,910)analysis_mode
+ 910	format(' subroutine spline: analysis_mode = ',i3)
+
 	imiss = 0
 	ovr = 1.4
 	iflag = 0
@@ -417,9 +431,32 @@ c
 c
 c.....  Have obs, so set starting field so spline converges faster.
 c
-	amean_start = sumdif / numdif
-	print *,' Using mean of ', amean_start, ' to start analysis.'
-	call constant(t, amean_start, imax,jmax)
+
+        if(analysis_mode .eq. 1)then
+	    amean_start = sumdif / numdif
+	    print *,' Using mean of '
+     1             , amean_start, ' to start analysis.'
+	    call constant(t, amean_start, imax,jmax)
+
+        elseif(analysis_mode .eq. 2)then
+            write(6,*)' Calling barnes_multivariate_sfc to start spline'       
+
+            call get_fnorm_max(ni,nj,r0_norm,r0_value_min,fnorm_max)
+            n_fnorm = int(fnorm_max) + 1
+
+            call barnes_multivariate_sfc(t,imax,jmax                
+     1                                    ,to,smsng
+     1                                    ,r_missing_data           ! Input
+     1                                    ,grid_spacing_m           ! Input
+     1                                    ,max_snd                  ! Input
+     1                                    ,temp_obs,max_obs,n_obs   ! Input
+     1                                    ,n_var                    ! Input
+     1                                    ,bias_3d                  ! Output
+     1                                    ,rms_thresh_norm          ! Input
+     1                                    ,weight_bkg_const         ! Input
+     1                                    ,n_fnorm
+     1                                    ,istatus)
+        endif
 c
 cc	print *,' Using smooth Barnes to start the analysis.'
 cc	rom2 = 0.005

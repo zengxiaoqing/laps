@@ -27,6 +27,7 @@ SRC   = mdatlaps.f \
 	lapsvanl.f \
 	lapsvanl_sub.f \
 	laps_routines.f \
+        barnes_multivariate_sfc.f \
 	qc_data.f 
 
 MAIN=laps_sfc.f 

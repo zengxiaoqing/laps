@@ -126,13 +126,15 @@ C
       CHARACTER*48 TIMELABEL
       CHARACTER*48 LAB1
 
-        PARAMETER (LRWK=5500, LIWK=4000)
+      PARAMETER (LRWK=5500, LIWK=4000)
 
-        REAL RWRK(LRWK)
-        INTEGER IWRK(LIWK)
+      REAL RWRK(LRWK)
+      INTEGER IWRK(LIWK)
 
-        REAL SCALE
-        DATA SCALE /1.1/
+      integer hic,hlc
+
+      REAL SCALE
+      DATA SCALE /1.1/
 
       parameter (machine_epsilon_p = 1.19e-07)  ! from iftran.im - bj
       COMMON /SAVMAP/
@@ -225,15 +227,20 @@ C --- Do contouring
           call CPSETC('ILT',' ')
           call cpseti('NSD',2)
 !         call cpseti('NLS',2)
-!         CALL CPSETI ('HIC', icol_current)
-!         CALL CPSETI ('HLC', icol_current)
+
+          CALL CPSETI ('HIC', icol_current)
+          CALL CPSETI ('LOC', icol_current)
+          CALL CPSETI ('HLC', icol_current)
+
           if (ihl.ge.2) call cpsetc('HLT',' ')
+
         end if
 
 !       call cpsetr ('LLS',.040)
         call cpseti ('CLS - contour level selection flag',20)
         call cpsetr ('CIS',DF)
         call cpseti ('LIS - label interval specifier',lis)
+!       call cpseti ('LLP', 2)
 !       call cpsetr ('CMN',FMIN)
 !       call cpsetr ('CMX',FMAX)
         call cpsetr ('CMN',clow)
@@ -243,9 +250,6 @@ C --- Do contouring
         call cpgetr ('LLS - LINE LABEL SIZE',clls)           
         call cpgetr ('HLS',hls)           
         call cpsetr ('CWM',1.00/zoom)
-
-        write(6,*)'IHL/HLS/LLS/LIS/ICOL = '
-     1            ,IHL,hls,clls,lis,icol_current
 
 
         CALL CPRECT (F,NX,NX,NY,RWRK,LRWK,IWRK,LIWK)
@@ -272,9 +276,23 @@ C --- Do contouring
 
         isize=7
         CALL PWRIT (MX1,MY2,' ',1,0,0,0)
-c       CALL FRAME                                  ! Flush frame buffer
+        CALL SFLUSH                                  ! Flush frame buffer
+
+        CALL cpgeti ('LIU', liu)
+        CALL cpgeti ('LLP', llp)
+        CALL cpgeti ('HIC', hic)
+        CALL cpgeti ('HLC', hlc)
+        CALL cpgeti ('LOC', loc)
+
+        write(6,*)'NCON/IHL / HLS / HIC/HLC/LOC/LLP/LLS/LIS/LIU/ICOL = '
+        write(6,*) NCON,IHL,hls,hic,hlc,loc,llp,clls,lis,liu
+     1             ,icol_current
+
+
         WRITE(6,155)
 155     FORMAT(' THE FIELD HAS BEEN PLOTTED')
+
+
       RETURN
       END
 
