@@ -21,12 +21,25 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #
+# Command line arguments
+#
+# -q  N                Use QSUB (e.g. on 'jet') where N is the number of nodes
+#
+# -e  e1,e2,...        Environment variables (if any) to pass into the executable
+#
+# third to last arg    Executable name
+#
+# second to last arg   $LAPSINSTALLROOT, one level above bin directory
+#
+# last arg             $LAPS_DATA_ROOT, path to data directory
+#                      purger (see call to purger.pl)
+#
 
 use strict;
-use vars qw($opt_o $opt_e);
+use vars qw($opt_o $opt_e $opt_q);
 use Getopt::Std;
 
-getopts('e:');
+getopts('e:q:');
 
 my $exe = shift || die "Program name and LAPS root directory required";
 my $LAPSROOT=shift || die "LAPS root directory required";
@@ -115,15 +128,38 @@ my $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
 #open(LOCK,">$lockfile");
 #close(LOCK);
 
+my $command;
+my $t;
 
-my $sys = "$LAPSROOT/bin/$exe ";
+if($opt_q){
+    print $t." Opening $LAPS_LOG_PATH/run_qsub_$exe.sh starting with executable $exe\n";
+    open(TFILE,">$LAPS_LOG_PATH/run_qsub_$exe.sh");
+    print TFILE "#!/bin/sh\n";
+    print TFILE "#PBS -lnodes=$opt_q:comp\n";
+    print TFILE "  \n";
+    print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 
-#system($sys);
+    print " Adding to $LAPS_LOG_PATH/run_qsub_$exe.sh with executable/nodes $exe $opt_q\n";
+    print TFILE "  \n";
+    print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
 
-#unlink "$lockfile";
+    print TFILE "  \n";
+    print $t." Closing $LAPS_LOG_PATH/run_qsub_$exe.sh with executable $exe\n";
+    close(TFILE);
 
+    chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
+    $command = "/usr/local/bin/qsub $LAPS_LOG_PATH/run_qsub_$exe.sh";
+    print "Executing $command\n";
+    system("$command");
 
-&forksub($sys,$lockfile);
+}else{
+    my $sys = "$LAPSROOT/bin/$exe ";
+#   system($sys);
+#   unlink "$lockfile";
+    &forksub($sys,$lockfile);
+
+}
+
 exit;
 
 sub forksub{

@@ -20,7 +20,7 @@
 #
 # This script runs LAPS analyses. The default is for realtime operation.
 #
-# Command line arguments (optional)
+# Command line arguments
 #
 # -t                   Run for archive time, specified by number of seconds since
 #                      Jan 1 1970 at 0000 UTC
@@ -34,7 +34,7 @@
 # -r -m N              where "N" is the (default) maximum number of files 
 #                      to be kept in each product directory by the purger
 #
-# second to last arg   $LAPS_ROOT, one level above bin directory
+# second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
 #                      purger (see call to purger.pl)
@@ -204,6 +204,7 @@ foreach $exe (@LAPS_EXE){
 
                 if($execount > 1){ # after start
                     print TFILE "  \n";
+                    print TFILE "cd $LAPS_LOG_PATH\n";
                     print TFILE "/usr/local/bin/qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptcount.log 2>&1\n";
                     print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
@@ -237,6 +238,7 @@ foreach $exe (@LAPS_EXE){
             print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable # $execount\n";
             close(TFILE);
 
+            chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
             $command = "/usr/local/bin/qsub $LAPS_LOG_PATH/run_qsub_1.sh";
             print "Executing $command\n";
             system("$command");
