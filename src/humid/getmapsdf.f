@@ -86,7 +86,7 @@ c-------non-executable statements-----------------------------------------------
 c
         implicit        none
 c
-        save
+        
         CHARACTER*250 DIRLMA
         CHARACTER*250 DIRLMF
         CHARACTER*31 EXTLMA
