@@ -66,8 +66,8 @@ c     1 0/28/93 put in the additions to enable rh wrt liq.  db
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'lapsparms.for'
+c        include 'parmtrs.inc'
 
 c parameter variables
 
@@ -81,16 +81,16 @@ c parameter variables
 
 c variables requiring dynamic allocation
 
-      integer double_lvl(kgrid*2)
-        real rhdata(igrid,jgrid,kdim),rhdata_l(igrid,jgrid,kdim),
-     1  equivalenced_rh(igrid,jgrid,kdim*2)
-      character var(kdim*2)*3,
-     1        lvl_coord(kdim*2)*4,
-     1        units(kdim*2)*10,
-     1        comment(kdim*2)*125
-        data var/kdim*'rh3',kdim*'rhl'/
-        data lvl_coord/kdim*'hpa',kdim*'hpa'/
-        data units /kdim*'percent',kdim*'percent'/
+      integer double_lvl(kk*2)
+        real rhdata(ii,jj,kk),rhdata_l(ii,jj,kk),
+     1  equivalenced_rh(ii,jj,kk*2)
+      character var(kk*2)*3,
+     1        lvl_coord(kk*2)*4,
+     1        units(kk*2)*10,
+     1        comment(kk*2)*125
+c        data var/kk*'rh3',kk*'rhl'/
+c        data lvl_coord/kk*'hpa',kk*'hpa'/
+c        data units /kk*'percent',kk*'percent'/
 
 c internal variables
 
@@ -117,6 +117,19 @@ c internal variables
       call get_directory(rhext,rhdir,len)
 
 c   initialize
+
+c     note that dynamic assignments don't work in data statements
+
+	do k = 1,kk
+	   var(k) = 'rh3'
+           var(k+kk) = 'rhl'
+	   lvl_coord(k) = 'hpa'
+	   lvl_coord(k+kk) = 'hpa'
+	   units(k) = 'percent'
+	   units(k+kk) = 'percent'
+	 enddo
+											    !k
+
 
       call get_r_missing_data(rmd, istatus)
 
@@ -181,7 +194,7 @@ c  first pass for regular rh fields
 21      continue
 
 
-        if (kbottom .eq. kdim .or. kbottom .eq. 1) then
+        if (kbottom .eq. kk .or. kbottom .eq. 1) then
                 continue ! not valid bottom found
         else
                 do k = kbottom-1,1, -1
@@ -209,7 +222,7 @@ c  second  pass for special rh field
 22      continue
 
 
-        if (kbottom .eq. kdim .or. kbottom .eq. 1) then
+        if (kbottom .eq. kk .or. kbottom .eq. 1) then
                 continue ! not valid bottom found
         else
                 do k = kbottom-1,1, -1
@@ -227,7 +240,7 @@ c   replace equivalence statments with do loops
       do i = 1,ii
 
         equivalenced_rh(i,j,k) = rhdata(i,j,k)
-        equivalenced_rh(i,j,k+kdim) = rhdata_l(i,j,k)
+        equivalenced_rh(i,j,k+kk) = rhdata_l(i,j,k)
 
       enddo
       enddo
