@@ -35,7 +35,8 @@ cdis
      1           ,rheight_radar,istatus)
 
 !       Called from read_radar_3dref, hence from (cloud/deriv/accum/lplot - 
-!       if NOWRAD data is unavailable). Operates on V0x, but not VRC files.
+!       if NOWRAD data is unavailable). Operates on V0x, for the purpose
+!       of mosaicing and writing out the VRZ file, but not VRC files.
 !       This Routine Fills in the gaps in a 3D radar volume that has been
 !       stored as a sparse array. A linear interpolation in the vertical
 !       direction is used. An additional option 'l_low_fill' can be set to
@@ -159,8 +160,11 @@ c       write(6,*)' Doing Column ',j
                 do while (k .lt. nk .and. (.not. l_test))
                     ref_above = ref_3d(i,j,k+1)
 
+!                   Should we require 'ref_above' to be missing in io array?
+!                   This way we'd only fill in levels not scanned by the radar
                     if(ref_below .gt. ref_base
-     1         .and. ref_above .eq. ref_base)then
+!    1           .and. ref_3d_io(i,j,k+1) .eq. r_missing_data ! rf_io_above
+     1           .and. ref_above .eq. ref_base)then
                         k_top = k
                         l_test = .true.
                     endif
@@ -180,7 +184,10 @@ c       write(6,*)' Doing Column ',j
                     k = k + 1
                     ref_above = ref_3d(i,j,k)
 
+!                   Should we require 'ref_below' to be missing in io array?
+!                   This way we'd only fill in levels not scanned by the radar
                     if(ref_above .gt. ref_base
+!    1           .and. ref_3d_io(i,j,k-1) .eq. r_missing_data ! rf_io_below
      1           .and. ref_below .eq. ref_base)then
                         k_bottom = k
                         l_test = .true.
@@ -193,11 +200,9 @@ c       write(6,*)' Doing Column ',j
                 if(.not. l_test)goto100 ! No Bottom exists
 
 !               Fill in gap if it exists and is small enough
-                gap_thresh = 2000.
+                gap_thresh = max(2000., slant_range * 0.02)
                 if(heights_3d(i,j,k_bottom) .lt.
      1                    heights_3d(i,j,k_top) + gap_thresh)then
-
-!               if(k_bottom .le. k_top+5)then ! Fill gaps smaller than const-1
 
 c                   write(6,*)' Filling gap between',i,j,k_bottom,k_top
 c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
