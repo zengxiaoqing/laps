@@ -997,3 +997,144 @@ c
 	return
         include 'lso_formats.inc'
 	end
+c
+c
+	subroutine read_surface_dataqc(i4time,btime,n_obs_g,n_obs_b,time,
+     &    wmoid,stations,provider,wx,reptype,autostntype,lat,lon,elev,
+     &    t,td,rh,dd,ff,ddg,ffg,alt,stnp,mslp,delpch,delp,vis,solar,
+     &    sfct,sfcm,pcp1,pcp3,pcp6,pcp24,snow,kkk_s,max24t,min24t,t_ea,
+     &    td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,sfct_ea,
+     &    sfcm_ea,pcp_ea,snow_ea,store_cldamt,store_cldht,
+     &    maxsta,jstatus)
+c
+c*****************************************************************************
+c
+c	Routine to read the LAPS LSO_QC surface data file with the expanded 
+c       format.   The data is passed back to the calling routine in 1-d arrays.
+c
+c	Changes:
+c		P. Stamus  12-17-98  Original version (from read_surface_data).
+c
+c*****************************************************************************
+c
+	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
+	real*4 t(maxsta), t_ea(maxsta), max24t(maxsta), min24t(maxsta)
+	real*4 td(maxsta), td_ea(maxsta), rh(maxsta), rh_ea(maxsta)
+	real*4 dd(maxsta), ddg(maxsta), dd_ea(maxsta)
+	real*4 ff(maxsta), ffg(maxsta), ff_ea(maxsta)
+	real*4 alt(maxsta), alt_ea(maxsta), delp(maxsta)
+	real*4 stnp(maxsta), mslp(maxsta), p_ea(maxsta)
+	real*4 vis(maxsta), vis_ea(maxsta)
+	real*4 solar(maxsta), solar_ea(maxsta)
+	real*4 sfct(maxsta), sfct_ea(maxsta)
+	real*4 sfcm(maxsta), sfcm_ea(maxsta)
+	real*4 pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
+	real*4 snow(maxsta), snow_ea(maxsta), pcp_ea(maxsta)
+	real*4 store_cldht(maxsta,5)
+c
+	integer*4 i4time, wmoid(maxsta), jstatus
+	integer*4 time(maxsta), delpch(maxsta), kkk_s(maxsta)
+c
+	character filetime*9, infile*256, btime*24
+	character stations(maxsta)*20, provider(maxsta)*11
+        character reptype(maxsta)*6, autostntype(maxsta)*6
+	character wx(maxsta)*25, store_cldamt(maxsta,5)*4
+c
+c
+c.....  Blank out the character arrays.
+c
+	jstatus = 0
+	do i=1,maxsta
+	   stations(i) = '                    '
+	   provider(i) = '           '
+	   reptype(i)  = '      '
+	   autostntype(i)  = '      '
+	   wx(i) = '                         '
+	   do j=1,5
+	      store_cldamt(i,j) = '    '
+	   enddo !j
+	enddo !i
+c
+c.....	Get the file.
+c
+	call make_fnam_lp(i4time, filetime, istatus)
+	call get_directory('lso', infile, len)
+	infile = infile(1:len) // filetime(1:9) // '.lso_qc'
+c
+	open(11,file=infile,status='old',err=999)
+c
+c.....	Read the header.
+c
+	read(11,900) btime,		! time
+     &               n_obs_g,		! # of obs in the laps grid
+     &               n_obs_b		! # of obs in the box
+c
+c.....	Read the station data.
+c
+	do k=1,n_obs_b
+c
+	   read(11,901)  stations(k),              !station id
+     &                   wmoid(k),                 !WMO id number
+     &                   provider(k),              !data provider
+     &                   lat(k), lon(k), elev(k),  !lat, lon, elev
+     &                   time(k)		   !obs time
+c
+	  read(11,903)   reptype(k),               !station report type
+     &                   autostntype(k),           !station type (manual/auto)
+     &                   wx(k)                     !present weather
+c
+	  read(11,905)   t(k), t_ea(k),            !temp, temp expected accuracy
+     &                   td(k), td_ea(k),          !dew point, dew point exp. accuracy
+     &                   rh(k), rh_ea(k)           !Rel hum, rh expected accuracy
+c
+	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed
+     &                   ddg(k), ffg(k),           !wind gust dir, wind gust speed
+     &                   dd_ea(k), ff_ea(k)        !dir expected accuracy, spd exp accuracy
+c
+	  read(11,909)   alt(k),                   !altimeter
+     &                   stnp(k),                  !station pressure
+     &                   mslp(k),                  !MSL pressure
+     &                   delpch(k),                !3-h press change character
+     &                   delp(k),                  !3-h pressure change
+     &                   p_ea(k), alt_ea(k)        !pressure exp accuracy, alt exp accuracy
+c
+	  read(11,911)   vis(k), vis_ea(k),        !visibility, vis exp accuracy
+     &                   solar(k), solar_ea(k),    !solar, solar exp accuracy
+     &                   sfct(k), sfct_ea(k),      !soil/water temp, soil/water temp exp accuracy
+     &                   sfcm(k), sfcm_ea(k)       !soil moist, soil moist temp exp accuracy
+c
+	  read(11,913)   pcp1(k),                  !1-h precipitation
+     &                   pcp3(k),                  !3-h precipitation
+     &                   pcp6(k),                  !6-h precipitation
+     &                   pcp24(k),                 !24-h precipitation
+     &                   snow(k),                  !snow depth
+     &                   pcp_ea(k), snow_ea(k)     !precip and snow exp accuracy
+c
+	  read(11,915)  kkk_s(k),                  !num cld layers 
+     &                  max24t(k),                 !24-h max temperature
+     &                  min24t(k)                  !24-h min temperature
+c
+c.....	Read the cloud data if we have any.
+c
+	  if(kkk_s(k) .gt. 0) then
+	    do ii=1,kkk_s(k)
+  	      read(11,917) store_cldamt(k,ii), store_cldht(k,ii)   !layer cloud amount and height
+	    enddo !ii
+	  endif
+c
+	enddo !k
+c
+	endfile(11)
+	close(11)	
+c
+c..... End of data reading.  Let's go home...
+c
+	jstatus = 1
+	return
+999     continue
+        print *,'Could not open file: ',infile
+	print *,' ++ ERROR opening LSO_QC file in READ_SURFACE_DATAQC ++'
+        jstatus = -1
+	return
+        include 'lso_formats.inc'
+	end
