@@ -1125,6 +1125,7 @@ c
 c=====================================================================
 c
 	include 'laps_sfc.inc'
+        integer dx,dy
 c
 c.... First, find the area that each ob covers in gridpt space (this
 c.... of course assumes a uniform coverage).
