@@ -66,5 +66,8 @@ c OVERALL LAPS PARAMETERS
 c
 c maxstns_cmn - max number of sfc stations you are likely to encounter in the
 c             - LSO file and various analyses, in and near the domain.
-
+c
+c path_to_soil_2m - this parameter is not yet active since we do not yet
+c                   supply the soil type database. It is there only for
+c                   software testing at this time.
 
