@@ -300,7 +300,7 @@ c
         do j=1,jmax
         do i=1,imax
 
-         if(imax-i .le. nskip_max .and. jmax-j .le. nskip_max)then
+         if(imax-i .le. nskip_max .or. jmax-j .le. nskip_max)then
              l_poss_extrap = .true. ! Extrapolation edge effects possible
          else
              l_poss_extrap = .false.
@@ -682,6 +682,18 @@ c
             write(6,*)
      1           ' Warning: bad status returned from compare_radiation'       
         endif
+
+!       Visible addition stats
+        n_vis_add_potl = 0
+        n_vis_added = 0
+        do i = 1,imax
+        do j = 1,jmax
+            n_vis_add_potl = n_vis_add_potl + istat_vis_potl_a(i,j)
+            n_vis_added    = n_vis_added    + istat_vis_added_a(i,j)
+        enddo ! j
+        enddo ! i
+        write(6,*)' n_vis_add_potl = ',n_vis_add_potl
+     1           ,' n_vis_added = ',n_vis_added
 
         return
         end
