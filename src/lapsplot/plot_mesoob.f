@@ -466,6 +466,8 @@ c
             call pwrity(cpux(ix),cpux(iy),atime(1:17),17,-1,0,-1)
         endif
 
+        call sflush
+
         return
         end
 
@@ -624,6 +626,8 @@ c
         endif
 c
  40     continue
+
+        call sflush
 
         return
         end
