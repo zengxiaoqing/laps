@@ -474,6 +474,11 @@ c
           do j = 1,jmax
           do i = 1,imax
             if(l_boundary(i,j) .and. l_barnes_wide)then ! Normalize boundary ob
+
+!              Here it seems to be important that the stations are mapped onto
+!              the grid with rounding up allowed to get the best possible 
+!              departures
+
 	       to(i,j) = to(i,j) - tb(i,j)
 
             else ! eliminate bad data from the interior while normalizing to

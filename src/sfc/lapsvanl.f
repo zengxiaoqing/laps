@@ -453,7 +453,10 @@ cc	call mean_pres(n_obs_b,pstn_s,pbar)
 c
 c.....     Correct gridded obs (t1_f,td1_f) using lapse rate and difference
 c          between gridded stn elevations (elev1) and laps terrain (topo)
-c
+
+!          Here it seems to be important that the stations are mapped onto the
+!          grid with rounding up allowed to get the best possible departures
+
 	   ter_s = elev1(i,j)     ! departures at stn elev
 c
 	   dz = ter_s - topo(i,j)
