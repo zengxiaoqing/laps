@@ -280,8 +280,10 @@ c read in laps lat/lon and topo
      1                        .and. i_suff_pcp  .eq. 1)then
             write(6,*)' Adding latest increment for new Storm Total '
      1               ,'Accumulation'
-            call add(snow_2d,  snow_2d_tot,  snow_2d_tot,  NX_L,NY_L)
-            call add(precip_2d,precip_2d_tot,precip_2d_tot,NX_L,NY_L)
+            call add_miss(snow_2d,  snow_2d_tot,  snow_2d_tot  
+     1                   ,NX_L,NY_L)     
+            call add_miss(precip_2d,precip_2d_tot,precip_2d_tot
+     1                   ,NX_L,NY_L)
 
         elseif(istatus_inc .eq. 1)then
             write(6,*)' Resetting Storm Total Accumulations to '
