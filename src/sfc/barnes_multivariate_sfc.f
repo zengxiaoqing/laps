@@ -50,6 +50,8 @@
             obs_barnes(i)%k = 1
             obs_barnes(i)%weight = 1. / rinst_err**2
 
+            obs_barnes(i)%ldf = obs(i)%ldf
+
             if(obs(i)%sfct_f .ne. badflag)then
                 obs_barnes(i)%qc = .true.
             else
