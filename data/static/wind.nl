@@ -6,6 +6,7 @@
  rms_thresh_wind=1.0,
  max_pr=1500,
  max_pr_levels=300,
+ i_3d=-1,
  /
 
 c WIND PARAMETERS
@@ -34,3 +35,13 @@ c
 c max_pr - Maximum number of wind profiles allowed for 'pro' + 'snd' files.
 c
 c max_pr_levels - Maximum number of levels per wind profile.
+c
+c i_3d - Valid values [-1,0,+1]
+c        -1 sets l_3d always to .false. (old 3d weighting algorithm)
+c         0 allows l_3d to be set automatically during runtime based on
+c           estimated computing resources
+c        +1 sets l_3d always to .true. (new 3d weighting algorithm)
+c
+c        Note: the new algorithm produces a more accurate analysis though it
+c        takes more CPU and memory resources
+

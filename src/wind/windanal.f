@@ -12,7 +12,7 @@
      1     ,imax,jmax,kmax,lat,lon
      1     ,i4time,grid_spacing_m
      1     ,r_missing_data
-     1     ,l_analyze
+     1     ,i_3d                                                 ! Input
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
      1     ,n_iter_wind_in
      1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar     
@@ -115,6 +115,8 @@
 
 !****************END DECLARATIONS *********************************************
 
+      write(6,*)' Subroutine laps_anl...'
+
 !     Compare background to obs
       call compare_wind(
      1            u_laps_bkg,v_laps_bkg,' FG ',
@@ -125,7 +127,20 @@
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
 
-      l_3d = .false. 
+      if(i_3d .eq. 1)then
+          l_3d = .true.
+      elseif(i_3d .eq. -1)then
+          l_3d = .false.
+      else ! conditional setting of l_3d when i_3d=0
+          if(n_radars .eq. 0 .and. imax*jmax .le. 40000)then
+              l_3d = .true.
+          else
+              l_3d = .false.
+          endif
+      endif
+
+      write(6,*)' i_3d/n_radars/n_grid_pts/l_3d '
+     1           ,i_3d, n_radars, imax*jmax, l_3d
 
       rms_thresh_norm = rms_thresh_wind          ! Not used if l_3d = .false.
 
