@@ -117,11 +117,11 @@ c
         write(6,*)' lat_s,lon_s,ralt',lat_s,lon_s,ralt
  4      format(59x,f8.0,1x,f7.0,1x,f8.0)
 
-        if(ralt .eq. 9999.)then
-            staelev = 0.        
-        else
-            staelev = ralt
-        endif
+!       if(ralt .eq. 9999.)then
+            staelev = -999.        
+!       else
+!           staelev = ralt
+!       endif
 
 !       Get Launch Time
         read(header_line(5),5)iy,mon,id,ih,min,is
