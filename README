@@ -1084,9 +1084,6 @@
         Change the parameter PRESSURE_INTERVAL_L to be the vertical
         pressure resolution desired (default is 5000pa). 
  
-        Update the individual pressures for each level listed in column form
-        in the file.
-
         Note that the vertical grid uses pressure coordinates and that
         the vertical pressure interval must be constant between levels.
         Of course, the top pressure should be greater than zero mb. The
