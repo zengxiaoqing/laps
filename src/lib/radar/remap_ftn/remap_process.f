@@ -744,11 +744,15 @@ c
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
 
+        character*9 a9time
         character*8 radar_subdir
         character*3 c3_radar_subdir
         character*(*) path_to_vrc
 
-        write(6,*)' Subroutine put_remap_vrc'
+        call make_fnam_lp(i4time,a9time,istatus)
+        if(istatus .ne. 1)return
+
+        write(6,*)' Subroutine put_remap_vrc for ',a9time
 
         call get_ref_base(ref_base,istatus)
         if(istatus .ne. 1)return

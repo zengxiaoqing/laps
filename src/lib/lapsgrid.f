@@ -1184,34 +1184,10 @@ c
       return
       end
 
-      subroutine get_pressure_bottom(pressure_bottom,istatus)
-
-      include 'lapsparms.cmn' ! PRESSURE_BOTTOM_L
-      include 'grid_fname.cmn'! grid_fnam_common
-
-!     This routine accesses the pressure_bottom variable from the
-!     .parms file via the common block. Note the variable name in the
-!     argument list is different in the calling routine
-
-!     The result 'pressure_bottom' has real meaning only when we are
-!     using a uniform 'PRESSURE' grid.
-
-      call get_laps_config(grid_fnam_common,istatus)
-
-      if(istatus .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not successfully called'
-          return
-      endif
-
-      pressure_bottom = PRESSURE_BOTTOM_L
-
-      return
-      end
-
-
       subroutine get_earth_radius(erad,istatus)
 
-      erad = 6367000.
+c     erad = 6367000.
+      erad = 6371200.
 
       istatus = 1
 

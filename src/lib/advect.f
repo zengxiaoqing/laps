@@ -144,3 +144,30 @@ c               write(6,*)' Upgrade',array_buf(i,j),array_out(i,j)
 
         return
         end
+
+        subroutine cpt_advection(field,u,v,dx,dy,ni,nj,advection)
+
+        real*4 field(ni,nj)
+        real*4 u(ni,nj)
+        real*4 v(ni,nj)
+        real*4 dx(ni,nj)
+        real*4 dy(ni,nj)
+        real*4 advection(ni,nj)
+
+	do j=2,nj-1
+	do i=2,ni-1
+	  dth1 = (field(i,j) - field(i-1,j)) / dx(i,j)
+	  dth2 = (field(i,j-1) - field(i-1,j-1)) / dx(i,j)
+	  dtdx = (u(i,j-1) + u(i-1,j-1)) * (dth1 + dth2) * .25
+	  dth3 = (field(i,j) - field(i,j-1)) / dy(i,j)
+	  dth4 = (field(i-1,j) - field(i-1,j-1)) / dy(i,j)
+	  dtdy = (v(i-1,j) + v(i-1,j-1)) * (dth3 + dth4) * .25
+	  advection(i,j) = - dtdx - dtdy                       ! field / sec
+
+        enddo ! i
+        enddo ! j 
+
+	call bounds(advection,ni,nj)
+
+        return
+        end

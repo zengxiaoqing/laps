@@ -571,7 +571,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
         write(6,*)' Subroutine ref_fill_horz...'
 
-        neighbor_thresh = 4
+        neighbor_thresh = 5 ! 4
 
 !       Obtain grid spacing
         call get_grid_spacing(grid_spacing_m,istatus)
@@ -613,6 +613,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
             do i = 2,ni-1
             do j = 2,nj-1
+                n_neighbors = 0
 
 !               Assess neighbors to see if we should fill in this grid point
                 if(   ngrids(i,j)   .ge. 1 
@@ -620,7 +621,6 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
      1               (ref_3d(i,j,k) .eq. ref_base
      1                          .or.
      1                ref_3d(i,j,k) .eq. r_missing_data)      )then       
-                    n_neighbors = 0
                     ref_sum = 0.
                     iil = i-1
                     jjl = j-1
@@ -633,6 +633,10 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
      1               .and. ref_3d(ii,jj,k) .ne. r_missing_data   )then
                             n_neighbors = n_neighbors + 1
                             ref_sum = ref_sum + ref_3d(ii,jj,k)
+                            if(n_add_lvl .le. 20)then
+                                write(6,*)i,j,'neighbor',n_neighbors
+     1                                   ,ii,jj,ref_3d(ii,jj,k)
+                            endif
                         endif
 
                     enddo ! jj
@@ -642,8 +646,12 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
 !               Fill into buffer array?
                 if(n_neighbors .ge. neighbor_thresh)then 
-                    ref_2d_buf(i,j) = ref_sum / float(n_neighbors)
+                    ref_fill = ref_sum / float(n_neighbors)
+                    ref_2d_buf(i,j) = ref_fill ! ref_3d(i,j,k) (test disable)
                     n_add_lvl = n_add_lvl + 1
+                    if(n_add_lvl .le. 20)then
+                        write(6,*)i,j,n_neighbors, ref_fill
+                    endif
                 else
                     ref_2d_buf(i,j) = ref_3d(i,j,k) ! ref_base
                 endif
