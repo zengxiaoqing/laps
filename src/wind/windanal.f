@@ -225,6 +225,9 @@ csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
       call get_pres_3d(i4time,imax,jmax,kmax,pres_3d,istatus)
       if(istatus .ne. 1)return
 
+      call get_rep_pres_intvl(pres_3d,imax,jmax,kmax,rep_pres_intvl
+     1                       ,istatus)
+
       do j=1,jmax
       do i=1,imax
         do k = 1,kmax
@@ -470,7 +473,7 @@ csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
 csms$serial end
 
       call barnes_multivariate(varbuff,n_var
-     1        ,imax,jmax,kmax,grid_spacing_m
+     1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1        ,varobs_diff_spread
      1        ,wt_p_spread,fnorm,n_fnorm
      1        ,l_analyze,l_3d,rms_thresh,weight_bkg_const
@@ -591,7 +594,7 @@ csms$insert      stop
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
               call barnes_multivariate(varbuff,n_var
-     1           ,imax,jmax,kmax,grid_spacing_m
+     1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1           ,varobs_diff_spread
      1           ,wt_p_spread,fnorm,n_fnorm
      1           ,l_analyze,l_3d,rms_thresh,weight_bkg_const
@@ -649,7 +652,7 @@ csms$insert      stop
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
           call barnes_multivariate(varbuff,n_var
-     1       ,imax,jmax,kmax,grid_spacing_m
+     1       ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
      1       ,l_analyze,l_3d,rms_thresh,weight_bkg_const
@@ -729,7 +732,7 @@ csms$insert      stop
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
           call barnes_multivariate(varbuff,n_var,imax,jmax,kmax
-     1       ,grid_spacing_m
+     1       ,grid_spacing_m,rep_pres_intvl
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
      1       ,l_analyze,l_3d,rms_thresh,weight_bkg_const

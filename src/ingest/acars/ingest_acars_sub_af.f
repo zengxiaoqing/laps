@@ -35,7 +35,7 @@
      1         I_A1LAT,                ! LATITUDE             DEG * 100
      1         I_A1LON,                ! LONGITUDE            DEG * -100 
      1         I_A1KIND,
-     1         I_A1ALT,                ! FLIGHT-ALT (true)    Meters MSL 
+     1         I_A1ALT,                ! FLIGHT-ALT (pressure) Meters MSL 
      1         I_A1PLA,
      1         I_A1DVAL,
      1         I_A1HOLM,

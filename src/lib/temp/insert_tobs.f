@@ -315,9 +315,12 @@ cdis
         write(6,*)' # of obs in data structure (tsnds + acars) = '
      1            ,n_obs
 
+        call get_rep_pres_intvl(pres_3d,ni,nj,nk,rep_pres_intvl
+     1                         ,istatus)
+
         call analyze_tobs(n_tsnd,ni,nj,nk,l_good_tsnd          ! I
      1      ,weight_bkg_const                                  ! I
-     1      ,grid_spacing_m,max_snd                            ! I
+     1      ,grid_spacing_m,rep_pres_intvl,max_snd             ! I
      1      ,temp_obs,max_obs,n_obs                            ! I
      1      ,r_missing_data                                    ! I
      1      ,l_3d,rms_thresh_norm                              ! I
@@ -337,7 +340,7 @@ cdis
 
         subroutine analyze_tobs(n_tsnd,ni,nj,nk,l_good_tsnd       ! I     
      1      ,weight_bkg_const                                     ! I
-     1      ,grid_spacing_m,max_snd                               ! I
+     1      ,grid_spacing_m,rep_pres_intvl,max_snd                ! I
      1      ,temp_obs,max_obs,n_obs                               ! I
      1      ,r_missing_data                                       ! I
      1      ,l_3d,rms_thresh_norm                                 ! I
@@ -383,7 +386,7 @@ cdis
 
              call barnes_univariate_shell(ni,nj,nk           ! Inputs
      1               ,r_missing_data                         ! Input
-     1               ,grid_spacing_m                         ! Input
+     1               ,grid_spacing_m,rep_pres_intvl          ! Input
      1               ,max_snd                                ! Input
      1               ,l_good_tsnd,n_tsnd                     ! Inputs
      1               ,bias_tsnd                              ! Input
@@ -428,7 +431,7 @@ cdis
 
         subroutine barnes_univariate_shell(ni,nj,nk              ! Inputs
      1                   ,r_missing_data                         ! Input
-     1                   ,grid_spacing_m                         ! Input
+     1                   ,grid_spacing_m,rep_pres_intvl          ! Input
      1                   ,max_snd                                ! Input
      1                   ,l_good_tsnd,n_tsnd                     ! Inputs
      1                   ,bias_tsnd                              ! Input
@@ -557,6 +560,7 @@ cdis
      1                      bias_3d                         ! Outputs
      1                     ,n_var                           ! Input
      1                     ,ni,nj,nk,grid_spacing_m         ! Inputs
+     1                     ,rep_pres_intvl                  ! Input
      1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm ! Inputs
      1                     ,l_analyze,l_3d,rms_thresh       ! Input
      1                     ,weight_bkg_const                ! Input

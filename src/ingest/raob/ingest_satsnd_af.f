@@ -63,7 +63,6 @@
 !    1         I_A1TYPE,
 !    1         I_A1MIN,                ! TIME-REPORT-MINUTES
 !    1         I_A1KIND,
-!    1         I_A1ALT,                ! FLIGHT-ALT (true)    Meters MSL 
 !    1         I_A1PLA,
 !    1         I_A1DVAL,
 !    1         I_A1HOLM,
