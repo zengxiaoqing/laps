@@ -641,13 +641,17 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
                   ---  2.3    Raw data ingest   ---
 
      There is a layer of "raw" data ingest code that may have to be modified
-     for the individual location depending on data formats. This is usually
-     the largest task within the porting of the LAPS code. The supported
-     component of the LAPS code is the analysis section. Ingest code is
-     supported only if your raw data looks has the same configuration and
-     format as FSL's raw data. It is the reponsibility of the LAPS user to 
-     modify the LAPS ingest code if necessary to generate the intermediate 
-     data files that are inputs to the analysis code. 
+     for the individual location depending on data formats. Its purpose is
+     to reformat and preprocess the various types of raw data into simple common 
+     formats used by the subsequent analyses. It also helps to modularize the 
+     software. 
+
+     Working with the ingest code is usually the largest task within the porting 
+     of LAPS. The supported component of the LAPS code is the analysis section. 
+     Ingest code is supported only if your raw data looks has the same 
+     configuration and format as FSL's raw data. It is the reponsibility of the
+     LAPS user to modify the LAPS ingest code if necessary to generate the 
+     intermediate data files that are inputs to the analysis code. 
 
      A flow chart for the ingest processes may be found at
      'http://laps.fsl.noaa.gov/wharton/slide1.html'.
