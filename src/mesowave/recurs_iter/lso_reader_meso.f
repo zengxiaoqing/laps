@@ -187,7 +187,8 @@ c
             olon(nobs)=lon(k)
             o(1,nobs)=t(k)
             ! if (dd(k).ne.badflag) then
-            if ((dd(k).ne.badflag) .and. (dd(k).ne.badsfc)) then  ! YUANFU XIE modified
+            if ((dd(k).ne.badflag) .and. (dd(k).ne.badsfc)) then 
+	    ! YUANFU XIE modified
              call disp_to_uv(dd(k),ff(k),utrue,vtrue)
              call uvtrue_to_uvgrid(utrue,vtrue,ugrid,vgrid,lon(k))
              o(2,nobs)=ugrid*0.5277777778     ! m/s
@@ -200,11 +201,12 @@ c
             endif
 
 	    ! Use either altimeter or station pressure: YUANFU
-            if ((alt(k).ne.badflag) .and. (alt(k).ne.badsfc)) then
-               o(4,nobs)=alt_2_sfc_press(alt(k),elev(k))
- 	    else 
-	       o(4,nobs)=pstn(k)
-	    endif
+            !if ((alt(k).ne.badflag) .and. (alt(k).ne.badsfc)) then
+            !   o(4,nobs)=alt_2_sfc_press(alt(k),elev(k))
+ 	    !else 
+	    !   o(4,nobs)=pstn(k)
+	    !endif
+	    o(4,nobs) = pmsl(k)
 
             o(5,nobs)=td(k)
 	IF ((o(5,nobs) .NE. badsfc) .AND. (o(5,nobs) .NE. badflag) 
@@ -212,7 +214,7 @@ c
 	IF ((o(5,nobs) .NE. badsfc) .AND. (o(5,nobs) .NE. badflag) 
      1     .AND. (dmx .LT. o(5,nobs))) dmx = o(5,nobs)
 
-	    ! Reduced Pressure:
+	    ! 6. Reduced Pressure:
 	    CALL reduce_p(t(k),td(k),o(4,nobs),elev(k),lapse_t,
      1	                  lapse_td,o(6,nobs),0.0,badflag)
 

@@ -35,8 +35,8 @@ SUBROUTINE WriteAnalysis(a,n)
   vunits(2) = 'M/S'
   varnames(3) = 'V  '	! V
   vunits(2) = 'M/S'
-  varnames(4) = 'PS ' 	! Pressure
-  comment(4) = 'ALT/STN PRESSURE'
+  varnames(4) = 'MSL ' 	! Pressure
+  comment(4) = 'MSL PRESSURE'
   vunits(4) = 'PA '
   varnames(5) = 'TD '	! Dew point
   vunits(5) = 'K  '
