@@ -4652,8 +4652,8 @@ c                   cint = -1.
      1                      ,r_missing_data)
 
             if(c_type_i .eq. 'pp' .and. i_image .eq. 1)then ! p_prime image
-                clow = +4.0
-                chigh = -4.0
+                clow = +5.0
+                chigh = -5.0
                 cint = 0.1
 
                 plot_parms%ncols = nint(abs(chigh-clow)/cint)
