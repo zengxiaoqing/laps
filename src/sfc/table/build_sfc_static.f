@@ -444,8 +444,8 @@ c=====================================================================
 c
 	implicit none
         real*4 fnorm(0:imax-1,0:jmax-1)
-        real pi, con, area, fno, rr, dx, dy , d, rom2
-        integer n_obs_var, imax, jmax
+        real pi, con, area, fno, rr, d, rom2
+        integer n_obs_var, imax, jmax, dx, dy
           
 ccc	include '../../source/sfc/laps_sfc.inc'
 c
