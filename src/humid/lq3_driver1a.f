@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 cdis
-        subroutine lq3_driver1a (i4time,data,jstatus)
+        subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,jstatus)
 
 c       $log: lq3_driver1a.f,v $
 c revision 1.18  1996/09/05  16:05:32  birk
@@ -175,8 +175,12 @@ c       included include file
         implicit none
 
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'lapsparms.for'
+c        include 'parmtrs.inc'
+c     parameter variables
+
+        integer ii,jj,kk
+        real mdf
 
 
         integer*4
@@ -200,37 +204,37 @@ c       included include file
 
 
         real*4
-     1        data(igrid,jgrid,kdim),
-     1        tpw(igrid,jgrid),
+     1        data(ii,jj,kk),
+     1        tpw(ii,jj),
      1        tempsh,rhc
 
-        integer kstart (igrid,jgrid)
-        real qs(igrid,jgrid)
-        real ps(igrid,jgrid)
+        integer kstart (ii,jj)
+        real qs(ii,jj)
+        real ps(ii,jj)
 
         real bias_one
 
         include 'setup.inc'
 
 
-        real*4 mask (igrid,jgrid),cg(igrid,jgrid,kgrid)
+        real*4 mask (ii,jj),cg(ii,jj,kk)
 
-        real*4 lt1dat(igrid,jgrid,kgrid)
+        real*4 lt1dat(ii,jj,kk)
 
         character
      1        dirlt1*50,dir*50,rhdir*50,dirpw*50,dir3*50,
      1        extlt1*31,ext*50,rhext*50,extpw*50,ext3*50,
-     1        varlt1(kgrid)*3,
-     1        lvl_coordlt1(kgrid)*4,
-     1        unitslt1(kgrid)*10,
-     1        commentlt1(kgrid)*125
+     1        varlt1(kk)*3,
+     1        lvl_coordlt1(kk)*4,
+     1        unitslt1(kk)*10,
+     1        commentlt1(kk)*125
 
 c lat lon variables
 
 
         character*50  directory
         character*50 grid_fnam_common
-        real lat(nx_l, ny_l), lon(nx_l, ny_l)
+        real lat(ii, jj), lon(ii, jj)
         real rspacing_dum
         character*125 comment_2d
         character*10  units_2d
@@ -241,8 +245,8 @@ c lat lon variables
 c rams stuff--------
         character*9
      1        filename,savefilename,ramsfile
-        character ramsvar(kgrid)*3, ramslvlcoord(kgrid)*4,
-     1        ramsunits(kgrid)*10, ramscomments(kgrid)*125
+        character ramsvar(kk)*3, ramslvlcoord(kk)*4,
+     1        ramsunits(kk)*10, ramscomments(kk)*125
         character rams_dir*50, rams_ext*31
 
 c ------------------
@@ -256,11 +260,11 @@ c ------------------
 
         integer*4 counter, counter1
 
-        integer*4 lvllm(kgrid)
+        integer*4 lvllm(kk)
 
-        real*4 maps_rh(igrid,jgrid,kgrid)
+        real*4 maps_rh(ii,jj,kk)
 
-c       real*4 maps_sh(igrid,jgrid,kgrid)
+c       real*4 maps_sh(ii,jj,kk)
 
 
         character*3 desired_field
@@ -268,8 +272,8 @@ c       real*4 maps_sh(igrid,jgrid,kgrid)
 c       external ss$_normal,rtsys_bad_prod,rtsys_good_prod
 c       external rtsys_no_data, rtsys_abort_prod
 
-        real*4 plevel(kdim)
-        integer*4 mlevel(kdim)
+        real*4 plevel(kk)
+        integer*4 mlevel(kk)
 
 
         real mean_rh_background  !used in rh/cloud computation
@@ -303,7 +307,7 @@ c                                                               routine
         call get_directory(ext,dir,len)
         call get_directory(rhext,rhdir,len)
 
-        call get_laps_config(laps_domain_file,istatus)
+        call get_laps_config('nest7grid',istatus)
         if(istatus .ne. 1)then
             write(6,*)' error in get_laps_config'
             return
@@ -349,9 +353,9 @@ c     sounding data even if it is present.
 c        initialize field to lq3 internal missing data flag.
 c        initialize total pw to laps missing data flag
 
-        do i = 1,igrid
-        do j = 1,jgrid
-        do k = 1,kdim
+        do i = 1,ii
+        do j = 1,jj
+        do k = 1,kk
         data (i,j,k) = -1e+30
         enddo
         tpw(i,j) = mdf
@@ -368,20 +372,20 @@ c        initialize total pw to laps missing data flag
 
 
 
-        do k = 1,kgrid
+        do k = 1,kk
         lvllm(k) = nint( pressure_of_level(k)  * .01 )
         enddo
 
 
-        do k = 1,kdim
+        do k = 1,kk
         plevel(k) = float ( lvllm(k)  )
         mlevel(k) = plevel(k)
         enddo
 
 c       mark the maps gridpoints
 
-        do j = 1,jgrid,(jgrid-1)/(jgrid-1)
-        do  i = 1,igrid,(igrid-1)/(igrid-1)
+        do j = 1,jj,(jj-1)/(jj-1)
+        do  i = 1,ii,(ii-1)/(ii-1)
 
         mask (i,j) = 1
 
@@ -407,7 +411,7 @@ c        rams_dir = '../lapsprd/ram/'
         rams_ext = 'ram'
         call get_directory('ram',rams_dir,len)
 
-        do i = 1,kgrid
+        do i = 1,kk
         ramsvar(i) = 'sh'
         enddo
 
@@ -419,12 +423,12 @@ c        rams_dir = '../lapsprd/ram/'
 c  attempt to get data from the ramsfile
 
         call read_laps (ramsi4time,ramsi4time,rams_dir,rams_ext,
-     1        igrid,jgrid,kgrid,kgrid,
+     1        ii,jj,kk,kk,
      1        ramsvar(1),lvllm,ramslvlcoord(1), ramsunits(1),
      1        ramscomments(1),data,istatus)
 
         if (istatus.eq.1) then
-             call check_nan3(data,igrid,jgrid,kgrid,istatus)
+             call check_nan3(data,ii,jj,kk,istatus)
              if(istatus.ne.1) then
                write(6,*) 'NaN detected from rams...abort'
                return
@@ -445,7 +449,7 @@ c first the rh data
         desired_field = 'sh '
 
         call get_maps_df (i4time,desired_field,maps_rh,
-     1                      igrid,jgrid,kdim,istatus)
+     1                      ii,jj,kk,istatus)
 
         if(istatus.ne.1) then
         print*, 'reading maps rh file failed'
@@ -453,7 +457,7 @@ c first the rh data
         endif
 
 
-        call check_nan3 (maps_rh,igrid,jgrid,kgrid,istatus)
+        call check_nan3 (maps_rh,ii,jj,kk,istatus)
          if (istatus.ne.1) then
                write(6,*) 'NaN detected from RUC/MAPS...abort'
                return
@@ -466,9 +470,9 @@ c first the rh data
 c use maps spacific humidity  (now contained in maps_rh variable) directly
 
 
-        do k = 1,kgrid
-        do j = 1,jgrid
-        do i = 1,igrid
+        do k = 1,kk
+        do j = 1,jj
+        do i = 1,ii
 
         if( maps_rh(i,j,k) .lt.0.0) then
                 write(6,*) 'negative rh read from lga', i,j,k
@@ -486,15 +490,15 @@ c use maps spacific humidity  (now contained in maps_rh variable) directly
 c **** obtain lat lons for domain
 
 
-        grid_fnam_common = laps_domain_file  ! used in get_directory to modify
+        grid_fnam_common = 'nest7grid'  ! used in get_directory to modify
                                       ! extension based on the grid domain
-        ext = laps_domain_file
+        ext = 'nest7grid'
 
 !       get the location of the static grid directory
         call get_directory(ext,directory,len_dir)
 
         var_2d='lat'
-        call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
+        call rd_laps_static (directory,ext,ii,jj,1,var_2d,
      1units_2d,comment_2d,
      1lat,rspacing_dum,istatus)
         if(istatus .ne. 1)then
@@ -503,7 +507,7 @@ c **** obtain lat lons for domain
         endif
 
         var_2d='lon'
-        call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
+        call rd_laps_static (directory,ext,ii,jj,1,var_2d,
      1units_2d,comment_2d,
      1lon,rspacing_dum,istatus)
         if(istatus .ne. 1)then
@@ -520,7 +524,7 @@ c ****  execute raob step if switch is on
         if(raob_switch.eq.1) then
         write (6,*) 'begin raob insertion'
         call raob_step (i4time,data,plevel,
-     1        lat,lon, igrid,jgrid,kgrid)
+     1        lat,lon, ii,jj,kk)
         else
         write(6,*) 'the raob switch is off... raobs skipped'
         endif
@@ -529,14 +533,14 @@ c ****  execute raob step if switch is on
 151     continue ! go here if using rams data as background
 
 c    open file for laps temp data
-        do k = 1,kgrid
+        do k = 1,kk
         varlt1(k) = 't  '
         enddo
 
         call read_laps (save_i4time,save_i4time,
      1        dirlt1,
      1        extlt1,
-     1        igrid,jgrid,kgrid,kgrid,
+     1        ii,jj,kk,kk,
      1        varlt1,
      1        lvllm,
      1        lvl_coordlt1,
@@ -552,7 +556,7 @@ c    open file for laps temp data
         return
         endif
 
-        call check_nan3 (lt1dat,igrid,jgrid,kgrid,istatus)
+        call check_nan3 (lt1dat,ii,jj,kk,istatus)
          if (istatus.ne.1) then
                write(6,*) 'NaN detected from lt1...ABORT'
                return
@@ -564,12 +568,12 @@ c    open file for laps temp data
 c perform initialquality control check for supersaturation after ingest
         print*, 'perform qc for supersaturation'
         counter = 0
-        do k = 1,kdim
+        do k = 1,kk
         write(6,*)  ' '
         write(6,*) 'Level ', k, '   ', plevel(k)
 
-        do j = jgrid,1,-1
-        do i = 1,igrid
+        do j = jj,1,-1
+        do i = 1,ii
 
         tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
      1           lt1dat(i,j,k)-273.15, 0.0 )/1000.
@@ -589,7 +593,7 @@ c perform initialquality control check for supersaturation after ingest
 
 
         enddo
-        write(6,*) cdomain(1:igrid)
+        write(6,*) cdomain(1:ii)
         enddo
         enddo
 
@@ -606,13 +610,13 @@ c perform initialquality control check for supersaturation after ingest
 
 c ****  get laps cloud data. used for cloud, bl, goes
 
-        call mak_cld_grid (i4time,i4timep,cg,igrid,jgrid,kdim,
+        call mak_cld_grid (i4time,i4timep,cg,ii,jj,kk,
      1                     c_istatus)
 
         c_istatus = 0
         if (i4time.eq.i4timep) c_istatus = 1
 
-        call check_nan3 (cg,igrid,jgrid,kgrid,istatus)
+        call check_nan3 (cg,ii,jj,kk,istatus)
          if (istatus.ne.1) then
                write(6,*) 'NaN detected from Cloud Grid...ABORT'
                return
@@ -625,7 +629,7 @@ c ***   insert bl moisture
         print*, 'calling lsin'
 c       insert boundary layer data
         call lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
-     1        kstart,qs,ps,lat,lon,igrid,jgrid,kdim,istatus)
+     1        kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
 
         print*, 'finished with routine lsin'
 
@@ -646,7 +650,7 @@ c make call to goes moisture insertion
      1        lt1dat,            ! laps lt1 (3-d temps)
      1        goes_switch,       ! goes switch and satellite number
      1        sounder_switch,    ! sounder switch, 0=imager,1=sndr
-     1        igrid,jgrid,kgrid
+     1        ii,jj,kk
      1        )
 
         else
@@ -691,9 +695,9 @@ c *** insert cloud moisture, this section now controled by a switch
         else  ! increase moisture based on cloud amount
 
         write(6,*) 'Saturate in cloudy areas'
-        do k = 1,kgrid
-        do j = 1,jgrid
-        do i = 1,igrid
+        do k = 1,kk
+        do j = 1,jj
+        do i = 1,ii
 
         if(cg(i,j,k) .gt. 0.1   .and. cg(i,j,k) .lt. 1.0) then !cloudy
 
@@ -725,10 +729,10 @@ c *** insert cloud moisture, this section now controled by a switch
 c repeat quality control check for supersaturation after pre-analysis
         print*, 'perform qc for supersaturation'
         counter = 0
-        do k = 1,kdim
+        do k = 1,kk
         write(6,*) 'Level ',k, '    ', plevel(k)
-        do j = jgrid,1,-1
-        do i = 1,igrid
+        do j = jj,1,-1
+        do i = 1,ii
 
         tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
      1           lt1dat(i,j,k)-273.15, 0.0 )/1000.
@@ -749,7 +753,7 @@ c repeat quality control check for supersaturation after pre-analysis
 
 
         enddo
-        write(6,*) cdomain(1:igrid)
+        write(6,*) cdomain(1:ii)
         enddo
         enddo
 
@@ -761,7 +765,7 @@ c repeat quality control check for supersaturation after pre-analysis
 
 c       recompute tpw including clouds and supersat corrections
 
-        call int_tpw(data,kstart,qs,ps,plevel,tpw,igrid,jgrid,kdim)
+        call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
 
 
 1234    continue  ! goes here if no 3-d temp data...also skips b.l. stuff
@@ -772,9 +776,9 @@ c       QC study.
 
         tempsh = 0.0
 
-        do i = 1,igrid
-        do j = 1,jgrid
-        do k = 1,kdim
+        do i = 1,ii
+        do j = 1,jj
+        do k = 1,kk
 
         if(data(i,j,k) .lt.0.0) then
           data(i,j,k) = mdf  !  put in missing data flag if missing
@@ -792,20 +796,20 @@ c       log the amount of water vapor
         write (6,*) ' '
         write (6,*) '***************************** '
         write (6,*) 'Average water in volume (g/g)*10000'
-        write (6,*) tempsh/float(igrid)/float(jgrid)/float(kgrid)*10000.
+        write (6,*) tempsh/float(ii)/float(jj)/float(kk)*10000.
         write (6,*) '***************************** '
         write (6,*) ' '
         write (6,*) ' '
 
 c check for NaN values and Abort if found
 
-        call check_nan3(data,igrid,jgrid,kgrid,istatus)
+        call check_nan3(data,ii,jj,kk,istatus)
           if(istatus.ne.1) then
             write(6,*) 'NaN values detected (sh array)... aborting'
             return
           endif
 
-        call check_nan2(tpw,igrid,jgrid,istatus)
+        call check_nan2(tpw,ii,jj,istatus)
           if(istatus.ne.1) then
             write(6,*) 'NaN values detected (tpw array)... aborting'
             return
@@ -815,18 +819,18 @@ c check for NaN values and Abort if found
 c       write final 3-d sh field to disk
         commentline = 'maps with clouds and surface effects only'
         call writefile (save_i4time,commentline,mlevel,data,
-     1                   igrid,jgrid,kdim,istatus)
+     1                   ii,jj,kk,istatus)
         if(istatus.eq.1)        jstatus(1) = 1
 
 c       write total precipitable water field
-        call write_lh4 (save_i4time,tpw,bias_one,igrid,jgrid,istatus)
+        call write_lh4 (save_i4time,tpw,bias_one,ii,jj,istatus)
         if(istatus.eq.1) jstatus(3) = 1
 
 
 c       generate lh3 file (RH true, RH liquid)
         if (t_istatus.eq.1) then
         call lh3_compress(data,lt1dat,save_i4time,lvllm,
-     1       igrid,jgrid,kdim,istatus)
+     1       ii,jj,kk,istatus)
         if(istatus.eq.1)        jstatus(2) = 1
         else
         print*, 'no lh3 or rh data produced...'

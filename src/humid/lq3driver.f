@@ -31,50 +31,60 @@ cdis
 cdis
         program lq3driver
 
-c routine to automatically execute routines lpw_driver1a & b for the laps
-c scheduler.
+c     routine to automatically execute routines lpw_driver1a & b for the laps
+c     scheduler.
 c
-c       note, it is essential that this module be executed in the laps exe
-c       path position ... its path location is vital to its proper execution
+c     note, it is essential that this module be executed in the laps exe
+c     path position ... its path location is vital to its proper execution
 c
 c
-c       it is also strongly recommended that this and the associated moisture
-c       modules be compiled with the highest permissible optimization.
-c       especially the satellite structure inclusion can take up to 1/2 hour
-c       of cpu time when run without optimization.
+c     it is also strongly recommended that this and the associated moisture
+c     modules be compiled with the highest permissible optimization.
+c     especially the satellite structure inclusion can take up to 1/2 hour
+c     of cpu time when run without optimization.
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+        include 'lapsparms.cmn'
+c        include 'parmtrs.inc'
 
-        real*4
-     1  data(igrid,jgrid,kdim)
+
 
         integer*4
-     1  i4time,
-     1  istatus,
-     1  jstatus(3)
+     1       ii,jj,kk,
+     1       i4time,
+     1       istatus,
+     1       jstatus(3)
+
+        real mdf
 
 
         character*9 filename
         character*200 fname
         integer len
 
+
+        call get_laps_config('nest7grid',istatus)
+
+	ii = nx_l_cmn
+	jj = ny_l_cmn
+	kk = nk_laps
+        mdf = r_missing_data_cmn
+
         call get_directory('etc',fname,len)
         print *,fname(1:len)
         open(11,file=fname(1:len)//'systime.dat',status='unknown')
         read (11,*)i4time
         read (11,22) filename
-22      format (1x,a9)
+ 22     format (1x,a9)
         close (11)
 
-c       convert filename to i4time
+c     convert filename to i4time
 
         call i4time_fname_lp (filename,i4time,istatus)
 
 
-        call lq3_driver1a (i4time,data,jstatus)
+        call lq3_driver1a (i4time,ii,jj,kk,mdf,jstatus)
 
         write(6,*) 'lq3, lh3, and lh4 (1=success)'
         write(6,*) jstatus, ' output matrix'

@@ -59,8 +59,8 @@ c       updated for unix 19 oct 1992  db
         implicit none
 
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'lapsparms.for'
+c        include 'parmtrs.inc'
 
 c input variables
 
@@ -81,32 +81,41 @@ c internal variables
      1  extlt1*31,ext*50,rhext*50,extpw*50,ext3*50
       integer k
 
-c variables requiring lapsparms.inc 
+c variables requiring dynamic properties 
 
 
         character
-     1  var(kdim)*3,
-     1  lvl_coord(kdim)*4,
-     1  units(kdim)*10,
-     1  comment(kdim)*125
+     1     var(kk)*3,
+     1     lvl_coord(kk)*4,
+     1     units(kk)*10,
+     1     comment(kk)*125
 
 
-        data var/kdim*'sh '/
-        data lvl_coord/kdim*'hpa'/
-        data units/kdim*'          '/
+c        data var/kdim*'sh '/
+c        data lvl_coord/kdim*'hpa'/
+c        data units/kdim*'          '/
 
-      data extpw/'lh1'/
-      data ext3/'lh2'/
-      data extlt1/'lt1'/
-      data ext /'lq3'/
-      data rhext /'lh3'/
-      integer len
+        data extpw/'lh1'/
+        data ext3/'lh2'/
+        data extlt1/'lt1'/
+        data ext /'lq3'/
+        data rhext /'lh3'/
+        integer len
 
-      call get_directory(extpw,dirpw,len)
-      call get_directory(ext3,dir3,len)
-      call get_directory(extlt1,dirlt1,len)
-      call get_directory(ext,dir,len)
-      call get_directory(rhext,rhdir,len)
+        do k = 1,kk
+           var(k) = 'lh1'
+           lvl_coord(k) = 'hpa'
+           units (k) = '          '
+        enddo
+
+
+
+
+        call get_directory(extpw,dirpw,len)
+        call get_directory(ext3,dir3,len)
+        call get_directory(extlt1,dirlt1,len)
+        call get_directory(ext,dir,len)
+        call get_directory(rhext,rhdir,len)
 
         dir = path
 
@@ -114,27 +123,27 @@ c variables requiring lapsparms.inc
         kmax = kk
 
         do k  = 1,kk
-        comment(k) = commentline
+           comment(k) = commentline
         enddo
 
         call write_laps (i4time,i4time,
-     1  dir,
-     1  ext,
-     1  ii,
-     1  jj,
-     1  kmax,
-     1  kk,
-     1  var,
-     1  lvl,
-     1  lvl_coord,
-     1  units,
-     1  comment,
-     1  data,
-     1  istatus)
+     1       dir,
+     1       ext,
+     1       ii,
+     1       jj,
+     1       kmax,
+     1       kk,
+     1       var,
+     1       lvl,
+     1       lvl_coord,
+     1       units,
+     1       comment,
+     1       data,
+     1       istatus)
 
         if(istatus.ne.1) then
-        istatus = 134316524
-        return
+           istatus = 134316524
+           return
         endif
 
         istatus = 1
@@ -146,3 +155,4 @@ c variables requiring lapsparms.inc
 
         end
 
+      
