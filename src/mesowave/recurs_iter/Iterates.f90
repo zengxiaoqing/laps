@@ -14,7 +14,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
   REAL,    INTENT(IN) :: bkgd(nx,ny,ncycles,nvlaps)
   REAL,    INTENT(IN) :: ldf(nx,ny),ds(3)
 
-  INTEGER :: iter,iobs,i,j,k,no_v,idp
+  INTEGER :: iter,iobs,i,j,k,no_v,idp,nbqc
   REAL    :: y0,b(2,3),rms,stdv(nvlaps)
 
   ! Unified analysis of velocity:
@@ -32,6 +32,8 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 
 	stdv(id) = 0.0
 	no_v = 0
+
+	nbqc = 0
 
         DO iobs=1,nobs
 
@@ -62,11 +64,17 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 	      stdv(id) = stdv(id)+(o(1,iobs)-y0)**2
 	      no_v = no_v+1
 
+	      ! Bad QC:
               IF ((id .EQ. 1) .OR. (id .EQ. 5)) THEN
                  IF (ABS(o(1,iobs)-y0) .GT. 10.0) THEN
-	            PRINT*,'Bad QC: ',o(1,iobs),y0,vid(iobs),iobs
+	            PRINT*,'Bad QC: ',o(1,iobs),y0, &
+			vid(iobs),iobs,o(2:4,iobs)
 	            o(1,iobs) = y0
                     w(iobs) = 0.0
+		    nbqc = nbqc+1
+	         ELSE
+		    PRINT*,'God QC: ',o(1,iobs),y0, &
+			vid(iobs),iobs,o(2:4,iobs)
                  ENDIF
 	      ENDIF
 
@@ -74,15 +82,18 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 
         ENDDO
 
-	stdv(id) = SQRT(stdv(id))/no_v
+	PRINT*,'Total Bad QC: ',nbqc,id
 
-	!IF (no_v .GT. 0) THEN
-        !   PRINT*,'Standard Deviation: ',stdv(id),id
-	!ELSE
-	!   PRINT*,'Standard Deviation: no observation'
-	!ENDIF
+	stdv(id) = SQRT(stdv(id)/no_v)
+
+	IF (no_v .GT. 0) THEN
+           PRINT*,'Standard Deviation: ',stdv(id),id
+	ELSE
+	   PRINT*,'Standard Deviation: no observation'
+	ENDIF
 
 	! Standard deviation check: with 4.0*stdv
+	nbqc = 0
         DO iobs=1,nobs
 
 	   IF ((id .EQ. vid(iobs)) .AND. &
@@ -111,14 +122,19 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 
               IF (ABS(o(1,iobs)-y0) .GT. 4.0*stdv(id)) THEN
 	         PRINT*,'Standard deviation QC: ', &
-			o(1,iobs),y0,vid(iobs),iobs
+	    	    o(1,iobs),y0,vid(iobs),iobs,stdv(id)
+	         nbqc = nbqc+1
 	         o(1,iobs) = y0
                  w(iobs) = 0.0
+	      ELSE
+		 PRINT*,'PASS STD: ',iobs,o(1,iobs),y0,stdv(id)
               ENDIF
 
 	   ENDIF
 
         ENDDO
+
+	PRINT*,'Number of STD QCed: ',nbqc,id
 
      ENDIF
 
