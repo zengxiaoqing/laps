@@ -125,6 +125,8 @@ c     reading goes 10
 
 c     get most recent file in directory
 
+      call s_len(path_to_gvap10, ptg_index, istatus)
+
       call get_newest_file (filename, time_diff,
      1     path_to_gvap10,ptg_index,filefound,
      1     extension, extension_index, istatus)
@@ -152,11 +154,13 @@ c     get most recent file in directory
 
  667  close(23)
 
-      nn = i-1
+      nn = i-1 + nn
       if (nn .eq. 0) go to 666
-      write(6,*) nn, ' number of records read GOES 10'
+      write(6,*) i-1, ' number of records read GOES 10'
       istatus = 1
 c      write(6,*) (wt(i),i=1,nn)
+
+      write (6,*) 'total GVAP records read is ', nn
 
       return
 
