@@ -2193,7 +2193,7 @@ Outputs: (LW3 is main output)
 	sag	inter data	SAOs             they are used for lapsplot 
 	d01-d20 inter data (3d)	derived radar obs output)
 
-	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
+	lw3	3d grid		3-D winds (U and V are wrt GRID NORTH)
 	lwm	2d grid		surface winds
 
 </pre>                                        
@@ -2615,7 +2615,7 @@ Inputs:                                          '*' = essential input
                                                                           file)
         lso     inter data      SAO obs (for precip type verification)
 
-	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
+	lw3	3d grid		3-D winds (U and V are wrt GRID NORTH)
 	lwm	2d grid		surface winds
         vrc/v01/vrz             2-D or 3-D radar reflectivity
 
@@ -3109,12 +3109,12 @@ Process humid:  LQ3  SH   sh      21  Specific Humidity
             	     RHL  rhl	  21  Relative Humidity with resp to liquid
             	LH4  TPW  tpw      1  Integrated Total Precipitable Water
 
-Process wind:   LW3  U3   u       21  Wind u (wrt TRUE NORTH)
-		     V3   v       21  Wind v (wrt TRUE EAST)
+Process wind:   LW3  U3   u       21  Wind u (wrt GRID NORTH)
+		     V3   v       21  Wind v (wrt GRID EAST)
           	     OM   w       21  Wind omega 
 
-                LWM  SU   u        1  Surface wind u (wrt TRUE NORTH)
-                     SV   v        1  Surface wind v (wrt TRUE EAST)
+                LWM  SU   u        1  Surface wind u (wrt GRID NORTH)
+                     SV   v        1  Surface wind v (wrt GRID EAST)
 		
 Process cloud:	LC3  LC3  camt    42  Fractional Cloud Cover (levels 1-42)
 
@@ -3178,14 +3178,14 @@ Process soil:   LM1  LSM  lsm      3  Soil Moisture
 		     MWF  mwf      1  Soil Moisture content Wetting Front
 
 LAPS Fcst Model:
-                RAM  U3   ru	  21  Fcst Model Wind u (true north)
-		     V3   rv	  21  Fcst Model Wind v (true north)
+                RAM  U3   ru	  21  Fcst Model Wind u (grid north)
+		     V3   rv	  21  Fcst Model Wind v (grid north)
 		     HT	  rz	  21  Fcst Model Height
 		     T3	  rt	  21  Fcst Model Temperature
 		     SH	  rsh	  21  Fcst Model Specific Humidity
 		
-		RSF  U	  rus 	   1  Fcst Model Surface wind u (true north)
-	             V	  rvs 	   1  Fcst Model Surface wind v (true north)
+		RSF  U	  rus 	   1  Fcst Model Surface wind u (grid north)
+	             V	  rvs 	   1  Fcst Model Surface wind v (grid north)
 		     T	  rts 	   1  Fcst Model Surface Temperature
 		     P	  rps 	   1  Fcst Model 1500m pressure
 		     TD	  rtd 	   1  Fcst Model Dewpoint                 
@@ -3234,11 +3234,10 @@ Process lga.exe (background model):
                                       isobaric
                      T3   t       21  Model isentrop temp interp to LAPS isobaric
                      SH   sh      21  Model specific humidity
-                     U3   u       21  Model u wind component (true north)
-                     V3   v       21  Model v wind component (true north)
+                     U3   u       21  Model u wind component (grid north)
+                     V3   v       21  Model v wind component (grid north)
 
-                LGB                   Sfc grids
-                                      (winds are true north)
+                LGB                   Sfc grids (winds are grid north)
 
 Process LH1: 	LH1  PW   pw	   1  Precipitable Water
 
