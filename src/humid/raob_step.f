@@ -396,10 +396,10 @@ c     compare computed diff values with QC thresholding... assign rmd if bad
 
             if(sdev(k).ne.rmd) then
  
-               if(abs(diff(k,is)) .le. 1.5*sdev(k) ) then
+               if(abs(diff(k,is)) .le. 1.*sdev(k) ) then
                   write(6,*) 'accepting ',k,is,diff(k,is)
                elseif (diff(k,is) .lt. 0.0 
-     1                 .and. abs(diff(k,is)) .le. 2.*sdev(k) ) then
+     1                 .and. abs(diff(k,is)) .le. 1.*sdev(k) ) then
                   write (6,*) 'accepting extreme negative value', 
      1                 k,is,diff(k,is)
                else
@@ -459,7 +459,7 @@ c     into regions that are near saturation already
 
 c     apply the computed weights and averages to the data point in question
 
-                  data(i,j,k) = data(i,j,k)*(scale_used-1.)*weight_avg 
+             data(i,j,k) = data(i,j,k)*(scale_used-1.)*weight_avg 
      1                 + data (i,j,k)
 
                   if (data(i,j,k) .lt. 0.0) then
