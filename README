@@ -108,22 +108,21 @@
 
       ----------------  2.1   UNIX System Requirements  ----------------
 
-     Supported UNIX platforms include
+     Supported UNIX platforms include...
 <pre>
-     IBM rs6000      AIX3.25 and AIX4. NFS mounted disks should be mounted with
+     IBM rs6000      AIX4.3            NFS mounted disks should be mounted with
                                        NFS version 2 instead of 3.
      HP              HPUX 10.20        Requires f90
      SunOS (Solaris) 5.6               Requires f90
-     IRIX64          6.4               Works using f77 but requires namelist 
-                                       end delimiter be changed from / to $
+     IRIX64          6.5               Requires f90
      DEC (Alpha)
      LINUX (elf)                       
 </pre>
 
      We are working on adding more supported platforms. We welcome suggestions
-     on how to modify LAPS for other platforms. Note that we cannot yet 
-     guarantee the portability of LAPS to these additional platforms 
-     (e.g. Windows NT).
+     on how to modify LAPS for other platforms/versions. Note that we cannot 
+     guarantee the portability of LAPS to all of these
+     other platforms (e.g. Windows NT).
 
                       --- 2.1.1   NetCDF library   ---
  
@@ -1723,6 +1722,8 @@ Sample Input/Output: May be available in the test data case.
 </pre>
 
 Source directory: laps/src/ingest/sao
+
+Parameter files: obs_driver.nl
 
 The LSO file is fairly self explanatory...the comments in the 
 'write_surface_obs' routine detail everything.  The expected accuracies are 
