@@ -66,7 +66,7 @@ c
       real rlat_grid,rlon_grid,height_grid
       real rlat_radar,rlon_radar,rheight_radar
       real elev,elev_deg,coselev,azimuth,azi_deg
-      real slant_range,sl_range_m,ri,rj,dbz,z
+      real slant_range,sl_range_m,ri,rj,dbz,z,grid_spacing_cen_m
       character*4 c4_radarname
       character*150 static_dir,filename
       character*3 ext
@@ -81,8 +81,8 @@ c
       write(6,801)NX_L,NY_L
   801 format('REMAP > Getting LAPS Domain: ',2i5)
 c
-      call get_laps_domain(NX_L,NY_L,'nest7grid',
-     :                      lat,lon,topo,istatus)
+      call get_domain_laps(NX_L,NY_L,'nest7grid',
+     :                     lat,lon,topo,grid_spacing_cen_m,istatus)    
       IF (istatus .eq. 0) THEN
         write(6,*)' Error getting LAPS domain'
         stop
@@ -95,6 +95,12 @@ c
 c
       write(6,810) range_interval
   810 format(' Range interval for LUTs is ',F10.2)
+
+      if(range_interval .gt. grid_spacing_cen_m)then
+          write(6,*)' WARNING: Range interval is > grid spacing of'
+     1             ,grid_spacing_cen_m, 'leading to inaccurate remap'
+      endif
+
       write(6,812) gate_spacing_m
   812 format(' Effective gate spacing for radar ',F10.2)
 
