@@ -600,7 +600,7 @@ netcdf laps
         float
             heli(record,levels_1,y,x);
             heli:long_name="helicity";
-            heli:units="meters / second**2";
+            heli:units="meters**2 / second**2";
             heli:valid_range= 0.f, 0.100f;
             heli:_FillValue = -99999.f;
  	    heli:_n3D = 0;
