@@ -191,10 +191,15 @@ cdis
           do j_grid = 1,jmax
           do i_grid = 1,imax
 
-            k_sfc = nint(height_to_zcoord(topo(i_grid,j_grid),istatus))
+            if(k_level .eq. 0)then
+                k_sfc = 
+     1              nint(height_to_zcoord(topo(i_grid,j_grid),istatus))     
+            else
+                k_sfc = -99
+            endif
 
-            if(k_grid .eq. k_level .or.
-     1           k_level .eq. 0 .and. k_sfc .eq. k_grid)then
+            if(k_grid  .eq. k_level                   .OR.
+     1         k_level .eq. 0 .and. k_sfc .eq. k_grid      )then
 
               if(grid_ra_vel(i_grid,j_grid,k_grid)
      1                          .ne. r_missing_data)then
@@ -203,7 +208,7 @@ cdis
      1              ,c1_plottype,rlat_radar,rlon_radar)
               endif
 
-            endif
+            endif ! at the right level to plot
 
           enddo ! i_grid
           enddo ! j_grid
@@ -263,6 +268,8 @@ cdis
 1323             format(' new ',2f8.3,10x,2i5)
 
                 spd_kt = speed_ms / mspkt
+
+                write(6,*)nint(ri),nint(rj)
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_radar)
