@@ -60,7 +60,7 @@ netcdf lsx {
             t:_FillValue = 1.e+37f;
             t:long_name="surface temperature";
             t:units="degrees kelvin";
-            t:valid_range= -75.f, 125.f;
+            t:valid_range= -150.f, 150.f;
             t:LAPS_var="T";
             t:lvl_coord="AGL ";
             t:LAPS_units="K";
@@ -327,7 +327,17 @@ netcdf lsx {
             hi:LAPS_var="HI";
             hi:lvl_coord="none";
             hi:LAPS_units="none";
- 
+
+        //      ground temperature
+        float
+            tgd(record,z,y,x);
+            tgd:_FillValue = 1.e+37f;
+            tgd:long_name="Ground Temperature";
+            tgd:units="K";
+            tgd:valid_range= 0.f, 400.f;
+            tgd:LAPS_var="TGD";
+            tgd:lvl_coord="AGL";
+            tgd:LAPS_units="K";
 
                 	        
         //	LAPS variables
@@ -362,6 +372,7 @@ netcdf lsx {
             vis_comment(record,z,namelen),
             fwx_comment(record,z,namelen),
             hi_comment(record,z,namelen),
+            tgd_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -458,6 +469,10 @@ netcdf lsx {
         short
             hi_fcinv(record, z);
             hi_fcinv:_FillValue= 0s;
+              	
+        short
+            tgd_fcinv(record, z);
+            tgd_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
