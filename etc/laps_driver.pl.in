@@ -105,6 +105,7 @@ my @cycle_time=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time_cmn"
 my $cycle_time = ($cycle_time[0]>0)?$cycle_time[0]:3600;
 
 my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+my $LAPS_LOCK_PATH = $LAPS_LOG_PATH;
 
 if(defined $opt_L){
    if(length($opt_L) != 16){
@@ -124,6 +125,9 @@ if(defined $opt_L){
    $mon="0".$mon if(length($mon)<2);
 
    $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
+   if(-e "/tmp/laps_casererun_log"){
+      $LAPS_LOCK_PATH = "/tmp/laps_casererun_log";
+   }
 
 }
 
@@ -149,14 +153,14 @@ select(STDOUT); $| = 1;
 
 
 my(@locks);
-opendir(LOCKDIR,"$LAPS_LOG_PATH");
+opendir(LOCKDIR,"$LAPS_LOCK_PATH");
 @locks = grep /^\.lock$exe/, readdir(LOCKDIR);
 closedir(LOCKDIR);
 
 foreach(@locks){
     $_ =~ /^\.lock$exe\.(\d+)$/;
     my $jpid = $1;
-    open(LFH,"$LAPS_LOG_PATH/$_");
+    open(LFH,"$LAPS_LOCK_PATH/$_");
     my $cid = <LFH>;
     close(LFH);
     next unless ($cid>1);
@@ -177,10 +181,11 @@ foreach(@locks){
 #    
     print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
     kill -9,$cid if($cid>0);
-    unlink "$LAPS_LOG_PATH/$_";
+    unlink "$LAPS_LOCK_PATH/$_";
 }
 
-my $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
+my $lockfile = "$LAPS_LOCK_PATH/\.lock$exe\.$$";
+
 #open(LOCK,">$lockfile");
 #close(LOCK);
 

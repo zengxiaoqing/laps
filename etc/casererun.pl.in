@@ -176,6 +176,11 @@ if($success != 1){
    print "Failed to make /tmp links for ingest data\n";
    die;
 }
+my $yrmonday = `date +%F`;
+chomp $yrmonday;
+my $hrmin = `date +%R`;
+chomp $hrmin;
+
 if(!-d "/tmp/time"){
    mkdir "/tmp/time", 0777 or die "Failed to make directory /tmp/time $!\n";
 }
@@ -183,17 +188,33 @@ if(!-l "$DATA_ROOT/time/systime.dat"){
   if(!-e "/tmp/time/systime.dat"){system("touch /tmp/time/systime.dat");}
   system("ln -sf /tmp/time/systime.dat $DATA_ROOT/time/systime.dat");
 }
-# preserve the runtime.log file for each run separately for each machine
+
 if(!-d "/tmp/laps_casererun_log"){
    mkdir "/tmp/laps_casererun_log", 0777;
 }
-if(-e "/tmp/laps_casererun_log/runtime.log"){
-  unlink "/tmp/laps_casererun_log/runtime.log";
-}elsif(-e "$DATA_ROOT/log/runtime.log"){
-  unlink "$DATA_ROOT/log/runtime.log";
-}
-system("ln -sf /tmp/laps_casererun_log/runtime.log $DATA_ROOT/log/runtime.log");
 
+# preserve the runtime.log file for each run separately for each machine
+system("ln -sf /tmp/laps_casererun_log/runtime.log.$yrmonday-$hrmin $DATA_ROOT/log/runtime.log");
+
+if(-e $wideband_2_netcdf){
+}
+
+# this is pretty specific and allows the path in remap.nl to work when the
+# scratch disk is scratch2
+# ---------------------------------------------------------------------------
+my @parts = split "/", $wideband_2_netcdf;
+if($parts[2] eq "scratch2"){
+   if(-e $wideband_2_netcdf){
+      system("rm -rf  $wideband_2_netcdf");
+      mkdir "/export/scratch2/wideband", 0777;
+   }
+   if(-e "/export/scratch/wideband"){
+      system("rm -rf  /export/scratch/wideband");
+   }
+   system("ln -sf /export/scratch2/wideband /export/scratch/wideband");
+}else{
+   system("rm -rf  $wideband_2_netcdf");
+}
 #-------------------------
 # main loop for casererun
 #-------------------------
