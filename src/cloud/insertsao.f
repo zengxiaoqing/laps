@@ -330,6 +330,17 @@ c place station at proper laps grid point
 
               endif ! ht_base > ht_defined
 
+              if(l_parse(amt_ret(i,l),'VV'))then
+                  if(l .eq. 1)then
+                      write(6,*)
+     1                    ' VV report, reset ht_defined to ht_base'
+     1                    ,ht_defined,ht_base
+                      ht_defined = ht_base
+                  else
+                      write(6,*)' WARNING: VV report with >1 layer ob'
+                  endif
+              endif
+
 C CLOUDS ARE NOW IN MSL
 !             Fill in clear for entire column for METAR or up to ht_base for 
 !             AWOS or up to ht_base for VV.

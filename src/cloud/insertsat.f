@@ -237,8 +237,8 @@ c
             
         endif
 
-!       Calculate cold filtered temperatures
-        i_delt = max(1,nint(grid_spacing_m/10000.))
+!       Calculate cold filtered temperatures (over ~20km box)
+        i_delt = max(1,nint(10000./grid_spacing_m))
         do j = 1,jmax
             jl = max(1   ,j-i_delt)
             jh = min(jmax,j+i_delt)
@@ -246,7 +246,7 @@ c
             do i = 1,imax
                 il = max(1   ,i-i_delt)
                 ih = min(imax,i+i_delt)
-                tb8_cold_k(i,j) = abs(r_missing_data)
+                tb8_cold_k(i,j) = tb8_k(i,j)
 
                 do jj = jl,jh,i_delt
                 do ii = il,ih,i_delt
