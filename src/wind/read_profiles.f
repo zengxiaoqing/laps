@@ -80,7 +80,7 @@ c
         r_mspkt = .518
 
         call get_wind_parms(l_use_raob,l_use_cdw,l_use_radial_vel
-     1                                          ,istatus)     
+     1                     ,weight_bkg_const,istatus)     
         if(istatus .ne. 1)then
             write(6,*)' Error getting wind parms'
             return

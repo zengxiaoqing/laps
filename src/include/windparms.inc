@@ -36,13 +36,6 @@
         integer i4time_raob_window
         parameter (i4time_raob_window = 0)
 
-!       Weight for Model Background. Recommended values: 0. to 1e+30.
-!       This will make the output values match the background if far from obs.
-!       A value of zero means this parameter is not active.
-        real*4 weight_bkg_const                                 
-        parameter (weight_bkg_const = 0.)
-!       parameter (weight_bkg_const = 1.0e30)
-
 !       If this is true, then we rotate the first guess and obs arrays to
 !       Grid North U+V just prior to the call to 'laps_anl'. They are rotated
 !       back to True North after the 'laps_anl' call and before the LW3 file
