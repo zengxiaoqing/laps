@@ -158,13 +158,13 @@ C   MACHINE:  HDS, CRAY C9161-128, CRAY Y-MP8/864, CRAY Y-MP EL2/256
 C
 C$$$
 C
-      PARAMETER       (MXSIZE=128000)
+      PARAMETER       (MXSIZE=512000)
       PARAMETER       (MXSIZ2=MXSIZE*2)
       PARAMETER       (MXSIZB=MXSIZE/8+6)
 C     FOR 32 BIT WORKSTATIONS AND HDS
-C     PARAMETER       (MXSIZI=MXSIZE/2)
+      PARAMETER       (MXSIZI=MXSIZE/2)
 C     FOR 64 BIT CRAY
-      PARAMETER       (MXSIZI=MXSIZE/4)
+C     PARAMETER       (MXSIZI=MXSIZE/4)
 C
       REAL            FLD(*)
 C
@@ -320,7 +320,10 @@ C$           4.2   CALL W3FI75 TO PACK DATA AND MAKE BDS.
 C
 C	ARACODE , must zero out the pfld buffer till expected data fill length
 
-      do 777 i = 1,itot
+C     do 777 i = 1,itot  ! itot is not yet defined! 
+C      correction provided by Francios Thomas
+c      
+      do 777 i=1,MXSIZ2
         pfld(i) = zero
   777 continue
 
