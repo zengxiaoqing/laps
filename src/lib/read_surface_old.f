@@ -339,7 +339,14 @@ c
         call s_len(string,len1)
         len2 = len(string)
 
-        string(len2-len1+1:len2) = string(1:len1)
+        iarg = len2-len1+1
+        string(iarg:len2) = string(1:len1)
+
+        if(iarg-1 .ge. 1)then
+            do i = 1,iarg-1
+                string(i:i) = ' '
+            enddo ! i
+        endif
 
         return
         end        
