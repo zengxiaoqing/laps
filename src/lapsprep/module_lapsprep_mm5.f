@@ -76,7 +76,7 @@ MODULE lapsprep_mm5
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE output_pregrid_format(p, t, ht, u, v, rh, slp, &
-                               lwc, rai, sno, ice, pic, snodep)
+                               lwc, rai, sno, ice, pic, snocov)
 
   !  Subroutine of lapsprep that will build a file in the
   !  MM5v3 pregrid format that can be read by REGRID
@@ -97,7 +97,7 @@ CONTAINS
   REAL, INTENT(IN)                   :: sno(:,:,:)  ! Snow (kg/kg)
   REAL, INTENT(IN)                   :: ice(:,:,:)  ! Ice (kg/kg)
   REAL, INTENT(IN)                   :: pic(:,:,:)  ! Graupel (kg/kg)
-  REAL, INTENT(IN)                   :: snodep(:,:) ! Snow depth (m)
+  REAL, INTENT(IN)                   :: snocov(:,:) ! Snow cover (fract)
 
   ! Local Variables
   
@@ -273,41 +273,25 @@ CONTAINS
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', slp_level, ' Min: ', MINVAL(slp),&
             ' Max: ', MAXVAL(slp)
 
-  IF (MAXVAL(snodep) .GE. 0) THEN
+  IF ((MINVAL(snocov) .GE. 0.).AND.(MAXVAL(snocov) .LT. 1.1)) THEN
     ! Water equivalent snow depth
-    field = 'WEASD    '
-    units = 'kg m{-2}                 '
-    desc  = 'Water equivalent snow depth                   '
-    PRINT *, 'FIELD = ', field
-    PRINT *, 'UNITS = ', units
-    PRINT *, 'DESC =  ',desc
-    CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
-
-    ! Compute WEASD from actual snow depth, which comes in as meters
-
-    d2d = snodep * 1000.  &  ! Convert from m to kg m{-2}, which = mm
-          / 10.             ! Convert from actual to liquid equivalent
-    WHERE(d2d .LT. 0.) d2d = 0.0
-    WRITE ( output_unit ) d2d
-    PRINT '(A,F9.1,A,F9.2,A,F9.2)', 'Level (Pa):',p_pa(z3+1), &
-       ' Min: ', MINVAL(d2d),&
-       ' Max: ', MAXVAL(d2d) 
-
-    ! Snow cover (flag)
     field = 'SNOWCOVR '
-    units = '0/1 Flag                 '
+    units = '(DIMENSIONLESS)          '
     desc  = 'Snow cover flag                               '
     PRINT *, 'FIELD = ', field
     PRINT *, 'UNITS = ', units
     PRINT *, 'DESC =  ',desc
     CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
-    ! Compute snow cover by using mask of d2d, which is currently = 
-    ! to WEASD
-    WHERE(d2d .GT. 0.) d2d = 1.0
+
+    ! Convert the snow cover fraction (ranges from 0 -> 1.) into a flag
+    ! value using the snow_thresh parameter set in the namelist.
+    d2d(:,:) = 0.
+    WHERE(snocov .GE. snow_thresh) d2d = 1.
+
     WRITE ( output_unit ) d2d
-    PRINT '(A,F9.1,A,F9.7,A,F9.7)', 'Level (Pa):', p_pa(z3+1),& 
+    PRINT '(A,F9.1,A,F9.2,A,F9.2)', 'Level (Pa):',p_pa(z3+1), &
        ' Min: ', MINVAL(d2d),&
-       ' Max: ', MAXVAL(d2d)                               
+       ' Max: ', MAXVAL(d2d) 
 
   ENDIF
   

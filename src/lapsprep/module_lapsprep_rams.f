@@ -62,7 +62,7 @@ MODULE lapsprep_rams
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  SUBROUTINE output_ralph2_format(p, u, v, t, ht, rh, slp, psfc, snodep)
+  SUBROUTINE output_ralph2_format(p, u, v, t, ht, rh, slp, psfc, snocov)
 
   ! Subroutine to output data in RAMS 4.x "RALPH 2" format. We do not have 
   ! SST data in LAPS yet, so that is not included for now.  
@@ -98,7 +98,7 @@ CONTAINS
   REAL, INTENT(IN)               :: rh(:,:,:) !Relative Humidity in %
   REAL, INTENT(IN)               :: slp(:,:)  !MSL Pressure in Pa
   REAL, INTENT(IN)               :: psfc(:,:) !Surface Pressure in Pa
-  REAL, INTENT(IN)               :: snodep(:,:)! Snow depth in m
+  REAL, INTENT(IN)               :: snocov(:,:)! Snow cover (fract)
 
   ! Local Variables
 
@@ -217,9 +217,9 @@ CONTAINS
    WRITE(output_unit,'(8F10.3)') (( slp(i,j)*.01,i=1,x),j=1,y)
    WRITE(output_unit,'(8F10.3)') (( psfc(i,j)*.01,i=1,x),j=1,y)
    WRITE(output_unit,'(8F10.3)') (( t(i,j,z3+1),i=1,x),j=1,y)
-   IF (MAXVAL(snodep).GE.0) THEN
-     WRITE(output_unit,'(8F10.4)') (( snodep(i,j),i=1,x),j=1,y)
-   ENDIF
+!   IF (MAXVAL(snocov).GE.0) THEN
+!     WRITE(output_unit,'(8F10.4)') (( snocov(i,j),i=1,x),j=1,y)
+!   ENDIF
   ! Close the file
   
   CLOSE(output_unit)

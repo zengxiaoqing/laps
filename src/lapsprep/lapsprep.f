@@ -88,7 +88,7 @@
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , t , rh , ht, &   
                                              lwc,rai,sno,pic,ice, sh, mr, & 
                                              virtual_t, rho
-    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snodep, d2d 
+    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d 
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
     REAL , PARAMETER                       :: tiny = 1.0e-20
     
@@ -203,7 +203,7 @@
       CALL NCDINQ ( cdfid , zid , dum , z , rcode )
 
       IF ( ( ext(loop) .EQ. 'lsx' ) .OR. &
-           ( ext(loop) .EQ. 'l1s' ) ) THEN
+           ( ext(loop) .EQ. 'lm2' ) ) THEN
          z2 = z
       ELSE
          z3 = z
@@ -230,7 +230,7 @@
         ALLOCATE ( sno ( x , y , z3 ) ) 
         ALLOCATE ( pic ( x , y , z3 ) ) 
         ALLOCATE ( ice ( x , y , z3 ) )
-        ALLOCATE ( snodep ( x , y ) ) 
+        ALLOCATE ( snocov ( x , y ) ) 
  
         ! The following variables are only used
         ! for converting non-mandatory cloud variables
@@ -246,7 +246,7 @@
         rai(:,:,:) = -999.
         sno(:,:,:) = -999.
         pic(:,:,:) = -999.
-        snodep(:,:) = -999.
+        snocov(:,:) = -999.
         
       END IF
 
@@ -321,7 +321,7 @@
           END IF
 
         END DO var_lsx
-      ELSE IF ( ext(loop) .EQ. 'l1s' ) THEN
+      ELSE IF ( ext(loop) .EQ. 'lm2' ) THEN
 
         var_l1s : DO var_loop = 1 , num_cdf_var(loop)
 
@@ -331,8 +331,8 @@
           start = (/ 1 , 1 , 1 , 1 /)
           count = (/ x , y , 1 , 1 /)
 
-          IF      ( cdf_var_name(var_loop,loop) .EQ. 'sto' ) THEN
-            CALL NCVGT ( cdfid , vid , start , count , snodep        , rcode )
+          IF      ( cdf_var_name(var_loop,loop) .EQ. 'sc ' ) THEN
+            CALL NCVGT ( cdfid , vid , start , count , snocov        , rcode )
           END IF
 
         END DO var_l1s                             
@@ -444,14 +444,14 @@
       select_output: SELECT CASE (output_format(out_loop))
         CASE ('mm5 ')
           CALL output_pregrid_format(p, t, ht, u, v, rh, slp, &
-                            lwc, rai, sno, ice, pic,snodep)
+                            lwc, rai, sno, ice, pic,snocov)
 
         CASE ('wrf ')
           CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
-                             lwc, rai, sno, ice, pic,snodep)
+                             lwc, rai, sno, ice, pic,snocov)
      
         CASE ('rams') 
-          CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snodep)
+          CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snocov)
         CASE ('sfm ')
           PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
 
