@@ -140,10 +140,19 @@
                     z_ave = z_sum / float(n_neighbors)
                     dbz_ave = alog10(z_ave) * 10.  ! Currently just a test
                     
-!                   if(ref_fill .ge. ref_base)then ! QC flags probably not in 
-                                                   ! the mix?
-                        l_fill = .true. ! Improves coverage if always .true.
-!                   endif
+                    l_fill = .true. ! Improves coverage if always .true.
+
+!                   Massage reflectivities based on likely QC flag averaging
+                    if(ref_fill .lt. ref_base)then        ! QC flags present
+                        if(ref_fill .gt. -50.)then
+                            ref_fill = ref_base
+                        elseif(ref_fill .lt. -100.5 .and. 
+     1                         ref_fill .gt. -101.5          )then
+                            ref_fill = -101.              ! QC Insuff Coverage
+                        else
+                            ref_fill = -102.              ! QC Low Ref
+                        endif
+                    endif
                 endif
 
 !               Fill into buffer array?
