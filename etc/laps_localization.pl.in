@@ -16,15 +16,15 @@ $result = GetOptions("lapsroot=s" => \$LAPSROOT,
 
 sub help_sub{
     print "$0 command line options (default values)\n";
-    print '   --lapsroot = Root directory of the installed laps binarys (@prefix@)\n';
-    print '   --dataroot = Root directory of the installed laps data (@prefix@/data)\n';
-    print '   --compile  = Performs a new compile for localization, \n';
-    print '                previously installed laps normally does not require compile for relocalization (nocompile)\n';
-    print '   --srcroot  = Root directory of the laps source code (@top_srcdir@) used for compile option only\n';
-    print '   --site     = localization site (guessed)\n';
-    print '   --help     = print this message and exit\n';
-    print '   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n';
-    print '   --satid    = g8 or g9 (guessed based on site)\n';
+    print "   --lapsroot = Root directory of the installed laps binarys (@prefix@)\n";
+    print "   --dataroot = Root directory of the installed laps data (@prefix@/data)\n";
+    print "   --compile  = Performs a new compile for localization, \n";
+    print "                previously installed laps normally does not require compile for relocalization (nocompile)\n";
+    print "   --srcroot  = Root directory of the laps source code (@top_srcdir@) used for compile option only\n";
+    print "   --site     = localization site (guessed)\n";
+    print "   --help     = print this message and exit\n";
+    print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
+    print "   --satid    = g8 or g9 (guessed based on site)\n";
     exit;
 }
 umask 002;
@@ -75,10 +75,39 @@ print "$0 running $sys\n";
 system($sys);
 chmod 0544, "./install_lvd.csh";
 
-$radar_type = ($sattype eq "wfo")? $sattype:'wsi';
+#$radar_type = ($sattype eq "wfo")? $sattype:'wsi';
+#chmod 0755, "./install_vrc.csh";
+#$sys = "./install_vrc.csh $LAPSROOT $LAPS_DATA_ROOT $compile $radar_type";
+#system($sys);
+#chmod 0544, "./install_vrc.csh";
 
-$sys = "./install_vrc.csh $LAPSROOT $LAPS_DATA_ROOT $compile $radar_type";
+if($sattype eq 'wfo' && $compile eq 'compile'){
+#
+#  reinstall vrc with corrected parameters
+#
+  open(VRC,">$LAPS_SRC_ROOT/src/include/vrc.inc");
+  print VRC "      integer*4     nelems,nlines\n";
+  print VRC "      parameter     (nelems=1201,nlines=897)\n";
+  close(VRC);
+  chdir("$LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc/table");
+  system("make clean 1>make.out 2>&1");
+  system("make install 1>>make.out 2>&1");
+  
+  chdir("$LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc");
+  system("make clean 1>make.out 2>&1");
+  system("make install 1>>make.out 2>&1");
+}  
 
+if(-x "$LAPSROOT/bin/genvrclut.exe"){
+  print "Running $LAPSROOT/bin/genvrclut.exe with stdout to $LAPS_DATA_ROOT/log/genvrclut.log\n";
+  print "This could take an hour or more...\n"; 
+  system("$LAPSROOT/bin/genvrclut.exe 1> $LAPS_DATA_ROOT/log/genvrclut.log 2>&1");
+}else{
+  print "$0 Failed to make genvrclut.exe, check $LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc/table/make.out\n";
+  exit -1;
+}  
+
+print "$0 complete\n";
 
 
 sub wfo_localization{
