@@ -54,13 +54,12 @@
          3.2.3 ..................  Polar Radar Data (e.g. WSR 88D Level II, Level III)
          3.2.4 ..................  WSI / NOWRAD RADAR PREPROCESSING (VRC)
          3.2.5 ..................  Radar Mosaic (Under development)
-         3.2.6 ..................  PROFILER (PRO) Ingest
-         3.2.7 ..................  VAD (PRO) Ingest
-         3.2.8 ..................  RASSs (LRS) Ingest
-         3.2.9 ..................  PIREPS/ACARS Ingest
-         3.2.10 .................  RAOB (SND) Ingest
-         3.2.11 .................  Cloud Drift Wind (CDW) Ingest
-         3.2.12 .................  Surface Data Ingest
+         3.2.6 ..................  PROFILER/VAD (PRO) Ingest
+         3.2.7 ..................  RASSs (LRS) Ingest
+         3.2.8 ..................  PIREPS/ACARS Ingest
+         3.2.9 ..................  RAOB (SND) Ingest
+         3.2.10 .................  Cloud Drift Wind (CDW) Ingest
+         3.2.11 .................  Surface Data Ingest
          3.3 ..............  Analysis Processes
          3.3.1 ..................  WIND
          3.3.2 ..................  SFC (LSX) 
@@ -1444,9 +1443,9 @@ Outputs (Intermediate data file):
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
------- 3.2.6 ---------------- PROFILER (PRO) Ingest ---------------------------
+------ 3.2.6 ---------------- PROFILER/VAD (PRO) Ingest ----------------------
 
-Process: PRO (ingest_pro.exe) LAPS Profiler wind ingest 
+Process: PRO (ingest_pro.exe) LAPS Wind Profile Ingest 
 
 Author: Steve Albers (albers@fsl.noaa.gov)
 
@@ -1458,8 +1457,10 @@ Inputs: (located in two separate NetCDF directories)
 	Boundary layer 915-MHz profiler wind data in netCDF format
             NetCDF CDL from FSL-NIMBUS. 
 
+	Doppler Radar VADs in NetCDF (FSL-NIMBUS CDL) format
+
 Output: (feeds wind)
-	pro	inter data	profiler wind direction (degrees) and
+	pro	inter data	wind profile direction (degrees) and
                                               speed     (meters/sec)  (ASCII)
 </pre>
 
@@ -1468,24 +1469,7 @@ Source directory: laps/src/ingest/profiler
 Sample Input/Output: Should be available in the test data case.
 
  
------- 3.2.7 ---------------------- VAD (PRO) Ingest --------------------------
-
-Process: (ingest_vad.exe) LAPS RAOBs
-
-Author: Steve Albers (albers@fsl.noaa.gov)
-
-<pre>
-Inputs:
-	VADs in NetCDF (FSL-NIMBUS CDL) format
-
-Outputs: (Feeds wind.exe)
-	pro	inter data	VAD wind
-                                        
-        Note: This is one of several processes that write to build up the
-              pro file.
-</pre>
- 
------- 3.2.8 ----------------- RASSs (LRS) Ingest -----------------------------
+------ 3.2.7 ----------------- RASSs (LRS) Ingest -----------------------------
 
 Process: (ingest_lrs.exe) LAPS local data RASS ingest
 
@@ -1506,7 +1490,7 @@ Source directory: laps/src/ingest/rass
 
 Sample Input/Output: Should be available in the test data case.
 
------- 3.2.9 ----------------- PIREPS/ACARS Ingest ----------------------------
+------ 3.2.8 ----------------- PIREPS/ACARS Ingest ----------------------------
 
 Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
 
@@ -1517,14 +1501,15 @@ Inputs:
 	Aircraft voice pireps and ACARS data (separate NetCDF files
                                                               FSL-NIMBUS CDLs)
 
-Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
+Outputs: (The two executables are run sequentially, appending to the 'pin' 
+                                               file. Feeds cloud.exe, wind.exe)
 	pin	inter data	voice pireps/clouds, ACARS/winds
 </pre>
                                         
 Sample Input/Output: Should be available in the test data case
 
  
------- 3.2.10 ---------------------- RAOB (SND) Ingest ------------------------
+------ 3.2.9 ---------------------- RAOB (SND) Ingest ------------------------
 
 Process: (ingest_raob.exe) LAPS RAOBs
 
@@ -1545,7 +1530,7 @@ Outputs: (Feeds temp.exe, humid.exe, wind.exe)
               using a dummy path name for the raw raob data in 
               'nest7grid.parms'.
 
------- 3.2.11 --------- Cloud Drift Wind (CDW) Ingest -------------------------
+------ 3.2.10 --------- Cloud Drift Wind (CDW) Ingest -------------------------
 
 Process: (ingest_cloud_drift.exe) LAPS Cloud Drift Winds
 
@@ -1559,7 +1544,7 @@ Outputs: (Feeds wind.exe)
 	cdw	intermediate data (ASCII)       Satellte cloud drift winds
 </pre>
                                         
------- 3.2.12 -------------- Surface Data Ingest ------------------------------
+------ 3.2.11 -------------- Surface Data Ingest ------------------------------
 
 Process: (obs_driver.x) LAPS Surface Ingest
      (author: Pete Stamus - stamus@fsl.noaa.gov)
