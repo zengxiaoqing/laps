@@ -10,6 +10,7 @@
  SFC_MIX = 1,
  MOD_4DDA_1 = 0,
  MOD_4DDA_FACTOR = 0.02,
+ T_REF = -47.0,
  
  /
 c   This is a switch for the module  lq3.  If the value of the first record is 0,
