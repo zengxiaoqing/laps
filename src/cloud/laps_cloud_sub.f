@@ -261,6 +261,7 @@ cdis
         real*4 t39_k(NX_L,NY_L)
         real*4 tb8_cold_k(NX_L,NY_L)
         real*4 albedo(NX_L,NY_L)
+        real*4 static_albedo(NX_L,NY_L)              ! Static albedo database
         real*4 cloud_frac_vis_a(NX_L,NY_L)
         real*4 cloud_frac_co2_a(NX_L,NY_L)
 
@@ -716,12 +717,14 @@ C READ IN SATELLITE DATA
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,rlaps_land_frac,topo                                ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
+     1              ,static_albedo                                       ! O
      1              ,comment_alb                                         ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
      1              ,istat_vis_potl_a,istat_vis)                         ! O
 
         call get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data           ! I
      1                   ,rlaps_land_frac,NX_L,NY_L                      ! I
+     1                   ,static_albedo                                  ! I
      1                   ,istat_39_a)                                    ! O
 
 !       Cloud cover QC check
