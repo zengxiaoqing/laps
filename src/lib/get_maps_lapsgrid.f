@@ -56,10 +56,12 @@ cdis
 !       Feb 1997               - Added entry get_modelfg_3d.
 
         include 'lapsparms.inc'
-
-        real*4 field_3d_maps(imaps,jmaps,kmax)     ! Local Dummy array
-        real*4 field_3d_maps_1(imaps,jmaps,kmax)   ! Local Dummy array
-        real*4 field_3d_maps_2(imaps,jmaps,kmax)   ! Local Dummy array
+!
+!      These three fields are no longer used and scheduled for removal
+!
+        real*4 field_3d_maps(1)     ! Local Dummy array
+        real*4 field_3d_maps_1(1)   ! Local Dummy array
+        real*4 field_3d_maps_2(1)   ! Local Dummy array
 
         real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
 
@@ -86,6 +88,9 @@ cdis
 
 !       1) No time interpolation is performed
 !       2) RAM/LGA file must be available valid at i4time/i4time_needed
+
+        
+        print*, imax,jmax,kmax,NX_L_CMN,NY_L_CMN,nk_laps
 
         i4time_needed = i4time
 
