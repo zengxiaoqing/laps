@@ -149,7 +149,7 @@ c  normal internal parameters
         
 c *** begin routine
 
-      write(6,*) '1.16 Iterated sigma computation, timecheck, 6.4.99'
+      write(6,*) '1.17 temperature control acceptance 6.8.99'
 
       pi = acos(-1.0)
       d2r = pi/180.
@@ -409,6 +409,13 @@ c     pressure levels
      1              td_r(ks,is),td_r(ks+1,is),temtd)
 
                q_r(k,is) = ssh2 (laps_pressure(k),temt,temtd,0.0)/1000.
+
+c     accept only valid raob data (temp must be > -40 c)  DB 1.17 change
+               if(temt.lt.-40. .or. laps_pressure(k).le. 300.)
+     1              q_r(k,is) = rmd
+               if (temt.ge.-40. .and. k.ge.18) then
+                       write(6,*) 'SOMETHING STRANGE', temt, k
+               endif
 
                call check_nan(q_r(k,is),istatus)
                if(istatus.eq.0) then ! nan detected bail
