@@ -41,7 +41,7 @@ cdis
 !       1997 Jul 31 K. Dritz  - Compute max_cld_snd as maxstns + N_PIREP and
 !                               pass to laps_cloud.
 
-        integer*4 j_status(20),iprod_number(20),i4time_array(20)
+        integer*4 j_status(20),iprod_number(20)
         character*9 a9_time
 
         call get_systime(i4time,a9_time,istatus)

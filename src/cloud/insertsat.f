@@ -123,7 +123,6 @@ c
         real*4 cldcv_1d(kcloud)
         real*4 laps_p(klaps)
 
-        character*3 var_2d
         character*31 ext
         character var*3,comment*125,units*10
 
@@ -131,7 +130,7 @@ c
         logical l_co2
         data l_co2 /.false./ ! Attempt to use co2 slicing method?
 
-        real*4 k_to_f,f_to_k
+        real*4 k_to_f
 
 !       Control search box for SAO analyzed data
         integer*4 idelt(3)
@@ -697,7 +696,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 !       Local
         real*4 arg,frac_k,temp_above,cldtop_temp_k
         integer*4 kl
-        real*4 ppcc(8)
+!       real*4 ppcc(8)
 
 !       Function call
         real*4 k_to_f
@@ -846,22 +845,22 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         endif
 
 !       Set variables depending on whether in Band 8 or CO2 mode
-        if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method
-            if(cldtop_m_co2 .ne. r_missing_data)then
-                l_cloud_present = .true.
-            else
-                l_cloud_present = .false.
-            endif
+!       if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method
+!           if(cldtop_m_co2 .ne. r_missing_data)then
+!               l_cloud_present = .true.
+!           else
+!               l_cloud_present = .false.
+!           endif
 
-            cldtop_m = cldtop_m_co2
-            sat_cover = PPCC(7)
+!           cldtop_m = cldtop_m_co2
+!           sat_cover = PPCC(7)
 
-        else                                 ! Using Band 8 (11.2mm) data
+!       else                                 ! Using Band 8 (11.2mm) data
             l_cloud_present = l_tb8
             cldtop_m = cldtop_m_tb8
             sat_cover = 1.1
 
-        endif
+!       endif
 
         return
         end

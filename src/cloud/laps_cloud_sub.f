@@ -137,13 +137,6 @@ cdis
         data l_packed_output /.false./
         data l_evap_radar /.false./
 
-        logical l_fill
-        logical l_flag_mvd
-        logical l_flag_cloud_type
-        logical l_flag_icing_index
-        logical l_flag_bogus_w
-        logical l_flag_snow_potential
-
         logical l_sao_lso
         data l_sao_lso /.true./ ! Do things the new way?
 
@@ -160,8 +153,6 @@ cdis
      23400.,3600.,3800.,4000.,4500.,5000.,5500.,6000.,6500.,
      37000.,7500.,8000.,8500.,9000.,9500.,10000.,11000.,12000.,
      413000.,14000.,15000.,16000.,17000.,18000.,19000.,20000./
-
-        integer iarg
 
         equivalence (cld_hts,cld_hts_new)
 
@@ -235,9 +226,6 @@ cdis
         data c2_precip_types
      1  /'  ','Rn','Sn','Zr','Sl','Ha','L ','ZL','  ','  ','  '/
 
-        character*3 c3_pt_flag
-        character*1 c1_r,c1_s
-
         integer i2_pcp_type_2d(NX_L,NY_L)
         real*4 r_pcp_type_2d(NX_L,NY_L)
 
@@ -254,10 +242,6 @@ cdis
         logical l_unresolved(NX_L,NY_L)
 
         character*1 c1_name_array(NX_L,NY_L)
-        character*9 filename
-
-        character*35 TIME
-        character*13 filename13
 
         integer MAX_FIELDS
         parameter (MAX_FIELDS = 10)
@@ -298,13 +282,10 @@ cdis
         integer obstime(maxstns),kloud(maxstns),idp3(maxstns)
         character store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
         character wx_s(maxstns)*8, obstype(maxstns)*8
-        character atime*24, infile*70
 
         integer STATION_NAME_LEN
         parameter (STATION_NAME_LEN = 3)                   
         character c_stations(maxstns)*(STATION_NAME_LEN)    
-
-        character asc_tim_9*9
 
         real*4 ri_s(maxstns), rj_s(maxstns)
 
@@ -323,7 +304,7 @@ cdis
         character*40 c_vars_req
         character*100 c_values_req
 
-        character*3 lso_ext
+        character*3 lso_ext        
         data lso_ext /'lso'/
 
         ISTAT = INIT_TIMER()
@@ -527,7 +508,7 @@ C READ IN RADAR DATA
 
         if(abs(i4time - i4time_radar) .le. 1200)then
 
-            call read_radar_3dref(i4time_radar,
+            call read_multiradar_3dref(i4time_radar,
 !    1                 1200,i4time_radar,
      1                 .true.,
      1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,
@@ -535,18 +516,16 @@ C READ IN RADAR DATA
      1                 heights_3d,
      1                 radar_ref_3d,
      1                 rlat_radar,rlon_radar,rheight_radar,radar_name,     
-     1                 n_ref_grids,istat_radar_2dref,istat_radar_3dref)       
+     1                 n_ref_grids,istat_radar_2dref_a,
+     1                 istat_radar_3dref_a)       
 
         else
             write(6,*)'radar data outside time window'
             n_ref_grids = 0
-            istat_radar_2dref = 0
-            istat_radar_3dref = 0
+            call constant_i(istat_radar_2dref_a,0,NX_L,NY_L)       
+            call constant_i(istat_radar_3dref_a,0,NX_L,NY_L)
 
         endif
-
-        call constant_i(istat_radar_2dref_a,istat_radar_2dref,NX_L,NY_L)       
-        call constant_i(istat_radar_3dref_a,istat_radar_3dref,NX_L,NY_L)
 
 C READ IN AND INSERT SAO DATA
 !       Read in surface pressure
@@ -694,20 +673,21 @@ C READ IN SATELLITE DATA
 
         I4_elapsed = ishow_timer()
 
-        istat_radar_3dref_orig = istat_radar_3dref
+        istat_radar_2dref=0
+        istat_radar_3dref=0
+        istat_radar_3dref_orig=0
 
 C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
-        if(istat_radar_2dref .eq. 1 .and. istat_radar_3dref .eq. 0)then
-            write(6,*)' Three dimensionalizing radar data'
+        write(6,*)' Three dimensionalizing radar data'
 
-!           Clear out radar echo above the highest cloud top
-            k_ref_def = nint(zcoord_of_pressure(float(700*100)))
+!       Clear out radar echo above the highest cloud top
+        k_ref_def = nint(zcoord_of_pressure(float(700*100)))
 
-            do j = 1,NY_L
-            do i = 1,NX_L
-
-              if(istat_radar_2dref_a(i,j) .eq. 1 .and.
-     1           istat_radar_3dref_a(i,j) .eq. 0       )then
+        do j = 1,NY_L
+        do i = 1,NX_L
+            
+            if(istat_radar_2dref_a(i,j) .eq. 1 .and.
+     1         istat_radar_3dref_a(i,j) .eq. 0       )then
 
                 if(radar_ref_3d(i,j,1) .gt. ref_base)then
 
@@ -754,26 +734,35 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
                     enddo ! k
 
                 endif ! Radar echo at this grid point
-              endif ! Three-dimensionalize this grid point
-            enddo ! i
-            enddo ! j
 
-            istat_radar_3dref = 1
+!               We have three-dimensionalized this grid point
+                istat_radar_2dref = 1
+                istat_radar_3dref = 1
+                istat_radar_3dref_a(i,j) = 1
 
-            I4_elapsed = ishow_timer()
+            elseif(istat_radar_2dref_a(i,j) .eq. 1 .and.
+     1             istat_radar_3dref_a(i,j) .eq. 1       )then
 
-        elseif(istat_radar_2dref .eq. 1 .and. istat_radar_3dref .eq. 1
-     1                                                             )then       
-            write(6,*)' Radar data is already fully three dimensional'      
+!               Grid point is already fully three dimensional
+                istat_radar_2dref = 1
+                istat_radar_3dref = 1
+                istat_radar_3dref_orig = 1
 
-        elseif(istat_radar_2dref .eq. 0 .and. istat_radar_3dref .eq. 0
-     1                                                             )then
-            write(6,*)' Radar data is missing for insertion'
+            endif ! Is this grid point 2-d or 3-d?
 
-        endif ! Do we have 3-d or 2-d radar data?
+        enddo ! i
+        enddo ! j
+
+        write(6,*)' istat_radar 2dref/3dref_orig/3dref = ' 
+     1           ,istat_radar_2dref,istat_radar_3dref_orig
+     1           ,istat_radar_3dref
+
+        I4_elapsed = ishow_timer()
 
 C INSERT RADAR DATA
-        if(istat_radar_3dref .eq. 1)then
+        n_radar_3dref = istat_radar_3dref
+
+        if(n_radar_3dref .gt. 0)then
             call get_max_ref(radar_ref_3d,NX_L,NY_L,NZ_L,dbz_max_2d)
 
             call insert_radar(i4time,clouds_3d,cld_hts
@@ -781,7 +770,7 @@ C INSERT RADAR DATA
      1          ,KCLOUD,cloud_base,cloud_base_buf,ref_base
      1          ,radar_ref_3d,dbz_max_2d,vis_radar_thresh_dbz
      1          ,l_unresolved
-     1          ,heights_3d,istatus)
+     1          ,heights_3d,istatus) ! istat_radar_3dref_a
 
             if(istatus .ne. 1)then
                 write(6,*)
@@ -1089,7 +1078,7 @@ C       EW SLICES
         character*10 units_2d(nfields)
         character*3 var_2d(nfields)
         integer LVL,LVL_2d(nfields)
-        character*4 LVL_COORD,LVL_COORD_2d(nfields)
+        character*4 LVL_COORD_2d(nfields)
 
         real*4 field_2dcloud(imax,jmax,nfields)
 
@@ -1134,8 +1123,8 @@ C       EW SLICES
         integer NZ_CLOUD_MAX
         parameter (NZ_CLOUD_MAX = 42)
 
-        character*125 comment_3d(NZ_CLOUD_MAX),comment_2d
-        character*10 units_3d(NZ_CLOUD_MAX),units_2d
+        character*125 comment_3d(NZ_CLOUD_MAX)
+        character*10 units_3d(NZ_CLOUD_MAX)
         character*3 var_3d(NZ_CLOUD_MAX),var_2d
         integer LVL_3d(NZ_CLOUD_MAX)
         character*4 LVL_COORD_3d(NZ_CLOUD_MAX)
@@ -1289,8 +1278,6 @@ C       EW SLICES
 
         character*31 ext
         character*3 var_2d
-        character*125 comment_2d
-        character*10 units_2d
 
         logical l_fill
 

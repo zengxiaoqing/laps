@@ -47,9 +47,7 @@ cdis
         integer*4 mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
         character*9 filename
-        character infile*70
         character*31 ext
-        integer ii(mxstn), jj(mxstn)    ! for the qc
 
         character*3 lvd_ext
         data lvd_ext /'lvd'/
@@ -216,10 +214,6 @@ cdis
         real*4 cloud_frac_vis_a(ni,nj)
         integer*4 mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
-        character*9 filename
-        character infile*70
-        character*31 ext
-        integer ii(mxstn), jj(mxstn)    ! for the qc
 
         write(6,*)' Insert VIS data routine'
 

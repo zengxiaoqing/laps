@@ -41,10 +41,15 @@ cdis
 !       get_radar_ref
 !           now called from lplot
 !
-!       read_radar_3dref
+!       read_multiradar_3dref
 !           now called from cloud
+!
+!       read_radar_3dref
+!           now called from deriv
 !           now called from accum
 !           now called from lplot
+!           now called from get_radar_ref
+!           now called from mosaic_radar
 !
 !       read_radar_2dref
 !           now called directly from wind-derived
@@ -414,6 +419,260 @@ cdis
         end
 
 
+        subroutine read_multiradar_3dref(i4time_radar,
+     1   l_apply_map,
+     1   imax,jmax,kmax,radarext,
+     1   lat,lon,topo,l_low_fill,l_high_fill,
+     1   heights_3d,
+     1   grid_ra_ref,
+     1   rlat_radar,rlon_radar,rheight_radar,radar_name,
+     1   n_ref_grids,istatus_2dref_a,istatus_3dref_a)
+
+!       Steve Albers Feb 1996   This routine will read in a 3D radar
+!                               reflectivity field. It will either read
+!                               in 3D radar refs and do the vertical filling
+!                               procedure, or read in the 2D data and do
+!                               a quick and dirty vertical fill.
+!                               This is basically the same as read_radar_ref
+!                               except heights are required as input for more
+!                               flexibility involving the type of vertical
+!                               grid.
+
+
+        real*4 grid_ra_ref(imax,jmax,kmax)
+        real*4 heights_3d(imax,jmax,kmax)
+
+        real*4 lat(imax,jmax)
+        real*4 lon(imax,jmax)
+        real*4 topo(imax,jmax)
+
+!       If a grid element has the following...
+!       We are supporting both a constant and an array version of
+!       istatus_2dref and istatus_3dref. Once we complete the transition
+!       to the array versions we can remove the entry.
+!       2dref=1, 3dref=1 - echo top from radar has better confidence than
+!                          the associated cloud top from satellite
+!       2dref=1, 3dref=0 - echo top from radar has less confidence
+!       2dref=0, 3dref=0 - missing data
+
+        integer*4 istatus_2dref
+        integer*4 istatus_3dref
+        integer*4 istatus_2dref_a(imax,jmax)
+        integer*4 istatus_3dref_a(imax,jmax)
+
+        character*3 var_2d
+        character*31  ext
+        character*10  units_2d
+        character*125 comment_2d
+
+        character*31 radarext
+
+        character*4 radar_name
+
+        logical l_low_fill,l_high_fill,l_apply_map
+
+        character*80 grid_fnam_common
+        common / grid_fnam_cmn / grid_fnam_common
+
+        write(6,*)' Subroutine read_radar_3dref'
+
+        call get_ref_base(ref_base,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading ref_base parameter'
+            istatus_2dref = 0
+            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
+            return
+        endif
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading ref_base parameter'
+            istatus_2dref = 0
+            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
+            return
+        endif
+
+        if(radarext(1:3) .eq. 'vrc')then
+50          write(6,*)' Reading NOWRAD data'
+
+            radar_name = 'WSI '
+
+            var_2d = 'REF'
+            ext = 'vrc'
+            call get_laps_2dgrid(i4time_radar,i4_tol,i4_ret,ext,var_2d
+     1                          ,units_2d,comment_2d,imax,jmax
+     1                          ,grid_ra_ref,0,istatus_nowrad)
+
+            if(istatus_nowrad .eq. 1)then
+
+!               Filter out the missing data values
+                if(i4time_radar .lt. 1014450000)then
+                    do i = 1,imax
+                    do j = 1,jmax
+                        if(grid_ra_ref(i,j,1) .eq. r_missing_data)then
+                            grid_ra_ref(i,j,1) = ref_base
+                        endif
+                    enddo ! j
+                    enddo ! i
+                endif
+
+                istatus_2dref = 1
+                call constant_i(istatus_2dref_a,1,imax,jmax)
+                istatus_3dref = 0
+                call constant_i(istatus_3dref_a,0,imax,jmax)
+
+!               Fill up the 3D reflectivity array just for kicks
+!                          (useful for precip type, get_low_ref)
+
+                if(l_low_fill .or. l_high_fill)then
+                    do k = 2,kmax
+                        do i = 1,imax
+                        do j = 1,jmax
+                            grid_ra_ref(i,j,k) = grid_ra_ref(i,j,k-1)
+                        enddo ! j
+                        enddo ! i
+                    enddo ! k
+                endif
+
+
+            else
+                istatus_2dref = 0
+                istatus_3dref = 0
+                call constant_i(istatus_2dref_a,0,imax,jmax)
+                call constant_i(istatus_3dref_a,0,imax,jmax)
+
+            endif
+
+        elseif(radarext(1:2) .eq. 'v0' .or.
+     1         radarext(1:2) .eq. 'v1' .or.
+     1         radarext(1:2) .eq. 'v2')then  ! Read Doppler radar ref data
+                                             ! from NetCDF files
+
+            write(6,*)' Reading Reflectivity Data from 3D file '
+     1                                                 ,radarext
+
+            ext = radarext
+
+!           Read Reflectivity
+            var_2d = 'REF'
+            call get_laps_3dgrid(i4time_radar,i4_tol,i4_ret
+     1                    ,imax,jmax,kmax,ext,var_2d
+     1                    ,units_2d,comment_2d,grid_ra_ref,istatus)
+
+
+            if(istatus .eq. 1)then
+
+                istatus_2dref = 1
+                call constant_i(istatus_2dref_a,1,imax,jmax)
+
+                read(comment_2d,558)rlat_radar,rlon_radar,rheight_radar
+     1                             ,n_ref_grids
+558             format(2f9.3,f8.0,i7)
+
+                if(l_low_fill .or. l_high_fill)then
+                    if(.false.)then ! WARNING: missing datas are modified
+                        call rfill(grid_ra_ref,imax,jmax,kmax,l_low_fill       
+     1                          ,l_high_fill,lat,lon,topo,rlat_radar
+     1                          ,rlon_radar,rheight_radar,istatus_rfill)
+
+                    else
+                        call ref_fill_vert(grid_ra_ref,imax,jmax,kmax
+     1                          ,l_low_fill,l_high_fill,lat,lon,topo
+     1                          ,heights_3d
+     1                          ,rlat_radar,rlon_radar,rheight_radar
+     1                          ,istatus_rfill)
+
+                    endif
+
+                    if(istatus_rfill .eq. 1)then
+                        write(6,*)' Reflectivity data filled in'
+                        istatus_3dref = 1
+                        call constant_i(istatus_3dref_a,1,imax,jmax)
+                    else
+                        write(6,*)' Reflectivity data fill error'
+                        istatus_3dref = 0
+                        call constant_i(istatus_3dref_a,0,imax,jmax)
+                    endif
+
+                else
+                    write(6,*)' Reflectivity not filled in'
+                    istatus_3dref = 1
+                    call constant_i(istatus_3dref_a,1,imax,jmax)
+
+                endif
+ 
+                call ref_fill_horz(grid_ra_ref,imax,jmax,kmax,lat,lon
+     1                ,rlat_radar,rlon_radar,rheight_radar,istatus)
+                if(istatus .ne. 1)then
+                    istatus_2dref = 0
+                    istatus_3dref = 0
+                    call constant_i(istatus_2dref_a,0,imax,jmax)
+                    call constant_i(istatus_3dref_a,0,imax,jmax)
+                endif
+
+!               We may want to remove this block eventually to allow calling
+!               routines to utilize the missing data flag in reflectivities.
+!               They are generally not set up to do this at present.
+                if(l_low_fill .or. l_high_fill)then
+                    do k = 1,kmax
+                    do j = 1,jmax
+                    do i = 1,imax
+                        if(grid_ra_ref(i,j,k) .eq. r_missing_data)then
+                            grid_ra_ref(i,j,k) = ref_base
+                        endif
+                    enddo ! i
+                    enddo ! j
+                    enddo ! k
+                endif
+
+            else
+                write(6,*)' Radar reflectivity data cannot be read in'
+                istatus_2dref = 0
+                istatus_3dref = 0
+                call constant_i(istatus_2dref_a,0,imax,jmax)
+                call constant_i(istatus_3dref_a,0,imax,jmax)
+
+            endif ! Success as reflectivity
+
+        elseif(radarext(1:3) .eq. 'vrz')then
+!           call read_raw_conus_ref()
+            write(6,*)' Radar vrz reflectivity data cannot be read in'
+            istatus_2dref = 0
+            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
+
+        elseif(radarext(1:3) .eq. 'ln3')then
+            call read_nowrad_3dref(i4time_radar
+     1                            ,imax,jmax,kmax
+     1                            ,grid_ra_ref,heights_3d
+     1                            ,istatus_2dref_a,istatus_3dref_a)
+            if(istatus_3dref .ne. 1)then
+                write(6,*)
+     1            ' Radar ln3 reflectivity data cannot be read in'
+            endif
+
+            istatus_2dref = istatus_2dref_a(1,1)
+            istatus_3dref = istatus_3dref_a(1,1)
+
+        else          ! Unknown extension
+            write(6,*)' Unknown radarext ',radarext(1:3)
+            write(6,*)' Radar reflectivity data cannot be read in'
+            istatus_2dref = 0
+            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
+
+        endif ! Test of extension (hence radar type )
+
+        return
+        end
+
+
         subroutine read_radar_3dref(i4time_radar,
 !    1   i4_tol,i4_ret,
      1   l_apply_map,
@@ -442,6 +701,20 @@ cdis
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
 
+!       If a grid element has the following...
+!       We are supporting both a constant and an array version of
+!       istatus_2dref and istatus_3dref. Once we complete the transition
+!       to the array versions we can remove the entry.
+!       2dref=1, 3dref=1 - echo top from radar has better confidence than
+!                          the associated cloud top from satellite
+!       2dref=1, 3dref=0 - echo top from radar has less confidence
+!       2dref=0, 3dref=0 - missing data
+
+        integer*4 istatus_2dref
+        integer*4 istatus_3dref
+        integer*4 istatus_2dref_a(imax,jmax)
+        integer*4 istatus_3dref_a(imax,jmax)
+
         character*3 var_2d
         character*31  ext
         character*10  units_2d
@@ -463,6 +736,8 @@ cdis
             write(6,*)' Error reading ref_base parameter'
             istatus_2dref = 0
             istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
             return
         endif
 
@@ -471,6 +746,8 @@ cdis
             write(6,*)' Error reading ref_base parameter'
             istatus_2dref = 0
             istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
             return
         endif
 
@@ -482,7 +759,8 @@ cdis
             var_2d = 'REF'
             ext = 'vrc'
             call get_laps_2dgrid(i4time_radar,i4_tol,i4_ret,ext,var_2d
-     1  ,units_2d,comment_2d,imax,jmax,grid_ra_ref,0,istatus_nowrad)
+     1                          ,units_2d,comment_2d,imax,jmax
+     1                          ,grid_ra_ref,0,istatus_nowrad)
 
             if(istatus_nowrad .eq. 1)then
 
@@ -498,7 +776,9 @@ cdis
                 endif
 
                 istatus_2dref = 1
+                call constant_i(istatus_2dref_a,1,imax,jmax)
                 istatus_3dref = 0
+                call constant_i(istatus_3dref_a,0,imax,jmax)
 
 !               Fill up the 3D reflectivity array just for kicks
 !                          (useful for precip type, get_low_ref)
@@ -517,6 +797,8 @@ cdis
             else
                 istatus_2dref = 0
                 istatus_3dref = 0
+                call constant_i(istatus_2dref_a,0,imax,jmax)
+                call constant_i(istatus_3dref_a,0,imax,jmax)
 
             endif
 
@@ -540,6 +822,7 @@ cdis
             if(istatus .eq. 1)then
 
                 istatus_2dref = 1
+                call constant_i(istatus_2dref_a,1,imax,jmax)
 
                 read(comment_2d,558)rlat_radar,rlon_radar,rheight_radar
      1                             ,n_ref_grids
@@ -563,14 +846,17 @@ cdis
                     if(istatus_rfill .eq. 1)then
                         write(6,*)' Reflectivity data filled in'
                         istatus_3dref = 1
+                        call constant_i(istatus_3dref_a,1,imax,jmax)
                     else
                         write(6,*)' Reflectivity data fill error'
                         istatus_3dref = 0
+                        call constant_i(istatus_3dref_a,0,imax,jmax)
                     endif
 
                 else
                     write(6,*)' Reflectivity not filled in'
                     istatus_3dref = 1
+                    call constant_i(istatus_3dref_a,1,imax,jmax)
 
                 endif
  
@@ -579,6 +865,8 @@ cdis
                 if(istatus .ne. 1)then
                     istatus_2dref = 0
                     istatus_3dref = 0
+                    call constant_i(istatus_2dref_a,0,imax,jmax)
+                    call constant_i(istatus_3dref_a,0,imax,jmax)
                 endif
 
 !               We may want to remove this block eventually to allow calling
@@ -600,6 +888,8 @@ cdis
                 write(6,*)' Radar reflectivity data cannot be read in'
                 istatus_2dref = 0
                 istatus_3dref = 0
+                call constant_i(istatus_2dref_a,0,imax,jmax)
+                call constant_i(istatus_3dref_a,0,imax,jmax)
 
             endif ! Success as reflectivity
 
@@ -608,23 +898,29 @@ cdis
             write(6,*)' Radar vrz reflectivity data cannot be read in'
             istatus_2dref = 0
             istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
 
         elseif(radarext(1:3) .eq. 'ln3')then
-            call read_nowrad_3dref(i4time_radar,
-     1                  imax,jmax,kmax,
-     1                  grid_ra_ref,heights_3d,istatus_3dref)
+            call read_nowrad_3dref(i4time_radar
+     1                            ,imax,jmax,kmax
+     1                            ,grid_ra_ref,heights_3d
+     1                            ,istatus_2dref_a,istatus_3dref_a)
             if(istatus_3dref .ne. 1)then
                 write(6,*)
      1            ' Radar ln3 reflectivity data cannot be read in'
             endif
 
-            istatus_2dref = istatus_3dref
+            istatus_2dref = istatus_2dref_a(1,1)
+            istatus_3dref = istatus_3dref_a(1,1)
 
         else          ! Unknown extension
             write(6,*)' Unknown radarext ',radarext(1:3)
             write(6,*)' Radar reflectivity data cannot be read in'
             istatus_2dref = 0
             istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
 
         endif ! Test of extension (hence radar type )
 
@@ -857,9 +1153,10 @@ cdis
 
 
 
-        subroutine read_nowrad_3dref(i4time_radar,
-     1                  imax,jmax,kmax,
-     1                  ref_3d,heights_3d,istatus_3dref)
+        subroutine read_nowrad_3dref(i4time_radar
+     1                              ,imax,jmax,kmax
+     1                              ,ref_3d,heights_3d
+     1                              ,istatus_2dref_a,istatus_3dref_a)       
 
         character*3 var_2d
         character*31  ext
@@ -874,19 +1171,24 @@ cdis
         real*4 ref_2d_8c(imax,jmax)
         real*4 ref_2d_et(imax,jmax)
 
+        integer*4 istatus_2dref_a(imax,jmax)
+        integer*4 istatus_3dref_a(imax,jmax)
+
         write(6,*)' Subroutine read_nowrad_3dref'
 
         call get_ref_base(ref_base,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading ref_base parameter'
-            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
             return
         endif
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Error reading ref_base parameter'
-            istatus_3dref = 0
+            write(6,*)' Error reading r_missing_data parameter'
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
             return
         endif
 
@@ -900,7 +1202,8 @@ cdis
 
         if(istatus_nowrad .ne. 1 .and. istatus_nowrad .ne. -1)then
             write(6,*)' Could not read in ',var_2d
-            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
             return
         endif
 
@@ -911,7 +1214,8 @@ cdis
 
         if(istatus_nowrad .ne. 1 .and. istatus_nowrad .ne. -1)then
             write(6,*)' Could not read in ',var_2d
-            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
             return
         endif
 
@@ -922,7 +1226,8 @@ cdis
 
         if(istatus_nowrad .ne. 1 .and. istatus_nowrad .ne. -1)then
             write(6,*)' Could not read in ',var_2d
-            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
             return
         endif
 
@@ -933,7 +1238,8 @@ cdis
 
         if(istatus_nowrad .ne. 1 .and. istatus_nowrad .ne. -1)then
             write(6,*)' Could not read in ',var_2d
-            istatus_3dref = 0
+            call constant_i(istatus_2dref_a,0,imax,jmax)
+            call constant_i(istatus_3dref_a,0,imax,jmax)
             return
         endif
 
@@ -1022,7 +1328,8 @@ cdis
         write(6,*)' # of ref points > 0 before/after echo top check = '
      1            ,icount_ref1,icount_ref2
 
-        istatus_3dref = 1
+        call constant_i(istatus_2dref_a,1,imax,jmax)
+        call constant_i(istatus_3dref_a,0,imax,jmax)
 
         return
         end

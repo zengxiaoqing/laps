@@ -48,10 +48,8 @@ cdis
 
         character*9  asc9_tim_pirep,asc9_tim_rcvd
         character*80 string
-        character*13 filename13
 
         character*31    ext
-        integer*4       len_dir
 
         logical l_good_pirep
 

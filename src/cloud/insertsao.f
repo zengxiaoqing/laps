@@ -72,7 +72,6 @@ cdis
         logical l_perimeter
         character*3 lso_ext
         data lso_ext /'lso'/
-        logical l_try_again
 
         logical l_dry, l_auto
 
@@ -561,7 +560,7 @@ C CLOUDS ARE NOW IN MSL
 !             We should not hit this anymore
               if(amt_ret(i,l).eq.'   X')then
                   write(6,*)' Error: insertsao - stop X'
-                  stop
+                  if(.true.)stop
 
                   cover=1.00 
                   ht_top=ht_base+cld_thk(ht_base) ! 1500.
