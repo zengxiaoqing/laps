@@ -217,7 +217,7 @@ EOF
   -fflags | --fflags | --fflag | --ffla | --ffl | --ff)
     ac_prec=fflags ;;
   -fflags=* | --fflags=* | --fflag=* | --ffla=* | --ffl=* | --ff=*)
-    user_flags="$ac_optarg" ;;
+    user_fflags="$ac_optarg" ;;
 
   -includedir | --includedir | --includedi | --included | --include \
   | --includ | --inclu | --incl | --inc)
@@ -593,7 +593,7 @@ else
   fi    
 fi
 
-if test -z $netcdf
+if test -z "$netcdf"
 then
   AC_MSG_ERROR(\n\nCannot find directory containing netcdf in $PATH 
              \nThis package is required for LAPS and must have ../lib/libnetcdf.a 

@@ -204,7 +204,7 @@ mkdirs:
 clean:
 	rm -f *~ *# *.o 
 	cd src/include; rm -f *~ *# *.o 
-	@for dir in $(LIBDIRS) $(EXEDIRS);\
+	@for dir in $(EXEDIRS);\
 	  do \
 	  echo " ";\
 	  echo Making LAPS clean in directory $$dir ;\
@@ -213,7 +213,17 @@ clean:
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
 
-distclean: clean cleandirs
+realclean: clean
+	@for dir in $(LIBDIRS);\
+	  do \
+	  echo " ";\
+	  echo Making LAPS clean in directory $$dir ;\
+	  (cd $$dir; \
+	  $(MAKE) clean ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+distclean: realclean cleandirs
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
 	  do \
 	  echo " ";\
