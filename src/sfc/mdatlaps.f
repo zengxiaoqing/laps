@@ -36,8 +36,9 @@ c
      &     lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
-     &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, irams_bk,
+     &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, 
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
+     &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
      &     jstatus)
 c
 c*******************************************************************************
@@ -92,6 +93,8 @@ c                       11-18-96  Ck num obs.
 c                       12-13-96  More porting changes...common for
 c                                   sfc data, LGS grids. Bag stations.in
 c                       08-27-97  Changes for dynamic LAPS.
+c                       09-24-98  If missing background, do a smooth Barnes
+c                                   so something is there.
 c
 c	Notes:
 c
@@ -134,6 +137,7 @@ c
 	real*4 wp(ni,nj), wsp(ni,nj), wmslp(ni,nj)
 	real*4 wt(ni,nj), wtd(ni,nj), welev(ni,nj), wvis(ni,nj)
 c
+        real*4 fnorm(0:ni-1,0:nj-1)
 	real*4 x1a(ni), x2a(nj), y2a(ni,nj)    !interp routine
 	real*4 d1(ni,nj)   ! work array
 c
@@ -141,7 +145,7 @@ c..... LAPS Lat/lon grids.
 c
 	real*4 lat(ni,nj),lon(ni,nj), topo(ni,nj)
 c
-	real*4 lapse_t, lapse_td, lapse_temp
+	real*4 lapse_t, lapse_td
 	character atime*24
 c
 c.....	Grids for the background fields...use if not enough sao data.
@@ -151,6 +155,8 @@ c
         real*4 rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
         real*4 wt_rp(ni,nj), wt_mslp(ni,nj) 
         real*4 vis_bk(ni,nj) 
+        integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
+        integer back_mp
 c
 c.....  Stuff for checking the background fields.
 c
@@ -170,12 +176,26 @@ c
 	jmax = nj
 	icnt = 0
 	delt = 0.035
-
-	rog = 0.286 / 9.8 * 6.5
+c
+c.....  Zero out the sparse obs arrays.
+c
+	call zero(u1,    imax,jmax)
+	call zero(v1,    imax,jmax)
+	call zero(t1,    imax,jmax)
+	call zero(td1,   imax,jmax)
+	call zero(rp1,   imax,jmax)
+	call zero(sp1,   imax,jmax)
+	call zero(mslp1, imax,jmax)
+	call zero(vis1,  imax,jmax)
+	call zero(elev1, imax,jmax)
+	do i=1,mxstn
+	   uu(i) = 0.
+	   vv(i) = 0.
+	enddo !i
 c
 c.....  Stuff for checking the background windspeed.
 c
-	if(ilaps_bk.ne.1 .and. irams_bk.ne.1) then
+	if(ilaps_bk.ne.1 .or. back_uv.ne.1) then
 	   call constant(bk_speed,badflag, imax,jmax)
 	else
 	   call windspeed(u_bk,v_bk,bk_speed, imax,jmax)
@@ -184,11 +204,16 @@ c
 c.....	Rotate sao winds to the projection grid, then change dd,fff to u,v
 c
 	do i=1,n_obs_b
-	  dd_rot = dd_s(i) - projrot_laps( lon_s(i) )
-	  dd_rot = mod( (dd_rot + 360.), 360.)
-          call decompwind_gm(dd_rot,ff_s(i),uu(i),vv(i),istatus)     
-	  if(uu(i).lt.-150. .or. uu(i).gt.150.) uu(i) = badflag
-	  if(vv(i).lt.-150. .or. vv(i).gt.150.) vv(i) = badflag
+	   if(dd_s(i).eq.badflag .or. ff_s(i).eq.badflag) then
+	      uu(i) = badflag
+	      vv(i) = badflag
+	   else
+	      dd_rot = dd_s(i) - projrot_laps( lon_s(i) )
+	      dd_rot = mod( (dd_rot + 360.), 360.)
+	      call decompwind_gm(dd_rot,ff_s(i),uu(i),vv(i),istatus)     
+	      if(uu(i).lt.-150. .or. uu(i).gt.150.) uu(i) = badflag
+	      if(vv(i).lt.-150. .or. vv(i).gt.150.) vv(i) = badflag
+	   endif
 	enddo !i
 c
 c.....  Before continuing, use the SAO data to check the backgrounds.
@@ -202,8 +227,8 @@ c
 	print *,' '
 	print *,' Checking background...'
 	print *,' '
-	if(ilaps_bk.ne.1 .and. irams_bk.ne.1) then
-	   print *,' NO BACKGROUND FIELDS AVAILIBLE...SKIPPING...'
+	if(ilaps_bk.ne.1 .or. back_uv.ne.1) then
+	   print *,' NO BACKGROUND WIND FIELDS AVAILIBLE...SKIPPING...'
 	   go to 415
 	endif
 c
@@ -315,8 +340,19 @@ c
 c.....	Now reduce station pressures to standard levels...1500 m (for CO) 
 c.....  and MSL.  Use background 700 mb and 850 mb data from LGA (or equiv).
 c
-	call mean_lapse(n_obs_b,elev_s,t_s,td_s,a_t,lapse_t,a_td,
-     &                    lapse_td,hbar,badflag)
+cc	call mean_lapse(n_obs_b,elev_s,t_s,td_s,a_t,lapse_t,a_td,
+cc     &                    lapse_td,hbar,badflag)
+c
+c.....  Set standard lapse rates in deg F.
+c
+        lapse_t = -.01167
+        lapse_td = -.007
+c
+	sum_diffp = 0.
+	num_diffp = 0
+	print *,' '
+	print *,' Calculating reduced pressures'
+	print *,'----------------------------------'
 	do k=1,n_obs_b
 	  if(pstn_s(k).le.badflag .or. t_s(k).le.badflag 
      &                           .or. td_s(k).le.badflag) then
@@ -325,11 +361,29 @@ c
 	  else
 	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_t,
      &                       lapse_td,pred_s(k),redp_lvl,badflag)  ! 1500 m for CO
-!	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_temp,
-!     &                       lapse_td,pmsl_s(k),0.)	! MSL
+	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_t,
+     &                       lapse_td,p_msl,0.,badflag)        ! MSL
+	    if(pmsl_s(k).gt.900. .and. pmsl_s(k).lt.1100.) then
+              if(p_msl .ne. badflag) then
+		 diff_ps = p_msl - pmsl_s(k)
+		 write(6,983) k, stn(k), p_msl, pmsl_s(k), diff_ps
+		 sum_diffp = sum_diffp + diff_ps
+		 num_diffp = num_diffp + 1
+	      endif
+	    else
+	       pmsl_s(k) = p_msl
+	    endif
 	  endif
- 550	  continue
         enddo !k
+	print *,' '
+	if(num_diffp .le. 0) then
+	   print *,' Bad num_diffp'
+	else
+	   bias = sum_diffp / float(num_diffp)
+	   print *,'Num: ', num_diffp,'   MSL Pressure Bias = ', bias
+	endif
+ 983    format(1x,i5,2x,a6,':',3f12.2)
+	print *,' '
 c
 c.....	Convert visibility to log( vis ) for the analysis.
 c
@@ -414,11 +468,91 @@ c
         call procar(vis1,imax,jmax,wvis,imax,jmax,-1)
         call procar(elev1,imax,jmax,welev,imax,jmax,-1)
 c
-c.....	Fill in the boundary of each field with values from a wide-area Barnes.
+c.....  Now that the data is ready, check the backgrounds.  If they
+c.....  are missing, fill the background field for the variable
+c.....  with a smooth Barnes analysis of the obs.  This will allow
+c.....  us to cold start the analysis, or run the analysis in a 
+c.....  stand-alone mode.
 c
-	if(n_sao_g .lt. 10) then
-	  print *,
-     & ' Limited SAO data...using previous analysis for the boundaries.'
+	n_obs_var = 0
+        fill_val = 1.e37
+        smsng = 1.e37
+	npass = 1
+	if(back_t .ne. 1) then
+	   print *,' '
+	   print *,
+     & ' **WARNING. No T background. Using smooth Barnes anl of obs'
+	   rom2 = 0.005
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(t_bk,imax,jmax,t1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(t_bk,imax,jmax,fill_val,istatus)
+	endif
+c
+	if(back_td .ne. 1) then
+	   print *,' '
+	   print *,
+     & ' **WARNING. No Td background. Using smooth Barnes anl of obs'
+	   rom2 = 0.005
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(td_bk,imax,jmax,td1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(td_bk,imax,jmax,fill_val,istatus)
+	endif
+c
+	if(back_uv .ne. 1) then
+	   print *,' '
+	   print *,
+     & ' **WARNING. No wind background. Using smooth Barnes anl of obs'
+	   rom2 = 0.005
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(u_bk,imax,jmax,u1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(u_bk,imax,jmax,fill_val,istatus)
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(v_bk,imax,jmax,v1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(v_bk,imax,jmax,fill_val,istatus)
+	endif
+c
+	if(back_sp .ne. 1) then
+	   print *,' '
+	   print *,
+     & ' **WARNING. No sfc P background. Using smooth Barnes anl of obs'
+	   rom2 = 0.005
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(stnp_bk,imax,jmax,sp1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(stnp_bk,imax,jmax,fill_val,istatus)
+	endif
+c
+	if(back_rp .ne. 1) then
+	   print *,' '
+	   print *, ' **WARNING. No reduced P background.',
+     &              ' Using smooth Barnes anl of obs'
+	   rom2 = 0.005
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(rp_bk,imax,jmax,rp1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(rp_bk,imax,jmax,fill_val,istatus)
+	endif
+c
+	if(back_mp .ne. 1) then
+	   print *,' '
+	   print *,
+     & ' **WARNING. No MSL P background. Using smooth Barnes anl of obs'
+	   rom2 = 0.005
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(mslp_bk,imax,jmax,mslp1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(mslp_bk,imax,jmax,fill_val,istatus)
+	endif
+c
+	if(back_vis .ne. 1) then
+	   print *,' '
+	   print *,
+     & ' **WARNING. No Vis background. Using smooth Barnes anl of obs'
+	   rom2 = 0.005
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(vis_bk,imax,jmax,vis1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(vis_bk,imax,jmax,fill_val,istatus)
+	endif
+c
+c.....	Fill in the boundary of each field with values from the
+c.....  background.
 c
 	  call back_bounds(u1,imax,jmax,u_bk,badflag)
 	  call back_bounds(v1,imax,jmax,v_bk,badflag)
@@ -430,42 +564,11 @@ c
 	  call back_bounds(vis1,imax,jmax,vis_bk,badflag)
 	  call back_bounds(elev1,imax,jmax,topo,badflag)
 c
-	else
-c
- 1111	  print *,' U:' 
-	  call fill_bounds(u1,imax,jmax,ii,jj,uu,n_obs_b,
-     &                     badflag,mxstn)
-	  print *,' V:' 
-	  call fill_bounds(v1,imax,jmax,ii,jj,vv,n_obs_b,
-     &                     badflag,mxstn)
-	  print *,' T:' 
-	  call fill_bounds(t1,imax,jmax,ii,jj,t_s,n_obs_b,
-     &                     badflag,mxstn)
-	  print *,' TD:' 
-	  call fill_bounds(td1,imax,jmax,ii,jj,td_s,n_obs_b,
-     &                     badflag,mxstn)
-	  print *,' P:' 
-	  call fill_bounds(rp1,imax,jmax,ii,jj,pred_s,n_obs_b,
-     &                     badflag,mxstn)
-	  print *,' SFC P:' 
-	  call fill_bounds(sp1,imax,jmax,ii,jj,pstn_s,n_obs_b,
-     &                     badflag,mxstn)
-	  print *,' MSL P:' 
-	  call fill_bounds(mslp1,imax,jmax,ii,jj,pmsl_s,n_obs_b,
-     &                     badflag,mxstn)
-	  print *,' VIS:' 
-	  call fill_bounds(vis1,imax,jmax,ii,jj,vis_s,n_obs_b,
-     &                     badflag,mxstn)
-	  print *,' STN ELEV:' 
-	  call fill_bounds(elev1,imax,jmax,ii,jj,elev_s,n_obs_b,
-     &                     badflag,mxstn)
-	endif
-c
 c.....	Check the brightness temperatures for clouds.
 c
-	if(ilaps_bk.eq.0 .and. irams_bk.eq.0) then
-	 print *,' ++ No previous temperature est for cloud routine ++'
-	 go to 720
+	if(ilaps_bk.eq.0 .or. back_t.eq.0) then
+	   print *,' ++ No previous temperature est for cloud routine ++'
+	   go to 720
 	endif
 	call zero(d1,imax,jmax)
 	call conv_f2k(t_bk,d1,imax,jmax)
@@ -712,6 +815,24 @@ c
      &                                     x(imax,j) = dum(imax,j)
 	enddo !j
 c
+c
+        do i=1,imax
+           do j=1,2
+              x(i,j)=dum(i,j)
+           enddo
+           do j=jmax-1,jmax
+              x(i,j)=dum(i,j)
+           enddo
+        enddo
+
+        do j=1,jmax
+           do i=1,2
+              x(i,j)=dum(i,j)
+           enddo
+           do i=imax-1,imax
+              x(i,j)=dum(i,j)
+           enddo
+        enddo
 	return
 	end
 c
@@ -725,6 +846,9 @@ c       earlier analysis...for when we have limited data.
 c
 c       Orginal: P. Stamus  NOAA/FSL  c.1990
 c       Changes: P. Stamus  27 Aug 1997  Pass in bad flag value.
+c                J. Smart   15 Jul 1998  background put on the boundary
+c                                        + 2 grid points in.
+c                                  (McGinley and Stamus approved this mod)
 c
 c======================================================================
 c
@@ -744,6 +868,24 @@ c
      &                                     x(imax,j) = dum(imax,j)
 	enddo !j
 c
+        do i=1,imax
+           do j=1,2
+              x(i,j)=dum(i,j)
+           enddo
+           do j=jmax-1,jmax
+              x(i,j)=dum(i,j)
+           enddo
+        enddo
+
+        do j=1,jmax
+           do i=1,2
+              x(i,j)=dum(i,j)
+           enddo
+           do i=imax-1,imax
+              x(i,j)=dum(i,j)
+           enddo
+        enddo
+
 	return
 	end
 c
