@@ -188,7 +188,8 @@
 
       namelist /sfcfiles/ topo_30s, topo_10m, pctland_10m
      &,landuse_30s, soiltype_top_30s, soiltype_bot_30s
-     &,greenfrac, soiltemp_1deg, albedo_ncep, sstemp
+     &,greenfrac, soiltemp_1deg, albedo_ncep, maxsnowalb
+     &,islope, sstemp
 
       character*80 filename
 
@@ -263,155 +264,8 @@
       return
       end
 c
-c -------------------------------------------------------------------
-c
-      subroutine read_analysis_control(c_analysis_type,istatus)
-
-      implicit none
-      include 'grid_fname.cmn'
-
-      character*80 filename
-      character*10 c_analysis_type
-
-      integer      istatus
-      integer      iflag_anl_control_cmn
-      data         iflag_anl_control_cmn/0/
-      save         iflag_anl_control_cmn
-
-      namelist /analysis_control/
-     +          c_analysis_type
-
-      integer      lenr
-
-      istatus = 0
-      call s_len(generic_data_root,lenr)
-      filename = generic_data_root(1:lenr)//'/static/wrfsi.nl'
-      if(iflag_anl_control_cmn.ne.1)then
-         open(93,file=filename,status='old',err=900)
-         rewind(93)
-         read(93,analysis_control,err=901)
-         close(93)
-         iflag_anl_control_cmn=1
-      endif
-      istatus = 1
-      return
- 900  print*,'error opening namelist file ', filename
-      return
-
- 901  print*,'error reading namelist file for paths_to_raw_data'
-      write(*,analysis_control)
-      return
-      end
-!
-!----------------------------
-!
-      subroutine read_wrfsi_laps_control(
-     +  nx_l,ny_l,nz_l,c_vcoordinate,grid_spacing_m
-     + ,pressure_bottom,pressure_interval
-     + ,laps_cycle_time
-     + ,l_highres_laps,lpad1,lpad2,lpad3
-     + ,i_perimeter,c50_lowres_dir
-     + ,craddat_type
-     + ,radarext_3d,radarext_3d_accum
-     + ,i2_missing_data,r_missing_data
-     + ,max_radars,ref_base,ref_base_useable
-     + ,maxstns,n_pirep
-     + ,vert_rad_meso,vert_rad_sao,vert_rad_pirep
-     + ,vert_rad_prof,silavwt_parm,toptwvl_parm
-     + ,c8_project,fdda_model_source,istatus)
-
-      implicit none
-
-      integer      nx_l,ny_l,nz_l
-      character*8  c_vcoordinate
-      real*4       grid_spacing_m
-      real*4       PRESSURE_BOTTOM
-      real*4       PRESSURE_INTERVAL
-      integer      laps_cycle_time
-      integer      i_perimeter
-      integer      i2_missing_data
-      logical*1    l_highres_laps,lpad1,lpad2,lpad3
-      real*4       r_missing_data
-      integer      MAX_RADARS
-      real*4       ref_base
-      real*4       ref_base_useable
-      integer      maxstns
-      integer      N_PIREP
-      integer      vert_rad_meso
-      integer      vert_rad_sao
-      integer      vert_rad_pirep
-      integer      vert_rad_prof     
-      character*3  craddat_type
-      character*50 c50_lowres_dir
-      character*8  radarext_3d
-      character*8  radarext_3d_accum
-      real*4       silavwt_parm
-      real*4       toptwvl_parm
-      character*8  c8_project
-      character*9  fdda_model_source(10)  !models_max)
-
-      include 'grid_fname.cmn'
-
-      character*80 filename
-
-      integer      istatus
-      integer      iflag_wrf_laps_cmn
-      data         iflag_wrf_laps_cmn/0/
-      save         iflag_wrf_laps_cmn
-
-      namelist /laps_analysis_control/
-     +          nx_l,ny_l,nz_l
-     +         ,c_vcoordinate
-     +         ,grid_spacing_m
-     +         ,pressure_bottom
-     +         ,pressure_interval
-     +         ,laps_cycle_time
-     +         ,l_highres_laps
-     +         ,i_perimeter
-     +         ,c50_lowres_dir
-     +         ,craddat_type
-     +         ,radarext_3d
-     +         ,radarext_3d_accum
-     +         ,i2_missing_data
-     +         ,r_missing_data
-     +         ,max_radars
-     +         ,ref_base
-     +         ,ref_base_useable
-     +         ,maxstns
-     +         ,n_pirep
-     +         ,vert_rad_meso
-     +         ,vert_rad_sao
-     +         ,vert_rad_pirep
-     +         ,vert_rad_prof
-     +         ,silavwt_parm
-     +         ,toptwvl_parm
-     +         ,c8_project
-     +         ,fdda_model_source
-
-      integer      lenr
-
-      istatus = 0
-      call s_len(generic_data_root,lenr)
-      filename = generic_data_root(1:lenr)//'/static/wrfsi.nl'
-      if(iflag_wrf_laps_cmn.ne.1)then
-         open(93,file=filename,status='old',err=900)
-         rewind(93)
-         read(93,laps_analysis_control,err=901)
-         close(93)
-         iflag_wrf_laps_cmn=1
-      endif
-      istatus = 1
-      return
-
- 900  print*,'error opening namelist file ', filename
-      return
-
- 901  print*,'error reading namelist file for laps_analysis_control'
-      write(*,laps_analysis_control)
-      return
-      end
-c
 c --------------------------------------------------------
+c
       subroutine get_grid_dim_xy_wrf(nest,nx,ny,istatus)
 
       implicit  none
@@ -518,9 +372,9 @@ c Note: this is not designed for nesting atm.
       implicit  none
 
       include 'wrf_horzgrid.cmn'
+      include 'grid_fname.cmn'
       real     grid_center_lon
       integer  istatus
-      integer  nest
 
       call read_wrfsi_hgridspec (istatus)
       if(istatus.ne.1)then
@@ -530,7 +384,7 @@ c Note: this is not designed for nesting atm.
 
       istatus = 1
 
-      grid_center_lon=moad_known_lon
+      grid_center_lon=moad_known_lon(nest)
 
       return
       end

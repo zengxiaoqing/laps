@@ -1,10 +1,15 @@
-      subroutine get_wrfsi_config(istatus)
+      subroutine get_wrfsi_config(nest,istatus)
 
 c
 c routine returns a common set of variables that describe a domain projection.
 c
         implicit none
 c
+c all these include files are needed to marry namelist besides nest7grid.parms
+c to the lapsparms.cmn.  At the moment we only deal with one additional namelist wrfsi.nl 
+c
+c       include 'wrf_dims.inc'
+
         include 'lapsparms.cmn'
 
         integer      nx_l,ny_l,nz_l
@@ -13,7 +18,6 @@ c
         real*4       PRESSURE_INTERVAL
         integer      laps_cycle_time
         integer      i_perimeter
-        logical*1    l_highres_laps,lpad1,lpad2,lpad3
 c       integer      i2_missing_data
 c       real*4       r_missing_data
         integer      MAX_RADARS
@@ -56,7 +60,16 @@ c       include 'wrf_laps_analysis.cmn'
 
 
         if(iflag_config_wrfsi.eq.1)then
+
            istatus = 1
+           grid_cen_lat_cmn   =moad_known_lat(nest)
+           grid_cen_lon_cmn   =moad_known_lon(nest)
+           nx_l_cmn           =xdim(nest)
+           ny_l_cmn           =ydim(nest)
+           grid_spacing_m_cmn =grid_spacing_wrf_m(nest)
+           i_orig_cmn         =domain_origin_parent_x(nest)
+           j_orig_cmn         =domain_origin_parent_y(nest)
+
            return
         endif
 
@@ -118,11 +131,19 @@ c           print*,'error reading wrfsi_laps_control'
 c           return
 c        endif
 c
+        if(nest.eq.0)then
+           nest=1    !this would be the MOAD
+        endif
+
         standard_latitude  =moad_stand_lats(1)
         standard_latitude2 =moad_stand_lats(2)
         standard_longitude =moad_stand_lons(1)
-        grid_cen_lat_cmn   =moad_known_lat
-        grid_cen_lon_cmn   =moad_known_lon
+        grid_cen_lat_cmn   =moad_known_lat(nest)
+        grid_cen_lon_cmn   =moad_known_lon(nest)
+        num_domains_cmn    =num_domains
+        i_orig_cmn         =domain_origin_parent_x(nest)
+        j_orig_cmn         =domain_origin_parent_y(nest)
+
         path_to_topt10m=topo_10m
         path_to_topt30s=topo_30s
         path_to_pctl10m=pctland_10m
@@ -132,6 +153,8 @@ c
         path_to_greenfrac = greenfrac
         path_to_soiltemp1deg = soiltemp_1deg
         path_to_albedo = albedo_ncep
+        path_to_maxsnoalb = maxsnowalb
+        path_to_islope = islope
         path_to_sst  = sstemp
 
         c6_maproj=wrftolaps_c6_maprojname(map_proj_name)
@@ -153,7 +176,6 @@ c
         call s_len(c_analysis_type,ltyp)
         vertical_grid = c_vcoordinate(1:lvc)
 
-        nest = 1
         num_staggers=num_staggers_wrf
 
         nx_l_cmn = xdim(nest)
@@ -162,10 +184,8 @@ c
         silavwt_parm_cmn = silavwt_parm_wrf
         toptwvl_parm_cmn = toptwvl_parm_wrf
 
-
         i2_missing_data_cmn = i2_missing_data
         r_missing_data_cmn = r_missing_data
-
 
         iflag_lapsparms_cmn = 1
         iflag_config_wrfsi = 1

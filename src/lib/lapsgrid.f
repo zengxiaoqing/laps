@@ -106,11 +106,15 @@ c       1994 Steve Albers
         call get_directory(ext,directory,len_dir)
 
 !       directory = ''
+        call s_len(grid_fnam_common,leng)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
 
         var = 'LAT'
+        if(grid_fnam_common(1:leng).eq.'wrfsi')then
+           var = 'LAC'
+        endif
         call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
      1                                 ,lat,grid_spacing_m,istatus)
         if(istatus .ne. 1)then
@@ -119,6 +123,9 @@ c       1994 Steve Albers
         endif
 
         var = 'LON'
+        if(grid_fnam_common(1:leng).eq.'wrfsi')then
+	   var = 'LOC'
+        endif
         call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
      1                                  ,lon,grid_spacing_m,istatus)
         if(istatus .ne. 1)then
@@ -127,18 +134,24 @@ c       1994 Steve Albers
         endif
 
         var = 'AVG'
+        if(grid_fnam_common(1:leng).eq.'wrfsi')then
+	   var = 'AVC'
+        endif
+
         call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
      1                                  ,topo,grid_spacing_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading AVG (topo) field'
             return
         endif
-       
+
+c the staggered grid may have r_missing_data top and right row/column.
         call array_minmax(topo,ni,nj,rmin,rmax,r_missing_data)
-        if(rmin .lt. -1000. .or. rmax .gt. 9000.)then
-            write(6,*)' Error, topo range out of bounds',rmin,rmax
-            istatus = 0
-            return
+        if(rmin .lt. -1000. .or. rmax .gt. 9000. .and.
+     1     rmax.ne.r_missing_data)then
+           write(6,*)' Error, topo range out of bounds',rmin,rmax
+           istatus = 0
+           return
         endif
 
         var = 'LDF'
@@ -365,7 +378,7 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
               return
            endif
         elseif(grid_fnam_common(1:5).eq.'wrfsi')then
-           call get_wrfsi_config(istatus)
+           call get_wrfsi_config(nest,istatus)
            if(istatus.ne.1)then
               print*,'Error returned from get_wrfsi_config'
               return
@@ -422,13 +435,12 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
      1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
      1  ,path_to_wsi_2d_radar_cmn,path_to_wsi_3d_radar_cmn
      1  ,path_to_qc_acars_cmn
-     1  ,c8_project_common
-     1  ,c_raddat_type, c80_description, path_to_topt30s
-     1  ,path_to_topt10m, path_to_pctl10m
+     1  ,c8_project_common,c_raddat_type,c80_description
+     1  ,path_to_topt30s ,path_to_topt10m
      1  ,path_to_soiltype_top30s, path_to_soiltype_bot30s
      1  ,path_to_landuse30s,path_to_greenfrac
-     1  ,path_to_soiltemp1deg,path_to_albedo,path_to_sst
-     1  ,fdda_model_source_cmn
+     1  ,path_to_soiltemp1deg,path_to_albedo,path_to_maxsnoalb
+     1  ,path_to_islope,path_to_sst,fdda_model_source_cmn
 
 
         if(ipass.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
@@ -900,6 +912,52 @@ c----------------------------------------------------------
       return
       end
 
+      subroutine get_num_domains(num_domains,istatus)
+
+      include 'lapsparms.cmn'              ! num_domains_cmn
+      include 'grid_fname.cmn'             ! grid_fnam_common
+
+!     character*80 grid_fnam
+
+!     This routine accesses the num_domains variable from the
+!     namelist file via the common block. Note the variable names in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      num_domains = num_domains_cmn
+
+      istatus = 1
+      return
+      end
+
+      subroutine get_domain_origin_parent(i_orig,j_orig,istatus)
+
+      include 'lapsparms.cmn'              ! i_orig_cmn,j_orig_cmn
+      include 'grid_fname.cmn'             ! grid_fnam_common
+
+!     character*80 grid_fnam
+
+!     This routine accesses the I&J_DOMAIN_ORIGIN_PARENT variables from the
+!     namelist file via the common block. Note the variable names in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      i_orig=i_orig_cmn
+      j_orig=j_orig_cmn
+
+      istatus = 1
+      return
+      end
 
       subroutine get_grid_dim_xy(NX_L,NY_L,istatus)
 
@@ -1155,7 +1213,9 @@ c----------------------------------------------------------
       istatus = 1
       return
       end
-
+c
+c-----------------------------------------------------------------------
+c
       subroutine get_l_compress_radar(l_compress_radar_ret, istatus)
 
       include 'lapsparms.cmn' ! l_compress_radar
@@ -1169,8 +1229,8 @@ c----------------------------------------------------------
 
       call get_laps_config(grid_fnam_common,istatus)
       if(istatus .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not successfully called'       
-          return
+         write(6,*)' ERROR, get_laps_config not successfully called'       
+         return
       endif
 
       l_compress_radar_ret = l_compress_radar
@@ -1335,28 +1395,6 @@ c     enddo
       return
       end
 
-      subroutine get_path_to_pctl_10m(path_to_pctl_10m,istatus)
-
-      include 'lapsparms.cmn' ! path_to_pctl_10m
-      include 'grid_fname.cmn'! grid_fnam_common
-
-!     This routine accesses the path_to_pctl_10m  variable from the
-!     .parms file via the common block. 
-
-      character*200 path_to_pctl_10m
-
-      call get_laps_config(grid_fnam_common,istatus)
-
-      if(istatus .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not successfully called'
-          return
-      endif
-
-      path_to_pctl_10m =  path_to_pctl10m
-
-      return
-      end
-
       subroutine get_path_to_soiltype_top(path_to_soiltype_top_30s
      +,istatus)
 
@@ -1496,7 +1534,52 @@ c---------------------------------------------------------------
       return
       end
 c
+c---------------------------------------------------------------
+      subroutine get_path_to_maxsnoalb(pathtomaxsnoalb,istatus)
 
+      include 'lapsparms.cmn' ! path_to_maxsnoalb
+      include 'grid_fname.cmn'! grid_fnam_common
+
+!     This routine accesses the path_to_maxsnoalb variable from the
+!     .parms file via the common block.
+
+      character*200 pathtomaxsnoalb
+
+      call get_laps_config(grid_fnam_common,istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      pathtomaxsnoalb = path_to_maxsnoalb
+
+      return
+      end
+c
+c---------------------------------------------------------------
+	subroutine get_path_to_islope(pathtoislope,istatus)
+
+	include 'lapsparms.cmn' ! path_to_islope
+	include 'grid_fname.cmn'! grid_fnam_common
+
+!	This routine accesses the path_to_islope variable from the
+!	.parms file via the common block.
+
+	character*200 pathtoislope
+
+	call get_laps_config(grid_fnam_common,istatus)
+
+	if(istatus .ne. 1)then
+	  write(6,*)' ERROR, get_laps_config not successfully called'
+	  return
+	endif
+
+        pathtoislope = path_to_islope
+
+	return
+	end
+c
 c---------------------------------------------------------------
       subroutine get_path_to_sst(path_to_sst_ret,istatus)
 
