@@ -300,7 +300,7 @@ rdr/001 rdr/002 rdr/003 rdr/004 rdr/005 rdr/006 rdr/007 rdr/008 rdr/009
 rdr/001/raw rdr/001/vrc rdr/002/vrc rdr/003/vrc rdr/004/vrc 
 rdr/005/vrc rdr/006/vrc rdr/007/vrc rdr/008/vrc rdr/009/vrc 
 lgb ls2 lapsprep dprep fsf fsf/mm5 fsf/ram fsf/eta fua fua/mm5 fua/ram fua/eta 
-stats balance balance/lt1 balance/lw3 balance/lh3 
+stats balance balance/lt1 balance/lw3 balance/lh3 balance/lq3
 grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
 
   }else{
