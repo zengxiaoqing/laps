@@ -244,7 +244,8 @@ c           enddo
 
             ww=ww/36.
 
-         elseif (cwb_type.eq.'nf15'.or.cwb_type.eq.'gfs')then
+         elseif (cwb_type.eq.'nf15'.or.cwb_type.eq.'gfs'
+     &.or.cwb_type.eq.'nf45'.or.cwb_type.eq.'tfs')then
 
             call read_nf15km(nx,ny,nz,filename,
      &                       ht,tp,sh,uw,vw,ww,        !Note: sh contains 3D rh
@@ -825,7 +826,7 @@ c
       header_rhs ='nfs relative humidity (%)'
       header_uws ='nfs u-wind (m/s)'
       header_vws ='nfs v-wind (m/s)'
-      header_mslp='nfs mean sea level presures (pa)'
+      header_mslp='nfs mean sea level presures (hpa)'  !modified to "hpa" 9-22-04 
 
       prk(1) = 100000.
       prk(2) = 92500.
