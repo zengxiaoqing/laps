@@ -31,6 +31,11 @@
          2.6 ..............  Modifying Compiler Flags     
          2.7 ..............  I/O of LAPS gridded files
          2.8 ..............  CHANGING THE HORIZONTAL DOMAIN
+         2.8.1 ..................  Number of Grid Points
+         2.8.2 ..................  Location of Domain (Map projections)
+         2.8.3 ..................  Domain Resolution 
+         2.8.4 ..................  Terrain Databases
+         2.8.5 ..................  Terrain Smoothing/Filtering  
          2.9 ..............  CHANGING THE VERTICAL DOMAIN
          2.10 .............  CHANGING THE CYCLE TIME 
          2.11 .............  SURFACE ANALYSIS CHANGES
@@ -310,6 +315,11 @@
      data directories as described below. Separating the data directory
      also makes it a bit easier to maintain your own local set of parameters 
      that are unique to your domain. 
+
+     Another configure option is --arch. Configure tries to get the 
+     architecture from a 'uname' command, but this can be overridden by having
+     an $ARCH environment variable or by using --arch. The allowed values for 
+     'arch' include 'aix', 'hpux', etc.
 
                 --- 2.2.3   Ingest Software changes ---
 
@@ -708,13 +718,13 @@
      libnetcdf.a
 
 
--------------- 2.8   CHANGING THE HORIZONTAL DOMAIN---------------------------
+-------------- 2.8 ----  CHANGING THE HORIZONTAL DOMAIN-----------------------
 
      Laps will allow you to change the horizontal domain after compilation
      and before the running of the localization script. Below is a list of 
      the relevant changes.
 
-                        NUMBER OF GRID POINTS
+                ----  2.8.1 Number of Grid Points ---
 
      Adjust the horizontal dimensions (NX_L, NY_L) in 
                                               './data/static/nest7grid.parms'.
@@ -725,37 +735,12 @@
            './data/static/nest7grid.parms'.
 
 
-             LOCATION OF DOMAIN (STATIC FILES, TERRAIN, etc.):
+          ----  2.8.2 Location of Domain (Map projections) ---
 
      The location of the horizontal domain can now be changed at run time. 
      Simply change the lat/lon values in 'data/static/nest7grid.parms'
      and run the './etc/laps_localization.pl' script. This script in turn
      runs 'gridgen_model.exe' and other programs.
-
-        Two scenarios for processing terrain may need more testing. These are:
-
-        1) Near a land/sea border
-           In this case a filter that sets a given terrain point to zero
-           if the absolute value of the point is less than 1 meter may
-           help as a post processing step to reduce noise just off of
-           the coast. 
-           
-        2) If you are in the vicinity of a land border of the Continental 
-           United States (e.g. Southern Canada or Northern Mexico).
-
-        The './src/grid/gridgen_model.f' program normally utilizes one of
-        two terrain data databases (distributed separately and available from 
-        the laps www site). 
-
-        The first database has two components; one is a worldwide 10' dataset,
-        the other is 30" data and covers the continental U.S.  The software 
-        automatically chooses the higher resolution data if it covers the 
-        domain of interest, otherwise it defaults to the lower resolution 
-        data. A ~0.2 degree wide transition zone is used for blending at 
-        the boundary between the two datasets. 
-
-        The second database is a global 30" terrain dataset from USGS that we
-        have reformatted here at FSL. 
 
         Prior to running 'laps_localization.pl', set the following parameters
         in 'data/static/nest7grid.parms' (needed only if you are outside 
@@ -883,12 +868,6 @@
                 Mercator:
                     N/A
 
-        7) Edit the file 'data/static/nest7grid.parms', if 
-                you want to modify the 'silavwt_parm' and 'toptwvl_parm' 
-                parameters.  The default values are 1. and 4., respectively. 
-                These parameters control the terrain silhouette weighting and 
-                the terrain smoothing, respectively. The value "4." here 
-                implies 4 delta-x smoothing.  
 
 </pre>
 
@@ -917,12 +896,61 @@
    The projection rotation routine 'projrot_laps' also has some approximations
    when local stereographic is used.
 
-                       RESOLUTION OF DOMAIN: 
+                   ----  2.8.3 Domain Resolution  ---
 
      The default value is 10000m. This is one of the items used in 
    constructing the static file (see above). To date, we have run LAPS with
    resolutions ranging from 1000m to 36000m.
 
+
+                   ----  2.8.4 Terrain Databases ---
+
+        The './src/grid/gridgen_model.f' program normally utilizes one of
+        two terrain data databases (distributed separately and available from 
+        the laps www site). 
+
+        The first database has two components; one is a worldwide 10' dataset,
+        the other is 30" data and covers the continental U.S.  The software 
+        automatically chooses the higher resolution data if it covers the 
+        domain of interest, otherwise it defaults to the lower resolution 
+        data. A ~0.2 degree wide transition zone is used for blending at 
+        the boundary between the two datasets. 
+
+        Two scenarios for processing the first database may need more testing.
+        These are:
+
+        1) Near a land/sea border
+           In this case a filter that sets a given terrain point to zero
+           if the absolute value of the point is less than 1 meter may
+           help as a post processing step to reduce noise just off of
+           the coast. 
+           
+        2) If you are in the vicinity of a land border of the Continental 
+           United States (e.g. Southern Canada or Northern Mexico).
+
+        The second database is a global 30" terrain dataset from USGS that we
+        have reformatted here at FSL. 
+
+                 ----  2.8.5 Terrain Smoothing/Filtering  ---
+
+    Edit the file 'data/static/nest7grid.parms'...
+<pre>
+            
+        1) silavwt_parm: 
+
+           Default value of 1. represents the use of silhouette terrain
+           which is the maximum elevation in the local area. Useful range is
+           between 0-1. A value of zero uses the average terrain instead of
+           the maximum. Note that a value of 1. may reduce the apparent effect
+           of filtering with 'toptwvl_parm'.
+
+        2) toptwvl_parm: 
+
+           Default value is 4 represents 4 delta-x filtering of the terrain.
+           You can change this to alter the smoothness of the terrain. Higher
+           numbers mean smoother terrain.
+
+</pre>
    
 --------- 2.9  ----- CHANGING THE VERTICAL DOMAIN------------------------------
 
