@@ -16,7 +16,6 @@ c	Parameter(DEPTH = 20, DCM = 50.80)
 	Parameter(DEPTH = 36, DCM = 91.4)
         Parameter(RainThres = 0.075)    ! cm/hr ... like 0.03 in/hr
 	Parameter(N=1)			!Number of rain periods
-	Parameter(Delt=1.0)		!Time period increment...means 1 hr.
 	Parameter(Snowthres=0.5)	!Snow cover threshold
 c
 C    End of include file
