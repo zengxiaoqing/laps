@@ -199,14 +199,14 @@ c     namelist data
       real    mod_4dda_factor
       real    t_ref
       integer gps_switch
-      character*256 path_to_gvap8,path_to_gvap10,path_to_gps
+      character*256 path_to_gvap12,path_to_gvap10,path_to_gps
       namelist /moisture_switch_nl/ raob_switch,
      1     raob_lookback, 
      1     raob_radius, goes_switch, cloud_switch, cloud_d
      1     ,tiros_switch, sounder_switch, sat_skip
      1     ,gvap_switch, IHOP_flag, time_diff, gps_switch
      1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
-     1     t_ref,path_to_gvap8,path_to_gvap10,path_to_gps
+     1     t_ref,path_to_gvap12,path_to_gvap10,path_to_gps
       
       integer len
       character cdomain(ii)
@@ -279,7 +279,7 @@ c     set namelist parameters to defaults
       mod_4dda_1 = 0
       mod_4dda_factor = 0.02
       t_ref = -132.0
-      path_to_gvap8 = ' '
+      path_to_gvap12 = ' '
       path_to_gvap10 = ' '
       path_to_gps = ' '
       
@@ -387,12 +387,12 @@ c     set namelist parameters to defaults
       
       write(6,*) 'T_ref is set to: ',t_ref
       
-      if (path_to_gvap8 .eq. ' '.and. path_to_gvap10 .eq. ' ')then
+      if (path_to_gvap12 .eq. ' '.and. path_to_gvap10 .eq. ' ')then
          write(6,*) 'Path to gvap not assigned, assigning gvap switch 0'
          gvap_switch = 0
       else
          write(6,*) 'Gvap switch assigned, using assigned switch'
-         write(6,*) 'Path is ', path_to_gvap8, ' ',path_to_gvap10
+         write(6,*) 'Path is ', path_to_gvap12, ' ',path_to_gvap10
          write(6,*) 'GVAP switch is set to ',gvap_switch
       endif
 
@@ -814,7 +814,7 @@ c     gvap data acquisition
          call process_gvap(ii,jj,gvap_data,gvap_w,
      1        gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
      1        lat,lon,time_diff,IHOP_flag,
-     1        path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
+     1        path_to_gvap12,path_to_gvap10,filename,istatus_gvap)
          
 
          if(istatus_gvap.eq.1 .and. istatus_gps.eq.1) then ! correct gvap

@@ -42,7 +42,7 @@ cdis
 cdis
 cdis
 cdis
-      subroutine read_gvap (filename, nstations, path_to_gvap8,
+      subroutine read_gvap (filename, nstations, path_to_gvap12,
      1     path_to_gvap10,time_diff,IHOP_flag,
      1     lat,lon, wt,w1,w2,w3,gvap_p,
      1     nn, istatus)
@@ -67,7 +67,7 @@ c
 c     input variables
       character*9 filename
       integer nstations,nn,istatus,idummy,idummy2
-      character*256 path_to_gvap8,path_to_gvap10
+      character*256 path_to_gvap12,path_to_gvap10
       integer time_diff         !time allowed for latency (sec)
       integer IHOP_flag
       real lat(nstations)
@@ -98,27 +98,27 @@ c     internal variables
       desired_ext = 'tpw'
       istatus_8=0
       istatus_10 = 0
-      call s_len(path_to_gvap8, ptg_index, istatus)
+      call s_len(path_to_gvap12, ptg_index, istatus)
 
-c     reading goes 8
+c     reading goes 12
 
 c     get most recent file in directory
 
       write (6,*)
-      write (6,*) 'Acquiring GOES  8 GVAP info'
+      write (6,*) 'Acquiring GOES 12 GVAP info'
       write (6,*)
 
 
 
       call get_newest_file (filename, time_diff,file_name_length,
-     1     path_to_gvap8,ptg_index,filefound,desired_ext, de_index,
+     1     path_to_gvap12,ptg_index,filefound,desired_ext, de_index,
      1     extension, extension_index, istatus)
 
       if(istatus.ne.1) then     !failure in getting file
          return
       endif
 
-      const_file = path_to_gvap8(1:ptg_index)//'20'//filefound
+      const_file = path_to_gvap12(1:ptg_index)//'20'//filefound
      1     //'.'//extension(1:extension_index)
 
       call s_len(const_file, cf, istatus)
@@ -145,7 +145,7 @@ c     get most recent file in directory
 
  665  close (22)
       nn = i-1
-      n8 = nn ! number of goes 8 stations read
+      n8 = nn ! number of goes 12 stations read
       if (nn .eq. 0) go to 666
       write(6,*) nn, ' number of records read GOES 8'
       istatus_8 = 1             !assign success to reading goes 8
@@ -154,7 +154,7 @@ c     write(6,*) (wt(i),i=1,nn)
       go to 669
 
  668  close (22)
-      write(6,*) 'failed reading GOES 8'
+      write(6,*) 'failed reading GOES 12'
       istatus_8 = 0
 
 

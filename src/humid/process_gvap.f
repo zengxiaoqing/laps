@@ -45,7 +45,7 @@ cdis
       subroutine  process_gvap (ii,jj,data_out,data_weights,
      1     gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
      1     glat,glon,time_diff,IHOP_flag,
-     1     path_to_gvap8,path_to_gvap10,filetime,istatus)
+     1     path_to_gvap12,path_to_gvap10,filetime,istatus)
 
       implicit none
 
@@ -63,7 +63,7 @@ c     input variables
       real mdf
       integer i4time
       integer IHOP_flag
-      character*256 path_to_gvap8,path_to_gvap10
+      character*256 path_to_gvap12,path_to_gvap10
       real data_weights(ii,jj)
 
       integer nstations,nn
@@ -94,7 +94,8 @@ c     input variables
       enddo
 
 
-      call read_gvap (filename, nstations, path_to_gvap8,path_to_gvap10,
+      call read_gvap (filename, nstations, path_to_gvap12,
+     1     path_to_gvap10,
      1     time_diff, IHOP_flag, lat,lon, wt,w1,w2,w3, gvap_pres, nn,
      1     istatus)
 
