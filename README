@@ -2593,7 +2593,8 @@ Inputs: '*' = essential input
 	v01-vxx grid            3-D radar reflectivity/radial velocity 
 
 Outputs: (LW3 is main output)
-	pig	inter data	acars winds    (prior to QC, true north)
+	pig	inter data	acars, cloud drift winds (prior to QC, 
+                                                             true north)
 	prg	inter data	profiler winds (prior to QC, true north)
 	sag	inter data	surface        (prior to QC, true north)
 	d01-dxx inter data 	derived radar vector obs    (grid north)
