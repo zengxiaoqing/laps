@@ -58,141 +58,6 @@ EXEDIRS = src/accum \
           src/wind \
           src/WFO/post
 
-DATADIRS = log/qc \
-           static \
-           time \
-           cdl \
-           lapsprd/balance/lt1 \
-           lapsprd/balance/lw3 \
-           lapsprd/cdw \
-           lapsprd/dprep \
-           lapsprd/d01 \
-           lapsprd/d02 \
-           lapsprd/d03 \
-           lapsprd/d04 \
-           lapsprd/d05 \
-           lapsprd/d06 \
-           lapsprd/d07 \
-           lapsprd/d08 \
-           lapsprd/d09 \
-           lapsprd/d10 \
-           lapsprd/d11 \
-           lapsprd/d12 \
-           lapsprd/d13 \
-           lapsprd/d14 \
-           lapsprd/d15 \
-           lapsprd/d16 \
-           lapsprd/d17 \
-           lapsprd/d18 \
-           lapsprd/d19 \
-           lapsprd/d20 \
-           lapsprd/fsf \
-           lapsprd/fua \
-           lapsprd/grid \
-           lapsprd/l1s \
-           lapsprd/lc3 \
-           lapsprd/lcb \
-           lapsprd/lco \
-           lapsprd/lcp \
-           lapsprd/lct \
-           lapsprd/lcv \
-           lapsprd/lf1 \
-           lapsprd/lga \
-           lapsprd/lgb \
-           lapsprd/lh3 \
-           lapsprd/lh4 \
-           lapsprd/lhe \
-           lapsprd/lil \
-           lapsprd/liw \
-           lapsprd/lm1 \
-           lapsprd/lm2 \
-           lapsprd/lmd \
-           lapsprd/lmr \
-           lapsprd/lmt \
-           lapsprd/ln3 \
-           lapsprd/lpbl \
-           lapsprd/lps \
-           lapsprd/lq3 \
-           lapsprd/lrp \
-           lapsprd/lrs \
-           lapsprd/lso \
-           lapsprd/lsq \
-           lapsprd/lsr \
-           lapsprd/lsr/dmsp01 \
-           lapsprd/lsr/dmsp02 \
-           lapsprd/lsr/goes08 \
-           lapsprd/lsr/goes09 \
-           lapsprd/lsr/goes10 \
-           lapsprd/lsr/tros12 \
-           lapsprd/lsr/tros14 \
-           lapsprd/lst \
-           lapsprd/lsx \
-           lapsprd/lt1 \
-           lapsprd/lty \
-           lapsprd/lvd/goes08 \
-           lapsprd/lvd/meteos \
-           lapsprd/lvd/goes10 \
-           lapsprd/lvd/gmssat \
-           lapsprd/lw3 \
-           lapsprd/lwc \
-           lapsprd/lwm \
-           lapsprd/msg \
-	   lapsprd/model/varfiles \
-	   lapsprd/model/output \
-	   lapsprd/model/sfc \
-           lapsprd/pbl \
-           lapsprd/pig \
-           lapsprd/pin \
-           lapsprd/prg \
-           lapsprd/pro \
-	   lapsprd/ram \
-	   lapsprd/rsf \
-           lapsprd/rdr \
-           lapsprd/rdr/001 \
-           lapsprd/rdr/002 \
-           lapsprd/rdr/003 \
-           lapsprd/rdr/004 \
-           lapsprd/rdr/005 \
-           lapsprd/rdr/006 \
-           lapsprd/rdr/007 \
-           lapsprd/rdr/008 \
-           lapsprd/rdr/009 \
-           lapsprd/rdr/001/raw \
-           lapsprd/rdr/001/vrc \
-           lapsprd/rdr/002/vrc \
-           lapsprd/rdr/003/vrc \
-           lapsprd/rdr/004/vrc \
-           lapsprd/rdr/005/vrc \
-           lapsprd/rdr/006/vrc \
-           lapsprd/rdr/007/vrc \
-           lapsprd/rdr/008/vrc \
-           lapsprd/rdr/009/vrc \
-           lapsprd/sag \
-           lapsprd/snd \
-           lapsprd/tmg \
-           lapsprd/v01 \
-           lapsprd/v02 \
-           lapsprd/v03 \
-           lapsprd/v04 \
-           lapsprd/v05 \
-           lapsprd/v06 \
-           lapsprd/v07 \
-           lapsprd/v08 \
-           lapsprd/v09 \
-           lapsprd/v10 \
-           lapsprd/v11 \
-           lapsprd/v12 \
-           lapsprd/v13 \
-           lapsprd/v14 \
-           lapsprd/v15 \
-           lapsprd/v16 \
-           lapsprd/v17 \
-           lapsprd/v18 \
-           lapsprd/v19 \
-           lapsprd/vdr \
-           lapsprd/vrc 
-
-
 all: exe
 debug: debuglib
 #
@@ -280,8 +145,9 @@ mkdirs: mkdatadirs
 	if [ ! -d $(INSTALLROOT)/etc ] ; then  \
 	ls -l  $(LAPSROOT)/etc; cp -r $(LAPSROOT)/etc  $(INSTALLROOT)/etc ; ls -l $(INSTALLROOT)/etc ; fi
 
-mkdatadirs :
-	$(PERL) $(LAPSROOT)/etc/makedatadirs.pl $(LAPSROOT) $(INSTALLROOT) $(DATAROOT)
+mkdatadirs:
+	$(PERL) $(LAPSROOT)/etc/makedatadirs.pl --srcroot=$(LAPSROOT) --installroot=$(INSTALLROOT) \
+                         --dataroot=$(DATAROOT)
 
 
 clean:
@@ -323,15 +189,8 @@ distclean: realclean cleandirs
 	$(RM) -r ./bin ./log
 
 cleandirs:
-	@for dir in $(DATADIRS) ;\
-	  do \
-	  echo " ";\
-	  echo Removing Laps data directory $(LAPSROOT)/$$dir ;\
-	  (cd $(LAPSROOT); \
-	   $(RM) -r $$dir ; if [ $$? != 0 ] ; then \
-	        echo "Exit status from rm was $$?" ; exit 1 ; fi ;) ;\
-	  done
-
+	$(PERL) $(LAPSROOT)/etc/makedatadirs.pl --srcroot=$(LAPSROOT) --installroot=$(INSTALLROOT) \
+                         --dataroot=$(DATAROOT) --cleandirs
 links:
 	$(LINK) $(CWD) $(LAPSROOT) $(INSTALLROOT)/lib $(MACHDEP)
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
