@@ -199,8 +199,7 @@ c
       character*200 cdfname
 c
 c
-      real*4 xe,esat,mrsat
-      common /estab/esat(15000:45000)
+      real*4 xe,mrsat
 c
 c *** Common block variables for Lambert-conformal grid.
 c
