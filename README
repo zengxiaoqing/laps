@@ -1209,14 +1209,8 @@ Outputs: (LW3 is main output)
 	d01-d20 inter data (3d)	derived radar obs
 
 	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
-	lwm	2d grid		mean winds (sfc - 300mb layer)
-                                surface winds
-	lhe	2d grid		helicity (derived from 3-D winds)
-	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
+	lwm	2d grid		surface winds
 
-	lmr	2d grid		2-D column max radar ref      
-	lf1	2d grid		2-D column max radar ref history (maximum 
-                                over time since the previous analysis cycle)
 </pre>                                        
 Source directory: laps/nest7grid/source/wind
 Compile-time parameters: laps/nest7grid/source/wind/windparms.inc
@@ -1439,6 +1433,14 @@ Outputs:
 	lrp     3d grid         3D icing index 
 	lty     3d grid         3D cloud & precip type (CTY,PTY) 
                                     threshold for cloud cover in CTY is 0.65.
+
+	lwm	2d grid		mean winds (sfc - 300mb layer)
+                                surface winds
+	lhe	2d grid		helicity (derived from 3-D winds)
+	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
+	lmr	2d grid		2-D column max radar ref      
+	lf1	2d grid		2-D column max radar ref history (maximum 
+                                over time since the previous analysis cycle)
 </pre>
 Source directory: laps/nest7grid/source/cloud
 
@@ -1769,44 +1771,57 @@ Process LZA:	LQ3  SH   sh      21  Specific Humidity
             	     RHL  rhl	  21  Relative Humidity with resp to liquid
             	LH4  TPW  tpw      1  Integrated Total Precipitable Water
 
+Process LZB:   	LW3  U3   u       21  Wind u
+		     V3   v       21  Wind v 
+          	     OM   w       21  Wind omega 
+
+                LWM  SU   u        1  Surface wind u
+                     SV   v        1  Surface wind v
+		
 Process cloud:	LC3  LC3  camt    42  Fractional Cloud Cover (levels 1-42)
-       +deriv	LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
-		LWC  LWC  lwc     21  Cloud Liquid Water 
-		     ICE  ice	  21  Cloud Ice
-		     PCN  pcn     21  Hydrometeor Concentration
-           	LIL  LIL  ilw      1  Integrated Liquid Water
+
          	LCB  LCB  cbas     1  Cloud base 
 		     LCT  ctop     1  Cloud Top
            	     CCE  cce      1  Cloud Ceiling
+
+         	LCV  LCV  ccov     1  Cloud Cover
+         	     CSC  csc      1  Cloud Analysis Implied Snow Cover
+
+        	LPS  REF  ref     21  LAPS Radar Reflectivity 
+
+Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
+
+		LWC  LWC  lwc     21  Cloud Liquid Water 
+		     ICE  ice	  21  Cloud Ice
+		     PCN  pcn     21  Hydrometeor Concentration
+
+           	LIL  LIL  ilw      1  Integrated Liquid Water
         	LCT  PTY  spt      1  Sfc Precip Type
                      PTT  ptt      1  LAPS Sfc Precip Type
                      SCT  sct      1  Sfc Cloud Type
-         	LCV  LCV  ccov     1  Cloud Cover
-         	     CSC  csc      1  Cloud Analysis Implied Snow Cover
+
 		LMD  LMD  mcd     21  Mean Cloud Drop Diameter 
-        	LPS  REF  ref     21  LAPS Radar Reflectivity 
 		LCO  COM  cw      21  Cloud omega 
          	LRP  LRP  icg     21  Icing Index
 		LTY  CTY  ctyp    21  Cloud Type 
 		     PTY  ptyp    21  Precip Type 
+
           	LMT  LMT  etop     1  Max Echo Tops
           	     LLR  llr	   1  Low Level Reflectivity
 
-Process LZB:   	LWM  SU   u        1  Surface wind u
+                LWM  SU   u        1  Surface wind u
                      SV   v        1  Surface wind v
-
-		LHE  LHE  hel      1  Helicity
                      MU   mu       1  Mean wind u 
        		     MV   mv       1  Mean wind v
+
+		LHE  LHE  hel      1  Helicity
            	
            	LF1  H    mxrh     1  Max Radar Reflectivity History
-		LW3  U3   u       21  Wind u
-		     V3   v       21  Wind v 
-          	     OM   w       21  Wind omega 
 		LIW  LIW  liw      1  log(LI*omega)
 		     W    w	   1  600mb omega
+
 		LMR  R    mxrf     1  Max Radar Reflectivity
-		
+
 Process LSM:	LM1  LSM  lsm      3  Soil Moisture
 		LM2  CIV  civ      1  Cumulative Infiltration Volume
 		     DWF  dwf	   1  Depth to wetting front
@@ -1845,7 +1860,6 @@ Fcst Model:	RAM  U3   ru	  21  Fcst Model Wind u
                      THE  the      1  Fcst Model Equivalent potential temp
                      PBE  pbe      1  Fcst Model Positive buoyant energy
                      NBE  nbe      1  Fcst Model Negative buoyant energy
-           	(over)		
                      PS   ps       1  Fcst Model Surface pressure
                      CCE  cce      1  Fcst Model Cloud ceiling
                      VIS  vis      1  Fcst Model Visibility
