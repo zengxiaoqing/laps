@@ -214,15 +214,9 @@ cdis
 !           Add ramp above top of bias data
             if(k_highest .ge. 1 .and. k_highest .le. nk-1)then
                 do k = k_highest+1,k_highest+1
-                    if(weight_bkg_const .eq. 0.)then
-                        bias_tsnd(i_tsnd,k) = 
-     1                  bias_tsnd(i_tsnd,k_highest) * 0.5
-                        wt_tsnd(i_tsnd,k) = 0.5
-                    else
-                        bias_tsnd(i_tsnd,k) = 
-     1                  bias_tsnd(i_tsnd,k_highest) * 1.0
-                        wt_tsnd(i_tsnd,k) = .04
-                    endif
+                    bias_tsnd(i_tsnd,k) = 
+     1              bias_tsnd(i_tsnd,k_highest) * 1.0
+                    wt_tsnd(i_tsnd,k) = .04
                 enddo ! k
             endif
 
@@ -336,37 +330,6 @@ cdis
 
           if(n_good_tsnd .gt. 0)then
              write(6,*)' # of TSND stations passing QC = ',n_good_tsnd
-
-           ! Smooth the ramps on top of each TSND, depending on the presence
-           ! of other TSNDs at that height. 'l_highest' means that the TSND
-           ! profile for this TSND is at least tied for the highest of all
-           ! TSNDs present.
-             if(weight_bkg_const .eq. 0)then
-               do k = 1,nk
-                 do i_tsnd = 1,n_tsnd
-                     if(wt_tsnd(i_tsnd,k) .eq. 0.5)then ! Inside ramp
-                         l_highest = .true.
-                         do i_tsnd2 = 1,n_tsnd
-                             if(i_tsnd2 .ne. i_tsnd
-     1                     .and. wt_tsnd(i_tsnd2,k) .eq. 1.0)then
-                                 l_highest = .false.
-                             endif
-                         enddo
-                         write(6,1,err=2)k,i_tsnd,l_highest
-     1                                  ,wt_tsnd(i_tsnd,k)
-1                        format('  l_highest ',2i3,l2,f5.2)
-2                        if(k .lt. nk .and. .not. l_highest)then
-                             write(6,*)' Modifying top of TSND ramp'
-                             bias_tsnd(i_tsnd,k+1) = bias_tsnd(i_tsnd,k)
-     1                                               * 2.0 ! Restores
-                             bias_tsnd(i_tsnd,k  ) = bias_tsnd(i_tsnd,k)
-     1                                               * 2.0 ! full bias
-                             wt_tsnd(i_tsnd,k+1) = .01 ! Tapers the weight instead
-                         endif
-                     endif
-                 enddo ! i_tsnd
-               enddo ! k
-             endif ! weight_bkg_const = 0
 
            ! This is in effect a single pass Barnes with a spatially varying
            ! radius of influence to account for clustering of data
