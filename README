@@ -218,7 +218,8 @@
      To introduce this section, here is a hierarchical listing of some primary 
      directories and files in the laps tree. The default LAPS structure is
      shown. These are created/addressed in various portions of section 2.2 
-     and beyond.
+     and beyond. Various "root" directories are mentioned in the form of
+     environment variables for easy reference.
 
      <pre>
      /home_disk/
@@ -226,13 +227,13 @@
          geog/
              laps_terrain.tar
          laps-m-n-o.tar
-         laps-m-n-o/                                                (laps_root)
+         laps-m-n-o/                                                 ($srcroot)
              Makefile
              src/
                  ingest/
              etc/                                                (laps scripts)
              bin/                                                 (executables)
-             data/                   (=LAPS_DATA_ROOT, can be moved/duplicated)
+             data/                   ($LAPS_DATA_ROOT, can be moved/duplicated)
                  lapsprd/
                      product_list/                                (laps output)
                  log/
@@ -255,7 +256,7 @@
      /home_disk/
          src/
              laps-m-n-o.tar
-             laps-m-n-o/                                            (laps_root)
+             laps-m-n-o/                                             ($srcroot)
                  Makefile
                  src/                                             (source code)
                      ingest/
@@ -265,10 +266,10 @@
          geog/
              laps_terrain.tar
          raw_data/
-         laps/                                        (--prefix in 'configure')
+         laps/                            ($lapsroot / --prefix in 'configure')
              etc/                                                (laps scripts)
              bin/                                                 (executables)
-             data*/                         (LAPS_DATA_ROOT, can be duplicated)
+             data*/                        ($LAPS_DATA_ROOT, can be duplicated)
                  lapsprd/
                      product_list/                                (laps output)
                  log/
@@ -303,7 +304,7 @@
 
                 ----   2.2.2  Running Configure ---
 
-     Go to the laps root directory and run...
+     Go to the $srcroot directory and run...
      $ ./configure
 
      For IBM/AIX platforms, you will want to override the default FORTRAN
@@ -343,15 +344,15 @@
 
      In this file (mainly Sec 2.3), a number of potential manual changes to 
      ingest code are outlined prior to running 'make' and 
-     'etc/laps_localization.pl', especially if one is using ingest data formats 
-     other than "standard" ones used at FSL. After becoming familiar with 
-     the changes needed for your implementation, it is recommended that you 
-     develop a method to save the hand edited files in a "safe" place 
-     outside of the laps directory structure, or by using a revision control 
-     system such as CVS.  This strategy would make it easier to update your 
-     implementation of LAPS with the latest 'laps-m-n-o.tar.gz' file from FSL, 
-     while minimizing the hassle involved with software modifications for 
-     your local implementation.
+     '$lapsroot/etc/laps_localization.pl', especially if one is using ingest 
+     data formats other than "standard" ones used at FSL. After becoming 
+     familiar with the changes needed for your implementation, it is 
+     recommended that you develop a method to save the hand edited files in a 
+     "safe" place outside of the laps directory structure, or by using a 
+     revision control system such as CVS.  This strategy would make it easier 
+     to update your implementation of LAPS with the latest 'laps-m-n-o.tar.gz'
+     file from FSL, while minimizing the hassle involved with software 
+     modifications for your local implementation.
 
 
                 ----   2.2.4  Running make ---
@@ -359,14 +360,14 @@
      The next step is to build and install the executables, this can be done 
      by running... 
 
-     $ cd (laps_root)
+     $ cd $srcroot
      $ make                  1> make.out 2>&1 
      $ make install          1> make_install.out 2>&1 
      $ make install_lapsplot 1> make_install_lapsplot.out 2>&1   
 
-     Check that the executables have been placed into the 'bin' directory.
-     The total number should be the number of EXEDIRS in 'laps_root/Makefile'
-     plus 2; this includes 'lapsplot.exe'.
+     Check that the executables have been placed into the '$lapsroot/bin' 
+     directory. The total number should be the number of EXEDIRS in 
+     '$srcroot/Makefile' plus 2; this includes 'lapsplot.exe'.
 
      Lapsplot can be installed only if you have NCAR graphics.
 
@@ -413,9 +414,9 @@
      data processing. These changes should be made prior to running the 
      localization. The parameter files are 'data/static/nest7grid.parms',
      'data/static/*.nl', and 'data/static/*/*.parms'. These should be emplaced
-     and/or modified within each 'dataroot' directory tree prior to running 
-     the localization. More details on 'nest7grid.parms' and other parameter 
-     files are discussed in subsequent parts of Section 2. 
+     and/or modified within each $LAPS_DATA_ROOT directory tree prior 
+     to running the localization. More details on 'nest7grid.parms' and 
+     other parameter files are discussed in subsequent parts of Section 2. 
 
      In most cases, you can simply edit the parameter files that are already
      there to tailor LAPS for your domain.
@@ -424,7 +425,7 @@
      of setting up those runtime parameter files with only those parameters 
      that are unique to the domain(s) (e.g. map projection parameters,
      data paths). The remaining parameters are automatically merged in from
-     the 'laps_root/data/static' directory tree by the localization script. 
+     the '$srcroot/data/static' directory tree by the localization script. 
      As an example, 'nest7grid.parms' only needs to contain the subset of 
      parameters that are unique to your domain(s). The rest can be 
      omitted from the file; they are automatically added in as a result of 
@@ -442,8 +443,9 @@
      localization for a particular laps domain. This should be repeated for
      each domain if there is more than one. 
 
-     $ cd (laps_root)/etc
-     $ perl laps_localization.pl --dataroot=/data_disk/laps/data 
+     $ cd $lapsroot/etc
+     $ perl laps_localization.pl --dataroot=/data_disk/laps/data \
+                                 --srcroot=$srcroot
 
      The localization involves several operations.  The parameter files are 
      merged/updated with the repository versions if needed. The dimensions
