@@ -1,13 +1,11 @@
 #if defined(IBM) || defined(HP)
 
 #define c_pause c_pause
-#define iralloc iralloc
-#define irfree irfree
-#define c_open c_open
-#define c_close c_close
+#define c_open_g c_open_g
+#define c_close_g c_close_g
 #define c_read c_read
-#define c_write c_write
-#define findgrib findgrib
+#define c_write_g c_write_g
+#define findgrib_g findgrib_g
 #define cv_to_ut cv_to_ut
 #define cv_fr_ut cv_fr_ut
 #define julian_date julian_date
@@ -16,13 +14,11 @@
 #elif defined(SUN) || defined(SGI) || defined(i686)
 
 #define c_pause c_pause_
-#define iralloc iralloc_
-#define irfree irfree_
-#define c_open c_open_
-#define c_close c_close_
+#define c_open_g c_open_g_
+#define c_close_g c_close_g_
 #define c_read c_read_
-#define c_write c_write_
-#define findgrib findgrib_
+#define c_write_g c_write_g_
+#define findgrib_g findgrib_g_
 #define cv_to_ut cv_to_ut_
 #define cv_fr_ut cv_fr_ut_
 #define julian_date julian_date_
@@ -33,13 +29,11 @@
 #elif defined(ALPHA) || defined(DEC) || defined(alpha)
 
 #define c_pause c_pause__
-#define iralloc iralloc__
-#define irfree irfree__
-#define c_open c_open__
-#define c_close c_close__
+#define c_open_g c_open_g__
+#define c_close_g c_close_g__
 #define c_read c_read__
-#define c_write c_write__
-#define findgrib findgrib__
+#define c_write_g c_write_g__
+#define findgrib_g findgrib_g__
 #define cv_to_ut cv_to_ut__
 #define cv_fr_ut cv_fr_ut__
 #define julian_date julian_date__
@@ -50,13 +44,11 @@
 #elif defined(STARDENT) || defined(CRAY)
 
 #define c_pause C_PAUSE 
-#define iralloc IRALLOC
-#define irfree IRFREE
-#define c_open C_OPEN
-#define c_close C_CLOSE
+#define c_open_g C_OPEN_G
+#define c_close_g C_CLOSE_G
 #define c_read C_READ
-#define c_write C_WRITE
-#define findgrib FINDGRIB
+#define c_write_g C_WRITE_G
+#define findgrib_g FINDGRIB_G
 #define cv_to_ut CV_TO_UT
 #define cv_fr_ut CV_FR_UT
 #define julian_date JULIAN_DATE
@@ -88,18 +80,10 @@
 #define FALSE 0
 extern int errno;
 
-
-
-
-
 #define MAXFILES 256
 
-struct file_s{
-  FILE *F;
-  int   f; 
-};
-
-struct file_s file[MAXFILES];
+FILE *file[MAXFILES];
+int   init=0;
 
 struct s_gribstat{
  int         bds_start;
@@ -110,91 +94,23 @@ struct s_gribstat{
  long bds_len;
 } sg;
 
-
-
-int ix = 0;
-
-
 /*---+----------------------------------------------------------------*/
-int isprint(char c){
- return(c>=0 && c<126);
-}
-/*---+----------------------------------------------------------------*/
+int c_open_g(char *filename, char *faccess)
 
-
-/*---+----------------------------------------------------------------*/
-FILE *findfile(int fd){
-
+{
   int i;
-
-
-#ifdef DEBUG
-  i=0;
-  printf("file[%d].f : %d\tfile[%d].F : %d\n", i, file[i].f, i, file[i].F);
-  i=1;
-  while(i<MAXFILES  &&   file[i].f != 0  &&  file[i].F != NULL){
-    printf("file[%d].f : %d\tfile[%d].F : %d\n", i, file[i].f, i, file[i].F);
-    i++;
-  }
-#endif
-
-
-
-  for(i=0; i<MAXFILES; i++)
-    if( file[i].f == fd)  return  file[i].F;
-
-  perror("io_utils.c -> findfile() : file descriptor not found");
-  exit(1);
-}/*end fildfile()*/
-/*---+----------------------------------------------------------------*/
-
-
-/*---+----------------------------------------------------------------*/
-
-void *iralloc(int *memtot, char *ia, int *ioff)
-
-{
-    char *addr;
-
-       addr = calloc(*memtot,4);
-       *ioff = (addr-ia)/4;
-/*     printf("in ralloc- %i %i %i \n",*memtot,iaddr,*ioff);
-*/
-    return(addr);
-}
-
-
-
-/*---+----------------------------------------------------------------*/
-
-void irfree(char **addr)
-
-{
-      free(*addr);
-}
-
-
-/*---+----------------------------------------------------------------*/
-
-int c_open(char *filename, char *faccess)
-
-{
-
-  int i;
- 
- 
-   if(ix > 255){ perror("io_utils.c -> c_open(): MAXFILES exceeded"); exit(1); }
-
-   /* initialize file structure */
-   if(ix == 0){
-     for(i=0; i<MAXFILES; i++){
-         file[i].f = 0;
-         file[i].F = NULL;
-       }
+  int done;
+  
+   /* initialize file pointer array */
+   if(!init) {
+     for(i=0; i<MAXFILES; i++) {
+         file[i] = NULL;
+     }
+     init=1;
    }
 
  #ifdef DEBUG 
-    printf("c_open called...\n\n");
+    printf("c_open_g called...\n\n");
     printf("ix : %d\n",ix);
     printf("filename : %s(end)\n",filename);
     printf("faccess : %s(end)\n",faccess);
@@ -202,10 +118,29 @@ int c_open(char *filename, char *faccess)
     getchar();
 #endif 
 
- 
-   file[ix].F = fopen(filename,faccess);
-   file[ix].f = fileno(file[ix].F);
-   ix++;
+    /* find first free slot */
+    done=0;
+    i=0;
+    while (!done) {
+      if (i >= MAXFILES) {
+	done=1;
+      }
+      else if (file[i] == NULL) {
+	done=1;
+      }
+      else {
+	i++;
+      }
+    }
+	
+    /* Check to see if we're full */
+    if (i >= MAXFILES) {
+     perror("io_utils.c -> c_open_g(): MAXFILES exceeded"); 
+     exit(1); 
+    }    
+
+    /* Open the file */
+    file[i] = fopen(filename,faccess);
  
 #ifdef DEBUG
   printf("%d : result of fopen()\n",  file[ix-1].F);
@@ -213,19 +148,23 @@ int c_open(char *filename, char *faccess)
   getchar();
 #endif 
  
-  return( file[ix-1].f );
+  return( i );
 }
 
 
 
 /*---+----------------------------------------------------------------*/
 
-int c_close(int *fd)
+int c_close_g(int *fd)
 {
 #ifdef DEBUG
-  printf("c_close called...\n\n");
+  printf("c_close_g called...\n\n");
 #endif
-  return(fclose(findfile((int)*fd)));
+  int err;
+
+  err=fclose(file[*fd]);
+  file[*fd]=NULL;
+  return(err);
 }
 
 
@@ -242,11 +181,11 @@ int c_read(int *fbyte, int *numbytes, void *a, int *fd)
   printf("fbyte %d\n",(int)*fbyte);
   printf("numbytes : %d\n",(int)*numbytes);
   printf("fd : %d\n",(int)*fd);
-  printf("findfile result : %d\n",findfile((int)*fd));
 #endif
 
 
-  retcode=fseek(findfile((int)*fd),*fbyte,0);
+  retcode=fseek(file[*fd],*fbyte,0);
+
 
   if(retcode != 0)
    {
@@ -254,7 +193,7 @@ int c_read(int *fbyte, int *numbytes, void *a, int *fd)
      return(retcode);
    }
 
-  retcode=fread((char*)a,1,*numbytes,findfile((int)*fd));
+  retcode=fread((char*)a,1,*numbytes,file[*fd]);
 
   if(retcode != *numbytes)
    {
@@ -268,11 +207,10 @@ int c_read(int *fbyte, int *numbytes, void *a, int *fd)
 
 /*---+----------------------------------------------------------------*/
 
-int c_write(int *fbyte, int *numbytes, void *a, int *fd)
+int c_write_g(int *fbyte, int *numbytes, void *a, int *fd)
 {
   int retcode;
   int i = 0;
-
 
 #ifdef DEBUG
   char *b = (char *) a; 
@@ -282,40 +220,37 @@ int c_write(int *fbyte, int *numbytes, void *a, int *fd)
 
 #ifdef DEBUG 
   
-  printf("c_write called...\n\n");
-  printf("entered c_write...\n");
+  printf("c_write_g called...\n\n");
+  printf("entered c_write_g...\n");
   printf("*fbyte    : %d\n",*fbyte);
   printf("*numbytes : %d\n",*numbytes);
-  printf("*a        : %p\n",a);
+  printf("*a        : %p\n",a); 
   printf("*fd       : %d\n\n",*fd);
-
   while(getchar() != 'q' && (i < (*numbytes-1))){
     /*printf("a[%i] = %c\n", i, (char ) ((char *)a + i*sizeof(char *)));*/
     if((char)*(b) == 0){ printf("NULL\n"); i++; b++; continue; }
 
     if((char)*(b)== 1){ printf("'1'\n"); i++; b++; continue; }
-  
+ 
     printf("b[%i] = %c\n", i, (char ) *(b++));
     i++;
   }
+
 #endif 
 
   if(*numbytes == 0 ){
-     perror("asked c_write to write ZERO bytes!!");
+     perror("asked c_write_g to write ZERO bytes!!");
      printf("Trying to write ZERO bytes!!\n");
      return -1;
   }
-     
-  retcode=fseek(findfile((int)*fd),*fbyte,2);
-
+  retcode=fseek(file[*fd],*fbyte,2);
   if(retcode != 0)
    {
-     printf("C_write error - filename %s \n",findfile((int)*fd));
+     printf("C_write error - filename \n");
      return(retcode);
    }
 
-
-  retcode=fwrite((char*)a,1,*numbytes,findfile((int)*fd));
+  retcode=fwrite((char*)a,1,*numbytes,file[*fd]);
 
   if(retcode != *numbytes)
    {
@@ -351,7 +286,7 @@ int c_swap4(int *numbytes, void *a)
 
   if(*numbytes < 4) perror("SWAPPING LESS THAN FOUR BYTES! ");
 
-  if((int) b % WORD_SIZE != 0 ) printf("INPUT BUFFER NOT ALIGNED ON WORD BOUNDRY!\n");
+  if((long) b % WORD_SIZE != 0 ) printf("INPUT BUFFER NOT ALIGNED ON WORD BOUNDRY!\n");
 
   /*perror("INPUT BUFFER NOT ALIGNED ON WORD BOUNDRY! ");*/
  
@@ -362,26 +297,6 @@ int c_swap4(int *numbytes, void *a)
   if(last < 0 || *numbytes < 0) { perror("OVERFLOW IN IO_UTILS.C - C_SWAP4"); exit(1); }
 
   n_end = *numbytes % WORD_SIZE;
-
-#ifdef DEBUG
-  printf("c_swap4 called...\n\n");
-  printf("\n\n");
-  printf("a's addr  : %ld\n",  a);
-  printf("WORD_SIZE : %d\n",  WORD_SIZE);
-  printf("numbytes  : %d\n",  *numbytes);
-  printf("last  = (((*numbytes / WORD_SIZE)-1) * WORD_SIZE)\n");
-  printf("last      : %d\n", last);
-  printf("n_end     : %d\n",  n_end);
-
-  /* get j to the right place!!!! */
-j:
-  printf("\nenter a byte to start swapping at!  : ");
-  scanf ("%d",&j);
-  printf("\n");
-  if(j%100000 == 0) printf("j  : %d\n",j);
-  printf("a+j's addr : %d\n\n",a+j);
-  printf("SWAPPING!!\n");
-#endif
 
 
 /*code to align on a word boundry*/
@@ -531,7 +446,7 @@ int c_view4(int *numbytes, void *a, int *iy)
 
 /*---+----------------------------------------------------------------*/
 
-int findgrib(int *fd)
+int findgrib_g(int *fd)
 {
   int found, grib_byte, buf_counter, num;
   char buf[8200], *place_ptr, *t_ptr;
@@ -540,11 +455,11 @@ int findgrib(int *fd)
   found=FALSE;
   buf_counter=0;
 
-  rewind(findfile((int)*fd));
+  rewind(file[*fd]);
 
   while (!found)
   {
-    fread(buf,sizeof(char),8192,findfile((int)*fd));
+    fread(buf,sizeof(char),8192,file[*fd]);
     buf[8192]=0;
 /*         replace occurrences of null with a blank in buf
            because strstr will stop when it reaches a null
