@@ -31,11 +31,11 @@ all: exe
 
 exe: $(ARCHIVE) $(EXE)
 
-%.exe: %.c
+%.exe: %.c $(LIB)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $*.c $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-%.exe: %.f
+%.exe: %.f $(LIB)
 	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
