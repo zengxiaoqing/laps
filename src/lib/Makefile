@@ -23,9 +23,12 @@ LIB      = liblaps.a
 DEBUGLIB = libdebuglaps.a
 
 
+#
+# machine_dependent needs to be first
+#
 
-
-SRC	= cio.c \
+SRC	= machine_dependent.F \
+          cio.c \
 	  rwl_v3.c \
           fort2c_str.c \
           static_routines.c \
@@ -99,7 +102,6 @@ SRC	= cio.c \
           lapsgrid.f \
           latlon_to_rlaps.f \
           libdummies.f \
-          machine_dependent.F \
           make_rh.f \
           make_ssh.f \
           make_td.f \
