@@ -119,8 +119,9 @@ C ****  Specify laps domain name
 C
       laps_dom_file = 'nest7grid'
 C 
-      if ((ext .eq. 'fua') .or. (ext .eq. 'fsf'))  then
-C ****  Skip get_laps_config and check if ext is fua or fsf
+      if ((ext .eq. 'fua') .or. (ext .eq. 'fsf') .or.
+     1 (ext .eq. 'pbl'))  then
+C ****  Skip get_laps_config and check if ext is fua or fsf or pbl
       else
 C
 C ****  call get_laps_config to read nest7grid.parms

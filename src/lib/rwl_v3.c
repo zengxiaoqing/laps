@@ -1486,11 +1486,12 @@ float *cdl_levels;
 	}
         if (DEBUG==1) printf("correctly wrote kdim\n");
 
-/* if ext is fua or fsf, cdl should have Nx, Ny, Dx, Dy, La1, Lo1, Latin1,
+/* if ext is fua or fsf or pbl, cdl should have Nx, Ny, Dx, Dy, La1, Lo1, Latin1,
      Latin2, grid_type and origin_name set as data in the cdl.  The variable
      "level" will be filled using cdl_levels rather than from base and interval */
 
-        if ((strncmp(ext,"fua",3) == 0) || (strncmp(ext,"fsf",3) == 0)) {
+        if ((strncmp(ext,"fua",3) == 0) || (strncmp(ext,"fsf",3) == 0) ||
+            (strncmp(ext,"pbl",3) == 0)) {
           start[0] = 0;
           count[0] = *n_levels;
 
@@ -2184,7 +2185,8 @@ fint4 *status;
           map_proj = malloc(name_len * sizeof(char));
           origin = malloc(name_len * sizeof(char));
 
-          if ((strncmp(ext,"fua",3) == 0) || (strncmp(ext,"fsf",3) == 0)) {
+          if ((strncmp(ext,"fua",3) == 0) || (strncmp(ext,"fsf",3) == 0)  ||
+              (strncmp(ext,"pbl",3) == 0)) {
 /* don't read static.nest7grid...data should be in cdl file */
           }
           else {
