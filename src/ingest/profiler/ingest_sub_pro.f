@@ -661,5 +661,9 @@ C
 
         istatus = istat_di * istat_sp
 
+        if(abs(p_sfc_hpa) .gt. 5000.)p_sfc_hpa  = sfc_badflag
+        if(abs(t_sfc_k) .gt. 500.)   t_sfc_k    = sfc_badflag
+        if(abs(rh_sfc_pct) .gt. 500.)rh_sfc_pct = sfc_badflag
+
         return
         end

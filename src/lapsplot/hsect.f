@@ -332,8 +332,8 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
-     1       /'     SFC: [p,pm,ps,tf,tc,df,dc,ws,vv,hu,ta,th,te,vo,mr'       
-     1       ,',mc,dv,ha,ma,sp]'
+     1       /'     SFC: [p,pm,ps,tf-i,tc,df,dc,ws,vv,hu,ta,th,te,vo'  
+     1       ,',mr,mc,dv,ha,ma,sp]'
      1       /'          [cs,vs,tw,fw,hi]'
      1       /'          [of,oc,ov,os,qf,qc,qv,qs] obs plots'       
      1       ,'  [bs] Sfc background'
@@ -1170,20 +1170,21 @@ c
               chigh = +40.
               cint = (vasmx-vasmn)/10.
               scale = 1e0
-              scale_l = +40.     ! for image plots
-              scale_h = -50.     ! for image plots
+              scale_l = +40.          ! for image plots
+              scale_h = -50.          ! for image plots
              elseif(var_2d.eq.'ALB')then
               c33_label='LAPS Albedo '//c_sat_id(k)
-              scale_l = 0.00     ! for image plots
-              scale_h = 0.50     ! for image plots
+              scale_l = 0.00          ! for image plots
+              cloud_albedo = .4485300
+              scale_h = cloud_albedo  ! for image plots
              elseif(var_2d.eq.'SVS')then
               c33_label='LAPS VIS counts (raw) - '//c_sat_id(k)
-              scale_l = 30.     ! for image plots
-              scale_h = 100.    ! for image plots
+              scale_l = 30.           ! for image plots
+              scale_h = 100.          ! for image plots
              else
               c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
-              scale_l = 30.     ! for image plots
-              scale_h = 230.    ! for image plots
+              scale_l = 30.           ! for image plots
+              scale_h = 230.          ! for image plots
              endif
 
              call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
@@ -1511,7 +1512,7 @@ c
 
                 var_2d = 'LLR'
                 ext = 'lmt'
-                call get_laps_2dgrid(i4time_hour,laps_cycle_time*100
+                call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                              ,i4time_lr,ext,var_2d,units_2d
      1                              ,comment_2d,NX_L,NY_L
      1                              ,radar_array,0,istatus)
@@ -1799,12 +1800,12 @@ c
                 i4time_start = i4time_end - i4time_interval
 
 !               Round down to nearest cycle time
-                i4time_endfile   = i4time_end  /laps_cycle_time*laps_cyc
-     1le_time
+                i4time_endfile   = i4time_end  
+     1                           / laps_cycle_time*laps_cycle_time
 
 !               Round up to nearest cycle time
-                i4time_startfile = i4time_start/laps_cycle_time*laps_cyc
-     1le_time
+                i4time_startfile = i4time_start
+     1                           / laps_cycle_time*laps_cycle_time
 
                 if(i4time_start .gt. i4time_startfile)
      1          i4time_startfile = i4time_startfile + laps_cycle_time
@@ -1833,9 +1834,6 @@ c
                         if(comment_a .ne. comment_b)then
                             write(6,*)' Storm Total was reset at '
      1                                            ,comment_b
-!                           write(6,*)' Storm Total Clock was reset ',co
-!    1mment_a
-!    1                                                   ,' ',comment_b
                             write(6,*)
      1               ' Cannot subtract storm totals to get accumulation'
                             istatus_file = 0
@@ -3181,16 +3179,17 @@ c                   cint = -1.
      1           ,lat,lon,jdot,
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'tt' .or. c_type .eq. 'tf'
+        elseif(c_type .eq. 'tt' 
+     1    .or. c_type .eq. 'tf' .or. c_type .eq. 'tfi'
      1                          .or. c_type .eq. 'tc')then
             var_2d = 'T'
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+     1                          ,field_2d,0,istatus)
 
-            if(c_type .ne. 'tc')then
+            if(c_type(1:2) .ne. 'tc')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_f(field_2d(i,j))
@@ -3211,15 +3210,27 @@ c                   cint = -1.
                 goto1200
             endif
 
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                   ,zoom,1.)       
-
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t
+            if(c_type(3:3) .ne. 'i')then ! contour plot
+                call contour_settings(field_2d,NX_L,NY_L
+     1                               ,clow,chigh,cint,zoom,1.)       
+
+                call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t       
      1           ,c33_label,i_overlay,c_display
      1           ,lat,lon,jdot
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            else ! image plot
+                n_image = n_image + 1
+                call ccpfil(field_2d,NX_L,NY_L,0.,100.,'hues')
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                                    ,i_overlay)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+            endif
 
         elseif(c_type .eq. 'hi')then
             var_2d = 'HI'

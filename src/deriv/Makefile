@@ -8,13 +8,11 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(SRCROOT)/src/lib/cloud/libcloud.a  \
-           $(SRCROOT)/src/lib/liblaps.a  \
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/cloud/libdebugcloud.a  \
-             $(SRCROOT)/src/lib/libdebuglaps.a  \
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a 
 
@@ -23,7 +21,12 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/cloud/libdebugcloud.a  \
 
 EXE = deriv.exe
 
-SRC=laps_deriv.f  laps_deriv_sub.f   cloud_deriv_subs.f  put_derived_wind_prods.f 
+SRC=laps_deriv.f  \
+    laps_deriv_sub.f \
+    cloud_deriv_subs.f \
+    put_derived_wind_prods.f \
+    rfill_evap.f \
+    schultz.f
 
 all: exe
 

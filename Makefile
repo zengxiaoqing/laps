@@ -14,7 +14,6 @@ MACHDEP = config.log config.status config.cache src/include/config.h
 LIBDIRS = src/lib \
           src/lib/bgdata \
           src/lib/blas \
-          src/lib/cloud \
           src/lib/fm \
           src/lib/goesinav \
           src/lib/goeslib \

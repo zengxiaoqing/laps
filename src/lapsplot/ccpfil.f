@@ -130,7 +130,6 @@ C
       CALL GSCR(IWKID,0,0.,0.,0.)
 
       if(colortable .eq. 'linear')then
-
           do i = 1,255
 !             rintens = min(max(float(i-2) / rcols,0.),1.)
               rintens = min(max(float(i-2) / rcols,0.),1.)
@@ -139,7 +138,7 @@ C
           enddo ! i
 
       elseif(colortable .eq. 'hues')then
-          call color_ramp(1,20,IWKID,1.0,0.7,0.7,1.0,0.7,0.7)          
+          call color_ramp(1,20,IWKID,0.5,0.7,0.7,3.0,0.7,0.7)          
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable
@@ -149,29 +148,11 @@ C
       RETURN
       END
 
-      subroutine hsi_to_rgb(hue,sat,rintens,red,grn,blu)
-
-!     Hue is 0:R, 1:B, 2:G, 3:R
-      hue1 = hue + 3.0
-
-      red = max(abs(hue1 - 3.0),0.0)
-      grn = max(abs(hue  - 2.0),0.0)
-      blu = max(abs(hue  - 1.0),0.0)
-
-      red = (red*sat) + 1.0*(1.0-sat)
-      grn = (grn*sat) + 1.0*(1.0-sat)
-      blu = (blu*sat) + 1.0*(1.0-sat)
-
-      red = red * rintens
-      grn = grn * rintens
-      blu = blu * rintens
-
-      return
-      end
-
       subroutine color_ramp(ncol1,ncol2,IWKID       ! I
      1                     ,hue1,sat1,rintens1      ! I
      1                     ,hue2,sat2,rintens2)     ! I
+
+      write(6,*)' Subroutine color_ramp...'
 
       do icol = ncol1,ncol2
           frac = float(icol-ncol1) / float(ncol2-ncol1)
@@ -181,9 +162,33 @@ C
           rintens = (1.0 - frac) * rintens1 + frac * rintens2
 
           call hsi_to_rgb(hue,sat,rintens,red,grn,blu)
+
+          write(6,1)icol,hue,sat,rintens,red,grn,blu
+ 1        format(i5,6f8.3)
           
           call GSCR(IWKID,icol,red,grn,blu)
       enddo
+
+      return
+      end
+
+      subroutine hsi_to_rgb(hue,sat,rintens,red,grn,blu)
+
+!     Hue is 0:R, 1:B, 2:G, 3:R
+
+      red1 = max(1.0 - abs(hue - 0.0),0.0)
+      red2 = max(1.0 - abs(hue - 3.0),0.0)
+      red = max(red1,red2)
+      grn = max(1.0 - abs(hue  - 2.0),0.0)
+      blu = max(1.0 - abs(hue  - 1.0),0.0)
+
+      red = (red*sat) + 1.0*(1.0-sat)
+      grn = (grn*sat) + 1.0*(1.0-sat)
+      blu = (blu*sat) + 1.0*(1.0-sat)
+
+      red = red * rintens
+      grn = grn * rintens
+      blu = blu * rintens
 
       return
       end
