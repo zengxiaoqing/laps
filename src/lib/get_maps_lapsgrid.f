@@ -421,7 +421,7 @@ c
      1                          ,field_2d_laps,istatus)
 
         if(istatus.ne.1)then
-           print*,'error getting 2d field from get_modelfg_2d'
+           print*,'warning: no 2d field from get_modelfg_2d'
            return
         endif
 
