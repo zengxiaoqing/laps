@@ -153,6 +153,7 @@ SRC	= machine_dependent.F \
           writelapscompressed.f \
           writelapsdata.f \
           writelapslvls.f \
+          writelapslfm.f \
           wrt_laps_static.f \
           zero.f \
           zr.f \
