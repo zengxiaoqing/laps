@@ -137,7 +137,7 @@ c
         endif
 
 !       Obtain NESDIS Cloud-top pressure
-        if(l_use_co2)then
+        if(l_use_co2)then ! This is the "mode 2" type of CO2 usage
             i4_co2_window = 4000
 
             write(6,*)' Getting NESDIS Cloud-top pressure'
@@ -198,11 +198,13 @@ c
 
         write(6,*)' Number of valid CO2-Slicing data points = ',icount
 
-        percent_co2_pot = float(icount) / float(imax*jmax) * 100.
+        if(l_use_co2)then
+            percent_co2_pot = float(icount) / float(imax*jmax) * 100.
 
-        write(6,101)percent_co2_pot
-101     format(' CO2-Slicing data potentially used over ',f6.2
-     1        ,'% of domain')
+            write(6,101)percent_co2_pot
+101         format(' CO2-Slicing data potentially used over ',f6.2
+     1            ,'% of domain')
+        endif
 
         return
         end

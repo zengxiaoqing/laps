@@ -39,20 +39,21 @@ cdis
 c
 c
 
-        subroutine insert_co2ctp(i4time,cld_hts                           ! I
-     1            ,imax,jmax,kmax,r_missing_data,l_use_co2                ! I
+        subroutine insert_co2ctp(i4time,cld_hts,heights_3d                ! I
+     1            ,imax,jmax,kmax,kcloud,r_missing_data,l_use_co2         ! I
      1            ,default_clear_cover                                    ! I
-     1            ,lat,lon,ix_low,ix_high,iy_low,iy_high,max_co2ctp       ! I
+     1            ,lat,lon,ix_low,ix_high,iy_low,iy_high                  ! I
      1            ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd       ! I/O
      1            ,istatus)                                               ! O
 
 !       Input
         real*4 lat(imax,jmax),lon(imax,jmax)
-        real*4 cld_hts(kmax)
+        real*4 cld_hts(kcloud)
+        real*4 heights_3d(imax,jmax,kmax)
 
 !       Arrays for cloud soundings
-        real*4 cld_snd(max_cld_snd,kmax)
-        real*4 wt_snd(max_cld_snd,kmax)
+        real*4 cld_snd(max_cld_snd,kcloud)
+        real*4 wt_snd(max_cld_snd,kcloud)
         integer*4 i_snd(max_cld_snd)
         integer*4 j_snd(max_cld_snd)
 
@@ -138,7 +139,10 @@ c
         do j = 1,jmax
         do i = 1,imax
             if(lstat_co2_a(i,j))then ! Create this cloud sounding
-!               ctop_m = height_of_pressure(cldtop_co2_pa_a(i,j))
+                call pressure_to_height(cldtop_co2_pa_a(i,j),heights_3d       
+     1                                 ,imax,jmax,kmax,i,j,ctop_m
+     1                                 ,istatus)       
+
                 cbase_m = ctop_m - 500.
 
                 cbuf_high = ctop_m + 500.
@@ -147,12 +151,13 @@ c
 
                 if(n_cloud .le. 10)then
                     write(6,*)' Working with CO2 cloud top:'
+     1                       ,nint(cldtop_co2_pa_a(i,j))
      1                       ,nint(cbase_m),nint(ctop_m),cover_rpt
                 endif
 
                 n_cloud = n_cloud + 1
 
-                do k=1,kmax
+                do k=1,kcloud
                     cover = cover_rpt
 
 !                   Fill in Cloud Layer
@@ -160,7 +165,7 @@ c
      1                 cld_hts(k) .lt. ctop_m                  )then
                         call spread2(cld_snd,wt_snd,i_snd,j_snd
      1                              ,n_cld_snd,max_cld_snd
-     1                                  ,nk,i,j,k,cover,1.)
+     1                              ,kcloud,i,j,k,cover,1.)
                         if(n_cloud .le. 10)then
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)
                         endif
@@ -173,7 +178,7 @@ c
      1                 cld_hts(k) .lt. cbuf_high               )then      
                         call spread2(cld_snd,wt_snd,i_snd,j_snd
      1                              ,n_cld_snd,max_cld_snd
-     1                              ,kmax,i,j,k,cover,1.)
+     1                              ,kcloud,i,j,k,cover,1.)
                         if(n_cloud .le. 10)then
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)       
                         endif

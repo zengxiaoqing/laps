@@ -138,7 +138,8 @@ cdis
         real*4 solar_alt(NX_L,NY_L)
         real*4 solar_ha(NX_L,NY_L)
 
-        logical l_packed_output, l_use_vis, l_use_39, l_use_co2_mode2
+        logical l_packed_output, l_use_vis, l_use_39
+        logical l_use_co2_mode1, l_use_co2_mode2
         logical l_evap_radar
 
         logical lstat_co2_a(NX_L,NY_L)
@@ -386,7 +387,7 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,l_use_39,l_use_co2_mode2
+        call get_cloud_parms(l_use_vis,l_use_39,l_use_co2_mode1
      1                      ,pct_req_lvd_s8a
      1                      ,i4_sat_window,i4_sat_window_offset
      1                      ,istatus)
@@ -394,6 +395,8 @@ c read in laps lat/lon and topo
             write(6,*)' laps_cloud_sub: Error getting cloud parms'
             stop
         endif
+
+        l_use_co2_mode2 = .false.
 
         n_lc3 = 1
         n_lps = 2
@@ -599,6 +602,14 @@ C READ IN AND INSERT PIREP DATA AS CLOUD SOUNDINGS
         I4_elapsed = ishow_timer()
 
 C READ IN AND INSERT CO2 SLICING DATA AS CLOUD SOUNDINGS
+        if(l_use_co2_mode1)then
+            call insert_co2ctp(i4time,cld_hts,heights_3d                  ! I
+     1            ,NX_L,NY_L,NZ_L,KCLOUD,r_missing_data,l_use_co2_mode1   ! I
+     1            ,default_clear_cover                                    ! I
+     1            ,lat,lon,ix_low,ix_high,iy_low,iy_high                  ! I
+     1            ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd       ! I/O
+     1            ,istatus)                                               ! O
+        endif
 
 C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
         write(6,*)
