@@ -1060,7 +1060,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      The inputted value should be the number of seconds since 0000 UTC 
      Jan 1, 1970. This is also the value found in line 2 of 
      'data/time/c_time.dat'. An example is shown as follows; note that
-     'ssssssss' represents the ctime.
+     'ssssssss' represents the ctime. 
 
      prompt> perl sched.pl  -a sssssssss $LAPS_ROOT $LAPS_DATA_ROOT
 
@@ -1068,9 +1068,11 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      'sched.pl' to run on the test data. This often helps in getting a better
      match between your output and ours. Note that $LAPS_DATA_ROOT needs to
      be set as an environment variable when executables are run individually.
-     The time of the run is specified in 'data/time/systime.dat'. This can be 
-     modified if needed if you want to try a slightly different time from 
-     the one supplied. 
+     The time of the run is specified in '$LAPS_DATA_ROOT/time/systime.dat'. 
+     This can be modified if needed if you want to try a slightly different 
+     time from the one supplied. To do this, interactively run the script
+     '$LAPSINSTALLROOT/etc/systime.pl' and write the numerical output to
+     '$LAPS_DATA_ROOT/time/systime.dat'.
 
      Note that for any given process or set of processes, deviations from the 
      FSL output may be caused by differences in the inputs as well as machine 
