@@ -275,6 +275,9 @@ c
 c
 c.....  Figure out if the data files are there, paths, etc.
 c
+        data_file_m = ' '
+        data_file_l = ' '
+        data_file_b = ' '
 
         call s_len(metar_format,len_metar_format)
 
@@ -322,15 +325,7 @@ c
           endif
 
         elseif(metar_format(1:len_metar_format) .eq. 'CWB')then
-            a8_time = a9_to_a8(filename9(1:9))
-
-	    len_path = index(path_to_METAR,' ') - 1
-	    data_file_m = 
-     1          path_to_METAR(1:len_path)//'metar'//a8_time//'.dat'
-
-!	    len_path = index(path_to_buoy_data,' ') - 1
-!	    data_file_b = 
-!    &          path_to_buoy_data(1:len_path)//'buoy'//a8_time//'.dat'       
+            continue
 
         else
             write(6,*)' ERROR, unknown metar format'
@@ -343,17 +338,17 @@ c.....  the data.
 c
 	print*,'Getting METAR data ', data_file_m
 c
-        call get_metar_obs(maxobs,maxsta,i4time,data_file_m,
-     &                      metar_format,   
-     &                      grid_east,grid_west,grid_north,grid_south,
-     &                      lat,lon,ni,nj,grid_spacing,
-     &                      nn,n_sao_g,n_sao_b,stations,
-     &                      reptype,atype,weather,wmoid,
-     &                      store_1,store_2,store_2ea,
-     &                      store_3,store_3ea,store_4,store_4ea,
-     &                      store_5,store_5ea,store_6,store_6ea,
-     &                      store_7,store_cldht,store_cldamt,
-     &                      provider, jstatus)
+        call get_metar_obs(maxobs,maxsta,i4time,
+     &                     path_to_metar,data_file_m,metar_format,   
+     &                     grid_east,grid_west,grid_north,grid_south,
+     &                     lat,lon,ni,nj,grid_spacing,
+     &                     nn,n_sao_g,n_sao_b,stations,
+     &                     reptype,atype,weather,wmoid,
+     &                     store_1,store_2,store_2ea,
+     &                     store_3,store_3ea,store_4,store_4ea,
+     &                     store_5,store_5ea,store_6,store_6ea,
+     &                     store_7,store_cldht,store_cldamt,
+     &                     provider, jstatus)
 c
 	if(jstatus .ne. 1) then
 	   print *, ' WARNING. Bad status return from GET_METAR_OBS'

@@ -208,7 +208,11 @@ c
      &          dd(ix), ffg(ix), ff(ix),             
      &          wmoid_in(ix), badflag, n_buoy_file, istatus)
 
-	        if(istatus .ne. 1) n_buoy_file = 0
+	        if(istatus .ne. 1)then
+                    write(6,*)
+     1              ' Warning: bad status return from READ_BUOY_CWB'       
+                    n_buoy_file = 0
+                endif
 
                 ix = ix + n_buoy_file
 
@@ -231,6 +235,9 @@ c.....  checks for "FloatInf" and sets the variable to 'badflag'.  If the
 c.....  "FloatInf" is in the lat, lon, elevation, or time of observation,
 c.....  we toss the whole ob since we can't be sure where it is.
 c
+
+        max_write = 100
+      
 	do i=1,n_buoy_all
 c
 c.....  Toss the ob if lat/lon/elev or observation time are bad by setting 
@@ -278,8 +285,14 @@ c
            if(lats(i) .lt. -90.) go to 125   !badflag (-99.9)...from nan ck
            call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,
      &                              ri_loc,rj_loc,istatus)
-           if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir) go to 125
-           if(rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) go to 125
+           if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
+     1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
+               if(i .le. max_write)then
+                   write(6,81,err=125)i,nint(ri_loc),nint(rj_loc)
+ 81		   format(i6,' out of box ',2i12)
+               endif
+               go to 125
+           endif
 c
 c.....  Elevation ok?
 c
@@ -289,7 +302,14 @@ c.....  Check to see if its in the desired time window.
 c
 	  itime60 = nint(timeobs(i)) + i4time_offset
 	  if(itime60 .lt. i4time_before 
-     1  .or. itime60 .gt. i4time_after) go to 125
+     1  .or. itime60 .gt. i4time_after) then
+               if(i .le. max_write)then
+                   write(6,91,err=125)i,itime60,i4time_before
+     1                                         ,i4time_after
+ 91		   format(i6,' out of time',3i12)
+               endif
+               go to 125
+          endif
 c
 c.....  Right time, right location...
 

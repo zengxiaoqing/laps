@@ -31,7 +31,8 @@ cdis
 cdis 
 c
 c
-	subroutine get_metar_obs(maxobs,maxsta,i4time,data_file,
+	subroutine get_metar_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_metar,data_file,
      &                      metar_format,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
@@ -46,7 +47,7 @@ c
 c
 c*****************************************************************************
 c
-c	Routine to gather METAR data for LAPS.   
+cdoc    Routine to gather METAR (and SYNOP) data for LAPS.   
 c
 c	Changes:
 c		P. Stamus  10-30-96  Original version (from get_sao_obs).
@@ -87,12 +88,13 @@ c
      &          store_cldht(maxsta,5)
 c
 	integer*4  itime60, wmoid(maxobs), wmoid_in(maxobs)
-	integer*4  before, after
+	integer*4  i4time_before, i4time_after
 	integer    rtime, dpchar(maxobs)
 	integer    maxSkyCover, recNum, nf_fid, nf_vid, nf_status
 c
 	character  stname(maxobs)*5, save_stn(maxobs)*5
 	character  data_file*(*), timech*9, time*4, metar_format*(*)
+        character  path_to_metar*(*), a9time*9, a8time*8, a9_to_a8*8
 	character  cvr(6,maxobs)*8
 	character  stations(maxsta)*20, provider(maxsta)*11
 	character  weather(maxobs)*25, wx(maxobs)*25
@@ -176,8 +178,18 @@ c
             i4time_offset = 315619200
 
         else ! Read CWB Metar and Synop Obs
-            recNum=150
+            i4time_file = (i4time_sys/3600) * 3600
+            call make_fnam_lp(i4time_file,a9time,istatus)
+            a8time = a9_to_a8(a9time(1:9))
+
+            call s_len(path_to_metar,len_path)
+
+!           Read Metar Obs
             maxSkyCover=10
+            recNum=150
+
+	    data_file = 
+     1            path_to_metar(1:len_path)//'metar'//a8time//'.dat'
 
             call s_len(data_file,len_file)
             write(6,*)' CWB Metar Data: ',data_file(1:len_file)
@@ -196,17 +208,19 @@ c
 
             ix = n_metar_cwb + 1
 
+!           Read Synop Obs
             maxSkyCover=2
             recNum=610
+
+	    data_file = 
+     1          path_to_metar(1:len_path)//'synop'//a8time//'.dat'
 
             call s_len(data_file,len_file)
             write(6,*)' CWB Synop Data: ',data_file(1:len_file)
 
             n_synop_cwb = 0
 
-            if(.false.)then
-
-                call read_synop_cwb(data_file , maxSkyCover, recNum, 
+            call read_synop_cwb(data_file , maxSkyCover, recNum, 
      &         alt(ix), atype_in(ix), td(ix), ttd(ix), elev(ix),
      &         lats(ix), lons(ix), max24t(ix), min24t(ix),
      &         pcp1(ix), pcp24(ix), pcp3(ix), pcp6(ix),
@@ -215,8 +229,6 @@ c
      &         snowcvr(ix), stname(ix), tt(ix), t(ix),
      &         timeobs(ix), vis(ix), dd(ix), ffg(ix), ff(ix),
      &         wmoid_in(ix), badflag, n_synop_cwb, istatus)
-
-            endif
 
             write(6,*)' n_synop_cwb = ',n_synop_cwb
 
@@ -283,8 +295,8 @@ c
 c
 c.....  Set up the time window.
 c
-	before = i4time - time_before
-	after  = i4time + time_after
+	i4time_before = i4time_sys - time_before
+	i4time_after  = i4time_sys + time_after
 c
 c..................................
 c.....	Now loop over all the obs.
@@ -317,7 +329,8 @@ c
 	  itime60 = nint(timeobs(i)) + i4time_offset
 c
 	  if(ick_METAR_time .eq. 1) then
-	    if(itime60.lt.before .or. itime60.gt.after) go to 125
+	    if(itime60.lt.i4time_before 
+     1    .or. itime60.gt.i4time_after) go to 125
 	  endif
 c
 c.....  Right time, right location...
@@ -336,8 +349,11 @@ c
 	     go to 150
 	  endif
 c
+!         Do duplication check unless station names are 'UNK'
 	  do k=1,icount
-	     if(stname(i) .eq. save_stn(k)) go to 125
+	     if(stname(i) .eq. save_stn(k))then
+                 if(stname(i)(1:3) .ne. 'UNK')go to 125
+             endif
 	  enddo	!k
 c
 	  icount = icount + 1

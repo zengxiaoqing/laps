@@ -289,6 +289,7 @@ c                    special cloud layer cover
 c               -------      dealing with lacking of data      -------
       do j= 1,n
          autoStationType(j)= "UNK"
+         presWeather(j)= "UNK"
          reportType(j)= "SYNOP"
          stationName(j)= "UNK"
 
