@@ -196,13 +196,14 @@ c
             istat_co2 = 0
         endif
 
-        write(6,*)' Number of valid CO2-Slicing data points = ',icount
+        write(6,*)' Number of utilized CO2-Slicing image points = '
+     1           ,icount
 
         if(l_use_co2)then
             percent_co2_pot = float(icount) / float(imax*jmax) * 100.
 
             write(6,101)percent_co2_pot
-101         format(' CO2-Slicing data potentially used over ',f6.2
+101         format(' CO2-Slicing imagery potentially used over ',f6.2
      1            ,'% of domain')
         endif
 
