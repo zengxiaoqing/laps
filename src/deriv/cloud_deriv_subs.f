@@ -145,7 +145,8 @@ cdis
 !                                                the top LAPS pressure level
 
               if(cloud_base .gt. heights_3d(i,j,nk) - 2.)then ! skip layer
-                  write(6,*)' Skip layer ',i,j,cloud_base,cloud_top
+                  write(6,*)' WARNING: Skip layer '
+     1                     ,i,j,cloud_base,cloud_top
                   go to 100            
               endif
 
@@ -155,9 +156,10 @@ cdis
               if(cloud_top  .gt. heights_3d(i,j,nk))then
                   cloud_top_before = cloud_top
                   cloud_top  =   heights_3d(i,j,nk)
-                  write(6,*)' Clip layer ',i,j,cloud_base
-     1                                    ,cloud_top_before,cloud_top      
+                  write(6,*)' WARNING: Clip layer ',i,j,cloud_base
+     1                     ,cloud_top_before,cloud_top      
                   k_1d_top = nk ! avoids roundoff error at very top of domain
+                  istatus_top = 1
 
               else
                   k_1d_top  = int(height_to_zcoord3(cloud_top 
@@ -170,7 +172,7 @@ cdis
               if(       k_1d_base .lt. 1 .or. k_1d_base .gt. nk  
      1             .or. k_1d_top  .lt. 1 .or. k_1d_top  .gt. nk
      1             .or. istatus_base .ne. 1 .or. istatus_top .ne. 1)then       
-                  write(6,*)' Bad return from height_to_zcoord3'
+                  write(6,*)' ERROR: Bad return from height_to_zcoord3'       
                   write(6,*)k_1d_base,istatus_base,cloud_base
      1                     ,heights_3d(i,j,1)
                   write(6,*)k_1d_top,istatus_top,cloud_top

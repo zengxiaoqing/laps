@@ -127,6 +127,7 @@ cdis
 
             if(istat_sh .ne. 1)then
                 write(6,*)' No first guess available for ',var_2d
+                istatus = 0
                 return
             endif
 
@@ -138,34 +139,42 @@ cdis
 
         do k = 1,KCLOUD
         do j = 1,nj
-        do i = 1,ni
+          istat_z = 0
+          do i = 1,ni
 
 !           Find the model pressure at this location in the cloud height grid
             if(i-1 .eq. (i-1)/10*10)then ! Update every 10th grid point
                 z_laps = height_to_zcoord2(cld_hts(k),heights_3d
-     1                  ,ni,nj,klaps,i,j,istatus)
-                if(istatus .ne. 1)then
-!                   Determine if cloud height grid is above pressure grid
-                    if(cld_hts(k) .gt. heights_3d(i,j,klaps))then
-                        i_grid_high = i_grid_high + 1
-                        cf_modelfg(i,j,k) = default_clear_cover
-                        go to 1000
-                    else
+     1                  ,ni,nj,klaps,i,j,istat_z)
+
+                if(istat_z .ne. 1)then
+
+!                   We're OK if cloud height grid is above pressure grid
+                    if(cld_hts(k) .le. heights_3d(i,j,klaps))then
                         write(6,*)' Error: Bad status from '
      1                           ,'height_to_zcoord2'
+                        istatus = 0
                         return
                     endif
-                endif
 
-                z_laps = max(1.,min(z_laps,float(klaps)-.001))
-                iz_laps = int(z_laps)
-                frac = z_laps - iz_laps
+                else
+                    z_laps = max(1.,min(z_laps,float(klaps)-.001))
+                    iz_laps = int(z_laps)
+                    frac = z_laps - iz_laps
 
-                p_modelfg =  pressure_of_level(iz_laps) * (1. - frac)
-     1                    +  pressure_of_level(iz_laps+1)  * frac
+                    p_modelfg = pressure_of_level(iz_laps) * (1. - frac)       
+     1                        + pressure_of_level(iz_laps+1)  * frac
 
-                p_modelfg_mb = p_modelfg * .01
+                    p_modelfg_mb = p_modelfg * .01
 
+                endif ! istat_z .ne. 1
+
+            endif
+
+            if(istat_z .ne. 1)then
+                i_grid_high = i_grid_high + 1
+                cf_modelfg(i,j,k) = default_clear_cover
+                go to 1000
             endif
 
 !           Find the model temp at this location in the cloud height grid
@@ -227,7 +236,7 @@ cdis
 
             endif
 
- 1000   enddo ! i
+ 1000     enddo ! i
         enddo ! j
         enddo ! k (cloud height array level)
 
@@ -237,6 +246,8 @@ cdis
      1            ,i_grid_high
         write(6,*)' # points set to cloud based on condensate = '
      1           ,i_condensate
+
+        istatus = 1
 
         return
         end
