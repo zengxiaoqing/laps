@@ -271,14 +271,22 @@ sub laps_data_root{
 # J. Smart 1-10-00:
 #    "     1-18-00: product subdirectories added. Removed
 #                   reference to lapssrcroot.
+#    "     6-28-01: added wrfsi functionality using $domain_type argument.
 
 sub mkdatadirs{
 
   my $LAPS_DATA_ROOT = shift;
-  $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if ! $LAPS_DATA_ROOT;
+  my $domain_type    = shift;
 
-  my (@datadirs) = qw (cdl lapsprd log log/qc static time);
-  my (@lapsprddirs) = qw (l1s lc3 lcb lco lcp lct lcv 
+# $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if ! $LAPS_DATA_ROOT;
+
+  my ($datadirs, $lapsprddirs);
+  my (@datadirs, @lapsprddirs);
+
+  if($domain_type eq "laps"){
+
+     (@datadirs) = qw (cdl lapsprd log log/qc static time);
+     (@lapsprddirs) = qw (l1s lc3 lcb lco lcp lct lcv 
 lf1 lga lh3 lh4 lhe lil liw lm1 lm2 lmd lmr lmt 
 lpbl lps lq3 lrp lrs lso lsx lt1 lty 
 lvd lvd/goes08 lvd/goes10 lvd/meteos lvd/gmssat lw3 lwc lwm 
@@ -295,10 +303,13 @@ lgb ls2 lapsprep dprep fsf fsf/mm5 fsf/ram fsf/eta fua fua/mm5 fua/ram fua/eta
 stats balance balance/lt1 balance/lw3 balance/lh3 
 grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
 
-  my $datadirs; my $lapsprddirs;
+  }else{
+     (@datadirs) = qw (cdl siprd silog static)
+  }
 
   foreach (@datadirs){
-     mkdir "$LAPS_DATA_ROOT/$_",0777 if(! -e "$LAPS_DATA_ROOT/$_");}
+     mkdir "$LAPS_DATA_ROOT/$_",0777 if(! -e "$LAPS_DATA_ROOT/$_");
+  }
 
 # this perhaps can be used once (if) the lapsprd subdirectories are checked-in to CVS.
 #    if( -e "$LAPSSRCROOT/data/lapsprd")    {
@@ -306,7 +317,8 @@ grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
 #        @lapsprddirs = readdir DATADIRS;   }
 
   foreach (@lapsprddirs) {
-     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777;}
+     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777;
+  }
 
   return;
 }
