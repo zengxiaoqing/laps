@@ -46,11 +46,19 @@ C Local variables
 
 C  BEGIN SUBROUTINE
 
+      print*,'wrt_laps_static'
+      print*,'make_static_fname'
       call make_static_fname(dir,laps_dom_file,file_name,f_len,status)
       if (status .eq. ERROR(2)) goto 990
 
+      print*,'call i4time_now_gg'
       i4time = i4time_now_gg()
       call cv_i4tim_asc_lp(i4time,asctime,status)
+      if(status .ne. 1)then
+         print*,'Error returned: cv_i4tim_asc_lp: ',i4time
+         return
+      endif
+
       unixtime = i4time - 315619200
 
 c get NX_L and NY_L from namelist (or common if namelist read already).
