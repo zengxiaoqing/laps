@@ -66,8 +66,11 @@ sub Set_logdir'fxa{ #'
 #       chomp($yymmdd);
         local(@gmtime) = gmtime;
         $gmtime[4]++;
-        $gmtime[5] -= 100 if($gmtime[5]>99);
-        for($i=3;$i<=5;$i++){
+#  Modified to make logfile directory to  $LOG_DIR/yyyymmdd/laps LW 1/7/00
+#       $gmtime[5] -= 100 if($gmtime[5]>99);
+        $gmtime[5] += 1900;
+#       for($i=3;$i<=5;$i++){
+        for($i=3;$i<=4;$i++){
           $gmtime[$i]="0".$gmtime[$i] if(length($gmtime[$i])<2);
         }
         local($yymmdd) = $gmtime[5].$gmtime[4].$gmtime[3];
