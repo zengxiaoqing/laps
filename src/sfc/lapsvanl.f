@@ -32,9 +32,9 @@ cdis
 c
 c
 	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
-     &     itheta_in,redp_lvl,
+     &     itheta_in,redp_lvl,sfc_nl_parms,
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
-     &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
+     &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,dd_s,ff_s,pstn_s,
      &     mslp_s,pred_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,obs,
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,sp_bk,vis_bk,tgd_bk_f,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
@@ -182,7 +182,7 @@ c                               11-23-99  Change pbar calc...check for a bad one
 c                                           Fix error with grid spacing.
 c
 c*****************************************************************************
-cx
+c 
 	include 'laps_sfc.inc'
         include 'laps_cloud.inc'
 c
@@ -219,7 +219,7 @@ c
 	real td(ni,nj), mslp(ni,nj)
         real tgd_k(ni,nj)
 c
-c.....	Grids for the variational analyses of rp, u, v
+c.....	Grids for the variational analyses of rp, u, v (grid north)
 c
 	real p_a(ni,nj), u_a(ni,nj), v_a(ni,nj) ! Post Variational Pa & M/S
 	real p_a_orig(ni,nj), u_a_orig(ni,nj), v_a_orig(ni,nj)   ! Reference
@@ -265,9 +265,11 @@ c
         type (sfcob) obs(mxstn)
 
 	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
-	real t_s(mxstn), td_s(mxstn), ff_s(mxstn)
+	real t_s(mxstn), td_s(mxstn)
+        real dd_s(mxstn), ff_s(mxstn) ! true north
 	real pstn_s(mxstn), mslp_s(mxstn), pred_s(mxstn), vis_s(mxstn)
         real ob_full(mxstn)
+        real u_s(mxstn), v_s(mxstn) ! grid north
 c
 	character stn(mxstn)*20
         character title*60, ver_file*256
@@ -710,8 +712,8 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(u,u1,u_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
-     &        rms_thresh_norm,bad_uw,imiss,mxstn,obs_error_wind,name,
-     &        topo,ldf)       
+     &              rms_thresh_norm*sfc_nl_parms%rms_wind,bad_uw,imiss,
+     &              mxstn,obs_error_wind,name,topo,ldf)       
 c
 	print *,' '
 	print *,'  At spline call for v (kt)'
@@ -721,8 +723,8 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(v,v1,v_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
-     &        rms_thresh_norm,bad_vw,imiss,mxstn,obs_error_wind,name,
-     &        topo,ldf)        
+     &              rms_thresh_norm*sfc_nl_parms%rms_wind,bad_vw,imiss,
+     &              mxstn,obs_error_wind,name,topo,ldf)        
 c
 	print *,' '
 	print *,'  At spline call for red_p (mb)'
@@ -1304,6 +1306,8 @@ c
         write(6,*)' LSX file write completed, istatus = ',istatus
 c
 	jstatus(3) = 1		! everything ok...
+
+        I4_elapsed = ishow_timer()
 c
 c.....  Now finish up with some verification.  Expected accuracys
 c.....  based on FMH-1 Appendix C, but fixed estimates for normal 
@@ -1342,6 +1346,45 @@ c
 	call zero(d1,imax,jmax)
 	call conv_k2f(td,d1,imax,jmax)
 	call verify(d1,td_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+        do ista = 1,n_obs_b
+            if(dd_s(ista) .ne. badflag .and. 
+     1         ff_s(ista) .ne. badflag)then      
+                call disptrue_to_uvgrid(dd_s(ista),ff_s(ista)
+     1                                 ,u_s(ista),v_s(ista),lon_s(ista))       
+            else
+                u_s(ista) = badflag
+                v_s(ista) = badflag
+            endif
+        enddo ! ista
+
+        title = 'U Wind Component background verification (kt)'
+ 	ea = 2.00
+ 	call zero(d1,imax,jmax)
+ 	call conv_ms2kt(u_bk,d1,imax,jmax)
+        call verify(d1,u_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+ 	title = 'U Wind Component verification (kt)'
+ 	ea = 2.00
+ 	call zero(d1,imax,jmax)
+ 	call conv_ms2kt(u_a,d1,imax,jmax)
+ 	call verify(d1,u_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+
+        title = 'V Wind Component background verification (kt)'
+ 	ea = 2.00
+ 	call zero(d1,imax,jmax)
+ 	call conv_ms2kt(v_bk,d1,imax,jmax)
+        call verify(d1,v_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+ 	title = 'V Wind Component verification (kt)'
+ 	ea = 2.00
+ 	call zero(d1,imax,jmax)
+ 	call conv_ms2kt(v_a,d1,imax,jmax)
+ 	call verify(d1,v_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
 	title = 'Wind Speed background verification (kt)'
@@ -1407,7 +1450,9 @@ c
 c.....  That's it.  Let go home.
 c
 	print *,' Normal completion of LAPSVANL'
+        I4_elapsed = ishow_timer()
 	return
+
  999	print *,'ERROR opening ',ver_file(1:len)
 	return
 c
