@@ -515,18 +515,6 @@ c
 	   call move(wt, wt_u, ni,nj)
 	   call move(wt, wt_v, ni,nj)
 c
-c.....  Rotate background winds from true north to grid north.
-c
-	   do j=1,nj
-	   do i=1,ni
-	      utrue = u_bk(i,j)
-	      vtrue = v_bk(i,j)
-	      call uvtrue_to_uvgrid(utrue, vtrue, ugrid, vgrid,lon(i,j))
-	      u_bk(i,j) = ugrid
-	      v_bk(i,j) = vgrid
-	   enddo !i
-	   enddo !j
-c
 	   call conv_ms2kt(u_bk,u_bk,ni,nj)
 	   call conv_ms2kt(v_bk,v_bk,ni,nj)
 	   back_uv = 1
