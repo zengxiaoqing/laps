@@ -1,7 +1,7 @@
 C
 C  Subroutine to read the file 
 C
-      subroutine read_rtamps_netcdf(nfid, manLevel, maxStaticIds, 
+      subroutine read_rtamps_netcdf_dum(nfid, manLevel, maxStaticIds,        
      +     nInventoryBins, rawLevel, recNum, stdLevel, termLevel, 
      +     tropLevel, editFlag, firstInBin, firstOverflow, 
      +     globalInventory, indxRefr, invTime, inventory, irMan, 
