@@ -595,10 +595,10 @@ C DO ANALYSIS on SAO and PIREP data
 
 !       Set weight for using model background clouds beyond a certain effective
 !       radius of influence from the sfc obs/pireps
-        weight_modelfg = 0.    ! Model wt inactive, obs used to infinite radius
+!       weight_modelfg = 0.    ! Model wt inactive, obs used to infinite radius
 !       weight_modelfg = 1.    ! Model used beyond ~100km from nearest obs
 !       weight_modelfg = .01   ! Model used beyond ~200km from nearest obs
-!       weight_modelfg = .0001 ! Model used beyond ~400km from nearest obs
+        weight_modelfg = .0001 ! Model used beyond ~400km from nearest obs
 
         call barnes_r5(clouds_3d,NX_L,NY_L,KCLOUD,cldcv1,wtcldcv
      1     ,cf_modelfg,l_perimeter,cld_snd,wt_snd,r_missing_data
