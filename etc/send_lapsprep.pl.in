@@ -75,10 +75,12 @@ if (! -f $filename) {
 # use the Perl Net:FTP module if it was present on the system
 # which would probably be more elegant
 
+print "Building script...\n";
 my $ftpscript = "ftp.lapsprep";
 open(FS,">$ftpscript");
 print FS "#!/bin/sh\n";
-print FS "ftp $remotehost << !\n";
+print FS "set -x \n";
+print FS "ftp -v $remotehost << !\n";
 print FS "cd $remotedir\n";
 print FS "bin\n";
 print FS "put $filename\n";
@@ -90,7 +92,8 @@ close(FS);
 chmod 0777, "$ftpscript";
 
 # Run the script
-system ("$ftpscript");
+print "Executing script...\n";
+system ("./$ftpscript > ../../log/send_lapsprep.log 2>&1");
 
 # Delete the script
 
