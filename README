@@ -54,6 +54,7 @@
      3.0 ............  Description of LAPS Processes
          3.1 ..............  Localization Processes
          3.1.1 ..................  Gridgen_model (static.nest7grid generation)
+         3.1.2 ..................  Surface Lookup Tables (gensfclut.exe)
          3.2 ..............  Ingest Processes
          3.2.1 ..................  LGA Model
          3.2.2 ..................  LVD 
@@ -1624,6 +1625,10 @@ Sample Output: Should be available in the test data case. The grids start with
                you're moving east on the grid, J increases as you're moving 
                north.
 
+------ 3.1.2 ------ Surface Lookup Tables (gensfclut.exe) ---------------
+
+Package: gensfclut.exe - Writes surface lookup tables, run by localization
+                         script. (contact: John McGinley / Steve Albers)
 
 ------- 3.2  ------------------  Ingest Processes ---------------------------
 
