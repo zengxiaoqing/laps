@@ -275,14 +275,17 @@ sub laps_data_root{
 
 sub mkdatadirs{
 
-  my ($LAPS_DATA_ROOT,$domain_type);
+  my ($LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$domain_type);
   $LAPS_DATA_ROOT = shift or die "no $LAPS_DATA_ROOT specified to mkdatadirs\n";
   $domain_type    = shift or die "no domain_type specified to mkdatadirs\n";
 
+  $LAPS_SRC_ROOT  = $ENV{LAPS_SRC_ROOT};
 # $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if ! $LAPS_DATA_ROOT;
 
   my ($datadirs, $lapsprddirs);
   my (@datadirs, @lapsprddirs);
+  my (@fua_dirs, @fsf_dirs);
+  my (@fdda_dirs);
 
   if($domain_type eq "laps"){
 
@@ -301,9 +304,31 @@ rdr/001 rdr/002 rdr/003 rdr/004 rdr/005 rdr/006 rdr/007 rdr/008 rdr/009
 rdr/001/raw rdr/001/vrc rdr/002/vrc rdr/003/vrc rdr/004/vrc 
 rdr/005/vrc rdr/006/vrc rdr/007/vrc rdr/008/vrc rdr/009/vrc 
 lgb ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/cdf 
-dprep fsf fsf/mm5 fsf/ram fsf/eta fua fua/mm5 fua/ram fua/eta 
-stats balance balance/lt1 balance/lw3 balance/lh3 balance/lq3
+dprep stats balance balance/lt1 balance/lw3 balance/lh3 balance/lq3
 grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
+
+     if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
+        print "using LAPS_DATA_ROOT nest7grid.parms for fdda dirs\n";
+        @fdda_dirs = &laps_tools::get_nl_value('nest7grid.parms','fdda_model_source_cmn',$LAPS_DATA_ROOT);
+     }elsif(-e "$LAPS_SRC_ROOT/data"){
+            print "using LAPS_SRC_ROOT nest7grid.parms for fdda dirs\n";
+            @fdda_dirs = &laps_tools::get_nl_value('nest7grid.parms','fdda_model_source_cmn',"$LAPS_SRC_ROOT/data");
+     }else{
+           print "file nest7grid.parms not available in dataroot or source root\n";
+           print "terminating\n";
+           exit;
+     }
+     print "adding fdda_model_source subdirectories to lapsprddirs\n";
+     my $ii = 0;
+     @fua_dirs[$ii] = 'fua';
+     @fsf_dirs[$ii] = 'fsf';
+     foreach (@fdda_dirs){
+              $ii++;
+              @fua_dirs[$ii]=@fua_dirs[0]."/".$_;
+              @fsf_dirs[$ii]=@fsf_dirs[0]."/".$_;
+     }
+     print "fua dirs: @fua_dirs\n";
+     print "fsf dirs: @fsf_dirs\n";
 
   }else{
      (@datadirs) = qw (cdl siprd silog static)
@@ -321,6 +346,14 @@ grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
   foreach (@lapsprddirs) {
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777;
   }
+  foreach (@fua_dirs) {
+     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777;
+  }
+  foreach (@fsf_dirs) {
+     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777;
+  }
+
+ 
 
   return;
 }

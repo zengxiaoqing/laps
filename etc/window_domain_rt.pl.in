@@ -329,10 +329,9 @@ if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
 # --------------------------------------------------------------------------------------
 if( $opt_m ){
    print "--no_ggm switch on\n";
-   system("@PERL@ ./localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type --no_ggm='t' > $LAPS_DATA_ROOT/$logname/localize_domain.log");
+   system("@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type --no_ggm='t' > $LAPS_DATA_ROOT/$logname/localize_domain.log");
 }else{
-   system("@PERL@ ./localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type > $LAPS_DATA_ROOT/$logname/localize_domain.log");
-}
+   system("@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type > $LAPS_DATA_ROOT/$logname/localize_domain.log"); }
 
 if( $all_roots_equal eq "T" && -e "$DATAROOT/$DOMAIN_NAME/data_loc" ){
     print "copy data_loc/static and data_loc/cdl to data\n";
@@ -398,8 +397,9 @@ if($restore_files eq "false" && !defined $opt_m){
 }
 
 if( $restore_files eq "true" ) {
-    print "will try and save static and cdl to _err\n";
-    print "for further examination. --> localization incomplete <--\n";
+    print "\n";
+    print "Save static and cdl to _err for further examination.\n";
+    print "     --> localization incomplete <--   \n";
     system("mv $LAPS_DATA_ROOT/static $LAPS_DATA_ROOT/static\_err");
     system("mv $LAPS_DATA_ROOT/cdl $LAPS_DATA_ROOT/cdl\_err");
     if( ! -e "$DATAROOT/$DOMAIN_NAME/data_rep"){
@@ -410,8 +410,13 @@ if( $restore_files eq "true" ) {
     if(!-e "$LAPS_DATA_ROOT/static"){
        mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make directory $LAPS_DATA_ROOT/static";
     }
-    system("cp -p $DATAROOT/laps_data/static/$namelist $LAPS_DATA_ROOT/static/");
-    system("cp -p $DATAROOT/laps_data/static/corners.dat $LAPS_DATA_ROOT/static/");
+    if( defined $ENV{FXA_LOCAL_DATA}){
+        system("cp -p $DATAROOT/laps_data/static/$namelist $LAPS_DATA_ROOT/static/");
+        system("cp -p $DATAROOT/laps_data/static/corners.dat $LAPS_DATA_ROOT/static/");
+    }
+    print "\n";
+    print "window_domain_rt incomplete\n";
+    exit;
 }
 
 if( -e "$LAPS_DATA_ROOT/static\_save"){
@@ -423,9 +428,9 @@ if( -e "$LAPS_DATA_ROOT/cdl\_save"){
     system("rm -rf $LAPS_DATA_ROOT/cdl\_save");
 }
 
-print "update lapsprd - synchronize with repository\n";
+print "update prod subdirectory - synchronize with repository\n";
 &laps_tools::mkdatadirs("$LAPS_DATA_ROOT","$domain_type");
 
-
-print "window_laps_rt complete\n";
+print "\n";
+print "window_domain_rt complete\n";
 exit;
