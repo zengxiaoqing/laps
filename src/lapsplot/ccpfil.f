@@ -433,8 +433,8 @@ C
 
       call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
-      xlow =  0.35
-      xhigh = 0.85
+      xlow =  0.40 ! 0.35
+      xhigh = xlow + 0.50
       ylow =  y_2 + .01
       yhigh = y_2 + .03
 
@@ -497,7 +497,8 @@ c     Restore original color table
           call right_justify(ch_low)
       endif
 
-      ixl = 353
+!     ixl = 353 + nint(.05 * 1024.)
+      ixl = nint((xlow - .005) * 1024.)
       CALL PCHIQU (  cpux(ixl),cpux(iy),ch_low,rsize ,0,+1.0)
 
 !     Right Edge
@@ -520,7 +521,7 @@ c     Restore original color table
       endif
       call left_justify(ch_high)
 
-      ixh = 878
+      ixh = ixl + 525 ! 878
       CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
 
 !     Midpoint
