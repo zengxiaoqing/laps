@@ -191,7 +191,7 @@ cdis
 
         real*4 cldcv_sao(NX_L,NY_L,KCLOUD)
         real*4 cld_pres_1d(KCLOUD)
-        real*4 pressures_pa(NZ_L)
+        real*4 pres_3d(NX_L,NY_L,NZ_L)
         real*4 clouds_3d_pres(NX_L,NY_L,NZ_L)
         real*4 wtcldcv(NX_L,NY_L,KCLOUD)
 
@@ -289,8 +289,8 @@ cdis
         real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
         real*4 cover_s(maxstns)
         real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns), ffg_s(maxst
-     1ns)
+        real*4 dd_s(maxstns), ff_s(maxstns)
+        real*4 ddg_s(maxstns), ffg_s(maxstns)
         real*4 vis_s(maxstns)
         real*4 pstn_s(maxstns),pmsl_s(maxstns),alt_s(maxstns)
         real*4 store_hgt(maxstns,5),ceil(maxstns),lowcld(maxstns)
@@ -404,6 +404,9 @@ c read in laps lat/lon and topo
             write(6,*)' Error getting laps_cycle_time'
             return
         endif
+
+        call get_pres_3d(i4time,NX_L,NY_L,NZ_L,pres_3d,istatus)
+        if(istatus .ne. 1)return
 
         n_lc3 = 1
         n_lps = 2
@@ -604,7 +607,7 @@ c read in laps lat/lon and topo
 
         call get_cloud_deriv(
      1                NX_L,NY_L,NZ_L,clouds_3d,cld_hts,
-     1                temp_3d,rh_3d_pct,heights_3d,
+     1                temp_3d,rh_3d_pct,heights_3d,pres_3d,
      1                istat_radar_3dref,radar_ref_3d,grid_spacing_cen_m,       
      1                l_mask_pcptype,ibase_array,itop_array,
      1                iflag_slwc,slwc,cice,thresh_cvr,
@@ -625,7 +628,7 @@ c read in laps lat/lon and topo
         write(6,*)' Inserting thin clouds into LWC/ICE fields'
         call insert_thin_lwc_ice(clouds_3d,clouds_3d_pres,heights_3d
      1       ,temp_3d,cld_hts,NX_L,NY_L,NZ_L,KCLOUD,thresh_thin_lwc_ice       
-     1       ,pressures_pa,slwc,cice,istatus)
+     1       ,pres_3d,slwc,cice,istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' Bad status return from insert_thin_lwc_ice'
@@ -1097,8 +1100,8 @@ c read in laps lat/lon and topo
         ext = 'lco'
         units = 'PA/S'
         comment = 'LAPS Cloud Derived Omega'
-        call put_laps_3d(i4time,ext,var,units,comment,w_3d,NX_L,NY_L,NZ_
-     1L)
+        call put_laps_3d(i4time,ext,var,units,comment,w_3d
+     1                  ,NX_L,NY_L,NZ_L)
         j_status(n_lco) = ss_normal
 
         I4_elapsed = ishow_timer()
@@ -1120,7 +1123,7 @@ c read in laps lat/lon and topo
         subroutine insert_thin_lwc_ice(clouds_3d,clouds_3d_pres
      1        ,heights_3d
      1        ,temp_3d,cld_hts,ni,nj,nk,kcld,thresh_thin_lwc_ice
-     1        ,pressures_pa,slwc,cice,istatus)
+     1        ,pres_3d,slwc,cice,istatus)
 
         include 'laps_cloud.inc'
 
@@ -1131,6 +1134,7 @@ c read in laps lat/lon and topo
         real*4 temp_3d(ni,nj,nk)           ! Input
         real*4 slwc(ni,nj,nk)              ! Input/Output
         real*4 cice(ni,nj,nk)              ! Input/Output
+        real*4 pres_3d(ni,nj,nk)           ! Input
         real*4 pressures_pa(nk)            ! Local
 
         integer max_layers
@@ -1144,20 +1148,20 @@ c read in laps lat/lon and topo
 
         write(6,*)' Subroutine insert_thin_lwc_ice'
 
-!       Initialize
-        do k = 1,nk
-            pressures_pa(k) = pressure_of_level(k)
-        enddo ! k
-
         iwrite = 0
 
 !       Convert from cloud cover to discreet cloud layer indices (cvr to a)
         do i = 1,ni
         do j = 1,nj
+          do k = 1,nk
+             pressures_pa(k) = pres_3d(i,j,k)
+          enddo ! k
+
           nlyr = 0
+
           do k = kcld-1,1,-1
-            if(clouds_3d(i,j,k)   .ge. thresh_thin_lwc_ice .and.
-     1         clouds_3d(i,j,k+1) .lt. thresh_thin_lwc_ice)then  ! Top of layer
+             if(clouds_3d(i,j,k)   .ge. thresh_thin_lwc_ice .and.
+     1          clouds_3d(i,j,k+1) .lt. thresh_thin_lwc_ice)then ! Top of layer
                 nlyr = nlyr + 1
                 a(nlyr) = clouds_3d(i,j,k)
                 ik(nlyr) = k

@@ -75,7 +75,7 @@ cdis
         real*4 height_3d(imax,jmax,kmax)
         real*4 temp_col_max(imax,jmax)
         real*4 rh_3d(imax,jmax,kmax)
-        real*4 pressures_mb(kmax)
+        real*4 pres_3d(imax,jmax,kmax)
         logical l_mask(imax,jmax)
         integer i2_pcp_type_2d(imax,jmax)
         integer i2_cldpcp_type_3d(imax,jmax,kmax)
@@ -113,10 +113,6 @@ cdis
         im = imax/2 ! 15
         jm = jmax/2 ! 56
 
-        do k = 1,kmax
-            pressures_mb(k) = pressure_of_level(k) / 100.
-        enddo ! k
-
         call make_fnam_lp(i4time_beg,asc_tim_9_beg,istatus)
         call make_fnam_lp(i4time_end,asc_tim_9_end,istatus)
 
@@ -126,11 +122,11 @@ cdis
 !       Get File Times
         call get_filespec(radarext_3d_accum(1:3),2,c_filespec,istatus)
 
-        call    Get_file_names(  c_filespec,
-     1                   i_nbr_files_ret,
-     1                   c_fnames,
-     1                   max_files,
-     1                   i_status )
+        call Get_file_names(c_filespec,
+     1                      i_nbr_files_ret,
+     1                      c_fnames,
+     1                      max_files,
+     1                      i_status)
 
         min_diff = 1999999999
 
@@ -227,8 +223,8 @@ cdis
 
                     do j = 1,jmax
                     do i = 1,imax
-                        if(snow_accum_pd(i,j) .gt. 1e-10)l_mask(i,j) = .
-     1true.
+                        if(snow_accum_pd(i,j) .gt. 1e-10)
+     1                     l_mask(i,j) = .true.
                     enddo
                     enddo
 
@@ -241,7 +237,7 @@ cdis
 !                   be representative for the entire accumulation subperiod
 !                   (typically one half of the laps cycle time).
 
-                    call cpt_pcp_type_3d(temp_3d,rh_3d,pressures_mb
+                    call cpt_pcp_type_3d(temp_3d,rh_3d,pres_3d
      1                  ,grid_ra_ref,l_mask,grid_spacing_cen_m
      1                  ,imax,jmax,kmax,i2_cldpcp_type_3d,istatus)
                     if(istatus .ne. 1)then
@@ -319,7 +315,7 @@ cdis
      1                          ,i2_pcp_type_2d(im,jm)
      1                          ,(ipcp_1d(k),k=1,min(kmax,10))
 101                 format(1x,'accum/tw/type2,3d',l2,2e11.3,2f6.1,i3,1x,
-     110i2)
+     1                     10i2)
 
                     write(6,*)' # of Points Snow/Precip/ZR = '
      1                          ,n_snw_pts,n_pcp_pts,n_zr_pts
@@ -513,7 +509,7 @@ cdis
 
         write(6,*)' Compute 3D precip type over masked area'
 
-        call cpt_pcp_type_3d(temp_3d,rh_3d,pressures_mb,grid_ra_ref
+        call cpt_pcp_type_3d(temp_3d,rh_3d,pres_3d,grid_ra_ref
      1          ,l_mask,grid_spacing_cen_m
      1          ,imax,jmax,kmax,i2_cldpcp_type_3d,istatus)
         if(istatus .ne. 1)then

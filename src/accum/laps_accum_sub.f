@@ -229,7 +229,7 @@ c read in laps lat/lon and topo
         else ! Valid storm total start time in comment
             i4_prev_total = i4time_beg - i4time_start_tot
             if(i4_prev_total .gt. 48*3600)then
-                rate_thresh = .001
+                rate_thresh = .0015   
             endif
         endif
 
@@ -272,16 +272,15 @@ c read in laps lat/lon and topo
             call add(precip_2d,precip_2d_tot,precip_2d_tot,NX_L,NY_L)
 
         elseif(istatus_inc .eq. 1)then
-            write(6,*)' Resetting Storm Total Accumulations to ',minutes
-     1,
-     1        ' min values'
+            write(6,*)' Resetting Storm Total Accumulations to '
+     1               ,minutes,' min values'
 
 !           Put the new reset time in the file header
             call make_fnam_lp(i4time-ilaps_cycle_time,filename,istatus)
-            comment_s = filename//' Time that storm total snow begins at
-     1.'
-            comment_r = filename//' Time that storm total precip begins 
-     1at.'
+            comment_s = filename//
+     1                  ' Time that storm total snow begins at.'
+            comment_r = filename//
+     1                  ' Time that storm total precip begins at.'
 
             call move(snow_2d  ,snow_2d_tot  ,NX_L,NY_L)
             call move(precip_2d,precip_2d_tot,NX_L,NY_L)

@@ -31,7 +31,7 @@ cdis
 cdis
 
         subroutine get_cloud_deriv(ni,nj,nk,clouds_3d,cld_hts,
-     1                          temp_3d,rh_3d_pct,heights_3d,
+     1                          temp_3d,rh_3d_pct,heights_3d,pres_3d,
      1                          istat_radar,radar_3d,grid_spacing_cen_m,       
      1                          l_mask_pcptype,ibase_array,itop_array,
      1                          iflag_slwc,slwc_3d,cice_3d,thresh_cvr,
@@ -64,6 +64,7 @@ cdis
         real*4 temp_3d(ni,nj,nk)         ! Input
         real*4 rh_3d_pct(ni,nj,nk)       ! Input
         real*4 heights_3d(ni,nj,nk)      ! Input
+        real*4 pres_3d(ni,nj,nk)         ! Input
         real*4 radar_3d(ni,nj,nk)        ! Input
 
         real*4 omega_3d(ni,nj,nk)        ! Input / Output (if l_flag_bogus_w = .true.)
@@ -143,11 +144,6 @@ cdis
         if(l_flag_bogus_w)then
             write(6,*)' Computing Cloud Bogused Omega'
         endif
-
-        do k = 1,nk
-            pressures_mb(k) = pressure_of_level(k) / 100.
-            pressures_pa(k) = pressure_of_level(k)
-        enddo ! k
 
         write(6,*)' Generating Lowest Base and Highest Top Arrays'
         do j = 1,nj
@@ -257,9 +253,9 @@ cdis
                 do k = 1,nk ! Initialize
                     temp_1d(k) = temp_3d(i,j,k)
                     heights_1d(k) = heights_3d(i,j,k)
-
+                    pressures_mb(k) = pres_3d(i,j,k) / 100.
+                    pressures_pa(k) = pres_3d(i,j,k)
                     cloud_type_1d(k) = 0
-
                 enddo
 
 !               cloud_ceil(i,j) = 3000. ! Dummied in for testing
@@ -512,7 +508,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
             write(6,*)' Computing 3D Precip type'
 
-            call cpt_pcp_type_3d(temp_3d,rh_3d_pct,pressures_mb
+            call cpt_pcp_type_3d(temp_3d,rh_3d_pct,pres_3d
      1                  ,radar_3d,l_mask_pcptype,grid_spacing_cen_m       
      1                  ,ni,nj,nk,cldpcp_type_3d,istatus)
             if(istatus .ne. 1)then
@@ -560,7 +556,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         end
 
 
-        subroutine cpt_pcp_type_3d(temp_3d,rh_3d_pct,pressures_mb
+        subroutine cpt_pcp_type_3d(temp_3d,rh_3d_pct,pres_3d
      1  ,radar_3d,l_mask,grid_spacing_cen_m
      1  ,ni,nj,nk,cldpcp_type_3d,istatus)
 
@@ -571,10 +567,10 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 !       This program modifies the most significant 4 bits of the integer
 !       array by inserting multiples of 16.
 
-        real*4 temp_3d(ni,nj,nk)
-        real*4 rh_3d_pct(ni,nj,nk)
-        real*4 pressures_mb(nk)
-        integer cldpcp_type_3d(ni,nj,nk) ! Output
+        real*4 temp_3d(ni,nj,nk)                          ! Input
+        real*4 rh_3d_pct(ni,nj,nk)                        ! Input
+        real*4 pres_3d(ni,nj,nk)                          ! Input
+        integer cldpcp_type_3d(ni,nj,nk)                  ! Output
         real*4 radar_3d(ni,nj,nk)
         integer*4 itype
         logical l_mask(ni,nj) ! Used for "Potential" Precip Type
@@ -625,7 +621,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 !                   Set refreezing flag
                     t_c         = temp_3d(i,j,k) - zero_c
                     td_c        = DWPT(t_c,rh_3d_pct(i,j,k))
-                    pressure_mb = pressures_mb(k)
+                    pressure_mb = pres_3d(i,j,k) / 100.
 
                     thresh_melt_c =
      1                  wb_melting_threshold(t_c,radar_3d(i,j,k))
