@@ -78,8 +78,10 @@ cdis
       integer*4 max_obs
 !     parameter (max_obs = 40000)       
       include 'barnesob.inc'
-      type (barnesob) obs_point(max_obs)                           
-      type (barnesob) obs_barnes(max_obs)                           
+      type (barnesob) obs_point(max_obs)      ! Full Wind Obs  - Non-radar data
+      type (barnesob) obs_point_diff(max_obs) ! Difference Obs - Non-radar data
+      type (barnesob) obs_barnes(max_obs)     ! Difference Obs - All Data
+      type (barnesob) obs_radar(max_obs)      ! Difference Obs - Radar data
 
       integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
@@ -535,9 +537,9 @@ csms$>       rms_thresh , out>:default=ignore)  begin
                   n_qc_total_good = n_qc_total_good + 1
 
 !                 Assign data structure element (using difference ob)
-                  obs_barnes(n_qc_total_good) = obs_point(i_ob)
-                  obs_barnes(n_qc_total_good)%value(1) = u_diff
-                  obs_barnes(n_qc_total_good)%value(2) = v_diff
+                  obs_point_diff(n_qc_total_good) = obs_point(i_ob)
+                  obs_point_diff(n_qc_total_good)%value(1) = u_diff
+                  obs_point_diff(n_qc_total_good)%value(2) = v_diff
 
                   if(n_qc_total_good .le. 500 .OR. 
      1               n_qc_total_good .eq. (n_qc_total_good/10)*10)then
@@ -555,7 +557,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
      1                  ,u_laps_bkg(i,j,k)
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
-     1                  ,obs_barnes(n_qc_total_good)%weight
+     1                  ,obs_point_diff(n_qc_total_good)%weight
 302                   continue
                   endif
 
@@ -602,24 +604,24 @@ csms$serial end
           call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p          ! I
-     1                              ,n_var,max_obs,obs_barnes         ! I/O
+     1                              ,n_var,max_obs,obs_point_diff     ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
 
-          if(ncnt_total .ne. n_qc_good_total)then
-              write(6,*)' WARNING: ncnt_total .ne. n_qc_good_total'
-     1                 ,ncnt_total,n_qc_good_total
+          if(ncnt_total .ne. n_qc_total_good)then
+              write(6,*)' WARNING: ncnt_total .ne. n_qc_total_good'
+     1                 ,ncnt_total,n_qc_total_good
           endif
 
       endif
 
       call get_inst_err2(r_missing_data                               ! I
-     1                  ,obs_barnes,max_obs,n_qc_total_good           ! I
+     1                  ,obs_point_diff,max_obs,n_qc_total_good       ! I
      1                  ,rms_thresh_norm                              ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
       call barnes_multivariate(varbuff                                ! O
-     1        ,n_var,ncnt_total,obs_barnes                            ! I
+     1        ,n_var,ncnt_total,obs_point_diff                        ! I
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1        ,varobs_diff_spread                                     ! O (aerr)
      1        ,wt_p,fnorm_dum,n_fnorm_dum                             ! I
@@ -707,6 +709,10 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
 
 !         Take the data from all the radars and add the derived radar obs into
 !         uobs_diff_spread and vobs_diff_spread (varobs_diff_spread)
+          if(l_point_struct)then
+              wt_p_radar = r_missing_data                 ! Initialize
+          endif
+
           call insert_derived_radar_obs(
      1         mode                                       ! Input
      1        ,n_radars,max_radars,idx_radar_a            ! Input
@@ -740,18 +746,42 @@ csms$serial(<rms_thresh, out>:default=ignore)  begin
 
               write(6,*)' Calling barnes with single radar obs added'       
 
-              call get_inst_err(imax,jmax,kmax,r_missing_data         ! I
-     1                         ,wt_p_radar,rms_thresh_norm            ! I
-     1                         ,rms_inst,rms_thresh)                  ! O
+!             call get_inst_err(imax,jmax,kmax,r_missing_data         ! I
+!    1                         ,wt_p_radar,rms_thresh_norm            ! I
+!    1                         ,rms_inst,rms_thresh)                  ! O
 
 csms$serial end
 
-              call arrays_to_barnesobs(imax,jmax,kmax                 ! I
+              if(l_point_struct)then
+                  call arrays_to_barnesobs(imax,jmax,kmax             ! I
+     1                              ,r_missing_data                   ! I
+     1                              ,varobs_diff_spread,wt_p_radar    ! I
+     1                              ,n_var,max_obs,obs_radar          ! I/O
+     1                              ,ncnt_radar,weight_radar          ! O
+     1                              ,istatus)                         ! O
+
+!                 Combine radar and non-radar data structures
+                  obs_barnes = obs_point_diff
+                  ncnt_total = n_qc_total_good
+
+                  do i = 1,ncnt_radar
+                      ncnt_total = ncnt_total + 1
+                      obs_barnes(ncnt_total) = obs_radar(i)
+                  enddo ! i
+
+              else
+                  call arrays_to_barnesobs(imax,jmax,kmax             ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_radar    ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
+              endif
+
+              call get_inst_err2(r_missing_data                       ! I
+     1                  ,obs_barnes,max_obs,ncnt_total                ! I
+     1                  ,rms_thresh_norm                              ! I
+     1                  ,rms_inst,rms_thresh)                         ! O
 
               call barnes_multivariate(varbuff                           ! O
      1           ,n_var,ncnt_total,obs_barnes                            ! I
@@ -790,6 +820,10 @@ csms$>                    out>:default=ignore) begin
 
 !         Take the data from all the radars and add the derived radar obs into
 !         uobs_diff_spread and vobs_diff_spread (varobs_diff_spread)
+          if(l_point_struct)then
+              wt_p_radar = r_missing_data                 ! Initialize
+          endif
+
           call insert_derived_radar_obs(
      1         mode                                       ! Input
      1        ,n_radars,max_radars,idx_radar_a            ! Input
@@ -826,18 +860,43 @@ csms$serial(<rms_thresh, out>:default=ignore)  begin
  401          format(1x,' Analyzing with ',i5
      1                 ,' multi-doppler grid points')     
 
-              call get_inst_err(imax,jmax,kmax,r_missing_data           ! I
-     1                         ,wt_p_radar,rms_thresh_norm              ! I
-     1                         ,rms_inst,rms_thresh)                    ! O
+!             call get_inst_err(imax,jmax,kmax,r_missing_data           ! I
+!    1                         ,wt_p_radar,rms_thresh_norm              ! I
+!    1                         ,rms_inst,rms_thresh)                    ! O
 
 csms$serial end
 
-              call arrays_to_barnesobs(imax,jmax,kmax                   ! I
+              if(l_point_struct)then
+                  call arrays_to_barnesobs(imax,jmax,kmax             ! I
+     1                              ,r_missing_data                   ! I
+     1                              ,varobs_diff_spread,wt_p_radar    ! I
+     1                              ,n_var,max_obs,obs_radar          ! I/O
+     1                              ,ncnt_radar,weight_radar          ! O
+     1                              ,istatus)                         ! O
+
+!                 Combine radar and non-radar data structures
+                  obs_barnes = obs_point_diff
+                  ncnt_total = n_qc_total_good
+
+                  do i = 1,ncnt_radar
+                      ncnt_total = ncnt_total + 1
+                      obs_barnes(ncnt_total) = obs_radar(i)
+                  enddo ! i
+
+              else
+                  call arrays_to_barnesobs(imax,jmax,kmax               ! I
      1                                ,r_missing_data                   ! I
      1                                ,varobs_diff_spread,wt_p_radar    ! I
      1                                ,n_var,max_obs,obs_barnes         ! I/O
      1                                ,ncnt_total,weight_total          ! O
      1                                ,istatus)                         ! O
+
+              endif
+
+              call get_inst_err2(r_missing_data                         ! I
+     1                  ,obs_barnes,max_obs,ncnt_total                  ! I
+     1                  ,rms_thresh_norm                                ! I
+     1                  ,rms_inst,rms_thresh)                           ! O
 
               call barnes_multivariate(varbuff                          ! O
      1          ,n_var,ncnt_total                                       ! I
@@ -893,6 +952,10 @@ csms$>                                     :default=ignore)  begin
 
 !         Take the data from all the radars and add the derived radar obs into
 !         uobs_diff_spread and vobs_diff_spread
+          if(l_point_struct)then
+              wt_p_radar = r_missing_data                 ! Initialize
+          endif
+
           call insert_derived_radar_obs(
      1         mode                                       ! Input
      1        ,n_radars,max_radars,idx_radar_a            ! Input
@@ -918,9 +981,9 @@ csms$>                                     :default=ignore)  begin
 
           write(6,*)' Calling barnes with single+multi radar obs added'       
 
-          call get_inst_err(imax,jmax,kmax,r_missing_data             ! I
-     1                     ,wt_p_radar,rms_thresh_norm                ! I
-     1                     ,rms_inst,rms_thresh)                      ! O
+!         call get_inst_err(imax,jmax,kmax,r_missing_data             ! I
+!    1                     ,wt_p_radar,rms_thresh_norm                ! I
+!    1                     ,rms_inst,rms_thresh)                      ! O
 
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 9 processor=',me
@@ -928,12 +991,37 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 10 processor=',me
 
-          call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
+          if(l_point_struct)then
+              call arrays_to_barnesobs(imax,jmax,kmax             ! I
+     1                              ,r_missing_data                   ! I
+     1                              ,varobs_diff_spread,wt_p_radar    ! I
+     1                              ,n_var,max_obs,obs_radar          ! I/O
+     1                              ,ncnt_radar,weight_radar          ! O
+     1                              ,istatus)                         ! O
+
+!             Combine radar and non-radar data structures
+              obs_barnes = obs_point_diff
+              ncnt_total = n_qc_total_good
+
+              do i = 1,ncnt_radar
+                  ncnt_total = ncnt_total + 1
+                  obs_barnes(ncnt_total) = obs_radar(i)
+              enddo ! i
+
+          else
+              call arrays_to_barnesobs  (imax,jmax,kmax               ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_radar    ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
+
+          endif
+
+          call get_inst_err2(r_missing_data                           ! I
+     1                  ,obs_barnes,max_obs,ncnt_total                ! I
+     1                  ,rms_thresh_norm                              ! I
+     1                  ,rms_inst,rms_thresh)                         ! O
 
           call barnes_multivariate(varbuff                            ! O
      1       ,n_var,ncnt_total,obs_barnes                             ! I
