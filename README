@@ -3603,7 +3603,7 @@ Process humid:  LQ3  SH   sh      21  Specific Humidity
 
 Process wind:   LW3  U3   u       21  Wind u (wrt GRID NORTH)
 		     V3   v       21  Wind v (wrt GRID EAST)
-          	     OM   w       21  Wind omega 
+          	     OM   om      21  Wind omega 
 
                 LWM  SU   u        1  Surface wind u (wrt GRID NORTH)
                      SV   v        1  Surface wind v (wrt GRID EAST)
