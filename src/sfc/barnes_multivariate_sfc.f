@@ -145,7 +145,7 @@
 
         call barnes_multivariate(
      1                      t_2d                                  ! Outputs
-     1                     ,n_var ! ,n_obs_valid,obs_barnes_valid ! Input
+     1                     ,n_var,n_obs_valid,obs_barnes_valid    ! Input
      1                     ,ni,nj,nk,grid_spacing_cen_m           ! Inputs
      1                     ,rep_pres_intvl                        ! Input
      1                     ,to_2d,wt_2d,fnorm,n_fnorm             ! Inputs
