@@ -534,7 +534,9 @@ c
      &,standard_longitude,sw,ne,cgrddef,istatus)
 
       if(gproj.eq.'LC')c6_maproj='lambrt'
-      if(gproj.eq.'PS')c6_maproj='pltstr'
+c corrected line below to read plrstr instead of pltstr
+c (BLS, 22 Mar 04)
+      if(gproj.eq.'PS')c6_maproj='plrstr'
       if(gproj.eq.'MC')c6_maproj='merctr' 
 cc
 c if RUC_NATIVE
