@@ -1,4 +1,4 @@
-netcdf fsf {
+netcdf rsf {
 
     dimensions:
         record = unlimited,
@@ -13,62 +13,62 @@ netcdf fsf {
         //	LAPS Fcst sfc u wind component
         //      bigfile name = uw
 	float                                  
-            u(record,z,y,x);
-            u:_FillValue = 1.e+37f;
-            u:long_name="LAPS Fcst sfc u wind component";
-            u:units="m/s";
-            u:valid_range= -200.f, 200.f;
-            u:LAPS_var="U";
-            u:lvl_coord="AGL";
-	    u:LAPS_units="M/S";
+            usf(record,z,y,x);
+            usf:_FillValue = 1.e+37f;
+            usf:long_name="LAPS Fcst sfc u wind component";
+            usf:units="m/s";
+            usf:valid_range= -200.f, 200.f;
+            usf:LAPS_var="U";
+            usf:lvl_coord="AGL";
+	    usf:LAPS_units="M/S";
                 	        
         //	LAPS Fcst sfc v wind component
         //      bigfile name = vw
 	float                                  
-            v(record,z,y,x);
-            v:_FillValue = 1.e+37f;
-            v:long_name="LAPS Fcst sfc v wind component";
-            v:units="m/s";
-            v:valid_range= -200.f, 200.f;
-            v:LAPS_var="V";
-            v:lvl_coord="AGL";
-	    v:LAPS_units="M/S";
+            vsf(record,z,y,x);
+            vsf:_FillValue = 1.e+37f;
+            vsf:long_name="LAPS Fcst sfc v wind component";
+            vsf:units="m/s";
+            vsf:valid_range= -200.f, 200.f;
+            vsf:LAPS_var="V";
+            vsf:lvl_coord="AGL";
+	    vsf:LAPS_units="M/S";
                 	        
         //	LAPS Fcst sfc w wind component
         //      bigfile name = ww
 	float                                  
-            w(record,z,y,x);
-            w:_FillValue = 1.e+37f;
-            w:long_name="LAPS Fcst sfc w wind component";
-            w:units="m/s";
-            w:valid_range= -100.f, 100.f;
-            w:LAPS_var="W";
-            w:lvl_coord="AGL";
-	    w:LAPS_units="M/S";
+            wsf(record,z,y,x);
+            wsf:_FillValue = 1.e+37f;
+            wsf:long_name="LAPS Fcst sfc w wind component";
+            wsf:units="m/s";
+            wsf:valid_range= -100.f, 100.f;
+            wsf:LAPS_var="W";
+            wsf:lvl_coord="AGL";
+	    wsf:LAPS_units="M/S";
                 	        
         //	LAPS Fcst sfc temperature
         //      bigfile name = t
 	float                                  
-            t(record,z,y,x);
-            t:_FillValue = 1.e+37f;
-            t:long_name="LAPS Fcst sfc temperature";
-            t:units="Kelvins";
-            t:valid_range= 0.f, 500.f;
-            t:LAPS_var="T";
-            t:lvl_coord="AGL";
-	    t:LAPS_units="K";
+            tsf(record,z,y,x);
+            tsf:_FillValue = 1.e+37f;
+            tsf:long_name="LAPS Fcst sfc temperature";
+            tsf:units="Kelvins";
+            tsf:valid_range= 0.f, 500.f;
+            tsf:LAPS_var="T";
+            tsf:lvl_coord="AGL";
+	    tsf:LAPS_units="K";
                 	        
         //	LAPS Fcst surface dewpoint
         //      bigfile name = dpt
 	float                                  
-            td(record,z,y,x);
-            td:_FillValue = 1.e+37f;
-            td:long_name="LAPS Fcst sfc dewpoint";
-            td:units="Kelvins";
-            td:valid_range= 0.f, 500.f;
-            td:LAPS_var="TD";
-            td:lvl_coord="AGL";
-	    td:LAPS_units="K";
+            dsf(record,z,y,x);
+            dsf:_FillValue = 1.e+37f;
+            dsf:long_name="LAPS Fcst sfc dewpoint";
+            dsf:units="Kelvins";
+            dsf:valid_range= 0.f, 500.f;
+            dsf:LAPS_var="TD";
+            dsf:lvl_coord="AGL";
+	    dsf:LAPS_units="K";
 
         //      LAPS Fcst relative humidity       //
         //      bigfile name = rh
@@ -109,14 +109,14 @@ netcdf fsf {
         //      LAPS Fcst MSL Pressure            //
         //      bigfile name = mslp
         float
-            msl(record,z,y,x);
-            msl:_FillValue = 1.e+37f;
-            msl:long_name="LAPS Fcst MSL pressure";
-            msl:units="pascals";
-            msl:valid_range= 0.f, 100000.f;
-            msl:LAPS_var="MSL";
-            msl:lvl_coord="MSL";
-            msl:LAPS_units="PA";
+            slp(record,z,y,x);
+            slp:_FillValue = 1.e+37f;
+            slp:long_name="LAPS Fcst MSL pressure";
+            slp:units="pascals";
+            slp:valid_range= 0.f, 100000.f;
+            slp:LAPS_var="MSL";
+            slp:lvl_coord="MSL";
+            slp:LAPS_units="PA";
 
         //	LAPS Fcst 1500m pressure
         //      bigfile name = p (at level "FH  1500")
@@ -133,14 +133,14 @@ netcdf fsf {
         //      LAPS Fcst surface pressure (looks like topo)      //
         //      bigfile name = p (at level "SFC")
         float
-            ps(record,z,y,x);
-            ps:_FillValue = 1.e+37f;
-            ps:long_name="LAPS Fcst sfc pressure";
-            ps:units="pascals";
-            ps:valid_range= 0.f, 100000.f;
-            ps:LAPS_var="PS";
-            ps:lvl_coord="AGL";
-            ps:LAPS_units="PA";
+            psf(record,z,y,x);
+            psf:_FillValue = 1.e+37f;
+            psf:long_name="LAPS Fcst sfc pressure";
+            psf:units="pascals";
+            psf:valid_range= 0.f, 100000.f;
+            psf:LAPS_var="PS";
+            psf:lvl_coord="AGL";
+            psf:LAPS_units="PA";
 
         //      LAPS Fcst integrated liquid water depth         
         //      bigfile name = ilw
@@ -396,16 +396,16 @@ netcdf fsf {
             fd:LAPS_units="NONE";
 
         //      Model Topography                    //
-        //      bigfile name = staticTopo
+        //      bigfile name = not used
         float
             ter(record,z,y,x);
             ter:_FillValue = 1.e+37f;
-            ter:long_name="terrain height";
-            ter:units="meters";
-            ter:valid_range= -200.f, 20000.f;
+            ter:long_name="Terrain Height";
+            ter:units="none";
+            ter:valid_range= 0.f, 20.f;
             ter:LAPS_var="TER";
             ter:lvl_coord="MSL";
-            ter:LAPS_units="METERS";           
+            ter:LAPS_units="meters";
 
         //	LAPS variables
                 	        
@@ -416,17 +416,17 @@ netcdf fsf {
             kdim;
 
         char
-            u_comment(record,z,namelen),
-            v_comment(record,z,namelen),
-            w_comment(record,z,namelen),
-            t_comment(record,z,namelen),
-            td_comment(record,z,namelen),
+            usf_comment(record,z,namelen),
+            vsf_comment(record,z,namelen),
+            wsf_comment(record,z,namelen),
+            tsf_comment(record,z,namelen),
+            dsf_comment(record,z,namelen),
             rh_comment(record,z,namelen),
             lcb_comment(record,z,namelen),
             lct_comment(record,z,namelen),
-            msl_comment(record,z,namelen),
+            slp_comment(record,z,namelen),
             p_comment(record,z,namelen),
-            ps_comment(record,z,namelen),
+            psf_comment(record,z,namelen),
             lil_comment(record,z,namelen),
             tpw_comment(record,z,namelen),
             r01_comment(record,z,namelen),
@@ -455,24 +455,24 @@ netcdf fsf {
         //	inventory variables
 
         short
-            u_fcinv(record, z);
-            u_fcinv:_FillValue= 0s;
+            usf_fcinv(record, z);
+            usf_fcinv:_FillValue= 0s;
               	
         short
-            v_fcinv(record, z);
-            v_fcinv:_FillValue= 0s;
+            vsf_fcinv(record, z);
+            vsf_fcinv:_FillValue= 0s;
               	
         short
-            w_fcinv(record, z);
-            w_fcinv:_FillValue= 0s;
+            wsf_fcinv(record, z);
+            wsf_fcinv:_FillValue= 0s;
               	
         short
-            t_fcinv(record, z);
-            t_fcinv:_FillValue= 0s;
+            tsf_fcinv(record, z);
+            tsf_fcinv:_FillValue= 0s;
               	
         short
-            td_fcinv(record, z);
-            td_fcinv:_FillValue= 0s;
+            dsf_fcinv(record, z);
+            dsf_fcinv:_FillValue= 0s;
               	
         short
             rh_fcinv(record, z);
@@ -487,16 +487,16 @@ netcdf fsf {
             lct_fcinv:_FillValue= 0s;
 
         short
-            msl_fcinv(record, z);
-            msl_fcinv:_FillValue= 0s;
+            slp_fcinv(record, z);
+            slp_fcinv:_FillValue= 0s;
 
         short
             p_fcinv(record, z);
             p_fcinv:_FillValue= 0s;
               	
         short
-            ps_fcinv(record, z);
-            ps_fcinv:_FillValue= 0s;
+            psf_fcinv(record, z);
+            psf_fcinv:_FillValue= 0s;
 
         short
             lil_fcinv(record, z);
@@ -582,9 +582,10 @@ netcdf fsf {
             fd_fcinv(record, z);
             fd_fcinv:_FillValue= 0s;
 
-        short
+         short
             ter_fcinv(record, z);
-            ter_fcinv:_FillValue= 0s;   
+            ter_fcinv:_FillValue= 0s;
+
 
         //	list of grid levels
 
