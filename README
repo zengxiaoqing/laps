@@ -91,8 +91,9 @@
          3.3.7 ..................  ACCUM 
          3.3.8 ..................  SOIL MOISTURE
          3.3.9 ..................  BALANCE
-         3.4 ..............  Model Initialization
+         3.4 ..............  Model Initialization & Postprocessing
          3.4.1 ..................  LAPSPREP
+         3.4.2 ..................  LFMPOST
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Output Variables and netCDF File Organization 
 
@@ -260,7 +261,10 @@
      The 'lapsplot.exe' executable is an interactive program that reads in
      the NetCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
      file can be displayed using other NCAR graphics utilities like 'ctrans'
-     and 'idt'.
+     and 'idt'. The 'gmeta' file can be converted into a GIF/JPEG file
+     for web display by using 'ctrans' in conjunction with 'netpbm' or another
+     similar method. We are starting to put some of our web related scripts
+     (for analyses) into the repository such as 'etc/www/followup_ncarg.sh'.
 
      'Lapsplot' is designed to work with version 3.2 (or higher) of NCAR 
      graphics. The environment variable $NCARG_ROOT should be set when
@@ -3441,12 +3445,12 @@ Reference: McGinley, J.A. and J.R. Smart, 2001: On providing a cloud-balanced
 initial condition for diabatic initialization. Preprints, 18th Conf. on Weather
 Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc. 
 
-------- 3.4  -------------  Model Initialization --------------------------
+------- 3.4  ----  Model Initialization & Postprocessing ---------------------
 
    The main FSL contacts for information on how we use the analyses to 
-   initialize the forecasts are as follows: Brent Shaw for MM5, Paul Schultz 
-   for RAMS/SFM, and Adrian Marroquin for ETA. The models themselves are not
-   included in this tar file.
+   initialize the forecasts are as follows: Brent Shaw for MM5/WRF, 
+   Paul Schultz for RAMS/SFM, and Adrian Marroquin for ETA. The models 
+   themselves are not included in this tar file.
 
 ------ 3.4.1 --------------LAPSPREP------------------------------------------
 
@@ -3534,6 +3538,16 @@ Parameter namelist file: 'static/lapsprep.nl'
 Source directory: 'laps/src/lapsprep'
 
    Please contact the author for additional information
+
+------ 3.4.2 -------------- LFMPOST ------------------------------------------
+
+Process: lfmpost.exe - Post-processes MM5/WRF model forecast files into formats
+                       that can be used to feed back into LAPS analysis or
+                       plotting software.
+   
+   (author: Brent Shaw)
+
+Source directory: 'laps/src/lfmpost'
 
 -------- 4.0 --  Porting code mods from LAPS users back to FSL --------------
 
