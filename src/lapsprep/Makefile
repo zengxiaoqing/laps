@@ -43,7 +43,7 @@ RM=rm -f
 
 .f.o:
 			$(RM) $@
-			$(FC) -c $(FFLAGS90) $*.f
+			$(FC) -c $(FREEF) $*.f
 
 EXE=lapsprep.exe
 FSRC=lapsprep.f   
@@ -67,7 +67,7 @@ $(EXE):			$(FOBJS) $(FMOD)
 debug:	
 	($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
  	"LAPSLIBS	=	$(DBLAPSLIB)" 	\
-	"FFLAGS90	=	$(DBFLAGS90)" 	)
+	"FREEF          =	$(DBFREEF)" 	)
 
 lapsprep.o:		$(FMOD)
 
