@@ -222,7 +222,8 @@ c
 c.....	Grids for the variational analyses of rp, u, v
 c
 	real p_a(ni,nj), u_a(ni,nj), v_a(ni,nj)
-c
+	real p_a_orig(ni,nj), u_a_orig(ni,nj), v_a_orig(ni,nj) ! Reference
+c                                                              ! Pascals & M/S
 c.....	Grids for the derived quantities.
 c
 	real du(ni,nj), dv(ni,nj), spd(ni,nj)
@@ -238,13 +239,14 @@ c
 c
 c.....	Grids for the background fields.
 c
-        real u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
+        real u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)  ! kt
         real wt_u(ni,nj), wt_v(ni,nj), wt_t(ni,nj), wt_td(ni,nj)
         real rp_bk(ni,nj), mslp_bk(ni,nj), sp_bk(ni,nj)
         real wt_rp(ni,nj), wt_mslp(ni,nj)
         real vis_bk(ni,nj), wt_vis(ni,nj)
 	real tgd_bk_f(ni,nj)
 	real tb8_bk(ni,nj)
+        real u_bk_ms(ni,nj), v_bk_ms(ni,nj)                       ! m/s
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
 c
@@ -255,7 +257,7 @@ c
 	real f(ni,nj), fu(ni,nj), fv(ni,nj), div(ni,nj)
 	real a(ni,nj), z(ni,nj), dx(ni,nj), dy(ni,nj)
 	real nu(ni,nj),nv(ni,nj), h7(ni,nj)
-	real t5(ni,nj), t7(ni,nj), td7(ni,nj)                  ! Deg K
+	real t5(ni,nj), t7(ni,nj), td7(ni,nj)                     ! Deg K
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
@@ -544,7 +546,7 @@ c	return
 	if(ibt .eq. 0) gamma = 0.
         call spline(t,t1_f,t_bk,alf,alf2a,beta,gamma,tb81,cormax,err,
      &        imax,jmax,rms_thresh_norm,bad_tm,imiss,mxstn,obs_error_t,
-     &        name)
+     &        name,topo,ldf)
 c
 cc	go to 887
 c
@@ -565,7 +567,7 @@ c	beta_td = 3.0
 	beta = 100.  
         call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,err, !gamma = 0
      &        imax,jmax,rms_thresh_norm,bad_tmd,imiss,mxstn,
-     &        obs_error_td,name)
+     &        obs_error_td,name,topo,ldf)
 c
  887	continue
 c
@@ -694,7 +696,8 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(u,u1,u_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
-     &        rms_thresh_norm,bad_uw,imiss,mxstn,obs_error_wind,name)       
+     &        rms_thresh_norm,bad_uw,imiss,mxstn,obs_error_wind,name,
+     &        topo,ldf)       
 c
 	print *,' '
 	print *,'  At spline call for v (kt)'
@@ -704,7 +707,8 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(v,v1,v_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
-     &        rms_thresh_norm,bad_vw,imiss,mxstn,obs_error_wind,name)        
+     &        rms_thresh_norm,bad_vw,imiss,mxstn,obs_error_wind,name,
+     &        topo,ldf)        
 c
 	print *,' '
 	print *,'  At spline call for red_p (mb)'
@@ -715,7 +719,7 @@ c
 	beta = 100.
 	call spline(rp,rp1,rp_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,
      &        jmax,rms_thresh_norm,bad_rp,imiss,mxstn,obs_error_redp,
-     &        name)     
+     &        name,topo,ldf)     
 c
 	print *,' '
 	print *,'  At spline call for msl p (mb)'
@@ -725,7 +729,7 @@ cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 	beta = 100.
 	call spline(mslp,mslp1,mslp_bk,alf,alf2a,beta,zcon,z,cormax,
      &      err,imax,jmax,rms_thresh_norm,bad_mp,imiss,mxstn,
-     &      obs_error_mslp,name)
+     &      obs_error_mslp,name,topo,ldf)
 c
 !       Call routine to check pres arrays and adjust psfc based on mslp/mslp_bk
         call pstn_anal(back_mp,back_sp,mslp_bk,mslp,imax,jmax
@@ -740,14 +744,14 @@ c
 	beta = 100.
 	call spline(vis,vis1,vis_bk,alf,alf2a,beta,zcon,z,cormax,err,
      &        imax,jmax,rms_thresh_norm,bad_vs,imiss,mxstn,
-     &        obs_error_vis,name)
+     &        obs_error_vis,name,topo,ldf)
 
         write(6,*)' Analyze TGD observations'
         bad_tgd = 3.0
         call barnes_multivariate_sfc_jacket('tgd',obs,mxstn,tgd_bk_f
      1                                     ,badflag,imax,jmax
      1                                     ,rms_thresh_norm,bad_tgd
-     1                                     ,d2,istatus)
+     1                                     ,topo,ldf,d2,istatus)
 	call conv_f2k(d2,tgd_k,imax,jmax)                  ! conv F to K
 c
 c.....	If no background fields are available, skip over the variational
@@ -763,7 +767,7 @@ c
      1             ,ilaps_bk,del
 	  go to 500
 	endif
-c
+
 cv....	This is the where the variational analysis stuff starts.
 c
 c.....	Compute and save the wind changes.
@@ -776,14 +780,20 @@ c
 	  else
 	    call multcon(rp,100.,imax,jmax) 	!convert pressure to Pa.
 	    call move(rp,p_a,imax,jmax)
-	    call conv_kt2ms(u,u,imax,jmax)	!convert winds from kt to m/sec
-	    call conv_kt2ms(v,v,imax,jmax)	!   "      "     "   "     "
-	    call conv_kt2ms(u_bk,u_bk,imax,jmax)!   "      "     "   "     "
-	    call conv_kt2ms(v_bk,v_bk,imax,jmax)!   "      "     "   "     "
+	    call conv_kt2ms(u,u,imax,jmax)	   ! convert winds (kt -> m/s)
+	    call conv_kt2ms(v,v,imax,jmax)	   !    "      "    "      "  
+	    call conv_kt2ms(u_bk,u_bk_ms,imax,jmax)!    "      "    "      "  
+	    call conv_kt2ms(v_bk,v_bk_ms,imax,jmax)!    "      "    "      " 
+
+!           Save the fields prior to the variational step for reference
+            u_a_orig = u      ! m/s
+            v_a_orig = v      ! m/s
+            p_a_orig = p_a    ! Pascals
+
 	  endif
 c
-	  call diff(u,u_bk,du,imax,jmax)
-	  call diff(v,v_bk,dv,imax,jmax)
+	  call diff(u,u_bk_ms,du,imax,jmax)
+	  call diff(v,v_bk_ms,dv,imax,jmax)
 c
 c.....	Compute divergence change and vorticity
 c
@@ -807,8 +817,8 @@ c	  open(51,file='../static/drag_coef.dat',
 	  read(51) akk
 	  close(51)
           ro=.667  ! ro is V/fL where L is ave data distance *4
-	  call nonlin(nu,nv,u,v,u_bk,v_bk,imax,jmax,dx,dy)
-	  call frict(fu,fv,u,v,u_bk,v_bk,imax,jmax,ak,akk)
+	  call nonlin(nu,nv,u,v,u_bk_ms,v_bk_ms,imax,jmax,dx,dy)
+	  call frict(fu,fv,u,v,u_bk_ms,v_bk_ms,imax,jmax,ak,akk)
 c
 c.....	compute forcing function
 c
@@ -865,6 +875,25 @@ c
 	call bounds(v_a,imax,jmax)
 c
 100	continue	! end loop on npass
+
+!       Compare before and after adjustments
+        call diff(u_a,u_a_orig,d1,imax,jmax)                   ! m/s
+        write(6,*)
+        write(6,*)' Stats for variational adjustment on U (m/s)'
+        call stats(d1,imax,jmax)
+
+        call diff(v_a,v_a_orig,d1,imax,jmax)                   ! m/s
+        write(6,*)
+        write(6,*)' Stats for variational adjustment on V (m/s)'
+        call stats(d1,imax,jmax)
+
+        call diff(p_a,p_a_orig,d1,imax,jmax)                   ! Pascals
+        write(6,*)
+        write(6,*)' Stats for variational adjustment on P (Pa)'
+        call stats(d1,imax,jmax)
+
+        write(6,*)
+
 500	continue	! skip to here if cold starting or no backgrnd
 c
 c.....	Channel the winds around the terrain
@@ -1280,8 +1309,7 @@ c
 	title = 'Wind Speed background verification (kt)'
 	ea = 2.00
 	call zero(d1,imax,jmax)
-	call windspeed(u_bk,v_bk,d1,imax,jmax)	! calc windspeed
- 	call conv_ms2kt(d1,d1,imax,jmax)
+	call windspeed(u_bk,v_bk,d1,imax,jmax)	! calc windspeed (kt)
 	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
