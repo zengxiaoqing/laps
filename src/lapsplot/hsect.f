@@ -744,7 +744,7 @@ cdis
         elseif(c_type .eq. 'ms' .or. c_type .eq. 'ob'
      1                          .or. c_type .eq. 'st'   )then
             i4time_plot = i4time_ref ! / laps_cycle_time * laps_cycle_time
-            c_filespec = '../lapsprd/lso/*.lso'
+            call get_filespec('lso',2,c_filespec,istatus)
             call get_file_time(c_filespec,i4time_ref,i4time_plot)
             call make_fnam_lp(i4time_plot,asc_tim_9,istatus)
 
