@@ -601,7 +601,11 @@ fint4 *status;
         free(cdlfile);
  
 /* create output file */
-        system(syscmd);
+#ifdef SMS
+       *status = pcl_system(syscmd, pcl_me());
+#else
+       system(syscmd);
+#endif
         free(syscmd);
         out_file = ncopen(fname,NC_WRITE);
         if (out_file == -1) {

@@ -35,6 +35,10 @@ cdis*/
 
 int SYSTEM ( _fcd *fstr)
 {
+#ifdef SMS
+  return (pcl_system(_fcdtocp(fstr), pcl_me()));
+#else
   return (system(_fcdtocp(fstr)));
+#endif
 }
 

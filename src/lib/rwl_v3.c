@@ -2056,7 +2056,11 @@ fint4 *status;
         if( access(filename, F_OK) != 0 ) { /* file does not exist */
 
 /*  create file, then open it */
+#ifdef SMS
+          istatus = pcl_system(syscmd, pcl_me());
+#else
           system(syscmd);
+#endif
           istatus = nc_open(filename,NC_WRITE, &cdfid);
           if (istatus != NC_NOERR) {
 	    *status = -2; /* error in file creation */ 
@@ -2071,7 +2075,11 @@ fint4 *status;
           }
           else { /* 10/14/97 for write_laps_data with no append, write over it anyway */
             if (((*called_from == 0) || (*called_from == 1)) && (*append == 0)){
+#ifdef SMS
+              istatus = pcl_system(syscmd, pcl_me());
+#else
               system(syscmd); /* added 10/14/97 */
+#endif
             }
           }
           istatus = nc_open(filename,NC_WRITE, &cdfid);
