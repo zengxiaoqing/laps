@@ -92,6 +92,7 @@ DATADIRS = log/qc \
            lapsprd/lcv \
            lapsprd/lf1 \
            lapsprd/lga \
+           lapsprd/lgb \
            lapsprd/lh3 \
            lapsprd/lh4 \
            lapsprd/lhe \
