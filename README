@@ -2103,7 +2103,8 @@ Input:
 Output:
          LSO	ascii	LAPS surface obs intermediate data file: METAR, Mesonet,
                         and Buoy/ship obs. The format of this file may be 
-                        gleaned from looking at the obs_driver code, or by 
+                        determined from looking at library access routines such
+                        as 'read_surface_data', the obs_driver code, or by 
                         looking at sample LSO files in the test data case.
 
 Sample Input/Output: May be available in the test data case.
