@@ -818,9 +818,9 @@ C CLOUDS ARE NOW IN MSL
         save summation_cover_last
 
 !       Null the changes for testing
-        layer_cover = summation_cover 
-        istatus = 1
-        return
+!       layer_cover = summation_cover 
+!       istatus = 1
+!       return
 
         if(summation_cover .eq. 0.)then ! Initializing a new cloud ob
             goto900
@@ -864,7 +864,7 @@ C CLOUDS ARE NOW IN MSL
 
         logical l_parse
 
-        character(*)string1,string2
+        character*(*) string1,string2
 
         integer slen1,slen2
 
