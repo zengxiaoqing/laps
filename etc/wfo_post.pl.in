@@ -29,11 +29,17 @@ $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
 require "$LAPSROOT/etc/run_sys.pm";
 
+require "$LAPSROOT/etc/laps_tools.pm";
+my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project_common",$LAPS_DATA_ROOT);
+my $c8_project = uc @c8_project[0];
+
 my $dsunavailable;
 if(!$opt_w){
     $fxa_sys =  &Get_env'fxa; #'
 }else{
+  if ($c8_project eq "RSA") {
     $dsunavailable = system("rsh -l fxa ds \'hostname\'");
+  }
 }
 
 $ENV{LAPS_DATA_ROOT} = shift ;
@@ -118,8 +124,10 @@ if (!$opt_w){
       }else{
         $ld = "Laps";
       }
-      $sys="rsh -l fxa ds \'/awips/fxa/bin/GridNotify $ld $filetime 0\'";
-      print "running $sys\n";
-      run_sys::run_sys("$sys >/dev/null 2>&1 &");
+      if ($c8_project eq "RSA") {
+        $sys="rsh -l fxa ds \'/awips/fxa/bin/GridNotify $ld $filetime 0\'";
+        print "running $sys\n";
+        run_sys::run_sys("$sys >/dev/null 2>&1 &");
+      }
     }
 }
