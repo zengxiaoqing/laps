@@ -5,7 +5,7 @@ use strict;
 umask 002;
 use Getopt::Long;
 
-my($LAPS_SRC_ROOT,$srcdir,$SMS,$filename,$file,@lines);
+my($LAPS_SRC_ROOT,$srcdir,$SMS,$filename,$file,@lines,@greplines,$nsms);
 my $result = GetOptions(
    "srcroot=s" => \$LAPS_SRC_ROOT,       # (required)
    "srcdir=s" => \$srcdir,               # (required)
@@ -35,7 +35,14 @@ foreach $filename (@ftnfiles){
     open(FILE,$filename) or die "Can't open $filename.";
     @lines = <FILE>;
     close FILE;
-    print "\nReading source code from file $filename\n\n";
+    @greplines = grep /csms/, @lines;
+    $nsms = @greplines;
+    print "\n$filename,$nsms\n";
+
+#   Translate with PPP only those files with SMS directives within
+    if ($nsms > 0) {
+ 
+    }
 
 }
 
