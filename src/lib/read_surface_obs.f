@@ -304,7 +304,7 @@ c
      &                   idummy,                   !WMO id number
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
-     &                   dummy                     !obs time
+     &                   idummy                    !obs time
 c
 	  read(11,919) dum   
 c
@@ -404,7 +404,7 @@ c
      &                   idummy,                   !WMO id number
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
-     &                   dummy                     !obs time
+     &                   idummy                    !obs time
 c
 	  read(11,919) dum
 c
@@ -500,7 +500,7 @@ c
      &                   idummy,                   !WMO id number
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
-     &                   dummy                     !obs time
+     &                   idummy                    !obs time
 c
 	  read(11,919) dum
 c
@@ -596,7 +596,7 @@ c
      &                   idummy,                   !WMO id number
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
-     &                   dummy                     !obs time
+     &                   idummy                    !obs time
 c
 	  read(11,919) dum
 c
@@ -696,7 +696,7 @@ c
      &                   idummy,                   !WMO id number
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
-     &                   dummy                     !obs time
+     &                   idummy                    !obs time
 c
 	  read(11,919) dum
 c
