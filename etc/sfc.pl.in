@@ -1,13 +1,36 @@
 #!@PERL@
 # @configure_input@
 
-$root = shift;
-$hr = shift;
-if (defined $root) {
-  if ($root =~ /^p$/i) {$logdir = "/data/lapb/parallel/laps/data/log";}
-  elsif ($root =~ /^o$/i) {$logdir = "/data/lapb/operational/laps/data/log";}
-  else {$logdir = $root . "/data/log"; } }
-else {$logdir = "/data/lapb/operational/laps/data/log"; } 
+# Looks in logdir (from command line) or $LAPS_DATA_ROOT/log.
+# The other command line argument is the hour of the LAPS run
+# if not current.  Both command line arguments are optional;
+# order doesn't matter.
+
+$nargs = @ARGV;
+if ($nargs == 0) {}
+elsif ($nargs == 1) {
+ $arg = shift;
+ if ($arg =~ /^[0-9]*$/) {$hr=$arg;}
+ else {$logdir = $arg;}
+ }
+elsif ($nargs == 2) {
+ $arg1 = shift;
+ $arg2 = shift;
+ if ($arg1 =~ /^[0-9]*$/) {$hr=$arg1; $logdir=$arg2;}
+ else {$hr=$arg2; $logdir=$arg1;}
+ }
+ 
+$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+
+if (defined $logdir) {
+ if ($logdir = $LAPS_DATA_ROOT) {$logdir=$logdir."/log";}
+ elsif (defined $LAPS_DATA_ROOT) {$logdir=$LAPS_DATA_ROOT."/log";}
+ else {die "Can't find path to log data.\n";}
+ }
+
+if (defined $hr) {$hr="0".$hr if (length($hr)<2);}
+
+print "logdir:  $logdir\nhr:      $hr\n";
 
 # Get the most recent log file.
 
