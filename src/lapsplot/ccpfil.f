@@ -259,7 +259,7 @@ C
      1                               ,LMAP,log_scaling,l_set_contours  ! I
      1                               ,colortable                       ! I
      1                               ,ncols                            ! I/O
-     1                               ,l_discrete                       ! I
+     1                               ,l_discrete,c5_sect               ! I
      1                               ,icol_offset)      
 C      
 C Close frame
@@ -294,7 +294,7 @@ c     Call local colorbar routine
      1                                ,LMAP,log_scaling,l_set_contours
      1                                ,colortable                      ! I
      1                                ,ncols                           ! I/O
-     1                                ,l_discrete                      ! I
+     1                                ,l_discrete,c5_sect              ! I
      1                                ,icol_offset)      
 
       include 'lapsplot.inc'
@@ -305,6 +305,7 @@ c     Call local colorbar routine
       INTEGER MREG,NREG,IWRK(LIWK)
       INTEGER MAP(LMAP),IAREA(NOGRPS),IGRP(NOGRPS)
       character*(*) colortable
+      character*5 c5_sect
       logical log_scaling, l_discrete, l_set_contours
 
       integer maxvals
@@ -329,7 +330,7 @@ C
       CALL set_image_colortable(IWKID
      1                         ,plot_parms                           ! I
      1                         ,ncols                                ! I/O
-     1                         ,l_discrete,ireverse
+     1                         ,l_discrete,ireverse,c5_sect
      1                         ,l_set_contours,colortable
      1                         ,MREG,NREG,log_scaling,icol_offset)
 C      
@@ -411,13 +412,14 @@ C
       END
       
       SUBROUTINE set_image_colortable(IWKID,plot_parms,ncols
-     1                               ,l_discrete,ireverse
+     1                               ,l_discrete,ireverse,c5_sect
      1                               ,l_set_contours,colortable
      1                               ,MREG,NREG,log_scaling,icol_offset)    
 
       include 'lapsplot.inc'
 
       character*(*) colortable
+      character*5 c5_sect
       logical log_scaling, l_discrete, l_set_contours
 C 
 C BACKGROUND COLOR
@@ -577,8 +579,12 @@ C
      1                            ,plot_parms,istatus)
 
       elseif(colortable .eq. 'omega')then       
-          if(.not. l_discrete)then
-              ncols = 59
+          if(l_discrete)then
+              ncols = 19
+          elseif(MREG*NREG .ge. 62500 .and. c5_sect .eq. 'hsect')then
+              ncols = 19
+          else
+              ncols = 79
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
