@@ -315,10 +315,13 @@ C
       REAL*4      wsout                          (NLVL_OUT)
 
       character*9 a9time_raob
+      character*8 c8_obstype
 
 !     Generate info for Sorting/QC, write original mandatory data to log file
       write(6,*)
       n_good_levels = 0
+
+      c8_obstype = 'RAOB'
 
       write(6,*)' Subroutine sort_and_write - initial mandatory data'       
       do ilevel = 1,nummand(isnd)
@@ -374,13 +377,13 @@ C
       write(6,511,err=998)
      1             wmostanum(isnd),n_good_levels,stalat(isnd)
      1            ,stalon(isnd),staelev(isnd),(staname(ic,isnd),ic=1,5)       
-     1            ,a9time_raob
+     1            ,a9time_raob,c8_obstype
       write(11,511,err=998)
      1             wmostanum(isnd),n_good_levels,stalat(isnd)
      1            ,stalon(isnd),staelev(isnd),(staname(ic,isnd),ic=1,5)       
-     1            ,a9time_raob
+     1            ,a9time_raob,c8_obstype
 
-  511 format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9)
+  511 format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9,1x,a8)
 
 
 !     Write out all sorted data for mandatory + sigw levels. 

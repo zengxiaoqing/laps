@@ -28,6 +28,7 @@ C
       character*5 c5_staid
       character*11 a11_raob_reltime,a11_pibal_reltime
       character*9 a9time_raob, a9time_file
+      character*8 c8_obstype
 
       call get_r_missing_data(r_missing_data,istatus)
       if (istatus .ne. 1) then
@@ -40,6 +41,8 @@ C
           write(6,*)' Error in get_domain_perimeter'
           return
       endif
+
+      c8_obstype = 'RAOB'
 
       NRECS = 0
 
@@ -67,12 +70,12 @@ C
 
       write(6,511,err=997)
      1             iwmostanum,n_good_levels,stalat
-     1            ,stalon,staelev,c5_staid,a9time_raob
+     1            ,stalon,staelev,c5_staid,a9time_raob,c8_obstype
       write(11,511,err=997)
      1             iwmostanum,n_good_levels,stalat
-     1            ,stalon,staelev,c5_staid,a9time_raob
+     1            ,stalon,staelev,c5_staid,a9time_raob,c8_obstype
 
-  511 format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
+  511 format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
 
       if(.true.)then ! Write out stuff for first level

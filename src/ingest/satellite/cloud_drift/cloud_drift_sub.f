@@ -41,8 +41,7 @@
       rlon = -rlon
 
       if(rlat .le. rnorth .and. rlat .ge. south .and.
-     1   rlon .ge. west   .and. rlon .le. east      
-     1                                                             )then       
+     1   rlon .ge. west   .and. rlon .le. east        )then       
           write(6,*)
           write(6,*)' cloud_drift #',i
 
@@ -51,7 +50,7 @@
           goto 900
       endif
 
-      if(c2_sat_type .ne. 'IR')then
+      if(c2_sat_type .ne. 'IR' .and. c2_sat_type .ne. 'VI')then       
           write(6,*)' Bad Sat Type ',c2_sat_type
           goto 900
       endif
