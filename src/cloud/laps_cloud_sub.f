@@ -122,7 +122,7 @@ cdis
 
         parameter       (default_clear_cover = .001)
 
-        real*4 thresh_cvr_base,thresh_cvr_top,thresh_cvr_ceiling
+        real*4 thresh_cvr_base,thresh_cvr_top
         parameter (thresh_cvr_base = 0.1)
         parameter (thresh_cvr_top  = 0.1)
 
