@@ -307,7 +307,7 @@ if( !defined $no_ggm ){
     if(defined $qspn && $q_sub eq "q"){
        $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -q $qspn -n rt gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
     }elsif(defined $qspn && $q_sub eq "Q"){
-       $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n comp gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
+       $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n ncomp gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
     }else{
        $command = "$INSTALL_ROOT/bin/gridgen_model.exe";
     }
