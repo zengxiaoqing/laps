@@ -138,6 +138,7 @@ cdis
 
 !       Set Default plot parameters
         plot_parms%rimage_intensity = 1.0
+        plot_parms%zoom = 1.0
 
 1100    write(6,1110)
 1110    format(/////'     [h/hz]  Horizontal Plan View '
@@ -179,6 +180,8 @@ cdis
                 plot_parms%contour_line_width = 1
             endif
 
+            plot_parms%zoom = zoom
+
             if(MAX_RADARS .ge. 1)then
                 L_RADARS = 1
             else
@@ -195,6 +198,7 @@ cdis
      1                            .or. c_section .eq. 'xz'
      1                            .or. c_section .eq. '2')THEN
             zoom = 1.0
+            plot_parms%zoom = zoom
 
             if(c_section .eq. 'xz')then
                 write(6,102)
@@ -221,7 +225,7 @@ cdis
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
             call plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                        ,r_missing_data,laps_cycle_time,maxstns
-     1                        ,namelist_parms)       
+     1                        ,plot_parms,namelist_parms)       
 
         endif ! c_section
 
