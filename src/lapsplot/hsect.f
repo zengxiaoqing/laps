@@ -3870,7 +3870,7 @@ c                   cint = -1.
                 enddo ! j
                 enddo ! i
 
-                if(k_mb .lt. 500)then
+                if(k_mb .eq. 300)then 
                     cint = 5.
                     clow = -60.
                     chigh = -30.
