@@ -1,4 +1,4 @@
- 00048
+ 00050
  KFCS                  003  ALT  STP  MSL
  WGGNS                 003  TMP  DEW  HUM
  SABS2                 001  ALT  
@@ -19,6 +19,7 @@
  KGDP                  003  ALT  STP  MSL
  FLU                   003  ALT  STP  MSL
  FMNTN                 003  ALT  STP  MSL
+ AP408                 001  ALT
  CMP01                 001  ALT
  CMP02                 001  ALT
  CMP03                 001  ALT
@@ -46,4 +47,5 @@
  UDFCD                 101  ALT
  MNDOT                 101  ALT
  FTCOLLINS             101  ALT
+ WXforYou              101  ALT               
  AP020                 001  ALT
