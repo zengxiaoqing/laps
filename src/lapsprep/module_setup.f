@@ -52,6 +52,7 @@ MODULE setup
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
    REAL               :: snow_thresh, lwc2vapor_thresh
+   REAL               :: rai_frac, sno_frac
    CHARACTER (LEN=256):: output_prefix
   
    !  Output file info.
@@ -97,7 +98,9 @@ CONTAINS
                          make_sfc_uv       , &
                          output_format     , &
                          snow_thresh       , &
-                         lwc2vapor_thresh
+                         lwc2vapor_thresh  , &
+                         rai_frac          , &
+                         sno_frac        
 
       nml_unit = 77
 
@@ -107,6 +110,8 @@ CONTAINS
       snow_thresh = 0.5
       lwc2vapor_thresh = 1.1
       make_sfc_uv = .false.
+      rai_frac = 1.0
+      sno_frac = 1.0
  
       ! Open the namelist
 

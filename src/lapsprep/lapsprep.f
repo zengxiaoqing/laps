@@ -99,6 +99,8 @@
     LOGICAL :: file_present
     REAL    :: rhmod, lwcmod, shmod
     REAL    :: rhadj
+    REAL    :: lwc_limit
+
     ! Beginning of code
  
     ! Check for command line argument containing LAPS valid time
@@ -460,9 +462,10 @@
 
       IF (MAXVAL(lwc) .LT. 99999.) THEN
 
-        ! For cloud liquid, limit max value to autoconv_lwc2rai
-        WHERE(lwc .GT. autoconv_lwc2rai) lwc = autoconv_lwc2rai
+        ! Convert lwc concentration to mixing ratio
         lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
+
+        ! Convert lwc mixing ratio to vapor mixing ratio
         IF (lwc2vapor_thresh .GT. 0.) THEN
           DO k=1,z3
             DO j=1,y
@@ -495,6 +498,13 @@
                   virtual_t(i,j,k) = ( 1. + 0.61*mr(i,j,k))*t(i,j,k)
                   rho(i,j,k) =  p(k)*100. / (rdry * virtual_t(i,j,k))
 
+                  ! Limit remaining cloud liquid to autoconversion rate
+                  ! Note, conversion rates are specified in kg/m**3, 
+                  ! so we need to convert this rate to kg/kg
+
+                  lwc_limit = autoconv_lwc2rai/rho(i,j,k)
+                  WHERE(lwc .GT. lwc_limit) lwc = lwc_limit
+
                 ENDIF
               ENDDO
             ENDDO
@@ -507,6 +517,7 @@
 
       IF (MAXVAL(rai) .LT. 99999.) THEN
         rai(:,:,:) = rai(:,:,:)/rho(:,:,:)   ! Rain mixing ratio
+        rai(:,:,:) = rai(:,:,:) * rai_frac
       ELSE
         PRINT *, 'Rain (lwc/rai) appears to be missing, setting values to 0.0' 
         rai(:,:,:) = 0.0
@@ -514,6 +525,7 @@
 
       IF (MAXVAL(sno) .LT. 99999.) THEN
         sno(:,:,:) = sno(:,:,:)/rho(:,:,:)   ! Snow mixing ratio
+        sno(:,:,:) = sno(:,:,:) * sno_frac
       ELSE
         PRINT *, 'Snow (lwc/sno) appears to be missing, setting values to 0.0'    
         sno(:,:,:) = 0.0
