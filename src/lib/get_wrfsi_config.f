@@ -157,58 +157,20 @@ c
         call s_len(c_vcoordinate,lvc)
         call s_len(c_analysis_type,ltyp)
         vertical_grid = c_vcoordinate(1:lvc)
-        nk_laps = nz_l                     ! moad_nz
 
         nest = 1
         num_staggers=num_staggers_wrf
 
-        if(c_analysis_type(1:ltyp).eq.'laps')then
-                     ! this means that the grid dimensions for lapsparms.cmn
-                     ! will be configured using laps_analysis_control
-           nx_l_cmn = nx_l
-           ny_l_cmn = ny_l
-           grid_spacing_m_cmn = grid_spacing_m
-           silavwt_parm_cmn = silavwt_parm
-           toptwvl_parm_cmn = toptwvl_parm
+        nx_l_cmn = xdim(nest)
+        ny_l_cmn = ydim(nest)
+        grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
+        silavwt_parm_cmn = silavwt_parm_wrf
+        toptwvl_parm_cmn = toptwvl_parm_wrf
 
-        else                     ! this means that the grid dimensions for lapsparms.cmn
-                                 ! will be configured with the wrf h gridspec.
-           nx_l_cmn = xdim(nest)
-           ny_l_cmn = ydim(nest)
-           grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
-           silavwt_parm_cmn = silavwt_parm_wrf
-           toptwvl_parm_cmn = toptwvl_parm_wrf
 
-           
-        endif
-
-        pressure_bottom_l = pressure_bottom
-        pressure_interval_l = pressure_interval
-        laps_cycle_time_cmn = laps_cycle_time
-        l_highres = l_highres_laps
-        i_perimeter_cmn = i_perimeter
-        c50_lowres_directory = c50_lowres_dir
-        c_raddat_type = craddat_type
-        radarext_3d_cmn = radarext_3d
-        radarext_3d_accum_cmn = radarext_3d_accum
         i2_missing_data_cmn = i2_missing_data
         r_missing_data_cmn = r_missing_data
-        max_radars = max_radars_cmn
-        ref_base_cmn = ref_base
-        ref_base_useable_cmn = ref_base_useable
-        maxstns_cmn = maxstns
-        n_pirep_cmn = n_pirep
-        vert_rad_meso_cmn = vert_rad_meso
-        vert_rad_sao_cmn = vert_rad_sao
-        vert_rad_pirep_cmn = vert_rad_pirep
-        vert_rad_prof_cmn = vert_rad_prof
-        c8_project_common = c8_project
 
-        do i=1,maxbgmodels
-           fdda_model_source_cmn(i) = fdda_model_source(i)
-        enddo
-
-        PRESSURE_0_L = PRESSURE_BOTTOM_L + PRESSURE_INTERVAL_L
 
         iflag_lapsparms_cmn = 1
         iflag_config_wrfsi = 1
