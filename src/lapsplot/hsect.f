@@ -1253,7 +1253,7 @@ c       include 'satellite_dims_lvd.inc'
             write(6,826)
  826        format(/'  SELECT FIELD (VAR_2D):  '
      1       /
-     1       /'     PBL | FIREWX: [ptp,pdm | vnt,ham,fwi] ? ',$)       
+     1       /'     PBL | FIREWX: [ptp,pdm | vnt,ham,hah,fwi] ? ',$)       
 
             read(lun,824)var_2d
 !824        format(a)
@@ -1286,10 +1286,14 @@ c       include 'satellite_dims_lvd.inc'
                 clow = 5000.
                 chigh = 0.
                 cint = 0.
-            elseif(var_2d(1:3) .eq. 'HAM')then
+            elseif(var_2d(1:2) .eq. 'HA')then
                 clow = 2.
                 chigh = 6.
                 cint = 1.
+            elseif(var_2d(1:3) .eq. 'FWI')then
+                clow = 0.
+                chigh = 40.
+                cint = 0.
             else ! default values
                 clow = 0.
                 chigh = 0.
