@@ -67,6 +67,9 @@
         character*200 path_to_landuse30s
         character*200 path_to_soiltype_top30s
         character*200 path_to_soiltype_bot30s
+        character*200 path_to_green_frac10m 
+        character*200 path_to_soiltemp1deg 
+
 
         common  /lapsparms_cmn/ iflag_lapsparms_cmn
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
@@ -93,7 +96,8 @@
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
      1  ,path_to_landuse30s,path_to_soiltype_top30s
-     1  ,path_to_soiltype_bot30s
+     1  ,path_to_soiltype_bot30s,path_to_green_frac10m
+     1  ,path_to_soiltemp1deg
      1  ,fdda_model_source_cmn
 
 
