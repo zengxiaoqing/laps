@@ -458,7 +458,7 @@ cdis
             if(istatus .ne. 1)return
 
             call read_radar_3dref(i4time_radar,                 ! I
-     1       .true.,ref_base,imax,jmax,kmax,                    ! I
+     1       .true.,r_missing_data,imax,jmax,kmax,              ! I
      1       radarext_3d_accum,lat,lon,topo,
      1       .true.,.false.,
      1       height_3d,
@@ -472,6 +472,17 @@ cdis
                 istatus = 0
                 return
             endif
+
+!           For now, we can change the 'r_missing_data' values to 'ref_base'
+            do i = 1,imax
+            do j = 1,jmax
+            do k = 1,kmax
+                if(grid_ra_ref(i,j,k) .eq. r_missing_data)then
+                    grid_ra_ref(i,j,k) = ref_base
+                endif
+            enddo ! k
+            enddo ! j
+            enddo ! i
 
             write(6,*)' Call get_low_ref'
 
