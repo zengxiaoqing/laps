@@ -121,7 +121,6 @@ c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
       character*132 cmodels(maxbgmodels)
       character*132 cmodel
-      character*255 cfname
       integer oldest_forecast, max_forecast_delta
       integer forecast_length
       logical use_analysis, use_systime
@@ -356,6 +355,7 @@ c
       integer   init_timer
       integer   itstatus(10)
       integer   icnt
+      integer   igrx,igry
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
       real diff, diff_mx, diff_mn
 
@@ -483,7 +483,7 @@ c
       integer   i4bgtime
       integer   nlga
 c
-      character*255 lgapath
+      character*256 lgapath
       character*256 lga_names(max_files)
       character*256 names(max_files)
       character*256 fname_bg(max_files)
@@ -495,7 +495,8 @@ c
 
       character*6   c6_maproj
       character*2   gproj
-      character*256 fullname,outdir
+      character*200 fullname
+      character*256 outdir
       character*31  ext
 c     character*3   var(nz_laps)
 c     character*4   lvl_coord(nz_laps)
@@ -512,7 +513,7 @@ c
 
       interface
 c
-         subroutine read_bgdata(nx_bg,ny_bg
+       subroutine read_bgdata(nx_bg,ny_bg
      +,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,ctype
      +,bgpath,fname_bg,af_bg,fullname,cmodel,bgmodel
      +,prbght,prbgsh,prbguv,prbgww
@@ -544,7 +545,7 @@ c
          character*132 cmodel
          character*256 bgpath
          character*256 fname_bg
-         character*256 fullname
+         character*200 fullname
          integer       bgmodel
          integer       nx_bg
          integer       ny_bg
@@ -554,9 +555,9 @@ c
          integer       nzbg_uv
          integer       nzbg_ww
          integer       istatus
-         end subroutine
+       end subroutine
 
-         subroutine vinterp(nz_laps,nx,ny,
+       subroutine vinterp(nz_laps,nx,ny,
      .	nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
      .  prlaps, prbght,prbgsh,prbguv,prbgww,
      .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
@@ -592,9 +593,9 @@ c
 c
          real*4  ::  prlaps(nz_laps)
  
-         end subroutine
+       end subroutine
 
-        subroutine get_bkgd_mdl_info(bgmodel
+       subroutine get_bkgd_mdl_info(bgmodel
      &,cmodel,fullname,nx,ny,nzbg_ht,nzbg_tp
      &,nzbg_sh,nzbg_uv,nzbg_ww
      &,gproj,dlat,dlon,centrallat,centrallon,dx,dy
@@ -618,7 +619,38 @@ c
         real          centrallon
         real          dx,dy
 
-        end subroutine
+       end subroutine
+
+       subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
+     .     lat,lon,grx,gry,bgmodel,cmodel)
+
+         character  gproj*2
+         character  cmodel*132
+         integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
+         real*4 lat(nx_laps,ny_laps)
+     .         ,lon(nx_laps,ny_laps)
+     .         ,grx(nx_laps,ny_laps)
+     .         ,gry(nx_laps,ny_laps)
+
+       end subroutine
+
+       subroutine hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz
+     .,grx,gry,fvi,flaps,bgmodel)
+
+         integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
+         real*4 fvi(nx_bg,ny_bg,nz)
+     .         ,flaps(nx_laps,ny_laps,nz)
+     .         ,grx(nx_laps,ny_laps)
+     .         ,gry(nx_laps,ny_laps)
+
+       end subroutine
+
+       subroutine filter_2dx(field,ix,iy,iz,smth)
+         integer ix,iy,iz
+         real field(ix,iy,iz)
+         real smth
+       end subroutine
+
 
       end interface
 
@@ -637,13 +669,11 @@ c
       cfname=bgpath(1:bglen)//bg_names(1)
       call s_len(cfname,lncf)
 
-      print*,'call get_bkgd_mdl_info ',cfname(1:lncf)
       call get_bkgd_mdl_info(bgmodel,cmodel,cfname
      &,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv
      &,nzbg_ww ,gproj,dlat,dlon,cenlat,cenlon,dx,dy
      &,Lat0,Lat1,Lon0,sw,ne,istatus)
 
-      print*,'done in lga_sub: get_bkgd_mdl_info'
       if(istatus.ne.1)then
          print*,'Error getting background model information'
          return
@@ -676,18 +706,17 @@ c
      +,lat,lon,topo,istatus)
       if (istatus.lt.1)then
           print *,'Error reading lat, lon, topo data.'
-          return
+          stop
       endif
 c
 c *** Specify model path, extension for write laps routine.
 c
       call get_directory('lga',outdir,len_dir)
-      print *,'writing to dir ',outdir
-c
+      print *,'writing to dir ',outdir(1:len_dir)
 c
 c *** get LAPS pressure levels.  Using pressures.nl
 c
-      print*,'get pressures from pressure.nl'
+c     print*,'get pressures from pressure.nl'
       call get_pres_1d(i4time_now,nz_laps,pr,istatus)
       do k = 1,nz_laps
          pr(k)=pr(k)/100.
@@ -695,7 +724,6 @@ c
 c
 c *** Determine which of the "bg_names" has not already been processed
 c
-      print*,'load names array'
       do j=1,max_files
          names(j)=bg_names(j)
       enddo
@@ -707,7 +735,6 @@ c
          i4time_bg_valid(j)=bg_times(j)+bg_valid(j)
       enddo
 
-      print*,'get directory -- lga'
       call get_directory('lga',lgapath,ldl)
       call get_file_times(lgapath,max_files,lga_names
      1                      ,lga_times,nlga,istatus)
@@ -778,6 +805,8 @@ c          endif
 c
 c ****** Read background model data.
 c
+c     print*,'process new model background'
+
       do nf=1,nbg
  
 c Removal of this loop causes already existing lga files to be overwritten
@@ -813,12 +842,6 @@ c
        print*
 
 
-c      if(cmodel(1:ic).eq.'AVN_SBN_CYLEQ')then
-c         allocate (tpbg(nx_bg,ny_bg,nzbg_uv))
-c      else
-c         allocate (tpbg(nx_bg,ny_bg,nzbg_sh))
-c      endif
-
        allocate (htbg(nx_bg,ny_bg,nzbg_ht))
        allocate (tpbg(nx_bg,ny_bg,nzbg_tp))
        allocate (shbg(nx_bg,ny_bg,nzbg_sh))
@@ -838,7 +861,6 @@ c      endif
        allocate (tpbg_sfc(nx_bg,ny_bg))
        allocate (mslpbg(nx_bg,ny_bg))
 
-       print*,'calling read_bgdata'
        call read_bgdata(nx_bg,ny_bg
      +    ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      +    ,'lapsb',bgpath,fname_bg(nf),af_bg(nf)
@@ -916,7 +938,7 @@ c
      .          vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
      .          wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
 
-
+c        print*,'Call vinterp '
          call vinterp(nz_laps,nx_bg,ny_bg
      .       ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .       ,pr,prbght,prbgsh,prbguv,prbgww
@@ -1030,7 +1052,6 @@ c
 
          call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .        lat,lon,grx,gry,bgmodel,cmodel)
-
          call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,htvi,ht,bgmodel)
          call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
@@ -1160,35 +1181,45 @@ c
 
         if(bgmodel.ne.1.and.bgmodel.ne.9)then
 
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+           if(bgmodel.ne.3)then
+
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,tpbg_sfc,tp_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,shbg_sfc,sh_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,uwbg_sfc,uw_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,vwbg_sfc,vw_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,prbg_sfc,pr_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,mslpbg,mslp,bgmodel)
 c
 c check for T > Td before sfc p computation. Due to large scale
 c interpolation we can have slightly larger (fractional) Td than T.
 c
-         call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+            call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
-         print *,' Dewpoint check (before call sfcbkgd):'
-         print *,'     Dewpt greater than temp at ',icnt,' points.'
-         if(icnt .gt. 0) then
+            print *,' Dewpoint check (before call sfcbkgd):'
+            print *,'     Dewpt greater than temp at ',icnt,' points.'
 
-            print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
-            print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
+            if(icnt .gt. 0) then
+               print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
+               print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
+            endif
 
-         endif
+           else
+
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .                  grx,gry,prbg_sfc,pr_sfc,bgmodel)
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .                  grx,gry,mslpbg,mslp,bgmodel)
+
+           endif
         endif
 
         deallocate (htbg_sfc)
@@ -1213,6 +1244,9 @@ c
 
          print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
          print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
+c
+c fix sfc Td to not be greater than T at points determined above
+         where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
 
         endif
 c
@@ -1246,14 +1280,6 @@ c
            print*,'         checking for supersaturations'
         endif
 c
-        do j=1,ny_laps
-        do i=1,nx_laps
-         if(sh_sfc(i,j).gt.tp_sfc(i,j))then
-            sh_sfc(i,j)=tp_sfc(i,j)
-         endif
-        enddo
-        enddo
-
         itstatus(3)=ishow_timer()
         print*,'Hinterp (2D) elapsed time (sec): ',itstatus(3)
         print*
@@ -1261,13 +1287,8 @@ c
 c the wind components are still on the native grid projection;
 c rotate them to the LAPS (output) domain as necessary.
 
-        if(.true.)then
-         call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
+        call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
      +,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc,istatus)
-        else
-         print*,'Not rotating u/v'
-        endif
-
         if(istatus.ne.1)then
          print*,'Error in rotate_background_uv '
          return
