@@ -417,15 +417,22 @@ cdis
 
                     call s_len(wx_s(i),lenwx)
 
-!                   Plot Weather String
-                    if(lenwx .gt. 0)then
-                        CALL PCLOQU(xsta-du2*0.9, ysta-du2*1.5
-     1                        , wx_s(i)(1:lenwx), charsize,ANGD,+1.0)
-                    endif
-
-!                   Plot name and Station Location
+!                   Test for valid report
                     if(pcp1(i) .ne. badflag .or. 
-     1                 snow(i) .ne. badflag .or. lenwx .gt. 0)then
+     1                 snow(i) .ne. badflag .or. 
+     1                 (wx_s(i) .ne. 'UNK' .and. lenwx .gt. 0) 
+     1                                                         )then       
+
+                        write(6,11)i,pcp1(i),snow(i),lenwx,wx_s(i)
+11                      format('  Plot Precip ob ',i4,2f8.2,i3,1x,a)
+
+!                       Plot Weather String
+                        if(lenwx .gt. 0 .and. wx_s(i) .ne. 'UNK')then
+                            CALL PCLOQU(xsta-du2*0.9, ysta-du2*1.5
+     1                        , wx_s(i)(1:lenwx), charsize,ANGD,+1.0)
+                        endif
+
+!                       Plot name and Station Location
                         CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
      1                              charsize,ANGD,CNTR)
 
@@ -491,7 +498,8 @@ cdis
 
                 endif
 
-                if(autostntype(i) .ne. 'CUM')then ! exclude CWB precip stations
+                if(autostntype(i) .ne. 'CUM' .or. iflag_cv .eq. 2)then 
+!                   exclude CWB precip stations for non-precip plots
                     call plot_mesoob(w1,w2,w3
      1                 ,temp,dewpoint
      1                 ,pressure,xsta,ysta
@@ -680,6 +688,7 @@ c
  103           format(f4.2)
                call left_justify(c4_pcp)
                CALL PCLOQU(u+du_t,v-dv,c4_pcp,charsize,ANGD,CNTR)
+               write(6,*)' Precip (td) plot = ',c4_pcp
             endif
  32         continue
 
