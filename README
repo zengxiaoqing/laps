@@ -467,6 +467,11 @@
      accomplish this, comment out the 'systime.exe' entry in the 
      'sched.pl'.  
 
+     Note that this tar file does not supply "raw" data that are inputted 
+     to the ingest processes. It is assummed that a user can independently
+     generate the intermediate data files (ingest output) and compare them 
+     with ours.
+
                ---  2.7  Modifying Compiler Flags       ---
 
      The './configure' script automatically modifies the compilation 
