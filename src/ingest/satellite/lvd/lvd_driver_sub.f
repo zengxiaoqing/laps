@@ -584,7 +584,6 @@ c ------------------------------------------------------------
           do i = 1,nft
           do j = 1,ntm(i)
              if(r_image_status(j,i).le.0.333)then
-
                 call lvd_file_specifier(c_type(j,i),ispec,istat)
                 if(ispec.eq.4)then
 
@@ -618,7 +617,8 @@ c ------------------------------------------------------------
 
                 elseif(ispec.eq.1)then
 
-                   if(csatid.ne.'gmssat'.and.csatid.ne.'meteos')then
+                   if( (csatid.ne.'gmssat'.and.csatid.ne.'meteos').and.
+     &                 (csattype.eq.'gvr'.or.csattype.eq.'gwc') )then
 
                        call btemp_convert(n_vis_elem,n_vis_lines,
      &                          vis_cnt_to_cnt_lut,
@@ -626,9 +626,8 @@ c ------------------------------------------------------------
      &                          image_vis(1,1,i))
                        write(*,*)'VIS data converted - cnt-to-cnt lut'
                    else
-                    write(*,*)'Not converting ',csattype,' vis data'
+                       write(*,*)'Not converting ',csattype,' vis data'
                    endif
-
                 endif
              endif
           enddo
@@ -918,9 +917,10 @@ c been mapped to the laps domain. AFWA's GMS so far.
      &                     var_lvd,c_lvd,units_lvd,
      &                     nlf,laps_data,istatus)
 
-311      write(6,*)' Writing lvd. Total # of fields: ',nlf
-         write(6,*)'    to ',dir_lvd(1:len_lvd)
-         call write_laps_data(i4time_data(i),
+311      if(nlf .gt. 0)then
+            write(6,*)' Writing lvd. Total # of fields: ',nlf
+            write(6,*)'    to ',dir_lvd(1:len_lvd)
+            call write_laps_data(i4time_data(i),
      &                      dir_lvd,
      &                      ext_lvd,
      &                      nx_l,ny_l,
@@ -933,16 +933,22 @@ c been mapped to the laps domain. AFWA's GMS so far.
      &                      c_lvd,
      &                      laps_data,
      &                      istatus)
-         if(istatus.eq.1)then
-            write(6,*)'*****************************'
-            write(*,*)'lvd file successfully written'
-            write(*,*)'for: ',c_fname
-            write(*,*)'i4 time: ',i4time_data(i)
-            write(6,*)'*****************************'
+            if(istatus.eq.1)then
+               write(6,*)'*****************************'
+               write(*,*)'lvd file successfully written'
+               write(*,*)'for: ',c_fname
+               write(*,*)'i4 time: ',i4time_data(i)
+               write(6,*)'*****************************'
+            else
+               write(*,*)' Error writing lvd file for this time'
+               write(*,*)' i4Time: ',i4time_data(i)
+               write(*,*)' File Time: ',c_fname
+            endif
+
          else
-            write(*,*)' Error writing lvd file for this time'
-            write(*,*)' i4Time: ',i4time_data(i)
-            write(*,*)' File Time: ',c_fname
+
+            print*,'No fields processed. No lvd written ',c_fname
+
          endif
 
 997   enddo
