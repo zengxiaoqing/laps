@@ -16,14 +16,18 @@ c bgmodels describes the model type of the files found in each path
 c allowable values are:
 c        bgmodels = 1 ---> RUC (60 km native grid)
 c        bgmodels = 2 ---> ETA (48 km conus-c grid)
-c        bgmodels = 3 ---> NOGAPS
+c        bgmodels = 3 ---> Taiwan FA Model (20km Lambert grid)
 c        bgmodels = 4 ---> RUC/ETA (SBN CONUS 211 grid)
 c        bgmodels = 5 ---> RUC (40 km native grid)
+c        bgmodels = 6 ---> AFWA NOGAPS LL 1 deg grid
+c        bgmodels = 7 ---> ETA48_GRIB
+c        bgmodels = 8 ---> AFWA AVN LL 1 deg grid
 c
 c If no forecast valid at the requested time and not older than oldest_forecast
 c is available then go to the next bgmodel
 c
-c Be default LAPS will not use an analysis file as it's background, 
-c the use_analysis logical changes this behaivior
+c By default LAPS will not use an analysis file as it's background, 
+c the use_analysis logical changes this behaivior (sometimes ... not
+c totally debugged at this point ... 11-15-99)
 c
 
