@@ -42,30 +42,31 @@ cdis
 cdis
 cdis
 cdis
-
-      subroutine cloud_sat (cg,sat,data)
+      subroutine cloud_sat (cg,delsat,data)
 
 c     This routine is the basic cloud saturation model for lq3driver.x
 c     this routine is called from the main routine when performing post
-c     saturation computations.  It is now also used in the variational step
+c     saturation computations.  It is now modified with test_cloud output.
 
-c     Dan Birkenheuer  3/2/2001
+c     Dan Birkenheuer  5/10/2002
 
-      real cg                   ! cloud fraction
-      real sat                  ! saturated ssh at location
-      real data                 ! pre_analyzed ssh at location
+      implicit none
 
+      real :: cg                ! cloud fraction
+      real :: delsat            ! output from test cloud, amount to sat
+      real :: data              ! pre_analyzed ssh at location
 
-
-      if(cg .gt. 0.6 .and. cg .lt. 1.0) then !cloudy
+      if(cg > 0.6 .and. cg < 1.0) then !cloudy
          
-         data = cg*sat + (1.- cg)*data
+c         data = cg*sat + (1.- cg)*data
+         data = data + cg*delsat !ramp to saturation if above .6 cf
+
+      elseif (cg >= 1.0) then 
          
-      elseif (cg.ge.1.0) then 
-         
-         data = sat
+         data = data + delsat
          
       endif
 
       return
-      end
+
+      end subroutine cloud_sat

@@ -42,7 +42,8 @@ cdis
 cdis
 cdis
 cdis
-      real function func (x)
+c FORTRAN90 constructs
+      real function func(x)
 
 c     This module now includes more than just satllite data.  It is the 
 c     minimization area for sounder radiance, GVAP, GPS, and cloud.
@@ -110,11 +111,13 @@ c     gvap common
 
 c     cloud common
 
-      common /cost_cloud/cost_cloud,cost_cld,cost_cloud_istatus,cost_sat
+      common /cost_cloud/cost_cloud,cost_cld,cost_cloud_istatus,
+     1     cost_sat,cost_qadjust
       integer cost_cloud_istatus
       real cost_cloud(500)
       real cost_cld
       real cost_sat(500)
+      real :: cost_qadjust(500)
       real cloud_temp           ! temp used in subroutine call
 
 c     gps common
@@ -355,39 +358,39 @@ c     GVAP section
 
 c     test for weight of measurement
          if(cost_weight.eq.cost_mdf) then !skip this step
-            continue ! skip this iteration
+            continue            ! skip this iteration
          else                   ! process gvap
             if (first_gvap) then
                first_gvap = .false.
                write(6,*) 'TEMP GVAP accepted'
             endif
-
+            
 c     integrate q for gvap layers
 c     determine sigma level pressure analogs
-
+            
             call sigma_to_p (0.1, cost_ps, 0.9, p1)
             call sigma_to_p (0.1, cost_ps, 0.7, p2)
             call sigma_to_p (0.1, cost_ps, 0.3, p3)
             call int_layerpw(x,cost_data,cost_kstart,
      1           cost_qs,cost_ps,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
      1           cost_kk,cost_mdf)
-
+            
             if (p1 .le. 300.0) then
                write(6,*)'TEMM ', x, p1,p2,p3,lpw1,lpw2,lpw3,
      1              cost_w1,cost_w2,cost_w3
             endif
-
+            
             if (lpw2.eq.cost_mdf) then
                i = i
             endif
-
+            
             
 c     minimize with respect to layer gvap data
-
+            
             max_func_gvap1 = 0.0
             max_func_gvap2 = 0.0
             max_func_gvap3 = 0.0
-          
+            
             if (lpw1.ne.cost_mdf) then
                max_func_gvap1 =  
      1              (lpw1-cost_w1)**2*cost_weight
@@ -400,23 +403,23 @@ c     minimize with respect to layer gvap data
                max_func_gvap3 =  
      1              (lpw3-cost_w3)**2*cost_weight
             endif
-
+            
 c     note that gvap data are in mm and other func computations are in
 c     cm units.  therefore each weight must be converted unitwise
 c     (divided by 100 since they are a factor of 10**2) higher in the 
 c     numerator of the J function.
-
+            
             func = func + (max_func_gvap1/100.+max_func_gvap2/100.
      1           +max_func_gvap3/100.)
-c            write(6,*) 'func 2 ',func
-
+c     write(6,*) 'func 2 ',func
+            
 c     generate modfied cost function based on these layers
-
+            
          endif                  !weight function test
       endif                     !data present test
-
+      
 c     minimize with respect to partly cloudy data
-
+      
       if (cost_cloud_istatus.eq.1) then ! cloud data present
          max_func_cloud = 0.0
          do k = 1,cost_kk
@@ -424,8 +427,8 @@ c     minimize with respect to partly cloudy data
             if (cost_data(k).ne.cost_mdf) then
                if(cost_data(k).ge.0.0) then
                   cloud_temp = cost_data(k)
-                  call cloud_sat (cost_cloud(k),cost_sat(k),cloud_temp)
-               
+                  call cloud_sat (cost_cloud(k),cost_qadjust(k),
+     1                 cloud_temp)
                   if(k .lt. lvl700 ) then ! sfc to 700
                      max_func_cloud = max_func_cloud + 
      1                    (cost_data(k)*x(1) - cloud_temp)**2 
@@ -440,11 +443,13 @@ c     minimize with respect to partly cloudy data
             endif               ! mdf check
          enddo                  ! enddo k level
       endif                     ! cloud data present
-
+      
+      
+c     avoiding cloud adjustment : UNCOMMENT NEXT LINE IF DOESN'T WORK
       func = func + max_func_cloud
-
+      
 c     GPS section
-
+      
       if (cost_gps_istatus .eq. 1) then
 
          call int_ipw (x,cost_p1d,cost_data,ipw,cost_mdf,cost_kk)
@@ -452,27 +457,31 @@ c     GPS section
          max_func_gps = 0.0
          
          max_func_gps = (cost_gps_data-ipw)**2*cost_gps_weight
+
+         func = func + max_func_gps
+
 c     write(6,*) 'TEMPM max_func_gps,',max_func_gps
       else
 c     write(6,*) 'NO GPS in func'
       endif
 
 c     avoid using gps where we have cloud (cloud_integral .ne. 0)
+
 c     if( max_func_cloud .lt. max_func_gps) then
-      if (cloud_integral .eq. 0.0) then
-         if(cost_comment_switch.eq.1) then
-            write(6,*) 'TEMU gps cloud', max_func_gps, max_func_cloud,
-     1           cloud_integral
-            cost_comment_switch = 0
-         endif
-         func = func + max_func_gps
-      else
-         if(cost_comment_switch.eq.1) then
-            write(6,*) 'TEMS gps cloud', max_func_gps, max_func_cloud,
-     1           cloud_integral
-            cost_comment_switch = 0
-         endif
-      endif
+c      if (cloud_integral .eq. 0.0) then
+c         if(cost_comment_switch.eq.1) then
+c            write(6,*) 'TEMU gps cloud', max_func_gps, max_func_cloud,
+c     1           cloud_integral
+c            cost_comment_switch = 0
+c         endif
+c         func = func + max_func_gps
+c      else
+c         if(cost_comment_switch.eq.1) then
+c            write(6,*) 'TEMS gps cloud', max_func_gps, max_func_cloud,
+c     1           cloud_integral
+c            cost_comment_switch = 0
+c         endif
+c      endif
 
 
 c     snd addition

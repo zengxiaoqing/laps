@@ -42,6 +42,8 @@ cdis
 cdis
 cdis
 cdis
+c FORTRAN 90 CONSTRUCTS USED OVER F77 CODE
+
       subroutine variational (
      1     sh,                  ! specific humidity g/g
      1     lat,lon,             ! lat and longitude (deg)
@@ -50,6 +52,7 @@ cdis
      1     cloud,               ! cloud array
      1     istatus_cloud,       ! clouds istatus
      1     sat,                 ! saturated specific hum.
+     1     qadjust,             ! moisture needed for cloud formation
      1     t,                   ! lt1 (laps 3d temps)
      1     mdf,
      1     ps,qs,kstart,
@@ -102,95 +105,94 @@ c     include 'lapsparms.for'
 
 c     parameter list variables
 
-      integer ii,jj,kk
-      real sh(ii,jj,kk)
-      real lat(ii,jj),lon(ii,jj)
-      integer i4time
-      real sat (ii,jj,kk)
-      real t(ii,jj,kk),p_3d(ii,jj,kk),mdf
-      real cloud(ii,jj,kk)
-      integer istatus_cloud
-      real gw1(ii,jj),gww1(ii,jj)
-      real gw2(ii,jj),gww2(ii,jj)
-      real gw3(ii,jj),gww3(ii,jj)
-      real gvap_p (ii,jj)
-      integer istatus_gvap
-      integer ngoes
-      integer isnd
-      integer sat_skip
-      real ps(ii,jj), qs(ii,jj)
-      integer kstart(ii,jj)
-      real gps_data(ii,jj)
-      real gps_w (ii,jj)
-      integer istatus_gps
-      real q_snd(ii,jj,kk)
-      real weight_snd(ii,jj,kk)
-      integer raob_switch
+      integer ::  ii,jj,kk
+      real :: sh(ii,jj,kk)
+      real ::  lat(ii,jj),lon(ii,jj)
+      integer :: i4time
+      real :: sat (ii,jj,kk)
+      real ::  t(ii,jj,kk),p_3d(ii,jj,kk),mdf
+      real :: cloud(ii,jj,kk)
+      integer :: istatus_cloud
+      real :: gw1(ii,jj),gww1(ii,jj)
+      real :: gw2(ii,jj),gww2(ii,jj)
+      real :: gw3(ii,jj),gww3(ii,jj)
+      real :: gvap_p (ii,jj)
+      integer :: istatus_gvap
+      integer :: ngoes
+      integer :: isnd
+      integer :: sat_skip
+      real ::  ps(ii,jj), qs(ii,jj)
+      integer :: kstart(ii,jj)
+      real :: gps_data(ii,jj)
+      real :: gps_w (ii,jj)
+      integer :: istatus_gps
+      real :: q_snd(ii,jj,kk)
+      real :: weight_snd(ii,jj,kk)
+      integer :: raob_switch
 
 
 c internal variables
 
-      integer istatus
-      integer i4time_sat
-      integer i,j,k,k2,ijk
-      real local_model_p(40)
-      real dummy
-      data local_model_p/.1,.2,.5,1.,1.5,2.,3.,4.,5.,7.,10.,15.,
+      integer :: istatus
+      integer :: i4time_sat
+      integer :: i,j,k,k2,ijk
+      real, dimension (40) :: local_model_p = (/.1,.2,.5,1.,1.5,2.,
+     1     3.,4.,5.,7.,10.,15.,
      1     20.,25.,30.,
      1     50.,60.,70.,85.,100.,115.,135.,150.,200.,250.,300.,350.,400.,
-     1     430.,475.,500.,570.,620.,670.,700.,780.,850.,920.,950.,1000./
-      integer k500, k700
+     1     430.,475.,500.,570.,620.,670.,700.,780.,850.,920.,
+     1     950.,1000./)
+      real :: dummy
+      real :: qadjust(ii,jj,kk)
+      integer :: k500, k700
 
 c climate model variables
-      integer*4 julian_day
-      real
-     1     standard_press(40),
+      integer :: julian_day
+      real :: standard_press(40),
      1     tempertur_guess(40),
      1     mixratio_guess(40)
-      real rmd
-      integer n_snd_ch
-      parameter (n_snd_ch = 22)
-      integer kanch(7)
-      data kanch /10,8,7,11,16,6,12/
-      integer restore_cost_rad_istatus
+      real :: rmd
+      integer, parameter :: n_snd_ch = 22
+      integer, dimension (7):: kanch =(/10,8,7,11,16,6,12/)
+      integer :: restore_cost_rad_istatus
 
 
 c dynamic dependent variables
 
-      real ch3(ii,jj),ch4(ii,jj),ch5(ii,jj)
-      real mr(ii,jj,kk)
-      real t_l(kk,ii,jj), mr_l (kk,ii,jj),p_l(kk,ii,jj)
+      real :: ch3(ii,jj),ch4(ii,jj),ch5(ii,jj)
+      real :: mr(ii,jj,kk)
+      real :: t_l(kk,ii,jj), mr_l (kk,ii,jj),p_l(kk,ii,jj)
 
-      real model_t(40,ii,jj), model_mr(40,ii,jj)
+      real :: model_t(40,ii,jj), model_mr(40,ii,jj)
 
 c     forward model variarles
       
 c     new optran variables
       
-      real tbest(n_snd_ch)
+      real :: tbest(n_snd_ch)
       
 c     old gimtau.f variables
       
-      real radiance(ii,jj,18),tskin(ii,jj),psfc(ii,jj),
+      real ::  radiance(ii,jj,18),tskin(ii,jj),psfc(ii,jj),
      1     theta(ii,jj),
      1     ozo(40),gimrad,tau(40)
-      real emiss
-      integer kan,lsfc(ii,jj)
-      real model_p(40)
-      real t_fm(40),w_fm(40),ozo_fm(40)
+      real :: emiss
+      integer :: kan,lsfc(ii,jj)
+      real, dimension (40) :: model_p
+      real :: t_fm(40),w_fm(40),ozo_fm(40)
       common/atmos/model_p,t_fm,w_fm,ozo_fm
-      real btemp(ii,jj,18),britgo,plango
-      real zenith               ! function call
-      real pi, d2r
-      external britgo
+      real :: btemp(ii,jj,18),plango
+      real :: zenith               ! function call
+      real :: pi, d2r
+      real, external :: britgo
       
 c     powell specific arrays
-      real x(3)
-      real xi(3,3)
-      real ftol,fret
-      integer iter(ii,jj)
-      real func                 ! function typing for cost function
-      external func
+      real, dimension (3) :: x
+      real, dimension (3,3) :: xi
+      real :: ftol,fret
+      integer, dimension (ii,jj) :: iter
+      real, external :: func    ! function typing for cost function
+
       
 c     optran specific arrays for powell function calling
       
@@ -233,10 +235,12 @@ c     gvap common block
       
 c     cloud common block
       
-      common /cost_cloud/cost_cloud,cost_cld,cost_cloud_istatus,cost_sat
+      common /cost_cloud/cost_cloud,cost_cld,cost_cloud_istatus,
+     1     cost_sat,cost_qadjust
       integer cost_cloud_istatus
       real cost_cloud(500)
       real cost_cld,cost_sat(500)
+      real :: cost_qadjust(500)
       
       integer goes_number
       
@@ -769,13 +773,14 @@ c     fill cost function for background atmosphere
                
                cost_data(k) = sh(i,j,k)
             enddo
+
             cost_kk = kk
             cost_tskin = tskin (i,j)
             cost_psfc = psfc (i,j)
             cost_julian_day = julian_day
             cost_lat = lat (i,j)
             cost_theta = theta (i,j)
-            
+
 c     cost function data for gvap
             
             cost_w1 = gw1(i,j)
@@ -796,6 +801,11 @@ c     cost function data for cloud analysis
             do k = 1,kk
                cost_cloud(k) = cloud(i,j,k)
                cost_sat(k) = sat(i,j,k)
+               cost_qadjust(k) = qadjust (i,j,k)
+c               write(6,*) 'TEMW ',
+c     1              cost_cloud(k), qadjust(i,j,k)/cost_sat(k),
+c     1              (cost_sat(k)-cost_data(k))/cost_sat(k),
+c     1              cost_p(k)
             enddo
 
 c     cost function data for gps

@@ -146,6 +146,10 @@ c     ------------------
       real*4 plevel(kk), p_3d(ii,jj,kk)
       integer*4 mlevel(kk)
 
+c     CLOUD variables
+
+      real :: qadjust (ii,jj,kk)
+
 c     SND variables
 
       real q_snd (ii,jj,kk)
@@ -775,6 +779,25 @@ c     fill subsoil part of the array with -1.e30 data.
     
       endif
 
+
+c     call to get cloud adjust parameter
+
+      do i = 1,ii
+         do j = 1,jj
+c     evaluate the probability of cloud
+            qadjust(i,j,kk) = 0.0
+            do k = 1,kk-1
+               qadjust(i,j,k) = 0.0
+               if (ps(i,j) > p_3d(i,j,k)) then
+                                !evaluate the probabilty of cloud 
+                  call test_cloud (lt1dat(i,j,k),lt1dat(i,j,k+1),
+     1              data(i,j,k),data(i,j,k+1),
+     1              p_3d(i,j,k), sat(i,j,k),
+     1                 qadjust(i,j,k))
+               endif
+            enddo
+         enddo
+      enddo
 c     gps data inserstion step (bias correction to gvap only)
 
       istatus_gps = 0
@@ -942,6 +965,7 @@ c     make call to goes moisture insertion
      1           cg,            ! 3-e cloud field 0-1 (1=cloudy)
      1           c_istatus,     ! cloud istatus
      1           sat,           ! saturated field
+     1           qadjust,       ! q increase needed for cloud formation
      1           lt1dat,        ! laps lt1 (3-d temps)
      1           mdf,
      1           ps,qs,kstart,
