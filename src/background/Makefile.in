@@ -50,7 +50,7 @@ INSTALL=@INSTALL@
 
 SRC=gridconv.f         lga_interp.f       readnogaps.f       readconus211.f\
     lga_util.f         readruc40native.f  readruc60native.f  readeta.f \
-    readdgprep.f       readconusnws.f
+    readdgprep.f       readconusnws.f     
 
 MAIN=lga.f
 
