@@ -34,7 +34,14 @@ C to >= i4time_now+forecast_length
 C      
       previous_time = 0
       call s_len(bgpath,len)
+
+      do bg_files=1,max_files
+         do i=1,100
+            bg_names(i:i) = char(0)
+         enddo
+      enddo
       bg_files=0
+
 
       if(bgmodel.eq.0) then
          do i=max(0,forecast_length),0,-1
@@ -42,6 +49,7 @@ C
             call make_fnam_lp(i4time_now+3600*i
      +           ,bg_names(bg_files),istatus)
             bg_names(bg_files)(10:13) = '0000'
+            bg_names(bg_files)(14:14) = char(0)
          enddo
       else
          next_time=bigint
