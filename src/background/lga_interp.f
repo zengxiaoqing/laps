@@ -214,7 +214,7 @@ c
 c
 c ****** Check for wrapping if a global data set.
 c
-         if (bgmodel .eq. 3) then
+         if (bgmodel .eq. 3 .or. bgmodel .eq. 6) then
             if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
             if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
             if (gry(i,j) .lt. 1) then
@@ -323,9 +323,17 @@ c
      .               nx,ny,nz*5,nz*5,var,
      .               ip,lvl_coord,units,comment,grid1,istatus)
 c
+      if(istatus.ne.1) then
+         print *, 'ERROR returned from read_laps'
+         stop 'lga_interp'
+      endif
       call read_laps(time2,time2+fcst2,dir,ext,
      .               nx,ny,nz*5,nz*5,var,
      .               ip,lvl_coord,units,comment,grid2,istatus)
+      if(istatus.ne.1) then
+         print *, 'ERROR returned from read_laps'
+         stop 'lga_interp'
+      endif
 c
 c *** Do interpolation with time for each new file.
 c

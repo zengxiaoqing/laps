@@ -43,9 +43,11 @@ c        bgmodel = 2 ---> ETA (48 km conus-c grid)
 c        bgmodel = 3 ---> NOGAPS
 c        bgmodel = 4 ---> SBN Conus211 (Eta or RUC)
 c        bgmodel = 5 ---> RUC (40 km native grid)
+c        bgmodel = 6 ---> AVN (360 x 181 lat-lon grid)
+c        bgmodel = 7 ---> ETA (48 km from grib file)
 c
       integer nbgmodel
-      parameter (nbgmodel=5)
+      parameter (nbgmodel=7)
 c
       integer bgmodel
 c
@@ -150,6 +152,16 @@ c         len = index(bgpaths(i),' ')
             ny_bg = 113
             nz_bg = 40       
             cmodel = 'RUC40_NATIVE'            
+         else if(bgmodel.eq.6) then
+            nx_bg = 360
+            ny_bg = 181
+            nz_bg = 16
+            cmodel = 'AVN_LL_GRIB'
+         else if(bgmodel.eq.7) then
+            nx_bg = 185
+            ny_bg = 129
+            nz_bg = 39
+            cmodel = 'ETA48_GRIB'
          endif
          
 
@@ -580,6 +592,12 @@ c
      .                             prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .                             gproj,istatus)
 c
+         elseif (bgmodel .eq. 6 .or.
+     .           bgmodel .eq. 7) then ! Process AVN or ETA grib data
+            call read_dgprep(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg
+     .                      ,prbg,htbg,tpbg,shbg,uwbg,vwbg
+     .                      ,gproj,istatus)
+c
          endif
          if (istatus .ne. 1) then
 c            l=index(bgpath,' ')-1
@@ -897,7 +915,12 @@ c
       call i4time_fname_lp(fname,bgtime,istatus)
       read(af,'(i4)') ihour
       call get_lapsdata_3d(bgtime,bgtime+ihour*3600,nx,ny,
-     +        nz,'lga','HT ',dumb1,comment,dumb2,istatus)
+     +        nz,'lga ','HT ',dumb1,comment,dumb2,istatus)
+      if(istatus.ne.1) then
+         stop 'error returned from get_lapsdata_3d'
+      endif
+
+
       source = comment(1:12)
       return
       end
