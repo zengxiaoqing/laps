@@ -184,8 +184,9 @@ cdis
         real*4 cloud_base_buf(NX_L,NY_L)
 
         real*4 cldtop_m(NX_L,NY_L)
-        real*4 cldtop_m_co2(NX_L,NY_L)
-        real*4 cldtop_m_tb8(NX_L,NY_L)
+        real*4 cldtop_co2_m(NX_L,NY_L)
+        real*4 cldtop_tb8_m(NX_L,NY_L)
+        real*4 cldtop_co2_pa_a(NX_L,NY_L)
 
         real*4 cldcv_sao(NX_L,NY_L,KCLOUD)
         real*4 cld_pres_1d(KCLOUD)
@@ -645,11 +646,12 @@ C DO ANALYSIS on SAO and PIREP data
         endif
 
 C READ IN SATELLITE DATA
-        call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,
-     1                    NX_L,NY_L,r_missing_data,
-     1                    tb8_k,istat_tb8,comment_tb8,
-     1                    t39_k,istat_t39,comment_t39,
-     1                    sst_k,istat_sst,comment_sst)
+        call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,     ! I
+     1                    NX_L,NY_L,r_missing_data,                      ! I
+     1                    tb8_k,istat_tb8,comment_tb8,                   ! O
+     1                    t39_k,istat_t39,comment_t39,                   ! O
+     1                    sst_k,istat_sst,comment_sst,                   ! O
+     1                    cldtop_co2_pa_a,cloud_frac_co2_a,istat_co2)    ! O
 
 !       Calculate solar altitude
         do j = 1,NY_L
@@ -682,7 +684,7 @@ C READ IN SATELLITE DATA
      1       topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,               ! I
      1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,             ! I
      1       t_gnd_k,                                                   ! O
-     1       cldtop_m_co2,cldtop_m_tb8,cldtop_m,                        ! O
+     1       cldtop_co2_m,cldtop_tb8_m,cldtop_m,                        ! O
      1       istatus)                                                   ! O
 
         if(istatus .ne. 1)then
@@ -695,7 +697,7 @@ C READ IN SATELLITE DATA
         write(6,301)
 301     format('  Cloud Top (km)             Band 8                ',
      1                 23x,'          Satellite Analysis')
-        CALL ARRAY_PLOT(cldtop_m_tb8,cldtop_m,NX_L,NY_L,'HORZ CV'
+        CALL ARRAY_PLOT(cldtop_tb8_m,cldtop_m,NX_L,NY_L,'HORZ CV'
      1                 ,c1_name_array,KCLOUD,cld_hts,scale)
 
         I4_elapsed = ishow_timer()
@@ -901,6 +903,30 @@ C       EW SLICES
         enddo ! i
         enddo ! j
 
+!       Log info on cloud holes
+        do i = 2,NX_L-1
+        do j = 2,NY_L-1
+            if(cvr_max(i,j) .lt. 0.65         .and.
+     1         cvr_max(i-1,j-1)   .gt. 0.65    .and.
+     1         cvr_max(i  ,j-1)   .gt. 0.65   .and.
+     1         cvr_max(i+1,j-1)   .gt. 0.65   .and.
+     1         cvr_max(i-1,j  )   .gt. 0.65   .and.
+     1         cvr_max(i+1,j  )   .gt. 0.65   .and.
+     1         cvr_max(i-1,j+1)   .gt. 0.65   .and.
+     1         cvr_max(i  ,j+1)   .gt. 0.65   .and.
+     1         cvr_max(i+1,j+1)   .gt. 0.65              )then
+                write(6,*)' WARNING, hole detected ',i,j,cvr_max(i,j)
+
+                do jj = j+1,j-1,-1
+                    write(6,*)nint(tb8_k(i-1,jj)),nint(tb8_k(i,jj))
+     1                       ,nint(tb8_k(i+1,jj))                
+                enddo ! jj
+
+            endif ! cloud hole detected
+
+        enddo ! j
+        enddo ! i
+
         if(istat_radar_3dref .eq. 1)then
             call get_max_reflect(radar_ref_3d,NX_L,NY_L,NZ_L
      1                          ,r_missing_data,dbz_max_2d)
@@ -1012,7 +1038,7 @@ C       EW SLICES
         enddo ! j
 
 !       Calculate cloud analysis implied snow cover
-        call cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_m_tb8
+        call cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_tb8_m
      1          ,tb8_k,NX_L,NY_L,r_missing_data,cvr_snow_cycle)
 
 !       MORE ASCII PLOTS
@@ -1046,7 +1072,7 @@ C       EW SLICES
         write(6,1001)
 1001    format('  Cloud Top (km)             Band 8                ',
      1            20x,'              Final Analysis')
-        CALL ARRAY_PLOT(cldtop_m_tb8,plot_mask,NX_L,NY_L,'HORZ CV'
+        CALL ARRAY_PLOT(cldtop_tb8_m,plot_mask,NX_L,NY_L,'HORZ CV'
      1                  ,c1_name_array,KCLOUD,cld_hts,scale) ! Plot Band 8 mask
 
 
@@ -1137,6 +1163,7 @@ C       EW SLICES
         comment_a(3) = 'LAPS Clear Sky Water Temp'
         comment_a(4) = comment_tb8
         comment_a(5) = comment_t39
+
 
         call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
         call move(cvr_snow_cycle,out_array_3d(1,1,2),NX_L,NY_L)
@@ -1260,12 +1287,12 @@ C       EW SLICES
         end
 
 
-        subroutine cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_m_tb8
+        subroutine cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_tb8_m
      1             ,tb8_k,ni,nj,r_missing_data,cvr_snow_cycle)
 
         real*4 cvr_max(ni,nj)          ! Input
         real*4 cloud_frac_vis_a(ni,nj) ! Input
-        real*4 cldtop_m_tb8(ni,nj)     ! Input
+        real*4 cldtop_tb8_m(ni,nj)     ! Input
         real*4 tb8_k(ni,nj)            ! Input
         real*4 cvr_snow_cycle(ni,nj)   ! Output
 
@@ -1305,7 +1332,7 @@ C       EW SLICES
             if(        .not. l_cvr_max                          ! No Cld Cover
 !           if(                cvr_max(i,j) .le. 0.1            ! No Cld Cover
      1          .and. cloud_frac_vis_a(i,j) .ne. r_missing_data
-!    1          .and. cldtop_m_tb8(i,j)     .eq. r_missing_data ! No Band 8 clds
+!    1          .and. cldtop_tb8_m(i,j)     .eq. r_missing_data ! No Band 8 clds
      1                                                    )then ! Definitely clear
                 cvr_snow_cycle(i,j) = cloud_frac_vis_a(i,j)
                 cvr_snow_cycle(i,j) = max(cvr_snow_cycle(i,j),0.)
