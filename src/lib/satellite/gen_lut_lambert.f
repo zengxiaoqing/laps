@@ -254,8 +254,8 @@ c not wfo data type
 
       else  !taiwan gms satellite data
 
-         nxlc = 400
-         nylc = 400
+         nxlc = 512 
+         nylc = 512
          nx3mx=nxlc
          ny3mx=nylc
          lat1=10.
@@ -267,6 +267,8 @@ c not wfo data type
          sw(2)=+104.1190
          ne(1)=44.09481
          ne(2)=+153.3814
+         dx = 8.77
+         dy = dx
 
       endif
 
@@ -341,9 +343,6 @@ c use original lambert software for fsl-conus in FSL's /public
       elseif(cdtype.eq.'twn')then           !only other type is taiwan gms
 
          call  latlon_2_lcij(nx*ny,xlat,xlon,ri,rj)
-         dx = 11.23
-         dy = dx
-         
 
       endif
 
