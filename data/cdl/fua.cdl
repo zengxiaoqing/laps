@@ -3,8 +3,8 @@ netcdf ram {
     dimensions:
         record = unlimited,
         z = 21,
-	x = 61,
-	y = 61,
+	x = 125,
+	y = 105,
         nav = 1,
         namelen = 132;
 		
@@ -56,6 +56,18 @@ netcdf ram {
             w3:LAPS_var="W3";
             w3:lvl_coord="HPA";
 	    w3:LAPS_units="M/S";
+
+        //      LAPS Fcst omega wind component
+        //                         
+        float
+            om(record,z,y,x);
+            om:_FillValue = 1.e+37f;
+            om:long_name="LAPS Fcst omega wind component";
+            om:units="Pa/s";
+            om:valid_range= -100.f, 100.f;
+            om:LAPS_var="OM";
+            om:lvl_coord="HPA";
+            om:LAPS_units="PA/S"; 
                 	        
         //	LAPS Fcst temperature
         //      bigfile name = t
@@ -191,6 +203,7 @@ netcdf ram {
             u3_comment(record,z,namelen),
             v3_comment(record,z,namelen),
             w3_comment(record,z,namelen),
+            om_comment(record,z,namelen), 
             t3_comment(record,z,namelen),
             sh_comment(record,z,namelen),
             rh3_comment(record,z,namelen),
@@ -221,6 +234,10 @@ netcdf ram {
         short
             w3_fcinv(record, z);
             w3_fcinv:_FillValue= 0s;
+  
+        short
+            om_fcinv(record, z);
+            om_fcinv:_FillValue= 0s;
               	
         short
             t3_fcinv(record, z);

@@ -3,8 +3,8 @@ netcdf rsf {
     dimensions:
         record = unlimited,
         z = 1,
-	x = 61,
-	y = 61,
+	x =125,
+	y = 105,
         nav = 1,
         namelen = 132;
 		
@@ -142,79 +142,77 @@ netcdf rsf {
             ps:lvl_coord="AGL";
             ps:LAPS_units="PA";
 
-        //      LAPS Fcst integrated liquid water   kg/m**2=mm
+        //      LAPS Fcst integrated liquid water depth         
         //      bigfile name = ilw
         float
             lil(record,z,y,x);
             lil:_FillValue = 1.e+37f;
-            lil:long_name="LAPS Fcst integrated liquid water";
-            lil:units="kg/m**2";
-            lil:valid_range= 0.f, 100.f;
+            lil:long_name="LAPS Fcst integrated liquid water depth";
+            lil:units="m";
+            lil:valid_range= 0.f, 1.f;
             lil:LAPS_var="LIL";
             lil:lvl_coord="AGL";
-            lil:LAPS_units="KG/M**2";
+            lil:LAPS_units="M";
 
-        //      LAPS Fcst integrated total precip water   kg/m**2=mm
+        //      LAPS Fcst integrated total precip water depth        
         //      bigfile name = tpw
         float
             tpw(record,z,y,x);
             tpw:_FillValue = 1.e+37f;
-            tpw:long_name="LAPS Fcst precipitable water";
-            tpw:units="kg/m**2";
-            tpw:valid_range= 0.f, 100.f;
+            tpw:long_name="LAPS Fcst precipitable water depth";
+            tpw:units="m";
+            tpw:valid_range= 0.f, 1.f;
             tpw:LAPS_var="TPW";
             tpw:lvl_coord="AGL";
-            tpw:LAPS_units="KG/M**2";
+            tpw:LAPS_units="M";
 
-        //      LAPS Fcst 60 minute precip accumulation   kg/m**2=mm
+        //      LAPS Fcst increment precip accumulation depth        
         //      bigfile name = pc
         float
             r01(record,z,y,x);
             r01:_FillValue = 1.e+37f;
-            r01:long_name="LAPS Fcst 60 min precip accum";
-            r01:units="kg/m**2";
-            r01:valid_range= 0.f, 10.f;
+            r01:long_name="LAPS Fcst increment precip accum depth";
+            r01:units="m";
+            r01:valid_range= 0.f, 1.f;
             r01:LAPS_var="R01";
             r01:lvl_coord="AGL";
-            r01:LAPS_units="KG/M**2";
+            r01:LAPS_units="M";
 
-        //      LAPS Fcst storm total precip accumulation  kg/m**2=mm
+        //      LAPS Fcst storm total precip accumulation depth        
         //      bigfile name = stpa
         float
             rto(record,z,y,x);
             rto:_FillValue = 1.e+37f;
             rto:long_name="LAPS Fcst storm total precip accum";
-            rto:units="kg/m**2";
-            rto:valid_range= 0.f, 10.f;
+            rto:units="m";
+            rto:valid_range= 0.f, 1.f;
             rto:LAPS_var="RTO";
             rto:lvl_coord="AGL";
-            rto:LAPS_units="KG/M**2";
+            rto:LAPS_units="M";
 
-        //      LAPS Fcst 60 minute snow accumulation  kg/m**2=mm
-        //      ***this should probably be meters...***
+        //      LAPS Fcst increment snow accumulation depth
         //      bigfile name = s1hr
         float
             s01(record,z,y,x);
             s01:_FillValue = 1.e+37f;
-            s01:long_name="LAPS Fcst 60 min snow accum";
-            s01:units="kg/m**2";
+            s01:long_name="LAPS Fcst increment snow accum depth";
+            s01:units="m";
             s01:valid_range= 0.f, 10.f;
             s01:LAPS_var="S01";
             s01:lvl_coord="AGL";
-            s01:LAPS_units="KG/M**2";
+            s01:LAPS_units="M";
 
-        //      LAPS Fcst storm total snow accumulation  kg/m**2=mm
-        //      ***this should probably be meters...***
+        //      LAPS Fcst storm total snow accumulation depth
         //      bigfile name = stot
         float
             sto(record,z,y,x);
             sto:_FillValue = 1.e+37f;
             sto:long_name="LAPS Fcst storm total snow accumulation";
-            sto:units="kg/m**2";
+            sto:units="m";
             sto:valid_range= 0.f, 10.f;
             sto:LAPS_var="STO";
             sto:lvl_coord="AGL";
-            sto:LAPS_units="KG/M**2";
+            sto:LAPS_units="M";
 	
         //      LAPS Fcst potential temperature   //
         //      not transferred to bigfile
