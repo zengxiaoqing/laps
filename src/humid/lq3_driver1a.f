@@ -31,152 +31,10 @@ cdis
 cdis
         subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
 
-c       $log: lq3_driver1a.f,v $
-c revision 1.18  1996/09/05  16:05:32  birk
-c assurred that a recent cloud analysis is used in the goes step
-c
-c revision 1.17  1996/08/30  20:46:49  birk
-c modified to allow the goes variational moisture code
-c
-c revision 1.16  1996/06/26  20:39:18  birk
-c changed the sequence of bringing in the raob data.  now
-c am allowing for the use of raob data even in the event that
-c qc is impossible.
-c
-c revision 1.15  1996/06/25  16:47:33  birk
-c modified for routine raob_step to enable inclusion of raob
-c data to modify the background using a second pass barnes routine
-c
-c revision 1.14  1996/03/13  22:44:00  birk
-c changed read_laps_data to read_laps to allow a sub-hourly cycle
-c
-c revision 1.13  1995/09/13  21:35:53  birk
-c added disclaimer to files
-c
-c revision 1.12  1994/10/28  21:35:49  birk
-c removed unused variables
-c
-c revision 1.11  1994/10/24  17:28:52  birk
-c installed variable for missing data flag
-c
-c revision 1.10  1994/10/19  21:08:49  birk
-c modified to read maps sh instead of rh background data
-c
-c revision 1.9  1994/09/09  15:52:34  birk
-c corrected mixed mode problem in pressure level assignment
-c
-c revision 1.8  1994/08/17  22:19:53  birk
-c modified to read lga/f files instead of lma/f for background fields.
-c this change is related to associated changes in .inc (include) files.
-c please check to see that these changes also exist.
-c
-c revision 1.7  1994/07/22  22:02:45  birk
-c made code compatible with lapsparms.inc
-c
-c revision 1.6  1994/06/28  20:13:18  birk
-c modified the cloud/rh relationship... former parameterization
-c is no longer used.  the new scheme simply computes the rh
-c in cloudy areas by summing the cloud fraction with the product of
-c the clear fraction times the background rh.  the background rh is
-c currently derived from the average rh in clear areas.   granted this is
-c a simplistic scheme and one that may be modified yet again.
-c the reason for this change is to avoid the super-high levels of rh that
-c the former parameterization produced even in 60% cloudy areas.
-c
-c revision 1.5  1994/06/17  22:35:59  birk
-c modified acceptance of cloudy sh value in all cases
-c (formerly code would accept the greater, cloud sh or background)
-c
-c revision 1.4  1994/06/15  20:12:10  birk
-c added type statement to track cloud moisture modification
-c
-c revision 1.3  1994/05/02  19:21:59  birk
-c removed external statements required  for vms scheduler
-c
-c revision 1.2  1994/04/25  14:55:16  birk
-c modified new header for rcs in the logfile
-c
-c revision 1.1  1994/04/25  14:51:58  birk
-c initial revision
-c
 
-c       driver that generates 3-d specific humidity analysis on the laps
-c       grid  part 1:  this code gets the lma or lmf files data and computes
-c       the laps grids for part one of the analysis
-
-c       birkenheuer, d.  1 may 1989
-c       birkenheuer d 23 mar 90 use lma and lmf files
-
-
-
-c       version 2.0 released 12 december 1990  d birkenheuer
-c       new additions include: vectorized software
-c                       qc check for under and super saturation
-c                       referencing clouds and the laps temp analysis
-c                       additional smoothing in the vicinity of
-c                       clouds to redistribute moisture
-c                       generation of lh3 file for rh laps for g2g
-c
-
-c       version 2.1 includes
-c                       t_istatus for temp check
-
-c       version 2.2 includes
-c                       inclusion of 900 mb level
-c                       adjustment for hourly operation
-
-c       version 3.0 includes surface interface call
-
-c       version 3.1 incorporates quadratic rh cloud cover parameterization
-c                   29 october 1991
-
-c       version 4.0 resolves filtering problems and better places the b.l.
-c       scheme in the sequence.  moves the supersaturation check to the end
-c       and performs it only once.  skips b.l. , cloud and supersaturation
-c       altogether if 3-d temp data are not available.
-
-c       version 4.1 add in a requirement to compute total precipitable water
-c       for the aviation project.  these modifications can be found in module
-c       lh3_compress.for.  by placing them there, the same routine generates
-c       includes production of tpw after the satellite runs too.
-
-c       version 4.2 includes the new boundary filter to improve the
-c       asthetics at the domain edge.
-
-c       version 4.3 includes mod in lh3_compress in the area for total
-c       precipitable water to prevent td from being less than 150. c
-
-c       version 5.0 generates tpw (lh4) files
-
-c       version 5.1 includes comment in lh4 output header on bias_one for
-c       statistical analysis of quality
-
-c       version 5.2 includes mixing in the lower boundary layer in lh4
-
-c       version 5.3 and 5.4 solved misc problems
-
-c       version 5.5 reduced mixing in the lower boundary layer in lh4 11/12/92
-
-c       version 5.6 changed to unpacked files 1/6/93 db
-
-c       version 6.0 to handle too dry condition in cloudy cases -- reordering
-c       of data insertion.
-
-c       version 6.1 replaces the approximate sh call (bakers routine) with a
-c       more precise version that compensates for phase of the liq or solid
-c       water species.
-
-c       version 7.0
-c       birkenheuer d., jan 94 modified to use rams as first guess
-
-
-c       included include file
 
         implicit none
 
-
-c        include 'lapsparms.for'
-c        include 'parmtrs.inc'
 c     parameter variables
 
         integer ii,jj,kk
@@ -186,8 +44,6 @@ c     parameter variables
 
         integer*4
      1       jstatus(3)
-
-
 
 
         integer
@@ -328,7 +184,7 @@ c        real eslo,esice
 c----------------------    code   ------------------
 c        initialize laps field
 
-        write (6,*) 'version 1.31; 6/18/99; passing temp to raob_step'
+        write (6,*) 'version 1.32; 7/8/99; increase cloud thresh (.6)'
 
 c call get_laps congif to fill common block used in pressure assignment
 c                                                               routine
@@ -929,7 +785,7 @@ c     *** insert cloud moisture, this section now controled by a switch
             do j = 1,jj
                do i = 1,ii
                   
-                  if(cg(i,j,k) .gt. 0.1 .and. cg(i,j,k) .lt. 1.0) then !cloudy
+                  if(cg(i,j,k) .gt. 0.6 .and. cg(i,j,k) .lt. 1.0) then !cloudy
                      
                      tempsh = ssh2( float(lvllm(k)),
      1                    lt1dat(i,j,k)-273.15,
