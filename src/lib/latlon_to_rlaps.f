@@ -38,6 +38,7 @@ cdis
 !       1997            Steve Albers - Added both kinds of lambert projections
 !                                    - as well as mercator projection
 !       1997            Steve Albers - Added local stereographic
+!       2002            Dan Birkenheuer - added input test for valid lats
 
 cdoc    This routine assumes a polar stereographic, lambert conformal,
 cdoc    or mercator projection.
@@ -51,6 +52,12 @@ cdoc    or mercator projection.
 
         save init,umin,umax,vmin,vmax
         data init/0/
+
+        if (abs(rlat) > 90.000) then
+           write(6,*) 'rejecting invalid latitude ',rlat
+           istatus = 0
+           return
+        endif
 
         if(init .eq. 0)then
             call latlon_to_uv(lat(1,1),lon(1,1),umin,vmin,istatus)
