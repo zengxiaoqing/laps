@@ -194,9 +194,10 @@ C                     FACTOR OF 2 IS USED IN AVERAGING TWO VIRTUAL
 C                     TEMPERATURES.
         real*4 esat_lut(-120:+100)
 
+        include 'constants.inc' 
         real*4 C1,C2
-        PARAMETER (C1 = .0006078)
-        PARAMETER (C2 = 14.64285)
+        PARAMETER (C1 = .001 * EP_1)
+        PARAMETER (C2 = r_d / (2. * grav) )
 
         DO 5 I= 1,N
            TK(I)= T(I)+273.16
@@ -243,9 +244,11 @@ cdoc    Convert T(C) and P to W. This is a fast approximate routine.
 
         real*4 esat_lut(-120:+100)
 
+        include 'constants.inc'
         real*4 C1,C2,const
-        PARAMETER (C1 = .0006078)
-        PARAMETER (C2 = 14.64285)
+        PARAMETER (C1 = .001 * EP_1)
+        PARAMETER (C2 = r_d / (2. * grav) )
+
         parameter (const = 622. * c1 * c2)
 
 C       ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
