@@ -35,9 +35,10 @@ c..........     temperatures are not greater than the potential temperature
 c..........     at an upper level.  Set this variable equal to the desired
 c..........     upper level:
 c
-c..........      	0 = No sfc theta check done
-c..........      	7 = Use 700 mb level
-c..........       	5 = Use 500 mb level
+c..........     -1 = auto-set itheta (5/7) based on terrain (centr gridpt>1000m)
+c..........      0 = No sfc theta check done
+c..........      7 = Use 700 mb level
+c..........      5 = Use 500 mb level
 c
 c..........     Recommended:  Use 700 mb most places, 500 mb over higher
 c..........                   terrain areas (like Colorado).
