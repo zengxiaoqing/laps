@@ -50,8 +50,8 @@ c       birkenheuer  feb 9 1993
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'lapsparms.for'
+c        include 'parmtrs.inc'
 
 c parameter variables
 
