@@ -13,6 +13,7 @@
       integer i4times(max_files)
       character*8 c8_project
       character*13 filename13, cvt_i4time_wfo_fname13
+      logical l_use_tamdar
 
 !     Output file
       character*31    ext
@@ -34,6 +35,12 @@
       call get_c8_project(c8_project,istatus)
       if (istatus .ne. 1) then
           write (6,*) 'Error getting c8_project'
+          go to 999
+      endif
+
+      call get_l_use_tamdar(l_use_tamdar,istatus)
+      if (istatus .ne. 1) then
+          write (6,*) 'Error getting l_use_tamdar'
           go to 999
       endif
 
