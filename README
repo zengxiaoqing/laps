@@ -105,10 +105,8 @@
      To install in /usr/local/laps with data in /data/fxa/laps use
      $ ./configure --prefix=/usr/local/laps --datadir=/data/fxa/laps
      
-     Data directories for laps can be specified at runtime and a single set of
-     binaries can support several data directories. Note that the data 
-     directory is currently restricted to 38 characters in length. We
-     hope to increase this in the future.
+     The data directory for running laps can be specified at runtime. A single 
+     set of binaries can support several data directories as described below. 
 
                 --- 2.1.3   Ingest Software changes ---
 
@@ -172,8 +170,10 @@
      this includes ingest data path names, and potentially other aspects of 
      the data processing. These should be changed prior to running the 
      localization. The main parameter files are 'data/static/nest7grid.parms',
-     'data/static/*.nl', and 'data/static/*/*.parms'. These should be modified
-     prior to running 'laps_localization.pl'.
+     'data/static/*.nl', and 'data/static/*/*.parms'. These should be emplaced
+     and/or modified within each 'data' directory tree prior to running 
+     'laps_localization.pl'. Details on the contents of the 'nest7grid.parms' 
+     file are discussed in subsequent sections. 
 
      The subset of parameters to be changed will vary depending on the
      implementation. The parameter files will also potentially be changing 
@@ -190,18 +190,18 @@
 
      Finally the script './etc/laps_localization.pl' will create the
      static data files and look up tables specific to the domain(s) you
-     have defined in 'data/static/nest7grid.parms'. Details on the contents 
-     of the 'nest7grid.parms' file are discussed in subsequent sections. 
-     Shown below is an example of running the localization for a particular
-     laps domain.
+     have defined in 'data/static/nest7grid.parms' and other runtime parameter
+     files. Shown below is an example of running the localization for a 
+     particular laps domain.
 
      $./etc/laps_localization.pl --lapsroot=/usr/local/laps         
                                  --dataroot=/data/fxa/laps/data
 
-
-     If you have multiple domains, this script can be run once for each domain.
-     Different runtime parameters are set up in each 'data' directory tree.
-
+     If you have multiple domains, this script can be run for each domain with
+     different values of 'lapsroot'. Different runtime parameters are set up 
+     in each 'data/static' directory tree. Make sure that the 'data/log' and 
+     'data/lapsprd/xxx' subdirectories are in place prior to running the 
+     localization on additional domains.
 
       ----------------  2.2   UNIX System Requirements  ----------------
 
