@@ -39,7 +39,7 @@ cdis
      1          ,iflag_write                     ! Input
      1          ,ilaps_cycle_time                ! Input
      1          ,grid_spacing_m                  ! Input
-     1          ,temp_3d,istatus)                ! Output
+     1          ,temp_3d,pres_3d,istatus)        ! Output
 
 !              1991     Steve Albers    Original Version
 !          Oct 1991     Steve Albers    Add Sfc pres as input to more accurately
@@ -71,7 +71,7 @@ cdis
         real*4 output_4d(ni,nj,nk,2)
 
         real*4 sh_3d(ni,nj,nk)     ! Local
-        real*4 pres_3d(ni,nj,nk)   ! Local
+        real*4 pres_3d(ni,nj,nk)   ! Output
         real*4 temp_sfc_k(ni,nj)   ! Input
         real*4 pres_sfc_pa(ni,nj)  ! Input
         real*4 theta(nk)
