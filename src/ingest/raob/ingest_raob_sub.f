@@ -324,21 +324,21 @@ C
       REAL*4      prMan                          (manLevel ,NREC)
       REAL*4      htMan                          (manLevel ,NREC)
       REAL*4      tpMan                          (manLevel ,NREC)
-      REAL*4      tdMan                          (manLevel ,NREC)
+      REAL*4      tdMan                          (manLevel ,NREC) ! Dwpt Dprs
       REAL*4      wdMan                          (manLevel ,NREC)
       REAL*4      wsMan                          (manLevel ,NREC)
 
       REAL*4      prMan_good                     (manLevel)
       REAL*4      htMan_good                     (manLevel)
       REAL*4      tpMan_good                     (manLevel)
-      REAL*4      tdMan_good                     (manLevel)
+      REAL*4      tdMan_good                     (manLevel)       ! Dwpt Dprs
       REAL*4      wdMan_good                     (manLevel)
       REAL*4      wsMan_good                     (manLevel)
 
       INTEGER*4   numsigt                        (NREC)
       REAL*4      prSigT                         (sigTLevel,NREC)
       REAL*4      tpSigT                         (sigTLevel,NREC)
-      REAL*4      tdSigT                         (sigTLevel,NREC)
+      REAL*4      tdSigT                         (sigTLevel,NREC) ! Dwpt Dprs
 
       INTEGER*4   numsigw                        (NREC)
       REAL*4      htSigW                         (sigWLevel,NREC)
@@ -353,9 +353,9 @@ C
       REAL*4      tpout                          (NLVL_OUT)
       REAL*4      tpout_sort_c                   (NLVL_OUT)
       REAL*4      tpout_c_z                      (NLVL_OUT)
-      REAL*4      tdout                          (NLVL_OUT)
-      REAL*4      tdout_sort_c                   (NLVL_OUT)
-      REAL*4      tdout_c_z                      (NLVL_OUT)
+      REAL*4      tdout                          (NLVL_OUT)  ! Dewpoint Depress
+      REAL*4      tdout_sort_c                   (NLVL_OUT)  ! Dewpoint Deg C
+      REAL*4      tdout_c_z                      (NLVL_OUT)  ! Dewpoint Deg C
       REAL*4      wdout                          (NLVL_OUT)
       REAL*4      wdout_sort                     (NLVL_OUT)
       REAL*4      wsout                          (NLVL_OUT)
@@ -399,7 +399,10 @@ C
 
       n_good_man = n_good_levels
 
-!     Bubble sort the mandatory levels by height
+!     Bubble sort the mandatory levels by height 
+!     (this may not be all that essential given that underground 
+!     levels have been filtered out)
+
  300  iswitch = 0
       do i = 2,n_good_man
           if(htman_good(indx(i)) .lt. htman_good(indx(i-1)))then
@@ -431,8 +434,8 @@ C
               n_good_z = n_good_z + 1
 
               if(abs(tdout(i)) .le. 500.)then ! good td value
-!                 tdout_c_z(i) = tpout_c_z(i) - tdout(i)
-                  tdout_c_z(i) = k_to_c(tdout(i))
+                  tdout_c_z(i) = tpout_c_z(i) - tdout(i)
+!                 tdout_c_z(i) = k_to_c(tdout(i))
 
                   tdout_ref = tdout(i)
 
@@ -478,6 +481,10 @@ C
             if(n_good_z .gt. 0)then
                 ht_calc = z(prsigt(ilevel,isnd)
      1                     ,prout,tpout_c_z,tdout_c_z,n_good_z)
+
+                if(nanf(ht_calc) .eq. 1)then
+                    ht_calc = -1.0        ! flag value for invalid height
+                endif
 
                 if(ht_calc .ne. -1.0)then ! valid height returned
                     ht_calc = ht_calc + htout(1)
