@@ -429,6 +429,8 @@
 
      There are many other targets within the Makefile that can be used for
      specialized purposes, such as cleaning things up to get a fresh start.
+     In particular, note that a 'make distclean' is recommended before running
+     'configure' a second time so that things will run smoothly. 
 
             --- 2.2.4.1 Creating single or multiple data domains ---
 
