@@ -1895,9 +1895,10 @@ Inputs:
         coordinate, NetCDF format. This is in fact being done for the AWIPS 4.2
         implementation of LAPS for a low-level tilt from a single radar, via 
         the 'etc/LapsRadar.pl' script running in the AWIPS environment. The 
-        comment section at the top of this script explains how it works. 
-        'etc/LapsRadar.pl' runs two executables, 'tfrNarrowband2netCDF' from 
-        AWIPS, and 'remap_polar_netcdf.exe' from LAPS.
+        comment section at the top of this script explains how this 4 bit
+        processing of reflectivity data works. 'etc/LapsRadar.pl' runs two 
+        executables, 'tfrNarrowband2netCDF' from AWIPS, and 
+        'remap_polar_netcdf.exe' from LAPS.
 
 Outputs (LAPS intermediate files - depending on input parameters):
 <pre>
