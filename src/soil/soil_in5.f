@@ -37,8 +37,8 @@ C
 	Subroutine Soil_In5(SoilType,IStatus) 
 
       include 'lapsparms.for'
-      parameter(imax=nx_l,jmax=ny_l)
       integer*4 imax,jmax
+      parameter(imax=nx_l,jmax=ny_l)
         include 'soilm.inc'
         integer SoilType(Imax,Jmax)
 	Open(Unit = 2, File = 'Soils.dat', Status = 'Old',

@@ -46,8 +46,8 @@ C
 
 
       include 'lapsparms.for'
-      parameter(imax=nx_l,jmax=ny_l)
       integer*4 imax,jmax
+      parameter(imax=nx_l,jmax=ny_l)
 	Include 'soilm.inc'
 
 	Real 	Laps_u(Imax,Jmax)
