@@ -189,14 +189,6 @@
               write(6,*)' File is too late ',a9_time,i
 
           else
-!             Open output SND file
-              if(iopen .eq. 0)then
-                  ext = 'snd'
-                  call open_lapsprd_file(11,i4time_sys,ext,istatus)
-                  if(istatus .ne. 1)go to 998
-                  iopen = 1
-              endif
-
               write(6,*)
               write(6,*)' File is in time window ',a9_time,i
               write(6,*)' Input file ',filename_in
@@ -218,12 +210,28 @@
 
               elseif(      l_parse(c8_raob_format,'AFGWC')
      1                .or. l_parse(c8_raob_format,'AFWA')   )then
+!                 Open output SND file (we can phase in 'open_ext' later)
+                  if(iopen .eq. 0)then
+                      ext = 'snd'
+                      call open_lapsprd_file(11,i4time_sys,ext,istatus)
+                      if(istatus .ne. 1)go to 998
+                      iopen = 1
+                  endif
+
                   call get_raob_data_af(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest,a9_time       
      1                ,filename_in,istatus)
 
               elseif(c8_raob_format(1:3) .eq. 'CWB')then
+!                 Open output SND file (we can phase in 'open_ext' later)
+                  if(iopen .eq. 0)then
+                      ext = 'snd'
+                      call open_lapsprd_file(11,i4time_sys,ext,istatus)
+                      if(istatus .ne. 1)go to 998
+                      iopen = 1
+                  endif
+
                   call get_raob_data_cwb(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest,a9_time       
@@ -241,8 +249,6 @@
 
       enddo
 
-      close(11) ! Output SND file
-
       go to 999
 
  997  write(6,*)' Error in RAOB ingest (ob time windows)'
@@ -258,3 +264,26 @@
       return
       end
  
+      subroutine open_ext(i4time_sys,ext,lun,istatus)
+
+      integer iopen
+      save iopen
+      data iopen /0/
+
+      character*3 ext
+
+!     Open output SND file
+      if(iopen .eq. 0)then
+          call open_lapsprd_file(lun,i4time_sys,ext,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' ERROR: could not open lapsprd file ',ext
+              stop
+          else
+              write(6,*)' Successfully Opened lapsprd file for ',ext
+          endif
+
+          iopen = 1
+      endif
+
+      return
+      end
