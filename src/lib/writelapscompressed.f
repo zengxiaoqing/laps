@@ -77,23 +77,23 @@ C
         return
       endif
 C
-      if (imax .ne. n7g_nx) then
-        if (flag .ne. 1)
-     1write (6,*) 
-     1'imax passed in does not match ','laps_dom_file'
-     1,'...write aborted.'
-        istatus=error(2)
-        return
-      endif
+!     if (imax .ne. n7g_nx) then
+!       if (flag .ne. 1)
+!    1write (6,*) 
+!    1'imax passed in does not match ','laps_dom_file'
+!    1,'...write aborted.'
+!       istatus=error(2)
+!       return
+!     endif
 C
-      if (jmax .ne. n7g_ny) then
-        if (flag .ne. 1)
-     1write (6,*) 
-     1'jmax passed in does not match, ',laps_dom_file
-     1,'...write aborted.'
-        istatus=error(2)
-        return
-      endif
+!     if (jmax .ne. n7g_ny) then
+!       if (flag .ne. 1)
+!    1write (6,*) 
+!    1'jmax passed in does not match, ',laps_dom_file
+!    1,'...write aborted.'
+!       istatus=error(2)
+!       return
+!     endif
 
 C ****  Specify file name
 C
@@ -135,7 +135,7 @@ C
       asc_len = len(asctime)
 
       ngrids = imax*jmax*kmax
-      call runlength_encode(ngrids,n_cmprs_max                ! I
+      call runlength_encode(ngrids,n_cmprs_max,data           ! I
      1                     ,n_cmprs,array,istatus)            ! O
 
       lun = 65
