@@ -846,7 +846,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
      ! making albedo an output variable in the WRF registry) and
      ! divide it back out.
      CALL get_wrfnc_2d(current_lun,'ALBEDO','A',nx,ny,1,albedo,status)
-     IF (.NOT. status) THEN
+     IF (status .NE. 0) THEN
        ! make sure destaggering did not create values outside the range
        WHERE (albedo .LT. 0.) albedo = 0.
        WHERE (albedo .GT. 1.0) albedo = 1.0
@@ -863,18 +863,20 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
      made_pbl = .true.
      CALL get_wrfnc_2d(current_lun,'TSK','A',nx,ny,1,ground_t,status)
    ENDIF
-   IF (do_smoothing) THEN
-     DO smth = 0.5, -0.5, -1
-        CALL SMOOTH(lwout,nx,ny,1,smth)
-        CALL SMOOTH(swout,nx,ny,1,smth)
-        CALL SMOOTH(lwdown,nx,ny,1,smth)
-        CALL SMOOTH(swdown,nx,ny,1,smth)
-        CALL SMOOTH(shflux,nx,ny,1,smth)
-        CALL SMOOTH(lhflux,nx,ny,1,smth)
-        IF (.NOT. made_pbl) CALL SMOOTH(pblhgt,nx,ny,1,smth)
-        CALL SMOOTH(ground_t,nx,ny,1,smth)
-     ENDDO
-   ENDIF
+
+!  Commented out smoothing of these fields. 01/21/2004 BLS
+!  IF (do_smoothing) THEN
+!    DO smth = 0.5, -0.5, -1
+!       CALL SMOOTH(lwout,nx,ny,1,smth)
+!       CALL SMOOTH(swout,nx,ny,1,smth)
+!       CALL SMOOTH(lwdown,nx,ny,1,smth)
+!       CALL SMOOTH(swdown,nx,ny,1,smth)
+!       CALL SMOOTH(shflux,nx,ny,1,smth)
+!       CALL SMOOTH(lhflux,nx,ny,1,smth)
+!       IF (.NOT. made_pbl) CALL SMOOTH(pblhgt,nx,ny,1,smth)
+!       CALL SMOOTH(ground_t,nx,ny,1,smth)
+!    ENDDO
+!  ENDIF
 
   END SUBROUTINE get_sigma_vars   
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
@@ -1292,7 +1294,17 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     REAL                          :: cldicethresh
     REAL                          :: snowthresh
     INTEGER                       :: status
+    REAL                          :: zero_thresh
 
+    ! Set up the zero_thresh (threshold below which arrays
+    ! are zeroed out for microphysics species) for MM5
+    ! and WRF separately
+
+    IF (mtype .EQ. 'mm5') THEN
+       zero_thresh = 1.e-10
+    ELSE
+       zero_thresh = 1.e-6
+    ENDIF
     ! Get each of the cloud species mixing ratio arrays
     ALLOCATE (cldliqmr_sig (nx,ny,ksigh))
     ALLOCATE (cldicemr_sig (nx,ny,ksigh))
@@ -1313,7 +1325,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
         PRINT '(A)', 'Problem getting CLW!  Setting to 0.'
         cldliqmr_sig = 0.0
       ENDIF
-      WHERE(cldliqmr_sig .LT. 0.00001) cldliqmr_sig = 0.0
+      WHERE(cldliqmr_sig .LT. zero_thresh) cldliqmr_sig = 0.0
       clwmrsfc(:,:) = cldliqmr_sig(:,:,1)
 
       IF (mtype .EQ. 'mm5') THEN 
@@ -1327,7 +1339,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
         PRINT '(A)', 'Problem getting RNW!  Setting to 0.'
         rainmr_sig = 0.0
       ENDIF
-      WHERE(rainmr_sig .LT. 0.00001) rainmr_sig = 0.0
+      WHERE(rainmr_sig .LT. zero_thresh) rainmr_sig = 0.0
       rainmrsfc(:,:) = rainmr_sig(:,:,1)
 
     ELSE
@@ -1350,7 +1362,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
         PRINT '(A)', 'Problem getting ICE!  Setting to 0.'
         cldicemr_sig = 0.0
       ENDIF
-      WHERE(cldicemr_sig .LT. 0.00001) cldicemr_sig = 0.0
+      WHERE(cldicemr_sig .LT. zero_thresh) cldicemr_sig = 0.0
       icemrsfc(:,:) = cldicemr_sig(:,:,1)
 
       IF (mtype .EQ. 'mm5') THEN  
@@ -1365,7 +1377,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
         PRINT '(A)', 'Problem getting SNOW!  Setting to 0.'
         snowmr_sig = 0.0
       ENDIF
-      WHERE(snowmr_sig .LT. 0.00001) snowmr_sig = 0.0
+      WHERE(snowmr_sig .LT. zero_thresh) snowmr_sig = 0.0
       snowmrsfc(:,:) = snowmr_sig(:,:,1)
     ELSE
       cldicemr_sig = 0.0
@@ -1387,7 +1399,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
         PRINT '(A)', 'Problem getting GRAUPEL!  Setting to 0.'
         graupelmr_sig = 0.0
       ENDIF
-      WHERE(graupelmr_sig .LT. 0.00001) graupelmr_sig = 0.0
+      WHERE(graupelmr_sig .LT. zero_thresh) graupelmr_sig = 0.0
       graupmrsfc(:,:) = graupelmr_sig(:,:,1)
     ELSE
       graupelmr_sig = 0.0
@@ -1404,11 +1416,11 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     ALLOCATE (condmr_sig(nx,ny,ksigh))
     condmr_sig = cldliqmr_sig + cldicemr_sig + snowmr_sig + rainmr_sig &
                  + graupelmr_sig
-print *, 'Calling integrated_liquid'
-print *, 'min/max condmr_sig = ',minval(condmr_sig),maxval(condmr_sig)
-print *, 'min/max mrsig = ',minval(mrsig),maxval(mrsig)
-print *, 'min/max rhodrysig = ', minval(rhodrysig),maxval(rhodrysig)
-print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
+    print *, 'Calling integrated_liquid'
+    print *, 'min/max condmr_sig = ',minval(condmr_sig),maxval(condmr_sig)
+    print *, 'min/max mrsig = ',minval(mrsig),maxval(mrsig)
+    print *, 'min/max rhodrysig = ', minval(rhodrysig),maxval(rhodrysig)
+    print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
     CALL integrated_liquid(nx,ny,ksigh,condmr_sig,mrsig, rhodrysig,zsig,terdot, &
                            intliqwater,totpcpwater) 
     DEALLOCATE(condmr_sig)   
@@ -1450,13 +1462,6 @@ print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
  
     DEALLOCATE (below_ground) 
     
-    ! Eliminate very small values due to interpolation
-    WHERE(cldliqmr_prs .LT. 0.00001) cldliqmr_prs = 0.0
-    WHERE(cldicemr_prs .LT. 0.00001) cldicemr_prs = 0.0
-    WHERE(rainmr_prs .LT. 0.00001) rainmr_prs = 0.0
-    WHERE(snowmr_prs .LT. 0.00001) snowmr_prs = 0.0 
-    WHERE(graupelmr_prs .LT. 0.00001) graupelmr_prs = 0.0
-
     ! Diagnostic Print of top 4 layers
 
     PRINT *, 'Mean Condensate Values:'
@@ -1494,7 +1499,7 @@ print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
         DO k = 1 , kprs
            IF (rainmr_prs(i,j,k).GT.0) THEN
              IF (snowmr_prs(i,j,k) .GT. 0.) THEN
-               IF (graupelmr_prs(i,j,k).GT.0.) THEN
+               IF (graupelmr_prs(i,j,k).GT.snowmr_prs(i,j,k)) THEN
                  pcptype_prs(i,j,k)=rainicecode
                ELSE
                  pcptype_prs(i,j,k) = rainsnowcode
@@ -1524,7 +1529,7 @@ print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
          ENDDO
          IF (rainmr_sig(i,j,1).GT.0) THEN
            IF (snowmr_sig(i,j,1) .GT. 0.) THEN
-             IF (graupelmr_sig(i,j,1).GT.0.) THEN
+             IF (graupelmr_sig(i,j,1).GT.snowmr_sig(i,j,1)) THEN
                  pcptype_sfc(i,j)=rainicecode
              ELSE
                  pcptype_sfc(i,j) = rainsnowcode
