@@ -267,6 +267,7 @@ AC_OUTPUT(src/include/trigd.inc
 	  etc/laps_monitor.pl
           etc/makedatadirs.pl
           etc/sendLAPS.pl
+          etc/send_lapsprep.pl
           etc/sfc.pl
           etc/systime.pl
           etc/temp.pl
