@@ -21,6 +21,7 @@ SRC=ingest_pro.f \
     ingest_sub_pro.f \
     ingest_sub_blppro.f \
     ingest_sub_rsapro.f \
+    read_rsa_50mhz.f \
     ingest_vad.f \
     ingest_vad_sub.f
 
