@@ -82,7 +82,7 @@ c                                     used for variable in include 'satellite_co
       integer   n_lvd_fields_max
       parameter (n_lvd_fields_max = 14)
       integer   max_files
-      parameter (max_files=800)
+      parameter (max_files=20000)
  
       integer   len_lvd
 
