@@ -59,6 +59,8 @@ MODULE wfoprep_setup
   INTEGER, PUBLIC              :: model_delay(max_sources)
   INTEGER, PUBLIC              :: max_fcst_len(max_sources)
   INTEGER, PUBLIC              :: output_freq(max_sources)
+  REAL, PUBLIC                 :: min_time_frac
+  REAL, PUBLIC                 :: min_vert_frac
   CHARACTER (LEN=256)          :: fxa_data
   CHARACTER (LEN=132),PUBLIC   :: model_name(max_sources)
   CHARACTER (LEN=256),PUBLIC   :: model_path(max_sources)
@@ -174,7 +176,7 @@ CONTAINS
     NAMELIST / wfoprep_nl / model_code, model_name, &
                             model_run_freq, model_delay, max_fcst_len, &
                             output_freq,output_format, fxa_data, &
-                            output_name
+                            output_name,min_time_frac,min_vert_frac
 
     PRINT '(A)', 'Processing wfoprep.nl namelist information.'
     ! Initialize the namelist values
@@ -186,7 +188,8 @@ CONTAINS
     max_fcst_len(:) = 0
     output_freq(:) = 0
     output_format = '          '
-
+    min_time_frac = 0.8
+    min_vert_frac = 0.5
     ! Build the file name of the namelist and make sure it exists
     nlfile = TRIM(laps_data_root) // '/static/wfoprep.nl'
     INQUIRE(file=nlfile, EXIST=nlfound)

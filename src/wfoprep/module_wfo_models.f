@@ -122,7 +122,7 @@ CONTAINS
     
 
     istatus = 1
-   
+    gproj(1:132) = ' ' 
     ! Get the horizontal dimensions
     nfstatus = NF_INQ_DIMID(nfid, 'x', vid)
     IF (nfstatus .NE. NF_NOERR) THEN

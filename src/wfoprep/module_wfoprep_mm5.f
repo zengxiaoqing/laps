@@ -66,7 +66,7 @@ MODULE wfoprep_mm5
   PUBLIC output_mm5v3_basic, output_mm5v3_sfc
   INTEGER, PARAMETER, PUBLIC   :: MM5MODE_NEW = 1
   INTEGER, PARAMETER, PUBLIC   :: MM5MODE_APPEND = 2
-  LOGICAL, PARAMETER           :: verbose = .false.
+  LOGICAL, PARAMETER           :: verbose = .true.
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE output_mm5v3_basic(i4time_cycle, i4time_valid, proj, &

@@ -8,7 +8,7 @@ SUBROUTINE fill_missing_levs(nx,ny,nz,plevs,data,missval,method)
   INTEGER, INTENT(IN)                 :: nx
   INTEGER, INTENT(IN)                 :: ny
   INTEGER, INTENT(IN)                 :: nz
-  REAL, INTENT(IN)                    :: plevs(nz)  ! Press in Pa
+  REAL, INTENT(IN)                    :: plevs(75)  ! Press in Pa
   REAL, INTENT(INOUT)                 :: data(nx,ny,nz)
   REAL, INTENT(IN)                    :: missval
   INTEGER, INTENT(IN)                 :: method

@@ -61,9 +61,9 @@ PROGRAM wfoprep
   USE wfoprep_wrf
  
   IMPLICIT NONE  
-
-  INTEGER,PARAMETER         :: maxl=100
-  INTEGER,PARAMETER         :: maxt=100
+  REAL, PARAMETER           :: rmissingval = -9999.
+  INTEGER,PARAMETER         :: maxl=75 
+  INTEGER,PARAMETER         :: maxt=50
   LOGICAL                   :: filefound
   INTEGER                   :: fcstsec(maxt)
   INTEGER                   :: goodlevs
@@ -88,7 +88,7 @@ PROGRAM wfoprep
   CHARACTER (LEN=256)       :: proclog
   INTEGER                   :: ta
   INTEGER                   :: t_id,ht_id,u_id,v_id,rh_id,msl_id
-  INTEGER                   :: nz_t,nz_ht,nz_u,nz_v,nz_rh,nz_rh,nz_msl
+  INTEGER                   :: nz_t,nz_ht,nz_u,nz_v,nz_rh,nz_msl
   INTEGER                   :: np_t,np_ht,np_u,np_v,np_rh,np_rh_raw,np_msl
   LOGICAL                   :: havesfc_t,havesfc_ht,havesfc_u,havesfc_msl
   LOGICAL                   :: havesfc_v,havesfc_rh
@@ -116,6 +116,7 @@ PROGRAM wfoprep
   LOGICAL, ALLOCATABLE      :: u_inv(:,:)
   LOGICAL, ALLOCATABLE      :: v_inv(:,:)
   LOGICAL, ALLOCATABLE      :: rh_inv(:,:)
+  LOGICAL, ALLOCATABLE      :: rh_inv_raw(:,:)
   LOGICAL, ALLOCATABLE      :: ht_inv(:,:)
   LOGICAL, ALLOCATABLE      :: msl_inv(:,:)
   LOGICAL, ALLOCATABLE      :: goodtime_flag (:)
@@ -442,9 +443,14 @@ PROGRAM wfoprep
       CYCLE model_loop
     ENDIF       
 
+    IF (ALLOCATED(rh_inv_raw)) DEALLOCATE(rh_inv_raw)
+    ALLOCATE(rh_inv_raw(nz_rh,ntimes))
+    ! Also allocate an array that matches the temperature array
     IF (ALLOCATED(rh_inv)) DEALLOCATE(rh_inv)
-    ALLOCATE(rh_inv(nz_rh,ntimes))
-    CALL get_wfomodel_var_inv(nfid,'rh        ',nz_rh,ntimes,rh_inv,istatus)
+    ALLOCATE(rh_inv(nz_t,ntimes))
+    rh_inv(:,:) = .false.
+    IF (nz_rh .EQ. nz_t) rh_inv = rh_inv_raw
+    CALL get_wfomodel_var_inv(nfid,'rh        ',nz_rh,ntimes,rh_inv_raw,istatus)
     IF (istatus .NE. 1) THEN
       PRINT '(A)', ' '
       PRINT '(A)', '####################################'
@@ -454,7 +460,7 @@ PROGRAM wfoprep
       CALL close_wfofile(nfid,istatus)  
       CYCLE model_loop
     ENDIF   
-             
+
     IF (ALLOCATED(ht_inv)) DEALLOCATE(ht_inv)
     IF (model_code(m).GT.1) THEN
       ALLOCATE (ht_inv(nz_ht,ntimes))
@@ -511,7 +517,7 @@ PROGRAM wfoprep
           IF (ht_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  htinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_ht)
-        IF ((goodpct .LT. 0.5).OR.(.NOT.ht_inv(ht_kbotp,i)).OR.&
+        IF ((goodpct .LT. min_vert_frac).OR.(.NOT.ht_inv(ht_kbotp,i)).OR.&
             (.NOT.ht_inv(ht_ktopp,i))) THEN
           PRINT *, 'WARNING: Height inventory failed vertical check:', &
               goodpct, i
@@ -525,7 +531,7 @@ PROGRAM wfoprep
           IF (t_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  tinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_t)
-        IF ((goodpct .LT. 0.5).OR.(.NOT.t_inv(t_kbotp,i)).OR.&
+        IF ((goodpct .LT. min_vert_frac).OR.(.NOT.t_inv(t_kbotp,i)).OR.&
             (.NOT.t_inv(t_ktopp,i))) THEN
           PRINT *, 'WARNING: Temperature inventory failed vertical check:', &
               goodpct, i
@@ -536,11 +542,11 @@ PROGRAM wfoprep
         ! Check RH
         goodlevs = 0
         rhinvloop: DO k = rh_kbotp, rh_ktopp
-          IF (rh_inv(k,i)) goodlevs = goodlevs + 1
+          IF (rh_inv_raw(k,i)) goodlevs = goodlevs + 1
         ENDDO  rhinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_rh_raw)
-        IF ((goodpct .LT. 0.5).OR.(.NOT.rh_inv(rh_kbotp,i)).OR.&
-            (.NOT.rh_inv(rh_ktopp,i))) THEN
+        IF ((goodpct .LT. min_vert_frac).OR.(.NOT.rh_inv_raw(rh_kbotp,i)).OR.&
+            (.NOT.rh_inv_raw(rh_ktopp,i))) THEN
           PRINT *, 'WARNING: RH inventory failed vertical check:', &
               goodpct, i
           goodtime_flag(i) = .false.
@@ -553,7 +559,7 @@ PROGRAM wfoprep
           IF (u_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  uinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_u)
-        IF ((goodpct .LT. 0.5).OR.(.NOT.u_inv(u_kbotp,i)).OR.&
+        IF ((goodpct .LT. min_vert_frac).OR.(.NOT.u_inv(u_kbotp,i)).OR.&
             (.NOT.u_inv(u_ktopp,i))) THEN
           PRINT *, 'WARNING: U inventory failed vertical check:', &
               goodpct, i
@@ -567,7 +573,7 @@ PROGRAM wfoprep
           IF (v_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  vinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_v)
-        IF ((goodpct .LT. 0.5).OR.(.NOT.v_inv(v_kbotp,i)).OR.&
+        IF ((goodpct .LT. min_vert_frac).OR.(.NOT.v_inv(v_kbotp,i)).OR.&
             (.NOT.v_inv(v_ktopp,i))) THEN
           PRINT *, 'WARNING: V inventory failed vertical check:', &
               goodpct,i
@@ -598,7 +604,7 @@ PROGRAM wfoprep
           CYCLE invloop
         ENDIF     
 
-        IF (.NOT. rh_inv(rh_ksfc,i)) THEN
+        IF (.NOT. rh_inv_raw(rh_ksfc,i)) THEN
           PRINT *, 'WARNING: Missing surface RH',i
           goodtime_flag(i) = .false.
           CYCLE invloop
@@ -611,7 +617,7 @@ PROGRAM wfoprep
       goodtime_flag(i) = .true.
     ENDDO invloop 
            
-    ! OK, now lets make sure that 50% ofthe time periods
+    ! OK, now lets make sure that enough time periods
     ! passed the above check and that the first and last
     ! times are available
     goodlevs = 0
@@ -619,12 +625,12 @@ PROGRAM wfoprep
       IF (goodtime_flag(i)) goodlevs = goodlevs + 1
     ENDDO
     goodpct = FLOAT(goodlevs)/FLOAT(ntimes_needed)
-    IF ( (goodpct .LT. 0.50).OR.(.NOT.goodtime_flag(1)).OR.&
+    IF ( (goodpct .LT. min_time_frac).OR.(.NOT.goodtime_flag(1)).OR.&
          (.NOT.goodtime_flag(ntimes_needed)))THEN
       PRINT *, ' '
       PRINT *, '###################################################'
       PRINT *, 'SKIPPING MODEL:  TIME INVENTORY CHECK FAILED'
-      PRINT *, 'goodpct = ', goodpct
+      PRINT *, 'goodpct/min_time_frac = ', goodpct,min_time_frac
       PRINT *, 'goodtime_Flag(1) = ', goodtime_Flag(1)
       PRINT *, 'ntimes_needed = ', ntimes_needed
       PRINT *, 'goodtime_flag(ntimes_needed) =',goodtime_flag(ntimes_needed)
@@ -661,7 +667,7 @@ PROGRAM wfoprep
       ALLOCATE (t3d     (proj%nx,proj%ny,np_t) )
       ALLOCATE (t3d1    (proj%nx,proj%ny,np_t) )
       ALLOCATE (t3d2    (proj%nx,proj%ny,np_t) )
-      ALLOCATE (rh3d     (proj%nx,proj%ny,np_rh_raw) )
+      ALLOCATE (rh3d     (proj%nx,proj%ny,np_t) )
       ALLOCATE (rh3d1    (proj%nx,proj%ny,np_rh_raw) )
       ALLOCATE (rh3d2    (proj%nx,proj%ny,np_rh_raw) ) 
       ALLOCATE (u3d     (proj%nx,proj%ny,np_u) )
@@ -843,8 +849,12 @@ PROGRAM wfoprep
           data3d_temp(:,:,:) = rmissingval
           rh1_zloop: DO k = 1,np_rh_raw
             t1_zloop: DO kk = 1, np_rh
-              IF ( rh_plevels_raw(k).EQ.t_plevels(kk)) THEN
-                data3d_temp(:,:,kk) = rh3d1(:,:,k)
+              IF  (rh_plevels_raw(k).EQ.t_plevels(kk)) THEN
+                rh_inv(kk+t_kbotp-1,time_index(ta))= &
+                  rh_inv_raw(k+rh_kbotp-1,time_index(ta))
+                IF (rh_inv(kk+t_kbotp-1,time_index(ta))) THEN
+                  data3d_temp(:,:,kk) = rh3d1(:,:,k)
+                ENDIF
                 EXIT t1_zloop
               ENDIF
             ENDDO t1_zloop
@@ -856,15 +866,28 @@ PROGRAM wfoprep
           
           ! Fill in top level if not already filled
           IF (MAXVAL(rh3d1(:,:,np_rh)) .EQ. rmissingval) THEN
+             print *, 'Setting top level RH to 5%'
              rh3d1(:,:,np_rh) = 5.0  ! Very dry
+             rh_inv(t_ktopp,time_index(ta)) = .true. 
           ENDIF
+          ! Fill in bottom level if not already filled (the 
+          ! MesoEta does not have the 1000mb value!)
+          IF (MAXVAL(rh3d1(:,:,1)) .EQ. rmissingval) THEN
+             rh3d1(:,:,1) = rh3d1(:,:,2)
+             rh_inv(t_kbotp,time_index(ta)) = .true.
+          ENDIF
+
 
           ! Repeat for the rh3d2 array
           data3d_temp(:,:,:) = rmissingval
           rh2_zloop: DO k = 1,np_rh_raw
             t2_zloop: DO kk = 1, np_rh
               IF (rh_plevels_raw(k).EQ.t_plevels(kk)) THEN
-                data3d_temp(:,:,kk) = rh3d2(:,:,k)
+                rh_inv(kk+t_kbotp-1,time_index(ta+1))= &
+                  rh_inv_raw(k+rh_kbotp-1,time_index(ta+1))
+                IF (rh_inv(kk+t_kbotp-1,time_index(ta+1))) THEN
+                  data3d_temp(:,:,kk) = rh3d2(:,:,k)
+                ENDIF          
                 EXIT t2_zloop
               ENDIF
             ENDDO t2_zloop
@@ -874,12 +897,20 @@ PROGRAM wfoprep
           rh3d2(:,:,:) = data3d_temp(:,:,:)
 
           ! Fill in top level if not already filled
-          IF (MAXVAL(rh3d1(:,:,np_rh)) .EQ. rmissingval) THEN
-             rh3d1(:,:,np_rh) = 5.0  ! Very dry
+          IF (MAXVAL(rh3d2(:,:,np_rh)) .EQ. rmissingval) THEN
+             rh3d2(:,:,np_rh) = 5.0  ! Very dry
+             rh_inv(t_ktopp,time_index(ta+1)) = .true.
           ENDIF        
+          ! Fill in bottom level if not already filled
+          IF (MAXVAL(rh3d2(:,:,1)) .EQ. rmissingval) THEN
+             rh3d2(:,:,1) = rh3d2(:,:,2)
+             rh_inv(t_kbotp,time_index(ta+1)) = .true.
+          ENDIF
 
           DEALLOCATE(data3d_temp)
           rh_plevels(1:np_rh) = t_plevels(1:np_t) 
+        ELSE
+          rh_plevels = rh_plevels_raw
         ENDIF
 
         ! Clean up all 3D arrays to fill in any missing levels
@@ -888,24 +919,24 @@ PROGRAM wfoprep
         fixvar1 = .false.
         fixvar2 = .false.
         DO k = 1,np_ht
-          IF (.NOT. ht_inv(k,time_index(ta))) THEN
+          IF (.NOT. ht_inv(k-1+ht_kbotp,time_index(ta))) THEN
             z3d1(:,:,k) = rmissingval
             fixvar1 = .true.
           ENDIF
-          IF (.NOT. ht_inv(k,time_index(ta+1))) THEN
+          IF (.NOT. ht_inv(k-1+ht_kbotp,time_index(ta+1))) THEN
             z3d2(:,:,k) = rmissingval
             fixvar2 = .true.
           ENDIF  
           IF (fixvar1) THEN
             PRINT *, 'WARNING: Filling in missing levels for z3d1'
             ! Call the fill routine to fill in for z3d1
-            CALL fill_missing_levs(proj%nx,proj%ny,ht_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_ht,ht_plevels, &
                   z3d1,rmissingval,2)
           ENDIF
           IF (fixvar2) THEN
             ! Call the vinterp routine to fill in for z3d2
             PRINT *, 'WARNING: Filling in missing levels for z3d2'  
-            CALL fill_missing_levs(proj%nx,proj%ny,ht_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_ht,ht_plevels, &
                   z3d2,rmissingval,2) 
           ENDIF
         ENDDO
@@ -914,24 +945,24 @@ PROGRAM wfoprep
         fixvar1 = .false.
         fixvar2 = .false.
         DO k = 1,np_t
-          IF (.NOT. t_inv(k,time_index(ta))) THEN
+          IF (.NOT. t_inv(k-1+t_kbotp,time_index(ta))) THEN
             t3d1(:,:,k) = rmissingval
             fixvar1 = .true.
           ENDIF
-          IF (.NOT. t_inv(k,time_index(ta+1))) THEN
+          IF (.NOT. t_inv(k-1+t_kbotp,time_index(ta+1))) THEN
             t3d2(:,:,k) = rmissingval
             fixvar2 = .true.
           ENDIF
           IF (fixvar1) THEN
             ! Call the vinterp routine to fill in for t3d1
             PRINT *, 'WARNING: Filling in missing levels for t3d1' 
-            CALL fill_missing_levs(proj%nx,proj%ny,t_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_t,t_plevels, &
                   t3d1,rmissingval,2) 
           ENDIF
           IF (fixvar2) THEN
             ! Call the vinterp routine to fill in for t3d2
             PRINT *, 'WARNING: Filling in missing levels for t3d2' 
-            CALL fill_missing_levs(proj%nx,proj%ny,t_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_t,t_plevels, &
                   t3d2,rmissingval,2) 
           ENDIF
         ENDDO 
@@ -940,24 +971,24 @@ PROGRAM wfoprep
         fixvar1 = .false.
         fixvar2 = .false.
         DO k = 1,np_u
-          IF (.NOT. u_inv(k,time_index(ta))) THEN
+          IF (.NOT. u_inv(k-1+u_kbotp,time_index(ta))) THEN
             u3d1(:,:,k) = rmissingval
             fixvar1 = .true.
           ENDIF
-          IF (.NOT. u_inv(k,time_index(ta+1))) THEN
+          IF (.NOT. u_inv(k-1+u_kbotp,time_index(ta+1))) THEN
             u3d2(:,:,k) = rmissingval
             fixvar2 = .true.
           ENDIF
           IF (fixvar1) THEN
             ! Call the vinterp routine to fill in for u3d1
             PRINT *, 'WARNING: Filling in missing levels for u3d1' 
-            CALL fill_missing_levs(proj%nx,proj%ny,u_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_u,u_plevels, &
                   u3d1,rmissingval,1)
           ENDIF
           IF (fixvar2) THEN
             ! Call the vinterp routine to fill in for u3d2
             PRINT *, 'WARNING: Filling in missing levels for u3d2' 
-            CALL fill_missing_levs(proj%nx,proj%ny,u_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_u,u_plevels, &
                   u3d2,rmissingval,1)  
           ENDIF
         ENDDO                         
@@ -966,24 +997,24 @@ PROGRAM wfoprep
         fixvar1 = .false.
         fixvar2 = .false.
         DO k = 1,np_v
-          IF (.NOT. v_inv(k,time_index(ta))) THEN
+          IF (.NOT. v_inv(k-1+v_kbotp,time_index(ta))) THEN
             v3d1(:,:,k) = rmissingval
             fixvar1 = .true.
           ENDIF
-          IF (.NOT. v_inv(k,time_index(ta+1))) THEN
+          IF (.NOT. v_inv(k-1+v_kbotp,time_index(ta+1))) THEN
             v3d2(:,:,k) = rmissingval
             fixvar2 = .true.
           ENDIF
           IF (fixvar1) THEN
             ! Call the vinterp routine to fill in for v3d1  
             PRINT *, 'WARNING: Filling in missing levels for v3d1' 
-            CALL fill_missing_levs(proj%nx,proj%ny,v_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_v,v_plevels, &
                   v3d1,rmissingval,1)  
           ENDIF
           IF (fixvar2) THEN
             ! Call the vinterp routine to fill in for v3d2
             PRINT *, 'WARNING: Filling in missing levels for z3d2' 
-            CALL fill_missing_levs(proj%nx,proj%ny,v_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_v,v_plevels, &
                   v3d2,rmissingval,1) 
           ENDIF                   
         ENDDO
@@ -992,24 +1023,24 @@ PROGRAM wfoprep
         fixvar1 = .false.
         fixvar2 = .false.
         DO k = 1,np_rh
-          IF (.NOT. rh_inv(k,time_index(ta))) THEN
+          IF (.NOT. rh_inv(k-1+t_kbotp,time_index(ta))) THEN
             rh3d1(:,:,k) = rmissingval
             fixvar1 = .true.
           ENDIF
-          IF (.NOT. rh_inv(k,time_index(ta+1))) THEN
+          IF (.NOT. rh_inv(k-1+t_kbotp,time_index(ta+1))) THEN
             rh3d2(:,:,k) = rmissingval
             fixvar2 = .true.
           ENDIF
           IF (fixvar1) THEN
             ! Call the vinterp routine to fill in for rh3d1
             PRINT *, 'WARNING: Filling in missing levels for rh3d1' 
-            CALL fill_missing_levs(proj%nx,proj%ny,rh_plevels, &
+            CALL fill_missing_levs(proj%nx,proj%ny,np_rh,rh_plevels, &
                   rh3d1,rmissingval,1) 
           ENDIF
           IF (fixvar2) THEN
             ! Call the vinterp routine to fill in for rh3d2
-            PRINT *, 'WARNING: Filling in missing levels for rh3d1' 
-            CALL fill_missing_levs(proj%nx,proj%ny,rh_plevels, &
+            PRINT *, 'WARNING: Filling in missing levels for rh3d2' 
+            CALL fill_missing_levs(proj%nx,proj%ny,np_rh,rh_plevels, &
                   rh3d2,rmissingval,1) 
           ENDIF
         ENDDO           
