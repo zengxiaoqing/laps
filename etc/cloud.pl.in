@@ -102,28 +102,42 @@ foreach (@lines) {if (/$searchstring(.*)/) {print "$1\n";}}
 # Satellite data
 print "\nSatellite (IR):\n";
 @greplines = grep /Returning S8A/, @lines;
-print "$greplines[0]";
+foreach (@greplines) {
+  ($junk,@rest) = split;
+  print "  Using @rest ";
+  print "\n";
+}
 @greplines = grep /No S8A/, @lines;
-print "$greplines[0]";
+print " $greplines[0]";
 @greplines = grep /required/, @lines;
 print "$greplines[0]";
 print "\n";
 
 print "Satellite (Visible Albedo):\n";
 @greplines = grep /Returning ALB/, @lines;
-print "$greplines[0]";
+foreach (@greplines) {
+  ($junk,@rest) = split;
+  print "  Using @rest ";
+  print "\n";
+}
 @greplines = grep /No VIS/, @lines;
-print "$greplines[0]";
+print " $greplines[0]";
 @greplines = grep /Visible albedo data used/, @lines;
 print "$greplines[0]";
 @greplines = grep /l_use_vis set to not use vis data/, @lines;
-print "$greplines[0]";
+print " $greplines[0]";
 print "\n";
 
 # Radar data
 print "Radar:\n";
-@greplines = grep /NOWRAD/, @lines;
-print "$greplines[0]\n";
+@greplines = grep /Read radar/, @lines;
+#print "$greplines[0]\n";
+foreach (@greplines) {
+  ($junk1,$junk2,@rest) = split;
+  print "  @rest ";
+  print "\n";
+}
+print "\n";
 
 # Surface metars (sfc.pl has a nicer way of printing these out)
 print "METARS:\n";
