@@ -48,23 +48,18 @@ c
       real*4    u_orig,v_orig
       real*4    pi
       real*4    u1,v1
-c     real*4    resx,resy
-
-      real*4    ri1,rj1
-      real*4    ri2,rj2
-      real*4    ri3,rj3
-      real*4    ri4,rj4
 
       real*4    lapterm
       real*4    lovterm
       real*4    latterm
       real*4    lonterm
-      real*4    dxterm
-      real*4    dyterm
       real*4    r_missing_data
       real*4    rls,rle,res,ree
       real*4    rlatin,rlap,rlov
       real*4    rla1,rlo1
+      real*4    rla1nxny,rlo1nxny
+      real*4    rla100,rlo100
+      real*4    rlatdxdy,rlondxdy
 
       real*4    ri(nx_l+2,ny_l+2)
       real*4    rj(nx_l+2,ny_l+2)
@@ -72,15 +67,22 @@ c     real*4    resx,resy
       real*4    rel_rj(nx_l+2,ny_l+2)
       real*4    ri_laps(nx_l,ny_l)
       real*4    rj_laps(nx_l,ny_l)
-      real*4    u
-      real*4    v
+      real*4    u,v,u0,v0,uscale,vscale
+      real*4    usmin,usmax,vsmin,vsmax
+      real*4    usat,vsat
+
+      integer center_id
+      integer process_id,wmo_sat_id
+      double precision reftime, valtime
+      character*132 earth_shape, grid_name, grid_type,
+     +     origin_name, process_name, wavelength, x_dim, y_dim
 
       integer isat,jtype,kchl
 c     integer i,j,n,nc
-      integer i,j,nc
+      integer i,j,nc,nt
       integer ii,jj
       integer indx
-      integer n1
+      integer n1,np
       integer i1,j1
       integer nx,ny
 c     integer lend
@@ -91,13 +93,17 @@ c     integer lend
       integer nx3mx,ny3mx
       integer linestart,lineend
       integer elemstart,elemend
+      integer i4time_latest,ifstat
       integer nijout
+      integer ierr
 
       logical lpoint
 
       character*200 table_path
       character*255 path
+      character*255 fname
       character*200 cname
+      character*9   cftime9
 c     character*6   csatid  !satellite data identifier {goes08, goes09, meteos, etc}
       character*3   cdtype !satellite data type       {'cdf', 'gvr', 'gwc', 'asc', etc}
       character*3   ct     !                         {'vis', 'ir', or 'wv'}
@@ -112,6 +118,7 @@ c
 
       logical     lwrite
       data lwrite /.false./
+
       logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98)
       data lfirst /.false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false.,
@@ -128,20 +135,19 @@ c
       call lvd_file_specifier(ct,indx,istatus)
 c
 c retrieve the latest nav info from a file if it exists
-c Note: for wfo data we are using the NW corner and not the SW
-c as our reference point.
 c
       if(cdtype.eq.'wfo')then
 
          call get_wfo_nav_parms(path_to_raw_sat(kchl,jtype,isat),
-     &ct,rla1,rlo1,dx,dy,nx3,ny3,istatus_wp)
+     &ct,rla100,rlo100,rla1nxny,rlo1nxny,rlatdxdy,rlondxdy,
+     &dx,dy,nx3mx,ny3mx,istatus_wp)
 
          if(istatus_wp.eq.1)then
 
             print*,'WARNING:, using namelist values for wfo mapping'
             print*,'because new wfo nav parameters were not obtained'
-            rla1 = r_la1(jtype,isat)
-            rlo1 = r_lo1(jtype,isat)
+            rla100 = r_la1(jtype,isat)
+            rlo100 = r_lo1(jtype,isat)
 
             if(indx.eq.1)then
 
@@ -153,7 +159,6 @@ c
             elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
               if(.not.lfirst(jtype,isat))then
-                 ct='ir'
                  dx = r_resolution_x_ir(jtype,isat)
                  dy = r_resolution_y_ir(jtype,isat)
                  nx3 = n_pixels_ir(jtype,isat)
@@ -178,7 +183,6 @@ c
             if(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
             if(.not.lfirst(jtype,isat))then
-                ct='ir'
                 lfirst(jtype,isat)=.true.
             else
                 jstatus = 0
@@ -205,7 +209,6 @@ c not wfo data type
          elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
             if(.not.lfirst(jtype,isat))then
-               ct='ir'
                dx = r_resolution_x_ir(jtype,isat)
                dy = r_resolution_y_ir(jtype,isat)
                nx3 = n_pixels_ir(jtype,isat)
@@ -225,24 +228,20 @@ c not wfo data type
 
          endif
 
-         rla1=r_la1(jtype,isat)
-         rlo1=r_lo1(jtype,isat)
- 
+         call get_latest_file_time(path_to_raw_sat(kchl,jtype,isat),
+     +                             i4time_latest)
+         call make_fnam_lp(i4time_latest,cftime9,ifstat)
+         call s_len(path_to_raw_sat(kchl,jtype,isat),np)
+         fname=path_to_raw_sat(kchl,jtype,isat)(1:np)
+         fname=fname(1:np)//cftime9//'_'//ct
+         call  rdcdfhead(fname, nx3mx, ny3mx, center_id, 
+     +     process_id, wmo_sat_id, Dx, Dy, rla100, rLatin, rlo100, 
+     +     rlov, reftime, valtime, earth_shape, grid_name, grid_type, 
+     +     origin_name, process_name, wavelength, x_dim, y_dim)
+
       endif
 
-      rlatin = r_latin(jtype,isat)
-      rlov = r_lov(jtype,isat)
-      rlap = r_lap(jtype,isat)
- 
-      if(cdtype.eq.'wfo')then
-         nx3mx=nx3
-         ny3mx=ny3
-         nx3=1
-         ny3=1
-      else
-         nx3mx=nx3
-         ny3mx=ny3
-      endif
+      rlap=rlatin
 
       write(6,*)'Satellite Nav Parameters'
       write(6,*)'dx     ',dx
@@ -251,11 +250,11 @@ c not wfo data type
       write(6,*)'ny3    ',ny3
       write(6,*)'nx3mx  ',nx3mx
       write(6,*)'ny3mx  ',ny3mx
-      write(6,*)'la1    ',rla1
-      write(6,*)'lo1    ',rlo1
-      write(6,*)'latin  ',rlatin
-      write(6,*)'Lov    ',rlov
-      write(6,*)'lap    ',rlap
+      write(6,*)'rla100 ',rla100
+      write(6,*)'rlo100 ',rlo100
+      write(6,*)'rlatin ',rlatin
+      write(6,*)'rlov   ',rlov
+      write(6,*)'rlap   ',rlap
 c
 c expand domain lats/lons: extra row and column "laps domain" used
 c to build the domain relative look up table
@@ -267,61 +266,59 @@ c
       call expand_domain(nx_l,ny_l,lat,lon,nx,ny,xlat,xlon,
      &istatus)
 c
-c build the absolute lut for the slightly larger domain
+c new code to compute lambert projected satellite data for
+c laps domain as specified in laps lat/lon arrays. Follows
+c method in lib/latlon_to_rlaps.f by Albers.
 c
-      dxterm = dx/1000.
-      dyterm = dy/1000.
-      call getdudv_lam(rlov,rlap,dxterm,dyterm,
-     &rla1,rlo1,du,dv,u_orig,v_orig)
-c
-c compute corner point ri/rj pairs used to determine # of i and j
-c
-      write(6,*)'Compute corner points'
+      if(cdtype.eq.'wfo')then
 
-      lapterm=(rlap*pi)/180.
-      lovterm=(rlov*pi)/180.
-      latterm=(xlat(1,1)*pi)/180.
-      lonterm=(xlon(1,1)*pi)/180.
+         call latlon_to_uv_lc(rla100,rlo100,rlap,rlap
+     &,rlov,usmin,vsmin)
+         call latlon_to_uv_lc(rla1nxny,rlo1nxny,rlap
+     &,rlap,rlov,usmax,vsmax)
+         uscale = (usmax - usmin)/(float(nx3mx)-1.)
+         vscale = (vsmax - vsmin)/(float(ny3mx)-1.)
+         u0 = usmin - uscale
+         v0 = vsmin - vscale
 
-      call getuv_lam(lapterm,lovterm,latterm,lonterm,u1,v1)
-      call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri1,rj1)
+         do j=1,ny
+         do i=1,nx
 
-      latterm=(xlat(nx,1)*pi)/180.
-      lonterm=(xlon(nx,1)*pi)/180.
+            call latlon_to_uv_lc(xlat(i,j),xlon(i,j),rlap,rlap
+     &,rlov,usat,vsat)
 
-      call getuv_lam(lapterm,lovterm,latterm,lonterm,u1,v1)
-      call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri2,rj2)
+            ri(i,j)=(usat - u0)/uscale
+            rj(i,j)=(vsat - v0)/vscale
 
-      latterm=(xlat(1,ny)*pi)/180.
-      lonterm=(xlon(1,ny)*pi)/180.
+         enddo
+         enddo
 
-      call getuv_lam(lapterm,lovterm,latterm,lonterm,u1,v1)
-      call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri3,rj3)
+      else
 
-      latterm=(xlat(nx,ny)*pi)/180.
-      lonterm=(xlon(nx,ny)*pi)/180.
+c use original lambert software for fsl-conus in FSL's /public
 
-      call getuv_lam(lapterm,lovterm,latterm,lonterm,u1,v1)
-      call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri4,rj4)
-c
+         call getdudv_lam(rlov,rlap,dx,dy,
+     &rla100,rlo100,du,dv,u_orig,v_orig)
+         lapterm=(rlap*pi)/180.
+         lovterm=(rlov*pi)/180.
+         do j = 1, ny
+         do i = 1, nx
+            latterm=(xlat(i,j)*pi)/180.
+            lonterm=(xlon(i,j)*pi)/180.
+            call getuv_lam(lapterm,lovterm,latterm,lonterm,u,v)
+            call uv_ij(ny3mx,u_orig,v_orig,du,dv,u,v
+     +,ri(i,j),rj(i,j))
+         enddo
+         enddo
+
+      endif
+
       write(6,*)'Sat ri/rj corners for domain'
-      write(6,*)'ri1/rj1 (SW) ',ri1,rj1
-      write(6,*)'ri2/rj2 (SE) ',ri2,rj2
-      write(6,*)'ri3/rj3 (NW) ',ri3,rj3
-      write(6,*)'ri4/rj4 (NE) ',ri4,rj4
+      write(6,*)'ri1/rj1 (SW) ',ri(1,1),rj(1,1)
+      write(6,*)'ri2/rj2 (SE) ',ri(nx,1),rj(nx,1)
+      write(6,*)'ri3/rj3 (NW) ',ri(1,ny),rj(1,ny)
+      write(6,*)'ri4/rj4 (NE) ',ri(nx,ny),rj(nx,ny)
       write(6,*)
-c
-c compute ri, rj look up tables for satellite data file (for each point in
-c LAPS domain). This is absolute lut (relative to the full satellite data file).
-c
-      do j = 1, ny
-      do i = 1, nx
-         latterm=(xlat(i,j)*pi)/180.
-         lonterm=(xlon(i,j)*pi)/180.
-         call getuv_lam(lapterm,lovterm,latterm,lonterm,u,v)
-         call uv_ij(ny3,u_orig,v_orig,du,dv,u,v,ri(i,j),rj(i,j))
-      enddo
-      enddo
 c
 c get new i/j start/end values for this domain
 c
@@ -329,9 +326,7 @@ c
      &linestart,lineend,elemstart,elemend,
      &rls,rle,res,ree,istatus)
       if(istatus.ne.1)then
-         write(6,*)'Laps boundary outside satellite data!'
-         write(6,*)'Terminating this lut generation!'
-         goto 1000
+         write(6,*)'WARNING: Laps domain outside sat data cover!'
       endif
 c
 c compute ri, rj relative look up table for the block of data surrounding
@@ -346,7 +341,7 @@ c
       do j = 1,ny
       do i = 1,nx
        if(ri(i,j).ne.r_missing_data.and.rj(i,j).ne.r_missing_data)then
-          rel_ri(i,j) = ri(i,j)  - res
+          rel_ri(i,j) = ri(i,j) - res
           rel_rj(i,j) = rj(i,j) - rls 
           if(lpoint)then
              i1=i
@@ -366,7 +361,7 @@ c
          print*,'Found ',nijout,' points outside domain'
       endif
 c
-c put the rel ri/rj lut into the laps domain size
+c put the expanded domain ri/rj's into the original laps domain
 c
       jj = 0
       do j = 2,ny-1
@@ -391,7 +386,12 @@ c
       path=path(1:n1)//'/lvd/'
       n1=index(path,' ')-1
 
-      cname=path(1:n1)//c_sat_id(isat)//'-llij-'//ct(1:nc)
+      nt=3
+      if(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
+         ct='ir'
+         nt=2
+      endif
+      cname=path(1:n1)//c_sat_id(isat)//'-llij-'//ct(1:nt)
       n1=index(cname,' ')-1
       table_path = cname(1:n1)//'-'//cdtype//'.lut'
 
@@ -407,9 +407,9 @@ c
       endif
 
       if(elemstart.le.0)elemstart=1
-      if(elemend.gt.nx)elemend=nx3
+      if(elemend.gt.nx3mx)elemend=nx3mx
       if(linestart.le.0)linestart=1
-      if(lineend.gt.ny)lineend=ny3
+      if(lineend.gt.ny3mx)lineend=ny3mx
 
 
       r_lap(jtype,isat) = rlap
@@ -422,10 +422,10 @@ c
          i_end_vis(jtype,isat) = elemend
          j_start_vis(jtype,isat) = linestart
          j_end_vis(jtype,isat) = lineend
-         r_la1(jtype,isat) = rla1
-         r_lo1(jtype,isat) = rlo1
-         r_resolution_x_vis(jtype,isat) = dx
-         r_resolution_y_vis(jtype,isat) = dy
+         r_la1(jtype,isat) = rla100
+         r_lo1(jtype,isat) = rlo100
+         r_resolution_x_vis(jtype,isat) = dx*1000.
+         r_resolution_y_vis(jtype,isat) = dy*1000.
          n_pixels_vis(jtype,isat) = nx3mx
          n_lines_vis(jtype,isat)  = ny3mx
 
@@ -435,10 +435,10 @@ c
          i_end_ir(jtype,isat) = elemend
          j_start_ir(jtype,isat) = linestart
          j_end_ir(jtype,isat) = lineend
-         r_la1(jtype,isat) = rla1
-         r_lo1(jtype,isat) = rlo1
-         r_resolution_x_ir(jtype,isat) = dx
-         r_resolution_y_ir(jtype,isat) = dy
+         r_la1(jtype,isat) = rla100
+         r_lo1(jtype,isat) = rlo100
+         r_resolution_x_ir(jtype,isat) = dx*1000.
+         r_resolution_y_ir(jtype,isat) = dy*1000.
          n_pixels_ir(jtype,isat) = nx3mx
          n_lines_ir(jtype,isat)  = ny3mx
 
@@ -448,10 +448,10 @@ c
          i_end_wv(jtype,isat) = elemend
          j_start_wv(jtype,isat) = linestart
          j_end_wv(jtype,isat) = lineend
-         r_la1(jtype,isat) = rla1
-         r_lo1(jtype,isat) = rlo1
-         r_resolution_x_wv(jtype,isat) = dx
-         r_resolution_y_wv(jtype,isat) = dy
+         r_la1(jtype,isat) = rla100
+         r_lo1(jtype,isat) = rlo100
+         r_resolution_x_wv(jtype,isat) = dx*1000.
+         r_resolution_y_wv(jtype,isat) = dy*1000.
          n_pixels_wv(jtype,isat) = nx3mx
          n_lines_wv(jtype,isat)  = ny3mx
 

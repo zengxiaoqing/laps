@@ -1,5 +1,5 @@
-      subroutine get_attribute_wfo(filename,rlat00,rlon00,dx,
-     &dy,nx,ny,istatus)
+      subroutine get_attribute_wfo(filename,rlat00,rlon00
+     &,latNxNy,lonNxNy,latdxdy,londxdy,dx,dy,nx,ny,istatus)
 C
 C  Open netcdf File for reading
 C
@@ -15,6 +15,10 @@ c     integer   ncid
       real      rlat00
       real      rlon00
       real      dx,dy
+      real      latNxNy
+      real      lonNxNy
+      real      latdxdy
+      real      londxdy
 
       include 'netcdf.inc'
 
@@ -61,6 +65,78 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'lon00'
+        istatus=-1
+        goto 100
+      endif
+C
+C Get latNxNy
+C
+      nf_status = NF_INQ_ATTID(nf_fid,nf_attid,'latNxNy',nf_attnum)
+      if(nf_status.ne.NF_NOERR) then
+         print*, NF_STRERROR(nf_status)
+         print*, 'latNxNy attribute id'
+         istatus=-1
+         goto 100
+      endif
+
+      nf_status = NF_GET_ATT_REAL(nf_fid,nf_attid,'latNxNy',latNxNy)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'latNxNy'
+         istatus=-1
+         goto 100
+      endif
+C
+C Get lonNxNy
+C
+      nf_status = NF_INQ_ATTID(nf_fid,nf_attid,'lonNxNy',nf_attnum)
+      if(nf_status.ne.NF_NOERR) then
+         print*, NF_STRERROR(nf_status)
+         print*, 'lonNxNy attribute id'
+         istatus=-1
+         goto 100
+      endif
+
+      nf_status = NF_GET_ATT_REAL(nf_fid,nf_attid,'lonNxNy',lonNxNy)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'lonNxNy'
+        istatus=-1
+        goto 100
+      endif
+C
+C Get latDxDy
+C
+      nf_status = NF_INQ_ATTID(nf_fid,nf_attid,'latDxDy',nf_attnum)
+      if(nf_status.ne.NF_NOERR) then
+         print*, NF_STRERROR(nf_status)
+         print*, 'latDxDy attribute id'
+         istatus=-1
+         goto 100
+      endif
+
+      nf_status = NF_GET_ATT_REAL(nf_fid,nf_attid,'latDxDy',latdxdy)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'latDxDy'
+         istatus=-1
+         goto 100
+      endif
+C
+C Get lonDxDy
+C
+      nf_status = NF_INQ_ATTID(nf_fid,nf_attid,'lonDxDy',nf_attnum)
+      if(nf_status.ne.NF_NOERR) then
+         print*, NF_STRERROR(nf_status)
+         print*, 'lonDxDy attribute id'
+         istatus=-1
+         goto 100
+      endif
+
+      nf_status = NF_GET_ATT_REAL(nf_fid,nf_attid,'lonDxDy',londxdy)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'lonDxDy'
         istatus=-1
         goto 100
       endif

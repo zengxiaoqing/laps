@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-       subroutine expand_domain(imax,jmax,xlat,xlon,kmax,lmax,lat,lon,
+       subroutine expand_domain(imax,jmax,lat,lon,kmax,lmax,xlat,xlon,
      &istatus)
 c
       include 'trigd.inc'
@@ -39,19 +39,21 @@ c
       integer kmax,lmax
 
 c these are input lat/lon
-      real*4    xlat(imax,jmax)
-      real*4    xlon(imax,jmax)
+      real*4    lat(imax,jmax)
+      real*4    lon(imax,jmax)
 
 c these are output (expanded) lat/lon
-      real*4    lat(kmax,lmax)
-      real*4    lon(kmax,lmax)
+      real*4    xlat(kmax,lmax)
+      real*4    xlon(kmax,lmax)
 
       real*4    g_space_deg
       real*4    wdw_lat_ns
       real*4    wdw_lon_ns
+      real*4    wdw_lon_ns_test
       integer i,j
       integer ii,jj
       integer nxl,nyl
+      integer icen,jcen
       integer istatus
 c
 c =================================
@@ -59,81 +61,88 @@ c
       istatus=-1
       nxl = kmax
       nyl = lmax
+      icen = imax/2+1
+      jcen = jmax/2+1
+
+      call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
+     &                                  ,g_space_deg,istatus)
 c
-      g_space_deg = sqrt( 
-     1       (  xlat(1,2) - xlat(1,1)                   )**2
-     1     + ( (xlon(1,2) - xlon(1,1))*cosd(xlat(1,1))  )**2 
-     1                         )
+c     g_space_deg = sqrt( 
+c    1       (  lat(1,2) - lat(1,1)                   )**2
+c    1     + ( (lon(1,2) - lon(1,1))*cosd(lat(1,1))  )**2 
+c    1                         )
 c.....       Define north-south window dimensions
 
-      wdw_lat_ns =  g_space_deg
-      wdw_lon_ns =  g_space_deg  / cosd(xlat(1,1))
+      wdw_lat_ns =  g_space_deg/111100.
+      wdw_lon_ns =  wdw_lat_ns           !g_space_deg  / cosd(xlat(1,1))
+
+c     wdw_lon_ns_test = g_space_deg/111100./cosd(lat(icen,jcen))
 
 c     g_space_deg = sqrt(
-c    1       (  xlon(1,2) - xlon(1,1)                   )**2
-c    1     + ( (xlat(1,2) - xlat(1,1))*cosd(xlat(1,1))  )**2
+c    1       (  lon(1,2) - lon(1,1)                   )**2
+c    1     + ( (lat(1,2) - lat(1,1))*cosd(lat(1,1))  )**2
 c    1                         )
 c.....       Define east-west window dimensions
 
 c     wdw_lat_ew =  g_space_deg
-c     wdw_lon_ew =  g_space_deg  / cosd(xlat(1,1))
+c     wdw_lon_ew =  g_space_deg  / cosd(lat(1,1))
 
       do j = 1,jmax
       jj = j+1
       do i = 1,imax
          ii = i+1
-         lat(ii,jj) = xlat(i,j)
-         lon(ii,jj) = xlon(i,j)
+         xlat(ii,jj) = lat(i,j)
+         xlon(ii,jj) = lon(i,j)
       enddo
       enddo
 
 c across the bottom and top
       do i = 2,nxl-1
-         lon(i,1) = lon(i,2)
-         lat(i,1) = lat(i,2)-wdw_lat_ns
-         lon(i,nyl)= lon(i,nyl-1)
-         lat(i,nyl)= lat(i,nyl-1)+wdw_lat_ns
-         if(lat(i,nyl).gt.90.0)lat(i,nyl)=lat(i,nyl)-180.0
-         if(lat(i,nyl).lt.-90.0)lat(i,nyl)=180.0+lat(i,nyl)
+         xlon(i,1) = xlon(i,2)-(xlon(i,3)-xlon(i,2))
+         xlat(i,1) = xlat(i,2)-wdw_lat_ns
+         xlon(i,nyl)= xlon(i,nyl-1)-(xlon(i,nyl-2)-xlon(i,nyl-1))
+         xlat(i,nyl)= xlat(i,nyl-1)+wdw_lat_ns
+         if(xlat(i,nyl).gt.90.0)xlat(i,nyl)=xlat(i,nyl)-180.0
+         if(xlat(i,nyl).lt.-90.0)xlat(i,nyl)=180.0+xlat(i,nyl)
       enddo
 c on the sides
       do j = 2,nyl-1
-         lon(1,j) = lon(2,j)-wdw_lon_ns
-         lat(1,j) = lat(2,j)
-         lon(nxl,j)= lon(nxl-1,j)+wdw_lon_ns
-         lat(nxl,j)= lat(nxl-1,j)
-         if(lon(1,j).lt.-180.0)lon(1,j)=lon(1,j)+360.
-         if(lon(nxl,j).gt.180.0)lon(nxl,j)=lon(nxl,j)-360.0
+         xlon(1,j) = xlon(2,j)-wdw_lon_ns
+         xlat(1,j) = xlat(2,j)-(xlat(3,j)-xlat(2,j))
+         xlon(nxl,j)= xlon(nxl-1,j)+wdw_lon_ns
+         xlat(nxl,j)= xlat(nxl-1,j)-(xlat(nxl-2,j)-xlat(nxl-1,j))
+         if(xlon(1,j).lt.-180.0)xlon(1,j)=xlon(1,j)+360.
+         if(xlon(nxl,j).gt.180.0)xlon(nxl,j)=xlon(nxl,j)-360.0
       enddo
 c now the corners
-      lat(1,1)=lat(1,2)-(lat(1,3)-lat(1,2))
-      lon(1,1)=lon(2,1)-(lon(3,1)-lon(2,1))
-      lat(1,nyl)=lat(2,nyl)-(lat(3,nyl)-lat(2,nyl))
-      lon(1,nyl)=lon(2,nyl)-(lon(3,nyl)-lon(2,nyl))
-      lat(nxl,1)=lat(nxl,2)-(lat(nxl,3)-lat(nxl,2)) 
-      lon(nxl,1)=lon(nxl-1,1)-(lon(nxl-2,1)-lon(nxl-1,1))
-      lat(nxl,nyl)=lat(nxl,nyl-1)-
-     &(lat(nxl,nyl-2)-lat(nxl,nyl-1))
-      lon(nxl,nyl)=lon(nxl-1,nyl)-
-     &(lon(nxl-2,nyl)-lon(nxl-1,nyl))
+      xlat(1,1)=xlat(1,2)-wdw_lat_ns                      !(xlat(1,3)-xlat(1,2))
+      xlon(1,1)=xlon(2,1)-wdw_lon_ns                      !(xlon(3,1)-xlon(2,1))
+      xlat(1,nyl)=xlat(1,nyl-1)+wdw_lat_ns                !(xlat(3,nyl)-xlat(2,nyl))
+      xlon(1,nyl)=xlon(2,nyl)-wdw_lon_ns                  !(xlon(3,nyl)-xlon(2,nyl))
+      xlat(nxl,1)=xlat(nxl,2)-wdw_lat_ns                  !(xlat(nxl,3)-xlat(nxl,2)) 
+      xlon(nxl,1)=xlon(nxl-1,1)+wdw_lon_ns                !-(xlon(nxl-2,1)-xlon(nxl-1,1))
+      xlat(nxl,nyl)=xlat(nxl,nyl-1)+wdw_lat_ns
+                                                          !&(xlat(nxl,nyl-2)-xlat(nxl,nyl-1))
+      xlon(nxl,nyl)=xlon(nxl-1,nyl)+wdw_lon_ns
+                                                          !&(xlon(nxl-2,nyl)-xlon(nxl-1,nyl))
 
-      if(lat(1,1).gt.90.0)lat(1,1)=lat(1,1)-180.0
-      if(lat(1,1).lt.-90.0)lat(1,1)=-180.0-lat(1,1)
-      if(lat(nxl,1).gt.90.0)lat(nxl,1)=lat(nxl,1)-180.0
-      if(lat(nxl,1).lt.-90.0)lat(nxl,1)=180.0-lat(nxl,1)
-      if(lat(1,nyl).gt.90.0)lat(1,nyl)=lat(1,nyl)-180.0
-      if(lat(1,nyl).lt.-90.0)lat(1,nyl)=-180.0-lat(1,nyl)
-      if(lat(nxl,nyl).gt.90.0)lat(nxl,nyl)=lat(nxl,nyl)-180.0
-      if(lat(nxl,nyl).lt.-90.0)lat(nxl,nyl)=-180.0-lat(nxl,nyl)
+      if(xlat(1,1).gt.90.0)xlat(1,1)=xlat(1,1)-180.0
+      if(xlat(1,1).lt.-90.0)xlat(1,1)=-180.0-xlat(1,1)
+      if(xlat(nxl,1).gt.90.0)xlat(nxl,1)=xlat(nxl,1)-180.0
+      if(xlat(nxl,1).lt.-90.0)xlat(nxl,1)=180.0-xlat(nxl,1)
+      if(xlat(1,nyl).gt.90.0)xlat(1,nyl)=xlat(1,nyl)-180.0
+      if(xlat(1,nyl).lt.-90.0)xlat(1,nyl)=-180.0-xlat(1,nyl)
+      if(xlat(nxl,nyl).gt.90.0)xlat(nxl,nyl)=xlat(nxl,nyl)-180.0
+      if(xlat(nxl,nyl).lt.-90.0)xlat(nxl,nyl)=-180.0-xlat(nxl,nyl)
 
-      if(lon(1,1).gt.180.0)lon(1,1)=lon(1,1)-360.0
-      if(lon(1,1).lt.-180.0)lon(1,1)=lon(1,1)+360.0
-      if(lon(nxl,1).gt.180.0)lon(nxl,1)=lon(nxl,1)-360.0
-      if(lon(nxl,1).lt.-180.0)lon(nxl,1)=lon(nxl,1)+360.0
-      if(lon(1,nyl).gt.180.0)lon(1,nyl)=lon(1,nyl)-360.0
-      if(lon(1,nyl).lt.-180.0)lon(1,nyl)=lon(1,nyl)+360.0
-      if(lon(nxl,nyl).gt.180.0)lon(nxl,nyl)=lon(nxl,nyl)-360.0
-      if(lon(nxl,nyl).lt.-180.0)lon(nxl,nyl)=lon(nxl,nyl)+360.0
+      if(xlon(1,1).gt.180.0)xlon(1,1)=xlon(1,1)-360.0
+      if(xlon(1,1).lt.-180.0)xlon(1,1)=xlon(1,1)+360.0
+      if(xlon(nxl,1).gt.180.0)xlon(nxl,1)=xlon(nxl,1)-360.0
+      if(xlon(nxl,1).lt.-180.0)xlon(nxl,1)=xlon(nxl,1)+360.0
+      if(xlon(1,nyl).gt.180.0)xlon(1,nyl)=xlon(1,nyl)-360.0
+      if(xlon(1,nyl).lt.-180.0)xlon(1,nyl)=xlon(1,nyl)+360.0
+      if(xlon(nxl,nyl).gt.180.0)xlon(nxl,nyl)=xlon(nxl,nyl)-360.0
+      if(xlon(nxl,nyl).lt.-180.0)xlon(nxl,nyl)=xlon(nxl,nyl)+360.0
 c  
       istatus = 1
 
