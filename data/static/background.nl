@@ -3,8 +3,6 @@
 '/public/data/grids/eta/48km_nat_isobaric/netcdf',
 '',
  bgmodels=5,2,0,
- max_forecast_delta=6,
- oldest_forecast=12,
  forecast_length=12,
  use_analysis=.false.,
  cmodel='RUC40_NATIVE','ETA48_CONUS','LAPS',
@@ -32,18 +30,24 @@ c bgmodels describes the model type for the files found in each path
 c          this variable works in conjunction with cmodel as indicated.
 c 
 c allowable values are:    (cmodel)
-c        bgmodels = 0 ----> LAPS_FUA,MODEL_FUA,LAPS 
-c                          (LAPS not tested)
+c        bgmodels = 0 ----> LAPS_FUA,  MODEL_FUA,  LAPS 
+c                           - LAPS_FUA: uses lapsprd/"model"/fua and fsf for backgrounds
+c                             fua/fsf on same domain; veritcal and time interpolation possible.
+c                           - MODEL_FUA: uses lapsprd/"model"/fua and fsf from a different
+c                             laps domains; horiz and vertical interpolation required; time interp
+c                             possible.
+c                            (LAPS not tested)
 c        bgmodels = 1 ----> RUC60_NATIVE                         (obsolete!)
 c        bgmodels = 2 ----> ETA48_CONUS                          (tested)
 c                           ORSM_HKO (Hong Kong Observ model     (tested) 
 c                                     
 c        bgmodels = 3 ----> CWB_20FA_LAMBERT
-c                                           _NF                  (tested, obsolete)
-c                                           _RE                  (tested, obsolete)
-c                                           _NF15                (under construction)
-c                                           _GFS                 (not avail yet)
-c                                           _NF45                (not avail yet)
+c                                "          _NF                  (tested, obsolete)
+c                                "          _RE                  (tested, obsolete)
+c                                "          _NF15                (tested)
+c                                "          _GFS                 (tested)
+c                                "          _NF45                (not avail yet)
+c                                "          _TFS                 (not avail yet)
 c
 c        bgmodels = 4 ----> (SBN: RUC, ETA, AVN, MesoEta)        (all tested)
 c                                 RUC40_NATIVE,
@@ -57,17 +61,9 @@ c        bgmodels = 7 ----> ETA48_GRIB                           (not tested)
 c        bgmodels = 8 ----> NOGAPS_AFWA_DEGRID                   (not tested)
 c        bgmodels = 9 ----> NWS_CONUS                            (obsolete!)
 c
-c max_forecast_delta = model forecast output frequency (ie., hrly =1, 3hrly =3, etc)
-c                      or controls the maximum allowable background model frequency
-c                      for time interpolation.
 c
-c oldest_forecast = the oldest forecast to be used for making a background (= 12
-c                   means a background will not be made from model output beyond
-c                   12 hrs.
-c
-c forecast_length < 0 return only the file which matches i4time_now
-c                 = 0 return files for i4time_now and the preceeding forecast
-c                 > 0 return all files for i4time_now to >= i4time_now+forecast_length
+c forecast_length = the length in hrs of the oldest forecast that can be used
+c                   as a background in laps
 c
 c use_analysis =  forces backgrounds to be produced from model initial times.
 c                 Note: this logical does not necessarily work as intended
@@ -89,3 +85,14 @@ c
 c smooth_fields  
 c     Set to .true. to turn on 2dx smoother (should not normally be
 c     required).
+c
+c luse_sfc_bkgd = true/false.  If true then lga uses 2m model variables for T, Td and P
+c                 for lgb 2d fields. If false, lga interpolates hydrostatically
+c                 using the 3d grids (laps) to derive sfc variables for lgb.  Currently
+c                 only active for bgpath = /public/data/grids/eta/48km_nat_isobaric/netcdf
+c                 (or identical type netcdf file) and cmodel = eta48conus (bgmodel = 2).
+c                 When = true, lgb fields are only slightly better (ie., verify better with
+c                 sfc obs).
+c
+c Namelist section 2: interp_controls
+c     These variables are not active atm.
