@@ -529,17 +529,12 @@ c     first the rh data
         i4time = save_i4time
         filename = savefilename
 
-c     use maps specific humidity  (now contained in maps_rh variable) directly
+c     specific humidity  (now contained in maps_rh variable) directly
 
 
         do k = 1,kk
            do j = 1,jj
               do i = 1,ii
-
-                 if( maps_rh(i,j,k) .lt.0.0) then
-                    write(6,*) 'negative rh read from lga', i,j,k
-                    maps_rh(i,j,k) = 0.0
-                 endif
 
                  data (i,j,k) = maps_rh(i,j,k)
 
@@ -548,6 +543,27 @@ c     use maps specific humidity  (now contained in maps_rh variable) directly
 
 
         enddo
+
+ 151    continue    ! go here if using rams data as background
+
+c     check for negative input and warn
+
+        do k = 1,kk
+           do j = 1,jj
+              do i = 1,ii
+
+                 if (data (i,j,k).lt.0.0) then
+                    write(6,*) 'neg. input found, data,i,j,k'
+                    write(6,*) data(i,j,k),i,j,k
+                    data(i,j,k) = 0.0
+                 endif
+
+              enddo
+           enddo
+
+
+        enddo
+
 
 c     **** obtain lat lons for domain
 
@@ -578,7 +594,7 @@ c     get the location of the static grid directory
         endif
 
 
- 151    continue    ! go here if using rams data as background
+
 
 c     open file for laps temp data
         do k = 1,kk

@@ -79,8 +79,14 @@ c
 
 c       print*, maxerror
 
-
-        if (maxerror/typical_data.le. 1.e-3) go to 22
+        if(typical_data.ne.0.0) then
+           if (maxerror/typical_data.le. 1.e-3) go to 22
+        else
+           if (maxerror.le. 1.e-3) then
+             write(6,*) 'typical_data = 0.0, divide avoided'
+             go to 22
+           endif
+        endif
 
 
         enddo
