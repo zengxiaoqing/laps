@@ -35,7 +35,7 @@ c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,
      .     laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .     reject_names,bg_names,max_files,accepted_files,
-     .     i4time_now,lga_status)
+     .     i4time_now,smooth_fields,lga_status)
 
 c
       implicit none
@@ -180,6 +180,7 @@ c
 c
       logical llapsfua
       logical linterp
+      logical smooth_fields
 
       data ntime/0/
       data ext/'lga'/
@@ -717,18 +718,21 @@ c
             if (pr(kk) .ge. 300.) goto 20
            enddo
 20         continue
-           call filter_2dx(htvi,nx_bg,ny_bg,nz_laps, 0.5)
-           call filter_2dx(htvi,nx_bg,ny_bg,nz_laps,-0.5)
-           call filter_2dx(tpvi,nx_bg,ny_bg,nz_laps, 0.5)
-           call filter_2dx(tpvi,nx_bg,ny_bg,nz_laps,-0.5)
-           call filter_2dx(shvi,nx_bg,ny_bg,kk     , 0.5)
-           call filter_2dx(shvi,nx_bg,ny_bg,kk     ,-0.5)
-           call filter_2dx(uwvi,nx_bg,ny_bg,nz_laps, 0.5)
-           call filter_2dx(uwvi,nx_bg,ny_bg,nz_laps,-0.5)
-           call filter_2dx(vwvi,nx_bg,ny_bg,nz_laps, 0.5)
-           call filter_2dx(vwvi,nx_bg,ny_bg,nz_laps,-0.5)
-           call filter_2dx(wwvi,nx_bg,ny_bg,nz_laps, 0.5)
-           call filter_2dx(wwvi,nx_bg,ny_bg,nz_laps,-0.5)
+           if (smooth_fields) THEN
+             print*, "SMOOTHING BACKGROUND DATA!"
+             call filter_2dx(htvi,nx_bg,ny_bg,nz_laps, 0.5)
+             call filter_2dx(htvi,nx_bg,ny_bg,nz_laps,-0.5)
+             call filter_2dx(tpvi,nx_bg,ny_bg,nz_laps, 0.5)
+             call filter_2dx(tpvi,nx_bg,ny_bg,nz_laps,-0.5)
+             call filter_2dx(shvi,nx_bg,ny_bg,kk     , 0.5)
+             call filter_2dx(shvi,nx_bg,ny_bg,kk     ,-0.5)
+             call filter_2dx(uwvi,nx_bg,ny_bg,nz_laps, 0.5)
+             call filter_2dx(uwvi,nx_bg,ny_bg,nz_laps,-0.5)
+             call filter_2dx(vwvi,nx_bg,ny_bg,nz_laps, 0.5)
+             call filter_2dx(vwvi,nx_bg,ny_bg,nz_laps,-0.5)
+             call filter_2dx(wwvi,nx_bg,ny_bg,nz_laps, 0.5)
+             call filter_2dx(wwvi,nx_bg,ny_bg,nz_laps,-0.5)
+           endif
 c
            if (bgmodel .eq. 4) then
             do j=1,ny_bg
