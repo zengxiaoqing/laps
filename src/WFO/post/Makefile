@@ -19,12 +19,10 @@ EXE = xfer_laps.exe \
       xfer_model.exe \
       fname2unixtime.exe
 
-SRC = xfer_laps.c \
-      fill_laps.c \
+SRC = fill_laps.c \
       fill_bigfile_cmn.c \
-      xfer_model.c \
-      fill_model.c \
-      fname2unixtime.c  
+      fill_model.c 
+      
 LIB = lapscdf.a
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
@@ -53,6 +51,6 @@ install: exe
 	done
 
 clean:
-	rm -f $(EXE)  *.o *~ *#
+	rm -f $(EXE)  *.o *~ *\# $(LIB)
 
 distclean: clean
