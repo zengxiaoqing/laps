@@ -92,6 +92,8 @@ c                                     used for variable in include 'satellite_co
       character*6 csatid
       character*9 c_fname_cur
       character*9 c_fname
+      character*50 c_gridfname
+      character*255 c_generic_dataroot
 
       real image_vis (n_vis_elem,n_vis_lines,nimages) 
       real image_ir  (n_ir_elem,n_ir_lines,nimages)
@@ -192,6 +194,8 @@ c
       itstatus=init_timer()
       itstatus=ishow_timer()
 
+      call find_domain_name(c_generic_dataroot,c_gridfname,istatus)
+
       csatid = c_sat_id(isat)
       csattype = c_sat_types(jtype,isat)
       smsng = float(i_msng_sat_flag(jtype,isat))
@@ -211,7 +215,7 @@ c ---------------------------------------------------------------------
 c ---------------------------------------------
 c acquiring LAPS latitude and longitude arrays.
 c ---------------------------------------------
-      call get_domain_laps(nx_l,ny_l,'nest7grid',lat,lon,topo,
+      call get_domain_laps(nx_l,ny_l,c_gridfname,lat,lon,topo,
      &grid_spacing_laps_m,istatus)
       if(istatus.eq.1)then
          write(6,*)'LAPS lat/lon/grid_spacing obtained'

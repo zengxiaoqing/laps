@@ -144,11 +144,13 @@ c      real*4 mindiff
 c
        integer i4time,imax,jmax
 c
+       character*255 dataroot
        character*3   var_2d
        character*3   c_sat_type
        character*6   c_sat_id
        character*150  directory
        character*31  ext
+       character*40  domain_name
        character*10  units_2d
        character*125 comment_2d
 c
@@ -356,17 +358,17 @@ c =============================================
           istatus(2)=istatus_n  
        endif
 c =============================================
-       ext = 'nest7grid'
 
 ! Get the location of the static grid directory
-       call get_directory(ext,directory,len_dir)
+       call get_directory('static',directory,len_dir)
 
        var_2d='LDF'
        write(6,*)'read land fraction'
 
-       call rd_laps_static (directory,ext,imax,jmax,1,var_2d,
-     1units_2d,comment_2d,
-     1rland_frac,rspacing_dum,istatus_l)
+       call find_domain_name(dataroot,domain_name,istatus)
+
+       call rd_laps_static (directory,domain_name,imax,jmax
+     1,1,var_2d,units_2d,comment_2d,rland_frac,rspacing_dum,istatus_l)
        if(istatus_l .ne. 1)then
            write(6,*)' Error reading LAPS static-land frac'
            return

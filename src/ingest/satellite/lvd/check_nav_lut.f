@@ -21,6 +21,8 @@
       character csattype*3
       character cfname_cur*9
       character chtype(maxchannels)*3
+      character cgenericdataroot*255
+      character c_gridfname*50
 
       logical   lut_flag
 
@@ -29,7 +31,8 @@
 c ---------------------------------------------
 c acquiring LAPS latitude and longitude arrays.
 c ---------------------------------------------
-      call get_domain_laps(nx_l,ny_l,'nest7grid',lat,lon,topo,
+      call find_domain_name(cgenericdataroot,c_gridfname,istatus)
+      call get_domain_laps(nx_l,ny_l,c_gridfname,lat,lon,topo,
      &grid_spacing_laps_m,istatus)
       if(istatus.eq.1)then
          write(6,*)'LAPS lat/lon/grid_spacing obtained'

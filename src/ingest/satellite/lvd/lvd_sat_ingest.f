@@ -32,23 +32,24 @@ c
 
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
-      include 'lapsparms.cmn'
 
-      Character*3 chtype(maxchannel)
+      character*3 chtype(maxchannel)
       character*9 cfname_cur
+      character   cgeneric_dataroot*255
+      character   c_gridfname*50
 c
 c ========================== START ==============================
 c 
+      call get_grid_dim_xy(nx_l,ny_l,istatus)
       call get_config(istatus)
       if(istatus.ne.1)then
          print*,'Error returned from get_config'
          goto 1000
       endif
-      write(6,*)'LAPS nest7grid.parms obtained'
-c
-      nx_l=nx_l_cmn
-      ny_l=ny_l_cmn
 
+      call find_domain_name(cgeneric_dataroot,c_gridfname,istatus)
+      write(6,*)'namelist parameters obtained: ',c_gridfname
+c
       call config_satellite_lvd(istatus)
       if(istatus.ne.1)then
          write(*,*)'Error config_satellite - Cannot continue'
@@ -106,6 +107,13 @@ c
         write(6,*)'IR:  ',nlinesir,nelemir
         write(6,*)'WV:  ',nlineswv,nelemwv
 c
+        if( (nlinesvis.eq.0.and.nelemvis.eq.0).and.
+     +      (nlinesir .eq.0.and.nelemir .eq.0).and.
+     +      (nlineswv .eq.0.and.nelemwv .eq.0) ) then
+             print*, 'All satellite array dimensions = 0 '
+             print*, 'Abort. Check static/satellite_lvd.nl'
+             stop
+        endif
 
         if(c_sat_id(k).ne.'gmssat')then
 
