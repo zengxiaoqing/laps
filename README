@@ -2704,14 +2704,12 @@ large-scale models (RUC, ETA, AVN - via the LGB file), or a previous analysis
 (if all else fails). If the background model terrain is on a coarser grid than
 LAPS, this is accounted for so that the LGB fields have the fine-scale terrain
 related structure. For wind fields, the background comes from the 3-D wind 
-interpolated to the surface or LWM file. Data, both inside and outside the LAPS
-grid is used via an initial Barnes analysis of the observations to set the 
-boundary conditions.  
+interpolated to the surface or LWM file. 
 
 Prior to analysis of each field, another quality control step is done that 
 rejects observations that deviate from the background by more than a threshold.
 This threshold is proportional to the standard deviation of the observation
-increments.
+increments. The proportionality constant is set depending on the field.
 
 The next step in the analyses is done with a successive correction technique 
 similar to the 3-D wind and temperature analyses (see those sections and their
@@ -2719,12 +2717,15 @@ web references). Observation increments are used for T, Td, U, V, MSL, P
 and straight observations are used for visibility. The temperature and dewpoint
 observations are also corrected for deviations of the station elevation from
 the LAPS terrain. Standard lapse rates are applied to this elevation difference.
+The analysis innovation is constrained to vary from the background by no more
+than the magnitude of the observation rejection threshold discussed above. This
+helps prevent overshooting (ballooning) of gradients into data sparse areas.
 
 A land fraction term is factored into the weighting whenever the observation
 and grid point are on either sides of a 0.01 land fraction threshold. This
 helps prevent situations such as heating over the land having undue effects
-over the water areas. This weight is applied mainly
-to the T, Td, U, and V fields.
+over the water areas. This weight is applied mainly to the T, Td, U, and V 
+fields.
 
 For pressure analysis, three fields are computed including reduced pressure (P)
 at reference height 'redp_lvl', surface pressure (PS), and mean sea level 
