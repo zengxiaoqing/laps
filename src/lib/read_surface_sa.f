@@ -38,8 +38,8 @@ cdis
 cdis
 c
 c
-        subroutine read_surface_sa(infile,maxsta,atime,               ! I
-     &   n_obs_g,n_obs_b,stn,reptype,atype,                           ! O
+        subroutine read_surface_sa(i4time,maxsta,                     ! I
+     &   n_obs_b,stn,reptype,atype,                                   ! O
      &   lat,lon,elev,wx,t,td,                                        ! O
      &   kloud,store_amt,store_hgt,                                   ! O
      &   obstime,istatus)                                             ! O
@@ -106,14 +106,9 @@ c
         enddo !i
 
 
-        if(.true.)then
-c
-c.....     Figure out the i4time and call the read routine.
-c
-           call s_len(infile, len)
-           filetime(1:9) = infile(len-12:len-4)
-           call i4time_fname_lp(filetime,i4time,status)
-c
+        call make_fnam_lp(i4time,filetime,istatus)
+
+        if(.false.)then
 	   call read_surface_data(i4time,atime,n_obs_g,n_obs_b,time,
      &    wmoid,stations,provider,wx_in,reptype,atype,lat,lon,
      &    elev,t,td,rh,dd,ff,ddg,ffg,alt,pstn,pmsl,delpch,delp,vis,rad,
@@ -124,10 +119,10 @@ c
 c
 
         else
-           call read_cloud_obs(i4time,maxsta,atime,                ! I
-     &      n_obs_g,n_obs_b,stations,reptype,                      ! O
+           call read_cloud_obs(i4time,maxsta,                      ! I
+     &      n_obs_b,stations,reptype,                              ! O
      &      atype,                                                 ! O
-     &      lat,lon,elev,wx_in,t,td,                               ! O
+     &      lat,lon,elev,wx_in,t,td,vis,                           ! O
      &      kloud,store_amt,store_hgt,obstime,jstatus)             ! O
 
         endif
@@ -175,10 +170,11 @@ c
 
 c
 c
-        subroutine read_cloud_obs(i4time,maxsta,atime_s_out,          ! I
-     &   n_obs_g_out,n_obs_b_out,stations_out,reptype_out,            ! O
+        subroutine read_cloud_obs(i4time,maxsta,                      ! I
+     &   n_obs_b_out,stations_out,reptype_out,                        ! O
      &   autostntype_out,                                             ! O
      &   lat_s_out,lon_s_out,elev_s_out,wx_s_out,t_s_out,td_s_out,    ! O
+     &   vis_s_out,                                                   ! O
      &   kloud_s_out,store_amt_out,store_hgt_out,obstime_out,istatus) ! O
 c
 c       The argument list is or should be consistent with 'read_sfc.inc' except
@@ -194,11 +190,10 @@ c
 c.....  Output arrays (duplicate declarations with _out suffix)
 c
 	real lat_s_out(maxsta), lon_s_out(maxsta), elev_s_out(maxsta)
-	real t_s_out(maxsta), td_s_out(maxsta)
+	real t_s_out(maxsta), td_s_out(maxsta), vis_s_out(maxsta)
 
 	real store_hgt_out(maxsta,5) 
 
-	character atime_s_out*24
 	character store_amt_out(maxsta,5)*4
         character stations_out(maxsta)*20
         character reptype_out(maxsta)*6, autostntype_out(maxsta)*6
@@ -228,9 +223,10 @@ c
      &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
      &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
      &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
-     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
-     &         jstatus)
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
+     &         maxsta,jstatus)
 c
+        call make_fnam_lp(i4time,filetime,istatus)
         if(jstatus .ne. 1 .and. jstatus .ne. -1) then
            print *,' ERROR: No valid LSO file found for ', filetime       
            istatus = -1
@@ -239,8 +235,6 @@ c
 c
 c.....  Place main cloud obs into output arrays
 
-        atime_s_out = atime_s
-        n_obs_g_out = n_obs_g
         n_obs_b_out = n_obs_b
         stations_out = stations
         reptype_out = reptype
@@ -251,18 +245,21 @@ c.....  Place main cloud obs into output arrays
         wx_s_out = wx_s
         t_s_out = t_s
         td_s_out = td_s
+        vis_s_out = vis_s
         kloud_s_out = kloud_s
         store_amt_out = store_amt
         store_hgt_out = store_hgt
         obstime_out = obstime
 
-        write(6,*)' n_obs_g_out,n_obs_b_out = ',n_obs_g_out,n_obs_b_out       
+        write(6,*)' n_obs_b_out = ',n_obs_b_out       
+
+        n_obs_b_ontime = n_obs_b_out
 c
 c.....  Figure out the i4time and call the read routine for SYNOPs.
 c
         i4time_synop = (i4time / 10800) * 10800
 
-        if(i4time_synop .ne. i4time)then
+        if(i4time_synop .ne. i4time .and. .false.)then
 
            write(6,*)' Reading 3 hourly sfc data for SYNOPs...'
 
@@ -272,8 +269,8 @@ c
      &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
      &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
      &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
-     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
-     &         jstatus)
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,      
+     &         maxsta,jstatus)
 c
            if(jstatus .ne. 1 .and. jstatus .ne. -1) then
               print *,' ERROR: No valid LSO file found for ', filetime       
@@ -285,8 +282,10 @@ c
 c.....     Place synop cloud obs into output arrays
 
            do i=1,n_obs_b
-              if(reptype(i)(1:4) .eq. 'SYNOP') then
-                 n_obs_g_out = 0 ! unknown at present
+              if(reptype(i)(1:5) .eq. 'SYNOP') then
+
+c                Check that station is not near other "on time" stations
+
                  n_obs_b_out = n_obs_b_out + 1
                  stations_out(n_obs_b_out) = stations(i)
                  reptype_out(n_obs_b_out) = reptype(i)
@@ -297,6 +296,7 @@ c.....     Place synop cloud obs into output arrays
                  wx_s_out(n_obs_b_out) = wx_s(i)
                  t_s_out(n_obs_b_out) = t_s(i)
                  td_s_out(n_obs_b_out) = td_s(i)
+                 vis_s_out(n_obs_b_out) = vis_s(i)
                  kloud_s_out(n_obs_b_out) = kloud_s(i)
                  store_amt_out(n_obs_b_out,:) = store_amt(i,:)
                  store_hgt_out(n_obs_b_out,:) = store_hgt(i,:)
@@ -304,8 +304,7 @@ c.....     Place synop cloud obs into output arrays
               endif
            enddo !i
 
-           write(6,*)' n_obs_g_out,n_obs_b_out = '
-     1                ,n_obs_g_out,n_obs_b_out       
+           write(6,*)' n_obs_b_out = ',n_obs_b_out       
 
         endif ! SYNOP time is different from current systime
 c
