@@ -80,7 +80,9 @@
      must be asked in reference to the latest released tar file; we cannot 
      support older versions of LAPS code. It is also recommended that LAPS 
      users try to take advantage of the latest LAPS updates by periodically 
-     importing a fresh tar file every few months or so. 
+     importing a fresh tar file every few months or so. Please check the
+     release notes at http://laps.fsl.noaa.gov/software/release_notes.html
+     for information about recent releases.
 
 ---------- 2.0 Installing and running the LAPS Ingest/Analysis code -----------
 
@@ -280,9 +282,6 @@
 
      Go to the laps root directory and run...
      $ ./configure
-
-     The output from 'configure' is automatically saved in 
-     '(laps_root)/config.log' for future reference.
 
      'configure' supports many options, the most important is the
      --prefix option which tells make where to install the laps system.
@@ -640,12 +639,15 @@
      'data/time/systime.dat' should be updated manually by the user, instead 
      of by the 'etc/sched.pl' script (that uses wall clock time). 
 
-     Note that this tar file does not supply "raw" data that are inputted 
-     to the ingest processes. In some cases, a user would independently
-     generate the intermediate data files (ingest output) and could then
-     compare them with ours. If sample "raw" files are needed as they appear 
-     on FSL's NIMBUS system, they can be obtained directly from FSL's facility
-     division at 'http://www-fd.fsl.noaa.gov/'.
+     Note that the 'lapsdata*' tar files contain intermediate plus analysis
+     output files only. We also have 'rawdata*' tar files that supply
+     a limited amount of "raw" data that are inputted to the ingest processes.
+     The times for the raw data match the 'lapsdata*' output approximately but
+     not always exactly. In many cases, a user would independently generate 
+     the intermediate data files (ingest output) and could then compare them 
+     with ours. If other "raw" files are needed as they appear on FSL's NIMBUS 
+     system, they can be obtained directly from FSL's facility division at 
+     'http://www-fd.fsl.noaa.gov/'.
 
      Any runtime errors can be tracked down by recompiling specific analyses
      with the '-g' option. This can be done by typing 'make debug' in the
@@ -1182,14 +1184,15 @@ April 1996
    
    If you have any problems during the configure, install and localization
    process, first check this README file and the FAQ available at
-   http://laps.fsl.noaa.gov/frd/laps/birk/LAPS_FACTS.htm.  
-   If you don't find the answer here send mail to 
+   http://laps.fsl.noaa.gov/frd/laps/birk/LAPS_FACTS.htm. Also check the
+   release notes at http://laps.fsl.noaa.gov/software/release_notes.html.
+   If you don't find the answer in these documents, send mail to 
    laps-bugs@fsl.noaa.gov   Include in your mail:
 <pre>
    The type of system (often, uname -a)
    The system limits (ulimit -a)
    The applicable compiler versions (often a -v or -V option to the compiler)
-   The entire output of configure (config.log)
+   The entire output of configure 
    The entire output of make
    The entire output of laps_localization.pl (i.e. make localize)
 </pre>
@@ -2066,7 +2069,7 @@ Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
    Section 3. The user can then modify that portion of the code while we 
    temporarily suspend FSL development on that set of modules. The modified 
    code can then be ported back to FSL (along with a log of the code mods 
-   suitable for entry into the "Revisions" file) for testing and integration 
+   suitable for entry into the Revisions logs) for testing and integration 
    into the next LAPS release. 
 
    In some cases, a less formal process may be easier to go by. Here, the
