@@ -1,9 +1,9 @@
-Quick install instructions for the LAPS systems.  Pleas refer to the
+Quick install instructions for the LAPS systems.  Please refer to the
 document README in this directory for detailed information on
 installation and configuration.
 
-    $ zcat laps-1.0.tar.gz | tar xf -
-    $ cd laps-1.0
+    $ zcat laps.tar.gz | tar xf -
+    $ cd laps
     $ ./configure 
     $ make install
     $ ./etc/laps_localization.pl 

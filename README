@@ -169,13 +169,14 @@
    
                   --- 2.2a  Perl   ---
 
-     The perl package is also required for laps, it is available via internet at
-     any gnu site such as ftp://prep.ai.mit.edu/pub/gnu.  
+     The perl package is also required for laps, it is available 
+     via internet at any gnu site such as ftp://prep.ai.mit.edu/pub/gnu.  
+     Perl 5.003 or higher is required.  
 
                   --- 2.2b  make   ---
 
-     Laps Makefiles work best by using gnu make.  This is available at 
-     any gnu site such as ftp://prep.ai.mit.edu/pub/gnu.  Some vendor
+     Laps Makefiles work best by using gnu make (version 3.75 or higher).  
+     This is available at any gnu site such as ftp://prep.ai.mit.edu/pub/gnu.  Some vendor
      provided make utilities may also work, however if you find you are
      having problems in this area please try installing and using gnu make.
 
