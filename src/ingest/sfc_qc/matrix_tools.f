@@ -17,7 +17,7 @@ c
 c
       do i=1,imax
       do n=1,nmax
-         sum = 0
+         sum = 0.
          do j=1,jmax
             sum = sum + (a(i,j) * b(j,n))
          enddo !j
@@ -134,40 +134,46 @@ c
       end
 c
 c
-c      subroutine invert (a,n,np,y)  
+      subroutine invert (a,n,np,y,maxsta)  
 c
 c*********************************************************************
 c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       14 Dec 1999  Peter Stamus, NOAA/FSL
+c          Pass in max number of stations for 'ludcmp'. 
+c
 c*********************************************************************
 c
-c      real a(np,np),y(np,np),d
-c      integer np,indx(np),n,j,i
+      real a(np,np),y(np,np),d
+      integer np,indx(np),n,j,i
 c
-c      do i=1,n
-c         do j=1,n
-c            y(i,j)=0.
-c         enddo !j
-c         y(i,i)=1.
-c      enddo !i
-c      call ludcmp(a,n,np,indx,d)  
-c      do j=1,n
-c         call lubksb(a,n,np,indx,y(1,j))  
-c      enddo !j
-cc
-c     return
-c      end
+      do i=1,n
+         do j=1,n
+            y(i,j)=0.
+         enddo !j
+         y(i,i)=1.
+      enddo !i
+      call ludcmp(a,n,np,indx,d,maxsta)  
+      do j=1,n
+         call lubksb(a,n,np,indx,y(1,j))  
+      enddo !j
+c
+      return
+      end
 c
 c
-      subroutine avgerr(wr,WIT,B,c,W,dwt,imax,iav,m,it)
+      subroutine avgerr(wr,wit,B,c,W,dwt,imax,iav,m,it)
 c
 c*********************************************************************
 c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       14 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          Add Bias error calculation.  Also some minor housekeeping.
+c
 c*********************************************************************
 c
       real B(m),c(m,m),W(m,m),wit(m,m),wr(m),dwt(m,m)
@@ -190,9 +196,14 @@ c
       else
          ia=iav
       endif
+c
+      sum = 0.
+      cnt = 0.
       do itt=1,ia
          do i=1,m
-            B(i)=WIT(itt,i)   
+            B(i)=wit(itt,i)   
+            sum = sum + B(i)
+            cnt = cnt + 1.
          enddo !i
          do j=1,imax
             do i=1,imax
@@ -215,17 +226,27 @@ c
          enddo !i
       enddo !j
 c
+      if(cnt .gt. 0.) then
+         write(6,*) ' Bias Error for W and VV: ', sum / cnt
+      else
+         write(6,*) ' In routine AVGERR: Cannot calculate bias ',
+     &              ' error for W and VV -- cnt = 0'
+      endif
+c
       return
       end
 c
 c
-      subroutine avgdiagerr(WIT,B,c,W,imax,iav,m,it)
+      subroutine avgdiagerr(wit,B,c,W,imax,iav,m,it)
 c
 c*********************************************************************
 c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       14 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          Add Bias error calculation.  Also some minor housekeeping.
+c
 c*********************************************************************
 c
       real B(m),c(m,m),W(m,m),wit(m,m)
@@ -233,9 +254,14 @@ c
       call zero(W, imax,imax)
       ia=iav
       if(ia.gt.it) ia=it
+c
+      sum = 0.
+      cnt = 0.
       do itt=1,ia
          do i=1,imax
-            B(i)=WIT(i,itt)   
+            B(i)=wit(i,itt)   
+            sum = sum + B(i)
+            cnt = cnt + 1.
          enddo !i
          do i=1,imax    
             W(i,i)=W(i,i)+b(i)*b(i)
@@ -244,6 +270,13 @@ c
       do i=1,imax
          W(i,i)=W(i,i)/float(ia)
       enddo !i
+c
+      if(cnt .gt. 0.) then
+         write(6,*) ' Bias Error for W and VV: ', sum / cnt
+      else
+         write(6,*) ' In routine AVGDIAGERR: Cannot calculate ',
+     &              ' bias error for W and VV -- cnt = 0'
+      endif
 c
       return
       end
@@ -290,7 +323,7 @@ c
             if(a(i,j).lt.elmn) elmn=a(i,j)
             sume=sume+a(i,j)
             sumea=sumea+abs(a(i,j))
-            cnt=cnt+1
+            cnt=cnt+1.
  1       enddo !i
       enddo !j
       sume=sume/cnt
@@ -298,24 +331,24 @@ c
 c
 c output results
 c
-      write(*,1000)  char
+      write(6,1000)  char
  1000 format(1x,'Diagnosis of matrix ',a3)
-      write (*,1001) dimx,dimn
- 1001 format(1x,'Max diagonal ',f10.3,' Min diagonal ',f10.3)
-      write (*,1002) sumd
+      write (6,1001) dimx,dimn
+ 1001 format(1x,'Max diagonal ',f8.3,' Min diagonal ',f8.3)
+      write (6,1002) sumd
  1002 format(1x,'Avg diagonal ',f8.3)
-      write (*,1003) elmx,elmn
+      write (6,1003) elmx,elmn
  1003 format(1x,'Max non-diagonal ',f8.3,' Min non-diagonal ',f8.3)
-      write (*,1004) sume
+      write (6,1004) sume
  1004 format(1x,'Avg non-diagonal ',f8.3)
-      write (*,1005) sumea
+      write (6,1005) sumea
  1005 format(1x,'Avg abs non-diagonal ',f8.3)
 c
       return
       end
 c
 c
-      Subroutine svdcmp(a,m,n,mp,np,w,v)
+      Subroutine svdcmp(a,m,n,mp,np,w,v,nmax)
 c
 c*********************************************************************
 c
@@ -328,16 +361,15 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       14 Dec 1999  Peter Stamus, NOAA/FSL
+c          Pass in max number of stations as nmax.
 c
 c*********************************************************************
 c
-       integer m,mp,n,np,NMAX
+       integer m,mp,n,np,nmax
        integer i,its,j,jj,k,l,nm
-       parameter (NMAX=500)
        real a(mp,np),v(np,np),w(np)
-       real anorm,c,f,g,h,s,scale,x,y,z,rv1(NMAX),pythag
-
-
+       real anorm,c,f,g,h,s,scale,x,y,z,rv1(nmax),pythag
 c
        g=0.
        scale=0.
@@ -562,7 +594,7 @@ c
        end
 c
 c
-        Subroutine svbksb(u,w,v,m,n,mp,np,b,x)
+        Subroutine svbksb(u,w,v,m,n,mp,np,b,x,nmax)
 c
 c*********************************************************************
 c
@@ -573,17 +605,18 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       14 Dec 1999  Peter Stamus, NOAA/FSL
+c          Pass in max number of stations as nmax.
 c
 c*********************************************************************
 c
         integer i,j,jj
         integer m,mp,n,np,nmax
-        parameter (nmax=500)
         real s,tmp(nmax)
         real b(mp),u(mp,np),v(np,np),w(np),x(np)
 c
         do j=1,n
-           s=0
+           s=0.
            if(w(j).ne.0.) then
               do i=1,m
                  s=s+u(i,j)*b(i)
@@ -593,7 +626,7 @@ c
            tmp(j)=s
         enddo !j
         do j=1,n
-           s=0
+           s=0.
            do jj=1,n
               s=s+v(j,jj)*tmp(jj)
            enddo !jj
@@ -602,3 +635,125 @@ c
 c
         return
         end
+c
+c     
+      subroutine ludcmp(a,n,np,indx,d,nmax)  
+c
+c*********************************************************************
+c
+c     This subroutine performs lower/upper decomposition of a
+c     matrix "a".
+c
+c     Original: John McGinley, NOAA/FSL  December 1999
+c     Changes:
+c       14 Dec 1999  Peter Stamus, NOAA/FSL
+c          Make code dynamic, housekeeping changes, for use in LAPS.
+c
+c*********************************************************************
+c
+      real d,a(np,np),tiny
+      real aamax,dum,sum,vv(nmax)
+      integer i,imax,j,k
+      integer n,np,indx(n),nmax
+      parameter (tiny=1.e-20)
+c
+      d=1.
+      do i=1,n
+         aamax=0.
+         do j=1,n
+            if(abs(a(i,j)).gt.aamax) aamax=abs(a(i,j))
+         enddo !j
+         if(aamax.eq.0.) then
+            print *, 'All 0, singular matrix in ludcmp'
+         endif
+         vv(i)=1./aamax
+      enddo !i
+c
+      do j=1,n
+         do i=1,j-1
+            sum=a(i,j)
+            do k=1,i-1
+               sum=sum-a(i,k)*a(k,j)
+            enddo !k
+            a(i,j)=sum
+         enddo !i
+         aamax=0.
+         do i=j,n
+            sum=a(i,j)
+            do k=1,j-1
+               sum=sum-a(i,k)*a(k,j)
+            enddo !k
+            a(i,j)=sum
+            dum=vv(i)*abs(sum)
+            if(dum.ge.aamax) then
+               imax=i
+               aamax=dum
+            endif
+         enddo !i
+         if(j.ne.imax) then
+            do k=1,n
+               dum=a(imax,k)
+               a(imax,k)=a(j,k)
+               a(j,k)=dum
+            enddo !k
+            d=-d
+            vv(imax)=vv(j)
+         endif
+         indx(j)=imax
+         if(a(j,j).eq.0.)a(j,j)=tiny
+         if(j.ne.n)then
+            dum=1./a(j,j)
+            do i=j+1,n
+               a(i,j)=a(i,j)*dum
+            enddo !i
+         endif
+      enddo !j
+c
+      return
+      end
+c
+c
+      subroutine lubksb(a,n,np,indx,b)   
+c
+c*********************************************************************
+c
+c     This subroutine solves a set of 'n' linear equationsns (a.x=b).
+c
+c     Original: John McGinley, NOAA/FSL  December 1999
+c     Changes:
+c       14 Dec 1999  Peter Stamus, NOAA/FSL
+c          Make code dynamic, housekeeping changes, for use in LAPS.
+c
+c*********************************************************************
+c
+      integer i,ii,j,ll
+      integer n,np,indx(n)
+      real a(np,np),b(n)  
+      real sum
+c
+      ii=0
+      do i=1,n
+         ll=indx(i)
+         sum=b(ll)
+         b(ll)=b(i)
+         if(ii.ne.0) then
+            do j=ii,i-1
+               sum=sum-a(i,j)*b(j)
+            enddo !j
+         elseif(sum.ne.0.) then
+            ii=i
+         endif
+         b(i)=sum
+      enddo !i
+c
+      do i=n,1,-1
+         sum=b(i)
+         do j=i+1,n
+            sum=sum-a(i,j)*b(j)
+         enddo !j
+         b(i)=sum/a(i,i)
+      enddo !i
+c
+      return
+      end
+
