@@ -3319,6 +3319,8 @@ Outputs:
                                 HAM  (Mid Level Haines Index)
                                 FWI  (Fosberg Fireweather Index)
                                 VNT  (Ventilation Index)
+                                UPB  (PBL Mean U Wind Component [grid-east])
+                                VPB  (PBL Mean V Wind Component [grid-north])
 </pre>
 Source directory: laps/src/deriv
 
@@ -3584,7 +3586,7 @@ the '$LAPS_DATA_ROOT/cdl/*.cdl' files.
 		Ext  Var  Var    Lvl  Field
 
 Process surface:LSX  U    su       1  Surface wind u (grid north)
-       		     V    sv       1  Surface wind v (grid north)
+       		     V    sv       1  Surface wind v (grid east)
         	     P    fp       1  1500m Pressure
             	     T    st       1  Temp 
 		     TD   std      1  Dewpt Temp
@@ -3676,12 +3678,12 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
                      LCL  lcl      1  Lifted Condensation Level
                      WB0  wb0      1  Wet-Bulb Zero
 
-                LWM  SU   u        1  Surface wind u
-                     SV   v        1  Surface wind v
+                LWM  SU   u        1  Surface wind u (grid north)
+                     SV   v        1  Surface wind v (grid east)
 
 		LHE  LHE  hel      1  Helicity
-                     MU   mu       1  Mean wind u 
-       		     MV   mv       1  Mean wind v
+                     MU   mu       1  Mean wind u (grid north)
+       		     MV   mv       1  Mean wind v (grid east)
            	
 		LIW  LIW  liw      1  log(LI*omega)
 		     W    w	   1  600mb omega
@@ -3692,6 +3694,8 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
                      HAM  ham      1  Mid Level Haines Index
                      FWI  fwi      1  Fosberg Fireweather Index
                      VNT  vnt      1  Ventilation Index
+                     UPB  upb      1  PBL Mean Wind U-component (grid north)
+                     VPB  vpb      1  PBL Mean Wind V-component (grid east)
 
 Process soil:   LM1  LSM  lsm      3  Soil Moisture
 		LM2  CIV  civ      1  Cumulative Infiltration Volume
@@ -3704,13 +3708,13 @@ Process soil:   LM1  LSM  lsm      3  Soil Moisture
 
 LAPS Fcst Model:
                 FUA  U3   ru	  21  Fcst Model Wind u (grid north)
-		     V3   rv	  21  Fcst Model Wind v (grid north)
+		     V3   rv	  21  Fcst Model Wind v (grid east)
 		     HT	  rz	  21  Fcst Model Height
 		     T3	  rt	  21  Fcst Model Temperature
 		     SH	  rsh	  21  Fcst Model Specific Humidity
 		
 		FSF  U	  rus 	   1  Fcst Model Surface wind u (grid north)
-	             V	  rvs 	   1  Fcst Model Surface wind v (grid north)
+	             V	  rvs 	   1  Fcst Model Surface wind v (grid east)
 		     T	  rts 	   1  Fcst Model Surface Temperature
 		     P	  rps 	   1  Fcst Model 1500m pressure
 		     TD	  rtd 	   1  Fcst Model Dewpoint                 
@@ -3760,7 +3764,7 @@ Process lga.exe (background model):
                      T3   t       21  Model isentrop temp interp to LAPS isobaric
                      SH   sh      21  Model specific humidity
                      U3   u       21  Model u wind component (grid north)
-                     V3   v       21  Model v wind component (grid north)
+                     V3   v       21  Model v wind component (grid east)
 
                 LGB                   Sfc grids (winds are grid north)
 
