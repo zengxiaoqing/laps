@@ -56,10 +56,10 @@ cdis
         real*4 temp_3d(ni,nj,nk)                 ! Input 3D temp grid
         real*4 rh_3d_pct(ni,nj,nk)               ! Input 3D rh grid
 !       real*4 heights_1d(nk)                    ! Input
-        integer*2 cldpcp_type_3d(ni,nj,nk)       ! Input 3D pcp type grid
+        integer cldpcp_type_3d(ni,nj,nk)       ! Input 3D pcp type grid
         real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
 
-        integer*4 isum_ref_2d(ni,nj)             ! Local array
+        integer isum_ref_2d(ni,nj)             ! Local array
         real*4 heights_1d(nk)                    ! Local array
 
         logical l_low_fill,l_high_fill,l_test
@@ -267,7 +267,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         real*4 temp_3d(ni,nj,nk)                 ! Input 3D temp grid
         real*4 rh_3d_pct(ni,nj,nk)               ! Input 3D rh grid
         real*4 heights_1d(nk)                    ! Input
-        integer*2 cldpcp_type_3d(ni,nj,nk)       ! Input 3D pcp type grid
+        integer cldpcp_type_3d(ni,nj,nk)       ! Input 3D pcp type grid
 
         real*4 maxrate_R2V,maxrate_S2V,maxrate_I2V
 !       parameter (maxrate_R2V = 0.83e-5) ! s**-1     (Original Schultz value)
@@ -278,7 +278,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         parameter (maxrate_S2V = 1.67e-7) ! s**-1     (New Empirical value)
         parameter (maxrate_I2V = 3.33e-8) ! s**-1     (New Empirical value)
 
-        integer*4 i_debug
+        integer i_debug
         data i_debug /0/
         save i_debug
 

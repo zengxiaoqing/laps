@@ -32,6 +32,8 @@ cdis
         Subroutine Normalize_Brightness(i4time,lat,lon,image,ni,nj
      1  ,sublat_d,sublon_d,range_m,l_national,iskip_bilin,r_missing_data
      1  ,lun,i_dir,Phase_angle_d,Specular_ref_angle_d,istatus)
+
+
 C***Normalize a vis satellite image for solar angle.
 
 C       S. Albers          Feb 94       Original version
@@ -98,7 +100,8 @@ C***Local variables
      1                PF_UL,PF_UR,PF_LR,PF_LL,PF_U,PF_L,P_F,RBril,RBrih,
      1          Phase_factor(maxlut,maxlut),Phase_angle_d(ni,nj),
      1          sat_radius,Emission_angle_d,Specular_ref_angle_d(ni,nj)       
-        Integer*2 nilut,njlut,I,J,img_i(maxlut),img_j(maxlut),
+
+        Integer nilut,njlut,I,J,img_i(maxlut),img_j(maxlut),
      1            ilut,jlut,ISpace,JSpace, ni2, nj2
 
 

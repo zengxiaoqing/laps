@@ -72,10 +72,10 @@ cdis
         real*4 omega_3d(ni,nj,nk)           ! Input / Output (if l_flag_bogus_w = .true.)
         real*4 slwc_3d(ni,nj,nk)            ! Output
         real*4 cice_3d(ni,nj,nk)            ! Output
-        integer*2 cldpcp_type_3d(ni,nj,nk)  ! Output (1st 4bits pcp, 2nd 4 are cld)
+        integer cldpcp_type_3d(ni,nj,nk)  ! Output (1st 4bits pcp, 2nd 4 are cld)
 
         real*4 mvd_3d(ni,nj,nk)             ! Output
-        integer*2 icing_index_3d(ni,nj,nk)  ! Output
+        integer icing_index_3d(ni,nj,nk)  ! Output
 !       real*4 lwc_res_3d(ni,nj,nk)         ! Output
 
 !       real*4 snow_2d(ni,nj)               ! Output
@@ -101,8 +101,8 @@ cdis
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(ni,nj)
-        integer*2 ibase_array(ni,nj)
-        integer*2 itop_array(ni,nj)
+        integer ibase_array(ni,nj)
+        integer itop_array(ni,nj)
 
         EXTERNAL        LIB$INIT_TIMER,
      1                  LIB$SHOW_TIMER,
@@ -572,7 +572,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         real*4 temp_3d(ni,nj,nk)
         real*4 rh_3d_pct(ni,nj,nk)
         real*4 pressures_mb(nk)
-        integer*2 cldpcp_type_3d(ni,nj,nk) ! Output
+        integer cldpcp_type_3d(ni,nj,nk) ! Output
         real*4 radar_3d(ni,nj,nk)
         integer*4 itype
         logical l_mask(ni,nj) ! Used for "Potential" Precip Type
@@ -757,9 +757,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         real*4 pres_2d(ni,nj)             ! Input
         real*4 t_sfc_k(ni,nj)             ! Input
         real*4 td_sfc_k(ni,nj)            ! Input
-        integer*2 cldpcp_type_3d(ni,nj,nk)! Input
+        integer cldpcp_type_3d(ni,nj,nk)! Input
         real*4 dbz_2d(ni,nj)              ! Input (Low Level reflectivity)
-        integer*2 pcp_type_2d(ni,nj)      ! Output
+        integer pcp_type_2d(ni,nj)      ! Output
                                        ! Leftmost 4 bits contain the precip type
 
         integer*4 iarg

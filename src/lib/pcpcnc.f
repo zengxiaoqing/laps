@@ -38,7 +38,7 @@ cdis
 
         real*4 temp_3d(ni,nj,nk)
         real*4 ref_3d(ni,nj,nk)
-        integer*2 cldpcp_type_3d(ni,nj,nk)
+        integer cldpcp_type_3d(ni,nj,nk)
         real*4 pcp_cnc_3d(ni,nj,nk)
         real*4 rate_3d(ni,nj,nk)
 

@@ -69,7 +69,7 @@ C
 C**********************************************************************
         IMPLICIT        NONE
 
-        INTEGER*2       FN_LENGTH
+        INTEGER         FN_LENGTH
 C
         INTEGER*4       I4TIME,         ! Input I4time of data
      1          FLAG,           ! Print flag (1 = off)
@@ -118,7 +118,7 @@ C
 C
         LOGICAL         l_packed_data
 C
-      INTEGER *2      LVL_AVAIL(200)
+        INTEGER       LVL_AVAIL(200)
 C
         DATA            MSG_FLAG/9.E30/
 C
@@ -304,7 +304,7 @@ C
      1          pos,
      1          ISTATUS                     !OUTPUT
 
-      INTEGER*2 LVL_AVAIL(*)
+      INTEGER  LVL_AVAIL(*)
 
       CHARACTER*3       LAPS_VAR_AVAIL(*)
       CHARACTER*3       VAR(*)

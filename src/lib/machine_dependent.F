@@ -29,10 +29,10 @@ cdis
 cdis 
 cdis 
 cdis 
-
-
 #ifndef solaris
         function i4_to_byte(i4_in)
+
+        character i4_to_byte
 
         integer*4 i4_in,i4
 
@@ -45,13 +45,14 @@ cdis
         return
 
         end
+#endif
 
         function byte_to_i4(b_in)
 
         integer*4 i4,byte_to_i4
-        byte b_in
+        character b_in
 
-        byte barg(4)
+        character barg(4)
         equivalence (barg,i4)
 
         i4 = 0
@@ -68,12 +69,13 @@ cdis
         return
 
         end
-#endif
 #ifdef solaris
       real function trigd(val)
       real val
-      real pi_180
+      real pi_180,invpi_180
+      parameter (invpi_180=57.29577951308)
       parameter (pi_180=0.017453292519943)
+
       entry sind(val)
         trigd = sin(val*pi_180)
         return
@@ -84,11 +86,22 @@ cdis
         trigd = tan(val*pi_180)
         return
       entry atand(val)
-        trigd = atan(val)/pi_180
+        trigd = atan(val)*invpi_180
+        return
+      entry acosd(val)
+        trigd = acos(val)*invpi_180
+        return
+      entry asind(val)
+        trigd = asin(val)*invpi_180
         return
       end
 
-#endif
+      real function atan2d(val1,val2)
+      real val1,val2
+      real invpi_180
+      parameter (invpi_180=57.29577951308)
+      atan2d = atan2(val1,val2)*invpi_180
+      return
+      end
 
-      
-      
+#endif

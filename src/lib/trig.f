@@ -92,9 +92,9 @@ cdis
         end
 
 
-        function atan2_deg(x,y)
+        function atan2d(x,y)
 
-        real*4 x,y,atan2_deg,pi,rpd
+        real*4 x,y,atan2d,pi,rpd
 
         parameter (pi = 3.1415926535897932)
         parameter (rpd = pi / 180.)

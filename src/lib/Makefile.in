@@ -37,7 +37,8 @@ RANLIB   = @RANLIB@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC	= rwl_v3.c \
+SRC	= cio.c \
+	  rwl_v3.c \
           fort2c_str.c \
           static_routines.c \
           waiting_c.c  \
@@ -184,19 +185,19 @@ $(LIB): $(ARCHIVE)
 	$(RANLIB) $@
 
 debug: 
-	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g -DDEBUG=1' \
+	$(RM) *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g -DDEBUG=1' \
         FFLAGS='@FFLAGS@ $(INC) -g' KRCFLAGS='$(KRCFLAGS) -g' 
 
 install: lib
 
 clean:
-	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
+	$(RM) $(LIB) $(DEBUGLIB) *.o *~ *#
 
 distclean: clean
-	rm -f Makefile
+	$(RM) Makefile
 
 %.f : %.F
-	rm -f $*.f
+	$(RM) $*.f
 	$(CPP) $(CPPFLAGS) $< 
 	mv $*.i $*.f
 

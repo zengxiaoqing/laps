@@ -13,6 +13,14 @@
 #define DEBUG 0
 #endif
 
+#if(SIZEOF_SHORT==4)
+#define fint4 short
+#elif(SIZEOF_INT==4)
+#define fint4 int
+#elif(SIZEOF_FINT4==4)
+#define fint4 long
+#endif
+
 #ifdef FORTRANUNDERSCORE
 #define dim_size_v3 dim_size_v3_
 #define check_laps_inv check_laps_inv_
@@ -38,7 +46,7 @@
 #define open_cdf open_cdf_
 #define nstrncpy nstrncpy_
 #define fstrncpy fstrncpy_
-#define cv_i4_tim_asc_lp cv_i4tm_asc_lp_
+#define cv_i4tim_asc_lp cv_i4tim_asc_lp_
 #endif
 #ifdef FORTRANCAPS
 #define dim_size_v3 DIM_SIZE_V3
@@ -129,7 +137,7 @@ char *g_name;
 #endif
 {
         int     *i4_ptr, i, i_indx, i_status, i_varid;
-        long    start[2];
+        fint4    start[2];
         short   i_flag;
         char    dim_name[15], var_name[15];
         void    cdf_i4times();
@@ -164,7 +172,7 @@ int i_size;
  
 {
         int i_status, i_varid;
-        long start[1], count[1];
+        fint4 start[1], count[1];
         static float *f_ptr;
  
 /* allocate memory to hold the values associated with the dimension */
@@ -175,7 +183,7 @@ int i_size;
  
 /* read the contents of the variable into memory */
         start[0] = 0;
-        count[0] = (long) i_size;
+        count[0] = (fint4) i_size;
         i_status = ncvarget (i_cdfid, i_varid, (const long *)start, 
                              (const long *)count, (void *) f_ptr);
         if (i_status == (-1)){
@@ -255,18 +263,18 @@ char *inv_var;
 
 /************************************************************/
 #ifdef __STDC__
-int retrieve_hdr_v3(int cdfid, long *imax, long *jmax, long *kmax)
+int retrieve_hdr_v3(int cdfid, fint4 *imax, fint4 *jmax, fint4 *kmax)
 #else
 int retrieve_hdr_v3(cdfid,imax,jmax,kmax)
 int cdfid;
-long *imax;
-long *jmax;
-long *kmax;
+fint4 *imax;
+fint4 *jmax;
+fint4 *kmax;
 #endif
 {
         int i_status, i_varid;
         int temp, str_len, i;
-        long mindex[1];
+        fint4 mindex[1];
         char *t_ptr;
  
 /* turn off the error handling done by the netCDF routines */
@@ -310,7 +318,7 @@ long *kmax;
 #ifdef __STDC__
 int retrieve_grid_v3(int i_cdfid,int i_level,int record_indx,
                      char *var, float *dptr, char *cptr,
-                     long *comm_len, char *lvlptr, char *uptr)
+                     fint4 *comm_len, char *lvlptr, char *uptr)
 #else
 int retrieve_grid_v3(i_cdfid, i_level, record_indx, var,
                            dptr, cptr, comm_len, lvlptr, uptr)
@@ -320,13 +328,13 @@ int record_indx;
 char *var;
 float *dptr;
 char *cptr;
-long *comm_len;
+fint4 *comm_len;
 char *lvlptr;
 char *uptr;
 #endif
 {
         int i_status, i_invflag, i_varid, lvl_indx, x_dim, y_dim;
-        long start[4],count[4],start_c[3],count_c[3];
+        fint4 start[4],count[4],start_c[3],count_c[3];
         char var_name[13];
  
 /* turn off the error handling done by the netCDF routines */
@@ -432,24 +440,24 @@ char *uptr;
 
 /************************************************************/
 #ifdef __STDC__
-void cstr_to_fstr(char *f_comment, char *comment, long *comm_len,
+void cstr_to_fstr(char *f_comment, char *comment, fint4 *comm_len,
                   char *f_lvl_coord, char *lvl_coord, 
-                  long *lvl_coord_len, char *f_units, char *units,
-                  long *units_len, long *kdim)
+                  fint4 *lvl_coord_len, char *f_units, char *units,
+                  fint4 *units_len, fint4 *kdim)
 #else
 void cstr_to_fstr(f_comment, comment, comm_len, f_lvl_coord, 
                   lvl_coord, lvl_coord_len, f_units, units,
                   units_len, kdim)
 char *f_comment; 
 char *comment; 
-long *comm_len;
+fint4 *comm_len;
 char *f_lvl_coord; 
 char *lvl_coord;
-long *lvl_coord_len; 
+fint4 *lvl_coord_len; 
 char *f_units; 
 char *units;
-long *units_len; 
-long *kdim;
+fint4 *units_len; 
+fint4 *kdim;
 #endif
 {
 	char *uptr, *cptr, *lptr, *pf, *pc, pc_char[1];
@@ -555,11 +563,11 @@ long *kdim;
 #ifdef __STDC__
 void read_cdf_v3 (char *f_filename, char *f_ext, char *f_var, 
                   char *f_comment, char *f_lvl_coord, char *f_units, 
-                  long *var_len, long *comm_len, long *fn_length, 
-                  long *ext_len, long *lvl_coord_len, long *units_len, 
-                  long *i_reftime, long *i_valtime, long *iimax, 
-                  long *jjmax, long *kkmax, long *kdim, long lvl[], 
-                  float *data, long *called_from, long *status)
+                  fint4 *var_len, fint4 *comm_len, fint4 *fn_length, 
+                  fint4 *ext_len, fint4 *lvl_coord_len, fint4 *units_len, 
+                  fint4 *i_reftime, fint4 *i_valtime, fint4 *iimax, 
+                  fint4 *jjmax, fint4 *kkmax, fint4 *kdim, fint4 lvl[], 
+                  float *data, fint4 *called_from, fint4 *status)
 #else
 void read_cdf_v3 (f_filename, f_ext, f_var, f_comment, f_lvl_coord, 
                   f_units, var_len, comm_len, fn_length, ext_len, 
@@ -573,31 +581,32 @@ char *f_var;
 char *f_comment;
 char *f_lvl_coord;
 char *f_units;
-long *var_len;
-long *comm_len;
-long *fn_length;
-long *ext_len;
-long *lvl_coord_len;
-long *units_len;
-long *i_reftime;
-long *i_valtime;
-long *iimax;
-long *jjmax;
-long *kkmax;
-long *kdim;
-long lvl[];
+fint4 *var_len;
+fint4 *comm_len;
+fint4 *fn_length;
+fint4 *ext_len;
+fint4 *lvl_coord_len;
+fint4 *units_len;
+fint4 *i_reftime;
+fint4 *i_valtime;
+fint4 *iimax;
+fint4 *jjmax;
+fint4 *kkmax;
+fint4 *kdim;
+fint4 lvl[];
 float *data;
-long *called_from;
-long *status;
+fint4 *called_from;
+fint4 *status;
 #endif
 {
         int cdfid, istatus;
         int i,j, t_level, i_record, unconv_var;
         int val_id,dim_id, t_record, int_1, int_2, found,t_var_id;
-        long num_record, imax, jmax, kmax, mindex[1];
+        long num_record;
+        fint4 imax, jmax, kmax, mindex[1];
         float *dptr;
         double reftime, valtime, d_valtime, timeoff, diff; 
-        char *filename, *cpt, char1;
+        char *filename, *cpt, char1[3];
 	char *ext, *var, *comment, *lvl_coord, *units; 
 	char *comm_var, *inv_var;
         char *fvptr, *vptr, *lptr, *uptr, *cptr, *t_var;
@@ -735,11 +744,13 @@ long *status;
 /* handle special case of i_record for lmr and lf1 files */
           if ((strcmp(ext,"LMR") == 0) || (strcmp(ext,"LF1") == 0)) {
             fvptr = vptr;  /* fvptr temp point to current var */
-            fvptr++;
-            char1 = *fvptr;
-            int_1 = atoi((const char *)&char1) - atoi((const char *)'0');
-            fvptr++;
-            char1 = *fvptr;
+            char1[0] = *(vptr+1);
+            char1[1] = *(vptr+2);
+            char1[2] = '\0';
+ 
+            int_1 = atoi(char1);
+	    /*            fvptr++;
+            char1[0] = *fvptr;
             int_2 = atoi((const char *)&char1) - atoi((const char *)'0');
             fvptr = vptr;
             fvptr++;
@@ -747,6 +758,9 @@ long *status;
             t_var = vptr;
 
             timeoff = (double) (((int_1*10) + int_2) * 10 * 60);
+            */
+            timeoff = (double) int_1*600;
+
             diff = (double) (*i_valtime - *i_reftime);
             valtime = reftime + timeoff + diff;
             i = 0;
@@ -801,7 +815,7 @@ long *status;
  
         free_read_var(var, comment, ext, lvl_coord, units,
                       comm_var, inv_var);
-        *status = (long) unconv_var;
+        *status = (fint4) unconv_var;
         return;
 
 }
@@ -809,7 +823,7 @@ long *status;
 #ifdef __STDC__
 int write_val_ref_asctime(int cdfid, int i_record, double *valtime,
                           double *reftime, char *asctime,
-                          long *asc_len)
+                          fint4 *asc_len)
 #else
 int write_val_ref_asctime(cdfid, i_record, valtime, reftime, 
                           asctime, asc_len)
@@ -818,11 +832,11 @@ int i_record;
 double *valtime; 
 double *reftime;
 char *asctime;
-long *asc_len;
+fint4 *asc_len;
 #endif
 {
         int varid, istatus;
-        long mindex[1], start_2[2], count_2[2];
+        fint4 mindex[1], start_2[2], count_2[2];
 
         mindex[0] = i_record;
         if ((varid = ncvarid(cdfid,"valtime")) == (-1)) {
@@ -888,19 +902,19 @@ long *asc_len;
 }
 /************************************************************/
 #ifdef __STDC__
-int check_grid_dims_v3(int cdfid, char *ext, long *imax, 
-                          long *jmax, long *n_levels, long lc3_levels,
-                          long lm1_levels)
+int check_grid_dims_v3(int cdfid, char *ext, fint4 *imax, 
+                          fint4 *jmax, fint4 *n_levels, fint4 lc3_levels,
+                          fint4 lm1_levels)
 #else
 int check_grid_dims_v3(cdfid, ext, imax, jmax, n_levels, lc3_levels,
                           lm1_levels)
 int cdfid;
 char *ext;
-long *imax; 
-long *jmax; 
-long *n_levels;
-long lc3_levels;
-long lm1_levels;
+fint4 *imax; 
+fint4 *jmax; 
+fint4 *n_levels;
+fint4 lc3_levels;
+fint4 lm1_levels;
 #endif
 {
         int dimid, istatus;
@@ -957,10 +971,10 @@ long lm1_levels;
           *n_levels = 1;
         }
         else if ((strncmp(ext,"lc3",3) == 0) && (dim_val == (long) LC3_LEVELS)) {
-          *n_levels = (long) LC3_LEVELS;
+          *n_levels = (fint4) LC3_LEVELS;
         }
         else if ((strncmp(ext,"lm1",3) == 0) && (dim_val == (long) LM1_LEVELS)) {
-          *n_levels = (long) LM1_LEVELS;
+          *n_levels = (fint4) LM1_LEVELS;
         }
         else {
           printf("z dimension in output file does not match n_levels passed in.\n");
@@ -993,8 +1007,9 @@ char *origin;
 #endif
 {
         int cdfid_stat, dimid, varid, istatus, ret_status;
-        long namelen, mindex[1], start[1], count[1];
-        long start_g[2], count_g[2];
+        long namelen;
+        fint4 mindex[1], start[1], count[1];
+        fint4 start_g[2], count_g[2];
 
          
 	cdfid_stat = ncopen(static_grid,NC_NOWRITE);
@@ -1208,22 +1223,22 @@ char *origin;
 
 /************************************************************/
 #ifdef __STDC__
-void fill_c_var(long *kdim, char *f_var, char *var, long *var_len,
-               char *f_comment, char *comment, long *comm_len,
-               char *f_asctime, char *asctime, long *asc_len)
+void fill_c_var(fint4 *kdim, char *f_var, char *var, fint4 *var_len,
+               char *f_comment, char *comment, fint4 *comm_len,
+               char *f_asctime, char *asctime, fint4 *asc_len)
 #else
 void fill_c_var(kdim,f_var,var,var_len,f_comment,comment,comm_len,
                 f_asctime, asctime,asc_len)
-long *kdim;
+fint4 *kdim;
 char *f_var;
 char *var;
-long *var_len;
+fint4 *var_len;
 char *f_comment;
 char *comment;
-long *comm_len;
+fint4 *comm_len;
 char *f_asctime;
 char *asctime;
-long *asc_len;
+fint4 *asc_len;
 #endif
 {
 	int i;
@@ -1248,9 +1263,9 @@ long *asc_len;
 }
 /************************************************************/
 #ifdef __STDC__
-int  write_hdr_v3(int cdfid, char *ext, int i_record, long *imax, 
-                  long *jmax, long *kmax, long *kdim, float *base, 
-                  float *interval, long *n_levels, float *Dx, 
+int  write_hdr_v3(int cdfid, char *ext, int i_record, fint4 *imax, 
+                  fint4 *jmax, fint4 *kmax, fint4 *kdim, float *base, 
+                  float *interval, fint4 *n_levels, float *Dx, 
                   float *Dy, float *La1, float *Lo1, float *LoV, 
                   float *Latin1, float *Latin2, char *map_proj, 
                   char *origin) 
@@ -1261,13 +1276,13 @@ int  write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, base,
 int cdfid; 
 char *ext;
 int i_record; 
-long *imax; 
-long *jmax; 
-long *kmax; 
-long *kdim; 
+fint4 *imax; 
+fint4 *jmax; 
+fint4 *kmax; 
+fint4 *kdim; 
 float *base; 
 float *interval; 
-long *n_levels; 
+fint4 *n_levels; 
 float *Dx; 
 float *Dy; 
 float *La1; 
@@ -1281,7 +1296,7 @@ char *origin;
 {
         short Nx, Ny;
 	int i, j, istatus, varid;
-        long start[1], count[1], mindex[1], start_2[2], count_2[2];
+        fint4 start[1], count[1], mindex[1], start_2[2], count_2[2];
         float level_val, *levels, *lp;
         
         istatus = 0;
@@ -1526,7 +1541,7 @@ int inv_id;
 #endif
 {
 	int istatus;
-        long start[2];
+        fint4 start[2];
         short i_flag;
 
 	start[0] = i_record;
@@ -1593,18 +1608,18 @@ float match_level;
 }
 /************************************************************/
 #ifdef __STDC__
-int update_laps_v3(int cdfid,long i_level,int i_record,
-                   long *imax, long *jmax, int var_id, 
+int update_laps_v3(int cdfid,fint4 i_level,int i_record,
+                   fint4 *imax, fint4 *jmax, int var_id, 
                    int inv_id,float *dptr,
                    int comm_id, char *cptr)
 #else
 int update_laps_v3(cdfid,i_level,i_record,imax,jmax, 
                    var_id,inv_id,dptr,comm_id,cptr)
 int cdfid;
-long i_level;
+fint4 i_level;
 int i_record;
-long *imax;
-long *jmax;
+fint4 *imax;
+fint4 *jmax;
 int var_id;
 int inv_id;
 float *dptr;
@@ -1613,7 +1628,7 @@ char *cptr;
 #endif
 {
 	int x_dim, y_dim, z_dim, istatus, dim_id;
-        long start[4], count[4], c_start[3], c_count[3];
+        fint4 start[4], count[4], c_start[3], c_count[3];
 
         x_dim = *imax;
         y_dim = *jmax;
@@ -1669,13 +1684,13 @@ char *cptr;
 #ifdef __STDC__
 void write_cdf_v3 (char *f_filename, char *f_ext, char *f_var, 
                    char *f_comment, char *f_asctime, char *f_cdl_path,
-                   char *f_static_path, long *fn_length, long *ext_len, 
-                   long *var_len, long *comm_len, long *asc_len, 
-                   long *cdl_path_len, long *stat_len, long *i_reftime, 
-                   long *i_valtime, long *imax, long *jmax, long *kmax, 
-                   long *kdim, long lvl[], float *data, float *base, 
-                   float *interval, long *n_levels, long *called_from, 
-                   long *append, long *status)
+                   char *f_static_path, fint4 *fn_length, fint4 *ext_len, 
+                   fint4 *var_len, fint4 *comm_len, fint4 *asc_len, 
+                   fint4 *cdl_path_len, fint4 *stat_len, fint4 *i_reftime, 
+                   fint4 *i_valtime, fint4 *imax, fint4 *jmax, fint4 *kmax, 
+                   fint4 *kdim,fint4 lvl[], float *data, float *base, 
+                   float *interval, fint4 *n_levels, fint4 *called_from, 
+                   fint4 *append, fint4 *status)
 #else
 void write_cdf_v3 (f_filename, f_ext, f_var, f_comment, f_asctime, 
                    f_cdl_path, f_static_path, fn_length, ext_len, 
@@ -1690,33 +1705,34 @@ char *f_comment;
 char *f_asctime;
 char *f_cdl_path;
 char *f_static_path;
-long *fn_length; 
-long *ext_len; 
-long *var_len; 
-long *comm_len; 
-long *asc_len;
-long *cdl_path_len;
-long *stat_len;
-long *i_reftime; 
-long *i_valtime; 
-long *imax;
-long *jmax; 
-long *kmax; 
-long *kdim; 
-long lvl[]; 
+fint4 *fn_length; 
+fint4 *ext_len; 
+fint4 *var_len; 
+fint4 *comm_len; 
+fint4 *asc_len;
+fint4 *cdl_path_len;
+fint4 *stat_len;
+fint4 *i_reftime; 
+fint4 *i_valtime; 
+fint4 *imax;
+fint4 *jmax; 
+fint4 *kmax; 
+fint4 *kdim; 
+fint4 lvl[]; 
 float *data; 
 float *base; 
 float *interval; 
-short *n_levels;
-long *called_from;
-long *append;
-long *status; 
+fint4 *n_levels;
+fint4 *called_from;
+fint4 *append;
+fint4 *status; 
 #endif
 {
 	int i, j, istatus, cdl_len, cdfid, i_record, var_id;
         int dim_id, comm_id, old_record, int1, int2;
         int missing_grids, inv_id, lc3_levels, lm1_levels;
-        long i_level, num_record, mindex[1],i4time;
+        fint4 i_level, mindex[1],i4time;
+        long num_record;
         float *dptr, Dx, Dy, La1, Lo1, LoV, Latin1, Latin2;
         double timeoff, reftime, valtime, diff;
         static char *fvptr, *vptr, *cptr;
@@ -1724,13 +1740,13 @@ long *status;
         char *map_proj, *origin;
         static char *asctime, *syscmd, *cdlfile, *comm_var, *inv_var;
         static char *static_grid;
-        char char1;
+        char char1[3];
 
 /* turn off the error handling done by the netCDF routines */
         ncopts = NC_VERBOSE;
 
-        lc3_levels = (long) LC3_LEVELS;
-        lm1_levels = (long) LM1_LEVELS;
+        lc3_levels = (fint4) LC3_LEVELS;
+        lm1_levels = (fint4) LM1_LEVELS;
 
 /* convert fortran f_file_name into C string filename and f_ext into C ext  */
         filename = malloc(*fn_length + 1);
@@ -1946,8 +1962,11 @@ long *status;
 /* handle special case of i_record for lmr and lf1 files */
           if ((strcmp(ext,"lmr") == 0) || (strcmp(ext,"lf1") == 0)) {
             fvptr = vptr;  /* fvptr temp point to current var */
-            fvptr++;
-            char1 = *fvptr;
+            char1[0] = *(vptr+1);
+            char1[1] = *(vptr+2);
+            char1[2] = '\0';
+            int1 = atoi(char1);
+ 	    /*
             int1 = atoi((const char *)&char1) - atoi((const char *)'0');
             fvptr++;
             char1 = *fvptr;
@@ -1956,9 +1975,12 @@ long *status;
             fvptr++;
             *fvptr = '\0';
             
-            if (old_record == (-1)) diff = valtime - reftime;
 
             timeoff = (double) (((int1*10) + int2) * 10 * 60);
+            */
+            timeoff= (double) int1*600;
+            if (old_record == (-1)) diff = valtime - reftime;
+            
             valtime = reftime + timeoff + diff;
 
             i4time = valtime + 315619200;
@@ -2015,12 +2037,12 @@ long *status;
 }
 /************************************************************/
 #ifdef __STDC__
-int open_cdf (int mode, char *fname,long *no_laps_diag)
+int open_cdf (int mode, char *fname,fint4 *no_laps_diag)
 #else
 int open_cdf (mode, fname, no_laps_diag)
 int mode;
 char *fname;
-long *no_laps_diag;
+fint4 *no_laps_diag;
 #endif
 {
         int      cdfid, istatus, i;

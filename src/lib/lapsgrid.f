@@ -961,16 +961,20 @@ c        end
       namelist /background_nl/bgpaths,bgmodels
 
       call get_directory('nest7grid',nest7grid,len_dir)
-
-      nest7grid = nest7grid(1:len_dir)//'/nest7grid.parms'
-
-      open(1,file=nest7grid,status='old',err=900)
+      if(nest7grid(len_dir:len_dir).ne.'/') then
+        len_dir=len_dir+1
+        nest7grid(len_dir:len_dir)='/'
+      endif
+      nest7grid = nest7grid(1:len_dir)//'background.nl'
+      
+      open(1,file=nest7grid(1:len_dir+13),status='old',err=900)
       read(1,background_nl,err=901)
       close(1)
       return
  900  print*,'error opening file ',nest7grid
       stop
  901  print*,'error reading background_nl in ',nest7grid
+      write(*,background_nl)
       stop
       end
 c
@@ -1013,7 +1017,7 @@ c
  
       call get_directory('nest7grid',nest7grid,len_dir)
 
-      nest7grid = nest7grid(1:len_dir)//'/nest7grid.parms'
+      nest7grid = nest7grid(1:len_dir)//'/satellite.nl'
 
       open(1,file=nest7grid,status='old',err=900)
       read(1,satellite_nl,err=901)
@@ -1041,10 +1045,9 @@ c
       integer n_lines(maxsndr)
       integer imsng_sndr_pix
       integer istatus
-
+      character*5   c_sndr_id(maxsndr)
       character*150 nest7grid
       character*200 path_to_sat_sounder(maxsndr)
-      character*6   c_sndr_id(maxsndr)
 
       real*4 channel_wavelength_u(maxch,maxsndr)
 
@@ -1055,7 +1058,7 @@ c-----------------------------------------------------------------------
 
       call get_directory('nest7grid',nest7grid,len_dir)
 
-      nest7grid = nest7grid(1:len_dir)//'/nest7grid.parms'
+      nest7grid = nest7grid(1:len_dir)//'/sat_sounder.nl'
 
       open(1,file=nest7grid,status='old',err=900)
       read(1,satellite_sounder_nl,err=901)
