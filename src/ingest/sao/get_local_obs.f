@@ -110,7 +110,7 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
      +     latitude(maxobs), longitude(maxobs),
      +     meanWeightedTemperature(maxobs), precipAccum(maxobs),
      +     precipRate(maxobs), pressChange3Hour(maxobs),
-     +     rawPrecip(maxobs), relHumidity(maxobs),
+     +     relHumidity(maxobs),
      +     seaLevelPressure(maxobs), soilMoisture(maxobs),
      +     soilTemperature(maxobs), solarRadiation(maxobs),
      +     stationPressure(maxobs), temperature(maxobs),
@@ -274,12 +274,11 @@ c
 
             else
               call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     firstOverflow, globalInventory, nStaticIds, 
-     +     numPST, numericWMOid, precipIntensity, precipType, 
-     +     pressChangeChar, altimeter(ix), dewpoint(ix), 
-     +     elevation(ix), latitude(ix), longitude(ix), 
-     +     meanWeightedTemperature(ix), precipAccum(ix), 
-     +     precipRate(ix), pressChange3Hour(ix), rawPrecip(ix), 
+     +     firstOverflow, globalInventory, nStaticIds, numericWMOid, 
+     +     precipIntensity, precipType, pressChangeChar, 
+     +     altimeter(ix), dewpoint(ix), elevation(ix), latitude(ix), 
+     +     longitude(ix), meanWeightedTemperature(ix), 
+     +     precipAccum(ix), precipRate(ix), pressChange3Hour(ix), 
      +     relHumidity(ix), seaLevelPressure(ix), seaSurfaceTemp(ix), 
      +     soilMoisture(ix), soilTemperature(ix), solarRadiation(ix), 
      +     stationPressure(ix), temperature(ix), visibility(ix), 
@@ -287,14 +286,13 @@ c
      +     altimeterDD(ix), dataProvider(ix), dewpointDD(ix), 
      +     precipAccumDD(ix), precipRateDD(ix), presWeather(ix), 
      +     pressChange3HourDD(ix), providerId(ix), relHumidityDD(ix), 
-     +     seaLevelPressureDD(ix), stationId(ix), 
-     +     stationName(ix), stationPressureDD(ix), stationType(ix), 
-     +     temperatureDD(ix), visibilityDD(ix), 
-     +     windDirDD(ix), windSpeedDD(ix), observationTime(ix), 
-     +     receivedTime(ix), reportTime(ix), rhChangeTime(ix), 
-     +     stationPressChangeTime(ix), tempChangeTime(ix), 
-     +     windDirChangeTime(ix), windGustChangeTime(ix), 
-     +     windSpeedChangeTime(ix),badflag)
+     +     seaLevelPressureDD(ix), stationId(ix), stationName(ix), 
+     +     stationPressureDD(ix), stationType(ix), temperatureDD(ix), 
+     +     visibilityDD(ix), windDirDD(ix), windSpeedDD(ix), 
+     +     observationTime(ix), receivedTime(ix), reportTime(ix), 
+     +     rhChangeTime(ix), stationPressChangeTime(ix), 
+     +     tempChangeTime(ix), windDirChangeTime(ix), 
+     +     windGustChangeTime(ix), windSpeedChangeTime(ix),badflag)
 
               n_local_file = recNum
               write(6,*)'     n_local_file = ',n_local_file
