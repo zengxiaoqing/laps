@@ -29,80 +29,8 @@ cdis
 cdis 
 cdis 
 cdis 
-        subroutine comp_laps_sao_old(u,v,ni,nj,nk,n_sao_obs
-     1          ,sao_i,sao_j,sao_k,sao_u
-     1          ,sao_v,N_SAO,r_missing_data,rms)
 
-        integer sao_i(N_SAO) ! X Sfc coordinates
-        integer sao_j(N_SAO) ! Y Sfc coordinates
-        integer sao_k(N_SAO) ! Z Sfc coordinates
-        real    sao_u(N_SAO) ! u Sfc component
-        real    sao_v(N_SAO) ! v Sfc component
-
-        dimension u(ni,nj,nk),v(ni,nj,nk)
-
-          nobs = 0
-          residualu = 0.
-          residualv = 0.
-
-          write(6,2)
-2         format(/'        Comparing LAPS to Saos,   '/
-     1  1x,'   n   i   j   k       Sfc        ',
-     1          '  LAPS          diff ')
-
-          do n = 1,n_sao_obs
-
-            i = sao_i(n)
-            j = sao_j(n)
-            k = sao_k(n)
-            u_sao = sao_u(n)
-            v_sao = sao_v(n)
-
-            if(k .le. nk .and. i .gt. 0 .and. j .gt. 0 .and. i .le. ni .
-     1and.
-     1       j .le. nj)then
-
-              if(u(i,j,k) .ne. r_missing_data
-     1   .and. v(i,j,k) .ne. r_missing_data)then
-                nobs = nobs + 1
-                diffu = u_sao - u(i,j,k)
-                diffv = v_sao - v(i,j,k)
-                residualu = residualu + diffu ** 2
-                residualv = residualv + diffv ** 2
-                write(6,101)n,i,j,k,u_sao,v_sao,
-     1                  u(i,j,k),v(i,j,k),diffu,diffv
-101                 format(1x,4i4,3(1x,2f6.1))
-
-              else
-                write(6,*)' NO LAPS WINDS AT THIS SAO LOCATION'
-
-              endif
-
-            endif ! k
-
-          enddo ! n
-
-          if(nobs .gt. 0)then
-              rmsu = sqrt(residualu/nobs)
-              rmsv = sqrt(residualv/nobs)
-              rms  = sqrt(rmsu**2 + rmsv**2)
-          else
-              rmsu = 0.
-              rmsv = 0.
-              rms = 0.
-          endif
-
-          write(6 ,102)nobs,rmsu,rmsv,rms
-          write(15 ,102)nobs,rmsu,rmsv,rms
-102       format(' RMS between LAPS & Sfc     (n,rmsu,rmsv,rms) = ',
-     1     i4,3f5.1)
-
-
-        return
-
-        end
-
-        subroutine comp_laps_sao(u_3d,v_3d,ni,nj,nk
+        subroutine comp_laps_sfc(u_3d,v_3d,ni,nj,nk
      1  ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc,r_missing_data
      1  ,rms)
 
@@ -116,8 +44,8 @@ cdis
 
         write(6,2)
 2       format(
-     1  /'Comparing Sao Velocities (passing QC) to LAPS Analysis'/
-     1  1x,'   i   j   k      SAO                 LAPS Analysis '
+     1  /'Comparing Sfc Velocities (passing QC) to LAPS Analysis'/
+     1  1x,'   i   j   k      SFC                 LAPS Analysis '
      1     ,'diff')
 
         do jl = 1,nj
@@ -146,7 +74,7 @@ cdis
 
               enddo ! k
 
-!           endif ! There is a SAO in this column
+!           endif ! There is a SFC in this column
 
           enddo ! j
         enddo ! i
@@ -164,8 +92,8 @@ cdis
 
         write(6 ,102)nobs,rmsu,rmsv,rms
         write(15 ,102)nobs,rmsu,rmsv,rms
-102     format(' RMS btwn LAPS & SAO (n,rmsu,rmsv,rms) = ',
-     1     i4,3f5.1)
+102     format(' RMS between LAPS & SFC (n,rmsu,rmsv,rms) = ',
+     1         i4,3f5.1)
 
         return
 

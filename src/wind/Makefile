@@ -22,8 +22,8 @@ EXE = wind.exe
 SRC= main_sub.f \
      get_wind_obs.f \
      weights.f \
+     comparisons.f \
      comp_vr_prof.f \
-     comp_laps_meso.f \
      comp_laps_sao.f \
      comp_maps_sao.f \
      comp_laps_vr.f \
@@ -35,7 +35,7 @@ SRC= main_sub.f \
      comp_laps_maps.f \
      vertwind.f \
      rdpoint.f \
-     rdsao.f \
+     rdsfc.f \
      read_profiles.f \
      interp_prof.f \
      qcradar.f \

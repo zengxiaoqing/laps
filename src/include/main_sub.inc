@@ -28,41 +28,6 @@ cdis
 cdis 
 cdis 
 cdis 
-!       LAPS Grid Dimensions
-                                              
-        real*4 lat(NX_L,NY_L)                 
-        real*4 lon(NX_L,NY_L)                 
-        real*4 topo(NX_L,NY_L)                
-
-!       Mesonet
-
-        integer meso_i(N_MESO) ! X mesonet coordinates                
-        integer meso_j(N_MESO) ! Y mesonet coordinates                
-        integer meso_k(N_MESO) ! Z mesonet coordinates                
-        real    meso_u(N_MESO) ! u mesonet component                  
-        real    meso_v(N_MESO) ! v mesonet component                  
-
-!       SAO
-
-        integer sao_i(N_SAO) ! X sao coordinates                      
-        integer sao_j(N_SAO) ! Y sao coordinates                      
-        integer sao_k(N_SAO) ! Z sao coordinates                      
-        real    sao_u(N_SAO) ! u sao component                        
-        real    sao_v(N_SAO) ! v sao component                        
-
-!       Pireps
-
-        integer pirep_i(N_PIREP) ! i pirep coordinates                
-        integer pirep_j(N_PIREP) ! j pirep coordinates                
-        integer pirep_k(N_PIREP) ! k pirep coordinates                
-        real    pirep_u(N_PIREP) ! u pirep component                  
-        real    pirep_v(N_PIREP) ! v pirep component                  
-
-
-!       Laps Analysis Grids
-        real grid_laps_wt(NX_L,NY_L,NZ_L)                             
-        real grid_laps_u(NX_L,NY_L,NZ_L)                              
-        real grid_laps_v(NX_L,NY_L,NZ_L)                              
 
 !       Data flags for LAPS analysis
         logical L_profiler

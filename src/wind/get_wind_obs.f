@@ -21,7 +21,42 @@
 !                                    as dummy arguments.
 !       1997 Jun     Ken Dritz       Removed include of 'lapsparms.for'.
 
-        include 'get_wind_obs.inc'
+!       LAPS Grid Dimensions
+                                                   
+        real*4 lat(NX_L,NY_L)                      
+        real*4 lon(NX_L,NY_L)                      
+
+!       Sectorized Uniform Wind
+
+!       Profiler Stuff
+        real lat_pr(MAX_PR)                        
+        real lon_pr(MAX_PR)                        
+
+
+!       Profiler Observations
+
+        integer nlevels_obs_pr(MAX_PR)             
+        real ob_pr_u (MAX_PR,NZ_L) ! Vertically interpolated Profiler wind
+        real ob_pr_v (MAX_PR,NZ_L) ! Vertically interpolated Profiler wind
+
+
+!       Barnes Profiler analysis
+
+        real weights_pr(NX_L,NY_L)                                      
+        real max_weights_pr(NX_L,NY_L,NZ_L)                             
+
+        real sum_pr_u (NX_L,NY_L,NZ_L)                                  
+        real sum_pr_v (NX_L,NY_L,NZ_L)                                  
+        real sum_wt_pr (NX_L,NY_L,NZ_L)                                 
+
+!       Laps Analysis Grids
+        real grid_laps_wt(NX_L,NY_L,NZ_L)                               
+        real grid_laps_u(NX_L,NY_L,NZ_L)                                
+        real grid_laps_v(NX_L,NY_L,NZ_L)                                
+
+!       Data flags for LAPS analysis
+        logical L_profiler
+        parameter (L_profiler = .true.)
 
         dimension u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
@@ -49,14 +84,8 @@
      1            lat,lon,                                          ! I
      1            MAX_PR,MAX_PR_LEVELS,                             ! I
      1            l_use_raob,                                       ! I
-     1            ob_pr_ht,                                         ! O
-     1            ob_pr_di, ob_pr_sp,                               ! O
      1            ob_pr_u , ob_pr_v ,                               ! O
-     1            ob_pr_r , ob_pr_t ,                               ! O
      1            nlevels_obs_pr,                                   ! O
-     1            ob_pr_ht_obs,                                     ! O
-     1            ob_pr_di_obs, ob_pr_sp_obs,                       ! O
-     1            ob_pr_u_obs , ob_pr_v_obs ,                       ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            n_vel_grids,                                      ! I
      1            u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,            ! I
@@ -89,7 +118,8 @@
 !       It would be interesting to see if this routine affects the LW3 file in
 !       the presence of radar velocity data. If it doesn't as expected, then it
 !       would simplify things to eliminate this call.
-        call prof_anal(istat_radar_vel                             ! I
+        if(istat_radar_vel .eq. 1 .and. n_vel_grids .gt. 0)then
+            call prof_anal(istat_radar_vel                         ! I
      1          ,n_vel_grids                                       ! I
      1          ,sum_pr_u,sum_pr_v,sum_wt_pr,max_weights_pr        ! I
      1          ,weights_pr                                        ! L
@@ -102,11 +132,11 @@
      1          ,heights_1d                                        ! I
      1          ,istatus)                                          ! O
 
-        if(istatus .ne. 1)then
-            write(6,*)' Error in prof_anal'
-            return
-        endif
-
+            if(istatus .ne. 1)then
+                write(6,*)' Error in prof_anal'
+                return
+            endif
+        endif ! valid radar data
 
         return
         end
@@ -285,10 +315,6 @@
 
                          if(istat_radar_vel .eq. 1 .and. n_vel_grids
      1                                                      .gt. 0)then
-
-!d                         write(6,201)i_pr,k,ob_pr_ht(i_pr,k),
-!d      1                    ob_pr_di(i_pr,k),ob_pr_sp(i_pr,k)
-!d201                      format(1x,' Summing Wts',2i4,2f8.0,f8.1)
 
                            do j = 1,nj
                            do i = 1,ni

@@ -3,14 +3,8 @@
      1                   lat,lon,                                   ! I
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
      1                   l_use_raob,                                ! I
-     1                   ob_pr_ht,                                  ! O
-     1                   ob_pr_di, ob_pr_sp,                        ! O
      1                   ob_pr_u , ob_pr_v ,                        ! O
-     1                   ob_pr_r , ob_pr_t ,                        ! O
      1                   nlevels_obs_pr,                            ! O
-     1                   ob_pr_ht_obs,                              ! O
-     1                   ob_pr_di_obs,ob_pr_sp_obs,                 ! O
-     1                   ob_pr_u_obs ,ob_pr_v_obs ,                 ! O
      1                   rlat_radar,rlon_radar,rheight_radar,       ! I
      1                   n_vel_grids,                               ! I
      1                   u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,     ! I

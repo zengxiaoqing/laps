@@ -91,7 +91,7 @@ cdis
 
         write(6 ,102)nobs,rmsu,rmsv,rms
         write(15 ,102)nobs,rmsu,rmsv,rms
-102     format(' RMS btwn Model Bkg & SAO (n,rmsu,rmsv,rms) = ',
+102     format(' RMS between Model Bkg & SFC (n,rmsu,rmsv,rms) = ',       
      1     i4,3f5.1)
 
         return

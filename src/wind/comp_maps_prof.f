@@ -94,8 +94,8 @@ cdis
 
         write(6 ,102)nobs,rmsu,rmsv,rms
         write(15 ,102)nobs,rmsu,rmsv,rms
-102     format(' RMS btwn Mdl Bkgrnd & Profiler (n,rmsu,rmsv,rms) = ',
-     1     i4,3f5.1)
+102     format(' RMS between Mdl Bkgrnd & Profiler '
+     1        ,'(n,rmsu,rmsv,rms) = ',i4,3f5.1)
 
         return
 
