@@ -8,11 +8,12 @@ Subroutine Name                                File Name
 
 main                                           laps_sfc.f
     laps_sfc_sub                                    "
-        get_bkgwind_sfc                        laps_routines.f
+        bkgwts                                 laps_routines.f
+        get_bkgwind_sfc                             "
         get_background_sfc                          "
         qcdata                                 qc_data.f
-           dev_ck                                   "
-           bkg_chk                                  "
+            dev_ck                                  "
+            bkg_chk                                 "
         mdat_laps                              mdatlaps.f
             splie2                                  "
             splin2                                  "
@@ -70,7 +71,6 @@ laps_routines.f:	subroutine extract(a,imax,jmax,i,j,ix,jy)
 laps_routines.f:	subroutine decompwind_gm(dd,ff,ucomp,vcomp,status)
 laps_routines.f:      subroutine stats(x,ni,nj)
 laps_routines.f:	subroutine clouds(imax,jmax,topo,t,smsng,tb8,
-laps_routines.f:	subroutine bkgwts(lat,lon,topo,numsfc,lat_s,lon_s,elev_s,
 laps_routines.f:      subroutine aplot(field, ni, nj)
 laps_routines.f:       subroutine check_field_2d(x,ni,nj,fill_val,istatus)
 laps_routines.f:	subroutine checknan_pt(x,nan_flag)
