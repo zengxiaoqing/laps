@@ -484,14 +484,6 @@ c
           endif
          if(bgtime+ihour*3600.le.i4time_now.and.
      +        bgtime+ihour*3600.gt.last_time) then
-c
-c Since the files are sorted from newest to oldest, if we have a previous
-c time but not a next time this run won't work - try an earlier run
-c
-            if(next_time.gt.bgtime+48*3600) then
-               ntime = 0
-               goto 40
-            endif
             last_time = bgtime+ihour*3600
             file_list(2) = bg_names(n)
           endif
