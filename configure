@@ -2846,7 +2846,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/change-center.pl
           etc/cronfile.pl
           etc/fxalogdir.pl
-          etc/hum3d.pl
+          etc/lq3driver.pl
           etc/laps_driver.pl
           etc/sched.pl
           etc/realtime.pl
@@ -2867,7 +2867,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/wfo-cwa-latlon-bounds.pl
           etc/wfo_post.pl
           etc/wfo-relocalization.pl
-          etc/wind3d.pl
+          etc/wind.pl
           etc/window_domain_rt.pl
           etc/wait4lapsprep.pl
           etc/wrfpost.pl
@@ -2975,7 +2975,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/change-center.pl
           etc/cronfile.pl
           etc/fxalogdir.pl
-          etc/hum3d.pl
+          etc/lq3driver.pl
           etc/laps_driver.pl
           etc/sched.pl
           etc/realtime.pl
@@ -2996,7 +2996,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/wfo-cwa-latlon-bounds.pl
           etc/wfo_post.pl
           etc/wfo-relocalization.pl
-          etc/wind3d.pl
+          etc/wind.pl
           etc/window_domain_rt.pl
           etc/wait4lapsprep.pl
           etc/wrfpost.pl
