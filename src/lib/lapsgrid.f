@@ -364,8 +364,9 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         call s_len(tempchar,len_dir)
  
         open(92,file=tempchar(1:len_dir),status='old',err=900)
-        inquire(unit=92,read=a8)
-        print*, a8
+ccc this code doesn't work on hpux 
+ccc        inquire(unit=92,read=a8)
+ccc        print*, a8
         read(92,lapsparms_nl,err=910)
 ccc         print *,'here ',iflag_lapsparms_cmn
 
