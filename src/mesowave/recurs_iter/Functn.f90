@@ -78,7 +78,7 @@ COMMON /OBSBlock/nobs,vid,idx,o,coe,w
         ENDDO
 
         ! y - y0
-        f = f + w(i)*(vo-o(1,iobs))**2
+        f = f + w(iobs)*(vo-o(1,iobs))**2
 
      ENDIF
 

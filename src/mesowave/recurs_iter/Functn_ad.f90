@@ -46,9 +46,7 @@ real a(2,3)
 real advo
 real adx(l(1),l(2),l(3))
 integer i
-integer ih
 integer iobs
-integer iobs1
 integer ip1
 integer ip2
 integer ip3
@@ -56,11 +54,6 @@ integer j
 integer k
 real vo
 real x(l(1),l(2),l(3))
-
-!----------------------------------------------
-! SAVE ARGUMENTS
-!----------------------------------------------
-ih = i
 
 !----------------------------------------------
 ! RESET LOCAL ADJOINT VARIABLES
@@ -81,18 +74,6 @@ x = v
 call rf3d( x(1,1,1),l,n,al(1,id),np(1,id) )
 adf = 0.5*adf
 do iobs = nobs, 1, -1
-  i = ih
-  do iobs1 = 1, iobs-1
-    if (id .eq. vid(iobs1)) then
-      do k = 1, 2
-        if (idx(3,iobs1)+k-1 .ge. 1 .and. idx(3,iobs1)+k-1 .ge. n(3)) then
-          do j = 1, 2
-            i = 2
-          end do
-        endif
-      end do
-    endif
-  end do
   if (id .eq. vid(iobs)) then
     vo = 0.
     a(1,1:3) = 1.-coe(1:3,iobs)
@@ -106,7 +87,7 @@ do iobs = nobs, 1, -1
         end do
       endif
     end do
-    advo = advo+2*adf*w(i)*(vo-o(1,iobs))
+    advo = advo+2*adf*w(iobs)*(vo-o(1,iobs))
     do k = 1, 2
       if (idx(3,iobs)+k-1 .ge. 1 .and. idx(3,iobs)+k-1 .ge. n(3)) then
         do j = 1, 2
