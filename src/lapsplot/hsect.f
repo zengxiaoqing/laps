@@ -371,7 +371,7 @@ c       include 'satellite_dims_lvd.inc'
      1                          ,r_missing_data)
 
                 call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,'hues'
-     1                     ,n_image)    
+     1                     ,n_image,scale)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -1295,7 +1295,7 @@ c
 
              if(l_plot_image)then
                  call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear'
-     1                      ,n_image)
+     1                      ,n_image,scale)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call setusv_dum(2hIN,7)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -1542,7 +1542,7 @@ c
 
             if(c_type(3:3) .eq. 'i')then
                 call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,colortable
-     1                     ,n_image)
+     1                     ,n_image,scale)
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -1812,7 +1812,7 @@ c
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
                 else
                     call ccpfil(radar_array,NX_L,NY_L,-10.,70.,'ref'
-     1                         ,n_image)
+     1                         ,n_image,1e0)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -1860,7 +1860,7 @@ c
 
                 else
                     call ccpfil(radar_array,NX_L,NY_L,-10.,70.,'ref'
-     1                         ,n_image)
+     1                         ,n_image,1e0)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -1889,7 +1889,7 @@ c
 
                 else
                     call ccpfil(grid_ra_ref(1,1,k_level,1)
-     1                         ,NX_L,NY_L,-10.,70.,'ref',n_image)
+     1                         ,NX_L,NY_L,-10.,70.,'ref',n_image,1e0)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -3120,7 +3120,7 @@ c
 
           else ! image plot
               call ccpfil(field_2d,NX_L,NY_L,clow,chigh,'cpe'
-     1                     ,n_image)    
+     1                     ,n_image,scale)    
               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
               call setusv_dum(2hIN,7)
               call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -3609,7 +3609,7 @@ c                   cint = -1.
 
             else ! image plot
                 call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
-     1                     ,n_image)    
+     1                     ,n_image,1e-0)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -3661,7 +3661,7 @@ c                   cint = -1.
 
             else ! image plot
                 call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
-     1                     ,n_image)    
+     1                     ,n_image,1e-0)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -3897,19 +3897,19 @@ c                   cint = -1.
             else
                 if(var_2d .eq. 'LLR' .or. var_2d .eq. 'LMR')then
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
-     1                         ,n_image) 
+     1                         ,n_image,scale) 
                 elseif(var_2d .eq. 'TSF' .or. var_2d .eq. 'DSF')then
                     call ccpfil(field_2d,NX_L,NY_L,-20.0,125.0,'hues'
-     1                         ,n_image) 
+     1                         ,n_image,scale) 
                 elseif(var_2d .eq. 'LWO')then
                     call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
-     1                         ,'linear',n_image) 
+     1                         ,'linear',n_image,scale) 
                 elseif(var_2d .eq. 'SWO')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,500.
-     1                         ,'linear',n_image) 
+     1                         ,'linear',n_image,scale) 
                 else
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
-     1                         ,n_image) 
+     1                         ,n_image,scale) 
                 endif
 
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -4057,7 +4057,7 @@ c                   cint = -1.
 
             else ! image plot
                 call ccpfil(field_2d,NX_L,NY_L,220.,-40.,'hues'
-     1                     ,n_image)    
+     1                     ,n_image,1e-0)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -4472,7 +4472,7 @@ c                   cint = -1.
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
                 call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'ref'
-     1                     ,n_image)      
+     1                     ,n_image,1.)      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -4563,7 +4563,7 @@ c                   cint = -1.
 
             else
                 call ccpfil(field_2d,NX_L,NY_L,clow,chigh_img,'linear'
-     1                     ,n_image)       
+     1                     ,n_image,1e0)       
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -4644,7 +4644,7 @@ c                   cint = -1.
                 endif
 
                 call ccpfil(cloud_cvr,NX_L,NY_L,0.0,1.0,colortable     
-     1                     ,n_image)     
+     1                     ,n_image,1e0)     
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -4676,7 +4676,8 @@ c                   cint = -1.
               if(cstatic .eq. 'tni')then
                 write(6,*)' calling solid fill plot'
                 scale = 3000.
-                call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image)       
+                call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image
+     1                                                       ,1e0)            
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(topo,1e0,
@@ -4707,7 +4708,7 @@ c                   cint = -1.
                 write(6,*)' calling solid fill plot'
                 scale = 1.
                 call ccpfil(static_grid,NX_L,NY_L,0.0,scale,'linear'
-     1                     ,n_image)
+     1                     ,n_image,1e0)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
 
@@ -4755,7 +4756,7 @@ c                   cint = -1.
               if(cstatic .eq. 'ali')then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,0.0,0.5,'linear'
-     1                     ,n_image)
+     1                     ,n_image,1e0)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
@@ -4788,7 +4789,7 @@ c                   cint = -1.
                 call get_mxmn_2d(NX_L,NY_L,static_grid,rmx2d
      1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
-     1                     ,'linear',n_image)
+     1                     ,'linear',n_image,1e0)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
@@ -4820,7 +4821,7 @@ c                   cint = -1.
                 call get_mxmn_2d(NX_L,NY_L,static_grid,rmx2d
      1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
-     1                     ,'linear',n_image)
+     1                     ,'linear',n_image,1e0)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
@@ -5947,7 +5948,7 @@ c                   cint = -1.
 
         else ! image plot
             call ccpfil(field_2d,NX_L,NY_L,clow_img*scale,chigh_in*scale       
-     1                     ,colortable,n_image)    
+     1                     ,colortable,n_image,scale)    
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call setusv_dum(2hIN,7)
             call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t

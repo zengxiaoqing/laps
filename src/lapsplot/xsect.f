@@ -702,7 +702,7 @@ c read in laps lat/lon and topo
      1                          ,r_missing_data)
 
                 call ccpfil(field_vert_diff,NX_C,NZ_C,rmin,rmax,'hues'
-     1                     ,n_image)    
+     1                     ,n_image,scale)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_C,NZ_C,c33_label,asc9_tim_t
@@ -1616,7 +1616,8 @@ c read in laps lat/lon and topo
      1                           ,field_vert,field_vert3,r_missing_data)
 
             write(6,*)' calling solid fill cloud plot'
-            call ccpfil(field_vert3,NX_P,NX_P,0.0,1.0,'linear',n_image)       
+            call ccpfil(field_vert3,NX_P,NX_P,0.0,1.0,'linear'
+     1                             ,n_image,1e0)       
 
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
