@@ -10,7 +10,8 @@ c
      .       uw(nx,ny,nz),
      .       vw(nx,ny,nz),
      .       rh(nx,ny,nz),   ! in as rh out as mr
-     .       pr(nx,ny,nz)
+     .       pr(nx,ny,nz),
+     .      tmp(nx,ny,nz)
 c
       integer vdims(10) !Allow up to 10 dimensions
       integer*4 nvs,nvdim,ntp,ndsize,j,lenstr,ncnowrit,ncopn,ncid,
@@ -54,7 +55,10 @@ c
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,10,start,count,uw,istatus)
+      call ncvgt(ncid,10,start,count,tmp,istatus)
+      call swap_array(nx*ny,nz,tmp,uw)
+
+
 c
 c *** Statements to fill vw.                             
 c
@@ -66,7 +70,8 @@ c
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,12,start,count,vw,istatus)
+      call ncvgt(ncid,12,start,count,tmp,istatus)
+      call swap_array(nx*ny,nz,tmp,vw)
 c
 c *** Statements to fill ht.                             
 c
@@ -78,7 +83,8 @@ c
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,2,start,count,ht,istatus)
+      call ncvgt(ncid,2,start,count,tmp,istatus)
+      call swap_array(nx*ny,nz,tmp,ht)
 c
 c *** Statements to fill rh.                             
 c
@@ -90,7 +96,8 @@ c
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,4,start,count,rh,istatus)
+      call ncvgt(ncid,4,start,count,tmp,istatus)
+      call swap_array(nx*ny,nz,tmp,rh)
 c
 c *** Statements to fill tp.                             
 c
@@ -102,7 +109,8 @@ c
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,7,start,count,tp,istatus)
+      call ncvgt(ncid,7,start,count,tmp,istatus)
+      call swap_array(nx*ny,nz,tmp,tp)
 c
 c *** Statements to fill ipr.                       
 c
@@ -115,11 +123,17 @@ c
          count(j)=ndsize
       enddo
       call ncvgt(ncid,31,start,count,ipr,istatus)
-      
+      if(ipr(1).gt.ipr(k)) then 
+         print*,'pressure here ',ipr      
+         print*,'Pressure data indicates that netcdf format may',
+     +           ' have changed'
+         stop
+      endif
+
       do k=1,nz
          do j=1,ny
             do i=1,nx
-               pr(i,j,k)=float(ipr(k))
+               pr(i,j,k)=float(ipr(nz-k+1))
                it=tp(i,j,k)*100
                it=min(45000,max(15000,it))
                xe=esat(it)
@@ -146,3 +160,17 @@ c
       istatus = 1
       return
       end
+
+      subroutine swap_array(n1,n2,a1,a2)
+      integer i,j,n1,n2
+      real a1(n1,n2),a2(n1,n2)
+      do j=1,n2
+         do i=1,n1
+            a2(i,j)=a1(i,n2-j+1)
+         enddo
+      enddo
+      return
+      end
+
+
+
