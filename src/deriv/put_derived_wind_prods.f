@@ -280,8 +280,9 @@ cdis
             call mean_wind(uanl,vanl,topo,imax,jmax,kmax
      1                    ,umean,vmean,ustorm,vstorm,istatus)
         else
-            call mean_wind_bunkers(uanl,vanl,topo,imax,jmax,kmax
-     1                    ,heights_3d,umean,vmean,ustorm,vstorm,istatus)       
+            call mean_wind_bunkers(uanl,vanl,topo,imax,jmax,kmax       ! I
+     1                    ,heights_3d                                  ! I
+     1                    ,umean,vmean,ustorm,vstorm,istatus)          ! O
         endif
 
         if(istatus .ne. 1)then
@@ -470,8 +471,8 @@ ccc202              format('H',i2)
                 comment_a(2) = 'LAPS Mean Wind SFC - 300mb'
 
                 call move(helicity,out_lhe_3d(1,1,1),NX_L,NY_L)
-                call move(ustorm  ,out_lhe_3d(1,1,2),NX_L,NY_L)
-                call move(vstorm  ,out_lhe_3d(1,1,3),NX_L,NY_L)
+                call move(umean   ,out_lhe_3d(1,1,2),NX_L,NY_L)
+                call move(vmean   ,out_lhe_3d(1,1,3),NX_L,NY_L)
 
                 call put_laps_multi_2d(i4time_sys,ext,var_a
      1          ,units_a,comment_a,out_lhe_3d,NX_L,NY_L,3,istatus)
