@@ -147,7 +147,8 @@ c
      :        Velocity(max_gates,max_rays),
      :        Reflect(max_gates,max_rays)
 
-      real*4 out_array_4d(NX_L,NY_L,NZ_L,3)
+      real*4, allocatable, dimension(:,:,:,:) :: out_array_4d
+!     real*4 out_array_4d(NX_L,NY_L,NZ_L,3)
       real*4 r_missing_data
 
       real*4 lat(NX_L,NY_L)
@@ -168,7 +169,7 @@ c
       integer igate_interval
       integer n_vel_grids_final,n_vel_grids_prelim
       integer n_ref_grids,n_ref_grids_qc_fail,nycor
-      integer istatus,istatus_qc
+      integer istatus,istatus_qc,istat_alloc
       integer ishow_timer,i4_elapsed
       integer i_purge
 
@@ -578,18 +579,6 @@ c
         comment_a(3) = 'Nyquist Velocity'
         nf = 3
 
-        if(.true.)then
-
-            DO 550 k = 1,NZ_L
-            DO 550 j = 1,NY_L
-            DO 550 i = 1,NX_L
-              out_array_4d(i,j,k,1) = grid_ref(i,j,k)
-              out_array_4d(i,j,k,2) = grid_rvel(i,j,k)
-              out_array_4d(i,j,k,3) = grid_nyq(i,j,k)
-  550       CONTINUE
-
-        endif ! .true.
-c
 c       DO 555 k=7,9
 c       print *, 'sample data on level ',k
 c       DO 555 j=1,NY_L
@@ -652,7 +641,7 @@ c
 
             I4_elapsed = ishow_timer()
 
-            call ref_fill_horz(out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
+            call ref_fill_horz(grid_ref,NX_L,NY_L,NZ_L
      1                        ,lat,lon,dgr
      1                        ,rlat_radar,rlon_radar,rheight_radar
      1                        ,istatus)       
@@ -660,6 +649,20 @@ c
                 write(6,*)' Error calling ref_fill_horz'          
                 return
             endif
+
+            allocate( out_array_4d(NX_L,NY_L,NZ_L,3), STAT=istat_alloc )       
+            if(istat_alloc .ne. 0)then
+                write(6,*)' ERROR: Could not allocate out_array_4d'
+                stop
+            endif
+
+            DO 550 k = 1,NZ_L
+            DO 550 j = 1,NY_L
+            DO 550 i = 1,NX_L
+              out_array_4d(i,j,k,1) = grid_ref(i,j,k)
+              out_array_4d(i,j,k,2) = grid_rvel(i,j,k)
+              out_array_4d(i,j,k,3) = grid_nyq(i,j,k)
+  550       CONTINUE
 
             I4_elapsed = ishow_timer()
 
@@ -687,11 +690,13 @@ c
 
             endif
 
+            deallocate(out_array_4d)
+
         else ! Single level of data (as per WFO)
             call put_remap_vrc(i_product_i4time,comment_a(1)
      1             ,rlat_radar,rlon_radar,rheight_radar
      1             ,dgr
-     1             ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
+     1             ,grid_ref,NX_L,NY_L,NZ_L
      1             ,c3_radar_subdir,path_to_vrc,r_missing_data,istatus)       
 
         endif
