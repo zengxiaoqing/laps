@@ -1,9 +1,10 @@
-@SET_MAKE@
+# User options are in src/include/makefile.inc
+# This Makefile is designed for gnu make version 3.75 or newer
+# Please report problems to lapsbugs@fsl.noaa.gov
 
-LAPSROOT=@top_srcdir@
-INSTALLROOT=@prefix@
-DATAROOT=@datadir@
-INSTALL=@INSTALL@
+
+LAPSROOT=.
+DATAROOT=/data/lapb/parallel/laps/data
 
 LINK=$(LAPSROOT)/util/link.pl
 CWD = $(shell pwd)
@@ -179,7 +180,7 @@ all: exe
 debug: debuglib
 
 localize: mkdatadirs
-	@PERL@ $(LAPSROOT)/etc/laps_localization.pl --lapsroot=$(INSTALLROOT) \
+	/usr/nfs/bin/perl $(LAPSROOT)/etc/laps_localization.pl --lapsroot=$(INSTALLROOT) \
                --dataroot=$(DATAROOT) --srcroot=$(LAPSROOT)
 
 exe: lib
