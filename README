@@ -284,6 +284,12 @@
      'make lapsplot' or 'make install_lapsplot'. It is not built with a plain 
      run of 'make'.
 
+     At times the linking of 'lapsplot' may show undefined references to 
+     library routines. This often represets a mismatch between NCAR graphics 
+     and various system libraries. Possible solutions for this include editing 
+     the library list within the 'ncargf77/ncargf90' script or switching the 
+     -Bstatic flag on or off.
+
      'Lapsplot' can be modified to show political boundaries outside of the 
      U.S. The following data files are relevant from the 'static/ncarg' 
      directory: 'continent_minus_us.dat', 'state_from_counties.dat', and 
