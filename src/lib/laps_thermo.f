@@ -56,8 +56,8 @@ cdis
             depress50 = 13.4 + tmid_f * 0.1
             rh = 0.5 ** ((t_f - td_f)/depress50)
             start = 240. - (t_k(i,j) - 240.) / 6.
-            ratio = (t_k(i,j) - start)/100. * (1.0 + 0.9 * (1.0 - sqrt(r
-     1h)))
+            ratio = (t_k(i,j) - start)/100. * 
+     1                                   (1.0 + 0.9 * (1.0 - sqrt(rh)))        
             dtw_dtd = ratio  ! (t = td)
             drh_dtd = const / depress50 ! (t = td)
             dtw_drh = dtw_dtd / drh_dtd
@@ -82,9 +82,9 @@ cdis
 
         do j = 1,nj
         do i = 1,ni
-            tw_k(i,j) = tw_fast(t_k(i,j)-273.15,td_k(i,j)-273.15,p_pa(i,
-     1j)*.01)
-     1                             + 273.15
+            tw_k(i,j) = 
+     1      tw_fast(t_k(i,j)-273.15,td_k(i,j)-273.15,p_pa(i,j)*.01)
+     1                                                     + 273.15
         enddo ! i
         enddo ! j
 
@@ -102,9 +102,9 @@ cdis
 
         do j = 1,nj
         do i = 1,ni
-            tw_k(i,j) = tw(t_k(i,j)-273.15,td_k(i,j)-273.15,p_pa(i,j)*.0
-     11)
-     1                             + 273.15
+            tw_k(i,j) = 
+     1      tw(t_k(i,j)-273.15,td_k(i,j)-273.15,p_pa(i,j)*.01)
+     1                                                     + 273.15
         enddo ! i
         enddo ! j
 
@@ -203,7 +203,7 @@ C   PRESSURE FOR DRY AIR.
 
 
         subroutine laps_be(ni,nj,nk
-     1  ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,ht_3d_m,p_1d_pa_dum,topo       
+     1  ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
      1                  ,pbe_2d,nbe_2d)
 
 !       1991    Steve Albers
@@ -215,12 +215,19 @@ C   PRESSURE FOR DRY AIR.
         real*4 p_sfc_pa(ni,nj)
         real*4 topo(ni,nj)
         real*4 t_3d_k(ni,nj,nk)
+        real*4 td_3d_k(ni,nj,nk)
         real*4 ht_3d_m(ni,nj,nk)
         real*4 p_1d_pa(nk)
         real*4 p_1d_mb(nk)                   ! Local
         real*4 pres_3d(ni,nj,nk)             ! Local
         real*4 pbe_2d(ni,nj)
         real*4 nbe_2d(ni,nj)
+
+        real*4 si_2d(ni,nj)
+        real*4 tt_2d(ni,nj)
+        real*4 k_2d(ni,nj)
+        real*4 lcl_2d(ni,nj)
+        
 
         COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
      1  ,VEL(20)
@@ -282,12 +289,17 @@ c       write(6,*)' i = ',i
 
             pbe_2d(i,j) = PBEPOS
             nbe_2d(i,j) = PBENEG
+          
+            si_2d(i,j) = SI
+            tt_2d(i,j) = TT
+            k_2d(i,j)  = K_INDEX
+            lcl_2d(i,j)= LCL                 ! Surface based parcel
 
             IF(i .eq. ni/2 .and. j .eq. nj/2)then
 !           IF(i .eq. i/8*8 .and. j .eq. 12)then
 
-                write(6,*)
-     1  ' n    p         t         td         ht       tdif       be'
+                write(6,*)' n    p         t         td'
+     1                   ,'         ht       tdif       be'
                 do n = 1,nlevel
                     write(6,301)n,p(n),t(n),td(n),ht(n),temdif(n),pbe(n)
 301                 format(1x,i2,f8.1,f10.2,f10.2,f10.0,f10.2,f10.1)
@@ -296,7 +308,7 @@ c       write(6,*)' i = ',i
                 SWEAT=0.0
 !               IF(IFLAG1*IFLAG2.EQ.0)SWEAT=0.0
 
-                 WRITE(6,430)DD85,FF85,DD50,FF50,T500
+                WRITE(6,430)DD85,FF85,DD50,FF50,T500
  430            FORMAT(' 850MB WIND',2F5.0,'         500MB WIND',2F5.0
      #         ,'    500MB TEMP= ',F6.1)
 
@@ -305,49 +317,44 @@ c       write(6,*)' i = ',i
                 WRITE(6,60)LI,SI,BLI
  60             FORMAT(' LI= ',F5.1,20X,'SI= ',F5.1,15X,'BLI= ',F5.1)
 
-                WRITE(6,61)TT,SWEAT,HWB0
- 61             FORMAT(' TOTAL TOTALS=',F6.1,10X,'SWEAT= ',F7.1,10X,'W.
-     1BULB ZERO='
-     #           ,F5.1,' KFT AGL')
+                WRITE(6,61,err=161)TT,SWEAT,HWB0
+ 61             FORMAT(' TOTAL TOTALS=',F6.1,10X,'SWEAT= ',F7.1
+     1                ,10X,'W. BULB ZERO=',F5.1,' KFT AGL')
 
-                ITCONV=INT(TCONV+0.5)
+ 161            ITCONV=INT(TCONV+0.5)
 
                 WRITE(6,62)LCL*.003281,CCL,ITCONV
- 62             FORMAT(' LCL= ',F5.1,' KFT AGL',11X,'CCL=',F5.1,' KFT AG
-     1L',7X
-     #          ,'CONVECTIVE TEMP=',I4,' DEG F')
+ 62             FORMAT(' LCL= ',F5.1,' KFT AGL',11X,'CCL=',F5.1
+     1                ,' KFT AGL',7X,'CONVECTIVE TEMP=',I4,' DEG F')
 
-                KK=NINT(K_INDEX)
+!               KK=NINT(K_INDEX)
                 ITMAX=NINT(TMAX)
 
-                WRITE(6,63)KK,ITMAX,WATER
- 63             FORMAT(' K INDEX =',I4,16X,'TMAX =',I4,' F',12X,'PRECIP.
-     1 WATER='
-     #         ,F5.2,' IN.')
-                WRITE(6,*)
+                WRITE(6,63,err=163)KK,ITMAX,WATER
+ 63             FORMAT(' K INDEX =',I4,16X,'TMAX =',I4,' F',12X
+     1                ,'PRECIP. WATER=',F5.2,' IN.')
+ 163            WRITE(6,*)
 C
                 IF(ICT+ICP.GT.0.OR.IO.GE.2)WRITE(6,71)P(1),PLCL
- 71             FORMAT(' ENERGY ANALYSIS - LIFTING A PARCEL FROM',F6.0,'
-     1 MB'
-     1                  ,'   LCL=',f7.1,' MB')
+ 71             FORMAT(' ENERGY ANALYSIS - LIFTING A PARCEL FROM'
+     1                ,F6.0,'MB','   LCL=',f7.1,' MB')
 C
                 DO 600 II=1,ICP
  600            WRITE(6,64)PBECR(II,1),PBECR(II,2),VEL(II),PBECR(II,4)
- 64             FORMAT(' ENERGY AT',F6.0,'MB=',F10.2,' JOULES/KG       V
-     1ELOCITY='
-     #        ,F6.2,'M/S   HT=',F7.0,' M')
+ 64             FORMAT(' ENERGY AT',F6.0,'MB=',F10.2
+     1                ,' JOULES/KG       VELOCITY=',F6.2,'M/S   HT='
+     1                ,F7.0,' M')
 C
                 WRITE(6,*)
                 DO 700 II=1,ICT
  700            WRITE(6,5)TDFCR(II,1),TDFCR(II,2)
- 5              FORMAT(5X,'ENVIRONMENTAL MINUS PARCEL TEMPERATURE AT',F6
-     1.0
-     1           ,'MB  =',F6.1)
+ 5              FORMAT(5X,'ENVIRONMENTAL MINUS PARCEL TEMPERATURE AT'
+     1                ,F6.0,'MB  =',F6.1)
 C
                 IF(BLI.LE.0.0)WRITE(6,65)PBENEG,VELNEG
                 IF(BLI.LE.0.0)WRITE(6,66)PBEPOS
  65             FORMAT('     CAP STRENGTH =',F10.1,' JOULES/KG.'
-     +            ,' VELOCITY NEEDED',F5.1,'M/S')
+     +                ,' VELOCITY NEEDED',F5.1,'M/S')
  66             FORMAT('     POSITIVE AREA=',F10.1,' JOULES/KG.')
                 GOTO2000
 C
@@ -369,9 +376,10 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
         END
 
 !
-        SUBROUTINE SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0,PLCL_PBE,LCL,CCL  
+        SUBROUTINE SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0
+     1   ,PLCL_PBE,LCL_PBE,CCL  
      1   ,TCONV,IO,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50,PBLI,VELNEG
-     #   ,WATER,IHOUR)
+     1   ,WATER,IHOUR)
 
 !       1991    Steve Albers
 !       Only the PBENEG and PBEPOS active outputs in this version
@@ -379,7 +387,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
         DIMENSION Q(70),W(70)! ,WB(70)
         COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
      1              ,VEL(20),temdif(70),partem(70),pbe(70)
-     #              ,DD85,FF85,DD50,FF50
+     1              ,DD85,FF85,DD50,FF50
         REAL LI,K,LCL_AGL,LCL_PBE
         ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
      1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
@@ -388,7 +396,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
         DATA BLTHCK/50.0/
         DATA RPD/.0174532925063/
  1      format('    MIXED PARCEL IS:',F10.1,'MB',F15.3,'C       '
-     #          ,'MIXING RATIO=',F9.7)
+     1          ,'MIXING RATIO=',F9.7)
 
 c       WRITE(6,15)
  15     FORMAT('          PRESSURE     TEMP.    DEW PT.     '
@@ -396,27 +404,68 @@ c       WRITE(6,15)
 
         IOUT=IO
 
- 3      FORMAT(' LVL(',I2,')',3F10.1,F11.6,F10.2)
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Stop in sindx'
+        endif
+
+!       Here is the new section imported (from old code) for TT,SI,K
+
+C                                                                         
+C  CALCULATE SHOWALTER INDEX                                              
+ 	SI=0                                                          
+ 	IF(P(1).GE.850.0)THEN                                                 
+ 	    CALL ITPLV(P,T ,NLEVEL,850.,TMAN85,IO)                    
+ 	    CALL ITPLV(P,TD,NLEVEL,850.,TDMN85,IO)                    
+ 	    THETAE=THAE(TMAN85,TDMN85,850.)                           
+ 	    CALL MSAD5(TP500,500.,THETAE,25.,20.,SLOPE,I1,I2,IA,0)    
+ 	    IF(WREQ50.LT.WMEAN)GOTO50                                 
+ 	    RH=WMEAN/WREQ50                                           
+ 50	    SI=TMAN50-TP500                                           
+
+C                                                                         
+C  CALCULATE TOTAL TOTALS AND SWEAT AND K INDICIES                        
+ 400	    CALL ITPLV(P,T,NLEVEL,700.,TMAN70,IO)        
+ 	    CALL ITPLV(P,TD,NLEVEL,700.,TDMN70,IO)       
+ 	    TT=TMAN85+TDMN85-2.*TMAN50                   
+ 	    A=max(TDMN85,0.)                             
+ 	    B=max(TT-49.,0.)                             
+ 	    C=0.                                         
+ 	    IF(FF85.LT.15.OR.FF50.LT.15.)   GOTO500      
+ 	    IF(DD85.GT.DD50)                GOTO500      
+ 	    IF(DD85.LT.130..OR.DD85.GT.250.)GOTO500      
+ 	    IF(DD50.LT.210..OR.DD50.GT.310.)GOTO500      
+ 	    C=SIN((DD50-DD85)*RPD)+.2                    
+ 500	    SWEAT=12.*A+20.*B+2.*FF85+FF50+125.*C        
+ 	    K=TMAN85-TMAN50+TDMN85-TMAN70+TDMN70         
+
+        ELSE    
+            SI=r_missing_data
+            TT=r_missing_data
+            SWEAT=r_missing_data
+            K=r_missing_data
+
+        ENDIF
+
+!3      FORMAT(' LVL(',I2,')',3F10.1,F11.6,F10.2)
 
         THETAE=OE_FAST(T(1),TD(1),P(1)) + 273.15
 
         CALL LCL_fast(P(1),T(1),TD(1),LCL_AGL,TLCL_PBE,PLCL_PBE)
 
+!       This LCL is for the surface parcel passed in
         LCL_PBE = LCL_AGL + HT(1)
 
         CALL POTBE(Q,NLEVEL,P(1),T(1),W(1),PLCL_PBE
-     #   ,TLCL_PBE,LCL_PBE,0.,THETAE,ICP,ICT,IO,PBENEG,PBEPOS
-     #   ,VELNEG)
+     1   ,TLCL_PBE,LCL_PBE,0.,THETAE,ICP,ICT,IO,PBENEG,PBEPOS
+     1   ,VELNEG)
 C
-        IF(IO.GE.2)WRITE(6,3)
-
         DO 600 I=1,ICP
             VEL(I)=SQRT(ABS(2.*PBECR(I,2)))
             IF(PBECR(I,2).LT.0.)VEL(I)=-VEL(I)
 c           WRITE(6,4)PBECR(I,1),PBECR(I,2),VEL(I)
- 4          format(' ENERGY AT',F6.0,'MB=',F15.2,'JOULES       VELOCITY=
-     1'
-     #         ,F6.1,'MS')
+ 4          format(' ENERGY AT',F6.0,'MB='
+     1            ,F15.2,'JOULES       VELOCITY=',F6.1,'MS')
  600    CONTINUE
 
 c       DO 700 I=1,ICT

@@ -92,6 +92,7 @@ cdis
         integer*4 iflag_write
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
+        real*4 sh_3d_dum(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L)
@@ -175,6 +176,7 @@ c read in LAPS_DOMAIN
      1          ,topo                            ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,temp_3d                         ! Input
+     1          ,sh_3d_dum                       ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
      1          ,istatus)                        ! Output
@@ -207,18 +209,21 @@ c read in LAPS_DOMAIN
      1          ,topo                            ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,temp_3d                         ! Input
+     1          ,sh_3d                           ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
      1          ,istatus)                        ! Output
 
 !       Arrays passed in
         real*4 temp_3d(NX_L,NY_L,NZ_L)
+        real*4 sh_3d(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
 !       Local declarations for stability 
+        real*4 td_3d_k(NX_L,NY_L,NZ_L)
         real*4 t_sfc_f(NX_L,NY_L)
         real*4 td_sfc_k(NX_L,NY_L)
         real*4 td_sfc_f(NX_L,NY_L)
@@ -254,14 +259,30 @@ c read in LAPS_DOMAIN
             return
         endif
 
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+
 !       Fill p_1d_pa, later we can change this to pres_3d?
         do k = 1,NZ_L
             p_1d_pa(k) = pressure_of_level(k)
         enddo ! k
 
+!       Convert SH to Td
+        do k = 1,nk
+        do j = 1,nj
+        do i = 1,ni
+            if(sh_3d(i,j,k) .ne. r_missing_data)then
+                ew = p_1d_pa(k)/100. * sh_3d(i,j,k)
+!               td_c = dewpt(ew)                      ! Check valid input range
+                td_3d_k(i,j,k) = temp_3d(i,j,k)       ! Temporary Placeholder
+            endif
+        enddo ! i
+        enddo ! j
+        enddo ! k            
+
         call laps_be(NX_L,NY_L,NZ_L
      1              ,temp_sfc_k,td_sfc_k,pres_sfc_pa
-     1              ,temp_3d,heights_3d,p_1d_pa,topo   
+     1              ,temp_3d,td_3d_k,heights_3d,topo   
      1              ,pbe_2d,nbe_2d)
 
 !       Fill pres_sfc_mb
