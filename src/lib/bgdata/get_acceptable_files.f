@@ -63,8 +63,10 @@ C
             call s_len(names(i),j)
             j=j-13
             if (j .ge. 0) then
-               if (names(i)(j+1:j+1) .eq. '1' .or. 
-     .              names(i)(j+1:j+1) .eq. '9') then
+
+c              if (names(i)(j+1:j+1) .eq. '1' .or. 
+c    .              names(i)(j+1:j+1) .eq. '9') then
+               
                   if (bgmodel .eq. 4) then
                      fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
 
@@ -82,12 +84,12 @@ C
 c                           print*,'SBN: ',bg_names(bg_files),bg_files
                         enddo
                      endif
-                  else
+                  else if(names(i)(j:j) .eq. '/') then
                      bg_files=bg_files+1
                      bg_names(bg_files)=names(i)(j+1:j+13)
 c                     print*,'NOTSBN: ',bg_names(bg_files),bg_files
                   endif
-               endif
+c              endif
             endif
          enddo
 
