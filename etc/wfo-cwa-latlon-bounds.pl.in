@@ -1,0 +1,15 @@
+#!@PERL@
+# @configure_input@
+
+$FXA_HOME = $ENV{FXA_HOME};
+$FXA_INGEST_SITE = $ENV{FXA_INGEST_SITE};
+if (!defined $FXA_HOME) {print "Environment variable FXA_HOME is required.";}
+if (!defined $FXA_INGEST_SITE) {print "Environment variable FXA_INGEST_SITE is required.";}
+if (!defined $FXA_HOME || !defined $FXA_INGEST_SITE) {exit;}
+
+if ($FXA_INGEST_SITE eq "FSL") {$FXA_INGEST_SITE = "BOU";}
+
+$line = `$FXA_HOME/bin/shp2bcd b $FXA_HOME/data/localization/nationalData/usa_cwa CWA | grep $FXA_INGEST_SITE`;
+$line =~ s/\://;
+($minlat,$maxlat,$minlon,$maxlon) = split /\s+/, $line;
+print "$minlat $maxlat $minlon $maxlon\n";
