@@ -307,7 +307,6 @@ cdis
             rlat=90.- a
             rlon = atan2d(v,u)
             rlon = rlon + 90.
-
         endif
 
         if(.true.)then ! Rotate considering where the projection pole is
@@ -319,7 +318,9 @@ cdis
             rlon_out = rlon + slon
         endif
 
+
         rlon_out = amod(rlon_out+540.,360.) - 180. ! Convert to -180/+180 range
+
 
         return
         end
@@ -498,13 +499,20 @@ cdis
           diff_gridi = ri - float(i)
           diff_gridj = rj - float(j)
           diff_grid = sqrt(diff_gridi**2 + diff_gridj**2)
-          diff_grid_max = max(diff_grid,diff_grid_max)
+
+          if(diff_grid .gt. diff_grid_max)then
+              diff_grid_max = diff_grid
+              idmax = i
+              jdmax = j
+          endif
+
           diff_grid_max_m = diff_grid_max * grid_spacing_m
 
       enddo
       enddo
 
       write(6,*)' check_domain: max_diff (gridpoints) = ',diff_grid_max
+     1         ,' at i/j',idmax,jdmax
       write(6,*)' check_domain: max_diff (approx m)   = '
      1                                                 ,diff_grid_max_m      
 
@@ -536,13 +544,20 @@ cdis
           diff_lli =  rlat - lat(i,j)
           diff_llj = (rlon - lon(i,j)) * cosd(lat(i,j))
           diff_ll = sqrt(diff_lli**2 + diff_llj**2)
-          diff_ll_max = max(diff_ll,diff_ll_max)
+
+          if(diff_ll .gt. diff_ll_max)then
+              diff_ll_max = diff_ll
+              idmax = i
+              jdmax = j
+          endif
+
           diff_ll_max_m = diff_ll_max * 110000. ! meters per degree
 
       enddo
       enddo
 
       write(6,*)' check_domain: max_diff (degrees) = ',diff_ll_max
+     1         ,' at i/j',idmax,jdmax
       write(6,*)' check_domain: max_diff (approx m)   = ',diff_ll_max_m
 
       if(diff_ll_max_m .gt. tolerance_m)then

@@ -16,7 +16,7 @@ C     latitude : -90 -  90  ; positive for northern hemisphere
 C     It is assumed that the x-axis point towards the east why the
 C     longitude is rotated relative to the 'standard pol.ste.' location
 C            
-      PI180=3.14159/180.
+      PI180=3.14159265/180.
       VDIST = ERAD*2.0
 C
 C     calculate distance from (0,0) and define (0,0) as 90,0 (90,-90 in
@@ -73,7 +73,7 @@ C     TSP 21 JUNE 89
 C
 C     set flag for n/s hemisphere
 C
-      PI180=3.14159/180.
+      PI180=3.14159265/180.
 C      
       IF(RLAT.GE.0.0) THEN
          HSIGN= 1.0
@@ -148,7 +148,8 @@ C
       ARG2A = MAX(ARG2A,-1.0)      
       BB    = ACOS(ARG2A)
 C
-      ARG2A = COS(GLAT)*COS(BB)/(1.0-SIN(GLAT)**2)
+!     ARG2A = COS(GLAT)*COS(BB)/(1.0-SIN(GLAT)**2)
+      ARG2A = COS(BB)/COS(GLAT)              ! 1997 Steve Albers
       ARG2A = MIN(ARG2A, 1.0)
       ARG2A = MAX(ARG2A,-1.0)      
       GLON  = ACOS(ARG2A)
@@ -195,7 +196,7 @@ C     TSP 20/06-89
 C
 C     constants
 C
-      PI180 = 3.14159/180.0
+      PI180 = 3.14159265/180.0
 C
 C     Set flag for N/S hemisphere and convert longitude to <0 ; 360> interval
 C
@@ -351,7 +352,7 @@ C
       FAC(PLA) = ERAD*2.0/(1.0+SIN(PLA*PI180))*COS(PLA*PI180)
       XC(PLA,PLO) = FAC(PLA)*COS(PLO*PI180)
       YC(PLA,PLO) = FAC(PLA)*SIN(PLO*PI180)      
-      PI180=3.14159/180.0
+      PI180=3.14159265/180.0
 C
 C     Calculate the coordinates
 C

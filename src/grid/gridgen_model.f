@@ -53,10 +53,8 @@ C*********************************************************************
         end
        
         subroutine Gridmap_sub(nnxp,nnyp)
-c       include 'lapsparms.for'
         logical exist,new_DEM
         integer nnxp,nnyp
-c       Parameter(nnxp=NX_L,nnyp=NY_L)
 	Real mdlat,mdlon
 	Real xmn(nnxp),ymn(nnyp)
 	Real xtn(nnxp),ytn(nnyp)
@@ -186,8 +184,9 @@ c calculate delta x and delta y using grid and map projection parameters
                 write(6,*)' deltax, deltay ',deltax,deltay
      1                   ,' at the north pole'
             else
-                write(6,*)' This latitude is relative to where the pole'
-     1                   ,' of the map projection is: lat/lon '
+                write(6,*)' The standard latitude ',std_lat,' is'
+     1                   ,' relative to where the pole'
+                write(6,*)' of the map projection is: lat/lon '
      1                   ,std_lat2,std_lon
                 write(6,*)' deltax, deltay ',deltax,deltay
      1                   ,' at the projection pole'
@@ -203,6 +202,8 @@ c*********************************************************************
 c       Get X/Y for lower left corner
         CALL POLAR_GP(mdlat,mdlon,XMN,YMN,DELTAX,DELTAY,
      1  NNXP,NNYP)
+
+
 	DO 600 I=2,NNXP
 	   XMN(I)=XMN(I-1)+DELTAX
  600	CONTINUE
@@ -238,8 +239,9 @@ C*  Convert it to lat/lon using the library routines.            *
 c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
     	   enddo
         enddo
-        print *,' lat,lon at 1,1 =',lat(1,1),lon(1,1)
-        print *,' lat,lon at nnxp,nnyp =',lat(nnxp,nnyp),lon(nnxp,nnyp)   
+        print *,' lat,lon at 1,1 =',lat(1,1),lon(1,1)               
+        print *,' lat,lon at ',nnxp,',',nnyp,' ='
+     1         ,lat(nnxp,nnyp),lon(nnxp,nnyp)   
 
         call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)  
 
