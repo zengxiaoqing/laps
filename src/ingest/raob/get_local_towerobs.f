@@ -314,6 +314,8 @@ c    &         pressure_pa,                                       ! O
      &         a9time_ob, stname, wmoid,                          ! O
      &         istatus)                                           ! O
 
+      include 'netcdf.inc'
+
       character*(*) filename 
       integer       maxobs ! raw stations for SND file
       integer       maxlvls ! raw/processed stations for SND file
