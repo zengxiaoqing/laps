@@ -336,6 +336,18 @@ c for goes8 - make it look like goes7
           endif
           i_dir = 1
 
+       elseif(c_sat_id.eq.'gmssat'.and.c_sat_type.eq.'twn')then
+
+          print*,'stretch twn visible: 30.,200.,68.,220.'
+          do j=1,jmax
+          do i=1,imax
+             if(laps_vis_norm(i,j).ne.r_missing_data)then
+c J. Smart 1-25-02.
+                call stretch(30.,200.,68.,220.,laps_vis_norm(i,j))
+             endif
+          enddo
+          enddo
+
        endif 
 c
 c ready to normalize vis counts to local domain
