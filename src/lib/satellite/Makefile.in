@@ -48,14 +48,15 @@ SRC=bcd_to_int.f \
     cnvtint.f \
     cnvtvxfl.f \
     cnvvxdb.f \
-    lvd_file_specifier.f \
     compute_gvarimg_res.f \
     expand_domain.f \
     gen_lut_gvar.f \
     gen_lut_lambert.f \
     genlvdlut_sub.f \
+    get_attr_wfo.f \
     get_gwc_oa.f \
     getsat_boundary.f \
+    lvd_file_specifier.f \
     rdgvarimg_cdf_header.f \
     read_gwc_header_sub.f \
     rewrite_satellite_lvd_nl.f \
