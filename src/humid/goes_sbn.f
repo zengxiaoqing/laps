@@ -535,12 +535,15 @@ c     Execute powell method correction of layer humidity in clear areas
 
             if (ch3(i,j).eq.rmd) then
                print*, 'missing data in channel 3 abort', i,j
+               go to 145
 
             elseif (ch4(i,j).eq.rmd) then
                print*, 'missing data in channel 4 abort', i,j
+               go to 145
 
             elseif (ch5(i,j).eq.rmd) then
                print*, 'missing data in channel 5 abort', i,j
+               go to 145
 
             else
 
@@ -556,13 +559,13 @@ c     Execute powell method correction of layer humidity in clear areas
 
                continue
 
-c               if( cld(i,j) .eq. 0 .or. cld(i,j).ge.1.) then ! clear
-               if( (cld(i,j) .eq. 0 .or. cld(i,j).ge.1.)  
-     1              .and.
-     1              abs(ch4(i,j)-btemp(i,j,2)).le.1.) then !clear
 
-c   print out the "clear" radiances for 6.7 micron only
-c   and compare these to the forward model radiances
+               if( (cld(i,j) .eq. 0  ) 
+     1              .and.
+     1              abs(ch4(i,j)-btemp(i,j,2)).le.1.) then !clear assume
+
+c     print out the "clear" radiances for 6.7 micron only
+c     and compare these to the forward model radiances
 
                   write(6,32) ' Observed=',ch3(i,j),' Modeled='
      1                 ,btemp(i,j,1),' Diff=',(ch3(i,j)-btemp(i,j,1))
@@ -595,6 +598,7 @@ c   and compare these to the forward model radiances
      1                    rads(i,j,kanch(6)),kanch(6)),ngoes,1,kanch(6))
                      radiance_ob(7) = bias_correction(britgo(
      1                    rads(i,j,kanch(7)),kanch(7)),ngoes,1,kanch(7))
+
                   endif
 
 c fill powell common block with profile data for optran
@@ -644,6 +648,10 @@ c     call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
                   endif
                   
                   write(6,*) blank
+
+               else
+                  write(6,*) 'Cld field says cloudy grid point, ',
+     1                 i,j
                   
                endif            !end of powell function
                
@@ -655,7 +663,7 @@ c     call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
       enddo
       
       write(6,*) failures,' failures occurred due to layer confusion' 
-      write(6,*) '...non-convergence, or clouds'
+      write(6,*) '...non-convergence '
      
 c     modify original lq3 file with new factors for comparison tests.
 c     modify lq3 only in clear areas as defined by lc3.
