@@ -277,10 +277,13 @@ c                   write(6,*)' khigh = ',kk
                 if(echo_top_agl .lt. 1000. .and. 
      1             .not. l_unresolved(i,j)       )then
 !                   Should we set these to unresolved here or better yet above?
-                    write(6,*)'CLD_RDR - Low echo top yet resolved ',i,j       
+                    write(6,610)i,j       
      1                        ,nint(echo_top_agl)
+     1                        ,nint(echo_top(i,j))
      1                        ,nint(cloud_base(i,j))
      1                        ,nint(cloud_base_buf(i,j))
+ 610                format('CLD_RDR - Low echo top yet resolved '
+     1                    ,2i5,' ET',2i5,' Base',2i7)
                 endif
             endif
 
