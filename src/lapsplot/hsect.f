@@ -87,6 +87,7 @@ cdis
         character*4 c4_log
         character*7 c7_string
         character*9 c9_string,a9_start,a9_end
+        character*10 c_colortable
         character infile*255
         character*20 c_model
 
@@ -1505,9 +1506,9 @@ c
 
             ext = 'lcv'
 
-            if(var_2d_in .ne. 'd39')then
+            if(var_2d_in(1:3) .ne. 'D39')then
                 var_2d = var_2d_in
-                call get_laps_2dgrid(i4time_ref,laps_cycle_time
+                call get_laps_2dgrid(i4time_ref,3*laps_cycle_time
      1                              ,i4time_nearest,ext,var_2d
      1                              ,units_2d,comment_2d,NX_L,NY_L
      1                              ,vas,0,istatus)
@@ -1516,9 +1517,11 @@ c
                     goto1200
                 endif
 
+                c_colortable = 'linear'
+
             else ! 'd39' field which is the difference of 's3a' - 's8a'
                 var_2d = 's8a'
-                call get_laps_2dgrid(i4time_ref,laps_cycle_time
+                call get_laps_2dgrid(i4time_ref,3*laps_cycle_time
      1                              ,i4time_nearest,ext,var_2d
      1                              ,units_2d,comment_2d,NX_L,NY_L
      1                              ,vas,0,istatus)
@@ -1528,7 +1531,7 @@ c
                 endif
 
                 var_2d = 's3a'
-                call get_laps_2dgrid(i4time_ref,laps_cycle_time
+                call get_laps_2dgrid(i4time_nearest,0
      1                              ,i4time_nearest,ext,var_2d
      1                              ,units_2d,comment_2d,NX_L,NY_L
      1                              ,field_2d,0,istatus)
@@ -1538,10 +1541,14 @@ c
                 endif
 
 !               Subtract the two satellite fields
+                call diff(field_2d,vas,vas,NX_L,NY_L)
+
+                c_colortable = 'hues'
 
             endif
 
-            c33_label='LAPS B-Temps (C) from LCV     '//var_2d_in
+            c33_label='LAPS LCV/'//var_2d_in(1:3)//' '
+     1              //comment_2d(1:14)//' Deg C'
 
             if(var_2d_in .eq. 'S8A' .or. var_2d_in .eq. 'S3A')then
               vasmx=-255.
@@ -1561,48 +1568,50 @@ c
               scale = 1e0
               scale_l = +40.          ! for image plots
               scale_h = -50.          ! for image plots
-             elseif(var_2d_in.eq.'ALB')then
+            elseif(var_2d_in.eq.'ALB')then
               c33_label='LAPS Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
               cloud_albedo = .4485300
               scale_h = cloud_albedo  ! for image plots
-             elseif(var_2d_in.eq.'SVS')then
+            elseif(var_2d_in.eq.'SVS')then
               c33_label='LAPS VIS counts (raw) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 100.          ! for image plots
-             else
+            elseif(var_2d_in.eq.'D39')then
+              c33_label='LAPS   3.9u - 11u difference  (K)'
+              scale_l = -10           ! for image plots
+              scale_h = +10.          ! for image plots
+            else
               c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 230.          ! for image plots
-             endif
+            endif
 
-             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
+            call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
-             if(c_type(3:3) .eq. 'i')then
-                 call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear'
-     1                      ,n_image)
-                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call setusv_dum(2hIN,7)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                           ,i_overlay,'hsect')
-                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+            if(c_type(3:3) .eq. 'i')then
+                call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,c_colortable
+     1                     ,n_image)
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
+     1                                          ,i_overlay,'hsect')
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
-             else ! contours
-                 if(ilvd .eq. 1)then
-                     if(var_2d_in.eq.'ALB')then
-                         clow = 0.0
-                         chigh = 1.
-                         cint = 0.1
-                         scale = 1e0
-                     else
-                         clow = 0.0
-                         chigh = 256.
-                         cint = 05.
-                         scale = 1e0
-                     endif
-                 endif
+            else ! contours
+                if(var_2d_in.eq.'ALB')then
+                    clow = 0.0
+                    chigh = 1.
+                    cint = 0.1
+                    scale = 1e0
+                else
+                    clow = 0.0
+                    chigh = 256.
+                    cint = 05.
+                    scale = 1e0
+                endif
 
-                 call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
+                call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
      1             c33_label,i_overlay,c_display,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
