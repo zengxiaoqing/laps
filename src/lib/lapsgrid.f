@@ -953,18 +953,19 @@ c        end
       end
 
       subroutine get_background_info(len,bgpaths,bgmodels
-     +     ,oldest_forecast,use_analysis)
+     +     ,oldest_forecast,max_forecast_delta,use_analysis)
+      implicit none
       integer maxbgmodels,len
-      parameter (maxbgmodels=4)
+      parameter (maxbgmodels=10)
       character*150 nest7grid
       character*150 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), len_dir
-      integer oldest_forecast
+      integer oldest_forecast, max_forecast_delta
       logical use_analysis
-      namelist /background_nl/bgpaths,bgmodels,oldest_forecast
-     +         ,use_analysis   
+      namelist /background_nl/bgpaths,bgmodels
+     +         ,oldest_forecast,max_forecast_delta,use_analysis   
 
-
+      max_forecast_delta=6
       oldest_forecast=18
       use_analysis=.false.
       call get_directory('nest7grid',nest7grid,len_dir)
@@ -1084,5 +1085,69 @@ c
       return
  901  print*,'error reading ingest_rrv_nl in ',nest7grid
       write(*,ingest_rrv_nl)
+      return
+      end
+c
+c-----------------------------------------------------------------------
+c
+      subroutine get_wsi_parms_vrc(irad,lines,elems,
+     +dx,dy,rla1,rlo1,rla2,rlo2,rlat,rlon,rlatin,istatus)
+
+      integer nrad_types
+      parameter (nrad_types=2)
+
+      integer nlines(nrad_types)
+      integer nelems(nrad_types)
+      integer irad
+      integer lines,elems
+      integer istatus
+
+      real*4  resx(nrad_types)
+      real*4  resy(nrad_types)
+      real*4  radla1(nrad_types)
+      real*4  radlo1(nrad_types)
+      real*4  radla2(nrad_types)
+      real*4  radlo2(nrad_types)
+      real*4  radlat(nrad_types)
+      real*4  radlon(nrad_types)
+      real*4  radlatin(nrad_types)
+
+      real*4  rla1,rlo1,rlat,rlon,rlatin
+      real*4  dx,dy
+
+      character nest7grid*150
+
+      namelist /vrc_nl/nlines,nelems,resx,resy,radla1,
+     +radlo1,radla2,radlo2,radlat,radlon,radlatin
+
+      istatus = 0
+
+      call get_directory('nest7grid',nest7grid,len_dir)
+
+      nest7grid = nest7grid(1:len_dir)//'/vrc.nl'
+
+      open(1,file=nest7grid,status='old',err=900)
+      read(1,vrc_nl,err=901)
+
+      lines=nlines(irad)
+      elems=nelems(irad)
+      dx=resx(irad)
+      dy=resy(irad)
+      rla1=radla1(irad)
+      rlo1=radlo1(irad)
+      rla2=radla2(irad)
+      rlo2=radlo2(irad)
+      rlat=radlat(irad)
+      rlon=radlon(irad)
+      rlatin=radlatin(irad)
+
+      close(1)
+      istatus = 1
+      return
+
+ 900  print*,'error opening file ',nest7grid
+      return
+ 901  print*,'error reading vrc_nl in ',nest7grid
+      write(*,vrc_nl)
       return
       end
