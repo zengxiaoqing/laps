@@ -27,18 +27,18 @@ SRC   = obs_driver_sub_af.f \
         read_metar_cwb.f \
         read_metar_af.f \
         read_synop_cwb.f \
-	get_local_obs.f \
+        get_local_obs.f \
         read_local_obs.f \
-	get_local_cwb.f \
-	read_local_cwb.f \
+        get_local_cwb.f \
+        read_local_cwb.f \
         get_maritime_obs.f \
-	read_maritime.f \
-	read_buoy_cwb.f \
-	read_ship_cwb.f \
+        read_maritime.f \
+        read_buoy_cwb.f \
+        read_ship_cwb.f \
         get_gps_obs.f \
         read_gps.f
 
-MAIN=obs_driver.f 
+MAIN=obs_driver.f
 
 LIB=libsao.a
 
@@ -72,18 +72,3 @@ distclean: clean
 	mv $*.i $*.f
 
 %.o : %.F
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
