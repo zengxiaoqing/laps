@@ -48,13 +48,24 @@ my $DATAROOT=shift || die "LAPS_DATA_ROOT required";
 #
 # lwc min 1.0
 #
+# If the user wants to purge in a $DATAROOT subdirectory (ie., no
+# subdirectories under this) then use "-r" in conjunction with "-t" and
+# input $DATAROOT must not have any subdirectories.
+# For example, "purger.pl -r -t 0.5 /data/laps/lapsprd/lt1" will only
+# purge files in the lt1 subdirectory using -t 0.5 as the input $hist_time.
+# Again, this will not work if there are subdirectories under the input $DATAROOT.
+#
 # Other exceptions can be listed below...
 #
 my(%clean_dirs, $hist_time, $min_files);
 
 if($opt_r){
-    $hist_time = 0;
-    $min_files = ($opt_m)?$opt_m:0;
+    if(defined $opt_t){
+       $hist_time = ($opt_t)?$opt_t:1.5;
+    }else{
+       $hist_time = 0;
+       $min_files = ($opt_m)?$opt_m:0;
+    }
 }else{
     $hist_time = ($opt_t)?$opt_t:1.5;
 #
@@ -138,6 +149,11 @@ foreach (@subdirs){
     next if($_ eq '.');
     $_ =~ s/^\.\///;
     $clean_dirs{$_} = $hist_time if(-d $_  && !$clean_dirs{$_});
+}
+
+if ($#subdirs == 0){
+    $dir = "./";
+    $clean_dirs{$dir} = $hist_time;
 }
 
 foreach $dir (keys(%clean_dirs)){
