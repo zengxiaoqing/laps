@@ -59,4 +59,63 @@
 
         return
         end
-
+c
+c
+      function a9_to_a8(a9_time)
+c
+c..... Routine to convert LAPS 'yyjjjhhmm' time to 'yymmddhh' time.
+c..... Corrected for Y2K.  P. Stamus, NOAA/FSL   Oct 1998
+c
+      character a9_time*9, a9_to_a8*8, a8*8
+      integer imon_a(12), imon(12)
+      data imon_a/0,31,59,90,120,151,181,212,243,273,304,334/
+c
+c..... First, read the LAPS time and get julian days.
+c
+      read(a9_time,11) iyr, jjj, ihh, imin
+ 11   format(i2,i3,2i2)
+c
+c..... Check for leap year.
+c
+      do i=1,12
+         imon(i) = imon_a(i)
+      enddo !i
+      if(iyr .eq. (iyr/4)*4) then
+         do i=3,12
+            imon(i) = imon(i) + 1
+         enddo !i
+      endif
+c
+c..... Convert julian day to month, day.
+c
+      do i=12,1,-1
+         kk = jjj - imon(i)
+         if(kk .gt. 0) then
+            imm = i
+            idy = kk
+            go to 200
+         elseif(kk .eq. 0) then
+            imm = i - 1
+            idy = jjj - imon(imm)
+            go to 200
+         endif
+      enddo !i
+      imm = 1
+      idy = jjj
+c
+ 200  continue
+c
+c..... Now write out the time.
+c
+      write(a8,12) iyr, imm, idy, ihh
+ 12   format(4i2)
+c
+      if(a8(1:1) .eq. ' ') a8(1:1) = '0'
+      if(a8(3:3) .eq. ' ') a8(3:3) = '0'
+      if(a8(5:5) .eq. ' ') a8(5:5) = '0'
+      if(a8(7:7) .eq. ' ') a8(7:7) = '0'
+c
+      a9_to_a8 = a8
+c
+      return
+      end
