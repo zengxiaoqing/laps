@@ -26,10 +26,11 @@ c
 	real lats(maxobs), lons(maxobs), elev(maxobs)
         real t(maxobs), td(maxobs), rh(maxobs)
         real dd(maxobs), ff(maxobs)
-        real sfcp(maxobs), pcp(maxobs)
+        real stnp(maxobs), mslp(maxobs), pcp(maxobs)
         real rtime(maxobs)
         integer    wmoid(maxobs)
         integer*4  i4time_ob_a(maxobs), before, after
+        character  stname(maxobs)*5
         character  provider(maxobs)*11
         character  weather(maxobs)*25
         character  reptype(maxobs)*6, atype(maxobs)*6
@@ -49,7 +50,6 @@ c
 
         character  stations(maxsta)*20
         character  store_cldamt(maxsta,5)*4
-        character stname(maxsta)*5
 c
 c.....  Start.
 c
@@ -101,12 +101,14 @@ c
 
             maxobs_in = maxobs-ix+1
 
-            call read_tmeso_data(path_to_local_data,maxobs_in
+            write(6,*)' maxobs/maxobs_in ',maxobs,maxobs_in
+
+            call read_local_cwb(path_to_local_data,maxobs_in
      1                 ,badflag,ibadflag,i4time_file                     ! I
      1                 ,stname(ix)                                       ! O
      1                 ,lats(ix),lons(ix),elev(ix)                       ! O
      1                 ,i4time_ob_a(ix),t(ix),td(ix),rh(ix)              ! O
-     1                 ,pcp(ix),sfcp(ix),dd(ix),ff(ix)                   ! O
+     1                 ,pcp(ix),stnp(ix),mslp(ix),dd(ix),ff(ix)          ! O
      1                 ,num,istatus)                                     ! O
 
 	    if(istatus .ne. 1)then
@@ -160,10 +162,12 @@ c........  the ob is outside the LAPS domain.
                      i_reject = k
                  endif
 
-                 write(6,51)i,k,stname(i),a9time_a(i),a9time_a(k)
-     1                     ,i_reject
- 51		 format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
-     1                 ,1x,i6)
+                 if(i .le. 100 .or. i .eq. (i/10)*10)then
+                     write(6,51)i,k,stname(i),a9time_a(i),a9time_a(k)     
+     1                         ,i_reject
+51                   format(' Duplicate detected ',2i6,1x,a6,1x,a9
+     1                     ,1x,a9,1x,i6)
+                 endif
 
                  lats(i_reject) = badflag ! test with this for now
 
@@ -189,7 +193,7 @@ c
 	box_jdir = float(nj + ibox_points) !buffer on north
 
 	do i=1,n_local_all
-	   if(lats(i) .lt. -90.) go to 125	
+	   if(abs(lats(i)) .gt. +90.) go to 125	
 	   call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,
      &                              ni,nj,ri_loc,rj_loc,istatus)
 	   if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir) go to 125
@@ -292,8 +296,8 @@ c
          store_3(nn,4) = badflag                ! wind gust speed (kt)
 c
          store_4(nn,1) = badflag                ! altimeter setting (mb)
-         store_4(nn,2) = sfcp(i)                ! station pressure (mb)
-         store_4(nn,3) = badflag                ! MSL pressure (mb)
+         store_4(nn,2) = stnp(i)                ! station pressure (mb)
+         store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
          store_4(nn,4) = badflag                ! 3-h press change character
          store_4(nn,5) = badflag                ! 3-h press change (mb)
 c

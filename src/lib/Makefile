@@ -36,7 +36,6 @@ SRC	= machine_dependent.F \
           barnes_multivariate.f \
           bilinear_interp.f \
           block_data.f \
-          c_time2fname.c \
           climate_sm.f \
           constant.f \
           convc2f.f \

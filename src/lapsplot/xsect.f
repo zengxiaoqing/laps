@@ -31,8 +31,8 @@ cdis
 cdis
 
         subroutine xsect(c_display,i4time_ref,lun,l_atms
-     1                  ,standard_longitude,NX_L,NY_L,NZ_L,NX_C,NZ_C       
-     1                  ,r_missing_data,laps_cycle_time,maxstns)
+     1                  ,standard_longitude,NX_L,NY_L,NZ_L,NX_C,NZ_C
+     1                  ,NX_P,r_missing_data,laps_cycle_time,maxstns)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added NX_C, NZ_C as dummy arguments
@@ -126,7 +126,7 @@ cdis
 
         real*4 u_3d(NX_L,NY_L,NZ_L)
         real*4 v_3d(NX_L,NY_L,NZ_L)
-        real*4 omega_3d(NX_L,NY_L,NZ_L)
+        real*4 field_3d(NX_L,NY_L,NZ_L)
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 rh_3d(NX_L,NY_L,NZ_L)
         real*4 q_3d(NX_L,NY_L,NZ_L)
@@ -214,6 +214,7 @@ cdis
         real*4 cice_2d(NX_C,NZ_C)
         real*4 field_vert(NX_C,NZ_C)
         real*4 field_vert2(NX_C,NZ_C)
+        real*4 field_vert3(NX_P,NX_P)
         real*4 w_2d(NX_C,NZ_C)
         character cldpcp_type_2d(NX_C,NZ_C)
         real*4 mvd_2d(NX_C,NZ_C)
@@ -290,7 +291,7 @@ c read in laps lat/lon and topo
         i_graphics_overlay = 0
         i_label_overlay = 0
         i_map = 0
-        i_initialize = o
+        i_initialize = 0
 
         l_wind_read = .false.
         l_radar_read = .false.
@@ -602,11 +603,11 @@ c read in laps lat/lon and topo
      1  /
      1  /'           ts (Thetae Sat), tw (wetbulb)'
      1  /
-     1  /'           cg (3D Cloud Image),  tc (Cloud Type),  tp (Precip
-     1Type)'
+     1  /'           cg/cf (3D Cloud Image),  tc (Cloud Type),  '
+     1  ,'tp (Precip Type)'
 !       1 /'           la (LWC - Adiabatic),         lj (LWC - Adjusted)'
 !       1 /'                                         sj (SLWC - Adjusted)'
-     1  /'           ls (Smith-Feddes LWC)' 
+     1  /'           ls (cloud liquid)' 
                                           ! ,        ss (SLWC - Smith-Feddes)'
      1  /'           ci (cloud ice)'
      1  /
@@ -732,7 +733,7 @@ c read in laps lat/lon and topo
 
                     if(c_wind .eq. 'k')then
                         call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
-     1                                  ,omega_3d,ext_wind,istatus)
+     1                                  ,field_3d,ext_wind,istatus)
 
                     elseif(c_wind .eq. 'b')then
                         directory = directory(1:len_dir)//'lw3'
@@ -742,11 +743,11 @@ c read in laps lat/lon and topo
                         call get_3dgrid_dname(directory
      1                  ,i4time_ref,laps_cycle_time*10000,i4time_3dw
      1                  ,ext,var_2d,units_2d
-     1                  ,comment_2d,NX_L,NY_L,NZ_L,omega_3d,istatus)       
+     1                  ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istatus)       
 
                     elseif(c_wind .eq. 'c')then
                         call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
-     1                                  ,omega_3d,ext_wind,istatus)
+     1                                  ,field_3d,ext_wind,istatus)
 
                     endif
 
@@ -790,14 +791,14 @@ c read in laps lat/lon and topo
                 do k = 1,NZ_L
                 do j = 1,NY_L
                 do i = 1,NX_L
-                    if(omega_3d(i,j,k) .eq. r_missing_data)then
-                        omega_3d(i,j,k) = -1e-30
+                    if(field_3d(i,j,k) .eq. r_missing_data)then
+                        field_3d(i,j,k) = -1e-30
                     endif
                 enddo ! i
                 enddo ! j
                 enddo ! k
 
-                call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow
+                call interp_3d(field_3d,field_vert,xlow,xhigh,ylow
      1                        ,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C
      1                        ,r_missing_data)
 
@@ -820,7 +821,7 @@ c read in laps lat/lon and topo
                 cint = -1.
 
             else ! Not LCO field
-                call interp_3d(omega_3d,field_vert
+                call interp_3d(field_3d,field_vert
      1                        ,xlow,xhigh,ylow,yhigh
      1                        ,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)       
 
@@ -863,14 +864,14 @@ c read in laps lat/lon and topo
                 do k = 1,NZ_L
                 do j = 1,NY_L
                 do i = 1,NX_L
-                    if(omega_3d(i,j,k) .eq. r_missing_data)then
-                        omega_3d(i,j,k) = -1e-30
+                    if(field_3d(i,j,k) .eq. r_missing_data)then
+                        field_3d(i,j,k) = -1e-30
                     endif
                 enddo ! i
                 enddo ! j
                 enddo ! k
 
-                call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow
+                call interp_3d(field_3d,field_vert,xlow,xhigh,ylow
      1                        ,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C
      1                        ,r_missing_data)
 
@@ -896,7 +897,7 @@ c read in laps lat/lon and topo
                 cint = -1.
 
             else ! Not LCO field
-                call interp_3d(omega_3d,field_vert
+                call interp_3d(field_3d,field_vert
      1                        ,xlow,xhigh,ylow,yhigh
      1                        ,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)       
 
@@ -1217,6 +1218,42 @@ c read in laps lat/lon and topo
             i_contour = 0
             c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
 
+        elseif(c_field .eq. 'cf' )then ! Cloud Gridded Image
+            i_image = 1
+
+            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+
+            call setusv_dum(2hIN,2)
+
+            write(6,*)' Plotting cloud gridded image'
+
+            ext = 'lcp'
+            var_2d = 'LCP'
+            call get_laps_3dgrid(
+     1                   i4time_ref,10000000,i4time_nearest,
+     1                   NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,field_3d,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' No cloud grid available'
+            endif
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+
+            call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            c33_label = 'LAPS Gridded Cloud Cover   X-Sect'
+
+            call remap_field_2d(
+     1                            NX_C,1,NX_C
+     1                           ,NZ_C,ibottom,NZ_C
+     1                           ,NX_P, 11, NX_P-10
+     1                           ,NX_P, 13, NX_P- 8
+     1                           ,field_vert,field_vert3,r_missing_data)
+
+            write(6,*)' calling solid fill cloud plot'
+            call ccpfil(field_vert3,NX_P,NX_P)
+
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
 
@@ -1347,7 +1384,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
               c33_label = 'LAPS Gridded Cloud Cover   X-Sect'
 
             endif ! l_atms
-
 
         elseif(c_field .eq. 'pt')then
             iflag_temp = 0 ! Returns Potential Temperature
@@ -1655,7 +1691,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             if(c_field .eq. 'pc')then
                 cint = -0.01
             else
-                cint = -0.1
+                cint = -0.01
             endif
             i_contour = 1
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
@@ -1918,7 +1954,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 
 !           Put in lat/lon of endpoints
-            x = left
+            x = rleft
             y = bottom - r_height * .03
             write(c7_string,2017)lat_1d(1)
             call pwrity (x, y, c7_string, 7, 0, 0, 0)
@@ -1961,26 +1997,85 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             write(6,*)' Max/Min = ',vmax,vmin
 
             if(cint .ge. 0.)then
-                call conrec
-     1          (field_vert(1,ibottom),NX_C,NX_C,(NZ_C-ibottom+1)
+                if(.false.)then
+!                   CALL CPSETI ('CLC - CONTOUR LINE COLOR INDEX'
+!    1                           , icolors(i_graphics_overlay))
+                    call conrec
+     1              (field_vert(1,ibottom),NX_C,NX_C,(NZ_C-ibottom+1)
      1                             ,clow,chigh,cint,-1,0,-1848,0)
+
+                else ! Can we make this work (anamorphically) for color plots?
+!                   call get_border(ni,nj,x_1,x_2,y_1,y_2)
+!                   call set(x_1,x_2,y_1,y_2,0.05,0.95,0.05,0.95,1)
+
+                    call get_border(NX_C,NZ_C-ibottom+1,x_1,x_2,y_1,y_2)       
+                    write(6,*)' Calling Set for conrec_line'
+                    call set(0.10,0.90,0.05,0.95,0.10,0.90,0.05,0.95,1)
+
+!                   call set(.20, .80, .20, .80
+!    1                     , 1., 61., 1., 21. ,1)
+
+                    call remap_field_2d(
+     1                            NX_C,1,NX_C
+     1                           ,NZ_C,ibottom,NZ_C
+     1                           ,NX_P, 11, NX_P-10
+     1                           ,NX_P, 13, NX_P- 8
+     1                           ,field_vert,field_vert3,r_missing_data)
+
+                    call conrec_line
+     1              (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+     1                             ,clow,chigh,cint,-1,0,-1848,0)
+
+
+                endif
+
             else
-                call conrec
-     1          (field_vert(1,ibottom),NX_C,NX_C,(NZ_C-ibottom+1)
-     1                             ,0.,1e8,1e8,-1,0,-1848,0)
+              if(.false.)then
+                call conrec(field_vert(1,ibottom)
+     1                     ,NX_C,NX_C,(NZ_C-ibottom+1)
+     1                     ,0.,1e8,1e8,-1,0,-1848,0)
                 cbase = 1e-4
 
                 do i = 1,N_CONTOURS
                     cvalue = factor(i)
                     if(cvalue .ge. abs(cint))then
-                        call conrec
-     1                          (field_vert(1,ibottom)
-     1  ,NX_C,NX_C,(NZ_C-ibottom+1),cvalue,cvalue,1e-6,-1,0,-1848,0)
-                        call conrec
-     1                          (field_vert(1,ibottom)
-     1  ,NX_C,NX_C,(NZ_C-ibottom+1),-cvalue,-cvalue,1e-6,-1,0,-1848,0)
+                        call conrec(field_vert(1,ibottom)
+     1                             ,NX_C,NX_C,(NZ_C-ibottom+1)
+     1                             ,cvalue,cvalue,1e-6,-1,0,-1848,0)
+                        call conrec(field_vert(1,ibottom)
+     1                             ,NX_C,NX_C,(NZ_C-ibottom+1)
+     1                             ,-cvalue,-cvalue,1e-6,-1,0,-1848,0)
                     endif
                 enddo ! i
+
+              else
+                call remap_field_2d(
+     1                            NX_C,1,NX_C
+     1                           ,NZ_C,ibottom,NZ_C
+     1                           ,NX_P, 11, NX_P-10
+     1                           ,NX_P, 13, NX_P- 8
+     1                           ,field_vert,field_vert3,r_missing_data)
+
+                call conrec_line
+     1              (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+     1                             ,0.,0.,cint,-1,0,-1848,0)
+
+                cbase = 1e-4
+
+                do i = 1,N_CONTOURS
+                    cvalue = factor(i)
+                    if(cvalue .ge. abs(cint))then
+                        call conrec_line
+     1                      (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+     1                             ,cvalue,cvalue,cint,-1,0,-1848,0)
+                        call conrec_line
+     1                      (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+     1                             ,-cvalue,-cvalue,cint,-1,0,-1848,0)
+                    endif
+                enddo ! i
+ 
+             endif
+
            endif ! cint > 0
         endif ! i_contour = 1
 
@@ -2184,113 +2279,14 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
            endif
 
-
-           if(l_atms)then ! Add in IFR/VFR ICON
-
-!              Get Ceiling Data
-               var_2d = 'CCE'
-               ext = 'lsx'
-               call get_laps_2dgrid(i4time_ref,laps_cycle_time,i4time_ne
-     1arest,
-     1         ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,cloud_ceil_2d,0,istatus)
-
-               if(istatus .ne. 1)then
-                   write(6,*)' LAPS Cloud Ceiling not available'
-                   c3_string = 'UNK'
-               else
-                   ista = nint(xsta)
-                   jsta = nint(ysta)
-                   ceiling_ft = cloud_ceil_2d(ista,jsta) * 3.281
-
-                   if(ceiling_ft .gt. 1000.)then
-                       c3_string = 'VFR'
-                   else
-                       c3_string = 'IFR'
-                   endif
-                   write(6,*)'ista,jsta,ceiling_ft = ',ista,jsta,ceiling
-     1_ft
-     1                                                  ,c3_string
-               endif
-
-
-!              Get Visibility Data
-               var_2d = 'VIS'
-               ext = 'lsx'
-               call get_laps_2dgrid(i4time_ref,laps_cycle_time,i4time_ne
-     1arest,
-     1         ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,vis_2d,0,istatus)
-
-               if(istatus .ne. 1)then
-                   write(6,*)' LAPS Visibility not available'
-                   c3_string = 'UNK'
-               else
-                   ista = nint(xsta)
-                   jsta = nint(ysta)
-                   vis_mi = vis_2d(ista,jsta) / 1609.
-
-                   if(vis_mi .le. 0.5)then
-                       c3_string = 'IFR'
-                   endif
-                   write(6,*)'ista,jsta,vis_mi = ',ista,jsta,vis_mi,c3_s
-     1tring
-               endif
-
-               call setusv_dum(2hIN,229)
-
-               x = pos_sta
-               y = bottom + .025 * r_height
-               call pwrity (x, y, c3_string, 3, 1, 0, 0)
-               write(6,*)' Conditions are ',c3_string
-
-           endif
-
-           if(l_arrival_gate)then ! Add in glide slope
-               write(6,*)' Adding in glide slope'
-
-               xcoord(1) = pos_sta
-               ycoord(1) = height_to_zcoord(rheight_airport,istatus)
-
-               if(azi_arrival .ne. azi_xsect)then ! Off to left
-                   index_start = int(pos_sta)
-                   index_end = 1
-                   idir = -1
-               else ! Off to right
-                   index_start = int(pos_sta) + 1
-                   index_end = NX_C
-                   idir = +1
-               endif
-
-               icounter = 1
-               do i = index_start,index_end,idir
-                   icounter = icounter + 1
-!                  Get Range of grid point in X-Sect
-                   call latlon_to_radar(lat_1d(i),lon_1d(i),0.
-     1                  ,azimuth,slant_range,elev
-     1                  ,rlat_airport,rlon_airport,rheight_airport)
-                   height_glide_slope =
-     1              min(rheight_airport + slant_range*.03,18000./3.281)
-                   xcoord(icounter) = i
-                   ycoord(icounter) = height_to_zcoord(height_glide_slop
-     1e,istatus)
-
-               enddo ! Grid Point in X-sect
-
-               call setusv_dum(2hIN,7) ! Yellow
-
-               call curve (xcoord, ycoord, icounter)
-
-           endif ! Add in glide slope for arrival gate X-Sect
-
         else ! l_sta = .false.
 
            if(.not. l_atms)then
 
 !              This lets up plot outside the main box
-               call set(.00, 1.0, .00, 1.0, rleft - width/8., right + wi
-     1dth/8.,
-     1         bottom - r_height/8., top + r_height/8.,1)
+               call set(.00, 1.0, .00, 1.0
+     1                , rleft - width/8., right + width/8.
+     1                , bottom - r_height/8., top + r_height/8.,1)
 
                xsta = -10000.
 
@@ -2299,9 +2295,10 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                y = bottom - .025 * r_height
 
-               call label_other_stations(i4time_label,standard_longitude
-     1,y,xsta,lat,lon,NX_L,NY_L
-     1  ,xlow,xhigh,ylow,yhigh,NX_C,bottom,r_height,maxstns)
+               call label_other_stations(i4time_label,standard_longitude       
+     1                                  ,y,xsta,lat,lon,NX_L,NY_L
+     1                                  ,xlow,xhigh,ylow,yhigh,NX_C
+     1                                  ,bottom,r_height,maxstns)
 
            endif
 
@@ -2744,7 +2741,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         end
 
         subroutine label_other_stations(i4time,standard_longitude,y,xsta
-     1,lat,lon,ni,nj
+     1          ,lat,lon,ni,nj
      1          ,xlow,xhigh,ylow,yhigh,nx_c,bottom,r_height,maxstns)
 
 !       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
@@ -2760,17 +2757,17 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
         real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
         real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns), ffg_s(maxst
-     1ns)
+        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
+     1       , ffg_s(maxstns)
         real*4 vis_s(maxstns)
         character stations(maxstns)*3, wx_s(maxstns)*8    ! c5_stamus
 
 !       Declarations for new read_surface routine
 !       New arrays for reading in the SAO data from the LSO files
-        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns),store_hgt(maxs
-     1tns,5)
-        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns),vis(maxs
-     1tns)
+        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
+     1          ,store_hgt(maxstns,5)
+        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
+     1          ,vis(maxstns)
      1                                          ,rad(maxstns)
 
         Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
@@ -2799,13 +2796,11 @@ c
         infile = directory(1:len_dir)//filename13(i4time,ext(1:3))
 
         call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
-     &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_p
-     1os_g,
-     &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
-     &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
-     &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
-     1store_emv,
-     &           store_amt,store_hgt,vis,obstime,istatus)
+     &      n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_pos_g,
+     &      n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
+     &      elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
+     &      ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
+     &      store_emv,store_amt,store_hgt,vis,obstime,istatus)
 
 100     write(6,*)'     n_obs_b',n_obs_b
 
@@ -2888,8 +2883,8 @@ c
      1                  ,ran,azi,c9_string,isweep
 11                  format(i4,2f6.1,f6.3,f6.1,1x,a3,4f6.1,1x,a9,i2)
 
-                    call line(stapos,bottom,stapos,bottom - .015 * r_hei
-     1ght)
+                    call line(stapos,bottom,stapos
+     1                       ,bottom - .015 * r_height)
 !                   write(6,*) ' Call line',stapos,bottom,r_height
 
                 endif
@@ -2926,3 +2921,45 @@ c       write(6,1)rmin,R1,R2,RD1,RD2,tclo
 
 c
 
+        subroutine remap_field_2d(nx_in,ixlow_in,ixhigh_in
+     1                           ,ny_in,iylow_in,iyhigh_in
+     1                           ,nx_out,ixlow_out,ixhigh_out
+     1                           ,ny_out,iylow_out,iyhigh_out
+     1                           ,field_in,field_out,r_missing_data)
+
+        real*4 field_in(nx_in,ny_in)
+        real*4 field_out(nx_out,ny_out)
+
+        call constant(field_out,r_missing_data,nx_out,ny_out)
+
+        rxlow_out  = ixlow_out
+        rxhigh_out = ixhigh_out
+        rylow_out  = iylow_out
+        ryhigh_out = iyhigh_out
+
+        rxlow_in   = ixlow_in
+        rxhigh_in  = ixhigh_in 
+        rylow_in   = iylow_in 
+        ryhigh_in  = iyhigh_in
+
+        do ixout = ixlow_out, ixhigh_out
+        do iyout = iylow_out, iyhigh_out
+            rxout = ixout
+            ryout = iyout
+
+            arg = rxout
+            call stretch(rxlow_out,rxhigh_out,rxlow_in,rxhigh_in,arg)
+            rxin = arg
+
+            arg = ryout
+            call stretch(rylow_out,ryhigh_out,rylow_in,ryhigh_in,arg)
+            ryin = arg
+
+            call bilinear_laps(rxin,ryin,nx_in,nx_out,field_in,result)       
+            field_out(ixout,iyout) = result
+
+        enddo
+        enddo
+
+        return
+        end

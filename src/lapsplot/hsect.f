@@ -349,7 +349,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /
      1       /'     [cc] Cld Ceiling (AGL), [cb] Lowest Cld Base (MSL)'       
      1       ,',  [ct] Highest Cld Top'
-     1       /'     [cv] Cloud Cover (2-D), [pw] Precipitable Water'
+     1       /'     [cv/cg] Cloud Cover (2-D), [pw] Precipitable Water'       
      1       /
      1       /'     [br,fr,lq] Humidity (lga;fua;lq3: [q or rh]) '
      1       /'     [sa/pa] Snow/Pcp Accum,'
@@ -3926,11 +3926,11 @@ c                   cint = -1.
             chigh = 20000.
             cint = 1000.
             call plot_cont(cloud_top,1e0,
-     1               clow,chigh,cint,asc9_tim,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1                     clow,chigh,cint,asc9_tim,c33_label,
+     1                     i_overlay,c_display,'nest7grid',lat,lon,jdot,       
+     1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'cv')then
+        elseif(c_type .eq. 'cv' .or. c_type .eq. 'cg')then
             write(6,2514)
 2514        format('     Enter Level (1-42); [-bbbb] for mb; '
      1                          ,'OR [0] for max in column',5x,'? ',$)
@@ -3983,13 +3983,20 @@ c                   cint = -1.
 
             endif
 
-            clow = 0.2
-            chigh = 0.8
-            cint = 0.2
-            call plot_cont(cloud_cvr,1e0,
+            if(c_type .eq. 'cv')then
+                clow = 0.2
+                chigh = 0.8
+                cint = 0.2
+                call plot_cont(cloud_cvr,1e0,
      1               clow,chigh,cint,asc9_tim,c33_label,
      1               i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            else ! 'cg'
+                write(6,*)' calling solid fill cloud plot'
+                call ccpfil(cloud_cvr,NX_L,NY_L)
+
+            endif
 
         elseif(c_type .eq. 'tn')then
             clow = -400.

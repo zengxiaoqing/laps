@@ -175,8 +175,10 @@ cdis
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
      1                                  .or. c_section .eq. '2')THEN
             l_atms = .false.
-            call xsect(c_display,i4time_ref,lun,l_atms,standard_longitud
-     1e,NX_L,NY_L,NZ_L,61,NZ_L,r_missing_data,laps_cycle_time,maxstns)
+            call xsect(c_display,i4time_ref,lun,l_atms
+     1                ,standard_longitude,NX_L,NY_L,NZ_L,61,NZ_L,181
+!    1                ,standard_longitude,NX_L,NY_L,NZ_L,61,61
+     1                ,r_missing_data,laps_cycle_time,maxstns)
 
         endif ! c_section
 

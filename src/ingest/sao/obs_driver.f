@@ -668,11 +668,47 @@ c
             write(6,*)' Warning: number of UNK stanames = ',iblank       
         endif
 
+!       Count pressure obs
+        nalt = 0
+        nstp = 0
+        nmsl = 0
+        nalt_and_msl = 0
+        nalt_or_msl = 0
+        do i = 1,n_obs_b
+            if(store_4(i,1) .ne. badflag)then
+                nalt = nalt+1
+            endif
+            if(store_4(i,2) .ne. badflag)then
+                nstp = nstp+1
+            endif
+            if(store_4(i,3) .ne. badflag)then
+                nmsl = nmsl+1
+            endif
+            if(store_4(i,1) .ne. badflag .and. 
+     1         store_4(i,3) .ne. badflag            )then
+                nalt_and_msl = nalt_and_msl+1
+            endif
+            if(store_4(i,1) .ne. badflag .or. 
+     1         store_4(i,3) .ne. badflag            )then
+                nalt_or_msl = nalt_or_msl+1
+            endif
+        enddo ! i
+
+        write(6,*)' # of stations reporting altimeter         ',nalt
+        write(6,*)' # of stations reporting station pressure  ',nalt
+        write(6,*)' # of stations reporting MSL pressure      ',nmsl
+        write(6,*)' # of stations reporting altimeter and MSLP'
+     1                                                 ,nalt_and_msl    
+        write(6,*)' # of stations reporting altimeter or MSLP '
+     1                                                 ,nalt_or_msl    
+
+!       Check for no obs
         if(nn .eq. 0)then
             write(6,*)' WARNING: no LSO written due to no obs'
             return
         endif
 
+        print *
 	print *,'  Writing LSO file, # of obs (in box) = ',n_obs_b
 c
         call write_surface_obs(atime,outfile,n_obs_g,

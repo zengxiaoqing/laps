@@ -192,7 +192,7 @@ cdis
      1                          .ne. r_missing_data)then
                 call plot_vr(i_grid,j_grid
      1              ,grid_ra_vel(i_grid,j_grid,k_grid),imax,jmax
-     1              ,c1_plottype,alat_radar,alon_radar)
+     1              ,c1_plottype,rlat_radar,rlon_radar)
               endif
 
             endif
@@ -292,7 +292,7 @@ cdis
      1                      ,azimuth_deg,range_m,elev_deg
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
-          k = nint(height_to_zcoord(retheight,istatus))
+        k = nint(height_to_zcoord(retheight,istatus))
 
             if ( k .eq. k_level) then ! plot even range_km rings
 
@@ -336,7 +336,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         do while (.true.)
             read(21,*,end=30)el,dir,speed_ms
 
-            retheight = el * 1000. + height_radar
+            retheight = el * 1000. + rheight_radar
 
             k = nint(height_to_zcoord(retheight,istatus))
 
@@ -344,8 +344,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
             if(speed_ms .lt. 90. .and. k .eq. k_level)then
 
-                alat = lat_radar
-                alon = lon_radar
+                alat = rlat_radar
+                alon = rlon_radar
 
 !               call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
 !               call latlon_ram_laps(alat,alon,x,y,init,'p')

@@ -65,7 +65,7 @@ C       NOTE: Profiler winds are written out in KNOTS
         real u(max_modes,max_levels)
         real v(max_modes,max_levels), prs
 
-        character*1 qc_flag(max_modes,max_levels)
+        integer*4 qc_flag(max_modes,max_levels)
         character*4 c4_qc
         real*4 level(max_modes,max_levels)
 
@@ -126,7 +126,7 @@ C
 
         character*6 prof_name(n_profilers)
         character*9 a9_timeObs
-        integer timeObs
+        integer*4 timeObs
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
@@ -470,7 +470,7 @@ C
 C           Get the associated quality control flags.
 C
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'uvQualityCode'
-     $                     ,1,qc_flag,status)
+     $                     ,0,qc_flag,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad qualityCode read ',status
                 return
@@ -498,8 +498,7 @@ C
               nlevels = ngates(im)
 
               do i = 1, nlevels
-                iqc_flag = byte_to_i4(qc_flag(im,i))
-!               iqc_flag2 = qc_flag(i)
+                iqc_flag = qc_flag(im,i)
 
                 if(iqc_flag.eq.good)then
                         j = 1

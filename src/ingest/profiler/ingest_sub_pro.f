@@ -121,7 +121,7 @@ C
 
         character*6 prof_name(n_profilers)
         character*9 a9_timeObs
-        integer timeObs
+        integer*4 timeObs
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)

@@ -156,7 +156,8 @@ C
       FMIN =  1.E8
       DO 55 J=1,NY
         DO 60 I=1,NX
-          IF (SPV(F(I,J)) .EQ. NO_P)
+!         IF (SPV(F(I,J)) .EQ. NO_P)
+          IF (SPV(F(I,J)) .EQ. 0)
      .    THEN
 !          if(f(i,j) .ne. r_missing_data)then
             IF (F(I,J).GT.FMAX) FMAX=F(I,J)

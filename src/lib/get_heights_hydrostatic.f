@@ -64,7 +64,7 @@ cdis
         real*4 C2
         PARAMETER (C2 = 14.64285)
 
-!       Generate heights of grid points using laps data and hydrostatic equation
+cdoc    Generate heights of grid points using laps data and hydrostatic equation
         write(6,*)' Generating 3D height grid'
         write(6,*)' Integrating hydrostatic equation over the LAPS grid'
 c       write(6,*)' Initialize and calculate first level'
@@ -160,8 +160,8 @@ cCCCCCCCCCCCCCCCCCC                         ISTAT = LIB$SHOW_TIMER(,,,)
 
         FUNCTION Z_thk(PT,P,T,TD,alog_array,esat_lut,N)
 C
-C   THIS FUNCTION RETURNS THE THICKNESS OF A LAYER BOUNDED BY PRESSURE
-C   P(1) AT THE BOTTOM AND PRESSURE PT AT THE TOP.
+cdoc    THIS FUNCTION RETURNS THE THICKNESS OF A LAYER BOUNDED BY PRESSURE
+cdoc    P(1) AT THE BOTTOM AND PRESSURE PT AT THE TOP.
 C
 C       BAKER,SCHLATTER 17-MAY-1982     Original version
 C       Albers                 1990     Restructured
@@ -236,6 +236,8 @@ C                     TEMPERATURES.
 
         FUNCTION W_laps(T,P,esat_lut)
 
+cdoc    Convert T(C) and P to W. This is a fast approximate routine.
+
 !       This function really only works when T > -50C but the efficiency will
 !       outweigh the error when T < -50C in this application
 
@@ -246,8 +248,8 @@ C                     TEMPERATURES.
         PARAMETER (C2 = 14.64285)
         parameter (const = 622. * c1 * c2)
 
-        ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
-     1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
+C       ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
+C    1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
 C
 C
         X= esat_lut(nint(T))

@@ -183,3 +183,16 @@ cdoc  Converts initial time and forecast time to a 13 character filename
       return
       end
 
+      subroutine c_time2fname(utime,a9time)
+
+cdoc  Convert utime to a9time. Jacket routine that calls 'make_fnam_lp'.
+
+      integer*4 utime, i4time, istatus
+      character*(*) a9time
+
+      i4time = utime + 315619200
+      call make_fnam_lp (i4time,a9time,istatus)
+
+      return
+      end
+

@@ -2,7 +2,7 @@ c
 c
       function wfo_fname13_to_fname9(wfo_fname13)
 c
-c..... Routine converts wfo filename 'yyyymmdd_hhmm' to 'yyjjjhhmm' filename.
+cdoc  Routine converts wfo filename 'yyyymmdd_hhmm' to 'yyjjjhhmm' filename.
 c
 c  JSmart   8-96  Stole this from JSmart who previously stole it from
 c                 PStamus and modified to generate the wfo filename time.
@@ -58,7 +58,7 @@ c ----------------------------------------------------------------
 c
       function fname9_to_wfo_fname13(a9_time_in)
 c
-c..... Routine to convert LAPS 'yyjjjhhmm' time to 'yyyymmdd_hhmm' time.
+cdoc  Routine to convert LAPS 'yyjjjhhmm' time to 'yyyymmdd_hhmm' time.
 c
 c  JSmart   8-96  Stole this from PStamus and modified to generate the
 c                 wfo filename time.
@@ -148,8 +148,10 @@ c
 C      INTEGER*4 INT_FILE(9), I, NYEAR, JDAY, NHOUR, MIN, MONTH, NDAY
 C      INTEGER*4 I4TIME_INT_LP
 
+cdoc   Convert wfo filename*13 to i4time
+
 c
-c first convert wfo filename *13 to filename 'yyjjjhhmm'
+c first convert wfo filename*13 to filename 'yyjjjhhmm'
 c
        fname9 = wfo_fname13_to_fname9(wfo_fname13)
 c
@@ -178,6 +180,9 @@ c
        character*13 fname9_to_wfo_fname13
        integer*4    i4time
        integer*4    i4time_temp
+
+cdoc   Convert i4time to wfo filename*13
+
 c
 c first convert i4time to ascii filename *9
 c
