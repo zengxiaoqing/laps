@@ -87,7 +87,7 @@ cdis
         character*4 c4_log
         character*7 c7_string
         character*9 c9_string,a9_start,a9_end
-        character*10 c_colortable
+        character*20 colortable
         character infile*255
         character*20 c_model
 
@@ -1510,7 +1510,7 @@ c
                     goto1200
                 endif
 
-                c_colortable = 'linear'
+                colortable = 'linear'
 
             else ! 'd39' field which is the difference of 's3a' - 's8a'
                 var_2d = 's8a'
@@ -1536,7 +1536,7 @@ c
 !               Subtract the two satellite fields
                 call diff(field_2d,vas,vas,NX_L,NY_L)
 
-                c_colortable = 'hues'
+                colortable = 'hues'
 
             endif
 
@@ -1583,7 +1583,7 @@ c
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
             if(c_type(3:3) .eq. 'i')then
-                call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,c_colortable
+                call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,colortable
      1                     ,n_image)
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -4624,7 +4624,14 @@ c                   cint = -1.
 
             else ! 'cg'
                 write(6,*)' calling solid fill cloud plot'
-                call ccpfil(cloud_cvr,NX_L,NY_L,0.0,1.0,'linear'
+                
+                if(NX_L*NY_L .gt. 40000)then
+                    colortable = 'linear_reduced'
+                else
+                    colortable = 'linear'
+                endif
+
+                call ccpfil(cloud_cvr,NX_L,NY_L,0.0,1.0,colortable     
      1                     ,n_image)     
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
