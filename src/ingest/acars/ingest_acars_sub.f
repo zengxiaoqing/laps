@@ -2,9 +2,10 @@
       subroutine get_acars_data(i4time_sys,i4_acars_window
      1                                    ,NX_L,NY_L
      1                                    ,c8_project
+     1                                    ,ext
      1                                    ,filename,istatus)
 
-      character*(*) filename
+      character*(*) filename,ext
 
 !.............................................................................
 
@@ -36,7 +37,7 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim recNum'
       endif
-      call acars_sub(nf_fid, recNum, c8_project,
+      call acars_sub(nf_fid, recNum, c8_project, ext,
 !.............................................................................
      1              i4time_sys,i4_acars_window,NX_L,NY_L,istatus)
       return
@@ -44,13 +45,14 @@ C
       end
 C
 C
-      subroutine acars_sub(nf_fid, recNum, c8_project,
+      subroutine acars_sub(nf_fid, recNum, c8_project, ext,
 !.............................................................................
      1              i4time_sys,i4_acars_window,NX_L,NY_L,istatus)
 !.............................................................................
 
       include 'netcdf.inc'
       character*8 c8_project
+      character*(*) ext
       integer recNum,nf_fid, nf_vid, nf_status
       integer airline(recNum), bounceError(recNum),
      +     correctedFlag(recNum), dataDescriptor(recNum),
@@ -162,6 +164,8 @@ C
      1           ,a9_timeObs,i4_resid,i4_acars_window
               goto 900        
           endif
+
+          call open_ext(31,i4time_sys,ext(1:3),istatus)       
 
           write(6,1)a9_timeObs,a9_recptTime 
           write(31,1)a9_timeObs,a9_recptTime 
@@ -1232,7 +1236,9 @@ C
             ws = windSpeed(i) * 1.9438 ! convert m/s to knots
         endif
 
-        alt = altitude(i) * 3.280839895 ! convert m to ft
+        if(abs(altitude(i)) .lt. 1e10)then
+            alt = altitude(i) * 3.280839895 ! convert m to ft
+        endif
 
         if (alt .gt. 35000.0) then
           max_temp = -20.0
