@@ -32,7 +32,7 @@ cdis
 
 
         subroutine read_lvd_3_4_5(i4time,ch3,ch4,ch5,
-     1   ii,jj,kk,istatus)
+     1   ii,jj,kk,ngoes, istatus)
 
 
 c       $log: read_lvd_3_4_5.for,v $
@@ -47,6 +47,7 @@ c parameter variables
         integer ii,jj,kk
         real ch3(ii,jj),ch4(ii,jj),ch5(ii,jj)
         integer i4time
+        integer ngoes
         integer istatus
 
 
@@ -91,6 +92,14 @@ c        dir = '../lapsprd/lvd/'
            write(6,*) 'Error reading channel 3'
            return
         endif
+
+
+c fill ngoes parameter from common
+
+        if(comment(1)(5:5) .eq. '8') ngoes = 8
+        if(comment(1)(5:5) .eq. '9') ngoes = 9
+        if(comment(1)(5:5) .eq. 'a') ngoes = 10
+
 
 c real laps data for chan 4
 

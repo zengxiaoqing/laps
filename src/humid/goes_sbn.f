@@ -148,6 +148,8 @@ c climate model variables
      1     tempertur_guess(40),
      1     mixratio_guess(40)
       real rmd
+      integer n_snd_ch
+      parameter (n_snd_ch = 18)
       integer kanch(3)
       data kanch /10,8,7/
 
@@ -218,7 +220,7 @@ cdline        real s_btemp(ii,jj,18)  !sounder b_temp
 cdline        real s_radiance(ii,jj,18)  ! sounder radiance
 cdline        real w_model (39)  ! forward model weighting function
 cdline        real p_dm (39)  ! derivate pressures
-      real rads (ii,jj,18)
+      real rads (ii,jj,n_snd_ch)
 
         data local_model_p/.1,.2,.5,1.,1.5,2.,3.,4.,5.,7.,10.,15.,
      1  20.,25.,30.,
@@ -288,7 +290,7 @@ c       convert filename to i4time_sat
         call i4time_fname_lp (filename1,i4time_sat,istatus)
         write (6,*) 'Getting satellite radainces (lvd)'
         call read_lvd_3_4_5 (i4time_sat,ch3,ch4,ch5,
-     1      ii,jj,kk,istatus)
+     1      ii,jj,kk,ngoes,istatus)
 
         if (istatus.ne.1) then
                 write(6,*) 'error getting satellite data'
@@ -309,9 +311,14 @@ c  acquire sounder data (experimental)
 
       if(isnd.eq.1) then ! get SOUNDER data only, still experimental
 
-       do kan = 1,18
-       call rsr (kan,rads(1,1,kan),ii,jj)
-       enddo
+
+       call rsr (i4time, rads, ii,jj,n_snd_ch,ngoes, istatus)
+       if (istatus .ne. 1) then
+          write (6,*) 'error obtaining sounder radiances'
+          return
+       endif
+
+
 
       endif ! only get SOUNDER data , experimental commment out.
 
@@ -546,6 +553,9 @@ c  call forward model with these profiles and output radiances
         call pfcgim (ngoes)
 
 c  do for each gridpoint
+
+
+
         do j = 1,jj
            do i = 1,ii
 
@@ -574,6 +584,7 @@ c perform forward model computation for radiance
 
 
 
+
               if(isnd.eq.1) then ! SOUNDER computation
                  do kan = 1,3
 
@@ -585,11 +596,15 @@ c perform forward model computation for radiance
                     btemp(i,j,kan) = britgo(radiance(i,j,kan),
      1                   kanch(kan))
 
+ 
+
                  enddo          ! kan
               endif             ! SOUNDER computation
 
+          
 
-cdline          do kan = 1,18 !sounder channels for research
+
+cdline          do kan = 1,n_snd_ch !sounder channels for research
 
 cdline        call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
 cdline    1                  theta(i,j),ngoes,kan,tau)
@@ -604,6 +619,9 @@ cdline          enddo ! Kan for sounder
       enddo
       enddo
 
+
+
+
 c  generate table of clear sounder btemps, computed and observed
 
 cdline       open (34,file='sounder.out',form='formatted')
@@ -611,7 +629,7 @@ cdline       open (34,file='sounder.out',form='formatted')
 cdline       do j = 1, jj
 cdline       do i = 1, ii
 
-cdline        do kan = 1,18
+cdline        do kan = 1,n_snd_ch
 cdline        if(rads(i,j,kan).gt.0.0 .and. rads(i,j,kan).lt.500.) then
 cdline        rads(i,j,kan) = britgo(rads(i,j,kan),kan)
 cdline        endif
@@ -619,7 +637,7 @@ cdline        enddo ! kan
 
 
 cdline          write(34,77) i,j,(s_btemp(i,j,kan), rads(i,j,kan) 
-cdline    1                      ,kan=1,18)
+cdline    1                      ,kan=1,n_snd_ch)
 cdline77        format (i2,1x,i2,1x,36(f7.3,1x))
 
 cd          write(34,*) i,j,ch4(i,j),rads(i,j,8)
@@ -656,8 +674,8 @@ c   only for starters.
             else
                continue
 
-
-               if( (cld(i,j) .eq. 0 .or. cld(i,j).ge.1.)
+c               if( cld(i,j) .eq. 0 .or. cld(i,j).ge.1.) then ! clear
+               if( (cld(i,j) .eq. 0 .or. cld(i,j).ge.1.)  
      1              .and.
      1              abs(ch4(i,j)-btemp(i,j,2)).le.1.) then !clear
 
@@ -667,6 +685,12 @@ c   and compare these to the forward model radiances
                   write(6,32) ' Observed=',ch3(i,j),' Modeled='
      1                 ,btemp(i,j,1),' Diff=',(ch3(i,j)-btemp(i,j,1))
  32               format(1x,a10,f8.3,a9,f8.3,a6,f8.3)
+
+c  this is a diagnostic output for plotting with psiplot (fort24.dat)
+
+                  write (24, *) ch4(i,j), btemp(i,j,2)
+                  write (23, *) ch3(i,j), btemp(i,j,1)
+                  write (25, *) ch5(i,j), btemp(i,j,3)
 
 
 
