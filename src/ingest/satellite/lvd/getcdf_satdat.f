@@ -93,7 +93,7 @@ c
       character*13  wfo_fname13
       character*13  fname9_to_wfo_fname13
       character*13  cvt_i4time_wfo_fname13
-      character*100 lvd_dir
+      character*150 lvd_dir
       character*3   chtype(max_channel)
       character*3   c_mtype(max_channel,max_files)
       character*3   c_mtype_new(max_channel,max_files)

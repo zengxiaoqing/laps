@@ -23,7 +23,7 @@ c
 c
        character*5   c_ext(max_channels)
        character*200 data_dir
-       character*100 static_dir
+       character*150 static_dir
        character*255 path
 
        logical   foundit(max_channels)

@@ -40,7 +40,7 @@ c
       Character*40 c_data_type
       character*100 cname
       character*100 path
-      character*100 cdir
+      character*150 cdir
       Character*255 filename
       Character*6  csat_id
       Character*3  csat_type
