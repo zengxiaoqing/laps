@@ -8,6 +8,10 @@
 	  integer i              
 	  integer j              
 	  integer k              
+	  real ri
+	  real rj              
+	  real rk              
+          real valuef(max_var)        ! Values of full obs
           real value(max_var)         ! Values of incremental obs
           real weight
           real elev                   ! Used for sfc obs
@@ -21,6 +25,10 @@
 	  integer i              
 	  integer j              
 	  integer k              
+	  real ri
+	  real rj              
+	  real rk              
+          real valuef(max_var)        ! Values of full obs
           real value(max_var)         ! Values of incremental obs
           real weight
           real elev                   ! Used for sfc obs
