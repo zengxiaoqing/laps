@@ -162,7 +162,7 @@ foreach(@cdl_list){
 # localize optran coefficients
 #
   print "Localizing Optran Coefficients based on moisture_switch.nl namelist settings\n";
-  run_sys::run_sys("@CSH@ $LAPSROOT/etc/localize_optran.com $LAPSROOT/bin/ $LAPS_DATA_ROOT/static");
+  run_sys::run_sys("@PERL@ $LAPSROOT/etc/localize_optran.pl $LAPSROOT/bin/ $LAPS_DATA_ROOT/static");
 
 #
 # run gridgen model if necessary
