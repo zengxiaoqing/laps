@@ -1405,7 +1405,9 @@ c
 	num_ea3 = 0
 	abs_diff = 0.
 	sum = 0.
+        sumsq = 0.
 	amean = 0.
+	rms = 0.
 	diff_mx = -1.e30
 	diff_mn = 1.e30
 	print *,' '
@@ -1435,6 +1437,7 @@ c
 	   else
 	      diff = interp_ob - ob(i)
 	      sum = diff + sum
+              sumsq = sumsq + diff**2
 	      adiff = abs(diff)
 	      abs_diff = abs_diff + adiff
 	      num = num + 1
@@ -1457,7 +1460,7 @@ c
 	   endif
 c
 	   write(iunit,905) i, stn(i)(1:5), interp_ob, ob(i), diff
- 905	   format(5x,i3,1x,a5,1x,3f10.2)
+ 905	   format(5x,i4,1x,a5,1x,3f10.2)
 c
  500	enddo !i
 c
@@ -1467,16 +1470,26 @@ c
 	amean = badflag
 	if(num .ne. 0) amean = sum / float(num)
 	if(num .ne. 0) ave_diff = abs_diff / float(num)
+	if(num .ne. 0) rms = sumsq / float(num)
+
 	write(6,909) amean, num
 	write(iunit,909) amean, num
  909	format(/,'    Mean difference: ',f10.2,' over ',i4,' stations.')
+
 	write(6,910) ave_diff, num
 	write(iunit,910) ave_diff, num
  910	format(' Average difference: ',f10.2,' over ',i4,' stations.')
+
+	write(6,915) rms, num
+	write(iunit,915) rms, num
+ 915	format(' RMS difference: ',f10.2,' over ',i4,' stations.')
+
 	write(iunit,920) diff_mx, stn_mx
  920	format(' Maximum difference of ',f10.2,' at ',a5)
+
 	write(iunit,925) diff_mn, stn_mn
  925	format(' Minimum difference of ',f10.2,' at ',a5)
+
 	write(iunit, 930)
  930	format(' ')
 c
