@@ -3512,7 +3512,8 @@ Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc.
    The main FSL contact for information on how we use the analyses to 
    initialize the forecasts is as follows: Paul Schultz for 
    RAMS/SFM/MM5/WRF/Eta. The models themselves are not included in this tar 
-   file.
+   file. There is some documentation for the model interfacing at this
+   URL: http://laps.fsl.noaa.gov/mm5doc/README_lapsmm5.htm
 
 ------ 3.4.1 --------------LAPSPREP------------------------------------------
 
