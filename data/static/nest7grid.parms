@@ -25,7 +25,6 @@
 
  c_raddat_type='wsi',
  radarext_3d_cmn='vrc',
-
  radarext_3d_accum_cmn='vrc',
  
  path_to_topt30s='/data/lapb/geog/world_topo_30s',
@@ -59,7 +58,7 @@
  vert_rad_sao_cmn=1,      
  vert_rad_pirep_cmn=1,    
  vert_rad_prof_cmn=1,     
- silavwt_parm_cmn=1.,     
+ silavwt_parm_cmn=0.,     
  toptwvl_parm_cmn=4.,     
  maxstations_cmn=6000,
  maxobs_cmn=6000,  
