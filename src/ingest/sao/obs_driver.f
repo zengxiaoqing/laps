@@ -62,6 +62,8 @@ c                     06-21-99  Pass lat/lon, grid size and grid spacing
 c                                 to get_ routines to calculate box size.
 c                     09-20-99  Add blacklist test (on KFCS w/known bad P).
 c                     11-10-99  Upgrade blacklist code.
+c	              01-05-00  Hardwire 903 format statement..LINUX compile
+c                                 didn't like variable field length.
 c
 c       Notes:
 c         1. When run "operationally", 'obs_driver.x' uses the time from
@@ -103,7 +105,9 @@ c
         integer    wmoid(maxobs), jstatus, grid_spacing 
         integer    dpchar(maxobs), narg, iargc
 	integer    num_varb(maxobs), max_bvar
-	parameter  (max_bvar=20)  !max number of variables to blacklist
+	parameter  (max_bvar=20)  !max number of variables to blacklist...
+                                  !change 903 format statement if you make
+                                  !this greater than 20.
 c
         character  stations(maxsta)*20, provider(maxsta)*11
         character  weather(maxobs)*25 
@@ -374,7 +378,8 @@ c
 	   read(11,903) stations_b(i), num_varb(i), 
      &                  (var_b(i,j), j=1,max_bvar)
 	enddo !i
- 903	format(1x,a20,2x,i3,<max_bvar>(2x,a3))
+cc 903	format(1x,a20,2x,i3,<max_bvar>(2x,a3))
+ 903	format(1x,a20,2x,i3,20(2x,a3))
 c
 c.....  Have blacklist info.  Now flag the var_b's at each station_b as bad.
 c
