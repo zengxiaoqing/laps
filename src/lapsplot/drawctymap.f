@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
       subroutine draw_county_map(sw,ne,jproj,polat,polon,rrot,jdot
-     1                          ,icol_sta,icol_cou,ni,nj)
+     1                          ,icol_sta,icol_cou,ni,nj,namelist_parms)       
 
       include 'lapsplot.inc'
 c
@@ -61,9 +61,11 @@ c
       jjlts=-2
       jgrid=0
 
+      call get_lapsplot_parms(namelist_parms,istatus)       
+
 !     1 means use local version of supmap, 2 means use the NCARGlib version
-!     3 means to try new routines
-      mode_supmap=1
+!     3 means to try newer (ezmap) routines
+      mode_supmap = namelist_parms%mode_supmap
 
       call get_grid_spacing(grid_spacing_m,istatus)
       if(istatus .ne. 1)then
@@ -73,9 +75,7 @@ c
           write(6,*)' Subroutine draw_county_map...',jproj
       endif
 
-      domsize = (max(ni,nj)-1.) * grid_spacing_m / zoom
-
-      call get_lapsplot_parms(namelist_parms,istatus)       
+      domsize = (float(nj)-1.) * grid_spacing_m / zoom
 
 !     Plot Counties
       if(jdot .eq. 1)then
@@ -84,8 +84,8 @@ c
           call gsln(1) ! Solid
       endif
 
-      if(domsize .le. 2500e3)then
-          write(6,*)' Plotting Counties'
+      if(domsize .le. 1500e3)then
+          write(6,*)' Plotting Counties ',domsize
           call setusv_dum(2HIN,icol_cou)
           jgrid=namelist_parms%latlon_int        ! Draw lat/lon lines?
 
@@ -97,12 +97,18 @@ c
               iout = 0
               call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                          jjlts,jgrid,iout,jdot,ier)
+          elseif(mode_supmap .eq. 3)then
+              write(6,*)' Calling MAPDRW, etc. for counties...'
+!             call mapdrw()
+              call mapint
+!             call maplot
+              CALL MPLNDR ('Earth..2',5)
           endif
           if(ier .ne. 0)write(6,*)' ier = ',ier
 
           call sflush
       else
-          write(6,*)' Large domain, omitting counties'
+          write(6,*)' Large domain, omitting counties ',domsize
 
       endif
 
@@ -120,8 +126,11 @@ c
           call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid,iout,jdot,ier)
       elseif(mode_supmap .eq. 3)then
-          write(6,*)' Calling MAPDRW and related routines...'
-          call mapdrw()
+          write(6,*)' Calling MAPDRW, etc. for states...'
+!         call mapdrw()
+          call mapint
+!         call maplot
+          CALL MPLNDR ('Earth..2',4)
       endif
       if(ier .ne. 0)write(6,*)' ier = ',ier
 
@@ -170,6 +179,7 @@ c
      1                       ,c3_time_zone,time_zone
      1                       ,c_institution,c_vnt_units
      1                       ,c_units_type,c_pbl_depth_units,l_discrete       
+     1                       ,mode_supmap
 
 !      Set defaults
        latlon_int = 0
@@ -178,6 +188,7 @@ c
        time_zone = 0.0
        c_institution = 'NOAA/FSL LAPS'
        c_vnt_units = 'M**2/S'
+       mode_supmap = 3
  
        call get_directory('static',static_dir,len_dir)
 
@@ -200,6 +211,7 @@ c
        namelist_parms%c_units_type = c_units_type
        namelist_parms%c_pbl_depth_units = c_pbl_depth_units
        namelist_parms%l_discrete = l_discrete
+       namelist_parms%mode_supmap = mode_supmap
 
        istatus = 1
        return
