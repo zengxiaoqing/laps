@@ -58,8 +58,8 @@ cdis
 !       echoes. In other words, this code is more complex that it would
 !       otherwise be so that real-time speed is optimized.
 
-        integer MAX_FILES
-        parameter (MAX_FILES = 3000)
+        integer MAX_RADAR_FILES
+        parameter (MAX_RADAR_FILES = 20000)
 
 !       Input
         real*4 lat(imax,jmax)
@@ -96,8 +96,8 @@ cdis
         real*4 grid_ra_nyq(imax,jmax,kmax)
 
         character*9 asc_tim_9,asc_tim_9_beg,asc_tim_9_end
-        integer i4time_file(MAX_FILES)
-        real*4 frac(MAX_FILES)
+        integer i4time_file(MAX_RADAR_FILES)
+        real*4 frac(MAX_RADAR_FILES)
 
         character*4  radar_name ! Local
 
@@ -137,6 +137,7 @@ cdis
             call get_fracs(i4time_beg,i4time_end,max_radar_gap        ! I
      1                    ,i_nbr_files_ret                            ! I
      1                    ,ext_local                                  ! I
+     1                    ,max_radar_files                            ! I
      1                    ,nscans_vrc                                 ! O
      1                    ,i4time_file                                ! 0
      1                    ,frac,frac_sum,istatus)                     ! O
@@ -147,6 +148,7 @@ cdis
             call get_fracs(i4time_beg,i4time_end,max_radar_gap        ! I
      1                    ,i_nbr_files_ret                            ! I
      1                    ,ext_local                                  ! I
+     1                    ,max_radar_files                            ! I
      1                    ,nscans_vrz                                 ! O
      1                    ,i4time_file                                ! 0
      1                    ,frac,frac_sum,istatus)                     ! O
@@ -174,6 +176,7 @@ cdis
         call get_fracs(i4time_beg,i4time_end,max_radar_gap            ! I
      1                ,i_nbr_files_ret                                ! I
      1                ,ext_local                                      ! I
+     1                ,max_radar_files                                ! I
      1                ,nscans                                         ! O
      1                ,i4time_file                                    ! 0
      1                ,frac,frac_sum,istatus)                         ! O
@@ -733,6 +736,7 @@ cdis
         subroutine get_fracs(i4time_beg,i4time_end,max_radar_gap        ! I
      1                      ,i_nbr_files_ret                            ! I
      1                      ,ext                                        ! I
+     1                      ,max_radar_files                            ! I
      1                      ,nscans                                     ! O
      1                      ,i4time_file,frac,frac_sum,istatus)         ! O
 
@@ -741,23 +745,22 @@ cdis
 !                               to arrive at an integrated precipitation rate
 !                               over a specified time window
 
-        integer MAX_FILES
-        parameter (MAX_FILES = 3000)
+        integer MAX_RADAR_FILES
 
         character*255 c_filespec
         character*9 asc_tim_9
-        character c_fnames(MAX_FILES)*80
+        character c_fnames(MAX_RADAR_FILES)*80
         character*3 ext
 
-        real*4 frac(MAX_FILES)
-        integer i4time_file(MAX_FILES)
+        real*4 frac(MAX_RADAR_FILES)
+        integer i4time_file(MAX_RADAR_FILES)
 
         call get_filespec(ext,2,c_filespec,istatus)
 
         call Get_file_names(c_filespec,
      1                      i_nbr_files_ret,
      1                      c_fnames,
-     1                      max_files,
+     1                      max_radar_files,
      1                      i_status)
 
         if(i_nbr_files_ret .gt. 0)then
