@@ -51,9 +51,11 @@ C
         parameter (max_stations = 1000)
 
         real temp(max_levels),prs
-        character*1 qc_flag(max_levels)
+c       character*1 qc_flag(max_levels)
+        integer i_qc_flag(max_levels)
         real rlevels(max_levels)
         integer good,bad,missing, start(2), count(2), staNamLen
+        integer start_time(1), count_time(1)
         parameter (good = 0)
         parameter (bad = 8)
         parameter (missing = -1)
@@ -99,7 +101,7 @@ C
         character*6 prof_name(max_stations)
 
         character*9 a9_timeObs
-        double precision timeObs
+        integer timeObs
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
@@ -234,8 +236,8 @@ C
         endif
 
 !       Get the number of levels from the NetCDF file
-        varid = NCDID(cdfid,'level',status)
-        CALL NCDINQ(cdfid,varid,dimname,n_levels,status)
+        status = NF_INQ_DIMID(cdfid,'level',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,n_levels)
 
         write(6,*)' # of levels = ',n_levels
 
@@ -246,8 +248,8 @@ C
         endif
 
 !       Get the number of profilers from the NetCDF file
-        varid = NCDID(cdfid,'recNum',status)
-        CALL NCDINQ(cdfid,varid,dimname,n_profilers,status)
+        status = NF_INQ_DIMID(cdfid,'recNum',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,n_profilers)
         write(6,*)' # of BLP RASSs = ',n_profilers
         if (n_profilers .gt. max_stations) then
           write(6,*)' Too many profilers to process'
@@ -256,8 +258,8 @@ C
         endif
 
 !	Get the number of characters in the station name
-        varid = NCDID(cdfid,'staNamLen',status)
-        CALL NCDINQ(cdfid,varid,dimname,staNamLen,status)
+        status = NF_INQ_DIMID(cdfid,'staNamLen',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,staNamLen)
 
         start(1) = 1
         count(2) = 1
@@ -268,10 +270,10 @@ C
         do ista = 1,n_profilers
 
 !         Fill profiler name into prof_name(ista)
-          varid = NCVID(cdfid, 'staName', status)
+          status = NF_INQ_VARID(cdfid,'staName',varid)
           start(2) = ista
-          CALL NCVGTC(cdfid, varid, start, count, 
-     1                prof_name(ista), staNamLen, status)
+          status = NF_GET_VARA_TEXT(cdfid, varid, start, count,
+     1                prof_name(ista))
           prof_name(ista)(6:6) = ' '
 
           write(6,*)
@@ -280,7 +282,7 @@ C         Get the surface pressure.  This time we'll use the 5-character
 C         site name (plus a terminating blank) to select the station.
 C
 
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',2,rlat
      1                      ,status)
           if(status.ne.0)then
                 write(6,*)'bad lat read ',prof_name(ista),status
@@ -289,7 +291,7 @@ C
           write(6,*)
           write(6,*)prof_name(ista),' Lat ',rlat
 
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',2,rlon
      1                      ,status)
           if(status.ne.0)then
                 write(6,*)'bad lon read ',status
@@ -299,17 +301,19 @@ C
           write(6,*)prof_name(ista),' Lon ',rlon
 
 !         Get the observation time
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'timeObs',0,timeObs
-     1                      ,status)
-
-          if(status.ne.0)then
+          status = NF_INQ_VARID(cdfid,'timeObs',varid)
+          start_time(1) = ista
+          count_time(1) = 1
+          status = NF_GET_VARA_INT(cdfid, varid, start_time, 
+     1                             count_time,timeObs)
+          if(status.ne.NF_NOERR)then
               write(6,*)' Warning: bad timeObs read ',status,timeObs
 
           elseif(abs(timeObs) .gt. 3d9)then
               write(6,*)' Warning: Bad observation time',timeObs
 
           else
-              call c_time2fname(nint(timeObs),a9_timeObs)
+              call c_time2fname(timeObs,a9_timeObs)
 
               write(6,*)
               write(6,*)' timeObs ',a9_timeObs
@@ -330,7 +334,7 @@ C
             write(6,*)prof_name(ista),' is in box'
 
 
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',0,prs       
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',2,prs       
      1                        ,status)
             if(status.ne.0)then
                 write(*,*)'bad pressure read ',status
@@ -340,7 +344,7 @@ C
             write(6,*)prof_name(ista),' pressure ',prs
 
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'temperature'
-     1                        ,0,t_sfc,status)
+     1                        ,2,t_sfc,status)
             i_qc_sfc = 0
             if(status.ne.0)then
                 write(*,*)'bad t_sfc read ',status
@@ -351,14 +355,14 @@ C
             write(6,*)prof_name(ista),' t_sfc ',t_sfc,i_qc_sfc
 
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'relHumidity'
-     1                        ,0,rh_sfc,status)
+     1                        ,2,rh_sfc,status)
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'windSpeedSfc'
-     1                        ,0,sp_sfc,status)
+     1                        ,2,sp_sfc,status)
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'windDirSfc'
-     1                        ,0,di_sfc,status)
+     1                        ,2,di_sfc,status)
 
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staElev'
-     1                        ,0,elev,status)
+     1                        ,2,elev,status)
             if(status.ne.0)then
                 write(*,*)'bad elev read ',status
                 go to 900
@@ -381,7 +385,7 @@ C
 C
 C           Get the array of RASS virtual temperatures for the profiler station.
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'virtualTemp',0,
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'virtualTemp',2,
      $                     temp,status)
             if(status.ne.0)then
                 write(*,*)'bad virtualTemp read ',status
@@ -390,8 +394,8 @@ C
 C
 C           Get the associated quality control flags.
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'qualityCode',0,
-     $                     qc_flag,status)
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'qualityCode'
+     $                         ,0,i_qc_flag,status)
             if(status.ne.0)then
                 write(*,*)'bad qualityCode read ',status
                 go to 900
@@ -399,7 +403,7 @@ C
 C
 C           Get the associated levels
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',0,
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',2,
      $                     rlevels,status)
             if(status.ne.0)then
                 write(*,*)'bad levels read ',status
@@ -414,8 +418,8 @@ C
             rms = 1.0
 
             do i = 1, n_levels
-                iqc_flag  = byte_to_i4(qc_flag(i))
-                iqc_flag2 = byte_to_i4(qc_flag(i))
+                iqc_flag  = i_qc_flag(i)
+                iqc_flag2 = i_qc_flag(i)
 
                 if(iqc_flag.eq.good)then
                         j = 1

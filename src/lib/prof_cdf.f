@@ -1,33 +1,3 @@
-cdis    Forecast Systems Laboratory
-cdis    NOAA/OAR/ERL/FSL
-cdis    325 Broadway
-cdis    Boulder, CO     80303
-cdis
-cdis    Forecast Research Division
-cdis    Local Analysis and Prediction Branch
-cdis    LAPS
-cdis
-cdis    This software and its documentation are in the public domain and
-cdis    are furnished "as is."  The United States government, its
-cdis    instrumentalities, officers, employees, and agents make no
-cdis    warranty, express or implied, as to the usefulness of the software
-cdis    and documentation for any purpose.  They assume no responsibility
-cdis    (1) for the use of the software and documentation; or (2) to provide
-cdis     technical support to users.
-cdis
-cdis    Permission to use, copy, modify, and distribute this software is
-cdis    hereby granted, provided that the entire disclaimer notice appears
-cdis    in all copies.  All modifications to this software must be clearly
-cdis    documented, and are solely the responsibility of the agent making
-cdis    the modifications.  If significant modifications or enhancements
-cdis    are made to this software, the FSL Software Policy Manager
-cdis    (softwaremgr@fsl.noaa.gov) should be notified.
-cdis
-cdis
-cdis
-cdis
-cdis
-cdis
 cdis
 cdis    Forecast Systems Laboratory
 cdis    NOAA/OAR/ERL/FSL
@@ -79,6 +49,8 @@ C
 C
 C Modifications:
 C       28-Nov-1995/LAB Put prof_cdf_common in it's own include file.
+C       07-Aug-2000/LSW modified to netCDF version 3.4
+
 C
         subroutine PROF_CDF_CLOSE(cdfid,status)
 C
@@ -115,7 +87,7 @@ C       Find the user's CDFID in our internal list.
 C
            if(cdfid_list(i).eq.cdfid.and.open_list(i))then
 C
-                CALL NCCLOS(cdfid_list(i),status)
+                status = NF_CLOSE(cdfid_list(i))
 C
                 open_list(i) = .false.                  ! Indicate internally.
                 go to 900
@@ -133,6 +105,7 @@ C
 C
 900     return
         end
+
 C   PROF_CDF_OPEN.FOR           Michael Barth           11-Aug-1993
 C
 C       This subroutine is used to open a netCDF file holding profiler data.
@@ -202,6 +175,8 @@ C
 C       27-May-1997/MFB Renamed "ncopts" common and variable so it doesn't
 C                       conflict with symbols used in C netCDF interface.
 C
+C       07-Aug-2000/LSW modified to netCDF version 3.4
+C
         subroutine PROF_CDF_OPEN(file,cdfid,status)
 C
         implicit none
@@ -254,10 +229,6 @@ C
 C       Unless non-default error handling has been set by a call to
 C       PROF_CDF_SET_ERROR set the default error handling.
 C
-        if(error_flag.eq.0)then
-           ncopts_val = 0           ! Tell netCDF.
-           CALL NCPOPT(ncopts_val)
-        endif
 C
         do i = 1, 4
 C
@@ -267,8 +238,8 @@ C
 C
 C       Open the file.
 C
-              cdfid = NCOPN(file,NCNOWRIT,status)
-              if(status.eq.0)then
+              status = NF_OPEN(file,NF_NOWRITE,cdfid)
+              if(status.eq.NF_NOERR)then
 C
 C       Clear out the data structures for this slot.
 C
@@ -280,29 +251,34 @@ C
 C
 C       Get the number of records (stations) in the file.
 C
-                 varid = NCDID(cdfid,'recNum',status)
-                 CALL NCDINQ(cdfid,varid,dimname,nrec_list(i),status)
+                 status = NF_INQ_DIMID(cdfid, 'recNum',varid)
+                 if (status.eq.NF_NOERR)then
+                   status = NF_INQ_DIMLEN(cdfid,varid,nrec_list(i))
+
                  
-                 if(nrec_list(i) .gt. max_profilers)then
+                   if(nrec_list(i) .gt. max_profilers)then
                      write(6,*)' Too many profilers in PROF_CDF_OPEN '       
      1                        ,nrec_list(i),max_profilers
                      status=-7
                      return
+                   endif
                  endif
 
-                 if(status.eq.0.and.nrec_list(i).gt.0)then
+                 if(status.eq.NF_NOERR.and.nrec_list(i).gt.0)then
 C
 C       Get the station names.  (Have to do this in a loop as I can't get
 C       NCVGTC to work on one call for the whole enchilada.)
 C
-                    varid = NCVID(cdfid,'staName',status)
+                    status = NF_INQ_VARID(cdfid,'staName',varid)
+
                     start(1) = 1
                     count(1) = 6 ! 6 characters
                     count(2) = 1 ! 1 record at a time
                     do j = 1, nrec_list(i)
                        start(2) = j
-                       CALL NCVGTC(cdfid,varid,start,count,
-     $                             staname_list(j,i),6,status)
+                       status = NF_GET_VARA_TEXT(cdfid,varid,start,
+     $                                           count,
+     $                                           staname_list(j,i))
                     enddo
                     if(status.eq.0)then
 C
@@ -311,10 +287,10 @@ C
                        start(1) = 1 ! Start at the beginning
                        start(2) = 1
                        count(1) = nrec_list(i) ! and get all records.
-                       varid = NCVID(cdfid,'wmoStaNum',status)
-                       CALL NCVGT(cdfid,varid,start,count,
-     $                            wmoid_list(1,i),status)
-                       if(status.ne.0)go to 900
+                       status = NF_INQ_VARID(cdfid,'wmoStaNum',varid)
+                       status = NF_GET_VARA_INT(cdfid,varid,start,count,
+     $                                          wmoid_list(1,i))
+                       if(status.ne.NF_NOERR)go to 900
                     endif
                  endif
 C
@@ -328,8 +304,8 @@ C
 C       3/17/97: Have ported to Unix, and have removed the +1.  If this rears
 C       it's head again the OLD code was: recdim_list(i) = recdim + 1
 C
-                CALL NCINQ(cdfid,ndims,nvars,ngatts,recdim,status)
-                if(status.eq.0)recdim_list(i) = recdim
+                status = NF_INQ(cdfid,ndims,nvars,ngatts,recdim)
+                if(status.eq.NF_NOERR)recdim_list(i) = recdim
 C
               endif
               go to 900                 ! Done processing with the open slot.
@@ -448,6 +424,8 @@ C
 C       21-Mar-1996/MFB Removed declarations that duplicate those in new
 C                       netcdf.inc.
 C
+C       07-Aug-2000/LSW modified to netCDF version 3.4
+C
         subroutine PROF_CDF_READ(cdfid,staname,wmoid,varname,dtype,
      $                           array,status)
 C
@@ -510,14 +488,14 @@ C
 C
 C       Get the variable id.
 C
-                    varid = NCVID(cdfid,varname,status)
-                    if(status.ne.0)go to 900
+                    status = NF_INQ_VARID(cdfid,varname,varid)
+                    if(status.ne.NF_NOERR)go to 900
 C
 C       Find out how many dimensions are in the variable.
 C
-                    CALL NCVINQ(cdfid,varid,name,vartyp,nvdims,vdims,
-     $                          nvatts,status)
-                    if(status.ne.0)go to 900
+                    status = NF_INQ_VAR(cdfid,varid,name,vartyp,
+     $                                  nvdims,vdims,nvatts)
+                    if(status.ne.NF_NOERR)go to 900
 C
 C       Use this information to, one dimension at a time, fill in the
 C       dimensions of the hyperslab to be obtained.
@@ -525,8 +503,8 @@ C
                     count_total = 1     ! Must calculate product of COUNT
 C                                       ! vector for character data type.
                     do k = 1, nvdims
-                       CALL NCDINQ(cdfid,vdims(k),name,dimsiz,status)
-                       if(status.ne.0)go to 900
+                       status = NF_INQ_DIM(cdfid,vdims(k),name,dimsiz)
+                       if(status.ne.NF_NOERR)go to 900
                        if(k.lt.nvdims.or.
      $                    (nvdims.eq.1.and.vdims(k).ne.
      $                     recdim_list(i)))then
@@ -541,20 +519,26 @@ C                                       ! vector for character data type.
 C
 C       Call the appropriate routine to get the variable.
 C
-                    if(dtype.eq.0)then
+                    if(dtype.eq.0)then  !reading an integer
 C
-                             CALL NCVGT(cdfid,varid,start,count,array,
-     $                                  status)
+                      status = NF_GET_VARA_INT(cdfid,varid,start,count,
+     $                                         array)
 C
-                    else if(dtype.eq.1)then
+                    else if(dtype.eq.1)then   !reading text
 C
-                             CALL NCVGTC(cdfid,varid,start,count,array,
-     $                                   count_total,status)
+                      status = NF_GET_VARA_TEXT(cdfid,varid,start,count,
+     $                                          array)
+C
+                    else if(dtype.eq.2)then   !reading real/float
+C
+                      status = NF_GET_VARA_REAL(cdfid,varid,start,count,
+     $                                          array)
                     else
 C
                              status = -4                ! Invalid DTYPE.
 C
                     endif
+                    if (status.ne.NF_NOERR) print *, NF_STRERROR(status)
 C
                     go to 900                   ! End of found station.
 C
@@ -574,6 +558,7 @@ C
 C
 C       Use the non-default error handling for PROF_CDF errors.
 C
+           
                 write(*,*)'PROF_CDF_READ:  '//
      $                    error_text(abs(status)-2)
                 if(error_flag.eq.2)stop
@@ -610,6 +595,9 @@ C       28-Nov-1995/LAB Put prof_cdf_common in it's own include file.
 C
 C       27-May-1997/MFB Renamed "ncopts" common and variable so it doesn't
 C                       conflict with symbols used in C netCDF interface.
+C
+C       07-Aug-2000/LSW modified to netCDF version 3.4 NCPOPT is no longer
+C                       supported, and as such is no longer called.  
 C
         subroutine PROF_CDF_SET_ERROR(error_code,status)
 C
@@ -649,21 +637,15 @@ C
         if(error_code.eq.0)then
 C
                 error_flag = 0
-                ncopts_val = 0
-                CALL NCPOPT(ncopts_val)
  
 C
         else if(error_code.eq.1)then
 C
                 error_flag = 1
-                ncopts_val = NCVERBOS
-                CALL NCPOPT(ncopts_val)
 C
         else if(error_code.eq.2)then
 C
                 error_flag = 2
-                ncopts_val = NCVERBOS + NCFATAL
-                CALL NCPOPT(ncopts_val)
         else
                 status = -6                     ! Invalid ERROR_CODE.
         endif
@@ -700,6 +682,8 @@ C                       -5      NetCDF file not open.
 C
 C MODFICATIONS:
 C       28-Nov-1995/LAB Put prof_cdf_common in it's own include file.
+C
+C       07-Aug-2000/LSW modified to netCDF version 3.4
 C
         subroutine PROF_CDF_GET_STATIONS(cdfid,n_stations,staname,
      $                                   wmoid,status)
@@ -789,18 +773,17 @@ C	read "avgTimePeriod" global attribute into timestr
         attname = 'avgTimePeriod'
 
 C determine type of attribute 'avgTimePeriod'
-        call NCAINQ (cdfid, ncglobal, 'avgTimePeriod', ttype,
-     1               tlen, istatus)
-        if (istatus .ne. 0) then  !error retrieving info about avgTimePeriod
+        istatus = NF_INQ_ATTTYPE(cdfid,NF_GLOBAL,'avgTimePeriod',ttype)
+        if (istatus .ne. NF_NOERR) then  !error retrieving info about avgTimePeriod
           istatus = 0
           return
         endif
 
         if (ttype .ne. NCCHAR) then   !read avgTimePeriod as an integer
 
-	  CALL NCAGT(cdfid,ncglobal,attname,itime,istatus)
-
-	  if (istatus .ne. 0) then   !error retrieving avgTimePeriod from file
+          istatus = NF_GET_ATT_INT(cdfid,NF_GLOBAL,'avgTimePeriod',
+     $                             itime)
+	  if (istatus .ne. NF_NOERR) then   !error retrieving avgTimePeriod from file
             istatus = 0
             return
           endif
@@ -816,8 +799,9 @@ C	    Verify that the units are minutes, seconds or hour, and convert
 C	    the number string into an integer.  Return value is via i4_avg_wdw_sec
 C  	    and is in seconds 
 
-          CALL NCAGTC(cdfid,ncglobal,attname,timestr,lenstr,istatus)
-	  if (istatus .ne. 0) then   !error retrieving avgTimePeriod from file
+          istatus = NF_GET_ATT_TEXT(cdfid,NF_GLOBAL,'avgTimePeriod',
+     $                              timestr)
+	  if (istatus .ne. NF_NOERR) then   !error retrieving avgTimePeriod from file
             istatus = 0
             return
           endif

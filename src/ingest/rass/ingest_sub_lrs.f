@@ -53,7 +53,9 @@ C
         parameter (max_stations = 200)
 
         real temp(max_levels),prs
-        character*1 qc_flag(max_levels)
+c       character*1 qc_flag(max_levels)
+        integer i_qc_flag(max_levels)
+
         integer level(max_levels), start(1), count(1)
         integer good,bad,missing
         parameter (good = 0)
@@ -99,7 +101,7 @@ C
         character*180 c_values_req
 
         character*9 a9_timeObs
-        double precision timeObs
+        integer timeObs
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
@@ -247,8 +249,8 @@ C
         endif
 
 !       Get the number of levels from the NetCDF file
-        varid = NCDID(cdfid,'level',status)
-        CALL NCDINQ(cdfid,varid,dimname,n_levels,status)
+        status = NF_INQ_DIMID(cdfid,'level',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,n_levels)
 
         write(6,*)' # of levels = ',n_levels
 
@@ -259,8 +261,8 @@ C
         endif
 
 !       Get the number of profilers from the NetCDF file
-        varid = NCDID(cdfid,'recNum',status)
-        CALL NCDINQ(cdfid,varid,dimname,n_profilers,status)
+        status = NF_INQ_DIMID(cdfid,'recNum',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,n_profilers)
         write(6,*)' # of RASSs = ',n_profilers
         if (n_profilers .gt. max_stations) then
           write(6,*)' Too many profilers to process'
@@ -270,11 +272,13 @@ C
         endif
 
 !       fill array wsmr_wmo_id_a with wmo station numbers
-        varid = NCVID(cdfid, 'wmoStaNum', status)
+        status = NF_INQ_VARID(cdfid,'wmoStaNum',varid)
         start(1) = 1
         count(1) = n_profilers
-        CALL NCVGT(cdfid, varid, start, count, wsmr_wmo_id_a, status)
-        if(status.ne.0)then
+
+        status = NF_GET_VARA_INT(cdfid, varid, start, count,
+     !                           wsmr_wmo_id_a)
+        if(status.ne.NF_NOERR)then
               write(*,*)'bad wmo_id array read ',status
               return
         endif
@@ -307,7 +311,7 @@ C
 C         Get the surface pressure.  This time we'll use the
 C         5-character site name (plus a terminating blank) to select the station.
 C
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'pressure',0,prs       
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'pressure',2,prs       
      1                      ,status)
           if(status.ne.0)then
                 write(*,*)'bad pressure read ',status
@@ -317,7 +321,7 @@ C
           write(6,*)
           write(6,*)'pressure ',prs
 
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'temperature',0
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'temperature',2
      1                      ,t_sfc,status)
           i_qc_sfc = 1
           if(status.ne.0)then
@@ -327,14 +331,14 @@ C
           write(6,*)
           write(6,*)'t_sfc ',t_sfc,i_qc_sfc
 
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'relHumidity',0
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'relHumidity',2
      1                      ,rh_sfc,status)
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'windSpeedSfc',0
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'windSpeedSfc',2
      1                      ,sp_sfc,status)
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'windDirSfc',0
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'windDirSfc',2
      1                      ,di_sfc,status)
 
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staLat',0,rlat
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staLat',2,rlat
      1                      ,status)
           if(status.ne.0)then
                 write(*,*)'bad lat read ',status
@@ -343,7 +347,7 @@ C
           write(6,*)
           write(6,*)'Lat ',rlat
 
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staLon',0,rlon
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staLon',2,rlon
      1                      ,status)
           if(status.ne.0)then
                 write(*,*)'bad lon read ',status
@@ -352,17 +356,19 @@ C
           write(6,*)'Lon ',rlon
 
 !         Get the observation time
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'timeObs',0
-     1                      ,timeObs,status)
-
-          if(status.ne.0)then
+          status = NF_INQ_VARID(cdfid,'timeObs',varid)
+          start(1) = ista
+          count(1) = 1
+          status = NF_GET_VARA_INT(cdfid, varid, start, count,
+     1                             timeObs)
+          if(status.ne.NF_NOERR)then
               write(6,*)' Warning: bad timeObs read ',status,timeObs
 
           elseif(abs(timeObs) .gt. 3d9)then
               write(6,*)' Warning: Bad observation time',timeObs
 
           else
-              call c_time2fname(nint(timeObs),a9_timeObs)
+              call c_time2fname(timeObs,a9_timeObs)
 
               write(6,*)
               write(6,*)' timeObs ',a9_timeObs
@@ -384,7 +390,7 @@ C
             write(6,*)'wmo id ', wsmr_wmo_id,' is in box'
 
 
-            CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staElev',0
+            CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staElev',2
      1          ,elev,status)
             if(status.ne.0)then
                 write(*,*)'bad elev read ',status
@@ -409,7 +415,7 @@ C           For this call, we'll use the WMO
 C           identifier to tell the subroutine what station we want.
 C
             CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'virtualTemp',
-     $                     0,temp,status)
+     $                     2,temp,status)
             if(status.ne.0)then
                 write(*,*)'bad virtualTemp read ',status
                 return
@@ -418,7 +424,7 @@ C
 C           Get the associated quality control flags.
 C
             CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'qualityCode',       
-     $                     0,qc_flag,status)
+     $                     0,i_qc_flag,status)
             if(status.ne.0)then
                 write(*,*)'bad qualityCode read ',status
                 return
@@ -446,8 +452,8 @@ c           write(1,*)'virtualTemp'
             write(6,*)line
 
             do i = 1, n_levels
-                iqc_flag  = byte_to_i4(qc_flag(i))
-                iqc_flag2 = byte_to_i4(qc_flag(i))
+                iqc_flag  = i_qc_flag(i)
+                iqc_flag2 = i_qc_flag(i)
 
                 if(iqc_flag.eq.good)then
                         j = 1
@@ -495,5 +501,3 @@ C
 C
         return
         end
-
-

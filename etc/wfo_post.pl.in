@@ -16,30 +16,59 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #
+# Command line args
+#
+# -w        Create Bigfile if we're running externally to AWIPS
+#
+
+use vars qw($opt_w);
+use Getopt::Std;
+getopts('w');
+
 $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
 require "$LAPSROOT/etc/run_sys.pm";
-$fxa_sys =  &Get_env'fxa; #'
+
+if(!$opt_w){
+    $fxa_sys =  &Get_env'fxa; #'
+}
 
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 
 # Import names of LAPS bigfile depositories.
-$FXA_DATA = $ENV{"FXA_DATA"};
-$FXA_DATA_BACKUP = $ENV{"FXA_DATA_BACKUP"};
+if(!$opt_w){
+    $FXA_DATA = $ENV{"FXA_DATA"};
+    $FXA_DATA_BACKUP = $ENV{"FXA_DATA_BACKUP"};
+}
 $ENV{PATH}.=":@NETCDF@/bin";
 
 # For local use.
-$XFR_HOME="$LAPSROOT/bin";
-$FCSTPRD="$LAPS_DATA_ROOT/lapsprd";
-$BIGFILE_PATH="Grid/FSL/netCDF/LAPS_Grid/LAPS";
-$WFO_FCSTPRD="$FXA_DATA/$BIGFILE_PATH";
-$WFO_FCSTPRD_BACKUP="$FXA_DATA_BACKUP/$BIGFILE_PATH";
-$TRANS_TBL="$LAPS_DATA_ROOT/static/public_laps2wfo.tbl";
-$LAPSTIME="$LAPS_DATA_ROOT/time/systime.dat";
-$CDL_PATH="$FXA_DATA/Grid/FSL/CDL";
+if(!$opt_w){
+    $XFR_HOME="$LAPSROOT/bin";
+    $FCSTPRD="$LAPS_DATA_ROOT/lapsprd";
+    $BIGFILE_PATH="Grid/FSL/netCDF/LAPS_Grid/LAPS";
+    $WFO_FCSTPRD="$FXA_DATA/$BIGFILE_PATH";
+    $WFO_FCSTPRD_BACKUP="$FXA_DATA_BACKUP/$BIGFILE_PATH";
+    $TRANS_TBL="$LAPS_DATA_ROOT/static/public_laps2wfo.tbl";
+    $LAPSTIME="$LAPS_DATA_ROOT/time/systime.dat";
+    $CDL_PATH="$FXA_DATA/Grid/FSL/CDL";
 
+}else{
+    $XFR_HOME="$LAPSROOT/bin";
+    $FCSTPRD="$LAPS_DATA_ROOT/lapsprd";
+    $BIGFILE_PATH="bigfile";
+    $WFO_FCSTPRD="$LAPS_DATA_ROOT/lapsprd/$BIGFILE_PATH";
+    $WFO_FCSTPRD_BACKUP="$LAPS_DATA_ROOT/lapsprd/$BIGFILE_PATH";
+    $TRANS_TBL="$LAPS_DATA_ROOT/static/public_laps2wfo.tbl";
+    $LAPSTIME="$LAPS_DATA_ROOT/time/systime.dat";
+    $CDL_PATH="$LAPS_DATA_ROOT/cdl";
+
+    $sys = "mkdir -p $LAPS_DATA_ROOT/lapsprd/bigfile";
+    run_sys::run_sys("$sys");
+
+}
 
 
 #Export environment variables for use in xfer_laps.
@@ -65,22 +94,22 @@ $filetime= $filetime - 315619200;
 
 run_sys::run_sys( "$LAPSROOT/bin/xfer_laps.exe");
 
-$mon++;
-($ss,$mm,$hh,$dd,$mon,$yy) = gmtime($filetime);
-$mon++;
-$yy += 1900;
-$filename = sprintf "%4.4d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
+if(!$opt_w){
+    $mon++;
+    ($ss,$mm,$hh,$dd,$mon,$yy) = gmtime($filetime);
+    $mon++;
+    $yy += 1900;
+    $filename = sprintf "%4.4d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
 
-use File::Copy 'cp';
+    use File::Copy 'cp';
 
-cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename") if(-d $FXA_DATA_BACKUP);
+    cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename") if(-d $FXA_DATA_BACKUP);
 
-$sys = "/bin/csh -c \'$ENV{FXA_HOME}/bin/GridNotify Laps $filetime 0\'";
-print "running $sys\n";
-run_sys::run_sys("$sys");
+    $sys = "/bin/csh -c \'$ENV{FXA_HOME}/bin/GridNotify Laps $filetime 0\'";
+    print "running $sys\n";
+    run_sys::run_sys("$sys");
 
-
-
+}
 
 
 

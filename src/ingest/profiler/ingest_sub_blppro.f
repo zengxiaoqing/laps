@@ -58,9 +58,9 @@ C       NOTE: Profiler winds are written out in KNOTS
 
 	parameter (max_modes = 3)
 	parameter (max_levels = 50)
-        character nmodes_short(4)
+        character*2 nmodes_short
 	integer nmodes
-        equivalence(nmodes,nmodes_short)
+!       equivalence(nmodes,nmodes_short)
 
         real u(max_modes,max_levels)
         real v(max_modes,max_levels), prs
@@ -69,18 +69,19 @@ C       NOTE: Profiler winds are written out in KNOTS
         character*4 c4_qc
         real*4 level(max_modes,max_levels)
 
-        character ngates_short(max_modes*4)
+        character*2  ngates_short(max_modes)
         character tmpgates    (max_modes*4)
         integer   ngates      (max_modes)
 
 
-        equivalence(ngates,tmpgates)
+!       equivalence(ngates,tmpgates)
 
         real ht_out(max_levels_out)
         real di_out(max_levels_out)
         real sp_out(max_levels_out)
 
         integer good,bad,missing, start(2), count(2), staNamLen
+        integer start_time(1), count_time(1)
         parameter (good = 0)
         parameter (bad = 12)
         parameter (missing = -1)
@@ -125,7 +126,7 @@ C
 
         character*6 prof_name(n_profilers)
         character*9 a9_timeObs
-        double precision timeObs
+        integer timeObs
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
@@ -266,8 +267,8 @@ C
         endif
 
 !       Get the number of profilers from the NetCDF file
-        varid = NCDID(cdfid,'recNum',status)
-        CALL NCDINQ(cdfid,varid,dimname,file_n_prof,status)
+        status = NF_INQ_DIMID(cdfid,'recNum',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,file_n_prof)
         write(6,*)' # of profilers = ',file_n_prof
         if (file_n_prof .gt. n_profilers) then
           write(6,*)' Error: too many profilers to process'
@@ -276,8 +277,8 @@ C
         endif
 
 !	Get the number of characters in the station name
-        varid = NCDID(cdfid,'staNamLen',status)
-        CALL NCDINQ(cdfid,varid,dimname,staNamLen,status)
+        status = NF_INQ_DIMID(cdfid,'staNamLen',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,staNamLen)
 
         start(1) = 1
         count(2) = 1
@@ -288,50 +289,76 @@ C
         do ista = 1,file_n_prof
 
 !       fill profiler name into prof_name(ista)
-          varid = NCVID(cdfid, 'staName', status)
+          status = NF_INQ_VARID(cdfid,'staName',varid)
           start(2) = ista
-          CALL NCVGTC(cdfid, varid, start, count, 
-     1                prof_name(ista), staNamLen, status)
+          status = NF_GET_VARA_TEXT(cdfid, varid, start, count,
+     1                prof_name(ista))
           prof_name(ista)(6:6) = ' '
           
 
           write(6,*)
           write(6,*)' Looping for profiler ',prof_name(ista)
 C
-          nmodes = 0
-	  CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'numModesUsed',
-     1                     0,nmodes_short(3),
-     $			   status)
+          if(.false.)then
+              nmodes = 0
+	      CALL PROF_CDF_READ(cdfid,prof_name(ista),0
+     1                          ,'numModesUsed',0,nmodes_short,
+     $			         status)
 
-          if(status .ne. 0)then
-            write(6,*)prof_name(ista)
-     1           ,'  Warning: bad status reading numModesUsed',status       
-            go to 900
-          else
-            write(6,*)'numModesused =',nmodes
+              if(status .ne. 0)then
+                  write(6,*)prof_name(ista)
+     1             ,'  Warning: bad status reading numModesUsed',status       
+                  go to 900
+              else
+                  write(6,*)'numModesused =',nmodes
+              endif
+
+	      CALL PROF_CDF_READ(cdfid,prof_name(ista),0
+     1                          ,'numLevelsUsed',0,ngates_short,status)       
+	      do i = 1, max_modes
+                  ngates(i) = 0
+                  do j=1,2
+                      tmpgates((i-1)*4+j+2) = ngates_short(2*(i-1)+j)
+                  enddo
+	      enddo
+
+          else ! This may help for Big/Little Endian conversions
+              nmodes = 0
+	      CALL PROF_CDF_READ(cdfid,prof_name(ista),0
+     1                          ,'numModesUsed',0,nmodes,
+     $			         status)
+
+!             call short_to_i4(nmodes_short,nmodes)
+
+              if(status .ne. 0)then
+                  write(6,*)prof_name(ista)
+     1             ,'  Warning: bad status reading numModesUsed',status       
+                  go to 900
+              else
+                  write(6,*)'numModesused =',nmodes
+              endif
+
+	      CALL PROF_CDF_READ(cdfid,prof_name(ista),0
+     1                          ,'numLevelsUsed',0,ngates,status)       
+!             do i = 1, max_modes
+!                 ngates(i) = 0
+!                 call short_to_i4(ngates_short(i),ngates(i))
+!             enddo
+
           endif
-
-	  CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'numLevelsUsed',
-     1                     0,ngates_short,
-     $			   status)
-
-	  do i = 1, max_modes
-             ngates(i) = 0
-             do j=1,2
-                tmpgates((i-1)*4+j+2) = ngates_short(2*(i-1)+j)
-             enddo
-	  enddo
 
           if(status .ne. 0)then
             write(6,*)' Warning: bad status reading numLevelsUsed'
             go to 900
+          else
+            write(6,*)' ngates array = ',ngates
           endif
 
 C
 C       Get the surface pressure.  This time we'll use the
 C       5-character site name (plus a terminating blank) to select the station.
 C
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',0,prs
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',2,prs
      1                      ,status)
           if(status.ne.0)then
             if(status .eq. -3)then
@@ -346,7 +373,7 @@ C
           write(6,*)prof_name(ista),' pressure ',prs
 
 !         Get the latitude
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',2,rlat
      1                      ,status)
           if(status.ne.0)then
                 write(6,*)' Warning: bad lat read ',status
@@ -356,7 +383,7 @@ C
           write(6,*)prof_name(ista),' Lat ',rlat
 
 !         Get the longitude
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',2,rlon
      1                      ,status)
           if(status.ne.0)then
                 write(6,*)' Warning: bad lon read ',status
@@ -366,17 +393,19 @@ C
           write(6,*)prof_name(ista),' Lon ',rlon
 
 !         Get the observation time
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'timeObs',0,timeObs       
-     1                      ,status)
-
-          if(status.ne.0)then
+          status = NF_INQ_VARID(cdfid,'timeObs',varid)
+          start_time(1) = ista
+          count_time(1) = 1
+          status = NF_GET_VARA_INT(cdfid, varid, start_time,
+     1                             count_time,timeObs)
+          if(status.ne.NF_NOERR)then
               write(6,*)' Warning: bad timeObs read ',status,timeObs
 
           elseif(abs(timeObs) .gt. 3d9)then
               write(6,*)' Warning: Bad observation time',timeObs
 
           else
-              call c_time2fname(nint(timeObs),a9_timeObs)
+              call c_time2fname(timeObs,a9_timeObs)
 
               write(6,*)
               write(6,*)' timeObs ',a9_timeObs
@@ -397,7 +426,7 @@ C
             write(6,*)prof_name(ista),' is in box'
 
             CALL PROF_CDF_READ
-     1          (cdfid,prof_name(ista),0,'staElev',0,elev,status)
+     1          (cdfid,prof_name(ista),0,'staElev',2,elev,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad elev read ',status
                 return
@@ -406,9 +435,9 @@ C
             write(6,*)prof_name(ista),' elev ',elev
 
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0
-     1                         ,'windSpeedSfc',0,sp_sfc,istatus1)
+     1                         ,'windSpeedSfc',2,sp_sfc,istatus1)
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0
-     1                         ,'windDirSfc',0,di_sfc,istatus2)
+     1                         ,'windDirSfc',2,di_sfc,istatus2)
 
             if(abs(sp_sfc) .gt. 500.)istatus1 = 1
             if(abs(di_sfc) .gt. 500.)istatus2 = 1
@@ -424,14 +453,14 @@ C           Get the array of profiler winds for the profiler station
 C           at Platteville.  For this call, we'll use the WMO
 C           identifier to tell the subroutine what station we want.
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'uComponent',0,
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'uComponent',2,
      1                                             u,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad uComponent read ',status
                 return
             endif
 
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'vComponent',0,
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'vComponent',2,
      1                              v,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad vComponent read ',status
@@ -441,7 +470,7 @@ C
 C           Get the associated quality control flags.
 C
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'uvQualityCode'
-     $                     ,0,qc_flag,status)
+     $                     ,1,qc_flag,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad qualityCode read ',status
                 return
@@ -449,7 +478,7 @@ C
 C
 C           Get the associated levels for this profiler
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',0,
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',2,
      $                     level,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad level read ',status
@@ -574,4 +603,32 @@ C
         return
         end
 
+
+        subroutine short_to_i4(shortvar,i4var)
+
+        character*1 shortvar(2) 
+        character*1 shortvar_loc(4)
+        character*1 i4_to_byte
+        integer*4 i4var, i4var_loc
+        equivalence (shortvar_loc, i4var_loc)
+
+        shortvar_loc(1) = shortvar(1)
+        shortvar_loc(2) = shortvar(2)
+        shortvar_loc(3) = i4_to_byte(0)
+        shortvar_loc(4) = i4_to_byte(0)
+
+        iarg1 = i4var_loc
+        call in_to_im(2,4,i4var_loc,1)                 
+        iarg2 = i4var_loc
+
+        if(abs(iarg1) .le. abs(iarg2))then
+            i4var = iarg1
+        else
+            i4var = iarg2
+        endif
+
+        write(6,*)' short_to_i4:',iarg1,iarg2,i4var
+
+        return
+        end        
 

@@ -67,6 +67,7 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
 
         real*4 level(max_levels)
         integer good,bad,missing, start(2), count(2), staNamLen
+        integer start_time(1), count_time(1)
         parameter (good = 0)
         parameter (bad = 12)
         parameter (missing = -1)
@@ -120,7 +121,7 @@ C
 
         character*6 prof_name(n_profilers)
         character*9 a9_timeObs
-        double precision timeObs
+        integer timeObs
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
@@ -315,8 +316,8 @@ C       Open an output file.
         endif
 
 !       Get the number of levels from the NetCDF file
-        varid = NCDID(cdfid,'level',status)
-        CALL NCDINQ(cdfid,varid,dimname,n_levels,status)
+        status = NF_INQ_DIMID(cdfid,'level',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,n_levels)
 
         write(6,*)' # of levels = ',n_levels
 
@@ -327,8 +328,8 @@ C       Open an output file.
         endif
 
 !       Get the number of profilers from the NetCDF file
-        varid = NCDID(cdfid,'recNum',status)
-        CALL NCDINQ(cdfid,varid,dimname,file_n_prof,status)
+        status = NF_INQ_DIMID(cdfid,'recNum',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,file_n_prof)
         write(6,*)' # of profilers = ',file_n_prof
         if (file_n_prof .gt. n_profilers) then
           write(6,*)' Too many profilers to process'
@@ -337,8 +338,8 @@ C       Open an output file.
         endif
 
 !	Get the number of characters in the station name
-        varid = NCDID(cdfid,'staNamLen',status)
-        CALL NCDINQ(cdfid,varid,dimname,staNamLen,status)
+        status = NF_INQ_DIMID(cdfid,'staNamLen',varid)
+        status = NF_INQ_DIM(cdfid,varid,dimname,staNamLen)
 
         start(1) = 1
         count(2) = 1
@@ -347,16 +348,17 @@ C       Open an output file.
         do ista = 1,file_n_prof
 
 !       fill profiler name into prof_name(ista)
-          varid = NCVID(cdfid, 'staName', status)
+          status = NF_INQ_VARID(cdfid,'staName',varid)
           start(2) = ista
-          CALL NCVGTC(cdfid, varid, start, count, 
-     1                prof_name(ista), staNamLen, status)
+         
+          status = NF_GET_VARA_TEXT(cdfid, varid, start, count,
+     1                prof_name(ista))
           prof_name(ista)(6:6) = ' '
 C
 C         Get the surface pressure for Platteville.  This time we'll use the
 C         5-character site name (plus a terminating blank) to select the station.
 C
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',0,prs
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',2,prs
      1                    ,status)
           if(status.ne.0)then
             if(status .eq. -3)then
@@ -371,7 +373,7 @@ C
           write(6,*)prof_name(ista),' pressure ',prs
 
 !         Get the latitude
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',2,rlat
      1                      ,status)
           if(status.ne.0)then
               write(6,*)' Warning: bad lat read ',status
@@ -381,7 +383,7 @@ C
           write(6,*)prof_name(ista),' Lat ',rlat
 
 !         Get the longitude
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',2,rlon
      1                      ,status)
           if(status.ne.0)then
               write(6,*)' Warning: bad lon read ',status
@@ -391,17 +393,19 @@ C
           write(6,*)prof_name(ista),' Lon ',rlon
 
 !         Get the observation time
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'timeObs',0,timeObs
-     1                      ,status)
-
-          if(status.ne.0)then
+          status = NF_INQ_VARID(cdfid,'timeObs',varid)
+          start_time(1) = ista
+          count_time(1) = 1
+          status = NF_GET_VARA_INT(cdfid, varid, start_time, 
+     1                             count_time,timeObs)
+          if(status.ne.NF_NOERR)then
               write(6,*)' Warning: bad timeObs read ',status,timeObs
 
           elseif(abs(timeObs) .gt. 3d9)then
               write(6,*)' Warning: Bad observation time',timeObs
 
           else
-              call c_time2fname(nint(timeObs),a9_timeObs)
+              call c_time2fname(timeObs,a9_timeObs)
 
               write(6,*)
               write(6,*)' timeObs ',a9_timeObs
@@ -422,7 +426,7 @@ C
             write(6,*)prof_name(ista),' is in box'
 
             CALL PROF_CDF_READ
-     1          (cdfid,prof_name(ista),0,'staElev',0,elev,status)
+     1          (cdfid,prof_name(ista),0,'staElev',2,elev,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad elev read ',status
                 return
@@ -453,14 +457,14 @@ C           Get the array of profiler winds for the profiler station
 C           at Platteville.  For this call, we'll use the WMO
 C           identifier to tell the subroutine what station we want.
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'uComponent',0,
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'uComponent',2,
      1                                             u,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad uComponent read ',status
                 return
             endif
 
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'vComponent',0,
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'vComponent',2,
      1                              v,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad vComponent read ',status
@@ -469,29 +473,17 @@ C
 C
 C           Get the associated quality control flags.
 C
-            if(c8_project(1:6) .eq. 'NIMBUS')then
-                CALL PROF_CDF_READ(cdfid,prof_name(ista),0
-     $                     ,'uvQualityCode',0,c1_qc_flag,status)
-                if(status.ne.0)then
-                    write(6,*)' Warning: bad qualityCode read ',status       
-                    return
-                endif
-
-            else
-                CALL PROF_CDF_READ(cdfid,prof_name(ista),0
-     $                     ,'uvQualityCode',0,i4_qc_flag,status)
-                if(status.ne.0)then
-                    write(6,*)' Warning: bad qualityCode read ',status
-                    return
-                endif
-
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0
+     $                 ,'uvQualityCode',0,i4_qc_flag,status)
+            if(status.ne.0)then
+                write(6,*)' Warning: bad qualityCode read ',status       
+                return
             endif
-
 C
 C           Get the associated levels for this profiler (also works with
 C           global data statement on NIMBUS)
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',0,
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',2,
      $                     level,status)
             if(status.ne.0)then
                 write(6,*)' Warning: bad level read ',status
@@ -504,11 +496,7 @@ C
 
             do i = n_levels, 1, -1
 
-                if(c8_project(1:6) .eq. 'NIMBUS')then
-                    iqc_flag = byte_to_i4(c1_qc_flag(i))
-                else
-                    iqc_flag = i4_qc_flag(i)
-                endif
+                iqc_flag = i4_qc_flag(i)
 
                 if(iqc_flag.eq.good)then
                         j = 1
@@ -637,11 +625,11 @@ C
         if(istatus .ne. 1)return
 
         CALL PROF_CDF_READ(cdfid,prof_name,0
-     1                         ,'windSpeedSfc',0,sp_sfc,istat_sp)
+     1                         ,'windSpeedSfc',2,sp_sfc,istat_sp)
 
         if(c8_project(1:6) .eq. 'NIMBUS')then
             CALL PROF_CDF_READ(cdfid,prof_name,0
-     1                         ,'windDirSfc',0,di_sfc,istat_di)
+     1                         ,'windDirSfc',2,di_sfc,istat_di)
         else
             CALL PROF_CDF_READ(cdfid,prof_name,0
      1                         ,'windDirSfc',0,i4_di_sfc,istat_di)
@@ -650,13 +638,13 @@ C
         endif
 
         CALL PROF_CDF_READ(cdfid,prof_name,0
-     1                         ,'pressure',0,p_sfc_hpa,istatus2)
+     1                         ,'pressure',2,p_sfc_hpa,istatus2)
 
         CALL PROF_CDF_READ(cdfid,prof_name,0
-     1                         ,'temperature',0,t_sfc_k,istatus2)
+     1                         ,'temperature',2,t_sfc_k,istatus2)
 
         CALL PROF_CDF_READ(cdfid,prof_name,0
-     1                         ,'relHumidity',0,rh_sfc_pct,istatus2)
+     1                         ,'relHumidity',2,rh_sfc_pct,istatus2)
 
         istatus = istat_di * istat_sp
 
