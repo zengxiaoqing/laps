@@ -95,6 +95,8 @@ c
       integer istat, i
       character*12 cmodel
       include 'lapsparms.cmn'
+      integer oldest_forecast
+      logical use_analysis
 c_______________________________________________________________________________
 c
 c Read background model from nest7grid.parms
@@ -112,7 +114,8 @@ c      istat = index(laps_domain_file,' ')-1
 
       i=1
 
-      call get_background_info(150,bgpaths,bgmodels) 
+      call get_background_info(150,bgpaths,bgmodels,oldest_forecast
+     +                      ,use_analysis) 
 
       do while(lga_status.eq.0 .and. i.le.nbgmodel)
          bgmodel = bgmodels(i)
@@ -186,7 +189,7 @@ c
 
          call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .        laps_cycle_time,lapsroot,laps_domain_file,
-     .        bgmodel,bgpath,cmodel,
+     .        bgmodel,bgpath,oldest_forecast,use_analysis,cmodel,
      .        nx_bg,ny_bg,nz_bg, lga_status)
          i=i+1 
       enddo
@@ -235,7 +238,7 @@ c===============================================================================
 c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .       laps_cycle_time,lapsroot,laps_domain_file,
-     .       bgmodel,bgpath,cmodel,
+     .       bgmodel,bgpath,oldest_forecast,use_analysis,cmodel,
      .       nx_bg,ny_bg,nz_bg, lga_status)
 
 c
@@ -245,6 +248,8 @@ c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
      .          max_files, lga_status, ncid
+      integer oldest_forecast
+      logical use_analysis
 c
       parameter (max_files=2000)
 
@@ -312,11 +317,13 @@ c
       character*12  cmodel
       integer len_dir, ntime, last_time,next_time, nf
       integer nxbg, nybg, nzbg(5),ntbg, ivaltimes(20)
+      integer bigint
+      parameter(bigint=2000000000)
 c
       data msgflg/1.e30/
       data ntime/0/
       data last_time/0/
-      data next_time/2000000000/
+      data next_time/bigint/
       data ext/'lga'/
 c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
@@ -438,9 +445,11 @@ c *** File names are returned sorted from newest to oldest ***
 c     process only the newest which is at least as old as the laps time
 c
       
-         if(bgtime.gt.i4time_now) then
+         if(bgtime.gt.i4time_now .and. .not. use_analysis) then
            print*,
      +      'Background model newer than requested LAPS - skipping'
+           print*,'This behaivior can be changed in the namelist '
+           print*,'parameter use_analysis '
            goto 40
          endif  
          if(ntime.gt.bgtime) then
@@ -451,8 +460,9 @@ c           print*,'Background older than latest available - skipping'
 c
 c ****** Do NOT process model fcst if fcst is greater than 18 hours.
 c
-         if (ihour .gt. 18) then
-            print *,'IHOUR > 18, no lga file created.'
+         if (ihour .gt. oldest_forecast) then
+            print *,'IHOUR > ',oldest_forecast,' no lga file created.'
+            print*,'oldest_forecast is a namelist parameter'
             goto 40
          endif
 c
@@ -485,19 +495,6 @@ c
             ntime = bgtime
          endif   
 
-cc         if(bgmodel.eq.4.and.n.eq.bg_files) then         
-cc            call open_sbn_netcdf(bgpath,fname,ncid,ivaltimes,istatus)
-cc            if(istatus.eq.0) then
-cc              print*,'Not enough records in file ',fname
-cc              istatus=0
-cc              ntime=0
-cc              goto 40
-cc            endif
-cc            call get_sbn_dims(ncid,nxbg,nybg,nzbg,ntbg)
-cc
-cc            call ncclos(ncid,istatus)
-cc
-cc         endif
 
          if(bgtime+ihour*3600.gt.i4time_now.and.
      +        bgtime+ihour*3600.lt.next_time) then
@@ -506,8 +503,16 @@ cc         endif
           endif
          if(bgtime+ihour*3600.le.i4time_now.and.
      +        bgtime+ihour*3600.gt.last_time) then
-            last_time = bgtime+ihour*3600
-            file_list(2) = bg_names(n)
+            if(next_time<bigint) then
+               last_time = bgtime+ihour*3600
+               file_list(2) = bg_names(n)
+            else
+c
+c otherwise the latest model is incomplete and doesn't have a current forecast 
+c look for an older one
+c
+               ntime=0
+            endif
           endif
 40       continue
 
@@ -515,7 +520,7 @@ cc         endif
 c
 c ****** Read background model data.
 c
-      if (last_time.eq.0 .or. next_time.eq.2000000000) then
+      if (last_time.eq.0 .or. next_time.eq.bigint) then
         print*, 'not enough files:',last_time,next_time 
         lga_status = 0
         return        
