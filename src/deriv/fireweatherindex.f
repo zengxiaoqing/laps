@@ -1,15 +1,24 @@
 
-      subroutine fireweatherindex(tmk,prs,qvp,ght,ter,sfp,tgk,
-     &                            u10,v10,xlus,fwi,miy,mjx,mkzh)
+!     subroutine fireweatherindex(tmk,prs,qvp,ght,ter,sfp,tgk,
+!    &                            u10,v10,xlus,fwi,miy,mjx,mkzh)
+
+      subroutine fireweatherindex(t_sfc_k,rh_sfc,p_sfc_mb,u10,v10
+     1                           ,miy,mjx
+     1                           ,fwi)
+
       include 'comconst'
 
-      dimension tmk(miy,mjx,mkzh), prs(miy,mjx,mkzh), qvp(miy,mjx,mkzh),
-     &          ght(miy,mjx,mkzh),
-     &          ter(miy,mjx), sfp(miy,mjx), tgk(miy,mjx),
+      dimension ! tmk(miy,mjx,mkzh), prs(miy,mjx,mkzh), qvp(miy,mjx,mkzh),
+!    &          ght(miy,mjx,mkzh),
+!    &          ter(miy,mjx), sfp(miy,mjx), tgk(miy,mjx),
      &          u10(miy,mjx), v10(miy,mjx), fwi(miy,mjx),
      $          xlus(miy,mjx)
 
-      real t2k, t2f, ht, prs2, q, e, es, rh2, m, n
+      real t_sfc_k(miy,mjx)
+      real rh_sfc(miy,mjx)
+      real p_sfc_mb(miy,mjx)
+ 
+      real t2k, t2f, ht, prs2, q, e, es, rh2, m, n, k_to_f
       logical debug
 
 C      debug = .true.   ! Debug mode
@@ -17,18 +26,29 @@ C      debug = .true.   ! Debug mode
 
       do 200 j = 1, mjx-1
       do 100 i = 1, miy-1
-        if (nint(xlus(i,j)).eq.iwater) then
+
+        if(.false.)then ! original Seattle code with sigma coordinate inputs
+
+          if (nint(xlus(i,j)).eq.iwater) then
            fwi(i,j) = -3.
            goto 100
+          endif
+          t2k = (tmk(i,j,mkzh) + tgk(i,j)) / 2.
+          t2f = (t2k - celkel) * 1.8 + 32.
+          ht = ght(i,j,mkzh) - ter(i,j)
+          prs2 = (ht-2.)/ht * (sfp(i,j)-prs(i,j,mkzh)) + prs(i,j,mkzh)
+          q = .001 * qvp(i,j,mkzh)  ! g/kg to g/g
+          e = q*prs2/(eps+q)
+          es = ezero * exp( eslcon1*(t2k-celkel)/(t2k-eslcon2) )
+          rh2 = 100.*(e*(prs2-es))/(es*(prs2-e))
+
+        else ! new version to use sfc inputs from LAPS analysis
+          rh2 = rh_sfc(i,j)
+          prs2 = p_sfc_mb(i,j)
+          t2f = k_to_f(t_sfc_k(i,j))
+
         endif
-        t2k = (tmk(i,j,mkzh) + tgk(i,j)) / 2.
-        t2f = (t2k - celkel) * 1.8 + 32.
-        ht = ght(i,j,mkzh) - ter(i,j)
-        prs2 = (ht-2.)/ht * (sfp(i,j)-prs(i,j,mkzh)) + prs(i,j,mkzh)
-        q = .001 * qvp(i,j,mkzh)  ! g/kg to g/g
-        e = q*prs2/(eps+q)
-        es = ezero * exp( eslcon1*(t2k-celkel)/(t2k-eslcon2) )
-        rh2 = 100.*(e*(prs2-es))/(es*(prs2-e))
+
 C---------Use 2.237 to convert m/s to mph
         uuu10 = u10(i,j) * 2.237
         vvv10 = v10(i,j) * 2.237
