@@ -264,7 +264,7 @@
 
      <pre>
      /home_disk/
-         raw_data/                                              (raw test data)
+         raw_data/                                     (optional raw test data)
          geog/
              laps_terrain.tar
          laps-m-n-o.tar
@@ -305,7 +305,7 @@
      /data_disk/
          geog/
              laps_terrain.tar
-         raw_data/                                              (raw test data)
+         raw_data/                                     (optional raw test data)
          laps/                         ($INSTALLROOT / --prefix in 'configure')
              etc/                                                (laps scripts)
              bin/                                                 (executables)
