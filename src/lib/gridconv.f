@@ -699,8 +699,8 @@ ccc      implicit none
 c
       integer np,n
 c
-      real*4 glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
-     .       lli(np),llj(np),        !Lat-lon grid i,j
+      real   glat(np),glon(np)     !Earth lat, lon (deg N, deg +E)
+      real   lli(np),llj(np),      !Lat-lon grid i,j
      .       diff
 c
       integer nx,ny,nz             !No. of LL domain grid points
@@ -713,13 +713,15 @@ c
       entry latlon_2_llij(np,glat,glon,lli,llj)
 c_______________________________________________________________________________
 c
+      dlond=dlon
+      dlatd=dlat
       if(cgrddef.eq.'S')then
          do n=1,np
             diff=glon(n)-lon0
             if (diff .lt. 0.) diff=diff+360.
             if (diff .ge. 360.) diff=diff-360.
-            lli(n)=diff/dlon+1.
-            llj(n)=(glat(n)-lat0)/dlat+1.
+            lli(n)=diff/dlond+1.
+            llj(n)=(glat(n)-lat0)/dlatd+1.
          enddo
       elseif(cgrddef.eq.'N')then
          do n=1,np
@@ -1037,9 +1039,11 @@ c
 
       integer nxc,nyc,nzc
       real sw(2),ne(2),rota,lat0,lon0
-      real tol
+      real tolx,toly
+      real grxdifsum1,grxdifsum2
+      real grydifsum1,grydifsum2
       real r_missing_data
-      parameter (tol=0.10)
+c     parameter (tol=0.10)
       common /psgrid/nxc,nyc,nzc,lat0,lon0,rota,sw,ne
 c_______________________________________________________________________________
 c
@@ -1068,10 +1072,31 @@ c      print*,nxc,nyc,nzc,lat0,lon0,rota,sw,ne
 c
 c *** Check that all LAPS grid points are within the background data coverage.
 c
-c
-c ****** Check for wrapping if a global data set.
-c
 
+c set tolerance based upon the grid spacing as a function of grx/gry
+      grxdifsum1=0.0
+      grxdifsum2=0.0
+      grydifsum1=0.0
+      grydifsum2=0.0
+      do j=1,ny_laps
+         grxdifsum1=grxdifsum1+(grx(2,j)-grx(1,j))
+         grxdifsum2=grxdifsum2+(grx(nx_laps-1,j)-grx(nx_laps,j))
+      enddo
+      do i=1,nx_laps
+         grydifsum1=grydifsum1+(gry(i,2)-gry(i,1))
+         grydifsum2=grydifsum2+(gry(i,ny_laps-1)-gry(i,ny_laps))
+      enddo
+
+      tolx=(abs(grxdifsum1)/ny_laps
+     .+abs(grxdifsum2)/ny_laps)*0.5
+      toly=(abs(grydifsum1)/nx_laps
+     .+abs(grydifsum2)/nx_laps)*0.5
+
+      print*,'horiz mapping tolerance x/y: ',tolx,toly
+
+c
+c *** First, check for wrapping if a global data set.
+c
       call s_len(cmodel,lenc)
 
       if ( bgmodel .eq. 6 .or. 
@@ -1126,13 +1151,13 @@ c LAPS must fit into model grid which must also fit into LAPS grid thus we
 c introduce a small fudge factor on the grid boundaries.
 c               
 
-               if(grx(i,j).gt.1.-tol) grx(i,j) = max(1.,grx(i,j))
-               if(gry(i,j).gt.1.-tol) gry(i,j) = max(1.,gry(i,j))
+               if(grx(i,j).gt.1.-tolx) grx(i,j) = max(1.,grx(i,j))
+               if(gry(i,j).gt.1.-toly) gry(i,j) = max(1.,gry(i,j))
 
-               if(grx(i,j).lt.float(nx_bg)+tol) 
-     +              grx(i,j) = min(float(nx_bg)-tol,grx(i,j))
-               if(gry(i,j).lt.float(ny_bg)+tol) 
-     +              gry(i,j) = min(float(ny_bg)-tol,gry(i,j))
+               if(grx(i,j).lt.float(nx_bg)+tolx) 
+     +              grx(i,j) = min(float(nx_bg)-tolx,grx(i,j))
+               if(gry(i,j).lt.float(ny_bg)+toly) 
+     +              gry(i,j) = min(float(ny_bg)-toly,gry(i,j))
 
                if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
      .             gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then

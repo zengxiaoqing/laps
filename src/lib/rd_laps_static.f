@@ -11,22 +11,22 @@ C directory specified in "dir".
 
 C Passed in variables
       character      dir*(*), laps_dom_file*(*)
-      integer*4      imax, jmax, n_grids
+      integer        imax, jmax, n_grids
       character*(*)  var(n_grids)
       character*(*)  units(n_grids)
       character*(*)  comment(n_grids)
       real*4         data(imax,jmax,n_grids), grid_spacing
-      integer*4      status
+      integer        status
 
 C Local variables
 
       character*150   file_name
-      integer*4      var_len, com_len, unit_len,
+      integer        var_len, com_len, unit_len,
      1               ERROR(3),
      1               no_laps_diag,
      1               flag
 
-      integer*4      f_len
+      integer        f_len
 
       logical        l_some_missing
 
@@ -60,9 +60,9 @@ c       enddo
         if (status .gt. 0) l_some_missing = .true.
 
         if(l_some_missing) then
-          STATUS=ERROR(3)
+          STATUS=ERROR(3) != -2
         else
-          STATUS=ERROR(1)
+          STATUS=ERROR(1) !=  1
         endif
       endif
 
@@ -261,7 +261,7 @@ C
               WRITE(var_2d, '("a",I2.2)') m1
            ENDIF
            call read_static_grid(nx,ny,var_2d,data,istatus)
-           if(istatus .ne. 1)then
+           if(istatus .ne. 0 .and. istatus.ne.1)then
               print*,' Error reading LAPS static: ',var_2d
               return
            endif
@@ -273,7 +273,7 @@ C
             WRITE(var_2d, '("a",I2.2)') m1
          ENDIF
          call read_static_grid(nx,ny,var_2d,data1,istatus)
-         if(istatus .ne. 1)then
+         if(istatus.ne.0 .and. istatus .ne. 1)then
             print*,' Error reading LAPS static: ',var_2d
             return
          endif
@@ -281,7 +281,7 @@ C
             WRITE(var_2d, '("a",I2.2)') m2
          ENDIF
          call read_static_grid(nx,ny,var_2d,data2,istatus)
-         if(istatus .ne. 1)then
+         if(istatus.ne.0 .and. istatus .ne. 1)then
             print*,' Error reading LAPS static: ',var_2d
             return
          endif

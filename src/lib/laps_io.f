@@ -142,20 +142,25 @@ c
            call get_directory_length(directory,len)
            if(directory(len+1:len_dir).eq.'lgb')then
               ext_int='lgb'
+
            else
-              do l=1,nfdda
-                 if(directory(len+1:len_dir).eq.
-     &fdda_model_source(l))then
+c             do l=1,nfdda
+c                if(directory(len+1:len_dir).eq.
+c    &fdda_model_source(l))then
+
                     ext_int='fsf'
-                 endif
-              enddo
+
+c                endif
+c             enddo
            endif
-           if(ext_int.eq.' ')then
-              print*,'Unknown lapsprd extension'
-     &,directory(1:len_dir)
-              istatus = 0
-              return
-           endif
+
+c          if(ext_int.eq.' ')then
+c             print*,'Unknown lapsprd extension'
+c    &,directory(1:len_dir)
+c             istatus = 0
+c             return
+c          endif
+
            len=3
            len_dir=len_dir+1
            directory(len_dir:len_dir)='/'
@@ -630,21 +635,26 @@ c
            endif
            call get_directory_length(directory,len)
            if(directory(len+1:len_dir).eq.'lga')then
-                 ext_int='lga'
+              ext_int='lga'
            else
-              do l=1,nfdda
-                 if(directory(len+1:len_dir).eq.
-     &fdda_model_source(l))then
+
+c             do l=1,nfdda
+c                if(directory(len+1:len_dir).eq.
+c    &fdda_model_source(l))then
+
                     ext_int='fua'
-                 endif
-              enddo
+
+c                endif
+c             enddo
+
            endif
-           if(ext_int.eq.' ')then
-              print*,'Unknown lapsprd extension'
-     &,directory(1:len_dir)
-              istatus = 0
-              return
-           endif
+c          if(ext_int.eq.' ')then
+c             print*,'Unknown lapsprd extension'
+c    &,directory(1:len_dir)
+c             istatus = 0
+c             return
+c          endif
+
            len=3
            len_dir=len_dir+1
            directory(len_dir:len_dir)='/'
