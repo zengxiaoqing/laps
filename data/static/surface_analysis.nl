@@ -14,6 +14,7 @@
  thresh_t=30.,
  thresh_td=40.,
  thresh_mslp=10.,
+ rms_wind=1.0,
  /
 c..... This is the namelist for the LAPS surface analysis
 c..... process (LSX).  Switches and similar things can go
@@ -92,3 +93,5 @@ c       QC parms: threshold checks
 c       thresh_t                ! for temperature (deg F)
 c       thresh_td               ! for dewpoint (deg F)
 c       thresh_mslp             ! for MSL pressure (millibars)
+c
+c       rms_wind                ! scaling factor for wind rms threshold
