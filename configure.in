@@ -120,6 +120,12 @@ EOF
 if test $? -eq 0 
 then
   CPPFLAGS="$CPPFLAGS -DF90"
+  if test "$arch" = "solaris"
+then
+	FFLAGS="$FFLAGS -M$(LAPSROOT)/src/lib"
+else
+	FFLAGS="$FFLAGS -I$(LAPSROOT)/src/lib"
+fi
 fi
 AC_F90_FUNC_TRIGD
 if test $USE_TRIGD -eq 1 
