@@ -42,7 +42,7 @@ Author: Dan Birkenheuer
 Date of development:   5/16/95
 mod 6/14/95 DB increased number of filenames to 3000
 mod 4/22/2002 DB increase number of filenames to 9000
-mod 3/9/04 DB increased number of filesnames to 19000 for IHOP
+mod 3/9/04 DB increased number of filesnames to 20000 for IHOP
 
 DISCLAMER:  Note that I am by background a FORTRAN programmer.  Therefore,
 though this routine is all "legal" C, it is probably written awkwardly in
@@ -58,9 +58,9 @@ matter)
 
 fileNames:
 an array of filenames in the calling routine defined in C as 
-char filnames[19000][256]; 
+char filnames[20000][256]; 
 or its FORTRAN equivalent:
-character*256 filenames(19000)
+character*256 filenames(20000)
 the 19000 possible filenames is hardwired into this routine and therefore is
 associated with the hardwire in the FORTRAN wrapper ment to go with this
 routine (one level above) and to be the FORTRAN interface to the rest of the
@@ -190,9 +190,9 @@ int *status;
 
         Outputofread = readdir (WorkingDir);
  
-	for (i=0; i<9000 && ( Outputofread != (struct dirent *)NULL ) ;)
+	for (i=0; i<20000 && ( Outputofread != (struct dirent *)NULL ) ;)
 	{
-	  if(i >= 8900 )
+	  if(i >= 19900 )
 	    printf ("WARNING numfiles nearing limit in getfilenames_c.c");
 	  if ( strcmp (Outputofread->d_name,".") == 0 )
 	    Outputofread = readdir (WorkingDir);
