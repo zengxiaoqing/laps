@@ -67,7 +67,9 @@ if(-d "$LAPS_SRC_ROOT/data"){
 	    print "$key\n";
 	    exit if($key != 'y');
 	}
-	run_sys("cp -r $LAPS_SRC_ROOT/data $LAPS_DATA_ROOT");
+        my $sys ="cp -r $LAPS_SRC_ROOT/data $LAPS_DATA_ROOT";
+        print $sys;
+	system $sys;
     }
     &update_nl("$LAPS_SRC_ROOT/data","$LAPS_DATA_ROOT");
 
@@ -157,6 +159,8 @@ if(-x "$LAPSROOT/bin/genvrclut.exe"){
 #
 print "cleaning out static/vxx directory of any old luts\n";
 system("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
+print "cleaning out static/lvd directory of any old luts\n";
+system("rm -f $LAPS_DATA_ROOT/static/lvd/*.lut");
 
 #
 # finally initialize the systime.dat file
