@@ -485,7 +485,7 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
         include 'grid_fname.cmn'
 
         NAMELIST /lapsparms_NL/ iflag_lapsparms_cmn
-     1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L
+     1  ,max_radar_files_cmn,PRESSURE_INTERVAL_L
      1  ,nk_laps,standard_latitude,standard_latitude2       
      1  ,standard_longitude,NX_L_CMN, NY_L_CMN, I_PERIMETER_CMN
      1  ,l_compress_radar
@@ -1385,6 +1385,27 @@ c
       endif
 
       r_hybrid_first_gate = r_hybrid_first_gate_cmn
+
+      istatus = 1
+      return
+      end
+
+      subroutine get_max_radar_files(max_radar_files, istatus)       
+
+      include 'lapsparms.cmn' ! max_radar_files_cmn
+      include 'grid_fname.cmn'! grid_fnam_common
+
+!     This routine accesses the 'max_radar_files' variable from the
+!     .parms file via the common block. Note the variable names in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
+      endif
+
+      max_radar_files = max_radar_files_cmn
 
       istatus = 1
       return
