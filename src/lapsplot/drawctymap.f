@@ -84,10 +84,11 @@ c
           call gsln(1) ! Solid
       endif
 
+      jgrid=namelist_parms%latlon_int        ! Draw lat/lon lines?
+
       if(domsize .le. 1500e3)then
-          write(6,*)' Plotting Counties ',domsize
+          write(6,*)' Plotting Counties ',domsize,mode_supmap,jgrid
           call setusv_dum(2HIN,icol_cou)
-          jgrid=namelist_parms%latlon_int        ! Draw lat/lon lines?
 
           if(mode_supmap .eq. 1)then
               jus=-4
@@ -96,26 +97,32 @@ c
           elseif(mode_supmap .eq. 2)then
               iout = 0
               call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
-     +                          jjlts,jgrid,iout,jdot,ier)
+     +                          jjlts,jgrid*1000,iout,jdot,ier)
           elseif(mode_supmap .eq. 3)then
               write(6,*)' Calling MAPDRW, etc. for counties...'
 !             call mapdrw()
               call mapint
 !             call maplot
               CALL MPLNDR ('Earth..2',5)
+              if(jgrid .gt. 0)then ! draw lat/lon lines
+                  call mpsetr('GR',float(jgrid))
+                  call mapgrd()
+              endif
           endif
           if(ier .ne. 0)write(6,*)' ier = ',ier
 
           call sflush
+
+          jgrid=0                        ! Do not draw subsequent lat/lon lines
+
       else
           write(6,*)' Large domain, omitting counties ',domsize
 
       endif
 
-      write(6,*)' Plotting States From Counties'
+      write(6,*)' Plotting States From Counties ',mode_supmap,jgrid
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
-      jgrid=0                                ! Do not draw lat/lon lines
 
       if(mode_supmap .eq. 1)then
           jus=-8
@@ -124,19 +131,24 @@ c
       elseif(mode_supmap .eq. 2)then
           iout = 0
           call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
-     +                      jjlts,jgrid,iout,jdot,ier)
+     +                      jjlts,jgrid*1000,iout,jdot,ier)
       elseif(mode_supmap .eq. 3)then
           write(6,*)' Calling MAPDRW, etc. for states...'
 !         call mapdrw()
           call mapint
 !         call maplot
           CALL MPLNDR ('Earth..2',4)
+          if(jgrid .gt. 0)then ! draw lat/lon lines
+              call setusv_dum(2HIN,icol_cou)
+              call mpsetr('GR',float(jgrid))
+              call mapgrd()
+          endif
       endif
       if(ier .ne. 0)write(6,*)' ier = ',ier
 
       call sflush
 
-      write(6,*)' Plotting Continents'
+      write(6,*)' Plotting Continents ',mode_supmap,jgrid
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
 
@@ -150,7 +162,7 @@ c
       elseif(mode_supmap .eq. 2)then
           iout = 2
           call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
-     +                      jjlts,jgrid,iout,jdot,ier)
+     +                      jjlts,jgrid*1000,iout,jdot,ier)
       endif
       if(ier .ne. 0)write(6,*)' ier = ',ier
 
