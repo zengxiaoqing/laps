@@ -85,11 +85,15 @@ c     foreach n element of wt, determine its location in ii,jj space
       ncount = 0
 
       do n = 1,nn
-
-         call  latlon_to_rlapsgrid(lat(n),lon(n),glat,glon,ii,jj,
+         write(6,*) 'GPSTEMP latloncheck', lat(n),lon(n)
+         if (abs(lat(n)) <= 90.000 .or. abs(lon(n)) <= 180.0 ) then
+            call  latlon_to_rlapsgrid(lat(n),lon(n),glat,glon,ii,jj,
      1        ri,rj, istatus)
+         else
+            istatus = 0 ! floating point error check for Jet
+         endif
 
-         if (istatus.eq.1 .and. wt(n) .gt. 0.0) then
+         if (istatus == 1 .and. wt(n) >  0.0) then
             ncount = ncount + 1
             i = nint (ri)
             j = nint (rj)
@@ -116,7 +120,7 @@ c     compute the fraction of data_out that is empty
 
       do i = 1,ii
          do j = 1,jj
-            if (data_out (i,j) .eq. -1.) then
+            if (data_out (i,j) ==  -1.) then
                sum = sum + 1
                data_out(i,j) = points(1,1) ! helps converge
             endif
@@ -124,13 +128,13 @@ c     compute the fraction of data_out that is empty
       enddo
 
       if(ncount.eq.0) then      !abort gvap here
-         write(6,*) 'No GVAP/GPS data avail to process... abort'
+         write(6,*) 'No GPS data avail to process'
          istatus = 0
          return
       endif
 
       write (6,*) ncount, ' out of ', n, ' total avial data used'
-      write (6,*) 'gvap/gps field fraction empty = ', sum/ii/jj
+      write (6,*) 'gps field fraction empty = ', sum/ii/jj
 
 c      if (sum/ii/jj .gt. 0.75) return ! return if not enough data
 
@@ -146,7 +150,7 @@ c     now have fairly full data array.  now analyze
 
 c     prep the weighting array for the above analyzed sheet
 
-      r50 = 15.e+3
+      r50 = 5.e+3     
 
       call weight_field (data_weights, mask,  ii,jj,r50 , istatus)
 

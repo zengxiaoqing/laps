@@ -44,16 +44,16 @@ c     comparison with GPS data for the variational minimizaiton technique.
 c     basically the forward model for this data source.
 
 c     input variables
-      real x(3)                 !adjustment vector
-      integer kk                !vertical dimension
-      real p(500)                !pressure (hPa) through the column
-      real data(500)             !data vector (actually sh)
-      real mdf                  !missing data flag
-      real ipw                  !returned computed ipw
+      real ::  x(3)             !adjustment vector
+      integer ::  kk            !vertical dimension
+      real ::  p(500)           !pressure (hPa) through the column
+      real :: data(500)         !data vector (actually sh)
+      real :: mdf               !missing data flag
+      real :: ipw               !returned computed ipw
 
 c     internal variables
       integer k
-      real d(kk)                !modified data (modified by x)
+      real d(kk)                !modified data (modified by x below 100hpa)
       
 
 c     code
@@ -62,24 +62,24 @@ c     code
 c     modify data vector
 
       do k = 1,kk
-         if(data(k) .ne. mdf) then
-            if(data(k) .ge. 0.0) then
+         if(data(k) /= mdf) then
+            if(data(k) >= 0.0) then
 
-               if(p(k).ge.700.) then
+               if(p(k) > 700.) then
                   d(k) = data(k) * x(1)
-               elseif(p(k).lt. 700. .and. p(k) .ge. 500) then
+               elseif(p(k) < 700. .and. p(k) >  500) then
                   d(k) = data(k) * x(2)
-               elseif(p(k) .lt.500. .and. p(k).ge.100.) then
+               elseif(p(k) < 500.and. p(k) > 100. ) then
                   d(k) = data(k) * x(3)
                else
-                  d(k) = data(k)
+                  d(k) = data(k) ! above 100 hpa no augmentation
                endif
 
             else
-               d(k) = data(k)
+               d(k) = data(k)   !transfers negative missing data flag
             endif
          else
-            d(k) = data (k)
+            d(k) = data (k) ! data equals missing data flag transfer
          endif
       enddo
       
@@ -89,8 +89,8 @@ c     integrate
       ipw = 0.0
 
       do k = 1,kk-1
-         if(d(k) .ne. mdf) then
-            if(d(k) .ge. 0.0) then
+         if(d(k) /= mdf) then   ! skip if missing data flag
+            if(d(k) >= 0.0) then !skip if negative
                ipw = ipw + (d(k)+d(k+1))/2.*(p(k)-p(k+1))
             endif
          endif
