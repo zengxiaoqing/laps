@@ -1753,6 +1753,17 @@ c
             if(diff .lt. 0.)then            
                 diff2 = diff * 1./cloud_frac_vis
                 cldtop_temp_rad = t_gnd_rad + diff2
+
+                if (cldtop_temp_rad .le. 0.0) then
+                   write(6,*) 'WARNING: cldtop_temp_rad <= 0'
+                   write(6,*) 'tb8_k ',tb8_k, ' tb8_rad ',tb8_rad
+                   write(6,*) 't_gnd_k ',t_gnd_k, ' t_gnd_rad ',
+     1                                              t_gnd_rad
+                   write(6,*) 'cloud_frac_vis ',cloud_frac_vis
+                   istatus = 0
+                   return
+                endif
+
                 cldtop_temp_k = rad_to_temp(cldtop_temp_rad)
                 istatus = 1                
             endif
