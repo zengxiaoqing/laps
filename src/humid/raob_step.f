@@ -29,7 +29,8 @@ cdis
 cdis
 cdis
 cdis
-        subroutine raob_step (i4time, data, laps_pressure,
+        subroutine raob_step (i4time, data, laps_pressure, 
+     1  raob_lookback,
      1  lat,lon,  ii,jj,kk)
 
 
@@ -116,7 +117,7 @@ c        include 'parmtrs.inc'
 
 c  input parameters
 
-      integer i4time, ii,jj,kk
+      integer i4time, ii,jj,kk, raob_lookback
       real data(ii,jj,kk), laps_pressure (kk)
       real lat(ii, jj), lon(ii, jj)
 
@@ -159,7 +160,7 @@ c *** begin routine
 
         pi = acos(-1.0)
         d2r = pi/180.
-        look_back_time = 0  ! 0 hours
+        look_back_time = raob_lookback
         maxfiles = 200
       call get_r_missing_data(rmd, istatus)   
 

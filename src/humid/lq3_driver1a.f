@@ -282,12 +282,14 @@ c       external rtsys_no_data, rtsys_abort_prod
         real pressure_of_level  !function call
 
         integer  raob_switch
+        integer  raob_lookback
         integer goes_switch
         integer cloud_switch
         integer tiros_switch
         integer sounder_switch
         integer sat_skip
-        namelist /moisture_switch/ raob_switch,goes_switch, cloud_switch
+        namelist /moisture_switch/ raob_switch,
+     1  raob_lookback, goes_switch, cloud_switch
      1         ,tiros_switch, sounder_switch, sat_skip
 
         integer len
@@ -326,6 +328,7 @@ c     sounding data even if it is present.
 c set namelist parameters to defaults (no satellite)
         cloud_switch = 1
         raob_switch = 0
+        raob_lookback = 0
         goes_switch = 0
         sounder_switch = 0
         tiros_switch = 0
@@ -353,6 +356,8 @@ c set namelist parameters to defaults (no satellite)
         else
            write (6,*) 'Raob switch on... will use raobs if present'
         endif
+
+        write(6,*) 'RAOB look back set to ', raob_lookback, 'seconds'
 
         if (goes_switch.eq.0) then
            write(6,*) 'GOES switch off, ignoring goes data'
@@ -560,7 +565,7 @@ c ****  execute raob step if switch is on
 
         if(raob_switch.eq.1) then
         write (6,*) 'begin raob insertion'
-        call raob_step (i4time,data,plevel,
+        call raob_step (i4time,data,plevel, raob_lookback,
      1        lat,lon, ii,jj,kk)
         else
         write(6,*) 'the raob switch is off... raobs skipped'
