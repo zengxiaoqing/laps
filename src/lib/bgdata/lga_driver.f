@@ -68,6 +68,10 @@ c
       character*132 cmodel
       
       integer warncnt
+c sfc namelist stuff. for reduced pressure calc
+      integer use_lso_qc, skip_internal_qc, itheta
+      logical l_require_lso
+      real    redp_lvl,del,gam,ak
 c
 c *** Background model grid data.
 c
@@ -128,8 +132,13 @@ c
      .          qsfc(nx_laps,ny_laps),
      .          uw_sfc(nx_laps,ny_laps),
      .          vw_sfc(nx_laps,ny_laps),
-     .          pr_sfc(nx_laps,ny_laps),
+     .          pr_sfc(nx_laps,ny_laps),     !Stn pressure
+     .          rp_sfc(nx_laps,ny_laps),     !Reduced pressure
      .          mslp(nx_laps,ny_laps)
+
+      real, allocatable :: rp_lvl(:,:)       !Reduced pressure lvl
+      real, allocatable :: rp_tp(:,:)        !Reduced pressure temp (holder)
+      real, allocatable :: rp_sh(:,:)        !Reduced pressure sh   (holder)
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
@@ -978,14 +987,13 @@ c
 
            print *,' Dewpoint check (after call sfcbkgd):'
            print *,'     Dewpt greater than temp at ',icnt,' points.'
-           if(icnt .gt. 0) then
 
-           print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
-           print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
+           if(icnt .gt. 0) then
+            print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
+            print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
 c
 c fix sfc Td to not be greater than T at points determined above
-           where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
-
+            where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
            endif
 c
 c..... Do the winds
@@ -994,6 +1002,28 @@ c
      &                         nz_laps,missingflag,uw_sfc)
            call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,vw_sfc)
+c
+c..... Compute reduced pressure using reduced pressure level from
+c      surface namelist file
+c
+           call read_sfc_nl(use_lso_qc,skip_internal_qc 
+     1,itheta, redp_lvl, del, gam, ak, l_require_lso)
+
+           allocate (rp_lvl(nx_laps,ny_laps)
+     1,rp_tp(nx_laps,ny_laps),rp_sh(nx_laps,ny_laps))
+
+           do j=1,ny_laps
+           do i=1,nx_laps
+              rp_lvl(i,j)=redp_lvl
+              rp_tp(i,j)=tp_sfc(i,j)
+              rp_sh(i,j)=sh_sfc(i,j)
+           enddo
+           enddo
+
+           call sfcbkgd(0,tp,sh,ht,rp_tp,rp_sh,rp_lvl,pr,
+     1nx_laps, ny_laps, nz_laps, rp_sfc)
+
+           deallocate (rp_lvl,rp_tp,rp_sh)
 c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
@@ -1118,7 +1148,7 @@ c              sfcgrid(i,j,kk+4)=missingflag
 
          call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
      .,cmodel,missingflag,uw_sfc,vw_sfc,tp_sfc,qsfc,pr_sfc,mslp
-     .,sh_sfc,istatus)
+     .,sh_sfc,rp_sfc,istatus)
          if(istatus.ne.1)then
             print*,'Error writing lgb - returning to main'
             return
@@ -1180,7 +1210,7 @@ c interp 3D fields
 
 c interp 2D fields
                call time_interp(outdir,ext,
-     +           nx_laps,ny_laps,1,7,pr(1),
+     +           nx_laps,ny_laps,1,8,pr(1),
      +           i4time_bg_valid(i),i4time_bg_valid(i-1),
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))

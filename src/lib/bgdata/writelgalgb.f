@@ -173,7 +173,7 @@ c ------------------------------------------------------------------------------
 c
       subroutine write_lgb(nx_laps,ny_laps,bgtime,bgvalid,cmodel
      .,missflag,uw_sfc,vw_sfc,tp_sfc,qsfc,pr_sfc,mslp,td_sfc
-     .,istatus)
+     .,rp_sfc,istatus)
 
       implicit none
 
@@ -190,6 +190,7 @@ c
      .          uw_sfc(nx_laps,ny_laps),
      .          vw_sfc(nx_laps,ny_laps),
      .          pr_sfc(nx_laps,ny_laps),
+     .          rp_sfc(nx_laps,ny_laps),
      .          mslp(nx_laps,ny_laps)
 
       character*256 outdir
@@ -362,6 +363,27 @@ c --- Td
      .           ,units,comment,td_sfc,istatus)
       if (istatus .ne. 1) then
          print*,'Error writing interpolated data to LAPS lgb - DSF'
+         return
+      endif
+c --- Reduced Pressure
+      warncnt=0
+      do i=1,nx_laps
+      do j=1,ny_laps
+         if(rp_sfc(i,j).ge.missflag.and.warncnt.lt.100)
+     +              then
+            print*,'Missing data at ',i,j,' in reduced press'
+            warncnt=warncnt+1
+         endif
+      enddo
+      enddo
+      var='P'
+      units='PA'
+      print*,'P'
+      call write_laps(bgtime,bgvalid,outdir,ext
+     .           ,nx_laps,ny_laps,1,1,var,0,lvl_coord
+     .           ,units,comment,rp_sfc,istatus)
+      if (istatus .ne. 1) then
+         print*,'Error writing interpolated data to LAPS lgb - P'
          return
       endif
 

@@ -353,6 +353,7 @@ c
          var(1,5)='SLP'
          var(1,6)='RSF'
          var(1,7)='DSF'
+         var(1,8)='P  '
       endif
 
       newfcst=fcst1-(i4time_valid2-i4time_now)
