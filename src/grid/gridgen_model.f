@@ -764,20 +764,10 @@ c -----------------------------------------------------------
 
         if(istatus.ne.1)then
          print*
-         print*,'land use data not processed completely'
-         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-            print*,' File(s) missing for landuse data'
-            print*,' Error:  Static file not created'
-            print*
-            return
-         else
-            print*,' File(s) missing for landuse data'
-            print*,'           *** WARNING ***'
-            print*,' landuse data not added to static file'
-            print*
-         endif
-         GEODAT2D=r_missing_data
-         GEODAT3D=r_missing_data
+         print*,' File(s) missing for landuse data'
+         print*,' Error:  Static file not created'
+         print*
+         return
         endif
 
         ilndmsk=12
@@ -895,7 +885,7 @@ c
         if(istatus.ne.1)then
            print*,'Processing incomplete in adjust_geog_data'
            if(c10_grid_fname(1:lf).eq.'wrfsi')then
-              print*,'Error: wrfsi static not updated'
+              print*,'Error: wrfsi static not generated'
               return
            endif
         endif
@@ -917,19 +907,11 @@ c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
         if(istatus_alb.ne.1)then
          print*
          print*,'Albedo climo data not processed completely'
-         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-            print*,' File(s) missing for albedo data'
-            print*,' Error:   Static file not created'
-            print*
-            istatus=0
-            return
-         else
-            print*,' File(s) missing for albedo data'
-            print*,'           *** WARNING ***'
-            print*,' albedo data not added to static file'
-            print*
-         endif
-         GEODAT3D=r_missing_data
+         print*,' File(s) missing for albedo data'
+         print*,' Error: Static file not created: albedo missing'
+         print*
+         istatus=0
+         return
         endif
 c
 c We can force water points to have albedo = 0.08.
