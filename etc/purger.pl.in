@@ -126,26 +126,18 @@ my($dir);
 foreach $dir (keys(%clean_dirs)){
     my(@filelist,@listoffiles,$i,$j);
     opendir(DIR,$dir);
-    if($dir eq '../log'){
-	@filelist = grep(/\d\d$/, readdir(DIR));
-    }else{
-	@filelist = grep(/^\d\d/, readdir(DIR));
-    }
-# since the previous commands can return an empty @filelist array for special
-# filenames (and possibly ones that need purging, try for other patterns (raw data files) 
-    if($#filelist < 0){
-        opendir(SUBDIR,"$DATAROOT/$dir");
-        @listoffiles = readdir SUBDIR;
-        $j==0;
-        foreach (@listoffiles){
-#          print "listoffiles $_\n";
-           if(/^\D+\.\d+/ || /^\D+\d+\./ || /^\D+\.\D+/ && ! /^\./ ){
-             @filelist[$j] = $_; 
-             $j++;
-           }
-        }
-       close(SUBDIR);
-    }
+
+#original constructs
+#   if($dir eq '../log'){
+#       @filelist = grep(/\d\d$/, readdir(DIR));
+#   }else{
+#       @filelist = grep(/^\d\d/, readdir(DIR));
+#   }
+
+# possibly more generic form for gathering filenames to purge (JS 11-5-00). 
+
+    @filelist = grep(/\d\d\d\d/, readdir(DIR));
+
     closedir(DIR);
     next unless(-d $dir);
     print "Purging in $dir\n";
