@@ -1,18 +1,18 @@
 
       subroutine qc_radar_obs(
-     1   imax,jmax,kmax                             ! Input
-     1  ,r_missing_data                             ! Input
-     1  ,vr_obs                                     ! Input/Output
-     1  ,vr_nyq                                     ! Input
-     1  ,n_radarobs_tot_unfltrd                     ! Input
-     1  ,lat,lon                                    ! Input
-     1  ,rlat_radar,rlon_radar                      ! Input
-     1  ,rheight_radar                              ! Input
-     1  ,upass1,vpass1  ! 1st pass anal             ! Input
-     1  ,u_laps_bkg,v_laps_bkg                      ! Input
-     1  ,v_nyquist_2,unfolding_thresh               ! Input
-     1  ,l_correct_unfolding                        ! Input
-     1  ,istatus                                    ! Input/Output
+     1           imax,jmax,kmax                             ! Input
+     1          ,r_missing_data                             ! Input
+     1          ,vr_obs                                     ! Input/Output
+     1          ,vr_nyq                                     ! Input
+     1          ,n_radarobs_tot_unfltrd                     ! Input
+     1          ,lat,lon                                    ! Input
+     1          ,rlat_radar,rlon_radar                      ! Input
+     1          ,rheight_radar                              ! Input
+     1          ,upass1,vpass1  ! 1st pass anal             ! Input
+     1          ,u_laps_bkg,v_laps_bkg                      ! Input
+     1          ,v_nyquist_2,unfolding_thresh               ! Input
+     1          ,l_correct_unfolding,l_grid_north           ! Input
+     1          ,istatus                                    ! Input/Output
      1                                                          )
 
       real*4   vr_obs(imax,jmax,kmax)
@@ -21,7 +21,7 @@
       real*4   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)
       real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax)
 
-      logical l_correct_unfolding
+      logical l_correct_unfolding,l_grid_north
 
       write(6,*)' LVL  # Obs  Intvl  # QC'
 
@@ -44,8 +44,8 @@
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
 
-            if(abs(upass1(i,j,k)) .ge. 1e6 .or. abs(vpass1(i,j,k)) .ge. 
-     11e6)then
+            if(abs(upass1(i,j,k)) .ge. 1e6 .or. 
+     1         abs(vpass1(i,j,k)) .ge. 1e6)then
                 ierr_count = ierr_count + 1
                 if(ierr_count .lt. 100)write(6,*)
      1      ' Error in upass1,vpass1',i,j,k,upass1(i,j,k),vpass1(i,j,k)
@@ -53,11 +53,23 @@
                 return
 
             else
-                call uvtrue_to_radar(upass1(i,j,k) + u_laps_bkg(i,j,k),
+                if(l_grid_north)then
+                    call uvgrid_to_radar(
+     1                       upass1(i,j,k) + u_laps_bkg(i,j,k),
      1                       vpass1(i,j,k) + v_laps_bkg(i,j,k),
      1                       t_pass1,
      1                       r_pass1,
      1                       azimuth)
+
+                else
+                    call uvtrue_to_radar(
+     1                       upass1(i,j,k) + u_laps_bkg(i,j,k),
+     1                       vpass1(i,j,k) + v_laps_bkg(i,j,k),
+     1                       t_pass1,
+     1                       r_pass1,
+     1                       azimuth)
+
+                endif ! l_grid_north
 
                 call radar_to_uvtrue(t_pass1,
      1                       vr_obs(i,j,k),
@@ -65,7 +77,7 @@
      1                       v_true,
      1                       azimuth)
 
-                call uv_to_disp        (u_true,
+                call uv_to_disp(u_true,
      1                          v_true,
      1                          di_true,
      1                          speed)
@@ -80,8 +92,8 @@
 !                                   less than about 2.7 V Nyquist
 !
                 if(v_nyquist_2 .ne. r_missing_data)then ! Use global Nyquist vel
-                  if(abs(abs(diff_radial)-v_nyquist_2) .lt. unfolding_th
-     1resh)then
+                  if(abs(abs(diff_radial)-v_nyquist_2) 
+     1                                        .lt. unfolding_thresh)then       
 c                   call latlon_to_radar(lat(i,j),lon(i,j),height_k
 c    1                  ,azimuth,slant_range,elev
 c    1                  ,rlat_radar,rlon_radar,rheight_radar)

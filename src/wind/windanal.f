@@ -1,21 +1,20 @@
        subroutine laps_anl(uobs,vobs,n_radars,
-     1        vr_obs_unfltrd,vr_nyq,v_nyquist_in
-     1       ,upass1,vpass1                                        ! Output
-     1       ,n_var,n_fnorm                                        ! Input
-     1       ,uanl,vanl,varanl                                     ! Output
-     1       ,wt_p,wt_p_spread,weight_bkg_const                    ! Input/Local
-     1       ,max_radars
-     1       ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar
-     1       ,u_laps_bkg,v_laps_bkg                                ! Input/Output
-     1       ,imax,jmax,kmax,lat,lon
-     1       ,i4time,grid_spacing_m
-     1       ,r_missing_data
-     1       ,l_good_multi_doppler_ob,l_analyze
-     1       ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
-     1       ,n_iter_wind
-     1       ,weight_meso,weight_sao,weight_pirep,weight_prof,weight_r
-     1adar
-     1       ,istatus)
+     1      vr_obs_unfltrd,vr_nyq,v_nyquist_in
+     1     ,upass1,vpass1                                        ! Output
+     1     ,n_var,n_fnorm                                        ! Input
+     1     ,uanl,vanl,varanl                                     ! Output
+     1     ,wt_p,wt_p_spread,weight_bkg_const                    ! Input/Local
+     1     ,max_radars
+     1     ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar
+     1     ,u_laps_bkg,v_laps_bkg                                ! Input/Output
+     1     ,imax,jmax,kmax,lat,lon
+     1     ,i4time,grid_spacing_m
+     1     ,r_missing_data
+     1     ,l_good_multi_doppler_ob,l_analyze
+     1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
+     1     ,n_iter_wind
+     1     ,weight_meso,weight_sao,weight_pirep,weight_prof,weight_radar     
+     1     ,istatus)
 
 !     This routine uses the inputted wind data and actually does the analysis
 
@@ -366,22 +365,22 @@
           else
               v_nyquist_2_in = r_missing_data
           endif
-          write(6,*)' Radar QC for radar #/v_nyq*2 ',i_radar,v_nyquist_2
-     1_in
+          write(6,*)' Radar QC for radar #/v_nyq*2 '
+     1             ,i_radar,v_nyquist_2_in
           call qc_radar_obs(
-     1   imax,jmax,kmax                             ! Input
-     1  ,r_missing_data                             ! Input
-     1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input/Output
-     1  ,vr_nyq(1,1,1,i_radar)                      ! Input
-     1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input/Output
-     1  ,lat,lon                                    ! Input
-     1  ,rlat_radar(i_radar),rlon_radar(i_radar)    ! Input
-     1  ,rheight_radar(i_radar)                     ! Input
-     1  ,upass1,vpass1  ! 1st pass anal             ! Input
-     1  ,u_laps_bkg,v_laps_bkg                      ! Input
-     1  ,v_nyquist_2_in,unfolding_thresh_in         ! Input
-     1  ,l_correct_unfolding                        ! Input
-     1  ,istatus                                    ! Input/Output
+     1           imax,jmax,kmax                             ! Input
+     1          ,r_missing_data                             ! Input
+     1          ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input/Output
+     1          ,vr_nyq(1,1,1,i_radar)                      ! Input
+     1          ,n_radarobs_tot_unfltrd(i_radar)            ! Input/Output
+     1          ,lat,lon                                    ! Input
+     1          ,rlat_radar(i_radar),rlon_radar(i_radar)    ! Input
+     1          ,rheight_radar(i_radar)                     ! Input
+     1          ,upass1,vpass1  ! 1st pass anal             ! Input
+     1          ,u_laps_bkg,v_laps_bkg                      ! Input
+     1          ,v_nyquist_2_in,unfolding_thresh_in         ! Input
+     1          ,l_correct_unfolding,l_grid_north           ! Input
+     1          ,istatus                                    ! Input/Output
      1                                                          )
       enddo
 
