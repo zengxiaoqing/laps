@@ -325,21 +325,12 @@ c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
            call get_domain_perimeter_grid(nnxp,nnyp,'nest7grid'
      1                  ,lat,lon
      1                  ,1.0,rnorth,south,east,west,istatus)
-
-           rmxlat=rnorth
-           rmnlat=south
-           rmxlon=east
-           rmnlon=west
-           if(west.gt.east)then
-              rmxlon=west
-              rmnlon=east
-           endif
            print*,'static dir = ',static_dir(1:lens)
            open(10,file=static_dir(1:lens)//'/llbounds.dat'
      +         ,status='unknown')
 
            print*,'write llbounds.dat'
-           write(10,*)rmxlat,rmnlat,rmxlon,rmnlon
+           write(10,*)rnorth,south,east,west
            close(10)
 	   return
 	endif
