@@ -353,10 +353,10 @@ c
                     rklaps_range = rklaps_max - rklaps_min
                     rklaps_mean = rklaps_range / float(n_good_lvl-1)
                     n_cross = int(rklaps_range)
-                    wt_factor = (min(rk_mean/0.5,1.0))
+                    wt_factor = (min(rklaps_mean/0.5,1.0))
                     write(6,*)
-     1                ' n_good_lvl,ncross,rk-range/mean,wt_factor'    
-     1                 ,n_good_lvl,ncross,rklaps_range,rklaps_mean
+     1                ' n_good_lvl,n_cross,rk-range/mean,wt_factor'    
+     1                 ,n_good_lvl,n_cross,rklaps_range,rklaps_mean
      1                 ,wt_factor
 
 !                   Adjust the weights for this profile?
