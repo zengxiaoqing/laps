@@ -266,6 +266,8 @@ c       07 Oct 1998  Peter Stamus, NOAA/FSL
 c          Added provider and report type variables.
 c       22 Oct 1998  Peter Stamus, NOAA/FSL
 c          Added index variables to track ob location in arrays.
+c       12 Mar 1999  Peter Stamus, NOAA/FSL
+c          Fixed bug with dup station handling.
 c
 c     Notes:
 c
@@ -275,11 +277,12 @@ c
          real pstna(m),pmsla(m),alta(m)
          real tb(m),tdb(m),ddb(m),ffb(m),latb(m),lonb(m),elevb(m)
          real pstnb(m),pmslb(m),altb(m)
-         integer indexa(m), indexb(m), iholdx
-         character stna(m)*5,stnb(m)*5,holdnam*5
+         integer indexa(m), indexb(m), iholdx, ix
+         character stna(m)*5,stnb(m)*5,holdnam*5, ch*1
          character providera(m)*11, providerb(m)*11, holdprov*11
          character reptypea(m)*6, reptypeb(m)*6, holdrep*6
 c
+         holdnam = '     '
          max=maxstaa
          if(maxstab.gt.max)max=maxstab
 c
@@ -292,9 +295,11 @@ c
 c
 c     we've found a duplicate name
 c
-                  stnb(l)(5:5)='1'
-                  write(*,1021) stnb(l)
- 1021             format(1x,'Station in master list renamed: ',a5)
+                  holdnam = stnb(l)
+                  stnb(l)(5:5)='A'
+                  write(*,1021) holdnam, stnb(l)
+ 1021             format(
+     &      1x,'Station in master list renamed - old/new: ',a5,1x,a5)
                endif 
             endif
          enddo !l
@@ -304,6 +309,8 @@ c         write(*,1000) k,stna(k),lata(k),lona(k),stnb(k),latb(k),
 c    1    lonb(k)
 c         enddo
  1000    format(1x,i3,1x,a5,1x,f8.3,1x,f8.3,1x,a5,1x,f8.3,1x,f8.3)
+c
+         holdnam = '     '
          do k=1,maxstaa
  3          continue
             iflag=0
@@ -312,10 +319,20 @@ c         enddo
                   if(lata(k).eq.latb(l).and.lona(k).eq.lonb(l)) then 
                      iflag=1    !the station is on the master list
                   else  
-                     stna(k)(5:5)='1' ! diff station has a duplicate name 
-                     write(*,1020) stna(k)
+                     holdnam = stna(k) !diff stn has a duplicate name
+                     ix = ichar(stna(k)(5:5))
+                     if(ix .lt. 64) ix = 64
+                     ix = ix + 1
+                     if(ix .gt. 90) then
+                        print *,
+     &            ' WARNING. Over 26 dup stn names for ', stna(k)
+                        print *,' Will try to continue...'
+                     endif
+                     ch = char(ix)
+                     stna(k)(5:5) = ch
+                     write(*,1020) holdnam,stna(k)
  1020                format(1x,
-     &                'Master/newlist duplicate:station renamed - ', a5)
+     &  'Master/newlist duplicate station renamed - old/new: ',a5,1x,a5)
                      go to 3 
                   endif
                endif
@@ -341,6 +358,7 @@ c         enddo
 c
 c now get both lists in the same order with the same stations
 c
+         holdnam = '     '
          do k=1,maxstab
             iflag=0
             do l=1,maxstaa
