@@ -56,20 +56,20 @@ if ($timestr =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)$/ ) {
 
 my ($filename, $localfile, $remotefile);
 if ($model eq 'mm5'){
-  $filename = 'mm5/LAPS:'.$year.'-'.$month.'-'.$day.'_'.$hour;
+  $filename = 'LAPS:'.$year.'-'.$month.'-'.$day.'_'.$hour;
 }elsif($model eq 'wrf'){
-  $filename = 'wrf/LAPS:'.$year.'-'.$month.'-'.$day.'_'.$hour;
+  $filename = 'LAPS:'.$year.'-'.$month.'-'.$day.'_'.$hour;
 }elsif($model eq 'rams'){
-  $filename = 'rams/LAPS:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
+  $filename = 'LAPS:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
 }elsif($model eq 'cdf') {
-  $filename = 'cdf/LAPS:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
+  $filename = 'LAPS:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
 }
 
-$localfile = $localdir.'/'.$filename;
-$remotefile = $remotedir.'/'.$filename;
+$localfile = $localdir.'/'.$model.'/'.$filename;
+$remotefile = $remotedir.'/'.$model.'/'.$filename;
 print "Sending $localfile to $remotehost as $remotefile \n";
 
-chdir $localdir;
+chdir "$localdir/$model";
 if (! -f $filename) { 
   die "Local file not present!\n";
 }
@@ -96,7 +96,7 @@ chmod 0777, "$ftpscript";
 
 # Run the script
 print "Executing script...\n";
-system ("./$ftpscript > ../../log/send_lapsprep.log 2>&1");
+system ("./$ftpscript > ../../../log/send_lapsprep.log 2>&1");
 
 # Delete the script
 
