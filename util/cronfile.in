@@ -11,7 +11,6 @@
 03,10,19,26,34,39,49,55 * * * *  @PERL@ @prefix@/etc/laps_driver.pl vrc_driver.x           @prefix@ @laps_data_root@
 08,14,23,29,38,45,53,59 * * * *  @PERL@ @prefix@/etc/laps_driver.pl lvd_sat_ingest.exe     @prefix@ @laps_data_root@
 22,30                   * * * *  @PERL@ @prefix@/etc/laps_driver.pl lsr_driver.exe         @prefix@ @laps_data_root@
-00,05,10,15,20,25,30,45 * * * *  @PERL@ @prefix@/etc/laps_driver.pl ingest_rrv.exe         @prefix@ @laps_data_root@
 02,12,22,32,42,52       * * * *  @PERL@ @prefix@/etc/laps_driver.pl ln3_driver.exe         @prefix@ @laps_data_root@ 
 00,05,10,15,20,25,30,35,40,45,50,55   * * * *  @PERL@ @prefix@/etc/laps_driver.pl remap_polar_netcdf.exe @prefix@ @laps_data_root@
 #40                      * * * *  @CSH@  @prefix@/etc/topc.csh  @laps_data_root@/log
