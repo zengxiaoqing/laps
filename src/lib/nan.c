@@ -52,7 +52,7 @@ typedef union
 
 } dnan; 
 
-#ifdef rs6000
+#ifdef rs6000 
 /*#  define NAN1 0x7f8
 #  define NAN2 0x7fc
 #  define NAN3 0x7ff
@@ -61,7 +61,7 @@ typedef union
 #include <fp.h>
 #define IsNANorINF(X) (!finite((double) *x))
 #endif
-#ifdef alpha
+#if defined(alpha) || defined(i686)
 #include <math.h>
 #define IsNANorINF(X) (!finite((double) *x))
 #endif
