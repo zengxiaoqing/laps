@@ -84,27 +84,62 @@ opendir(LOCKDIR,"$LAPS_LOG_PATH");
 @locks = grep /^\.lock$exe/, readdir(LOCKDIR);
 closedir(LOCKDIR);
 
-
 foreach(@locks){
     $_ =~ /^\.lock$exe\.(\d+)$/;
     my $jpid = $1;
-    print "WARNING Found LOCK file for $exe with pid $jpid - killing previous job\n";
-    kill 9,$jpid;
+    open(LFH,"$LAPS_LOG_PATH/$_");
+    my $cid = <LFH>;
+    close(LFH);
+    
+    print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
+    kill -9,$cid if($cid>0);
     unlink "$LAPS_LOG_PATH/$_";
 }
 
 my $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
-open(LOCK,">$lockfile");
-close(LOCK);
+#open(LOCK,">$lockfile");
+#close(LOCK);
 
 
 my $sys = "$LAPSROOT/bin/$exe ";
 
-system($sys);
+#system($sys);
 
-unlink "$lockfile";
+#unlink "$lockfile";
 
 
+&forksub($sys,$lockfile);
+exit;
+
+sub forksub{
+    my($sys,$lockfile) = @_;
+  FORK: {      
+      my $pid;
+      if($pid = fork) {
+	  # parent process
+	  open(LOCK,">$lockfile");
+	  print LOCK "$pid\n";
+	  close(LOCK);
+	
+	  while(-e "$lockfile"){
+	      sleep 10;
+	  }
+
+
+      }elsif (defined $pid) { 
+	  #child here
+	  system($sys);
+	  unlink "$lockfile";
+	  exit;
+      }elsif ($! =~ /No more process/){
+	  # EAGAIN, recoverable fork error
+	  sleep 5;
+	  redo FORK;
+      }else{
+	  die "Can't fork: $!\n";
+      }
+  }
+}
 
 
 

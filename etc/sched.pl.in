@@ -21,7 +21,7 @@
 #
 
 use strict;
-
+use English;
 umask 002;
 my $cycle_time = 3600;
 my $initial_time = time();
@@ -33,7 +33,7 @@ my $initial_time = time();
 my @LAPS_EXE = qw(lga.exe obs_driver.x 
                   ingest_raob.exe 
                   ingest_cloud_drift.exe ingest_pireps.exe ingest_acars.exe 
-                  ingest_pro.exe ingest_blppro.exe ingest_vad.exe
+                  ingest_pro.exe ingest_vad.exe
 		  wind.exe 
                   ingest_lrs.exe ingest_blplrs.exe 
                   laps_sfc.x temp.exe 
@@ -79,37 +79,45 @@ select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
 
 
-my(@locks);
-opendir(LOCKDIR,"$LAPS_LOG_PATH");
-@locks = grep /^\.locklaps/, readdir(LOCKDIR);
-closedir(LOCKDIR);
-
-
-foreach(@locks){
-    $_ =~ /^\.locklaps\.(\d+)$/;
-    my $jpid = $1;
-    print "WARNING Found LOCK file for sched.pl with pid $jpid - killing previous job\n";
-    kill 9,$jpid;
-    unlink "$LAPS_LOG_PATH/$_";
-}
 
 my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
-open(LOCK,">$lockfile");
-close(LOCK);
-
 
 
 my $t=gmtime(); print $t." Running purger\n";
-system("@PERL@ $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
+system("$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
 my($exe);
 foreach $exe (@LAPS_EXE){
+
+    my(@locks);
+    opendir(LOCKDIR,"$LAPS_LOG_PATH");
+    @locks = grep /^\.locklaps/, readdir(LOCKDIR);
+    closedir(LOCKDIR);
+
+    foreach(@locks){
+	$_ =~ /^\.locklaps\.(\d+)$/;
+	my $jpid = $1;    
+	open(LFH,"$LAPS_LOG_PATH/$_");
+	my $prevproc = <LFH>;
+	close(LFH);
+	$prevproc = ~/^(\d+) (.*)$/;
+	my $cid = $1;
+	$prevproc = $2;
+	
+	print "WARNING Found LOCK file for sched.pl with pid $jpid and child $cid - killing $prevproc\n";
+	kill -9,$cid if($cid>0);
+	unlink "$LAPS_LOG_PATH/$_";
+    }
+
+
     $t=gmtime(); 
     my $log = $exe;
     $log =~ s/\..*$/\.log\.$hhmm/;
     if(-x  "$LAPSROOT/bin/$exe"){
 	print $t." Running $exe\n";
-	system("$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1");
+#	system("$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1");
+	my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
+	&forksub($sys,$lockfile);
     }else{
 	print $t."WARNING: $exe not found\n";
     }
@@ -124,15 +132,50 @@ foreach $exe (@LAPS_EXE){
 $t = gmtime;
 
 print LOG "$t\n";
-close(LOG);
+
 
 
 if($fxa_sys!=0){
     print LOG $t." Running wfo postprocessing\n";
-    system("@PERL@ $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
+    my $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+#    system("/usr/nfs/bin/perl $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
+
+    &forksub($sys,$lockfile);
+
+}
+close(LOG);
+#unlink "$lockfile";
+
+sub forksub{
+    my($sys,$lockfile) = @_;
+  FORK: {      
+      my $pid;
+      if($pid = fork) {
+	  # parent process
+	  open(LOCK,">$lockfile");
+	  print LOCK "$pid $sys\n";
+	  close(LOCK);
+	
+	  while(-e "$lockfile"){
+	      sleep 10;
+	  }
+
+
+      }elsif (defined $pid) { 
+	  #child here
+	  system($sys);
+	  unlink "$lockfile";
+	  exit;
+      }elsif ($! =~ /No more process/){
+	  # EAGAIN, recoverable fork error
+	  sleep 5;
+	  redo FORK;
+      }else{
+	  die "Can't fork: $!\n";
+      }
+  }
 }
 
-unlink "$lockfile";
 
 sub systime{
     use Time::Local;
