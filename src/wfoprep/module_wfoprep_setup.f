@@ -64,7 +64,7 @@ MODULE wfoprep_setup
   CHARACTER (LEN=256)          :: fxa_data
   CHARACTER (LEN=132),PUBLIC   :: model_name(max_sources)
   CHARACTER (LEN=256),PUBLIC   :: model_path(max_sources)
-  CHARACTER (LEN=10), PUBLIC   :: output_format
+  CHARACTER (LEN=10), PUBLIC   :: output_type
   CHARACTER (LEN=32), PUBLIC   :: output_name(max_sources)
   CHARACTER (LEN=256),PUBLIC   :: laps_data_root
   CHARACTER (LEN=256),PUBLIC   :: ext_data_path
@@ -175,7 +175,7 @@ CONTAINS
     CHARACTER(LEN=132)          :: model_name_tmp 
     NAMELIST / wfoprep_nl / model_code, model_name, &
                             model_run_freq, model_delay, max_fcst_len, &
-                            output_freq,output_format, fxa_data, &
+                            output_freq,output_type, fxa_data, &
                             output_name,min_time_frac,min_vert_frac
 
     PRINT '(A)', 'Processing wfoprep.nl namelist information.'
@@ -187,7 +187,7 @@ CONTAINS
     model_delay(:) = 0
     max_fcst_len(:) = 0
     output_freq(:) = 0
-    output_format = '          '
+    output_type = '          '
     min_time_frac = 0.8
     min_vert_frac = 0.5
     ! Build the file name of the namelist and make sure it exists
@@ -278,16 +278,16 @@ CONTAINS
     ENDIF
 
     ! Check output format for validity
-    IF ( (output_format .NE. 'mm5       ') .AND. &
-         (output_format .NE. 'rams      ') .AND. &
-         (output_format .NE. 'wrf       ') ) THEN
+    IF ( (output_type .NE. 'mm5       ') .AND. &
+         (output_type .NE. 'rams      ') .AND. &
+         (output_type .NE. 'wrf       ') ) THEN
       PRINT '(2A)', 'Invalid output format requested: ', &
-              output_format
+              output_type
       PRINT *, 'Must be one of:  mm5, rams, wrf'
       istatus = 0
       RETURN
     ELSE
-      PRINT '(A)', 'wfoprep will output the following format:',output_format
+      PRINT '(A)', 'wfoprep will output the following format:',output_type
     ENDIF
 
     PRINT '(A)', 'Successfully processed namelist.'

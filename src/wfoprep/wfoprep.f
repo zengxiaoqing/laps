@@ -44,7 +44,7 @@ PROGRAM wfoprep
   ! you wish to initialize with LAPS.  Furthermore, the old version was
   ! set up to support only the SFM, which we are no longer supporting.  This
   ! version can output files for ingest by MM5v3/REGRIDDER, RAMS 4.3 in RALPH2
-  ! format, or WRFSI/hinterp input.   This is controlled by the output_format
+  ! format, or WRFSI/hinterp input.   This is controlled by the output_type
   ! entry(ies) in the wfoprep.nl.  Finally, this new version is cast in
   ! free-form F90 code, including the use of modules.
   !
@@ -1105,7 +1105,7 @@ PROGRAM wfoprep
       ENDIF
 
       ! Output the data for this time
-      IF (output_format(1:3).EQ. 'mm5') THEN
+      IF (output_type(1:3).EQ. 'mm5') THEN
         IF (model_code(m) .GT. 1) THEN
           PRINT *, 'Writing MM5v3 3D state variables for i4time =',i4time_valid
           CALL output_mm5v3_basic(i4time_cycle,i4time_valid, proj, &
@@ -1125,7 +1125,7 @@ PROGRAM wfoprep
                tsf, usf, vsf, rhsf,  &
                ext_data_path, output_name(m), MM5MODE_NEW,istatus) 
         ENDIF
-      ELSE IF (output_format(1:3).EQ.'wrf') THEN
+      ELSE IF (output_type(1:3).EQ.'wrf') THEN
         IF (model_code(m) .GT. 1) THEN 
           PRINT *, 'Writing WRF 3D state variables for i4time =',i4time_valid
           CALL output_wrf_basic(i4time_cycle,i4time_valid, proj, &
@@ -1145,11 +1145,11 @@ PROGRAM wfoprep
                tsf, usf, vsf, rhsf,  &
                ext_data_path, output_name(m), WRFMODE_NEW,istatus)
         ENDIF                                                                   
-      ELSE IF (output_format(1:4).EQ.'rams') THEN
+      ELSE IF (output_type(1:4).EQ.'rams') THEN
         print *, 'rams output coming soon'
         stop 
       ELSE
-        PRINT *,'Unrecognized output format requested: ', output_format
+        PRINT *,'Unrecognized output format requested: ', output_type
         STOP
       ENDIF
   
