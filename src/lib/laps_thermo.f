@@ -273,10 +273,12 @@ c       write(6,*)' i = ',i
 
             nlevel = n
 
-            CALL SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0,PLCL,LCL,CCL,TCONV
-     1,IO
-     #      ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI,VELNEG
-     #      ,WATER,IHOUR)
+            IO = 0
+
+            CALL SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0,PLCL,LCL,CCL
+     1                ,TCONV,IO
+     1                ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI
+     1                ,VELNEG,WATER,IHOUR)
 
             pbe_2d(i,j) = PBEPOS
             nbe_2d(i,j) = PBENEG

@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
 
-        subroutine read_tsnd(i4time_sys,heights_3d,temp_3d,       ! Input
+        subroutine read_tsnd(i4time_sys,heights_3d,temp_bkg_3d,   ! Input
      1                   sh_3d,pres_3d,                           ! Input
      1                   lat_pr,lon_pr,                           ! Output
      1                   lat,lon,                                 ! Input
@@ -94,7 +94,7 @@ c                               not exactly match the LAPS analysis time.
         character*9 a9time
 
         real*4 heights_3d(imax,jmax,kmax)
-        real*4 temp_3d(imax,jmax,kmax)
+        real*4 temp_bkg_3d(imax,jmax,kmax)
         real*4 sh_3d(imax,jmax,kmax)
         real*4 pres_3d(imax,jmax,kmax)
         real*4 lat(imax,jmax)
@@ -234,8 +234,8 @@ c311                format(1x,i6,i4,5f8.1)
 
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
-                    call interp_rass_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
-     1                          t_diff,
+                    call interp_tsnd_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
+     1                          t_diff,temp_bkg_3d,
      1                          ob_pr_t(i_pr,level),
      1                          i_pr,
      1                          level,l_3d,
@@ -248,7 +248,7 @@ c311                format(1x,i6,i4,5f8.1)
 
 c                   write(6,411,err=412)ista,i_pr,level
 c       1                ,ob_pr_t(i_pr,level)
-c       1                ,temp_3d(i_ob,j_ob,level)
+c       1                ,temp_bkg_3d(i_ob,j_ob,level)
 c       1                ,heights_3d(i_ob,j_ob,level)
 c       1                ,t_diff
 411                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
@@ -272,7 +272,7 @@ c       1                ,t_diff
      1                         imax,jmax,kmax,
      1                         max_snd_obs,max_snd_levels,
      1                         r_missing_data,     
-     1                         temp_3d,heights_3d,pres_3d)
+     1                         temp_bkg_3d,heights_3d,pres_3d)
 
                     call interp_laps_to_rass(ob_pr_ht_obs,ob_pr_t_obs,
      1                         sh_interp_laps,p_interp_laps,
@@ -441,8 +441,8 @@ c611                format(1x,i6,i4,5f8.1)
 
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
-                    call interp_rass_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
-     1                         t_diff,
+                    call interp_tsnd_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
+     1                         t_diff,temp_bkg_3d,
      1                         ob_pr_t(i_pr,level),
      1                         i_pr,
      1                         level,l_3d,
@@ -455,7 +455,7 @@ c611                format(1x,i6,i4,5f8.1)
 
 c                   write(6,711,err=712)ista,i_pr,level
 c       1                ,ob_pr_t(i_pr,level)
-c       1                ,temp_3d(i_ob,j_ob,level)
+c       1                ,temp_bkg_3d(i_ob,j_ob,level)
 c       1                ,heights_3d(i_ob,j_ob,level)
 c       1                ,t_diff
 711                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
@@ -478,7 +478,7 @@ c       1                ,t_diff
      1                      lat_pr,lon_pr,i_ob,j_ob,
      1                      imax,jmax,kmax,
      1                      max_snd_obs,max_snd_levels,r_missing_data,       
-     1                      temp_3d,heights_3d,pres_3d)
+     1                      temp_bkg_3d,heights_3d,pres_3d)
 
                 tamb = ob_pr_t_obs(i_pr,level) + t_diff
 
