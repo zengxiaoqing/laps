@@ -157,7 +157,7 @@ if(defined $opt_A){
       exit;
    }
 
-   $archive_time = &seconds_since_1970($opt_A,$LAPSROOT);   
+   $archive_time = &seconds_since_1970($opt_A,$LAPSROOT,$LAPS_DATA_ROOT);
 }
    
 #print "$opt_a $archive_time\n";
@@ -601,7 +601,7 @@ sub seconds_since_1970{
 
 # format for input dd-mmm-yyyy-hhmm
 
-    my ($input_time,$LAPSINSTALLROOT)=@_;
+    my ($input_time,$LAPSINSTALLROOT,$LAPS_DATA_ROOT)=@_;
 
     require "$LAPSINSTALLROOT/etc/run_sys.pm";
 
@@ -633,13 +633,13 @@ sub seconds_since_1970{
     $command .= "$mon ";
     $command .= "$day ";
     $command .= "$hour ";
-    $command .= "$min > $LAPSINSTALLROOT/systime_sys.dat";
+    $command .= "$min > $LAPS_DATA_ROOT/systime_sys.dat";
 
     run_sys::run_sys($command,1);
-    open(SYS,"$LAPSINSTALLROOT/systime_sys.dat");
+    open(SYS,"$LAPS_DATA_ROOT/systime_sys.dat");
     my @date_types = <SYS>;
     close (SYS);
-    unlink "$LAPSINSTALLROOT/systime_sys.dat";
+    unlink "$LAPS_DATA_ROOT/systime_sys.dat";
     my $i4time_sys = @date_types[0];
     my $seconds_since_1970 = $i4time_sys-$i4time_1970;
 #   print "seconds since 1970 = $seconds_since_1970\n";
