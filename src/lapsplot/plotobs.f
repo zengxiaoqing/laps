@@ -272,7 +272,7 @@ cdis
                 write(6,*)nint(ri),nint(rj)
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_radar)
+     1                          ,size_radar,'true')
 
         else if(k_ob .gt. k_level)then
                 goto1300
@@ -322,7 +322,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 112             format(1x,f6.1,i4,2f7.0,4x,2f7.0,i4)
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon
-     1                          ,imax,jmax,size_suw)
+     1                          ,imax,jmax,size_suw,'true')
                 endif
 
 
@@ -371,7 +371,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 111             format(1x,2f8.1,4x,f7.0,f7.0,i4,f8.3)
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_vad)
+     1                          ,size_vad,'true')
 
 
             endif
@@ -417,7 +417,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 spd_kt = SPEED_ms  / mspkt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_meso)
+     1                          ,size_meso,'true')
 
         endif ! k .eq. k_level
 
@@ -464,7 +464,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 spd_kt = SPEED_ms  / mspkt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_meso)
+     1                          ,size_meso,'true')
 
         endif ! k .eq. k_level
 
@@ -512,7 +512,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 spd_kt = SPEED_ms  / mspkt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_prof)
+     1                          ,size_prof,'true')
                 write(6,111,err=121)alat,alon,dir,spd_kt
 121             continue
 
@@ -567,7 +567,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 write(6,921)ri,rj,max(dir,-99.),spd_kt,c3_obsext
 921             format(1x,2f8.1,4x,f7.0,f7.0,2x,a3)
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_pirep)
+     1                          ,size_pirep,'true')
 
             endif ! k .eq. k_level
 
@@ -615,7 +615,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 !               write(6,111)alat,alon,max(dir,-99.),spd_kt
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_maps)
+     1                          ,size_maps,'true')
 
             endif ! k .eq. k_level
 

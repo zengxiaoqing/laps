@@ -37,13 +37,13 @@ cdis
 cdis   
 cdis
 
-      subroutine plot_windob(dir,spd,ri,rj,lat,lon,imax,jmax,relsize)
-
-!     This routine assumes input direction is with respect to TRUE NORTH
+      subroutine plot_windob(dir,spd,ri,rj,lat,lon,imax,jmax,relsize
+     1                      ,c4_rot)
 
       include 'lapsparms.cmn'
 
       real*4 lat(imax,jmax),lon(imax,jmax)
+      character*4 c4_rot
 
       call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
 !     write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
@@ -63,10 +63,12 @@ cdis
           goto 1
       endif
 
-!     rot = projrot_latlon(lat(nint(ri),nint(rj))
-!    1                    ,lon(nint(ri),nint(rj)),istatus) / 57.295
-
-      rot = 0.
+      if(c4_rot .eq. 'true')then ! Convert wind ob from true north to grid north
+          rot = projrot_latlon(lat(nint(ri),nint(rj))
+     1                        ,lon(nint(ri),nint(rj)),istatus) / 57.295
+      else                       ! Input is in grid north
+          rot = 0.
+      endif
 
 !     Convert ri and rj to x1 and y1 (U and V)
 !     call supcon(alat,alon,x1,y1)

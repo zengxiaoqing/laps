@@ -59,7 +59,7 @@ cdis
         write(6,*)
         write(6,*) ' Plot_winds_2d: interval/size=',interval,relsize
         write(6,*)
-        write(6,*) ' winds are assumed to be TRUE north at this point'       
+        write(6,*) ' winds are assumed to be GRID north at this point'       
 
         do j = 1+isize,jmax-isize,interval
         do i = 1+isize,imax-isize,interval
@@ -81,7 +81,7 @@ cdis
                 call latlon_to_rlapsgrid(alat,alon,lat,lon,imax,jmax
      1                                                  ,ri,rj,istatus)
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,relsize)
+     1                          ,relsize,'grid')
 
             endif
 
