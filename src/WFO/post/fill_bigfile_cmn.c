@@ -198,19 +198,19 @@ int getDataSize(int cdfId, char *level_name, int *x, int *y, int *numLevels)
       return ERROR;
     }
     
-    nc_status = nc_inq_dimlen(cdfId, xId, x);
+    nc_status = nc_inq_dimlen(cdfId, xId, (size_t *)x);
     if (nc_status != NC_NOERR) {
       fprintf(stdout, "Error getting x dimension from LAPS file.\n");
       return ERROR;
     }
 
-    nc_status = nc_inq_dimlen(cdfId, yId, y);
+    nc_status = nc_inq_dimlen(cdfId, yId, (size_t *)y);
     if (nc_status != NC_NOERR) {
       fprintf(stdout, "Error getting y dimension from LAPS file.\n");
       return ERROR;
     }
 
-    nc_status = nc_inq_dimlen(cdfId, zId, numLevels);
+    nc_status = nc_inq_dimlen(cdfId, zId, (size_t *)numLevels);
     if (nc_status != NC_NOERR) {
       fprintf(stdout, "Error getting z dimension from LAPS file.\n");
       return ERROR;

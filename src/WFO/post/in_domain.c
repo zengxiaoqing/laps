@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
               fprintf(stdout,"%d\n",status);
               return;
             } else {
-              nc_status = nc_inq_dimlen(cdfId, varId, &nx);
+              nc_status = nc_inq_dimlen(cdfId, varId, (size_t *)&nx);
               if (nc_status != NC_NOERR) {
                 fprintf(stdout, "Unable to retrieve dimension 'x' from file.\n");
                 status = 0;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
               fprintf(stdout,"%d\n",status);
               return;
             } else {
-              nc_status = nc_inq_dimlen(cdfId, varId, &ny);
+              nc_status = nc_inq_dimlen(cdfId, varId, (size_t *)&ny);
               if (nc_status != NC_NOERR) {
                 fprintf(stdout, "Unable to retrieve dimension 'y' from file.\n");
                 status = 0;
