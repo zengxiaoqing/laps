@@ -440,7 +440,7 @@ long *units_len;
 long *kdim;
 #endif
 {
-	char *uptr, *cptr, *lptr;
+	char *uptr, *cptr, *lptr, *pf, *pc, pc_char[1];
         char *hld_unit, *hld_comm, *hld_lvl;
         int i, j, slen;
 
@@ -455,16 +455,29 @@ long *kdim;
         cptr = comment;
         lptr = lvl_coord;
 
-        for (i = 0; i < *kdim; i++) {
+        for (i = 0; i < *kdim ; i++) {
           slen = strlen(uptr);
           if (slen < (*units_len)) {
             strcpy(hld_unit,uptr);
             for (j = slen + 1; j <= *units_len; j++)
               strcat(hld_unit," ");
           }
-          else
+          else {
             strncpy(hld_unit,uptr,*units_len);
-          strcat(f_units, hld_unit);
+          }
+          if (i == (*kdim - 1)) {
+            pf = f_units + ((*kdim - 1) * (*units_len));
+            pc = hld_unit;
+            for (j = 0; j < *units_len; j++) {
+              strncpy(&pc_char,pc,1);
+              *pf = pc_char[0];
+              pf++;
+              pc++;
+            }
+          }
+          else {
+            strcat(f_units, hld_unit);
+          }
           uptr += (*units_len) + 1;
 
           slen = strlen(cptr);
@@ -473,9 +486,22 @@ long *kdim;
             for (j = slen + 1; j <= *comm_len; j++)
               strcat(hld_comm," ");
           }
-          else
+          else {
             strncpy(hld_comm,cptr,*comm_len);
-          strcat(f_comment, hld_comm);
+          }
+          if (i == (*kdim - 1)) {
+            pf = f_comment + ((*kdim - 1) * (*comm_len));
+            pc = hld_comm;
+            for (j = 0; j < *comm_len; j++) {
+              strncpy(&pc_char,pc,1);
+              *pf = pc_char[0];
+              pf++;
+              pc++;
+            }
+          }
+          else {
+            strcat(f_comment, hld_comm);
+          }
           cptr += (*comm_len) + 1;
 
           slen = strlen(lptr);
@@ -484,9 +510,22 @@ long *kdim;
             for (j = slen + 1; j <= *lvl_coord_len; j++)
               strcat(hld_lvl, " ");
           }
-          else
+          else {
             strncpy(hld_lvl,lptr,*lvl_coord_len);
-          strcat(f_lvl_coord, hld_lvl);
+          }
+          if (i == (*kdim - 1)) {
+            pf = f_lvl_coord + ((*kdim - 1) * (*lvl_coord_len));
+            pc = hld_lvl;
+            for (j = 0; j < *lvl_coord_len; j++) {
+              strncpy(&pc_char,pc,1);
+              *pf = pc_char[0];
+              pf++;
+              pc++;
+            }
+          }
+          else {
+            strcat(f_lvl_coord, hld_lvl);
+          }
           lptr += (*lvl_coord_len) + 1;
         }
 
@@ -556,7 +595,7 @@ long *status;
 /* open netCDF file for reading, if file exists */
         if( access(filename, F_OK) != 0 ) {
           printf("The LAPS file %s does not exist\n",filename);
-          *status = -1; /* error opening file */
+          *status = -5; /* file not there */
           return;
         }
 
