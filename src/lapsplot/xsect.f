@@ -3004,6 +3004,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             ri = xlow + (float(ii-1) * deltax)
             rj = ylow + (float(ii-1) * deltay)
 
+            if(ri .lt. 1.0)ri = 1.0
+            if(rj .lt. 1.0)rj = 1.0
+
             i = int(ri)
             if(i .eq. NX_L)i=i-1
 
@@ -3018,7 +3021,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             Z3=array_in(i+1, j+1)
             Z4=array_in(i  , j+1)
 
-            if(    z1 .ne. r_missing_data
+            if(  z1 .ne. r_missing_data
      1     .and. z2 .ne. r_missing_data
      1     .and. z3 .ne. r_missing_data
      1     .and. z4 .ne. r_missing_data)then
@@ -3079,8 +3082,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         end
 
 
-        subroutine interp_2d_spread(array_in,array_out,xlow,xhigh,ylow,y
-     1high,NX_L,NY_L,NX_C,r_missing_data)
+        subroutine interp_2d_spread(array_in,array_out,xlow,xhigh
+     1                             ,ylow,yhigh,NX_L,NY_L,NX_C
+     1                             ,r_missing_data)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NX_C, r_missing_data
 !                                   as dummy arguments
@@ -3104,6 +3108,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             ri = xlow + (float(ii-1) * deltax)
             rj = ylow + (float(ii-1) * deltay)
 
+            if(ri .lt. 1.0)ri = 1.0
+            if(rj .lt. 1.0)rj = 1.0
+
             i = int(ri)
             if(i .eq. NX_L)i=i-1
 
@@ -3118,7 +3125,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             Z3=array_in(i+1, j+1)
             Z4=array_in(i  , j+1)
 
-            if(    z1 .ne. r_missing_data
+            if(  z1 .ne. r_missing_data
      1     .and. z2 .ne. r_missing_data
      1     .and. z3 .ne. r_missing_data
      1     .and. z4 .ne. r_missing_data)then
