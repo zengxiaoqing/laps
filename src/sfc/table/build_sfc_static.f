@@ -226,6 +226,11 @@ c
         close(19)
 	print *,' '
 	print *,' Normal completion of DRAG_COEF.'
+
+
+
+        goto 9999 ! Bypass PBL top code
+
 c
 c
 c...........................................................................
@@ -287,7 +292,7 @@ c
 	print *,' '
 	print *,' Normal completion of PBL_TOP'
 c
-	print *,' '
+ 9999   print *,' '
 	print *,' Normal completion of build_sfc_static'
 c
 	stop

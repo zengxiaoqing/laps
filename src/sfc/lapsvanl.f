@@ -896,13 +896,13 @@ c
 c.....	Channel the winds around the terrain
 c
 	call get_directory('static', infile, len)
-	infile = infile(1:len) // '/pbl_top.dat'
-	call s_len(infile, len)
+!	infile = infile(1:len) // '/pbl_top.dat'
+!	call s_len(infile, len)
 c	open(52,file='../static/surface/pbl_top.dat',
-	open(52,file=infile(1:len),
-     &       form='unformatted',status='old')
-	read(52) pbl_top
-	close(52)
+!	open(52,file=infile(1:len),
+!    &       form='unformatted',status='old')
+!	read(52) pbl_top
+!	close(52)
 cc	call vortdiv(u_a,v_a,vort,div,imax,jmax,dx,dy)
 cc	call channel(u_a,v_a,topo,imax,jmax,pbl_top,pblht,dx,dy,z,div)
 c

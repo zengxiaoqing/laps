@@ -55,7 +55,8 @@ C
       deltax_cdf = deltax
       deltay_cdf = deltay
 
-      if(c6_maproj .eq. 'plrstr')then
+      if(.false.)then
+!     if(c6_maproj .eq. 'plrstr')then
           call get_ps_parms(std_lat,std_lat2,grid_spacing,phi0
      1                     ,grid_spacing_proj_m)
 

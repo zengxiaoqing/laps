@@ -550,7 +550,7 @@ c
 	   call check_field_2d(td_bk,imax,jmax,fill_val,istatus)
 	endif
 c
-	if(back_uv .ne. 1) then
+	if(back_uv .ne. 1) then  !u1/v1 already rotated to grid north
 	   print *,' '
 	   print *,
      & ' **WARNING. No wind background. Using smooth Barnes anl of obs'
