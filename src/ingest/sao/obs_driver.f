@@ -377,7 +377,7 @@ c
 c
         if(metar_format(1:len_metar_format) .ne. 'AFWA')then
            call get_metar_obs(maxobs,maxsta,i4time_sys,
-     &                        path_to_metar,data_file_m,metar_format,   
+     &                        path_to_metar,metar_format,   
      &                        minutes_to_wait_for_metars,
      &                        ick_metar_time,itime_before,itime_after,
      &                        grid_east,grid_west,grid_north,grid_south,       

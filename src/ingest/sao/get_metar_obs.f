@@ -39,7 +39,7 @@ cdis
 c
 c
 	subroutine get_metar_obs(maxobs,maxsta,i4time_sys,
-     &                      path_to_metar,data_file,metar_format,
+     &                      path_to_metar,metar_format,
      &                      minutes_to_wait_for_metars,
      &                      ick_metar_time,itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
@@ -214,8 +214,12 @@ c
 	        if(nf_status.ne.NF_NOERR) then ! No file found to open
 	           print *, NF_STRERROR(nf_status)
 	           print *, data_file
-                   write(6,*)' WARNING: no file found in get_metar_obs'       
-                   return
+                   write(6,*)' WARNING: not found in get_metar_obs - '
+     1                      ,data_file       
+                   n_metar_file = 0
+                   goto580
+                else
+                   write(6,*)' File found - ',data_file
 	        endif
 c
 c.....          Get the dimension of some of the variables.
@@ -272,7 +276,7 @@ c
                     write(6,*)'     n_metar_file = ',n_metar_file
                 endif
 
-                ix = ix + n_metar_file
+ 580            ix = ix + n_metar_file
 
  590	    enddo             ! i4time_file (in time window)
 
