@@ -782,6 +782,9 @@ c
       xmax=r*((se(2)-rlonc)*dg2rd)*cosd(rlatc)
       ymax=r*nw(1)*dg2rd
 
+      if(xmax.eq.xmin)xmax=abs(xmin)
+      if(ymax.eq.ymin)ymax=abs(ymin)
+
       dx=(xmax-xmin)/(nx-1)
       dy=(ymax-ymin)/(ny-1)
 
@@ -856,7 +859,8 @@ c
 c===============================================================================
 c
       subroutine init_gridconv_cmn(gproj,nxbg,nybg,nzbg
-     &,dlat,dlon,Lat0,Lat1,Lon0,sw1,sw2,ne1,ne2,istatus)
+     &,dlat,dlon,cenlat,cenlon,Lat0,Lat1,Lon0
+     &,sw1,sw2,ne1,ne2,istatus)
 c
 c JS 4-01
 c
@@ -870,6 +874,7 @@ c
       real           Lon0,Lon1,Lon2
       real           sw1,ne1
       real           sw2,ne2
+      real           cenlat,cenlon
 
 c
 c *** Common block variables for lat-lon grid.
@@ -885,6 +890,13 @@ c
       real*4    lat1_lc,lat2_lc,lon0_lc,sw(2),ne(2)
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1_lc,lat2_lc
      &,lon0_lc,sw,ne
+c
+c *** Common block variables for cyclindrical equidistant grid.
+c
+      integer   nx,ny,nz
+      real*4    rlatc,rlonc,nw(2),se(2),dx,dy
+      common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
+
 
       if(gproj.eq.'LC')then
          nx_lc=nxbg
@@ -911,13 +923,28 @@ c
          return
       endif
 
+      if(gproj.eq.'LE')then
+         nx=nxbg
+         ny=nybg
+         nz=nzbg
+         rlatc=cenlat
+         rlonc=cenlon
+         se(1)=sw1
+         se(2)=sw2
+         nw(1)=ne1
+         nw(2)=ne2
+c        dx=dlon*111100.
+c        dy=dlat*111100.
+         return 
+      endif
+
       return
       end
 c
 c===============================================================================
 c
       subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
-     .     lat,lon,grx,gry,bgmodel)
+     .     lat,lon,grx,gry,bgmodel,cmodel)
 
 c
       implicit none
@@ -930,7 +957,11 @@ c
       integer i,j,k
       integer istatus
 c
+      character*(*) cmodel
       character*2 gproj
+
+      integer lenc
+
       integer nxc,nyc,nzc
       real sw(2),ne(2),rota,lat0,lon0
       real tol
@@ -958,6 +989,8 @@ c      print*,nxc,nyc,nzc,lat0,lon0,rota,sw,ne
          call latlon_2_coneqij(nx_laps*ny_laps,lat,lon,grx,gry)
       elseif (gproj .eq. 'LL') then
          call latlon_2_llij(nx_laps*ny_laps,lat,lon,grx,gry)
+      elseif (gproj .eq. 'LE') then
+         call latlon_2_ceij(nx_laps*ny_laps,lat,lon,grx,gry)
       endif
 c
 c *** Check that all LAPS grid points are within the background data coverage.
@@ -965,6 +998,9 @@ c
 c
 c ****** Check for wrapping if a global data set.
 c
+
+      call s_len(cmodel,lenc)
+
       if ( bgmodel .eq. 6 .or. 
      .     bgmodel .eq. 8) then
          do j=1,ny_laps
@@ -985,6 +1021,26 @@ c
                endif
             enddo
          enddo
+      elseif(bgmodel.eq.4.and.cmodel(1:lenc).eq.'AVN_SBN_CYLEQ')then
+         do j=1,ny_laps
+            do i=1,nx_laps
+               if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+               if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               if (gry(i,j) .lt. 1) then
+                  gry(i,j)=2.-gry(i,j)
+                  grx(i,j)=grx(i,j)-float(nx_bg/2)
+                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               endif
+               if (gry(i,j) .gt. ny_bg) then
+                  gry(i,j)=float(2*ny_bg)-gry(i,j)
+                  grx(i,j)=grx(i,j)-float(nx_bg/2)
+                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               endif
+            enddo
+         enddo
+
 c
 c ****** If not a global data set, then check that LAPS domain is fully
 c           within background domain.
