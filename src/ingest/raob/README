@@ -61,3 +61,25 @@
  7010.399902 0.9999999934E+37 0.9999999934E+37 0.9999999934E+37 320.0000000 15.43200016
  7530.000000 400.0000000 -19.84999084 -22.64999008 0.9999999934E+37 0.9999999934E+37
        72363           0    35.2300      -101.7000          1094. AMA     991760000 RAOB    
+
+
+.............................................................................
+
+
+Here is a tree diagram outlining the source code in this directory...
+
+
+Subroutine Name                                          File Name
+---------------                                          ---------  
+main                                                     ingest_sounding.f
+    get_snd_parms                                        ingest_sounding.f
+    ingest_raob                                          ingest_raob.f
+        get_raob_data                                    ingest_raob_sub.f
+            main_sub                                     ingest_raob_sub.f
+                read_netcdf                              ingest_raob_sub.f
+                sort_and_write                           ingest_raob_sub.f
+        get_raob_data_af                                 ingest_raob_sub_af.f        
+    ingest_satsnd                                        ingest_satsnd.f
+        get_satsnd_afwa                                  ingest_satsnd_afwa.f
+
+
