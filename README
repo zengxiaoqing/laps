@@ -2939,7 +2939,9 @@ Outputs:
                                 mixing ratio if desired by dividing through
                                 by the air density. 
 
-	lil     2d grid		vertically integrated cloud liquid water content
+	lil     2d grid		Vertically integrated cloud liquid water content
+                                (lwc). This is the total cloud liquid in the
+                                column.
 
 	lct     2d grid		SFC precip type (SPT,PTT) 
                                     Types are:
@@ -3063,10 +3065,16 @@ Inputs: (from LSX, LZA processes)
       * vrc/v01/vrz  grid       2-D or 3-D radar reflectivity	
 
 Outputs:
-	L1S          2d grid	Snowfall over LAPS cycle time (S01 field) 
-				Storm total snow accumulation (STO field)
-				Rain/Liquid Equivalent Precip (R01 field)
-				Storm Total Rain/Liquid Pcp   (RTO field)
+	L1S          2d grid	Snowfall over LAPS cycle time  (S01 field) 
+
+				Storm total snow accumulation  (STO field)
+                                Time interval is listed in the comment field.
+
+				Rain/Liquid Equivalent Precip  (R01 field)
+                                over LAPS cycle time.
+
+				Storm Total Rain/Liquid Precip (RTO field)
+                                Time interval is listed in the comment field.
 </pre>
 Source directory: laps/src/accum
 
