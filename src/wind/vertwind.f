@@ -32,11 +32,11 @@ cdis
 
         subroutine vert_wind(uanl,vanl,u_sfc,v_sfc,ni,nj,nk,wanl
      1          ,topo,lat,lon,grid_spacing_m,istatus
-     1          ,NX_L_MAX,NY_L_MAX,r_missing_data
+     1          ,r_missing_data
      1          ,laps_rotate_winds,flu,flv,sigma,conv)
 
 !      ~1990        Steve Albers  Orig version
-!       1997 Jun    Ken Dritz     Added NX_L_MAX and NY_L_MAX as dummy
+!       1997 Jun    Ken Dritz     Added ni and nj as dummy
 !                                 arguments, thus making wsum and one and
 !                                 several other arrays automatic.
 !       1997 Jun    Ken Dritz     Initialize wsum and one dynamically, instead
@@ -44,24 +44,25 @@ cdis
 !       1997 Jun    Ken Dritz     Added r_missing_data as dummy argument.
 !       1997 Jun    Ken Dritz     Removed include of 'lapsparms.for'.
 !       1997 Oct    Steve Albers  Pass lon to fflxc. Misc Cleanup.
+!       1997 Dec    Steve Albers  Changed NX_L_MAX/NY_L_MAX to ni/nj
 
         real m ! Grid points per meter
 
-        real*4 wsum(NX_L_MAX,NY_L_MAX)
-        real*4  one(NX_L_MAX,NY_L_MAX)
+        real*4 wsum(ni,nj)
+        real*4  one(ni,nj)
 
         logical laps_rotate_winds
 
-        integer*2 k_terrain(NX_L_MAX,NY_L_MAX)
+        integer*2 k_terrain(ni,nj)
 
 !       DATA PHI0,scale/90.,1./
         DATA scale/1./
 
         real*4 uanl(ni,nj,nk),vanl(ni,nj,nk)
         real*4 wanl(ni,nj,nk) ! omega (pascals/second)
-        real*4 terrain_w(NX_L_MAX,NY_L_MAX),conv(ni,nj)
+        real*4 terrain_w(ni,nj),conv(ni,nj)
         real*4 u_sfc(ni,nj),v_sfc(ni,nj)
-        real*4 topo_pa(NX_L_MAX,NY_L_MAX)
+        real*4 topo_pa(ni,nj)
 
         real*4 lat(ni,nj)
         real*4 lon(ni,nj)
@@ -71,15 +72,15 @@ cdis
         real*4 flv(ni,nj)
         real*4 sigma(ni,nj)
 
-        real*4 u_sfc_grid(NX_L_MAX,NY_L_MAX),
-     1         v_sfc_grid(NX_L_MAX,NY_L_MAX)
-        real*4 beta_factor(NX_L_MAX,NY_L_MAX)
+        real*4 u_sfc_grid(ni,nj),
+     1         v_sfc_grid(ni,nj)
+        real*4 beta_factor(ni,nj)
 
         real*4 radius_earth
         parameter (radius_earth = 6371e3)
 
-        do i=1,NX_L_MAX
-           do j=1,NY_L_MAX
+        do i=1,ni
+           do j=1,nj
               wsum(i,j) = 0.0
               one(i,j) = 1.0
            enddo

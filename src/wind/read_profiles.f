@@ -161,25 +161,32 @@ c
         write(6,*)' WARNING: # of profilers has reached'
      1           ,' dimensions of MAX_PR ',MAX_PR
 
-        GO TO 450
+        n_profiles=MAX_PR
+        GO TO 500
 c
 c       Profiler reading error handling
 c
-  420   CONTINUE
-        write(6,*) ' Error opening PRO (or equivalent) file'
-        i_pr=1
-        GO TO 450
+  420   write(6,*) ' Error opening PRO file'
+        n_profiles=0
+        GO TO 500
 
-  430   CONTINUE
-        write(6,*) ' Error during read of PRO (or equivalent) file'
+  430   write(6,*) ' Error during read of PRO file'
         write(6,*) ' While reading profiler number ',i_pr
+        n_profiles=i_pr-1
+        GO TO 500
 c
-  450   CONTINUE
-        n_pr=i_pr-1
+  450   CONTINUE ! Used for end of file
+        n_profiles=i_pr-1
+
         close(12)
+
+  500   CONTINUE
+
+        n_profilers = n_profiles
 c
 c ***   Read in sonde data    ***************************************
 c
+
       write(6,*)
 
 !     i4time_raob_window = ilaps_cycle_time
@@ -193,32 +200,35 @@ c
           write(6,*)' Nearest SND file is within time window'
      1                ,i4time_diff,i4time_raob_window
       else
-          write(6,*)' Nearest SND file is outside time window'
+          write(6,*)' Warning: Nearest SND file is outside time window'       
      1                ,i4time_diff,i4time_raob_window
-          go to 520
+          go to 600
       endif
 
       i4time_snd = i4time_nearest
 
       call open_lapsprd_file(12,i4time_snd,ext,istatus)
-      if(istatus .ne. 1)go to 520
+      if(istatus .ne. 1)then
+          write(6,*) ' Error opening SND file'
+          GO TO 600
+      endif
 
       lag_time = 0 ! Middle of sonde sampling period
       rcycsnd = float(i4time - i4time_snd + lag_time)
      1             / float(ilaps_cycle_time)
 
 
-      DO isnd = n_pr+1,max_pr
+      DO i_pr = n_profiles+1,max_pr
         read(12,511,err=530,end=550)
      1  ista,nlevels_in,
-     1  lat_pr(isnd),lon_pr(isnd),elev_pr(isnd),c5_name
+     1  lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),c5_name
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5)
 
-        rcycles_pr(isnd) = 0. ! Allow use of RAOBs regardless of age
+        rcycles_pr(i_pr) = 0. ! Allow use of RAOBs regardless of age
 
-        write(6,512)isnd,ista,nlevels_in,lat_pr(isnd)
-     1                 ,lon_pr(isnd)
-     1                 ,elev_pr(isnd),rcycles_pr(isnd),c5_name
+        write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)
+     1                 ,lon_pr(i_pr)
+     1                 ,elev_pr(i_pr),rcycles_pr(i_pr),c5_name
  512    format(/' RAOB #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a6,i12)       
 
 
@@ -235,7 +245,7 @@ c
           if(ht_in .eq. r_missing_data .and. 
      1       pr_in .ne. r_missing_data                      )then
 
-              call latlon_to_rlapsgrid(lat_pr(isnd),lon_pr(isnd),lat,lon       
+              call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon       
      1                              ,imax,jmax,ri,rj,istatus)
 
               if(istatus .ne. 1)goto505
@@ -259,19 +269,19 @@ c
      1       sp_in .ne. r_missing_data          )then           
 
               n_good_levels = n_good_levels + 1
-              nlevels_obs_pr(isnd) = n_good_levels
-              ob_pr_ht_obs(isnd,n_good_levels) = ht_in
-              ob_pr_di_obs(isnd,n_good_levels) = di_in
-              ob_pr_sp_obs(isnd,n_good_levels) = sp_in
+              nlevels_obs_pr(i_pr) = n_good_levels
+              ob_pr_ht_obs(i_pr,n_good_levels) = ht_in
+              ob_pr_di_obs(i_pr,n_good_levels) = di_in
+              ob_pr_sp_obs(i_pr,n_good_levels) = sp_in
 
-              call disp_to_uv(ob_pr_di_obs(isnd,n_good_levels),
-     1                        ob_pr_sp_obs(isnd,n_good_levels),
-     1                        ob_pr_u_obs(isnd,n_good_levels),
-     1                        ob_pr_v_obs(isnd,n_good_levels))
+              call disp_to_uv(ob_pr_di_obs(i_pr,n_good_levels),
+     1                        ob_pr_sp_obs(i_pr,n_good_levels),
+     1                        ob_pr_u_obs(i_pr,n_good_levels),
+     1                        ob_pr_v_obs(i_pr,n_good_levels))
 
-!             write(6,311,err=312)ista,isnd
-!    1        ,ob_snd_ht_obs(isnd,level)
-!    1        ,ob_snd_t_obs(isnd,level)
+!             write(6,311,err=312)ista,i_pr
+!    1        ,ob_snd_ht_obs(i_pr,level)
+!    1        ,ob_snd_t_obs(i_pr,level)
 !311          format(1x,i6,i4,5f8.1)
 
           endif ! Good data at the level
@@ -279,42 +289,43 @@ c
           go to 516
 
   515     write(6,*)' Error reading RAOB, raw level # =',level
-          write(6,*)' While reading sounding # ',(isnd-n_pr)
-          go to 550
+          write(6,*)' While reading sounding # ',(i_pr-n_profiles)
+          n_profiles=i_pr-1
+          go to 600
 
   516   END DO                   ! level
-      END DO ! isnd
+      END DO ! i_pr
 
       write(6,*)' WARNING: # of soundings+profilers has reached'
      1         ,' dimensions of MAX_PR ',MAX_PR
 
-      GO TO 550
+      n_profiles=MAX_PR
+      GO TO 600
 c
 c     Sounding reading error handling
 c
-  520 CONTINUE
-      write(6,*) ' Error opening SND (or equivalent) file'
-      isnd=n_pr+1
-      GO TO 550
+  530 write(6,*) ' Error during read of SND file'
+      write(6,*) ' While reading sounding number ',(i_pr-n_profiles)
+      n_profiles=i_pr-1
+      GO TO 600
 
-  530 CONTINUE
-      write(6,*) ' Error during read of SND (or equivalent) file'
-      write(6,*) ' While reading sounding number ',(isnd-n_pr)
+  550 CONTINUE ! Used for end of file
+      n_profiles=i_pr-1
 
-  550 CONTINUE
+  600 CONTINUE 
 
       close(12)
-      n_tot=isnd-1
-      n_snd=n_tot-n_pr
+
+      n_snd=n_profiles-n_profilers
 
       write(6,*)
-      write(6,*) ' Read ',n_pr,' wind profiler(s).'
+      write(6,*) ' Read ',n_profilers,' wind profiler(s).'
       write(6,*) ' Read ',n_snd,' sounding(s).'
       write(6,*)
 c
 c     Process all wind profiles.  Interpolate heights to LAPS levels.
 c
-      DO i_pr=1,n_tot
+      DO i_pr=1,n_profiles
 
 !           Determine if profile is in the LAPS domain
 

@@ -141,7 +141,7 @@ c
 
         write(6,12)
 12      format(/'             Mapping meso Obs'
-     1      /'   n Sta  i  j  k   u      v'
+     1      /'   n Sta   i   j  k     u      v'
      1      ,'       dd     ff    ')
 
         n_meso_obs = 0
@@ -211,7 +211,7 @@ c
 
             endif ! In horizontal bounds
 
-20          format(i4,1x,a3,3i3,2f7.1,2x,2f7.1,2x,2f7.1,2x,2f7.1)
+20          format(i4,1x,a3,2i4,i3,2f7.1,2x,2f7.1,2x,2f7.1,2x,2f7.1)
 
           endif ! wind is reported
 

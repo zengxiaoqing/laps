@@ -984,13 +984,15 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                       vpass1(i,j,k) + v_laps_bkg(i,j,k),
      1                       t_radar,
      1                       r_radar,
-     1                       azimuth)
+     1                       azimuth,
+     1                       lon(i,j) )
 
                     call radar_to_uvgrid(t_radar,
      1                       vr_obs_fltrd(i,j,k),
      1                       u_wind,
      1                       v_wind,
-     1                       azimuth)
+     1                       azimuth,
+     1                       lon(i,j) )
 
                 else ! we are using true north winds
 
