@@ -1,6 +1,7 @@
  &moisture_switch_nl
  RAOB_SWITCH = 0,
  RAOB_LOOKBACK = 3600,
+ RAOB_RADIUS = 45000.0,
  GOES_SWITCH = 8,
  CLOUD_SWITCH = 1,
  CLOUD_D = 0,
@@ -28,6 +29,7 @@ c   values used.
 
 c  RAOB_SWITCH = 0,    raob on/off
 c  RAOB_LOOKBACK = 3600, raob latency seconds
+c  RAOB_RADIUS = 45000.0  Radius of influence of snd data meters
 c  GOES_SWITCH = 8,  goes switch on/off assign sat, 0=nogoes 
 c  CLOUD_SWITCH = 1, cloud usage on/off
 c  CLOUD_D = 1, cloud field presence is mandated to produce output
