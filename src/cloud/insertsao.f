@@ -43,9 +43,9 @@ cdis
      1          ,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1          ,ni,nj,nk                                                 ! I
      1          ,n_obs_b,lat_sta_ret,lon_sta_ret,c_stations
-     1          ,wx,t,td
-     1          ,elev
-     1          ,istatus
+     1          ,wx,t,td                                                  ! O
+     1          ,elev                                                     ! O
+     1          ,istatus                                                  ! O
      1          ,maxstns,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH)
 
 !       1995 Steve Albers                         Original Version
@@ -86,20 +86,16 @@ cdis
         logical l_dry, l_parse
 
 !       Arrays for reading in the SAO data from the LSO files
-        Real*4   elev(maxstns),t(maxstns),td(maxstns),dd(maxstns)
-     1          ,ff(maxstns),ddg(maxstns)
-        real*4   ffg(maxstns),pstn(maxstns),pmsl(maxstns),alt(maxstns)
-     1                                          ,ht_base_ret(maxstns,5)
-        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
-     1          ,vis(maxstns),rad(maxstns),sfct(maxstns)
+        Real*4   elev(maxstns),t(maxstns),td(maxstns)
+        real*4   ht_base_ret(maxstns,5)
 c
-        Integer*4   obstime(maxstns),n_cloud_layers_ret(maxstns)
-     1                              ,idp3(maxstns)
+        Integer*4   n_cloud_layers_ret(maxstns)
+        Integer*4   obstime(maxstns)
 c
         Character   infile*170,atime*24 
      1             ,obstype(maxstns)*6,atype(maxstns)*6
      1             ,wx(maxstns)*8
-        character   store_emv(maxstns,5)*1,amt_ret(maxstns,5)*4
+        character   amt_ret(maxstns,5)*4
 
         character*8 c8_project
 
@@ -149,12 +145,11 @@ c
 
 !       Access SAO data from LSO files
         infile = c150_filename
-        call read_surface_sa(infile,maxstns,atime,
-     1   n_obs_g,n_obs_b,c_stations,obstype,atype,
-     1   lat_sta_ret,lon_sta_ret,elev,wx,t,td,dd,ff,ddg,
-     1   ffg,pstn,pmsl,alt,n_cloud_layers_ret,ceil,lowcld,cover_a,
-     1   rad,sfct,idp3,store_emv,       
-     1   amt_ret,ht_base_ret,vis,obstime,istatus)
+        call read_surface_sa(infile,maxstns,atime,                 ! I
+     1   n_obs_g,n_obs_b,c_stations,obstype,atype,                 ! O
+     1   lat_sta_ret,lon_sta_ret,elev,wx,t,td,                     ! O
+     1   n_cloud_layers_ret,amt_ret,ht_base_ret,                   ! O
+     1   obstime,istatus)                                          ! O
 
         if(istatus .ne. 1)then
             write(6,*)' Bad status returned from reading SAO data'
