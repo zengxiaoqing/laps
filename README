@@ -34,7 +34,7 @@
          2.3.3 ..................  Surface Data
          2.3.4 ..................  Profiler / RASS
          2.3.5 ..................  PIREPS & ACARS from aircraft
-         2.3.6 ..................  RAOB/Dropsonde
+         2.3.6 ..................  RAOB / Dropsonde / Radiometer
          2.3.7 ..................  Satellite
          2.3.8 ..................  GPS
          2.3.9 ..................  Other Data Sources
@@ -75,7 +75,7 @@
          3.2.6 ..................  PROFILER/VAD/SODAR (PRO) Ingest
          3.2.7 ..................  RASSs (LRS) Ingest
          3.2.8 ..................  PIREPS/ACARS Ingest
-         3.2.9 ..................  Sounding (RAOB/Dropsonde/Sat) (SND) Ingest
+         3.2.9 ..................  Sounding (RAOB/Dropsonde/Sat/Radiometer) (SND) Ingest
          3.2.10 .................. LVD (Satellite Image + Cloud Top Pressure)
          3.2.11 .................  Cloud Drift Wind (CDW) Ingest
          3.3 ..............  ANALYSIS PROCESSES
@@ -1109,7 +1109,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            is available (with some restrictions) on the Web at 
            http://acweb.fsl.noaa.gov.
 
-                      ----   2.3.6  RAOB/Dropsonde ---
+                      ----   2.3.6  RAOB / Dropsonde / Radiometer ---
 
      RAOBs (snd):
            FSL NIMBUS, WFO/AWIPS, CWB, or AFWA databases. These are available 
@@ -1122,6 +1122,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            Under current development is an ingest module for AVAPS. We may 
            include modules for other databases in the future, such as NIMBUS
            or WFO/AWIPS.          
+
+     Radiometers (snd):
+           A radiometer ingest module has been developed for the MADIS
+           database - http://www-sdd.fsl.noaa.gov/MADIS/ 
 
                       ----   2.3.7  Satellite ---
 
@@ -2505,7 +2509,7 @@ Parameter namelist file (for data paths): 'static/nest7grid.parms'
 Sample Input/Output: Should be available in the test data case
 
  
------- 3.2.9 --------- Sounding (RAOB/Dropsonde/Sat) (SND) Ingest -------------
+------ 3.2.9 ----- Sounding (RAOB/Dropsonde/Sat/Radiometer) (SND) Ingest -------
 
 Process: (ingest_sounding.exe) LAPS Soundings
 
@@ -2521,6 +2525,8 @@ Inputs:
         Satellite Soundings in AFWA format
 
         Dropsonde (AVAPS or CWB format)
+
+        Radiometer (FSL-MADIS CDL - NetCDF)
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)              sounding temp, dewpoint, wind
