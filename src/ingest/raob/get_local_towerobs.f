@@ -251,12 +251,12 @@ c
 
                 do il = 1,nlvl_s(nsta)
                     height_m_s(nsta,il) = lvls_m(il,i) + staelev_s(nsta)       
+                    temp_c_s(nsta,il) = temp_c(i,il)           
+                    dewpoint_c_s(nsta,il) = dewpoint_c(i,il)           
+                    dir_deg_s(nsta,il) = dir_deg(i,il)           
+                    spd_mps_s(nsta,il) = spd_mps(i,il)           
                 enddo
 
-                temp_c_s(nsta,:) = temp_c(i,:)           
-                dewpoint_c_s(nsta,:) = dewpoint_c(i,:)           
-                dir_deg_s(nsta,:) = dir_deg(i,:)           
-                spd_mps_s(nsta,:) = spd_mps(i,:)           
 
                 go to 1600 
 
