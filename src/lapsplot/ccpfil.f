@@ -320,9 +320,11 @@ C
      1                   ,2.0,0.4,0.4                 ! Green
 !    1                   ,2.5,0.65,0.55)              ! Yellow Orig
      1                   ,2.45,0.95,0.65)             ! Yellow New
-          call color_ramp(70*ncols1/100,90*ncols1/100,IWKID,icol_offset
-!    1                   ,2.5,0.65,0.55               ! Yellow Orig
-     1                   ,2.45,0.95,0.65              ! Yellow New
+          call color_ramp(70*ncols1/100,82*ncols1/100,IWKID,icol_offset
+     1                   ,2.45,0.95,0.65              ! Yellow 
+     1                   ,2.72,0.9,0.7)               ! Orange
+          call color_ramp(82*ncols1/100,90*ncols1/100,IWKID,icol_offset
+     1                   ,2.72,0.9,0.7                ! Orange 
      1                   ,3.0,0.9,0.7)                ! Red
           call color_ramp(90*ncols1/100,ncols1,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
@@ -356,8 +358,11 @@ C
           call color_ramp(1,8,IWKID,icol_offset
      1                   ,3.0,0.9,0.2                 ! Dark Hot
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(8,18,IWKID,icol_offset
+          call color_ramp(8,12,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,2.75,0.9,0.7)               ! Orange
+          call color_ramp(12,18,IWKID,icol_offset
+     1                   ,2.75,0.9,0.7                ! Orange
      1                   ,2.5,0.95,0.65)              ! Yellow
           call color_ramp(18,29,IWKID,icol_offset
      1                   ,2.5,0.95,0.65               ! Yellow
@@ -377,10 +382,13 @@ C
           call color_ramp(1,11,IWKID,icol_offset
      1                   ,3.0,0.9,0.2                 ! Dark Hot
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(11,28,IWKID,icol_offset
+          call color_ramp(11,18,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,2.75,0.9,0.7)               ! Orange
+          call color_ramp(18,28,IWKID,icol_offset
+     1                   ,2.75,0.9,0.7                ! Orange
      1                   ,2.5,0.95,0.65)              ! Yellow
-          call color_ramp(28,46,IWKID,icol_offset
+          call color_ramp(28,47,IWKID,icol_offset
      1                   ,2.5,0.95,0.65               ! Yellow
      1                   ,2.0,0.4,0.4)                ! Green
           call color_ramp(47,60,IWKID,icol_offset       
@@ -401,9 +409,13 @@ C
      1                   ,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
      1                   ,2.5,0.95,0.65)              ! Yellow
-          call color_ramp(78*ncols/100,ncols
+          call color_ramp(78*ncols/100,91*ncols/100
      1                   ,IWKID,icol_offset
      1                   ,2.5,0.95,0.65               ! Yellow
+     1                   ,2.75,0.9,0.7)               ! Orange
+          call color_ramp(91*ncols/100,ncols
+     1                   ,IWKID,icol_offset
+     1                   ,2.75,0.9,0.7                ! Orange
      1                   ,3.0,0.9,0.7)                ! Red
 
       else
