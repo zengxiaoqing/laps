@@ -91,7 +91,7 @@ C
       nf_status = NF_OPEN(cdfname,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN rucsbn'
+        print *,'NF_OPEN ', cdfname
       endif
 
       mtbg=ntbg
@@ -141,9 +141,9 @@ c
       integer ncid, lenstr, ntp, nvdim, nvs, ndsize
 c
       integer nx,ny,nz
-      integer nxbg,nybg,nzbg(5),ntbg,ivaltimes(20)
+      integer nxbg,nybg,nzbg(5),ntbg
 c
-      integer rcode
+      integer rcode,ivaltimes(ntbg)
 c
 c *** Netcdf arrays.
 c
@@ -157,8 +157,8 @@ cc      parameter(nzbg4=40,ntbg=5)
      .       uwn(nxbg,nybg,nzbg(4)),
      .       vwn(nxbg,nybg,nzbg(5))
 
-      real   pr_sfc(nxbg,nybg),uw_sfc(nxbg,nybg),vw_sfc(nxbg,nybg)
-     +     ,sh_sfc(nxbg,nybg),tp_sfc(nxbg,nybg),mslp(nxbg,nybg)
+      real   pr_sfc(nx,ny),uw_sfc(nx,ny),vw_sfc(nx,ny)
+     +     ,sh_sfc(nx,ny),tp_sfc(nx,ny),mslp(nx,ny)
 
 c
       real prn(19)
@@ -201,6 +201,7 @@ c
       real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
+      integer nf_vid,nn
 c
 ccc      save htn,tpn,rhn,uwn,vwn,prn,oldfname
 c_______________________________________________________________________________
@@ -214,8 +215,8 @@ ccc      if (fname .ne. oldfname) then
          model='ETA'
       endif
 
-
       istatus=0
+
       fname13=fname9_to_wfo_fname13(fname)
 
       call s_len(path,slen)
@@ -227,26 +228,44 @@ ccc      if (fname .ne. oldfname) then
          print *,'NF_OPEN ',cdfname
       endif
 
-      read(af,'(i4)') n
-      n=n/3+1
-      if(n.gt.ntbg) return
+      read(af,'(i4)') nn
 
+      rcode=NF_INQ_VARID(ncid,'valtimeMINUSreftime',nf_vid)
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+      endif
+      rcode=NF_GET_VARA_INT(ncid,nf_vid,1,ntbg,ivaltimes)
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+      endif
+
+      n=1
+      do while(n.lt.ntbg.and.ivaltimes(n)/3600.ne. nn)
+         n=n+1
+      enddo
+      if(ivaltimes(n)/3600.ne.nn) then
+         print*,'ERROR: No record valid at time ',nn,af
+         goto 999
+      endif
+       
 
 c
 c ****** Read netcdf data.
 c ****** Statements to fill htn.
 c
 
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=19
-         start(4)=n
-         count(4)=1
+      start(1)=1
+      count(1)=nxbg
+      start(2)=1
+      count(2)=nybg
+      start(3)=1
+      count(3)=19
+      start(4)=n
+      count(4)=1
 
-         call read_netcdf_real(ncid,'gh',nxbg*nybg*count(3),htn,start
+      call read_netcdf_real(ncid,'gh',nxbg*nybg*count(3),htn,start
      +     ,count,rcode)
 
 c
@@ -324,40 +343,14 @@ c
 
          call read_netcdf_real(ncid,'vw',nxbg*nybg*count(3),vwn,start
      +     ,count,rcode)
-c
-c get sfc pressure field
-c
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=1
-         start(4)=n
-         count(4)=1
-      
-         call read_netcdf_real(ncid,'p',nxbg*nybg,pr_sfc,start
-     +     ,count,rcode)
 
-c
-c get mslp (this field name differs from one model to the other)
-c
-         if(model.eq.'ETA') then
-            call read_netcdf_real(ncid,'emsp',nxbg*nybg,mslp
-     +           ,0,0,rcode)
-         else
-            call read_netcdf_real(ncid,'mmsp',nxbg*nybg,mslp
-     +           ,0,0,rcode)
-         endif
+         
 
+         
 
-
-c
-c *** Close netcdf file.
-c
-      rcode= NF_CLOSE(ncid)
 c
 ccc      endif
+
 
 c
 c *** Fill ouput arrays.
@@ -419,27 +412,64 @@ c
 
       if(istatus .eq. 0) then
         print*, 'No valid data found for',fname, af
-        return
-      endif
+      else
 
-      do j=1,nybg
-         do i=1,nxbg
-            ii=i+ip
-            jj=j+jp
-            tp_sfc(ii,jj)=tpn(i,j,1)
-            sh_sfc(ii,jj)=rhn(i,j,1)
-            it=tp_sfc(ii,jj)*100
-            it=min(45000,max(15000,it))
-            xe=esat(it)
-            mrsat=0.00622*xe/(pr_sfc(i,j)*0.01-xe)
-            sh_sfc(ii,jj)=sh_sfc(ii,jj)*mrsat
-            sh_sfc(ii,jj)=sh_sfc(ii,jj)/(1.+sh_sfc(ii,jj))
-            uw_sfc(ii,jj)=uwn(i,j,1)
-            vw_sfc(ii,jj)=vwn(i,j,1)
-            istatus = 1
+c
+c get sfc pressure field
+c
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=1
+         start(4)=n
+         count(4)=1
+      
+         call read_netcdf_real(ncid,'p',nxbg*nybg,htn,start
+     +     ,count,rcode)
+
+c
+c get mslp (this field name differs from one model to the other)
+c
+         if(model.eq.'ETA') then
+            call read_netcdf_real(ncid,'emsp',nxbg*nybg,htn(1,1,2)
+     +           ,0,0,rcode)
+         else
+            call read_netcdf_real(ncid,'mmsp',nxbg*nybg,htn(1,1,2)
+     +           ,0,0,rcode)
+         endif
+
+
+
+c
+c *** Close netcdf file.
+c
+         rcode= NF_CLOSE(ncid)
+         do j=1,nybg
+            do i=1,nxbg
+               ii=i+ip
+               jj=j+jp
+               if(tpn(i,j,1).lt.missingflag) then
+                  pr_sfc(ii,jj)=htn(i,j,1)
+                  mslp(ii,jj)=htn(i,j,2)
+
+                  tp_sfc(ii,jj)=tpn(i,j,1)
+                  sh_sfc(ii,jj)=rhn(i,j,1)
+                  it=int(tp_sfc(ii,jj)*100)
+                  it=min(45000,max(15000,it))
+                  xe=esat(it)
+                  mrsat=0.00622*xe/(pr_sfc(ii,jj)*0.01-xe)
+                  sh_sfc(ii,jj)=sh_sfc(ii,jj)*mrsat
+                  sh_sfc(ii,jj)=sh_sfc(ii,jj)/(1.+sh_sfc(ii,jj))
+                  uw_sfc(ii,jj)=uwn(i,j,1)
+                  vw_sfc(ii,jj)=vwn(i,j,1)
+                  
+                  istatus = 1
+               endif
+            enddo
          enddo
-      enddo
-
+      endif
 
 
 c
@@ -469,12 +499,10 @@ c
 cc      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
 c
 cc      oldfname=fname
-      istatus=1
-      return
-
- 900  print*,'ERROR: bad dimension specified in netcdf file'
-      print*, (count(i),i=1,4)
-      istatus=-1
-      
-      return
+      if(0.eq.1) then
+ 900     print*,'ERROR: bad dimension specified in netcdf file'
+         print*, (count(i),i=1,4)
+         istatus=-1
+      endif
+ 999  return
       end
