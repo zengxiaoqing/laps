@@ -269,7 +269,7 @@ c
 	skip_internal_qc = 0    ! use internal QC routine
 
 c       QC parms: # of standard deviations 
-        bad_p  = 3.0 	        ! for reduced pressure
+        bad_p  = 2.5 	        ! for reduced pressure
         bad_mp = 4.0 	        ! for MSL pressure
         bad_t  = 2.5 	        ! for temperature
         bad_td = 2.0 	        ! for dewpoint
