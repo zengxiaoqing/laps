@@ -200,7 +200,7 @@ c
       call read_snd_data(lun,i4time_snd,ext                             ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                    ! I
      1                         ,lat,lon,imax,jmax,kmax                  ! I
-     1                         ,heights_3d                              ! I
+     1                         ,heights_3d,.true.                       ! I
      1                         ,mode                                    ! I
      1                         ,n_profiles                              ! I/O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr    ! O
