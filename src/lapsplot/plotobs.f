@@ -35,6 +35,8 @@ cdis
 !       Steve A         Nov  1989       Original Version
 !       Steve A         Nov  1991       Adjustable Dimensions
 
+        include 'trigd.inc'
+
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 grid_ra_vel(imax,jmax,kmax)
         real*4 lat(imax,jmax)

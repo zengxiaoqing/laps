@@ -62,8 +62,11 @@ cdis
 !                                   polar orbiter (lrs).
 !       98-Mar-23        "          Added lvd subdirectory flexibility.
 
+        include 'trigd.inc'
+
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
         real*4 rlaps_land_frac(NX_L,NY_L)
+        real*4 soil_type(NX_L,NY_L)
 
         character*1 c_display
         character*1 cansw
@@ -275,8 +278,8 @@ cdis
 
         var_2d='LON'
         call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1units_2d,comment_2d,
-     1lon,rspacing_dum,istatus)
+     1                       units_2d,comment_2d,
+     1                       lon,rspacing_dum,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-lon'
             return
@@ -284,8 +287,8 @@ cdis
 
         var_2d='AVG'
         call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1units_2d,comment_2d,
-     1topo,rspacing_dum,istatus)
+     1                       units_2d,comment_2d,
+     1                       topo,rspacing_dum,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-topo'
             return
@@ -293,11 +296,20 @@ cdis
 
         var_2d='LDF'
         call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1units_2d,comment_2d,
-     1rlaps_land_frac,rspacing_dum,istatus)
+     1                       units_2d,comment_2d,
+     1                       rlaps_land_frac,rspacing_dum,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-ldf'
             return
+        endif
+
+        var_2d='USE'
+        call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
+     1                       units_2d,comment_2d,
+     1                       soil_type,rspacing_dum,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Warning: could not read LAPS soil-type'
+!           return
         endif
 
         if(lun .eq. 5)call logit('nest7grid')
@@ -332,7 +344,7 @@ cdis
      1       ,' [sa/pa] Snow/Pcp Accum'
      1       /'     [sc] Snow Cover'
      1       /'     [sh,rh] Specific/Rel Humidity'
-     1       ,'     [tr,lf,gr] Terrain/Land Frac/Grid, '
+     1       ,'     [tr,lf,gr,so] Terrain/Land Frac/Grid, '
      1       /'     [v1,v2,v3,v4,v5,po] IR Twm/av; VCF/VIS; Tsfc-11u'
      1        '; Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? '$)
@@ -732,8 +744,8 @@ cdis
 
             call plot_cont(field_2d,1e-0,-30.,+30.,2.,asc9_tim_n,
      1      'LAPS    SFC Wetbulb (approx) (C) '
-     1  ,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1                    ,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ms' .or. c_type .eq. 'ob'
      1                          .or. c_type .eq. 'st'   )then
@@ -749,54 +761,51 @@ cdis
             c33_label = '                                 '
 
             call plot_stations(asc_tim_9,c33_label,c_field,i_overlay
-     1   ,c_display,lat,lon,c_file,iflag
-     1   ,NX_L,NY_L,laps_cycle_time)
+     1                        ,c_display,lat,lon,c_file,iflag
+     1                        ,NX_L,NY_L,laps_cycle_time)
 
         elseif(c_type .eq. 'he')then
             write(6,*)
 !           write(6,*)'    Looking for 3D laps wind data:'
 !           call get_file_time(c_filespec,i4time_ref,i4time_3dw)
 
-            if(lapsplot_pregen)then
-                write(6,*)' Getting pregenerated helicity file'
-                var_2d = 'LHE'
-                ext = 'lhe'
-!               call get_laps_2d(i4time_3dw,ext,var_2d
-!       1               ,units_2d,comment_2d,NX_L,NY_L,helicity,istatus)
+            write(6,*)' Getting pregenerated helicity file'
+            var_2d = 'LHE'
+            ext = 'lhe'
 
-                call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
+            call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                  ,helicity,0,istatus)
 
-                i4time_3dw = i4time_nearest
-                call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
+            i4time_3dw = i4time_nearest
+            call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
+            
+            abs_max = 0
+            do i = 1,NX_L
+            do j = 1,NY_L
+                abs_max = max(abs_max,abs(helicity(i,j)))
+            enddo ! j
+            enddo ! i
 
-            else
-                ext = 'lw3'
-                call get_uv_3d(i4time_3dw,NX_L,NY_L,NZ_L,u_3d,v_3d,ext,i
-     1status)
-!               call mean_wind(u_3d,v_3d,topo,NX_L,NY_L,NZ_L
-!       1               ,dum1_array,dum2_array,dum3_array,idum1_array
-!       1                                                       ,umean,vmean
-!       1                                               ,u_2d,v_2d,istatus)
-                call helicity_laps(u_3d,v_3d,u_2d,v_2d,topo
-     1          ,dum1_array,dum2_array,dum3_array,idum1_array
-     1          ,NX_L,NY_L,NZ_L
-     1                          ,helicity,istatus)
-
-                i4time_3dw = i4time_ref
-                call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
-
-            endif
+            write(6,*)' Max helicity magnitude = ',abs_max
 
             c_field = 'he'
             kwind = 0
             clow = -100.
             chigh = +100.
-            call plot_cont(helicity,1e-4,clow,chigh,5.,asc9_tim_3dw,
-     1    'LAPS Helicity  sfc-500mb 1e-4m/s**2'
-     1  ,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            if(abs_max .gt. 1.)then ! new way
+                scale = 1.
+                c33_label = 'LAPS Helicity sfc-500mb m**2/s**2'           
+            else                    ! old way
+                scale = 1e-4
+                c33_label = 'LAPS Helicity  sfc-500 1e-4m/s**2'          
+            endif
+
+            call plot_cont(helicity,scale,clow,chigh,5.,asc9_tim_3dw
+     1                   ,c33_label
+     1                   ,i_overlay,c_display,'nest7grid',lat,lon,jdot       
+     1                   ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'v1' .or. c_type .eq. 'v2'
      1    .or. c_type .eq. 'v3' .or. c_type .eq. 'v4'
@@ -2336,7 +2345,7 @@ cdis
 !           call compare_classdat(temp_3d,asc9_tim_t,i4time_ref,c3_site)
 
         elseif(c_type .eq. 'ia' .or. c_type .eq. 'ij'
-     1                        .or. c_type .eq. 'is')then
+     1                          .or. c_type .eq. 'is')then
 
           if(.false.)then
 
@@ -3495,8 +3504,8 @@ cdis
             cint = 0.2
             call plot_cont(cloud_cvr,1e0,
      1               clow,chigh,cint,asc9_tim,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'tr')then
             clow = -400.
@@ -3506,8 +3515,8 @@ cdis
             asc9_tim_t = '         '
             call plot_cont(topo,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             i4time_topo = 0
 
@@ -3523,8 +3532,21 @@ cdis
             asc9_tim_t = '         '
             call plot_cont(rlaps_land_frac,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            i4time_topo = 0
+
+        elseif(c_type .eq. 'so')then
+            clow = 0.
+            chigh = 20.
+            cint = 1.
+            c33_label = 'Soil Type                        '
+            asc9_tim_t = '         '
+            call plot_cont(soil_type,1e0,
+     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             i4time_topo = 0
 
@@ -4240,14 +4262,11 @@ cdis
         real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
         real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
         real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns), ffg_s(maxst
-     1ns)
+        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
+     1       , ffg_s(maxstns)
         real*4 vis_s(maxstns)
         character stations(maxstns)*3, wx_s(maxstns)*8      ! c5_stamus
 
-!       common /read_sfc_cmn/ lat_s,lon_s,elev_s,cover_s,hgt_ceil,hgt_lo
-!    1w
-!    1                ,t_s,td_s,pr_s,sr_s,dd_s,ff_s,ddg_s,ffg_s,vis_s
 c
         character atime*24, infile*70
         character directory*150,ext*31
@@ -4355,11 +4374,12 @@ c
 80      enddo ! i
 
         if(iflag .eq. 1)then ! special mesonet label 
-            call cv_i4tim_asc_lp(i4time_file,atime,istatus)
+            call setusv_dum(2hIN,2)
+            call cv_i4tim_asc_lp(i4time,atime,istatus)
             atime = atime(1:14)//atime(16:17)//' '
-            ix = 512
-            iy = 512
-            call pwrity(cpux(ix),cpux(iy),atime(1:17),17,1,0,0)
+            ix = 590
+            iy = 270
+            call pwrity(cpux(ix),cpux(iy),atime(1:17),17,-1,0,-1)
         endif
 
         return

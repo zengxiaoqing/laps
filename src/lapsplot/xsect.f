@@ -2522,6 +2522,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                                   was unused)
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
+        include 'trigd.inc'
+
         logical l_left, l_right, l_top, l_bottom
 
         integer*4 NX_C,NZ_C

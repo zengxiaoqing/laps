@@ -38,6 +38,8 @@ cdis
 !       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 !       97-Oct        Steve Albers  Add lon in call to fflxc.
 
+        include 'trigd.inc'
+
         real m ! Grid points per meter
 
         real one(ni,nj)
