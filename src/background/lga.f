@@ -105,8 +105,7 @@ c
       integer max_files,bg_files
       integer itime_inc
       integer itime
-c     parameter (max_files=600)
-      parameter (max_files=5000)
+      parameter (max_files=20000)
       character*256 names(max_files)
       character*256 reject_names(max_files)
       integer reject_cnt
