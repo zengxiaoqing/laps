@@ -79,7 +79,7 @@ c
       call s_len(filename,l)
       call readindexfile(filename,nvarsmax,nz,nvars,nlevs
      +,p_levels,ivarcoord,ivarid,istatus)
-      if(istatus.ne.0)goto 995
+      if(istatus.lt.1)goto 995
 
       do j=1,nvars
          if(ivarid(j).eq.11.and.ivarcoord(j).eq.100)then
@@ -126,7 +126,7 @@ c    +,istatus)
 
       endif
  
-      if(istatus .ne. 0)then
+      if(istatus .ne. 1)then
          print*,'data not read properly'
          return
       endif
@@ -244,10 +244,8 @@ c
 c
 990   continue
       print *,'Error finding dgprep file.'
-      istatus=0
       return
 995   print*,'Error reading model index file.',filename(1:l)
-      istatus=0
       return
       end
 c
@@ -286,7 +284,7 @@ c
 
       real*4 dummy(nx,ny,nz)
 
-      istatus=1
+      istatus=0
 
       print*,'read 3-d variables'
 c nvar = 1
@@ -356,7 +354,7 @@ c     print*,'set upper level rh to 10%'
       enddo
       enddo
 
-      istatus=0
+      istatus=1
       return
 
 50    print*,'error during read'
@@ -388,7 +386,7 @@ c
      .      ,vw_sfc(nx,ny)
      .      ,mslp(nx,ny)
 
-      istatus=1
+      istatus=0
 
       print*,'read 3-d variables'
       do k=1,nz
@@ -422,7 +420,7 @@ c
       read(lun,err=50) ((sh_sfc(i,j),i=1,nx),j=1,ny)
       read(lun,err=50) ((mslp(i,j),i=1,nx),j=1,ny)
 
-      istatus=0
+      istatus=1
       return
 
 50    print*,'error during read'
