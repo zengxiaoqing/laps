@@ -1214,7 +1214,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
             if(abs(tdiff) .gt. corr_thr .and. l_output)then
                 write(6,901,err=902)i,j,nlyr-1,tb8_k(i,j),t_effective
      1               ,tdiff,frac_clouds,l_correct,(a(l),l=nlyr-1,1,-1)       
-901             format(1x,2i3,i3,2f7.0,f7.1,f7.3,l2,' *',10f6.2)
+901             format(1x,2i4,i3,2f7.0,f7.1,f7.3,l2,' *',10f6.2)
 902         endif
 
 !           This corrective section is now turned on
