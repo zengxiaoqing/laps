@@ -84,8 +84,8 @@ cdis
         enddo ! j
         enddo ! i
 
-        call get_sfc_albedo(ni,nj,lat,r_missing_data                     ! I
-     1                     ,sfc_albedo,sfc_albedo_lwrb,istat_sfc_albedo) ! O   
+        call get_sfc_albedo(ni,nj,lat,r_missing_data,i4time              ! I
+     1                     ,sfc_albedo,sfc_albedo_lwrb,istat_sfc_alb)    ! O   
 
 !       Determine whether to use VIS / ALBEDO data
         if(.not. l_use_vis)then
@@ -193,9 +193,9 @@ cdis
         return
         end
 
-        subroutine get_sfc_albedo(ni,nj,lat,r_missing_data           ! I
+        subroutine get_sfc_albedo(ni,nj,lat,r_missing_data,i4time    ! I
      1                           ,sfc_albedo,sfc_albedo_lwrb         ! O
-     1                           ,istat_sfc_albedo)                  ! O
+     1                           ,istat_sfc_alb)                     ! O
 
 !       This returns the surface albedo. This is from the static database
 !       to yield a less confident "lower bound". If we are confident that
@@ -212,12 +212,21 @@ cdis
 
         real*4 static_albedo(ni,nj)   ! Static albedo database
 
-        var = 'ALB'
-        call read_static_grid(ni,nj,var,static_albedo,istatus)
+        istat_sfc_alb = 0
+
+        call get_static_field_interp('albedo',i4time,ni,nj
+     1                               ,static_albedo,istat_sfc_alb)       
+        if(istat_sfc_alb.eq.0 .or. istat_sfc_alb.eq.1)istat_sfc_alb=1 
+
+!       if(istat_sfc_alb .ne. 1)then ! Read sfc albedo from fixed database
+            write(6,*)' Monthly Albedo Data N/A, look for fixed data'
+            var = 'ALB'
+            call read_static_grid(ni,nj,var,static_albedo,istat_sfc_alb)
+!       endif
 
         do i = 1,ni
         do j = 1,nj
-            if(istatus .eq. 1)then ! static database available
+            if(istat_sfc_alb .eq. 1)then ! static database available
                 if(static_albedo(i,j) .ne. r_missing_data)then ! over water
                     sfc_albedo_lwrb(i,j) = static_albedo(i,j)
 
