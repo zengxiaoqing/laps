@@ -1,3 +1,4 @@
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -34,6 +35,7 @@
 #define get_level_index get_level_index_
 #define update_laps_v3 update_laps_v3_
 #define write_cdf_v3 write_cdf_v3_
+#define open_cdf open_cdf_
 #endif
 #ifdef FORTRANCAPS
 #define dim_size_v3 DIM_SIZE_V3
@@ -57,6 +59,7 @@
 #define get_level_index GET_LEVEL_INDEX
 #define update_laps_v3 UPDATE_LAPS_V3
 #define write_cdf_v3 WRITE_CDF_V3
+#define open_cdf OPEN_CDF
 #endif
 #ifdef FORTRANDOUBLEUNDERSCORE
 #define dim_size_v3 dim_size_v3__
@@ -80,6 +83,7 @@
 #define get_level_index get_level_index__
 #define update_laps_v3 update_laps_v3__
 #define write_cdf_v3 write_cdf_v3__
+#define open_cdf open_cdf__
 #endif
 
 /************************************************************/
@@ -1949,3 +1953,33 @@ long *status;
         return;
 }
 /************************************************************/
+#ifdef __STDC__
+int open_cdf (int mode, char *fname,long *no_laps_diag)
+#else
+int open_cdf (mode, fname, no_laps_diag)
+int mode;
+char *fname;
+long *no_laps_diag;
+#endif
+{
+        int      cdfid, istatus, i;
+
+        ncopts = 0;
+
+/* open the netcdf file and get the file id and the variable id */
+        cdfid = ncopen (fname, mode);
+
+        ncopts = NC_VERBOSE;
+
+        if (cdfid == (-1)) {
+          if (*no_laps_diag == 0) {
+            printf("open_cdf: cannot open file as netCDF %s.\n", fname); 
+          }
+          return -1;
+        }
+        else {
+          return cdfid;
+        }
+}
+/************************************************************/
+
