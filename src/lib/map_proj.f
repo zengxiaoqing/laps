@@ -179,7 +179,7 @@ C
 
 C     ****************************************************************
 C
-      SUBROUTINE GETOPS(PLA,PLO,GLAT,GLON,RLAT,WLON1)
+      SUBROUTINE GETOPS(PLA_r4,PLO_r4,GLAT_r4,GLON_r4,RLAT_r4,WLON1_r4)       
 C
 C     Convert geographical lat/lon coordinates to polar stereographic
 C     ditto with the pol.ste. pole at RLAT,WLON1
@@ -196,7 +196,18 @@ C     TSP 20/06-89
 C
 C     constants
 C
-      PI180 = 3.14159265/180.0
+      implicit real*8 (a-h,o-z)
+
+      real*4 pla_r4,plo_r4,glat_r4,glon_r4,rlat_r4,wlon1_r4
+
+      PLA = pla_r4
+      PLO = plo_r4
+      GLAT = glat_r4
+      GLON = glon_r4
+      RLAT = rlat_r4
+      WLON1 = wlon1_r4
+
+      PI180 = 3.1415926535897932/180.0
 C
 C     Set flag for N/S hemisphere and convert longitude to <0 ; 360> interval
 C
@@ -214,14 +225,22 @@ C     Test for a N/S pole case
 C
       IF(RLAT.EQ.90.0) THEN
          PLA=GLAT
-         PLO=AMOD(GLOR+270.0,360.0)
+         PLO=DMOD(GLOR+270.0D0,360.0D0)
          GO TO 2000
       END IF
       IF(RLAT.EQ.-90.0) THEN
          PLA=-GLAT
-         PLO=AMOD(GLOR+270.0,360.0)
+         PLO=DMOD(GLOR+270.0D0,360.0D0)
          GO TO 2000
       END IF
+C
+C     Test for GE coordinates at PS pole (Steve Albers - 1998)
+C
+      if(GLAT .eq. RLAT .and. GLON .eq. WLON1)then
+         PLA = 90.0
+         PLO = 0.
+         GOTO2000
+      endif
 C
 C     Test for longitude on 'Greenwich or date line'
 C
@@ -235,7 +254,7 @@ C
          END IF
          GO TO 2000
       END IF      
-      IF(AMOD(GLOR+180.0,360.0).EQ.RWLON1) THEN
+      IF(DMOD(GLOR+180.0D0,360.0D0).EQ.RWLON1) THEN
          PLA=RLAT-90.0+GLAT
          IF(PLA.LT.-90.0) THEN
             PLA=-180.0-PLA
@@ -256,46 +275,46 @@ C
 C     1. Get the help circle BB and angle ALPHA (legalize arguments)
 C
       ARG2A = COS(GLAT*PI180)*COS(ARGU1*PI180)
-      ARG2A = MAX(ARG2A,-1.0)
-      ARG2A = MIN(ARG2A, 1.0)         
+      ARG2A = MAX(ARG2A,-1.0D0)
+      ARG2A = MIN(ARG2A, 1.0D0)         
       BB    = ACOS(ARG2A)
 C
       ARG2A = SIN(HSIGN*GLAT*PI180)/SIN(BB)
-      ARG2A = MAX(ARG2A,-1.0)
-      ARG2A = MIN(ARG2A, 1.0)
+      ARG2A = MAX(ARG2A,-1.0D0)
+      ARG2A = MIN(ARG2A, 1.0D0)
       ALPHA = ASIN(ARG2A)
 C
 C     2. Get PLA and PLO (still legalizing arguments)
 C
       ARG2A = COS(RLAT*PI180)*COS(BB)+
      +        SIN(HSIGN*RLAT*PI180)*SIN(HSIGN*GLAT*PI180)
-      ARG2A = MAX(ARG2A,-1.0)
-      ARG2A = MIN(ARG2A, 1.0)         
+      ARG2A = MAX(ARG2A,-1.0D0)
+      ARG2A = MIN(ARG2A, 1.0D0)         
       PLA   = ASIN(ARG2A)
 C
       ARG2A = SIN(BB)*COS(ALPHA)/COS(PLA)
-      ARG2A = MAX(ARG2A,-1.0)
-      ARG2A = MIN(ARG2A, 1.0)
+      ARG2A = MAX(ARG2A,-1.0D0)
+      ARG2A = MIN(ARG2A, 1.0D0)
       PLO   = ASIN(ARG2A)
 C
 C    Test for passage of the 90 degree longitude (duallity in PLO)
 C         Get PLA for which PLO=90 when GLAT is the latitude
 C
       ARG2A = SIN(HSIGN*GLAT*PI180)/SIN(HSIGN*RLAT*PI180)
-      ARG2A = MAX(ARG2A,-1.0)
-      ARG2A = MIN(ARG2A, 1.0)         
+      ARG2A = MAX(ARG2A,-1.0D0)
+      ARG2A = MIN(ARG2A, 1.0D0)         
       PLA90 = ASIN(ARG2A)
 C
 C         Get help arc BB and angle ALPHA
 C
       ARG2A = COS(RLAT*PI180)*SIN(PLA90)
-      ARG2A = MAX(ARG2A,-1.0)
-      ARG2A = MIN(ARG2A, 1.0)
+      ARG2A = MAX(ARG2A,-1.0D0)
+      ARG2A = MIN(ARG2A, 1.0D0)
       BB    = ACOS(ARG2A)
 
       ARG2A = SIN(HSIGN*GLAT*PI180)/SIN(BB)
-      ARG2A = MAX(ARG2A,-1.0)
-      ARG2A = MIN(ARG2A, 1.0)        
+      ARG2A = MAX(ARG2A,-1.0D0)
+      ARG2A = MIN(ARG2A, 1.0D0)        
       ALPHA = ASIN(ARG2A)
 C
 C         Get GLOLIM - it is nesc. to test for the existence of solution
@@ -329,9 +348,17 @@ C
 C     To obtain a rotated value (ie so x-axis in pol.ste. points east)
 C     add 270 to longitude
 C
-      PLO=AMOD(PLO+270.0,360.0)
+      PLO=DMOD(PLO+270.0D0,360.0D0)
 C
  2000 CONTINUE      
+
+      pla_r4 = PLA
+      plo_r4 = PLO
+      glat_r4 = GLAT
+      glon_r4 = GLON
+      rlat_r4 = RLAT
+      wlon1_r4 = WLON1
+
       RETURN
       END                                  
 C

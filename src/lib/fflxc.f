@@ -173,10 +173,10 @@ C
 !           Rotate to arbitrary pole
             polat = slat2
             polon = slon
-            rlat_in = rlat
-            rlon_in = rlon
-            call GETOPS(rlat,rlon_dum,rlat_in,rlon_in,polat,polon)
-!                          O     O        I      I      I     I
+            rlat_ge = rlat
+            rlon_ge = rlon
+            call GETOPS(rlat_ps,rlon_ps,rlat_ge,rlon_ge,polat,polon)       
+!                          O       O        I      I      I     I
 
             call get_grid_spacing(grid_spacing_m,istatus)
             if(istatus .ne. 1)then
@@ -188,7 +188,7 @@ C
      1                       ,grid_spacing_proj_m)
 
 !           phi0 = slat1
-            phi  = rlat
+            phi  = rlat_ps
 
 !           Check to see if you are at the opposite pole
             if(phi .eq. -90.)then      
