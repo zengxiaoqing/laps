@@ -1,4 +1,6 @@
 
+      subroutine ingest_acars(istatus)
+
 !     Ken Dritz      15-Jul-1997        Added call to get_grid_dim_xy to get
 !                                       the values of NX_L, NY_L
 !     Ken Dritz      15-Jul-1997        Pass NX_L, NY_L to get_acars_data
@@ -37,7 +39,7 @@
           write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
       else
           write(6,*)' Error getting laps_cycle_time'
-          stop
+          return
       endif
 
       lag_time_report = 3600
@@ -50,7 +52,7 @@
           dir_in = c_values_req
       else
           write(6,*)' Error getting ',c_vars_req
-          stop   
+          return
       endif
 
       ext_in = 'cdf'
@@ -132,7 +134,8 @@
      1                                      ,filename_in,istatus)
               else
                   write(6,*)' ERROR, invalid ext_in: ',ext_in
-                  stop
+                  istatus = 0
+                  return
               endif
 
           endif
@@ -142,7 +145,8 @@
 
  999  continue
 
-      write(6,*)' End of acars ingest program'
-
+      write(6,*)' End of acars ingest routine'
+ 
+      return
       end
  

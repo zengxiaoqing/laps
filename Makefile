@@ -37,7 +37,6 @@ EXEDIRS = src/accum \
           src/grid \
           src/humid \
           src/ingest/acars \
-          src/ingest/pireps \
           src/ingest/profiler \
           src/ingest/radar/ingest_rrv \
           src/ingest/radar/remap \

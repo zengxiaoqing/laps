@@ -99,7 +99,7 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim recNum'
       endif
-      call main_sub(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,
+      call pireps_sub(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,
      +     maxTurbElements, maxTurbLvls, recNum,
 !.............................................................................
      1     i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
@@ -108,7 +108,7 @@ C
       end
 C
 C
-      subroutine main_sub(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,
+      subroutine pireps_sub(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,
      +     maxTurbElements, maxTurbLvls, recNum,
 !.............................................................................
      1     i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
@@ -154,7 +154,7 @@ C
 
 !.............................................................................
 
-      call read_netcdf(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls, 
+      call read_pireps_netcdf(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,     
      +     maxTurbElements, maxTurbLvls, recNum, icingIntens, 
      +     lowLvlWndShr, temperature, turbIntens, vis, windDir, 
      +     windSpd, fltLvlBottom, fltLvlTop, icingBottom, icingTop, 
@@ -304,7 +304,7 @@ C
 C
 C  Subroutine to read the file "PIREP data : selected by receipt time : time range from 885926400 to 885926700" 
 C
-      subroutine read_netcdf(nf_fid, maxIcingLvls, maxLocs, 
+      subroutine read_pireps_netcdf(nf_fid, maxIcingLvls, maxLocs, 
      +     maxSkyLvls, maxTurbElements, maxTurbLvls, recNum, 
      +     icingIntens, lowLvlWndShr, temperature, turbIntens, vis, 
      +     windDir, windSpd, fltLvlBottom, fltLvlTop, icingBottom, 

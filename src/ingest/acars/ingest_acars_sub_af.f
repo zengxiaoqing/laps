@@ -13,6 +13,7 @@
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
+      real*4 latitude,longitude
 
 !............................................................................
 
@@ -137,7 +138,7 @@
 
           endif
 
-          temperature = float(I_FLTP)/10.
+          temperature = float(I_A1FLTP)/10.
 
  850      if(abs(temperature) .lt. 400.)then
               write(6,13)temperature

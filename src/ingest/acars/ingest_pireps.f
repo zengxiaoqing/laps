@@ -1,4 +1,6 @@
 
+      subroutine ingest_pireps(istatus)
+
 !     Steve Albers                      Original Version
 !     Ken Dritz     15-Jul-1997         Added call to get_grid_dim_xy to
 !                                       get the values of NX_L, NY_L
@@ -38,7 +40,7 @@
           write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
       else
           write(6,*)' Error getting laps_cycle_time'
-          stop
+          return
       endif
 
       lag_time_report = 3600
@@ -51,7 +53,7 @@
           dir_in = c_values_req
       else
           write(6,*)' Error getting ',c_vars_req
-          stop   
+          return
       endif
 
 !     dir_in = path_to_raw_pirep
@@ -71,8 +73,8 @@
           endif
       
       else
-          write(6,*)' No raw data files identified, STOP'
-          stop
+          write(6,*)' No raw data files identified'
+          go to 999
       endif
 
 
@@ -107,7 +109,8 @@
 
  999  continue
 
-      write(6,*)' End of pirep ingest program'
+      write(6,*)' End of pirep ingest routine'
 
+      return
       end
  

@@ -33,7 +33,7 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim recNum'
       endif
-      call main_sub(nf_fid, recNum,
+      call acars_sub(nf_fid, recNum,
 !.............................................................................
      1              i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
       return
@@ -41,7 +41,7 @@ C
       end
 C
 C
-      subroutine main_sub(nf_fid, recNum,
+      subroutine acars_sub(nf_fid, recNum,
 !.............................................................................
      1              i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
 !.............................................................................
@@ -80,7 +80,7 @@ C
 
 !............................................................................
 
-      call read_netcdf(nf_fid, recNum, airline, bounceError, 
+      call read_acars_netcdf(nf_fid, recNum, airline, bounceError, 
      +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
      +     interpolatedTime, missingInputMinutes, rollFlag, 
      +     speedError, tempError, waterVaporQC, windDirError, 
@@ -206,7 +206,7 @@ C
 C
 C  Subroutine to read the file "ACARS data" 
 C
-      subroutine read_netcdf(nf_fid, recNum, airline, bounceError, 
+      subroutine read_acars_netcdf(nf_fid, recNum, airline, bounceError, 
      +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
      +     interpolatedTime, missingInputMinutes, rollFlag, 
      +     speedError, tempError, waterVaporQC, windDirError, 
