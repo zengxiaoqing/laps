@@ -595,11 +595,12 @@ c
               if(cldtop_m(i,j) .eq. 0.           .or. 
      1           abs(cldtop_m(i,j)) .gt. 100000.      )then
                   write(6,*)' WARNING: cldtop_m(i,j) = ',cldtop_m(i,j)
+     1                     ,i,j     
               endif
 
               if(htbase_init .eq. 0.           .or. 
      1           abs(htbase_init) .gt. 100000.      )then
-                  write(6,*)' WARNING: htbase_init = ',htbase_init
+                  write(6,*)' WARNING: htbase_init = ',htbase_init,i,j     
               endif
 
 !             Locate SAO cloud base below satellite cloud top, modify
@@ -639,7 +640,7 @@ c
 
             if(htbase      .eq. 0.           .or. 
      1         abs(htbase) .gt. 100000.             )then
-                write(6,*)' WARNING: htbase = ',htbase
+                write(6,*)' WARNING: htbase = ',htbase,i,j
             endif
 
 !           Add satellite cloud to array
