@@ -502,7 +502,8 @@ c
 	    elseif(cvr(ii,i)(1:3) .eq. 'CLR') then
 	       ht(ii,i) = 3657.4     ! Automatic Ob
 
-            elseif(ht(ii,i) .gt. 17000.0) then ! Check for bad height
+            elseif(ht(ii,i) .gt. 17000.0    .OR.
+     1             ht(ii,i) .eq. badflag        ) then ! Check for bad height
                write(6,*)' WARNING in get_metar_obs: '      
      1                   ,' reject cloud ob, height = '
      1                   ,ht(ii,i),stname(i)
