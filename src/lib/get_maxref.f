@@ -101,13 +101,13 @@ cdis
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Error in get_max_ref, STOP'
+            write(6,*)' Error in get_max_reflect, STOP'
             stop
         endif
 
         call get_ref_base(ref_base,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Error in get_max_ref, STOP'
+            write(6,*)' Error in get_max_reflect, STOP'
             stop
         endif
 
@@ -132,9 +132,12 @@ cdis
 !       Update Radar Array with proper missing output flag if needed 
         do j = 1,jmax
         do i = 1,imax
-            if(r_missing_out    .eq. ref_base       .AND.
-     1         radar_array(i,j) .eq. r_missing_data       )then
-                radar_array(i,j) = ref_base
+            if(r_missing_out    .eq. ref_base)then
+                if(     radar_array(i,j) .eq. r_missing_data 
+     1             .or. radar_array(i,j) .eq. -101.          ! QC flags
+     1             .or. radar_array(i,j) .eq. -102.    )then       
+                    radar_array(i,j) = ref_base
+                endif
             endif
         enddo
         enddo

@@ -459,6 +459,17 @@ c
 c
 c     Reflectivity data
 c
+!        QC flags within the gridded reflectivities are as follows...
+!
+!            r_missing_data     Insufficient number of "potential gates" in
+!                               the grid volume
+!
+!            -101.              Insufficient fractional coverage of "actual"
+!                               gates in grid volume
+!
+!            -102.              Reflectivity less than threshold value
+
+
             IF(ngrids_ref(i,j,k) .ge. MIN_REF_SAMPLES) THEN ! Good gates
               rknt=float(ngrids_ref(i,j,k))
               IF (rknt .ge. float(n_pot_ref(i,j,k)) * COVERAGE_MIN) THEN
@@ -476,24 +487,24 @@ c
      :               write(6,835) i,j,k,grid_ref(i,j,k)
   835                format(' Grid loc: ',3(i4,','),'  Refl: ',f6.1)
 
-                ELSE ! Failed REF QC test
+                ELSE        ! Failed REF QC test
  
                   n_ref_grids_qc_fail = n_ref_grids_qc_fail + 1
-                  grid_ref(i,j,k) = r_missing_data
+                  grid_ref(i,j,k) = -102.
 
-                END IF ! Passed REF QC test
+                END IF      ! Passed REF QC test
 
-              ELSE ! Insufficent coverage
+              ELSE       ! Insufficent coverage
 
-                grid_ref(i,j,k) = r_missing_data
+                grid_ref(i,j,k) = -101.
 
-              END IF   ! coverage check of count
+              END IF     ! coverage check of count
 
-            ELSE ! Insufficent data count
+            ELSE       ! Insufficent data count
 
               grid_ref(i,j,k) = r_missing_data
 
-            END IF   ! first check of count
+            END IF     ! first check of count
 
   400     CONTINUE ! i,j
   500   CONTINUE ! k
