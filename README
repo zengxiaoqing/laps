@@ -139,7 +139,7 @@
 
      - If significant modifications or enhancements are made to this
      software, the FSL Software Policy Manager
-     (softwaremgr@fsl.noaa.gov) should be notified.
+     (softwaremgr.fsl@noaa.gov) should be notified.
 
      THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
      AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
@@ -1115,8 +1115,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            databases for ACARS data to translate the automated aircraft 
            observations. The wind, temperature and humidity obs are appended 
            to our intermediate "PIN" file. A NIMBUS equivalent NetCDF database 
-           is available (with some restrictions) on the Web at 
-           http://acweb.fsl.noaa.gov.
+           is available (with some restrictions) on the Web via MADIS at
+           http://www-sdd.fsl.noaa.gov/MADIS/
 
                       ----   2.3.6  RAOB / Dropsonde / Radiometer ---
 
@@ -1128,9 +1128,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      Dropsondes (snd):
            A Dropsonde ingest module has been developed for the CWB database. 
-           Under current development is an ingest module for AVAPS. We may 
-           include modules for other databases in the future, such as NIMBUS
-           or WFO/AWIPS.          
+           An ingest module has also been developed for AVAPS. We may include 
+           modules for other databases in the future, such as NIMBUS or 
+           WFO/AWIPS.          
 
      Radiometers (snd):
            A radiometer ingest module has been developed for the MADIS
@@ -1177,8 +1177,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                       ----   2.3.9  Other Data Sources ---
 
      Radar VAD Algorithm winds (pro)
-           FSL NIMBUS database, from WSR-88D algorithm output. FSL obtains
-           this from NCEP and does not presently redistribute it.
+           FSL NIMBUS NetCDF database, from WSR-88D algorithm output. FSL 
+           obtains this from NCEP and does not presently redistribute it.
 
      SODAR data (pro) - This is treated in a similar manner to wind profilers 
            and can be processed by LAPS ingest to appear in the PRO file.
