@@ -25,7 +25,7 @@
 #define read_cdf_v3 read_cdf_v3_
 #define write_val_ref_asctime write_val_ref_asctime_
 #define check_grid_dimensions check_grid_dimensions_
-#define get_static_info get_static_info_
+#define get_static_info_v3 get_static_info_v3_
 #define free_file_var free_file_var_
 #define free_write_var free_write_var_
 #define free_static_var free_static_var_
@@ -49,7 +49,7 @@
 #define read_cdf_v3 READ_CDF_V3
 #define write_val_ref_asctime WRITE_VAL_REF_ASCTIME
 #define check_grid_dimensions CHECK_GRID_DIMENSIONS
-#define get_static_info GET_STATIC_INFO
+#define get_static_info_v3 GET_STATIC_INFO_V3
 #define free_file_var FREE_FILE_VAR
 #define free_write_var FREE_WRITE_VAR
 #define free_static_var FREE_STATIC_VAR
@@ -73,7 +73,7 @@
 #define read_cdf_v3 read_cdf_v3__
 #define write_val_ref_asctime write_val_ref_asctime__
 #define check_grid_dimensions check_grid_dimensions__
-#define get_static_info get_static_info__
+#define get_static_info_v3 get_static_info_v3__
 #define free_file_var free_file_var__
 #define free_write_var free_write_var__
 #define free_static_var free_static_var__
@@ -964,13 +964,13 @@ long lm1_levels;
 }
 /************************************************************/
 #ifdef __STDC__
-int get_static_info(char *static_grid, float *Dx, float *Dy, 
-                    float *La1, float *Lo1, float *LoV, 
-                    float *Latin1, float *Latin2, char *map_proj, 
-                    char *origin)
+int get_static_info_v3(char *static_grid, float *Dx, float *Dy, 
+                      float *La1, float *Lo1, float *LoV, 
+                      float *Latin1, float *Latin2, char *map_proj, 
+                      char *origin)
 #else
-int get_static_info(static_grid, Dx, Dy, La1, Lo1, LoV, Latin1,
-                    Latin2, map_proj, origin)
+int get_static_info_v3(static_grid, Dx, Dy, La1, Lo1, LoV, Latin1,
+                       Latin2, map_proj, origin)
 char *static_grid; 
 float *Dx; 
 float *Dy; 
@@ -1830,8 +1830,8 @@ long *status;
         map_proj = malloc(256 * sizeof(char));
         origin = malloc(256 * sizeof(char));
 
-        istatus = get_static_info(static_grid, &Dx, &Dy, &La1, &Lo1, &LoV, 
-                                  &Latin1, &Latin2, map_proj, origin);
+        istatus = get_static_info_v3(static_grid, &Dx, &Dy, &La1, &Lo1, &LoV, 
+                                     &Latin1, &Latin2, map_proj, origin);
         free(static_grid);
 
         if (istatus == -1) {
