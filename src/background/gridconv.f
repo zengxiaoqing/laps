@@ -5,7 +5,7 @@ c        polar stereographic grid i, j and vice-versa.
 c     Equations and code mostly obtained from RAMS.
 c     snook (12/20/95)
 c
-      implicit none
+ccc      implicit none
 c
       integer*4 np,n
 c
@@ -220,7 +220,7 @@ c===============================================================================
 c
       subroutine psll_2_psij(pslat,pslon,psi,psj)
 c
-      implicit none
+ccc      implicit none
 c
       real*4 pslat,pslon,      !Pol ste. lat, lon (deg N, deg +E)
      .       psi,psj,          !Pol ste. i,j
@@ -243,7 +243,7 @@ c===============================================================================
 c
       subroutine psij_2_psll(psi,psj,pslat,pslon)
 c
-      implicit none
+ccc      implicit none
 c
       real*4 psi,psj,          !Pol ste. i,j
      .       pslat,pslon,      !Pol ste. lat, lon (deg N, deg +E)
@@ -407,7 +407,7 @@ c===============================================================================
 c
       subroutine ps_param(xmin,ymin,dx,dy)
 c
-      implicit none
+ccc      implicit none
 c
       real*4 pslat,pslon,
      .       xmin,xmax,ymin,ymax,
@@ -444,7 +444,7 @@ c        conical-equidistant grid i, j vice-versa.
 c     Equations obtained from Adrian Marroquin and Tom Black (NCEP).
 c     snook (12/20/95)
 c
-      implicit none
+ccc      implicit none
 c
       integer*4 np,n
 c
@@ -480,7 +480,7 @@ c===============================================================================
 c
       subroutine geoll_2_coneqll(glat,glon,celat,celon)
 c
-      implicit none
+ccc      implicit none
 c
       real*4 glat,glon,      !Earth lat, lon (deg N, deg +E)
      .       celat,celon,    !Con eq. lat, lon (deg N, deg +E)
@@ -506,7 +506,7 @@ c===============================================================================
 c
       subroutine coneqll_2_coneqij(celat,celon,cei,cej)
 c
-      implicit none
+ccc      implicit none
 c
       real*4 celat,celon,      !Con eq. lat, lon (deg N, deg +E)
      .       cei,cej           !Con eq. i,j
@@ -529,7 +529,7 @@ c===============================================================================
 c
       subroutine coneqij_2_coneqll(cei,cej,celat,celon)
 c
-      implicit none
+ccc      implicit none
 c
       real*4 cei,cej,          !Con eq. i,j
      .       celat,celon       !Con eq. lat, lon (deg N, deg +E)
@@ -552,7 +552,7 @@ c===============================================================================
 c
       subroutine coneqll_2_geoll(celat,celon,glat,glon)
 c
-      implicit none
+ccc      implicit none
 c
       real*4 celat,celon,    !Con eq. lat, lon (deg N, deg +E)
      .       glat,glon       !Earth lat, lon (deg N, deg +E)
@@ -585,7 +585,7 @@ c        Lambert-conformal grid i, j and vice-versa.
 c     Equations obtained from NCAR graphics documentation.
 c     snook (12/20/95)
 c
-      implicit none
+ccc      implicit none
 c
       integer*4 np,n
 c
@@ -639,7 +639,7 @@ c===============================================================================
 c
       subroutine lc_param(s,cone,xmin,ymin,dx,dy)
 c
-      implicit none
+ccc      implicit none
 c
       real*4 s,cone,r,
      .       xmin,xmax,ymin,ymax,
@@ -684,7 +684,7 @@ c *** Routines to convert from geographical lat, lon to
 c        lat-lon grid i, j and vice-versa.
 c     snook (11/5/96)
 c
-      implicit none
+ccc      implicit none
 c
       integer*4 np,n
 c

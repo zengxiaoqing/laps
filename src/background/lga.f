@@ -97,13 +97,14 @@ c Read background model from nest7grid.parms
       prbot = PRESSURE_BOTTOM_L/100.
       delpr = PRESSURE_INTERVAL_L/100.
       laps_cycle_time = laps_cycle_time_cmn
-c      bgmodel = laps_background_model_cmn
+      bgmodel = laps_background_model_cmn
+c this line will be changed shortly
+      bgpath = path_to_ruc_cmn
 
       if(bgmodel.eq.1) then
 	nx_bg = 81
         ny_bg = 62
         nz_bg = 25        
-        bgmodel = path_to_ruc_cmn
         cmodel = 'RUC60_NATIVE'   
       else if(bgmodel.eq.2) then
 	nx_bg = 93
@@ -114,19 +115,16 @@ c      bgmodel = laps_background_model_cmn
 	nx_bg = 144
         ny_bg = 73
         nz_bg = 16        
-        bgmodel = path_to_ruc_cmn
         cmodel = 'RUC60_NATIVE'   	   
       else if(bgmodel.eq.4) then
 	nx_bg = 93
         ny_bg = 65
         nz_bg = 19        
-        bgmodel = path_to_ruc_cmn
         cmodel = 'RUC60_NATIVE'   	   
       else if(bgmodel.eq.5) then
 	nx_bg = 151
         ny_bg = 113
         nz_bg = 40       
-        bgmodel = path_to_ruc_cmn
         cmodel = 'RUC40_NATIVE'   	   
       endif
 
