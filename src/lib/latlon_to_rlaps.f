@@ -137,11 +137,13 @@ cdis
 !       This routine assumes a polar stereographic, lambert conformal,
 !       or mercator projection.
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         include 'lapsparms.cmn'
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        call get_laps_config('nest7grid',istatus)  
+
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
@@ -180,7 +182,7 @@ cdis
 
         subroutine latlon_to_uv_ps(rlat_in,rlon_in,slat,polat,slon,u,v)
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         if(abs(polat) .eq. 90.)then ! pole at N/S geographic pole
             if(.true.)then
                 polon = slon
@@ -214,7 +216,7 @@ cdis
 
         subroutine latlon_to_uv_lc(rlat,rlon,slat1,slat2,slon,u,v)
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         real*4 n
 
 !       Difference between two angles, result is between -180. and +180.
@@ -231,7 +233,7 @@ cdis
 
         subroutine latlon_to_uv_mc(rlat,rlon,slat,cenlon,u,v)
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         real*4 pi, rpd
 
         parameter (pi=3.1415926535897932)
@@ -258,11 +260,13 @@ cdis
 !       This routine assumes a polar stereographic, lambert conformal,
 !       or mercator projection.
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         include 'lapsparms.cmn'
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        call get_laps_config('nest7grid',istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
@@ -301,7 +305,7 @@ cdis
         subroutine uv_to_latlon_ps(u,v,slat,polat,slon
      1                                         ,rlat_out,rlon_out)
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         r=sqrt(u**2+v**2)
 
         if (r .eq. 0) then
@@ -333,7 +337,7 @@ cdis
 
         subroutine uv_to_latlon_lc(u,v,slat1,slat2,slon,rlat,rlon)
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         real*4 n
 
         call lambert_parms(slat1,slat2,n,s,rconst)
@@ -352,7 +356,7 @@ cdis
 
         subroutine uv_to_latlon_mc(u,v,slat,cenlon,rlat,rlon)
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         parameter (pi=3.1415926535897932)
         parameter (rpd=pi/180.)
 
@@ -394,8 +398,10 @@ cdis
 !       Difference between two angles, result is between -180. and +180.
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        call get_laps_config('nest7grid',istat_config)
+
+        if(istat_config .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
@@ -464,6 +470,7 @@ cdis
 
         projrot_latlon = projrot_laps
 
+!       istatus = 1 ! Not yet usable because of the entry
         return
         end
 
