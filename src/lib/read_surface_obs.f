@@ -147,8 +147,9 @@ c
 	end
 c
 c
-	subroutine read_sfc_metadata(i4time,n_obs_g,n_obs_b,time,
-     &    wmoid,stations,provider,lat,lon,elev,maxsta,jstatus)
+	subroutine read_sfc_metadata(i4time,n_obs_g,n_obs_b,time
+     1              ,wmoid,stations,provider,reptype,autostntype
+     1              ,lat,lon,elev,maxsta,jstatus)
 c
 c*****************************************************************************
 c
@@ -158,6 +159,8 @@ cdoc    arrays.
 c
 c	Changes:
 c		P. Stamus  04-13-98  Original version (from write_surface_LS2).
+c      
+c               S. Albers  2000      Expanded for OSSE use
 c
 c*****************************************************************************
 c
@@ -168,6 +171,7 @@ c
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
+        character reptype(maxsta)*6, autostntype(maxsta)*6
 	character dum*132
 c
 	jstatus = 0
@@ -196,7 +200,8 @@ c
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
      &                   time(k)                   !obs time
 c
-	  read(11,919) dum                       
+	  read(11,903)   reptype(k),               !station report type
+     &                   autostntype(k)            !station type (manual/auto)
 c
 	  read(11,919) dum
 c
