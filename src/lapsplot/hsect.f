@@ -904,7 +904,7 @@ cdis
      1          ,ext,var_2d
      1          ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
-                if(istatus .ne. 1)then
+                if(istatus .eq. 0)then
                     write(6,*)' Cant find S8W Analysis ',istatus
                     goto1200
                 endif
@@ -918,7 +918,7 @@ cdis
      1              ,ext,var_2d
      1              ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
-                if(istatus .ne. 1)then
+                if(istatus .eq. 0)then
                     write(6,*)' Cant find VAS/S8A Analysis'
                     goto1200
                 endif
@@ -932,7 +932,7 @@ cdis
      1              ,ext,var_2d
      1              ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
-                if(istatus .ne. 1 .and. istatus .ne. -1)then
+                if(istatus .eq. 0)then
                     write(6,*)' Cant find ALB Analysis'
                     goto1200
                 endif
@@ -954,7 +954,7 @@ cdis
      1          ,i4time_ref,10000,i4time_nearest
      1          ,ext,var_2d
      1          ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
-                if(istatus .ne. 1 .and. istatus .ne. -1)then
+                if(istatus .eq. 0)then
                     write(6,*)' Cant find VIS Analysis'
                     goto1200
                 endif
@@ -967,7 +967,7 @@ cdis
      1          ,i4time_ref,10000,i4time_nearest
      1          ,ext,var_2d
      1          ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
-                if(istatus .ne. 1)then
+                if(istatus .eq. 0)then
                     write(6,*)' Cant find VAS/S8A Analysis'
                     goto1200
                 endif
