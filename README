@@ -202,8 +202,8 @@
      documentation for your compiler. Some platforms such as Solaris and HPUX 
      do not come with an ANSI compliant C compiler by default.  If you have 
      not purchased that additional product from the vendor, we recommend GNU C
-     available at 'ftp://prep.ai.mit.edu/pub/gnu'. Check that the C compiler
-     is in your path.
+     (gcc) available at 'http://www.gnu.org/software/gcc/gcc.html'. Check that 
+     the C compiler is in your path.
 
      For Solaris platforms, 'cc' is recommended.
 
