@@ -167,7 +167,7 @@ cdis
      1                                   ,asc9_tim_point,iwrite2,l_eof)       
             if(elev .eq. 0.)i_qc = 0
         else
-            call read_laps_cdw_wind(lun_in,xlat,xlon,pres,dd,ff
+            call read_laps_cdw_wind(lun_in,xlat,xlon,pres_pa,dd,ff
      1                                           ,asc9_tim_point,l_eof)
         endif
 
@@ -204,30 +204,15 @@ cdis
                           if(abs(elev) .lt. 90000.)then
                              pres_mb = ztopsa(elev)
                              pres_pa = pres_mb * 100.
-                             if(.false.)then ! Const pressure grid assumption
-                                rk = zcoord_of_pressure(pres_pa)
+                             rk = rlevel_of_field(pres_pa,pres_3d
+     1                                           ,ni,nj,nk
+     1                                           ,i_grid,j_grid
+     1                                           ,istatus_rk) 
 
-                                if (rk .eq. r_missing_data) then
-                                  write(6,*)' WARNING: rejecting ACARS '      
-     1                                ,'apparently above top of domain '       
-     1                                ,elev
-                                   istatus_rk = 0
-                                else
-                                   istatus_rk = 1
-                                endif
-
-                             else ! Arbitrary vertical pressure grid 
-                                rk = rlevel_of_field(pres_pa,pres_3d
-     1                                              ,ni,nj,nk
-     1                                              ,i_grid,j_grid
-     1                                              ,istatus_rk) 
-
-                                if(istatus_rk .ne. 1)then
-                                    write(6,*)
-     1                              ' Bad status from rlevel_of_field'       
-                                endif
-
-                             endif ! vertical grid type
+                             if(istatus_rk .ne. 1)then
+                                 write(6,*)
+     1                           ' Bad status from rlevel_of_field'       
+                             endif
 
                           else ! way too high
                              write(6,*)' WARNING: rejecting ACARS ',       
@@ -241,9 +226,20 @@ cdis
                        weight_ob = weight_pirep
 
                     else ! cdw
-                        rk = zcoord_of_pressure(pres)
-                        istatus_rk = 1
-                        weight_ob = weight_cdw
+!                      rk = zcoord_of_pressure(pres_pa)
+!                      istatus_rk = 1
+
+                       rk = rlevel_of_field(pres_pa,pres_3d
+     1                                     ,ni,nj,nk
+     1                                     ,i_grid,j_grid
+     1                                     ,istatus_rk) 
+
+                       if(istatus_rk .ne. 1)then
+                           write(6,*)
+     1                          ' Bad status from rlevel_of_field'       
+                       endif
+
+                       weight_ob = weight_cdw
 
                     endif
 
