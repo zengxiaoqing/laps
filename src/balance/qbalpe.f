@@ -23,7 +23,7 @@ c
       call qbalpe(nx,ny,nz)
 c
 
-999   print*,'balance package finished'
+999   print*,'Done'
 
 1000  end
 c
@@ -105,7 +105,11 @@ c
 c
 c switch to run balance package or not
 c
-      if(.not.lrunbal)goto 999
+      if(.not.lrunbal)then
+         print*,'Namelist value lrunbal = false '
+         print*,'Balance Package not running '
+         goto 999
+      endif
 
       if(vertical_grid.eq.'PRESSURE')THEN!Pressure in mb
          do i=1,nz
