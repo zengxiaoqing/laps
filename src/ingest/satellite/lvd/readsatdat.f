@@ -114,6 +114,7 @@ c
                if(rcode.ne.nf_noerr) return
 
                call get_cdf_dims(ncid,record,nx,ny,istatus)
+               record = 1
                if(istatus.eq.1)then
                   print*,'Error reading cdf dimensions'
                   return

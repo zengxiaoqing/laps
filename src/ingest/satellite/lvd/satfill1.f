@@ -109,6 +109,7 @@ c
                rcode=NF_OPEN(c_filename,NF_NOWRITE,NCID)
                if(rcode.ne.nf_noerr) return
                call get_cdf_dims(ncid,record,nx2,ny2,istatus)
+               record=1
                if(istatus.eq.1)then
                   print*,'Error reading cdf dimensions'
                   return
