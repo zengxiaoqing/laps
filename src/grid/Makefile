@@ -20,7 +20,9 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
 
 EXE = gridgen_model.exe
 
-SRC   = get_tile_list.f gridgen_utils.f proc_geodat.f put_laps_static.f
+SRC   = get_tile_list.f gridgen_utils.f \
+        proc_geodat.f put_laps_static.f \
+        rd_static_attr_sub.f
 
 MAIN=gridgen_model.f 
 

@@ -1,65 +1,3 @@
-!1.     given lat/lon points of analysis domain
-!2.     determine the domain subset corner points (lat0 and lon0
-!       lat0=lat(1,1)
-!         where real*4 lat0,lon0,dlat,dlon     !SW corner lat, lon, lat, lon spacing
-!3.     adjust for staggering is done via lat/lon 
-!
-!4.     use latlon_2_llij(nx*ny,lat,lon,gri,grj)
-!         with common /llgrid/ni,nj,nk,lat0,lon0,dlat,dlon
-!         set appropriately for the raw (30s or whatever) data
-!         ni/nj = num raw data gridpoints covering the domain
-!5.     use read_usgs_geog (formerly read_usgs_veg.F)
-!         to extract that part of the full-sized raw data
-!         relevant to the domain.  This routine will need
-!         to be written (starting with read_usgs_veg.F)
-!6.     need function that determines the starting/ending i/j
-!         values for the raw data surrounding the domain lat/lon point.
-!
-!         grid_ratio=(resolution input)/(resolution output)
-
-!         function istartg(r_grid_ratio,gri)
-!            is = nint(gri-(1./r_grid_ratio) * 0.5)
-!            return
-!            end
-
-!         function iendg(r_grid_ratio,gri)
-!            ie = int(gri+(1./r_grid_ratio) * 0.5)
-!            return
-!            end
-
-!         function jstartg(r_grid_ratio,grj)
-!            js = nint(grj-(1./r_grid_ratio) * 0.5)
-!            return
-!            end
-
-!         function jendg(r_grid_ratio,grj)
-!            je = int(grj+(1./r_grid_ratio) * 0.5)
-!            return
-!            end
-
-!7.     now do this:
-!
-!       do j=1,ny
-!          do i=1,nx
-!             
-!             is=istartg(r_grid_ratio,gri(i,j)) 
-!             ie=iendg(r_grid_ratio,(gri(i,j))
-!             js=jstartg(r_grid_ratio,gri(i,j))
-!             je=jendg(r_grid-ratio,gri(i,j))
-!             do jd=js,je
-!                do id=is,ie
-!                   dindex=rawdata(id,jd)
-!                   dcnt(i,j,dindex)=dcnt(i,j,dindex)+1
-!                   totnum(i,j)=totnum(i,j)+1 
-!                enddo
-!             enddo
-
-!          enddo
-!       enddo
-
-c-----------------------------------------------
-
-
       subroutine proc_geodat(nx_dom,ny_dom,ncat
      1,path_to_tile_data,dom_lats_in,dom_lons_in,lmask_out
      1,geodat,istatus)
@@ -70,6 +8,10 @@ c-----------------------------------------------
 !                     : 2002
 !                    Corrected problems with crossing the dateline
 !                    and constrained albedo to one tile.
+! J. Smart (NOAA/FSL) : 2003
+!                    Further refined processing of tiles to accomodate
+!                    dateline, Greenwich mean, and Poles. Added smoothing
+!                    of temp field (subroutine one_two_one).
 
       use horiz_interp
 
@@ -78,7 +20,8 @@ c-----------------------------------------------
       integer nx_dom 
       integer ny_dom
       integer ncat
-      integer ntn
+      integer ntn,nt
+      integer bgmodel
       integer itilesize_d
       integer lentd,lenp,lenf
       integer iblksizo
@@ -90,7 +33,6 @@ c-----------------------------------------------
       integer itiley
       integer,allocatable:: itile_lat(:)
       integer,allocatable:: itile_lon(:)
-      integer itilelon
       integer it,jt
       integer is,js
       integer ie,je
@@ -98,7 +40,6 @@ c-----------------------------------------------
       integer i,j,k,ii,jj
       integer ix,iy
       integer icnta
-      integer icat
 
       integer istatus
       integer istat
@@ -137,11 +78,16 @@ c-----------------------------------------------
       real    tile_s_lat
       real    tile_w_lon
       real    tile_e_lon
+      real    sw(2),ne(2)
       real    deltallo
       real    min_lat
       real    max_lat
       real    min_lon
       real    max_lon
+      real    minlat
+      real    maxlat
+      real    minlon
+      real    maxlon
       real    raw_lon
       real    raw_lat
       real    start_lon
@@ -154,9 +100,11 @@ c-----------------------------------------------
       real    r_missing_data
  
       logical  dem_data
-      logical  lgotW,lgotE
+      logical  lgot0
+      logical  lgotE,lgotW
       logical  make_srcmask
       logical  lexist,lopen
+      logical  lfndtile
 
       character*(*) path_to_tile_data
       character*255 title
@@ -222,16 +170,18 @@ c original create from Brent Shaw pseudocode
 
       call s_len(path_to_tile_data,lenp)
       ctiletype=path_to_tile_data(lenp:lenp)
-      if(ctiletype.eq.'V'.or.ctiletype.eq.'O'.or.
-     1   ctiletype.eq.'U'.or.ctiletype.eq.'T'.or.
-     1   ctiletype.eq.'A'.or.ctiletype.eq.'G'.or.
-     1   ctiletype.eq.'L' )then
+      if(ctiletype.eq.'T'.or.
+     1   ctiletype.eq.'A'.or.
+     1   ctiletype.eq.'G'.or.
+     1   ctiletype.eq.'M' )then
          print*,'tile type to process = ',ctiletype
       else
          print*,'Unknown tile type in proc_geodat_tiles'
          print*,'path_to_tile_data: ',path_to_tile_data(1:lenp)
          stop
       endif
+
+      bgmodel=6
 
       TITLE=path_to_tile_data(1:lenp)//'HEADER'
       lentd=INDEX(TITLE,' ')-1
@@ -249,7 +199,7 @@ c original create from Brent Shaw pseudocode
       print *,'iblksizo,no=',iblksizo,no
       CLOSE(29)
 
-      maxtiles=(360/iblksizo)+(180/iblksizo)
+      maxtiles=(360/iblksizo)*(180/iblksizo)
       print*,'Maxtiles = ',maxtiles
 
       if(NO .GT. 0)then
@@ -276,18 +226,18 @@ c original create from Brent Shaw pseudocode
 ! Find min/max latitude and longitude so we can compute which tiles to 
 ! read
 
-      min_lat = MINVAL(dom_lats)
-      max_lat = MAXVAL(dom_lats)
-      min_lon = MINVAL(dom_lons)
-      max_lon = MAXVAL(dom_lons)
+      minlat = MINVAL(dom_lats)
+      maxlat = MAXVAL(dom_lats)
+      minlon = MINVAL(dom_lons)
+      maxlon = MAXVAL(dom_lons)
 
 ! no offsets needed here since these are the tiles, not the points
 ! in the tiles. However, since domains may need data from tiles with
 ! offset considered, add it in.
-      min_lat = max(-89.9999,min(89.9999,min_lat - abs(rsoff)))
-      max_lat = max(-89.9999,min(89.9999,max_lat + abs(rsoff)))
-      min_lon = max(-359.9999,min(359.9999,min_lon - abs(rwoff)))
-      max_lon = max(-359.9999,min(359.9999,max_lon + abs(rwoff)))
+      min_lat = max(-89.9999, min(89.9999, minlat - abs(rsoff)))
+      max_lat = max(-89.9999, min(89.9999, maxlat + abs(rsoff)))
+      min_lon = max(-359.9999,min(359.9999,minlon - abs(rwoff)))
+      max_lon = max(-359.9999,min(359.9999,maxlon + abs(rwoff)))
 
       deallocate(dom_lats,dom_lons)
 
@@ -316,51 +266,73 @@ c original create from Brent Shaw pseudocode
 !     num_raw_points_total(:,:)=0
 !     num_raw_points_cat(:,:,:)=0
 
-c preliminary ... change sign of lat/lon as necessary and
-c find SW anchor point.
+      lgotW=.false.
+      lgotE=.false.
+      lgot0=.false.
+
+      do itile=1,ntn
+         read(ctile_name_list(itile)(1:2),'(i2.2)')itile_lat(itile)
+         read(ctile_name_list(itile)(4:6),'(i3.3)')itile_lon(itile)
+         if(itile_lon(itile).eq.0)lgot0=.true.
+         if(ctile_name_list(itile)(7:7).eq.'W')then
+            lgotW=.true.
+            if(itile_lon(itile).lt.180)then
+               itile_lon(itile)=360-itile_lon(itile)
+            endif
+         endif
+         if(ctile_name_list(itile)(7:7).eq.'E')then
+            lgotE=.true.
+         endif
+
+         if(ctile_name_list(itile)(3:3).eq.'S')then
+            itile_lat(itile)=-1.0*itile_lat(itile)
+         endif
+      enddo
 
       min_lon=360
       max_lon=-360
       min_lat=90
       max_lat=0
-      lgotW=.false.
-      lgotE=.false.
 
       do itile=1,ntn
-         read(ctile_name_list(itile)(1:2),'(i2.2)')itile_lat(itile)
-         read(ctile_name_list(itile)(4:6),'(i3.3)')itile_lon(itile)
-
-         if(ctile_name_list(itile)(3:3).eq.'S')then
-            itile_lat(itile)=-1.0*itile_lat(itile)
-         endif
          if(itile_lat(itile).lt.min_lat)min_lat=itile_lat(itile)
          if(itile_lat(itile).gt.max_lat)max_lat=itile_lat(itile)
-
-         if(ctile_name_list(itile)(7:7).eq.'W')then
-c           lgotW=.true.
-            itile_lon(itile)=-1.0*itile_lon(itile)
-         endif
-         if(itile_lon(itile).lt.min_lon)min_lon=itile_lon(itile)
-         if(itile_lon(itile).gt.max_lon)max_lon=itile_lon(itile)
-
-c        if(ctile_name_list(itile)(7:7).eq.'W')then
-c           itile_lon(itile)=360-itile_lon(itile)
-c        endif
-c        if(ctile_name_list(itile)(7:7).eq.'E')lgotE=.true.
+c        if(itile_lon(itile).lt.min_lon)min_lon=itile_lon(itile)
+c        if(itile_lon(itile).gt.max_lon)max_lon=itile_lon(itile)
       enddo
 
-      tile_s_lat = float(minval(itile_lat(1:ntn)))+rsoff
-      tile_n_lat = float(maxval(itile_lat(1:ntn)))+rsoff
-      tile_w_lon = float(minval(itile_lon(1:ntn)))+rwoff
-      tile_e_lon = float(maxval(itile_lon(1:ntn)))+rwoff
+      tile_s_lat = min_lat
+      tile_n_lat = max_lat
+
+      if(itilesize_d.lt.180)then
+         if(lgotW.and.lgotE)then
+            if(lgot0)then
+               tile_w_lon = float(maxval(itile_lon(1:ntn)))
+               tile_e_lon = float(minval(itile_lon(1:ntn)))
+               if(abs(tile_w_lon-tile_e_lon).lt.180)then
+                  tile_w_lon=tile_w_lon-360.
+               endif
+            else
+               tile_w_lon = float(minval(itile_lon(1:ntn)))
+               tile_e_lon = float(maxval(itile_lon(1:ntn)))
+            endif
+         else
+            tile_w_lon = float(minval(itile_lon(1:ntn)))
+            tile_e_lon = float(maxval(itile_lon(1:ntn)))
+         endif
+      else
+         tile_s_lat = float(minval(itile_lat(1:ntn)))  !+rsoff
+         tile_n_lat = float(maxval(itile_lat(1:ntn)))  !+rsoff
+         tile_w_lon = float(minval(itile_lon(1:ntn)))  !+rwoff
+         tile_e_lon = float(maxval(itile_lon(1:ntn)))  !+rwoff
+      endif
 
       print*,'S/N tile lat points = ',tile_s_lat,tile_n_lat
       print*,'W/E tile lon points = ',tile_w_lon,tile_e_lon
 
 c determine the x/y size dimensions and allocate/initialize the super tile
 
-      rlondif=tile_e_lon-tile_w_lon
-      if(rlondif.lt.0.0)rlondif=360.+rlondif
+      rlondif=abs(tile_e_lon-tile_w_lon)
       itx=nx_tile*(nint(rlondif)+itilesize_d)/float(itilesize_d)
       ity=ny_tile*nint((abs(tile_n_lat-tile_s_lat)+itilesize_d)
      ./float(itilesize_d))
@@ -376,12 +348,19 @@ c is relevant to the actual data points within the tile.
       nyst=ity
       dlat=dlat_tile
       dlon=dlat
-      lat0=min_lat+rsoff 
-c     if(lgotE .and. lgotW)min_lon=360+min_lon+rwoff
-      lon0=min_lon+rwoff 
+      lat0=tile_s_lat+rsoff
+      if(tile_w_lon.gt.180)then
+         lon0=tile_w_lon-360+rwoff 
+      else
+         lon0=tile_w_lon+rwoff
+      endif
+      sw(1)=lat0
+      sw(2)=lon0
+      ne(1)=tile_n_lat+itilesize_d+rsoff
+      ne(2)=tile_e_lon+itilesize_d+rwoff
       cgrddef='S'
 
-      print*,'generating supertile for domain'
+      print*,'generate supertile for domain'
       print*,'number of small tiles needed= ',ntn
 
       DO itile = 1, ntn  !number of tiles needed
@@ -390,16 +369,13 @@ c     if(lgotE .and. lgotW)min_lon=360+min_lon+rwoff
        cfname = path_to_tile_data(1:lenp)//ctilename(1:3)
        read(ctilename(4:6),'(i3.3)')icurEW
        read(ctilename(7:7),'(a1)')curEW
-       IF (icurEW > 180) THEN
-          icurEW = icurEW - 180
-          IF (curEW == 'W') THEN
-             curEW = 'E'
-          ELSE
-             curEW = 'W'
-          ENDIF
-       ELSE IF (icurEW == 180) THEN
+       IF (icurEW > 180)THEN    ! .and. icurEW < 360) THEN
+          icurEW = 360 - icurEW
+       ENDIF
+       IF (icurEW == 180.and.curEW.ne.'W') THEN
           curEW = 'W' 
        END IF 
+
        write(cfname(lenp+4:lenp+6),'(i3.3)')icurEW
        write(cfname(lenp+7:lenp+7),'(a1)')curEW
 
@@ -427,7 +403,9 @@ c     if(lgotE .and. lgotW)min_lon=360+min_lon+rwoff
        elseif( ctiletype.eq.'V' )then      ! world USGS 30s landuse
            CALL READ_DEM(29,cfname,no,no,1,4,raw_data)
            dem_data=.true.
-       elseif( (ctiletype.eq.'G').or.(ctiletype.eq.'A') )then      ! greenfrac/albedo
+       elseif( (ctiletype.eq.'G')
+     1     .or.(ctiletype.eq.'A')
+     1     .or.(ctiletype.eq.'M') )then      ! greenfrac/albedo/maxsnowalb
            CALL READ_DEM_G(29,cfname,no,no,1,ncat,1,1,4,raw_data
      1,istat)
            if(istat.ne.0)then
@@ -435,7 +413,7 @@ c     if(lgotE .and. lgotW)min_lon=360+min_lon+rwoff
               return
            endif
            dem_data=.true.
-       elseif( ctiletype.eq.'T' )then      ! soiltemp
+       elseif( ctiletype.eq.'T')then ! .or. ctiletype.eq.'M')then      ! soiltemp
            CALL READ_DEM(29,cfname,no,no,2,2,raw_data)
            dem_data=.true.
        else                                ! other  like albedo
@@ -456,14 +434,21 @@ c
 c      print*,'compute itiley/itilex'
        if(curNS .eq. 'S') icurNS=-1.0*icurNS
        itiley=nint(1.0+(float(icurNS)-tile_s_lat)/float(itilesize_d))
-       if(curEW .eq. 'W') icurEW=-1.0*icurEW
-       itilex=nint(1.0+(float(icurEW)-tile_w_lon)/float(itilesize_d))
+c
+       rlondif=float(itile_lon(itile))-tile_w_lon
+       if(rlondif.lt.0)then
+          rlondif=rlondif+360.
+       elseif(rlondif.ge.360)then
+          rlondif=rlondif-360
+       endif
+
+       itilex=nint(1.0+(rlondif/float(itilesize_d)))
 
        itx=1+(itilex-1)*nx_tile
        ity=1+(itiley-1)*ny_tile
 
-c      print*,'itilex/itiley ',itilex,itiley
-c      print*,'itx/ity ',itx,ity
+       print*,'itilex/itiley ',itilex,itiley
+       print*,'itx/ity ',itx,ity
 
        jj=0
        do iy=ity,ny_tile*itiley
@@ -481,8 +466,15 @@ c      print*,'itx/ity ',itx,ity
 
       print*,'initializing hinterp grx/gry arrays'
 
+      print*,'nxst= ',nxst
+      print*,'nyst= ',nyst
+      print*,'dlat= ',dlat
+      print*,'dlon= ',dlon
+      print*,'lat0= ',lat0
+      print*,'lon0= ',lon0
+
       call init_hinterp(nxst,nyst,nx_dom,ny_dom,'LL',
-     .dom_lats_in,dom_lons_in,grx,gry,1,'     ')
+     .dom_lats_in,dom_lons_in,grx,gry,bgmodel,'     ')
 
       print*,'grid rx/ry computed'
       print*,'SW: grx/gry    1,1: ',grx(1,1),gry(1,1)
@@ -508,38 +500,45 @@ c compute mean value to use as def_value
             endif
          enddo
          enddo
-         amean(k)=asum(k)/icnta
+         if(icnta.gt.0)then
+            amean(k)=asum(k)/icnta
+         else
+            amean(k)=r_missing_data
+         endif
       enddo
-
-c     print*,'is/ie,js/je ',is,ie,js,je
-c     if(ctiletype.eq.'A')then
-c        write(10)data_proc(is:ie,js:je,1)
-c     endif
 
       allocate (lmask_src(nxst,nyst))
       make_srcmask=.true.
-      method  = 2
       val_mask = 1
+      nt=1
 
       if(ctiletype.eq.'T')then
 
          min_val = 239.73
          max_val = 305.09
+         method  = 1
+         geodat(:,:,:)=r_missing_data
 
       elseif(ctiletype.eq.'A')then
 
          min_val = 2.0
          max_val = 100.
+         method  = 2
+         where(amean .eq. r_missing_data)amean=18.
 
       elseif(ctiletype.eq.'G')then
 
          min_val = 1.0
          max_val = 100.
+         method  = 2
+         where(amean .eq. r_missing_data)amean=65.
 
-      elseif(ctiletype.eq.'L')then
+      elseif(ctiletype.eq.'M')then
 
-         min_val = 0.0
-         max_val = 1.0
+         min_val = 1.0
+         max_val = 100.
+         method  = 1
+         geodat(:,:,:)=65.
 
       endif
 
@@ -547,28 +546,17 @@ c     endif
 
          def_val = amean(ii)
 
-         if(.false.)then
-            call hinterp_field(nxst,nyst,nx_dom,ny_dom,1
-     .,grx,gry,data_proc(1,1,ii),geodat(1,1,ii),1)
-            geodat(:,:,ii)=geodat(:,:,ii)/100.
-
-         elseif(ctiletype.eq.'L')then
-
-            call hinterp_field(nxst,nyst,nx_dom,ny_dom,1
-     .,grx,gry,data_proc(1,1,ii),geodat(1,1,ii),1)
-
-            call filter_2dx(geodat,nx_dom,ny_dom,1, 0.5)
-            call filter_2dx(geodat,nx_dom,ny_dom,1,-0.5)
-
-         else
-
-            call interpolate_masked_val(nxst, nyst
+         call interpolate_masked_val(nxst, nyst
      ., lmask_src, data_proc(1,1,ii), nx_dom, ny_dom, lmask_out
      ., geodat(1,1,ii), grx, gry, make_srcmask, min_val, max_val
      ., def_val, val_mask, method)
-            if(ctiletype.eq.'A')then
-               geodat(:,:,ii)=geodat(:,:,ii)/100.
-            endif
+
+         if(ctiletype.eq.'A'.or.ctiletype.eq.'M')then
+            geodat(:,:,ii)=geodat(:,:,ii)/100.
+         endif
+         if(ctiletype.eq.'T')then  !.or.ctiletype.eq.'M')then
+
+            call one_two_one(nx_dom,ny_dom,nt,geodat(1,1,ii))
 
          endif
 
@@ -646,5 +634,61 @@ c     endif
       return
 
 1000  print*,'returning to main. no data processed'
+      return
+
+      end
+c
+c-----------------------------------------------------------
+c
+      subroutine one_two_one(nx,ny,nt,data)
+
+      implicit none
+      integer i,j,ii,jj,icnt,n
+      integer nx,ny,nt
+      integer istatus
+      real  r_missing_data
+      real  fact,sum
+      real  data(nx,ny)
+      real, allocatable :: temp(:,:)
+
+      if(.not. allocated(temp))allocate(temp(nx,ny))
+
+      call get_r_missing_data(r_missing_data,istatus)
+
+      temp=data
+
+      do n=1,nt
+
+         do j=2,ny-1
+         do i=2,nx-1
+
+            sum=0.0
+            icnt=0
+            do jj=j-1,j+1
+            do ii=i-1,i+1
+
+               fact=1
+               if(jj==j.and.ii==i)fact=2
+               if(data(ii,jj).lt.r_missing_data)then
+                  icnt=icnt+fact
+                  sum=sum+data(ii,jj)*fact
+               endif
+
+            enddo
+            enddo
+
+            if(icnt.gt.0)then
+               temp(i,j)=sum/float(icnt)
+            else
+               temp(i,j)=data(i,j)
+            endif
+
+         enddo
+         enddo
+
+         data=temp
+
+      enddo
+
       return
       end

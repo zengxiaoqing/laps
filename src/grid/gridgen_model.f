@@ -61,72 +61,172 @@ c*********************************************************************
         integer lf
         character c10_grid_fname*10
         character c_dataroot*200
+        character cstaticdir*200
+        logical   localize
+        real,     allocatable  ::  moad_lat(:,:)
+        real,     allocatable  ::  moad_lon(:,:)
+        real,     allocatable  ::  dum2d(:,:)
+        real      La1,Lo1,LoV,Latin1,Latin2
+        real      Dx,Dy
+
+        include 'grid_fname.cmn'
 
         write(6,*)
         write(6,*)' gridgen_model: start'
 
-	call get_grid_dim_xy(NX_L,NY_L,istatus)
-	if (istatus .ne. 1) then
-           write (6,*) 'Error getting horizontal domain dimensions'
-	   goto999
-	endif
+        call get_config(istatus)
+        if(istatus.ne.1)then
+           print*,'Error returned: get_config'
+           stop
+        endif
 
         call find_domain_name(c_dataroot,c10_grid_fname,istatus)
         if(istatus .ne. 1)then
             write(6,*) 'Error: find domain name - stop'
             stop
         endif
-
         call s_len(c10_grid_fname,lf)
 
-        call get_n_staggers(n_staggers,istatus)
-        if(istatus.ne.1)then
-           print*,'Error getting n_staggers for',
-     &': ',c10_grid_fname(1:lf)
-           stop
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           call get_num_domains(num_domains,istatus)
+           if(istatus.ne.1)then
+              print*,'Error returned: get_num_domains'
+              stop
+           endif
+        else
+           num_domains=1
         endif
 
-        call get_stagger_index(istag,istatus)
-        if(istatus.ne.1)then
-           print*,'Error getting num_staggers_wrf from wrfsi.nl'
-           stop
-        endif
+        do nest=1,num_domains
 
-        call Gridmap_sub(NX_L,NY_L,n_staggers,istag,istatus)
+c first detemine if this domain requires localizing or re-localizing
 
- 999	write(6,*)' gridgen_model finish: istatus = ',istatus
-        write(6,*)
+           call get_directory('static',cstaticdir,len_dir)
 
+           call rd_static_attr(cstaticdir,nest
+     .,c10_grid_fname,Nx_l,Ny_l,Dx,Dy,La1,Lo1,Latin1
+     .,Latin2,LoV,istatus)
+
+           call eval_localization(cstaticdir,nest,localize
+     .,c10_grid_fname,La1,Lo1,istatus)
+c
+c force localizations until we are ready to ignore them otherwise
+c
+           localize = .true.
+
+           if(localize)then
+
+              call get_grid_dim_xy(NX_L,NY_L,istatus)
+              if (istatus .ne. 1) then
+                 print*, 'Error getting horizontal domain dimensions'
+                 goto999
+              endif
+
+              call get_grid_spacing(Dx,istatus)
+              call get_domain_origin_parent(i_orig,j_orig,istatus)
+
+              print*,'grid_spacing(m)  = ',Dx
+              print*,'grid dims        = ',nx_l,ny_l
+              print*,'grid origin i/j  = ',i_orig,j_orig
+              Dy=Dx
+
+              if(nest.gt.1)then
+                 print*,' calculate center lat/lon '
+                 La1=moad_lat(i_orig,j_orig)
+                 Lo1=moad_lon(i_orig,j_orig)
+                 print*,' SW lat/lon = ',La1,Lo1
+                 call get_earth_radius(erad,istatus)
+c Get X/Y for grid center
+                 CALL POLAR_GP(La1,Lo1,Xcen,Ycen,Dx,Dy,NX_L,NY_L,-1.)
+                 call xy_to_latlon(Xcen,Ycen,erad,rlat,rlon)
+              endif
+
+              call get_n_staggers(n_staggers,istatus)
+              call get_stagger_index(istag,istatus)
+
+              if(istatus.ne.1)then
+                 print*,'Error getting namelist info for',
+     +': ',c10_grid_fname(1:lf)
+                 stop
+              endif
+
+              call Gridmap_sub(NX_L,NY_L,n_staggers,istag,nest,istatus)
+
+              if(istatus.eq.1)then
+                 print*,' Gridmap_sub finish successfully'
+                 if(nest.eq.1.and.num_domains.gt.1)then
+                    allocate (moad_lat(nx_l,ny_l),
+     .                        moad_lon(nx_l,ny_l),
+     .                        dum2d(nx_l,ny_l))
+                    call get_laps_domain(nx_l,ny_l,c10_grid_fname
+     +,moad_lat,moad_lon,dum2d,istatus)
+                    if(istatus.lt.1)then
+                       print *,'Error reading MOAD lat, lon data.'
+                       stop
+                    endif
+                 endif
+              endif
+
+              print*,' Gridmap_sub finished '
+              print*
+
+           else
+              print*
+              print*,' No need to re-localize this domain '
+              print*
+              if(nest.eq.1.and.num_domains.gt.1)then
+                 allocate (moad_lat(nx_l,ny_l),
+     .                     moad_lon(nx_l,ny_l),
+     .                        dum2d(nx_l,ny_l))
+                 call get_laps_domain(nx_l,ny_l,c10_grid_fname
+     +,moad_lat,moad_lon,dum2d,istatus)
+                 if(istatus.lt.1)then
+                    print *,'Error reading MOAD lat, lon data.'
+                    stop
+                 endif
+              endif
+           endif
+
+        enddo
+
+ 999	print*,' gridgen_model finish: istatus = ',istatus
+        print*
+
+        stop
         end
-       
-        subroutine Gridmap_sub(nnxp,nnyp,n_staggers,istag,istatus)
+c
+c --------------------------------------------------------------------
+c
+        subroutine Gridmap_sub(nnxp,nnyp,n_staggers,istag,nest,istatus)
 
         include 'trigd.inc'
 
         logical exist,new_DEM
+        logical lforce_ter_2_zero
 
         integer nnxp,nnyp,mode
         integer ngrids
         integer n_staggers
+        integer nest
+        integer iter
         integer istag
 
 	Real  mdlat,mdlon
 	Real  xmn(nnxp),ymn(nnyp)
 	Real  xtn(nnxp,n_staggers)
         Real  ytn(nnyp,n_staggers)
-        real  adum(nnxp,nnyp)
 
-        real, allocatable ::  topt_10(:,:)
-        real, allocatable ::  topt_10_s(:,:)
+        real, allocatable ::  topt_10   (:,:)
+        real, allocatable ::  topt_10_s (:,:)
         real, allocatable ::  topt_10_ln(:,:)
         real, allocatable ::  topt_10_lt(:,:)
-        real, allocatable ::  topt_30(:,:)
-        real, allocatable ::  topt_30_s(:,:)
+        real, allocatable ::  topt_30   (:,:)
+        real, allocatable ::  topt_30_s (:,:)
         real, allocatable ::  topt_30_ln(:,:)
         real, allocatable ::  topt_30_lt(:,:)
 
-        real  topt_out(nnxp,nnyp)
-        real  topt_out_s(nnxp,nnyp)
+        real  topt_out   (nnxp,nnyp)
+        real  topt_out_s (nnxp,nnyp)
         real  topt_out_ln(nnxp,nnyp)
         real  topt_out_lt(nnxp,nnyp)
 
@@ -138,6 +238,9 @@ c
 
         integer maxdatacat
         parameter (maxdatacat=24)
+
+        real, allocatable ::  adum2d  (:,:)
+        real, allocatable ::  adum3d  (:,:,:)
 
         real, allocatable ::  GEODAT2D(:,:)
         real, allocatable ::  GEODAT3D(:,:,:)
@@ -160,6 +263,8 @@ c
         character*200 path_to_soiltemp_1deg
         character*200 path_to_luse_30s
         character*200 path_to_albedo        !albedo = 0.144 deg res or 8.64m 
+        character*200 path_to_maxsnoalb
+        character*200 path_to_islope
 
         character*255 filename
         character*200 c_dataroot
@@ -169,31 +274,36 @@ c
         character*6   c6_maproj
         character*1   cdatatype
         integer len,lf,lfn,ns
+        integer ishow_timer,init_timer
+        integer itstatus
 
         real,  allocatable ::  rmapdata(:,:,:)
         real,  allocatable ::  data(:,:,:)     !primary output array storage unit.
-
-
+ 
         interface
           subroutine adjust_geog_data(nnxp,nnyp,ncat
-     &,istatgrn,istattmp,lat,topt_out,path_to_soiltemp
-     &,landmask,soiltemp_1deg,greenfrac,istatus)
+     &,istatgrn,istattmp,istatslp,lat,topt_out,path_to_soiltemp
+     &,landmask,soiltemp_1deg,greenfrac,islope,istatus)
 
           integer nnxp,nnyp
           integer istatus
           integer istatgrn
           integer istattmp
+          integer istatslp
 
           character*(*) path_to_soiltemp
           real    lat(nnxp,nnyp)
           real    landmask(nnxp,nnyp)
           real    topt_out(nnxp,nnyp)
           real    soiltemp_1deg(nnxp,nnyp)
+          real    islope(nnxp,nnyp)
           real    greenfrac(nnxp,nnyp,12)
           end subroutine
         end interface
 
 C*********************************************************************
+
+        itstatus = init_timer()
 
         call find_domain_name(c_dataroot,c10_grid_fname,istatus)
         if(istatus .ne. 1)then
@@ -204,18 +314,22 @@ C*********************************************************************
         call s_len(c10_grid_fname,lf)
 
 c add 12 for albedo month 1 - 12.
+c add 1 more for islope JS: 2-25-03
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           ngrids=97+12   ! 2d grids (including %dist for landuse
-                          ! and two soiltype categories, green frac and albedo).
+           ngrids=112     !97+12   ! 2d grids (including %dist for landuse
+                                   ! and two soiltype categories, green frac, albedo and others).
         else
-           ngrids=26+12
+           ngrids=38      !26+12   doesn't include terrain slope index and other stuff.
         endif
 
-        allocate (data(nnxp,nnyp,ngrids),stat=istat)
-        if(istat.ne.0)then
-           print*,'Error allocating data object: array data ',istat
-           print*,'Terminating: Maybe not enough memory'
-           stop
+        if(.not. allocated (data))then
+           allocate (data(nnxp,nnyp,ngrids),stat=istat)
+        
+           if(istat.ne.0)then
+              print*,'Error allocating data object: array data ',istat
+              print*,'Terminating: Maybe not enough memory'
+              stop
+           endif
         endif
 
         model = 'MODEL 4 delta x smoothed filter\0'
@@ -231,8 +345,6 @@ c   the 30s topo covers the continental US
 cc        itoptfn_30=static_dir(1:len)//'model/topo_30s/U'
 c   the 10m topo covers the world
 cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
-c   the 10m pctl covers the world
-cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
 
         call get_path_to_topo_10m(path_to_topt10m,istatus)
         if(istatus .ne. 1)then
@@ -243,12 +355,6 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
         call get_path_to_topo_30s(path_to_topt30s,istatus)
         if(istatus .ne. 1)then
            write(6,*) 'Error getting path_to_topt30s'
-           return
-        endif
-
-        call get_path_to_pctl_10m(path_to_pctl10m,istatus)
-        if(istatus .ne. 1)then
-           write(6,*) 'Error getting path_to_pctl10m'
            return
         endif
 
@@ -291,6 +397,17 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
            return
         endif
 
+        call get_path_to_maxsnoalb(path_to_maxsnoalb,istatus)
+        if(istatus .ne. 1)then
+           print*, 'Error getting path_to_maxsnoalb'
+           return
+        endif
+
+        call get_path_to_islope(path_to_islope,istatus)
+        if(istatus .ne. 1)then
+           print*, 'Error getting path_to_islope'
+           return
+        endif
 
         call s_len(path_to_topt30s,len)
         print*,'path to topt30s:        ',path_to_topt30s(1:len)
@@ -301,10 +418,6 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
            print*,'path to toptl0m:        ',path_to_topt10m(1:len)
         endif
         path_to_topt10m(len+1:len+2)='/H'
-
-        call s_len(path_to_pctl10m,len)
-        print*,'path to pctl_10m:       ',path_to_pctl10m(1:len)
-	path_to_pctl10m(len+1:len+2)='/L'
 
         call s_len(path_to_soiltype_top_30s,len)
         print*,'path to soiltype_top:   '
@@ -329,6 +442,14 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
         call s_len(path_to_albedo,len)
         print*,'path to albedo:         ',path_to_albedo(1:len)
         path_to_albedo(len+1:len+2)='/A'
+
+        call s_len(path_to_maxsnoalb,len)
+        print*,'path to max snow albedo: ',path_to_maxsnoalb(1:len)
+        path_to_maxsnoalb(len+1:len+2)='/M'
+
+        call s_len(path_to_islope,len)
+        print*,'path to islope categorical: ',path_to_islope(1:len)
+        path_to_islope(len+1:len+2)='/I'
 
         call get_topo_parms(silavwt_parm,toptwvl_parm,istatus)
 	if (istatus .ne. 1) then
@@ -492,12 +613,12 @@ C*****************************************************************
 
 ! We will end at this step given the showgrid or max/min lat lon
 ! options.
-        if(mode.eq.2) then
+       if(mode.eq.2) then
 
            print*,'We no longer run showgrid in gridgen_model'
            return
 
-        elseif(mode.eq.3)then
+       elseif(mode.eq.3)then
 
            print*,'get perimeter of grid'
            call get_domain_perimeter_grid(nnxp,nnyp,c10_grid_fname
@@ -511,149 +632,210 @@ C*****************************************************************
            write(10,*)rnorth,south,east,west
            close(10)
 	   return
-	endif
+       endif
 
-        write(6,*)'deltax = ',deltax
-
-        write(6,*)'check_domain:status = ',istat_chk
-
+       write(6,*)'deltax = ',deltax
+       write(6,*)'check_domain:status = ',istat_chk
 c
 C*****************************************************************
 c calculate surface static fields
 c
-       if(iplttopo.eq.1)then
+c ------------ Terrain USGS 30 sec ----------------
+c ------------ and 10m if necessary ---------------
+c type = U
+c
+       itstatus=ishow_timer()
+       print*
+       print*,' Processing 30s topo data....'
 
-          print*
-          print*,' Processing 30s topo data....'
+       allocate (topt_30(nnxp,nnyp),
+     +           topt_30_s(nnxp,nnyp),
+     +           topt_30_ln(nnxp,nnyp),
+     +           topt_30_lt(nnxp,nnyp))
 
-          allocate (topt_30(nnxp,nnyp),
-     +              topt_30_s(nnxp,nnyp),
-     +              topt_30_ln(nnxp,nnyp),
-     +              topt_30_lt(nnxp,nnyp))
-
-          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
+       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
      +,ytn(1,1),deltax,deltay,TOPT_30,TOPT_30_S,TOPT_30_LN
      +,TOPT_30_LT,PATH_TO_TOPT30S,TOPTWVL,SILAVWT,new_DEM,1
      +,istatus_30s)
 
-          if(istatus_30s .ne. 1)then
-           print*,'WARNING: File(s) missing for 30s terrain data'
-          else
-           print *,'topt_30    =',topt_30(1,1),topt_30(nnxp,nnyp)
-          endif
+       if(istatus_30s .ne. 1)then
 
-          if (.not.new_DEM) then
+          print*,'WARNING: File(s) missing for 30s terrain data'
+          print*,' >>>> Try Processing 10m topo data <<<<'
+          print*
 
-            write(6,*)
-            write(6,*)' Processing 10m topo data....'
+          allocate (topt_10(nnxp,nnyp),
+     +              topt_10_s(nnxp,nnyp),
+     +              topt_10_ln(nnxp,nnyp),
+     +              topt_10_lt(nnxp,nnyp))
 
-            allocate (topt_10(nnxp,nnyp),
-     +                topt_10_s(nnxp,nnyp),
-     +                topt_10_ln(nnxp,nnyp),
-     +                topt_10_lt(nnxp,nnyp))
+          print*
+          print*,' Calling GEODAT:  10m terrain data ....'
 
-            print*
-            print*,' Processing 10m terrain data....'
-
-            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
+          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
      +,ytn(1,1),deltax,deltay,TOPT_10,TOPT_10_S,TOPT_10_LN
      +,TOPT_10_LT,PATH_TO_TOPT10M,TOPTWVL,SILAVWT,new_DEM,1
      +,istatus_10m)
-            if(istatus_10m .ne. 1)then
-             print*,'WARNING: File(s) missing for 10m terrain data'
-            else
+
+          if(istatus_10m .ne. 1)then
+
+             print*
+             print*,'Error: File(s) missing for both 10m and
+     +30s terrain data'
+             print*,'Error: Aborting --- No static file created'
+             return
+
+          else
+
              print *,'topt_10    =',topt_10(1,1),topt_10(nnxp,nnyp)
-            endif
-            print*
-            if(istatus_30s .eq.1 .and. istatus_10m.eq.1)then
-               print*,'blending 10min and 30sec terrain data'
-               call blend_topo(nnxp,nnyp,lats(1,1,1),lons(1,1,1)
+             print*
+             print*,'try blending 10min and 30s terrain data'
+             call blend_topo(nnxp,nnyp,lats(1,1,1),lons(1,1,1)
      1,topt_10,topt_10_s,topt_10_ln,topt_10_lt
      1,topt_30,topt_30_s,topt_30_ln,topt_30_lt
      1,topt_out,topt_out_s,topt_out_ln,topt_out_lt)
 
-            else
+             deallocate (topt_10,
+     1                   topt_10_s,
+     1                   topt_10_ln,
+     1                   topt_10_lt)
 
-               print*,'only one terrain data set available'
-               print*,'not able to blend 10m and 30s terrain'
+          endif
 
-            endif
-            deallocate (topt_10,
-     1                  topt_10_s,
-     1                  topt_10_ln,
-     1                  topt_10_lt)
+       else ! go with 30s topo data since all tiles available
 
-          else ! new_DEM, go with 30s topo data
+          print*,'Topo SW and NE corner values'
+          print *,'topt_30    =',topt_30(1,1),topt_30(nnxp,nnyp)
 
-             if(istatus_30s .ne. 1)then
-                print*,'********* ERROR ***********'
-                print*,'ERROR: File(s) missing for 30s terrain data'
-                print*,'ERROR: Static file not created'
-                return
-             endif
+          topt_out=topt_30
+          topt_out_s=topt_30_s
+          topt_out_ln=topt_30_ln
+          topt_out_lt=topt_30_lt
+          icount_30=nnyp*nnxp
+          
+       endif !istatus_30s ... data processed ok 
 
+       deallocate (topt_30,
+     1             topt_30_s,
+     1             topt_30_ln,
+     1             topt_30_lt)
 
-             do j=1,nnyp
-             do i=1,nnxp
-               topt_out(i,j)=topt_30(i,j)
-               topt_out_s(i,j)=topt_30_s(i,j)
-               topt_out_ln(i,j)=topt_30_ln(i,j)
-               topt_out_lt(i,j)=topt_30_lt(i,j)
-             enddo
-             enddo
-             icount_30=nnyp*nnxp
+       print*
+c
+c -------------- 30s Landuse -------------------------
+c type = V
+c
+       itstatus=ishow_timer()
+       print*
+       print*,' Calling GEODAT: Processing 30s landuse data.'
+       print*,' Re-allocate GEODAT3D ',nnxp,nnyp,' 24'
+       print*
+       allocate  (adum2d(nnxp,nnyp))
+       allocate  (GEODAT2D(nnxp,nnyp))
+       allocate  (GEODAT3D(nnxp,nnyp,24))
 
-          endif ! new_DEM
+       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+     +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
+     +,adum2d,adum2d,PATH_TO_LUSE_30S,2.0,0.0,new_DEM,24
+     +,istatus)
 
-          deallocate (topt_30,
-     1                topt_30_s,
-     1                topt_30_ln,
-     1                topt_30_lt)
+       if(istatus.ne.1)then
+         print*,'********* ERROR ***********'
+         print*,'ERROR:  File(s) missing for landuse data'
+         print*,'ERROR:  Static file not created'
+         print*
+         return
+       endif
 
-          print*
+       ilndmsk=12  !land mask is 12 for both wrfsi and laps
+       if(c10_grid_fname(1:lf).eq.'wrfsi')then
 
-       endif ! iplttopo = 1
+c dominant category landuse
+          ilnduse=11
+          data(:,:,ilnduse)=GEODAT2D
+c landmask for wrfsi
+          data(:,:,ilndmsk) = 1.
+          where(data(:,:,11) .eq. 16.)data(:,:,ilndmsk)=0.
+
+c grids 15 thru 38 are percent distributions
+          i=14
+          do j=1,24
+             data(:,:,i+j)=GEODAT3D(:,:,j)
+          enddo
+       else
+c dominant category landuse
+          ilnduse=5
+          data(:,:,ilnduse)=GEODAT2D   !landuse for laps
+c landmask for laps
+          data(:,:,ilndmsk)=1.
+          where(data(:,:,5) .eq. 16.)data(:,:,ilndmsk)=0.
+       endif
+c
+c **********************************************
+c fix water areas to have 0.0m terrain elevation
+c currently no fix going on!
+c **********************************************
+       lforce_ter_2_zero=.false.
+       if(lforce_ter_2_zero)then
+          where(data(:,:,ilndmsk).eq.0)topt_out=0.0
+       endif
+
 
 c for WRFSI we'll bilinearly interpolate to get the topo
 c from the non-staggered topo
 
        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+
+          data(:,:,9)=topt_out
+          call move(topt_out_s,data(1,1,48),nnxp,nnyp)
+          call move(topt_out_ln,data(1,1,49),nnxp,nnyp)
+          call move(topt_out_lt,data(1,1,50),nnxp,nnyp)
+
+          indxter=51
           do j=2,nnyp
           do i=2,nnxp
-             data(i,j,51) = r_missing_data
-c            topt_stag_out(i,j)=r_missing_data
+             data(i,j,indxter) = r_missing_data
              call bilinear_interp(i,j,nnxp,nnyp,topt_out,result)
-             data(i-1,j-1,51)=result
+             data(i-1,j-1,indxter)=result
           enddo
           enddo
 
-          where((data(:,:,51).lt. 0.01).and.
-     1          (data(:,:,51).gt.-0.01))data(:,:,51)=0.0
+          where((data(:,:,indxter).lt. 0.01).and.
+     1          (data(:,:,indxter).gt.-0.01))data(:,:,indxter)=0.0
+
+       else  !must be LAPS
+
+          indxter=3
+          call move(topt_out,data(1,1,indxter),nnxp,nnyp)         ! KWD
+          call move(topt_out_s,data(1,1,7),nnxp,nnyp)             ! JS
+          call move(topt_out_ln,data(1,1,8),nnxp,nnyp)            ! JS
+          call move(topt_out_lt,data(1,1,9),nnxp,nnyp)            ! JS
+
        endif 
 
-       write(6,*)
-       print *,'topt_out   =',topt_out(1,1),topt_out(nnxp,nnyp)
-       print *,'# of grid pts using 30 sec data =  ',icount_30
-       print *,'# of grid pts using 10 min data =  ',icount_10
-       print *,'# of grid pts using blended data = ',icount_ramp
+       print*
+       print *,'terrain  = ',data(1,1,indxter),data(nnxp,nnyp,indxter)
+       print *,'# of grid pts using 30 sec terrain data =  ',icount_30
+       print *,'# of grid pts using 10 min terrain data =  ',icount_10
+       print *,'# of grid pts using blended terrain data = ',icount_ramp
+       print*
 C
-        call s_len(static_dir,len)
-        open(10,file=static_dir(1:len)//'latlon.dat'
+       call s_len(static_dir,len)
+       open(10,file=static_dir(1:len)//'latlon.dat'
      +         ,status='unknown',form='unformatted')
-        open(11,file=static_dir(1:len)//'topo.dat'
+       open(11,file=static_dir(1:len)//'topo.dat'
      +         ,status='unknown',form='unformatted')
-        open(15,file=static_dir(1:len)//'corners.dat'
+       open(15,file=static_dir(1:len)//'corners.dat'
      +         ,status='unknown')
-        write(10)lats(1:nnxp,1:nnyp,1),lons(1:nnxp,1:nnyp,1)
-        close(10)
-        write(11)topt_out
-        close(11)
-        write(15,*)lats(1,1,1),lons(1,1,1)
-        write(15,*)lats(1,nnyp,1),lons(1,nnyp,1)
-        write(15,*)lats(nnxp,1,1),lons(nnxp,1,1)
-        write(15,*)lats(nnxp,nnyp,1),lons(nnxp,nnyp,1)
-c        write(16,*)topt_pctlfn
-        close(15)
+       write(10)lats(1:nnxp,1:nnyp,ns),lons(1:nnxp,1:nnyp,ns)
+       close(10)
+       write(11)data(:,:,indxter)
+       close(11)
+       write(15,*)lats(1,1,ns),lons(1,1,ns)
+       write(15,*)lats(1,nnyp,ns),lons(1,nnyp,ns)
+       write(15,*)lats(nnxp,1,ns),lons(nnxp,1,ns)
+       write(15,*)lats(nnxp,nnyp,ns),lons(nnxp,nnyp,ns)
+       close(15)
 
 c SG97  topography.dat is written to be displayed with gnuplot
 c SG97  this will make an elevated view from the SW direction over the domain
@@ -665,60 +847,20 @@ c SG97  splot 'topography.dat'
 	open(666,file=static_dir(1:len)//'topography.dat')
         do j=1,nnyp
 	  do i=1,nnxp
-	    write(666,*) topt_out(i,j)
+	    write(666,*) data(i,j,indxter)
           enddo
             write(666,'()')
         enddo
         close(666)
-c -----------------------------------------------------------
+c
+c ------ Land Fraction from 30s Land Use ----------------------------
+c type = L (no longer used ... no land fraction data base)
+c
         print*
-        print*,' Calling GEODAT: Processing 30s landuse data.'
-        print*,' Re-allocate GEODAT3D ',nnxp,nnyp,' 24'
-        print*
-        allocate  (GEODAT2D(nnxp,nnyp))
-        allocate  (GEODAT3D(nnxp,nnyp,24))
-
-        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-     +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
-     +,adum,adum,PATH_TO_LUSE_30S,2.0,0.0,new_DEM,24
-     +,istatus)
-
-        if(istatus.ne.1)then
-         print*,'********* ERROR ***********'
-         print*,'ERROR:  File(s) missing for landuse data'
-         print*,'ERROR:  Static file not created'
-         print*
-         return
-        endif
-
-        ilndmsk=12
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
-
-c landmask for wrfsi
-           data(:,:,11)=GEODAT2D
-           data(:,:,ilndmsk) = 1.
-           where(data(:,:,11) .eq. 16.)data(:,:,ilndmsk)=0.
-
-c grids 15 thru 39 are percent distributions
-           i=14
-           do j=1,24
-              data(:,:,i+j)=GEODAT3D(:,:,j)
-           enddo
-        else
-c landmask for laps
-           data(:,:,5)=GEODAT2D   !landuse for laps
-           data(:,:,ilndmsk)=1.
-           where(data(:,:,5) .eq. 16.)data(:,:,ilndmsk)=0.
-        endif
-
-c ----------------------------------------------------------------
-        print*
-        print*,' Processing 10m land fraction data ....'
         print*,' Create from 30s land use fractional dist'
         print*
-c
+ 
         GEODAT2D(:,:)=1.- GEODAT3D(:,:,16)
-
 c
 c this function allows variable amounts of smoothing of
 c the land fraction data depending on grid spacing
@@ -727,44 +869,29 @@ c
         
         print*,'Filter land fraction with 2dx ',iter
         do k=1,iter
-           print*,'Calling filter_2dx'
            call filter_2dx(GEODAT2D,nnxp,nnyp,1, 0.5)
            call filter_2dx(GEODAT2D,nnxp,nnyp,1,-0.5)
         enddo
 
-c JS: 1-10-03:
-c These calls might become obsolete and the land_10m geog
-c data base will also become obsolete.
-c
-c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-c    +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,adum,adum
-c    +,PATH_TO_PCTL10M,1.,0.,new_DEM,1,istatus)
-c       print*,'Calling proc_geodat - land fraction'
-c       call proc_geodat(nnxp,nnyp,1,path_to_pctl10m
-c    +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
-c    +,GEODAT2D,istatus_ldf)
-c       if(istatus_ldf .ne. 1)then
-c          write(6,*)' File(s) missing for 10m land frac data'
-c          write(6,*)' Static file not created.......ERROR'
-c          return
-c       endif
+        idx=4
+        if(c10_grid_fname(1:lf).eq.'wrfsi')idx=10
 
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           idx=10
-        else
-           idx=4
-        endif
         data(:,:,idx)=GEODAT2D
         print *,'pctlandfrac=',GEODAT2D(1,1),GEODAT2D(nnxp,nnyp)       
 c
 c -------------------------------------------------------------------
 c potential fix of fictitous islands for certain resolution domains.
+c Story here is that west coast terrain can be "funky" possibly due
+c to steepness and method to compute avg terrain.
+
+        where(data(:,:,idx).le.0.1 .and. data(:,:,indxter).lt.5.0)
+     &data(:,:,indxter)=0.0
+
 c
-        where(data(:,:,idx).le.0.1 .and. topt_out(:,:).lt.5.0)
-     &topt_out=0.0
+c -------------- Top Layer Soil Type -------------------------
+c type = O
 c
-c -------------------------------------------------------------------
-c
+        itstatus=ishow_timer()
         print*
         print*,' Processing 30s soil type top layer data....'
 
@@ -772,7 +899,7 @@ c
         allocate (GEODAT3D(nnxp,nnyp,16))
 
         CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns),ytn(1,ns)
-     +,deltax,deltay,GEODAT2D,GEODAT3D,adum,adum
+     +,deltax,deltay,GEODAT2D,GEODAT3D,adum2d,adum2d
      +,PATH_TO_SOILTYPE_TOP_30S,2.0,0.0,new_DEM,16   !maxdatacat
      +,istatus)
 
@@ -805,13 +932,16 @@ c top layer dominant category and percent distribution soil type
         else
            data(:,:,10)=GEODAT2D
         endif
-
-c ---------------------------------------------------------------
+c
+c -------------- Bottom Layer Soil Type -------------------------
+c type = O
+c
+        itstatus=ishow_timer()
         print*
-        print*,' Processing 30s soil type bottom layer data....'
+        print*,' Processing 30s soil type bottom layer data'
 
         CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-     +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D,adum,adum
+     +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D,adum2d,adum2d
      +,PATH_TO_SOILTYPE_BOT_30S,2.0,0.0,new_DEM,16   !maxdatacat
      +,istatus)
 
@@ -847,10 +977,13 @@ c
         else
             data(:,:,11)=GEODAT2D
         endif
-
-c ----------------------------------------------------------------
+c
+c ------------- Greenness Fraction --------------------
+c type = G
+c
+        itstatus=ishow_timer()
         print*
-        print*,' Calling GEODAT: Processing green frac data.'
+        print*,' Calling PROC_GEODAT: Process green frac data.'
         print*,' Re-allocate GEODAT3D ',nnxp,nnyp,' 12'
         print*
 
@@ -859,17 +992,14 @@ c ----------------------------------------------------------------
         if(istat.ne.0)then
            print*,'Error allocating data object GEODAT3D ',istat
            if(c10_grid_fname(1:lf).eq.'wrfsi')then
-              print*,'Terminating: Maybe not enough memory'
+              print*,'Error: Aborting process'
+              print*,'Error: Maybe not enough memory'
+              print*,'Error: Cannot allocate GEODAT3D'
               stop
            else
-              print*,'Continue without greenness fraction'         
+              print*,'Warning: Continue without green fraction'         
            endif
         endif
-
-c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-c    +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
-c    +,adum,adum,path_to_green_frac,2.0,0.0,new_DEM,12
-c    +,istatus_grn)
 
         print*,'Calling proc_geodat'
         call proc_geodat(nnxp,nnyp,12,path_to_green_frac
@@ -880,37 +1010,36 @@ c    +,istatus_grn)
          print*
          print*,'greenness fraction data not processed completely'
          if(c10_grid_fname(1:lf).eq.'wrfsi')then
-            print*,' File(s) missing for green frac data'
-            print*,' Error:   Static file not created'
+            print*,' Error: File(s) missing for green frac data'
+            print*,' Error: Static file not created'
             print*
             istatus=0
             return
          else
-            print*,' File(s) missing for green frac data'
-            print*,'           *** WARNING ***'
-            print*,' green fraction data not added to static file'
+            print*,' Warning: File(s) missing for green frac data'
+            print*,' Warning: green frac not added to static file'
             print*
          endif
          GEODAT3D=r_missing_data
         endif
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           i=83
+           igrn=83
         else
-           i=12
+           igrn=12
         endif
         do j=1,12
-           data(:,:,i+j)=GEODAT3D(:,:,j)
+           data(:,:,igrn+j)=GEODAT3D(:,:,j)
         enddo
-
-44      continue
-c ------------------------------------------------------------------
+c
+c --------------- Deep Soil Temperature -------------------
+c type = T
+c
+        itstatus=ishow_timer()
         print*
-c       print*,' Calling GEODAT: Processing 1 degree soiltemp data.'
+        print*,' Call PROC_GEODAT: Process 1 deg soiltemp data.'
 
-c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-c    +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,data(1,1,ilndmsk),adum  !send in landmask to help 
-c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
+        GEODAT2D=0.0
 
         call proc_geodat(nnxp,nnyp,1
      1,path_to_soiltemp_1deg,lats(1,1,ns),lons(1,1,ns)
@@ -920,8 +1049,8 @@ c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
          print* 
          print*,'soiltemp data not processed completely' 
          if(c10_grid_fname(1:lf).eq.'wrfsi')then 
-            print*,' File(s) missing for soiltemp data' 
-            print*,' Error:   Static file not created'
+            print*,' Error:  File(s) missing for soiltemp data' 
+            print*,' Error:  Static file not created'
             print*
             istatus=0
             return
@@ -934,39 +1063,117 @@ c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
          GEODAT2D=r_missing_data
         endif
 
+        idst=25
         if(c10_grid_fname(1:lf).eq.'wrfsi')then 
-           i=96
-        else
-           i=25
+           idst=96
         endif 
+        data(:,:,idst)=GEODAT2D
+c
+c -------------- Terrain slope index categories -------------------------
+c type = I
+c
+        itstatus=ishow_timer()
+        print*
+        print*,' Processing 1 deg islope data'
 
-        data(:,:,i)=GEODAT2D
+        allocate (adum3d(nnxp,nnyp,9))  !temporarily holds %dist of islope cat
+
+        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+     +,ytn(1,ns),deltax,deltay,GEODAT2D,adum3d,adum2d,adum2d
+     +,PATH_TO_ISLOPE,2.0,0.0,new_DEM,9,istatus_slp)
+
+        deallocate (adum2d,adum3d)
+
+        if(istatus_slp.ne.1)then
+           print*
+           print*,' ter slope category data not processed completely'
+           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+             print*,' Error: File(s) missing for islope data'
+             print*,' Error: Static file not created'
+             print*
+             return
+           else
+             print*,' Warning: File(s) missing for islope data'
+             print*,' Warning: islope not added to static file'
+             print*
+           endif
+           GEODAT2D=r_missing_data
+           GEODAT3D=r_missing_data
+        endif
+
+c put the categories back to the original raw data. if it is a land
+c point but islope indicates water, force islope = 1.
+        where(GEODAT2D .eq. 8)GEODAT2D=13.0
+        where(GEODAT2D .eq. 9)GEODAT2D=0.0
+
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           islp=109
+        else
+           islp=38
+        endif
+        data(:,:,islp)=GEODAT2D
 c
 c Adjust geog data to conform to landuse data (the most
 c accurate for defining land-water boundaries).
 c Adjust soil temps to terrain elevations.
 c
-        if(.true.)then
         print*,'Calling adjust_geog_data'
 
-        call adjust_geog_data(nnxp,nnyp,12,istatus_grn
-     &,istatus_tmp,lats(1,1,ns),topt_out,path_to_soiltemp_1deg
-     &,data(1,1,ilndmsk),data(1,1,i),GEODAT3D,istatus)
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+
+           call adjust_geog_data(nnxp-1,nnyp-1,12,istatus_grn,
+     &istatus_tmp,istatus_slp,lats(1,1,ns),data(1:nnxp-1,1:nnyp-1,
+     &indxter),path_to_soiltemp_1deg,data(1:nnxp-1,1:nnyp-1,ilndmsk),
+     &data(1:nnxp-1,1:nnyp-1,idst),GEODAT3D(1:nnxp-1,1:nnyp-1,:),
+     &data(1:nnxp-1,1:nnyp-1,islp),istatus)
+
+        else
+
+           call adjust_geog_data(nnxp,nnyp,12,istatus_grn,
+     &istatus_tmp,istatus_slp,lats(1,1,ns),data(1,1,indxter),
+     &path_to_soiltemp_1deg, data(1,1,ilndmsk),data(1,1,idst),
+     &GEODAT3D,data(1,1,islp),istatus)
+
+        endif
+
         if(istatus.ne.1)then
-           print*,'Processing incomplete in adjust_geog_data'
+           print*,' Warning: Processing incomplete: adjust_geog_data'
            if(c10_grid_fname(1:lf).eq.'wrfsi')then
-              print*,'Error: wrfsi static not generated'
+              print*,'Error: wrfsi static file not generated'
               return
            endif
         endif
-        endif
-c ------------------------------------------------------------------
-        print*
-c       print*,' Calling GEODAT: Processing albedo climo data.'
 
-c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-c    +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,data(1,1,ilndmsk),adum  !send in landmask to help
-c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
+c force land points to have the correct (default) islope value.
+        where(data(:,:,islp)   .eq. 0.0 .and.
+     .        data(:,:,ilndmsk).eq. 1.0)data(:,:,islp)=1.0
+c force water points to have the correct category for islope
+        where(data(:,:,ilndmsk).eq. 0.0)data(:,:,islp)=0.0
+
+
+c rewrite adjusted greenfrac into output array
+        do j=1,12
+           data(:,:,igrn+j)=GEODAT3D(:,:,j)
+        enddo
+c
+c annual max/min greenness fraction in domain
+c
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           print*,' compute max/min greenness frac at grid points'
+           do j=1,nnyp
+           do i=1,nnxp
+              data(i,j,110)=MAXVAL(GEODAT3D(i,j,:))
+              data(i,j,111)=MINVAL(GEODAT3D(i,j,:))
+           enddo
+           enddo
+        endif
+c
+c ---------------Monthly Albedo Climatology--------------------------------
+c type = A
+c
+        itstatus=ishow_timer()
+        print*
+        print*,' Processing albedo climo data'
 
         call proc_geodat(nnxp,nnyp,12,path_to_albedo
      +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
@@ -976,22 +1183,15 @@ c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
 
         if(istatus_alb.ne.1)then
          print*
-         print*,'Albedo climo data not processed completely'
-         print*,' File(s) missing for albedo data'
+         print*,' Error: Albedo climo data not processed completely'
+         print*,' Error: File(s) missing for albedo data'
          print*,' Error: Static file not created: albedo missing'
          print*
          istatus=0
          return
         endif
-c
-c We can force water points to have albedo = 0.08.
-c Land points with missing albedo are given the mean domain
-c albedo.
-c We can be more sophisticated with this by
-c determining the albedo as a function of landuse category and
-c then assigning missing albedo with the same landuse albedo.
-c
-c       print*,'force albedo = 0.08 for water points'
+
+c force water points to 0.08 albedo
 
         do k=1,12
            where(data(:,:,ilndmsk).eq.0.0)GEODAT3D(:,:,k)=0.08
@@ -1005,18 +1205,39 @@ c       print*,'force albedo = 0.08 for water points'
         do j=1,12
            data(:,:,i+j)=GEODAT3D(:,:,j)
         enddo
+c
+c ---------------- Max Snow Albedo ------------------
+c type = M
+c
+        call proc_geodat(nnxp,nnyp,1,path_to_maxsnoalb
+     +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
+     +,GEODAT2D,istatus_alb)
 
-c       call get_static_albedo(nnxp,nnyp,lats(1,1,ns),lons(1,1,ns)
-c    +,data(1,1,12),GEODAT2D,istatus)
-c       if(c10_grid_fname(1:lf).eq.'wrfsi')then
-c          data(:,:,47)=GEODAT2D
-c       else
-c          data(:,:,6)=GEODAT2D
-c       endif
+        print*,'Done in proc_geodat: Max Snow Albedo'
 
-c Adjust geog data to conform to landuse data (the most
-c accurate for defining land-water boundaries).
-c Adjust soil temps to terrain elevations.
+        if(istatus_alb.ne.1)then
+         print*
+         print*,'Error: Max Snow Albedo not processed completely'
+         if(c10_grid_fname(1:lf).eq.'wrfsi')then
+            print*,' Error: Static file not created '
+            print*
+            istatus=0
+            return
+         else
+            print*,'Warning: File(s) missing for max snow albedo'
+         endif
+        endif
+c
+c force max albedo = 0.08 over water. force max albedo = 0.7 over ice
+c
+        where(data(:,:,ilndmsk).eq.0.0)GEODAT2D=0.08
+        where(data(:,:,ilnduse).eq.24.0)GEODAT2D=0.7
+
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           data(:,:,47)=GEODAT2D
+        else
+           data(:,:,6)=GEODAT2D
+        endif
 
         deallocate (GEODAT2D)
         deallocate (GEODAT3D)
@@ -1034,7 +1255,6 @@ c Adjust soil temps to terrain elevations.
               data(:,:,in2)=lons(:,:,j)
            enddo
 
-           data(:,:,9)=topt_out
 
 c compute map/grid information. Reallocate GEODAT3D array
            allocate (GEODAT3D(nnxp,nnyp,4))
@@ -1114,12 +1334,20 @@ c          call move(topt_stag_out,data(1,1,i+12),nnxp,nnyp) !51
         call put_laps_static(grid_spacing_m,model,comment,var
      1,data,nnxp,nnyp,ngrids,ngrids,std_lat,std_lat2,std_lon
 c    1,data,nnxp,nnyp,nf+3*maxdatacat,ngrids,std_lat,std_lat2,std_lon
-     1,c6_maproj,deltax,deltay)
+     1,c6_maproj,deltax,deltay,nest)
 
         istatus = istat_chk
+
+        itstatus=ishow_timer()
+        print*,' -------------------------------'
+        print*,' Total Elapsed time: ', itstatus
+        print*,' -------------------------------'
+
 	return
 	End
-
+c
+c ================================================================
+c
       SUBROUTINE GEODAT(n2,n3,erad,rlat,wlon1,xt,yt,deltax,deltay
      1 ,DATR,DATS,DATLN,DATLT,OFN,WVLN,SILWT,which_data,maxdatacat
      1 ,istat_files)
@@ -1316,27 +1544,17 @@ C
 
       lcat=1
       len=index(ofn,' ')
-      if(ofn(len-1:len-1).eq.'V')then
+      if(ofn(len-1:len-1).eq.'V'.or.
+     &   ofn(len-1:len-1).eq.'I')then
          icnt = 0
          cdatatype='landuse'
-      elseif(ofn(len-1:len-1).eq.'A')then
-         icnt=0
-         cdatatype='albedo'
+         if(ofn(len-1:len-1).eq.'I')cdatatype='islope'
       elseif(ofn(len-1:len-1).eq.'O')then
          icnt = 0
          cdatatype='soiltype'
       elseif(ofn(len-1:len-1).eq.'U' .or.
-     &       ofn(len-1:len-1).eq.'H' .or.
-     &       ofn(len-1:len-1).eq.'L')then
+     &       ofn(len-1:len-1).eq.'H')then
          cdatatype='topography'
-         if(ofn(len-1:len-1).eq.'L')cdatatype='landfrac'
-      elseif(ofn(len-1:len-1).eq.'G')then
-         icnt = 0
-         cdatatype='greenfrac'
-         lcat = 12
-      elseif(ofn(len-1:len-1).eq.'T')then
-         icnt = 0
-         cdatatype='soiltemp'
       endif
 
       print*,'SFCOPQR: cdatatype = ',cdatatype
@@ -1494,9 +1712,16 @@ c
 
 !                 Read the tile
                   if(TITLE3 .ne. TITLE3_last_read)then
-                    if( (ofn(len-1:len).eq.'U').and.(no.eq.1200) )then
-                      CALL READ_DEM(29,TITLE3(1:LB),no,no,2,2, ! world topo_30s
+                    if( (ofn(len-1:len).eq.'U').and.(no.eq.1200).or.
+     .                   no.eq.1201 )then
+                         if(no.eq.1201)then
+                            print*,'Reading ', title3(1:lb)
+                            CALL READ_DEM(29,TITLE3(1:LB),no,no,4,4, ! topo_3s experimental
      .                              DATO(1,1,NOFR,1))
+                         else
+                            CALL READ_DEM(29,TITLE3(1:LB),no,no,2,2, ! world topo_30s
+     .                              DATO(1,1,NOFR,1))
+                         endif
                       dem_data=.true.
                     elseif( (ofn(len-1:len).eq.'O') )then      ! soiltype top and bot layer
                       CALL READ_DEM(29,TITLE3(1:LB),no,no,1,4,
@@ -1507,7 +1732,8 @@ c
      .                              DATO(1,1,NOFR,1))
                       dem_data=.true.
                     elseif( (ofn(len-1:len).eq.'G').or.
-     .                      (ofn(len-1:len).eq.'A') )then      ! greenfrac/albedo
+     .                      (ofn(len-1:len).eq.'I').or.
+     .                      (ofn(len-1:len).eq.'A') )then      ! greenfrac/albedo/islope
                       CALL READ_DEM_G(29,TITLE3(1:LB),no,no,mof,lcat
      .                     ,nofr, 1,4, DATO,istat)
                          if(istat.ne.0)then
@@ -1623,7 +1849,6 @@ C Nearest grid point for landfrac, landuse, soiltype, soiltemp
 ! Calculate average and silhouette terrain, then apply SILWT weight
 
             if(cdatatype(1:lent).eq.'topography'.or.
-     &         cdatatype(1:lent).eq.'landfrac'.or.
      &         cdatatype(1:lent).eq.'soiltemp'   )then
 
 
@@ -1672,7 +1897,8 @@ C Nearest grid point for landfrac, landuse, soiltype, soiltemp
 
 c            print *,'datq=',datq(iq,jq)
 
-            elseif(cdatatype(1:lent).eq.'landuse'   .or.
+            elseif(cdatatype(1:lent).eq.'islope'    .or.
+     &             cdatatype(1:lent).eq.'landuse'   .or.
      &             cdatatype(1:lent).eq.'soiltype'    )then
 
              call compute_categories(cdatatype,np*np,DATP(1,1,1)
@@ -1690,24 +1916,17 @@ c dominant greenness fraction for each month
               datqs(iq,jq,lp)=domcat
              enddo
 
-c           elseif(cdatatype(1:lent).eq.'soiltemp'    )then
-c             call compute_categories(cdatatype,np*np,DATP(1,1,1)
-c    &                               ,1,domcat,pctcat)
-c             datq(iq,jq)=domcat
-
             endif
 
 16       continue ! IQ
 15    continue ! JQ
 
       print *,'after 15'
-c     stop
  
       XQ1=(1.-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
       YQ1=(1.-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
 
-      if(cdatatype(1:lent).eq.'topography'.or.
-     +   cdatatype(1:lent).eq.'landfrac')then
+      if(cdatatype(1:lent).eq.'topography')then
 
         print*
         print*,'Before GDTOST2'
@@ -1737,16 +1956,6 @@ c     stop
            CALL GDTOST2(DATSLT,NIQ,NJQ,XR,YR,RVAL)
            DATLT(IR,JR)=RVAL
 
-c let's constrain the landfrac data between 0.0 and 1.0
-           if(ofn(len-1:len).eq.'L')then
-              if(DATR(IR,JR).gt. 1.0)then
-                 DATR(IR,JR)=1.0
-              endif
-              if(DATS(IR,JR,1).gt.1.0)then
-                 DATS(IR,JR,1)=1.0
-              endif
-           endif
-
  29      CONTINUE
  28     CONTINUE
 
@@ -1758,6 +1967,7 @@ c let's constrain the landfrac data between 0.0 and 1.0
         print*,'datlt(1,1)/(n2,n3)= ',datlt(1,1),datlt(n2,n3)
  
       elseif(cdatatype(1:lent).eq.'landuse'.or.
+     +       cdatatype(1:lent).eq.'islope' .or.
      +       cdatatype(1:lent).eq.'soiltype')then
 
         DO 38 JR=1,N3
@@ -1774,51 +1984,6 @@ c let's constrain the landfrac data between 0.0 and 1.0
 
  39      CONTINUE
  38     CONTINUE
-
-      elseif(cdatatype(1:lent).eq.'greenfrac' )then
-
-        DO 47 LP=1,lcat
-         DO 48 JR=1,N3
-          DO 49 IR=1,N2
-
-            IXR=NINT((XT(IR)-XQ1)/DELTAXQ)+1.
-            IYR=NINT((YT(JR)-YQ1)/DELTAYQ)+1.
-            if(ixr.lt.1)ixr=1
-            if(iyr.lt.1)iyr=1
-            if(ixr.gt.n2)ixr=niq
-            if(iyr.gt.n3)iyr=njq
-            dats(ir,jr,lp)=datqs(ixr,iyr,lp)  !monthly categories for greenness frac
-
- 49       CONTINUE
- 48      CONTINUE
- 47     CONTINUE
-
-      elseif(cdatatype(1:lent).eq.'soiltemp'  )then
-
-        where(datq .eq. 0.0)datq=r_missing_data
-        datr=r_missing_data
-        DO 58 JR=1,N3
-         DO 59 IR=1,N2
-c           IXR=NINT((XT(IR)-XQ1)/DELTAXQ)+1.
-c           IYR=NINT((YT(JR)-YQ1)/DELTAYQ)+1.
-c           if(ixr.lt.1)ixr=1
-c           if(iyr.lt.1)iyr=1
-c           if(ixr.gt.n2)ixr=niq
-c           if(iyr.gt.n3)iyr=njq
-c           datr(ir,jr)=datq(ixr,iyr)
-
-            XR=(XT(IR)-XQ1)/DELTAXQ+1.
-            YR=(YT(JR)-YQ1)/DELTAYQ+1.
-c           call bilinear_interp_extrap(xr,yr,niq,njq
-c    1               ,datq,rval,istatus)
-
-c           CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
-
-            DATR(IR,JR)=max(0.,RVAL)
-
- 59      CONTINUE
- 58     CONTINUE
-
 
       endif
 
@@ -1876,75 +2041,74 @@ c           CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
 c
 cc ------------------------------------------------------------------
 c
-      subroutinevfirec(iunit,a,n,type)                                  
-      character*1vc                                                     
-      character*(*)type                                                 
-      common/vform/vc(0:63)                                             
-      characterline*80,cs*1                                             
-      dimensiona(*)                                                     
-                                                                        
-      if(vc(0).ne.'0')callvfinit                                        
-                                                                        
-      ich0=ichar('0')                                                   
-      ich9=ichar('9')                                                   
-      ichcz=ichar('Z')                                                  
-      ichlz=ichar('z')                                                  
-      ichca=ichar('A')                                                  
-      ichla=ichar('a')                                                  
-                                                                        
-      read(iunit,10)nn,nbits,bias,fact                                  
- 10   format(2i8,2e20.10)                                               
-      if(nn.ne.n)then                                                   
-      print*,' Word count mismatch on vfirec record '                   
-      print*,' Words on record - ',nn                                   
-      print*,' Words expected  - ',n                                    
-      stop'vfirec'                                                      
-      endif                                                             
-                                                                        
-      nvalline=(78*6)/nbits                                             
-      nchs=nbits/6                                                      
-      do20i=1,n,nvalline                                                
-      read(iunit,'(a78)', end=15)line                                          
-      go to 16
+      subroutine vfirec(iunit,a,n,type)
+      character*1 vc
+      character*(*) type
+      common/vform/vc(0:63)
+      character line*80, cs*1
+      dimension a(*)
 
- 15   write(6,*)' Warning, incomplete terrain file detected'
+      if(vc(0).ne.'0') call vfinit
+
+      ich0=ichar('0')
+      ich9=ichar('9')
+      ichcz=ichar('Z')
+      ichlz=ichar('z')
+      ichca=ichar('A')
+      ichla=ichar('a')
       
- 16   ic=0                                                              
-      do30ii=i,i+nvalline-1                                             
-      isval=0                                                           
-      if(ii.gt.n)goto20                                                 
-      do40iii=1,nchs                                                    
-      ic=ic+1                                                           
-      cs=line(ic:ic)                                                    
-      ics=ichar(cs)                                                     
-      if(ics.le.ich9)then                                               
-      nc=ics-ich0                                                       
-      elseif(ics.le.ichcz)then                                          
-      nc=ics-ichca+10                                                   
-      else                                                              
-      nc=ics-ichla+36                                                   
-      endif                                                             
-      isval=intor(intlshft(nc,6*(nchs-iii)),isval)                      
- 40   continue                                                          
-      a(ii)=isval                                                       
- 30   continue                                                          
- 20   continue                                                          
-                                                                        
-      facti=1./fact                                                     
-      if(type.eq.'LIN')then                                             
-      do48i=1,n                                                         
-      a(i)=a(i)*facti-bias                                              
- 48   continue                                                          
-      elseif(type.eq.'LOG')then                                         
-      scfct=2.**(nbits-1)                                               
-      do55i=1,n                                                         
-      a(i)=sign(1.,a(i)-scfct)                                          
-     +*(10.**(abs(20.*(a(i)/scfct-1.))-10.))                            
- 55   continue                                                          
-      endif                                                             
-      return                                                  
-      end                            
+      read(iunit,10)nn,nbits,bias,fact
+ 10   format(2i8,2e20.10)
+      if(nn.ne.n) then
+         print*,' Word count mismatch on vfirec record '
+         print*,' Words on record - ',nn
+         print*,' Words expected  - ',n
+         stop 'vfirec'
+      endif
 
+      nvalline=(78*6)/nbits
+      nchs=nbits/6
+      do 20 i=1,n,nvalline
+         read(iunit,'(a78)') line
+         ic=0
+         do 30 ii=i,i+nvalline-1
+            isval=0
+            if(ii.gt.n) go to 20
+            do 40 iii=1,nchs
+               ic=ic+1
+               cs=line(ic:ic)
+               ics=ichar(cs)
+               if(ics.le.ich9)then
+                  nc=ics-ich0
+               elseif(ics.le.ichcz) then
+                  nc=ics-ichca+10
+               else
+                  nc=ics-ichla+36
+               endif
+               isval=ior(ishft(nc,6*(nchs-iii)),isval)
+ 40         continue
+            a(ii)=isval
+ 30      continue
+ 20   continue
+
+      facti=1./fact
+      if(type.eq.'LIN') then
+         do 48 i=1,n
+            a(i)=a(i)*facti-bias
+ 48      continue
+      elseif(type.eq.'LOG') then
+         scfct=2.**(nbits-1)
+         do 55 i=1,n
+            a(i)=sign(1.,a(i)-scfct)
+     +           *(10.**(abs(20.*(a(i)/scfct-1.))-10.))
+ 55      continue
+      endif
+
+      return
+      end
+c
+cc ------------------------------------------------------------------
+c
       subroutinevfinit                                                  
       character*1vc,vcscr(0:63)                                         
       common/vform/vc(0:63)                                             
@@ -2041,7 +2205,9 @@ c
       real    sum_g
 
 c categorical data types
-      if(ctype.eq.'landuse'.or.ctype.eq.'soiltype')then
+      if(ctype.eq.'landuse'   .or.
+     +   ctype.eq.'soiltype'  .or.
+     +   ctype.eq.'islope'  )then
 
          do k=1,nlcat
             lcat(k)=0
@@ -2103,8 +2269,8 @@ c
 c ----------------------------------------------------------
 c
       subroutine adjust_geog_data(nnxp,nnyp,ncat
-     &,istatgrn,istattmp,lat,topt_out,path_to_soiltemp
-     &,landmask,soiltemp_1deg,greenfrac,istatus)
+     &,istatgrn,istattmp,istatslp,lat,topt_out,path_to_soiltemp
+     &,landmask,soiltemp_1deg,greenfrac,islope,istatus)
 c
 c This routine uses landmask to refine the course resolution
 c soil temp and green fraction data to conform to water-land
@@ -2120,7 +2286,9 @@ c
       integer istatus
       integer istatgrn
       integer istattmp
+      integer istatslp
       integer ijsthresh
+      integer isum
       integer l1,l2
       integer lent
       integer ncat
@@ -2137,25 +2305,29 @@ c
       real,intent(inout)  ::    topt_out(nnxp,nnyp)
       real,intent(inout)  ::    soiltemp_1deg(nnxp,nnyp)
       real,intent(inout)  ::    greenfrac(nnxp,nnyp,ncat)
+      real,intent(inout)  ::    islope(nnxp,nnyp)
 
       real,   allocatable ::    grnfrctmp     (:,:,:)
       real,   allocatable ::    soiltmp       (:,:)
+      real,   allocatable ::    islopetmp     (:,:)
       real,   allocatable ::    rmeanlattemp  (:)
 
       real    avgtmp
       real    avggrn(ncat)
+      real    avgslpcat
       real    tatlmx,tatlmn
       real    rlatmx,rlatmn
       real    r_missing_data
       real    rmngrn
+      real    islp
       real    sumt
       real    sumg
       real    sum(ncat)
       real    tslp
 
       istatus=0
-      if(istatgrn.eq.0 .and. istattmp.eq.0)then
-	 print*,'Unable to process greenfrac or soiltemp ',
+      if(istatgrn.eq.0.and.istattmp.eq.0.and.istatslp.eq.0)then
+	 print*,'Unable to process greenfrac soiltemp or slp ',
      &'in adjust_geog ... no data'
 	 return
       endif
@@ -2164,17 +2336,20 @@ c
 c use moist adiabatic laps rate (6.5 deg/km) to get new temp
  
       allocate (grnfrctmp(nnxp,nnyp,ncat),
-     &          soiltmp(nnxp,nnyp))
+     &          soiltmp(nnxp,nnyp),
+     &          islopetmp(nnxp,nnyp))
 
       call get_r_missing_data(r_missing_data,istatus)
 
       soiltmp=soiltemp_1deg
       grnfrctmp=greenfrac
+      islopetmp=islope
 
       where(grnfrctmp.eq.0.0)grnfrctmp=r_missing_data
       rmngrn=minval(grnfrctmp(1:nnxp,1:nnyp,1:1))
       print*,'minimum green fraction = ',rmngrn
       where(soiltmp.eq.0.0)soiltmp=r_missing_data
+      where(islopetmp.eq.0.0)islopetmp=r_missing_data
 
 c determine average soiltemp and greenfrac in domain
       sumt=0.0
@@ -2198,6 +2373,11 @@ c greenfrac is assumed to be continuous globally; only use land points
                endif
             enddo
          endif
+         if(islopetmp(i,j).ne. r_missing_data)then
+            isum=islopetmp(i,j)+isum
+            islp=islp+1
+         endif
+
       enddo
       enddo
 
@@ -2226,14 +2406,23 @@ c greenfrac is assumed to be continuous globally; only use land points
          rlatmx=maxval(lat(:,nnyp))
          tatlmx=rmeanlattemp(l2)
          tatlmn=rmeanlattemp(l1)
-         tslp=(rlatmx-rlatmn)/(tatlmx-tatlmn)
-         do j=1,nnyp
-         do i=1,nnxp
-            soiltemp_1deg(i,j)=tatlmn+(rlatmx-lat(i,j))/tslp
-            sumt=soiltemp_1deg(i,j)+sumt
-         enddo
-         enddo
-         avgtmp=sumt/(nnyp*nnxp)
+         if(tatlmx.ne.0.and.tatlmn.ne.0.and.
+     .      tatlmx.ne.tatlmn)then
+            tslp=(rlatmx-rlatmn)/(tatlmx-tatlmn)
+            do j=1,nnyp
+            do i=1,nnxp
+               soiltemp_1deg(i,j)=tatlmn+(rlatmx-lat(i,j))/tslp
+               sumt=soiltemp_1deg(i,j)+sumt
+            enddo
+            enddo
+            avgtmp=sumt/(nnyp*nnxp)
+         elseif(tatlmx.gt.0)then
+            avgtmp=tatlmx
+         elseif(tatlmn.gt.0)then
+            avgtmp=tatlmn
+         else
+            avgtmp=0.0
+         endif
          deallocate (rmeanlattemp)
       endif
 
@@ -2244,15 +2433,26 @@ c greenfrac is assumed to be continuous globally; only use land points
       do l=1,ncat
          if(ic(l).gt.0)then
             avggrn(l)=sum(l)/float(ic(l))
+         else
+            avggrn(l)=0.0
          endif
          print*,'Domain average greenfrac = ',l,avggrn(l)
       enddo
+
+      avgslpcat=r_missing_data
+      if(islp.gt.0)then
+         avgslpcat=float(isum)/islp
+         print*,'Average slope category: ',avgslpcat
+      else
+         print*,'Could not compute average slpe cat ?'
+         print*,'Average slope category: ',avgslpcat
+      endif
 
 c extend search to a fraction of the domain size. someday improve this for
 c ratio geog-data-res/domain-res or something to avoid unreasonable
 c search distance.
 
-      ijsthresh = int(nnxp/4)
+      ijsthresh = int(nnxp/2)
 
       do j = 1,nnyp
        do i = 1,nnxp
@@ -2303,6 +2503,10 @@ c search distance.
 
          endif
 
+         if(soiltemp_1deg(i,j).lt.0.00)then
+            print*,'Here:  bizzare soil temp'
+            print*,'i/j/soiltemp ',i,j,soiltemp_1deg(i,j)
+         endif
 ! greenness frac
 
          if(grnfrctmp(i,j,1).eq.r_missing_data.and.
@@ -2355,6 +2559,61 @@ c search distance.
           greenfrac(i,j,:)=grnfrctmp(i,j,:)
 
          endif
+c ------------------------------------------
+c this section for terrain slope categories
+c
+         if(islopetmp(i,j).eq.r_missing_data)then !an inconsistency
+
+          endsearch = .false.
+
+          sumt=0.0
+          isc=0
+          islp=-9
+          is=1
+          js=1
+          jj=j
+
+          do while (.not.endsearch)
+           do ii=i-is,i+is
+           do jj=j-js,j+js
+
+            if( (ii.ge.1) .and. (ii.le.nnxp)
+     &     .and.(jj.ge.1) .and. (jj.le.nnyp)) then
+
+             if(landmask(ii,jj).eq.1.and.
+     &         islopetmp(ii,jj).lt.r_missing_data)then
+               islp=islopetmp(ii,jj)
+               sumt=sumt+islopetmp(ii,jj)
+               isc=isc+1
+             endif
+
+            endif
+
+           enddo
+           enddo
+
+           if(isc.gt.0)then
+              if(islp.gt.7.0)islp=13.0    !force mean to glacial ice as necessary
+              if(sumt.lt.isc)then
+                 islp=1.0
+              else
+                 islp=float(nint(sumt/float(isc)))
+              endif
+              islope(i,j)=islp
+              endsearch=.true.
+           else
+              is=is+1
+              js=js+1
+              if(is.gt.ijsthresh.or.js.gt.ijsthresh)endsearch=.true.
+           endif
+
+          enddo
+
+         else
+
+          islope(i,j)=islopetmp(i,j)
+
+         endif
 
         else     !this is a water point
 
@@ -2369,12 +2628,16 @@ c search distance.
             endif
          enddo
 
+         if(islope(i,j).ne.r_missing_data)then
+            islope(i,j)=r_missing_data
+         endif
+
         endif
 
        enddo
       enddo
 
-      deallocate (grnfrctmp,soiltmp)
+      deallocate (grnfrctmp,soiltmp,islopetmp)
 
 c if the above search failed to find nearby soil temp or greenness frac
 c then use average value
@@ -2382,7 +2645,7 @@ c then use average value
       do j = 1,nnyp
       do i = 1,nnxp
 
-         if(landmask(i,j).eq.1)then
+         if(landmask(i,j).eq.1)then  !a land point
 
             if(soiltemp_1deg(i,j).eq.r_missing_data)then
                soiltemp_1deg(i,j) = avgtmp-0.0065*topt_out(i,j)
@@ -2390,14 +2653,20 @@ c then use average value
 
             do l = 1,12
                if(greenfrac(i,j,l).eq.0.0)then
-                  greenfrac(i,j,l)=float(nint(avggrn(l)))
+                  greenfrac(i,j,l)=avggrn(l)
                endif
             enddo
+
+            if(islope(i,j).eq.r_missing_data)then
+               islope(i,j)=float(nint(avgslpcat))
+            endif
 
          endif
 
       enddo
       enddo
+
+      where(islope.eq.r_missing_data)islope=0.0  !put water category back to original value
 
       istatus=1
 

@@ -37,7 +37,6 @@ c A-c staggers contained within these arrays.
 
       deltay=deltax
 
-
       call get_grid_center(mdlat,mdlon,istatus)
       if(istatus .ne. 1)then
          write(6,*)' Error returned: get_grid_center'
@@ -56,7 +55,7 @@ c A-c staggers contained within these arrays.
 
 c Get X/Y for lower left corner
             CALL POLAR_GP(mdlat,mdlon,XMN1,YMN1,DELTAX,DELTAY,
-     +  NNXP,NNYP)
+     +  NNXP,NNYP,1.)
             stagger_ns=0
             stagger_ew=0
             call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
@@ -71,7 +70,6 @@ c Get X/Y for lower left corner
 
          elseif(k.eq.3)then !this is the B-stagger (.5 N-S stagger)
 
-            call get_grid_center(mdlat,mdlon,istatus)
             call get_xytn(deltax,deltay,nnxp,nnyp,0,0,xmn1,ymn1
      +,xtn(1,k),ytn(1,k))
             stagger_ew=0
@@ -81,7 +79,6 @@ c Get X/Y for lower left corner
 
          elseif(k.eq.4)then !this is the C-stagger (.5 both N-S and E-W)
 
-            call get_grid_center(mdlat,mdlon,istatus)
             call get_xytn(deltax,deltay,nnxp,nnyp,0,0,xmn1,ymn1
      +,xtn(1,k),ytn(1,k))
             stagger_ew=0.5*deltax
@@ -340,14 +337,14 @@ c
       character*(*)  comment(nf)
       character*2    cat
 
-      if(ngrids.eq.38)then
+      if(ngrids.eq.38)then  !this is the LAPS analysis section
 
          var(1)    = 'LAT'
          var(2)    = 'LON'
          var(3)    = 'AVG'
          var(4)    = 'LDF'
          var(5)    = 'USE'
-         var(6)    = 'ALB'  !possibly not used now.
+         var(6)    = 'ALB'  !now used for max snow alb 2-20-03 JS.
          var(7)    = 'STD'
          var(8)    = 'SLN'
          var(9)    = 'SLT'
@@ -373,12 +370,12 @@ c
 
          var(ngrids)   = 'ZIN'
  
-         comment(1) = 'Lat: From MODEL by J. Snook/ S. Albers 1-95\0'
-         comment(2) = 'Lon: From MODEL by J. Snook/ S. Albers 1-95\0'
+         comment(1) = 'Lat: From MODEL by J. Smart/ S. Albers 2-03\0'
+         comment(2) = 'Lon: From MODEL by J. Smart/ S. Albers 2-03\0'
          comment(3) = 'Average terrain elevation (m) \0'
-         comment(4) = 'Land Fraction \0'
+         comment(4) = 'Land Fraction: derived from USGS land use \0'
          comment(5) = 'Land Use dominant category (USGS 24 Category) \0'
-         comment(6) = 'Clear Sky Albedo - fixed at .08 over water\0'
+         comment(6) = 'Maximum Snow Albedo; defined over land only \0'
          comment(7) = 'Standard Deviation of Elevation data (m)\0'
          comment(8) = 'Mean longitudinal terrain slope (m/m)\0'
          comment(9) = 'Mean latitudinal terrain slope (m/m)\0'
@@ -406,7 +403,7 @@ c
 
          comment(ngrids)='\0'
 
-      elseif(ngrids.eq.109)then
+      elseif(ngrids.eq.112)then   !this is the WRFSI section
 
          var(1)    = 'LAT'  ! non-staggered (Analysis-grid) lats
          var(2)    = 'LON'  ! non-staggered (Analysis-grid) lons
@@ -443,7 +440,7 @@ c
          var(i+6)   = 'CPH'  ! Horizontal component of coriolis parameter
          var(i+7)   = 'CPV'  ! Vertical component of coriolis parameter
 
-         var(i+8)   = 'ALB'  ! Static (climatological) albedo
+         var(i+8)   = 'ALB'  ! Maximum snow albedo defined over land only
          var(i+9)   = 'STD'  ! Standard Deviation of Elevation Data (m)
          var(i+10)  = 'SLN'  ! Terrain Slope; Longitudinal Component (m/m)
          var(i+11)  = 'SLT'  ! Terrain Slope; Latitudinal Component (m/m)
@@ -478,13 +475,17 @@ c
             write(cat,'(i2.2)')j
             if(cat(1:1).eq.' ')cat(1:1)='0'
             if(cat(2:2).eq.' ')cat(2:2)='0'
-            var(i+j)= 'A'//cat   ! monthly albedo
+            var(i+j)= 'A'//cat ! monthly albedo
          enddo
+
+         var(109) = 'SLP'      !terrain slope index, dominant category
+         var(110) = 'GNX'      !max greenness fraction
+         var(111) = 'GNN'      !min greenness fraction
 
          var(ngrids)   = 'ZIN'
 
-         comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
-         comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
+         comment(1) = 'Made from MODEL by J. Smart/ S. Albers 2-03\0'
+         comment(2) = 'Made from MODEL by J. Smart/ S. Albers 2-03\0'
          comment(3) = 'a-stagger grid latitudes \0'
          comment(4) = 'a-stagger grid longitudes for WRF_SI \0'
          comment(5) = 'b-stagger grid latitudes for WRF_SI \0'
@@ -492,7 +493,7 @@ c
          comment(7) = 'c-stagger grid latitudes for WRF_SI \0'
          comment(8) = 'c-stagger grid longitudes for WRF_SI \0'
          comment(9) = 'Average terrain elevation (m) \0'
-         comment(10)= 'Land Fraction A-grid \0'
+         comment(10)= 'Land Fraction computed from USGS landuse\0'
          comment(11)= 'Land Use Dominant category \0'
          comment(12)= 'Land-Water Mask (0=water; 1 otherwise) \0'
          comment(13)= 'Soiltype Top Layer dominant category \0'
@@ -517,7 +518,7 @@ c
          comment(i+6)= 'Horizontal component coriolis parameter \0'
          comment(i+7)= 'Vertical component coriolis parameter \0'
 
-         comment(i+8)= 'Static Albedo (%) valid only over water atm \0'
+         comment(i+8)= 'Maximum Snow Albedo (%) over land only \0'
          comment(i+9)= 'Standard Deviation of Elevation data (m)\0'
          comment(i+10)= 'Mean longitudinal terrain slope (m/m)\0'
          comment(i+11)= 'Mean latitudinal terrain slope (m/m)\0'
@@ -556,11 +557,11 @@ c
           comment(i+j)= 'climatological albedo: mon = '//cat
          enddo
 
+         comment(109)=  'terrain slope index'
+         comment(110)=  'annual max greenness fraction'
+         comment(111)=  'annual min greenness fraction'
+
          comment(ngrids)= '\0'
-
-      else
-
-         print*,'unexpected value of ngrids. ngrids = ',ngrids
 
       endif
       return
@@ -594,21 +595,31 @@ C	read(unit_no,rec=1) idata
 
         multiplier=1.0
 	if(ctiletype.eq.'T'.or.ctiletype.eq.'U')then
-           call read_binary_field(cdata,i1,i2,nn1*nn2,unit_name,len)
-           do county=1,nn2
-           do countx=1,nn1
-              idata(countx,county) = ia (cdata(countx,county),2,0)
-           enddo
-           enddo
-           if(ctiletype.eq.'T')multiplier=.01  !(for T data these are temps * 100)
+           if(nn1.eq.1201)then
+              open(unit_no,file=unit_name,status='old',
+     .form='unformatted')
+              read(unit_no)data
+              close(unit_no)
+           else
+              call read_binary_field(cdata,i1,i2,nn1*nn2,unit_name,len)
+
+              do county=1,nn2
+              do countx=1,nn1
+               idata(countx,county) = ia (cdata(countx,county),2,0)
+              enddo
+              enddo
+              if(ctiletype.eq.'T')multiplier=.01  !(for T data these are temps * 100)
+           endif
         else
            call read_binary_field(idata,i1,i2,nn1*nn2,unit_name,len)
         endif
 
+        if(nn1.le.1200)then
 	do county=1,nn2
 	do countx=1,nn1
 	 if(idata(countx,county).eq.-9999) idata(countx,county)=0
-	  data(countx,county)=float(idata(countx,nn2-county+1))*multiplier
+	  data(countx,county)=float(idata(countx,nn2-county+1))
+     &*multiplier
 c SG97 initial data (DEM format) starts in the lower-left corner;
 c SG97 this format is wrapped around to have upper-left corner as its start.
 c
@@ -618,6 +629,7 @@ c JS00 some machines do not account for signed integers
 
 	enddo
 	enddo
+        endif
 
 ccc	 close(unit_no)
 	return
@@ -630,7 +642,7 @@ c ********************************************************************
         implicit none
         integer  countx,county,countz
         integer  unit_no,nn1,nn2,nn3,nn4,nofr
-        integer  len, i1, i2
+        integer  len, lend, i1, i2, i
         integer  istat
 
         real     data(nn1,nn2,nn3,nn4)
@@ -639,6 +651,7 @@ c ********************************************************************
 c       logical  l1,l2
 
         character*(*) unit_name
+        character*1   ctype
 
 C       open(unit_no,file=unit_name,status='old',access='direct',
 C       . recl=nn2*nn1*2)
@@ -652,9 +665,20 @@ C       read(unit_no,rec=1) idata
            print*,'unable to allocate idata array: read_dem_g'
            return
         endif
+
+        call s_len(unit_name,len)
+        call get_directory_length(unit_name,lend)
+        ctype=unit_name(lend+1:lend+1)
+
+        print*,'read_dem_g: tile type = ',ctype
+
         call read_binary_field(idata,i1,i2,nn1*nn2*nn4,unit_name,len)
 
-        if(nn1.ne.1250 .and. nn2.ne.1250)then
+c       if(nn1.ne.1250 .and. nn2.ne.1250)then
+        if(ctype.ne.'A' .and. 
+     &     ctype.ne.'G' .and.
+     &     ctype.ne.'I' .and.
+     &     ctype.ne.'M')then
 
            do county=1,nn2
            do countx=1,nn1
@@ -687,6 +711,14 @@ c SG97 this format is wrapped around to have upper-left corner as its start.
            enddo
            enddo
 
+        endif
+
+c we'll resurrect the actually categories when done
+c processing but for now we want categories 1-9 for
+c terrain slope index.
+        if(ctype == 'I')then
+           where(data .eq. 13)data = 8
+           where(data .eq. 0)data = 9
         endif
 
         deallocate(idata)
@@ -739,6 +771,8 @@ C
         IA    = 0                                   
 !                                                
         II1 = ICHAR(CHR(1:1))                     
+        if(II1 < 0) ii1=ii1+256
+
 ! .. GET THE SIGN -- ISN=0 POSITIVE, ISN=1 NEGATIVE:
         JJ  = IAND(II1,BIT_1)                        
         ISN = ISHFT(JJ,-7)                          
@@ -758,6 +792,7 @@ C
 !   .. GET THE BYTE FROM CHR: 
         DO M = 1,N          
          II2 = ICHAR(CHR(M:M)) 
+         if(ii2 < 0) ii2 = ii2 + 256
          MSHFT = (N-M)*8      
          IA2   = ISHFT(II2,MSHFT)
 !   .. THE ABS(INTEGER):          
@@ -771,14 +806,16 @@ C
 c
 c--------------------------------------------------------------------
 c
-       SUBROUTINE POLAR_GP(LAT,LON,X,Y,DX,DY,NX,NY)
+       SUBROUTINE POLAR_GP(LAT,LON,X,Y,DX,DY,NX,NY,DIR)
 C
       include 'trigd.inc'
        REAL*4 LAT,LON,X,Y,DX,DY,
      1        ERAD,TLAT,TLON                                      ! ,PLAT,PLON,
      1        XDIF,YDIF
 C
-       INTEGER*4 NX,NY
+       INTEGER   NX,NY
+       INTEGER   IDIR  !positive going from center Lat/Lon to SW X/Y;
+C                       negative going from SW Lat/Lon to center X/Y.
 C
        RAD=3.141592654/180.
 
@@ -788,26 +825,13 @@ C
            stop
        endif
 
-       TLAT=90.0
-       call get_standard_longitude(std_lon,istatus)
-       if(istatus .ne. 1)then
-           write(6,*)' Error calling laps routine'
-           stop 
-       endif
-       TLON=std_lon
-C
-C      CALL GETOPS(PLAT,PLON,LAT,LON,TLAT,TLON)
-C      CALL PSTOXY(XDIF,YDIF,PLAT,PLON,ERAD)
-
-C      call latlon_to_xy(LAT,LON,TLAT,TLON,ERAD,XDIF,YDIF)
        call latlon_to_xy(LAT,LON,ERAD,XDIF,YDIF)
 
-C
-       X=XDIF+(1.-FLOAT(NX)/2.)*DX
-       Y=YDIF+(1.-FLOAT(NY)/2.)*DY
-C
+       X=XDIF+(1.-DIR*FLOAT(NX)/2.)*DX
+       Y=YDIF+(1.-DIR*FLOAT(NY)/2.)*DY
+ 
        RETURN
-C
+ 
        END
 c
 c------------------------------------------------------------
@@ -1081,6 +1105,153 @@ c          ,rmeantemp(135),rmeantemp(180)
       print*,'path_to_tiles: ',path_to_tiles(1:ldir+3),ldir
       return
   4   print*,'Error: reading LATMEANTEMP file '
+
+      return
+      end
+c
+c------------------------------------------------------------------
+c
+       subroutine get_gridnl(mode)
+       implicit none
+       integer mode
+       integer len
+       integer istatus
+       character*256 directory
+       character*256 fname
+       character*200 cdataroot
+       character*10  c10_grid_fname
+       namelist /grid_nl/ mode
+
+       mode = 0
+       call find_domain_name(cdataroot,c10_grid_fname,istatus)
+       if(istatus.ne.1)then
+          print*,'Error returned from find_domain_name'
+          return
+       endif
+       call get_directory(c10_grid_fname,directory,len)
+       fname = directory(1:len)//'grid.nl'
+       open(3,file=fname,status='old',err=101)
+       read(3,grid_nl,err=101,end=101)
+       close(3)
+
+101    return
+       end
+c
+c ---------------------------------------------------------
+c
+      subroutine eval_localization(cstaticdir,nest,localize
+     .,cgrid_fname,La1_dom,Lo1_dom,istatus)
+
+c routine performs the following:
+c 1. tests if the static file has been generated for this domain or nest?
+c 2. tests if the static variables consistent with the current namelist specs
+c
+c if 1 or 2 is false then we need to either localize or re-localize
+c the domain and "localize" is returned indicating such (true or false).
+c
+      implicit  none
+
+      integer   nest
+      integer   Nx,Ny
+      integer   nx_dom,ny_dom
+      integer   lf
+      integer   istatus
+
+      character cstaticdir*200
+      character cgrid_fname*10
+      character cnest*2
+
+      logical   localize
+      logical   static_exists
+
+      real      Dx,Dy,La1,Lo1,LoV,Latin1,Latin2
+      real      grid_spacing_dom_m,grid_spacing_m
+      real      La1_dom,Lo1_dom
+
+      localize = .false.
+
+      call rd_static_attr(cstaticdir,nest,cgrid_fname
+     .,Nx, Ny, Dx, Dy, La1, Lo1, Latin1, Latin2, LoV
+     .,istatus)
+
+      IF (istatus .NE. 1) THEN
+        print '(A,I5)',' Failure reading WRF static file: ',istatus
+        localize = .true.
+        return
+      END IF 
+
+      call get_grid_spacing(grid_spacing_dom_m,istatus)
+      call get_grid_dim_xy(nx_dom,ny_dom,istatus)
+      if(Nx.ne.nx_dom)localize=.true.
+      if(Ny.ne.ny_dom)localize=.true.
+      if(La1.ne.La1_dom)localize=.true.
+      if(Lo1.ne.Lo1_dom)localize=.true.
+      if(dx.ne.grid_spacing_dom_m)localize=.true.
+
+      RETURN
+      end
+c
+c --------------------------------------------------------
+c
+      subroutine rd_static_attr(cstaticdir,nest
+     .,cgrid_fname,nx,ny,dx,dy,La1,Lo1,Latin1
+     .,Latin2,LoV,istatus)
+
+c routine performs the following:
+c 1. tests if the static file has been generated for this domain or nest?
+c 2. tests if the static variables consistent with the current namelist specs
+c
+c if 1 or 2 is false then we need to either localize or re-localize
+c the domain and "localize" is returned indicating such (true or false).
+c
+      implicit  none
+
+      integer   nest
+      integer   Nx,Ny
+      integer   istatus
+
+      character staticfile*200
+      character cstaticdir*200
+      character cgrid_fname*10
+      character cnest*2
+
+      logical   localize
+      logical   static_exists
+
+      real      Dx,Dy,La1,Lo1,LoV,Latin1,Latin2
+      real      grid_spacing_dom_m,grid_spacing_m
+
+      istatus = 1
+
+      staticfile=TRIM(cstaticdir)//'static.'//cgrid_fname
+      if(nest.gt.1)then
+         write(cnest,'(i2.2)')nest
+         staticfile=TRIM(staticfile)//'_d'//cnest
+      endif
+
+      INQUIRE(FILE=staticfile, EXIST=static_exists)
+      IF (static_exists) THEN
+
+        call rd_static_attr_sub(staticfile, Nx, Ny
+     .,La1, Latin1, Latin2, Lo1, LoV, Dx, Dy
+     .,istatus)
+
+        IF (istatus .NE. 1) THEN
+           print '(A,I5)', ' Error reading WRF static file: ',istatus
+           return
+        END IF
+
+        IF (LoV .LT. -180.) LoV = LoV + 360.
+        IF (LoV .GT. 180.) LoV = LoV - 360.
+        IF (Lo1 .LT. -180.) Lo1 = Lo1 + 360.
+        IF (Lo1 .GT. 180.) Lo1 = Lo1 - 360.
+
+      ELSE
+
+        PRINT '(A)', 'Static file not found: ', staticfile
+        istatus = 0
+
+      ENDIF
 
       return
       end
