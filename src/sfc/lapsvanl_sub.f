@@ -396,9 +396,9 @@ c
 c.....  Set the weights for the spline.
 c
 	alf = 100.
-	beta = 75.
-	a = 50.
-	if(isat_flag .eq. 0) a = 0
+	beta = 3.
+	a =  5.
+	if(isat_flag .eq. 0) a = 0.
 	alf2a = (1./9.) * alf
 c
 	write(6,9995) alf, beta, alf2a, a
@@ -414,7 +414,19 @@ c
 	     do i=3,imax-2
 		alfo = alf
 		alf2o = alf2a
+		ao = a
+c
 		if(to(i,j) .eq. 0.) alfo = 0.
+		if(s(i,j).eq.0. .or. s(i-1,j).eq.0. .or. s(i+1,j).eq.0.
+     &             .or. s(i,j-1).eq.0. .or. s(i,j+1).eq.0.) then
+		   ao = 0.
+		   sxx = 0.
+		   syy = 0.
+		else
+		   sxx = (s(i+1,j) + s(i-1,j) - 2. * s(i,j))
+		   syy = (s(i,j+1) + s(i,j-1) - 2. * s(i,j))
+		endif
+c
 		dtxx = t(i+1,j) + t(i-1,j) - 2. * t(i,j)
 		dtyy = t(i,j+1) + t(i,j-1) - 2. * t(i,j)
 		d4t = 20. * t(i,j) 
@@ -424,13 +436,11 @@ c
 		d2t = dtxx + dtyy
 		dtx = (t(i+1,j) - t(i-1,j)) * .5
 		dty = (t(i,j+1) - t(i,j-1)) * .5
-		sxx = (s(i+1,j) + s(i-1,j) - 2. * s(i,j))
-		syy = (s(i,j+1) + s(i,j-1) - 2. * s(i,j))
 c       
-		res = d4t - a * (d2t - sxx - syy) / beta
+		res = d4t - ao * (d2t - sxx - syy) / beta
      &               + alfo/beta * (t(i,j) - to(i,j)) ! stations
      &               + alf2o/beta * t(i,j)            ! background
-		cortm = 20. + a*4./beta + alfo/beta + alf2o/beta
+		cortm = 20. + ao*4./beta + alfo/beta + alf2o/beta
 		tcor = abs(res / cortm)
 		t(i,j) = t(i,j) - res / cortm * ovr
 		if(tcor .le. cormax) go to 5
@@ -442,7 +452,6 @@ c	write(6,1009)beta,d4t,d2t,dtxy,dtx,dty,gam,sxx,syy,sxy,sx,sy
  5		continue
 	     enddo !i
 	     enddo !j
-
 c
 c	write(6,1000) it,cormax
 	     if(cormax .lt. err) iteration = .false.
@@ -457,7 +466,7 @@ c
 	do j=1,jmax
 	do i=1,imax
 	   t(i,j) = t(i,j) + tb(i,j)
-	   s(i,j) = s(i,j) + tb(i,j)
+	   if(s(i,j)  .ne. 0.)  s(i,j) =  s(i,j) + tb(i,j)
 	   if(to(i,j) .ne. 0.) to(i,j) = to(i,j) + tb(i,j)
 	enddo !i
 	enddo !j
@@ -691,11 +700,14 @@ c
 c
 c
 	subroutine barnes_wide(t,imax,jmax,ii,jj,t_ob,numsta,smsng,
-     &                         mxstn,npass,fnorm)
+     &                         mxstn,npass,fnorm,istatus)
 c
 c.....	Routine to do a Barnes analysis that will consider stations in
 c.....	the 't_ob' array that are outside the boundaries of the 't' array.
 c
+c       Changes:  P.Stamus NOAA/FSL  7 Jan 1999  Add status flag.
+c
+
 	real*4 t(imax,jmax), t_ob(mxstn) 
 	real*4 fnorm(0:imax-1,0:jmax-1)
 	real*4 h1(imax,jmax), val(mxstn)
@@ -704,6 +716,7 @@ c
 	integer*4 dx, dy 
 c
 !	print *,' *** In BARNES_wide ***'
+	istatus = -1
 	call zero(h1,imax,jmax)
 	im1 = imax - 1
 	jm1 = jmax - 1
@@ -721,9 +734,11 @@ c
 	enddo !n 
 c
 	if(ncnt .eq. 0) then
-	  print *,' +++ NCNT = 0 in BARNES_WIDE. +++'
-	  return
+	   print *,' **Warning. No obs for analysis in BARNES_WIDE. **'
+	   istatus = 0
+	   return
 	endif
+c
 	write(6,900) ncnt, numsta
 900	format('   Selected ',i4,' obs out of ',i4,' total.')
 c
@@ -747,22 +762,19 @@ c
 	        do n=1,ncnt
 	          dx = min(abs(i - iob(n)), im1) 
 	          dy = min(abs(j - job(n)), jm1) 
-	          sum2 = fnorm(dx,dy) * val(n) + sum2
-	          sumwt2 = sumwt2 + fnorm(dx,dy) 
+	          sum2 = (fnorm(dx,dy)+.01) * val(n) + sum2
+	          sumwt2 = sumwt2 + (fnorm(dx,dy) + .01) 
 	        enddo !n
-	        if(sumwt2 .ne. 0.) go to 490 
 	      else
 	        go to 500
 	      endif 
 	    endif 
 c
-490	    continue 
-c
-	    t(i,j) = sum2 / sumwt2
-c
-500 	  continue
-          enddo !i
-	  enddo !j
+	    if(sumwt2 .ne. 0.) t(i,j) = sum2 / sumwt2
+c       
+ 500	    continue
+	 enddo !i
+  	 enddo !j
 c
 	  if(ipass .eq. 2) then
 	    call diff(h1,t,t,imax,jmax)
@@ -789,6 +801,7 @@ c
         enddo !ipass
 c
 !	print *,'   leaving barnes_wide'
+	istatus = 1
 	return
 	end
 c
