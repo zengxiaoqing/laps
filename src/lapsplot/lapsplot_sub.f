@@ -106,7 +106,7 @@ cdis
      1ay'
             write(6,*)
             write(6,*)
-     1    ' It will be located in ~/gmeta'
+     1    ' It will be located in ./gmeta'
 !       1'    For Ramteks other than RMA0, run trans on metacode file.'
 !           write(6,*)
 !           write(6,*)

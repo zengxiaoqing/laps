@@ -415,7 +415,7 @@ c read in laps lat/lon and topo
      1                          ,NX_L,NY_L,xsta,ysta,istatus)
 
                 if(xsta .lt. 1 .or. xsta .gt. NX_L .OR.
-     1           ysta .lt. 1 .or. ysta .gt. NY_L)then
+     1             ysta .lt. 1 .or. ysta .gt. NY_L)then
                     write(6,*)' Station is outside domain - try again...
      1'
                     goto80
@@ -435,15 +435,17 @@ c read in laps lat/lon and topo
             enddo
 
             if(.not. l_sta)then
-                read(c3_ylow,*,err=75)ylow
+                read(c3_ylow,*,err=80)ylow
                 write(6,*)
                 write(6,*)'      J = ',nint(ylow)
 
-75              if(ylow .lt. 1 .or. ylow .gt. NY_L)then
-                    write(6,*)' Grid point is outside domain - try again
-     1...'
-                    goto80
-                endif
+                ylow = max(min(nint(ylow),NY_L),1)
+
+!75              if(ylow .lt. 1 .or. ylow .gt. NY_L)then
+!                    write(6,*)' Grid point is outside domain - try again
+!     1...'
+!                    goto80
+!                endif
 
             else
                 write(6,72)sta_lat(i_sta),sta_lon(i_sta)
@@ -515,15 +517,17 @@ c read in laps lat/lon and topo
             enddo
 
             if(.not. l_sta)then
-                read(c3_xlow,*,err=76)xlow
+                read(c3_xlow,*,err=80)xlow
                 write(6,*)
                 write(6,*)'      I = ',nint(xlow)
 
- 76             if(xlow .lt. 1 .or. xlow .gt. NX_L)then
-                    write(6,*)' Grid point is outside domain - try again
-     1...'
-                    goto80
-                endif
+                xlow = max(min(nint(xlow),NX_L),1)
+
+! 76             if(xlow .lt. 1 .or. xlow .gt. NX_L)then
+!                    write(6,*)' Grid point is outside domain - try again
+!     1...'
+!                    goto80
+!                endif
 
             else
                 write(6,82)sta_lat(i_sta),sta_lon(i_sta)

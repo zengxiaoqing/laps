@@ -27,6 +27,7 @@ EXE = lapsplot.exe
 
 SRC= lapsplot_main.f \
      lapsplot_sub.f \
+     array_range.f \
      aski4t.f \
      hsect.f \
      xsect.f \

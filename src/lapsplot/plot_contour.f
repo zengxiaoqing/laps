@@ -206,6 +206,7 @@ C
 
 C --- Do contouring
 
+        call cpsetr ('LLS',.040)
         call cpseti ('CLS - contour level selection flag',20)
         call cpsetr ('CIS',DF)
         call cpseti ('LIS - label interval specifier',lis)
@@ -214,9 +215,13 @@ C --- Do contouring
         call cpsetr ('CMN',clow)
         call cpsetr ('CMX',chigh)
         call cpsetr ('SPV',SPVALU)
-!       call cpsetr ('LLS',.020)
+!       call cpsetr ('LLS - LINE LABEL SIZE',.025)
+        call cpgetr ('LLS - LINE LABEL SIZE',clls)           
 
-       if (ihl.ge.1) then
+        write(6,*)'IHL/LLS/ICOL = ',IHL,clls,icol_current
+
+!      if (ihl.ge.1) then
+       if (.true.) then
         call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.025)
         call CPSETC('ILT',' ')
         call cpseti('NSD',2)
@@ -226,7 +231,6 @@ C --- Do contouring
         if (ihl.eq.3) call cpsetc('HIT',' ')
        end if
 
-!      call cpsetr ('LLS',.020)
 
         CALL CPRECT (F,NX,NX,NY,RWRK,LRWK,IWRK,LIWK)
         CALL CPPKCL (F,RWRK,IWRK)
