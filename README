@@ -312,28 +312,24 @@
      you will want to use --fc=f90, and possibly -cc=cc.
 
      'configure' supports many other options, the most important is the
-     --prefix option which tells make where to install the laps system. 
-     The default (if you did not use --prefix) is to install whereever 
-     the source is. A fully operational laps system can require up to 1 GB 
-     of disk space, this will vary depending on domain size and purge 
-     interval (more on this later).  You can also separate the data 
-     (read/write) from the binary executables, (i.e. /bin, /etc - read only) 
-     using the --datadir option.  The use of the --prefix and --datadir 
-     options is recommended to make it easier to add multiple domains and to 
-     update your source code. 
+     --prefix option which tells make where to install the laps system
+     (FORTRAN executables, Perl Scripts, etc.). The default (if you did 
+     not use --prefix) is to install whereever the source is. The use of 
+     the --prefix option is highly recommended to make it easier to update 
+     your source code (e.g. importing a new LAPS tar file), without
+     disturbing the binaries, data, and runtime parameters that you are 
+     working with on-site. 
 
-     For example, to install laps in directory '/data_disk/laps' with data 
-     in '/data_disk/laps/data' use... 
-     prompt> ./configure --prefix=/data_disk/laps
+     For example, to install laps in directory '/usr/local/laps' use... 
+     prompt> ./configure --prefix=/usr/local/laps
      
-     To install in '/usr/local/laps' with data in '/data_disk/laps/data1' use...
-     prompt> ./configure --prefix=/usr/local/laps --datadir=/data_disk/laps/data1
-     
-     One or more alternate data directories for running laps can be specified 
+     One or more data directories for running laps can be specified 
      at runtime, if desired. A single set of binaries can thus support several 
-     data directories as described below. Separating the data directory
-     also makes it a bit easier to maintain your own local set of parameters 
-     that are unique to your domain. 
+     data directories as described below. 
+ 
+     A fully operational laps system can require up to 1 GB of disk space;
+     this will vary depending on domain size and purge interval (more on 
+     this later).  
 
      Another configure option is --arch. Configure tries to get the 
      architecture from a 'uname' command, but this can be overridden by having
@@ -375,17 +371,17 @@
      any GNU site. 
 
 
-                --- 2.2.4.1 Creating multiple data domains ---
+            --- 2.2.4.1 Creating single or multiple data domains ---
 
-     If you intend to run multiple data domains you will want to use the 
-     '--datadir=/data_disk/laps/data1' option to configure when installing the
-     first one (see 2.2.2 above).  Then, for each additional domain you wish 
-     to create, run... 
+     For each domain you wish to create, run... 
 
-     prompt> make DATAROOT=/data_disk/laps/data2 mkdatadirs
+     prompt> make DATAROOT=/data_disk/laps/datax mkdatadirs
 
-     where the subdirectory name 'data2' must be a unique name for each
-     additional domain. Then follow the setup and localization steps below.
+     where the subdirectory name 'datax' must be a unique name for each
+     data domain. Then follow the setup and localization steps below.
+
+     If a DATAROOT is not supplied, the dataroot tree location will default
+     to where the LAPS binaries are installed via configure.
 
      
             ----   2.2.5  Untarring the geography databases  ---
@@ -442,8 +438,8 @@
      Finally, you can create the static data files and look up tables specific 
      to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
      other runtime parameter files. Shown below is an example of running the 
-     localization for a particular laps domain. This should be repeated for
-     each domain if there is more than one. 
+     localization for a particular laps domain. This should be repeated 
+     (with a unique dataroot) for each domain if there is more than one. 
 
      prompt> cd $lapsroot/etc
      prompt> perl laps_localization.pl --dataroot=/data_disk/laps/data --srcroot=$srcroot
