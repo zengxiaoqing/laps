@@ -167,24 +167,19 @@
 
                 --- 2.1.6   Setting Runtime Parameters ---
 
-     Runtime parameter changes (Sec 2.9) are needed to specify the domain(s); 
-     this includes ingest data path names, and potentially other aspects of 
-     the data processing. These should be changed prior to running the 
-     localization. The main parameter files are 'data/static/nest7grid.parms',
-     'data/static/*.nl', and 'data/static/*/*.parms'. These should be emplaced
-     and/or modified within each 'data' directory tree prior to running 
-     'laps_localization.pl'. Details on the contents of the 'nest7grid.parms' 
+     Runtime parameter changes (Sec 2.9) may be needed to specify the 
+     domain(s); this includes ingest data path names, grid dimension and
+     location and potentially other aspects of the data processing. 
+     These changes should be made prior to running the localization. The main 
+     parameter files are 'data/static/nest7grid.parms', 'data/static/*.nl', 
+     and 'data/static/*/*.parms'. These should be emplaced and/or modified 
+     within each 'dataroot' directory tree prior to running 
+     'laps_localization. pl'. Details on the contents of the 'nest7grid.parms' 
      file are discussed in subsequent sections. 
 
-     The subset of parameters to be changed will vary depending on the
-     implementation. The parameter files will also potentially be changing 
-     with each release. To accomodate this it is suggested that a 'perl' or
-     'sed/awk' script, or some type of GUI, be constructed locally to modify 
-     the appropriate parameters from the supplied values to the values 
-     appropriate for your local implementation. This strategy will handle 
-     cases where a new revision has parameters added or subtracted in a 
-     particular namelist other than the ones being locally modified. This gives
-     some measure of backward compatability.
+     The user needs only to establish those runtime files/parameters that are 
+     unique to the domain. The remaining parameters are automatically merged 
+     in from the 'src' directory tree by the localization script. 
 
 
                 ----   2.1.7  Running the Localization ---
@@ -199,10 +194,8 @@
                                  --dataroot=/data/fxa/laps/data
 
      If you have multiple domains, this script can be run for each domain with
-     different values of 'lapsroot'. Different runtime parameters are set up 
-     in each 'data/static' directory tree. Make sure that the 'data/log' and 
-     'data/lapsprd/xxx' subdirectories are in place prior to running the 
-     localization on additional domains.
+     different values of 'lapsroot'. Any needed subdirectories under 'dataroot'
+     are automatically created if they are not already present.
 
       ----------------  2.2   UNIX System Requirements  ----------------
 
