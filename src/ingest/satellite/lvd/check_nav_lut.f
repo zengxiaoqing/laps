@@ -74,10 +74,10 @@ c        call genlvdlut_sub(nx_l,ny_l,gstatus)
      &chtype,maxchannels,nchannels,lut_flag,istatus)
 
          if(lut_flag.and.istatus.eq.0)then
-            print*,'*******************************************'
+            print*,'************************************************'
             write(6,*)'Found difference in nav parms',
      +' - rebuild the lut'
-            print*,'*******************************************'
+            print*,'************************************************'
             call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
      +gstatus)
             if(gstatus.lt.0)then
