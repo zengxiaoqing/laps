@@ -15,6 +15,20 @@
 #define write_cdf_static WRITE_CDF_STATIC
 #endif
 
+#ifdef FORTRANDOUBLEUNDERSCORE
+#define cdf_update_stat cdf_update_stat__
+#define free_static_malloc free_static_malloc__
+#define cdf_wrt_hdr_stat cdf_wrt_hdr_stat__
+#define write_cdf_static write_cdf_static__
+#define cdf_retr_grid_stat cdf_retr_grid_stat__
+#define cdf_retr_hdr_stat cdf_retr_hdr_stat__
+#define read_cdf_static read_cdf_static__
+#define open_cdf open_cdf__
+#define dim_size_v3 dim_size_v3__
+#define nstrncpy nstrncpy__
+#define fstrncpy fstrncpy__
+#endif
+
 #ifdef FORTRANUNDERSCORE
 #define cdf_update_stat cdf_update_stat_
 #define free_static_malloc free_static_malloc_
