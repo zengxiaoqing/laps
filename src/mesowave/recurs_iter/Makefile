@@ -110,7 +110,8 @@ CONFIGLAPS = \
 	ConfigLaps.f90 \
 	LapsInfo.f90 \
 	LSO_Data_QC.f90 \
-	WriteAnalysis.f90
+	WriteAnalysis.f90 \
+	GridBarnes.f90
 ConfigLaps.o: Definition.o $(CONFIGLAPS)
 	$(FC) -c $(FLAG) -I$(SRCROOT)/src/lib/mthermo/ $(FREE) ConfigLaps.f90
 

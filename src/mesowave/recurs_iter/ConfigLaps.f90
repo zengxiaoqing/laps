@@ -33,6 +33,7 @@ MODULE ConfigLaps
 
 CONTAINS
 
+  INCLUDE 'GridBarnes.f90'
   INCLUDE 'LapsInfo.f90'
   INCLUDE 'LSO_Data_QC.f90'
   INCLUDE 'WriteAnalysis.f90'

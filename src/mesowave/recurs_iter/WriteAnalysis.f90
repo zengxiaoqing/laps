@@ -104,7 +104,11 @@ SUBROUTINE WriteAnalysis(a,n)
                    data(1,1,n(4)+7),data(1,1,n(4)+8),nx,ny)
 
      ! Reduced Pressure Change:
-     data(1:nx,1:ny,11) = 0.0 
+     ! data(1:nx,1:ny,11) = 0.0
+     CALL GridBarnes(a(1,1,it,6),n,n,a(1,1,1,6))
+	! WRITE(14,*) a(1:n(1),1:n(2),it,6)
+     data(1:nx,1:ny,11) = a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,it,6)-&
+			  a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,1,6)
 	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3),6)- &
 	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3)-1,6)
 
