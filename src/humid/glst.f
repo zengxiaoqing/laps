@@ -48,8 +48,8 @@ c       input i4time
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'lapsparms.for'
+c        include 'parmtrs.inc'
 
 c parameter variables
 
@@ -60,7 +60,7 @@ c parameter variables
 
 c variables dynamically dependent on lapsparms.inc
 
-      real data(igrid,jgrid,1)
+      real data(ii,jj,1)
 
 
 c internal variables
