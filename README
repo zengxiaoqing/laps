@@ -66,6 +66,8 @@
          3.2.9 ..................  RAOB + Satellite Sounding (SND) Ingest
          3.2.10 .................  Cloud Drift Wind (CDW) Ingest
          3.2.11 .................  Surface Data Ingest
+                3.2.11.1..............Ingest routines
+                3.2.11.2..............How to Blacklist stations 
          3.3 ..............  ANALYSIS PROCESSES
          3.3.1 ..................  WIND
          3.3.2 ..................  SFC (LSX) 
@@ -1824,12 +1826,16 @@ Outputs: (Feeds wind.exe)
                                         
 ------ 3.2.11 -------------- Surface Data Ingest ------------------------------
 
+------ 3.2.11.1  Ingest routines  
+
 Process: (obs_driver.x) LAPS Surface Ingest
      (author: Pete Stamus - stamus@fsl.noaa.gov)
+     (description updated: 20 Dec 1999)
 
 <pre>
 Inputs:
-	Surface METARS and local data in NetCDF (NIMBUS) format
+	Surface METARS, local data via LDAD, and buoy/ship data in NetCDF 
+             (NIMBUS) format
 
 Outputs: (Feeds laps_sfc.x, cloud.exe, deriv.exe, lapsplot.exe)
 
@@ -1839,9 +1845,68 @@ Outputs: (Feeds laps_sfc.x, cloud.exe, deriv.exe, lapsplot.exe)
 
 Source directory: laps/src/ingest/sao
 
-The data within the ASCII format is fairly self explanatory if you look at our
-'obs_driver' code. The lat/lon info (as in the rest of LAPS) is in decimal 
-degrees.                                        
+The LSO file is fairly self explanatory...the comments in the 'write_surface_obs'
+routine detail everything.  The expected accuracies are based on "offical" NWS
+numbers where possible.  For LDAD observations, they're just a best guess, since
+no one really knows how good the obs are.  These expected accuracies will be used 
+in the quality control routines sometime in the future.  The lat/lons are in decimal 
+degrees.
+
+------ 3.2.11.2  How to Blacklist stations
+
+     (author: Pete Stamus - stamus@fsl.noaa.gov)
+     (description updated: 20 Dec 1999)
+
+As part of the 'obs_driver' code, a Blacklisting function has been added.  This
+allows users to tell LAPS to skip stations with known bad variables (one or several),
+or to skip a station completely.  As of this writing, the user will have to edit
+a "Blacklist.dat" file...in the future we hope to include this function in the 
+LAPS GUI.
+
+An example file, called "Blacklist.example" has been included in the same directory
+as this README file.  It shows the format that *must* be followed for the Blacklist
+to work properly.  An error in the format will either allow the bad station(s)
+through, or crash the program completely.  Let's decode the "Blacklist.example" 
+file:
+     The first line is the number of obs to blacklist...in this case, 4.
+     Each station goes on a new line.  The number of variables to blacklist
+     for that station is next, then the codes for the variable follow.  For
+     the first station (KFCS), we are blacklisting the 3 pressure variables.
+     To blacklist the entire station (KDTW) use 1 for the number of variables,
+     and "ALL" as the variable.  The last two examples show 1 and 2 individual
+     variables, respectively.
+
+These are the valid codes for variables to blacklist:
+
+        "ALL" - Set all variables at this station to bad
+        "TMP" - Set temperature bad
+        "DEW" - Set dew point temperature bad
+        "HUM" - Set relative humidity bad
+        "WND" - Set wind bad (this does both speed and direction, and gusts)
+        "ALT" - Set altimeter bad
+        "STP" - Set station pressure bad
+        "MSL" - Set MSL pressure bad
+        "VIS" - Set visibility bad
+        "CLD" - Set clouds to bad (this does all cloud layers reported)
+        "PCP" - Set precipitation amount to bad (all reported, 1-12 hrs)
+        "SNW" - Set snow cover to bad
+        "SOL" - Set solar to bad (if reported)
+        "SWT" - Set soil/water temperature to bad (if reported)
+        "SWM" - Set soil moisture to bad (if reported)
+
+An incorrect variable code generates a warning message, and the code should
+continue without acting on the station in question.
+
+Note that when a station is blacklisted, its name, latitude, longitude, elevation,
+and time, will still be stored in the LSO file.  However, the selected variables
+(up to "ALL" of them) will be set to the 'badflag' value and skipped in the
+analyses.
+
+To actually get this stuff working, edit a file called "Blacklist.dat" in the
+'data/static' directory.  Format the file *exactly* as the 'Blacklist.example'
+file (using your station information, of course).  Save the file, and the next 
+time 'obs_driver' runs, it will use the blacklist information.  This will be 
+noted in the 'obs_driver.log' file.  
 
 ------- 3.3  -------------  ANALYSIS PROCESSES --------------------------------
 
@@ -1902,27 +1967,30 @@ Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
 ------ 3.3.2 ----------------- SFC (LSX) -------------------------------------
 
 Surface processing - laps_sfc.x (LSX and friends) 
-        (author: Pete Stamus - stamus@fsl.noaa.gov)
+     (author: Pete Stamus - stamus@fsl.noaa.gov)
+     (description updated: 21 Dec 1999)
 
-Surface package collects surface data - SAOs, local mesonet, GOES IR bightness.
-Places surface data on LAPS grid.  Quality Control of Obs.  Also takes previous
-hour's result as input.  Data is collected over a slightly larger than grid to 
-help boundary conditions.  Uses a cubic spline technique for interpolation.
 
-GOES IR gives relative temperatures, not absolute temps.  GOES tempature 
-gradient fields is then interpolated together with surface observations and 
-previous background, etc.  LGA 700 mb temperatures are extrapolated to the 
-surface, compare it with the hard data points.  Use to account for elevation 
-effects.
+The surface package collects surface data from the LSO intermediate data file  
+(METARs, local mesonets via LDAD, buoy/ship obs), IR brightness temperatures,
+and fields from selected background models.  Places surface data on LAPS grid
+and performs a simple quality control of the obs.  Backgrounds can come from
+a locally-run model, the national-scale models (RUC, ETA, AVN), or a previous
+analysis (if all else fails).  Data outside the LAPS grid is used to improve
+boundary conditions.  Analyses are done on analysis increments using a cubic
+spline technique. 
 
-Constrain surface winds and pressure fields to full equations of motion.  Do an
-interpolation of SAO reports and mesonet reports to get 2-D winds on surface.
-re-analysize wind field based on adjusted pressure field.
+Satellite IR gives relative temperatures, not absolute temps.  The temperature 
+gradients from the satellite are used with surface observations and backgrounds 
+in the temperature analysis.  
 
-Then derived fields are calculated.
+The analysis uses variational techniques to constrain the surface winds and 
+reduced pressures to the full equations on motion.  Several derived variables
+are calculated before the LSX file is written.  Also, a dependent validation is
+done by interpolating several variables back to the observation locations and
+comparing the analysis to the ob.  Output from this check is written to a file
+located in the .../log/qc subdirectory.
 
-For LT1 (3D temps) take 3D temps from the LGA module (orginally MAPS data)
-plus LAPS surface temps and RASS, then the fields are blended.
 
 <pre>
 
@@ -1930,13 +1998,14 @@ LSO process - obs_driver.x - Ingest surface data
         (author: Pete Stamus - stamus@fsl.noaa.gov)
 
 Input:
-	raw SAO data
-	raw mesonet data
+	raw METAR data
+	raw LDAD mesonet data
+        raw Buoy/ship data
 
 Output:
-         LSO	ascii	LAPS surface obs file: mesonet & SAO
+         LSO	ascii	LAPS surface obs file: METAR, Mesonet and Buoy/ship obs.
                         The format of this file may be gleaned from looking
-                        at the obs_driver.x code, or by looking at sample LSO 
+                        at the obs_driver code, or by looking at sample LSO 
                         files in the test data case.
 
 
@@ -1946,14 +2015,18 @@ Output:
 
 Inputs:
          LSO    surface observations
-	 LGA	maps data analysis
+	 LGA	Background model on LAPS grid
+                  - or -
+         RSF    Background local model
+                  - or -
 	 LSX    (previous hour's LSX)
-         LRS    RASS data
+	 LM1    Soil moisture (for fire wx calc)
+         LM2    Snow cover (for fire wx calc)
          LWM    latest surface winds from 3D wind analysis
 
 Outputs: (Feeds L1S, LBA)
 
- 28257   LSX    LAPS surface data grids (27 packed in one file)
+ 28257   LSX    LAPS surface data grids (23 2-d fields packed in one file)
 </pre>
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
