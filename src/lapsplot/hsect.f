@@ -345,8 +345,8 @@ c       include 'satellite_dims_lvd.inc'
      1       /
      1       /'     [t,tb,tr,to] Temp (LAPS,LGA,RAM,OBS)'      
      1       ,',   [pt] Pot Temp'
-     1       /'    [ht,hb,hr,hy,bh] Hgts (LAPS,LGA,RAM,Hydrstc,QBAL),'
-     1       /'  [hh] Height of Const Temp Sfc')
+     1       /'     [ht,hb,hr,hy,bh] Hgts (LAPS,LGA,RAM,Hydrstc,QBAL),'
+     1       /'     [hh] Height of Const Temp Sfc')
 
         write(6,12)
  12     format(/4x,' [ci] Cloud Ice     ',22x
