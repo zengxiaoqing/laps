@@ -7,11 +7,12 @@
  TIROS_SWITCH = 0,
  SAT_SKIP = 2,
  GVAP_SWITCH = 0,
- SFC_MIX = 1,
+ SFC_MIX = 0,
  MOD_4DDA_1 = 0,
  MOD_4DDA_FACTOR = 0.02,
  T_REF = -132.0,
- PATH_TO_GVAP = '/public/data/sat/ssec/goes8/ascii/',
+ PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
+ PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
  
  /
 c   
