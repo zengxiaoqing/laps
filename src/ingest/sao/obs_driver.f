@@ -939,7 +939,7 @@ c
         character  store_cldamt(maxsta,5)*4
 
         if(i .le. 0 .or. i .gt. maxsta)then
-            write(6,*)' init_station index out of bounds ',i
+            write(6,*)' ERROR: init_station index out of bounds ',i       
             stop
         endif            
 
