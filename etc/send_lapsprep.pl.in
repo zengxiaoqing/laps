@@ -99,7 +99,7 @@ print "Executing script...\n";
 system ("./$ftpscript > ../../../log/send_lapsprep.log 2>&1");
 
 # Delete the script
-
+unlink "$ftpscript";
 chdir $mydir;
 exit;
 #------------------------------------------------------
