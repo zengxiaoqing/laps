@@ -4,7 +4,7 @@
 
 
 LAPSROOT=.
-DATAROOT=/data/lapb/parallel/laps/data
+include $(LAPSROOT)/src/include/makefile.inc
 
 LINK=$(LAPSROOT)/util/link.pl
 CWD = $(shell pwd)
