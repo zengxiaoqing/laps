@@ -321,13 +321,15 @@ c ---- transform code figure into base of cloud layer indicated (unit: m) ----
 
 c          ----- eliminate duplicate skyCovers and skyLayerBases -----
          dummy= int( skyLayerBase(1,j) )
-         if ( skyCover(i,j) .eq. skyCover(1,j)  .and.
+         if(dummy .gt. 0)then
+           if ( skyCover(i,j) .eq. skyCover(1,j)  .and.
      ~        skyLayerBase(i,j) .ge. lowestCloudHeight(dummy) )  then
             if ( dummy .ne. 9  .and.
      ~           skyLayerBase(i,j) .gt. lowestCloudHeight(dummy+1) )
      ~         go to 250
             skyCover(1,j)= '   '
 	    skyLayerBase(1,j)= badflag
+           endif
          endif
 
 c        ----- eliminate unreasonable skyCovers and skyLayerBases -----
