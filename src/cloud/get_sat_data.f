@@ -42,11 +42,11 @@ c
         subroutine get_sat_data(i4time,
      1  i4_sat_window,i4_sat_window_offset,                              ! I
      1  imax,jmax,r_missing_data,                                        ! I
-     1  l_use_39,                                                        ! I
+     1  l_use_39,l_use_co2,                                              ! I
      1  s8a_k,istat_s8a,comment_s8a,                                     ! O
      1  s3a_k,istat_s3a,comment_s3a,                                     ! O
      1  sst_k,istat_sst,comment_sst,                                     ! O
-     1  cldtop_co2_pa_a,cloud_frac_co2_a,istat_co2)                      ! O
+     1  cldtop_co2_pa_a,cloud_frac_co2_a,istat_co2,lstat_co2_a)          ! O
 
 !       Output
         real*4 s8a_k(imax,jmax)
@@ -55,7 +55,8 @@ c
         real*4 cldtop_co2_pa_a(imax,jmax)
         real*4 cloud_frac_co2_a(imax,jmax)
 
-        logical l_use_39
+        logical lstat_co2_a(imax,jmax)
+        logical l_use_39, l_use_co2
 
 !       Local
         real*4 pct_pa(imax,jmax)
@@ -136,38 +137,45 @@ c
         endif
 
 !       Obtain NESDIS Cloud-top pressure
-        i4_co2_window = 4000
+        if(l_use_co2)then
+            i4_co2_window = 4000
 
-        write(6,*)' Getting NESDIS Cloud-top pressure'
-        ext = 'ctp'
-        var = 'PCT'
-        ilevel = 0
-        call get_laps_2dgrid(i4time,i4_co2_window,i4time_nearest,EXT,var       
+            write(6,*)' Getting NESDIS Cloud-top pressure'
+            ext = 'ctp'
+            var = 'PCT'
+            ilevel = 0
+            call get_laps_2dgrid(i4time,i4_co2_window,i4time_nearest
+     1                      ,EXT,var       
      1                      ,units,comment,imax,jmax,pct_pa,ilevel
      1                      ,istat_pct)       
-        if(abs(istat_pct) .ne. 1)then
-            write(6,*)' Note: cannot read NESDIS Cloud-top pressure'
-        endif
+            if(abs(istat_pct) .ne. 1)then
+                write(6,*)' Note: cannot read NESDIS Cloud-top pressure'       
+            endif
 
-!       Obtain NESDIS Cloud-fraction
-        write(6,*)' Getting NESDIS Cloud-fraction'
-        ext = 'ctp'
-        var = 'LCA'
-        ilevel = 0
-        call get_laps_2dgrid(i4time,i4_co2_window,i4time_nearest,EXT,var
-     1                      ,units,comment,imax,jmax,lca,ilevel
-     1                      ,istat_lca)       
-        if(abs(istat_lca) .ne. 1)then
-            write(6,*)' Note: cannot read NESDIS Cloud-fraction'
-        endif
+!           Obtain NESDIS Cloud-fraction
+            write(6,*)' Getting NESDIS Cloud-fraction'
+            ext = 'ctp'
+            var = 'LCA'
+            ilevel = 0
+            call get_laps_2dgrid(i4time,i4_co2_window,i4time_nearest
+     1                          ,EXT,var
+     1                          ,units,comment,imax,jmax,lca,ilevel
+     1                          ,istat_lca)       
+            if(abs(istat_lca) .ne. 1)then
+                write(6,*)' Note: cannot read NESDIS Cloud-fraction'
+            endif
+
+        endif ! l_use_co2
 
 !       Calculate CO2-Slicing Cloud-top pressure
 
         cloud_frac_co2_a = r_missing_data
         cldtop_co2_pa_a  = r_missing_data
+        lstat_co2_a = .false.
         icount = 0
 
-        if(abs(istat_pct) .eq. 1 .and. abs(istat_lca) .eq. 1)then
+        if(abs(istat_pct) .eq. 1 .and. abs(istat_lca) .eq. 1 
+     1                           .and. l_use_co2                )then
             write(6,*)' Extracting CO2-Slicing info from NESDIS data'
             do j = 1,jmax
             do i = 1,imax
@@ -177,6 +185,7 @@ c
                         icount = icount + 1
                         cloud_frac_co2_a(i,j) = lca(i,j)
                         cldtop_co2_pa_a(i,j) = pct_pa(i,j) 
+                        lstat_co2_a(i,j) = .true.
                     endif
                 endif
             enddo ! i
