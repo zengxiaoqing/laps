@@ -1,0 +1,17 @@
+&tcbogus_nl
+bogus=.false.
+itc_no=1
+dskm=15.
+year=2002
+month=07
+day=09
+hour=12.
+cen_lat=24.2,20.,
+cen_lon=120.2,125.,
+alpha_i=0.85,0.8,
+vmax=18.,60.,
+rmax=50.,60.,
+r_7deg=80.,300.,
+speed=15.,20.,
+direc=30.,45.,
+&end
