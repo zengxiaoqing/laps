@@ -283,8 +283,7 @@
 
      In many UNIX environments, large data files are stored on a "data" disk 
      and the source code is stored on a smaller "home" disk. Below is a
-     typical laps directory structure for that setup. The soft link allows
-     most things to be referenced from either disk.
+     typical laps directory structure for that setup. 
 
      <pre>
      /home_disk/
@@ -295,7 +294,6 @@
                  src/                                             (source code)
                      ingest/
              template                                     (template parameters)
-         laps/   ----------------->  soft linked to /data_disk/laps/
 
      /data_disk/
          geog/
