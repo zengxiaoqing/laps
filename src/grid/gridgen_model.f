@@ -871,8 +871,11 @@ c Adjust soil temps to terrain elevations.
      &,lats(1,1,ns),topt_out,path_to_soiltemp_1deg
      &,data(1,1,12),data(1,1,in1),GEODAT3D,istatus)
         if(istatus.ne.1)then
-           print*,'Error returned: adjust_geog_data'
-           return
+           print*,'Processing incomplete in adjust_geog_data'
+           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+              print*,'Error for wrfsi'
+              return
+           endif
         endif
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
