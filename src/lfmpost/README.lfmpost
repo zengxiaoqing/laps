@@ -1,0 +1,129 @@
+Process - lfmpost.exe
+
+     (Author: Brent Shaw)
+
+   The LAPS source code now includes a post-processor for processing the
+   output from MM5v3 and WRFv1.2 files.  The program is "lfmpost.exe" and its
+   source code is in LAPS_SRC_ROOT/src/lfmpost.
+   
+   To run this program, the following items need to be set up properly:
+
+     1.  LAPS_DATA_ROOT:  This is an environment variable and the program
+         will use LAPS_DATA_ROOT to find the fua.cdl and fsf.cdl files when
+         outputting the data.  The cdl files are assumed to be in
+         $LAPS_DATA_ROOT/cdl, and the dimensions (nx,ny) in these cdl files
+         must match the dimensions of the model grid.  The concept is that
+         one will have a LAPS domain that is identical (projection,
+         dimensions, etc.) to the local model domain setup, so the
+         LAPS_DATA_ROOT will normally be the LAPS_DATA_ROOT used for the
+         analyses used to initialize the model.
+
+         The LAPS_DATA_ROOT is also used to tell the program where        
+         the output files will be written:
+           $LAPS_DATA_ROOT/lapsprd/fua/$MODEL_NAME/  -> yyjjjhhmmffff.fua
+           $LAPS_DATA_ROOT/lapsprd/fsf/$MODEL_NAME/  -> yyjjjhhmmffff.fsf
+         (MODEL_NAME is set in the namelist, see below)
+
+     2. 
+       a.  If using with MM5:
+           MM5_DATA_ROOT:  This is an environment variable that tells the
+           program where the top level directory containing the raw MM5
+           output resides.  This data root must have the following directories:
+
+           mm5prd/raw: Contains the MMOUT_DOMAINx or MMOUT_DOMAINx_## files
+           static:  Contains the TERRAIN_DOMAINx file, lfmpost.nl, and 
+                    lfmpost_points.txt files reside.
+
+           The program can process either the single file per run output or the
+           split output files.
+   
+           For each domain being processed, there should also be a 
+           "dxx" subdirectory in MM5_DATA_ROOT/mm5prd, where xx is the 2-digit
+           domain number (01 for main grid, 02 for the first nest, etc.).  
+           Under the dxx subdirectory are additional subdirectories:
+
+              grib   -> This is where GRIB files will be written.
+              v5d    -> This is where Vis5D files will be written
+              fua    -> Where LAPS-format netCDF fua (3d) files go
+              fsf    -> Where LAPS-format netCDF fsf (2d) files go
+              points -> Where tabular text point forecasts go
+
+       b.  If using with WRF (v1.2 netCDF output):
+           MOAD_DATAROOT: This is an environment variable that tells the
+           program where the top level directory containing the raw WRF 
+           output resides.  This data root must have the following directories:
+
+           wrfprd: Contains the wrfout_dd_tttttt netCDF output files.  It also
+                   contains the namelist.input file WRF used to create the
+                   raw output files. 
+              NOTE: You must use the option of 1 time frame per output file!!!
+           static: Contains the static.wrfsi, lfmpost.nl, and 
+                   lfmpost_points.txt files.
+
+           For each domain being processed, there should also be a
+           "dxx" subdirectory in MOAD_DATAROOT/wrfprd, where xx is the 2-digit
+           domain number (01 for main grid, 02 for the first nest, etc.).
+           Under the dxx subdirectory are additional subdirectories:
+
+              grib   -> This is where GRIB files will be written.
+              v5d    -> This is where Vis5D files will be written
+              fua    -> Where LAPS-format netCDF fua (3d) files go
+              fsf    -> Where LAPS-format netCDF fsf (2d) files go
+              points -> Where tabular text point forecasts go
+
+      
+     3.  lfmpost.nl:  The namelist file that controls the program.  You 
+         need to copy this file into your MM5_DATA_ROOT/static or 
+         MOAD_DATAROOT/static (for MM5 or WRF, respectively) and edit 
+         it to your liking.  Explanation of the controls are in comments
+         in the namelist file.
+
+   Once the environment variables and namelist are properly set up, simply
+   execute the program as follows:
+
+       For MM5:   
+           lfmpost.exe mm5 $LAPS_DATA_ROOT  (both args required)
+       
+       For WRF:
+           lfmpost.exe wrf $LAPS_DATA_ROOT (both args required)
+
+
+   All output will be written to the MOAD_DATAROOT/wrfprd/dxx/xxx  or
+   MM5_DATA_ROOT/mm5prd/dxx/xxx subdirectories as required.
+
+<pre>
+Inputs for MM5:
+        $MM5_DATA_ROOT/mm5prd/raw/MMOUT_DOMAINx or MMOUT_DOMAINx_## files
+        $MM5_DATA_ROOT/static/TERRAIN_DOMAINx files
+        $MM5_DATA_ROOT/static/lfmpost.nl
+        $MM5_DATA_ROOT/static/lfmpost_points.nl
+
+Inputs for WRF:
+        $MOAD_DATAROOT/wrfprd/wrfout_01_xxxxxx
+        $MOAD_DATAROOT/wrfprd/namelist.input
+        $MOAD_DATAROOT/static/static.wrfsi
+        $MOAD_DATAROOT/static/lfmpost.nl
+        $MOAD_DATAROOT/static/lfmpost_points.nl
+
+Outputs for MM5:                                                   
+        $MM5_DATA_ROOT/mm5prd/dxx/fua/yyjjjhhmmffff.fua
+         (contains 3D data on pressure levels)
+        $MM5_DATA_ROOT/mm5prd/dxx/fsf/yyjjjhhmmffff.fsf
+         (contains 2D surface and derived variables)
+        $MM5_DATA_ROOT/mm5prd/dxx/grib/yyjjjhhmmffff.grib
+        $MM5_DATA_ROOT/mm5prd/dxx/v5d/yyjjjhhmmffff.v5d
+        $MM5_DATA_ROOT/mm5prd/dxx/points/*.txt
+
+Outputs for WRF:
+        $MOAD_DATAROOT/wrfprd/dxx/fua/yyjjjhhmmffff.fua
+         (contains 3D data on pressure levels)
+        $MOAD_DATAROOT/wrfprd/dxx/fsf/yyjjjhhmmffff.fsf
+         (contains 2D surface and derived variables)
+        $MOAD_DATAROOT/wrfprd/dxx/grib/yyjjjhhmmffff.grib
+        $MOAD_DATAROOT/wrfprd/dxx/v5d/yyjjjhhmmffff.v5d
+        $MOAD_DATAROOT/wrfprd/dxx/points/*.txt
+</pre>
+Parameter Namelist File:  $LAPS_DATA_ROOT/static/lfmpost.nl
+Source Directory:  src/lfmpost
+
+    Please contact the author (shaw@fsl.noaa.gov) for additional info.  
