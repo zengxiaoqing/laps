@@ -1,36 +1,31 @@
-      subroutine read_ship_cwb (
-     ~     filename, maxSkyCover, recNum, altimeter,
-     ~     autoStationType, dewpoint, dpFromTenths, elevation,
-     ~     latitude, longitude, maxTemp24Hour, minTemp24Hour,
-     ~     precip1Hour, precip24Hour, precip3Hour, precip6Hour,
-     ~     presWeather, pressChange3Hour, pressChangeChar,
-     ~     reportType, seaLevelPress, skyCover, skyLayerBase,
-     ~     snowCover, stationName, tempFromTenths, temperature,
-     ~     timeObs, visibility, windDir, windGust, windSpeed, wmoId,
-     ~     badflag, n, istatus )
-
-      integer  maxSkyCover, recNum
+      subroutine read_ship_cwb ( filename, maxSkyCover, recNum, 
+     +     dataPlatformType, dewpoint, elevation, equivWindSpeed10m,
+     +     latitude, longitude, precip1Hour, precip24Hour, precip3Hour,
+     +     precip6Hour, presWeather, pressChange3Hour, pressChangeChar,
+     +     seaLevelPress, seaSurfaceTemp, skyCover, skyLayerBase, 
+     +     stationName, temperature, timeObs, visibility, 
+     +     wetBulbTemperature, windDir, windGust, windSpeed, wmoId,
+     +     badflag, n, istatus )
+ 
+      integer  recNum
 
       character*(*)  filename
-      character*6    autoStationType(recNum)
       character*25   presWeather(recNum)
-      character*6    reportType(recNum)
       character*8    skyCover(maxSkyCover,recNum)
       character*5    stationName(recNum)
 
-      integer  pressChangeChar(recNum), wmoId(recNum)
+      integer  dataPlatformType(recNum), pressChangeChar(recNum)
+      integer  wmoId(recNum)
 
-      real  altimeter(recNum), dewpoint(recNum), dpFromTenths(recNum)
-      real  elevation(recNum), latitude(recNum), longitude(recNum)
-      real  maxTemp24Hour(recNum), minTemp24Hour(recNum)
-      real  precip1Hour(recNum), precip24Hour(recNum)
-      real  precip3Hour(recNum), precip6Hour(recNum)
-      real  pressChange3Hour(recNum), seaLevelPress(recNum)
-      real  skyLayerBase(maxSkyCover,recNum), snowCover(recNum)
-      real  tempFromTenths(recNum), temperature(recNum)
-      real  visibility(recNum), windDir(recNum), windGust(recNum)
-      real  windSpeed(recNum), windGust2(recNum)
-      real  badflag
+      real  dewpoint(recNum), elevation(recNum)
+      real  equivWindSpeed10m(recNum), latitude(recNum)
+      real  longitude(recNum), precip1Hour(recNum)
+      real  precip24Hour(recNum), precip3Hour(recNum)
+      real  precip6Hour(recNum), pressChange3Hour(recNum)
+      real  seaLevelPress(recNum), seaSurfaceTemp(recNum)
+      real  skyLayerBase(maxSkyCover,recNum), temperature(recNum)
+      real  visibility(recNum), wetBulbTemperature(recNum)
+      real  windDir(recNum), windGust(recNum), windSpeed(recNum)
 
       double precision  timeObs(recNum)
 
@@ -40,35 +35,35 @@
       character*10  time(recNum)
       character*9   a10_to_a9
 
-      integer  windQua(recNum), seaLevelPressQua(recNum)
-      integer  temperatureQua(recNum), dewpointQua(recNum)
-      integer  pressChange3HourQua(recNum)
+      integer  windQua(recNum), temperatureQua(recNum)
+      integer  seaLevelPressQua(recNum), seaSurfaceTempQua(recNum)
+      integer  dewpointQua(recNum), pressChange3HourQua(recNum)
+      integer  wetBulbTemperatureQua(recNum)
 
-      real  tempDewDiff(recNum)
+      real  relaHumility(recNum), tempDewDiff(recNum)
 
-      istatus= 0
+      istatus = 0
       n= 0
-
+ 
       open ( 1, file=filename, status='old', err=1000 )
 
       istatus= 1
 
       do j= 1,recNum
-         read ( 1, 10, end=99, err=999 ) reportFlag(j), stationName(j),
-     ~               latitude(j), longitude(j),
+         read ( 1, 10, end=99, err=999 ) reportFlag(j),
+     ~               stationName(j), latitude(j), longitude(j),
      ~               yy(j), mo(j), dd(j), hh(j), mn(j)
          read (1,20) windDir(j), windSpeed(j), windQua(j),
      ~               visibility(j), presWeather(j),
      ~               seaLevelPress(j), seaLevelPressQua(j),
      ~               temperature(j), temperatureQua(j),
      ~               skyCover(1,j), skyLayerBase(1,j)
-         read (1,30) tempDewDiff(j), dewpointQua(j),
-     ~               pressChangeChar(j), pressChange3Hour(j),
-     ~               pressChange3HourQua(j), precip3Hour(j),
-     ~               maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
-         read (1,40) skyCover(2,j), skyLayerBase(2,j),
-     ~               precip24Hour(j)
-         read (1,*)
+         read (1,30) tempDewDiff(j), dewpointQua(j), pressChangeChar(j),       
+     ~               pressChange3Hour(j), pressChange3HourQua(j),
+     ~               precip3Hour(j), wetBulbTemperature(j),
+     ~               wetBulbTemperatureQua(j), windGust(j)
+         read (1,40) skyCover(2,j), skyLayerBase(2,j), precip24Hour(j)
+         read (1,50) seaSurfaceTemp(j), seaSurfaceTempQua(j)
 
          if ( reportFlag(j) .ne. '*34' )  then
             write (6,*) 'read ship data heading error'
@@ -81,19 +76,21 @@
 10    format ( a3, a5, 4x, 2f5.2, 2x, 5a2 )
 20    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
      ~         f2.0 )
-30    format ( f3.1, i1, x, i2, f3.1, i1, 3(x, f4.1), 8x, f3.0 )
+30    format ( f3.1, i1, x, i2, f3.1, i1, x, f4.1, 10x, f4.1, i1, 3x,
+     ~         f3.0 )
 40    format ( a2, 2x, f2.0, 14x, f4.1 )
+50    format ( 16x, f4.1, i1 )
 
 c      ----------       examing data quality and changing units       ---------
 99    do j= 1,n
-
-         if ( windQua(j) .ne. 1 )  then
+         if ( windQua(j) .eq. 9 )  then
             windDir(j)= badflag
             windSpeed(j)= badflag
          endif
 
          if ( windGust(j) .eq. -99. )  windGust(j)= badflag
          if ( elevation(j) .eq. -999. )  elevation(j)= badflag
+         if ( precip3Hour(j) .eq. -99.9 )  precip3Hour(j)= badflag
          if ( pressChangeChar(j).eq.-9 ) pressChangeChar(j)=int(badflag)
          if ( presWeather(j) .eq. '-9' )  presWeather(j)= 'UNK'
 
@@ -102,12 +99,17 @@ c      ----------       examing data quality and changing units       ---------
             else
                seaLevelPress(j)= badflag
          endif
+  
+         if ( pressChange3HourQua(j) .eq. 1 )  then       ! millibar -> pascal
+               pressChange3Hour(j)= pressChange3Hour(j) *100.
+            else
+               pressChange3Hour(j)= badflag
+         endif
 
-         if ( pressChange3HourQua(j) .eq. 1 )  then
-            pressChange3Hour(j)= pressChange3Hour(j) *100. ! millibar -> pascal
-          else
-            pressChange3Hour(j)= badflag
-            pressChangeChar(j)= int(badflag)
+         if ( seaSurfaceTempQua(j) .eq. 1 )  then
+               seaSurfaceTemp(j)= seaSurfaceTemp(j) +273.15     ! degC -> degK
+            else
+               seaSurfaceTemp(j)= badflag
          endif
 
          if ( temperatureQua(j) .eq. 1 )  then
@@ -116,38 +118,22 @@ c      ----------       examing data quality and changing units       ---------
                temperature(j)= badflag
          endif
 
-         tempFromTenths(j)= temperature(j)
-
          if ( dewpointQua(j) .eq. 1 )  then
                dewpoint(j)= temperature(j) -tempDewDiff(j)        ! unit: degK
             else
                dewpoint(j)= badflag
          endif
 
-         dpFromTenths(j)= dewpoint(j)
-
-         if ( maxTemp24Hour(j) .eq. -99.9 )  then
-               maxTemp24Hour(j)= badflag
+         if ( wetBulbTemperatureQua(j) .eq. 1 )  then           ! degC -> degK
+               wetBulbTemperature(j)= wetBulbTemperature(j) +273.15
             else
-               maxTemp24Hour(j)= maxTemp24Hour(j) +273.15       ! degC -> degK
-         endif
-
-         if ( minTemp24Hour(j) .eq. -99.9 )  then
-               minTemp24Hour(j)= badflag
-            else
-               minTemp24Hour(j)= minTemp24Hour(j) +273.15       ! degC -> degK
+               wetBulbTemperature(j)= badflag
          endif
 
          if ( precip24Hour(j) .eq. -99.9 )  then
                precip24Hour(j)= badflag
             else
                precip24Hour(j)= precip24Hour(j) *0.001   ! millimeter -> meter
-         endif
-
-         if ( precip3Hour(j) .eq. -99.9 )  then
-               precip3Hour(j)= badflag
-            else
-               precip3Hour(j)= precip3Hour(j) *0.001     ! millimeter -> meter
          endif
 
          if ( yy(j)(1:1) .eq. ' ' )  yy(j)= '0'//yy(j)(2:2)
@@ -158,20 +144,19 @@ c      ----------       examing data quality and changing units       ---------
          time(j)= yy(j)//mo(j)//dd(j)//hh(j)//mn(j)
          call cv_asc_i4time( a10_to_a9(time(j),istatus), i4time )
          timeObs(j)= dble( i4time )                       ! seconds since 1960
-
       enddo
 
 c    -------     code figure transformed into visibility ( unit: m )  -------
       do j= 1,n
          if     ( visibility(j) .eq.  0. )  then
                visibility(j)= 50.
-         elseif ( visibility(j) .gt.  0.  .and. 
+         elseif ( visibility(j) .gt.  0.  .and.
      ~            visibility(j) .lt. 51. )  then
                visibility(j)= visibility(j) *100.
-         elseif ( visibility(j) .gt. 55.  .and. 
+         elseif ( visibility(j) .gt. 55.  .and.
      ~            visibility(j) .lt. 81. )  then
                visibility(j)= ( visibility(j) -50. ) *1000.
-         elseif ( visibility(j) .gt. 80.  .and. 
+         elseif ( visibility(j) .gt. 80.  .and.
      ~            visibility(j) .lt. 90. )  then
                visibility(j)= ( visibility(j) -74. ) *5000.
          elseif ( visibility(j) .eq. 90. )  then
@@ -226,13 +211,13 @@ c  -----  code figure transformed into base of lowest cloud ( unit: m )  -----
 c ---- code figure transformed into base of cloud layer indicated (unit: m) ----
          if     ( skyLayerBase(2,j) .eq.  0. )  then
                skyLayerBase(2,j)= 15.
-         elseif ( skyLayerBase(2,j) .gt.  0.  .and.  
+         elseif ( skyLayerBase(2,j) .gt.  0.  .and.
      ~            skyLayerBase(2,j) .lt. 51. )  then
                skyLayerBase(2,j)= skyLayerBase(2,j) *30.
-         elseif ( skyLayerBase(2,j) .gt. 55.  .and.  
+         elseif ( skyLayerBase(2,j) .gt. 55.  .and.
      ~            skyLayerBase(2,j) .lt. 81. )  then
                skyLayerBase(2,j)= ( skyLayerBase(2,j) -50. ) *300.
-         elseif ( skyLayerBase(2,j) .gt. 80.  .and. 
+         elseif ( skyLayerBase(2,j) .gt. 80.  .and.
      ~            skyLayerBase(2,j) .lt. 90. )  then
                skyLayerBase(2,j)= ( skyLayerBase(2,j) -74. ) *1500.
          elseif ( skyLayerBase(2,j) .eq. 90. )  then
@@ -285,35 +270,34 @@ c                    special cloud layer cover
 
 c               -------      dealing with lacking of data      -------
       do j= 1,n
-         autoStationType(j)= "UNK"
          presWeather(j)= "UNK"
-         reportType(j)= "SHIP"
 
-         wmoId(j)= int(badflag)
+         dataPlatformType(j)= int(badflag)
 
-         altimeter(j)= badflag
          elevation(j)= 0.
+         equivWindSpeed10m(j)= badflag
          precip1Hour(j)= badflag
-         precip6Hour(j)= badflag
-         snowCover(j)= badflag
+         precip6Hour(j)= badflag 
+         wmoId(j)= badflag 
       enddo
 
-      go to 1000
+      go to 1000 
 
-999   do j= 1,n
-         write (6,*) reportFlag(j), stationName(j),
-     ~               latitude(j), longitude(j), ' ',
-     ~               yy(j), mo(j), dd(j), hh(j), mn(j), ' ', timeobs(j)
-         write (6,*) windDir(j), windSpeed(j), windQua(j),
+999   write (6,*) ' Error reading ship file'
+      do j= 1,n
+         write(6,*)  reportFlag(j),
+     ~               stationName(j), latitude(j), longitude(j),
+     ~               yy(j), mo(j), dd(j), hh(j), mn(j)
+         write(6,*)  windDir(j), windSpeed(j), windQua(j),
      ~               visibility(j), presWeather(j),
-     ~               seaLevelPress(j), seaLevelPressQua(j),
+     ~               seaLevelPress(j), seaLevelPressQua(j), 
      ~               temperature(j), temperatureQua(j),
      ~               skyCover(1,j), skyLayerBase(1,j)
-         write (6,*) dewpoint(j), dewpointQua(j),
-     ~               pressChangeChar(j), pressChange3Hour(j),
-     ~               pressChange3HourQua(j), precip3Hour(j),
-     ~               maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
-         write (6,*) skyCover(2,j), skyLayerBase(2,j), precip24Hour(j)
+         write(6,*)  dewpoint(j), dewpointQua(j), pressChangeChar(j),       
+     ~               pressChange3Hour(j), pressChange3HourQua(j),
+     ~               precip3Hour(j), wetBulbTemperature(j),
+     ~               wetBulbTemperatureQua(j), windGust(j)
+         write(6,*)  skyCover(2,j), skyLayerBase(2,j), precip24Hour(j)
       enddo
 
 1000  return

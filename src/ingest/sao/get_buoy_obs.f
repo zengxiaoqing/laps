@@ -74,14 +74,18 @@ c.....  Read arrays.
 c
         integer maxobs ! raw data file
         integer maxsta ! output LSO file
+        integer    maxSkyCover
+        parameter (maxSkyCover = 2)
+
 	real*8  timeobs(maxobs)
 	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
 	real*4  t(maxobs), td(maxobs)
 	real*4  dd(maxobs), ff(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs)
 	real*4  vis(maxobs), dp(maxobs)
-	real*4  pcp1(maxobs), pcp6(maxobs), pcp24(maxobs)
+	real*4  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)       
 	real*4  equivspd(maxobs), sea_temp(maxobs), t_wet(maxobs)
+        real*4  skyLayerBase(maxSkyCover,maxobs)
         real    lat(ni,nj), lon(ni,nj)
 c
 c.....  Output arrays.
@@ -107,6 +111,7 @@ c
 	character  reptype(maxobs)*6, atype(maxobs)*6
 	character  store_cldamt(maxsta,5)*4
         character  path_to_buoy_data*(*), buoy_format*(*)
+        character  skyCover(maxSkyCover,maxobs)
 c
 c
 c.....  Start.
@@ -178,14 +183,16 @@ c
             enddo ! i
 
 	    if(istatus .ne. 1) go to 990
-	    n_buoy_all = recNum
+	    n_maritime_all = recNum
 c
-        else ! Read buoy obs in CWB format
+        else ! Read buoy/ship obs in CWB format
 
             ix = 1
 
             i4time_file_b = ( (i4time_before+3600) / 10800) * 10800
             i4time_file_a = ( (i4time_after+3600) / 10800) * 10800
+
+            recNum = maxobs
 
             do i4time_file = i4time_file_b, i4time_file_a, 10800
    	        call make_fnam_lp(i4time_file,a9time,istatus)
@@ -194,8 +201,6 @@ c
 	        call s_len(path_to_buoy_data,len_path)
 	        data_file = path_to_buoy_data(1:len_path)//'buoy'
      1                                           //a8time//'.dat'      
-
-                recNum = maxobs
 
                 call s_len(data_file,len_file)
                 write(6,*)' CWB Buoy Data: ',data_file(1:len_file)
@@ -219,12 +224,47 @@ c
 
             enddo ! i4time_file
 
-            n_buoy_all = ix - 1
+            if(.false.)then
+
+              do i4time_file = i4time_file_b, i4time_file_a, 10800
+   	        call make_fnam_lp(i4time_file,a9time,istatus)
+                a8time = a9_to_a8(a9time(1:9))
+
+	        call s_len(path_to_buoy_data,len_path)
+	        data_file = path_to_buoy_data(1:len_path)//'ship'
+     1                                           //a8time//'.dat'      
+
+                call s_len(data_file,len_file)
+                write(6,*)' CWB Ship Data: ',data_file(1:len_file)
+
+	        call read_ship_cwb(data_file, maxSkyCover, recNum, 
+     &          iplat_type(ix),
+     &          td(ix), elev(ix), equivspd(ix), lats(ix), lons(ix), 
+     &          pcp1(ix), pcp24(ix), pcp3(ix), pcp6(ix),
+     &          wx, dp(ix), dpchar(ix), mslp(ix), sea_temp(ix), 
+     &          skyCover(1,ix), skyLayerBase(1,ix),
+     &          stname(ix), t(ix), timeobs(ix), vis(ix), t_wet(ix), 
+     &          dd(ix), ffg(ix), ff(ix),             
+     &          wmoid_in(ix), badflag, n_ship_file, istatus)
+
+	        if(istatus .ne. 1)then
+                    write(6,*)
+     1              ' Warning: bad status return from READ_SHIP_CWB'       
+                    n_ship_file = 0
+                endif
+
+                ix = ix + n_ship_file
+
+              enddo ! i4time_file
+
+            endif ! .false.
+
+            n_maritime_all = ix - 1
             i4time_offset=0
 
         endif
 
-        write(6,*)' n_buoy_all = ',n_buoy_all
+        write(6,*)' n_maritime_all = ',n_maritime_all
 
 c
 c.....  First check the data coming from the NetCDF file.  There can be
@@ -239,7 +279,7 @@ c
 
         max_write = 100
       
-	do i=1,n_buoy_all
+	do i=1,n_maritime_all
 c
 c.....  Toss the ob if lat/lon/elev or observation time are bad by setting 
 c.....  lat to badflag (-99.9), which causes the bounds check to think that
@@ -278,7 +318,7 @@ c
         box_idir = float( ni + ibox_points)  !buffer on east
         box_jdir = float( nj + ibox_points)  !buffer on north
 c
-	do 125 i=1,n_buoy_all
+	do 125 i=1,n_maritime_all
 c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
@@ -336,6 +376,12 @@ c
 	  save_stn(icount) = stname(i)  ! only one...save for checking
 c
  150	  nn = nn + 1
+
+          if(nn .gt. maxsta)then
+              write(6,*)' ERROR in get_buoy_obs ',nn,maxsta
+              stop
+          endif
+
 	  n_buoy_b = n_buoy_b + 1     !station is in the box
 c
 c.....  Check if its in the LAPS grid.
@@ -577,8 +623,8 @@ c
 c
 c.....  That's it...lets go home.
 c
-	 print *,' Found ',n_buoy_b,' buoy obs in the LAPS box'
-	 print *,' Found ',n_buoy_g,' buoy obs in the LAPS grid'
+	 print *,' Found ',n_buoy_b,' maritime obs in the LAPS box'
+	 print *,' Found ',n_buoy_g,' maritime obs in the LAPS grid'
 	 print *,' '
 	 jstatus = 1		! everything's ok...
 	 return

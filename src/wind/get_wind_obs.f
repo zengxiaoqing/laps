@@ -6,7 +6,7 @@
      1            i4time_lapswind,heights_3d,heights_1d,            ! I
      1            MAX_PR,MAX_PR_LEVELS,weight_prof,l_use_raob,      ! I
      1            l_use_cdw,                                        ! I
-     1            N_SAO,N_PIREP,                                    ! I
+     1            N_SFC,N_PIREP,                                    ! I
      1            lat,lon,                                          ! I
      1            NTMIN,NTMAX,                                      ! I
      1            u_laps_fg,v_laps_fg,                              ! O
@@ -166,15 +166,15 @@
            return
 	endif
 
-        call rdsao(i4time_lapswind,heights_3d
-     1            ,N_SAO,maxstns
+        call rdsfc(i4time_lapswind,heights_3d
+     1            ,N_SFC,maxstns
      1            ,lat,lon
-     1            ,n_sao_obs
+     1            ,n_sfc_obs
      1            ,grid_laps_wt,grid_laps_u,grid_laps_v
      1            ,NX_L,NY_L,NZ_L,istatus)
         if(istatus .ne. 1)then
             write(6,*)
-     1     ' Aborting from get_wind_obs - Error reading saos'
+     1     ' Aborting from get_wind_obs - Error reading sfc obs'
             return
 !       else
 !           i4time_array(n_sag) = i4time_lapswind

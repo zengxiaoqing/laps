@@ -29,15 +29,11 @@ cdis
 cdis 
 cdis 
 cdis 
-        subroutine rdsao(i4time,heights_3d
-     1  ,N_SAO,maxstns
+        subroutine rdsfc(i4time,heights_3d
+     1  ,N_SFC,maxstns
      1  ,lat,lon,n_sfc_obs
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v
-     1          ,ni,nj,nk,istatus)
-
-!       1997 Jun    Ken Dritz     Added N_SAO and maxstns as dummy arguments,
-!                                 making arrays dimensioned thereby automatic.
-!       1997 Jun    Ken Dritz     Removed include of 'lapsparms.for'.
+     1  ,ni,nj,nk,istatus)
 
 !****************************************************************************
 
@@ -50,11 +46,11 @@ cdis
 
 !       SFC
 
-        integer sfc_i(N_SAO) ! X Sfc coordinates
-        integer sfc_j(N_SAO) ! Y Sfc coordinates
-        integer sfc_k(N_SAO) ! Z Sfc coordinates
-        real    sfc_u(N_SAO) ! u Sfc component
-        real    sfc_v(N_SAO) ! v Sfc component
+        integer sfc_i(N_SFC) ! X Sfc coordinates
+        integer sfc_j(N_SFC) ! Y Sfc coordinates
+        integer sfc_k(N_SFC) ! Z Sfc coordinates
+        real    sfc_u(N_SFC) ! u Sfc component
+        real    sfc_v(N_SFC) ! v Sfc component
 
 !       Laps Analysis Grids
         real grid_laps_wt(ni,nj,nk)
@@ -101,17 +97,13 @@ c
         call make_fnam_lp(i4time,asc_tim_9,istatus)
 
         write(6,*)' Reading SFC Obs: Calling read_sfc ',asc_tim_9
-        write(6,*)' N_SAO, maxstns = ',N_SAO, maxstns
+        write(6,*)' N_SFC, maxstns = ',N_SFC, maxstns
 
         ext = 'lso'
         call get_directory(ext,directory,len_dir) ! Returns top level directory
 
         c13_fname = filename13(i4time,ext(1:3))
         infile = directory(1:len_dir)//c13_fname
-
-!       call read_sfc(infile,maxstns,atime,num_meso,num_saos,
-!     &        num_sfc,stations,lat_s,lon_s,elev_s,wx_s,cover_s,hgt_ceil,
-!     &        hgt_low,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pr_s,sr_s,vis_s,istatus)
 
         call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
      1           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
@@ -121,8 +113,7 @@ c
      1           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
      1           store_emv,store_amt,store_hgt,vis,obstime,istatus)
 
-
-100     write(6,*)'num_saos',n_sao_b
+100     write(6,*)'n_sao_b=',n_sao_b
 
         if(n_obs_b .gt. maxstns)then
             write(6,*)' Too many stations',n_obs_b,maxstns
@@ -130,8 +121,8 @@ c
             return
         endif
 
-        if(n_sao_b .gt. N_SAO)then
-            write(6,*)' Too many SFC stations',n_sao_b,N_SAO
+        if(n_sao_b .gt. N_SFC)then
+            write(6,*)' Too many SFC stations',n_sao_b,N_SFC
             istatus = 0
             return
         endif

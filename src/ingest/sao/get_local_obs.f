@@ -69,7 +69,8 @@ c
 c
 c.....  Read arrays.
 c
-        integer maxobs,maxsta
+        integer maxobs ! raw data file
+        integer maxsta ! processed stations for LSO file
 	real*8  timeobs(maxobs), rh_time(maxobs), p_time(maxobs)
 	real*8  t_time(maxobs), dd_time(maxobs), gust_time(maxobs)
 	real*8  ff_time(maxobs)
@@ -90,17 +91,17 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  itime60, before, after, wmoid(maxobs)
+	integer*4  itime60, before, after, wmoid(maxsta)
 	integer    rtime
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
 	character  stname(maxobs)*6, save_stn(maxobs)*6
 	character  data_file*(*), timech*9, time*4
 	character  stations(maxsta)*20
-	character  pro(maxsta)*11, provider(maxobs)*11
-	character  weather(maxobs)*25, wx(maxsta)*25
-	character  reptype(maxobs)*6, atype(maxobs)*6
-	character  store_cldamt(maxsta,5)*4, stn_type(maxsta)*11
+	character  pro(maxobs)*11, provider(maxsta)*11
+	character  wx(maxobs)*25, weather(maxsta)*25
+	character  reptype(maxsta)*6, atype(maxsta)*6
+	character  store_cldamt(maxsta,5)*4, stn_type(maxobs)*11
 c
 c.....  Start.
 c
@@ -258,6 +259,13 @@ c
 	  save_stn(icount) = stname(i)  ! only one...save for checking
 c
  150	  nn = nn + 1
+
+          if(nn .gt. maxsta)then
+              write(6,*)' ERROR in get_local_obs: increase maxsta '
+     1                 ,nn,maxsta
+              stop
+          endif
+ 
 	  n_local_b = n_local_b + 1     !station is in the box
 c
 c.....  Check if its in the LAPS grid.

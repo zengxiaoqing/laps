@@ -150,16 +150,16 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-        integer    wmoid(maxobs), jstatus, grid_spacing 
-        integer    dpchar(maxobs), narg, iargc
-	integer    num_varb(maxobs), max_bvar
+        integer    wmoid(maxsta), jstatus, grid_spacing 
+        integer    dpchar(maxsta), narg, iargc
+	integer    num_varb(maxsta), max_bvar
 	parameter  (max_bvar=20)  !max number of variables to blacklist...
                                   !change 903 format statement if you make
                                   !this greater than 20.
 c
         character  stations(maxsta)*20, provider(maxsta)*11
-        character  weather(maxobs)*25 
-        character  reptype(maxobs)*6, atype(maxobs)*6
+        character  weather(maxsta)*25 
+        character  reptype(maxsta)*6, atype(maxsta)*6
         character  store_cldamt(maxsta,5)*4
 	character  atime*24, outfile*200
 	character  dir_s*256, ext_s*31, units*10, comment*125,var_s*3
@@ -167,7 +167,7 @@ c
         character  fname9_to_wfo_fname13*13
 	character  data_file_m*150, data_file_l*150, data_file_b*150
 	character  dir_b*256, black_path*256, stations_b(maxsta)*20
-	character  var_b(maxobs,max_bvar)*3 
+	character  var_b(maxsta,max_bvar)*3 
 c
         character*200 path_to_metar
         character*200 path_to_local_data
