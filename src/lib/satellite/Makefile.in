@@ -1,0 +1,88 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@
+KRCFLAGS=@KRCFLAGS@ $(INC)
+
+
+FC       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC) @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+CPPFLAGS = @CPPFLAGS@
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a
+
+LIB      = libsatellite.a
+DEBUGLIB = libdebugsatellite.a
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+
+# Define all source code to be compiled and placed in local library.
+
+SRC=write_orb_att.f \
+    write_att_c.c \
+    bcdtoint.f \
+    byteswp2.f \
+    byteswp4.f \
+    cnvtglfl.f \
+    cnvtint.f \
+    cnvtvxfl.f \
+    cnvvxdb.f \
+    lvd_file_specifier.f
+
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
+
+
+all: lib
+
+lib: $(LIB)
+
+$(LIB): $(ARCHIVE) 
+	$(RANLIB) $@
+
+debug: 
+	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g' \
+        FFLAGS='@FFLAGS@ $(INC) -g' KRCFLAGS='$(KRCFLAGS) -g' 
+
+install: lib
+
+clean:
+	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
+
+
+
+
+
+
+
+gimloc.f:  $(LAPSROOT)/src/include/elcons.inc $(LAPSROOT)/src/include/instco.inc $(LAPSROOT)/src/include/elcomm.inc@F77INC@
+
