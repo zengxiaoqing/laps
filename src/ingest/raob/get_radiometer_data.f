@@ -149,23 +149,23 @@ C
      +     temperature( level, recNum), temperatureSfc(recNum),
      +     vaporDensity( level, recNum)
       double precision observationTime(recNum)
-      character cloudBaseTempDD(recNum)
-      character*60 QCT(QCcheckNum)
+      character*51 stationName(recNum)
+      character*6 providerId(recNum)
+      character vaporDensityDD( level, recNum)
+      character*30 staticIds(maxStaticIds)
       character temperatureDD( level, recNum)
-      character*72 ICT(ICcheckNum)
       character relHumidityDD( level, recNum)
       character*11 dataProvider(recNum)
-      character*6 providerId(recNum)
-      character integratedVaporDD(recNum)
-      character*30 staticIds(maxStaticIds)
-      character integratedLiquidDD(recNum)
-      character vaporDensityDD( level, recNum)
+      character*72 ICT(ICcheckNum)
+      character cloudBaseTempDD(recNum)
+      character*60 QCT(QCcheckNum)
       character liquidDensityDD( level, recNum)
-      character*51 stationName(recNum)
+      character integratedLiquidDD(recNum)
+      character integratedVaporDD(recNum)
 
 !     Declarations for 'write_snd' call
+      integer iwmostanum(recNum)
       real stalat(level),stalon(level)
-      integer iwmostanum(level)
       character a9time_ob_r(recNum)*9,a9time_ob_l(level)*9
       character c8_obstype*8
       real height_m(level)
@@ -220,28 +220,27 @@ C The netcdf variables are filled - your snd write call may go here
 C
 !     Initial loop through obs to get times and stanums
       do iob = 1,recNum
+          read(providerId(iob),'(3x,i2)')iwmostanum(iob)
           if(abs(observationTime(iob)) .le. 1e10)then
               i4time_ob = idint(observationTime(iob))+315619200
               call make_fnam_lp(i4time_ob,a9time_ob_r(iob),istatus)
           endif
 
-          read(providerId(iob),'(3x,i2)')iwmostanum(iob)
       enddo ! iob
 
+      c8_obstype = 'RADIOMTR'
+
       do iob = 1,recNum
-
-!         Convert arrays for a single sounding
-          stalat = latitude(iob)
-          stalon = longitude(iob)
-          staelev = elevation(iob)
-
-          a9time_ob_l = a9time_ob_r(iob)
-          c8_obstype = 'RADIOMTR'
-
           call convert_array(levels(:,iob),height_m,level
      1                      ,'none',r_missing_data,istatus)
 
-          call addcon_miss(height_m,staelev,height_m,level,1)
+          call addcon_miss(height_m,elevation(iob),height_m,level,1)
+
+          stalat = latitude(iob)
+          stalon = longitude(iob)
+
+!         Convert arrays for a single sounding
+          a9time_ob_l = a9time_ob_r(iob)
 
           pressure_mb = r_missing_data
 
@@ -261,32 +260,34 @@ C
           spd_mps = r_missing_data
 
 
-!         call 'write_snd' for a single sounding
           call get_nlevels_snd(pressure_mb,height_m,r_missing_data
      +                        ,level,nlevels_snd)
+
+          if(integratedVapor(iob) .gt. .06)nlevels_snd=0
 
           l_closest_time = l_closest_time_i(iwmostanum,a9time_ob_r
      1                                     ,recNum,iob,i4time_sys
      1                                     ,istatus)
-          if(.not. l_closest_time)nlevels_snd = 0
-          if(nlevels_snd .gt. 0)then
+
+          if(nlevels_snd .gt. 0 .and. l_closest_time)then
+!             call 'write_snd' for a single profile
               call open_ext(lun_out,i4time_sys,'snd',istatus)
 
-              call write_snd(lun_out                         ! I
-     +                      ,1,nlevels_snd,1                 ! I
-     +                      ,iwmostanum                      ! I
-     +                      ,stalat,stalon,staelev           ! I
-     +                      ,providerId(iob)                 ! I
-     +                      ,a9time_ob_l,c8_obstype          ! I
-     +                      ,nlevels_snd                     ! I
-     +                      ,height_m                        ! I
-     +                      ,pressure_mb                     ! I
-     +                      ,temp_c                          ! I
-     +                      ,dewpoint_c                      ! I
-     +                      ,dir_deg                         ! I
-     +                      ,spd_mps                         ! I
-     +                      ,istatus)                        ! O
-          endif ! valid sounding
+              call write_snd(lun_out
+     +                      ,1,nlevels_snd,1
+     +                      ,iwmostanum
+     +                      ,stalat,stalon,elevation(iob)
+     +                      ,providerId(iob)
+     +                      ,a9time_ob_l,c8_obstype
+     +                      ,nlevels_snd
+     +                      ,height_m
+     +                      ,pressure_mb
+     +                      ,temp_c
+     +                      ,dewpoint_c
+     +                      ,dir_deg
+     +                      ,spd_mps
+     +                      ,istatus)
+          endif ! valid profile
 
       enddo ! iob
       return
@@ -351,19 +352,19 @@ C
      +     temperature( level, recNum), temperatureSfc(recNum),
      +     vaporDensity( level, recNum)
       double precision observationTime(recNum)
-      character cloudBaseTempDD(recNum)
-      character*60 QCT(QCcheckNum)
+      character*51 stationName(recNum)
+      character*6 providerId(recNum)
+      character vaporDensityDD( level, recNum)
+      character*30 staticIds(maxStaticIds)
       character temperatureDD( level, recNum)
-      character*72 ICT(ICcheckNum)
       character relHumidityDD( level, recNum)
       character*11 dataProvider(recNum)
-      character*6 providerId(recNum)
-      character integratedVaporDD(recNum)
-      character*30 staticIds(maxStaticIds)
-      character integratedLiquidDD(recNum)
-      character vaporDensityDD( level, recNum)
+      character*72 ICT(ICcheckNum)
+      character cloudBaseTempDD(recNum)
+      character*60 QCT(QCcheckNum)
       character liquidDensityDD( level, recNum)
-      character*51 stationName(recNum)
+      character integratedLiquidDD(recNum)
+      character integratedVaporDD(recNum)
 
 
 C   Variables of type REAL
