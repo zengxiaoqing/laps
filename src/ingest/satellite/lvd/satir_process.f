@@ -105,7 +105,7 @@ c
        integer istatus_a, istatus_f
        integer istatus_r
        integer istatus_w, istatus
-       integer i,j
+       integer i,j,ik
 
        real*4 badlow,badhigh
        real*4 r_missing_data
@@ -164,10 +164,15 @@ c
 c----------------------------------------------------------------------------
 c.....       Do a quick check on the data. 
 c
+       ik=0
        do j=1,jmax
        do i=1,imax
           if(ta8(i,j).le.badlow .or. 
-     &       ta8(i,j).gt.badhigh) ta8(i,j) = r_missing_data
+     &       ta8(i,j).gt.badhigh)then
+             ik=ik+1
+             if(ik.le.25)print*,'ta8(',i,',',j,')= ',ta8(i,j)
+             ta8(i,j) = r_missing_data
+          endif
           if(tb8(i,j).le.badlow .or.
      &       tb8(i,j).gt.badhigh) tb8(i,j) = r_missing_data
           if(tc8(i,j).le.badlow .or.
