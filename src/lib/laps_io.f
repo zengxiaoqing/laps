@@ -37,7 +37,7 @@ cdis
 
         character*9 asc9_tim
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_2d
         character*10 units_2d
@@ -98,7 +98,7 @@ cdis
 
         character*9 asc9_tim
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_2d
         character*10 units_2d
@@ -147,7 +147,7 @@ cdis
         character*9 asc9_tim
 
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_2d
         character*10 units_2d
@@ -234,7 +234,7 @@ c
         character*9 asc9_tim
 
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_2d
         character*10 units_2d
@@ -327,7 +327,7 @@ c
         character*9 asc9_tim
 
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_2d
         character*10 units_2d
@@ -556,7 +556,7 @@ cc        character*3 var_3d(kmax),var_2d
 !       Steve Albers            1990
 
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
@@ -622,7 +622,7 @@ cc        character*3 var_3d(kmax),var_2d
 !       Steve Albers            1990
 
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_2d
         character*10 units_2d
@@ -691,7 +691,7 @@ cc        character*3 var_2d
         logical ltest_vertical_grid
 
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_3d(nk),comment_2d
         character*10 units_3d(nk),units_2d
@@ -739,7 +739,7 @@ cc        character*3 var_2d
         logical ltest_vertical_grid
 
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_3d(nk*nf),comment_2d(nf)
         character*10 units_3d(nk*nf),units_2d(nf)
@@ -801,7 +801,7 @@ cc        character*3 var_2d
         parameter (MAX_FIELDS = 10)
 
         character*150 DIRECTORY
-        character*31 EXT
+        character*(*) EXT
 
         character*125 comment_a(nf)
         character*10 units_a(nf)
