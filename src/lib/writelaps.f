@@ -99,10 +99,9 @@ C
      1               append                !0=no, 1=yes
 C
       parameter (max_levels = 100)
-      real*4         base,                 !bottom of LAPS levels
-     1               interval,             !interval of LAPS levels
-     1               pr(max_levels),       !pressures read from get_pres_1d
-     1               cdl_levels(max_levels)
+      real*4         pr(max_levels),       !pressures read from get_pres_1d
+     1               cdl_levels(max_levels),
+     1               bott, top
 C
       character*4    fcst_hh_mm
       character*9    gtime
@@ -145,11 +144,17 @@ C
 
 C **** Special case where write_laps is called with fua or fsf extension
       if (ext .eq. 'fua') then
-        j = base
-        do i = n_levels, 1, -1
-          cdl_levels(i) = j
-          j = j - interval
-        enddo
+        bott = pr(1)
+        top = pr(n_levels)
+        if (bott .gt. top) then
+          do i = n_levels, 1, -1
+            cdl_levels(i) = pr(i)
+          enddo
+        else
+          do i = 1, n_levels
+            cdl_levels(i) = pr(i)
+          enddo
+        endif
       endif
       if (ext .eq. 'fsf') then
         n_levels = 1
