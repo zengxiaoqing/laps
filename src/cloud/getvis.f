@@ -185,7 +185,7 @@ cdis
             cloud_frac_vis_a(i,j) = cloud_frac_vis
 
 !           Is there enough of a signal from the VIS to say a cloud is present?
-            if(       cloud_frac_vis_a(i,j) .gt. 0.5 
+            if(       cloud_frac_vis_a(i,j) .gt. 0.3 
      1          .and. sfc_albedo(i,j) .ne. r_missing_data
      1          .and. sfc_albedo(i,j) .le. 0.3              
      1          .and. l_use_vis_add                         )then
