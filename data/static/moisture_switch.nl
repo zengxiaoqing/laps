@@ -3,7 +3,7 @@
  RAOB_LOOKBACK = 3600,
  GOES_SWITCH = 8,
  CLOUD_SWITCH = 1,
- SOUNDER_SWITCH = 0,
+ sounder_switch = 0,
  TIROS_SWITCH = 0,
  SAT_SKIP = 3,
  GVAP_SWITCH = 0,

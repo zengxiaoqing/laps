@@ -44,8 +44,8 @@ cdis
         parameter  (LAPS_DOMAIN_FILE = 'nest7grid')
 
         integer*4 NX_L,NY_L,NZ_L
-        parameter (NX_L = 125)
-        parameter (NY_L = 105)
+        parameter (NX_L = 61)
+        parameter (NY_L = 61)
         parameter (NZ_L = 21)
 
 !       The following three parameters are also in 'lib/lapsparms.inc'.

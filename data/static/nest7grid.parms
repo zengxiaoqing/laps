@@ -1,5 +1,5 @@
  &lapsparms_nl
- c80_description='NOAA/ERL Forecast Systems Laboratory, Boulder CO (PARALLEL)'
+ c80_description='LAPS WFO ',
  iflag_lapsparms_cmn=1,              
 
  c6_maproj='plrstr',                 
@@ -9,9 +9,8 @@
  grid_cen_lat_cmn=41.0,         
  grid_cen_lon_cmn=-105.5,         
  grid_spacing_m_cmn=10000.,          
- NX_L_CMN=125,                         
- NY_L_CMN=105,                         
-
+ nx_l_cmn=61,
+ ny_l_cmn=61,
  vertical_grid='PRESSURE',
  nk_laps=21,                         
  PRESSURE_BOTTOM_L=110000.,          
@@ -23,26 +22,26 @@
  I_PERIMETER_CMN=10,                  
  c50_lowres_directory='NULL',
 
- c_raddat_type='wsi',
+ c_raddat_type='wfo',
  radarext_3d_cmn='vrc',
  radarext_3d_accum_cmn='vrc',
  
- path_to_topt30s='/data/lapb/geog/world_topo_30s',
- path_to_topt10m='/data/lapb/geog/topo_10m',
- path_to_pctl10m='/data/lapb/geog/land_10m',
+ path_to_topt30s='/awips/laps/terrain/topo_30s',
+ path_to_topt10m='/awips/laps/terrain/topo_10m',
+ path_to_pctl10m='/awips/laps/terrain/land_10m',
  path_to_soil2m='/data/lapb/geog/soil_2m',
 
  path_to_raw_pirep_cmn='/public/data/pirep/netcdf/',
  path_to_raw_rass_cmn='/public/data/profiler/rass/noaanet/netcdf/',
- path_to_raw_profiler_cmn='/public/data/profiler/wind/noaanet/netcdf/',
+ path_to_raw_profiler_cmn='$FXA_DATA/point/profiler/netcdf/',
  path_to_raw_blprass_cmn='/public/data/profiler/rass/external/netcdf/',
  path_to_raw_blpprofiler_cmn='/public/data/profiler/wind/external/netcdf/',
- path_to_wsi_2d_radar_cmn='/public/data/radar/wsi/nowrad/netcdf/'
+ path_to_wsi_2d_radar_cmn='$FXA_DATA/nowrad/conusC/Z/',
  path_to_wsi_3d_radar_cmn='/public/data/radar/wsi/nexrad/netcdf/',
  path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
 
- path_to_metar_data_cmn='/public/data/metar/netcdf/',
- path_to_local_data_cmn='/public/data/ldad/mesonet/netcdf/',
+ path_to_metar_data_cmn='$FXA_DATA/point/metar/netcdf/',
+ path_to_local_data_cmn='$FXA_DATA/LDAD/mesonet/netCDF/',
  path_to_buoy_data_cmn='/data/fxa/point/maritime/netcdf/',
  min_to_wait_for_metars_cmn=10,
 
@@ -61,7 +60,7 @@
  toptwvl_parm_cmn=2.,     
  maxstations_cmn=6000,
  maxobs_cmn=6000,  
- c8_project_common='NIMBUS', 
+ c8_project_common='WFO',
  /
 c OVERALL LAPS PARAMETERS
 c
@@ -71,4 +70,3 @@ c
 c path_to_soil_2m - this parameter is not yet active since we do not yet
 c                   supply the soil type database. It is there only for
 c                   software testing at this time.
-

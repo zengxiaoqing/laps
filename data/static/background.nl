@@ -1,8 +1,7 @@
  &background_nl
- bgpaths='/public/data/grids/ruc2/40km_fsl-conus_hybb/netcdf',
-         '/public/data/grids/eta/48km_nat_isobaric/netcdf',
-                  '',
- bgmodels=5,2,0,
+ bgpaths='$FXA_DATA/Grid/SBN/netCDF/CONUS211/RUC/',
+           '$FXA_DATA/Grid/SBN/netCDF/CONUS211/Eta/',
+ bgmodels=4,4,
  max_forecast_delta=6,
  oldest_forecast=12,
  use_analysis=.false.,
