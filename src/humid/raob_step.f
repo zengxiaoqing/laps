@@ -34,57 +34,42 @@ cdis
      1     lat,lon,  laps_t, ii,jj,kk)
 
 
+c   This module modifies the input data array of specific humidity
+c   with available RAOB data using .snd data if present.  In
+c   addition, the module is easily disabled in the presence of
+c   .snd data by simply modifying the static file
+c   ../static/raob_moisture_switch.nl by putting a 0 in the
+c   appropriate record.  The advantage of this approach is that it
+c   is external to the program and will not require a recompile.
+c   
+c   Theory:
+c   
+c   This code utilizes a form of a second pass of a Barnes
+c   analysis.  I.e., the background is already available from a
+c   model forecast.  This is generally obtained via .lga or in
+c   4dda mode from a model run.  The second pass Barnes scales the
+c   background to the RAOB data.  The scaling approach prevents
+c   illogical adjustments in large domains.  This is a "one-pass"
+c   analysis.  The radius of influence of a RAOB is 600km.  At
+c   that distance, the weight associated with a RAOB is 0.5.  It
+c   falls off rapidly as distance increases a note on the
+c   look_back_time parameter:  look_back_time was devised to allow
+c   the generation of .snd files only at the time of observation
+c   (not in the event of no obs) hence this is really not required
+c   in the current way the "system" as a whole is being coded as a
+c   group.  In the "group" approach, a .snd file will be created
+c   each LAPS time and will automatically contain the RAOB data
+c   for a prescribed "look back time".  Typically this is 3 hours.
+c   If no data are present, the .snd file will exist and wi ll be
+c   empty.  If for some reason this group approach for lookback
+c   time is ever dropped or modified, this code contains a switch
+c   to accommodate that scenario if needed.  On a related note, if
+c   the .snd files exist with a more recent date than the current
+c   runtime, the presence of these will be detected and the
+c   current runtime .snd file will be sought instead.  If this
+c   current file is not available, the code will report it is
+c   unable to find .snd data for the current time.
 
-
-c       this module modifies the input data array of specific humidity
-c       with available raob data
-c       this module will use .snd data if it is available.
-c       in addition there is a way to turn off this module in the presence
-c       of .snd data.   simply modify the static file
-c       ../static/raob_moisture_switch.txt
-c       by putting a 0 in the first record.  the advantage of this approach
-c       is that it is external to the program and will not require a
-c       recompile.
-c
-c
-c
-c       theory:
-c
-c       this code utilizes the second pass of a barnes analysis.
-c       in this form, a background is already available i.e., from the
-c       model forecast that the moisture analysis obtains from .lga
-c       or in 4dda mode from a model run
-c
-c       the second pass barnes scales the background to the raob data
-c       the scaling approach prevents illogical adjustments in large
-c       domains, common for AFWA application.
-c
-c       this is a "one-pass" analysis.
-c
-c       the radius of influence of a raob is 600km.  At that distance,
-c       the weight associated with a raob is 0.5.  it falls off rapidly
-c       as distance increases
-c
-c       a note on the look_back_time parameter:
-c
-c       look_back_time was devised to allow the generation of snd files
-c       only at the time of observation (not in the event of no obs)
-c       hence this is really not required in the current way the "system"
-c       as a whole is being coded as a group.  in the "group" approach,
-c       a .snd file will be created each laps time and will automatically
-c       contain the raob data for a predescribed "look back time".  
-c       typically this will be 3 hours.  if there is no data, the .snd file 
-c       will exist and will be empty.
-c
-c       if for some reason this group approach for lookback time is ever
-c       dropped or modified, this code contains a switch to accommodate that
-c       scenario if needed.
-c
-c       on a related note, if the .snd files exist with a more recent date
-c       than the current runtime, the presence of these will be detected
-c       and the current runtime .snd file will be sought instead.  if this
-c       current file is not avialable, the code will report it is
-c       unable to find .snd data for the current time.
 
 
       implicit none
