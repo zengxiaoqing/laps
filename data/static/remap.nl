@@ -1,5 +1,6 @@
  &remap_nl
  n_radars_remap=7,
+ max_times=3,
  path_to_vrc_nl='rdr',
  ref_min=0.0,
  min_ref_samples=4,
@@ -33,6 +34,8 @@ c
 c                      For each radar, up to 3 radar times will be processed. 
 c                      These are chosen among the times that we have new input 
 c                      data for.  
+c
+c 'max_times'        - Number of volume times to process for each radar
 c
 c 'path_to_radar_a'  - Full path to each directory containing a set of input
 c                      radar tilts/volumes. 
