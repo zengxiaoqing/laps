@@ -307,8 +307,8 @@
       real dewpoint_c(MAX_PR,MAX_PR_LEVELS)
 
       real*4 heights_3d(ni,nj,nk)
-      real lat(ni,nj)
-      real lon(ni,nj)
+      real*4 lat(ni,nj)
+      real*4 lon(ni,nj)
 
       character*5 c5_name(MAX_PR)
       character*8 c8_obstype(MAX_PR)
@@ -318,7 +318,7 @@
 
       logical l_fill_ht, l_snd2
 
-      l_snd2 = .false.
+      l_snd2 = .true.
 
       lun_in = 59
       mode = 1
@@ -357,7 +357,7 @@
      1                         ,heights_3d,l_fill_ht                   ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
-     1                         ,elev_pr                                ! O
+     1                         ,staelev                                ! O
      1                         ,nlevels_obs_pr                         ! O
      1                         ,c5_name,c8_obstype                     ! O
      1                         ,height_m,pressure_mb                   ! O
@@ -374,6 +374,8 @@
       endif
 
       do i = 1,n_profiles
+          
+          write(6,*)' number of levels = ',i,nlevels_obs_pr(i)
 
           do j = 1,nlevels_obs_pr(i)
               if(ob_pr_u_obs(i,j) .ne. r_missing_data .and.
@@ -391,6 +393,7 @@
               else
                   call make_fnam_lp(i4time_ob_pr_lvl(i,j)
      1                             ,a9time_ob_lvl(i,j),istatus)       
+!                 write(6,*)i,j,a9time_ob_lvl(i,j),i4time_ob_pr_lvl(i,j)
               endif
 
               if(istatus .ne. 1)then
