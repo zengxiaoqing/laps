@@ -62,15 +62,27 @@ c       include 'wrf_laps_analysis.cmn'
         if(iflag_config_wrfsi.eq.1)then
 
            istatus = 1
-           grid_cen_lat_cmn   =moad_known_lat(nest)
-           grid_cen_lon_cmn   =moad_known_lon(nest)
-           nx_l_cmn           =xdim(nest)
-           ny_l_cmn           =ydim(nest)
            grid_spacing_m_cmn =grid_spacing_wrf_m(nest)
-           i_orig_cmn         =domain_origin_parent_x(nest)
-           j_orig_cmn         =domain_origin_parent_y(nest)
+           lli_orig_cmn       =domain_origin_lli(nest)
+           llj_orig_cmn       =domain_origin_llj(nest)
+           uri_orig_cmn       =domain_origin_uri(nest)
+           urj_orig_cmn       =domain_origin_urj(nest)
+           parent_id_cmn      =parent_id(nest)
+           ratio_to_parent_cmn=ratio_to_parent(nest)
+           if(nest.eq.1)then
+              nx_l_cmn           =xdim
+              ny_l_cmn           =ydim
+           else
+              nx_l_cmn=(domain_origin_uri(nest)-
+     +                  domain_origin_lli(nest))*
+     +                  ratio_to_parent(nest)+1
+              ny_l_cmn=(domain_origin_urj(nest)-
+     +                  domain_origin_llj(nest))*
+     +                  ratio_to_parent(nest)+1
+           endif
 
            return
+
         endif
 
         call read_wrfsi_hgridspec (istatus)
@@ -78,6 +90,8 @@ c       include 'wrf_laps_analysis.cmn'
            print*,'error reading wrfsi_hgridspec'
            return
         endif
+
+	write(6,*) 'in config, past hgridspec call'
 
         r_missing_data=+1e37
         i2_missing_data=-99
@@ -141,8 +155,12 @@ c
         grid_cen_lat_cmn   =moad_known_lat(nest)
         grid_cen_lon_cmn   =moad_known_lon(nest)
         num_domains_cmn    =num_domains
-        i_orig_cmn         =domain_origin_parent_x(nest)
-        j_orig_cmn         =domain_origin_parent_y(nest)
+        lli_orig_cmn       =domain_origin_lli(nest)
+        llj_orig_cmn       =domain_origin_llj(nest)
+        uri_orig_cmn       =domain_origin_uri(nest)
+        urj_orig_cmn       =domain_origin_urj(nest)
+        parent_id_cmn      =parent_id(nest)
+        ratio_to_parent_cmn=ratio_to_parent(nest)
 
         path_to_topt10m=topo_10m
         path_to_topt30s=topo_30s
@@ -178,8 +196,8 @@ c
 
         num_staggers=num_staggers_wrf
 
-        nx_l_cmn = xdim(nest)
-        ny_l_cmn = ydim(nest)
+        nx_l_cmn = xdim
+        ny_l_cmn = ydim
         grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
         silavwt_parm_cmn = silavwt_parm_wrf
         toptwvl_parm_cmn = toptwvl_parm_wrf
@@ -202,9 +220,38 @@ c---------------------------------------------------------
         i = nest
  
         do while (i.ne.1)
+         if(i.eq.0)then
+            print*,'Error:  parent_id = 0. Nest = ',nest
+            print*,'Error:  Check wrfsi.nl variable parent_id.'
+            print*,'***** Terminating *****'
+            stop
+         endif
          grid_spacing_wrf_m = grid_spacing_wrf_m / ratio_to_parent(i)
          i = parent_id(i)
         end do
  
         return
         end  
+
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+	subroutine get_nmm_grid_spacing(dlmd,dphd,res)
+
+        include 'wrf_horzgrid.cmn'
+	
+	if (moad_delta_x .gt. 2. .or. moad_delta_y .gt. 2.) then
+	write(6,*) 'unexpectedly large deltax/deltay values'
+	write(6,*) moad_delta_x, moad_delta_y
+	write(6,*) 'these seem inappropriate for nmm grid'
+	STOP
+	endif
+
+	dlmd=moad_delta_x
+	dphd=moad_delta_y
+
+	res=111200.*(dlmd**2.+dphd**2.)**0.5
+
+	return
+	end subroutine get_nmm_grid_spacing
+
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC

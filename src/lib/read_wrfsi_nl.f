@@ -107,8 +107,10 @@
       namelist /hgridspec/
      +          num_domains,xdim,ydim,parent_id
      +         ,ratio_to_parent
-     +         ,domain_origin_parent_x
-     +         ,domain_origin_parent_y
+     +         ,domain_origin_lli
+     +         ,domain_origin_llj
+     +         ,domain_origin_uri
+     +         ,domain_origin_urj
      +         ,stagger_type
      +         ,map_proj_name,latlon_grid 
      +         ,moad_known_lat, moad_known_lon, moad_known_loc
@@ -158,6 +160,8 @@
       save         iflag_vgridspec_cmn
 
       integer      lenr
+
+	write(6,*) 'execute read_wrfsi_vgridspec'
 
       istatus = 0
       call s_len(generic_data_root,lenr)
@@ -263,34 +267,7 @@
       write(*,paths_to_raw_data)
       return
       end
-c
-c --------------------------------------------------------
-c
-      subroutine get_grid_dim_xy_wrf(nest,nx,ny,istatus)
-
-      implicit  none
-
-      include 'wrf_horzgrid.cmn'
-
-      integer  istatus
-      integer  nest
-      integer  nx,ny
-
-      call read_wrfsi_hgridspec (istatus)
-      if(istatus.ne.1)then
-         print*,'error in get_stand_lon_wrf'
-         return
-      endif
-
-      istatus = 1
-
-      nx=xdim(nest)
-      ny=ydim(nest)
-
-      return
-      end
-!----------------------------
-
+c--------------------------------
       subroutine get_stand_lon_wrf(std_lon,istatus)
 
       implicit  none
@@ -332,7 +309,6 @@ c
  
       istatus = 1
 
-c Note: this is not designed for nesting atm.
       std_lat = moad_stand_lats(1)
       std_lat2= moad_stand_lats(2)
 
@@ -349,7 +325,6 @@ c Note: this is not designed for nesting atm.
       character c6_maproj*6
       character wrftolaps_c6_maprojname*6
       integer  istatus
-      integer  nest
 
       call read_wrfsi_hgridspec (istatus)
       if(istatus.ne.1)then
@@ -359,7 +334,6 @@ c Note: this is not designed for nesting atm.
 
       istatus = 1
 
-c Note: this is not designed for nesting atm.
       c6_maproj=wrftolaps_c6_maprojname(map_proj_name)
 
       return
@@ -384,7 +358,7 @@ c Note: this is not designed for nesting atm.
 
       istatus = 1
 
-      grid_center_lon=moad_known_lon(nest)
+      grid_center_lon=moad_known_lon(1)
 
       return
       end
@@ -397,7 +371,6 @@ c Note: this is not designed for nesting atm.
       include 'wrf_horzgrid.cmn'
       real     grid_spacing_m
       integer  istatus
-      integer  nest
 
       call read_wrfsi_hgridspec (istatus)
       if(istatus.ne.1)then
@@ -411,3 +384,6 @@ c Note: this is not designed for nesting atm.
 
       return
       end
+
+!----------------------------------
+
