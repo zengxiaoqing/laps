@@ -963,10 +963,10 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
      IF (make_v5d) thick_10_5 = zprs(:,:,k500)-zprs(:,:,k1000)
 
      ! Convert THETA into temperature
-     print *, 'Converting interpolated theta to temp..'
-     DO k = 1,kprs
-       tprs(:,:,k) = thetaprs(:,:,k) / (p0/prslvl(k))**kappa
-     ENDDO
+     !print *, 'Converting interpolated theta to temp..'
+     !DO k = 1,kprs
+     !  tprs(:,:,k) = thetaprs(:,:,k) / (p0/prslvl(k))**kappa
+     !ENDDO
      print *, 'Computing dewpoint on pressure...'
      tdprs = tprs/((-rvolv * ALOG(rhprs*.01)*tprs) + 1.0) 
      
