@@ -443,7 +443,12 @@ foreach $exe (@LAPS_EXE){
         }else{
             print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
             if(-e "$LAPSROOT/etc/$wgi_script_name.pl"){
-               print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script_name.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1\n";
+               if( $wgi_script_name eq "sfc"){
+                   $exe_name = $1 if($exe =~ /^(\S+)\./);
+                   print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script_name.pl -r $exe_name $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1\n";
+               }else{
+                   print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script_name.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1\n";
+               }
             }
         }
        
