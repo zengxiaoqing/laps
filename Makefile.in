@@ -21,6 +21,7 @@ LIBDIRS = src/lib \
           src/lib/nav \
           src/lib/powell  \
           src/lib/radar/remap_ftn \
+          src/lib/satellite \
           src/lib/temp   \
           src/lib/util  
 
@@ -43,8 +44,8 @@ EXEDIRS = src/accum \
           src/ingest/rass/blp \
           src/ingest/sao \
           src/ingest/satellite/cloud_drift \
-          src/ingest/satellite/goes8/lambert \
-          src/ingest/satellite/goes8/lambert/table \
+          src/ingest/satellite/lvd \
+          src/ingest/satellite/lvd/table \
           src/ingest/satellite/sounding \
           src/lapsplot \
           src/sched \
@@ -115,7 +116,8 @@ DATADIRS = log/qc \
            lapsprd/lsx \
            lapsprd/lt1 \
            lapsprd/lty \
-           lapsprd/lvd \
+           lapsprd/lvd/goes08 \
+           lapsprd/lvd/goes09 \
            lapsprd/lw3 \
            lapsprd/lwc \
            lapsprd/lwm \
