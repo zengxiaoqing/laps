@@ -45,6 +45,23 @@ c
 c
         return
         end
+c
+c-----------------------------------------------------
+c
+        subroutine move_i(a,b,imax,jmax)
+c
+c.....  Routine to move array 'a' into array 'b'.
+c
+        integer*4 a(imax,jmax), b(imax,jmax)
+c
+        do j=1,jmax
+        do i=1,imax
+          b(i,j) = a(i,j)
+        enddo !i
+        enddo !j
+c
+        return
+        end
 
 c
 c-----------------------------------------------------

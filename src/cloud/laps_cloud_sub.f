@@ -207,7 +207,8 @@ cdis
         character*4 radar_name
         character*31 radarext_3d_cloud
         real*4 radar_ref_3d(NX_L,NY_L,NZ_L)
-        real*4 dum_3d(NX_L,NY_L,NZ_L)
+        integer istat_radar_2dref_a(NX_L,NY_L)
+        integer istat_radar_3dref_a(NX_L,NY_L)
        
         real*4 heights_3d(NX_L,NY_L,NZ_L)
 
@@ -544,6 +545,9 @@ C READ IN RADAR DATA
 
         endif
 
+        call constant_i(istat_radar_2dref_a,istat_radar_2dref,NX_L,NY_L)       
+        call constant_i(istat_radar_3dref_a,istat_radar_3dref,NX_L,NY_L)
+
 C READ IN AND INSERT SAO DATA
 !       Read in surface pressure
         var = 'PS'
@@ -671,7 +675,7 @@ C READ IN SATELLITE DATA
      1        cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
      1        cloud_frac_co2_a,rlaps_land_frac,
      1        topo,heights_3d,temp_3d,t_sfc_k,t_gnd_k,sst_k,pres_sfc_pa,       
-     1        dum_3d,cldtop_m_co2,cldtop_m_tb8,cldtop_m,cvr_snow,
+     1        cldtop_m_co2,cldtop_m_tb8,cldtop_m,cvr_snow,
      1        NX_L,NY_L,KCLOUD,NZ_L,istatus,r_missing_data)
 
         if(istatus .ne. 1)then
@@ -700,6 +704,10 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
             do j = 1,NY_L
             do i = 1,NX_L
+
+              if(istat_radar_2dref_a(i,j) .eq. 1 .and.
+     1           istat_radar_3dref_a(i,j) .eq. 0       )then
+
                 if(radar_ref_3d(i,j,1) .gt. ref_base)then
 
                     k_topo = int(zcoord_of_pressure(pres_sfc_pa(i,j)))
@@ -726,9 +734,8 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
 !                   Add third dimension to radar echo
 150                 if(abs(cloud_top_m) .le. 1e6)then ! Valid Cloudtop
-                        k_cloud_top = ! nint(height_to_zcoord(cloud_top_m))
-     1            nint(height_to_zcoord2(cloud_top_m,heights_3d
-     1               ,NX_L,NY_L,NZ_L,i,j,istatus)   )
+                        k_cloud_top = nint(height_to_zcoord2(cloud_top_m
+     1                          ,heights_3d,NX_L,NY_L,NZ_L,i,j,istatus))      
                         if(istatus .ne. 1)then
                             write(6,*)' Error: Bad status returned'
      1                          ,' from height_to_zcoord2'
@@ -746,6 +753,7 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
                     enddo ! k
 
                 endif ! Radar echo at this grid point
+              endif ! Three-dimensionalize this grid point
             enddo ! i
             enddo ! j
 
@@ -755,11 +763,11 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
         elseif(istat_radar_2dref .eq. 1 .and. istat_radar_3dref .eq. 1
      1                                                             )then       
-            write(6,*)' Radar data is already three dimensional'
+            write(6,*)' Radar data is already fully three dimensional'      
 
         elseif(istat_radar_2dref .eq. 0 .and. istat_radar_3dref .eq. 0
      1                                                             )then
-            write(6,*)' Radar data is unavailable for insertion'
+            write(6,*)' Radar data is missing for insertion'
 
         endif ! Do we have 3-d or 2-d radar data?
 
@@ -913,6 +921,7 @@ C       EW SLICES
                 if(clouds_3d(i,j,k  ) .lt. thresh_cvr_base .and.
      1             clouds_3d(i,j,k+1) .ge. thresh_cvr_base  )then
                     cloud_base(i,j) = 0.5 * (cld_hts(k) + cld_hts(k+1))
+                    cloud_base(i,j) = max(cloud_base(i,j),topo(i,j))
                 endif
               enddo ! k
 
@@ -940,6 +949,7 @@ C       EW SLICES
                     cloud_ceiling(i,j) = 0.5 * 
      1                    (cld_hts(k) + cld_hts(k+1))
      1                                                - topo(i,j)
+                    cloud_ceiling(i,j) = max(cloud_ceiling(i,j),0.)
                 endif
               enddo ! k
 
@@ -1111,9 +1121,8 @@ C       EW SLICES
         return
         end
 
-        subroutine put_clouds_3d(i4time,ext,clouds_3d,cld_hts,cld_pres_1
-     1d
-     1                                          ,ni,nj,nk,istatus)
+        subroutine put_clouds_3d(i4time,ext,clouds_3d,cld_hts
+     1                          ,cld_pres_1d,ni,nj,nk,istatus)
 
 !       1997 Jul 31 K. Dritz  - Removed include of lapsparms.for, which was
 !                               not actually needed for anything.
@@ -1350,7 +1359,7 @@ C       EW SLICES
                 frac = z_laps - iz_laps
 
                 p_modelfg =  pressure_of_level(iz_laps) * (1. - frac)
-     1                  +  pressure_of_level(iz_laps+1)  * frac
+     1                    +  pressure_of_level(iz_laps+1)  * frac
 
                 p_modelfg_mb = p_modelfg * .01
 

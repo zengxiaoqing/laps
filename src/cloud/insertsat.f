@@ -36,7 +36,7 @@ c
      1  cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
      1  cloud_frac_co2_a,rlaps_land_frac,
      1  topo,heights_3d,temp_3d,t_sfc_k,t_gnd_k,sst_k,pres_sfc_pa,
-     1  dum_3d,cldtop_m_co2,cldtop_m_tb8,cldtop_m,cvr_snow,imax,jmax,
+     1  cldtop_m_co2,cldtop_m_tb8,cldtop_m,cvr_snow,imax,jmax,
      1  kcld,klaps,istatus,r_missing_data)
 c
 c*************************************************************************
@@ -242,21 +242,20 @@ c
         ext = 'sst'
         var = 'SST'
         ilevel = 0
-        call get_laps_2dgrid(i4time,3600,i4time_nearest,EXT,var,units,
-     1comment
-     1                  ,imax,jmax,sst_k,ilevel,istat_sst)
+        call get_laps_2dgrid(i4time,3600,i4time_nearest,EXT,var
+     1                ,units,comment,imax,jmax,sst_k,ilevel,istat_sst)       
         if(istat_sst .ne. 1)then
-            write(6,*)' Warning: cannot read sst_k'
+            write(6,*)' Note: cannot read sst_k'
         endif
 
 
         do j = 1,jmax
         do i = 1,imax
           if(rlaps_land_frac(i,j) .ge. 0.5)then
-            t_gnd_k(i,j) = t_ground_k(t_sfc_k(i,j),solar_alt(i,j),solar_
-     1ha(i,j)
-     1     ,solar_dec,rlat(i,j),cvr_snow(i,j),r_missing_data,i,j,imax,jm
-     1ax)
+            t_gnd_k(i,j) = t_ground_k(t_sfc_k(i,j),solar_alt(i,j)
+     1                               ,solar_ha(i,j),solar_dec,rlat(i,j)       
+     1                               ,cvr_snow(i,j),r_missing_data,i,j
+     1                               ,imax,jmax)
           else ! water environment
             if(istat_sst .eq. 1 
      1                   .and. sst_k(i,j) .ne. r_missing_data)then     

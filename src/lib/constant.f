@@ -47,6 +47,23 @@ c
         end
 c
 c
+c
+        subroutine constant_i(a,iconst,imax,jmax)
+c
+c.....  routine to set an array to an integer constant.
+c
+        integer*4 a(imax,jmax)
+c
+        do j=1,jmax
+        do i=1,imax
+          a(i,j) = iconst
+        enddo !i
+        enddo !j
+c
+        return
+        end
+c
+c
         subroutine constant_3d(a,const,imax,jmax,kmax)
 c
 c.....  routine to set a 3d array to a real constant.
