@@ -32,8 +32,9 @@ cdis
 
         subroutine read_tsnd(i4time_sys,heights_3d,temp_3d,       ! Input
      1                   sh_3d,pres_3d,                           ! Input
-     1                   lat_pr,lon_pr,                           ! Input
+     1                   lat_pr,lon_pr,                           ! Output
      1                   lat,lon,                                 ! Input
+     1                   max_snd_grid,                            ! Input
      1                   ob_pr_t,                                 ! Output
      1                   c5_name,                                 ! Output
      1                   l_use_raob,                              ! Input
@@ -43,8 +44,8 @@ cdis
      1                   n_rass,n_snde,n_tsnd,                    ! Output
      1                   ilaps_cycle_time,                        ! Input
      1                   imax,jmax,kmax,                          ! Input
-     1                   r_missing_data                           ! Input
-     1                                  )
+     1                   r_missing_data,                          ! Input
+     1                   istatus)                                 ! Output
 
 !       1992     Steve Albers   Read RASS data from lrs files
 !       1994     Steve Albers   Withold RASS surface ob
@@ -64,28 +65,32 @@ c                               not exactly match the LAPS analysis time.
 !       1998 Feb Steve Albers   Added feature to calculate the height from
 !                               the pressure if the height is missing.
 
-!       Note that max_snd needs to be the same throughout insert_tsnd.f
-!                                                     and read_tsnd.f
-        integer*4 max_snd,max_snd_levels
-        parameter (max_snd = 30)
+!       'max_snd_obs' is the max number of rass+raob soundings and represents
+!       arrays used locally. 'max_snd_grid' is the max number of overall
+!       soundings and represents output arrays.
+ 
+        integer*4 max_snd_obs,max_snd_levels
+        parameter (max_snd_obs = 30)
         parameter (max_snd_levels = 128)
 
         real*4 surface_rass_buffer
         parameter (surface_rass_buffer = 30.)
 
 
-!       Declarations
-        integer nlevels(max_snd),nlevels_good(max_snd)
-        real lat_pr(max_snd)
-        real lon_pr(max_snd)
-        real elev_pr(max_snd)
-        integer num_pr(max_snd)
+!       Output arrays
+        real lat_pr(max_snd_grid)
+        real lon_pr(max_snd_grid)
+        real bias_htlow(max_snd_grid)
+        real ob_pr_t (max_snd_grid,kmax) ! Vertically interpolated RASS temp
+        character*5 c5_name(max_snd_grid) 
 
-        real bias_htlow(max_snd)
-        real ob_pr_t (max_snd,kmax) ! Vertically interpolated RASS temp
-        real ob_pr_ht_obs(max_snd,max_snd_levels)
-        real ob_pr_t_obs(max_snd,max_snd_levels)
-        character*5 c5_name(max_snd) 
+!       Local arrays
+        integer num_pr(max_snd_obs)
+        integer nlevels(max_snd_obs),nlevels_good(max_snd_obs)
+        real ob_pr_ht_obs(max_snd_obs,max_snd_levels)
+        real ob_pr_t_obs(max_snd_obs,max_snd_levels)
+        real elev_pr(max_snd_obs)
+
         character*9 a9time
 
         real*4 heights_3d(imax,jmax,kmax)
@@ -109,16 +114,23 @@ c                               not exactly match the LAPS analysis time.
 
         write(6,*)' Subroutine read_tsnd -- reads RASS and Sondes'
 
+        if(max_snd_obs .gt. max_snd_grid)then
+            write(6,*)' Error in read_tsnd: max_snd_obs > max_snd_grid'       
+     1               ,max_snd_obs,max_snd_grid
+            istatus = 0
+            return
+        endif
+
         n_rass = 0
         n_snde = 0
         n_tsnd = 0
 
-        do i_pr = 1,max_snd
+        do i_pr = 1,max_snd_obs
             nlevels(i_pr) = 0
             nlevels_good(i_pr) = 0
         enddo
 
-        do i_pr = 1,max_snd
+        do i_pr = 1,max_snd_obs
             do level = 1,kmax
                 ob_pr_t(i_pr,level)  = r_missing_data
             enddo
@@ -146,10 +158,10 @@ c                               not exactly match the LAPS analysis time.
             go to 590
         endif
 
-        call open_lapsprd_file(12,i4time_file,ext,istatus)
+        call open_lapsprd_file_read(12,i4time_file,ext,istatus)
         if(istatus .ne. 1)go to 590
 
-400     do i_pr = 1,max_snd
+400     do i_pr = 1,max_snd_obs
 
 340         continue
 
@@ -196,8 +208,8 @@ c311                format(1x,i6,i4,5f8.1)
      1         j_ob .ge. 1 .and. j_ob .le. jmax .and.
      1         nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
      1                                                  )then
-                write(6,*)'  In Bounds - Vertically Interpolating the Ra
-     1ss'
+                write(6,*)'  In Bounds - Vertically Interpolating the '
+     1                   ,'Rass'
             else
                 write(6,*)'  Out of Bounds or < 2 levels',nlevels_in
                 nlevels_good(i_pr)=0 ! This effectively throws out the Rass
@@ -226,7 +238,8 @@ c311                format(1x,i6,i4,5f8.1)
      1                          nlevels_good,
      1                          lat_pr,lon_pr,i_ob,j_ob,
      1                          imax,jmax,kmax,
-     1                          max_snd,max_snd_levels,r_missing_data,      
+     1                          max_snd_obs,max_snd_levels,
+     1                          r_missing_data,      
      1                          heights_3d)
 
 c                   write(6,411,err=412)ista,i_pr,level
@@ -253,7 +266,8 @@ c       1                ,t_diff
      1                         nlevels_good,
      1                         lat_pr,lon_pr,i_ob,j_ob,
      1                         imax,jmax,kmax,
-     1                         max_snd,max_snd_levels,r_missing_data,     
+     1                         max_snd_obs,max_snd_levels,
+     1                         r_missing_data,     
      1                         temp_3d,heights_3d,pres_3d)
 
                     call interp_laps_to_rass(ob_pr_ht_obs,ob_pr_t_obs,
@@ -263,7 +277,8 @@ c       1                ,t_diff
      1                         nlevels_good,
      1                         lat_pr,lon_pr,i_ob,j_ob,
      1                         imax,jmax,kmax,
-     1                         max_snd,max_snd_levels,r_missing_data,
+     1                         max_snd_obs,max_snd_levels,
+     1                         r_missing_data,
      1                         sh_3d,heights_3d,pres_3d)
 
                     tvir = ob_pr_t_obs(i_pr,level) + t_diff
@@ -291,7 +306,8 @@ c       1                ,t_diff
 
         enddo  ! i_pr
         write(6,*)' WARNING: Used all space in temperature arrays'
-        write(6,*)' while reading RASS.  Check max_snd: ',max_snd
+        write(6,*)' while reading RASS.  Check max_snd_obs: '
+     1            ,max_snd_obs
 
 500     continue ! Exit out of loop when file is done
 
@@ -300,7 +316,7 @@ c       1                ,t_diff
 
 
         goto600
-590     write(6,*)' Error opening LRS (or equivalent) file'
+590     write(6,*)' Warning, could not open current LRS file'
         
 600     CONTINUE
         write(6,*) ' Read ',n_rass,' RASS temperature sounding(s)'
@@ -335,10 +351,10 @@ c
 
         i4time_snd = i4time_nearest
 
-        call open_lapsprd_file(12,i4time_snd,ext,istatus)
+        call open_lapsprd_file_read(12,i4time_snd,ext,istatus)
         if(istatus .ne. 1)go to 890
 
-        do i_pr = n_rass+1,max_snd
+        do i_pr = n_rass+1,max_snd_obs
 
 640         continue
 
@@ -404,8 +420,8 @@ c611                format(1x,i6,i4,5f8.1)
      1         j_ob .ge. 1 .and. j_ob .le. jmax .and.
      1         nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
      1                                                  )then
-                write(6,*)'  In Bounds - Vertically Interpolating the So
-     1nde'
+                write(6,*)'  In Bounds - Vertically Interpolating the '
+     1                   ,'Sonde'
             else
                 write(6,*)'  Out of Bounds or < 2 levels ',nlevels_in
                 nlevels_good(i_pr)=0 ! This effectively throws out the Sonde
@@ -427,7 +443,8 @@ c611                format(1x,i6,i4,5f8.1)
      1                         nlevels_good,
      1                         lat_pr,lon_pr,i_ob,j_ob,
      1                         imax,jmax,kmax,
-     1                         max_snd,max_snd_levels,r_missing_data,
+     1                         max_snd_obs,max_snd_levels,
+     1                         r_missing_data,
      1                         heights_3d)
 
 c                   write(6,711,err=712)ista,i_pr,level
@@ -454,7 +471,7 @@ c       1                ,t_diff
      1                      nlevels_good,
      1                      lat_pr,lon_pr,i_ob,j_ob,
      1                      imax,jmax,kmax,
-     1                      max_snd,max_snd_levels,r_missing_data,
+     1                      max_snd_obs,max_snd_levels,r_missing_data,       
      1                      temp_3d,heights_3d,pres_3d)
 
                 tamb = ob_pr_t_obs(i_pr,level) + t_diff
@@ -476,7 +493,8 @@ c       1                ,t_diff
 
         enddo  ! i_pr
         write(6,*)' ERROR: Used all space in temperature arrays'
-        write(6,*)' while reading sondes.  Check max_snd: ',max_snd
+        write(6,*)' while reading sondes.  Check max_snd_obs: '
+     1            ,max_snd_obs
 
 800     continue ! Exit out of loop when file is done
         n_snde = i_pr - 1 - n_rass 
@@ -490,5 +508,6 @@ c       1                ,t_diff
         write(6,*) ' Read ',n_snde,' temperature sonde(s)'
         write(6,*) ' Read ',n_tsnd,' Total RASS+Sonde sounding(s)'
 
+        istatus = 1
         RETURN
         end
