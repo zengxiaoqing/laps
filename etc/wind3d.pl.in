@@ -203,7 +203,7 @@ print "@greplines[4]";
 print "\n";
 
 # RMS Ob-First Guess Grid differences
-print "Obs-First Guess difference stats, after QC (m/s):\n";
+print "Obs-First Guess difference stats, before QC (m/s):\n";
 @greplines = grep /BIAS\/RMS/, @lines;
 @greplines = grep /FG/, @greplines;
 print "@greplines[0]";
