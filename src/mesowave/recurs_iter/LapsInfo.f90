@@ -25,6 +25,14 @@ SUBROUTINE LapsInfo
   PRINT*,'N = ',n
   PRINT*,'Nxy without fictitous: ',nx,ny
 
+  ! QC: threshold value check:
+  qc_cons(1) = 10.0		! T
+  qc_cons(5) = 10.0		! DT
+  qc_cons(2) = 5.0		! U
+  qc_cons(3) = 5.0		! V
+  qc_cons(4) = 400.0		! MSL P
+  qc_cons(6) = 400.0		! RED P
+  
   ! Check:
   IF ((n(1) .GT. mx) .OR. (n(2) .GT. my) .OR. &
       (n(3) .GT. mt) .OR. (n(4) .GT. mv)) THEN

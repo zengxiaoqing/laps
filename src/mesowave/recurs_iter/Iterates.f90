@@ -69,6 +69,12 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 	      stdv(id) = stdv(id)+(o(1,iobs)-y0)**2
 	      no_v = no_v+1
 
+	      IF (ABS(o(1,iobs)-y0) .GT. qc_cons(id)) THEN
+		 PRINT*,'Threshold QC: ',o(1,iobs),y0,id,o(2:4,iobs)
+		 o(1,iobs) = y0
+		 w(iobs) = 0.0
+	      ENDIF
+
 	      ! Bad QC:
               IF ((id .EQ. 1) .OR. (id .EQ. 5)) THEN
                  IF (ABS(o(1,iobs)-y0) .GT. 10.0) THEN
@@ -83,11 +89,6 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
                  ENDIF
 	      ENDIF
 
-	      if (id .EQ. 4) then
-	        if (abs(y0-o(1,iobs)) .GT. amx) amx = abs(y0-o(1,iobs))
-		print*,'MSLP: ',y0,o(1,iobs), &
-		(y0-o(1,iobs))/100.0
-		endif
 	   ENDIF
 
         ENDDO
