@@ -997,16 +997,16 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
                ---  2.5  Test data case  ---
 
      Tar files containing test data (called 'lapsdata*') are available that 
-     contain successive runs of laps data on the Colorado domain using the
-     namelist settings from the repository. The tar files include intermediate
-     files from the 'ingest' code plus outputs from the 'analysis' code. 
-     Several consecutive analysis cycles are posted, one file per cycle. 
-     Included are the contents of the 'lapsprd', 'time', 'static', and 'log' 
-     subdirectories under 'data' or $LAPS_DATA_ROOT. The log files are useful
-     for diagnosing any differences in output you may observe. The contents 
-     of the various directories are outlined elsewhere in this README file. 
-     The data was created using the latest software release. Our users can 
-     download this data at this URL:
+     contain a snapshot of several hour's worth of laps data from the Colorado 
+     domain using namelist settings taken from the repository. The tar files 
+     include intermediate files from the 'ingest' code plus outputs from 
+     the 'analysis' code. Several consecutive analysis cycles are posted with
+     one file per cycle. Included are the contents of the 'lapsprd', 'time', 
+     'static', and 'log' subdirectories under 'data' or $LAPS_DATA_ROOT. The 
+     log files are useful for diagnosing any differences in output you may 
+     observe. The contents of the various directories are outlined elsewhere 
+     in this README file. The data was created using the latest software 
+     release. Our users can download this data at this URL:
 
            'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
