@@ -110,7 +110,7 @@
                 wt_2d(i,j) = 1.0 / rinst_err**2 ! Set differently for boundary?
                 sumsq_inst = sumsq_inst + 1./wt_2d(i,j)
                 n_obs_valid = n_obs_valid + 1
-                to_2d(i,j) = to_2d_in(i,j)
+!               to_2d(i,j) = to_2d_in(i,j)
 
 !               Fill data structure element
                 obs_barnes_valid(n_obs_valid)%i = i
@@ -120,7 +120,7 @@
                 obs_barnes_valid(n_obs_valid)%value(1) = to_2d_in(i,j)
 
             else
-                to_2d(i,j) = r_missing_data
+!               to_2d(i,j) = r_missing_data
             endif
 
           enddo ! j
