@@ -23,7 +23,7 @@ use English;
 use Getopt::Std;
 require "timelocal.pl";
 
-use vars qw($opt_h $opt_j $opt_H $opt_o $opt_q);
+use vars qw($opt_h $opt_j $opt_H $opt_o $opt_q $opt_a);
 getopt('hj');
 
 
@@ -48,7 +48,7 @@ if($fxa_sys!=0){
 
 my $month = (gmtime())[4];
 my $sfcfile = "$LAPS_DATA_ROOT/lapsprd/model/sfc/sfc$month"."b";
-my $S_MODEL = "smsRun 1 $LAPSROOT/model/bin/sfm";
+my $S_MODEL = "$LAPSROOT/model/bin/rams";
 my $P_MODEL = "$LAPSROOT/model/bin/sfm";
 
 $ENV{MPI_ROOT}="/home/lapb/jedwards/mpich/bin/";
@@ -57,6 +57,7 @@ $ENV{PATH}="$ENV{MPI_ROOT}/bin:$LAPSROOT/bin:$ENV{PATH}";
 if($opt_H>0){
     print "USAGE: $0 [-Hqo] [-h] hour [-j] day\n";
     print "  where -H : print this message and exit\n";
+    print "        -a : create sfc and varfiles only\n";
     print "        -q : quick mode start the model assuming all preliminaries are complete\n";
     print "        -o : output to tty instead of $LAPS_LOG_PATH\n";
     print "        -h hour : Run for hour instead of current hour\n";
@@ -505,17 +506,18 @@ unless($opt_q>0){
     
     print @r_out;
 
-    if(grep(/ISAN complete/,@r_out)==0){
-	print STDERR "sfm ISAN failed - aborting\n";
-	exit -1;
-    }
+
     my $varfil = "  VARFIL = ";
     foreach (@r_out){
 	if(/^\s*Writing var file (.*)\.g1\s*/){
 	    $varfil .= "\'$1\',\n      ";
 	}
     }
-    
+    if($varfil eq "  VARFIL = "){
+	print STDERR "sfm ISAN failed - aborting\n";
+	exit -1;
+    }
+       
 #
 # Should this be a history or an initial run?
 #   
@@ -623,13 +625,10 @@ unless($opt_q>0){
     my $child_pid=0;
     $child_pid = &postproc("$yy$jjj$hh",$LAPSROOT,$rl,$freq,$lockfile);
 
-#my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/postprod.pl $yy$jjj$hh 3600 $rl &";
-#system($sys);
-#print "$sys\n";
-
 #
 # Finally run the model
 #
+    exit if(defined($opt_a));
 
     print "Starting the model $child_pid\n";
 
