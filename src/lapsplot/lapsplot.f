@@ -30,7 +30,7 @@ cdis
 cdis
 cdis
         subroutine lapsplot(field,ni,nj,clow,chigh,cint,lat,lon
-     1                  ,c_metacode,c_file,c_domain,jdot_in)
+     1                  ,c_metacode,jdot_in)
 
 !       implicit none
 
@@ -43,9 +43,7 @@ cdis
 !       COMMON/LABS/IA(2),NC,NREP,NCRT,ILAB,NULBLL,SIZEL,SIZEM,SIZEP
         common /ERROR/ IFRAME, IERRR
 
-        character*(*)   c_file
-        character*(*)   c_domain
-
+        character*9   c_file
         integer*4       idummy(6),ioffm,istatus
 
         integer*4 ni,nj,i
@@ -98,6 +96,8 @@ cdis
      1  plm1(2),plm2(2),plm3(2),plm4(2)
 
         character*2 c_metacode
+
+        c_file = 'nest7grid'
 
         call get_r_missing_data(r_missing_data, istatus)
         if(istatus .ne. 1)then

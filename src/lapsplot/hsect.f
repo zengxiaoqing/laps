@@ -711,9 +711,9 @@ c       include 'satellite_dims_lvd.inc'
                     write(6,*)' Reading cloud omega'
                     var_2d = 'COM'
                     ext = 'lco'
-                    call get_laps_2dgrid(i4time_3dw,0,i4time_nearest,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,w_2d,k_mb,istatus)
+                    call get_laps_2dgrid(i4time_3dw,0,i4time_nearest
+     1                                  ,ext,var_2d,units_2d,comment_2d
+     1                                  ,NX_L,NY_L,w_2d,k_mb,istatus)
                     call mklabel33(k_level
      1                     ,' Cloud Omega ubar/s',c33_label)       
 
@@ -946,9 +946,9 @@ c       include 'satellite_dims_lvd.inc'
 !           Read in surface temp data
             var_2d = 'T'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time,i4time_temp,
-     1      ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,temp_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time,i4time_temp       
+     1                          ,ext,var_2d,units_2d,comment_2d
+     1                          ,NX_L,NY_L,temp_2d,0,istatus)
 
             if(istatus .ne. 1)then
                 write(6,*)' LAPS Sfc Temp not available'
@@ -1434,23 +1434,22 @@ c
 !               if(lapsplot_pregen)then
                 if(.true.)then
                     write(6,*)' Getting pregenerated radar data file'
-
                     var_2d = 'R'
                     ext = 'lmr'
-                    i4time_hour = (i4time_radar+laps_cycle_time/2)
-     1                          /laps_cycle_time * laps_cycle_time
-                    call make_fnam_lp(i4time_hour,asc9_tim_r,istatus)
-                    call get_laps_2d(i4time_hour,ext,var_2d
-     1                              ,units_2d,comment_2d,NX_L,NY_L
-     1                              ,radar_array,istatus)
+!                   i4time_hour = (i4time_radar+laps_cycle_time/2)
+!    1                          /laps_cycle_time * laps_cycle_time
+                    call get_laps_2dgrid(i4time_ref,10000,i4time_radar
+     1                                  ,ext,var_2d,units_2d,comment_2d       
+     1                                  ,NX_L,NY_L,radar_array,0
+     1                                  ,istatus)
 
                 else
                     call get_max_ref(grid_ra_ref,NX_L,NY_L,NZ_L
      1                              ,radar_array)
-                    call make_fnam_lp(i4time_radar,asc9_tim_r       
-     1                                                      ,istatus)
 
                 endif
+
+                call make_fnam_lp(i4time_radar,asc9_tim_r,istatus)
 
 !               Display R field
 
@@ -1735,7 +1734,7 @@ c
             else ! Near Realtime - look for snow accumulation files
                 if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
                    !Find latest time of radar data
-                    if('nest7grid' .ne. 'STORMFEST')then ! Read MHR packed data
+                    if(.true.)then ! Read MHR packed data
                         c_filespec = c_filespec_ra
                     else
                         c_filespec = c_filespec_src
@@ -2461,7 +2460,7 @@ c
 
                 call plot_cldpcp_type(b_array
      1                ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1                ,lat,lon,idum1_array,'nest7grid'
+     1                ,lat,lon,idum1_array
      1                ,NX_L,NY_L,laps_cycle_time,jdot)
 
             else ! OLD ARCHAIC CODE
@@ -2524,7 +2523,7 @@ c
 
                     call plot_cldpcp_type(pcp_type_2d
      1              ,asc9_tim,c33_label,c_type,k_level,i_overlay
-     1              ,c_display,lat,lon,idum1_array,'nest7grid'
+     1              ,c_display,lat,lon,idum1_array
      1              ,NX_L,NY_L,laps_cycle_time,jdot)
 
                 endif
@@ -2561,7 +2560,7 @@ c
 
                 call plot_cldpcp_type(pcp_type_2d
      1             ,asc9_tim,c33_label,c_type,k,i_overlay,c_display  
-     1             ,lat,lon,idum1_array,'nest7grid'
+     1             ,lat,lon,idum1_array
      1             ,NX_L,NY_L,laps_cycle_time,jdot)
 
             endif ! k_level
@@ -3345,7 +3344,8 @@ c                   cint = -1.
                write(6,725)
  725           format(/'  SELECT FIELD (VAR_2D):  '
      1          /
-     1          /'     SFC: [u,v,ps,t,td,rh,msl] ? ',$)
+     1          /'  SFC: [u,v,ps,t,td,rh,msl,th,the'       
+     1                 ,',pbe,nbe,lhe,llr,lmr,lcv] ? ',$)       
 
             endif
 
@@ -3392,16 +3392,35 @@ c                   cint = -1.
             c33_label = 'LAPS Sfc Bkgnd/Fcst  '//fcst_hhmm//' '
      1                  //ext(1:3)//'/'//var_2d(1:3)
 
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                              ,zoom,scale)       
+            call make_fnam_lp(i4_valid,asc9_tim,istatus)
 
-            call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
+            if(var_2d .ne. 'LCV')then
+                call contour_settings(field_2d,NX_L,NY_L
+     1                               ,clow,chigh,cint,zoom,scale)       
 
-            call plot_cont(field_2d,scale,clow,chigh,cint
-     1                    ,asc9_tim_t,c33_label,i_overlay,c_display
-     1                    ,lat,lon,jdot
-     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+                call plot_cont(field_2d,scale,clow,chigh,cint
+     1                        ,asc9_tim,c33_label,i_overlay,c_display
+     1                        ,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
             
+            else
+                write(6,*)' calling solid fill cloud plot'
+                n_image = n_image + 1
+                call ccpfil(field_2d,NX_L,NY_L,1.0)
+                call upcase(c33_label,c33_label)
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                if(asc_tim_9 .ne. '         ')then
+                    call i4time_fname_lp(asc9_tim,I4time_lbl,istatus)       
+                    call cv_i4tim_asc_lp(i4time_lbl,asc_tim_24,istatus)      
+                else
+                    asc_tim_24 = '                        '
+                endif
+
+                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+     1                                                    ,i_overlay)
+
+            endif
 
         elseif(c_type .eq. 'p' .or. c_type .eq. 'pm')then ! 1500m or MSL Pres
             if(c_type .eq. 'p')then
@@ -4034,8 +4053,6 @@ c                   cint = -1.
                 if(asc_tim_9 .ne. '         ')then
                     call i4time_fname_lp(asc9_tim,I4time_lbl,istatus)       
                     call cv_i4tim_asc_lp(i4time_lbl,asc_tim_24,istatus)      
-!                   asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)
-!    1                                           //' '      
                 else
                     asc_tim_24 = '                        '
                 endif
@@ -4053,7 +4070,7 @@ c                   cint = -1.
             asc9_tim_t = '         '
 
             if(c_type .eq. 'tni')then
-                write(6,*)' calling solid fill cloud plot'
+                write(6,*)' calling solid fill plot'
                 scale = 3000.
                 call ccpfil(topo,NX_L,NY_L,scale)
                 n_image = n_image + 1
@@ -4132,7 +4149,6 @@ c                   cint = -1.
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
 !                                   as dummy arguments
-!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         common /MCOLOR/mini,maxi
@@ -4210,7 +4226,7 @@ c                   cint = -1.
         elseif(c_display .eq. 'p')then ! Generate a Map background only
             c_metacode = 'm'
             call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint,lat,lon
-     1          ,c_metacode,c_file,'nest7grid',jdot)
+     1                   ,c_metacode,jdot)
             goto990
         else
             c_metacode = 'c'
@@ -4225,7 +4241,7 @@ c                   cint = -1.
             if(c_display .eq. 'r')then
                 call lapsplot(array_plot,NX_L,NY_L
      1                       ,clow,chigh,cint,lat,lon
-     1                       ,c_metacode,c_file,'nest7grid',jdot)
+     1                       ,c_metacode,jdot)
             endif
 
             c_metacode = 'c '
@@ -4278,7 +4294,7 @@ c                   cint = -1.
             endif
 
             call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint,lat,lon
-     1          ,c_metacode,c_file,'nest7grid',jdot)
+     1                   ,c_metacode,jdot)
         endif
 
 990     return
@@ -4296,7 +4312,7 @@ c                   cint = -1.
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
 !                                   as dummy arguments
-!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
+!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to hardwire
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
@@ -4356,8 +4372,7 @@ c                   cint = -1.
 
             if(c_display .eq. 'r')then
                 call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint
-     1                       ,lat,lon,c_metacode
-     1                       ,'nest7grid','nest7grid',jdot)
+     1                       ,lat,lon,c_metacode,jdot)
             endif
 
             c_metacode = 'c '
@@ -4433,7 +4448,7 @@ c                   cint = -1.
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added laps_cycle_time as dummy argument
-!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
+!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to hardwire
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
@@ -4477,8 +4492,7 @@ c                   cint = -1.
 
             if(c_display .eq. 'r')then
                 call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint
-     1                       ,lat,lon
-     1                       ,c_metacode,'nest7grid','nest7grid',jdot)
+     1                       ,lat,lon,c_metacode,jdot)
             endif
 
             c_metacode = 'c '
@@ -4527,7 +4541,7 @@ c                   cint = -1.
 
         subroutine plot_cldpcp_type(cldpcp_type_2d
      1     ,asc_tim_9,c33_label,c_field,k_level,i_overlay,c_display
-     1     ,lat,lon,ifield_2d,c_file
+     1     ,lat,lon,ifield_2d
      1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, laps_cycle_time as
@@ -4536,7 +4550,7 @@ c                   cint = -1.
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
-        character*(*) c_file
+        character*9 c_file
 
         character cldpcp_type_2d(NX_L,NY_L)
         real*4 lat(NX_L,NY_L)
@@ -4551,6 +4565,8 @@ c                   cint = -1.
         include 'icolors.inc'
 
         logical l_obs
+
+        c_file = 'nest7grid'
 
         write(6,1505)c33_label,asc_tim_9
 1505    format(2x,a33,2x,a9)

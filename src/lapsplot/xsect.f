@@ -94,6 +94,9 @@ cdis
      1       /' ','R','*','Z','I','H',' ',' ',' ',' ',' '/
 
 
+        character*1 c_prodtype
+        character*4 fcst_hhmm
+
         character*4 c4_log
 
         real*4 dum1_array(NX_L,1)
@@ -238,7 +241,7 @@ cdis
         character*4 c4_string
         character*7 c7_string
         character*24 asc_tim_24
-        character*9 asc_tim_9,c9_string
+        character*9 asc_tim_9,a9time,c9_string
         character*20 c20_sta
         integer*4 ity
 
@@ -305,8 +308,6 @@ c read in laps lat/lon and topo
             write(6,*)' Error getting LAPS domain'
             return
         endif
-
-        if(lun .eq. 5)call logit('nest7grid')
 
         i_graphics_overlay = 0
         i_label_overlay = 0
@@ -745,7 +746,7 @@ c read in laps lat/lon and topo
 
                     endif
 
-                    call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
+                    call make_fnam_lp(i4time_3dw,a9time,istatus)
 
                 elseif(c_field .eq. 'w ' .or. c_field .eq. 'om')then ! Omega
                     write(6,*)' Reading Omega/W'
@@ -771,7 +772,7 @@ c read in laps lat/lon and topo
 
                     endif
 
-                    call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
+                    call make_fnam_lp(i4time_3dw,a9time,istatus)
 
                 endif
             endif
@@ -1040,7 +1041,7 @@ c read in laps lat/lon and topo
             do k = NZ_C,1,-1
             do i = 1,NX_C
                 if(u_vert(i,k) .ne. r_missing_data)then
-                    call uv_to_disp(        u_vert(i,k),
+                    call uv_to_disp(u_vert(i,k),
      1                              v_vert(i,k),
      1                              field_vert(i,k),
      1                              speed_dum)
@@ -1082,7 +1083,7 @@ c read in laps lat/lon and topo
             cint = 10.
             i_contour = 1
             c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
-            call make_fnam_lp(i4time_radar,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_radar,a9time,istatus)
 
         elseif(c_field .eq. 'ri' .or. c_field .eq. 'rj' 
      1    .or. c_field .eq. 'rs')then ! Reflectivity Image
@@ -1132,30 +1133,66 @@ c read in laps lat/lon and topo
 
             goto1510
 
-1500        write(6,*)' Getting Radar data via get_laps_3dgrid'
-            var_2d = 'REF'
-            ext = 'lps'
+1500        continue
 
-            call get_laps_3dgrid(i4time_get,86400,i4time_radar,
-     1          NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Could not read lps via get_laps_3dgrid'       
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+            var_2d = 'REF'
+
+            if(c_prodtype .eq. 'A')then
+                write(6,*)' Getting Radar data via get_laps_3dgrid'
+                ext = 'lps'
+
+                call get_laps_3dgrid(i4time_get,86400,i4time_radar
+     1              ,NX_L,NY_L,NZ_L,ext,var_2d
+     1              ,units_2d,comment_2d,grid_ra_ref,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Could not read lps via get_laps_3dgrid'       
+                    goto100
+                endif
+
+                call make_fnam_lp(i4time_radar,a9time,istatus)
+                c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
+
+            elseif(c_prodtype .eq. 'F')then
+                call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,grid_ra_ref
+     1                              ,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Could not read forecast ref'       
+                    goto100
+                endif
+                c33_label = 'LAPS  FUA Reflectivity '//fcst_hhmm
+     1                    //'   dbz'
+
+            else
                 goto100
+
             endif
 
 1510        continue
-
-            call make_fnam_lp(i4time_radar,asc_tim_9,istatus)
 
             if(c_field .ne. 'rs')then
                 call interp_3d(grid_ra_ref,field_vert
      1                        ,xlow,xhigh,ylow,yhigh
      1                        ,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)       
+
             else ! Get Spread Out Data
                 call interp_3d_spread
      1          (grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh,
      1           NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
             endif
 
             call set(vxmin, vxmax, vymin, vymax
@@ -1237,7 +1274,6 @@ c read in laps lat/lon and topo
             enddo ! i
 
             i_contour = 0
-            c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
 
         elseif(c_field .eq. 'cf' )then ! Cloud Gridded Image
             i_image = 1
@@ -1259,7 +1295,7 @@ c read in laps lat/lon and topo
                 write(6,*)' No cloud grid available'
             endif
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
 
             call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
@@ -1295,7 +1331,7 @@ c read in laps lat/lon and topo
                 write(6,*)' No cloud grid available'
             endif
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
 
             call interp_3dc(clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh,
      1               NX_L,NY_L,NX_C,r_missing_data)
@@ -1414,7 +1450,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 !           if(istatus .ne. 1)goto100
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1430,7 +1466,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 !           if(istatus .ne. 1)goto100
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1441,12 +1477,32 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             c33_label = 'LAPS Potl Temp (Balanced)     K  '
 
         elseif(c_field .eq. 't ')then
-            iflag_temp = 1 ! Returns Ambient Temp (K)
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
 
-            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+            if(c_prodtype .eq. 'A')then
+                iflag_temp = 1 ! Returns Ambient Temp (K)
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+                call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+
+                call make_fnam_lp(i4time_nearest,a9time,istatus)
+
+            else
+                write(6,*)' Sorry, not yet supported'
+                goto100
+
+            endif
+
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1464,7 +1520,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         elseif(c_field .eq. 'tb')then
             var_2d = 'T3'
-            call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
+            call make_fnam_lp(i4time_ref,a9time,istatus)
             ext='lt1'
 
             call get_directory('balance',directory,lend)
@@ -1475,7 +1531,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1           ,ext,var_2d,units_2d
      1           ,comment_2d,NX_L,NY_L,NZ_L,temp_3d,istatus)       
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1497,7 +1553,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 !           if(istatus .ne. 1)goto100
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1527,7 +1583,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 !           if(istatus .ne. 1)goto100
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1577,7 +1633,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                                  ,q_3d,istatus)
             if(istatus .ne. 1)goto100
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(q_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1607,12 +1663,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             ext = 'lh3'
             call get_laps_3dgrid
-     1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+     1      (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
      1          ,ext,var_2d,units_2d,comment_2d
      1                                  ,rh_3d,istatus)
             if(istatus .ne. 1)goto100
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1641,7 +1697,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                                  ,rh_3d,istatus)
             if(istatus .ne. 1)goto100
 
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -1717,7 +1773,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 cint = -0.01
             endif
             i_contour = 1
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
 
         elseif(c_field .eq. 'ic')then
 
@@ -1752,7 +1808,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = 0.
             cint = -0.1
             i_contour = 4
-            call make_fnam_lp(i4time_cloud,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_cloud,a9time,istatus)
 
         elseif(c_field .eq. 'mv')then
             iflag_slwc = 0
@@ -1785,7 +1841,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = 26.
             cint = 2.
             i_contour = 1
-            call make_fnam_lp(i4time_cloud,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_cloud,a9time,istatus)
 
         elseif(c_field .eq. 'tc')then
             iflag_slwc = 0
@@ -1804,7 +1860,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                     ,ylow,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C)
 
             i_contour = 3
-            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
 
         elseif(c_field .eq. 'tp')then
             iflag_slwc = 0
@@ -1830,7 +1886,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             endif ! pregen
 
             i_contour = 5
-            call make_fnam_lp(i4time_radar,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_radar,a9time,istatus)
 
         elseif(c_field .eq. 'ic')then
             iflag_slwc = 0
@@ -1846,15 +1902,15 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         endif ! c_field
 
-        write(6,1605)c33_label,asc_tim_9
+        write(6,1605)c33_label,a9time
 1605    format(2x,a33,2x,a9)
 
-        call lib$set_symbol('DATE_LAPSPLOT',asc_tim_9)
-        istatus = lib$set_logical('DATE_LAPSPLOT',asc_tim_9)
+        call lib$set_symbol('DATE_LAPSPLOT',a9time)
+        istatus = lib$set_logical('DATE_LAPSPLOT',a9time)
 
         c_metacode = 'c '
 
-        call i4time_fname_lp(asc_tim_9,i4time_dum,istatus)
+        call i4time_fname_lp(a9time,i4time_dum,istatus)
         call cv_i4tim_asc_lp(i4time_dum,asc_tim_24,istatus)
         asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
@@ -2791,7 +2847,6 @@ c
 
         write(6,*)
      1  ' Reading Station locations from read_sfc for labelling '
-!       1                                       ,asc_tim_9
         ext = 'lso'
         call get_directory(ext,directory,len_dir) ! Returns top level directory
         infile = directory(1:len_dir)//filename13(i4time,ext(1:3))
@@ -2964,3 +3019,85 @@ c
 
         return
         end
+
+        subroutine input_product_info(
+     1                              i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,ndim                    ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+        integer       maxbgmodels
+        parameter     (maxbgmodels=10)
+
+        integer       n_fdda_models
+        integer       l,len_dir,lfdda
+        integer       istatus
+        character*9   c_fdda_mdl_src(maxbgmodels)
+        character*(*) directory
+        character*(*) ext
+        character*20  c_model
+        character*10  cmds
+        character*1   cansw
+        character*150 c_filenames(1000)
+
+        character*1 c_prodtype
+        character*4 fcst_hhmm
+        character*9 a9time
+        character*13 a13_time
+
+        logical l_parse
+
+        write(6,*)' Subroutine input_product_info...'
+
+        write(6,1)
+ 1      format('  Product type: analysis [a], background [b]'
+     1        ,', forecast [f] ? ',$)        
+
+        read(5,2)c_prodtype
+ 2      format(a)
+
+        call upcase(c_prodtype,c_prodtype)
+
+        if(c_prodtype .eq. 'A')then
+            return
+
+        else
+            if(c_prodtype .eq. 'B')then
+                if(ndim .eq. 2)then
+                    ext = 'lgb'
+                else
+                    ext = 'lga'
+                endif
+
+            elseif(c_prodtype .eq. 'F')then
+                if(ndim .eq. 2)then
+                    ext = 'fsf'
+                else
+                    ext = 'fua'
+                endif
+
+            endif
+
+            call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory               ! O
+     1                             ,i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+        endif
+
+        return
+        end
+

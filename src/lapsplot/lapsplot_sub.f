@@ -186,6 +186,7 @@ cdis
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
      1                                  .or. c_section .eq. '2')THEN
+            zoom = 1.0
             l_atms = .false.
             call xsect(c_display,i4time_ref,lun,l_atms
 !    1                ,standard_longitude,NX_L,NY_L,NZ_L,61,NZ_L,181       

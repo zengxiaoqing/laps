@@ -234,9 +234,11 @@ C --- Do contouring
         call cpsetr ('SPV',SPVALU)
         call cpsetr ('LLS - LINE LABEL SIZE',.025/sqrt(zoom))
         call cpgetr ('LLS - LINE LABEL SIZE',clls)           
+        call cpgetr ('HLS',hls)           
         call cpsetr ('CWM',1.00/zoom)
 
-        write(6,*)'IHL/LLS/ICOL = ',IHL,clls,icol_current
+        write(6,*)'IHL/HLS/LLS/LIS/ICOL = '
+     1            ,IHL,hls,clls,lis,icol_current
 
 
         CALL CPRECT (F,NX,NX,NY,RWRK,LRWK,IWRK,LIWK)
