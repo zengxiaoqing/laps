@@ -401,7 +401,6 @@ c                      2D fields (Sfc field)
       data var  / 1001, 1016, 1048, 1049, 1040, 1088 /
       data prs  / 1008 /
 
-      istatus= 0
       n= 0
 
       do 10 i= 1,nz
@@ -504,7 +503,7 @@ c                      2D fields (Sfc field)
 
       write (6,*) 'read fgge data completely       record number= ', n
       CALL CLOSE_FGGE_FILE(ISTAT)
-      istatus= 1
+      istatus= 0 !success
 
       return
       end
