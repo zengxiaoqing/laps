@@ -43,9 +43,12 @@ c                   vi   <-----computed value (output)
         implicit none
 
         real*4 li,l1,l2,v1,v2,output, range
-
+        
         range = l2-l1
-        output = (li-l1)/range * v2 + (l2-li)/range*v1
-
+        if (range == 0.0) then
+           output = li
+        else
+           output = (li-l1)/range * v2 + (l2-li)/range*v1
+        endif
         return
         end
