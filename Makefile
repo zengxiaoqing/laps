@@ -9,7 +9,7 @@ include $(LAPSROOT)/src/include/makefile.inc
 LINK=$(LAPSROOT)/util/link.pl
 CWD = $(shell pwd)
 
-MACHDEP = config.status config.cache Makefile src/include/config.h
+MACHDEP = config.log config.status config.cache src/include/config.h
 
 LIBDIRS = src/lib \
           src/lib/bgdata \
@@ -283,9 +283,9 @@ distclean: realclean cleandirs
 	  $(MAKE) distclean ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
-	$(RM) config.cache Makefile config.status \
-	      ./util/cronfile ./etc/*.pl ./etc/*.csh ./src/include/config.h; \
-	$(RM) -r ./bin ./log 
+	$(RM) $(MACHDEP) \
+	      ./util/cronfile ./etc/*.pl ./etc/*.csh ; \
+	$(RM) -r ./bin ./log
 
 cleandirs:
 	@for dir in $(DATADIRS) ;\
