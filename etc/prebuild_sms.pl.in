@@ -1,0 +1,42 @@
+#!@PERL@
+#
+
+use strict;
+umask 002;
+use Getopt::Long;
+
+my($LAPS_SRC_ROOT,$srcdir,$SMS,$filename,$file,@lines);
+my $result = GetOptions(
+   "srcroot=s" => \$LAPS_SRC_ROOT,       # (required)
+   "srcdir=s" => \$srcdir,               # (required)
+   "smsroot=s" => \$SMS                  # (required)
+                                         );          
+print "begin prebuild_sms.pl - SMS root is $SMS\n";
+
+chdir $LAPS_SRC_ROOT/$srcdir || die "Could not cd to $LAPS_SRC_ROOT/$srcdir";
+system("pwd");
+
+system("cp $LAPS_SRC_ROOT/src/include/directives.inc .");
+
+opendir(CURRENTDIR,".");
+my @ftnfiles = grep /\.f$/, readdir CURRENTDIR;
+closedir CURRENTDIR;
+
+foreach $filename (@ftnfiles){
+    $file = truncstr($filename,2);
+    print,"file = $file\n";
+
+#   Restore original files so we can optionally run this script multiple times 
+    if (-e "$file\.f\.orig") {
+        system("cp $file.f.orig $file.f");
+    }
+
+#   Determine whether file has any SMS commands within
+    open(FILE,$filename) or die "Can't open $filename.";
+    @lines = <FILE>;
+    close FILE;
+    print "\nReading source code from file $filename\n\n";
+
+}
+
+exit;
