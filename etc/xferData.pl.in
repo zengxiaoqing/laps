@@ -1,7 +1,7 @@
 #!@PERL@
 use strict;
 #
-# Expected arguments: LAPSROOT LAPS_DATA_ROOT OUTPUTDIR
+# Expected arguments: LAPSROOT LAPS_DATA_ROOT OUTDIR
 #
 #  1 - read contents of $fcstprd/ram and $fcstprd/rsf directories
 #  2 - fill bigfile located in WFO_FCSTPRD; log errors and diagnostics
@@ -26,12 +26,14 @@ if($fxa_sys!=0){
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
 }
 
-
-
 my $fcstprd = "$LAPS_DATA_ROOT/lapsprd";
 $ENV{XFR_HOME} =     "$xfer_home";
 $ENV{FCSTPRD} =      "$fcstprd";
-$ENV{WFO_FCSTPRD}= "$ENV{FXA_DATA}/Grid/FSL/netCDF/LAPS_Grid/$OUTDIR/";        
+if($OUTDIR=~ /\//){
+  $ENV{WFO_FCSTPRD}=$OUTDIR;
+}else{
+  $ENV{WFO_FCSTPRD}= "$ENV{FXA_DATA}/Grid/FSL/netCDF/LAPS_Grid/$OUTDIR/";        
+}
 $ENV{TRANS_TBL} =    "$LAPS_DATA_ROOT/static/model/usr/public_rams2wfo.tbl";
 
 #opendir(FCSTPRD,"$LAPS_DATA_ROOT/lapsprd/fua") 
@@ -51,7 +53,7 @@ $filename =~ s#.*/##;
     $filename = "$1$2$3";
     my $yyjjjhh = "$1$2";
     my $fcsthr = $3;
-    my $logfile = "$LAPS_LOG_PATH/xferlog.$2$3";
+    my $logfile = "$LAPS_LOG_PATH/xferlog.$OUTDIR.$2$3";
 
     $fcsthr = $fcsthr + 0;             #convert string to number (02 -> 2)
     my $runtime = $yyjjjhh."00";
@@ -77,7 +79,7 @@ $filename =~ s#.*/##;
 #    print "$unixtimeRun<>$fcsthr\n";
     my $sys = "/bin/csh -c '$ENV{FXA_HOME}/bin/GridNotify $OUTDIR $inittime $fcsttime'";
 #    print "Calling $sys\n";
-    &run_sys($sys);
+    &run_sys($sys) if($ENV{FXA_HOME});
 
 #  Starting a new cycle (model run)?  Clean up previous model runs.
 
