@@ -470,14 +470,14 @@
 
      A tar file containing test data is available that contains a 1 hour
      run of laps data (intermediate files from the 'ingest' code plus outputs
-     from the 'analysis' code). If we have enough disk space, then several
-     consecutive hours are posted, one hour per file. Included are the 
-     contents of the 'data/lapsprd', 'data/time' and 'data/log' directories 
-     from an FSL machine. The log files are useful for diagnosing any 
-     differences in output you may observe. The contents of the various 
-     directories are outlined below in this README file. The data was created 
-     using the latest software release. Our users can download this data at 
-     'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
+     from the 'analysis' code). Several consecutive hours are posted, one 
+     hour per file (e.g. 'm3', 'm2', 'm1', '0' represent consecutive hours
+     of data). Included are the contents of the 'data/lapsprd', 'data/time' 
+     and 'data/log' directories from an FSL machine. The log files are useful 
+     for diagnosing any differences in output you may observe. The contents of
+     the various directories are outlined below in this README file. The data 
+     was created using the latest software release. Our users can download 
+     this data at 'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
      If you want to test the 'analysis' code only, you might initiate
      appopriate portions of the 'sched.pl' to run for the test data at 
@@ -754,12 +754,12 @@
 	Updated: 16 Jan 1997.  Pete Stamus (stamus@fsl.noaa.gov)
 
    For the laps_sfc.x (LSX) process, perform the following between untarring 
-   the tar file and running 'install_laps'.
+   the tar file and running the localization.
 
    STATIC FILES
 
      1. Before running the surface analysis, the surface static files will
-	have to be created.  The 'install_laps' script does this by running 
+	have to be created.  The localization script does this by running 
         'build_sfc_static.x' in  '.../static/surface'.  Two files are
 	created in the '.../static/surface' directory that the surface
 	analysis uses: 'pbl_top.dat' and 'drag_coef.dat'
@@ -767,6 +767,7 @@
         Note that 'build_sfc_static.x' is run *after* the 'static.nest7grid'
 	file (located in '.../data/static' and containing latitude, 
 	longitude, and elevation for the domain) is created for your location.
+        Both are run within the localization script.
 
      2. In 'build_sfc_static', the friction parameter has been configured
 	by automatically producing a scaling factor based on the range of
@@ -779,7 +780,7 @@
      1. A still fairly simple quality control is included in the surface
 	package.  If you wish to skip over this step, you can change 
     	the 'laps_sfc.inc' file in '.../source/sfc' prior to compilation of 
-        the surface analysis by the 'install_laps' script (or recompilation
+        the surface analysis by the localization script (or recompilation
 	by hand at a later date).
 
    PRESSURE REDUCTION
@@ -990,9 +991,9 @@ April 1996
 ----------  3.0 DESCRIPTION OF LAPS PROCESSES  --------------------------------
 
        The following section contains information on which LAPS processes 
-   generate which LAPS output products. Other static data (like lat and lon  
-   grids) are not included in this list. These are the processes contained 
-   within the LAPS tar file and built with the 'install_laps' command. 
+   generate which LAPS output products. Static data (like lat and lon  
+   grids) are included in section 3.1. These are the processes contained 
+   within the LAPS tar file and built with the localization script.
 
           "Inter data" is an ascii file containing non-gridded data 
    (intermediate data files). Examples of this are surface obs, profiler obs, 
