@@ -32,7 +32,6 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
 cdis
 cdis
 cdis
@@ -42,14 +41,15 @@ cdis
 cdis
 cdis
 cdis
-      subroutine report_change (data_in, data, plevel,mdf,ii,jj,kk)
+cdis
+      subroutine report_change (data_in, data, p_3d,mdf,ii,jj,kk)
 
       implicit none
 
       integer ii,jj,kk
       real data_in (ii,jj,kk)
       real data (ii,jj,kk)
-      real plevel (kk)
+      real p_3d (ii,jj,kk)
       real mdf ! missing data flag
 
 
@@ -83,9 +83,9 @@ c     this block is planned for a future suboutine.
          return
       endif     
 
-      call check_nan1(plevel,kk,istatus)
+      call check_nan3(p_3d,ii,jj,kk,istatus)
       if(istatus.ne.1)then 
-         write(6,*) 'NaN in var:plevel routine:report_change'
+         write(6,*) 'NaN in var:p_3d routine:report_change'
          return
       endif
 
@@ -94,7 +94,7 @@ c     this block is planned for a future suboutine.
          write(6,*) 'NaN in var:mdf routine:report_change'
          return
       endif     
-      write(6,*) 'data_in, data, plevel, mdf check okay'
+      write(6,*) 'data_in, data, p_3d, mdf check okay'
 
  
 
@@ -128,7 +128,8 @@ c     this block is planned for a future suboutine.
               delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
               call moment_b (diff_data,counter,ave,adev,sdev,
      1             var,skew,curt,istatus)
-              write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
+              write(6,*) 'level ',k, 'approx pressure ',
+     1             p_3d(1,1,k), ave, ' +/-', sdev,' g/g Q'  
            endif
            
         enddo
@@ -139,7 +140,7 @@ c     this block is planned for a future suboutine.
         write(6,*) 'Avg delta moisture/Avg moisture for level*100'
         
         do k = 1,kk
-           write(6,*)plevel(k), delta_moisture(k)*100.,'%'
+           write(6,*) 'level ',k, delta_moisture(k)*100.,'%'
         enddo
         write(6,*)
         write(6,*)

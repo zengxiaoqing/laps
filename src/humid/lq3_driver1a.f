@@ -602,7 +602,7 @@ c     ****  execute raob step if switch is on
          
          write(6,*) 'Reporting effects of RAOB insertion'
          
-         call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+         call report_change (data_in, data, p_3d, mdf,ii,jj,kk)
 
          do i = 1,ii
             do j = 1,jj
@@ -684,10 +684,10 @@ c     check fields after lsin call
          
          write(6,*) 'Reporting incremental boundary layer effects'
          
-         call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
          
          write(6,*) 'Reporting net change'
-         call report_change (data_start, data, plevel, mdf, ii,jj,kk)
+         call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
 
          do i = 1,ii
             do j = 1,jj
@@ -818,10 +818,10 @@ c     CHECKING PROCESS OUTPUT
       
       write(6,*) 'Reporting changes from TPW data types'
       
-      call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+      call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
       
       write(6,*) 'Reporting net change'
-      call report_change (data_start, data, plevel, mdf, ii,jj,kk)
+      call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
       
       do i = 1,ii
          do j = 1,jj
@@ -907,10 +907,10 @@ c     make call to goes moisture insertion
             
             write (6,*) 'GOES step complete, effects logged.'
             
-            call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+            call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
             
             write(6,*) 'Reporting net change'
-            call report_change (data_start, data, plevel, mdf, ii,jj,kk)
+            call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
             
             do i = 1,ii
                do j = 1,jj
@@ -1023,10 +1023,10 @@ c     ! still cloudy...put in for albers
 
          
          write (6,*) 'Reporting cloud effects on analysis'
-         call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
          
          write(6,*) 'Reporting net change'
-         call report_change (data_start, data, plevel, mdf, ii,jj,kk)
+         call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
          
          do i = 1,ii
             do j = 1,jj
@@ -1054,7 +1054,7 @@ c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
          
          write(6,*) ' mod_4dda loop complete'
          
-         call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
          
       endif
       
@@ -1173,7 +1173,7 @@ c     generate lh3 file (RH true, RH liquid)
       
       write (6,*) 'Reporting overall changes to moisture'
       
-      call report_change (data_start, data, plevel,mdf,ii,jj,kk)
+      call report_change (data_start, data, p_3d,mdf,ii,jj,kk)
       
       return
       
