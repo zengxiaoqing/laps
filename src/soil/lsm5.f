@@ -33,10 +33,10 @@ cdis
 
       implicit none
 
-      include   'lapsparms.cmn'
       integer*4  istatus
+      integer    nx_l,ny_l
        
-      Call get_laps_config('nest7grid',IStatus)
+      call get_grid_dim_xy(NX_L,NY_L,istatus)
       if(istatus.eq.1)then
         write(6,*)'LAPS Parameters obtained'
       else
@@ -44,7 +44,7 @@ cdis
         write(6,*)'Terminating LAPS-LSM5. Soil Moisture'
         stop
       end if
-      call lsm5_sub(NX_L_CMN,NY_L_CMN)
+      call lsm5_sub(NX_L,NY_L)
       stop
       end
 

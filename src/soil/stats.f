@@ -4,7 +4,7 @@
      &                  istatus)
 c
 c
-      dimension data(n)
+      dimension data(9)
       parameter (r_missing_data = +1e37)
       istatus=0
       if(n.le.1)then

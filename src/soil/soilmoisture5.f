@@ -144,10 +144,17 @@ C	    IF(OLDWEA.LE.0.)XTHI=THI     ! I'm Not Sure  about this statement
           Laps_WFZ(i,j)= Z
   	  Laps_IN(I,J) = IN
 	  Laps_Wx(I,J) = OLDWEA
-	  THSPER = THS / 100.0 
-	  Laps_SMC_3D(I,J,1) = THI1/ THSPER
-	  Laps_SMC_3D(I,J,2) = THI2/ THSPER
-	  Laps_SMC_3D(I,J,3) = THI3/ THSPER
+          if(THS.eq.0.0)then
+             Laps_SMC_3D(I,J,1) = 0.0
+             Laps_SMC_3D(I,J,2) = 0.0
+             Laps_SMC_3D(I,J,3) = 0.0
+          else
+	     THSPER = THS / 100.0 
+	     Laps_SMC_3D(I,J,1) = THI1/ THSPER
+	     Laps_SMC_3D(I,J,2) = THI2/ THSPER
+	     Laps_SMC_3D(I,J,3) = THI3/ THSPER
+
+          endif
 
         else
 
@@ -156,10 +163,17 @@ C	    IF(OLDWEA.LE.0.)XTHI=THI     ! I'm Not Sure  about this statement
 	  Laps_WFZ(I,J) = hor1*2.54
           Laps_IN(i,j)=0.1  !Not sure about this
 	  Laps_Wx(I,J) = 1./24. 
-	  THSPER = ths / 100.0 
-	  Laps_SMC_3D(I,J,1) = ths/ THSPER
-	  Laps_SMC_3D(I,J,2) = ths/ THSPER
-	  Laps_SMC_3D(I,J,3) = ths/ THSPER
+
+          if(THS.eq.0.0)then
+             Laps_SMC_3D(I,J,1) = 0.0
+             Laps_SMC_3D(I,J,2) = 0.0
+             Laps_SMC_3D(I,J,3) = 0.0
+          else
+	     THSPER = ths / 100.0 
+	     Laps_SMC_3D(I,J,1) = ths/ THSPER
+	     Laps_SMC_3D(I,J,2) = ths/ THSPER
+	     Laps_SMC_3D(I,J,3) = ths/ THSPER
+          endif
 
         endif
 

@@ -38,11 +38,9 @@ c type boundaries at this time.
 c
        implicit none
 
-       integer*4 ndat
-       parameter (ndat = 125)
        integer*4 nx_l,ny_l,nz
        real*4 data(nx_l,ny_l,nz)
-       real*4 temp(ndat)
+       real*4 temp(9)
        real*4 r_low,r_high
        real*4 r_missing_data
        real*4 ave,adev,sdev,var,skew,curt
@@ -74,12 +72,13 @@ c
      &data(ii,jj,k).le.r_high)then
                    n=n+1
                    temp(n) = data(ii,jj,k)
-             endif
+                endif
+
              enddo
              enddo
 
              if(n.ge.2)then
-                call moment(temp,ndat,ave,adev,sdev,var,skew,curt,
+                call moment(temp,n,ave,adev,sdev,var,skew,curt,
      &                      istat)
                 data(i,j,k)=ave
                 icnts=icnts-1
@@ -87,6 +86,7 @@ c
                 data(i,j,k)=r_missing_data
                 icntm=icntm-1
              endif
+
           endif
 
        enddo !i
@@ -134,5 +134,3 @@ c
 c
 1000  return
       end
-
-
