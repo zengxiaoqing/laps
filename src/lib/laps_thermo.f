@@ -170,11 +170,11 @@ cdis
         call move(pbe_2d,out_multi_2d(1,1,1),NX_L,NY_L)
         call move(nbe_2d,out_multi_2d(1,1,2),NX_L,NY_L)
         call move(    li,out_multi_2d(1,1,3),NX_L,NY_L)
-        call move(    si,out_multi_2d(1,1,4),NX_L,NY_L)
-        call move(    tt,out_multi_2d(1,1,5),NX_L,NY_L)
-        call move(     k,out_multi_2d(1,1,6),NX_L,NY_L)
-        call move(   lcl,out_multi_2d(1,1,7),NX_L,NY_L)
-        call move(   wb0,out_multi_2d(1,1,8),NX_L,NY_L)
+        call move( si_2d,out_multi_2d(1,1,4),NX_L,NY_L)
+        call move( tt_2d,out_multi_2d(1,1,5),NX_L,NY_L)
+        call move(  k_2d,out_multi_2d(1,1,6),NX_L,NY_L)
+        call move(lcl_2d,out_multi_2d(1,1,7),NX_L,NY_L)
+        call move(wb0_2d,out_multi_2d(1,1,8),NX_L,NY_L)
 
 !       add var arrays
         ext = 'lst'
@@ -446,7 +446,36 @@ c       WRITE(6,15)
             write(6,*)' Stop in sindx'
         endif
 
+!       Fill WB array (imported from old code)
+ 	DO 100 N=1,NLEVEL                                            
+            IF(TD(N).EQ.-99.0)THEN                                         
+                Q(N)=-99.                                                      
+                WB(N)=-99.                                                     
+  	        IF(IO.GE.2)WRITE(6,3)N,P(N),T(N),TD(N),Q(N),WB(N)    
+                IFL=1                                                
+                TD(N)=T(N)-15.0                                      
+                IF(T(N).LT.-40.)TD(N)=T(N)                           
+            ENDIF                                                           
+                                                                          
+ 	    Q(N)=(ES(TD(N))*EPSILN)/P(N)                             
+ 	    Q(N)=max(Q(N),0.0001)                                    
+ 	    W(N)=Q(N)/(1.-Q(N))                                      
+ 	    IOUT=IO                                                  
+ 	    IF(N.LE.1)IOUT=IO                                        
+ 	    WB(N)=WTBLB(P(N),T(N),W(N),0)                            
+ 	    IF(WB(N).LT.TD(N))WB(N)=TD(N)                            
+ 	    IF(WB(N).GT.T(N)) WB(N)=T(N)                             
+ 	    IF(IO.GE.2.AND.IFL.EQ.0)WRITE(6,3)N,P(N),T(N),TD(N),Q(N),WB(N) 
+            IFL=0                                                            
+ 3	    FORMAT(' LVL(',I2,')',3F10.1,F11.6,F10.2)                      
+ 100	CONTINUE                                                             
+
 !       Here is the new section imported (from old code) for TT,SI,K
+C                                                                         
+C  CALCULATE LIFTED INDEX                                                 
+ 	CALL ITPLV(P,T,NLEVEL,500.,TMAN50,IO)                                   
+!	WREQ50=ES(TP500)/500.                                                   
+!	IF(WREQ50.LT.WMEAN)GOTO40                                               
 
 C                                                                         
 C  CALCULATE SHOWALTER INDEX                                              

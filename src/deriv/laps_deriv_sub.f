@@ -598,10 +598,12 @@ c read in laps lat/lon and topo
 !       DERIVED RADAR/PRECIP STUFF
         if(istat_radar_3dref .eq. 1)then ! LMT
 
-            if(l_evap_radar .and. istatus_rh .eq. 1
+            if(l_evap_radar 
+!    1             .and. istatus_rh .eq. 1
      1             .and. istat_radar_3dref_orig .eq. 1)then ! Reread radar data
-                write(6,*)' Rereading radar data to apply evaporation/fi
-     1ll'
+
+                write(6,*)
+     1              ' Rereading radar data to apply evaporation/fill'
 
 !               Get time of radar file of the indicated appropriate extension
                 call get_filespec(radarext_3d_cloud(1:3),2,c_filespec
