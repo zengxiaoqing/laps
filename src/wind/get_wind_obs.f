@@ -39,16 +39,6 @@
         real ob_pr_u (MAX_PR,NZ_L) ! Vertically interpolated Profiler wind
         real ob_pr_v (MAX_PR,NZ_L) ! Vertically interpolated Profiler wind
 
-
-!       Barnes Profiler analysis
-
-        real weights_pr(NX_L,NY_L)                                      
-        real max_weights_pr(NX_L,NY_L,NZ_L)                             
-
-        real sum_pr_u (NX_L,NY_L,NZ_L)                                  
-        real sum_pr_v (NX_L,NY_L,NZ_L)                                  
-        real sum_wt_pr (NX_L,NY_L,NZ_L)                                 
-
 !       Laps Analysis Grids
         real grid_laps_wt(NX_L,NY_L,NZ_L)                               
         real grid_laps_u(NX_L,NY_L,NZ_L)                                
@@ -121,8 +111,6 @@
         if(istat_radar_vel .eq. 1 .and. n_vel_grids .gt. 0)then
             call prof_anal(istat_radar_vel                         ! I
      1          ,n_vel_grids                                       ! I
-     1          ,sum_pr_u,sum_pr_v,sum_wt_pr,max_weights_pr        ! I
-     1          ,weights_pr                                        ! L
      1          ,ob_pr_u,ob_pr_v                                   ! I
      1          ,grid_ra_vel,lat,lon,rlat_radar,rlon_radar,rheight_radar ! I
      1          ,i2_missing_data                                   ! I
@@ -224,8 +212,6 @@
 
         subroutine prof_anal(istat_radar_vel                            ! I
      1          ,n_vel_grids                                            ! I
-     1          ,sum_pr_u,sum_pr_v,sum_wt_pr,max_weights_pr             ! I
-     1          ,weights_pr                                             ! O
      1          ,ob_pr_u,ob_pr_v                                        ! I
      1          ,grid_ra_vel,lat,lon,rlat_radar,rlon_radar,rheight_radar! I
      1          ,i2_missing_data                                        ! I

@@ -3,8 +3,8 @@
      1      vr_obs_unfltrd,vr_nyq,v_nyquist_in
      1     ,upass1,vpass1                                        ! Output
      1     ,n_var,n_fnorm                                        ! Input
-     1     ,uanl,vanl,varanl                                     ! Output
-     1     ,wt_p,wt_p_spread,weight_bkg_const                    ! Input/Local
+     1     ,uanl,vanl                                            ! Output
+     1     ,wt_p,weight_bkg_const                                ! Input/Local
      1     ,max_radars
      1     ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar
      1     ,u_laps_bkg,v_laps_bkg                                ! Input/Local
