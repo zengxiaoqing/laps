@@ -58,6 +58,7 @@ c     internal variables
       real g                    ! gravity
       real r                    ! gas constant of dry air
       real kkk                  ! (r/cp) where cp is the specific heat
+
       save g,r,kkk              ! inserted save to be safe, probably not needed
 
       data g / 980.665/         !  cm/s**2  (cgs units)
@@ -84,7 +85,7 @@ c     section is for better boundary layer analysis
       
       do j = 1,jj
          do i = 1,ii
-            do k = 2,kk-1
+            do k = 2,kk-1  !note that n2(,,k) end points are not filled.
                
                n2(i,j,k) = (g/lt1dat(i,j,k) )**2 * (plevel(k)/r) *
      1              (
@@ -107,7 +108,7 @@ c     now decide where the "height of the boundary layer" is
 
 c     search upward for n2(k+1) being negative, then interpolate there
 
-            do k = 1,kk-1
+            do k = 2,kk-2       ! avoid using n2(,,k) endpoints, (not filled)
                   x1 = plevel(k)
                   y1 = n2(i,j,k)
 
@@ -115,7 +116,7 @@ c     search upward for n2(k+1) being negative, then interpolate there
      1              .and. n2(i,j,k+1) .lt. 0.0) then
 
                   x2 = plevel(k+1)
-                  y2 = n2(i,j,k+1)
+                  y2 = n2(i,j,k+1) 
 c     bail out of loop here to not affect regions above 1st inversion
                   go to 111
 
