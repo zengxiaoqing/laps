@@ -328,11 +328,11 @@ c
 
       if(namelist_parms%l_hybrid_first_gate)then
           if(elevation_deg .lt. 1.0)then     ! < 1.0
-              hybrid_range = 50.
+              hybrid_range = 50000.
           elseif(elevation_deg .lt. 2.0)then ! Between 1.0 and 2.0
-              hybrid_range = 28.
+              hybrid_range = 28000.
           elseif(elevation_deg .lt. 3.0)then ! Between 2.0 and 3.0
-              hybrid_range = 18.
+              hybrid_range = 18000.
           else
               hybrid_range = 0.
           endif
