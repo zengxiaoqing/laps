@@ -29,15 +29,16 @@ cdis
 cdis
 cdis
 cdis
-       subroutine rsr (i4time_in, rad, ii,jj,kk,ngoes, istatus)
+       subroutine rsr (i4time_in, rad, ii,jj,kk,ngoes, 
+     1                 istatus)
 
 
        implicit none
 
 
+       integer ii,jj,kk, i4time_in, istatus
        real rad (ii,jj,kk)
        real local_rad_data (ii,jj,19)
-       integer ii,jj,kk, i4time_in, istatus
        integer ngoes
        character*150 ext
        character*256 dir
@@ -52,7 +53,11 @@ cdis
        integer i4time
 
 
+
        istatus = 0 ! bad
+
+
+
 
        ext = 'lsr'
        call get_directory('lsr',dir,len)
