@@ -285,6 +285,17 @@ c       include 'satellite_dims_lvd.inc'
         c_vnt_units = namelist_parms%c_vnt_units
         c_units_type = namelist_parms%c_units_type
 
+!       Surface Temperature Ranges
+        if(namelist_parms%l_discrete)then
+            sfctf_h = 120.
+        else
+            sfctf_h = 125.
+        endif
+
+        sfctf_l = -20.
+        sfctdf_h = 120.
+        sfctdf_l = -20.
+
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus)       
 
         i_overlay = 0
@@ -1432,11 +1443,19 @@ c       include 'satellite_dims_lvd.inc'
                 chigh = 1100.
                 cint = 0.
             elseif(var_2d(1:3) .eq. 'PDM')then
-                clow = 0.
-                chigh = 8000.
-                cint = 1000.
-                units_2d = 'FT'
-                scale = 1. / ft_per_m
+                if(namelist_parms%c_pbl_depth_units .eq. 'english')then
+                    clow = 0.
+                    chigh = 8000.
+                    cint = 1000.
+                    units_2d = 'FT'
+                    scale = 1. / ft_per_m
+                else ! 'metric'
+                    clow = 0.
+                    chigh = 2400.
+                    cint = 400.
+                    units_2d = 'M'
+                    scale = 1. 
+                endif
             elseif(var_2d(1:3) .eq. 'VNT')then
                 if(c_vnt_units .eq. 'KT-FT')then
                     clow = 150.
@@ -4020,7 +4039,7 @@ c                   cint = -1.
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
+                call ccpfil(field_2d,NX_L,NY_L,sfctf_l,sfctf_h,'hues'       
      1                     ,n_image,1e-0,'hsect',namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -4073,8 +4092,7 @@ c                   cint = -1.
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-!               call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
-                call ccpfil(field_2d,NX_L,NY_L,125.,-20.,'hues'
+                call ccpfil(field_2d,NX_L,NY_L,sfctdf_h,sfctdf_l,'hues'       
      1                     ,n_image,1e-0,'hsect',namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -4110,8 +4128,8 @@ c                   cint = -1.
 
             scale = 1.
 
-            clow = -20.
-            chigh = +125.
+            clow = sfctf_l
+            chigh = sfctf_h
             cint = 0.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
@@ -4320,7 +4338,7 @@ c                   cint = -1.
                 units_2d = 'cm'
 
             elseif(var_2d .eq. 'PDM')then 
-                if(c_units_type .eq. 'english')then
+                if(namelist_parms%c_pbl_depth_units .eq. 'english')then       
                     units_2d = 'FT'
                     scale = 1. / ft_per_m
                 endif
@@ -4399,9 +4417,14 @@ c                   cint = -1.
                 if(var_2d .eq. 'LLR' .or. var_2d .eq. 'LMR')then
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
      1                         ,n_image,scale,'hsect',namelist_parms)        
-                elseif(var_2d .eq. 'TSF' .or. var_2d .eq. 'DSF')then
-                    call ccpfil(field_2d,NX_L,NY_L,-20.0,125.0,'hues'
-     1                         ,n_image,scale,'hsect',namelist_parms) 
+                elseif(var_2d .eq. 'TSF')then
+                    call ccpfil(field_2d,NX_L,NY_L,sfctf_l,sfctf_h      
+     1                         ,'hues',n_image,scale,'hsect'
+     1                         ,namelist_parms) 
+                elseif(var_2d .eq. 'DSF')then
+                    call ccpfil(field_2d,NX_L,NY_L,sfctdf_h,sfctdf_l
+     1                         ,'hues',n_image,scale,'hsect'
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'LWO')then
                     call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
      1                         ,'linear',n_image,scale,'hsect'
