@@ -51,6 +51,7 @@
  MAX_RADARS_CMN=5,        
  ref_base_cmn=-10.,       
  ref_base_useable_cmn=0., 
+ r_hybrid_first_gate_cmn=0.,
  maxstns_cmn=1500,         
  N_PIREP_CMN=3000,         
  vert_rad_meso_cmn=1,     
@@ -121,6 +122,10 @@ c                        thus acting as a ground clutter and noise filter.
 c                        Areas with reflectivities < 'ref_base_useable_cmn'
 c                        are generally reset to 'ref_base_cmn' (no echo 
 c                        value).
+c                      
+c r_hybrid_first_gate_cmn - Flag to mask out gates near the radar for low tilts to 
+c                           emulate what happens with the hybrid reflectivity scan.
+c                           Allowed values are 0.0 (flag off) or 1.0 (flag on).
 c
 c fdda_model_source_cmn - Enter the forecast model if you'd like to use
 c                         one for 4DDA (as a substitute for lga/lgb input
