@@ -1107,8 +1107,11 @@ c
 !       and data/static/satellite_lvd.nl). As many as 'maxsat' 2d fields
 !       can be returned depending on configuration specified in satellite_lvd.nl.
 !       max_sat is defined in src/include/satellite_dims_lvd.inc.
-
-        character*9 asc9_tim
+!
+!       John Smart              1999
+!       Added multiple lvd file search for best domain cover for files that
+!       are within i4tol. If all files have the same domain cover (like 100%)
+!       then the first (and closest in time) file is returned.
 
         character*150 dir
         character*150 satdir
@@ -1121,14 +1124,25 @@ c
         character*4 LVL_COORD_2d
 
         real*4 field_2d(imax,jmax)
+        real*4 field_2d_save(imax,jmax,10)
 
         integer max_files
         parameter (max_files = 600)
+
+        character*9 asc9_tim
+        character*9 asc9_time(max_files)
+
+        real*4 pctmiss(max_files)
+        real*4 pctmnmiss
+        real*4 r_missing_data
+        integer jf,jr,imiss
+
         character*255 c_filespec
         character*120 c_fnames(max_files)
         integer i4times(max_files)
         integer i_selected(max_files)
         character*6 c_sat_id          !input satellite id's known to system
+        logical lcont
 
         ext = 'lvd'
         call get_directory(ext,dir,ldir)
@@ -1146,6 +1160,7 @@ c
         lsdir=index(satdir,' ')-1
         c_filespec = satdir(1:lsdir)//'*.'//ext(1:lext)
 
+        call get_r_missing_data(r_missing_data,istat)
         call get_file_times(c_filespec,max_files,c_fnames
      1                     ,i4times,i_nbr_files_ret,istatus)
         if(istatus .ne. 1)then
@@ -1153,6 +1168,9 @@ c
      1              ,'from get_file_times'
            return
         endif
+
+        lcont=.true.
+        jf=0
 
 50      i4_diff_min = 999999999
         do j = 1,i_nbr_files_ret
@@ -1166,14 +1184,18 @@ c
            write(6,*)' No remaining files found within ',i4tol
      1              ,' sec time window ',ext(1:5),var_2d
 
-           istatus = 0
-           return
+           lcont=.false.
+
+c          istatus = 0
+c          return
         endif
 
         do j=1,i_nbr_files_ret
 
            i4_diff=abs(i4times(j)-i4time_needed)
-           if(i4_diff .eq. i4_diff_min .and. i_selected(j) .eq. 0)then
+           if(i4_diff.eq.i4_diff_min.and.
+     1            i_selected(j).eq.0.and.
+     1            i4_diff.le.i4tol)               then
 
               i_selected(j) = 1
               lvl_2d = 0
@@ -1193,26 +1215,60 @@ c
                  go to 50
 
 c we need to expect some missing data in the lvd fields.
+c determine which lvd file within the time window has the best
+c domain coverage.
 c
-c             else   !  istatus = 1, check for missing data
-c                do il = 1,imax
-c                do jl = 1,jmax
-c                   if(field_2d(il,jl) .eq. r_missing_data)then
+              else   !  istatus = 1, check for domain cover maxima
+
+                 jf=jf+1
+                 imiss=0
+                 do il = 1,imax
+                 do jl = 1,jmax
+                    if(field_2d(il,jl) .eq. r_missing_data)then
+                       imiss=imiss+1
+
 c                           write(6,*)il,jl,
 c    1                        ' Missing Data Value Detected in 2D Field'
 c                           istatus = -1
 c                           return
-c                   endif
-c                enddo ! j
-c                enddo ! i
+
+                    endif
+                    field_2d_save(il,jl,jf)=field_2d(il,jl)
+                 enddo ! j
+                 enddo ! i
+
+                 pctmiss(jf)=float(imiss)/float(imax*jmax)
+                 asc9_time(jf)=asc9_tim
 
               endif
 
-              return
+c             return
+
+              if(lcont)goto 50
 
            endif ! File is closest unread file to desired time
 
         enddo ! ith file
+
+        pctmnmiss=1.0
+        if(jf.gt.1)then
+           do i=1,jf
+              if(pctmiss(i).lt.pctmnmiss)then
+                 jr=i
+                 pctmnmiss=pctmiss(i)
+              endif
+           enddo
+        elseif(jf.eq.1)then
+           jr=jf
+        elseif(jf.eq.0)then
+           istatus = 0
+           return
+        endif
+
+        call move(field_2d_save(1,1,jr),field_2d,imax,jmax)
+        print*,'Returning requested field for ', asc9_time(jr),
+     1' from get_laps_lvd'
+        istatus = 1
 
         return 
         end
