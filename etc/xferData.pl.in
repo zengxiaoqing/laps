@@ -42,7 +42,7 @@ $ENV{TRANS_TBL} =    "$LAPS_DATA_ROOT/static/model/usr/public_rams2wfo.tbl";
 #  Globbing returns complete paths.  We will operate on only the most
 #  recent file.   $filename =~ s#.*/## returns the basename.
 
-my @filenames = <$LAPS_DATA_ROOT/lapsprd/fsf/9*>;
+my @filenames = <$LAPS_DATA_ROOT/lapsprd/fsf/0*>;
 @filenames = reverse sort @filenames;
 my $filename = $filenames[0];
 $filename =~ s#.*/##;
@@ -73,7 +73,7 @@ $filename =~ s#.*/##;
 
     &run_sys("$xfer_home/xfer_model.exe $filename >> $logfile");
 #    print "$filename\n";
-    &run_sys("chmod go+w $ENV{WFO_FCSTPRD}/19*"); 
+    &run_sys("chmod go+w $ENV{WFO_FCSTPRD}/20*"); 
 #    print "$unixtimeRun<>$fcsthr\n";
     my $sys = "/bin/csh -c '$ENV{FXA_HOME}/bin/GridNotify $OUTDIR $inittime $fcsttime'";
 #    print "Calling $sys\n";
