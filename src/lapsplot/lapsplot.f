@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
         subroutine lapsplot(field,ni,nj,clow,chigh,cint,plot_parms
-     1                     ,lat,lon,c_metacode,jdot_in)
+     1                     ,namelist_parms,lat,lon,c_metacode,jdot_in)       
 
         include 'lapsplot.inc'
 
@@ -118,7 +118,8 @@ cdis
                 write(6,*)' Skipping map plot - already done with image'       
 
             else ! set up supmap for plot
-                call lapsplot_setup(ni,nj,lat,lon,jdot_in)
+                call lapsplot_setup(ni,nj,lat,lon,jdot_in
+     1                             ,namelist_parms)      
 
             endif
 
@@ -170,11 +171,14 @@ cdis
         end
 
 
-        subroutine lapsplot_setup(ni,nj,lat,lon,jdot_in)
+        subroutine lapsplot_setup(ni,nj,lat,lon,jdot_in,namelist_parms)       
 
 !       implicit none
 
 !       include 'lapsparms.cmn'
+
+        include 'lapsplot.inc'
+
         common /supmp1/ dummy,part
         common /supmp6/ umin,umax,vmin,vmax
         real*4 dummy(8),part
@@ -303,12 +307,14 @@ c       set up supmap for plot
         write(6,*)' lapsplot_setup: IFRAME = ',IFRAME,' JDOT = '
      1                                   ,jdot_in,' ',c6_maproj
 
-!       call MAPINT
+        call MAPINT
 
 !       call GSCR(1,0,0.9,1.0,0.9)
 !       call GSCR(1,1,0.,0.,0.)
 
-        call MAPSTC('OU','US')
+        call MAPSTC('OU','PS')
+        call MAPSTI('C6',5)
+        call MAPSTI('DO',0)
 
         if(c6_maproj .eq. 'plrstr')then
             polat = std_lat2
@@ -336,6 +342,7 @@ c       set up supmap for plot
 
         endif
 
+        call MAPINT
 
         map_mode = 2
 
@@ -350,10 +357,14 @@ c       set up supmap for plot
             jdot = 0
         endif
 
-        call MAPSET('CO',PLM1,PLM2,PLM3,PLM4)
+        call MAPSTI('C6',icol_sta)
+
+        call MAPSET('PO',PLM1,PLM2,PLM3,PLM4)
+
+        call MAPINT
 
         call draw_county_map(PLM3,PLM4,jproj,polat,polon,rrot,jdot
-     1                      ,icol_sta,icol_cou,ni,nj)
+     1                      ,icol_sta,icol_cou,ni,nj,namelist_parms)
 
 !       Set up colors, draw the state map?
  
