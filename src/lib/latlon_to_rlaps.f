@@ -521,17 +521,14 @@ c
 
 !...........................................................................
 
-!     We can uncomment this after maproj is in library...
+      erad=6367000.
 
-      write(6,*)' check_domain: test of latlon_to_xy not yet in place'
-      write(6,*)'               implement this when maproj.f is in lib'       
+      call latlon_to_xy(lat(1,1),lon(1,1),erad,x1,y1)
+      call latlon_to_xy(lat(2,1),lon(2,1),erad,x2,y2)
 
-!     call latlon_to_xy(lat(1,1),lon(1,1),x1,y1)
-!     call latlon_to_xy(lat(2,1),lon(2,1),x2,y2)
+      dist = sqrt((x2-x1)**2 + (y2-y1)**2)
 
-!     dist = sqrt((x2-x1)**2 + (y2-y1)**2)
-
-!     write(6,*)'grid_spacing_m according to latlon_to_xy is:',dist
+      write(6,*)'grid_spacing_m according to latlon_to_xy is:',dist
       
 !...........................................................................
 

@@ -113,6 +113,7 @@ SRC	= readwritelaps.c \
           make_ssh.f \
           make_td.f \
           make_fnam_lp.f \
+          map_proj.f \
           meanlapse.f \
           meanpres.f \
           move.f \
