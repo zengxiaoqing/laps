@@ -656,6 +656,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         character*3 ext
         character*8 c8_obstype
         character*150 directory
+        character*150 filename
         character*13 filename13
 
 !       Plot Temperature Obs  ***********************************************
@@ -669,10 +670,17 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         lun = 32
         ext = 'tmg'
         call get_directory(ext,directory,len_dir)
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1  ,status='old',err=41)
 
-        td = r_missing_data
+        filename = directory(1:len_dir)//filename13(i4time,ext(1:3))
+        call s_len(filename,len_file)
+
+        open(lun,file=filename(1:len_file),status='old',err=31)
+        go to 32
+
+ 31     write(6,*)' Could not open ',filename(1:len_file)
+        go to 41
+
+ 32     td = r_missing_data
         p = r_missing_data
         dir = r_missing_data
         spd_kt = r_missing_data
@@ -681,8 +689,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         nobs_temp = 0
 
         do while (.true.) ! Count the temperature obs
-            read(32,*,end=41,err=50)ri,rj,rk,t_k,c8_obstype
- 50         continue
+            read(32,*,end=41,err=36)ri,rj,rk,t_k,c8_obstype
+ 36         continue
 
             ri = ri + 1.
             rj = rj + 1.
