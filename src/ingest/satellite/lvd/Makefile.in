@@ -26,17 +26,17 @@ INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
 
 # Define local library name, this houses the module's code
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
-           $(LAPSROOT)/src/lib/goesinav/libgoesinav.a  \
-           $(LAPSROOT)/src/lib/nav/libnav.a  \
-           $(LAPSROOT)/src/lib/util/libutil.a \
-           $(LAPSROOT)/src/lib/satellite/libsatellite.a
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a \
+           $(LAPSROOT)/src/lib/satellite/libsatellite.a \
+           $(LAPSROOT)/src/lib/goesinav/libgoesinav.a \
+           $(LAPSROOT)/src/lib/nav/libnav.a \
+           $(LAPSROOT)/src/lib/util/libutil.a
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
-             $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a  \
-             $(LAPSROOT)/src/lib/nav/libdebugnav.a  \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a \
-             $(LAPSROOT)/src/lib/satellite/libdebugsatellite.a
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a \
+             $(LAPSROOT)/src/lib/satellite/libdebugsatellite.a \
+             $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a \
+             $(LAPSROOT)/src/lib/nav/libdebugnav.a \
+             $(LAPSROOT)/src/lib/util/libdebugutil.a
 
 OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
 
