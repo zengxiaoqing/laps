@@ -9,14 +9,18 @@
 #
 use strict;
 use English;
-use vars qw($opt_s $opt_i $opt_d $opt_t $opt_w $opt_c $opt_m $opt_h);
+use vars qw($opt_s $opt_i $opt_d $opt_t $opt_w $opt_c $opt_m $opt_h $opt_q $opt_Q);
 use Getopt::Std;
 use File::Copy 'cp';
 use Cwd;
 
-getopts('s:i:d:t:w:hmc');
+getopts('s:i:d:t:w:q:Q:hmc');
 
 umask 002;
+
+# We need to make sure ncgen is accessible for gridgen_model.exe
+
+$ENV{PATH}="$ENV{PATH}:/NETCDF//bin";
 
 # --------------- Notes for command line inputs -------------------------------
 # opt_s is LAPS_SRC_ROOT override
@@ -41,6 +45,9 @@ umask 002;
 # by perl module mkdatadirs in laps_tools.pm. It removes Makefile dependence.
 #
 # The -m and -c options cannot be used simultaneously.
+#
+# opt_q qsub project name command line input for localize_domain.pl
+# opt_Q Qsub project name command line input for localize_domain.pl
 # -----------------------------------------------------------------------------
 
 
@@ -59,19 +66,17 @@ $LAPS_SRC_ROOT = $opt_s if( $opt_s);
 $LAPSINSTALLROOT = $opt_i if( $opt_i);
 $LAPS_DATA_ROOT = $opt_d if( $opt_d);
 
-my $logname;
+my $logname = "log";
 
 #This should take care of laps and wrfsi. Use LAPS type variables thereafter.
 if($domain_type eq "laps"){
    $LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if( $ENV{LAPS_SRC_ROOT} && !defined $LAPS_SRC_ROOT);
    $LAPSINSTALLROOT = $ENV{LAPSINSTALLROOT} if( $ENV{LAPSINSTALLROOT} && !defined $LAPSINSTALLROOT);
    $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if( $ENV{LAPS_DATA_ROOT} && !defined $LAPS_DATA_ROOT);
-   $logname="log";
 }elsif($domain_type eq "wrfsi"){
    $LAPS_SRC_ROOT = $ENV{SOURCE_ROOT} if( $ENV{SOURCE_ROOT} && !defined $LAPS_SRC_ROOT);
    $LAPSINSTALLROOT = $ENV{INSTALLROOT} if( $ENV{INSTALLROOT} && !defined $LAPSINSTALLROOT);
    $LAPS_DATA_ROOT = $ENV{MOAD_DATAROOT} if( $ENV{MOAD_DATAROOT} && !defined $LAPS_DATA_ROOT);
-   $logname="silog"
 }else{
    die "\nUnknown domain type entered with -w command line input: $domain_type.
           You have two options:
@@ -309,7 +314,7 @@ if( defined($LAPS_TEMPLATE) ){
         @filelist = readdir TEMPDIR;
         closedir TEMPDIR;
         foreach (@filelist){
-           if( ! /^\./){
+           if( ! /^\./ && ! /dataroot/ && ! /domain/ ){
               print "Copy $LAPS_TEMPLATE/$_ to $LAPS_DATA_ROOT/static \n";
               system("cp -pr $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
            }
@@ -322,6 +327,8 @@ if( defined($LAPS_TEMPLATE) ){
    print "No template subdirectory. All roots equal(?): $all_roots_equal.\n";
 }
 
+require "$LAPSINSTALLROOT/etc/run_sys.pm";
+
 if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
     print "Running $LAPSINSTALLROOT/etc/localize_domain.pl\n";
 }elsif ( -e "LAPS_SRC_ROOT/etc") {chdir "$LAPS_SRC_ROOT/etc" or die "Can't chdir to LAPS INSTALL or SRC_ROOTs $!\n";
@@ -330,11 +337,29 @@ if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
 # --------------------------------------------------------------------------------------
 # ****************************** Run localize_domain.pl ******************************
 # --------------------------------------------------------------------------------------
+my $command;
 if( $opt_m ){
    print "--no_ggm switch on\n";
-   system("@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type --no_ggm='t' > $LAPS_DATA_ROOT/$logname/localize_domain.log");
+   $command = "@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type --no_ggm='t' > $LAPS_DATA_ROOT/$logname/localize_domain.log";
+
+}elsif(defined $opt_q){
+
+   $command = "@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type --qspn=$opt_q > $LAPS_DATA_ROOT/$logname/localize_domain.log";
+
+}elsif(defined $opt_Q){
+
+   $command = "@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type --Qspn=$opt_Q > $LAPS_DATA_ROOT/$logname/localize_domain.log";
+
 }else{
-   system("@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type > $LAPS_DATA_ROOT/$logname/localize_domain.log"); }
+
+   $command = "@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type > $LAPS_DATA_ROOT/$logname/localize_domain.log";
+
+}
+
+print "running localize_domain.pl with this command\n";
+print "$command\n";
+
+run_sys::run_sys($command);
 
 if( $all_roots_equal eq "T" && -e "$DATAROOT/$DOMAIN_NAME/data_loc" ){
     print "copy data_loc/static and data_loc/cdl to data\n";
