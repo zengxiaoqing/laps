@@ -33,7 +33,7 @@ cdis
         subroutine interp_rass_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
      1                             t_diff,
      1                             t_interp,
-     1                             i_pr,level,
+     1                             i_pr,level,l_3d,
      1                             nlevels_obs,
      1                             lat_pr,lon_pr,i_ob,j_ob,
      1                             ni,nj,nk,
@@ -48,6 +48,8 @@ cdis
         integer nlevels_obs(max_rs)
         real ob_pr_ht_obs(max_rs,max_rs_levels)
         real ob_pr_t_obs(max_rs,max_rs_levels)
+
+        logical l_3d ! Option requiring obs to be near the grid point
 
         real*4 heights_3d(ni,nj,nk)
 
@@ -76,6 +78,43 @@ cdis
 
                 t_interp = ob_pr_t_obs(i_pr,i_obs)   * frach
      1                   + ob_pr_t_obs(i_pr,i_obs-1) * fracl
+
+!               Start of experimental section
+
+                t_lapse = (ob_pr_t_obs(i_pr,i_obs) 
+     1                  -  ob_pr_t_obs(i_pr,i_obs-1)) 
+     1                  / (h_upper - h_lower) 
+
+                h_upper_diff = h_upper - heights_3d(i_ob,j_ob,level)
+                h_lower_diff = h_lower - heights_3d(i_ob,j_ob,level)
+
+                if(abs(h_upper_diff) .lt. abs(h_lower_diff))then
+                    height_ob      = h_upper
+                    height_ob_diff = h_upper_diff
+                    temp_ob        = ob_pr_t_obs(i_pr,i_obs) 
+
+                else
+                    height_ob      = h_lower
+                    height_ob_diff = h_lower_diff
+                    temp_ob        = ob_pr_t_obs(i_pr,i_obs-1) 
+
+                endif
+
+                rk_ob = height_to_zcoord2(height_ob,heights_3d,ni,nj,nk       
+     1                                   ,i_ob,j_ob,istatus)
+
+                if(abs(rk_ob - float(level)) .gt. 0.5 .AND. l_3d
+     1                                                .AND. .false.
+     1                                                             )then       
+                   t_interp = r_missing_data
+                   return
+                endif 
+
+                t_interp2 = temp_ob - height_ob_diff * t_lapse
+
+                write(6,*)' t_interp, t_interp2 ',t_interp, t_interp2
+
+!               End of experimental section
 
 !               Correct for the time lag
                 t_interp = t_interp + t_diff

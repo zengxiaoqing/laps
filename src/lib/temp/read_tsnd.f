@@ -37,7 +37,7 @@ cdis
      1                   max_snd_grid,max_snd_obs,                ! Input
      1                   ob_pr_t,                                 ! Output
      1                   c5_name,c4_obstype,                      ! Output
-     1                   l_use_raob,                              ! Input
+     1                   l_use_raob,l_3d,                         ! Input
      1                   i4_window_raob_file,                     ! Input
 !    1                   t_maps_inc,                              ! Input
      1                   bias_htlow,                              ! Output
@@ -107,7 +107,7 @@ c                               not exactly match the LAPS analysis time.
         character ext*31
         character*255 c_filespec
 
-        logical l_use_raob
+        logical l_use_raob,l_3d
 
 !       Initialize
 
@@ -238,7 +238,7 @@ c311                format(1x,i6,i4,5f8.1)
      1                          t_diff,
      1                          ob_pr_t(i_pr,level),
      1                          i_pr,
-     1                          level,
+     1                          level,l_3d,
      1                          nlevels_good,
      1                          lat_pr,lon_pr,i_ob,j_ob,
      1                          imax,jmax,kmax,
@@ -445,7 +445,7 @@ c611                format(1x,i6,i4,5f8.1)
      1                         t_diff,
      1                         ob_pr_t(i_pr,level),
      1                         i_pr,
-     1                         level,
+     1                         level,l_3d,
      1                         nlevels_good,
      1                         lat_pr,lon_pr,i_ob,j_ob,
      1                         imax,jmax,kmax,

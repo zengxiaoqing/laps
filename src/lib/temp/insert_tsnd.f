@@ -85,9 +85,11 @@ cdis
         character*5 c5_name(max_snd_grid) 
         character*4 c4_obstype(max_snd_grid) 
 
-        logical l_qc,l_flag_vv,l_good_tsnd(max_snd_grid),l_use_raob
+        logical l_qc,l_flag_vv,l_good_tsnd(max_snd_grid),l_use_raob,l_3d
 
         include 'tempobs.inc'
+
+        l_3d = .false.
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
@@ -114,7 +116,7 @@ cdis
      1                   max_snd_grid,max_snd_obs,            ! Input
      1                   tsnd,                                ! Output
      1                   c5_name,c4_obstype,                  ! Output
-     1                   l_use_raob,                          ! Input
+     1                   l_use_raob,l_3d,                     ! Input
      1                   i4time_raob_window,                  ! Input
 !    1                   t_maps_inc,                          ! Input
      1                   bias_htlow,                          ! Output
@@ -286,6 +288,7 @@ cdis
      1      ,grid_spacing_m,max_snd_grid                       ! Input
      1      ,temp_obs,max_obs                                  ! Input
      1      ,r_missing_data                                    ! Input
+     1      ,l_3d                                              ! Input
      1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
 
         if(istatus .ne. 1)then
@@ -303,6 +306,7 @@ cdis
      1      ,grid_spacing_m,max_snd_grid                       ! Input
      1      ,temp_obs,max_obs                                  ! Input
      1      ,r_missing_data                                    ! Input
+     1      ,l_3d                                              ! Input
      1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
 
 !       Original Version        Steve Albers
@@ -318,8 +322,6 @@ cdis
 
 !       These arrays are passed in
         real*4 bias_3d(ni,nj,nk)
-        real*4 wt_3d(ni,nj,nk)
-        real*4 bias_obs_3d(ni,nj,nk)
         real*4 bias_tsnd(max_snd_grid,nk)
         real*4 wt_tsnd(max_snd_grid,nk)
 
@@ -331,8 +333,6 @@ cdis
 
         write(6,*)
         write(6,*)' Subroutine analyze_tsnd'
-
-        l_3d = .false.
 
         if(.false.)then ! Insert a single TSND
           do i_tsnd = 1,n_tsnd
@@ -375,10 +375,9 @@ cdis
      1               ,max_snd_grid                           ! Input
      1               ,l_good_tsnd,n_tsnd                     ! Inputs
      1               ,bias_tsnd                              ! Input
+     1               ,temp_obs,max_obs                       ! Input
      1               ,bias_3d                                ! Output
-     1               ,bias_obs_3d                            ! Dummy
      1               ,l_analyze,l_3d                         ! Output
-     1               ,wt_3d                                  ! Dummy
      1               ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1               ,weight_bkg_const                       ! Input
      1               ,n_fnorm                                ! Input
@@ -420,10 +419,9 @@ cdis
      1                   ,max_snd_grid                           ! Input
      1                   ,l_good_tsnd,n_tsnd                     ! Inputs
      1                   ,bias_tsnd                              ! Input
+     1                   ,temp_obs,max_obs                       ! Input
      1                   ,bias_3d                                ! Output
-     1                   ,bias_obs_3d                            ! Input
      1                   ,l_analyze,l_3d                         ! Output/Input
-     1                   ,wt_3d                                  ! Local
      1                   ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
@@ -451,6 +449,10 @@ cdis
 
         dimension fnorm(0:n_fnorm)
 
+        include 'tempobs.inc'
+
+        write(6,*)' Subroutine Barnes_univariate_shell'
+
         do k = 1,nk
 
             l_analyze(k) = .false.
@@ -466,6 +468,7 @@ cdis
 
         enddo ! k
 
+        write(6,*)' filling bias_obs_3d array from bias soundings'
 
         do i_tsnd = 1,n_tsnd
 
@@ -485,7 +488,7 @@ cdis
                 l_analyze(k) = .true.
 
                 write(6,71)i,j,k,bias_obs_3d(i,j,k),wt_3d(i,j,k)
-71              format(1x,3i3,2e11.4)
+71              format(1x,3i4,2e11.4)
 
             endif ! We have an good tsnd
 
