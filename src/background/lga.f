@@ -1199,15 +1199,25 @@ c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
 c
+        icnt=0
         do k=1,nz_laps
          do j=1,ny_laps
           do i=1,nx_laps
-            shsat=ssh2(pr(k),tp(i,j,k)-273.15,
-     .             tp(i,j,k)-273.15,-47.0)*0.001
-            sh(i,j,k)=max(1.0e-6,min(sh(i,j,k),shsat))
+            if(tp(i,j,k).gt.100.0)then
+               shsat=ssh2(pr(k),tp(i,j,k)-273.15,
+     .             tp(i,j,k)-273.15,-132.0)*0.001
+               sh(i,j,k)=max(1.0e-6,min(sh(i,j,k),shsat))
+            else
+               icnt=icnt+1
+            endif
           enddo
          enddo
         enddo
+        print*
+        if(icnt.gt.0)then
+           print*,'Warning: found ',icnt,' 3D points when'
+           print*,'         checking for supersaturations'
+        endif
 c
         do j=1,ny_laps
         do i=1,nx_laps
@@ -1224,7 +1234,6 @@ c
 c the wind components are still on the native grid projection;
 c rotate them to the LAPS (output) domain as necessary.
 
-
         if(.true.)then
          call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
      +,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc,istatus)
@@ -1236,7 +1245,6 @@ c rotate them to the LAPS (output) domain as necessary.
          print*,'Error in rotate_background_uv '
          return
         endif
-
 c
 c Write LGA
 c ---------
