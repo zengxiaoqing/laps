@@ -62,7 +62,7 @@ c
         write(6,*)
 	write(6,*)'Getting Mesonet Tower Data...'
 c
-        call get_local_towerobs(maxobs,maxsta,i4time_sys,
+        call get_local_towerobs(maxsta,i4time_sys,
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
