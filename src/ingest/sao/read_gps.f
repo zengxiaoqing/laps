@@ -1,70 +1,17 @@
-      subroutine obs_driver_gps
-      include 'netcdf.inc'
-      integer recNum,nf_fid, nf_vid, nf_status
-C
-C  Open netcdf File for reading
-C
-      nf_status = NF_OPEN('fsl001061515.nc',NF_NOWRITE,nf_fid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN fsl001061515.nc'
-      endif
-C
-C  Fill all dimension values
-C
-C
-C Get size of recNum
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim recNum'
-      endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim recNum'
-      endif
-      call get_gps_dum(nf_fid, recNum)
-
-      end
-C
-C
-      subroutine get_gps_dum(nf_fid, recNum)
-
-      include 'netcdf.inc'
-      integer recNum,nf_fid, nf_vid, nf_status
-
-      real dryDelay(recNum), formalError(recNum), pressure(recNum),
-     +     staElev(recNum), staLat(recNum), staLon(recNum),
-     +     temperature(recNum), totalDelay(recNum),
-     +     waterVapor(recNum), wetDelay(recNum)
-      double precision timeObs(recNum)
-      character*5 staNam(recNum)
-      character*80 staLongNam(recNum)
-
-      call read_gps(nf_fid, recNum, dryDelay, formalError, 
-     +     pressure, staElev, staLat, staLon, temperature, 
-     +     totalDelay, waterVapor, wetDelay, timeObs, staLongNam, 
-     +     staNam)
-C
-C The netcdf variables are filled - your code goes here
-C
-      return
-      end
 C
 C  Subroutine to read the file 
 C
       subroutine read_gps(nf_fid, recNum, 
      +     pressure, staElev, staLat, staLon, temperature, 
-     +     timeObs, staNam)
+     +     relativeHumidity, timeObs, staNam)
 C
       include 'netcdf.inc'
       integer recNum,nf_fid, nf_vid, nf_status
 
       real dryDelay(recNum), formalError(recNum), pressure(recNum),
      +     staElev(recNum), staLat(recNum), staLon(recNum),
-     +     temperature(recNum), totalDelay(recNum),
+     +     temperature(recNum), relativeHumidity(recNum), 
+     +     totalDelay(recNum),
      +     waterVapor(recNum), wetDelay(recNum)
       double precision timeObs(recNum)
       character*5 staNam(recNum)
@@ -169,6 +116,20 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var temperature'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      RH  "PerCent"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'relativeHumidity',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var relativeHumidity'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,relativeHumidity)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var relativeHumidity'
       endif
 C
 C     Variable        NETCDF Long Name

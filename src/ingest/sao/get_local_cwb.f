@@ -99,7 +99,9 @@ c
 
         do i4time_file = i4time_file_a, i4time_file_b, -3600
 
-            call read_tmeso_data(path_to_local_data,maxobs
+            maxobs_in = maxobs-ix+1
+
+            call read_tmeso_data(path_to_local_data,maxobs_in
      1                 ,badflag,ibadflag,i4time_file                     ! I
      1                 ,stname(ix)                                       ! O
      1                 ,lats(ix),lons(ix),elev(ix)                       ! O

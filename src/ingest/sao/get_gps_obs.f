@@ -64,14 +64,13 @@ c
         real    lat(ni,nj), lon(ni,nj)
 	real*8  timeobs(maxobs)
 	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
-	real*4  t(maxobs), td(maxobs)
-	real*4  mslp(maxobs)
+	real*4  t(maxobs), rh(maxobs), stnp(maxobs)
 
 	integer*4  i4time_ob, before, after, wmoid(maxobs)
 	integer    rtime, dpchar(maxobs), iplat_type(maxobs)
 
         character*9 a9time_file
-	character  stname(maxobs)*8, save_stn(maxobs)*8
+	character  stname(maxobs)*5, save_stn(maxobs)*8
 	character  data_file*255, timech*9, time*4, gps_format*(*)
 	character  weather(maxobs)*25, wx(maxsta)*25
 	character  reptype(maxobs)*6, atype(maxobs)*6
@@ -128,7 +127,7 @@ c
             call make_fnam_lp(i4time_file,a9time_file,istatus)
             call s_len(path_to_gps_data,len_path)
 	    data_file = path_to_gps_data(1:len_path)//a9time_file
-     1                                              //'0100o'     
+     1                                              //'0030o.nc'     
 c
 c.....      Get the data from the NetCDF file.  First, open the file.
 c.....      If not there, return.
@@ -141,8 +140,8 @@ c
                go to 990
             else
                write(6,*)' File opened successfully'
-               write(6,*)' Returning since GPS code is not tested yet'
-               go to 990
+!              write(6,*)' Returning since GPS code is not tested yet'
+!              go to 990
 	    endif
 c
 c.....      Get the dimension of some of the variables.
@@ -161,9 +160,8 @@ c
 	    endif
 
 	    call read_gps(nf_fid , recNum, 
-     &         mslp, elev, lats, lons, 
-     &         t, timeobs, stname,
-     &         timeobs)
+     &         stnp, elev, lats, lons, 
+     &         t, rh, timeobs, stname)
 
             i4time_offset=315619200
 c
@@ -197,9 +195,9 @@ c
 c
 	   if( nanf( timeobs(i) ) .eq. 1 ) lats(i) = badflag
 c
-	   if( nanf( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
+	   if( nanf( stnp(i) ) .eq. 1 ) stnp(i)  = badflag
 	   if( nanf( t(i)    ) .eq. 1 ) t(i)     = badflag
-	   if( nanf( td(i)   ) .eq. 1 ) td(i)    = badflag
+	   if( nanf( rh(i)   ) .eq. 1 ) rh(i)    = badflag
 c
 	enddo !i
 c
@@ -281,28 +279,20 @@ c.....  Convert units for storage.
 c
 c.....  Temperature and dewpoint
 c
-	temp_k = t(i)                         
-	if(temp_k.lt.190. .or. temp_k.gt.345.) temp_k = badflag
-	if(temp_k .le. badflag) then          !t bad?
-	   temp_f = badflag                   !          bag
+	temp_c = t(i)                         
+	if(temp_c .lt. -85. .or. temp_c .gt. +70.)temp_c = badflag
+	if(temp_c .eq. badflag) then                 ! t bad?
+	   temp_f = badflag                          !          bag
 	else
-	   temp_f = ((temp_k - 273.16) * 9./5.) + 32.  ! K to F
+	   temp_f = c_to_f(temp_c)                   ! C to F
 	endif
 c
-	dewp_k = td(i)
-	if(dewp_k.lt.210. .or. dewp_k.gt.320.) dewp_k = badflag
-	if(dewp_k .le. badflag) then           !dp bad?
-	   dewp_f = badflag                    !         bag
-	else
-	   dewp_f = ((dewp_k - 273.16) * 9./5.) + 32.  ! K to F
-	endif
+	dewp_f = badflag
 c
-c..... Pressure...MSL and 3-h pressure change
+c..... Pressure...Station Pressure
 c
-	if(mslp(i).lt.85000. .or. mslp(i).gt.120000.) then
-	   mslp(i) = badflag
-	else
-	   mslp(i) = mslp(i) * 0.01 !Pa to mb
+	if(stnp(i).lt.400. .or. stnp(i).gt.1200.) then
+	   stnp(i) = badflag
 	endif
 c
 c..... Fill the expected accuracy arrays.  Values are based on information
@@ -324,22 +314,28 @@ c..... Dew point (deg F).  Also estimate a RH accuracy based on the dew point.
 c..... Estimates for the RH expected accuracy are from playing around with the
 c..... Psychrometric Tables for various T/Td combinations.
 c
-	 store_2ea(nn,2) = 5.0 * fon       ! start...don't know what we have 
-	 store_2ea(nn,3) = 50.0            ! Relative Humidity %
-	 if(dewp_f .ne. badflag) then
-	    if(dewp_f.ge.c2f(-35.) .and. dewp_f.le.c2f(-2.)) then
-	       store_2ea(nn,2) = 2.0 * fon ! conv to deg F
-	       store_2ea(nn,3) = 20.0      ! RH (%) 
-	    elseif(dewp_f.gt.c2f(-2.) .and. dewp_f.le.c2f(30.)) then
-	       store_2ea(nn,2) = 1.0 * fon ! conv to deg F
-	       store_2ea(nn,3) = 8.0       ! RH (%) 
-	    endif
-	 endif
+         store_2ea(nn,2) = 0.0             ! Dew Point not reported
+         store_2ea(nn,3) = 10.0            ! Relative Humidity %
+c
+c..... Wind (Not reported)
+c
+         store_3ea(nn,1) = 0.00            ! deg
+         store_3ea(nn,2) = 0.00            ! kt
 c
 c..... Pressure and altimeter (mb)
 c
-	 store_4ea(nn,1) = 1.00            ! pressure (mb)
-	 store_4ea(nn,2) = 0.00            ! altimeter (mb)
+         store_4ea(nn,1) = 1.00            ! pressure (mb)
+         store_4ea(nn,2) = 0.00            ! altimeter (mb)
+c
+c..... Other stuff (don't report these). 
+c 
+         store_5ea(nn,1) = 0.0             ! Visibility 
+         store_5ea(nn,2) = 0.0             ! solar radiation       
+         store_5ea(nn,3) = 0.0             ! soil/water temperature
+         store_5ea(nn,4) = 0.0             ! soil moisture
+c
+         store_6ea(nn,1) = 0.0             ! precipitation (in)
+         store_6ea(nn,2) = 0.0             ! snow cover (in) 
 c
 c
 c..... Output the data to the storage arrays
@@ -359,8 +355,8 @@ c
 	 store_1(nn,4) = rtime                  ! observation time
 c
 	 store_2(nn,1) = temp_f                 ! temperature (deg f)
-	 store_2(nn,2) = dewp_f                 ! dew point (deg f)
-	 store_2(nn,3) = badflag                ! Relative Humidity
+	 store_2(nn,2) = badflag                ! dew point (deg f)
+	 store_2(nn,3) = rh(i)                  ! Relative Humidity
 c
 	 store_3(nn,1) = badflag                ! wind dir (deg)
 	 store_3(nn,2) = badflag                ! wind speed (kt)
@@ -368,8 +364,8 @@ c
 	 store_3(nn,4) = badflag                ! wind gust speed (kt)
 c
 	 store_4(nn,1) = badflag                ! altimeter setting (mb)
-	 store_4(nn,2) = badflag                ! station pressure (mb)
-	 store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
+	 store_4(nn,2) = stnp(i)                ! station pressure (mb)
+	 store_4(nn,3) = badflag                ! MSL pressure (mb)
          store_4(nn,4) = badflag
          store_4(nn,5) = badflag                ! 3-h press change (mb)
 c
@@ -405,3 +401,9 @@ c
 	 return
 c
 	 end
+
+         function c_to_f(t_c)
+cdoc     Convert Celsius to Fahrenheit
+         c_to_f = (t_c * 9./5.) + 32.             ! C to F
+         return
+         end

@@ -140,7 +140,7 @@ c
 	    if(nf_status.ne.NF_NOERR) then
 	       print *, NF_STRERROR(nf_status)
 	       print *, data_file
-	       go to 990
+	       go to 590
 	    endif
 c
 c.....  Get the dimension of some of the variables.
@@ -157,6 +157,13 @@ c
 	       print *, NF_STRERROR(nf_status)
 	       print *,'dim recNum'
 	    endif
+
+            if(recnum .gt. maxobs-ix+1)then
+                write(6,*)
+     1              ' ERROR: exceeded array limits in get_local_obs'
+                go to 590
+            endif
+
 c
 c.....  Call the read routine.
 c
@@ -181,7 +188,7 @@ c
 
             ix = ix + n_local_file
 
-        enddo ! i4time_file
+590     enddo                  ! i4time_file
 
         n_local_all = ix - 1
         write(6,*)' n_local_all = ',n_local_all

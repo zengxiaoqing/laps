@@ -200,8 +200,6 @@ c
      1                             ,10800                                     
      1                             ,i4time_file_b,i4time_file_a)              
 
-            recNum = maxobs
-
             do i4time_file = i4time_file_b, i4time_file_a, 10800
    	        call make_fnam_lp(i4time_file,a9time,istatus)
                 a8time = a9_to_a8(a9time(1:9))
@@ -212,6 +210,8 @@ c
 
                 call s_len(data_file,len_file)
                 write(6,*)' CWB Buoy Data: ',data_file(1:len_file)
+
+                recnum = maxobs-ix+1
 
 	        call read_buoy_cwb(data_file, maxSkyCover, recNum, 
      &          iplat_type(ix),
@@ -254,6 +254,8 @@ c
 
                 call s_len(data_file,len_file)
                 write(6,*)' CWB Ship Data: ',data_file(1:len_file)
+
+                recnum = maxobs-ix+1
 
 	        call read_ship_cwb(data_file, maxSkyCover, recNum, 
      &          iplat_type(ix),

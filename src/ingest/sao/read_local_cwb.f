@@ -19,19 +19,21 @@ c
         real dd(maxobs), ff(maxobs)
         real sfcp(maxobs), pcp(maxobs)
         integer*4 i4time_ob_a(maxobs)
+
+        integer istart(20), iend(20)
 c
         character inpath*(*), stn_id*5, stname(maxobs)*5 
-     1           ,a9_to_a8*8, a9time*9, a8time*8, a6time*6, filename*21       
+     1           ,a9_to_a8*8, a9time*9, a8time*8, a6time*6, filename*80
      1           ,line*132, hhmm*4, cvt_i4time_wfo_fname13*13
-     1           ,a13time*13      
+     1           ,a13time*13, a13time_ob*13 
+
+        character*100 c1dum, c2dum, c3dum     
 c
 c.....  Stuff for the mesonet metadata.
 c
 	real lat_master(maxobs),lon_master(maxobs),elev_master(maxobs)
 c
 	character stn_master(maxobs)*5
-
-        num = 0
 c
 c.....  Get the mesonet metadata (station information).
 c
@@ -43,6 +45,7 @@ c
             write(6,*)' Error reading mesonet station table'
             return
         endif
+
 c
 c.....  Start here.  Fill the output arrays with something, then open
 c.....	the file to read.
@@ -59,50 +62,85 @@ c
 	   dd(i) = badflag
 	   ff(i) = badflag
 	enddo !i
+
 c
-        i4time_file = i4time_sys
+        i4time_file = i4time_sys + 8*3600                 ! convert GMT to EAT
 
         a13time = cvt_i4time_wfo_fname13(i4time_file)
 
-        filename = a13time(1:4)//'_'//a13time(5:6)             ! yyyy_mm
-     1                         //'_'//a13time(7:8)             ! dd
-     1                         //'_'//a13time(10:13)           ! hhmm
-     1                         //'_m.pri'
+        filename = 'Data.CWB.MSO.'
+     1                  //a13time(1:4)//'-'//a13time(5:6) ! yyyy_mm
+     1                  //'-'//a13time(7:8)               ! dd
+     1                  //'_'//a13time(10:13)             ! hhmm
+     1                  //'_m.pri'
 
         write(6,*)' Mesonet file ',filename
 
         call s_len(inpath,len_inpath)
-        open(11,file=inpath(1:len_inpath)//filename,status='old'       
-     1                                                     ,err=980)
-c
+        call s_len(filename,len_fname)
+ 
         num = 0
 
-!       Skip header comments at the top of the file
-        do iread = 1,16
-            read(11,*,end=550,err=990)
-        enddo
+        open(11,file=inpath(1:len_inpath)//filename(1:len_fname)
+     1         ,status='old',err=980)
+
+        if(.true.)goto980 ! for testing
 c
 c.....  This starts the read loop.  Since we don't know how many 
 c.....  stations we have, read until we hit the end of file.
 c     
  500    continue
 c
-        read(11,*,end=550,err=990) line
+        read(11,801,end=550,err=990) line
+ 801    format(a)
 
-        read(line,901,err=990)hhmm,stn_id
- 901    format(a4,a5)
+!       Find first dash
+        do i = 132,1,-1
+            if(line(i:i) .eq. '-')then
+                idash = i
+            endif
+        enddo ! i
 
-        read(line(10:132),*,err=990)rspd,idir,rdum,rdum,rdum
-     1                                     ,rdum,rsfcp,rt,rtd
+        a13time_ob = line(idash-4:idash-1)//line(idash+1:idash+2)    ! yyyymm
+     1             //line(idash+4:idash+5)//'_'                      ! dd
+     1             //line(idash+7:idash+8)//line(idash+10:idash+11)  ! hhmm
+
+!       Parse the string into contiguous characters
+        ivar = 1
+        istart(1) = 1
+
+        do i = 1,idash
+            if(line(i:i) .eq. ' ' .and. line(i-1:i-1) .ne. ' ')then
+                iend(ivar) = i-1
+            endif
+
+            if(line(i:i) .eq. ' ' .and. line(i+1:i+1) .ne. ' ')then
+                ivar = ivar + 1
+                istart(ivar) = i+1
+            endif
+        enddo
+
+        nvar = ivar - 1
+
+        do ivar = 1,nvar
+            write(6,*)ivar,line(istart(ivar):iend(ivar))
+        enddo ! i
+
+!       Now we can read the variables
+!       read(line,901,err=990)hhmm,stn_id
+!901    format(a4,a4)
+
+!       read(line(9:132),*,err=990)rspd,idir,rdum,rdum,rdum
+!    1                            ,rdum,rsfcp,rt,rtd
+!    1                            ,rdum,slp
+
+        ivar = 1
+        read(line(istart(ivar):iend(ivar)),*)rspd
 
 c
 c.....  Check for valid date/time...if bad, toss this ob.
 c
-        if(iyr.lt.0 .or. imth.le.0 .or. idy.le.0 .or. 
-     &     ihr.lt.0 .or. imin.lt.0) then 
-           print *, ' Bad date/time at station: ', stn_id, idum
-           go to 500
-        endif
+        write(6,*)'date/time at station: ', stn_id, a13time_ob
 c
 c.....  Have good date/time...store ob.  Adjust/scale variables while storing.
 c
@@ -170,7 +208,7 @@ c
 c       Match data with metadata for each station, then store the metadata
 c       in arrays.
 c
-        do i=1,n_local_all
+        do i=1,num
 	   do j=1,num_master
 	      if(stname(i)(1:5) .eq. stn_master(j)(1:5)) then
 		 lats(i) = lat_master(j)

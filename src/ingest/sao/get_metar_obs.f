@@ -254,7 +254,7 @@ c
             a8time = a9_to_a8(a9time(1:9))
 
             maxSkyCover=6
-            recNum = maxobs
+            recNum = maxobs-ix+1
 
 	    data_file = 
      1          path_to_metar(1:len_path)//'synop'//a8time//'.dat'

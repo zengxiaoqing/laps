@@ -121,7 +121,6 @@ cdis
         real*4 vas(NX_L,NY_L)
         real*4 cint
         real*4 uv_2d(NX_L,NY_L,2)
-!       equivalence (uv_2d(1,1,1),u_2d),(uv_2d(1,1,2),v_2d)
 
         real*4 div(NX_L,NY_L)
         real*4 dir(NX_L,NY_L)
@@ -220,8 +219,8 @@ cdis
 !       real*4 heights_3d(NX_L,NY_L,NZ_L)
 
         real*4 p_1d_pa(NZ_L)
-        real*4 pbe_2d(NX_L,NY_L)
-        real*4 nbe_2d(NX_L,NY_L)
+        real*4 rh_2d(NX_L,NY_L)
+        real*4 sh_2d(NX_L,NY_L)
 
         real*4 k_to_f
         real*4 make_rh
@@ -2574,14 +2573,14 @@ c
 
               call get_laps_2dgrid(i4time_ref,10000000,i4time_temp,
      1        ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,pbe_2d,0,istatus)
+     1                                          ,field_2d,0,istatus)
 
           else
               var_2d = 'NBE'
 
               call get_laps_2dgrid(i4time_ref,10000000,i4time_temp,
      1        ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,nbe_2d,0,istatus)
+     1                                          ,field_2d,0,istatus)
 
           endif
 
@@ -2595,7 +2594,8 @@ c
 !             Change flag value 
               do i = 1,NX_L
               do j = 1,NY_L
-                  if(pbe_2d(i,j) .eq. r_missing_data)pbe_2d(i,j) = -1.       
+                  if(field_2d(i,j) .eq. r_missing_data)
+     1                field_2d(i,j) = -1.           
               enddo ! j
               enddo ! i
 
@@ -2603,7 +2603,7 @@ c
               clow = 0.
               chigh = 8000.
               cint = +400.
-              call plot_cont(pbe_2d,scale,clow,chigh,cint,asc9_tim_t,
+              call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t,
      1                       c33_label,i_overlay,c_display,'nest7grid',
      1                       lat,lon,jdot,
      1                       NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2612,10 +2612,11 @@ c
 !             Change flag value (for now)
               do i = 1,NX_L
               do j = 1,NY_L
-                  if(nbe_2d(i,j) .eq. -1e6)nbe_2d(i,j) = r_missing_data
-                  if(nbe_2d(i,j) .ge. -2. .and. 
-     1               nbe_2d(i,j) .ne. r_missing_data)
-     1                                   nbe_2d(i,j) = +.0001
+                  if(field_2d(i,j) .eq. -1e6)
+     1                field_2d(i,j) = r_missing_data
+                  if(field_2d(i,j) .ge. -2. .and. 
+     1               field_2d(i,j) .ne. r_missing_data)
+     1                                   field_2d(i,j) = +.0001
               enddo ! j
               enddo ! i
 
@@ -2623,7 +2624,7 @@ c
               clow = -500 !   0.
               chigh = 0.  !   0.
               cint = 50.  ! -10.
-              call plot_cont(nbe_2d,scale,clow,chigh,cint,asc9_tim_t
+              call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t    
      1                      ,c33_label,i_overlay,c_display,'nest7grid'
      1                      ,lat,lon,jdot,NX_L,NY_L,r_missing_data
      1                      ,laps_cycle_time)
@@ -2730,7 +2731,7 @@ c
      1                             ,directory               ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
-     1                             ,asc9_tim_r              ! O
+     1                             ,asc9_tim_t              ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
@@ -2748,16 +2749,28 @@ c
             read(5,*)qtype
 
             var_2d = 'SH '
-            call get_modelfg_3d_sub(i4_valid,var_2d,subdir,ext
-     1             ,nx_l,ny_l,nz_l,field_3d,istatus)             ! q_3d
+            CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,k_mb,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 sh_2d,istat_sh)
 
-            if(istatus.ne.1)then
-                print*,var_2d, ' not obtained from ',ext(1:3)
+            var_2d = 'RH3'
+            CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,k_mb,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 rh_2d,istat_rh)
+            if(istat_rh .eq. 0 .and. istat_sh .eq. 0)then
+                print*,' RH/SH not obtained from ',ext(1:3)
                 print*,'no plotting of data for requested time period'
+                goto1200
+            endif
 
-            else
 
-                if(qtype.eq.'q')then
+            if(.true.)then
+
+                if(qtype.eq.'q' .and. istat_sh .eq. 1)then
 
                     call mklabel33(k_level,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' Q  (x1e3)',c33_label)
@@ -2767,7 +2780,7 @@ c
                     cint = 0.2
 c                   cint = -1.
 
-                    call plot_cont(field_3d(1,1,k_level),1e-3
+                    call plot_cont(sh_2d,1e-3
      1                            ,clow,chigh,cint ! q_3d
      1                            ,asc9_tim_t,c33_label,i_overlay
      1                            ,c_display,'nest7grid'
@@ -2775,45 +2788,71 @@ c                   cint = -1.
      1                            ,r_missing_data,laps_cycle_time)
 
                 elseif(qtype .eq. 'r')then
+                    if(istat_rh .eq. 0 .and. istat_sh .eq. 1)then
 
-                    write(6,1635)
-1635                format(10x,'input t_ref [deg C] ? ',$)
-                    read(5,*)t_ref
+                        write(6,1635)
+1635                    format(10x
+     1                       ,'input t_ref for RH calc [deg C] ? ',$)
+                        read(5,*)t_ref
 
-                    var_2d = 'T3 '
-                    call get_modelfg_3d_sub(i4_valid,var_2d,subdir,ext
-     1                          ,nx_l,ny_l,nz_l,temp_3d,istatus)
-                    if(istatus.ne.1)then
-                        print*,var_2d, ' not obtained from ',ext(1:3)
-                    endif
+                        var_2d = 'T3 '
+                        CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,k_mb,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 temp_2d,ISTATUS)
+
+                        if(istatus.ne.1)then
+                            print*,var_2d, ' not obtained from '
+     1                            ,ext(1:3)
+                        endif
 
 
-                    call mklabel33(k_level,' '//fcst_hhmm
+                        call mklabel33(k_level,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' rh %cptd ',c33_label)
 
-                    clow = 0.
-                    chigh = +100.
-                    cint = 10.
+                        clow = 0.
+                        chigh = +100.
+                        cint = 10.
 
-                    call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
+                        call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
 
-                    do i = 1,NX_L
-                    do j = 1,NY_L
-                        field_3d(i,j,k_level)=make_rh(float(k_mb)
-     1                         ,temp_3d(i,j,k_level)-273.15
-     1                         ,field_3d(i,j,k_level)*1000.,t_ref)*100. ! q_3d
-                    enddo ! j
-                    enddo ! i
+                        do i = 1,NX_L
+                        do j = 1,NY_L
+                            rh_2d(i,j)=make_rh(float(k_mb)
+     1                         ,temp_2d(i,j)-273.15
+     1                         ,sh_2d(i,j)*1000.,t_ref)*100. ! q_3d
+                        enddo ! j
+                        enddo ! i
 
-                    call plot_cont(field_3d(1,1,k_level),1e0
+                    elseif(istat_rh .eq. 1)then
+                        write(6,1636)
+1636                    format(10x,'OK to plot RH as read in ? ',$)
+                        read(5,*)directory   
+
+                        if(directory(1:1) .eq. 'n' 
+     1                .OR. directory(1:1) .eq. 'N')then
+                            goto1200
+                        endif
+
+                        call mklabel33(k_level,' '//fcst_hhmm
+     1                         //' '//ext(1:3)//' rh %     ',c33_label)
+
+                    else
+                        write(6,*)' RH/SH not obtained...'
+                        goto1200
+
+                    endif ! istat_rh / istat_sh
+
+                    call plot_cont(rh_2d,1e0
      1                            ,clow,chigh,cint,asc9_tim_t
      1                            ,c33_label,i_overlay,c_display
      1                            ,'nest7grid',lat,lon,jdot
      1                            ,NX_L,NY_L,r_missing_data
      1                            ,laps_cycle_time)
 
-              endif
-            endif
+                endif ! plot RH
+            endif ! True
 
         elseif(c_type .eq. 'hy')then
             write(6,1513)
