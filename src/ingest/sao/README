@@ -1,30 +1,33 @@
 
   Tree diagram outlining the source code for 'obs_driver.x'
 
-  Subroutine Name                              File Name:
-  ---------------                              ----------
+  Subroutine Name                              File Name:         Type/Format:
+  ---------------                              ----------         ------------
  
 main                                           obs_driver.f
     obs_driver_sub                                  "
-        get_metar_obs                          get_metar_obs.f 
-            read_metar                         read_metar.f 
-            read_metar_cwb                     read_metar_cwb.f
-            read_synop_cwb                     read_synop_cwb.f
+        get_metar_obs                          get_metar_obs.f    metar/synop 
+            read_metar                         read_metar.f       NIMBUS/WFO
+            read_metar_cwb                     read_metar_cwb.f   CWB/GTS
+            read_synop_cwb                     read_synop_cwb.f   CWB/GTS
   
-        get_sao_obs_af                         get_metar_obs_af.f
-            read_metar_af                      read_metar_af.f
+        get_sao_obs_af                         get_metar_obs_af.f metar/synop
+            read_metar_af                      read_metar_af.f    AFWA
 
-        get_local_obs                          get_local_obs.f 
-            read_local                         read_local.f 
+        get_local_obs                          get_local_obs.f    mesonet 
+            read_local                         read_local.f       NIMBUS/WFO
 
-        get_local_cwb                          get_local_cwb.f
-            read_tmeso_stntbl                       "
-            read_tmeso                              "
+        get_local_cwb                          get_local_cwb.f    mesonet
+            read_local_cwb                     read_local_cwb.f   CWB
+                read_tmeso_stntbl                   "
 
-        get_buoy_obs                           get_buoy_obs.f   (maritime obs)
-            read_buoy                          read_buoy.f 
-            read_buoy_cwb                      read_buoy_cwb.f
-            read_ship_cwb                      read_ship_cwb.f
+        get_buoy_obs                           get_buoy_obs.f     maritime obs
+            read_buoy                          read_buoy.f        NIMBUS/WFO
+            read_buoy_cwb                      read_buoy_cwb.f    CWB/GTS
+            read_ship_cwb                      read_ship_cwb.f    CWB/GTS
+
+        get_gps_obs                            get_gps_obs.f      gps obs
+            read_gps                           read_gps.f         NIMBUS
 
         write_surface_obs                      obs_driver.f
 
