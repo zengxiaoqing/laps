@@ -197,6 +197,7 @@ c
          call zero(image_ir(1,1,i),n_ir_elem,n_ir_lines)
          call zero(image_vis(1,1,i),n_vis_elem,n_vis_lines)
          call zero(image_67(1,1,i),n_wv_elem,n_wv_lines)
+         call zero(image_12(1,1,i),n_ir_elem,n_ir_lines)
       enddo
 
       call find_domain_name(c_generic_dataroot,c_gridfname,istatus)
@@ -363,10 +364,12 @@ c June 2001 added Taiwan (gms) sat ingest
       elseif(csattype.eq.'twn')then
 
          call read_gms_taiwan(path_to_raw_sat(1,jtype,isat)
-     &,400,400,maxchannels,max_files,nchannels,csatid,csattype
+     &,n_lines_ir(jtype,isat),n_pixels_ir(jtype,isat)        !<-- full array size raw data
+     &,maxchannels,max_files,nchannels,csatid,csattype
      &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
      &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
-     &,image_67,nimages,nft,ntm,c_type,i4time_data,istatus)
+     &,image_67,image_12,nimages,nft,ntm,c_type,i4time_data
+     &,istatus)
 
          if(istatus.ne.1)then
             print*,'Error returned: read_gms_taiwan'

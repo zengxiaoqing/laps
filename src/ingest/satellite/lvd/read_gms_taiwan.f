@@ -1,8 +1,9 @@
       subroutine read_gms_taiwan(path_to_raw_sat,nxt,nyt
      &,maxchannels,max_files,nchannels,csatid,csattype
      &,chtype,i4time_needed,nelems_ir,nlines_ir,nelems_vis
-     &,nlines_vis,nelems_wv,nlines_wv,image_ir,image_vis
-     &,image_wv,nimages,nft,ntm,c_type,i4time_data,istatus)
+     &,nlines_vis,nelems_wv,nlines_wv,image_11u,image_vis
+     &,image_wv,image_12u,nimages,nft,ntm,c_type,i4time_data
+     &,istatus)
 c
 c routine to read binary satellite data file from
 c Taiwan CWB.
@@ -34,13 +35,14 @@ c
       character*200 path_to_raw_sat(maxchannels)
       character*255 filename
 
-      integer     istatus,lf,lp,ls,lv
+      integer     istatus,lf,lp,ls,lt,lv
       integer     i,j,ii,jj,icnt,k
       integer     istart,jstart
       integer     iend,jend
       integer     nft,ntm(maxchannels)
       integer     i4time_data(max_files)
-      real        image_ir(nelems_ir,nlines_ir,nimages)
+      real        image_11u(nelems_ir,nlines_ir,nimages)
+      real        image_12u(nelems_ir,nlines_ir,nimages)
       real        image_vis(nelems_vis,nlines_vis,nimages)
       real        image_wv(nelems_wv,nlines_wv,nimages)
 
@@ -59,17 +61,20 @@ c
             return
          endif
 
-c add file-time source here. CWB names are yyjjjhhmm_"type".lvd
+c add file-time source here. CWB names are yyjjjhhmm_"type"
 
          call s_len(path_to_raw_sat(ispec),lp)
          fname_sat=path_to_raw_sat(ispec)(1:lp)//'/*_'
          call s_len(fname_sat,ls)
-         fname_sat=fname_sat(1:ls)//chtype(k)//'.lvd'
+         fname_sat=fname_sat(1:ls)//chtype(k)
          call s_len(fname_sat,ls)
 
+         print*
+         print*,'Get latest satellite time'
          call get_latest_file_time(fname_sat,i4time_latest_sat) 
          call make_fnam_lp(i4time_latest_sat,fname9_sat,istatus)
 
+         print*,'Get latest lvd time'
          call get_directory('lvd',fname_lvd,lv)
          fname_lvd=fname_lvd(1:lv)//csatid//'/*.lvd'
          call get_latest_file_time(fname_lvd,i4time_latest_lvd)
@@ -83,10 +88,11 @@ c check if this is new data
 
          filename=path_to_raw_sat(ispec)(1:lp)//'/'//fname9_sat
          call s_len(filename,lf)
-         filename=filename(1:lf)//'_'//chtype(k)//'.lvd'
+         call s_len(chtype(k),lt)
+         filename=filename(1:lf)//'_'//chtype(k)(1:lt)
          call s_len(filename,lf)
 
-         filename=path_to_raw_sat(ispec)(1:lp)//'/011561933_11u.laps'
+
          call s_len(filename,lf)
 
          open(10,file=filename,access='direct',recl=nxt,err =99)
@@ -95,18 +101,47 @@ c check if this is new data
 
 c load block for known i-j start/end locations
 
-         if(ispec.eq.4)then
+         if(ispec.eq.1)then
 
-            call load_image_twn(nelems_ir,nlines_ir
-     &,istart,iend,jstart,jend,nxt,nyt,c_imagedata,image_ir(1,1,1))
+            call load_image_twn(nelems_vis,nlines_vis
+     &,istart,iend,jstart,jend,nxt,nyt,c_imagedata,image_vis(1,1,1))
 
             ntm(nft)=ntm(nft)+1
             c_type(ntm(nft),nft)=chtype(k)
-            i4time_data(nft)=i4time_latest_sat-60       !remove the 60 after testing!@!!!!!
- 
+            i4time_data(nft)=i4time_latest_sat
+
+         elseif(ispec.eq.3)then
+
+            call load_image_twn(nelems_wv,nlines_wv
+     &,istart,iend,jstart,jend,nxt,nyt,c_imagedata,image_wv(1,1,1))
+
+            ntm(nft)=ntm(nft)+1
+            c_type(ntm(nft),nft)=chtype(k)
+            i4time_data(nft)=i4time_latest_sat
+
+         elseif(ispec.eq.4)then
+
+            call load_image_twn(nelems_ir,nlines_ir
+     &,istart,iend,jstart,jend,nxt,nyt,c_imagedata
+     &,image_11u(1,1,1))
+
+            ntm(nft)=ntm(nft)+1
+            c_type(ntm(nft),nft)=chtype(k)
+            i4time_data(nft)=i4time_latest_sat
+
+         elseif(ispec.eq.5)then
+
+            call load_image_twn(nelems_ir,nlines_ir
+     &,istart,iend,jstart,jend,nxt,nyt,c_imagedata
+     &,image_12u(1,1,1))
+
+            ntm(nft)=ntm(nft)+1
+            c_type(ntm(nft),nft)=chtype(k)
+            i4time_data(nft)=i4time_latest_sat
+
          else
 
-            print*,'read_gms_taiwan: only read IR1 for now'
+            print*,'read_gms_taiwan: unknown type = ',chtype(k)
             print*,'returning no image data'
             return 
 
@@ -152,20 +187,21 @@ c load block for known i-j start/end locations
       endif
 
       if(jend-jstart+1.ne.nlines)then
-         print*,'jend - jstart + 1 *!=* nlines: ',jend-jstart+1,nlines
+         print*,'jend - jstart + 1 /!=/ nlines: ',jend-jstart+1,nlines
       endif
 
       if(iend-istart+1.ne.nelems)then
-         print*,'iend - istart + 1 *!=* nelems: ',iend-istart+1,nelems
+         print*,'iend - istart + 1 /!=/ nelems: ',iend-istart+1,nelems
       endif
 
+c reverse order (CWB data is 1,1 in NW corner)
       do j = 1,nyt
       do i = 1,nxt
-         r_imagetmp(i,j)=float(ichar(c_imagedata(i,nyt-j+1))) !j)))  !nyt-j+1)))
+         r_imagetmp(i,j)=float(ichar(c_imagedata(i,nyt-j+1)))
       enddo
       enddo
 
-c convert to counts, load block, and reverse order (CWB data is 1,1 in NW corner)
+c convert to counts and load block.
  
       icnt=0
       jj=0
@@ -178,7 +214,7 @@ c convert to counts, load block, and reverse order (CWB data is 1,1 in NW corner
          do i=istart,iend
 
             ii=ii+1
-            r_image(ii,jj)=r_imagetmp(i,j)   !float(ichar(c_imagedata(i,j)))  !j)))  !jend-j+1)))
+            r_image(ii,jj)=r_imagetmp(i,j) 
 
             if(r_image(ii,jj).le. 0.0    .or.
      &         r_image(ii,jj).gt. 255.0  .or.
@@ -191,12 +227,6 @@ c convert to counts, load block, and reverse order (CWB data is 1,1 in NW corner
 
          enddo
       enddo
-
-c     do i=1,ii
-c     do j=1,jj
-c        r_imagedata(i,j)=r_image(i,jj-j+1)
-c     enddo
-c     enddo
 
       if(icnt.gt.0)then
          print*,'found missing data: twn ',icnt
