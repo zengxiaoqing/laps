@@ -1,26 +1,24 @@
-      subroutine lprep_eta_conusc(nx,ny,nz,ht,pr,tp,uw,vw,rh,
-     .                           gproj,istatus)
+      subroutine lprep_eta_conusc(nx,ny,nz,pr,tp,rh,
+     .                     tp_sfc,pr_sfc,rh_sfc,gproj,istatus)
 c
       implicit none
 c
-      integer nx,ny,nz,nvars,recdim,start(10),count(10),k
+      integer nx,ny,nz,nvars,recdim,i,j,k,istatus
 c
-      real*4 ht(nx,ny,nz),
-     .       tp(nx,ny,nz),
-     .       uw(nx,ny,nz),
-     .       vw(nx,ny,nz),
-     .       rh(nx,ny,nz),   ! in as rh out as mr
+      real*4 tp(nx,ny,nz),
+     .       rh(nx,ny,nz),   ! in as rh out as sh
      .       pr(nx,ny,nz),
-     .      tmp(nx,ny,nz)
+     .      tp_sfc(nx,ny),
+     .      rh_sfc(nx,ny),   ! in as rh out as sh
+     .      pr_sfc(nx,ny)
+
+      real make_ssh
 c
-      integer vdims(10) !Allow up to 10 dimensions
-      integer nvs,nvdim,ntp,ndsize,j,lenstr,ncid,
-     .          nrecs,ngatts,ndims,ipr(nz), len, it, i, istatus
 c
       character*2   gproj
-      real*4 xe,mrsat
       include 'bgdata.inc'
-
+      real xe, mrsat
+      integer it
 c
 c *** Common block variables for Lambert-conformal grid.
 c
@@ -36,7 +34,9 @@ c
          pr(1,1,k) = pr(k,1,1)
       enddo
 
-
+c
+c convert ua rh to sh
+c
       do k=1,nz
          do j=1,ny
             do i=1,nx
@@ -47,7 +47,24 @@ c
                mrsat=0.00622*xe/(pr(i,j,k)-xe)
                rh(i,j,k)=rh(i,j,k)*mrsat
                rh(i,j,k)=rh(i,j,k)/(1.+rh(i,j,k)) 
+c               rh(i,j,k)=make_ssh(pr(i,j,k),tp(i,j,k)-273.15,
+c     +              rh(i,j,k)/100.,0.0)*0.001
             enddo
+         enddo
+      enddo
+c
+c convert sfc rh to sh
+c
+      do j=1,ny
+         do i=1,nx
+               it=tp_sfc(i,j)*100
+               it=min(45000,max(15000,it))
+               xe=esat(it)
+               mrsat=0.00622*xe/(pr_sfc(i,j)*0.01-xe)
+               rh_sfc(i,j)=rh_sfc(i,j)*mrsat
+               rh_sfc(i,j)=rh_sfc(i,j)/(1.+rh_sfc(i,j)) 
+c               rh_sfc(i,j)=make_ssh(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15,
+c     +              rh_sfc(i,j)/100.,0.0)*0.001
          enddo
       enddo
       

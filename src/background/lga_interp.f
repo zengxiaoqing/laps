@@ -168,6 +168,7 @@ c
      .                       time1,fcst1,time2,fcst2)
 c
       implicit none
+      include 'bgdata.inc'
 c
       integer nx,ny,nz,kdim
 c
@@ -215,7 +216,7 @@ c
             var(kk)='V3 '
          enddo
       else
-         do k=1,6
+         do k=1,7
             ip(k)=0
          enddo
          var(1)='USF'
@@ -224,6 +225,7 @@ c
          var(4)='PSF'
          var(5)='SLP'
          var(6)='RSF'
+         var(7)='DSF'
       endif
          
 c
@@ -254,9 +256,10 @@ c
             do i=1,nx
                gridn(i,j,k)=(1.-weight)*grid1(i,j,k)+weight*grid2(i,j,k)
 
-               if(gridn(i,j,k) .gt. 1.e35) then
+               if(gridn(i,j,k) .ge. missingflag .or.
+     +              gridn(i,j,k).ne.gridn(i,j,k)) then
                   print *,'SEVERE Error in time_interp',
-     +                 i,j,k,grid1(i,j,k),grid2(i,j,k),fcst1,fcst2
+     +                 i,j,k,k/nz,grid1(i,j,k),grid2(i,j,k),weight
 c
 c haven't figured out a good way to do this yet.
 c
@@ -278,6 +281,11 @@ c
       write(af,'(2i2.2)') ihour,imin
       print *,'Writing - ',fname//af,'.'//ext//' (Backfill)'
       comment(1)='LI: '//comment(1)
+
+      do k=1,kdim
+         print*,k,gridn(1,1,k)
+      enddo
+
 
       call write_laps(time1,time1+newfcst,dir,ext,
      .                nx,ny,nz,kdim,var,

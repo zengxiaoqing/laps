@@ -1,9 +1,12 @@
-      subroutine lprep_ruc2_pub(nx,ny,nz,ht,pr,sh,uw,vw,th,gproj)
+      subroutine lprep_ruc2_hybrid(nx,ny,nz,ht,pr,sh,uw,vw,th,usfc,vsfc,
+     +     tsfc,prsfc,shsfc,gproj)
       implicit none
       include 'bgdata.inc'
       integer nx,ny,nz,i,j,k
       real ht(nx,ny,nz),pr(nx,ny,nz),sh(nx,ny,nz),uw(nx,ny,nz)
      +     ,vw(nx,ny,nz),th(nx,ny,nz)
+      real usfc(nx,ny), vsfc(nx,ny), tsfc(nx,ny), prsfc(nx,ny),
+     +     shsfc(nx,ny)
       real cp,g,r,cpog,kappa
       parameter (cp=1004.686,g=9.80665,r=287.053,cpog=cp/g,kappa=r/cp)
       real tv, psi(nx,ny),psj(nx,ny),lat(nx,ny),lon(nx,ny),
@@ -40,6 +43,19 @@ c
          enddo
       enddo
 c
+c Copy first level into surface fields (this is 5m AGL)
+c
+      do j=1,ny
+         do i=1,nx
+            prsfc(i,j) = pr(i,j,1)*100.
+            usfc(i,j) = uw(i,j,1)
+            vsfc(i,j) = vw(i,j,1)
+            tsfc(i,j) = th(i,j,1)
+            shsfc(i,j) = sh(i,j,1)
+         enddo
+      enddo
+
+c
 c *** Fill Lambert-conformal common block variables.
 c
       gproj='LC'
@@ -68,3 +84,4 @@ c      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
 c
       return
       end
+

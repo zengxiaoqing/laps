@@ -305,8 +305,9 @@ c
      .          grid(nx_laps,ny_laps,kdim), !Full LAPS array for write_laps
      .          pr(nz_laps),     !LAPS pressures
      .          lat(nx_laps,ny_laps),        !LAPS lat
-     .          lon(nx_laps,ny_laps),         !LAPS lon
-     .          grx(nx_laps,ny_laps),         !hinterp factor
+     .          lon(nx_laps,ny_laps),        !LAPS lon
+     .          topo(nx_laps,ny_laps),       !LAPS avg terrain
+     .          grx(nx_laps,ny_laps),        !hinterp factor
      .          gry(nx_laps,ny_laps),         !hinterp factor
      .          ht_sfc(nx_laps,ny_laps),
      .          tp_sfc(nx_laps,ny_laps),
@@ -342,7 +343,9 @@ c
       character*125 comment(kdim)
       integer len_dir, ntime, nf
       integer nxbg, nybg, nzbg(5),ntbg
-
+      integer nsfc_fields
+      real make_td
+      parameter (nsfc_fields=7)
 c
 
       data ntime/0/
@@ -350,14 +353,13 @@ c
 c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
-
-
       lga_status=0
       call get_directory('static',outdir,len_dir)    
 
       call get_laps_lat_lon(outdir(1:len_dir),laps_domain_file,
-     .                      nx_laps,ny_laps,lat,lon,istatus)
-      if (istatus .ne. 1) print *,'Error reading LAPS lat, lon data.'
+     .                      nx_laps,ny_laps,lat,lon,topo,istatus)
+
+      if (istatus.lt.1)print *,'Error reading lat, lon, topo data.'
 c
 c *** Specify model path, extension for write laps routine.
 c
@@ -438,18 +440,21 @@ c
      .                          htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,
      .                          uwbg_sfc,vwbg_sfc,mslpbg,
      .                          istatus)
+
             if(istatus.gt.0) then
-               call lprep_eta_conusc(nx_bg,ny_bg,nz_bg,htbg
-     +              ,prbg,tpbg,uwbg,vwbg,shbg,gproj,istatus)
+               call lprep_eta_conusc(nx_bg,ny_bg,nz_bg,prbg,tpbg,shbg,
+     +              tpbg_sfc,prbg_sfc,shbg_sfc,gproj,istatus)
             endif
-         elseif (bgmodel .eq. 3 .or. 
-     .           bgmodel .eq. 8) then ! Process NOGAPS data
-            call read_nogaps(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg,
-     .                       prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .                       htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,
-     .                       uwbg_sfc,vwbg_sfc,mslpbg,
-     .                       gproj,istatus)
- 
+c
+c NOGAPS ingest now in readdgprep.f  (J. Smart 9-4-98).
+c        elseif (bgmodel .eq. 3 .or.
+c    .           bgmodel .eq. 8) then ! Process NOGAPS data
+c           call read_nogaps(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg,
+c    .                       prbg,htbg,tpbg,shbg,uwbg,vwbg,
+c    .                       htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,
+c    .                       uwbg_sfc,vwbg_sfc,mslpbg,
+c    .                       gproj,istatus)
+c 
          elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
             ntbg=10 
             
@@ -462,21 +467,22 @@ c
      .           mslpbg,gproj,1,istatus)
 c
          elseif (bgmodel .eq. 5) then ! Process 40 km RUC data
-            call read_ruc2_hybb(fullname,nx_bg,ny_bg,nz_bg
-     +                     ,mslpbg,htbg,prbg,shbg,uwbg,vwbg,tpbg,wwbg
-     +                    ,istatus)
-            if(istatus.gt.0) then
-
+            call read_ruc2_hybb(fullname,nx_bg,ny_bg,nz_bg,
+     +           mslpbg,htbg,prbg,shbg,uwbg,vwbg,tpbg,wwbg,istatus)
+            if(istatus.ge.1) then
                print*,'Read complete: entering prep'
-               call lprep_ruc2_pub(nx_bg,ny_bg,nz_bg
-     +              ,htbg,prbg,shbg,uwbg,vwbg,tpbg,gproj)
+               call lprep_ruc2_hybrid(nx_bg,ny_bg,nz_bg,htbg,prbg,shbg,
+     +              uwbg,vwbg,tpbg,uwbg_sfc,vwbg_sfc,tpbg_sfc,prbg_sfc,
+     +              shbg_sfc,gproj)
 
-               print*,'Data prep complete'
             endif
-
-c     
+            print*,'Data prep complete'
+c
+c ETA grib ingest currently disabled (J. Smart 9-4-98)
+c Also, NOGAPS 2.5 degree obsolete.
+c
          elseif (bgmodel .eq. 6 .or.
-     .           bgmodel .eq. 7) then ! Process AVN or ETA grib data
+     .           bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
             call read_dgprep(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg
      .                      ,prbg,htbg,tpbg,shbg,uwbg,vwbg
      .                      ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
@@ -489,7 +495,7 @@ c
 c
          endif
          
-         if (istatus .ne. 1) then
+         if (istatus .lt. 1) then
 c            l=index(bgpath,' ')-1
 
             call s_len(bgpath,l)
@@ -672,6 +678,17 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
       enddo
       enddo
 c
+c compute sfc p for NOGAPS background
+c
+      if(bgmodel.eq.8)then
+
+
+         call sfcprs(tp, sh, ht, tp_sfc, sh_sfc, topo, pr,
+     .               nx_laps, ny_laps, nz_laps, pr_sfc)
+
+      endif
+
+c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
 c
@@ -682,6 +699,15 @@ c
      .             tp(i,j,k)-273.15,0.0)*0.001
             sh(i,j,k)=max(1.0e-6,min(sh(i,j,k),shsat))
          enddo
+         enddo
+         enddo
+c
+c
+         do j=1,ny_laps
+         do i=1,nx_laps
+            shsat=ssh2(pr_sfc(i,j)*0.01,tp_sfc(i,j)-273.15,
+     .             tp_sfc(i,j)-273.15,0.0)*0.001
+            sh_sfc(i,j)=max(1.0e-6,min(sh_sfc(i,j),shsat))
          enddo
          enddo
 c
@@ -779,7 +805,11 @@ c
            print *,'Error writing interpolated data to LAPS database.'
          endif
 
-         if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.6) then
+         if(bgmodel.eq.2.or.
+     +      bgmodel.eq.4.or.
+     +      bgmodel.eq.5.or.
+     +      bgmodel.eq.6.or.
+     +      bgmodel.eq.8) then
 
 c
 c Write the 2d fields to lgb
@@ -797,6 +827,8 @@ c
             units(kk+5)='PA'
             var(kk+6)='SLP'
             units(kk+6)='PA'
+            var(kk+7)='DSF'
+            units(kk+7)='K'
             do j=1,ny_laps
                do i=1,nx_laps
                   grid(i,j,kk+1) = uw_sfc(i,j)
@@ -806,9 +838,13 @@ c
                   grid(i,j,kk+5) = pr_sfc(i,j)
                   grid(i,j,kk+6) = mslp(i,j)
 
+                  grid(i,j,kk+7) = make_td(pr_sfc(i,j)/100.,
+     +                 tp_sfc(i,j)-273.15,sh_sfc(i,j)*1000.0,0.0)+273.15
+
+
                enddo
             enddo
-            do kk=1,6
+            do kk=1,nsfc_fields
                ip(kk)=0
             enddo
          
@@ -818,7 +854,7 @@ c
             print *,'writing to dir ',outdir
             print *,'Writing - ',fname//af(3:4),'00.',ext
             call write_laps(bgtime,bgvalid,outdir,ext,
-     .           nx_laps,ny_laps,6,6,var,
+     .           nx_laps,ny_laps,nsfc_fields,nsfc_fields,var,
      .           ip,lvl_coord,units,comment,grid,istatus)
          
 
@@ -880,7 +916,7 @@ c
                call get_directory(ext,outdir,len_dir) 
                print*,outdir,ext
                call time_interp(outdir,ext,
-     .              nx_laps,ny_laps,1,6,
+     .              nx_laps,ny_laps,1,nsfc_fields,
      .              pr,laps_cycle_time,
      .              lga_times(i-1),lga_valid(i-1),
      .              lga_times(i  ),lga_valid(i  ))
@@ -910,7 +946,7 @@ c
       read(af,'(i4)') ihour
       call get_lapsdata_3d(bgtime,bgtime+ihour*3600,nx,ny,
      +        nz,'lga ','HT ',dumb1,comment,dumb2,istatus)
-      if(istatus.ne.1) then
+      if(istatus.lt.1) then
          stop 'error returned from get_lapsdata_3d'
       endif
 
