@@ -65,6 +65,7 @@ MODULE setup
   LOGICAL                       :: keep_fdda
   LOGICAL                       :: split_output
   LOGICAL                       :: realtime
+  LOGICAL                       :: make_donefile
   INTEGER                       :: max_wait_sec
   LOGICAL                       :: proc_by_file_num
   INTEGER                       :: start_file_num
@@ -285,7 +286,7 @@ CONTAINS
     NAMELIST /lfmpost_nl/ domain_num, keep_fdda, split_output, levels_mb,&
         redp_lvl,lfm_name , proc_by_file_num, start_file_num, stop_file_num, &
              file_num_inc, file_num3, make_laps,realtime, write_to_lapsdir, &
-             make_v5d, v5d_compress,max_wait_sec, do_smoothing, &
+             make_donefile,make_v5d, v5d_compress,max_wait_sec, do_smoothing, &
              gribsfc,gribua,table_version,center_id,subcenter_id,process_id, &
              make_points,point_tz_utcoffset,point_tz_label,point_windspd_units,&
              point_temp_units, point_vent_units
@@ -336,6 +337,7 @@ CONTAINS
     make_points = .false.
     v5d_compress = 2
     realtime = .true.
+    make_donefile = .true.
     do_smoothing = .true.
     ! Default GRIB settings
     gribsfc = .false.

@@ -43,7 +43,8 @@
                                   press_levels, &
                                   lfmprd_dir, laps_data_root, domnum, &
                                   laps_reftime, laps_valtime, nx, ny, nz, &
-                                  realtime,write_to_lapsdir,model_name )
+                                  realtime,write_to_lapsdir,model_name, &
+                                  make_donefile )
 
     ! Creates the LAPS *.fua and *.fsf files for model output.  The names of the
     ! input variables correspond to their netCDF names found in the fua.cdl
@@ -145,6 +146,7 @@
     LOGICAL, INTENT(IN)             :: realtime
     LOGICAL, INTENT(IN)             :: write_to_lapsdir
     CHARACTER(LEN=32), INTENT(IN)   :: model_name
+    LOGICAL, INTENT(IN)             :: make_donefile
     ! Locals
     CHARACTER(LEN=2)             :: domnum_str
     INTEGER, PARAMETER           :: nvar3d = 16 ! Equals # of 3d arrays above!
@@ -349,7 +351,7 @@
       PRINT *, 'Error writing LAPS 3D (fua) file.'
     ENDIF
     PRINT *, 'Done writing 3d data.'
-    IF ((realtime) .AND. (istatus .EQ. 1)) THEN
+    IF ((realtime) .AND. (istatus .EQ. 1) .AND. (make_donefile)) THEN
       donefile = TRIM(output_file) // '.done'
       OPEN(77,FILE=donefile,STATUS='UNKNOWN')
       CLOSE(77)
@@ -617,7 +619,7 @@
       PRINT *, 'Error writing LAPS 2d (fsf) file.'
     ENDIF
     PRINT *, 'Done writing 2d data.'
-    IF ( (realtime) .AND. (istatus .EQ. 1)) THEN
+    IF ( (realtime) .AND. (istatus .EQ. 1).AND.(make_donefile)) THEN
       donefile = TRIM(output_file) // '.done'
       OPEN(77,FILE=donefile, STATUS='UNKNOWN')
       CLOSE(77) 

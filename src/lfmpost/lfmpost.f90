@@ -328,7 +328,7 @@ PROGRAM lfmpost
                             upbl, vpbl, vnt_index,ham_index,hah_index,fwi_index,&
                             prslvl*0.01,lfmprd_dir,laps_data_root,domain_num,&
                             laps_reftime,laps_valtime,nx,ny,kprs,realtime, &
-                            write_to_lapsdir,model_name)
+                            write_to_lapsdir,model_name,make_donefile)
 
       DEALLOCATE(cldliqcon_prs)
       DEALLOCATE(cldicecon_prs)
