@@ -55,7 +55,7 @@ cdoc    or mercator projection.
 
         if (abs(rlat) > 90.000) then
            write(6,*) 'rejecting invalid latitude ',rlat
-           istatus = 0
+           istatus = -1
            return
         endif
 
