@@ -8,6 +8,7 @@
  dgr=1.1,
  abs_vel_min=2.0,
  l_line_ref_qc=.false.,
+ l_hybrid_first_gate=.false.,
  path_to_radar_a=
 '/public/data/radar/wsr88d/wideband/kama/netcdf',
 '/public/data/radar/wsr88d/wideband/kcys/netcdf',
@@ -76,4 +77,8 @@ c                      to be used
 c
 c 'l_line_ref_qc'    - Flag to call Dr. Deng's (CWB) QC routine for continuous
 c                      line echo deleting
+c                      
+c 'l_hybrid_first_gate - Flag to mask out gates near the radar for low tilts
+c                        to emulate what happens with the hybrid reflectivity
+c                        scan
 c                      
