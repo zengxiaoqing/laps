@@ -416,10 +416,15 @@ foreach $exe (@LAPS_EXE){
     } # if $opt_q or $opt_Q
 
     my $cur_time = time();
-    if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)+$extend_time*3600){
-	print "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
-	print LOG "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
-	last;
+
+# we won't worry about cycle time overrun if archive case
+    if(! $opt_A || ! $opt_a)
+    {
+       if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)+$extend_time*3600){
+          print "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
+          print LOG "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
+          last;
+       }
     }
 }
 

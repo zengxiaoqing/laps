@@ -6,6 +6,8 @@
 # if not current.  Both command line arguments are optional;
 # order doesn't matter.
 
+require '@prefix@/etc/which_bkgd.pm';
+
 $nargs = @ARGV;
 if ($nargs == 0) {}
 elsif ($nargs == 1) {
@@ -68,55 +70,14 @@ foreach (@lines) {
 print "ANALYSIS VALID TIME (yydddhhmm): $validtime UTC\n\n";
 
 # Determine background model.
+# ---------------------------
 
-$modeltype = "missing";
+($modelid,$modeltype,$runtime,$fcsthr,$mdlyr,$mdldy)=&which_bkgd::which_bkgd(@lines);
 
-#Newer way with using 'get_modelfg_3d'
-$searchstring = "Successfully obtained: ";
-foreach (@lines) {
-  if (/$searchstring(.*)/) {
-    ($modeltime,$modeltype) = split(" ",$1); 
-    last; } 
-}
+print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n";
+print "$modeltype $modelid $mdlyr$mdldy$runtime$fcsthr \n";
 
-if ($modeltype eq "missing") {print "Can't determine model background.\n"}
-
-print "BACKGROUND FIELDS:  ";
-if ($modeltype =~ /ram/) {
-  $modelid = "local";
-
-} else {
-  $bgmodelfile = $filename;
-  $bgmodelfile =~ s/$logname/lga/;
-  $modelid = "???";
-  if (open(BGMODEL,$bgmodelfile)) {
-    foreach (<BGMODEL>) {
-#     if (/cmodel (\w*)/) {$modelid = $1;}
-      if (/cmodel: (.*)/)           {(@modelid) = split(" ", $1); $modelid = @modelid[0];}
-      if (/Reading - (.*)/)         {$pathname = $1; last; close BGMODEL; } 
-      if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; } 
-    }
-    $basename = $1 if ($pathname =~ /([^\/]*)$/);
-  }
-
-  if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
-    $runtime = $2/100;
-    $fcsthr = $4;
-#   print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; 
-  } elsif ($basename =~ /(\d\d\d\d)(\d\d)(\d\d)\_(\d\d)(\d\d)/) {
-    $runtime = $4;
-#   print "Using grids from $modelid started at $runtime UTC \n"; 
-  }
-
-}
-
-if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
-  $runtime = $3;
-  $fcsthr = $4;
-  print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n"; 
-} 
-
-@profiletypes = qw(RASS TOWER RAOB RADIOMTR);
+@profiletypes = qw(RASS RAOB DROPSND TOWER RADIOMTR);
 foreach $profiletype (@profiletypes) {
 # Print $profiletype (only if present)
   $i=0; $iprint=0; $ihead=0;

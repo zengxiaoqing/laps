@@ -6,6 +6,8 @@
 # if not current.  Both command line arguments are optional;
 # order doesn't matter.
 
+require '@prefix@/etc/which_bkgd.pm';
+
 $nargs = @ARGV;
 if ($nargs == 0) {}
 elsif ($nargs == 1) {
@@ -62,6 +64,14 @@ if (defined $hr) {
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
 print "\nReading from log file $filename\n\n";
+
+# Determine background model.
+# ---------------------------
+
+($modelid,$modeltype,$runtime,$fcsthr,$mdlyr,$mdldy)=&which_bkgd::which_bkgd(@lines);
+
+print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n";
+print "$modeltype $modelid $mdlyr$mdldy$runtime$fcsthr \n";
 
 # Model background, 4dda mode
 
