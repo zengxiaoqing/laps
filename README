@@ -812,15 +812,16 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
       
                        ----   2.3.3  Surface Data ---
 
-     Sfc Obs (lso): FSL uses this data in FSL's NIMBUS NetCDF format as input.
-           The FSL code is in the '.../src/ingest/sao' directory, and
-           includes routines to read and format different surface data
-           (METAR, local data, buoy [under development]).  Outside users will 
-           need to modify/write the necessary routines to read their data 
-           formats to be able to output the ASCII LSO file. Paths to the data 
-           are set in the 'surface_obs.inc' file. Looking at the routines in 
-           the '.../src/ingest/sao' directory should provide enough 
-           information to get you started.  
+     Sfc Obs (lso): FSL uses this data primarily in FSL's NIMBUS NetCDF format
+           as input. A few other formats are now being supported, as listed
+           in the 'static/obs_driver.nl' namelist. The FSL code is in the 
+           '.../src/ingest/sao' directory, and includes routines to read and 
+           reformat different surface data (METAR/SYNOP, local data, buoy, 
+           and GPS). Users may need to modify/write the necessary routines to 
+           read their data formats to be able to output the ASCII LSO file. 
+           Paths to the data are set in the 'obs_driver.nl' file. Looking at 
+           the routines in the '.../src/ingest/sao' directory should provide 
+           enough information to get you started on any needed modifications.  
       
                       ----   2.3.4  Profiler / RASS ---
 
@@ -1741,14 +1742,15 @@ between the valid forecast times for two of the set of input files.
 ------ 3.2.2.1   obs_driver.x --- 
 
 LSO process - obs_driver.x - Ingest surface data
-        (author: Pete Stamus)
+        (author: Pete Stamus/Steve Albers)
 
 <pre>
 
 Input:
-	raw NetCDF METAR data
-	raw NetCDF LDAD mesonet data
-        raw NetCDF Buoy/ship data
+	METAR/SYNOP data
+	LDAD mesonet data
+        Buoy/ship (maritime) data
+        GPS surface data       
 
 Output:
          LSO	ascii	LAPS surface obs intermediate data file: METAR, Mesonet,
@@ -1759,9 +1761,9 @@ Output:
 Sample Input/Output: May be available in the test data case.
 </pre>
 
-Source directory: laps/src/ingest/sao (contains a README file)
+Source directory: $LAPS_SRC_ROOT/src/ingest/sao (contains a README file)
 
-Parameter files: obs_driver.nl
+Parameter file (specifies input data paths and formats): 'obs_driver.nl'
 
 The LSO file is fairly self explanatory. The easiest way to see what
 goes where is to look at the routine 'read_surface_data' in the file 
@@ -1770,7 +1772,8 @@ file 'src/include/lso_formats.inc'.
 
 The routines are pretty well commented, and should be enough to tell you what 
 you need to know if you want to make a decoder that outputs an LSO-type 
-formatted file directly. 
+formatted file directly. This direct route would allow you to bypass the
+step of producing "raw" NetCDF surface observation data. 
 
 The expected accuracies are based on "offical" NWS numbers where possible.  
 For LDAD observations, they're just a best guess, since no one really knows 
