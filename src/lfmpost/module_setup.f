@@ -94,7 +94,7 @@ MODULE setup
   REAL                          :: output_freq_min
   CHARACTER(LEN=24)             :: cycle_date
   CHARACTER(LEN=24),ALLOCATABLE :: times_to_proc(:)
-  INTEGER,ALLOCATABLE           :: sim_minutes(:)
+  INTEGER,ALLOCATABLE           :: sim_tstep(:)
   CHARACTER(LEN=24), PARAMETER  :: static_date='1900-01-01_00:00:00.0000'
   
   ! Model domain configuration info
@@ -649,7 +649,7 @@ CONTAINS
  
     status = 0
     num_points = 0
-    pointfile = TRIM(lfmprd_dir) // '../static/lfmpost_points.txt'
+    pointfile = TRIM(lfmprd_dir) // '/../static/lfmpost_points.txt'
     INQUIRE(FILE=pointfile, EXIST=pointfileexists)
     IF (.NOT. pointfileexists) THEN
       PRINT *, 'Point file missing: ', pointfile
@@ -874,13 +874,13 @@ CONTAINS
       start_minute, start_second
 
     ALLOCATE (times_to_proc (num_times_to_proc))
-    ALLOCATE (sim_minutes   (num_times_to_proc))
+    ALLOCATE (sim_tstep   (num_times_to_proc))
     PRINT *, 'Total number of output times: ', num_times_to_proc
     DO t = 1,num_times_avail, time_index_inc
       sec_to_add = (t-1)*NINT(dt)*time_step_count_output
-      sim_minutes(t) = NINT(sec_to_add/60.)
+      sim_tstep(t) = NINT(sec_to_add/dt)
       CALL geth_newdate(new_date, cycle_date(1:19),sec_to_add)
-      PRINT *, 'Will Process Date: ', new_date,sim_minutes(t)
+      PRINT *, 'Will Process Date: ', new_date,sim_tstep(t)
       times_to_proc(t) = new_date
     ENDDO
     PRINT *, ' '

@@ -156,7 +156,7 @@ PROGRAM lfmpost
       ENDIF
 
     ELSEIF(mtype.EQ.'wrf') THEN
-      CALL make_wrf_file_name(lfmprd_dir,domain_num,sim_minutes(t),data_file)
+      CALL make_wrf_file_name(lfmprd_dir,domain_num,sim_tstep(t),data_file)
       INQUIRE(FILE=data_file,EXIST=file_ready)
       IF (.NOT.file_ready) THEN
         CALL wrfio_wait(data_file,max_wait_sec)
