@@ -71,33 +71,77 @@ c                                      check on time for individual variables.
 c
 c*****************************************************************************
 c
-	include 'netcdf.inc'
-c
 c.....  Input variables/arrays
 c
-        integer maxobs ! raw data file
         integer maxsta ! processed stations for LSO file
         character*(*) path_to_local_data, local_format
 c
 c.....  Local variables/arrays
 c
-        real    lat(ni,nj), lon(ni,nj), k_to_f
-	real*8  observationTime(maxobs), rhChangeTime(maxobs)
-        real*8  stationPressChangeTime(maxobs)
-	real*8  tempChangeTime(maxobs), windDirChangeTime(maxobs)
-        real*8  windGustChangeTime(maxobs)
-	real*8  windSpeedChangeTime(maxobs)
-	real*4  latitude(maxobs), longitude(maxobs), elevation(maxobs)       
-	real*4  temperature(maxobs), dewpoint(maxobs)
-        real*4  relHumidity(maxobs), stationPressure(maxobs)      
-	real*4  windDir(maxobs), windSpeed(maxobs)
-        real*4  windDirMax(maxobs), windGust(maxobs)       
-	real*4  seaLevelPressure(maxobs), altimeter(maxobs)
-        real*4  visibility(maxobs), solarRadiation(maxobs)
-        real*4  seaSurfaceTemperature(maxobs), soilTemperature(maxobs)       
+	integer    rtime
         integer*4  i4time_ob_a(maxobs), before, after
+        real    lat(ni,nj), lon(ni,nj), k_to_f
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_dupe(maxobs)
+c
+	integer*4  wmoid(maxsta)
+	integer    recNum
+c
+	character  save_stn(maxobs)*6
+	character  timech*9, time*4
+	character  stations(maxsta)*20
+	character  provider(maxsta)*11
+	character  presWeather(maxobs)*25, weather(maxsta)*25
+	character  reptype(maxsta)*6, atype(maxsta)*6
+	character  store_cldamt(maxsta,5)*4 
+        character*13 filename13, cvt_i4time_wfo_fname13
+        character*150 data_file 
+c
+c.....  Declarations for call to NetCDF reading routine (from gennet)
+
+      include 'netcdf.inc'
+      integer maxSensor, maxobs,nf_fid, nf_vid, nf_status
+      parameter (maxSensor=2) ! Manually added
+      integer filterSetNum, firstOverflow, globalInventory,
+     +     nStaticIds, numPST, numericWMOid(maxobs), precipIntensity(
+     +     maxSensor, maxobs), precipType( maxSensor, maxobs),
+     +     pressChangeChar(maxobs)
+      real altimeter(maxobs), dewpoint(maxobs), elevation(maxobs),
+     +     latitude(maxobs), longitude(maxobs),
+     +     meanWeightedTemperature(maxobs), precipAccum(maxobs),
+     +     precipRate(maxobs), pressChange3Hour(maxobs),
+     +     rawPrecip(maxobs), relHumidity(maxobs),
+     +     seaLevelPressure(maxobs), soilMoisture(maxobs),
+     +     soilTemperature(maxobs), solarRadiation(maxobs),
+     +     stationPressure(maxobs), temperature(maxobs),
+     +     visibility(maxobs), windDir(maxobs), windDirMax(maxobs),
+     +     windGust(maxobs), windSpeed(maxobs)
+      double precision observationTime(maxobs), receivedTime(maxobs),
+     +     reportTime(maxobs), rhChangeTime(maxobs),
+     +     stationPressChangeTime(maxobs), tempChangeTime(maxobs),
+     +     windDirChangeTime(maxobs), windGustChangeTime(maxobs),
+     +     windSpeedChangeTime(maxobs)
+      character windDirDD(maxobs)
+      character*11 stationType(maxobs)
+      character*51 test1(maxobs)
+      character*24 staticIds
+      character windSpeedDD(maxobs)
+      character relHumidityDD(maxobs)
+      character stationPressureDD(maxobs)
+      character altimeterDD(maxobs)
+      character pressChange3HourDD(maxobs)
+      character precipRateDD(maxobs)
+      character*11 dataProvider(maxobs)
+      character*6 stationId(maxobs)
+      character dewpointDD(maxobs)
+      character seaLevelPressureDD(maxobs)
+      character visibilityDD(maxobs)
+      character precipAccumDD(maxobs)
+      character*51 stationName(maxobs)
+      character*12 providerId(maxobs)
+      character temperatureDD(maxobs)
+
+      real seaSurfaceTemperature(maxobs) ! manually added
 c
 c.....  Output arrays.
 c
@@ -109,20 +153,6 @@ c
      &          store_6(maxsta,5), store_6ea(maxsta,2),
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
-c
-	integer*4  wmoid(maxsta)
-	integer    rtime
-	integer    recNum, nf_fid, nf_vid, nf_status
-c
-	character  stationId(maxobs)*6, save_stn(maxobs)*6
-	character  timech*9, time*4
-	character  stations(maxsta)*20
-	character  dataProvider(maxobs)*11, provider(maxsta)*11
-	character  presWeather(maxobs)*25, weather(maxsta)*25
-	character  reptype(maxsta)*6, atype(maxsta)*6
-	character  store_cldamt(maxsta,5)*4, stationType(maxobs)*11
-        character*13 filename13, cvt_i4time_wfo_fname13
-        character*150 data_file 
 c
 c.....  Start.
 c
@@ -171,6 +201,8 @@ c
      1                         ,3600                                     
      1                         ,i4time_file_b,i4time_file_a)              
 
+        I4_elapsed = ishow_timer()
+
         do i4time_file = i4time_file_a, i4time_file_b, -3600
 
             call s_len(path_to_local_data,len_path)
@@ -209,6 +241,7 @@ c
                 write(6,*)' Try increasing "maxobs" in obs_driver.nl'
                 go to 590
             endif
+
 c
 c.....  Call the read routine.
 c
@@ -239,6 +272,8 @@ c
             endif
 
             ix = ix + n_local_file
+
+            I4_elapsed = ishow_timer()
 
 590     enddo                  ! i4time_file
 
@@ -742,6 +777,8 @@ c
 c
  125     continue
        enddo !i
+
+         I4_elapsed = ishow_timer()
 c
 c
 c.....  That's it...lets go home.
