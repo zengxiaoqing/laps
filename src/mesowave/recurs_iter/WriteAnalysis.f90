@@ -19,6 +19,7 @@ SUBROUTINE WriteAnalysis(a,n)
   CHARACTER :: lvl_coord(nvlaps+10)*3,comment(nvlaps+10)*125
   INTEGER   :: lvl(nvlaps+10),istatus,it,i,j
   REAL*4    :: data(n(1)-2*nfic,n(2)-2*nfic,16)
+  REAL	    :: pp(n(1),n(2))
 
   CALL get_directory('lsx', dir_s, len)
   ext = 'lsx'
@@ -105,10 +106,9 @@ SUBROUTINE WriteAnalysis(a,n)
 
      ! Reduced Pressure Change:
      ! data(1:nx,1:ny,11) = 0.0
-     CALL GridBarnes(a(1,1,it,6),n,n,a(1,1,1,6))
-	! WRITE(14,*) a(1:n(1),1:n(2),it,6)
+     CALL GridBarnes(a(1,1,it,6),n,n,pp)
      data(1:nx,1:ny,11) = a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,it,6)-&
-			  a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,1,6)
+			  pp(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic)
 	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3),6)- &
 	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3)-1,6)
 
