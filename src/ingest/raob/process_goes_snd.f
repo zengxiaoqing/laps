@@ -155,8 +155,11 @@ c-------------------------------------------------------------------------------
 C
 
       istatus = 0 ! set initially as bad
+
+c     compute average record time for ingest
       avg_i4time_record = nint((float(i4time_begin)+
      1     float(i4time_end))/2.)
+      call make_fnam_lp(avg_i4time_record,m_time_record,istatus)
 
 c     get perimeter values for the domain
       call get_domain_perimeter(iii,jjj,'nest7grid',lat_a,
@@ -221,7 +224,6 @@ c     set up time window compare
         nbuf_2=int(rbuf(2))
         write (c_time_record_long,34) nbuf_1,nbuf_2
         c_time_record = c_time_record_long(1:9)
-        call make_fnam_lp(avg_i4time_record,m_time_record,istatus)
  34     format (i5.5,i6.6)
         call i4time_fname_lp(c_time_record,i4time_record,istatus)
         if (i4time_record.ge.i4time_begin 
