@@ -2186,7 +2186,10 @@ the future.  The lat/lons are in decimal degrees.
 
 This new QC package compares the observations temporally and fills in 
 predicted values for an observation when it is only intermittently available.
-This helps compensate for temporal changes in data density.
+This helps compensate for temporal changes in data density. A future 
+enhancement may be to replicate cloud layer observations for a few hours.
+This would be especially helpful when running an hourly LAPS while SYNOP 
+stations report clouds only every 3 hours.
 
 More information is in the NWP conference paper on Kalman Filtering 
 (McGinley 2001) at http://laps.fsl.noaa.gov/cgi/LAPB.pubs_01.cgi
