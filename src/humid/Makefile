@@ -37,9 +37,10 @@ SRC=analq.f            ghbry.f            lq3_driver1a.f     rsr.f \
     getmapsdf.f        locate.f           read_lvd_3_4_5.f   writefile.f \
     moment_b.f         two_d_stats.f      process_gvap.f     read_gvap.f \
     analz_gvap.f       report_change.f    ofm.f              oh_zone.f  \
-    process_gps.f      read_gps.f         int_layerpw.f \
+    process_gps.f      read_gps.f         int_layerpw.f      cloud_sat.f \
     get_newest_file.f  weight_field.f     analz_gps.f        sigma_to_laps.f \
-    precip_water_profile.f                optrans.f	     bias_correction.f
+    int_ipw.f \
+    precip_water_profile.f                optrans.f	     bias_correction.f 
 
 MAIN=lq3driver.f
 
@@ -53,7 +54,7 @@ exe: $(ARCHIVE) $(EXE)
 
 
 
-$(EXE): $(ARCHIVE) $(MAIN)
+$(EXE): $(ARCHIVE) $(MAIN) $(LAPSLIBS)
 	$(RANLIB) $(LIB)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o

@@ -111,6 +111,7 @@ c     regular internal variables
      1     npts,                !npfilepts in calling routine
      1     istatus
       integer loop_counter
+      integer qk_max
       
 c     internal variables with fixed dimensions
       
@@ -133,7 +134,11 @@ c     compute level of bl (qk)
          do i = 1,ii
             
 c     check integrity
-            if (ph(i,j) .le. 0.0) return ! this cannot be 0.0
+            if (ph(i,j) .le. 0.0)then
+               write(6,*) 'SEVERE error in routine analq.f '
+               write(6,*) 'Aborting analq.f'
+               return           ! this cannot be 0.0
+            endif
             
             k = kstart (i,j)    ! k is "surface"
  10         if (p_3d(i,j,k) .gt. ph(i,j)) then !  haven't reached the bl top
@@ -151,6 +156,13 @@ c     check integrity
          enddo
       enddo
 
+      do j = 1,jj
+         do i = 1,ii
+            qk_max = max (qk(i,j), qk_max)
+         enddo
+      enddo
+      write(6,*) 'QK max of field is', qk_max
+
       call check_nan2(ph,ii,jj,istatus)
 
       if(istatus.ne.1) then
@@ -164,18 +176,10 @@ c     ----------  mixing step
       do j = 1,jj
          do i = 1,ii
             
-c     check for clouds in the boundary layer...if there, do not modify the
-c     boundary at this time  2.2.93
-            
-            cgsum = 0.0
-            do k = kstart(i,j),qk(i,j)
-               cgsum = cgsum + cg(i,j,k)
-            enddo
-            
-            if (cgsum .lt. 0.1) then ! fill in the boundary layer
+
                
-               do k = kstart(i,j),qk(i,j)
-                  if (kstart (i,j) .ge. qk(i,j) ) goto 11 ! skip loop
+            do k = kstart(i,j),qk(i,j)
+               if (kstart (i,j) .ge. qk(i,j) ) goto 11 ! skip loop
                   
 c     new method is simple linear approximation in pressure space.
 c     this method is independent of grid spacing, the old method was
@@ -207,27 +211,43 @@ c     0.092103403 <-->  10% at 25 hpa
 c     0.11982929 <-->  5% at 25 hpa
 
 
-                  frac = p_3d(i,j,k)-p_3d(i,j,kstart(i,j))
-                  frac = exp(frac*0.11982929) ! 
-                  data(i,j,k) = data(i,j,kstart(i,j))*frac +
-     1                 (1.-frac)*data(i,j,k)
+               frac = p_3d(i,j,k)-p_3d(i,j,kstart(i,j))
+               frac = exp(frac*0.01386294) ! 
+               data(i,j,k) = data(i,j,kstart(i,j))*frac +
+     1              (1.-frac)*data(i,j,k)
 
-               enddo
-            endif
+
+               
+            enddo
+
  11         continue            ! loop skipped  no boundary layer, no mixing
-
+            
          enddo
       enddo
-
+      
       call check_nan3(data,ii,jj,kk,istatus)
       if(istatus.ne.1) then
          write(6,*) 'NaN detected in var:data  routine:analq.f'
          write(6,*) 'check after frac computation'
          return
       endif
+c     integrate the tpw field
+         
+      call int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
+
+      call check_nan2(tpw,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:tpw  routine:analq.f'
+         return
+      endif
       
       
-c     ---------- end mixing step
+c     ---------- end mixing step at this point return and ignore 
+c     radiometer code
+
+      return
+
+c--------------- this code is now defunct and not used.......
 
 c     note that qs  has units of g/kg
 

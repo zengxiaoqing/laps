@@ -73,6 +73,8 @@ c     parameter variables
       real
      1     ssh2                 !function
 c     1        make_ssh !function type
+
+      real sat(ii,jj,kk)        !saturation ssh at each location
       
       
       real*4
@@ -195,11 +197,7 @@ c
       data extlt1/'lt1'/
       data ext /'lq3'/
       data rhext /'lh3'/
-      
-c     real eslo,esice
-      
-      
-      
+
 c----------------------code   ------------------
 c     initialize laps field
       
@@ -218,7 +216,6 @@ c     routine
          write(6,*)' error in get_laps_config'
          return
       endif
-
 
 c     
 c     set namelist parameters to defaults 
@@ -532,6 +529,17 @@ c     open file for laps temp data
       endif
       
       
+c     generate saturation array for the domain based on current temp
+c     ans pressure
+
+      do k = 1,kk
+         do j = 1,jj
+            do i = 1,ii
+               sat(i,j,k)=ssh2( p_3d(i,j,k) ,lt1dat(i,j,k)-273.15,
+     1              lt1dat(i,j,k)-273.15, t_ref )/1000.
+            enddo               ! i
+         enddo                  ! j
+      enddo                     ! k
       
       
 c     perform initialquality control check for supersaturation after ingest
@@ -545,18 +553,15 @@ c     perform initialquality control check for supersaturation after ingest
          
          do j = jj,1,-1
             do i = 1,ii
-               tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1              lt1dat(i,j,k)-273.15, t_ref )/1000.
-               
-               if ( data(i,j,k)/tempsh .ge. 1.0) then
+               if ( data(i,j,k)/sat(i,j,k) .ge. 1.0) then
                   cdomain(i) = 'x'
-                  if(data(i,j,k)/tempsh .gt. 1.01) then
+                  if(data(i,j,k)/sat(i,j,k) .gt. 1.01) then
                      cdomain(i) = 's'
                   endif
                   counter = counter + 1
-                  data(i,j,k) = tempsh
+                  data(i,j,k) = sat(i,j,k)
                else
-                  write (cdomain(i),34) int(data(i,j,k)/tempsh*10.)
+                  write (cdomain(i),34) int(data(i,j,k)/sat(i,j,k)*10.)
  34               format (i1)
                endif
             enddo
@@ -622,7 +627,7 @@ c     end report moisture change block
          write(6,*) 'the raob switch is off... raobs skipped'
       endif
       
-c     ****  get laps cloud data. used for cloud, bl, goes
+c     ****   laps cloud data. used for cloud, bl, goes
       
       call mak_cld_grid (i4time,i4timep,cg,ii,jj,kk,
      1     lct,c_istatus)
@@ -668,6 +673,20 @@ c     insert boundary layer data
       call lsin (i4time,p_3d,lt1dat,data,cg,tpw,bias_one,
      1     kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
 
+c     check for supersaturation
+
+      do k = 1,kk
+         do j = 1,jj
+            do i = 1,ii
+               if(data(i,j,k).ge.sat(i,j,k)
+     1              .and.
+     1              data(i,j,k).ne.mdf) then
+                  data(i,j,k) = 0.9*sat(i,j,k)
+               endif
+            enddo
+         enddo
+      enddo
+
 c     check fields after lsin call
       call check_nan3(data,ii,jj,kk,istatus)
       if(istatus.ne.1) then
@@ -709,7 +728,14 @@ c     end report moisture change block
          do k = 1,kk
             do i = 1,ii
                do j = 1,jj
-                  data(i,j,k) = data_pre_bound(i,j,k)
+
+c     fill subsoil part of the array with -1.e30 data.
+                  if(data(i,j,k).lt.0.0) then
+                     continue
+                  else
+                     data(i,j,k) = data_pre_bound(i,j,k)
+                  endif
+
                   data_in(i,j,k) = data(i,j,k)
                enddo
             enddo
@@ -733,43 +759,39 @@ c     gvap data insertion step
          
       endif
 
-      if(istatus_gps.ne. 1) then !cannot complete
-         write(6,*) 'GPS problems, cannot complete gvap correction'
+c     gvap data acquisition
+
+      istatus_gvap = 0
+      
+      if (gvap_switch.eq.1) then
+         
+         write(6,*) 
+         write(6,*) 'Begin GVAP insertion setep'
+         write(6,*) 
+         
+         call process_gvap(ii,jj,gvap_data,gvap_w,
+     1        gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
+     1        lat,lon,time_diff,
+     1        path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
+         
+c         do i = 1,ii
+c            do j = 1,jj
+c               if (gw1(i,j) .ne. mdf )then
+c                  write(6,*) gw1(i,j), gw2(i,j), gw3(i,j), i,j
+c               endif
+c            enddo
+c         enddo
+         
+         if(istatus_gvap.eq.1 .and. istatus_gps.eq.1) then ! correct gvap
+            continue            ! placeholder for correction call
+            write(6,*) 'gvap/gps correction currently disabled'
+         endif  
+         
       else
-         write(6,*) 'Got gps trying to get gvap data'
-
-         istatus_gvap = 0
-
-         if (gvap_switch.eq.1) then
-            
-            write(6,*) 
-            write(6,*) 'Begin GVAP insertion setep'
-            write(6,*) 
-            
-            call process_gvap(ii,jj,gvap_data,gvap_w,
-     1           gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
-     1           lat,lon,time_diff,
-     1           path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
-
-            do i = 1,ii
-               do j = 1,jj
-                  if (gw1(i,j) .ne. mdf )then
-                     write(6,*) gw1(i,j), gw2(i,j), gw3(i,j), i,j
-                  endif
-               enddo
-            enddo
-
-            if(istatus_gvap.eq.1 .and. istatus_gps.eq.1) then ! correct gvap
-               continue  ! placeholder for correction call
-               write(6,*) 'gvap/gps correction currently disabled'
-            endif  
-            
-         else
-            write(6,*) 'Gvap off, not using gvap or attempting' 
-            write(6,*) 'any adjustment'
-         endif
-
+         write(6,*) 'Gvap off, not using gvap or attempting' 
+         write(6,*) 'any adjustment'
       endif
+     
          
 c     CHECKING PROCESS OUTPUT
 
@@ -886,6 +908,8 @@ c     make call to goes moisture insertion
      1           i4time,        ! i4time of run
      1           p_3d,          ! pressure mb
      1           cg,            ! 3-e cloud field 0-1 (1=cloudy)
+     1           c_istatus,     ! cloud istatus
+     1           sat,           ! saturated field
      1           lt1dat,        ! laps lt1 (3-d temps)
      1           mdf,
      1           ps,qs,kstart,
@@ -895,6 +919,9 @@ c     make call to goes moisture insertion
      1           gw1,gw2,gw3,
      1           gww1,gww2,gww3,
      1           gvap_p,istatus_gvap,
+     1           gps_data,
+     1           gps_w,
+     1           istatus_gps,
      1           ii,jj,kk
      1           )
             
@@ -979,31 +1006,19 @@ c     *** insert cloud moisture, this section now controled by a switch
             return
          endif
 
+c     saturate in cloudy areas.  
 
          do k = 1,kk
             write(6,*) lvllm(k),'checking lvllm prior to sat'
             do j = 1,jj
                do i = 1,ii
-                  
-                  if(cg(i,j,k) .gt. 0.6 .and. cg(i,j,k) .lt. 1.0) then !cloudy
-                     
-                     tempsh = ssh2( float(lvllm(k)),
-     1                    lt1dat(i,j,k)-273.15,
-     1                    lt1dat(i,j,k)-273.15, t_ref )/1000.
-                     data(i,j,k) = cg(i,j,k)* tempsh
-     1                    +(1.-cg(i,j,k))*data(i,j,k)
-                     
-                  elseif (cg(i,j,k).ge.1.0) then 
-c     ! still cloudy...put in for albers
-                     
-                     tempsh = ssh2( float(lvllm(k)) 
-     1                    ,lt1dat(i,j,k)-273.15,
-     1                    lt1dat(i,j,k)-273.15, t_ref )/1000.
-                     data(i,j,k) = tempsh
-                     
+
+c                  call cloud_sat (cg(i,j,k),sat(i,j,k),data(i,j,k))
+
+                  if(cg(i,j,k).ge.1.0) then ! saturate only in cloud areas
+                     data(i,j,k) = sat(i,j,k)
                   endif
-                  
-                  
+
                enddo
             enddo
          enddo
@@ -1060,19 +1075,19 @@ c     repeat quality control check for supersaturation after pre-analysis
          do j = jj,1,-1
             do i = 1,ii
                
-               tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1              lt1dat(i,j,k)-273.15,t_ref )/1000.
+c               tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
+c     1              lt1dat(i,j,k)-273.15,t_ref )/1000.
                
-               if ( data(i,j,k)/tempsh .ge. 1.0) then
+               if ( data(i,j,k)/sat(i,j,k) .ge. 1.0) then
                   cdomain(i) = 'x'
-                  if(data(i,j,k)/tempsh .gt. 1.01) cdomain(i:i) = 's'
+                  if(data(i,j,k)/sat(i,j,k).gt.1.01) cdomain(i:i) = 's'
                   counter = counter + 1
-                  data(i,j,k) = tempsh
+                  data(i,j,k) = sat(i,j,k)
                elseif (data(i,j,k) .lt. 0.0) then
                   cdomain(i) = 'M'
                   
                else
-                  write (cdomain(i),35) int(data(i,j,k)/tempsh*10.)
+                  write (cdomain(i),35) int(data(i,j,k)/sat(i,j,k)*10.)
  35               format (i1)
                   
                endif

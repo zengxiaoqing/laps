@@ -90,7 +90,7 @@ c     internal variables
       integer istatus_8,istatus_10
       integer file_name_length
       character*120 desired_ext
-      integer de_index
+      integer de_index, n8
 
 
       file_name_length = 9
@@ -136,6 +136,7 @@ c     get most recent file in directory
 
  665  close (22)
       nn = i-1
+      n8 = nn ! number of goes 8 stations read
       if (nn .eq. 0) go to 666
       write(6,*) nn, ' number of records read GOES 8'
       istatus_8 = 1             !assign success to reading goes 8
@@ -146,7 +147,7 @@ c     write(6,*) (wt(i),i=1,nn)
  668  close (22)
       write(6,*) 'failed reading GOES 8'
       istatus_8 = 0
-      nn = 1
+
 
  669  continue
 
@@ -183,9 +184,10 @@ c     get most recent file in directory
       open(23, file=const_file(1:cf),form='formatted',
      1     status='old',err = 666)
       read(23,*,end=666,err=666) ! first header line is ignored
-      do i = 1,nstations
+      do i = nn,nstations
          read(23,*,end=667,err=667) idummy,idummy,lat(i),lon(i),
-     1        idummy,idummy,wt(i), w1(i),w2(i),w3(i)
+     1        idummy,idummy,wt(i), w1(i),w2(i),w3(i),idummy, 
+     1        gvap_p(i)
 
       enddo
 
@@ -206,9 +208,9 @@ c     get most recent file in directory
          istatus = 1
       endif
       
-      nn = i-1 + nn
+      nn = i-1
       if (nn .eq. 0) go to 666
-      write(6,*) i-1, ' number of records read GOES 10'
+      write(6,*) nn-n8, ' number of records read GOES 10'
       istatus = 1
 c      write(6,*) (wt(i),i=1,nn)
 

@@ -45,7 +45,7 @@ cdis
 
 
 
-        subroutine sh2mr (sh,mr)
+        subroutine sh2mr (sh,mr,istatus)
 
 
 c       $log: sh2mr.for,v $
@@ -58,23 +58,25 @@ c       this routine computes the mixing ratio (g/g)
 
         real sh,mr
         real epsilon
+        integer istatus
 
         epsilon = 0.622 !(ratio of molecular weight of water ~ 18,
 c                       over dry air~29)
 
+        istatus  = 1
+
         if (sh/epsilon .eq. 1.) then
                 write(6,*) 'error in input to routine sh2mr'
                 write(6,*) 'divide by zero has occurred'
-                write(6,*) 'exit with return value (1)'
-                call exit (1)
+                istatus = 0
         endif
 
 
         if (sh/epsilon .gt. 1.) then
                 write(6,*) 'error in input to routine sh2mr'
                 write(6,*) 'impossible condition has occurred'
-                write(6,*) 'exit with return value (1)'
-                call exit (1)
+                write(6,*) 'sh has value of ', sh
+                istatus = 0
         endif
 
         mr = sh / (1.-sh/epsilon)

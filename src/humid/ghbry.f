@@ -45,9 +45,7 @@ cdis
       subroutine ghbry (i4time,p_3d,pb,lt1dat,htby,
      1     ii,jj,kk,istatus)
     
-c     routine to return boundary layer depth in meters
-c     currently this is fixed at 100 meters.  logically, this
-c     should be determined by some type of model
+c     routine to return boundary layer top in pressure units
      
       implicit none
 
@@ -89,7 +87,7 @@ c     ------------begin exe last revised 10/26/99 db
          do i = 1,ii
             
             htby(i,j) = pb(i,j) !put surface pressure in as first guess of
-c     boundary level
+c     boundary level top
             
          enddo
       enddo
@@ -143,18 +141,32 @@ c     divert code here to not fall into section 111
             if (y2.lt.0.0)   then !actually found negative level
 c     this test prevents going to the top of the column w/o inversion
 c     should never happen, but this is safeguard.
+
+c     sun machines seem to have a problem when y2 and y1 are very close.
+c     to avoid this situation, such close numbers indicate that the 
+c     top of the boundary is very close to x1 so we assign this
+c     here,  if the difference is large enough, then we use the interp
+c     routine.
+
+c               write (6,*) 'TEMPP ', abs(y2-y1)
+
+               if (abs(y2-y1) .le. 1.e-6) then
+                  htby(i,j) = x1
+               else
                
 c     interpolate in height space
-               call interp( 0.,y1,y2,log(x1),log(x2),htby(i,j) )
-               htby(i,j) = exp(htby(i,j))
+                  call interp( 0.,y1,y2,log(x1),log(x2),htby(i,j) )
+                  htby(i,j) = exp(htby(i,j))
 
 c     double safeguard on making sure htby is not below ground level.
-               htby(i,j) = min (htby(i,j),pb(i,j))
+                  htby(i,j) = min (htby(i,j),pb(i,j))
+               endif
 
-c     check for runaway adjusment, assign to base value
-               if (htby(i,j).lt. 550. ) then ! regard as too high
-                  write (6,*) 'i,j,htby(i,j), adjust ',i,j,htby(i,j)
-                  htby(i,j) = pb(i,j)
+c     check for runaway adjustment, assign to base value
+               if (htby(i,j).lt.pb(i,j)-400. ) then ! regard as too high
+                  write (6,*) 'i,j,htby(i,j), gt 400mb depth, adjust',
+     1                 ' to surface pressure - 400 mb', i,j,htby(i,j)
+                  htby(i,j) = pb(i,j)-400.
                endif
 
             endif

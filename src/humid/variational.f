@@ -45,9 +45,11 @@ cdis
       subroutine variational (
      1     sh,                  ! specific humidity g/g
      1     lat,lon,             ! lat and longitude (deg)
-     1     i4time,              !i4time of run (seconds)
-     1     p_3d,                !pressure hpa (laps vert grid)
-     1     cloud,               !cloud array
+     1     i4time,              ! i4time of run (seconds)
+     1     p_3d,                ! pressure hpa (laps vert grid)
+     1     cloud,               ! cloud array
+     1     istatus_cloud,       ! clouds istatus
+     1     sat,                 ! saturated specific hum.
      1     t,                   ! lt1 (laps 3d temps)
      1     mdf,
      1     ps,qs,kstart,
@@ -57,6 +59,9 @@ cdis
      1     gw1,gw2,gw3,
      1     gww1,gww2,gww3,
      1     gvap_p,istatus_gvap,
+     1     gps_data,
+     1     gps_w,
+     1     istatus_gps,
      1     ii,jj,kk             ! grid dimensions
      1     )
 
@@ -66,9 +71,7 @@ c   improvement in upper level moisture (above 500 mb) can be anticipated to be
 c   about 70%.  Current research is pursuing using the satellite data in other
 c   levels and other variables such as temperature. 
 c
-c   19 October, 1999, Tuesday
-c   
-c   This routine interfaces GOES 8/10 satellite broadcast network data (and
+c   This routine interfaces GOES 8/10/11 satellite broadcast network data (and
 c   local GVAR data) to the LAPS moisture analysis.  In 1999, this routine
 c   was modified from an earlier version that used the University of
 c   Wisconsin -- Madison's forward model to a new model developed at
@@ -89,7 +92,6 @@ c   further recompilation.
 
 c   
       implicit none
-      save
       include 'Constants.inc'
       include 'grid_fname.cmn'
 
@@ -101,8 +103,10 @@ c     parameter list variables
       real sh(ii,jj,kk)
       real lat(ii,jj),lon(ii,jj)
       integer i4time
+      real sat (ii,jj,kk)
       real t(ii,jj,kk),p_3d(ii,jj,kk),mdf
       real cloud(ii,jj,kk)
+      integer istatus_cloud
       real gw1(ii,jj),gww1(ii,jj)
       real gw2(ii,jj),gww2(ii,jj)
       real gw3(ii,jj),gww3(ii,jj)
@@ -113,13 +117,16 @@ c     parameter list variables
       integer sat_skip
       real ps(ii,jj), qs(ii,jj)
       integer kstart(ii,jj)
+      real gps_data(ii,jj)
+      real gps_w (ii,jj)
+      integer istatus_gps
 
 
 c internal variables
 
       integer istatus
       integer i4time_sat
-      integer i,j,k,k2
+      integer i,j,k,k2,ijk
       real local_model_p(40)
       real dummy
       data local_model_p/.1,.2,.5,1.,1.5,2.,3.,4.,5.,7.,10.,15.,
@@ -139,6 +146,7 @@ c climate model variables
       parameter (n_snd_ch = 22)
       integer kanch(7)
       data kanch /10,8,7,11,16,6,12/
+      integer restore_cost_rad_istatus
 
 
 c dynamic dependent variables
@@ -149,17 +157,17 @@ c dynamic dependent variables
 
       real model_t(40,ii,jj), model_mr(40,ii,jj)
 
-
-c forward model variarles
-
-c new optran variables
-       real tbest(n_snd_ch)
-
-
-c old gimtau.f variables
+c     forward model variarles
+      
+c     new optran variables
+      
+      real tbest(n_snd_ch)
+      
+c     old gimtau.f variables
+      
       real radiance(ii,jj,18),tskin(ii,jj),psfc(ii,jj),
-     1  theta(ii,jj),
-     1  ozo(40),gimrad,tau(40)
+     1     theta(ii,jj),
+     1     ozo(40),gimrad,tau(40)
       real emiss
       integer kan,lsfc(ii,jj)
       real model_p(40)
@@ -168,17 +176,17 @@ c old gimtau.f variables
       real btemp(ii,jj,18),britgo,plango
       real zenith               ! function call
       real pi, d2r
-
-c       powell specific arrays
+      
+c     powell specific arrays
       real x(3)
       real xi(3,3)
       real ftol,fret
       integer iter(ii,jj)
-      real func         ! function typing for cost function
+      real func                 ! function typing for cost function
       external func
-
-c   optran specific arrays for powell function calling
-
+      
+c     optran specific arrays for powell function calling
+      
       real radiance_ob (Nchan)
       integer cost_kk
       real cost_p(Nlevel)
@@ -190,15 +198,20 @@ c   optran specific arrays for powell function calling
       real cost_lat
       real cost_theta
       integer cost_isnd
-
+      integer cost_rad_istatus
+      integer goes_good
       
-      real bias_correction ! function
- 
-
+      
+      real bias_correction      ! function
+      
+c     optran common block
+      
       common /cost_optran/radiance_ob, cost_kk, cost_p, cost_t_l,
-     1    cost_mr_l, cost_tskin, cost_psfc, cost_julian_day, cost_lat,
-     1    cost_theta, cost_isnd
-
+     1     cost_mr_l, cost_tskin, cost_psfc, cost_julian_day, cost_lat,
+     1     cost_theta, cost_isnd, cost_rad_istatus
+      
+c     gvap common block
+      
       common /cost_gvap/cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight,
      1     cost_gvap_istatus,cost_data,cost_kstart,cost_qs,
      1     cost_ps, cost_p1d, cost_mdf
@@ -210,43 +223,61 @@ c   optran specific arrays for powell function calling
       real cost_ps
       real cost_p1d(500)
       real cost_mdf
-
+      
+c     cloud common block
+      
+      common /cost_cloud/cost_cloud,cost_cld,cost_cloud_istatus,cost_sat
+      integer cost_cloud_istatus
+      real cost_cloud(500)
+      real cost_cld,cost_sat(500)
+      
       integer goes_number
-
+      
       common /sat_id/ goes_number
 
-c  analysis of the factor field
+c     common block for gps
+      common /cost_gps/cost_gps_data, cost_gps_weight,cost_gps_istatus
+      integer cost_gps_istatus
+      real cost_gps_data
+      real cost_gps_weight
+      
+c     analysis of the factor field
       integer pn
       real points(ii*jj,3)
       real data_anal(ii,jj)
       real ave,adev,sdev,var,skew,curt
       real upper_limit, lower_limit
-
-c  cloud variables
+      
+c     cloud variables
       real cld(ii,jj)
-
-c  moisture modified field
-      real factor(ii,jj), factor2(ii,jj)
-
-c  get latest filename
+      
+c     moisture modified field
+      real factor(ii,jj), factor2(ii,jj), factor3(ii,jj)
+      
+c     get latest filename
       character*256 path
-
-c  laplace solver variables
+      
+c     laplace solver variables
       integer mask(ii,jj)
-
-c  misc variables
+      
+c     misc variables
       integer failures
       character*4 blank
-
+      
       real rads (ii,jj,n_snd_ch)
-
+      
       character*9 filename1,  filename
       character*9 grid_name
 
       integer len
+      
+
+      cost_rad_istatus = 1      ! assume good
+      goes_good = 1             ! assume good
+      if (istatus_gps .eq. 1) write (6,*) 'GPS usage is a GO'
 
 c     check sat_skip for zero, if zero skip routine
-
+      
       if (sat_skip.le.0) then
          write (6,*) 'sat_skip parameter <= 0, skipping sat entirely'
          return
@@ -276,12 +307,12 @@ c     constants
       blank = '  '
       
 c     set laps grid
-
-c      grid_fnam_common = 'nest7grid'
+      
+c     grid_fnam_common = 'nest7grid'
       call get_laps_config(grid_fnam_common,istatus)
- 
-c      grid_name = 'nest7grid'
-c      call get_laps_config(grid_name,istatus)
+      
+c     grid_name = 'nest7grid'
+c     call get_laps_config(grid_name,istatus)
       
       do j = 1,jj
          do i = 1,ii
@@ -326,9 +357,9 @@ c     convert filename to i4time_sat
          if (istatus.ne.1) then
             write(6,*) 'error getting satellite data'
             write(6,*) 'aborting goes_sbn module'
-            return
+            goes_good = 0
          endif
-
+         
          do j = 1,jj
             do i = 1,ii
                if(ch3(i,j).le.0.0 .or. ch4(i,j).le.0.0 .or.
@@ -338,12 +369,12 @@ c     convert filename to i4time_sat
                   write(6,*) 'IMAGER DATA'
                   write(6,*) '   aborting satellite moisture'
                   write(6,*) '   data untrustworthy'
-                  return
+                  goes_good  = 0
                endif
             enddo
          enddo    
                 
-                  
+         
          write(6,*) ' '
          write(6,*) ' '
          write(6,*) 'Using LVD data from: ', filename1
@@ -353,405 +384,466 @@ c     convert filename to i4time_sat
       endif                     ! get IMAGER data only
       
 c     acquire sounder data
+      
+      if(isnd.eq.1) then        ! get SOUNDER data only
+         
+         call rsr (i4time, rads, ii,jj,18,ngoes, istatus)
+         if (istatus .ne. 1) then
+            write (6,*) 'error obtaining sounder radiances'
+            goes_good = 0
+         endif
+         
+      endif                     ! only get SOUNDER data
+      
+c     --------- at this point, the existance of satellite data is established,
+c     ---------  should be cost effective to continue.
+      
+      
+c     set up time for regular laps interval
+c     generate filename from 14time for julian day extraction later
+      
+      call make_fnam_lp (i4time, filename, istatus)
+      
+c     get laps surface temperature
+      print*, 'getting surface temperature (lsx)'
+      call glst(i4time,tskin,ii,jj,istatus)
+      
+      if(istatus.ne.1) then
+         
+         write(6,*) ' '
+         write(6,*) ' '
+         write(6,*) 'Failed to get LSX temp data for forward model'
+         write(6,*) ' '
+         write(6,*) ' '
+         goes_good = 0
+         
+      endif
+      
+      
+c     get laps surface pressure
+      
+      print*, 'getting surface pressure (lsx)'
+      call glsp(i4time,psfc,ii,jj,istatus)
+      
+      if(istatus.ne.1) then
+         
+         write(6,*) ' '
+         write(6,*) ' '
+         write(6,*) 'Failed getting LSX pres for forward model'
+         write(6,*) ' '
+         write(6,*) ' '
+         goes_good = 0
+         
+      endif
 
-      if(isnd.eq.1) then ! get SOUNDER data only
-
-       call rsr (i4time, rads, ii,jj,18,ngoes, istatus)
-       if (istatus .ne. 1) then
-          write (6,*) 'error obtaining sounder radiances'
-          return
-       endif
-
-      endif ! only get SOUNDER data
-
-c --------- at this point, the existance of satellite data is established,
-c ---------  should be cost effective to continue.
-
-
-c   set up time for regular laps interval
-c   generate filename from 14time for julian day extraction later
-
-        call make_fnam_lp (i4time, filename, istatus)
-
-c   get laps surface temperature
-        print*, 'getting surface temperature (lsx)'
-        call glst(i4time,tskin,ii,jj,istatus)
-
-        if(istatus.ne.1) then
-
-           write(6,*) ' '
-           write(6,*) ' '
-           write(6,*) 'Failed to get LSX temp data for forward model'
-           write(6,*) ' '
-           write(6,*) ' '
-           return
- 
-        endif
-
-
-c   get laps surface pressure
-
-        print*, 'getting surface pressure (lsx)'
-        call glsp(i4time,psfc,ii,jj,istatus)
-
-        if(istatus.ne.1) then
-
-           write(6,*) ' '
-           write(6,*) ' '
-           write(6,*) 'Failed getting LSX pres for forward model'
-           write(6,*) ' '
-           write(6,*) ' '
-           return
-
-        endif
-
+c      if (goes_good .eq. 0) go to 865
+      
 c     convert pressure to hpa
-        do j = 1,jj
-           do i = 1,ii
-              psfc(i,j) = psfc(i,j)/100.
-           enddo
-        enddo
-
-c     setup cloud test (cloud array passed in)
-
-        do j = 1,jj
-           do i = 1,ii
-              cld(i,j) = 0.0
-              do k = 1,kk
-                 cld(i,j) = max(cld(i,j),cloud(i,j,k))
-              enddo
-              if(cld(i,j).gt.1.) cld(i,j) = 1.0
-              if(cld(i,j).le.0.1) cld(i,j) = 0.0
-           enddo
-        enddo
-
-        write (6,*) 'Running GOES',ngoes,' forward model OPTRAN vsn'
-
-        do j = 1,jj
-           do i = 1,ii
-              do k = kk,1,-1
-
-                 if(cloud(i,j,k).ge.1.0) then ! assume cloud top
-
-                    if(p_3d(i,j,k).lt.psfc(i,j)) then ! above ground level
-                       psfc(i,j) = p_3d(i,j,k)
-                       tskin(i,j) = t(i,j,k)
-                       cld(i,j) = cloud(i,j,k)
-
-                    else
-                       print*, 'cloud below ground'
-                    endif
-                    go to 55
-                 endif
-              enddo
-
- 55           continue
-
-           enddo
-        enddo
-
-c       modify sounding to convert sh to mr and model organization
-c       assign 0.0 moisture where there is missing data.
-
-        do i = 1,ii
-           do j = 1,jj
-              do k = 1,kk
-
-                 if(sh(i,j,k) .ne. -1.e30) then
-                    call sh2mr (sh(i,j,k), mr(i,j,k) )
-                    mr_l(k,i,j) = mr(i,j,k)
-                 else
-                    mr_l(k,i,j) = 0.0
-                 endif
-                 t_l (k,i,j) = t(i,j,k)
-                 p_l (k,i,j) = p_3d(i,j,k)
-
-              enddo
-           enddo
-        enddo
-
-        read (filename(3:5),22) julian_day
- 22     format (i3)
-
-c     prepare to use forward model functions
-c     here use goes 8 for reference (goes 10 not avail)
-
-        call pfcgim (8)
-
-        if(isnd .eq.1) then     ! use sounder data for ch3, ch4, ch5
-           do j = 1, jj
-              do i = 1, ii
-                 if(rads(i,j,10).eq.rmd .or.
-     1                rads(i,j,10).le. 0.0) then
-                    ch3(i,j) = rmd
-                    if (rads(i,j,10).le.0.0) then
-                       write(6,*) 'Zero in ch10 ',rads(i,j,10), i,j
-                    endif
-                 else
-                    ch3(i,j) = bias_correction (britgo(rads(i,j,10),10),
-     1                   ngoes, 1, 10)
-                 endif
-                 if(rads(i,j,8).eq.rmd .or.
-     1                rads(i,j,8).le.0.0) then
-                    ch4(i,j) = rmd
-                    if (rads(i,j,8).le.0.0) then
-                       write(6,*) 'Zero in ch8 ',rads(i,j,8), i,j
-                    endif
-                 else
-                    ch4(i,j) = bias_correction (britgo(rads(i,j,8),8),
-     1                   ngoes, 1, 8)
-                 endif
-                 if(rads(i,j,7).eq.rmd .or.
-     1                rads(i,j,7).le.0.0) then
-                    ch5(i,j) = rmd
-                    if (rads(i,j,7).le.0.0) then
-                       write(6,*) 'Zero in ch7 ',rads(i,j,7), i,j
-                    endif
-                 else
-                    ch5(i,j) = bias_correction (britgo(rads(i,j,7),7),
-     1                   ngoes, 1, 7)
-                 endif
-              enddo
-           enddo
-        endif                   ! sounder used
-
-c  do for each gridpoint
-
-        do j = 1,jj,sat_skip
-           do i = 1,ii,sat_skip
-
-c     compute zenith angle for model
-
-              theta(i,j) = zenith(lat(i,j)*d2r,
-     1             lon(i,j)*d2r,0.*d2r,-75.*d2r)
-
-              if(abs(theta(i,j)) .ge. 70.) then
-                 ch3(i,j) = rmd  ! designed to through out processing
-c     at the location where there is no possiblity of running the forward
-c     model
-                 go to 864      !skip ofm computation here
-              endif
-
-c     insert call for OPTRAN for initial comparison with gimtau.f
-c     note that optran is configured to return both sounder and imager
-c     channels used in this algorithm.
-
-              call ofm ( kk, p_l(1,i,j), t_l(1,i,j), 
-     1             mr_l(1,i,j), tskin(i,j), psfc(i,j),
-     1             julian_day, lat(i,j),theta(i,j), tbest) 
-
-              if(isnd.eq.0) then ! IMAGER computation
-
-                 do kan = 1,3
-
-                    btemp(i,j,kan) = tbest (kan+7)
-
-                 enddo          !kan
-
-              endif             ! end IMAGER computation
-
-              if(isnd.eq.1) then ! SOUNDER computation
-
-                 do kan = 1,7
-
-                    btemp(i,j,kan) = tbest(kan)
-
-                 enddo          ! kan
-
-              endif             ! end SOUNDER computation
- 864          continue
-           enddo                ! j
-        enddo                   ! i
-
-c     Execute powell method correction of layer humidity in clear areas
-
-      failures = 0
-
       do j = 1,jj
          do i = 1,ii
-
-            factor (i,j) = rmd
-            factor2(i,j) = rmd
-
-         enddo ! i
-      enddo ! j
-
-
-
-      do j = 1,jj,sat_skip
-         do i = 1,ii,sat_skip
-
-            if (i .eq. 1 .and. j.eq.1) then !first time set
-               x(1) = 1.0
-               x(2) = 1.5
-               x(3) = 0.8
-            endif
-
-            do k   = 1,3
-               x(k) = 1.0
-            enddo
-
-            if (ch3(i,j).eq.rmd) then
-               print*, 'missing data in channel 3 abort', i,j
-               go to 145
-
-            elseif (ch4(i,j).eq.rmd) then
-               print*, 'missing data in channel 4 abort', i,j
-               go to 145
-
-            elseif (ch5(i,j).eq.rmd) then
-               print*, 'missing data in channel 5 abort', i,j
-               go to 145
-
-            else
-
-               if (isnd.eq.1) then
-                  do k = 4,7
-                     if (rads(i,j,k) .eq. rmd) then
-                        print*, 'missing data in sounder channel ',
-     1                       k,' index ',i,j
-                        go to 145
-                     endif
-                  enddo
-               endif
-
-               continue
-
-
-               if( (cld(i,j) .eq. 0  ) 
-     1              .and.
-     1              abs(ch4(i,j)-btemp(i,j,2)).le.1.) then !clear assume
-
-c     print out the "clear" radiances for 6.7 micron only
-c     and compare these to the forward model radiances
-
-                  write(6,32) ' Observed=',ch3(i,j),' Modeled='
-     1                 ,btemp(i,j,1),' Diff=',(ch3(i,j)-btemp(i,j,1))
- 32               format(1x,a10,f8.3,a9,f8.3,a6,f8.3)
-                  write(6,*) ch4(i,j),btemp(i,j,2)
-                  write(6,*) ch5(i,j), btemp(i,j,3)
-
-                  do k = 1,3
-                  do k2 = 1,3
-                    xi(k,k2) = 0.0
-                     if(k.eq.k2)  xi(k,k) = -.0001
-                  enddo
-                  enddo
-
-                  if(isnd.eq.0) then ! USE AS IMAGER DATA, btemps
-                     radiance_ob(1) = ch3(i,j)
-                     radiance_ob(2) = ch4(i,j)
-                     radiance_ob(3) = ch5(i,j)
-                  endif
-
-                  if(isnd.eq.1) then ! USE AS SOUNDER DATA, btemps
-                     radiance_ob(1) = ch3(i,j)
-                     radiance_ob(2) = ch4(i,j)
-                     radiance_ob(3) = ch5(i,j)
-                     radiance_ob(4) = bias_correction(britgo(
-     1                    rads(i,j,kanch(4)),kanch(4)),ngoes,1,kanch(4))
-                     radiance_ob(5) = bias_correction(britgo(
-     1                    rads(i,j,kanch(5)),kanch(5)),ngoes,1,kanch(5))
-                     radiance_ob(6) = bias_correction(britgo(
-     1                    rads(i,j,kanch(6)),kanch(6)),ngoes,1,kanch(6))
-                     radiance_ob(7) = bias_correction(britgo(
-     1                    rads(i,j,kanch(7)),kanch(7)),ngoes,1,kanch(7))
-
-c check for bad data in radiance_ob
-
-                     do k = 1,7
-                        if (radiance_ob(k) .le.0.0 ) then
-                           write(6,*) 'bad radiance_ob', radiance_ob(k),
-     1                          kanch(k), filename1,' aborting'
-                           istatus = 0
-                           return
-                        endif
-                     enddo
-
-                  endif
-
-
-
-c fill powell common block with profile data for routine variational
-
-                  do k = 1, kk
-                     cost_p(k) = p_l(k,i,j)
-                     cost_t_l(k) = t_l(k,i,j)
-                     cost_mr_l(k) = mr_l (k,i,j)
-                     cost_p1d(k) = p_3d(i,j,k)
-
-                     cost_data(k) = sh(i,j,k)
-                  enddo
-                  cost_kk = kk
-                  cost_tskin = tskin (i,j)
-                  cost_psfc = psfc (i,j)
-                  cost_julian_day = julian_day
-                  cost_lat = lat (i,j)
-                  cost_theta = theta (i,j)
-
-                  cost_w1 = gw1(i,j)
-                  cost_w2 = gw2(i,j)
-                  cost_w3 = gw3(i,j)
-                  cost_weight = gww1(i,j)
-                  cost_gvap_p = gvap_p(i,j)
-                  cost_gvap_istatus = istatus_gvap
-                  cost_kstart = kstart (i,j)
-                  cost_qs = qs(i,j)
-                  cost_ps = ps (i,j)
-                  cost_mdf = mdf
-                  
-                  
-
-                  if(cld(i,j).eq.0.) then
-c     don't match low atmosphere (use func, not func3)
-
-                     call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
-
-c     else !clouds... don't match low atmosphere
-c     call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
-                  endif
-
-                  write(6,33) abs(x(1)), abs(x(2)),abs(x(3)),
-     1                 i,j,fret,iter(i,j)
- 33               format(3(f7.2,2x),i3,i3,1x,f7.2,i3)
-
-
-
-                  if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 50
-     1                 .and. abs(abs(x(1))-1.) .lt. .1 .and.
-     1                 iter(i,j) .gt. 1 
-     1                 .and.  abs(x(3)).ne.0.0
-     1                 .and.  abs(x(2)).ne.0.0) then
-                     factor(i,j)  = abs(x(3))
-                     factor2(i,j) = abs(x(2))
-                  elseif (cld(i,j).gt.0.)then
-                     write(6,*) '  .... coordinate rejected, cloudy'
-                  else
-                     write(6,*) i,j, '  .... coordinate rejected', 
-     1                    abs(x(1)),iter(i,j), cld(i,j)
-                     
-                     failures = failures + 1
-                     
-                  endif
-                  
-                  write(6,*) blank
-
-               else
-                  write(6,*) 'Cld field says cloudy grid point, ',
-     1                 i,j
-                  
-               endif            !end of powell function
-               
-            endif               ! end of missing data flag test
-            
- 145        continue            !(placed here for sounder missing data flag test)
-
+            psfc(i,j) = psfc(i,j)/100.
          enddo
       enddo
       
+c     setup cloud test (cloud array passed in)
+      
+      do j = 1,jj
+         do i = 1,ii
+            cld(i,j) = 0.0
+            do k = 1,kk
+               cld(i,j) = max(cld(i,j),cloud(i,j,k))
+            enddo
+            if(cld(i,j).gt.1.) cld(i,j) = 1.0
+            if(cld(i,j).le.0.1) cld(i,j) = 0.0
+         enddo
+      enddo
+      
+      write (6,*) 'Running GOES',ngoes,' forward model OPTRAN vsn'
+      
+      do j = 1,jj
+         do i = 1,ii
+            do k = kk,1,-1
+               
+               if(cloud(i,j,k).ge.1.0) then ! assume cloud top
+                  
+                  if(p_3d(i,j,k).lt.psfc(i,j)) then ! above ground level
+                     psfc(i,j) = p_3d(i,j,k)
+                     tskin(i,j) = t(i,j,k)
+                     cld(i,j) = cloud(i,j,k)
+                     
+                  else
+                     print*, 'cloud below ground'
+                  endif
+                  go to 55
+               endif
+            enddo
+            
+ 55         continue
+            
+         enddo
+      enddo
+      
+c     modify sounding to convert sh to mr and model organization
+c     assign 0.0 moisture where there is missing data.
+      
+      do i = 1,ii
+         do j = 1,jj
+            do k = 1,kk
+               
+               if(sh(i,j,k) .ne. -1.e30) then
+                  call sh2mr (sh(i,j,k), mr(i,j,k),istatus )
+                  if(istatus .eq.1) then
+                     mr_l(k,i,j) = mr(i,j,k)
+                  else
+                     Write(6,*) 'trap sh2ml, i,j,k,mr ',i,j,k,mr(i,j,k)
+                     write(6,*) 'assigning mr to zero'
+                     mr_l(k,i,j) = 0.0
+                  endif
+               else
+                  mr_l(k,i,j) = 0.0
+               endif
+               t_l (k,i,j) = t(i,j,k)
+               p_l (k,i,j) = p_3d(i,j,k)
+               
+            enddo
+         enddo
+      enddo
+      
+      read (filename(3:5),22) julian_day
+ 22   format (i3)
+      
+c     prepare to use forward model functions
+c     here use goes 8 for reference (goes 10 not avail)
+      
+      call pfcgim (8)
+      
+      if(isnd .eq.1 .and. goes_good .eq.1) then ! use sounder data for ch3, ch4, ch5
+         do j = 1, jj
+            do i = 1, ii
+               if(rads(i,j,10).eq.rmd .or.
+     1              rads(i,j,10).le. 0.0) then
+                  ch3(i,j) = rmd
+                  if (rads(i,j,10).le.0.0) then
+                     write(6,*) 'Zero in ch10 ',rads(i,j,10), i,j
+                  endif
+               else
+                  ch3(i,j) = bias_correction (britgo(rads(i,j,10),10),
+     1                 ngoes, 1, 10)
+               endif
+               if(rads(i,j,8).eq.rmd .or.
+     1              rads(i,j,8).le.0.0) then
+                  ch4(i,j) = rmd
+                  if (rads(i,j,8).le.0.0) then
+                     write(6,*) 'Zero in ch8 ',rads(i,j,8), i,j
+                  endif
+               else
+                  ch4(i,j) = bias_correction (britgo(rads(i,j,8),8),
+     1                 ngoes, 1, 8)
+               endif
+               if(rads(i,j,7).eq.rmd .or.
+     1              rads(i,j,7).le.0.0) then
+                  ch5(i,j) = rmd
+                  if (rads(i,j,7).le.0.0) then
+                     write(6,*) 'Zero in ch7 ',rads(i,j,7), i,j
+                  endif
+               else
+                  ch5(i,j) = bias_correction (britgo(rads(i,j,7),7),
+     1                 ngoes, 1, 7)
+               endif
+            enddo
+         enddo
+      endif                     ! sounder used
+      
+c     do for each gridpoint
+
+      do j = 1,jj,sat_skip
+         do i = 1,ii,sat_skip
+            
+c     compute zenith angle for model
+            
+            theta(i,j) = zenith(lat(i,j)*d2r,
+     1           lon(i,j)*d2r,0.*d2r,-75.*d2r)
+            
+            if(abs(theta(i,j)) .ge. 70.) then
+               ch3(i,j) = rmd   ! designed to through out processing
+c     at the location where there is no possiblity of running the forward
+c     model
+               go to 864        !skip ofm computation here
+            endif
+            
+c     insert call for OPTRAN for initial comparison with gimtau.f
+c     note that optran is configured to return both sounder and imager
+c     channels used in this algorithm.
+            
+            call ofm ( kk, p_l(1,i,j), t_l(1,i,j), 
+     1           mr_l(1,i,j), tskin(i,j), psfc(i,j),
+     1           julian_day, lat(i,j),theta(i,j), tbest) 
+            
+            if(isnd.eq.0) then  ! IMAGER computation
+               
+               do kan = 1,3
+                  
+                  btemp(i,j,kan) = tbest (kan+7)
+                  
+               enddo            !kan
+               
+            endif               ! end IMAGER computation
+            
+            if(isnd.eq.1) then  ! SOUNDER computation
+               
+               do kan = 1,7
+                  
+                  btemp(i,j,kan) = tbest(kan)
+                  
+               enddo            ! kan
+               
+            endif               ! end SOUNDER computation
+ 864        continue
+         enddo                  ! j
+      enddo                     ! i
+
+ 865  continue
+      
+c     Execute powell method correction of layer humidity in clear areas
+      
+      failures = 0
+      
+      do j = 1,jj
+         do i = 1,ii
+            
+            factor (i,j) = rmd
+            factor2(i,j) = rmd
+            factor3(i,j) = rmd
+            
+         enddo                  ! i
+      enddo                     ! j
+
+      restore_cost_rad_istatus = cost_rad_istatus
+      
+      do j = 1,jj,sat_skip
+         do i = 1,ii,sat_skip
+            
+            cost_rad_istatus = restore_cost_rad_istatus
+            
+            if(goes_good .eq. 0) cost_rad_istatus = 0
+            
+            do k   = 1,3
+               x(k) = 1.0
+            enddo
+            
+            if (ch3(i,j).eq.rmd) then
+               print*, 'missing data in channel 3 noted', i,j
+               cost_rad_istatus = 0
+               
+            elseif (ch4(i,j).eq.rmd) then
+               print*, 'missing data in channel 4 noted', i,j
+               cost_rad_istatus = 0
+               
+            elseif (ch5(i,j).eq.rmd) then
+               print*, 'missing data in channel 5 noted', i,j
+               cost_rad_istatus = 0
+               
+            endif
+            
+            if (isnd.eq.1) then
+               do k = 4,7
+                  if (rads(i,j,k) .eq. rmd) then
+                     print*, 'missing data in sounder channel ',
+     1                    k,' index ',i,j
+                     cost_rad_istatus = 0 ! fail using radiance
+                  endif
+               enddo
+            endif
+            
+            continue
+            
+c     new check for viable radiance location
+            
+            if(cost_rad_istatus.eq.1 .and. 
+     1           abs(ch4(i,j)-btemp(i,j,2)).lt.5.) then
+               write(6,*) 'Radiance passed clear chan test',
+     1              abs(ch4(i,j)-btemp(i,j,2))
+               continue         ! pass clear channel test
+            else
+               write (6,*)'Radiance failed clear chan test',
+     1               abs(ch4(i,j)-btemp(i,j,2)), cost_rad_istatus
+               cost_rad_istatus = 0 ! failing clear channel test
+            endif
+            
+c     radiance data quality known, continue with normal run
+            
+            if (cost_rad_istatus.eq.1) then
+               
+               write(6,32) ' Observed=',ch3(i,j),' Modeled='
+     1              ,btemp(i,j,1),' Diff=',(ch3(i,j)-btemp(i,j,1))
+ 32            format(1x,a10,f8.3,a9,f8.3,a6,f8.3)
+               write(6,*) ch4(i,j),btemp(i,j,2)
+               write(6,*) ch5(i,j), btemp(i,j,3)
+            else
+               write(6,*)'Radiance data not included in variational'
+            endif
+            
+c     initialize cost function vector for scaling output
+            
+            do k = 1,3
+               do k2 = 1,3
+                  xi(k,k2) = 0.0
+                  if(k.eq.k2)  xi(k,k) = 1.0
+               enddo
+            enddo
+            
+c     copy imager data into radiance arrays
+            
+            if(isnd.eq.0 .and. cost_rad_istatus.eq.1) then ! USE 
+                                !AS IMAGER DATA, btemps
+               radiance_ob(1) = ch3(i,j)
+               radiance_ob(2) = ch4(i,j)
+               radiance_ob(3) = ch5(i,j)
+            endif
+            
+c     copy sounder data into radiance arrays
+            
+            if(isnd.eq.1 .and. cost_rad_istatus.eq.1) then ! USE
+                                ! AS SOUNDER DATA, btemps
+               radiance_ob(1) = ch3(i,j)
+               radiance_ob(2) = ch4(i,j)
+               radiance_ob(3) = ch5(i,j)
+               radiance_ob(4) = bias_correction(britgo(
+     1              rads(i,j,kanch(4)),kanch(4)),ngoes,1,kanch(4))
+               radiance_ob(5) = bias_correction(britgo(
+     1              rads(i,j,kanch(5)),kanch(5)),ngoes,1,kanch(5))
+               radiance_ob(6) = bias_correction(britgo(
+     1              rads(i,j,kanch(6)),kanch(6)),ngoes,1,kanch(6))
+               radiance_ob(7) = bias_correction(britgo(
+     1              rads(i,j,kanch(7)),kanch(7)),ngoes,1,kanch(7))
+               
+c     check for bad data in radiance_ob
+               
+               do k = 1,7
+                  if (radiance_ob(k) .le.0.0 ) then
+                     write(6,*) 'bad radiance_ob', radiance_ob(k),
+     1                    kanch(k), filename1,' aborting'
+                     istatus = 0
+                     return
+                  endif
+               enddo
+               
+            endif
+            
+c     fill powell common block with profile data for routine variational
+c     this code executed for all types of data
+            
+c     fill cost function for background atmosphere
+            
+            do k = 1, kk
+               cost_p(k) = p_l(k,i,j)
+               cost_t_l(k) = t_l(k,i,j)
+               cost_mr_l(k) = mr_l (k,i,j)
+               cost_p1d(k) = p_3d(i,j,k)
+               
+               cost_data(k) = sh(i,j,k)
+            enddo
+            cost_kk = kk
+            cost_tskin = tskin (i,j)
+            cost_psfc = psfc (i,j)
+            cost_julian_day = julian_day
+            cost_lat = lat (i,j)
+            cost_theta = theta (i,j)
+            
+c     cost function data for gvap
+            
+            cost_w1 = gw1(i,j)
+            cost_w2 = gw2(i,j)
+            cost_w3 = gw3(i,j)
+            cost_weight = gww1(i,j)
+            cost_gvap_p = gvap_p(i,j)
+            cost_gvap_istatus = istatus_gvap
+            cost_kstart = kstart (i,j)
+            cost_qs = qs(i,j)
+            cost_ps = ps (i,j)
+            cost_mdf = mdf
+            
+c     cost function data for cloud analysis
+            
+            cost_cloud_istatus = istatus_cloud
+            cost_cld = cld(i,j)
+            do k = 1,kk
+               cost_cloud(k) = cloud(i,j,k)
+               cost_sat(k) = sat(i,j,k)
+            enddo
+
+c     cost function data for gps
+
+            cost_gps_data = gps_data(i,j)
+            cost_gps_weight = gps_w (i,j)
+            cost_gps_istatus = istatus_gps
+            
+            
+c     executed variational search
+
+            ftol = 0.01
+            
+            call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
+            
+c     check output of variational search for fret of 0.0 that
+c     indicates no convergence (fret is result of func)  we assume
+c     that the func will never be non-zero in real search.
+            
+            if (fret.eq.0.0) then ! assume that func set to no
+                                !convergence
+               do ijk = 1,3
+                  x(ijk) = 1.0
+               enddo
+            endif
+            
+c     write out solution details
+            if (iter(i,j) .eq. 0) then
+               write(6,*) 'No iterations..',i,j,cost_gps_istatus, 
+     1              cost_gvap_istatus, cost_cloud_istatus, fret
+            else
+               write(6,33) 'TEML ',abs(x(1)), abs(x(2)),abs(x(3)),
+     1              i,j,fret,iter(i,j)
+ 33            format(a5,3(f7.2,2x),i3,1x,i3,1x,f7.2,i3)
+            endif
+               
+c     criterion to accept the result is based on variational 
+c     performance, the cloud test is in the process of being dropped.
+            
+c     if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 50
+            if ( iter(i,j) .lt. 50
+c     1           .and. abs(abs(x(1))-1.) .lt. .1
+     1           .and.
+     1           iter(i,j) .gt. 1 
+     1           .and.  abs(x(3)).ne.0.0
+     1           .and.  abs(x(2)).ne.0.0
+     1           .and.  abs(x(1)).ne.0.0) then
+               factor(i,j)  = abs(x(3))
+               factor2(i,j) = abs(x(2))
+               factor3(i,j) = abs(x(1)) ! low level
+c     elseif (cld(i,j).gt.0.)then
+c     write(6,*) '  .... coordinate rejected, cloudy'
+            else
+               write(6,*) i,j, '  .... coordinate rejected', 
+c     1                 abs(x(1)),iter(i,j), cld(i,j)
+     1              abs(x(1)),iter(i,j)
+               
+               failures = failures + 1
+               
+            endif
+            
+            write(6,*) blank
+            
+            
+            
+         enddo
+      enddo
+      
+      
       write(6,*) failures,' failures occurred due to layer confusion' 
       write(6,*) '...non-convergence '
-     
+
+c     ************* Section on processing resulting scaling fields  ****
+      
 c     modify original lq3 file with new factors for comparison tests.
 c     modify lq3 only in clear areas as defined by lc3.
       
@@ -783,7 +875,8 @@ c     derive field statistics to determine outliers
       write (6,*) 
       write (6,*) 'Classify acceptable data' 
       write (6,*) 
-      write (6,*) 'acceptable range', lower_limit, upper_limit
+      write (6,*) 'acceptable range', lower_limit, upper_limit,
+     1     (lower_limit+upper_limit)/2., 'top'
       
       do i = 1,pn
          if(points(i,1) .lt. upper_limit .and.
@@ -803,14 +896,15 @@ c     derive field statistics to determine outliers
             call slv_laplc (data_anal,mask,ii,jj)
             call smooth_grid2 (ii,jj,data_anal,1)
             call two_d_stats(ii,jj,data_anal,rmd)
+            write(6,*) 'TEMP processed slv_lapc 1'
             
          else
-            write(6,*) 'not enough data to process, skipping slv_lapc'
+            write(6,*) 'TEMP not enough data, skipping slv_lapc'
          endif
          
       else
          write(6,*) 
-     1        'pn = 0,no acceptable data to analyze for adjustment'
+     1        'TEMP pn = 0,no acceptable data to analyze for adjustment'
          return
          
       endif
@@ -844,9 +938,9 @@ c     modify lq3 field  top level
             
             do k = k500+1, kk   !between 475 and 100 mb
                
-               sh(i,j,k) = sh(i,j,k) * 
-     1              ((abs(data_anal(i,j))-1.) * 
-     1              (p_3d(i,j,k)/500.) +1.)
+               sh(i,j,k) = sh(i,j,k) * data_anal(i,j)
+c     1              ((abs(data_anal(i,j))-1.) * 
+c     1              (p_3d(i,j,k)/500.) +1.)
                
             enddo
          enddo
@@ -880,7 +974,8 @@ c     derive field statistics to determine outliers
       write (6,*) 
       write (6,*) 'Classify acceptable data' 
       write (6,*) 
-      write (6,*) 'acceptable range', lower_limit, upper_limit
+      write (6,*) 'acceptable range', lower_limit, upper_limit,
+     1     (lower_limit+upper_limit)/2., 'mid'
       
       do i = 1,pn
          if(points(i,1) .lt. upper_limit .and.
@@ -900,14 +995,15 @@ c     derive field statistics to determine outliers
             call slv_laplc (data_anal,mask,ii,jj)
             call smooth_grid2 (ii,jj,data_anal,1)
             call two_d_stats(ii,jj,data_anal,rmd)
+            write (6,*) 'TEMP processed slv_lapc 2'
             
          else
-            write(6,*) 'not enough data to process, skipping slv_lapc'
+            write(6,*) 'TEMP not enough data, skipping slv_lapc'
          endif
          
       else
          write(6,*) 
-     1        'pn = 0,no acceptable data to analyze for adjustment'
+     1        'TEMP pn = 0,no acceptable data to analyze for adjustment'
          return
          
       endif
@@ -916,9 +1012,84 @@ c     modify lq3 field  second level
       
       do j = 1,jj
          do i = 1,ii
-            do k = k700,k500    !between 700 and 500 mb
+            do k = k700+1,k500    !between 700 and 500 mb
                
                sh(i,j,k) = sh(i,j,k) * data_anal(i,j)
+               
+            enddo
+         enddo
+      enddo      
+      
+c     modify third (lowest level)
+
+      
+      pn = 0
+      
+      do j = 1,jj
+         do i = 1,ii
+            mask(i,j) = 0
+            data_anal(i,j) = 1.
+            if (factor3(i,j).ne.rmd ) then
+               pn = pn+1
+               points(pn,1) = factor3(i,j)
+               points(pn,2) = i
+               points(pn,3) = j
+               mask(i,j) = 1
+               data_anal(i,j) = factor3(i,j)
+            endif
+         enddo
+      enddo
+      
+c     derive field statistics to determine outliers
+      call moment_b (points(1,1),pn,ave,adev,sdev,var,skew,
+     1     curt,istatus)
+      upper_limit = ave + 3.*sdev
+      lower_limit = ave - 3.*sdev
+      write (6,*) 
+      write (6,*) 
+      write (6,*) 'Classify acceptable data' 
+      write (6,*) 
+      write (6,*) 'acceptable range', lower_limit, upper_limit,
+     1     (lower_limit+upper_limit)/2., 'low'
+      
+      do i = 1,pn
+         if(points(i,1) .lt. upper_limit .and.
+     1        points(i,1) .gt. lower_limit) then
+            data_anal(int(points(i,2)),int(points(i,3))) = points (i,1)
+            write(6,*) points(i,1), 'assigned'
+         else
+            write(6,*) points(i,1), 'rejected ******************'
+            points(i,2) = 0     ! flag for bad point in prep grid
+         endif
+      enddo
+      
+      if (pn.ne.0) then
+         
+         call prep_grid(ii,jj,data_anal,ii*jj,points,pn,istatus)
+         if(istatus.eq.1) then
+            call slv_laplc (data_anal,mask,ii,jj)
+            call smooth_grid2 (ii,jj,data_anal,1)
+            call two_d_stats(ii,jj,data_anal,rmd)
+            write (6,*) 'TEMP processed slv_lapc 2'
+            
+         else
+            write(6,*) 'TEMP not enough data, skipping slv_lapc'
+         endif
+         
+      else
+         write(6,*) 
+     1        'TEMP pn = 0,no acceptable data to analyze for adjustment'
+         return
+         
+      endif
+      
+c     modify lq3 field low  level
+      
+      do j = 1,jj
+         do i = 1,ii
+            do k = 1,k700    !between sfc and 700 mb
+               if(sh(i,j,k) .ne. mdf)
+     1              sh(i,j,k) = sh(i,j,k) * data_anal(i,j)
                
             enddo
          enddo

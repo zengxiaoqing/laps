@@ -59,7 +59,6 @@ c     Dan Birkenheuer  3/2/2001
 
       if(cg .gt. 0.6 .and. cg .lt. 1.0) then !cloudy
          
-         
          data = cg*sat + (1.- cg)*data
          
       elseif (cg.ge.1.0) then 

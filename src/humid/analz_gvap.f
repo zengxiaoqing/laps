@@ -61,7 +61,7 @@ cdis
       real glon(ii,jj)
 
 c     volitile array points
-      real points (nn,3)
+      real points (nn,3),point1(nn,3),point2(nn,3), point3(nn,3)
       integer mask (ii,jj)
       real r50
       real ri, rj
@@ -109,9 +109,18 @@ c     foreach n element of wt, determine its location in ii,jj space
             gww3(i,j) = 1.
             mask(i,j) = 1
             data_weights (i,j) = 1.
+            point1(ncount,1) = w1(n)
+            point2(ncount,1) = w2(n)
+            point3(ncount,1) = w3(n)
             points(ncount,1) = wt(n)
             points(ncount,2) = i
             points(ncount,3) = j
+            point1(ncount,2) = i
+            point1(ncount,3) = j
+            point2(ncount,2) = i
+            point2(ncount,3) = j
+            point3(ncount,2) = i
+            point3(ncount,3) = j
 
             write(6,*)lat(n),lon(n), glat(i,j), glon(i,j), wt(n)
          else
@@ -132,6 +141,9 @@ c     compute the fraction of data_out that is empty
             if (data_out (i,j) .eq. -1.) then
                sum = sum + 1
                data_out(i,j) = points(1,1) ! helps converge
+               gw1(i,j) = point1(1,1)
+               gw2(i,j) = point2(1,1)
+               gw3(i,j) = point3(1,1)
             endif
          enddo
       enddo
@@ -152,6 +164,13 @@ c     now have fairly full data array.  now analyze
 
       call prep_grid (ii,jj,data_out,nn,points,ncount,istatus)
       call slv_laplc (data_out,mask,ii,jj)
+      call prep_grid (ii,jj,gw1,nn,point1,ncount,istatus)
+      call slv_laplc (gw1,mask,ii,jj)
+      call prep_grid (ii,jj,gw2,nn,point2,ncount,istatus)
+      call slv_laplc (gw2,mask,ii,jj)
+      call prep_grid (ii,jj,gw3,nn,point3,ncount,istatus)
+      call slv_laplc (gw3,mask,ii,jj)
+
 
 c     prep the weighting array for the above analyzed sheet
 
@@ -163,6 +182,17 @@ c     prep the weighting array for the above analyzed sheet
          write (6,*) 'Failure in weight_field from analz_gvap'
          return
       endif
+
+c     equate weight field to gww1,2,and 3 fields
+
+      do j = 1,jj
+         do i = 1,ii
+            gww1(i,j) = data_weights(i,j)
+            gww2(i,j) = data_weights(i,j)
+            gww3(i,j) = data_weights(i,j)
+         enddo
+      enddo
+
 
 c      call slv_laplc (data_weights, mask, ii,jj)
 

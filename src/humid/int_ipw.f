@@ -62,7 +62,7 @@ c     code
 c     modify data vector
 
       do k = 1,kk
-         if(data .ne. mdf) then
+         if(data(k) .ne. mdf) then
             if(data(k) .ge. 0.0) then
 
                if(p(k).ge.700.) then
