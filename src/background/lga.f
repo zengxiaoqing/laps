@@ -33,12 +33,6 @@ cdis
       implicit none
       include 'bgdata.inc'
 
-c eventually put these parameters into bgdata.inc
-      integer mxvars,mxlvls
-      parameter(mxvars=10,mxlvls=100)
-
-      character*10 cvars(mxvars)
-      integer      levels(mxlvls,mxvars)
 c
 c
 c------------------> BACKGROUND MODEL DESIGNATION <-----------------------------
@@ -269,7 +263,7 @@ c
            call lga_driver(nx_laps,ny_laps,nz_laps,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .          reject_names,names,max_files,accepted_files,
-     .          i4time_now_lga, mxvars,mxlvls,lga_status)
+     .          i4time_now_lga, lga_status)
 
 c
 c these constructs force t-1 and t+1 cycle time background generation.
@@ -344,7 +338,7 @@ c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,
      .     laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .     reject_names,bg_names,max_files,accepted_files,
-     .     i4time_now,mxvars,mxlvls,lga_status)
+     .     i4time_now,lga_status)
 
 c
       implicit none
@@ -352,11 +346,11 @@ c
 c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .        nx_bg  ,ny_bg,               !Background model grid dimensions
-     .        nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,
+     .        nzbg_ht,nzbg_tp,nzbg_sh,
+     .        nzbg_uv,nzbg_ww,
      .        max_files, lga_status,
      .        laps_cycle_time,
-     .        bgmodel,nbg,
-     .        mxvars,mxlvls
+     .        bgmodel,nbg,lncf
 
       integer   ishow_timer
       integer   init_timer
@@ -518,8 +512,8 @@ c
 
       interface
 c
-         subroutine read_bgdata(mxlvls,nx_bg,ny_bg
-     +,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,ctype
+         subroutine read_bgdata(nx_bg,ny_bg
+     +,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,ctype
      +,bgpath,fname_bg,af_bg,fullname,cmodel,bgmodel
      +,prbght,prbgsh,prbguv,prbgww
      +,htbg,tpbg,uwbg,vwbg,shbg,wwbg
@@ -539,7 +533,7 @@ c
          real  :: prbguv(nx_bg,ny_bg,nzbg_uv)
          real  :: prbgww(nx_bg,ny_bg,nzbg_ww)
          real  :: htbg(nx_bg,ny_bg,nzbg_ht)
-         real  :: tpbg(nx_bg,ny_bg,nzbg_uv)
+         real  :: tpbg(nx_bg,ny_bg,nzbg_tp)
          real  :: shbg(nx_bg,ny_bg,nzbg_sh)
          real  :: uwbg(nx_bg,ny_bg,nzbg_uv)
          real  :: vwbg(nx_bg,ny_bg,nzbg_uv)
@@ -552,10 +546,10 @@ c
          character*256 fname_bg
          character*256 fullname
          integer       bgmodel
-         integer       mxlvls
          integer       nx_bg
          integer       ny_bg
          integer       nzbg_ht
+         integer       nzbg_tp
          integer       nzbg_sh
          integer       nzbg_uv
          integer       nzbg_ww
@@ -563,13 +557,14 @@ c
          end subroutine
 
          subroutine vinterp(nz_laps,nx,ny,
-     .	nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,
+     .	nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
      .  prlaps, prbght,prbgsh,prbguv,prbgww,
      .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
      .  htvi,tpvi,shvi,uwvi,vwvi,wwvi)
 
          integer nx,ny
          integer nzbg_ht
+         integer nzbg_tp
          integer nzbg_sh
          integer nzbg_uv
          integer nzbg_ww
@@ -580,7 +575,7 @@ c
          real*4  ::  prbgsh(nx,ny,nzbg_sh)
          real*4  ::  prbguv(nx,ny,nzbg_uv)
          real*4  ::  prbgww(nx,ny,nzbg_ww)
-         real*4  ::  tpbg(nx,ny,nzbg_ht)
+         real*4  ::  tpbg(nx,ny,nzbg_tp)
          real*4  ::  htbg(nx,ny,nzbg_ht)
          real*4  ::  shbg(nx,ny,nzbg_sh)
          real*4  ::  uwbg(nx,ny,nzbg_uv)
@@ -599,6 +594,32 @@ c
  
          end subroutine
 
+        subroutine get_bkgd_mdl_info(bgmodel
+     &,cmodel,fullname,nx,ny,nzbg_ht,nzbg_tp
+     &,nzbg_sh,nzbg_uv,nzbg_ww
+     &,gproj,dlat,dlon,centrallat,centrallon,dx,dy
+     &,Lat0,Lat1,Lon0,sw,ne,istatus)
+
+        character*200 fullname
+        character*132 cmodel
+        character*2   gproj
+        integer       istatus
+        integer       bgmodel
+        integer       nx,ny
+        integer       nzbg_ht
+        integer       nzbg_tp
+        integer       nzbg_sh
+        integer       nzbg_uv
+        integer       nzbg_ww
+        real          Lat1
+        real          Lat0,Lon0
+        real          sw(2),ne(2)
+        real          centrallat
+        real          centrallon
+        real          dx,dy
+
+        end subroutine
+
       end interface
 
       warncnt=0 
@@ -614,13 +635,15 @@ c
          bgpath(bglen:bglen)='/'
       endif
       cfname=bgpath(1:bglen)//bg_names(1)
+      call s_len(cfname,lncf)
 
-
+      print*,'call get_bkgd_mdl_info ',cfname(1:lncf)
       call get_bkgd_mdl_info(bgmodel,cmodel,cfname
-     &,mxvars,mxlvls,nx_bg,ny_bg,nzbg_ht,nzbg_sh,nzbg_uv
+     &,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv
      &,nzbg_ww ,gproj,dlat,dlon,cenlat,cenlon,dx,dy
      &,Lat0,Lat1,Lon0,sw,ne,istatus)
 
+      print*,'done in lga_sub: get_bkgd_mdl_info'
       if(istatus.ne.1)then
          print*,'Error getting background model information'
          return
@@ -633,11 +656,12 @@ c
       print *
       print *, ' Background information: '
       print *, '-------------------------'
-      print *, 'nx/ny:           ',nx_bg,ny_bg
-      print *, 'nz(ht,sh,uv,ww): ',nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww
-      print *, 'bgpath:          ',bgpath(1:bglen)
-      print *, 'bgmodel:         ',bgmodel
-      print *, 'cmodel:          ',cmodel
+      print *, 'nx/ny:              ',nx_bg,ny_bg
+      print *, 'nz(ht,tp,sh,uv,ww): '
+     &,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+      print *, 'bgpath:             ',bgpath(1:bglen)
+      print *, 'bgmodel:            ',bgmodel
+      print *, 'cmodel:             ',cmodel
       print *
 
       call get_directory('static',outdir,len_dir)    
@@ -663,6 +687,7 @@ c
 c
 c *** get LAPS pressure levels.  Using pressures.nl
 c
+      print*,'get pressures from pressure.nl'
       call get_pres_1d(i4time_now,nz_laps,pr,istatus)
       do k = 1,nz_laps
          pr(k)=pr(k)/100.
@@ -670,6 +695,7 @@ c
 c
 c *** Determine which of the "bg_names" has not already been processed
 c
+      print*,'load names array'
       do j=1,max_files
          names(j)=bg_names(j)
       enddo
@@ -681,6 +707,7 @@ c
          i4time_bg_valid(j)=bg_times(j)+bg_valid(j)
       enddo
 
+      print*,'get directory -- lga'
       call get_directory('lga',lgapath,ldl)
       call get_file_times(lgapath,max_files,lga_names
      1                      ,lga_times,nlga,istatus)
@@ -786,16 +813,14 @@ c
        print*
 
 
+c      if(cmodel(1:ic).eq.'AVN_SBN_CYLEQ')then
+c         allocate (tpbg(nx_bg,ny_bg,nzbg_uv))
+c      else
+c         allocate (tpbg(nx_bg,ny_bg,nzbg_sh))
+c      endif
 
        allocate (htbg(nx_bg,ny_bg,nzbg_ht))
-
-
-       if(cmodel(1:ic).eq.'AVN_SBN_CYLEQ')then
-          allocate (tpbg(nx_bg,ny_bg,nzbg_uv))
-       else
-          allocate (tpbg(nx_bg,ny_bg,nzbg_sh))
-       endif
-
+       allocate (tpbg(nx_bg,ny_bg,nzbg_tp))
        allocate (shbg(nx_bg,ny_bg,nzbg_sh))
        allocate (uwbg(nx_bg,ny_bg,nzbg_uv))
        allocate (vwbg(nx_bg,ny_bg,nzbg_uv))
@@ -813,9 +838,11 @@ c
        allocate (tpbg_sfc(nx_bg,ny_bg))
        allocate (mslpbg(nx_bg,ny_bg))
 
-       call read_bgdata(mxlvls,nx_bg,ny_bg
-     +    ,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,'lapsb',bgpath
-     +    ,fname_bg(nf),af_bg(nf),fullname,cmodel,bgmodel
+       print*,'calling read_bgdata'
+       call read_bgdata(nx_bg,ny_bg
+     +    ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     +    ,'lapsb',bgpath,fname_bg(nf),af_bg(nf)
+     +    ,fullname,cmodel,bgmodel
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
@@ -869,7 +896,7 @@ c         convert to wfo if necessary
           endif
           lga_status= -nf
 
-          deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
+          deallocate(htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +,prbght, prbguv, prbgsh, prbgww, htbg_sfc, prbg_sfc
      +,shbg_sfc, uwbg_sfc, vwbg_sfc, tpbg_sfc, mslpbg)
 
@@ -891,7 +918,7 @@ c
 
 
          call vinterp(nz_laps,nx_bg,ny_bg
-     .       ,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww
+     .       ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .       ,pr,prbght,prbgsh,prbguv,prbgww
      .       ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .       ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)

@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
       subroutine vinterp(nz_laps,nx,ny,
-     .	nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,
+     .	nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
      .  prlaps, prbght,prbgsh,prbguv,prbgww,
      .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
      .  htvi,tpvi,shvi,uwvi,vwvi,wwvi)
@@ -40,11 +40,13 @@ c
 c
       integer nx,ny
       integer nzbg_ht
+      integer nzbg_tp
       integer nzbg_sh
       integer nzbg_uv
       integer nzbg_ww
 
       integer nzbght
+      integer nzbgtp
       integer nzbgsh
       integer nzbguv
       integer nzbgww
@@ -58,7 +60,7 @@ c
      .       prbgsh(nx,ny,nzbg_sh),   !pressure (mb) of levels for rh
      .       prbguv(nx,ny,nzbg_uv),   !pressure (mb) of levels for u/v comps
      .       prbgww(nx,ny,nzbg_ww),   !pressure (mb) of levels for vertical wind comp
-     .       tpbg(nx,ny,nzbg_ht),     !temperature (K)
+     .       tpbg(nx,ny,nzbg_tp),     !temperature (K)
      .       htbg(nx,ny,nzbg_ht),     !height (m)
      .       shbg(nx,ny,nzbg_sh),     !specific humidity (kg/kg)
      .       uwbg(nx,ny,nzbg_uv),     !u-wind (m/s)
@@ -98,8 +100,14 @@ c first loop is required for getting the heights and temps.
 c currently only SBN grids have variable pressure levels for
 c individual fields (like sh, u/v and ww).
 
+      if(nzbg_ht.ne.nzbg_tp)then
+         print*,'vinterp requires nzbg_ht=nzbg_tp'
+         print*,'no interp performed. terminating'
+         stop
+      endif
 
       nzbght=nzbg_ht
+      nzbgtp=nzbg_tp
       nzbgsh=nzbg_sh
       nzbguv=nzbg_uv
       nzbgww=nzbg_ww
