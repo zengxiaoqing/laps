@@ -189,14 +189,14 @@
 
                    http://ngwww.ucar.edu:7777/
 
-     The 'lapsplot.x' executable is an interactive program that reads in
+     The 'lapsplot.exe' executable is an interactive program that reads in
      the NetCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
      file can be displayed using other NCAR graphics utilities like 'ctrans'
      and 'idt'.
 
      Lapsplot can be modified to show political boundaries outside of the U.S.
      The following data files are relevant from the 'static/ncarg' directory: 
-     'continent.dat', 'uscounty.dat', and 'state_from_counties.dat'.
+     'continent_minus_us.dat', 'state_from_counties.dat', and 'uscounty.dat'.
 
      Please note that lapsplot is provided to help you check out how your
      LAPS implementation is working. We do not have any other plotting or 
