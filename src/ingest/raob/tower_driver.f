@@ -13,7 +13,7 @@ c
         integer    wmoid(maxsta), istatus
         integer    dpchar(maxsta), narg, iargc
 c
-        character  stations(maxsta)*20
+!       character  stations(maxsta)*20
         character  reptype(maxsta)*6, atype(maxsta)*6
 	character  atime*24, outfile*200
 	character  dir_s*256, ext_s*31, units*10, comment*125,var_s*3
@@ -87,32 +87,11 @@ c
         call get_ibadflag(ibadflag,istatus)
         if(istatus .ne. 1)return
 
-!       Replace blank/UNK station names with wmoid if possible, else set blank
-        iblank = 0
-        do i = 1,nobs
-            call s_len(stations(i),lensta)
-            if(lensta .eq. 0 .or. stations(i)(1:3) .eq. 'UNK')then
-                if(wmoid(i) .ne. ibadflag .and. wmoid(i) .ne. 0)then
-                    write(stations(i),511,err=512)wmoid(i)
- 511		    format(i8)
- 512		    continue
-                else
-                    stations(i) = 'UNK                 '
-                    iblank = iblank + 1
-                endif
-            endif
-        enddo
-
-        if(iblank .gt. 0)then
-            write(6,*)' Warning: number of UNK stanames = ',iblank       
-        endif
-
 !       Check for no obs
         if(nobs .eq. 0)then
             write(6,*)' NOTE: no SND appended due to no tower obs'
             return
         endif
-
 c
 c
 c.....	That's about it...let's go home.
