@@ -5,8 +5,11 @@
      1            r_missing_data,i2_missing_data,                   ! I
      1            i4time_lapswind,heights_3d,heights_1d,            ! I
      1            MAX_PR,MAX_PR_LEVELS,weight_prof,l_use_raob,      ! I
+     1            l_use_cdw,                                        ! I
+     1            N_SAO,N_PIREP,                                    ! I
      1            lat,lon,                                          ! I
-     1            u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,            ! I
+     1            NTMIN,NTMAX,                                      ! I
+     1            u_laps_fg,v_laps_fg,                              ! O
      1            grid_laps_u,grid_laps_v,grid_laps_wt,             ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            istat_radar_vel,n_vel_grids,                      ! I
@@ -51,13 +54,18 @@
         dimension u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
 
+        dimension u_laps_fg(NX_L,NY_L,NZ_L)
+        dimension v_laps_fg(NX_L,NY_L,NZ_L)
+
         real*4 heights_3d(NX_L,NY_L,NZ_L)
         real*4 heights_1d(NZ_L)
         real*4 grid_ra_vel(NX_L,NY_L,NZ_L)
 
-        logical l_use_raob
+        character*3 ext_in
 
-!  ***  Read in Profiler Data  ********************************************
+        logical l_use_raob,l_use_cdw
+
+!  ***  Read in Model First Guess Data  **************************************
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
         if(istatus .eq. 1)then
@@ -66,6 +74,29 @@
             write(6,*)' Error getting laps_cycle_time'
             return
         endif
+
+        call get_fg_wind_new(
+     1          i4time_lapswind,ilaps_cycle_time               ! Input
+     1          ,NX_L,NY_L,NZ_L                                ! Input
+     1          ,NTMIN,NTMAX                                   ! Input
+     1          ,u_mdl_bkg_4d,v_mdl_bkg_4d                     ! Output
+     1          ,u_laps_fg,v_laps_fg                           ! Output
+     1          ,istatus)                                      ! Output
+
+        if(istatus .ne. 1)then
+            write(6,*)' Abort LAPS wind analysis - no first guess info'
+            return
+        endif
+
+        write(6,*)' Column of first guess winds'
+        write(6,*)'j  v_laps_fg(23,j,13)'
+        do j = 1,NY_L
+            write(6,5555)j,v_laps_fg(23,j,13)
+ 5555       format(i4,4f7.2)
+        enddo ! j
+
+
+!  ***  Read in Profiler Data  ********************************************
 
         write(6,*)' Calling read_profiles'
 
@@ -125,6 +156,81 @@
                 return
             endif
         endif ! valid radar data
+
+
+!  ***  Read in SFC wind data   *******************************************
+
+	call get_maxstns(maxstns,istatus)
+	if (istatus .ne. 1) then
+	   write (6,*) 'Error obtaining maxstns'
+           return
+	endif
+
+        call rdsao(i4time_lapswind,heights_3d
+     1            ,N_SAO,maxstns
+     1            ,lat,lon
+     1            ,n_sao_obs
+     1            ,grid_laps_wt,grid_laps_u,grid_laps_v
+     1            ,NX_L,NY_L,NZ_L,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)
+     1     ' Aborting from get_wind_obs - Error reading saos'
+            return
+!       else
+!           i4time_array(n_sag) = i4time_lapswind
+!           j_status(n_sag) = ss_normal
+        endif
+
+        I4_elapsed = ishow_timer()
+
+!  ***  Read in Pirep data   ********************************************
+
+        n_pirep_obs = 0
+
+        ext_in = 'pin'
+
+        call rdpoint(i4time_lapswind,heights_3d
+     1  ,N_PIREP,n_pirep_obs,ext_in
+     1  ,NX_L,NY_L,NZ_L
+     1  ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                         ! I
+     1  ,lat,lon
+!    1  ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
+     1  ,grid_laps_wt,grid_laps_u,grid_laps_v,istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)
+     1       ' Aborting from get_wind_obs - Error reading pireps'
+            return
+!       else
+!           i4time_array(n_pig) = i4time_lapswind
+!           j_status(n_pig) = ss_normal
+        endif
+
+!  ***  Read in cloud drift wind data   ***********************************
+
+        if(l_use_cdw)then
+
+            ext_in = 'cdw'
+
+            call rdpoint(i4time_lapswind,heights_3d
+     1      ,N_PIREP,n_pirep_obs,ext_in
+     1      ,NX_L,NY_L,NZ_L
+     1      ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                     ! I
+     1      ,lat,lon
+!    1      ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
+     1      ,grid_laps_wt,grid_laps_u,grid_laps_v,istatus)
+
+            if(istatus .ne. 1)then
+                write(6,*)
+     1           ' Aborting from LAPS Wind Anal - Error reading cdw'
+                return
+!           else
+!               i4time_array(n_pig) = i4time_lapswind
+!               j_status(n_pig) = ss_normal
+            endif
+
+        endif ! l_use_cdw
+
 
         return
         end

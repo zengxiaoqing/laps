@@ -87,8 +87,8 @@
       real*4    density_array_in(imax,jmax)                            ! Local
 
       real*4 uobs_diff(imax,jmax,kmax),vobs_diff(imax,jmax,kmax)       ! Local
-      real*4 uobs_diff_spread(imax,jmax,kmax)                          ! Local
-      real*4 vobs_diff_spread(imax,jmax,kmax)                          ! Local
+!     real*4 uobs_diff_spread(imax,jmax,kmax)                          ! Local
+!     real*4 vobs_diff_spread(imax,jmax,kmax)                          ! Local
       real*4 varobs_diff_spread(imax,jmax,kmax,n_var)                  ! Local
 
       integer*4 n_obs_lvl(kmax)                                        ! Local
@@ -348,7 +348,7 @@
 
 !       Spread the difference ob vertically
         call spread_vert(uobs_diff,vobs_diff,l_3d,iwrite
-     1          ,uobs_diff_spread,vobs_diff_spread
+     1          ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2)
      1          ,wt_p,wt_p_spread,i,j,imax,jmax,kmax,istatus)
 
         if(istatus .ne. 1)return
@@ -403,10 +403,10 @@
 
       call move_3d(upass1,varbuff(1,1,1,1),imax,jmax,kmax)
       call move_3d(vpass1,varbuff(1,1,1,2),imax,jmax,kmax)
-      call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
-     1                             ,imax,jmax,kmax)
-      call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
-     1                             ,imax,jmax,kmax)
+!     call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
+!    1                             ,imax,jmax,kmax)
+!     call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
+!    1                             ,imax,jmax,kmax)
 
       call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
@@ -421,10 +421,10 @@
 
       call move_3d(varbuff(1,1,1,1),upass1,imax,jmax,kmax)
       call move_3d(varbuff(1,1,1,2),vpass1,imax,jmax,kmax)
-      call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
-     1                             ,imax,jmax,kmax)
-      call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
-     1                             ,imax,jmax,kmax)
+!     call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
+!    1                             ,imax,jmax,kmax)
+!     call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
+!    1                             ,imax,jmax,kmax)
 
       I4_elapsed = ishow_timer()
 
@@ -498,49 +498,49 @@
      1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_spread                                ! Input/Output
-     1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
+     1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2) ! I/O
      1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
      1        ,istatus                                    ! Input/Output
      1                                                          )
           if(icount_radar_total .gt. 0 .or. .not. l_3d)then
 
-          I4_elapsed = ishow_timer()
+              I4_elapsed = ishow_timer()
 
-          write(6,*)' Calling barnes with modified radar obs added'
+              write(6,*)' Calling barnes with modified radar obs added'       
 
-          call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
-          call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
+              call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
+              call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-          call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
-     1                             ,imax,jmax,kmax)
-          call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
-     1                             ,imax,jmax,kmax)
+!             call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
+!    1                             ,imax,jmax,kmax)
+!             call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
+!    1                             ,imax,jmax,kmax)
 
-          call get_inst_err(imax,jmax,kmax,r_missing_data
-     1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+              call get_inst_err(imax,jmax,kmax,r_missing_data
+     1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-          call barnes_multivariate(varbuff,n_var
-     1       ,imax,jmax,kmax,grid_spacing_m
-     1       ,varobs_diff_spread
-     1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,l_3d,rms_thresh,weight_bkg_const
-     1       ,n_obs_lvl,istatus)
+              call barnes_multivariate(varbuff,n_var
+     1           ,imax,jmax,kmax,grid_spacing_m
+     1           ,varobs_diff_spread
+     1           ,wt_p_spread,fnorm,n_fnorm
+     1           ,l_analyze,l_3d,rms_thresh,weight_bkg_const
+     1           ,n_obs_lvl,istatus)
 
-          call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
-          call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
-          call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
-     1                             ,imax,jmax,kmax)
-          call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
-     1                             ,imax,jmax,kmax)
+              call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
+              call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
+!             call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread       
+!    1                                 ,imax,jmax,kmax)
+!             call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
+!    1                                 ,imax,jmax,kmax)
 
-          if(istatus .ne. 1)return
+              if(istatus .ne. 1)return
 
-          I4_elapsed = ishow_timer()
+              I4_elapsed = ishow_timer()
 
           endif ! There is any radar data
 
-      else ! n_radars .ne. 1
+      else ! n_radars .gt. 1
 
           mode = 2 ! Only multi-Doppler obs
 
@@ -561,7 +561,7 @@
      1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_spread                                ! Input/Output
-     1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
+     1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2) ! I/O
      1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
      1        ,istatus                                    ! Input/Output
@@ -577,10 +577,10 @@
           call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
           call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-          call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
-     1                             ,imax,jmax,kmax)
-          call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
-     1                             ,imax,jmax,kmax)
+!         call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
+!    1                             ,imax,jmax,kmax)
+!         call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
+!    1                             ,imax,jmax,kmax)
 
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
@@ -594,10 +594,10 @@
 
           call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
           call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
-          call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
-     1                             ,imax,jmax,kmax)
-          call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
-     1                             ,imax,jmax,kmax)
+!         call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
+!    1                             ,imax,jmax,kmax)
+!         call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
+!    1                             ,imax,jmax,kmax)
 
           if(istatus .ne. 1)return
 
@@ -653,7 +653,7 @@
      1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_spread                                ! Input/Output
-     1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
+     1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2)  ! I/O
      1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
      1        ,istatus                                    ! Input/Output
@@ -666,10 +666,10 @@
           call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
           call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-          call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
-     1                             ,imax,jmax,kmax)
-          call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
-     1                             ,imax,jmax,kmax)
+!         call move_3d(uobs_diff_spread,varobs_diff_spread(1,1,1,1)
+!    1                             ,imax,jmax,kmax)
+!         call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
+!    1                             ,imax,jmax,kmax)
 
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
@@ -683,10 +683,10 @@
 
           call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
           call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
-          call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
-     1                             ,imax,jmax,kmax)
-          call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
-     1                             ,imax,jmax,kmax)
+!         call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
+!    1                             ,imax,jmax,kmax)
+!         call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
+!    1                             ,imax,jmax,kmax)
 
           if(istatus .ne. 1)return
 
