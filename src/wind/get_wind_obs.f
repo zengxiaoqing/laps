@@ -293,6 +293,7 @@ cdis
         character*8 obstype(MAX_PR)
         character*12 c_obstype
         character*5 c5_name_a(MAX_PR)
+        character*9 a9time
         integer*4 i4time_ob_pr(MAX_PR)
         real*4 ob_pr_u (MAX_PR,nk) ! Vertically interpolated Profile wind
         real*4 ob_pr_v (MAX_PR,nk) ! Vertically interpolated Profile wind
@@ -310,6 +311,7 @@ cdis
         write(6,*)
         write(6,*)' Subroutine remap_profiles: # of profiles = '
      1           ,n_profiles
+        write(6,*)' U/V are true north with time trending applied...'
 
         do i_pr = 1,n_profiles ! MAX_PR
 
@@ -329,10 +331,18 @@ cdis
                         i_ob = nint(ri)
                         j_ob = nint(rj)
 
+                        call make_fnam_lp(i4time_ob_pr(i_pr),a9time
+     1                                   ,istatus)
+                        if(istatus .ne. 1)then
+                            write(6,*)
+     1                      ' Error in remap_profiles - invalid obtime'       
+                            return
+                        endif
+              
                         write(6,311)i_pr,i_ob,j_ob,nlevels_obs_pr(i_pr)
-     1                           ,obstype(i_pr),c5_name_a(i_pr)       
+     1                           ,obstype(i_pr),c5_name_a(i_pr),a9time
  311                    format(1x,' Remapping profile ',4i6,1x,a8,1x,a5
-     1                        ,' (intrp LAPS lvls)')      
+     1                        ,1x,a9,' (intrp LAPS lvls)')      
 
                         do k = 1,nk
                             if(ob_pr_u(i_pr,k) .ne. r_missing_data)then
