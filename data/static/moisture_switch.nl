@@ -3,10 +3,11 @@
  RAOB_LOOKBACK = 3600,
  GOES_SWITCH = 8,
  CLOUD_SWITCH = 1,
- SOUNDER_SWITCH = 1,
+ SOUNDER_SWITCH = 0,
  TIROS_SWITCH = 0,
  SAT_SKIP = 2,
  GVAP_SWITCH = 0,
+ TIME_DIFF = 3600, 
  SFC_MIX = 0,
  MOD_4DDA_1 = 0,
  MOD_4DDA_FACTOR = 0.02,
@@ -29,6 +30,7 @@ c    SOUNDER_SWITCH = 0, (0=off [implies imager on], 1=on)
 c    TIROS_SWITCH = 0, (0=off, 1=on) [currently inactive]
 c    SAT_SKIP = 3, (3= every third gridpoint, 1=all)
 c    GVAP_SWITCH = 0, (0=off, 1=on) [currently inactive]
+c    TIME_DIFF = 14400, [seconds of allowed latency for gvap data]
 c    SFC_MIX = 1, (1=on, 0=off) [controls interaction with sfc Q, lsx]
 c    MOD_4DDA_1 = 0, (0=off,1=on) switch for using MOD_4DDA_FACTOR
 c    MOD_4DDA_FACTOR = 0.02, (vertical compounded drying constant)
