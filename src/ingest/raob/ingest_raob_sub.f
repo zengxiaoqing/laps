@@ -571,7 +571,7 @@ C
           i = i+1
       enddo ! i
 
-      call open_ext(11,i4time_sys,'snd',istatus)
+      call open_ext(21,i4time_sys,'snd',istatus)
 
 !     QC and convert units, T and Td are converted to deg C
       do i = 1,n_good_levels
@@ -610,7 +610,7 @@ C
       lonout_sort = stalon(isnd)      ! assign entire array for this sounding
       a9time_out_sort = a9time_raob   ! assign entire array for this sounding
 
-      call write_snd  (11                                         ! I
+      call write_snd  (21                                         ! I
      1                ,1,maxlvl,1                                 ! I
      1                ,wmostanum(isnd)                            ! I
      1                ,latout_sort,lonout_sort,staelev(isnd)      ! I
