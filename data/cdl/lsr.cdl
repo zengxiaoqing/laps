@@ -1,0 +1,509 @@
+netcdf lsr {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	GOES-9 14.71 micron sounding radiance //
+
+	float                                  
+            s01(record,z,y,x);
+            s01:navigation_dim = "nav";
+            s01:record = "valtime, reftime";
+            s01:_FillValue = 1.e+37f;
+            s01:long_name="GOES-9 14.71 micron sounding radiance";
+            s01:units="W/(m*-2 sec sterradian cm*-1)";
+            s01:wavelen_in_cm=14.71e-4;
+            s01:valid_range= 0.f, 100.f;
+            s01:LAPS_var="S01";
+            s01:lvl_coord="NONE";
+	    s01:LAPS_units="RADIANCE";
+
+        //	GOES-9 14.37 micron sounding radiance //
+
+	float                                  
+            s02(record,z,y,x);
+            s02:navigation_dim = "nav";
+            s02:record = "valtime, reftime";
+            s02:_FillValue = 1.e+37f;
+            s02:long_name="GOES-9 14.37 micron sounding radiance";
+            s02:units="W/(m*-2 sec sterradian cm*-1)";
+            s02:wavelen_in_cm=14.37e-4;
+            s02:valid_range= 0.f, 100.f;
+            s02:LAPS_var="S02";
+            s02:lvl_coord="NONE";
+	    s02:LAPS_units="RADIANCE";
+
+        //	GOES-9 14.06 micron sounding radiance //
+
+	float                                  
+            s03(record,z,y,x);
+            s03:navigation_dim = "nav";
+            s03:record = "valtime, reftime";
+            s03:_FillValue = 1.e+37f;
+            s03:long_name="GOES-9 14.06 micron sounding radiance";
+            s03:units="W/(m*-2 sec sterradian cm*-1)";
+            s03:wavelen_in_cm=14.06e-4;
+            s03:valid_range= 0.f, 100.f;
+            s03:LAPS_var="S03";
+            s03:lvl_coord="NONE";
+	    s03:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 13.64 micron sounding radiance //
+
+	float                                  
+            s04(record,z,y,x);
+            s04:navigation_dim = "nav";
+            s04:record = "valtime, reftime";
+            s04:_FillValue = 1.e+37f;
+            s04:long_name="GOES-9 13.64 micron sounding radiance";
+            s04:units="W/(m*-2 sec sterradian cm*-1)";
+            s04:wavelen_in_cm=13.64e-4;
+            s04:valid_range= 0.f, 100.f;
+            s04:LAPS_var="S04";
+            s04:lvl_coord="NONE";
+	    s04:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 13.37 micron sounding radiance //
+
+	float                                  
+            s05(record,z,y,x);
+            s05:navigation_dim = "nav";
+            s05:record = "valtime, reftime";
+            s05:_FillValue = 1.e+37f;
+            s05:long_name="GOES-9 13.37 micron sounding radiance";
+            s05:units="W/(m*-2 sec sterradian cm*-1)";
+            s05:wavelen_in_cm=13.37e-4;
+            s05:valid_range= 0.f, 100.f;
+            s05:LAPS_var="S05";
+            s05:lvl_coord="NONE";
+	    s05:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 12.66 micron sounding radiance //
+
+	float                                  
+            s06(record,z,y,x);
+            s06:navigation_dim = "nav";
+            s06:record = "valtime, reftime";
+            s06:_FillValue = 1.e+37f;
+            s06:long_name="GOES-9 12.66 micron sounding radiance";
+            s06:units="W/(m*-2 sec sterradian cm*-1)";
+            s06:wavelen_in_cm=12.66e-4;
+            s06:valid_range= 0.f, 100.f;
+            s06:LAPS_var="S06";
+            s06:lvl_coord="NONE";
+	    s06:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 12.02 micron sounding radiance //
+
+	float                                  
+            s07(record,z,y,x);
+            s07:navigation_dim = "nav";
+            s07:record = "valtime, reftime";
+            s07:_FillValue = 1.e+37f;
+            s07:long_name="GOES-9 12.02 micron sounding radiance";
+            s07:units="W/(m*-2 sec sterradian cm*-1)";
+            s07:wavelen_in_cm=12.02e-4;
+            s07:valid_range= 0.f, 100.f;
+            s07:LAPS_var="S07";
+            s07:lvl_coord="NONE";
+	    s07:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 11.03 micron sounding radiance //
+
+	float                                  
+            s08(record,z,y,x);
+            s08:navigation_dim = "nav";
+            s08:record = "valtime, reftime";
+            s08:_FillValue = 1.e+37f;
+            s08:long_name="GOES-9 11.03 micron sounding radiance";
+            s08:units="W/(m*-2 sec sterradian cm*-1)";
+            s08:wavelen_in_cm=11.03e-4;
+            s08:valid_range= 0.f, 100.f;
+            s08:LAPS_var="S08";
+            s08:lvl_coord="NONE";
+	    s08:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 9.71 micron sounding radiance //
+
+	float                                  
+            s09(record,z,y,x);
+            s09:navigation_dim = "nav";
+            s09:record = "valtime, reftime";
+            s09:_FillValue = 1.e+37f;
+            s09:long_name="GOES-9 9.71 micron sounding radiance";
+            s09:units="W/(m*-2 sec sterradian cm*-1)";
+            s09:wavelen_in_cm=9.71e-4;
+            s09:valid_range= 0.f, 100.f;
+            s09:LAPS_var="S09";
+            s09:lvl_coord="NONE";
+	    s09:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 7.43 micron sounding radiance //
+
+	float                                  
+            s10(record,z,y,x);
+            s10:navigation_dim = "nav";
+            s10:record = "valtime, reftime";
+            s10:_FillValue = 1.e+37f;
+            s10:long_name="GOES-9 7.43 micron sounding radiance";
+            s10:units="W/(m*-2 sec sterradian cm*-1)";
+            s10:wavelen_in_cm=7.43e-4;
+            s10:valid_range= 0.f, 100.f;
+            s10:LAPS_var="S10";
+            s10:lvl_coord="NONE";
+	    s10:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 7.02 micron sounding radiance //
+
+	float                                  
+            s11(record,z,y,x);
+            s11:navigation_dim = "nav";
+            s11:record = "valtime, reftime";
+            s11:_FillValue = 1.e+37f;
+            s11:long_name="GOES-9 7.02 micron sounding radiance";
+            s11:units="W/(m*-2 sec sterradian cm*-1)";
+            s11:wavelen_in_cm=7.02e-4;
+            s11:valid_range= 0.f, 100.f;
+            s11:LAPS_var="S11";
+            s11:lvl_coord="NONE";
+	    s11:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 6.51 micron sounding radiance //
+
+	float                                  
+            s12(record,z,y,x);
+            s12:navigation_dim = "nav";
+            s12:record = "valtime, reftime";
+            s12:_FillValue = 1.e+37f;
+            s12:long_name="GOES-9 6.51 micron sounding radiance";
+            s12:units="W/(m*-2 sec sterradian cm*-1)";
+            s12:wavelen_in_cm=6.51e-4;
+            s12:valid_range= 0.f, 100.f;
+            s12:LAPS_var="S12";
+            s12:lvl_coord="NONE";
+	    s12:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 4.57 micron sounding radiance //
+
+	float                                  
+            s13(record,z,y,x);
+            s13:navigation_dim = "nav";
+            s13:record = "valtime, reftime";
+            s13:_FillValue = 1.e+37f;
+            s13:long_name="GOES-9 4.57 micron sounding radiance";
+            s13:units="W/(m*-2 sec sterradian cm*-1)";
+            s13:wavelen_in_cm=4.57e-4;
+            s13:valid_range= 0.f, 100.f;
+            s13:LAPS_var="S13";
+            s13:lvl_coord="NONE";
+	    s13:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 4.52 micron sounding radiance //
+
+	float                                  
+            s14(record,z,y,x);
+            s14:navigation_dim = "nav";
+            s14:record = "valtime, reftime";
+            s14:_FillValue = 1.e+37f;
+            s14:long_name="GOES-9 4.52 micron sounding radiance";
+            s14:units="W/(m*-2 sec sterradian cm*-1)";
+            s14:wavelen_in_cm=4.52e-4;
+            s14:valid_range= 0.f, 100.f;
+            s14:LAPS_var="S14";
+            s14:lvl_coord="NONE";
+	    s14:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 4.45 micron sounding radiance //
+
+	float                                  
+            s15(record,z,y,x);
+            s15:navigation_dim = "nav";
+            s15:record = "valtime, reftime";
+            s15:_FillValue = 1.e+37f;
+            s15:long_name="GOES-9 4.45 micron sounding radiance";
+            s15:units="W/(m*-2 sec sterradian cm*-1)";
+            s15:wavelen_in_cm=4.45e-4;
+            s15:valid_range= 0.f, 100.f;
+            s15:LAPS_var="S15";
+            s15:lvl_coord="NONE";
+	    s15:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 4.13 micron sounding radiance //
+
+	float                                  
+            s16(record,z,y,x);
+            s16:navigation_dim = "nav";
+            s16:record = "valtime, reftime";
+            s16:_FillValue = 1.e+37f;
+            s16:long_name="GOES-9 4.13 micron sounding radiance";
+            s16:units="W/(m*-2 sec sterradian cm*-1)";
+            s16:wavelen_in_cm=4.13e-4;
+            s16:valid_range= 0.f, 100.f;
+            s16:LAPS_var="S16";
+            s16:lvl_coord="NONE";
+	    s16:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 3.98 micron sounding radiance //
+
+	float                                  
+            s17(record,z,y,x);
+            s17:navigation_dim = "nav";
+            s17:record = "valtime, reftime";
+            s17:_FillValue = 1.e+37f;
+            s17:long_name="GOES-9 3.98 micron sounding radiance";
+            s17:units="W/(m*-2 sec sterradian cm*-1)";
+            s17:wavelen_in_cm=3.98e-4;
+            s17:valid_range= 0.f, 100.f;
+            s17:LAPS_var="S17";
+            s17:lvl_coord="NONE";
+	    s17:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 3.74 micron sounding radiance //
+
+	float                                  
+            s18(record,z,y,x);
+            s18:navigation_dim = "nav";
+            s18:record = "valtime, reftime";
+            s18:_FillValue = 1.e+37f;
+            s18:long_name="GOES-9 3.74 micron sounding radiance";
+            s18:units="W/(m*-2 sec sterradian cm*-1)";
+            s18:wavelen_in_cm=3.74e-4;
+            s18:valid_range= 0.f, 100.f;
+            s18:LAPS_var="S18";
+            s18:lvl_coord="NONE";
+	    s18:LAPS_units="RADIANCE";
+                	        
+        //	GOES-9 0.67 micron visible counts //
+
+	float                                  
+            s19(record,z,y,x);
+            s19:navigation_dim = "nav";
+            s19:record = "valtime, reftime";
+            s19:_FillValue = 1.e+37f;
+            s19:long_name="GOES-9 0.67 micron sounding radiance";
+            s19:units="W/(m*-2 sec sterradian cm*-1)";
+            s19:wavelen_in_cm=0.67e-4;
+            s19:valid_range= 0.f, 100.f;
+            s19:LAPS_var="S19";
+            s19:lvl_coord="NONE";
+	    s19:LAPS_units="COUNTS";
+                	        
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            sat_name(namelen);
+        char
+            s01_comment(record,z,namelen),
+            s02_comment(record,z,namelen),
+            s03_comment(record,z,namelen),
+            s04_comment(record,z,namelen),
+            s05_comment(record,z,namelen),
+            s06_comment(record,z,namelen),
+            s07_comment(record,z,namelen),
+            s08_comment(record,z,namelen),
+            s09_comment(record,z,namelen),
+            s10_comment(record,z,namelen),
+            s11_comment(record,z,namelen),
+            s12_comment(record,z,namelen),
+            s13_comment(record,z,namelen),
+            s14_comment(record,z,namelen),
+            s15_comment(record,z,namelen),
+            s16_comment(record,z,namelen),
+            s17_comment(record,z,namelen),
+            s18_comment(record,z,namelen),
+            s19_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            s01_fcinv(record, z);
+            s01_fcinv:_FillValue= 0s;
+              	
+        short
+            s02_fcinv(record, z);
+            s02_fcinv:_FillValue= 0s;
+              	
+        short
+            s03_fcinv(record, z);
+            s03_fcinv:_FillValue= 0s;
+              	
+        short
+            s04_fcinv(record, z);
+            s04_fcinv:_FillValue= 0s;
+              	
+        short
+            s05_fcinv(record, z);
+            s05_fcinv:_FillValue= 0s;
+              	
+        short
+            s06_fcinv(record, z);
+            s06_fcinv:_FillValue= 0s;
+              	
+        short
+            s07_fcinv(record, z);
+            s07_fcinv:_FillValue= 0s;
+              	
+        short
+            s08_fcinv(record, z);
+            s08_fcinv:_FillValue= 0s;
+              	
+        short
+            s09_fcinv(record, z);
+            s09_fcinv:_FillValue= 0s;
+              	
+        short
+            s10_fcinv(record, z);
+            s10_fcinv:_FillValue= 0s;
+              	
+        short
+            s11_fcinv(record, z);
+            s11_fcinv:_FillValue= 0s;
+              	
+        short
+            s12_fcinv(record, z);
+            s12_fcinv:_FillValue= 0s;
+              	
+        short
+            s13_fcinv(record, z);
+            s13_fcinv:_FillValue= 0s;
+              	
+        short
+            s14_fcinv(record, z);
+            s14_fcinv:_FillValue= 0s;
+              	
+        short
+            s15_fcinv(record, z);
+            s15_fcinv:_FillValue= 0s;
+              	
+        short
+            s16_fcinv(record, z);
+            s16_fcinv:_FillValue= 0s;
+              	
+        short
+            s17_fcinv(record, z);
+            s17_fcinv:_FillValue= 0s;
+              	
+        short
+            s18_fcinv(record, z);
+            s18_fcinv:_FillValue= 0s;
+              	
+        short
+            s19_fcinv(record, z);
+            s19_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS LSR file - LAPS Satellite Sounder Radiance Data";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS Satellite Sounder Radiance Data;
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+        sat_name        = "GOES-9";
+}                       
