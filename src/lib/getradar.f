@@ -770,11 +770,7 @@ cdoc                            calls read_multiradar_3dref.
 
                 endif ! l_low_fill OR l_high_fill
 
-            else
-                istatus_2dref_a = 0
-                istatus_3dref_a = 0
-
-            endif
+            endif ! good vrc status
 
         endif ! vrc
 
