@@ -305,10 +305,10 @@ C
      1                   ,3.0,0.9,0.7)                ! Red
           call color_ramp(90*ncols1/100,ncols1,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
-     1                   ,3.0,0.9,0.2)                ! Hot
+     1                   ,3.0,0.9,0.2)                ! Dark Hot
           call color_ramp(100*ncols1/100,ncols,IWKID,icol_offset
-     1                   ,3.0,0.9,0.2                 ! White
-     1                   ,3.0,0.15,0.6)               ! Hot
+     1                   ,3.0,0.9,0.2                 ! Dark Hot
+     1                   ,3.0,0.15,0.6)               ! White Hot
 
           if(colortable .eq. 'ref')then
               do i = 1,3
@@ -329,6 +329,36 @@ C
 !             call GSCR(IWKID, ncols+icol_offset, 0.3, 0.3, 0.3)
 
           endif
+
+      elseif(colortable .eq. 'tpw')then
+          ncols = 60
+          call color_ramp(1,8,IWKID,icol_offset
+     1                   ,3.0,0.9,0.2                 ! Dark Hot
+     1                   ,3.0,0.9,0.7)                ! Red
+          call color_ramp(8,29,IWKID,icol_offset
+     1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,2.0,0.4,0.4)                ! Green
+          call color_ramp(29,36,IWKID,icol_offset       
+     1                   ,2.0,0.4,0.4                 ! Green
+     1                   ,1.5,1.0,0.7)                ! Aqua
+          call color_ramp(36,54,IWKID,icol_offset
+     1                   ,1.5,1.0,0.7                 ! Aqua
+     1                   ,0.5,0.5,0.7)                ! Violet
+          call color_ramp(54,60,IWKID,icol_offset
+     1                   ,0.5,0.5,0.7                 ! Violet
+     1                   ,0.5,0.15,0.6)               ! Pink
+
+      elseif(colortable .eq. 'moist')then
+          ncols = 60
+          call color_ramp(1,11,IWKID,icol_offset
+     1                   ,3.0,0.9,0.2                 ! Dark Hot
+     1                   ,3.0,0.9,0.7)                ! Red
+          call color_ramp(11,46,IWKID,icol_offset
+     1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,2.0,0.4,0.4)                ! Green
+          call color_ramp(47,60,IWKID,icol_offset       
+     1                   ,2.0,0.4,0.4                 ! Green
+     1                   ,1.5,1.0,0.7)                ! Aqua
 
       elseif(colortable .eq. 'spectral' .or. colortable .eq. 'acc')then       
           ncols = 40
@@ -368,7 +398,7 @@ C
      1                     ,hue1,sat1,rintens1                  ! I
      1                     ,hue2,sat2,rintens2)                 ! I
 
-      write(6,*)' Subroutine color_ramp...'
+      write(6,*)' Subroutine color_ramp.. ',ncol1,ncol2
 
       do icol = ncol1,ncol2
           frac = float(icol-ncol1) / float(ncol2-ncol1)
@@ -429,7 +459,17 @@ C
 
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
-      logical log_scaling
+      logical log_scaling,l_loop
+
+      range = abs(scale_h - scale_l) / scale
+
+      if(scale_l .eq. -20. .or. scale_h .eq. 7200. 
+     1                     .or. range .eq. 5.5           ! TPW
+     1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
+          l_loop = .true.
+      else
+          l_loop = .false.
+      endif
 
       call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
@@ -524,49 +564,10 @@ c     Restore original color table
       ixh = ixl + 525 ! 878
       CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
 
-!     Midpoint
+      if(.not. l_loop)then ! Plot Midpoint
 
-!     Plot Black Line
-      frac = 0.5
-      x1   = xlow + frac*xrange 
-      x2   = xlow + frac*xrange 
-      call setusv_dum(2hIN,0)
-
-      y1 = ylow
-      y2 = yhigh
-      call line(x1,y1,x2,y2)
-
-!     Plot Number
-      call setusv_dum(2hIN,7)  ! Yellow
-      if(log_scaling)then
-          rmid = (10.** ((scale_l+scale_h) / 2.0) ) / scale
-      else
-          rmid = ((scale_l+scale_h) / scale)/2.0
-      endif
-
-      if( (abs(rmid) .gt. 1.0 .or. abs(rlow) .gt. 1.0
-     1                        .or. abs(rhigh) .gt. 1.0 )
-     1                        .AND. 
-     1            abs(rmid-float(nint(rmid))) .lt. .05   
-     1                                                           )then       
-          write(ch_mid,1)nint(rmid)
-      elseif(abs(rhigh) .ge. 1.0)then
-          write(ch_mid,2)rmid
- 2        format(f8.1)
-      else
-          write(ch_mid,3)rmid
-      endif 
-      call left_justify(ch_mid)
-      call s_len(ch_mid,len_mid)
-
-      ixm = (ixl+ixh)/2
-      CALL PCHIQU (cpux(ixm),cpux(iy),ch_mid(1:len_mid),rsize,0 , 0.0)       
-
-      if(colortable .ne. 'spectral' .and. colortable .ne. 'acc')return       
-
-!     Other fractions
-      do frac = 0.25,0.75,0.50
 !         Plot Black Line
+          frac = 0.5
           x1   = xlow + frac*xrange 
           x2   = xlow + frac*xrange 
           call setusv_dum(2hIN,0)
@@ -577,28 +578,130 @@ c     Restore original color table
 
 !         Plot Number
           call setusv_dum(2hIN,7)  ! Yellow
-          rarg = scale_l + (scale_h-scale_l) * frac
           if(log_scaling)then
-              rfrac = (10.**(rarg)) / scale
+              rmid = (10.** ((scale_l+scale_h) / 2.0) ) / scale
           else
-              rfrac = rarg / scale
+              rmid = ((scale_l+scale_h) / scale)/2.0
           endif
 
-          if(rfrac .lt. 0.2)then
-              write(ch_frac,3)rfrac
-          elseif(rfrac .lt. 2.0)then
-              write(ch_frac,2)rfrac
+          if( (abs(rmid) .gt. 1.0 .or. abs(rlow) .gt. 1.0
+     1                            .or. abs(rhigh) .gt. 1.0 )
+     1                            .AND. 
+     1                abs(rmid-float(nint(rmid))) .lt. .05   
+     1                                                           )then       
+              write(ch_mid,1)nint(rmid)
+          elseif(abs(rhigh) .ge. 1.0)then
+              write(ch_mid,2)rmid
+2             format(f8.1)
           else
-              write(ch_frac,1)nint(rfrac)
+              write(ch_mid,3)rmid
+          endif 
+          call left_justify(ch_mid)
+          call s_len(ch_mid,len_mid)
+
+          ixm = (ixl+ixh)/2
+          CALL PCHIQU (cpux(ixm),cpux(iy),ch_mid(1:len_mid),rsize,0,0.0)       
+
+      endif
+
+      if(colortable .eq. 'spectral' .or. colortable .eq. 'acc')then
+
+!         Other fractions
+          do frac = 0.25,0.75,0.50
+!             Plot Black Line
+              x1   = xlow + frac*xrange 
+              x2   = xlow + frac*xrange 
+              call setusv_dum(2hIN,0)
+
+              y1 = ylow
+              y2 = yhigh
+              call line(x1,y1,x2,y2)
+
+!             Plot Number
+              call setusv_dum(2hIN,7)  ! Yellow
+              rarg = scale_l + (scale_h-scale_l) * frac
+              if(log_scaling)then
+                  rlabel = (10.**(rarg)) / scale
+              else
+                  rlabel = rarg / scale
+              endif
+
+              if(rlabel .lt. 0.2)then
+                  write(ch_frac,3)rlabel
+              elseif(rlabel .lt. 2.0)then
+                  write(ch_frac,2)rlabel
+              else
+                  write(ch_frac,1)nint(rlabel)
+              endif
+
+              call left_justify(ch_frac)
+              call s_len(ch_frac,len_frac)
+
+              ixm = ixl + (ixh-ixl)*frac
+              CALL PCHIQU (cpux(ixm),cpux(iy),ch_frac(1:len_frac)
+     1                    ,rsize,0 , 0.0)       
+          enddo
+
+      elseif(l_loop)then ! plot additional numbers
+          if(range .gt. 1000.)then
+              colorbar_int = 1000.
+          elseif(range .gt. 10.)then
+              colorbar_int = 5.
+          else ! range .le. 10
+              colorbar_int = 0.5
           endif
 
-          call left_justify(ch_frac)
-          call s_len(ch_frac,len_frac)
+          colorbar_int = colorbar_int * scale
 
-          ixm = ixl + (ixh-ixl)*frac
-          CALL PCHIQU (cpux(ixm),cpux(iy),ch_frac(1:len_frac)
-     1                ,rsize,0 , 0.0)       
-      enddo
+          ixl = 409
+          ixh = 924
+
+          write(6,*)' Plotting colorbar for sfc t',scale_l,colorbar_int       
+     1             ,ixl,ixh                 
+
+          loop_count = 0
+
+          do rarg = scale_l+colorbar_int,scale_h-.001,colorbar_int
+              frac = (rarg - scale_l) / (scale_h - scale_l)
+
+              loop_count = loop_count + 1
+
+!             Plot Black Line
+              x1   = xlow + frac*xrange 
+              x2   = xlow + frac*xrange 
+              call setusv_dum(2hIN,0)
+
+              y1 = ylow
+              y2 = yhigh
+              call line(x1,y1,x2,y2)
+
+              if(loop_count .eq. (loop_count/2) * 2 )then
+!                 Plot Number
+                  call setusv_dum(2hIN,7)  ! Yellow
+                  if(log_scaling)then
+                      rlabel = (10.**(rarg)) / scale
+                  else
+                      rlabel = rarg / scale
+                  endif
+
+                  if(range .lt. 0.2)then
+                      write(ch_frac,3)rlabel
+                  elseif(range .lt. 2.0)then
+                      write(ch_frac,2)rlabel
+                  else
+                      write(ch_frac,1)nint(rlabel)
+                  endif
+
+                  call left_justify(ch_frac)
+                  call s_len(ch_frac,len_frac)
+
+                  ixm = ixl + (ixh-ixl)*frac
+                  CALL PCHIQU (cpux(ixm),cpux(iy),ch_frac(1:len_frac)
+     1                        ,rsize,0 , 0.0)       
+
+              endif ! loop_count
+          enddo ! rarg
+      endif
 
       return
       end 
