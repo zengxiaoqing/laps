@@ -9,8 +9,8 @@
 
       character*170 filename
 
-      integer level, maxStaticIds, nInventoryBins, recNum,nf_fid,
-     +     nf_vid, nf_status
+      integer ICcheckNum, QCcheckNum, level, maxStaticIds,
+     +     nInventoryBins, recNum,nf_fid, nf_vid, nf_status
 C
 C  Open netcdf File for reading
 C
@@ -23,6 +23,32 @@ C
 C
 C  Fill all dimension values
 C
+C
+C Get size of ICcheckNum
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'ICcheckNum',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim ICcheckNum'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,ICcheckNum)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim ICcheckNum'
+      endif
+C
+C Get size of QCcheckNum
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'QCcheckNum',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim QCcheckNum'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,QCcheckNum)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim QCcheckNum'
+      endif
 C
 C Get size of level
 C
@@ -75,24 +101,24 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim recNum'
       endif
-      call read_radiometer_data(nf_fid, level, maxStaticIds,
-     +     nInventoryBins, recNum, i4time_sys, ilaps_cycle_time,
-     +     NX_L, NY_L, i4time_earliest, i4time_latest, lun_out,
-     +     istatus)
+      call read_radiometer_data(nf_fid, ICcheckNum, QCcheckNum, level,
+     +     maxStaticIds, nInventoryBins, recNum, i4time_sys,
+     +     ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
+     +     i4time_latest, lun_out, istatus)
 
       return
       end
 C
 C
-      subroutine read_radiometer_data(nf_fid, level, maxStaticIds,
-     +     nInventoryBins, recNum, i4time_sys, ilaps_cycle_time,
-     +     NX_L, NY_L, i4time_earliest, i4time_latest, lun_out,
-     +     istatus)
+      subroutine read_radiometer_data(nf_fid, ICcheckNum, QCcheckNum,
+     +     level, maxStaticIds, nInventoryBins, recNum, i4time_sys,
+     +     ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
+     +     i4time_latest, lun_out, istatus)
 
 
       include 'netcdf.inc'
-      integer level, maxStaticIds, nInventoryBins, recNum,nf_fid,
-     +     nf_vid, nf_status
+      integer ICcheckNum, QCcheckNum, level, maxStaticIds,
+     +     nInventoryBins, recNum,nf_fid, nf_vid, nf_status
       integer cloudBaseTempICA(recNum), cloudBaseTempICR(recNum),
      +     cloudBaseTempQCA(recNum), cloudBaseTempQCR(recNum),
      +     firstInBin(nInventoryBins), firstOverflow,
@@ -123,23 +149,24 @@ C
      +     temperature( level, recNum), temperatureSfc(recNum),
      +     vaporDensity( level, recNum)
       double precision observationTime(recNum)
-      character vaporDensityDD( level, recNum)
-      character liquidDensityDD( level, recNum)
-      character cloudBaseTempDD(recNum)
-      character*2 ICT
-      character*51 stationName(recNum)
-      character*11 dataProvider(recNum)
       character temperatureDD( level, recNum)
-      character integratedLiquidDD(recNum)
       character integratedVaporDD(recNum)
       character relHumidityDD( level, recNum)
-      character*6 providerId(recNum)
+      character*60 QCT(QCcheckNum)
+      character*11 dataProvider(recNum)
+      character cloudBaseTempDD(recNum)
       character*30 staticIds(maxStaticIds)
-      character*10 QCT
+      character integratedLiquidDD(recNum)
+      character liquidDensityDD( level, recNum)
+      character vaporDensityDD( level, recNum)
+      character*72 ICT(ICcheckNum)
+      character*6 providerId(recNum)
+      character*51 stationName(recNum)
 
 !     Declarations for 'write_snd' call
       real stalat(level),stalon(level)
-      character c5_staid*5,a9time_ob(level)*9,c8_obstype*8
+      integer iwmostanum(level)
+      character c5_staid*5,a9time_ob*9,a9time_ob_a(level)*9,c8_obstype*8
       real height_m(level)
       real pressure_mb(level)
       real temp_c(level)
@@ -163,11 +190,11 @@ C
           return
       endif
 
-      call read_radiometer_netcdf(nf_fid, level, maxStaticIds, 
-     +     nInventoryBins, recNum, cloudBaseTempICA, 
-     +     cloudBaseTempICR, cloudBaseTempQCA, cloudBaseTempQCR, 
-     +     firstInBin, firstOverflow, globalInventory, 
-     +     integratedLiquidICA, integratedLiquidICR, 
+      call read_radiometer_netcdf(nf_fid, ICcheckNum, QCcheckNum, 
+     +     level, maxStaticIds, nInventoryBins, recNum, 
+     +     cloudBaseTempICA, cloudBaseTempICR, cloudBaseTempQCA, 
+     +     cloudBaseTempQCR, firstInBin, firstOverflow, 
+     +     globalInventory, integratedLiquidICA, integratedLiquidICR, 
      +     integratedLiquidQCA, integratedLiquidQCR, 
      +     integratedVaporICA, integratedVaporICR, 
      +     integratedVaporQCA, integratedVaporQCR, invTime, 
@@ -192,19 +219,20 @@ C
       do iob = 1,recNum
 
 !         Convert arrays for a single sounding
-          iwmostanum = 0
+          iwmostanum(iob) = 0
           stalat = latitude(iob)
           stalon = longitude(iob)
           staelev = elevation(iob)
-          c5_staid = staticIds(iob)(1:5)
+          c5_staid = providerId(iob)(1:5)
           if(abs(observationTime(iob)) .le. 1e10)then
               i4time_ob = idint(observationTime(iob))+315619200
               call make_fnam_lp(i4time_ob,a9time_ob,istatus)
+              a9time_ob_a = a9time_ob
           endif
 
           c8_obstype = 'RADIOMTR'
 
-          call convert_array(levels(iob,:),height_m,level
+          call convert_array(levels(:,iob),height_m,level
      1                      ,'none',r_missing_data,istatus)
 
           call add_miss(height_m,staelev,height_m,level,1)
@@ -214,7 +242,7 @@ C
           call convert_array(pressure(iob),pressure_mb(1),level
      1                      ,'pa_to_mb',r_missing_data,istatus)
 
-          call convert_array(temperature(iob,:),temp_c,level
+          call convert_array(temperature(:,iob),temp_c,level
      1                      ,'k_to_c',r_missing_data,istatus)
 
 !         call 'write_snd' for a single sounding
@@ -228,7 +256,7 @@ C
      +                      ,1,nlevels_snd,1                 ! I
      +                      ,iwmostanum                      ! I
      +                      ,stalat,stalon,staelev           ! I
-     +                      ,c5_staid,a9time_ob,c8_obstype   ! I
+     +                      ,c5_staid,a9time_ob_a,c8_obstype ! I
      +                      ,nlvl                            ! I
      +                      ,height_m                        ! I
      +                      ,pressure_mb                     ! I
@@ -245,11 +273,11 @@ C
 C
 C  Subroutine to read the file 
 C
-      subroutine read_radiometer_netcdf(nf_fid, level, maxStaticIds, 
-     +     nInventoryBins, recNum, cloudBaseTempICA, 
-     +     cloudBaseTempICR, cloudBaseTempQCA, cloudBaseTempQCR, 
-     +     firstInBin, firstOverflow, globalInventory, 
-     +     integratedLiquidICA, integratedLiquidICR, 
+      subroutine read_radiometer_netcdf(nf_fid, ICcheckNum, 
+     +     QCcheckNum, level, maxStaticIds, nInventoryBins, recNum, 
+     +     cloudBaseTempICA, cloudBaseTempICR, cloudBaseTempQCA, 
+     +     cloudBaseTempQCR, firstInBin, firstOverflow, 
+     +     globalInventory, integratedLiquidICA, integratedLiquidICR, 
      +     integratedLiquidQCA, integratedLiquidQCR, 
      +     integratedVaporICA, integratedVaporICR, 
      +     integratedVaporQCA, integratedVaporQCR, invTime, 
@@ -270,8 +298,8 @@ C
      +     temperatureDD, vaporDensityDD)
 C
       include 'netcdf.inc'
-      integer level, maxStaticIds, nInventoryBins, recNum,nf_fid, 
-     +     nf_vid, nf_status
+      integer ICcheckNum, QCcheckNum, level, maxStaticIds, 
+     +     nInventoryBins, recNum,nf_fid, nf_vid, nf_status
       integer cloudBaseTempICA(recNum), cloudBaseTempICR(recNum),
      +     cloudBaseTempQCA(recNum), cloudBaseTempQCR(recNum),
      +     firstInBin(nInventoryBins), firstOverflow,
@@ -302,19 +330,19 @@ C
      +     temperature( level, recNum), temperatureSfc(recNum),
      +     vaporDensity( level, recNum)
       double precision observationTime(recNum)
-      character vaporDensityDD( level, recNum)
-      character liquidDensityDD( level, recNum)
-      character cloudBaseTempDD(recNum)
-      character*2 ICT
-      character*51 stationName(recNum)
-      character*11 dataProvider(recNum)
       character temperatureDD( level, recNum)
-      character integratedLiquidDD(recNum)
       character integratedVaporDD(recNum)
       character relHumidityDD( level, recNum)
-      character*6 providerId(recNum)
+      character*60 QCT(QCcheckNum)
+      character*11 dataProvider(recNum)
+      character cloudBaseTempDD(recNum)
       character*30 staticIds(maxStaticIds)
-      character*10 QCT
+      character integratedLiquidDD(recNum)
+      character liquidDensityDD( level, recNum)
+      character vaporDensityDD( level, recNum)
+      character*72 ICT(ICcheckNum)
+      character*6 providerId(recNum)
+      character*51 stationName(recNum)
 
 
 C   Variables of type REAL
