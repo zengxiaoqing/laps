@@ -69,9 +69,9 @@ C---------Use 2.237 to convert m/s to mph
 
         fwi(i,j) = (n * sqrt(1.0 + uuu10**2 + vvv10**2)) / 0.3002
 
-        if( debug .and. mod(i,20) .eq. 0 .and. mod(j,20) .eq. 0 ) then
-           print *, j, i, t2k, t2f, prs2, rh2, fwi(i,j), uuu10, vvv10 
-        endif
+!       if( debug .and. mod(i,20) .eq. 0 .and. mod(j,20) .eq. 0 ) then
+!          print *, j, i, t2k, t2f, prs2, rh2, fwi(i,j), uuu10, vvv10 
+!       endif
 
  100  continue
  200  continue
