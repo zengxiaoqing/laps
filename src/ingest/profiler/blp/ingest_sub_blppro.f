@@ -54,7 +54,7 @@ C       NOTE: Profiler winds are written out in KNOTS
 
         integer cdfid,status,i,j,n_levels,n_profilers,file_n_prof
         parameter (n_levels = 150)
-        parameter (n_profilers = 11)
+        parameter (n_profilers = 1000)
 
 	parameter (max_modes = 3)
 	parameter (max_gates = 50)
@@ -118,7 +118,6 @@ C
         character*9 asc9_tim,a9time_ob
 
         character*31    ext
-        character*50    directory
         integer*4       len_dir,len_dir_in
 
         character*40 c_vars_req
@@ -157,10 +156,11 @@ C
 C       Open an output file.
 C
         ext = 'pro'
-        call get_directory(ext,directory,len_dir)
-
-        open(1,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1          ,status='unknown')
+        call open_lapsprd_file(1,i4time,ext,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error opening product file',ext
+            return
+        endif
 
 !       Read to end of file so we can append to it
         do i = 1,1000000

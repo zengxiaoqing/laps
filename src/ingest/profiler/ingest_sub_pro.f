@@ -79,6 +79,11 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
         character*100 fnam_in
         character*80 dir_in
         character*255 c_filespec
+        integer max_files
+
+        parameter(max_files = 3000)
+        character*255 c_filenames(max_files)
+
         integer wsmr_wmo_id
         data wsmr_wmo_id/74533/
         integer error_code
@@ -87,6 +92,7 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
         data l_in_box/.true./
         character*8 c8_project
         character*5 c5_data_interval
+        character*1 c1_char
 
         integer varid
         integer n_levels 
@@ -110,7 +116,6 @@ C
         character*9 asc9_tim,a9time_ob
 
         character*31    ext
-        character*50    directory
         integer*4       len_dir,len_dir_in
 
         character*40 c_vars_req
@@ -142,14 +147,6 @@ C
            write(6,*)'laps_cycle_time = ',laps_cycle_time
         endif
 
-        call get_c8_project(c8_project,istatus)
-        if (istatus .ne. 1) then
-           write(6,*)'Error getting c8_project'
-           return
-        else
-           write(6,*)'c8_project = ',c8_project
-        endif
-
         r_mspkt = .518
 
         call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat,lon,    
@@ -164,10 +161,11 @@ C
 C       Open an output file.
 C
         ext = 'pro'
-        call get_directory(ext,directory,len_dir)
-
-        open(1,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1          ,status='unknown')
+        call open_lapsprd_file(1,i4time,ext,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error opening product file',ext
+            return
+        endif
 
         outfile = filename13(i4time,'pro')
         asc9_tim = outfile(1:9)
@@ -207,9 +205,36 @@ C
 
         call s_len(dir_in,len_dir_in)
 
-C       Wait for the data
+        if(.false.)then
+            call get_c8_project(c8_project,istatus)
+            if (istatus .ne. 1) then
+               write(6,*)'Error getting c8_project'
+               return
+            else
+               write(6,*)'c8_project = ',c8_project
+            endif
 
-!       len_dir_in = 25
+        else
+C           Determine file format by looking at the file name convention
+            call get_file_names(dir_in(1:len_dir_in),numoffiles
+     1                         ,c_filenames,max_files,istatus)
+            if(istatus .ne. 1 .or. numoffiles .eq. 0)then
+                write(6,*)' Error calling get_file_names'
+                stop
+            endif
+            ipos = len_dir_in + 10
+            c1_char = c_filenames(1)(ipos:ipos)
+            if(c1_char .eq. '_')then
+                c8_project = 'WFO' 
+            else
+                c8_project = 'NIMBUS'
+            endif
+            write(6,*)' 9th character of filename: ',c1_char
+            write(6,*)' Setting c8_project parameter: ',c8_project
+
+        endif
+
+C       Wait for the data
 
 !       Determine whether we are using /public or WFO Advanced filenames...
         if(c8_project(1:6) .eq. 'NIMBUS')then
@@ -235,10 +260,10 @@ C       Wait for the data
         write(6,*)c_filespec(1:80)
 
         i4time_desired = i4time
-
         i4_check_interval = 10
-        i4_total_wait = 300
         i4_thresh_age = 3600
+        i4time_now = i4time_now_gg()
+        i4_total_wait = min(300,i4time_desired+25*60 - i4time_now)
 
         open(31,file='zzzz', status = 'old', err=10)
         read(31,*,err=10)i4_check_interval
@@ -247,17 +272,19 @@ C       Wait for the data
  10     continue
         close(31)
 
-        call wait_for_data(c_filespec,i4time_desired
+        if(i4_total_wait .gt. 0)then
+            call wait_for_data(c_filespec,i4time_desired
      1               ,i4_check_interval,i4_total_wait
      1               ,i4_thresh_age       ! Only loop through the waiting
                                           ! if data is younger than this
                                           ! threshold
      1               ,istatus)
 
-        if(istatus .ne. 1)then
-            write(6,*)' No recent data'
-            return        ! Normal action
-!           continue      ! Do this for testing on the WFO
+            if(istatus .ne. 1)then
+                write(6,*)' No recent data'
+                return        ! Normal action
+!               continue      ! Do this for testing on the WFO
+            endif
         endif
 
 C       READ IN THE RAW PROFILER DATA
