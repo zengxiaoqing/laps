@@ -224,6 +224,7 @@ cdis
      1                '[S3A, S3C,    ]',
      1                '[S4A, S4C,    ]',
      1                '[S8A, S8W, S8C]',
+     1                '[SCA, SCC,    ]',
      1                '[SCA, SCC,    ]'/
 
         logical lfndtyp
@@ -1350,8 +1351,8 @@ c
              enddo
 
              write(6,118)
-118          format(5x,'Select LVD field',1x,'(vis, 3.9, 6.7, 11.2, 12)'
-     1                /34x,' [enter 1, 2, 3, 4, 5; neg for img] ? ',$)
+118          format(5x,'Select field',1x,'(vis, 3.9, 6.7, 11.2, 12, 13)'
+     1              /32x,' [enter 1, 2, 3, 4, 5, 6; neg for img] ? ',$)
              read(lun,*)ilvd
 
              if(ilvd .lt. 0)then
@@ -4110,7 +4111,7 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'PTP')then
                     call ccpfil(field_2d,NX_L,NY_L,50000.,110000.
      1                         ,'spectral',n_image,scale) 
-                elseif(var_2d .eq. 'PDM')then
+                elseif(var_2d .eq. 'PDM' .or. var_2d .eq. 'BLH')then       
                     call ccpfil(field_2d,NX_L,NY_L,0.,2400.
      1                         ,'spectral',n_image,scale) 
                 elseif(var_2d(2:3) .eq. '01' .or.           ! Precip
@@ -5141,7 +5142,7 @@ c             if(cint.eq.0.0)cint=0.1
 
 
         subroutine plot_cont(array,scale,clow,chigh,cint,
-     1    asc_tim_9,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1    asc_tim_9,c_label,i_overlay,c_display,lat,lon,jdot,
      1    NX_L,NY_L,r_missing_data,laps_cycle_time)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
@@ -5153,7 +5154,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
 
-        character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
+        character c_label*(*),asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character*1 c_display
 
         real*4 array(NX_L,NY_L)
@@ -5166,8 +5167,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         Y_SPACING = 3
 
-        write(6,1505)c33_label,scale,asc_tim_9
-1505    format(7x,a33,4x,'Units = ',1pe9.0,6x,a9)
+        write(6,1505)c_label,scale,asc_tim_9
+1505    format(7x,a,4x,'Units = ',1pe9.0,6x,a9)
 
         if(asc_tim_9 .ne. '         ')then
             call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
@@ -5276,7 +5277,7 @@ c             if(cint.eq.0.0)cint=0.1
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
+                 call write_label_lplot(NX_L,NY_L,c_label,asc_tim_9
      1                                           ,i_overlay,'hsect')
             endif
 
@@ -5891,18 +5892,19 @@ c             if(cint.eq.0.0)cint=0.1
         end
 
 
-        subroutine write_label_lplot(ni,nj,c33_label,a9time
+        subroutine write_label_lplot(ni,nj,c_label,a9time
      1                              ,i_overlay,c5_sect)        
 
-        character*33 c33_label
+        character*(*) c_label
         character*24 asc_tim_24,asc_tim_24_in
+        character*4 c4_grid
         character*5 c5_sect
         character*9 a9time
 
         common /image/ n_image
         common /icol_index/ icol_common
 
-!       call upcase(c33_label,c33_label)
+!       call upcase(c_label,c_label)
 
         if(a9time .ne. '         ')then
             call i4time_fname_lp(a9time,I4time_lbl,istatus)       
@@ -5928,10 +5930,28 @@ c             if(cint.eq.0.0)cint=0.1
 
         call setusv_dum('  ',7)
 
-        ix = 170 ! 135
+        call get_grid_spacing_cen(grid_spacing_m,istatus)
+        igrid_spacing = nint(grid_spacing_m/1000.)
+        if(igrid_spacing .le. 99 .and. igrid_spacing .ge. 1)then
+            write(c4_grid,1)igrid_spacing
+ 1          format(i2,'km')
+        else
+            c4_grid = '    '
+        endif
+
+!       Top Label               
         iy = y_2 * 1024
-!       call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
-        CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL LAPS',rsize,0,0)   
+!       ix = 170 
+!       CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL LAPS',rsize,0,0)   
+
+        if(c5_sect .eq. 'hsect')then
+            ix = 70
+        else
+            ix = 90
+        endif
+
+        CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL LAPS '//c4_grid
+     1                                               ,rsize,0,-1.0)   
 
 !       if(c5_sect .eq. 'sound')then
 !           call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
@@ -5961,21 +5981,22 @@ c             if(cint.eq.0.0)cint=0.1
 
         rsize = .010 ! .011
 
-!       ix = 320
+!       Field on Bottom Left
         ix = 130
         iy = y_1 * 1024
-!       call pwrity(cpux(ix),cpux(iy),c33_label,33,jsize_b,0,0)
-        CALL PCHIQU (cpux(ix),cpux(iy),c33_label,rsize,0,-1.0)
+        CALL PCHIQU (cpux(ix),cpux(iy),c_label,rsize,0,-1.0)
 
-!       ix = 705
-!       ix = 635
+!       Time on Bottom Right
         ix = 672
         iy = y_1 * 1024
-!       call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,jsize_b,0,0)
         call downcase(asc_tim_24(5:10),asc_tim_24(5:10))
-        CALL PCHIQU (cpux(ix),cpux(iy),'VT '//asc_tim_24(1:17)
+        CALL PCHIQU (cpux(ix),cpux(iy),'VT '//asc_tim_24(1:17)//'UTC'
      1                                ,rsize,0,-1.0)
 
+!       Resolution on Bottom Center
+!       ix = 520
+!       iy = y_1 * 1024
+!       CALL PCHIQU (cpux(ix),cpux(iy),c4_grid,rsize,0,-1.0)
 
         return
         end
@@ -6205,10 +6226,10 @@ c             if(cint.eq.0.0)cint=0.1
 
         subroutine plot_field_2d(i4time,c_type_in,field_2d,scale
      1                        ,clow_in,chigh_in,cint_in
-     1                        ,c33_label,i_overlay,c_display,lat,lon
+     1                        ,c_label,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data,colortable)
 
-        character*(*) c_type_in, c33_label, c_display, colortable
+        character*(*) c_type_in, c_label, c_display, colortable
         character*10 c_type
         character*9 asc9_tim_t
 
@@ -6264,7 +6285,7 @@ c             if(cint.eq.0.0)cint=0.1
             endif
 
             call plot_cont(field_2d,scale,clow,chigh,cint
-     1                        ,asc9_tim_t,c33_label,i_overlay
+     1                        ,asc9_tim_t,c_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L,NY_L
      1                        ,r_missing_data,laps_cycle_time)
 
@@ -6283,7 +6304,7 @@ c             if(cint.eq.0.0)cint=0.1
      1                 ,colortable,n_image,scale)    
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call setusv_dum(2hIN,7)
-            call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+            call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                            ,i_overlay,'hsect')
             call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
