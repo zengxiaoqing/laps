@@ -31,24 +31,39 @@ cdis
 cdis 
        program vrc_driver
        
-       include 'lapsparms.cmn'
-       Call get_laps_config('nest7grid',IStatus)
+       character*80  c_grid_fname
+       character*3   c_raddat_type_vrc
+       character*200 c_dataroot
+
+       call get_grid_dim_xy(NX_L,NY_L,istatus)
        if(istatus.eq.1)then
          write(*,*)'LAPS Parameters obtained'
        else
-          write(*,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
+          write(*,*)'IStatus = ',IStatus,'Error - get_grid_dim_xy'
           write(*,*)'Terminating LAPS-VRC. WSI remapping'
           stop
-       end if
+       endif
+       call get_raddat_type(c_raddat_type_vrc,istatus)
+       if(istatus.ne.1)then
+          write(*,*)'IStatus = ',IStatus,'Error - get_radar_type'
+          write(*,*)'Terminating LAPS-VRC. WSI remapping'
+          stop
+       endif
+       call find_domain_name(c_dataroot,c_grid_fname,istatus)
+       if(istatus.ne.1)then
+          write(*,*)'IStatus = ',IStatus,'Error - find_domain_name'
+          write(*,*)'Terminating LAPS-VRC. WSI remapping'
+          stop
+       endif
 
-       call vrc_driver_sub(nx_l_cmn,ny_l_cmn,c_raddat_type,
-     +path_to_wsi_2d_radar_cmn)
+       call vrc_driver_sub(nx_l,ny_l,c_raddat_type_vrc,
+     +c_grid_fname)
  
        stop
        end
 
        subroutine vrc_driver_sub(nx_l,ny_l,c_raddat_type,
-     +wsi_dir_path)
+     +c_grid_fname)
 c
 c Program drives transformation of WSI-NOWRAD high density (hd) radar to LAPS
 c domain (subroutine NOWRAD_to_LAPS). 'hd' files are assumed to reside in
@@ -65,6 +80,7 @@ c
        character*150 dir_vrc
        character*31 ext_vrc
        character*200 dir_static
+       character*(*) c_grid_fname
 
        character*125 comment_ll(2),comment_vrc
        character*10 units_ll(2),units_vrc
@@ -106,12 +122,18 @@ c
        character*14 c_filetime
        character*9 wfo_fname13_to_fname9
        character*9 c_filename
-       character*150 wsi_dir_path
+       character*200 wsi_dir_path
        character*255 c_filespec
        character*200 c_filenames_proc(max_files)
        character*3   c_raddat_type
      
        data lvl_2d/0/
+
+c
+c get vrc runtime parameters
+c
+       call read_vrc_nl(wsi_dir_path,msngrad,i4_check_interval,
+     +i4_total_wait,i4_thresh_age,istatus)
 
 c
 c set filename. wfo data is 13 character. HOWEVER, if reading from WFO-type
@@ -159,11 +181,6 @@ c       nd = index(dir_vrc,' ')-1
 
        call get_latest_file_time(c_filespec,i4time_latest_vrc)
 c
-c get wait-for-data parameters
-c
-       call read_vrc_nl(msngrad,i4_check_interval,
-     +i4_total_wait,i4_thresh_age,istatus)
- 
        i4time_latest_diff = i4time_latest_vrc-i4time_latest_wsi
 c
 c wait for data if necessary
@@ -242,7 +259,7 @@ c
        var_ll(1)='LAT'
        var_ll(2)='LON'
 
-       call rd_laps_static(dir_static, 'nest7grid', nx_l, ny_l, 2,
+       call rd_laps_static(dir_static, c_grid_fname, nx_l, ny_l, 2,
      &     var_ll, units_ll, comment_ll, data, grid_spacing,
      &     istatus)
 

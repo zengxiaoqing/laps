@@ -52,8 +52,8 @@ c
 
       integer max_elem,max_line
       integer imax,jmax
-      parameter (max_elem = 15)
-      parameter (max_line = 15)
+      parameter (max_elem = 20)
+      parameter (max_line = 20)
       integer   nline,nelem
       real*4    r_grid_ratio
       real*4    r_missing_data
@@ -119,8 +119,8 @@ c
          DO J=1,JMAX
          DO I=1,IMAX
 
-c           if(r_llij_lut_ri(i,j).ne.r_missing_data.or.
-c    &         r_llij_lut_rj(i,j).ne.r_missing_data)then
+            if(r_llij_lut_ri(i,j).ne.r_missing_data.or.
+     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 
 c
 c line/elem are floating point i/j positions in ISPAN grid for input lat/lon
@@ -211,7 +211,7 @@ cccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
 cccd5555         format(1x,2i4,2f10.2,2i5,f10.2)
 cccd           endif
 
-c           endif            !r_llij's = r_missing_data
+            endif            !r_llij's = r_missing_data
 
          enddo
          enddo
