@@ -42,6 +42,8 @@ cdis
      1          ,pres_sfc_pa                     ! Input
      1          ,istatus)                        ! Output
 
+cdoc    Calculate and write out set of 2-D stability grids
+
 !       Arrays passed in
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
@@ -226,8 +228,8 @@ cdis
      1        ,r_missing_data)
 
 !       1991    Steve Albers
-!       Returns PBE and NBE in Joules, Parcel is lifted from lowest level
-!                                                            i.e. sfc
+cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
+!                                                                    i.e. sfc
 
         real*4 t_sfc_k(ni,nj)
         real*4 td_sfc_k(ni,nj)
@@ -306,7 +308,11 @@ c       write(6,*)' i = ',i
             CALL SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0,PLCL,LCL,CCL
      1                ,TCONV,IO,blayr_thk_pa
      1                ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI
-     1                ,VELNEG,WATER,IHOUR)
+     1                ,VELNEG,WATER,IHOUR,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Bad istatus returned from SINDX'
+                stop
+            endif
 
             pbe_2d(i,j) = PBEPOS
             nbe_2d(i,j) = PBENEG
@@ -413,7 +419,9 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
         SUBROUTINE SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0
      1   ,PLCL_PBE,LCL_PBE_MSL,CCL  
      1   ,TCONV,IO,blayr_thk_pa,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50
-     1   ,PBLI,VELNEG,WATER,IHOUR)
+     1   ,PBLI,VELNEG,WATER,IHOUR,istatus)
+
+cdoc    Calculate a variety of stability indices from an input sounding
 
 !       1991    Steve Albers
 !       1999    Steve Albers    Adding more indices to active output
@@ -442,7 +450,7 @@ c       WRITE(6,15)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Stop in sindx'
+            return
         endif
 
 !       Fill WB array (imported from old code)
@@ -461,7 +469,14 @@ c       WRITE(6,15)
  	    W(N)=Q(N)/(1.-Q(N))                                      
  	    IOUT=IO                                                  
  	    IF(N.LE.1)IOUT=IO                                        
- 	    WB(N)=WTBLB(P(N),T(N),W(N),0)                            
+
+ 	    WB(N)=WTBLB(P(N),T(N),W(N),0,istatus)                            
+            if(istatus .ne. 1)then
+                write(6,*)' Bad istatus return from WTBLB: P,T,W = '
+     1                   ,P(N),T(N),W(N)
+                return
+            endif
+
  	    IF(WB(N).LT.TD(N))WB(N)=TD(N)                            
  	    IF(WB(N).GT.T(N)) WB(N)=T(N)                             
  	    IF(IO.GE.2.AND.IFL.EQ.0)WRITE(6,3)N,P(N),T(N),TD(N),Q(N),WB(N) 
@@ -553,7 +568,13 @@ C	    ENTER NEWTON ITERATION LOOP
 
  	    QQ=ES(TDWB0)*EPSILN/PWB0       
  	    WWB0=QQ/(1.-QQ)          
- 	    WTBLB0=WTBLB(PWB0,TWB0,WWB0,IOUT)      
+ 	    WTBLB0=WTBLB(PWB0,TWB0,WWB0,IOUT,istatus)      
+            if(istatus .ne. 1)then
+                write(6,*)' Bad istatus return from WTBLB: P,T,W = '
+     1                   ,PWB0,TWB0,WWB0
+                return
+            endif
+
  262        CONTINUE
 
 !   	    IF(IO.GE.2)WRITE(6,265)N,PWB0,TWB0,TDWB0,WTBLB0,SLOPE,DELTA   
@@ -640,6 +661,8 @@ C
         SUBROUTINE POTBE(Q,NLEVEL,PMEAN,TMEAN,WMEAN,PLCL
      #   ,TLCL,LCL,HBLAYR,BLTHTE,ICP,ICT,IO,PBENEG,pos_area_max
      #   ,VELNEG)
+
+cdoc    Calculate a PBE/LCL related indices from an input sounding
 
 !       Steve Albers 1991
 
@@ -873,14 +896,17 @@ C
 !
 C       1991    Steve Albers
 C
-        FUNCTION WTBLB(P,TC,W,IOUT)
+        FUNCTION WTBLB(P,TC,W,IOUT,istatus)
+
+cdoc    Calculate Wet Bulb, given P,T,W
+
         THETAE=THAEK(P,TC,W)
         CALL MSAD5(WTBLB_arg,P,THETAE,TC,20.,SLOPE,I1,I2,IA,IOUT
      1            ,istatus)      
 
         if(istatus .ne. 1)then
             write(6,*)' Error in WTBLB',P,TC,W,IOUT
-            stop
+!           stop
         endif
 
         WTBLB = WTBLB_arg
@@ -891,6 +917,8 @@ C
 C
         SUBROUTINE BLAYR(P,T,Q,PMEAN,TMEAN,WMEAN,THKNES,NLEVEL,HH,
      +                    LOWEST,IO)
+
+cdoc    Calculate boundary layer mean values from an input sounding
 
 !       Steve Albers 1991
 
@@ -973,6 +1001,8 @@ C
 C
         SUBROUTINE LLCL(LCL,TLCL,PLCL,P,TC,W,IO) ! In Meters
 
+cdoc    Calculate LCL properties from an input parcel
+
 !       Steve Albers 1991
 
         REAL LCL,KAPPA
@@ -1006,6 +1036,8 @@ C
 C
         SUBROUTINE LCL_fast(P,TC,TD,HLCL,TLCL,PLCL)
 
+cdoc    Calculate LCL properties from an input sounding (efficiently)
+
 !       Steve Albers 1991
 
         ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
@@ -1024,6 +1056,8 @@ C
 C
 C
         SUBROUTINE ITPLV(P,PARAM,NLEVEL,PINT,PARMAN,IO,istatus)
+
+cdoc    Interpolate any parameter from a pressure sounding to a specific pres
 
 !       Steve Albers 1991
 
@@ -1054,6 +1088,8 @@ C
 C
         SUBROUTINE NEWTN(X,XOLD,Y,YOLD,SLOPE,ITER,IO,FENCE,istatus)
 
+cdoc    Newton iteration
+
 !       Steve Albers 1991
 
         IF(ITER.GT.0)SLOPE=(Y-YOLD)/(X-XOLD)
@@ -1079,6 +1115,8 @@ C
 C
         SUBROUTINE MSAD5
      ^  (TEMNEW,PRESNW,THETAE,TGUESS,SLOPEG,SLOPE,I1,I2,IA,IO,istatus)       
+
+cdoc    Calculate along a moist adiabat. Solve for T, given ThetaE and P
 
 !       Steve Albers 1991
 
@@ -1156,6 +1194,8 @@ C
 C      1991     Steve Albers
 C
        FUNCTION THAE(TC,TD,P)
+
+cdoc   Calculate Theta(e), given T, Td, P
 C
 C   COMPUTES THE EQUIVALENT POTENTIAL TEMPURATURE (K).
 C    (USING THE ROSSBY DEFINITION)
@@ -1172,7 +1212,9 @@ C    (USING THE ROSSBY DEFINITION)
        END
 C
        FUNCTION THD(P,T,W,PMEI)
-C   COMPUTES THE DRY AIR POTENTIAL TEMPERATURE
+
+cdoc   COMPUTES THE DRY AIR POTENTIAL TEMPERATURE
+
        real*4 AK
        parameter (AK=.28613105)
 
@@ -1182,7 +1224,7 @@ C   COMPUTES THE DRY AIR POTENTIAL TEMPERATURE
        END
 
        FUNCTION RL(TM2)
-C   LATENT HEAT OF EVAPORATION
+cdoc   LATENT HEAT OF EVAPORATION
 C      TM2=T-273.15
 C      RL=597.31-0.589533*TM2+0.001005333*(TM2*TM2)
        RL=597.31-((0.589533+0.001005333*TM2)*TM2)
@@ -1194,7 +1236,7 @@ C
 
 !       Steve Albers 1991
 
-C   COMPUTES THE DRY AIR POTENTIAL TEMPERATURE
+cdoc   COMPUTES THE DRY AIR POTENTIAL TEMPERATURE (theta), GIVEN P and T
        AK=.28613105
 C       AKS=AK * (1.0+1.608*W)/(1.0 + 1.941569*W)
 C       E=W*P1/(0.62197 +W)
@@ -1207,6 +1249,9 @@ C       T2=T1 * ((P2*PMEI)**AKS)
        END
 C
        FUNCTION THETE(T,TD,ALT,HGT)
+
+cdoc   Compute theta(e), given T, TD, Altimeter setting, and elevation (HGT)
+
 C  T TEMP (C), TD DEW PT (C), ALT (ALTIMETER SETTING IN.)
 C  HGT HEIGHT ASL (M).
 C  CONVERT PA FROM INCHES TO MB
@@ -1220,8 +1265,7 @@ C
 C
 C
        FUNCTION XMXRAT(PRES,DEWP)
-C   COMPUTE MIXING RATIO (GM/GM) GIVEN DEW POINT TEMP
-C   AND THE PRESSURE (MB)
+cdoc   COMPUTE MIXING RATIO (GM/GM) GIVEN DEW POINT TEMP AND THE PRESSURE (MB)
        RATMIX=EXP(21.16-5415.0/DEWP)
        RATMIX=RATMIX/PRES
        IF(RATMIX.LT.(5.0E-05)) RATMIX=5.0E-05
@@ -1232,8 +1276,8 @@ C
 C
 C
        FUNCTION THAEK(P,TC,W)
-C   COMPUTES THE EQUIVALENT POTENTIAL TEMPURATURE (K).
-C    (USING THE ROSSBY DEFINITION)
+cdoc   COMPUTES THE EQUIVALENT POTENTIAL TEMPURATURE (K).
+cdoc   (USING THE ROSSBY DEFINITION)
         Q=W/(1.0+W)
         E=(P*Q)/.62197
         PMEI=1./(P-E)
@@ -1254,7 +1298,7 @@ C
 !       pres in mb   (Input) Min allowed is 500mb
 !       oe_fast in C (Output)
 
-!       Quick way to get Theta(e) using lookup table
+cdoc    Quick way to get Theta(e) using lookup table
 
 !       1991    Steve Albers
 
@@ -1384,8 +1428,8 @@ c101    format(1x,3f10.2,f10.4)
 
 !       Steve Albers 1991
 
-!       Quick way to get temperature along a moist adiabat given theta(e)
-!       This uses a lookup table
+cdoc    Quick way to get temperature along a moist adiabat given theta(e)
+cdoc    This uses a lookup table
 
 !       thetae in K  (Input)
 !       pres in mb   (Input)
@@ -1487,8 +1531,8 @@ c101    format(1x,2f10.2,f10.4)
 
         FUNCTION DWPT_laps(T,RH)
 C
-C   THIS FUNCTION RETURNS THE DEW POINT (CELSIUS) GIVEN THE TEMPERATURE
-C   (CELSIUS) AND RELATIVE HUMIDITY (%).
+cdoc THIS FUNCTION RETURNS THE DEW POINT (CELSIUS) GIVEN THE TEMPERATURE
+cdoc (CELSIUS) AND RELATIVE HUMIDITY (%).
 C
 C       BAKER,SCHLATTER 17-MAY-1982     Original version
 C
@@ -1510,7 +1554,7 @@ C   COMPUTE DEW POINT DEPRESSION.
         function twet_fast(t_c,td_c,pres_mb)
 
 !       Steve Albers 1991
-!       This is a fast routine using lookup tables
+cdoc    This is a fast approximate Wet Bulb routine using lookup tables
 !       WARNING: This routine is only active below 500mb due to size restriction
 !       of the lookup table. Max dewpoint depression allowed is 30
 !       Further approximation used (twet = t_c) when t_c is outside valid range
@@ -1532,6 +1576,8 @@ C   COMPUTE DEW POINT DEPRESSION.
 
        subroutine li_laps(tc,td,pr,t500laps,i4time,imax,jmax,li,flag
      !                   ,istatus)
+
+cdoc   Compute 2-D grid of LI, given a grid of parcels to launch
 
 !      1991     Steve Albers
 
@@ -1635,6 +1681,8 @@ C   COMPUTE DEW POINT DEPRESSION.
 
         function func_li(t_c,td_c,psta_mb,t500_c,r_missing_data)
 
+cdoc    Calculate LI given an input parcel
+
         td_in = min(td_c,t_c)
 
         thetae = THAE(t_c,td_in,psta_mb)
@@ -1656,8 +1704,9 @@ C   COMPUTE DEW POINT DEPRESSION.
         end
 
 
-!       function t500(thetae)
         subroutine thetae_to_t500(thetae,t500,istatus)
+
+cdoc    Given theta(e), what is T-500mb?
 
         real diff(10)
 C
@@ -1727,6 +1776,8 @@ C USE AITKEN'S FORMULA TO ACCELERATE CONVERGENCE
 
         function expm(x)
 
+cdoc    Calculate exp function with check to avoid underflow with large inputs.
+
         if(x .ge. -70.)then
             expm = exp(x)
         else
@@ -1738,9 +1789,10 @@ C USE AITKEN'S FORMULA TO ACCELERATE CONVERGENCE
 
         function devirt_td(t_k,td_k,p_pa)
 
-!       This function yields the approximate temperature given the virtual temp
-!       tv from the mthermo library is called. Please suggest improvements
-!       to this routine to Steve Albers at FSL.
+cdoc    This function yields the approximate temperature given the virtual temp
+cdoc    tv from the mthermo library is called. 
+
+!       Please suggest improvements to this routine to Steve Albers at FSL.
 
 !       t_k       Input temp in K
 !       td_k      Input dew point temp in K
@@ -1762,9 +1814,10 @@ C USE AITKEN'S FORMULA TO ACCELERATE CONVERGENCE
 
         function devirt_sh(t_k,sh,p_pa)
 
-!       This function yields the approximate temperature given the virtual temp
-!       tv from the mthermo library is called. Please suggest improvements
-!       to this routine to Steve Albers at FSL.
+cdoc    This function yields the approximate temperature given the virtual temp
+cdoc    tv from the mthermo library is called. 
+
+!       Please suggest improvements to this routine to Steve Albers at FSL.
 
 !       t_k       Input temp in K
 !       sh        Input specific humidity (dimensionless)
@@ -1785,9 +1838,10 @@ C USE AITKEN'S FORMULA TO ACCELERATE CONVERGENCE
 
         function devirt_rh(t_k,rh,p_pa)
 
-!       This function yields the approximate temperature given the virtual temp
-!       devirt_td from the laps library is called. Please suggest improvements
-!       to this routine to Steve Albers at FSL.
+cdoc    This function yields the approximate temperature given the virtual temp
+cdoc    devirt_td from the laps library is called. 
+
+!       Please suggest improvements to this routine to Steve Albers at FSL.
 
 !       t_k       Input temp in K
 !       rh        Input rh as fraction
@@ -1810,10 +1864,10 @@ C USE AITKEN'S FORMULA TO ACCELERATE CONVERGENCE
 
         FUNCTION TV_SH(T,SH,P)
 C
-C   THIS FUNCTION RETURNS THE VIRTUAL TEMPERATURE TV (CELSIUS) OF
-C   A PARCEL OF AIR AT TEMPERATURE T (CELSIUS), DEW POINT TD
-C   (CELSIUS), AND PRESSURE P (MILLIBARS). THE EQUATION APPEARS
-C   IN MOST STANDARD METEOROLOGICAL TEXTS.
+cdoc    THIS FUNCTION RETURNS THE VIRTUAL TEMPERATURE TV (CELSIUS) OF
+cdoc    A PARCEL OF AIR AT TEMPERATURE T (CELSIUS), DEW POINT TD
+cdoc    (CELSIUS), AND PRESSURE P (MILLIBARS). THE EQUATION APPEARS
+cdoc    IN MOST STANDARD METEOROLOGICAL TEXTS.
 C
 C       BAKER,SCHLATTER 17-MAY-1982     Original version
 C       ALBERS                 1994     Modified for SH Input
@@ -1831,10 +1885,10 @@ C   CALCULATE THE DIMENSIONLESS MIXING RATIO.
 
       FUNCTION TSA_fast(OS,P)
 C
-C   THIS FUNCTION RETURNS THE TEMPERATURE TSA (CELSIUS) ON A SATURATION
-C   ADIABAT AT PRESSURE P (MILLIBARS). OS IS THE EQUIVALENT POTENTIAL
-C   TEMPERATURE OF THE PARCEL (CELSIUS). SIGN(A,B) REPLACES THE
-C   ALGEBRAIC SIGN OF A WITH THAT OF B.
+cdoc  THIS FUNCTION RETURNS THE TEMPERATURE TSA (CELSIUS) ON A SATURATION
+cdoc  ADIABAT AT PRESSURE P (MILLIBARS). OS IS THE EQUIVALENT POTENTIAL
+cdoc  TEMPERATURE OF THE PARCEL (CELSIUS). SIGN(A,B) REPLACES THE
+cdoc  ALGEBRAIC SIGN OF A WITH THAT OF B.
 C
 C       BAKER,SCHLATTER 17-MAY-1982     Original version
 C       Modification for better convergence, Keith Brewster, Feb 1994.
@@ -1895,6 +1949,8 @@ c
 
         subroutine get_tw_approx_2d(t_k,td_k,p_pa,ni,nj,tw_k)
 
+cdoc    Calculate Wet Bulb, using a fast approximate method
+
 !       Steve Albers 1991
 
 !       This routine is fast but only accurate near 0 degrees C (273K)
@@ -1935,6 +1991,8 @@ c
 
         subroutine get_tw_2d(t_k,td_k,p_pa,ni,nj,tw_k)
 
+cdoc    Calculate 2-D grid of Wet Bulb, using 'tw_fast'
+
 !       Steve Albers 1991
 !       WARNING: This routine may not work because it calls tw_fast
 
@@ -1956,6 +2014,8 @@ c
 
         subroutine get_tw_2d_orig(t_k,td_k,p_pa,ni,nj,tw_k)
 
+cdoc    Calculate 2-D grid of Wet Bulb, using 'tw'
+
 !       Steve Albers 1991
 
         real*4 t_k(ni,nj)     ! Input
@@ -1976,12 +2036,13 @@ c
 
         FUNCTION TW_fast(T,TD,P)
 C
-!       WARNING: This routine may not work because it calls TSA_fast
 C
-C   THIS FUNCTION RETURNS THE WET-BULB TEMPERATURE TW (CELSIUS)
-C   GIVEN THE TEMPERATURE T (CELSIUS), DEW POINT TD (CELSIUS)
-C   AND PRESSURE P (MB).  SEE P.13 IN STIPANUK (1973), REFERENCED
-C   ABOVE, FOR A DESCRIPTION OF THE TECHNIQUE.
+cdoc    THIS FUNCTION RETURNS THE WET-BULB TEMPERATURE TW (CELSIUS)
+cdoc    GIVEN THE TEMPERATURE T (CELSIUS), DEW POINT TD (CELSIUS)
+cdoc    AND PRESSURE P (MB).  SEE P.13 IN STIPANUK (1973), REFERENCED
+cdoc    ABOVE, FOR A DESCRIPTION OF THE TECHNIQUE.
+
+cdoc    WARNING: This routine may not work because it calls TSA_fast
 C
 C       BAKER,SCHLATTER 17-MAY-1982     Original version
 C
@@ -2014,9 +2075,10 @@ C   PRESSURE P WHOSE EQUIVALENT POTENTIAL TEMPERATURE IS AOS.
 
         FUNCTION W_fast(T,P) ! Saturation mixing ratio wrt water
 C
-C   THIS FUNCTION RETURNS THE MIXING RATIO (GRAMS OF WATER VAPOR PER
-C   KILOGRAM OF DRY AIR) GIVEN THE TEMPERATURE T (CELSIUS) AND PRESSURE
-C   (MILLIBARS). THE FORMULA IS QUOTED IN MOST METEOROLOGICAL TEXTS.
+cdoc    THIS FUNCTION RETURNS THE MIXING RATIO (GRAMS OF WATER VAPOR PER
+cdoc    KILOGRAM OF DRY AIR) GIVEN THE TEMPERATURE T (CELSIUS) AND PRESSURE
+cdoc    (MILLIBARS). THE FORMULA IS QUOTED IN MOST METEOROLOGICAL TEXTS.
+cdoc    Note this is a faster version done by Steve Albers.
 C
 C       BAKER,SCHLATTER 17-MAY-1982     Original version
 C       Albers                 1992     modified for laps
@@ -2028,9 +2090,10 @@ C
 
         FUNCTION Wice_fast(T,P) ! Saturation mixing ratio wrt ice
 C
-C   THIS FUNCTION RETURNS THE MIXING RATIO (GRAMS OF WATER VAPOR PER
-C   KILOGRAM OF DRY AIR) GIVEN THE TEMPERATURE T (CELSIUS) AND PRESSURE
-C   (MILLIBARS). THE FORMULA IS QUOTED IN MOST METEOROLOGICAL TEXTS.
+cdoc    THIS FUNCTION RETURNS THE MIXING RATIO (GRAMS OF WATER VAPOR PER
+cdoc    KILOGRAM OF DRY AIR) GIVEN THE TEMPERATURE T (CELSIUS) AND PRESSURE
+cdoc    (MILLIBARS). THE FORMULA IS QUOTED IN MOST METEOROLOGICAL TEXTS.
+cdoc    Note this is a faster version done by Steve Albers
 C
 C       BAKER,SCHLATTER 17-MAY-1982     Original version
 C       Albers                 1993     modified for laps
@@ -2042,10 +2105,11 @@ C
 
         FUNCTION OS_fast(TK,P)
 C
-C   THIS FUNCTION RETURNS THE EQUIVALENT POTENTIAL TEMPERATURE OS
-C   (K) FOR A PARCEL OF AIR SATURATED AT TEMPERATURE T (K)
-C   AND PRESSURE P (MILLIBARS).
-C
+cdoc    THIS FUNCTION RETURNS THE EQUIVALENT POTENTIAL TEMPERATURE OS
+cdoc    (K) FOR A PARCEL OF AIR SATURATED AT TEMPERATURE T (K)
+cdoc    AND PRESSURE P (MILLIBARS).
+cdoc    Note this is a faster version done by Steve Albers
+
 C       BAKER,SCHLATTER 17-MAY-1982     Original version
 C
         DATA B/2.6518986/

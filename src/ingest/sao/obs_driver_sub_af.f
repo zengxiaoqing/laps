@@ -687,6 +687,7 @@ c
 c=====================================================================
 c
 	real*4 fnorm(0:imax-1,0:jmax-1)
+        integer*4 dx,dy
 c
 c.... First, find the area that each ob covers in gridpt space (this
 c.... of course assumes a uniform coverage).

@@ -65,16 +65,6 @@ c
       integer time_before, time_after
       parameter( time_before = 900 )     ! default 15 min.
       parameter( time_after  = 300 )     ! default  5 min.
-c
-c
-c.....      Do we check the METARs for time?  If yes, then off hour LSO
-c.....      or LS2 files will not include top of the hour data.  This will
-c.....      probably be ok if there are a lot of off hour mesonet data, but
-c.....      not so good otherwise.
-c
-      parameter( ick_METAR_time = 0 )     ! 0=don't check, 1=check
-c
-c
 
 
 

@@ -33,7 +33,7 @@ c
 c
 	subroutine get_metar_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_metar,data_file,
-     &                      metar_format,
+     &                      metar_format,ick_metar_time,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_sao_g,n_sao_b,stations,
@@ -421,7 +421,7 @@ c
 	endif
 c
 c
-c.....  Convert units for storage.
+c.....  Convert units for storage. Some QC checking.
 c
 c.....  Temperature and dewpoint
 c
@@ -444,6 +444,7 @@ c
 c..... Wind speed and direction
 c
 	ddg = badflag
+        if(ff(i) .lt. 0. .or. ff(i) .gt. 500.)ff(i) = badflag
 	if(ff(i)  .ne. badflag) ff(i)  = 1.94254 * ff(i)   !m/s to kt
 	if(ffg(i) .ne. badflag) then
 	   ffg(i) = 1.94254 * ffg(i) !m/s to kt
@@ -653,8 +654,8 @@ c
 c
 c.....  That's it...lets go home.
 c
-	 print *,' Found ',n_sao_b,' METARs in the LAPS box'
-	 print *,' Found ',n_sao_g,' METARs in the LAPS grid'
+	 print *,' Found ',n_sao_b,' METAR/SYNOPs in the LAPS box'
+	 print *,' Found ',n_sao_g,' METAR/SYNOPs in the LAPS grid'
 	 print *,' '
 	 jstatus = 1		! everything's ok...
 	 return

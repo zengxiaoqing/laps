@@ -4,6 +4,7 @@
  path_to_buoy_data='/data/fxa/point/maritime/netcdf/',
  metar_format='FSL',
  minutes_to_wait_for_metars=10,
+ ick_metar_time=0,
  maxsta=6000,
  /
 
@@ -19,4 +20,14 @@ c 'metar_format' - Format of metar data. Valid values are 'FSL' and 'CWB'
 c
 c 'minutes_to_wait_for_metars' - Especially helpful on WFO
 c
+c 'ick_metar_time' - 0=don't check, 1=check
+c.....      Do we check the METARs for time?  If yes, then off hour LSO
+c.....      or LS2 files will not include top of the hour data.  This will
+c.....      probably be ok if there are a lot of off hour mesonet data, but
+c.....      not so good otherwise.
+c
 c 'maxsta' - max number of surface stations in raw data
+c
+c
+c
+c

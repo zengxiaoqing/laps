@@ -92,6 +92,7 @@ c
      1                           ,path_to_gps_data
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
+     1                           ,ick_metar_time
      1                           ,maxsta
      1                           ,istatus)
         if(istatus .ne. 1)stop
@@ -104,6 +105,7 @@ c
      1                           ,path_to_gps_data
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
+     1                           ,ick_metar_time
      1                           ,maxsta
      1                           ,istatus)
 
@@ -117,6 +119,7 @@ c
      1                           ,path_to_gps_data
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
+     1                           ,ick_metar_time
      1                           ,maxsta
      1                           ,istatus)
 c        
@@ -160,7 +163,6 @@ c
         character*8   a9_to_a8, a8_time
 c
         integer cnt, minutes_to_wait_for_metars
-c        parameter(minutes_to_wait_for_metars=10)
 	logical exists
         data exists/.false./
         data cnt/0/
@@ -340,6 +342,7 @@ c
 c
         call get_metar_obs(maxobs,maxsta,i4time,
      &                     path_to_metar,data_file_m,metar_format,   
+     &                     ick_metar_time,
      &                     grid_east,grid_west,grid_north,grid_south,
      &                     lat,lon,ni,nj,grid_spacing,
      &                     nn,n_sao_g,n_sao_b,stations,
@@ -587,6 +590,7 @@ c
      1                         ,path_to_gps_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
+     1                         ,ick_metar_time
      1                         ,maxsta
      1                         ,istatus)
 
@@ -595,7 +599,6 @@ c
        character*200 path_to_buoy_data
        character*200 path_to_gps_data
        character*8   metar_format
-       integer       minutes_to_wait_for_metars
 
        namelist /obs_driver_nl/ path_to_metar
      1                         ,path_to_local_data
@@ -603,6 +606,7 @@ c
      1                         ,path_to_gps_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
+     1                         ,ick_metar_time
      1                         ,maxsta
  
        character*150 static_dir,filename
