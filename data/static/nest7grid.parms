@@ -19,7 +19,7 @@
 
  laps_cycle_time_cmn=3600,           
 
- l_highres=.false.,                  
+ l_compress_radar=.false.,                  
  I_PERIMETER_CMN=10,                  
  c50_lowres_directory='NULL',
 
@@ -69,6 +69,10 @@ c
 c NX_L_CMN    - number of grid points in the horizontal direction
 c 
 c NY_L_CMN    - number of grid points in the vertical direction
+c
+c l_compress_radar - Compress "vxx" radar files using run-length encoding.
+c                    Note that this is experimental and departs from the 
+c                    NetCDF file convention
 c
 c maxstns_cmn - max number of sfc stations you are likely to encounter in the
 c             - LSO file and various analyses, in and near the domain.
