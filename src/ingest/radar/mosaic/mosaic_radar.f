@@ -600,6 +600,7 @@ c
                      lvl_3d(k) = nint(zcoord_of_level(k))/100
                      lvl_coord_3d(k) = 'HPA'
                      var_3d(k) = var_vrz
+                     comment_3d(k) = " " ! initialize
                  enddo ! k
 
                  comment_3d(1) = comment_vrz
