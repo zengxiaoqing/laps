@@ -284,6 +284,7 @@ c       external rtsys_no_data, rtsys_abort_prod
         integer  raob_switch
         integer goes_switch
         integer cloud_switch
+        integer tiros_switch
         integer sounder_switch
         integer len
         character*200 cdomain
@@ -326,25 +327,47 @@ c     sounding data even if it is present.
         read(23,*,end=24) goes_switch
         read(23,*,end=24) cloud_switch
         read(23,*,end=24) sounder_switch
+        read(23,*,end=24) tiros_switch
+
 
         if (cloud_switch.eq.0) then
-        write(6,*) 'Cloud switch off, ignore clouds'
-        write(6,*) 'If available, clouds will be used in GOES adjust'
+           write(6,*) 'Cloud switch off, ignore clouds'
+           write(6,*) 'If available, clouds will be used in GOES adjust'
+        else
+           write (6,*) 'Clouds will be used in the analysis'
         endif
 
         if (raob_switch.eq.0) then
-        write(6,*) 'raob switch off, ignoring raobs (.snd files)'
+           write(6,*) 'raob switch off, ignoring raobs (.snd files)'
+        else
+           write (6,*) 'Raob switch on... will use raobs if present'
         endif
 
         if (goes_switch.eq.0) then
-        write(6,*) 'goes switch off, ignoring sbn goes data for moisture
-     1'
+           write(6,*) 'GOES switch off, ignoring goes data'
+        else
+           write(6,*) 'GOES switch on, attempting GOES ', goes_switch
         endif
 
       if (sounder_switch.eq.0) then
-        write(6,*) 'sounder switch off'
-        write(6,*) 'using imager data only'
+         write(6,*) 'Sounder switch off'
+         write(6,*) 'Using IMAGER data only'
+      else
+         write(6,*) 'Sounder ON using Sounder data'
       endif
+
+      if (tiros_switch.eq.0) then
+         write(6,*) 'tiros switch off'
+         else 
+            write (6,*) 'Attempting to run tiros data from NOAA-',  
+     1           tiros_switch
+      endif
+
+      if (tiros_switch.ne.0 .and. goes_switch.ne.0) then
+         write(6,*) 'USING BOTH TIROS AND GOES DATA IN THIS RUN'
+      endif
+
+
 
 
         close (23)
@@ -634,90 +657,142 @@ c       insert boundary layer data
 
         print*, 'finished with routine lsin'
 
+
+
+c make call to TIROS moisture insertion
+
+
+        if (tiros_switch .ne. 0) then
+
+           if(c_istatus.eq.1 .and. t_istatus.eq.1) then
+
+        
+              write (6,*) 'begin TIROS insertion step'
+      
+              call tiros (
+     1             data,        ! specific humidity g/g
+     1             lat,lon,     ! lat and longitude (deg)
+     1             i4time,      ! i4time of run (seconds)
+     1             plevel,      ! pressure hpa (laps vert grid)
+     1             cg,          ! cloud array
+     1             lt1dat,      ! lt1 (laps 3d temps)
+     1             14,          ! satellite number
+     1             ii,jj,kk     ! grid dimensions
+     1             )
+
+           else
+
+              write(6,*)
+              write(6,*)
+              write(6,*)
+              write(6,*) 'tiros moisture insertion step skipped'
+              write(6,*) 'cloud or lt1 data not current'
+              write(6,*) 'cannot assume clear conditions or'
+              write(6,*) 'use alternate lt1.. this will create'
+              write(6,*) 'forward model problems....'
+              write(6,*) 'tiros moisture insertion step skipped'
+              write(6,*)
+              write(6,*)
+              write(6,*)
+
+           endif
+
+        else
+
+           write(6,*) 'tiros switch is off... tiros step skipped...'
+
+        endif
+
+
 c make call to goes moisture insertion
 
 
-        if (goes_switch .eq. 8  .or. goes_switch .eq. 9) then
+        if (goes_switch .ne. 0 ) then
 
-        if(c_istatus.eq.1 .and. t_istatus.eq.1) then
+           if(c_istatus.eq.1 .and. t_istatus.eq.1) then
 
-        write (6,*) 'begin goes insertion step'
-        call goes_sbn (
-     1        data,              ! 3-d specific humidity g/g
-     1        lat,lon,           ! 2-d lat and longitude
-     1        i4time,            ! i4time of run
-     1        plevel,            ! pressure mb
-     1        cg,                ! 3-e cloud field 0-1 (1=cloudy)
-     1        lt1dat,            ! laps lt1 (3-d temps)
-     1        goes_switch,       ! goes switch and satellite number
-     1        sounder_switch,    ! sounder switch, 0=imager,1=sndr
-     1        ii,jj,kk
-     1        )
+              write (6,*) 'begin goes insertion step'
+              call goes_sbn (
+     1             data,        ! 3-d specific humidity g/g
+     1             lat,lon,     ! 2-d lat and longitude
+     1             i4time,      ! i4time of run
+     1             plevel,      ! pressure mb
+     1             cg,          ! 3-e cloud field 0-1 (1=cloudy)
+     1             lt1dat,      ! laps lt1 (3-d temps)
+     1             goes_switch, ! goes switch and satellite number
+     1             sounder_switch, ! sounder switch, 0=imager,1=sndr
+     1             ii,jj,kk
+     1             )
+
+           else
+
+              write(6,*)
+              write(6,*)
+              write(6,*)
+              write(6,*) 'goes moisture insertion step skipped'
+              write(6,*) 'cloud or lt1 data not current'
+              write(6,*) 'cannot assume clear conditions or'
+              write(6,*) 'use alternate lt1.. this will create'
+              write(6,*) 'forward model problems....'
+              write(6,*) 'goes moisture insertion step skipped'
+              write(6,*)
+              write(6,*)
+              write(6,*)
+
+           endif
 
         else
 
-        write(6,*)
-        write(6,*)
-        write(6,*)
-        write(6,*) 'goes moisture insertion step skipped'
-        write(6,*) 'cloud or lt1 data not current'
-        write(6,*) 'cannot assume clear conditions or'
-        write(6,*) 'use alternate lt1.. this will create'
-        write(6,*) 'forward model problems....'
-        write(6,*) 'goes moisture insertion step skipped'
-        write(6,*)
-        write(6,*)
-        write(6,*)
-
-        endif
-
-        else
-
-        write(6,*) 'goes switch is off... goes step skipped...'
+           write(6,*) 'goes switch is off... goes step skipped...'
 
         endif
 
 
-c *** insert cloud moisture, this section now controled by a switch
+c     *** insert cloud moisture, this section now controled by a switch
 
         if(cloud_switch.eq.0) then
-              write(6,*) ' '
-              write(6,*) 'Cloud switch  '
-              write(6,*) 'Skipping cloud moistening here'
-              write(6,*) ' '
-              write(6,*) ' '
-              c_istatus = 0  !force this to skip here
+           write(6,*) ' '
+           write(6,*) 'Cloud switch  '
+           write(6,*) 'Skipping cloud moistening here'
+           write(6,*) ' '
+           write(6,*) ' '
+           c_istatus = 0        !force this to skip here
         endif
 
         if(c_istatus.ne.1 .or. i4time.ne.i4timep)then
-        c_istatus = 0
-        write(6,*) 'Cloud field not available for exact time'
-        write(6,*) 'assume ALL CLEAR values used'
-        else  ! increase moisture based on cloud amount
+           c_istatus = 0
+           write(6,*) 'Cloud field not available for exact time'
+           write(6,*) 'assume ALL CLEAR values used'
+        else                    ! increase moisture based on cloud amount
 
-        write(6,*) 'Saturate in cloudy areas'
-        do k = 1,kk
-        do j = 1,jj
-        do i = 1,ii
+           write(6,*) 'Saturate in cloudy areas'
+           do k = 1,kk
+              do j = 1,jj
+                 do i = 1,ii
 
-        if(cg(i,j,k) .gt. 0.1   .and. cg(i,j,k) .lt. 1.0) then !cloudy
+                    if(cg(i,j,k) .gt. 0.1 .and. cg(i,j,k) .lt. 1.0) then
+c                                                         !cloudy
 
-        tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1           lt1dat(i,j,k)-273.15, 0.0 )/1000.
-        data(i,j,k) = cg(i,j,k)* tempsh+(1.-cg(i,j,k))*data(i,j,k)
+                       tempsh = ssh2( float(lvllm(k)),
+     1                      lt1dat(i,j,k)-273.15,
+     1                      lt1dat(i,j,k)-273.15, 0.0 )/1000.
+                       data(i,j,k) = cg(i,j,k)* tempsh
+     1                      +(1.-cg(i,j,k))*data(i,j,k)
 
-        elseif (cg(i,j,k).ge.1.0) then ! still cloudy...put in for albers
+                    elseif (cg(i,j,k).ge.1.0) then 
+c                                        ! still cloudy...put in for albers
 
-        tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1           lt1dat(i,j,k)-273.15, 0.0 )/1000.
-        data(i,j,k) = tempsh
+                       tempsh = ssh2( float(lvllm(k)) 
+     1                      ,lt1dat(i,j,k)-273.15,
+     1                      lt1dat(i,j,k)-273.15, 0.0 )/1000.
+                       data(i,j,k) = tempsh
 
-        endif
+                    endif
 
 
-        enddo
-        enddo
-        enddo
+                 enddo
+              enddo
+           enddo
 
 
         endif
