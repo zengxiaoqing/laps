@@ -392,8 +392,10 @@ sub systime{
     $min = '0'.$min if(length($min)<2);
     $hour = '0'.$hour if(length($hour)<2);
 
-    my $jjj = &julian($year,$mon+1,$mday);
-    
+    require "$LAPSROOT/etc/laps_tools.pm";
+
+    my $jjj = &laps_tools::julian($year,$mon+1,$mday);
+
     $jjj="0".$jjj while(length($jjj)< 3);
       
     open(TFILE,">$DATAROOT/time/c_time.dat");
@@ -411,47 +413,6 @@ sub systime{
     close(TFILE);
 }
 
-;#
-;#+--+------------------------------------------------------------------+
-;#
-;# &julian: Calculate julian day from year, month, day
-;# Arguments: year, month, day
-;# Returns: julian day
-
-sub julian {
-    my($yr,$mo,$dy) = @_;
- 
-    my($b,$g,$d,$e,$f,$today,$first_of_year);
-    $yr = ($yr < 70) ? ($yr + 2000) : ($yr + 1900);
- 
-    # Use temporary vars to compute num of days since Oct 1, 1582 to today
-    $b = int ( ($mo - 14) / 12 );
-    $g = $yr + 4900 + $b;
-    $b = $mo - 2 - 12*$b;
- 
-    $d = int( (1461*($g-100))/4);
-    $e = int( (367*$b)/12);
-    $f = int( (3*int($g/100))/4);
- 
-    $today = $d + $e - $f + $dy - 2432076;
- 
-    # Now compute number of days from Oct 1, 1582 to Jan 1, $yr
-    $mo = 1;
-    $dy = 1;
-    $b = int( ($mo - 14) / 12);
-    $g = $yr + 4900 + $b;
-    $b = $mo - 2 - 12*$b;
- 
-    $d = int( (1461*($g-100))/4);
-    $e = int( (367*$b)/12);
-    $f = int( (3*int($g/100))/4);
- 
-    $first_of_year = $d + $e - $f + $dy - 2432076;
- 
-    # Julian day from 1st of year is $today-$first_of_year+1
- 
-    $today - $first_of_year + 1;
-}
 
 sub parse_namelist{
     my($namelist,@variables) = @_;
