@@ -29,26 +29,52 @@ c
       end
 c
 c
-      subroutine addmv(a,b,c,s,imax,jmax,m)
+      subroutine addmv(a,b,c,imax,jmax,m)
 c
 c*********************************************************************
 c
-c     Routine adds or subrtacts two vectors or matricies, s is 
-c     add or subrtract contoller.  Results are output in c.    
+c     Routine adds two vectors or matricies.  Results are output in c.    
 c
 c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       13 Oct 1998  Peter Stamus, NOAA/FSL
+c          Removed subract option...put in separate routine.
 c
 c*********************************************************************
 c
-      real a(m,m),b(m,m),c(m,m),s
+      real a(m,m),b(m,m),c(m,m)
       integer imax,jmax,i,j,m
 c
       do j=1,jmax
       do i=1,imax
-         c(i,j) = a(i,j) + b(i,j)*s
+         c(i,j) = a(i,j) + b(i,j)
+      enddo !i
+      enddo !j
+c
+      return
+      end
+c
+c
+      subroutine submv(a,b,c,imax,jmax,m)
+c
+c*********************************************************************
+c
+c     Routine subrtacts two vectors or matricies.  Results are output 
+c     in c.    
+c
+c     Original: Peter Stamus, NOAA/FSL  13 Oct 1998 (from 'addmv')
+c     Changes:
+c
+c*********************************************************************
+c
+      real a(m,m),b(m,m),c(m,m)
+      integer imax,jmax,i,j,m
+c
+      do j=1,jmax
+      do i=1,imax
+         c(i,j) = a(i,j) - b(i,j)
       enddo !i
       enddo !j
 c
@@ -108,119 +134,6 @@ c
       end
 c
 c
-      subroutine ludcmp(a,n,np,indx,d)  
-c
-c*********************************************************************
-c
-c     Routine performs lower/upper decomposition of a matrix a
-c
-c     Original: John McGinley, NOAA/FSL  Spring 1998
-c     Changes:
-c       21 Aug 1998  Peter Stamus, NOAA/FSL
-c          Make code dynamic, housekeeping changes, for use in LAPS.
-c
-c*********************************************************************
-c
-      integer i,imax,j,k
-      parameter (nmax=500,tol=1.e-20)
-      real aamax,dum,sum,vv(nmax)
-      real d,a(np,np),tol
-      integer n,np,indx(n),nmax
-c
-      d=1.
-      do i=1,n
-         aamax=0.
-         do j=1,n
-            if(abs(a(i,j)).gt.aamax) aamax=abs(a(i,j))
-         enddo !j
-         if(aamax.eq.0.) pause 'All 0, singular matrix in ludcmp'
-         vv(i)=1./aamax
-      enddo !i
-      do j=1,n
-         do i=1,j-1
-            sum=a(i,j)
-            do k=1,i-1
-               sum=sum-a(i,k)*a(k,j)
-            enddo !k
-            a(i,j)=sum
-         enddo !i
-         aamax=0.
-         do i=j,n
-            sum=a(i,j)
-            do k=1,j-1
-               sum=sum-a(i,k)*a(k,j)
-            enddo !k
-            a(i,j)=sum
-            dum=vv(i)*abs(sum)
-            if(dum.ge.aamax) then
-               imax=i
-               aamax=dum
-            endif
-         enddo !i
-         if(j.ne.imax) then
-            do k=1,n
-               dum=a(imax,k)
-               a(imax,k)=a(j,k)
-               a(j,k)=dum
-            enddo !k
-            d=-d
-            vv(imax)=vv(j)
-         endif
-         indx(j)=imax
-         if(a(j,j).eq.0.)a(j,j)=tol
-         if(j.ne.n)then
-            dum=1./a(j,j)
-            do i=j+1,n
-               a(i,j)=a(i,j)*dum
-            enddo !i
-         endif
-      enddo !j
-c
-      return
-      end
-c
-c
-      subroutine lubksb(a,n,np,indx,b)   
-c
-c*********************************************************************
-c solves set of n linear equns a.x=b
-c     Original: John McGinley, NOAA/FSL  Spring 1998
-c     Changes:
-c       21 Aug 1998  Peter Stamus, NOAA/FSL
-c          Make code dynamic, housekeeping changes, for use in LAPS.
-c*********************************************************************
-c
-      real a(np,np),b(n)  
-      real sum
-      integer n,np,indx(n)
-      integer i,ii,j,ll
-c
-      ii=0
-      do i=1,n
-         ll=indx(i)
-         sum=b(ll)
-         b(ll)=b(i)
-         if(ii.ne.0) then
-            do j=ii,i-1
-               sum=sum-a(i,j)*b(j)
-            enddo !j
-         else if (sum.ne.0.) then
-            ii=i
-         endif
-         b(i)=sum
-      enddo !i
-      do i=n,1,-1
-         sum=b(i)
-         do j=i+1,n
-            sum=sum-a(i,j)*b(j)
-         enddo !j
-         b(i)=sum/a(i,i)
-      enddo !i
-c
-      return
-      end
-c
-c
       subroutine invert (a,n,np,y)  
 c
 c*********************************************************************
@@ -231,8 +144,7 @@ c          Make code dynamic, housekeeping changes, for use in LAPS.
 c*********************************************************************
 c
       real a(np,np),y(np,np),d
-      parameter(im=500)
-      integer np,indx(im),n,j,i
+      integer np,indx(np),n,j,i
 c
       do i=1,n
          do j=1,n
@@ -318,11 +230,7 @@ c*********************************************************************
 c
       real B(m),c(m,m),W(m,m),wit(m,m)
 c
-      do i=1,imax
-         do j=1,imax
-            W(i,j)=0. 
-         enddo !j
-      enddo !i
+      call zero(W, imax,imax)
       ia=iav
       if(ia.gt.it) ia=it
       do itt=1,ia
@@ -593,7 +501,10 @@ c
                 endif
                 go to 3
              endif
-             if(its.eq.30) pause 'no convergence in svdcmp'
+             if(its.eq.30) then
+                print *,
+     &       ' No convergence in sudcmp: inverted matrix may be suspect'
+             endif
              x=w(l)
              nm=k-1
              y=w(nm)

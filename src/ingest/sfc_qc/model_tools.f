@@ -1,7 +1,7 @@
 c
 c
-        Subroutine model(F,dta,del,nvar,mwt,lat_s,lon_s,elev
-     1   ,imax,m,ni,nj,laps_cycle_time,i4time)
+        Subroutine model(F,dta,nvar,mwt,lat_s,lon_s,elev
+     1   ,imax,m,ni,nj,lat_grid,lon_grid,laps_cycle_time,i4time)
 c
 c*********************************************************************
 c
@@ -23,25 +23,20 @@ c
         real var_bk(ni,nj),var_bk1(ni,nj),
      &    u_bk(ni,nj),u_bk1(ni,nj),v_bk(ni,nj),v_bk1(ni,nj)
 c
-        real lat_grid(ni,nj), lon_grid(ni,nj), grid_spacing
+        real lat_grid(ni,nj), lon_grid(ni,nj)
 	real rii(m), rjj(m)
 	integer iii(m), ijj(m)
 c
         integer nvar
         character dir_s*256,ext_s*31,units*10,comment*125,var_s*3
-        character var_req(6)*4
+        character var_req(6)*4, ext_bk*31
         data var_req/'TEMP','DEWP','    ','    ','MSLP','SFCP'/
 c
-c.....  Get the grid lat/lons from the static file.
+c.....  Start here.
 c
-        call get_directory('static', dir_s, len)
-        ext_s = 'nest7grid'
-        var_s = 'LAT'
-        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      lat_grid ,grid_spacing,istatus)
-        var_s = 'LON'
-        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      lon_grid ,grid_spacing,istatus)
+        do i=1,m
+           del(i) = 0.
+        enddo !i
 c
 c.....  Get the wind component backgrounds.
 c
@@ -52,6 +47,10 @@ c
      &      ext_bk,ibkg1_time,u_bk1,v_bk1,laps_cycle_time,ni,nj,istatus)
 	   dtt=ibkg_time-ibkg1_time
 	   if(dtt.eq.0.) go to 100
+           call conv_ms2kt(u_bk, u_bk, ni,nj)
+           call conv_ms2kt(u_bk1, u_bk1, ni,nj)
+           call conv_ms2kt(v_bk, v_bk, ni,nj)
+           call conv_ms2kt(v_bk1, v_bk1, ni,nj)
 	   do j=1,nj
 	   do i=1,ni
 	      u_bk(i,j)=(u_bk(i,j)-u_bk1(i,j))/dtt
@@ -89,10 +88,10 @@ c
 	      b=rjj(k)-float(jj)
 	      if(a.gt.1.) a=1.
 	      if(b.gt.1.) b=1.
-	      if(nvar.eq.3) del(k)=(1-a)*(1-b)*u_bk(i,j)+a*u_bk(ii,j)
-     &     +b*(u_bk(i,jj))+a*b*u_bk(ii,jj)
-	      if(nvar.eq.4) del(k)=(1-a)*(1-b)*v_bk(i,j)+a*v_bk(ii,j)
-     &	   +b*(v_bk(i,jj))+a*b*v_bk(ii,jj)
+	      if(nvar.eq.3) del(k)=(1-a)*(1-b)*u_bk(ii,jj)+a*u_bk(iip,jj)
+     &     +b*(u_bk(ii,jjp))+a*b*u_bk(iip,jjp)
+	      if(nvar.eq.4) del(k)=(1-a)*(1-b)*v_bk(ii,jj)+a*v_bk(iip,jj)
+     &	   +b*(v_bk(ii,jjp))+a*b*v_bk(iip,jjp)
            enddo !k
         else
 	   call get_background_sfc(i4time+laps_cycle_time,var_req(nvar),
@@ -101,6 +100,16 @@ c
      &       ext_bk,ibkg1_time,var_bk1,laps_cycle_time,ni,nj,istatus)
 	   dtt=ibkg_time-ibkg1_time
 	   if(dtt.eq.0.) go to 100
+c
+           if(nvar.eq.1 .or. nvar.eq.2) then
+              call conv_k2f(var_bk, var_bk, ni,nj)
+              call conv_k2f(var_bk1, var_bk1, ni,nj)
+           elseif(nvar.eq.5 .or. nvar.eq.6) then
+              call multcon(var_bk, 0.01, ni,nj)
+              call multcon(var_bk1, 0.01, ni,nj)
+           else
+              print *,'  WARNING. Bad nvar in model.'
+           endif
 c
 	   do j=1,nj
            do i=1,ni
@@ -138,8 +147,8 @@ c
 	      b=rjj(k)-float(jj)
 	      if(a.gt.1.) a=1.
 	      if(b.gt.1.) b=1.
-	      del(k)=(1-a)*(1-b)*var_bk(i,j)+a*var_bk(ii,j)
-     &               +b*(var_bk(i,jj))+a*b*var_bk(ii,jj)
+	      del(k)=(1-a)*(1-b)*var_bk(ii,jj)+a*var_bk(iip,jj)
+     &               +b*(var_bk(ii,jjp))+a*b*var_bk(iip,jjp)
 	      if(nvar.eq.6) then ! convert stn_p change to alstg change
 		 stdtbar=288.16-.0098*elev(k)*.5
 		 arg=9.808*elev(k)/(287.04*stdtbar) 
@@ -148,7 +157,9 @@ c
            enddo !k
 	endif
 	go to 101
- 100	del(m)=0. ! with no background trend use persistence 
+ 100	do i=1,m
+           del(m) = 0. ! with no background trend use persistence 
+        enddo !i
 c
 c mwt is a model spatial correlation to input what the expected
 c spatial error is likely to be with the model
@@ -198,7 +209,7 @@ c
 	end
 c
 c        
-	Subroutine weights(mwt,dwt,ua,va,theta,lat,lon,cycle,imax,m)
+	Subroutine weights(mwt,dwt,ua,va,theta,lat,lon,icycle,imax,m)
 c
 c*********************************************************************
 c
@@ -213,7 +224,9 @@ c*********************************************************************
 c
 	common tab(10000),pi,re,rdpdg,reorpd
 	real mwt(m,m),dwt(m,m),ua(m),va(m),theta(m),lat(m),lon(m)
+        integer icycle
 c       
+        cycle = float( icycle )
 	expsclr=1000.
 	hcutoff= 50000.  !dist in m for wt e**-1
 	hcutoffm=50000.  
@@ -282,9 +295,8 @@ c
 c*********************************************************************
 c
         parameter       (badflag = -99.9)
-        parameter (im=500,jm=500)
         real monster (m,m,nvar), fcf(m,m,nvar)
-        real data(im)
+        real data(2*m)
 c
 	if(nn .eq. 0) nn = 1
 	if(icyc .eq. 0) icyc = 1
@@ -421,10 +433,8 @@ c
 	em1=1.-.36789
 	em1s=em1*em1
 	nn2=2*nn
-cc	open(9,file='/scratch/localhost/mcginley/fort.9',form=
-cc   &       'formatted',access='sequential',status='old')
 	do i=1,maxsta
-c     if(it.lt.104)go to 1
+        if(it.lt.26) go to 1
 	   if(fcf(i,1,nv).eq.badflag) go to 1
 	   k=icyc+1
 	   t=float(k-1)/step
@@ -448,8 +458,6 @@ c
 	      sum=sum+fcf(i,l,nv)*cos(2.*pi*f*t)
      &              +fcf(i,l+1,nv)*sin(2.*pi*f*t)
 	   enddo !l
-	   if(it.gt.66.and.it.lt.84)
-     &        write(9,*) 'STN',i,'VARIABLE ',nv,'ITERATION',it
 	   fff(1)=fcf(i,1,nv)
 	   ll=1
 c     do l=3,nn+1,2
@@ -463,36 +471,22 @@ c     do l=3,nn+1,2
      &              +fcf(i,nn2-l+1,nv)*sin(2.*pi*fm*t)
 	      sumf=fff(ll)
 	   enddo !l
-c           if(it.lt.90.and.it.gt.66) then
-c           do l=1,nn
-c           write(9,*) 'l,mon,fff',l,monster(i,l,nv),fff(l)
-c           fff(l)=0.
-c           enddo
-c           write(9,*)  'fourier series- unfil, fil',sum,sumf 
-c           endif
  1	   a=1.
 	   b=1.
 	   if(monster(i,2,nv).eq.badflag) a=0.
 	   if(monster(i,3,nv).eq.badflag) b=0
 	   sum0=monster(i,1,nv)*(1.+a*em1+b*em1s*.5)+a*monster(i,2,nv)*
      &           (-a*em1-b*em1s)+monster(i,3,nv)*(b*em1s*.5)    
-	   y(i)=sum0
 	   if(it.lt.26) go to 2
-c     if(abs(sum-sum0).lt.thresh)then 
-c           write(*,*) 'fft est stn ',i, ' of ',sum,' acptd ovr ',
-c    &       '2nd order interp  ',sum0,atime(1:17)
-c           y(i)= sum   
-c           else
-c           y(i)=sum0
-c           write(*,*) 'fft est stn ',i, ' of ',sum,' RJCTD FOR ',
-c    &       '2nd ordr  ',y(i),'  ',atime(1:17)
-c           endif
-c	   write(9,*) 'i,fourier unfil, filt est',i,sum,sumf
-c	   write(9,*) 'taylor series',sum0,monster(i,1,nv),
-c     &           monster(i,2,nv),
-c     &           monster(i,3,nv)
-	   y(i)=sum0		!ob guess set to taylor for the time being
- 2	   continue
+            if(i.eq.1) then
+             print*,'Fourier and Taylor samples for station 1 variable'
+     &                 ,nvar
+         	   print*, 'fourier unfil, filt est',sum,sumf
+	           print*,  'taylor series',sum0,monster(i,1,nv),
+     &           monster(i,2,nv),
+     &           monster(i,3,nv)
+            endif
+ 2 	   y(i)=sum0		!ob guess set to taylor for the time being
 	enddo !on i
 c
 	return 

@@ -1,5 +1,3 @@
-c
-c
        Program QC_main
 c
        include 'lapsparms.cmn'
@@ -74,6 +72,7 @@ c
 c
         integer*4 i4time, wmoid(m), jstatus
         integer*4 time(m), delpch(m), kkk_s(m)
+        integer   index(m), indexa(m), indexb(m)
 c
         character infile*256, store_cldamt(m,5)*4
         character stations(m)*20, provider(m)*11
@@ -88,6 +87,10 @@ c
      &          store_5(m,4), store_5ea(m,4),
      &          store_6(m,5), store_6ea(m,2),
      &          store_7(m,3)
+        real    store_chtout(m,5)
+        integer   wmoid_out(m)
+        character outfile*256
+        character store_camtout(m,5)*4, wx_out(m)*25
 c
 c  two sets of past obs a and b
 c
@@ -158,13 +161,16 @@ c
 c        
 c character arrys for file names, station names, time, wx symbols
 c
-
+        real        lat_grid(ni,nj), lon_grid(ni,nj), grid_spacing
+        real        fon, nof
+        parameter(  fon = 5./9., nof = 9./5. )
 	integer     i4prev1, i4prev2, cycle
 	character*9 filename, fname1, fname2
         Character   atime*24, atime_cur*24, stn(m)*5, wx(m)*25
         character   stna(m)*5, stnb(m)*5
         character   monfile*256, atime_mon*24
-        character   dir_s*180, dir_out*256, ext_out*31
+        character   dir_mon*256, dir_out*256, ext_out*31
+        character   dir_s*256,ext_s*31,units*10,comment*125,var_s*3
 c
 c
 c..... Start here.  First get the time from the user or scheduler.
@@ -220,12 +226,18 @@ c
         on=1
         off=0
 c
-c  constants
+c..... Set constants and zero some arrays
 c
         re=6371122.
         pi = 4.0 * atan(1.0)
         rdpdg=pi/180.
         reorpd=re*rdpdg  
+c
+        do i=1,m
+           index(i)  = 0
+           indexa(i) = 0
+           indexb(i) = 0
+        enddo !i
 c
 c  averaging period for error for w and vv
 c
@@ -236,6 +248,17 @@ c
         do i=1,10000
            tab(i)= exp (-float((i-1)*(i-1))/1000.)
         enddo !i
+c
+c.....  Get the grid lat/lons from the static file.
+c
+        call get_directory('static', dir_s, len)
+        ext_s = 'nest7grid'
+        var_s = 'LAT'
+        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
+     &                      lat_grid ,grid_spacing,istatus)
+        var_s = 'LON'
+        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
+     &                      lon_grid ,grid_spacing,istatus)
 c
 c.....  Check for a 'monster' file in the 'LSQ' output
 c.....  directory.  If there's one there, read it.
@@ -252,8 +275,8 @@ c
         endif
 c
  500    continue
-        call get_directory('lsq', dir_s, len)
-        monfile = dir_s(1:len) // 'monster.dat'
+        call get_directory('lsq', dir_mon, len)
+        monfile = dir_mon(1:len) // 'monster.dat'
 
         IF(flagstart) THEN
 c
@@ -283,28 +306,31 @@ c random number intial seed
 c              
                  iiiii=ran1(iiiii)*2000000.-1000000.
                  vit(i,j)=oberrt*ffz(iiiii,20)
-                 wit(i,j)=moderr*ffz(iiiii,20)
-                 witd(i,j)=moderr*ffz(iiiii,20)
+                 wit(i,j)=moderrt*ffz(iiiii,20)
+                 witd(i,j)=moderrtd*ffz(iiiii,20)
                  vitd(i,j)=oberrtd*ffz(iiiii,20)
-                 witu(i,j)=moderr*ffz(iiiii,20)
-                 witv(i,j)=moderr*ffz(iiiii,20)
+                 witu(i,j)=moderru*ffz(iiiii,20)
+                 witv(i,j)=moderru*ffz(iiiii,20)
                  vitv(i,j)=oberru*ffz(iiiii,20)
                  vitu(i,j)=oberru*ffz(iiiii,20)
-                 witpm(i,j)=moderr*ffz(iiiii,20)
+                 witpm(i,j)=moderrpm*ffz(iiiii,20)
                  vitpm(i,j)=oberrpm*ffz(iiiii,20)
-                 wital(i,j)=moderr*ffz(iiiii,20)
+                 wital(i,j)=moderral*ffz(iiiii,20)
                  vital(i,j)=oberral*ffz(iiiii,20)
               enddo !on j
-              Pt(i,i)=moderrt*moderr
-              Ptd(i,i)=moderrtd*moderr
-              Pu(i,i)=moderru*moderr
-              Pv(i,i)=moderru*moderr
-              Ppm(i,i)=moderrpm*moderr
-              Pal(i,i)=moderral*moderr
+              Pt(i,i)=moderrt*moderrt
+              Ptd(i,i)=moderrtd*moderrtd
+              Pu(i,i)=moderru*moderru
+              Pv(i,i)=moderru*moderru
+              Ppm(i,i)=moderrpm*moderrpm
+              Pal(i,i)=moderral*moderral
            enddo !i
            on=1
            off=0
-           it=1 
+           ite=0
+c     "it" is the index that records how many cycles are in monster
+c      start it off with 0 for start up
+       it=0
 c
 c.....  Get the LSO data file for 2 cycles ago.
 c
@@ -328,6 +354,7 @@ c
            do k=1,maxstab
               stnb(k)(1:5)=stations(k)(1:5)
               print*,stnb(k) 
+              indexb(k) = k
            enddo !k
 c
            print*, maxstab, 'obs read for cycle '    
@@ -355,12 +382,14 @@ c
            maxstaa=n_obs_b
            do k=1,maxstaa
               stna(k)(1:5)=stations(k)(1:5)
+              indexa(k) = k
            enddo !k
            print*, maxstaa, 'obs read for cycle '
            call reorder(ta,tda,dda,ffa,lata,lona,eleva,pstna,pmsla,alta,
-     &       stna,providera,reptypea,
+     &       stna,providera,reptypea,indexa,
      &       tb,tdb,ddb,ffb,latb,lonb,elevb,pstnb,pmslb,altb,stnb,
-     &       providerb,reptypeb,maxstaa,maxstab,m,badflag)
+     &       providerb,reptypeb,indexb,
+     &       maxstaa,maxstab,m,badflag)
            call convuv(ddb,ffb,ub,vb,maxstab,m,badflag)
            call convuv(dda,ffa,ua,va,maxstaa,m,badflag)
 c
@@ -368,22 +397,33 @@ c  convert to theta from raw temps
 c
            call thet(tb,thetab,maxstaa,eleva,m)
 c
-c  replace missing values of theta from neighbors
+c  replace missing values of theta from neighbors in b set
 c
            call fill(stnb,thetab,latb,lonb,elevb,thetab,sl,
      &       maxstaa,m,8./1000.,-1./1000. )         
            call thet2T(tb,thetab,maxstaa,eleva,m)
+c fill the b arrays so that no data is missing
+           call fill(stnb,tdb,latb,lonb,elevb,thetab,vl,
+     &          maxstab,m,15./1000.,-35./1000.)        
+           call fill(stnb,ub,latb,lonb,elevb,thetab,vl,
+     &          maxstab,m,10./1000.,-10./1000.)        
+           call fill(stnb,va,latb,lonb,elevb,thetab,vl,
+     &       maxstab,m,10./1000.,-10./1000.)         
+           call fill(stnb,pmslb,latb,lonb,elevb,thetab,vl,
+     &       maxstab,m,2./1000.,-2./1000.)        
+           call fill(stnb,altb,latb,lonb,elevb,thetab,vl,
+     &       maxstab,m,2./1000.,-2./1000.)         
            call writemon(tb,tdb,ub,vb,pmslb,altb,nvar,maxstaa,m,
-     &          monster,(it  )) 
+     &          monster,it  ) 
            call thet(ta,thetaa,maxstaa,eleva,m)
            call fill(stna,thetaa,lata,lona,eleva,thetaa,sl,
      &             maxstaa,m,8./1000.,-1./1000.)          
 c
-c  now for first guess ta, use thetas and interp to stn locations
+c  now for first guess ta, use thetas and interp to msng stn locations
 c
            call thet2T(ta,thetaa,maxstaa,eleva,m)
 c
-c same thing for dewpoint and winds
+c same thing for dewpoint and winds in a set
 c
            call fill(stna,tda,lata,lona,eleva,thetaa,vl,
      &          maxstaa,m,15./1000.,-35./1000.)        
@@ -409,7 +449,8 @@ c.....  bag it and start over.
 c
            print *,' Found monster file valid for: ', atime_mon
            if( abs(i4time-i4time_mon) .gt. laps_cycle_time) then
-              print *,'    But monster file too old. Starting over...'
+              print *,
+     &      '    But this monster file too old. Starting over...'
               flagstart = .true.
               close(15)
               go to 500
@@ -418,8 +459,9 @@ c
            read(15) vit,vitd,vitu,vitv,vitpm,vital
            read(15) wit,witd,witu,witv,witpm,wital
            read(15) pt,ptd,pu,pv,ppm,pal
-           read(15) monster
+           read(15) monster    
            read(15) ta,tda,ua,va,pmsla,alta
+           read(15) it
            close(15)
         ENDIF
 c
@@ -431,22 +473,19 @@ c
 c put the obs in the monster stack
 c
         call writemon(ta,tda,ua,va,pmsla,alta,nvar,maxstaa,m,
-     &          monster,(it  )) 
-c
-        icyc = 24
-        nn = 32
-c
-cc        if(it.ge.26) then
-cc           icyc=24
-cc           nn=32
-cc        else
-cc           go to 334
-cc        endif
-cc        if(it.ge.66) then
-cc           icyc=48
-cc           nn=64
-cc        endif
-c
+     &          monster,it) 
+ 
+          if(it.ge.26) then
+             icyc=24
+             nn=32
+         else
+             go to 334
+          endif
+          if(it.ge.66) then
+             icyc=48
+             nn=64
+          endif
+ 
 c     perform fourier analysis on the last 24 or 48 obs
 c
  333    call fouranal(monster,fcf,maxstaa,m,6,nvar,nn,icyc) !1 is maxvar
@@ -469,10 +508,6 @@ c
 c     
 c  input ob estimates as a departure from background ta
 c
-
-	go to 1234
-
-
         call perturb(yta,ta,yta,maxstaa,m,offset,on)      
         call perturb(ta,ta,dta,maxstaa,m,offset,on)      
         call perturb(ytda,tda,ytda,maxstaa,m,offset,on)      
@@ -492,76 +527,84 @@ c
      &       cycle,maxstaa,m)
 c
         write(*,*) 'Kalman for TEMP'
-*****MODEL IS UNDER REVISION - ARGUEMENTS WILL CHANGE**********
-        call model(F,dta,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
-     &          ,maxstaa,m,ni,nj,timer,cycle,14.,4.,24.,6.)
+
+
+        call model(F,dta,1,mwt,lata,lona,eleva,maxstaa,
+     &             m,ni,nj,lat_grid,lon_grid,cycle,i4time)
 c
 c  create the v and w matrices using the error history
 c
-        Call avgdiagerr(wit,B,c,W,maxstaa,ia,m,it-1)
-        Call avgdiagerr(Vit,B,c,vV,maxstaa,ia,m,it-1)
+        Call avgdiagerr(wit,B,c,W,maxstaa,ia,m,it)
+        Call avgdiagerr(Vit,B,c,vV,maxstaa,ia,m,it)
+        do i=1,maxstaa
+         print*, 'w,v,p,F',W(i,i),vv(i,i),pt(i,i),F(i,i)
+        enddo
 c  kalman....
         call kalman(dta,F,YTA,pt,it, w,vv,xt,xtt,maxstaa,m,atime)
+c
+c
         write(*,*) 'Kalman for DEWPOINT'
-        call model(F,dtda,tda,ua,va,thetaa,mwt,lata,lona,eleva
-     1          ,maxstaa,m,ni,nj,timer,cycle,4.,2.,12.,18.)
+        call model(F,dta,2,mwt,lata,lona,eleva,maxstaa,
+     &             m,ni,nj,lat_grid,lon_grid,cycle,i4time)
 c
 c  create the v and w matrices using the error history
 c
-        Call avgdiagerr(witd,B,c,W,maxstaa,ia,m,it-1)
-        Call avgdiagerr(Vitd,B,c,vV,maxstaa,ia,m,it-1)
+        Call avgdiagerr(witd,B,c,W,maxstaa,ia,m,it)
+        Call avgdiagerr(Vitd,B,c,vV,maxstaa,ia,m,it)
         call kalman(dtda,F,YTDA,ptd,it,w,vv,xtd,xttd,maxstaa,m,atime)
+c
+c
         write(*,*) 'Kalman for U-WIND'
-        call model(F,dua,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
-     1          ,maxstaa,m,ni,nj,timer,cycle,2.,0.,20.,6.)
+        call model(F,dta,3,mwt,lata,lona,eleva,maxstaa,
+     &             m,ni,nj,lat_grid,lon_grid,cycle,i4time)
 c
 c  create the v and w matrices using the error history
 c
-        Call avgdiagerr(witu,B,c,W,maxstaa,ia,m,it-1)
-        Call avgdiagerr(Vitu,B,c,vV,maxstaa,ia,m,it-1)
+        Call avgdiagerr(witu,B,c,W,maxstaa,ia,m,it)
+        Call avgdiagerr(Vitu,B,c,vV,maxstaa,ia,m,it)
 c  kalman....
         call kalman(dua,F,yua,pu,it, w,vv,xu,xtu,maxstaa,m,atime)       
+c
+c
         write(*,*) 'Kalman for V-WIND'
-        call model(F,dva,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
-     1          ,maxstaa,m,ni,nj,timer,cycle,0.,0.,24.,6.)
+        call model(F,dta,4,mwt,lata,lona,eleva,maxstaa,
+     &             m,ni,nj,lat_grid,lon_grid,cycle,i4time)
 c
 c  create the v and w matrices using the error history
 c
-        Call avgdiagerr(witv,B,c,W,maxstaa,ia,m,it-1)
-        Call avgdiagerr(Vitv,B,c,vV,maxstaa,ia,m,it-1)
+        Call avgdiagerr(witv,B,c,W,maxstaa,ia,m,it)
+        Call avgdiagerr(Vitv,B,c,vV,maxstaa,ia,m,it)
 c
 c  kalman....
 c
         call kalman(dva,F,yva,pv,it, w,vv,xv,xtv,maxstaa,m,atime)
+c
+c
         write(*,*) 'Kalman for PMSL'
-        call model(F,dpma,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
-     1          ,maxstaa,m,ni,nj,timer,cycle,0.,3.,16.,16.)
+        call model(F,dta,5,mwt,lata,lona,eleva,maxstaa,
+     &             m,ni,nj,lat_grid,lon_grid,cycle,i4time)
 c
 c  create the v and w matrices using the error history
 c
-        Call avgdiagerr(witpm,B,c,W,maxstaa,ia,m,it-1)
-        Call avgdiagerr(Vitpm,B,c,vV,maxstaa,ia,m,it-1)
+        Call avgdiagerr(witpm,B,c,W,maxstaa,ia,m,it)
+        Call avgdiagerr(Vitpm,B,c,vV,maxstaa,ia,m,it)
 c  kalman....
         call kalman(dpma,F,YpmslA,ppm,it, w,vv,xpm,xtpm,maxstaa,m,atime)
+c
+c
         write(*,*) 'Kalman for ALSTG'
-        call model(F,dalta,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
-     1          ,maxstaa,m,ni,nj,timer,cycle,0.,.1,24.,16.)
+        call model(F,dta,6,mwt,lata,lona,eleva,maxstaa,
+     &             m,ni,nj,lat_grid,lon_grid,cycle,i4time)
 c
 c  create the v and w matrices using the error history
 c
-        Call avgdiagerr(wital,B,c,W,maxstaa,ia,m,it-1)
-        Call avgdiagerr(Vital,B,c,vV,maxstaa,ia,m,it-1)
+        Call avgdiagerr(wital,B,c,W,maxstaa,ia,m,it)
+        Call avgdiagerr(Vital,B,c,vV,maxstaa,ia,m,it)
 c  kalman....
         call kalman(dalta,F,yalta,pal,it, w,vv,xal,xtal,maxstaa,m,atime)
 c
-c read in new obs.....maxstaa will go ue
+c read in new obs.....maxstaa will go up
 c
-
-
-
-1234    continue
-
-
 
         call read_surface_data(i4time,atime_cur,n_obs_g,n_obs_b,time,
      &     wmoid,stations,provider,wx,reptype,autostntype,lat,lon,elev,
@@ -582,14 +625,16 @@ c
         maxsta=n_obs_b
         do k=1,maxsta
            stn(k)(1:5)=stations(k)(1:5)
+           index(k) = k
         enddo !k
-        print*, maxsta,'obs read for cycle ',it
+        print*, maxsta,'obs read for cycle ',it+1
         write(*,1066) atime
  1066   format(1x,a24)
         call reorder(t,td,dd,ff,lat,lon,elev,pstn,pmsl,alt,
-     &          stn,provider,reptype,
+     &          stn,provider,reptype,index,
      &          ta,tda,dda,ffa,lata,lona,eleva,pstna,pmsla,alta,
-     &          stna,providera,reptypea,maxsta,maxstaa,m,badflag)
+     &          stna,providera,reptypea,indexa,
+     &          maxsta,maxstaa,m,badflag)
         print*, maxsta,maxstaa,maxstab
 c
 c redo the theta conversion, interpolation, and back to ta for new stns
@@ -616,11 +661,6 @@ c
 c
 c set qc status and gross error check
 c
-
-	go to 12345
-
-
-
         write(*,*) 'gross err T'
         call qcset(t,ta,qcstat,m,maxstaa,badflag,grosst)
         write(*,*) 'gross err TD'
@@ -667,33 +707,33 @@ c
         write(*,*) 'ERROR PROCESSING FOR T'
         call errorproc(dt,yta,xtt,xt,wr,vr,ar,maxstab,m,qcstat
      &          ,oberrt,badthr,atime,icnt,1)  
-        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,wit,it)
-        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vit,it)
+        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,wit,ite)
+        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vit,ite)
         write(*,*) 'ERROR PROCESSING FOR TD'
         call errorproc(dtd,ytda,xttd,xtd,wr,vr,ar,maxstab,m,qcstatd  
      &          ,oberrtd,badthr,atime,icnt,2)  
-        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witd,it)
-        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitd,it)
+        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witd,ite)
+        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitd,ite)
         write(*,*) 'ERROR PROCESSING FOR U'
         call errorproc(du,yua,xtu,xu,wr,vr,ar,maxstab,m,qcstauv
      &          ,oberru,badthr,atime,icnt,3)  
-        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witu,it)
-        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitu,it)
+        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witu,ite)
+        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitu,ite)
         write(*,*) 'ERROR PROCESSING FOR v'
         call errorproc(dv,yva,xtv,xv,wr,vr,ar,maxstab,m,qcstauv  
      &          ,oberru,badthr,atime,icnt,4)  
-        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witv,it)
-        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitv,it)
+        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witv,ite)
+        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitv,ite)
         write(*,*) 'ERROR PROCESSING FOR PMSL'
         call errorproc(dpm,ypmsla,xtpm,xpm,wr,vr,ar,maxstab,m,qcstapm
      &          ,oberrpm,badthr,atime,icnt,5)  
-        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witpm,it)
-        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitpm,it)
+        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witpm,ite)
+        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitpm,ite)
         write(*,*) 'ERROR PROCESSING FOR ALSTG' 
         call errorproc(dalt,yalta,xtal,xal,wr,vr,ar,maxstab,m,qcstal  
      &          ,oberral,badthr,atime,icnt,6)  
-        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,wital,it)
-        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vital,it)
+        call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,wital,ite)
+        call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vital,ite)
 c     
 c  recover optimum fields   offset has been removed already 
 c here a: model, b: ob, e: com 
@@ -745,6 +785,7 @@ c
         write(*,*) 'FILL for F series'
         write(*,*) 't fill'
         call thet(tf,thetaf,maxstaa,eleva,m)
+c do a barnes interp to station without using stations ob
         call fillone(stna,thetaf,lata,lona,eleva,thetaf,sl,
      &       maxstaa,m,8./1000.,-1./1000.)          
         call thet2T(tf,thetaf,maxstaa,eleva,m)
@@ -867,10 +908,6 @@ c
 c  special treatment of new obs
 c    if new ob is missing, ta contains analyzed value for i>maxstab
 c
-
-12345   continue
-
-
         do i=maxstab+1,maxstaa
            tb(i)=badflag
            te(i)=ta(i)
@@ -971,20 +1008,57 @@ c
 c.....  Write out the NetCDF QC output file.  Convert units to
 c.....  the LAPS standard output units first.
 c
-
-c************convert units
-c
-c
-c
         do i=1,maxstaa
            stations(i)(1:20) = '                    '
            stations(i)(1:5) = stn(i)(1:5)
+c
+           if( t(i) .ne. badflag)  t(i) = ((  t(i) - 273.15) * nof) + 32.  ! conv F to K
+           if(ta(i) .ne. badflag) ta(i) = (( ta(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(tb(i) .ne. badflag) tb(i) = (( tb(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(tc(i) .ne. badflag) tc(i) = (( tc(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(te(i) .ne. badflag) te(i) = (( te(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(tf(i) .ne. badflag) tf(i) = (( tf(i) - 32.) * fon) + 273.15  ! conv F to K
+c
+           if( td(i) .ne. badflag)  td(i) = ((  td(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(tda(i) .ne. badflag) tda(i) = (( tda(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(tdb(i) .ne. badflag) tdb(i) = (( tdb(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(tdc(i) .ne. badflag) tdc(i) = (( tdc(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(tde(i) .ne. badflag) tde(i) = (( tde(i) - 32.) * fon) + 273.15  ! conv F to K
+           if(tdf(i) .ne. badflag) tdf(i) = (( tdf(i) - 32.) * fon) + 273.15  ! conv F to K
+c
+           if( u(i) .ne. badflag)  u(i) =  u(i) * 0.514791          ! conv kt to m/s
+           if(ua(i) .ne. badflag) ua(i) = ua(i) * 0.514791          ! conv kt to m/s
+           if(ub(i) .ne. badflag) ub(i) = ub(i) * 0.514791          ! conv kt to m/s
+           if(uc(i) .ne. badflag) uc(i) = uc(i) * 0.514791          ! conv kt to m/s
+           if(ue(i) .ne. badflag) ue(i) = ue(i) * 0.514791          ! conv kt to m/s
+           if(uf(i) .ne. badflag) uf(i) = uf(i) * 0.514791          ! conv kt to m/s
+c
+           if( v(i) .ne. badflag)  v(i) =  v(i)* 0.514791           ! conv kt to m/s
+           if(va(i) .ne. badflag) va(i) = va(i)* 0.514791           ! conv kt to m/s
+           if(vb(i) .ne. badflag) vb(i) = vb(i)* 0.514791           ! conv kt to m/s
+           if(vc(i) .ne. badflag) vc(i) = vc(i)* 0.514791           ! conv kt to m/s
+           if(ve(i) .ne. badflag) ve(i) = ve(i)* 0.514791           ! conv kt to m/s
+           if(vf(i) .ne. badflag) vf(i) = vf(i)* 0.514791           ! conv kt to m/s
+c
+           if( pmsl(i) .ne. badflag)  pmsl(i) =  pmsl(i) * 100.     ! conv mb to Pa
+           if(pmsla(i) .ne. badflag) pmsla(i) = pmsla(i) * 100.     ! conv mb to Pa  
+           if(pmslb(i) .ne. badflag) pmslb(i) = pmslb(i) * 100.     ! conv mb to Pa
+           if(pmslc(i) .ne. badflag) pmslc(i) = pmslc(i) * 100.     ! conv mb to Pa
+           if(pmsle(i) .ne. badflag) pmsle(i) = pmsle(i) * 100.     ! conv mb to Pa
+           if(pmslf(i) .ne. badflag) pmslf(i) = pmslf(i) * 100.     ! conv mb to Pa
+c
+           if( alt(i) .ne. badflag)  alt(i) =  alt(i) * 100.        ! conv mb to Pa
+           if(alta(i) .ne. badflag) alta(i) = alta(i) * 100.        ! conv mb to Pa  
+           if(altb(i) .ne. badflag) altb(i) = altb(i) * 100.        ! conv mb to Pa
+           if(altc(i) .ne. badflag) altc(i) = altc(i) * 100.        ! conv mb to Pa
+           if(alte(i) .ne. badflag) alte(i) = alte(i) * 100.        ! conv mb to Pa
+           if(altf(i) .ne. badflag) altf(i) = altf(i) * 100.        ! conv mb to Pa
+c
         enddo !i
 c        
         ext_out = 'lsq'
         call get_directory('lsq', dir_out, len)
 c        
-
         call write_qc_cdf(i4time, dir_out, ext_out, m, maxstaa, 
      1       stn, provider, reptype, lat, lon, elev,
      1       qcstat,  t,    tb,    ta,    tc,    te,    tf,  
@@ -997,11 +1071,51 @@ c
 c
 c.....  Now convert the units back for other storage files.
 c
-
-
-c*********************
-
-
+        do i=1,maxstaa
+c
+           if( t(i) .ne. badflag)  t(i) = ((  t(i) - 273.15) * nof) + 32.    ! conv F to K
+           if(ta(i) .ne. badflag) ta(i) = (( ta(i) - 273.15) * nof) + 32.    ! conv F to K
+           if(tb(i) .ne. badflag) tb(i) = (( tb(i) - 273.15) * nof) + 32.    ! conv F to K
+           if(tc(i) .ne. badflag) tc(i) = (( tc(i) - 273.15) * nof) + 32.    ! conv F to K
+           if(te(i) .ne. badflag) te(i) = (( te(i) - 273.15) * nof) + 32.    ! conv F to K
+           if(tf(i) .ne. badflag) tf(i) = (( tf(i) - 273.15) * nof) + 32.    ! conv F to K
+c
+           if( td(i) .ne. badflag)  td(i) = ((  td(i) - 32.) * nof) + 32.    ! conv F to K
+           if(tda(i) .ne. badflag) tda(i) = (( tda(i) - 32.) * nof) + 32.    ! conv F to K
+           if(tdb(i) .ne. badflag) tdb(i) = (( tdb(i) - 32.) * nof) + 32.    ! conv F to K
+           if(tdc(i) .ne. badflag) tdc(i) = (( tdc(i) - 32.) * nof) + 32.    ! conv F to K
+           if(tde(i) .ne. badflag) tde(i) = (( tde(i) - 32.) * nof) + 32.    ! conv F to K
+           if(tdf(i) .ne. badflag) tdf(i) = (( tdf(i) - 32.) * nof) + 32.    ! conv F to K
+c
+           if( u(i) .ne. badflag)  u(i) =  u(i) * 1.94254         ! conv m/s to kt
+           if(ua(i) .ne. badflag) ua(i) = ua(i) * 1.94254         ! conv m/s to kt
+           if(ub(i) .ne. badflag) ub(i) = ub(i) * 1.94254         ! conv m/s to kt
+           if(uc(i) .ne. badflag) uc(i) = uc(i) * 1.94254         ! conv m/s to kt
+           if(ue(i) .ne. badflag) ue(i) = ue(i) * 1.94254         ! conv m/s to kt
+           if(uf(i) .ne. badflag) uf(i) = uf(i) * 1.94254         ! conv m/s to kt
+c
+           if( v(i) .ne. badflag)  v(i) =  v(i) * 1.94254         ! conv m/s to kt
+           if(va(i) .ne. badflag) va(i) = va(i) * 1.94254         ! conv m/s to kt
+           if(vb(i) .ne. badflag) vb(i) = vb(i) * 1.94254         ! conv m/s to kt
+           if(vc(i) .ne. badflag) vc(i) = vc(i) * 1.94254         ! conv m/s to kt
+           if(ve(i) .ne. badflag) ve(i) = ve(i) * 1.94254         ! conv m/s to kt
+           if(vf(i) .ne. badflag) vf(i) = vf(i) * 1.94254         ! conv m/s to kt
+c
+           if( pmsl(i) .ne. badflag)  pmsl(i) =  pmsl(i) * 0.01   ! conv Pa to mb
+           if(pmsla(i) .ne. badflag) pmsla(i) = pmsla(i) * 0.01   ! conv Pa to mb
+           if(pmslb(i) .ne. badflag) pmslb(i) = pmslb(i) * 0.01   ! conv Pa to mb
+           if(pmslc(i) .ne. badflag) pmslc(i) = pmslc(i) * 0.01   ! conv Pa to mb
+           if(pmsle(i) .ne. badflag) pmsle(i) = pmsle(i) * 0.01   ! conv Pa to mb
+           if(pmslf(i) .ne. badflag) pmslf(i) = pmslf(i) * 0.01   ! conv Pa to mb
+c
+           if( alt(i) .ne. badflag)  alt(i) =  alt(i) * 0.01      ! conv Pa to mb
+           if(alta(i) .ne. badflag) alta(i) = alta(i) * 0.01      ! conv Pa to mb
+           if(altb(i) .ne. badflag) altb(i) = altb(i) * 0.01      ! conv Pa to mb
+           if(altc(i) .ne. badflag) altc(i) = altc(i) * 0.01      ! conv Pa to mb
+           if(alte(i) .ne. badflag) alte(i) = alte(i) * 0.01      ! conv Pa to mb
+           if(altf(i) .ne. badflag) altf(i) = altf(i) * 0.01      ! conv Pa to mb
+c
+        enddo !i
 c
 c  put these in ta,tda for next cycle
 c
@@ -1025,17 +1139,15 @@ c
         write(16) pt,ptd,pu,pv,ppm,pal
         write(16) monster
         write(16) ta,tda,ua,va,pmsla,alta
+        write(16) it
         close(16)
         print*,' complete'
 c
 c.....  Write out a "clean" LSO file.
 c
-
-        go to 9999   !skip until can check on the arrays.
-
-
         do i=1,maxstaa
-           rtime = float( time(i) )
+           ii = index(i)
+           rtime = float( time(ii) )
            store_1(i,1) = lat(i)          ! station latitude
            store_1(i,2) = lon(i)          ! station longitude
            store_1(i,3) = elev(i)         ! station elevation
@@ -1045,67 +1157,81 @@ c
            store_2(i,2) = tde(i)          ! dew point (deg f)
            store_2(i,3) = badflag         ! Relative Humidity
 c
-           if(u(i).eq.badflag .or. abs(u(i)).gt.200. .or. 
-     &        v(i).eq.badflag .or. abs(v(i)).gt.200.) then
+           if(ue(i).eq.badflag .or. abs(ue(i)).gt.200. .or. 
+     &        ve(i).eq.badflag .or. abs(ve(i)).gt.200.) then
               spd = badflag
               dir = badflag
-c
-           elseif(u(i).eq.0.0 .and. v(i).eq.0.0) then
+c 
+           elseif(ue(i).eq.0.0 .and. ve(i).eq.0.0) then
               spd = 0.0
               dir = 0.0                      !Undefined
 c
            else
-              spd = sqrt(u(i)*u(i) + v(i)*v(i) )   !speed
-              dir = 57.2957795 * (atan2(u(i),v(i))) + 180.   !dir
+              spd = sqrt(ue(i)*ue(i) + ve(i)*ve(i) )   !speed
+              dir = 57.2957795 * (atan2(ue(i),ve(i))) + 180.   !dir
            endif
-
-           store_3(i,1) = dir             ! wind dir (deg)
-           store_3(i,2) = spd             ! wind speed (kt)
-           store_3(i,3) = badflag         ! wind gust dir (deg)
-           store_3(i,4) = badflag         ! wind gust speed (kt)
 c
-           store_4(i,1) = alte(i)         ! altimeter setting (mb)
-           store_4(i,2) = pstn(i)         ! station pressure (mb)
-           store_4(i,3) = pmsle(i)        ! MSL pressure (mb)
-           store_4(i,4) = float(delpch(i))! 3-h press change character
-           store_4(i,5) = delp(i)         ! 3-h press change (mb)
+           store_3(i,1) = dir               ! wind dir (deg)
+           store_3(i,2) = spd               ! wind speed (kt)
+           store_3(i,3) = badflag           ! wind gust dir (deg)
+           store_3(i,4) = badflag           ! wind gust speed (kt)
 c
-           store_5(i,1) = vis(i)          ! visibility (miles)
-           store_5(i,2) = solar(i)        ! solar radiation 
-           store_5(i,3) = sfct(i)         ! soil/water temperature
-           store_5(i,4) = sfcm(i)         ! soil moisture
+           store_4(i,1) = alte(i)           ! altimeter setting (mb)
+           store_4(i,2) = pstn(i)           ! station pressure (mb)
+           store_4(i,3) = pmsle(i)          ! MSL pressure (mb)
+           store_4(i,4) = float(delpch(ii)) ! 3-h press change character
+           store_4(i,5) = delp(ii)          ! 3-h press change (mb)
+c
+           store_5(i,1) = vis(ii)           ! visibility (miles)
+           store_5(i,2) = solar(ii)         ! solar radiation 
+           store_5(i,3) = sfct(ii)          ! soil/water temperature
+           store_5(i,4) = sfcm(ii)          ! soil moisture
 c     
-           store_6(i,1) = pcp1(i)         ! 1-h precipitation
-           store_6(i,2) = pcp3(i)         ! 3-h precipitation
-           store_6(i,3) = pcp6(i)         ! 6-h precipitation
-           store_6(i,4) = pcp24(i)        ! 24-h precipitation
-           store_6(i,5) = snow(i)         ! snow cover
+           store_6(i,1) = pcp1(ii)          ! 1-h precipitation
+           store_6(i,2) = pcp3(ii)          ! 3-h precipitation
+           store_6(i,3) = pcp6(ii)          ! 6-h precipitation
+           store_6(i,4) = pcp24(ii)         ! 24-h precipitation
+           store_6(i,5) = snow(ii)          ! snow cover
 c
-           store_7(i,1) = float(kkk_s(i)) ! number of cloud layers
-           store_7(i,2) = max24t(i)       ! 24-h max temperature
-           store_7(i,3) = min24t(i)       ! 24-h min temperature
+           kkk = kkk_s(ii)
+           store_7(i,1) = float(kkk)        ! number of cloud layers
+           store_7(i,2) = max24t(ii)        ! 24-h max temperature
+           store_7(i,3) = min24t(ii)        ! 24-h min temperature
 c
-           store_2ea(i,1) = t_ea(i)
-           store_2ea(i,2) = td_ea(i)
-           store_2ea(i,3) = rh_ea(i)
-           store_3ea(i,1) = dd_ea(i)
-           store_3ea(i,2) = ff_ea(i)
-           store_4ea(i,1) = p_ea(i)
-           store_4ea(i,2) = alt_ea(i)
-           store_5ea(i,1) = vis_ea(i)
-           store_5ea(i,2) = solar_ea(i)
-           store_5ea(i,3) = sfct_ea(i)
-           store_5ea(i,4) = sfcm_ea(i)
-           store_6ea(i,1) = pcp_ea(i)
-           store_6ea(i,2) = snow_ea(i)
+           store_2ea(i,1) = t_ea(ii)
+           store_2ea(i,2) = td_ea(ii)
+           store_2ea(i,3) = rh_ea(ii)
+           store_3ea(i,1) = dd_ea(ii)
+           store_3ea(i,2) = ff_ea(ii)
+           store_4ea(i,1) = p_ea(ii)
+           store_4ea(i,2) = alt_ea(ii)
+           store_5ea(i,1) = vis_ea(ii)
+           store_5ea(i,2) = solar_ea(ii)
+           store_5ea(i,3) = sfct_ea(ii)
+           store_5ea(i,4) = sfcm_ea(ii)
+           store_6ea(i,1) = pcp_ea(ii)
+           store_6ea(i,2) = snow_ea(ii)
 c
-        enddo !nn
+           wmoid_out(i) = wmoid(ii)
+           wx_out(i) = wx(ii)
+           if(kkk .gt. 0) then
+              do k=1,kkk
+                 store_chtout(i,k) = store_cldht(ii,k)
+                 store_camtout(i,k) = store_cldamt(ii,k)
+              enddo !k
+           endif
+c
+        enddo !i
 c     
-        call write_surface_obs(atime_cur,outfile,n_obs_g,
-     &    n_obs_b,wmoid,stations,provider,wx,reptype,autostntype,
+        call get_directory('lsq',outfile,len)
+        outfile = outfile(1:len) // filename // '.lsoqc'
+        call s_len(outfile, len)
+        call write_surface_obs(atime_cur,outfile(1:len),n_obs_g,
+     &    n_obs_b,wmoid_out,stations,provider,wx_out,reptype,
+     &    autostntype,
      &    store_1,store_2,store_3,store_4,store_5,store_6,store_7,
      &    store_2ea,store_3ea,store_4ea,store_5ea,store_6ea,
-     &    store_cldamt,store_cldht,maxsta,jstatus)
+     &    store_camtout,store_chtout,m,jstatus)
 c
 c.....  That's it.
 c     
