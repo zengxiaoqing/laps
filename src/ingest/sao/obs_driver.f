@@ -57,6 +57,7 @@ c                     05-01-98  Added soil moisture variables.
 c                     08-28-98  Added buoy and LDAD mesonet reads.
 c                     09-04-98  Install as LSO, using new 'ls2' format.
 c                     09-30-98  Housekeeping changes.
+c	              12-03-98  Increase dir_s to 256 characters.
 c
 c       Notes:
 c         1. When run "operationally", 'obs_driver.x' uses the time from
@@ -103,7 +104,7 @@ c
         character  reptype(maxobs)*6, atype(maxobs)*6
         character  store_cldamt(maxsta,5)*4
 	character  atime*24, outfile*200
-	character  dir_s*50, ext_s*31, units*10, comment*125,var_s*3
+	character  dir_s*256, ext_s*31, units*10, comment*125,var_s*3
 	character  filename9*9, filename13*13
         character  fname9_to_wfo_fname13*13
 	character  data_file_m*150, data_file_l*150, data_file_b*150
