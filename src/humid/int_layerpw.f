@@ -81,7 +81,6 @@ c     internal variables
 c     check bounds
 
       if (p1.gt.ps) then ! below ground for this level
-         write(6,*) 'TEMP below ground warning p1 > ps', p1, ps
          lpw1 = mdf
          return
       endif

@@ -249,7 +249,13 @@ c     stability cost is identical for both imager and sounder
 c     test for weight of measurement
          if(cost_weight.lt. 0.2 .or. cost_weight.eq.cost_mdf) then !skip this step
             continue
+         elseif (abs(cost_ps-cost_gvap_p) .ge. 50.) then !
+            write(6,*) 'TEMP pressure difference too wide 
+     1for processing gvap'
+            write(6,*) 'gvap p = ',cost_gvap_p, 'laps sfc = ',cost_ps
+            continue
          else  ! process gvap
+            write(6,*) 'TEMP GVAP accepted'
 c     integrate q for gvap layers
 c     determine sigma level pressure analogs
             call sigma_to_p (0.1, cost_gvap_p, 0.9, p1)
@@ -258,8 +264,6 @@ c     determine sigma level pressure analogs
             call int_layerpw(x,cost_data,cost_kstart,
      1           cost_qs,cost_ps,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
      1           cost_kk,cost_mdf)
-            write(6,*) 'TEMPORARY ', cost_gvap_p,
-     1           lpw1,cost_w1, lpw2,cost_w2, lpw3, cost_w3
 
 c     minimize with respect to layer gpw data
 
