@@ -22,6 +22,8 @@
           go to 999
        endif
 
+       lun_out = 21
+
        if(c8_project .ne. 'RSA')then
            c8_raob_format = c8_project
            write(6,*)
@@ -32,13 +34,15 @@
                c8_raob_format = c8_project
                write(6,*)
                write(6,*)' Call ingest_drpsnd, format=',c8_raob_format       
-               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format)
+               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format
+     1                           ,lun_out)
 
            else
                c8_raob_format = 'AVAPS'
                write(6,*)
                write(6,*)' Call ingest_drpsnd, format=',c8_raob_format       
-               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format)
+               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format
+     1                           ,lun_out)
 
            endif
 
@@ -71,7 +75,7 @@
            call get_laps_cycle_time(laps_cycle_time,istatus)
            if(istatus .ne. 1)stop
 
-           call tower_driver_sub(ni,nj
+           call tower_driver_sub(ni,nj,lun_out
      1                           ,maxobs,laps_cycle_time
      1                           ,path_to_raw_tower
      1                           ,itime_before,itime_after
@@ -85,7 +89,7 @@
        write(6,*)' Call ingest_satsnd'
        call ingest_satsnd(path_to_raw_satsnd)
 
-       close(11) ! Output SND file
+       close(lun_out) ! Output SND file
 
  999   end
 
