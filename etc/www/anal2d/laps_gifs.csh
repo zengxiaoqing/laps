@@ -46,6 +46,13 @@ else
 
 endif
 
+if (-d $LAPS_DATA_ROOT) then
+    echo "$LAPS_DATA_ROOT exists"
+else
+    echo "$LAPS_DATA_ROOT does not exist"
+    exit
+endif
+
 setenv CP cp
 setenv WWW_DIR $SERVER_ROOT/$WWW_DOMAIN
 
