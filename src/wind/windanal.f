@@ -39,7 +39,7 @@ cdis
 
        subroutine laps_anl(uobs,vobs
      1     ,n_radars,istat_radar_vel                                   ! I
-     1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in                         ! I
+     1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in,idx_radar_a             ! I
 !    1     ,upass1,vpass1                                              ! O
      1     ,n_var                                                      ! I
      1     ,uanl,vanl                                                  ! O
@@ -117,6 +117,7 @@ cdis
 !     4D Radial velocity array (all radars)
       real*4 vr_obs_unfltrd(imax,jmax,kmax,max_radars)                 ! Input
       real*4 vr_nyq(imax,jmax,kmax,max_radars)                         ! Input
+      integer*4 idx_radar_a(max_radars)                                ! Input
 
 !     Nyquist velocity (if known and constant) for each radar
       real*4 v_nyquist_in(max_radars)                                  ! Input
@@ -534,16 +535,11 @@ csms$serial(default=ignore)  begin
 
 !     Perform radar QC by differencing radial velocities and first pass analysis
       do i_radar = 1,n_radars
-          if(v_nyquist_in(i_radar) .ne. r_missing_data
-     1       .and. v_nyquist_in(i_radar).lt.200.
-     1       .and. v_nyquist_in(i_radar).gt.1.0 ) then
-              v_nyquist_2_in = 2. * v_nyquist_in(i_radar)
-              unfolding_thresh_in = 0.7 * v_nyquist_in(i_radar)
-          else
-              v_nyquist_2_in = r_missing_data
-          endif
-          write(6,*)' Radar QC for radar #/v_nyq*2 '
-     1             ,i_radar,v_nyquist_2_in
+
+          v_nyquist_global = v_nyquist_in(i_radar)
+          
+          write(6,*)' Radar QC for radar #/v_nyq ',i_radar
+     1                                            ,v_nyquist_global
           call qc_radar_obs(
      1           imax,jmax,kmax                             ! Input
      1          ,r_missing_data                             ! Input
@@ -555,7 +551,7 @@ csms$serial(default=ignore)  begin
      1          ,rheight_radar(i_radar)                     ! Input
      1          ,upass1,vpass1  ! 1st pass anal             ! Input
      1          ,u_laps_bkg,v_laps_bkg                      ! Input
-     1          ,v_nyquist_2_in,unfolding_thresh_in         ! Input
+     1          ,v_nyquist_global                           ! Input
      1          ,l_correct_unfolding,l_grid_north           ! Input
      1          ,istatus                                    ! Input/Output
      1                                                          )
@@ -582,7 +578,7 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
 !         uobs_diff_spread and vobs_diff_spread (varobs_diff_spread)
           call insert_derived_radar_obs(
      1         mode                                       ! Input
-     1        ,n_radars,max_radars                        ! Input
+     1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
      1        ,vr_obs_unfltrd                             ! Input
@@ -667,7 +663,7 @@ csms$>                    out>:default=ignore) begin
 !         uobs_diff_spread and vobs_diff_spread (varobs_diff_spread)
           call insert_derived_radar_obs(
      1         mode                                       ! Input
-     1        ,n_radars,max_radars                        ! Input
+     1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
      1        ,vr_obs_unfltrd                             ! Input
@@ -772,7 +768,7 @@ csms$>                                     :default=ignore)  begin
 !         uobs_diff_spread and vobs_diff_spread
           call insert_derived_radar_obs(
      1         mode                                       ! Input
-     1        ,n_radars,max_radars                        ! Input
+     1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
      1        ,vr_obs_unfltrd                             ! Input
@@ -948,7 +944,7 @@ csms$serial end
 
       subroutine insert_derived_radar_obs(
      1   mode                                       ! Input
-     1  ,n_radars,max_radars                        ! Input
+     1  ,n_radars,max_radars,idx_radar_a            ! Input
      1  ,imax,jmax,kmax                             ! Input
      1  ,r_missing_data                             ! Input
      1  ,vr_obs_unfltrd                             ! Input
@@ -981,6 +977,9 @@ csms$serial end
       real*4   vr_obs_fltrd(imax,jmax,kmax)                          ! Local
       real*4   upass1_buf(imax,jmax,kmax)                            ! Local
       real*4   vpass1_buf(imax,jmax,kmax)                            ! Local
+
+      integer*4 idx_radar_a(max_radars)
+
       logical  l_good_multi_doppler_ob(imax,jmax,kmax)               ! Local
       logical  l_analyze(kmax),l_derived_output,l_grid_north
 
@@ -1012,7 +1011,7 @@ csms$ignore begin
      1   imax,jmax,kmax                             ! Input
      1  ,mode                                       ! Input
      1  ,r_missing_data                             ! Input
-     1  ,i_radar                                    ! Input
+     1  ,i_radar,idx_radar_a(i_radar)               ! Input
      1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
@@ -1034,7 +1033,7 @@ csms$ignore begin
      1   imax,jmax,kmax                             ! Input
      1  ,mode                                       ! Input
      1  ,r_missing_data                             ! Input
-     1  ,i_radar                                    ! Input
+     1  ,i_radar,idx_radar_a(i_radar)               ! Input
      1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
@@ -1140,7 +1139,7 @@ csms$ignore end
      1   imax,jmax,kmax                             ! Input
      1  ,mode                                       ! Input
      1  ,r_missing_data                             ! Input
-     1  ,i_radar                                    ! Input
+     1  ,i_radar,idx_radar                          ! Input
      1  ,vr_obs_unfltrd                             ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
@@ -1232,14 +1231,14 @@ csms$ignore begin
 
 
 c  convert radar obs into u & v by using tangential component of first pass
-      write(6,*)' Generating derived radar obs, opening d00 file, i4time
+      write(6,*)' Generating derived radar obs, opening dxx file, i4time
      1 = '
      1                  ,i4time
       write(6,*)'  i   j   k    df    vr    fgr'
 
       if(l_derived_output)then
           if(i_radar .le. 99)then
-              write(ext,531)i_radar
+              write(ext,531)idx_radar ! i_radar
  531          format('d',i2.2)
           else
               ext = 'dxx'
