@@ -1334,7 +1334,7 @@ the World Wide Web at
 
 Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
-Sample Output: May be available in the test data case.
+Sample Input/Output: May be available in the test data case.
 
 ------ 3.2.4 -------------------VRC--------------------------------------------
 
@@ -1397,7 +1397,7 @@ Output: (feeds wind)
 
 Source directory: laps/src/ingest/profiler
 
-Sample Output: Should be available in the test data case.
+Sample Input/Output: Should be available in the test data case.
 
  
 ------ 3.2.7 -----------------------VAD----------------------------------------
@@ -1418,22 +1418,22 @@ Outputs: (Feeds wind.exe)
  
 ------ 3.2.8 ------------------RASS (LRS)-------------------------------------
 
-Process: (ingest_lrs.exe, ingest_blplrs.exe) LAPS local data RASS ingest
+Process: (ingest_lrs.exe) LAPS local data RASS ingest
      (author: Steve Albers - albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
-	WPDN RASS temperature data in netCDF format (ingest_lrs.exe) 
-	Boundary layer RASS data in netCDF format (ingest_blplrs.exe) 
+	WPDN RASS temperature data in netCDF format 
+	Boundary layer RASS data in netCDF format 
         These are in two separate NetCDF directories (FSL-NIMBUS CDLs).
 
-Outputs: (The two executables are run sequentially, feeds LSX and temp.exe)
+Outputs: (feeds LSX and temp.exe)
 	lrs	inter data	RASS Virtual Temperatures (ASCII)
 </pre>
 
 Source directory: laps/src/ingest/rass
 
-Sample Output: Should be available in the test data case.
+Sample Input/Output: Should be available in the test data case.
 
 ------ 3.2.9 ------------------PIREPS/ACARS-----------------------------------
 
@@ -1449,7 +1449,7 @@ Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
 	pin	inter data	voice pireps/clouds, ACARS/winds
 </pre>
                                         
-Sample Output: Should be available in the test data case
+Sample Input/Output: Should be available in the test data case
 
  
 ------ 3.2.10 -----------------------RAOB--------------------------------------
