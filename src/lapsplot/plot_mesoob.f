@@ -121,7 +121,7 @@ c
  
 !           Plot Pressure
             if(p .gt. 0. .and. p .lt. 10000.) then
-               if(p .gt. 1000.) p = p - 1000.
+               if(p .ge. 1000.) p = p - 1000.
                ip = ifix( p )
                write(p1,101,err=40) ip
  101           format(i3.3)

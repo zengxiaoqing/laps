@@ -81,9 +81,11 @@ c
 c
 c	Other files for internal use...
 c
-	integer rely(26,mxstn), ivals(mxstn)
-	integer ivals1(mxstn), ivals2(mxstn)
-	integer rely_l(26,mxstn) 
+	integer rely(26,mxstn)            ! QC flags for current cycle
+	integer rely_l(26,mxstn)          ! QC flags for previous cycle
+        integer ivals(mxstn)              
+	integer ivals1(mxstn)             ! Ob indices for current cycle
+        integer ivals2(mxstn)             ! Ob indices for previous cycle
 	integer istatus, jstatus
 	character filename*9, outfile*256
 c
@@ -359,6 +361,10 @@ c ---------------------------------------------------------------------------
 c
 c
 	subroutine time_ck(stn1,num1,stn2,num2,ivals)
+
+c       Returns array of indices in stn2 array corresponding to each index
+c       in the stn1 array. This matches the stations in the two arrays.
+
 	dimension ivals(num1)
 	character stn1(num1)*3,stn2(num2)*3
 	do 10 n=1,num1
@@ -377,14 +383,13 @@ c
      &	                    stn_all,n_obs_curr)
 	dimension ivals1(num1),ivals2(num2)
 	character stn1(num1)*3,stn2(num2)*3,stn_all(n_obs_curr)*3
-	do 10 n=1,num1
-	 ivals1(n) = -99
-	 do 20 m=1,n_obs_curr
-	  if(stn_all(m) .ne. stn1(n)) goto 20
-	  ivals1(n) = m
-20	 continue
-	 if(ivals1(n) .lt. 0) write(60,*) ' cannot find ',stn1(n)
-10	continue	 
+
+	do n=1,num1
+            ivals1(n) = n
+        enddo ! n
+
+!       Calculate array of indices in stn_all array corresponding to each 
+!       index in the stn2 array. This matches the stations in the two arrays.
 	do 30 n=1,num2
 	 ivals2(n) = -99
 	 do 40 m=1,n_obs_curr
@@ -394,6 +399,7 @@ c
 	 if(ivals2(n) .lt. 0) 
      &          write(60,*) n,' cannot find previous ',stn2(n)
 30	continue	 
+
 	return
 	end
 c -----------------------------------------------------------------------------

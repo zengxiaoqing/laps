@@ -1905,19 +1905,40 @@ c
         real*4 stnp_bk(ni,nj)                                    ! I
         real*4 stnp(ni,nj)                                       ! I/O
 
+
+        write(6,*)' Subroutine pstn_anal'
+
         call get_r_missing_data(r_missing_data,istatus)
 
 !       Check bounds of mslp/stnp fields
         if(back_sp .eq. 1)then
-!           call array_diagnosis(stnp_bk,300.,1100.) ! ERROR
+            call array_minmax(stnp_bk,ni,nj,rmin,rmax,r_missing_data)
+            if(rmin .lt. 300. .or. rmax .gt. 1100)then
+                write(6,*)' ERROR: STNP bkgnd range out of bounds'      
+     1                   ,rmin,rmax
+                stop
+            endif
         endif
 
-!       call array_diagnosis(mslp,850.,1100.) ! WARNING
+        call array_minmax(mslp,ni,nj,rmin,rmax,r_missing_data)
+        if(rmin .lt. 850. .or. rmax .gt. 1100)then
+            write(6,*)' Warning: MSLP analysis range out of bounds'      
+     1               ,rmin,rmax
+        endif
 
         if(back_mp .eq. 1)then
-!           call array_diagnosis(mslp_bk,850.,1100.) ! WARNING
-!           call diff(mslp,mslp_bk,mslp_diff,ni,nj)
-!           call array_diagnosis(mslp_diff,-50.,+50.) ! WARNING
+            call array_minmax(mslp_bk,ni,nj,rmin,rmax,r_missing_data)
+            if(rmin .lt. 850. .or. rmax .gt. 1100)then
+                write(6,*)' Warning: MSLP bkgnd range out of bounds'      
+     1                   ,rmin,rmax
+            endif
+
+            call diff(mslp,mslp_bk,mslp_diff,ni,nj)
+            call array_minmax(mslp_diff,ni,nj,rmin,rmax,r_missing_data)       
+            if(rmin .lt. -50. .or. rmax .gt. +50.)then
+                write(6,*)' Warning: MSLP bkg diff range out of bounds'       
+     1                   ,rmin,rmax
+            endif
         endif
 
         if(back_mp .ne. 1 .or. back_sp .ne. 1)then
@@ -1925,6 +1946,7 @@ c
             return
         endif
 
+!       Adjust stnp field
         write(6,*)' Performing stnp adjustment using mslp/mslp_bk'
 
         do i = 1,ni

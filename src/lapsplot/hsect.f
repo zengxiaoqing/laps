@@ -3541,10 +3541,8 @@ c                   cint = -1.
         elseif(c_type .eq. 'p' .or. c_type .eq. 'pm')then ! 1500m or MSL Pres
             if(c_type .eq. 'p')then
                 var_2d = 'P'
-                c33_label = 'LAPS 1500m Pressure          (mb)'
             else
                 var_2d = 'MSL'
-                c33_label = 'LAPS MSL Pressure            (mb)'
             endif
 
             ext = 'lsx'
@@ -3556,6 +3554,12 @@ c                   cint = -1.
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
                 goto1200
+            endif
+
+            if(c_type .eq. 'p')then
+                c33_label = 'LAPS '//comment_2d(1:23)//' (mb)'       
+            else
+                c33_label = 'LAPS MSL Pressure            (mb)'
             endif
 
             clow = 0.

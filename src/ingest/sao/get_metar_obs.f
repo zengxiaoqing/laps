@@ -749,10 +749,21 @@ c
         call get_sfc_badflag(badflag,istatus)
         
         if(c_var .eq. 'alt_mb' .or. c_var .eq. 'mslp_mb')then
-            if(abs(arg) .gt. 1500.)arg = badflag
+            if(arg .gt. 1100.)arg = badflag
+            if(arg .lt.  850.)arg = badflag
+
+        elseif(c_var .eq. 'alt_pa' .or. c_var .eq. 'mslp_pa')then
+            if(arg .gt. 110000.)arg = badflag
+            if(arg .lt.  85000.)arg = badflag
+
+        elseif(c_var .eq. 'stnp_pa')then
+            if(arg .gt. 110000.)arg = badflag
+            if(arg .lt.  40000.)arg = badflag
+
         else
             write(6,*)' Warning: unknown variable in sfc_climo_qc_r'
      1	             ,c_var
+
         endif
 
         return

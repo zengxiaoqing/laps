@@ -760,14 +760,10 @@ cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 	call spline(mslp,mslp1,mslp_bk,alf,alf2a,beta,zcon,z,cormax,
      &      err,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
 c
-        if(back_mp .eq. 1. .and. back_sp .eq. 1 .and. .true.)then
-            write(6,*)' Updating psfc field using mslp/mslp_bk'
-            call pstn_anal(back_mp,back_sp,mslp_bk,mslp,imax,jmax
-     1                                                 ,sp_bk,psfc)       
-        else
-            write(6,*)' Keeping psfc field from the background'
-        endif
-c
+!       Call routine to check pres arrays and adjust psfc based on mslp/mslp_bk
+        call pstn_anal(back_mp,back_sp,mslp_bk,mslp,imax,jmax
+     1                ,sp_bk,psfc)       
+
 	print *,' '
 	print *,'  At spline call for visibility'
 	bad_vs = bad_vis

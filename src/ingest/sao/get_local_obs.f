@@ -469,7 +469,7 @@ c
 c..... Pressure...Station pressure, MSL and altimeter
 c
 	  stn_press = stnp(i)
-	  if(stn_press.lt.40000. .or. stn_press.gt.120000.) stn_press = badflag
+          call sfc_climo_qc_r('stnp_pa',stn_press)
 	  if(p_time(i) .ge. 0.) then
 	     if( (timeobs(i) - p_time(i)) .gt. laps_cycle_time ) then
 		stn_press = badflag
@@ -477,16 +477,11 @@ c
 	  endif
 	  if(stn_press .ne. badflag) stn_press = stn_press * 0.01 !Pa to mb
 c
-	  if(mslp(i).lt.85000. .or. mslp(i).gt.120000.) then
-	     mslp(i) = badflag
-	  else
-	     mslp(i) = mslp(i) * 0.01 !Pa to mb
-	  endif
-	  if(alt(i).lt.85000. .or. alt(i).gt.120000.) then
-	     alt(i) = badflag
-	  else
-	     alt(i) =  alt(i) * 0.01 !Pa to mb
-	  endif
+          call sfc_climo_qc_r('mslp_pa',mslp(i))
+	  if(mslp(i) .ne. badflag) mslp(i) = mslp(i) * 0.01 !Pa to mb
+
+          call sfc_climo_qc_r('alt_pa',alt(i))
+	  if(alt(i) .ne. badflag) alt(i) = alt(i) * 0.01 !Pa to mb
 c
 c..... Visibility
 c

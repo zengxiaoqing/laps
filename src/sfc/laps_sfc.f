@@ -604,10 +604,11 @@ c.....	Check each of the primary analysis variables.
 c
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
+          if(nn .ne. mm)write(6,*)'nn .ne. mm',nn,mm,stations(mm)
 	  if(nn .lt. 1) go to 121
 	  if(rely(7,nn) .lt. 0) then	! temperature
-	     print *, 'QC: Bad T at ',stations(mm),' with value '
-     1              ,t_s(mm)
+	     print *, 'QC: Bad T at ',stations(mm),' with rely/value '       
+     1              ,rely(7,mm),t_s(mm)
 	     t_s(mm) = badflag
 	  endif
  121	enddo  !mm

@@ -3,7 +3,7 @@
  skip_internal_qc = 0,
  itheta=5,
  redp_lvl=1500.,
- del=3.24e6
+ del=3.24e6,
  gam=.0001,
  ak=1.e-6, 
  /
