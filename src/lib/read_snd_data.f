@@ -2,6 +2,7 @@
         subroutine read_snd_data(lun,i4time_snd,ext                    ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
      1                         ,lat,lon,imax,jmax,kmax                 ! I
+     1                         ,heights_3d                             ! I
      1                         ,n_profiles                             ! O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
      1                         ,c5_name,i4time_ob_pr,obstype           ! O
@@ -33,6 +34,7 @@ cdoc    Returns sounding data from the SND file
 
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
+        real*4 heights_3d(imax,jmax,kmax)
 
         istatus = 0
 
