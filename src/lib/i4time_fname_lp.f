@@ -56,29 +56,22 @@ C================================================================
 C
 C       Check the length of FILE_NAME to be sure that it is valid.
 C
-        lenf = len(fname_in)
-        IF (lenf.lt.9.or.lenf.gt.13) THEN
-           GO TO 1000
+        call get_filetime_length(fname_in,lenf)
 
-        ELSEIF(lenf.gt.9.and.lenf.lt.13)  THEN
-           write(6,*)'WARNING! Filename > 9 and < 13'
-           write(6,*)'Subroutine i4time_fname_lp'
-        END IF
+        if(lenf.ne.9.and.lenf.ne.13)then
+           write(6,*)' error in i4time_fname_lp: ',fname_in,lenf
+           go to 1000
+        endif
+
 c
 c added 9-3-96 JSmart for use in conversions of wfo filenames of
 c the type yyyymmdd_hhmm (13 characters).
 c
-        call s_len(fname_in,lenf)
-c       if(lenf.le.0)lenf=13
-        if(lenf.ne.9.and.lenf.ne.13)then
-           write(6,*)'error ',fname_in,lenf
-        endif
-        if(lenf.eq.13)then
 
+        if(fname_in(9:9) .eq. '_')then ! We have a WFO file
            file_name = wfo_fname13_to_fname9(fname_in)
 
         else   !assume 9 character filename type
-
            file_name = fname_in
 
         endif

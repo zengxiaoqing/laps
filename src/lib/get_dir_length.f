@@ -60,7 +60,7 @@ C
 C
         i = strlen
         do while ((i .gt. 0) .and. (c_fname(i:i) .ne. ']')
-     1               .and. (c_fname(i:i) .ne. '/') )
+     1                       .and. (c_fname(i:i) .ne. '/') )
            i = i-1
         enddo
 C
@@ -193,7 +193,7 @@ C
 C
 C#####################################################################
 C
-        subroutine get_filetime_length(c_fname,lenf)
+        subroutine get_filetime_length(c_fname,lent)
 C
 C*********************************************************************
 C
@@ -205,22 +205,24 @@ C       of the character string.
 C
 
         character*(*) c_fname
-        integer*4 lend,lenf
+        integer*4 lend,lent,lenf
 
         call get_directory_length(c_fname,lend)
-        if(c_fname(lend+1:lend+2).eq.'19'.or.
-     &c_fname(lend+1:lend+2).eq.'20')then
 
-           lenf=13
+        lenf = len(c_fname) - lend
 
-        else !assume 9 characters for time portion of filename
+        if(lenf .ge. 13 .and. c_fname(lend+9:lend+9).eq.'_')then
+           lent=13
 
-           lenf=9
+        elseif(lenf .ge. 9)then !assume 9 chars for time portion of filename
+           lent=9
+
+        else
+           lent = lenf
 
         endif
 
-c       write(6,*)'Time portion of string = ',c_fname(
-c    &lend+1:lend+lenf)
+c       write(6,*)'Time portion of string = ',c_fname(lend+1:lend+lent)       
 
         return
         end
