@@ -43,7 +43,7 @@ c
       real*4    xlat(nx_l+2,ny_l+2)
       real*4    xlon(nx_l+2,ny_l+2) !expanded domain lats/lons
  
-      real*4    dx,dy
+      real*4    dx,dy  !both in km from /public and /WFO SBN
       real*4    du,dv
       real*4    u_orig,v_orig
       real*4    pi
@@ -56,6 +56,7 @@ c
       real*4    r_missing_data
       real*4    rls,rle,res,ree
       real*4    rlatin,rlap,rlov
+      real*4    centerlat,centerlon
       real*4    rla1,rlo1
       real*4    rla1nxny,rlo1nxny
       real*4    rla100,rlo100
@@ -139,8 +140,8 @@ c
       if(cdtype.eq.'wfo')then
 
          call get_wfo_nav_parms(path_to_raw_sat(kchl,jtype,isat),
-     &ct,rla100,rlo100,rla1nxny,rlo1nxny,rlatdxdy,rlondxdy,
-     &dx,dy,nx3mx,ny3mx,istatus_wp)
+     &ct,centerlat,centerlon,rla100,rlo100,rla1nxny,rlo1nxny,
+     &rlatdxdy,rlondxdy,dx,dy,nx3mx,ny3mx,istatus_wp)
 
          if(istatus_wp.eq.1)then
 
@@ -148,6 +149,8 @@ c
             print*,'because new wfo nav parameters were not obtained'
             rla100 = r_la1(jtype,isat)
             rlo100 = r_lo1(jtype,isat)
+            centerlat = r_lap(jtype,isat)
+            centerlon = r_lov(jtype,isat)
 
             if(indx.eq.1)then
 
@@ -190,6 +193,9 @@ c
             endif
 
             endif
+
+            rlap=centerlat
+            rlov=centerlon
 
          else
             print*,'Error returned from get_wfo_nav_parms'
@@ -239,9 +245,9 @@ c not wfo data type
      +     rlov, reftime, valtime, earth_shape, grid_name, grid_type, 
      +     origin_name, process_name, wavelength, x_dim, y_dim)
 
-      endif
+         rlap=rlatin
 
-      rlap=rlatin
+      endif
 
       write(6,*)'Satellite Nav Parameters'
       write(6,*)'dx     ',dx

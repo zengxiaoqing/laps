@@ -328,8 +328,8 @@ c
 
 c ===============================================================
 c
-      subroutine get_wfo_nav_parms(cpath,chtype,
-     &rlat,rlon,rlatnxny,rlonnxny,rlatdxdy,rlondxdy,
+      subroutine get_wfo_nav_parms(cpath,chtype,centerlat,
+     &centerlon,rlat,rlon,rlatnxny,rlonnxny,rlatdxdy,rlondxdy,
      &dx,dy,nx,ny,istatus)
 
       character*(*) cpath
@@ -341,6 +341,8 @@ c
       integer       istatus
       integer       i4time_cur
       integer       nx,ny
+      real*4        centerlat
+      real*4        centerlon
       real*4        rlat
       real*4        rlon
       real*4        rlatdxdy
@@ -375,8 +377,8 @@ c
 c read header of current 11u gvarimage
 c
       write(6,*)'calling get_attribute_wfo ',chtype(1:nn)
-      call get_attribute_wfo(cfname_sat,rlat,rlon,rlatnxny,rlonnxny,
-     &rlatdxdy,rlondxdy,dx,dy,nx,ny,lstatus)
+      call get_attribute_wfo(cfname_sat,centerlat,centerlon,rlat,
+     &rlon,rlatnxny,rlonnxny,rlatdxdy,rlondxdy,dx,dy,nx,ny,lstatus)
       if(lstatus .lt. 0)then
          write(6,*)'No attributes returned: get_attribute_wfo ',chtype
      &(1:nn)
@@ -388,9 +390,6 @@ c        istatus=1
 c        goto 900
 
       endif
-
-      dx=dx*1000.0
-      dy=dy*1000.0
 
       istatus = 0
       goto 1000

@@ -1,5 +1,6 @@
-      subroutine get_attribute_wfo(filename,rlat00,rlon00
-     &,latNxNy,lonNxNy,latdxdy,londxdy,dx,dy,nx,ny,istatus)
+      subroutine get_attribute_wfo(filename,centralLat,centralLon,
+     &rlat00,rlon00,latNxNy,lonNxNy,latdxdy,londxdy,dx,dy,nx,ny,
+     &istatus)
 C
 C  Open netcdf File for reading
 C
@@ -12,6 +13,8 @@ C
 c     integer   ncid
       integer   lenf
       integer   nf_status
+      real      centralLat
+      real      centralLon
       real      rlat00
       real      rlon00
       real      dx,dy
@@ -29,6 +32,42 @@ c     integer   ncid
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ',filename(1:lenf)
+        istatus=-1
+        goto 100
+      endif
+C
+C Get centralLat
+C
+      nf_status = NF_INQ_ATTID(nf_fid,nf_attid,'centralLat',nf_attnum)
+      if(nf_status.ne.NF_NOERR) then
+         print*, NF_STRERROR(nf_status)
+         print*, 'centralLat attribute id'
+         istatus=-1
+         goto 100
+      endif
+
+      nf_status=NF_GET_ATT_REAL(nf_fid,nf_attid,'centralLat',centralLat)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'centralLat'
+         istatus=-1
+         goto 100
+      endif
+C
+C Get centralLon
+C
+      nf_status = NF_INQ_ATTID(nf_fid,nf_attid,'centralLon',nf_attnum)
+      if(nf_status.ne.NF_NOERR) then
+         print*, NF_STRERROR(nf_status)
+         print*, 'centralLon attribute id'
+         istatus=-1
+         goto 100
+      endif
+
+      nf_status=NF_GET_ATT_REAL(nf_fid,nf_attid,'centralLon',centralLon)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'centralLon'
         istatus=-1
         goto 100
       endif
