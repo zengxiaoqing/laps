@@ -292,8 +292,6 @@ cdis
         real*4 bias_3d(ni,nj,nk)
         real*4 wt_3d(ni,nj,nk)
         real*4 bias_obs_3d(ni,nj,nk)
-        real*4 r0_array_out(ni,nj)
-
         real*4 bias_tsnd(max_snd_grid,nk)
         real*4 wt_tsnd(max_snd_grid,nk)
 
@@ -352,7 +350,6 @@ cdis
      1               ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1               ,weight_bkg_const                       ! Input
      1               ,n_fnorm                                ! Input
-     1               ,r0_array_out                           ! Dummy
      1               ,istatus)                               ! Output
 
              if(istatus .ne. 1)then
@@ -398,7 +395,6 @@ cdis
      1                   ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
-     1                   ,r0_array_out                           ! Dummy
      1                   ,istatus)                               ! Output
 
 !       Jun 16 1997             Ken Dritz
@@ -415,7 +411,6 @@ cdis
         real*4 bias_obs_3d(ni,nj,nk)
         real*4 bias_3d(ni,nj,nk)
         real*4 wt_3d(ni,nj,nk)
-        real*4    r0_array_out(ni,nj)
         integer*4 n_obs_lvl(nk)                                ! Local
 
         logical l_analyze(nk)
@@ -493,7 +488,6 @@ cdis
      1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm ! Inputs
      1                     ,l_analyze                       ! Input
      1                     ,weight_bkg_const                ! Input
-     1                     ,r0_array_out                    ! Output
      1                     ,n_obs_lvl,istatus)              ! Outputs
 
         return

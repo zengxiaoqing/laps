@@ -30,8 +30,8 @@ cdis
 cdis
 cdis
 
-        subroutine smooth_cross_laps(ni,nj,i_l,i_h,j_l,j_h,r4_img,r4_buf
-     1,n_cross_in)
+        subroutine smooth_cross_laps(ni,nj,i_l,i_h,j_l,j_h,r4_img
+     1                              ,n_cross_in)
 
         integer*4 n_cross_in    ! ODD
         real*4 r4_img(ni,nj) ! Input/Output

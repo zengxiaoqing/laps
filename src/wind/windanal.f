@@ -87,7 +87,6 @@
 
 !--------------------------------------------------------------------------------
 
-      real*4    r0_array_out(imax,jmax)                                ! Local
       real*4    density_array_in(imax,jmax)                            ! Local
 
       real*4 uobs_diff(imax,jmax,kmax),vobs_diff(imax,jmax,kmax)       ! Local
@@ -328,7 +327,7 @@
      1        ,imax,jmax,kmax,grid_spacing_m
      1        ,varobs_diff_spread
      1        ,wt_p_spread,fnorm,n_fnorm
-     1        ,l_analyze,weight_bkg_const,r0_array_out
+     1        ,l_analyze,weight_bkg_const
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
 
@@ -436,7 +435,7 @@
      1       ,imax,jmax,kmax,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,weight_bkg_const,r0_array_out
+     1       ,l_analyze,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
@@ -497,7 +496,7 @@
      1       ,imax,jmax,kmax,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,weight_bkg_const,r0_array_out
+     1       ,l_analyze,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
@@ -583,7 +582,7 @@
      1       ,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,weight_bkg_const,r0_array_out
+     1       ,l_analyze,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
