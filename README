@@ -428,8 +428,8 @@
      and other C library routines may need adjustment. This involves the 
      existence and number of underscores in the C routine names when called by
      FORTRAN routines. Fixes for this may include a combination of changing 
-     the number of underscores in the C routines, changing the CFLAGS for LAPS,
-     or changing the FFLAGS for LAPS.
+     the number of underscores in the C routines, changing the CPPFLAGS for 
+     LAPS, or changing the FFLAGS for LAPS.
 
                 --- 2.2.3   Ingest Software changes ---
 
