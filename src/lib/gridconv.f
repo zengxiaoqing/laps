@@ -904,14 +904,11 @@ cc     implicit none
       PI=acos(-1.)
       deg2rad=PI/180.
 
-c     ymax=R*(1./tanh(sind(ne(1))))
+c     ymax=R*(tanh(sind(ne(1))))
       ymax=R*(log(tan(PI/4.+(ne(1)-rlatc)*deg2rad)))
-
-      xmax=R*(deg2rad*(ne(2)-rlonc))
-
-      ymin=R*(1./tanh(sind(sw(1)-rlatc)))
       ymin=R*(log(tan(PI/4.+(sw(1)-rlatc)*deg2rad)))
 
+      xmax=R*(deg2rad*(ne(2)-rlonc))
       xmin=R*(deg2rad*(sw(2)-rlonc))
 
       dx=(xmax-xmin)/(nx-1)
@@ -923,8 +920,8 @@ c     ymax=R*(1./tanh(sind(ne(1))))
          if(dlon.gt.180.)dlon=dlon-360.
          if(dlon.lt.-180.)dlon=dlon+360.
          x=R*(deg2rad*dlon)
-         y=R*(1./tanh(sind(rlat(i))))
-         y=R*(log(tan(45.+0.5*rlat(i)*deg2rad)))
+c        y=R*(1./tanh(sind(rlat(i))))
+         y=R*(log(tan(PI/4.+0.5*(dlat*deg2rad))))
          ri(i)=(x-xmin)/dx + 1.
          rj(i)=(y-ymin)/dy + 1.
       enddo
