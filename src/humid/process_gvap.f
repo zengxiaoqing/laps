@@ -79,6 +79,14 @@ c     input variables
 
 
          write(6,*) nn, ' number of stations read in file'
+         if (nn.gt.nstations) then ! exceeded dimension
+            istatus  = 0
+            write (6,*) 'nstations exceeded (parameter dimension)'
+            write (6,*) 'readjust and recompile code'
+            write (6,*) 'warning only, not fatal'
+            write (6,*) 'gvap data not used'
+            return
+         endif
 c     correct longitute to negative for west
          do i = 1,nn
             lon(i) = lon(i) * (-1.0)
@@ -93,6 +101,7 @@ c     correct longitute to negative for west
       if(istatus.ne.1) then ! failure to get data
          return
       endif
+
 
       if(istatus.eq.1) then ! data_out can be used to normalize field
 c     note that the 0.1 factor is to convert mm (gvap) to cm (tpw).

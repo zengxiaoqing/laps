@@ -127,8 +127,25 @@ c     prep the weighting array for the above analyzed sheet
 
       call weight_field (data_weights, mask,  ii,jj, 15.e+3, istatus)
 
+      if (istatus .ne. 1) then! test weight_field
+         write (6,*) 'Failure in weight_field from analz_gvap'
+         return
+      endif
+
 c      call slv_laplc (data_weights, mask, ii,jj)
 
+c     test NaN values coming out of data_out and data_weights
+
+      call check_nan2 (data_out,ii,jj,istatus)
+      if (istatus.ne.1) then 
+         write (6,*) 'NaN detected in data_out in analz_gvap.f'
+         return
+      endif
+      call check_nan2 (data_out,ii,jj,istatus)
+      if (istatus.ne.1) then 
+         write (6,*) 'NaN detected in data_weights in analz_gvap.f'
+         return
+      endif
 
       istatus = 1
 
