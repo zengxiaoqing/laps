@@ -25,7 +25,7 @@
 #
 # Command line arguments
 #
-# -q  N                Use QSUB (e.g. on 'jet') where N is the number of nodes
+# -q  A                Use QSUB (e.g. on 'jet') where A is the project name
 #
 # -e  e1,e2,...        Environment variables (if any) to pass into the executable
 #
@@ -139,7 +139,7 @@ if($opt_q){
     print $t." Opening $LAPS_LOG_PATH/run_qsub_$exe.sh starting with executable $exe\n";
     open(TFILE,">$LAPS_LOG_PATH/run_qsub_$exe.sh");
     print TFILE "#!/bin/sh\n";
-    print TFILE "#PBS -lnodes=$opt_q:comp,walltime=30:00 -A $opt_q\n";
+    print TFILE "#PBS -lnodes=1:comp,walltime=30:00 -A $opt_q\n";
     print TFILE "  \n";
     print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 
