@@ -1360,9 +1360,9 @@ c       include 'satellite_dims_lvd.inc'
                 colortable = 'vnt'
 
             elseif(var_2d(1:2) .eq. 'HA')then
-                clow = 2.
-                chigh = 6.
-                cint = 1.
+                clow = 1.5
+                chigh = 6.4999
+                cint = 1.0
 
                 colortable = 'haines'
 
@@ -4284,7 +4284,7 @@ c                   cint = -1.
      1                             ,'vnt',n_image,scale,'hsect') 
                     endif
                 elseif(var_2d(1:2) .eq. 'HA')then
-                    call ccpfil(field_2d,NX_L,NY_L,2.,6.
+                    call ccpfil(field_2d,NX_L,NY_L,1.5,6.4999
      1                         ,'haines',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'FWI')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,40.
