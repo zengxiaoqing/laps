@@ -13,10 +13,11 @@
 **   for ALPHA	: cc -DSWAPBYTE -DLONG64 -c unpkfgge_a.c
 **   for VMS    : cc /def=(SWAPBYTE) unpkfgge_a.c
 **   for HP/UX	: cc -Aa	-c unpkfgge_a.c
-**   for REDHAT(LINUX) : cc -DSWAPBYTE -c unpkfgge_a.c
+**   for Linux  : gcc -DSWAPBYTE -c unpkfgge_a.c
 ** Restriction :
 **   An internal working buffer is used for data points <= 65535
 **   (Since the FGGE format use 16bits to encode the data points)
+**   for HP/UX	: cc -Aa	-c unpkfgge_a.c
 ** Note :
 **   This version is write for FORTRAN API.
 ** History :
@@ -25,7 +26,6 @@
 **                          can't pass a blank trimed file name.
 **   Jun-06-1994  C.P.DZEN  Fix negetive header->A on 64 bits machine.
 **   Feb-19-1997  C.P.DZEN  Fix record length(B value) > 65535(16bits) problem.
-**   Mar-23-2001  C.T.CHU   Add comment about linux redhat compile method
 */
 /*---------------------------------------------------------------------------*/
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -33,6 +33,26 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+/*---------------------------------------------------------------------------*/
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+/*---------------------------------------------------------------------------*/
+#if defined (FORTRANUNDERSCORE)
+#   define open_fgge_file open_fgge_file_ 
+#   define read_fgge_record read_fgge_record_
+#   define decode_fgge_header decode_fgge_header_
+#   define decode_fgge_data decode_fgge_data_
+#   define close_fgge_file close_fgge_file_
+#   define print_fgge_header print_fgge_header_
+#   define print_fgge_data print_fgge_data_
+#elif defined (FORTRANDOUBLEUNDERSCORE)
+#   define open_fgge_file open_fgge_file__ 
+#   define read_fgge_record read_fgge_record__
+#   define decode_fgge_header decode_fgge_header__
+#   define decode_fgge_data decode_fgge_data__
+#   define close_fgge_file close_fgge_file__
+#   define print_fgge_header print_fgge_header__
+#   define print_fgge_data print_fgge_data__
+#endif
 /*---------------------------------------------------------------------------*/
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /*---------------------------------------------------------------------------*/
@@ -88,7 +108,7 @@ void swap64(char *b1,int size)
 
 #endif
 /*---------------------------------------------------------------------------*/
-void gbyte(p, u, q, b)
+void ggbyte(p, u, q, b)
 long  *p, *u, q, b;
 { register long   j, jq = q, jb = b, lb, qb;
 
@@ -111,13 +131,13 @@ long  *p, *u, q, b;
   { *u = (G1BYTE(*(p + j), jq, jb)); }
 }
 /*---------------------------------------------------------------------------*/
-void gbytes(p, u, q, b, s, n)
+void ggbytes(p, u, q, b, s, n)
 long   *p, *u, q, b, s, n;
 { register long   i = 0, jp = 0;
   long		  jq = q;
   if (n > 0)
   { while (1)
-    { gbyte(p + jp, u + i, jq, b);
+    { ggbyte(p + jp, u + i, jq, b);
       if (++i == n) break;
       jq += b + s;
       jp += jq / SWORD;
@@ -133,11 +153,11 @@ typedef struct fgge_head
     long NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3;
   } FGGE_HEAD ;
 /*---------------------------------------------------------------------------*/
-void open_fgge_file_(char *fgge_name, int *status);
-void read_fgge_record_(char *obuf, int *status);
-void decode_fgge_header_(char *ibuf, FGGE_HEAD *header,int *status);
-void decode_fgge_data_(char *ibuf, FGGE_HEAD *header, float *data, int *status);
-void close_fgge_file_(int *status);
+void open_fgge_file(char *fgge_name, int *status);
+void read_fgge_record(char *obuf, int *status);
+void decode_fgge_header(char *ibuf, FGGE_HEAD *header,int *status);
+void decode_fgge_data(char *ibuf, FGGE_HEAD *header, float *data, int *status);
+void close_fgge_file(int *status);
 float rtran_mia(long mia);
 void print_fgge_header(FGGE_HEAD *header);
 void print_fgge_data(FGGE_HEAD *header,float *data);
@@ -157,19 +177,19 @@ char *trim_blank(char *string)
   return( strbuf );
 }
 /*---------------------------------------------------------------------------*/
-void open_fgge_file_(char *fgge_name, int *status)
+void open_fgge_file(char *fgge_name, int *status)
 { *status = 0 ;
   if( (fgge_fptr=fopen(trim_blank(fgge_name), "r")) == (FILE *)NULL )
   { *status = -1 ;
     fprintf(stderr,"FGGE file open error : %s\n",fgge_name); }
 }
 /*---------------------------------------------------------------------------*/
-void close_fgge_file_(int *status)
+void close_fgge_file(int *status)
 { *status = 0 ;
   fclose(fgge_fptr);
 }
 /*---------------------------------------------------------------------------*/
-void read_fgge_record_(char *obuf, int *status)
+void read_fgge_record(char *obuf, int *status)
 { int  i,npts;
   long need_len,read_len;
   *status = 0 ;
@@ -181,7 +201,7 @@ void read_fgge_record_(char *obuf, int *status)
   SWAP_BYTE(obuf,need_len);
 #endif
 
-  gbyte(obuf,&npts,240,16);
+  ggbyte(obuf,&npts,240,16);
   
   /* printf("Total %d data points to read\n",npts); */
 
@@ -194,47 +214,47 @@ void read_fgge_record_(char *obuf, int *status)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-void decode_fgge_header_(char *ibuf, FGGE_HEAD *header, int *status)
+void decode_fgge_header(char *ibuf, FGGE_HEAD *header, int *status)
 {
   *status = 0 ;
-  ;gbyte(ibuf,&header->Q ,  0,12);
-  ;gbyte(ibuf,&header->S1, 12,12);
-  ;gbyte(ibuf,&header->F1, 24, 8);
-  ;gbyte(ibuf,&header->T , 32, 4);
-  ;gbyte(ibuf,&header->C1, 36,20);
-  ;gbyte(ibuf,&header->E1, 56, 8);  if( header->E1 > 127 ) header->E1 -= 256 ;
-  gbyte(ibuf,&header->M , 64, 4);
-  gbyte(ibuf,&header->X , 68, 8);
-  gbyte(ibuf,&header->S2, 76,12);
-  gbyte(ibuf,&header->F2, 88, 8);
-  gbyte(ibuf,&header->N , 96, 4);
-  gbyte(ibuf,&header->C2,100,20);
-  gbyte(ibuf,&header->E2,120, 8);  if( header->E2 > 127 ) header->E2 -= 256 ;
-  gbyte(ibuf,&header->CD,128, 8);
-  gbyte(ibuf,&header->CM,136, 8);
-  gbyte(ibuf,&header->KS,144, 8);
-  gbyte(ibuf,&header->K ,152, 8);
-  gbyte(ibuf,&header->U1,160,16);
-  ;gbyte(ibuf,&header->NW,176,16);
-  ;gbyte(ibuf,&header->JJ,192, 8);
-  ;gbyte(ibuf,&header->MM,200, 8);
-  ;gbyte(ibuf,&header->YY,208, 8);
-  gbyte(ibuf,&header->GG,216, 8);
-  gbyte(ibuf,&header->R ,224, 8);
-  gbyte(ibuf,&header->G ,232, 8);
-  ;gbyte(ibuf,&header->J ,240,16);
-  ;gbyte(ibuf,&header->B ,256,16);
-  gbyte(ibuf,&header->Z ,272,16);
-  ;gbyte(ibuf,&header->A ,288,32);
+  ;ggbyte(ibuf,&header->Q ,  0,12);
+  ;ggbyte(ibuf,&header->S1, 12,12);
+  ;ggbyte(ibuf,&header->F1, 24, 8);
+  ;ggbyte(ibuf,&header->T , 32, 4);
+  ;ggbyte(ibuf,&header->C1, 36,20);
+  ;ggbyte(ibuf,&header->E1, 56, 8);  if( header->E1 > 127 ) header->E1 -= 256 ;
+  ggbyte(ibuf,&header->M , 64, 4);
+  ggbyte(ibuf,&header->X , 68, 8);
+  ggbyte(ibuf,&header->S2, 76,12);
+  ggbyte(ibuf,&header->F2, 88, 8);
+  ggbyte(ibuf,&header->N , 96, 4);
+  ggbyte(ibuf,&header->C2,100,20);
+  ggbyte(ibuf,&header->E2,120, 8);  if( header->E2 > 127 ) header->E2 -= 256 ;
+  ggbyte(ibuf,&header->CD,128, 8);
+  ggbyte(ibuf,&header->CM,136, 8);
+  ggbyte(ibuf,&header->KS,144, 8);
+  ggbyte(ibuf,&header->K ,152, 8);
+  ggbyte(ibuf,&header->U1,160,16);
+  ;ggbyte(ibuf,&header->NW,176,16);
+  ;ggbyte(ibuf,&header->JJ,192, 8);
+  ;ggbyte(ibuf,&header->MM,200, 8);
+  ;ggbyte(ibuf,&header->YY,208, 8);
+  ggbyte(ibuf,&header->GG,216, 8);
+  ggbyte(ibuf,&header->R ,224, 8);
+  ggbyte(ibuf,&header->G ,232, 8);
+  ;ggbyte(ibuf,&header->J ,240,16);
+  ;ggbyte(ibuf,&header->B ,256,16);
+  ggbyte(ibuf,&header->Z ,272,16);
+  ;ggbyte(ibuf,&header->A ,288,32);
 #ifdef  LONG64
   if( header->A > 0x3fffffffl ) header->A -= 0x100000000 ;
 #endif
-  gbyte(ibuf,&header->U2,320,16);
-  ;gbyte(ibuf,&header->SN,336,16);
-  ;gbyte(ibuf,&header->MN,352, 8);
-  ;gbyte(ibuf,&header->RT,360, 8);
-  ;gbyte(ibuf,&header->DO,368, 8);
-  gbyte(ibuf,&header->U3,376, 8);
+  ggbyte(ibuf,&header->U2,320,16);
+  ;ggbyte(ibuf,&header->SN,336,16);
+  ;ggbyte(ibuf,&header->MN,352, 8);
+  ;ggbyte(ibuf,&header->RT,360, 8);
+  ;ggbyte(ibuf,&header->DO,368, 8);
+  ggbyte(ibuf,&header->U3,376, 8);
 }
 /*---------------------------------------------------------------------------*/
 float rtran_mia(long mia)
@@ -251,14 +271,14 @@ float rtran_mia(long mia)
   return( rmia );
 }
 /*---------------------------------------------------------------------------*/
-void decode_fgge_data_(char *ibuf, FGGE_HEAD *header, float *data, int *status)
+void decode_fgge_data(char *ibuf, FGGE_HEAD *header, float *data, int *status)
 { float rmia,ddosn;
   int	i;
   *status = 0 ;
 
   rmia	= rtran_mia( header->A );
   ddosn = pow( (double)2.0 , (double)(15 - header->SN) );
-  gbytes(ibuf,wbuf,384,16,0,header->J);
+  ggbytes(ibuf,wbuf,384,16,0,header->J);
   for( i=0 ; i < header->J ; i++)
   {
     if( wbuf[i] > 0x7fff ) wbuf[i] -= 0x10000 ;
