@@ -49,6 +49,7 @@ SRC	= machine_dependent.F \
           check_nan1.f \
           check_nan2.f \
           check_nan3.f \
+          config_sat_commons.f \
           constant.f \
           convc2f.f \
           conversions.f \
