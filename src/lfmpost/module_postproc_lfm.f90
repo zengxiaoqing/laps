@@ -483,19 +483,16 @@ CONTAINS
       ! and perturbation pressures and adding them together
       ALLOCATE(pbase(nx,ny,ksigh))
       ALLOCATE(ppsig(nx,ny,ksigh))
-print *, 'here1'
       CALL get_wrfnc_3d(current_lun, "PB","A",nx,ny,ksigh,1,pbase,status)
       IF (status.NE.0) THEN
         PRINT *, 'Could not properly obtain WRF base state pressure.'
         CALL ABORT
       ENDIF
-print *, 'here2'
       CALL get_wrfnc_3d(current_lun, "P", "A",nx,ny,ksigh,1,ppsig,status)
       IF (status.NE.0) THEN
         PRINT *, 'Could not properly obtain WRF perturbation pressure.'
         CALL ABORT
       ENDIF
-print *, 'here3'
       psig = pbase+ppsig
       DEALLOCATE(pbase)
       DEALLOCATE(ppsig) 
@@ -504,7 +501,6 @@ print *, 'here3'
           CALL SMOOTH(psig,nx,ny,ksigh,smth)
         ENDDO
       ENDIF
-  print *, 'here4'
       ! Get theta on sigma
       CALL get_wrfnc_3d(current_lun, "T","A",nx,ny,ksigh,1,thetasig,status)
       IF (status.NE.0) THEN
@@ -529,7 +525,6 @@ print *, 'here3'
           CALL SMOOTH(mrsig,nx,ny,ksigh,smth)
         ENDDO
       ENDIF
-  print *,'here3'
       ! Compute temperature on sigma
       tsig = thetasig/ ( (100000./psig)**kappa) 
  
