@@ -916,7 +916,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
             rhprs(i,j,kp) = MIN(rhprs(i,j,kp),100.)
             thetaprs(i,j,kp) = potential_temp(tprs(i,j,kp),prslvl(kp))
             IF (ABS(prslvl(kp)-psig(i,j,ksigh) ) .LT. 0.1) THEN
-               zprs(i,j,kp) = zsig(i,j,1)
+               zprs(i,j,kp) = zsig(i,j,ksigh)
                dz = 0.0
             ELSE
               dz = tvbar * rog * ALOG(psig(i,j,ksigh)/prslvl(kp))
