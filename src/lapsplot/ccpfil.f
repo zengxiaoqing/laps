@@ -37,8 +37,10 @@ cdis
 cdis   
 cdis
       subroutine ccpfil(field_in,MREG,NREG,scale_l_in,scale_h_in
-     1                 ,colortable,n_image,scale,c5_sect)       
+     1                 ,colortable,n_image,scale,c5_sect,namelist_parms)       
 
+
+      include 'lapsplot.inc'
 C 
 C Define error file, Fortran unit number, and workstation type,
 C and workstation ID.
@@ -52,7 +54,18 @@ C
 
       write(6,*)' Subroutine ccpfil for solid fill plot...'
 
-      l_discrete = .false.
+      if(colortable .eq. 'vnt')then
+          l_discrete = .true.
+      elseif(colortable .eq. 'spectral' .or. 
+     1       colortable .eq. 'spectralr')then
+          l_discrete = namelist_parms%l_discrete
+      elseif(colortable .eq. 'moist')then
+          l_discrete = namelist_parms%l_discrete
+      elseif(colortable .eq. 'tpw')then
+          l_discrete = namelist_parms%l_discrete
+      else
+          l_discrete = .false.
+      endif
 
       if(colortable(1:3) .eq. 'acc')then
           log_scaling = .true.
@@ -91,6 +104,7 @@ C
       endif
 
       write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
+     1                           ,l_discrete,log_scaling,l_integral
 
 !     Apply scaling to the array
 !     call addcon(field_in,-scale_l,ZREG,MREG,NREG)
@@ -127,7 +141,7 @@ C
                   ZREG(i,j) = scale_loc * 0.50 ! e.g. CSC 
 
                 elseif(colortable(1:3) .eq. 'cpe')then ! apply only to hsects
-                  if(scale_h_in .eq. 7200. .or. scale_h_in .eq. 50.)then 
+                  if(scale_h_in .eq. 7000. .or. scale_h_in .eq. 50.)then 
                       ZREG(i,j) = scale_loc * 0.00 ! ! cape/cin for hsect
                   endif
 
@@ -185,20 +199,27 @@ C
 
       if(l_discrete)then
 !         Set interval for writing numbers
-          range = scale_loc
+          range = scale_loc/scale
           if(l_integral)then
               colorbar_int = 0.5
           elseif(range .gt. 1000.)then
               colorbar_int = 1000.
-          elseif(range .gt. 10.)then
+          elseif(range .gt. 45.)then
               colorbar_int = 10.
-          else ! range .le. 10
-              colorbar_int = 1.0
+          elseif(range .gt. 25.)then
+              colorbar_int = 5.
+          elseif(range .gt. 10.)then
+              colorbar_int = 2.
+          elseif(range .gt. 6.)then
+              colorbar_int = 1.
+          else ! range .le. 6
+              colorbar_int = 0.5
           endif
 
           ncols = nint(range / colorbar_int)
 
-          write(6,*)' l_discrete case, ncols = ',ncols
+          write(6,*)' l_discrete case, ncols = '
+     1             ,range,colorbar_int,ncols  
       endif
 
       LMAP=MREG*NREG*256 ! 16000000
@@ -227,7 +248,7 @@ c     Call local colorbar routine
       call colorbar(MREG, NREG, 
      1              ncols, ireverse_colorbar, log_scaling,             ! I
      1              scale_l, scale_h, colortable, scale,icol_offset,
-     1              c5_sect, l_discrete, l_integral)
+     1              c5_sect, l_discrete, l_integral, colorbar_int)
 
       jdot = 1
       
@@ -241,7 +262,7 @@ c     Call local colorbar routine
      1                                ,colortable,ncols
      1                                ,l_discrete                  ! I
      1                                ,icol_offset)      
-      
+
       PARAMETER (LRWK=300000,LIWK=300000,NWRK=300000
      1          ,NOGRPS=5)       
       REAL ZREG(MREG,NREG),RWRK(LRWK), XWRK(NWRK), YWRK(NWRK)
@@ -354,31 +375,34 @@ C
               ncols = 60
           endif
 
-          call color_ramp(1,ncols1/8,IWKID,icol_offset
-     1                   ,0.5,0.15,0.6                ! Pink
-     1                   ,0.5,0.5,0.7)                ! Violet
-          call color_ramp(ncols1/8,59*ncols1/120,IWKID,icol_offset
-     1                   ,0.5,0.5,0.7                 ! Violet
-     1                   ,1.5,1.0,0.7)                ! Aqua
-          call color_ramp(59*ncols1/120,73*ncols1/120,IWKID,icol_offset       
-     1                   ,1.5,1.0,0.7                 ! Aqua
-     1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(73*ncols1/120,70*ncols1/100,IWKID,icol_offset
-     1                   ,2.0,0.4,0.4                 ! Green
-!    1                   ,2.5,0.65,0.55)              ! Yellow Orig
-     1                   ,2.45,0.95,0.60)             ! Yellow New
-          call color_ramp(70*ncols1/100,82*ncols1/100,IWKID,icol_offset
-     1                   ,2.45,0.95,0.60              ! Yellow 
-     1                   ,2.72,0.9,0.7)               ! Orange
-          call color_ramp(82*ncols1/100,90*ncols1/100,IWKID,icol_offset
-     1                   ,2.72,0.9,0.7                ! Orange 
-     1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(90*ncols1/100,ncols1,IWKID,icol_offset
-     1                   ,3.0,0.9,0.7                 ! Red
-     1                   ,3.0,0.9,0.2)                ! Dark Hot
-          call color_ramp(100*ncols1/100,ncols,IWKID,icol_offset
-     1                   ,3.0,0.9,0.2                 ! Dark Hot
-     1                   ,3.0,0.15,0.6)               ! White Hot
+          call generate_colortable(ncols,'hues',IWKID,icol_offset       
+     1                            ,istatus)
+
+!         call color_ramp(1,ncols1/8,IWKID,icol_offset
+!    1                   ,0.5,0.15,0.6                ! Pink
+!    1                   ,0.5,0.5,0.7)                ! Violet
+!         call color_ramp(ncols1/8,59*ncols1/120,IWKID,icol_offset
+!    1                   ,0.5,0.5,0.7                 ! Violet
+!    1                   ,1.5,1.0,0.7)                ! Aqua
+!         call color_ramp(59*ncols1/120,73*ncols1/120,IWKID,icol_offset       
+!    1                   ,1.5,1.0,0.7                 ! Aqua
+!    1                   ,2.0,0.4,0.4)                ! Green
+!         call color_ramp(73*ncols1/120,70*ncols1/100,IWKID,icol_offset
+!    1                   ,2.0,0.4,0.4                 ! Green
+!!   1                   ,2.5,0.65,0.55)              ! Yellow Orig
+!    1                   ,2.45,0.95,0.60)             ! Yellow New
+!         call color_ramp(70*ncols1/100,82*ncols1/100,IWKID,icol_offset
+!    1                   ,2.45,0.95,0.60              ! Yellow 
+!    1                   ,2.72,0.9,0.7)               ! Orange
+!         call color_ramp(82*ncols1/100,90*ncols1/100,IWKID,icol_offset
+!    1                   ,2.72,0.9,0.7                ! Orange 
+!    1                   ,3.0,0.9,0.7)                ! Red
+!         call color_ramp(90*ncols1/100,ncols1,IWKID,icol_offset
+!    1                   ,3.0,0.9,0.7                 ! Red
+!    1                   ,3.0,0.9,0.2)                ! Dark Hot
+!         call color_ramp(100*ncols1/100,ncols,IWKID,icol_offset
+!    1                   ,3.0,0.9,0.2                 ! Dark Hot
+!    1                   ,3.0,0.15,0.6)               ! White Hot
 
           if(colortable .eq. 'ref')then
               do i = 1,3
@@ -405,104 +429,148 @@ C
           endif
 
       elseif(colortable .eq. 'vnt')then       
-          ncols = 60
-          call color_ramp(1,7,IWKID,icol_offset
+          if(.not. l_discrete)then
+              ncols = 60 
+          endif
+
+!         call generate_colortable(ncols,colortable,IWKID,icol_offset       
+!    1                            ,istatus)
+
+          i1 = 1
+          i2 = 1 + nint(.1017 * float(ncols-1))
+          call color_ramp(i1,i2,IWKID,icol_offset
      1                   ,0.5,0.15,0.6                ! Pink
      1                   ,0.5,0.5,0.7)                ! Violet
-          call color_ramp(7,29,IWKID,icol_offset
+
+          i1 = 1 + nint(.1017 * float(ncols-1))
+          i2 = 1 + nint(.31   * float(ncols-1))
+          call color_ramp(i1,i2,IWKID,icol_offset
      1                   ,0.5,0.5,0.7                 ! Violet
      1                   ,1.5,1.0,0.7)                ! Aqua
-          call color_ramp(29,36,IWKID,icol_offset       
+
+          i1 = 1 + nint(.31   * float(ncols-1))
+          i2 = 1 + nint(.49   * float(ncols-1))
+          call color_ramp(i1,i2,IWKID,icol_offset       
      1                   ,1.5,1.0,0.7                 ! Aqua
      1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(36,42,IWKID,icol_offset
+
+          i1 = 1 + nint(.49   * float(ncols-1))
+          i2 = 1 + nint(.6349 * float(ncols-1))
+          call color_ramp(i1,i2,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
 !    1                   ,2.5,0.65,0.55)              ! Yellow Orig
      1                   ,2.45,0.95,0.60)             ! Yellow New
-          call color_ramp(42,49,IWKID,icol_offset
+
+          i1 = 1 + nint(.6349 * float(ncols-1))
+          i2 = 1 + nint(.77   * float(ncols-1))       ! .8136 orig
+          call color_ramp(i1,i2,IWKID,icol_offset
      1                   ,2.45,0.95,0.60              ! Yellow 
      1                   ,2.72,0.9,0.7)               ! Orange
-          call color_ramp(49,54,IWKID,icol_offset
+
+          i1 = 1 + nint(.77   * float(ncols-1))
+          i2 = 1 + nint(.81   * float(ncols-1))
+          call color_ramp(i1,i2,IWKID,icol_offset
      1                   ,2.72,0.9,0.7                ! Orange 
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(54,60,IWKID,icol_offset
+
+          i1 = 1 + nint(.81   * float(ncols-1))
+          i2 = ncols
+          call color_ramp(i1,i2,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.2)                ! Dark Hot
 
       elseif(colortable .eq. 'tpw')then
-          ncols = 60
-          call color_ramp(1,8,IWKID,icol_offset
-     1                   ,3.0,0.9,0.2                 ! Dark Hot
-     1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(8,12,IWKID,icol_offset
-     1                   ,3.0,0.9,0.7                 ! Red
-     1                   ,2.75,0.9,0.7)               ! Orange
-          call color_ramp(12,18,IWKID,icol_offset
-     1                   ,2.75,0.9,0.7                ! Orange
-     1                   ,2.5,0.95,0.60)              ! Yellow
-          call color_ramp(18,29,IWKID,icol_offset
-     1                   ,2.5,0.95,0.60               ! Yellow
-     1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(29,36,IWKID,icol_offset       
-     1                   ,2.0,0.4,0.4                 ! Green
-     1                   ,1.5,1.0,0.7)                ! Aqua
-          call color_ramp(36,54,IWKID,icol_offset
-     1                   ,1.5,1.0,0.7                 ! Aqua
-     1                   ,0.5,0.5,0.7)                ! Violet
-          call color_ramp(54,60,IWKID,icol_offset
-     1                   ,0.5,0.5,0.7                 ! Violet
-     1                   ,0.5,0.15,0.6)               ! Pink
+          if(.not. l_discrete)then
+              ncols = 60
+          endif
+
+          call generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                            ,istatus)
+
+!         call color_ramp(1,8,IWKID,icol_offset
+!    1                   ,3.0,0.9,0.2                 ! Dark Hot
+!    1                   ,3.0,0.9,0.7)                ! Red
+!         call color_ramp(8,12,IWKID,icol_offset
+!    1                   ,3.0,0.9,0.7                 ! Red
+!    1                   ,2.75,0.9,0.7)               ! Orange
+!         call color_ramp(12,18,IWKID,icol_offset
+!    1                   ,2.75,0.9,0.7 ! Orange
+!    1                   ,2.5,0.95,0.60)              ! Yellow
+!         call color_ramp(18,29,IWKID,icol_offset
+!    1                   ,2.5,0.95,0.60               ! Yellow
+!    1                   ,2.0,0.4,0.4)                ! Green
+!         call color_ramp(29,36,IWKID,icol_offset       
+!    1                   ,2.0,0.4,0.4                 ! Green
+!    1                   ,1.5,1.0,0.7)                ! Aqua
+!         call color_ramp(36,54,IWKID,icol_offset
+!    1                   ,1.5,1.0,0.7                 ! Aqua
+!    1                   ,0.5,0.5,0.7)                ! Violet
+!         call color_ramp(54,60,IWKID,icol_offset
+!    1                   ,0.5,0.5,0.7                 ! Violet
+!    1                   ,0.5,0.15,0.6)               ! Pink
 
       elseif(colortable .eq. 'moist')then
-          ncols = 60
-          call color_ramp(1,12,IWKID,icol_offset
-     1                   ,3.0,0.9,0.2                 ! Dark Hot
-     1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(12,17,IWKID,icol_offset
-     1                   ,3.0,0.9,0.7                 ! Red
-     1                   ,2.75,0.9,0.7)               ! Orange
-          call color_ramp(17,30,IWKID,icol_offset
-     1                   ,2.75,0.9,0.7                ! Orange
-     1                   ,2.5,0.95,0.60)              ! Yellow
-          call color_ramp(30,47,IWKID,icol_offset
-     1                   ,2.5,0.95,0.60               ! Yellow
-     1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(47,60,IWKID,icol_offset       
-     1                   ,2.0,0.4,0.4                 ! Green
-     1                   ,1.5,1.0,0.7)                ! Aqua
+          if(.not. l_discrete)then
+              ncols = 60
+          endif
+
+          call generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                            ,istatus)
+
+
+!         call color_ramp(1,12,IWKID,icol_offset
+!    1                   ,3.0,0.9,0.2                 ! Dark Hot
+!    1                   ,3.0,0.9,0.7)                ! Red
+!         call color_ramp(12,17,IWKID,icol_offset
+!    1                   ,3.0,0.9,0.7                 ! Red
+!    1                   ,2.75,0.9,0.7)               ! Orange
+!         call color_ramp(17,30,IWKID,icol_offset
+!    1                   ,2.75,0.9,0.7                ! Orange
+!    1                   ,2.5,0.95,0.60)              ! Yellow
+!         call color_ramp(30,47,IWKID,icol_offset
+!    1                   ,2.5,0.95,0.60               ! Yellow
+!    1                   ,2.0,0.4,0.4)                ! Green
+!         call color_ramp(47,60,IWKID,icol_offset       
+!    1                   ,2.0,0.4,0.4                 ! Green
+!    1                   ,1.5,1.0,0.7)                ! Aqua
 
       elseif(            colortable .eq. 'spectral' 
      1              .or. colortable .eq. 'spectralr'     
      1              .or. colortable .eq. 'acc'            )then       
 
-          if(            colortable .eq. 'acc' 
-     1              .or. colortable .eq. 'spectralr'     
-     1              .or. MREG*NREG .gt. 62500)then       
-              ncols = 20
-          else
-              ncols = 40
+          if(.not. l_discrete)then
+              if(            colortable .eq. 'acc' 
+     1                  .or. colortable .eq. 'spectralr'     
+     1                  .or. MREG*NREG .gt. 62500)then       
+                  ncols = 20
+              else
+                  ncols = 40
+              endif
           endif
 
-          call color_ramp(1,35*ncols/100
-     1                   ,IWKID,icol_offset
-     1                   ,0.6,0.7,0.4                 ! Violet
-     1                   ,1.5,1.0,0.7)                ! Aqua
-          call color_ramp(35*ncols/100,55*ncols/100
-     1                   ,IWKID,icol_offset       
-     1                   ,1.5,1.0,0.7                 ! Aqua
-     1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(55*ncols/100,74*ncols/100
-     1                   ,IWKID,icol_offset
-     1                   ,2.0,0.4,0.4                 ! Green
-     1                   ,2.5,0.95,0.60)              ! Yellow
-          call color_ramp(74*ncols/100,91*ncols/100
-     1                   ,IWKID,icol_offset
-     1                   ,2.5,0.95,0.60               ! Yellow
-     1                   ,2.75,0.9,0.7)               ! Orange
-          call color_ramp(91*ncols/100,ncols
-     1                   ,IWKID,icol_offset
-     1                   ,2.75,0.9,0.7                ! Orange
-     1                   ,3.0,0.9,0.7)                ! Red
+          call generate_colortable(ncols,'spectral',IWKID,icol_offset       
+     1                            ,istatus)
+
+!         call color_ramp(1,35*ncols/100
+!    1                   ,IWKID,icol_offset
+!    1                   ,0.6,0.7,0.4                 ! Violet
+!    1                   ,1.5,1.0,0.7)                ! Aqua
+!         call color_ramp(35*ncols/100,55*ncols/100
+!    1                   ,IWKID,icol_offset       
+!    1                   ,1.5,1.0,0.7                 ! Aqua
+!    1                   ,2.0,0.4,0.4)                ! Green
+!         call color_ramp(55*ncols/100,74*ncols/100
+!    1                   ,IWKID,icol_offset
+!    1                   ,2.0,0.4,0.4                 ! Green
+!    1                   ,2.5,0.95,0.60)              ! Yellow
+!         call color_ramp(74*ncols/100,91*ncols/100
+!    1                   ,IWKID,icol_offset
+!    1                   ,2.5,0.95,0.60               ! Yellow
+!    1                   ,2.75,0.9,0.7)               ! Orange
+!         call color_ramp(91*ncols/100,ncols
+!    1                   ,IWKID,icol_offset
+!    1                   ,2.75,0.9,0.7                ! Orange
+!    1                   ,3.0,0.9,0.7)                ! Red
 
       elseif(colortable .eq. 'haines')then       
           ncols = 5 
@@ -629,7 +697,7 @@ C
       subroutine colorbar(ni,nj,ncols,ireverse,log_scaling
      1                   ,scale_l,scale_h
      1                   ,colortable,scale,icol_offset,c5_sect
-     1                   ,l_discrete,l_integral)                      ! I
+     1                   ,l_discrete,l_integral,colorbar_int)      ! I
 
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
@@ -640,9 +708,10 @@ C
 
       range = abs(scale_h - scale_l) / scale
 
-      if(scale_l .eq. -20. .or. scale_h .eq. 7200. 
+      if(scale_l .eq. -20. .or. scale_h .eq. 7000. 
      1                     .or. nint(range) .eq. 8000    ! PBL
      1                     .or. l_integral               ! e.g. HAH, HAM, CWI
+     1                     .or. l_discrete               
      1                     .or. colortable .eq. 'tpw'    ! TPW
      1                     .or. colortable .eq. 'vnt'    ! VNT
      1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
@@ -799,7 +868,9 @@ c     Restore original color table
       if(l_loop)then ! plot additional numbers
 
 !         Set interval for writing numbers
-          if(l_integral)then
+          if(l_discrete)then
+              continue ! use passed in value of colorbar_int
+          elseif(l_integral)then
               colorbar_int = 0.5
           elseif(range .gt. 1000.)then
               colorbar_int = 1000.
@@ -824,7 +895,7 @@ c     Restore original color table
 
               loop_count = loop_count + 1
 
-              if(.not. l_integral)then ! Plot Black Line 
+              if(.not. l_integral .and. .not. l_discrete)then ! Plot Black Line
                   x1   = xlow + frac*xrange 
                   x2   = xlow + frac*xrange 
                   call setusv_dum(2hIN,0)
@@ -848,7 +919,11 @@ c     Restore original color table
                   elseif(range .lt. 2.0)then
                       write(ch_frac,2)rlabel
                   else
-                      write(ch_frac,1)nint(rlabel)
+                      if( abs(rlabel- nint(rlabel)) .lt. .001)then
+                          write(ch_frac,1)nint(rlabel)
+                      else
+                          write(ch_frac,2)rlabel
+                      endif
                   endif
 
                   call left_justify(ch_frac)
@@ -920,3 +995,58 @@ c     Restore original color table
 
       return
       end 
+
+
+      subroutine generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                              ,istatus)
+
+!     Generate colortable from ramp information stored in a file
+!     Number of colors is passed in
+
+      character*200 path,filename
+      character*(*)colortable
+      real*4 frac_a(300)
+      real*4 hue_a(300)
+      real*4 sat_a(300)
+      real*4 rint_a(300)
+
+      lun = 41
+      nramp = 0
+
+      call get_directory('static',path,lenp)
+      call s_len(colortable,lenc)
+
+      filename = path(1:lenp)//'/www/'//colortable(1:lenc)//'.lut'
+
+      call s_len(filename,lenf)
+
+      write(6,*)' Reading colortable ',filename(1:lenf)
+      open(lun,file=filename(1:lenf),status='old')
+
+ 10   read(lun,*,end=101)frac,hue,sat,rint
+
+      nramp = nramp + 1
+
+      frac_a(nramp) = frac
+      hue_a(nramp) = hue
+      sat_a(nramp) = sat
+      rint_a(nramp) = rint
+
+      go to 10
+
+ 101  continue
+
+      do i = 1,nramp-1
+          i1 = 1 + nint(frac_a(i  ) * float(ncols-1))
+          i2 = 1 + nint(frac_a(i+1) * float(ncols-1))
+     
+          call color_ramp(i1,i2,IWKID,icol_offset
+     1                   ,hue_a(i  ),sat_a(i  ),rint_a(i  )
+     1                   ,hue_a(i+1),sat_a(i+1),rint_a(i+1) )
+
+      enddo ! i
+
+      close(lun)
+
+      return
+      end
