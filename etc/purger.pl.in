@@ -88,9 +88,9 @@ if($min_files>0){
 
     foreach $radar (@radars){
         $dir="v$radar";
-        $clean_dirs{$dir} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+        $clean_dirs{$dir} = $vxx_time;
         $dir="rdr/0$radar/vrc";
-        $clean_dirs{$dir} = ($vrc_time<$hist_time)?$vrc_time:$hist_time;
+        $clean_dirs{$dir} = $vrc_time;
     }
 
     $clean_dirs{'lvd/goes08'} = (0.5<$hist_time)?0.5:$hist_time;;
