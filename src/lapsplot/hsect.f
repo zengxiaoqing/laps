@@ -346,7 +346,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [t,tb,tr,to] Temp (LAPS,LGA,RAM,OBS)'      
      1       ,', [pt] Pot Temp'
      1       /'     [ht,hb,hr,hy] Heights (LAPS,LGA,RAM,Hydrstc),'
-     1       /'     [hh] Heightt of Const Temp Sfc')
+     1       /'     [hh] Height of Const Temp Sfc')
 
         write(6,12)
  12     format(/4x,' [ci] Cloud Ice     ',22x
@@ -844,7 +844,7 @@ c       include 'satellite_dims_lvd.inc'
      1                          ,NX_L,NY_L
      1                          ,field_2d,0,istatus)
 
-            IF(istatus .ne. 1)THEN
+            IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
                 write(6,*)' Error Reading Stability Analysis ',var_2d
                 goto1200
             endif
@@ -855,9 +855,15 @@ c       include 'satellite_dims_lvd.inc'
             call s_len(units_2d,len_units)
 
             if(len_units .gt. 0)then
-                c33_label = 'LAPS '
+                if(units_2d(1:len_units) .eq. 'M')then
+                    c33_label = 'LAPS '
+     1                      //comment_2d(1:len_comment)
+     1                      //'   ('//units_2d(1:len_units)//'-MSL)'
+                else
+                    c33_label = 'LAPS '
      1                      //comment_2d(1:len_comment)
      1                      //'   ('//units_2d(1:len_units)//')'
+                endif
             else
                 c33_label = 'LAPS '
      1                      //comment_2d(1:len_comment)
@@ -2103,16 +2109,19 @@ c
                 iflag_slwc = 13 ! Returns New Smith - Feddes LWC
                 if(k_level .gt. 0)then
                     call mklabel33(k_level,
-     1          ' Smt-Fed LWC g/m^3 ',c33_label)
+!    1                             ' Smt-Fed LWC g/m^3 ',c33_label)
+     1                             ' Cloud LWC g/m^3   ',c33_label)
                 else
-                    c33_label = 'LAPS Max Smith-Feddes  LWC g/m^3 '
+!                   c33_label = 'LAPS Max Smith-Feddes  LWC g/m^3 '
+                    c33_label = 'LAPS Column Max LWC        g/m^3 '
                 endif
 
             elseif(c_type .eq. 'ci')then
                 iflag_slwc = 13 ! Returns Cloud Ice
                 if(k_level .gt. 0)then
                     call mklabel33(k_level,
-     1          ' Smt-Fed ICE g/m^3 ',c33_label)
+!    1                             ' Smt-Fed ICE g/m^3 ',c33_label)
+     1                             ' Cloud ICE g/m^3   ',c33_label)
                 else
                     c33_label = 'LAPS Max Smith-Feddes  ICE g/m^3 '
                 endif
@@ -2121,9 +2130,10 @@ c
                 iflag_slwc = 14 ! Returns Smith - Feddes SLWC
                 if(k_level .gt. 0)then
                     call mklabel33(k_level,
-     1          'Smt-Fed SLWC g/m^3 ',c33_label)
+     1                             'Smt-Fed SLWC g/m^3 ',c33_label)
                 else
-                    c33_label = 'LAPS Max Smith-Feddes SLWC g/m^3 '
+!                   c33_label = 'LAPS Max Smith-Feddes SLWC g/m^3 '
+                    c33_label = 'LAPS Column Max SLWC       g/m^3 '
                 endif
 
             endif
@@ -2214,24 +2224,28 @@ c
             else ! Find Maximum value in column
                do j = 1,NY_L
                do i = 1,NX_L
-                   column_max(i,j) = -1e-30
+                   column_max(i,j) = 0.
                    if(c_type .ne. 'ci')then
                      do k = 1,NZ_L
-                       column_max(i,j) = max(column_max(i,j),slwc_3d(i,j
-     1,k))
+                       column_max(i,j) = 
+     1                 max(column_max(i,j),slwc_3d(i,j,k))
                      enddo ! k
                    else
                      do k = 1,NZ_L
-                       column_max(i,j) = max(column_max(i,j),cice_3d(i,j
-     1,k))
+                       column_max(i,j) = 
+     1                 max(column_max(i,j),cice_3d(i,j,k))
                      enddo ! k
                    endif
                enddo ! i
                enddo ! j
-               call plot_cont(column_max,1e-3,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+               call subcon(column_max,1e-30,field_2d,NX_L,NY_L)
+
+               call plot_cont(field_2d,1e-3,
+     1                        clow,chigh,cint,asc9_tim_t,c33_label,
+     1                        i_overlay,c_display,'nest7grid',lat,lon,
+     1                        jdot,NX_L,NY_L,r_missing_data,
+     1                        laps_cycle_time)
 
             endif
 

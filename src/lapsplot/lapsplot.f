@@ -134,22 +134,23 @@ c           set up supmap for plot
             write(6,*)' lapsplot: call "conrec"'
 
             if(cint .ge. 0.)then
-                call conrec_line
-     1  (field,ni,ni,nj,clow,chigh,cint,-1,0,-1848,0)
+                call conrec_line(field,ni,ni,nj,clow,chigh,cint
+     1                          ,-1,0,-1848,0)
 
             else ! Special Contouring
-                call conrec_line
-     1    (field,ni,ni,nj,0.,1e8,1e8,-1,0,-1848,0)
+                call conrec_line(field,ni,ni,nj,0.,1e8,1e8,-1,0,-1848,0)       
                 cbase = 1e-4
 
                 do i = 1,N_CONTOURS
                     cvalue = factor(i)
-                    if(cvalue .ge. abs(cint) .and.
-     1                 cvalue .le. abs(chigh))then
-                        call conrec_line
-     1     (field,ni,ni,nj,cvalue,cvalue,1e-6,-1,0,-1848,0)
-                        call conrec_line
-     1     (field,ni,ni,nj,-cvalue,-cvalue,1e-6,-1,0,-1848,0)
+                    if(      cvalue .ge. abs(cint) 
+!    1                 .and. cvalue .le. abs(chigh)
+     1                                                  )then
+                        write(6,*)' Contouring at +/-',cvalue
+                        call conrec_line(field,ni,ni,nj,cvalue
+     1                                  ,cvalue,1e-6,-1,0,-1848,0)
+                        call conrec_line(field,ni,ni,nj,-cvalue
+     1                                  ,-cvalue,1e-6,-1,0,-1848,0)
                     endif
                 enddo
             endif
