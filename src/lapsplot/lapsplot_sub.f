@@ -191,9 +191,13 @@ cdis
      1                                  .or. c_section .eq. '2')THEN
             zoom = 1.0
             l_atms = .false.
+
+            NXSECT = nint(sqrt(float(NX_L**2 + NY_L**2))) ! 541
+
+            write(6,*)' NXSECT = ',NXSECT
+
             call xsect(c_display,i4time_ref,lun,l_atms
-!    1                ,standard_longitude,NX_L,NY_L,NZ_L,61,NZ_L,181       
-     1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,541       
+     1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,NXSECT       
      1                ,r_missing_data,laps_cycle_time,maxstns)
 
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
