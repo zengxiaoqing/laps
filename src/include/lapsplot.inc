@@ -23,6 +23,8 @@
 	type plot_type
           sequence
 
+          real rimage_intensity
+
           integer contour_line_width
 
 	end type plot_type
