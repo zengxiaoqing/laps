@@ -658,7 +658,7 @@ fint4 *status;
         int i,j, t_level, i_record, unconv_var;
         int val_id,dim_id, t_record, int_1, int_2, found,t_var_id;
         long num_record;
-        fint4 imax, jmax, kmax, ii,jj,k; 
+        fint4 imax, jmax, kmax; 
         size_t mindex[1], dim_len;
         float *dptr;
         double reftime, valtime, d_valtime, timeoff, diff; 
@@ -878,19 +878,6 @@ fint4 *status;
           istatus = retrieve_grid_v3(cdfid, t_level, t_record, 
                                      t_var, dptr, cptr, 
                                      name_len, lptr, uptr); 
-
-/*        if(DEBUG){
-	    k=0;
-	    for(ii=0;ii<(*iimax);ii++)
-	      for(jj=0;jj<(*jjmax);jj++){
-		k++;
-	        if(dptr[k]>1.e35){
-	          printf("found missing at i=%d j=%d %d %g\n",ii,jj,k,t_level,dptr[k]);
-	        } 
-	      }
-	  }
-*/
-	  
 
           if (istatus == -1)  {
             unconv_var += 1;
@@ -1403,11 +1390,11 @@ int  write_hdr_v3(int cdfid, char *ext, int i_record, fint4 *imax,
                   float *interval, fint4 *n_levels, float *Dx, 
                   float *Dy, float *La1, float *Lo1, float *LoV, 
                   float *Latin1, float *Latin2, char *map_proj, 
-                  char *origin, int name_len) 
+                  char *origin, int name_len, float *cdl_levels)
 #else
 int  write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, base, 
                   interval,n_levels, Dx, Dy, La1, Lo1, LoV, Latin1, 
-                  Latin2, map_proj, origin, name_len) 
+                  Latin2, map_proj, origin, name_len, cdl_levels)
 int cdfid; 
 char *ext;
 int i_record; 
@@ -1428,6 +1415,7 @@ float *Latin2;
 char *map_proj; 
 char *origin;
 int  name_len;
+float *cdl_levels;
 #endif
 {
         short Nx, Ny;
@@ -1498,6 +1486,29 @@ int  name_len;
 	}
         if (DEBUG==1) printf("correctly wrote kdim\n");
 
+/* if ext is fua or fsf, cdl should have Nx, Ny, Dx, Dy, La1, Lo1, Latin1,
+     Latin2, grid_type and origin_name set as data in the cdl.  The variable
+     "level" will be filled using cdl_levels rather than from base and interval */
+
+        if ((strncmp(ext,"fua",3) == 0) || (strncmp(ext,"fsf",3) == 0)) {
+          start[0] = 0;
+          count[0] = *n_levels;
+
+          istatus = nc_inq_varid(cdfid,"level",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for level\n");
+
+          istatus = nc_put_vara_float(cdfid,varid,start,count,cdl_levels);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote level\n");
+        }
+        else {
 /* write out levels */
 /* levels written are based on value in n_levels, which has been adjusted to
      one of four options: standard LAPS 3D (nk_laps in nest7grid.parms),
@@ -1505,256 +1516,257 @@ int  name_len;
                           which are currently set with #define at beginning of
                           this file */
 
-        levels = (float *) malloc((*n_levels) * sizeof(float));
-        lp = levels;
+          levels = (float *) malloc((*n_levels) * sizeof(float));
+          lp = levels;
 
-        if (strncmp(ext,"lc3",3) == 0) {
-          for( i = 1; i <= LC3_LEVELS; i++) {
-            *lp = i;
-            lp++;
+          if (strncmp(ext,"lc3",3) == 0) {
+            for( i = 1; i <= LC3_LEVELS; i++) {
+              *lp = i;
+              lp++;
+            }
           }
-        }
-        else if (strncmp(ext,"lm1",3) == 0) {
-          for( i = 1; i <= LM1_LEVELS; i++) {
-            *lp = i * (-1);
-            lp++;
+          else if (strncmp(ext,"lm1",3) == 0) {
+            for( i = 1; i <= LM1_LEVELS; i++) {
+              *lp = i * (-1);
+              lp++;
+            }
           }
-        }
-        else if (*n_levels == 1) {
-          *levels = 0;
-        }
-        else {  /* standard LAPS 3D */
+          else if (*n_levels == 1) {
+            *levels = 0;
+          }
+          else {  /* standard LAPS 3D */
 
-          j = *n_levels - 1;
-          for( i = 0; i < *n_levels; i++) {
-            lp = levels + j;
-            j = j - 1;
-            *lp = *base;
-            *base = *base - *interval;
-          }
+            j = *n_levels - 1;
+            for( i = 0; i < *n_levels; i++) {
+              lp = levels + j;
+              j = j - 1;
+              *lp = *base;
+              *base = *base - *interval;
+            }
       
-/*        for( i = 0; i < *n_levels; i++) {
-            *lp = *base;
-            lp++;
-            *base = *base - *interval;
-          }
+/*          for( i = 0; i < *n_levels; i++) {
+              *lp = *base;
+              lp++;
+              *base = *base - *interval;
+            }
 */
-        }
+          }
 
-        start[0] = 0;
-        count[0] = *n_levels;
+          start[0] = 0;
+          count[0] = *n_levels;
 
-        istatus = nc_inq_varid(cdfid,"level",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for level\n");
+          istatus = nc_inq_varid(cdfid,"level",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for level\n");
 
-        istatus = nc_put_vara_float(cdfid,varid,start,count,levels);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote level\n");
+          istatus = nc_put_vara_float(cdfid,varid,start,count,levels);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote level\n");
 
-        free (levels);
+          free (levels);
 
-        mindex[0] = 0;
+          mindex[0] = 0;
 
 /* write out Nx */
-        istatus = nc_inq_varid(cdfid,"Nx",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for Nx\n");
+          istatus = nc_inq_varid(cdfid,"Nx",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for Nx\n");
 
-        Nx = (short) *imax;
-        istatus = nc_put_var1_short(cdfid,varid,mindex,&Nx);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote Nx\n");
+          Nx = (short) *imax;
+          istatus = nc_put_var1_short(cdfid,varid,mindex,&Nx);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote Nx\n");
 
 /* write out Ny */
-        istatus = nc_inq_varid(cdfid,"Ny",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for Ny\n");
+          istatus = nc_inq_varid(cdfid,"Ny",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for Ny\n");
 
-        Ny = (short) *jmax;
-        istatus = nc_put_var1_short(cdfid,varid,mindex,&Ny);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote Ny\n");
+          Ny = (short) *jmax;
+          istatus = nc_put_var1_short(cdfid,varid,mindex,&Ny);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote Ny\n");
 
 /* write out Dx */
-        istatus = nc_inq_varid(cdfid,"Dx",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for Dx\n");
+          istatus = nc_inq_varid(cdfid,"Dx",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for Dx\n");
 
-        istatus = nc_put_var1_float(cdfid,varid,mindex,Dx);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote Dx\n");
+          istatus = nc_put_var1_float(cdfid,varid,mindex,Dx);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote Dx\n");
 
 /* write out Dy */
-        istatus = nc_inq_varid(cdfid,"Dy",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for Dy\n");
+          istatus = nc_inq_varid(cdfid,"Dy",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for Dy\n");
 
-        istatus = nc_put_var1_float(cdfid,varid,mindex,Dy);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote Dy\n");
+          istatus = nc_put_var1_float(cdfid,varid,mindex,Dy);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote Dy\n");
 
 /* write out La1 */
-        istatus = nc_inq_varid(cdfid,"La1",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for La1\n");
+          istatus = nc_inq_varid(cdfid,"La1",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for La1\n");
 
-        istatus = nc_put_var1_float(cdfid,varid,mindex,La1);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote La1\n");
+          istatus = nc_put_var1_float(cdfid,varid,mindex,La1);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote La1\n");
 
 /* write out Lo1 */
-        istatus = nc_inq_varid(cdfid,"Lo1",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for Lo1\n");
+          istatus = nc_inq_varid(cdfid,"Lo1",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for Lo1\n");
 
-        istatus = nc_put_var1_float(cdfid,varid,mindex,Lo1);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote Lo1\n");
+          istatus = nc_put_var1_float(cdfid,varid,mindex,Lo1);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote Lo1\n");
 
 /* write out LoV */
-        istatus = nc_inq_varid(cdfid,"LoV",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for LoV\n");
+          istatus = nc_inq_varid(cdfid,"LoV",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for LoV\n");
 
-        istatus = nc_put_var1_float(cdfid,varid,mindex,LoV);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote LoV\n");
+          istatus = nc_put_var1_float(cdfid,varid,mindex,LoV);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote LoV\n");
 
 /* write out Latin1 */
-        istatus = nc_inq_varid(cdfid,"Latin1",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for Latin1\n");
+          istatus = nc_inq_varid(cdfid,"Latin1",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for Latin1\n");
 
-        istatus = nc_put_var1_float(cdfid,varid,mindex,Latin1);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote Latin1\n");
+          istatus = nc_put_var1_float(cdfid,varid,mindex,Latin1);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote Latin1\n");
 
 /* write out Latin2 */
-        istatus = nc_inq_varid(cdfid,"Latin2",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for Latin2\n");
+          istatus = nc_inq_varid(cdfid,"Latin2",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for Latin2\n");
 
-        istatus = nc_put_var1_float(cdfid,varid,mindex,Latin2);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote Latin2\n");
+          istatus = nc_put_var1_float(cdfid,varid,mindex,Latin2);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote Latin2\n");
 
 /* write out map_proj */
-        istatus = nc_inq_varid(cdfid,"grid_type",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for grid_type\n");
+          istatus = nc_inq_varid(cdfid,"grid_type",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for grid_type\n");
 
-	start_2[0] = i_record;
-        start_2[1] = 0;
-        count_2[0] = 1;
-        if (strlen(map_proj) > name_len) {
-          count_2[1] = name_len;
-          map_proj[name_len - 1] = '\0';
-        }
-        else {
-          count_2[1] = strlen(map_proj);
-        }
+	  start_2[0] = i_record;
+          start_2[1] = 0;
+          count_2[0] = 1;
+          if (strlen(map_proj) > name_len) {
+            count_2[1] = name_len;
+            map_proj[name_len - 1] = '\0';
+          }
+          else {
+            count_2[1] = strlen(map_proj);
+          }
 
-        istatus = nc_put_vara_text(cdfid,varid,start_2,count_2,map_proj);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote map_proj\n");
+          istatus = nc_put_vara_text(cdfid,varid,start_2,count_2,map_proj);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote map_proj\n");
 
 /* write out origin */
-        istatus = nc_inq_varid(cdfid,"origin_name",&varid);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("found varid for origin_name\n");
+          istatus = nc_inq_varid(cdfid,"origin_name",&varid);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("found varid for origin_name\n");
 
-        start[0] = 0;
-        if (strlen(origin) > name_len) {
-          count[0] = name_len;
-          origin[name_len - 1] = '\0';
+          start[0] = 0;
+          if (strlen(origin) > name_len) {
+            count[0] = name_len;
+            origin[name_len - 1] = '\0';
+          }
+          else {
+            count[0] = strlen(origin);
+          }
+
+          istatus = nc_put_vara_text(cdfid,varid,start,count,origin);
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+          if (DEBUG==1) printf("correctly wrote origin\n");
+
+
+          if (istatus != NC_NOERR){
+            printf("%s\n",nc_strerror(istatus));
+            return (-1);
+	  }
+
         }
-        else {
-          count[0] = strlen(origin);
-        }
-
-        istatus = nc_put_vara_text(cdfid,varid,start,count,origin);
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-        if (DEBUG==1) printf("correctly wrote origin\n");
-
-
-        if (istatus != NC_NOERR){
-          printf("%s\n",nc_strerror(istatus));
-          return (-1);
-	}
-
 	return 0;
 }
 /************************************************************/
@@ -1946,15 +1958,15 @@ void write_cdf_v3 (char *f_filename, char *f_ext, char *f_var,
                    fint4 *cdl_path_len, fint4 *stat_len, fint4 *i_reftime, 
                    fint4 *i_valtime, fint4 *imax, fint4 *jmax, fint4 *kmax, 
                    fint4 *kdim,fint4 lvl[], float *data, float *base, 
-                   float *interval, fint4 *n_levels, fint4 *called_from, 
-                   fint4 *append, fint4 *status)
+                   float *interval, fint4 *n_levels, float *cdl_levels,
+                   fint4 *called_from, fint4 *append, fint4 *status)
 #else
 void write_cdf_v3 (f_filename, f_ext, f_var, f_comment, f_asctime, 
                    f_cdl_path, f_static_path, fn_length, ext_len, 
                    var_len, comm_len,  asc_len, cdl_path_len, stat_len, 
                    i_reftime, i_valtime, imax, jmax, kmax, kdim, lvl, 
-                   data, base, interval, n_levels, called_from, 
-                   append, status)
+                   data, base, interval, n_levels, cdl_levels,
+                   called_from, append, status)
 char *f_filename; 
 char *f_ext; 
 char *f_var; 
@@ -1980,6 +1992,7 @@ float *data;
 float *base; 
 float *interval; 
 fint4 *n_levels;
+float *cdl_levels;
 fint4 *called_from;
 fint4 *append;
 fint4 *status; 
@@ -2168,29 +2181,35 @@ fint4 *status;
 
         if (num_record == 0) {
 
-/* get info from static.nest7grid for writing to output files */
-	  static_grid = malloc((*stat_len + 20) * sizeof(char));
-          nstrncpy(static_grid,f_static_path,*stat_len);
-          strcat(static_grid,"static.nest7grid");
-
           map_proj = malloc(name_len * sizeof(char));
           origin = malloc(name_len * sizeof(char));
 
-          istatus = get_static_info_v3(static_grid, &Dx, &Dy, &La1, &Lo1, 
+          if ((strncmp(ext,"fua",3) == 0) || (strncmp(ext,"fsf",3) == 0)) {
+/* don't read static.nest7grid...data should be in cdl file */
+          }
+          else {
+/* get info from static.nest7grid for writing to output files */
+	    static_grid = malloc((*stat_len + 20) * sizeof(char));
+            nstrncpy(static_grid,f_static_path,*stat_len);
+            strcat(static_grid,"static.nest7grid");
+
+            istatus = get_static_info_v3(static_grid, &Dx, &Dy, &La1, &Lo1, 
                                        &LoV, &Latin1, &Latin2, map_proj, 
                                        origin, name_len);
-          free(static_grid);
+            free(static_grid);
 
-          if (istatus == -1) {
-            printf("Error reading info from static.nest7grid.\n");
-            printf("  Some navigation data will be missing from file.\n");
+            if (istatus == -1) {
+              printf("Error reading info from static.nest7grid.\n");
+              printf("  Some navigation data will be missing from file.\n");
+            }
           }
 
 /* write out header information into file */
 
 	  istatus = write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, 
                                  base, interval, n_levels, &Dx, &Dy, &La1, &Lo1, 
-                                 &LoV, &Latin1, &Latin2, map_proj, origin,name_len);
+                                 &LoV, &Latin1, &Latin2, map_proj, origin,name_len,
+                                 cdl_levels);
 
           free_static_var(map_proj, origin);
           if (istatus == -1) {
