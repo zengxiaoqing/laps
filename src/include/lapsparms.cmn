@@ -38,6 +38,8 @@
         real*4 silavwt_parm_cmn
         real*4 toptwvl_parm_cmn
         integer maxstations_cmn, maxobs_cmn
+        integer num_domains_cmn
+        integer i_orig_cmn, j_orig_cmn
 
 !       integer   num_staggers
 
@@ -72,6 +74,8 @@
         character*200 path_to_greenfrac
         character*200 path_to_soiltemp1deg 
         character*200 path_to_albedo
+        character*200 path_to_maxsnoalb
+        character*200 path_to_islope
         character*200 path_to_sst
 
         common  /lapsparms_cmn/ iflag_lapsparms_cmn
@@ -101,5 +105,6 @@
      1  ,path_to_landuse30s,path_to_soiltype_top30s
      1  ,path_to_soiltype_bot30s,path_to_greenfrac
      1  ,path_to_soiltemp1deg,path_to_albedo,path_to_sst
+     1  ,path_to_maxsnoalb,path_to_islope
      1  ,fdda_model_source_cmn
-!    1  ,num_staggers
+     1  ,num_domains_cmn,i_orig_cmn,j_orig_cmn

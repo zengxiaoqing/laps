@@ -11,7 +11,7 @@
       integer domain_origin_parent_y(10)
       integer i2_missing_data
       
-      real moad_known_lat, moad_known_lon,
+      real moad_known_lat(10), moad_known_lon(10),
      +       moad_stand_lats(4), moad_stand_lons(4),
      +       moad_delta_x, moad_delta_y,
      +       silavwt_parm_wrf, toptwvl_parm_wrf
