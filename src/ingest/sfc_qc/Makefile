@@ -1,13 +1,6 @@
 # User options are in src/include/makefile.inc
 # This Makefile is designed for gnu make version 3.75 or newer
 # Please report problems to lapsbugs@fsl.noaa.gov
-# User options are in src/include/makefile.inc
-# This Makefile is designed for gnu make version 3.75 or newer
-# Please report problems to lapsbugs@fsl.noaa.gov
-# User options are in src/include/makefile.inc
-# This Makefile is designed for gnu make version 3.75 or newer
-# Please report problems to lapsbugs@fsl.noaa.gov
-#
 #
 
 LAPSROOT=../../..
@@ -15,44 +8,26 @@ LAPSROOT=../../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
+LAPSLIBS = -Wl,-L$(LAPSROOT)/src/lib -llaps
 
 
+DBLAPSLIBS = -Wl,-L$(LAPSROOT)/src/lib -ldebuglaps  
 
 
+EXE = sfc_qc.exe
+
+SRC   = kalman.f         matrix_tools.f   test_qc.f     \
+        QC_tools.f       model_tools.f    write_qc.c    \
+        write_tools.f    $(LAPSROOT)/src/sfc/mdatlaps.f \
+        $(LAPSROOT)/src/sfc/laps_routines.f \
+	$(LAPSROOT)/src/ingest/sao/write_surface_obs.f
 
 
+MAIN=QC_main.f
 
+LIB=libqc.a
 
-
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
-           $(LAPSROOT)/src/lib/mthermo/libmthermo.a  
-
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
-             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  
-
-
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
-.SUFFIXES:
-.SUFFIXES: .o .c .f .a .F .i .exe
-
-EXE = obs_driver.x
-
-
-
-
-
-SRC   = get_metar_obs.f \
-	read_metar.f \
-	write_surface_ls2.f
-
-MAIN=obs_driver.f
-
-
-
-LIB=libsao.a
-
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 
 all: exe
 
@@ -62,12 +37,6 @@ $(EXE): $(ARCHIVE) $(MAIN)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-#$(EXE.F): $(MAIN) $(ARCHIVE)
-#	rm -f $*.f
-#	$(CPP) $(CPPFLAGS) $*.F 
-#	mv $*.i $*.f
-#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
-#	rm -f *.o $*.f
 
 debug: $(SRC)
 	$(RM) $(EXE) ;
@@ -82,6 +51,7 @@ clean:
 
 
 distclean: clean
+
 %.f : %.F
 	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 

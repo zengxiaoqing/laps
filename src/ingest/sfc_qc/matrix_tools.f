@@ -121,11 +121,11 @@ c          Make code dynamic, housekeeping changes, for use in LAPS.
 c
 c*********************************************************************
 c
-      real aamax,dum,sum,vv(nmax)
-      real d,a(np,np),tiny
-      integer n,np,indx(n),nmax
       integer i,imax,j,k
-      parameter (nmax=500,tiny=1.e-20)
+      parameter (nmax=500,tol=1.e-20)
+      real aamax,dum,sum,vv(nmax)
+      real d,a(np,np),tol
+      integer n,np,indx(n),nmax
 c
       d=1.
       do i=1,n
@@ -167,7 +167,7 @@ c
             vv(imax)=vv(j)
          endif
          indx(j)=imax
-         if(a(j,j).eq.0.)a(j,j)=tiny
+         if(a(j,j).eq.0.)a(j,j)=tol
          if(j.ne.n)then
             dum=1./a(j,j)
             do i=j+1,n
@@ -231,8 +231,8 @@ c          Make code dynamic, housekeeping changes, for use in LAPS.
 c*********************************************************************
 c
       real a(np,np),y(np,np),d
-      integer np,indx(im),n,j,i
       parameter(im=500)
+      integer np,indx(im),n,j,i
 c
       do i=1,n
          do j=1,n
@@ -423,11 +423,13 @@ c          Make code dynamic, housekeeping changes, for use in LAPS.
 c
 c*********************************************************************
 c
-       real a(mp,np),v(np,np),w(np)
-       real anorm,c,f,g,h,s,scale,x,y,z,rv1(NMAX),pythag
        integer m,mp,n,np,NMAX
        integer i,its,j,jj,k,l,nm
        parameter (NMAX=500)
+       real a(mp,np),v(np,np),w(np)
+       real anorm,c,f,g,h,s,scale,x,y,z,rv1(NMAX),pythag
+
+
 c
        g=0.
        scale=0.
@@ -663,11 +665,11 @@ c          Make code dynamic, housekeeping changes, for use in LAPS.
 c
 c*********************************************************************
 c
-        real s,tmp(nmax)
-        real b(mp),u(mp,np),v(np,np),w(np),x(np)
         integer i,j,jj
         integer m,mp,n,np,nmax
         parameter (nmax=500)
+        real s,tmp(nmax)
+        real b(mp),u(mp,np),v(np,np),w(np),x(np)
 c
         do j=1,n
            s=0

@@ -167,3 +167,117 @@ c
        return
        end
 
+      subroutine write_qc_cdf(i4time_file, dir, ext, m, 
+     1   num_sta, 
+     1   stations, provider, reptype, lat, lon, elev,
+     1   qcstat,  t,    tb,    ta,    tc,    te,    tf,  
+     1   qcstatd, td,   tdb,   tda,   tdc,   tde,   tdf,  
+     1   qcstauv, u,    ub,    ua,    uc,    ue,    uf,  
+     1            v,    vb,    va,    vc,    ve,    vf,  
+     1   qcstapm, pmsl, pmslb, pmsla, pmslc, pmsle, pmslf, 
+     1   qcstal,  alt,  altb,  alta,  altc, alte,   altf, 
+     1   status)
+
+c*********************************************************************
+c     Original: Linda Wharton, NOAA/FSL  05 Oct 1998
+c       Subroutine write_qc_cdf to write output to a netCDF
+c         file rather than the "temploc" file.
+c
+c*********************************************************************
+
+	integer*4 i4time_file  ! valid time of file
+	character dir*(*)      ! directory for output
+	character ext*(*)      ! ext for output
+	integer   m            ! dimension of data arrays
+        integer   num_sta      ! number of valid stations in data arrays
+        character*(*) stations(m) !should be length 20 
+	character*(*) provider(m) !should be length 11
+        character*(*) reptype(m)  ! should be length 6
+	real*4    lat(m), lon(m), elev(m)
+        integer   qcstat(m),qcstatd(m),qcstauv(m),qcstapm(m),qcstal(m)
+        real*4    t(m), td(m), u(m), v(m),  pmsl(m),  alt(m)
+        real*4    ta(m),tda(m),ua(m),va(m), pmsla(m), alta(m)
+        real*4    tb(m),tdb(m),ub(m),vb(m), pmslb(m), altb(m)
+        real*4    tc(m),tdc(m),uc(m),vc(m), pmslc(m), altc(m)
+        real*4    te(m),tde(m),ue(m),ve(m), pmsle(m), alte(m)
+        real*4    tf(m),tdf(m),uf(m),vf(m), pmslf(m), altf(m)
+	integer   status
+
+c Local variables
+
+        character filename*200, cdl_path*190, gtime*9, fcst_hh_mm*4
+	integer   fn_len, ext_len, sta_len, pro_len, type_len;
+	integer   istatus, error(2); 
+	integer*4 i_reftime, i_valtime;
+c
+c begin
+c
+        error(1)=1 ! success
+        error(2)=0 ! failure
+
+
+c make output file name from i4time_file 
+
+        call make_fnam_lp(i4time_file,gtime,istatus)
+        if (istatus .ne. 1) then
+          write (6,*)
+     1'Error converting i4time to file name... writing QC file aborted.'
+          status=error(2)
+          return
+        endif
+
+        call s_len(ext, ext_len)
+
+        fcst_hh_mm = '0000'
+
+        call cvt_fname_v3(dir, gtime, fcst_hh_mm, ext, ext_len,
+     1                    filename, fn_len, istatus)
+
+c get cdl_path
+	call get_directory('cdl',cdl_path, cdl_len)
+
+c setup lengths of character variables for passing into C code
+        sta_len = len(stations(1))
+        pro_len = len(provider(1))
+        type_len = len(reptype(1))
+
+c setup valtime and reftime for writing into output file
+	i_reftime = i4time_file - 315619200
+	i_valtime = i_reftime
+
+c pass data into C code for generating netCDF output file
+	call write_qc( filename, cdl_path, num_sta, m, i_reftime, 
+     1        i_valtime, stations, provider, reptype, sta_len, 
+     1        pro_len, type_len, fn_len, cdl_len, lat, lon, elev, 
+     1        qcstat,  t,    tb,    ta,    tc,    te,    tf,  
+     1        qcstatd, td,   tdb,   tda,   tdc,   tde,   tdf,  
+     1        qcstauv, u,    ub,    ua,    uc,    ue,    uf,  
+     1                 v,    vb,    va,    vc,    ve,    vf,  
+     1        qcstapm, pmsl, pmslb, pmsla, pmslc, pmsle, pmslf, 
+     1        qcstal,  alt,  altb,  alta,  altc, alte,   altf, 
+     1        istatus)
+
+	if (istatus .eq. error(1)) then   !successful completion of 
+	  status = error(1)
+	  goto 99
+	else
+          if (istatus .eq. 2)  goto 96  !error writing file
+          if (istatus .eq. -1)  goto 95  !error reading dimension data
+          if (istatus .eq. -2)  goto 94  !error creating netCDF file
+	endif
+
+94	write (6,*) 'Error creating netCDF file...write aborted.'
+	status=error(2)
+	goto 99
+
+95	write (6,*) 
+     1'Error reading dimensions from netCDF file...write aborted.'
+	status=error(2)
+	goto 99
+
+96	write (6,*) 'Error writing text to  netCDF file...write aborted.'
+	status=error(2)
+	goto 99
+
+99      return
+	end
