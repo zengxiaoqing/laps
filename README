@@ -60,7 +60,7 @@
          3.2.6 ..................  PROFILER/VAD (PRO) Ingest
          3.2.7 ..................  RASSs (LRS) Ingest
          3.2.8 ..................  PIREPS/ACARS Ingest
-         3.2.9 ..................  RAOB (SND) Ingest
+         3.2.9 ..................  RAOB + Satellite Sounding (SND) Ingest
          3.2.10 .................  Cloud Drift Wind (CDW) Ingest
          3.2.11 .................  Surface Data Ingest
          3.3 ..............  Analysis Processes
@@ -526,8 +526,9 @@
      PIREPS (pin) - We are ingesting FSL NetCDF pirep files to translate the 
            cloud layers from voice pireps into intermediate "PIN" files.
 
-     ACARS (pin) - We are ingesting FSL NetCDF ACARS files to translate the 
-           wind obs and append them to our intermediate "PIN" file.
+     ACARS (pin) - We are ingesting FSL NetCDF and AFWA databases for ACARS 
+           data to translate the wind, temperature and humidity obs and 
+           append them to our intermediate "PIN" file.
 
      Profilers/RASS (pro/lrs) - These are obtained from FSL's NIMBUS database
            in NetCDF format where they are stored in 4 different directories. 
@@ -547,9 +548,17 @@
 </pre>                 
 
      Radar VAD Algorithm winds (pro)
+           FSL NIMBUS database.
 
      RAOBs (snd):
-           FSL NIMBUS database. 
+           FSL NIMBUS, WFO Advanced, or AFWA databases. 
+
+     Satellite derived soundings (snd):
+           AFWA database format. 
+
+     Cloud Drift Winds (cdw):
+           We are ingesting the NESDIS (ASCII) satellite cloud-drift wind files
+           for use in the wind analysis.
 
      Model first guess (lga): 
            RUC grids are ftp'ed from NMC to FSL, then converted at FSL from 
@@ -1550,16 +1559,19 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 Inputs:
 	Aircraft voice pireps and ACARS data (separate NetCDF files
                                                               FSL-NIMBUS CDLs)
+        AFWA format also allowed for ACARS.
 
 Outputs: (The two executables are run sequentially, appending to the 'pin' 
-                                               file. Feeds cloud.exe, wind.exe)
-	pin	inter data	voice pireps/clouds, ACARS/winds
+          file. Feeds cloud.exe, wind.exe, lq3driver.x)
+
+	pin	inter data	voice pireps/clouds, ACARS/(wind, temp, 
+                                                                  mixing ratio)
 </pre>
                                         
 Sample Input/Output: Should be available in the test data case
 
  
------- 3.2.9 ---------------------- RAOB (SND) Ingest ------------------------
+------ 3.2.9 --------- RAOB + Satellite Sounding (SND) Ingest ----------------
 
 Process: (ingest_raob.exe) LAPS RAOBs
 
@@ -1569,6 +1581,9 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 Inputs:
 	RAOBs in NetCDF format (FSL-NIMBUS CDL)
                                (Should also work with WFO-Advanced CDL)
+                               (AFWA format also allowed)
+
+        Satellite Soundings in AFWA format
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)              RAOB temp, dewpoint, wind
@@ -1576,9 +1591,9 @@ Outputs: (Feeds temp.exe, humid.exe, wind.exe)
                                         
         Note: If you have good profiler or rass data, you may want to disable
               the RAOB ingest as they would then perhaps hurt as much as they
-              help (due to raobs being relatively old). This can be done by
-              using a dummy path name for the raw raob data in 
-              'nest7grid.parms'.
+              help (due to raobs being relatively old). There are flags to
+              toggle usage of the RAOB (i.e. snd) data in 'wind.nl', 'temp.nl'
+              and 'moisture_switch.nl'.
 
 ------ 3.2.10 --------- Cloud Drift Wind (CDW) Ingest -------------------------
 
@@ -1589,6 +1604,7 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 <pre>
 Inputs:
 	GOES 8/9 cloud drift winds in ASCII format
+        AFWA format also allowed.
 
 Outputs: (Feeds wind.exe)
 	cdw	intermediate data (ASCII)       Satellte cloud drift winds
