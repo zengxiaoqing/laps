@@ -252,6 +252,8 @@ c rams stuff--------
 
 c ------------------
 
+        real data_in(ii,jj,kk), delta_moisture(kk), avg_moisture(kk)
+
 
         character*125 commentline
 
@@ -648,6 +650,17 @@ c perform initialquality control check for supersaturation after ingest
           endif
 
 
+c record total moisture
+
+        do k = 1,kk
+        do i = 1,ii
+        do j = 1,jj
+        data_in(i,j,k) = data(i,j,k)
+	enddo
+	enddo
+        enddo
+
+
 
 
 c ****  get laps cloud data. used for cloud, bl, goes
@@ -932,6 +945,32 @@ c       generate lh3 file (RH true, RH liquid)
         print*, 'no laps 3-d temp data avail'
         jstatus(2) = 0
         endif
+
+
+
+c record total moisture
+
+        do k = 1,kk
+        delta_moisture(k) = 0.0
+        avg_moisture(k) = 0.0
+        do i = 1,ii
+        do j = 1,jj
+        if( data(i,j,k) .ne. mdf) then
+        delta_moisture(k) = data(i,j,k) - data_in(i,j,k)
+        avg_moisture(k) = avg_moisture(k) + data(i,j,k)
+        endif
+	enddo
+	enddo
+        if(avg_moisture(k).ne.0) then
+           delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
+        endif
+         
+        enddo
+
+       do k = 1,kk
+        write(6,*)'delta moisture level ',plevel(k), delta_moisture(k)
+       enddo
+
 
         return
 
