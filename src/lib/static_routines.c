@@ -430,7 +430,7 @@ fint4 *status;
     }
 
     ncvarput(cdf_id, i_varid, start_map, edges_map, (void *)map_proj);
-    if(DEBUG==1) printf("cdf_wrt_hdr_stat: 14 %d\n",edges_map[0],edges_map[1]);
+    if(DEBUG==1) printf("cdf_wrt_hdr_stat: 14 %d %d\n",edges_map[0],edges_map[1]);
 
     return 0;
 }
@@ -747,7 +747,7 @@ int c_unit_len;
 
 	if (i_status == (-1)) {
 	   printf("cdf_retrieve_laps: error retrieving data %s grid.\n", 
-		 	 *s_field);
+		 	 s_field);
 	   return -1;
 	}
 

@@ -434,7 +434,7 @@ char *uptr;
           if (DEBUG == 1)
             printf("%s\n",nc_strerror(i_status));
             printf("cdf_retrieve_laps: error retrieving data %s grid.\n",
-                         *var);
+                         var);
           return -1;
         }
  
@@ -550,7 +550,7 @@ fint4 *kdim;
             pf = f_units + ((*kdim - 1) * (*units_len));
             pc = hld_unit;
             for (j = 0; j < *units_len; j++) {
-              strncpy(&pc_char,pc,1);
+              strncpy(pc_char,pc,1);
               *pf = pc_char[0];
               pf++;
               pc++;
@@ -574,7 +574,7 @@ fint4 *kdim;
             pf = f_comment + ((*kdim - 1) * (*comm_len));
             pc = hld_comm;
             for (j = 0; j < *comm_len; j++) {
-              strncpy(&pc_char,pc,1);
+              strncpy(pc_char,pc,1);
               *pf = pc_char[0];
               pf++;
               pc++;
@@ -598,7 +598,7 @@ fint4 *kdim;
             pf = f_lvl_coord + ((*kdim - 1) * (*lvl_coord_len));
             pc = hld_lvl;
             for (j = 0; j < *lvl_coord_len; j++) {
-              strncpy(&pc_char,pc,1);
+              strncpy(pc_char,pc,1);
               *pf = pc_char[0];
               pf++;
               pc++;
