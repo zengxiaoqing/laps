@@ -3574,7 +3574,7 @@ Source directory: 'laps/src/lapsprep'
 -------  5.0 --  LAPS Output Variables and netCDF File Organization -----------
 
 LAPS Variables and netCDF File Organization
-        (author: Linda Wharton - Linda.S.Wharton)
+        (author: Linda Wharton - Linda.S.Wharton@noaa.gov)
 
 LAPS output is written in NetCDF format as summarized below. Each file 
 extension goes into a separate directory under '$LAPS_DATA_ROOT/lapsprd/'.
