@@ -107,7 +107,7 @@ cdis
 
         i4time_raob_window = 0 ! 43200
 
-        call get_temp_parms(l_use_raob,istatus)
+        call get_temp_parms(l_use_raob,weight_bkg_const,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error: Bad status return from put_temp_anal'
             return
@@ -221,6 +221,7 @@ cdis
      1                  ,temp_3d            ! Input/Output
      1                  ,ilaps_cycle_time   ! Input
      1                  ,l_use_raob         ! Input
+     1                  ,weight_bkg_const   ! Input
      1                  ,i4time_raob_window ! Input
      1                  ,ni,nj,nk           ! Input
      1                  ,grid_spacing_m     ! Input
@@ -609,10 +610,11 @@ c       1                               j_diff_thmax,k_diff_thmax
         end
 
 
-       subroutine get_temp_parms(l_use_raob_t,istatus)
+       subroutine get_temp_parms(l_use_raob_t,weight_bkg_const_temp
+     1                          ,istatus)
 
        logical l_use_raob_t
-       namelist /temp_nl/ l_use_raob_t
+       namelist /temp_nl/ l_use_raob_t,weight_bkg_const_temp
  
        character*150 static_dir,filename
  

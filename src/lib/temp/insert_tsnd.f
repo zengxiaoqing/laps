@@ -38,6 +38,7 @@ cdis
      1               ,temp_3d                       ! Input/Output
      1               ,ilaps_cycle_time              ! Input
      1               ,l_use_raob                    ! Input
+     1               ,weight_bkg_const              ! Input
      1               ,i4time_raob_window            ! Input
      1               ,ni,nj,nk                      ! Input
      1               ,grid_spacing_m                ! Input
@@ -72,13 +73,7 @@ cdis
         real*4 temp_3d(ni,nj,nk)
         real*4 sh_3d(ni,nj,nk)
         real*4 pres_3d(ni,nj,nk)
-        real*4 wt_3d(ni,nj,nk)
-        real*4 bias_obs_3d(ni,nj,nk)
         real*4 heights_3d(ni,nj,nk)
-
-!       These arrays are passed in
-        real*4 bias_3d(ni,nj,nk)
-        real*4 r0_array_out(ni,nj)
 
         real*4 bias_tsnd(max_snd_grid,nk),bias_htlow(max_snd_grid)
         real*4 wt_tsnd(max_snd_grid,nk)
@@ -90,13 +85,6 @@ cdis
         character*4 c4_obstype(max_snd_grid) 
 
         logical l_qc,l_flag_vv,l_good_tsnd(max_snd_grid),l_use_raob
-
-!       Weight for Model Background. Recommended values: 0. to 1e+30. Try 1e29.
-!       This will make the output values match the background if far from obs.
-!       A value of zero means this parameter is not active.
-        real*4 weight_bkg_const                                   ! Input
-        parameter (weight_bkg_const = 0.)
-!       parameter (weight_bkg_const = 1.0e30)
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
@@ -274,14 +262,10 @@ cdis
         enddo ! i_tsnd
 
         call analyze_tsnd(n_tsnd,n_good_tsnd,ni,nj,nk,l_good_tsnd
-     1  ,bias_3d
-     1  ,wt_3d                                             ! Dummy
-     1  ,bias_obs_3d                                       ! Dummy
-     1  ,r0_array_out                                      ! Dummy
-     1  ,weight_bkg_const                                  ! Input
-     1  ,grid_spacing_m,max_snd_grid                       ! Input
-     1  ,r_missing_data                                    ! Input
-     1  ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)
+     1      ,weight_bkg_const                                  ! Input
+     1      ,grid_spacing_m,max_snd_grid                       ! Input
+     1      ,r_missing_data                                    ! Input
+     1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
 
         if(istatus .ne. 1)then
             write(6,*)' Bad istatus returned from analyze_tsnd'
@@ -294,14 +278,10 @@ cdis
 
 
         subroutine analyze_tsnd(n_tsnd,n_good_tsnd,ni,nj,nk,l_good_tsnd     
-     1  ,bias_3d
-     1  ,wt_3d                                             ! Dummy
-     1  ,bias_obs_3d                                       ! Dummy
-     1  ,r0_array_out                                      ! Dummy
-     1  ,weight_bkg_const                                  ! Input
-     1  ,grid_spacing_m,max_snd_grid                       ! Input
-     1  ,r_missing_data                                    ! Input
-     1  ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)
+     1      ,weight_bkg_const                                  ! Input
+     1      ,grid_spacing_m,max_snd_grid                       ! Input
+     1      ,r_missing_data                                    ! Input
+     1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
 
 !       Original Version        Steve Albers
 
