@@ -566,7 +566,8 @@
      The landuse data is global 30" data and required to compute a
      land/water mask. The mask is used during localization to force consistency
      between the other geography data at land-water boundaries. Land fraction 
-     is derived from the landuse data, using the water category.
+     is derived from the landuse data using the water category, with valid
+     values ranging continuously between 0.0 and 1.0.
 
      The global albedo climatology database has less resolution than either
      the terrain or landuse data.  The albedo is approximately 8.6 minutes
