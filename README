@@ -2638,6 +2638,8 @@ The surface package collects surface data from the LSO intermediate data file
 and fields from selected background models.  Places surface data on LAPS grid
 and performs a simple quality control of the obs (climo + standard deviation
 checks). The quality control is described in the section below at (3.3.2.2).  
+A flow chart can be seen at this URL:
+http://laps.fsl.noaa.gov/albers/laps/talks/sfc/Sfc_anal.gif
 
 The background fields come from the locally-run LAPS model (FSF file), other
 large-scale models (RUC, ETA, AVN - via the LGB file), or a previous analysis 
