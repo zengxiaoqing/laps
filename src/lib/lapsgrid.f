@@ -69,7 +69,6 @@ c
 
 !       directory = ''
 
-
         var = 'LAT'
         call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
      1                                 ,lat,grid_spacing_m,istatus)
@@ -103,6 +102,11 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         if(istatus .ne. 1)then
             write(6,*)' Error in get_laps_config'
             return
+        endif
+
+        call check_domain(lat,lon,ni,nj,grid_spacing_m,5,istat_chk)
+        if(istat_chk .ne. 1)then
+            write(6,*)' Warning or Error in check_domain'
         endif
 
         return
@@ -184,6 +188,11 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         if(istatus .ne. 1)then
             write(6,*)' Error in get_laps_config'
             return
+        endif
+
+        call check_domain(lat,lon,ni,nj,grid_spacing_m,5,istat_chk)
+        if(istat_chk .ne. 1)then
+            write(6,*)' Warning or Error in check_domain'
         endif
 
         return
@@ -287,11 +296,16 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
             return
         endif
 
+        call check_domain(lat,lon,ni,nj,grid_spacing_m,5,istat_chk)
+        if(istat_chk .ne. 1)then
+            write(6,*)' Warning or Error in check_domain'
+        endif
+
         return
 
         end
 
-
+!********* THE PORTION ABOVE IS THE SAME IN OLDLAPS AND NEWLAPS **************
 
         subroutine get_laps_config(grid_fnam,istatus)
 
