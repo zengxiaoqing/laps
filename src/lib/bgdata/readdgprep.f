@@ -141,9 +141,9 @@ c
          do j=1,ny
          do i=1,nx
 
-            sh(i,j,k)=make_ssh(prk(k),
-     .                         tp(i,j,k)-273.15,
-     .                         sh(i,j,k)/100.,0.)*0.001
+            sh(i,j,k)=make_ssh(prk(k)
+     .                        ,tp(i,j,k)-273.15
+     .                        ,sh(i,j,k)/100.,-47.)*0.001
 
             pr(i,j,k)=prk(k)
 
@@ -164,7 +164,7 @@ c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
 
             prsfc=pr_sfc(i,j)/100.
             qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.,0.)
-            td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc,0.)+273.15
+            td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc,-47.)+273.15
 
 c           it=tp_sfc(i,j)*100
 c           it=min(45000,max(15000,it))
@@ -343,13 +343,55 @@ c
 
 188   continue
 c
-c As at AFWA, rh above level  (300mb)=10%
+c'set upper level rh to 10%' !This is above 100mb.
+c also have found some rh=0.0 in avn fields.
 c
-c     print*,'set upper level rh to 10%'
-      do k=nshl+1,nz
+
       do j=1,ny
       do i=1,nx
-         sh(i,j,k)=10.0
+
+         if(sh_sfc(i,j).le.0.0)then
+            if( (i.gt.1.and.i.lt.nx) .and.
+     .          (j.gt.1.and.j.lt.ny) )then
+
+                 sh_sfc(i,j)=(sh_sfc(i+1,j)+sh_sfc(i-1,j)+
+     .                     sh_sfc(i,j+1)+sh_sfc(i,j-1) )/4.0
+            elseif(i.eq.1)then
+                 sh_sfc(i,j)=sh_sfc(i+1,j)
+            elseif(j.eq.1)then
+                 sh_sfc(i,j)=sh_sfc(i,j+1)
+            elseif(i.eq.nx)then
+                 sh_sfc(i,j)=sh_sfc(i-1,j)
+            elseif(j.eq.ny)then
+                 sh_sfc(i,j)=sh_sfc(i,j-1)
+            endif
+         endif
+      enddo
+      enddo
+
+c     do k=nshl+1,nz
+
+      do k=1,nz
+      do j=1,ny
+      do i=1,nx
+
+         if(k.gt.nshl)sh(i,j,k)=10.0
+         if(sh(i,j,k).le.0.0)then
+            if( (i.gt.1.and.i.lt.nx) .and.
+     .          (j.gt.1.and.j.lt.ny) )then
+ 
+                 sh(i,j,k)=(sh(i+1,j,k)+sh(i-1,j,k)+
+     .                      sh(i,j+1,k)+sh(i,j-1,k) )/4.0
+            elseif(i.eq.1)then
+                 sh(i,j,k)=sh(i+1,j,k)
+            elseif(j.eq.1)then
+                 sh(i,j,k)=sh(i,j+1,k)
+            elseif(i.eq.nx)then
+                 sh(i,j,k)=sh(i-1,j,k)
+            elseif(j.eq.ny)then
+                 sh(i,j,k)=sh(i,j-1,k)
+            endif
+         endif
       enddo
       enddo
       enddo

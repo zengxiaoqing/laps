@@ -12,7 +12,7 @@
      + , max_forecast_delta
       integer ivaltimes(10), ntbg
       character*4   af
-      character*200 bg_names(max_files), fullname
+      character*100 bg_names(max_files), fullname
 C     integer nf_status, nf_vid, nf_fid, istatus
       integer istatus
       logical use_analysis
@@ -63,13 +63,12 @@ C
             call s_len(names(i),j)
             j=j-13
             if (j .ge. 0) then
-
-c              if (names(i)(j+1:j+1) .eq. '1' .or. 
-c    .              names(i)(j+1:j+1) .eq. '9') then
-               
+               if(index(names(i)(j+1:j+13),'/').eq.0 .and.
+     +              names(i)(j:j).eq.'/') then
                   if (bgmodel .eq. 4) then
+                     print *, 'SBN file:',names(i)(j+1:j+13)
                      fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
-
+                     
                      call get_sbn_model_id(names(i),cmodel,ivaltimes,
      +                    ntbg)
 
@@ -81,15 +80,16 @@ c    .              names(i)(j+1:j+1) .eq. '9') then
                            write(af,'(i4.4)') ivaltimes(k)/3600
                            bg_files=bg_files+1
                            bg_names(bg_files)=fname//af
-c                           print*,'SBN: ',bg_names(bg_files),bg_files
+c     print*,'SBN: ',bg_names(bg_files),bg_files
                         enddo
                      endif
-                  else if(names(i)(j:j) .eq. '/') then
+                  else 
+c     if(names(i)(j:j) .eq. '/') then
                      bg_files=bg_files+1
                      bg_names(bg_files)=names(i)(j+1:j+13)
-c                     print*,'NOTSBN: ',bg_names(bg_files),bg_files
+c     print*,'NOTSBN: ',bg_names(bg_files),bg_files
                   endif
-c              endif
+               endif
             endif
          enddo
 
