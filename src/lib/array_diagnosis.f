@@ -50,7 +50,7 @@ c
         cnt0=0
         do j=1,jmax
         do i=1,imax
-          if(a(imax,jmax).eq.0) then
+          if(a(i,j).eq.0.0) then
             cnt0=cnt0+1.
           else
             suma=suma+a(i,j)

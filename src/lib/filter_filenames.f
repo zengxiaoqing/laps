@@ -23,23 +23,25 @@ c      this represents the FA (Taiwan) filename type for the the FA model.
 c
        implicit none
 
-       integer*4 max_numeric_char
+       integer   max_numeric_char
        parameter(max_numeric_char = 10)
-       integer*4 max_2letter_strings
+       integer   max_2letter_strings
        parameter(max_2letter_strings = 3)
-       integer*4 max_files_filtered
+       integer   max_files_filtered
        parameter(max_files_filtered=3000)
 
-       integer*4 max_files
-       integer*4 i_nbr_files_in
-       integer*4 i_nbr_files_out
-       integer*4 i_fnames_filtered
-       integer*4 i_files_qualifying
-       integer*4 lend
-       integer*4 istatus
-       integer*4 i,j,k,n
+       integer   max_files
+       integer   i_nbr_files_in
+       integer   i_nbr_files_out
+       integer   i_fnames_filtered
+       integer   i_files_qualifying
+       integer   lend
+       integer   istatus
+       integer   i,j,k,n
 
        logical found_qualifying
+
+       include 'filter_fnames.inc'   !contains lwant_filter_output logical
 
        character*(*) c_fnames(max_files)
        character*255 c_files_qualifying(max_files_filtered)
@@ -53,6 +55,7 @@ c
 
        i_fnames_filtered = 0
        i_files_qualifying= 0
+       istatus = 1
 
        do i=1,i_nbr_files_in
 
@@ -89,17 +92,16 @@ c
           c_fnames(i)=' '
        enddo
 
+       if(i_fnames_filtered.gt.0.and.lwant_filter_output)then
+        do i=1,i_fnames_filtered
+           n=index(c_fnames_filtered(i),' ')
+           write(6,*)' filtered filename = ',c_fnames_filtered(i)(1:n)
+        enddo
+       endif
        if(i_fnames_filtered.gt.0)then
-          write(6,*)'Filenames have been filtered'
-          do i=1,i_fnames_filtered
-             n=index(c_fnames_filtered(i),' ')
-             write(6,*)i,' filtered fname = ',c_fnames_filtered(i)(1:n)
-          enddo
           do i=1,i_files_qualifying
              c_fnames(i)=c_files_qualifying(i)
           enddo
-c      else
-c         write(6,*)'No filenames have been filtered'
        endif
 
        do i=1,i_files_qualifying
@@ -107,6 +109,5 @@ c         write(6,*)'No filenames have been filtered'
        enddo
        i_nbr_files_out = i_files_qualifying
 
-       istatus=1
        return
        end
