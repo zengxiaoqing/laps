@@ -1493,7 +1493,7 @@ c
 
         elseif(c_type(1:2) .eq. 'lc')then ! Satellite/Cloud data in LCV
             write(6,122)
- 122        format(5x,'Select field name [s8a, s3a, d39] :    ',$)
+ 122        format(5x,'Select field name [s8a, s3a, d39, alb] :    ',$)       
             read(lun,*)var_2d_in
             call upcase(var_2d_in,var_2d_in)
 
@@ -1540,8 +1540,8 @@ c
 
             endif
 
-            c33_label='LAPS LCV/'//var_2d_in(1:3)//' '
-     1              //comment_2d(1:14)//' Deg C'
+!           c33_label='LAPS LCV/'//var_2d_in(1:3)//' '//comment_2d(1:20)
+            c33_label='LAPS LCV '//comment_2d(1:24)
 
             if(var_2d_in .eq. 'S8A' .or. var_2d_in .eq. 'S3A')then
               vasmx=-255.
@@ -1562,7 +1562,7 @@ c
               scale_l = +40.          ! for image plots
               scale_h = -50.          ! for image plots
             elseif(var_2d_in.eq.'ALB')then
-              c33_label='LAPS Albedo '//c_sat_id(k)
+!             c33_label='LAPS Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
               cloud_albedo = .4485300
               scale_h = cloud_albedo  ! for image plots
@@ -1575,7 +1575,7 @@ c
               scale_l = -10           ! for image plots
               scale_h = +10.          ! for image plots
             else
-              c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
+!             c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 230.          ! for image plots
             endif
