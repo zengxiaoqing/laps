@@ -331,6 +331,7 @@ foreach $exe (@LAPS_EXE){
 
                 if($node_type eq "rt"){
                     print TFILE "export PBS_SERVER_LIST=/PBSHOME/lib/server.rt\n";
+                    print TFILE "export PBS_MODE=1\n";
                     print TFILE "  \n";
                 }
 
