@@ -4,19 +4,9 @@
 #
 #
 
-LAPSROOT = /usr/nfs/lapb/parallel/laps
-DOMAIN   = /data/lapb/parallel/laps/data
-
+LAPSROOT =../../..
 
 include $(LAPSROOT)/src/include/makefile.inc
-
-KRCFLAGS=-g $(INC)
-
-
-
-
-
-
 
 
 .SUFFIXES:
