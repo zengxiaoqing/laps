@@ -233,7 +233,7 @@ foreach $exe (@LAPS_EXE){
 
                 if($execount > 1){ # after start
                     print TFILE "  \n";
-                    print TFILE "qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
+                    print TFILE "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
                     print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
                     close(TFILE);
@@ -285,7 +285,7 @@ foreach $exe (@LAPS_EXE){
             close(TFILE);
 
             chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
-            $command = "qsub $LAPS_LOG_PATH/run_qsub_1.sh";
+            $command = "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_1.sh";
             print "Executing $command\n";
             system("$command");
 
