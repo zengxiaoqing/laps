@@ -171,6 +171,9 @@ c                                           stn char array.  Rm *4 from all
 c                                           declarations. Don't calc subsitute
 c                                           T/Td backgrounds here. Don't use
 c                                           sat data in T spline if no bkg.
+c                               08-13-99  Change spline call to allow diff wts
+c                                           for diff variables.  Fix for SGI..
+c                                           constants passed to subroutines.
 c
 c*****************************************************************************
 cx
@@ -179,7 +182,8 @@ cx
 c
 	parameter(roi = 20)	  !radius of influence for Barnes 
 	parameter( 	          !QC parameters: # of standard deviations 
-     &            bad_p  = 5.0,		! for reduced pressure
+     &            bad_p  = 3.0,		! for reduced pressure
+     &            bad_mp = 4.0,		! for MSL pressure
      &            bad_t  = 3.0,		! for temperature
      &            bad_td = 4.0,		! for dewpoint
      &            bad_u  = 4.0,		! for u-wind
@@ -296,6 +300,8 @@ c
 c
 c.....	Start...set up constants, initialize arrays, etc.
 c
+	call tagit('laps_vanl', 19990813)
+	zcon = 0.
 	ibt = 1      !assume have sat data...code cks later.
 	grid_fnam_common = laps_domain
 	jstatus(3) = -1		 ! start w/this until changed
@@ -303,11 +309,8 @@ c
 	imax = ni
 	jmax = nj
 	kmax = nk
-	beta = 3.
-	betac = .3
-	itmax = 100
-	alf = 100.
-	alfg = 1000.
+	itmax = 60               !max num interations for leib
+	erf = 0.1                !error in leib
 	err = .0003
 	ovr = 1.4
 	scale = 0.
@@ -551,11 +554,6 @@ c
 c.....	Now force the t analysis with the tb8 and background data.
 c
 	name = 'NOPLOT'	
-	gamma = 5.
-	if(ibt .eq. 0) then	! data not there
-cc	   call zero(tb8, imax,jmax)
-	   gamma = 0.
-	endif
 	bad_tm = bad_t
 	if(back_t .ne. 1) bad_tm = bad_t * 2.
 	print *,' '
@@ -564,9 +562,15 @@ cc	   call zero(tb8, imax,jmax)
  7119	format(2i5,f10.2)
 
 c	return
-
-        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb81,cormax,err,
+	alf = 10000.
+	alf2a = 0.
+	beta = 100.
+	gamma = 5.
+	if(ibt .eq. 0) gamma = 0.
+        call spline(t,t1,t_bk,alf,alf2a,beta,gamma,tb81,cormax,err,
      &        imax,jmax,roi,bad_tm,imiss,mxstn,obs_error_t,name)
+c
+cc	go to 887
 c
 c.....	Now call the solution algorithm for the dew point.
 c
@@ -576,10 +580,14 @@ c	beta_td = 3.0
 !	read(5,*) beta_td
 !	write(6,19998) beta_td
 19998	format(' Using beta_td of: ',f10.2)
+	print *,' '
 	print *,'  At spline call for td'
 	bad_tmd = bad_td
 	if(back_t .ne. 1) bad_tmd = bad_td * 2.
-        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,err,
+	alf = 10000.
+	alf2a = 0.
+	beta = 100.  
+        call spline(td,td1,td_bk,alf,alf2a,beta,zcon,z,cormax,err,  !gamma = 0
      &        imax,jmax,roi,bad_tmd,imiss,mxstn,obs_error_td,name)
 c
 c.....	Convert the analysed perturbations back to t, td, and tb8 (do the
@@ -711,35 +719,55 @@ c
 	enddo !j
 c
 c..... Call the solution algorithm for the rest of the fields.
+c..... Note: 'gamma' (satellite weight) is zero for these.
 c
+	print *,' '
 	print *,'  At spline call for u'
 	bad_uw = bad_u
 	if(back_uv .ne. 1) bad_uw = bad_u * 2.
-	call spline(u,u1,u_bk,alf,wt_u,beta,0.,z,cormax,err,imax,jmax,
+	alf = 10000.
+	alf2a = 0.
+	beta = 100.
+	call spline(u,u1,u_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
      &        roi,bad_uw,imiss,mxstn,obs_error_wind,name)
 c
+	print *,' '
 	print *,'  At spline call for v'
 	bad_vw = bad_v
 	if(back_uv .ne. 1) bad_vw = bad_v * 2.
-	call spline(v,v1,v_bk,alf,wt_v,beta,0.,z,cormax,err,imax,jmax,
+	alf = 10000.
+	alf2a = 0.
+	beta = 100.
+	call spline(v,v1,v_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
      &        roi,bad_vw,imiss,mxstn,obs_error_wind,name)
 c
+	print *,' '
 	print *,'  At spline call for red_p'
 	bad_rp = bad_p
 	if(back_rp .ne. 1) bad_rp = bad_p * 2.
-	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,z,cormax,err,imax,
+	alf = 10000.
+	alf2a = 0.
+	beta = 100.
+	call spline(rp,rp1,rp_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,
      &        jmax,roi,bad_rp,imiss,mxstn,obs_error_redp,name)
 c
+	print *,' '
 	print *,'  At spline call for msl p'
-	bad_mp = bad_p
-	if(back_mp .ne. 1) bad_mp = bad_p * 2.
-	call spline(mslp,mslp1,mslp_bk,alf,wt_mslp,beta,0.,z,cormax,
+cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
+	alf = 10000.
+	alf2a = 0.
+	beta = 100.
+	call spline(mslp,mslp1,mslp_bk,alf,alf2a,beta,zcon,z,cormax,
      &      err,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
 c
+	print *,' '
 	print *,'  At spline call for visibility'
 	bad_vs = bad_vis
 	if(back_vis .ne. 1) bad_vs = bad_vis * 2.
-	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,z,cormax,err,
+	alf = 10000.
+	alf2a = 0.
+	beta = 100.
+	call spline(vis,vis1,vis_bk,alf,alf2a,beta,zcon,z,cormax,err,
      &        imax,jmax,roi,bad_vs,imiss,mxstn,obs_error_vis,name)
 c
 c.....	If no background fields are available, skip over the variational
@@ -825,7 +853,7 @@ c
 	  scale=0.
 c
 	  call zero(z, ni,nj)
-	  call leib(p_a,f,60,.1,imax,jmax,z,z,z,z,a,dx,dy,1.)
+	  call leib(p_a,f,itmax,erf,imax,jmax,z,z,z,z,a,dx,dy)
 c
 	  write(6,1200) filename,gam,del,dt
 1200	  format(1x,'wind and pressure analysis for ',a9/1x,' with gam,
@@ -925,7 +953,7 @@ c
 c
 c.....  Adjust visibility analysis.
 c
-        call enhance_vis(i4time,vis,rh,topo,imax,jmax,kcloud)
+	call enhance_vis(i4time,vis,rh,topo,imax,jmax,kcloud)
 	call conv_miles2m(vis,vis,imax,jmax)	! conv miles to meters
 	vis_mx = -1.e25
 	vis_mn =  1.e25
