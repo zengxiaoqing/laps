@@ -13,6 +13,7 @@
  FILE_NUM3 = .FALSE.,
  V5D_COMPRESS = 1,
  DO_SMOOTHING = .false.,
+ USE_MODEL_PBL = .TRUE.,
  TABLE_VERSION = 2,
  CENTER_ID = 59,
  SUBCENTER_ID = 2, 
@@ -65,6 +66,10 @@ c  VIS5D_COMPRESS:  Set to 1, 2, or 4 for maximum to no compression
 c   for Vis5D files.
 c  DO_SMOOTHING:  True causes most fields to be smoothed in output. 
 c   Exceptions are precip and cloud fields.
+c  USE_MODEL_PBL: Logical.  If true, lfmpost will attempt to use the
+c    models PBL height if available and valid.  Otherwise, it will
+c    generate a pbl height internally.  For now, WRF always uses an 
+c    internally generated value.
 c  TABLE_VERSION/CENTER_ID/SUBCENTER_ID:  Used to 
 c    control these values in the PDS section of the output GRIB
 c    files.  NOTE:  GRIB output uses FSL/LAPB (Center 59/Subcenter 2)
