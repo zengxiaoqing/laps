@@ -1,6 +1,6 @@
 
 
-        subroutine vis_to_albedo(i4time,
+        subroutine vis_to_albedo(i4time,csatid,
      &                           r_norm_vis_cnts_in,
      &                           lat,lon,
      &                           imax,jmax,
@@ -21,6 +21,8 @@ c                                          albedo written by S. Albers.
 c     S. Albers       2-Mar-1995           Set threshold solar alt to 15.
 c     S. Albers      22-Nov-1995           Extra phase angle constraint
 c     S. Albers      22-Aug-1996           Extra specular ref angle constraint
+c     J. Smart        8-Apr-1998           Added csatid to argument list, added to
+c                                          formatted output.
 c
 C***Parameter and variables list
 c
@@ -54,6 +56,7 @@ c
         Integer*4       i,j
 
         Real*4 arg
+        Character*(*)   csatid
 c
 c     ------------------------- BEGIN ---------------------------------
 
@@ -120,9 +123,9 @@ c
 
          write(6,*)' n_missing_albedo = ',n_missing_albedo
          write(6,*)'       Mins and Maxs'
-         write(6,105)albedo_min,albedo_max
+         write(6,105)csatid,albedo_min,albedo_max
 
- 105     format('  ALBEDO      ',2f10.2)
+ 105     format(1x,a6,'  ALBEDO      ',2f10.2)
 
         Return
         End

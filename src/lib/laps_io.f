@@ -1035,7 +1035,7 @@ c
               call make_fnam_lp(i4times(j),asc9_tim,istatus)
 
               write(6,11)satdir(1:lsdir),asc9_tim,ext(1:5),var_2d
-11            format(' Reading 2d ',a51,1x,a9,1x,a5,1x,a3)
+11            format(' Reading 2d ',a61,1x,a9,1x,a5,1x,a3)
 
               CALL READ_LAPS_DATA(i4times(j),satdir,EXT,imax
      1            ,jmax,1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D
