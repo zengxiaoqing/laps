@@ -624,14 +624,8 @@
      (topo_30s, landuse_30s, and albedo_ncep) are defined as
      runtime parameters within the 'nest7grid.parms' file (Sec 2.2.6). 
 
-     In addition to the geography being available on the LAPS Home Web page
-     (software link), the geography data is also available at:
-
-                  -----------------------------------
-                  ftp://ftp.fsl.noaa.gov/pub/frd-laps
-                  -----------------------------------
-
-     You will find the following global data sets at this ftp site. Some of
+     The geography data is available on the LAPS Home Web page (software link).
+     You will find the following global data sets at this web/ftp site. Some of
      the data have been subdivided into "quartershperes" for easier downloading.
      Select the files needed for your application or get all of them if you
      intend to generate localizations around the entire globe.
@@ -1121,6 +1115,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            to our intermediate "PIN" file. A NIMBUS equivalent NetCDF database 
            is available (with some restrictions) on the Web via MADIS at
            http://www-sdd.fsl.noaa.gov/MADIS/
+
+           Note the TAMDAR is presently being screened out from the NIMBUS
+           database while this data source is being validated.
 
                       ----   2.3.6  RAOB / Dropsonde / Radiometer ---
 
@@ -3609,7 +3606,8 @@ Source directory: 'laps/src/lapsprep'
 Process: wfoprep.exe - Processes AWIPS/WFO large-scale model forecast files 
                        into formats that can be used as lateral boundary
                        conditions to initialize a local forecast model 
-                       (e.g., MM5, RAMS, WRF)
+                       (e.g., MM5, RAMS, WRF). The input files come from
+                       the SBN and are in NetCDF format.
    
      (author: Brent Shaw)
 
