@@ -2870,6 +2870,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/wind3d.pl
           etc/window_domain_rt.pl
           etc/wait4lapsprep.pl
+          etc/wrfpost.pl
           etc/xferData.pl src/include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -2998,6 +2999,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/wind3d.pl
           etc/window_domain_rt.pl
           etc/wait4lapsprep.pl
+          etc/wrfpost.pl
           etc/xferData.pl"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
