@@ -33,7 +33,7 @@
 #
 # -e                   Extend time in hours (allow for long runs beyond cycle time)
 #
-# -q  A                Use QSUB (e.g. on 'jet') where A is the project name
+# -q  A                Use QSUB_WAIT (e.g. on 'jet') where A is the project name
 #
 # -n                   Node type to be used with -q (default=comp)
 #
@@ -290,7 +290,7 @@ foreach $exe (@LAPS_EXE){
         }
 
     }else{ # -q option
-#       Set up QSUB so that each process (one or more executables in each) submits the next qsub process at the end
+#       Set up QSUB_WAIT so that each process (one or more executables in each) submits the next qsub_wait process at the end
         $execount = $execount + 1;
         $exenext = $execount + 1;
 
@@ -311,13 +311,13 @@ foreach $exe (@LAPS_EXE){
 
                 if($execount > 1){ # after start
                     print TFILE "  \n";
-                    print TFILE "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
+                    print TFILE "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
                     print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
                     close(TFILE);
                 }
 
-#               Start new qsub script
+#               Start new qsub_wait script
                 $scriptcount = $scriptcount + 1;
                 $scriptnext = $scriptcount + 1;
 
@@ -345,7 +345,7 @@ foreach $exe (@LAPS_EXE){
                 print TFILE "  \n";
 #               print TFILE "date >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
 #               print TFILE "  \n";
-#               print TFILE "echo 'Running (from qsub) $LAPSROOT/bin/$exe' >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
+#               print TFILE "echo 'Running (from qsub_wait) $LAPSROOT/bin/$exe' >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
             }
 
 	}
@@ -373,13 +373,13 @@ foreach $exe (@LAPS_EXE){
         if($execount == $nexe){ # Last on the list
 
             print TFILE "  \n";
-            print TFILE "echo `date` [finished qsub scripts] >> $LAPS_LOG_PATH/runtime.log\n";
+            print TFILE "echo `date` [finished qsub_wait scripts] >> $LAPS_LOG_PATH/runtime.log\n";
             print TFILE "  \n";
             print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable # $execount\n";
             close(TFILE);
 
             chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
-            $command = "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_1.sh";
+            $command = "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_1.sh";
             print "Executing $command\n";
             system("$command");
 
@@ -398,10 +398,10 @@ foreach $exe (@LAPS_EXE){
 }
 
 $t = gmtime;
+my $date = `date`;
+print "$date\n";
 
 print LOG "$t\n";
-
-
 
 if($fxa_sys!=0 || ($opt_w && (! $opt_q) ) ){
     print LOG $t." Running wfo postprocessing\n";
@@ -415,6 +415,37 @@ if($fxa_sys!=0 || ($opt_w && (! $opt_q) ) ){
 #   system("/usr/nfs/bin/perl $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
 
     &forksub($sys,$lockfile);
+
+}elsif($opt_w && $opt_q){
+
+  if (index($LAPS_DATA_ROOT,"usfsfire/f1") != -1) {
+
+    my $filetime;
+    my $dummy;
+    my $LAPSTIME = "$LAPS_DATA_ROOT/time/systime.dat";
+    open(LAPSTIME,$LAPSTIME) or die "Can't open $LAPSTIME";
+    ($filetime,$dummy,$dummy,$dummy) = <LAPSTIME>;
+    close(LAPSTIME);
+    chomp($filetime); 
+    $filetime =~ s/ *//;  #fortran write may have added leading spaces
+    $filetime= $filetime - 315619200;
+
+    my $ss;
+    my $mm;
+    my $hh;
+    my $dd;
+    my $mon;
+    my $yy;
+    my $filename;
+    ($ss,$mm,$hh,$dd,$mon,$yy) = gmtime($filetime);
+    $mon++;
+    $yy += 1900;
+    $filename = sprintf "%4.4d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
+
+    $sys = "@PERL@ $LAPSROOT/etc/putFile_fire1.pl $LAPSROOT $filename";
+    system("$sys");
+
+  }
 
 }
 
