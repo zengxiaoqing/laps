@@ -44,6 +44,7 @@ c     get the  filenames available from get_filenames
       endif
 
       maxhash = ' '
+      hash = ' '
 
       do i = 1,numoffiles
          hashpoint = index (filenames(i),'tpw')
