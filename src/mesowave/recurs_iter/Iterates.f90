@@ -214,7 +214,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
         IF (id .EQ. 6) THEN
 	   al(1:3,id) = al(1:3,id)*0.9
         ELSE
-           al(1:3,id:idp) = al(1:3,id:idp)*0.8
+           al(1:3,id:idp) = al(1:3,id:idp)*0.9
 	ENDIF
      ENDIF
 
@@ -224,6 +224,13 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
         a(1:n(1),1:n(2),1:n(3),id:idp)
 
   ENDDO
+
+  PRINT*,'MAX DIFF IN T: ', &
+	MAXVAL(s(nfic+1:nfic+nx,nfic+1:nfic+ny,n(3),1)- &
+	       bkgd(1:nx,1:ny,n(3),1)), &
+	MINVAL(s(nfic+1:nfic+nx,nfic+1:nfic+ny,n(3),1)- &
+	       bkgd(1:nx,1:ny,n(3),1))
+  PRINT*,'NXNYid: ',nx,ny,id,idp,n
 
   ! Land/water weight:
   IF ((id .NE. 6) .AND. (id .NE. 4)) THEN
