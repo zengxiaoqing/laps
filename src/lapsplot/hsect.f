@@ -985,7 +985,7 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'hues')
+     1                        ,NX_L,NY_L,r_missing_data,'spectralr')       
 
                 call move(w_2d,field_2d,NX_L,NY_L)
 
@@ -1060,7 +1060,7 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'hues')
+     1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
 
             elseif(c_field .eq. 'va')then ! Vorticity Advection Field
@@ -1431,8 +1431,10 @@ c       include 'satellite_dims_lvd.inc'
                 cint = 0.
             elseif(var_2d(1:3) .eq. 'PDM')then
                 clow = 0.
-                chigh = 2400.
-                cint = 0.
+                chigh = 8000.
+                cint = 1000.
+                units_2d = 'FT'
+                scale = 1. / ft_per_m
             elseif(var_2d(1:3) .eq. 'VNT')then
                 if(c_vnt_units .eq. 'KT-FT')then
                     clow = 150.
@@ -2142,7 +2144,7 @@ c
 
             elseif(c_field(1:2) .eq. 'lr')then ! Low Lvl Reflectivity data
                 if(c_type .eq. 'rf')then
-                    write(6,*)' Getting analyzed lmr file'
+                    write(6,*)' Getting analyzed lmt file'
 
                     i4time_hour = (i4time_radar+laps_cycle_time/2)
      1                              /laps_cycle_time * laps_cycle_time
@@ -4433,7 +4435,7 @@ c                   cint = -1.
      1                         ,'haines',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'FWI')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,40.
-     1                         ,'spectral',n_image,scale,'hsect') 
+     1                         ,'spectralr',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'PTP')then
                     call ccpfil(field_2d,NX_L,NY_L,50000.,110000.
      1                         ,'spectral',n_image,scale,'hsect') 
