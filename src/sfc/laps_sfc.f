@@ -246,8 +246,8 @@ c
 	call cv_i4tim_asc_lp(i4time, atime, status)	   ! get the atime
 	call make_fnam_lp(i4time_last,filename_last,istatus)  ! make earlier filename	
 c
-        del = 1.e6
-	gam = .0008
+        del = 1.3e5
+	gam = .000004
 	ak = 1.e-6
 c
 c.....  Set the namelist variables to their defaults.  If there's a problem reading
@@ -711,8 +711,8 @@ c.....	Call LAPSVANL to do the actual variational analysis, and calculate
 c.....	derived variables, etc.  The output file goes to the lapsprd 
 c.....	directory (machine dependent) and has the extension '.lsx'.
 c
-	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,laps_cycle_time,
-     &     itheta,
+	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,
+     &     itheta,laps_cycle_time,
      &     dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g,

@@ -838,6 +838,7 @@ c	  open(51,file='../static/drag_coef.dat',
      &         form='unformatted',status='old')
 	  read(51) akk
 	  close(51)
+          ro=.667  ! ro is V/fL where L is ave data distance *4
 	  call nonlin(nu,nv,u,v,u_bk,v_bk,imax,jmax,dx,dy)
 	  call frict(fu,fv,u,v,u_bk,v_bk,imax,jmax,ak,akk)
 c
@@ -856,7 +857,7 @@ c
      &         fu(i-1,j-1))/ dx(i,j) + (fv(i,j+1) - fv(i,j-1) + 
      &         fv(i-1,j+1) - fv(i-1,j-1)) / dy(i,j)) * .25
 	    f(i,j) = rho * (-ddiva + fo(i,j) * vort(i,j)) +
-     &         a(i,j) * rp(i,j) - rho * anonlinterm + 
+     &         a(i,j) * rp(i,j) - rho * ro* anonlinterm + 
      &         rho * frictterm
 	    f(imax,j) = f(imax-1,j)
 	    f(i,jmax) = f(i,jmax-1)
@@ -869,21 +870,21 @@ c
 	  call zero(z, ni,nj)
 	  call leib(p_a,f,itmax,erf,imax,jmax,z,z,z,z,a,dx,dy)
 c
-	  write(6,1200) filename,gam,del,dt
-1200	  format(1x,'wind and pressure analysis for ',a9/1x,' with gam,
-     &           del, and dt = ',3e12.4)
+	  write(6,1200) filename,ro,gam,del,dt
+1200	  format(1x,'wind and pressure analysis for ',a9/1x,' with ro, 
+     &      gam,  del, and dt = ',4e12.4)
 c
 	  do j=2,jmax-1
 	  do i=2,imax-1
 	    dpdy = (p_a(i,j+1) - p_a(i,j)) / dy(i,j)
 	    dpdx = (p_a(i+1,j) - p_a(i,j)) / dx(i,j)
-	    dvdtnf= (dv(i,j)+dv(i,j+1)+dv(i-1,j+1)+dv(i-1,j))/4./dt
-     &             +(nv(i,j)+nv(i,j+1)+nv(i-1,j+1)+nv(i-1,j))*.25
+	    dvdtnf= ro*(dv(i,j)+dv(i,j+1)+dv(i-1,j+1)+dv(i-1,j))/4./dt
+     &             +ro*(nv(i,j)+nv(i,j+1)+nv(i-1,j+1)+nv(i-1,j))*.25
      &             -(fv(i,j)+fv(i,j+1)+fv(i-1,j+1)+fv(i-1,j))*.25
 	    u_a(i,j) = (u(i,j) - del * fo(i,j)*(dvdtnf + dpdy / rho)) /
      &                 (1. + del * fo2(i,j))
-	    dudtnf= (du(i,j)+du(i+1,j)+du(i+1,j-1)+du(i,j-1))/4./dt
-     &             +(nu(i,j)+nu(i+1,j)+nu(i+1,j-1)+nu(i,j-1))*.25
+	    dudtnf=ro* (du(i,j)+du(i+1,j)+du(i+1,j-1)+du(i,j-1))/4./dt
+     &             +ro*(nu(i,j)+nu(i+1,j)+nu(i+1,j-1)+nu(i,j-1))*.25
      &             -(fu(i,j)+fu(i+1,j)+fu(i+1,j-1)+fu(i,j-1))*.25
             v_a(i,j) = (v(i,j) + del * fo(i,j)*(dudtnf + dpdx / rho)) /
      &                 (1. + del * fo2(i,j))
