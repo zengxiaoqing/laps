@@ -1160,7 +1160,7 @@ fi
 if test "$GCC" 
 then
   OTHERLIBS="$OTHERLIBS -lgcc"
-  CPPFLAGS = "cc -P"     
+  CPPFLAGS="cc -P"     
 fi
 
 LIBPATHFLAG=-L
