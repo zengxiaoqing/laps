@@ -673,29 +673,3 @@ c
 	 return
 c
 	 end
-
-         subroutine get_filetime_range(
-     1                i4time_ob_b,i4time_ob_a                   ! I
-     1               ,i4_contains_early,i4_contains_late        ! I
-     1               ,intvl                                     ! I
-     1               ,i4time_file_b,i4time_file_a)              ! O
-
-cdoc     Determine the range of needed filetimes, given observation time range
-cdoc     and other info about the files.
-
-         integer i4time_ob_b        ! Earliest ob we want
-         integer i4time_ob_a        ! Latest ob we want
-         integer i4_contains_early  ! Earliest contained ob relative to filetime
-         integer i4_contains_late   ! Latest contained ob relative to filetime
-         integer intvl              ! Regular time interval of files
-
-!        Range of file times we want to read
-         i4time_file_b = i4time_ob_b - i4_contains_late
-         i4time_file_a = i4time_ob_a + i4_contains_early
-
-!        Range of filenames at fixed intervals
-         i4time_file_b = ( (i4time_file_b + intvl - 1) / intvl)*intvl     
-         i4time_file_a = ( (i4time_file_a            ) / intvl)*intvl
-
-         return
-         end

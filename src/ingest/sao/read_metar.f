@@ -686,16 +686,3 @@ c
 c
       return
       end
-c
-c
-      subroutine ck_array_real(var, recNum, filval, badflag)
-c
-      integer recNum
-      real*4 var(recNum), filval, badflag
-c
-      do i=1,recNum
-         if(var(i) .eq. filval) var(i) = badflag
-      enddo !i
-c
-      return
-      end

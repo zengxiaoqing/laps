@@ -138,10 +138,10 @@
               i4_contains_late  = 0
 
           elseif(c8_raob_format(1:6) .eq. 'CWB')then 
-              filename_in = dir_in(1:len_dir_in)//'/temp.'//
-     1                                            a8_time_orig(i)
-              i4_contains_early = 21600
-              i4_contains_late  = 21600
+              filename_in = dir_in(1:len_dir_in)//'/temp'//
+     1                      a8_time_orig(i)//'.dat'
+              i4_contains_early = 0 ! 21600
+              i4_contains_late  = 0 ! 21600
 
           else
               write(6,*)' Error - Invalid c8_raob_format '

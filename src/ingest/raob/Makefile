@@ -26,7 +26,9 @@ SRC=ingest_sounding.f \
     ingest_raob_sub_af.f \
     ingest_raob_sub_cwb.f \
     ingest_satsnd.f \
-    ingest_satsnd_af.f
+    ingest_satsnd_af.f \
+    tower_driver.f \
+    get_local_towerobs.f
 
 all: exe
 
