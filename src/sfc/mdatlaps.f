@@ -102,6 +102,7 @@ c                                   Changed character array 'stn'.  Rm *4
 c                                   from all declarations.  Use Barnes for
 c                                   missing backgrounds. Turn off for now 
 c                                   MSL P calc at stns that don't report it.
+c	                07-26-99  Set back_mp off until can check.
 c
 c	Notes:
 c
@@ -534,7 +535,7 @@ c
 	   call check_field_2d(rp_bk,imax,jmax,fill_val,istatus)
 	endif
 c
-cc	back_mp = 0
+	back_mp = 0
 	if(back_mp .ne. 1) then
 	   print *,' '
 	   print *,
