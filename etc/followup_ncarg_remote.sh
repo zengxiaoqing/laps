@@ -75,3 +75,7 @@ echo "Running purger.pl on brain..."
 echo "perl /usr/nfs/lapb/builds/laps/etc/purger.pl -r -m $NUM_FILES $REMOTE_DATA_ROOT/lapsprd"
 ssh brain "perl /usr/nfs/lapb/builds/laps/etc/purger.pl -r -m $NUM_FILES $REMOTE_DATA_ROOT/lapsprd"
 
+date
+
+echo "followup_ncarg_remote.sh finished..."
+
