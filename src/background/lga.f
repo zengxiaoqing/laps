@@ -120,7 +120,7 @@ c      istat = index(laps_domain_file,' ')-1
 c         len = index(bgpaths(i),' ')
 
          call s_len(bgpaths(i),len)
-         bgpath(1:len) =  bgpaths(i)
+         bgpath =  bgpaths(i)
           
          if(bgmodel.eq.1) then
             nx_bg = 81
@@ -407,6 +407,7 @@ c         j=index(lga_names(i),' ')-18
          j=j-17
  
          if (j .ge. 0) lga_names(i)=lga_names(i)(j+1:j+13)
+ccc         print *,i,lga_names(i)
       enddo
 c
 c *** Get current time from systime.dat
@@ -448,10 +449,10 @@ c           print*,'Background older than latest available - skipping'
          endif
             
 c
-c ****** Do NOT process model fcst if fcst is greater than 12 hours.
+c ****** Do NOT process model fcst if fcst is greater than 18 hours.
 c
-         if (ihour .gt. 12) then
-            print *,'IHOUR > 12, no lga file created.'
+         if (ihour .gt. 18) then
+            print *,'IHOUR > 18, no lga file created.'
             goto 40
          endif
 c
@@ -528,6 +529,8 @@ c
          do i=1,lga_files
             if (fname .eq. lga_names(i)(1:9) .and.
      .          af(3:4) .eq. lga_names(i)(10:11)) then
+
+               print *,i,lga_names(i),':',fname,':',af
                call get_lga_source(nx_laps,ny_laps,nz_laps
      +              ,fname,af,comment(1))
                call s_len(cmodel,i)
