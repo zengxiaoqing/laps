@@ -332,7 +332,7 @@ if( $all_roots_equal eq "T" && -e "$DATAROOT/$DOMAIN_NAME/data_loc" ){
     print "copy data_loc/static and data_loc/cdl to data\n";
     system("cp -rf $DATAROOT/$DOMAIN_NAME/data_loc/static  $DATAROOT/$DOMAIN_NAME/data/");
     system("cp -rf $DATAROOT/$DOMAIN_NAME/data_loc/cdl  $DATAROOT/$DOMAIN_NAME/data/");
-    system("cp $DATAROOT/$DOMAIN_NAME/data_loc/log/laps_localization.log $DATAROOT/$DOMAIN_NAME/data/log/.");
+    system("cp $DATAROOT/$DOMAIN_NAME/data_loc/$logname/localize_domain.log $DATAROOT/$DOMAIN_NAME/data/$logname/.");
     system("rm -rf $DATAROOT/$DOMAIN_NAME/data_loc");
     $LAPS_DATA_ROOT = "$DATAROOT/$DOMAIN_NAME/data";
 }
