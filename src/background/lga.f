@@ -96,7 +96,7 @@ c
       character*9 a9
       integer i4time_now
       integer*4 max_files,bg_files
-      parameter (max_files=200)
+      parameter (max_files=500)
       character*100 names(max_files)
       character*100 reject_files(max_files)
       integer reject_cnt
@@ -446,6 +446,8 @@ c
      .           bgmodel .eq. 8) then ! Process NOGAPS data
             call read_nogaps(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .                       prbg,htbg,tpbg,shbg,uwbg,vwbg,
+     .                       htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,
+     .                       uwbg_sfc,vwbg_sfc,mslpbg,
      .                       gproj,istatus)
  
          elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
@@ -477,6 +479,8 @@ c
      .           bgmodel .eq. 7) then ! Process AVN or ETA grib data
             call read_dgprep(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg
      .                      ,prbg,htbg,tpbg,shbg,uwbg,vwbg
+     .                      ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     .                      ,uwbg_sfc,vwbg_sfc,mslpbg
      .                      ,gproj,istatus)
          elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
             call read_conus_nws(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
@@ -775,7 +779,7 @@ c
            print *,'Error writing interpolated data to LAPS database.'
          endif
 
-         if(bgmodel.eq.2.or.bgmodel.eq.4) then
+         if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.6) then
 
 c
 c Write the 2d fields to lgb
@@ -871,7 +875,7 @@ c
      .           pr,laps_cycle_time,
      .           lga_times(i-1),lga_valid(i-1),
      .           lga_times(i  ),lga_valid(i  ))
-            if(bgmodel.eq.2.or.bgmodel.eq.4) then
+            if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.6) then
                ext = 'lgb'
                call get_directory(ext,outdir,len_dir) 
                print*,outdir,ext
