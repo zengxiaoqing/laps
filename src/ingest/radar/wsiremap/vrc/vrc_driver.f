@@ -50,12 +50,11 @@ cdis
        subroutine vrc_driver_sub(nx_l,ny_l,c_raddat_type,
      +wsi_dir_path)
 c
-c Program drives transformation of NOWRAD high density (hd) radar to LAPS
+c Program drives transformation of WSI-NOWRAD high density (hd) radar to LAPS
 c domain (subroutine NOWRAD_to_LAPS). 'hd' files are assumed to reside in
-c /public/data/radar/wsi/nowrad/netcdf.  The pathway to these data can be
-c changed pretty easily.
+c /public/data/radar/wsi/nowrad/netcdf. Program also handles WSI-NOWRAD in
+c WFO (c_raddat_type = 'wfo').
 c
-
        integer extreme_thrsh_70
        integer extreme_thrsh_47
 
@@ -63,7 +62,7 @@ c
      &            extreme_thrsh_47=0.30,
      &            extreme_thrsh_70=0.10)
 
-       character*50 dir_vrc
+       character*150 dir_vrc
        character*31 ext_vrc
        character*200 dir_static
 
@@ -71,7 +70,6 @@ c
        character*10 units_ll(2),units_vrc
        character*3 var_ll(2),var_vrc
 
-       character*11 laps_dom_file
        character*4 lvl_coord_2d
 
        real*4 lat(nx_l,ny_l)
@@ -96,6 +94,8 @@ c
        integer n,nn,nd, len
        integer n_vars_req
        integer irad
+       integer msngrad,i4_check_interval
+       integer i4_total_wait,i4_thresh_age
 
        character*100 c_values_req
        character*40  c_vars_req
@@ -106,16 +106,17 @@ c
        character*14 c_filetime
        character*9 wfo_fname13_to_fname9
        character*9 c_filename
-       character*100 wsi_dir_path
-       character*255 c_filespec, fname
+       character*150 wsi_dir_path
+       character*255 c_filespec
        character*200 c_filenames_proc(max_files)
        character*3   c_raddat_type
      
        data lvl_2d/0/
 
 c
-c set filename. wfo data is 13 character. HOWEVER, if reading from /public
-c then we must fool the wfo filename to still be 9 characters.
+c set filename. wfo data is 13 character. HOWEVER, if reading from WFO-type
+c data from /public then we must fool the filename to still be 9 characters.
+c we do this by checking for "public" when the radar type is wfo.
 c
        i4time_cur = i4time_now_gg()
        c_fname_cur_temp = cvt_i4time_wfo_fname13(i4time_cur)
@@ -137,8 +138,6 @@ c
        n=index(wsi_dir_path,' ')
        write(6,*)'wsi_dir_path = ',wsi_dir_path(1:n-1)
 c
-c new code to accomodate the submission of this code by "at"
-c
        if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
        else
@@ -150,7 +149,6 @@ c
        call get_latest_file_time(c_filespec,i4time_latest_wsi)
 c
 c convert to fname9 and determine if this time has already been processed
-c into vrc.
 c
        call get_directory('vrc',dir_vrc,nd)
 c       dir_vrc = '../lapsprd/vrc/'    !this also use below for output
@@ -163,19 +161,13 @@ c       nd = index(dir_vrc,' ')-1
 c
 c get wait-for-data parameters
 c
-       call get_directory('static',fname,len)
-       
-       open(15,
-     &      file=fname(1:len)//'vrc/vrc_wait.parms',
-     &      form='formatted',err=995)
-       read(15,87)i4_check_interval
-       read(15,87)i4_total_wait
-       read(15,87)i4_thresh_age
-       close(15)
-87     format(i4)
-c
+       call read_vrc_nl(msngrad,i4_check_interval,
+     +i4_total_wait,i4_thresh_age,istatus)
+ 
        i4time_latest_diff = i4time_latest_vrc-i4time_latest_wsi
-
+c
+c wait for data if necessary
+c
        if(i4time_latest_diff .eq. 0)then
 
           i4time_latest_vrc = i4time_latest_vrc + 900
@@ -210,7 +202,7 @@ c
 
        endif
 c
-c since we found the data, set nfiles to 1 and set the filenames for input.
+c we found new data, set nfiles to 1 and set the filenames for input.
 c in theory we could find more than one new file to process. In such a case
 c nfiles > 1.
 c
@@ -218,10 +210,8 @@ c
        n=index(wsi_dir_path,' ')
        if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
-c          c_raddat_type=c_raddat_types(1)
        else
           c_filespec=wsi_dir_path(1:n-1)//'*_hd'
-c          c_raddat_type=c_raddat_types(1)
        endif
 
        call get_latest_file_time(c_filespec,i4time_latest_wsi)
@@ -248,9 +238,7 @@ c
 c
 c Definitions needed for acquiring LAPS latitude and longitude arrays.
 c
-c       dir_static='../static/'
        call get_directory('static',dir_static,len)
-ccc       laps_dom_file=laps_domain_file
        var_ll(1)='LAT'
        var_ll(2)='LON'
 
@@ -262,10 +250,10 @@ ccc       laps_dom_file=laps_domain_file
           write(*,*)'LAPS lat/lon grid obtained'
           write(*,*)
           do j=1,ny_l
-             do i=1,nx_l
-                lat(i,j)=data(i,j,1)
-                lon(i,j)=data(i,j,2)
-             end do
+          do i=1,nx_l
+             lat(i,j)=data(i,j,1)
+             lon(i,j)=data(i,j,2)
+          end do
           end do
        else
           write(*,*)'Unable to get lat/lon data'
@@ -277,57 +265,60 @@ c *****************************************************************************
 c process the nowrad high density data. Remap to LAPS domain.  Generate output.
 c *****************************************************************************
 c
-       call get_wsi_parms_vrc(irad,nlines,nelems,
-     +rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,istatus)
+c need routine to read wsi-nowrad header and return nlines and nelems.
+c      call get_wsi_parms_vrc(irad,nlines,nelems,
+c    +rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,istatus)
 
        do k=1,nfiles
-       call NOWRAD_to_LAPS(c_raddat_type,
-     &                 c_filenames_proc(k),
-     &                 nlines,nelems,
-     &                 nx_l,ny_l,
-     &                 lat,
-     &                 lon,
-     &                 i4_validTime,
-     &                 rdbz,
-     &                 istatus)
-       if(istatus .eq. 1)then
-          write(6,*)'WSI data properly remapped'
-       else
-          goto 18
-       endif
+
+          call read_nowrad_dims(c_raddat_type,c_filenames_proc(k),
+     &         nelems,nlines)
+
+          call NOWRADWSI_to_LAPS(c_raddat_type,
+     &                     c_filenames_proc(k),
+     &                           nlines,nelems,
+     &                               nx_l,ny_l,
+     &                                 lat,lon,
+     &                            i4_validTime,
+     &                                    rdbz,
+     &                                 istatus )
+
+         if(istatus .eq. 1)then
+            write(6,*)'WSI data properly remapped'
+         else
+            goto 18
+         endif
 c
 c quick QC check
 c
-       n_extreme=0
-       do j=1,ny_l
-       do i=1,nx_l
-          if(rdbz(i,j) .ge. 70.)then
-             n_extreme=n_extreme+1
-          end if
-       end do
-       end do
-       percent_extreme_70 = n_extreme/(nx_l*ny_l)
-       n_extreme=0
-       do j=1,ny_l
-       do i=1,nx_l
-          if(rdbz(i,j) .ge. 47.)then
-             n_extreme=n_extreme+1
-          end if
-       end do
-       end do
-       percent_extreme_47 = n_extreme/(nx_l*ny_l)
+         n_extreme=0
+         do j=1,ny_l
+         do i=1,nx_l
+            if(rdbz(i,j) .ge. 70.)then
+               n_extreme=n_extreme+1
+            end if
+         end do
+         end do
+         percent_extreme_70 = n_extreme/(nx_l*ny_l)
+         n_extreme=0
+         do j=1,ny_l
+         do i=1,nx_l
+            if(rdbz(i,j) .ge. 47.)then
+               n_extreme=n_extreme+1
+            end if
+         end do
+         end do
+         percent_extreme_47 = n_extreme/(nx_l*ny_l)
 
-
-       n=index(c_filenames_proc(k),' ')
-
-       if(percent_extreme_70 .le. extreme_thrsh_70 .and.
-     &    percent_extreme_47 .le. extreme_thrsh_47)then
+         n=index(c_filenames_proc(k),' ')
+         if(percent_extreme_70 .le. extreme_thrsh_70 .and.
+     &      percent_extreme_47 .le. extreme_thrsh_47)then
 c
-c   Output...i4time is i4 time 1960.
+c   Output ... adjust i4time to 1960.
 c
-          i4time_data=i4_validTime+315619200
+            i4time_data=i4_validTime+315619200
 
-          call write_laps_data(i4time_data,
+            call write_laps_data(i4time_data,
      &                         dir_vrc,
      &                         ext_vrc,
      &                         nx_l,ny_l,1,1,
@@ -339,35 +330,35 @@ c
      &                         rdbz,
      &                         istatus)
 
-          if(istatus.eq.1)then
-             write(*,*)'VRC file successfully written'
-             write(*,*)'for: ',c_filenames_proc(k)(1:n-1)
-             write(*,*)'i4 time: ',i4time_data
-          else
-             goto 14
-          end if
+            if(istatus.eq.1)then
+               write(*,*)'VRC file successfully written'
+               write(*,*)'for: ',c_filenames_proc(k)(1:n-1)
+               write(*,*)'i4 time: ',i4time_data
+            else
+               goto 14
+            end if
 
-       else
+         else
 
-          write(6,*)'Either'
-          write(6,*)'More than 10% of dBZ >= 70 OR'
-          write(6,*)'More than 25% of dBZ >= 47; thus,'
-          write(6,*)'Not writing this vrc'
-          write(*,*)'i4Time: ',i4time_data,
+            write(6,*)'Either'
+            write(6,*)'More than 10% of dBZ >= 70 OR'
+            write(6,*)'More than 25% of dBZ >= 47; thus,'
+            write(6,*)'Not writing this vrc'
+            write(*,*)'i4Time: ',i4time_data,
      &              ' fTime: ',c_filenames_proc(k)(1:n-1)
 
-       end if
+         end if
 
-       goto 25
+         goto 25
 
-18     write(6,*)'Error with the wsi data. Not writing a'
-       write(6,*)'vrc file for this time'
-       write(6,*)'Filename: ',c_filenames_proc(k)(1:n-1)
+18       write(6,*)'Error with the wsi data. Not writing a'
+         write(6,*)'vrc file for this time'
+         write(6,*)'Filename: ',c_filenames_proc(k)(1:n-1)
 
-       goto 25
+         goto 25
 
-14     write(*,*)'Error writing VRC file - Terminating'
-       write(*,*)'i4Time: ',i4time_data,
+14       write(*,*)'Error writing VRC file - Terminating'
+         write(*,*)'i4Time: ',i4time_data,
      &           ' fTime: ',c_filenames_proc(k)(1:n-1)
 
 25     enddo

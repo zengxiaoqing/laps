@@ -104,7 +104,11 @@ c      do i=1,n_radar_types
       if(c_raddat_type.eq.'wfo')then
 
          write(6,*)'Gen LUT for Conus lambert (WFO) WSI data '
-         call gen_vrc_wfo_cdf_lut(2,nx_l,ny_l,lat,lon,istatus)
+c        call gen_vrc_wfo_cdf_lut(2,nx_l,ny_l,lat,lon,istatus)
+c        call 
+         call gen_rirj_lam(imax,jmax,lat,lon,nelems,nlines
+     &        ,la1,lo1,la2,lo2,latin,lov,rlat,rlon,dx,dy,ri,rj
+     &        ,istatus)
 
          if(istatus.eq.1)then
             write(6,*)'CDF look-up table generated'
@@ -118,7 +122,7 @@ c      do i=1,n_radar_types
          write(6,*)'Gen LUT for wsi - Cylindrical Equidistant'
 
          print*,'Using latlon_to_ceij routine'
-         call gen_llij_lut_wsi(1,nx_l,ny_l,lat,lon,istatus)
+         call gen_rirj_ce(nx_l,ny_l,lat,lon,istatus)
 
       endif
 

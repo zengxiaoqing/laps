@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-       subroutine NOWRAD_to_LAPS(c_radtype,
+       subroutine NOWRADWSI_to_LAPS(ctype,
      &                    filename,
      &                    nlines,nelems,
      &                    imax,jmax,
@@ -49,86 +49,109 @@ c confines.
        real*4 lat(imax,jmax)
        real*4 lon(imax,jmax)
        real*4 rdbz(imax,jmax)
-       real*4 r_llij_lut_ri(imax,jmax)
-       real*4 r_llij_lut_rj(imax,jmax)
+       real*4 ri(imax,jmax)
+       real*4 rj(imax,jmax)
        real*4 grid_spacing_m
-       real*8 valTime
+       real*4 dlat,dlon
+       real*4 LoV, Latin, La1,La2,Lo1,Lo2
+       real*4 centerLon,topLat,dx,dy
+       real*4 nw(2),se(2)
+       real*4 pi,rad2dg
 
        integer image_to_dbz(0:15)
        integer validTime
        integer istatus
        integer status
-       integer i_base_value,increment
-
-cccccccccccccccccccccccccccccccccccccccccccccccccc
+       integer i_base_value
+       integer increment
 
        character filename*200
-       character c_radtype*3
+       character ctype*3
 
        integer image(nelems,nlines)
-c
-c ***************************************************************************
-c ************************** GET NOWRAD DATA ********************************
-c
+
+       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
+
+c ----------------------------------------------------------------
+c Read data and get navigation info to build lat/lon to i/j table
+c ----------------------------------------------------------------
       istatus=1
 
-      if(c_radtype.eq.'wfo')then
-         call read_wsi_cdf_wfo(filename,nlines,nelems,
-     1Dx,Dy,valTime,image,istatus)
-         if(istatus.ne.0)then
-            write(6,*)'Error reading nowrad data'
-            goto 14
-         end if
-         validTime = int(valTime)
-         write(*,*)'Valid Time ',validTime
+      call read_nowrad_cdf(ctype,filename,nlines,nelems,
+     + dlat,dlon,La1,Lo1,La2,Lo2,centerlon,topLat,validTime,
+     + dx,dy,Lov, Latin, image, istatus)
+c
+c this routine converts the raw bytes to integers scaled 0 - 64
+c
+      call cvt_wsi_nowrad(ctype,nelems,nlines,image,istatus)
 
-      elseif(c_radtype.eq.'wsi')then
+      pi=acos(-1.)
+      rad2dg=180.0/pi
 
-           call read_wsi_cdf_wsi(filename,nlines,nelems,
-     +dlat,dlon,lat2,lon1,validTime,Dx,Dy,image,status)
-           if(status.ne.0)then
-              write(6,*)'Bad data detected'
-              write(6,*)'Returning without data'
-              goto 14
-           endif
+      if(ctype.eq.'wfo')then
+
+         Lo1=-Lo1
+         Lo2=-Lo2
+         if(Lov.lt.-180.0)Lov=Lov+360.
+         if(Lo1.lt.-180.0)Lo1=Lo1+360.
+         if(Lo2.lt.-180.0)Lo2=Lo2+360.
+
+         if(Lov.gt.180.0)Lov=Lov-360.
+         if(Lo1.gt.180.0)Lo1=Lo1-360.
+         if(Lo2.gt.180.0)Lo2=Lo2-360.
+
+         call gen_rirj_lam(imax,jmax,lat,lon,nelems,nlines
+     &        ,La1,Lo1,La2,Lo2,Latin,Lov,dx,dy,ri,rj
+     &        ,istatus)
+c
+ 
+      elseif(ctype.eq.'wsi')then
+c
+c load common block for cyclindrical equidistant
+c
+           nx=nelems
+           ny=nlines
+           nz=1
+           nw(1)=la1
+           nw(2)=lo1
+           se(1)=la2
+           se(2)=lo2
+           rlatc=(topLat - (dlat*(nlines-1)*0.5))*rad2dg
+           rlonc=centerLon*rad2dg
+           
+           call latlon_2_ceij(imax*jmax,lat,lon,ri,rj)
+
+           call check_domain_vrc(imax,jmax,ri,rj,nx,ny)
 
       endif
 
-      write(*,*)' Found 5-min NOWrad data for requested time '
+      write(*,*)' NOWRAD data prepared for requested time '
       write(*,*)
       write(*,*)'Valid Time ',validTime
 
-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-c
+c ---------------------------------------------------
 c    Build radar count level to dbz look up
-c
+c ---------------------------------------------------
       increment=5
       i_base_value=7
       do i = 1,15
          image_to_dbz(i)=(i-1)*increment+i_base_value
       end do
       image_to_dbz(0)=0
-c
-c get remapping look-up-table
-c
-      
-      call readvrclut(c_radtype,imax,jmax,
-     &     r_llij_lut_ri,r_llij_lut_rj,istatus)
-c
+c ---------------------------------------------------
 c compute grid ratio 
-c
+c ---------------------------------------------------
       call get_grid_spacing(grid_spacing_m,istatus)
       r_grid_ratio=sqrt(Dx*Dx + Dy*Dy)/grid_spacing_m
-c
-c  Remap NOWrad onto LAPS grid.
-c
+c ---------------------------------------------------
+c  Remap NOWRAD-WSI data to LAPS grid.
+c ---------------------------------------------------
        Call process_nowrad_z(imax,jmax,
      &                  r_grid_ratio,
      &                  image_to_dbz,
      &                  image,
-     &                  r_llij_lut_ri,
-     &                  r_llij_lut_rj,
+     &                  ri,
+     &                  rj,
      &                  nlines,nelems, ! input array dimensions
      &                  rdbz,
      &                  istatus)

@@ -85,7 +85,6 @@ c
       integer fcount
       integer bad_data_flag
 
-      CALL ZERO(laps_dbz,IMAX,JMAX)
       istatus = -1
       bad_data_flag = 16
       qcstatus=0
@@ -102,120 +101,116 @@ c
          goto 1000
       endif
 c
-c The "10" loop represents input image resolution < output grid resolution such
-c that there are enough pixels from the input image to get a representative
-c mean value for the remapped output grid value
+c initialize laps dbz field to ref_base
+c
+      do j=1,jmax
+      do i=1,imax
+         laps_dbz(i,j)=ref_base
+      enddo
+      enddo
 c
       if(r_grid_ratio .le. 0.5)then
 
          write(6,*)'Grid ratio .le. 0.5' !0.75'
          write(6,*)'Use pixel avg to get dbz'
-         DO J=1,JMAX
-            DO I=1,IMAX
 
-               IF(laps_dbz(I,J).EQ.0.) then
+         DO J=1,JMAX
+         DO I=1,IMAX
+
+            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
+
 c
 c line/elem are floating point i/j positions in ISPAN grid for input lat/lon
 c also, use the lat/lon to real i/j look up table (r_llij_lut) to map out points
 c needed for satellite pixels.
 c****************************************************************************
-                  elem_mx = r_llij_lut_ri(i,j)+((1./r_grid_ratio) * 0.5)
-                  elem_mn = r_llij_lut_ri(i,j)-((1./r_grid_ratio) * 0.5)
-                  line_mx = r_llij_lut_rj(i,j)+((1./r_grid_ratio) * 0.5)
-                  line_mn = r_llij_lut_rj(i,j)-((1./r_grid_ratio) * 0.5)
-                  jstart = nint(line_mn+0.5)
-                  jend   = int(line_mx)
-                  istart = nint(elem_mn+0.5)
-                  iend   = int(elem_mx)
+               elem_mx = r_llij_lut_ri(i,j)+((1./r_grid_ratio) * 0.5)
+               elem_mn = r_llij_lut_ri(i,j)-((1./r_grid_ratio) * 0.5)
+               line_mx = r_llij_lut_rj(i,j)+((1./r_grid_ratio) * 0.5)
+               line_mn = r_llij_lut_rj(i,j)-((1./r_grid_ratio) * 0.5)
+               jstart = nint(line_mn+0.5)
+               jend   = int(line_mx)
+               istart = nint(elem_mn+0.5)
+               iend   = int(elem_mx)
 
-                  if(istart.le.0 .or. jstart.le.0 .or.
-     &                 iend.gt.nelem .or. jend.gt.nline)then
-                     write(*,*)'insufficient data for lat/lon sector'
-                     write(*,1020)i,j
- 1020                format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
-                     write(6,1021)elem_mx,elem_mn,line_mx,line_mn
- 1021                format(1x,'elem mx/mn  line mx/mn ',4f7.1)
-                  else
+               if(istart.le.0 .or. jstart.le.0 .or.
+     &            iend.gt.nelem .or. jend.gt.nline)then
+                  write(*,*)'insufficient data for lat/lon sector'
+                  write(*,1020)i,j
+ 1020             format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
+                  write(6,1021)elem_mx,elem_mn,line_mx,line_mn
+ 1021             format(1x,'elem mx/mn  line mx/mn ',4f7.1)
+               else
 c
 c **** FIND PIXELS AROUND GRID POINT
 c
-                     zmax=-1.e15
-                     zmin=1.e15
-                     npix = 0
-                     pixsum = 0.
-                     maxpix = 0
+                  zmax=-1.e15
+                  zmin=1.e15
+                  npix = 0
+                  pixsum = 0.
+                  maxpix = 0
 
-                     DO JJ=jstart,jend
-                        DO II=istart,iend
+                  DO JJ=jstart,jend
+                  DO II=istart,iend
                         
-                           if(image_data(II,JJ).le.bad_data_flag.and.
-     &                          image_data(II,JJ).ge.0)then
-                              npix=npix+1
-                              z_array(npix)=
-     +                             image_to_dbz(image_data(II,JJ))
-                           endif
+                     if(image_data(II,JJ).le.bad_data_flag.and.
+     &                  image_data(II,JJ).ge.0)then
+                        npix=npix+1
+                        z_array(npix)=
+     +                       image_to_dbz(image_data(II,JJ))
+                     endif
                            
-                        enddo
-                     enddo
+                  enddo
+                  enddo
  
-                     if(npix.gt.1)then
+                  if(npix.gt.1)then
 c
-c...  this section finds the warmest pixel, coldest pixel, and mean pixel.
+c...  this section finds the highest, lowest, and mean pixel.
 c
-                        Do ii=1,npix
+                     do ii=1,npix
+                        rdbz  = z_array(ii)
+                        pixsum = pixsum + rdbz
+                        if(rdbz.gt.zmax)zmax=rdbz
+                        if(rdbz.lt.zmin)zmin=rdbz
+                     enddo
 
-                           rdbz  = z_array(ii)
-                           pixsum = pixsum + rdbz
+                  elseif(npix.eq.1)then
+                     rdbz = z_array(npix)
+                  else   
+                     rdbz=ref_base
+                     fcount=fcount+1
+                  endif
 
-                           if(rdbz.gt.zmax) then
-                              zmax=rdbz
-                           end if
+                  if(npix .ge. maxpix)maxpix=npix
 
-                           if(rdbz.lt.zmin) then
-                              zmin=rdbz
-                           end if
-
-                        enddo
-
-                     elseif(npix.eq.1)then
-
-                        rdbz = z_array(npix)
-
-                     else   
-
-                        rdbz=ref_base
-                        fcount=fcount+1
-
+                  if(npix .gt. 1)then
+                     if(pixsum.gt.0)then
+                        laps_dbz(i,j) = pixsum / float(npix)
+                     else
+                        laps_dbz(i,j) = ref_base
                      endif
 
-                     if(npix .ge. maxpix)maxpix=npix
+                  elseif(rdbz.gt.0.0)then
 
-                     if(npix .gt. 1)then
+                     laps_dbz(i,j) = rdbz
 
-                        if(pixsum.gt.0)then
-                           laps_dbz(i,j) = pixsum / float(npix)
-                        else
-                           laps_dbz(i,j) = ref_base
-                        endif
+                  else
 
-                     elseif(rdbz.gt.0.0)then
+                     laps_dbz(i,j) = ref_base
 
-                        laps_dbz(i,j) = rdbz
+                  endif      ! npix .gt. 1
 
-                     else
-
-                        laps_dbz(i,j) = ref_base
-
-                     endif      ! npix .gt. 1
-
-                  end if        ! Enough data for num_lines .gt. 0
+               end if        ! Enough data for num_lines .gt. 0
 
 cccd           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
 cccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
 cccd5555         format(1x,2i4,2f10.2,2i5,f10.2)
 cccd           endif
-               endif
-            enddo
+
+            endif            !r_llij's = r_missing_data
+
+         enddo
          enddo
 
          write(6,*)'Max num WSI pix for avg: ',maxpix
@@ -243,31 +238,31 @@ c
          enddo
 
          DO J=1,JMAX
-            DO I=1,IMAX
+         DO I=1,IMAX
 
-               IF(laps_dbz(I,J).eq.0.) then
+            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 c
 c bilinear_interp_extrap checks on boundary conditions and
 c uses ref_base if out of bounds.
 c
-                  call bilinear_laps(
-     &                 r_llij_lut_ri(i,j),
-     &                 r_llij_lut_rj(i,j),
-     &                 nelem,nline,wsi_dbz_data,
-     &                 result)
+               call  bilinear_interp_extrap(
+     &               r_llij_lut_ri(i,j),
+     &               r_llij_lut_rj(i,j),
+     &               nelem,nline,wsi_dbz_data,
+     &               result,istatus)
 
-                  if(result .ne. r_missing_data .and.
-     &                 result .gt. 0.0)then
+               if(result .ne. r_missing_data .and.
+     &            result .gt. 0.0)then
+                  laps_dbz(i,j) = result
 
-                     laps_dbz(i,j) = result
+c              else
+c                 laps_dbz(i,j) = ref_base
 
-                  else
-                        
-                     laps_dbz(i,j) = ref_base
-
-                  endif
                endif
-            enddo
+            endif
+
+         enddo
          enddo
 
       end if                    ! r_image_ratio
