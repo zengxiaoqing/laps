@@ -377,7 +377,7 @@ c
 c
 c echo tops
 c
-             baddata=70.   !this is kft.
+             baddata=75.   !this is kft. Max value in WSI data = 70,000 ft.
              call check_radar_data(nx_l,ny_l,baddata,
      &remapped_prod,kstatus)
              if(kstatus.lt.0)then

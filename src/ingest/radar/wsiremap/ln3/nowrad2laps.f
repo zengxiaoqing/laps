@@ -219,8 +219,10 @@ c
           do i = 1,imax
              if(count(i,j) .gt. 0)then
 c               if(sum(i,j) .gt. 0)then
-c               remapped_prod(i,j)=float(sum(i,j))/float(count(i,j))
+c------------>  remapped_prod(i,j)=float(sum(i,j))/float(count(i,j))
+
                 remapped_prod(i,j)=float(i_max_value(i,j))
+
 c               else
 c                  remapped_prod(i,j)=ref_base_useable
 c               endif
@@ -232,7 +234,8 @@ c               endif
        else
           do j = 1,jmax
           do i = 1,imax
-             if(i_max_value(i,j).gt.0)then
+             if(count(i,j) .gt. 0)then
+c            if(i_max_value(i,j).gt.0)then
                 remapped_prod(i,j)=float(i_max_value(i,j))
              else
                 remapped_prod(i,j)=r_missing_data
