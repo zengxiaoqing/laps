@@ -128,13 +128,19 @@ c
 	n_obs_b = 0		! # of gps obs in the box
 
         call s_len(gps_format, len_gps_format)
-        if(gps_format(1:len_gps_format) .eq. 'NIMBUS')then ! FSL NetCDF format
-
+        if(gps_format(1:len_gps_format) .eq. 'NIMBUS' .or. ! FSL NetCDF format
+     1     gps_format(1:len_gps_format) .eq. 'CWB'   )then ! CWB NetCDF format
             i4time_file = i4time_sys - 900
             call make_fnam_lp(i4time_file,a9time_file,istatus)
             call s_len(path_to_gps_data,len_path)
-	    data_file = path_to_gps_data(1:len_path)//a9time_file
-     1                                              //'0030o.nc'     
+c
+            if(gps_format(1:len_gps_format) .eq. 'NIMBUS') then
+               data_file = path_to_gps_data(1:len_path)//a9time_file
+     1                                                 //'0030o.nc'
+            elseif(gps_format(1:len_gps_format) .eq. 'CWB') then
+               data_file = path_to_gps_data(1:len_path)//a9time_file
+     1                                                 //'00.cwb.nc'
+            endif
 c
 c.....      Get the data from the NetCDF file.  First, open the file.
 c.....      If not there, return.
