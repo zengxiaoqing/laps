@@ -228,7 +228,7 @@ c     +++ read raob file
             read(12,*) rspacing_dum,
      1           p_r (lev_r(isound),isound),
      1           t_r (lev_r(isound),isound),
-     1           td_r(lev_r(isound),isound)
+     1           td_r(lev_r(isound),isound),rdummy,rdummy
 
             if (
      1           (p_r (lev_r(isound),isound).ne.rmd)
