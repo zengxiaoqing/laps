@@ -147,6 +147,7 @@ c ---------------------------------------------------------
          elemend_orig   = i_end_vis(jtype,isat)
          linestart_orig = j_start_vis(jtype,isat)
          lineend_orig   = j_end_vis(jtype,isat)
+
          goto 65
 
 62       if(.not.lfirst(jtype,isat))then
@@ -157,9 +158,12 @@ c ---------------------------------------------------------
             lineend_orig   = j_end_ir(jtype,isat)
             lfirst(jtype,isat)=.true.
          else
-            goto 1000
-            istatus = 1
+c
+c only need to generate IR lut once
+c
+            return
          endif 
+
          goto 65
  
 63       ct='wv'
@@ -192,7 +196,7 @@ c
          if(ustatus.eq.1)then
             print*,'GVAR parameters not obtained cannot proceed'
             istatus =-1
-            goto 1000
+            return
          else
             goto 901
          endif
