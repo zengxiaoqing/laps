@@ -5,22 +5,36 @@
 # exits with a warning to stderr if the limit is exceeded  
 #
 use strict;
+use vars qw($opt_o $opt_e);
+use Getopt::Std;
+
+getopts('e:');
+
 my $exe = shift || die "Program name and LAPS root directory required";
 my $LAPSROOT=shift || die "LAPS root directory required";
 require "$LAPSROOT/etc/fxa.pm";
 umask 002;
 my $fxa_sys =  &Get_env'fxa; #'
-
+$ENV{PATH}.=":@NETCDFBIN@";
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
-$ENV{PATH}.=":@NETCDFBIN@";
+
+if($opt_e){
+    foreach(split(/,/,$opt_e)){
+	/^(\w+)=(\w+)$/;
+	$ENV{$1} = $2;
+    }
+}
+
+
 my($LAPS_LOG_PATH);
 if($fxa_sys!=0){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
 }
+
 #
 # Make sure the requested program exists
 #
