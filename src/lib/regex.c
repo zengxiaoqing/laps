@@ -20,10 +20,10 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* AIX requires this to be the first thing in the file. */
-#include <config.h>
 #if defined (_AIX) && !defined (REGEX_MALLOC)
   #pragma alloca
 #endif
+#include <config.h>
 
 #define _GNU_SOURCE
 
@@ -417,7 +417,11 @@ extract_number (dest, source)
   *dest = *source & 0377;
   *dest += temp << 8;
 }
-
+void printchar(c)
+  char c;
+{
+  putc(c);
+}
 #ifndef EXTRACT_MACROS /* To debug the macros.  */
 #undef EXTRACT_NUMBER
 #define EXTRACT_NUMBER(dest, src) extract_number (&dest, src)
@@ -480,7 +484,6 @@ static int debug = 0;
 
 
 extern void printchar ();
-#define printchar putchar
 
 /* Print the fastmap in human-readable form.  */
 

@@ -209,43 +209,43 @@ cc   inferred in cloud temperature profile
 cc
 cc   ----------------------------------------------------------------
 cc
-      if(.true.) go to 455
-        nlevel=(zctop-zcb)/100.0
-        temp=cldbtm
-        press=cldbp*100.0
-        if(nlevel.le.0) nlevel=0
-        alw=0.0
-        calw(1)=0.0
-        nlm1=nlevel-1
-        if(nlm1.lt.1) nlm1=1
-        dtdz=(cldtpt-cldbtm)/(zctop-zcb)
-        zht=zbase
-        do 450 j=1,nlm1
-          rl=rlvo+(temp-273.15)*dlvdt
-          arg=rl*(273.15-temp)/273.15/temp/rv
-          es=eso*exp(arg)
-          qvs1=0.622*es/(press-es)
-          rho1=press/(rair*temp)
-          arg=-grav*dz/rair/temp
-          p=press*exp(arg)
-          des=es*rl/temp/temp/rv
-          dtz=-grav*((1.0+0.621*es*rl/(press*rair*temp))/
-     1        (cp+0.621*rl*des/press))
-          if(dtdz.lt.dtz) then
-            dttdz=dtz-(dtdz-dtz)
-          else
-            dttdz=dtdz
-          endif
-          zht=zht+dz
-          press=p
-          temp=temp+dttdz*dz
-          rl=rlvo+(273.15-temp)*dlvdt
-          arg=rl*(temp-273.15)/273.15/temp/rv
-          es2=eso*exp(arg)
-          qvs2=0.622*es2/(press-es2)
-          rho2=press/(rair*temp)
-          alw=alw+(qvs1-qvs2)*(rho1+rho2)/2.
-          if(alw.lt.0.0) alw=0.0
+ccc      if(.true.) go to 455
+ccc        nlevel=(zctop-zcb)/100.0
+ccc        temp=cldbtm
+ccc        press=cldbp*100.0
+ccc        if(nlevel.le.0) nlevel=0
+ccc        alw=0.0
+ccc        calw(1)=0.0
+ccc        nlm1=nlevel-1
+ccc        if(nlm1.lt.1) nlm1=1
+ccc        dtdz=(cldtpt-cldbtm)/(zctop-zcb)
+ccc        zht=zbase
+ccc        do 450 j=1,nlm1
+ccc          rl=rlvo+(temp-273.15)*dlvdt
+ccc          arg=rl*(273.15-temp)/273.15/temp/rv
+ccc          es=eso*exp(arg)
+ccc          qvs1=0.622*es/(press-es)
+ccc          rho1=press/(rair*temp)
+ccc          arg=-grav*dz/rair/temp
+ccc          p=press*exp(arg)
+ccc          des=es*rl/temp/temp/rv
+ccc          dtz=-grav*((1.0+0.621*es*rl/(press*rair*temp))/
+ccc     1        (cp+0.621*rl*des/press))
+ccc          if(dtdz.lt.dtz) then
+ccc            dttdz=dtz-(dtdz-dtz)
+ccc          else
+ccc            dttdz=dtdz
+ccc          endif
+ccc          zht=zht+dz
+ccc          press=p
+ccc          temp=temp+dttdz*dz
+ccc          rl=rlvo+(273.15-temp)*dlvdt
+ccc          arg=rl*(temp-273.15)/273.15/temp/rv
+ccc          es2=eso*exp(arg)
+ccc          qvs2=0.622*es2/(press-es2)
+ccc          rho2=press/(rair*temp)
+ccc          alw=alw+(qvs1-qvs2)*(rho1+rho2)/2.
+ccc          if(alw.lt.0.0) alw=0.0
 cc   ----------------------------------------------------------------
 cc
 cc   application of a simple linear glaciation
@@ -254,19 +254,19 @@ cc         partially liquid -15 C > T > -25 C
 cc         all ice    T < -25 C
 cc
 cc   ---------------------------------------------------------------
-          ffrac=1.0
-          if(cldtpt.lt.258.15) then
-            if(cldtpt.gt.248.15) then
-              ffrac=(cldtpt-248.15)/10
-            else
-              ffrac=0.0
-            endif
-          endif
-          if(ffrac.lt.0.0) ffrac=0.0
-          calw(j+1)=alw*ffrac*1000.0
-            write(6,9015) j,calw(j+1),zht
- 450   continue
- 455   continue
+ccc          ffrac=1.0
+ccc          if(cldtpt.lt.258.15) then
+ccc            if(cldtpt.gt.248.15) then
+ccc              ffrac=(cldtpt-248.15)/10
+ccc            else
+ccc              ffrac=0.0
+ccc            endif
+ccc          endif
+ccc          if(ffrac.lt.0.0) ffrac=0.0
+ccc          calw(j+1)=alw*ffrac*1000.0
+ccc            write(6,9015) j,calw(j+1),zht
+ccc 450   continue
+ccc 455   continue
 cc   -----------------------------------------------------------------
 cc
 cc                 obtain LAPS profile of LWCs
