@@ -43,7 +43,7 @@ cdis
      1                                   ,maxsta,c_field,zoom
      1                                   ,namelist_parms,plot_parms
      1                                   ,atime_s
-     1                                   ,c33_label,i_overlay)
+     1                                   ,c_label,i_overlay)
 
         include 'lapsplot.inc'
 
@@ -58,7 +58,7 @@ cdis
 
         real*4 lat(ni,nj),lon(ni,nj)
 
-        character c33_label*33
+        character c_label*(*)
         character directory*150,ext*31,ext_lso*6
         character*255 c_filespec
         character*9 c9_string, asc_tim_9
@@ -271,21 +271,25 @@ cdis
             endif
 
             if(c_field(1:1) .eq. 'q')then ! LSO_QC file
-                c33_label = 'Sfc QC Obs   ('//c3_presob//' pres)'
+                c_label = 'Sfc QC Obs   ('//c3_presob//' pres)'
             else
-                c33_label = 'Sfc Obs      ('//c3_presob//' pres)'
+                c_label = 'Sfc Obs      ('//c3_presob//' pres)'
             endif
 
             if(iflag_cv .eq. 1)then
-                c33_label(14:33) =  '          Ceil & Vis'
+                c_label(14:33) =  '          Ceil & Vis'
             elseif(iflag_cv .eq. 2)then
-                c33_label(13:33) = '1Hr Pcp/Snw Dpth (in)'
+                if(namelist_parms%c_units_type .eq. 'english')then
+                    c_label(13:33) = '1Hr Pcp/Snw Dpth (in)'
+                else
+                    c_label(13:38) = '1Hr Pcp (mm)/Snw Dpth (cm)'
+                endif
             elseif(iflag_cv .eq. 3)then
-                c33_label(14:33) =  '   Sfc T & Solar Rad'
+                c_label(14:33) =  '   Sfc T & Solar Rad'
             endif
 
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-            call write_label_lplot(ni,nj,c33_label,asc_tim_9
+            call write_label_lplot(ni,nj,c_label,asc_tim_9
      1                            ,namelist_parms,i_overlay,'hsect')       
 
         endif
@@ -400,15 +404,25 @@ cdis
                 elseif(iflag_cv .eq. 2)then ! Precip
                     temp = badflag
                     if(pcp1(i) .ne. badflag)then
-                        dewpoint = pcp1(i)
-                        write(6,*)' Precip ob ',i,pcp1(i)
+                        if(namelist_parms%c_units_type 
+     1                                             .eq. 'metric')then      
+                            dewpoint = pcp1(i) * 25.4
+                        else
+                            dewpoint = pcp1(i)
+                        endif
+                        write(6,*)' Precip ob ',i,pcp1(i),dewpoint
                     else
                         dewpoint = badflag
                     endif
 
                     if(snow(i) .ne. badflag)then
-                        temp = snow(i)
-                        write(6,*)' Snow ob ',i,snow(i)
+                        if(namelist_parms%c_units_type 
+     1                                             .eq. 'metric')then      
+                            temp = snow(i) * 2.54
+                        else
+                            temp = snow(i)
+                        endif
+                        write(6,*)' Snow ob ',i,snow(i),temp
                     else
                         temp = badflag
                     endif
@@ -505,7 +519,7 @@ cdis
      1                 ,pressure,xsta,ysta
      1                 ,lat,lon,ni,nj,relsize,zoom,n_obs_g,11,du2
      1                 ,wx_s(i)
-     1                 ,iflag,iflag_cv,plot_parms)
+     1                 ,iflag,iflag_cv,namelist_parms,plot_parms)
                 endif
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,33)
@@ -541,7 +555,7 @@ c
         subroutine plot_mesoob(dir,spd,gust,t,td,p,ri,rj
      1                        ,lat,lon,imax,jmax,relsize_in,zoom,nobs
      1                        ,icol_in,du2,wx,iflag,iflag_cv
-     1                        ,plot_parms)
+     1                        ,namelist_parms,plot_parms)
 
         include 'lapsparms.cmn'
 
@@ -684,8 +698,13 @@ c
         elseif(iflag_cv .eq. 2)then ! Precip obs plot
 !           Plot 1hr Precip Ob
             if(td.gt.-75. .and. td.lt.100.) then
-               write(c4_pcp,103,err=32) td
- 103           format(f4.2)
+               if(namelist_parms%c_units_type .eq. 'english')then
+                   write(c4_pcp,103,err=32) td
+ 103               format(f4.2)
+               else ! millimeters for metric
+                   write(c4_pcp,104,err=32) td
+ 104               format(f4.1)
+               endif
                call left_justify(c4_pcp)
                CALL PCLOQU(u+du_t,v-dv,c4_pcp,charsize,ANGD,CNTR)
                write(6,*)' Precip (td) plot = ',c4_pcp
