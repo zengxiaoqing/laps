@@ -121,8 +121,10 @@ c
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
 
-      logical     lfirst(maxtype,maxsat)              !4 types x 2 sats (3-16-98)
+      logical     lpoint
+      logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98)
       data lfirst /.false.,.false.,.false.,.false.,
+     &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false./
       save
 c
@@ -383,13 +385,18 @@ c
       if(istatus.ne.1)return
 
       nijout = 0
-
+      lpoint =.true.
       do j = 1,nyl2
       do i = 1,nxl2
          if(rpix(i,j).ne.r_missing_data.and.
      &rline(i,j).ne.r_missing_data)then
             rel_ri(i,j) = rpix(i,j)  - res  !float(elemstart)
             rel_rj(i,j) = rline(i,j) - rls  !float(linestart)
+            if(lpoint)then
+               i1=i
+               j1=j
+               lpoint=.false.
+            endif
          else
             rel_ri(i,j) = r_missing_data
             rel_rj(i,j) = r_missing_data
@@ -448,12 +455,12 @@ c
       if(elemend.gt.nx)elemend=nx
       if(linestart.le.0)linestart=1
       if(lineend.gt.ny)lineend=ny
+c
 c ------------------------------------------------------------------------
 c compute image resolution in meters. This done with the original line/pix
 c values since we use gimloc here.
 c ------------------------------------------------------------------------
-      i1=elemstart   !nx_l/2
-      j1=linestart   !ny_l/2
+c
       call compute_gvarimage_resolution(rp_div,rl_div,
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
      &r_img_res_m,istatus)
