@@ -458,12 +458,12 @@
      on your machine.
 
      The terrain data files come in compressed tar files separate
-     from the rest of the LAPS distribution.  There are two topography 
-     databases, one in file 'laps_terrain.tar.gz', the other in our 
-     'world_topo_30s' directory (see section 2.7). You can choose from either 
-     database. Only one copy of the topo data is required no matter how many 
-     data installations you are supporting. The paths to the three main
-     subdirectories (topo_30s, topo_10m, and land_10m) are defined as
+     from the rest of the LAPS distribution.  There are two 30" topography 
+     databases; 'topo_30s' is in file 'laps_terrain.tar.gz', the other in our 
+     'world_topo_30s' directory. You can choose from either database 
+     (see section 2.7.4). Only one copy of the topo data is required no matter
+     how many data installations you are supporting. The paths to the three 
+     main subdirectories (topo_30s, topo_10m, and land_10m) are defined as
      runtime parameters within the 'nest7grid.parms' file (Sec 2.2.6). 
 
      The land fraction database is required for the 'land_10m' subdirectory
@@ -1143,6 +1143,14 @@
         data comes in 10x10 degree tiles. Since there is no automated blending
         between this dataset and the 10' data, it is suggested that all the 
         tiles be in place to cover the domain.
+
+        Summarizing the allowable combinations of database choices...
+<pre>
+        land_10m topo_10m
+        land_10m topo_10m topo_30s   (10m automatically blends for 30s holes)
+        land_10m topo_30s
+        land_10m world_topo_30s
+</pre>
 
                  ----  2.7.5 Terrain Smoothing/Filtering  ---
 
