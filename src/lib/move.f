@@ -45,3 +45,61 @@ c
 c
         return
         end
+
+c
+c-----------------------------------------------------
+c
+        subroutine move_3d(a,b,imax,jmax,kmax)
+c
+c.....  Routine to move (copy) array 'a' into array 'b'.
+c
+        real*4 a(imax,jmax,kmax), b(imax,jmax,kmax)
+c
+        do k=1,kmax
+        do j=1,jmax
+        do i=1,imax
+          b(i,j,k) = a(i,j,k)
+        enddo !i
+        enddo !j
+        enddo !k
+c
+        return
+        end
+c
+c
+        subroutine move_2dto3d(a,b,index,imax,jmax,kmax)
+c
+c.....  Routine to move (copy) the 2d array 'a' into one level
+c.....  of the 3d array 'b'.  The level is defined by 'index'.
+c
+c       Original:  P. Stamus  NOAA/FSL  15 Apr 1997
+c
+        real*4 a(imax,jmax), b(imax,jmax,kmax)
+c
+        do j=1,jmax
+        do i=1,imax
+          b(i,j,index) = a(i,j)
+        enddo !i
+        enddo !j
+c
+        return
+        end
+c
+c
+        subroutine move_3dto2d(a,index,b,imax,jmax,kmax)
+c
+c.....  Routine to move (copy) one level of the 3d array 'a' into 
+c.....  the 2d array 'b'.  The level is defined by 'index'.
+c
+c       Original:  P. Stamus  NOAA/FSL  15 Apr 1997
+c
+        real*4 a(imax,jmax,kmax), b(imax,jmax)
+c
+        do j=1,jmax
+        do i=1,imax
+          b(i,j) = a(i,j,index)
+        enddo !i
+        enddo !j
+c
+        return
+        end
