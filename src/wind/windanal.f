@@ -38,7 +38,7 @@ cdis
 cdis
 
        subroutine laps_anl(uobs,vobs
-!    1     ,obs_point,max_obs                                          ! I
+     1     ,obs_point,max_obs,nobs_point                               ! I
      1     ,n_radars,istat_radar_vel                                   ! I
      1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in,idx_radar_a             ! I
 !    1     ,upass1,vpass1                                              ! O
@@ -76,10 +76,10 @@ cdis
 !********************ARGUMENT LIST********************************************
 
       integer*4 max_obs
-      parameter (max_obs = 40000)       
+!     parameter (max_obs = 40000)       
       include 'barnesob.inc'
-      type (barnesob) obs_barnes(max_obs)                           
-!     type (barnesob) obs_point(max_obs)                           
+      type (barnesob_qc) obs_point(max_obs)                           
+      type (barnesob)    obs_barnes(max_obs)                           
 
       integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
@@ -148,7 +148,7 @@ cdis
       logical  l_grid_north     ! Flag for grid north or true north    ! Input
       logical  l_3pass          ! Flag for doing 3 pass analysis       ! Input
       logical  l_correct_unfolding ! Flag for dealiasing               ! Input
-      logical  l_3d,l_not_struct
+      logical  l_not_struct,l_point_struct
 
       real*4   rms_thresh                                              ! Input
       real*4   weight_bkg_const                                        ! Input
@@ -180,10 +180,10 @@ csms$serial(default=ignore)  begin
      1            uobs,vobs,wt_p,istatus)
 csms$serial end
 
-      l_3d = .true.                              ! Can no longer be changed
       l_not_struct = .false.
+      l_point_struct = .false.
 
-      rms_thresh_norm = rms_thresh_wind          ! Not used if l_3d = .false.
+      rms_thresh_norm = rms_thresh_wind          
 
       n_iter_wind = 1
 
@@ -232,18 +232,6 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
       qc_thresh = 30. ! Threshold speed for throwing out the ob
 
-      allocate( uobs_diff(imax,jmax,kmax), STAT=istat_alloc )
-      if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate uobs_diff'
-          stop
-      endif
-
-      allocate( vobs_diff(imax,jmax,kmax), STAT=istat_alloc )
-      if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate vobs_diff'
-          stop
-      endif
-
       allocate( pres_3d(imax,jmax,kmax), STAT=istat_alloc )
       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate pres_3d'
@@ -256,11 +244,25 @@ csms$>       rms_thresh , out>:default=ignore)  begin
       call get_rep_pres_intvl(pres_3d,imax,jmax,kmax,rep_pres_intvl
      1                       ,istatus)
 
-      do j=1,jmax
-      do i=1,imax
-        do k = 1,kmax
-!         wt_p_spread(i,j,k) = wt_p(i,j,k)        ! Initialize the local array
+      deallocate(pres_3d)
 
+      allocate( uobs_diff(imax,jmax,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate uobs_diff'
+          stop
+      endif
+
+      allocate( vobs_diff(imax,jmax,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate vobs_diff'
+          stop
+      endif
+
+      if(.not. l_point_struct)then
+
+       do j=1,jmax
+       do i=1,imax
+        do k = 1,kmax
           if(wt_p(i,j,k) .ne. r_missing_data)then
             if(uobs(i,j,k) .ne. r_missing_data      .and.
      1         vobs(i,j,k) .ne. r_missing_data              )then
@@ -294,7 +296,6 @@ csms$>       rms_thresh , out>:default=ignore)  begin
      1         (speed_diff .gt. 22. .and. wt_p(i,j,k) .eq. weight_prof)
      1                                                                 )
 
-!       1       .OR. (abs(k-16) .le. 5 .and. (i .ne. 50 .or. j .ne. 14)) )
      1                                                          )then
 
                 ! Throw out the ob
@@ -436,36 +437,71 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
         enddo ! k
 
-        if(.false.)then
-!         Spread the difference ob vertically
-          call spread_vert(uobs_diff,vobs_diff,l_3d               ! I
-     1                    ,iwrite                                 ! I/O
-     1                    ,varobs_diff_spread(1,1,1,1)            ! O*
-     1                    ,varobs_diff_spread(1,1,1,2)            ! O*
-     1                    ,wt_p                                   ! I
-     1                    ,wt_p_spread                            ! O*
-     1                    ,pres_3d,i,j,imax,jmax,kmax             ! I
-     1                    ,istatus)                               ! O*
+!       Initialize the obs_out columns
+!       do k = 1,kmax
+!         varobs_diff_spread(i,j,k,1) = uobs_diff(i,j,k)
+!         varobs_diff_spread(i,j,k,2) = vobs_diff(i,j,k)
+!       enddo ! k
 
-!         if(istatus .ne. 1)return
+       enddo ! i
+       enddo ! j
 
-        else
+      endif ! .not. l_point_struct
 
-!         Initialize the obs_out columns
-          do k = 1,kmax
-            varobs_diff_spread(i,j,k,1) = uobs_diff(i,j,k)
-            varobs_diff_spread(i,j,k,2) = vobs_diff(i,j,k)
-!           wt_p_spread(i,j,k) = wt_p(i,j,k)
-          enddo ! k
-
-        endif ! phase out 'spread_vert' call
-
-      enddo ! i
-      enddo ! j
+      varobs_diff_spread(:,:,:,1) = uobs_diff
+      varobs_diff_spread(:,:,:,2) = vobs_diff
 
       deallocate(uobs_diff)
       deallocate(vobs_diff)
-      deallocate(pres_3d)
+
+!     Perform QC of data structure info
+      if(l_point_struct)then
+          do i_ob = 1,nobs_point
+              i = obs_point(i_ob)%i                       
+              j = obs_point(i_ob)%j                       
+              k = obs_point(i_ob)%k                       
+              u = obs_point(i_ob)%value(1)
+              v = obs_point(i_ob)%value(2)
+
+              speed_bkg  = sqrt(u_laps_bkg(i,j,k)**2
+     1                        + v_laps_bkg(i,j,k)**2)
+
+              u_diff = u - u_laps_bkg(i,j,k)
+              v_diff = v - v_laps_bkg(i,j,k)
+              speed_diff = sqrt(u_diff**2 + v_diff**2)
+
+!             Apply QC check to the OB against the background analysis
+              if(
+!                Make sure we actually have a real reference background
+     1           (speed_bkg .gt. 0.) .and.
+
+!                General QC check
+     1           (speed_diff .gt. qc_thresh
+
+!              Stricter QC check for pireps
+     1                       .OR. 
+     1         (speed_diff .gt. 10. .and. 
+     1                              obs_point(i_ob)%type .eq. 'pirep')        
+
+!              Stricter QC check for Cloud Drift Winds
+     1                       .OR. 
+     1         (speed_diff .gt. 10. .and. 
+     1                              obs_point(i_ob)%type .eq. 'cdw')        
+
+!              Stricter QC check for profilers
+     1                       .OR. 
+     1         (speed_diff .gt. 22. .and. 
+     1                              obs_point(i_ob)%type .eq. 'prof')        
+     1                                                                 )
+
+     1                                                          )then
+
+                  continue
+
+              endif
+
+          enddo ! i_ob
+      endif
 
       write(6,*)
       write(6,*)' QC info for non-radar data (after remapping to grid)'
@@ -621,7 +657,7 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
 
 csms$serial end
 
-          if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
+          if(icount_radar_total .gt. 0)then 
 
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 3 processor=',me
@@ -707,7 +743,7 @@ csms$>                    out>:default=ignore) begin
 
 csms$serial end
 
-          if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
+          if(icount_radar_total .gt. 0)then 
 
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 6 processor=',me
@@ -1493,85 +1529,6 @@ csms$ignore begin
       endif
 
 csms$ignore end
-      return
-      end
-
-
-      subroutine spread_vert(uobs_in,vobs_in,l_3d               ! I
-     1                      ,iwrite                             ! I/O
-     1                      ,uobs_out,vobs_out                  ! O*
-     1                      ,wt_p                               ! I
-     1                      ,weights                            ! O*
-     1                      ,pres_3d,i,j                        ! I
-     1                      ,imax,jmax,kmax                     ! I
-     1                      ,istatus)                           ! O*
-
-!     Modified 7/94 S. Albers to allow better handling of variable
-!     vertical resolution of pressure
-!     3/97 S. Albers: Obtain parameters from runtime file
-
-      include 'windparms.inc'
-
-      real*4 uobs_in(imax,jmax,kmax)                   ! I
-      real*4 uobs_out(imax,jmax,kmax)                  ! O
-      real*4 vobs_in(imax,jmax,kmax)                   ! I
-      real*4 vobs_out(imax,jmax,kmax)                  ! O
-      real*4 wt_p(imax,jmax,kmax)                      ! I
-      real*4 weights(imax,jmax,kmax)                   ! O (spread)
-      real*4 pres_3d(imax,jmax,kmax)                   ! I
-
-      integer*4 vert_rad_pirep
-      integer*4 vert_rad_sfc
-      integer*4 vert_rad_cdw
-      integer*4 vert_rad_prof
-
-      logical l_3d
-
-!     Vertical radius of influence for each data source (pascals)
-      real*4 r0_vert_pirep,r0_vert_cdw,r0_vert_sfc,r0_vert_prof
-      parameter (r0_vert_pirep = 2500.)
-      parameter (r0_vert_cdw   = 2500.)
-      parameter (r0_vert_sfc   = 2500.)
-      parameter (r0_vert_prof  = 2500.)
-
-csms$ignore begin
-      call get_r_missing_data(r_missing_data, istatus)
-      if(istatus .ne. 1)return
-
-      vert_rad_pirep = 0
-      vert_rad_sfc   = 0
-      vert_rad_cdw   = 0
-      vert_rad_prof  = 0
-
-      pres_range_pirep = 0.
-      pres_range_cdw   = 0.
-      pres_range_sfc   = 0.
-      pres_range_prof  = 0.
-
-!     Initialize the obs_out columns
-      do k = 1,kmax
-          uobs_out(i,j,k) = uobs_in(i,j,k)
-          vobs_out(i,j,k) = vobs_in(i,j,k)
-          weights(i,j,k) = wt_p(i,j,k)
-      enddo ! k
-
-      do k = 1,kmax
-
-          if(weights(i,j,k) .eq. weight_pirep)then ! Spread this pirep vertically
-              dist_pa = 0.
-          endif
-
-          if(weights(i,j,k) .eq. weight_cdw)then ! Spread this meso vertically
-              dist_pa = 0.
-          endif
-
-          if(weights(i,j,k) .eq. weight_sfc)then ! Spread this Sfc vertically
-              dist_pa = 0.
-          endif
-
-      enddo ! k
-csms$ignore end
-
       return
       end
 
