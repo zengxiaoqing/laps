@@ -43,61 +43,61 @@ unless($opt_o==1){
     select(STDOUT); $| = 1;
 }
 
-print  gmtime." Running systime.exe\n";
+$t=gmtime(); print $t." Running systime.exe\n";
 system("$LAPSROOT/bin/systime.exe");
 
-print gmtime." Running c_time.exe\n";
+$t=gmtime(); print $t." Running c_time.exe\n";
 system("$LAPSROOT/bin/c_time.exe > $LAPS_DATA_ROOT/time/c_time.dat");
 
-print gmtime." Running purger\n";
+$t=gmtime(); print $t." Running purger\n";
 system("@PERL@ $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
 
-print gmtime." Running obs_driver\n";
+$t=gmtime(); print $t." Running obs_driver\n";
 system("$LAPSROOT/bin/obs_driver.x 1> $LAPS_LOG_PATH/obs_driver.log.$hhmm 2>&1");
 
-print gmtime." Running rass ingest\n";
+$t=gmtime(); print $t." Running rass ingest\n";
 system("$LAPSROOT/bin/ingest_lrs.exe 1> $LAPS_LOG_PATH/rass.log.$hhmm 2>&1");
 
-print gmtime." Running BLP rass ingest\n";
+$t=gmtime(); print $t." Running BLP rass ingest\n";
 system("$LAPSROOT/bin/ingest_blplrs.exe 1> $LAPS_LOG_PATH/rass_blp.log.$hhmm 2>&1");
 
-print gmtime." Running raob ingest\n";
+$t=gmtime(); print $t." Running raob ingest\n";
 system("$LAPSROOT/bin/ingest_raob.exe 1> $LAPS_LOG_PATH/raob.log.$hhmm 2>&1");
 
-print gmtime." Running laps_sfc\n";
+$t=gmtime(); print $t." Running laps_sfc\n";
 system("$LAPSROOT/bin/laps_sfc.x 1> $LAPS_LOG_PATH/laps_sfc.log.$hhmm 2>&1");
 
-print gmtime." Running temp.exe\n";
+$t=gmtime(); print $t." Running temp.exe\n";
 system("$LAPSROOT/bin/temp.exe 1> $LAPS_LOG_PATH/temp.log.$hhmm 2>&1");
 
-print gmtime." Running ingest_pireps\n";
+$t=gmtime(); print $t." Running ingest_pireps\n";
 system("$LAPSROOT/bin/ingest_pireps.exe 1> $LAPS_LOG_PATH/ingest_pireps.log.$hhmm 2>&1");
 
-print gmtime." Running ingest_acars\n";
+$t=gmtime(); print $t." Running ingest_acars\n";
 system("$LAPSROOT/bin/ingest_acars.exe 1> $LAPS_LOG_PATH/ingest_acars.log.$hhmm 2>&1");
 
-print gmtime." Running ingest_pro\n";
+$t=gmtime(); print $t." Running ingest_pro\n";
 system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_LOG_PATH/ingest_pro.log.$hhmm 2>&1");
 
-print gmtime." Running ingest_blppro\n";
+$t=gmtime(); print $t." Running ingest_blppro\n";
 system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_LOG_PATH/ingest_blppro.log.$hhmm 2>&1");
 
-print gmtime." Running wind\n";
+$t=gmtime(); print $t." Running wind\n";
 system("$LAPSROOT/bin/wind.exe 1> $LAPS_LOG_PATH/wind.log.$hhmm 2>&1");
 
-print gmtime." Running cloud\n";
+$t=gmtime(); print $t." Running cloud\n";
 system("$LAPSROOT/bin/cloud.exe 1> $LAPS_LOG_PATH/cloud.log.$hhmm 2>&1");
 
-print gmtime." Running lq3driver\n";
+$t=gmtime(); print $t." Running lq3driver\n";
 system("$LAPSROOT/bin/lq3driver.x 1> $LAPS_LOG_PATH/lq3.log.$hhmm 2>&1");
 
-print gmtime." Running deriv\n";
+$t=gmtime(); print $t." Running deriv\n";
 system("$LAPSROOT/bin/deriv.exe 1> $LAPS_LOG_PATH/deriv.log.$hhmm 2>&1");
 
-print gmtime." Running accum\n";
+$t=gmtime(); print $t." Running accum\n";
 system("$LAPSROOT/bin/accum.exe 1> $LAPS_LOG_PATH/accum.log.$hhmm 2>&1");
 
-print gmtime." Running lsm5\n";
+$t=gmtime(); print $t." Running lsm5\n";
 system("$LAPSROOT/bin/lsm5.exe 1> $LAPS_LOG_PATH/lsm5.log.$hhmm 2>&1");
 
 
