@@ -16,6 +16,7 @@
  nk_laps=21,                         
 
  laps_cycle_time_cmn=3600,           
+ max_radar_files_cmn=20000,
 
  l_compress_radar=.true.,                  
  I_PERIMETER_CMN=10,                  
@@ -112,6 +113,8 @@ c MAX_RADARS_CMN - Number of wideband radars being used. This can be set to
 c                  0 if no radars are present to save computer memory 
 c                  (particularly in the wind analysis) along with other 
 c                  resources.
+c
+c max_radar_files_cmn - Maximum number of files expected in a radar directory
 c
 c ref_base_cmn - Reflectivity dbZ value assigned to areas with no echoes.
 c
