@@ -47,7 +47,6 @@ c FORTRAN 90 CONSTRUCTS USED OVER F77 CODE
       subroutine variational (
      1     sh,                  ! specific humidity g/g
      1     sfc_data,            ! struct type lbsi surface data
-     1     lat,lon,             ! lat and longitude (deg)
      1     i4time,              ! i4time of run (seconds)
      1     p_3d,                ! pressure hpa (laps vert grid)
      1     cloud,               ! cloud array
@@ -56,7 +55,7 @@ c FORTRAN 90 CONSTRUCTS USED OVER F77 CODE
      1     qadjust,             ! moisture needed for cloud formation
      1     t,                   ! lt1 (laps 3d temps)
      1     mdf,
-     1     ps,qs,kstart,
+     1     qs,kstart,
      1     ngoes,               ! goes satellite number
      1     isnd,                ! sounder switch
      1     sat_skip,            ! normally 1 for full resolution
@@ -110,11 +109,11 @@ c     parameter list variables
       integer ::  ii,jj,kk
       type (lbsi), dimension (ii,jj) :: sfc_data
       real :: sh(ii,jj,kk)
-      real ::  lat(ii,jj),lon(ii,jj)
       integer :: i4time
       real :: sat (ii,jj,kk)
       real ::  t(ii,jj,kk),p_3d(ii,jj,kk),mdf
       real :: cloud(ii,jj,kk)
+      real :: qs(ii,jj)
       integer :: istatus_cloud
       real :: gw1(ii,jj),gww1(ii,jj)
       real :: gw2(ii,jj),gww2(ii,jj)
@@ -124,7 +123,6 @@ c     parameter list variables
       integer :: ngoes
       integer :: isnd
       integer :: sat_skip
-      real ::  ps(ii,jj), qs(ii,jj)
       integer :: kstart(ii,jj)
       real :: gps_data(ii,jj)
       real :: gps_w (ii,jj)
@@ -449,12 +447,8 @@ c     get laps surface pressure now replaced with value from structure sfc_data
       
       print*, 'Transferring surface pressure from structure'
 
-      do j = 1,jj
-         do i = 1, ii
-            psfc(i,j) = sfc_data(i,j)%sfc_pres
-         enddo
-      enddo
-      
+      psfc = sfc_data%sfc_pres
+
 c     setup cloud test (cloud array passed in)
       
       do j = 1,jj
@@ -587,7 +581,7 @@ c     channels used in this algorithm.
             
             call ofm ( kk, p_l(1,i,j), t_l(1,i,j), 
      1           mr_l(1,i,j), tskin(i,j), psfc(i,j),
-     1           julian_day, lat(i,j),theta(i,j), tbest) 
+     1           julian_day, sfc_data(i,j)%lat, theta(i,j), tbest)
             
             if(isnd.eq.0) then  ! IMAGER computation
                
@@ -766,7 +760,7 @@ c     fill cost function for background atmosphere
             cost_tskin = tskin (i,j)
             cost_psfc = psfc (i,j)
             cost_julian_day = julian_day
-            cost_lat = lat (i,j)
+            cost_lat = sfc_data(i,j)%lat
             cost_theta = theta (i,j)
 
 c     cost function data for gvap
@@ -778,8 +772,8 @@ c     cost function data for gvap
             cost_gvap_p = gvap_p(i,j)
             cost_gvap_istatus = istatus_gvap
             cost_kstart = kstart (i,j)
-            cost_qs = qs(i,j)
-            cost_ps = ps (i,j)
+            cost_qs = qs (i,j)
+            cost_ps = sfc_data(i,j)%sfc_pres
             cost_mdf = mdf
             
 c     cost function data for cloud analysis

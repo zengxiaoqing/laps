@@ -57,7 +57,8 @@ c     parameter variables
       real mdf
       integer lct
       type (lbsi), dimension(ii,jj) :: sfc_data
-      real :: pi, d2r, tempz(2,ii,jj)
+      real :: pi, d2r, tempz(2,ii,jj), alt, sol_sub_lat, sol_sub_lon
+      real :: zenith_angle      !added for testing calculation
       real zenith ! function
 
      
@@ -388,23 +389,16 @@ c     set namelist parameters to defaults
 
 c     initialize field to lq3 internal missing data flag.
 c     initialize total pw to laps missing data flag
-      
-      do i = 1,ii
-         do j = 1,jj
-            do k = 1,kk
-               data (i,j,k) = -1e+30
-            enddo
-            tpw(i,j) = mdf
-            gvap_w(i,j) = 0.0
-            gvap_data(i,j) = 0.0
-            gps_data(i,j) = 0.0
-            gps_w(i,j) = 0.0
-         enddo
-      enddo
 
-      jstatus(1) = 0
-      jstatus(2) = 0            !%loc(rtsys_abort_prod)
-      jstatus(3) = 0
+      data = -1.e+30
+      tpw = mdf
+      gvap_w = 0.0
+      gvap_data = 0.0
+      gps_data = 0.0
+      gps_w = 0.0
+      mask = 0
+      
+      jstatus = 0               ! %loc(rtsys_abort_prod)
 
       call get_pres_3d (i4time,ii,jj,kk,p_3d,istatus)
 
@@ -417,21 +411,14 @@ c     initialize total pw to laps missing data flag
 
 c     dependence here now remains to one dimension
 
-      do k = 1,kk
-         do j = 1,jj
-            do i = 1,ii
-               p_3d(i,j,k) = p_3d(i,j,k) * 0.01  ! convert to hpa
-            enddo
-         enddo
-         lvllm(k) = nint (p_3d(1,1,k))
-      enddo
+      p_3d = p_3d * 0.01 ! convert 3d array to hPa
 
-      do k = 1,kk
-         plevel(k) = float ( lvllm(k)  )
-         mlevel(k) = plevel(k)
-      enddo
+      lvllm (1:kk)  = int( p_3d (1,1,1:kk))
 
-c     mark the maps gridpoints
+      plevel (1:kk) = float (lvllm(1:kk))
+      mlevel = plevel
+
+c     mark the maps gridpoints -- archaic code ???
 
       do j = 1,jj,(jj-1)/(jj-1)
          do  i = 1,ii,(ii-1)/(ii-1)
@@ -473,24 +460,11 @@ c     Get background field
       i4time = save_i4time
       filename = savefilename
 
-c     check for negative input and warn
-      
-      do k = 1,kk
-         do j = 1,jj
-            do i = 1,ii
-               
-               if (data (i,j,k).lt.0.0) then
-                  write(6,*) 'neg. input found, data,i,j,k'
-                  write(6,*) data(i,j,k),i,j,k
-                  data(i,j,k) = 0.0
-               endif
-               
-            enddo
-         enddo
-         
-         
-      enddo
-      
+c     check for negative input, assign zero value
+
+      where (data < 0.0) 
+         data = 0.0
+      end where
       
 c     **** obtain lat lons for domain
       
@@ -534,10 +508,8 @@ c     get the location of the static grid directory
       
       
 c     open file for laps temp data
-      do k = 1,kk
-         varlt1(k) = 't3 '
-      enddo
-      
+      varlt1 = 't3 '
+
       call read_laps (save_i4time,save_i4time,
      1     dirlt1,
      1     extlt1,
@@ -559,10 +531,12 @@ c     open file for laps temp data
       
 c     fill new data structure surface data
 
+      sfc_data%lat = lat
+      sfc_data%lon = lon
+
       do i = 1, ii
          do j = 1,jj
-            sfc_data(i,j)%lat = lat(i,j)
-            sfc_data(i,j)%lon = lon(i,j)
+
 c     compute the secant of zenith angle for each goes satellite
 c     (1) is goes east
 c     (2) is goes west
@@ -576,6 +550,36 @@ c     (x) add additional satellites as needed
                tempz(k,i,j) = 1./cos(tempz(k,i,j)*d2r)
                sfc_data(i,j)%secza(k) = tempz(k,i,j)
             enddo               !k
+
+         enddo
+      enddo
+
+      call solar_position (lat(1,1), lon(1,1), i4time, alt, 
+     1     sol_sub_lat, sol_sub_lon)
+
+c     note that the solar hour angle is now used to compute the solar subpoint
+c     longitude
+
+      sol_sub_lon = lon(1,1) - sol_sub_lon
+
+c     now the solar subpoint latitude is given by the declination
+c     the solar subpoint longitude is given by adjusting the longitude with
+c     the solar hour angle offset.
+
+c     the solar zenith angle is now computable from the following.
+
+      do j = 1,jj
+         do i = 1,ii
+
+            zenith_angle = zenith ( 
+     1           lat(i,j)*d2r,lon(i,j)*d2r, sol_sub_lat*d2r, 
+     1           sol_sub_lon*d2r  )
+            if(abs (zenith_angle) >= 85.0) then
+               sfc_data(i,j)%secsola = 11.47 ! largest allowed value
+c     sun is assumed below horizon
+            else
+               sfc_data(i,j)%secsola = 1./ cos ( d2r*zenith_angle)
+            endif
 
          enddo
       enddo
@@ -647,19 +651,11 @@ c     initial check for computed nans
       
       
 c     record total moisture
-      
-      do k = 1,kk
-         do i = 1,ii
-            do j = 1,jj
-               data_in(i,j,k) = data(i,j,k)
-               data_start(i,j,k) = data(i,j,k)
-            enddo
-         enddo
-      enddo
-      
+
+      data_in = data
+      data_start = data
       
 c     ****  execute raob step if switch is on
-      
       
       if(raob_switch.eq.1) then
          write (6,*) 'begin raob insertion'
@@ -667,30 +663,7 @@ c     ****  execute raob step if switch is on
          call snd_step (i4time,p_3d,raob_lookback, lat,lon,
      1        lt1dat, ii,jj,kk, q_snd,weight_snd, 
      1        raob_radius, raob_switch)
-         
-c     ---  as of 12/07/01 snd_step has been replaced raob_step
-c     Raob_step will be removed in the near future.
-c     The new snd_step routine is variational and also is set to use
-c     tower data for the RSA project.
-
-c         call raob_step (i4time,data,p_3d, raob_lookback,
-c     1        lat,lon, lt1dat, ii,jj,kk)
-         
-         
-c         write(6,*) 'Reporting effects of RAOB insertion'
-         
-c         call report_change (data_in, data, p_3d, mdf,ii,jj,kk)
-         
-c         do i = 1,ii
-c            do j = 1,jj
-c               do k  = 1,kk
-c                  data_in(i,j,k) = data(i,j,k)
-c               enddo
-c            enddo
-c         enddo
-         
-c     end report moisture change block
-         
+             
       else
          write(6,*) 'the raob switch is off... SND skipped'
       endif
@@ -728,32 +701,18 @@ c     ****   laps cloud data. used for cloud, bl, goes
 
 c     ***   insert bl moisture
 
-      do k = 1,kk
-         do i = 1,ii
-            do j = 1,jj
-               data_pre_bound(i,j,k) = data(i,j,k)
-            enddo
-         enddo
-      enddo
+      data_pre_bound = data
 
       print*, 'calling lsin'
 c     insert boundary layer data
       call lsin (i4time,p_3d,sfc_data,lt1dat,data,cg,tpw,bias_one,
-     1     kstart,qs,ps,lat,lon,mdf,ii,jj,kk,istatus)
+     1     kstart,qs,ps,mdf,ii,jj,kk,istatus)
 
 c     check for supersaturation
 
-      do k = 1,kk
-         do j = 1,jj
-            do i = 1,ii
-               if(data(i,j,k).ge.sat(i,j,k)
-     1              .and.
-     1              data(i,j,k).ne.mdf) then
-                  data(i,j,k) = 0.9*sat(i,j,k)
-               endif
-            enddo
-         enddo
-      enddo
+      where (data >= sat .and. data /= mdf )
+         data = 0.99*sat
+      end where
 
 c     check fields after lsin call
       call check_nan3(data,ii,jj,kk,istatus)
@@ -780,37 +739,18 @@ c     check fields after lsin call
          write(6,*) 'Reporting net change'
          call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
 
-         do i = 1,ii
-            do j = 1,jj
-               do k  = 1,kk
-                  data_in(i,j,k) = data(i,j,k)
-               enddo
-            enddo
-         enddo
-         
+         data_in = data
+
 c     end report moisture change block
          
       else
          write(6,*) 'Lsin and sfc mixing step skipped'
+
+         where (data >= 0.0 )
+            data = data_pre_bound
+         end where
          
-         do k = 1,kk
-            do i = 1,ii
-               do j = 1,jj
-
-c     fill subsoil part of the array with -1.e30 data.
-                  if(data(i,j,k).lt.0.0) then
-                     continue
-                  else
-                     data(i,j,k) = data_pre_bound(i,j,k)
-                  endif
-
-                  data_in(i,j,k) = data(i,j,k)
-               enddo
-            enddo
-         enddo
-    
       endif
-
 
 c     call to get cloud adjust parameter
 
@@ -861,14 +801,7 @@ c     gvap data acquisition
      1        lat,lon,time_diff,IHOP_flag,
      1        path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
          
-c         do i = 1,ii
-c            do j = 1,jj
-c               if (gw1(i,j) .ne. mdf )then
-c                  write(6,*) gw1(i,j), gw2(i,j), gw3(i,j), i,j
-c               endif
-c            enddo
-c         enddo
-         
+
          if(istatus_gvap.eq.1 .and. istatus_gps.eq.1) then ! correct gvap
             continue            ! placeholder for correction call
             write(6,*) 'gvap/gps correction currently disabled'
@@ -923,16 +856,8 @@ c     CHECKING PROCESS OUTPUT
       
       write(6,*) 'Reporting net change'
       call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
-      
-      do i = 1,ii
-         do j = 1,jj
-            do k  = 1,kk
-               data_in(i,j,k) = data(i,j,k)
-            enddo
-         enddo
-      enddo
-      
 
+      data_in = data
 
       write(6,*) 
 
@@ -994,7 +919,6 @@ c     make call to goes moisture insertion
             call variational (
      1           data,          ! 3-d specific humidity g/g
      1           sfc_data,      ! struct surface data (type lbsi)
-     1           lat,lon,       ! 2-d lat and longitude
      1           i4time,        ! i4time of run
      1           p_3d,          ! pressure mb
      1           cg,            ! 3-e cloud field 0-1 (1=cloudy)
@@ -1003,7 +927,7 @@ c     make call to goes moisture insertion
      1           qadjust,       ! q increase needed for cloud formation
      1           lt1dat,        ! laps lt1 (3-d temps)
      1           mdf,
-     1           ps,qs,kstart,
+     1           qs,kstart,
      1           goes_switch,   ! goes switch and satellite number
      1           sounder_switch, ! sounder switch, 0=imager,1=sndr
      1           sat_skip,      ! normally 1 for full resolution
@@ -1026,16 +950,7 @@ c     make call to goes moisture insertion
             write(6,*) 'Reporting net change'
             call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
             
-            do i = 1,ii
-               do j = 1,jj
-                  do k  = 1,kk
-                     data_in(i,j,k) = data(i,j,k)
-                  enddo
-               enddo
-            enddo
-         
-
-            
+            data_in = data
             
 c     end report moisture change block
         
@@ -1117,10 +1032,6 @@ c     saturate in cloudy areas.
 
                   call cloud_sat (cg(i,j,k),qadjust(i,j,k),data(i,j,k))
 
-c                  if(cg(i,j,k).ge.1.0) then ! saturate only in cloud areas
-c                     data(i,j,k) = sat(i,j,k)
-c                  endif
-
                enddo
             enddo
          enddo
@@ -1138,13 +1049,7 @@ c                  endif
          write(6,*) 'Reporting net change'
          call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
          
-         do i = 1,ii
-            do j = 1,jj
-               do k  = 1,kk
-                  data_in(i,j,k) = data(i,j,k)
-               enddo
-            enddo
-         enddo
+         data_in = data
          
       endif
       
@@ -1154,10 +1059,10 @@ c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
       if(mod_4dda_1 .eq. 1) then ! act to decrease overall water
          
          do k=1,kk
-            factor=1.-(float(k)*mod_4dda_factor)
+            factor = 1.-(float(k)*mod_4dda_factor)
             do j=1,jj
                do i=1,ii
-                  data(i,j,k)=data(i,j,k)*factor
+                  data(i,j,k) = data(i,j,k)*factor
                enddo
             enddo
          enddo
@@ -1167,7 +1072,6 @@ c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
          call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
          
       endif
-      
       
 c     repeat quality control check for supersaturation after pre-analysis
       write (6,*)  'perform qc for supersaturation'
@@ -1193,8 +1097,7 @@ c     1              lt1dat(i,j,k)-273.15,t_ref )/1000.
  35               format (i1)
                   
                endif
-               
-               
+
             enddo
             write(6,*) (cdomain(i),i=1,ii)
          enddo
@@ -1204,8 +1107,7 @@ c     1              lt1dat(i,j,k)-273.15,t_ref )/1000.
          write (6,*) 'supersaturation has been corrected, 
      1        ',counter,' times.'
       endif
-      
-      
+     
 c     recompute tpw including clouds and supersat corrections
       
       call int_tpw(data,kstart,qs,ps,p_3d,tpw,mdf,ii,jj,kk)
@@ -1214,25 +1116,28 @@ c     place the accepted missing data flag in output field
 c     sum over the entire grid for a total water sum value for 
 c     QC study.
       
+c     conform to laps missing data flag (switch from mine)
+
+      where (data < 0.0)
+         data = mdf
+      endwhere
+
+c     sum total water for simple print diagnostic
+
       tempsh = 0.0
-      
+     
       do i = 1,ii
          do j = 1,jj
             do k = 1,kk
                
-               if(data(i,j,k) .lt.0.0) then
-                  data(i,j,k) = mdf !  put in missing data flag if missing
-               else
+               if(data(i,j,k) /= mdf) then
                   tempsh = tempsh + data(i,j,k) ! sum if good data
                endif
                
             enddo
          enddo
       enddo
-      
-      
-      
-      
+
 c     log the amount of water vapor
       
       write (6,*) ' '
@@ -1295,4 +1200,3 @@ c     generate lh3 file (RH true, RH liquid)
       return
       
       end
-      

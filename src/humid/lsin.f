@@ -38,7 +38,7 @@ cdis
 cdis
 
       subroutine lsin (i4time,p_3d,sfc_data,lt1dat,data,cg,tpw,bias_one,
-     1     kstart,qs,p,glat,glon,mdf,ii,jj,kk,istatus)
+     1     kstart,qs,p,mdf,ii,jj,kk,istatus)
 
 c     this routine is the laps surface interface for water vapor
 c     its function is to get the relevant boundary layer moisture
@@ -84,8 +84,6 @@ c     input variables
       integer kstart (ii,jj)
       real qs (ii,jj)
       real p (ii,jj)            !surface pressure (topo level)
-      real glat (ii,jj)
-      real glon (ii,jj)
       real mdf
       
 c     internal variables with lapsparms.inc dependence
@@ -133,12 +131,8 @@ c     get required field variables
          return
       endif
 
-      do i = 1,kk
-         do j = 1,jj
-            sfc_data(ii,jj)%sfc_temp = t(i,j)
-         enddo
-      enddo
-      
+c     fill sfc data structure with temperature (K)
+      sfc_data%sfc_temp = t
       
       call glsp(i4time,p,ii,jj,istatus)
       if(istatus.ne.1) return
@@ -152,13 +146,9 @@ c     get required field variables
       
       
 c     convert p to mb
-      
-      do j = 1,jj
-         do i = 1,ii
-            p(i,j) = p(i,j)*.01
-            sfc_data(i,j)%sfc_pres = p(i,j)
-         enddo
-      enddo
+
+      p = p*0.01
+      sfc_data%sfc_pres = p
       
       call glstd(i4time,td,ii,jj,istatus)
       if(istatus.ne.1) return
@@ -169,7 +159,6 @@ c     convert p to mb
          write(6,*) 'NaN detected in var:td  routine:lsin.f'
          return
       endif
-      
       
       call ghbry (i4time,p_3d,p,t,lt1dat,pu,ii,jj,kk,
      1     istatus)
@@ -182,23 +171,17 @@ c     convert p to mb
          return
       endif
       
-      
       istatus = 0               ! begin with bad istatus
       
-c     convert td to c then compute surface specific h.
+c     convert td and t to c then compute surface specific h.
+
+      td = td - 273.15
+      t  =  t - 273.15
       
       do j = 1,jj
          do i = 1,ii
-            
-            td(i,j) = td(i,j) - 273.15
-            sfc_data(i,j)%sfc_temp = t(i,j) ! temp in K degrees
-            t(i,j)  = t(i,j)  - 273.15
-            
             qs (i,j) = ssh2 (p(i,j),t(i,j),
      1           td(i,j),0.0)   ! qs is gm/kg
-            
-            blsh(i,j) = qs(i,j) *1e-3 ! blsh is gm/gm
-            
          enddo
       enddo
 
@@ -208,6 +191,8 @@ c     convert td to c then compute surface specific h.
          write(6,*) 'NaN detected in var:qs  routine:lsin.f'
          return
       endif
+
+      blsh = qs * 1.e-3 ! blsh is gm/gm
       
       
 c     write surface data in at the bottom of the column
@@ -254,7 +239,7 @@ c     radiometer data
       
       print*, 'call routine analq'
       call analq(i4time,p_3d,p,t,pu,td,data,cg,tpw,bias_one,kstart,
-     1     qs, glat,glon,mdf,ii,jj,kk)
+     1     qs,sfc_data%lat,sfc_data%lon,mdf,ii,jj,kk)
       
       print*, 'done with routine analq'
       
