@@ -26,7 +26,7 @@ CPPFLAGS = $(INC) @CPPFLAGS@
 @USECPP@
 # Define include paths.
 NETCDF=@NETCDF@
-INC = -I$(LAPSROOT)/src/include -I$(NETCDF)/include
+INC = -I$(SRCROOT)/src/include -I$(NETCDF)/include
 
 AR  = @ARCHIVE@
 RANLIB   = @RANLIB@
@@ -34,17 +34,17 @@ INSTALL=@INSTALL@
 PERL = @PERL@
 LIBPATHFLAG=@LIBPATHFLAG@
 
-LAPSLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib -llaps
-DBLAPSLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib -ldebuglaps
+LAPSLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib -llaps
+DBLAPSLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib -ldebuglaps
 
-BGDATALIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/bgdata -lbgdata
-DBBGDATALIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/bgdata -ldebugbgdata
+BGDATALIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/bgdata -lbgdata
+DBBGDATALIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/bgdata -ldebugbgdata
 
-MTHERMOLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/mthermo -lmthermo
-DBMTHERMOLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/mthermo -ldebugmthermo
+MTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -lmthermo
+DBMTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -ldebugmthermo
 
-UTILLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/util -lutil
-DBUTILLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/util -ldebugutil
+UTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -lutil
+DBUTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -ldebugutil
 
 
 
