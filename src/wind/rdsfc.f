@@ -77,9 +77,10 @@ cdis
         real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
         real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)  
         real*4 ffg_s(maxstns), vis_s(maxstns)
+        real*4 dd_ea(maxstns), ff_ea(maxstns)
 c
-        character stations(maxstns)*3, wx_s(maxstns)*8        ! c5_stamus
-!       character stations(maxstns)*20, provider(maxstns)*11
+!       character stations(maxstns)*3, wx_s(maxstns)*8        ! c5_stamus
+        character stations(maxstns)*20, provider(maxstns)*11
         character atime*24, infile*270
         character directory*250,ext*31
 
@@ -113,7 +114,7 @@ c
         c13_fname = filename13(i4time,ext(1:3))
         infile = directory(1:len_dir)//c13_fname
 
-        if(.true.)then
+        if(.false.)then
             call read_surface_old(infile,maxstns,atime,n_meso_g,
      1           n_meso_pos,
      1           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
@@ -150,7 +151,7 @@ c
 
         write(6,12)
 12      format(/'             Mapping Sfc Obs'
-     1      /'   n Sta   i   j  k     u      v'
+     1      /'   n  Sta    i   j  k     u      v'
      1      ,'       dd     ff      azi    ran ')
 
 
@@ -211,7 +212,7 @@ c
                 grid_laps_wt(sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),k)
      1                          = weight_sfc
 
-                write(6,20)n_sfc_obs,stations(i)(1:3),
+                write(6,20)n_sfc_obs,stations(i)(1:5),
      1                     sfc_i(n_sfc_obs),
      1                     sfc_j(n_sfc_obs),
      1                     sfc_k(n_sfc_obs),
@@ -224,7 +225,7 @@ c
 
             endif ! In horizontal bounds
 
-20          format(i4,1x,a3,2i4,i3,2f7.1,2x,2f7.1,2x,2f7.1,2x,2f7.1)
+20          format(i4,1x,a5,2i4,i3,2f7.1,2x,2f7.1,2x,2f7.1,2x,2f7.1)
 
           endif ! wind is reported
 
