@@ -1156,7 +1156,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                ---  2.4  Running LAPS Analyses  ---
 
-     LAPS runs under cron; there is a sample cron script in 
+     LAPS runs in real-time under cron; there is a sample cron script in 
      '$LAPSINSTALLROOT/util/cronfile'. Referring to this cron, you can 
      see that once each hour (or other cycle time), the main './etc/sched.pl' 
      runs. As an example at FSL, we run the 'sched.pl' hourly at :20 after the
@@ -1192,9 +1192,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      commands).
 
      There is also a script called 'etc/cronfile.pl' that creates a modified
-     version of 'util/cronfile' tailored to your domain. This script can be 
-     run manually and the output location of the cronfile is directly under 
-     $LAPS_DATA_ROOT.
+     version of 'util/cronfile' tailored to a given domain. This script can be 
+     run manually and the output location of the cronfile is located in 
+     '$LAPS_DATA_ROOT/cronfile'.
 
                ----   2.4.1  Cron timing considerations ---
 
@@ -1246,7 +1246,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      in this README file. The data was created using the latest software 
      release. Our users can download this data at this URL:
 
-           'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
+           'http://laps.fsl.noaa.gov/cgi/LAPS_SOFTWARE.cgi'.
 
      It is suggested here to test the localization procedure to ensure that all
      the static files needed to run LAPS are present. To do this, check that 
@@ -1626,6 +1626,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      vertical pressure interval can vary between levels. Of course, the 
      top pressure should be greater than zero mb. The bottom level should 
      extend below the terrain and below the observations.
+
+   Note: If you are feeding LAPS output into an AWIPS workstation, then
+   additional workstation related changes may be needed.
 
 -------- 2.9 ----- CHANGING THE CYCLE TIME -----------------------------------
 
