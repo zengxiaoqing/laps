@@ -397,7 +397,7 @@ c
      .          bg_valid(max_files),
      .          valid_bg(max_files),time_bg(max_files),
      .          bgvalid,
-     .          i,ic,ii,j,jj,k,kk,l,ldl,
+     .          i,ic,ii,j,jj,k,kk,l,ldl,lf,
      .          istatus,istatus_prep
 
       integer   i4lgatime(max_files)
@@ -417,6 +417,8 @@ c     character*4   lvl_coord(nz_laps)
 c     character*10  units(nz_laps)
       character*125 comment(nz_laps)
       character*4   af_bg(max_files)
+      character*10  c_domain_name
+      character*200 c_dataroot
       integer len_dir,ntime, nf
       integer nxbg, nybg, nzbg(5),ntbg
 c
@@ -432,6 +434,11 @@ c
 
       call get_directory('static',outdir,len_dir)    
 
+      call find_domain_name(c_dataroot,c_domain_name,istatus)
+      if(istatus.ne.1)then
+          print*,'Error returned: find_domain_name'
+          return
+      endif
       call get_laps_lat_lon(outdir(1:len_dir),'nest7grid',
      .                      nx_laps,ny_laps,lat,lon,topo,istatus)
 
@@ -596,9 +603,10 @@ c
          if (istatus_prep .ne. 0) then
 c            l=index(bgpath,' ')-1
 
+            call s_len(fname_bg(nf),lf)
             call s_len(bgpath,l)
             if (bgmodel .gt. 1 .and. bgmodel .le. 3) then
-               fname13=fname_bg(nf)//af_bg(nf)
+               fname13=fname_bg(nf)(1:lf)//af_bg(nf)
             elseif (bgmodel .eq. 4) then
                fname13=fname9_to_wfo_fname13(fname_bg(nf))
             endif
