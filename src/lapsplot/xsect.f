@@ -1132,7 +1132,7 @@ c read in laps lat/lon and topo
             enddo ! i
             enddo ! k
 
-            clow =  0.
+            clow =  -200.
             chigh = +200.
             if(i_image .eq. 0)then
                 cint = 10. / density
@@ -1175,7 +1175,7 @@ c read in laps lat/lon and topo
             enddo ! i
             enddo ! k
 
-            clow =  0.
+            clow =  -200.
             chigh = +200.
             if(i_image .eq. 0)then
                 cint = 10. / density
@@ -1207,7 +1207,7 @@ c read in laps lat/lon and topo
             do k = NZ_C,1,-1
             do i = 1,NX_C
                 if(v_vert(i,k) .ne. r_missing_data)then
-                    call uv_to_disp(        u_vert(i,k),
+                    call uv_to_disp(u_vert(i,k),
      1                              v_vert(i,k),
      1                              di_dum,
      1                              speed_ms)
@@ -1498,7 +1498,10 @@ c read in laps lat/lon and topo
                         l_low_fill = .true.                        
                         l_high_fill = .true.                        
 
+                        i4_tol = 1200
+
                         call read_radar_3dref(i4time_radar,
+     1                   i4_tol,i4_ret,                                  ! I/O
 !    1                   .true.,ref_base,
      1                   .true.,r_missing_data,
      1                   NX_L,NY_L,NZ_L,ext_radar,
@@ -2358,6 +2361,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 call make_fnam_lp(i4time_valid,a9time,istatus)
 
+                scale = 1e-3
+
             elseif(c_prodtype .eq. 'B' .or. 
      1             c_prodtype .eq. 'F')then
 
@@ -2377,12 +2382,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             call interp_3d(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
-
-            do k = 1,NZ_C
-            do i = 1,NX_C
-                field_vert(i,k) = field_vert(i,k) * 1e3
-            enddo ! i
-            enddo ! k
 
             clow = 0.
             chigh = 0.
@@ -2570,27 +2569,22 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             write(6,*)' CLOW,HIGH,CINT ',clow,chigh,cint
             write(6,*)' Max/Min = ',vmax,vmin
 
-            if(cint .ge. 0.)then
-                if(.false.)then
-!                   CALL CPSETI ('CLC - CONTOUR LINE COLOR INDEX'
-!    1                           , icolors(i_graphics_overlay))
-                    call conrec
-     1              (field_vert(1,ibottom),NX_C,NX_C,(NZ_C-ibottom+1)
-     1                             ,clow,chigh,cint,-1,0,-1848,0)
+            if(i_image .eq. 0)then
+                write(6,*)' Scaling data by ',scale
+                do k = NZ_C,1,-1
+                do i = 1,NX_C
+                    if(field_vert(i,k) .ne. r_missing_data)then
+                        field_vert(i,k) = field_vert(i,k) / scale       
+                    endif
+                enddo ! i
+                enddo ! k
+            endif ! contour plot
 
-                else ! Can we make this work (anamorphically) for color plots?
+            if(cint .ge. 0. .or. i_image .eq. 1)then
+                if(.true.)then 
+!                   Can we make this work (anamorphically) for color plots?
 !                   call get_border(ni,nj,x_1,x_2,y_1,y_2)
 !                   call set(x_1,x_2,y_1,y_2,0.05,0.95,0.05,0.95,1)
-
-                    if(i_image .eq. 0)then
-                        do k = NZ_C,1,-1
-                        do i = 1,NX_C
-                            if(field_vert(i,k) .ne. r_missing_data)then
-                              field_vert(i,k) = field_vert(i,k) / scale       
-                            endif
-                        enddo ! i
-                        enddo ! k
-                    endif ! contour plot
 
                     call get_border(NX_C,NZ_C-ibottom+1,x_1,x_2,y_1,y_2)       
 
@@ -2609,7 +2603,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                          ,0.10,0.90,0.05,0.95,1) ! Orig
 
                         write(6,*)' calling contour line plot, scale:'       
-     1                            ,scale
+     1                            ,scale,clow,chigh,cint
 
                         call conrec_line(field_vert3,NX_P,NX_P,NX_P
      1                             ,clow,chigh,cint,plot_parms
@@ -2660,7 +2654,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 endif
 
-            else ! logarithmic plot
+            else ! logarithmic contour plot
               if(.false.)then
                 call conrec(field_vert(1,ibottom)
      1                     ,NX_C,NX_C,(NZ_C-ibottom+1)
@@ -3814,6 +3808,7 @@ c
         call upcase(c_prodtype,c_prodtype)
 
         if(c_prodtype .eq. 'A' .or. c_prodtype .eq. 'N')then
+            i4_valid = i4time_ref
             return
 
         elseif(c_prodtype .eq. 'Q')then
