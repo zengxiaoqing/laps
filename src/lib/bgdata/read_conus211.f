@@ -91,8 +91,6 @@ C
       call s_len(path,slen)
       cdfname=path(1:slen)//'/'//fname13
 
-
-
       nf_status = NF_OPEN(cdfname,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
@@ -231,6 +229,9 @@ ccc      if (fname .ne. oldfname) then
       call s_len(path,slen)
       cdfname=path(1:slen)//'/'//fname13
       
+      call s_len(cdfname,slen)
+      print*,'reading cdfname: ',cdfname(1:slen)
+
       rcode = NF_OPEN(cdfname,NF_NOWRITE,ncid)
       if(rcode.ne.NF_NOERR) then
          print *, NF_STRERROR(rcode)
@@ -456,6 +457,10 @@ c
       if(istatus .eq. 0) then
         print*, 'No valid data found for',fname, af
       else
+c
+c return sfc rh and use routine 'sfcprs' (in lga.f) to compute
+c laps terrain driven sfc p, T and Td.
+c
 
          do j=1,nybg
             do i=1,nxbg
@@ -464,12 +469,14 @@ c
                if(tpn(i,j,1).lt.missingflag) then
                   tp_sfc(ii,jj)=tpn(i,j,1)
                   sh_sfc(ii,jj)=rhn(i,j,1)
-                  it=int(tp_sfc(ii,jj)*100)
-                  it=min(45000,max(15000,it))
-                  xe=esat(it)
-                  mrsat=0.00622*xe/(pr_sfcn(i,j)*0.01-xe)
-                  sh_sfc(ii,jj)=sh_sfc(ii,jj)*mrsat
-                  sh_sfc(ii,jj)=sh_sfc(ii,jj)/(1.+sh_sfc(ii,jj))
+
+c                 it=int(tp_sfc(ii,jj)*100)
+c                 it=min(45000,max(15000,it))
+c                 xe=esat(it)
+c                 mrsat=0.00622*xe/(pr_sfcn(i,j)*0.01-xe)
+c                 sh_sfc(ii,jj)=sh_sfc(ii,jj)*mrsat
+c                 sh_sfc(ii,jj)=sh_sfc(ii,jj)/(1.+sh_sfc(ii,jj))
+
                   uw_sfc(ii,jj)=uwn(i,j,1)
                   vw_sfc(ii,jj)=vwn(i,j,1)
                   mslp(ii,jj)=mslpn(i,j)
