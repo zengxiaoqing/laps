@@ -572,8 +572,8 @@ c
         write(comment_a(3),888)rlat_radar,rlon_radar,rheight_radar
      1       ,n_vel_grids_final,c4_radarname
 
-  888   format(2f9.3,f8.0,i7,a7)
-  889   format(2f9.3,f8.0,i7,a7,e12.4,l2)
+  888   format(2f9.3,f8.0,i7,a4,3x)
+  889   format(2f9.3,f8.0,i7,a4,3x,e12.4,l2)
 
         write(6,890)comment_a(1)(1:80)
         write(6,890)comment_a(2)(1:80)
@@ -582,12 +582,12 @@ c
 
         I4_elapsed = ishow_timer()
 
-        if(.true.)then
+        if(c7_laps_ext(1:3) .ne. 'vrc')then
             call put_laps_multi_3d(i_product_i4time,ext,var_a,units_a,       
      1              comment_a,out_array_4d,NX_L,NY_L,NZ_L,nf,istatus)
 
         else ! Single level of data (as per WFO)
-!           call put_laps_vrc(i_product_i4time,comment_a(1),
+!           call put_laps_vrc(i_product_i4time,comment_a(1),c7_laps_ext       
 !    1               c4_radarname,rlat_radar,rlon_radar,rheight_radar
 !    1               out_array_4d(1,1,1),NX_L,NY_L,NZ_L,istatus)
 
@@ -750,13 +750,56 @@ c            ext = 'v01'
         end
 
 
-!       suborutine put_laps_vrc(i_product_i4time,comment_a(1),
+!       call put_laps_vrc(i_product_i4time,comment_a(1)
 !    1               c4_radarname,rlat_radar,rlon_radar,rheight_radar
-!    1               out_array_4d(1,1,1),NX_L,NY_L,NZ_L,istatus)
+!    1               out_array_4d(1,1,1),NX_L,NY_L,istatus)
+
+        subroutine put_laps_vrc(i4time,comment_2d,imax,jmax
+     1                         ,field_2d,istatus)
+
+        character*7 c7_ext
 
 !       Get column max reflectivity
 !       call ref_fill_horz()
-!       call put_laps_2d()           ! Except how do we handle radar subdir?
 
-!       return
-!       end
+
+!       Stuff from 'put_laps_2d' except how do we handle radar subdir?
+
+        character*150 DIRECTORY
+        character*150 DIRECTORY1
+        character*31 EXT
+
+        character*125 comment_2d
+        character*10 units_2d
+        character*3 var_2d
+        integer*4 LVL_2d
+        character*4 LVL_COORD_2d
+
+        real*4 field_2d(imax,jmax)
+
+        character*8 radar_subdir
+
+        ext = 'vrc'
+        var_2d = 'REF'
+        units_2d = 'DBZ'
+
+        call getenv('RADAR_SUBDIR',radar_subdir)
+        call downcase(radar_subdir,radar_subdir)
+        write(6,*)' radar_init: radar_subdir = ',radar_subdir
+
+        call get_directory(radar_subdir,directory1,len_dir)
+
+        directory = directory1(1:len_dir)//'vrc'
+
+        write(6,11)directory,ext(1:5),var_2d
+11      format(' Writing 2d ',a50,1x,a5,1x,a3)
+
+        lvl_2d = 0
+        lvl_coord_2d = 'MSL'
+
+        CALL WRITE_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
+     1  1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
+     1                     COMMENT_2D,field_2d,ISTATUS)
+
+        return
+        end

@@ -12,6 +12,7 @@
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
        character*3 ext_out
+       character*8 radar_subdir
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
@@ -19,13 +20,19 @@
 !      include 'remap.cmn' ! for debugging only
 
 c
-c     Determine filename extension
-        call getenv('LAPS_REMAP_EXT',ext_out)
-        call downcase(ext_out,ext_out)
-        write(6,*)' REMAP_PROCESS > laps_ext = ',ext_out
-        if(ext_out(1:1) .ne. 'v')then
-          ext_out = 'v01'
-        endif
+c      Determine filename extension
+       call getenv('LAPS_REMAP_EXT',ext_out)
+       call downcase(ext_out,ext_out)
+       write(6,*)' radar_init: laps_ext = ',ext_out
+       if(ext_out(1:1) .ne. 'v')then
+           ext_out = 'v01'
+       endif
+
+       if(ext_out .eq. 'vrc')then ! Obtain radar subdir 
+           call getenv('RADAR_SUBDIR',radar_subdir)
+           call downcase(radar_subdir,radar_subdir)
+           write(6,*)' radar_init: radar_subdir = ',radar_subdir
+       endif
 
        i_last_scan = 0
 
@@ -181,12 +188,12 @@ c     Determine filename extension
        end
  
  
-       function get_field_num(ext)
+       function get_field_num(c3_field)
        integer get_field_num
-       character*3 ext
+       character*3 c3_field
  
-       if(ext .eq. 'DBZ')get_field_num = 1
-       if(ext .eq. 'VEL')get_field_num = 2
+       if(c3_field .eq. 'DBZ')get_field_num = 1
+       if(c3_field .eq. 'VEL')get_field_num = 2
  
        return
        end
