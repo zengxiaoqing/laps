@@ -1,76 +1,85 @@
-#  Make file for Nexrad RISC RPG Project
+# Generated automatically from Makefile.in by configure.
 #
-#  Version 1.00 - Preliminary program development
-#  Version 1.01 - First Registered version in SCCS
-#  Version 1.02 - Added error_log to file list and renamed the output to rpg
-#  Version 1.03 - Added tapesys, tape thread simulator
 #
-rpg: rpg_tape monitor widebd_server widebd_client serial_HSI.o minsys.o bx25.o sysmon.o  wideband.o mess.o error_log.o riscrpg.h mess.h x25.h makefile
-	cc -g -o rpg minsys.o serial_HSI.o bx25.o sysmon.o  wideband.o mess.o error_log.o -I/usr/local/include -L/nsslsun/nssl/bens/lib -lnssl
 
-widebd_server: bd_server.c wideband.o  makefile 
-	cc -g -o widebd_server bd_server.c wideband.o  -lnssl
+LAPSROOT=../../../..
+INSTALLROOT=/usr/nfs/lapb/parallel/laps
 
-widebd_client: bd_client.c wideband.o  makefile
-	cc -g -o widebd_client bd_client.c wideband.o  -lnssl
+# Specify Fortran, C, and loader options for default SUN configuration.
 
-rpg_tape: rpg_tape.c get_tape_mess.o sysmon.o  wideband.o mess.o riscrpg.h mess.h makefile
-	cc -g -o rpg_tape rpg_tape.c get_tape_mess.o sysmon.o  wideband.o mess.o -I/usr/local/include -L/nsslsun/nssl/bens/lib -lnssl
+CC=xlc
 
-monitor:  monitor.c sysmon.o riscrpg.h makefile
-	/usr/5bin/cc -g -o monitor monitor.c -I/usr/local/include -lnssl -lcurses -ltermcap
+CFLAGS=-g $(INC)  -O3 -qstrict
 
-minsys.o: minsys.c riscrpg.h x25.h makefile
-	cc -g -c minsys.c -I/usr/local/include
-
-mess.o: mess.c mess.h makefile
-	cc -g -c mess.c -I/usr/local/include
-
-serial_HSI.o: serial_HSI.c serial_HSI.h makefile
-	cc -g -c serial_HSI.c -I/usr/local/include
-
-wideband.o: wideband.c riscrpg.h makefile
-	cc -g -c wideband.c -I/usr/local/include
-
-bx25.o: bx25.c x25.h makefile
-	cc -g -c bx25.c -I/usr/local/include
-
-sysmon.o: sysmon.c riscrpg.h makefile
-	cc -g -c sysmon.c -I/usr/local/include
-
-error_log.o: error_log.c riscrpg.h makefile
-	cc -g -c error_log.c -I/usr/local/include
-
-get_tape_mess.o: get_tape_mess.c mess.h riscrpg.h makefile
-	cc -g -c get_tape_mess.c -I/usr/local/include
-
-riscrpg.h: mess.h x25.h makefile
-
-# shm_attach.o: shm_attach.c makefile
-#	cc -g -c shm_attach.c -I/usr/local/include -lnssl
-
-testshm: testshm.o makefile 
-	cc -g -o testshm testshm.o -I/usr/local/include
-testcircw: testcircw.o  makefile 
-	cc -g -o testcircw testcircw.o  -I/usr/local/include
-testcircr: testcircr.o  makefile 
-	cc -g -o testcircr testcircr.o  -I/usr/local/include
+FC       = xlf
 
 
-sample_wide_reader: sample_wide_reader.o  wideband.o makefile 
-	cc -g -o sample_wide_reader sample_wide_reader.o  wideband.o -I/usr/local/include
+FFLAGS =  -qfixed $(INC)  -O3 -qstrict
 
-sample_wide_writer: sample_wide_writer.o  wideband.o mess.h makefile 
-	cc -g -o sample_wide_writer sample_wide_writer.o  wideband.o -I/usr/local/include
+# Define pre-processor command line options for .F files.
 
-wideband_echo: wideband_echo.o  wideband.o mess.h makefile 
-	cc -g -o wideband_echo wideband_echo.o  wideband.o -I/usr/local/include
+CPP = xlc -P
 
-wideband_scan: wideband_scan.o  wideband.o mess.h makefile 
-	cc -g -o wideband_scan wideband_scan.o  wideband.o -I/usr/local/include
+# Define include paths.
 
-wideband_rda: wideband_rda.o  wideband.o mess.h makefile 
-	cc -g -o wideband_rda wideband_rda.o  wideband.o -I/usr/local/include
+INC = -I$(LAPSROOT)/src/include -I/usr/nfs/netcdf/include
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
+           $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
+           $(LAPSROOT)/src/lib/radar/remap_ftn/libremap_ftn.a  \
+           $(LAPSROOT)/src/lib/util/libutil.a  
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
+             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
+             $(LAPSROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
+             $(LAPSROOT)/src/lib/util/libdebugutil.a  
+
+
+OTHERLIBS = /usr/nfs/netcdf/lib/libnetcdf.a 
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a
+
+EXE = remap_polar_netcdf.exe
+
+
+# Define other variables 
+
+AR  = ar
+RANLIB   = ranlib
+INSTALL = $(LAPSROOT)/util/install-sh
+
+# Define all source code to be compiled and placed in local library.
+
+SRC=remap.f netcdfio.f
+
+
+all: exe
+
+exe: $(EXE)
+
+$(EXE): $(SRC)
+	$(FC) $(FFLAGS) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+debug: $(SRC)
+	rm -f $(EXE) *.o;
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS=' -qfixed $(INC) -g'
+
+install: exe
+	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
+
+clean:
+	rm -f $(EXE)  *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
 
 
 
