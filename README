@@ -207,7 +207,7 @@
 
      For Solaris platforms, 'cc' is recommended.
 
-     For HP-UX platforms, 'gcc' is suggested.
+     For HP-UX platforms, 'cc' is suggested.
 
 
                   ---  2.1.5  FORTRAN Compiler ---
