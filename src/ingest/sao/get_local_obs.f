@@ -82,14 +82,19 @@ c
 c.....  Local variables/arrays
 c
         real    lat(ni,nj), lon(ni,nj), k_to_f
-	real*8  timeobs(maxobs), rh_time(maxobs), p_time(maxobs)
-	real*8  t_time(maxobs), dd_time(maxobs), gust_time(maxobs)
-	real*8  ff_time(maxobs)
-	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
-	real*4  t(maxobs), td(maxobs), rh(maxobs), stnp(maxobs)
-	real*4  dd(maxobs), ff(maxobs), ddg(maxobs), ffg(maxobs)
-	real*4  mslp(maxobs), alt(maxobs), vis(maxobs)
-        real*4  solar(maxobs), sea_temp(maxobs), soil_temp(maxobs)
+	real*8  observationTime(maxobs), rhChangeTime(maxobs)
+        real*8  stationPressChangeTime(maxobs)
+	real*8  tempChangeTime(maxobs), windDirChangeTime(maxobs)
+        real*8  windGustChangeTime(maxobs)
+	real*8  windSpeedChangeTime(maxobs)
+	real*4  latitude(maxobs), longitude(maxobs), elevation(maxobs)       
+	real*4  temperature(maxobs), dewpoint(maxobs)
+        real*4  relHumidity(maxobs), stationPressure(maxobs)      
+	real*4  windDir(maxobs), windSpeed(maxobs)
+        real*4  windDirMax(maxobs), windGust(maxobs)       
+	real*4  seaLevelPressure(maxobs), altimeter(maxobs)
+        real*4  visibility(maxobs), solarRadiation(maxobs)
+        real*4  seaSurfaceTemperature(maxobs), soilTemperature(maxobs)       
         integer*4  i4time_ob_a(maxobs), before, after
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_dupe(maxobs)
@@ -109,13 +114,13 @@ c
 	integer    rtime
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
-	character  stname(maxobs)*6, save_stn(maxobs)*6
+	character  stationId(maxobs)*6, save_stn(maxobs)*6
 	character  timech*9, time*4
 	character  stations(maxsta)*20
-	character  pro(maxobs)*11, provider(maxsta)*11
-	character  wx(maxobs)*25, weather(maxsta)*25
+	character  dataProvider(maxobs)*11, provider(maxsta)*11
+	character  presWeather(maxobs)*25, weather(maxsta)*25
 	character  reptype(maxsta)*6, atype(maxsta)*6
-	character  store_cldamt(maxsta,5)*4, stn_type(maxobs)*11
+	character  store_cldamt(maxsta,5)*4, stationType(maxobs)*11
         character*13 filename13, cvt_i4time_wfo_fname13
         character*150 data_file 
 c
@@ -207,14 +212,20 @@ c
 c
 c.....  Call the read routine.
 c
-	    call read_local_obs(nf_fid, recNum, alt(ix),
-     &         pro(ix), solar(ix), sea_temp(ix), soil_temp(ix), td(ix),        
-     &         elev(ix), lats(ix), lons(ix),       
-     &         timeobs(ix), wx(ix), rh(ix), rh_time(ix),
-     &         mslp(ix), stname(ix), p_time(ix), stnp(ix), 
-     &         stn_type(ix), t_time(ix), t(ix), vis(ix),
-     &         dd(ix), dd_time(ix), ddg(ix), ffg(ix), gust_time(ix), 
-     &         ff(ix), ff_time(ix), badflag, istatus)
+	    call read_local_obs(nf_fid, recNum, altimeter(ix),
+     &         dataProvider(ix), solarRadiation(ix), 
+     &         seaSurfaceTemperature(ix), soilTemperature(ix),        
+     &         dewpoint(ix),        
+     &         elevation(ix), latitude(ix), longitude(ix),       
+     &         observationTime(ix), presWeather(ix), 
+     &         relHumidity(ix), rhChangeTime(ix),       
+     &         seaLevelPressure(ix), stationId(ix), 
+     &         stationPressChangeTime(ix), stationPressure(ix),        
+     &         stationType(ix), tempChangeTime(ix), temperature(ix), 
+     &         visibility(ix),       
+     &         windDir(ix), windDirChangeTime(ix), windDirMax(ix), 
+     &         windGust(ix), windGustChangeTime(ix), 
+     &         windSpeed(ix), windSpeedChangeTime(ix), badflag, istatus)       
  
 	    if(istatus .ne. 1)then
                 write(6,*)
@@ -256,18 +267,18 @@ c
 c........  Toss the ob if lat/lon/elev or observation time are bad by setting 
 c........  lat to badflag (-99.9), which causes the bounds check to think that
 c........  the ob is outside the LAPS domain.
-	   if( nanf( lats(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nanf( lons(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nanf( elev(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nanf( timeobs(i) ) .eq. 1 ) lats(i) = badflag
+	   if( nanf( latitude(i) ) .eq. 1 ) latitude(i)  = badflag
+	   if( nanf( longitude(i) ) .eq. 1 ) latitude(i)  = badflag
+	   if( nanf( elevation(i) ) .eq. 1 ) latitude(i)  = badflag
+	   if( nanf( observationTime(i) ) .eq. 1 ) latitude(i) = badflag       
 
-	   i4time_ob_a(i) = nint(timeobs(i)) + 315619200
+	   i4time_ob_a(i) = nint(observationTime(i)) + 315619200
 	   call make_fnam_lp(i4time_ob_a(i),a9time_a(i),istatus)
 
-           call filter_string(stname(i))
+           call filter_string(stationId(i))
 
            do k = 1,i-1
-             if(       stname(i) .eq. stname(k) 
+             if(       stationId(i) .eq. stationId(k) 
      1                          .AND.
      1           ( (.not. l_dupe(i)) .and. (.not. l_dupe(k)) )
      1                                                           )then
@@ -280,36 +291,46 @@ c........  the ob is outside the LAPS domain.
                      i_reject = k
                  endif
 
-                 write(6,51)i,k,stname(i),a9time_a(i),a9time_a(k)
+                 write(6,51)i,k,stationId(i),a9time_a(i),a9time_a(k)       
      1                     ,i_reject
  51		 format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
      1                 ,1x,i6)
 
-                 lats(i_reject) = badflag ! test with this for now
+                 latitude(i_reject) = badflag ! test with this for now
 
                  l_dupe(i_reject) = .true.
              endif
            enddo ! k
 c
 c
-	   if( nanf( rh_time(i)   ) .eq. 1 ) rh_time(i)   = ibadflag
-	   if( nanf( t_time(i)    ) .eq. 1 ) t_time(i)    = ibadflag
-	   if( nanf( p_time(i)    ) .eq. 1 ) p_time(i)    = ibadflag
-	   if( nanf( dd_time(i)   ) .eq. 1 ) dd_time(i)   = ibadflag
-	   if( nanf( ff_time(i)   ) .eq. 1 ) ff_time(i)   = ibadflag
-	   if( nanf( gust_time(i) ) .eq. 1 ) gust_time(i) = ibadflag
+	   if( nanf( rhChangeTime(i)   ) .eq. 1 ) 
+     1               rhChangeTime(i)   = ibadflag
+	   if( nanf( tempChangeTime(i)    ) .eq. 1 ) 
+     1               tempChangeTime(i)    = ibadflag
+	   if( nanf( stationPressChangeTime(i)    ) .eq. 1 ) 
+     1               stationPressChangeTime(i)    = ibadflag
+	   if( nanf( windDirChangeTime(i)   ) .eq. 1 ) 
+     1               windDirChangeTime(i)   = ibadflag
+	   if( nanf( windSpeedChangeTime(i)   ) .eq. 1 ) 
+     1               windSpeedChangeTime(i)   = ibadflag
+	   if( nanf( windGustChangeTime(i) ) .eq. 1 ) 
+     1               windGustChangeTime(i) = ibadflag
 c
-	   if( nanf( vis(i)  ) .eq. 1 )    vis(i)   = badflag
-	   if( nanf( mslp(i) ) .eq. 1 )    mslp(i)  = badflag
-	   if( nanf( t(i)    ) .eq. 1 )    t(i)     = badflag
-	   if( nanf( td(i)   ) .eq. 1 )    td(i)    = badflag
-	   if( nanf( solar(i)) .eq. 1 )    solar(i) = badflag
-	   if( nanf( sea_temp(i)) .eq. 1 ) sea_temp(i) = badflag
-	   if( nanf( soil_temp(i)) .eq. 1 ) soil_temp(i) = badflag
-	   if( nanf( dd(i)   ) .eq. 1 )    dd(i)    = badflag
-	   if( nanf( ff(i)   ) .eq. 1 )    ff(i)    = badflag
-	   if( nanf( ffg(i)  ) .eq. 1 )    ffg(i)   = badflag
-	   if( nanf( alt(i)  ) .eq. 1 )    alt(i)   = badflag
+	   if( nanf( visibility(i)  ) .eq. 1 ) visibility(i) = badflag       
+	   if( nanf( seaLevelPressure(i) ) .eq. 1 ) 
+     1               seaLevelPressure(i)  = badflag
+	   if( nanf( temperature(i) ) .eq. 1 ) temperature(i) = badflag       
+	   if( nanf( dewpoint(i)   ) .eq. 1 ) dewpoint(i) = badflag
+	   if( nanf( solarRadiation(i)) .eq. 1 ) 
+     1               solarRadiation(i) = badflag
+	   if( nanf( seaSurfaceTemperature(i)) .eq. 1 ) 
+     1               seaSurfaceTemperature(i) = badflag
+	   if( nanf( soilTemperature(i)) .eq. 1 ) 
+     1               soilTemperature(i) = badflag
+	   if( nanf( windDir(i)   ) .eq. 1 ) windDir(i) = badflag       
+	   if( nanf( windSpeed(i)   ) .eq. 1 ) windSpeed(i) = badflag
+	   if( nanf( windGust(i)  ) .eq. 1 ) windGust(i)   = badflag
+	   if( nanf( altimeter(i)  ) .eq. 1 ) altimeter(i)   = badflag
 c
 	enddo !i
 c
@@ -329,13 +350,14 @@ c.....  on the LAPS grid, then check if outside past box boundary.
 c
 !          Test for badflag OR (close to S Pole but not quite at it)
 !          Check can also be generalized in 'latlon_to_rlapsgrid' for 'lambert'
-           if(lats(i) .lt. -89.999 .and. lats(i) .ne. -90.) go to 125 
-           call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,       
-     &                              ri_loc,rj_loc,istatus)
+           if(latitude(i) .lt. -89.999 .and. latitude(i) .ne. -90.) 
+     1                                                        go to 125       
+           call latlon_to_rlapsgrid(latitude(i),longitude(i),lat,lon,       
+     &                              ni,nj,ri_loc,rj_loc,istatus)
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
      1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
                if(i .le. max_write)then
-                   write(6,81,err=125)i,wmoid(i),stname(i)
+                   write(6,81,err=125)i,wmoid(i),stationId(i)
      1                               ,nint(ri_loc),nint(rj_loc)
  81                format(i6,i7,1x,a8,' out of box ',2i12)
                endif
@@ -344,14 +366,15 @@ c
 c
 c.....  Elevation ok?
 c
-	   if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125       
+	   if(elevation(i).gt.5200. .or. elevation(i).lt.-400.) 
+     1                                                        go to 125       
 c
 c.....  Check to see if its in the desired time window.
 c
 	   if(i4time_ob_a(i) .lt. before 
      1   .or. i4time_ob_a(i) .gt. after) then
                if(i .le. max_write)then
-                   write(6,91,err=125)i,wmoid(i),stname(i)
+                   write(6,91,err=125)i,wmoid(i),stationId(i)
      1                               ,a9time_a(i),before
      1                               ,after
  91		   format(i6,i7,1x,a8,' out of time ',a11,2i12)
@@ -370,21 +393,21 @@ c.....  time period.
 c
 	   if(jfirst .eq. 1) then
 	     icount = 1
-	     save_stn(1) = stname(i)
+	     save_stn(1) = stationId(i)
 	     jfirst = 0
 	     go to 150
 	   endif
 c
 	   do k=1,icount
-             if(stname(i) .eq. save_stn(k)) then
-                 write(6,*)' Rejecting duplicate ',i,k,stname(i)
+             if(stationId(i) .eq. save_stn(k)) then
+                 write(6,*)' Rejecting duplicate ',i,k,stationId(i)
      1                    ,' ',a9time_a(i),' ',a9time_a(k)
                  go to 125
              endif
 	   enddo !k
 c
 	   icount = icount + 1
-	   save_stn(icount) = stname(i)  ! only one...save for checking
+	   save_stn(icount) = stationId(i)  ! only one...save for checking
 c
  150	   nn = nn + 1
 
@@ -416,9 +439,10 @@ c.....  current time).
 c
 c.....  Temperature, dewpoint and RH.
 c
-	  temp_k = t(i) 
-	  if(t_time(i) .ge. 0.) then ! implies that it is not set to ibadflag
-	     if( (timeobs(i) - t_time(i)) .gt. laps_cycle_time) then
+	  temp_k = temperature(i) 
+	  if(tempChangeTime(i) .ge. 0.) then ! implies that it is not set to ibadflag
+	     if( (observationTime(i) - tempChangeTime(i)) 
+     1                          .gt. laps_cycle_time) then
 		temp_k = badflag
 	     endif
 	  endif
@@ -429,7 +453,7 @@ c
 	  endif
           call sfc_climo_qc_r('t_f',temp_f)
 c       
-	  dewp_k = td(i)
+	  dewp_k = dewpoint(i)
           call sfc_climo_qc_r('td_k',dewp_k)
 	  if(dewp_k .le. badflag) then !dp bad?
 	     dewp_f = badflag	       !then bag it
@@ -437,35 +461,40 @@ c
 	     dewp_f = k_to_f(dewp_k)
 	  endif
 c
-	  rh_p = rh(i) 
+	  rh_p = relHumidity(i) 
 	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
-	  if(rh_time(i) .ge. 0.) then
-	     if( (timeobs(i) - rh_time(i)) .gt. laps_cycle_time) then
+	  if(rhChangeTime(i) .ge. 0.) then
+	     if( (observationTime(i) - rhChangeTime(i)) 
+     1                             .gt. laps_cycle_time) then
 		rh_p = badflag
 	     endif
 	  endif
 c
 c..... Wind speed and direction
 c
-	  dir = dd(i) 
+	  dir = windDir(i) 
           call sfc_climo_qc_r('dir_deg',dir)
-	  spd = ff(i)
+	  spd = windSpeed(i)
           call sfc_climo_qc_r('spd_ms',spd)
-	  if(dd_time(i).ge.0. .and. ff_time(i).ge.0.) then
-	     if( ((timeobs(i) - dd_time(i)) .gt. laps_cycle_time) .or.
-     &           ((timeobs(i) - ff_time(i)) .gt. laps_cycle_time) ) then
+	  if(windDirChangeTime(i).ge.0. .and. 
+     1       windSpeedChangeTime(i).ge.0.     ) then       
+	     if( ((observationTime(i) - windDirChangeTime(i)) 
+     &                          .gt. laps_cycle_time) .or.
+     &           ((observationTime(i) - windSpeedChangeTime(i)) 
+     &                          .gt. laps_cycle_time)      ) then
 		dir = badflag
 		spd = badflag
 	     endif
 	  endif
 	  if(spd .ne. badflag) spd = 1.94254 * spd !m/s to kt
 c
-	  dirgust = ddg(i)
+	  dirgust = windDirMax(i)
           call sfc_climo_qc_r('dir_deg',dir_gust)
-	  spdgust = ffg(i)
+	  spdgust = windGust(i)
           call sfc_climo_qc_r('spd_ms',spd_gust)
-	  if(gust_time(i) .ne. badflag) then
-	     if( (timeobs(i) - gust_time(i)) .gt. laps_cycle_time) then
+	  if(windGustChangeTime(i) .ne. badflag) then
+	     if( (observationTime(i) - windGustChangeTime(i)) 
+     1                                      .gt. laps_cycle_time) then
 		dirgust = badflag
 		spdgust = badflag
 	     endif
@@ -474,41 +503,44 @@ c
 c
 c..... Pressure...Station pressure, MSL and altimeter
 c
-	  stn_press = stnp(i)
+	  stn_press = stationPressure(i)
           call sfc_climo_qc_r('stnp_pa',stn_press)
-	  if(p_time(i) .ge. 0.) then
-	     if( (timeobs(i) - p_time(i)) .gt. laps_cycle_time ) then
+	  if(stationPressChangeTime(i) .ge. 0.) then
+	     if( (observationTime(i) - stationPressChangeTime(i)) .gt. 
+     1                                         laps_cycle_time ) then
 		stn_press = badflag
 	     endif
 	  endif
 	  if(stn_press .ne. badflag) stn_press = stn_press * 0.01 !Pa to mb
 c
-          call sfc_climo_qc_r('mslp_pa',mslp(i))
-	  if(mslp(i) .ne. badflag) mslp(i) = mslp(i) * 0.01 !Pa to mb
+          call sfc_climo_qc_r('mslp_pa',seaLevelPressure(i))
+	  if(seaLevelPressure(i) .ne. badflag) seaLevelPressure(i)   
+     1                             = seaLevelPressure(i)   * 0.01 !Pa to mb
 
-          call sfc_climo_qc_r('alt_pa',alt(i))
-	  if(alt(i) .ne. badflag) alt(i) = alt(i) * 0.01 !Pa to mb
+          call sfc_climo_qc_r('alt_pa',altimeter(i))
+	  if(altimeter(i) .ne. badflag) 
+     1                         altimeter(i) = altimeter(i) * 0.01 !Pa to mb
 c
 c..... Visibility
 c
-	 if(vis(i).lt.0. .or. vis(i).gt.330000.) then
-	   vis(i) = badflag
+	 if(visibility(i).lt.0. .or. visibility(i).gt.330000.) then
+	   visibility(i) = badflag
 	 else
-	   vis(i) = vis(i) * .001      !m to km
-	   vis(i) = 0.621371 * vis(i)  !km to miles
+	   visibility(i) = visibility(i) * .001      !m to km
+	   visibility(i) = 0.621371 * visibility(i)  !km to miles
 	 endif
 
 c
 c..... Solar Radiation
 c
-         solar_rad = solar(i)                         
+         solar_rad = solarRadiation(i)                         
          if(solar_rad .le. badflag) then          !  bad?
             solar_rad = badflag                   !  bag
          endif
 c
 c..... Sea Surface Temperature
 c
-         seatemp_k = sea_temp(i)                         
+         seatemp_k = seaSurfaceTemperature(i)                         
          call sfc_climo_qc_r('tgd_k',seatemp_k)
          if(seatemp_k .ne. badflag) then          
             seatemp_f = k_to_f(seatemp_k)
@@ -519,7 +551,7 @@ c
 c
 c..... Soil Surface Temperature
 c
-         soiltemp_k = soil_temp(i)                         
+         soiltemp_k = soilTemperature(i)                         
          call sfc_climo_qc_r('tgd_k',soiltemp_k)
          if(soiltemp_k .ne. badflag) then          
             soiltemp_f = k_to_f(soiltemp_k)
@@ -583,14 +615,14 @@ c..... Wind direction (deg) and speed (kts)
 c
 	 store_3ea(nn,1) = 15.0    ! deg 
 	 store_3ea(nn,2) = 10.0    ! kt
-	 if(ff(i) .ne. badflag) then
-	    if(ff(i).ge.1.0 .and. ff(i).lt.10.0) then
+	 if(windSpeed(i) .ne. badflag) then
+	    if(windSpeed(i).ge.1.0 .and. windSpeed(i).lt.10.0) then
 	       store_3ea(nn,2) = 2.0          ! kt
-	    elseif(ff(i) .gt. 10.0) then
-	       store_3ea(nn,2) = ff(i) * 0.2  ! 20% of speed (kts)
+	    elseif(windSpeed(i) .gt. 10.0) then
+	       store_3ea(nn,2) = windSpeed(i) * 0.2  ! 20% of speed (kts)
 	    endif
 c
-	    if(ff(i) .ge. 5.0) then    ! dir check
+	    if(windSpeed(i) .ge. 5.0) then    ! dir check
 	       store_3ea(nn,1) = 10.0   ! deg
 	    endif
 	 endif
@@ -607,12 +639,12 @@ c..... reported visibility between 0 and 3/8th mile, set accuracy to
 c..... 1/16th mile).  This isn't ideal, but its a start.
 c
 	 store_5ea(nn,1) = 10.00         ! Start with this (miles)
-	 if(vis(i) .ne. badflag) then
-	    if(vis(i) .lt. 2.0) then
+	 if(visibility(i) .ne. badflag) then
+	    if(visibility(i) .lt. 2.0) then
 	       store_5ea(nn,1) = 0.50 ! miles
-	    elseif(vis(i).ge.2.0 .and. vis(i).lt.3.0) then
+	    elseif(visibility(i).ge.2.0 .and. visibility(i).lt.3.0) then       
 	       store_5ea(nn,1) = 1.00 ! miles
-	    elseif(vis(i) .gt. 3.0) then
+	    elseif(visibility(i) .gt. 3.0) then
 	       store_5ea(nn,1) = 2.00 ! miles
 	    endif
 	 endif
@@ -629,9 +661,9 @@ c
 c
 c..... Output the data to the storage arrays
 c
-	 call s_len(stname(i), len)
+	 call s_len(stationId(i), len)
          if(len .ne. 0)then
-             stations(nn)(1:len) = stname(i)(1:len) ! station name
+             stations(nn)(1:len) = stationId(i)(1:len) ! station name
          else
              write(6,*)' Warning in get_local_obs: blank station name.'
      1                ,' Assigning name ',i
@@ -639,26 +671,26 @@ c
  101	     format(i5,15x)
          endif
 c
-	 call s_len(pro(i), len)
+	 call s_len(dataProvider(i), len)
          if(len .ne. 0) then
-	     provider(nn)(1:len) = pro(i)(1:len)    ! data provider
+	     provider(nn)(1:len) = dataProvider(i)(1:len)    ! data provider
          endif
 c
-         call s_len(stn_type(i), len)
+         call s_len(stationType(i), len)
          if(len .ne. 0) then
             ilen = min(len, 6)
-            atype(nn)(1:ilen) = stn_type(i)(1:ilen) ! auto stn type
+            atype(nn)(1:ilen) = stationType(i)(1:ilen) ! auto stn type
          endif
 c
-         weather(nn)(1:25) = wx(i)(1:25)        ! present weather
+         weather(nn)(1:25) = presWeather(i)(1:25) ! present weather
          call filter_string(weather(nn))
 
 	 reptype(nn)(1:6) = 'LDAD  '            ! report type
 	 wmoid(nn) = ibadflag                   ! WMO ID
 c
-	 store_1(nn,1) = lats(i)                ! station latitude
-	 store_1(nn,2) = lons(i)                ! station longitude
-	 store_1(nn,3) = elev(i)                ! station elevation
+	 store_1(nn,1) = latitude(i)            ! station latitude
+	 store_1(nn,2) = longitude(i)           ! station longitude
+	 store_1(nn,3) = elevation(i)           ! station elevation
 	 store_1(nn,4) = rtime                  ! observation time
 c
 	 store_2(nn,1) = temp_f                 ! temperature (deg f)
@@ -670,13 +702,13 @@ c
 	 store_3(nn,3) = dirgust                ! wind gust dir (deg)
 	 store_3(nn,4) = spdgust                ! wind gust speed (kt)
 c
-         store_4(nn,1) = alt(i)                 ! altimeter setting (mb)
+         store_4(nn,1) = altimeter(i)           ! altimeter setting (mb)
          store_4(nn,2) = stn_press              ! station pressure (mb)
-         store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
+         store_4(nn,3) = seaLevelPressure(i)    ! MSL pressure (mb)
          store_4(nn,4) = badflag                ! 3-h press change character
          store_4(nn,5) = badflag                ! 3-h press change (mb)
 c
-         store_5(nn,1) = vis(i)                 ! visibility (miles)
+         store_5(nn,1) = visibility(i)          ! visibility (miles)
          store_5(nn,2) = solar_rad              ! solar radiation 
 
          if(seatemp_f .ne. badflag)then
