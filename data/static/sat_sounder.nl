@@ -1,9 +1,9 @@
  &satellite_sounder_nl
  n_sndr=2,
- c_sndr_id='goes08','goes09',
+ c_sndr_id='goes08','goes10',
  path_to_sat_sounder='/public/data/sat/fsl-gs/goes8/raw/sounding/scan-area/netcdf/',
-                     '/public/data/sat/fsl-gs/goes9/raw/sounding/scan-area/netcdf/',
- n_elems=322,193
+                     '/public/data/sat/fsl-gs/goes10/raw/sounding/scan-area/netcdf/',
+ n_elems=322,305
  n_lines=200,228
  n_sndr_channels=19,
  channel_wavelength_u  = 00.67,03.74,03.98,04.13,04.45,04.52,04.57,06.51,07.02,
