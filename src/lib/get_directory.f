@@ -30,7 +30,7 @@ cdis
 cdis
 cdis
 
-        subroutine get_directory(ext_in,directory,len_dir)
+        subroutine get_directory(ext_in,directory_out,len_dir)
 
 !       1993         S. Albers
 
@@ -43,14 +43,14 @@ cdis
 !       the products is returned. This routine is designed for a UNIX
 !       environment.
 
-        character*(*) ext_in     ! input
-        character*80 ext         ! local
-        character*(*) directory  ! output
-        integer*4 len_dir        ! output
+        character*(*) ext_in         ! input
+        character*80 ext             ! local
+        character*(*) directory_out  ! output
+        integer*4 len_dir            ! output
 
         character*80 grid_fnam_common
         common / grid_fnam_cmn / grid_fnam_common
-        character *200 laps_data_root
+        character *201 laps_data_root, directory
 
         call GETENV('LAPS_DATA_ROOT',laps_data_root) 
 
@@ -65,9 +65,9 @@ cdis
         call s_len(laps_data_root,len_lapsroot)
 
 
-        if(len_lapsroot.gt.(len(directory)-10)) then
-          print*,'directory string passed to get_directory',
-     +       ' is too short lengthen to at least: ',len_lapsroot+10
+        if(len_lapsroot .gt. 200) then
+          write(6,*)' get_directory ERROR: LAPS_DATA_ROOT is too long,'
+     1             ,' shorten to <200'
           stop
         endif 
 c        print *, laps_data_root(1:len_lapsroot),len_lapsroot
@@ -134,5 +134,21 @@ c           directory = laps_data_root(1:len_lapsroot)//'etc/'
 
  999    call s_len(directory,len_dir)
 
+!       Test length of input directory
+        if(len_dir .gt. len(directory_out))then
+            write(6,*)' get_directory ERROR: input directory is too'     
+            write(6,*)' short, lengthen from ',len(directory_out)
+     1               ,' to ',len_dir     
+            stop
+
+        elseif(len_dir .eq. 201)then
+            write(6,*)' get_directory ERROR: LAPS_DATA_ROOT is too long'       
+     1               ,' total directory length >= ',len_dir
+            stop ! consider increasing max string lengths in this routine
+
+        else ! len_dir fits all constraints
+            directory_out = directory(1:len_dir)
+
+        endif ! len_dir
         return
         end
