@@ -94,5 +94,5 @@ C
       endif
 C
       istatus = 0
-      return
+100   return
       end
