@@ -1001,7 +1001,8 @@ Package: gridgen_model.exe - Writes static file, run by localization script.
                                  (contact: Steve Albers - albers@fsl.noaa.gov).
 
 Inputs:
-	Geography databases
+	Geography databases (topography, land fraction)
+        static/nest7grid.parms
 
 <pre>
 Outputs:
