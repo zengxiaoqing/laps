@@ -71,13 +71,15 @@
      *   hh(j), m2(j), stationName(j), latitude(j),
      *   longitude(j), windDir(j), windSpeed(j), windQua(j),
      *   windGust(j), windGustQua(j), visibility(j), presWeather(j),
-     *   ( dmyCover(i,j), dmyLayerBase(i,j), i=1,10 ), temperature(j),
-     *   temperatureQua(j), dewpoint(j), dewpointQua(j), altimeter(j),
-     *   altimeterQua(j), precip1Hour(j), yy(j), m1(j), dd(j)
+     *   ( dmyCover(i,j), dmyLayerBase(i,j), i=1,7 ), seaLevelPress(j),
+     *   temperature(j), temperatureQua(j), dewpoint(j), dewpointQua(j),
+     *   altimeter(j), altimeterQua(j), precip1Hour(j), yy(j), m1(j),
+     *   dd(j)
          n= n+1
       enddo
 10    format( 2a2, a4, 2f5.2, 2f5.0, i1, f5.0, i1, 2x, f5.0, 5x, a2,
-     *        10(a3,f5.0), 3(f5.0,i1), 10x, f5.3, 12x, 3a2 )
+     *        7(a3,f5.0), 3x, f5.1, 16x, 3(f5.0,i1), 10x, f5.3, 12x, 
+     *        3a2 )
 
 c         -------       read the elevations of all stations      -------
 99    read (2,*)
