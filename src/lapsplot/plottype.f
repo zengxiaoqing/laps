@@ -97,7 +97,16 @@ cdis
         if(c2_field .eq. 'tc' .or. c2_field .eq. 'cy')then
             nc = 2
 
-            if(imax .gt. 110 .or. jmax .gt. 110)then
+            if(jmax .gt. 230)then
+                isize = 0
+                iskip = 6
+            elseif(jmax .gt. 190)then
+                isize = 0
+                iskip = 5
+            elseif(jmax .gt. 150)then
+                isize = 0
+                iskip = 4
+            elseif(imax .gt. 110 .or. jmax .gt. 110)then
                 isize = 0
                 iskip = 3
             elseif(imax .gt. 75 .or. jmax .gt. 75)then
