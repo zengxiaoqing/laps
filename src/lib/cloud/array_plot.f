@@ -33,11 +33,12 @@ cdis
       subroutine array_plot(a,b,imax,jmax,NAME,name_array,kmax,cld_hts,s
      1cale)
 
-      include 'lapsparms.for' ! for NX_L,NY_L
+!     1997 Aug 01 K. Dritz  - Changed NX_L to imax and NY_L to jmax
+!     1997 Aug 01 K. Dritz  - Removed include of lapsparms.for
 
-      dimension a(imax,jmax),b(imax,jmax),ia(NX_L,NY_L)
-      character*1 c1a_array(NX_L,NY_L),c1b_array(NX_L,NY_L)
-      character*1 name_array(NX_L,NY_L)
+      dimension a(imax,jmax),b(imax,jmax),ia(imax,jmax)
+      character*1 c1a_array(imax,jmax),c1b_array(imax,jmax)
+      character*1 name_array(imax,jmax)
       real*4 cld_hts(kmax)
       CHARACTER NAME*10
       character*1 c1_cov(0:13)

@@ -37,7 +37,7 @@ c
      1  cloud_frac_co2_a,rlaps_land_frac,
      1  topo,heights_3d,temp_3d,t_sfc_k,t_gnd_k,sst_k,pres_sfc_pa,
      1  dum_3d,cldtop_m_co2,cldtop_m_tb8,cldtop_m,cvr_snow,imax,jmax,
-     1  kcld,klaps,istatus)
+     1  kcld,klaps,istatus,r_missing_data)
 c
 c*************************************************************************
 c
@@ -51,6 +51,10 @@ c       1995 Dec 12 Steve Albers   QC check added prior to call of subroutine
 c                                  rad_to_temp
 c       1996 Sep    Steve Albers   Fix QC check comparing cloud heights
 c                                  to heights_3d(i,j,klaps)
+!       1997 Aug 01 Ken Dritz      Changed NX_L to imax, NY_L to jmax, and
+!                                  NZ_L to klaps
+!       1997 Aug 01 Ken Dritz      Added r_missing_data as dummy argument
+!       1997 Aug 01 Ken Dritz      Removed include of lapsparms.for
 c
 c*************************************************************************
 c
@@ -78,10 +82,6 @@ c
 
         character*3 lvd_ext
         data lvd_ext /'lvd'/
-
-        include 'lapsparms.for' ! for NX_L, NY_L, NZ_L
-                                           !     r_missing_data
-                                           !     rlaps_land_frac
 
 !       Input/Output
         real*4 cldcv(imax,jmax,kcld)       ! 3D Cloud cover array
@@ -116,11 +116,11 @@ c
 
 !       Local
 
-        real*4 k_terrain(NX_L,NY_L)
-        real*4 zcoords_1d(NZ_L)
+        real*4 k_terrain(imax,jmax)
+        real*4 zcoords_1d(klaps)
         integer krefs_1d(kcloud)
         real*4 cldcv_1d(kcloud)
-        real*4 laps_p(NZ_L)
+        real*4 laps_p(klaps)
 
         character*3 var_2d
         character*31 ext
@@ -250,10 +250,10 @@ c
 !       Check number of points thrown out as a function of offset to check
 !       for IR navigation errors
         thresh1 = 5.
-!       call correlation(t_gnd_k,tb8_k,thresh1,NX_L,NY_L)
-        call correlation(t_gnd_k,tb8_k,thresh2,NX_L,NY_L)
+!       call correlation(t_gnd_k,tb8_k,thresh1,imax,jmax)
+        call correlation(t_gnd_k,tb8_k,thresh2,imax,jmax)
         thresh3 = 15.
-!       call correlation(t_gnd_k,tb8_k,thresh3,NX_L,NY_L)
+!       call correlation(t_gnd_k,tb8_k,thresh3,imax,jmax)
 
 !       Find terrain locations
         do j=1,jmax

@@ -37,7 +37,8 @@ cdis
      1          ,n_obs_pos_b,lat_sta_ret,lon_sta_ret,c_stations
      1          ,wx,t,td,obstype
      1          ,elev
-     1                                  ,istatus)
+     1          ,istatus
+     1          ,maxstns,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH)
 
 !       1995 Steve Albers                         Original Version
 !       11-Nov-1995    Steve Albers     Ignore SAOs reporting 'X'
@@ -46,12 +47,14 @@ cdis
 !                                           (Completed the change)
 !       12-Nov-1996    Steve Albers     Improved logging and cleanup
 !        6-Dec-1996    Steve Albers     Filter the obs string
-
-        include 'lapsparms.for' ! maxstns
-        parameter (IX_LOW  = 1    - I_PERIMETER)
-        parameter (IX_HIGH = NX_L + I_PERIMETER)
-        parameter (IY_LOW  = 1    - I_PERIMETER)
-        parameter (IY_HIGH = NY_L + I_PERIMETER)
+!        1-Aug-1997    Ken Dritz        Added I_PERIMETER and maxstns as dummy
+!                                       arguments
+!        1-Aug-1997    Ken Dritz        Added maxstns, IX_LOW, IX_HIGH, IY_LOW,
+!                                       and IY_HIGH as dummy arguments.
+!        1-Aug-1997    Ken Dritz        Removed PARAMETER statements for
+!                                       IX_LOW, IX_HIGH, IY_LOW, and IY_HIGH.
+!        1-Aug-1997    Ken Dritz        Removed include of lapsparms.for
+!        6-Aug-1997    Steve Albers     Removed equivalences.
 
         character*150 c150_filename,directory
         character*31 ext
@@ -63,9 +66,6 @@ cdis
 
         real*4 lat_sta_ret(maxstns)
         real*4 lon_sta_ret(maxstns)
-        real*4 ht_base_ret(maxstns,5)
-        character*4 amt_ret(maxstns,5)
-        integer*4 n_cloud_layers_ret(maxstns)
 
         logical l_sao_lso
         data l_sao_lso /.true./ ! Do things the new way?
@@ -80,21 +80,17 @@ cdis
         Real*4   elev(maxstns),t(maxstns),td(maxstns),dd(maxstns)
      1          ,ff(maxstns),ddg(maxstns)
         real*4   ffg(maxstns),pstn(maxstns),pmsl(maxstns),alt(maxstns)
-     1                                          ,store_hgt(maxstns,5)
+     1                                          ,ht_base_ret(maxstns,5)
         real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
      1          ,vis(maxstns),rad(maxstns)
 c
-        Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
+        Integer*4   obstime(maxstns),n_cloud_layers_ret(maxstns)
+     1                              ,idp3(maxstns)
 c
         Character   infile*170,atime*24 
      1             ,obstype(maxstns)*8
      1             ,wx(maxstns)*8
-        character   store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
-
-!       Equivalences between the old method and the new method
-        equivalence(ht_base_ret    ,store_hgt)
-        equivalence(amt_ret        ,store_amt)
-        equivalence(n_cloud_layers_ret, kloud)
+        character   store_emv(maxstns,5)*1,amt_ret(maxstns,5)*4
 
 !       Arrays for inserting the cloud data into the LAPS grid
         real*4 cldcv(ni,nj,nk)
@@ -146,8 +142,9 @@ c
      1   n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_pos_g,
      1   n_obs_b,n_obs_pos_b,c_stations,obstype,lat_sta_ret,lon_sta_ret,       
      1   elev,wx,t,td,dd,ff,ddg,
-     1   ffg,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,store_emv,       
-     1   store_amt,store_hgt,vis,obstime,istatus)
+     1   ffg,pstn,pmsl,alt,n_cloud_layers_ret,ceil,lowcld,cover_a,
+     1   rad,idp3,store_emv,       
+     1   amt_ret,ht_base_ret,vis,obstime,istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' Bad status returned from reading SAO data'

@@ -31,31 +31,27 @@ cdis
 cdis
 
       subroutine barnes_r5(t,imax,jmax,kmax,to,wt_p,cf_modelfg
-     1  ,l_perimeter,cld_snd,wt_snd
-     1        ,grid_spacing_m,i_snd,j_snd,n_cld_snd,max_cld_snd,istatus)
+     1  ,l_perimeter,cld_snd,wt_snd,r_missing_data
+     1  ,grid_spacing_m,i_snd,j_snd,n_cld_snd,max_cld_snd,istatus
+     1  ,NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm)
 
-      include 'lapsparms.for'
+!     1997 Aug 01  K. Dritz  - Added NX_DIM_LUT, NY_DIM_LUT, IX_LOW,
+!                              IX_HIGH, IY_LOW, IY_HIGH, and n_fnorm as
+!                              dummy arguments.
+!     1997 Aug 01  K. Dritz  - Removed PARAMETER statements for the above.
+!     1997 Aug 01  K. Dritz  - Changed NX_L_MAX to imax and NY_L_MAX to jmax.
+!     1997 Aug 01  K. Dritz  - Added r_missing_data as dummy argument.
+!     1997 Aug 01  K. Dritz  - Removed include of lapsparms.for.
+
       include 'laps_cloud.inc'
 
       integer NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH
-      parameter (NX_DIM_LUT = NX_L + I_PERIMETER - 1)
-      parameter (NY_DIM_LUT = NY_L + I_PERIMETER - 1)
-      parameter (IX_LOW  = 1    - I_PERIMETER)
-      parameter (IX_HIGH = NX_L + I_PERIMETER)
-      parameter (IY_LOW  = 1    - I_PERIMETER)
-      parameter (IY_HIGH = NY_L + I_PERIMETER)
 
       integer*4 iskip,n_fnorm
 !     parameter (iskip = 2)
 
-      integer*4 lowi_lut(NX_L_MAX)
-      integer*4 lowj_lut(NY_L_MAX)
-
-!     This should work out to be slightly larger than needed
-      parameter (n_fnorm =
-!       1     2   * (NX_DIM_LUT*NX_DIM_LUT) + (NY_DIM_LUT*NY_DIM_LUT) )
-     1      1.6 * ( (NX_DIM_LUT*NX_DIM_LUT) + (NY_DIM_LUT*NY_DIM_LUT) ) 
-     1)
+      integer*4 lowi_lut(imax)
+      integer*4 lowj_lut(jmax)
 
       integer*4 max_obs
       parameter (max_obs = 9049)

@@ -31,7 +31,7 @@ cdis
 cdis
         subroutine rfill_evap(ref_3d,ni,nj,nk,l_low_fill,l_high_fill
      1  ,lat,lon,topo,rlat_radar,rlon_radar,rheight_radar
-     1  ,temp_3d,rh_3d_pct,cldpcp_type_3d,istatus)
+     1  ,temp_3d,rh_3d_pct,cldpcp_type_3d,istatus,ref_base)
 
 !       This Routine Fills in the gaps in a 3D radar volume that has been
 !       stored as a sparse array. A linear interpolation in the vertical
@@ -43,8 +43,11 @@ cdis
 
 !       Steve Albers            1992          Original rfill subroutine
 !       Steve Albers            1993          Add low level evaporation
-
-        include 'lapsparms.for'
+!       Ken Dritz           1997 Aug 01       Changed NX_L_MAX to ni,
+!                                             NY_L_MAX to nj, and
+!                                             NZ_L_MAX to nk
+!       Ken Dritz           1997 Aug 01       Added ref_base as dummy arg.
+!       Ken Dritz           1997 Aug 01       Removed include of lapsparms.for
 
 !       ni,nj,nk are input LAPS grid dimensions
 !       rlat_radar,rlon_radar,rheight_radar are input radar coordinates
@@ -56,8 +59,8 @@ cdis
         integer*2 cldpcp_type_3d(ni,nj,nk)       ! Input 3D pcp type grid
         real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
 
-        integer*4 isum_ref_2d(NX_L_MAX,NY_L_MAX) ! Local array
-        real*4 heights_1d(NZ_L_MAX)              ! Local array
+        integer*4 isum_ref_2d(ni,nj)             ! Local array
+        real*4 heights_1d(nk)                    ! Local array
 
         logical l_low_fill,l_high_fill,l_test
 

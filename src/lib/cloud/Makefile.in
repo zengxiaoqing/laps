@@ -13,7 +13,7 @@ KRCFLAGS=@KRCFLAGS@ $(INC)
 
 DRTUFLAG = -Drtu
 
-F77       = @FC@
+FC       = @FC@
 
 
 FFLAGS = @FFLAGS@ $(INC) @OPTIMIZE@
@@ -58,8 +58,8 @@ $(LIB): $(ARCHIVE)
 	$(RANLIB) $@
 
 debug: 
-	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='$(CFLAGS) -g' \
-        FFLAGS='$(FFLAGS) -g' KRCFLAGS='$(KRCFLAGS) -g' 
+	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g' \
+        FFLAGS='@FFLAGS@ $(INC) -g' KRCFLAGS='$(KRCFLAGS) -g' 
 
 install: lib
 
