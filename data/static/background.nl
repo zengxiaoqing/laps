@@ -10,6 +10,7 @@
  cmodel='RUC40_NATIVE','ETA48_CONUS','LAPS',
  itime_inc =0,
  smooth_fields = .false.,
+ luse_sfc_bkgd = .false.,
  /
  &interp_controls
  max_delta_interp=6,
