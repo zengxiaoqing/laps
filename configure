@@ -1166,7 +1166,7 @@ fi
 LIBPATHFLAG=-L
 if test "$arch" = "hpux" 
 then
-  FFLAGS="$FFLAGS +FPVZO -K -O3" 
+  FFLAGS="$FFLAGS +FPVZO -K -O2 +Onolimit" 
   FIXED="+source=fixed"
   FREE="+source=free +langlvl=90"
   OPTIMIZE=""
