@@ -26,7 +26,7 @@ all: exe
 
 exe: $(EXE)
 
-$(EXE): $(SRC)
+$(EXE): $(SRC) $(LAPSLIBS) 
 	$(FC) $(FFLAGS) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 

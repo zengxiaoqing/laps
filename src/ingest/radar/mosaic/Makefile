@@ -30,7 +30,7 @@ all: exe
 
 exe: $(ARCHIVE) $(EXE)
 
-$(EXE): $(ARCHIVE) $(MAIN)
+$(EXE): $(ARCHIVE) $(MAIN) $(LAPSLIBS)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
