@@ -21,9 +21,6 @@
 #
 
 use strict;
-use Getopt::Std;
-my($opt_o);
-getopt('o');
 
 umask 002;
 my $cycle_time = 3600;
@@ -73,14 +70,14 @@ if($fxa_sys!=0){
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
 }
 
-unless($opt_o){
+
     open(SAVEOUT,">&STDOUT");
     open(SAVEERR,">&STDERR");
     open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm") || die "Can't redirect stdout";
     open(STDERR, ">&STDOUT") || die "Can't dup stdout";
     select(STDERR); $| = 1;
     select(STDOUT); $| = 1;
-}
+
 
 
 my $t=gmtime(); print $t." Running purger\n";

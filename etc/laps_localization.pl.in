@@ -270,6 +270,13 @@ sub wfo_localization{
   my($file2) = "$root/$site/Laps_Center_Point.txt";
   my($goes) = 0;
   my($lat,$lon);  
+
+  open(LOCFILE,$file2) or die "Can't find $file2.";
+  my $line = <LOCFILE>;
+  chop($line);
+  $line =~ s/ +/,/;
+  ($lat,$lon) = split(",",$line);
+
   if($satid eq "g8"){
       $goes = 8;
   }elsif($satid eq "g9"){
@@ -278,16 +285,9 @@ sub wfo_localization{
       open(LOCFILE,$file1) or die "Can't find $file1.";
       my $line = <LOCFILE>;
       close(LOCFILE);
-      $goes=9 if($line eq "WEST");      
-      $goes=8 if($line eq "EAST");      
-  }
-    
-  if($goes==0){
-      open(LOCFILE,$file1) or die "Can't find $file1.";
-      my $line = <LOCFILE>;
-      chop($line);
-      $line =~ s/ +/,/;
-      ($lat,$lon) = split(",",$line);
+      $goes=9 if($line =~ /WEST/i);      
+      $goes=8 if($line =~ /EAST/i);      
+  }else{
       $goes = $lon>-100 ? 8:9;  # identifies the goes sat to use based on longitude
   }
   #First files:  the namelist files.
