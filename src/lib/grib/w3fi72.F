@@ -426,7 +426,7 @@ C
 C	ARACODE
 C	next call is to create files on LITTLE_ENDIAN machine/correct the byte order!
 
-#if defined(ALPHA) || defined(DEC)
+#if defined(ALPHA) || defined(DEC) || defined(i686)
         foo = c_swap4(12,bds11)
 #endif
 
@@ -441,7 +441,7 @@ C
 C	ARACODE
 C	next call is to create files on LITTLE_ENDIAN machine/correct the byte order!
 
-#if defined(ALPHA) || defined(DEC)
+#if defined(ALPHA) || defined(DEC) || defined(i686)
       if(len.gt.0) then
         len_org = len
 
@@ -458,7 +458,6 @@ C	make len a multiple of four!
         if(mod(len,lw).ne.0) then
           len = ((len + 3) / 4) * 4
         end if
-
         foo = c_swap4(len,pfld)
         len = len_org
 
