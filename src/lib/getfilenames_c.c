@@ -42,6 +42,7 @@ Author: Dan Birkenheuer
 Date of development:   5/16/95
 mod 6/14/95 DB increased number of filenames to 3000
 mod 4/22/2002 DB increase number of filenames to 9000
+mod 3/9/04 DB increased number of filesnames to 19000 for IHOP
 
 DISCLAMER:  Note that I am by background a FORTRAN programmer.  Therefore,
 though this routine is all "legal" C, it is probably written awkwardly in
@@ -57,10 +58,10 @@ matter)
 
 fileNames:
 an array of filenames in the calling routine defined in C as 
-char filnames[9000][256]; 
+char filnames[19000][256]; 
 or its FORTRAN equivalent:
-character*256 filenames(9000)
-the 9000 possible filenames is hardwired into this routine and therefore is
+character*256 filenames(19000)
+the 19000 possible filenames is hardwired into this routine and therefore is
 associated with the hardwire in the FORTRAN wrapper ment to go with this
 routine (one level above) and to be the FORTRAN interface to the rest of the
 FORTRAN world.  character*(*)  type dimensions are handled by this interface.
