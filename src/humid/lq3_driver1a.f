@@ -374,7 +374,7 @@ c set namelist parameters to defaults
         sfc_mix = 0
         mod_4dda_1 = 0
         mod_4dda_factor = 0.02
-        t_ref = -47.0
+        t_ref = -132.0
 
         call get_directory('static',fname,len)
         open (23, file=fname(1:len)//'moisture_switch.nl',
