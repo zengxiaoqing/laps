@@ -32,6 +32,7 @@ SRC=array_plot.f \
     insertvis.f \
     laps_cloud.f \
     laps_cloud_sub.f \
+    read_surface_sa.f \
     slice.f \
     spread.f 
 

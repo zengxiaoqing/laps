@@ -34,7 +34,7 @@ cdis
      1          ,name_array,l_perimeter,ista_snd,cvr_snd,cld_snd
      1          ,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1          ,ni,nj,nk                                                 ! I
-     1          ,n_obs_pos_b,lat_sta_ret,lon_sta_ret,c_stations
+     1          ,n_obs_b,lat_sta_ret,lon_sta_ret,c_stations
      1          ,wx,t,td,obstype
      1          ,elev
      1          ,istatus
@@ -139,9 +139,8 @@ c
 
 !       Access SAO data from LSO files
         infile = c150_filename
-        call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
-     1   n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_pos_g,
-     1   n_obs_b,n_obs_pos_b,c_stations,obstype,lat_sta_ret,lon_sta_ret,       
+        call read_surface_sa(infile,maxstns,atime,
+     1   n_obs_g,n_obs_b,c_stations,obstype,lat_sta_ret,lon_sta_ret,       
      1   elev,wx,t,td,dd,ff,ddg,
      1   ffg,pstn,pmsl,alt,n_cloud_layers_ret,ceil,lowcld,cover_a,
      1   rad,idp3,store_emv,       
@@ -152,12 +151,7 @@ c
             return
         endif
 
-        num_sao = n_obs_b ! Done in lieu of an equivalence
-
-        write(6,*)' # of observed "sao" stations (grid/box) = '
-     1                                        ,n_sao_g,n_sao_b       
         write(6,*)' # of obs (grid/box) = ',n_obs_g,n_obs_b
-        write(6,*)' # of "sao" stations (for looping) = ',num_sao
 
         write(6,*)' Now we are looping to insert the stations'
 
@@ -167,7 +161,7 @@ c
         if(istatus .ne. 1)return
 
 !       Loop through the stations
-        do i=1,num_sao
+        do i=1,n_obs_b
 
           call filter_string(obstype(i))
 
