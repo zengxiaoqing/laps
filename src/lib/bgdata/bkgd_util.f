@@ -194,16 +194,12 @@ c ----------------------------------------------------------------
             call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
      +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
 
-c this call used to reset lapsparms.cmn back to original settings
-
-            call reset_lapsparms_common(.true.,bgmodel,cmodel
-     1,fullname,gproj,istatus)
-
          elseif(gproj.eq.'PS')then
 
              if(slon0.eq.std_lon)then
 
-c this only good if both domains share a common pole point
+c also, this only good if both domains share a common pole point.
+c currently we are only considering polar stereo, not local stereo.
 
                 call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
@@ -507,6 +503,9 @@ c
             Lat1_save=standard_latitude2
             Lon0_save=standard_longitude
             isave=1
+         else
+            print*,'Return to rotate_background_uv: isave=0; ldir=false'
+            return 
          endif
       elseif(isave.eq.1)then        !restore original nest7grid.parms settings
          c6_maproj=c6_maproj_save
@@ -534,8 +533,7 @@ c
      &,standard_longitude,sw,ne,cgrddef,istatus)
 
       if(gproj.eq.'LC')c6_maproj='lambrt'
-c corrected line below to read plrstr instead of pltstr
-c (BLS, 22 Mar 04)
+C corrected line below from pltstr to plrstr (BLS 22 Mar 04)
       if(gproj.eq.'PS')c6_maproj='plrstr'
       if(gproj.eq.'MC')c6_maproj='merctr' 
 cc
