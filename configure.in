@@ -143,6 +143,23 @@ else
 	FFLAGS="$FFLAGS -I\$(SRCROOT)/src/lib"
 fi
 fi
+
+dnl  Check to see if we are running Portland Group
+dnl  compilers on a PC. If so, set flags appropriately.
+
+grep 'pgf' << EOF
+$FC
+EOF
+if test $? -eq 0
+then
+  if test "$arch" = "i686"
+  then
+    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    FFLAGS90="$FFLAGS90 -Mfree -byteswapio -i4"
+    CPP="$FC"
+    OPTIMIZE="-O2"
+  fi
+fi  
 AC_F90_FUNC_TRIGD
 if test $USE_TRIGD -eq 1 
 then
