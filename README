@@ -1092,7 +1092,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                       ----   2.3.7  Satellite ---
 
-     Satellite Image Ingest (lvd): GOES-8 or GOES-9 data ingest. Data stored at
+     Satellite Image Ingest (lvd): GOES data ingest. Data is stored at
            FSL in NetCDF or AWIPS/NOAAPORT/SBN data (also in NetCDF). Ingest of
            Air Force Weather Agency (AFWA) satellite data is also possible.  
            Raw GVAR satellite data can be ingested and navigated using GIMLOC 
@@ -1102,8 +1102,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            data) as input. The flat file ingest is still under development as 
            of 3-11-98.
 
-     Satellite Sounder Ingest (lsr): GOES-8 and GOES-9 satellite sounder data 
-           ingest. Program lsr_driver.exe processes data from both satellites.
+     Satellite Sounder Ingest (lsr): GOES satellite sounder data ingest. 
+           Program lsr_driver.exe processes data from both satellites.
            Product files are yyjjjhhmm.lsr and stored in subdirectories 
            lapsprd/lsr/'satid'. Nineteen channels. Output is Radiance. The 
            namelist data/static/sat_sounder.nl defines the appropriate 
@@ -2483,7 +2483,7 @@ LVD process - lvd_sat_ingest.exe - takes raw sat. data and puts it on LAPS
         (author: John Smart - smart@fsl.noaa.gov)
 
 Input:
- 	 GOES 8, GOES 9 or other satellite data
+ 	 GOES or other satellite data
 
 <pre>
 Output:
@@ -2505,7 +2505,7 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
-	GOES 8/9 cloud drift winds in NESDIS (ASCII) format
+	GOES cloud drift winds in NESDIS (ASCII) format
         AFWA & CWB formats are also allowed.
 
 Outputs: (Feeds wind.exe)
@@ -2585,7 +2585,7 @@ Outputs: (LW3 is main output)
 	pig	inter data	acars winds    (prior to QC, true north)
 	prg	inter data	profiler winds (prior to QC, true north)
 	sag	inter data	surface        (prior to QC, true north)
-	d01-dxx inter data (3d)	derived radar obs output)
+	d01-dxx inter data 	derived radar vector obs    (grid north)
 
 	lw3	3d grid		3-D winds (U and V are wrt GRID NORTH)
 	lwm	2d grid		surface winds
@@ -3354,12 +3354,12 @@ Process: qbalpe.exe - "Quasi-geostrophic balance of height, wind and clouds.
 <pre>
 Inputs: 
       * lw3          3d grid       LAPS wind analysis (grid north)
-      * lt1          3d grid       LAPS temperature analysis
+      * lt1          3d grid       LAPS height analysis
       * lsx          2d grid       LAPS sfc station pressure (PS field)
       * lwc          3d grid       LAPS Cloud Liquid/Ice/Precip
         lh3          3d grid       LAPS humidity
         lco          3d grid       LAPS Cloud Omega
-        lga          3d grid       Model first guess grids
+      * lga          3d grid       Model first guess grids (including omega)
 
 Outputs:
         lt1          3d grid    in lapsprd/balance/lt1 (ht and t field)
