@@ -142,14 +142,18 @@ c
 	real rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
 	real wt_rp(ni,nj), wt_mslp(ni,nj), wt_stnp(ni,nj)
 	real vis_bk(ni,nj), wt_vis(ni,nj)
+	real tgd_bk(ni,nj), wt_tgd(ni,nj)
 	real wt(ni,nj)
 c
 	integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
-	integer back_mp
+	integer back_mp, back_tgd
 	character var_req*4, ext_bk*31, back*9
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
+        include 'sfcob.inc'
+        type (sfcob) obs(mxstn)
+
 	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
 	real t_s(mxstn), t_ea(mxstn), max24t(mxstn), min24t(mxstn)
         real td_s(mxstn), td_ea(mxstn), rh(mxstn), rh_ea(mxstn)
@@ -340,22 +344,14 @@ c
             stop
         endif
 
-!	if(istatus.ne.1 .or. n_obs_b.eq.0) then	  !surface obs not available
-!	  jstatus(1) = 0
-!	  stop 'No surface obs available'
-!	endif
-c
+	do i=1,n_obs_b ! Put obs into data structure (for sfct)
+            obs(i)%sfct_k = sfct(i)
+        enddo ! i
+
 	print *,' '
 	write(6,320) use,atime_s,n_obs_g,n_obs_b
 320	format(1x,a6,' data valid time: ',a24,' Num obs: ',2i6)
 c
-!	if(n_obs_b .lt. 1) then
-!	   jstatus(1) = -2
-!	   print *,' Insufficient number of surface observations'
-!	   print *,' for a clean analysis.  Stopping.'
-!	   stop 
-!	endif
-
 	print *,' '
 c
 c.....  Copy 3 characters of the station name to another array for use
@@ -402,10 +398,11 @@ c
 	call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
      &              rii,rjj,wt,ni,nj,mxstn)
 c
-c.....  Zero the weights then get the background data.  Try for a RAMS 
-c.....  forecast first, then the surface winds from the 3d analysis, then
-c.....  a previous LAPS analysis.  If RAMS or the 3d wind are missing just 
-c.....  use LAPS.  If both LAPS and RAMS are missing, print a warning.
+c.....  Zero the weights then get the background data.  Try for an FSF
+c.....  forecast first, except for surface winds from the 3d analysis, then
+c.....  a previous LAPS analysis. If both LAPS and FSF are missing, print a
+c.....  warning. Ground temp is read from 'get_modelfg_2d', that looks for
+c.....  an FSF forecast according to the fdda parameter, otherwise LGB.
 c
         call zero(wt_u, ni,nj)
         call zero(wt_v, ni,nj)
@@ -415,6 +412,7 @@ c
         call zero(wt_mslp, ni,nj)
         call zero(wt_stnp, ni,nj)
         call zero(wt_vis, ni,nj)
+        call zero(wt_tgd, ni,nj)
 c
 	back_t = 0
 	back_td = 0
@@ -423,6 +421,7 @@ c
 	back_mp = 0
 	back_uv = 0
 	back_vis = 0
+	back_tgd = 0
 c
 	if(ihours .eq. 0) then     ! skip the backgrounds
 	   ilaps_bk = 0
@@ -474,7 +473,7 @@ c
 	   call move(wt, wt_t, ni,nj)
 	   back_t = 1
 	else
-	   print *,'     No background available'
+	   print *,'     No background available for ',var_req
 	   call zero(t_bk,ni,nj)
 	endif
 c
@@ -490,7 +489,7 @@ c
 	   call move(wt, wt_mslp, ni,nj)
 	   back_mp = 1
 	else
-	   print *,'     No background available'
+	   print *,'     No background available for ',var_req
 	   call zero(mslp_bk,ni,nj)
 	endif
 c
@@ -506,7 +505,7 @@ c
 	   call multcon(stnp_bk,0.01,ni,nj) ! conv Pa to mb
 	   back_sp = 1
 	else
-	   print *,'     No background available'
+	   print *,'     No background available for ',var_req
 	   call zero(stnp_bk,ni,nj)
 	endif
 c
@@ -523,7 +522,7 @@ c
 	   call visg2log(vis_bk,ni,nj,badflag) ! conv miles to log(miles)
 	   back_vis = 1
 	else
-	   print *,'     No background available'
+	   print *,'     No background available for ',var_req
 	   call zero(vis_bk,ni,nj)
 	endif
 c
@@ -539,7 +538,7 @@ c
 	   call conv_k2f(td_bk,td_bk,ni,nj) ! conv K to deg F
 	   back_td = 1
 	else
-	   print *,'     No background available'
+	   print *,'     No background available for ',var_req
 	   call zero(td_bk,ni,nj)
 	endif
 	print *,' '
@@ -556,8 +555,23 @@ c
 	   call multcon(rp_bk,0.01,ni,nj) ! conv Pa to mb
 	   back_rp = 1
 	else
-	   print *,'     No background available'
+	   print *,'     No background available for ',var_req
 	   call zero(rp_bk, ni,nj)
+	endif
+c
+	print *,' '
+	print *,' Getting ground temperature background....'
+	var_req = 'tgd'
+        call get_modelfg_2d(i4time,var_req,ni,nj,tgd_bk,istatus)       
+	if(istatus .eq. 1) then
+	   call make_fnam_lp(i4time,back,istatus)
+	   write(6,*) 'Read successful for ',var_req
+	   call move(wt, wt_tgd, ni,nj)
+	   call conv_k2f(tgd_bk,tgd_bk,ni,nj) ! conv K to deg F
+	   back_tgd = 1
+	else
+	   print *,'     No background available for ',var_req
+	   call zero(tgd_bk, ni,nj)
 	endif
 c
  951	format(3x,'Using background from ',a6,' at ',a9)
