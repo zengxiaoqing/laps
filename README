@@ -2071,11 +2071,10 @@ Sample Input/Output: May be available in the test data case. If not, the README
                      in the source directory contains a description of the 
                      'snd' file.
                                         
-        Note: If you have good profiler or rass data, you may want to disable
-              the RAOB ingest as they would then perhaps hurt as much as they
-              help (due to raobs being relatively old). There are flags to
-              toggle usage of the RAOB (i.e. snd) data in 'wind.nl', 'temp.nl'
-              and 'moisture_switch.nl'.
+        Note: Sounding data is used if the observations lie in the time window
+              centered on the analysis time. There are flags to toggle usage 
+              of the RAOB (i.e. snd) data in 'wind.nl', 'temp.nl' and 
+              'moisture_switch.nl'.
 
 ------ 3.2.10 --------- Cloud Drift Wind (CDW) Ingest -------------------------
 
