@@ -1245,9 +1245,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
            'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
-     If you want to test the localization procedure, make sure the paths
-     to the geography data are correct in '$TEMPLATE/nest7grid.parms' and/or
-     '$LAPS_DATA_ROOT/static/nest7grid.parms'.
+     It is suggested here to test the localization procedure to ensure that all
+     the static files needed to run LAPS are present. To do this, check that 
+     the paths to the geography data are correct in '$TEMPLATE/nest7grid.parms'
+     and/or '$LAPS_DATA_ROOT/static/nest7grid.parms'.
 
      When running LAPS as a whole for the archived data, the 'etc/sched.pl' 
      script will accept a '-A' command line argument. This forces the script
