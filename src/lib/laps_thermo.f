@@ -146,7 +146,7 @@ cdis
 
         call laps_be(NX_L,NY_L,NZ_L
      1              ,temp_sfc_k,td_sfc_k,pres_sfc_pa
-     1              ,temp_3d,td_3d_k,heights_3d,topo   
+     1              ,temp_3d,td_3d_k,heights_3d,topo,blayr_thk_pa
      1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
      1              ,r_missing_data)
 
@@ -222,7 +222,7 @@ cdis
 
         subroutine laps_be(ni,nj,nk
      1        ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
-     1        ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
+     1        ,blayr_thk_pa,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
      1        ,r_missing_data)
 
 !       1991    Steve Albers
@@ -304,7 +304,7 @@ c       write(6,*)' i = ',i
             IO = 0
 
             CALL SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0,PLCL,LCL,CCL
-     1                ,TCONV,IO
+     1                ,TCONV,IO,blayr_thk_pa
      1                ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI
      1                ,VELNEG,WATER,IHOUR)
 
@@ -359,13 +359,12 @@ c       write(6,*)' i = ',i
  161            ITCONV=INT(TCONV+0.5)
 
                 WRITE(6,62)LCL*.003281,CCL,ITCONV
- 62             FORMAT(' LCL= ',F5.1,' KFT',11X,'CCL=',F5.1
+ 62             FORMAT(' LCL= ',F5.1,' KFT MSL',11X,'CCL=',F5.1
      1                ,' KFT AGL',7X,'CONVECTIVE TEMP=',I4,' DEG F')
 
-!               KK=NINT(K_INDEX)
                 ITMAX=NINT(TMAX)
 
-                WRITE(6,63,err=163)K_INDEX,ITMAX,WATER
+                WRITE(6,63,err=163)nint(K_INDEX),ITMAX,WATER
  63             FORMAT(' K INDEX =',I4,16X,'TMAX =',I4,' F',12X
      1                ,'PRECIP. WATER=',F5.2,' IN.')
  163            WRITE(6,*)
@@ -413,8 +412,8 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
 !
         SUBROUTINE SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0
      1   ,PLCL_PBE,LCL_PBE_MSL,CCL  
-     1   ,TCONV,IO,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50,PBLI,VELNEG
-     1   ,WATER,IHOUR)
+     1   ,TCONV,IO,blayr_thk_pa,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50
+     1   ,PBLI,VELNEG,WATER,IHOUR)
 
 !       1991    Steve Albers
 !       1999    Steve Albers    Adding more indices to active output
@@ -479,15 +478,25 @@ C  CALCULATE LIFTED INDEX
 
 C                                                                         
 C  CALCULATE SHOWALTER INDEX                                              
- 	SI=0                                                          
+
+        SI=r_missing_data
+        TT=r_missing_data
+        SWEAT=r_missing_data
+        K=r_missing_data
+
  	IF(P(1).GE.850.0)THEN                                                 
  	    CALL ITPLV(P,T ,NLEVEL,850.,TMAN85,IO,istatus)                    
  	    CALL ITPLV(P,TD,NLEVEL,850.,TDMN85,IO,istatus)                    
  	    THETAE=THAE(TMAN85,TDMN85,850.)                           
- 	    CALL MSAD5(TP500,500.,THETAE,25.,20.,SLOPE,I1,I2,IA,0)    
-!	    IF(WREQ50.LT.WMEAN)GOTO50                                 
-!	    RH=WMEAN/WREQ50                                           
- 50	    SI=TMAN50-TP500                                           
+ 	    CALL MSAD5(TP500,500.,THETAE,25.,20.,SLOPE,I1,I2,IA,0
+     1                ,istatus)    
+            if(istatus .ne. 1)then
+                write(6,*)' Error, skipping Showlater in SINDX'
+            else
+!	        IF(WREQ50.LT.WMEAN)GOTO50                                 
+!	        RH=WMEAN/WREQ50                                           
+ 50	        SI=TMAN50-TP500                                           
+            endif ! valid results from MSAD5
 
 C                                                                         
 C  CALCULATE TOTAL TOTALS AND SWEAT AND K INDICIES                        
@@ -505,12 +514,6 @@ C  CALCULATE TOTAL TOTALS AND SWEAT AND K INDICIES
  500	    SWEAT=12.*A+20.*B+2.*FF85+FF50+125.*C        
  	    K=TMAN85-TMAN50+TDMN85-TMAN70+TDMN70         
 
-        ELSE    
-            SI=r_missing_data
-            TT=r_missing_data
-            SWEAT=r_missing_data
-            K=r_missing_data
-
         ENDIF
 
 C                                                                         
@@ -521,50 +524,65 @@ C  CALCULATE WET BULB ZERO LEVEL
  87	format(' SURFACE WETBULB TEMP IS BELOW ZERO')                          
  	HWB0=0.                                                                 
  	PWB0=0.                                                                 
- 	GOTO400                                                                 
+ 	GOTO390                                                                 
 C                                                                         
+!       Test for bracketing of the Wet Bulb Zero
  150	DO 200 N=2,NLEVEL                                                    
- 	IF(WB(N)*WB(N-1))250,250,200                                            
- 200	CONTINUE                                                             
+ 	    IF(WB(N)*WB(N-1))250,250,200                                            
+ 200    CONTINUE                                                           
+
+        write(6,*)' Warning, no WB0 detected in loop'
+        goto390
+
+!       The two levels bracket an occurrence of Wet Bulb Zero
+ 250    if(.false.)then                                  ! original method 
+ 	    SLOPE=(WB(N)-WB(N-1))/(P(N)-P(N-1))                                
+ 	    WTBLB0=WB(N)                                                       
+ 	    PWB0=P(N)                                                          
+ 	    ITER=0                                                             
+ 	    GOTO262                                                            
 C                                                                         
- 250	SLOPE=(WB(N)-WB(N-1))/(P(N)-P(N-1))                                  
- 	WTBLB0=WB(N)                                                            
- 	PWB0=P(N)                                                               
- 	ITER=0                                                                  
- 	GOTO262                                                                 
+C	    ENTER NEWTON ITERATION LOOP     
+ 260	    CONTINUE        
+
+ 	    CALL ITPLV(P, T,NLEVEL,PWB0,TWB0 ,IO,istatus)      
+            if(istatus .ne. 1)goto390
+
+ 	    CALL ITPLV(P,TD,NLEVEL,PWB0,TDWB0,IO,istatus)       
+            if(istatus .ne. 1)goto390
+
+ 	    QQ=ES(TDWB0)*EPSILN/PWB0       
+ 	    WWB0=QQ/(1.-QQ)          
+ 	    WTBLB0=WTBLB(PWB0,TWB0,WWB0,IOUT)      
+ 262        CONTINUE
+
+!   	    IF(IO.GE.2)WRITE(6,265)N,PWB0,TWB0,TDWB0,WTBLB0,SLOPE,DELTA   
+ 265	    format(' WTBLB0 LOOP',I3,F12.3,5F12.5)         
+ 	    IF(ABS(WTBLB0).LE..05)GOTO300            
+ 	    CALL NEWTN(PWB0,POLD,WTBLB0,WETOLD,SLOPE,ITER,IO,1000.
+     1                                                      ,istatus)
+            if(istatus .ne. 1)then
+                goto390
+            else        
+ 	        GOTO260      
+            endif
 C                                                                         
-C	ENTER NEWTON ITERATION LOOP                                            
- 260	CONTINUE                                                             
+ 300	    CONTINUE       
 
- 	CALL ITPLV(P, T,NLEVEL,PWB0,TWB0 ,IO,istatus)                         
-        if(istatus .ne. 1)goto390
+        else                                     ! new method
+            frac = (0. - WB(N-1)) / (WB(N) - WB(N-1))
+            PWB0 = P(N-1) * (1. - frac) + P(N) * frac
 
- 	CALL ITPLV(P,TD,NLEVEL,PWB0,TDWB0,IO,istatus)                          
-        if(istatus .ne. 1)goto390
-
- 	QQ=ES(TDWB0)*EPSILN/PWB0                                               
- 	WWB0=QQ/(1.-QQ)                                                        
- 	WTBLB0=WTBLB(PWB0,TWB0,WWB0,IOUT)                                      
- 262    CONTINUE
-
-!   	IF(IO.GE.2)WRITE(6,265)N,PWB0,TWB0,TDWB0,WTBLB0,SLOPE,DELTA          
- 265	format(' WTBLB0 LOOP',I3,F12.3,5F12.5)                                
- 	IF(ABS(WTBLB0).LE..05)GOTO300                                          
- 	CALL NEWTN(PWB0,POLD,WTBLB0,WETOLD,SLOPE,ITER,IO,1000.,istatus)
-        if(istatus .ne. 1)then
-            goto390
-        else        
- 	    GOTO260                                                                 
         endif
-C                                                                         
- 300	CONTINUE                                                             
- 	CALL BLAYR(P,T,Q,DUM1,DUM2,DUM3,P(1)-PWB0,NLEVEL,HWB0,1,IO)             
-!	IF(IO.GE.1)WRITE(6,351)PWB0,HWB0                                        
+
+!       Integrate hydrostatically to get height from pressure
+ 	CALL BLAYR(P,T,Q,DUM1,DUM2,DUM3,P(1)-PWB0,NLEVEL,HWB0,1,IO) 
+!	IF(IO.GE.1)WRITE(6,351)PWB0,HWB0                            
  351	format(' WETBULB ZERO IS AT',F6.1,'MB     OR',F6.2,'KFT  AGL')        
 
         goto400                      ! Normal condition
 
- 390    HWB0 = r_missing_data        ! Error condition
+ 390    HWB0 = r_missing_data        ! Indeterminate condition
         PWB0 = r_missing_data
 
  400    CONTINUE
@@ -857,7 +875,14 @@ C       1991    Steve Albers
 C
         FUNCTION WTBLB(P,TC,W,IOUT)
         THETAE=THAEK(P,TC,W)
-        CALL MSAD5(WTBLB_arg,P,THETAE,TC,20.,SLOPE,I1,I2,IA,IOUT)
+        CALL MSAD5(WTBLB_arg,P,THETAE,TC,20.,SLOPE,I1,I2,IA,IOUT
+     1            ,istatus)      
+
+        if(istatus .ne. 1)then
+            write(6,*)' Error in WTBLB',P,TC,W,IOUT
+            stop
+        endif
+
         WTBLB = WTBLB_arg
         RETURN
         END
@@ -1053,7 +1078,7 @@ C
 C
 C
         SUBROUTINE MSAD5
-     ^  (TEMNEW,PRESNW,THETAE,TGUESS,SLOPEG,SLOPE,I1,I2,IA,IO)
+     ^  (TEMNEW,PRESNW,THETAE,TGUESS,SLOPEG,SLOPE,I1,I2,IA,IO,istatus)       
 
 !       Steve Albers 1991
 
@@ -1078,6 +1103,13 @@ C  DETERMINE LATENT HEAT RELEASED ABOVE 500MB
  750    ITER=1
  760    EPSILN=THAE(TEMPNW(ITER),TEMPNW(ITER),PRESNW)-THETAE
         I1=I1+1
+
+        if(I1 .gt. 200000)then
+            write(6,*)' Error, too many I1 loops in MSAD5'
+            istatus = 0
+            return
+        endif
+
 C  TEST FOR CONVERGENCE
         IF(ABS(EPSILN).LT..01)GOTO890
         IF(IO.GE.3.AND.ITER.EQ.1)
@@ -1116,6 +1148,7 @@ C
 C       WRITE(6,901)THETAE,PRESNW,TEMNEW,I1,I2,IA
 C901    FORMAT(' TRAVELLED DOWN MOIST ADIABAT, THETAE=',F7.2
 C     #  ,' NEW PRESSURE=',F7.2,' NEW TEMP=',F7.2,3I3)
+        istatus = 1
         RETURN
         END
 C
