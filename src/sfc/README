@@ -41,8 +41,9 @@ main                                           laps_sfc.f
             frict                                   "
             leib                                    "
             stats                                   "
-            vortdiv                                 
-            lp_fire_danger                     lib/laps_routines.f
+            vortdiv                            lib/util/windfields.f
+            meso_anl                           lib/laps_routines.f
+            lp_fire_danger                          "
             heat_index                              "
             verify                             lapsvanl_sub.f
                 splie2                         mdatlaps.f
