@@ -2668,7 +2668,8 @@ Outputs: (LW3 is main output)
 	pig	inter data	acars, cloud drift winds (prior to QC, 
                                                              true north)
 	prg	inter data	profiler, sounding winds (prior to QC, 
-                                                             true north)
+                                                          true north,
+                                                          corrected for time)
 	sag	inter data	surface winds  (prior to QC, true north)
 	d01-dxx inter data 	derived radar vector obs    (grid north)
 
