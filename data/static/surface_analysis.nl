@@ -3,8 +3,8 @@
  skip_internal_qc = 0,
  itheta=5,
  redp_lvl=1500.,
- del=1.e6,
- gam=.0008,
+ del=3.24e6
+ gam=.0001,
  ak=1.e-6, 
  /
 c..... This is the namelist for the LAPS surface analysis

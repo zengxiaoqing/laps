@@ -750,7 +750,7 @@ c
 	end
 c
 c
-      subroutine heat_index(t,rh,hi,ni,nj,badflag)
+      subroutine heat_index(t,rh,hi,ni,nj,r_missing_data)
 c
 c====================================================================
 c
@@ -759,7 +759,7 @@ c     by Lans Rothfusz, NWS.  Seems to provide valid HI numbers
 c     for temperatures above 75 deg F.
 c
 c     Original:  07-18-95  P. Stamus, NOAA/FSL
-c     Changes:  P. Stamus  08-25-97  Return badflag if Temp < 75F
+c     Changes:  P. Stamus  08-25-97  Return r_missing_data if Temp < 75F
 c                                    Change units returned to K.
 c                          01-20-98  T in as deg K.
 c
@@ -769,13 +769,13 @@ c       1.  Inputs:
 c                    rh = Relative Humidity (0 to 100 %)
 c                    t  = Temperature (deg K)
 c	             ni, nj  = Grid dimensions
-c                    badflag = Bad flag value
+c                    r_missing_data = Bad flag value
 c
 c           Output:
 c                    hi = Heat Index (deg K)
 c
 c       2.  If the temperature is below 75 deg F, no heat index is
-c           calculated and the point is set to "badflag".
+c           calculated and the point is set to "r_missing_data".
 c
 c====================================================================
 c
@@ -788,7 +788,7 @@ c
 	 temp = ( 1.8 * (t(i,j) - 273.15) ) + 32.         ! K to F
 c
 	 if(temp .lt. 75.) then
-	    hi(i,j) = badflag
+	    hi(i,j) = r_missing_data
 
 	 else
 	    rh1 = rh(i,j)                                  ! %

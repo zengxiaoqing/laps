@@ -329,6 +329,8 @@ c
 	anof = 9. / 5.
 	pblht = 500.		! pbl height in meters
 	fill_val = 1.e37
+
+        call get_r_missing_data(r_missing_data,istatus)
 c
 	call zero(z,imax,jmax)
 	call zero(p_a,imax,jmax)
@@ -452,32 +454,7 @@ cc	call mean_pres(n_obs_b,pstn_s,pbar)
 	else
 	   print *,'  Mean pressure from the obs or bkg is: ', pbar
 	endif
-c
-c.....  Calculate the terrain est temps and pressure.
-c.....  If no t or td background, make one.
-c
-cc	if(back_t .ne. 1) then
-cc	   print *,' No t background.  Est from t7.'
-cc	   do j=1,jmax
-cc	   do i=1,imax
-cc	      dz = topo(i,j) - h7(i,j)
-cc	      t_bk(i,j) = t7(i,j) + (lapse_t * dz) 
-cc	   enddo !i
-cc	   enddo !j
-cc	endif
-c
-cc	if(back_td .ne. 1) then
-cc	   print *,' No td background.  Est from td7.'
-cc	   do j=1,jmax
-cc	   do i=1,imax
-cc	      dz = topo(i,j) - h7(i,j)
-cc	      td_bk(i,j) = td7(i,j) + (lapse_td * dz) 
-cc	   enddo !i
-cc	   enddo !j
-cc	endif
-c
-cc	go to 887
-c
+
 	do j=1,jmax
 	do i=1,imax
 c
@@ -505,41 +482,38 @@ c
 	   psfc(i,j) = pbar * exp(-dz * gor / tbar)  ! Has no meteorological 
                                                      ! variation       
 
-           if(.true.)then                            ! is this needed?
+!          Use LGA 700mb t/td and lapse rates to estimate sfc t/td
+	   dz = ter - h7(i,j)
+	   tt(i,j) = t7(i,j) + (lapse_t * dz)   
+	   ttd(i,j) = td7(i,j) + (lapse_td * dz)	
 c
-c.....         Using laps sfc p and background model sfc p,  
-c.....         move background temps from background model 
-c.....         terrain to laps terrain.  Use Poisson's eqn.
+	   if(tb81(i,j) .ne. 0.) then
+	       tb81(i,j) = tb81(i,j) - tt(i,j)
+	   endif
+
+c.....     Using laps sfc p and background model sfc p,  
+c.....     move background temps from background model 
+c.....     terrain to laps terrain.  Use Poisson's eqn.
 c
-	       dz = ter - h7(i,j)
-	       tt(i,j) = t7(i,j) + (lapse_t * dz)   
-	       ttd(i,j) = td7(i,j) + (lapse_td * dz)	
-c
-	       if(tb81(i,j) .ne. 0.) then
-	           tb81(i,j) = tb81(i,j) - tt(i,j)
-	       endif
+	   if(t_bk(i,j).ne.0. .and. back_t.eq.1 .and. .true.)then 
+                                                           ! is this needed?
+	       t_bk_ltopo = 
+     1         t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
+	       t_bk(i,j) = t_bk_ltopo - tt(i,j)
+	   else
+	       t_bk(i,j) = t_bk(i,j) - tt(i,j)
+	   endif
 
-	       if(t_bk(i,j).ne.0. .and. back_t.eq.1) then
-	           t_bk_ltopo = 
-     1             t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
-	           diff_tbk = t_bk_ltopo - t_bk(i,j)
-	           t_bk(i,j) = t_bk_ltopo - tt(i,j)
-	       else
-	           t_bk(i,j) = t_bk(i,j) - tt(i,j)
-	       endif
-
-	       if(td_bk(i,j) .ne. 0.) then
-	           td_bk(i,j) = td_bk(i,j) - ttd(i,j)
-	       endif
-
-           endif ! .true.
+	   if(td_bk(i,j) .ne. 0.) then
+	       td_bk(i,j) = td_bk(i,j) - ttd(i,j)
+	   endif
 
            if(sp_bk(i,j) .ne. 0. .and. back_sp .eq. 1)then ! psfc from bkgnd  
                                                            ! can be used as it
                                                            ! is on the LAPS trn
                psfc(i,j) = sp_bk(i,j)
            endif
-c
+
 	enddo !i
 	enddo !j
 c
@@ -1037,7 +1011,7 @@ c
 c.....  Calculate Heat Index
 c
 	print *,' Heat Index...'
-	call heat_index(t,rh,hi,imax,jmax,badflag)
+	call heat_index(t,rh,hi,imax,jmax,r_missing_data)
 c
 c.....	Now write out the grids to PROD_DEV.
 c
