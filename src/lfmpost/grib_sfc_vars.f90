@@ -987,7 +987,7 @@
       timerange = 4
       timeperiod1 = fcsttime_prev
       timeperiod2 = fcsttime_now
-      scalep10 =  1
+      scalep10 =  4
       CALL make_id(table_version,center_id,subcenter_id,process_id, &
                    param,leveltype,level1,level2,yyyyr,mmr,ddr, &
                  hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
@@ -1013,7 +1013,7 @@
       timerange = 4
       timeperiod1 = 0
       timeperiod2 = fcsttime_now
-      scalep10 =  1
+      scalep10 =  4
       CALL make_id(table_version,center_id,subcenter_id,process_id, &
                    param,leveltype,level1,level2,yyyyr,mmr,ddr, &
                  hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
