@@ -218,7 +218,7 @@ cdis
 C Below are some Taiwan FGGE routines
 
 #if defined(hpux) || defined(alpha)
-      subroutine read_fa ( lun, filename, xx,               ! I
+      subroutine read_fa ( lun, filename,                   ! I
      .                     nx, ny, nz,                      ! I
      .                     r_missing_data,                  ! I
      .                     pressures_pa,                    ! O
@@ -229,6 +229,7 @@ C Below are some Taiwan FGGE routines
       parameter ( nlevel=16, nvar=5 )  ! nlevel=nz
 
       PARAMETER ( MAX_BUF=320000, MAX_PTS=160000 )
+      parameter ( i_record=300 )
       CHARACTER FGGE_TEMP*80, FGGE_NAME*40, FGGE_IPT*30, ANS
       BYTE      FGGE_BUF(MAX_BUF)
       REAL*4    FDATA(MAX_PTS)
@@ -245,7 +246,6 @@ C Below are some Taiwan FGGE routines
       RECORD /FGGE_HEAD/HEADER
 
       character*255 filename
-      character*2   xx
       real*4 r_missing_data    ! Missing data value
  
 c     3D fields (pressure grid OR sigma grid. What are the level values?)
@@ -268,25 +268,20 @@ c                           Sfc field
       data e1  / -1, 10*-2, 5*-3 /
       data var1  / 1001, 1016, 1048, 1049, 1088 /
 
+      n= 0
+
       do 10 i= 1,nz
 10       pressures_pa(i)= c1(i) *10.**e1(i)*100.  !pa
  
       CALL OPEN_FGGE_FILE(filename,ISTAT)
       IF( ISTAT .NE. 0 ) STOP 'open_fgge_file error !!!'
- 
-      if ( xx .eq. '00' )  then
-         i_record= 82
-      else
-         i_record= 86
-      endif
 
       do l= 1,i_record
  
          CALL READ_FGGE_RECORD(FGGE_BUF,ISTAT)
-         IF( ISTAT .NE. 0 ) STOP 'read_fgge_record error !!!'
+         if ( istat .ne. 0 )  exit
  
          CALL DECODE_FGGE_HEADER(FGGE_BUF,HEADER,ISTAT)
-         IF( ISTAT .NE. 0 ) STOP 'decode_fgge_header error !!!'
 
          if ( header.s1 .eq. 1 )  then
             CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
@@ -328,8 +323,10 @@ c                           Sfc field
             endif
          enddo
 
+         n= n+1
       enddo
 
+      write (6,*) 'read fgge data completely       record number= ', n
       CALL CLOSE_FGGE_FILE(ISTAT)
 
       istatus = 0 ! Success
