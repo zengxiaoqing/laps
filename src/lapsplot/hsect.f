@@ -349,7 +349,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /
      1      /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta,th,te'         
      1      ,',vo,mr,mc,dv-i,ha,ma,sp]'
-     1      /'          [cs,vs,tw,fw-i,hi-i]'
+     1      /'          [cs,vs,tw,fw-i,hi-i,gf-i]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
      1      ,'  [bs] Sfc background'
      1      /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
@@ -2221,7 +2221,7 @@ c
             call plot_field_2d(i4time_accum,c_type,accum_2d,scale
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'ref')
+     1                        ,NX_L,NY_L,r_missing_data,'acc')
 
         elseif( c_type .eq. 'rx')then
             write(6,1311)
@@ -3482,22 +3482,38 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'tt' 
      1    .or. c_type .eq. 'tf' .or. c_type .eq. 'tfi'
+     1    .or. c_type .eq. 'gf' .or. c_type .eq. 'gfi'
      1                          .or. c_type .eq. 'tc')then
-            var_2d = 'T'
+
+            if(c_type(1:1) .eq. 't')then
+                var_2d = 'T'
+            elseif(c_type(1:1) .eq. 'g')then
+                var_2d = 'TGD'
+            endif
+
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
      1                          ,field_2d,0,istatus)
 
-            if(c_type(1:2) .ne. 'tc')then
+            if(c_type(1:2) .eq. 'tf')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
                 c33_label = 'LAPS Sfc Temperature     (F)     '
-            else
+
+            elseif(c_type(1:2) .eq. 'gf')then
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_f(field_2d(i,j))
+                enddo ! j
+                enddo ! i
+                c33_label = 'LAPS Ground Temperature  (F)     '
+
+            elseif(c_type(1:2) .eq. 'tc')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_c(field_2d(i,j))
@@ -5677,6 +5693,12 @@ c                   cint = -1.
             clow = clow_in
         endif
 
+        if(cint_in .lt. 0.)then
+            clow_img = abs(cint_in)
+        else
+            clow_img = clow_in
+        endif
+
         call s_len(c_type,len_type)
 
         if(c_type(len_type:len_type) .ne. 'i' .or. c_type .eq. 'hi')then       
@@ -5693,7 +5715,7 @@ c                   cint = -1.
      1                        ,r_missing_data,laps_cycle_time)
 
         else ! image plot
-            call ccpfil(field_2d,NX_L,NY_L,clow_in*scale,chigh_in*scale       
+            call ccpfil(field_2d,NX_L,NY_L,clow_img*scale,chigh_in*scale       
      1                     ,colortable,n_image)    
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call setusv_dum(2hIN,7)
