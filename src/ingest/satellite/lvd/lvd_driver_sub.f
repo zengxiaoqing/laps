@@ -1063,8 +1063,6 @@ c been mapped to the laps domain. AFWA's GMS so far.
             csat=csatid
             ncs=6
          endif
-         print*,'check for new cloud top pressure (C02) files'
-         print*,'ctp time window (sec) = ',iwindow_ctp
 
          if(l_archive_case)then
             call s_len(generic_data_root,lend)
@@ -1104,6 +1102,8 @@ c           path_to_ctp='/data/ihop/lapb/casedate/data/sat/nesdis/'
 
          call s_len(path_to_ctp,lctp)
          print*,'Path to CO2 data: ',path_to_ctp(1:lctp)
+         print*,'check for new cloud top pressure (C02) files'
+         print*,'ctp time window (sec) = ',iwindow_ctp
 
          call check_for_new_ctp(iwindow_ctp,istatus_ctp)
 
