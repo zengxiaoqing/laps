@@ -219,7 +219,7 @@ cdis
         do j = 1,nj
             if(istatus .eq. 1)then ! static database available
                 if(static_albedo(i,j) .ne. r_missing_data)then ! over water
-                    sfc_albedo_lwrb(i,j) = static_albedo(i,j)*2. ! fudge to .08
+                    sfc_albedo_lwrb(i,j) = static_albedo(i,j)
 
                     if(lat(i,j) .le. 38.)then          ! it's reliable
                         sfc_albedo(i,j) = sfc_albedo_lwrb(i,j)
