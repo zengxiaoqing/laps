@@ -48,16 +48,17 @@
       lag_time_report = 1800
 
       call get_cloud_drift_parms(path_to_cloud_drift,istatus)
+      if(istatus .ne. 1)stop
 
       do ipath = 1,max_paths
           dir_in = path_to_cloud_drift(ipath)
 
           call s_len(dir_in,len_dir_in)
-          if(istatus .eq. 1)then
+          if(len_dir_in .gt. 0)then
               write(6,*)' path for cloud drift winds = '
      1                   ,dir_in(1:len_dir_in)      
           else
-              write(6,*)' Error getting cloud_drift_path'
+              write(6,*)' Warning: no cloud_drift_path'
               stop
           endif
 
