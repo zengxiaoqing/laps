@@ -11,6 +11,7 @@ main                                                    remap.f
         get_longitude                                      "
         lut_gen                                         lut_gen.f
         radar_init                                      netcdfio.f
+        get_data_field                                     "
         fill_common                                     fill_common.f
         radar_init                                      netcdfio.f
             get_tilt_netcdf_data                        get_tilt_netcdf.f
