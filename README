@@ -426,7 +426,7 @@
 
      On some platforms (e.g. Linux) the linking of FORTRAN programs to NetCDF
      and other C library routines may need adjustment. This involves the 
-     existance and number of underscores in the C routine names when called by
+     existence and number of underscores in the C routine names when called by
      FORTRAN routines. Fixes for this may include a combination of changing 
      the number of underscores in the C routines, changing the CFLAGS for LAPS,
      or changing the FFLAGS for LAPS.
