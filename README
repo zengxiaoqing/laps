@@ -218,11 +218,14 @@
      modify the LAPS ingest code if necessary to generate the intermediate 
      data files that are inputs to the analysis code.
 
-     The default LAPS ingest code obtains raw data in NetCDF format from 
-     the FSL NIMBUS system, then outputs the LAPS "intermediate" data files. 
-     Most ingest code is located under the src/ingest directory. When NetCDf 
-     format is used for the raw data, a cdl file for the raw data is often 
-     included in the source code directory.
+     The default LAPS ingest code obtains "raw" data in NetCDF format from 
+     the FSL NIMBUS system. Note that the ingest code is also generally 
+     compatable with SBN/NOAAPORT data as stored in NetCDF files on the 
+     WFO-Advanced system. The ingest code processes the "raw" data and 
+     outputs the LAPS "intermediate" data files. Most ingest code is 
+     located under the src/ingest directory. When NetCDf format is used for 
+     the raw data, a cdl file for the raw data is sometimes included in the 
+     source code directory.
   
      Depending on the data source, you may generally prefer one of two choices:
          1) Modify LAPS ingest code to accept your own raw data format, all
@@ -240,9 +243,6 @@
 
      The pathnames for most of the ingest data sources are assigned within
      the './data/static/nest7grid.parms' files and can be set accordingly at runtime.
-
-     Note that the ingest code is also generally compatable with SBN data as
-     stored on the WFO-Advanced system.
 
      Sfc Obs (lso): FSL uses this data in FSL's NetCDF format as input.
            The FSL code is in the '.../src/ingest/sao' directory, and
