@@ -3622,7 +3622,7 @@ c                   cint = -1.
             endif
 
             call plot_temp_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
-     1                        ,r_missing_data,lat,lon,topo)
+     1                        ,r_missing_data,lat,lon,topo,zoom)
 
         elseif(c_type(1:2) .eq. 'ht'.or. c_type(1:2) .eq. 'bh')then
             write(6,1513)
