@@ -119,7 +119,7 @@ CONTAINS
   CALL wrf_date_to_ymd(yyyyddd, valid_yyyy, valid_mm, valid_dd) 
   WRITE(hdate, '(I4.4,"-",I2.2,"-",I2.2,"_",I2.2,":",I2.2,":00.0000")') &
           valid_yyyy, valid_mm, valid_dd, valid_hh, valid_min
-  IF (valid_mm .EQ. 0) THEN
+  IF (valid_min .EQ. 0) THEN
     output_file_name = TRIM(output_prefix) // ':' // hdate(1:13)
   ELSE
     output_file_name = TRIM(output_prefix) // ':' // hdate(1:16)
