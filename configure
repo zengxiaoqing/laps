@@ -935,7 +935,7 @@ then
   FFLAGS="-native -xl -i4 -fnonstd"
   OPTIMIZE="-O"
 fi
-if !test "$FC"
+if ! test "$FC"
 then
   
 for ac_prog in f90 xlf f77  gf77

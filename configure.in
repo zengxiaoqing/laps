@@ -77,7 +77,7 @@ then
   FFLAGS="-native -xl -i4 -fnonstd"
   OPTIMIZE="-O"
 fi
-if !test "$FC"
+if ! test "$FC"
 then
   AC_PROG_FC
 fi
