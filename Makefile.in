@@ -124,6 +124,25 @@ DATADIRS = log/qc \
            lapsprd/pin \
            lapsprd/prg \
            lapsprd/pro \
+           lapsprd/rdr \
+           lapsprd/rdr/001 \
+           lapsprd/rdr/002 \
+           lapsprd/rdr/003 \
+           lapsprd/rdr/004 \
+           lapsprd/rdr/005 \
+           lapsprd/rdr/006 \
+           lapsprd/rdr/007 \
+           lapsprd/rdr/008 \
+           lapsprd/rdr/009 \
+           lapsprd/rdr/001/vrc \
+           lapsprd/rdr/002/vrc \
+           lapsprd/rdr/003/vrc \
+           lapsprd/rdr/004/vrc \
+           lapsprd/rdr/005/vrc \
+           lapsprd/rdr/006/vrc \
+           lapsprd/rdr/007/vrc \
+           lapsprd/rdr/008/vrc \
+           lapsprd/rdr/009/vrc \
            lapsprd/sag \
            lapsprd/snd \
            lapsprd/v01 \
