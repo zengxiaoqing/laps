@@ -9,6 +9,9 @@ echo "Starting install_laps.csh...$6"
 setenv LAPS_SRC_ROOT      $1
 setenv LAPSINSTALLROOT    $2
 setenv LAPS_DATA_ROOT     $3
+
+#The TEMPLATEDIR is needed except for the 'p' option, in which case you can set it 
+#to a dummy location such as '/dev/null'.
 setenv TEMPLATEDIR        $4
 
 #Note that this can normally be set to 'perl'. The full path should be used if
