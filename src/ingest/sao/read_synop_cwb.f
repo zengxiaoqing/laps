@@ -1,4 +1,180 @@
-      subroutine read_synop_cwb (
+      subroutine read_synop_cwb ( filename, maxSkyCvr, maxobs,
+     ~                          i4time_sys, path_to_local,            
+     ~                          altm, stnTp, td, tdTths, elev,
+     ~                          lats, lons, t24max, t24min,
+     ~                          pcp1hr, pcp24hr, pcp3hr, pcp6hr, 
+     ~                          prsWth, p, pc, pcc, rptTp, rh,
+     ~                          mslp, skyCvr, skyLyrBs, snowCvr, sr, st,       
+     ~                          stname, tTths, t, timeObs, vis,
+     ~                          dd, wgdd, ff, wgff, wmoId, badflag,
+     ~                          num, istatusSynop )
+
+!     integer, parameter :: maxobs =   160
+      integer, parameter :: maxSynop = 120
+      integer, parameter :: maxMso =    40
+
+      character*(*)  filename
+      character*25   prsWth(maxobs)
+      character*(*)  path_to_local
+      character*13   cvt_i4time_wfo_fname13,a13time_eat
+      character*9    a9time
+      character*8    skyCvr(maxSkyCvr,maxobs)
+      character*6    StnTp(maxobs), rptTp(maxobs)
+      character*5    stname(maxobs), stnNo(maxobs)
+
+      integer  pcc(maxobs), wmoId(maxobs), flag
+
+      real  altm(maxobs), td(maxobs), tdTths(maxobs)
+      real  elev(maxobs), lats(maxobs), lons(maxobs)
+      real  t24max(maxobs), t24min(maxobs)
+      real  rh(maxobs), pcp1hr(maxobs), pcp24hr(maxobs)
+      real  pcp3hr(maxobs), pcp6hr(maxobs)
+      real  p(maxobs), pc(maxobs), mslp(maxobs)
+      real  skyLyrBs(maxSkyCvr,maxobs), snowCvr(maxobs)
+      real  tTths(maxobs), t(maxobs)
+      real  vis(maxobs), dd(maxobs), wgdd(maxobs), wgff(maxobs)
+      real  ff(maxobs), sr(maxobs), st(maxobs)
+
+      character*5   stnNoMso(maxMso)
+      character*3   rptTpMso(maxMso)
+      integer  pccMso(maxMso)
+
+      real  latsMso(maxMso), lonsMso(maxMso)
+      real  elevMso(maxMso), tMso(maxMso), t24maxMso(maxMso)
+      real  t24minMso(maxMso), tdMso(maxMso), rhMso(maxMso)
+      real  pcp1hrMso(maxMso), pcp3hrMso(maxMso), pcp6hrMso(maxMso)
+      real  pcp24hrMso(maxMso), ddMso(maxMso), ffMso(maxMso)
+      real  wgddMso(maxMso), wgffMso(maxMso), pMso(maxMso)
+      real  mslpMso(maxMso), pcMso(maxMso), srMso(maxMso), stMso(maxMso)       
+
+      double precision  timeObs(maxobs)
+
+      stnTp   = 'UNK'
+      rptTpMso= 'Mso'
+      rptTp   = '      '
+      skyCvr  = '        '
+      stname  = 'UNK'
+      stnNo   = '     '
+      wmoId   = ibadflag
+      pcc     = ibadflag
+      lats    = badflag
+      lons    = badflag
+      elev    = badflag
+      t       = badflag
+      tTths   = badflag
+      t24max  = badflag
+      t24min  = badflag
+      td      = badflag
+      tdTths  = badflag
+      rh      = badflag
+      pcp1hr  = badflag
+      pcp3hr  = badflag
+      pcp6hr  = badflag
+      pcp24hr = badflag
+      ff      = badflag
+      dd      = badflag
+      wgff    = badflag
+      wgdd    = badflag
+      p       = badflag
+      mslp    = badflag
+      pc      = badflag
+      altm    = badflag
+      skyLyrBs= badflag
+      vis     = badflag
+      snowCvr = badflag
+      sr      = badflag
+      st      = badflag
+      
+      istatusSynop= 0
+      istatusMso=   0
+      numSynop=     0
+      numMso=       0
+
+      nq= maxSynop
+
+      call read_synop_cwb_sub ( filename, maxSkyCvr, maxSynop,
+     ~     altm(1:nq), stnTp(1:nq), td(1:nq), tdTths(1:nq), elev(1:nq),
+     ~     lats(1:nq), lons(1:nq), t24max(1:nq), t24min(1:nq),
+     ~     pcp1hr(1:nq), pcp24hr(1:nq), pcp3hr(1:nq), pcp6hr(1:nq), 
+     ~     prsWth(1:nq), pc(1:nq), pcc(1:nq), rptTp(1:nq), mslp(1:nq),
+     ~     skyCvr(1:maxSkyCvr,1:nq), skyLyrBs(1:maxSkyCvr,1:nq),
+     ~     snowCvr(1:nq), stname(1:nq), tTths(1:nq), t(1:nq),
+     ~     timeObs(1:nq), vis(1:nq), dd(1:nq), wgff(1:nq), ff(1:nq),
+     ~     wmoId(1:nq), badflag, numSynop, istatusSynop )
+
+      do i= 1,numSynop
+         write(stnNo(i),'(i5)') wmoId(i)      
+      enddo
+
+      np= numSynop +1
+      nq= numSynop +maxMso
+
+      call read_meso_cwb (path_to_local, maxMso, badflag, ibadflag, 
+     ~     i4time_sys, stnNoMso, latsMso, lonsMso, elevMso,
+     ~     tMso, t24maxMso, t24minMso, tdMso, rhMso, 
+     ~     pcp1hrMso, pcp3hrMso, pcp6hrMso, pcp24hrMso,
+     ~     ddMso, ffMso, wgddMso, wgffMso, pMso, 
+     ~     mslpMso, pccMso, pcMso, srMso, stMso, 
+     ~     numMso, istatusMso)
+
+c                    combine synop data and mesonet data 
+      k= numSynop
+      do i= 1,numMso
+         flag= 0
+
+         do j= 1,numSynop
+            if ( stnNoMso(i) .eq. stnNo(j) ) then
+               rh(j)=   rhMso(i)
+               dd(j)=   ddMso(i)
+               ff(j)=   ffMso(i)
+               wgdd(j)= wgddMso(i)
+               wgff(j)= wgffMso(i)
+               p(j)=    pMso(i)
+               sr(j)=   srMso(i)
+               st(j)=   stMso(i)
+
+               flag= 1
+               exit
+            endif
+         enddo 
+
+         if ( flag /= 1 ) then
+            k= k +1
+
+            stnNo(k)=   stnNoMso(i)
+            rptTp(k)=   rptTpMso(i)
+            td(k)=      tdMso(i)
+            tdTths(k)=  tdMso(i)
+            elev(k)=    elevMso(i)
+            lats(k)=    latsMso(i)
+            lons(k)=    lonsMso(i)
+            t24max(k)=  t24maxMso(i)
+            t24min(k)=  t24minMso(i)
+            rh(k)=      rhMso(i)
+            rh(k)=      rhMso(i)
+            pcp1hr(k)=  pcp1hrMso(i)
+            pcp24hr(k)= pcp24hrMso(i)
+            pcp3hr(k)=  pcp3hrMso(i)
+            pcp6hr(k)=  pcp6hrMso(i)
+            p(k)=       pMso(i)
+            pc(k)=      pcMso(i)
+            pcc(k)=     pccMso(i)
+            mslp(k)=    mslpMso(i)
+            t(k)=       tMso(i)
+            dd(k)=      ddMso(i)
+            wgdd(k)=    wgddMso(i)
+            ff(k)=      ffMso(i)
+            wgff(k)=    wgffMso(i)
+            sr(k)=      srMso(i)
+            st(k)=      stMso(i)
+         endif
+      enddo
+
+      end
+
+
+
+      subroutine read_synop_cwb_sub (
      ~     filename, maxSkyCover, recNum, altimeter,
      ~     autoStationType, dewpoint, dpFromTenths, elevation,
      ~     latitude, longitude, maxTemp24Hour, minTemp24Hour,
@@ -321,15 +497,15 @@ c ---- transform code figure into base of cloud layer indicated (unit: m) ----
 
 c          ----- eliminate duplicate skyCovers and skyLayerBases -----
          dummy= int( skyLayerBase(1,j) )
-         if(dummy .gt. 0)then
-           if ( skyCover(i,j) .eq. skyCover(1,j)  .and.
-     ~        skyLayerBase(i,j) .ge. lowestCloudHeight(dummy) )  then
-            if ( dummy .ne. 9  .and.
-     ~           skyLayerBase(i,j) .gt. lowestCloudHeight(dummy+1) )
-     ~         go to 250
-            skyCover(1,j)= '   '
-	    skyLayerBase(1,j)= badflag
-           endif
+         if ( dummy .gt. 0 )  then
+            if ( skyCover(i,j) .eq. skyCover(1,j)  .and.
+     ~           skyLayerBase(i,j) .ge. lowestCloudHeight(dummy) )  then
+               if ( dummy .ne. 9  .and.
+     ~              skyLayerBase(i,j) .gt. lowestCloudHeight(dummy+1) )
+     ~            go to 250
+               skyCover(1,j)= '   '
+	       skyLayerBase(1,j)= badflag
+            endif
          endif
 
 c        ----- eliminate unreasonable skyCovers and skyLayerBases -----
@@ -397,7 +573,7 @@ c        --- transform code figure of cloud cover into metar format ---
 c               -------      deal with lacking of data      -------
       do j= 1,staNum
          autoStationType(j)= "UNK"
-         presWeather(j)= "UNK"
+c        presWeather(j)= "UNK"
          reportType(j)= "SYNOP"
          stationName(j)= "UNK"
 
@@ -408,4 +584,734 @@ c               -------      deal with lacking of data      -------
       enddo
 
 1000  return
+      end
+
+
+
+
+      subroutine read_meso_cwb (inpath, maxobs, badflag, ibadflag,
+     ~                          i4time_sys, stname, lats, lons, elev,
+     ~                          t, t24max, t24min, td, rh, pcp1hr,
+     ~                          pcp3hr, pcp6hr, pcp24hr, dd, ff,
+     ~                          wgdd, wgff, stnp, mslp, pcc, pc, sr, st,
+     ~                          num, istatus)                    
+ 
+c======================================================================
+c
+c     Routine to read the CWB ASCII Mesonet files.
+c     
+c======================================================================
+ 
+      real :: lats(maxobs), lons(maxobs), elev(maxobs)
+      real :: t(maxobs), t24max(maxobs), t24min(maxobs), td(maxobs)
+      real :: rh(maxobs), pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
+      real :: pcp24hr(maxobs), dd(maxobs), ff(maxobs), wgdd(maxobs)
+      real :: wgff(maxobs), stnp(maxobs), mslp(maxobs), pc(maxobs)
+      real :: sr(maxobs), st(maxobs)
+      integer :: pcc(maxobs), wmoId(maxobs)
+
+      logical :: l_parse
+
+c    larger arrays for istart and iend to read data to make processes smooth
+      integer, parameter :: num40 = 40,  num70 = 70
+      integer   :: istart(num70), iend(num70), hh, flag
+ 
+      character(*)  :: inpath
+      character(13) :: cvt_i4time_wfo_fname13, a13time_eat
+      character     :: cstn_id*3, stn_id(maxobs)*3, stname(maxobs)*5
+      character     :: filename*80, line*320, c5_blank*5
+ 
+c                      Stuff for the mesonet metadata.
+      real  lat_master(maxobs), lon_master(maxobs), elev_master(maxobs)
+ 
+      character :: stn_id_master(maxobs)*3, stn_name_master(maxobs)*5
+ 
+c               Get the mesonet metadata (station information).
+      call read_tmeso_stntbl (inpath, maxobs, badflag,  
+     ~                        stn_id_master, stn_name_master,
+     ~                        lat_master, lon_master, elev_master,
+     ~                        num_master, istatus)
+      if ( istatus /= 1 ) then
+         write(6,*) ' Error reading mesonet station table'
+         return
+      endif
+
+c    Fill the output arrays with something, then open the file to read.
+ 
+      istatus= 0
+      c5_blank= '     '
+      stname= c5_blank 
+      pcc = ibadflag
+      t   = badflag
+      td  = badflag
+      rh  = badflag
+      stnp= badflag
+      dd  = badflag
+      ff  = badflag
+      wgdd= badflag
+      wgff= badflag
+      pc  = badflag
+      sr  = badflag
+      st  = badflag
+
+      i4time_file_eat= i4time_sys +8*3600             ! convert GMT to EAT
+      a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
+
+      filename= 'Data.CWB.MSO.'
+     ~           //a13time_eat(1:4)//'-'//a13time_eat(5:6)            ! yyyy_mm
+     ~           //'-'//a13time_eat(7:8) //'_' //'0000' //'_h.pri'    ! dd
+      write(6,*) ' Mesonet file ', filename
+
+      call s_len ( inpath, len_inpath )
+      call s_len ( filename, len_fname )
+ 
+      num= 0
+      num_keep= 0
+
+      open (11,file=inpath(1:len_inpath)//filename(1:len_fname), 
+     ~         status='old',err=980)
+
+c.....  This starts the read loop.  Since we don't know how many 
+c.....  stations we have, read until we hit the end of file.
+      
+ 100  flag= 0
+ 
+      read (11,'(a)',end=600,err=990) line
+
+c    Find first dash in time portion (two spaces before last dash in string)
+      do i= 1,300
+         if (line(i:i) == ':')  exit
+      enddo 
+ 
+c                  Parse the string into contiguous characters
+      idash= i -9
+      istart= 0
+      iend=   0
+
+      ivar= 1
+      istart(1)= 1
+
+      do i= 1,idash
+         if ( i == 1 )  go to 200
+         if ( line(i:i) == ' ' .and. line(i-1:i-1) /= ' ' ) then
+            iend(ivar)= i-1
+         endif
+
+ 200     if ( line(i:i) == ' ' .and. line(i+1:i+1) /= ' ' ) then
+            ivar= ivar +1
+            istart(ivar)= i+1
+         endif
+      enddo
+
+      if ( istart(num40) /= 0 )  go to 100
+
+      ivar= 1
+      read (line(istart(ivar):iend(ivar)),'(2i2)',err=399) ihr, imin
+
+      read (a13time_eat(10:11),'(i2)') hh
+      if ( ihr /= hh )  go to 100
+
+      ivar= 2
+      read (line(istart(ivar):iend(ivar)),*,err=399) cstn_id
+
+      ivar= 3
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rstnp= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rstnp
+      endif
+
+      ivar= 4
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         slp= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) slp 
+      endif
+
+      ivar= 5
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         ipcc= ibadflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) ipcc
+      endif
+
+      ivar= 6
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rpc= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rpc
+      endif
+
+      ivar= 7
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rt= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rt
+      endif
+
+      ivar= 10
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rtd= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rtd
+      endif
+
+      ivar= 11
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         idir= ibadflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) idir
+      endif
+
+      ivar= 12
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rspd= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rspd
+      endif
+
+      ivar= 13
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rwgff= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rwgff
+      endif
+
+      ivar= 14
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         iwgdd= ibadflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) iwgdd
+      endif
+
+      ivar= 15
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rpcp= badflag
+      elseif ( l_parse(line(istart(ivar):iend(ivar)),'000T') ) then
+         rpcp= 0
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rpcp
+      endif
+
+      ivar= 21
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rsr= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rsr
+      endif
+
+      ivar= 24
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         irh= ibadflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) irh
+      endif
+
+      ivar= 28
+      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+         rst= badflag
+      else
+         read (line(istart(ivar):iend(ivar)),*,err=399) rst
+      endif
+
+      if ( num == 0 )  go to 400
+
+      do i= 1,num
+         if ( cstn_id//'  ' == stn_id(i) ) then 
+            num= i
+            flag= 1
+            go to 500
+         else
+            cycle
+         endif
+      enddo
+      go to 400
+
+ 399  write(6,*) ' read error in station/variable ', num+1, ivar
+      write(6,*) ivar, line(istart(ivar):iend(ivar))
+      go to 990
+
+c    Have good date/time...store ob.  Adjust/scale variables while storing.
+ 400  num= num_keep +1                    ! add to count
+
+      if ( num > maxobs ) then
+         write(6,*) ' read_local_cwb error for too many obs: ',
+     ~              num, maxobs
+         istatus= 0
+         return
+      endif
+ 
+c Match data with metadata for this station, then store the metadata in arrays.
+      imatch= 0
+      do j= 1,num_master
+         if ( cstn_id == stn_id_master(j) ) then
+            lats(num)= lat_master(j)
+            lons(num)= lon_master(j)
+            elev(num)= elev_master(j)
+            stn_id(num)= stn_id_master(j) 
+            stname(num)= stn_name_master(j) 
+            imatch=1
+         endif
+      enddo 
+
+      if ( imatch == 0 ) then
+         write(6,*) ' No station match ',stn_id
+      endif
+ 
+c     stname(num)= stn_id//'  '
+ 
+c                                quality control
+ 500  if ( rstnp <= 0 ) then
+         stnp(num)= badflag
+      else
+         stnp(num)= rstnp *100.                        ! millibar -> pascal
+      endif
+ 
+      if ( slp <= 800. .or. slp > 1100. ) then
+         mslp(num)= badflag
+      else
+         mslp(num)= slp *100.                          ! millibar -> pascal
+      endif
+ 
+      pcc(num)= ipcc 
+
+      if ( rpc <= 0 ) then
+         pc(num)= badflag
+      else
+         pc(num)= rpc *100.                            ! millibar -> pascal 
+      endif
+ 
+      if ( rt <= -90 ) then
+         t(num)= badflag
+      else
+         if ( rt > 50. )  rt= - (rt - 50.)
+         t(num)= rt +273.15                        ! degC -> degK
+      endif
+ 
+      if ( rtd <= -90 ) then
+         td(num)= badflag
+      else
+         if ( rtd > 50. ) rtd= - (rtd - 50.)
+         td(num)= rtd +273.15                      ! degC -> degK
+      endif
+ 
+      if ( idir > 36 .or. idir < 0 ) then
+         dd(num)= badflag
+      else
+         dd(num)= float(idir * 10)
+      endif
+ 
+      if ( rspd < 0 ) then
+         ff(num)= badflag
+      else
+         ff(num)= rspd                                 ! unit : m/s 
+      endif
+ 
+      if ( rwgff < 0 ) then
+         wgff(num)= badflag
+      else
+         wgff(num)= rwgff                              ! unit : m/s
+      endif
+ 
+      if ( iwgdd > 36 .or. iwgdd < 0 ) then
+         wgdd(num)= badflag
+      else
+         wgdd(num)= float(iwgdd * 10)
+      endif
+ 
+      if ( rpcp < 0 ) then
+         pcp1hr(num)= badflag
+      else
+         pcp1hr(num)= rpcp *0.001                      ! millimeter -> meter
+      endif
+ 
+      if ( rsr < 0 ) then
+         sr(num)= badflag
+      else
+         sr(num)= rsr /1000. /3600.                    ! conv mJ/m/m to watt/m/m
+      endif
+ 
+      if ( irh < 0 ) then
+         rh(num)= badflag
+      else
+         rh(num)= float(irh)
+      endif
+ 
+      if ( rst < 0 ) then
+         st(num)= badflag
+      else
+         st(num)= rst
+      endif
+ 
+c                          Go back for the next ob.
+      if ( flag == 0 )  num_keep= num 
+      num= num_keep
+      go to 100
+ 
+ 600  call mso_t24_pcp (inpath, filename, stname, stn_id, maxobs, 
+     ~     badflag, hh, num, t24max, t24min, pcp3hr, pcp6hr, pcp24hr,      
+     ~     istatus)
+
+      if ( istatus == 1 ) then
+         do i= 1,maxobs
+            t24max(i)= t24max(i) +273.15                  ! degC -> degK
+            t24min(i)= t24min(i) +273.15                  ! degC -> degK
+            pcp3hr(i)= pcp3hr(i) *0.001                   ! millimeter -> meter
+            pcp6hr(i)= pcp6hr(i) *0.001                   ! millimeter -> meter
+            pcp24hr(i)= pcp24hr(i) *0.001                 ! millimeter -> meter
+         enddo
+      else
+         write(6,*) ' Error estimating mso_t24_pcp '
+      endif
+
+c                        Hit end of file...that's it.
+      write(6,*) ' Found ', num, ' mesonet stations.'
+      istatus= 1
+      return
+      
+ 980  write(6,*) ' Warning: could not open mesonet data file ',filename
+      num= 0
+      istatus= -1
+      return
+
+ 990  write(6,*) ' ** ERROR reading mesonet data.'
+      num= 0
+      istatus= -1
+      return
+      
+      end
+ 
+ 
+ 
+      subroutine read_tmeso_stntbl (inpath, maxobs, badflag, stn_id,
+     ~           stn_name, lat, lon, elev, num, istatus)       
+ 
+c======================================================================
+c
+c     Routine to read station information for the CWB ASCII Mesonet 
+c	data.
+c     
+c======================================================================
+ 
+      real         :: lat(maxobs), lon(maxobs), elev(maxobs)
+      character(3) :: stn_id(maxobs), stn_id_in
+      character(5) :: stn_name(maxobs), stn_name_in
+      character(*) :: inpath
+ 
+      lat=  badflag
+      lon=  badflag
+      elev= badflag
+      stn_id=   '   '
+      stn_name= '     '
+ 
+      call s_len ( inpath, len_inpath )
+      open (13,file=inpath(1:len_inpath)//'stn-table',status='old',
+     ~                                                err=990)
+      num= 0
+
+c                 Skip header comments at the top of the file
+      do iread= 1,2
+         read (13,*,end=550,err=990)
+      enddo
+ 
+c.....  This starts the station read loop.  Since we don't know how many 
+c.....  stations we have, read until we hit the end of file.
+
+ 500  read (13,900,end=550,err=990) stn_id_in,stn_name_in,
+     ~                              lat_deg,lat_min,lat_sec,alat_sec,       
+     ~                              lon_deg,lon_min,lon_sec,alon_sec,
+     ~                              elev_m
+ 900  format (2x,a3,1x,a5,14x,                     ! name
+     ~        i2,2x,i2,1x,i2,1x,f3.0,4x,           ! lat
+     ~        i3,2x,i2,1x,i2,1x,f3.0,              ! lon
+     ~        f12.0)                               ! elevation
+ 
+c         Move station info to arrays for sending to calling routine.
+ 
+      alat= float(lat_deg) +float(lat_min)/60. 
+     ~                     +(float(lat_sec) +alat_sec) /3600.
+      alon= float(lon_deg) +float(lon_min)/60. 
+     ~                     +(float(lon_sec) +alon_sec) /3600.
+
+      num= num +1
+      stn_id(num)= stn_id_in
+      stn_name(num)= stn_name_in
+      lat(num)= alat
+      lon(num)= alon
+      elev(num)= elev_m
+ 
+c                         Go back for the next ob.
+      go to 500
+ 
+c                        Hit end of file...that's it.
+ 550  write(6,*) ' Found ', num,
+     ~           ' mesonet stations in the station table.' 
+      istatus= 1
+      return
+      
+ 990  write(6,*) stn_id_in, stn_name_in,
+     ~           lat_deg, lat_min, lat_sec, alat_sec,       
+     ~           lon_deg, lon_min, lon_sec, alon_sec, elev_m
+      write(6,*) ' ** ERROR reading mesonet station table'
+      istatus= 0
+      return
+
+      end
+
+
+ 
+      subroutine mso_t24_pcp (inpath, filename, stname, stn_id, maxobs,
+     ~           badflag, ih, num, t24max, t24min, pcp3hr, pcp6hr, 
+     ~           pcp24hr, istatus)
+
+      integer, parameter :: num24 = 24,  num40 = 40,  num70 = 70
+      character(*) :: stname(maxobs), stn_id(maxobs), inpath
+      character(2) :: yy, mm, dd
+      character    :: filename*35, fileDummy*35, line*320, stn*3
+      logical :: l_parse
+      integer :: istart(num70), iend(num70), d(12) 
+      integer :: hr, flag
+      real :: t24max(maxobs), t24min(maxobs)
+      real :: tmax(maxobs,num24), tmin(maxobs,num24)
+      real :: pcp3hr(maxobs), pcp6hr(maxobs), pcp24hr(maxobs)
+      real :: p1hr(maxobs,-4:num24)
+      data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
+
+      stn=  '   '
+      tmax= badflag
+      tmin= badflag
+      p1hr=    0
+      pcp3hr=  0
+      pcp6hr=  0
+      pcp24hr= 0
+      maxrcd= 3000
+      istatus= 0
+
+      read (filename(14:17),'(i4)') iy
+      read (filename(19:20),'(i2)') im
+      read (filename(22:23),'(i2)') id
+
+c                 open two files to read data of 24 hours
+      do l= 0,1
+         id= id -l
+
+         if ( id < 1 ) then
+            im= im -1
+  
+            if ( im < 1 ) then
+               im= 12
+               iy= iy -1
+            endif
+
+            id= d(im)
+         endif
+
+         iy= iy -2000
+         call i2a ( iy, yy )
+         call i2a ( im, mm )
+         call i2a ( id, dd )
+         fileDummy= 'Data.CWB.MSO.' //'20' //yy //'-' //mm //'-' //dd
+     ~                                          //'_' //'0000_h.pri'     
+         iy= iy +2000
+
+         call s_len ( inpath, len_inpath )
+         call s_len ( fileDummy, len_fname )
+
+         select case ( l ) 
+         case ( 0 )
+            rewind (11)
+         case ( 1 )
+            open (11,file=inpath(1:len_inpath)//fileDummy(1:len_fname),
+     ~               status='old',err=980)
+         end select
+
+         do 200 k= 1,maxrcd
+            read (11,'(a)',iostat=istat) line
+
+            if ( istat == -1 .or. istat == -2 )  exit
+            if ( istat > 0 )  go to 990
+               
+c    Find first dash in time portion (two spaces before last dash in string)
+            do i= 1,300
+               if (line(i:i) == ':')  exit
+            enddo
+
+            idash= i -9
+
+c                 Parse the string into contiguous characters
+            istart= 0
+            iend=   0
+
+            ivar= 1
+            istart(1)= 1
+
+            do i= 1,idash
+               if ( i == 1 )  go to 100
+
+               if ( line(i:i) == ' ' .and. line(i-1:i-1) /= ' ' ) then      
+                  iend(ivar)= i-1
+               endif
+
+ 100           if ( line(i:i) == ' ' .and. line(i+1:i+1) /= ' ' ) then
+                  ivar= ivar +1
+                  istart(ivar)= i+1
+               endif
+            enddo
+
+c                              avoid daily data
+            if ( istart(num40) /= 0 )  cycle
+
+            ivar= 1
+            read (line(istart(ivar):iend(ivar)),'(2i2)',err=199) hr, mn
+            if ( l == 0 .and. hr >  ih )  cycle  
+            if ( l == 1 .and. hr <= ih )  cycle  
+            if ( hr == 0 )  hr= 24
+           
+            ivar= 2
+            read (line(istart(ivar):iend(ivar)),*,err=200) stn
+
+            do i= 1,num
+            if ( stn_id(i) == stn//'  ' ) then
+               ivar= 8
+               if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+                 tmax(i,hr)= badflag
+               else
+                 read(line(istart(ivar):iend(ivar)),*,err=199)tmax(i,hr)
+               endif
+
+               ivar= 9
+               if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+                 tmin(i,hr)= badflag
+               else
+                 read(line(istart(ivar):iend(ivar)),*,err=199)tmin(i,hr)    
+               endif
+
+               ivar= 15
+               if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
+                 p1hr(i,hr)= badflag
+               elseif(l_parse(line(istart(ivar):iend(ivar)),'000T'))then
+                 p1hr(i,hr)= 0
+               else
+                 read(line(istart(ivar):iend(ivar)),*,err=199)p1hr(i,hr)
+               endif
+            endif
+            enddo
+
+            cycle
+
+ 199        write(6,*) ' read error in station/variable ', j, ivar
+            write(6,*) ivar,line(istart(ivar):iend(ivar))
+ 200     enddo
+
+         if ( ih == 23 )  exit 
+ 500  enddo 
+
+      do i= 1,num
+         t24max(i)= tmax(i,1)
+         t24min(i)= tmin(i,1)
+
+         do j= 2,num24
+            flag= 0
+
+            if ( tmax(i,j) > 50. .or. tmax(i,j) < -90. ) then
+               tmax(i,j)= badflag
+               exit
+            elseif ( tmin(i,j) > 50. .or. tmin(i,j) < -90. ) then
+               tmin(i,j)= badflag
+               exit
+            endif
+
+            if ( t24max(i) < tmax(i,j) )  t24max(i)= tmax(i,j)
+            if ( t24min(i) > tmin(i,j) )  t24min(i)= tmin(i,j)
+
+            flag= 1
+         enddo
+
+c  once there is any data missing in tmax or tmin, flag= 0 from prior do loop
+         if ( flag /= 1 ) then
+            t24max(i)= badflag
+            t24min(i)= badflag
+            write(6,*) 'too few data to obtain Tmax/Tmin for ',
+     ~                 stname(i), ' mesonet station ', j
+            cycle
+         endif
+ 900  enddo
+
+c                         calculate accumulated rain gauge
+      do i= 1,num
+         p1hr(i, 0)= p1hr(i,24)
+         p1hr(i,-1)= p1hr(i,23)
+         p1hr(i,-2)= p1hr(i,22)
+         p1hr(i,-3)= p1hr(i,21)
+         p1hr(i,-4)= p1hr(i,20)
+      enddo
+
+      do i= 1,num
+      do j= ih,ih-2,-1
+         if ( p1hr(i,j) == badflag ) then
+            pcp3hr(i)= badflag
+            write(6,*) 'too few data to estimate pcp3hr for ',
+     ~                 stname(i), ' mesonet station ', j
+            exit
+         else
+            pcp3hr(i)= pcp3hr(i) +p1hr(i,j)
+         endif
+      enddo
+      enddo
+
+      do i= 1,num
+      do j= ih,ih-5,-1
+         if ( p1hr(i,j) == badflag ) then
+            pcp6hr(i)= badflag
+            write(6,*) 'too few data to estimate pcp6hr for ',
+     ~                 stname(i), ' mesonet station ', j
+            exit
+         else
+            pcp6hr(i)= pcp6hr(i) +p1hr(i,j)
+         endif
+      enddo
+      enddo
+
+      do i= 1,num
+      do j= 1,num24
+         if ( p1hr(i,j) == badflag ) then
+            pcp24hr(i)= badflag
+            write(6,*) 'too few data to estimate pcp24hr for ',
+     ~                 stname(i), ' mesonet station ', j
+            exit
+         else
+            pcp24hr(i)= pcp24hr(i) +p1hr(i,j)
+         endif
+      enddo
+      enddo
+
+      istatus= 1
+      return
+
+ 980  write(6,*) ' Warning: could not open mesonet data file ',
+     ~           inpath(1:len_inpath)//fileDummy(1:len_fname)
+      istatus= -1
+      return
+        
+ 990  write(6,*) ' ** ERROR reading mesonet data.'
+      num= 0
+      istatus= -1
+      return
+
+      end
+        
+
+
+      subroutine  i2a (ii,aa)
+
+      character(2) :: aa
+      integer      :: ii
+
+      if ( ii < 10 ) then
+         write (aa,'(a1,i1)') '0', ii
+      else
+         write (aa,'(i2)') ii
+      endif
+
+      return
       end

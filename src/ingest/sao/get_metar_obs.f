@@ -81,9 +81,10 @@ c
 	real*8  timeobs(maxobs)
 	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
 	real*4  t(maxobs), td(maxobs), tt(maxobs), ttd(maxobs)
-	real*4  dd(maxobs), ff(maxobs), ffg(maxobs)
-	real*4  mslp(maxobs), alt(maxobs)
+	real*4  dd(maxobs), ddg(maxobs), ff(maxobs), ffg(maxobs)
+	real*4  stnp(maxobs), mslp(maxobs), alt(maxobs)
 	real*4  ht(6,maxobs), vis(maxobs), dp(maxobs)
+        real*4  rh(maxobs), sr(maxobs), st(maxobs)
 	real*4  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)
 	real*4  max24t(maxobs), min24t(maxobs), snowcvr(maxobs)
         real    lat(ni,nj), lon(ni,nj), k_to_f
@@ -129,6 +130,13 @@ c
 
         call get_box_size(box_size,istatus)
         if(istatus .ne. 1)return
+
+!       Initialize variables mainly used for CWB combined synop/local data
+        ddg  = badflag
+        stnp = badflag
+        rh   = badflag
+        sr   = badflag
+        st   = badflag
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
@@ -327,19 +335,22 @@ c
      1          path_to_metar(1:len_path)//'synop'//a8time//'.dat'
 
             call s_len(data_file,len_file)
-            write(6,*)' CWB Synop Data: ',data_file(1:len_file)
+            write(6,*)' CWB Synop/Local Data: ',data_file(1:len_file)       
 
             n_synop_cwb = 0
 
             call read_synop_cwb(data_file , maxSkyCover, recNum, 
+     &         i4time_sys, path_to_metar,
      &         alt(ix), atype_in(ix), td(ix), ttd(ix), elev(ix),
      &         lats(ix), lons(ix), max24t(ix), min24t(ix),
      &         pcp1(ix), pcp24(ix), pcp3(ix), pcp6(ix),
-     &         wx(ix), dp(ix), dpchar(ix),
-     &         reptype_in(ix), mslp(ix), cvr(1,ix), ht(1,ix),
-     &         snowcvr(ix), stname(ix), tt(ix), t(ix),
-     &         timeobs(ix), vis(ix), dd(ix), ffg(ix), ff(ix),
-     &         wmoid_in(ix), badflag, n_synop_cwb, istatus)
+     &         wx(ix), stnp(ix), dp(ix), dpchar(ix),
+     &         reptype_in(ix), rh(ix),
+     &         mslp(ix), cvr(1,ix), ht(1,ix),
+     &         snowcvr(ix), sr(ix), st(ix), 
+     &         stname(ix), tt(ix), t(ix), timeobs(ix), vis(ix), 
+     &         dd(ix), ddg(ix), ff(ix), ffg(ix), wmoid_in(ix), badflag,       
+     &         n_synop_cwb, istatus)
 
             write(6,*)' n_synop_cwb = ',n_synop_cwb
 
@@ -570,12 +581,11 @@ c
 c
 c..... Wind speed and direction
 c
-	ddg = badflag
         if(ff(i) .lt. 0. .or. ff(i) .gt. 500.)ff(i) = badflag
 	if(ff(i)  .ne. badflag) ff(i)  = 1.94254 * ff(i)   !m/s to kt
 	if(ffg(i) .ne. badflag) then
 	   ffg(i) = 1.94254 * ffg(i) !m/s to kt
-	   ddg = dd(i)
+	   if(ddg(i) .eq. badflag)ddg(i) = dd(i)
 	endif
 c
 c..... Pressure...MSL and altimeter, 3-h pressure change
@@ -741,22 +751,22 @@ c
 c
 	 store_2(nn,1) = temp_f                 ! temperature (deg f)
 	 store_2(nn,2) = dewp_f                 ! dew point (deg f)
-	 store_2(nn,3) = badflag                ! Relative Humidity
+	 store_2(nn,3) = rh(i)                  ! Relative Humidity
 c
 	 store_3(nn,1) = dd(i)                  ! wind dir (deg)
 	 store_3(nn,2) = ff(i)                  ! wind speed (kt)
-	 store_3(nn,3) = ddg                    ! wind gust dir (deg)
+	 store_3(nn,3) = ddg(i)                 ! wind gust dir (deg)
 	 store_3(nn,4) = ffg(i)                 ! wind gust speed (kt)
 c
 	 store_4(nn,1) = alt(i)                 ! altimeter setting (mb)
-	 store_4(nn,2) = badflag                ! station pressure (mb)
+	 store_4(nn,2) = stnp(i)                ! station pressure (mb)
 	 store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
 	 store_4(nn,4) = float(dpchar(i))       ! 3-h press change character
          store_4(nn,5) = dp(i)                  ! 3-h press change (mb)
 c
 	 store_5(nn,1) = vis(i)                 ! visibility (miles)
-	 store_5(nn,2) = badflag                ! solar radiation 
-	 store_5(nn,3) = badflag                ! soil/water temperature
+	 store_5(nn,2) = sr(i)                  ! solar radiation 
+	 store_5(nn,3) = st(i)                  ! soil/water temperature
 	 store_5(nn,4) = badflag                ! soil moisture
 c
 	 store_6(nn,1) = pcp1(i)                ! 1-h precipitation
