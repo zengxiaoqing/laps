@@ -1333,6 +1333,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      debuggers can then be used such as 'dbx'. Examination of the log files 
      again is helpful.
 
+     We have a new script (in 2004) called 'casererun.pl' that can be used
+     for archive data runs. We have yet to try it on the supplied test data 
+     case though it could prove to be useful.
+
                 ----  2.5.1  Analysis Only Test ---
 
      You may want to check that any analysis outputs from this time are not 
