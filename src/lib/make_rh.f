@@ -69,15 +69,19 @@ c       Dan Birkenheuer    14 May 1993
 
 c       first compute the saturation  vapor pressure of water
 
-        if (t .gt. t_ref .and. t .gt. -47. ) then ! liquid phase
+        if(t_ref .lt.-132.) t_ref = -132.  ! limit t_ref
+
+        if (t .gt. t_ref .and. t .ge. -132. ) then ! liquid phase
 c                                               eslo approx
                 esat = eslo (t)
 
         elseif (t .le. t_ref) then ! assume ice phase
                 esat = esice (t)
 
-        else ! liquid phase and td is less tan -47
-                esat = es(t)
+        else ! situation not covered (impossible)
+
+           write(6,*) 'Make_rh .. t and t_ref conflict, NaN'
+           esat = 1./0.0
 
         endif
 

@@ -69,14 +69,12 @@ c       stop the obvious
 
 c       first compute the ambient vapor pressure of water
 
-        if (t .ge. t_ref .and. t .ge. -47. ) then ! liquid phase
+        if (t_ref .lt. -132.) t_ref = -132.
+
+        if (t .ge. t_ref .and. t .ge. -132. ) then ! liquid phase
 c                                               eslo approx
 
                 ew = eslo (t)
-
-        elseif (t .ge. t_ref .and. t .lt. -47.) then !liq phase poorer
-c                                       es approx
-                ew = es (t)
 
         else ! ice phase
 

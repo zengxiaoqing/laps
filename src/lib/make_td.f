@@ -116,8 +116,8 @@ c   against saturation q calling ssh2 in this
 
 c second test for too little a q for routine to work.
         if(q .lt. 7.214e-26) then
-        print *, 'input value of q to module MAKE_TD was lower than 7.21
-     14e-26'
+        print *, 'input value of q to module MAKE_TD was lower than 
+     1 7.214e-26 '
         print *, ' assigning returned td the values of -199. c'
         make_td = -199.
         return

@@ -78,23 +78,20 @@ c       trap the obvious error conditions
         endif
 
         if (td .lt. -200. ) then
-                ssh2 = 0.0
-                return
+           write (6,*) 'td is less than -199.C, zero vapor press assngd'
+           ssh2 = 0.0
+           return
         endif
 
+        if (t_ref .lt. -132.) t_ref = -132.
 
-        if (t .gt. t_ref  .and. td.gt.-47.) then !assume liquid phase
+        if (t .gt. t_ref  .and. td.ge.-132.) then !assume liquid phase
 
-                ew = eslo (td)
+           ew = eslo (td)
 
-        elseif (t.le.t_ref) then    !assume ice phase
+        else                    !assume ice phase
 
-                ew = esice (td)
-
-        else   ! liquid phase and td is less than -47 which will
-c                 cause severe problems in the code!
-
-                ew = es (td)
+           ew = esice (td)
 
         endif
 
