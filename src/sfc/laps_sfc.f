@@ -97,6 +97,9 @@ c                               09-24-98  Carry background flags for each var.
 c                                           Rm ceil QC check.
 c                               09-30-98  Housekeeping.
 c                               12-02-98  Remove status check for LT1.
+c                               07-07-99  General upgrades and cleanup.  Change
+c                                           read_surface_obs to read_surface_data.
+c                                           Rm *4 from all declarations.
 c
 c       Notes:
 c
@@ -112,26 +115,27 @@ c*****************************************************************************
 c
 	include 'laps_sfc.inc'
 c
-	real*4 lat(ni,nj), lon(ni,nj), topo(ni,nj)
-	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
-	real*4 grid_spacing
+	real lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	real x1a(ni), x2a(nj), y2a(ni,nj)
+	real grid_spacing
 c
-	integer*4 jstatus(20)	! 20 is standard for prodgen drivers
+	integer*4 i4time
+	integer jstatus(20)		! 20 is standard for prodgen drivers
 	integer narg, iargc
 c
 	character atime*24, filename*9, filename_last*9
-	character infile1*256, infile_last*256
+	character infile_last*256
 	character dir_s*256,ext_s*31,units*10,comment*125,var_s*3
 	character laps_domain*9
 c
 c.....  Stuff for backgrounds.
 c
-	real*4 u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
-	real*4 wt_u(ni,nj), wt_v(ni,nj), wt_t(ni,nj), wt_td(ni,nj)
-	real*4 rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
-	real*4 wt_rp(ni,nj), wt_mslp(ni,nj), wt_stnp(ni,nj)
-	real*4 vis_bk(ni,nj), wt_vis(ni,nj)
-	real*4 wt(ni,nj)
+	real u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
+	real wt_u(ni,nj), wt_v(ni,nj), wt_t(ni,nj), wt_td(ni,nj)
+	real rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
+	real wt_rp(ni,nj), wt_mslp(ni,nj), wt_stnp(ni,nj)
+	real vis_bk(ni,nj), wt_vis(ni,nj)
+	real wt(ni,nj)
 c
 	integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
 	integer back_mp
@@ -139,34 +143,54 @@ c
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
-	real*4 lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
-	real*4 t_s(mxstn), td_s(mxstn), dd_s(mxstn), ff_s(mxstn)
-	real*4 ddg_s(mxstn), ffg_s(mxstn)
-	real*4 pstn_s(mxstn), pmsl_s(mxstn), alt_s(mxstn)
-	real*4 cover_s(mxstn), hgt_ceil(mxstn), hgt_low(mxstn)
-	real*4 solar_s(mxstn), store_hgt(mxstn,5), vis_s(mxstn)
-	real*4 rii(mxstn), rjj(mxstn)
+	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
+	real t_s(mxstn), t_ea(mxstn), max24t(mxstn), min24t(mxstn)
+        real td_s(mxstn), td_ea(mxstn), rh(mxstn), rh_ea(mxstn)
+
+        real dd_s(mxstn), ddg_s(mxstn), dd_ea(mxstn)
+        real ff_s(mxstn), ffg_s(mxstn), ff_ea(mxstn)
+
+        real alt_s(mxstn), alt_ea(mxstn), delp(mxstn)
+	real pstn_s(mxstn), pmsl_s(mxstn), p_ea(mxstn)
+
+	real store_hgt(mxstn,5) 
+
+        real vis_s(mxstn), vis_ea(mxstn)
+        real solar_s(mxstn), solar_ea(mxstn)
+
+        real sfct(mxstn), sfct_ea(mxstn)
+        real sfcm(mxstn), sfcm_ea(mxstn)
+        real pcp1(mxstn), pcp3(mxstn), pcp6(mxstn), pcp24(mxstn)
+        real snow(mxstn), snow_ea(mxstn), pcp_ea(mxstn)
+
+	real rii(mxstn), rjj(mxstn)
 c
-	integer*4 kloud_s(mxstn),idp3_s(mxstn),obstime(mxstn)
-	integer*4 ii(mxstn), jj(mxstn)
+	integer kloud_s(mxstn), obstime(mxstn)
+        integer wmoid(mxstn), delpch(mxstn)
+	integer ii(mxstn), jj(mxstn)
 c
 	character atime_s*24
-	character stn(mxstn)*3,obstype(mxstn)*8,wx_s(mxstn)*8
-	character store_emv(mxstn,5)*1, store_amt(mxstn,5)*4
+	character store_amt(mxstn,5)*4
+        character stations(mxstn)*20, provider(mxstn)*11
+        character reptype(mxstn)*6, autostntype(mxstn)*6
+        character wx_s(mxstn)*25 
 c
 c.....  Work arrays for the QC routine.
 c
-        integer*4 rely(26,mxstn), ivals1(mxstn)
+        integer rely(26,mxstn), ivals1(mxstn)
+	character stn3(mxstn)*3
 c
 c.....  Stuff for intermediate grids (old LGS file)
 c
-	real*4 u1(ni,nj), v1(ni,nj)
-	real*4 t1(ni,nj), td1(ni,nj), tb81(ni,nj)
-	real*4 rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
-	real*4 vis1(ni,nj), elev1(ni,nj)
+	real u1(ni,nj), v1(ni,nj)
+	real t1(ni,nj), td1(ni,nj), tb81(ni,nj)
+	real rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
+	real vis1(ni,nj), elev1(ni,nj)
 c
 c
+c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
+c*************************************************************
 c
 	narg = iargc()
 cc	print *,' narg = ', narg
@@ -227,21 +251,6 @@ cc	dir_s = '../static/'
         call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
      &                      topo ,grid_spacing,istatus)
 c
-c.....	Find east/west and north/south sides of grid (max extension of grid)
-c
-	grid_east = -999.
-	grid_west = 0.
-	grid_north = 0.
-	grid_south = 90.
-	do i=1,ni
-	  if(lat(i,nj) .gt. grid_north) grid_north = lat(i,nj)
-	  if(lat(i,1) .lt. grid_south) grid_south = lat(i,1)
-	enddo !i
-	do j=1,nj	
-	  if(lon(ni,j) .gt. grid_east) grid_east = lon(ni,j)
-	  if(lon(1,j) .lt. grid_west) grid_west = lon(1,j)
-	enddo !j
-c
 c.....  Read in the obs and calculate a weight based on distance to each
 c.....  station.
 c
@@ -249,17 +258,19 @@ c.....	READ IN THE SURFACE OBS:  dd/ff in deg/kt, t and td in F, elev in m,
 c.....	                          and the pressure variable. cld hts are msl.
 c
 c 	infile1 = '../lapsprd/lso/'//filename//'.lso' 
-	call get_directory('lso',infile1,len)
-	infile1 = infile1(1:len) // filename(1:9) // '.lso'
+cc	call get_directory('lso',infile1,len)
+cc	infile1 = infile1(1:len) // filename(1:9) // '.lso'
 c
-	write(6,305) infile1
- 305	format(' Getting surface data from: ',a70)
-	call read_surface_obs(infile1,mxstn,atime_s,n_meso_g,
-     &   n_meso_pos,n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
-     &   n_obs_pos_g,n_obs_b,n_obs_pos_b,stn,obstype,lat_s,lon_s,elev_s,
-     &   wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn_s,pmsl_s,alt_s,
-     &   kloud_s,hgt_ceil,hgt_low,cover_s,solar_s,idp3_s,store_emv,
-     &   store_amt,store_hgt,vis_s,obstime,istatus)
+	write(6,305) filename(1:9)
+ 305	format(' Getting surface data at: ',a9)
+c
+        call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b,obstime,
+     &    wmoid,stations,provider,wx_s,reptype,autostntype,lat_s,lon_s,
+     &    elev_s,t_s,td_s,rh,dd_s,ff_s,ddg_s,ffg_s,alt_s,pstn_s,pmsl_s,
+     &    delpch,delp,vis_s,solar_s,sfct,sfcm,pcp1,pcp3,pcp6,pcp24,snow,
+     &    kloud_s,max24t,min24t,t_ea,td_ea,rh_ea,dd_ea,ff_ea,alt_ea,
+     &    p_ea,vis_ea,solar_ea,sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,
+     &    store_hgt,mxstn,istatus)
 c
 	if(istatus.ne.1 .or. n_obs_b.eq.0) then	  !surface obs not available
 	  jstatus(1) = 0
@@ -278,6 +289,18 @@ c
 	endif
 	print *,' '
 c
+c.....  Copy 3 characters of the station name to another array for use
+c.....  in the qc_data routine.  This can be removed once the QC is changed
+c.....  to the stand-alone Kalman.  Blank out the array first.
+c
+	do i=1,mxstn
+	   stn3(i)(1:3) = '   '
+	enddo !i
+c
+	do i=1,n_obs_b
+	   stn3(i)(1:3) = stations(i)(2:4)
+	enddo !i
+c
 c.....	Find the i,j location of each station, then calculate the
 c.....  background weights (based on station density).
 c
@@ -285,9 +308,10 @@ c
      &               ni,nj,ii,jj,rii,rjj)
 c
         do ista=1,n_obs_b
-           write(6,999) ista,stn(ista),rii(ista),rjj(ista)
+           write(6,999) ista,stations(ista)(1:5), reptype(ista)(1:6), 
+     &                  autostntype(ista)(1:6), rii(ista), rjj(ista)
         enddo !ista
- 999    format(i4,': ',a3,' is at i,j: ',f5.1,',',f5.1)
+ 999    format(i4,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1)
 c
         call zero(wt, ni,nj)
 	call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
@@ -464,11 +488,8 @@ c
 	infile_last = infile_last(1:len) // filename_last // '.lso'
 c
 	call qcdata(filename,infile_last,rely,ivals1,mxstn,
-     &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, ddg_s, 
-     &     ffg_s, pstn_s, pmsl_s, alt_s, cover_s, hgt_ceil, 
-     &     hgt_low, solar_s, store_hgt, vis_s, kloud_s, idp3_s, 
-     &     obstime, stn, obstype, wx_s, store_emv, store_amt,
-     &     rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
+     &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
+     &     vis_s, stn3, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
      &     istatus)
 c
 	if(istatus .eq. 1) then
@@ -490,7 +511,7 @@ c
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 121
 	  if(rely(7,nn) .lt. 0) then	! temperature
-	    print *, 'QC: Bad T at ',stn(mm),' with value ',t_s(mm)
+	   print *, 'QC: Bad T at ',stations(mm),' with value ',t_s(mm)
 	    t_s(mm) = badflag
 	  endif
  121	enddo  !mm
@@ -498,7 +519,7 @@ c
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 122
 	  if(rely(8,nn) .lt. 0) then	! dewpt
-	    print *, 'QC: Bad TD at ',stn(mm),' with value ',td_s(mm)
+	   print *, 'QC: Bad TD at ',stations(mm),' with value ',td_s(mm)
 	    td_s(mm) = badflag
 	  endif
  122	enddo  !mm
@@ -506,7 +527,7 @@ c
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 123
 	  if(rely(9,nn) .lt. 0) then	! wind direction
-	    print *, 'QC: Bad DIR at ',stn(mm),' with value ',dd_s(mm)
+	   print *, 'QC: Bad DIR at ',stations(mm),' with value ',dd_s(mm)
 	    dd_s(mm) = badflag
 	  endif
  123	enddo  !mm
@@ -514,23 +535,23 @@ c
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 124
 	  if(rely(10,nn) .lt. 0) then	! wind speed
-	    print *, 'QC: Bad SPD at ',stn(mm),' with value ',ff_s(mm)
+	   print *, 'QC: Bad SPD at ',stations(mm),' with value ',ff_s(mm)
 	    ff_s(mm) = badflag
 	  endif
  124	enddo  !mm
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 126
-	  if(rely(15,nn) .lt. 0) then	! altimeter 
-	    print *, 'QC: Bad ALT at ',stn(mm),' with value ',alt_s(mm)
+	 if(rely(15,nn) .lt. 0) then	! altimeter 
+	  print *, 'QC: Bad ALT at ',stations(mm),' with value ',alt_s(mm)
 	    alt_s(mm) = badflag
 	  endif
  126	enddo  !mm
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 128
-	  if(rely(25,nn) .lt. 0) then	! visibility 
-	    print *, 'QC: Bad VIS at ',stn(mm),' with value ',vis_s(mm)
+	 if(rely(25,nn) .lt. 0) then	! visibility 
+	  print *, 'QC: Bad VIS at ',stations(mm),' with value ',vis_s(mm)
 	    vis_s(mm) = badflag
 	  endif
  128	enddo  !mm
@@ -549,9 +570,9 @@ c
 cx....	Now call MDATLAPS to put the data on the grid.
 c
 	call mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,lat,
-     &     lon,grid_east,grid_west,grid_north,grid_south,topo,x1a,x2a,
+     &     lon,topo,x1a,x2a,
      &     y2a, lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, 
-     &     alt_s, vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g,
+     &     alt_s, vis_s, stations, rii, rjj, ii, jj, n_obs_b, n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk,
      &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, 
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
@@ -571,7 +592,7 @@ c
 	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,laps_cycle_time,
      &     dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
-     &     vis_s, stn, n_obs_b, n_sao_b, n_sao_g,
+     &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
@@ -584,6 +605,7 @@ c
 c
 c.....	That's about it...let's go home.
 c
+	print *,' End of LAPS Surface Analysis'
 	return
 	end
 
