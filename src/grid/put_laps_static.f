@@ -96,19 +96,21 @@ C
      1                      std_lat2,origin,var,comment,
      1                      data,model,grid_spacing,
      1                      c6_maproj,istatus)
-      if(istatus .eq. 1)then
-          write (6,*)'wrt_laps_static: status = ',istatus
-      else
+      if(istatus .ne. 1)then
           write (6,*)'ERROR wrt_laps_static: status = ',istatus
-      endif
-
-
-      call rd_laps_static(dir_out(1:len),laps_dom_file,imax,jmax,kdim,
-     1            var,units,comment,data,grid_spacing,istatus)
-      if(istatus .eq. 1)then
-          write (6,*)'rd_laps_static: status = ',istatus
       else
-          write (6,*)'ERROR rd_laps_static: status = ',istatus
+          write (6,*)'wrt_laps_static: status = ',istatus
+
+
+          call rd_laps_static(dir_out(1:len),laps_dom_file
+     1,imax,jmax,kdim,var,units,comment,data,grid_spacing
+     1,istatus)
+          if(istatus .eq. 1)then
+             write (6,*)'rd_laps_static: status = ',istatus
+          else
+             write (6,*)'ERROR rd_laps_static: status = ',istatus
+          endif
+
       endif
 
       return

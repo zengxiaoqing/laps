@@ -297,8 +297,10 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
 	path_to_topt30s(len+1:len+2)='/U'
 
         call s_len(path_to_topt10m,len)
-        print*,'path to toptl0m:        ',path_to_topt10m(1:len)
-	path_to_topt10m(len+1:len+2)='/H'
+        if(len.gt.0)then
+           print*,'path to toptl0m:        ',path_to_topt10m(1:len)
+        endif
+        path_to_topt10m(len+1:len+2)='/H'
 
         call s_len(path_to_pctl10m,len)
         print*,'path to pctl_10m:       ',path_to_pctl10m(1:len)
@@ -561,9 +563,9 @@ c
      +,istatus_10m)
             if(istatus_10m .ne. 1)then
              print*,'WARNING: File(s) missing for 10m terrain data'
+            else
+             print *,'topt_10    =',topt_10(1,1),topt_10(nnxp,nnyp)
             endif
-
-            print *,'topt_10    =',topt_10(1,1),topt_10(nnxp,nnyp)
             print*
             if(istatus_30s .eq.1 .and. istatus_10m.eq.1)then
                print*,'blending 10min and 30sec terrain data'
@@ -611,25 +613,6 @@ c
      1                topt_30_lt)
 
           print*
-          print*,' Processing 10m land fraction data....'
-
-          allocate (GEODAT2D(nnxp,nnyp))
-
-          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-     +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,adum,adum
-     +,PATH_TO_PCTL10M,1.,0.,new_DEM,1,istatus)
-
-          if(istatus .ne. 1)then
-             write(6,*)' File(s) missing for 10m land data'
-             write(6,*)' Static file not created.......ERROR'
-             return
-          endif
-
-          if(c10_grid_fname(1:lf).eq.'wrfsi')then
-             data(:,:,10)=GEODAT2D
-          else
-             data(:,:,4) =GEODAT2D
-          endif
 
        endif ! iplttopo = 1
 
@@ -652,7 +635,6 @@ c            topt_stag_out(i,j)=r_missing_data
 
        write(6,*)
        print *,'topt_out   =',topt_out(1,1),topt_out(nnxp,nnyp)
-       print *,'pctlandfrac=',GEODAT2D(1,1),GEODAT2D(nnxp,nnyp)       
        print *,'# of grid pts using 30 sec data =  ',icount_30
        print *,'# of grid pts using 10 min data =  ',icount_10
        print *,'# of grid pts using blended data = ',icount_ramp
@@ -690,11 +672,91 @@ c SG97  splot 'topography.dat'
             write(666,'()')
         enddo
         close(666)
+c -----------------------------------------------------------
+        print*
+        print*,' Calling GEODAT: Processing 30s landuse data.'
+        print*,' Re-allocate GEODAT3D ',nnxp,nnyp,' 24'
+        print*
+        allocate  (GEODAT2D(nnxp,nnyp))
+        allocate  (GEODAT3D(nnxp,nnyp,24))
+
+        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+     +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
+     +,adum,adum,PATH_TO_LUSE_30S,2.0,0.0,new_DEM,24
+     +,istatus)
+
+        if(istatus.ne.1)then
+         print*
+         print*,' File(s) missing for landuse data'
+         print*,' Error:  Static file not created'
+         print*
+         return
+        endif
+
+        ilndmsk=12
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+
+c landmask for wrfsi
+           data(:,:,11)=GEODAT2D
+           data(:,:,ilndmsk) = 1.
+           where(data(:,:,11) .eq. 16.)data(:,:,ilndmsk)=0.
+
+c grids 15 thru 39 are percent distributions
+           i=14
+           do j=1,24
+              data(:,:,i+j)=GEODAT3D(:,:,j)
+           enddo
+        else
+c landmask for laps
+           data(:,:,5)=GEODAT2D   !landuse for laps
+           data(:,:,ilndmsk)=1.
+           where(data(:,:,5) .eq. 16.)data(:,:,ilndmsk)=0.
+        endif
 
 c ----------------------------------------------------------------
         print*
+        print*,' Processing 10m land fraction data....'
+        print*,' Create from 30s land use fractional dist'
+        print*
+c
+        GEODAT2D(:,:)=1.- GEODAT3D(:,:,16)
+        call filter_2dx(geodat2d,nnxp,nnyp,1, 0.5)
+        call filter_2dx(geodat2d,nnxp,nnyp,1,-0.5)
+
+        istatus_ldf=1
+
+c JS: 1-10-03:
+c These calls might become obsolete and the land_10m geog
+c data base will also become obsolete.
+c
+c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+c    +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,adum,adum
+c    +,PATH_TO_PCTL10M,1.,0.,new_DEM,1,istatus)
+c       print*,'Calling proc_geodat - land fraction'
+c       call proc_geodat(nnxp,nnyp,1,path_to_pctl10m
+c    +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
+c    +,GEODAT2D,istatus_ldf)
+
+        if(istatus_ldf .ne. 1)then
+           write(6,*)' File(s) missing for 10m land frac data'
+           write(6,*)' Static file not created.......ERROR'
+           return
+        endif
+
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           idx=10
+        else
+           idx=4
+        endif
+        data(:,:,idx)=GEODAT2D
+        print *,'pctlandfrac=',GEODAT2D(1,1),GEODAT2D(nnxp,nnyp)       
+c
+c -------------------------------------------------------------------
+c
+        print*
         print*,' Processing 30s soil type top layer data....'
 
+        deallocate(GEODAT3D)
         allocate (GEODAT3D(nnxp,nnyp,16))
 
         CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns),ytn(1,ns)
@@ -774,48 +836,6 @@ c
             data(:,:,11)=GEODAT2D
         endif
 
-c -----------------------------------------------------------
-        print*
-        print*,' Calling GEODAT: Processing 30s landuse data.'
-        print*,' Re-allocate GEODAT3D ',nnxp,nnyp,' 24'
-        print*
-        deallocate(GEODAT3D)
-        allocate  (GEODAT3D(nnxp,nnyp,24))
-
-        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-     +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
-     +,adum,adum,PATH_TO_LUSE_30S,2.0,0.0,new_DEM,24
-     +,istatus)
-
-        if(istatus.ne.1)then
-         print*
-         print*,' File(s) missing for landuse data'
-         print*,' Error:  Static file not created'
-         print*
-         return
-        endif
-
-        ilndmsk=12
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
-
-c landmask for wrfsi
-           data(:,:,11)=GEODAT2D
-           data(:,:,ilndmsk) = 1.
-           where(data(:,:,11) .eq. 16.)data(:,:,ilndmsk)=0.
-
-c grids 15 thru 39 are percent distributions
-           do j=1,24
-              data(:,:,14+j)=GEODAT3D(:,:,j)
-           enddo
-        else
-c landmask for laps
-           data(:,:,5)=GEODAT2D   !landuse for laps
-           data(:,:,ilndmsk)=1.
-           where(data(:,:,5) .eq. 16.)data(:,:,ilndmsk)=0.
-c          where(data(:,:,5) .eq. 16. .and. data(:,:,4).lt.0.5)
-c    &           data(:,:,4) = 0.0    !for laps landfrac
-        endif
-
 c ----------------------------------------------------------------
         print*
         print*,' Calling GEODAT: Processing green frac data.'
@@ -863,12 +883,12 @@ c    +,istatus_grn)
         endif
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           ing=83
+           i=83
         else
-           ing=12
+           i=12
         endif
         do j=1,12
-           data(:,:,ing+j)=GEODAT3D(:,:,j)
+           data(:,:,i+j)=GEODAT3D(:,:,j)
         enddo
 
 44      continue
@@ -903,12 +923,12 @@ c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
         endif
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then 
-           in1=96
+           i=96
         else
-           in1=25
+           i=25
         endif 
 
-        data(:,:,in1)=GEODAT2D
+        data(:,:,i)=GEODAT2D
 c
 c Adjust geog data to conform to landuse data (the most
 c accurate for defining land-water boundaries).
@@ -919,7 +939,7 @@ c
 
         call adjust_geog_data(nnxp,nnyp,12,istatus_grn
      &,istatus_tmp,lats(1,1,ns),topt_out,path_to_soiltemp_1deg
-     &,data(1,1,ilndmsk),data(1,1,in1),GEODAT3D,istatus)
+     &,data(1,1,ilndmsk),data(1,1,i),GEODAT3D,istatus)
         if(istatus.ne.1)then
            print*,'Processing incomplete in adjust_geog_data'
            if(c10_grid_fname(1:lf).eq.'wrfsi')then
@@ -1080,7 +1100,8 @@ c          call move(topt_stag_out,data(1,1,i+12),nnxp,nnyp) !51
         endif
 
         call put_laps_static(grid_spacing_m,model,comment,var
-     1,data,nnxp,nnyp,nf+3*maxdatacat,ngrids,std_lat,std_lat2,std_lon
+     1,data,nnxp,nnyp,ngrids,ngrids,std_lat,std_lat2,std_lon
+c    1,data,nnxp,nnyp,nf+3*maxdatacat,ngrids,std_lat,std_lat2,std_lon
      1,c6_maproj,deltax,deltay)
 
         istatus = istat_chk
@@ -1294,8 +1315,9 @@ C
          cdatatype='soiltype'
       elseif(ofn(len-1:len-1).eq.'U' .or.
      &       ofn(len-1:len-1).eq.'H' .or.
-     &       ofn(len-1:len-1).eq.'L' )then
+     &       ofn(len-1:len-1).eq.'L')then
          cdatatype='topography'
+         if(ofn(len-1:len-1).eq.'L')cdatatype='landfrac'
       elseif(ofn(len-1:len-1).eq.'G')then
          icnt = 0
          cdatatype='greenfrac'
@@ -1537,7 +1559,8 @@ c                   print *,'nofr,dato=',nofr,dato(1,1,nofr)
 
 C Interp OK for continuous data such as topo and landfrac
 
-                  if(cdatatype.eq.'topography')then
+                  if(cdatatype.eq.'topography'.or.
+     &               cdatatype.eq.'landfrac' )then
 
                    IO1=INT(RIO)
                    JO1=INT(RJO)
@@ -1548,7 +1571,7 @@ C Interp OK for continuous data such as topo and landfrac
                    WIO1=1.0-WIO2
                    WJO1=1.0-WJO2
 
-                   do LP = 1,lcat !this for greenness frac when lcat=12
+                   do LP = 1,lcat
 
                    DATP(IP,JP,LP)=WIO1*(WJO1*DATO(IO1,JO1,JOFR,LP)
      +                                 +WJO2*DATO(IO1,JO2,JOFR,LP))
@@ -1568,7 +1591,7 @@ C Interp OK for continuous data such as topo and landfrac
 
                   else
 
-C Nearest grid point for greenfrac (NOT), landuse, soiltype, soiltemp
+C Nearest grid point for landfrac, landuse, soiltype, soiltemp
 
                    IO1=NINT(RIO)
                    JO1=NINT(RJO)
@@ -1576,8 +1599,7 @@ C Nearest grid point for greenfrac (NOT), landuse, soiltype, soiltemp
                     DATP(IP,JP,LP)= DATO(IO1,JO1,JOFR,LP)
                    enddo
 
-                  endif ! cdatatype eq topography
-
+                  endif ! cdatatype eq topography or landfrac
                    
 20               CONTINUE
 18             continue ! IP
@@ -1589,6 +1611,7 @@ C Nearest grid point for greenfrac (NOT), landuse, soiltype, soiltemp
 ! Calculate average and silhouette terrain, then apply SILWT weight
 
             if(cdatatype(1:lent).eq.'topography'.or.
+     &         cdatatype(1:lent).eq.'landfrac'.or.
      &         cdatatype(1:lent).eq.'soiltemp'   )then
 
 
@@ -1671,7 +1694,8 @@ c     stop
       XQ1=(1.-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
       YQ1=(1.-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
 
-      if(cdatatype(1:lent).eq.'topography')then
+      if(cdatatype(1:lent).eq.'topography'.or.
+     +   cdatatype(1:lent).eq.'landfrac')then
 
         print*
         print*,'Before GDTOST2'

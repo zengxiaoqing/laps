@@ -558,6 +558,10 @@ c
 
          comment(ngrids)= '\0'
 
+      else
+
+         print*,'unexpected value of ngrids. ngrids = ',ngrids
+
       endif
       return
       end

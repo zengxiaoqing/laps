@@ -174,17 +174,7 @@ c-----------------------------------------------
       real    lat0,lon0,dlat,dlon
       common /llgrid/nxst,nyst,nz,lat0,lon0,dlat,dlon,cgrddef
 
-c     interface
-c       subroutine read_dem(unit_no,unit_name,nn1,nn2,i1,i2
-c    &,data)
-c         character*(*) unit_name
-c         integer  unit_no,nn1,nn2,nn3,nn4,nofr
-c         integer  i1, i2
-c         real     data(nn1,nn2,nn3,nn4)
-c       end subroutine
-c     end interface
-
-c from Brent Shaw pseudocode
+c original create from Brent Shaw pseudocode
 
 !LSM Field Processing for "Many-to-one" aggregation
 
@@ -237,7 +227,8 @@ c from Brent Shaw pseudocode
       ctiletype=path_to_tile_data(lenp:lenp)
       if(ctiletype.eq.'V'.or.ctiletype.eq.'O'.or.
      1   ctiletype.eq.'U'.or.ctiletype.eq.'T'.or.
-     1   ctiletype.eq.'A'.or.ctiletype.eq.'G')then
+     1   ctiletype.eq.'A'.or.ctiletype.eq.'G'.or.
+     1   ctiletype.eq.'L' )then
          print*,'tile type to process = ',ctiletype
       else
          print*,'Unknown tile type in proc_geodat_tiles'
@@ -300,6 +291,8 @@ c from Brent Shaw pseudocode
       min_lon =  max(-359.9999,min(359.9999,min_lon + rwoff))
       max_lon =  max(-359.9999,min(359.9999,max_lon + rwoff))
 
+c     min_lon =  max(-359.9999,min(359.9999,min_lon))! + rwoff))
+c     max_lon =  max(-359.9999,min(359.9999,max_lon))! + rwoff))
       deallocate(dom_lats,dom_lons)
 
 !  Compute a list of tiles needed to fulfill lat/lon range just computed
@@ -451,7 +444,7 @@ c     if(lgotE .and. lgotW)min_lon=360+min_lon+rwoff
            dem_data=.true.
        else                                ! other  like albedo
            CALL JCLGET(29,cfname,'FORMATTED',0,istatus)
-!          CALL VFIREC(29,raw_data,NO*NO,'LIN')
+           CALL VFIREC(29,raw_data,no*no,'LIN')
            if ((ctiletype.eq.'U').and.(no.eq.121)) then
                 dem_data=.false.           ! topo_30s
            endif
@@ -547,6 +540,11 @@ c     endif
          min_val = 1.0
          max_val = 100.
 
+      elseif(ctiletype.eq.'L')then
+
+         min_val = 0.0
+         max_val = 1.0
+
       endif
 
       do ii=1,ncat
@@ -557,6 +555,14 @@ c     endif
             call hinterp_field(nxst,nyst,nx_dom,ny_dom,1
      .,grx,gry,data_proc(1,1,ii),geodat(1,1,ii),1)
             geodat(:,:,ii)=geodat(:,:,ii)/100.
+
+         elseif(ctiletype.eq.'L')then
+
+            call hinterp_field(nxst,nyst,nx_dom,ny_dom,1
+     .,grx,gry,data_proc(1,1,ii),geodat(1,1,ii),1)
+
+            call filter_2dx(geodat,nx_dom,ny_dom,1, 0.5)
+            call filter_2dx(geodat,nx_dom,ny_dom,1,-0.5)
 
          else
 
