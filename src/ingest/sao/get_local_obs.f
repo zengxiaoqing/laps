@@ -89,7 +89,7 @@ c
 	real*4  t(maxobs), td(maxobs), rh(maxobs), stnp(maxobs)
 	real*4  dd(maxobs), ff(maxobs), ddg(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs), alt(maxobs), vis(maxobs)
-        real*4  sea_temp(maxobs)
+        real*4  solar(maxobs), sea_temp(maxobs)
         integer*4  i4time_ob_a(maxobs), before, after
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_dupe(maxobs)
@@ -208,7 +208,7 @@ c
 c.....  Call the read routine.
 c
 	    call read_local_obs(nf_fid, recNum, alt(ix),
-     &         pro(ix), sea_temp(ix), td(ix), 
+     &         pro(ix), solar(ix), sea_temp(ix), td(ix), 
      &         elev(ix), lats(ix), lons(ix),       
      &         timeobs(ix), wx(ix), rh(ix), rh_time(ix),
      &         mslp(ix), stname(ix), p_time(ix), stnp(ix), 
@@ -303,6 +303,7 @@ c
 	   if( nanf( mslp(i) ) .eq. 1 )    mslp(i)  = badflag
 	   if( nanf( t(i)    ) .eq. 1 )    t(i)     = badflag
 	   if( nanf( td(i)   ) .eq. 1 )    td(i)    = badflag
+	   if( nanf( solar(i)) .eq. 1 )    solar(i) = badflag
 	   if( nanf( sea_temp(i)) .eq. 1 ) sea_temp(i) = badflag
 	   if( nanf( dd(i)   ) .eq. 1 )    dd(i)    = badflag
 	   if( nanf( ff(i)   ) .eq. 1 )    ff(i)    = badflag
@@ -497,6 +498,13 @@ c
 	 endif
 
 c
+c..... Solar Radiation
+c
+         solar_rad = solar(i)                         
+         if(solar_rad .le. badflag) then          !  bad?
+            solar_rad = badflag                   !  bag
+         endif
+c
 c..... Sea Surface Temperature
 c
          seatemp_k = sea_temp(i)                         
@@ -656,7 +664,7 @@ c
          store_4(nn,5) = badflag                ! 3-h press change (mb)
 c
          store_5(nn,1) = vis(i)                 ! visibility (miles)
-         store_5(nn,2) = badflag                ! solar radiation 
+         store_5(nn,2) = solar_rad              ! solar radiation 
 	 store_5(nn,3) = seatemp_f              ! soil/water temperature (F)
          store_5(nn,4) = badflag                ! soil moisture 
 c

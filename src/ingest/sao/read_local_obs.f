@@ -1,7 +1,7 @@
 c
 c
       subroutine read_local_obs(nf_fid , recNum, altimeter, 
-     +     dataProvider, seaSurfaceTemperature,    
+     +     dataProvider, solarRadiation, seaSurfaceTemperature,    
      +     dewpoint, elevation, latitude, longitude, observationTime,
      +     presWeather, relHumidity, rhChangeTime, seaLevelPressure,
      +     stationId, stationPressChangeTime, stationPressure,
@@ -35,7 +35,7 @@ c
      +     seaLevelPressure(recNum), stationPressure(recNum),
      +     temperature(recNum), visibility(recNum), windDir(recNum),
      +     windDirMax(recNum), windGust(recNum), windSpeed(recNum),
-     +     seaSurfaceTemperature(recNum)
+     +     solarRadiation(recNum), seaSurfaceTemperature(recNum)
       real filval, misval
 
       double precision observationTime(recNum), rhChangeTime(recNum),
@@ -154,6 +154,32 @@ C
          print *, ' in var dewpoint'
       endif
       call ck_array_real(dewpoint, recNum, misval, badflag)
+C
+C     Variable        NETCDF Long Name
+C      dewpoint     "solar radiation" 
+C
+        nf_status = NF_INQ_VARID(nf_fid,'solarRadiation',nf_vid)       
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var solarRadiation'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,solarRadiation)       
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in NF_GET_VAR_ solarRadiation '
+      endif
+        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var solarRadiation'
+      endif
+      call ck_array_real(solarRadiation, recNum, filval, badflag)       
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var solarRadiation'
+      endif
+      call ck_array_real(solarRadiation, recNum, misval, badflag)       
 C
 C     Variable        NETCDF Long Name
 C      dewpoint     "sea surface temperature" 
