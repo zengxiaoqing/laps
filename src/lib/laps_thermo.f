@@ -69,7 +69,6 @@ cdoc    Calculate and write out set of 2-D stability grids
         real*4 li(NX_L,NY_L)
 
         real*4 pres_sfc_mb(NX_L,NY_L)
-        real*4 t500laps(NX_L,NY_L)
         real*4 pres_3d(NX_L,NY_L,NZ_L)
 
         integer nfields
@@ -165,7 +164,7 @@ cdoc    Calculate and write out set of 2-D stability grids
         enddo ! i
 
         flag = 0.0
-        call li_laps(t_sfc_f,td_sfc_f,pres_sfc_mb,t500laps ! Local?
+        call li_laps(t_sfc_f,td_sfc_f,pres_sfc_mb
      1              ,i4time_needed,NX_L,NY_L,li,flag,istatus)
 
 !       call move
@@ -1574,7 +1573,7 @@ cdoc    This is a fast approximate Wet Bulb routine using lookup tables
         return
         end
 
-       subroutine li_laps(tc,td,pr,t500laps,i4time,imax,jmax,li,flag
+       subroutine li_laps(tc,td,pr,i4time,imax,jmax,li,flag
      !                   ,istatus)
 
 cdoc   Compute 2-D grid of LI, given a grid of parcels to launch

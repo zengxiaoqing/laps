@@ -78,6 +78,11 @@ c
 c
 c.....	Read the station data.
 c
+        if(n_obs_b.eq.0) then
+         print*, 'no obs in file ',infile,' returning'
+         jstatus=-1
+         return
+        endif
 	do k=1,n_obs_b
 c
 	   read(11,901)  stations(k),              !station id
@@ -444,8 +449,9 @@ c
 	end
 c
 c
-	subroutine read_sfc_wind(i4time,btime,n_obs_g,n_obs_b,
-     &    stations,provider,lat,lon,elev,dd,ff,maxsta,jstatus)
+        subroutine read_sfc_wind(i4time,ext,n_obs_g,n_obs_b
+     1                          ,stations,provider,lat,lon,elev
+     1                          ,dd,ff,dd_ea,ff_ea,maxsta,jstatus)
 c
 c*****************************************************************************
 c
@@ -460,12 +466,15 @@ c
 	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
 	real*4 dd(maxsta)
 	real*4 ff(maxsta)
+	real*4 dd_ea(maxsta)
+	real*4 ff_ea(maxsta)
 c
 	integer*4 i4time, jstatus
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
 	character dum*132
+        character*(*) ext
 c
 	jstatus = 0
 c
@@ -473,7 +482,7 @@ c.....	Get the file.
 c
 	call make_fnam_lp(i4time, filetime, istatus)
 	call get_directory('lso', infile, len)
-	infile = infile(1:len) // filetime(1:9) // '.lso'
+	infile = infile(1:len) // filetime(1:9) // '.' // ext
 c
 	open(11,file=infile,status='old',err=999)
 c
@@ -499,7 +508,7 @@ c
 c
 	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed
      &                   dummy, dummy,             !wind gust dir, wind gust speed
-     &                   dummy, dummy              !dir expected accuracy, spd exp accuracy
+     &                   dd_ea(k), ff_ea(k)        !dir expected accuracy, spd exp accuracy
 c
 	  read(11,919) dum
 c

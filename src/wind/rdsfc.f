@@ -1,34 +1,41 @@
-cdis    Forecast Systems Laboratory
-cdis    NOAA/OAR/ERL/FSL
-cdis    325 Broadway
-cdis    Boulder, CO     80303
-cdis 
-cdis    Forecast Research Division
-cdis    Local Analysis and Prediction Branch
-cdis    LAPS 
-cdis 
-cdis    This software and its documentation are in the public domain and 
-cdis    are furnished "as is."  The United States government, its 
-cdis    instrumentalities, officers, employees, and agents make no 
-cdis    warranty, express or implied, as to the usefulness of the software 
-cdis    and documentation for any purpose.  They assume no responsibility 
-cdis    (1) for the use of the software and documentation; or (2) to provide
-cdis     technical support to users.
+cdis   
+cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
+cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
 cdis    
-cdis    Permission to use, copy, modify, and distribute this software is
-cdis    hereby granted, provided that the entire disclaimer notice appears
-cdis    in all copies.  All modifications to this software must be clearly
-cdis    documented, and are solely the responsibility of the agent making 
-cdis    the modifications.  If significant modifications or enhancements 
-cdis    are made to this software, the FSL Software Policy Manager  
+cdis    This software is distributed under the Open Source Definition,
+cdis    which may be found at http://www.opensource.org/osd.html.
+cdis    
+cdis    In particular, redistribution and use in source and binary forms,
+cdis    with or without modification, are permitted provided that the
+cdis    following conditions are met:
+cdis    
+cdis    - Redistributions of source code must retain this notice, this
+cdis    list of conditions and the following disclaimer.
+cdis    
+cdis    - Redistributions in binary form must provide access to this
+cdis    notice, this list of conditions and the following disclaimer, and
+cdis    the underlying source code.
+cdis    
+cdis    - All modifications to this software must be clearly documented,
+cdis    and are solely the responsibility of the agent making the
+cdis    modifications.
+cdis    
+cdis    - If significant modifications or enhancements are made to this
+cdis    software, the FSL Software Policy Manager
 cdis    (softwaremgr@fsl.noaa.gov) should be notified.
-cdis 
-cdis 
-cdis 
-cdis 
-cdis 
-cdis 
-cdis 
+cdis    
+cdis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
+cdis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
+cdis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
+cdis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
+cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
+cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
+cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
+cdis   
+cdis
+cdis
+cdis   
+cdis
         subroutine rdsfc(i4time,heights_3d
      1  ,N_SFC,maxstns
      1  ,lat,lon,n_sfc_obs
@@ -72,6 +79,7 @@ cdis
         real*4 ffg_s(maxstns), vis_s(maxstns)
 c
         character stations(maxstns)*3, wx_s(maxstns)*8        ! c5_stamus
+!       character stations(maxstns)*20, provider(maxstns)*11
         character atime*24, infile*270
         character directory*250,ext*31
 
@@ -105,13 +113,20 @@ c
         c13_fname = filename13(i4time,ext(1:3))
         infile = directory(1:len_dir)//c13_fname
 
-        call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
+        if(.true.)then
+            call read_surface_old(infile,maxstns,atime,n_meso_g,
+     1           n_meso_pos,
      1           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
      1           n_obs_pos_g,
      1           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
      1           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
      1           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
      1           store_emv,store_amt,store_hgt,vis,obstime,istatus)
+        else
+            call read_sfc_wind(i4time,'lso',n_obs_g,n_obs_b
+     1                        ,stations,provider,lat_s,lon_s,elev_s
+     1                        ,dd_s,ff_s,dd_ea,ff_ea,maxstns,istatus)
+        endif
 
 100     write(6,*)'n_sao_b=',n_sao_b
 
