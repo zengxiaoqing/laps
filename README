@@ -721,11 +721,12 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
          3) Convert your raw data to NetCDF format then run the LAPS ingest
             code as is. The CDLs and sample "raw" NetCDF files supplied with
             our test dataset can serve as a guide to writing the software
-            to do this. We generally do not maintain or support any software 
-            for writing "raw" NetCDF files as this is done external to LAPS.
-            Sometimes by posting a message to 'laps-users' you can obtain 
-            information from other LAPS users as to how they may have 
-            implemented this step.
+            to do this. If the CDL is unavailable, doing 'ncdump -h' on
+            the actual data file will yield equivalent information. We 
+            generally do not maintain or support any software for writing 
+            "raw" NetCDF files as this is done external to LAPS. Sometimes by 
+            posting a message to 'laps-users' you can obtain information from 
+            other LAPS users as to how they may have implemented this step.
 
      For gridded data sources such as the model background, generally (1) or
      (3) is easiest. For surface and other point data sources option (2) is 
@@ -775,14 +776,13 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      through private companies like Alden. 
 
      The conversion from GRIB to NetCDF is done outside of LAPS by FSL's 
-     Facility division (NIMBUS). If you have the CDL, this should mostly be 
-     sufficient along with knowledge of NetCDF to write out the data. Beyond 
+     Facility division (NIMBUS). Having the CDL should mostly be sufficient 
+     along with general knowledge of NetCDF for writing out the data. Beyond 
      that, you may wish to contact the Facility Division for more info (given
      that some type of funding arrangement with them exists). The Atlanta, 
      Sterling, and Seattle WFOs have followed a more direct route, going from
      the RUC/Eta to the intermediate "lga" file, bypassing the NetCDF file on 
-     the model grid. This includes RUC on isobaric surfaces. Pete Stamus (FSL) 
-     would have more info on this.
+     the model grid. This includes RUC on isobaric surfaces. 
 
                        ----   2.3.2  Radar ingest ---
 
