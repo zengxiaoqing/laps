@@ -127,7 +127,8 @@ sub update_nl{
     }
 
     &write_namelist($filename,$nl_var,$nl_line,@new_values);
-    
+
+    my($var, $val, $line, $eon);
     my %nl_vals;
     my %comments;
 
@@ -138,9 +139,8 @@ sub update_nl{
         my @template = <FILE>;
         close(FILE);
 
-        my $var='';
+        $var='';
         my $mark=0;
-        my $line;
         foreach $line (@template){
             if($line =~ /^\s*\&/){
                 $mark=1;
@@ -178,7 +178,6 @@ sub update_nl{
         print "merging $LAPS_DATA_ROOT/static/tmp/$nl_file into $LAPS_DATA_ROOT/static/$nl_file\n";
         open(OUTFILE,">$LAPS_DATA_ROOT/static/$nl_file") or die "Could not open $LAPS_DATA_ROOT/static/$nl_file to write";
 
-        my($var, $val, $line, $eon);
         my @comments = split("\n",$comments{$nl_file});
 
         foreach $line (@infile){
