@@ -3,8 +3,8 @@ netcdf rsf {
     dimensions:
         record = unlimited,
         z = 1,
-	x = 61,
-	y = 61,
+	x = 125,
+	y = 105,
         nav = 1,
         namelen = 132;
 		
