@@ -205,12 +205,23 @@ c        call s_len(grid_type,leng)
       endif
 c ETA Public
 c ----------
-      if(bgmodel.eq.2.and.cmodel(1:nclen).eq.'ETA48_CONUS')
+      if(bgmodel.eq.2.and.cmodel(1:nclen).eq.'ETA48_CONUS'.or.
+     &cmodel(1:nclen).eq.'ORSM_HKO')
      &then
          call get_eta48_dims(fullname,nxbg,nybg,nzbg
      &         ,Lat0,Lat1,Lon0,La1in,Lo1in,La2in,Lo2in,istatus)
          if(istatus.eq.1)then
-            gproj='LC'
+            if(cmodel(1:nclen).eq.'ETA48_CONUS')then
+               gproj='LC'
+            elseif(cmodel(1:nclen).eq.'ORSM_HKO')then
+               gproj='NP'
+               sw(1)=10
+               sw(2)=100
+               ne(1)=35
+               ne(2)=128
+               nxbg=113
+               nybg=101
+            endif
             nzbg_ht=nzbg
             nzbg_tp=nzbg
             nzbg_sh=nzbg
