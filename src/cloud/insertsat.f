@@ -49,7 +49,7 @@ c
      1  grid_spacing_m,surface_sao_buffer,                               ! I
 !    1  cloud_frac_vis_a,istat_vis,
      1  solar_alt,solar_ha,solar_dec,                                    ! I
-     1  cloud_frac_co2_a,                                                ! I
+     1  lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,                  ! I
      1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
      1  t_gnd_k,                                                         ! O
@@ -125,6 +125,8 @@ c
         real*4 cvr_snow(imax,jmax)
         real*4 pres_sfc_pa(imax,jmax)
         real*4 heights_3d(imax,jmax,klaps)
+        real*4 cloud_frac_co2_a(imax,jmax)
+        real*4 cldtop_co2_pa_a(imax,jmax)
 
         integer*4 istat_39_a(imax,jmax)
         integer*4 istat_39_add_a(imax,jmax)
@@ -134,7 +136,6 @@ c
         real*4 cldtop_m(imax,jmax)
         real*4 cldtop_co2_m(imax,jmax)
         real*4 cldtop_tb8_m(imax,jmax)
-        real*4 cloud_frac_co2_a(imax,jmax)
 
 !       Local
 
@@ -147,8 +148,8 @@ c
         character var*3,comment*125,units*10
 
         logical  l_tb8,l_cloud_present,l_use_39
-        logical l_use_co2
-        data l_use_co2 /.false./ ! Attempt to use co2 slicing method?
+
+        logical lstat_co2_a(imax,jmax)
 
         real*4 k_to_f
 
@@ -320,13 +321,13 @@ c
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
      1     ,istat_39_a(i,j), l_use_39                                     ! I
      1     ,istat_39_add_a(i,j)                                           ! O
-     1     ,l_use_co2                                                     ! I
+     1     ,lstat_co2_a(i,j)                                              ! I
      1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
      1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
      1     ,cldtop_m(i,j),l_cloud_present                                 ! O
      1     ,sat_cover)                                                    ! O
 
-          if(l_use_co2 .and. istat_co2 .eq. 1)then ! Using CO2 slicing method
+          if(lstat_co2_a(i,j))then ! Using CO2 slicing method
 
 !           Clear out those levels higher than what the satellite is showing
 !           with the co2 slicing method
@@ -541,12 +542,11 @@ c
      1            ,k_terrain(i,j),laps_p
      1            ,istat_39_a(i,j), l_use_39                             ! I
      1            ,istat_39_add_dum                                      ! O
-     1            ,l_use_co2                                             ! I
+     1            ,lstat_co2_a(i,j)                                      ! I
      1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
      1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
      1            ,cldtop_m(i,j),l_cloud_present                         ! O
      1            ,sat_cover)                                            ! O
-
 
 
 !             Calculate the cover (opacity) given the brightness temperature,
@@ -591,7 +591,7 @@ c
 !                     return
                   endif
                   cover = cover_new
-              endif ! l_use_co2
+              endif ! .true.
 
             else ! Normal use of satellite data
               cover=sat_cover
@@ -683,7 +683,7 @@ c
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p
      1  ,istat_39, l_use_39                                            ! I
      1  ,istat_39_add                                                  ! O
-     1  ,l_use_co2                                                     ! I
+     1  ,lstat_co2                                                     ! I
      1  ,n_valid_co2,n_missing_co2,cldtop_co2_m,istat_co2              ! O
      1  ,cldtop_tb8_m,l_tb8                                            ! O
      1  ,cldtop_m,l_cloud_present                                      ! O
@@ -716,8 +716,8 @@ c
         real*4 laps_p(klaps)                    ! Input
         integer*4 n_valid_co2,n_missing_co2     ! Input/Output
         real*4 cldtop_co2_m                     ! Output
-        logical l_use_co2,l_use_39              ! Input
-        integer istat_co2                       ! Output
+        logical lstat_co2,l_use_39              ! Input
+        integer istat_co2                       ! Output (not presently used)
         real*4 cldtop_tb8_m                     ! Output
         logical l_tb8                           ! Output
         real*4 cldtop_m                         ! Output
@@ -829,7 +829,7 @@ c
         istat_39_add = 0
 
 !       Set variables depending on whether in Band 8 or CO2 mode
-        if(l_use_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method
+        if(lstat_co2)then ! Using CO2 method
             if(cldtop_co2_m .ne. r_missing_data)then
                 l_cloud_present = .true.
             else
