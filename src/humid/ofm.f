@@ -1,4 +1,3 @@
-cdis   
 cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
 cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
 cdis    
@@ -86,6 +85,11 @@ c   further recompilation.
       real sfc_emis             !surface emissivity for optran 90
       real sfc_refl             !surface reflectivity for optran 90
       real sec_solar            !local secant of solar angle for optran 90
+      real, dimension (:,:), allocatable :: tau90,flux_tau,
+     1     solar_tau            !tau for optran 90 return variable
+      real, dimension (:), allocatable ::  upwelling_radiance, 
+     1     brightness_temperature !upwelling radiance 
+      integer compute_rtm      ! optran 90 wrapper function is type int
       integer jday, istatus
       logical first_call
       data first_call /.true./
@@ -256,9 +260,45 @@ c     generate layers
 c surface parameters
 
       
+c     call to optran 90
 
+c      call optran90_fm ()
 
-cc end insert new code
+      if (nk .eq. 10000) then
+
+         allocate (tau90 (1:nk_90, 1:mchan))
+         allocate (flux_tau (1:nk_90,1:mchan))
+         allocate (solar_tau (1:nk_90,1:mchan))
+         allocate (upwelling_radiance (1:mchan))
+         allocate (brightness_temperature (1:mchan))
+         
+         tau90 = 0.0
+         flux_tau = 0.0
+         solar_tau = 0.0
+         upwelling_radiance = 0.0
+         brightness_temperature = 0.0
+         
+         call optran90_fm (     ! call to optran 90 forward model
+     1        nk_90,level_p, layer_p, layer_t, layer_w, layer_o,
+     1        laps_sfc_t,
+     1        sfc_emis,
+     1        sfc_refl,
+     1        sec_za,
+     1        sec_solar,
+     1        Mchan,
+     1        tau90,
+     1        flux_tau,
+     1        solar_tau,
+     1        upwelling_radiance,
+     1        brightness_temperature
+     1        )
+         
+         deallocate (tau90,flux_tau)
+         deallocate (upwelling_radiance, brightness_temperature)
+
+      endif
+
+c end insert new code
       
 c11111111111111111111
 c     begin using vectors

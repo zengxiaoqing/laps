@@ -10,20 +10,24 @@ include $(SRCROOT)/src/include/makefile.inc
 
 #FFLAGS+=-pg
 
+
+
 DBFFLAGS+=-pg
 
 LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/fm/libfm.a \
 	   $(SRCROOT)/src/lib/powell/libpowell.a \
+           $(SRCROOT)/src/lib/opt90/libopt90.a \
 	   $(SRCROOT)/src/lib/mthermo/libmthermo.a   
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a   \
              $(SRCROOT)/src/lib/fm/libdebugfm.a \
              $(SRCROOT)/src/lib/powell/libdebugpowell.a \
+             $(SRCROOT)/src/lib/opt90/libdebugopt90.a \
 	     $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a   
 
 .SUFFIXES:
-.SUFFIXES: .o .c .f .a .F .i .exe
+.SUFFIXES: .o .c .f .a .i .exe
 
 EXE = lq3driver.x
 
@@ -81,6 +85,7 @@ distclean: clean
 	mv $*.i $*.f
 
 %.o : %.F
+
 
 
 
