@@ -1164,6 +1164,8 @@ c read in laps lat/lon and topo
 
         write(6,*)' Subroutine insert_thin_lwc_ice'
 
+        zero = 0.
+
         iwrite = 0
 
 !       Convert from cloud cover to discreet cloud layer indices (cvr to a)
@@ -1272,8 +1274,8 @@ c read in laps lat/lon and topo
 
 !                 Test if no condensate is currently at the grid point from the
 !                 modified S-F method that is only applied to thick clouds
-                  if(slwc(i,j,k) .eq. -1e-30 .and. 
-     1               cice(i,j,k) .eq. -1e-30       )then
+                  if(slwc(i,j,k) .eq. zero .and. 
+     1               cice(i,j,k) .eq. zero       )then
 
                     density = density_ave * clouds_3d_pres(i,j,k) 
      1                                    / a(ilyr)
@@ -1293,7 +1295,8 @@ c read in laps lat/lon and topo
                     if(iwrite .lt. 50.)then
                         iwrite = iwrite + 1
                         write(6,1)i,j,k,thickness,optical_depth
-     1     ,clouds_3d_pres(i,j,k),temp_3d(i,j,k),slwc(i,j,k),cice(i,j,k)
+     1                           ,clouds_3d_pres(i,j,k),temp_3d(i,j,k)
+     1                           ,slwc(i,j,k),cice(i,j,k)
 1                       format(3i4,f7.0,2f7.3,f7.1,2f9.4)
                     endif
 
@@ -1301,7 +1304,8 @@ c read in laps lat/lon and topo
                     if(iwrite .lt. 50.)then
                         iwrite = iwrite + 1
                         write(6,2)i,j,k,thickness,optical_depth
-     1     ,clouds_3d_pres(i,j,k),temp_3d(i,j,k),slwc(i,j,k),cice(i,j,k)
+     1                           ,clouds_3d_pres(i,j,k),temp_3d(i,j,k)
+     1                           ,slwc(i,j,k),cice(i,j,k)
 2                       format(3i4,f7.0,2f7.3,f7.1,2f9.4,' *')
                     endif
 

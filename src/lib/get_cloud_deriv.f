@@ -122,6 +122,8 @@ cdis
 
         write(6,*)' Start LWC/Omega/Snow Potential Routine'
 
+        zero = 0.
+
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading r_missing_data'
@@ -177,15 +179,9 @@ cdis
         write(6,*)
 
         if(iflag_slwc .ne. 0)then
-            write(6,*)' Initializing SLWC array'
-            do k = 1,nk
-            do j = 1,nj
-            do i = 1,ni
-                slwc_3d(i,j,k) = -1e-30
-                cice_3d(i,j,k) = -1e-30
-            enddo
-            enddo
-            enddo
+            write(6,*)' Initializing SLWC/CICE arrays'
+            call constant_3d(slwc_3d,zero,ni,nj,nk)
+            call constant_3d(cice_3d,zero,ni,nj,nk)
         endif
 
         if(l_flag_bogus_w)then
@@ -201,13 +197,7 @@ cdis
 
         if(l_flag_mvd)then
             write(6,*)' Initializing MVD array'
-            do k = 1,nk
-            do j = 1,nj
-            do i = 1,ni
-                mvd_3d(i,j,k) = -1e-30
-            enddo
-            enddo
-            enddo
+            call constant_3d(mvd_3d,zero,ni,nj,nk)
         endif
 
 !       if(.true.)then
@@ -339,16 +329,17 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                           if(iflag_slwc .lt. 10)then
                             call get_slwc1d(nk,cld_base_m,cld_top_m
-     1                      ,k_1d_base,k_1d_top
-     1                      ,heights_1d,temp_1d,pressures_pa,
-     1                                      iflag_slwc,slwc_1d)
+     1                                     ,k_1d_base,k_1d_top
+     1                                     ,heights_1d,temp_1d
+     1                                     ,pressures_pa
+     1                                     ,iflag_slwc,zero,slwc_1d)       
                           else ! Get Smith-Feddes Output
                             mode = 1
 
                             do k_1d = 1,nk ! Initialize
-                              slwc_1d(k_1d) = -1e-30
-                              cice_1d(k_1d) = -1e-30
-                              prob_laps(k_1d) = -1e-30
+                              slwc_1d(k_1d) = zero
+                              cice_1d(k_1d) = zero
+                              prob_laps(k_1d) = zero
                             enddo
 
 !                           QC the data going into SMF
@@ -421,7 +412,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
      1                                                  )then ! Total Depletion
                                     cice_1d(k_1d) = cice_1d(k_1d) 
      1                                            + slwc_1d(k_1d)
-                                    slwc_1d(k_1d) = -1e-30
+                                    slwc_1d(k_1d) = zero
 
                                   else ! Ramped Depletion
                                     ramp = 1.0 - 
@@ -909,8 +900,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
 
         subroutine get_slwc1d(nk,cbase_m,ctop_m,kbase,ktop
-     1                  ,heights_1d,temp_1d,pressures_pa,
-     1                                          iflag_slwc,slwc_1d)
+     1                       ,heights_1d,temp_1d,pressures_pa
+     1                       ,iflag_slwc,zero,slwc_1d)
 
         real*4 temp_1d(nk)
         real*4 heights_1d(nk)
@@ -918,7 +909,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         real*4 slwc_1d(nk)  ! Output
 
         do k = 1,nk ! Initialize
-            slwc_1d(k) = -1e-30
+            slwc_1d(k) = zero
         enddo
 
         if(ctop_m .gt. cbase_m)then
