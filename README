@@ -69,7 +69,7 @@
          3.2.2.3 .....................  How to Blacklist stations 
          3.2.3 ..................  Polar Radar Data (e.g. WSR 88D Level II, Level III)
          3.2.4 ..................  WSI / NOWRAD RADAR PREPROCESSING (VRC)
-         3.2.5 ..................  Radar Mosaic (Under development)
+         3.2.5 ..................  Radar Mosaic 
          3.2.6 ..................  PROFILER/VAD/SODAR (PRO) Ingest
          3.2.7 ..................  RASSs (LRS) Ingest
          3.2.8 ..................  PIREPS/ACARS Ingest
@@ -2189,11 +2189,11 @@ to data is variable path_to_wsi_2d_radar_cmn in nest7grid.parms.
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
------- 3.2.5 --------------- Radar Mosaic (Under development) ----------------
+------ 3.2.5 --------------- Radar Mosaic ------------------------------------
 
 Process: (mosaic_radar.exe) 
 
-Author John Smart (smart@fsl.noaa.gov)
+Author Steve Albers (albers@fsl.noaa.gov) / John Smart (smart@fsl.noaa.gov)
 
 <pre>
 Inputs:
@@ -2204,9 +2204,18 @@ Outputs (Intermediate data file):
         vrz     grid                          3-D reflectivity  
 </pre>
 
+This program runs once per LAPS cycle in the 'sched.pl'. It produces just
+one output file for the cycle valid at 'systime'. A future enhancement
+would be to allow this to produce multiple outputs within a given LAPS
+cycle.
+
+The nearest radar with valid data is the one chosen to contribute at each
+grid-point.
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
+Parameter namelist file: 'static/radar_mosaic.nl'
+
 ------ 3.2.6 ---------------- PROFILER/VAD/SODAR (PRO) Ingest -----------------
 
 Process: PRO (ingest_pro.exe) LAPS Wind Profile Ingest 
