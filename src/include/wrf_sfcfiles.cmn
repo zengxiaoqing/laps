@@ -1,4 +1,5 @@
 !Variables in the sfcfiles section of wrfsi.nl
       character*80 topo_30s, topo_10m, pctland_10m
+     +, veg_landuse_30s
       common /wrf_sfcfiles_cmn/
-     + topo_30s, topo_10m, pctland_10m
+     + topo_30s, topo_10m, pctland_10m, veg_landuse_30s

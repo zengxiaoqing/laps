@@ -64,6 +64,7 @@
         character*200 path_to_topt10m
         character*200 path_to_pctl10m
         character*200 path_to_soil2m
+        character*200 path_to_landuse30s
 
         common  /lapsparms_cmn/ iflag_lapsparms_cmn
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
@@ -89,6 +90,7 @@
      1  ,path_to_buoy_data_cmn,c8_project_common
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
+     1  ,path_to_landuse30s
      1  ,fdda_model_source_cmn
 
 
