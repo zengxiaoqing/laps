@@ -2555,7 +2555,7 @@ Inputs:
         Met Tower (LDAD NetCDF)
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
-	snd	inter data (ASCII)              sounding temp, dewpoint, wind
+	snd	inter data (ASCII)   sounding temp, dewpoint, wind (true N)
 </pre>
 
 Source directory: laps/src/ingest/raob (contains a README file)
