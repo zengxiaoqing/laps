@@ -195,6 +195,13 @@ c
          else if(bgmodel.eq.2) then
             ext = '.E48'
             gproj='LC'
+            lat1=25.0
+            lat2=25.0
+            lon0=-95.0
+            sw(1)=12.19
+            sw(2)=-133.459
+            ne(1)=57.29
+            ne(2)=-49.3849
 
             call read_eta_conusc(fullname,nx,ny,nz,
      +           ht, p, th, uw, vw, rh, ht_sfc, p_sfc,

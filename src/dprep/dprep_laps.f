@@ -11,7 +11,6 @@ c
 c
       real*4 ht(nx,ny,nz),     !LAPS 3d height (m)
      .       tp(nx,ny,nz),     !LAPS 3d temperature (K)
-     .       th(nx,ny,nz),     !LAPS 3d theta (K)
      .       uw(nx,ny,nz),     !LAPS 3d u-wind (m/s)
      .       vw(nx,ny,nz),     !LAPS 3d v-wind (m/s)
      .       mr(nx,ny,nz),     !LAPS 3d mixing ratio (kg/kg)
@@ -28,7 +27,7 @@ C     .       ex(nx,ny,nz),     !LAPS 3d Exner function
      .       lon(nx,ny),
      .       lat0,lon0,        !LAPS polar stereo grid pole point
      .       pri(nz),
-     .       prbot,dpr
+     .       prbot,dpr, factor
 c
       integer istatus,i,j,k
 c
@@ -36,26 +35,22 @@ c
 c_______________________________________________________________________________
 c
 c
-c *** Convert surface and 3d temp to theta.
+c *** Convert  3d temp to theta.
 c *** Compute Exner function.
 c
 
       do k=1,nz
          do j=1,ny
             do i=1,nx
-               th(i,j,k)=tp(i,j,k)*(1.0e5/pr(i,j,k))**kappa
-               pr(i,j,k)=cp*tp(i,j,k)/th(i,j,k)
-            enddo
-         enddo
-      enddo
-
-      do k=1,nz
-         do j=1,ny
-            do i=1,nx
+               factor = (1.0e5/pr(i,j,k))**kappa
+               tp(i,j,k)=tp(i,j,k)*factor
+               pr(i,j,k)=cp/factor
                mr(i,j,k)=mr(i,j,k)/(1.-mr(i,j,k))
             enddo
          enddo
       enddo
+
+
       istatus = 1
       
       return
