@@ -18,10 +18,10 @@ CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 
 # Define include paths.
-
-INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+NETCDF=@NETCDF@
+INC = -I$(LAPSROOT)/src/include -I$(NETCDF)/include
 AR  = @ARCHIVE@
 RANLIB   = @RANLIB@
 INSTALL=@INSTALL@
 PERL = @PERL@
-OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
+OTHERLIBS = -L@NETCDF@/lib -lnetcdf  @OTHERLIBS@

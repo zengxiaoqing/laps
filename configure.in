@@ -26,10 +26,7 @@ fi
 
 if test "$prefix" = "NONE" 
 then
-  echo "This install may overwrite any currently installed LAPS in $ac_default_prefix"
   prefix=$ac_default_prefix
-else
-  echo "This install may overwrite any currently installed LAPS in $prefix"
 fi
 if test "$datadir" = '${prefix}/share'
 then
@@ -37,12 +34,6 @@ then
 fi
 echo "Installing data in $datadir"
 
-echo "Are you sure you want to continue?"
-AC_QUERY_USER_YN
-if test "$ac_query_user_yn" = "n"
-then
-  AC_MSG_ERROR(LAPS configure aborted by user)
-fi
 dnl
 dnl Check for host architecture
 # 
@@ -57,14 +48,14 @@ AC_INIT_ARCH($arch)
 # AC_PROG_CC
 
 dnl guess c compiler if not set by user
-if ! test -n "$CC" 
+if test -z "$CC" 
 then
   AC_CHECK_PROGS(CC,xlc cc xlC gcc CC,,$PATH)
 fi
 dnl
 dnl Find path to netcdf ***required by LAPS***
 dnl
-AC_PROG_NETCDF($netcdf)
+AC_PROG_GENERIC(NETCDF, ncdump, libnetcdf.a, netcdf.inc)
 
 dnl
 dnl Find path to perl  ***required by LAPS***
@@ -77,7 +68,9 @@ dnl Find path to csh  ***required by LAPS***
 dnl
 AC_CHECK_PROGS(CSH,csh,,$PATH)
 AC_PATH_PROG(CSH,$CSH )
-if test "$GCC" = "yes"
+AC_PROG_GCC_TRADITIONAL
+
+if test "$GCC" 
 then
   OTHERLIBS="$OTHERLIBS -lgcc"
   CPPFLAGS = "cc -P"     
@@ -88,7 +81,8 @@ if test "$arch" = "hpux"
 then
   FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
   OPTIMIZE="-O"
-  if test "$GCC" = "no"
+  echo "GCC = $GCC"
+  if test -z "$GCC"
   then
       OTHERLIBS="$OTHERLIBS -lm"
       KRCFLAGS="$CFLAGS"
@@ -107,7 +101,7 @@ then
 dnl  FFLAGS="$FFLAGS -native -xl -i4 -fnonstd"
 dnl   OPTIMIZE="-O"
 fi
-if ! test "$FC"
+if test -z "$FC"
 then
   AC_PROG_FC
 fi
@@ -128,7 +122,7 @@ if test $? -eq 0
 then
   CPPFLAGS="$CPPFLAGS -DF90"
   if test "$arch" = "solaris"
-then
+  then
 dnl module flags for solaris 
 	FFLAGS="$FFLAGS -M$(LAPSROOT)/src/lib"
 dnl
@@ -145,17 +139,6 @@ then
   CPPFLAGS="$CPPFLAGS -DUSE_TRIGD"
 fi
 
-
-
-#exit
-if test $ac_fc_inc_val -eq 0
-then
-  F77INC="util/f77inc.in"
-  AC_SUBST_FILE(F77INC)
-else
-  F77INC=''
-  AC_SUBST(F77INC)
-fi
 # AC_FC_FUNC_GETENV
 dnl
 dnl AC_FC_NAMES sets WDEF to describe fortran externals to c
@@ -169,6 +152,10 @@ then
 else
   CPPFLAGS="$CPPFLAGS -DNODYNAMIC"
 fi
+dnl
+dnl How to compile fortran with ncarg?
+dnl
+AC_FC_FUNC_NCARGFC(NCARGFC)
 
 AC_SUBST(CPPFLAGS)
 AC_SUBST(PERL)
@@ -190,10 +177,6 @@ dnl AC_PROG_AWK
 
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
-AC_CONFIG_AUX_DIR(util)
-dnl
-dnl the install test isn't working on HP
-dnl
 # AC_PROG_INSTALL
 INSTALL='$(LAPSROOT)/util/install-sh'
 AC_SUBST(INSTALL)
@@ -227,7 +210,6 @@ AC_STRUCT_TM
 
 dnl Checks for library functions.
 AC_FUNC_ALLOCA
-AC_PROG_GCC_TRADITIONAL
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(gettimeofday re_comp regcomp)
 
