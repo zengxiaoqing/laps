@@ -48,8 +48,7 @@ c       should be determined by some type of model
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'parmtrs.inc'
 
 c input parameters
 
@@ -60,9 +59,9 @@ c input parameters
       real lt1dat(ii,jj,kk)
       real htby (ii,jj)
 
-c variables dependent on lapsparms.inc 
+c dynamic allocation 
 
-        real*4 n2(igrid,jgrid,kdim) ! brunt-vaisala frequency
+        real*4 n2(ii,jj,kk) ! brunt-vaisala frequency
 
 c internal variables
 
@@ -85,8 +84,8 @@ c     1  mb = 1000 cgs units does not have to be applied.
 
         integer*4 i,j,k
 
-        do j = 1,jgrid
-        do i = 1,igrid
+        do j = 1,jj
+        do i = 1,ii
 
         htby(i,j) = pb(i,j)  !put surface pressure in as first guess of
 c               boundary level
@@ -103,9 +102,9 @@ c       endif
 c       code here currently under test march 13, 1992  dan b.
 c       section is for better boundary layer analysis
 
-        do j = 1,jgrid
-        do i = 1,igrid
-        do k = 2,kdim-1
+        do j = 1,jj
+        do i = 1,ii
+        do k = 2,kk-1
 
         n2(i,j,k) = (g/lt1dat(i,j,k) )**2 * (plevel(k)/r) *
      1  (
@@ -126,11 +125,11 @@ c        now decide where the "height of the boundary layer" is
 
 
         y1min = 0.0
-        do j = 1,jgrid
-        do i = 1,igrid
+        do j = 1,jj
+        do i = 1,ii
 
         test = .false.
-        do k = 1,kgrid
+        do k = 1,kk
 
         if (pb(i,j) .ge. plevel(k) .and. n2(i,j,k) .lt. 0.0) then
         test = .true.
@@ -176,7 +175,7 @@ c       statement
 
 c       write out the pbl pressure top
 
-        call gen_bl_file (i4time,htby,igrid,jgrid,istatus)
+        call gen_bl_file (i4time,htby,ii,jj,istatus)
 
         if (istatus.eq.0) print*, 'error in gen_bl_file routine'
 
