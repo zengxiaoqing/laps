@@ -10,7 +10,7 @@
  TIROS_SWITCH = 0,
  SAT_SKIP = 3,
  GVAP_SWITCH = 1,
- IHOP_FLAG = 0,
+ IHOP_FLAG = 1,
  TIME_DIFF = 9000,
  GPS_SWITCH = 1,
  SFC_MIX = 1,
@@ -27,7 +27,7 @@ c   This is a switch for the module  lq3.  The data are delivered in
 c   default form.  It is up to the user to define these for their 
 c   particular applicaton.  Here are the definitions of the current 
 c   values used.
-c  RAOB_SWITCH = 0,    raob on/off
+  RAOB_SWITCH = 0,    raob on/off
 c  RAOB_LOOKBACK = 3600, raob latency seconds
 c  ENDIAN = 1 (big endian machines [default], =0 little endian machines)
 c  GOES_SWITCH = 12,  goes switch on/off assign sat
