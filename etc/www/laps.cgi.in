@@ -147,6 +147,10 @@ my $default_thickness = @lines[10];
 $default_thickness =~ s/ //g;
 chomp $default_thickness;
 
+my $default_npix = @lines[11];
+$default_npix =~ s/ //g;
+chomp $default_npix;
+
 $n_choices=8;
 
 &ReadParse(*default);
@@ -218,7 +222,7 @@ print <<"EOF";
 Use the shift or control(Apple) key (for PCs) or buttons 2 and 3 (for Unix) to 
 select multiple pressure levels.<br>
 -->
-
+<center>
 
 <table border=0 cellpadding=5>
 <tr>
@@ -270,10 +274,10 @@ EOF
   foreach $file (@domainlist) {
 
     if($file ne "anal2d" && $file ne "fcst2d" && $file ne "t2" && $file ne "." && $file ne ".."){
-#     if(-e "$DomainDir/$file/data"){
+      if(-e "$DomainDir/$file/data/lapsprd"){
         if($file eq $default_domain ) { print "<option selected>$file\n"; } 
         else               { print "<option>$file\n"; } 
-#     }
+      }
     }
 
   }
@@ -337,14 +341,18 @@ print <<"EOF";
 <select name="fields" size=$n_choices multiple>
 <option $selected{'HT'}> HT
 <option $selected{'TEMP'}> TEMP
+<option $selected{'SFCT'}> SFCT
 <option $selected{'DEWPOINT'}> DEWPOINT
 <option $selected{'RH'}> RH
+<option $selected{'SH'}> SH
 <option $selected{'WINDSPD'}> WINDSPD
 <option $selected{'U'}> U
 <option $selected{'V'}> V
 <option $selected{'DIV'}> DIV
 <option $selected{'VORT'}> VORT
 <option $selected{'OMEGA'}> OMEGA
+<option $selected{'C_OMEGA'}> C_OMEGA
+<option $selected{'MCONV'}> MCONV
 <option $selected{'THETAE'}> THETAE
 <option $selected{'CAPE'}> CAPE
 <option $selected{'CIN'}> CIN
@@ -374,11 +382,14 @@ print <<"EOF";
 <option $selected{'LAND_FRAC'}> LAND_FRAC
 <option $selected{'LE_FLUX'}> LE_FLUX
 <option $selected{'SE_FLUX'}> SE_FLUX
+<option $selected{'LONG_WAVE'}> LONG_WAVE
+<option $selected{'SHRT_WAVE'}> SHRT_WAVE
 <option $selected{'ht'}> ht
 <option $selected{'temp'}> temp
 <option $selected{'sfct'}> sfct
 <option $selected{'dewpoint'}> dewpoint
 <option $selected{'rh'}> rh
+<option $selected{'sh'}> sh
 <option $selected{'wind'}> wind
 <option $selected{'windspd'}> windspd
 <option $selected{'u'}> u
@@ -388,6 +399,7 @@ print <<"EOF";
 <option $selected{'vort_adv'}> vort_adv
 <option $selected{'omega'}> omega
 <option $selected{'c_omega'}> c_omega
+<option $selected{'mconv'}> mconv
 <option $selected{'msl_p'}> msl_p
 <option $selected{'red_p'}> red_p
 <option $selected{'stn_p'}> stn_p
@@ -409,6 +421,7 @@ print <<"EOF";
 <option $selected{'cld_ice'}> cld_ice
 <option $selected{'cld_type'}> cld_type
 <option $selected{'sat_11u'}> sat_11u
+<option $selected{'sat_wv'}>  sat_wv
 <option $selected{'sat_d39'}> sat_d39
 <option $selected{'vis_alb'}> vis_alb
 <option $selected{'reflct'}> reflct
@@ -511,6 +524,8 @@ print <<"EOF";
 <A HREF="xsect.html">X-coord</A>: <INPUT NAME="xcen" VALUE="$default_xcen" size=5>&nbsp;  
 <br>
 <A HREF="ysect.html">Y-coord</A>: <INPUT NAME="ycen" VALUE="$default_ycen" size=5>&nbsp;  
+<br>
+<A HREF="imgsize.html">Img Size</A>: <INPUT NAME="npix" VALUE="$default_npix" size=5>&nbsp;  
 </td>
 
 
@@ -553,7 +568,7 @@ print <<"EOF";
 
 
 <center>
-Thickness:
+Thk/Size:
 <br>
 
 <select name="thickness">
