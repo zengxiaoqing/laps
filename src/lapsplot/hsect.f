@@ -72,6 +72,8 @@ cdis
 
         include 'trigd.inc'
 
+        include 'constants.inc'
+
         include 'lapsplot.inc'
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
@@ -118,9 +120,6 @@ cdis
 
 !       integer*4 ity,ily,istatus
 !       data ity/35/,ily/1010/
-
-        real*4 mspkt
-        data mspkt/.518/
 
 !       Stuff to read in WIND file
         integer*4 KWND
@@ -268,6 +267,8 @@ cdis
         character*10  c10_grid_fname
         character*200 c_dataroot
 
+        character*6 c_vnt_units
+
 c       include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
 
@@ -279,6 +280,8 @@ c       include 'satellite_dims_lvd.inc'
 
         icen = NX_L/2+1
         jcen = NY_L/2+1
+
+        c_vnt_units = 'ft-kt' ! pass in from namelist later on
 
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus)       
 
@@ -1319,6 +1322,16 @@ c       include 'satellite_dims_lvd.inc'
 
             i4time_3dw = i4time_nearest
             call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
+
+            if(units_2d(1:2) .eq. 'PA')then
+                units_2d = 'hPa'
+                scale = 100.
+            elseif(units_2d(1:4) .eq. 'NONE')then
+                units_2d = '          '
+                scale = 1.
+            else ! default value
+                scale = 1.
+            endif
             
             if(var_2d(1:3) .eq. 'PTP')then
                 clow = 500.
@@ -1329,9 +1342,19 @@ c       include 'satellite_dims_lvd.inc'
                 chigh = 2400.
                 cint = 0.
             elseif(var_2d(1:3) .eq. 'VNT')then
-                clow = 5000.
+                if(c_vnt_units .eq. 'ft-kt')then
+                    clow = 30000.
+                    scale = 1. / (ft_per_m / mspkt) ! Convert from M**2/S to 
+                                                    ! FT-KT (inverse)
+                else
+                    clow = 5000.
+                endif
+
                 chigh = 0.
                 cint = 0.
+
+                units_2d = c_vnt_units
+
             elseif(var_2d(1:2) .eq. 'HA')then
                 clow = 2.
                 chigh = 6.
@@ -1344,16 +1367,6 @@ c       include 'satellite_dims_lvd.inc'
                 clow = 0.
                 chigh = 0.
                 cint = 0.
-            endif
-
-            if(units_2d(1:2) .eq. 'PA')then
-                units_2d = 'hPa'
-                scale = 100.
-            elseif(units_2d(1:4) .eq. 'NONE')then
-                units_2d = '          '
-                scale = 1.
-            else ! default value
-                scale = 1.
             endif
 
             c33_label = comment_2d(1:26)//' '//units_2d(1:6)
@@ -4128,8 +4141,15 @@ c                   cint = -1.
 
             elseif(var_2d .eq. 'TPW')then       
 !               scale = 10.     ! Convert from KG/M**2 (mm) to cm
-                scale = 1e-2    ! Convert from M (mm) to cm
+                scale = 1e-2    ! Convert from M (mm) to cm (inverse)
                 units_2d = 'cm'
+
+            elseif(var_2d .eq. 'VNT')then 
+                if(c_vnt_units .eq. 'ft-kt')then
+                    scale = 1. / (ft_per_m / mspkt) ! Convert from M**2/S to 
+                                                    ! FT-KT (inverse)
+                    units_2d = 'ft-kt'
+                endif
 
             else
                 scale = 1.
@@ -4220,8 +4240,13 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,0.,5.5
      1                         ,'tpw',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'VNT')then
-                    call ccpfil(field_2d,NX_L,NY_L,5000.,0.
-     1                         ,'spectral',n_image,scale,'hsect') 
+                    if(c_vnt_units .eq. 'ft-kt')then
+                        call ccpfil(field_2d,NX_L,NY_L,30000.,0.
+     1                             ,'spectral',n_image,scale,'hsect') 
+                    else
+                        call ccpfil(field_2d,NX_L,NY_L,5000.,0.
+     1                             ,'spectral',n_image,scale,'hsect') 
+                    endif
                 elseif(var_2d(1:2) .eq. 'HA')then
                     call ccpfil(field_2d,NX_L,NY_L,2.,6.
      1                         ,'spectral',n_image,scale,'hsect') 
@@ -6089,9 +6114,11 @@ c             if(cint.eq.0.0)cint=0.1
 
         call setusv_dum('  ',7)
 
+!       Add resolution for Top Label
         call get_grid_spacing_cen(grid_spacing_m,istatus)
         igrid_spacing = nint(grid_spacing_m/1000.)
-        if(igrid_spacing .le. 99 .and. igrid_spacing .ge. 1)then
+        if(igrid_spacing .le. 99 .and. igrid_spacing .ge. 1
+     1                           .and. c5_sect .ne. 'xsect'  )then
             write(c4_grid,1)igrid_spacing
  1          format(i2,'km')
         else
@@ -6143,7 +6170,12 @@ c             if(cint.eq.0.0)cint=0.1
         rsize = .010 ! .011
 
 !       Field on Bottom Left
-        ix = 100 ! 130
+        if(c5_sect .eq. 'xsect')then
+            ix = 130
+        else
+            ix = 100 ! 130
+        endif
+
         iy = y_1 * 1024
         CALL PCHIQU (cpux(ix),cpux(iy),c_label(1:len_label)
      1              ,rsize,0,-1.0)      
@@ -6483,25 +6515,6 @@ c             if(cint.eq.0.0)cint=0.1
             call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
         endif ! image plot
-
-        return
-        end
-
-        subroutine s_len2(string,len_string)
-
-!       This routine finds the length of the string counting intermediate
-!       blanks
-
-        character*(*) string
-
-        len1 = len(string)
-
-        len_string = 0
-
-        do i = 1,len1
-            call s_len(string(i:i),len2)
-            if(len2 .eq. 1)len_string = i
-        enddo ! i
 
         return
         end
