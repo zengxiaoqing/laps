@@ -273,6 +273,8 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
         endif
         call s_len(tempchar,len_dir)
  
+
+        min_to_wait_for_metars_cmn=10
         open(92,file=tempchar(1:len_dir),status='old',err=900)
 
         read(92,lapsparms_nl,err=910)
