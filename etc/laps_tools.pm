@@ -346,20 +346,24 @@ sub write_namelist {
 sub get_pressures {
 
     my $LAPS_DATA_ROOT = shift(@_);
-    open(PRES,"$LAPS_DATA_ROOT/static/pressures.nl") or die "Can't open $LAPS_DATA_ROOT/static/pressures.nl";
-    my @plines = <PRES>;
-    close PRES;
     my @pressures;
-    my $i=0;
-    my $l;
-    foreach (@plines){
-       if(!/\&/ && ! /\pressure/i  && !/\//){
+    if(-e "$LAPS_DATA_ROOT/static/pressures.nl")
+    {
+     open(PRES,"$LAPS_DATA_ROOT/static/pressures.nl") or die "Can't open $LAPS_DATA_ROOT/static/pressures.nl";
+     my @plines = <PRES>;
+     close PRES;
+     my $i=0;
+     my $l;
+     foreach (@plines){
+       if(/\s*\d+/){
           $l=length($_);
           @pressures[$i]=substr($_,1,$l-4);
           $i++
        }
+     }
+    }else{
+     print "Warning: pressures.nl does not exist in $LAPS_DATA_ROOT/static\n";
     }
-
     return @pressures;
 }
 1;

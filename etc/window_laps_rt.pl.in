@@ -106,13 +106,15 @@ if($opt_t){
    }
 }else{
    print "WARNING! no -t (path to template) command line input.\n";
-   print "Using LAPS_SRC_ROOT (repository) for namelists\n";
+   print "Using LAPS_SRC_ROOT (possibly repository) for all namelists\n";
 }
 if($opt_c){
    $CONFIG_DOMAIN = "true";
 }else{
 #   print "-c command line not specified. Default set to false \n";
-   $CONFIG_DOMAIN = "false";
+    $CONFIG_DOMAIN = "false";
+    print "Generate laps_data_root directory structure\n";
+    &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
 }
 
 print "Laps Src Root  = $LAPS_SRC_ROOT\n";
@@ -127,7 +129,7 @@ if($opt_m && $CONFIG_DOMAIN eq "true"){
    exit;
 }
 
-#check to see if any saved static and cdl subdirectories got save to _err; if so, remove.
+#check to see if any saved static and cdl subdirectories got moved to _err; if so, remove.
 if( -e "$LAPS_DATA_ROOT/static\_err" ){
    print "removing leftover $LAPS_DATA_ROOT/static\_err\n";
    system("rm -rf $LAPS_DATA_ROOT/static\_err");
@@ -269,8 +271,9 @@ if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
 }elsif ( -e "LAPS_SRC_ROOT/etc") {chdir "$LAPS_SRC_ROOT/etc" or die "Can't chdir to LAPS INSTALL or SRC_ROOTs $!\n";
     print "Running $LAPS_SRC_ROOT/etc/laps_localization.pl\n";
 }
-# ***** Run laps_localization.pl *****
-# ------------------------------------
+# --------------------------------------------------------------------------------------
+# ****************************** Run laps_localization.pl ******************************
+# --------------------------------------------------------------------------------------
 if( $opt_m ){
    print "--no_ggm switch on\n";
    system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT --no_ggm='t' > $LAPS_DATA_ROOT/log/laps_localization.log");
@@ -289,25 +292,28 @@ if( $all_roots_equal eq "T" && -e "$DATAROOT/$DOMAIN_NAME/data_loc" ){
 
 if( $opt_m ){
     print "restoring gridgen files. Move from  static_save  to  static \n";
-    system ("mv $LAPS_DATA_ROOT/static\_save/topo.dat $LAPS_DATA_ROOT/static/");
-    system ("mv $LAPS_DATA_ROOT/static\_save/latlon.dat $LAPS_DATA_ROOT/static/");
-    system ("mv $LAPS_DATA_ROOT/static\_save/corners.dat $LAPS_DATA_ROOT/static/");
-    system ("mv $LAPS_DATA_ROOT/static\_save/topography.dat $LAPS_DATA_ROOT/static/");
-    system ("mv $LAPS_DATA_ROOT/static\_save/static.nest7grid $LAPS_DATA_ROOT/static/");
-    system ("mv $LAPS_DATA_ROOT/static\_save/drag_coef.dat $LAPS_DATA_ROOT/static/");
+    if(-e "$LAPS_DATA_ROOT/static\_save/topo.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/topo.dat $LAPS_DATA_ROOT/static/");}
+    if(-e "$LAPS_DATA_ROOT/static\_save/latlon.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/latlon.dat $LAPS_DATA_ROOT/static/");}
+     if(-e "$LAPS_DATA_ROOT/static\_save/corners.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/corners.dat $LAPS_DATA_ROOT/static/");}
+    if(-e "$LAPS_DATA_ROOT/static\_save/topography.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/topography.dat $LAPS_DATA_ROOT/static/");}
+    if(-e "$LAPS_DATA_ROOT/static\_save/static.nest7grid"){system ("mv $LAPS_DATA_ROOT/static\_save/static.nest7grid $LAPS_DATA_ROOT/static/");}
+    if(-e "$LAPS_DATA_ROOT/static\_save/drag_coef.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/drag_coef.dat $LAPS_DATA_ROOT/static/");}
 }
 
 print "Checking for static.nest7grid \n";
 my $restore_files="false";
-if( !-e "$LAPS_DATA_ROOT/static/static.nest7grid"){
-    print "$LAPS_DATA_ROOT/static/static.nest7grid does not exist!\n";
-    print "Setting variable - restore_files - to true\n";
-    $restore_files="true";
-}else{
-    system ("ls -l $LAPS_DATA_ROOT/static/static.nest7grid");
+if( !defined $opt_m ){
+    if(!-e "$LAPS_DATA_ROOT/static/static.nest7grid"){
+       print "error detected\n";
+       print "$LAPS_DATA_ROOT/static/static.nest7grid does not exist!\n";
+       print "setting variable - restore_files - to true\n";
+       $restore_files="true";
+    }else{
+       system ("ls -l $LAPS_DATA_ROOT/static/static.nest7grid");
+    }
 }
 
-if($restore_files eq "false"){
+if($restore_files eq "false" && !defined $opt_m){
    print "checking laps_localization.log\n";
    open(LOC,"$LAPS_DATA_ROOT/log/laps_localization.log");
    my @loc=<LOC>;
@@ -331,8 +337,8 @@ if($restore_files eq "false"){
 }
 
 if( $restore_files eq "true" ) {
-    print "error detected. save static and cdl to err\n";
-    print "restoring saved static and cdl files\n";
+    print "will try and save static and cdl to _err\n";
+    print "for further examination. --> localization incomplete <--\n";
     system("mv $LAPS_DATA_ROOT/static $LAPS_DATA_ROOT/static\_err");
     system("mv $LAPS_DATA_ROOT/cdl $LAPS_DATA_ROOT/cdl\_err");
     if( ! -e "$DATAROOT/$DOMAIN_NAME/data_rep"){
