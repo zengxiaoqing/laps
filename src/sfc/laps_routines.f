@@ -1456,6 +1456,8 @@ c
 	       go to 300
            endif
 
+           i4time_bk = i4time_in
+
         endif
 
 c
