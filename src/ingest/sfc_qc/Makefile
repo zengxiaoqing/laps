@@ -14,12 +14,9 @@ DBLAPSLIBS=$(DBLAPSLIB) $(DBBGDATALIB) $(DBMTHERMOLIB)
 
 EXE = sfc_qc.exe
 
-SRC   = kalman.f         matrix_tools.f   \
+SRC   = kalman.f    matrix_tools.f   \
         QC_tools.f       model_tools.f    write_qc.c    \
-        write_tools.f     \
-        $(LAPSROOT)/src/sfc/laps_routines.f \
-        $(LAPSROOT)/src/sfc/lapsvanl_sub.f \
-	$(LAPSROOT)/src/ingest/sao/write_surface_obs.f 
+        write_tools.f     lapsvanl_sub.f  
 
 
 MAIN=QC_main.f
