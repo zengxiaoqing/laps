@@ -374,6 +374,24 @@ sub wfo_localization{
       close(TEMPLATE);
       print "Using static template file $template\n";
 
+      my $i;
+
+      for($i=0;$i<=$#template;){
+        if ($template[$i] =~ /=/){
+            $i++;
+            next;
+        }
+        if ($template[$i] =~ /^\s*\&/){
+            $i++;
+            next;
+        }
+        last if ($template[$i] =~ /^\s*\//);
+        
+        $template[$i-1]=join('',$template[$i-1],$template[$i]);
+        splice(@template,$i,1);
+      }
+
+
       open(OUTFILE,">$template") or die "$0: Can't open $template to write";
       
       foreach (@template)
