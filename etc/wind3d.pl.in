@@ -43,7 +43,7 @@ foreach $file (@filenames) {
 
 $tail = `tail -1 $filename`;
 if ($tail !~ /End of LAPS Wind Analysis/) {
-  die "Wind analysis is in progress...\n";}
+  print "Wind analysis is in progress...\n";}
 
 # This is a bit more kosher...
 if (defined $hr) { 
