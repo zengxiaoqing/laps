@@ -329,6 +329,7 @@ c         enddo
  1000    format(1x,i3,1x,a5,1x,f8.3,1x,f8.3,1x,a5,1x,f8.3,1x,f8.3)
 c
          holdnam = '     '
+c check the new list and see if that stn is in the old list
          do k=1,maxstaa
  3          continue
             iflag=0
@@ -428,7 +429,8 @@ c
                endif
             enddo !l
             if(iflag.eq.0) then ! there is no match for an existing stn
-c make a place for the master list station in putit in the new obs
+c make a place for the master list station in put it in the new ob list
+c at the same position as in the master list.
                maxstaa=maxstaa+1
                do l =maxstaa,k+1,-1
                   indexa(l) = indexa(l-1)
@@ -773,7 +775,8 @@ c
 c
 c
         Subroutine errorproc(dt,y,by,md,xt,x,wr,vr,ar,imax,m,qcstat,
-     &                  oberr,wm,wo,wb,length,badthr,atime,icnt,nvar)
+     &            oberr,wm,wo,wb,length,badthr,atime,icnt,nvar,n,i4time
+     &            ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
 c
 c*********************************************************************
 c
@@ -795,22 +798,22 @@ c
         real dt(m),y(m),xt(m),by(m),md(m),x(m),wr(m),vr(m),ar(m)
         real me,oe,ce
         real wm(m),wo(m),wb(m)
-        real tdt(m),b(m),tmb(m),tob(m),tcb(m),tmr(m),tor(m),tcr(m)
-        real totr(m),totb(m)
+        real tdt(m),b(m),tmb(nvar),tob(nvar),tcb(nvar),tmr(nvar)
+        real totr(nvar),totb(nvar),tor(nvar),tcr(nvar)
         integer sca(2,2),scf(2,2),scb(2,2),sco(2,2),imax,qcstat(m)
         integer scat(2,2),scft(2,2),scbt(2,2),scot(2,2),on,off
 c
 c.....  Truth routine and missing ob replacement
 c
-        icnt=icnt+1 
-        iiiii=icnt
+        icnt=icnt+1
+        iiiii=icnt+i4time
         iiiii=ran1(iiiii)*20000000.-10000000.
         on=1
         off=0
         if(totr(nvar).ne.0) then
-           me=sqrt(tmr(nvar)/totr(nvar))
-           oe=sqrt(tor(nvar)/totr(nvar))
-           ce=sqrt(tcr(nvar)/totr(nvar))
+           me=sqrt(tmr(n)/totr(n))
+           oe=sqrt(tor(n)/totr(n))
+           ce=sqrt(tcr(n)/totr(n))
         endif
         thresh=oberr*badthr 
         do i=1,imax
@@ -870,7 +873,11 @@ c  do kalmod errors
            sum1=sum1+wo(i)
            sum2=sum2+wb(i)
            sum3=sum3+wm(i)
-c     write(6,*) 'KALMOD ERRORS - OB - BUD - MOD :',i,wo(i),wb(i),wm(i)
+      write(6,9) 'KALMOD ERRORS - OB - BUD - MOD :',i,wo(i),wb(i),wm(i)
+      write(6,9) 'KALMOD PERCENTS-OB - BUD - MOD :',i,.5*(wb(i)+wm(i))/
+     &  (wo(i)+wb(i)+wm(i)),.5*(wo(i)+wm(i))/(wo(i)+wb(i)+wm(i)),
+     &  .5*(wo(i)+wb(i))/(wo(i)+wb(i)+wm(i))
+  9   format(1x,a32,i3,3f8.3)
            if(dt(i).eq.badflag) go to 5
            sumco=X(i)-dT(i)+sumco
            sumfo=XT(i)-dT(i)+sumfo
@@ -881,20 +888,17 @@ c     write(6,*) 'KALMOD ERRORS - OB - BUD - MOD :',i,wo(i),wb(i),wm(i)
  5         continue   
         enddo !i
 c
-        print*,'OVERALL FRACTION OB,BUD,NWP '
         Write(6,*) 'OVERALL FRACTION OB,BUD,NWP '
-        print*,.5*(sum2+sum3)/(sum1+sum2+sum3),.5*(sum1+sum3)/
-     1       (sum1+sum2+sum3),.5*(sum1+sum2)/(sum1+sum2+sum3) 
         Write(6,*) .5*(sum2+sum3)/(sum1+sum2+sum3),.5*(sum1+sum3)/
      1       (sum1+sum2+sum3),.5*(sum1+sum2)/(sum1+sum2+sum3) 
-        tmb(nvar)=tmb(nvar)+sumwr
-        tob(nvar)=tob(nvar)+sumvr 
-        tcb(nvar)=tcb(nvar)+sumar
-        tmr(nvar)=tmr(nvar)+stdwr
-        tor(nvar)=tor(nvar)+stdvr
-        tcr(nvar)=tcr(nvar)+stdar
-        totr(nvar)=totr(nvar)+sumtot
-        totb(nvar)=totb(nvar)+sumtot 
+        tmb(n)=tmb(n)+sumwr
+        tob(n)=tob(n)+sumvr 
+        tcb(n)=tcb(n)+sumar
+        tmr(n)=tmr(n)+stdwr
+        tor(n)=tor(n)+stdvr
+        tcr(n)=tcr(n)+stdar
+        totr(n)=totr(n)+sumtot
+        totb(n)=totb(n)+sumtot 
         if(sumtot.eq.0.) then
            stdar=badflag
            stdvr=badflag
@@ -934,12 +938,12 @@ c
      &       1x,'F X = XT    - obser RMS ',f8.3,' Bias ',f8.3/
      &       1x,'Kalman X    - obser RMS ',f8.3,' Bias ',f8.3)
         write(6,*) 'RUNNING BIAS AND RMS BY VARIABLE' 
-        write(6,*) 'FX=XT ',(tmb(nvar)/totb(nvar)),sqrt(tmr(nvar)/totr(
-     &                            nvar))
-        write(6,*) 'OBSER ',(tob(nvar)/totb(nvar)),sqrt(tor(nvar)/totr(
-     &                            nvar))
-        write(6,*) 'KAL X ',(tcb(nvar)/totb(nvar)),sqrt(tcr(nvar)/totr(
-     &                            nvar))
+        write(6,*) 'FX=XT ',(tmb(n)/totb(n)),sqrt(tmr(n)/totr(
+     &                            n))
+        write(6,*) 'OBSER ',(tob(n)/totb(n)),sqrt(tor(n)/totr(
+     &                            n))
+        write(6,*) 'KAL X ',(tcb(n)/totb(n)),sqrt(tcr(n)/totr(
+     &                            n))
  1000   format(1x,'TRUE VALUES FOR TIME ',i4)
 c
 c zero out scoring arraYs

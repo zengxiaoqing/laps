@@ -1,4 +1,4 @@
-c
+
        Program QC_main
 c
        include 'lapsparms.cmn'
@@ -12,13 +12,13 @@ c
           stop
        endif
 c
-       call QC_main_sub(NX_L_CMN,NY_L_CMN,maxstns_cmn,
+       call QC_main_sub(NX_L_CMN,NY_L_CMN,nk_laps,maxstns_cmn,
      &                  laps_cycle_time_cmn,badflag)
 c     
        end
 c
 c
-       subroutine QC_main_sub(ni, nj, m, laps_cycle_time, badflag)
+       subroutine QC_main_sub(ni,nj,nk,m,laps_cycle_time,badflag)
 c
 c*********************************************************************
 c
@@ -34,7 +34,7 @@ c          Finished 1st set of changes.  Change 'ran' to 'ran1' for
 c          portability.
 c       08 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
 c          New version.  This manifestation is based on an improved 
-c          model with ob, model, and buddy estimates with the Kalman 
+c          model with ob, mo, and buddy estimates with the Kalman 
 c          using obs as orginally done.  Also some housekeeping 
 c          changes.
 c
@@ -68,11 +68,12 @@ c
         real sfcm(m), sfcm_ea(m)
         real pcp1(m), pcp3(m), pcp6(m), pcp24(m)
         real snow(m), snow_ea(m), pcp_ea(m)
-        real store_cldht(m,5)
+        real store_cldht(m,5),pctmin
 c
         integer i4time, wmoid(m), jstatus
         integer time(m), delpch(m), kkk_s(m)
         integer index(m), indexa(m), indexb(m)
+        integer minobs,ihr
 c
         character store_cldamt(m,5)*4
         character stations(m)*20, provider(m)*11
@@ -126,6 +127,8 @@ c  input arrays-model and analysis weighting arrays
         real   wmt(m),wot(m),wbt(m),wmtd(m),wotd(m),wbtd(m)
         real   wmu(m),wou(m),wbu(m),wmv(m),wov(m),wbv(m)
         real   wmp(m),wop(m),wbp(m),wma(m),woa(m),wba(m)
+        real   tcr(nvar),tmr(nvar),tor(nvar),tcb(nvar),tmb(nvar)
+        real   tob(nvar),totr(nvar),totb(nvar)
 c
 c  output arrays
         real   xt(m),xtt(m)
@@ -171,13 +174,14 @@ c
         real        lat_grid(ni,nj), lon_grid(ni,nj), grid_spacing
         real        fon, nof
         parameter(  fon = 5./9., nof = 9./5. )
-	integer     i4prev1, i4prev2, cycle
+	integer     i4prev1, i4prev2, laps_cycle_time, cycle
 	character*9 filename, fname1, fname2
         Character   atime*24, atime_cur*24, stn(m)*5, wx(m)*25
         character   stna(m)*5, stnb(m)*5
         character   monfile*256, atime_mon*24, monjrfile*256
         character   dir_mon*256, dir_out*256, ext_out*31
         character   dir_s*256,ext_s*31,units*10,comment*125,var_s*3
+        character   nanvar*10
 c
 c
 c..... Start here.  First get the time from the user or scheduler.
@@ -198,10 +202,14 @@ c.....  Set the data cycle in seconds and figure out the
 c.....  previous time variables and filenames.
 c
         cycle = laps_cycle_time
+        cycler = float(cycle)/3600.
 	i4prev1 = i4time - cycle
 	i4prev2 = i4prev1 - cycle
         call make_fnam_lp(i4prev1, fname1, istatus)
         call make_fnam_lp(i4prev2, fname2, istatus)
+c  set minimum number of obs allowed and minimum pct of previous list
+        minobs=10
+        pctmin=.3 
 c
 c  observation and model error assumptions
 c *** expected obs accuracy for each variable at each station
@@ -210,18 +218,18 @@ c      the read_surface_data routine.  Can use these someday.***
 c
 c
 c observation and model error assumptions
-        oberr=0.5*9./5.!C error converted to F
+        oberr=1.0*9./5.!C error converted to F
         oberrt=0.5*9./5.
         oberrtd=1.0*9./5.
-        oberruv=1.0/.515!m/sec error conv to knts
-        oberrpm=0.5
-        oberral=0.5
-        moderr=4.0
-        moderrt=4.0
-        moderrtd=4.0
-        moderru=4.0
-        moderrpm=2.0
-        moderral=2.0
+        oberruv=0.515/.515!m/sec error conv to knts
+        oberrpm=0.50
+        oberral=0.50
+        moderr=3.0
+        moderrt=3.0
+        moderrtd=3.0
+        moderru=3.0
+        moderrpm=1.5
+        moderral=1.5
         grosst=25.
         grosstd=30.
         grossuv=25.
@@ -332,7 +340,7 @@ c
               enddo !j
 c
               do j=1,2
-                 iiiii=i*j*k
+                 iiiii=i4time
 c
 c     random number intial seed
                  iiiii=ran1(iiiii)*2000000.-1000000.
@@ -360,7 +368,8 @@ c
 c
            ite=0
 c
-c.....  "it" is the index that records how many cycles are in monster
+c.....  "it" is the index that records how many cycles have been 
+c        written to monster
 c.....  start it off with 0 for start up
 c
            it=0
@@ -392,7 +401,6 @@ c
 c
            print*, maxstab, 'obs read for cycle '    
 c
-           it=2
 c
 c.....  Now get LSO data for 1 cycle ago.
 c
@@ -410,9 +418,17 @@ c
               stop
            else
               print *,' Found LSO data for (Hr-1) at ', atime
+              
            endif
 c
            maxstaa=n_obs_b
+           pct=float(maxstaa)/float(maxstab)
+           if(pct.lt.pctmin.or.maxstaa.lt.minobs) then
+            print*, 'Percent of obs A/B is ',pct,' for min pct of ',pctmin
+            print*, 'Insufficient count ',maxstaa,' for minimum of ',minobs
+            print*,' No Kalman QC is possible...try next cycle'
+            stop
+           endif
            do k=1,maxstaa
               stna(k)(1:5)=stations(k)(1:5)
               indexa(k) = k
@@ -455,8 +471,6 @@ c
            print*,'alstg   '
            call fill(stnb,altb,latb,lonb,elevb,thetab,vl,
      &       maxstab,m,2./1000.,-2./1000.)         
-           call writemon(tb,tdb,ub,vb,pmslb,altb,nvar,maxstaa,m,
-     &          ncycles,monster,it) 
            call thet(ta,thetaa,maxstaa,eleva,m)
            print*,'First fill on a array: potl temp'
            call fill(stna,thetaa,lata,lona,eleva,thetaa,sl,
@@ -484,13 +498,27 @@ c
            call fill(stna,alta,lata,lona,eleva,thetaa,vl,
      &       maxstaa,m,2./1000.,-2./1000.)         
            icnt=1
+c if the b set has much fewer obs than the a set just write a into b
+           if(pct.gt.(1./pctmin)) then
+            print*,'insufficient obs in the b set: replacing with a'
+            call replace(ta,tb,maxstaa,1,m,1)  
+            call replace(tda,tdb,maxstaa,1,m,1)  
+            call replace(ua,ub,maxstaa,1,m,1)  
+            call replace(va,vb,maxstaa,1,m,1)  
+            call replace(pmsla,pmalb,maxstaa,1,m,1)  
+            call replace(alta,altb,maxstaa,1,m,1)  
+           endif
+           call writemon(tb,tdb,ub,vb,pmslb,altb,nvar,maxstaa,m,
+     &          ncycles,monster,it) 
 c
+           it=1
         ELSE
 c
            call s_len(monfile, len)
            open(15,file=monfile(1:len),
      &         form='unformatted',status='old')
            read(15) atime_mon, i4time_mon
+           atime=atime_mon
 c
 c.....  Check the time in the monster file.  If its too old,
 c.....  bag it and start over.
@@ -509,6 +537,7 @@ c
            read(15) pt,ptd,pu,pv,ppm,pal
            read(15) monster    
            read(15) stna,lata,lona,eleva
+           read(15) providera, reptypea
            read(15) ta,tda,ua,va,pmsla,alta
            read(15) ncmt,ncmtd,ncmu,ncmv,ncmpm,ncmalt
            read(15) it,maxstaa
@@ -523,19 +552,27 @@ c
            read(18) wot,wotd,wou,wov,wop,woa
            read(18) wbt,wbtd,wbu,wbv,wbp,wba
            read(18) wmt,wmtd,wmu,wmv,wmp,wma
+           read(18) tor,tcr,tmr,tob,tcb,tmb
+           read(18) totr,totb
            close(18)
 
         ENDIF
+c read time of either monster or lso and convert hour to a real value, time
+        read(atime(12:14),1098) ihr
+        print*,'GMT hour is ',ihr 
+ 1098   format(i3)
+        timer=ihr+1 
 c
 c.....  This is the start of routine
 c
         maxstab=maxstaa
-        badthr=3.5
+        badthr=5.5
 c
 c.....  Put the obs in the monster stack
 c
         call writemon(ta,tda,ua,va,pmsla,alta,nvar,maxstaa,m,
      &          ncycles,monster,it) 
+        it=it+1
 c 
 c.....  Compute distance/wind/theta defined weighting functions for 
 c.....  error cov
@@ -550,9 +587,9 @@ c.....  wave, amplitude of semi-diurnal wave, time of peak amplitude
 c.....  time of semi-diur peak in z time
 c
         mm = m * m
-c while we wait for the real model driver...set model estimate to persistence
+c while we wait for the real model driver...set model estimate to sin wave 
         call model(dta,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
-     1   ,maxstaa,m,mm,time,cycle,0.,0.,24.,6.)
+     1   ,maxstaa,m,mm,timer,cycle,14.,4.,24.,6.)
         call perturb(yta,ta,yta,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -570,7 +607,7 @@ c make tf all missing flag values
         call project(2,ytda,monster,2,nvar,
      &               maxstaa,m,ncycles,nn,atime,it,icyc,oberrtd,badthr)
         call model(dtda,tda,ua,va,thetaa,mwt,lata,lona,eleva
-     1   ,maxstaa,m,mm,time,cycle,0.,0.,12.,18.)
+     1   ,maxstaa,m,mm,timer,cycle,2.,1.,12.,16.)
         call perturb(ytda,tda,ytda,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -588,7 +625,7 @@ c make tdf all missing flag values
         call project(2,yua,monster,3,nvar,
      &                maxstaa,m,ncycles,nn,atime,it,icyc,oberruv,badthr)
         call model(dua,ua,ua,va,thetaa,mwt,lata,lona,eleva
-     1   ,maxstaa,m,mm,time,cycle,0.,0.,20.,6.)
+     1   ,maxstaa,m,mm,timer,cycle,0.,0.,20.,6.)
         call perturb(yua,ua,yua,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -606,7 +643,7 @@ c make uf all missing flag values
         call project(2,yva,monster,4,nvar,
      &                maxstaa,m,ncycles,nn,atime,it,icyc,oberruv,badthr)
         call model(dva,va,ua,va,thetaa,mwt,lata,lona,eleva
-     1   ,maxstaa,m,mm,time,cycle,0.,0.,24.,12.)
+     1   ,maxstaa,m,mm,timer,cycle,0.,0.,24.,12.)
         call perturb(yva,va,yva,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -624,7 +661,7 @@ c make vf all missing flag values
         call project(2,ypma,monster,5,nvar,
      &                maxstaa,m,ncycles,nn,atime,it,icyc,oberrpm,badthr)
         call model(dpma,pmsla,ua,va,thetaa,mwt,lata,lona,eleva
-     1   ,maxstaa,m,mm,time,cycle,0.,0.,16.,10.)
+     1   ,maxstaa,m,mm,timer,cycle,0.,1.0,16.,16.)
         call perturb(ypma,pmsla,ypma,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -642,7 +679,7 @@ c make pmslf all missing flag values
         call project(2,yalta,monster,6,nvar,
      &       maxstaa,m,ncycles,nn,atime,it,icyc,oberral,badthr)
         call model(dalta,alta,ua,va,thetaa,mwt,lata,lona,eleva
-     1       ,maxstaa,m,mm,time,cycle,1.0,1.0,16.,10.)
+     1       ,maxstaa,m,mm,timer,cycle,0.0,1.0,16.,16.)
         call perturb(yalta,alta,yalta,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -677,6 +714,8 @@ c
         atime = atime_cur
 c
         maxsta=n_obs_b
+        pct=float(maxsta)/float(maxstaa)
+        print*, 'Ob count for new cycle is ',pct,' of total list'
         do k=1,maxsta
            stn(k)(1:5)=stations(k)(1:5)
            index(k) = k
@@ -689,7 +728,7 @@ c
      &          ta,tda,dda,ffa,lata,lona,eleva,pstna,pmsla,alta,
      &          stna,providera,reptypea,indexa,
      &          maxsta,maxstaa,m,badflag)
-        print*, maxsta,maxstaa,maxstab
+
 c
 c.....  Convert new winds to u,v
 c
@@ -842,6 +881,12 @@ c.....  Redo the model
 c
         call kalmod(F,yta,byta,dta,ta,wmt,wot,wbt,offset,
      1       maxstaa,mwt,m)
+        print*,'temp model before kalman call'
+        do i=1,maxstaa
+         write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),yta(i),
+     &                  byta(i),dta(i),mwt(i,i)
+ 3333 format(1x,a17,a5,i5,f10.7,4f7.4)
+        enddo
 c
 c.....  Prepare the fields for the kalman filter
 c
@@ -850,8 +895,8 @@ c
 c
 c.....  Create the v and w matrices using the error history
 c
-        Call avgdiagerr(wit,B,c,w,maxstaa,ia,m,it-1)
-        Call avgdiagerr(Vit,B,c,vv,maxstaa,ia,m,it-1)
+        Call avgdiagerr(wit,B,c,w,maxstaa,ia,m,it)
+        Call avgdiagerr(Vit,B,c,vv,maxstaa,ia,m,it)
         write(6,*) 'Kalman for TEMP'
         call kalman(F,tc,ta,pt,it, w,vv,xt,xtt,maxstaa,m,atime)
 c
@@ -878,10 +923,10 @@ c
         call perturb(xt,tc,xt,maxstaa,m,0.,on)      
         call perturb(xtt,tc,xtt,maxstaa,m,0.,on)      
         call errorproc(dt,yta,byta,dta,xtt,xt,wr,vr,ar,maxstaa,m,qcstat
-     & ,oberrt,wmt,wot,wbt,length,badthr,atime,icnt,1)  
+     & ,oberrt,wmt,wot,wbt,length,badthr,atime,icnt,nvar,1,i4time  
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
         call perturb(tb,yta,tc,maxstaa,m,0.,off)
         call perturb(te,dta,tc,maxstaa,m,0.,off)
-        call perturb(tc,byta,tc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,wit,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstaa,m,ncycles,vit,it)
 c
@@ -892,14 +937,16 @@ c.....  Temperature.  .  .  .  .  .  .  ..  .  .  .  .  .  .  .  .  .  .
 c
         write(6,*) 'OUTPUT for T '
         call writec(stn,maxstaa,m,' Stations   ',atime)
+        call writev(tc,maxstaa,1,m, 'TA LAST CYC ',atime,on,0.)
         call writev(tf,maxstaa,1,m, ' XT from KAL  ',atime,on,0.)
         call writev(t,maxstaa,1,m, ' RAW T OBS  ',atime,on,0.)
         call writev(tb,maxstaa,1,m, ' OB TREND T',atime,on,0.)
+        call perturb(tc,byta,tc,maxstaa,m,0.,off)
         call writev(tc,maxstaa,1,m, ' BUD GUESS T',atime,on,0.)
         call writev(te,maxstaa,1,m, ' NWP GUESS T',atime,on,0.)
         call writev(ta,maxstaa,1,m,' KALMAN  T ',atime,on,0.)
         call writei(qcstat,maxstaa,m,
-     &   'QC FAILURES: 100000 FX=XT,10000NWP,100OBTND,100BUD,10GRS,1MSG'
+     &   'QC FAILURES: 100000 FX=XT,10000NWP,1000BTND,100TND,10GRS,1MSG'
      &   ,atime)
         call writev(ncmt,maxstaa,1,m,' NumConMsg ',atime,on,0.)
 c
@@ -908,6 +955,11 @@ c
         write(6,*) 'Dewpoint    Stage 2**************'
         call kalmod(F,ytda,bytda,dtda,tda,wmtd,wotd,wbtd,offset,
      1              maxstaa,mwt,m)
+        print*,'dewpoint model before kalman call'
+        do i=1,maxstaa
+        write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),ytda(i),
+     &              bytda(i),dtda(i),mwt(i,i)
+        enddo
 c
 c.....  Prepare the fields for the kalman filter
 c
@@ -945,10 +997,11 @@ c
         call perturb(xt,tdc,xt,maxstaa,m,0.,on)      
         call perturb(xtt,tdc,xtt,maxstaa,m,0.,on)      
         call errorproc(dtd,ytda,bytda,dtda,xtt,xt,wr,vr,ar,maxstaa,m,
-     &        qcstatd,oberrtd,wmtd,wotd,wbtd,length,badthr,atime,icnt,1)  
+     & qcstatd,oberrtd,wmtd,wotd,wbtd,length,badthr,atime,icnt,nvar,
+     &  2,i4time  
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
         call perturb(tdb,ytda,tdc,maxstaa,m,0.,off)
         call perturb(tde,dtda,tdc,maxstaa,m,0.,off)
-        call perturb(tdc,bytda,tdc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,witd,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstaa,m,ncycles,vitd,it)
 c
@@ -959,9 +1012,11 @@ c.....  Dewpoint....
 c
         write(6,*) 'OUTPUT for TD'
         call writec(stn,maxstaa,m,' Stations   ',atime)
+        call writev(tdc,maxstaa,1,m, 'TDA LAST CYC ',atime,on,0.)
         call writev(tdf,maxstaa,1,m, ' XT from KAL  ',atime,on,0.)
         call writev(td,maxstaa,1,m, ' RAW TD OBS ',atime,on,0.)
         call writev(tdb,maxstaa,1,m, ' OB TREND TD',atime,on,0.)
+        call perturb(tdc,bytda,tdc,maxstaa,m,0.,off)
         call writev(tdc,maxstaa,1,m, ' BUD GUESS TD',atime,on,0.)
         call writev(tde,maxstaa,1,m, ' NWP GUESS TD',atime,on,0.)
         call writev(tda,maxstaa,1,m,' KALMAN  TD',atime,on,0.)
@@ -975,6 +1030,11 @@ c
         write(6,*) 'U-Wind      Stage 2**************'
         call kalmod(F,yua,byua,dua,ua,wmu,wou,wbu,offset,
      1              maxstaa,mwt,m)
+        print*,'u-wind model before kalman call '
+        do i=1,maxstaa
+         write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),yua(i),
+     &                  byua(i),dua(i),mwt(i,i)
+        enddo
 c
 c.....  Prepare the fields for the kalman filter
 c
@@ -1011,10 +1071,10 @@ c
         call perturb(xt,uc,xt,maxstaa,m,0.,on)      
         call perturb(xtt,uc,xtt,maxstaa,m,0.,on)      
         call errorproc(du,yua,byua,dua,xtt,xt,wr,vr,ar,maxstaa,m,qcstau
-     & ,oberruv,wmu,wou,wbu,length,badthr,atime,icnt,1)  
+     & ,oberruv,wmu,wou,wbu,length,badthr,atime,icnt,nvar,3,i4time  
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
         call perturb(ub,yua,uc,maxstaa,m,0.,off)
         call perturb(ue,dua,uc,maxstaa,m,0.,off)
-        call perturb(uc,byua,uc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,witu,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstaa,m,ncycles,vitu,it)
 c
@@ -1025,9 +1085,11 @@ c.....  U-Wind
 c
         write(6,*) 'OUTPUT for U '
         call writec(stn,maxstaa,m,' Stations   ',atime)
+        call writev(uc,maxstaa,1,m, 'UA LAST CYC ',atime,on,0.)
         call writev(uf,maxstaa,1,m, ' XT from KAL  ',atime,on,0.)
         call writev(u,maxstaa,1,m, ' RAW U OBS  ',atime,on,0.)
         call writev(ub,maxstaa,1,m, ' OB TREND U',atime,on,0.)
+        call perturb(uc,byua,uc,maxstaa,m,0.,off)
         call writev(uc,maxstaa,1,m, ' BUD GUESS U',atime,on,0.)
         call writev(ue,maxstaa,1,m, ' NWP GUESS U',atime,on,0.)
         call writev(ua,maxstaa,1,m,' KALMAN  U ',atime,on,0.)
@@ -1041,6 +1103,11 @@ c.....  Redo the model
 c
         call kalmod(F,yva,byva,dva,va,wmv,wov,wbv,offset,
      1              maxstaa,mwt,m)
+        print*,'v-wind model'
+        do i=1,maxstaa
+         write(6,3333) 'stn,i,F,o,b,m ',stna(i),i,F(i,i),yva(i),
+     &                  byva(i),dva(i)
+        enddo
 c
 c.....  Prepare the fields for the kalman filter
 c
@@ -1077,10 +1144,10 @@ c
         call perturb(xt,vc,xt,maxstaa,m,0.,on)      
         call perturb(xtt,vc,xtt,maxstaa,m,0.,on)      
         call errorproc(dv,yva,byva,dva,xtt,xt,wr,vr,ar,maxstaa,m,qcstav
-     & ,oberruv,wmv,wov,wbv,length,badthr,atime,icnt,1)  
+     & ,oberruv,wmv,wov,wbv,length,badthr,atime,icnt,nvar,4,i4time  
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
         call perturb(vb,yva,vc,maxstaa,m,0.,off)
         call perturb(ve,dva,vc,maxstaa,m,0.,off)
-        call perturb(vc,byva,vc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,witv,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstaa,m,ncycles,vitv,it)
 c
@@ -1091,9 +1158,11 @@ c.....  V wind
 c
         write(6,*) 'OUTPUT for V '
         call writec(stn,maxstaa,m,' Stations   ',atime)
+        call writev(vc,maxstaa,1,m, 'VA LAST CYC ',atime,on,0.)
         call writev(vf,maxstaa,1,m, ' XT from KAL  ',atime,on,0.)
         call writev(v,maxstaa,1,m, ' RAW V OBS  ',atime,on,0.)
         call writev(vb,maxstaa,1,m, ' OB TREND V',atime,on,0.)
+        call perturb(vc,byva,vc,maxstaa,m,0.,off)
         call writev(vc,maxstaa,1,m, ' BUD GUESS V',atime,on,0.)
         call writev(ve,maxstaa,1,m, ' NWP GUESS V',atime,on,0.)
         call writev(va,maxstaa,1,m,' KALMAN  V ',atime,on,0.)
@@ -1107,6 +1176,11 @@ c.....  Redo the model
 c
         call kalmod(F,ypma,bypma,dpma,pmsla,wmp,wop,wbp,offset,
      1              maxstaa,mwt,m)
+        print*,'pmsl   model before kalman call'
+        do i=1,maxstaa
+        write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),ypma(i),
+     &             bypma(i),dpma(i),mwt(i,i)
+        enddo
 c
 c.....  Prepare the fields for the kalman filter
 c
@@ -1143,7 +1217,9 @@ c
         call perturb(xt,pmslc,xt,maxstaa,m,0.,on)      
         call perturb(xtt,pmslc,xtt,maxstaa,m,0.,on)      
         call errorproc(dpm,ypma,bypma,dpma,xtt,xt,wr,vr,ar,maxstaa,
-     &    m,qcstapm,oberrpm,wmp,wop,wbp,length,badthr,atime,icnt,1)  
+     & m,qcstapm,oberrpm,wmp,wop,wbp,length,badthr,atime,icnt,nvar,5
+     &  ,i4time  
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
         call perturb(pmslb,ypma,pmslc,maxstaa,m,0.,off)
         call perturb(pmsle,dpma,pmslc,maxstaa,m,0.,off)
         call perturb(pmslc,bypma,pmslc,maxstaa,m,0.,off)
@@ -1157,9 +1233,11 @@ c.....  Temperature
 c
         write(6,*) 'OUTPUT for PMSL '
         call writec(stn,maxstaa,m,' Stations   ',atime)
+        call writev(pmslc,maxstaa,1,m, 'PMSLA LAST CYC ',atime,on,1000.)
         call writev(pmslf,maxstaa,1,m, ' XT from KAL  ',atime,on,1000.)
         call writev(pmsl,maxstaa,1,m, ' RAW PMSL OBS  ',atime,on,1000.)
         call writev(pmslb,maxstaa,1,m, ' OB TREND PMSL',atime,on,1000.)
+        call perturb(pmslc,bypma,pmslc,maxstaa,m,0.,off)
         call writev(pmslc,maxstaa,1,m, ' BUD GUESS PMSL',atime,on,1000.)
         call writev(pmsle,maxstaa,1,m, ' NWP GUESS PMSL',atime,on,1000.)
         call writev(pmsla,maxstaa,1,m,' KALMAN  PMSL ',atime,on,1000.)
@@ -1173,6 +1251,11 @@ c.....  Redo the model
 c
         call kalmod(F,yalta,byalta,dalta,alta,wma,woa,wba,offset,
      1              maxstaa,mwt,m)
+        print*,'alstg  model before kalman call'
+        do i=1,maxstaa
+         write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),yalta(i),
+     &            byalta(i),dalta(i),mwt(i,i)
+        enddo
 c
 c.....  Prepare the fields for the kalman filter
 c
@@ -1209,10 +1292,11 @@ c
         call perturb(xt,altc,xt,maxstaa,m,0.,on)      
         call perturb(xtt,altc,xtt,maxstaa,m,0.,on)      
         call errorproc(dalt,yalta,byalta,dalta,xtt,xt,wr,vr,ar,maxstaa,
-     &    m,qcstal,oberral,wma,woa,wba,length,badthr,atime,icnt,1)  
+     & m,qcstal,oberral,wma,woa,wba,length,badthr,atime,icnt,nvar,6
+     &     ,i4time  
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
         call perturb(altb,yalta,altc,maxstaa,m,0.,off)
         call perturb(alte,dalta,altc,maxstaa,m,0.,off)
-        call perturb(altc,byalta,altc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,wital,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstaa,m,ncycles,vital,it)
 c
@@ -1223,9 +1307,11 @@ c.....  Temperature
 c
         write(6,*) 'OUTPUT for ALSTG '
         call writec(stn,maxstaa,m,' Stations   ',atime)
+        call writev(altc,maxstaa,1,m, 'ALTA LAST CYC  ',atime,on,1000.)
         call writev(altf,maxstaa,1,m, ' XT from KAL  ',atime,on,1000.)
         call writev(alt,maxstaa,1,m, ' RAW ALSTG OBS  ',atime,on,1000.)
         call writev(altb,maxstaa,1,m, ' OB TREND ALSTG',atime,on,1000.)
+        call perturb(altc,byalta,altc,maxstaa,m,0.,off)
         call writev(altc,maxstaa,1,m, ' BUD GUESS ALSTG',atime,on,1000.)
         call writev(alte,maxstaa,1,m, ' NWP GUESS ALSTG',atime,on,1000.)
         call writev(alta,maxstaa,1,m,' KALMAN ALSTG  ',atime,on,1000.)
@@ -1238,29 +1324,28 @@ c
         write(6,3006) maxstaa
         print *,' '
 
-!      enddo
 
- 3004   format (1x,a24,3x, 'it= ',i4)
+ 3004   format (1x,a24,3x, 'it= ',i12)
  3005   format(1x,a4,3x,2f7.2,f7.0,3x,6(i7,6f6.1))
  3006   format(1x,i3)
 
         write(6,*) '...................................................'
         write(6,*) '...................................................'
         do i=1,maxstaa
-           if( t(i) .ne. badflag)  t(i) = ((  t(i) - 273.15) * nof) + 32.  ! conv F to K
-           if(ta(i) .ne. badflag) ta(i) = (( ta(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(tb(i) .ne. badflag) tb(i) = (( tb(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(tc(i) .ne. badflag) tc(i) = (( tc(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(te(i) .ne. badflag) te(i) = (( te(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(tf(i) .ne. badflag) tf(i) = (( tf(i) - 32.) * fon) + 273.15  ! conv F to K
+           if( t(i) .ne. badflag)  t(i) = ((  t(i) - 32.) * fon) +273.15!conv F to K
+           if(ta(i) .ne. badflag) ta(i) = (( ta(i) - 32.) * fon) +273.15  ! conv F to K
+           if(tb(i) .ne. badflag) tb(i) = (( tb(i) - 32.) * fon) +273.15  ! conv F to K
+           if(tc(i) .ne. badflag) tc(i) = (( tc(i) - 32.) * fon) +273.15  ! conv F to K
+           if(te(i) .ne. badflag) te(i) = (( te(i) - 32.) * fon) +273.15  ! conv F to K
+           if(tf(i) .ne. badflag) tf(i) = (( tf(i) - 32.) * fon) +273.15  ! conv F to K
 c
-           if( td(i) .ne. badflag)  td(i) = ((  td(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(tda(i) .ne. badflag) tda(i) = (( tda(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(tdb(i) .ne. badflag) tdb(i) = (( tdb(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(tdc(i) .ne. badflag) tdc(i) = (( tdc(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(tde(i) .ne. badflag) tde(i) = (( tde(i) - 32.) * fon) + 273.15  ! conv F to K
-           if(tdf(i) .ne. badflag) tdf(i) = (( tdf(i) - 32.) * fon) + 273.15  ! conv F to K
-c
+           if( td(i) .ne. badflag)  td(i) = ((td(i)-32.)  * fon) +273.15  ! conv F to K
+           if(tda(i) .ne. badflag) tda(i) = ((tda(i)-32.) * fon) +273.15  ! conv F to K
+           if(tdb(i) .ne. badflag) tdb(i) = ((tdb(i)-32.) * fon) +273.15  ! conv F to K
+           if(tdc(i) .ne. badflag) tdc(i) = ((tdc(i)-32.) * fon) +273.15  ! conv F to K
+           if(tde(i) .ne. badflag) tde(i) = ((tde(i)-32.) * fon) +273.15  ! conv F to K
+           if(tdf(i) .ne. badflag) tdf(i) = ((tdf(i)-32.) * fon) +273.15  ! conv F to K
+
            if( u(i) .ne. badflag)  u(i) =  u(i) * 0.514791          ! conv kt to m/s
            if(ua(i) .ne. badflag) ua(i) = ua(i) * 0.514791          ! conv kt to m/s
            if(ub(i) .ne. badflag) ub(i) = ub(i) * 0.514791          ! conv kt to m/s
@@ -1295,7 +1380,7 @@ c
         call get_directory('lsq', dir_out, len)
 c        
         call write_qc_cdf(i4time, dir_out, ext_out, m, maxstaa, 
-     1       stn, provider, reptype, lat, lon, elev,
+     1       stna, providera, reptypea, lata, lona, eleva,
      1       qcstat,  t,    tb,    ta,    tc,    te,    tf,  
      1       qcstatd, td,   tdb,   tda,   tdc,   tde,   tdf,  
      1       qcstauv, u,    ub,    ua,    uc,    ue,    uf,  
@@ -1308,20 +1393,20 @@ c.....  Now convert the units back for other storage files.
 c
         do i=1,maxstaa
 c
-           if( t(i) .ne. badflag)  t(i) = ((  t(i) - 273.15) * nof) + 32.    ! conv F to K
-           if(ta(i) .ne. badflag) ta(i) = (( ta(i) - 273.15) * nof) + 32.    ! conv F to K
-           if(tb(i) .ne. badflag) tb(i) = (( tb(i) - 273.15) * nof) + 32.    ! conv F to K
-           if(tc(i) .ne. badflag) tc(i) = (( tc(i) - 273.15) * nof) + 32.    ! conv F to K
-           if(te(i) .ne. badflag) te(i) = (( te(i) - 273.15) * nof) + 32.    ! conv F to K
-           if(tf(i) .ne. badflag) tf(i) = (( tf(i) - 273.15) * nof) + 32.    ! conv F to K
+           if( t(i) .ne. badflag)  t(i) = ((  t(i) - 273.15) * nof) +32.    ! conv F to K
+           if(ta(i) .ne. badflag) ta(i) = (( ta(i) - 273.15) * nof) +32.    ! conv F to K
+           if(tb(i) .ne. badflag) tb(i) = (( tb(i) - 273.15) * nof) +32.    ! conv F to K
+           if(tc(i) .ne. badflag) tc(i) = (( tc(i) - 273.15) * nof) +32.    ! conv F to K
+           if(te(i) .ne. badflag) te(i) = (( te(i) - 273.15) * nof) +32.    ! conv F to K
+           if(tf(i) .ne. badflag) tf(i) = (( tf(i) - 273.15) * nof) +32.    ! conv F to K
 c
-           if( td(i) .ne. badflag)  td(i) = ((  td(i) - 32.) * nof) + 32.    ! conv F to K
-           if(tda(i) .ne. badflag) tda(i) = (( tda(i) - 32.) * nof) + 32.    ! conv F to K
-           if(tdb(i) .ne. badflag) tdb(i) = (( tdb(i) - 32.) * nof) + 32.    ! conv F to K
-           if(tdc(i) .ne. badflag) tdc(i) = (( tdc(i) - 32.) * nof) + 32.    ! conv F to K
-           if(tde(i) .ne. badflag) tde(i) = (( tde(i) - 32.) * nof) + 32.    ! conv F to K
-           if(tdf(i) .ne. badflag) tdf(i) = (( tdf(i) - 32.) * nof) + 32.    ! conv F to K
-c
+           if( td(i) .ne. badflag)  td(i) = ((  td(i) -273.15)*nof) +32.    ! conv F to K
+           if(tda(i) .ne. badflag) tda(i) = (( tda(i) -273.15)*nof) +32.    ! conv F to K
+           if(tdb(i) .ne. badflag) tdb(i) = (( tdb(i) -273.15)*nof) +32.    ! conv F to K
+           if(tdc(i) .ne. badflag) tdc(i) = (( tdc(i) -273.15)*nof) +32.    ! conv F to K
+           if(tde(i) .ne. badflag) tde(i) = (( tde(i) -273.15)*nof) +32.    ! conv F to K
+           if(tdf(i) .ne. badflag) tdf(i) = (( tdf(i) -273.15)*nof) +32.    ! conv F to K
+
            if( u(i) .ne. badflag)  u(i) =  u(i) * 1.94254         ! conv m/s to kt
            if(ua(i) .ne. badflag) ua(i) = ua(i) * 1.94254         ! conv m/s to kt
            if(ub(i) .ne. badflag) ub(i) = ub(i) * 1.94254         ! conv m/s to kt
@@ -1352,34 +1437,397 @@ c
 c
         enddo !i
 c
-c
 c.....  Write out the updated monster file, and the other storage file.
+c.....  First, check the arrays for bad values.
 c
-        call s_len(monfile, len)
-        print*,'Writing file ',monfile(1:len)
-        open(16,file=monfile(1:len),
-     &         form='unformatted',status='unknown')
-        write(16) atime_cur, i4time
-        write(16) vit,vitd,vitu,vitv,vitpm,vital
-        write(16) wit,witd,witu,witv,witpm,wital
-        write(16) pt,ptd,pu,pv,ppm,pal
-        write(16) monster
-        write(16) stna,lata,lona,eleva
-        write(16) ta,tda,ua,va,pmsla,alta
-        write(16) it,maxstaa
-        close(16)
-        print *,' Done.'
+        ifound_nan = 0
+        nanvar = '          '
+        print *,' Checking monster.dat arrays for NaNs...'
 c
-        call s_len(monjrfile, len)
-        print*,'Writing file ',monjrfile(1:len)
-        open(19,file=monjrfile(1:len),
-     &       form='unformatted',status='unknown')
+        call checknan_2d(vit,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'vit'
+           go to 800
+        endif
+        call checknan_2d(vitd,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'vitd'
+           go to 800
+        endif
+        call checknan_2d(vitu,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'vitu'
+           go to 800
+        endif
+        call checknan_2d(vitv,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'vitv'
+           go to 800
+        endif
+        call checknan_2d(vitpm,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'vitpm'
+           go to 800
+        endif
+        call checknan_2d(vital,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'vital'
+           go to 800
+        endif
 c
-        write(19) wot,wotd,wou,wov,wop,woa
-        write(19) wbt,wbtd,wbu,wbv,wbp,wba
-        write(19) wmt,wmtd,wmu,wmv,wmp,wma
-        close(19)
-        print *,' Done.'
+        call checknan_2d(wit,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wit'
+           go to 800
+        endif
+        call checknan_2d(witd,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'witd'
+           go to 800
+        endif
+        call checknan_2d(witu,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'witu'
+           go to 800
+        endif
+        call checknan_2d(witv,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'witv'
+           go to 800
+        endif
+        call checknan_2d(witpm,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'witpm'
+           go to 800
+        endif
+        call checknan_2d(wital,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wital'
+           go to 800
+        endif
+c
+        call checknan_2d(pt,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'pt'
+           go to 800
+        endif
+        call checknan_2d(ptd,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'ptd'
+           go to 800
+        endif
+        call checknan_2d(pu,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'pu'
+           go to 800
+        endif
+        call checknan_2d(pv,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'pv'
+           go to 800
+        endif
+        call checknan_2d(ppm,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'ppm'
+           go to 800
+        endif
+        call checknan_2d(pal,m,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'pal'
+           go to 800
+        endif
+c
+        do i=1,m
+        do j=1,ncycles
+        do k=1,nvar
+           call checknan_pt(monster(i,j,k), nan_flag)
+           if(nan_flag .ne. 1) then
+              ifound_nan = 1
+              nanvar = 'monster'
+              go to 800
+           endif
+        enddo !k
+        enddo !j
+        enddo !i    
+c
+        call checknan_1d(lata,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'lata'
+           go to 800
+        endif
+        call checknan_1d(lona,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'lona'
+           go to 800
+        endif
+        call checknan_1d(eleva,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'eleva'
+           go to 800
+        endif
+c
+        call checknan_1d(ta,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'ta'
+           go to 800
+        endif
+        call checknan_1d(tda,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'tda'
+           go to 800
+        endif
+        call checknan_1d(ua,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'ua'
+           go to 800
+        endif
+        call checknan_1d(va,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'va'
+           go to 800
+        endif
+        call checknan_1d(pmsla,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'pmslaa'
+           go to 800
+        endif
+        call checknan_1d(alta,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'alta'
+           go to 800
+        endif
+c
+        call checknan_1d(wot,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wot'
+           go to 800
+        endif
+        call checknan_1d(wotd,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wotd'
+           go to 800
+        endif
+        call checknan_1d(wou,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wou'
+           go to 800
+        endif
+        call checknan_1d(wov,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wov'
+           go to 800
+        endif
+        call checknan_1d(wop,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wop'
+           go to 800
+        endif
+        call checknan_1d(woa,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'woa'
+           go to 800
+        endif
+c
+        call checknan_1d(wbt,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wbt'
+           go to 800
+        endif
+        call checknan_1d(wbtd,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wbtd'
+           go to 800
+        endif
+        call checknan_1d(wbu,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wbu'
+           go to 800
+        endif
+        call checknan_1d(wbv,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wbv'
+           go to 800
+        endif
+        call checknan_1d(wbp,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wbp'
+           go to 800
+        endif
+        call checknan_1d(wba,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wba'
+           go to 800
+        endif
+c
+        call checknan_1d(wmt,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wmt'
+           go to 800
+        endif
+        call checknan_1d(wmtd,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wmtd'
+           go to 800
+        endif
+        call checknan_1d(wmu,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wmu'
+           go to 800
+        endif
+        call checknan_1d(wmv,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wmv'
+           go to 800
+        endif
+        call checknan_1d(wmp,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wmp'
+           go to 800
+        endif
+        call checknan_1d(wma,m,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'wma'
+           go to 800
+        endif
+c
+        call checknan_1d(tor,nvar,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'tor'
+           go to 800
+        endif
+        call checknan_1d(tcr,nvar,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'tcr'
+           go to 800
+        endif
+        call checknan_1d(tmr,nvar,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'tmr'
+           go to 800
+        endif
+        call checknan_1d(tob,nvar,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'tob'
+           go to 800
+        endif
+        call checknan_1d(tcb,nvar,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'tcb'
+           go to 800
+        endif
+        call checknan_1d(tmb,nvar,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'tmb'
+           go to 800
+        endif
+c
+        call checknan_1d(totr,nvar,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'totr'
+           go to 800
+        endif
+        call checknan_1d(totb,nvar,nan_flag)
+        if(nan_flag .ne. 1) then
+           ifound_nan = 1
+           nanvar = 'totb'
+           go to 800
+        endif
+c
+c.....  If no NaN's, write out the monster.dat and monster_jr.dat
+c.....  files.  If there are, don't.
+c
+ 800    continue
+        if(ifound_nan .eq. 0) then
+           call s_len(monfile, len)
+	   print *,' No NaNs found...'
+           print*,'Writing file ',monfile(1:len)
+           open(16,file=monfile(1:len),
+     &          form='unformatted',status='unknown')
+           write(16) atime_cur, i4time
+           write(16) vit,vitd,vitu,vitv,vitpm,vital
+           write(16) wit,witd,witu,witv,witpm,wital
+           write(16) pt,ptd,pu,pv,ppm,pal
+           write(16) monster
+           write(16) stna,lata,lona,eleva
+           write(16) providera, reptypea
+           write(16) ta,tda,ua,va,pmsla,alta
+           write(16) ncmt,ncmtd,ncmu,ncmv,ncmpm,ncmalt
+           write(16) it,maxstaa
+           close(16)
+           print *,' Done.'
+c
+           call s_len(monjrfile, len)
+           print*,'Writing file ',monjrfile(1:len)
+           open(19,file=monjrfile(1:len),
+     &          form='unformatted',status='unknown')
+c
+           write(19) wot,wotd,wou,wov,wop,woa
+           write(19) wbt,wbtd,wbu,wbv,wbp,wba
+           write(19) wmt,wmtd,wmu,wmv,wmp,wma
+           write(19) tor,tcr,tmr,tob,tcb,tmb
+           write(19) totr,totb
+           close(19)
+           print *,' Done.'
+c
+        else
+c
+           print *,' **WARNING. Found a NaN in monster/monster_jr.dat ',
+     &             'variable: ', nanvar
+           print *,'            Skipping monster/monster_jr.dat writes.'
+c
+        endif
 c
         print*,' Kalman complete'
 c

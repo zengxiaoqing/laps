@@ -272,7 +272,8 @@ c
       enddo !i
 c
       if(cnt .gt. 0.) then
-         write(6,*) ' Bias Error for W and VV: ', sum / cnt
+         write(6,*) ' Bias Error for W and VV: ', sum / cnt,' for ', ia
+     & ,' cycles'
       else
          write(6,*) ' In routine AVGDIAGERR: Cannot calculate ',
      &              ' bias error for W and VV -- cnt = 0'

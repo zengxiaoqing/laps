@@ -19,10 +19,11 @@ c*********************************************************************
 c
         parameter (badflag=-99.9)
         common tab(10000),pi,re,rdpdg,reorpd
+        integer cycle
         real dta(m),mwt(m,m),lat(m),lon(m),elev(m)
         real advect(mm)  ,var(m) 
         real kappa,ua(m),va(m),theta(m) 
-        integer time(m), time_i
+        real time
 c
 c.....  Start here.
 c
@@ -31,14 +32,13 @@ c
         Tstd=287.16
         pstd=1013.2
         g=9.808
-        time_i = time(1)
 c
 c.....  Here would be reading model grids and interpolating to stns
 c.....  set offset for heating: max temp 00Z; min temp 12Z
 c
-        ddiur=-amp*(2.*pi/(24.*cycle)) *         !correcting waves
-     &         sin(2.*pi/24.*(time_i-peak))*cycle
-     &        -amp1*2.*pi/12.*sin(2.*pi/12.*float(time_i)-peak1)
+        ddiur=-amp*(2.*pi/24.) *         !correcting waves
+     &         sin(2.*pi/24.*(time-peak))
+     &        -amp1*2.*pi/12.*sin(2.*pi/12.*(time-peak1))
 c
         do i=1,imax
            sum=0.
@@ -62,7 +62,7 @@ c
               endif
 c
 c corrects for wind component along station/station vector
-              sum=-(uav*dth*dx/rr+vav*dth*dy/rr)*cycle+sum
+              sum=-(uav*dth*dx/rr+vav*dth*dy/rr)*float(cycle)+sum
               cnt=cnt+1.
  1         enddo !on j
            advect(i)=sum/cnt

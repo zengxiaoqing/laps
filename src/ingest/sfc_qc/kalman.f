@@ -142,8 +142,9 @@ c
 c
       sum = 0.
       do i=1,imax
-         write(6,*) 'i,x,xt,y,k,w,v ',i,X(i),XT(i),
-     &              Y(i),K(i,i),w(i,i),v(i,i)
+         write(6,1098) 'i,x,xt,y,k,w,v ',i,X(i)-10000.,XT(i)-10000.,
+     &              Y(i)-10000.,K(i,i),w(i,i),v(i,i)
+ 1098 format(1x,a15,i3,3f10.3,f7.4,2f10.3)
          sum=sum+K(i,i)
       enddo !i
       print*, 'MEAN KALMAN ',sum/float(imax)
@@ -179,12 +180,17 @@ c
          c=0.5*(wbt(i)+wot(i))/sum
          sum=0.
          sum1=0.
-         do j = 1,imax
-            if(i.eq.j) go to 1
-            sum=mwt(i,j)/(1.-mwt(i,i))*yta(j)+sum
-            F(i,j)=0.
- 1          continue
-         enddo
+         if(mwt(i,i).eq.1.) then
+             print*,'Station ',i,' is lonely: set buddy trend to 0'
+             sum=0.
+          else
+            do j = 1,imax
+             if(i.eq.j) go to 1
+             sum=mwt(i,j)/(1.-mwt(i,i))*yta(j)+sum
+             F(i,j)=0.
+ 1           continue
+            enddo
+         endif
          byta(i)=sum
          F(i,i)=a*(1.+yta(i)/(ta(i)+offset)) + 
      &          c*(1.+dta(i)/(ta(i)+offset)) +
