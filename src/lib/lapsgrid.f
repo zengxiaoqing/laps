@@ -1215,7 +1215,7 @@ c     erad = 6367000.
       do i=1,maxbgmodels
          fdda_model_source_cmn(i) = ' '
       enddo
-      iflag_lapsparms_cmn=0
+ 
       call get_laps_config(grid_fnam_common,istatus)
 
       if(istatus .ne. 1)then
