@@ -1758,6 +1758,9 @@ Outputs:
 
          lsq    NetCDF  QC'd LAPS surface obs in NIMBUS NetCDF format
 
+         lsq/monster*.dat' are binary files that contains internalinformation 
+         about the data history
+
 Sample Input/Output: May be available in the test data case.
 </pre>
 
@@ -2172,14 +2175,14 @@ in the temperature analysis.
 
 The analysis uses variational techniques to constrain the surface winds and 
 reduced pressures to the full equations on motion.  Several derived variables
-are calculated before the LSX file is written.  Also, a dependent validation is
-done by interpolating several variables back to the observation locations and
-comparing the analysis to the ob.  Output from this check is written to a file
-located in the .../log/qc subdirectory.
+are calculated before the LSX file is written.  Also, a dependent data 
+validation is done by interpolating several variables back to the observation 
+locations and comparing the analysis to the ob.  Output from this check is 
+written to files located in '$LAPS_DATA_ROOT/log/qc/laps_sfc.ver.hhmm', where
+'hhmm' is the analysis 'systime'.
 
 
 <pre>
-
 
 
 28257	LSX process - LAPS surface data analysis
