@@ -1,5 +1,6 @@
       SUBROUTINE POWELL(P,XI,N,NP,FTOL,ITER,FRET,func)
       PARAMETER (NMAX=40,ITMAX=50)
+      EXTERNAL FUNC
       real func ! funciton type
       DIMENSION P(NP),XI(NP,NP),PT(NMAX),PTT(NMAX),XIT(NMAX)
       FRET=FUNC(P)

@@ -33,7 +33,8 @@ cdis
 c
 c ****  tsfs is surface air temp. (from surface analysis)
 c
-      dimension vdat(13),nspin(13),erm(13),lbuf(33)
+c      dimension vdat(13),nspin(13),erm(13),lbuf(33)
+      dimension vdat(13),nspin(13),erm(13)
 c
 c ****  added icloud to filt common block.
       common/filt/tdat(13,11,11),iflag(2,11,11),icloud
@@ -292,7 +293,8 @@ c ****  new common blocks.
       common/radtra/tau,dbdt
       common/filt/tdat(13,11,11),iflag(2,11,11),icloud
       real*8 xtx(9,9),xiv(9,9)
-      dimension tbo(*),ero(*),dtb(12),lbuf(33)
+c      dimension tbo(*),ero(*),dtb(12),lbuf(33)
+      dimension tbo(*),ero(*),dtb(12)
       dimension alpha(9,12),phs(40,3),phis(40,3),coef(9)
       dimension tau(40),taus(40,10),dbdt(40),pwv(40),delp(40),dlnp(40)
 c

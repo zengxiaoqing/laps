@@ -369,7 +369,7 @@ C                    CHANGE IN SINE OF GEOCENTRIC LATITUDE
 C                    CHANGE IN SINE OF ORBIT YAW                                
       REAL*8 GATT                                                               
 C                    SUBROUTINE FUNCTION                                        
-      REAL*8 A1,A2                                                              
+c      REAL*8 A1,A2                                                              
 C                    WORK AREAS                                                 
 C                                                                               
 C     INCLUDE FILES                                                             
@@ -983,7 +983,8 @@ C                            GEO(*,2) = LONGITUDE IN RADIANS
 C                                                                               
 C     LOCAL VARIABLES                                                           
 C                                                                               
-      REAL*8 E,S,H,EV,SC,ALPHA,BETA,SINE,COSE,DE,DS
+c     REAL*8 E,S,H,EV,SC,ALPHA,BETA,SINE,COSE,DE,DS
+      REAL*8 E,S,H,EV,SC,SINE,COSE,DE,DS
       INTEGER I,IER                                                             
 C                                                                               
 C     INCLUDE FILES                                                             

@@ -41,7 +41,7 @@ c       J Smart 6-96  modified the arguments for trig functions by computing
 c 			them first and storing in variable term
 
 	real*4 polat,polon,lat,lon,u,v
-	real*8 n,r,pi
+	real*8 n,pi
         real*8 term
         real*8 rtanterm,rexpterm
 

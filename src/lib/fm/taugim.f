@@ -25,7 +25,7 @@ c
       dimension t(nl),w(nl),o(nl),tau(nl),tl(nl),wl(nl),ol(nl)
       dimension delo(nl),delt(nl),delw(nl)
       dimension sumo(nl),sums(nl),sumt(nl),sumw(nl)
-      dimension cbuf(lenc),dp(nl),prsq(nl),xx(nx,nl,nc)
+      dimension dp(nl),prsq(nl),xx(nx,nl,nc)
       dimension coef(nxp1,nl,nc,nk),tauc(nl,nc),sqp(nc)
       dimension wdep(nl),sqw(nl),odep(nl),sqo(nl),sqd(nl),sqdep(nl,nc)
       equivalence (sqd(1),sqdep(1,1)),(taud(1),tauc(1,1))
