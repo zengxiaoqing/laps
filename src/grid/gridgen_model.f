@@ -719,11 +719,16 @@ c ----------------------------------------------------------------
 c
         GEODAT2D(:,:)=1.- GEODAT3D(:,:,16)
 
-        print*,'Filter land fraction with 2dx'
-
-        do k=1,2
-           call filter_2dx(geodat2d,nnxp,nnyp,1, 0.5)
-           call filter_2dx(geodat2d,nnxp,nnyp,1,-0.5)
+c
+c this function allows variable amounts of smoothing of
+c the land fraction data depending on grid spacing
+c
+        iter=min(10,int(8000./deltax)+1)
+        
+        print*,'Filter land fraction with 2dx ',iter
+        do k=1,iter
+           call filter_2dx(GEODAT2D,nnxp,nnyp,1, 0.5)
+           call filter_2dx(GEODAT2D,nnxp,nnyp,1,-0.5)
         enddo
 
 c JS: 1-10-03:
