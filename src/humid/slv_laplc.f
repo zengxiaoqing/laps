@@ -107,7 +107,7 @@ c       print*, maxerror
         write(6,*) 'diriclet terminated on iterations ', k
 
 22      write (6,*) 'max error solving dirichlet problem ', 
-     1       maxerror/typical_data,k
+     1       maxerror,'/',typical_data,k
 
 c     fill boarders (normally zero) with nearest neighbor values
 
