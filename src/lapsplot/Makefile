@@ -8,8 +8,6 @@ LAPSROOT=../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
-NCARGFC=ncargf77
-
 FFLAGS=$(DBFLAGS)
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
