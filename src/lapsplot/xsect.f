@@ -1006,6 +1006,7 @@ c read in laps lat/lon and topo
 
             endif ! LCO field
 
+            colortable = 'omega'
 
             if(i_image .eq. 0)then
                 cint = -1. * 2. ** (-density)
@@ -1073,12 +1074,6 @@ c read in laps lat/lon and topo
                 enddo ! k
 
                 cint = -1.
-
-!               This is commented out to help with manual lapsplot ports
-!               We can turn this on once the omega.lut is propagated everywhere
-!               It should be turned on if the 'omega.lut' is different from
-!               the 'hues.lut'
-!               colortable = 'omega'
 
             else ! Not LCO field
                 call interp_3d(field_3d,field_vert
