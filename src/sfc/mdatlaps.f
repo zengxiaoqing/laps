@@ -345,18 +345,6 @@ c
 	endif
 	print *,' '
 c
-c
-c.....  Now, back to the analysis.
-c.....	Convert altimeters to station pressure. Original sta pres is ignored.
-c
- 415	do j=1,n_obs_b
-	  if(alt_s(j) .le. badflag) then
-	    pstn_s(j) = badflag
-	  else
-	    pstn_s(j) = alt_2_sfc_press(alt_s(j), elev_s(j)) !conv alt to sp
-	  endif
-	enddo !j
-c
 c.....	Now reduce station pressures to standard levels...1500 m (for CO) 
 c.....  and MSL.  Use background 700 mb and 850 mb data from LGA (or equiv).
 c
@@ -368,50 +356,10 @@ c
         lapse_t = -.01167
         lapse_td = -.007
 c
-c       We are now leaving all the original pmsl_s obs in place, regardless
-c       of whether pstn_s (i.e. alt_s) obs are present or not.
-c
-	sum_diffp = 0.
-	num_diffp = 0
-	print *,' '
-	print *,' Calculating reduced pressures'
-	print *,'----------------------------------'
-	do k=1,n_obs_b
-	  if(pstn_s(k).le.badflag .or. t_s(k).le.badflag 
-     &                           .or. td_s(k).le.badflag) then
-	    pred_s(k) = badflag
-!           pmsl_s(k) = badflag
-	  else
-	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_t,
-     &                       lapse_td,pred_s(k),redp_lvl,badflag)  ! 1500 m for CO
-	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_t,
-     &                       lapse_td,p_msl,0.,badflag)        ! MSL
-	    if(pmsl_s(k).gt.900. .and. pmsl_s(k).lt.1100.) then
-              if(p_msl .ne. badflag) then
-		 diff_ps = p_msl - pmsl_s(k)
-		 write(6,983) k, stn(k)(1:5), p_msl, pmsl_s(k), diff_ps
-		 sum_diffp = sum_diffp + diff_ps
-		 num_diffp = num_diffp + 1
-	      endif
-	    else
-cc	       pmsl_s(k) = p_msl
-	    endif
-	  endif
-        enddo !k
-	print *,' '
-	if(num_diffp .le. 0) then
-	   print *,' Bad num_diffp'
-	else
-	   bias = sum_diffp / float(num_diffp)
-	   print *,'Num: ', num_diffp,'   MSL Pressure Bias = ', bias
-	endif
- 983    format(1x,i5,2x,a8,':',3f12.2)
-	print *,' '
-c
 c.....  If we have good background T, Td, and Station P fields from LGB (or 
 c.....  FSF), and there is no reduced pressure background, use them
 c.....  to calculate a reduced pressure background.  Otherwise, skip this
-c.....  section to used what we've already found above.
+c.....  section to use what we've already found above.
 c
         write(6,*)' back_rp = ',back_rp
 
@@ -445,6 +393,72 @@ c
 c
 	   print *,' Done.  back_rp = ', back_rp
 	endif
+c
+c
+c.....  Now, back to the analysis.
+c.....	Convert altimeters to station pressure. Original sta pres is ignored.
+c
+ 415	do j=1,n_obs_b
+	  if(alt_s(j) .le. badflag) then
+	    pstn_s(j) = badflag
+	  else
+	    pstn_s(j) = alt_2_sfc_press(alt_s(j), elev_s(j)) !conv alt to sp
+	  endif
+	enddo !j
+c
+c       We are now leaving all the original pmsl_s obs in place, regardless
+c       of whether pstn_s (i.e. alt_s) obs are present or not.
+c
+	sum_diffp = 0.
+	num_diffp = 0
+	print *,' '
+	print *,' Calculating reduced pressures'
+	print *,'----------------------------------'
+	do k=1,n_obs_b
+	  if(pstn_s(k).le.badflag .or. t_s(k).le.badflag 
+     &                           .or. td_s(k).le.badflag) then
+	    pred_s(k) = badflag
+!           pmsl_s(k) = badflag
+	  else
+	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_t,
+     &                       lapse_td,pred_s(k),redp_lvl,badflag)  ! 1500 m for CO
+	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_t,
+     &                       lapse_td,p_msl,0.,badflag)        ! MSL
+	    if(pmsl_s(k).gt.900. .and. pmsl_s(k).lt.1100.) then
+              if(p_msl .ne. badflag) then
+		 diff_ps = p_msl - pmsl_s(k)
+		 write(6,983) k, stn(k)(1:5), p_msl, pmsl_s(k), diff_ps
+		 sum_diffp = sum_diffp + diff_ps
+		 num_diffp = num_diffp + 1
+	      endif
+	    else
+cc	       pmsl_s(k) = p_msl
+	    endif
+	  endif
+
+          if(pred_s(k) .ne. badflag .and. back_rp .eq. 1)then ! compare to bkg
+            i = ii(k)
+            j = jj(k)
+            if(i.ge.1 .and. i.le.ni .and. j.ge.1 .and. j.le.nj)then
+              diff = pred_s(k) - rp_bk(ii(k),jj(k))
+              if(abs(diff) .gt. 10.)then
+                  write(6,981)k,stn(k)(1:5),pred_s(k),elev_s(k),diff
+ 981		  format(' Reduced pressure flagged for ',i5,a,3f9.1)  
+!                 pred_s(k) = badflag
+              endif
+            endif
+          endif
+
+        enddo !k
+	print *,' '
+	if(num_diffp .le. 0) then
+	   print *,' Bad num_diffp'
+	else
+	   bias = sum_diffp / float(num_diffp)
+	   print *,'Num: ', num_diffp,'   MSL Pressure Bias = ', bias
+	endif
+ 983    format(1x,i5,2x,a8,':',3f12.2)
+	print *,' '
 c
 c.....	Change vis observations that are more than 10 miles to 11 miles,
 c.....  so the high end of the analysis will be "greater than 10 miles".
