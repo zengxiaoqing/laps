@@ -366,6 +366,15 @@ c
         do i=1,i_nbr_files
             call get_directory_length(c_fnames(i),lend)
             call get_time_length(c_fnames(i),lenf)
+            if(lenf.le.0)then
+               call get_fname_length(c_fnames(i),lenf)
+               lenf=lend+lenf
+            endif
+            if(lenf.eq.lend)then
+               print*,'no filenames in c_fnames array: get_best_fcst'
+               return
+            endif
+
             call get_fcst_times(c_fnames(i)(lend+1:lenf)
      1                 ,i4_initial,i4_valid,i4_fn)
             if(i4_valid .eq. i4time_needed)then

@@ -855,6 +855,67 @@ c     ymax=R*(1./tanh(sind(ne(1))))
 c
 c===============================================================================
 c
+      subroutine init_gridconv_cmn(gproj,nxbg,nybg,nzbg
+     &,dlat,dlon,Lat0,Lat1,Lon0,sw1,sw2,ne1,ne2,istatus)
+c
+c JS 4-01
+c
+      implicit none
+
+      character*(*)  gproj
+      integer        istatus
+      integer        nxbg,nybg,nzbg
+      real           dlat,dlon
+      real           Lat0,Lat1
+      real           Lon0,Lon1,Lon2
+      real           sw1,ne1
+      real           sw2,ne2
+
+c
+c *** Common block variables for lat-lon grid.
+c
+      integer   nx_ll,ny_ll,nz_ll
+      real*4    lat0_ll,lon0_ll,d_lat,d_lon
+      common /llgrid/nx_ll,ny_ll,nz_ll,lat0_ll,lon0_ll
+     &,d_lat,d_lon
+c
+c *** Common block variables for lambert-conformal grid.
+c
+      integer   nx_lc,ny_lc,nz_lc
+      real*4    lat1_lc,lat2_lc,lon0_lc,sw(2),ne(2)
+      common /lcgrid/nx_lc,ny_lc,nz_lc,lat1_lc,lat2_lc
+     &,lon0_lc,sw,ne
+
+      if(gproj.eq.'LC')then
+         nx_lc=nxbg
+         ny_lc=nybg
+         nz_lc=nzbg
+         lat1_lc=Lat0
+         lat2_lc=Lat1
+         lon0_lc=Lon0
+         sw(1)=sw1
+         sw(2)=sw2
+         ne(1)=ne1
+         ne(2)=ne2
+         return
+      endif
+
+      if(gproj.eq.'LL')then
+         nx_ll=nxbg
+         ny_ll=nybg
+         nz_ll=nzbg
+         lat0_ll=sw1
+         lon0_ll=lon0
+         d_lat=dlat
+         d_lon=dlon
+         return
+      endif
+
+      return
+      end
+c
+c===============================================================================
+c
       subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .     lat,lon,grx,gry,bgmodel)
 

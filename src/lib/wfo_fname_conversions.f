@@ -199,3 +199,30 @@ c
 
        return
        end
+
+      function cvt_fname13_to_wfo_fname13(fname13)
+c
+c function converts filename yyjjjhhmmffff to yyyymmdd_hhmm
+c Note: does not use ffff
+      character*13  fname13
+      character*13  cvt_fname13_to_wfo_fname13
+      character*13  fname9_to_wfo_fname13
+  
+      cvt_fname13_to_wfo_fname13=fname9_to_wfo_fname13(fname13(1:9))
+      return
+      end
+
+      function cvt_wfo_fname13_to_fname13(fname13)
+c
+c function converts filename yyyymmdd_hhmm  to  yyjjjhhmm0000
+c
+      character*9   fname9
+      character*9   wfo_fname13_to_fname9
+      character*13  fname13
+      character*13  cvt_wfo_fname13_to_fname13
+      character*13  fname9_to_wfo_fname13
+
+      fname9=wfo_fname13_to_fname9(fname13)
+      cvt_wfo_fname13_to_fname13=fname9//fname13(10:13)
+      return
+      end
