@@ -4,7 +4,7 @@
  l_use_radial_vel=.true.,
  weight_bkg_const_wind=5e28,
  max_pr=1500,
- max_pr_levels=128,
+ max_pr_levels=300,
  /
 
 c WIND PARAMETERS

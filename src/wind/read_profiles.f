@@ -125,6 +125,12 @@ c                             time of the current LAPS analysis time.
      1         ,elev_pr(i_pr),c5_name,a9time_ob
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,1x,3x,a9)
 
+            if(nlevels_obs_pr(i_pr) .gt. MAX_PR_LEVELS)then
+                write(6,*)' ERROR: too many profiler (.pro) levels '
+     1                   ,i_pr,nlevels_obs_pr(i_pr),MAX_PR_LEVELS
+                goto430
+            endif
+
             obstype(i_pr) = 'PROFILER'
 
             call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
@@ -164,7 +170,7 @@ c                             time of the current LAPS analysis time.
             enddo ! level
         enddo ! profiler site
 
-        write(6,*)' WARNING: # of profilers has reached'
+        write(6,*)' ERROR: # of profilers has reached'
      1           ,' dimensions of MAX_PR ',MAX_PR
 
         n_profiles=MAX_PR
@@ -283,6 +289,13 @@ c
      1       sp_in .ne. r_missing_data          )then           
 
               n_good_levels = n_good_levels + 1
+
+              if(n_good_levels .gt. MAX_PR_LEVELS)then
+                  write(6,*)' ERROR: too many sounding (.snd) levels '       
+     1                     ,i_pr,n_good_levels,MAX_PR_LEVELS
+                  goto515
+              endif
+
               nlevels_obs_pr(i_pr) = n_good_levels
               ob_pr_ht_obs(i_pr,n_good_levels) = ht_in
               ob_pr_di_obs(i_pr,n_good_levels) = di_in
@@ -310,7 +323,7 @@ c
   516   END DO                   ! level
       END DO ! i_pr
 
-      write(6,*)' WARNING: # of soundings+profilers has reached'
+      write(6,*)' ERROR: # of soundings+profilers has reached'
      1         ,' dimensions of MAX_PR ',MAX_PR
 
       n_profiles=MAX_PR

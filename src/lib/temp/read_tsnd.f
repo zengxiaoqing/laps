@@ -70,7 +70,7 @@ c                               not exactly match the LAPS analysis time.
 !       soundings and represents output arrays.
  
         integer*4 max_snd_levels
-        parameter (max_snd_levels = 128)
+        parameter (max_snd_levels = 300)
 
         real*4 surface_rass_buffer
         parameter (surface_rass_buffer = 30.)
@@ -173,6 +173,13 @@ c                               not exactly match the LAPS analysis time.
      1                     ,c5_name(i_pr),a9time,c8_obstype(i_pr)
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9,1x,a8)
 
+            if(nlevels_in .gt. max_snd_levels)then
+                write(6,*)' ERROR: too many levels in LRS file '       
+     1                   ,i_pr,nlevels_in,max_snd_levels
+                istatus = 0
+                return
+            endif
+
 !           Determine if rass is in the LAPS domain
 406         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
      1                              ,imax,jmax,ri,rj,istatus)
@@ -193,6 +200,7 @@ c                               not exactly match the LAPS analysis time.
      1             .and.  ht_in .gt. elev_pr(i_pr) + surface_rass_buffer
      1             .and.  level .le. max_snd_levels )then
                     nlevels_good(i_pr) = nlevels_good(i_pr) + 1
+
                     ob_pr_ht_obs(i_pr,nlevels_good(i_pr)) = ht_in
                     ob_pr_t_obs(i_pr,nlevels_good(i_pr)) =  t_in
 
@@ -378,6 +386,13 @@ c
      1                 ,elev_pr(i_pr),i_ob,j_ob,c5_name(i_pr),a9time
 707         format(/' Sonde #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9)
 
+            if(nlevels_in .gt. max_snd_levels)then
+                write(6,*)' ERROR: too many levels in SND file '       
+     1                   ,i_pr,nlevels_in,max_snd_levels
+                istatus = 0
+                return
+            endif
+
 708         do level = 1,nlevels_in
 
                 read(12,*,err=640)ht_in,pr_in,t_in,td_in,dd_in,ff_in
@@ -406,6 +421,7 @@ c
      1             .and.  abs(ht_in) .lt. 1e6
      1             .and.  level      .le. max_snd_levels )then
                     nlevels_good(i_pr) = nlevels_good(i_pr) + 1
+
                     ob_pr_ht_obs(i_pr,nlevels_good(i_pr)) = ht_in
                     ob_pr_t_obs(i_pr,nlevels_good(i_pr)) =  t_in + 273.15
 
