@@ -100,6 +100,8 @@ cdoc    Used to read in a surface grid with inputs of time and ext
 cdoc    This routine can be used to read in a surface grid of known time
 cdoc    by calling the new READ_LAPS routine
 
+        include      'bgdata.inc'
+
         character*9 asc9_tim
         character*150 DIRECTORY
         character*(*) EXT
@@ -107,8 +109,10 @@ cdoc    by calling the new READ_LAPS routine
 
         character*125 comment_2d
         character*10 units_2d
+        character*15 fdda_model_source(maxbgmodels)
         character*3 var_2d
-        integer*4 LVL_2d
+        integer   LVL_2d
+        integer   nfdda
         character*4 LVL_COORD_2d
 
         real*4 field_2d(imax,jmax)
@@ -119,11 +123,17 @@ cdoc    by calling the new READ_LAPS routine
             return
         endif
 
+        call get_fdda_model_source(fdda_model_source,nfdda,istatus)
+
         call s_len(ext,len)
 
         if(len.gt.3)then
            directory = ext
            call s_len(directory,len_dir)
+c
+c code section below needs more when we reverse the fdda subdirectory
+c order (ie., from fsf/"model" to "model"/fsf)
+c
            if(directory(len_dir:len_dir).eq.'/')then
               len_dir=len_dir-1
               directory=directory(1:len_dir)
@@ -131,9 +141,15 @@ cdoc    by calling the new READ_LAPS routine
            call get_directory_length(directory,len)
            if(directory(len+1:len_dir).eq.'lgb')then
               ext_int='lgb'
-           elseif(directory(len+1:len_dir).eq.'fsf')then
-              ext_int='fsf'
            else
+              do l=1,nfdda
+                 if(directory(len+1:len_dir).eq.
+     &fdda_model_source(l))then
+                    ext_int='fsf'
+                 endif
+              enddo
+           endif
+           if(ext_int.eq.' ')then
               print*,'Unknown lapsprd extension'
      &,directory(1:len_dir)
               istatus = 0
@@ -204,6 +220,7 @@ cdoc    Returns a 2-D grid. Inputs include the extension and time window.
         endif
 
         call get_directory(ext,directory,len_dir)
+
 
         do i = 1,31
             if(ext(i:i) .eq. ' ')goto20
@@ -599,13 +616,17 @@ cdoc    Returns a 3-D fcst grid. Inputs include directory, initial and valid tim
         if(len.gt.3)then    !this tests whether ext is truely an extension or not.
            directory = ext
            call s_len(directory,len_dir)
+c
+c code section below needs more when we reverse the fdda subdirectory
+c order (ie., from fsf/"model" to "model"/fsf)
+c
            if(directory(len_dir:len_dir).eq.'/')then
               len_dir=len_dir-1
               directory=directory(1:len_dir)
            endif
            call get_directory_length(directory,len)
            if(directory(len+1:len_dir).eq.'lga')then
-              ext_int='lga'
+                 ext_int='lga'
            else
               do l=1,nfdda
                  if(directory(len+1:len_dir).eq.
@@ -632,7 +653,8 @@ cdoc    Returns a 3-D fcst grid. Inputs include directory, initial and valid tim
      1,var_2d
 11      format(' Reading 3d ',a,1x,a5,1x,a3)
 
-        do k = 1,kmax
+        if(kmax.gt.1)then
+          do k = 1,kmax
             units_3d(k)   = units_2d
             if(ltest_vertical_grid('HEIGHT'))then
                 lvl_3d(k) = zcoord_of_level(k)/10
@@ -650,15 +672,25 @@ cdoc    Returns a 3-D fcst grid. Inputs include directory, initial and valid tim
 
             var_3d(k) = var_2d
 
-        enddo ! k
+          enddo ! k
 
-        CALL READ_LAPS(I4TIME,I4_VALID,DIRECTORY,EXT_INT,imax,jmax,
+
+          CALL READ_LAPS(I4TIME,I4_VALID,DIRECTORY,EXT_INT,imax,jmax,
      1  kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
      1                     COMMENT_3D,field_3d,ISTATUS)
 
-        comment_2d=comment_3d(1)
-        units_2d=units_3d(1)
+          comment_2d=comment_3d(1)
+          units_2d=units_3d(1)
 
+        else
+
+
+          CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT_INT
+     1,imax,jmax,1,1,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_2D
+     1, COMMENT_2D,field_3d,ISTATUS)
+
+
+        endif
         return
         end
 
@@ -1244,6 +1276,7 @@ c
         integer jf,jr,imiss
 
         character*255 c_filespec
+        character*125 comment_2d_save(max_lvd_files)
         character*120 c_fnames(max_files)
         integer i4times(max_files)
         integer i4times_data(max_lvd_files)
@@ -1347,6 +1380,7 @@ c                           return
                  pctmiss(jf)=float(imiss)/float(imax*jmax)
                  asc9_time(jf)=asc9_tim
                  i4times_data(jf)=i4times(j)
+                 comment_2d_save(jf)=comment_2d
 
               endif
 
@@ -1390,6 +1424,7 @@ c
         print*,'Returning requested field from',
      1' get_laps_lvd    ',asc9_time(jf),'     ',var_2d
         i4time_nearest=i4times_data(jf)
+        comment_2d=comment_2d_save(jf)
         istatus = 1
 
         return 

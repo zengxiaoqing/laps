@@ -111,11 +111,13 @@ cdis
 
 c if lga is the first in the list then we'll force this to be the
 c only possible background returned from get_modelfg_2/3d..
-        elseif(fdda_model_source(1).eq.'lga')then
-           n_fdda_models = 1
-           subdir(n_fdda_models)=c_bkgd_ext(2)
-           ext_a(n_fdda_models) =c_bkgd_ext(2)
-           lgab=.true.
+c removed functionality 12-06-01 (JRS)
+c       elseif(fdda_model_source(1).eq.'lga')then
+c          n_fdda_models = 1
+c          subdir(n_fdda_models)=c_bkgd_ext(2)
+c          ext_a(n_fdda_models) =c_bkgd_ext(2)
+c          lgab=.true.
+
         else
            do i=1,n_fdda_models
               subdir(i)=fdda_model_source(i)
@@ -136,12 +138,10 @@ c this part adds lga/b to the list since it isn't already  part of it.
            else
               print*,'*** WARNING *** '
               print*,'Cannot add lga/b to model background list in'
-     .,'get_modelfg_3d'
+     .,'get_modelfg_3d, n_fdda_models > maxbgmodels'
            endif
         endif
            
-
-
         do isource = 1,n_fdda_models
 
            call make_fnam_lp(i4time_needed,a9_time,istatus)
@@ -190,6 +190,7 @@ c this part adds lga/b to the list since it isn't already  part of it.
 
 
         call get_directory(ext_a,directory,lend)
+c Here -> reverse the directory order from "model/fua" to "fua/model"
         if(ext_a.ne.'lga'.and.ext_a.ne.'lgb')then
            call s_len(subdir,ld)
            directory = directory(1:lend)//subdir(1:ld)//'/'
@@ -248,14 +249,13 @@ c new: changed variable name "ext" to "directory".
 
                 else
 
-c removed this since "directory" needed; therefore, using get_2dgrid_dname.
-c                 call get_lapsdata_2d(i4_initial,i4_valid,directory
-c    1              ,var_2d,units_2d,comment_2d,imax,jmax
-c    1              ,field_3d_laps(1,1,1),istatus)
+                  call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1              ,var_2d,units_2d,comment_2d,imax,jmax
+     1              ,field_3d_laps(1,1,1),istatus)
 
-                  call get_2dgrid_dname(directory
-     1         ,i4_fn,0,i4time_nearest,EXT,var_2d,units_2d
-     1         ,comment_2d,imax,jmax,field_3d_laps(1,1,1),0,istatus)
+c                 call get_2dgrid_dname(directory
+c    1         ,i4_fn,0,i4time_nearest,EXT,var_2d,units_2d
+c    1         ,comment_2d,imax,jmax,field_3d_laps(1,1,1),0,istatus)
 
 
                 endif
