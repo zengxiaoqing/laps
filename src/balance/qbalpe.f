@@ -714,7 +714,8 @@ c truth profile and compute an average analysis error
          allocate(udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz))
 
 c  create dropsond profiles for testing....comment out read pig,tmg
-         call readpig(a9_time,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
+         call readpig(a9_time,nx,ny,lat,lon
+     1,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
          if(istatus.eq.-3)then
             print*,'Error returned: readpig.'
             print*,'Dropsonde analysis not performed.'
@@ -3070,7 +3071,8 @@ c--------------------------------------------------
 cc
 c------------------------------------------------------------
 cc
-      subroutine readpig(a9_time,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
+      subroutine readpig(a9_time,nx,ny,lat,lon
+     &,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
 
 c this subroutine reads the .pig and .tmg files to recover observed  
 c u, v, bnd T profiles, the decimal i,j locations at the nz LAPS levels 
@@ -3089,6 +3091,7 @@ c
       logical lexist
       real, allocatable, dimension(:) :: ri,rj,rk,dd,ff
      1,tt,uu,vv
+      real lat(nx,ny),lon(nx,ny)
 
       integer mxz
       parameter(mxz=300)
@@ -3130,9 +3133,17 @@ c
         endif
 c convert dd ff to u,v
         do n=1,nsave
-        ang=rdpdg*(dd(n)-270.)
-         uu(n)=ff(n)/.515*cos(ang)
-         vv(n)=-ff(n)/.515*sin(ang)
+           call disp_to_uv(dd(n),ff(n),uu(n),vv(n))
+           call rlapsgrid_to_latlon(ri(n),rj(n),lat,lon,nx,ny
+     1,rlat,rlon,istatll)
+           call uvtrue_to_uvgrid(
+     1            uu(n),vv(n)
+     1           ,uu(n),vv(n)
+     1           ,rlon)
+
+c        ang=rdpdg*(dd(n)-270.)
+c        uu(n)=ff(n)/.515*cos(ang)
+c        vv(n)=-ff(n)/.515*sin(ang)
         enddo
 c since dropsonde is reverse order, flip it.
         if(rk(1).gt.rk(nsave))then
@@ -3300,6 +3311,8 @@ c dropsonde instrument error, oberru
       real, allocatable, dimension(:) :: ri,rj,rk,dd,ff
      1,ut,vt,Tt,wt,pht
 
+      logical lfndref
+
       allocate(ri(300),rj(300),rk(300))
       allocate(dd(300),ff(300))
       allocate(ut(nz),vt(nz),Tt(nz),wt(nz),pht(nz))
@@ -3412,6 +3425,7 @@ c height level (k) and truth number (n)
       enddo! on n
 c now analysis errors with a different ensemble of truth estimates
       do n=4,nx
+       lfndref=.false.
        do k=1,nz
 c create truth profiles using guassian random numbers
         if(udrop(k).eq.smsng) go to 2
@@ -3425,7 +3439,9 @@ c integrate hypsometric eqn to recover heights
          if(zter.gt.errt(1,5,k-1)) then
           pht(k)=errt(1,5,k-1)+r*tave/g*alog(p(k-1)/p(k))
          else
+          if(.not.lfndref)pht(k-1)=errt(1,5,k-1)
           pht(k)=pht(k-1)+r*tave/g*alog(p(k-1)/p(k))
+          lfndref=.true.
          endif
          
          
