@@ -91,9 +91,10 @@
 ----------------- 1.0  General LAPS info --------------------------------------
 
      Below is a description of the tar file containing the LAPS data ingest and
-     analysis code. The predictive component of LAPS (MM5 or RAMS) is
-     distributed separately. The main FSL contact for this is 
-     Paul Schultz (schultz@fsl.noaa.gov). 
+     analysis code. The predictive component of LAPS (MM5, RAMS/SFM, ETA) is
+     set up separately. The main FSL contacts for information on how we
+     use the analyses to initialize the forecasts are as follows: Brent Shaw 
+     for MM5, Paul Schultz for RAMS/SFM, and Adrian Marroquin for ETA.     
 
      Please note that FSL provides support for LAPS software only if a prior
      agreement is made to that effect. Additionally, questions concerning LAPS
@@ -101,7 +102,7 @@
      support older versions of LAPS code. It is also recommended that LAPS 
      users try to take advantage of the latest LAPS updates by periodically 
      importing a fresh tar file every few months or so. Please check the
-     release notes at http://laps.fsl.noaa.gov/software/release_notes.html
+     LAPS Software Page at 'http://laps.fsl.noaa.gov/cgi/LAPS_SOFTWARE.cgi'
      for information about recent releases.
 
 ---------- 2.0 Installing and running the LAPS Ingest/Analysis code -----------
