@@ -239,6 +239,11 @@ PROGRAM lfmpost
     ALLOCATE ( shflux       ( nx , ny ) )
     ALLOCATE ( lhflux       ( nx , ny ) )
     ALLOCATE ( ground_t     ( nx , ny ) )
+    ALLOCATE ( vnt_index      ( nx , ny ) )
+    ALLOCATE ( ham_index       ( nx , ny ) )
+    ALLOCATE ( hah_index       ( nx , ny ) )
+    ALLOCATE ( fwi_index        ( nx , ny ) )
+
     IF (make_v5d) ALLOCATE ( abs_vort (nx,ny,kprs))
     IF (make_v5d) ALLOCATE ( thick_10_5 (nx,ny)) 
     IF (make_v5d) ALLOCATE ( snowcover (nx,ny))
@@ -314,6 +319,7 @@ PROGRAM lfmpost
                             cldamt,ceiling,echo_tops,max_refl,refl_sfc, &
                             pcptype_sfc,srhel,liftedind,heatind,visibility,&
                             terdot,lwout,swout,shflux,lhflux,pblhgt,ground_t,&
+                            vnt_index,ham_index,hah_index,fwi_index,&
                             prslvl*0.01,lfmprd_dir,laps_data_root,domain_num,&
                             laps_reftime,laps_valtime,nx,ny,kprs,realtime, &
                             write_to_lapsdir,model_name)
@@ -587,6 +593,11 @@ PROGRAM lfmpost
     DEALLOCATE ( rainmrsfc )
     DEALLOCATE ( snowmrsfc )
     DEALLOCATE ( graupmrsfc )
+    DEALLOCATE ( vnt_index)
+    DEALLOCATE ( ham_index )
+    DEALLOCATE ( hah_index )
+    DEALLOCATE ( fwi_index )
+
     IF (make_v5d) THEN
       DEALLOCATE (abs_vort)
       DEALLOCATE (thick_10_5)

@@ -39,6 +39,7 @@
                                   s01, sto, th, the, pbe, nbe, lcv, cce, lmt, &
                                   lmr, llr, spt, lhe, li, hi, vis, terdot, &
                                   lwout,swout,shflux,lhflux,pblhgt,ground_t,&
+                                  vnt,ham,hah,fwi, &
                                   press_levels, &
                                   lfmprd_dir, laps_data_root, domnum, &
                                   laps_reftime, laps_valtime, nx, ny, nz, &
@@ -128,6 +129,11 @@
     REAL, INTENT(IN)                :: lhflux( nx , ny )
     REAL, INTENT(IN)                :: pblhgt( nx , ny )
     REAL, INTENT(IN)                :: ground_t( nx , ny )
+    REAL, INTENT(IN)                :: vnt   ( nx , ny )
+    REAL, INTENT(IN)                :: ham   ( nx , ny )
+    REAL, INTENT(IN)                :: hah   ( nx , ny )
+    REAL, INTENT(IN)                :: fwi   ( nx , ny )
+
     REAL, INTENT(IN)                :: press_levels (nz)
     CHARACTER(LEN=*),INTENT(IN)     :: lfmprd_dir 
     CHARACTER(LEN=*),INTENT(IN)     :: laps_data_root
@@ -140,7 +146,7 @@
     ! Locals
     CHARACTER(LEN=2)             :: domnum_str
     INTEGER, PARAMETER           :: nvar3d = 16 ! Equals # of 3d arrays above!
-    INTEGER, PARAMETER           :: nvar2d = 38 ! # of 2d arrays above!
+    INTEGER, PARAMETER           :: nvar2d = 42 ! # of 2d arrays above!
     REAL, ALLOCATABLE               :: laps_data ( : , : , : )
     INTEGER, ALLOCATABLE            :: levels ( : )
     CHARACTER(LEN=3),ALLOCATABLE    :: varname (: )
@@ -425,12 +431,12 @@
     startind = startind + 1
     laps_data(:,:,startind) = lil
     varname(startind) = 'LIL'
-    varcomment(startind) = 'Forecast integrated liquid water depth in m'
+    varcomment(startind) = 'Forecast integrated liquid water depth in mm'
 
     startind = startind + 1
     laps_data(:,:,startind) = tpw
     varname(startind) = 'TPW'
-    varcomment(startind) = 'Forecast total precipitable water depth in m'
+    varcomment(startind) = 'Forecast total precipitable water depth in mm'
 
     startind = startind + 1
     laps_data(:,:,startind) = r01
@@ -557,6 +563,26 @@
     laps_data(:,:,startind) = ground_t
     varname(startind) = 'TGD'
     varcomment(startind) = 'Forecast Ground Temperature'
+
+    startind = startind + 1
+    laps_data(:,:,startind) = vnt
+    varname(startind) = 'VNT'
+    varcomment(startind) = 'ventilation index          '
+
+    startind = startind + 1
+    laps_data(:,:,startind) = ham
+    varname(startind) = 'HAM'
+    varcomment(startind) = 'Mid-Level Haines Index     '
+
+    startind = startind + 1
+    laps_data(:,:,startind) = hah
+    varname(startind) = 'HAH'
+    varcomment(startind) = 'High-Level Haines Index    '
+
+    startind = startind + 1
+    laps_data(:,:,startind) = fwi
+    varname(startind) = 'FWI'
+    varcomment(startind) = 'Forsberg Fire Wx Index     '
 
     IF (.NOT. write_to_lapsdir) THEN
       output_dir = TRIM(lfmprd_dir) // '/d' // domnum_str // '/fsf/' 

@@ -54,7 +54,7 @@ RM=rm -f
 
 EXE=lfmpost.exe
 FSRC=lfmpost.f90 bint.f90 clouds.f90 integrated_liquid.f90 reflectivity.f90 \
-     met_functions.f90 interp_press_to_z.f90 \
+     met_functions.f90 interp_press_to_z.f90 model_pblhgt.f90 \
      snowfall.f90 wintprec.f90 helicity.f90 capecin.f90 the2t.f90 \
      output_laps_format.f90 smooth.f90 grib_sfc_vars.f90 grib_ua_vars.f90
 

@@ -258,6 +258,11 @@ CONTAINS
     varname(varindex) = 'PIC       '
     nlevels(varindex) = kprs
     varindex = varindex + 1    
+ 
+    ! Total Condensate
+    varname(varindex) = 'COND      '
+    nlevels(varindex) = kprs
+    varindex = varindex + 1
 
     ! Radar Reflectivity (fua/ref)
     varname(varindex) = 'REF       '
@@ -588,6 +593,7 @@ CONTAINS
     ! Local variables
     REAL, ALLOCATABLE       :: data2d(:,:)
     REAL, ALLOCATABLE       :: data3d(:,:,:)
+    REAL, ALLOCATABLE       :: condmr(:,:,:)
     INTEGER                 :: varindex
     INTEGER                 :: ret
    
@@ -694,6 +700,18 @@ CONTAINS
               varname(varindex)
     ret = v5dwrite(timestep,varindex,data3d)
     varindex = varindex + 1   
+
+    ! Generate total condensate field
+    ALLOCATE(condmr(nx,ny,kprs))
+    condmr = cldliqmr_prs + cldicemr_prs + rainmr_prs + snowmr_prs &
+             + graupelmr_prs
+    CALL post2v5d(condmr,nx,ny,kprs,data3d)
+    data3d = data3d * 1000.
+    PRINT '(2A)', 'V5DOUT: Writing condmr*1000 as varname: ',&
+              varname(varindex)
+    ret = v5dwrite(timestep,varindex,data3d)
+    DEALLOCATE(condmr)
+    varindex = varindex + 1
 
     CALL post2v5d(refl_prs,nx,ny,kprs,data3d)
     WHERE(data3d .LT. 0.) data3d = 0.
@@ -806,15 +824,15 @@ CONTAINS
     varindex = varindex + 1  
 
     CALL post2v5d(intliqwater,nx,ny,1,data2d)
-    data2d = data2d * 1000
-    PRINT '(2A)', 'V5DOUT: Writing intliqwater*1000 as varname: ',&
+    data2d = data2d
+    PRINT '(2A)', 'V5DOUT: Writing intliqwater (mm) as varname: ',&
               varname(varindex)
     ret = v5dwrite(timestep,varindex,data2d)
     varindex = varindex + 1 
 
     CALL post2v5d(totpcpwater,nx,ny,1,data2d)
-    data2d = data2d * 39.37
-    PRINT '(2A)', 'V5DOUT: Writing totpcpwater*39.37 as varname: ',&
+    data2d = data2d
+    PRINT '(2A)', 'V5DOUT: Writing totpcpwater (mm) as varname: ',&
               varname(varindex)
     ret = v5dwrite(timestep,varindex,data2d)
     varindex = varindex + 1  

@@ -141,6 +141,13 @@ MODULE postproc_lfm
   REAL, ALLOCATABLE, PUBLIC  :: rainmrsfc          ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: snowmrsfc          ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: graupmrsfc         ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: vnt_index          ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: ham_index          ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: hah_index          ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: fwi_index          ( : , : )
+
+
+
   REAL, PARAMETER            :: nonecode = 0.
   REAL, PARAMETER            :: raincode = 1.
   REAL, PARAMETER            :: snowcode = 2.
@@ -350,7 +357,9 @@ CONTAINS
     REAL                          :: dz, dtdz, pbot,tvbot,zbot     
     REAL, ALLOCATABLE             :: mrsfc(:,:)
     REAL, EXTERNAL                :: tcvp
+    LOGICAL                       :: made_pbl
 
+    made_pbl = .false.
     ! Get the 3D pressure
  
     IF (mtype .EQ. 'mm5') THEN
@@ -632,10 +641,12 @@ CONTAINS
    
        ! Get TH2 and convert to temperature if non-zero
        CALL get_wrfnc_2d(current_lun,'TH2','A',nx,ny,1,tsfc,status)
+       thetasfc = tsfc
        IF ((MINVAL(tsfc) .GT. 100.) .AND. (MAXVAL(tsfc) .LT. 1000.)) THEN
          tsfc = tsfc/((100000./psfc)**kappa)
        ELSE 
-         tsfc = 0.
+         tsfc = 0. 
+         thetasfc = 0.
        ENDIF
     ENDIF
     
@@ -684,6 +695,9 @@ CONTAINS
           dtdz = ( tsig(i,j,2) - tsig(i,j,1) ) / &
                  ( zsig(i,j,2) - zsig(i,j,1) ) 
           tsfc(i,j) = tsig(i,j,1) - dtdz*dz
+          IF (mtype .EQ. 'wrf') THEN
+            thetasfc(i,j) = potential_temp(tsfc(i,j),psfc(i,j))
+          ENDIF
         ENDDO
       ENDDO
     ELSE 
@@ -751,7 +765,10 @@ CONTAINS
 
      CALL get_mm5_2d(current_lun, 'PBL HGT  ', time_to_proc, pblhgt, &
                     'D   ', status)
-     IF (status .NE. 0) pblhgt(:,:) = 1.e37
+     IF ((status .NE. 0) .or. (maxval(pblhgt) .LE. 0))THEN
+       CALL model_pblhgt(thetasig,thetasfc,psig,zsig,terdot,nx,ny,ksigh,pblhgt)
+       made_pbl = .true.
+     ENDIF
 
      CALL get_mm5_2d(current_lun, 'GROUND T ', time_to_proc, ground_t, &
                     'D   ', status)
@@ -761,8 +778,9 @@ CONTAINS
      lwout(:,:) = 0.
      swout(:,:) = 0.
      CALL get_wrfnc_2d(current_lun,'HFX','A',nx,ny,1,shflux,status)
-     CALL get_wrfnc_2d(current_lun,'HFX','A',nx,ny,1,lhflux,status)
-     pblhgt(:,:) = 0.
+     CALL get_wrfnc_2d(current_lun,'QFX','A',nx,ny,1,lhflux,status)
+     CALL model_pblhgt(thetasig,thetasfc,psig,zsig,terdot,nx,ny,ksigh,pblhgt)
+     made_pbl = .true.
      CALL get_wrfnc_2d(current_lun,'TSK','A',nx,ny,1,ground_t,status)
    ENDIF
    IF (do_smoothing) THEN
@@ -771,7 +789,7 @@ CONTAINS
         CALL SMOOTH(swout,nx,ny,1,smth)
         CALL SMOOTH(shflux,nx,ny,1,smth)
         CALL SMOOTH(lhflux,nx,ny,1,smth)
-        CALL SMOOTH(pblhgt,nx,ny,1,smth)
+        IF (.NOT. made_pbl) CALL SMOOTH(pblhgt,nx,ny,1,smth)
         CALL SMOOTH(ground_t,nx,ny,1,smth)
      ENDDO
    ENDIF
@@ -1299,6 +1317,11 @@ CONTAINS
     ALLOCATE (condmr_sig(nx,ny,ksigh))
     condmr_sig = cldliqmr_sig + cldicemr_sig + snowmr_sig + rainmr_sig &
                  + graupelmr_sig
+print *, 'Calling integrated_liquid'
+print *, 'min/max condmr_sig = ',minval(condmr_sig),maxval(condmr_sig)
+print *, 'min/max mrsig = ',minval(mrsig),maxval(mrsig)
+print *, 'min/max rhodrysig = ', minval(rhodrysig),maxval(rhodrysig)
+print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
     CALL integrated_liquid(nx,ny,ksigh,condmr_sig,mrsig, rhodrysig,zsig,terdot, &
                            intliqwater,totpcpwater) 
     DEALLOCATE(condmr_sig)   
