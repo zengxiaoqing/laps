@@ -99,7 +99,7 @@ c
      &                   td(k), td_ea(k),          !dew point, dew point exp. accuracy
      &                   rh(k), rh_ea(k)           !Rel hum, rh expected accuracy
 c
-	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed
+	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed (kt)
      &                   ddg(k), ffg(k),           !wind gust dir, wind gust speed
      &                   dd_ea(k), ff_ea(k)        !dir expected accuracy, spd exp accuracy
 c
@@ -510,7 +510,7 @@ c
 c
 	  read(11,919) dum
 c
-	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed
+	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed (kt)
      &                   dummy, dummy,             !wind gust dir, wind gust speed
      &                   dd_ea(k), ff_ea(k)        !dir expected accuracy, spd exp accuracy
 c
