@@ -96,7 +96,7 @@
 '/home/lapb/smart/afgwc/laps/satellite/gmsdata/            ',
 
  L_CELL_AFWA= .FALSE. ,
- L_NATIONAL= .FALSE.,
+ L_NATIONAL= .TRUE.,
  ISKIP_BILIN = 1,
  ISATS=1,0,1,0,
  ITYPES=1,0,0,0,
