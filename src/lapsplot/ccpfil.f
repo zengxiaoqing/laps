@@ -77,7 +77,11 @@ C
       do i = 1,MREG
       do j = 1,NREG
           if(field_in(i,j) .eq. r_missing_data)then
-              ZREG(i,j) = scale * 0.96
+!             Test for 'linear' is proxy for rejecting X-sects
+!             We only want to color missing data values for H-sects
+              if(colortable .ne. 'linear')then
+                  ZREG(i,j) = scale * 0.96
+              endif
           elseif(ireverse .eq. 1)then
               ZREG(i,j) = scale - ZREG(i,j)
           endif
