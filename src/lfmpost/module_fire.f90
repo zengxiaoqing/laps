@@ -131,7 +131,7 @@ CONTAINS
       DO i = 1 , nx
       
         IF (p3d_mb(i,j,1) .lt. pmbbot) THEN
-          haines2d(i,j) = 0.
+          haines2d(i,j) = 1e37  !missing
         ELSE
     
           DO k = 2, nz
