@@ -6,36 +6,18 @@
 
 LAPSROOT=../../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = 
 
-
 DBLAPSLIBS = 
-
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .exe
 
 EXE = xfer_laps.exe
+
 SRC = xfer_laps.c fill_laps.c
-
-
-
-
-
 
 all: exe
 
