@@ -3,6 +3,7 @@
  l_use_vis_partial=.true.,
  l_use_vis_add=.true.,
  l_use_39=.true.,
+ l_use_metars=.true.,
  latency_co2=4000,
  pct_req_lvd_s8a=75.,
  i4_sat_window=1270,
@@ -22,6 +23,10 @@ c
 c l_use_39 - flag for whether to use 3.9 micron satellite data, the
 c            default is .true. This is still somewhat experimental, so this
 c            should be set back to .false. if any problems are suspected.
+c
+c l_use_metars - flag for whether to use METARs (surface stations) in the
+c                cloud fraction analysis. They are always used for internal 
+c                verification.
 c
 c latency_co2 - Allowed time lag (in seconds) for using CO2-Slicing satellite 
 c               data from the CTP file for cloud-top pressure information

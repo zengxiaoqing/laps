@@ -106,11 +106,15 @@ cdis
      1                           ,l_use_39,latency_co2                   ! O
      1                           ,pct_req_lvd_s8a                        ! O
      1                           ,i4_sat_window,i4_sat_window_offset     ! O
+     1                           ,namelist_parms                         ! O
      1                           ,istatus)                               ! O
 
-       logical l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 
+       include 'cloud.inc'
+
+       logical l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39
+       logical l_use_metars 
        namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial       
-     1                    ,l_use_39, latency_co2
+     1                    ,l_use_39, l_use_metars, latency_co2
      1                    ,pct_req_lvd_s8a
      1                    ,i4_sat_window,i4_sat_window_offset
  
@@ -130,6 +134,9 @@ cdis
 
        print*,'success reading cloud_nl in ',filename
        write(*,cloud_nl)
+
+!      Fill namelist_parms data structure
+       namelist_parms%l_use_metars = l_use_metars
 
        istatus = 1
        return
