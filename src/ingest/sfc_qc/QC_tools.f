@@ -1,7 +1,7 @@
 c
 c
-        subroutine score(TT,XT,XB,TA,T,imax,scf,sca,scb,
-     &     thresh,qcstat,m,badflag)
+        subroutine score(TT,T,BB,XB,XT,TA,imax,scf,sca,scb,sco,
+     &                   thresh,qcstat,m,badflag)
 c
 c*********************************************************************
 c
@@ -11,17 +11,20 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       15 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          New version.
 c
 c     Notes:
 c
 c*********************************************************************
 c     
-        real TT(m),XT(m),TA(m),T(m),XB(m),thresh
-        integer scf(2,2),sca(2,2),scb(2,2),i,ii,jj,jjj,qcstat(m),iii 
+        real    TT(m),XT(m),TA(m),T(m),XB(m),BB(m),thresh
+        integer scf(2,2),sca(2,2),scb(2,2),sco(2,2)
+        integer i,ii,jj,jjj,qcstat(m),iii 
 c
         do i=1,imax
            if(qcstat(i).eq.1) go to 1
-           if(abs(TT(i)-T(i)).gt.thresh   ) then !ob is bad
+           if(abs(TT(i)-T(i)).gt.thresh ) then !ob is bad
               jj=2
            else
               jj=1
@@ -32,22 +35,29 @@ c
            else
               ii=1
            endif
-           if(abs(T(i)-XB(i)).gt.thresh) then !trend check tosses ob
+           if(abs(T(i)-XB(i)).gt.thresh) then !buddy check tosses ob
               iii=2
               qcstat(i)=qcstat(i)+1000
            else
               iii=1
            endif
-           if(abs(T(i)-TA(i)).gt.thresh) then !comb tosses 
+           if(abs(T(i)-TA(i)).gt.thresh) then !kalman optimum tosses 
               jjj=2
               qcstat(i)=qcstat(i)+100000
            else
               jjj=1
            endif
+           if(abs(T(i)-BB(i)).gt.thresh) then !obtend tosses 
+              iiii=2
+              qcstat(i)=qcstat(i)+100
+           else
+              iiii=1
+           endif
            scf(ii,jj)=scf(ii,jj)+1
            sca(jjj,jj)=sca(jjj,jj)+1
            scb(iii,jj)=scb(iii,jj)+1
- 1      enddo !i
+           sco(iiii,jj)=sco(iiii,jj)+1
+ 1      enddo
 c
         return
         end 
@@ -57,6 +67,9 @@ c
 c
 c*********************************************************************
 c
+c     Pulls out a random value from a normal distribution.  Input is
+c     an integer seed 'ii' and an interation number 'n'. 'n' should
+c     be >20 for best results.
 c     
 c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
@@ -69,7 +82,7 @@ c     Notes:
 c
 c*********************************************************************
 c
-      sum=0
+      sum=0.
       do l=1,n
          imix=9.*ran1(ii)+1
          do i=1,imix
@@ -84,7 +97,6 @@ c
 c
 c
       subroutine stats_qc(sc,m,n)
-
 c
 c*********************************************************************
 c
@@ -126,7 +138,7 @@ c
          tss=float(sc(2,2))/float(sc(2,2)+sc(1,2))-float(sc(2,1))
      1        /float(sc(1,1)+sc(2,1))
       endif 
-      write(*,1000) pbot,pbok,pgot,pgok,csi,tss
+      write(6,1000) pbot,pbok,pgot,pgok,csi,tss
  1000 format(/1x,'Fraction of bad obs tossed/kept ',2f6.3/
      1     1x,'Fraction of good obs tossed/kept ',2f6.3/
      2     1x,'CSI = ',f6.3,'  TSS = ',f6.3)
@@ -146,6 +158,8 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       15 Dec 1999  Peter Stamus, NOAA/FSL
+c          Housekeeping...change 'if' structure in do loop.
 c
 c     Notes:
 c
@@ -164,13 +178,13 @@ c
         do l=1,maxstn
            if(t(l).eq.badflag) then
               theta(l)= badflag
-              go to 1
+           else
+              tbar=2.*Tstd+stdlps*elev(l)
+              ppp=pstd*exp(-elev(l)*g/rr/tbar)
+              theta(l)=((t(l)-32.)*.5555556+273.16) * 
+     &                 (1000./ppp)**kappa - 273.16
            endif
-           tbar=2.*Tstd+stdlps*elev(l)
-           ppp=pstd*exp(-elev(l)*g/rr/tbar)
- 2         theta(l)=((t(l)-32.)*.5555556+273.16)*(1000./ppp)**kappa
-     &          -273.16
- 1      enddo !on l
+        enddo !on l
 c
         return
         end
@@ -186,6 +200,8 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       15 Dec 1999  Peter Stamus, NOAA/FSL
+c          Housekeeping...restructure 'if' block in do loop.
 c
 c     Notes:
 c
@@ -202,15 +218,15 @@ c
         g=9.808
         rr=287.04
         do l=1,maxstn
-           if(theta(l).ne.badflag) then
+           if(theta(l).eq.badflag) then
+              t(l)=badflag
+           else 
               tbar=2.*Tstd+stdlps*elev(l)
               ppp=pstd*exp(-elev(l)*g/rr/tbar)
- 2            t(l)   =((ppp/1000.)**(kappa)*(theta(l)+273.16)
-     &             -273.16)/.5555556 +32.
-           else 
-              t(l)=badflag
+              t(l) = ( (ppp/1000.)**(kappa) * 
+     &               (theta(l)+273.16) - 273.16 ) / .5555556 + 32.
            endif
- 1      enddo !on l
+        enddo !on l
 c
         return
         end
@@ -225,6 +241,8 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       15 Dec 1999  Peter Stamus, NOAA/FSL
+c          Housekeeping...restructure 'if' block in do loop.
 c
 c     Notes:
 c
@@ -237,13 +255,13 @@ c
             if(dd(l).le.badflag.or.ff(l).le.badflag) then
                u(l)=badflag
                v(l)=badflag
-               go to 1
+            else
+               ang=dd(l)-270.
+               ang=rdpdg*ang
+               u(l)=cos(ang)*ff(l)
+               v(l)=-sin(ang)*ff(l)
             endif
-            ang=dd(l)-270.
-            ang=rdpdg*ang
-            u(l)=cos(ang)*ff(l)
-            v(l)=-sin(ang)*ff(l)
- 1       enddo !on l
+         enddo !on l
 c
          return
          end 
@@ -462,6 +480,8 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       15 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          Add to write code 'if' block (1000 format).
 c
 c     Notes:
 c
@@ -482,13 +502,14 @@ c
         thmn=-1./1000.
         call regress(elev,theta,maxsta,m,thlapse,sint,thmx,thmn)
         call regress(elev,t,maxsta,m,lapse,sintt,tmx,tmn)
+c
 c compute avg variable 
-        tbar=0
-        ebar=0
+        tbar=0.
+        ebar=0.
         cnt=0.
         do i=1,maxsta
            if (t(i).ne.badflag) then
-              cnt=cnt+1
+              cnt=cnt+1.
               tbar=tbar+t(i)
               ebar=ebar+elev(i)
            endif
@@ -513,9 +534,14 @@ c compute avg variable
                  sum=tab(iii)*(t(j)-(tbar+lapse*(elev(j)-ebar)))+sum     
                  sumwt=tab(iii)+sumwt
  3            enddo !on j
-              if(sumwt.ne.0) t(i)=sum/sumwt+tbar+(elev(i)-ebar)*lapse
-              write(*,1000) stn(i), t(i)
- 1000         format(1x,'Replaced missing ob at stn ',a5,1x,F8.3) 
+              if(sumwt .ne. 0.) then
+                 t(i)=sum/sumwt+tbar+(elev(i)-ebar)*lapse
+                 write(6,1000) i, stn(i), t(i)
+ 1000            format(1x,' Replaced missing ob at stn ',i5,1x,a5,
+     &                  ' with ',F8.3) 
+              else
+                 write(6,*) ' No fill possible for station ', i
+              endif
            endif 
         enddo !i
 c
@@ -528,10 +554,10 @@ c
 c
 c*********************************************************************
 c
-c     returns a buddy check value for a statation location not
-c     using the station value
-c     uses a pass for theta analysis then the variable
-c     tmx and tmn are the extremes of the variable lapse rate in unit/m)
+c     Returns a buddy check value for a station location not using 
+c     the station value.  Instead, it uses a pass for theta analysis 
+c     then the variable tmx and tmn are the extremes of the variable 
+c     lapse rate in unit/m .
 c     
 c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
@@ -558,13 +584,14 @@ c
         thmn=-1./1000.
         call regress(elev,theta,maxsta,m,thlapse,sint,thmx,thmn)
         call regress(elev,t,maxsta,m,lapse,sintt,tmx,tmn)
+c
 c     compute avg variable 
-        tbar=0
-        ebar=0
+        tbar=0.
+        ebar=0.
         cnt=0.
         do i=1,maxsta
            if (t(i).ne.badflag) then
-              cnt=cnt+1
+              cnt=cnt+1.
               tbar=tbar+t(i)
               ebar=ebar+elev(i)
            endif
@@ -589,8 +616,8 @@ c     compute avg variable
               sum=tab(iii)*(t(j)-(tbar+lapse*(elev(j)-ebar)))+sum     
               sumwt=tab(iii)+sumwt
  3         enddo !on j
-           if(sumwt.ne.0) tfl(i)=sum/sumwt+tbar+
-     &          (elev(i)-ebar)*lapse
+           if(sumwt.ne.0) tfl(i) = sum/sumwt + tbar + 
+     &                             (elev(i) - ebar) * lapse
         enddo !on i
         do i=1,maxsta 
            t(i)=tfl(i)
@@ -617,11 +644,11 @@ c
         parameter (badflag=-99.9)
         real t(m),elev(m)
 c     
-        sum=0
-        sum1=0
-        sum2=0
-        sum12=0
-        sum11=0
+        sum=0.
+        sum1=0.
+        sum2=0.
+        sum12=0.
+        sum11=0.
         do i=1,imax
            if(t(i).eq.badflag) go to 1
            sum12=t(i)*elev(i)+sum12
@@ -637,6 +664,7 @@ c
            slp=smn
         endif
         if(slp.gt.smx) then
+           slp = smx
 c       write(6,1001) slp,smx
 c           write(6,1001) slp,sint
         endif
@@ -647,7 +675,7 @@ c
         end
 c
 c
-        subroutine qcset(t,ta,qcstat,m,maxsta,badflag,gross)
+        subroutine qcset(t,ta,ncm,qcstat,m,maxsta,badflag,gross)
 c
 c*********************************************************************
 c
@@ -659,25 +687,35 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       15 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          New version.
 c
 c     Notes:
 c
 c*********************************************************************
 c
+        real t(m), ta(m), ncm(m)
         integer qcstat(m)
-        real t(m),ta(m)
 c
         do i=1,maxsta
-           qcstat(i)=0
-           if (t(i).eq.badflag) then
-              qcstat(i)=1
+           qcstat(i) = 0
+           if(t(i) .eq. badflag) then
+              qcstat(i) = 1
+              ncm(i) = ncm(i) + 1.
            else
-              if (abs(t(i)-ta(i)).gt.gross) then
-                 qcstat(i)=10
-                 write(*,*) 'qcset:stn',i,t(i),
-     &                ' fails gross chk relative',' to estimate ',ta(i)
+              if(ta(i) .ne. badflag) then
+                 if(abs(t(i)-ta(i)) .gt. gross) then
+                    qcstat(i) = 10
+                    write(6,*) ' qcset:stn ',i,t(i),
+     &                         ' fails gross error ck relative to ',
+     &                         'estimate ',ta(i),' :ob replaced.'
+                    t(i) = ta(i)
+                    ncm(i) = ncm(i) + 1.
+                 else
+                    ncm(i) = 0.
+                 endif
               endif
-           endif 
+           endif
         enddo !i
 c
         return
@@ -724,7 +762,7 @@ c     Notes:
 c
 c*********************************************************************
 c
-        integer*4 ia(m),ib(m)
+        integer ia(m),ib(m)
 c
         do i=1,imax
            ib(i)=ia(i)
@@ -734,8 +772,8 @@ c
         end 
 c
 c
-        Subroutine errorproc(dt,y,xt,x,wr,vr,ar,imax,m,qcstat,oberr,
-     &     badthr,atime,icnt,nvar)
+        Subroutine errorproc(dt,y,by,md,xt,x,wr,vr,ar,imax,m,qcstat,
+     &                  oberr,wm,wo,wb,length,badthr,atime,icnt,nvar)
 c
 c*********************************************************************
 c
@@ -746,19 +784,23 @@ c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
 c       07 Oct 1998  Peter Stamus, NOAA/FSL
 c          Change 'ran' to 'ran1' function for portability.
+c       15 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          New version.
 c
 c     Notes:
 c
 c*********************************************************************
 c
         parameter(badflag=-99.9)    
-        real dt(m),y(m),xt(m),x(m),wr(m),vr(m),ar(m),me,oe,ce
-        real tdt(m),b(m),tmb(m),tob(m),tcb(m),
-     &        tmr(m),tor(m),tcr(m),totr(m),totb(m)
-        integer sca(2,2),scf(2,2),scb(2,2),imax,qcstat(m),on,off
-        integer scat(2,2),scft(2,2),scbt(2,2)
+        real dt(m),y(m),xt(m),by(m),md(m),x(m),wr(m),vr(m),ar(m)
+        real me,oe,ce
+        real wm(m),wo(m),wb(m)
+        real tdt(m),b(m),tmb(m),tob(m),tcb(m),tmr(m),tor(m),tcr(m)
+        real totr(m),totb(m)
+        integer sca(2,2),scf(2,2),scb(2,2),sco(2,2),imax,qcstat(m)
+        integer scat(2,2),scft(2,2),scbt(2,2),scot(2,2),on,off
 c
-c truth routine and missing ob replacement
+c.....  Truth routine and missing ob replacement
 c
         icnt=icnt+1 
         iiiii=icnt
@@ -772,22 +814,18 @@ c
         endif
         thresh=oberr*badthr 
         do i=1,imax
-           ii = i * 7 + 11
-           iiiii=ran1(ii)*2000000.-1000000.
+           iiiii=ran1(iiiii)*2000000.-1000000.
            if (dt(i).ne.badflag) then
-              tdt(i)=.25*(dt(i)-oberr*ffz(iiiii,20))+
-     &             .25*(xt(i)-me*ffz(iiiii,20))+
-     &             .25*(x(i)-ce*ffz(iiiii,20))+
-     &             .25*(y(i)-oe*ffz(iiiii,20))
+              tdt(i)=dt(i)-oberr*ffz(iiiii,20)
            else
-              tdt(i)=
-     &             .3333*(xt(i)-me*ffz(iiiii,20))+
-     &             .3333*(x(i)-ce*ffz(iiiii,20))+
-     &             .3333*(y(i)-oe*ffz(iiiii,20))
+              tdt(i) =
+     &           .3333*(xt(i)-me*ffz(iiiii,20)) +
+     &           .3333*( x(i)-ce*ffz(iiiii,20)) +
+     &           .3333*( y(i)-oe*ffz(iiiii,20))
            endif
         enddo !i
 c
-c Compute performance stats
+c.....  Compute performance stats
 c
         stdwr=0.
         stdar=0.
@@ -795,36 +833,60 @@ c
         stdfo=0.
         stdco=0.
         stdoo=0.
-        sumfo=0
-        sumco=0
+        sumfo=0.
+        sumco=0.
         sumoo=0.
         sumvr=0.
-        sumwr=0
-        sumar=0
-        sumtot=0
-        sumtotb=0
+        sumwr=0.
+        sumar=0.
+        sumtot=0.
+        sumtotb=0.
+        sum1=0.
+        sum2=0.
+        sum3=0.
         do i=1,imax
-           sumtot=sumtot+1
+           sumtot=sumtot+1.
            WR(i)=xt(i)-tdt(i)
            sumwr=sumwr+WR(i)
            stdwr=WR(i)*WR(i)+stdwr
-           VR(i)=y(i)-tdt(i)
+           if(dt(i).ne.badflag) then 
+              VR(i)=dt(i)-tdt(i)
+           else 
+              VR(i)=oberr*(-1.)**(int(10.*ran1(i)+1.))
+           endif 
            sumvr=sumvr+VR(i)
            stdvr=VR(i)*VR(i)+stdvr
            AR(i)=X(i)-TdT(i)
            sumar=sumar+AR(i)
            stdar=AR(i)*AR(i)+stdar
-           if(dt(i).eq.badflag)go to 5
+c
+c  do kalmod errors
+           wo(i)=(y(i)-tdt(i))**2+float(length-1)*wo(i)**2
+           wo(i)=sqrt(wo(i)/float(length))
+           wb(i)=(by(i)-tdt(i))**2+float(length-1)*wb(i)**2
+           wb(i)=sqrt(wb(i)/float(length))
+           wm(i)=(md(i)-tdt(i))**2+float(length-1)*wm(i)**2
+           wm(i)=sqrt(wm(i)/float(length))
+           sum1=sum1+wo(i)
+           sum2=sum2+wb(i)
+           sum3=sum3+wm(i)
+c     write(6,*) 'KALMOD ERRORS - OB - BUD - MOD :',i,wo(i),wb(i),wm(i)
+           if(dt(i).eq.badflag) go to 5
            sumco=X(i)-dT(i)+sumco
            sumfo=XT(i)-dT(i)+sumfo
-           sumoo= Y(i)-dT(i)+sumoo
            stdfo=(XT(i)-dT(i))**2+stdfo
            stdco=(X(i)-dT(i))**2+stdco
-           stdoo=(y(i)-dt(i))**2+stdoo
-           sumtotb=sumtotb+1
+           sumtotb=sumtotb+1.
            b(i)=dt(i)
  5         continue   
         enddo !i
+c
+        print*,'OVERALL FRACTION OB,BUD,NWP '
+        Write(6,*) 'OVERALL FRACTION OB,BUD,NWP '
+        print*,.5*(sum2+sum3)/(sum1+sum2+sum3),.5*(sum1+sum3)/
+     1       (sum1+sum2+sum3),.5*(sum1+sum2)/(sum1+sum2+sum3) 
+        Write(6,*) .5*(sum2+sum3)/(sum1+sum2+sum3),.5*(sum1+sum3)/
+     1       (sum1+sum2+sum3),.5*(sum1+sum2)/(sum1+sum2+sum3) 
         tmb(nvar)=tmb(nvar)+sumwr
         tob(nvar)=tob(nvar)+sumvr 
         tcb(nvar)=tcb(nvar)+sumar
@@ -833,7 +895,7 @@ c
         tcr(nvar)=tcr(nvar)+stdar
         totr(nvar)=totr(nvar)+sumtot
         totb(nvar)=totb(nvar)+sumtot 
-        if(sumtot.eq.0) then
+        if(sumtot.eq.0.) then
            stdar=badflag
            stdvr=badflag
            stdwr=badflag
@@ -848,7 +910,7 @@ c
            sumar=sumar/sumtot
            sumwr=sumwr/sumtot
         endif
-        if(sumtotb.eq.0) then
+        if(sumtotb.eq.0.) then
            stdco=badflag
            stdfo=badflag
            stdoo=badflag
@@ -863,70 +925,74 @@ c
            sumfo=sumfo/sumtotb
            sumoo=sumoo/sumtotb
         endif
-        write(*,1061) stdwr,sumwr,stdvr,sumvr,stdar,sumar,stdfo,
-     &       sumfo,stdoo,sumoo,stdco,sumco 
+        write(6,1061) stdwr,sumwr,stdvr,sumvr,stdar,sumar,stdfo,
+     &       sumfo,stdco,sumco 
  1061   format(1x,'RMS/Bias errors for truth and observation estimates'/
-     &       1x,'Model guess - truth RMS ',f8.3,' Bias ',f8.3/
-     &       1x,'Observ guess- truth RMS ',f8.3,' Bias ',f8.3/
-     &       1x,'Combin guess- truth RMS ',f8.3,' Bias ',f8.3/
-     &       1x,'Model guess - obser RMS ',f8.3,' Bias ',f8.3/
-     &       1x,'Obser guess - obser RMS ',f8.3,' Bias ',f8.3/
-     &       1x,'Combin guess- obser RMS ',f8.3,' Bias ',f8.3)
-        write(*,*) 'RUNNING BIAS AND RMS BY VARIABLE' 
-        write(*,*) 'MODEL ',(tmb(nvar)/totb(nvar)),sqrt(tmr(nvar)/totr(
+     &       1x,'F X = XT    - truth RMS ',f8.3,' Bias ',f8.3/
+     &       1x,'Observ      - truth RMS ',f8.3,' Bias ',f8.3/
+     &       1x,'Kalman X    - truth RMS ',f8.3,' Bias ',f8.3/
+     &       1x,'F X = XT    - obser RMS ',f8.3,' Bias ',f8.3/
+     &       1x,'Kalman X    - obser RMS ',f8.3,' Bias ',f8.3)
+        write(6,*) 'RUNNING BIAS AND RMS BY VARIABLE' 
+        write(6,*) 'FX=XT ',(tmb(nvar)/totb(nvar)),sqrt(tmr(nvar)/totr(
      &                            nvar))
-        write(*,*) 'OBSER ',(tob(nvar)/totb(nvar)),sqrt(tor(nvar)/totr(
+        write(6,*) 'OBSER ',(tob(nvar)/totb(nvar)),sqrt(tor(nvar)/totr(
      &                            nvar))
-        write(*,*) 'COMBD ',(tcb(nvar)/totb(nvar)),sqrt(tcr(nvar)/totr(
+        write(6,*) 'KAL X ',(tcb(nvar)/totb(nvar)),sqrt(tcr(nvar)/totr(
      &                            nvar))
  1000   format(1x,'TRUE VALUES FOR TIME ',i4)
 c
-c     call writev(Y,imax,1 ,m,'OBSER GUESSS',atime,on,offset)
-c     call writev(x,imax,1,m,'COMB EST    ',atime,on,offset)
-c     call writev(TdT,imax,1,m,'TRUTH       ',atime,on,offset)
-c     call writev(WR,imax,1,m,'MODEL ERROR ',atime,on,0.)
-c     call writev(VR,imax,1,m,'OBSER GSS ER',atime,on,0.)
 c zero out scoring arraYs
         do i=1,2
         do j=1,2
            scf(i,j)=0
            scb(i,j)=0
            sca(i,j)=0 
+           sco(i,j)=0
         enddo !j
         enddo !i
-        call score(TdT,XT,Y,x,b,imax,scf,sca,scb,thresh,qcstat,m,
-     &             badflag)
-        write(*,*) 'CONTINGECY TABLES FOR ERROR THRESHOLD OF ',thresh 
-        write(*,1008) scf(1,1), scf(1,2), scf(2,1),scf(2,2)
- 1008   format(//1x,'QC EFFICIENCY FOR MD'/14x,' GOOD OB    BAD OB'
-     1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats_qc(scf,2,2)
-        write(*,1010) scb(1,1), scb(1,2), scb(2,1),scb(2,2)
- 1010   format(//1x,'QC EFFICIENCY FOR OB'/14x,' GOOD OB    BAD OB'
-     1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats_qc(scb,2,2)
-        write(*,1009) sca(1,1), sca(1,2), sca(2,1),sca(2,2)
- 1009   format(//1x,'QC EFFICIENCY FOR CM'/14x,' GOOD OB    BAD OB'
-     1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
+        call score(tdt,b,y,by,md,xt,imax,scf,sca,scb,sco,
+     1       thresh,qcstat,m,badflag)
+c     write(6,*) 'CONTINGECY TABLES FOR ERROR THRESHOLD OF ',thresh 
+c     write(6,1011) sco(1,1), sco(1,2), sco(2,1),sco(2,2)
+ 1011   format(//1x,'QC EFFICIENCY FOR OB TND'/14x,' GOOD OB    BAD OB'
+     1 //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
+c     call stats_qc(sco,2,2)
+c     write(6,1010) scb(1,1), scb(1,2), scb(2,1),scb(2,2)
+ 1010   format(//1x,'QC EFFICIENCY FOR BUDDY'/14x,' GOOD OB    BAD OB'
+     1 //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
+c     call stats_qc(scb,2,2)
+c     write(6,1008) scf(1,1), scf(1,2), scf(2,1),scf(2,2)
+ 1008   format(//1x,'QC EFFICIENCY FOR NWP    '/14x,' GOOD OB    BAD OB'
+     1 //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
+c     call stats_qc(scf,2,2)
+c     write(6,1009) sca(1,1), sca(1,2), sca(2,1),sca(2,2)
+ 1009   format(//1x,'QC EFFICIENCY FOR KAL XT '/14x,' GOOD OB    BAD OB'
+     1 //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
         do i=1,2
         do j=1,2
            scft(i,j)=scft(i,j)+scf(i,j)
            scbt(i,j)=scbt(i,j)+scb(i,j)
            scat(i,j)=scat(i,j)+sca(i,j)
+           scot(i,j)=scot(i,j)+sco(i,j)
         enddo !j
         enddo !i
-        write(*,1018) scft(1,1), scft(1,2), scft(2,1),scft(2,2)
- 1018   format(//1x,'CUM QC EFFNCY FOR MD'/14x,' GOOD OB    BAD OB'
-     1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats_qc(scft,2,2)
-        write(*,1020) scbt(1,1), scbt(1,2), scbt(2,1),scbt(2,2)
- 1020   format(//1x,'CUM QC EFFNCY FOR OB'/14x,' GOOD OB    BAD OB'
-     1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats_qc(scbt,2,2)
-        write(*,1019) scat(1,1), scat(1,2), scat(2,1),scat(2,2)
- 1019   format(//1x,'CUM QC EFFNCY FOR CM'/14x,' GOOD OB    BAD OB'
-     1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats_qc(scat,2,2)
+c     write(6,1021) scot(1,1), scot(1,2), scot(2,1),scot(2,2)
+ 1021   format(//1x,'CUM QC EFFNCY FOR OB TND'/14x,' GOOD OB    BAD OB'
+     1 //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
+c     call stats_qc(scot,2,2)
+c     write(6,1020) scbt(1,1), scbt(1,2), scbt(2,1),scbt(2,2)
+ 1020   format(//1x,'CUM QC EFFNCY FOR BUDDY'/14x,' GOOD OB    BAD OB'
+     1 //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
+c     call stats_qc(scbt,2,2)
+c     write(6,1018) scft(1,1), scft(1,2), scft(2,1),scft(2,2)
+ 1018   format(//1x,'CUM QC EFFNCY FOR NWP'/14x,' GOOD OB    BAD OB'
+     1 //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
+c     call stats_qc(scft,2,2)
+c     write(6,1019) scat(1,1), scat(1,2), scat(2,1),scat(2,2)
+ 1019   format(//1x,'CUM QC EFFNCY FOR XT'/14x,' GOOD OB    BAD OB'
+     1 //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
+c     call stats_qc(scat,2,2)
 c
         return
         end
@@ -1053,3 +1119,54 @@ c
 c
         return
         end
+c
+c
+        subroutine subob(a,b,c,ncm,h,imax,m,badflag)
+c
+c*********************************************************************
+c
+c     Original: John McGinley, NOAA/FSL  December 1999
+c     Changes:
+c       15 Dec 1999  Peter Stamus, NOAA/FSL
+c          Housekeeping changes for use in LAPS.
+c
+c     Notes:
+c
+c*********************************************************************
+c
+        real a(m),b(m),c(m),ncm(m),nsq,h,hsq    
+c
+        hsq=h*h
+        do i=1,imax
+           nsq=ncm(i)*ncm(i) 
+           if(a(i).eq.badflag) then
+              a(i)=(nsq*b(i)+hsq*c(i))/(nsq+hsq)
+           endif
+        enddo !i
+c
+        return
+        end 
+c
+c
+        subroutine replacemsng(a,b,imax,jmax,m,n,badflag)
+c
+c*********************************************************************
+c
+c     Original: John McGinley, NOAA/FSL  Spring 1998
+c     Changes:
+c       15 Dec 1999  Peter Stamus, NOAA/FSL
+c          Housekeeping changes for use in LAPS.
+c
+c     Notes:
+c
+c*********************************************************************
+c
+        real a(m,n),b(m,n)    
+        do j=1,jmax
+        do i=1,imax
+           if(b(i,j).eq.badflag) b(i,j)=a(i,j)
+        enddo !i
+        enddo !j
+c
+        return
+        end 
