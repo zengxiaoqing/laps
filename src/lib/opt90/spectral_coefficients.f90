@@ -742,14 +742,14 @@ CONTAINS
     !#--------------------------------------------------------------------------#
 
     ! -- Output an info message
-    WRITE( message, '( "FILE VERSION: ", i1, ".", i2.2, 2x, &
-                      &"N_CHANNELS=",i4 )' ) &
-                    file_release, file_version, &
-                    n_channels
-    CALL display_message( ROUTINE_NAME, &
-                          TRIM( message ), &
-                          INFORMATION, &
-                          message_log = message_log )
+!    WRITE( message, '( "FILE VERSION: ", i1, ".", i2.2, 2x, &
+!                      &"N_CHANNELS=",i4 )' ) &
+!                    file_release, file_version, &
+!                    n_channels
+!    CALL display_message( ROUTINE_NAME, &
+!                          TRIM( message ), &
+!                          INFORMATION, &
+!                          message_log = message_log )
  
     error_status = SUCCESS
 
@@ -1401,6 +1401,10 @@ END MODULE spectral_coefficients
 ! $State$
 !
 ! $Log$
+! Revision 1.1  2002/11/15 15:21:33  birk
+! Added to cvs mainly to see how this compiles on other platforms, it currently
+! seems to compile on the IBM
+!
 ! Revision 1.11  2001/08/31 21:11:41  paulv
 ! - Added MIN and MAX release/version parameters to allow for valid use of
 !   data files within a specified range.

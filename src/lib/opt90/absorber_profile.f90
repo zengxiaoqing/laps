@@ -870,7 +870,7 @@ CONTAINS
         ave_absorber = POINT_5 * ( absorber( k, j ) + absorber( k-1, j ) )
 
 
-        ! ------------------------------------------------------
+        ! -------------------------------------------------------
         ! Calculate the absorber space bracket layer, ka, for:
         !
         !   abs_spc(ka-1) < absorber < abs_spc(ka)
@@ -892,17 +892,19 @@ CONTAINS
         !
         ! The use of the CEILING intrinsic function provides the
         ! integer value equal to or greater than the argument.
-        ! Then use of MIN( ka, MAX_N_ABSORBERS_LAYERS ) is to
-        ! ensure that the calculated value never exceeds the 
-        ! maximum number of absorber space layers, which could
+        ! Then use of MAX( MIN( ka, MAX_N_ABSORBERS_LAYERS ), 1 )
+        ! is to ensure that the calculated value never exceeds the 
+        ! maximum number of absorber space layers - which could
         ! happen if an input absorber profile contained amounts
-        ! which exceeded the maximum absorber space amount.
-        ! ------------------------------------------------------
+        ! which exceeded the maximum absorber space amount - and
+        ! is never less than 1 - which could happen if the input
+        ! absorber profile has adjacent layers with zero amounts.
+        ! -------------------------------------------------------
 
-        layer_index( k, j ) = MIN( INT( CEILING( ( ONE / alpha(j) ) * &
+        layer_index( k, j ) = MAX( MIN( INT( CEILING( ( ONE / alpha(j) ) * &
                                                  LOG( ( ave_absorber / absorber_space_levels(1,j) ) * &
                                                       ( EXP( alpha(j) ) - ONE ) + ONE ) ) ), &
-                                   MAX_N_ABSORBER_LAYERS )
+                                   MAX_N_ABSORBER_LAYERS ), 1 )
 
 
       END DO k_user_space_loop
@@ -924,9 +926,20 @@ END MODULE absorber_profile
 !
 ! $Revision$
 !
+! $Name$
+!
 ! $State$
 !
 ! $Log$
+! Revision 1.11  2001/09/25 15:51:29  paulv
+! - Changed the calculation of the bracketing absorber space layer in
+!   sbroutine FIND_ABSORBER_LAYER_INDEX from
+!     MIN( ka, MAX_N_ABSORBERS_LAYERS )
+!   to
+!     MAX( MIN( ka, MAX_N_ABSORBERS_LAYERS ), 1 )
+!   so as to avoid the result ever being zero - which could happen before if
+!   adjacent layers of the input absorber profile were zero.
+!
 ! Revision 1.10  2001/08/31 20:41:18  paulv
 ! - Altered method of searching for bracketing absorber space layers in
 !   FIND_ABSORBER_LAYER_INDEX. Previosuly a trickle down search was performed.

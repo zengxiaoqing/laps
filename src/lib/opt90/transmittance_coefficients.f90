@@ -782,20 +782,20 @@ CONTAINS
     !#--------------------------------------------------------------------------#
 
     ! -- Output an info message
-    WRITE( message, '( "FILE VERSION: ", i1, ".", i2.2, 2x, &
-                      &"N_PREDICTORS_TO_USE=",i1,2x,&
-                      &"N_ABSORBER_LAYERS=",i3,2x,&
-                      &"N_CHANNELS=",i4,2x,&
-                      &"N_ABSORBERS=",i1 )' ) &
-                    file_release, file_version, &
-                    n_predictors_to_use, &
-                    n_absorber_layers, &
-                    n_channels, &
-                    n_absorbers
-    CALL display_message( ROUTINE_NAME, &
-                          TRIM( message ), &
-                          INFORMATION, &
-                          message_log = message_log )
+!    WRITE( message, '( "FILE VERSION: ", i1, ".", i2.2, 2x, &
+!                      &"N_PREDICTORS_TO_USE=",i1,2x,&
+!                      &"N_ABSORBER_LAYERS=",i3,2x,&
+!                      &"N_CHANNELS=",i4,2x,&
+!                      &"N_ABSORBERS=",i1 )' ) &
+!                    file_release, file_version, &
+!                    n_predictors_to_use, &
+!                    n_absorber_layers, &
+!                    n_channels, &
+!                    n_absorbers
+!    CALL display_message( ROUTINE_NAME, &
+!                          TRIM( message ), &
+!                          INFORMATION, &
+!                          message_log = message_log )
 
     error_status = SUCCESS
 
@@ -1463,20 +1463,20 @@ CONTAINS
     !#--------------------------------------------------------------------------#
 
     ! -- Output an info message
-    WRITE( message, '( "FILE VERSION: ", i1, ".", i2.2, 2x, &
-                      &"N_PREDICTORS=",i1,2x,&
-                      &"N_ABSORBER_LAYERS=",i3,2x,&
-                      &"N_CHANNELS=",i4,2x,&
-                      &"N_ABSORBERS=",i1 )' ) &
-                    file_release, file_version, &
-                    n_tc_predictors, &
-                    n_tc_layers, &
-                    n_tc_channels, &
-                    n_tc_absorbers
-    CALL display_message( ROUTINE_NAME, &
-                          TRIM( message ), &
-                          INFORMATION, &
-                          message_log = message_log )
+!    WRITE( message, '( "FILE VERSION: ", i1, ".", i2.2, 2x, &
+!                      &"N_PREDICTORS=",i1,2x,&
+!                      &"N_ABSORBER_LAYERS=",i3,2x,&
+!                      &"N_CHANNELS=",i4,2x,&
+!                      &"N_ABSORBERS=",i1 )' ) &
+!                    file_release, file_version, &
+!                    n_tc_predictors, &
+!                    n_tc_layers, &
+!                    n_tc_channels, &
+!                    n_tc_absorbers
+!    CALL display_message( ROUTINE_NAME, &
+!                          TRIM( message ), &
+!                          INFORMATION, &
+!                          message_log = message_log )
 
     error_status = SUCCESS
 
@@ -1498,6 +1498,10 @@ END MODULE transmittance_coefficients
 ! $State$
 !
 ! $Log$
+! Revision 1.1  2002/11/15 15:21:33  birk
+! Added to cvs mainly to see how this compiles on other platforms, it currently
+! seems to compile on the IBM
+!
 ! Revision 1.11  2001/08/31 21:14:36  paulv
 ! - Added MIN and MAX release/version parameters to allow for valid use of
 !   data files within a specified range.

@@ -2,8 +2,11 @@
 !
 ! NAME:
 !       optran90_fm ! initial interface to f90 code to the LAPS system
-!                     written by db 11/5/2002
+!                     built on optran90 test code
+!                     and Paul van Delst (acknowledged below)
 !                     Forecast systems laboratory
+!
+!  Copywrite (C) 2003 Daniel Birkenheuer
 !
 !
 !
@@ -94,10 +97,24 @@
   real sfc_emis
   real laps_sfc_t
 
+! optran 90 coefficient data information
+
+  character*256 sndr_coeff, sndr_trans
+  integer sndr_coeff_len, sndr_trans_len
+  common /optn_coef/ sndr_coeff, sndr_trans, sndr_coeff_len, &
+                     sndr_trans_len
+
 
   ! ------------------
   ! Program parameters
   ! ------------------
+
+  ! path for LAPS
+
+  character*256 fname
+  integer len
+  integer channels_used
+
 
   ! -- Name
   CHARACTER( * ),  PARAMETER :: PROGRAM_NAME = 'RTM_TEST_FWD'
@@ -110,7 +127,8 @@
   ! -- Profile definitions
   CHARACTER( * ),  PARAMETER :: PROFILE_FILE        = 'profiles_LAYER.bin'
   INTEGER,         PARAMETER :: N_PROFILES          = 1
-  INTEGER,         PARAMETER :: N_LAYERS            = 100 ! arbitrary level number
+  INTEGER N_LAYERS    ! arbitrary level number to be kk
+
 
   ! -- Other dimension parameters
   INTEGER,         PARAMETER :: N_ABSORBERS  = MAX_N_ABSORBERS
@@ -149,21 +167,24 @@
   REAL( fp_kind ), DIMENSION( N_ANGLES ) :: view_angle
   REAL( fp_kind ), DIMENSION( N_ANGLES ) :: secant_view_angle
   REAL( fp_kind ), DIMENSION( N_ANGLES ) :: secant_solar_angle
+  REAL( fp_kind ), DIMENSION( N_ANGLES ) :: surface_temperature
 
   ! -- Profile read array
-  REAL( fp_kind ), DIMENSION( N_LAYERS ) :: level_pressure
-  REAL( fp_kind ), DIMENSION( N_LAYERS ) :: layer_pressure
-  REAL( fp_kind ), DIMENSION( N_LAYERS ) :: layer_temperature
-  REAL( fp_kind ), DIMENSION( N_LAYERS ) :: layer_water_vapor
-  REAL( fp_kind ), DIMENSION( N_LAYERS ) :: layer_ozone
+  REAL( fp_kind ), DIMENSION( : ), ALLOCATABLE  :: level_pressure
+  REAL( fp_kind ), DIMENSION( : ), ALLOCATABLE  :: layer_pressure
+  REAL( fp_kind ), DIMENSION( : ), ALLOCATABLE  :: layer_temperature
+  REAL( fp_kind ), DIMENSION( : ), ALLOCATABLE  :: layer_water_vapor
+  REAL( fp_kind ), DIMENSION( : ), ALLOCATABLE  :: layer_ozone
+
+
 
   ! -- Profile data arrays
-  REAL( fp_kind ), DIMENSION( N_LAYERS, N_ANGLES ) :: level_p
-  REAL( fp_kind ), DIMENSION( N_LAYERS, N_ANGLES ) :: layer_p
-  REAL( fp_kind ), DIMENSION( N_LAYERS, N_ANGLES ) :: layer_t
-  REAL( fp_kind ), DIMENSION( N_LAYERS, N_ANGLES ) :: layer_w
-  REAL( fp_kind ), DIMENSION( N_LAYERS, N_ANGLES ) :: layer_o
-
+  REAL( fp_kind ), DIMENSION( :, : ), ALLOCATABLE :: level_p
+  REAL( fp_kind ), DIMENSION( :, : ), ALLOCATABLE :: layer_p
+  REAL( fp_kind ), DIMENSION( :, : ), ALLOCATABLE :: layer_t
+  REAL( fp_kind ), DIMENSION( :, : ), ALLOCATABLE :: layer_w
+  REAL( fp_kind ), DIMENSION( :, : ), ALLOCATABLE :: layer_o
+ 
   ! -- Number of channels processed for each profile
   INTEGER, DIMENSION( N_ANGLES ) :: n_channels_per_profile
 
@@ -183,6 +204,7 @@
   REAL( fp_kind ) :: angle_modifier
   REAL( fp_kind ), DIMENSION( N_ANGLES ) :: mw_emissivity
   REAL( fp_kind ), DIMENSION( N_ANGLES ) :: ir_emissivity
+  integer ::  first_time = 1
 
 
   ! ----------
@@ -206,19 +228,28 @@
   !##############################################################################
   !##############################################################################
 
-  WRITE( *, '( /5x, "Initialising RTM...." )' )
-
-  error_status = initialize_rtm( tau_file = 'TEST_transmittance_coefficients', &
-                                 spectral_file = 'TEST_spectral_coefficients'  )
-
-  IF ( error_status /= SUCCESS ) THEN
-    CALL display_message( PROGRAM_NAME, &
-                          'Error initialzing RTM', &
-                           error_status )
-!    STOP
-  END IF
+  N_LAYERS = kk  ! profile dependent length
 
 
+  if (first_time == 1) then ! first time it is called
+     first_time = 0
+
+     call get_directory ('static',fname,len)
+     fname = fname(1:len)//'optranlib/'
+     len = len_trim(fname)
+     
+     error_status = initialize_rtm( tau_file = sndr_trans(1:sndr_trans_len),&
+                   path = fname(1:len),  &
+               spectral_file = sndr_coeff(1:sndr_coeff_len)  )
+
+     IF ( error_status /= SUCCESS ) THEN
+        CALL display_message( PROGRAM_NAME, &
+             'Error initialzing RTM', &
+             error_status )
+        STOP
+     END IF
+
+  endif ! first_time called
 
 
   !##############################################################################
@@ -240,32 +271,24 @@
   ! from the coefficient data files
   ! ----------------------------------
 
-  CALL get_max_n_channels( n_channels )
+! ALLOCATE ARRAYS FOR VARIABLE PROFILE CONTENTS
+!
 
-  n_channels = mchan
+  ALLOCATE (      level_p                  ( N_LAYERS,N_ANGLES), &
+                  layer_p                  ( N_LAYERS,N_ANGLES), &    
+                  layer_t                  ( N_LAYERS,N_ANGLES), & 
+                  layer_w                  ( N_LAYERS,N_ANGLES), & 
+                  layer_o                  ( N_LAYERS,N_ANGLES), &
+                  level_pressure           ( N_LAYERS), &
+                  layer_pressure           ( N_LAYERS), & 
+                  layer_temperature        ( N_LAYERS), & 
+                  layer_water_vapor        ( N_LAYERS), & 
+                  layer_ozone              ( N_LAYERS)   )
+
+  CALL get_max_n_channels( n_channels )
 
   begin_channel = 1
   end_channel   = n_channels
-
-!!!Replace the above code with the following to process channel subsets
-!!!
-!!!  CALL get_max_n_channels( n_available_channels )
-!!!
-!!!  ! -- Get user channel limits
-!!!  WRITE( *, '( /5x, "Number of available channels: ", i4 )' ) n_available_channels
-!!!  WRITE( *, '( /5x, "Enter begin,end channels to process: " )', &
-!!!            ADVANCE = 'NO' )
-!!!  READ( *, * ) l1, l2
-!!!
-!!!  ! -- Only keep valid values
-!!!  l1 = MAX( 1, MIN( l1, n_available_channels ) )
-!!!  l2 = MAX( 1, MIN( l2, n_available_channels ) )
-!!!  begin_channel = MIN( l1, l2 )
-!!!  end_channel   = MAX( l1, l2 )
-!!!  n_channels    = end_channel - begin_channel + 1
-
-!  WRITE( *, '( /5x, "Processing channels ", i4, " to ", i4, "...", / )' ) &
-!            begin_channel, end_channel
 
 
   ! ---------------------------------------------------
@@ -297,124 +320,43 @@
 
 
 
-  !#----------------------------------------------------------------------------#
-  !#                 -- FILL PROFILE INDEPENDENT INPUT ARRAYS --                #
-  !#----------------------------------------------------------------------------#
-
-  ! -- Compute delta angle value
-  !d_angle = ( MAX_ANGLE - MIN_ANGLE ) / REAL( N_ANGLES-1, fp_kind ) ! this won't work for GOES
-
-  ! -- Initialise angle x channel counter
-  il = 0
-
-
-  ! ----------------
-  ! Loop over angles
-  ! ----------------
-
-  !DO i_angle = 1, N_ANGLES
-
-   ! ! -- Fill angle arrays
-    !view_angle( i_angle )         = MIN_ANGLE + ( REAL( i_angle-1, fp_kind ) * d_angle )
-    !secant_view_angle( i_angle )  = ONE / COS( view_angle( i_angle ) * DEGREES_TO_RADIANS )
-    !secant_solar_angle( i_angle ) = DEFAULT_SECANT_SOLAR_ANGLE
-
-    ! -- Fill channel count array, i.e. do them all
-    !n_channels_per_profile( i_angle ) = n_channels
-
-
-    ! ------------------
-    ! Loop over channels
-    ! ------------------
-
-    !DO l = 1, n_channels
-
-      ! -- Increment angle x channel counter
-      ! -- and set the channel index
-     ! il = il + 1
-      !channel_index( il ) = begin_channel + l - 1
-
-      ! -- Assign pretend surface emissivity and reflectivity
-      ! -- For uW, r = specular; for IR, r = isotropic
-      ! -- The angle modifier is just something to provide
-      ! -- a little bit of angular variation in the surface
-      ! -- emissivities and reflectivities.
-      !angle_modifier = (COS( view_angle( i_angle ) * DEGREES_TO_RADIANS ))**(0.1_fp_kind)
-      !IF ( is_microwave_channel( channel_index( il ) ) == 1 ) THEN
-      !  surface_emissivity( il )   = DEFAULT_MW_EMISSIVITY * angle_modifier
-      !  surface_reflectivity( il ) = ONE - surface_emissivity( il )
-      !  mw_emissivity( i_angle ) = surface_emissivity( il )
-      !ELSE
-      !  surface_emissivity( il )   = DEFAULT_IR_EMISSIVITY * angle_modifier
-      !  surface_reflectivity( il ) = ( ONE - surface_emissivity( il ) ) / PI
-      !  ir_emissivity( i_angle ) = surface_emissivity( il )
-      !END IF
-
-!    END DO
-
-!  END DO
-
-
-
-  !##############################################################################
-  !##############################################################################
-  !##############################################################################
-  !#                                                                            #
-  !#                   -- OPEN THE INPUT PROFILE DATA FILE --                   #
-  !#                                                                            #
-  !##############################################################################
-  !##############################################################################
-  !##############################################################################
-
-  !##############################################################################
-  !##############################################################################
-  !##############################################################################
-  !#                                                                            #
-  !#                     -- OPEN THE OUTPUT DATA FILES --                       #
-  !#                                                                            #
-  !##############################################################################
-  !##############################################################################
-  !##############################################################################
-
- 
-
-  !##############################################################################
-  !##############################################################################
-  !##############################################################################
-  !#                                                                            #
-  !#                       -- BEGIN LOOP OVER PROFILES --                       #
-  !#                                                                            #
-  !##############################################################################
-  !##############################################################################
-  !##############################################################################
-
-
 
 
     !#--------------------------------------------------------------------------#
-    !#                           -- READ A PROFILE --                           #
+    !#                           -- Assign variable from LAPS input             #
     !#--------------------------------------------------------------------------#
 
-    
-    ! ---------------------------------------------------------
-    ! Load RTM input profile arrays
-    ! (Using same profile for all angles - not efficient since
-    !  all quantities are recalculated for each angle, but, eh,
-    !  it's a test.)
-    ! ---------------------------------------------------------
-
- 
-      level_p(1:kk, 1 ) = lev_p(1:kk)
+      do k = 1, kk
+         level_p(k, 1 ) = lev_p(k+1)
+      enddo
       layer_p(1:kk, 1 ) = lay_p(1:kk)
       layer_t(1:kk, 1 ) = lay_t(1:kk)
       layer_w(1:kk, 1 ) = lay_w(1:kk)
       layer_o(1:kk, 1 ) = lay_o(1:kk)
+      surface_temperature = laps_sfc_t
+      surface_emissivity = sfc_emis    !array assignment to constant
+      surface_reflectivity = sfc_refl  !array assignment to constant
+      secant_view_angle = sec_za
+      secant_solar_angle = sec_solar
+      n_channels_per_profile  = n_channels  ! don't understand
+
+      do k = 1,n_channels
+         channel_index(k) = k  ! don't understand
+      enddo
+
+      ! note the (in,out) cautions on upwelling radiance and brightness_temperature
+      ! this is preset here.
+
+      upwelling_radiance = 0.
+      brightness_temperature = 1.0  ! recommended preset
+
 
    
 
     !#--------------------------------------------------------------------------#
     !#                            -- FORWARD MODEL --                           #
     !#--------------------------------------------------------------------------#
+
 
     error_status = compute_rtm( &
                                 ! -- Forward inputs
@@ -424,7 +366,8 @@
                                 layer_w,                &  ! Input,  K x M
                                 layer_o,                &  ! Input,  K x M
 
-                                layer_t(N_LAYERS,:),    &  ! Input, M
+!                                layer_t(N_Layers,:),    &  ! Input, M
+                                surface_temperature,    &  ! Input, M
                                 surface_emissivity,     &  ! Input, L*M
                                 surface_reflectivity,   &  ! Input, L*M
 
@@ -448,6 +391,18 @@
       STOP
     END IF
 
+! here the returned arrays (upwelling_radiance and brightness_temperature)
+! have dimensions of the insturment channels.  The LAPS array however is a 
+! fixed one of 18.  this takes and only uses the part of the LAPS array needed
+
+    
+    channels_used = size (upwelling_radiance)
+
+    do i = 1,channels_used
+       up_radiance(i) = upwelling_radiance(i)
+       bright_temp(i) = brightness_temperature(i)
+    enddo
+
 
 
 
@@ -460,6 +415,10 @@
   ! ---------------------------------------
 
   ! -- Forward model
+
+  DEALLOCATE (  layer_p,  layer_t  ,layer_w  ,layer_o ,  layer_pressure,  layer_temperature , layer_water_vapor ,  layer_ozone,  &
+                level_p, level_pressure  )
+
   DEALLOCATE( surface_emissivity,     &  ! Input,  L*M
               surface_reflectivity,   &  ! Input,  L*M
               channel_index,          &  ! Input,  L*M
@@ -487,18 +446,32 @@
   ! Deallocate the coefficient arrays
   ! ---------------------------------
 
-  WRITE( *, '( /5x, "Destroying RTM...." )' )
-
-  error_status = destroy_rtm()
-
-  IF ( error_status /= SUCCESS ) THEN
-    CALL display_message( PROGRAM_NAME, &
-                          'Error destroying RTM', &
-                          error_status )
-    STOP
-  END IF
+ ! this utility is now handled by the new module below.  called from 
+ ! variational.f after all calls to the forward model are complete.
 
 END SUBROUTINE  optran90_fm
+
+SUBROUTINE optran_deallocate (istatus)
+
+!  USE type_kinds
+!  USE file_utility
+!  USE error_handler
+!  USE parameters
+
+  USE initialize
+  integer :: istatus
+  
+  istatus = destroy_rtm()
+  
+!  IF ( error_status /= SUCCESS ) THEN
+!     CALL display_message( PROGRAM_NAME, &
+!          'Error destroying RTM', &
+!          error_status )
+!     STOP
+!  END IF
+  
+
+END SUBROUTINE optran_deallocate
 
 
 !-------------------------------------------------------------------------------
@@ -514,6 +487,9 @@ END SUBROUTINE  optran90_fm
 ! $State$
 !
 ! $Log$
+! Revision 1.2  2002/11/18 20:01:39  birk
+! changes made to avoid compilation errors on jet, statement order specifics.
+!
 ! Revision 1.1  2002/11/15 15:21:32  birk
 ! Added to cvs mainly to see how this compiles on other platforms, it currently
 ! seems to compile on the IBM
