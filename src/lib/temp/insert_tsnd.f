@@ -66,7 +66,7 @@ cdis
 !       read_tsnd and analyze_tsnd.
 
         integer*4 max_snd_grid
-        parameter (max_snd_grid = 30)
+        parameter (max_snd_grid = 500)              ! Total number of profiles
 
         real*4 lat(ni,nj),lon(ni,nj)
         real*4 temp_3d(ni,nj,nk)
@@ -87,10 +87,11 @@ cdis
         integer*4 igrid_tsnd(max_snd_grid),jgrid_tsnd(max_snd_grid)
         real*4 tsnd (max_snd_grid,nk) ! Vertically interpolated TSND temp
         character*5 c5_name(max_snd_grid) 
+        character*4 c4_obstype(max_snd_grid) 
 
         logical l_qc,l_flag_vv,l_good_tsnd(max_snd_grid),l_use_raob
 
-!       Weight for Model Background. Recommended values: 0. to 1e+30.
+!       Weight for Model Background. Recommended values: 0. to 1e+30. Try 1e29.
 !       This will make the output values match the background if far from obs.
 !       A value of zero means this parameter is not active.
         real*4 weight_bkg_const                                   ! Input
@@ -113,22 +114,24 @@ cdis
 
 !       Read in TSND and Temperature sonde data
 
-        call read_tsnd(i4time,heights_3d,       ! Input
-     1                   temp_3d,sh_3d,pres_3d, ! Input
-     1                   lat_tsnd,lon_tsnd,     ! Output
-     1                   lat,lon,               ! Input
-     1                   max_snd_grid,          ! Input
-     1                   tsnd,                  ! Output
-     1                   c5_name,               ! Output
-     1                   l_use_raob,            ! Input
-     1                   i4time_raob_window,    ! Input
-!    1                   t_maps_inc,            ! Input
-     1                   bias_htlow,            ! Output
-     1                   n_rass,n_snde,n_tsnd,  ! Output
-     1                   ilaps_cycle_time,      ! Input
-     1                   ni,nj,nk,              ! Input
-     1                   r_missing_data,        ! Input
-     1                   istatus)               ! Output
+        max_snd_obs = max_snd_grid                            ! rass + raobs
+
+        call read_tsnd(i4time,heights_3d,                     ! Input
+     1                   temp_3d,sh_3d,pres_3d,               ! Input
+     1                   lat_tsnd,lon_tsnd,                   ! Output
+     1                   lat,lon,                             ! Input
+     1                   max_snd_grid,max_snd_obs,            ! Input
+     1                   tsnd,                                ! Output
+     1                   c5_name,c4_obstype,                  ! Output
+     1                   l_use_raob,                          ! Input
+     1                   i4time_raob_window,                  ! Input
+!    1                   t_maps_inc,                          ! Input
+     1                   bias_htlow,                          ! Output
+     1                   n_rass,n_snde,n_tsnd,                ! Output
+     1                   ilaps_cycle_time,                    ! Input
+     1                   ni,nj,nk,                            ! Input
+     1                   r_missing_data,                      ! Input
+     1                   istatus)                             ! Output
 
         if(istatus .ne. 1)then
             write(6,*)' bad istatus returned from read_tsnd'
@@ -153,17 +156,19 @@ cdis
 !           Find Temperature bias for each level
             write(6,*)
             write(6,*)' Temperature bias, sounding # ',i_tsnd,'  '
-     1                                                ,c5_name(i_tsnd)       
+     1                ,c5_name(i_tsnd),'  ',c4_obstype(i_tsnd)       
             if(iwrite .eq. 1)write(6,*)
      1      '   k     Tobs        sh      tamb      tlaps      bias'
+
             l_qc = .false.
 !           l_flag_vv = .true.
             l_flag_vv = .false.
+
             do k = 1,nk
               if(tsnd(i_tsnd,k) .ne. r_missing_data)then
 
-                IF(i_tsnd.le.n_rass) THEN
-!                   Convert from virtual temperature to temperature (inactive)
+                IF(c4_obstype(i_tsnd) .eq. 'RASS') THEN
+!                   Convert from virtual temperature to temperature
                     tvir = tsnd(i_tsnd,k)
                     sh = sh_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)       
                     p_pa = 
@@ -188,10 +193,12 @@ cdis
      1                 ' ABS(Temp - FIRST GUESS) > 10., Temp NOT USED'       
                 endif
 
-!               This should discriminate the vertical velocity data
-                if(abs(tamb-267.7) .gt. 3.0)then
-                    l_flag_vv = .false.
-                endif
+!               This should discriminate the vertical velocity data (inactive)
+                IF(c4_obstype(i_tsnd) .eq. 'RASS') THEN
+                    if(abs(tamb-267.7) .gt. 3.0)then
+                        l_flag_vv = .false.
+                    endif
+                ENDIF
 
               endif ! Valid data for this TSND at this level
             enddo ! k
@@ -208,18 +215,26 @@ cdis
 
 !           Fill in lower parts of Bias field
             if(k_lowest .ge. 2 .and. k_lowest .le. nk)then
-                do k = 1,k_lowest-1
-                    bias_tsnd(i_tsnd,k) = bias_htlow(i_tsnd)
-                    wt_tsnd(i_tsnd,k) = 1.0
-                enddo ! k
+                if(c4_obstype(i_tsnd) .ne. 'SAT') THEN
+                    do k = 1,k_lowest-1
+                        bias_tsnd(i_tsnd,k) = bias_htlow(i_tsnd)
+                        wt_tsnd(i_tsnd,k) = 1.0
+                    enddo ! k
+                endif ! c4_obstype
             endif
 
 !           Add ramp above top of bias data
             if(k_highest .ge. 1 .and. k_highest .le. nk-1)then
                 do k = k_highest+1,k_highest+1
-                    bias_tsnd(i_tsnd,k) = bias_tsnd(i_tsnd,k_highest) * 
-     1                                    0.5
-                    wt_tsnd(i_tsnd,k) = 0.5
+                    if(weight_bkg_const .eq. 0.)then
+                        bias_tsnd(i_tsnd,k) = 
+     1                  bias_tsnd(i_tsnd,k_highest) * 0.5
+                        wt_tsnd(i_tsnd,k) = 0.5
+                    else
+                        bias_tsnd(i_tsnd,k) = 
+     1                  bias_tsnd(i_tsnd,k_highest) * 1.0
+                        wt_tsnd(i_tsnd,k) = .04
+                    endif
                 enddo ! k
             endif
 
@@ -229,8 +244,8 @@ cdis
                 if(iwrite .eq. 1)write(6,11,err=12)k,bias_tsnd(i_tsnd,k)       
      1                 ,temp_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)
      1                 ,temp_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)    
-     1                                  + bias_tsnd(i_tsnd,k)
-11              format(1x,i4,f7.1,2f8.1)
+     1                + bias_tsnd(i_tsnd,k),wt_tsnd(i_tsnd,k)
+11              format(1x,i4,f7.1,3f8.1)
 12              continue
             enddo ! k
 
@@ -346,9 +361,10 @@ cdis
            ! of other TSNDs at that height. 'l_highest' means that the TSND
            ! profile for this TSND is at least tied for the highest of all
            ! TSNDs present.
-             do k = 1,nk
+             if(weight_bkg_const .eq. 0)then
+               do k = 1,nk
                  do i_tsnd = 1,n_tsnd
-                     if(wt_tsnd(i_tsnd,k) .eq. 0.5)then
+                     if(wt_tsnd(i_tsnd,k) .eq. 0.5)then ! Inside ramp
                          l_highest = .true.
                          do i_tsnd2 = 1,n_tsnd
                              if(i_tsnd2 .ne. i_tsnd
@@ -369,9 +385,10 @@ cdis
                          endif
                      endif
                  enddo ! i_tsnd
-             enddo ! k
+               enddo ! k
+             endif ! weight_bkg_const = 0
 
-           ! This is in effect a single pass Barnes with an spatially varying
+           ! This is in effect a single pass Barnes with a spatially varying
            ! radius of influence to account for clustering of data
 
              call get_fnorm_max(ni,nj,r0_norm,r0_value_min,fnorm_max)

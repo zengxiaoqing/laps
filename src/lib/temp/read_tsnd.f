@@ -34,9 +34,9 @@ cdis
      1                   sh_3d,pres_3d,                           ! Input
      1                   lat_pr,lon_pr,                           ! Output
      1                   lat,lon,                                 ! Input
-     1                   max_snd_grid,                            ! Input
+     1                   max_snd_grid,max_snd_obs,                ! Input
      1                   ob_pr_t,                                 ! Output
-     1                   c5_name,                                 ! Output
+     1                   c5_name,c4_obstype,                      ! Output
      1                   l_use_raob,                              ! Input
      1                   i4_window_raob_file,                     ! Input
 !    1                   t_maps_inc,                              ! Input
@@ -69,8 +69,7 @@ c                               not exactly match the LAPS analysis time.
 !       arrays used locally. 'max_snd_grid' is the max number of overall
 !       soundings and represents output arrays.
  
-        integer*4 max_snd_obs,max_snd_levels
-        parameter (max_snd_obs = 30)
+        integer*4 max_snd_levels
         parameter (max_snd_levels = 128)
 
         real*4 surface_rass_buffer
@@ -83,6 +82,7 @@ c                               not exactly match the LAPS analysis time.
         real bias_htlow(max_snd_grid)
         real ob_pr_t (max_snd_grid,kmax) ! Vertically interpolated RASS temp
         character*5 c5_name(max_snd_grid) 
+        character*4 c4_obstype(max_snd_grid) 
 
 !       Local arrays
         integer num_pr(max_snd_obs)
@@ -166,14 +166,15 @@ c                               not exactly match the LAPS analysis time.
 340         continue
 
             read(12,401,err=406,end=500)
-     1     ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
+     1      ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
      1                                       ,c5_name(i_pr),a9time
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9)
 
+            c4_obstype(i_pr) = 'RASS'
+
 !           Determine if rass is in the LAPS domain
-406         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon,i
-     1max,jmax
-     1                          ,ri,rj,istatus)
+406         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
+     1                              ,imax,jmax,ri,rj,istatus)
 
             i_ob = nint(ri)
             j_ob = nint(rj)
@@ -362,6 +363,8 @@ c
      1      ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
      1                                        ,c5_name(i_pr),a9time
 801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
+
+            c4_obstype(i_pr) = 'RAOB'
 
 !           Determine if sonde is in the LAPS domain
 706         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
