@@ -46,7 +46,8 @@ RM=rm -f
 			$(FC) -c $(FFLAGS) $(FREE) $*.f 
 
 EXE=wfoprep.exe
-FSRC=wfoprep.f   
+FSRC=wfoprep.f \
+     fill_missing_levs.f 
 
 FOBJS=$(FSRC:.f=.o)
 
