@@ -45,7 +45,7 @@ cdis
  
 !      Open/Read Polar NetCDF file for the proper time
        integer max_files
-       parameter(max_files=1000)
+       parameter(max_files=20000)  ! max_radar_files
 
        character*150 path_to_radar,c_filespec,filename,directory
      1              ,c_fnames(max_files)
