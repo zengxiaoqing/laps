@@ -1,0 +1,17 @@
+laps_cv_centlat=${laps_cv_centlat=39.32573}
+laps_cv_centlon=${laps_cv_centlon=-104.24382}
+laps_cv_path_blpprof=${laps_cv_path_blpprof=/dummy/}
+laps_cv_path_blprass=${laps_cv_path_blprass=/dummy/}
+laps_cv_path_ngm=${laps_cv_path_ngm=/data/fxa/Grid/SBN/netCDF/CONUS211/NGM}
+laps_cv_path_pirep=${laps_cv_path_pirep=/dummy/}
+laps_cv_path_prof=${laps_cv_path_prof=/data/fxa/point/profiler/netcdf/}
+laps_cv_path_raob=${laps_cv_path_raob=/dummy/}
+laps_cv_path_rass=${laps_cv_path_rass=/dummy/}
+laps_cv_path_ruc=${laps_cv_path_ruc=/data/fxa/Grid/SBN/netCDF/CONUS211/RUC}
+laps_cv_path_satcdf=${laps_cv_path_satcdf=/dummy/}
+laps_cv_path_satgvar=${laps_cv_path_satgvar=/dummy/}
+laps_cv_path_wsi2d=${laps_cv_path_wsi2d=/data/fxa/nowrad/conusC/Z/}
+laps_cv_path_wsi3d=${laps_cv_path_wsi3d=/dummy/}
+laps_cv_stndlat=${laps_cv_stndlat=40.0}
+laps_cv_stndlon=${laps_cv_stndlon=-105.0}
+

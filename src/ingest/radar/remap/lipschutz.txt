@@ -1,0 +1,163 @@
+From lipschut@krypton.fsl.noaa.gov Thu Mar 21 23:36:49 1996
+Return-Path: <lipschut@krypton.fsl.noaa.gov>
+Received: from fslg8.fsl.noaa.gov by peaks.fsl.noaa.gov (4.1/SMI-4.1)
+	id AA16141; Thu, 21 Mar 96 23:36:47 GMT
+Received: by fslg8.fsl.noaa.gov (5.57/Ultrix3.0-C)
+	id AA01773; Thu, 21 Mar 96 23:36:46 GMT
+Received: from localhost.fsl.noaa.gov by krypton.fsl.noaa.gov (4.1/SMI-4.1)
+	id AA06675; Thu, 21 Mar 96 23:36:45 GMT
+Message-Id: <9603212336.AA06675@krypton.fsl.noaa.gov>
+To: albers@peaks.fsl.noaa.gov (Steve Albers)
+Cc: lipschutz@peaks.fsl.noaa.gov, roberts@peaks.fsl.noaa.gov,
+        liang@peaks.fsl.noaa.gov
+Subject: Re: realtime remapper summary 
+In-Reply-To: Your message of "Thu, 21 Mar 1996 23:07:07 GMT."
+             <9603212307.AA14840@peaks.fsl.noaa.gov> 
+Date: Thu, 21 Mar 1996 23:36:45 +0000
+From: Bob Lipschutz <lipschut@krypton.fsl.noaa.gov>
+Status: RO
+
+> 
+> 
+> 
+> 
+>        Bob,
+> 
+>        Thought I'd summarize our discussion here for the benefit of
+>    Woody and Quingfu.
+> 
+>        I think I can leave the real-time version of the remapper on
+>    just to see how it performs. The output files will be found in
+>    yucca:/localhost/data/remap/rrv_kftg_rt/nest7grid/lapsprd/v01.
+> 
+>        As noted previously, I cannot yet ascertain the validity of these
+>    files or state that we are keeping up with the pace of the radar.
+>    We thus may be loosing data along the way. I can say that some
+>    reflectivities and velocities probably make it in some form into the
+>    output v01 file.
+> 
+>        As you mentioned, having a real-time monitor of the radar status
+>    will help us to demonstrate conclusively how we are keeping up with
+>    the data.
+> 
+>        It now appears that we have a chance of keeping up with the
+>    radar in clear-air mode, but we will not be able to keep up in storm mode.
+> 
+>        I am also thinking of running a separate remapper on the LAPS
+>    domain (10 km) that could feed directly into LAPS via /public.
+>    I can probably start testing on this by sending files to peaks.
+> 
+> 
+> 
+>                                                                  Steve
+> 
+Right.  Also, we talked about how we might get this to work more optimally 
+for real-time.  Any alternative likely will involve additional resources, 
+either in hardware or manpower.  A hardware solution would involve getting
+a faster processor.  However, that still leaves the issue of moving/handling the
+14.5 MB netCDF files.  I guess I'd recommend looking at how those files are
+created.  In particular, I suggest writing byte values instead of floats.
+That cuts your file size by 4x and probably greatly improves compressability.
+Another idea that may help for real-time processing would be to kick off a
+separate process to do the end-of-volume stuff so that the tilt-by-tilt
+processing can proceed without waiting.
+
+As to who (or how much) is available to do what's needed...  
+
+	-Bob
+
+
+     Bob also mentioned that a FORTRAN driver may fix the "MAIN error".
+
+
+
+From lipschut@krypton.fsl.noaa.gov Sat Mar 23 00:28:53 1996
+Return-Path: <lipschut@krypton.fsl.noaa.gov>
+Received: from fslg8.fsl.noaa.gov by peaks.fsl.noaa.gov (4.1/SMI-4.1)
+	id AA01900; Sat, 23 Mar 96 00:28:53 GMT
+Received: by fslg8.fsl.noaa.gov (5.57/Ultrix3.0-C)
+	id AA02249; Sat, 23 Mar 96 00:28:50 GMT
+Received: from localhost.fsl.noaa.gov by krypton.fsl.noaa.gov (4.1/SMI-4.1)
+	id AA14342; Sat, 23 Mar 96 00:28:49 GMT
+Message-Id: <9603230028.AA14342@krypton.fsl.noaa.gov>
+To: albers@fsl
+Cc: lipschut@fsl.noaa.gov, roberts@fsl
+Subject: running widebd_client
+Date: Sat, 23 Mar 1996 00:28:48 +0000
+From: Bob Lipschutz <lipschut@krypton.fsl.noaa.gov>
+Status: RO
+
+
+Steve,
+
+If you need to run the wideband ingest program on yucca,
+I think you should be able to cd ~lipschut/wideband/bin
+and then run widebd_client in that directory.  If 
+that doesn't work (because of permissions), copy
+these two files to your own directory and run widebd_client.
+
+~lipschut/wideband/bin/widebd_client 
+~lipschut/wideband/bin/nexrad.cfg
+
+Also, I happened to find a program called wideband_scan
+sitting in you remap directory.  It reads from the
+circular buffer and prints out current scan information.
+You should be able to run that one as 
+~lipschut/wideband/bin/wideband_scan.
+
+	...see ya in a week.
+
+		-Bob
+From lipschut@krypton.fsl.noaa.gov  Mon Apr 29 14:38:54 1996
+Return-Path: <lipschut@krypton.fsl.noaa.gov>
+Received: from fslg8.fsl.noaa.gov by peaks.fsl.noaa.gov (4.1/SMI-4.1)
+	id AA28887; Mon, 29 Apr 96 14:38:54 GMT
+Received: by fslg8.fsl.noaa.gov (5.57/Ultrix3.0-C)
+	id AA24427; Mon, 29 Apr 96 14:38:52 GMT
+Received: from localhost.fsl.noaa.gov by krypton.fsl.noaa.gov (4.1/SMI-4.1)
+	id AA15263; Mon, 29 Apr 96 14:38:51 GMT
+Message-Id: <9604291438.AA15263@krypton.fsl.noaa.gov>
+To: albers@peaks.fsl.noaa.gov (Steve Albers)
+Cc: lipschutz@peaks.fsl.noaa.gov, roberts@fsl
+Subject: Re: circular buffer 
+In-Reply-To: Your message of "Fri, 26 Apr 1996 23:30:55 GMT."
+             <9604262330.AA15505@peaks.fsl.noaa.gov> 
+Date: Mon, 29 Apr 1996 14:38:50 +0000
+From: Bob Lipschutz <lipschut@krypton.fsl.noaa.gov>
+Status: RO
+
+> 
+> 
+> 
+> 
+>      Bob,
+> 
+>      I was curious whether data is being fed into the circular buffer on
+>   'yucca' today.
+> 
+> 
+> 
+> 
+
+Hi, Steve.  The widebd_client program was not running when I came in
+Monday morning.  I don't know why.  That certainly would explain
+why you weren't seeing data.
+
+I have not yet persued how to make widebd_client "operational."  
+Ultimately, it should run out of an operational account, with auto-startup 
+when the system reboots.  I'd also like to add some better monitoring and 
+reporting.
+
+For the time being I have just been running it from my account.  
+You could also run it... perhaps that might be preferred, since you're 
+also looking at the data.  At least you should be able to start it if 
+you find that it isn't up.  When you have a moment to experiment, let 
+me know, so I can kill my process.  Then you could try running:
+
+	~lipschut/bin/widebd_client &
+
+You'll need to run this from your own writable directory since 
+widebd_client (for now, anyway) creates a log file in the 
+current working directory.
+
+	-Bob

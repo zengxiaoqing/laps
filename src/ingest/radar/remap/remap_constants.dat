@@ -1,0 +1,99 @@
+c     file: remap_constants.dat
+
+c     Radar Data Look Up Tables
+      integer*4  MAX_RAYS,MAX_GATES,MAX_GATES_LUT
+      parameter (MAX_RAYS = 380)
+c
+c     Note that MAX_GATES involves a realigning of reflectivity and Doppler
+c     gates to give them a one-to-one correspondence in gate_spacing and
+c     range. The actual # of gates for the 88D is 460 (reflectivity) and
+c     920 (Doppler).
+c
+      parameter (MAX_GATES = 1840)
+c
+c     This is set to MAX_GATES if we are only dealing with "normal" scans.
+c     One could consider setting MAX_GATES_LUT to be something like twice
+c     MAX_GATES if processing of 1/2 PRF scans is done, depending on how
+c     the code in remap_process is configured.
+c
+      parameter (MAX_GATES_LUT = MAX_GATES)
+
+      real*4     MAX_ELEV
+      parameter (MAX_ELEV = 20.0)
+
+      integer*4  LUT_ELEVS,LUT_GATES
+      parameter (LUT_ELEVS = 200) ! Normally 10 times the MAX_ELEV
+c
+c     This can be set to be less than MAX_GATES if it is desired to save
+c     memory space in the lookup tables. If that is done, it should be
+c     set to MAX_GATES divided by an integer.
+c
+      parameter (LUT_GATES = MAX_GATES)
+c
+c     Here the gate spacing is given for Doppler, the reflectivity is 1000m
+c     and has been replicated to the smaller Doppler gate spacing.
+c
+      real*4 GATE_SPACING_M
+      parameter (GATE_SPACING_M = 250.)
+
+      real*4     MAX_RANGE_M
+      parameter (MAX_RANGE_M = GATE_SPACING_M * MAX_GATES_LUT)
+
+      integer*4  LUT_RANGES,LUT_AZIMUTHS
+      parameter (LUT_RANGES = 230)
+      parameter (LUT_AZIMUTHS = 360) ! This should not be changed
+
+      real*4     ELEV_INTERVAL
+      parameter (ELEV_INTERVAL = MAX_ELEV / LUT_ELEVS)
+c
+c     For normal scans, this is the ratio of gate spacing in the radar
+c     to that in the lookup table.
+c
+      integer*4  GATE_INTERVAL
+      parameter (GATE_INTERVAL = MAX_GATES_LUT / LUT_GATES)
+c
+c     This interval is for the lookup tables, not the necessarily the radar 
+c     gate spacing.
+c
+      real*4     RANGE_INTERVAL
+      parameter (RANGE_INTERVAL = MAX_RANGE_M / LUT_RANGES)
+ 
+      integer*4 max_tilts
+      Parameter (max_tilts = 30)
+
+      integer*4 i_missing_data
+      parameter (i_missing_data = -999)
+c
+c     Data screening variables
+c
+c     The first gate processed should be far enough from
+c     the radar to avoid ground clutter and at least one grid
+c     box from the radar to avoid mixing away and toward velocities
+c     creating artificially weak winds near the radar.
+c     No such problem with reflectivity, but ground clutter can
+c     be real bad close in.
+c
+c     INITIAL_REF_GATE must be less than or equal to INITIAL_VEL_GATE
+c
+      integer INITIAL_VEL_GATE,INITIAL_REF_GATE
+      parameter (INITIAL_VEL_GATE=48, INITIAL_REF_GATE=16)
+c
+      real*4     RV_STDV_LIM,RV_VAR_LIM
+      parameter (RV_STDV_LIM = 3.0)
+      parameter (RV_VAR_LIM = RV_STDV_LIM * RV_STDV_LIM)
+
+      integer*4  MIN_VEL_SAMPLES,MIN_REF_SAMPLES
+      parameter (MIN_VEL_SAMPLES = 4)
+      parameter (MIN_REF_SAMPLES = 4)
+
+      real*4 ABS_VEL_MIN,VEL_MIS_CHECK
+      parameter (ABS_VEL_MIN = 2.0)
+      parameter (VEL_MIS_CHECK = 100.)
+
+      integer*4 REF_MIN,REF_MIS_CHECK,REF_GRIDS_CHECK
+      parameter (REF_MIN = 0.)
+      parameter (REF_MIS_CHECK = 100.)
+      parameter (REF_GRIDS_CHECK = 0)
+
+      real*4 COVERAGE_MIN
+      parameter (COVERAGE_MIN = 0.4)

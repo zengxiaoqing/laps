@@ -1,0 +1,92 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC)  @OPTIMIZE@
+
+F77       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/cloud/libcloud.a  \
+           $(LAPSROOT)/src/lib/liblaps.a  \
+           $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
+           $(LAPSROOT)/src/lib/goeslib/libgoeslib.a  \
+           $(LAPSROOT)/src/lib/util/libutil.a  
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/cloud/libdebugcloud.a  \
+             $(LAPSROOT)/src/lib/libdebuglaps.a  \
+             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
+             $(LAPSROOT)/src/lib/goeslib/libdebuggoeslib.a  \
+             $(LAPSROOT)/src/lib/util/libdebugutil.a 
+
+
+OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a
+
+EXE = deriv.exe
+
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL = @INSTALL@
+
+# Define all source code to be compiled and placed in local library.
+
+SRC=laps_deriv.f      laps_deriv_sub.f
+
+
+all: exe
+
+exe: $(EXE)
+
+$(EXE): $(SRC)
+	$(FC) $(FFLAGS) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+debug: $(SRC)
+	rm -f $(EXE) *.o;
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+
+install: exe
+	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
+
+clean:
+	rm -f $(EXE)  *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
+
+
+
+
+
+
+
+laps_deriv_sub.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
+

@@ -1,0 +1,688 @@
+No match.
+No match.
+add.for
+addcon.for
+advect.for
+array_diagnosis.for
+atan3.for
+atan3d.for
+bilinear_interp.for
+constant.for
+convc2f.for
+conversions.for
+convf2c.for
+convf2k.for
+convk2f.for
+convkt2ms.for
+convm2miles.for
+convmiles2m.for
+convms2kt.for
+cv_asc_i4time.for
+cv_i4tim_asc_lp.for
+cvt_cdf_oldlaps.for
+diff.for
+downcase.for
+esat1.for
+filename13.for
+get_cloud_deriv.for
+get_dir_length.for
+get_file_time.for
+get_heights_hydrostatic.for
+get_lowref.for
+get_maps_lapsgrid.for
+get_maxref.for
+get_maxtops.for
+get_precip_accum.for
+get_radar_max_pd.for
+get_wind_2d.for
+getcld3d.for
+getradar.for
+gettmp2d.for
+gettmp3d.for
+getuv3d.for
+getw3d.for
+hum.for
+i4time_fname_lp.for
+interp.for
+interpolate_3dfield.for
+laps_io.for
+laps_thermo.for
+lapsgrid.for
+lapsparms.for
+latlon_to_rlaps.for
+make_fnam_lp.for
+meanlapse.for
+meanpres.for
+move.for
+multar.for
+multcon.for
+my_show_timer.for
+newreadobs.for
+psatoz.for
+radar_qc.for
+razm_lat_lon_gm.for
+rd_laps_static.for
+read-laps-static.for
+read_surface_obs.for
+readlapsdata.for
+readlapsheader.for
+readobs.for
+readobsi.for
+readsfc.for
+rfill.for
+smf_wisp91.for
+smf_wisp92.for
+subcon.for
+upcase.for
+visg2log.for
+viss2log.for
+vlog2vis.for
+vv.for
+windspeed.for
+writelapsdata.for
+wrt_laps_static.for
+zero.for
+zr.for
+zs.for
+ztopsa.for
+ln: laps_cloud.inc: File exists
+ln: lapsparms.cmn: File exists
+cc -Inetcdf/src -Drtu -c readwritelaps.c
+"readwritelaps.c", line 12173: warning: & before array or function: ignored
+cc -Inetcdf/src -Drtu -c i4time_now_gg.c
+cc -Inetcdf/src -Drtu -c static_routines.c
+f77 -native -O3 -i4 -c add.f
+add.f:
+	add:
+f77 -native -O3 -i4 -c addcon.f
+addcon.f:
+	addcon:
+f77 -native -O3 -i4 -c advect.f
+advect.f:
+	advect:
+f77 -native -O3 -i4 -c array_diagnosis.f
+array_diagnosis.f:
+	array_diagnosis:
+f77 -native -O3 -i4 -c atan3.f
+atan3.f:
+	atan3:
+f77 -native -O3 -i4 -c atan3d.f
+atan3d.f:
+	atan3d:
+f77 -native -O3 -i4 -c bilinear_interp.f
+bilinear_interp.f:
+	bilinear_interp:
+f77 -native -O3 -i4 -c constant.f
+constant.f:
+	constant:
+f77 -native -O3 -i4 -c convc2f.f
+convc2f.f:
+	conv_c2f:
+f77 -native -O3 -i4 -c conversions.f
+conversions.f:
+	omega_to_w:
+	w_to_omega:
+	latlon_to_radar:
+	radar_to_latlon_old:
+	radar_to_latlon:
+	height_to_zcoord:
+	height_to_zcoord2:
+	height_to_zcoord3:
+	height_to_zcoord4:
+	height_to_pressure:
+	height_of_level:
+	zcoord_of_level:
+	pressure_of_level:
+	pressure_of_rlevel:
+	zcoord_of_pressure:
+	zcoord_of_logpressure:
+	uvgrid_to_radar:
+	uvtrue_to_radar:
+	uvgrid_to_disptrue:
+	disptrue_to_radar:
+	radar_to_uvgrid:
+	radar_to_uvtrue:
+	radar_to_disptrue:
+	disptrue_to_uvgrid:
+	uvtrue_to_uvgrid:
+	uvgrid_to_uvtrue:
+	rotate_vec:
+	disp_to_uv:
+	uv_to_disp:
+	k_to_f:
+	f_to_k:
+f77 -native -O3 -i4 -c convf2c.f
+convf2c.f:
+	conv_f2c:
+f77 -native -O3 -i4 -c convf2k.f
+convf2k.f:
+	conv_f2k:
+f77 -native -O3 -i4 -c convk2f.f
+convk2f.f:
+	conv_k2f:
+f77 -native -O3 -i4 -c convkt2ms.f
+convkt2ms.f:
+	conv_kt2ms:
+f77 -native -O3 -i4 -c convm2miles.f
+convm2miles.f:
+	conv_m2miles:
+f77 -native -O3 -i4 -c convmiles2m.f
+convmiles2m.f:
+	conv_miles2m:
+f77 -native -O3 -i4 -c convms2kt.f
+convms2kt.f:
+	conv_ms2kt:
+f77 -native -O3 -i4 -c cv_asc_i4time.f
+cv_asc_i4time.f:
+	cv_asc_i4time:
+f77 -native -O3 -i4 -c cv_i4tim_asc_lp.f
+cv_i4tim_asc_lp.f:
+	cv_i4tim_asc_lp:
+f77 -native -O3 -i4 -c cvt_cdf_oldlaps.f
+cvt_cdf_oldlaps.f:
+	cvt_cdf_oldlaps:
+"cvt_cdf_oldlaps.f", line 24: Warning: local variable "i" never used
+"cvt_cdf_oldlaps.f", line 24: Warning: local variable "j" never used
+"cvt_cdf_oldlaps.f", line 24: Warning: local variable "k" never used
+"cvt_cdf_oldlaps.f", line 38: Warning: local variable "ext_i" never used
+"cvt_cdf_oldlaps.f", line 46: Warning: local variable "gtime" never used
+"cvt_cdf_oldlaps.f", line 47: Warning: local variable "file_name" never used
+"cvt_cdf_oldlaps.f", line 61: Warning: local variable "b_ext" never used
+f77 -native -O3 -i4 -c diff.f
+diff.f:
+	diff:
+f77 -native -O3 -i4 -c downcase.f
+downcase.f:
+	downcase:
+f77 -native -O3 -i4 -c esat1.f
+esat1.f:
+	esat1:
+f77 -native -O3 -i4 -c filename13.f
+filename13.f:
+	filename13:
+f77 -native -O3 -i4 -c get_cloud_deriv.f
+get_cloud_deriv.f:
+	get_cloud_deriv:
+"get_cloud_deriv.f", line 56: Warning: local variable "rlwc_laps1d" never used
+"get_cloud_deriv.f", line 58: Warning: local variable "lwc_res_1d" never used
+"get_cloud_deriv.f", line 61: Warning: local variable "icing_index_1d" never used
+	cpt_pcp_type_3d:
+	get_sfc_preciptype:
+	get_slwc1d:
+	integrate_slwc:
+	get_mvd:
+	get_cloudtype:
+	get_stability:
+	isi3:
+f77 -native -O3 -i4 -c get_dir_length.f
+get_dir_length.f:
+	get_directory_length:
+f77 -native -O3 -i4 -c get_directory.f
+get_directory.f:
+	get_directory:
+f77 -native -O3 -i4 -c get_file_names.f
+get_file_names.f:
+	get_file_names:
+	i4_to_byte:
+	byte_to_i4:
+f77 -native -O3 -i4 -c get_file_time.f
+get_file_time.f:
+	get_file_time:
+f77 -native -O3 -i4 -c get_heights_hydrostatic.f
+get_heights_hydrostatic.f:
+	get_heights_hydrostatic:
+	z_thk:
+	w_laps:
+f77 -native -O3 -i4 -c get_lowref.f
+get_lowref.f:
+	get_low_ref:
+f77 -native -O3 -i4 -c get_maps_lapsgrid.f
+get_maps_lapsgrid.f:
+	get_maps_laps_4d:
+	get_maps_file:
+	check_maps_file:
+	get_maps_window:
+f77 -native -O3 -i4 -c get_maxref.f
+get_maxref.f:
+	get_max_ref:
+f77 -native -O3 -i4 -c get_maxtops.f
+get_maxtops.f:
+	get_maxtops:
+f77 -native -O3 -i4 -c get_precip_accum.f
+get_precip_accum.f:
+ MAIN:
+"get_precip_accum.f", line 2: Error: unbalanced parentheses, statement skipped
+"get_precip_accum.f", line 2: Error: unclassifiable statement
+"get_precip_accum.f", line 22: Error: illegal continuation card ignored
+"get_precip_accum.f", line 23: Error: illegal continuation card ignored
+"get_precip_accum.f", line 24: Error: illegal continuation card ignored
+"get_precip_accum.f", line 25: Error: illegal continuation card ignored
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "lat" is a non-argument adjustable array
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 44: Error: "lon" is a non-argument adjustable array
+"get_precip_accum.f", line 45: Error: "topo" is a non-argument adjustable array
+"get_precip_accum.f", line 48: Error: "snow_accum" is a non-argument adjustable array
+"get_precip_accum.f", line 49: Error: "precip_accum" is a non-argument adjustable array
+"get_precip_accum.f", line 51: Error: "snow_accum_pd" is a non-argument adjustable array
+"get_precip_accum.f", line 52: Error: "snow_rate" is a non-argument adjustable array
+"get_precip_accum.f", line 53: Error: "precip_rate" is a non-argument adjustable array
+"get_precip_accum.f", line 54: Error: "dbz_2d" is a non-argument adjustable array
+"get_precip_accum.f", line 55: Error: "t_sfc_k" is a non-argument adjustable array
+"get_precip_accum.f", line 56: Error: "td_sfc_k" is a non-argument adjustable array
+"get_precip_accum.f", line 57: Error: "pres_sta_pa" is a non-argument adjustable array
+"get_precip_accum.f", line 58: Warning: local variable "tw_sfc_k" never used
+"get_precip_accum.f", line 58: Error: "tw_sfc_k" is a non-argument adjustable array
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "temp_3d" is a non-argument adjustable array
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 60: Error: "temp_col_max" is a non-argument adjustable array
+"get_precip_accum.f", line 61: Error: "rh_3d" is a non-argument adjustable array
+"get_precip_accum.f", line 62: Error: "pressures_mb" is a non-argument adjustable array
+"get_precip_accum.f", line 63: Error: "l_mask" is a non-argument adjustable array
+"get_precip_accum.f", line 64: Error: "pcp_type_2d" is a non-argument adjustable array
+"get_precip_accum.f", line 65: Error: "cldpcp_type_3d" is a non-argument adjustable array
+"get_precip_accum.f", line 66: Error: "ipcp_1d" is a non-argument adjustable array
+"get_precip_accum.f", line 68: Error: "grid_ra_ref" is a non-argument adjustable array
+"get_precip_accum.f", line 69: Error: "grid_ra_vel" is a non-argument adjustable array
+"get_precip_accum.f", line 85: Warning: local variable "i4_to_byte" never used
+"get_precip_accum.f", line 107: Error: bad dimension list for array "pressures_mb"
+"get_precip_accum.f", line 135: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 148: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 165: Error: bad dimension list for array "snow_accum"
+"get_precip_accum.f", line 166: Error: bad dimension list for array "snow_accum_pd"
+"get_precip_accum.f", line 167: Error: bad dimension list for array "precip_accum"
+"get_precip_accum.f", line 168: Error: bad dimension list for array "l_mask"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "lat"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "lon"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "topo"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "grid_ra_ref"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "grid_ra_vel"
+"get_precip_accum.f", line 208: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 235: Error: bad dimension list for array "temp_3d"
+"get_precip_accum.f", line 235: Error: bad dimension list for array "rh_3d"
+"get_precip_accum.f", line 235: Error: bad dimension list for array "cldpcp_type_3d"
+"get_precip_accum.f", line 239: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 245: Error: bad dimension list for array "pres_sta_pa"
+"get_precip_accum.f", line 245: Error: bad dimension list for array "t_sfc_k"
+"get_precip_accum.f", line 245: Error: bad dimension list for array "td_sfc_k"
+"get_precip_accum.f", line 245: Error: bad dimension list for array "pcp_type_2d"
+"get_precip_accum.f", line 287: Error: bad dimension list for array "ipcp_1d"
+"get_precip_accum.f", line 325: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 336: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 347: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 362: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 368: Error: bad dimension list for array "temp_col_max"
+"get_precip_accum.f", line 394: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 407: Error: bad dimension list for array "dbz_2d"
+"get_precip_accum.f", line 417: Error: bad dimension list for array "snow_rate"
+"get_precip_accum.f", line 432: Error: bad dimension list for array "precip_rate"
+"get_precip_accum.f", line 463: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 535: Warning: RETURN statement in main or block data
+	get_fracs:
+Compilation failed
+*** Error code 1
+make: Fatal error: Command failed for target `get_precip_accum.o'
+cc -Inetcdf/src -Drtu -g -c readwritelaps.c
+"readwritelaps.c", line 12173: warning: & before array or function: ignored
+cc -Inetcdf/src -Drtu -g -c i4time_now_gg.c
+cc -Inetcdf/src -Drtu -g -c static_routines.c
+f77 -native -O2 -i4 -c -g add.f
+f77: Warning: -O conflicts with -g. -O turned off.
+add.f:
+	add:
+f77 -native -O2 -i4 -c -g addcon.f
+f77: Warning: -O conflicts with -g. -O turned off.
+addcon.f:
+	addcon:
+f77 -native -O2 -i4 -c -g advect.f
+f77: Warning: -O conflicts with -g. -O turned off.
+advect.f:
+	advect:
+f77 -native -O2 -i4 -c -g array_diagnosis.f
+f77: Warning: -O conflicts with -g. -O turned off.
+array_diagnosis.f:
+	array_diagnosis:
+f77 -native -O2 -i4 -c -g atan3.f
+f77: Warning: -O conflicts with -g. -O turned off.
+atan3.f:
+	atan3:
+f77 -native -O2 -i4 -c -g atan3d.f
+f77: Warning: -O conflicts with -g. -O turned off.
+atan3d.f:
+	atan3d:
+f77 -native -O2 -i4 -c -g bilinear_interp.f
+f77: Warning: -O conflicts with -g. -O turned off.
+bilinear_interp.f:
+	bilinear_interp:
+f77 -native -O2 -i4 -c -g constant.f
+f77: Warning: -O conflicts with -g. -O turned off.
+constant.f:
+	constant:
+f77 -native -O2 -i4 -c -g convc2f.f
+f77: Warning: -O conflicts with -g. -O turned off.
+convc2f.f:
+	conv_c2f:
+f77 -native -O2 -i4 -c -g conversions.f
+f77: Warning: -O conflicts with -g. -O turned off.
+conversions.f:
+	omega_to_w:
+	w_to_omega:
+	latlon_to_radar:
+	radar_to_latlon_old:
+	radar_to_latlon:
+	height_to_zcoord:
+	height_to_zcoord2:
+	height_to_zcoord3:
+	height_to_zcoord4:
+	height_to_pressure:
+	height_of_level:
+	zcoord_of_level:
+	pressure_of_level:
+	pressure_of_rlevel:
+	zcoord_of_pressure:
+	zcoord_of_logpressure:
+	uvgrid_to_radar:
+	uvtrue_to_radar:
+	uvgrid_to_disptrue:
+	disptrue_to_radar:
+	radar_to_uvgrid:
+	radar_to_uvtrue:
+	radar_to_disptrue:
+	disptrue_to_uvgrid:
+	uvtrue_to_uvgrid:
+	uvgrid_to_uvtrue:
+	rotate_vec:
+	disp_to_uv:
+	uv_to_disp:
+	k_to_f:
+	f_to_k:
+f77 -native -O2 -i4 -c -g convf2c.f
+f77: Warning: -O conflicts with -g. -O turned off.
+convf2c.f:
+	conv_f2c:
+f77 -native -O2 -i4 -c -g convf2k.f
+f77: Warning: -O conflicts with -g. -O turned off.
+convf2k.f:
+	conv_f2k:
+f77 -native -O2 -i4 -c -g convk2f.f
+f77: Warning: -O conflicts with -g. -O turned off.
+convk2f.f:
+	conv_k2f:
+f77 -native -O2 -i4 -c -g convkt2ms.f
+f77: Warning: -O conflicts with -g. -O turned off.
+convkt2ms.f:
+	conv_kt2ms:
+f77 -native -O2 -i4 -c -g convm2miles.f
+f77: Warning: -O conflicts with -g. -O turned off.
+convm2miles.f:
+	conv_m2miles:
+f77 -native -O2 -i4 -c -g convmiles2m.f
+f77: Warning: -O conflicts with -g. -O turned off.
+convmiles2m.f:
+	conv_miles2m:
+f77 -native -O2 -i4 -c -g convms2kt.f
+f77: Warning: -O conflicts with -g. -O turned off.
+convms2kt.f:
+	conv_ms2kt:
+f77 -native -O2 -i4 -c -g cv_asc_i4time.f
+f77: Warning: -O conflicts with -g. -O turned off.
+cv_asc_i4time.f:
+	cv_asc_i4time:
+f77 -native -O2 -i4 -c -g cv_i4tim_asc_lp.f
+f77: Warning: -O conflicts with -g. -O turned off.
+cv_i4tim_asc_lp.f:
+	cv_i4tim_asc_lp:
+f77 -native -O2 -i4 -c -g cvt_cdf_oldlaps.f
+f77: Warning: -O conflicts with -g. -O turned off.
+cvt_cdf_oldlaps.f:
+	cvt_cdf_oldlaps:
+"cvt_cdf_oldlaps.f", line 24: Warning: local variable "i" never used
+"cvt_cdf_oldlaps.f", line 24: Warning: local variable "j" never used
+"cvt_cdf_oldlaps.f", line 24: Warning: local variable "k" never used
+"cvt_cdf_oldlaps.f", line 38: Warning: local variable "ext_i" never used
+"cvt_cdf_oldlaps.f", line 46: Warning: local variable "gtime" never used
+"cvt_cdf_oldlaps.f", line 47: Warning: local variable "file_name" never used
+"cvt_cdf_oldlaps.f", line 61: Warning: local variable "b_ext" never used
+f77 -native -O2 -i4 -c -g diff.f
+f77: Warning: -O conflicts with -g. -O turned off.
+diff.f:
+	diff:
+f77 -native -O2 -i4 -c -g downcase.f
+f77: Warning: -O conflicts with -g. -O turned off.
+downcase.f:
+	downcase:
+f77 -native -O2 -i4 -c -g esat1.f
+f77: Warning: -O conflicts with -g. -O turned off.
+esat1.f:
+	esat1:
+f77 -native -O2 -i4 -c -g filename13.f
+f77: Warning: -O conflicts with -g. -O turned off.
+filename13.f:
+	filename13:
+f77 -native -O2 -i4 -c -g get_cloud_deriv.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_cloud_deriv.f:
+	get_cloud_deriv:
+"get_cloud_deriv.f", line 56: Warning: local variable "rlwc_laps1d" never used
+"get_cloud_deriv.f", line 58: Warning: local variable "lwc_res_1d" never used
+"get_cloud_deriv.f", line 61: Warning: local variable "icing_index_1d" never used
+	cpt_pcp_type_3d:
+	get_sfc_preciptype:
+	get_slwc1d:
+	integrate_slwc:
+	get_mvd:
+	get_cloudtype:
+	get_stability:
+	isi3:
+f77 -native -O2 -i4 -c -g get_dir_length.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_dir_length.f:
+	get_directory_length:
+f77 -native -O2 -i4 -c -g get_directory.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_directory.f:
+	get_directory:
+f77 -native -O2 -i4 -c -g get_file_names.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_file_names.f:
+	get_file_names:
+	i4_to_byte:
+	byte_to_i4:
+f77 -native -O2 -i4 -c -g get_file_time.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_file_time.f:
+	get_file_time:
+f77 -native -O2 -i4 -c -g get_heights_hydrostatic.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_heights_hydrostatic.f:
+	get_heights_hydrostatic:
+	z_thk:
+	w_laps:
+f77 -native -O2 -i4 -c -g get_lowref.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_lowref.f:
+	get_low_ref:
+f77 -native -O2 -i4 -c -g get_maps_lapsgrid.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_maps_lapsgrid.f:
+	get_maps_laps_4d:
+	get_maps_file:
+	check_maps_file:
+	get_maps_window:
+f77 -native -O2 -i4 -c -g get_maxref.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_maxref.f:
+	get_max_ref:
+f77 -native -O2 -i4 -c -g get_maxtops.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_maxtops.f:
+	get_maxtops:
+f77 -native -O2 -i4 -c -g get_precip_accum.f
+f77: Warning: -O conflicts with -g. -O turned off.
+get_precip_accum.f:
+ MAIN:
+"get_precip_accum.f", line 2: Error: unbalanced parentheses, statement skipped
+"get_precip_accum.f", line 2: Error: unclassifiable statement
+"get_precip_accum.f", line 22: Error: illegal continuation card ignored
+"get_precip_accum.f", line 23: Error: illegal continuation card ignored
+"get_precip_accum.f", line 24: Error: illegal continuation card ignored
+"get_precip_accum.f", line 25: Error: illegal continuation card ignored
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "lat" is a non-argument adjustable array
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "imax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 43: Error: "jmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 44: Error: "lon" is a non-argument adjustable array
+"get_precip_accum.f", line 45: Error: "topo" is a non-argument adjustable array
+"get_precip_accum.f", line 48: Error: "snow_accum" is a non-argument adjustable array
+"get_precip_accum.f", line 49: Error: "precip_accum" is a non-argument adjustable array
+"get_precip_accum.f", line 51: Error: "snow_accum_pd" is a non-argument adjustable array
+"get_precip_accum.f", line 52: Error: "snow_rate" is a non-argument adjustable array
+"get_precip_accum.f", line 53: Error: "precip_rate" is a non-argument adjustable array
+"get_precip_accum.f", line 54: Error: "dbz_2d" is a non-argument adjustable array
+"get_precip_accum.f", line 55: Error: "t_sfc_k" is a non-argument adjustable array
+"get_precip_accum.f", line 56: Error: "td_sfc_k" is a non-argument adjustable array
+"get_precip_accum.f", line 57: Error: "pres_sta_pa" is a non-argument adjustable array
+"get_precip_accum.f", line 58: Warning: local variable "tw_sfc_k" never used
+"get_precip_accum.f", line 58: Error: "tw_sfc_k" is a non-argument adjustable array
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "temp_3d" is a non-argument adjustable array
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 59: Error: "kmax":  Adjustable array's bounds must be a dummy argument or in a common block
+"get_precip_accum.f", line 60: Error: "temp_col_max" is a non-argument adjustable array
+"get_precip_accum.f", line 61: Error: "rh_3d" is a non-argument adjustable array
+"get_precip_accum.f", line 62: Error: "pressures_mb" is a non-argument adjustable array
+"get_precip_accum.f", line 63: Error: "l_mask" is a non-argument adjustable array
+"get_precip_accum.f", line 64: Error: "pcp_type_2d" is a non-argument adjustable array
+"get_precip_accum.f", line 65: Error: "cldpcp_type_3d" is a non-argument adjustable array
+"get_precip_accum.f", line 66: Error: "ipcp_1d" is a non-argument adjustable array
+"get_precip_accum.f", line 68: Error: "grid_ra_ref" is a non-argument adjustable array
+"get_precip_accum.f", line 69: Error: "grid_ra_vel" is a non-argument adjustable array
+"get_precip_accum.f", line 85: Warning: local variable "i4_to_byte" never used
+"get_precip_accum.f", line 107: Error: bad dimension list for array "pressures_mb"
+"get_precip_accum.f", line 135: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 148: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 165: Error: bad dimension list for array "snow_accum"
+"get_precip_accum.f", line 166: Error: bad dimension list for array "snow_accum_pd"
+"get_precip_accum.f", line 167: Error: bad dimension list for array "precip_accum"
+"get_precip_accum.f", line 168: Error: bad dimension list for array "l_mask"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "lat"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "lon"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "topo"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "grid_ra_ref"
+"get_precip_accum.f", line 198: Error: bad dimension list for array "grid_ra_vel"
+"get_precip_accum.f", line 208: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 235: Error: bad dimension list for array "temp_3d"
+"get_precip_accum.f", line 235: Error: bad dimension list for array "rh_3d"
+"get_precip_accum.f", line 235: Error: bad dimension list for array "cldpcp_type_3d"
+"get_precip_accum.f", line 239: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 245: Error: bad dimension list for array "pres_sta_pa"
+"get_precip_accum.f", line 245: Error: bad dimension list for array "t_sfc_k"
+"get_precip_accum.f", line 245: Error: bad dimension list for array "td_sfc_k"
+"get_precip_accum.f", line 245: Error: bad dimension list for array "pcp_type_2d"
+"get_precip_accum.f", line 287: Error: bad dimension list for array "ipcp_1d"
+"get_precip_accum.f", line 325: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 336: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 347: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 362: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 368: Error: bad dimension list for array "temp_col_max"
+"get_precip_accum.f", line 394: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 407: Error: bad dimension list for array "dbz_2d"
+"get_precip_accum.f", line 417: Error: bad dimension list for array "snow_rate"
+"get_precip_accum.f", line 432: Error: bad dimension list for array "precip_rate"
+"get_precip_accum.f", line 463: Warning: RETURN statement in main or block data
+"get_precip_accum.f", line 535: Warning: RETURN statement in main or block data
+	get_fracs:
+Compilation failed
+*** Error code 1
+make: Fatal error: Command failed for target `get_precip_accum.o'
+chmod: readwritelaps.c: Not owner
+chmod: static_routines.c: Not owner

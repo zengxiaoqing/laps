@@ -1,0 +1,262 @@
+dnl
+dnl tests specific to fortran and it's interface to C
+dnl
+AC_DEFUN(AC_PROG_FC,[
+AC_CHECK_PROGS(FC, f77 xlf f90 gf77,,$PATH)
+test -z "$FC" && AC_MSG_ERROR([no acceptable fortran found in \$PATH])
+cat >conftest.f <<EOF
+          program main
+          end
+EOF
+/bin/rm -f conftest.out
+$FC $FFLAGS -c conftest.f > conftest.out 2>&1
+if test $? != 0 ; then
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN(Fortran compiler returned non-zero return code)
+    if test -s conftest.out ; then
+        cat conftest.out
+    fi
+elif test ! -s conftest.o ; then
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN(Fortran compiler did not produce object file)
+    if test -s conftest.out ; then
+        cat conftest.out
+    fi
+else    
+    AC_MSG_RESULT($FC seems to work)
+fi
+rm -f conftest* 
+AC_SUBST(FC)
+])
+
+AC_DEFUN(AC_FC_FUNC_GETENV,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+  AC_MSG_CHECKING(For a getenv function in fortran)
+  cat << EOF > testgetenv.f
+       program t_getenv
+       character*8 name
+       character*80 response
+       data name/'HOME'/
+       call getenv(name,response)
+       print *,response
+       end
+EOF
+/bin/rm -f genv.out
+$FC $FFLAGS testgetenv.f -o genv > testgenv.out 2>&1
+if test $? != 0
+then
+  AC_MSG_RESULT(no)
+  HAVE_FC_GETENV=0
+else
+  AC_MSG_RESULT(yes)
+  HAVE_FC_GETENV=1
+  THOME=`genv`
+  if test ! "$THOME"="$HOME"
+  then
+    AC_MSG_ERROR(Fortran getenv does not seem to return the proper value for 
+                 the environment variable HOME env=$HOME $FC=$THOME)
+  fi
+fi
+rm -f testgetenv.f genv testgenv.out  
+])
+
+dnl Fortran runtime for Fortran/C linking
+dnl On suns, try
+dnl FC_LIB          =/usr/local/lang/SC2.0.1/libM77.a \ 
+dnl              /usr/local/lang/SC2.0.1/libF77.a -lm \
+dnl              /usr/local/lang/SC2.0.1/libm.a \
+dnl              /usr/local/lang/SC2.0.1/libansi.a
+dnl
+dnl AIX requires -bI:/usr/lpp/xlf/lib/lowsys.exp
+dnl ------------------------------------------------------------------------
+dnl
+dnl Get the format of Fortran names.  Uses F77, FFLAGS, and sets WDEF.
+dnl If the test fails, sets NOF77 to 1, HAS_FORTRAN to 0
+dnl
+define(AC_FC_NAMES,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+   # Check for strange behavior of Fortran.  For example, some FreeBSD
+   # systems use f2c to implement f77, and the version of f2c that they 
+   # use generates TWO (!!!) trailing underscores
+   #
+   # Eventually, we want to be able to override the choices here and
+   # force a particular form.  This is particularly useful in systems
+   # where a Fortran compiler option is used to force a particular
+   # external name format (rs6000 xlf, for example).
+   cat > confftest.f <<EOF
+       subroutine iNiT_fop( a )
+       integer a
+       a = 1
+       return
+       end
+EOF
+   $FC $FFLAGS -c confftest.f > /dev/null 2>&1
+   if test ! -s confftest.o ; then
+        AC_MSG_ERROR(Unable to test Fortran compiler:
+        Compiling a test program failed to produce an object file.)
+   elif test -n "$FORTRANNAMES" ; then
+	WDEF="-D$FORTRANNAMES"
+   else
+    # We have to be careful here, since the name may occur in several
+    # forms.  We try to handle this by testing for several forms
+    # directly.
+    if test $arch_CRAY ; then
+     # Cray doesn't accept -a ...
+     nameform1=`strings confftest.o | grep init_fop_  | head -1`
+     nameform2=`strings confftest.o | grep INIT_FOP   | head -1`
+     nameform3=`strings confftest.o | grep init_fop   | head -1`
+     nameform4=`strings confftest.o | grep init_fop__ | head -1`
+    else
+     nameform1=`strings -a confftest.o | grep init_fop_  | head -1`
+     nameform2=`strings -a confftest.o | grep INIT_FOP   | head -1`
+     nameform3=`strings -a confftest.o | grep init_fop   | head -1`
+     nameform4=`strings -a confftest.o | grep init_fop__ | head -1`
+    fi
+    /bin/rm -f confftest.f confftest.o
+    if test -n "$nameform4" ; then
+	AC_MSG_RESULT(Fortran externals are lower case and have 1 or 2 trailing underscores)
+	WDEF=-DFORTRANDOUBLEUNDERSCORE
+    elif test -n "$nameform1" ; then
+        AC_MSG_RESULT(Fortran externals have a trailing underscore and are lowercase)
+	WDEF=-DFORTRANUNDERSCORE
+    elif test -n "$nameform2" ; then
+	AC_MSG_RESULT(Fortran externals are uppercase)
+	WDEF=-DFORTRANCAPS 
+    elif test -n "$nameform3" ; then
+	AC_MSG_RESULT(Fortran externals are lower case)
+	WDEF=-DFORTRANNOUNDERSCORE 
+    else
+	AC_MSG_ERROR(Unable to determine the form of Fortran external names
+          Make sure that the compiler $FC can be run on this system)
+    fi
+    fi])dnl
+
+
+AC_DEFUN(AC_FC_FUNC_IMPLICIT_ALLOC,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+# 
+# Check for implicit dynamic memory allocation support in fortran
+#
+# This is unnessaccerily complicated in an attempt to fool optimizers 
+#
+   cat > memtest.f <<EOF
+       program memtest
+       integer n1, n2
+       n1=200
+       n2=300
+       call mem_test(n1,n2)
+       
+       end
+       subroutine mem_test( n1, n2 )
+       integer n1,n2, i, j
+       real f(n1,n2)
+       do j=1,n2
+         do i=1,n1
+           f(i,j) = i+j*n1
+         enddo
+       enddo
+       print *,f
+       return
+       end
+EOF
+$FC $FFLAGS  memtest.f -o memtest > /dev/null 2>&1
+if test ! -x memtest ; then
+  AC_MSG_RESULT(Test for implicit memory allocation in fortran did not compile
+                   assuming implicit allocation is not supported)
+  DYNAMIC=0
+else
+  memtest > /dev/null 2>&1
+  if test $? != 0 
+  then
+    AC_MSG_RESULT(Test for implicit memory allocation in fortran failed
+                   assuming implicit allocation is not supported)
+    DYNAMIC=0
+  else
+    AC_MSG_RESULT(Good: $FC supports implicit memory allocation)
+    DYNAMIC=1
+  fi
+fi
+rm -f memtest.f memtest
+])
+dnl
+dnl How to use the preprocessor with fortran
+dnl 
+AC_DEFUN(AC_FC_CPP,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+  AC_REQUIRE([AC_PROG_CC])dnl
+  cat > cpptest.F << EOF
+       program cpptest
+       int a
+       a=-1
+#if defined(CPPTEST)
+       a=0
+#endif
+       print *,a
+       end
+EOF
+dnl
+dnl We want to make sure we get a clean fortran output from cpp
+dnl
+rm -f cpptest.* cpptest
+CPP="$CC -P"
+$CPP $CPPFLAGS -DCPPTEST cpptest.F 1>/dev/null 2>&1
+if test -s cpptest.i
+then
+  mv cpptest.i cpptest.f
+  $FC $FFLAGS cpptest.f -o cpptest 1>/dev/null 2>&1
+  if test -x cpptest
+  then
+    fc_tmp=`cpptest`
+  fi
+  AC_MSG_RESULT(f)  
+fi
+rm -f cpptest.* cpptest
+])
+
+AC_DEFUN(AC_FC_INC,[
+dnl test -I command line option
+  AC_REQUIRE([AC_PROG_FC])dnl
+  cat > util/inctest.inc << EOF
+       integer a
+       data a/1/
+EOF
+  cat > inctest.f << EOF
+       program inctest
+       include 'inctest.inc'
+       print *,a
+       end
+EOF
+dnl
+dnl  
+dnl
+$FC $FFLAGS -Iutil inctest.f -o inctest 1>/dev/null 2>&1
+if test ! -x inctest ; then
+  AC_MSG_RESULT(It appears that -I cannot be used with Fortran include
+	        statement. Will add links for include files)
+
+  ac_fc_inc_val=0
+else
+  inctest > /dev/null 2>&1
+  if test $? != 0 
+  then
+    AC_MSG_RESULT(It appears that -I cannot be used with Fortran include
+	        statement. Will add links for include files)
+    ac_fc_inc_val=0
+  else
+    AC_MSG_RESULT(Good: $FC supports -I option for fortran include statement)
+    ac_fc_inc_val=1
+  fi
+fi
+rm -f inctest.f inctest util/inctest.inc
+
+])
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,39 @@
+
+C
+	subroutine get_directory_length(c_fname,lenf)
+C
+C********************************************************************
+C
+C	This routine takes as input a pathname and returns an index that 
+C	points at the end of the directory portion of the pathname.
+C	Simple-minded algorithm just searches backwards for the first
+C	occurance of a `/' (for UNIX) or a `]' (for VMS).
+C
+C	Input/Output:
+C
+C	Name		Type	I/O	Description
+C	----		---	--	-----------
+C	c_fnames	char	I	file name.
+C	lenf		I  	O	index to end of directory
+C
+C********************************************************************
+C
+	character c_fname*(*)
+	integer*4 lenf
+C
+	integer*4 i, strlen
+C
+C****************************
+C
+        strlen = len(c_fname)
+C
+	i = strlen
+	do while ((i .gt. 0) .and. (c_fname(i:i) .ne. ']') 
+	1		     .and. (c_fname(i:i) .ne. '/') )
+	   i = i-1
+	enddo
+C
+	lenf = i
+C 
+	return
+	end

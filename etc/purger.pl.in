@@ -1,0 +1,68 @@
+#!@PERL@
+# @configure_input@
+#
+$DATAROOT=shift;
+
+# This script purgers old data files in directories under the lapsprd 
+# directory.  It expects the at least the first two characters of the file
+# name are digits.  hist_time is the age in days of the oldest files to keep.
+# Exceptions can be listed below.
+#
+
+$hist_time = 0.5;
+
+print "Running $0 for data in $DATAROOT\n";
+
+chdir($DATAROOT);
+
+opendir(DIR,$DATAROOT); 
+
+foreach(grep(!/^\.\.?$/,readdir(DIR))){
+    $clean_dirs{$_} = 1.5 if(-d $_);
+}
+
+closedir(DIR);
+#
+# List directories in which to keep files for a longer or shorter time here.
+#
+
+$clean_dirs{lga} = 0.5;
+$clean_dirs{lm2} = 2.1;
+
+#
+# Don't ever completely empty the directories 
+#
+
+$min_files = 5;
+
+
+foreach $dir (keys(%clean_dirs)){
+    opendir(DIR,$dir);
+    @filelist = grep(/^\d\d/, readdir(DIR));
+    closedir(DIR);
+    print "Purging in $dir\n";
+    next if($#filelist < $min_files);
+    $i=0;
+    foreach $file (sort @filelist){
+        stat("$dir/$file");
+        $age = -M _;
+
+#        print "$file $age\n";
+
+        if($age > $clean_dirs{$dir}){
+            $i--;
+            print "Removing file $dir/$file $age $clean_dirs{$dir}\n";
+            system("rm -f $dir/$file") ;
+        }else{
+	    last if($i++ > $min_files);
+	}         
+
+    }
+}
+
+
+
+
+
+
+

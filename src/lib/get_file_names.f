@@ -1,0 +1,172 @@
+cdis    Forecast Systems Laboratory
+cdis    NOAA/OAR/ERL/FSL
+cdis    325 Broadway
+cdis    Boulder, CO     80303
+cdis
+cdis    Forecast Research Division
+cdis    Local Analysis and Prediction Branch
+cdis    LAPS
+cdis
+cdis    This software and its documentation are in the public domain and
+cdis    are furnished "as is."  The United States government, its
+cdis    instrumentalities, officers, employees, and agents make no
+cdis    warranty, express or implied, as to the usefulness of the software
+cdis    and documentation for any purpose.  They assume no responsibility
+cdis    (1) for the use of the software and documentation; or (2) to provide
+cdis     technical support to users.
+cdis
+cdis    Permission to use, copy, modify, and distribute this software is
+cdis    hereby granted, provided that the entire disclaimer notice appears
+cdis    in all copies.  All modifications to this software must be clearly
+cdis    documented, and are solely the responsibility of the agent making
+cdis    the modifications.  If significant modifications or enhancements
+cdis    are made to this software, the FSL Software Policy Manager
+cdis    (softwaremgr@fsl.noaa.gov) should be notified.
+cdis
+cdis
+cdis
+cdis
+cdis
+cdis
+cdis
+        subroutine get_file_names(pathname_in,numoffiles,c_filenames
+     1        ,max_files,istatus)
+
+c
+c       Author : Dan Birkenheuer
+c
+c       Date: 5/22/95
+c       12/2/96 modified error output. DB
+c
+c       to be used with C-routine getfilenames_c.. this is the Fortran
+c       wrapper for that routine.
+c
+
+        implicit none
+
+        integer numoffiles,max_files
+        character*(*) pathname_in
+        character*(*) c_filenames(max_files)
+
+
+        character*256 file_names(3000)
+        character*256 dirpath
+        character*256 filter
+        integer istatus,i,nc,nindx,status,nindx2
+
+        nindx = index (pathname_in, '*')
+
+        if( nindx .eq. 0) then
+
+        dirpath = pathname_in
+        filter = '*'
+
+        else
+
+        nc = len(pathname_in)
+        i = nc
+        do while (pathname_in(i:i) .ne. '/' .and. i .gt. 0)
+        i = i-1
+        if (i.eq.0) goto 122
+        enddo
+122     continue
+
+        if (i.gt.0) then
+        dirpath = pathname_in(1:i)
+        filter = pathname_in(i+1:nc)
+        else
+        dirpath = '.'
+        filter = pathname_in(i+1:nc)
+        endif
+
+        endif
+
+
+        call getfilenames_c (dirpath,file_names,numoffiles,filter, statu
+     1s)
+
+        if(numoffiles.gt.max_files) then
+        print *, 'Error calling Get_file_names'
+        print *, 'number of files returned exceeds array allocation for'
+        print *, 'file_names.  (numoffiles > max_files)'
+        istatus = 0 ! failure
+        print *, 'Maxfile is ',max_files
+        print *, 'Number of files returned is ',numoffiles
+        return
+        endif
+
+        nindx2 = index(dirpath, ' ')
+        do i = 1, numoffiles
+        nindx = index(file_names(i), ' ')
+
+        if( dirpath(nindx2-1:nindx2-1) .ne. '/')then
+        c_filenames(i) = dirpath(1:nindx2-1)//'/'
+     1//file_names(i)(1:nindx-2)
+        else
+        c_filenames(i) = dirpath(1:nindx2-1)//file_names(i)(1:nindx-2)
+        endif
+
+        enddo
+
+        istatus = status
+
+        if (istatus.ne.1) then
+        return
+        endif
+
+c       sort data
+
+        call sort_fn (c_filenames,numoffiles,istatus)
+
+        return
+        end
+
+
+
+
+
+        subroutine sort_fn (names,number,istatus)
+
+        integer number                  ! Input
+        integer istatus                 ! Output
+        character*(*) names(number)     ! Input/Output
+
+        character*500 names_buf         ! Local
+        logical l_switch                ! Local
+
+!       This does a Bubble Sort on the list of names.
+!       Note that this is relatively inefficient, more efficient
+!       alternatives include a "tree" sort or various C sorting utilities.
+!       WARNING: Input names must be <= 500 characters in length.
+
+!       Steve Albers    June 1995
+
+10      l_switch = .false.
+
+        do i=1,number-1
+
+!           Compare two names
+            if(names(i) .gt. names(i+1))then
+
+!               Switch the names
+                names_buf = names(i)
+                names(i) = names(i+1)
+                names(i+1) = names_buf
+                l_switch = .true.
+
+            endif
+
+        enddo
+
+        if(l_switch)then
+!           write(6,*)' Sort_fn: switched one or more names'
+            go to 10
+        else
+            write(6,*)' Sort_fn: names all sorted'
+        endif
+
+        istatus = 1
+
+        return
+        end
+

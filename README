@@ -1,0 +1,1784 @@
+<pre>
+
+     This LAPS README file is viewable on the WWW via the LAPB home 
+     page at http://www.fsl.noaa.gov/frd-bin/LAPB.homepage.cgi
+
+
+                       TABLE OF CONTENTS
+                       -----------------
+
+     1.0 ............  General LAPS info
+     2.0 ............  Installing the LAPS Ingest/Analysis code 
+         2.1 ..............  Introduction
+         2.2 ..............  NetCDF library
+         2.3 ..............  Plotting / NCAR graphics library
+         2.4 ..............  Raw data ingest 
+         2.5 ..............  Running LAPS Analyses 
+         2.6 ..............  Test data case
+         2.7 ..............  F77 Compiler Flags     
+         2.8 ..............  I/O of LAPS gridded files
+         2.9 ..............  CHANGING THE HORIZONTAL DOMAIN
+         2.10 .............  CHANGING THE VERTICAL DOMAIN
+         2.11 .............  CHANGING THE CYCLE TIME 
+         2.12 .............  SURFACE ANALYSIS CHANGES
+         2.13 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
+         2.14 .............  LGA (MODEL BACKGROUND INGEST) CHANGES
+         2.15 .............  VRC (NOWRAD/ETC RADAR INGEST) CHANGES
+         2.16 .............  LVD (SATELLITE INGEST) CHANGES
+         2.17 .............  OTHER RUNTIME PARAMETERS
+     3.0 ............  Description of LAPS Processes
+         3.1 ..............  WATER VAPOR (HUMIDITY PROCESSING)
+         3.2 ..............  WSR 88-D RADAR REMAPPER
+         3.3 ..............  ADDITIONAL RADAR PREPROCESSING (VRC)
+         3.4 ..............  PROFILERS (PRO)
+         3.5 ..............  RASSs (LRS)
+         3.6 ..............  PIREPS/ACARS
+         3.7 ..............  WIND
+         3.8 ..............  TEMP
+         3.9 ..............  CLOUD
+         3.10 .............  DERIV
+         3.11 .............  ACCUM
+         3.12 .............  LGA
+         3.13 .............  LVD
+         3.14 .............  SFC (LSX)
+         3.15 .............  RAOB (SND)
+     4.0 ............  Porting code mods from LAPS users back to FSL
+     5.0 ............  LAPS Variables and netCDF File Organization 
+
+
+
+----------------- 1.0  General LAPS info --------------------------------------
+
+     Below is a description of the tar file containing the LAPS data ingest and
+     analysis code. The predictive component of LAPS (MM5 or RAMS) is
+     distributed separately. The main FSL contacts for this are 
+     John Snook (snook@fsl.noaa.gov) and Jim Edwards (jedwards@fsl.noaa.gov).
+
+     Please note that FSL provides support for LAPS software only if a prior
+     agreement is made to that effect. Additionally, questions concerning LAPS
+     must be asked in reference to the latest released tar file; we cannot 
+     support older versions of LAPS code. It is also recommended that LAPS 
+     users try to take advantage of the latest LAPS updates by periodically 
+     importing a fresh tar file every few months or so. A log of detailing 
+     recent revisions to the LAPS code may be found in laps/Revisions*.
+
+------------ 2.0 Installing the LAPS Ingest/Analysis code ---------------------
+
+            -----      2.1      Introduction  ------
+
+     Untar the laps source code using a command like
+     $ zcat laps-m.n.tar.gz | tar xf -
+     Go to the laps root directory and run 
+     $ ./configure
+
+     configure supports many options, the most important is the
+     --prefix option which tells make where to install the laps system.
+     The default is to install whereever the source is. A fully
+     operational laps system can require up to 1 GB of disk space,
+     this will vary depending on domain size and purge interval (more
+     on this later).  You can also separate the data (read/write) from
+     the binary executables (read only) using the --datadir option.  For example,
+     to install laps in directory /data/fxa/laps with data in /data/fxa/laps/data
+     use 
+     $ ./configure --prefix=/data/fxa/laps
+     
+     To install in /usr/local/laps with data in /data/fxa/laps use
+     $ ./configure --prefix=/usr/local/laps --datadir=/data/fxa/laps
+     
+     Data directories for laps can be specified at runtime and a single set of
+     binaries can support several data directories.
+
+     Supported platforms include
+
+     IBM rs6000 AIX3.25 and AIX4.
+     HP         HPUX 10.20
+
+     other platforms may be supported.
+
+
+     We welcome suggestions on how to modify LAPS for other platforms, though 
+     we cannot guarantee the portability of LAPS to these additional platforms.
+
+     The next step is to build and install the executables, this can be done 
+     by running 
+     $ make install 1> make.out 2>&1 
+     from the top level directory.  We recommend using Gnu Make
+     Version 3.74 or later available via ftp from any GNU site. 
+
+     Finally the script ./etc/laps_localization.pl will create some
+     look up tables and modify certain files based on 
+
+ 
+
+----- Needs updated -------
+
+
+     In this file, a number of potential manual changes to the code are 
+     outlined prior to running 'install_laps', especially if one is on a 
+     domain other than the default Colorado domain. After becoming familiar 
+     with the changes needed for your domain, it is recommended that you 
+     develop a method to save the hand edited files in a "safe" place outside 
+     of the laps directory. The relevant files could then be copied into place 
+     by a local script run prior to the 'install_laps' script. As part of this
+     procedure, a 'sed' script may be useful for automatically editing 
+     particular parameters within a file. This strategy would make it easier 
+     to update your implementation of LAPS with the latest laps.tar.gz file 
+     from FSL, while minimizing the hassle involved with LAPS modifications 
+     for your local domain. Examples of such files (described below) possibly
+     worth saving include the following:
+
+              src/include/lapsparms.for
+              data/static/nest7grid.parms
+              src/include/laps_grid_def.h
+              nest7grid/static/nest7grid.cdl
+              install_laps
+
+     One caution here is that you might want to check for any updates FSL has 
+     made in the files that need to be hand edited.
+
+     An iteration for updating your LAPS code might look as follows:
+
+     Step 1) Copy new laps.tar.gz file into an EMPTY directory (called 'laps').
+
+     Step 2) 'gunzip' and untar the laps.tar.gz file
+
+     Step 3) If first iteration: Make hand changes to code 
+                                 Save hand changes in a separate directory
+                                                      (outside of 'laps')
+
+             If later iteration: Copy in (and double check) previously made 
+                                 changes
+
+     Step 4) Run install_laps
+
+     Note that 'install_laps' should not be run twice in succession. It should
+     always be run on a freshly untarred set of code (except for files copied
+     in by hand).
+
+                  --- 2.2   NetCDF library   ---
+ 
+     You will generally want to edit the line in the install_laps script 
+     for your machine that soft links to the netcdf library. Simply search for 
+     'netcdf.a', 'netcdf.h', 'netcdf.inc', and 'netcdf/bin' in install_laps 
+     and make the appropriate substitutions. It is assummed that you have 
+     access to a netcdf library. If not, you can freely download it from the 
+     WWW at http://www.unidata.ucar.edu/packages/netcdf/index.html.
+     
+
+            ---  2.3  Plotting / NCAR graphics library (optional)  ---
+
+     To build the lapsplot process, access to an NCAR graphics library is 
+     needed to be able to run the 'ncargf77' command. Lapsplot is an optional 
+     plotting program, thus NCAR graphics is optional. You might wish to check
+     the following World Wide Web location for more info...
+
+                   http://ngwww.ucar.edu:7777/
+
+     The 'lapsplot.x' executable is an interactive program that reads in
+     the NetCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
+     file can be displayed using other NCAR graphics utilities like 'ctrans'
+     and 'idt'.
+
+     Please note that lapsplot is provided to help you check out how your
+     LAPS implementation is working. We do not have any other plotting or 
+     visualization packages available with LAPS at this time.
+
+
+               ---  2.4    Raw data ingest   ---
+
+     There is a layer of raw data ingest code that may have to be modified
+     for the individual location depending on data formats. This is usually
+     the largest task within the porting of the LAPS code. The supported
+     component of the LAPS code is the analysis section. Ingest code is
+     supported only if your raw data looks has the same configuration and
+     format as FSL's raw data. It is the reponsibility of the LAPS user to 
+     modify the LAPS ingest code if necessary to generate the intermediate 
+     data files that are inputs to the analysis code.
+
+     The default LAPS ingest code obtains raw data in NetCDF format from 
+     the FSL NIMBUS system, then outputs the LAPS "intermediate" data files. 
+     Doing a 'grep ingest install_laps | grep echo' shows the executables 
+     associated with each raw data source. Most ingest code is located in the
+     nest7grid/source/ingest directory. When NetCDf format is used for the
+     raw data, a cdl file for the raw data is often included in the
+     source code directory.
+  
+     Depending on the data source, you may generally prefer one of two choices:
+         1) Modify LAPS ingest code to accept your own raw data format. 
+         2) Convert your raw data to NetCDF format then run the LAPS ingest
+            code as is.
+
+     For surface obs, option (1) is generally better.
+
+     You may note the following data sources used at FSL. These data sources
+     are what the FSL ingest code is tailored to for producing intermediate
+     data files. Note that LAPS will still run even if some of the data sources
+     are withheld, albeit in degraded fashion. 
+
+     The pathnames for most of the ingest data sources are assigned within
+     the 'nest7grid.parms' files and can be set accordingly at runtime.
+
+     Our long range plans are to hopefully make the ingest code compatable
+     with NOAAport data.
+
+     Sfc Obs (lso): FSL uses this data in FSL's NetCDF format as input.
+           The FSL code is in the '.../source/ingest/sao' directory, and
+           includes routines to read and format different surface data
+           (METAR, mesonet, buoy).  Outside users will need to write 
+           the necessary routines to read their data formats and pass
+           the data in arrays to the calling routines in the expected form.
+           Paths to the data are set in the 'surface_obs.inc' file.
+           Looking at the routines in the '.../source/ingest/sao' directory
+           should provide enough information to get you started.  Direct
+           questions about surface data to Pete Stamus (stamus@fsl.noaa.gov).
+
+     Radar (vrc)                 - WSI-NOWRAD, stored at FSL in NetCDF.
+           (v01, v02, ... > VRC) - WSR-88Ds, Remappers run on NSSL 
+                                   "RIDDS"/"RISC" Boxes.
+
+     Satellite (lvd): GOES-8 groundstation feed, stored at FSL in NetCDF. 
+           Also used is the NOAA/SBN data feed. Another option under 
+           development is to use ASCII files generated by RAMSDIS as input.
+
+     PIREPS (pin) - We are ingesting FSL NetCDF pirep files to translate the 
+           cloud layers from voice pireps into intermediate "PIN" files.
+
+     ACARS (pin) - We are ingesting FSL NetCDF ACARS files to translate the 
+           wind obs and append them to our intermediate "PIN" file.
+
+     Profilers/RASS (pro/lrs) - These are obtained from FSL's NIMBUS database
+           in NetCDF format where they are stored in 4 different directories. 
+           These data come in turn from FSL's demonstration division from
+           two main networks. The 30+ WPDN profiler network is located mostly 
+           in the central U.S. We are also using a network of experimental 
+           boundary (NOAAnet) layer profilers for both wind and temperature. 
+           The profiler data for wind goes into the 'pro' file, and RASS 
+           temperature profiles go into the 'lrs' file. To summarize...
+
+                      Network            file        frequency
+                      -------            ----        ---------
+                    WPDN wind            PRO          404 MHz
+                    WPDN RASS            LRS
+                    NOAAnet wind         PRO          915 MHz
+                    NOAAnet RASS         LRS
+                 
+
+     Model first guess (lga): 
+           RUC grids are ftp'ed from NMC to FSL, then converted at FSL from 
+           GRIB to NetCDF. 
+
+           You might wish to check the following URLs on the WWW for...
+
+           more RUC info:  http://www.fsl.noaa.gov/frd-bin/MAPS.rucinfo.cgi
+           more GRIB info: http://sslab.colorado.edu:2222/datastandards.html
+
+           RUC is also available from UNIDATA and distributed to universities 
+           through private companies like Alden. 
+
+           The conversion from GRIB to NetCDF is done by FSL's facility 
+           division (NIMBUS). You may wish to contact them for more info. 
+           The Seattle WFO has also run this type of GRIB to NetCDF decoder. 
+           The Atlanta WFO is getting this done as well, John Snook (FSL) 
+           would have info on this.
+
+      
+
+               ---  2.5  Running LAPS Analyses  ---
+
+     A sample crontab file is located in 'sched/lapscron_sample' that runs
+     several LAPS processes. 
+
+     Once each hour (or other cycle time), the main sched/schedule.com runs.
+     As an example, at FSL, we run the schedule.com hourly at :21 after the 
+     top of the hour. Note the use of a command line argument to pass in the 
+     LAPS path as in this example: 'sched/schedule.com /laps/nest7grid'.
+
+     The 'lapscron_sample' file also runs several ingest processes separately
+     from the 'schedule.com'. For example, the background model ingest (lga) 
+     is nominally run at :18 and :48 after. The satellite ingest (lvd) is run 
+     at ~6 minute intervals. NOWRAD Radar ingest (vrc), is run at ~10 minute 
+     intervals.
+     
+     By inspecting the 'schedule.com' file which runs everything else (the 
+     first item in the 'lapscron_sample' file), you can see the various 
+     executables that are run in a certain order. You might want to modify the
+     'schedule.com' file for your needs.
+
+               ---  2.6  Test data case  ---
+
+     A tar file containing test data is available that contains a 5 hour
+     run of laps data (intermediate files from the 'ingest' code plus outputs
+     from the 'analysis' code). The schedule.com was run each hour from 1000 
+     UTC through 1400 UTC for a particular date. A few files of "data history" 
+     are included as well from 0900 UTC. This is the contents of the 
+     'nest7grid/lapsprd' and 'nest7grid/log' directories from an FSL machine. 
+     The contents of the various directories are outlined below in this README 
+     file. The data was created with the latest software release. Our users 
+     can download this data at 
+     http://www.fsl.noaa.gov/frd-bin/LAPSDATA.tarfile.cgi.
+
+     If you want to test the 'analysis' code only, you might initiate
+     the 'schedule.com' to run for the test data at 1000 UTC (as indicated
+     by the 'systime.dat') for the date
+     supplied, making sure any outputs from the 1000 UTC analyses are not 
+     present. Only the 'ingest' outputs from 1000 UTC and the analysis 'data 
+     history' output products from 0900 UTC should then be present. You may 
+     also want to remove the ingest processes from the schedule.com for this 
+     test, since the ingest outputs are already present.
+
+     When running LAPS for archived data in this manner, the 
+     'sched/systime.dat' should be updated manually by the user, instead of
+     by the 'sched/schedule.com' script (that uses wall clock time). To help
+     accomplish this, comment out the 'systime.exe' entry in the 
+     'schedule.com'.  
+
+               ---  2.7  F77 Compiler Flags       ---
+
+     The 'install_laps' script automatically modifies the compilation 
+     flags by modifying the Makefiles according to what type of platform
+     you are on. Hopefully the flags will work OK on your particular
+     platform. The sed_Makefile* script can be modified if you want to 
+     change the flags from the default set. For your information, here are 
+     some of the more important flags we use on the various machines.
+
+       SUN-OS: 
+
+         -native   Generate code for the best floating-point hardware
+                   available on the machine you are compiling on.
+
+
+         -xl       Extended Language. Where source  could  be  either
+                   VMS  FORTRAN or standard, interpret as VMS FORTRAN
+                   . These ambiguous features are: Unformatted record
+                   size in bytes, VMS-style logical file names, quote
+                   (")   character   introducing   octal   constants,
+                   backslash    (\)    character   within   character
+                   constants, and a nonstandard form of the PARAMETER
+                   statement.
+
+         -O2       Do basic local and global optimization.   This
+                   level  usually  gives  minimum code size.  The
+                   details are: induction  variable  elimination,
+                   local    and   global   common   subexpression
+                   elimination,  algebraic  simplification,  copy
+                   propagation,   constant   propagation,   loop-
+                   invariant optimization,  register  allocation,
+                   basic    block    merging,    tail   recursion
+                   elimination, dead code elimination, tail  call
+                   elimination, and complex expression expansion.
+                   Do not use -O2 unless -O3 results in excessive
+                   compilation  time,  running out of swap space,
+                   or excessively large code size.
+
+
+         -O3       Besides what -O2  does,  this  also  optimizes
+                   references   and   definitions   of   external
+                   variables.
+
+         -g        Produce additional symbol  table  information  for
+                   dbx(1)  or dbxtool(1).  Also, pass the -lg flag to
+                   ld(1).  For separate compile and  link  steps:  if
+                   you compile with -g , then be sure to link with -g.
+                   The -g overrides -O.
+
+
+       HP-UX:
+
+         -O        Perform level 1 and level 2 optimization.
+
+         +O1       Perform level 1 optimization.
+
+                   Normally, the sed.Makefile_hp will use the -O option,
+                   on some compilers, you might want to use the 
+                   sed.Makefile_hp_alternate script that invokes the +O1.
+
+         -g        Generate additional information needed by the
+                   symbolic debugger xdb (see xdb(1)).  This option
+                   is incompatible with optimization.  -g overrides
+                   the -s option, regardless of the order in which
+                   they are encountered on the command line.
+
+         +e        Enable ``other-vendor'' compatibility mode for
+                   importing non-HP code.  This is equivalent to
+                   specifying all the +E options (except +E4).  It is
+                   also the same as specifying the $NOSTANDARD
+                   directive at the beginning of the program file.
+                   This option turns on the -K option.
+
+         +es       Allow more than 72 characters on a single source
+                   line (Extended Source).
+
+
+         +U77      /usr/lib/libU77.a - library referred to by +U77 that is 
+                   hopefully installed on your machine.
+
+         -K        Automatically SAVE all local variables in all
+                   subprograms.  This option forces static storage
+                   for these variables in order to provide a
+                   convenient path for importing FORTRAN 66 and
+                   FORTRAN 77 programs that were written to depend on
+                   static allocation of memory (that is, variables
+                   retaining their values between invocations of
+                   their containing program units).  This option has
+                   two side-effects:
+
+                      +  All non-initialized variables are initialized
+                         to zero.
+                      +  The DATA statement can appear among executable
+                         statements.
+
+
+---------------- 2.8 ------ I/O of LAPS gridded files-------------------------
+
+     Once the laps library is compiled (as outlined above), laps grids can
+     be read. There are three levels of software that can access the data.
+
+     1. Lowest Level - NetCDF c routine calls (not recommended unless you're
+                                               a NetCDF hacker)
+
+     2. Medium Level - READ_LAPS_DATA - look at the source code in 
+        lib/readlapsdata.f for the arguments.
+
+     3. Highest (and easiest) level - get_laps_3d or get_laps_2d. The source
+        is contained in lib/laps_io.f. The various grids available are
+        listed later in this README file under the heading "NetCDF organization"
+
+     To link to the reading routines, you will want to link to:
+
+     laps/lib/lapslib.a
+     laps/lib/netcdf/netcdf.a
+
+
+-------------- 2.9   CHANGING THE HORIZONTAL DOMAIN---------------------------
+
+   NUMBER OF GRID POINTS:
+
+     To do this, perform the following between untarring the tar file and
+   running install_laps.
+
+     1. Edit src/include/lapsparms.for 
+
+        Change the parameters NX_L, NY_L to be the number of grid points
+        (default is 61 x 61). Make sure they are <= NX_L_MAX and NY_L_MAX. 
+
+        If NX_L_MAX and NY_L_MAX need to be changed, they must also then be 
+        changed in another file, namely 'laps/lib/lapsparms.inc'. Note that 
+        'laps/lib/lapsparms.inc' file has different contents (basically a 
+        subset of) the 'src/include/lapsparms.for' file. 
+
+        Note also that NX_L is the dimension counting from W to E. NY_L is the 
+        dimension counting from S to N.
+
+     2. Adjust the horizontal dimensions in 'src/include/laps_grid_def.h'.
+
+     3. Edit the file 'laps/nest7grid/static/nest7grid.cdl' to modify
+	the domain size from the Colorado (61x61) to your domain size.
+	This should be consistent with the values of NX_L and NY_L in
+	src/include/lapsparms.for. 
+
+        Three sets of variables need to be modified in nest7grid.cdl:
+        a) x and y in the dimensions area should be set to match NX_L
+           and NY_L.
+        b) NX and Ny in the data area should be set to match NX_L
+           and NY_L.
+        c) imax and jmax in the LAPS data area should be set to match
+           NX_L and NY_L.
+
+     4. Adjust the horizontal dimensions in 
+                                   'laps/nest7grid/static/nest7grid.parms'.
+
+   LOCATION OF DOMAIN (STATIC FILE, etc.):
+
+     To do this, perform the following between untarring the tar file and
+   running install_laps. 
+
+        The STATIC FILE, 'static.nest7grid', is automatically built during the
+        execution of 'install_laps'. The code to do this is still somewhat
+        under development. Steve Albers (albers@fsl.noaa.gov) can try to offer 
+        help on this if you're stuck. The code currently works best if you 
+        are working within the continental United States. Some mods may 
+        occasionally be required to make it work elsewhere in the world. 
+        Two scenarios in particular still need more testing. These are:
+
+        a) Near a land/sea border
+           In this case a filter that sets a given terrain point to zero
+           if the absolute value of the point is less than 1 meter may
+           help as a post processing step to reduce noise just off of
+           the coast. 
+           
+        b) If you are in the vicinity of a land border of the Continental 
+           United States (e.g. Southern Canada or Northern Mexico).
+
+        The 'gridgen_model.f' program utilizes two terrain data sets (included
+        within the tar file). One is a worldwide 10' dataset, the other is 
+        30" data and covers the continental U.S. The software automatically 
+        chooses the higher resolution data if it covers the domain of interest,
+        otherwise it defaults to the lower resolution data. A ~0.2 degree wide
+        transition zone is used for blending at the boundary between the
+        two datasets. If for some reason you need to change this strategy, you
+        would want to modify 'gridgen_model.f'.
+
+        Prior to running install_laps, perform the following steps
+        (needed only if you are outside the default Colorado domain).
+
+        Step 1) Edit the file 'data/static/nest7grid.parms' to
+                modify the 'grid_spacing_m_cmn' parameter (only if you are not 
+                using the default 10000m for the grid spacing).
+
+        Step 2) Edit the file 'data/static/nest7grid.parms' to
+                modify the 'grid_cen_lat_cmn' and 'grid_cen_lon_cmn' parameters.
+
+        Step 3) Edit the file 'data/static/nest7grid.parms' to
+                modify the 'standard_longitude' parameter. This deals with 
+                the longitude which is straight up and down in the MAP 
+                projection (default is -105 deg). Note that LAPS is currently 
+                designed to operate with a Polar stereographic projection.
+
+        Step 4) Edit the file 'data/static/nest7grid.parms' to
+                modify the 'standard_latitude' parameter. This deals with 
+                with the latitude at which the grid resolution is exactly 
+                the nominal value (e.g. 10km). The default standard_latitude 
+                is 40 deg.
+
+        Step 5) Edit the file 'src/include/lapsparms.for', only if 
+                you want to modify the 'silavwt_parm' and 'toptwvl_parm' 
+                parameters.  The default values are 1. and 4., respectively. 
+                These parameters control the terrain silhouette weighting and 
+                the terrain smoothing, respectively. The value "4." here 
+                implies 4 delta-x smoothing.
+
+        Step 6) Within the file 'laps/nest7grid/static/nest7grid.cdl',
+                navigation variables in the data section should be modified
+                for completeness, but will not affect the output if they are not
+                modified.  They are:
+
+                Dx  - the grid spacing in km in the x direction.
+                Dy  - the grid spacing in km in the y direction.
+                La1 - the first latitude of the grid.
+                Lo1 - the first longitude of the grid. If the longitude 
+                      is negative (as in the US) it should be entered as
+                      360 - longitude (ie. -105 long would be entered 
+                      as 360 - 105, or 255).
+                LoV - the standard longitude which is true north.  The same 
+                      rules for negative longitudes apply as in Lo1.
+
+        When you run install_laps, the NetCDF static file will be automatically
+        generated (we hope). If you see the following error message: 
+
+        FILE../static/model/topo_30s/U50N119W DOES NOT EXIST
+
+        it does not necessarily mean there is a problem, it signifies that 
+        your domain runs outside the 30" data, but will still be covered by 
+        the 10' worldwide data.
+
+        Note that this program works only for a polar stereographic projection.
+   There is a map projection parameter currently in 'nest7grid.parms'. This
+   has some expanded functionality to a tangent lambert projection. Thus
+   the LAPS analyses can be run with a tangent lambert projection if you can
+   supply your own substitute module to create the 'static.nest7grid' file.
+
+      RESOLUTION OF DOMAIN: 
+
+     The default value is 10000m. This is one of the items used in 
+   constructing the static file (see above). Resolutions less than about 
+   5km could possibly be run in a nested configuration with the 10km domain. 
+   This depends how much of a scale factor jump is permissable between the 
+   model background and LAPS. A nested configuration (e.g. 10km/2km domains) 
+   could be set up by generating LGA/F files having 2km resolution using 
+   10km LAPS analyses/forecasts as input.
+
+
+   
+--------- 2.10 ----- CHANGING THE VERTICAL DOMAIN------------------------------
+
+
+   NUMBER OF LEVELS:
+
+     To do this, perform the following between untarring the tar file and
+   running install_laps. 
+
+     1. Edit 'src/include/lapsparms.for' 
+
+        Change the parameter NZ_L to be the number of vertical levels. Make
+        sure it is <= NZ_L_MAX. If NZ_L_MAX needs to
+        be changed, it must also then be changed in another file, namely 
+        'laps/lib/lapsparms.inc'. Note that NZ_L counts upward from bottom to 
+        top.
+
+     2. Edit 'data/static/nest7grid.parms'
+       
+        Change the parameter 'nk_laps' to be equal to the new NZ_L 
+        (number of vertical levels).
+
+     3. readwritelaps.c in the library needs to be changed. Explicit mention of
+        the number of levels occurs in quite a few places (default = 21).
+        Multiples of 21 also need to be changed (i.e. 42, 63, etc.).
+
+     4. Adjust the vertical grid point dimension (NZ,NZ_LONG) in:
+                          src/include/laps_grid_def.h.
+
+   PRESSURE OF THE LEVELS (and vertical resolution):
+
+     To do this, perform the following between untarring the tar file and
+   running install_laps.
+
+     1. Edit 'data/static/nest7grid.parms'
+
+        Change the parameter PRESSURE_BOTTOM_L to be the pressure in
+        pascals of the lowest laps level (default is 110000 pa).
+
+        Change the parameter PRESSURE_INTERVAL_L to be the vertical
+        pressure resolution desired (default is 5000pa). 
+ 
+        Update the individual pressures for each level listed in column form
+        in the file.
+
+        Note the vertical pressure interval must be constant between levels.
+
+     2. readwritelaps.c in the library needs to be changed. Explicit mention
+        is made in the code of the pressures of each level in integer millibars.
+
+-------- 2.11 ----- CHANGING THE CYCLE TIME -----------------------------------
+
+      The default cycle time is 60 minutes. To change this, do the following
+   between untarring the tar file and running 'install_laps'. 
+
+     1. Edit 'src/include/lapsparms.for' to change the parameter
+        'laps_cycle_time'.
+ 
+     2. Edit runtime parameter file 'data/static/nest7grid.parms' 
+        to change the value of 'laps_cycle_time'.
+
+     3. There are "at" scripts for two ingest processes (lvd/satellite and
+        vrc/radar) that may or may not need modification. They are located in
+        sched/submit_lvd_at.script and sched/submit_vrc_at.script. For LVD, 
+        check out the README in 'source/ingest/satellite/goes8/lambert'.       
+        A README is also under development for VRC. Please contact John Smart 
+        (smart@fsl.noaa.gov) for the latest details.
+        
+
+--------- 2.12 ------SURFACE ANALYSIS CHANGES---------------------------------
+
+	Updated: 16 Jan 1997.  Pete Stamus (stamus@fsl.noaa.gov)
+
+   For the laps_sfc.x (LSX) process, perform the following between untarring 
+   the tar file and running 'install_laps'.
+
+   STATIC FILES
+
+     1. Before running the surface analysis, the surface static files will
+	have to be created.  The 'install_laps' script does this by running 
+        'build_sfc_static.x' in  '.../static/surface'.  Two files are
+	created in the '.../static/surface' directory that the surface
+	analysis uses: 'pbl_top.dat' and 'drag_coef.dat'
+
+        Note that 'build_sfc_static.x' is run *after* the 'static.nest7grid'
+	file (located in '.../nest7grid/static' and containing latitude, 
+	longitude, and elevation for the domain) is created for your location.
+
+     2. In 'build_sfc_static', the friction parameter has been configured
+	by automatically producing a scaling factor based on the range of
+	elevations across the domain.  This factor can be changed in the
+	'drag_coef' section of 'build_sfc_static', if so desired.  More 
+	details on this might be had from Pete Stamus (stamus@fsl.noaa.gov).
+
+   QUALITY CONTROL
+
+     1. A still fairly simple quality control is included in the surface
+	package.  If you wish to skip over this step, you can change 
+    	the 'laps_sfc.inc' file in '.../source/sfc' prior to compilation of 
+        the surface analysis by the 'install_laps' script (or recompilation
+	by hand at a later date).
+
+   PRESSURE REDUCTION
+
+     1. You will need to select an elevation for the reduced pressure analysis.
+	The reduced pressure is the only one really used in the variational
+	portion of LAPS, and the idea is to select an elevation that is 
+	representative of the domain (or portion of the domain) you are
+	interested in.  For example, the Colorado LAPS domain includes 4000m
+	high mountains over the western 1/3, and plains that slope below 
+	1000m at the eastern boundary.  We use 1500m as the Colorado LAPS
+	reduced pressure.  This is close to the elevations over the eastern
+	2/3's of the domain, and requires a smaller reduction over the mountins
+	compared to MSL, for example.  Change the variable in 'laps_sfc.inc'
+	in the '../source/sfc' directory before compilation.
+
+   SURFACE THETA CHECK	
+
+     1. In 'laps_sfc.inc', set the 'itheta' flag for the surface theta
+	check.  This check adjusts the surface potential temperatures so
+	they are not greater than the potential temperature at an upper 
+	level.  Set this variable equal to the desired upper level (or if
+	you don't want to do this check):
+
+	                0 = No sfc theta check done
+	                7 = Use 700 mb level
+	                5 = Use 500 mb level
+c
+	Recommended:  Use 700 mb most places, 500 mb over higher terrain 
+	areas (like Colorado).
+
+
+ ----- 2.13 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
+
+Major Updates (from most recent to oldest mods)
+Last updated: October 1996 by Daniel Birkenheuer
+
+April 1997:
+
+  On the 15th of April an upgrade to enable the moisture analysis to
+  process GOES sounder data was deemed ready for export.  Though this
+  module has not yet been tested with sounder data since that particular
+  data interface will not be ready for approximately another month, the
+  code is ready to accept the data when available.
+
+  The main impact to our users is that the moisture switch file under LAPS
+  static must be adjusted to take advantage of this feature.  For the time
+  being the new switch should be (0).  Later when sounder data is routinely
+  available and this module has been checked out, it can be set to (1).
+  This is now the 4th switch in the moisture_switch file.
+
+October 1996:
+
+   Added a switch for enabling cloud data to be used in saturating the air
+   in cloudy areas. This is included as the last item in the
+   moisture_switch.txt file that is maintained under the static area.  To
+   enable cloud data for saturating the air this is (1) to disable the
+   feature, set the character to (0).
+
+   You might wonder why we need such a switch.  During October we
+   experienced problems with the cloud analysis.  This was inadvertently
+   causing problems in the moisture analysis through the cloud saturation
+   adjustment.  The incorrect moisture was in turn causing the models to
+   blow up.  Hence we added this switch so that we could easily reactivate
+   the feature once the cloud analysis was repaired without having to worry
+   about recompiling any code.
+
+August 1996:
+
+   Satellite sounding processing was reestablished in the LAPS moisture
+   processing adapting to the GOES-I series data.  At this time, a journal
+   article is in preparation to fully document this aspect of the analysis.
+   Until this is formally published, a brief summary of the
+   moisture/satellite algorithm is provided at the end of this section.
+
+   You have the option of running this portion of the software without
+   having to do anything to the code itself.  If you wish to run this code,
+   you will need LVD files (LAPS satellite data files).  In addition you
+   need to verify the SECOND record of the ASCII file
+   ./nest7grid/static/moisture_switch.txt contains the numeral 8 or 9.  The
+   numeral 8 signifies to use the GOES-8 coefficients in the forward model,
+   a numeral 9 will cause the software to use the GOES-9 coefficients in
+   the forward model.  It is currently imperative for the user to set this
+   parameter.  Unfortunately, at the time of this writing, the SBN data
+   stream does not contain an indicator of which satellite is used to fill
+   the CONUS frames, therefore the user needs to supply this information
+   and this is the way to do it.
+
+   If you wish to disable the satellite usage, you merely need to edit the
+   "switch" file to contain the numeral 0 as its second record.  Further
+   documentation on what to do is contained at the end of the ASCII file.
+   It should also be noted that the LVD files MUST contain simultaneous
+   data from 6.7, 11, and 12 microns for this algorithm to work.  If one or
+   more bands are lacking the algorithm will gracefully fail.
+
+
+
+June 1996
+
+   Included the capability to ingest RAOB data into the moisture module.
+   There are two important items to know about:
+
+   (1) The RAOB data are contained in lapsprd/snd/*.snd files.  The
+   moisture module will automatically use .snd data if present.  If you do
+   not wish to use sounding data there are 2 ways to exclude these data,
+   the most obvious is to not provide .snd files.
+
+   (2) In the event that you wish to exclude the use of sounding data and
+   want them to be present in the data directory (possibly for some other
+   application) you can avoid using them in the moisture code by modifying
+   the file:
+   ./nest7grid/static/moisture_switch.txt
+
+   The first record of this ASCII file is used for the RAOB data inclusion.
+   The file itself is documented internally following the second record.
+   If the first record is "1" (nominal case), the use of sounding data will
+   be on, and .snd files will be processed if present.  If this character
+   is "0", the moisture code will not process sounding data.  Note that
+   this ASCII file is now used for other purposes and that its name has
+   been modified to be more generic (it was formerly used only for RAOB
+   data and named raob_moisture_switch.txt).
+
+April 1996
+
+   Radiometer data is currently unavailable from this laboratory.  The old
+   path to the data was addressed in this humidity include file:
+
+   ./nest7grid/source/humid/get_rad.inc
+
+   path to radiometer data (not a laps file)
+
+   This include file will be removed if and when the prospects of acquiring
+   radiometer data are forever lost.  For now treat this as orphan code, if
+   ignored, it will not cause problems.
+
+
+
+
+----- 2.14 ----------LGA (MODEL BACKGROUND INGEST) CHANGES---------------------
+
+   Check and modify the following variables in 'source/background/grid_dim.inc'
+  
+       nx_laps, ny_laps, nz_laps
+
+------ 2.15 --------VRC (NOWRAD/WSR-88D ETC RADAR INGEST) CHANGES--------------
+
+   Depending on where the raw radar data is coming from, you will want to
+   set the 'radarext_3d' parameter in the 'nest7grid.parms' file as 
+   follows:
+ 
+   'vrz'     Use this if you have mosaiced 3-D reflectivity 'vrz' files
+             available. If you have vrc files with better areal coverage, 
+             use 'vrc' instead.
+
+   'v01'     Use this is you have 3-D v01 files available from a single radar.
+             If you have vrc files with better areal coverage, use 'vrc'
+             instead.
+
+   'vrc'     Use this when you only have 2-D 'vrc' radar files available.
+             This is the default value.
+
+
+------ 2.16 -------------LVD (SATELLITE INGEST) CHANGES------------------------
+
+   There may be some parameters in the satellite code that change when 
+   the domain is moved. The latest info is in the README in 
+   'source/ingest/satellite/goes8/lambert'. Please contact John Smart 
+   (smart@fsl.noaa.gov) for more details. 
+
+------ 2.17 ----------------OTHER RUNTIME PARAMETERS---------------------------
+
+   It is worthwhile to check the 'nest7grid.parms' file to make sure all
+   the runtime parameters are correct. Some parameters worth noting are:
+
+   c8_project_common - Depends on which "realization" of LAPS you are running.
+                       Allowed values are 'NIMBUS', 'WFOADV', 'AFGWC'.
+
+*******************************************************************************
+**********  3.0 DESCRIPTION OF LAPS PROCESSES  ********************************
+
+       The following section contains information on which LAPS processes 
+   generate which LAPS output products. Other static data (like lat and lon  
+   grids) are not included in this list. These are the processes contained 
+   within the LAPS tar file and built with the 'install_laps' command. 
+
+          "Inter data" is an ascii file containing non-gridded data 
+   (intermediate data files). Examples of this are surface obs, profiler obs, 
+   etc.
+
+          This list contains all outputs generated by LAPS processes.
+
+          The products listed under each process are the outputs produced by 
+   that process. Inputs are listed here for some analyses, if the schedule.com
+   is run according to the flow therein, the necessary inputs will be 
+   available. 
+
+ ------ 3.1 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
+
+Last updated: August 1996 by Daniel Birkenheuer
+
+Code organization:
+
+   The moisture code is coordinated by the LQ3 modules all of which (with
+   the exception of libraries) exist under ./nest7grid/source/humid/.  The
+   main driver, lq3driver.x contains only one subroutine call at this time.
+
+   ./nest7grid/source/humid/lq3_driver1a.f (Module) <active>
+
+   is the primary moisture processing module that sequences the various
+   subroutines.
+
+   There is a second routine that formerly was used for HSM satellite
+   processing; it is currently deactivated:
+
+   ./nest7grid/source/humid/lq3_driver1b.f (Module) <deactivated>.
+
+   Now, using the GOES forward radiance model and more advanced techniques,
+   the satellite inclusion takes place in the above "1a" module. Treat the
+   "1b" module as orphan code.
+
+
+Control file:
+
+   ./nest7grid/static/moisture_switch.txt
+
+   Is an ASCII file intended for easy editing and control of the moisture
+   modules activities.  The first record controls usage of RAOB data
+   (0=off, 1=on).  The second record controls usage of satellite data (LVD
+   files) and again (0=off; 8=on, use GOES-8, 9=on, use GOES-9).  This
+   module is exported with the RAOB feature OFF and the satellite feature
+   ON and SET FOR GOES-8.  The third switch enables (1) or disables (0)
+   saturating air in cloudy areas. The fourth now enables using sounder 
+   data in lieu of imager data (GOES only).  This should be set to (0) for
+   the current time.
+
+Input files:
+
+   Inputs (status as of August 1996) ("grid" designates LAPS netCDF grid
+   file unless otherwise stated):
+
+   LGA         grid    MAPS/RUC background analysis or forecast
+
+   LSX         grid    LAPS surface analysis
+
+   LC3         grid    LAPS 3-D clouds
+
+   LT1         grid    LAPS 3-D temperatures
+
+   SND         ASCII   RAOB observation file
+
+   LVD         grid    Satellite data from AWIPS SBN
+
+   <off> LH1   grid    LAPS grid of VAS total precipitable water.
+
+   <off> LH2   grid    3 LAPS grids of VAS/radiometer modified precipitable
+                          water.
+
+
+
+Outputs (note LH3 contains 2 fields):
+
+   LQ3         grid    3D Specific Humidity (floating point number)
+
+   LH3         grid1   3D (RH3 field) Relative Humidity units of percent   
+                          0-100 (floating point number) with respect to
+                          liquid water if ambient temperature is warmer
+                          than 0 C, with respect to ice if ambient
+                          temperature is equal to or less than 0 C
+
+   LH3         grid2   3D (RHL field) Relative Humidity units of percent   
+                          0-100 (floating point number) with respect to
+                          liquid water at all temperatures
+
+   LH4         grid    2D Total precipitable water (meters) (floating point
+                                  number)
+
+
+                        PRIMARY ALGORITHM SUMMARIES
+
+RAOB ENHANCEMENT:
+
+     The RAOB data are added to the analysis via a second pass Barnes
+     analysis.  Normally, a Barnes analysis consists of two parts.
+     The first fills the entire domain with values weighted by the
+     distance to the neighboring points.  In the second pass, a
+     difference field (derived from the difference of the first pass
+     and the observations) is added to the result from the first pass
+     with adjusted weights to better tune to the scale of interest.
+
+     In this application we skip the first pass using instead the
+     "background" analysis in place of the result of the first pass
+     Barnes' result.  The difference field is then generated and
+     applied using a set of weights appropriate for the LAPS domain
+     resolution and density of observations.
+
+SATELLITE ALGORITHM:
+     An essential ingredient of the variational method is a satellite
+     forward radiance model.  The forward model produces a simulated
+     radiance based on temperature, moisture, and ozone profiles along
+     with the temperature of the surface or cloud top, and the
+     pressure of that radiating surface (i.e., surface pressure or
+     cloud top pressure whichever applies).   Also needed are the
+     zenith angle, used to determine the air mass path and optical
+     depth between the radiator and the satellite.  The forward model
+     used for this work was obtained from NESDIS.  The forward model
+     coefficients used for this study were vintage late 1995.
+
+     In order to apply the forward model appropriately, a
+     determination of clear and cloudy fields-of-view (FOV) need to be
+     determined.  The LAPS cloud analysis is used to identify clear
+     and cloudy LAPS grid points.  The analysis as presented here is
+     only working from FOVs classified as clear.  Cloudy FOVs probably
+     can be used, but this is an early attempt at this technique, so a
+     conservative approach was chosen.  Later research may focus on
+     using a combination of both clear and cloudy FOVs in the
+     algorithm.
+
+     The first step in the algorithm is to assure all the data needed
+     for proper execution are present.  These include channel
+     radiances derived from AWIPS imagery, the LAPS cloud analysis
+     output, the LAPS surface temperature output, and LAPS 3-D
+     temperatures.  The forward model also requires an ozone profile
+     along with moisture and temperature profiles above 100 hPa.
+     These are gotten from climatology since LAPS extends only to 100
+     hPa.  The entire ozone profile is provided by the forward model
+     since LAPS does not analyze this parameter.
+
+     Next, the forward model is run to verify "clear" LAPS gridpoints,
+     where clear is defined as those points in which both the modeled
+     and measured GOES image radiances in channel 4 (11 micron) agree
+     to with 2K.  This step uses the LAPS thermal and as yet
+     unmodified moisture profiles.  Disparity in the channel 4
+     brightness temperature comparison indicates that the LAPS thermal
+     profile is too far off or perhaps it is really cloudy where the
+     LAPS cloud analysis is indicating it is clear.  (It doesn't have
+     to be totally cloudy for a disparity to exist, it can be
+     partially cloudy and this will still be detectable in this
+     difference test.)   This is a conservative test; it really goes
+     beyond simple cloud detection though that is a likely cause of
+     differences, the forward model check is very sensitive and in
+     many ways eliminates any thermal profiles that subsequent
+     variational technique will find difficult to deal with.  We are
+     basically saying that we will not worry about moisture adjustment
+     unless the thermal profiles are reasonable.
+
+     At this point, all gridpoints offering promise of moisture
+     adjustment have been identified.  If the domain is totally
+     cloudy, the GOES adjustment is discontinued and returns
+     unmodified moisture values which are passed to the final QC step.
+     Assuming some gridpoints have been classified as clear, the next
+     step is a variational adjustment at those locations.  The
+     functional evaluated at each gridpoint has the form (using TEX-
+     type ASCII, ^=superscript and _=subscript),
+
+           5                             3
+     J = sum [R^o_i -R(t,o,cw)_i]^2  + sum  (1-c_k)^2        (1)
+         i=3                           k=1
+
+     where the goal is to determine the optimum set of three
+     coefficients.  Each coefficient, c_k is a scaling factor for the
+     moisture corresponding to three atmospheric layers (k).   The
+     layers range from surface to 700 hPa (k=1), 700 - 500 hPa (k=2),
+     and above 500 hPa (k=3).  The forward model radiance (R) is a
+     function of LAPS temperature (t), ozone climatology profile (o),
+     and LAPS mixing ratio (w).  The moisture profile is scaled with
+     the appropriate coefficient (c).  The observed radiance derived
+     from AWIPS image data is designated as R^o_i  where subscript i
+     indicates the imager channel number.
+
+     The first term in the functional maximizes agreement between the
+     forward model and observed radiance at the expense of only
+     modifying the water vapor profile.  The second term adds
+     stability and gives more weight to solutions in which the
+     coefficients departure from unity (no change to the initial
+     profile) is minimized.  The stability term was discovered to be
+     necessary since without it some very good radiance matches were
+     solved but with unreasonable coefficients.
+
+     Note that differences in all three channels are minimized in this
+     technique, not only the moisture channel.  Thus, any improvement
+     in the "dirty window," channel 5, will also contribute to the
+     solution.  A variational technique is used to minimize this
+     function and typically requires three to 10 iterations to
+     converge. A limit of 50 iterations was set as the maximum number
+     to attempt.  If limit was reached, that particular gridpoint was
+     excluded and treated as cloudy.
+
+     Once the coefficients are determined, Laplaces equation is solved
+     for interior points for which coefficients have not been
+     determined.  Then the entire domain is averaged using a spatial
+     invariant filter; simply averaging the values in a 3x3 gridpoint
+     window, assigning that average to the window's central grid
+     location.
+
+     When the coefficients have been determined, they are applied to
+     the specific humidity  field at each pressure level for which
+     they are designated.  The modified specific humidity field is
+     then advanced to the final analysis step.  In this August 1996
+     release, the coefficient adjustment is limited to above 500 hPa
+     only.
+
+------ 3.2 -----------------RADAR REMAPPER------------------------------------
+
+Process: REMAP (author: Steve Albers/Keith Brewster - run on "RIDDS BOX")
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Every volume scan
+Initiation: Completion of volume scan
+
+Inputs:
+	Raw WSR-88D Radar Data (reflectivity and velocity in polar form)
+
+Outputs (LAPS intermediate files):
+     v01    grids         3-D Radar reflectivity, velocity, and Nyquist vel
+     v02      "                                  "
+     etc. (for each radar)
+
+Source directory: laps/nest7grid/source/ingest/radar/remap
+
+This process runs on special hardware that is connected to the 88D radar.
+The source code in the LAPS source directory contains the upper level
+cartesian remapping routines. These must be linked with the lower level 
+routines running on the actual RIDDS box to access the raw wideband radar
+data. This hardware is currently being developed by NSSL (contact Mike Jain), 
+and is being fielded on a number of WSR 88-D radars by several people at FSL 
+(including Woody Roberts and Steve Albers). Please see the following
+references from the LAPB home page, (Albers 1995; Brewster et al, 1995;
+Roberts et al, 1995). 
+
+The outputs from this process are currently used by the LAPS wind analysis.
+We may expand this to the cloud and precip accumulation analyses in the
+future (these currently use NOWRAD 'vrc' 2-D radar files).
+
+To build the remapping software on the RIDDS machine, a special section
+of the 'install_laps' script is invoked using a special version of the
+LAPS tar file. One still untars and runs 'install_laps' as normal, but only
+the remapper gets built. When running the remapper, files such as v01, v02,
+etc. are produced depending on which radar is being used. 
+
+To run the remapper software do 'cd nest7grid/exe; ./remapcrt.exe'; 
+the correct LAPS static file must be present (a normal occurrence when LAPS is 
+installed). The remapcrt.exe executable runs continuously, no scheduler is 
+involved. There is a set of environment variables that control such things as 
+data compression and transmission options. There is also a method to ftp the 
+files automatically, but this is more of a kludge and you'll need to contact 
+the author for the gory details.
+
+     Variable:            Contents         
+     ---------            --------
+     RADARNAME            'KFTG' for example                         [required]
+     LAPS_USER            Username for rcp command                   [optional]
+     LAPS_DEST            Destination machine directory name for rcp command
+                                                                     [optional]
+     LAPS_REMOTE          Node name for rcp command                  [optional]
+     LAPS_COMPRESS        'gzip' or 'compress'                       [optional]
+     LAPS_EXT             Set output extension if you have more than one radar 
+                                                                     [optional]
+     LAPS_PURGE           Valid values are non-negative integers. A value 
+                          of '0' disables the purger. Positive integers will
+                          purge the output file directory keeping that number
+                          of files present.
+
+Normally the remapper is compiled and run on the same machine. However, a
+procedure is being tested to allow compilation to occur on one machine with
+executables only being ported to another machine where the remapper is run.
+
+There is another version of the remapper that runs simulated data.
+To run this remapper, do 'cd nest7grid/exe; ./remapc_fake.exe'.
+
+The radar remapper is being run in the context of the Regional Radar Volume
+(RRV) Project. For more info please see the file './README_rrv'.
+
+------ 3.3 ---------------------VRC--------------------------------------------
+
+Process: VRC (vrc_driver.x) Author John Smart (smart@fsl.noaa.gov)
+
+Inputs:
+        Raw WSI NOWRAD reflectivity data
+        v01, v02, etc.                        3-D reflectivity  (proposed)
+
+Outputs (Intermediate data file):
+        vrc     grid                          2-D reflectivity
+        vrz     grid                          3-D reflectivity  (proposed)
+
+The output reflectivity is used by the cloud and precip accumulation analyses.
+                                        
+------ 3.4 -----------------PROFILER (PRO)-------------------------------------
+
+Processes: PRO - ingest_pro.exe, ingest_blppro.exe - LAPS local data Profiler 
+      wind ingest (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	WPDN profiler wind data in netCDF format (ingest_pro.exe) 
+	Boundary layer profiler wind data in netCDF format (ingest_blppro.exe) 
+        These are in two separate NetCDF directories.
+
+Outputs: (The two executables are run sequentially, feeds wind)
+	pro	inter data	profiler wind direction (degrees) and
+                                              speed     (meters/sec)  (ASCII)
+
+Source directory: laps/nest7grid/source/ingest/profiler
+
+Sample Output: Should be available in the test data case.
+
+------ 3.5 ------------------RASS (LRS)---------------------------------------
+
+Process: (ingest_lrs.exe, ingest_blplrs.exe) LAPS local data RASS ingest
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	WPDN RASS temperature data in netCDF format (ingest_lrs.exe) 
+	Boundary layer RASS data in netCDF format (ingest_blplrs.exe) 
+        These are in two separate NetCDF directories.
+
+Outputs: (The two executables are run sequentially, feeds LSX and temp.exe)
+	lrs	inter data	RASS Virtual Temperatures (ASCII)
+
+Source directory: laps/nest7grid/source/ingest/rass
+
+Sample Output: Should be available in the test data case.
+
+------ 3.6 ------------------PIREPS/ACARS-------------------------------------
+
+Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	Aircraft voice pireps and ACARS data (separate NetCDF files)
+
+Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
+	pin	inter data	voice pireps/clouds, ACARS/winds
+                                        
+Sample Output: Should be available in the test data case
+ 
+------ 3.7 ---------------------WIND-------------------------------------------
+
+Process: wind.exe - WIND analysis and related fields
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+	Generate a preliminary analysis using SAOs, surface mesonet, profiler, 
+	and aircraft reports.  Output of the blance packge from the previous
+	cycle is used as a first guess to do quality control on new 
+        observations. Time tendencies from the MAPS model are used both to 
+        update the older (greater than cycle time) aircraft reports and to 
+        advance the first guess over the LAPS cycle time.
+
+	In a second step, the Doppler radial velocities are mixed in.  The 
+        azimuthal component is estimated by using the results of the first 
+        step.  Radial velocities are taken from the Doppler radars after 
+        dealiasing and other quality control steps are done.
+
+Auxiliary functions:
+	write out graphical products
+		
+Inputs: (from PRO, PIN, LGA/RAM, LSX, LT1)       '*' = essential input
+      * lga/ram grid            model data analysis/forecast
+                                needed for current and previous cycle times
+	pro     inter data      profiler winds
+        snd     inter data      RAOB data including winds
+	pin	inter data      pireps/clouds
+      * lso     inter data      LAPS surface obs file: mesonet & SAO
+	lsx	grid		LAPS surface data grids
+        lt1     grid            LAPS heights
+
+        (remapped from raw radar data)
+	v01-v20 grid            3-D radar reflectivity/radial velocity 
+        vrc/v01/vrz             2-D or 3-D radar reflectivity
+
+Outputs: (LW3 is main output)
+	msg	inter data	mesonet winds  (none of these five really have
+	pig	inter data	acars winds     to be part of the Wind Anlysis,
+	prg	inter data	profiler winds   they are used for lapsplot
+	sag	inter data	SAOs              output)
+	d01-d20 inter data (3d)	derived radar obs
+
+	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
+	lwm	2d grid		mean winds (sfc - 300mb layer)
+                                surface winds
+	lhe	2d grid		helicity (derived from 3-D winds)
+	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
+
+	lmr	2d grid		2-D column max radar ref      
+	lf1	2d grid		2-D column max radar ref history (maximum 
+                                over time since the previous analysis cycle)
+                                        
+Source directory: laps/nest7grid/source/wind
+Compile-time parameters: laps/nest7grid/source/wind/windparms.inc
+
+CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
+
+Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
+           342-352. 
+
+           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
+
+------ 3.8 ---------------------TEMP-------------------------------------------
+
+Process: temp.exe - Temperature-Height analysis
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+	Generate a temperature analysis using model background, sfc temp
+        analysis, and RASS data.
+
+Inputs: (from LGA, LSX, RAM [if available], LRS)       '*' = essential input
+      * lga/ram grid            model data analysis / forecast
+	lrs	inter data      RASS vertical temp profile 
+        snd     inter data      RAOB data including temperatures
+      * lsx     grid            LAPS surface data grids
+
+Outputs: (LW3 used by LBA)
+	lt1	3d grid		3-D temperature (K), 3-D Heights (M-MSL)
+
+Source directory: laps/nest7grid/source/temp
+
+Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
+           Analysis and Prediction System (LAPS): Analyses of clouds, 
+           precipitation, and temperature. Weather and Forecasting, 11, 
+           273-287.
+
+           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+
+------ 3.9 ---------------------CLOUD------------------------------------------
+
+Process: cloud.exe - Cloud analysis package
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+	Several input analyses are combined with SAOs of cloud layers.  These 
+        input analyses are the 3D temperature analysis,  a three-dimensional 
+        LAPS radar reflectivity analysis derived from full volumetric radar 
+        data, and a cloud top analysis derived from GOES IR band eight data.
+
+	Vertical cloud soundings from SAOs and pilot reports are analyzed 
+        horizontally to generate a preliminary three-dimensional analysis.  
+        This step provides information on the vertical location and 
+        approximate horizontal distribution of cloud layers.
+
+	The satellite cloud-top temperature field is converted to a cloud-top 
+        height field using the three-dimensional temperature analysis.  The 
+        cloud-top height field is then inserted into the preliminary cloud 
+        analysis to better define the cloud-top	heights as well as to increase
+        the horizontal spatial information content of the cloud analysis.  
+        A set of rules is employed to resolve conflicts between SAO and
+	satellite data.  Finally, the three-dimensional radar reflectivity 
+        field is inserted to provide additional detail in the analysis.
+
+Inputs:                                          '*' = essential input
+      * lsx	     grid	   LAPS surface data grids
+      * lt1          grid          LAPS 3-d temperature/height grid
+
+      * vrc/v01/vrz  grid          2-D or 3-D radar reflectivity	
+
+      * lvd          grid          Infra-red and Visible satellite data
+	pin	     inter data	   pireps/clouds
+        lm2          grid          composite snow cover (prev hour normally)
+      * lga/ram      grid          model data analysis / forecast
+      * lso          inter data    SAO obs 
+
+Outputs: 
+	lc3     3d grid	(ht)    3d clouds (fractional cover) 
+	lps     3d grid         3D Radar Reflectivity (filled in)
+	lcb     2d grid		cloud base/top (LCB,LCT) - all clouds are
+                                    considered (> .1 cover). Heights are MSL.
+                                cloud ceiling (CCE) -  only areas analyzed
+                                   with a cloud fraction > 0.65 are considered.
+                                   Units are meters AGL.
+
+	lcv     2d grid		column max cloud cover / snow cover
+                                    threshold for cloud cover in CTY is 0.65.
+
+Source directory: laps/nest7grid/source/cloud
+
+Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
+           Analysis and Prediction System (LAPS): Analyses of clouds, 
+           precipitation, and temperature. Weather and Forecasting, 11, 
+           273-287.
+
+           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+
+------ 3.10 ---------------------DERIV-----------------------------------------
+
+Process: deriv.exe - Derived products
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+        These derived products are mostly cloud related.
+
+Inputs:                                          '*' = essential input
+      * lc3     3d grid	(ht)    3d clouds (fractional cover) 
+      *	lt1	grid		LAPS 3-d temperature grid
+	lps     3d grid         3D Radar Reflectivity (filled in)
+        lsx     2d grid         sfc pressure, temperature
+	lcv     2d grid		column max cloud cover / snow cover
+        lh3     grid            LAPS 3-d Relative Humidity (normally previous 
+                                                                          file)
+        lso     inter data      SAO obs (for precip type verification)
+
+Outputs: 
+	lcp     3d grid	(pres)	3d clouds (fractional cover) (pressure grid)
+	lwc     3d grid         liquid water content (LWC)
+	lil     2d grid		integrated lwc
+	lct     2d grid		SFC precip type (SPT,PTT) 
+                                    Types are:
+                                       0 - No Precip         
+                                       1 - Rain             "R"
+                                       2 - Snow             "S"
+                                       3 - Freezing Rain    "Z"
+                                       4 - Ice Pellets      "I"
+                                       5 - Hail             "A"
+                                       6 - Drizzle          "L"
+                                       7 - Freezing Drizzle "F"
+                                    SPT uses simple 0 dbz reflectivity 
+                                    threshold to define areas of precip.
+                                    PTT uses a 13 dbz threshold for non-snow
+                                    precip (~.01"/hr), 0 dbz is still used
+                                    for snow though a surface dewpoint
+                                    depression threshold is used to filter out
+                                    areas of snow virga not reaching the ground.
+                                    The latter may be more useful for display
+                                    purposes by end users. PTT also utilizes
+                                    SAO data to delineate areas of drizzle,
+                                    freezing drizzle, rain, freezing rain, 
+                                    and snow - in areas that radar does not 
+                                    detect echoes.
+                                SFC cloud type (SCT)
+                                    This is the type of the lowest cloud layer
+                                    in the LTY (3-D cloud type) file. The 
+                                    cover threshold is 0.65. The presence of 
+                                    a CB higher up has priority. There are
+                                    10 possible cloud types.
+                                    Types are:
+                                       0 - No Cloud
+                                       1 - Stratus          "St"
+                                       2 - Stratocumulus    "Sc"
+                                       3 - Cumulus          "Cu"
+                                       4 - Nimbostratus     "Ns"
+                                       5 - Altocumulus      "Ac"
+                                       6 - Altostratus      "As"
+                                       7 - Cirrostratus     "Cs"
+                                       8 - Cirrus           "Ci"
+                                       9 - Cirrocumulus     "Cc"
+                                      10 - Cumulonimbus     "Cb"
+
+	lmd     3d grid         mean cloud drop diameter 
+	lmt	2d grid	        max echo tops (LMT), 
+                                Low level reflectivity (LLR)
+	lco     3d grid         cloud omega       
+	lrp     3d grid         3D icing index 
+	lty     3d grid         3D cloud & precip type (CTY,PTY) 
+                                    threshold for cloud cover in CTY is 0.65.
+
+Source directory: laps/nest7grid/source/cloud
+
+Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
+           Analysis and Prediction System (LAPS): Analyses of clouds, 
+           precipitation, and temperature. Weather and Forecasting, 11, 
+           273-287.
+
+           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+
+------ 3.11 ---------------------ACCUM-----------------------------------------
+
+Process: accum.exe - Snowfall/Liquid Equivalent Precipitation
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+	LAPS incremental/storm total snowfall/liquid equivalent accumulation.
+
+Inputs: (from LSX, LZA processes)
+      * lsx	     grid	LAPS surface data grids
+      * lt1	     grid	LAPS 3-d temperature grid
+        lh3          grid       LAPS 3-d Relative Humidity (normally previous)
+
+      * vrc/v01/vrz  grid       2-D or 3-D radar reflectivity	
+
+Outputs:
+	L1S          2d grid	Snowfall over LAPS cycle time (S01 field) 
+				Storm total snow accumulation (STO field)
+				Rain/Liquid Equivalent Precip (R01 field)
+				Storm Total Rain/Liquid Pcp   (RTO field)
+
+Source directory: laps/nest7grid/source/accum
+
+Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
+           Analysis and Prediction System (LAPS): Analyses of clouds, 
+           precipitation, and temperature. Weather and Forecasting, 11, 
+           273-287.
+
+           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+
+------ 3.12 ---------------------LGA-------------------------------------------
+
+Package: lga.exe - ingest model data (author: John Snook - snook@fsl.noaa.gov).
+
+        LGA 	LAPS analysis grids from RUC analysis grids, 50 mb levels 
+                (1 hr files) (vertical interpolation)
+
+Inputs:
+	Model hybrid data 
+
+Outputs: (Feeds LZB, LC3 )
+	lga	grid	maps data analysis/forecast
+
+------ 3.13 ---------------------LVD-------------------------------------------
+
+LVD process - lvd_driver.exe - takes raw sat. data and puts it on LAPS 
+              grid.
+        (author: John Smart - smart@fsl.noaa.gov)
+
+Input:
+ 	 GOES 8 Data
+
+Output:
+         LVD	grid	LAPS satellite data file
+
+------ 3.14 ------------------SFC (LSX)----------------------------------------
+
+Surface processing - laps_sfc.x (LSX and friends) 
+        (author: Pete Stamus - stamus@fsl.noaa.gov)
+
+Surface package collects surface data - SAOs, local mesonet, GOES IR bightness.
+Places surface data on LAPS grid.  Quality Control of Obs.  Also takes previous
+hour's result as input.  Data is collected over a slightly larger than grid to 
+help boundary conditions.  Uses a cubic spline technique for interpolation.
+
+GOES IR gives relative temperatures, not absolute temps.  GOES tempature 
+gradient fields is then interpolated together with surface observations and 
+previous background, etc.  LGA 700 mb temperatures are extrapolated to the 
+surface, compare it with the hard data points.  Use to account for elevation 
+effects.
+
+Constrain surface winds and pressure fields to full equations of motion.  Do an
+interpolation of SAO reports and mesonet reports to get 2-D winds on surface.
+re-analysize wind field based on adjusted pressure field.
+
+Then derived fields are calculated.
+
+For LT1 (3D temps) take 3D temps from the LGA module (orginally MAPS data)
+plus LAPS surface temps and RASS, then the fields are blended.
+
+**********
+
+LSO process - obs_driver.x - Ingest surface data
+        (author: Pete Stamus - stamus@fsl.noaa.gov)
+
+Input:
+	raw SAO data
+	raw mesonet data
+
+Output:
+         LSO	ascii	LAPS surface obs file: mesonet & SAO
+                        The format of this file may be gleaned from looking
+                        at the obs_driver.x code, or by looking at sample LSO 
+                        files in the test data case.
+
+**********
+
+28257	LSX process - LAPS surface data analysis
+        (author: Pete Stamus - stamus@fsl.noaa.gov)
+
+Inputs:
+         LSO    surface observations
+	 LGA	maps data analysis
+	 LSX    (previous hour's LSX)
+         LRS    RASS data
+         LWM    latest surface winds from 3D wind analysis
+
+Outputs: (Feeds L1S, LBA)
+
+ 28257   LSX    LAPS surface data grids (27 packed in one file)
+ 
+------ 3.15 -----------------------RAOB----------------------------------------
+
+Process: (ingest_raob.exe) LAPS RAOBs
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	RAOBs in NetCDF format
+
+Outputs: (Feeds temp.exe, humid.exe, wind.exe)
+	snd	inter data	RAOB temp, dewpoint, wind
+                                        
+        Note: This executable is not presently in the 'schedule.com' for the
+              operational LAPS at FSL. It could be added if desired.
+
+********************************************************************************
+********************************************************************************
+
+        4.0 --  Porting code mods from LAPS users back to FSL:
+
+   We would like to encourage suggestions from LAPS users on how to improve
+   LAPS, both scientifically and in the software itself. In general, we should 
+   follow a carefully orchestrated procedure to port code improvements back 
+   from LAPS users to FSL that may be called "virtual RCS". This is essential 
+   to insure compatability as well as to preserve ongoing code developments 
+   by FSL and various LAPS users. Prior to making the mods, a LAPS user 
+   should "check out" a well defined set of modules from the latest LAPS 
+   release (or developmental code from the parallel side of 'peaks.fsl'). This 
+   is done in close coordination with the FSL code author(s), listed in
+   Section 3. The user can then modify that portion of the code while we 
+   temporarily suspend FSL development on that set of modules. The modified 
+   code can then be ported back to FSL (along with a log of the code mods 
+   suitable for entry into the "Revisions" file) for testing and integration 
+   into the next LAPS release. 
+
+   In some cases, a less formal process may be easier to go by. Here, the
+   user can provide documentation of suggested mods either in descriptive form,
+   or in terms of before and after code. The code author can then implement
+   the changes in the FSL version. This can be useful in the event the mods are
+   simple, or if the user has been working with a relatively old version of
+   the software and/or there have been significant recent FSL mods to the
+   software. This can also be useful if the user has an idea of a desired
+   functionality within LAPS, but has not actually looked at the software
+   details associated with implementing the functionality.
+
+   It should be noted that it can be problematic for us to accept software 
+   modified by users if the mods were not made on the latest developmental
+   FSL version of the particular files. This is because it can be tricky to 
+   reconcile two sets of software that have been allowed to diverge and evolve 
+   independently. The changes that have occurred in both would have to be
+   reconstructed in detail. It is recommended instead that one of the 
+   procedures in the first two paragraphs of this section be followed.
+
+
+-------  5.0 --  LAPS Variables and netCDF File Organization -----------------
+
+LAPS Variables and netCDF File Organization ver. 2	20 Jul 1995
+        (author: Linda Wharton - wharton@fsl.noaa.gov)
+
+                File LAPS CDF
+		Ext  Var  Var   #Lvl  Field
+Process LSX:	LT1  T3   t	  21  Temperature
+		     HT   z       21  Height
+            	LSX  U    su       1  Surface wind u 
+       		     V    sv       1  Surface wind v
+        	     P    fp       1  1500m Pressure
+            	     T    st       1  Temp 
+		     TD   std      1  Dewpt Temp
+        	     VV   vv	   1  Vertical Velocity
+		     RH   srh      1  Relative Humidity
+		     MSL  mp	   1  MSL Pressure
+         	     TAD  ta       1  Temp Advection
+        	     TH   pot      1  Potential Temp
+		     THE  ept      1  Equivalent Potential Temp
+           	     PS   sp	   1  Pressure
+		     VOR  vor	   1  Vorticity
+		     MR   mr       1  Mixing Ratio  
+         	     MRC  mc       1  Moisture Convergence
+        	     DIV  d	   1  Divergence
+		     THA  pta      1  Potential Temp Advection
+		     MRA  ma       1  Moisture Advection
+		     LI   li       1  Lifted Index
+		     SPD  spd	   1  Surface Wind Speed
+		     CSS  cssi     1  CSSI
+		     PBE  pbe      1  Positive Bouyant Energy
+		     NBE  nbe      1  Negative Bouyant Energy
+		     VIS  vis 	   1  Surface Visibility
+                     FWX  fwx      1  Fire Danger
+		     HI   hi       1  Heat Index
+
+Process L1S:	L1S  S01  s1hr     1  Snow Accum Cycle 
+		     STO  stot     1  Snow Accum Storm Tot 
+          	     R01  pc	   1  Liq Accum Cycle 
+        	     RTO  pt	   1  Liq Accum Storm Tot 
+        	
+Process LZA:	LQ3  SH   sh      21  Specific Humidity 
+            	LH3  RH3  rh      21  Relative Humidity 
+            	     RHL  rhl	  21  Relative Humidity with resp to liquid
+            	LH4  TPW  tpw      1  Integrated Total Precipitable Water
+
+Process cloud:	LC3  LC3  camt    42  Fractional Cloud Cover (levels 1-42)
+       +deriv	LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
+		LWC  LWC  lwc     21  Cloud Liquid Water 
+		     ICE  ice	  21  Cloud Ice
+		     PCN  pcn     21  Hydrometeor Concentration
+           	LIL  LIL  ilw      1  Integrated Liquid Water
+         	LCB  LCB  cbas     1  Cloud base 
+		     LCT  ctop     1  Cloud Top
+           	     CCE  cce      1  Cloud Ceiling
+        	LCT  SPT  spt      1  Sfc Precip Type
+                     PTT  ptt      1  LAPS Sfc Precip Type
+                     SCT  sct      1  Sfc Cloud Type
+         	LCV  LCV  ccov     1  Cloud Cover
+         	     CSC  csc      1  Cloud Analysis Implied Snow Cover
+		LMD  LMD  mcd     21  Mean Cloud Drop Diameter 
+        	LPS  REF  ref     21  LAPS Radar Reflectivity 
+		LCO  COM  cw      21  Cloud omega 
+         	LRP  LRP  icg     21  Icing Index
+		LTY  CTY  ctyp    21  Cloud Type 
+		     PTY  ptyp    21  Precip Type 
+          	LMT  LMT  etop     1  Max Echo Tops
+          	     LLR  llr	   1  Low Level Reflectivity
+
+Process LZB:   	LWM  SU   u        1  Surface wind u
+                     SV   v        1  Surface wind v
+
+		LHE  LHE  hel      1  Helicity
+                     MU   mu       1  Mean wind u 
+       		     MV   mv       1  Mean wind v
+           	
+           	LF1  H    mxrh     1  Max Radar Reflectivity History
+		LW3  U3   u       21  Wind u
+		     V3   v       21  Wind v 
+          	     OM   w       21  Wind omega 
+		LIW  LIW  liw      1  log(LI*omega)
+		     W    w	   1  600mb omega
+		LMR  R    mxrf     1  Max Radar Reflectivity
+		
+Process LSM:	LM1  LSM  lsm      3  Soil Moisture
+		LM2  CIV  civ      1  Cumulative Infiltration Volume
+		     DWF  dwf	   1  Depth to wetting front
+		     WX   wx       1  Wet/Dry grid point
+		     EVP  evp      1  Evaporation Data
+		     SC   sc       1  Snow covered
+		     SM   sm       1  Snow melt
+		     MWF  mwf      1  Soil Moisture content Wetting Front
+
+Fcst Model:	RAM  U3   ru	  21  Fcst Model Wind u
+		     V3   rv	  21  Fcst Model Wind v
+		     OM	  rw	  21  Fcst Model Omega
+		     HT	  rz	  21  Fcst Model Height
+		     T3	  rt	  21  Fcst Model Temperature
+		     SH	  rsh	  21  Fcst Model Specific Humidity
+                     RH3  rh3     21  Fcst Model Relative Humidity
+                     LWC  lwc     21  Fcst Model Cloud liquid water
+                     ICE  ice     21  Fcst Model Cloud Ice
+		
+		RSF  U	  rus 	   1  Fcst Model Surface wind u
+	             V	  rvs 	   1  Fcst Model Surface wind v
+		     T	  rts 	   1  Fcst Model Surface Temperature
+		     P	  rps 	   1  Fcst Model 1500m pressure
+		     TD	  rtd 	   1  Fcst Model Dewpoint                 
+                     RH   rh       1  Fcst Model Relative humidity 
+                     LCB  lcb      1  Fcst Model Cloud base
+                     LCT  lct      1  Fcst Model Cloud top
+                     MSL  msl      1  Fcst Model MSL pressure
+                     LIL  lil      1  Fcst Model Integrated liquid water
+                     TPW  tpw      1  Fcst Model Total precipitable water
+                     R01  r01      1  Fcst Model Liquid accum cycle     
+                     RTO  rto      1  Fcst Model Liquid accum storm total
+                     S01  s01      1  Fcst Model Snow accum cycle     
+                     STO  sto      1  Fcst Model Snow accum storm total
+                     TH   th       1  Fcst Model Potential temperature  
+                     THE  the      1  Fcst Model Equivalent potential temp
+                     PBE  pbe      1  Fcst Model Positive buoyant energy
+                     NBE  nbe      1  Fcst Model Negative buoyant energy
+           	(over)		
+                     PS   ps       1  Fcst Model Surface pressure
+                     CCE  cce      1  Fcst Model Cloud ceiling
+                     VIS  vis      1  Fcst Model Visibility
+                     LCV  lcv      1  Fcst Model Cloud cover
+                     LMT  lmt      1  Fcst Model Max echo tops
+                     SPT  spt      1  Fcst Model Sfc precip type
+                     LHE  lhe      1  Fcst Model Helicity
+                     LI   li       1  Fcst Model Lifted index
+                     HI   hi       1  Fcst Model Heat index
+
+                RSM  LSM  lsm     11  Fcst Model Soil Moisture
+
+Intermediate LAPS files:
+
+Process VRC:    VRC  REF  ref      1  NOWRAD 2D radar reflectivity
+                VRZ               21  (Proposed 3D reflectivity mosaic)
+ 
+Process V01:    V01  REF  refd    21  Radar reflectivity
+                     VEL  veld    21  Radial Velocity    
+                     NYQ  nyqd    21  Nyquist velocity
+
+                files V02, V03, V04, V05, V06, V07, V08, V09, V10, V11,
+                      V12, V13, V14, V15, V16, V17, V18, V19, V20 same format
+
+Process LGA:         HT   ht      21  MAPS isentrop height interp to LAPS 
+                                      isobaric
+                     T3   t       21  MAPS isentrop temp interp to LAPS isobaric
+                     SH   sh      21  MAPS specific humidity
+                     U3   u       21  MAPS u wind component
+                     V3   v       21  MAPS v wind component
+
+Process LH1: 	LH1  PW   pw	   1  Precipitable Water
+
+Process LH2: 	LH2  PW   lpw	   3  Layer Precipitable Water
+
+Process LVD:    LVD  S8W  s8w      1  GOES IR band-8 bright temp warmest pixel
+                     S8C  s8c      1  GOES IR band-8 bright temp coldest pixel
+                     SVS  svs      1  GOES visible satellite - raw
+                     SVN  svn      1  GOES visible satellite - normalized
+                     ALB  alb      1  albedo
+                     S3A  s3a      1  GOES IR band-3 bright temp averaged
+                     S3C  s3c      1  GOES IR band-3 bright temp filtered
+                     S4A  s4a      1  GOES IR band-4 bright temp averaged
+                     S4C  s4c      1  GOES IR band-4 bright temp filtered
+                     S5A  s5a      1  GOES IR band-5 bright temp averaged
+                     S5C  s5c      1  GOES IR band-5 bright temp filtered
+                     S8A  s8a      1  GOES IR band-8 bright temp averaged
+                     SCA  sca      1  GOES IR band-12 bright temp averaged
+                     SCC  scc      1  GOES IR band-12 bright temp averaged
+</pre>

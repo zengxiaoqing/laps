@@ -1,0 +1,14 @@
+Parameters needed to build wsi polar stereographic sector
+lat/lon to i/j look up table. These read by program
+exe/genvrclut.exe when c_raddat_type()=wsi. This program is run when
+installing laps and the lut needed by the vrc process.
+
+2124.34550    !0.01912046    !2.1243455 km
+1995.80800    !0.01796406    !1.995808  km
+3661          !Number of elems (nelems)
+1837          !Number of lines (nlines)
+0052.99998    !Latitude of first point (la1)
+-130.00000    !Longitude of first point (lo1)
+0025.00000    !Bogus ... not used for vrc navigation
+-095.00000    !-1.658063     !Lov (-95.0000 deg)
+0025.00000    !Bogus ... not used for vrc navigation

@@ -1,0 +1,2746 @@
+cdis    Forecast Systems Laboratory
+cdis    NOAA/OAR/ERL/FSL
+cdis    325 Broadway
+cdis    Boulder, CO     80303
+cdis
+cdis    Forecast Research Division
+cdis    Local Analysis and Prediction Branch
+cdis    LAPS
+cdis
+cdis    This software and its documentation are in the public domain and
+cdis    are furnished "as is."  The United States government, its
+cdis    instrumentalities, officers, employees, and agents make no
+cdis    warranty, express or implied, as to the usefulness of the software
+cdis    and documentation for any purpose.  They assume no responsibility
+cdis    (1) for the use of the software and documentation; or (2) to provide
+cdis     technical support to users.
+cdis
+cdis    Permission to use, copy, modify, and distribute this software is
+cdis    hereby granted, provided that the entire disclaimer notice appears
+cdis    in all copies.  All modifications to this software must be clearly
+cdis    documented, and are solely the responsibility of the agent making
+cdis    the modifications.  If significant modifications or enhancements
+cdis    are made to this software, the FSL Software Policy Manager
+cdis    (softwaremgr@fsl.noaa.gov) should be notified.
+cdis
+cdis
+cdis
+cdis
+cdis
+cdis
+cdis
+
+        subroutine xsect(c_display,i4time_ref,lun,l_atms,standard_longit
+     1ude)
+
+        include 'lapsparms.for'
+
+        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
+
+        integer*4 NX_C,NZ_C,NZ_B
+        parameter (NX_C = 61)   ! NX_L ! Number of horizontal points in X-Sect
+        parameter (NZ_C = NZ_L) ! Number of vertical levels in LAPS
+
+        parameter (NZ_B = 5)    ! Bottom Level of ATMS X-Sect
+
+        include 'laps_cloud.inc'
+
+        real*4 clouds_3d(NX_L,NY_L,KCLOUD)
+        byte b_dum(NX_L,NY_L,KCLOUD)
+
+        common/lapsplot_cmn2/clouds_3d,b_dum
+        common/lapsplot_omega/l_convert
+
+        logical l_sta,l_convert,lapsplot_pregen,l_atms,l_pregen,l_arriva
+     1l_gate
+        logical l_radar_read, l_wind_read
+        logical iflag_mvd,iflag_icing_index,iflag_cloud_type,iflag_bogus
+     1_w
+        logical iflag_snow_potential
+        data lapsplot_pregen /.true./
+
+        real*4 cld_pres(KCLOUD)
+
+        character*2 c2_cloud_type,c2_cloud_types(0:10)
+     1  /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
+
+        character*2 c2_precip_type,c2_precip_types(0:10)
+     1  /'  ','Rn','Sn','Zr','Sl','Ha','  ','  ','  ','  ','  '/
+
+        character*1 c1_precip_types(0:10)
+     1       /' ','R','*','Z','I','H',' ',' ',' ',' ',' '/
+
+
+        character*4 c4_log
+
+        real*4 dum1_array(NX_L,1)
+        real*4 dum2_array(NX_L,1)
+        real*4 dum3_array(NX_L,1)
+        real*4 dum4_array(NX_L,1)
+
+        data mode_lwc/2/
+
+!       character*255 c_filespec_wd/'*.lw3'/
+!       character*255 c_filespec_wc/'*.lco'/
+!       character*255 c_filespec_wb/'*.lba'/
+        character*255 c_filespec_qg/'USER_DATA:*.lqo'/
+        character*255 c_filespec
+
+        character*31 ext_wind
+
+        character*3 var_2d
+        character*50  directory
+        character*31  ext
+        character*10  units_2d
+        character*125 comment_2d
+
+      ! Used for "Potential" Precip Type
+        logical l_mask_pcptype(NX_C,1)
+        integer*2 ibase_array(NX_C,1)
+        integer*2 itop_array(NX_C,1)
+
+        real*4 u_3d(NX_L,NY_L,NZ_L)
+        real*4 v_3d(NX_L,NY_L,NZ_L)
+        real*4 omega_3d(NX_L,NY_L,NZ_L)
+        real*4 temp_3d(NX_L,NY_L,NZ_L)
+        real*4 rh_3d(NX_L,NY_L,NZ_L)
+        real*4 q_3d(NX_L,NY_L,NZ_L)
+        real*4 slwc_3d(NX_L,NY_L,NZ_L)
+        real*4 cice_3d(NX_L,NY_L,NZ_L)
+        real*4 grid_ra_ref(NX_L,NY_L,NZ_L)
+        real*4 grid_ra_vel(NX_L,NY_L,NZ_L)
+!       real*4 grid_ra_rfill(NX_L,NY_L,NZ_L)
+
+        real*4 pcp_type_3d(NX_L,NY_L,NZ_L)
+        equivalence(pcp_type_3d,rh_3d)
+
+!       real*4 pcp_type_2d(NX_C,NZ_C)
+!       equivalence(pcp_type_2d,rh_2d)
+
+        real*4 field_2d(NX_C,NZ_C)
+
+!       COMMON/LABS/IA(2),NC,NREP,NCRT,ILAB,NULBLL,SIZEL,SIZEM,SIZEP
+        character c9_radarage*9
+
+        real*4 lifted(NX_L,NY_L)
+
+!       real*4 cloud_cvr_2d(NX_L,NY_L)
+        real*4 cloud_ceil_2d(NX_L,NY_L)
+        real*4 vis_2d(NX_L,NY_L)
+        real*4 cloud_top_2d(NX_L,NY_L)
+
+        real*4 clouds_vert(NX_C,KCLOUD)
+
+!       real*4 cloud_cvr_1d(NX_C)
+        real*4 cloud_ceil_1d(NX_C)
+!       real*4 cloud_low_1d(NX_C)
+        real*4 cloud_top_1d(NX_C)
+
+        common /MCOLOR/mini,maxi
+
+        real xcoord(100),ycoord(100)
+
+!       COMMON /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
+
+        include 'icolors.inc'
+
+        integer*4 N_CONTOURS
+        parameter (N_CONTOURS = 20)
+        real*4 factor(N_CONTOURS)/
+     1  .01,
+     1  .02,
+     1  .05,
+     1  .1,
+     1  .2,
+     1  .5,
+     1  1.,
+     1  2.,
+     1  5.,
+     1  10.,
+     1  20.,
+     1  50.,
+     1  100.,
+     1  200.,
+     1  500.,
+     1  1000.,
+     1  2000.,
+     1  5000.,
+     1  10000.,
+     1  20000.
+     1                  /
+
+        real*4 lat_1d(NX_C)
+        real*4 lon_1d(NX_C)
+        real*4 snow_1d(NX_C)
+
+        real*4 pres_2d(NX_L,NY_L)
+        real*4 pres_1d(NX_C)
+
+        real*4 u_vert(NX_C,NZ_C)
+        real*4 v_vert(NX_C,NZ_C)
+        real*4 temp_2d(NX_C,NZ_C)
+        real*4 rh_2d(NX_C,NZ_C)
+        real*4 heights_2d(NX_C,NZ_C)
+        real*4 radar_2d(NX_C,NZ_C)
+        real*4 slwc_2d(NX_C,NZ_C)
+        real*4 cice_2d(NX_C,NZ_C)
+        real*4 field_vert(NX_C,NZ_C)
+        real*4 field_vert2(NX_C,NZ_C)
+        real*4 w_2d(NX_C,NZ_C)
+        byte cldpcp_type_2d(NX_C,NZ_C)
+        real*4 mvd_2d(NX_C,NZ_C)
+!       real*4 lwc_res_2d(NX_C,NZ_C)
+        byte icing_index_2d(NX_C,NZ_C)
+        real*4 terrain_vert(NX_C,NZ_C)
+        real*4 terrain_vert1d(NX_C)
+        real*4 lon_vert(NX_C)
+
+        integer*4 iarg
+        byte barg
+        equivalence(barg,iarg)
+
+        real*4 mspkt /.518/
+
+        character*33 c33_label
+        character*1 c_display
+        character*1 c1_string
+        character*2 c_metacode,c_field,c_wind
+        character*3 c3_string,c3_sta,c3_type
+        character*3 c3_ylow,c3_xlow
+        character*5 c5_arrival_gate
+        character*4 c4_string
+        character*7 c7_string
+        character*24 asc_tim_24
+        character*9 asc_tim_9,c9_string
+        character*20 c20_sta
+        integer*4 ity/35/
+
+        integer*4 N_STATIONS
+        parameter (N_STATIONS = 32)
+
+        character*3 c3_sta_array(N_STATIONS)
+     1  /'WIG','FTC','LOV','ELB','FLG','PTV','STP',
+     1         'ELB','BJC','DEN','APA','COS','CYS','LAR',
+     1         'LIC','AKO','GLD','LHX','BOU','KIO','GXY',
+     1   'ERI','MHR','CP3','CHL','UND','OKC','MKC',
+     1   'ICT','DSM','GRI','ASE'/
+
+        real*4 sta_lat(N_STATIONS)
+     1    /  40.29,  40.59,  40.59,  39.20,  39.36,  40.26,  39.75,
+     1       39.23,  39.90,  39.75,  39.57,  38.82,  41.15,  41.32,
+     1       39.18,  40.17,  39.37,  38.05,  40.01,  39.35,  40.42,
+     1       40.10,  39.87,  39.95,  40.44,  40.10,  35.40,  39.12,
+     1       37.65,  41.53,  40.97,  39.22/
+
+        real*4 sta_lon(N_STATIONS)
+     1    /-103.05,-105.14,-105.14,-104.50,-103.04,-104.87,-104.87,
+     1     -104.63,-105.12,-104.87,-104.85,-104.72,-104.82,-105.68,
+     1     -103.70,-103.22,-101.70,-103.52,-105.25,-104.42,-104.63,
+     1     -105.03,-104.76,-105.19,-104.64,-104.34, -97.60, -94.60,
+     1      -97.43, -93.65, -98.32,-106.87/
+
+        character*80 c80_domain
+
+        common /lapsplot_cmn1/u_3d,v_3d,omega_3d,temp_3d,rh_3d,q_3d,slwc
+     1_3d,
+     1               cice_3d,grid_ra_ref,grid_ra_vel
+
+!       sizem = 1.0
+        sizel = 2.0
+
+        ioffm = 1 ! Don't plot label stuff in conrec
+
+        if(.not. l_atms)then
+!           open(8,file='for008.dat',status='unk')
+!           call OPNGKS
+        endif
+
+        lapsplot_pregen = .false.
+
+c read in laps lat/lon and topo
+        call get_laps_domain(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo,ist
+     1atus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting LAPS domain'
+            return
+        endif
+
+        if(lun .eq. 5)call logit(LAPS_DOMAIN_FILE)
+
+        i_graphics_overlay = 0
+        i_map = 0
+        i_initialize = o
+
+        l_wind_read = .false.
+        l_radar_read = .false.
+
+!       if(c_display .eq. 't')call setusv_dum(2hIN,16)
+
+        rleft = 1
+        right = NX_C
+
+!       Decide whether the bottom of the X-Sect is at the bottom of the LAPS domain
+
+!       if(l_atms)then
+            topo_min = 1e10
+            do j = 1,NY_L
+            do i = 1,NX_L
+                topo_min = min(topo_min,topo(i,j))
+            enddo
+            enddo
+
+            ibottom_terrain = height_to_zcoord(topo_min,istatus)
+
+            ibottom_terrain = max(ibottom_terrain,1)
+
+!           ibottom_terrain = 1
+
+            write(6,*)'    Lowest Displayed Level = ',ibottom_terrain
+
+            bottom = ibottom_terrain
+!       else
+!           bottom = 1
+!       endif
+
+        ibottom = bottom
+
+        top = NZ_C
+        width = right - rleft
+        r_height = top - bottom
+
+!       This lets up plot outside the main box
+!       call set(.00, 1.0, .00, 1.0, rleft - width/8., right + width/8.,
+!       1                            bottom - r_height/8., top + r_height/8.,1)
+
+        if(i_initialize .eq. 1)goto100
+
+        i_initialize = 1
+
+!       Define Segment for Cross Section on LAPS Grid
+80      continue
+
+        c80_domain = laps_domain_file
+        if(c80_domain(1:4) .eq. 'nest')then
+            write(6,102)
+102         format(/
+     1 '    Type of Xsect ',
+     1  ' [we, sn, xxx (azimuth-true), arr (arrival gate)]   ? '$)
+        else
+            write(6,103)
+103         format(/
+     1 '    Type of Xsect ',
+     1  ' [we, sn, xxx (azimuth-true)]                       ? '$)
+        endif
+
+        if(l_atms)write(6,*)' Reading X-sect type from lun = ',lun
+
+        read(lun,1201)c3_type
+1201    format(a3)
+
+        if(l_atms)write(6,*)' Just read X-sect type  = ',c3_type,lun
+
+        l_sta = .true.
+        l_arrival_gate = .false.
+
+        if(c3_type(1:2) .eq. 'we')then
+            xlow = 1.
+            xhigh = NX_L
+
+            if(c80_domain(1:4) .eq. 'nest')then
+                write(6,111)NY_L,NY_L/2+1,NY_L
+111             format(/'     N-S Location ',
+     1        '[1 to ',i3,'; 1 = S Edge, '
+     1        ,i3,' = Center, '
+     1        ,i3,' = N Edge]   OR '//
+     1        6x,' CLASS:       wig,ftc,lov,elb,flg'/
+     1        6x,' RADIOMETERS: ptv,stp,elb,eri'/
+     1        6x,' RADARS:      mhr,cp3,chl,und'/
+     1        6x,' SAOs:        bjc,den,apa,cos,cys,lar,lic,ako,gld,lhx,
+     1gxy'/
+     1        6x,' VORs:        kiw'/
+     1        ' ',6x,'MESONET:     ',
+     1        'bou                                               ? '$)
+
+            else ! StormFest
+                write(6,1110)NY_L,NY_L/2+1,NY_L
+1110            format(/'     N-S Location ',
+     1        '[1 to ',i3,'; 1 = S Edge, '
+     1        ,i3,' = Center, '
+     1        ,i3,' = N Edge]   OR '//
+     1        '$',6x,'SAOs   :     ',
+     1        'okc,mkc,ict,dsm,gri                               ? ')
+
+            endif
+
+            read(lun,120)c3_ylow
+120         format(a3)
+
+            call upcase(c3_ylow,c3_ylow)
+
+            l_sta = .false.
+
+            do i = 1,N_STATIONS
+              if(c3_ylow .eq. c3_sta_array(i))then
+                call latlon_to_rlapsgrid(sta_lat(i),sta_lon(i),lat,lon
+     1                          ,NX_L,NY_L,xsta,ysta,istatus)
+
+                if(xsta .lt. 1 .or. xsta .gt. NX_L .OR.
+     1           ysta .lt. 1 .or. ysta .gt. NY_L)then
+                    write(6,*)' Station is outside domain - try again...
+     1'
+                    goto80
+                endif
+
+                ylow = ysta
+                l_sta = .true.
+                i_sta = i
+
+                pos_sta = 1. + (NX_C-1.) * (xsta-xlow)/(xhigh-xlow)
+
+!               pos_sta = xsta
+
+                c3_sta = c3_ylow
+              endif
+
+            enddo
+
+            if(.not. l_sta)then
+                read(c3_ylow,*,err=75)ylow
+                write(6,*)
+                write(6,*)'      J = ',nint(ylow)
+
+75              if(ylow .lt. 1 .or. ylow .gt. NY_L)then
+                    write(6,*)' Grid point is outside domain - try again
+     1...'
+                    goto80
+                endif
+
+            else
+                write(6,72)sta_lat(i_sta),sta_lon(i_sta)
+     1                          ,nint(ylow),nint(pos_sta)
+72              format(/7x,'lat/lon ',2f8.2,' J/I =',2i4)
+            endif
+
+            yhigh = ylow
+
+        elseif(c3_type(1:2) .eq. 'sn')then
+            ylow = 1.
+            yhigh = NY_L
+
+            if(c80_domain(1:4) .eq. 'nest')then
+                write(6,112)NX_L,NX_L/2+1,NX_L
+112             format(/'     E-W Location ',
+     1        '[1 to ',i3,'; 1 = W Edge, '
+     1        ,i3,' = Center, '
+     1        ,i3,' = E Edge]   OR '//
+     1        6x,' CLASS:       wig,ftc,lov,elb,flg'/
+     1        6x,' RADIOMETERS: ptv,stp,elb,eri'/
+     1        6x,' RADARS:      mhr,cp3,chl,und'/
+     1        6x,' SAOs:        bjc,den,apa,cos,cys,lar,lic,ako,gld,lhx,
+     1gxy'/
+     1        6x,' VORs:        kiw'/
+     1        ' ',6x,'MESONET:     ',
+     1        'bou                                               ? '$)
+
+            else ! StormFest
+                write(6,1120)NX_L,NX_L/2+1,NX_L
+1120            format(/'     E-W Location ',
+     1        '[1 to ',i3,'; 1 = W Edge, '
+     1        ,i3,' = Center, '
+     1        ,i3,' = E Edge]   OR '//
+     1        '$',6x,'SAOs   :     ',
+     1        'okc,mkc,ict,dsm,gri                               ? ')
+
+            endif
+
+            read(lun,120)c3_xlow
+
+            call upcase(c3_xlow,c3_xlow)
+
+            l_sta = .false.
+
+            do i = 1,N_STATIONS
+              if(c3_xlow .eq. c3_sta_array(i))then
+!               call latlon_grid(sta_lat(i),sta_lon(i),igrid,jgrid)
+                call latlon_to_rlapsgrid(sta_lat(i),sta_lon(i),lat,lon
+     1                          ,NX_L,NY_L,xsta,ysta,istatus)
+                if(xsta .lt. 1 .or. xsta .gt. NX_L .OR.
+     1           ysta .lt. 1 .or. ysta .gt. NY_L)then
+                    write(6,*)' Station is outside domain - try again...
+     1'
+                    goto80
+                endif
+
+                xlow = xsta
+                l_sta = .true.
+                i_sta = i
+
+                pos_sta = 1. + (NX_C-1.) * (ysta-ylow)/(yhigh-ylow)
+
+!               pos_sta = ysta
+
+                c3_sta = c3_xlow
+              endif
+
+            enddo
+
+            if(.not. l_sta)then
+                read(c3_xlow,*,err=76)xlow
+                write(6,*)
+                write(6,*)'      I = ',nint(xlow)
+
+ 76             if(xlow .lt. 1 .or. xlow .gt. NX_L)then
+                    write(6,*)' Grid point is outside domain - try again
+     1...'
+                    goto80
+                endif
+
+            else
+                write(6,82)sta_lat(i_sta),sta_lon(i_sta)
+     1                          ,nint(xlow),nint(pos_sta)
+82              format(/7x,'lat/lon ',2f8.2,' I/J =',2i4)
+            endif
+
+            xhigh = xlow
+
+
+        else ! Try to get an azimuth for the X-Sect
+            read(c3_type,*,err=85)azi_xsect
+
+            if(c80_domain(1:4) .eq. 'nest')then
+                write(6,113)
+113             format(/'     Waypoint for X-Sect: '/
+     1        6x,' CLASS:       wig,ftc,lov,elb,flg'/
+     1        6x,' RADIOMETERS: ptv,stp,elb,eri'/
+     1        6x,' RADARS:      mhr,cp3,chl,und'/
+     1        6x,' SAOs:        bjc,den,apa,cos,cys,lar,lic,ako,gld,lhx,
+     1gxy'/
+     1        6x,' VORs:        kiw'/
+     1        6x,' MESONET:     bou'/
+     1        ' ',5x,'                     OR I,J location:',27x,'? '$)
+
+            else ! Storm Fest
+                write(6,1130)
+1130             format(/'     Waypoint for X-Sect: '/
+     1        6x,' SAOs:        okc,mkc,ict,dsm,gri'/
+     1        '$',5x,'                     OR I,J location:',27x,'? ')
+
+            endif
+
+            read(lun,130)c20_sta
+130         format(a20)
+            c3_sta = c20_sta(1:3)
+            call upcase(c3_sta,c3_sta)
+
+            l_sta = .false.
+
+            do i = 1,N_STATIONS
+              if(c3_sta .eq. c3_sta_array(i))then
+                call latlon_to_rlapsgrid(sta_lat(i),sta_lon(i),lat,lon
+     1                          ,NX_L,NY_L,xsta,ysta,istatus)
+                l_sta = .true.
+!               i_sta = i
+              endif
+            enddo
+
+            if(.not. l_sta)then ! Get I,J of Waypoint
+                read(c20_sta,*,err=85)xsta,ysta
+                write(6,86)xsta,ysta
+86              format(/2x,'Waypt x,y = ',2f7.2)
+
+            else
+                write(6,87)c3_sta,xsta,ysta
+87              format(/2x,a3,' x,y =   ',2f7.2)
+
+            endif
+
+!           Calculate endpoints of X-Sect from Waypoint and Azimuth
+            call xsect_endpoints
+     1  (xsta,ysta,azi_xsect,xlow,ylow,xhigh,yhigh,pos_sta,istatus)
+
+            goto90
+
+85          write(6,*)' Try again...'
+            goto80
+
+90      endif ! Type of X-Sect
+
+
+100    write(6,95)
+95     format(
+     1  /'  Field:  [di,sp,u,v,w,vc (barbs)'
+     1  /'           t (Temp), pt (Potl Temp), ts (Thetae Sat), tw (wet
+     1bulb)'
+     1  /
+     1  /'           cg (3D Cloud Image),  tc (Cloud Type),  tp (Precip
+     1Type)'
+!       1 /'           la (LWC - Adiabatic),         lj (LWC - Adjusted)'
+!       1 /'                                         sj (SLWC - Adjusted)'
+     1  /'           ls (Smith-Feddes LWC)' ! ,        ss (SLWC - Smith-Feddes)'
+     1  /'           ci (cloud ice)'
+     1  /
+     1  /'           ic (icing index)    pc (precip conc)    mv (Mean Vo
+     1l Diam)'
+     1  /
+     1  /'           cv (cloud cover contours)'
+     1  /'           rf (reflectivity-graphic), ri (ref-image)'
+     1  /'           sh,rh (Specific/Relative Humidity)'
+     1  /' ',49x,'q (quit/display)]   ? '$)
+
+        NULBLL = 3 ! for conrec (number of lines between labels)
+
+        read(lun,1301)c_field
+1301    format(a2)
+
+        istatus = 1
+
+        if(c_field .eq. 'q ')goto9999
+
+        c4_log = 'x '//c_field
+        if(lun .eq. 5)call logit(c4_log)
+
+        write(6,*)' Generating Cross Section'
+
+        i_image = 0
+
+        call interp_2d(lat,lat_1d,xlow,xhigh,ylow,yhigh)
+        call interp_2d(lon,lon_1d,xlow,xhigh,ylow,yhigh)
+
+        call interp_2d(topo,terrain_vert1d,xlow,xhigh,ylow,yhigh)
+
+        if(    c_field .eq. 'di' .or. c_field .eq. 'sp'
+     1  .or. c_field .eq. 'u ' .or. c_field .eq. 'v '
+     1  .or. c_field .eq. 'w ' .or. c_field .eq. 'dv'
+     1  .or. c_field .eq. 'vc')then
+
+            if(c_field .ne. 'w ')then
+!               write(6,104)
+104             format('$   Balanced Winds  [y,n]       (DEF=n) ',30x,'?
+     1 ')
+
+!               read(lun,1301)c_wind
+!               if(c_wind .eq. 'y' .or. c_wind .eq. 'Y')then
+!                   c_wind = 'y'
+!               else
+                    c_wind = 'n'
+!               endif
+
+            else
+                write(6,105)
+105             format('$   Omega field: Kinematic, Balanced, Cloud Bogu
+     1sed, QG'
+     1                  ,' [k,b,c,q]  ',3x,'? ')
+
+                read(lun,1301)c_wind
+                if(c_wind .eq. 'k' .or. c_wind .eq. 'K')c_wind = 'n'
+                if(c_wind .eq. 'b' .or. c_wind .eq. 'B')c_wind = 'y'
+                if(c_wind .eq. 'c' .or. c_wind .eq. 'C')c_wind = 'c'
+                if(c_wind .eq. 'q' .or. c_wind .eq. 'Q')c_wind = 'q'
+            endif
+
+            if       (c_wind .eq. 'y')then
+                ext_wind = 'lba'
+                call get_directory(ext_wind,directory,len_dir)
+                c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
+
+            else   if(c_wind .eq. 'c')then
+                ext_wind = 'lco'
+                call get_directory(ext_wind,directory,len_dir)
+                c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
+
+            else   if(c_wind .eq. 'n')then
+                ext_wind = 'lw3'
+                call get_directory(ext_wind,directory,len_dir)
+                c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
+
+            else   if(c_wind .eq. 'q')then
+                c_filespec = c_filespec_qg
+            endif
+
+            if(.not. l_wind_read)then
+                write(6,*)
+                write(6,*)'    Looking for 3D laps data:'
+                if(c_field .ne. 'w ')then
+                    call get_file_time(c_filespec,i4time_ref,i4time_3dw)
+                    call get_uv_3d(i4time_3dw,NX_L,NY_L,NZ_L
+     1                                  ,u_3d,v_3d,ext_wind,istatus)
+                    call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
+
+                elseif(c_field .eq. 'w ')then
+                    if(lapsplot_pregen .or. c_wind .ne. 'c')then
+                      if(c_wind .ne. 'q')then ! Pregenerated Kinematic or
+                                              ! Balanced Omega
+                        call get_file_time(c_filespec,i4time_ref,i4time_
+     13dw)
+                        call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
+     1                                  ,omega_3d,ext_wind,istatus)
+                        call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
+
+                      else ! Read Pregenerated QG Omega
+                        call get_file_time(c_filespec,i4time_ref,i4time_
+     13dw)
+!                       call GET_MAPS_QGOM(I4TIME_3DW,omega_3d,ISTATUS)
+                        write(6,*)' GET_MAPS_QGOM disabled'
+                        call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
+
+                      endif
+                    endif
+
+                endif
+            endif
+!           l_wind_read = .true.
+
+            if(istatus .ne. 1)then
+                write(6,*)' Error reading in wind field'
+                goto100
+            endif
+
+        endif
+
+        if(c_field .eq. 'vc')then
+
+!           Remap from 3d grid to Vert Xsect grid
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+
+            i_contour = 2
+            c33_label = 'LAPS Wind      Vert X-Sect  (kt) '
+
+        elseif(c_field .eq. 'w ' )then
+
+            if(ext_wind .eq. 'lco')then ! Cloud Omega
+
+                if(.not. lapsplot_pregen)then ! Calculate on the Fly
+                    iflag_temp = 1 ! Returns Ambient Temp (K)
+                    call get_temp_3d(i4time_ref,i4time_nearest,iflag_tem
+     1p
+     1          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+!                   if(istatus .ne. 1)goto100
+
+                    call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+                    call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh
+     1)
+
+!                   Read Cloud Base and Ceiling Data
+                    call get_clouds_3dgrid(i4time_ref,i4time_cloud,NX_L,
+     1NY_L,KCLOUD
+     1         ,ext,clouds_3d,cld_hts,cld_pres,istatus)
+                    call interp_3dc
+     1              (clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh)
+
+!                   Read in sfc pressure
+                    i4time_tol = 10000000
+                    var_2d = 'PS'
+                    ext = 'lsx'
+                    call get_laps_2dgrid(i4time_ref,i4time_tol,i4time_ne
+     1arest,
+     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                                  ,pres_2d,0,istatus)
+                    IF(istatus .ne. 1)THEN
+                        write(6,*)' Error Reading Surface Pressure Analy
+     1sis'
+                        goto100
+                    endif
+                    call interp_2d
+     1             (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh)
+
+                    write(6,*)' Getting laps hydrostatic heights'
+                    call get_heights_hydrostatic(temp_2d,pres_1d,terrain
+     1_vert1d,
+     1          dum1_array,dum2_array,dum3_array,dum4_array,
+     1                                  NX_C,1,NZ_C,heights_2d)
+
+                    iflag_mvd = .false.
+                    iflag_icing_index = .false.
+                    iflag_cloud_type = .false.
+                    iflag_bogus_w = .true.
+!                   iflag_snow_potential = .false.
+
+                    call get_cloud_deriv(NX_C,1,NZ_C,clouds_vert,cld_hts
+     1,
+     1                          temp_2d,rh_2d,heights_2d,
+     1                          istat_radar,radar_2d,
+     1                          l_mask_pcptype,ibase_array,itop_array,
+     1                          iflag_slwc,slwc_2d,cice_2d,
+     1                          iflag_cloud_type,cldpcp_type_2d,
+     1                          iflag_mvd,mvd_2d,
+     1                          iflag_icing_index,icing_index_2d,
+     1                                iflag_bogus_w,field_vert,istatus)
+!       1                               iflag_snow_potential,snow_1d,lwc_res_2d)
+                    if(istatus .ne. 1)goto100
+
+                else ! for pregenerated or non-cloud omega
+!                   Take out missing data values to insure better interpolation
+                    do k = 1,NZ_L
+                    do j = 1,NY_L
+                    do i = 1,NX_L
+                        if(omega_3d(i,j,k) .eq. r_missing_data)then
+                            omega_3d(i,j,k) = -1e-30
+                        endif
+                    enddo ! i
+                    enddo ! j
+                    enddo ! k
+
+                    call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow
+     1                            ,yhigh)
+
+                endif ! (Read Pregenerated File)
+
+                do k = 1,NZ_C
+                do i = 1,NX_C
+                    if(field_vert(i,k) .ne. r_missing_data)then
+                        if(l_convert)field_vert(i,k) = ! Always should be .true.
+     1           omega_to_w(field_vert(i,k),pressure_of_level(k)) * 100.
+                    else
+                        field_vert(i,k) = -1e-30
+                    endif
+                enddo ! i
+                enddo ! k
+
+                cint = -1.
+
+            else ! Not LCO field
+                call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow,yhigh
+     1)
+
+                do k = NZ_C,1,-1
+                do i = 1,NX_C
+                    if(field_vert(i,k) .ne. r_missing_data)then
+!                       l_convert is .false. if old 'W' data is read in (not OM)
+                        if(l_convert)field_vert(i,k) =
+     1           omega_to_w(field_vert(i,k),pressure_of_level(k)) * 100.
+                    else
+                        field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                    endif
+                enddo ! i
+                enddo ! k
+
+                cint = -1.
+
+            endif ! LCO field
+
+            i_contour = 1
+
+            if       (c_wind .eq. 'y')then
+                c33_label = 'LAPS W (bal)   Vert X-Sect (cm/s)'
+            else   if(c_wind .eq. 'c')then
+                c33_label = 'LAPS W (cloud) Vert X-Sect (cm/s)'
+            else   if(c_wind .eq. 'q')then
+                c33_label = 'LAPS W (Q-G)   Vert X-Sect (cm/s)'
+            else ! if(c_wind .eq. 'n')then
+                c33_label = 'LAPS W (kinem) Vert X-Sect (cm/s)'
+            endif
+
+
+        elseif(c_field .eq. 'u ' )then
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            do k = NZ_C,1,-1
+            do i = 1,NX_C
+                if(u_vert(i,k) .ne. r_missing_data)then
+                    field_vert(i,k) = u_vert(i,k)/mspkt
+                else
+                    field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                endif
+            enddo ! i
+            enddo ! k
+            clow = -100.
+            chigh = +1000.
+            cint = 10.
+            i_contour = 1
+            c33_label = 'LAPS  U        Vert X-Sect  (kt) '
+
+        elseif(c_field .eq. 'v ' )then
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            do k = NZ_C,1,-1
+            do i = 1,NX_C
+                if(v_vert(i,k) .ne. r_missing_data)then
+                    field_vert(i,k) = v_vert(i,k)/mspkt
+                else
+                    field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                endif
+            enddo ! i
+            enddo ! k
+            clow = -100.
+            chigh = +1000.
+            cint = 10.
+            i_contour = 1
+            c33_label = 'LAPS  V        Vert X-Sect  (kt) '
+
+        elseif(c_field .eq. 'sp' )then
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            do k = NZ_C,1,-1
+            do i = 1,NX_C
+                if(v_vert(i,k) .ne. r_missing_data)then
+                    call uv_to_disp(        u_vert(i,k),
+     1                              v_vert(i,k),
+     1                              di_dum,
+     1                              speed_ms)
+                    field_vert(i,k) = speed_ms/mspkt
+                else
+                    field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                endif
+            enddo ! i
+            enddo ! k
+            clow = -100.
+            chigh = +1000.
+            cint = 10.
+            i_contour = 1
+            c33_label = 'LAPS Isotachs  Vert X-Sect  (kt) '
+
+        elseif(c_field .eq. 'di' )then
+            call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh)
+            call interp_3d(v_3d,v_vert,xlow,xhigh,ylow,yhigh)
+            call interp_2d(lon,lon_vert,xlow,xhigh,ylow,yhigh)
+            do k = NZ_C,1,-1
+            do i = 1,NX_C
+                if(u_vert(i,k) .ne. r_missing_data)then
+                    call uv_to_disp(        u_vert(i,k),
+     1                              v_vert(i,k),
+     1                              field_vert(i,k),
+     1                              speed_dum)
+                else
+                    field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                endif
+            enddo ! i
+            enddo ! k
+            clow = -100.
+            chigh = +1000.
+            cint = 10.
+            i_contour = 1
+            c33_label = 'LAPS Isogons   Vert X-Sect  (Deg)'
+
+        elseif(c_field .eq. 'rf' .or. c_field .eq. 'rg'
+     1                   .or. c_field .eq. 'rk')then
+            if(c_field .eq. 'rk')then
+                i4time_get = i4time_ref/laps_cycle_time * laps_cycle_tim
+     1e
+                goto1300
+            endif
+
+1300        write(6,*)' Getting Radar data via get_laps_3dgrid'
+            var_2d = 'REF'
+            ext = 'lps'
+
+            call get_laps_3dgrid(i4time_ref,86400,i4time_radar,
+     1          NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
+
+1310        call interp_3d(grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh)
+            clow = 0.
+            chigh = +100.
+            cint = 10.
+            i_contour = 1
+            c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
+            call make_fnam_lp(i4time_radar,asc_tim_9,istatus)
+
+        elseif(c_field .eq. 'ri' .or. c_field .eq. 'rj' .or. c_field .eq
+     1. 'rs'
+     1                                  )then ! Reflectivity Image
+            i_image = 1
+            if(c_field .eq. 'ri')then
+                i4time_get = i4time_ref/laps_cycle_time * laps_cycle_tim
+     1e
+            else
+                i4time_get = i4time_ref
+            endif
+
+            if(c_field .eq. 'ri')goto1500 ! Skip next part
+
+            if(.not. l_radar_read)then
+                call get_radar_ref(i4time_get,2000,i4time_radar,1
+     1          ,1,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
+     1          ,grid_ra_ref,n_ref
+     1    ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
+     1                                  ,istat_3dref)
+
+                if(istat_2dref .le. 0)goto 100
+
+                l_radar_read = .true.
+
+            endif
+
+            if(istat_3dref .le. 0)then
+                if(istat_2dref .eq. 1)then
+                    write(6,*)' Radar Xsect unavailable, try earlier tim
+     1e'
+                endif
+                goto 100
+            endif
+
+            goto1510
+
+1500        write(6,*)' Getting Radar data via get_laps_3dgrid'
+            var_2d = 'REF'
+            ext = 'lps'
+
+            call get_laps_3dgrid(i4time_get,86400,i4time_radar,
+     1          NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
+
+1510        continue
+
+            call make_fnam_lp(i4time_radar,asc_tim_9,istatus)
+
+            if(c_field .ne. 'rs')then
+                call interp_3d(grid_ra_ref,field_vert,xlow,xhigh,ylow,yh
+     1igh)
+            else ! Get Spread Out Data
+                call interp_3d_spread
+     1          (grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh)
+            endif
+
+            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+
+            write(6,*)' Generating Reflectivity Image'
+            do i = 1,NX_C-1
+            do k = ibottom,NZ_L-1
+                x1 = i
+                y1 = k
+
+!               Perform a bi-linear interpolation to provide an image
+!               This image consists of a set of line segments which will look
+!               smoother than blocks the size of the grid.
+
+                Z1=field_vert(i  , k  )
+                Z2=field_vert(i+1, k  )
+                Z3=field_vert(i+1, k+1)
+                Z4=field_vert(i  , k+1)
+
+                nii = 15
+                njj = 60
+
+                do ii = 0,nii
+                  fraci = float(ii) / float(nii)
+                  xx = x1 + fraci
+
+                  do jj = 0,njj
+                    fracj = float(jj) / float(njj)
+                    yy = y1 + fracj
+                    r_dbz =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
+     1                  - (Z2+Z4-Z3-Z1)*fraci*fracj
+
+                    i_dbz = nint(r_dbz)
+                    i_dbz = i_dbz/5 * 5 ! This reduces the resolution and saves on graphics
+
+!                   Plot line segments of the same color
+                    if(i_dbz .ne. i_dbz_ref
+     1                        .and. fracj .gt. 0.)then
+
+                        y_last = yy - 1./float(njj)
+
+                        if(i_dbz_ref .ge. 0)then
+                            icol = 180 + i_dbz_ref / 5
+
+!                           write(6,432)i_dbz,i_dbz_ref,xx,y_ref,y_last
+ 432                        format(2i5,3f9.4)
+
+                            call setusv_dum(2hIN,icol)
+
+                            call line(xx,y_ref,xx,y_last)
+                        endif
+
+                        i_dbz_ref = i_dbz
+                        y_ref = yy
+
+                    elseif(fracj .eq. 0.0)then
+                        i_dbz_ref = i_dbz
+                        y_ref = yy
+
+                    endif
+
+                    if(fracj .eq. 1.0)then
+                        if(i_dbz .ge. 0)then
+                           icol = 180 + i_dbz_ref / 5
+
+!                          write(6,432)i_dbz,i_dbz_ref,xx,y_ref,y_last        
+
+                           call setusv_dum(2hIN,icol)
+
+                           call line(xx,y_ref,xx,yy)
+
+                        endif
+                    endif
+
+                  enddo
+                enddo
+            enddo ! k
+            enddo ! i
+
+            i_contour = 0
+            c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
+
+        elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
+            i_image = 1
+
+            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+
+            call setusv_dum(2hIN,2)
+
+            write(6,*)' Plotting cloud gridded image'
+
+            ext = 'lc3'
+            call get_clouds_3dgrid(i4time_ref,i4time_nearest,NX_L,NY_L,K
+     1CLOUD
+     1               ,ext,clouds_3d,cld_hts,cld_pres,istatus)
+
+            if(istatus .ne. 1)then
+                write(6,*)' No cloud grid available'
+            endif
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+
+            call interp_3dc(clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh)
+
+            niii = 12 ! horizontal resolution of cloud plot
+
+            do i = 1,NX_C
+
+              i_eighths_ref = 0
+              k_ref = ibottom+1
+
+              do k = ibottom+1,KCLOUD-1
+
+                if(clouds_vert(i,k) .ne. r_missing_data)then
+
+                    if(l_atms)then ! Turn into a binary (bipolar) field
+                        if(clouds_vert(i,k) .gt. 0.65)then
+                            clouds_vert(i,k) = 1.0
+                        else
+                            clouds_vert(i,k) = 0.0
+                        endif
+                    endif
+
+                    i_eighths = nint(clouds_vert(i,k)*8.)
+
+                else
+                    i_eighths = 0
+                endif
+
+d               if(clouds_vert(i,k) .gt. 0.01)
+d       1       write(6,1100)i,k,nint(cld_hts(k)),clouds_vert(i,k)
+d       1                                               ,i_eighths
+1100            format(2i3,i6,f6.2,i3)
+
+                if(i_eighths .ne. i_eighths_ref)then
+
+!                 Remap clouds using standard atmosphere
+                  chigh = (cld_hts(k) + cld_hts(k-1))/2.
+                  clow  = (cld_hts(k_ref) + cld_hts(k_ref-1))/2.
+
+!                 Remap clouds using ambient pressure in center of domain
+                  phigh = (cld_pres(k) + cld_pres(k-1))/2.
+                  plow  = (cld_pres(k_ref) + cld_pres(k_ref-1))/2.
+
+d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
+1101              format(1x,i2,2i6)
+
+                  if(i_eighths_ref .ge. 1)then
+                    do ii = -niii,+niii
+
+                      fraci = float(ii) / float(2*niii)
+
+                      if((fraci+0.5) .lt. i_eighths_ref/8.0)then
+
+!                       Remap clouds using standard atmosphere
+!                       r_low = height_to_zcoord(clow,istatus)
+!                       r_high = height_to_zcoord(chigh,istatus)
+
+!                       Remap clouds using ambient pressure in center of domain
+                        r_low = zcoord_of_pressure(plow)
+                        r_high = zcoord_of_pressure(phigh)
+
+                        uu = i + fraci
+
+                        if(r_low .lt. NZ_L)then ! Keep below the top of the domain
+                          call line(uu, r_low, uu, r_high)
+                        endif
+
+                      endif ! This line is covered
+                    enddo ! ii
+                  endif ! Finite Cloud Cover in this grid segment
+
+                  i_eighths_ref = i_eighths
+                  k_ref = k
+
+                endif ! Change in cloud cover
+
+              enddo ! k
+
+            enddo ! i
+
+!           Generate Cloud Key
+            if(.not. l_atms)then
+              do i_eighths = 1,8
+                i = 7 + 5 * i_eighths
+
+                do ii = -niii,+niii
+                      x = i-2
+                      y = bottom - r_height * .055
+                      write(c3_string,2013)i_eighths
+                      call pwrity (x, y, c3_string, 3, 0, 0, 0)
+2013                  format(i1,'/8')
+
+                      fraci = float(ii) / float(2*niii)
+
+                      if((fraci+0.5) .lt. i_eighths/8.0)then
+                        r_low  = ibottom - 1. + 0.05
+                        r_high = ibottom - 1. + 0.45
+                        uu = i + fraci
+
+                        if(r_low .lt. NZ_L)then ! Keep below the top of the domain
+                          call line(uu, r_low, uu, r_high)
+                        endif
+
+                      endif ! This line is covered
+                enddo ! ii
+              enddo ! i
+
+              c33_label = 'LAPS Gridded Cloud Cover   X-Sect'
+
+            endif ! l_atms
+
+
+        elseif(c_field .eq. 'pt')then
+            iflag_temp = 0 ! Returns Potential Temperature
+            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1  ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+!           if(istatus .ne. 1)goto100
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh)
+
+            clow = 200.
+            chigh = +500.
+            cint = 5.
+            i_contour = 1
+            c33_label = 'LAPS Potl Temp Vert X-Sect    K  '
+
+        elseif(c_field .eq. 't ')then
+            iflag_temp = 1 ! Returns Ambient Temp (K)
+            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1  ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+!           if(istatus .ne. 1)goto100
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh)
+
+            do k = 1,NZ_L
+            do i = 1,NX_C
+                field_vert(i,k) = field_vert(i,k) - 273.15 ! K to C
+            enddo ! i
+            enddo ! k
+
+            clow = -100.
+            chigh = +100.
+            cint = 5.
+            i_contour = 1
+            c33_label = 'LAPS Temp      Vert X-Sect  Deg C'
+
+        elseif(c_field .eq. 'ts')then
+            iflag_temp = 1 ! Returns Ambient Temp (K)
+            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1  ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+!           if(istatus .ne. 1)goto100
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh)
+
+            do k = 1,NZ_L
+            do i = 1,NX_C
+                field_vert(i,k) =
+     1   OS(field_vert(i,k)-273.15,pressure_of_level(k)/100.) + 273.15
+            enddo ! i
+            enddo ! k
+
+            clow = +200.
+            chigh = +600.
+            cint = 5.
+            i_contour = 1
+            c33_label = 'LAPS Theta(e) Sat   X-Sect  Deg K'
+
+        elseif(c_field .eq. 'tw')then
+            iflag_temp = 1 ! Returns Ambient Temp (K)
+            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
+     1  ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+!           if(istatus .ne. 1)goto100
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh)
+
+            var_2d = 'RHL'
+            ext = 'lh3'
+            call get_laps_3dgrid
+     1  (i4time_nearest,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+     1          ,ext,var_2d,units_2d,comment_2d
+     1                                  ,rh_3d,istatus)
+            if(istatus .ne. 1)goto100
+
+            call interp_3d(rh_3d,field_vert2,xlow,xhigh,ylow,yhigh)
+
+            do k = 1,NZ_L
+            do i = 1,NX_C
+                t_c         = field_vert(i,k) - 273.15
+                td_c        = DWPT(t_c,field_vert2(i,k))
+                pressure_mb = pressure_of_level(k)/100.
+
+!               This function call here is fast but returns a t_wb_c
+!               equal to t_c if pres < 500mb. This approximation should
+!               not hurt the algorithm.
+
+                t_wb_c = twet_fast(t_c,td_c,pressure_mb)
+                field_vert(i,k) = t_wb_c
+            enddo ! i
+            enddo ! k
+
+            clow = -100.
+            chigh = +100.
+            cint = 5.
+            i_contour = 1
+            c33_label = 'LAPS Wet Bulb       X-Sect  Deg K'
+
+        elseif(c_field .eq. 'sh')then
+            var_2d = 'SH '
+            ext = 'lq3'
+            call get_laps_3dgrid
+     1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+     1          ,ext,var_2d,units_2d,comment_2d
+     1                                  ,q_3d,istatus)
+            if(istatus .ne. 1)goto100
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(q_3d,field_vert,xlow,xhigh,ylow,yhigh)
+
+            do k = NZ_C,1,-1
+            do i = 1,NX_C
+                if(field_vert(i,k) .ne. r_missing_data)then
+                    field_vert(i,k) = field_vert(i,k) * 1000.
+                endif
+            enddo ! i
+            enddo ! k
+
+            clow = 0.
+            chigh = +40.
+            cint = 0.4
+            cint = -1.
+            i_contour = 1
+            c33_label = 'LAPS Specific Humidity     x1e3  '
+
+        elseif(c_field .eq. 'rh')then
+            var_2d = 'RHL'
+            ext = 'lh3'
+            call get_laps_3dgrid
+     1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+     1          ,ext,var_2d,units_2d,comment_2d
+     1                                  ,rh_3d,istatus)
+            if(istatus .ne. 1)goto100
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh)
+
+            do k = NZ_C,1,-1
+            do i = 1,NX_C
+                if(field_vert(i,k) .ne. r_missing_data)then
+                    field_vert(i,k) = field_vert(i,k)
+                endif
+            enddo ! i
+            enddo ! k
+
+            clow = 0.
+            chigh = +100.
+            cint = 10.
+            i_contour = 1
+            c33_label = 'LAPS Relative Humidity     %     '
+
+            NULBLL = 1 ! for conrec (number of lines between labels)
+
+        elseif(c_field .eq. 'cv')then
+            var_2d = 'LCP'
+            ext = 'lcp'
+            call get_laps_3dgrid
+     1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+     1          ,ext,var_2d,units_2d,comment_2d
+     1                                  ,rh_3d,istatus)
+            if(istatus .ne. 1)goto100
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh)
+
+            clow = 0.
+            chigh = +1.
+            cint = 0.2
+            i_contour = 1
+            c33_label = 'LAPS Cloud Fraction              '
+
+            NULBLL = 1 ! for conrec (number of lines between labels)
+
+        elseif(c_field .eq. 'la' .or. c_field .eq. 'lj'
+     1                         .or. c_field .eq. 'sj'
+     1                         .or. c_field .eq. 'ls'
+     1                         .or. c_field .eq. 'ss'
+     1                         .or. c_field .eq. 'ci'
+     1                         .or. c_field .eq. 'pc'
+     1                                          )then
+
+            if(c_field .eq. 'la')then
+                iflag_slwc = 1
+                c33_label = 'LAPS Adiabatic LWC      g/m^3    '
+            elseif(c_field .eq. 'lj')then
+                iflag_slwc = 2
+                c33_label = 'LAPS Adjusted  LWC      g/m^3    '
+            elseif(c_field .eq. 'sj')then
+                iflag_slwc = 3
+                c33_label = 'LAPS Adjusted  SLWC     g/m^3    '
+            elseif(c_field .eq. 'ls')then
+                iflag_slwc = 13
+                c33_label = 'LAPS Smith-Feddes LWC   g/m^3    '
+            elseif(c_field .eq. 'ci')then
+                iflag_slwc = 13
+                c33_label = 'LAPS Cloud Ice          g/m^3    '
+            elseif(c_field .eq. 'ss')then
+                iflag_slwc = 14
+                c33_label = 'LAPS Smith-Feddes SLWC  g/m^3    '
+            elseif(c_field .eq. 'pc')then
+                c33_label = 'LAPS Precip Concen      g/m^3    '
+            endif
+
+            i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
+
+            l_pregen = lapsplot_pregen
+
+            write(6,*)' Getting pregenerated LWC file'
+            if(c_field .eq. 'ls')then
+                var_2d = 'LWC'
+            elseif(c_field .eq. 'ci')then
+                var_2d = 'ICE'
+            elseif(c_field .eq. 'pc')then
+                var_2d = 'PCN'
+            endif
+            ext = 'lwc'
+            call get_laps_3dgrid(i4time_lwc,86400,i4time_nearest,
+     1          NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,slwc_3d,istatus)
+
+            call interp_3d(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh)
+
+            do k = 1,NZ_C
+            do i = 1,NX_C
+                field_vert(i,k) = field_vert(i,k) * 1e3
+            enddo ! i
+            enddo ! k
+
+            clow = 0.
+            chigh = 0.
+            if(c_field .eq. 'pc')then
+                cint = -0.01
+            else
+                cint = -0.1
+            endif
+            i_contour = 1
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+
+        elseif(c_field .eq. 'ic')then
+
+            iflag_slwc = 13
+            c33_label = '    LAPS Icing Index             '
+
+            i4time_lrp = i4time_ref/laps_cycle_time * laps_cycle_time
+
+            if(lapsplot_pregen)then
+!           if(.false.)then
+                write(6,*)' Getting pregenerated LRP file'
+                var_2d = 'LRP'
+                ext = 'lrp'
+                call get_laps_3dgrid(i4time_lrp,86400,i4time_cloud,
+     1          NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,slwc_3d,istatus)
+                call interp_3dn(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh
+     1)
+
+                do k = 1,NZ_C
+                do i = 1,NX_C
+                    iarg = nint(field_vert(i,k))
+                    icing_index_2d(i,k) = iarg
+                enddo ! i
+                enddo ! k
+
+            else ! Calculate on the Fly
+
+            endif ! Read Pregenerated File
+
+            clow = 0.
+            chigh = 0.
+            cint = -0.1
+            i_contour = 4
+            call make_fnam_lp(i4time_cloud,asc_tim_9,istatus)
+
+        elseif(c_field .eq. 'mv')then
+            iflag_slwc = 0
+            c33_label = 'LAPS Mean Volume Diameter  m^-6  '
+
+            i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
+
+            if(.true.)then ! Calculate on the Fly
+                iflag_temp = 1 ! Returns Ambient Temp (K)
+                call get_temp_3d(i4time_lwc,i4time_nearest,iflag_temp
+     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+!               if(istatus .ne. 1)goto100
+
+                call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+                call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh)
+
+!               Read Cloud Base and Ceiling Data
+                ext = 'lc3'
+                call get_clouds_3dgrid(i4time_lwc,i4time_cloud,NX_L,NY_L
+     1,KCLOUD
+     1          ,ext,clouds_3d,cld_hts,cld_pres,istatus)
+                call interp_3dc
+     1          (clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh)
+
+!               Read in sfc pressure
+                i4time_tol = 10000000
+                var_2d = 'PS'
+                ext = 'lsx'
+                call get_laps_2dgrid(i4time_lwc,i4time_tol,i4time_neares
+     1t,
+     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                                  ,pres_2d,0,istatus)
+                IF(istatus .ne. 1)THEN
+                    write(6,*)' Error Reading Surface Pressure Analysis'
+                    goto100
+                endif
+                call interp_2d
+     1     (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh)
+
+                write(6,*)' Getting laps hydrostatic heights'
+                call get_heights_hydrostatic(temp_2d,pres_1d,terrain_ver
+     1t1d,
+     1          dum1_array,dum2_array,dum3_array,dum4_array,
+     1                                  NX_C,1,NZ_C,heights_2d)
+
+                iflag_mvd = .true.
+                iflag_icing_index = .false.
+                iflag_cloud_type = .false.
+                iflag_bogus_w = .false.
+!               iflag_snow_potential = .false.
+
+                call get_cloud_deriv(NX_C,1,NZ_C,clouds_vert,cld_hts,
+     1                          temp_2d,rh_2d,heights_2d,
+     1                          istat_radar,radar_2d,
+     1                          l_mask_pcptype,ibase_array,itop_array,
+     1                          iflag_slwc,slwc_2d,cice_2d,
+     1                          iflag_cloud_type,cldpcp_type_2d,
+     1                          iflag_mvd,field_vert,
+     1                          iflag_icing_index,icing_index_2d,
+     1                                iflag_bogus_w,w_2d,istatus)
+!       1                               iflag_snow_potential,snow_1d,lwc_res_2d)
+                if(istatus .ne. 1)goto100
+
+
+            endif ! (Read Pregenerated File)
+
+            do k = 1,NZ_C
+            do i = 1,NX_C
+                field_vert(i,k) = field_vert(i,k) * 1e6 + .01
+            enddo ! i
+            enddo ! k
+
+            clow = 10.
+            chigh = 26.
+            cint = 2.
+            i_contour = 1
+            call make_fnam_lp(i4time_cloud,asc_tim_9,istatus)
+
+        elseif(c_field .eq. 'tc')then
+            iflag_slwc = 0
+            c33_label = '        LAPS Cloud Type          '
+
+            i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
+
+            if(lapsplot_pregen)then
+
+                write(6,*)' Reading pregenerated cloud type'
+                var_2d = 'CTY'
+                ext =    'lty'
+                call get_laps_3dgrid(i4time_lwc,86400,i4time_nearest,
+     1          NX_L,NY_L,NZ_L,ext,var_2d
+     1          ,units_2d,comment_2d,pcp_type_3d,istatus)
+
+                call interp_3dn(pcp_type_3d,field_2d,xlow,xhigh,ylow,yhi
+     1gh)
+
+            else ! Calculate Cloud Type on the Fly
+
+                iflag_temp = 1 ! Returns Ambient Temp (K)
+                call get_temp_3d(i4time_lwc,i4time_nearest,iflag_temp
+     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+!               if(istatus .ne. 1)goto100
+
+                call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+                call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh)
+
+!               Read Cloud Base and Ceiling Data
+                ext = 'lc3'
+                call get_clouds_3dgrid(i4time_lwc,i4time_cloud,NX_L,NY_L
+     1,KCLOUD
+     1          ,ext,clouds_3d,cld_hts,cld_pres,istatus)
+                call interp_3dc(clouds_3d,clouds_vert,xlow,xhigh,ylow,yh
+     1igh)
+
+
+!               Read in sfc pressure
+                i4time_tol = 10000000
+                var_2d = 'PS'
+                ext = 'lsx'
+                call get_laps_2dgrid(i4time_lwc,i4time_tol,i4time_neares
+     1t,
+     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                                  ,pres_2d,0,istatus)
+                IF(istatus .ne. 1)THEN
+                    write(6,*)' Error Reading Surface Pressure Analysis'
+                    goto100
+                endif
+
+                call interp_2d(pres_2d,pres_1d,xlow,xhigh,ylow,yhigh)
+
+                write(6,*)' Getting laps hydrostatic heights'
+                call get_heights_hydrostatic(temp_2d,pres_1d,terrain_ver
+     1t1d,
+     1          dum1_array,dum2_array,dum3_array,dum4_array,
+     1                                  NX_C,1,NZ_C,heights_2d)
+
+                iflag_mvd = .false.
+                iflag_icing_index = .false.
+                iflag_cloud_type = .true.
+                iflag_bogus_w = .false.
+!               iflag_snow_potential = .false.
+
+                call get_cloud_deriv(NX_C,1,NZ_C,clouds_vert,cld_hts,
+     1                          temp_2d,rh_2d,heights_2d,
+     1                          istat_radar,radar_2d,
+     1                          l_mask_pcptype,ibase_array,itop_array,
+     1                          iflag_slwc,slwc_2d,cice_2d,
+     1                          iflag_cloud_type,cldpcp_type_2d,
+     1                          iflag_mvd,mvd_2d,
+     1                          iflag_icing_index,icing_index_2d,
+     1                                iflag_bogus_w,w_2d,istatus)
+!       1                               iflag_snow_potential,snow_1d,lwc_res_2d)
+                if(istatus .ne. 1)goto100
+
+            endif
+
+            i_contour = 3
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+
+        elseif(c_field .eq. 'tp')then
+            iflag_slwc = 0
+            c33_label = 'LAPS Precip Type                  '
+
+            i4time_pcp = i4time_ref
+
+            if(.true.)then
+
+                write(6,*)' Reading pregenerated precip type'
+                var_2d = 'PTY'
+                ext =    'lty'
+                call get_laps_3dgrid(i4time_pcp,86400,i4time_radar,
+     1          NX_L,NY_L,NZ_L,ext,var_2d
+     1          ,units_2d,comment_2d,pcp_type_3d,istatus)
+
+                call interp_3dn(pcp_type_3d,field_2d,xlow,xhigh,ylow,yhi
+     1gh)
+
+            else ! Calculate Precip Type on the Fly
+
+
+            endif ! pregen
+
+            i_contour = 5
+            call make_fnam_lp(i4time_radar,asc_tim_9,istatus)
+
+        elseif(c_field .eq. 'ic')then
+            iflag_slwc = 0
+            c33_label = '     LAPS Icing Severity Index   '
+
+            i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
+
+            if(lapsplot_pregen)then
+
+            else
+
+            endif ! Get Pregenerated file
+
+        endif ! c_field
+
+        write(6,1605)c33_label,asc_tim_9
+1605    format(2x,a33,2x,a9)
+
+        call lib$set_symbol('DATE_LAPSPLOT',asc_tim_9)
+        istatus = lib$set_logical('DATE_LAPSPLOT',asc_tim_9)
+
+        c_metacode = 'c '
+
+        call i4time_fname_lp(asc_tim_9,i4time_dum,istatus)
+        call cv_i4tim_asc_lp(i4time_dum,asc_tim_24,istatus)
+        asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
+
+        if(i_image .eq. 0)then
+            i_graphics_overlay = i_graphics_overlay + 1
+            call setusv_dum(2hIN,icolors(i_graphics_overlay))
+        else
+            call setusv_dum(2hIN,7) ! Yellow
+        endif
+
+        write(6,*)' Plotting, Overlay = ',i_graphics_overlay
+
+        if(l_atms)then
+            c33_label = 'ATMS Approach Cross Section      '
+        endif
+
+        call upcase(c33_label,c33_label)
+        call set(0.,1.,0.,1.,0.,1.,0.,1.,1)
+        call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)
+        call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+
+        if(i_map .eq. 0)then
+
+            i_map = 1
+
+            call setusv_dum(2hIN,7)
+
+            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+
+!           This lets up plot outside the main box
+            call set(.00, 1.0, .00, 1.0, rleft - width/8., right + width
+     1/8.,
+     1           bottom - r_height/8., top + r_height/8.,1)
+
+!           Draw box enclosing graph
+            xcoord(1) = rleft
+            ycoord(1) = bottom
+            xcoord(2) = right
+            ycoord(2) = bottom
+            xcoord(3) = right
+            ycoord(3) = top
+            xcoord(4) = rleft
+            ycoord(4) = top
+            xcoord(5) = xcoord(1)
+            ycoord(5) = ycoord(1)
+            npts = 5
+            call curve (xcoord, ycoord, npts)
+
+!           Label Left Axis
+            if(l_atms)then ! Label Height (kft msl) on Left Axis
+                Do i = 4,30,2
+                    y = height_to_zcoord(i*304.8,istatus)  ! m / kft
+                    call line (rleft, y, rleft + width * .015, y )
+
+!                   Height
+                    x = rleft - width * .055
+                    iht_kft = i
+                    write(c4_string,2014)iht_kft
+                    call pwrity (x, y, c4_string, 4, 1, 0, 0)
+                enddo
+
+                Do i = 35,50,5
+                    y = height_to_zcoord(i*304.8,istatus)  ! m / kft
+                    call line (rleft, y, rleft + width * .015, y )
+
+!                   Height
+                    x = rleft - width * .055
+                    iht_kft = i
+                    write(c4_string,2014)iht_kft
+                    call pwrity (x, y, c4_string, 4, 1, 0, 0)
+                enddo
+
+                call pwrity (rleft - .090 * width,bottom + r_height*0.5,
+     1          'HEIGHT (KFT MSL)',16,2,90,0)
+
+            else ! Label pressure on left axis
+                Do i = ibottom,NZ_C
+                    y = i
+                    call line (rleft, y, rleft + width * .015, y )
+
+!                   Pressure
+                    x = rleft - width * .045
+                    ipres_mb = nint(zcoord_of_level(i)/100.)
+                    write(c4_string,2014)ipres_mb
+                    call pwrity (x, y, c4_string, 4, 1, 0, 0)
+2014                format(i4)
+                end do
+                call pwrity (rleft - .090 * width,bottom + r_height*0.5,
+     1          ' PRESSURE (HPA) ',16,2,90,0)
+!           endif
+
+
+!           if(.not. l_atms)then
+!               Label Height (km - msl) on Right Axis
+                Do i = 0,16
+                    y = height_to_zcoord(i*1000.,istatus)
+
+                    if(y .ge. bottom)then
+                        call line (right, y, right - width * .015, y )
+
+!                       Height
+                        x = right + width * .015
+                        iht_km = i
+                        write(c4_string,2014)iht_km
+                        call pwrity (x, y, c4_string, 4, 1, 0, 0)
+                    endif
+
+                end do
+                call pwrity (right + .090 * width,bottom + r_height*0.5,
+     1          'HEIGHT  (KM MSL)',16,2,270,0)
+            endif
+
+
+!           Put in lat/lon of endpoints
+            x = left
+            y = bottom - r_height * .03
+            write(c7_string,2017)lat_1d(1)
+            call pwrity (x, y, c7_string, 7, 0, 0, 0)
+            y = bottom - r_height * .05
+            write(c7_string,2017)lon_1d(1)
+            call pwrity (x, y, c7_string, 7, 0, 0, 0)
+
+            x = right
+            y = bottom - r_height * .03
+            write(c7_string,2017)lat_1d(NX_C)
+            call pwrity (x, y, c7_string, 7, 0, 0, 0)
+            y = bottom - r_height * .05
+            write(c7_string,2017)lon_1d(NX_C)
+            call pwrity (x, y, c7_string, 7, 0, 0, 0)
+
+2017        format(f7.2)
+
+        endif ! i_map .eq. 0
+
+
+        if(i_contour .eq. 1)then
+            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+
+            mini = icolors(i_graphics_overlay)
+            maxi = icolors(i_graphics_overlay)
+
+            vmax = -1e30
+            vmin = 1e30
+
+            do k = ibottom,NZ_C
+            do i = 1,NX_C
+                vmax = max(vmax,field_vert(i,k))
+                vmin = min(vmin,field_vert(i,k))
+            enddo ! k
+            enddo ! i
+
+            write(6,*)' CLOW,HIGH,CINT ',clow,chigh,cint
+            write(6,*)' Max/Min = ',vmax,vmin
+
+            if(cint .ge. 0.)then
+                call conrec
+     1          (field_vert(1,ibottom),NX_C,NX_C,(NZ_C-ibottom+1)
+     1                             ,clow,chigh,cint,-1,0,-1848,0)
+            else
+                call conrec
+     1          (field_vert(1,ibottom),NX_C,NX_C,(NZ_C-ibottom+1)
+     1                             ,0.,1e8,1e8,-1,0,-1848,0)
+                cbase = 1e-4
+
+                do i = 1,N_CONTOURS
+                    cvalue = factor(i)
+                    if(cvalue .ge. abs(cint))then
+                        call conrec
+     1                          (field_vert(1,ibottom)
+     1  ,NX_C,NX_C,(NZ_C-ibottom+1),cvalue,cvalue,1e-6,-1,0,-1848,0)
+                        call conrec
+     1                          (field_vert(1,ibottom)
+     1  ,NX_C,NX_C,(NZ_C-ibottom+1),-cvalue,-cvalue,1e-6,-1,0,-1848,0)
+                    endif
+                enddo ! i
+           endif ! cint > 0
+        endif ! i_contour = 1
+
+        if(i_contour .eq. 2)then ! Plot Wind Barbs
+            call setusv_dum(2hIN,icolors(i_graphics_overlay))
+
+            call set(.10, .90, .10, .90, rleft, right, rleft, right,1)
+            du=0.4
+            rot = 0.
+            do i = NX_C,1,-3
+                rk_terrain = max(height_to_zcoord(terrain_vert1d(i),ista
+     1tus),1.0)
+                do k = ibottom,NZ_C
+                    if(u_vert(i,k) .ne. r_missing_data .and.
+     1         v_vert(i,k) .ne. r_missing_data .and.
+     1                abs(u_vert(i,k)) .lt. 1e6      )then
+                        x1 = i
+                        y1 = (k-ibottom) * float(NX_C-1)
+     1                                       / float(NZ_C-ibottom) + 1.
+                        call uv_to_disp(u_vert(i,k),
+     1                          v_vert(i,k),
+     1                          dir,
+     1                          spd_ms)
+                        if(dir .gt. -400. .and. k .ge. int(rk_terrain))t
+     1hen
+                            call barbs(spd_ms/mspkt,dir,x1,y1,du,rot
+     1                                  ,-1e10,+1e10,-1e10,+1e10)
+                        endif
+                    endif
+                enddo ! k
+            enddo ! i
+        endif ! i_contour = 2
+
+        if(i_contour .eq. 3)then ! Plot Cloud Type
+            call set(.10, .90, .10, .90, rleft, right, rleft, right,1)
+            du=0.4
+            rot = 0.
+            do i = NX_C,1,-2
+                do k = ibottom,NZ_C
+                    i_cloud_type = field_2d(i,k)
+
+                    if(i_cloud_type .ne. 0)then
+                        x = i
+                        y = (k-ibottom) * float(NX_C-1)
+     1                                  / float(NZ_C-ibottom) + 1.
+
+                        c2_cloud_type = c2_cloud_types(i_cloud_type)
+                        call upcase(c2_cloud_type,c2_cloud_type)
+                        write(6,*)i_cloud_type,c2_cloud_type,x,y
+                        call pwrity (x, y, c2_cloud_type, 2, 0, 0, 0)
+                    endif
+
+                enddo ! k
+            enddo ! i
+        endif ! i_contour = 3
+
+        if(i_contour .eq. 4)then ! Plot Icing Index
+            call set(.10, .90, .10, .90, rleft, right, rleft, right,1)
+            du=0.4
+            rot = 0.
+            do i = NX_C,1,-1
+                do k = ibottom,NZ_C
+                    if(icing_index_2d(i,k) .ne. 0)then
+                        x = i
+                        y = (k-ibottom) * float(NX_C-1)
+     1                                  / float(NZ_C-ibottom) + 1.
+!                       write(c1_string,2011)icing_index_2d(i,k)
+                        c1_string = '*'
+2011                    format(i1)
+
+!                       Normal Overlay Colors
+                        call setusv_dum(2hIN,icolors(i_graphics_over
+     1lay))
+
+!                       Multicolored ISI display
+                        if(.false.)then
+                        if(icing_index_2d(i,k) .gt. 3)then
+                            i_color_value = icing_index_2d(i,k) - 3
+                        else
+                            i_color_value = icing_index_2d(i,k)
+                        endif
+
+                        if(i_color_value .eq. 1)call setusv_dum(2hIN
+     1,7) ! Y
+                        if(i_color_value .eq. 2)call setusv_dum(2hIN
+     1,245) ! O
+                        if(i_color_value .eq. 3)call setusv_dum(2hIN
+     1,111) ! R
+                        endif
+
+                        call pwrity (x, y, c1_string, 1, 0, 0, 0)
+                    endif
+                enddo ! k
+            enddo ! i
+        endif ! i_contour = 4
+
+
+        if(i_contour .eq. 5)then ! Plot Precip Type
+            call setusv_dum(2hIN,icolors(i_graphics_overlay))
+
+            call set(.10, .90, .10, .90, rleft, right, rleft, right,1)
+            do i = NX_C,1,-1
+                do k = ibottom+1,NZ_C
+                    i_precip_type = field_2d(i,k)
+                    if(i_precip_type .ne. 0)then
+                        x = i
+                        y = (k-ibottom) * float(NX_C-1)
+     1                                  / float(NZ_C-ibottom) + 1.
+
+                        c2_precip_type = c1_precip_types(i_precip_type)
+                        call pwrity (x, y, c2_precip_type, 2, 0, 0, 0)
+                    endif
+                enddo ! k
+            enddo ! i
+        endif ! i_contour = 5
+
+
+        goto100
+
+9999    continue
+
+!       Contour in the terrain surface
+        call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+        n_div = 20
+        call setusv_dum(2hIN,3)
+
+!       Read in sfc pressure
+        i4time_tol = 43200
+        var_2d = 'PS'
+        ext = 'lsx'
+        call get_laps_2dgrid(i4time_ref,i4time_tol,i4time_nearest,
+     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                                  ,pres_2d,0,istatus)
+        IF(istatus .ne. 1)THEN
+            write(6,*)' Error Reading Surface Pressure Analysis'
+            write(6,*)' Converting Terrain to Sfc Pressure with Std Atmo
+     1sphere'
+            istat_sfc_pres = 0
+        else
+            call interp_2d
+     1     (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh)
+            istat_sfc_pres = 1
+        endif
+
+        do i = 1,NX_C
+            xcoord(i) = i
+            if(istat_sfc_pres .eq. 1)then
+                ycoord(i) = max(zcoord_of_pressure(pres_1d(i)),1.0)
+            else
+                ycoord(i) = max(height_to_zcoord(terrain_vert1d(i),istat
+     1us),1.0)
+            endif
+
+            if(i .gt. 1)then
+                do j = 0,n_div
+                    frac = float(j) / float(n_div)
+                    ybottom = bottom
+                    ytop = ycoord(i-1) * (1.-frac) + ycoord(i) * frac
+                    xval = float(i-1) + frac
+                    call line(xval,ybottom,xval,ytop)
+                enddo ! j
+            endif
+        enddo ! i
+
+        call setusv_dum(2hIN,7)
+
+        if(l_sta)then ! Label location of station
+
+!          This lets up plot outside the main box
+           call set(.00, 1.0, .00, 1.0, rleft - width/8., right + width/
+     18.,
+     1        bottom - r_height/8., top + r_height/8.,1)
+
+           x = pos_sta
+           write(6,*)'     Labelling ',c3_sta,pos_sta
+
+           call line(x,bottom,x,bottom - .015 * r_height)
+
+           y = bottom - .025 * r_height
+           call upcase(c3_type,c3_type)
+
+           if(l_arrival_gate)then
+               write(c9_string,2039)c3_sta,c5_arrival_gate(1:3)
+           else
+               write(c9_string,2039)c3_sta,c3_type
+           endif
+
+2039       format(1x,a3,'-',a3)
+
+!          call pwrity ((x+1.75), y, c9_string, 9, 0, 0, 0)
+           call pwrity ((x+0.15), y, c9_string, 9, 0, 0, 0)
+
+           if(.not. l_atms)then
+               i4time_label = i4time_ref/laps_cycle_time*laps_cycle_time
+     1                                          -laps_cycle_time
+
+               call label_other_stations(i4time_label,standard_longitude
+     1        ,y,xsta,lat,lon,NX_L,NY_L
+     1  ,xlow,xhigh,ylow,yhigh,NX_C,bottom,r_height)
+
+           endif
+
+
+           if(l_atms)then ! Add in IFR/VFR ICON
+
+!              Get Ceiling Data
+               var_2d = 'CCE'
+               ext = 'lsx'
+               call get_laps_2dgrid(i4time_ref,laps_cycle_time,i4time_ne
+     1arest,
+     1         ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                                     ,cloud_ceil_2d,0,istatus)
+
+               if(istatus .ne. 1)then
+                   write(6,*)' LAPS Cloud Ceiling not available'
+                   c3_string = 'UNK'
+               else
+                   ista = nint(xsta)
+                   jsta = nint(ysta)
+                   ceiling_ft = cloud_ceil_2d(ista,jsta) * 3.281
+
+                   if(ceiling_ft .gt. 1000.)then
+                       c3_string = 'VFR'
+                   else
+                       c3_string = 'IFR'
+                   endif
+                   write(6,*)'ista,jsta,ceiling_ft = ',ista,jsta,ceiling
+     1_ft
+     1                                                  ,c3_string
+               endif
+
+
+!              Get Visibility Data
+               var_2d = 'VIS'
+               ext = 'lsx'
+               call get_laps_2dgrid(i4time_ref,laps_cycle_time,i4time_ne
+     1arest,
+     1         ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                                     ,vis_2d,0,istatus)
+
+               if(istatus .ne. 1)then
+                   write(6,*)' LAPS Visibility not available'
+                   c3_string = 'UNK'
+               else
+                   ista = nint(xsta)
+                   jsta = nint(ysta)
+                   vis_mi = vis_2d(ista,jsta) / 1609.
+
+                   if(vis_mi .le. 0.5)then
+                       c3_string = 'IFR'
+                   endif
+                   write(6,*)'ista,jsta,vis_mi = ',ista,jsta,vis_mi,c3_s
+     1tring
+               endif
+
+               call setusv_dum(2hIN,229)
+
+               x = pos_sta
+               y = bottom + .025 * r_height
+               call pwrity (x, y, c3_string, 3, 1, 0, 0)
+               write(6,*)' Conditions are ',c3_string
+
+           endif
+
+           if(l_arrival_gate)then ! Add in glide slope
+               write(6,*)' Adding in glide slope'
+
+               xcoord(1) = pos_sta
+               ycoord(1) = height_to_zcoord(rheight_airport,istatus)
+
+               if(azi_arrival .ne. azi_xsect)then ! Off to left
+                   index_start = int(pos_sta)
+                   index_end = 1
+                   idir = -1
+               else ! Off to right
+                   index_start = int(pos_sta) + 1
+                   index_end = NX_C
+                   idir = +1
+               endif
+
+               icounter = 1
+               do i = index_start,index_end,idir
+                   icounter = icounter + 1
+!                  Get Range of grid point in X-Sect
+                   call latlon_to_radar(lat_1d(i),lon_1d(i),0.
+     1                  ,azimuth,slant_range,elev
+     1                  ,rlat_airport,rlon_airport,rheight_airport)
+                   height_glide_slope =
+     1              min(rheight_airport + slant_range*.03,18000./3.281)
+                   xcoord(icounter) = i
+                   ycoord(icounter) = height_to_zcoord(height_glide_slop
+     1e,istatus)
+
+               enddo ! Grid Point in X-sect
+
+               call setusv_dum(2hIN,7) ! Yellow
+
+               call curve (xcoord, ycoord, icounter)
+
+           endif ! Add in glide slope for arrival gate X-Sect
+
+        else ! l_sta = .false.
+
+           if(.not. l_atms)then
+
+!              This lets up plot outside the main box
+               call set(.00, 1.0, .00, 1.0, rleft - width/8., right + wi
+     1dth/8.,
+     1         bottom - r_height/8., top + r_height/8.,1)
+
+               xsta = -10000.
+
+               i4time_label = i4time_ref/laps_cycle_time*laps_cycle_time
+     1                                          -laps_cycle_time
+
+               y = bottom - .025 * r_height
+
+               call label_other_stations(i4time_label,standard_longitude
+     1,y,xsta,lat,lon,NX_L,NY_L
+     1  ,xlow,xhigh,ylow,yhigh,NX_C,bottom,r_height)
+
+           endif
+
+        endif ! l_sta = .true.
+
+        call frame
+
+        return
+        end
+
+
+        subroutine interp_3d(array_in,array_out,xlow,xhigh,ylow,yhigh)
+
+        include 'lapsparms.for'
+
+        integer*4 NX_C,NZ_C
+        parameter (NX_C = 61) ! NX_L
+        parameter (NZ_C = NZ_L)
+
+        real*4 array_in(NX_L,NY_L,NZ_L)
+        real*4 array_out(NX_C,NZ_C)
+
+        do k = 1,NZ_L
+             call interp_2d(array_in(1,1,k),array_out(1,k)
+     1                                 ,xlow,xhigh,ylow,yhigh)
+        enddo ! i
+
+        return
+        end
+
+        subroutine interp_3dn(array_in,array_out,xlow,xhigh,ylow,yhigh)
+
+!       Nearest neighbor interpolation of a vertical X-sect
+
+        include 'lapsparms.for'
+
+        integer*4 NX_C,NZ_C
+        parameter (NX_C = 61) ! NX_L
+        parameter (NZ_C = NZ_L)
+
+        real*4 array_in(NX_L,NY_L,NZ_L)
+        real*4 array_out(NX_C,NZ_C)
+
+        do k = 1,NZ_L
+             call interp_2dn(array_in(1,1,k),array_out(1,k)
+     1                                 ,xlow,xhigh,ylow,yhigh)
+        enddo ! i
+
+        return
+        end
+
+        subroutine interp_3d_spread(array_in,array_out,xlow,xhigh,ylow,y
+     1high)
+
+        include 'lapsparms.for'
+
+        integer*4 NX_C,NZ_C
+        parameter (NX_C = 61) ! NX_L
+        parameter (NZ_C = NZ_L)
+
+        real*4 array_in(NX_L,NY_L,NZ_L)
+        real*4 array_out(NX_C,NZ_C)
+
+        do k = 1,NZ_L
+             call interp_2d_spread(array_in(1,1,k),array_out(1,k)
+     1                                 ,xlow,xhigh,ylow,yhigh)
+        enddo ! i
+
+        return
+        end
+
+
+        subroutine interp_2d(array_in,array_out,xlow,xhigh,ylow,yhigh)
+
+        include 'lapsparms.for'
+
+        integer*4 NX_C,NZ_C
+        parameter (NX_C = 61) ! NX_L
+        parameter (NZ_C = NZ_L)
+
+        real*4 array_in(NX_L,NY_L)
+        real*4 array_out(NX_C)
+
+        deltax = (xhigh - xlow) / (float(NX_C) - 1.)
+        deltay = (yhigh - ylow) / (float(NX_C) - 1.)
+
+!       Bilinearly interpolate from 2d grid to 1d array
+        do ii = 1,NX_C
+            ri = xlow + (float(ii-1) * deltax)
+            rj = ylow + (float(ii-1) * deltay)
+
+            i = int(ri)
+            if(i .eq. NX_L)i=i-1
+
+            j = int(rj)
+            if(j .eq. NY_L)j=j-1
+
+            fraci = ri - i
+            fracj = rj - j
+
+            Z1=array_in(i  , j  )
+            Z2=array_in(i+1, j  )
+            Z3=array_in(i+1, j+1)
+            Z4=array_in(i  , j+1)
+
+            if(    z1 .ne. r_missing_data
+     1     .and. z2 .ne. r_missing_data
+     1     .and. z3 .ne. r_missing_data
+     1     .and. z4 .ne. r_missing_data)then
+
+                array_out(ii) =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
+     1                - (Z2+Z4-Z3-Z1)*fraci*fracj
+
+            else
+                array_out(ii) = r_missing_data
+
+            endif
+
+!            if(array_out(ii) .ne. r_missing_data
+!       1       .and. abs(array_out(ii) .lt. 1e-20)then
+!                array_out(ii) = r_missing_data
+!            endif
+
+        enddo ! ii
+
+        return
+        end
+
+
+        subroutine interp_2dn(array_in,array_out,xlow,xhigh,ylow,yhigh)
+
+!       Nearest neighbor interpolation of a 2d array to a line.
+
+        include 'lapsparms.for'
+
+        integer*4 NX_C,NZ_C
+        parameter (NX_C = 61) ! NX_L
+        parameter (NZ_C = NZ_L)
+
+        real*4 array_in(NX_L,NY_L)
+        real*4 array_out(NX_C)
+
+        deltax = (xhigh - xlow) / (float(NX_C) - 1.)
+        deltay = (yhigh - ylow) / (float(NX_C) - 1.)
+
+!       Interpolate from 2d grid to 1d array using the nearest neighbor
+        do ii = 1,NX_C
+            ri = xlow + (float(ii-1) * deltax)
+            rj = ylow + (float(ii-1) * deltay)
+
+            i = nint(ri)
+            j = nint(rj)
+
+            array_out(ii) = array_in(i,j)
+
+        enddo ! ii
+
+        return
+        end
+
+
+        subroutine interp_2d_spread(array_in,array_out,xlow,xhigh,ylow,y
+     1high)
+
+        include 'lapsparms.for'
+
+        integer*4 NX_C,NZ_C
+        parameter (NX_C = 61) ! NX_L
+        parameter (NZ_C = NZ_L)
+
+        real*4 array_in(NX_L,NY_L)
+        real*4 array_out(NX_C)
+
+        deltax = (xhigh - xlow) / (float(NX_C) - 1.)
+        deltay = (yhigh - ylow) / (float(NX_C) - 1.)
+
+!       Bilinearly interpolate from 2d grid to 1d array
+        do ii = 1,NX_C
+            ri = xlow + (float(ii-1) * deltax)
+            rj = ylow + (float(ii-1) * deltay)
+
+            i = int(ri)
+            if(i .eq. NX_L)i=i-1
+
+            j = int(rj)
+            if(j .eq. NY_L)j=j-1
+
+            fraci = ri - i
+            fracj = rj - j
+
+            Z1=array_in(i  , j  )
+            Z2=array_in(i+1, j  )
+            Z3=array_in(i+1, j+1)
+            Z4=array_in(i  , j+1)
+
+            if(    z1 .ne. r_missing_data
+     1     .and. z2 .ne. r_missing_data
+     1     .and. z3 .ne. r_missing_data
+     1     .and. z4 .ne. r_missing_data)then
+
+                array_out(ii) =  Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
+     1                - (Z2+Z4-Z3-Z1)*fraci*fracj
+
+            else
+                array_out(ii) = r_missing_data
+
+            endif
+
+!            if(array_out(ii) .ne. r_missing_data
+!       1       .and. abs(array_out(ii) .lt. 1e-20)then
+!                array_out(ii) = r_missing_data
+!            endif
+
+        enddo ! ii
+
+        return
+        end
+
+        subroutine interp_3dc(array_in,array_out,xlow,xhigh,ylow,yhigh)
+
+        include 'lapsparms.for'
+
+        include 'laps_cloud.inc'
+
+        integer*4 NX_C,NZ_C
+        parameter (NX_C = 61) ! NX_L
+        parameter (NZ_C = kcloud)
+
+        real*4 array_in(NX_L,NY_L,kcloud)
+        real*4 array_out(NX_C,kcloud)
+
+        do k = 1,kcloud
+             call interp_2d(array_in(1,1,k),array_out(1,k)
+     1                                 ,xlow,xhigh,ylow,yhigh)
+        enddo ! i
+
+        return
+        end
+
+
+        subroutine xsect_endpoints(xsta,ysta,azi_xsect,
+     1                  xlow,ylow,xhigh,yhigh,pos_sta,istatus)
+
+        include 'lapsparms.for'
+
+        logical l_left, l_right, l_top, l_bottom
+
+        integer*4 NX_C,NZ_C
+        parameter (NX_C = 61) ! NX_L
+        parameter (NZ_C = NZ_L)
+
+        ANGDIF(X,Y)=MOD(X-Y+540.,360.)-180.
+        COTAND(X) = TAND(90.-X)
+
+!           Calculate endpoints of X-Sect from Waypoint and Azimuth
+            azi_met = 90. - azi_xsect
+
+!           Intersection with right edge
+            l_right = .false.
+            if(cotand(azi_met) .ne. 0.)then
+                yright = ysta + (NX_L - xsta) * tand(azi_met)
+                if(yright .le. float(NY_L) .and. yright .ge. 1.)then
+                    l_right = .true.
+                    write(6,311)float(NX_L),yright
+311                 format('  Right Edge  ',2f7.2)
+                endif
+            endif
+
+!           Intersection with left edge
+            l_left = .false.
+            if(cotand(azi_met) .ne. 0.)then
+                yleft = ysta - (xsta - 1.) * tand(azi_met)
+                if(yleft .le. float(NY_L) .and. yleft .ge. 1.)then
+                    l_left = .true.
+                    write(6,312)1.,yleft
+312                 format('  Left Edge   ',2f7.2)
+                endif
+            endif
+
+!           Intersection with top edge
+            l_top = .false.
+            if(tand(azi_met) .ne. 0.)then
+                xtop = xsta + (NY_L - ysta) * cotand(azi_met)
+                if(xtop .le. float(NX_L) .and. xtop .ge. 1.)then
+                    l_top = .true.
+                    write(6,313)xtop,float(NY_L)
+313                 format('  Top Edge    ',2f7.2)
+                endif
+            endif
+
+!           Intersection with bottom edge
+            l_bottom = .false.
+            if(tand(azi_met) .ne. 0.)then
+                xbottom = xsta - (ysta - 1.) * cotand(azi_met)
+                if(xbottom .le. float(NX_L) .and. xbottom .ge. 1.)then
+                    l_bottom = .true.
+                    write(6,314)xbottom,1.
+314                 format('  Bottom Edge ',2f7.2)
+                endif
+            endif
+
+!           Now we can get the endpoints
+            if(abs(angdif(azi_xsect,45.)) .le. 45.)then
+                if(l_left)then
+                    xlow = 1.
+                    ylow = yleft
+                elseif(l_bottom)then
+                    xlow = xbottom
+                    ylow = 1.
+                endif
+
+                if(l_right)then
+                    xhigh = NX_L
+                    yhigh = yright
+                elseif(l_top)then
+                    xhigh = xtop
+                    yhigh = NY_L
+                endif
+
+            elseif(abs(angdif(azi_xsect,135.)) .le. 45.)then
+                if(l_left)then
+                    xlow = 1.
+                    ylow = yleft
+                elseif(l_top)then
+                    xlow = xtop
+                    ylow = NY_L
+                endif
+
+                if(l_right)then
+                    xhigh = NX_L
+                    yhigh = yright
+                elseif(l_bottom)then
+                    xhigh = xbottom
+                    yhigh = 1
+                endif
+
+            elseif(abs(angdif(azi_xsect,225.)) .le. 45.)then
+                if(l_left)then
+                    xhigh = 1.
+                    yhigh = yleft
+                elseif(l_bottom)then
+                    xhigh = xbottom
+                    yhigh = 1.
+                endif
+
+                if(l_right)then
+                    xlow = NX_L
+                    ylow = yright
+                elseif(l_top)then
+                    xlow = xtop
+                    ylow = NY_L
+                endif
+
+            elseif(abs(angdif(azi_xsect,315.)) .le. 45.)then
+                if(l_left)then
+                    xhigh = 1.
+                    yhigh = yleft
+                elseif(l_top)then
+                    xhigh = xtop
+                    yhigh = NY_L
+                endif
+
+                if(l_right)then
+                    xlow = NX_L
+                    ylow = yright
+                elseif(l_bottom)then
+                    xlow = xbottom
+                    ylow = 1
+                endif
+
+            endif
+
+            if(xlow .ne. xhigh)then
+                pos_sta = 1. + (NX_C-1.) * (xsta-xlow)/(xhigh-xlow)
+            else
+                pos_sta = 1. + (NX_C-1.) * (ysta-ylow)/(yhigh-ylow)
+            endif
+
+            write(6,91)xlow,ylow,xhigh,yhigh,pos_sta
+91          format(1x,' End Points  ',2f7.2,2x,2f7.2,'  pos_sta',f7.2)
+
+
+        return
+        end
+
+        subroutine label_other_stations(i4time,standard_longitude,y,xsta
+     1,lat,lon,ni,nj
+     1          ,xlow,xhigh,ylow,yhigh,nx_c,bottom,r_height)
+
+!       This routine labels stations on the X-sect in a logical manner
+
+        include 'lapsparms.for'
+
+        real*4 stapos_a(maxstns+1)
+
+        real*4 lat(ni,nj),lon(ni,nj)
+
+        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
+        real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
+        real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
+        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns), ffg_s(maxst
+     1ns)
+        real*4 vis_s(maxstns)
+        character stations(maxstns)*3, wx_s(maxstns)*8    ! c5_stamus
+
+!       Declarations for new read_surface routine
+!       New arrays for reading in the SAO data from the LSO files
+        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns),store_hgt(maxs
+     1tns,5)
+        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns),vis(maxs
+     1tns)
+     1                                          ,rad(maxstns)
+
+        Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
+
+        Character   obstype(maxstns)*8
+     1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
+
+        common /read_sfc_cmn/ lat_s,lon_s,elev_s,cover_s,hgt_ceil,hgt_lo
+     1w
+     1                ,t_s,td_s,pr_s,sr_s,dd_s,ff_s,ddg_s,ffg_s,vis_s
+c
+        character atime*24, infile*70
+        character directory*50,ext*31
+
+        character*9 c9_string
+        character*13 filename13
+
+        character*2 icompass(8)/'N ','NE','E ','SE','S ','SW','W ','NW'/
+
+        write(6,*)' Reading Station locations from read_sfc for labellin
+     1g '
+!       1                                       ,asc_tim_9
+        ext = 'lso'
+        call get_directory(ext,directory,len_dir) ! Returns top level directory
+        infile = directory(1:len_dir)//filename13(i4time,ext(1:3))
+
+        call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
+     &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_p
+     1os_g,
+     &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
+     &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
+     &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
+     1store_emv,
+     &           store_amt,store_hgt,vis,obstime,istatus)
+
+100     write(6,*)'     n_obs_b',n_obs_b
+
+        if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
+            write(6,*)' Too many stations, or no file present'
+            istatus = 0
+            return
+        endif
+
+        stapos_a(1) = xsta
+
+        sect_length = sqrt((xhigh-xlow)**2 + (yhigh-ylow)**2)
+
+        write(6,*)'i,xsta,ysta,frac,rmin,stations(i),'
+     1                            ,'stapos,dist_min,ran,azi'
+
+        iplot = 1
+
+        do isweep = 0,7
+          do i = 1,n_obs_b
+            call latlon_to_rlapsgrid(lat_s(i),lon_s(i),lat,lon
+     1                          ,ni,nj,xsta,ysta,istatus)
+
+!           Calculate distance from station to X-sect
+!           Rmin is in terms of LAPS Grid Points
+            call closest(xlow-xsta,ylow-ysta,xhigh-xlow,yhigh-ylow,frac,
+     1rmin)
+
+            stapos = 1. + frac * float(nx_c-1)
+
+!           rmin = rmin * float(nx_c-1) / sect_length
+
+            if(frac .ge. 0. .and. frac .le. 1.)then
+              if(int(abs(rmin*2.)) .eq. isweep)then
+
+!               Find distance from previously written out locations
+                dist_min = min(abs(nx_c-stapos),abs(stapos-1.))
+                do ii = 1,iplot
+                    dist = abs(stapos-stapos_a(ii))
+                    if(dist .lt. dist_min)then
+                        dist_min = dist
+                    endif
+                enddo ! ii
+
+
+                if(dist_min .gt. 5.0)then ! No other stations in the way
+                    xclo = xlow + frac * (xhigh - xlow)
+                    yclo = ylow + frac * (yhigh - ylow)
+
+                    iplot = iplot + 1
+                    stapos_a(iplot) = stapos
+
+                    xdelt = xclo - xsta
+                    ydelt = yclo - ysta
+
+                    call xy_to_met_xm(xdelt,ydelt,ran,azi,istatus)
+
+                    azi = azi + (lon_s(i) - standard_longitude)
+
+                    i_cardinal_pt = mod(int((azi+22.5)/45.),8) + 1
+
+                    if(icompass(i_cardinal_pt)(2:2) .eq. ' ')then
+                        write(c9_string,2038)nint(ran*10.)
+     1                    ,icompass(i_cardinal_pt),stations(i)(1:3)
+2038                    format(i2,a2,a3)
+                        call pwrity ((stapos+0.6), y, c9_string
+     1                                                  , 9, 0, 0, 0)
+                    else
+                        write(c9_string,2039)nint(ran*10.)
+     1                    ,icompass(i_cardinal_pt),stations(i)(1:3)
+2039                    format(i2,a2,' ',a3)
+
+                        call pwrity ((stapos+.15), y, c9_string
+     1                                                  , 9, 0, 0, 0)
+                    endif
+
+
+                    write(6,11)i,xsta,ysta,frac,rmin,stations(i)(1:3)
+     1                  ,stapos,dist_min
+     1                  ,ran,azi,c9_string,isweep
+11                  format(i4,2f6.1,f6.3,f6.1,1x,a3,4f6.1,1x,a9,i2)
+
+                    call line(stapos,bottom,stapos,bottom - .015 * r_hei
+     1ght)
+!                   write(6,*) ' Call line',stapos,bottom,r_height
+
+                endif
+
+              endif
+            endif
+          enddo ! stations
+        enddo ! isweep
+
+        return
+        end
+
+        subroutine closest(r1,r2,rd1,rd2,tclo,rmin)
+        implicit real*4 (a-z)
+
+d       write(6,*)
+
+        rnum =  -(      R1 * RD1
+     1  +       R2 * RD2)
+        denom =  (      RD1 * RD1
+     1  +       RD2 * RD2)
+
+        tclo = rnum/denom ! + t0
+
+        rdot = sqrt(RD1**2 + RD2**2)
+        rnum = (R1*RD2) - (R2*RD1)
+        rmin = rnum/rdot
+d       write(6,*)' rnum,rdot = ',rnum,rdot
+
+d       write(6,1)rmin,R1,R2,RD1,RD2,tclo
+1       format(f12.10,5f12.8)
+        return
+        end

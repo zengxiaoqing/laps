@@ -1,0 +1,70 @@
+
+							9-20-96
+
+LAPS WSI Nowrad low-level reflectivity ingest (vrc)
+
+1. Source Code:
+
+The source code exists in /data/laps/nest7grid/source/ingest/radar/wsiremap/vrc.
+Subdirectory /table contains source code to build remapping look-up-tables.
+
+2. Data Directory
+
+The data pathway for the wsi data is set (hardwired) in static/lapsparms.for.
+
+3. Parameter Settings
+
+Two files contain parameter settings for the vrc code and ingest of wsi reflectivity
+information: 1) static/lapsparms.for has n_radar_types and c_raddat_types. If the
+user knows that wsi data is available in two different directories then n_radar_types
+can be > 1 and c_raddat_types can identify these. Otherwise, n_radar_types is typically
+= 1 and c_raddat_types identifies that type. 2) static/vrc/vrc.parms contains the number
+of lines and elements for the wsi data being processed; and 3) static/vrc/wsi_cdf_lut_*.parms
+is used in the look-up-table generation (where * indicates the data type: wsi = /public data
+at 2 km resolution in polar stereographic; wfo = wsi data in lambert conformal at 5 km 
+resolution).  Currently the vrc_driver software is capable of processing either the "wsi"
+or the "wfo" data.
+
+4. Look-up-table Generation
+
+A look-up-table (lut) is automatically generated for the vrc code to use
+when remapping the WSI Nowrad data to the LAPS domain. Both lambert and
+polar-stereographic remapping is possible depending on the data requested
+for ingest. The lut is written to subdirectory static/vrc and is given a
+name compatible with the ingest software and the parameter setting found
+in static/lapsparms.for (see parameter settings). For example, the
+table generated for the wfo (lambert) data is static/vrc/wsi_llij_lut_wfo.lut
+The polar sterographic remapping is generated for "raw" (2 km) wsi data and
+is given the name static/vrc/wsi_llij_lut_wsi.lut
+
+5. Installing WSI-Nowrad ingest
+
+Given that the user has modified static/lapsparms.for appropriately for "wsi"
+data, the script "laps/build_wsi_vrc.csh copies wsi_wsi.parms into vrc.parms
+in static/vrc, compiles the look-up-table executable and runs it, and then builds
+the vrc_driver executable.
+
+If the user desires "wfo" formatted wsi data then the install_laps script should
+be modified to execute build_wfo_vrc.csh.
+
+6. User Notes:
+
+It should be noted that for wsi reflectivity stored in "wfo" form on FSL's /public,
+the filename is 9 characters, the same as wsi data stored in "wsi" form on FSL's
+/public.  However, wsi data stored in "wfo" form on the wfo platform is in files
+with names that have 13 characters.  Within file vrc_driver.f a test is made on
+the first character of the wsi_data_path. If this character is "p" and c_raddat_types
+is "wfo" then it is assumed that the filename will have 9 characters. 
+ 
+The wsi data stored in "wfo" form on the wfo platform has been multiplied by 16 for
+display purposes. Accordingly, the vrc software divides by 16 prior to remapping to
+the laps domain.
+
+The "wfo" data type has 1201 elements per line and there are 897 lines. The "wsi" type
+of data has 3661 elements per line and there are 1837 lines.
+
+The vrc software automatically determines whether pixel averaging or bi-linear interpolation
+is used to transform the wsi data to the laps domain (10 km currently). If the grid ratio
+(wsi data resolution/laps domain resolution) is >= 0.5, then vrc uses bi-linear interpolation.
+If the ratio is < 0.5 then pixel averaging is used. Thus, for the "wsi" form of data input we
+use pixel averaging.  Bilinear interpolation is used for the "wfo" form of data.

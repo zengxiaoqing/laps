@@ -1,0 +1,3 @@
+10         !check interval, every 10 seconds
+200        !total wait time, 200 seconds (2 min 20sec) !12-14-95, to accomdate new_at!
+3700       !age threshold, 3700 seconds; don't wait if data is > 1 hr old

@@ -1,0 +1,124 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC)  @OPTIMIZE@
+
+FC       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+CPPFLAGS=@CPPFLAGS@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/temp/libtemp.a  \
+           $(LAPSROOT)/src/lib/liblaps.a  \
+           $(LAPSROOT)/src/lib/mthermo/libmthermo.a
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/temp/libtemp.a  \
+             $(LAPSROOT)/src/lib/libdebuglaps.a  \
+             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  
+
+
+
+OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a .F .i .exe
+
+EXE = laps_sfc.x
+
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL=@INSTALL@
+
+# Define all source code to be compiled and placed in local library.
+
+SRC   = mdatlaps.f \
+	lapsvanl.f \
+	lapsvanl_sub.f \
+	laps_routines.f \
+	qc_data.f 
+
+MAIN=laps_sfc.f
+
+
+
+LIB=libsfc.a
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+
+all: exe
+
+exe: $(ARCHIVE) $(EXE)
+
+$(EXE): $(ARCHIVE) $(MAIN)
+	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+#$(EXE.F): $(MAIN) $(ARCHIVE)
+#	rm -f $*.f
+#	$(CPP) $(CPPFLAGS) $*.F 
+#	mv $*.i $*.f
+#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+#	rm -f *.o $*.f
+
+debug: clean $(ARCHIVE) $(MAIN)
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+
+install: exe
+	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
+
+clean:
+	rm -f $(EXE) $(LIB) *.o *~ *# *.i
+
+
+distclean: clean
+	rm -f Makefile
+
+
+%.f : %.F
+	rm -f $*.f
+	$(CPP) $(CPPFLAGS) $< 
+	mv $*.i $*.f
+
+%.o : %.F
+
+
+
+
+
+
+
+
+
+laps_routines.f:  $(LAPSROOT)/src/include/laps_sfc.inc@F77INC@
+
+laps_sfc.f:  $(LAPSROOT)/src/include/laps_sfc.inc@F77INC@
+
+lapsvanl.f:  $(LAPSROOT)/src/include/laps_sfc.inc $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
+
+lapsvanl_sub.f:  $(LAPSROOT)/src/include/laps_sfc.inc $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
+
+mdatlaps.f:  $(LAPSROOT)/src/include/laps_sfc.inc@F77INC@
+
+qc_data.f:  $(LAPSROOT)/src/include/laps_sfc.inc@F77INC@
+

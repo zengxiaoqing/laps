@@ -1,0 +1,67 @@
+From kbrews@tornado.gcn.uoknor.edu Wed Oct 19 16:53:08 1994
+Return-Path: <kbrews@tornado.gcn.uoknor.edu>
+Received: from tornado.gcn.uoknor.edu by peaks.fsl.noaa.gov (4.1/SMI-4.1)
+	id AA18264; Wed, 19 Oct 94 16:53:06 GMT
+Received: by tornado.gcn.uoknor.edu (AIX 3.2/UCB 5.64/4.03)
+          id AA65468; Wed, 19 Oct 1994 11:52:29 -0500
+From: kbrews@tornado.gcn.uoknor.edu (Keith Brewster)
+Message-Id: <9410191652.AA65468@tornado.gcn.uoknor.edu>
+Subject: Re: remap
+To: albers@peaks.fsl.noaa.gov (Steve Albers)
+Date: Wed, 19 Oct 1994 11:52:28 +22305823 (CDT)
+In-Reply-To: <9410191628.AA14962@peaks.fsl.noaa.gov> from "Steve Albers" at Oct 19, 94 04:28:11 pm
+X-Mailer: ELM [version 2.4 PL21]
+Content-Type: text
+Content-Length: 553       
+Status: RO
+
+> 
+>          Keith,
+> 
+>          The remapper is giving the message of insufficient ref coverage,
+>   no data written...
+> 
+
+  That may be true for the beginning of that tape.  What we need to
+do is skip about 200 files on that tape to where there is some weather.
+Also I hope the code (lut) is set up for KINX rather than KOUN or KTLX,
+I forgot what state I left it in.
+
+To do that:
+
+mt -f /dev/nrst5 fsf 200
+
+Then use 
+
+remapca2 -f /dev/nrst5
+
+Its very important to use "nrst5" instead of "rst5" or it will
+rewind the tape back to the start.
+
+Keith
+From kbrews@tornado.gcn.uoknor.edu Thu Oct 20 16:19:31 1994
+Return-Path: <kbrews@tornado.gcn.uoknor.edu>
+Received: from tornado.gcn.uoknor.edu by peaks.fsl.noaa.gov (4.1/SMI-4.1)
+	id AA17783; Thu, 20 Oct 94 16:19:29 GMT
+Received: by tornado.gcn.uoknor.edu (AIX 3.2/UCB 5.64/4.03)
+          id AA37529; Thu, 20 Oct 1994 11:18:46 -0500
+From: kbrews@tornado.gcn.uoknor.edu (Keith Brewster)
+Message-Id: <9410201618.AA37529@tornado.gcn.uoknor.edu>
+Subject: Re: I'll try the mt command you sent me...
+To: albers@peaks.fsl.noaa.gov (Steve Albers)
+Date: Thu, 20 Oct 1994 11:18:46 +22305823 (CDT)
+In-Reply-To: <9410201606.AA17176@peaks.fsl.noaa.gov> from "Steve Albers" at Oct 20, 94 04:06:29 pm
+X-Mailer: ELM [version 2.4 PL21]
+Content-Type: text
+Content-Length: 111       
+Status: RO
+
+ skip 250 files = 1730 z
+ The most data coverage is around 2300z.  There are about 10 files per hour.
+
+  Keith
+
+
+   ALso mt ... rewind
+
+        mt ... status

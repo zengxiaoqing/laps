@@ -1,0 +1,3 @@
+30         !check interval, 60 seconds
+150        !total wait time, 300 seconds (5 min)
+3601       !age threshold, 2701 seconds; don't wait if data is > 3/4 hr old

@@ -1,0 +1,39 @@
+RADAR_NAME  SITE_NAME     LAT_DEG LAT_MIN LAT_SEC  LON_DEG LON_MIN LON_SEC
+KOUN        Norman        35      14      09       097     27      43 
+KOKC        OklaCity      35      19      59       097     16      39
+KTLX        OklaCity      35      19      59       097     16      39
+KFDR        Fredrick      34      21      44       098     58      34
+KMLB        Melbourn      28      06      47       080     39      16
+KDDC        DodgeCty      37      45      35       099     58      04
+KLWX        Sterling      38      58      31       077     28      41
+KHGX        Houston       29      28      19       095     04      44
+KICT        Wichita       37      39      16       097     26      33
+KIWA        Phoenix       33      17      21       111     40      12
+KLSX        St Louis      38      41      56       090     40      58
+KAMA        Amarillo      35      14      00       101     42      32
+KAMX        Miami         25      36      39       080     24      26
+KBGM        Binghmtn      42      12      03       075     59      06
+KDOV        Dover         38      49      32       075     26      24
+KDTX        Detroit       42      41      59       083     28      19
+KEAX        KansCity      38      48      37       094     14      51
+KFTG        Denver        39      47      13       104     32      45
+KGLD        Goodland      39      22      00       101     44      00
+KGRK        Granger       30      43      19       097     22      58
+KINX        Tulsa         36      10      30       095     33      52
+KIWA        Phoenix       33      17      21       111     40      12
+KJAN        Jackson       32      19      05       090     04      48
+KLOT        Chicago       41      36      14       088     05      02
+KLZK        Lit Rock      34      50      11       092     15      43
+KMXF        Carrvill      32      32      12       085     47      23
+KPBZ        Pittsbrg      40      31      51       080     13      04
+KRME        Rome NY       43      28      45       075     27      30
+KTWX        Topeka        38      59      49       096     13      55
+KUEX        GrandIsl      40      19      15       098     26      31
+KVBG        Vandenbg      34      50      17       120     23      46
+KVPS        EglinAFB      30      33      53       085     55      18
+KNQA        Memphis       35      20      41       089     52      24
+KFWS        Ft Worth      32      34      22       097     18      10
+KLBB        Lubbock       33      39      14       101     48      49
+KFFC        Atlanta       33      31      46       084     33      57
+PUGA        Guam USA      13      27      14       144     48      28
+UNKN        Unknown       00      00      00       000     00      00

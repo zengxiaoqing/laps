@@ -1,0 +1,136 @@
+#
+#
+
+LAPSROOT = @prefix@
+DOMAIN   = @datadir@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC) 
+
+F77       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC) 
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+CPPFLAGS=@CPPFLAGS@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
+           $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
+           $(LAPSROOT)/src/lib/lapack/liblapack.a  \
+           $(LAPSROOT)/src/lib/blas/libblas.a  \
+           $(LAPSROOT)/src/lib/util/libutil.a  \
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
+             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
+             $(LAPSROOT)/src/lib/lapack/libdebuglapack.a  \
+             $(LAPSROOT)/src/lib/blas/libdebugblas.a  \
+             $(LAPSROOT)/src/lib/util/libdebugutil.a  \
+
+
+OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a .F .i .exe
+
+EXE = wind.exe
+
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL=@INSTALL@
+
+# Define all source code to be compiled and placed in local library.
+
+SRC= main_sub.f \
+     get_wind_obs.f \
+     put_derived_wind_prods.f \
+     weights.f \
+     comp_vr_prof.f \
+     comp_laps_meso.f \
+     comp_laps_sao.f \
+     comp_maps_sao.f \
+     comp_laps_vr.f \
+     comp_laps_prof.f \
+     comp_maps_prof.f \
+     comp_laps_pirep.f \
+     comp_maps_pirep.f \
+     comp_laps1_laps2.f \
+     comp_laps_maps.f \
+     vertwind.f \
+     fflxc.f \
+     weight_vertical.f \
+     rdpirep.f \
+     rdmeso.f \
+     rdsao.f \
+     read_profiles.f \
+     interp_prof.f \
+     qcradar.f \
+     get_fg_wind.f \
+     windanal.f
+
+MAIN=main.f
+
+
+
+LIB=libwind.a
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+
+all: exe
+
+exe: $(ARCHIVE) $(EXE)
+
+$(EXE): $(ARCHIVE) $(MAIN)
+	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+#$(EXE.F): $(MAIN) $(ARCHIVE)
+#	rm -f $*.f
+#	$(CPP) $(CPPFLAGS) $*.F 
+#	mv $*.i $*.f
+#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+#	rm -f *.o $*.f
+
+debug: clean $(ARCHIVE) $(MAIN)
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+
+install: exe
+	$(INSTALL) $(EXE) $(LAPSROOT)/bin/$(EXE)
+
+clean:
+	rm -f $(EXE) $(LIB) *.o *~ *# *.i
+
+
+distclean: clean
+	rm -f Makefile
+
+
+%.f : %.F
+	rm -f $*.f
+	$(CPP) $(CPPFLAGS) $< 
+	mv $*.i $*.f
+
+%.o : %.F
+
+
+
+
+
+
+
+
+

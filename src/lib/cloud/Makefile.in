@@ -1,0 +1,93 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@
+KRCFLAGS=@KRCFLAGS@ $(INC)
+
+DRTUFLAG = -Drtu
+
+F77       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC) @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a
+
+LIB      = libcloud.a
+DEBUGLIB = libdebugcloud.a
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+
+# Define all source code to be compiled and placed in local library.
+
+SRC=array_plot.f    insertradar.f   insertvis.f     slice.f \
+    barnes_r5.f     insertsao.f     rfill_evap.f    spread.f \
+    insertpireps.f  insertsat.f     schultz.f
+
+
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
+
+
+all: lib
+
+lib: $(LIB)
+
+$(LIB): $(ARCHIVE) 
+	$(RANLIB) $@
+
+debug: 
+	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='$(CFLAGS) -g' \
+        FFLAGS='$(FFLAGS) -g' KRCFLAGS='$(KRCFLAGS) -g' 
+
+install: lib
+
+clean:
+	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
+
+
+
+
+
+
+
+array_plot.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+barnes_r5.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
+
+insertradar.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+insertsao.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+insertsat.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
+
+rfill_evap.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+

@@ -1,0 +1,88 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@
+KRCFLAGS=@KRCFLAGS@ $(INC)
+
+
+F77       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC) @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a
+
+LIB      = libutil.a
+DEBUGLIB = libdebugutil.a
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+
+# Define all source code to be compiled and placed in local library.
+
+SRC=bilinear_laps.f   helicity.f        put_wind_2d.f     trilinear_laps.f\
+    cpt_liw.f         laps_slwc_revb.f  steer_grid.f      windcnvrt.f\
+    degfrom.f         meanwind.f        storm_cent_rt.f   xytomet.f
+
+
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
+
+
+all: lib
+
+lib: $(LIB)
+
+$(LIB): $(ARCHIVE) 
+	$(RANLIB) $@
+
+debug: 
+	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='$(CFLAGS) -g' \
+        FFLAGS='$(FFLAGS) -g' KRCFLAGS='$(KRCFLAGS) -g' 
+
+install: lib
+
+clean:
+	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
+
+
+
+
+
+
+
+bilinear_laps.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
+
+helicity.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
+
+meanwind.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
+
+steer_grid.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
+

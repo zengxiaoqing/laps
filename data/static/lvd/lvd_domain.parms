@@ -1,0 +1,6 @@
+125                            !nx_l
+105                            !ny_l
+5                              !n_channels
+2                              !n_images_proc
+41.0                           ! grid_cen_lat_cmn
+-105.5                         ! grid_cen_lon_cmn

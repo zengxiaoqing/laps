@@ -1,0 +1,89 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC)  @OPTIMIZE@
+
+F77       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
+
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
+
+
+OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a .exe
+
+EXE = purger.exe systime.exe c_time.exe
+SRC = purger.f systime.f c_time.f
+
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL = @INSTALL@
+
+# Define all source code to be compiled 
+
+
+all: exe
+
+exe: $(EXE)
+
+%.exe: %.f
+	$(FC) $(FFLAGS) $*.f $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+debug: $(SRC)
+	rm -f $(EXE) *.o;
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+
+install: exe
+	@for file in $(EXE);\
+	  do \
+	  $(INSTALL) $$file $(INSTALLROOT)/bin/$$file; \
+	done
+
+clean:
+	rm -f $(EXE)  *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
+
+
+
+
+
+
+
+purger.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+systime.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+

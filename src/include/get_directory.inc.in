@@ -1,0 +1,3 @@
+        character*200 lapsroot
+c        parameter (lapsroot='@prefix@/')
+        data lapsroot /'@prefix@/'/   

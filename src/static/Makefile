@@ -1,0 +1,86 @@
+# Generated automatically from Makefile.in by configure.
+#
+#
+
+LAPSROOT = /data/mdlg/laps-ROC
+DOMAIN   = /data/mdlg/laps-ROC/data
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=cc
+
+CFLAGS=-g $(INC) 
+
+F77       = f77
+
+
+FFLAGS =   $(INC) 
+
+# Define pre-processor command line options for .F files.
+
+CPP = cc -P
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I/usr/local/netcdf/include
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
+
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
+
+
+OTHERLIBS = /usr/local/netcdf/lib/libnetcdf.a 
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a .exe
+
+EXE = build_sfc_static.exe  checkbi.exe 
+SRC = build_sfc_static.f  checkbi.f
+
+
+# Define other variables 
+
+AR  = ar
+RANLIB   = ranlib
+INSTALL = $(LAPSROOT)/util/install-sh
+
+# Define all source code to be compiled 
+
+
+all: exe
+
+exe: $(EXE)
+
+%.exe: %.f
+	$(FC) $(FFLAGS) $*.f $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+debug: $(SRC)
+	rm -f $(EXE) *.o;
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+
+install: exe
+	@for file in $(EXE);\
+	  do \
+	  $(INSTALL) $$file $(LAPSROOT)/bin/$$file; \
+	done
+
+clean:
+	rm -f $(EXE)  *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
+
+
+
+
+
+
+

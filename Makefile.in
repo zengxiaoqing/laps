@@ -1,0 +1,211 @@
+@SET_MAKE@
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+DATAROOT=@datadir@
+INSTALL=@INSTALL@
+
+#
+# Some f77 compilers (SUN) don't recognize the -I command line option 
+# for fortran include statements F77INC will create links to the proper include
+# directories
+#
+
+LIBDIRS = src/lib \
+          src/lib/blas \
+          src/lib/cloud \
+          src/lib/fm \
+          src/lib/goesinav \
+          src/lib/goeslib \
+          src/lib/lapack \
+          src/lib/mthermo \
+          src/lib/nav \
+          src/lib/powell  \
+          src/lib/temp   \
+          src/lib/util  
+
+EXEDIRS = src/accum \
+          src/background \
+          src/cloud \
+          src/deriv \
+          src/grid \
+          src/humid \
+          src/ingest/acars \
+          src/ingest/pireps \
+          src/ingest/profiler \
+          src/ingest/profiler/blp \
+          src/ingest/radar/wsiremap/vrc \
+          src/ingest/radar/wsiremap/vrc/table \
+          src/ingest/raob \
+          src/ingest/rass \
+          src/ingest/rass/blp \
+          src/ingest/sao \
+          src/ingest/satellite/goes8/lambert \
+          src/ingest/satellite/goes8/lambert/table \
+          src/lapsplot \
+          src/sched \
+          src/sfc \
+          src/soil \
+          src/temp \
+          src/wind 
+
+DATADIRS = log/qc \
+           static \
+           lapsprd/l1s \
+           lapsprd/lc3 \
+           lapsprd/lcb \
+           lapsprd/lco \
+           lapsprd/lcp \
+           lapsprd/lct \
+           lapsprd/lcv \
+           lapsprd/lf1 \
+           lapsprd/lga \
+           lapsprd/lh3 \
+           lapsprd/lh4 \
+           lapsprd/lhe \
+           lapsprd/lil \
+           lapsprd/liw \
+           lapsprd/lm1 \
+           lapsprd/lm2 \
+           lapsprd/lmd \
+           lapsprd/lmr \
+           lapsprd/lmt \
+           lapsprd/lpbl \
+           lapsprd/lps \
+           lapsprd/lq3 \
+           lapsprd/lrp \
+           lapsprd/lrs \
+           lapsprd/lso \
+           lapsprd/lsx \
+           lapsprd/lt1 \
+           lapsprd/lty \
+           lapsprd/lvd \
+           lapsprd/lw3 \
+           lapsprd/lwc \
+           lapsprd/lwm \
+           lapsprd/msg \
+           lapsprd/pig \
+           lapsprd/pin \
+           lapsprd/prg \
+           lapsprd/pro \
+           lapsprd/sag \
+           lapsprd/vrc
+
+
+all:
+debug: debuglib
+
+localize: mkdirs
+	@PERL@ $(LAPSROOT)/etc/laps_localization.pl $(INSTALLROOT) $(DATAROOT)
+
+exe: lib
+	@for dir in $(EXEDIRS) ;\
+	  do \
+	  echo " ";\
+	  echo Making Laps in directory $$dir ;\
+	  (cd $$dir; \
+	  $(MAKE) all ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+lib:
+	@for dir in $(LIBDIRS) ;\
+	  do \
+	  echo " ";\
+	  echo Making Laps in directory $$dir ;\
+	  (cd $$dir; \
+	  $(MAKE) all ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+debuglib:
+	@for dir in $(LIBDIRS) ;\
+	  do \
+	  echo " ";\
+	  echo Making Laps in directory $$dir ;\
+	  (cd $$dir; \
+	  $(MAKE) debug ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+install: mkdirs
+	@for dir in $(LIBDIRS) $(EXEDIRS);\
+	  do \
+	  echo " ";\
+	  echo Making Laps in directory $$dir ;\
+	  (cd $$dir; \
+	  $(MAKE) install ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+mkdirs:
+	if [ ! -d  $(INSTALLROOT) ] ; then  \
+	mkdir -p $(INSTALLROOT) ; fi 
+	if [ ! -d $(DATAROOT) ] ; then  \
+	cp -r $(LAPSROOT)/data $(DATAROOT) ; fi 
+	if [ ! -d $(INSTALLROOT)/etc ] ; then  \
+	cp -r $(LAPSROOT)/etc  $(INSTALLROOT) ; fi
+	@for dir in $(DATADIRS) ;\
+	  do \
+	  echo " ";\
+	  echo Creating Laps data directory $(DATAROOT)/$$dir ;\
+	  (cd $(DATAROOT); \
+	  mkdir -p $$dir ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from mkdir was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+clean:
+	rm -f *~ *# *.o 
+	cd src/include; rm -f *~ *# *.o 
+	@for dir in $(LIBDIRS) $(EXEDIRS);\
+	  do \
+	  echo " ";\
+	  echo Making LAPS clean in directory $$dir ;\
+	  (cd $$dir; \
+	  $(MAKE) clean ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+distclean: clean cleandirs
+	@for dir in $(LIBDIRS) $(EXEDIRS);\
+	  do \
+	  echo " ";\
+	  echo Making LAPS distclean in directory $$dir ;\
+	  (cd $$dir; \
+	  $(MAKE) distclean ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
+	rm -fr config.cache Makefile bin log 
+
+cleandirs:
+	@for dir in $(DATADIRS) ;\
+	  do \
+	  echo " ";\
+	  echo Removing Laps data directory $(LAPSROOT)/$$dir ;\
+	  (cd $(LAPSROOT); \
+	   rm -fr $$dir ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from rm was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

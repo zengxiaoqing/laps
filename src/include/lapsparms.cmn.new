@@ -1,0 +1,177 @@
+c
+c!       These parameters are read in at runtime with subroutine get_laps_config
+c!       Note: Do not include this in the same module as 'lapsparms.for'
+c!             The same variable names are still used in a few cases
+c!                (i.e. vertical_grid).
+
+c
+c  The parameter MAX_BG_MODELS defines the allowable number of elements in the
+c  arrays path_to_background and laps_background_model_cmn
+c
+        integer      MAX_BG_MODELS
+        parameter    (MAX_BG_MODELS=6) 
+
+
+        integer*4    iflag_lapsparms_cmn
+        real*4       PRESSURE_BOTTOM_L
+        real*4       PRESSURE_INTERVAL_L
+        real*4       PRESSURE_0_L
+        character*40 vertical_grid
+        integer*4    nk_laps
+        real*4       standard_latitude
+        real*4       standard_latitude2
+        real*4       standard_longitude
+        logical*1    l_highres,l_pad1,l_pad2,l_pad3
+        integer*4    NX_L_CMN
+        integer*4    NY_L_CMN
+        integer*4    I_PERIMETER_CMN
+        character*50 c50_lowres_directory
+        character*6  c6_maproj
+        real*4 grid_spacing_m_cmn
+        real*4 grid_cen_lat_cmn
+        real*4 grid_cen_lon_cmn
+        integer*4    laps_cycle_time_cmn
+        integer*4    i_delta_sat_t_sec_cmn
+        real*4       r_msng_sat_flag_cdf_cmn
+        real*4       r_msng_sat_flag_gvr_cmn
+        real*4       r_msng_sat_flag_asc_cmn
+        character*8  radarext_3d_cmn
+        character*8  radarext_3d_accum_cmn
+        character*100 path_to_raw_pirep_cmn
+        character*100 path_to_raw_rass_cmn
+        character*100 path_to_raw_profiler_cmn
+        character*100 path_to_raw_blprass_cmn
+        character*100 path_to_raw_blpprofiler_cmn
+        character*100 path_to_raw_satellite_cdf_cmn
+        character*100 path_to_raw_satellite_gvr_cmn
+        character*100 path_to_raw_sat_wfo_vis_cmn
+        character*100 path_to_raw_sat_wfo_i39_cmn
+        character*100 path_to_raw_sat_wfo_iwv_cmn
+        character*100 path_to_raw_sat_wfo_i11_cmn
+        character*100 path_to_raw_sat_wfo_i12_cmn
+        character*100 path_to_wsi_2d_radar_cmn
+        character*100 path_to_wsi_3d_radar_cmn
+        character*100 path_to_qc_acars_cmn
+        character*100 path_to_raw_raob_cmn
+        character*100 path_to_metar_data_cmn
+        character*100 path_to_local_data_cmn
+        integer*4 i2_missing_data_cmn
+        real*4    r_missing_data_cmn
+        integer*4  MAX_RADARS_CMN
+        real*4 ref_base_cmn
+        real*4 ref_base_useable_cmn
+        integer*4  maxstns_cmn
+        integer*4  N_PIREP_CMN
+        integer*4 vert_rad_meso_cmn
+        integer*4 vert_rad_sao_cmn
+        integer*4 vert_rad_pirep_cmn
+        integer*4 vert_rad_prof_cmn     
+        real*4 silavwt_parm_cmn
+        real*4 toptwvl_parm_cmn
+        character*8 c8_project_common
+
+        character*100 path_to_background_model(MAX_BG_MODELS)
+        integer laps_background_model_cmn(MAX_BG_MODELS)
+
+        integer maxstations_cmn, maxobs_cmn
+
+        common  /lapsparms_cmn/ iflag_lapsparms_cmn
+     1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
+     1  ,vertical_grid,nk_laps,standard_latitude,standard_latitude2
+     1  ,standard_longitude,NX_L_CMN, NY_L_CMN, I_PERIMETER_CMN
+     1  ,c50_lowres_directory,c6_maproj
+     1  ,l_highres,l_pad1,l_pad2,l_pad3
+     1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
+     1  ,laps_cycle_time_cmn
+     1  ,i_delta_sat_t_sec_cmn,r_msng_sat_flag_cdf_cmn
+     1  ,radarext_3d_cmn,radarext_3d_accum_cmn
+     1  ,path_to_raw_pirep_cmn
+     1  ,path_to_raw_rass_cmn,path_to_raw_profiler_cmn
+     1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
+     1  ,path_to_raw_satellite_cdf_cmn,path_to_raw_satellite_gvr_cmn
+     1  ,path_to_wsi_2d_radar_cmn,path_to_wsi_3d_radar_cmn
+     1  ,path_to_qc_acars_cmn,path_to_raw_raob_cmn
+     1  ,path_to_metar_data_cmn,path_to_local_data_cmn
+     1  ,r_msng_sat_flag_gvr_cmn,r_msng_sat_flag_asc_cmn
+     1  ,path_to_raw_sat_wfo_vis_cmn,path_to_raw_sat_wfo_i39_cmn
+     1  ,path_to_raw_sat_wfo_iwv_cmn,path_to_raw_sat_wfo_i11_cmn
+     1  ,path_to_raw_sat_wfo_i12_cmn
+     1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
+     1  ,ref_base_cmn,ref_base_useable_cmn,maxstns_cmn,N_PIREP_CMN
+     1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
+     1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
+     1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
+     1  ,path_to_background_model
+     1  ,laps_background_model_cmn
+     1  ,maxstations_cmn,maxobs_cmn
+
+        NAMELIST /lapsparms_NL/ iflag_lapsparms_cmn
+     1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
+     1  ,vertical_grid,nk_laps,standard_latitude,standard_latitude2
+     1  ,standard_longitude,NX_L_CMN, NY_L_CMN, I_PERIMETER_CMN
+     1  ,c50_lowres_directory,c6_maproj
+     1  ,l_highres,l_pad1,l_pad2,l_pad3
+     1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
+     1  ,laps_cycle_time_cmn
+     1  ,i_delta_sat_t_sec_cmn,r_msng_sat_flag_cdf_cmn
+     1  ,radarext_3d_cmn,radarext_3d_accum_cmn
+     1  ,path_to_raw_pirep_cmn
+     1  ,path_to_raw_rass_cmn,path_to_raw_profiler_cmn
+     1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
+     1  ,path_to_raw_satellite_cdf_cmn,path_to_raw_satellite_gvr_cmn
+     1  ,path_to_wsi_2d_radar_cmn,path_to_wsi_3d_radar_cmn
+     1  ,path_to_qc_acars_cmn,path_to_raw_raob_cmn
+     1  ,path_to_metar_data_cmn,path_to_local_data_cmn
+     1  ,r_msng_sat_flag_gvr_cmn,r_msng_sat_flag_asc_cmn
+     1  ,path_to_raw_sat_wfo_vis_cmn,path_to_raw_sat_wfo_i39_cmn
+     1  ,path_to_raw_sat_wfo_iwv_cmn,path_to_raw_sat_wfo_i11_cmn
+     1  ,path_to_raw_sat_wfo_i12_cmn
+     1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
+     1  ,ref_base_cmn,ref_base_useable_cmn,maxstns_cmn,N_PIREP_CMN
+     1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
+     1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
+     1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
+     1  ,path_to_background_model
+     1  ,laps_background_model_cmn
+     1  ,maxstations_cmn,maxobs_cmn
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

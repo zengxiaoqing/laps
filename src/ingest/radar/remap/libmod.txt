@@ -1,0 +1,30 @@
+
+s/\[.*\]//g
+s%/[lL][iI][sS][tT]%%g
+s/user_dev://g
+s/USER_DEV://g
+s/lib_dev://g
+s/LIB_DEV://g
+s/rt_dev://g
+s/RT_DEV://g
+s/log_dev//g
+s/LOG_DEV://g
+s/prod_dev://g
+s/PROD_DEV://g
+s/laps_dir://g
+s/LAPS_DIR://g
+s/arrays.for/arrays.f/g
+s/,,my_show_timer/my_show_timer/g
+#s/str$upcase/upcase/g
+#s/lapsprams.for//g
+#s/_gg/_lp/g
+#s/%loc(ss$_normal)/1/g
+#s/_gq/_lp/g
+#s/[Tt][Yy][Pp][Ee]\*/print\*/g
+#s/[Tt][Yy][Pp][Ee] \*/print \*/g
+s/^     	1/     1 /g
+s/^    	1/     1 /g
+s/^   	1/     1 /g
+s/^  	1/     1 /g
+s/^ 	1/     1 /g
+s/^	1/     1 /g

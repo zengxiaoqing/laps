@@ -1,0 +1,18 @@
+Parameters needed to build goes9 wfo regClip sector 
+lat/lon to i/j look up table. These read by program 
+exe/genlvdlut.exe. This program is run when 
+installing laps and the lut needed by the lvd process 
+ 
+1015.90002
+1015.90002
+2042
+2042
+  29.39183
+-116.48560
+  25.00000
+ -95.00000
+  25.00000
+ 912
+1588
+ 734
+1409

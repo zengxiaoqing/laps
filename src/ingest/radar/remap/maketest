@@ -1,0 +1,32 @@
+
+F77=f77
+
+F77FLAGS= -xl -native -O2 -g -i4 
+
+SRC= remap_procssrt.f \
+     ldvelref87.f \
+     readdata.f \
+     lut_gen.f \
+
+OBJ= remap_procssrt.o \
+     ldvelref87.o \
+     readdata.o \
+     lut_gen.o)
+
+all: remap
+
+remap: $(OBJ)
+	$(F77) -o $@ $(F77FLAGS) $(OBJ) \
+		../../../../../lib/lapsdebuglib.a \
+		../../../../../lib/mthermo/mthermo.a \
+		../../../../../lib/netcdf/netcdf.a \
+		../../../../../util/util.a 
+
+
+.SUFFIXES: .o .f
+
+.f.o : 
+	$(F77) -c $(F77FLAGS) $<
+
+test:
+	@echo $(OBJ)

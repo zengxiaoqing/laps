@@ -1,0 +1,1239 @@
+cdis    Forecast Systems Laboratory
+cdis    NOAA/OAR/ERL/FSL
+cdis    325 Broadway
+cdis    Boulder, CO     80303
+cdis
+cdis    Forecast Research Division
+cdis    Local Analysis and Prediction Branch
+cdis    LAPS
+cdis
+cdis    This software and its documentation are in the public domain and
+cdis    are furnished "as is."  The United States government, its
+cdis    instrumentalities, officers, employees, and agents make no
+cdis    warranty, express or implied, as to the usefulness of the software
+cdis    and documentation for any purpose.  They assume no responsibility
+cdis    (1) for the use of the software and documentation; or (2) to provide
+cdis     technical support to users.
+cdis
+cdis    Permission to use, copy, modify, and distribute this software is
+cdis    hereby granted, provided that the entire disclaimer notice appears
+cdis    in all copies.  All modifications to this software must be clearly
+cdis    documented, and are solely the responsibility of the agent making
+cdis    the modifications.  If significant modifications or enhancements
+cdis    are made to this software, the FSL Software Policy Manager
+cdis    (softwaremgr@fsl.noaa.gov) should be notified.
+cdis
+cdis
+cdis
+cdis
+cdis
+cdis
+cdis
+
+        subroutine get_cloud_deriv(ni,nj,nk,clouds_3d,cld_hts,
+     1                          temp_3d,rh_3d_pct,heights_3d,
+     1                          istat_radar,radar_3d,
+     1                          l_mask_pcptype,ibase_array,itop_array,
+     1                          iflag_slwc,slwc_3d,cice_3d,thresh_cvr,
+     1                          l_flag_cloud_type,cldpcp_type_3d,
+     1                          l_flag_mvd,mvd_3d,
+     1                          l_flag_icing_index,icing_index_3d,
+     1                          l_flag_bogus_w,omega_3d,istatus)
+!    1                          iflag_snow_potential,snow_2d,lwc_res_3d)
+
+!       Steve Albers
+!       This routine calculates SLWC, Cloud Type, MVD, and Icing Index
+!       This routine also does the Cloud Bogussed Omega and the Snow Potential.
+!       These have been combined to make more efficient use of looping through
+!       large arrays.
+!       The input flags can be adjusted to allow only some of these to be returned
+!
+!       Steve Albers Oct 1992 Add Haines cloud-ice modification
+!                    Apr 1994 Remove byte usage
+!                    Dec 1996 Clean up error handling
+
+
+!       LWC Flags
+!       iflag_slwc =  1 : Adiabatic LWC
+!       iflag_slwc =  2 : Adjusted  LWC
+!       iflag_slwc =  3 : Adjusted  SLWC
+!       iflag_slwc = 11 : Smith-Feddes LWC
+!       iflag_slwc = 12 : Smith-Feddes SLWC
+!       iflag_slwc = 13 : New Smith-Feddes LWC
+!       iflag_slwc = 14 : New Smith-Feddes SLWC
+
+        include 'lapsparms.inc'
+
+        real*4 temp_3d(ni,nj,nk)           ! Input
+        real*4 rh_3d_pct(ni,nj,nk)         ! Input
+        real*4 heights_3d(ni,nj,nk)        ! Input
+        real*4 radar_3d(ni,nj,nk)          ! Input
+
+        real*4 omega_3d(ni,nj,nk)           ! Input / Output (if l_flag_bogus_w = .true.)
+        real*4 slwc_3d(ni,nj,nk)            ! Output
+        real*4 cice_3d(ni,nj,nk)            ! Output
+        integer*2 cldpcp_type_3d(ni,nj,nk)  ! Output (1st 4bits pcp, 2nd 4 are cld)
+
+        real*4 mvd_3d(ni,nj,nk)             ! Output
+        integer*2 icing_index_3d(ni,nj,nk)  ! Output
+!       real*4 lwc_res_3d(ni,nj,nk)         ! Output
+
+!       real*4 snow_2d(ni,nj)               ! Output
+
+        real*4 temp_1d(NZ_L_MAX)            ! Local
+        real*4 slwc_1d(NZ_L_MAX)
+        real*4 cice_1d(NZ_L_MAX)
+        real*4 heights_1d(NZ_L_MAX)
+        real*4 pressures_mb(NZ_L_MAX)
+        real*4 pressures_pa(NZ_L_MAX)
+        real*4 rlwc_laps1d(NZ_L_MAX)
+        real*4 w_1d(NZ_L_MAX)
+        real*4 lwc_res_1d(NZ_L_MAX)
+        real*4 prob_laps(NZ_L_MAX)
+        real*4 d_thetae_dz_1d(NZ_L_MAX)
+        integer*4 cloud_type_1d(NZ_L_MAX)
+
+        integer*4 iarg
+
+        integer*4 iflag_slwc
+        logical   l_flag_cloud_type,l_flag_mvd,l_flag_icing_index
+     1           ,l_flag_bogus_w,l_cloud
+
+      ! Used for "Potential" Precip Type
+        logical l_mask_pcptype(ni,nj)
+        integer*2 ibase_array(ni,nj)
+        integer*2 itop_array(ni,nj)
+
+        EXTERNAL        LIB$INIT_TIMER,
+     1                  LIB$SHOW_TIMER,
+     1                  my_show_timer
+
+        include 'laps_cloud.inc'
+
+        real*4 clouds_3d(ni,nj,KCLOUD)
+
+        Integer*4  KCLOUD_M1,  KCLOUD_P1
+        parameter (KCLOUD_M1 = KCLOUD - 1)
+        parameter (KCLOUD_P1 = KCLOUD + 1)
+
+        real*4 thresh_cvr
+!       parameter (THRESH_CVR = 0.65)
+!       parameter (THRESH_CVR = 0.75)
+
+        character*2 c2_type
+
+        write(6,*)' Start LWC/Omega/Snow Potential Routine'
+
+!       Check consistency of input flags
+        if(l_flag_icing_index)then
+            iflag_slwc = 13
+            l_flag_mvd = .true.
+        endif
+
+        if(l_flag_mvd .or. l_flag_bogus_w
+!       1            .or. iflag_slwc .ge. 10
+     1       .or. iflag_slwc .ge. 1
+     1                                          )then
+            l_flag_cloud_type = .true.
+        endif
+
+        if(l_flag_bogus_w)then
+            write(6,*)' Computing Cloud Bogused Omega'
+        endif
+
+        do k = 1,nk
+            pressures_mb(k) = pressure_of_level(k) / 100.
+            pressures_pa(k) = pressure_of_level(k)
+        enddo ! k
+
+        write(6,*)' Generating Lowest Base and Highest Top Arrays'
+        do j = 1,nj
+        do i = 1,ni
+            ibase_array(i,j) = KCLOUD_P1
+            itop_array(i,j) = 0
+        enddo
+        enddo
+
+        do k = KCLOUD,1,-1
+            do j = 1,nj
+            do i = 1,ni
+                if(clouds_3d(i,j,k) .ge. THRESH_CVR)then
+                    ibase_array(i,j) = k
+                endif
+            enddo
+            enddo
+        enddo
+
+        do k = 1,KCLOUD
+            do j = 1,nj
+            do i = 1,ni
+                if(clouds_3d(i,j,k) .ge. THRESH_CVR)then
+                    itop_array(i,j) = k
+                endif
+            enddo
+            enddo
+        enddo
+
+        I4_elapsed = ishow_timer()
+        write(6,*)
+
+        if(iflag_slwc .ne. 0)then
+            write(6,*)' Initializing SLWC array'
+            do k = 1,nk
+            do j = 1,nj
+            do i = 1,ni
+                slwc_3d(i,j,k) = -1e-30
+                cice_3d(i,j,k) = -1e-30
+            enddo
+            enddo
+            enddo
+        endif
+
+        if(l_flag_bogus_w)then
+            write(6,*)' Initializing Omega array'
+            do k = 1,nk
+            do j = 1,nj
+            do i = 1,ni
+                omega_3d(i,j,k) = r_missing_data
+            enddo
+            enddo
+            enddo
+        endif
+
+        if(l_flag_mvd)then
+            write(6,*)' Initializing MVD array'
+            do k = 1,nk
+            do j = 1,nj
+            do i = 1,ni
+                mvd_3d(i,j,k) = -1e-30
+            enddo
+            enddo
+            enddo
+        endif
+
+!       if(.true.)then
+        if(l_flag_cloud_type)then
+            write(6,*)' Initializing Cloud Type Array'
+            do k = 1,nk
+            do j = 1,nj
+            do i = 1,ni
+                cldpcp_type_3d(i,j,k) = 0
+            enddo
+            enddo
+            enddo
+        endif
+
+        if(l_flag_icing_index)then
+            write(6,*)' Initializing Icing Index Array'
+            do k = 1,nk
+            do j = 1,nj
+            do i = 1,ni
+                icing_index_3d(i,j,k) = 0
+            enddo
+            enddo
+            enddo
+        endif
+
+        I4_elapsed = ishow_timer()
+
+        n_cloud_columns = 0
+        n_slwc_call = 0
+
+        write(6,*)' Finding Cloud Layers and Computing Output Field(s)'
+        do i = 1,ni
+        do j = 1,nj
+
+            l_cloud = .false.
+
+!           Generate vertical sounding at this grid point and call SLWC routine
+
+            if(ibase_array(i,j) .ne. KCLOUD_P1)then ! At least one layer exists
+                l_cloud = .true.
+                n_cloud_columns = n_cloud_columns + 1
+
+                do k = 1,nk ! Initialize
+                    temp_1d(k) = temp_3d(i,j,k)
+                    heights_1d(k) = heights_3d(i,j,k)
+
+                    cloud_type_1d(k) = 0
+
+                enddo
+
+!               cloud_ceil(i,j) = 3000. ! Dummied in for testing
+!               cloud_top(i,j)  = 5000. ! Dummied in for testing
+
+!               Get Base and Top
+                k = max(ibase_array(i,j) - 1,1)
+                k_highest = itop_array(i,j) - 1
+
+                do while (k .le. k_highest)
+                  if(clouds_3d(i,j,k+1) .ge. THRESH_CVR .and.
+     1               clouds_3d(i,j,k  ) .lt. THRESH_CVR
+     1                              .OR.
+     1             k .eq. 1 .and. clouds_3d(i,j,k) .ge. THRESH_CVR
+     1                                                  )then
+                    cld_base_m = 0.5 * (cld_hts(k) + cld_hts(k+1))
+                    k_base = k + 1
+
+c                   if(i .eq. 1)write(6,*)i,j,k,' Cloud Base'
+
+                    k = k + 1
+
+                    do while (k .le. kcloud-1)
+                      if(clouds_3d(i,j,k  ) .gt. THRESH_CVR .and.
+     1                   clouds_3d(i,j,k+1) .le. THRESH_CVR)then
+                        cld_top_m = 0.5 * (cld_hts(k) + cld_hts(k+1))
+
+!                       Constrain cloud top to top of domain
+                        cld_top_m = min(cld_top_m,heights_3d(i,j,nk))
+
+                        k_top = k
+
+!                       We have now defined a cloud base and top
+                        k_1d_base = int(height_to_zcoord3(cld_base_m,hei
+     1ghts_3d
+     1                  ,pressures_pa,ni,nj,nk,i,j,istatus)) + 1
+                        k_1d_top  = int(height_to_zcoord3(cld_top_m ,hei
+     1ghts_3d
+     1                  ,pressures_pa,ni,nj,nk,i,j,istatus))
+
+                        if(istatus .ne. 1)then
+                            write(6,*)
+     1        ' Returning from get_cloud_deriv (height_to_zcoord3 call)'
+     1              ,cld_base_m,cld_top_m,(heights_3d(i,j,kk),kk=1,nk)
+                            return
+                        endif
+
+!                       Make sure cloud base and top stay in LAPS domain
+                        k_1d_base = min(k_1d_base,nk)
+                        k_1d_top  = min(k_1d_top ,nk)
+!                       k_1d_base = max(k_1d_base,1)
+!                       k_1d_top  = max(k_1d_top ,1)
+
+c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
+
+                        if(l_flag_cloud_type)then ! Get 1d Stability & Cloud type
+                            call get_stability(nk,temp_1d,heights_1d
+     1                  ,pressures_mb,k_1d_base,k_1d_top,d_thetae_dz_1d)
+
+                            do k_1d = k_1d_base,k_1d_top
+                                call get_cloudtype(temp_1d(k_1d)
+     1                     ,d_thetae_dz_1d(k_1d),cld_base_m,cld_top_m
+     1                     ,itype,c2_type)
+
+                                if(radar_3d(i,j,k_1d) .gt. 45.)then
+                                    itype = 10 ! CB
+                                endif
+
+                                cloud_type_1d(k_1d)     = itype
+
+                                cldpcp_type_3d(i,j,k_1d) = itype
+                            enddo
+                        endif
+
+!                       We have now defined a cloud base and top
+                        if(iflag_slwc .ne. 0)then
+
+                          n_slwc_call = n_slwc_call + 1
+
+                          if(iflag_slwc .lt. 10)then
+                            call get_slwc1d(nk,cld_base_m,cld_top_m
+     1                      ,k_1d_base,k_1d_top
+     1                      ,heights_1d,temp_1d,pressures_pa,
+     1                                      iflag_slwc,slwc_1d)
+                          else ! Get Smith-Feddes Output
+                            mode = 1
+
+                            do k_1d = 1,nk ! Initialize
+                              slwc_1d(k_1d) = -1e-30
+                              cice_1d(k_1d) = -1e-30
+                              prob_laps(k_1d) = -1e-30
+                            enddo
+
+!                           QC the data going into SMF
+                            if(cld_top_m .gt. heights_1d(nk) - 110.)then
+                                cld_top_qc_m = heights_1d(nk) - 110.
+                                cld_base_qc_m =
+     1                          min(cld_base_m,cld_top_qc_m - 110.)
+                                write(6,501)i,j,nint(heights_1d(nk))
+     1                        ,nint(cld_base_qc_m),nint(cld_top_qc_m)
+501                             format(1x,'QC data for SMF, ht/bs/tp',2i
+     14,3i6)
+
+                            else ! normal case
+                                cld_top_qc_m = cld_top_m
+                                cld_base_qc_m = cld_base_m
+
+                            endif
+
+                            if(iflag_slwc .le. 12)then
+!                               Performance is 200/350 calls/sec on PROFS3/FSL9
+                                call get_smf_1d(nk,cld_base_qc_m
+     1                              ,cld_top_qc_m
+!    1                              ,cloud_type_1d((k_1d_base + k_1d_top)/2)
+     1                              ,1
+     1                              ,heights_1d,pressures_mb,temp_1d
+     1                              ,slwc_1d,prob_laps,mode)
+                            else ! iflag_slwc = 13 or 14
+
+!                               Performance is 450/700 calls/sec on PROFS3/FSL9
+                                call get_sfm_1d(nk,cld_base_qc_m
+     1                              ,cld_top_qc_m
+!    1                              ,cloud_type_1d((k_1d_base + k_1d_top)/2)
+     1                              ,1
+     1                              ,heights_1d,pressures_mb,temp_1d
+     1                              ,slwc_1d,cice_1d,prob_laps,mode)
+!    1                              ,slwc_1d,prob_laps,mode)
+                            endif
+
+
+                            if(iflag_slwc .eq. 12 .or.
+     1                         iflag_slwc .eq. 14           )then
+                              do k_1d = k_1d_base,k_1d_top
+                                if(temp_1d(k_1d) .gt. 273.15)then
+                                  slwc_1d(k_1d) = 0.
+                                endif
+                              enddo ! k_1d
+                            endif
+
+                          endif ! iflag <> 10
+
+                        endif ! iflag .ne. 0
+
+
+                        do k_1d = k_1d_base,k_1d_top ! Loop through the cloud layer
+                            if(iflag_slwc .ne. 0)then
+                              if(slwc_1d(k_1d) .gt. 0.)then
+                                if(istat_radar .eq. 1
+     1                    .and. temp_3d(i,j,k_1d) .lt. 273.15
+     1                                  )then ! Apply Radar Depletion
+
+!                               if(.false.)then ! Don't Apply Radar Depletion
+
+                                 if(cloud_type_1d(k_1d) .ne. 10)then ! Not CB
+
+                                  if(radar_3d(i,j,k_1d) .le. 8.)then ! No Depletion
+                                    continue
+
+                                  elseif(radar_3d(i,j,k_1d) .gt. 11.)the
+     1n ! Total Depletion
+                                    cice_1d(k_1d) = cice_1d(k_1d) + slwc
+     1_1d(k_1d)
+                                    slwc_1d(k_1d) = -1e-30
+
+                                  else ! Ramped Depletion
+                                    ramp = 1.0 - ((radar_3d(i,j,k_1d) -
+     18.) / 3.)
+                                    cice_1d(k_1d) = cice_1d(k_1d) + slwc
+     1_1d(k_1d)
+     1                                                    * (1.-ramp)
+                                    slwc_1d(k_1d) = slwc_1d(k_1d) * ramp
+
+                                  endif ! Dbz Sufficient for Depletion
+
+                                 endif ! Not a CB
+
+                                endif ! Valid Radar Data and below freezing
+
+                              endif ! LWC Returned by Algorithm
+
+!                             Pull lwc/ice from 1d array to 3d array
+                              if(slwc_1d(k_1d) .gt. 0.)
+     1                           slwc_3d(i,j,k_1d) = slwc_1d(k_1d)
+                              if(cice_1d(k_1d) .gt. 0.)
+     1                           cice_3d(i,j,k_1d) = cice_1d(k_1d)
+
+                            endif ! iflag_slwc
+
+                            if(l_flag_mvd)then
+                                call get_mvd(cloud_type_1d(k_1d),rmvd_mi
+     1crons)
+                                mvd_3d(i,j,k_1d) = rmvd_microns * 1e-6
+                            endif
+
+                        enddo ! k_1d
+
+                        goto1000
+
+                      endif ! Found Cloud Top
+
+                      k = k + 1
+
+                    enddo ! k
+
+                  endif ! Found Cloud Base
+
+1000              k = k + 1
+
+                enddo ! k
+
+            endif ! ibase_array (At least one layer exists)
+
+            if(l_flag_bogus_w)then
+              if(l_cloud)then
+                  call cloud_bogus_w(cloud_type_1d, heights_1d, nk, w_1d
+     1)
+
+                  do k = 1,nk ! Transfer the 1D w into the output omega array
+                      if(w_1d(k) .ne. r_missing_data)then
+                          omega_3d(i,j,k) = w_to_omega(w_1d(k),pressures
+     1_pa(k))
+!                     else
+!                         w_1d(k) = 0. ! Condition the array for the snow_diag
+                      endif
+                  enddo
+
+              endif ! l_cloud
+            endif ! l_flag_bogus_w
+
+        enddo ! j
+        enddo ! i
+
+        write(6,*)' N_CLOUD_COLUMNS,N_SLWC_CALL = ',n_cloud_columns,n_sl
+     1wc_call
+
+        I4_elapsed = ishow_timer()
+
+!       Simulate Radar Data
+        if(.true.)then
+!           istat_radar = 1
+            do i = 1,ni
+            do j = 1,nj
+                l_mask_pcptype(i,j) = .false.
+            enddo ! j
+            enddo ! i
+        endif
+
+        if(istat_radar .eq. 1)then ! Get 3D precip type
+
+            write(6,*)' Computing 3D Precip type'
+
+            call cpt_pcp_type_3d(temp_3d,rh_3d_pct,pressures_mb
+     1                  ,radar_3d,l_mask_pcptype,ni,nj,nk
+     1                  ,cldpcp_type_3d,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)'Bad status returned from cpt_pcp_type_3d'
+                return
+            endif
+
+            I4_elapsed = ishow_timer()
+
+        endif ! Valid Radar Data
+
+        if(l_flag_icing_index)then
+
+            write(6,*)' Computing Icing Severity Index field'
+
+            do i = 1,ni
+            do j = 1,nj
+            do k = 1,nk
+                iarg = cldpcp_type_3d(i,j,k)
+                i_precip_type = iarg/16
+                i_cloud_type  = iarg - i_precip_type*16
+
+                if(iarg .gt. 0)then ! clouds or precip are present
+                    call isi3(slwc_3d(i,j,k),temp_3d(i,j,k)-273.15
+     1                          ,i_cloud_type,i_precip_type,xindex)
+                    iarg = xindex
+                    icing_index_3d(i,j,k) = iarg
+
+                else
+                    icing_index_3d(i,j,k) = 0
+
+                endif
+
+            enddo ! k
+            enddo ! j
+            enddo ! i
+
+            I4_elapsed = ishow_timer()
+
+        endif ! iflag icing index
+
+        return
+        end
+
+
+        subroutine cpt_pcp_type_3d(temp_3d,rh_3d_pct,pressures_mb
+     1  ,radar_3d,l_mask
+     1  ,ni,nj,nk,cldpcp_type_3d,istatus)
+
+!       1991    Steve Albers
+
+!       This program modifies the most significant 4 bits of the integer
+!       array by inserting multiples of 16.
+
+        include 'lapsparms.cmn'
+
+        real*4 temp_3d(ni,nj,nk)
+        real*4 rh_3d_pct(ni,nj,nk)
+        real*4 pressures_mb(nk)
+        integer*2 cldpcp_type_3d(ni,nj,nk) ! Output
+        real*4 radar_3d(ni,nj,nk)
+        integer*4 itype
+        logical l_mask(ni,nj) ! Used for "Potential" Precip Type
+
+        if(iflag_lapsparms_cmn .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not called'
+            istatus = 0
+            return
+!           stop
+        endif
+
+!       Stuff precip type into cloud type array
+!       0 - No Precip
+!       1 - Rain
+!       2 - Snow
+!       3 - Freezing Rain
+!       4 - Sleet
+!       5 - Hail
+
+        zero_c = 273.15
+!       thresh_melt_c = 0.5
+        rlayer_refreez_max = 0.0
+
+        n_zr = 0
+        n_sl = 0
+        n_last = 0
+
+        do j = 1,nj
+        do i = 1,ni
+
+            iflag_melt = 0
+            iflag_refreez = 0
+            rlayer_refreez = 0.0
+
+            iprecip_type_last = 0
+
+            do k = nk,1,-1
+
+!               if(radar_3d(i,j,k) .gt. 0. .or. l_mask(i,j))then
+                if(radar_3d(i,j,k) .ge. 0. .or. l_mask(i,j))then
+
+!                   Set refreezing flag
+                    t_c         = temp_3d(i,j,k) - zero_c
+                    td_c        = DWPT(t_c,rh_3d_pct(i,j,k))
+                    pressure_mb = pressures_mb(k)
+
+                    thresh_melt_c =
+     1                  wb_melting_threshold(t_c,radar_3d(i,j,k))
+
+!                   This function call here is fast but returns a t_wb_c
+!                   equal to t_c if pres < 500mb. This approximation should
+!                   not hurt the algorithm. Same if abs(t_c) > 60.
+
+                    t_wb_c = twet_fast(t_c,td_c,pressure_mb)
+
+                    if(t_wb_c .lt. 0.)then
+                        if(iflag_melt .eq. 1)then
+
+!                           Integrate below freezing temperature times column
+!                           thickness - ONLY for portion of layer below freezing
+
+                            temp_lower_c = t_wb_c
+                            k_upper = min(k+1,nk)
+
+!                           For simplicity and efficiency, the assumption is
+!                           here made that the wet bulb depression is constant
+!                           throughout the level.
+
+                            temp_upper_c = t_wb_c +
+     1                  (temp_3d(i,j,k_upper) - temp_3d(i,j,k))
+
+                            if(temp_upper_c .le. 0.)then
+                                frac_below_zero = 1.0
+                                tbar_c = 0.5 *
+     1                              (temp_lower_c + temp_upper_c)
+
+                            else ! Layer straddles the freezing level
+                                frac_below_zero = temp_lower_c
+     1                                  / (temp_lower_c - temp_upper_c)
+                                tbar_c = 0.5 * temp_lower_c
+
+                            endif
+
+                            rlayer_refreez = rlayer_refreez
+     1             + abs(tbar_c * PRESSURE_INTERVAL_L * frac_below_zero)
+
+!                           if(rlayer_refreez .ge. 75000.)then
+                            if(rlayer_refreez .ge. 25000.)then
+                                iflag_refreez = 1
+                            endif
+
+                            rlayer_refreez_max =
+     1                          max(rlayer_refreez_max,rlayer_refreez)
+
+                        endif ! iflag_melt = 1
+
+                    else ! Temp > 0C
+                        iflag_refreez = 0
+                        rlayer_refreez = 0.0
+
+                    endif ! Temp is freezing
+
+!                   Set melting flag
+                    if(t_wb_c .ge. thresh_melt_c)then
+                        iflag_melt = 1
+                    endif
+
+                    if(radar_3d(i,j,k) .lt. 50.)then
+                        if(t_wb_c .ge. thresh_melt_c)then  ! Melted to Rain
+                            iprecip_type = 1
+
+                        else ! Check if below zero_c (Refrozen Precip or Snow)
+                            if(t_wb_c .lt. 0.0)then
+                                if(iflag_melt .eq. 1)then
+                                    if(iflag_refreez .eq. 0)then ! Freezing Rain
+                                        n_zr = n_zr + 1
+                                        if(n_zr .lt. 30)then
+                                            write(6,5)i,j,k,t_wb_c
+     1                                  ,temp_3d(i,j,k),rh_3d_pct(i,j,k)
+5                                           format('zr',3i3,2f8.2,f8.1)
+                                        endif
+                                        iprecip_type = 3
+
+                                    else  ! (iflag_refreez = 1)  ! Sleet
+                                        n_sl = n_sl + 1
+                                        iprecip_type = 4
+
+                                    endif
+
+                                else                             ! Snow
+                                    iprecip_type = 2
+
+                                endif ! iflag_melt = 1
+                           else ! Temp between 0C and Melting threshold
+                                iprecip_type = iprecip_type_last
+                                n_last = n_last + 1
+                                if(n_last .lt. 5)then
+                                    write(6,*)'Unchanged Precip'
+     1                                        ,i,j,k,t_wb_c
+                                endif
+                           endif
+                        endif
+
+                    else ! >= 50 dbz
+                        iprecip_type = 5                     ! Hail
+
+                    endif ! Intense enough for hail
+
+                else ! No Radar Echo
+                    iprecip_type = 0
+
+                endif ! Radar Echo?
+
+!               Insert most sig 4 bits into array
+                itype = cldpcp_type_3d(i,j,k)
+                itype = itype - (itype/16)*16     ! Initialize the 4 bits
+                itype = itype + iprecip_type * 16 ! Add in the new value
+                cldpcp_type_3d(i,j,k) = itype
+
+                iprecip_type_last = iprecip_type
+
+            enddo ! k
+        enddo ! j
+        enddo ! i
+
+        write(6,*)' rlayer_refreez_max = ',rlayer_refreez_max
+        write(6,*)' n_zr/n_sl = ',n_zr,n_sl
+
+        istatus = 1
+        return
+        end
+
+
+        subroutine get_sfc_preciptype(pres_2d,t_sfc_k,td_sfc_k
+     1            ,cldpcp_type_3d
+     1            ,dbz_2d,pcp_type_2d,ni,nj,nk)
+
+!       Steve Albers 1991
+
+        real*4 pres_2d(ni,nj)             ! Input
+        real*4 t_sfc_k(ni,nj)             ! Input
+        real*4 td_sfc_k(ni,nj)            ! Input
+        integer*2 cldpcp_type_3d(ni,nj,nk)! Input
+        real*4 dbz_2d(ni,nj)              ! Input (Low Level reflectivity)
+        integer*2 pcp_type_2d(ni,nj)      ! Output
+                                       ! Leftmost 4 bits contain the precip type
+
+        integer*4 iarg
+
+        n_precip = 0
+        n_chg_frz = 0
+        n_chg_mlt = 0
+        n_hail = 0
+
+        do j = 1,nj
+        do i = 1,ni
+
+!           Interpolate from three dimensional grid to terrain surface
+            rksfc = zcoord_of_pressure(pres_2d(i,j))
+
+!           If no precip at the NEAREST grid point, check the point just above
+!           the surface
+            ksfc_close = max(nint(rksfc),1)
+            if(float(ksfc_close) .lt. rksfc)then
+                ksfc_above = ksfc_close + 1
+            else
+                ksfc_above = ksfc_close
+            endif
+
+!           Pull out the precip type
+            iarg = cldpcp_type_3d(i,j,ksfc_close)
+            iprecip_type = iarg/16
+
+            if(iprecip_type .ne. 0)then
+                pcp_type_2d(i,j) = cldpcp_type_3d(i,j,ksfc_close)
+            else
+                pcp_type_2d(i,j) = cldpcp_type_3d(i,j,ksfc_above)
+                iarg = cldpcp_type_3d(i,j,ksfc_above)
+                iprecip_type = iarg/16
+            endif
+
+!           0 - No Precip
+!           1 - Rain
+!           2 - Snow
+!           3 - Freezing Rain
+!           4 - Sleet
+!           5 - Hail
+
+            zero_c = 273.15
+
+!           Given no hail, if sfc wetbulb is below freezing, change the
+!           precip type to the lowest frozen type in the 3D column.
+!           If sfc wetbulb is above freezing change the precip type to rain
+
+            if(iprecip_type .ne. 0 .and. iprecip_type .ne. 5)then ! Not Hail
+
+                t_sfc_c  = t_sfc_k(i,j)  - 273.15
+                td_sfc_c = td_sfc_k(i,j) - 273.15
+                pres_mb  = pres_2d(i,j) / 100.
+
+                tw_sfc_c = twet_fast(t_sfc_c,td_sfc_c,pres_mb)
+
+!               Note that the dbz value has not been passed in yet
+                thresh_melt_c = wb_melting_threshold(t_sfc_c,dbz_2d(i,j)
+     1)
+
+                n_precip = n_precip + 1
+                if(iprecip_type .ne. 1)then       ! Not Rain
+                    if(tw_sfc_c .gt. thresh_melt_c)then ! Above freezing
+                        iprecip_type = 1
+                        n_chg_mlt = n_chg_mlt + 1
+                    endif
+
+                elseif(iprecip_type .eq. 1)then   ! Rain
+                    if(tw_sfc_c .lt. thresh_melt_c)then ! Below freezing
+
+!                       Get lowest frozen precip type
+                        iprecip_frozen = 0
+                        do k = nk,ksfc_close,-1
+                            iarg = cldpcp_type_3d(i,j,k)
+                            iprecip = iarg/16
+
+                            if(iprecip .eq. 2 .or. iprecip .eq. 3 .or.
+     1                                             iprecip .eq. 4)then
+                                iprecip_frozen = iprecip
+                            endif
+
+                        enddo ! k
+                        iprecip_type = iprecip_frozen
+                        n_chg_frz = n_chg_frz + 1
+
+                    endif ! Below melting thresh at sfc
+
+                endif ! 3D Precip is rain
+
+!               Ensure that ZR is diagnosed only if sfc dry bulb < 0C
+                if(iprecip_type .eq. 3 .and. t_sfc_c .gt. 0.)then
+                    iprecip_type = 1
+                    n_chg_mlt = n_chg_mlt + 1
+                endif
+
+                iarg = iprecip_type * 16
+                pcp_type_2d(i,j) = iarg
+
+            endif ! Precip
+
+            if(iprecip_type .eq. 5)n_hail = n_hail + 1
+
+        enddo ! i
+        enddo ! j
+
+        write(6,*)' # Sfc pts with precip =                   ',n_precip
+        write(6,*)' # Sfc pts changed to frozen by sfc data = ',n_chg_fr
+     1z
+        write(6,*)' # Sfc pts changed to rain by sfc data  =  ',n_chg_ml
+     1t
+        write(6,*)' # Sfc pts with hail =                     ',n_hail
+
+        return
+        end
+
+
+        subroutine get_slwc1d(nk,cbase_m,ctop_m,kbase,ktop
+     1                  ,heights_1d,temp_1d,pressures_pa,
+     1                                          iflag_slwc,slwc_1d)
+
+        real*4 temp_1d(nk)
+        real*4 heights_1d(nk)
+        real*4 pressures_pa(nk)
+        real*4 slwc_1d(nk)  ! Output
+
+        do k = 1,nk ! Initialize
+            slwc_1d(k) = -1e-30
+        enddo
+
+        if(ctop_m .gt. cbase_m)then
+
+!           Determine Lowest and Highest Grid Points within the cloud
+            if(ktop .ge. kbase .and. kbase .ge. 2)then
+
+!               Get cloud base pressure and temperature
+                cbase_pa = height_to_pressure(cbase_m,heights_1d
+     1                          ,pressures_pa,1,1,nk,1,1)
+
+!               cbase_pa = ztopsa(cbase_m) * 100.
+
+                frac_k = (cbase_m - heights_1d(kbase-1))  /
+     1         (heights_1d(kbase) - heights_1d(kbase-1))
+
+                cbase_k = temp_1d(kbase-1) * (1.0 - frac_k)
+     1                  + temp_1d(kbase)   * frac_k
+
+
+!               Get cloud top temperature
+                frac_k = (ctop_m - heights_1d(ktop-1))  /
+     1         (heights_1d(ktop) - heights_1d(ktop-1))
+
+                ctop_k = temp_1d(ktop-1) * (1.0 - frac_k)
+     1                 + temp_1d(ktop)   * frac_k
+
+
+!               Calculate SLWC at each vertical grid point. For each level
+!               we use an assumed cloud extending from the actual cloud base
+!               to the height of the grid point in question.
+
+                do k=kbase,ktop
+                    grid_top_pa = zcoord_of_level(k)
+
+                    grid_top_k = temp_1d(k)
+
+                    call laps_slwc_revb(cbase_pa,cbase_k
+     1                ,grid_top_pa,grid_top_k,ctop_k
+     1                ,ADIABATIC_LWC,ADJUSTED_LWC,ADJUSTED_SLWC
+     1                ,I_STATUS1,I_STATUS2)
+
+!                   These three lines are dummied in
+!                   i_status = .true.
+!                   slwc_adiabatic = -(ctop_k-cbase_k) / 10.
+!                   slwc_adjusted =  -(ctop_k-cbase_k) / 10.
+
+                    if(i_status2 .eq. 1)then
+                        if(iflag_slwc .eq. 1)then
+                            slwc_1d(k) = ADIABATIC_LWC
+                        elseif(iflag_slwc .eq. 2)then
+                            slwc_1d(k) = ADJUSTED_LWC
+                        elseif(iflag_slwc .eq. 3)then
+                            slwc_1d(k) = ADJUSTED_SLWC
+                        endif
+                    else
+                        write(6,*)' Error Detected in SLWC'
+                    endif
+                enddo ! k
+            endif ! thick enough cloud exists
+        endif ! cloud exists
+
+        return
+        end
+
+        subroutine integrate_slwc(slwc,imax,jmax,kmax,slwc_int)
+
+        include 'lapsparms.inc'
+
+        real*4 slwc(imax,jmax,kmax)
+        real*4 slwc_int(imax,jmax) ! Output in g/m**2 (~10**-3 mm or microns)
+        real*4 depth(NZ_L_MAX)
+
+        do k = 1,kmax-1
+            depth(k) = height_of_level(k+1) - height_of_level(k)
+        enddo ! k
+
+        do j = 1,jmax
+        do i = 1,imax
+            slwc_int(i,j) = 0.
+            do k = 1,kmax-1
+                slwc_ave = (slwc(i,j,k) + slwc(i,j,k+1)) * 0.5
+                slwc_int(i,j) = slwc_int(i,j) + slwc_ave * depth(k)
+            enddo ! k
+        enddo ! i
+        enddo ! j
+
+        return
+        end
+
+        subroutine get_mvd(itype,rmvd)
+
+!       rmvd        Output Mean Volume Diameter in microns
+
+!                                                 ! no cloud
+        IF(itype.EQ.0) THEN
+            rmvd = 0.0
+!                                                 ! St
+        ELSEIF (itype.EQ. 1) THEN
+            rmvd = 12.0
+!                                                 ! Sc
+        ELSEIF (itype.EQ. 2) THEN
+            rmvd = 10.0
+!                                                 ! Cu
+        ELSEIF (itype.EQ. 3) THEN
+            rmvd = 18.0
+!                                                 ! Ns
+        ELSEIF (itype.EQ. 4) THEN
+            rmvd = 12.0
+!                                                 ! Ac
+        ELSEIF (itype.EQ. 5) THEN
+            rmvd = 18.0
+!                                                 ! As
+        ELSEIF (itype.EQ. 6) THEN
+            rmvd = 10.0
+!                                                 ! Cb
+        ELSEIF (itype.EQ.10) THEN
+            rmvd = 25.0
+!                                                 ! cirriform
+        ELSE ! itype = 7,8,9
+            rmvd = 10.0
+!
+        ENDIF
+
+        return
+        end
+
+
+        subroutine get_cloudtype(temp_k,d_thetae_dz
+     1                          ,cbase_m,ctop_m,itype,c2_type)
+
+        character*2 c2_type,c2_cloudtypes(10)
+
+        data c2_cloudtypes
+     1  /'St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
+
+        temp_c = temp_k - 273.15
+        depth_m = ctop_m - cbase_m
+
+!       Go from Stability to Cloud Type
+        If ( temp_c.ge.-10.) then
+
+            if (d_thetae_dz.ge. +.001) then
+                itype = 1 ! St
+            elseif (d_thetae_dz .lt. +.001 .and. d_thetae_dz .ge. -.001)
+     1 then
+                itype = 2 ! Sc
+            elseif (d_thetae_dz .lt. -.001 .and. d_thetae_dz .ge. -.005)
+     1 then
+                itype = 3 ! Cu
+            else ! d_thetae_dz .lt. -.005
+                if(depth_m .gt. 5000)then
+                    itype = 10 ! Cb
+                else
+                    itype = 3  ! Cu
+                endif
+            endif
+
+        Elseif (temp_c.lt.-10. .and. temp_c.ge.-20.) then
+
+            if (d_thetae_dz .lt. 0.) then
+                if(depth_m .gt. 5000)then
+                    itype = 10 ! Cb
+                else
+                    itype = 5 ! Ac
+                endif
+            else
+                itype = 6 ! As
+            endif
+
+        Else !if ( temp_c.lt.-20.) then
+
+            if (d_thetae_dz .ge. +.0005) then
+                itype = 7 ! Cs
+            elseif (d_thetae_dz .lt. +.0005 .and. d_thetae_dz .ge. -.000
+     15) then
+                itype = 8 ! Ci
+            else ! d_thetae_dz .lt. -.0005
+                itype = 9 ! Cc
+            endif
+
+            if(depth_m .gt. 5000 .and. d_thetae_dz .lt. -.0000)then
+                itype = 10 ! Cb
+            endif
+
+        Endif
+
+        c2_type = c2_cloudtypes(itype)
+
+!       write(6,*)' ',c2_type
+
+        return
+        end
+
+        subroutine get_stability(nk,temp_1d,heights_1d,pressures_mb
+     1                           ,kbottom,ktop,d_thetae_dz_1d)
+
+        include 'lapsparms.inc'
+
+!       This routine returns stability at a given level given 1D array inputs
+
+        real*4 temp_1d(nk)
+        real*4 heights_1d(nk)
+        real*4 pressures_mb(nk)
+        real*4 d_thetae_dz_1d(nk)
+        real*4 thetae_1d(NZ_L_MAX)
+
+!       Calculate Stability
+        klow  = max(kbottom-1,1)
+        khigh = min(ktop+1,nk)
+
+        do k = klow,khigh
+            thetae_1d(k)  = OS_fast(temp_1d(k), pressures_mb(k))
+        enddo ! k
+
+        do k = kbottom,ktop
+            km1  = max(k-1,1)
+            kp1  = min(k+1,nk)
+
+            d_thetae_dz_1d(k) = (thetae_1d(kp1) - thetae_1d(km1))
+     1                / (heights_1d(kp1) - heights_1d(km1))
+
+        enddo ! k
+
+        return
+        end
+
+c
+      subroutine isi3(slw,temp,ictype,iptype,xindex)
+c     this version 2.0 dated 30 Dec 1991
+c       m. politovich, rap, ncar
+c       "dammit jim, I'm a scientist, not a programmer!"
+c-----subroutine to calculate icing severity index
+c
+c     input:  slw     liquid water content in g/m3
+c             temp    temperature in deg C
+c             ictype  cloud type
+c             iptype  precip type
+c     output: index   severity index - real number from 0-6
+c
+c     note: there are really 3 categories, with
+c            continuous or intermittent designation
+c           1-3 = cats 1, 2 and 3 continuous
+c           4-6 = cats 1, 2 and 3 intermittent
+c           continuous:   cloud types st,as,cs
+c           intermittent: cloud types cu,cs,cb,ac,sc
+c
+c     precip type: if zr, category 3 is designated
+c
+c     version 2.0  17 December 1991
+c
+c
+c     scat and tcat are arrays of thresholds for slw and temp
+      parameter (islw=3, itemp=3, ityp=2)
+      dimension scat(islw),tcat(itemp)
+c     iaray is the 3D severity index matrix
+      dimension iaray(islw+1, itemp+1, ityp)
+c
+c     These are the lw and temp categories
+      data scat /0.01,0.1,0.5/
+      data tcat /-10.,-5.,0./
+c     iaray is the array of severity index values
+c       iaray (slw, temp, type)
+c     this version 2.0 dated 30 Dec 1991
+c
+      data iaray/  0, 1, 2, 3, 0, 2, 2, 3,
+     j             0, 2, 3, 3, 0, 0, 0, 0,
+     b             0, 4, 5, 6, 0, 5, 5, 6,
+     k             0, 5, 6, 6, 0, 0, 0, 0/
+c
+c
+c     sort input values
+c    **note that - test is for "ge" rather than "gt"
+c
+      i = 1
+      do 460 ii = 1, islw
+        if (slw.gt.scat(ii)) i = ii + 1
+460     continue
+761   j = 1
+      do 461 ii = 1, itemp
+        if (temp.gt.tcat(ii)) j = ii+1
+461     continue
+c     cloud type section (continuous/intermittent)
+c      types: 0/none 1/st 2/sc 3/cu 4/ns 5/ac
+c             6/as   7/cs 8/ci 9/cc 10/cb
+c      continuous, k=1
+c      intermittent k=2
+c     ** note that - if there is no cloud type (=0) but there
+c      IS slw calculated, the slw overrides**
+      k = 1
+      if (ictype.eq.2) k = 2
+      if (ictype.eq.3) k = 2
+      if (ictype.eq.5) k = 2
+      if (ictype.ge.9) k = 2
+c
+c     precip type section (freezing rain/drizzle=cat 3)
+c      types: 0/none 1/rn 2/sn 3/zr 4/sl 5/ha 6-10/no assignment
+c     ** note that - freezing rain sets slw to category 4,
+c      and, sets temperature to category 3 (even if it is
+c      somehow diagnosed to "above freezing"
+c      also - if no cloud type given (eg, below cloud), zr
+c       is considered "continuous"***
+      if (iptype.eq.3) j = 3
+      if (iptype.eq.3) i = 4
+c
+!     write (6,5995) slw,temp,type
+5995  format (' l,t,ty:',2f7.2, a2)
+!     write (6,5996) i,j,k
+5996  format (' i,j,k:',3i3)
+c
+c     assign severity index from sorted values
+c
+      index = iaray(i,j,k)
+      xindex = index
+c
+c     ahhh, there's an easy solution to everything...almost
+c
+      return
+      end
+
+      function wb_melting_threshold(t_c,dbz)
+
+!     This function calculates the wet-bulb threshold for melting snow into
+!     rain as a function of dbz and t_c.
+
+      wb_melting_threshold = 1.3  ! Units are C
+
+      return
+      end
+
+
+        subroutine nowrad_virga_correction(r_pcp_type_2d,
+     1                                     r_pcp_type_thresh_2d,
+     1                                     t_sfc_k,
+     1                                     td_sfc_k,
+     1                                     istat_radar_3dref)
+
+        r_pcp_type_thresh_2d = r_pcp_type_2d
+
+        if(r_pcp_type_2d .eq. 2.0)then
+
+!           Threshold by surface dewpoint depression
+            if(t_sfc_k - td_sfc_k .gt. 10.0)then
+                if(istat_radar_3dref .eq. 0)then ! orig 2d data
+                    r_pcp_type_thresh_2d = 0.  ! No Snow
+                endif
+            endif
+
+        endif
+
+
+        return
+        end
+
+

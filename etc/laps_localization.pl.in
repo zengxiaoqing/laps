@@ -1,0 +1,188 @@
+#!@PERL@
+# @configure_input@
+#
+# Feb 97 by Paul Schultz.
+#
+# modified for newlaps by Jim Edwards July 1997
+#
+use Getopt::Long;
+$result = GetOptions("lapsroot=s" => \$LAPSROOT,
+                     "dataroot=s" => \$LAPS_DATA_ROOT,
+                     "srcroot=s"  => \$LAPS_SRC_ROOT,
+                     "compile!" => \$compile,
+                     "site=s" => \$localization_site,
+                     "help" => \&help_sub,
+                     "<>" => \&help_sub);
+
+sub help_sub{
+    print "$0 command line options (default values)\n";
+    print '   --lapsroot = Root directory of the installed laps binarys (@prefix@)\n';
+    print '   --dataroot = Root directory of the installed laps data (@prefix@/data)\n';
+    print '   --compile  = Performs a new compile for localization, \n';
+    print '                previously installed laps normally does not require compile for relocalization (nocompile)\n';
+    print '   --srcroot  = Root directory of the laps source code (@top_srcdir@) used for compile option only\n';
+    print '   --site     = localization site (guessed)\n';
+    print '   --help     = print this message and exit\n';
+    print '   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n';
+    print '   --satid    = g8 or g9 (guessed based on site)\n';
+    exit;
+}
+umask 002;
+
+$compile = ($compile==1)? "compile":"nocompile";
+
+
+$thisdir = 'pwd';
+chomp($thisdir);
+
+
+$LAPS_SRC_ROOT="@top_srcdir@" unless($LAPS_SRC_ROOT);
+$LAPSROOT="@prefix@" unless($LAPSROOT);
+$LAPS_DATA_ROOT = "$LAPSROOT/data" unless($LAPS_DATA_ROOT);
+$ENV{LAPS_DATA_ROOT} = $LAPS_DATA_ROOT;
+
+$FXA_DATA = $ENV{"FXA_DATA"};
+
+
+if(-d $FXA_DATA){
+  print "Localizing for WFO $ENV{FXA_INGEST_SITE}\n";
+  
+  $satid = &wfo_localization($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA);
+  $sattype = "wfo";
+}else{  
+  print "$0 Could not identify your site for localization\n";
+  print "please refer to the file $LAPS_SRC_ROOT/README\n";
+  print "For complete instructions on a custom install\n\n";
+
+  print "Assume all files have been edited and continue with install? (y or n)\n";
+  
+  $key = getc;
+
+  print "$key\n";
+  exit if($key != 'y');
+
+}
+
+#
+# now install the lvd stuff
+#
+
+chdir($thisdir);
+chmod 0755, "./install_lvd.csh";
+$sys = "./install_lvd.csh $LAPS_DATA_ROOT $compile $sattype $satid ";
+
+print "$0 running $sys\n";
+system($sys);
+chmod 0544, "./install_lvd.csh";
+
+
+sub wfo_localization{
+  local($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA) = @_;
+  local($root) = $ENV{"FXA_LOCALIZATION_ROOT"};
+  local($site) = $ENV{"FXA_INGEST_SITE"};
+  local($file) = "$root/$site/Laps_Center_Point.txt";
+
+  open(LOCFILE,$file) or die "Can't find $file.";
+  $line = <LOCFILE>;
+  chop($line);
+  $line =~ s/ +/,/;
+  ($lat,$lon) = split(",",$line);
+  $goes = $lon>-100 ? 8:9;  # identifies the goes sat to use based on longitude
+
+  #First file:  the static parameters file.
+
+  $srctemplate = "$LAPS_SRC_ROOT/data/static/nest7grid.parms.wfo";
+    
+  $outfile = "$LAPS_DATA_ROOT/static/nest7grid.parms";
+
+  if(! -d "$LAPS_DATA_ROOT/static"){
+    system("mkdir -p $LAPS_DATA_ROOT");
+    mkdir "$LAPS_DATA_ROOT/static", 0755 || die "$0 Could not create $LAPS_DATA_ROOT/static" ;
+  }
+
+  $template = &get_best_template($srctemplate,$outfile);
+
+
+  open(TEMPLATE,"$template") or die "$0: Can't find template file in $srctemplate or $outfile";
+  @template = <TEMPLATE>;
+  close(TEMPLATE);
+  print "Using static template file $template\n";
+
+  open(OUTFILE,">$outfile") or die "$0: Can't open $outfile to write";
+
+  foreach (@template)
+  {
+      $_ =~ s/\$FXA_DATA/$FXA_DATA/;
+      if(/standard_latitude\s*=/){
+	  print OUTFILE " standard_latitude=$lat,\n";
+      }elsif(/standard_longitude\s*=/){
+	  print OUTFILE " standard_longitude=$lon,\n";
+      }elsif(/grid_cen_lat_cmn\s*=/){
+          print OUTFILE " grid_cen_lat_cmn=$lat,\n";
+      }elsif(/grid_cen_lon_cmn\s*=/){
+          print OUTFILE " grid_cen_lon_cmn=$lon,\n";
+      }elsif(/path_to_raw_sat/){
+        if($goes==8){
+	    $_ =~ s/west/east/;
+	}else{
+	    $_ =~ s/east/west/;
+	}
+	print OUTFILE $_;
+      }else{
+	  print OUTFILE $_;
+      }
+  }
+  close(OUTFILE); 
+
+#Second file.  Are we using GOES-E or GOES-W?  Ramer says the distinction
+#is only position relative to 100 deg W longitude.  This information goes
+#into a file used by the moisture analysis.
+  $goes = $lon>-100 ? 8:9;
+  $src_template= "$LAPS_SRC_ROOT/data/static/moisture_switch.txt";
+  $outfile = "$LAPS_DATA_ROOT/static/moisture_switch.txt";
+  $template = &get_best_template($src_template,$outfile);
+  if(open(TEMPLATE,"$template")){
+    @template=<TEMPLATE>;
+    close(TEMPLATE);
+    print "Using $template for moisture file internal documentation\n";
+  }else{
+    print "Cannot find moisture parameter template in $src_template or $outfile\n";
+    print "This file will be created without internal documentation\n";
+  }
+  print "Creating moisture parameter file $outfile\n";
+
+  open(OUTFILE,">$outfile") or die "$0: Can't open $outfile to write";
+  print OUTFILE "0\n$goes\n1\n0\n0\n\n";
+  print OUTFILE @template;
+  close(OUTFILE);
+  
+  $goes = "g".$goes;
+
+}
+
+#
+# This subroutine test the files $template and $newfile
+# if neither file exists an empty var is returned 
+# if $newfile exists and is newer than $template, it is returned
+# otherwise  $template is returned
+#
+
+sub get_best_template{
+    local($template, $newfile) = @_;
+    local($t_age) = 0;
+    local($n_age) = 0;
+    local($best_file)='';
+
+    $t_age = -M $template if(-e $template);
+    $n_age = -M $newfile if(-e $newfile);
+    if($t_age>0 && ($t_age<$n_age || $n_age<=0)){
+	$best_file=$template ;
+    }elsif($n_age>0){
+	$best_file=$newfile ;
+    }else{
+	$best_file='';
+    }
+}
+
+
+  

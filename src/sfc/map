@@ -1,0 +1,42 @@
+(ld): halt 4
+(ld): savename laps_sfc.x
+(ld): filelist 10 1
+(ld): i /lib/crt0.o
+(ld): i /tmp/F8XbqQUa0
+(ld): i libsfc.a
+(ld): i ../../src/lib/liblaps.a
+(ld): i ../../src/lib/mthermo/libmthermo.a
+(ld): i /usr/local/netcdf/lib/libnetcdf.a
+(ld): lib /usr/lib/libxlf90.a
+(ld): lib /usr/lib/libxlf.a
+(ld): lib /usr/lib/libm.a
+(ld): lib /usr/lib/libc.a
+LIBRARY: Shared object libxlf90.a[io.o]: 64 symbols imported.
+LIBRARY: Shared object libxlf90.a[math.o]: 320 symbols imported.
+LIBRARY: Shared object libxlf90.a[xlfsys.o]: 28 symbols imported.
+LIBRARY: Shared object libxlf.a[shr.o]: 135 symbols imported.
+LIBRARY: Shared object libc.a[aio.o]: 5 symbols imported.
+LIBRARY: Shared object libc.a[shr.o]: 1545 symbols imported.
+LIBRARY: Shared object libc.a[meth.o]: 2 symbols imported.
+LIBRARY: Shared object libc.a[pse.o]: 78 symbols imported.
+FILELIST: Number of previously inserted files processed: 10
+(ld): resolve
+ld: 0711-228 WARNING: Duplicate symbols were found while resolving symbols.
+	The following duplicates were found:
+ Symbol                    Source-File(Object) OR Import-File{Shared-object}
+ ------------------------- -------------------------------------------------
+ ncerr                     globdef.c(/usr/local/netcdf/lib/libnetcdf.a[globdef.o])
+    ** Duplicate **        readwritelaps.c(../../src/lib/liblaps.a[readwritelaps.o])
+RESOLVE: 1322 of 8539 symbols were kept.
+RESOLVE: The return code is 4.
+(ld): addgl /usr/lib/glink.o
+ADDGL: Glink code added for 73 symbols.
+(ld): er full
+ld: 0711-318 ERROR: Undefined symbols were found.
+	The following symbols are in error:
+ Symbol                    Inpndx  TY CL Source-File(Object-File) OR Import-File{Shared-object}
+                              RLD: Address  Section  Rld-type Referencing Symbol
+ ----------------------------------------------------------------------------------------------
+ .put_temp_anal            [162]   ER PR lapsvanl.f(libsfc.a[lapsvanl.o])
+                                   00004e60 .text    R_RBR    [12]    .laps_vanl
+ER: The return code is 8.

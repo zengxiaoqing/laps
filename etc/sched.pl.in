@@ -1,0 +1,94 @@
+#!@PERL@
+# @configure_input@
+# Run the LAPS suite of programs 
+#
+require "getopt.pl";
+
+umask 002;
+
+$LAPSROOT=shift || die "LAPS root directory required\n";
+
+$ENV{LAPS_DATA_ROOT} = shift ;
+$ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
+$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+#
+# This sends the stdout to the run log file
+#
+$hhmm = `date -u +%H%M`;
+chomp($hhmm);
+
+unless($opt_o==1){
+    open(SAVEOUT,">&STDOUT");
+    open(SAVEERR,">&STDERR");
+    open(STDOUT, ">$LAPS_DATA_ROOT/log/sched.log.$hhmm") || die "Can't redirect stdout";
+    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+    select(STDERR); $| = 1;
+    select(STDOUT); $| = 1;
+}
+
+print "Running systime.exe\n";
+system("$LAPSROOT/bin/systime.exe");
+
+print "\nRunning c_time.exe\n";
+system("$LAPSROOT/bin/c_time.exe > $LAPS_DATA_ROOT/time/c_time.dat");
+
+print "\nRunning purger\n";
+system("$LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
+
+print "\nRunning obs_driver\n";
+system("$LAPSROOT/bin/obs_driver.x 1> $LAPS_DATA_ROOT/log/obs_driver.log.$hhmm 2>&1");
+
+print "\nRunning rass ingest\n";
+system("$LAPSROOT/bin/ingest_lrs.exe 1> $LAPS_DATA_ROOT/log/rass.log.$hhmm 2>&1");
+
+print "\nRunning BLP rass ingest\n";
+system("$LAPSROOT/bin/ingest_blplrs.exe 1> $LAPS_DATA_ROOT/log/rass_blp.log.$hhmm 2>&1");
+
+
+print "\nRunning laps_sfc\n";
+system("$LAPSROOT/bin/laps_sfc.x 1> $LAPS_DATA_ROOT/log/laps_sfc.log.$hhmm 2>&1");
+
+print "\nRunning temp.exe\n";
+system("$LAPSROOT/bin/temp.exe 1> $LAPS_DATA_ROOT/log/temp.log.$hhmm 2>&1");
+
+print "\nRunning ingest_pro\n";
+system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_DATA_ROOT/log/ingest_pro.log.$hhmm 2>&1");
+
+print "\nRunning ingest_blppro\n";
+system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_DATA_ROOT/log/ingest_blppro.log.$hhmm 2>&1");
+
+print "\nRunning ingest_pireps\n";
+system("$LAPSROOT/bin/ingest_pireps.exe 1> $LAPS_DATA_ROOT/log/ingest_pireps.log.$hhmm 2>&1");
+
+print "\nRunning ingest_acars\n";
+system("$LAPSROOT/bin/ingest_acars.exe 1> $LAPS_DATA_ROOT/log/ingest_acars.log.$hhmm 2>&1");
+
+print "\nRunning wind\n";
+system("$LAPSROOT/bin/wind.exe 1> $LAPS_DATA_ROOT/log/wind.log.$hhmm 2>&1");
+
+print "\nRunning cloud\n";
+system("$LAPSROOT/bin/cloud.exe 1> $LAPS_DATA_ROOT/log/cloud.log.$hhmm 2>&1");
+
+print "\nRunning lq3driver\n";
+system("$LAPSROOT/bin/lq3driver.x 1> $LAPS_DATA_ROOT/log/lq3.log.$hhmm 2>&1");
+
+print "\nRunning deriv\n";
+system("$LAPSROOT/bin/deriv.exe 1> $LAPS_DATA_ROOT/log/deriv.log.$hhmm 2>&1");
+
+print "\nRunning accum\n";
+system("$LAPSROOT/bin/accum.exe 1> $LAPS_DATA_ROOT/log/accum.log.$hhmm 2>&1");
+
+print "\nRunning lsm5\n";
+system("$LAPSROOT/bin/lsm5.exe 1> $LAPS_DATA_ROOT/log/lsm5.log.$hhmm 2>&1");
+
+print "$0 completed at ".`date`;
+
+
+
+
+
+
+
+
+
+

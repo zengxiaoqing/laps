@@ -1,0 +1,207 @@
+dnl Process this file with autoconf to produce a configure script.
+sinclude(./aclocal.m4)dnl
+sinclude(./acfortran.m4)dnl
+AC_INIT_LAPS(src/lib/regex.c)
+if test "$prefix" = "NONE" 
+then
+  echo "This install may overwrite any currently installed LAPS in $ac_default_prefix"
+  prefix=$ac_default_prefix
+else
+  echo "This install may overwrite any currently installed LAPS in $prefix"
+fi
+if test "$datadir" = '${prefix}/share'
+then
+  datadir="$prefix/data"
+fi
+echo "Installing data in $datadir"
+
+echo "Are you sure you want to continue?"
+AC_QUERY_USER_YN
+if test "$ac_query_user_yn" = "n"
+then
+  AC_MSG_ERROR(LAPS configure aborted by user)
+fi
+dnl
+dnl Check for host architecture
+# 
+
+ARCHIVE="ar"
+ANSICFLAGS=$CFLAGS
+dnl
+dnl guess arch if not set by user
+dnl
+AC_INIT_ARCH($arch)
+# AC_PROG_CC
+AC_CHECK_PROGS(CC, cc xlc xlC gcc,,$PATH)
+
+dnl
+dnl Find path to netcdf ***required by LAPS***
+dnl
+AC_PROG_NETCDF($netcdf)
+
+dnl
+dnl Find path to perl  ***required by LAPS***
+dnl
+AC_CHECK_PROGS(PERL,perl5 perl,,$PATH)
+AC_PATH_PROG(PERL,$PERL )
+
+dnl
+dnl Find path to csh  ***required by LAPS***
+dnl
+AC_CHECK_PROGS(CSH,csh,,$PATH)
+AC_PATH_PROG(CSH,$CSH )
+
+
+if test "$arch" = "hpux" 
+then
+  FFLAGS="+e +U77 +FPVZO -K" 
+  OPTIMIZE="-O"
+  OTHERLIBS="-lm"
+  KRCFLAGS=" $CFLAGS"
+  CFLAGS="$CFLAGS -Aa"
+  CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
+fi
+if test "$arch" = "rs6000" 
+then
+  FFLAGS=" "
+  OPTIMIZE="-O3 -qstrict"
+fi
+if test "$arch" = "sun4" 
+then
+  FFLAGS="-native -xl -i4 -fnonstd"
+  OPTIMIZE="-O"
+fi
+
+AC_PROG_FC
+AC_FC_CPP
+AC_FC_INC
+if test $ac_fc_inc_val -eq 0
+then
+  F77INC="util/f77inc.in"
+  AC_SUBST_FILE(F77INC)
+else
+  F77INC=''
+  AC_SUBST(F77INC)
+fi
+# AC_FC_FUNC_GETENV
+dnl
+dnl AC_FC_NAMES sets WDEF to describe fortran externals to c
+dnl
+AC_FC_NAMES
+CPPFLAGS="$CPPFLAGS $WDEF"
+AC_FC_FUNC_IMPLICIT_ALLOC
+if test $DYNAMIC -eq 1
+then
+  CPPFLAGS="$CPPFLAGS -DDYNAMIC"
+else
+  CPPFLAGS="$CPPFLAGS -DNODYNAMIC"
+fi
+
+AC_SUBST(CPPFLAGS)
+AC_SUBST(PERL)
+AC_SUBST(CSH)
+AC_SUBST(FFLAGS)
+AC_SUBST(OPTIMIZE)
+AC_SUBST(OTHERLIBS)
+AC_SUBST(ARCHIVE)
+if test -z "$KRCFLAGS"
+then
+  KRCFLAGS="$CFLAGS"
+fi
+AC_SUBST(KRCFLAGS)
+
+dnl Checks for programs.
+dnl AC_PROG_AWK
+
+
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+AC_CONFIG_AUX_DIR(util)
+dnl
+dnl the install test isn't working on HP
+dnl
+# AC_PROG_INSTALL
+INSTALL='$(LAPSROOT)/util/install-sh'
+AC_SUBST(INSTALL)
+AC_SUBST(INCLUDE)
+
+dnl Checks for libraries.
+dnl Replace `main' with a function in -lcurses:
+# AC_CHECK_LIB(curses, main)
+dnl Replace `main' with a function in -lm:
+# AC_CHECK_LIB(m, main)
+dnl Replace `main' with a function in -lnssl:
+# AC_CHECK_LIB(nssl, main)
+dnl Replace `main' with a function in -ltermcap:
+# AC_CHECK_LIB(termcap, main)
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h malloc.h strings.h sys/ioctl.h sys/time.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_OFF_T
+AC_TYPE_SIZE_T
+AC_STRUCT_TM
+
+dnl Checks for library functions.
+AC_FUNC_ALLOCA
+AC_PROG_GCC_TRADITIONAL
+AC_TYPE_SIGNAL
+AC_CHECK_FUNCS(gettimeofday re_comp regcomp)
+
+#LAPS_PARMS_CONFIG
+
+
+AC_OUTPUT(src/lib/Makefile 
+          src/lib/blas/Makefile 
+          src/lib/cloud/Makefile
+          src/lib/fm/Makefile
+          src/lib/goesinav/Makefile 
+          src/lib/goeslib/Makefile 
+          src/lib/lapack/Makefile 
+          src/lib/mthermo/Makefile 
+          src/lib/nav/Makefile
+          src/lib/powell/Makefile
+          src/lib/temp/Makefile
+          src/lib/util/Makefile
+          src/accum/Makefile 
+          src/background/Makefile 
+          src/cloud/Makefile
+          src/deriv/Makefile
+          src/grid/Makefile
+          src/humid/Makefile
+          src/ingest/acars/Makefile
+          src/ingest/pireps/Makefile
+          src/ingest/profiler/Makefile
+          src/ingest/profiler/blp/Makefile
+          src/ingest/radar/wsiremap/vrc/Makefile
+          src/ingest/radar/wsiremap/vrc/table/Makefile
+          src/ingest/raob/Makefile
+          src/ingest/rass/Makefile
+          src/ingest/rass/blp/Makefile
+          src/ingest/sao/Makefile
+          src/ingest/satellite/goes8/lambert/Makefile
+          src/ingest/satellite/goes8/lambert/table/Makefile
+          src/lapsplot/Makefile
+          src/sched/Makefile
+          src/sfc/Makefile
+          src/soil/Makefile
+          src/static/Makefile
+          src/temp/Makefile
+          src/wind/Makefile
+          Makefile
+          etc/run_lvd_driver.pl
+          etc/run_vrc_driver.pl
+          etc/purger.pl
+          etc/lga.pl
+          etc/sched.pl
+	  etc/laps_localization.pl
+          etc/install_lvd.csh
+          etc/update_nav_file.csh)
+
+
+
+
