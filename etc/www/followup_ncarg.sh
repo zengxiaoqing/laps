@@ -45,7 +45,7 @@ then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=792x664
 
-elif test "$2" = "rcsv"
+elif test "$2" = "mw-rt-rcsv"
 then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=792x664
