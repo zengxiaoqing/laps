@@ -1801,7 +1801,27 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
+                c33_label = 'LAPS Temp      Vert X-Sect  Deg C'
+
                 call make_fnam_lp(i4time_nearest,a9time,istatus)
+
+            elseif(c_prodtype .eq. 'B' .or. 
+     1             c_prodtype .eq. 'F')then
+                var_2d = 'T3'
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+                if(c_prodtype .eq. 'B')then
+                    c33_label = 'LAPS  Bkgnd   T      '//fcst_hhmm
+     1                                                 //'  Deg C '
+                elseif(c_prodtype .eq. 'F')then
+                    c33_label = 'LAPS  FUA     T      '//fcst_hhmm
+     1                                                 //'  Deg C '
+                endif
 
             else
                 write(6,*)' Sorry, not yet supported'
@@ -1822,7 +1842,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +100.
             cint = 5.
             i_contour = 1
-            c33_label = 'LAPS Temp      Vert X-Sect  Deg C'
 
         elseif(c_field .eq. 'tb')then
             var_2d = 'T3'
