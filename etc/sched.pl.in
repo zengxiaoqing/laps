@@ -210,6 +210,11 @@ sub systime{
     
     $jjj="0".$jjj while(length($jjj)< 3);
       
+    open(TFILE,">$DATAROOT/time/c_time.dat");
+    print TFILE " $year$jjj$hour$min\n";
+    print TFILE "   $ctime\n";
+    close(TFILE);
+
     open(TFILE,">$DATAROOT/time/systime.dat");
     print TFILE "  $ftime\n";
     print TFILE " $year$jjj$hour$min\n";
