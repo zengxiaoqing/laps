@@ -550,6 +550,7 @@ C
 C     Variable        NETCDF Long Name
 C      image        "Image Pixel Values"
 C
+      include 'netcdf.inc'
       integer elems,lines
       integer image(elems,lines)
       character*(*) cfname
