@@ -21,8 +21,10 @@
         parameter (weight_prof = 1.01)     ! Must be a unique value
 
         real*4 weight_radar
-        parameter (weight_radar = 0.05)
-
+        parameter (weight_radar = 0.25)    ! 2 m/s radial velocity error
+                                           ! tangential velocity assume no
+                                           ! error with exact fit to 1st
+                                           ! pass background
         integer n_var
         parameter (n_var = 2)
 
