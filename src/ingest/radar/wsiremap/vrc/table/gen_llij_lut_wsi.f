@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
       subroutine gen_llij_lut_wsi(irad,imax,jmax,lat,lon
-     +    ,c_raddat_type,istatus)
+     +    ,istatus)
 c
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -49,61 +49,31 @@ c
        real*4 ri(imax,jmax)
        real*4 rj(imax,jmax)
 
-       real*4 pi
-       real*4 rdtodg
-       real*4 dgtord
-       real*4 dgtokm
        real*4 dx,dy
-       real*4 du,dv
        real*4 rla1,rlo1
        real*4 rla2,rlo2
        real*4 rlatin,rlap
        real*4 rlat,rlon
-       real*4 ri1,ri2,ri3,ri4
-       real*4 rj1,rj2,rj3,rj4
-       real*4 dxterm,dyterm
-       real*4 lat0,lon0
+       real*4 rlatc,rlonc
        real*4 dlat,dlon
-
-       real*4    fraclat
-       real*4    fraclon
-       real*4    rlat_diff_deg
-       real*4    rlon_diff_deg
-       real*4    iline,jline
-       real*4    idiff,jdiff
+       real*4 nw(2),se(2)
 
        integer i,j
-       integer k,l
-       integer n,n1,n2
+       integer n,n1
        integer nx,ny,nz
        integer irad
-       integer istart,jstart
-       integer iend,jend
-       integer ishow_timer
-       integer init_timer
-       integer itstatus
        integer istatus
        integer nlines
        integer nelems
 
-       logical   found_line
-       logical   found_elem
-
+       character table_path*255
        character path*100
-       character cname*100
        character file*255
 
-       integer lines
-       integer nelements
-
-       common /cegrid/nx,ny,nz,lat0,lon0,dlat,dlon
+       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 c
 c ***************************************************************************
 c
-      pi=acos(-1.)
-      rdtodg=180.0/pi
-      dgtord=1./rdtodg
-      dgtokm=111.1
       istatus=1
       call get_wsi_parms_vrc(irad,nlines,nelems,
      +dx,dy,rla1,rlo1,rla2,rlo2,rlat,rlon,rlatin,
@@ -124,10 +94,14 @@ c
 c
       dlon = 0.019119
       dlat = 0.017966
-      lat0 = rla1
-      lon0 = rlo1
+      rlatc = rlat
+      rlonc = rlon
       nx = nelems
       ny = nlines
+      nw(1)=rla1
+      nw(2)=rlo1
+      se(1)=rla2
+      se(2)=rlo2
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
@@ -138,40 +112,37 @@ c
 c output
 c
       write(6,*)'WFO/WSI ri/rj corners for domain: '
-      write(6,*)'ri1/rj1 (SW) ',ri(1,1),rj(1,1)
-      write(6,*)'ri2/rj2 (SE) ',ri(imax,1),rj(imax,1)
-      write(6,*)'ri3/rj3 (NW) ',ri(1,jmax),rj(1,jmax)
-      write(6,*)'ri4/rj4 (NE) ',ri(imax,jmax),rj(imax,jmax)
+      write(6,*)'(SW) ',ri(1,1),rj(1,1)
+      write(6,*)'(SE) ',ri(imax,1),rj(imax,1)
+      write(6,*)'(NW) ',ri(1,jmax),rj(1,jmax)
+      write(6,*)'(NE) ',ri(imax,jmax),rj(imax,jmax)
       write(6,*)
 
-       do i = 1,imax,10
-       do j = 1,jmax,10
+      do i = 1,imax,10
+      do j = 1,jmax,10
+         write(6,*)'i,j,ri,rj: ',i,j,ri(i,j),rj(i,j)
+      enddo
+      enddo
 
-          write(6,*)'i,j,ri,rj: ',i,j,ri(i,j),rj(i,j)
+      call get_directory('static',table_path,n1)
+      table_path = table_path(1:n1)//'vrc/wsi_llij_lut_wfo.lut'
+      write(6,*)'Write lat/lon to i/j look up table'
+      n1=index(table_path,' ')
+      write(6,*)table_path(1:n1)
 
-       enddo
-       enddo
+      call write_table (table_path,imax,jmax,lat,lon,ri,rj,istatus)
+      if(istatus .ne. 1)then
+         write(6,*)'Error writing look-up table'
+         goto 900
+      endif
 
-       cname='wsi_llij_lut_'//c_raddat_type
-       n2=index(cname,' ')-1
-       file = path(1:n1)//cname(1:n2)//'.lut'
-       n=index(file,' ')
-       write(6,*)'Write lat/lon to i/j look up table'
-       write(6,*)file(1:n)
+      goto 16
 
-       call write_table (file,imax,jmax,lat,lon,ri,rj,istatus)
-       if(istatus .ne. 1)then
-          write(6,*)'Error writing look-up table'
-          goto 900
-       endif
+900   write(6,*)'Error writting table ',file(1:n)
+      goto 16
 
-       goto 16
+901   write(6,*)'Error reading parm file ',file(1:n)
 
-900    write(6,*)'Error writting table ',file(1:n)
-       goto 16
-
-901    write(6,*)'Error reading parm file ',file(1:n)
-
-16     write(6,*)'Finished in get_llij_lut_polar'
-       return
-       end
+16    write(6,*)'Finished in get_llij_lut_wsi'
+      return
+      end

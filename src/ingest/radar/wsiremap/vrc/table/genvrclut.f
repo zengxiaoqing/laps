@@ -63,9 +63,6 @@ c
       integer   i,j
       integer   istatus
       integer   len
-      integer   nlines,nelems
-      logical   test
-      data      test/.false./
 c
 c dimensions for lat/lon
 c
@@ -102,12 +99,11 @@ c -------------------------------------------------------------------
          stop
       end if
 c
-c
 c      do i=1,n_radar_types
       
       if(c_raddat_type.eq.'wfo')then
 
-         write(6,*)'Gen LUT for Conus (lambert) wsi (WFO) data '
+         write(6,*)'Gen LUT for Conus lambert (WFO) WSI data '
          call gen_vrc_wfo_cdf_lut(2,nx_l,ny_l,lat,lon,istatus)
 
          if(istatus.eq.1)then
@@ -121,33 +117,16 @@ c      do i=1,n_radar_types
 
          write(6,*)'Gen LUT for wsi - Cylindrical Equidistant'
 
-         if(test)then
+         print*,'Using latlon_to_ceij routine'
+         call gen_llij_lut_wsi(1,nx_l,ny_l,lat,lon,istatus)
 
-            print*,'Using latlon_to_ceij routine'
-            call gen_llij_lut_wsi(1,nx_l,ny_l,lat,lon,c_raddat_type
-     +,istatus)
+      endif
 
-         else
-
-            print*,'Using inefficient latlon_to_ll routine'
-            call get_wsi_parms_vrc(1,nlines,nelems,
-     +rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,
-     +istatus) 
-
-            call gen_llij_lut_ll(1,nx_l,ny_l,lat,lon,c_raddat_type
-     +,nlines,nelems,istatus)
-
-         endif
-
-         if(istatus.eq.1)then
-            write(6,*)'CDF look-up table generated'
-         else
-            write(6,*)'Error generating look-up-table'
-            goto 901
-         endif
+      if(istatus.eq.1)then
+         write(6,*)'CDF look-up table generated'
       else
-        print*, 'Error in nest7grid.parms c_raddat_type:',c_raddat_type
-        goto 901
+         write(6,*)'Error generating look-up-table'
+         goto 901
       endif
 
 c      enddo

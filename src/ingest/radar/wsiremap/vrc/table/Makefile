@@ -10,12 +10,10 @@ include $(LAPSROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a   \
            $(LAPSROOT)/src/lib/nav/libnav.a \
-           $(LAPSROOT)/src/lib/goesinav/libgoesinav.a \
            $(LAPSROOT)/src/lib/radar/wsi_ingest/libwsi.a
 
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
              $(LAPSROOT)/src/lib/nav/libdebugnav.a \
-             $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a \
              $(LAPSROOT)/src/lib/radar/wsi_ingest/libdebugwsi.a
 
 .SUFFIXES:
@@ -24,9 +22,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
 EXE = genvrclut.exe
 
 SRC = gen_llij_lut_wfo.f \
-      gen_llij_lut_wsi.f \
-      gen_llij_lut_ll.f \
-      get_radar_bounds.f 
+      gen_llij_lut_wsi.f
 
 MAIN=genvrclut.f
 
