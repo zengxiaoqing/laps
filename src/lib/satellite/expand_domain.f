@@ -38,10 +38,14 @@ c
       integer imax,jmax
       integer kmax,lmax
 
+c these are input lat/lon
       real*4    xlat(imax,jmax)
       real*4    xlon(imax,jmax)
+
+c these are output (expanded) lat/lon
       real*4    lat(kmax,lmax)
       real*4    lon(kmax,lmax)
+
       real*4    g_space_deg
       real*4    wdw_lat_ns
       real*4    wdw_lon_ns
@@ -87,8 +91,10 @@ c across the bottom and top
       do i = 2,nxl-1
          lon(i,1) = lon(i,2)
          lat(i,1) = lat(i,2)-wdw_lat_ns
-         lon(i,lmax)= lon(i,nyl-1)
-         lat(i,lmax)= lat(i,nyl-1)+wdw_lat_ns
+         lon(i,nyl)= lon(i,nyl-1)
+         lat(i,nyl)= lat(i,nyl-1)+wdw_lat_ns
+         if(lat(i,nyl).gt.90.0)lat(i,nyl)=lat(i,nyl)-180.0
+         if(lat(i,nyl).lt.-90.0)lat(i,nyl)=180.0+lat(i,nyl)
       enddo
 c on the sides
       do j = 2,nyl-1
@@ -96,16 +102,9 @@ c on the sides
          lat(1,j) = lat(2,j)
          lon(nxl,j)= lon(nxl-1,j)+wdw_lon_ns
          lat(nxl,j)= lat(nxl-1,j)
+         if(lon(1,j).lt.-180.0)lon(1,j)=lon(1,j)+360.
+         if(lon(nxl,j).gt.180.0)lon(nxl,j)=lon(nxl,j)-360.0
       enddo
-c now the corners
-c     lat(1,1)=lat(2,1)
-c     lon(1,1)=lon(1,2)
-c     lat(1,ny)=lat(2,ny)
-c     lon(1,ny)=lon(1,ny-1)
-c     lat(nx,1)=lat(nx-1,1) 
-c     lon(nx,1)=lon(nx,2)
-c     lat(nx,ny)=lat(nx-1,ny)
-c     lon(nx,ny)=lon(nx,ny-1)
 c now the corners
       lat(1,1)=lat(1,2)-(lat(1,3)-lat(1,2))
       lon(1,1)=lon(2,1)-(lon(3,1)-lon(2,1))
@@ -117,6 +116,24 @@ c now the corners
      &(lat(nxl,nyl-2)-lat(nxl,nyl-1))
       lon(nxl,nyl)=lon(nxl-1,nyl)-
      &(lon(nxl-2,nyl)-lon(nxl-1,nyl))
+
+      if(lat(1,1).gt.90.0)lat(1,1)=lat(1,1)-180.0
+      if(lat(1,1).lt.-90.0)lat(1,1)=-180.0-lat(1,1)
+      if(lat(nxl,1).gt.90.0)lat(nxl,1)=lat(nxl,1)-180.0
+      if(lat(nxl,1).lt.-90.0)lat(nxl,1)=180.0-lat(nxl,1)
+      if(lat(1,nyl).gt.90.0)lat(1,nyl)=lat(1,nyl)-180.0
+      if(lat(1,nyl).lt.-90.0)lat(1,nyl)=-180.0-lat(1,nyl)
+      if(lat(nxl,nyl).gt.90.0)lat(nxl,nyl)=lat(nxl,nyl)-180.0
+      if(lat(nxl,nyl).lt.-90.0)lat(nxl,nyl)=-180.0-lat(nxl,nyl)
+
+      if(lon(1,1).gt.180.0)lon(1,1)=lon(1,1)-360.0
+      if(lon(1,1).lt.-180.0)lon(1,1)=lon(1,1)+360.0
+      if(lon(nxl,1).gt.180.0)lon(nxl,1)=lon(nxl,1)-360.0
+      if(lon(nxl,1).lt.-180.0)lon(nxl,1)=lon(nxl,1)+360.0
+      if(lon(1,nyl).gt.180.0)lon(1,nyl)=lon(1,nyl)-360.0
+      if(lon(1,nyl).lt.-180.0)lon(1,nyl)=lon(1,nyl)+360.0
+      if(lon(nxl,nyl).gt.180.0)lon(nxl,nyl)=lon(nxl,nyl)-360.0
+      if(lon(nxl,nyl).lt.-180.0)lon(nxl,nyl)=lon(nxl,nyl)+360.0
 c  
       istatus = 1
 

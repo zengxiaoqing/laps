@@ -13,6 +13,7 @@
      &                              imc,
      &                              orbitAttitude,
      &                              Nx4,Ny4,
+     &                              x_step,y_step,
      &                              istatus)
 c
       PARAMETER (NVARS=67) !NUMBER OF VARIABLES
@@ -28,6 +29,7 @@ C
       INTEGER   northwest_vis_line             (   1)
       INTEGER   southeast_vis_pixel            (   1)
       INTEGER   southeast_vis_line             (   1)
+      INTEGER   x_step,y_step
       REAL*8      frameStartTime                 
       CHARACTER*1 elem_dim                       (   1,   8)
       CHARACTER*1 line_dim                       (   1,   8)
@@ -390,7 +392,35 @@ C
  590  CONTINUE
       RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,dy)
 C
+C    statements to fill x_step
 C
+      rcode=NF_INQ_VARID(ncid,'x_step',varid)
+      if(rcode.ne.0)return
+
+      CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO 680 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+ 680  CONTINUE
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,x_step)
 C
+C    statements to fill y_step 
+C
+      rcode=NF_INQ_VARID(ncid,'y_step',varid)
+      if(rcode.ne.0)return
+
+      CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO 690 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+ 690  CONTINUE
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,y_step)
+
       RETURN
       END

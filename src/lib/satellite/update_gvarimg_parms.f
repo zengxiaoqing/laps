@@ -12,7 +12,7 @@
      &                        orbitAttitude,
      &                        SatSubLAT,
      &                        SatSubLON,
-     &                        decimat,
+     &                        x_step,y_step,
      &                        nx,ny,
      &                        istatus)
 c
@@ -39,11 +39,13 @@ c     Integer   max_channels
       Integer   image_width
       Integer   strbdy1,strbdy2
       Integer   stpbdy1,stpbdy2
-      Integer   decimat
       Integer   strtpix,strtline
       Integer   stoppix,stopline
       Integer   bepixfc,bescnfc,fsci
-      REAL*8      frameStartTime 
+      Integer   decimat
+      Integer   x_step,y_step
+
+      Real*8      frameStartTime 
       Real*8      getftime
       Real*8      SatSubLAT,SatSubLON
       Real*4      golonsbp
@@ -170,6 +172,7 @@ c
      &                        imc,
      &                        orbitAttitude,
      &                        nx,ny,
+     &                        x_step,y_step,
      &                        lstatus)
 
          if(lstatus .ne. 1)then
@@ -281,6 +284,8 @@ c           write(6,*)'Using: ',filename_cdf(1:100)
             endif
          endif
          frameStartTime=getftime()
+         x_step=decimat
+         y_step=decimat
 c
       endif
       istatus = 0

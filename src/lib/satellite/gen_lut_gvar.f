@@ -63,7 +63,6 @@ c
 c
       Integer     start_line
       Integer     start_pix
-      Integer     decimat
       Integer     i1,j1
       Integer     x_step
       Integer     y_step
@@ -190,7 +189,7 @@ c
      &                         start_pix,start_line,
      &                         orbAt,
      &                         SatSubLAT,SatSubLON,
-     &                         decimat,
+     &                         x_step,y_step,
      &                         nx,ny,
      &                         ustatus)
 
@@ -218,33 +217,23 @@ c
      +istatus)
 c
 c if the gvar image data file ever changes, for example, data thinning is
-c applied, then the following values should change as well.
+c applied, then the following values should change as well. These now obtained
+c from gvar data files.
 c
-      x_step=1.0
-      y_step=1.0
+c     x_step=1.0
+c     y_step=1.0
 c
 c currently AFWA goespatch is every other pixel and every scan line.
+c use r_thin to adjust appropriately
 c
-      r_thin=2.0
+      r_thin = 1.0
+      if(csattype.eq.'gwc')r_thin=2.0
+      x_step=x_step*r_thin
 
-      if(csattype.eq.'gwc')then
-         if(ct(1:nc).eq.'vis')then
-            x_step=float(decimat)*r_thin   ! *2.0 because afwa returns every other pixel!
-            y_step=float(decimat)
-         elseif(ct(1:nc).eq.'wv ')then
-            x_step=float(decimat)*r_thin
-            y_step=float(decimat)
-         else
-            x_step=float(decimat)*r_thin
-            y_step=float(decimat)
-         endif
-
-         ewCycles=i_ewCycles(jtype,isat)
-         ewIncs=i_ewIncs(jtype,isat)
-         nsCycles=i_nsCycles(jtype,isat)
-         nsIncs=i_nsIncs(jtype,isat)
-
-      endif
+      ewCycles=i_ewCycles(jtype,isat)
+      ewIncs=i_ewIncs(jtype,isat)
+      nsCycles=i_nsCycles(jtype,isat)
+      nsIncs=i_nsIncs(jtype,isat)
 
       rp_div = 4.0*x_step
       rl_div = 4.0*y_step            !channels 2, 4, and 5 (3.9u, 11u, and 12u)
@@ -330,8 +319,13 @@ c save corners
 
       if(cstatus.lt.0)then
         write(6,*)'WARNING! Some rl/rp values not computed '
-        write(6,*)'For LUT ',csattype,' status = ',cstatus
-        goto 903
+        write(6,*)'For Look-Up-Table ',csattype
+     +,' status = ',cstatus
+        write(6,*)'Earth location may not be viewable from',
+     +' satellite'
+        write(6,*)'Use data with caution!'
+
+c       goto 903
       endif
 
       if(npoints_out .gt. 0)then

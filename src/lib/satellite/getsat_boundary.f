@@ -80,7 +80,7 @@ c
       endif
 
       if(istatus.eq.0)then
-         print*,'set lut values outside boundary to missing'
+         print*,'set look-up values outside bndry to missing'
          call get_r_missing_data(r_missing_data,istatus)
          do j=1,ny
          do i=1,nx
