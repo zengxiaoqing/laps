@@ -240,9 +240,11 @@ C
      1                 windDir(i,i_pr_cl) .le. 360    .and.
      1                 wdQcFlag(i,i_pr_cl) .ne. 1     .and.
      1                 wdQcFlag(i,i_pr_cl) .ne. 2     .and.
+     1                 wdQcFlag(i,i_pr_cl) .ne. 4     .and.
      1                 wdQcFlag(i,i_pr_cl) .ne. -9999 .and.
      1                 wsQcFlag(i,i_pr_cl) .ne. 1     .and.
      1                 wsQcFlag(i,i_pr_cl) .ne. 2     .and.   
+     1                 wsQcFlag(i,i_pr_cl) .ne. 4     .and.   
      1                 wsQcFlag(i,i_pr_cl) .ne. -9999 
      1                                                      )then ! Good QC
                         n_good_levels = n_good_levels + 1
@@ -288,6 +290,8 @@ C
      1                 tempQcFlag(i,i_pr_cl) .ne. 1 
      1                            .and.
      1                 tempQcFlag(i,i_pr_cl) .ne. 2       
+     1                            .and.
+     1                 tempQcFlag(i,i_pr_cl) .ne. 4       
      1                            .and.
      1                 tempQcFlag(i,i_pr_cl) .ne. -9999       
      1                            .and.
