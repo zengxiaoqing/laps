@@ -407,16 +407,20 @@ c
          endif
       enddo
       enddo
-      write(6,*)'max/min line times ',rmaxtime,rmintime
+      print*,' max/min line times ',rmaxtime,rmintime
       i4time_data_orig=i4time_data
       if(rmaxtime.gt.0.0.and.rmintime.gt.0.0)then
+         print*,' Using max/min average for filetime'
          i4time_data=nint((rmaxtime+rmintime)/2.)+315619200
       elseif(rmaxtime.gt.0.0)then
          print*,' Using max line time for filetime'
          i4time_data=int(rmaxtime)+315619200
-      else
+      elseif(rmintime.gt.0.0)then
          print*,' Using min line time for filetime'
          i4time_data=int(rmintime)+315619200
+      else
+         print*,' Using original i4time for filetime'
+         i4time_data=i4time_data_orig
       endif
 
       deallocate (isndrdata

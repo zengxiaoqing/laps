@@ -79,9 +79,12 @@ c
 c ---------------------------------------------------------
 c read static information for gvarimage navigation
 c
-      istatus = -1 
+      if(istatus.ne.1)then
+         print*,'Error returned get_r_missing_data'
+         return
+      endif
 
-      call get_r_missing_data(r_missing_data,istatus)
+      istatus = -1
 
       rsndr_res_m=(resolution_y+resolution_x)/2.0
       rl_div = resolution_y/8.
