@@ -44,7 +44,7 @@ cdis
 cdis
       subroutine read_gvap (filename, nstations, path_to_gvap8,
      1     path_to_gvap10,time_diff,
-     1     lat,lon, wt,w1,w2,w3,
+     1     lat,lon, wt,w1,w2,w3,gvap_p,
      1     nn, istatus)
 
 c     routine to read goes watervapor for system testing
@@ -75,6 +75,7 @@ c     input variables
       real w1(nstations)
       real w2(nstations)
       real w3(nstations)
+      real gvap_p(nstations)
 
 c     internal variables
 
@@ -128,7 +129,8 @@ c     get most recent file in directory
       read(22,*,end=668,err=668) ! first header line is ignored
       do i = 1,nstations
          read(22,*,end=665,err=665) idummy,idummy,lat(i),lon(i),
-     1        idummy,idummy,wt(i), w1(i),w2(i),w3(i)
+     1        idummy,idummy,wt(i), w1(i),w2(i),w3(i),idummy, 
+     1        gvap_p(i)
 
       enddo
 

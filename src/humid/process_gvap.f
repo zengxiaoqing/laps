@@ -32,7 +32,7 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
+cdis
 cdis
 cdis
 cdis
@@ -67,6 +67,7 @@ c     input variables
       real w1(nstations)
       real w2(nstations)
       real w3(nstations)
+      real gvap_p(nstations)    !surface pressure for sigma coord
 
 
 
@@ -75,7 +76,7 @@ c     input variables
       filename = filetime
 
       call read_gvap (filename, nstations, path_to_gvap8,path_to_gvap10,
-     1     time_diff, lat,lon, wt,w1,w2,w3, nn,
+     1     time_diff, lat,lon, wt,w1,w2,w3, gvap_p, nn,
      1     istatus)
 
       if (
