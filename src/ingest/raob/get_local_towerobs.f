@@ -11,8 +11,8 @@ c
         integer maxobs ! raw stations in NetCDF files
         integer maxsta ! processed stations for SND file 
 
-        parameter (maxlvls=100)
-        parameter (maxobs=1000) ! Raw stations in NetCDf files
+        parameter (maxlvls=50)
+        parameter (maxobs=10000) ! Raw stations in NetCDf files
 
         character*(*) path_to_local_data, local_format
 
@@ -23,8 +23,7 @@ c
         double precision d_timeobs
 
 !       Obs arrays (raw files)
-        integer     nobs,nlvls,nlvl(maxobs)
-	real*4      lats(maxobs), lons(maxobs)
+        integer     nobs,nlvl(maxobs)
         real*4      lvls_m(maxlvls,maxobs)
         real*4      fill_stationP, fill_lvls, stationP
         integer*4   i4time
@@ -37,8 +36,8 @@ c
 c.....  Variables used by write_snd - all obs not yet whittled down
 c
         integer    nsnd_all ! combined # of obs over multiple files
-	integer*4  wmoid(maxobs)
-        real*4     stalat(maxobs,maxlvls),stalon(maxobs,maxlvls)
+	integer    wmoid(maxobs)
+        real*4     stalat(maxobs),stalon(maxobs)
         real*4     staelev(maxobs)
         character  c5_staid(maxobs)*5, a9time_ob(maxobs)*9
 !       character  c8_obstype(maxobs)*8
@@ -62,6 +61,8 @@ c
         real*4     dewpoint_c_s(maxsta,maxlvls)      
         real*4     dir_deg_s(maxsta,maxlvls),spd_mps_s(maxsta,maxlvls)       
 	character  stname_s(maxsta)*6
+
+        logical    l_closest_time(maxsta)
 
 c.....  Unknown vars.
 	character  save_stn(maxsta)*6
@@ -144,7 +145,7 @@ c
      &         maxobs, maxlvls,                                   ! I
      &         r_missing_data,                                    ! I
      &         nsnd_file, nlvl, lvls_m(1,ix),                     ! O
-     &         staelev(ix), stalat(ix,1), stalon(ix,1),           ! O
+     &         staelev(ix), stalat(ix), stalon(ix),               ! O
      &         temp_c(ix,1), dewpoint_c(ix,1),                    ! O
      &         height_m(ix,1),                                    ! O
 c    &         pressure_mb(ix,1),                                 ! O
@@ -156,10 +157,8 @@ c    &         dir_deg(ix,1), spd_mps(ix,1),                      ! O
                 write(6,*)
      1          '     Warning: bad status return from read_local_tower'       
                 nsnd_file = 0
-
             else
                 write(6,*)'     nsnd_file = ',nsnd_file
-
             endif
 
             ix = ix + nsnd_file
@@ -168,37 +167,108 @@ c    &         dir_deg(ix,1), spd_mps(ix,1),                      ! O
 
         nsnd_all = ix - 1
         write(6,*)' nsnd_all = ',nsnd_all
-c
-c.....  Call the routine to write the SND file.
-c
 
+        if(nsnd_all .gt. maxobs)then
+            write(6,*)' ERROR: nsnd_all > maxobs ',nsnd_all,maxobs
+            nsta = 0
+            istatus = 0
+            return
+        endif
+c
+c.....  Post process the soundings.....
+c
         print *
 	print *,'  Appending SND file, # of obs (in grid) = ',nsnd_all       
 
         pressure_mb_s = r_missing_data
 
+!       Flag those reports that are the closest times for the station
+        do i = 1,nsnd_all
+            i4_closest = 99999
+
+            do j = 1,nsnd_all
+                if(wmoid(j) .eq. wmoid(i))then
+!                   Calculate time of station j
+!                   call i4tim_fnam_lp(a9time_ob(j),i4time_j,istatus)
+                    i4_diff = abs(i4time_j - i4time_sys)
+                    if(i4_diff .lt. i4_closest)then
+                        j_closest = j
+                        i4_closest = i4_diff
+                    endif
+                endif
+            enddo ! j
+
+            if(i .eq. j_closest)then
+                l_closest_time(i) = .true.
+            else
+                l_closest_time(i) = .false.
+            endif
+
+        enddo ! i
+
+!       Transfer arrays (with various QC steps)
+
         nsta = 0
         do i = 1,nsnd_all
-            if(nlvl(i) .gt. 0)then ! Valid sounding - use for output
+            if(nlvl(i) .gt. 0 .and. nlvl(i) .le. maxlvls)then 
+
+!               Valid sounding - use for output
                 nsta = nsta + 1
-                write(6,*)
-     1           ' Valid sounding - transferring to output arrays ',nsta      
-                stalat_s(nsta,:) = stalat(i,:)           
-                stalon_s(nsta,:) = stalon(i,:)           
+                write(6,601)nsta,i,stname(i),wmoid(i),a9time_ob(i)
+ 601            format(' Valid sounding - transferring to output arrays'      
+     1                ,2i5,2x,a7,2x,i10,2x,a10)
+                stalat_s(nsta,:) = stalat(i)           
+                stalon_s(nsta,:) = stalon(i)           
                 staelev_s(nsta) = staelev(i)           
-                stname_s(nsta) = stname(i)           
+                stname_s(nsta) = stname(i)(1:6)           
+
+                wmoid_s(nsta) = wmoid(i)           
                 a9time_ob_s(nsta,:) = a9time_ob(i)           
                 c8_obstype_s(nsta) = 'TOWER   '
-                nlvl_s(nsta) = nlvl(i)           
-!               height_m_s(nsta,:) = height_m(i,:)           
-                height_m_s(nsta,:) = lvls_m(:,i) + staelev_s(nsta)           
+
+                nlvl_s(nsta) = nlvl(i)
+
+!               QC the levels 
+                do il = nlvl(i),1,-1
+                    if(     lvls_m(il,i) .ge. 1e10 
+!    1                 .or. lvls_m(il,i) .le. 0.          
+     1                                             )then
+                        write(6,*)' ERROR: invalid lvls_m',i,wmoid(i)
+     1                           ,il,lvls_m(il,i)
+                        nlvl_s(nsta) = il-1
+                    else
+                        if(il .ge. 2)then
+                            if(lvls_m(il,i) .le. lvls_m(il-1,i))then
+                                write(6,*)' ERROR: levels out of order'
+     1                                   ,i,lvls_m(il-1,i),lvls_m(il,i)      
+                                go to 1500
+                            endif 
+                        endif
+                    endif
+                enddo ! il
+
+                do il = 1,nlvl_s(nsta)
+                    height_m_s(nsta,il) = lvls_m(il,i) + staelev_s(nsta)       
+                enddo
+
                 temp_c_s(nsta,:) = temp_c(i,:)           
                 dewpoint_c_s(nsta,:) = dewpoint_c(i,:)           
                 dir_deg_s(nsta,:) = dir_deg(i,:)           
                 spd_mps_s(nsta,:) = spd_mps(i,:)           
+
+                go to 1600 
+
+ 1500           write(6,*)' Sounding rejected: ' ,nsta
+
+                nsta = nsta - 1
+
+ 1600           continue ! Normal status
+
             endif
         enddo ! i
-
+c
+c.....  Call the routine to write the SND file.
+c
         lun_out = 11
         if(nsta .gt. 0)then
             call open_ext(lun_out,i4time_sys,'snd',istatus)
@@ -247,10 +317,9 @@ c    &         pressure_pa, dir_deg, spd_mps                      ! O
       integer       maxlvls ! raw/processed stations for SND file
       real*4        r_missing_data 
       integer       nobs,nlvls,lev_set
-      real*4        lats(maxobs), lons(maxobs)
       real*4        lvls_m(maxlvls,maxobs)
       real*4        staelev(maxobs)
-      real*4        stalat(maxobs,maxlvls),stalon(maxobs,maxlvls)
+      real*4        stalat(maxobs),stalon(maxobs)
       real*4        dd(maxlvls,maxobs), ff(maxlvls,maxobs)
       real*4        temp_k, rh_pct,stationP,ws,wd
       real*4        height_m(maxobs,maxlvls)
@@ -583,6 +652,15 @@ c     read _fillValue for windDir
       lev_set = 0
       do obno = 1, nobs
 
+        if(obno .le. 100)then
+            id = 1
+        else
+            id = 0
+        endif
+
+        if(id.eq.1)write(6,*)' SA: obno,stalat,stalon,staelev'
+     1                 ,obno,stalat(obno),stalon(obno),staelev(obno)       
+
         lev_set = 0
 
         index_1(1) = obno
@@ -592,7 +670,7 @@ c     read _fillValue for windDir
         count(2) = 1
 
         do lno = 1, 10
-          print *, 'LW level ',lno,'= ',lvls_m(lno,obno)
+          if(id.eq.1)print *, 'LW level ',lno,'= ',lvls_m(lno,obno)
         enddo
 
 c       read var observationTime(recNum) -> d_timeobs
@@ -622,8 +700,9 @@ c       read var stationName(obno,staNamLen) -> stationName
           return
         endif
 
-c       truncate stname(obno)  = stationName(1:5)
-        stname(obno)  = stationName(1:5)
+c       truncate stname(obno)  
+        call left_justify(stationName)
+        stname(obno)  = stationName(1:6)
 
 c       read var stationId(recNum,providerIDLen) -> c_staid 
         count(1) = pi_len 
@@ -678,15 +757,15 @@ c       convert string to iwmostanum(maxobs) (cvt S to 0 and N to 1)
      1    wmoid(obno) = ichr1*100000 + ichr2*10000 + ichr3*1000 + 
      1                  ichr4*100 +ichr5*10 + ichr6
 
-        write(6,*) 'LW c_staid wmoid >',c_staid(1:lensta),
+        if(id.eq.1)write(6,*) 'LW c_staid wmoid >',c_staid(1:lensta),
      1'<  >',wmoid(obno),'<'
         
-        print *,'LW obno nobs nlvls ',obno,nobs,nlvls
+        if(id.eq.1)print *,'LW obno nobs nlvls ',obno,nobs,nlvls
 
         lvl = 1
         do while ((lvl.le.nlvls).and.(lev_set.eq.0))
 
-          print *, 'LW levels_fill lvls_m ',
+          if(id.eq.1)print *, 'LW levels_fill lvls_m ',
      1levels_fill, lvls_m(lvl,obno)
 
           if(lvls_m(lvl,obno) .ne. levels_fill)then
@@ -700,7 +779,7 @@ c           read stationPressure
               print *,'reading var stationPressure'
             endif 
 
-            write(6,*) 'LW o l stationP ',obno,lvl,stationP
+            if(id.eq.1)write(6,*) 'LW o l stationP ',obno,lvl,stationP       
 
 c           check stationPressure for _FillValue
             if (stationP .eq. sp_fill) stationP = r_missing_data
@@ -728,7 +807,8 @@ c           Convert temp_k to temp_c
               endif
             endif
 
-      write(6,*) 'LW temp_k temp_c',temp_k,'   ',temp_c(obno,lvl)
+      if(id.eq.1)
+     1      write(6,*) 'LW temp_k temp_c',temp_k,'   ',temp_c(obno,lvl)
 
 c           read var relHumidity(recNum,level) -> rh
             nf_status = NF_GET_VAR1_REAL(nf_fid,rh_id,index_2,rh_pct)
@@ -749,7 +829,8 @@ c           Convert rh to dewpoint
               endif
             endif
 
-      write(6,*) 'LW rh_pct dpt_c ',rh_pct,'   ',dewpoint_c(obno,lvl)
+      if(id.eq.1)
+     1  write(6,*) 'LW rh_pct dpt_c ',rh_pct,'   ',dewpoint_c(obno,lvl)       
 
 c           read var windSpeed(recNum,level) -> ws
             nf_status = NF_GET_VAR1_REAL(nf_fid,ws_id,index_2,ws)
@@ -768,7 +849,7 @@ c           read var windSpeed(recNum,level) -> ws
               endif
             endif
 
-            write(6,*) 'LW spd_mps      ',spd_mps(obno,lvl)
+            if(id.eq.1)write(6,*) 'LW spd_mps      ',spd_mps(obno,lvl)
 
 c           read var windDir(recNum,level) -> dd(lvl,obno)
             nf_status = NF_GET_VAR1_REAL(nf_fid,wd_id,index_2,wd)
@@ -787,27 +868,18 @@ c           read var windDir(recNum,level) -> dd(lvl,obno)
               endif
             endif
 
-            write(6,*) 'LW dir_deg      ',dir_deg(obno,lvl)
+            if(id.eq.1)write(6,*) 'LW dir_deg      ',dir_deg(obno,lvl)
 
           else
             nlvl(obno) = lvl - 1
             lev_set = 1
-            print *, 'LW lvl nlvl(obno) ',lvl, nlvl(obno)
+            if(id.eq.1)print *, 'LW lvl nlvl(obno) ',lvl, nlvl(obno)
           endif
           lvl = lvl + 1
         enddo
       enddo
 
       write(6,*) 'End of read_local_tower'
-
-!     Final QC check
-      call get_ibadflag(ibadflag,istatus)
-      if(istatus .ne. 1)return
-
-      if(iblank .gt. 0)then
-        write(6,*)' Warning: number of UNK stanames = ',iblank
-      endif
-
 
       return
       end

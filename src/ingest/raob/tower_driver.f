@@ -65,11 +65,13 @@ c
         call get_local_towerobs(maxsta,i4time_sys,
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
-     &                      grid_east,grid_west,grid_north,grid_south,
+!    &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,
-     &                      nobs,stations,
-     &                      reptype,atype,wmoid,
-     &                      laps_cycle_time, istatus)
+     &                      nobs,
+!    &                      stations,
+!    &                      reptype,atype,wmoid,
+!    &                      laps_cycle_time, 
+     &                      istatus)
 
 	if(istatus .ne. 1) then
 	   print *, ' istatus=0 returned from get_local_towerobs...'
@@ -115,7 +117,7 @@ c
 c
 c.....	That's about it...let's go home.
 c
-	write(6,*)' Normal completion of TOWER_DRIVER'
+	write(6,*)' Normal completion of TOWER_DRIVER, nobs = ',nobs
 
         return
 	end
