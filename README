@@ -1774,12 +1774,14 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 
 -------  5.0 --  LAPS Variables and netCDF File Organization -----------------
 
-LAPS Variables and netCDF File Organization ver. 2	20 Jul 1995
+LAPS Variables and netCDF File Organization
         (author: Linda Wharton - wharton@fsl.noaa.gov)
 
                 File LAPS CDF
 		Ext  Var  Var   #Lvl  Field
-Process LSX:	LT1  T3   t	  21  Temperature
+
+Process surface:
+                LT1  T3   t	  21  Temperature
 		     HT   z       21  Height
             	LSX  U    su       1  Surface wind u 
        		     V    sv       1  Surface wind v
@@ -1808,17 +1810,17 @@ Process LSX:	LT1  T3   t	  21  Temperature
                      FWX  fwx      1  Fire Danger
 		     HI   hi       1  Heat Index
 
-Process L1S:	L1S  S01  s1hr     1  Snow Accum Cycle 
+Process accum:	L1S  S01  s1hr     1  Snow Accum Cycle 
 		     STO  stot     1  Snow Accum Storm Tot 
           	     R01  pc	   1  Liq Accum Cycle 
         	     RTO  pt	   1  Liq Accum Storm Tot 
         	
-Process LZA:	LQ3  SH   sh      21  Specific Humidity 
+Process humid:  LQ3  SH   sh      21  Specific Humidity 
             	LH3  RH3  rh      21  Relative Humidity 
             	     RHL  rhl	  21  Relative Humidity with resp to liquid
             	LH4  TPW  tpw      1  Integrated Total Precipitable Water
 
-Process LZB:   	LW3  U3   u       21  Wind u
+Process wind:   LW3  U3   u       21  Wind u
 		     V3   v       21  Wind v 
           	     OM   w       21  Wind omega 
 
@@ -1869,7 +1871,7 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
 
 		LMR  R    mxrf     1  Max Radar Reflectivity
 
-Process LSM:	LM1  LSM  lsm      3  Soil Moisture
+Process soil:   LM1  LSM  lsm      3  Soil Moisture
 		LM2  CIV  civ      1  Cumulative Infiltration Volume
 		     DWF  dwf	   1  Depth to wetting front
 		     WX   wx       1  Wet/Dry grid point
@@ -1919,19 +1921,22 @@ Fcst Model:	RAM  U3   ru	  21  Fcst Model Wind u
 
                 RSM  LSM  lsm     11  Fcst Model Soil Moisture
 
+
 Intermediate LAPS files:
 
-Process VRC:    VRC  REF  ref      1  NOWRAD 2D radar reflectivity
+Process vrc_driver:
+                VRC  REF  ref      1  NOWRAD 2D radar reflectivity
                 VRZ               21  (Proposed 3D reflectivity mosaic)
  
-Process V01:    V01  REF  refd    21  Radar reflectivity
+Process remap:  V01  REF  refd    21  Radar reflectivity
                      VEL  veld    21  Radial Velocity    
                      NYQ  nyqd    21  Nyquist velocity
 
                 files V02, V03, V04, V05, V06, V07, V08, V09, V10, V11,
                       V12, V13, V14, V15, V16, V17, V18, V19, V20 same format
 
-Process LGA:         HT   ht      21  MAPS isentrop height interp to LAPS 
+Process lga.exe:
+                LGA  HT   ht      21  MAPS isentrop height interp to LAPS 
                                       isobaric
                      T3   t       21  MAPS isentrop temp interp to LAPS isobaric
                      SH   sh      21  MAPS specific humidity
@@ -1942,7 +1947,8 @@ Process LH1: 	LH1  PW   pw	   1  Precipitable Water
 
 Process LH2: 	LH2  PW   lpw	   3  Layer Precipitable Water
 
-Process LVD:    LVD  S8W  s8w      1  GOES IR band-8 bright temp warmest pixel
+Process lvd_sat_ingest:
+                     LVD  S8W  s8w 1  GOES IR band-8 bright temp warmest pixel
                      S8C  s8c      1  GOES IR band-8 bright temp coldest pixel
                      SVS  svs      1  GOES visible satellite - raw
                      SVN  svn      1  GOES visible satellite - normalized
@@ -1957,9 +1963,11 @@ Process LVD:    LVD  S8W  s8w      1  GOES IR band-8 bright temp warmest pixel
                      SCA  sca      1  GOES IR band-12 bright temp averaged
                      SCC  scc      1  GOES IR band-12 bright temp averaged
 
-Static LAPS file - run by localization/gridgen_model.exe:
+Static LAPS file - run by localization:
 
-static.nest7grid:    LAT           1  Latitude (degrees)
+gridgen_model.exe: creates file 'static.nest7grid'
+
+                     LAT           1  Latitude (degrees)
                      LON           1  Longitude (degrees)
                      AVE           1  Mean elevation MSL (m)
                      STD           1  Unused
@@ -1967,3 +1975,4 @@ static.nest7grid:    LAT           1  Latitude (degrees)
                      ZIN           1  Z coordinate - used for plotting in AVS
                      LDF           1  Land Fraction (0-1)
                      USE           1  Soil Type (under development)
+
