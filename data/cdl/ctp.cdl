@@ -18,10 +18,10 @@ netcdf ctp {
             pct:_FillValue = 1.e+37f;
             pct:long_name="NESDIS 2D cld top pressure";
             pct:units="mb";
-            pct:valid_range= 1100.f, 10.f;
+            pct:valid_range= 10.f, 110000.f;
             pct:LAPS_var="PCT";
             pct:lvl_coord="";
-	    pct:LAPS_units="MB";
+	    pct:LAPS_units="PA";
 
         //      2D Fractional Cloud Amount
 
@@ -32,10 +32,10 @@ netcdf ctp {
             lca:_FillValue = 1.e+37f;
             lca:long_name="NESDIS 2D fractional cloud amount";
             lca:units="percent";
-            lca:valid_range= 0.f, 100.f;
+            lca:valid_range= 0.f, 1.f;
             lca:LAPS_var="LCA";
             lca:lvl_coord="MSL";
-            lca:LAPS_units="percent";
+            lca:LAPS_units="none";
 
         //      2D Cloud Top Temperature
 
@@ -46,7 +46,7 @@ netcdf ctp {
             ctt:_FillValue = 1.e+37f;
             ctt:long_name="NESDIS 2D cloud top temperature";
             ctt:units="K";
-            ctt:valid_range= 100.f, 400.f;
+            ctt:valid_range= 100.f, 350.f;
             ctt:LAPS_var="CTT";
             ctt:lvl_coord="MSL";
             ctt:LAPS_units="K";
