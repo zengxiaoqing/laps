@@ -1,0 +1,83 @@
+      SUBROUTINE FI7518 (IRET,IWORK,NPTS,ISTRTA,INRNGA,INRNGB,
+     *                          MAXA,MINA,LWIDEA,MXVALA)
+C$$$  SUBPROGRAM DOCUMENTATION BLOCK
+C                .      .    .                                       .
+C SUBPROGRAM:    FI7518      SCAN FORWARD
+C   PRGMMR: CAVANAUGH        ORG: W/NMC42    DATE: 94-01-21
+C
+C ABSTRACT: SCAN FORWARD FROM START OF BLOCK B TOWARDS END OF BLOCK B
+C           IF NEXT POINT UNDER TEST FORCES A LARGER MAXVALA THEN
+C           TERMINATE INDICATING LAST POINT TESTED FOR INCLUSION
+C           INTO BLOCK A.
+C
+C PROGRAM HISTORY LOG:
+C   94-01-21  CAVANAUGH
+C   95-10-31  IREDELL     REMOVED SAVES AND PRINTS
+C   98-06-17  IREDELL     REMOVED ALTERNATE RETURN
+C
+C USAGE:    CALL FI7518 (IRET,IWORK,NPTS,ISTRTA,INRNGA,INRNGB,
+C     *                          MAXA,MINA,LWIDEA,MXVALA)
+C   INPUT ARGUMENT LIST:
+C     IFLD     -
+C     JSTART   -
+C     NPTS     -
+C
+C   OUTPUT ARGUMENT LIST:      (INCLUDING WORK ARRAYS)
+C     IRET     -
+C     JLAST    -
+C     MAX      -
+C     MIN      -
+C     LWIDTH   - NUMBER OF BITS TO CONTAIN MAX DIFF
+C
+C REMARKS: SUBPROGRAM CAN BE CALLED FROM A MULTIPROCESSING ENVIRONMENT.
+C
+C ATTRIBUTES:
+C   LANGUAGE: IBM VS FORTRAN 77, CRAY CFT77 FORTRAN
+C   MACHINE:  HDS, CRAY C916/256, Y-MP8/64, Y-MP EL92/256
+C
+C$$$
+      INTEGER        IWORK(*),NPTS,ISTRTA,INRNGA
+      INTEGER        MAXA,MINA,LWIDEA,MXVALA
+      INTEGER        IBITS(31)
+C
+      DATA           IBITS/1,3,7,15,31,63,127,255,511,1023,2047,
+     *               4095,8191,16383,32767,65535,131071,262143,
+     *               524287,1048575,2097151,4194303,8388607,
+     *               16777215,33554431,67108863,134217727,268435455,
+     *               536870911,1073741823,2147483647/
+C  ----------------------------------------------------------------
+      IRET=0
+C     PRINT *,'          FI7518'
+      NPOS  = ISTRTA + INRNGA
+      ITST  = 0
+C
+ 1000 CONTINUE
+      ITST  = ITST + 1
+      IF (ITST.LE.INRNGB) THEN
+C         PRINT *,'TRY NPOS',NPOS,IWORK(NPOS),MAXA,MINA
+          IF (IWORK(NPOS).GT.MAXA) THEN
+              IF ((IWORK(NPOS)-MINA).GT.MXVALA) THEN
+C                 PRINT *,'FI7518A -',ITST,' RANGE EXCEEDS MAX'
+                  IRET=1
+                  RETURN
+              ELSE
+                  MAXA    = IWORK(NPOS)
+              END IF
+          ELSE IF (IWORK(NPOS).LT.MINA) THEN
+              IF ((MAXA-IWORK(NPOS)).GT.MXVALA) THEN
+C                 PRINT *,'FI7518B -',ITST,' RANGE EXCEEDS MAX'
+                  IRET=1
+                  RETURN
+              ELSE
+                  MINA    = IWORK(NPOS)
+              END IF
+          END IF
+          INRNGA  = INRNGA + 1
+C         PRINT *,'               ',ITST,INRNGA
+          NPOS  = NPOS +1
+          GO TO 1000
+      END IF
+C  ----------------------------------------------------------------
+ 9000 CONTINUE
+      RETURN
+      END
