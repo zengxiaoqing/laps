@@ -14,7 +14,7 @@ c**************new routine as adapted at FSL**************************
       character*3 var_2d
 
       integer MAX_FIELDS
-      parameter (MAX_FIELDS = 6)
+      parameter (MAX_FIELDS = 7)
       real*4 field_array(ni,nj,MAX_FIELDS)
       character*3 var_a(MAX_FIELDS)
       character*125 comment_a(MAX_FIELDS)
@@ -40,6 +40,7 @@ c**************new routine as adapted at FSL**************************
       real*4 vent_2d(ni,nj)                                         ! L
       real*4 fosberg_2d(ni,nj)                                      ! L
       real*4 umean_2d(ni,nj),vmean_2d(ni,nj)                        ! L
+      real*4 cfwi(ni,nj)                                            ! L
 
       write(6,*)' Subroutine fire_fields (under construction)'
 
@@ -89,6 +90,7 @@ c**************new routine as adapted at FSL**************************
      1                          ,haines_hi_2d                       ! O
      1                          ,vent_2d                            ! O
      1                          ,umean_2d,vmean_2d                  ! O
+     1                          ,cfwi                               ! O
      1                          ,istatus)                           ! O
 
       if(istatus .eq. 1)then ! write out LFR fire fields file
@@ -100,6 +102,7 @@ c**************new routine as adapted at FSL**************************
           call move(fosberg_2d   ,field_array(1,1,4),ni,nj)
           call move(umean_2d     ,field_array(1,1,5),ni,nj)
           call move(vmean_2d     ,field_array(1,1,6),ni,nj)
+          call move(cfwi         ,field_array(1,1,7),ni,nj)
 
           ext = 'lfr'
           var_a(1) = 'VNT'
@@ -108,21 +111,24 @@ c**************new routine as adapted at FSL**************************
           var_a(4) = 'FWI'
           var_a(5) = 'UPB'
           var_a(6) = 'VPB'
+          var_a(7) = 'CWI'
           units_a(1) = 'M**2/S'
           units_a(2) = '      '
           units_a(3) = '      '
           units_a(4) = '      '
           units_a(5) = 'M/S'
           units_a(6) = 'M/S'
+          units_a(7) = '      '
           comment_a(1) = 'Ventilation Index'
           comment_a(2) = 'Haines Index (850-700hPa)'
           comment_a(3) = 'Haines Index (700-500hPa)'
           comment_a(4) = 'Fosberg Fire Wx Index'
           comment_a(5) = 'Boundary Layer Mean U Component'
           comment_a(6) = 'Boundary Layer Mean V Component'
+          comment_a(7) = 'Critical Fire Weather Index'
           call put_laps_multi_2d(i4time,ext,var_a,units_a
      1                          ,comment_a,field_array,ni,nj
-     1                          ,6,istatus)
+     1                          ,7,istatus)
 
       else
           write(6,*)' Skipping write of LFR file'
@@ -149,6 +155,7 @@ c**************new routine as adapted at FSL**************************
      1                           ,haines_hi_2d                       ! O
      1                           ,vent_2d                            ! O
      1                           ,umean_2d,vmean_2d                  ! O
+     1                           ,cfwi                               ! O
      1                           ,istatus)                           ! O
 
        real*4 pres_3d_pa(ni,nj,nk)                                   ! I
@@ -173,6 +180,7 @@ c**************new routine as adapted at FSL**************************
        real*4 vent_2d(ni,nj)                                         ! O
        real*4 umean_2d(ni,nj),vmean_2d(ni,nj)                        ! O
        real*4 fosberg_2d(ni,nj)                                      ! O
+       real*4 cfwi(ni,nj)                                            ! O
 
        real*4 pres_3d_mb(ni,nj,nk)                                   ! L
 
@@ -222,6 +230,14 @@ c**************new routine as adapted at FSL**************************
            write(6,*)' Skip ventilation index due to no PBL'
 
        endif
+
+!      Calculate Critical Fire Weather Index.
+!         (RH<15% and speed>20mph for any 3 consecutive hours during the
+!          past 24 hours)
+       write(6,*)' Calculate Critical Fireweather Index'
+       call critical_fwi(rh_sfc,u_sfc,v_sfc                               ! I
+     1                  ,ni,nj,i4time                                     ! I
+     1                  ,cfwi)                                            ! O
 
        return
        end
@@ -366,3 +382,90 @@ c**************new routine as adapted at FSL**************************
 
         return
         end
+
+
+       subroutine critical_fwi(rh_sfc,u_sfc,v_sfc                         ! I
+     1                        ,ni,nj,i4time                               ! I
+     1                        ,cfwi)                                      ! O
+
+       implicit none
+
+       real*4 spd_thresh
+       parameter (spd_thresh = 79.90372)   ! 20mph squared in m/s
+ 
+       integer*4 ni,nj,i4time,pi4time,i,j,n,istatus
+
+       real*4 rh_sfc(ni,nj),u_sfc(ni,nj),v_sfc(ni,nj)
+     .       ,rh(ni,nj),u(ni,nj),v(ni,nj)
+     .       ,cfwi1(ni,nj,24),cfwi(ni,nj)
+     .       ,speed
+
+       character*31  ext
+       character*10  units_2d
+       character*125 comment_2d
+       character*3   var_2d
+
+       do n=1,24
+          if (n .eq. 1) then
+
+             do j=1,nj
+             do i=1,ni
+                u(i,j)=u_sfc(i,j)
+                v(i,j)=v_sfc(i,j)
+                rh(i,j)=rh_sfc(i,j)
+             enddo
+             enddo
+
+          else
+
+             pi4time = i4time - (float(n-1)*3600)
+
+             ext = 'lsx'
+
+             var_2d = 'U'
+             call get_laps_2d(pi4time,ext,var_2d,units_2d,comment_2d
+     1                       ,ni,nj,u,istatus)
+             var_2d = 'V'
+             call get_laps_2d(pi4time,ext,var_2d,units_2d,comment_2d
+     1                       ,ni,nj,v,istatus)
+             var_2d = 'RH'
+             call get_laps_2d(pi4time,ext,var_2d,units_2d,comment_2d
+     1                       ,ni,nj,rh,istatus)
+
+          endif
+
+          do j=1,nj
+          do i=1,ni
+             if (rh(i,j) .gt. 0 .and. rh(i,j) .lt. 15. .and.
+     1           u(i,j) .lt. 100. and. v(i,j) .lt. 100.) then
+                speed = u(i,j)**2 + v(i,j)**2
+                if (speed .gt. spd_thresh) then
+                   cfwi1(i,j,n) = 1.
+                else
+                   cfwi1(i,j,n) = 0.
+                endif
+             else
+                cfwi1(i,j,n) = 0.
+             endif
+          enddo
+          enddo
+
+       enddo
+
+       do j=1,nj
+       do i=1,ni
+          cfwi(i,j) = 0.
+       enddo
+       enddo
+
+       do n=3,24
+       do j=1,nj
+       do i=1,ni
+          if (cfwi1(i,j,n)+cfwi1(i,j,n-1)+cfwi1(i,j,n-2) .gt. 0.) 
+     1       cfwi(i,j) = 1.
+       enddo
+       enddo
+       enddo
+
+       return
+       end
