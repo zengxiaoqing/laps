@@ -1256,20 +1256,6 @@ c                         Hit end of file...that's it.
 
 
 
-      subroutine  i2a (ii,aa)
-
-      character(2) :: aa
-      integer      :: ii
-
-      if ( ii < 10 ) then
-         write (aa,'(a1,i1)') '0', ii
-      else
-         write (aa,'(i2)') ii
-      endif
-
-      return
-      end
-
 
       subroutine get_box_size (box_size,istatus)
 
