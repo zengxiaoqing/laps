@@ -3,401 +3,400 @@ netcdf rsf {
     dimensions:
         record = unlimited,
         z = 1,
-	x = 125,
-	y = 105,
+	x = 61,
+	y = 61,
         nav = 1,
         namelen = 132;
 		
     variables:
-        //	LAPS Fcst sfc wind component
 
+        //	LAPS Fcst sfc u wind component
+        //      bigfile name = uw
 	float                                  
             u(record,z,y,x);
-            u:navigation_dim = "nav";
-            u:record = "valtime, reftime";
-            u:_FillValue = 1.e+37f;
+            u:_FillValue = -99999.f;
             u:long_name="LAPS Fcst sfc u wind component";
-            u:units="meters / second";
+            u:units="m/s";
             u:valid_range= -200.f, 200.f;
             u:LAPS_var="U";
-            u:lvl_coord="HPA";
+            u:lvl_coord="AGL";
 	    u:LAPS_units="M/S";
                 	        
         //	LAPS Fcst sfc v wind component
-
+        //      bigfile name = vw
 	float                                  
             v(record,z,y,x);
-            v:navigation_dim = "nav";
-            v:record = "valtime, reftime";
-            v:_FillValue = 1.e+37f;
+            v:_FillValue = -99999.f;
             v:long_name="LAPS Fcst sfc v wind component";
-            v:units="meters / second";
+            v:units="m/s";
             v:valid_range= -200.f, 200.f;
             v:LAPS_var="V";
-            v:lvl_coord="HPA";
+            v:lvl_coord="AGL";
 	    v:LAPS_units="M/S";
                 	        
+        //	LAPS Fcst sfc w wind component
+        //      bigfile name = ww
+	float                                  
+            w(record,z,y,x);
+            w:_FillValue = -99999.f;
+            w:long_name="LAPS Fcst sfc w wind component";
+            w:units="m/s";
+            w:valid_range= -100.f, 100.f;
+            w:LAPS_var="W";
+            w:lvl_coord="AGL";
+	    w:LAPS_units="M/S";
+                	        
         //	LAPS Fcst sfc temperature
-
+        //      bigfile name = t
 	float                                  
             t(record,z,y,x);
-            t:navigation_dim = "nav";
-            t:record = "valtime, reftime";
-            t:_FillValue = 1.e+37f;
-            t:long_name="LAPS Fcst surface temperature";
-            t:units="degrees Kelvin";
-            t:valid_range= -200.f, 200.f;
+            t:_FillValue = -99999.f;
+            t:long_name="LAPS Fcst sfc temperature";
+            t:units="Kelvins";
+            t:valid_range= 0.f, 500.f;
             t:LAPS_var="T";
             t:lvl_coord="AGL";
 	    t:LAPS_units="K";
                 	        
-        //	LAPS Fcst 1500m pressure
-
-	float                                  
-            p(record,z,y,x);
-            p:navigation_dim = "nav";
-            p:record = "valtime, reftime";
-            p:_FillValue = 1.e+37f;
-            p:long_name="LAPS Fcst 1500m pressure";
-            p:units="pascals";
-            p:valid_range= -200.f, 200.f;
-            p:LAPS_var="P";
-            p:lvl_coord="AGL";
-	    p:LAPS_units="PA";
-                	        
         //	LAPS Fcst surface dewpoint
-
+        //      bigfile name = dpt
 	float                                  
             td(record,z,y,x);
-            td:navigation_dim = "nav";
-            td:record = "valtime, reftime";
-            td:_FillValue = 1.e+37f;
-            td:long_name="LAPS Fcst surface dewpoint";
-            td:units="degrees Kelvin";
-            td:valid_range= -200.f, 200.f;
+            td:_FillValue = -99999.f;
+            td:long_name="LAPS Fcst sfc dewpoint";
+            td:units="Kelvins";
+            td:valid_range= 0.f, 500.f;
             td:LAPS_var="TD";
             td:lvl_coord="AGL";
 	    td:LAPS_units="K";
 
-        //      Relative humidity       //
-
+        //      LAPS Fcst relative humidity       //
+        //      bigfile name = rh
         float
             rh(record,z,y,x);
-            rh:navigation_dim = "nav";
-            rh:record = "valtime, reftime";
-            rh:_FillValue = 1.e+37f;
-            rh:long_name="LAPS Fcst relative humidity";
+            rh:_FillValue = -99999.f;
+            rh:long_name="LAPS Fcst sfc relative humidity";
             rh:units="meters";
-            rh:valid_range= -20000.f, 20000.f;
+            rh:valid_range= 0.f, 100.f;
             rh:LAPS_var="RH";
             rh:lvl_coord="AGL";
-            rh:LAPS_units="M";
+            rh:LAPS_units="PERCENT";
 
-        //      cloud base
-
+        //      LAPS Fcst cloud base
+        //      bigfile name = cb
         float
             lcb(record,z,y,x);
-            lcb:navigation_dim = "nav";
-            lcb:record = "valtime, reftime";
-            lcb:_FillValue = 1.e+37f;
-            lcb:long_name="LAPS cloud base";
+            lcb:_FillValue = -99999.f;
+            lcb:long_name="LAPS Fcst cloud base";
             lcb:units="meters";
-            lcb:valid_range= -200.f, 200.f;
+            lcb:valid_range= 0.f, 100000.f;
             lcb:LAPS_var="LCB";
             lcb:lvl_coord="MSL";
             lcb:LAPS_units="M";
-        //      cloud top
 
+        //      LAPS Fcst cloud top
+        //      bigfile name = ctop
         float
             lct(record,z,y,x);
-            lct:navigation_dim = "nav";
-            lct:record = "valtime, reftime";
-            lct:_FillValue = 1.e+37f;
-            lct:long_name="LAPS cloud top";
+            lct:_FillValue = -99999.f;
+            lct:long_name="LAPS Fcst cloud top";
             lct:units="meters";
-            lct:valid_range= -200.f, 200.f;
+            lct:valid_range= 0.f, 100000.f;
             lct:LAPS_var="LCT";
             lct:lvl_coord="MSL";
             lct:LAPS_units="M";
 
-        //      MSL Pressure            //
-
+        //      LAPS Fcst MSL Pressure            //
+        //      bigfile name = mslp
         float
             msl(record,z,y,x);
-            msl:navigation_dim = "nav";
-            msl:record = "valtime, reftime";
-            msl:_FillValue = 1.e+37f;
-            msl:long_name="MSL pressure";
+            msl:_FillValue = -99999.f;
+            msl:long_name="LAPS Fcst MSL pressure";
             msl:units="pascals";
-            msl:valid_range= -20000.f, 20000.f;
+            msl:valid_range= 0.f, 100000.f;
             msl:LAPS_var="MSL";
-            msl:lvl_coord="AGL";
+            msl:lvl_coord="MSL";
             msl:LAPS_units="PA";
 
-        //      integrated liquid water
-
-        float
-            lil(record,z,y,x);
-            lil:navigation_dim = "nav";
-            lil:record = "valtime, reftime";
-            lil:_FillValue = 1.e+37f;
-            lil:long_name="integrated liquid water";
-            lil:units="grams/meter**2";
-            lil:valid_range= 0.f, 100.f;
-            lil:LAPS_var="LIL";
-            lil:lvl_coord="MSL";
-            lil:LAPS_units="G/M**2";
-
-        //      integrated total precip water
-
-        float
-            tpw(record,z,y,x);
-            tpw:navigation_dim = "nav";
-            tpw:record = "valtime, reftime";
-            tpw:_FillValue = 1.e+37f;
-            tpw:long_name="integrated total precipitable water";
-            tpw:units="meters";
-            tpw:valid_range= 0.f, 0.100f;
-            tpw:LAPS_var="TPW";
-            tpw:lvl_coord="    ";
-            tpw:LAPS_units="M";
-
-        //      60 minute precip accumulation
-
-        float
-            r01(record,z,y,x);
-            r01:navigation_dim = "nav";
-            r01:record = "valtime, reftime";
-            r01:_FillValue = 1.e+37f;
-            r01:long_name="LAPS 60 minute precip. accum.";
-            r01:units="meters";
-            r01:valid_range= -200.f, 200.f;
-            r01:LAPS_var="R01";
-            r01:lvl_coord="MSL";
-            r01:LAPS_units="M";
-
-        //      storm total precip accum
-
-        float
-            rto(record,z,y,x);
-            rto:navigation_dim = "nav";
-            rto:record = "valtime, reftime";
-            rto:_FillValue = 1.e+37f;
-            rto:long_name="storm total precip. accum.";
-            rto:units="meters";
-            rto:valid_range= -200.f, 200.f;
-            rto:LAPS_var="RTO";
-            rto:lvl_coord="MSL";
-            rto:LAPS_units="M";
-
-        //      60 min snow accumulation
-
-        float
-            s01(record,z,y,x);
-            s01:navigation_dim = "nav";
-            s01:record = "valtime, reftime";
-            s01:_FillValue = 1.e+37f;
-            s01:long_name="LAPS 60 minute snow accum.";
-            s01:units="meters";
-            s01:valid_range= -200.f, 200.f;
-            s01:LAPS_var="S01";
-            s01:lvl_coord="MSL";
-            s01:LAPS_units="M";
-
-        //      storm total accumulation
-
-        float
-            sto(record,z,y,x);
-            sto:navigation_dim = "nav";
-            sto:record = "valtime, reftime";
-            sto:_FillValue = 1.e+37f;
-            sto:long_name="storm total snow accumulation";
-            sto:units="meters";
-            sto:valid_range= -200.f, 200.f;
-            sto:LAPS_var="STO";
-            sto:lvl_coord="MSL";
-            sto:LAPS_units="M";
-	
-        //      Potential temperature   //
-
-        float
-            th(record,z,y,x);
-            th:navigation_dim = "nav";
-            th:record = "valtime, reftime";
-            th:_FillValue = 1.e+37f;
-            th:long_name="LAPS Fcst potential temperature";
-            th:units="degrees Kelvin";
-            th:valid_range= -75.f, 125.f;
-            th:LAPS_var="TH";
-            th:lvl_coord="AGL";
-            th:LAPS_units="K";
-
-        //      equivalent potential temperature  //
-
-        float
-            the(record,z,y,x);
-            the:navigation_dim = "nav";
-            the:record = "valtime, reftime";
-            the:_FillValue = 1.e+37f;
-            the:long_name="LAPS Fcst equivalent potential temperature";
-            the:units="degrees Kelvin";
-            the:valid_range= -20000.f, 20000.f;
-            the:LAPS_var="THE";
-            the:lvl_coord="AGL";
-            the:LAPS_units="K";
-
-        //      positive buoyant energy         //
-        float
-            pbe(record,z,y,x);
-            pbe:navigation_dim = "nav";
-            pbe:record = "valtime, reftime";
-            pbe:_FillValue = 1.e+37f;
-            pbe:long_name="positive buoyant energy";
-            pbe:units="joules/kilogram";
-            pbe:valid_range= -20000.f, 20000.f;
-            pbe:LAPS_var="PBE";
-            pbe:lvl_coord="AGL";
-            pbe:LAPS_units="J/KG";
-
-         //      negative buoyant energy         //
-
-         float
-            nbe(record,z,y,x);
-            nbe:navigation_dim = "nav";
-            nbe:record = "valtime, reftime";
-            nbe:_FillValue = 1.e+37f;
-            nbe:long_name="negative buoyant energy";
-            nbe:units="joules/kilogram";
-            nbe:valid_range= -20000.f, 20000.f;
-            nbe:LAPS_var="NBE";
-            nbe:lvl_coord="AGL";
-            nbe:LAPS_units="J/KG";
-
-        //      surface pressure        //
-
+        //	LAPS Fcst 1500m pressure
+        //      bigfile name = p (at level "FH  1500")
+	float                                  
+            p(record,z,y,x);
+            p:_FillValue = -99999.f;
+            p:long_name="LAPS Fcst 1500m pressure";
+            p:units="pascals";
+            p:valid_range= 0.f, 100000.f;
+            p:LAPS_var="P";
+            p:lvl_coord="MSL";
+	    p:LAPS_units="PA";
+                	        
+        //      LAPS Fcst surface pressure (looks like topo)      //
+        //      bigfile name = p (at level "SFC")
         float
             ps(record,z,y,x);
-            ps:navigation_dim = "nav";
-            ps:record = "valtime, reftime";
-            ps:_FillValue = 1.e+37f;
-            ps:long_name="surface pressure";
+            ps:_FillValue = -99999.f;
+            ps:long_name="LAPS Fcst sfc pressure";
             ps:units="pascals";
-            ps:valid_range= -20000.f, 20000.f;
+            ps:valid_range= 0.f, 100000.f;
             ps:LAPS_var="PS";
             ps:lvl_coord="AGL";
             ps:LAPS_units="PA";
 
-        //      Cloud Ceiling           //
+        //      LAPS Fcst integrated liquid water   kg/m**2=mm
+        //      bigfile name = ilw
+        float
+            lil(record,z,y,x);
+            lil:_FillValue = -99999.f;
+            lil:long_name="LAPS Fcst integrated liquid water";
+            lil:units="kg/m**2";
+            lil:valid_range= 0.f, 100.f;
+            lil:LAPS_var="LIL";
+            lil:lvl_coord="AGL";
+            lil:LAPS_units="KG/M**2";
 
+        //      LAPS Fcst integrated total precip water   kg/m**2=mm
+        //      bigfile name = tpw
+        float
+            tpw(record,z,y,x);
+            tpw:_FillValue = -99999.f;
+            tpw:long_name="LAPS Fcst precipitable water";
+            tpw:units="kg/m**2";
+            tpw:valid_range= 0.f, 100.f;
+            tpw:LAPS_var="TPW";
+            tpw:lvl_coord="AGL";
+            tpw:LAPS_units="KG/M**2";
+
+        //      LAPS Fcst 60 minute precip accumulation   kg/m**2=mm
+        //      bigfile name = pc
+        float
+            r01(record,z,y,x);
+            r01:_FillValue = -99999.f;
+            r01:long_name="LAPS Fcst 60 min precip accum";
+            r01:units="kg/m**2";
+            r01:valid_range= 0.f, 10.f;
+            r01:LAPS_var="R01";
+            r01:lvl_coord="AGL";
+            r01:LAPS_units="KG/M**2";
+
+        //      LAPS Fcst storm total precip accumulation  kg/m**2=mm
+        //      bigfile name = stpa
+        float
+            rto(record,z,y,x);
+            rto:_FillValue = -99999.f;
+            rto:long_name="LAPS Fcst storm total precip accum";
+            rto:units="kg/m**2";
+            rto:valid_range= 0.f, 10.f;
+            rto:LAPS_var="RTO";
+            rto:lvl_coord="AGL";
+            rto:LAPS_units="KG/M**2";
+
+        //      LAPS Fcst 60 minute snow accumulation  kg/m**2=mm
+        //      ***this should probably be meters...***
+        //      bigfile name = s1hr
+        float
+            s01(record,z,y,x);
+            s01:_FillValue = -99999.f;
+            s01:long_name="LAPS Fcst 60 min snow accum";
+            s01:units="kg/m**2";
+            s01:valid_range= 0.f, 10.f;
+            s01:LAPS_var="S01";
+            s01:lvl_coord="AGL";
+            s01:LAPS_units="KG/M**2";
+
+        //      LAPS Fcst storm total snow accumulation  kg/m**2=mm
+        //      ***this should probably be meters...***
+        //      bigfile name = stot
+        float
+            sto(record,z,y,x);
+            sto:_FillValue = -99999.f;
+            sto:long_name="LAPS Fcst storm total snow accumulation";
+            sto:units="kg/m**2";
+            sto:valid_range= 0.f, 10.f;
+            sto:LAPS_var="STO";
+            sto:lvl_coord="AGL";
+            sto:LAPS_units="KG/M**2";
+	
+        //      LAPS Fcst potential temperature   //
+        //      not transferred to bigfile
+        float
+            th(record,z,y,x);
+            th:_FillValue = -99999.f;
+            th:long_name="LAPS Fcst sfc potential temperature";
+            th:units="Kelvins";
+            th:valid_range= 0.f, 500.f;
+            th:LAPS_var="TH";
+            th:lvl_coord="AGL";
+            th:LAPS_units="K";
+
+        //      LAPS Fcst equivalent potential temperature  //
+        //      not transferred to bigfile
+        float
+            the(record,z,y,x);
+            the:_FillValue = -99999.f;
+            the:long_name="LAPS Fcst sfc equivalent potential temperature";
+            the:units="Kelvins";
+            the:valid_range= 0.f, 500.f;
+            the:LAPS_var="THE";
+            the:lvl_coord="AGL";
+            the:LAPS_units="K";
+
+        //      LAPS Fcst positive buoyant energy         //
+        //      bigfile name = pbe
+        float
+            pbe(record,z,y,x);
+            pbe:_FillValue = -99999.f;
+            pbe:long_name="LAPS Fcst positive buoyant energy";
+            pbe:units="j/kg";
+            pbe:valid_range= 0.f, 10000.f;
+            pbe:LAPS_var="PBE";
+            pbe:lvl_coord="AGL";
+            pbe:LAPS_units="J/KG";
+
+         //      LAPS Fcst negative buoyant energy         //
+         //      bigfile name = nbe
+         float
+            nbe(record,z,y,x);
+            nbe:_FillValue = -99999.f;
+            nbe:long_name="LAPS Fcst negative buoyant energy";
+            nbe:units="j/kg";
+            nbe:valid_range= 0.f, 1000.f;
+            nbe:LAPS_var="NBE";
+            nbe:lvl_coord="AGL";
+            nbe:LAPS_units="J/KG";
+
+        //      LAPS Fcst cloud cover
+        //      bigfile name = ccov
+        //      not computed yet
+        float
+            lcv(record,z,y,x);
+            lcv:_FillValue = -99999.f;
+            lcv:long_name="LAPS Fcst cloud cover";
+            lcv:units="none";
+            lcv:valid_range= 0.f, 1.f;
+            lcv:LAPS_var="LCV";
+            lcv:lvl_coord="MSL";
+            lcv:LAPS_units="FRACTION";
+
+        //      LAPS Fcst cloud ceiling           //
+        //      not yet computed -- this is a placeholder
         float
             cce(record,z,y,x);
-            cce:navigation_dim = "nav";
-            cce:record = "valtime, reftime";
-            cce:_FillValue = 1.e+37f;
-            cce:long_name="cloud ceiling";
+            cce:_FillValue = -99999.f;
+            cce:long_name="LAPS Fcst cloud ceiling";
             cce:units="meters";
-            cce:valid_range= -20000.f, 20000.f;
+            cce:valid_range= 0.f, 100000.f;
             cce:LAPS_var="CCE";
             cce:lvl_coord="AGL";
             cce:LAPS_units="M";
 
-         //      visability              //
-
-         float
-            vis(record,z,y,x);
-            vis:navigation_dim = "nav";
-            vis:record = "valtime, reftime";
-            vis:_FillValue = 1.e+37f;
-            vis:long_name="visibility";
-            vis:units="meters";
-            vis:valid_range= -20000.f, 20000.f;
-            vis:LAPS_var="VIS";
-            vis:lvl_coord="AGL";
-            vis:LAPS_units="M";
-
-        //      LAPS cloud cover
-
-        float
-            lcv(record,z,y,x);
-            lcv:navigation_dim = "nav";
-            lcv:record = "valtime, reftime";
-            lcv:_FillValue = 1.e+37f;
-            lcv:long_name="LAPS cloud cover";
-            lcv:units="none";
-            lcv:valid_range= 0.f, 100.f;
-            lcv:LAPS_var="LCV";
-            lcv:lvl_coord="MSL";
-            lcv:LAPS_units="UNDIM";
-
-        //       Max echo tops
-
+        //       LAPS Fcst radar echo tops
+        //       bigfile name = mret
         float
             lmt(record,z,y,x);
-            lmt:navigation_dim = "nav";
-            lmt:record = "valtime, reftime";
-            lmt:_FillValue = 1.e+37f;
-            lmt:long_name="maximum radar echo tops";
+            lmt:_FillValue = -99999.f;
+            lmt:long_name="LAPS Fcst radar echo tops";
             lmt:units="meters";
-            lmt:valid_range= 0.f, 0.100f;
+            lmt:valid_range= 0.f, 100000.f;
             lmt:LAPS_var="LMT";
             lmt:lvl_coord="MSL";
             lmt:LAPS_units="M";
 
-        //      LAPS Fcst sfc precip type  //
+        //       LAPS Fcst column max reflectivity
+        //       bigfile name = cxr
+        float
+            lmr(record,z,y,x);
+            lmr:_FillValue = -99999.f;
+            lmr:long_name="LAPS Fcst column max refl";
+            lmr:units="dBZ";
+            lmr:valid_range= -20.f, 100.f;
+            lmr:LAPS_var="LMR";
+            lmr:lvl_coord="MSL";
+            lmr:LAPS_units="DBZ";
 
+        //       LAPS Fcst low level reflectivity
+        //       bigfile name = llr
+        float
+            llr(record,z,y,x);
+            llr:_FillValue = -99999.f;
+            llr:long_name="LAPS Fcst low level refl";
+            llr:units="dBZ";
+            llr:valid_range= -20.f, 100.f;
+            llr:LAPS_var="LLR";
+            llr:lvl_coord="MSL";
+            llr:LAPS_units="DBZ";
+
+        //      LAPS Fcst sfc precip type (coded) //
+        //      bigfile name = spt
         float
             spt(record,z,y,x);
-            spt:navigation_dim = "nav";
-            spt:record = "valtime, reftime";
-            spt:_FillValue = 1.e+37f;
+            spt:_FillValue = -99999.f;
             spt:long_name="LAPS Fcst sfc precip type";
-            spt:units="meters";
-            spt:valid_range= 0.f, 0.100f;
+            spt:units="code";
+            spt:valid_range= 0.f, 100.f;
             spt:LAPS_var="SPT";
-            spt:lvl_coord="MSL";
-            spt:LAPS_units="M";
+            spt:lvl_coord="AGL";
+            spt:LAPS_units="CODE";
 
-        //      helicity
-
+        //      LAPS Fcst helicity
+        //      not transferred to bigfile
         float
             lhe(record,z,y,x);
-            lhe:navigation_dim = "nav";
-            lhe:record = "valtime, reftime";
-            lhe:_FillValue = 1.e+37f;
-            lhe:long_name="helicity";
-            lhe:units="meters / second**2";
-            lhe:valid_range= 0.f, 0.100f;
+            lhe:_FillValue = -99999.f;
+            lhe:long_name="LAPS Fcst helicity";
+            lhe:units="m/s**2";
+            lhe:valid_range= 0.f, 10000.f;
             lhe:LAPS_var="LHE";
             lhe:lvl_coord="MSL ";
             lhe:LAPS_units="M/S**2";
 
-        //     lifted index            / 
-
+        //     LAPS Fcst lifted index            //
+        //     bigfile name = sli
         float
             li(record,z,y,x);
-            li:navigation_dim = "nav";
-            li:record = "valtime, reftime";
-            li:_FillValue = 1.e+37f;
-            li:long_name="lifted index";
-            li:units="degrees Kelvin";
-            li:valid_range= -20000.f, 20000.f;
+            li:_FillValue = -99999.f;
+            li:long_name="LAPS Fcst lifted index";
+            li:units="Kelvins";
+            li:valid_range= -50.f, 50.f;
             li:LAPS_var="LI";
             li:lvl_coord="AGL";
             li:LAPS_units="K";
 
-
-         //      heat index                      //
+         //      LAPS Fcst heat index                      //
+         //      bigfile name = hidx
          float
             hi(record,z,y,x);
-            hi:navigation_dim = "nav";
-            hi:record = "valtime, reftime";
-            hi:_FillValue = 1.e+37f;
-            hi:long_name="Heat index";
-            hi:units="none";
-            hi:valid_range= 0.f, 20.f;
+            hi:_FillValue = -99999.f;
+            hi:long_name="LAPS Fcst heat index";
+            hi:units="Kelvins";
+            hi:valid_range= 0.f, 500.f;
             hi:LAPS_var="HI";
-            hi:lvl_coord="none";
-            hi:LAPS_units="none";
+            hi:lvl_coord="AGL";
+            hi:LAPS_units="K";
+
+         //      LAPS Fcst visibility              //
+         //      not computed yet -- this is a placeholder
+         float
+            vis(record,z,y,x);
+            vis:_FillValue = -99999.f;
+            vis:long_name="LAPS Fcst visibility";
+            vis:units="meters";
+            vis:valid_range= 0.f, 100000.f;
+            vis:LAPS_var="VIS";
+            vis:lvl_coord="AGL";
+            vis:LAPS_units="M";
+
+        //  	LAPS fire index                     //
+        //      bigfile name = fd
+        float
+            fd(record,z,y,x);
+            fd:_FillValue = -99999.f;
+            fd:long_name="fire index";
+            fd:units="none";
+            fd:valid_range= 0.f, 20.f;
+            fd:LAPS_var="FD";
+            fd:lvl_coord="AGL";
+            fd:LAPS_units="NONE";
+
 
         //	LAPS variables
                 	        
@@ -410,13 +409,15 @@ netcdf rsf {
         char
             u_comment(record,z,namelen),
             v_comment(record,z,namelen),
+            w_comment(record,z,namelen),
             t_comment(record,z,namelen),
-            p_comment(record,z,namelen),
             td_comment(record,z,namelen),
             rh_comment(record,z,namelen),
             lcb_comment(record,z,namelen),
             lct_comment(record,z,namelen),
             msl_comment(record,z,namelen),
+            p_comment(record,z,namelen),
+            ps_comment(record,z,namelen),
             lil_comment(record,z,namelen),
             tpw_comment(record,z,namelen),
             r01_comment(record,z,namelen),
@@ -427,15 +428,17 @@ netcdf rsf {
             the_comment(record,z,namelen),
             pbe_comment(record,z,namelen),
             nbe_comment(record,z,namelen),
-            ps_comment(record,z,namelen),
-            cce_comment(record,z,namelen),
-            vis_comment(record,z,namelen),
             lcv_comment(record,z,namelen),
+            cce_comment(record,z,namelen),
             lmt_comment(record,z,namelen),
+            cxr_comment(record,z,namelen),
+            llr_comment(record,z,namelen),
             spt_comment(record,z,namelen),
             lhe_comment(record,z,namelen),
             li_comment(record,z,namelen),
             hi_comment(record,z,namelen),
+            vis_comment(record,z,namelen),
+            fd_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -450,8 +453,8 @@ netcdf rsf {
             v_fcinv:_FillValue= 0s;
               	
         short
-            p_fcinv(record, z);
-            p_fcinv:_FillValue= 0s;
+            w_fcinv(record, z);
+            w_fcinv:_FillValue= 0s;
               	
         short
             t_fcinv(record, z);
@@ -478,6 +481,14 @@ netcdf rsf {
             msl_fcinv:_FillValue= 0s;
 
         short
+            p_fcinv(record, z);
+            p_fcinv:_FillValue= 0s;
+              	
+        short
+            ps_fcinv(record, z);
+            ps_fcinv:_FillValue= 0s;
+
+        short
             lil_fcinv(record, z);
             lil_fcinv:_FillValue= 0s;
 
@@ -501,7 +512,6 @@ netcdf rsf {
             sto_fcinv(record, z);
             sto_fcinv:_FillValue= 0s;
 
-
         short
             th_fcinv(record, z);
             th_fcinv:_FillValue= 0s;
@@ -519,24 +529,24 @@ netcdf rsf {
             nbe_fcinv:_FillValue= 0s;
 
         short
-            ps_fcinv(record, z);
-            ps_fcinv:_FillValue= 0s;
+            lcv_fcinv(record, z);
+            lcv_fcinv:_FillValue= 0s;
 
         short
             cce_fcinv(record, z);
             cce_fcinv:_FillValue= 0s;
 
         short
-            vis_fcinv(record, z);
-            vis_fcinv:_FillValue= 0s;
-
-        short
-            lcv_fcinv(record, z);
-            lcv_fcinv:_FillValue= 0s;
-
-        short
             lmt_fcinv(record, z);
             lmt_fcinv:_FillValue= 0s;
+
+        short
+            cxr_fcinv(record, z);
+            cxr_fcinv:_FillValue= 0s;
+
+        short
+            llr_fcinv(record, z);
+            llr_fcinv:_FillValue= 0s;
 
         short
             spt_fcinv(record, z);
@@ -553,6 +563,14 @@ netcdf rsf {
         short
             hi_fcinv(record, z);
             hi_fcinv:_FillValue= 0s;
+
+        short
+            vis_fcinv(record, z);
+            vis_fcinv:_FillValue= 0s;
+
+        short
+            fd_fcinv(record, z);
+            fd_fcinv:_FillValue= 0s;
 
 
         //	list of grid levels
@@ -645,14 +663,14 @@ netcdf rsf {
         :Conventions = "NUWG";
         :history = "created by LAPS Branch of FSL";
         :record = "valtime, reftime";
-        :title = "RAMS rsf file - surface data";
+        :title = "LAPS rsf file - forecast model surface data";
         :version = 3;
 
     data:
 
         earth_shape     = "spherical radius";
-        grid_name       = "RAMS rsf file - surface data";
-        process_name    = "RAMS - Regional Atmospheric Modeling System";
+        grid_name       = "LAPS rsf file - forecast model surface data";
+        process_name    = "LAPS - Local Analysis and Prediction System";
         x_dim           = "x";
         y_dim           = "y";
 }                       
