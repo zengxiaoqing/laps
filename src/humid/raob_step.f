@@ -162,7 +162,7 @@ c     climate model (for QC)
         
 c *** begin routine
 
-      write(6,*) '1.19; improved climo moisture QC check 6.29.99'
+      write(6,*) '1.20; Td adjusted WRT liq at freezing temps.'
 
       pi = acos(-1.0)
       d2r = pi/180.
@@ -407,7 +407,10 @@ c     pressure levels
      1              log(p_r(ks,is)),log(p_r(ks+1,is)),
      1              td_r(ks,is),td_r(ks+1,is),temtd)
 
-               q_r(k,is) = ssh2 (laps_pressure(k),temt,temtd,0.0)/1000.
+c     adjustment to t_ref for sounding data assuming now Td WRT liq at
+c     temps below freezing, DB  1.20 change
+
+               q_r(k,is) = ssh2 (laps_pressure(k),temt,temtd,-129.)/1000.
 
 c     accept only valid raob data (temp must be > -40 c
 c     and +/- 3c temp check on laps background to raob temp)  DB 1.18 change
