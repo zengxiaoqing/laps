@@ -1,8 +1,8 @@
-       Subroutine getlapsvxx(imax,jmax,kmax,maxradar,c_radar_id,
-     &      n_radars,c_extension_proc,i4timefile_proc,i4_tol,rheight_3d,      
-     &      lat,lon,topo,
-     &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,
-     &      grid_ra_ref,grid_ra_vel,istatus)
+       Subroutine getlapsvxx(imax,jmax,kmax,maxradar,c_radar_id,         ! I
+     &      n_radars,c_extension_proc,i4timefile_proc,i4_tol,rheight_3d, ! I   
+     &      lat,lon,topo,                                                ! I
+     &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,          ! O
+     &      grid_ra_ref,grid_ra_vel,istatus)                             ! O
 c
        Integer       imax,jmax,kmax  !same as imax,jmax,kmax in lapsparms.for
        Integer       maxradar
@@ -53,7 +53,8 @@ c
       if(istatus .ne. 1)return
 
 c ========================================================
-c Read intermediate radar file
+c Read intermediate radar files. This will return the array only with those
+c valid radars within the internal 20min time window of 'read_radar_3dref'.
 c
       l_apply_map=.true.
       l_low_fill = .true.
@@ -63,9 +64,13 @@ c
       write(6,*)'get_laps_vxx: Reading v-file Reflectivity, ',
      1          '# of potential radars = ',n_radars
 
-      n_valid_radars = 0
+      k = 0
 
-      do k=1,n_radars
+      do kcount=1,n_radars
+
+         write(6,*)
+
+         k = k+1
 
          call get_directory(c_extension_proc(k),directory,len_dir)
 
@@ -86,41 +91,34 @@ c
      1   n_ref_grids,istatus_2dref,istatus_3dref)
 
 c check laps analysis values
-c100       write(6,*)'Which output level do you want? [1-21]'
-c          read(5,*)level
          if(istatus_3dref.ne.1 .and. istatus_3dref.ne.-1)then
-            write(6,*)'Error reading radar ',ext
-            goto 44
+            write(6,*)'Unsuccessful reading radar ',kcount,k,ext
+            k=k-1
          else
-            write(6,*)'Successful reading radar ',ext
+            write(6,*)'Successful reading radar ',kcount,k,ext
             write(6,*)'radar lat/lon/elev: ',rlat_radar(k),
      &                         rlon_radar(k),rheight_radar(k)
-            n_valid_radars = n_valid_radars + 1
+            level=9
+            write(6,*)
+            write(6,*)'Level ',level,' Analysis output'
+            write(6,*)'------------------------------'
+29          format(1x,'  i  j    lat   lon     topo    ref ')
+            write(6,29)
+
+            do j=1,jmax,10
+            do i=1,imax,10
+               write(6,30)i,j,lat(i,j),lon(i,j),topo(i,j)
+     &                   ,grid_ra_ref(i,j,level,k)
+            end do
+            end do
+
+30          format(1x,2i3,1x,3f7.1,1x,2(f8.1,1x))
+
          endif
 
-         level=9
-         write(6,*)
-         write(6,*)'Level ',level,' Analysis output'
-         write(6,*)'------------------------------'
-29       format(1x,'  i  j    lat   lon     topo    ref ')
-         write(6,29)
-
-         do j=1,jmax,10
-         do i=1,imax,10
-            write(6,30)i,j,lat(i,j),lon(i,j),topo(i,j)
-     &                ,grid_ra_ref(i,j,level,k)
-         end do
-         end do
-
-c        write(6,*)'Another level [Y/y or N/n]?'
-c        read(5,38)c_again
-c38       format(a1)
-c        if(c_again.eq.'Y'.or.c_again.eq.'y')goto 100
-30       format(1x,2i3,1x,3f7.1,1x,2(f8.1,1x))
-
-44       if(k.lt.n_radars)write(6,*)'Ok, next radar '
-
       enddo
+
+      n_valid_radars = k
 
       return
       end
