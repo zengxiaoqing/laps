@@ -30,6 +30,7 @@
  path_to_topt30s='/data/lapb/geog/world_topo_30s',
  path_to_topt10m='/data/lapb/geog/topo_10m',
  path_to_pctl10m='/data/lapb/geog/land_10m',
+ path_to_landuse30s='/data/lapb/geog/landuse_30s',
  path_to_soil2m='/data/lapb/geog/soil_2m',
 
  path_to_raw_pirep_cmn='/public/data/pirep/netcdf/',
@@ -55,7 +56,7 @@
  toptwvl_parm_cmn=2.,     
  silavwt_parm_cmn=0.,     
  c8_project_common='NIMBUS', 
- fdda_model_source_cmn='',
+ fdda_model_source_cmn='mm5hot','lga','mm5',
  /
 c OVERALL LAPS PARAMETERS
 c
