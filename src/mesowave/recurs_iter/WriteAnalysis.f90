@@ -80,6 +80,9 @@ SUBROUTINE WriteAnalysis(a,n)
      data(1:nx,1:ny,1:n(4)) = &
          a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,it,1:n(4))
 
+     !!! Temporarily use reduced pressure to replace MSL p:
+     data(1:nx,1:ny,4) = data(1:nx,1:ny,6)
+
      ! Theta_e: equivalent potential temperature
      DO j=1,ny
 	DO i=1,nx
