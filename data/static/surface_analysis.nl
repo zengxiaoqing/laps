@@ -11,6 +11,9 @@
  bad_mp=5.0,
  bad_u=6.0,
  bad_v=6.0,
+ thresh_t=30.,
+ thresh_td=40.,
+ thresh_mslp=10.,
  /
 c..... This is the namelist for the LAPS surface analysis
 c..... process (LSX).  Switches and similar things can go
@@ -85,3 +88,7 @@ c       bad_the = 2.5           ! for theta-e
 c       bad_vis = 500. 	        ! for visibility
 c       bad_tb8 = 5.0 	        ! for tb8 Brightness temps.
 c
+c       QC parms: threshold checks
+c       thresh_t                ! for temperature (deg F)
+c       thresh_td               ! for dewpoint (deg F)
+c       thresh_mslp             ! for MSL pressure (millibars)
