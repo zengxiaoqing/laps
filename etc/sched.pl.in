@@ -63,6 +63,9 @@
 # -f                   Run followup script to generate GIF images for the web.
 #                      The argument value is a shorthand name for the domain.
 #                      
+# -F                   Run followup script to generate GIF images for the web.
+#                      No other executables are run.
+#                      
 
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
@@ -73,11 +76,11 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f);
+            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:Q:KM:n:A:f:wslvp:');
+getopts('d:c:a:rm:t:e:q:Q:KM:n:A:f:F:wslvp:');
 
 my $initial_time = time();
 
@@ -109,6 +112,9 @@ if(defined $opt_s){ # "surface only"
 
 }elsif(defined $opt_M){ # Mesowave
     @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M);
+
+}elsif(defined $opt_F){ # Followup Only
+    @LAPS_EXE = ( );
 
 }elsif($c8_project eq "AIRDROP"){
     @LAPS_EXE = qw(lga.exe ingest_sounding.exe
@@ -454,6 +460,17 @@ foreach $exe (@LAPS_EXE){
        
         if($execount == $nexe){ # Last on the list
 
+            if($opt_f || $opt_F){ 
+                print TFILE "  \n";
+                print TFILE "echo 'Running www images postprocessing' >> $LAPS_LOG_PATH/runtime.log\n";
+
+                if($opt_f){ 
+                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
+                }else{ # $opt_F
+                    print TFILE "$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1\n";
+                }
+            }
+
             print TFILE "  \n";
             print TFILE "echo `date` [finished qsub_wait scripts] >> $LAPS_LOG_PATH/runtime.log\n";
             print TFILE "  \n";
@@ -473,8 +490,8 @@ foreach $exe (@LAPS_EXE){
 
     my $cur_time = time();
 
-# we won't worry about cycle time overrun if archive case
-    if(! $opt_A && ! $opt_a)
+# we won't worry about cycle time overrun if archive case or web only run
+    if(! $opt_A && ! $opt_a && ! $opt_F)
     {
        if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)+$extend_time*3600){
           print "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
@@ -537,9 +554,12 @@ if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
 
 }
 
-if($opt_f){
+if($opt_f && (! $opt_q) && (! $opt_Q) ){ 
     print LOG $t." Running www images postprocessing\n";
     system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_f $LAPSROOT 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
+}elsif($opt_F && (! $opt_q) && (! $opt_Q) ){
+    print LOG $t." Running www images postprocessing\n";
+    system("$LAPSROOT/etc/www/followup_ncarg.sh $LAPS_DATA_ROOT $opt_F $LAPSROOT 1> $LAPS_LOG_PATH/followup_ncarg.log.$yyjjjhhmm 2>&1");
 }
 
 close(LOG);
