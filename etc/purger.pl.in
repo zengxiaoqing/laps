@@ -36,7 +36,7 @@ my $DATAROOT=shift || die "LAPS_DATA_ROOT required";
 #
 # Command line arguments::
 #
-# -m  default maximum number of files to keep in each directory
+# -r -m  default maximum number of files to keep in each directory
 #
 # -t  default maximum time (days) to keep files in each directory
 #
