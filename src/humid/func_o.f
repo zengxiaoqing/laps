@@ -67,7 +67,6 @@ c   the imager or sounding instrument can be used with the software without
 c   further recompilation.
 
       implicit none
-      save
       include 'Constants.inc'
       
 c     parameter variables
