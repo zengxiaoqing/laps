@@ -238,11 +238,14 @@ c     Test whether point is in the domain
 
         if (lat.le.rnorth .and. lat .ge. south
      1       .and. lon .ge. west .and. lon .le. east )then
+           write (6,*) 'accepting sounding ', lat,lon
+           write (6,*) 'routine process_goes_snd'
            continue
         else
            ! outside the perimeter - reject
            write (6,*) 'lat lon reject', lat, lon
            go to 200            !bail on this record
+
         endif                   !domain test finished
 
 c     good ob
@@ -291,7 +294,7 @@ c     finish off with stuff for writing
         nlvl(1) = count_level ! number of levels
 
 c     Call write routine
-
+        write(6,*) 'including satsnd in output file'
         call write_snd (lun_out,
      1       maxsnd,maxlvl,nsnd,
      1       iwmostanum,
