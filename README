@@ -9,6 +9,8 @@
      1.0 ............  General LAPS info
      2.0 ............  Installing the LAPS Ingest/Analysis code 
          2.1 ..............  Introduction
+         2.1.1 ..................  Ingest Software Changes
+         2.1.2 ..................  Setting Runtime Parameters
          2.2 ..............  System Requirements
          2.2.1 ..................  NetCDF library
          2.2.2 ..................  Perl
@@ -126,27 +128,43 @@
      created by the make install step.  Alternatively untar this file in
      some place outside the laps tree and create a symbolic link to
      'data/static/model' - this prevents having to update these terrain files 
-     each time you update LAPS.
+     each time you update LAPS. 
      Finally the script './etc/laps_localization.pl' will create the
      static data files and look up tables specific to the domain you
      have defined in 'data/static/nest7grid.parms', below are details on
      the contents of the 'nest7grid.parms' file.  
 
-     In this file, a number of potential manual changes to the code are 
-     outlined prior to running make and 'laps_localization.pl',especially 
-     if one is on a domain other than the default Colorado domain. After 
-     becoming familiar with the changes needed for your domain, it is 
-     recommended that you develop a method to save the hand edited files in a
-     "safe" place outside of the laps directory structure, or by using
-     a revision control system such as CVS.  This strategy would make it 
-     easier to update your implementation of LAPS with the latest laps.tar.gz 
-     file from FSL, while minimizing the hassle involved with LAPS 
-     modifications for your local domain. Some files (described below)
-     possibly worth saving are 'data/static/nest7grid.parms' and
-     'data/static/*.nl'.
+                --- 2.1.1   Ingest Software changes ---
 
-     One caution here is that you might want to check for any updates FSL has 
-     made in this file.
+     In this file, a number of potential manual changes to ingest code are 
+     outlined prior to running 'make' and 'laps_localization.pl', especially 
+     if one is using ingest data formats other than "standard" ones used at 
+     FSL. After becoming familiar with the changes needed for your 
+     implementation, it is recommended that you develop a method to save the 
+     hand edited files in a "safe" place outside of the laps directory 
+     structure, or by using a revision control system such as CVS.  This 
+     strategy would make it easier to update your implementation of LAPS with 
+     the 'latest laps.tar.gz' file from FSL, while minimizing the hassle 
+     involved with software modifications for your local implementation.
+
+                --- 2.1.2   Setting Runtime Parameters ---
+
+     Runtime parameter changes are needed to specify the domain, ingest data
+     path names, and potentially other aspects of the data processing.
+     The main parameter files are 'data/static/nest7grid.parms',
+     'data/static/*.nl', and 'data/static/*/*.parms'. These should be modified
+     prior to running 'laps_localization.pl'.
+
+     The subset of parameters to be changed will vary depending on the
+     implementation. The parameter files will also potentially be changing 
+     with each release. To accomodate this it is suggested that a 'perl' or
+     'sed/awk' script, or some type of GUI, be constructed locally to modify 
+     the appropriate parameters from the supplied values to the values 
+     appropriate for your local implementation. This strategy will handle 
+     cases where a new revision has parameters added or subtracted in a 
+     particular namelist other than the ones being locally modified. This gives
+     some measure of backward compatability.
+
 
         ----------------  2.2   System Requirements  ----------------
 
