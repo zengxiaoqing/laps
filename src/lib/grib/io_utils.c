@@ -76,6 +76,7 @@
 #include <malloc.h>
 #include<string.h>
 #include<memory.h>
+#include<errno.h>
 #define TRUE 1
 #define FALSE 0
 extern int errno;
