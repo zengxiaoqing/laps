@@ -1,4 +1,4 @@
-#!@PERL@
+#!/usr/local/perl5/bin/perl
 
 package laps_tools;
 use strict;
