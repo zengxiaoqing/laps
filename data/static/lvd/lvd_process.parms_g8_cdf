@@ -9,6 +9,7 @@ goes8
 # satellite data types (for source location, lut generation):
 cdf
 # channel types - the number of entries must match n_channels in lvd.parms:
+5
 vis
 4u
 wv

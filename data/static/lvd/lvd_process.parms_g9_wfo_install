@@ -1,14 +1,15 @@
-# install mode - called "cmode" in code
+# install mode - called "cmode" in code:
 install
-# number of satellites
+# number of satellites:
 1
-# satellite id's
+# satellite id's:
 goes9
-# number of satellite data sources
+# number of satellite data sources:
 1
-# satellite data types (for source location, lut generation)
+# satellite data types (for source location, lut generation):
 wfo
-# channel types - the number of entries must match n_channels in lvd.parms
+# channel types - the number of entries must match n_channels in lvd.parms:
+5
 vis
 i39
 iwv
