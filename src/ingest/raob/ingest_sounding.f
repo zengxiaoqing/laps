@@ -3,18 +3,23 @@
 
 !      Steve Albers      May-1999       Original Version
 
-       character*150 path_to_raw_raob,path_to_raw_satsnd
+       character*150 path_to_raw_raob,path_to_local_raob
+       character*150 path_to_raw_satsnd
        character*200 path_to_raw_tower
 
        call get_laps_config('nest7grid',istatus)
 
-       call get_snd_parms(path_to_raw_raob,path_to_raw_satsnd
-     1                   ,path_to_raw_tower,istatus)
+       call get_snd_parms(path_to_raw_raob,path_to_local_raob
+     1                   ,path_to_raw_satsnd,path_to_raw_tower,istatus)       
        if(istatus .ne. 1)goto999
  
        write(6,*)
        write(6,*)' Call ingest_raob'
        call ingest_raob(path_to_raw_raob)
+ 
+       write(6,*)
+       write(6,*)' Call ingest_local_raob (not yet supported)'
+!      call ingest_local_raob(path_to_local_raob)
 
        write(6,*)
        write(6,*)' Call ingest_satsnd'
@@ -48,13 +53,17 @@
  999   end
 
 
-       subroutine get_snd_parms(path_to_raw_raob,path_to_raw_satsnd
+       subroutine get_snd_parms(path_to_raw_raob,path_to_local_raob
+     1                         ,path_to_raw_satsnd
      1                         ,path_to_raw_tower,istatus)
 
-       character*150 path_to_raw_raob,path_to_raw_satsnd
+       character*150 path_to_raw_raob,path_to_local_raob
+     1              ,path_to_raw_satsnd
+
        character*200 path_to_raw_tower
-       namelist /snd_nl/ path_to_raw_raob,path_to_raw_satsnd
-     1                  ,path_to_raw_tower
+
+       namelist /snd_nl/ path_to_raw_raob,path_to_local_raob
+     1                  ,path_to_raw_satsnd,path_to_raw_tower
  
        character*150 static_dir,filename
  
