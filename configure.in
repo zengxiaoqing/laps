@@ -96,7 +96,7 @@ if test "$arch" = "rs6000"
 then
   FFLAGS="$FFLAGS"
   FIXED="-qfixed"
-  FREE="-qfree=f90"
+  FREE="-qfree=f90 -qsuffix=f=f90"
   OPTIMIZE="-O3 -qstrict"
 fi
 if test "$arch" = "alpha"
