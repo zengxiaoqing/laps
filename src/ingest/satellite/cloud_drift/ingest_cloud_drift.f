@@ -40,8 +40,6 @@
           stop
       endif
 
-      i_open = 0
-
       call get_windob_time_window('CDW',i4_window,istatus)
       if(istatus .ne. 1)stop
 
@@ -76,18 +74,16 @@
      1                       ,max_files,istatus)
 
 !         Open output CDW file 
-          if(i_nbr_files_ret .gt. 0 .and. i_open .eq. 0)then
-              ext = 'cdw'
-              call open_lapsprd_file(11,i4time_sys,ext(1:3),istatus)
-              if(istatus .ne. 1)then
-                  write(6,*)' Error opening output file ',ext
-                  stop
-              endif
-              i_open = 1
+          lun_out = 11
+          ext = 'cdw'
+          if(i_nbr_files_ret .gt. 0)then
+              write(6,*)' Found ',i_nbr_files_ret,' files in '
+     1                 ,c_filespec      
           endif
 
           if(cloud_drift_format(ipath) .eq. 'NESDIS')then
-              lag_time_report = 1800
+              i4_contains_early = 0
+              i4_contains_late  = 1800
 
 !             Obtain file times from file names
               do i = 1,i_nbr_files_ret
@@ -106,14 +102,16 @@
               enddo ! i
 
           elseif(cloud_drift_format(ipath) .eq. 'AFWA')then
-              lag_time_report = 3600
+              i4_contains_early = 0
+              i4_contains_late = 3600
 
               call get_file_times(c_filespec,max_files,c_fnames
      1                           ,i4times,i_nbr_files_ret
      1                           ,istatus)
 
           elseif(cloud_drift_format(ipath) .eq. 'CWB_SATOB')then
-              lag_time_report = 3600
+              i4_contains_early = 21600
+              i4_contains_late = 21600
 
 !             Obtain file times from file names
               do i = 1,i_nbr_files_ret
@@ -131,7 +129,8 @@
               enddo ! i
 
           elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then
-              lag_time_report = 0
+              i4_contains_early = 21600
+              i4_contains_late = 21600
 
 !             Obtain file times from file names
               do i = 1,i_nbr_files_ret
@@ -164,8 +163,9 @@
 
 !             Test whether we want the NetCDF file for this time
               i4time_file_earliest = i4time_sys - i4_window
-     1                                          - lag_time_report
+     1                                          - i4_contains_late
               i4time_file_latest =   i4time_sys + i4_window
+     1                                          + i4_contains_early
           
               if(i4times(i) .lt. i4time_file_earliest)then
                   write(6,*)' File is too early ',a9_time,i
@@ -177,12 +177,25 @@
 
                   if(cloud_drift_format(ipath) .eq. 'NESDIS')then
 !                     Read from the ASCII pirep file
-!                     Write to the opened PIN file
+
+                      call open_ext(lun_out,i4time_sys,ext(1:3),istatus)       
+                      if(istatus .ne. 1)then
+                          write(6,*)' Error opening output file ',ext
+                          stop
+                      endif
+
+!                     Write to the opened CDW file
                       call get_cloud_drift_data(i4time_sys,i4_window
      1                                          ,NX_L,NY_L
      1                                          ,filename_in,istatus)
 
                   elseif(cloud_drift_format(ipath) .eq. 'AFWA')then       
+                      call open_ext(lun_out,i4time_sys,ext(1:3),istatus)       
+                      if(istatus .ne. 1)then
+                          write(6,*)' Error opening output file ',ext
+                          stop
+                      endif
+
                       call get_cloud_drift_afwa(i4time_sys,i4_window
      1                                          ,NX_L,NY_L
      1                                          ,filename_in,istatus)
@@ -205,7 +218,7 @@
           enddo ! i
       enddo ! ipath
 
- 990  close(11) ! Output PIN file
+ 990  close(lun_out) ! Output CDW file
 
  999  continue
 
