@@ -3739,12 +3739,12 @@ c             cint = -1.
         elseif(c_type .eq. 'sc')then
             var_2d = 'SC'
             ext = 'lm2'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
 
-            IF(istatus .ne. 1)THEN
+            IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
                 write(6,*)' Error Reading Snow Cover'
                 goto1200
             endif

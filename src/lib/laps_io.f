@@ -67,12 +67,16 @@ cdis
      1  1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
      1                     COMMENT_2D,field_2d,ISTATUS)
 
-!       Spot check for missing data
-        if(istatus .eq. 1 .and.
-     1            field_2d(imax/2,jmax/2) .eq. r_missing_data)then
-            write(6,*)' Missing Data Value Detected in 2D Field'
-            istatus = -1
-        endif
+!       Check for missing data
+        do j = 1,jmax
+        do i = 1,imax
+            if(istatus .eq. 1 .and.
+     1             field_2d(imax/2,jmax/2) .eq. r_missing_data)then
+                write(6,*)' Missing Data Value Detected in 2D Field'
+                istatus = -1
+            endif
+        enddo ! i
+        enddo ! j
 
         return
         end
@@ -128,12 +132,16 @@ cdis
      1  1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
      1                     COMMENT_2D,field_2d,ISTATUS)
 
-!       Spot check for missing data
-        if(istatus .eq. 1 .and.
-     1            field_2d(imax/2,jmax/2) .eq. r_missing_data)then
-            write(6,*)' Missing Data Value Detected in 2D Field'
-            istatus = -1
-        endif
+!       Check for missing data
+        do j = 1,jmax
+        do i = 1,imax
+            if(istatus .eq. 1 .and.
+     1             field_2d(imax/2,jmax/2) .eq. r_missing_data)then
+                write(6,*)' Missing Data Value Detected in 2D Field'
+                istatus = -1
+            endif
+        enddo ! i
+        enddo ! j
 
         return
         end
@@ -204,15 +212,19 @@ cdis
 11          format(' Reading 2d ',a45,1x,a9,1x,a5,1x,a3)
 
             CALL READ_LAPS_DATA(I4TIME_nearest,DIRECTORY,EXT,imax,jmax,
-     1  1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
+     1                     1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
      1                     COMMENT_2D,field_2d,ISTATUS)
 
-!           Spot check for missing data
-            if(istatus .eq. 1 .and.
+!           Check for missing data
+            do j = 1,jmax
+            do i = 1,imax
+                if(istatus .eq. 1 .and.
      1                 field_2d(imax/2,jmax/2) .eq. r_missing_data)then
-                write(6,*)' Missing Data Value Detected in 2D Field'
-                istatus = -1
-            endif
+                    write(6,*)' Missing Data Value Detected in 2D Field'
+                    istatus = -1
+                endif
+            enddo ! i
+            enddo ! j
 
         else
             write(6,*)' No field found within window ',ext(1:10)
@@ -290,15 +302,19 @@ c
 11          format(' Reading 2d ',a52,1x,a9,1x,a5,1x,a3)
 
             CALL READ_LAPS_DATA(I4TIME_nearest,DIRECTORY,EXT,imax,jmax,
-     1  1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
+     1                     1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
      1                     COMMENT_2D,field_2d,ISTATUS)
 
-!           Spot check for missing data
-            if(istatus .eq. 1 .and.
+!           Check for missing data
+            do j = 1,jmax
+            do i = 1,imax
+                if(istatus .eq. 1 .and.
      1                 field_2d(imax/2,jmax/2) .eq. r_missing_data)then
-                write(6,*)' Missing Data Value Detected in 2D Field'
-                istatus = -1
-            endif
+                    write(6,*)' Missing Data Value Detected in 2D Field'
+                    istatus = -1
+                endif
+            enddo ! i
+            enddo ! j
 
         else
             write(6,*)' No field found within window ',ext(1:10)
