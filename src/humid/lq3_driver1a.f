@@ -110,6 +110,7 @@ c     rams stuff--------
 c     ------------------
       
       real data_in(ii,jj,kk), delta_moisture(kk), avg_moisture(kk)
+      real data_start(ii,jj,kk)
       real data_pre_bound (ii,jj,kk)
       real diff_data(ii*jj)
       real ave,adev,sdev,var,skew,curt
@@ -598,6 +599,7 @@ c     record total moisture
          do i = 1,ii
             do j = 1,jj
                data_in(i,j,k) = data(i,j,k)
+               data_start(i,j,k) = data(i,j,k)
             enddo
          enddo
       enddo
@@ -615,6 +617,14 @@ c     ****  execute raob step if switch is on
          write(6,*) 'Reporting effects of RAOB insertion'
          
          call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+
+         do i = 1,ii
+            do j = 1,jj
+               do k  = 1,kk
+                  data_in(i,j,k) = data(i,j,k)
+               enddo
+            enddo
+         enddo
          
 c     end report moisture change block
          
@@ -660,10 +670,23 @@ c     insert boundary layer data
       if( sfc_mix.eq.1)then
          write(6,*) 'Lsin allowed to modify data field'
          
-         write(6,*) 'Reporting effects of boundary layer effects'
+         write(6,*) 'Reporting incremental boundary layer effects'
          
          call report_change (data_in, data, plevel,mdf,ii,jj,kk)
          
+         write(6,*) 'Reporting net change'
+         call report_change (data_start, data, plevel, mdf, ii,jj,kk)
+
+         do i = 1,ii
+            do j = 1,jj
+               do k  = 1,kk
+                  data_in(i,j,k) = data(i,j,k)
+               enddo
+            enddo
+         enddo
+         
+
+
 c     end report moisture change block
          
 
@@ -753,6 +776,19 @@ c     make call to goes moisture insertion
             
             call report_change (data_in, data, plevel,mdf,ii,jj,kk)
             
+            write(6,*) 'Reporting net change'
+            call report_change (data_start, data, plevel, mdf, ii,jj,kk)
+            
+            do i = 1,ii
+               do j = 1,jj
+                  do k  = 1,kk
+                     data_in(i,j,k) = data(i,j,k)
+                  enddo
+               enddo
+            enddo
+         
+
+            
             
 c     end report moisture change block
         
@@ -779,7 +815,50 @@ c     end report moisture change block
          write(6,*) 'goes switch is off... goes step skipped...'
          
       endif
+
+c     gvap data insertion step (currently under test)
       
+      if (gvap_switch.eq.1) then
+         
+         call process_gvap(ii,jj,gvap_data,tpw,
+     1        lat,lon,time_diff,
+     1        path_to_gvap8,path_to_gvap10,filename,istatus)
+         
+         if(istatus.eq.1) then  ! apply gvap weights
+            
+            do k = 1,kk
+               do j = 1,jj
+                  do i = 1,ii
+                     if(data(i,j,k).ge.0.0) then
+                        data(i,j,k) = data(i,j,k) * gvap_data(i,j)
+     1                       + data(i,j,k)
+                     endif
+                  enddo
+               enddo
+            enddo
+            
+            write(6,*) 'Reporting changes from GVAP'
+            
+            call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+
+            write(6,*) 'Reporting net change'
+            call report_change (data_start, data, plevel, mdf, ii,jj,kk)
+            
+            do i = 1,ii
+               do j = 1,jj
+                  do k  = 1,kk
+                     data_in(i,j,k) = data(i,j,k)
+                  enddo
+               enddo
+            enddo
+         
+
+            
+         else
+            write(6,*) 'gvap weights not applied, istatus = 0'
+         endif
+         
+      endif
       
 c     *** insert cloud moisture, this section now controled by a switch
 
@@ -829,47 +908,20 @@ c     ! still cloudy...put in for albers
          write (6,*) 'Reporting cloud effects on analysis'
          call report_change (data_in, data, plevel,mdf,ii,jj,kk)
          
-
-
-
-      endif
-      
-c     gvap data insertion step (currently under test)
-      
-      if (gvap_switch.eq.1) then
+         write(6,*) 'Reporting net change'
+         call report_change (data_start, data, plevel, mdf, ii,jj,kk)
          
-         call process_gvap(ii,jj,gvap_data,tpw,
-     1        lat,lon,time_diff,
-     1        path_to_gvap8,path_to_gvap10,filename,istatus)
-         
-         if(istatus.eq.1) then  ! apply gvap weights
-            
-            do k = 1,kk
-               do j = 1,jj
-                  do i = 1,ii
-                     if(data(i,j,k).ge.0.0) then
-                        data(i,j,k) = data(i,j,k) * gvap_data(i,j)
-     1                       + data(i,j,k)
-                     endif
-                  enddo
+         do i = 1,ii
+            do j = 1,jj
+               do k  = 1,kk
+                  data_in(i,j,k) = data(i,j,k)
                enddo
             enddo
-            
-            write(6,*) 'Reporting changes from GVAP'
-            
-            call report_change (data_in, data, plevel,mdf,ii,jj,kk)
-            
-         else
-            write(6,*) 'gvap weights not applied, istatus = 0'
-         endif
-         
-         
-         
-         
+         enddo
          
       endif
       
-      
+  
 c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
       
       if(mod_4dda_1 .eq. 1) then ! act to decrease overall water
@@ -1004,7 +1056,7 @@ c     generate lh3 file (RH true, RH liquid)
       
       write (6,*) 'Reporting overall changes to moisture'
       
-      call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+      call report_change (data_start, data, plevel,mdf,ii,jj,kk)
       
       return
       
