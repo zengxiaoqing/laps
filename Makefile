@@ -281,18 +281,7 @@ mkdirs: mkdatadirs
 	ls -l  $(LAPSROOT)/etc; cp -r $(LAPSROOT)/etc  $(INSTALLROOT)/etc ; ls -l $(INSTALLROOT)/etc ; fi
 
 mkdatadirs :
-	if [ ! -d $(DATAROOT) ] ; then  \
-	cp -r $(LAPSROOT)/data $(DATAROOT) ; fi 
-	@for dir in $(DATADIRS) ;\
-	  do \
-	  if [ ! -d $(DATAROOT)/$$dir ] ; then  \
-	    echo Creating Laps data directory $(DATAROOT)/$$dir ;\
-	    (cd $(DATAROOT); \
-	    mkdir -p $$dir ; if [ $$? != 0 ] ; then \
-	          echo "Exit status from mkdir was $$?" ; exit 1 ; fi ;) ;\
-	    fi ; done ; 
-
-
+	$(PERL) $(LAPSROOT)/etc/makedatadirs.pl $(LAPSROOT) $(INSTALLROOT) $(DATAROOT)
 
 
 clean:
