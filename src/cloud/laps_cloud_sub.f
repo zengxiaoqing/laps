@@ -212,7 +212,7 @@ cdis
         real*4 heights_3d(NX_L,NY_L,NZ_L)
 
 !       Output array declarations
-        real*4 out_array_3d(NX_L,NY_L,5)
+        real*4 out_array_3d(NX_L,NY_L,6)
 
 !       real*4 snow_2d(NX_L,NY_L)
 
@@ -243,7 +243,7 @@ cdis
 
         character*255 c_filespec
         character var*3,comment*125,directory*150,ext*31,units*10
-        character*125 comment_tb8,comment_t39,comment_sst
+        character*125 comment_tb8,comment_t39,comment_sst,comment_alb       
         character*3 exts(20)
         character*3 var_a(MAX_FIELDS)
         character*125 comment_a(MAX_FIELDS)
@@ -648,6 +648,7 @@ C DO ANALYSIS on SAO and PIREP data
 C READ IN SATELLITE DATA
         call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,     ! I
      1                    NX_L,NY_L,r_missing_data,                      ! I
+     1                    l_use_39,                                      ! I
      1                    tb8_k,istat_tb8,comment_tb8,                   ! O
      1                    t39_k,istat_t39,comment_t39,                   ! O
      1                    sst_k,istat_sst,comment_sst,                   ! O
@@ -664,6 +665,7 @@ C READ IN SATELLITE DATA
         call get_vis(i4time,solar_alt,l_use_vis,lat                      ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
+     1              ,comment_alb                                         ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
      1              ,istat_vis_a,istat_vis)                              ! O
 
@@ -922,7 +924,7 @@ C       EW SLICES
                 write(6,*)' hole detected ',i,j,cvr_max(i,j)
 
                 do jj = j+1,j-1,-1
-                    write(6,511)
+                    write(6,511,err=512)
      1                        nint(cvr_max(i-1,jj)*100)
      1                       ,nint(cvr_max(i  ,jj)*100)
      1                       ,nint(cvr_max(i+1,jj)*100)
@@ -935,8 +937,11 @@ C       EW SLICES
      1                       ,nint(tb8_k(i+1,jj)-t_gnd_k(i+1,jj))
      1                       ,nint(topo(i-1,jj)),nint(topo(i,jj))        
      1                       ,nint(topo(i+1,jj))
- 511                format(1x,3i3,4x,3i4,4x,3i4,4x,3i4,4x,3i5)
-                enddo ! jj
+     1                       ,nint(cvr_sao_max(i-1,jj)*100)
+     1                       ,nint(cvr_sao_max(i  ,jj)*100)
+     1                       ,nint(cvr_sao_max(i+1,jj)*100)
+ 511                format(1x,3i3,4x,3i4,4x,3i4,4x,3i4,4x,3i5,4x,3i3)
+ 512            enddo ! jj
 
             endif ! cloud hole detected
 
@@ -1169,16 +1174,19 @@ C       EW SLICES
         var_a(3) = 'CWT'
         var_a(4) = 'S8A'
         var_a(5) = 'S3A'
+        var_a(6) = 'ALB'
         units_a(1) = 'UNDIM'
         units_a(2) = 'UNDIM'
         units_a(3) = 'K'
         units_a(4) = 'K'
         units_a(5) = 'K'
+        units_a(6) = ' '
         comment_a(1) = 'LAPS Cloud Cover'
         comment_a(2) = 'LAPS Cloud Analysis Implied Snow Cover'
         comment_a(3) = 'LAPS Clear Sky Water Temp'
         comment_a(4) = comment_tb8
         comment_a(5) = comment_t39
+        comment_a(6) = comment_alb
 
 
         call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
@@ -1186,9 +1194,10 @@ C       EW SLICES
         call move(cvr_water_temp,out_array_3d(1,1,3),NX_L,NY_L)
         call move(tb8_k         ,out_array_3d(1,1,4),NX_L,NY_L)
         call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
+        call move(albedo        ,out_array_3d(1,1,6),NX_L,NY_L)
 
         call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1          comment_a,out_array_3d,NX_L,NY_L,5,istatus)
+     1          comment_a,out_array_3d,NX_L,NY_L,6,istatus)
 
         if(istatus .eq. 1)j_status(n_lcv) = ss_normal
 
