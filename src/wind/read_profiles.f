@@ -39,7 +39,7 @@ cdis
 cdis
  
         subroutine read_profiles(i4time_sys,heights_3d,             ! I
-     1                   lat_pr,lon_pr,obstype,                     ! O
+     1                   lat_pr,lon_pr,obstype,c5_name_a,           ! O
      1                   lat,lon,                                   ! I
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
      1                   l_use_raob,l_use_all_nontower_lvls,        ! I
@@ -93,6 +93,8 @@ c                             time of the current LAPS analysis time.
 !       real ob_pr_sp_obs(MAX_PR_LEVELS)                                    ! L
         real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS)                              ! L
         real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)                              ! L
+        real ob_pr_t_obs(MAX_PR,MAX_PR_LEVELS)                              ! L
+        real ob_pr_td_obs(MAX_PR,MAX_PR_LEVELS)                             ! L
         real ob_pr_ht(MAX_PR,kmax)                                          ! L
         real ob_pr_di(MAX_PR,kmax)                                          ! L
         real ob_pr_sp(MAX_PR,kmax)                                          ! L
@@ -193,15 +195,18 @@ c
       i4time_snd = i4time_nearest
 
       lun = 12
+      mode = 1 ! key levels off of wind data
       call read_snd_data(lun,i4time_snd,ext                             ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                    ! I
      1                         ,lat,lon,imax,jmax,kmax                  ! I
      1                         ,heights_3d                              ! I
+     1                         ,mode                                    ! I
      1                         ,n_profiles                              ! I/O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr    ! O
      1                         ,c5_name_a,i4time_ob_pr,obstype          ! O
      1                         ,ob_pr_ht_obs,ob_pr_pr_obs               ! O
      1                         ,ob_pr_u_obs,ob_pr_v_obs                 ! O
+     1                         ,ob_pr_t_obs,ob_pr_td_obs                ! O
      1                         ,istatus)                                ! O
 
  600  continue
@@ -268,8 +273,8 @@ c
      1           obstype(i_pr)(1:5) .eq. 'TOWER')then
 
                 write(6,311)i_pr,i_ob,j_ob,nlevels_obs_pr(i_pr)
-     1                     ,obstype(i_pr)
- 311            format(1x,' Remapping profile ',4i6,1x,a8
+     1                     ,obstype(i_pr),c5_name_a(i_pr)
+ 311            format(1x,' Remapping profile ',4i6,1x,a8,1x,a5
      1                ,' (all levels)')      
 
                 do lvl = 1,nlevels_obs_pr(i_pr)
