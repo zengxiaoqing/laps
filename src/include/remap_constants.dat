@@ -100,6 +100,7 @@ c
           real abs_vel_min
 
           logical l_line_ref_qc
+          logical l_hybrid_first_gate
 
       end type namelist_type
 
