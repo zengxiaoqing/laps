@@ -623,7 +623,6 @@ fint4 *status;
         }
         else {
           la1 = *(data + (lat_index*(*imax)*(*jmax)));
-          if (la1 < 0.0) la1 = 360.0 + la1;
         }
 
         if (lon_index == (-1)) {
