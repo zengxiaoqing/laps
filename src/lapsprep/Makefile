@@ -56,6 +56,7 @@ FMOD = module_constants.o \
        module_lapsprep_mm5.o \
        module_lapsprep_rams.o \
        module_lapsprep_wrf.o \
+       module_lapsprep_netcdf.o \
        module_setup.o
 
 
@@ -71,11 +72,13 @@ debug:
 
 lapsprep.o:		$(FMOD)
 
-module_lapsprep_mm5.o:	module_setup.o module_laps_static.o module_date_pack.o
+module_lapsprep_mm5.o:		module_setup.o module_laps_static.o module_date_pack.o
 
-module_lapsprep_rams.o:	module_setup.o module_laps_static.o module_date_pack.o
+module_lapsprep_rams.o:		module_setup.o module_laps_static.o module_date_pack.o
 
-module_lapsprep_wrf.o:	module_setup.o module_laps_static.o module_date_pack.o
+module_lapsprep_wrf.o:		module_setup.o module_laps_static.o module_date_pack.o
+
+module_lapsprep_netcdf.o:	module_setup.o module_laps_static.o module_date_pack.o
 
 
 clean:
