@@ -1,5 +1,5 @@
 
-        subroutine avapsread_sub(filename, istatus)
+        subroutine avapsread_sub(filename, lun_out, istatus)
 
         integer maxlvl
         parameter (maxlvl=10000)
@@ -125,7 +125,7 @@ c
                     ws_out(lvl_out) = ws(lvl)
                 endif
 
-                write(6,*)lvl,lvl_out,i4time_lvl,a9time_a(lvl_out)
+                write(6,*)lvl,lvl_out,i4time,a9time_a(lvl_out)
      1                   ,p_out(lvl_out)
      1                   ,t_out(lvl_out),td_out(lvl_out)
      1                   ,wd_out(lvl_out),ws_out(lvl_out)       
@@ -146,7 +146,7 @@ c
         lat_a = lat_s
         lon_a = lon_s
 
-        call write_snd    (11                              ! I
+        call write_snd    (lun_out                         ! I
      1                    ,1,lvl_out,1                     ! I
      1                    ,iwmostanum                      ! I
      1                    ,lat_a,lon_a,staelev             ! I
