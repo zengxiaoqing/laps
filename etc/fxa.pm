@@ -27,16 +27,26 @@ sub Get_env'fxa{ #'
     open(FXA,"$fxa_env_file");
     push(@fxaenv,<FXA>);
     close(FXA);
+    my $i;
     foreach(@fxaenv){
-	next if /^\#/;
-	next unless(/\s*([^\s]+)\s+([^\s]+)\s*$/);
+        $i++;
+
+        next if /^\#/;
+        next unless(/\s*([^\s]+)\s+([^\s]+)\s*$/);
         $evar = $1;
         $eval = $2;
-        $eval =~ s/\${$evar}/$ENV{$evar}/;
-        $eval =~ s#\$\{(.*[^\{])\}#$ENV{$1}#g;
-        $eval =~ s#\$([^\s\/]+)#$ENV{$1}#g;
 
-        $ENV{$evar} .= $eval;
+        $eval =~ s/\$\{/\$/g;
+        $eval =~ s/\}//g;
+
+        if($evar eq "PATH"){
+          my @paths=split(':',$ENV{PATH}) ;
+          $eval='';
+         foreach(@paths){
+	    $eval.="$_:" unless($eval=~/\:$_\:/);
+         }
+        }
+        $ENV{$evar} = $eval;
     }
     close(FXA);
     return 1;
@@ -46,8 +56,8 @@ sub Get_env'fxa{ #'
 sub Set_logdir'fxa{ #'
     
     if( -d $ENV{LOG_DIR}){
-#	local($yymmdd) = `date -u +%y%m%d`;
-#	chomp($yymmdd);
+#       local($yymmdd) = `date -u +%y%m%d`;
+#       chomp($yymmdd);
         local(@gmtime) = gmtime;
         $gmtime[4]++;
         for($i=3;$i<=5;$i++){
@@ -57,21 +67,22 @@ sub Set_logdir'fxa{ #'
 #        print "hera $yymmdd\n"; chomp($yymmdd); print $yymmdd;
 
 
-	$LAPS_LOG_PATH= "$ENV{LOG_DIR}/$yymmdd";
+        $LAPS_LOG_PATH= "$ENV{LOG_DIR}/$yymmdd";
 
-	if(! -d $LAPS_LOG_PATH){
-	    mkdir $LAPS_LOG_PATH, 0777 || 
+        if(! -d $LAPS_LOG_PATH){
+            mkdir $LAPS_LOG_PATH, 0777 || 
                 die "Could not create Log directory $LAPS_LOG_PATH";
-	}
-	$LAPS_LOG_PATH .= "/laps";
-	if(! -d $LAPS_LOG_PATH){
-	    mkdir $LAPS_LOG_PATH, 0777 || 
+        }
+        $LAPS_LOG_PATH .= "/laps";
+        if(! -d $LAPS_LOG_PATH){
+            mkdir $LAPS_LOG_PATH, 0777 || 
                 die "Could not create Log directory $LAPS_LOG_PATH";
-	}
+        }
     }else{
-	die "Could not find log dir $ENV{LOG_DIR}";
+        die "Could not find log dir $ENV{LOG_DIR}";
     }
-    return $LAPS_LOG_PATH;	
+    return $LAPS_LOG_PATH;
 }
 
 1;
+
