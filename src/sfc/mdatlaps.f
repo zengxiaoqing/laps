@@ -103,6 +103,9 @@ c                                   from all declarations.  Use Barnes for
 c                                   missing backgrounds. Turn off for now 
 c                                   MSL P calc at stns that don't report it.
 c	                07-26-99  Set back_mp off until can check.
+c                       08-17-99  Change vis for obs of 10+ miles, turn off bkg.
+c                                   If LGB bkgs good, calculate a bkg red_p
+c                                   instead of using previous LSX.
 c
 c	Notes:
 c
@@ -177,6 +180,7 @@ c
 c
 c.....	START.  Set up constants.
 c
+	call tagit('mdatlaps', 19990817)
 	jstatus(1) = -1		! put something in the status
 	jstatus(2) = -1
 	ibt = 0
@@ -393,8 +397,33 @@ cc	       pmsl_s(k) = p_msl
  983    format(1x,i5,2x,a8,':',3f12.2)
 	print *,' '
 c
-c.....	Convert visibility to log( vis ) for the analysis.
+c.....  If we have good background fields from LGB (or similar), use them
+c.....  to calculate a reduced pressure background.  Otherwise, skip this
+c.....  section to used what we've already found above.
 c
+	if(back_t.eq.1 .and. back_td.eq.1 .and. back_sp.eq.1) then
+	   print *,' Have good backgrounds...calculating RP_BK from them.'
+	   do j=1,jmax
+	   do i=1,imax
+	      if(stnp_bk(i,j).le.badflag .or. t_bk(i,j).le.badflag 
+     &                                  .or. td_bk(i,j).le.badflag) then
+		 rp_bk(i,j) = badflag
+	      else
+		 call reduce_p(t_bk(i,j),td_bk(i,j),stnp_bk(i,j),
+     &                         topo(i,j),lapse_t,lapse_td,rp_bk(i,j),
+     &                         redp_lvl,badflag) ! 1500 m for CO
+	      endif
+	   enddo !i
+	   enddo !j
+	endif
+c
+c.....	Change vis observations that are more than 10 miles to 11 miles,
+c.....  so the high end of the analysis will be "greater than 10 miles".
+c.....  Then convert visibility to log( vis ) for the analysis.
+c
+	do i=1,n_obs_b
+	   if(vis_s(i) .ge. 11.) vis_s(i) = 11.
+	enddo !i
 	call viss2log(vis_s,mxstn,n_obs_b,badflag)
 c
 c.....	READ IN THE BAND 8 BRIGHTNESS TEMPS (deg K)
@@ -545,6 +574,7 @@ c
 	   call check_field_2d(mslp_bk,imax,jmax,fill_val,istatus)
 	endif
 c
+	back_vis = 0
 	if(back_vis .ne. 1) then
 	   print *,' '
 	   print *,
