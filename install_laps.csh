@@ -186,14 +186,15 @@ if ($6 != p) then
 
     if (-e $LAPS_DATA_ROOT/lapsprd) then
         setenv config_domain f
+        echo " "
+        echo "Calling window_laps_rt.pl, config_domain = f"
+        $NEWPERL $LAPSINSTALLROOT/etc/window_laps_rt.pl    -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT 
     else
         setenv config_domain t
+        echo " "
+        echo "Calling window_laps_rt.pl, config_domain = t"
+        $NEWPERL $LAPSINSTALLROOT/etc/window_laps_rt.pl -c -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT 
     endif
-
-    echo " "
-    echo "Calling window_laps_rt.pl, config_domain = $config_domain ..."
-
-    $NEWPERL $LAPSINSTALLROOT/etc/window_laps_rt.pl -c$config_domain -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT 
 
 #   cd $LAPS_SRC_ROOT
 #   make DATAROOT=$LAPS_DATA_ROOT mkdatadirs 

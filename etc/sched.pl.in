@@ -215,7 +215,6 @@ foreach $exe (@LAPS_EXE){
 
                 if($execount > 1){ # after start
                     print TFILE "  \n";
-                    print TFILE "cd $LAPS_LOG_PATH\n";
                     print TFILE "/usr/local/bin/qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
                     print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
@@ -240,6 +239,8 @@ foreach $exe (@LAPS_EXE){
                 }
 
                 print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
+                print TFILE "  \n";
+                print TFILE "cd $LAPS_LOG_PATH\n";
 #               print TFILE "  \n";
 #               print TFILE "date >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
 #               print TFILE "  \n";
@@ -259,6 +260,8 @@ foreach $exe (@LAPS_EXE){
         }
        
         if($execount == $nexe){ # Last on the list
+            print TFILE "  \n";
+            print TFILE "date >> $LAPS_LOG_PATH/runtime.log\n";
             print TFILE "  \n";
             print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable # $execount\n";
             close(TFILE);
