@@ -18,6 +18,7 @@
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
           character*12 type           ! Observation type
+          character*12 file           ! Observation (intermediate) file
 	end type barnesob
 
 	type barnesob_qc
@@ -36,5 +37,6 @@
           integer mask_sea            ! Used for sfc analyses
           logical qc
           character*12 type           ! Observation type
+          character*12 file           ! Observation (intermediate) file
 	end type barnesob_qc
 
