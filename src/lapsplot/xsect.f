@@ -660,7 +660,9 @@ c read in laps lat/lon and topo
 
 100    write(6,95)
 95     format(
-     1  /'  Field:  [WIND: di,sp,u,v,om,dv,vo,va,vc (barbs)'
+     1  /'  Field - (add "i" for image):'
+     1  /
+     1  /'          [WIND: di,sp,u,v,om,dv,vo,va,vc (barbs)'
      1  /
      1  /'           TEMP: [t,pt,tb,pb] (T, Theta, T Blnc, Theta Blnc)'       
      1  /
@@ -680,8 +682,8 @@ c read in laps lat/lon and topo
      1l Diam)'
      1  /
      1  /'           cv (cloud cover contours)'
-     1  /'           rf (reflectivity-graphic), ri (ref-image)'
-     1  //'     Difference field: [df-i]  '
+     1  /'           rf (reflectivity-graphic), ri (ref-image)]'
+     1  //'     Difference field: [df]  '
      1  /' ',49x,'q (quit/display)]   ? ',$)
 
         NULBLL = 3 ! for conrec (number of lines between labels)
@@ -1660,7 +1662,7 @@ c read in laps lat/lon and topo
             call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
-            c33_label = 'LAPS Gridded Cloud Cover   X-Sect'
+            c33_label = 'Gridded Cloud Cover        X-Sect'
 
             call remap_field_2d(
      1                            NX_C,1,NX_C
@@ -2670,7 +2672,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             size_mini = .05
             size_mini_x = size_mini * width * 0.8 ! aspect ratio of xsect
             size_mini_y = size_mini * r_height
-            rleft_mini  = rleft + width    * .68
+!           rleft_mini  = rleft + width    * .68
+            rleft_mini  = rleft + width    * .26
             bottom_mini = top   + r_height * .025
             xl = rleft_mini  + x_1 * size_mini_x
             xh = rleft_mini  + x_2 * size_mini_x
