@@ -3,15 +3,15 @@ netcdf sfc_qc {
     dimensions:
         recNum         = unlimited;
         maxProviderLen = 11;        // Provider length
-        maxStaTypeLen  =  6;        // Station type length (lso = reptype)
+        maxRepTypeLen  =  6;        // Report type length (lso = reptype)
 	maxStaIdLen    = 20;        // Station id length (lso = stations)
 		
     variables:
 
-    // Station type.
+    // Report type.
 
-    char    stationType(recNum, maxStaTypeLen);
-            stationType:long_name    = "Station type"; 
+    char    reportType(recNum, maxRepTypeLen);
+            reportType:long_name    = "Report type"; 
 
     // Data provider
 
