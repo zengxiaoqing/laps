@@ -252,11 +252,15 @@ cdis
 
         character*9   c_fdda_mdl_src(maxbgmodels)
         character*10  cmds
+        character*10  c10_grid_fname
+        character*200 c_dataroot
 
 c       include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
 
         data mode_lwc/2/
+
+        call find_domain_name(c_dataroot,c10_grid_fname,istatus)
 
         icen = NX_L/2+1
         jcen = NY_L/2+1
@@ -278,24 +282,37 @@ c       include 'satellite_dims_lvd.inc'
 !       Get the location of the static grid directory
         call get_directory(ext,directory,len_dir)
 
-        var_2d='LAT'
+        call s_len(c10_grid_fname,lf)
+        if(c10_grid_fname(1:lf).eq.'nest7grid')then
+           var_2d='LAT'
+        else
+           var_2d='LAC'   !wrfsi c-stagger
+        endif
         call read_static_grid(nx_l,ny_l,var_2d,lat,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-lat'
             return
         endif
 
-        var_2d='LON'
+        if(c10_grid_fname(1:lf).eq.'nest7grid')then
+           var_2d='LON'
+        else
+           var_2d='LOC'   !wrfsi c-stagger
+        endif 
         call read_static_grid(nx_l,ny_l,var_2d,lon,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-lon'
             return
         endif
+        if(c10_grid_fname(1:lf).eq.'nest7grid')then
+           var_2d='AVG'
+        else
+           var_2d='AVC'   !wrfsi c-stagger
+        endif
 
-        var_2d='AVG'
         call read_static_grid(nx_l,ny_l,var_2d,topo,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Error reading LAPS static-topo'
+            write(6,*)' Error reading domain static-topo'
             return
         endif
 
@@ -4739,9 +4756,13 @@ c                   cint = -1.
               i4time_topo = 0
 
            elseif(cstatic(1:2) .eq. 'al')then
-              var_2d='ALB'
-              call read_static_grid(nx_l,ny_l,var_2d,static_grid
-     1,istatus)
+
+c             var_2d='ALB'
+c             call read_static_grid(nx_l,ny_l,var_2d,static_grid
+c    1,istatus)
+
+              call get_static_field_interp('albedo',i4time_ref
+     1,nx_l,ny_l,static_grid,istatus)
               if(istatus .ne. 1)then
                  print*,' Warning: could not read static-albedo'
                  return
@@ -4750,7 +4771,7 @@ c                   cint = -1.
               clow = 0.
               chigh = 1.0
               cint = .05
-              c33_label = 'Static Albedo                    '
+              c33_label = 'Interpolated Albedo     '
               asc9_tim_t = '         '
 
               if(cstatic .eq. 'ali')then
