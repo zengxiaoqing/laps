@@ -178,6 +178,8 @@ C********************************************************************
         nobs = 0
         residualu = 0.
         residualv = 0.
+        sumu = 0.
+        sumv = 0.
 
         write(6,*)'Comparing ',c_ob,' Wind Obs (passing QC) to '
      1                       ,c_grid,' Grid'
@@ -197,6 +199,10 @@ C********************************************************************
 
                   diffu = u_3d(il,jl,k) - grid_laps_u(il,jl,k)
                   diffv = v_3d(il,jl,k) - grid_laps_v(il,jl,k)
+
+                  sumu = sumu + diffu
+                  sumv = sumv + diffv
+
                   residualu = residualu + diffu ** 2
                   residualv = residualv + diffv ** 2
 
@@ -219,16 +225,25 @@ C********************************************************************
         if(nobs .gt. 0)then
             rmsu = sqrt(residualu/nobs)
             rmsv = sqrt(residualv/nobs)
+
+            biasu = -sumu / float(nobs)
+            biasv = -sumv / float(nobs)
+
         else
             rmsu = 0.
             rmsv = 0.
+
+            biasu = 0.
+            biasv = 0.
+
         endif
 
         rms  = sqrt(rmsu**2 + rmsv**2)
 
-        write(6,102)c_ob,c_grid,nobs,rmsu,rmsv,rms
-102     format(' RMS between ',a,' & ',a,' (n,rmsu,rmsv,rms) = ',
-     1     i4,3f5.1)
+        write(6,102)c_ob,c_grid,nobs,rmsu,rmsv,biasu,biasv,rms
+102     format(' RMS/BIAS between '
+     1        ,a,' & ',a,' (n,rmsu,rmsv,biasu,biasv,rms) = '
+     1        ,i4,5f5.1)
 
         return
 

@@ -13,7 +13,7 @@
 
 !       Weights in wind analysis
         real*4 weight_cdw
-        parameter (weight_cdw = 1.03)
+        parameter (weight_cdw = 0.04)      ! 5 m/s instrument error
 
         real*4 weight_sfc
         parameter (weight_sfc = 1.0)
