@@ -3,8 +3,8 @@
      +     usfc, vsfc, tsfc, dsfc, psfc, mslp, zsfc,
      +     istatus)
 C
-      include 'netcdf.inc'
       implicit none
+      include 'netcdf.inc'
       character*(*) fullname
       character*80 c8_proj
       integer x, y, z, nf_fid, nf_vid, nf_status
