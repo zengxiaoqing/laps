@@ -98,6 +98,7 @@ SRC	= machine_dependent.F \
           make_ssh.f \
           make_td.f \
           make_fnam_lp.f \
+          make_optran_layers.f \
           map_proj.f \
           meanlapse.f \
           meanpres.f \
