@@ -196,7 +196,7 @@ c
       Integer       i4_file_closest(n_radars)
       Integer       i4time_nearest
 c
-c vrc definitions
+c vrc output definitions
 c
 !     character     dir_vrc*50
       character     ext_vrc*31
@@ -205,7 +205,7 @@ c
       character*3   var_vrc(2)
       character     lvl_coord_2d*4
 c
-c vrz definitions
+c vrz output definitions
 c
       character     dir_vrz*50
       character     ext_vrz*31
@@ -213,7 +213,7 @@ c
       character     units_vrz*10
       character     var_vrz*3
 c
-c for getting laps heights
+c for getting laps heights & vrc
 c
       character     ext*31
      +             ,var_3d(nz_l)*3
@@ -449,21 +449,35 @@ c ----------------------------------------------------------
      &          grid_ra_ref,grid_ra_vel,                                 ! O
      &          istatus)                                                 ! O
 
-          elseif(c_mosaic_type(1:3).eq.'rdr')then
+          elseif(c_mosaic_type(1:3).eq.'rdr')then ! rd 'vrc' files on LAPS grid
+             ext = 'vrc'
+             var_2d = 'REF'
+             ilevel = 0
 
-!            Should this be simplified to read 'vrc' files on the LAPS grid?
+             do i = 1,i_ra_count
+                path=path_rdr(1:lprdr)//c_ra_ext(i)//'/vrc/'
+                grid_ra_ref(:,:,:,i) = r_missing_data  ! Initialize this 3D ref
 
-             call get_rdr_dims(c_ra_filename(1),x,y,z,record,istatus)
+                call get_2dgrid_dname(path
+     1           ,i4_file_closest(i),0,i4time_nearest
+     1           ,ext,var_2d,units_2d
+     1           ,comment_2d,nx_l,ny_l,grid_ra_ref(1,1,1,i)
+     1           ,ilevel,istatus)
 
-             call get_laps_rdr(nx_l,ny_l,nz_l,z,record,i_ra_count,
-     &         c_ra_filename,c_radar_id,rlat_radar,rlon_radar,
-     &         rheight_radar,n_valid_radars,grid_ra_ref,istatus)
+                if(istatus.ne.1 .and. istatus.ne.-1)then
+                  print*,'Error reading radar ',i
 
-             if(istatus.ne.1)then
-                call s_len(c_ra_filename(i),nc)
-                print*,'Error reading ',c_ra_filename(i)(1:nc)
-                return
-              endif
+                else
+                  n_valid_radars = n_valid_radars + 1
+
+                  read(comment_2d(1:9),'(f9.3)')rlat_radar(i)
+                  read(comment_2d(10:18),'(f9.3)')rlon_radar(i)
+                  read(comment_2d(19:26),'(f8.0)')rheight_radar(i)
+                  c_radar_id(i)(1:4)=comment_2d(34:37)
+
+                endif
+
+            enddo ! i
 
           endif
 
