@@ -85,7 +85,7 @@
          3.4.1 ..................  DPREP
          3.4.2 ..................  MM5 Initialization
      4.0 ............  Porting code mods from LAPS users back to FSL
-     5.0 ............  LAPS Variables and netCDF File Organization 
+     5.0 ............  LAPS Output Variables and netCDF File Organization 
 
 
 
@@ -134,6 +134,10 @@
      will find them and provide the laps package with the proper path. You 
      can also provide the path to netcdf to 'configure' by using the command 
      line argument --netcdf=path_to_ncdump.
+
+     NetCDF is a general format structure. The detailed format of each data 
+     file is self-describing (via 'ncdump'), and is mirrored in a separate 
+     static file called the CDL. This CDL can be FSL's version or someone elses.
    
                       --- 2.1.2  Perl             ---
 
@@ -978,14 +982,14 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
      Note that for any given process or set of processes, deviations from the 
      FSL output may be caused by differences in the inputs as well as machine 
-     roundoff error. Having all of the data history from 'lapsprd' may also be
-     an issue; this may be less of a problem if you run laps for the latest 
-     hour of data that is supplied. The history is then supplied from earlier
-     'lapsdata*/lapsprd' output. Output differences can be tracked down 
-     by recompiling specific analyses with the '-g' option. This can be done by
-     typing 'make debug' in the appropriate 'src' directories. Various 
-     debuggers can then be used such as 'dbx'. Examination of the log files 
-     again is helpful.
+     roundoff error. Most, but perhaps not all of the input data is supplied. 
+     Having all of the data history from 'lapsprd' may also be an issue; this 
+     may be less of a problem if you run laps for the latest hour of data that
+     is supplied. The history is then supplied from earlier 'lapsdata*/lapsprd'
+     output. Output differences can be tracked down by recompiling specific 
+     analyses with the '-g' option. This can be done by typing 'make debug' in t
+     he appropriate 'src' directories. Various debuggers can then be used such
+     as 'dbx'. Examination of the log files again is helpful.
 
                 ----  2.5.1  Analysis Only Test ---
 
@@ -3010,7 +3014,8 @@ then, you can use vis5d to view the files directly.
 LAPS Variables and netCDF File Organization
         (author: Linda Wharton - wharton@fsl.noaa.gov)
 
-Note that more info on the units of the fields, etc. are contained in the
+LAPS output is written in NetCDF format as summarized below.
+Note that additional info on the units of the fields, etc. are contained in the
 'data/*.cdl' files.
 
 
