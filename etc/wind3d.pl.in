@@ -145,7 +145,7 @@ if ($found == 0) {print "none\n";}
 @greplines = grep /multi-doppler grid points/, @lines;
 print "   $greplines[0]";
 
-# Radar profiles, including VADs.
+# Wind profiles, including VADs.
 
 foreach (@lines) {
   if (/PROFILER/) {
@@ -157,6 +157,16 @@ foreach (@lines) {
     @list = split;
     push(@vads,$list[9]);
     push(@vadnums,$list[2]);
+    next; } 
+  if (/RAOB/) {
+    @list = split;
+    push(@raobs,$list[9]);
+    push(@raobnums,$list[2]);
+    next; } 
+  if (/DROPSND/) {
+    @list = split;
+    push(@dropsnds,$list[9]);
+    push(@dropsndnums,$list[2]);
     next; } }
 
 print "\nProfilers:  ";
@@ -182,6 +192,34 @@ foreach (@lines) {
     foreach $item (@vadnums) {
 #     if ($profilenum eq $item) {print "$vads[$i], $lapsi, $lapsj \n";}
       if ($profilenum eq $item) {print "$vads[$i] ";}
+      $i=$i+1; } } }
+print "\n";
+
+print "\nRAOBs:  ";
+#$nraobs=@raobs; $i=0;
+#while ($i < $nraobs) {print "$raobnums[$i], $raobs[$i] \n"; $i=$i+1;}
+$searchstring = "Remapping profile ";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($profilenum,$lapsi,$lapsj) = split(" ",$1);
+    $i=0;
+    foreach $item (@raobnums) {
+#     if ($profilenum eq $item) {print "$raobs[$i], $lapsi, $lapsj \n";}
+      if ($profilenum eq $item) {print "$raobs[$i] ";}
+      $i=$i+1; } } }
+print "\n";
+
+print "\nDROPSNDs:  ";
+#$ndropsnds=@dropsnds; $i=0;
+#while ($i < $ndropsnds) {print "$dropsndnums[$i], $dropsnds[$i] \n"; $i=$i+1;}
+$searchstring = "Remapping profile ";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($profilenum,$lapsi,$lapsj) = split(" ",$1);
+    $i=0;
+    foreach $item (@dropsndnums) {
+#     if ($profilenum eq $item) {print "$dropsnds[$i], $lapsi, $lapsj \n";}
+      if ($profilenum eq $item) {print "$dropsnds[$i] ";}
       $i=$i+1; } } }
 print "\n";
 
