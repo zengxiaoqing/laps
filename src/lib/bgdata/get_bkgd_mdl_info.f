@@ -1,7 +1,7 @@
       subroutine get_bkgd_mdl_info(bgmodel,cmodel,fullname
      &,nx,ny,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      &,gproj,dlat,dlon,centrallat,centrallon,dx,dy
-     &,Lat0,Lat1,Lon0,sw,ne,istatus)
+     &,Lat0,Lat1,Lon0,sw,ne,cgrddef,istatus)
 c
 c JSmart 04-2001
 c
@@ -16,6 +16,7 @@ c     include 'bgdata.inc'
       character*13  fname9_to_wfo_fname13
       character*4   cf
       character*2   gproj
+      character*1   cgrddef
       
       integer       i,j
       integer       istatus
@@ -253,11 +254,11 @@ c ----------
             nzbg_uv=nz
             nzbg_ww=nz
             gproj='LL'
-            Lat0=90.0
-            sw(1)=Lat0
-            Lon0=0.0
-            dlat=1.0
+            Lat0=90.0   !although consistent with AVN Public, doesn't work
+            Lon0=0.0    !with gridconv latlon_2_llij
+            dlat=1.0 
             dlon=1.0
+            cgrddef='N'
          else
             print*,'Error - readavnpublicdims '
          endif
@@ -281,6 +282,7 @@ c --------------------
          Lon0=0.0
          dlat=1.0
          dlon=1.0
+         cgrddef='S'
       endif
 
 c Taiwan FA and NF models

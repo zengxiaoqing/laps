@@ -572,6 +572,7 @@ c
       character*200 fullname
       character*256 outdir
       character*4   af_bg(max_files)
+      character*1   cgrddef
 
       interface
 
@@ -661,11 +662,12 @@ c
      &,cmodel,fullname,nx,ny,nzbg_ht,nzbg_tp
      &,nzbg_sh,nzbg_uv,nzbg_ww
      &,gproj,dlat,dlon,centrallat,centrallon,dx,dy
-     &,Lat0,Lat1,Lon0,sw,ne,istatus)
+     &,Lat0,Lat1,Lon0,sw,ne,cgrddef,istatus)
 
         character*200 fullname
         character*132 cmodel
         character*2   gproj
+        character*1   cgrddef
         integer       istatus
         integer       bgmodel
         integer       nx,ny
@@ -733,7 +735,7 @@ c
       call get_bkgd_mdl_info(bgmodel,cmodel,fullname
      &,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv
      &,nzbg_ww ,gproj,dlat,dlon,cenlat,cenlon,dx,dy
-     &,Lat0,Lat1,Lon0,sw,ne,istatus)
+     &,Lat0,Lat1,Lon0,sw,ne,cgrddef,istatus)
 
       if(istatus.ne.1)then
          print*,'Error getting background model information'
@@ -774,7 +776,7 @@ c initialize projection common block and return need info
 c
       call init_gridconv_cmn(gproj,nx_bg,ny_bg,nzbg_ht
      &,dlat,dlon,cenlat,cenlon,Lat0,Lat1,Lon0
-     &,sw(1),sw(2),ne(1),ne(2),istatus)
+     &,sw(1),sw(2),ne(1),ne(2),cgrddef,istatus)
 
 
       do j=1,max_files

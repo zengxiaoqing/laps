@@ -243,6 +243,7 @@ c qc
          do j=1,ny
          do i=1,nx
             if((abs(ht(i,j,k))  .gt. 100000.) .or.
+     +             (ht(i,j,k)   .lt.-3000.)   .or.
      +         (abs(tp(i,j,k))  .gt. 1000.)   .or.
      +             (tp(i,j,k)   .le. 0.)      .or.
      +         (abs(sh(i,j,ksh))  .ge. 101.)    .or.   !rh
