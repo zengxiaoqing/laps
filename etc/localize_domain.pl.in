@@ -48,7 +48,7 @@ sub help_sub{
     print "   --install_root = Root directory of the installed laps binaries (@prefix@)\n";
     print "   --dataroot = Root directory of the installed laps data (@prefix@/data)\n";
     print "   --srcroot  = Root directory of the laps source code    (@top_srcdir@)\n";
-    print "   --which_data_root = Specifies localization for either LAPS or WRFSI\n";
+    print "   --which_type = Specifies localization for either LAPS or WRFSI\n";
     print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
     print "   --satid    = g8 or g10 (guessed based on -100.0W)\n";
     print "   --no_ggm   = if defined (ie., ='t') then localization does not run gridgen_model\n";
