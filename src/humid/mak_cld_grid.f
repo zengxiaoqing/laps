@@ -89,7 +89,7 @@ c internal variables
 
 
 c       threshold is dtermined by variable thresh
-
+      save
       real thresh
       data thresh /.65/
       real pressure_of_level !function call

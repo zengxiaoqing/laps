@@ -48,6 +48,7 @@ c       to see if any w_cost element is negative if it is we assign a high
 c       cost and return.
 
         implicit none
+        save
         real x(3)
         integer lsfc
         real psfc

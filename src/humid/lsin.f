@@ -109,8 +109,8 @@ c  normal internal variables
 
 
 c       constants
-
-        real*4
+        save
+        real
      1  r,!the gas constant for dry air
      1  bad,!bad data flag
      1  g! the acceleration of gravity near the surface of the earth

@@ -67,7 +67,8 @@ c
 c-------------------------------------------------------------------------------
 c    formal parameter declarations
 c-------------------------------------------------------------------------------
-        real*4  v_lat,
+       save 
+       real*4  v_lat,
      1  standard_press(40),
      1  tempertur_guess(40),
      1  mixratio_guess(40)
@@ -423,6 +424,7 @@ c                               (not on u. of w. source tape)
 c
         dimension c(6)
 c
+        save
         real*8 c, t
 c
         data c/ 0.7859063157d+00,  0.3579242320d-01,
@@ -443,6 +445,7 @@ c                               (not on u. of w. source tape)
 c
         dimension c(10)
 c
+        save
         real*8 c, s, t
 c
         data c/ 0.9999968760d-00, -0.9082695004d-02,
@@ -465,7 +468,8 @@ c
 c   to obtain calendar date from 'nyrday' which is of the form 'yyddd'
 c   kyear,nmon,kalday are binary integer year,month,day.  mon is
 c   the month expressed in left-justified three-letter code.
-
+        
+        save
         dimension months(12)
         data months/4hjan ,4hfeb ,4hmar ,4hapr ,4hmay ,4hjun ,
      1  4hjul ,4haug ,4hsep ,4hoct ,4hnov ,4hdec /
