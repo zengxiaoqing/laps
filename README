@@ -2326,12 +2326,9 @@ Source directory: laps/src/wind (contains a README file)
 
 Parameter namelist file: 'static/wind.nl'
 
-CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
+Further description and reference is at:
 
-Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
-           342-352. 
-
-           Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi
+http://laps.fsl.noaa.gov/albers/laps/talks/wind/sld001.htm
 
 
 ------ 3.3.2 ----------------- SFC (LSX) -------------------------------------
