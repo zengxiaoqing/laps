@@ -165,7 +165,9 @@ clean:
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
 
-realclean: clean
+realclean: cleanlib clean
+
+cleanlib:
 	@for dir in $(LIBDIRS);\
 	  do \
 	  echo " ";\
@@ -174,7 +176,7 @@ realclean: clean
 	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) clean ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
-	  done
+	done
 
 distclean: realclean cleandirs
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
