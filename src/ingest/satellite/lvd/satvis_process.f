@@ -216,7 +216,9 @@ c
 c
 c Our standard is goes08 and we know how to stretch this
 c to look like goes07; therefore we should always need the
-c goes8-to-goes7 stretch parameters:
+c goes8-to-goes7 stretch parameters:  When processing goes08
+c data we only need to stretch once with the g8 stretch parms;
+c all other satellite vis data require two stretches.
 
        visin1_g8=vis_cnt_range_in(1,1)
        visin2_g8=vis_cnt_range_in(2,1)
@@ -243,7 +245,7 @@ c  					       that is a pre-normalized display-ready image.
 c override the namelist value for these data. The fsl-conus data
 c have been normalized with l_national = .true.
 
-          write(6,*)'Reverse the normalization'
+          print*,'Reverse the normalization'
 
           call normalize_brightness(i4time,lat,lon,laps_vis_norm
      &,imax,jmax,sublat_d,sublon_d,range_m,.true.,iskip_bilin   !note: l_national is hardwired true here.
@@ -259,9 +261,12 @@ c
 c
 c The standard is to save the raw (true) satellite vis counts (svs).
 c
+          print*,'Reverse the stretch and save (raw) counts'
           print*,'stretch ',c_sat_type,' visible'
           print*,'vis-cnt-stretch-in  1/2: ',visin1_g8,visin2_g8
           print*,'vis-cnt-stretch-out 1/2: ',visout1_g8,visout2_g8
+          print*
+          print*,'Apply goes08-to-goes07 stretch and save counts'
 
           do j=1,jmax
           do i=1,imax
@@ -272,19 +277,20 @@ c
 
              if(laps_vis_norm(i,j).ne.r_missing_data)then
 
-c              call stretch(visout1_g8,visout2_g8
-c    &                     ,visin1_g8,visin2_g8
-c    &                     ,laps_vis_norm(i,j))
+               call stretch(visout1_g8,visout2_g8
+     &                     ,visin1_g8,visin2_g8
+     &                     ,laps_vis_norm(i,j))
 
-               call stretch(0., 255., 0., 303.57, laps_vis_norm(i,j))  !reverse the stretch 
                laps_vis_raw(i,j)=laps_vis_norm(i,j)                    !OK, save these. This is svs!
 
-c for goes8 - make it look like goes7
-c              call stretch(visin1_g8,visin2_g8
-c    &                     ,visout1_g8,visout2_g8
-c    &                     ,laps_vis_norm(i,j))
+c              call stretch(0., 255., 0., 303.57, laps_vis_norm(i,j))  !reverse the stretch 
 
-               call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+c for goes8 - make it look like goes7
+               call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
+
+c              call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
 
 c laps_vis_norm is now ready for local normalization
              endif
@@ -314,11 +320,12 @@ c
              do i=1,imax
                if(laps_vis_norm(i,j).ne.r_missing_data)then
 c for goes8 - make it look like goes7
-c                call stretch(visin1_g8,visin2_g8
-c    &                     ,visout1_g8,visout2_g8
-c    &                     ,laps_vis_norm(i,j))
+                 call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
 
-                 call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+c                call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+
                endif
              enddo
              enddo
@@ -327,15 +334,18 @@ c    &                     ,laps_vis_norm(i,j))
 
              isat = 3
              print*,'Stretch ',csatid,' to goes7 look-a-like'
-             print*,'stretch ',csatid,' visible'
+             print*,'Two step process:'
+             print*,'1:  stretch ',csatid,'to goes08'
+             print*,'2:  stretch goes08 to look like goes07' 
 
              visin1_cur=vis_cnt_range_in(1,isat)
              visin2_cur=vis_cnt_range_in(2,isat)
              visout1_cur=vis_cnt_range_out(1,isat)
              visout2_cur=vis_cnt_range_out(2,isat)
 
-             print*,'In: ',visin1_cur,visin2_cur
-             print*,'Out: ',visout1_cur,visout2_cur
+             print*,'goes10 to goes08 stretch parameters:'
+             print*,'   In:  ',visin1_cur,visin2_cur
+             print*,'   Out: ',visout1_cur,visout2_cur
 
              do j=1,jmax
              do i=1,imax
@@ -346,20 +356,21 @@ c                 call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
 c          3-08-99 commented out and added new stretch parameters for goes10.
 c          8-27-99 re-activated the 305 stretch for WFO.
 c
-c                 call stretch(visin1_cur,visin2_cur,
-c    &                         visout1_cur,visout2_cur,
-c    &                         laps_vis_norm(i,j))
+                  call stretch(visin1_cur,visin2_cur,
+     &                         visout1_cur,visout2_cur,
+     &                         laps_vis_norm(i,j))
 
-                  call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
+c                 call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
 
-c                 call stretch(0.,295.,0.,255.,laps_vis_norm(i,j))
+cc old:              call stretch(0.,295.,0.,255.,laps_vis_norm(i,j))
 
 c for goes8 - make it look like goes7
-c                 call stretch(visin1_g8,visin2_g8
-c    &                     ,visout1_g8,visout2_g8
-c    &                     ,laps_vis_norm(i,j))
+                  call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
 
-                  call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+c                 call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+
                endif
              enddo
              enddo
@@ -376,8 +387,7 @@ c
           if(csatid.eq.'goes08')then
 
              isat = 1
-             print*,'Stretch ',csatid,' to goes7 look-a-like'
-             print*,csatid,' vis stretch vars from namelist: '
+             print*,'stretch ',csatid,' to goes07 look-a-like'
              print*,' In:  ',visin1_g8,visin2_g8
              print*,' Out: ',visout1_g8,visout2_g8
 
@@ -398,15 +408,18 @@ c                  call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
 
              isat = 3
              print*,'Stretch ',csatid,' to goes7 look-a-like'
-             print*,'stretch ',csatid,' visible'
+             print*,'Two step process:'
+             print*,'1:  stretch ',csatid,'to goes08'
+             print*,'2:  stretch goes08 to look like goes07'
 
              visin1_cur=vis_cnt_range_in(1,isat)
              visin2_cur=vis_cnt_range_in(2,isat)
              visout1_cur=vis_cnt_range_out(1,isat)
              visout2_cur=vis_cnt_range_out(2,isat)
 
-             print*,'In: ',visin1_cur,visin2_cur
-             print*,'Out: ',visout1_cur,visout2_cur
+             print*,'goes10 to goes08 stretch parameters:'
+             print*,'   In:  ',visin1_cur,visin2_cur
+             print*,'   Out: ',visout1_cur,visout2_cur
 
              do j=1,jmax
              do i=1,imax
@@ -431,31 +444,71 @@ c    &                     ,laps_vis_norm(i,j))
              enddo
              enddo
 
+          elseif(csatid.eq.'goes12')then
+
+             isat = 5
+             print*,'Stretch ',csatid,' to goes7 look-a-like'
+             print*,'Two step process:'
+             print*,'1:  stretch ',csatid,'to goes08'
+             print*,'2:  stretch goes08 to look like goes07'
+
+             visin1_cur=vis_cnt_range_in(1,isat)
+             visin2_cur=vis_cnt_range_in(2,isat)
+             visout1_cur=vis_cnt_range_out(1,isat)
+             visout2_cur=vis_cnt_range_out(2,isat)
+
+             print*,'goes12 to goes08 stretch parameters:'
+             print*,'   In:  ',visin1_cur,visin2_cur
+             print*,'   Out: ',visout1_cur,visout2_cur
+
+             do j=1,jmax
+             do i=1,imax
+                if(laps_vis_norm(i,j).ne.r_missing_data)then
+
+                   call stretch(visin1_cur,visin2_cur
+     &                     ,visout1_cur,visout2_cur
+     &                     ,laps_vis_norm(i,j))
+
+c now make it look like goes7
+                   call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
+
+c                  call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
+
+                endif
+             enddo
+             enddo
+
           endif
           i_dir = 1
 
-       elseif(csatid.eq.'gmssat'.and.c_sat_type.eq.'twn')then
+       elseif(csatid.eq.'gmssat')then
 
           isat = 4
+
+          if(c_sat_type.eq.'twn')then
+
+             print*,'Stretch ',csatid,' to goes7 look-a-like'
+             print*,'Currently 1 step process:'
+             print*,'1:  stretch ',csatid,' to goes07'
+
+             visin1_cur=vis_cnt_range_in(1,isat)
+             visin2_cur=vis_cnt_range_in(2,isat)
+             visout1_cur=vis_cnt_range_out(1,isat)
+             visout2_cur=vis_cnt_range_out(2,isat)
+
+             print*,'gmssat to goes08 stretch parameters:'
+             print*,'   In:  ',visin1_cur,visin2_cur
+             print*,'   Out: ',visout1_cur,visout2_cur
+
 c         print*,'stretch twn visible: 40.,250.,68.,220.'
 c         print*,'stretch twn visible: 38.,320.,68.,220.' !11-12-02
 c         print*,'stretch twn visible: 38.,350.,68.,220.' !11-15-02
 
-          visin1_cur=vis_cnt_range_in(1,isat)
-          visin2_cur=vis_cnt_range_in(2,isat)
-          visout1_cur=vis_cnt_range_out(1,isat)
-          visout2_cur=vis_cnt_range_out(2,isat)
-
-          print*,'Current stretch (not longer hardwired) '
-          print*,'stretch twn visible: 38.,400.,68.,220.' !11-22-02
-          print*
-          print*,csatid,' vis stretch parameters from namelist: '
-          print*,' In:  ',visin1_cur,visin2_cur
-          print*,' Out: ',visout1_cur,visout2_cur
-
-          do j=1,jmax
-          do i=1,imax
-             if(laps_vis_norm(i,j).ne.r_missing_data)then
+             do j=1,jmax
+             do i=1,imax
+                if(laps_vis_norm(i,j).ne.r_missing_data)then
 c J. Smart 1-25-02.
 c   "      2-05-03
                    call stretch(visin1_cur,visin2_cur
@@ -463,9 +516,42 @@ c   "      2-05-03
      &                     ,laps_vis_norm(i,j))
 
 c               call stretch(38.,400.,68.,220.,laps_vis_norm(i,j))
-             endif
-          enddo
-          enddo
+                endif
+             enddo
+             enddo
+
+          elseif(c_sat_type.eq.'hko')then
+
+             print*,'Stretch ',csatid,' to goes7 look-a-like'
+             print*,'Two step process:'
+             print*,'1:  stretch ',csatid,'to goes08'
+             print*,'2:  stretch goes08 to look like goes07'
+
+             visin1_cur=vis_cnt_range_in(1,isat)
+             visin2_cur=vis_cnt_range_in(2,isat)
+             visout1_cur=vis_cnt_range_out(1,isat)
+             visout2_cur=vis_cnt_range_out(2,isat)
+
+             print*,'gmssat to goes08 stretch parameters:'
+             print*,'   In:  ',visin1_cur,visin2_cur
+             print*,'   Out: ',visout1_cur,visout2_cur
+
+             do j=1,jmax
+             do i=1,imax
+                if(laps_vis_norm(i,j).ne.r_missing_data)then
+                   call stretch(visin1_cur,visin2_cur
+     &                     ,visout1_cur,visout2_cur
+     &                     ,laps_vis_norm(i,j))
+c now make it look like goes7
+                   call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
+
+                endif
+             enddo
+             enddo
+
+          endif
 
        endif 
 c
