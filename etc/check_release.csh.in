@@ -21,7 +21,7 @@ echo " Actual number is... `ls -l *.x *.exe | grep -i -v total | wc -l`"
 echo " "
 echo "checking make.out"
 setenv FILE $1/make.out
-grep -i " error " $FILE ; grep -i "^error " $FILE
+grep -i " error " $FILE ; grep -i "^error " $FILE ; grep -i "ERROR:" $FILE
 grep '(E)' $FILE
 grep '(S)' $FILE
 grep -i undefined $FILE
@@ -33,7 +33,7 @@ ls -l $FILE
 echo " "
 echo "checking make_install.out"
 setenv FILE $1/make_install.out
-grep -i " error " $FILE ; grep -i "^error " $FILE
+grep -i " error " $FILE ; grep -i "^error " $FILE ; grep -i "ERROR:" $FILE
 grep '(E)' $FILE
 grep '(S)' $FILE
 grep -i undefined $FILE
