@@ -18,6 +18,7 @@
 #define write_qc WRITE_QC
 #endif
 #ifdef FORTRANDOUBLEUNDERSCORE
+#define nstrncpy nstrncpy__
 #define write_qc write_qc__
 #endif
 
