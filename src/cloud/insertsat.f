@@ -694,9 +694,13 @@ c
 !       1       ,htbase_init,cldtop_m(i,j)
             endif
 
-            if(htbase      .eq. 0.           .or. 
-     1         abs(htbase) .gt. 100000.             )then
-                write(6,*)' WARNING: htbase = ',htbase,i,j,mode_sao
+!           Test for unreasonable cloud layer
+            if(htbase      .lt. topo(i,j)     .or. 
+     1         abs(htbase) .gt. 100000.       .or.
+     1         htbase      .ge. cldtop_m(i,j) .or.
+     1         cover       .le. 0.01              )then
+                write(6,*)' WARNING: htbase/cover = '
+     1                   ,htbase,cover,i,j,mode_sao
      1                   ,cldtop_m(i,j),l_no_sao_vis
      1                   ,istat_vis_potl_a(i,j)
             endif
