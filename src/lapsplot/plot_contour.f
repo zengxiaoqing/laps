@@ -38,11 +38,14 @@ cdis
 cdis
 
 
-      subroutine conrec_line
-     1  (field,ni,nii,nj,clow_in,chigh_in,cint_in,i1,i2,i3,i4)
+      subroutine conrec_line(field,ni,nii,nj
+     1                      ,clow_in,chigh_in,cint_in,plot_parms
+     1                      ,i1,i2,i3,i4)
 
 !     97-Aug-17     Ken Dritz     Commented out assignment to r_missing_data
 !                                 and inserted call to get_r_missing_data
+
+      include 'lapsplot.inc'
 
       data ihl/0/
       save ihl
@@ -89,7 +92,7 @@ cdis
 
       call plot_contour
      1  (NF,ni,nii,nj,field,c_blank,cint,cl,ch,c_blank,4,ihl
-     1      ,clow,chigh,lis,r_missing_data)
+     1      ,clow,chigh,plot_parms,lis,r_missing_data)
 
       return
       end
@@ -97,7 +100,7 @@ cdis
 
 
       SUBROUTINE PLOT_CONTOUR(NF, MX, NX, NY, F, LAB1, FINT, FMIN, FMAX,
-     + TIMELABEL,NC,IHL,clow,chigh,lis,r_missing_data)
+     + TIMELABEL,NC,IHL,clow,chigh,plot_parms,lis,r_missing_data)
 C
 C PURPOSE       Plot contours of F(NX,NY).
 C
@@ -116,6 +119,8 @@ C               IHL  - I  flag as whether to plot high/low labels
 C
 C
 
+
+      include 'lapsplot.inc'
 
       PARAMETER (N2X=400)
       INTEGER NF, MX, NX, NY, IVAR
@@ -281,7 +286,7 @@ C --- Do contouring
           else
             call cpseti ('CLD',65535)
           end if
-!         call cpseti ('CLL',1)       ! Line Width
+          call cpseti ('CLL',plot_parms%contour_line_width)       ! Line Width
 !         CALL CPSETI ('CLC - CONTOUR LINE COLOR INDEX', 7+NC)
 111     CONTINUE
 
