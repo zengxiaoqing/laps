@@ -57,7 +57,7 @@ c                     fields. q3d used. (NOS - ETA)
 c otherwise tdsfc is input with q
 c 
       t_ref=-47.0
-      if(bgmodel.eq.9)then
+      if(bgmodel.eq.3.or.bgmodel.eq.9)then
          do k=1,kx
             do j=1,jmx
             do i=1,imx
@@ -159,7 +159,7 @@ c
           qsfc=ssh2(psfc,tsfc-273.15
      &                  ,tdsfc-273.15,t_ref)*.001  !kg/kg
 
-       elseif(bgm.eq.4.or.bgm.eq.9)then  !RH
+       elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then  !RH
           qsfc=make_ssh(psfc,tsfc-273.15
      &                      ,tdsfc/100.,t_ref)*.001  !kg/kg
 

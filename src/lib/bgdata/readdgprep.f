@@ -170,17 +170,13 @@ c    +,istatus)
          open(lun,file=filename(1:l),status='old'
      +,IOSTAT=IOSTATUS,err=991)
 
-c
-c        call read_fa(lun,filename                      ! I
-c    .               ,nx,ny,nz                          ! I
-c    .               ,r_missing_data                    ! I
-c    .               ,prk                               ! O
-c    .               ,ht,tp,sh,uw,vw                    ! O
-c    .               ,mslp                              ! O
-c    .               ,istatus)                          ! O
-c
-c
-         istatus=0
+         call read_fa(lun,filename                      ! I
+     .               ,nx,ny,nz                          ! I
+     .               ,r_missing_data                    ! I
+     .               ,prk                               ! O
+     .               ,ht,tp,sh,uw,vw                    ! O
+     .               ,mslp                              ! O
+     .               ,istatus)                          ! O
 
       endif
  
@@ -229,23 +225,25 @@ c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
      &,' Bogus Q used for these points'
 
          endif
- 
-         print*,'convert rh to Td - sfc'
-         icm=0
-         do j=1,ny
-         do i=1,nx
 
-            if(td_sfc(i,j).gt.0.0 .and. td_sfc(i,j).le.100.)then
-               prsfc=pr_sfc(i,j)/100.
-               qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.
+         if(bgmodel.eq.6)then
+ 
+            print*,'convert rh to Td - sfc: bgmodel: ',bgmodel
+            icm=0
+            do j=1,ny
+            do i=1,nx
+
+               if(td_sfc(i,j).gt.0.0 .and. td_sfc(i,j).le.100.)then
+                  prsfc=pr_sfc(i,j)/100.
+                  qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.
      &,t_ref)
-               td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc,t_ref)
-     &+273.15
-            else
-               td_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
+                  td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc
+     &,t_ref)+273.15
+               else
+                  td_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
      &,bogus_sh,t_ref)+273.15
-               icm=icm+1
-            endif
+                  icm=icm+1
+               endif
 
 c           it=tp_sfc(i,j)*100
 c           it=min(45000,max(15000,it))
@@ -254,13 +252,15 @@ c           mrsat=0.00622*xe/(prsfc-xe)         !Assumes that rh units are %
 c           td_sfc(i,j)=td_sfc(i,j)*mrsat             !rh --> mr
 c           td_sfc(i,j)=td_sfc(i,j)/(1.+td_sfc(i,j))  !mr --> sh
 
-         enddo
-         enddo
+            enddo
+            enddo
 
-         if(icm.gt.0)then
-            pcnt=float(icm)/float(nx*ny)
-            print*,'WARNING: suspect 2d rh data (#/%): ',icm,pcnt
+            if(icm.gt.0)then
+               pcnt=float(icm)/float(nx*ny)
+               print*,'WARNING: suspect 2d rh data (#/%): ',icm,pcnt
      &,' Bogus Q used for these points'
+            endif
+
          endif
 
       elseif(bgmodel.eq.8)then
