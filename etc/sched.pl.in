@@ -33,7 +33,7 @@ print "\nRunning c_time.exe\n";
 system("$LAPSROOT/bin/c_time.exe > $LAPS_DATA_ROOT/time/c_time.dat");
 
 print "\nRunning purger\n";
-system("$LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
+system("@PERL@ $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
 
 print "\nRunning obs_driver\n";
 system("$LAPSROOT/bin/obs_driver.x 1> $LAPS_DATA_ROOT/log/obs_driver.log.$hhmm 2>&1");

@@ -3,7 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
-#include "/usr/local/netcdf/include/netcdf.h"
+#include "netcdf.h"
 #include "fill_laps.h"
 
 #define TRUE    1
@@ -198,7 +198,7 @@ int extractLAPSdata(int *cdfId_in, char *prevFilename, PARAMETER_LIST_T paramInf
 {
     char filename[80];
     int cdfId, mode = NC_NOWRITE, status;    
-    double d_reftime, d_valtime;
+    double d_reftime=0.0, d_valtime=0.0;
     ncopts = 0;
     
     status = get_LAPS_cdf_filename(paramInfo, r_filename, reftime, filename);
