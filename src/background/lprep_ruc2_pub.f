@@ -53,18 +53,18 @@ c
       sw(2)=-126.1378
       ne(1)=55.4818
       ne(2)=-57.3794
-c
+c **** No Longer Needed *****
 c *** Convert ruc winds from grid north to true north.
 c
-      do j=1,ny
-         do i=1,nx
-            psi(i,j)=float(i)
-            psj(i,j)=float(j)
-         enddo
-      enddo
-      call psij_2_latlon(nx*ny,psi,psj,lat,lon)
+c      do j=1,ny
+c         do i=1,nx
+c            psi(i,j)=float(i)
+c            psj(i,j)=float(j)
+c         enddo
+c      enddo
+c      call psij_2_latlon(nx*ny,psi,psj,lat,lon)
 c
-      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
+c      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
 c
       return
       end

@@ -272,6 +272,7 @@ c===============================================================================
 c
       subroutine rotate_vec_a(u,v,angle,nx,ny,nz)
 c
+      include 'trigd.inc'
       
 c
       integer nx,ny,nz,i,j,k
