@@ -23,6 +23,7 @@ LIBDIRS = src/lib \
           src/lib/nav \
           src/lib/powell  \
           src/lib/radar/remap_ftn \
+          src/lib/radar/wsi_ingest \
           src/lib/satellite \
           src/lib/temp   \
           src/lib/util  
