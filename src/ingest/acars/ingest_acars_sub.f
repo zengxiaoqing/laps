@@ -6,17 +6,19 @@
 !     Ken Dritz     15-Jul-1997      Changed LAPS_DOMAIN_FILE to 'nest7grid'
 !     Ken Dritz     15-Jul-1997      Removed include of lapsparms.for
 !     Steve Albers  22-Jul-1997      Added NX_L, NY_L to dummy argument list
+!     Steve Albers     Dec-1997      Updated for CDL change
 
 !.............................................................................
 
-C     FORTRAN TEMPLATE FOR FILE= latest_q.cdf                            
-      PARAMETER (NVARS=32) !NUMBER OF VARIABLES
+C     FORTRAN TEMPLATE FOR FILE= 972881800q.cdf                          
+      PARAMETER (NVARS=36) !NUMBER OF VARIABLES
       PARAMETER (NREC=   50000)   !CHANGE THIS TO GENERALIZE
-C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 32
+C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 36
       INTEGER*4 RCODE
       INTEGER*4 RECDIM
 C     ****VARIABLES FOR THIS NETCDF FILE****
 C
+      INTEGER*4   missingInputMinutes            
       CHARACTER*1 minDate                        (  30)
       CHARACTER*1 maxDate                        (  30)
       REAL*8      minSecs                        
@@ -29,8 +31,9 @@ C
       REAL*4      windDir                        (NREC)
       REAL*4      windSpeed                      (NREC)
       REAL*4      heading                        (NREC)
-      INTEGER*4   turbIntens                     (NREC)
       REAL*4      waterVaporMR                   (NREC)
+      REAL*4      medTurbulence                  (NREC)
+      REAL*4      maxTurbulence                  (NREC)
       REAL*4      vertAccel                      (NREC)
       CHARACTER*1 tailNumber                     (   6,NREC)
       LOGICAL*1   airline                        (NREC)
@@ -49,6 +52,8 @@ C
       CHARACTER*1 flight                         (  13,NREC)
       CHARACTER*1 rptStation                     (   4,NREC)
       REAL*8      timeReceived                   (NREC)
+      CHARACTER*1 origAirport                    (   6,NREC)
+      CHARACTER*1 destAirport                    (   6,NREC)
 C*************************************
       INTEGER*4 START(10)
       INTEGER*4 COUNT(10)
@@ -84,7 +89,7 @@ C*************************************
       CALL NCDINQ(NCID,RECDIM,DUMMY,NRECS,RCODE)
 C     !NRECS! NOW CONTAINS NUM RECORDS FOR THIS FILE
 C
-C    statements to fill minDate                        
+C    statements to fill missingInputMinutes            
 C
       CALL NCVINQ(NCID, 1,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -94,10 +99,10 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
   10  CONTINUE
-      CALL NCVGTC(NCID, 1,START,COUNT,
-     +minDate                        ,LENSTR,RCODE)
+      CALL NCVGT(NCID, 1,START,COUNT,
+     +missingInputMinutes            ,RCODE)
 C
-C    statements to fill maxDate                        
+C    statements to fill minDate                        
 C
       CALL NCVINQ(NCID, 2,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -108,9 +113,9 @@ C
       COUNT(J)=NDSIZE
   20  CONTINUE
       CALL NCVGTC(NCID, 2,START,COUNT,
-     +maxDate                        ,LENSTR,RCODE)
+     +minDate                        ,LENSTR,RCODE)
 C
-C    statements to fill minSecs                        
+C    statements to fill maxDate                        
 C
       CALL NCVINQ(NCID, 3,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -120,10 +125,10 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
   30  CONTINUE
-      CALL NCVGT(NCID, 3,START,COUNT,
-     +minSecs                        ,RCODE)
+      CALL NCVGTC(NCID, 3,START,COUNT,
+     +maxDate                        ,LENSTR,RCODE)
 C
-C    statements to fill maxSecs                        
+C    statements to fill minSecs                        
 C
       CALL NCVINQ(NCID, 4,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -134,9 +139,9 @@ C
       COUNT(J)=NDSIZE
   40  CONTINUE
       CALL NCVGT(NCID, 4,START,COUNT,
-     +maxSecs                        ,RCODE)
+     +minSecs                        ,RCODE)
 C
-C    statements to fill latitude                       
+C    statements to fill maxSecs                        
 C
       CALL NCVINQ(NCID, 5,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -147,9 +152,9 @@ C
       COUNT(J)=NDSIZE
   50  CONTINUE
       CALL NCVGT(NCID, 5,START,COUNT,
-     +latitude                       ,RCODE)
+     +maxSecs                        ,RCODE)
 C
-C    statements to fill longitude                      
+C    statements to fill latitude                       
 C
       CALL NCVINQ(NCID, 6,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -160,9 +165,9 @@ C
       COUNT(J)=NDSIZE
   60  CONTINUE
       CALL NCVGT(NCID, 6,START,COUNT,
-     +longitude                      ,RCODE)
+     +latitude                       ,RCODE)
 C
-C    statements to fill altitude                       
+C    statements to fill longitude                      
 C
       CALL NCVINQ(NCID, 7,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -173,9 +178,9 @@ C
       COUNT(J)=NDSIZE
   70  CONTINUE
       CALL NCVGT(NCID, 7,START,COUNT,
-     +altitude                       ,RCODE)
+     +longitude                      ,RCODE)
 C
-C    statements to fill timeObs                        
+C    statements to fill altitude                       
 C
       CALL NCVINQ(NCID, 8,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -186,9 +191,9 @@ C
       COUNT(J)=NDSIZE
   80  CONTINUE
       CALL NCVGT(NCID, 8,START,COUNT,
-     +timeObs                        ,RCODE)
+     +altitude                       ,RCODE)
 C
-C    statements to fill temperature                    
+C    statements to fill timeObs                        
 C
       CALL NCVINQ(NCID, 9,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -199,9 +204,9 @@ C
       COUNT(J)=NDSIZE
   90  CONTINUE
       CALL NCVGT(NCID, 9,START,COUNT,
-     +temperature                    ,RCODE)
+     +timeObs                        ,RCODE)
 C
-C    statements to fill windDir                        
+C    statements to fill temperature                    
 C
       CALL NCVINQ(NCID,10,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -212,9 +217,9 @@ C
       COUNT(J)=NDSIZE
  100  CONTINUE
       CALL NCVGT(NCID,10,START,COUNT,
-     +windDir                        ,RCODE)
+     +temperature                    ,RCODE)
 C
-C    statements to fill windSpeed                      
+C    statements to fill windDir                        
 C
       CALL NCVINQ(NCID,11,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -225,9 +230,9 @@ C
       COUNT(J)=NDSIZE
  110  CONTINUE
       CALL NCVGT(NCID,11,START,COUNT,
-     +windSpeed                      ,RCODE)
+     +windDir                        ,RCODE)
 C
-C    statements to fill heading                        
+C    statements to fill windSpeed                      
 C
       CALL NCVINQ(NCID,12,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -238,9 +243,9 @@ C
       COUNT(J)=NDSIZE
  120  CONTINUE
       CALL NCVGT(NCID,12,START,COUNT,
-     +heading                        ,RCODE)
+     +windSpeed                      ,RCODE)
 C
-C    statements to fill turbIntens                     
+C    statements to fill heading                        
 C
       CALL NCVINQ(NCID,13,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -251,7 +256,7 @@ C
       COUNT(J)=NDSIZE
  130  CONTINUE
       CALL NCVGT(NCID,13,START,COUNT,
-     +turbIntens                     ,RCODE)
+     +heading                        ,RCODE)
 C
 C    statements to fill waterVaporMR                   
 C
@@ -266,7 +271,7 @@ C
       CALL NCVGT(NCID,14,START,COUNT,
      +waterVaporMR                   ,RCODE)
 C
-C    statements to fill vertAccel                      
+C    statements to fill medTurbulence                  
 C
       CALL NCVINQ(NCID,15,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -277,9 +282,9 @@ C
       COUNT(J)=NDSIZE
  150  CONTINUE
       CALL NCVGT(NCID,15,START,COUNT,
-     +vertAccel                      ,RCODE)
+     +medTurbulence                  ,RCODE)
 C
-C    statements to fill tailNumber                     
+C    statements to fill maxTurbulence                  
 C
       CALL NCVINQ(NCID,16,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -289,10 +294,10 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  160  CONTINUE
-      CALL NCVGTC(NCID,16,START,COUNT,
-     +tailNumber                     ,LENSTR,RCODE)
+      CALL NCVGT(NCID,16,START,COUNT,
+     +maxTurbulence                  ,RCODE)
 C
-C    statements to fill airline                        
+C    statements to fill vertAccel                      
 C
       CALL NCVINQ(NCID,17,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -303,9 +308,9 @@ C
       COUNT(J)=NDSIZE
  170  CONTINUE
       CALL NCVGT(NCID,17,START,COUNT,
-     +airline                        ,RCODE)
+     +vertAccel                      ,RCODE)
 C
-C    statements to fill dataDescriptor                 
+C    statements to fill tailNumber                     
 C
       CALL NCVINQ(NCID,18,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -315,10 +320,10 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  180  CONTINUE
-      CALL NCVGT(NCID,18,START,COUNT,
-     +dataDescriptor                 ,RCODE)
+      CALL NCVGTC(NCID,18,START,COUNT,
+     +tailNumber                     ,LENSTR,RCODE)
 C
-C    statements to fill errorType                      
+C    statements to fill airline                        
 C
       CALL NCVINQ(NCID,19,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -329,9 +334,9 @@ C
       COUNT(J)=NDSIZE
  190  CONTINUE
       CALL NCVGT(NCID,19,START,COUNT,
-     +errorType                      ,RCODE)
+     +airline                        ,RCODE)
 C
-C    statements to fill rollFlag                       
+C    statements to fill dataDescriptor                 
 C
       CALL NCVINQ(NCID,20,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -342,9 +347,9 @@ C
       COUNT(J)=NDSIZE
  200  CONTINUE
       CALL NCVGT(NCID,20,START,COUNT,
-     +rollFlag                       ,RCODE)
+     +dataDescriptor                 ,RCODE)
 C
-C    statements to fill waterVaporQC                   
+C    statements to fill errorType                      
 C
       CALL NCVINQ(NCID,21,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -355,9 +360,9 @@ C
       COUNT(J)=NDSIZE
  210  CONTINUE
       CALL NCVGT(NCID,21,START,COUNT,
-     +waterVaporQC                   ,RCODE)
+     +errorType                      ,RCODE)
 C
-C    statements to fill interpolatedTime               
+C    statements to fill rollFlag                       
 C
       CALL NCVINQ(NCID,22,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -368,9 +373,9 @@ C
       COUNT(J)=NDSIZE
  220  CONTINUE
       CALL NCVGT(NCID,22,START,COUNT,
-     +interpolatedTime               ,RCODE)
+     +rollFlag                       ,RCODE)
 C
-C    statements to fill interpolatedLL                 
+C    statements to fill waterVaporQC                   
 C
       CALL NCVINQ(NCID,23,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -381,9 +386,9 @@ C
       COUNT(J)=NDSIZE
  230  CONTINUE
       CALL NCVGT(NCID,23,START,COUNT,
-     +interpolatedLL                 ,RCODE)
+     +waterVaporQC                   ,RCODE)
 C
-C    statements to fill tempError                      
+C    statements to fill interpolatedTime               
 C
       CALL NCVINQ(NCID,24,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -394,9 +399,9 @@ C
       COUNT(J)=NDSIZE
  240  CONTINUE
       CALL NCVGT(NCID,24,START,COUNT,
-     +tempError                      ,RCODE)
+     +interpolatedTime               ,RCODE)
 C
-C    statements to fill windDirError                   
+C    statements to fill interpolatedLL                 
 C
       CALL NCVINQ(NCID,25,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -407,9 +412,9 @@ C
       COUNT(J)=NDSIZE
  250  CONTINUE
       CALL NCVGT(NCID,25,START,COUNT,
-     +windDirError                   ,RCODE)
+     +interpolatedLL                 ,RCODE)
 C
-C    statements to fill windSpeedError                 
+C    statements to fill tempError                      
 C
       CALL NCVINQ(NCID,26,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -420,9 +425,9 @@ C
       COUNT(J)=NDSIZE
  260  CONTINUE
       CALL NCVGT(NCID,26,START,COUNT,
-     +windSpeedError                 ,RCODE)
+     +tempError                      ,RCODE)
 C
-C    statements to fill speedError                     
+C    statements to fill windDirError                   
 C
       CALL NCVINQ(NCID,27,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -433,9 +438,9 @@ C
       COUNT(J)=NDSIZE
  270  CONTINUE
       CALL NCVGT(NCID,27,START,COUNT,
-     +speedError                     ,RCODE)
+     +windDirError                   ,RCODE)
 C
-C    statements to fill bounceError                    
+C    statements to fill windSpeedError                 
 C
       CALL NCVINQ(NCID,28,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -446,9 +451,9 @@ C
       COUNT(J)=NDSIZE
  280  CONTINUE
       CALL NCVGT(NCID,28,START,COUNT,
-     +bounceError                    ,RCODE)
+     +windSpeedError                 ,RCODE)
 C
-C    statements to fill correctedFlag                  
+C    statements to fill speedError                     
 C
       CALL NCVINQ(NCID,29,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -459,9 +464,9 @@ C
       COUNT(J)=NDSIZE
  290  CONTINUE
       CALL NCVGT(NCID,29,START,COUNT,
-     +correctedFlag                  ,RCODE)
+     +speedError                     ,RCODE)
 C
-C    statements to fill flight                         
+C    statements to fill bounceError                    
 C
       CALL NCVINQ(NCID,30,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -471,10 +476,10 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  300  CONTINUE
-      CALL NCVGTC(NCID,30,START,COUNT,
-     +flight                         ,LENSTR,RCODE)
+      CALL NCVGT(NCID,30,START,COUNT,
+     +bounceError                    ,RCODE)
 C
-C    statements to fill rptStation                     
+C    statements to fill correctedFlag                  
 C
       CALL NCVINQ(NCID,31,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -484,10 +489,10 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  310  CONTINUE
-      CALL NCVGTC(NCID,31,START,COUNT,
-     +rptStation                     ,LENSTR,RCODE)
+      CALL NCVGT(NCID,31,START,COUNT,
+     +correctedFlag                  ,RCODE)
 C
-C    statements to fill timeReceived                   
+C    statements to fill flight                         
 C
       CALL NCVINQ(NCID,32,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -497,8 +502,60 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  320  CONTINUE
-      CALL NCVGT(NCID,32,START,COUNT,
+      CALL NCVGTC(NCID,32,START,COUNT,
+     +flight                         ,LENSTR,RCODE)
+C
+C    statements to fill rptStation                     
+C
+      CALL NCVINQ(NCID,33,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO 330 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+ 330  CONTINUE
+      CALL NCVGTC(NCID,33,START,COUNT,
+     +rptStation                     ,LENSTR,RCODE)
+C
+C    statements to fill timeReceived                   
+C
+      CALL NCVINQ(NCID,34,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO 340 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+ 340  CONTINUE
+      CALL NCVGT(NCID,34,START,COUNT,
      +timeReceived                   ,RCODE)
+C
+C    statements to fill origAirport                    
+C
+      CALL NCVINQ(NCID,35,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO 350 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+ 350  CONTINUE
+      CALL NCVGTC(NCID,35,START,COUNT,
+     +origAirport                    ,LENSTR,RCODE)
+C
+C    statements to fill destAirport                    
+C
+      CALL NCVINQ(NCID,36,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO 360 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+ 360  CONTINUE
+      CALL NCVGTC(NCID,36,START,COUNT,
+     +destAirport                    ,LENSTR,RCODE)
 C
 C     HERE IS WHERE YOU WRITE STATEMENTS TO USE THE DATA
 C

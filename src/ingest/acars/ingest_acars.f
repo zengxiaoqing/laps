@@ -2,6 +2,7 @@
 !     Ken Dritz      15-Jul-1997        Added call to get_grid_dim_xy to get
 !                                       the values of NX_L, NY_L
 !     Ken Dritz      15-Jul-1997        Pass NX_L, NY_L to get_acars_data
+!     Steve Albers      Dec-1997        Call to 'open_lapsprd_file_append'
 
 !     Input file 
       character*70 filename_in
@@ -14,10 +15,7 @@
       integer i4times(max_files)
 
 !     Output file
-      character*70 filename_out
-      character*13 filename13
       character*31    ext
-      character*50    directory
       integer*4       len_dir
 
       character*40 c_vars_req
@@ -46,20 +44,7 @@
 
 !     Open output PIN file
       ext = 'pin'
-      call get_directory(ext,directory,len_dir)
-      filename_out = directory(1:len_dir)
-     1                            //filename13(i4time_sys,ext(1:3))     
-      write(6,*)' Output file ',filename_out
-      open(11,file=filename_out,status='unknown',err=999,
-     +     position='append')
-
-
-!     Read to end of PIN file so we can append to it
-c      do i = 1,100000
-c          read(11,*,end=30)
-c      enddo ! i
-c 30   write(6,*)' Appending to end of PIN file: # lines = ',i
-
+      call open_lapsprd_file_append(11,i4time_sys,ext(1:3),istatus)
 
 !     Get List of input /public NetCDF files
       c_vars_req = 'path_to_qc_acars'
@@ -117,7 +102,7 @@ c 30   write(6,*)' Appending to end of PIN file: # lines = ',i
 
       go to 990
 
- 980  write(6,*)' Warning: no "latest_q.cdf" acars file'
+ 980  write(6,*)' Note: no "latest_q.cdf" acars file'
       close(21)
 
  990  close(11) ! Output PIN file
