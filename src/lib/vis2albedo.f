@@ -117,6 +117,9 @@ c             end if
                      albedo_out(i,j) = 
      1                           cloudfrac_to_albedo(cloud_frac_vis)
                    endif
+
+!                  Additional stretch
+                   call stretch2(0.0,1.0,.09,1.0,albedo_out(i,j))
 c                                                               excesses
 c Accumulate extrema
 c
