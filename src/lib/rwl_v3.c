@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "/usr/local/netcdf/include/netcdf.h"
 #define SYSCMD "/usr/local/netcdf/bin/ncgen -o %s %s"
 
@@ -552,7 +553,13 @@ long *status;
         filename = malloc(*fn_length + 1);
         nstrncpy(filename,f_filename,*fn_length);
 
-/* open netCDF file for reading */
+/* open netCDF file for reading, if file exists */
+        if( access(filename, F_OK) != 0 ) {
+          printf("The LAPS file %s does not exist\n",filename);
+          *status = -1; /* error opening file */
+          return;
+        }
+
         cdfid = ncopen((const char*)filename,NC_NOWRITE);
         free(filename);
         if (cdfid == -1) {
