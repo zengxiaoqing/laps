@@ -613,6 +613,9 @@ C READ IN AND INSERT PIREP DATA AS CLOUD SOUNDINGS
         endif
         I4_elapsed = ishow_timer()
 
+!       Cloud cover QC check
+        call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
+
 C READ IN AND INSERT CO2 SLICING DATA AS CLOUD SOUNDINGS
         if(l_use_co2_mode1)then
             call insert_co2ctp(i4time,cld_hts,heights_3d                  ! I
@@ -651,6 +654,9 @@ C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
      1      ' Error: Bad status from barnes_r5, aborting cloud analysis'
             goto999
         endif
+
+!       Cloud cover QC check
+        call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
 !       Hold current cloud cover from SAO/PIREPS in a buffer array
         do k = 1,KCLOUD
@@ -695,10 +701,13 @@ C READ IN SATELLITE DATA
         enddo
         enddo
 
+!       Cloud cover QC check
+        call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
+
         call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add            ! I
      1              ,l_use_vis_partial,lat                               ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
-     1              ,rlaps_land_frac                                     ! I
+     1              ,rlaps_land_frac,topo                                ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,comment_alb                                         ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
@@ -1843,7 +1852,7 @@ C       EW SLICES
 
         real*4 clouds_3d
 
-        if(clouds_3d .gt. 1.0001)then
+        if(clouds_3d .gt. 1.001)then
             write(6,*)' Error, clouds_3d > 1',i,j,k,clouds_3d
             stop
         elseif(clouds_3d .gt. 1.0)then
