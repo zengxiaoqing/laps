@@ -74,7 +74,7 @@ c       real*4 fraci,fracj
         real*4 r_missing_data
         real*4 result
 
-        integer i,j,ii,jj
+        integer i,j,ii,jj,iir,jir
         integer istart,jstart
         integer iend,jend
 	integer*4 npix, nwarm
@@ -98,9 +98,10 @@ c mean value for the remapped output grid value
 c
         insufdata=0
         if(r_grid_ratio .le.0.0)goto 1000
-        if(r_grid_ratio .lt. 0.5)then  !0.75)then
 
-          write(6,*)'Grid ratio .lt. 0.5'   !0.75'
+        if(r_grid_ratio .lt. 0.5)then
+
+          write(6,*)'Grid ratio .lt. 0.5'
           write(6,*)'Use pixel avg to get IR Tb'
           DO 10 J=1,JMAX
           DO 10 I=1,IMAX
@@ -238,9 +239,9 @@ ccd           endif
           write(6,*)'Number of LAPS gridpoints missing',
      &fcount
 
-        else
+        elseif(r_grid_ratio .lt. 1.0)then
 c       ---------------------------------------
-c input image resolution is large relative to output grid spacing
+c input image resolution is somewhat large relative to output grid.
 c this section uses bilinear interpolation to map
 c the four surrounding input pixels to the output grid.
 c
@@ -270,15 +271,6 @@ c
      &              elem_dim,line_dim,image_ir,
      &              result,istatus)
 
-c interp_extrap allows the satellite edge to be closer to the
-c laps grid than blinear_laps
-c
-c           call bilinear_laps(
-c    &           r_llij_lut_ri(i,j),
-c    &           r_llij_lut_rj(i,j),
-c    &           elem_dim,line_dim,image_ir,
-c    &           result,istatus)
-
 	       if(result .ne. r_missing_data .and.
      &            result .gt. 0.0)then
 
@@ -304,6 +296,29 @@ c            end if
 
    20     CONTINUE ! I,J
 c          close(29)
+
+        else      ! here the input data resolution is course relative to
+c                   the analysis domain
+
+          print*,'Image data res similar to domain res'
+          print*,'Use spline - gdtost'
+
+          DO 30 J=1,JMAX
+          DO 30 I=1,IMAX
+
+           if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+     &        r_llij_lut_rj(i,j).ne.r_missing_data)then
+
+               call gdtost(image_ir,elem_dim,line_dim,
+     .             r_llij_lut_ri(i,j),r_llij_lut_rj(i,j)
+     .            ,sa(i,j),0)
+           
+               sc(i,j)=sa(i,j)
+               sT(i,j)=sa(i,j)
+
+           endif
+
+   30     CONTINUE
 
         end if     ! r_image_ratio
 
