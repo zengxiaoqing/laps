@@ -25,10 +25,6 @@
       character*40 c_vars_req
       character*100 c_values_req
 
-!     Define width of raob release time window centered on the SND filetime
-!     +/- 3 hr for AFGWC, +/- laps_cycle_time for NIMBUS
-      integer i4_raob_window
-
 !     Define interval to be used (between timestamps) for creation of SND files
       integer i4_snd_interval
       parameter (i4_snd_interval = 3600)
@@ -96,6 +92,15 @@
 
       endif
 
+!     Get RAOB Time Window
+      call get_windob_time_window('RAOB',i4_wind_ob,istatus)
+      if(istatus .ne. 1)goto 997
+
+      call get_tempob_time_window('RAOB',i4_temp_ob,istatus)
+      if(istatus .ne. 1)goto 997
+
+      i4_raob_window = 2 * max(i4_wind_ob,i4_temp_ob)
+
 !     Loop through raob files and choose ones in time window
       write(6,*)' # of files using filename format ',c8_project,' = '          
      1                                              ,i_nbr_files_ret
@@ -104,13 +109,11 @@
 
           if(c8_project(1:6) .eq. 'NIMBUS')then
               filename_in = dir_in(1:len_dir_in)//a9_time//'0300o'
-              i4_raob_window = 2 * ilaps_cycle_time
 !             i4_raob_window = 60000  ! Temporary for testing
               i4_raob_lag = 10800
           else ! AFGWC
               filename_in = dir_in(1:len_dir_in)//'/raob.'//
      1                                            a8_time_orig(i)
-              i4_raob_window = 21600
               i4_raob_lag = 3600
           endif
 
@@ -171,6 +174,10 @@
 
 
       close(11) ! Output PIN file
+
+      go to 999
+
+ 997  write(6,*)' Error in RAOB ingest (ob time windows)'
 
       go to 999
 

@@ -74,7 +74,7 @@ c                             time of the current LAPS analysis time.
         character*5 c5_name
         character*9 a9time_ob
 
-        logical l_fill, l_use_raob, l_use_cdw, l_use_radial_vel
+        logical l_use_raob, l_use_cdw, l_use_radial_vel
 
         r_mspkt = .518
 
@@ -226,18 +226,16 @@ c
           GO TO 600
       endif
 
-      lag_time = 0 ! Middle of sonde sampling period
-      rcycsnd = float(i4time - i4time_snd + lag_time)
-     1             / float(ilaps_cycle_time)
-
-
       DO i_pr = n_profiles+1,max_pr
         read(12,511,err=530,end=550)
      1  ista,nlevels_in,
      1  lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),c5_name,a9time_ob
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
 
-        rcycles_pr(i_pr) = 0. ! Allow use of RAOBs regardless of age
+        call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
+        rcycsnd = float(i4time - i4time_ob) / float(ilaps_cycle_time)
+
+        rcycles_pr(i_pr) = max(min(rcycsnd,1.0),-1.0)
 
         write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)
      1             ,lon_pr(i_pr)
@@ -357,14 +355,11 @@ c
             endif
 
 !           Determine if profile was obtained close enough in time....
-            if(rcycles_pr(i_pr) .gt. 1.0)then
+            if(abs(rcycles_pr(i_pr)) .gt. 1.0)then
                 write(6,*)'Profile  # ',i_pr,' Out of time bounds:'
      1                                      ,rcycles_pr(i_pr)
                 nlevels_obs_pr(i_pr)=0 ! This effectively throws out the profile
             endif
-
-            if(nlevels_obs_pr(i_pr) .eq. 128)nlevels_obs_pr(i_pr)=0 ! This throws out
-                             ! the profiler if it's just a 128 array of zeros
 
 !  ***  Interpolate the profiles to the LAPS grid levels  *******
 
