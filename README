@@ -569,7 +569,7 @@
 
            You might wish to check the following URLs on the WWW for...
 
-           more RUC info:  'http://www.fsl.noaa.gov/frd-bin/MAPS.rucinfo.cgi'
+           more RUC info:  'http://maps.fsl.noaa.gov/MAPS.rucinfo.cgi'
            more GRIB info: 'http://sslab.colorado.edu:2222/datastandards.html'
 
            RUC is also available from UNIDATA and distributed to universities 
@@ -577,8 +577,9 @@
 
            The conversion from GRIB to NetCDF is done by FSL's facility 
            division (NIMBUS). You may wish to contact them for more info. 
-           The Seattle WFO has also run this type of GRIB to NetCDF decoder. 
-           The Atlanta WFO is getting this done as well, John Snook (FSL) 
+           The Seattle WFO (for a time) read this type of GRIB data and filled
+           the LAPS arrays directly in a modified lga process, bypassing the 
+           NetCDF step. The Atlanta WFO has done this as well, John Snook (FSL)
            would have info on this.
 
 
@@ -2150,12 +2151,12 @@ Process humid:  LQ3  SH   sh      21  Specific Humidity
             	     RHL  rhl	  21  Relative Humidity with resp to liquid
             	LH4  TPW  tpw      1  Integrated Total Precipitable Water
 
-Process wind:   LW3  U3   u       21  Wind u
-		     V3   v       21  Wind v 
+Process wind:   LW3  U3   u       21  Wind u (wrt TRUE NORTH)
+		     V3   v       21  Wind v (wrt TRUE EAST)
           	     OM   w       21  Wind omega 
 
-                LWM  SU   u        1  Surface wind u
-                     SV   v        1  Surface wind v
+                LWM  SU   u        1  Surface wind u (wrt TRUE NORTH)
+                     SV   v        1  Surface wind v (wrt TRUE EAST)
 		
 Process cloud:	LC3  LC3  camt    42  Fractional Cloud Cover (levels 1-42)
 
@@ -2292,6 +2293,8 @@ Process lvd_sat_ingest:
                      S8A  s8a      1  GOES IR band-8 bright temp averaged
                      SCA  sca      1  GOES IR band-12 bright temp averaged
                      SCC  scc      1  GOES IR band-12 bright temp averaged
+
+                     Note: band-8 is approx 11.2 microns.
 
 Static LAPS file - run by localization:
 
