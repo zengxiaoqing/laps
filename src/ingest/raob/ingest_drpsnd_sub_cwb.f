@@ -1,6 +1,6 @@
       subroutine get_drpsnd_data_cwb ( i4time_sys, ilaps_cycle_time,
      ~         nx_l, ny_l, i4time_drpsnd_earliest, i4time_drpsnd_latest,
-     ~         a9_time, filename, istatus )
+     ~         a9_time, filename, lun_out, istatus )
 
       integer   loopNum, levelNum  
       parameter ( loopNum=100, levelNum=90 )
@@ -246,7 +246,7 @@ c      format f15.0 in snd files
 900   continue
 
 !     Call write_snd routine
-      call write_snd(      11                                 ! I
+      call write_snd(      lun_out                            ! I
      1                    ,loopNum,levelNum,inNum             ! I
      1                    ,wmoId                              ! I
      1                    ,latitude_out,longitude_out,staelev ! I
