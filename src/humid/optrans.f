@@ -119,9 +119,12 @@ cdis
 	Real WW(0:Nw)		! wet absorber amount space
 	Real AA(0:Nw)		! dry absorber amount space
 	Real OO(0:Nw)		! Ozo absorber amount space
-	Real PwMax /13.87981/	! max wet absorber at WW(Nw)
-	Real PMax  /2100./	! max dry absorber at AA(Nw)
-	Real OzMax  /1.1403912/	! max ozo absorber at OO(Nw)
+	Real PwMax 
+        data PwMax /13.87981/   ! max wet absorber at WW(Nw)
+	Real PMax  
+        data PMax /2100./       ! max dry absorber at AA(Nw)
+	Real OzMax  
+        data OzMax /1.1403912/  ! max ozo absorber at OO(Nw)
 c        Real PwMax /12.33761/   ! maximum value for wet absorber space
 c	Real PMax  /2000./	! max dry absorber at AA(Nw)
 c        Real OzMax /153.4007/   ! maximum value for Ozo absorber space
@@ -133,7 +136,8 @@ c        Real OzMax /153.4007/   ! maximum value for Ozo absorber space
 	Real ODDry(Nlevel,Nchan)    ! dry optical depth on pressure levels
 	Real ODOzo(Nlevel,Nchan)    ! ozo optical depth on pressure levels
 
-	Real Dtr /1.74532952e-2/ ! degrees to radians conversion
+	Real Dtr 
+        data Dtr /1.74532952e-2/ ! degrees to radians conversion
 
 	Real Secant		! secant of angle
 
@@ -152,7 +156,8 @@ c        Real OzMax /153.4007/   ! maximum value for Ozo absorber space
 
 
 *  This may need a SAVE statement on some systems
-	Logical First /.true./  ! flag to initialize coefficients and such
+	Logical First 
+        data First /.true./     ! flag to initialize coefficients and such
 				! first time routine is called.
 c     LAPS APPS
         character*200 fname
@@ -1060,9 +1065,11 @@ c     LAPS APPS
 
 	Integer k     ! utility variables
 
-	Real*8 Tolerance /1.0e-10/ ! iteration-to-iteration convergence criterion
+	Real*8 Tolerance 
+        data Tolerance /1.0e-10/ ! iteration-to-iteration convergence criterion
 
-	Integer MaxIter /100/ ! arbitrary value to test non-convergence
+	Integer MaxIter 
+        data MaxIter /100/      ! arbitrary value to test non-convergence
 
 	Real*8 x1,x2,fx,fp ! Newton's method variables
 			   ! fx is the function
@@ -1143,8 +1150,10 @@ c	transmittance profile.
 	Real Sum,b1,b2,bs,tau1,tau2
 	Integer i
 
-	Real*4 C1 /1.1905e-5/
-	Real*4 C2 /1.4385/
+	Real*4 C1 
+        data C1 /1.1905e-5/
+	Real*4 C2 
+        data C2 /1.4385/
 
 	Real Planck,Bright,V,Temp,Radiance
 	Planck(V,Temp) = (C1*v*v*v)/(Exp(C2*V/Temp) - 1)
