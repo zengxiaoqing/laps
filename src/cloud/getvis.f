@@ -86,8 +86,6 @@ cdis
         call get_sfc_albedo(ni,nj,lat,r_missing_data                     ! I
      1                     ,sfc_albedo,sfc_albedo_lwrb,istat_sfc_albedo) ! O   
 
-        n_missing_albedo = ni*nj
-
 !       Determine whether to use VIS / ALBEDO data
         if(.not. l_use_vis)then
             write(6,*)' Note: l_use_vis set to not use vis data'
@@ -142,17 +140,6 @@ cdis
             clear_albedo = sfc_albedo_lwrb(i,j)
             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
      1                                           ,vis_albedo(i,j))
-
-!           Fudge the frac at low solar elevation angles
-!           Note the ramp extrapolates down to 9 deg to account for slight
-!           errors in determining the solar elevation
-            if(.false.)then
-!           if(solar_alt(i,j) .lt. 20. .and. solar_alt(i,j) .ge. 9.)then
-                frac = (20. - solar_alt(i,j)) / 10.
-                term1 = .13 * frac
-                term2 = 1. + term1
-                cloud_frac_vis = (cloud_frac_vis + term1) * term2
-            endif
 
             iscr_frac_sat = nint(cloud_frac_vis*10.)
             iscr_frac_sat = min(max(iscr_frac_sat,-10),20)
@@ -209,22 +196,46 @@ cdis
      1                           ,sfc_albedo,sfc_albedo_lwrb         ! O
      1                           ,istat_sfc_albedo)                  ! O
 
+!       This returns the surface albedo. This is from the static database
+!       to yield a less confident "lower bound". If we are confident that
+!       snow/ice is not present, then the 'sfc_albedo' array is also 
+!       populated and can be used more at face value.
+
         character*3 var
         real*4 lat(ni,nj)
-        real*4 sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
-        real*4 static_albedo(ni,nj)
+        real*4 sfc_albedo(ni,nj)      ! Populated with "reliable" values that
+                                      ! may include land/sea snow/ice
+
+        real*4 sfc_albedo_lwrb(ni,nj) ! Populated with lower bound (i.e. from
+                                      ! static database)
+
+        real*4 static_albedo(ni,nj)   ! Static albedo database
 
         var = 'ALB'
         call read_static_grid(ni,nj,var,static_albedo,istatus)
 
         do i = 1,ni
         do j = 1,nj
-            if(istatus .eq. 1)then
+            if(istatus .eq. 1)then ! static database available
+                if(static_albedo(i,j) .ne. r_missing_data)then ! over water
+                    sfc_albedo_lwrb(i,j) = static_albedo(i,j)*2. ! fudge to .08
+
+                    if(lat(i,j) .le. 38.)then          ! it's reliable
+                        sfc_albedo(i,j) = sfc_albedo_lwrb(i,j)
+                    else                               ! sea/lake ice possible?
+                        sfc_albedo(i,j) = r_missing_data
+                    endif
+
+                else                                           ! over land
+                    sfc_albedo_lwrb(i,j) = 0.2097063 ! static_albedo(i,j)
+                    sfc_albedo(i,j)      = r_missing_data
+
+                endif
+
+            else ! static database not available
+                sfc_albedo_lwrb(i,j) = 0.2097063 
                 sfc_albedo(i,j)      = r_missing_data
-                sfc_albedo_lwrb(i,j) = 0.2097063 ! static_albedo(i,j)
-            else
-                sfc_albedo(i,j)      = r_missing_data
-                sfc_albedo_lwrb(i,j) = 0.2097063 ! static_albedo(i,j)
+
             endif
         enddo ! j
         enddo ! i
