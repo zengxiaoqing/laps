@@ -14,8 +14,8 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
   REAL,    INTENT(IN) :: bkgd(nx,ny,ncycles,nvlaps)
   REAL,    INTENT(IN) :: ldf(nx,ny),ds(3)
 
-  INTEGER :: iter,iobs,i,j,k,no_v,idp,nbqc
-  REAL    :: y0,b(2,3),rms,stdv(nvlaps)
+  INTEGER :: iter,iobs,i,j,k,no_v,idp,nbqc,numo
+  REAL    :: y0,b(2,3),rms,stdv(nvlaps),amx,amn
 
   ! Unified analysis of velocity:
   idp = id
@@ -34,6 +34,9 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 	no_v = 0
 
 	nbqc = 0
+	numo = 0
+	amx = -1.0e6
+	amn = 1.0e6
 
         DO iobs=1,nobs
 
@@ -44,6 +47,8 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
                (idx(2,iobs) .LT. n(2)-nfic)) THEN
 
               y0 = 0.0
+
+	      numo = numo+1
         
               b(1,1:3) = 1.0-coe(1:3,iobs)
               b(2,1:3) = coe(1:3,iobs)
@@ -78,11 +83,17 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
                  ENDIF
 	      ENDIF
 
+	      if (id .EQ. 4) then
+	        if (abs(y0-o(1,iobs)) .GT. amx) amx = abs(y0-o(1,iobs))
+		print*,'MSLP: ',y0,o(1,iobs), &
+		(y0-o(1,iobs))/100.0
+		endif
 	   ENDIF
 
         ENDDO
 
-	PRINT*,'Total Bad QC: ',nbqc,id
+	PRINT*,'Total Bad QC: ',nbqc,id,numo
+	if (id .EQ. 4) PRINT*,'MAXimum diff: ',amx
 
 	stdv(id) = SQRT(stdv(id)/no_v)
 
@@ -120,21 +131,21 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 		 ENDIF
               ENDDO
 
-              IF (ABS(o(1,iobs)-y0) .GT. 4.0*stdv(id)) THEN
+              IF (ABS(o(1,iobs)-y0) .GT. 3.0*stdv(id)) THEN
 	         !PRINT*,'Standard deviation QC: ', &
 	    	 !   o(1,iobs),y0,vid(iobs),iobs,stdv(id)
 	         nbqc = nbqc+1
 	         o(1,iobs) = y0
                  w(iobs) = 0.0
 	      !ELSE
-	      !  PRINT*,'PASS STD: ',iobs,o(1,iobs),y0,stdv(id)
+	      !  PRINT*,'PASS STD: ',iobs,o(1,iobs),y0,3.0*stdv(id)
               ENDIF
 
 	   ENDIF
 
         ENDDO
 
-	PRINT*,'Number of STD QCed: ',nbqc,id
+	PRINT*,'Number of STD QCed: ',nbqc,id,stdv(id),numo
 
      ENDIF
 
@@ -214,7 +225,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
   ENDDO
 
   ! Land/water weight:
-  IF (id .NE. 6) THEN
+  IF ((id .NE. 6) .AND. (id .NE. 4)) THEN
      DO j=1,ny
         DO i=1,nx
   	   s(nfic+i,nfic+j,1:n(3),id:idp) = &
