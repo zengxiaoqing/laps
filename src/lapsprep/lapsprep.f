@@ -433,12 +433,46 @@
       DO k = 1, z3
         rho(:,:,k) = p(k)*100. / (rdry * virtual_t(:,:,k))
       ENDDO
-      ! Divide all of species by density     
-      lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
-      rai(:,:,:) = rai(:,:,:)/rho(:,:,:)   ! Rain mixing ratio
-      sno(:,:,:) = sno(:,:,:)/rho(:,:,:)   ! Snow mixing ratio
-      ice(:,:,:) = ice(:,:,:)/rho(:,:,:)   ! Ice mixing ratio
-      pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
+
+      ! For each of the species, ensure they are not "missing".  If missing
+      ! then set their values to 0.000.  Otherwise, divide by the density to 
+      ! convert from concentration to mixing ratio.
+
+      IF (MAXVAL(lwc) .LT. 99999.) THEN
+        lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
+      ELSE
+        PRINT *,'Cloud Liquid (lwc/lwc) appears to be missing, setting values to 0.0'
+        lwc(:,:,:) = 0.0
+      ENDIF
+
+      IF (MAXVAL(rai) .LT. 99999.) THEN
+        rai(:,:,:) = rai(:,:,:)/rho(:,:,:)   ! Rain mixing ratio
+      ELSE
+        PRINT *, 'Rain (lwc/rai) appears to be missing, setting values to 0.0' 
+        rai(:,:,:) = 0.0
+      ENDIF
+
+      IF (MAXVAL(sno) .LT. 99999.) THEN
+        sno(:,:,:) = sno(:,:,:)/rho(:,:,:)   ! Snow mixing ratio
+      ELSE
+        PRINT *, 'Snow (lwc/sno) appears to be missing, setting values to 0.0'    
+        sno(:,:,:) = 0.0
+      ENDIF
+
+      IF (MAXVAL(ice) .LT. 99999.) THEN 
+        ice(:,:,:) = ice(:,:,:)/rho(:,:,:)   ! Ice mixing ratio
+      ELSE
+        PRINT *, 'Ice (lwc/ice) appears to be missing, setting values to 0.0' 
+        ice(:,:,:) = 0.0
+      ENDIF
+
+      IF (MAXVAL(pic) .LT. 99999.) THEN
+        pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
+      ELSE
+        PRINT *, 'P. Ice (lwc/pic) appears to be missing, setting values to 0.0' 
+        pic(:,:,:) = 0.0
+      ENDIF
+
     ENDIF
 
     ! Loop over the each desired output format
