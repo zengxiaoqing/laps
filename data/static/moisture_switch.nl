@@ -1,10 +1,10 @@
  &moisture_switch_nl
  RAOB_SWITCH = 0,
  RAOB_LOOKBACK = 3600,
- GOES_SWITCH = 0,
+ GOES_SWITCH = 8,
  CLOUD_SWITCH = 1,
- CLOUD_D = 1,
- SOUNDER_SWITCH = 0,
+ CLOUD_D = 0,
+ SOUNDER_SWITCH = 1,
  TIROS_SWITCH = 0,
  SAT_SKIP = 2,
  GVAP_SWITCH = 1,
@@ -42,3 +42,4 @@ c  MOD_4DDA_FACTOR = 0.02,  drying value (+ = drying)
 c  T_REF = -132.0,     reference temp in C where all is ice
 c  PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
 c  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
+c  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
