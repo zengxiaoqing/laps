@@ -681,7 +681,7 @@
 
      The default value is 10000m. This is one of the items used in 
    constructing the static file (see above). To date, we have run LAPS with
-   resolutions ranging from 1000m to 16000m.
+   resolutions ranging from 1000m to 36000m.
 
    
 --------- 2.10 ----- CHANGING THE VERTICAL DOMAIN------------------------------
