@@ -446,6 +446,9 @@
      modify the LAPS ingest code if necessary to generate the intermediate 
      data files that are inputs to the analysis code. 
 
+     A flow chart for the ingest processes may be found at
+     'http://laps.fsl.noaa.gov/wharton/slide1.html'.
+
      The default LAPS ingest code obtains "raw" data from the FSL NIMBUS 
      system. The raw data can either be in ASCII, NetCDF (as point data), or
      NetCDF (as gridded data - generally not on the LAPS grid). Note that the 
@@ -1334,6 +1337,9 @@ Sample Output: Should be available in the test data case. The grids start with
 
 
 ------- 3.2  ------------------  INGEST PROCESSES---------------------------
+
+As mentioned above, a flow chart for the ingest processes may be found at
+'http://laps.fsl.noaa.gov/wharton/slide1.html'.
 
 ------ 3.2.1 -------------------- LGA Model ---------------------------------
 
