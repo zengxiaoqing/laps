@@ -145,7 +145,7 @@ c
 	integer*4 i4time, wmoid(maxsta), jstatus
 	integer*4 time(maxsta), delpch(maxsta), kloud(maxsta)
 c
-	character filetime*9, infile*256, btime*24
+	character filetime*9, infile*256
 	character stations(maxsta)*20, provider(maxsta)*11
         character reptype(maxsta)*6, atype(maxsta)*6
 	character wx_in(maxsta)*25, store_amt(maxsta,5)*4
