@@ -9,7 +9,7 @@
 #define MAX_WFO_LEVEL_LEN        5
 #define MAX_WFO_LEVEL_VALUE      10
 #define CHARS_PER_LEVEL          10
-#define MAX_WFO_LEVELS           22
+#define MAX_WFO_LEVELS           44
 #define MAX_TIMESTRING_LEN       30
 #define MAX_PARAMETER_LIST_LEN   100
 
