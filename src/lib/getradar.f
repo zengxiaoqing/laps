@@ -906,6 +906,40 @@ cdoc                            calls read_multiradar_3dref.
         return
         end
 
+        subroutine read_radar_raw2d(i4time_radar,             ! I
+     1                  imax,jmax,                            ! I
+     1                  iradar                                ! I
+     1                  radar_name,                           ! O
+     1                  ref_2d,radar_dist_2d,istatus_2dref)   ! O
+
+!       Read in unmosaiced radar data from 'vrc' files (under construction)
+
+        real*4 ref_2d(imax,jmax)
+        real*4 radar_dist_2d(imax,jmax) ! Not yet filled
+
+        character*3 var_2d
+        character*31  ext
+        character*10  units_2d
+        character*125 comment_2d
+
+        character*4 radar_name
+
+        write(6,*)' Subroutine read_radar_raw2d'
+
+50      write(6,*)' Reading VRC/NOWRAD data'
+
+        radar_name = 'WSI '
+
+        var_2d = 'REF'
+        ext = 'vrc'
+        call get_laps_2d(i4time_radar,ext,var_2d
+     1          ,units_2d,comment_2d,imax,jmax,ref_2d,istatus_vrc)
+
+        istatus_2dref = istatus_vrc
+
+        return
+        end
+
 
         subroutine read_radar_vel(i4time_radar,l_apply_map,
      1   imax,jmax,kmax,radarext,
