@@ -188,7 +188,7 @@ c
 c
 c.....  Work arrays for the QC routine.
 c
-        integer rely(26,mxstn), ivals1(mxstn)
+        integer rely(26,mxstn)
 	character stn3(mxstn)*3
 c
 c.....  Stuff for intermediate grids (old LGS file)
@@ -604,7 +604,7 @@ c
 	call get_directory('lso', infile_last, len)
 	infile_last = infile_last(1:len) // filename_last // '.lso'
 c
-	call qcdata(filename,infile_last,rely,ivals1,mxstn,
+	call qcdata(filename,infile_last,rely,mxstn,
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn3, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
      &     ni,nj,mslp_bk,back_mp,
@@ -625,12 +625,6 @@ c
 c
 c.....	Check each of the primary analysis variables.
 c
-	do mm=1,n_obs_b
-	  nn = ivals1(mm)
-          if(nn .ne. mm)write(6,*)'WARNING: nn .ne. mm'
-     1                            ,nn,mm,stations(mm)
-        enddo ! mm
-
 	do mm=1,n_obs_b
 	  if(rely(7,mm) .lt. 0) then	! temperature
 	     print *, 'QC: Bad T at ',stations(mm),' with rely/value '       
