@@ -1454,7 +1454,7 @@ c
 	   if(ob(i) .le. badflag) then
 	      diff = badflag
 	   else
-	      diff = interp_ob - ob(i)
+	      diff = ob(i) - interp_ob 
 	      sum = diff + sum
               sumsq = sumsq + diff**2
 	      adiff = abs(diff)
