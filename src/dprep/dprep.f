@@ -14,7 +14,7 @@ c
 c     integer i, filesfound, nf_fid, len
       integer i, filesfound, len
       character*256 nl_file, laps_data_root
-      integer bgfcnt, max_files, istat
+      integer bgfcnt, max_files, istat, istatus
       parameter (max_files=500)
       character*256 bgfnames(max_files)
       integer maxdprepmodels, maxtimes
@@ -123,7 +123,11 @@ c
 c     print*,nx,ny,nz,i4time_now,bgmodel,bgpath,
 c     +         bgfnames,bgfcnt,outdir,filesfound,bgfcnt
                call dprep_sub(nx,ny,nz,i4time_now,bgmodel,bgpath,
-     +              bgfnames,bgfcnt,outdir,filesfound)
+     +              bgfnames,bgfcnt,outdir,filesfound,istatus)
+               if(istatus.ne.0)then
+                  print*,'No dprep output due to error'
+                  i=maxdprepmodels+1
+               endif
             endif
 
          
@@ -145,8 +149,12 @@ c            stop
             if(bgmodel .eq. 4)then
                cfilespec=bgpath(1:len)//'/*'
                call get_latest_file_time(cfilespec,i4time_latest)
-               cfname = cvt_i4time_wfo_fname13(i4time_latest)
-               call get_sbn_dims(bgpath,cfname,idum,idum,idum,ntbg)
+               if(i4time_latest .ne. 0)then
+                  cfname = cvt_i4time_wfo_fname13(i4time_latest)
+                  call get_sbn_dims(bgpath,cfname,idum,idum,idum,ntbg)
+               else
+                  i=maxdprepmodels  !6-30-00: Smart: no files (i4time_latest = 0) terminates the loop.
+               endif
             endif
 
 
@@ -157,12 +165,18 @@ c            stop
      +           nx,ny,nz,reject_files,reject_cnt)
 
 
-            print *, nx,ny,nz
          
             i=i+1
+
             if(bgfcnt.gt.0) then
+
+               print *, nx,ny,nz
                call dprep_sub(nx,ny,nz,i4time_now,bgmodel
-     +              ,bgpath,bgfnames,bgfcnt,outdir,filesfound)
+     +,bgpath,bgfnames,bgfcnt,outdir,filesfound,istatus)
+               if(istatus.ne.0)then
+                  print*,'No dprep output due to error'
+                  i=maxdprepmodels+1
+               endif
             endif
          
          enddo
@@ -180,7 +194,7 @@ c
       end
 c
       subroutine dprep_sub(NX,NY,NZ,i4time,bgmodel,bgpath,bgfnames,
-     +     bgfcnt,outdir,filesfound)
+     +     bgfcnt,outdir,filesfound, istatus_dprep)
       implicit none
       include 'netcdf.inc'
       integer NX, NY, NZ, i4time, i, j, bgtime
@@ -194,6 +208,7 @@ c     integer bgmodel, istatus, bgfcnt, k, len, filesfound
       character*9 fname
       character*13 fname13,fname9_to_wfo_fname13
       integer nxbg, nybg, nzbg(5),ntbg 
+      integer istatus_dprep
 c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ), 
       real ht( NX,  NY,  NZ), 
      +   ht_sfc( NX,  NY), p_sfc( NX,  NY), 
@@ -204,6 +219,8 @@ c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ),
      +   p(NX,NY,NZ), mslp(NX, NY), ww(nx,ny,nz)
 
       real lat1, lat2, lon0
+
+      istatus_dprep=1
       filesfound = 0
       
       do k=1,bgfcnt
@@ -233,6 +250,7 @@ c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ),
                call get_standard_latitudes(lat1,lat2,istatus)
                call get_standard_longitude(lon0,istatus)
                call get_laps_corners(nx,ny,sw,ne)
+               istatus_dprep = 0
             endif
          else if(bgmodel.eq.2) then
             ext = '.E48'
@@ -246,12 +264,21 @@ c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ),
             ne(2)=-49.3849
 
             call read_eta_conusc(fullname,nx,ny,nz,
+     +           ht, p, th, uw, vw, rh, ww, ht_sfc, p_sfc,
+     +           rh_sfc, th_sfc, uw_sfc, vw_sfc, mslp ,istatus)
+
+            if(istatus .eq. 0)then
+
+               call dprep_eta_conusc(nx,ny,nz,
      +           ht, p, th, uw, vw, rh, ht_sfc, p_sfc,
      +           rh_sfc, th_sfc, uw_sfc, vw_sfc, mslp ,istatus)
 
-            call dprep_eta_conusc(nx,ny,nz,
-     +           ht, p, th, uw, vw, rh, ht_sfc, p_sfc,
-     +           rh_sfc, th_sfc, uw_sfc, vw_sfc, mslp ,istatus)
+               istatus_dprep = 0
+
+            else
+               print*,'Error reading eta_conusc'
+               return
+            endif
 
          else if(bgmodel.eq.4) then
             ext='.SBN'
@@ -268,9 +295,16 @@ c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ),
             
             call read_conus_211(bgpath,fname,af,nx,ny,nz,
      .           nxbg,nybg,nzbg,ntbg,
-     .           p,ht,th,rh,uw,vw,
+     .           p,ht,th,rh,uw,vw,ww,
      .           p_sfc,uw_sfc,vw_sfc,rh_sfc,th_sfc,
      .           mslp,gproj,2,istatus)
+
+            if(istatus .ne. 0)then
+               print*,'Error reading conus_211'
+               return
+            else
+               istatus_dprep = 0
+            endif
 
          else if(bgmodel.eq.5) then
             ext='.RUC'
@@ -286,11 +320,14 @@ c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ),
             call read_ruc2_hybb(fullname,nx,ny,nz
      +           ,mslp,ht,p,rh,uw,vw,th,ww
      +           ,istatus)
-            if(istatus.gt.0) then
+            if(istatus.eq.0) then
                call dprep_ruc2_pub(nx,ny,nz
      +              ,ht,p,rh,uw,vw,th,gproj)
                
-
+               istatus_dprep = 0
+            else
+               print*,'Error reading ruc2_hybb'
+               return
             endif
 
 
@@ -299,7 +336,7 @@ c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ),
             print*, 'ERROR bgmodel may not be supported ',bgmodel
             stop
          endif
-         if(istatus.gt.0) then
+         if(istatus_dprep.eq.0) then
             call dprep_output(outdir,fname//af(3:4)//'00'//ext,gproj,
      +           sw,ne,nx,ny,nz,ht, p, th, uw, vw, rh, ht_sfc, p_sfc,
      +           rh_sfc, th_sfc, uw_sfc, vw_sfc, mslp ,lat1, lat2, lon0, 
