@@ -217,7 +217,7 @@ sub systime{
     my($sec,$min,$hour,$mday,$mon,$year) = gmtime($ctime);
     my $yyyy = 1900+$year;
     my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
-    my $year= $year-100 if($year>99);
+    $year= $year-100 if($year>99);
 
 
 
