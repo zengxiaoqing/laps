@@ -14,7 +14,10 @@ use File::Copy 'cp';
 getopts('s:i:d:t:c:');
 
 #
-# opt_d is LAPS_DATA_ROOT (eg., /data/lapb/parallel/laps/data)
+# opt_s is LAPS_SRC_ROOT override
+# opt_i is LAPSINSTALLROOT override
+# opt_d is LAPS_DATA_ROOT (eg., /data/lapb/parallel/laps/data) override.
+#       if the data root does not exist and -c = "t", then it is created.
 #
 # opt_t is template subdirectory (eg., /usr/nfs/common/lapb/parallel/laps/template/"name")
 #          name is usually the same as the domain name in LAPS_DATA_ROOT
@@ -22,7 +25,7 @@ getopts('s:i:d:t:c:');
 # log and lapsprd directories (=f, for false)
 #
 # In some cases LAPSINSTALLROOT = LAPS_SRC_ROOT. This is made possible
-# by perl module makedatadirs.pm that removes the Makefile dependence.
+# by perl module mkdatadirs.pm that removes the Makefile dependence.
 #
 # If no template is specified and opt_c = "f" then a new LAPS_DATA_ROOT
 # is built from either the LAPSINSTALLROOT or the LAPS_SRC_ROOT.
@@ -75,18 +78,22 @@ if(-d $FXA_DATA && ! -d "$FXA_DATA/laps_data"){
    system("ln -s $FXA_DATA/laps_data data");
 }
 
-require "$LAPSINSTALLROOT/etc/makedatadirs.pm";
+require "$LAPSINSTALLROOT/etc/mkdatadirs.pm";
 
 if( $CONFIG_DOMAIN eq "t") {
-  print "Removing entire dataroot: $LAPS_DATA_ROOT\n";
-  system("rm -rf $LAPS_DATA_ROOT") if( $LAPS_DATA_ROOT ne "/data/lapb/operational/laps/data");
+  print "Removing dataroot: $LAPS_DATA_ROOT\n";
+  if( -e $LAPS_DATA_ROOT ){
+      if( $LAPS_DATA_ROOT ne "/data/lapb/operational/laps/data"){
+         system("rm -rf $LAPS_DATA_ROOT");
+      }
+  } 
   mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";
-  print "Using makedatadir.pm to generate lapsdataroot directory structure\n";
-  makedatadirs::makedatadirs($LAPS_DATA_ROOT);
+  print "Use mkdatadir.pm to generate lapsdataroot directory structure\n";
+  mkdatadirs::mkdatadirs($LAPS_DATA_ROOT);
 }else{
   print "Keep lapsprd and log subdirectories\n";
   system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
-  rename ("$LAPS_DATA_ROOT", "$LAPS_DATA_ROOT\_save");
+  rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
   mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
   mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make static in $LAPS_DATA_ROOT $!\n";
 }
@@ -103,12 +110,12 @@ if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
 
 # ***** Run laps_localization.pl *****
 # ------------------------------------
-system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/localization.out");
+system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/laps_localization.log");
 
 print ("Checking for static.nest7grid");
 system("ls -l $LAPS_DATA_ROOT/static/static.nest7grid"); print "\n";
-print "checking localization.out\n";
-open(LOC,"$LAPS_DATA_ROOT/localization.out");
+print "checking laps_localization.log\n";
+open(LOC,"$LAPS_DATA_ROOT/laps_localization.log");
 my @loc=<LOC>;
 close(LOC);
 
@@ -119,20 +126,23 @@ foreach(@loc){if(/world/i && /warning/i){$world_topo_warn_lines = 1;}}
 my $error_lines = grep /error/i,@loc;
 my $cannot_lines = grep /cannot/i,@loc;
 
-if($error_lines gt 0){print "Lines with error found in localization.out\n";}
-if($cannot_lines gt 0){print "Lines with cannot found in localization.out\n";}
-if($world_topo_warn_lines gt 0){print "Lines with both world_topo and warning found in localization.out\n";}
+if($error_lines gt 0){print "Lines with error found in laps_localization.log\n";}
+if($cannot_lines gt 0){print "Lines with cannot found in laps_localization.log\n";}
+if($world_topo_warn_lines gt 0){print "Lines with both world_topo and warning found in laps_localization.log\n";}
 
-#if($warning_lines gt 0){print "Lines with warning found in localization.out\n";}
+#if($warning_lines gt 0){print "Lines with warning found in laps_localization.log\n";}
 
-system ("tail -1               $LAPS_DATA_ROOT/localization.out");
-system ("ls -l                 $LAPS_DATA_ROOT/localization.out");
+system ("tail -1               $LAPS_DATA_ROOT/laps_localization.log");
+system ("ls -l                 $LAPS_DATA_ROOT/laps_localization.log");
 
-if( $CONFIG_DOMAIN eq "f"){print "restoring saved lapsprd and log\n";
-   system("mv $LAPS_DATA_ROOT/localization.out $LAPS_DATA_ROOT\_save/log/");
+if( $CONFIG_DOMAIN eq "f"){print "restoring saved dataroot files\n";
+   system("mv $LAPS_DATA_ROOT/laps_localization.log $LAPS_DATA_ROOT\_save/log/.");
+   system("rm -rf $LAPS_DATA_ROOT/lapsprd"); system("rm -rf $LAPS_DATA_ROOT/log");
    system("mv $LAPS_DATA_ROOT\_save/lapsprd $LAPS_DATA_ROOT/");
    system("mv $LAPS_DATA_ROOT\_save/log     $LAPS_DATA_ROOT/");
    system("mv $LAPS_DATA_ROOT\_save/time    $LAPS_DATA_ROOT/");
    system("rm -rf $LAPS_DATA_ROOT\_save");
-  }
+}elsif ( -e "$LAPS_DATA_ROOT/laps_localization.log"){system("mv $LAPS_DATA_ROOT/laps_localization.log $LAPS_DATA_ROOT/log/.");}
+
+print "window_laps_rt complete\n";
 exit;
