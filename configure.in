@@ -253,7 +253,7 @@ AC_OUTPUT(src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
 	  etc/LapsRadar.pl
-          etc/change_center.pl
+          etc/change-center.pl
           etc/check_release.csh
           etc/cloud.pl
           etc/cronfile.pl

@@ -2926,7 +2926,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
 	  etc/LapsRadar.pl
           etc/check_release.csh
           etc/cloud.pl
-          etc/change_center.pl
+          etc/change-center.pl
           etc/cronfile.pl
           etc/fxalogdir.pl
           etc/hum3d.pl
@@ -3050,7 +3050,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/LapsRadar.pl
           etc/check_release.csh
           etc/cloud.pl
-          etc/change_center.pl
+          etc/change-center.pl
           etc/cronfile.pl
           etc/fxalogdir.pl
           etc/hum3d.pl
