@@ -32,10 +32,16 @@ cdis
 c
 c===============================================================================
 c
-      subroutine lga_driver(nx_laps,ny_laps,nz_laps,
-     .     laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
-     .     reject_names,bg_names,max_files,accepted_files,
-     .     i4time_now,smooth_fields,lga_status)
+      subroutine lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd
+     .    ,laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt
+     .    ,reject_names,bg_names,max_files,accepted_files
+     .    ,i4time_now,smooth_fields,lga_status)
+
+c KML: CHANGES MADE APRIL 2004
+c tdbg_sfc (model 2m dew point) is now being read in from subroutine read_bgdata
+c tdbg_sfc is then horizontally interpolated to LAPS grid (td_sfc)
+c ht_sfc and td_sfc are passed into subroutine sfcbkgd -> now called sfcbkgd_sfc (JRS)
+c KML: END
 
 c
       implicit none
@@ -71,7 +77,7 @@ c
       integer warncnt
 c sfc namelist stuff. for reduced pressure calc
       integer use_lso_qc, skip_internal_qc, itheta
-      logical l_require_lso
+      logical l_require_lso, luse_sfc_bkgd
       real    redp_lvl,del,gam,ak
 c
 c *** Background model grid data.
@@ -83,6 +89,7 @@ c
       real, allocatable  :: uwbg_sfc(:,:)
       real, allocatable  :: vwbg_sfc(:,:)
       real, allocatable  :: shbg_sfc(:,:)
+      real, allocatable  :: tdbg_sfc(:,:)
       real, allocatable  :: tpbg_sfc(:,:)
       real, allocatable  :: htbg_sfc(:,:)
       real, allocatable  :: mslpbg(:,:)
@@ -127,6 +134,7 @@ c
      .          grx(nx_laps,ny_laps),        !hinterp factor
      .          gry(nx_laps,ny_laps),         !hinterp factor
      .          ht_sfc(nx_laps,ny_laps),
+     .          td_sfc(nx_laps,ny_laps),
      .          tp_sfc(nx_laps,ny_laps),
      .          Tdsfc(nx_laps,ny_laps),
      .          sh_sfc(nx_laps,ny_laps),
@@ -203,13 +211,14 @@ c
      +,bgpath,fname_bg,af_bg,fullname,cmodel,bgmodel
      +,prbght,prbgsh,prbguv,prbgww
      +,htbg,tpbg,uwbg,vwbg,shbg,wwbg
-     +,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     +,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
      +,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
 c
          real  :: prbg_sfc(nx_bg,ny_bg)
          real  :: uwbg_sfc(nx_bg,ny_bg)
          real  :: vwbg_sfc(nx_bg,ny_bg)
          real  :: shbg_sfc(nx_bg,ny_bg)
+         real  :: tdbg_sfc(nx_bg,ny_bg)
          real  :: tpbg_sfc(nx_bg,ny_bg)
          real  :: htbg_sfc(nx_bg,ny_bg)
          real  :: mslpbg(nx_bg,ny_bg)
@@ -576,6 +585,7 @@ c
        allocate (shbg_sfc(nx_bg,ny_bg))
        allocate (uwbg_sfc(nx_bg,ny_bg))
        allocate (vwbg_sfc(nx_bg,ny_bg))
+       allocate (tdbg_sfc(nx_bg,ny_bg))
        allocate (tpbg_sfc(nx_bg,ny_bg))
        allocate (mslpbg(nx_bg,ny_bg))
 
@@ -585,7 +595,7 @@ c
      +    ,fullname,cmodel,bgmodel
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
-     +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
      +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus_prep(nf))
 
            if(.false.)then
@@ -606,7 +616,6 @@ c              fname13=fname_bg(nf)(1:lf)//af_bg(nf)
 c           elseif (bgmodel .eq. 4) then
 c              fname13=fname9_to_wfo_fname13(fname_bg(nf))
 c           endif
-
           print *,'Background model data not returned from ',
      .'read_bgdata: ',bgpath(1:bglen)//fname_bg(nf)
           print *,'Process aborted for this file.'
@@ -647,17 +656,15 @@ c         convert to wfo if necessary
 
           deallocate(htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +,prbght, prbguv, prbgsh, prbgww, htbg_sfc, prbg_sfc
-     +,shbg_sfc, uwbg_sfc, vwbg_sfc, tpbg_sfc, mslpbg)
+     +,shbg_sfc, uwbg_sfc, vwbg_sfc, tdbg_sfc, tpbg_sfc, mslpbg)
 
  
        else   !processing the file
-
 c        endif
 c
 c ****** Vertically interpolate background data to LAPS isobaric levels.
 c
          if(linterp)then   ! this switch determines if we are going to h/v-interp or not
-
            itstatus(1)=init_timer()
 
            allocate( htvi(nx_bg,ny_bg,nz_laps),!Height (m)
@@ -791,7 +798,6 @@ c
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,tpvi,tp,bgmodel)
 
-
            if(bgmodel.eq.2.and.cmodel(1:ic).eq.'ORSM_HKO'.and.
      .       .false.)then
               print*,'use bilinear interp for ',cmodel(1:ic)
@@ -811,10 +817,8 @@ c
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .           grx,gry,wwvi,ww,bgmodel)
            endif
-
            itstatus(2)=ishow_timer()
            print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
-           print*
 c
 c ****** Check for missing value flag in any of the fields.
 c ****** Check for NaN's in any of the fields.
@@ -826,7 +830,6 @@ c
      .              vwvi,   !V-wind (m/s)
      .              wwvi,   !W-wind (pa/s)
      .              msgpt)
-
            do k=1,nz_laps
             do j=1,ny_laps
                do i=1,nx_laps
@@ -861,6 +864,7 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
      +                          ,shbg_sfc
      +                          ,uwbg_sfc
      +                          ,vwbg_sfc
+     +                          ,tdbg_sfc
      +                          ,tpbg_sfc
      +                          ,mslpbg)
 
@@ -934,6 +938,8 @@ c
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,tdbg_sfc,td_sfc,bgmodel)
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,tpbg_sfc,tp_sfc,bgmodel)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,shbg_sfc,sh_sfc,bgmodel)
@@ -975,17 +981,26 @@ c
            deallocate (shbg_sfc)
            deallocate (uwbg_sfc)
            deallocate (vwbg_sfc)
+           deallocate (tdbg_sfc)
            deallocate (tpbg_sfc)
            deallocate (mslpbg)
 c
 c... Do the temp, moisture (sh_sfc returns with Td), and pressures
-c
-           call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr,
+c... Only ETA48_CONUS and namelist switch "luse_sfc_bkgd" enable the use
+c... of subroutine sfcbkgd_sfc. This routine uses the 2m Td and sfc_press
+c... 2D arrays directly from the background model.
+
+           if(cmodel.eq.'ETA48_CONUS' .and. luse_sfc_bkgd)then
+
+              call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
+     .            ,sh_sfc,topo,pr,nx_laps, ny_laps, nz_laps, pr_sfc)
+           else
+              call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr,
      .            nx_laps, ny_laps, nz_laps, pr_sfc)
+           endif
 
            call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
-
            print *,' Dewpoint check (after call sfcbkgd):'
            print *,'     Dewpt greater than temp at ',icnt,' points.'
 
@@ -1020,9 +1035,12 @@ c
               rp_sh(i,j)=sh_sfc(i,j)
            enddo
            enddo
-
-           call sfcbkgd(0,tp,sh,ht,rp_tp,rp_sh,rp_lvl,pr,
-     1nx_laps, ny_laps, nz_laps, rp_sfc)
+c
+c always use sfcbkgd (as opposed to sfcbkgd_sfc) to compute reduced pressure
+c because this version uses the 3D analysis info for computations.
+c
+           call sfcbkgd(0,tp,sh,ht,rp_tp,rp_sh,rp_lvl,pr
+     1,nx_laps, ny_laps, nz_laps, rp_sfc)
 
            deallocate (rp_lvl,rp_tp,rp_sh)
 c
@@ -1059,8 +1077,8 @@ c rotate them to the LAPS (output) domain as necessary.
            itstatus_rot=ishow_timer()
 
            call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
-     &,bgmodel,cmodel,fullname(1:i),gproj,lon0,lat0,lat1,uw,vw
-     &,uw_sfc,vw_sfc,istatus)
+     &,bgmodel,cmodel,fullname,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc
+     &,istatus)
            if(istatus.ne.1)then
               print*,'Error in rotate_background_uv '
               return
@@ -1071,9 +1089,7 @@ c rotate them to the LAPS (output) domain as necessary.
            print*
 
          else
-
 c this is a grid compatible fua file
-
            ht=htbg
            tp=tpbg
            sh=shbg
@@ -1082,22 +1098,23 @@ c this is a grid compatible fua file
            ww=wwbg
            pr_sfc=prbg_sfc
            mslp=mslpbg
+c          td_sfc=tdbg_sfc
+           td_sfc=shbg_sfc
            tp_sfc=tpbg_sfc
            ht_sfc=htbg_sfc
            sh_sfc=shbg_sfc
            uw_sfc=uwbg_sfc
            vw_sfc=vwbg_sfc
 c
-c LAPS_FUA doesnt require interp but we will recompute
+c LAPS_FUA doesn't require interp but we still want to recompute
 c pr_sfc, tp_sfc and sh_sfc using high res terrain
 c
-           call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo
-     &           ,pr,nx_laps, ny_laps, nz_laps, pr_sfc)
-
+           call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc
+     &,td_sfc,tp_sfc,sh_sfc,topo,pr,nx_laps,ny_laps,nz_laps,pr_sfc)
            call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
-           print *,' Td check (after call sfcbkgd - MODEL_FUA):'
+           print *,' Td check (after call sfcbkgd - LAPS_FUA):'
            print *,' Td greater than T at ',icnt,' points.'
            if(icnt .gt. 0) then
               print*,'Max diff = ',diff_mx,' at ',i_mx,',',j_mx
@@ -1119,7 +1136,7 @@ c
            deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +                ,prbght, prbguv, prbgsh, prbgww )
            deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
-     +                ,vwbg_sfc,tpbg_sfc,mslpbg)
+     +                ,vwbg_sfc,tdbg_sfc, tpbg_sfc,mslpbg)
 
          endif !(linterp)
 c

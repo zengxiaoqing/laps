@@ -3,8 +3,13 @@
      +    ,bgpath,fname_bg,af_bg,fullname,cmodel,bgmodel
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg, tpbg,uwbg,vwbg,shbg,wwbg
-     +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
      +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
+
+c KML: CHANGES MADE APRIL 2004
+c tdbg_sfc (model 2m dew point) is now read in during subroutine read_eta_conusc
+c tdbg_sfc array is checked for nan
+c KML: END
 
       implicit none
       include 'netcdf.inc'
@@ -52,6 +57,7 @@ c
       real, intent(out) :: shbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: uwbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: vwbg_sfc(nx_bg,ny_bg)
+      real, intent(out) :: tdbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: tpbg_sfc(nx_bg,ny_bg)
 
       real      lon0,lat1,lat2
@@ -71,6 +77,7 @@ c
       character*5     ctype      !either "dprep" or "lapsb" depending on dprep or lga
       character*4     af_bg
       character*2     gproj
+
 
       interface
 
@@ -168,12 +175,10 @@ c        character gproj*2
 100     format(i4.4)
            i4_valid=i4_initial+i4hr/100*3600
 
-
 c the following subroutine should also work for different
 c domain fua/fsf but we'll try the get_lapsdata stuff first.
 
          if(cmodel(1:lencm).eq.'MODEL_FUA')then
-
             call read_fuafsf_cdf(fullname
      +,nx_bg, ny_bg, nzbg_ht
      +,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg
@@ -391,7 +396,7 @@ c for now all fields have 3D dimension of nzbg_ht
 c
           call read_eta_conusC(fullname,nx_bg,ny_bg,nzbg_ht
      .,htbg,prbght,tpbg,uwbg,vwbg,shbg,wwbg
-     .,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     .,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
      .,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
 
           if(istatus.ne.0)goto 99
@@ -451,6 +456,7 @@ c         endif
           if(ctype.eq.'lapsb')then
 
              print*,' entering lprep_ruc2_hybrid'
+
              call lprep_ruc2_hybrid(nx_bg,ny_bg,nzbg_ht
      +,htbg,prbght,shbg,uwbg,vwbg,tpbg,uwbg_sfc,vwbg_sfc
      +,tpbg_sfc,prbg_sfc,shbg_sfc,htbg_sfc,istatus)
@@ -536,6 +542,11 @@ c
          print *,' ERROR: NaN found in sfc pressure array '
       endif
 
+      call checknan_2d(tdbg_sfc,nx_bg,ny_bg,nan_flag)
+      if(nan_flag .ne. 1) then
+         print *,' ERROR: NaN found in sfc temp array '
+      endif
+
       call checknan_2d(tpbg_sfc,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc temp array '
@@ -565,6 +576,5 @@ c
 99    if(istatus.ne. 0)then
          print*,'Error with background model data in read_bgdata'
       endif
-
       return
       end

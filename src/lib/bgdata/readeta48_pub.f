@@ -211,8 +211,13 @@ C
 C  Subroutine to read the file "ETA 48 km AWIPS Regional CONUS " 
 C
       subroutine read_eta_conusc(fname, NX,NY,NZ, ht,p,t,uw,vw,
-     +     rh, pvv, ht_sfc, p_sfc, rh_sfc, t_sfc, uw_sfc, vw_sfc,
-     +     mslp,istatus)
+     +     rh, pvv, ht_sfc, p_sfc, rh_sfc, td_sfc, t_sfc, uw_sfc, vw_sfc
+     +     ,mslp,istatus)
+
+c KML: CHANGES MADE APRIL 2004
+c td_sfc (model 2m dew point) is now being read in
+c td_sfc will ultimately be used in subroutine sfcbkgd
+c KML: END
 
       include 'netcdf.inc'
       integer NX,NY,NZ, nf_fid, nf_status, k
@@ -221,12 +226,16 @@ C
      +    ht( NX, NY, NZ), ht_sfc( NX,  NY),
      +     p( NX, NY, NZ),  p_sfc( NX,  NY), 
      +    rh( NX,  NY,  NZ), rh_sfc( NX,  NY), 
+     +                       td_sfc( NX,  NY),
      +     t( NX,  NY,  NZ),  t_sfc( NX,  NY), 
      +    uw( NX,  NY,  NZ), uw_sfc( NX,  NY), 
      +    vw( NX,  NY,  NZ), vw_sfc( NX,  NY),
      +    pvv(NX,  NY,  NZ),
      +    tmp(nz)
+      real qsfc
+      real make_ssh, make_td
       integer nxny,nxnynz
+      character c8_project*8
       logical reverse_fields
       data reverse_fields/.false./
 
@@ -241,6 +250,13 @@ C
 
       nxny = nx*ny
       nxnynz=nx*ny*nz
+
+      call get_c8_project(c8_project,istatus)
+      if(istatus.ne. 1)then
+         print*,'Error: returned from get_c8_project'
+         print*,'Error: current routine: read_eta_conusc'
+         return
+      endif
 C
 C     Variable        NETCDF Long Name
 C      p            "isobaric levels" 
@@ -373,18 +389,29 @@ C      p_sfc        "surface pressure"
 C
       call read_netcdf_real(nf_fid,'p_sfc',nxny,p_sfc,0,0,nf_status)
 
+c FSL netCDF file only has sfc rh
+c ---------------------------------------
+      if(c8_project.eq.'NIMBUS')then
 C
 C     Variable        NETCDF Long Name
 C      rh_sfc       "relative humidity 2m fixed height abv ground" 
 C
+      print*,'FSL-NIMBUS: Read sfc RH'
       call read_netcdf_real(nf_fid,'rh_2mFH',nxny,rh_sfc,0,0,nf_status)
-
+C
+C     Variable        NETCDF Long Name
+C      td_sfc        "dew point temp 2m fixed height abv ground"
+C
+      else
+      print*,'Read td_2mFH: KML Upgrade'
+      call read_netcdf_real(nf_fid,'td_2mFH',nxny,td_sfc,0,0,nf_status)
+      endif
+c ---------------------------------------
 C
 C     Variable        NETCDF Long Name
 C      t_sfc        "temperature 2m fixed height abv ground" 
 C
       call read_netcdf_real(nf_fid,'t_2mFH',nxny,t_sfc,0,0,nf_status)
-
 C
 C     Variable        NETCDF Long Name
 C      uw_sfc       "u wind component 10m fixed height abv ground" 
@@ -402,6 +429,21 @@ C
         print *,'nf_close'
         return
       endif
+C
+C routines in file lib/bgdata/sfcbkgd.f require Td; thus, for FSL netcdf
+C we must derive this from rh.
+C
+      if(c8_project.eq.'NIMBUS')then
+       do j=1,ny
+       do i=1,nx
+         qsfc=make_ssh(p_sfc(i,j)/100.,t_sfc(i,j)-273.15,
+     &rh_sfc(i,j)/100.,-132.)
+         td_sfc(i,j)=make_td(p_sfc(i,j)/100.,t_sfc(i,j)-273.15,
+     & qsfc,-132.)+273.15
+       enddo
+       enddo
+      endif
+
       istatus = 0
 
       return

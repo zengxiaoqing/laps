@@ -75,6 +75,7 @@ c
       character*10  cfname10,a9_to_yr_a10_time
       character*4   af
       character*2   gproj
+      character*2   cpref
  
       character*16  cFA_filename
       character*3   c3ext,  c3_FA_ext
@@ -192,7 +193,15 @@ c       to covert the FA filename but currently is not.  J.Smart
          call downcase(cwb_type,cwb_type)
          c3ext=c3_FA_ext(af) 
          cfname10=a9_to_yr_a10_time(fname,istatus)
-         cFA_filename="nf"//cfname10(1:8)//fname(6:7)//'.'//c3ext
+         if(cwb_type.eq.'gfs')then
+            cpref='gb'
+         elseif(cwb_type.eq.'tfs')then
+            cpref='gs'
+         else
+            cpref='nf'
+         endif
+cFA_filename="nf"//cfname10(1:8)//fname(6:7)//'.'//c3ext
+         cFA_filename=cpref//cfname10(1:8)//fname(6:7)//'.'//c3ext
          call s_len(path,l)
          filename=path(1:l)//'/'//cFA_filename
          call s_len(filename,l)

@@ -28,7 +28,8 @@ SRC= bkgd_stn_interp.f   bkgd_util.f            es_table.f             \
      readconusnws.f      readruc2_pub.f         read_fuafsf.f          \
      read_netcdf_field.f read_sbn_grids.f       readdgprep.f           \
      readnogaps.f        readruc60native.f      rdmodelindex.f         \
-     sfcbkgd.f           tcbogus.f              writelgalgb.f
+     sfcbkgd.f           sfcbkgd_sfc.f          tcbogus.f              \
+     writelgalgb.f
 
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
