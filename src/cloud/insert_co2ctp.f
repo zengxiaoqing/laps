@@ -73,6 +73,10 @@ c
 
         write(6,*)' Subroutine insert_c02ctp...'
 
+        write(6,*)
+     1    ' Number of cumulative cloud soundings before CO2-slice = '
+     1                                                     ,n_cld_snd
+
 !       Obtain NESDIS Cloud-top pressure
         if(l_use_co2)then
             i4_co2_window = latency_co2
@@ -135,7 +139,7 @@ c
 
 !       Add to cloud sounding arrays
 
-        n_cloud = 0
+        n_cloud = 0 ! # of CO2 slicing soundings
 
         do j = 1,jmax
         do i = 1,imax
@@ -157,6 +161,8 @@ c
                 endif
 
                 n_cloud = n_cloud + 1
+
+                n_cld_snd = n_cld_snd + 1 ! # of cumulative cloud soundings
 
                 do k=1,kcloud
                     cover = cover_rpt
@@ -202,6 +208,10 @@ c
         enddo ! j
 
         write(6,*)' Number of valid CO2-Slicing soundings = ',n_cloud
+
+        write(6,*)
+     1    ' Number of cumulative cloud soundings after CO2-slice = '
+     1                                                     ,n_cld_snd
 
         return
         end
