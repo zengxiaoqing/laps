@@ -25,24 +25,25 @@
 c
 c *** Background model grid data.
 c
-      real, intent(out) :: prbght(:,:,:)     !Pressure (mb) ht and temp
-      real, intent(out) :: prbgsh(:,:,:)     !Pressure (mb) q
-      real, intent(out) :: prbguv(:,:,:)     !Pressure (mb) u- v-components
-      real, intent(out) :: prbgww(:,:,:)     !Pressure (mb) omega
+      real, intent(out) :: prbght(nx_bg,ny_bg,nzbg_ht)     !Pressure (mb) ht and temp
+      real, intent(out) :: prbgsh(nx_bg,ny_bg,nzbg_sh)     !Pressure (mb) q
+      real, intent(out) :: prbguv(nx_bg,ny_bg,nzbg_uv)     !Pressure (mb) u- v-components
+      real, intent(out) :: prbgww(nx_bg,ny_bg,nzbg_ww)     !Pressure (mb) omega
 
-      real, intent(out) :: htbg(:,:,:)     !Height (m)
-      real, intent(out) :: tpbg(:,:,:)     !Temperature (K)
-      real, intent(out) :: shbg(:,:,:)     !Specific humidity (kg/kg)
-      real, intent(out) :: uwbg(:,:,:)     !U-wind (m/s)
-      real, intent(out) :: vwbg(:,:,:)     !V-wind (m/s)
-      real, intent(out) :: wwbg(:,:,:)     !W-wind (pa/s)
-      real, intent(out) :: mslpbg(:,:)     !mslp  (mb)
-      real, intent(out) :: htbg_sfc(:,:)
-      real, intent(out) :: prbg_sfc(:,:)
-      real, intent(out) :: shbg_sfc(:,:)
-      real, intent(out) :: uwbg_sfc(:,:)
-      real, intent(out) :: vwbg_sfc(:,:)
-      real, intent(out) :: tpbg_sfc(:,:)
+      real, intent(out) :: htbg(nx_bg,ny_bg,nzbg_ht)     !Height (m)
+      real, intent(out) :: tpbg(nx_bg,ny_bg,nzbg_ht)     !Temperature (K)
+      real, intent(out) :: shbg(nx_bg,ny_bg,nzbg_sh)     !Specific humidity (kg/kg)
+      real, intent(out) :: uwbg(nx_bg,ny_bg,nzbg_uv)     !U-wind (m/s)
+      real, intent(out) :: vwbg(nx_bg,ny_bg,nzbg_uv)     !V-wind (m/s)
+      real, intent(out) :: wwbg(nx_bg,ny_bg,nzbg_ww)     !W-wind (pa/s)
+
+      real, intent(out) :: mslpbg(nx_bg,ny_bg)     !mslp  (mb)
+      real, intent(out) :: htbg_sfc(nx_bg,ny_bg)
+      real, intent(out) :: prbg_sfc(nx_bg,ny_bg)
+      real, intent(out) :: shbg_sfc(nx_bg,ny_bg)
+      real, intent(out) :: uwbg_sfc(nx_bg,ny_bg)
+      real, intent(out) :: vwbg_sfc(nx_bg,ny_bg)
+      real, intent(out) :: tpbg_sfc(nx_bg,ny_bg)
 
       real      lon0,lat1,lat2
 
@@ -65,24 +66,24 @@ c
      .ht_sfc,pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp,
      .ctype,istatus)
 
-         real  ::   pr_sfc(:,:)
-         real  ::   uw_sfc(:,:)
-         real  ::   vw_sfc(:,:)
-         real  ::   sh_sfc(:,:)
-         real  ::   tp_sfc(:,:)
-         real  ::   ht_sfc(:,:)
-         real  ::     mslp(:,:)
+         real  ::   pr_sfc(nxbg,nybg)
+         real  ::   uw_sfc(nxbg,nybg)
+         real  ::   vw_sfc(nxbg,nybg)
+         real  ::   sh_sfc(nxbg,nybg)
+         real  ::   tp_sfc(nxbg,nybg)
+         real  ::   ht_sfc(nxbg,nybg)
+         real  ::     mslp(nxbg,nybg)
 c
-         real  :: prbght(:,:,:)
-         real  :: prbgsh(:,:,:)
-         real  :: prbguv(:,:,:)
-         real  :: prbgww(:,:,:)
-         real  ::     ht(:,:,:)
-         real  ::     tp(:,:,:)
-         real  ::     sh(:,:,:)
-         real  ::     uw(:,:,:)
-         real  ::     vw(:,:,:)
-         real  ::     ww(:,:,:)
+         real  :: prbght(nxbg,nybg,nzbght)
+         real  :: prbgsh(nxbg,nybg,nzbgsh)
+         real  :: prbguv(nxbg,nybg,nzbguv)
+         real  :: prbgww(nxbg,nybg,nzbgww)
+         real  ::     ht(nxbg,nybg,nzbght)
+         real  ::     tp(nxbg,nybg,nzbght)
+         real  ::     sh(nxbg,nybg,nzbgsh)
+         real  ::     uw(nxbg,nybg,nzbguv)
+         real  ::     vw(nxbg,nybg,nzbguv)
+         real  ::     ww(nxbg,nybg,nzbgww)
 
          character*256 cdfname
          character*132 cmodel
@@ -127,7 +128,7 @@ c
           if(ctype.eq."lapsb")then
 
 c convert rh to sh.
-             print*,'Preparing grids for laps background'
+             print*,'Prepare grids for laps background-lga'
              call lprep_eta_conusc(nx_bg,ny_bg,nzbg_ht
      +,prbght,tpbg,shbg,tpbg_sfc,prbg_sfc,shbg_sfc,istatus)
  
@@ -139,7 +140,6 @@ c convert rh to sh.
 c
       elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
 
-          print*,'entering read_sbn_grids'
           call read_sbn_grids(fullname,af_bg,cmodel,mxlvls,
      .         nx_bg,ny_bg,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,
      .         prbght,prbgsh,prbguv,prbgww,
@@ -174,7 +174,7 @@ c but now decrement nz since arrays only contain 3d info.
 
           if(ctype.eq.'lapsb')then
 
-             print*,' entering prep'
+             print*,' entering lprep_ruc2_hybrid'
              call lprep_ruc2_hybrid(nx_bg,ny_bg,nzbg_ht
      +,htbg,prbght,shbg,uwbg,vwbg,tpbg,uwbg_sfc,vwbg_sfc
      +,tpbg_sfc,prbg_sfc,shbg_sfc,htbg_sfc,istatus)

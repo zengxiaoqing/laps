@@ -434,9 +434,9 @@ C   Variables of type CHAR
 C
 C
 C     Variable        NETCDF Long Name
-C      grid         
+C      grid_type 
 C
-      nf_status = NF_INQ_VARID(nf_fid,'grid',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'grid_type',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var grid'
@@ -468,34 +468,34 @@ C
 C     Variable        NETCDF Long Name
 C      nav          "projection type"
 C
-      nf_status = NF_INQ_VARID(nf_fid,'nav',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var nav'
-        return
-      endif
-      nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,nav)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var nav'
-        return
-      endif
+c     nf_status = NF_INQ_VARID(nf_fid,'nav',nf_vid)
+c     if(nf_status.ne.NF_NOERR) then
+c       print *, NF_STRERROR(nf_status)
+c       print *,'in var nav'
+c       return
+c     endif
+c     nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,nav)
+c     if(nf_status.ne.NF_NOERR) then
+c       print *, NF_STRERROR(nf_status)
+c       print *,'in var nav'
+c       return
+c     endif
 C
 C     Variable        NETCDF Long Name
 C      origin       
 C
-      nf_status = NF_INQ_VARID(nf_fid,'origin',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var origin'
-        return
-      endif
-      nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,origin)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var origin'
-        return
-      endif
+c     nf_status = NF_INQ_VARID(nf_fid,'origin',nf_vid)
+c     if(nf_status.ne.NF_NOERR) then
+c       print *, NF_STRERROR(nf_status)
+c       print *,'in var origin'
+c       return
+c     endif
+c     nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,origin)
+c     if(nf_status.ne.NF_NOERR) then
+c       print *, NF_STRERROR(nf_status)
+c       print *,'in var origin'
+c       return
+c     endif
 
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then

@@ -5,7 +5,7 @@ C
 C  Open netcdf File for reading
 C
       character dummy*31
-      character cdfname*(*)
+      character cdfname*200
       integer   istatus
       integer   dim_id
       integer   nx,ny

@@ -178,6 +178,7 @@ C
 C     integer NX, NY, NZ, nf_fid, nf_vid, nf_status,istatus
       integer NX, NY, NZ, nf_fid, nf_status,istatus
       character*(*) filename
+      character*4   cvar
       integer nxny,nxnynz
       real mmsp(nx,ny), hgt( NX,  NY,  NZ), 
      +     p( NX,  NY,  NZ), qv( NX,  NY,  NZ), 
@@ -202,13 +203,15 @@ C
 C     Variable        NETCDF Long Name
 C      MMSP         "MAPS mean sea level pressure" 
 C
-      call read_netcdf_real(nf_fid,'MMSP',nxny,mmsp,0,0,nf_status)
+      cvar='MMSP'
+      call read_netcdf_real(nf_fid,cvar,nxny,mmsp,0,0,nf_status)
 
 C
 C     Variable        NETCDF Long Name
 C      hgt          "geopotential height" 
 C
-      call read_netcdf_real(nf_fid,'hgt',nxnynz,hgt,0,0,nf_status)
+      cvar='hgt '
+      call read_netcdf_real(nf_fid,cvar,nxnynz,hgt,0,0,nf_status)
 
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the height field is missing'
@@ -221,7 +224,8 @@ C
 C     Variable        NETCDF Long Name
 C      p            "pressure" 
 C
-      call read_netcdf_real(nf_fid,'p',nxnynz,p,0,0,nf_status)
+      cvar='p   '
+      call read_netcdf_real(nf_fid,cvar,nxnynz,p,0,0,nf_status)
 
       if(nf_status.lt.-0.5*nxnynz) then
       print*, 'A substantial portion of the pressure field is missing'
@@ -232,7 +236,8 @@ C
 C     Variable        NETCDF Long Name
 C      qv           "water vapor mixing ratio" 
 C
-      call read_netcdf_real(nf_fid,'qv',nxnynz,qv,0,0,nf_status)
+      cvar='qv  '
+      call read_netcdf_real(nf_fid,cvar,nxnynz,qv,0,0,nf_status)
 
       if(nf_status.lt.-0.5*nxnynz) then
       print*,'A substantial portion of the water vapor field is missing'
@@ -244,7 +249,8 @@ C
 C     Variable        NETCDF Long Name
 C      u            "u-component of wind" 
 C
-      call read_netcdf_real(nf_fid,'u',nxnynz,u,0,0,nf_status)
+      cvar='u   '
+      call read_netcdf_real(nf_fid,cvar,nxnynz,u,0,0,nf_status)
 
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the u-wind field is missing'
@@ -256,7 +262,8 @@ C
 C     Variable        NETCDF Long Name
 C      v            "v-component of wind" 
 C
-      call read_netcdf_real(nf_fid,'v',nxnynz,v,0,0,nf_status)
+      cvar='v   '
+      call read_netcdf_real(nf_fid,cvar,nxnynz,v,0,0,nf_status)
 
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the v-wind field is missing'
@@ -268,7 +275,8 @@ C
 C     Variable        NETCDF Long Name
 C      vpt          "virtual potential temperature" 
 C
-      call read_netcdf_real(nf_fid,'vpt',nxnynz,vpt,0,0,nf_status)
+      cvar='vpt '
+      call read_netcdf_real(nf_fid,cvar,nxnynz,vpt,0,0,nf_status)
 
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the vpt field is missing'
@@ -280,7 +288,8 @@ C
 C     Variable        NETCDF Long Name
 C      w            "vertical velocity" 
 C
-      call read_netcdf_real(nf_fid,'w',nxnynz,w,0,0,nf_status)
+      cvar='w   '
+      call read_netcdf_real(nf_fid,cvar,nxnynz,w,0,0,nf_status)
 
 
       nf_status = nf_close(nf_fid)

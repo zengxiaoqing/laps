@@ -15,8 +15,8 @@ c
       integer   nlevs(nvarsmax)
       integer   nvars
 
-      integer   bgmodel,nx,ny,nz
-     .         ,i,j,k,l,n,istatus
+      integer   bgmodel,nx,ny,nz,nzsh
+     .         ,i,j,k,l,n,istatus,ksh
      .         ,icm(nz),icm_sfc
      .         ,icn3d
 c
@@ -182,9 +182,11 @@ c    +,istatus)
      +     tp_sfc, sfc_dummy, uw, vw, ww, td_sfc, isoLevel,
      +     reftime, valtime, grid, model, nav, origin, istatus)
 
+               nzsh=nz-5
+
                call qcmodel_sh(nx,ny,1,td_sfc)  !td_sfc actually = RH for AVN.
 
-               call qcmodel_sh(nx,ny,nz,sh)     !sh actually = RH for AVN.
+               call qcmodel_sh(nx,ny,nzsh,sh)     !sh actually = RH for AVN.
 
          endif
 
@@ -241,17 +243,23 @@ c           enddo
          return
       endif
 
-c qc
+c qc 
 
       do k=1,nz
+         if(k.le.nzsh)then
+            ksh=k
+         else
+            ksh=nzsh
+         endif
          do j=1,ny
          do i=1,nx
-            if((abs(ht(i,j,k)) .gt. 100000.) .or.
-     +         (abs(tp(i,j,k)) .gt. 1000.)   .or.
-     +             (tp(i,j,k)  .le. 0.)      .or.
-     +         (abs(sh(i,j,k)) .ge. 101.)    .or.   !rh
-     +         (abs(uw(i,j,k)) .gt. 150.)    .or.
-     +         (abs(vw(i,j,k)) .gt. 150.)        )then
+            if((abs(ht(i,j,k))  .gt. 100000.) .or.
+     +         (abs(tp(i,j,k))  .gt. 1000.)   .or.
+     +             (tp(i,j,k)   .le. 0.)      .or.
+     +         (abs(sh(i,j,ksh))  .ge. 101.)    .or.   !rh
+     +              sh(i,j,ksh)   .eq. rfill    .or.
+     +         (abs(uw(i,j,k))  .gt. 150.)    .or.
+     +         (abs(vw(i,j,k))  .gt. 150.)        )then
  
                print*,'ERROR: Missing or bad value detected: ',i,j,k
                print*,'ht/tp/sh/uw/vw/ww: ',ht(i,j,k),tp(i,j,k)
@@ -263,6 +271,22 @@ c qc
          enddo
          enddo
       enddo
+
+c qc - for rh.
+
+c     do k=1,nzsh
+c        do j=1,ny
+c        do i=1,nx
+c           if((abs(sh(i,j,k)) .ge. 101.)then
+c              print*,'ERROR: Missing RH value detected: ',i,j,k
+c              print*,'rh: ',sh(i,j,k)
+c              istatus = 1
+c              return
+c           endif
+c        enddo
+c        enddo
+c     enddo
+
  
       if(istatus .eq. 1)then
          print*,'Error reading dgprep data file: ',cmodel(1:nclen),

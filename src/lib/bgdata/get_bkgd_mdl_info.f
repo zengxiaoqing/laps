@@ -11,10 +11,9 @@ c
 
       integer       mxvars,mxlvls
 
-      character*(*) fullname
-      character*(*) cmodel
-      character*(*) gproj
-c     character*(*) cvars(mxvars)
+      character*200 fullname
+      character*132 cmodel
+      character*2   gproj
       character*9   fname13
       character*9   fname9_to_wfo_fname13
       character*4   cf
@@ -71,7 +70,7 @@ c ----------
          else
             print*,'Error - get_eta48_dims: ',fullname(1:lenfn)
          endif
-         return
+         goto 1000
       endif
 
 c All SBN grids!
@@ -88,7 +87,7 @@ c ----------------
          else
             print*,'cannot convert fullname to WFO format'
             print*,'in get_bkgd_mdl_info ',fullname(1:lenfn)
-            return
+            goto 1000
          endif
 
          call get_sbn_dims(fullname,cmodel,mxvars,mxlvls
@@ -100,6 +99,7 @@ c ----------------
 	    print*,bgmodel,cmodel(1:nclen)
 	    return
          endif
+
          call get_attribute_sbn(fullname,centralLat
      +,centralLon,rlat00,rlon00,latNxNy,lonNxNy,latdxdy,londxdy
      +,dx,dy,nx,ny,rotation,istatus)
@@ -136,7 +136,7 @@ c        dy=dy*1000.
          ne(1)=latNxNy
          ne(2)=lonNxNy
 
-         return
+         goto 1000
 
       endif
 
@@ -160,7 +160,7 @@ c ----------
          else
             print*,'Error - get_ruc2_dims: ',fullname(1:lenfn)
          endif
-         return
+         goto 1000
       endif
       
 c AVN Public
@@ -182,7 +182,7 @@ c ----------
          else
             print*,'Error - readavnpublicdims '
          endif
-         return
+         goto 1000
 
       endif
 
@@ -202,7 +202,7 @@ c --------------------
          Lon0=0.0
          dlat=1.0
          dlon=1.0
-         return
+         goto 1000
       endif
 
 c Taiwan FA and NF models
@@ -224,7 +224,7 @@ c -----------------------
          sw(2)=+112.545
          ne(1)=32.384
          ne(2)=+131.172
-         return
+         goto 1000
       endif
       if(bgmodel.eq.3.and.cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_NF')
      &then
@@ -243,11 +243,11 @@ c -----------------------
          sw(2)=+109.24
          ne(1)=34.987
          ne(2)=+131.60
-         return
+         goto 1000
       endif
 
       print*,'get_bkgd_mdl_info not yet working for: '
      &,'   ',bgmodel,cmodel(1:nclen)
 
-      return
+1000  return
       end

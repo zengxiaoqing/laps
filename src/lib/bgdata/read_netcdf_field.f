@@ -1,4 +1,5 @@
       subroutine read_netcdf_real(nf_fid,fname,n1,f,start,count,istatus)
+
       implicit none
 
       include 'netcdf.inc'
@@ -6,7 +7,7 @@
       integer n1,i, nf_fid, nf_vid,istatus,nf_status
       integer start(10),count(10)
       real f(n1) , nfmissing
-      character*(*) fname
+      character*4 fname
 
       istatus=0
       nf_status = NF_INQ_VARID(nf_fid,fname,nf_vid)
