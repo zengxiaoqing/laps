@@ -48,9 +48,11 @@ C
       character*(*)colortable
       character*5 c5_sect
 
-      logical log_scaling, l_discrete
+      logical log_scaling, l_integral, l_discrete
 
       write(6,*)' Subroutine ccpfil for solid fill plot...'
+
+      l_discrete = .false.
 
       if(colortable(1:3) .eq. 'acc')then
           log_scaling = .true.
@@ -59,9 +61,9 @@ C
       endif
 
       if(colortable .eq. 'haines' .or. colortable .eq. 'cwi')then
-          l_discrete = .true.
+          l_integral = .true.
       else
-          l_discrete = .false.
+          l_integral = .false.
       endif
 
       n_image = n_image + 1
@@ -83,7 +85,7 @@ C
           scale_h = scale_l_in * scale
       endif
 
-      if(l_discrete)then
+      if(l_integral)then
           scale_l = scale_l - 0.5 * scale
           scale_h = scale_h + 0.5 * scale
       endif
@@ -129,7 +131,7 @@ C
                       ZREG(i,j) = scale_loc * 0.00 ! ! cape/cin for hsect
                   endif
 
-                elseif(l_discrete)then ! e.g. Haines
+                elseif(l_integral)then ! e.g. Haines
                   ZREG(i,j) = scale_loc * 100. ! 1.2 
 
                 else
@@ -148,7 +150,7 @@ C
             if(c5_sect .eq. 'hsect')then
               if(ZREG(i,j) .gt. scale_loc     .and. 
      1             colortable(1:3) .ne. 'cpe' .and.
-     1             (.not. l_discrete)               )then
+     1             (.not. l_integral)               )then
                 ZREG(i,j) = scale_loc
               endif
             endif
@@ -161,7 +163,6 @@ C
           enddo ! i
 
       endif ! log_scaling
-
 
       ireverse_colorbar = ireverse
 
@@ -180,13 +181,35 @@ C
 C Call Conpack color fill routine
 C      
       icol_offset = 40 ! Offset new colortable to preserve previous low end
+      ncols = 20
+
+      if(l_discrete)then
+!         Set interval for writing numbers
+          range = scale_loc
+          if(l_integral)then
+              colorbar_int = 0.5
+          elseif(range .gt. 1000.)then
+              colorbar_int = 1000.
+          elseif(range .gt. 10.)then
+              colorbar_int = 10.
+          else ! range .le. 10
+              colorbar_int = 1.0
+          endif
+
+          ncols = nint(range / colorbar_int)
+
+          write(6,*)' l_discrete case, ncols = ',ncols
+      endif
 
       LMAP=MREG*NREG*256 ! 16000000
       LMAP = min(LMAP,32000000)
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,ireverse
      1                               ,r_missing_data
      1                               ,LMAP,log_scaling
-     1                               ,colortable,ncols,icol_offset)      
+     1                               ,colortable                       ! I
+     1                               ,ncols                            ! I/O
+     1                               ,l_discrete                       ! I
+     1                               ,icol_offset)      
 C      
 C Close frame
 C      
@@ -201,9 +224,10 @@ C
 c     Call local colorbar routine
       write(6,*)' Drawing colorbar: ',MREG,NREG
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-      call colorbar(MREG, NREG, ncols, ireverse_colorbar, log_scaling,
+      call colorbar(MREG, NREG, 
+     1              ncols, ireverse_colorbar, log_scaling,             ! I
      1              scale_l, scale_h, colortable, scale,icol_offset,
-     1              c5_sect, l_discrete)
+     1              c5_sect, l_discrete, l_integral)
 
       jdot = 1
       
@@ -214,7 +238,9 @@ c     Call local colorbar routine
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
      1                                ,r_missing_data
      1                                ,LMAP,log_scaling
-     1                                ,colortable,ncols,icol_offset)      
+     1                                ,colortable,ncols
+     1                                ,l_discrete                  ! I
+     1                                ,icol_offset)      
       
       PARAMETER (LRWK=300000,LIWK=300000,NWRK=300000
      1          ,NOGRPS=5)       
@@ -222,16 +248,16 @@ c     Call local colorbar routine
       INTEGER MREG,NREG,IWRK(LIWK)
       INTEGER MAP(LMAP),IAREA(NOGRPS),IGRP(NOGRPS)
       character*(*) colortable
-      logical log_scaling
+      logical log_scaling, l_discrete
       
       EXTERNAL FILL
 
-      ncols = 20
 C      
 C Set up color table
       write(6,*)' ccpfil_sub - scale = ',scale
 C      
-      CALL set_image_colortable(IWKID,ncols,ireverse,colortable
+      CALL set_image_colortable(IWKID,ncols,l_discrete,ireverse
+     1                         ,colortable
      1                         ,MREG,NREG,log_scaling,icol_offset)
 C      
 C Initialize Areas
@@ -285,11 +311,12 @@ C
       RETURN
       END
       
-      SUBROUTINE set_image_colortable(IWKID,ncols,ireverse,colortable
+      SUBROUTINE set_image_colortable(IWKID,ncols,l_discrete,ireverse
+     1                               ,colortable
      1                               ,MREG,NREG,log_scaling,icol_offset)    
 
       character*(*) colortable
-      logical log_scaling
+      logical log_scaling, l_discrete
 C 
 C BACKGROUND COLOR
 C BLACK
@@ -444,8 +471,13 @@ C
      1                   ,2.0,0.4,0.4                 ! Green
      1                   ,1.5,1.0,0.7)                ! Aqua
 
-      elseif(colortable .eq. 'spectral' .or. colortable .eq. 'acc')then       
-          if(colortable .eq. 'acc' .or. MREG*NREG .gt. 62500)then       
+      elseif(            colortable .eq. 'spectral' 
+     1              .or. colortable .eq. 'spectralr'     
+     1              .or. colortable .eq. 'acc'            )then       
+
+          if(            colortable .eq. 'acc' 
+     1              .or. colortable .eq. 'spectralr'     
+     1              .or. MREG*NREG .gt. 62500)then       
               ncols = 20
           else
               ncols = 40
@@ -597,19 +629,20 @@ C
       subroutine colorbar(ni,nj,ncols,ireverse,log_scaling
      1                   ,scale_l,scale_h
      1                   ,colortable,scale,icol_offset,c5_sect
-     1                   ,l_discrete)     
+     1                   ,l_discrete,l_integral)                      ! I
 
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
       character*5 c5_sect
-      logical log_scaling,l_loop, l_discrete
+      logical log_scaling,l_loop, l_discrete, l_integral
 
       write(6,*)' colorbar: scale_l,scale_h,scale',scale_l,scale_h,scale
 
       range = abs(scale_h - scale_l) / scale
 
       if(scale_l .eq. -20. .or. scale_h .eq. 7200. 
-     1                     .or. l_discrete               ! e.g. HAH, HAM, CWI
+     1                     .or. nint(range) .eq. 8000    ! PBL
+     1                     .or. l_integral               ! e.g. HAH, HAM, CWI
      1                     .or. colortable .eq. 'tpw'    ! TPW
      1                     .or. colortable .eq. 'vnt'    ! VNT
      1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
@@ -675,7 +708,7 @@ c     Restore original color table
       rsize = .008
       iy = (y_2+.021) * 1024
 
-      if(.not. l_discrete)then
+      if(.not. l_integral)then
 
 !         Left Edge
           if(log_scaling)then
@@ -721,9 +754,9 @@ c     Restore original color table
           ixh = ixl + 525 ! 878
           CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
 
-      endif ! l_discrete
+      endif ! l_integral
 
-      if(.not. l_loop .and. .not. l_discrete)then ! Plot Midpoint
+      if(.not. l_loop .and. .not. l_integral)then ! Plot Midpoint
 
           frac = 0.5
           x1   = xlow + frac*xrange 
@@ -766,7 +799,7 @@ c     Restore original color table
       if(l_loop)then ! plot additional numbers
 
 !         Set interval for writing numbers
-          if(l_discrete)then
+          if(l_integral)then
               colorbar_int = 0.5
           elseif(range .gt. 1000.)then
               colorbar_int = 1000.
@@ -791,7 +824,7 @@ c     Restore original color table
 
               loop_count = loop_count + 1
 
-              if(.not. l_discrete)then ! Plot Black Line 
+              if(.not. l_integral)then ! Plot Black Line 
                   x1   = xlow + frac*xrange 
                   x2   = xlow + frac*xrange 
                   call setusv_dum(2hIN,0)
@@ -823,7 +856,7 @@ c     Restore original color table
 
                   ixm = ixl + (ixh-ixl)*frac
 
-                  if(l_discrete)then
+                  if(l_integral)then
                       if(rlabel .eq. float(nint(rlabel)))then
                           CALL PCHIQU (cpux(ixm),cpux(iy)
      1                        ,ch_frac(1:len_frac),rsize,0 , 0.0)       
