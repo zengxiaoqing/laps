@@ -33,8 +33,8 @@ c
 c
         subroutine diff(a,b,result,imax,jmax)
 c
-c.....  Routine to subtract array 'b' from array 'a' and put the
-c.....  result into array 'result' .
+cdoc..  Routine to subtract array 'b' from array 'a' and put the
+cdoc..  result into array 'result' .
 c
         real*4 a(imax,jmax), b(imax,jmax), result(imax,jmax)
 c
@@ -50,8 +50,8 @@ c
 c
         subroutine diff_3d(a,b,result,imax,jmax,kmax)
 c
-c.....  Routine to subtract array 'b' from array 'a' and put the
-c.....  result into array 'result' .
+cdoc..  Routine to subtract array 'b' from array 'a' and put the
+cdoc..  result into array 'result' .
 c
         real*4 a(imax,jmax,kmax), b(imax,jmax,kmax)
      1                          , result(imax,jmax,kmax)
@@ -66,3 +66,29 @@ c
 c
         return
         end
+
+c
+c
+        subroutine diff_miss(a,b,result,imax,jmax)
+c
+cdoc    Routine to subtract array 'b' from array 'a' and put the
+cdoc    result into array 'result'. This takes account of 'r_missing_data'
+c
+        real*4 a(imax,jmax), b(imax,jmax), result(imax,jmax)
+c
+        call get_r_missing_data(r_missing_data,istatus)
+
+        do j=1,jmax
+        do i=1,imax
+          if(a(i,j) .ne. r_missing_data .and. 
+     1       b(i,j) .ne. r_missing_data       )then
+              result(i,j) = a(i,j) - b(i,j)
+          else
+              result(i,j) = r_missing_data
+          endif
+        enddo !i
+        enddo !j
+c
+        return
+        end
+c
