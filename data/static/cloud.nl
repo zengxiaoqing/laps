@@ -4,7 +4,7 @@
  l_use_vis_add=.true.,
  l_use_39=.true.,
  latency_co2=4000,
- pct_req_lvd_s8a=0.75,
+ pct_req_lvd_s8a=75.,
  i4_sat_window=1270,
  i4_sat_window_offset=-60,
  /
