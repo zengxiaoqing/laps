@@ -69,7 +69,6 @@ c
      .          lga_status                   !status returned from lga_driver
 c                                            ! 1=good 0=bad
       integer   np
-      real*4    prbot,delpr                  !LAPS bottom and delta pressures
 c
       character*255 lapsroot                 !LAPS root path
 c
@@ -127,11 +126,6 @@ c Read information from static/nest7grid.parms
       call get_grid_dim_xy(nx_laps,ny_laps,istatus)
       call get_laps_dimensions(nz_laps,istatus)
       call get_laps_cycle_time(laps_cycle_time,istatus)
-      call get_pressure_interval(delpr,istatus)
-      call get_pressure_bottom(prbot,istatus)
-
-      prbot=prbot/100.
-      delpr=delpr/100.
 c
 c Read information from static/background.nl
 c
@@ -208,19 +202,22 @@ c
 
            print *, 'bgmodel is set to ', bgmodel
            print *, ' '
-           print *, 'input parameters'
-           print *,  ' '
-           print *, nx_laps,ny_laps,nz_laps,prbot,delpr
+           print *, 'Input Parameters'
+           print *, '----------------'
+           print *, ' Analysis dimensions: '
+           print *, nx_laps,ny_laps,nz_laps
            print *, laps_cycle_time
-ccc   print *, lapsroot
+           print *
+           print *, ' Background dimensions: '
            print *, nx_bg,ny_bg,nz_bg
            print *, 'bgpath ', bgpath(1:bglen)
            print *, 'cmodel ',cmodel(i)
+           print *
  970       continue
 c
 c *** Call lga driver.
 c
-           call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
+           call lga_driver(nx_laps,ny_laps,nz_laps,
      .          laps_cycle_time,lapsroot,laps_domain_file,
      .          bgmodel,bgpath,names,cmodel(i),max_files,bg_files,
      .          nx_bg, ny_bg, nz_bg, i4time_now_lga, lga_status)
@@ -302,7 +299,7 @@ c
 c
 c===============================================================================
 c
-      subroutine lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
+      subroutine lga_driver(nx_laps,ny_laps,nz_laps,
      .     laps_cycle_time,lapsroot,laps_domain_file,
      .     bgmodel,bgpath,bg_names,cmodel,max_files,bg_files,
      .     nx_bg,ny_bg,nz_bg,i4time_now, lga_status)
@@ -319,7 +316,6 @@ c
       integer icnt
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
       real diff, diff_mx, diff_mn
-      real prbot, delpr
       real lon0,lat1,lat2
 
       character*(*) lapsroot
@@ -368,7 +364,7 @@ c
      .          uw(nx_laps,ny_laps,nz_laps), !!U-wind (m/s)
      .          vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
      .          ww(nx_laps,ny_laps,nz_laps), !W-wind (pa/s)
-     .          pr(nz_laps),     !LAPS pressures
+     .          pr(nz_laps),                 !LAPS pressures
      .          lat(nx_laps,ny_laps),        !LAPS lat
      .          lon(nx_laps,ny_laps),        !LAPS lon
      .          topo(nx_laps,ny_laps),       !LAPS avg terrain
@@ -443,11 +439,10 @@ c
       endif
       call get_laps_domain(nx_laps,ny_laps,c_domain_name
      +,lat,lon,topo,istatus)
-
-c     call get_laps_lat_lon(outdir(1:len_dir),'nest7grid',
-c    .                      nx_laps,ny_laps,lat,lon,topo,istatus)
-
-      if (istatus.lt.1)print *,'Error reading lat, lon, topo data.'
+      if (istatus.lt.1)then
+          print *,'Error reading lat, lon, topo data.'
+          return
+      endif
 c
 c *** Specify model path, extension for write laps routine.
 c
@@ -455,10 +450,11 @@ c
       print *,'writing to dir ',outdir
 c
 c
-c *** Compute LAPS pressure levels.
+c *** get LAPS pressure levels.  Using pressures.nl
 c
-      do k=1,nz_laps
-         pr(k)=prbot-delpr*float(k-1)
+      call get_pres_1d(i4time_now,nz_laps,pr,istatus)
+      do k = 1,nz_laps
+         pr(k)=pr(k)/100.
       enddo
 c
 c *** Determine which of the "bg_names" has not already been processed
