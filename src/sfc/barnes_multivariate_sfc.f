@@ -102,6 +102,7 @@ C
 
         bad = bad_mult * std
 	print *,' std dev: ',std,', bad value: ',bad
+     1                          ,', ratio: ',bad_mult      
 
 !       Eliminate bad data from the data structure
         do i = 1,mxstn

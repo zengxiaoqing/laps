@@ -446,6 +446,7 @@ c.....  Bad data defined as deviating 'bad_mult' sigmas from 1st guess
 c
 	bad = bad_mult * std
 	print *,' std dev: ',std,', bad value: ',bad
+     1                          ,', ratio: ',bad_mult      
 c
 c.....  Normalize the obs with respect to the bkg.
 c
