@@ -619,7 +619,7 @@ c read in laps lat/lon and topo
      1  /
      1  /'           cv (cloud cover contours)'
      1  /'           rf (reflectivity-graphic), ri (ref-image)'
-     1  /'           sh,rh (Specific/Relative Humidity)'
+     1  /'           sh,rh,rl (Specific/Relative Humidity)'
      1  /' ',49x,'q (quit/display)]   ? ',$)
 
         NULBLL = 3 ! for conrec (number of lines between labels)
@@ -1384,8 +1384,15 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             i_contour = 1
             c33_label = 'LAPS Specific Humidity     x1e3  '
 
-        elseif(c_field .eq. 'rh')then
-            var_2d = 'RHL'
+        elseif(c_field .eq. 'rh' .or. c_field .eq. 'rl')then
+            if(c_field .eq. 'rh')then
+                var_2d = 'RH3'
+            elseif(c_field .eq. 'rl')then
+                var_2d = 'RHL'
+            endif
+
+            write(6,*)' Reading lh3 / ',var_2d
+
             ext = 'lh3'
             call get_laps_3dgrid
      1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L

@@ -49,7 +49,10 @@ cdis
 
         relsize = size_in
 
-        write(6,*) ' plot_winds_2d: interval/size=',interval,relsize
+        write(6,*)
+        write(6,*) ' Plot_winds_2d: interval/size=',interval,relsize
+        write(6,*)
+        write(6,*) ' winds are assumed to be TRUE north at this point'       
 
         do j = 1+isize,jmax-isize,interval
         do i = 1+isize,imax-isize,interval

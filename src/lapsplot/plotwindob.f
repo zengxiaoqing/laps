@@ -32,6 +32,8 @@ cdis
 
       subroutine plot_windob(dir,spd,ri,rj,lat,lon,imax,jmax,relsize)
 
+!     This routine assumes input direction is with respect to TRUE NORTH
+
       include 'lapsparms.cmn'
 
       real*4 lat(imax,jmax),lon(imax,jmax)
@@ -50,6 +52,9 @@ cdis
       call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
 
       rot = (standard_longitude - lon(nint(ri),nint(rj))) / 57.295
+
+      rot = projrot_latlon(lat(nint(ri),nint(rj))
+     1                    ,lon(nint(ri),nint(rj)),istatus) / 57.295
 
 !     Convert ri and rj to x1 and y1 (U and V)
 !     call supcon(alat,alon,x1,y1)

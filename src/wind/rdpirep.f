@@ -31,7 +31,7 @@ cdis
 cdis 
         subroutine rdpirep(i4time,heights_3d
      1  ,N_PIREP,n_pirep_obs,ext_in
-     1  ,u_maps_inc,v_maps_inc,ni,nj,nk
+     1  ,ni,nj,nk
      1  ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                         ! I
      1  ,lat,lon
      1  ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
@@ -73,8 +73,6 @@ cdis
 !******************************************************************************
 
         real*4 heights_3d(ni,nj,nk)
-        real*4 u_maps_inc(ni,nj,nk)
-        real*4 v_maps_inc(ni,nj,nk)
 
         dimension u_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
@@ -227,11 +225,6 @@ cdis
      1                                    ,i_grid,j_grid,k_grid
      1                                    ,i4time,i4time_pirep
      1                                    ,v_time_interp,v_diff,istatus)       
-
-!                       u_diff = u_maps_inc(i_grid,j_grid,k_grid) 
-!    1                                                         * rcycles
-!                       v_diff = v_maps_inc(i_grid,j_grid,k_grid)
-!    1                                                         * rcycles       
 
                         pirep_u(n_pirep_obs) = u_temp - u_diff
                         pirep_v(n_pirep_obs) = v_temp - v_diff

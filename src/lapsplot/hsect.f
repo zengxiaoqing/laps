@@ -211,12 +211,6 @@ cdis
         real*4 cloud_low(NX_L,NY_L)
         real*4 cloud_top(NX_L,NY_L)
 
-        character asc9_tim_3dw*9, asc24_tim_3dw*24
-        character asc9_tim_r*9, asc9_tim*9, asc_tim_9
-        character asc9_tim_t*9
-        character asc9_tim_n*9
-        character c9_radarage*9
-
         character*255 c_filespec_ra
         character*255 c_filespec_src
         data c_filespec_ra /'/data/laps/nest7grid/lapsprd/vrc/*.vrc'/       
@@ -235,6 +229,8 @@ cdis
         real*4 pbe_2d(NX_L,NY_L)
         real*4 nbe_2d(NX_L,NY_L)
 
+        real*4 k_to_f
+
         include 'laps_cloud.inc'
 
         real*4 clouds_3d(NX_L,NY_L,KCLOUD)
@@ -246,6 +242,12 @@ cdis
         common /supmp1/ dummy,part
 
 !       COMMON /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
+
+        character asc9_tim_3dw*9, asc24_tim_3dw*24
+        character asc9_tim_r*9, asc9_tim*9, asc_tim_9
+        character asc9_tim_t*9
+        character asc9_tim_n*9
+        character c9_radarage*9
 
         include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
@@ -317,9 +319,10 @@ cdis
 
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  ',
-     1       /'     [wd] Wind, [wb,wr,wf] (LGA,RAM,LAPS-BKG), '
-     1       ,'[co] Cloud Omega'
-     1       /'     [lw] li*w, [li] li, [he] helicity, [pe] CAPE,'
+     1       /'     [wd] Wind (LW3/LWM),'
+     1       ,' [wb,wr,wf] (LGA/LGB, RAM/RSF, LAPS-BKG), '
+     1       /'     [co] Cloud Omega,'
+     1       ,' [lw] li*w, [li] li, [he] helicity, [pe] CAPE,'
      1       ,' [ne] CIN'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
@@ -347,7 +350,7 @@ cdis
      1       /
      1       /'     [sa/pa] Snow/Pcp Accum,'
      1       ,'     [sc] Snow Cover'
-     1       /'     [sh,rh] Specific/Rel Humidity'
+     1       /'     [sh,rh,rl] Specific/Rel Humidity'
      1       ,'     [tn,lf,gr,so] Terrain/Land Frac/Grid, '
      1       /'     [v1,v2,v3,v4,v5,po] IR Twm/av; VCF/VIS; Tsfc-11u'
      1       ,'; Polar Orbiter'
@@ -366,41 +369,37 @@ cdis
 
             if(c_type .eq. 'wd')then
                 ext = 'lw3'
-                call get_directory(ext,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+!               call get_directory(ext,directory,len_dir)
+!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
 
             elseif(c_type .eq. 'wb')then
                 call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
 
                 ext = 'lga'
 
-                call get_directory(ext,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+!               call get_directory(ext,directory,len_dir)
+!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
 
             elseif(c_type .eq. 'wr')then
                 call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
 
                 ext = 'ram'
 
-                call get_directory(ext,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+!               call get_directory(ext,directory,len_dir)
+!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
 
             elseif(c_type .eq. 'co')then
                 ext = 'lco'
-                call get_directory(ext,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+!               call get_directory(ext,directory,len_dir)
+!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
 
             elseif(c_type .eq. 'wf')then
                 ext = 'lw3'
-                call get_directory(ext,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
-
+!               call get_directory(ext,directory,len_dir)
+!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
             endif
 
-            write(6,*)
-            write(6,*)'    Looking for 3D laps wind data:'
-            call get_file_time(c_filespec,i4time_ref,i4time_3dw)
-            call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
+            call get_filespec(ext,2,c_filespec,istatus)
 
             if(c_type .eq. 'wd')then
                 write(6,13)
@@ -408,7 +407,8 @@ cdis
      1    '     Enter Level in mb, -1 = steering, 0 = sfc',24x,'? ',$)
             else
                 write(6,14)
-14              format('     Enter Level in mb',48x,'? ',$)
+14              format(
+     1    '     Enter Level in mb, 0 = sfc',39x,'? ',$)
             endif
 
             read(lun,*)k_level
@@ -418,6 +418,11 @@ cdis
             if(k_level .gt. 0)then
                k_level = nint(zcoord_of_pressure(float(k_level*100)))
             endif
+
+            write(6,*)
+            write(6,*)'    Looking for laps wind data: ',ext(1:3)
+            call get_file_time(c_filespec,i4time_ref,i4time_3dw)
+            call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
 
             if(c_type .eq. 'co')then
                 c_field = 'w'
@@ -431,17 +436,78 @@ cdis
 102                 format(/
      1          '  Field [di,sp,u,v,vc (barbs), ob (obs)]',30x,'? ',$)
                     read(lun,15)c_field
-                    ext = 'lwm'
-                    call get_directory(ext,directory,len_dir)
-                    c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
 
-                    var_2d = 'SU'
-                    call get_laps_2d(i4time_3dw,ext,var_2d
-     1                  ,units_2d,comment_2d,NX_L,NY_L,u_2d,istatus)
-                    var_2d = 'SV'
-                    call get_laps_2d(i4time_3dw,ext,var_2d
-     1                  ,units_2d,comment_2d,NX_L,NY_L,v_2d,istatus)
+                    if(c_type .eq. 'wd')then
+                        ext = 'lwm'
+                    elseif(c_type .eq. 'wb')then
+                        ext = 'lgb'
+                    elseif(c_type .eq. 'wr')then
+                        ext = 'rsf'
+                    endif
 
+                    if(ext(1:3) .eq. 'lgb' .or. ext(1:3) .eq. 'rsf')then       
+                        write(6,211)ext(1:3)
+                        read(5,221)a13_time
+
+                        call get_fcst_times(a13_time,I4TIME,i4_valid
+     1                                                     ,i4_fn)
+
+                        call make_fnam_lp(i4_valid,asc9_tim_3dw,istatus)      
+                        write(6,*)' Valid time = ',asc9_tim_3dw
+
+                        call get_directory(ext,directory,len_dir)
+
+                        level=0
+
+                        if(ext(1:3) .eq. 'lgb')then
+                            var_2d = 'USF'
+                        else
+                            var_2d = 'U'
+                        endif
+
+                        write(6,*)' Reading sfc wind data from: '
+     1                            ,ext(1:3),' ',var_2d
+
+                        CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,
+     1                                 NX_L,NY_L,1,1,       
+     1                                 VAR_2d,level,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 u_2d,ISTATUS)
+
+                        if(ext(1:3) .eq. 'lgb')then
+                            var_2d = 'VSF'
+                        else
+                            var_2d = 'V'
+                        endif
+
+                        write(6,*)' Reading sfc wind data from: '
+     1                            ,ext(1:3),' ',var_2d
+
+                        CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,
+     1                                 NX_L,NY_L,1,1,       
+     1                                 VAR_2d,level,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 v_2d,ISTATUS)
+
+                        write(6,*)' Valid time = ',asc9_tim_3dw
+                        call make_fnam_lp(i4_valid,asc9_tim_3dw,istatus)      
+                        write(6,*)' Valid time = ',asc9_tim_3dw
+
+                    else ! lwm
+!                       call get_directory(ext,directory,len_dir)
+!                       c_filespec = directory(1:len_dir)//'*.'//ext(1:3)      
+
+                        call get_filespec(ext,2,c_filespec,istatus)
+
+                        var_2d = 'SU'
+                        call get_laps_2d(i4time_3dw,ext,var_2d
+     1                      ,units_2d,comment_2d,NX_L,NY_L,u_2d,istatus)
+
+                        var_2d = 'SV'
+                        call get_laps_2d(i4time_3dw,ext,var_2d
+     1                      ,units_2d,comment_2d,NX_L,NY_L,v_2d,istatus)
+
+                    endif
 
                 else if(k_level .gt. 0)then
                     write(6,103)
@@ -581,10 +647,8 @@ cdis
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
-                elseif(c_type .eq. 'wb')then
-                    c19_label = ' WIND-lga  (kt)    '
-                elseif(c_type .eq. 'wr')then
-                    c19_label = ' WIND-ram  (kt)    '
+                elseif(c_type .eq. 'wb' .or. c_type .eq. 'wr')then
+                    c19_label = ' WIND-'//ext(1:3)//'  (kt)    '
                 else
                     c19_label = ' WINDS    (kt)     '
                 endif
@@ -2549,15 +2613,22 @@ cdis
      1             ,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'rh')then
+        elseif(c_type .eq. 'rh' .or. c_type .eq. 'rl')then
             write(6,1513)
             read(lun,*)k_level
             if(k_level .gt. 0)then
                k_level = nint(zcoord_of_pressure(float(k_level*100)))
             endif
 
-            var_2d = 'RHL'
             ext = 'lh3'
+
+            if(c_type .eq. 'rh')then
+                var_2d = 'RH3'
+            elseif(c_type .eq. 'rl')then
+                var_2d = 'RHL'
+            endif
+
+            write(6,*)' Reading lh3 / ',var_2d
 
             call get_laps_3dgrid
      1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
@@ -2829,7 +2900,7 @@ cdis
 !           K to F
             do i = 1,NX_L
             do j = 1,NY_L
-                field_2d(i,j) = ((field_2d(i,j)-273.15) * 1.8) + 32.
+                field_2d(i,j) = k_to_f(field_2d(i,j))
             enddo ! j
             enddo ! i
 
@@ -2860,7 +2931,7 @@ cdis
 !           K to F
             do i = 1,NX_L
             do j = 1,NY_L
-                field_2d(i,j) = ((field_2d(i,j)-273.15) * 1.8) + 32.
+                field_2d(i,j) = k_to_f(field_2d(i,j))
             enddo ! j
             enddo ! i
 
@@ -2894,7 +2965,7 @@ cdis
 !           K to F
             do i = 1,NX_L
             do j = 1,NY_L
-                field_2d(i,j) = ((field_2d(i,j)-273.15) * 1.8) + 32.
+                field_2d(i,j) = k_to_f(field_2d(i,j))
             enddo ! j
             enddo ! i
 
@@ -3035,11 +3106,17 @@ cdis
                 goto1200
             endif
 
-            if(var_2d .eq. 'TSF')then
+            if(var_2d .eq. 'TSF' .or.
+     1         var_2d .eq. 'DSF' .or.
+     1         var_2d .eq. 'T'   .or.
+     1         var_2d .eq. 'TD'       )then
+
+                write(6,*)' Converting sfc data to Fahrenheit'
+
 !               K to F
                 do i = 1,NX_L
                 do j = 1,NY_L
-                    field_2d(i,j) = ((field_2d(i,j)-273.15) * 1.8) + 32.
+                    field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
 
