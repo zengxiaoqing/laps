@@ -4,6 +4,7 @@
   output_format = 'mm5',
   snow_thresh = 1.1,
   lwc2vapor_thresh = 1.1,
+  make_sfc_uv = .false.,
 /
  
 c
@@ -37,3 +38,8 @@ c    1.0 (default value is 1.1).  If set to 1.0, cloud water will be converted
 c    to vapor up until the RH for that point reaches 100%.  Any remaining 
 c    cloud water will be left in place.  Values greater than 1.0 allow
 c    for supersaturation (e.g., 1.1 allows 110% max RH).
+c
+c  make_sfc_uv:
+c    Logical flag. If set to true, then the surface u/v fields from lsx
+c    will be replaced with winds interpolated from the 3D isobaric 
+c    u/v fields.
