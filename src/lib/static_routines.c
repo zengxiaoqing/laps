@@ -1,3 +1,4 @@
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -6,6 +7,8 @@
 #define SYSCMD "ncgen -o %s %s"
 #define LAT "lat"
 #define LON "lon"
+
+#define DEBUG 0
 
 #ifdef FORTRANCAPS
 #define read_cdf_static READ_CDF_STATIC
@@ -22,7 +25,6 @@
 #define read_cdf_static read_cdf_static_
 #define open_cdf open_cdf_
 #define cdf_dim_size cdf_dim_size_
-#define log_diag log_diag_
 #define nstrncpy nstrncpy_
 #define fstrncpy fstrncpy_
 #endif
@@ -82,7 +84,7 @@ char *comm_ptr;
 	int start[4], count[4], start_c[3], count_c[3];
 #endif
 
-	log_diag (2, "cdf_update_stat:grid name = %s\n", s_field);
+	if(DEBUG==1) printf( "cdf_update_stat:grid name = %s\n", s_field);
 
 /* turn off the error handling done by the netCDF routines */
         ncopts = NC_VERBOSE;
@@ -107,7 +109,7 @@ char *comm_ptr;
 	count_c[2] = strlen(comm_ptr);
 
 /* get the variable ids */
-	log_diag (2, "Data variable name = %s\n", s_field);
+	if(DEBUG==1) printf( "Data variable name = %s\n", s_field);
 	if ((i_comid = ncvarid (i_cdfid, commnt)) == (-1))
 		return -1;
 
@@ -116,7 +118,7 @@ char *comm_ptr;
                              (const long *)count, (void *)gptr);
 	
 	if (i_status == (-1)) {
-		log_diag (1, "cdf_update_stat: error during cdf write\n");
+		if(DEBUG==1) printf( "cdf_update_stat: error during cdf write\n");
 		return -1;
 	}
 	else {
@@ -124,9 +126,9 @@ char *comm_ptr;
                                (const long *)count_c, (void *)comm_ptr);
 	  
 	  if (i_status == (-1))
-		log_diag (1, "cdf_update_stat: error during cdf write\n");
+		if(DEBUG==1) printf( "cdf_update_stat: error during cdf write\n");
 	  else
-		log_diag (2, "cdf_update_stat: cdf write ok\n");
+		if(DEBUG==1) printf( "cdf_update_stat: cdf write ok\n");
 	}
 
 	return i_status;
@@ -920,7 +922,7 @@ float *grid_spacing_n;
 	count_long[0] = 132;
 	
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "imax");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "imax");
 	if ((i_varid = ncvarid (i_cdfid, "imax")) == (-1))
 		return -1;
 
@@ -931,7 +933,7 @@ float *grid_spacing_n;
 	   return -1;
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "jmax");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "jmax");
 	if ((i_varid = ncvarid (i_cdfid, "jmax")) == (-1))
 		return -1;
 
@@ -942,7 +944,7 @@ float *grid_spacing_n;
 	   return -1;
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "n_grids");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "n_grids");
 	if ((i_varid = ncvarid (i_cdfid, "n_grids")) == (-1))
 		return -1;
 
@@ -953,7 +955,7 @@ float *grid_spacing_n;
 	   return -1;
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n",
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n",
 		  "grid_spacing");
 	if ((i_varid = ncvarid (i_cdfid, "grid_spacing")) == (-1))
 		return -1;

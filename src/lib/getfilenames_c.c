@@ -90,6 +90,7 @@ numfiles will be reported as 0.
 
 
 **----------------------------------------------------------------------------*/
+#include <config.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

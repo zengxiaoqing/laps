@@ -29,20 +29,30 @@ cdis
 cdis  
 cdis 
 cdis*/
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 
-#ifdef rtu
+
+#ifdef FORTRANUNDERSCORE
 #define fstrncpy fstrncpy_
 #define nstrncpy nstrncpy_
+#endif
+#ifdef FORTRANDOUBLEUNDERSCORE
+#define fstrncpy fstrncpy__
+#define nstrncpy nstrncpy__
+#endif
+#ifdef FORTRANCAPS
+#define fstrncpy FSTRNCPY
+#define nstrncpy NSTRNCPY
 #endif
 
 /*************************************************************************
 *       fstrncpy  -  copy function used to copy strings with embedded blanks
 *************************************************************************/
 #ifdef __STDC__
-static void fstrncpy (char *target,char *source,long maxlen)
+void fstrncpy (char *target,char *source,long maxlen)
 #else
 void fstrncpy (target,source,maxlen)
 char *target;           /* space to be copied into */
@@ -59,7 +69,7 @@ long maxlen;            /* max length of *source   */
 *       nstrncpy  -  copy function used to copy strings terminated with blanks
 *************************************************************************/
 #ifdef __STDC__
-static void nstrncpy (char *target,char *source,long maxlen)
+void nstrncpy (char *target,char *source,long maxlen)
 #else
 void nstrncpy (target,source,maxlen)
 char *target;           /* space to be copied into */

@@ -29,6 +29,7 @@ cdis
 cdis  
 cdis 
 cdis*/
+#include <config.h>
 #include <stdlib.h>
 #include <fortran.h>
 

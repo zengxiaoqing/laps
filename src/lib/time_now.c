@@ -45,6 +45,7 @@ c Author:  Dan Birkenheuer
 c Date:     April 1, 1994
 
 */
+#include <config.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <time.h>

@@ -29,6 +29,7 @@ cdis
 cdis  
 cdis 
 cdis*/
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -36,6 +37,8 @@ cdis*/
 #include "grid_info.h"
 #include "laps_grid_def.h"
 
+/* Set to 1 for verbose debug info */
+#define DEBUG 0
 
 #ifdef FORTRANUNDERSCORE
 #define cre_lw3 cre_lw3_
@@ -82,7 +85,6 @@ cdis*/
 #define cre_lga cre_lga_
 #define cre_lgf cre_lgf_
 #define cre_ln3 cre_ln3_
-#define log_diag log_diag_
 #define itoa itoa_
 #define fill_empty_grids fill_empty_grids_
 #define cdf_get_coord cdf_get_coord_
@@ -151,7 +153,6 @@ cdis*/
 #define cre_lga CRE_LGA
 #define cre_lgf CRE_LGF
 #define cre_ln3 CRE_LN3
-#define log_diag LOG_DIAG
 #define itoa ITOA
 #define fill_empty_grids FILL_EMPTY_GRIDS
 #define cdf_get_coord CDF_GET_COORD
@@ -220,7 +221,6 @@ cdis*/
 #define cre_lga cre_lga__
 #define cre_lgf cre_lgf__
 #define cre_ln3 cre_ln3__
-#define log_diag log_diag__
 #define itoa itoa__
 #define fill_empty_grids fill_empty_grids__
 #define cdf_get_coord cdf_get_coord__
@@ -251,7 +251,7 @@ cdis*/
 *               cre_lmr, cre_lf1, cre_l1s, cre_lps, cre_lrp, cre_lba,
 *               cre_lc3, cre_lwc, cre_lil, cre_lcb, cre_lct, cre_lcv, 
 *               cre_lmd, cre_lco, cre_lty, cre_lcp, cre_z02
-*		log_diag  (does nothing, set to printf statment for debug)
+*		log_diag  (does nothing, set to printf statment for debug) (removed)
 *		itoa	  (converts integer to ascii)
 *		fill_empty_grids
 *		cdf_get_coord
@@ -451,7 +451,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -485,27 +485,27 @@ char *fname;
    
    {			/* store num_variables */
     static long num_variables = {21};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {63};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {63};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -632,7 +632,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -665,27 +665,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {1};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {1};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -812,7 +812,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -845,27 +845,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {3};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {3};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -1018,7 +1018,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -1051,27 +1051,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {18};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {42};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {42};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -1197,7 +1197,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -1230,27 +1230,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {1};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {1};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -1376,7 +1376,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -1409,27 +1409,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {21};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {21};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -2253,7 +2253,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -2286,27 +2286,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {93};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {27};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {27};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -2695,60 +2695,60 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
-   static int fctimes_start[] = {0};
-   static int fctimes_edges[] = {1};
+   const long fctimes_start[] = {0};
+   const long fctimes_edges[] = {1};
    static short fctimes[] = {0};
-   ncvarput(cdfid, fctimes_id, fctimes_start, fctimes_edges, (void *)fctimes);
+   ncvarput(cdfid, fctimes_id, (const long *)fctimes_start,(const long *) fctimes_edges, (void *)fctimes);
    }
 
    {			/* store num_variables */
     static long num_variables = {18};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store level */
-   static int level_start[] = {0};
-   static int level_edges[] = {21};
+   const long level_start[] = {0};
+   const long level_edges[] = {21};
    static short level[] = {100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100};
    ncvarput(cdfid, level_id, level_start, level_edges, (void *)level);
    }
 
    {			/* store origin */
-   static int origin_start[] = {0};
-   static int origin_edges[] = {49};
+   const long origin_start[] = {0};
+   const long origin_edges[] = {49};
    static char origin[] = {"NOAA/ERL/Forecast Systems Laboratory, Boulder, CO"};
    ncvarput(cdfid, origin_id, origin_start, origin_edges, (void *)origin);
    }
 
    {			/* store model */
-   static int model_start[] = {0};
-   static int model_edges[] = {43};
+   const long model_start[] = {0};
+   const long model_edges[] = {43};
    static char model[] = {"LAPS - Local Analysis and Prediction System"};
    ncvarput(cdfid, model_id, model_start, model_edges, (void *)model);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {42};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {42};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -3109,7 +3109,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -3142,27 +3142,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {18};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {2};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {2};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -3318,7 +3318,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -3351,27 +3351,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {18};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {2};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {2};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -3497,7 +3497,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -3530,27 +3530,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {3};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {3};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -3675,7 +3675,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -3708,27 +3708,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {3};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {3};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -3943,7 +3943,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -3976,27 +3976,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {24};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {4};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {4};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -4120,7 +4120,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -4153,27 +4153,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {21};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {21};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -4297,7 +4297,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -4330,27 +4330,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {21};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {21};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -4563,7 +4563,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -4596,27 +4596,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {24};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {84};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {84};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -4741,7 +4741,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -4774,27 +4774,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {42};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {42};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -4975,12 +4975,12 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store num_variables */
     static long num_variables = {21};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store fctimes */
@@ -5013,22 +5013,22 @@ char *fname;
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {63};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {63};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -5152,7 +5152,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -5185,27 +5185,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {1};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {1};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -5857,12 +5857,12 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
-   static int fctimes_start[] = {0};
-   static int fctimes_edges[] = {1};
+   const long fctimes_start[] = {0};
+   const long fctimes_edges[] = {1};
    static short fctimes[] = {0};
    ncvarput(cdfid, fctimes_id, fctimes_start, fctimes_edges, (void *)fctimes);
    }
@@ -5876,41 +5876,41 @@ char *fname;
    
    {			/* store num_variables */
     static long num_variables = {21};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store origin */
-   static int origin_start[] = {0};
-   static int origin_edges[] = {49};
+   const long origin_start[] = {0};
+   const long origin_edges[] = {49};
    static char origin[] = {"NOAA/ERL/Forecast Systems Laboratory, Boulder, CO"};
    ncvarput(cdfid, origin_id, origin_start, origin_edges, (void *)origin);
    }
 
    {			/* store model */
-   static int model_start[] = {0};
-   static int model_edges[] = {43};
+   const long model_start[] = {0};
+   const long model_edges[] = {43};
    static char model[] = {"LAPS - Local Analysis and Prediction System"};
    ncvarput(cdfid, model_id, model_start, model_edges, (void *)model);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {3};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {3};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -6036,7 +6036,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -6069,27 +6069,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {21};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {21};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -6213,7 +6213,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -6246,27 +6246,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {21};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {21};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -6414,12 +6414,12 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store num_variables */
     static long num_variables = {18};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store fctimes */
@@ -6452,22 +6452,22 @@ char *fname;
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {42};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {42};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -6592,7 +6592,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -6625,27 +6625,27 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {21};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {21};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -7152,61 +7152,61 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
-   static int fctimes_start[] = {0};
-   static int fctimes_edges[] = {1};
+   const long fctimes_start[] = {0};
+   const long fctimes_edges[] = {1};
    static short fctimes[] = {0};
    ncvarput(cdfid, fctimes_id, fctimes_start, fctimes_edges, (void *)fctimes);
    }
 
    {			/* store num_variables */
     static long num_variables = {54};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store level */
-   static int level_start[] = {0};
-   static int level_edges[] = {1};
+   const long level_start[] = {0};
+   const long level_edges[] = {1};
    static short level[] = {0};
    ncvarput(cdfid, level_id, level_start, level_edges, (void *)level);
    }
 
    {			/* store origin */
-   static int origin_start[] = {0};
-   static int origin_edges[] = {49};
+   const long origin_start[] = {0};
+   const long origin_edges[] = {49};
    static char origin[] = {"NOAA/ERL/Forecast Systems Laboratory, Boulder, CO"};
    ncvarput(cdfid, origin_id, origin_start, origin_edges, (void *)origin);
    }
 
    {			/* store model */
-   static int model_start[] = {0};
-   static int model_edges[] = {43};
+   const long model_start[] = {0};
+   const long model_edges[] = {43};
    static char model[] = {"LAPS - Local Analysis and Prediction System"};
    ncvarput(cdfid, model_id, model_start, model_edges, (void *)model);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
 
    {			/* store kmax */
     static long kmax = {14};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {14};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -7713,61 +7713,61 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
-   static int fctimes_start[] = {0};
-   static int fctimes_edges[] = {1};
+   const long fctimes_start[] = {0};
+   const long fctimes_edges[] = {1};
    static short fctimes[] = {0};
    ncvarput(cdfid, fctimes_id, fctimes_start, fctimes_edges, (void *)fctimes);
    }
 
    {			/* store num_variables */
     static long num_variables = {54};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store level */
-   static int level_start[] = {0};
-   static int level_edges[] = {1};
+   const long level_start[] = {0};
+   const long level_edges[] = {1};
    static short level[] = {0};
    ncvarput(cdfid, level_id, level_start, level_edges, (void *)level);
    }
 
    {			/* store origin */
-   static int origin_start[] = {0};
-   static int origin_edges[] = {49};
+   const long origin_start[] = {0};
+   const long origin_edges[] = {49};
    static char origin[] = {"NOAA/ERL/Forecast Systems Laboratory, Boulder, CO"};
    ncvarput(cdfid, origin_id, origin_start, origin_edges, (void *)origin);
    }
 
    {			/* store model */
-   static int model_start[] = {0};
-   static int model_edges[] = {43};
+   const long model_start[] = {0};
+   const long model_edges[] = {43};
    static char model[] = {"LAPS - Local Analysis and Prediction System"};
    ncvarput(cdfid, model_id, model_start, model_edges, (void *)model);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
 
    {			/* store kmax */
     static long kmax = {14};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {14};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -8011,7 +8011,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -8023,7 +8023,7 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {27};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store level */
@@ -8049,22 +8049,22 @@ char *fname;
 
    {			/* store imax */
     static long imax = {11};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {11};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {105};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {105};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -8308,7 +8308,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -8320,7 +8320,7 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {27};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store level */
@@ -8346,22 +8346,22 @@ char *fname;
 
    {			/* store imax */
     static long imax = {11};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {11};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {105};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {105};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -8603,7 +8603,7 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
@@ -8615,7 +8615,7 @@ char *fname;
 
    {			/* store num_variables */
     static long num_variables = {27};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store level */
@@ -8641,22 +8641,22 @@ char *fname;
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {5};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {5};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -10421,60 +10421,60 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
-   static int fctimes_start[] = {0};
-   static int fctimes_edges[] = {1};
+   const long fctimes_start[] = {0};
+   const long fctimes_edges[] = {1};
    static short fctimes[] = {0};
    ncvarput(cdfid, fctimes_id, fctimes_start, fctimes_edges, (void *)fctimes);
    }
 
    {			/* store level */
-   static int level_start[] = {0};
-   static int level_edges[] = {1};
+   const long level_start[] = {0};
+   const long level_edges[] = {1};
    static short level[] = {0};
    ncvarput(cdfid, level_id, level_start, level_edges, (void *)level);
    }
 
    {			/* store origin */
-   static int origin_start[] = {0};
-   static int origin_edges[] = {49};
+   const long origin_start[] = {0};
+   const long origin_edges[] = {49};
    static char origin[] = {"NOAA/ERL/Forecast Systems Laboratory, Boulder, CO"};
    ncvarput(cdfid, origin_id, origin_start, origin_edges, (void *)origin);
    }
 
    {			/* store model */
-   static int model_start[] = {0};
-   static int model_edges[] = {43};
+   const long model_start[] = {0};
+   const long model_edges[] = {43};
    static char model[] = {"LAPS - Local Analysis and Prediction System"};
    ncvarput(cdfid, model_id, model_start, model_edges, (void *)model);
    }
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
    
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {1};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {1};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -10597,60 +10597,60 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
-   static int fctimes_start[] = {0};
-   static int fctimes_edges[] = {1};
+   const long fctimes_start[] = {0};
+   const long fctimes_edges[] = {1};
    static short fctimes[] = {0};
    ncvarput(cdfid, fctimes_id, fctimes_start, fctimes_edges, (void *)fctimes);
    }
 
    {			/* store num_variables */
     static long num_variables = {15};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store level */
-   static int level_start[] = {0};
-   static int level_edges[] = {3};
+   const long level_start[] = {0};
+   const long level_edges[] = {3};
    static short level[] = {-1, -2, -3};
    ncvarput(cdfid, level_id, level_start, level_edges, (void *)level);
    }
 
    {			/* store origin */
-   static int origin_start[] = {0};
-   static int origin_edges[] = {49};
+   const long origin_start[] = {0};
+   const long origin_edges[] = {49};
    static char origin[] = {"NOAA/ERL/Forecast Systems Laboratory, Boulder, CO"};
    ncvarput(cdfid, origin_id, origin_start, origin_edges, (void *)origin);
    }
 
    {			/* store model */
-   static int model_start[] = {0};
-   static int model_edges[] = {43};
+   const long model_start[] = {0};
+   const long model_edges[] = {43};
    static char model[] = {"LAPS - Local Analysis and Prediction System"};
    ncvarput(cdfid, model_id, model_start, model_edges, (void *)model);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {3};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {3};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -10948,60 +10948,60 @@ char *fname;
 
    {			/* store version */
     static long version = {2};
-    ncvarput1(cdfid, version_id, (int *)0, (void *)&version);
+    ncvarput1(cdfid, version_id, (const long *)0, (void *)&version);
    }
 
    {			/* store fctimes */
-   static int fctimes_start[] = {0};
-   static int fctimes_edges[] = {1};
+   const long fctimes_start[] = {0};
+   const long fctimes_edges[] = {1};
    static short fctimes[] = {0};
    ncvarput(cdfid, fctimes_id, fctimes_start, fctimes_edges, (void *)fctimes);
    }
 
    {			/* store num_variables */
     static long num_variables = {33};
-    ncvarput1(cdfid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(cdfid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {			/* store level */
-   static int level_start[] = {0};
-   static int level_edges[] = {1};
+   const long level_start[] = {0};
+   const long level_edges[] = {1};
    static short level[] = {0};
    ncvarput(cdfid, level_id, level_start, level_edges, (void *)level);
    }
 
    {			/* store origin */
-   static int origin_start[] = {0};
-   static int origin_edges[] = {49};
+   const long origin_start[] = {0};
+   const long origin_edges[] = {49};
    static char origin[] = {"NOAA/ERL/Forecast Systems Laboratory, Boulder, CO"};
    ncvarput(cdfid, origin_id, origin_start, origin_edges, (void *)origin);
    }
 
    {			/* store model */
-   static int model_start[] = {0};
-   static int model_edges[] = {43};
+   const long model_start[] = {0};
+   const long model_edges[] = {43};
    static char model[] = {"LAPS - Local Analysis and Prediction System"};
    ncvarput(cdfid, model_id, model_start, model_edges, (void *)model);
    }
 
    {			/* store imax */
     static long imax = {NX};
-    ncvarput1(cdfid, imax_id, (int *)0, (void *)&imax);
+    ncvarput1(cdfid, imax_id, (const long *)0, (void *)&imax);
    }
 
    {			/* store jmax */
     static long jmax = {NY};
-    ncvarput1(cdfid, jmax_id, (int *)0, (void *)&jmax);
+    ncvarput1(cdfid, jmax_id, (const long *)0, (void *)&jmax);
    }
 
    {			/* store kmax */
     static long kmax = {7};
-    ncvarput1(cdfid, kmax_id, (int *)0, (void *)&kmax);
+    ncvarput1(cdfid, kmax_id, (const long *)0, (void *)&kmax);
    }
 
    {			/* store kdim */
     static long kdim = {7};
-    ncvarput1(cdfid, kdim_id, (int *)0, (void *)&kdim);
+    ncvarput1(cdfid, kdim_id, (const long *)0, (void *)&kdim);
    }
    return cdfid;
 }
@@ -11162,7 +11162,7 @@ char *fname;
  
    {			/* store num_variables */
     static long num_variables = {18};
-    ncvarput1(ncid, num_variables_id, (int *)0, (void *)&num_variables);
+    ncvarput1(ncid, num_variables_id, (const long *)0, (void *)&num_variables);
    }
 
    {                    /* store fctimes */
@@ -15029,17 +15029,6 @@ char *fname;
    }
    return ncid;
 }
-/************************************************************************/
-#ifdef __STDC__
-void log_diag(int ii, char *cstring, char *name)
-#else
-void log_diag( ii, cstring, name )
-int ii;
-char *cstring, *name;
-#endif
-{
-        return;
-}
 
 /*************************************************************************
 * itoa
@@ -15202,20 +15191,20 @@ int i_cdftype;
 
 	static char *v_ptr;
 #ifdef CRAY
-	static int nbytes[]={0,sizeof(ncbyte),sizeof(ncchar),sizeof(ncshort),sizeof(nclong),sizeof(ncfloat),sizeof(ncdouble)};
+	const long nbytes[]={0,sizeof(ncbyte),sizeof(ncchar),sizeof(ncshort),sizeof(nclong),sizeof(ncfloat),sizeof(ncdouble)};
 	int i_status, i_varid, i_start;
 #else
 #if defined(__alpha) || defined(__IP21)
-	static int nbytes[]={0,1,1,2,8,4,8};
+	const long nbytes[]={0,1,1,2,8,4,8};
 	int i_status, i_varid;
 	long i_start;
 #else
-	static int nbytes[]={0,1,1,2,4,4,8};
-	int i_status, i_varid, i_start;
+	const long nbytes[]={0,1,1,2,4,4,8};
+	long i_status, i_varid, i_start;
 #endif
 #endif
 
-	log_diag (2, "cdf_get_var: v_name = %s\n", v_name);
+	if(DEBUG==1) printf( "cdf_get_var: v_name = %s\n", v_name);
 
 /* allocate memory to hold the values associated with the dimension */
 	v_ptr = malloc (i_size * nbytes[i_cdftype]); 
@@ -15223,11 +15212,11 @@ int i_cdftype;
 /* get the variable id for this dimension */
 	i_varid = ncvarid (i_cdfid, v_name);
 
-	log_diag (2, "cdf_get_var: Size = %d   Var id = %d\n", i_size, i_varid);
+	if(DEBUG==1) printf( "cdf_get_var: Size = %d   Var id = %d\n", i_size, i_varid);
 
 /* read the contents of the variable into memory */
 	i_start = 0;
-	i_status = ncvarget (i_cdfid, i_varid, &i_start, &i_size, (void *)v_ptr);
+	i_status = ncvarget (i_cdfid, i_varid,(const long*) &i_start,(const long*)  &i_size, (void *)v_ptr);
 	if (i_status == (-1)){
 		printf("error reading values for array index %s\n", v_name);
 		return (char *)i_status;
@@ -15247,18 +15236,18 @@ int i_size;
 short *lvls;
 #endif
 {
-	int i_status, i_varid, i_start;
+	long i_status, i_varid, i_start;
 
-	log_diag (2, "cdf_get_var: v_name = %s\n", v_name);
+	if(DEBUG==1) printf( "cdf_get_var: v_name = %s\n", v_name);
 
 /* get the variable id for this dimension */
 	i_varid = ncvarid (i_cdfid, v_name);
 
-	log_diag (2, "cdf_get_var: Size = %d   Var id = %d\n", i_size, i_varid);
+	if(DEBUG==1) printf( "cdf_get_var: Size = %d   Var id = %d\n", i_size, i_varid);
 
 /* read the contents of the variable into memory */
 	i_start = 0;
-	i_status = ncvarget (i_cdfid, i_varid, &i_start, &i_size,(void *)lvls);
+	i_status = ncvarget (i_cdfid, i_varid, (const long *)&i_start,(const long *) &i_size,(void *)lvls);
 	if (i_status == (-1)){
 		printf("error reading values for array index %s\n", v_name);
 		return i_status;
@@ -15305,14 +15294,14 @@ char *d_name;
 	short *i_ptr;
 	char *cdf_get_coord();
 
-	log_diag (2, "cdf_get_index: d_name = %s\n", d_name);
+	if(DEBUG==1) printf( "cdf_get_index: d_name = %s\n", d_name);
 	
 /* read in the dimension id and size from the netcdf file */
 	if ((i_dsize = cdf_dim_size (i_cdfid, d_name)) == (-1)){
 		return -1;
 	}
 
-	log_diag (2, "cdf_get_index: dim size = %d\n", i_dsize);
+	if(DEBUG==1) printf( "cdf_get_index: dim size = %d\n", i_dsize);
 
 /* read the contents of the coordinate variable associated with this dimension
    from the net_cdf file */
@@ -15364,11 +15353,8 @@ char *d_name;
 #endif
 {
 	int i, i_dimid, i_status;
-#if defined(__alpha) || defined(__IP21)
         long i_dsize;
-#else
-        int i_dsize;
-#endif
+
 
 /* read in the dimension id and size */
 	if ((i_dimid = ncdimid (i_cdfid, d_name)) == (-1))
@@ -15422,7 +15408,7 @@ char *g_name;
 
 /* read the fctimes inventory array associated with this grid */
 	sprintf (var_name, "%s%s", g_name, "_fcinv");
-	log_diag (2, "cdf_chk_ninv: var_name = %s\n", var_name);
+	if(DEBUG==1) printf( "cdf_chk_ninv: var_name = %s\n", var_name);
 
 	i_varid = ncvarid (i_cdfid, var_name);
 
@@ -15433,7 +15419,7 @@ char *g_name;
 	if (i_status == -1)
 		return -1;
 
-	log_diag (2, "cdf_chk_ninv: i_flag = %d\n", i_flag);
+	if(DEBUG==1) printf( "cdf_chk_ninv: i_flag = %d\n", i_flag);
 
 	if (i_flag == 1)
 		return 1;
@@ -15492,14 +15478,11 @@ char *cptr;
 #endif
 {
 	int i_status, i_comid,i_varid; 
-#if defined(__alpha) || defined(__IP21)
         long start[4], count[4], start_c[3], count_c[3];
-#else
-        int start[4], count[4], start_c[3], count_c[3];
-#endif
+
 
 /* get the variable ids */
-	log_diag (2, "Data variable name = %s\n", gname);
+	if(DEBUG==1) printf( "Data variable name = %s\n", gname);
 	if ((i_varid = ncvarid (i_cdfid, gname)) == (-1))
 		return -1;
 	if ((i_comid = ncvarid (i_cdfid, cname)) == (-1))
@@ -15586,30 +15569,27 @@ char *gname;
 	static short i_flag=1;
 	int i_status, i_varid;
 	char varname[15];
-#if defined(__alpha) || defined(__IP21)
         long start[2];
-#else
-        int start[2];
-#endif
+
 
 /* print out all of the dimension data */
-	log_diag (2, "cdf_upd_linv: fcindx = %d   lindx = %d   x = %d   y = %d\n",
+	if(DEBUG==1) printf( "cdf_upd_linv: fcindx = %d   lindx = %d   x = %d   y = %d\n",
 		gdims->fctime_coord, gdims->level_coord, gdims->x_dim, gdims->y_dim);
 
 /* get the variable id of the fctimes inventory array */
 	sprintf (varname, "%s%s", gname, "_fcinv");
-	log_diag (2, "cdf_upd_linv: inventory variable name = %s\n", varname);
+	if(DEBUG==1) printf( "cdf_upd_linv: inventory variable name = %s\n", varname);
 	if ((i_varid = ncvarid (i_cdfid, varname)) == (-1))
 		return -1;
 	else
-		log_diag (2, "cdf_upd_linv: varid = %d\n", i_varid);
+		if(DEBUG==1) printf( "cdf_upd_linv: varid = %d\n", i_varid);
 
 /* construct the arrays needed by the netcdf write routine */
 	start[0] = gdims->fctime_coord;
 	start[1] = gdims->level_coord;
 
 	i_status = ncvarput1 (i_cdfid, i_varid, start, (void *)&i_flag); 
-	log_diag (2, "cdf_upd_linv: ncvarput1 status = %d\n", i_status);
+	if(DEBUG==1) printf( "cdf_upd_linv: ncvarput1 status = %d\n", i_status);
 
 	if (i_status == (-1)){
 		return -1;
@@ -17254,7 +17234,7 @@ long *no_laps_diag;
 
 	ncopts = 0;
 
-	log_diag (2, "open_cdf: cdf file name = %s\n", fname);
+	if(DEBUG==1) printf( "open_cdf: cdf file name = %s\n", fname);
 
 /* open the netcdf file and get the file id and the variable id */
 	cdfid = ncopen (fname, mode);
@@ -17268,7 +17248,7 @@ long *no_laps_diag;
 	  return -1;
 	}
 	else {
-		log_diag (2, "open_cdf: %s file open. Cdfid = %d\n", 
+		if(DEBUG==1) printf( "open_cdf: %s file open. Cdfid = %d\n", 
 			fname, cdfid);
 		return cdfid;
 	}
@@ -17344,11 +17324,7 @@ long *num_variables;
 #endif
 {
 	int i_status, i_varid, i, i_version, temp, str_len;
-#if defined(__alpha) || defined(__IP21)
         long mindex[1], start[1], count_asc[1], count_ldom[1], count_long[1]; 
-#else
-        int mindex[1], start[1], count_asc[1], count_ldom[1], count_long[1]; 
-#endif
 	static char c_ver[5];
 	char *t_ptr;
 
@@ -17361,7 +17337,7 @@ long *num_variables;
 	count_long[0] = 132;
 	
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "imax");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "imax");
 	if ((i_varid = ncvarid (i_cdfid, "imax")) == (-1))
 		return -1;
 
@@ -17371,7 +17347,7 @@ long *num_variables;
 	   return -1;
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "jmax");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "jmax");
 	if ((i_varid = ncvarid (i_cdfid, "jmax")) == (-1))
 		return -1;
 
@@ -17381,7 +17357,7 @@ long *num_variables;
 	   return -1;
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "kmax");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "kmax");
 	if ((i_varid = ncvarid (i_cdfid, "kmax")) == (-1))
 		return -1;
 
@@ -17391,7 +17367,7 @@ long *num_variables;
 	   return -1;
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "version");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "version");
 	if ((i_varid = ncvarid (i_cdfid, "version")) == (-1))
 		return -1;
 	   
@@ -17418,7 +17394,7 @@ long *num_variables;
 	}
 	
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "asctime");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "asctime");
 	if ((i_varid = ncvarid (i_cdfid, "asctime")) == (-1))
 		return -1;
 	   
@@ -17428,7 +17404,7 @@ long *num_variables;
 	   return -1;
 
 /* get the variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", 
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", 
 	          "laps_domain_file");
 	if ((i_varid = ncvarid (i_cdfid, "laps_domain_file")) == (-1))
 		return -1;
@@ -17447,7 +17423,7 @@ long *num_variables;
         }
         
 /* get the  variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "model");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "model");
 	if ((i_varid = ncvarid (i_cdfid, "model")) == (-1))
 		return -1;
 	   
@@ -17464,7 +17440,7 @@ long *num_variables;
         }
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "origin");
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", "origin");
 	if ((i_varid = ncvarid (i_cdfid, "origin")) == (-1))
 		return -1;
 	   
@@ -17481,7 +17457,7 @@ long *num_variables;
         }
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", 
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", 
 		  "num_variables");
 	if ((i_varid = ncvarid (i_cdfid, "num_variables")) == (-1))
 		return -1;
@@ -17552,13 +17528,9 @@ char *asctime;
 #endif
 {
 	int i_status, i, i_lvlid, i_ldomfid, i_asctmid;
-#if defined(__alpha) || defined(__IP21)
         long ldom_ct[1], ldom_st[1], asc_ct[1], asc_st[1],
              lvl_ct[1],lvl_st[1];
-#else
-        int ldom_ct[1], ldom_st[1], asc_ct[1], asc_st[1],
-            lvl_ct[1],lvl_st[1];
-#endif
+
 	    
 	 static long level_val;
 	
@@ -17570,7 +17542,7 @@ char *asctime;
 
 /* get the variable ids */
 
-	log_diag (2, "Data variable name = %s\n", "lvl");
+	if(DEBUG==1) printf( "Data variable name = %s\n", "lvl");
 	if ((i_lvlid = ncvarid (i_cdfid,"lvl" )) == (-1))
 		return -1;
    	if ((i_ldomfid = ncvarid (i_cdfid,"laps_domain_file" )) == (-1))
@@ -17653,7 +17625,7 @@ char *comm_ptr;
 	int i_status;
 	cdf_grid_info dims;
 
-	log_diag (2, "cdf_update_laps:grid name = %s\n", s_field);
+	if(DEBUG==1) printf( "cdf_update_laps:grid name = %s\n", s_field);
 
 /* get the forecast time index of the data array */
 	dims.fctime_coord = cdf_get_index (i_cdfid, i_fctime, "fctimes");
@@ -17661,7 +17633,7 @@ char *comm_ptr;
 		ncclose (i_cdfid);
 		return -1;
 	}
-	log_diag (2, "cdf_update_laps:fctime coord = %d\n", dims.fctime_coord);
+	if(DEBUG==1) printf( "cdf_update_laps:fctime coord = %d\n", dims.fctime_coord);
 
 /* get the level index of the data array */
 	dims.level_coord = cdf_get_index (i_cdfid, i_level, "level");
@@ -17669,7 +17641,7 @@ char *comm_ptr;
 		ncclose (i_cdfid);
 		return -1;
 	}
-	log_diag (2, "cdf_update_laps: level coord = %d\n", dims.level_coord);
+	if(DEBUG==1) printf( "cdf_update_laps: level coord = %d\n", dims.level_coord);
 
 /* get the x and y dimension sizes */
 	dims.x_dim = cdf_dim_size (i_cdfid, "lon");
@@ -17679,9 +17651,9 @@ char *comm_ptr;
 	i_status = cdf_write_grid (i_cdfid, &dims, s_field, gptr,
 				   commnt, comm_ptr);
 	if (i_status == 0)
-		log_diag (2, "cdf_update_laps: cdf write ok\n",i_status);
+		if(DEBUG==1) printf( "cdf_update_laps: cdf write ok\n",i_status);
 	else {
-		log_diag (1, "cdf_update_laps: error during cdf write\n",i_status);
+		if(DEBUG==1) printf( "cdf_update_laps: error during cdf write\n",i_status);
 		return -1;		
 	}
 
@@ -17763,7 +17735,7 @@ char *ext;
 		 	  i_fctime);
 		return -1;
 	}
-	log_diag (2, "cdf_retrieve_laps: fctime coord = %d\n", 
+	if(DEBUG==1) printf( "cdf_retrieve_laps: fctime coord = %d\n", 
 		  dims.fctime_coord);
 
 /* get the level index of the data array */
@@ -17772,7 +17744,7 @@ char *ext;
 		printf("cdf_retrieve_laps: no level %d\n", i_level);
 		return -1;
 	}
-	log_diag (2, "cdf_retrieve_laps: level coord = %d\n", dims.level_coord);
+	if(DEBUG==1) printf( "cdf_retrieve_laps: level coord = %d\n", dims.level_coord);
 
 /* check the inventory variable to see if this grid is available */
 	i_invflag = cdf_check_laps_inv (i_cdfid, dims.level_coord, 
@@ -17786,11 +17758,11 @@ char *ext;
 	dims.x_dim = cdf_dim_size (i_cdfid, "lon");
 	dims.y_dim = cdf_dim_size (i_cdfid, "lat");
 
-	log_diag (2, "cdf_retrieve_laps: x = %d   y = %d\n",dims.x_dim,
+	if(DEBUG==1) printf( "cdf_retrieve_laps: x = %d   y = %d\n",dims.x_dim,
 							    dims.y_dim);
 
 /* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", s_field);
+	if(DEBUG==1) printf( "cdf_read_grid: data variable name = %s\n", s_field);
 	if ((i_varid = ncvarid (i_cdfid, s_field)) == (-1)) {
 		printf("cdf_retrieve_laps: no grid available.\n");
 		return -1;
@@ -21382,7 +21354,7 @@ long *status;
 /* convert LAPS variables to corresponding netCDF variables--unconv_var
    is a count of how many variables in c_var could not be converted */
 
-        unconv_var = get_cdf_var(ext,kkmax,c_var,cdf_var,process_var,
+        unconv_var = get_cdf_var(ext,kkmax,(char *)c_var,(char *)cdf_var,process_var,
         			 cdf_fctime);
 	
 /* open netCDF file for reading */

@@ -9,7 +9,7 @@ INSTALLROOT=@prefix@
 CC=@CC@
 
 CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@
-KRCFLAGS=@KRCFLAGS@ $(INC)
+#KRCFLAGS=@KRCFLAGS@ $(INC)
 
 FC       = @FC@
 
@@ -181,7 +181,7 @@ all: lib
 
 lib: $(LIB)
 
-$(LIB): $(LIB)(readwritelaps.o static_routines.o) $(ARCHIVE) 
+$(LIB): $(ARCHIVE) 
 	$(RANLIB) $@
 
 debug: 
@@ -193,10 +193,10 @@ install: lib
 clean:
 	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
 
-$(LIB)(readwritelaps.o static_routines.o): readwritelaps.c static_routines.c
-	$(CC) $(KRCFLAGS) $(CPPFLAGS) -c $*.c -o $*.o
-	$(AR) r $@ $*.o
-	rm  -f $*.o
+#$(LIB)(readwritelaps.o static_routines.o): readwritelaps.c static_routines.c
+#	$(CC) $(KRCFLAGS) $(CPPFLAGS) -c $*.c -o $*.o
+#	$(AR) r $@ $*.o
+#	rm  -f $*.o
 
 distclean: clean
 	rm -f Makefile

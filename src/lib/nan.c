@@ -1,3 +1,5 @@
+#include <config.h>
+
 #if defined(FORTRANUNDERSCORE)
 
 #define nan nan_

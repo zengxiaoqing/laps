@@ -41,6 +41,7 @@ Author:   Dan Birkenheuer
 Last modified: 3/24/94
 
 */
+#include <config.h>
 
 #include <stdio.h>
 #include <time.h>

@@ -57,6 +57,7 @@ isecs, the wait will be for the absolute value of isecs.
 */
 
 
+#include <config.h>
 
 #include <unistd.h>
 

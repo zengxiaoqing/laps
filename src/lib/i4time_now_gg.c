@@ -29,6 +29,7 @@ cdis
 cdis  
 cdis 
 cdis*/
+#include <config.h>
 #ifdef sun
 #include <sys/stdtypes.h>
 #endif
