@@ -18,7 +18,7 @@ c allowable values are:
 c        bgmodels = 0 ---> LAPS
 c        bgmodels = 1 ---> RUC60_NATIVE
 c        bgmodels = 2 ---> ETA48_CONUS
-c        bgmodels = 3 ---> TAIWAN_20FA_LAMBERT
+c        bgmodels = 3 ---> CWB_20FA_LAMBERT (_NF or _RE)
 c        bgmodels = 4 ---> RUC_ or ETA_ (SBN_CONUS_211_GRID)
 c        bgmodels = 5 ---> RUC40_NATIVE 
 c        bgmodels = 6 ---> AVN (_AFWA_DEGRIB or _FSL_NETCDF)
