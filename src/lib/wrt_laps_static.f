@@ -37,7 +37,7 @@ C Local variables
      1               ERROR(2),
      1               flag
 
-      integer*2      f_len
+      integer        f_len
 
       COMMON         /PRT/flag
 
