@@ -19,7 +19,6 @@
 !       Second observation data structure (just one variable)
         include 'barnesob.inc'
         type (barnesob_qc) obs_barnes(mxstn)
-        type (barnesob)    obs_barnes_valid(mxstn)
 
         real*4 tb(ni,nj)                                ! Background field
         real*4 t_2d(ni,nj)                              ! Analyzed field
@@ -31,42 +30,44 @@
      1           ,c_field      
 
 !       Transfer from 'obs' data structure to 'obs_barnes' data structure
-        n_obs = 0
         if(c_field .eq. 'tgd')then
             rinst_err = 1.5
-            do i = 1,mxstn
-                n_obs = n_obs + 1
-
-                ista = obs(i)%i
-                jsta = obs(i)%j
-                obs_barnes(i)%i = ista
-                obs_barnes(i)%j = jsta
-
-                obs_barnes(i)%k = 1
-                obs_barnes(i)%weight = 1. / rinst_err**2
-
-                if(obs(i)%sfct_f .ne. badflag)then
-                    obs_barnes(i)%qc = .true.
-                else
-                    obs_barnes(i)%qc = .false.
-                endif
-
-!               Reject obs (for now) if they are outside of the domain
-                if(ista .lt. 1 .or. ista .gt. ni 
-     1        .or. jsta .lt. 1 .or. jsta .gt. nj )then
-                    obs_barnes(i)%qc = .false.
-                endif
-
-!               Calculate difference of ob from the background
-                if(obs_barnes(i)%qc)then
-                    ob_full(i) = obs(i)%sfct_f
-                    ob_bkg(i)  = tb(ista,jsta)
-                    ob_diff(i) = ob_full(i) - ob_bkg(i)
-                    obs_barnes(i)%value(1) = ob_diff(i)
-                endif
-
-            enddo ! i
         endif
+
+        call get_sfcob_field(obs,mxstn,'tgd',ob_full,istatus)
+
+        n_obs = 0
+        do i = 1,mxstn
+            n_obs = n_obs + 1
+
+            ista = obs(i)%i
+            jsta = obs(i)%j
+            obs_barnes(i)%i = ista
+            obs_barnes(i)%j = jsta
+
+            obs_barnes(i)%k = 1
+            obs_barnes(i)%weight = 1. / rinst_err**2
+
+            if(obs(i)%sfct_f .ne. badflag)then
+                obs_barnes(i)%qc = .true.
+            else
+                obs_barnes(i)%qc = .false.
+            endif
+
+!           Reject obs (for now) if they are outside of the domain
+            if(ista .lt. 1 .or. ista .gt. ni 
+     1    .or. jsta .lt. 1 .or. jsta .gt. nj )then
+                obs_barnes(i)%qc = .false.
+            endif
+
+!           Calculate difference of ob from the background
+            if(obs_barnes(i)%qc)then
+                ob_bkg(i)  = tb(ista,jsta)
+                ob_diff(i) = ob_full(i) - ob_bkg(i)
+                obs_barnes(i)%value(1) = ob_diff(i)
+            endif
+
+        enddo ! i
 
 !       Calculate rms (stdev) of the ob-background differences
         cnt = 0
@@ -92,14 +93,15 @@
             if(obs_barnes(i)%qc)then
                 if(ob_diff(i) .ge. bad)then
                     obs_barnes(i)%qc = .false.
-                    write(6,1099) i, j, ob_full(i), ob_diff(i)
+                    write(6,1099) obs_barnes(i)%i, obs_barnes(i)%j
+     1                          , ob_full(i), ob_diff(i)
 1099	            format(1x,'bad data at i,j ',2i5,': value ',e12.4       
      1                    ,', diff ',e12.4)
                 endif
             endif
         enddo ! i
 
-        call get_fnorm_max(imax,jmax,r0_norm,r0_value_min,fnorm_max)   
+        call get_fnorm_max(ni,nj,r0_norm,r0_value_min,fnorm_max)   
         n_fnorm = int(fnorm_max) + 1
 
         weight_bkg_const = 5e28 ! a la wind.nl
@@ -107,7 +109,7 @@
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
 
-        if(.true.)return ! Temporary
+!       if(.true.)return ! Temporary
 
 !       Note that we do not need to fill to_2d_dum when l_struct = .true.
 !       Note that we don't need to fill l_boundary when l_struct = .true.
@@ -120,9 +122,12 @@
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
      1                   ,l_boundary,.false.,.true.              ! Input
-     1                   ,n_obs_valid,obs_barnes_valid           ! Input
+     1                   ,mxstn,obs_barnes                       ! Input
      1                   ,t_2d                                   ! Output
      1                   ,istatus)                               ! Output
+
+        write(6,*)' Adding incremental analysis to background'       
+        call add(t_2d,tb,t_2d,ni,nj)
 
         return
         end
@@ -211,6 +216,8 @@
      1                                        = obs_barnes(iob)%weight       
                 obs_barnes_valid(n_obs_valid)%value(1) 
      1                                        = obs_barnes(iob)%value(1)       
+                sumsq_inst = sumsq_inst 
+     1                     + 1. / obs_barnes_valid(n_obs_valid)%weight
             endif ! valid ob
           enddo ! iob
 
@@ -278,3 +285,27 @@
         return
         end
 
+
+        subroutine get_sfcob_field(obs,mxstn,c_field,ob_1d,istatus)
+
+        character*(*) c_field
+        real*4 ob_1d(mxstn)
+
+!       Input observation data structure (all variables)
+        include 'sfcob.inc'
+        type (sfcob) obs(mxstn)
+
+        if(c_field .eq. 'sfct_f' .or. c_field .eq. 'tgd')then
+            do i = 1,mxstn
+                ob_1d(i) = obs(i)%sfct_f
+            enddo ! i
+        else
+            write(6,*)' Error, unknown field in get_sfcob_field'
+            istatus = 0
+            return
+        endif
+
+        istatus = 1
+
+        return
+        end
