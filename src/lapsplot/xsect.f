@@ -296,6 +296,7 @@ c read in laps lat/lon and topo
         if(lun .eq. 5)call logit('nest7grid')
 
         i_graphics_overlay = 0
+        i_label_overlay = 0
         i_map = 0
         i_initialize = o
 
@@ -1719,6 +1720,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         call cv_i4tim_asc_lp(i4time_dum,asc_tim_24,istatus)
         asc_tim_24 = asc_tim_24(1:14)//asc_tim_24(16:17)//' '
 
+        i_label_overlay = i_label_overlay + 1
+
         if(i_image .eq. 0)then
             i_graphics_overlay = i_graphics_overlay + 1
             call setusv_dum(2hIN,icolors(i_graphics_overlay))
@@ -1727,6 +1730,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         endif
 
         write(6,*)' Plotting, Overlay = ',i_graphics_overlay
+     1                                   ,i_label_overlay
 
         if(l_atms)then
             c33_label = 'ATMS Approach Cross Section      '
@@ -1736,7 +1740,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         call set(0.,1.,0.,1.,0.,1.,0.,1.,1)
 
 !       Write bottom label
-        if(i_graphics_overlay .le. 1)then
+        if(i_label_overlay .le. 1)then
             ity = 35
             call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)
             call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)

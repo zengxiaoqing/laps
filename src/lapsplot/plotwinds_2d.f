@@ -47,7 +47,9 @@ cdis
 !       This variable keeps the barbs away from the boundary
         isize = 0 ! interval + 1
 
-        relsize = 61. / 200.
+        relsize = size_in
+
+        write(6,*) ' plot_winds_2d: interval/size=',interval,relsize
 
         do j = 1+isize,jmax-isize,interval
         do i = 1+isize,imax-isize,interval

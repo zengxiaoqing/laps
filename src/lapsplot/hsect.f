@@ -522,7 +522,7 @@ cdis
                     interval = 1
                 endif
 
-                size = ( float(max(NX_L,NY_L)) / 30. ) / float(interval)       
+                size = float(interval) * .14
 
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,interval
      1               ,asc9_tim_3dw
@@ -2855,7 +2855,7 @@ cdis
                 interval = 1
             endif
 
-            size = ( float(max(NX_L,NY_L)) / 30. ) / float(interval)
+            size = float(interval) * .15
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -4353,6 +4353,14 @@ c
             endif
 
 80      enddo ! i
+
+        if(iflag .eq. 1)then ! special mesonet label 
+            call cv_i4tim_asc_lp(i4time_file,atime,istatus)
+            atime = atime(1:14)//atime(16:17)//' '
+            ix = 512
+            iy = 512
+            call pwrity(cpux(ix),cpux(iy),atime(1:17),17,1,0,0)
+        endif
 
         return
         end
