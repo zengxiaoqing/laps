@@ -165,7 +165,7 @@ cdis
 
 ! ***   Remapping + Barnes Analysis of Profiler Data in u & v *****************
 
-        call remap_profiler(
+        call remap_profiles(
      1           ob_pr_u,ob_pr_v                                  ! I
      1          ,grid_laps_u,grid_laps_v,grid_laps_wt             ! I/O
      1          ,max_obs,obs_point,nobs_point                     ! I/O
@@ -285,7 +285,7 @@ cdis
         end
 
 
-        subroutine remap_profiler(
+        subroutine remap_profiles(
      1           ob_pr_u,ob_pr_v                                     ! I
      1          ,grid_laps_u,grid_laps_v,grid_laps_wt                ! I/O
      1          ,max_obs,obs_point,nobs_point                        ! I/O
@@ -350,6 +350,18 @@ cdis
                                 grid_laps_wt(i_ob,j_ob,k) = weight_prof       
                                 write(6,11)k,ob_u,ob_v
  11                             format(10x,i4,2f8.1)
+
+!                               Add to data structure (still is subsampling)
+                                nobs_point = nobs_point + 1
+                                obs_point(nobs_point)%i = i_ob
+                                obs_point(nobs_point)%j = j_ob
+                                obs_point(nobs_point)%k = k
+                                obs_point(nobs_point)%value(1) = ob_u
+                                obs_point(nobs_point)%value(2) = ob_v
+                                obs_point(nobs_point)%weight = 
+     1                                                weight_prof       
+                                obs_point(nobs_point)%type = 'prof'      
+
                             endif
 
                         endif ! In bounds vertically (of profile data)
