@@ -5363,6 +5363,7 @@ c             if(cint.eq.0.0)cint=0.1
         real*4 lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
+        real*4 n_plotted(NX_L,NY_L)
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 grid_ra_vel(imax,jmax,kmax)
 
@@ -5452,7 +5453,7 @@ c             if(cint.eq.0.0)cint=0.1
 2041                format('         Enter Radar # (0=all)',40x,'? ',$)       
                     read(5,*)i_radar
 
-                    idum1_array = 0
+                    n_plotted = 0
 
                     if(i_radar .gt. 0)then         ! single radar plot
                         i_radar_start = i_radar
@@ -5468,7 +5469,7 @@ c             if(cint.eq.0.0)cint=0.1
 !                   call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
                     call plot_obs(k_level,.true.,asc_tim_9(1:9)
      1                  ,i_radar_start,i_radar_end
-     1                  ,imax,jmax,kmax,idum1_array
+     1                  ,imax,jmax,kmax,n_plotted
      1                  ,grid_ra_ref,grid_ra_vel,lat,lon,topo,1)
                     return
                 endif
