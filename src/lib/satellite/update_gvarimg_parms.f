@@ -242,10 +242,11 @@ c        endif
          call get_gwc_oa(c_filenames(1),c_imc,orbitAttitude,336,
      &gstatus)
          if(gstatus.ne.0)then
-            write(6,*)'Error in get_gwc_oa. Trying read_orb_att.'
+            write(6,*)'error: get_gwc_oa '
             call get_directory('static',c_filespec,ld)
             c_filespec=c_filespec(1:ld)//'/lvd'
             ld=index(c_filespec, ' ')-1
+            print*,'try ',c_filespec(1:ld),'lvd/',cd6,'_orbatt.dat'
             call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
      &istatus)
             if(istatus.ne.0)then
@@ -256,7 +257,7 @@ c        endif
 c           call make_fnam_lp(i4time_nearest,c_fname,istatus)
 c           filename_cdf=cdir_path(1:n)//c_fname//'.oad'
 c           write(6,*)'Using: ',filename_cdf(1:100)
-            write(6,*)'Success in get_gwc_oanda'
+            write(6,*)'gwc O&A obtained '
          endif
 
          else
