@@ -704,6 +704,7 @@ c read in laps lat/lon and topo
         
         if(c_field(len_field:len_field) .eq. 'i' 
      1                    .and. c_field .ne. 'ri'
+     1                    .and. c_field .ne. 'ci'
      1                    .and. c_field .ne. 'dii')then
             i_image = 1
             c_field = c_field(1:len_field-1)
@@ -3692,7 +3693,7 @@ c
 
             call input_background_info(
      1                              ext                     ! I
-     1                             ,directory               ! O
+     1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,a9time                  ! O
