@@ -704,79 +704,77 @@ if($fxa_sys!=0){
         $sys = "$FXA_HOME/bin/$exe $radar $startWin $endWin $inputDir $outputDir";
         &forksub($sys,$lockfile);
 
-#=====================================================================
-#
-#       run remap_polar_netcdf.exe process
-#
-
-#       $exe = "remap_polar_netcdf.exe";
-#       $log = $exe;
-#       $log =~ s/\..*$/\.log\.$hhmm/;
-#       open(SAVEOUT,">>&STDOUT");
-#       open(SAVEERR,">>&STDERR");
-#       open(STDOUT, ">>$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
-#       open(STDERR, ">>&STDOUT") || die "Can't dup stdout";
-#       select(STDERR); $| = 1;
-#       select(STDOUT); $| = 1;
-
-#
-#       Make sure the requested program exists
-#
-
-#       unless(-x "$LAPSROOT/bin/$exe"){
-#         die "Program $LAPSROOT/bin/$exe not found or not executable";
-#       }
-
-#
-#       Look for a previous lock for this exe in the log directory
-#
-
-#       my(@locks);
-#       opendir(LOCKDIR,"$LAPS_LOG_PATH");
-#       @locks = grep /^\.lock$exe/, readdir(LOCKDIR);
-#       closedir(LOCKDIR);
-
-#       foreach(@locks){
-#         $_ =~ /^\.lock$exe\.(\d+)$/;
-#         my $jpid = $1;
-#         open(LFH,"$LAPS_LOG_PATH/$_");
-#         my $cid = <LFH>;
-#         close(LFH);
-#         next unless ($cid>1);
-#         open(PS,"ps -ef |");
-#         my @ps = <PS>;
-#         close(PS);
-
-#
-#         Kill any children of the child
-#
-
-#         foreach(@ps){
-#            if ($_ =~ /\s+(\d+)\s+$cid\s+/){
-#             print "Killing process $1\n";
-#             kill -9,$1;
-#           }
-#         }
-#
-#         Kill the child
-#    
-
-#         print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
-#         kill -9,$cid if($cid>0);
-#         unlink "$LAPS_LOG_PATH/$_";
-#       }
-
-#       $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
-
-#       $sys = "$LAPSROOT/bin/$exe ";
-
-#       &forksub($sys,$lockfile);
-
       }  # if $process == 1
 
     }  # if ($radar_avail[$radNo] != -1)
 
   }  #loop through radar_avail
+#=====================================================================
+#
+# run remap_polar_netcdf.exe process
+#
+
+  $exe = "remap_polar_netcdf.exe";
+  $log = $exe;
+  $log =~ s/\..*$/\.log\.$hhmm/;
+  open(SAVEOUT,">>&STDOUT");
+  open(SAVEERR,">>&STDERR");
+  open(STDOUT, ">>$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
+  open(STDERR, ">>&STDOUT") || die "Can't dup stdout";
+  select(STDERR); $| = 1;
+  select(STDOUT); $| = 1;
+
+#
+# Make sure the requested program exists
+
+
+  unless(-x "$LAPSROOT/bin/$exe"){
+    die "Program $LAPSROOT/bin/$exe not found or not executable";
+  }
+
+#
+# Look for a previous lock for this exe in the log directory
+#
+  my(@locks);
+  opendir(LOCKDIR,"$LAPS_LOG_PATH");
+  @locks = grep /^\.lock$exe/, readdir(LOCKDIR);
+  closedir(LOCKDIR);
+
+  foreach(@locks){
+    $_ =~ /^\.lock$exe\.(\d+)$/;
+    my $jpid = $1;
+    open(LFH,"$LAPS_LOG_PATH/$_");
+    my $cid = <LFH>;
+    close(LFH);
+    next unless ($cid>1);
+    open(PS,"ps -ef |");
+    my @ps = <PS>;
+    close(PS);
+
+#
+#   Kill any children of the child
+#
+
+    foreach(@ps){
+      if ($_ =~ /\s+(\d+)\s+$cid\s+/){
+        print "Killing process $1\n";
+        kill -9,$1;
+      }
+    }
+#
+#   Kill the child
+#    
+
+    print "WARNING Found LOCK file for $exe with pid $jpid and child $cid - killing process $cid\n";
+    kill -9,$cid if($cid>0);
+    unlink "$LAPS_LOG_PATH/$_";
+  }
+
+  $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
+
+  $sys = "$LAPSROOT/bin/$exe ";
+
+  &forksub($sys,$lockfile);
 
 }
 exit;
@@ -811,9 +809,3 @@ sub forksub{
       }
   }
 }
-
-
-
-
-
-
