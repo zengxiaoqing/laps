@@ -137,7 +137,7 @@ c
 
 !       Ob times contained in each file
         i4_contains_early = 0 
-        i4_contains_late = 3599
+        i4_contains_late = 0 ! 3599
 
         call get_filetime_range(before,after                
      1                         ,i4_contains_early,i4_contains_late       
@@ -148,8 +148,14 @@ c
 
             maxobs_in = maxobs-ix+1
 
-            write(6,*)' maxobs/maxobs_in (read_local_cwb call)'
-     1                 ,maxobs,maxobs_in
+            write(6,*)
+     1           ' maxobs/maxobs_in/i4time_file (read_local_cwb call)'       
+     1            ,maxobs,maxobs_in,i4time_file
+
+!           Note that 'ix' subscripts can be added in if we want to
+!           merge data from various filetimes. We currently read with
+!           just one filetime as that should cover the observation
+!           time window reasonably well for now.
 
             call read_local_cwb ( path_to_local_data, maxobs_in,
      ~                      badflag, ibadflag, i4time_file, 
