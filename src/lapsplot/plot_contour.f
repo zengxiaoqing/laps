@@ -37,6 +37,9 @@ cdis
 !     97-Aug-17     Ken Dritz     Commented out assignment to r_missing_data
 !                                 and inserted call to get_r_missing_data
 
+      data ihl/0/
+      save ihl
+
       real field(ni,nj)
 
       character*48 c_blank
@@ -57,16 +60,17 @@ cdis
          stop
       endif
 
-      ihl = 2
+!     ihl = 2
+      ihl = ihl + 1
 
       if(chigh_in .eq. clow_in)then ! special contouring (non-equal intervals)
           clow = clow_in
           chigh = chigh_in
           cint = cint_in
           lis = 1 ! labelling interval
-          ihl = ihl - 1
+!         ihl = ihl - 1
       else
-          ihl = 1
+!         ihl = 1
           clow = clow_in
           chigh = chigh_in
           cint = cint_in
@@ -206,6 +210,16 @@ C
         NHI = -1
 
 C --- Do contouring
+!      if (ihl.ge.1) then
+       if (.true.) then
+        call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.025)
+        call CPSETC('ILT',' ')
+        call cpseti('NSD',2)
+!       call cpseti('NLS',2)
+!       CALL CPSETI ('HIC', icol_current)
+!       CALL CPSETI ('HLC', icol_current)
+        if (ihl.ge.2) call cpsetc('HLT',' ')
+       end if
 
         call cpsetr ('LLS',.040)
         call cpseti ('CLS - contour level selection flag',20)
@@ -220,17 +234,6 @@ C --- Do contouring
         call cpgetr ('LLS - LINE LABEL SIZE',clls)           
 
         write(6,*)'IHL/LLS/ICOL = ',IHL,clls,icol_current
-
-!      if (ihl.ge.1) then
-       if (.true.) then
-        call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.025)
-        call CPSETC('ILT',' ')
-        call cpseti('NSD',2)
-!       call cpseti('NLS',2)
-        CALL CPSETI ('HLC - HIGH/LOW LABEL COLOR INDEX', icol_current)
-        if (ihl.eq.2) call cpsetc('LOT',' ')
-        if (ihl.eq.3) call cpsetc('HIT',' ')
-       end if
 
 
         CALL CPRECT (F,NX,NX,NY,RWRK,LRWK,IWRK,LIWK)

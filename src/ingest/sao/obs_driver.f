@@ -156,10 +156,6 @@ c
 c
         integer    wmoid(maxsta), jstatus, grid_spacing 
         integer    dpchar(maxsta), narg, iargc
-	integer    num_varb(maxsta), max_bvar
-	parameter  (max_bvar=20)  !max number of variables to blacklist...
-                                  !change 903 format statement if you make
-                                  !this greater than 20.
 c
         character  stations(maxsta)*20, provider(maxsta)*11
         character  weather(maxsta)*25 
@@ -170,8 +166,6 @@ c
 	character  filename9*9, filename13*13, a9time_metar_file*9
         character  fname9_to_wfo_fname13*13
 	character  data_file_m*150, data_file_l*150, data_file_b*150
-	character  dir_b*256, black_path*256, stations_b(maxsta)*20
-	character  var_b(maxsta,max_bvar)*3 
 c
         character*200 path_to_metar
         character*200 path_to_local_data
@@ -181,8 +175,6 @@ c
         character*8   a9_to_a8, a8_time
 c
         integer cnt
-	logical exists
-        data exists/.false./
         data cnt/0/
 c 
 c
@@ -520,6 +512,176 @@ c.....  Count up the obs.
 c
 	n_obs_g = n_sao_g + n_local_g + n_buoy_g + n_gps_g
 	n_obs_b = nn
+
+c       Call subroutine to blacklist the stations in the "store" arrays
+        call apply_blacklist(      maxsta,n_obs_b,stations
+     1                            ,store_1,store_2,store_3
+     1                            ,store_4,store_5,store_6
+     1                            ,store_7,badflag)
+
+c
+!       Final QC check 
+        call get_ibadflag(ibadflag,istatus)
+        if(istatus .ne. 1)return
+
+!       Replace blank/UNK station names with wmoid if possible, else set blank
+        iblank = 0
+        do i = 1,n_obs_b
+            call s_len(stations(i),lensta)
+            if(lensta .eq. 0 .or. stations(i)(1:3) .eq. 'UNK')then
+                if(wmoid(i) .ne. ibadflag .and. wmoid(i) .ne. 0)then
+                    write(stations(i),511,err=512)wmoid(i)
+ 511		    format(i8)
+ 512		    continue
+                else
+                    stations(i) = 'UNK                 '
+                    iblank = iblank + 1
+                endif
+            endif
+        enddo
+
+        if(iblank .gt. 0)then
+            write(6,*)' Warning: number of UNK stanames = ',iblank       
+        endif
+
+!       Count pressure obs
+        nalt = 0
+        nstp = 0
+        nmsl = 0
+        nalt_and_msl = 0
+        nalt_or_msl = 0
+        do i = 1,n_obs_b
+            if(store_4(i,1) .ne. badflag)then
+                nalt = nalt+1
+            endif
+            if(store_4(i,2) .ne. badflag)then
+                nstp = nstp+1
+            endif
+            if(store_4(i,3) .ne. badflag)then
+                nmsl = nmsl+1
+            endif
+            if(store_4(i,1) .ne. badflag .and. 
+     1         store_4(i,3) .ne. badflag            )then
+                nalt_and_msl = nalt_and_msl+1
+            endif
+            if(store_4(i,1) .ne. badflag .or. 
+     1         store_4(i,3) .ne. badflag            )then
+                nalt_or_msl = nalt_or_msl+1
+            endif
+        enddo ! i
+
+        write(6,*)
+        write(6,*)' # of stations reporting altimeter         ',nalt
+        write(6,*)' # of stations reporting station pressure  ',nalt
+        write(6,*)' # of stations reporting MSL pressure      ',nmsl
+        write(6,*)' # of stations reporting altimeter and MSLP'
+     1                                                 ,nalt_and_msl    
+        write(6,*)' # of stations reporting altimeter or MSLP '
+     1                                                 ,nalt_or_msl    
+
+!       Check for no obs
+        if(nn .eq. 0)then
+            write(6,*)' WARNING: no LSO written due to no obs'
+            return
+        endif
+
+c
+c.....  Call the routine to write the LSO file.
+c
+
+        print *
+	print *,'  Writing LSO file, # of obs (in box) = ',n_obs_b
+c
+        call write_surface_obs(atime,outfile,n_obs_g,
+     &    n_obs_b,wmoid,stations,provider,weather,reptype,atype,
+     &    store_1,store_2,store_3,store_4,store_5,store_6,store_7,
+     &    store_2ea,store_3ea,store_4ea,store_5ea,store_6ea,
+     &    store_cldamt,store_cldht,maxsta,jstatus)
+c
+c.....	That's about it...let's go home.
+c
+	write(6,*)' Normal completion of OBS_DRIVER'
+
+	end
+
+
+ 
+       subroutine get_obs_driver_parms(path_to_metar
+     1                         ,path_to_local_data
+     1                         ,path_to_buoy_data
+     1                         ,path_to_gps_data
+     1                         ,metar_format
+     1                         ,minutes_to_wait_for_metars
+     1                         ,ick_metar_time
+     1                         ,itime_before,itime_after
+     1                         ,maxobs
+     1                         ,istatus)
+
+       character*200 path_to_metar
+       character*200 path_to_local_data
+       character*200 path_to_buoy_data
+       character*200 path_to_gps_data
+       character*8   metar_format
+
+       namelist /obs_driver_nl/ path_to_metar
+     1                         ,path_to_local_data
+     1                         ,path_to_buoy_data
+     1                         ,path_to_gps_data
+     1                         ,metar_format
+     1                         ,minutes_to_wait_for_metars
+     1                         ,ick_metar_time
+     1                         ,itime_before,itime_after
+     1                         ,maxobs
+ 
+       character*150 static_dir,filename
+ 
+       call get_directory('nest7grid',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/obs_driver.nl'
+ 
+       open(1,file=filename,status='old',err=900)
+       read(1,obs_driver_nl,err=901)
+       close(1)
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading obs_driver_nl in ',filename
+       write(*,obs_driver_nl)
+       istatus = 0
+       return
+ 
+       end
+
+
+        subroutine apply_blacklist(maxsta,n_obs_b,stations
+     1                            ,store_1,store_2,store_3
+     1                            ,store_4,store_5,store_6
+     1                            ,store_7,badflag)
+
+	integer    num_varb(maxsta), max_bvar
+	parameter  (max_bvar=20)  !max number of variables to blacklist...
+                                  !change 903 format statement if you make
+                                  !this greater than 20.
+
+	character  dir_b*256, black_path*256, stations_b(maxsta)*20
+	character  var_b(maxsta,max_bvar)*3 
+        character  stations(maxsta)*20
+
+	real    store_1(maxsta,4), 
+     &          store_2(maxsta,3), 
+     &          store_3(maxsta,4), 
+     &          store_4(maxsta,5), 
+     &          store_5(maxsta,4), 
+     &          store_6(maxsta,5), 
+     &          store_7(maxsta,3)
+
+	logical exists
+        data exists/.false./
 c
 c.....  Check for a blacklist file.  If one exists, read it
 c.....  and flag the variables listed for each blacklist station
@@ -636,143 +798,10 @@ c
 	      endif
 	   enddo !i
 	enddo !ibl
-c
-c.....  Call the routine to write the LSO file.
-c
-c
+
 	print *,' '
 	print *,'  Done with blacklisting.'
  505	continue
 
-!       Final QC check 
-        call get_ibadflag(ibadflag,istatus)
-        if(istatus .ne. 1)return
-
-!       Replace blank/UNK station names with wmoid if possible, else set blank
-        iblank = 0
-        do i = 1,n_obs_b
-            call s_len(stations(i),lensta)
-            if(lensta .eq. 0 .or. stations(i)(1:3) .eq. 'UNK')then
-                if(wmoid(i) .ne. ibadflag .and. wmoid(i) .ne. 0)then
-                    write(stations(i),511,err=512)wmoid(i)
- 511		    format(i8)
- 512		    continue
-                else
-                    stations(i) = 'UNK                 '
-                    iblank = iblank + 1
-                endif
-            endif
-        enddo
-
-        if(iblank .gt. 0)then
-            write(6,*)' Warning: number of UNK stanames = ',iblank       
-        endif
-
-!       Count pressure obs
-        nalt = 0
-        nstp = 0
-        nmsl = 0
-        nalt_and_msl = 0
-        nalt_or_msl = 0
-        do i = 1,n_obs_b
-            if(store_4(i,1) .ne. badflag)then
-                nalt = nalt+1
-            endif
-            if(store_4(i,2) .ne. badflag)then
-                nstp = nstp+1
-            endif
-            if(store_4(i,3) .ne. badflag)then
-                nmsl = nmsl+1
-            endif
-            if(store_4(i,1) .ne. badflag .and. 
-     1         store_4(i,3) .ne. badflag            )then
-                nalt_and_msl = nalt_and_msl+1
-            endif
-            if(store_4(i,1) .ne. badflag .or. 
-     1         store_4(i,3) .ne. badflag            )then
-                nalt_or_msl = nalt_or_msl+1
-            endif
-        enddo ! i
-
-        write(6,*)' # of stations reporting altimeter         ',nalt
-        write(6,*)' # of stations reporting station pressure  ',nalt
-        write(6,*)' # of stations reporting MSL pressure      ',nmsl
-        write(6,*)' # of stations reporting altimeter and MSLP'
-     1                                                 ,nalt_and_msl    
-        write(6,*)' # of stations reporting altimeter or MSLP '
-     1                                                 ,nalt_or_msl    
-
-!       Check for no obs
-        if(nn .eq. 0)then
-            write(6,*)' WARNING: no LSO written due to no obs'
-            return
-        endif
-
-        print *
-	print *,'  Writing LSO file, # of obs (in box) = ',n_obs_b
-c
-        call write_surface_obs(atime,outfile,n_obs_g,
-     &    n_obs_b,wmoid,stations,provider,weather,reptype,atype,
-     &    store_1,store_2,store_3,store_4,store_5,store_6,store_7,
-     &    store_2ea,store_3ea,store_4ea,store_5ea,store_6ea,
-     &    store_cldamt,store_cldht,maxsta,jstatus)
-c
-c.....	That's about it...let's go home.
-c
-	write(6,*)' Normal completion of OBS_DRIVER'
-
-	end
-
-
- 
-       subroutine get_obs_driver_parms(path_to_metar
-     1                         ,path_to_local_data
-     1                         ,path_to_buoy_data
-     1                         ,path_to_gps_data
-     1                         ,metar_format
-     1                         ,minutes_to_wait_for_metars
-     1                         ,ick_metar_time
-     1                         ,itime_before,itime_after
-     1                         ,maxobs
-     1                         ,istatus)
-
-       character*200 path_to_metar
-       character*200 path_to_local_data
-       character*200 path_to_buoy_data
-       character*200 path_to_gps_data
-       character*8   metar_format
-
-       namelist /obs_driver_nl/ path_to_metar
-     1                         ,path_to_local_data
-     1                         ,path_to_buoy_data
-     1                         ,path_to_gps_data
-     1                         ,metar_format
-     1                         ,minutes_to_wait_for_metars
-     1                         ,ick_metar_time
-     1                         ,itime_before,itime_after
-     1                         ,maxobs
- 
-       character*150 static_dir,filename
- 
-       call get_directory('nest7grid',static_dir,len_dir)
-
-       filename = static_dir(1:len_dir)//'/obs_driver.nl'
- 
-       open(1,file=filename,status='old',err=900)
-       read(1,obs_driver_nl,err=901)
-       close(1)
-
-       istatus = 1
-       return
-
-  900  print*,'error opening file ',filename
-       istatus = 0
-       return
-
-  901  print*,'error reading obs_driver_nl in ',filename
-       write(*,obs_driver_nl)
-       istatus = 0
-       return
- 
-       end
-
+        return
+        end

@@ -4425,7 +4425,7 @@ c                   cint = -1.
             c_metacode = 'c '
             i_overlay = 1
 
-            i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
+!           i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
 !       1                                            -laps_cycle_time
             call setusv_dum(2hIN,34)
 
@@ -4438,7 +4438,7 @@ c                   cint = -1.
 
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y '
-     1  .or. c_metacode .eq. 'c ')then
+     1    .or. c_metacode .eq. 'c ')then
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
 !                call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)      

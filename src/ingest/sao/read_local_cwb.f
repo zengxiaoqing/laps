@@ -31,7 +31,7 @@ c
         character inpath*(*), stn_id*3
      1           ,a9_to_a8*8, a9time*9, a8time*8, a6time*6, filename*80
      1           ,line*132, hhmm*4, cvt_i4time_wfo_fname13*13
-     1           ,a13time*13, a13time_ob*13, c5_blank*5 
+     1           ,a13time_eat*13, a13time_ob_eat*13, c5_blank*5 
 
 
         character*100 c1dum, c2dum, c3dum     
@@ -75,14 +75,14 @@ c
 !       if(.true.)goto980 ! for testing
 
 c
-        i4time_file = i4time_sys + 8*3600                 ! convert GMT to EAT
+        i4time_file_eat = i4time_sys + 8*3600             ! convert GMT to EAT
 
-        a13time = cvt_i4time_wfo_fname13(i4time_file)
+        a13time_eat = cvt_i4time_wfo_fname13(i4time_file_eat)
 
         filename = 'Data.CWB.MSO.'
-     1                  //a13time(1:4)//'-'//a13time(5:6) ! yyyy_mm
-     1                  //'-'//a13time(7:8)               ! dd
-     1                  //'_'//a13time(10:13)             ! hhmm
+     1                  //a13time_eat(1:4)//'-'//a13time_eat(5:6) ! yyyy_mm
+     1                  //'-'//a13time_eat(7:8)                   ! dd
+     1                  //'_'//a13time_eat(10:13)                 ! hhmm
      1                  //'_m.pri'
 
         write(6,*)' Mesonet file ',filename
@@ -112,11 +112,11 @@ c
             endif
         enddo ! i
 
-        a13time_ob = line(idash-4:idash-1)//line(idash+1:idash+2)    ! yyyymm
-     1             //line(idash+4:idash+5)//'_'                      ! dd
-     1             //line(idash+7:idash+8)//line(idash+10:idash+11)  ! hhmm
+        a13time_ob_eat = line(idash-4:idash-1)//line(idash+1:idash+2)   ! yyyymm
+     1                 //line(idash+4:idash+5)//'_'                     ! dd
+     1                 //line(idash+7:idash+8)//line(idash+10:idash+11) ! hhmm
 
-        i4time_rcvd = cvt_wfo_fname13_i4time(a13time_ob)
+        i4time_rcvd_eat = cvt_wfo_fname13_i4time(a13time_ob_eat)
 
 !       Parse the string into contiguous characters
         ivar = 1
@@ -229,19 +229,20 @@ c
  	stname(num) = stn_id//'  '
 c
 c       Correct received time to arrive at actual observation time
-        isecofday_ob = ihr_ob * 3600 + imin_ob * 60
-        isecofday_rcvd = i4time_rcvd - (i4time_rcvd/86400)*86400
+        isecofday_ob_eat = ihr_ob * 3600 + imin_ob * 60
+        isecofday_rcvd_eat = i4time_rcvd_eat 
+     1                    - (i4time_rcvd_eat/86400)*86400
 
-        idiff_sec = isecofday_ob - isecofday_rcvd
+        idiff_sec = isecofday_ob_eat - isecofday_rcvd_eat
         if(idiff_sec .lt. -43200)idiff_sec = idiff_sec + 86400
         if(idiff_sec .gt. +43200)idiff_sec = idiff_sec - 86400
 
-        i4time_ob = i4time_rcvd + idiff_sec
-        i4time_ob_a(num) = i4time_ob
+        i4time_ob_eat = i4time_rcvd_eat + idiff_sec 
+        i4time_ob_a(num) = i4time_ob_eat - 8*3600 ! EAT to GMT time zone change
 c
         if(num .le. 100)then
-            write(6,*)'date/time at station: ', stn_id,' ',a13time_ob
-     1                                        ,idiff_sec
+            write(6,*)'date/time at station: ', stn_id,' '
+     1                ,a13time_ob_eat,idiff_sec
         endif
 c
         if(idir.gt.36 .or. idir.lt.0) then
@@ -268,17 +269,17 @@ c
            td(num) = c_to_f(rtd) 
         endif
 c
-        if(irh .lt. 0) then
-           rh(num) = badflag
-        else
-           rh(num) = float(irh)
-        endif
+!       if(irh .lt. 0) then
+!          rh(num) = badflag
+!       else
+!          rh(num) = float(irh)
+!       endif
 c
-        if(iprecip .lt. 0) then
-           pcp(num) = badflag
-        else
-           pcp(num) = float(iprecip) * 0.1 * 0.03937 !conv mm to inch
-        endif
+!       if(iprecip .lt. 0) then
+!          pcp(num) = badflag
+!       else
+!          pcp(num) = float(iprecip) * 0.1 * 0.03937 !conv mm to inch
+!       endif
 c
         if(rstnp .le. 0) then
            stnp(num) = badflag

@@ -27,10 +27,13 @@ c
         real t(maxobs), td(maxobs), rh(maxobs)
         real dd(maxobs), ff(maxobs)
         real stnp(maxobs), mslp(maxobs), pcp(maxobs)
-        real rtime(maxobs)
+
         integer    wmoid(maxobs)
+        integer    rtime
         integer*4  i4time_ob_a(maxobs), before, after
+
         character  stname(maxobs)*5
+	character  timech*9, time*4
         character  provider(maxobs)*11
         character  weather(maxobs)*25
         character  reptype(maxobs)*6, atype(maxobs)*6
@@ -128,6 +131,8 @@ c
 
         n_local_all = ix - 1
         write(6,*)' n_local_all = ',n_local_all
+
+        max_write = 100
 c
 c
 c..................................
@@ -207,7 +212,23 @@ c
 c.....  If you want to check the valid time, or if there are more than
 c.....  one report from this station, put that here.
 c
+c
+c.....  Check to see if its in the desired time window.
+c
+	   if(i4time_ob_a(i) .lt. before 
+     1   .or. i4time_ob_a(i) .gt. after) then
+               write(6,91,err=125)i,stname(i)
+     1                               ,a9time_a(i),before
+     1                               ,after
+ 91            format(i6,1x,a8,' out of time ',a11,2i12)
+               go to 125
+           endif
+c
+c.....  Right time, right location...
 
+           timech = a9time_a(i)
+	   time = timech(6:9)
+	   read(time,*) rtime
 c          	
 	   nn = nn + 1
 
@@ -284,7 +305,7 @@ c
 	 store_1(nn,1) = lats(i)                ! station latitude
 	 store_1(nn,2) = lons(i)                ! station longitude
 	 store_1(nn,3) = elev(i)                ! station elevation (m)
-	 store_1(nn,4) = rtime(i)               ! observation time
+	 store_1(nn,4) = rtime                  ! observation time
 c	
 	 store_2(nn,1) = t(i)                   ! temperature (deg F)
 	 store_2(nn,1) = td(i)                  ! dew point (deg F)

@@ -163,7 +163,7 @@ cdis
 
         common /MCOLOR/mini,maxi
 
-        real xcoord(100),ycoord(100)
+        real xcoord(NX_C),ycoord(NX_C)
 
 !       COMMON /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
 
@@ -273,6 +273,24 @@ cdis
 
 !       sizem = 1.0
         sizel = 2.0
+
+        vxmin = .10
+        vxmax = .90
+        vymin = .20
+        vymax = .80
+
+        vymin2 = .50 - (.50-vymin) * 1.25
+        vymax2 = .50 + (vymax-.50) * 1.25
+
+        if(vymin .eq. .10)then
+            iyl_remap = 13
+            iyh_remap = 8
+        elseif(vymin .eq. .20)then
+            iyl_remap = 33
+            iyh_remap = 28
+        else
+            write(6,*)' Error, invalid vymin ',vymin
+        endif
 
         ioffm = 1 ! Don't plot label stuff in conrec
 
@@ -1138,7 +1156,8 @@ c read in laps lat/lon and topo
      1           NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
             endif
 
-            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, bottom, top,1)
 
             write(6,*)' Generating Reflectivity Image'
             do i = 1,NX_C-1
@@ -1221,7 +1240,8 @@ c read in laps lat/lon and topo
         elseif(c_field .eq. 'cf' )then ! Cloud Gridded Image
             i_image = 1
 
-            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, bottom, top,1)
 
             call setusv_dum(2hIN,2)
 
@@ -1248,7 +1268,7 @@ c read in laps lat/lon and topo
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
      1                           ,NX_P, 11, NX_P-10
-     1                           ,NX_P, 13, NX_P- 8
+     1                           ,NX_P, iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
 
             write(6,*)' calling solid fill cloud plot'
@@ -1257,7 +1277,8 @@ c read in laps lat/lon and topo
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
 
-            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, bottom, top,1)
 
             call setusv_dum(2hIN,2)
 
@@ -1847,18 +1868,14 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         write(6,*)' Plotting, Overlay = ',i_graphics_overlay
      1                                   ,i_label_overlay
 
-        if(l_atms)then
-            c33_label = 'ATMS Approach Cross Section      '
-        endif
-
         call upcase(c33_label,c33_label)
-        call set(0.,1.,0.,1.,0.,1.,0.,1.,1)
+        call set(0., 1., vymin2, vymax2, 0.,1.,0.,1.,1)
 
 !       Write bottom label
         if(i_label_overlay .le. 1)then
             ity = 35
-            call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)
-            call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+            call pwrity(cpux(320),cpux(ity),c33_label,33,1,0,0)
+            call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,1,0,0)
         endif
 
         if(i_map .eq. 0)then
@@ -1867,12 +1884,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             call setusv_dum(2hIN,7)
 
-            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, bottom, top,1)
 
 !           This lets up plot outside the main box
-            call set(.00, 1.0, .00, 1.0, rleft - width/8., right + width
-     1/8.,
-     1           bottom - r_height/8., top + r_height/8.,1)
+            call set(.00, 1.0, vymin2 , vymax2
+     1             , rleft - width/8., right + width/8.,
+     1               bottom - r_height/8., top + r_height/8.,1)
 
 !           Draw box enclosing graph
             xcoord(1) = rleft
@@ -1889,46 +1907,20 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call curve (xcoord, ycoord, npts)
 
 !           Label Left Axis
-            if(l_atms)then ! Label Height (kft msl) on Left Axis
-                Do i = 4,30,2
-                    y = height_to_zcoord(i*304.8,istatus)  ! m / kft
-                    call line (rleft, y, rleft + width * .015, y )
-
-!                   Height
-                    x = rleft - width * .055
-                    iht_kft = i
-                    write(c4_string,2014)iht_kft
-                    call pwrity (x, y, c4_string, 4, 1, 0, 0)
-                enddo
-
-                Do i = 35,50,5
-                    y = height_to_zcoord(i*304.8,istatus)  ! m / kft
-                    call line (rleft, y, rleft + width * .015, y )
-
-!                   Height
-                    x = rleft - width * .055
-                    iht_kft = i
-                    write(c4_string,2014)iht_kft
-                    call pwrity (x, y, c4_string, 4, 1, 0, 0)
-                enddo
-
-                call pwrity (rleft - .090 * width,bottom + r_height*0.5,
-     1          'HEIGHT (KFT MSL)',16,2,90,0)
-
-            else ! Label pressure on left axis
+            if(.true.)then ! Label Height (kft msl) on Left Axis
                 Do i = ibottom,NZ_C
                     y = i
                     call line (rleft, y, rleft + width * .015, y )
 
 !                   Pressure
-                    x = rleft - width * .045
+                    x = rleft - width * .030
                     ipres_mb = nint(zcoord_of_level(i)/100.)
                     write(c4_string,2014)ipres_mb
-                    call pwrity (x, y, c4_string, 4, 1, 0, 0)
+                    call pwrity (x, y, c4_string, 4, 0, 0, 0)
 2014                format(i4)
                 end do
-                call pwrity (rleft - .090 * width,bottom + r_height*0.5,
-     1          ' PRESSURE (HPA) ',16,2,90,0)
+                call pwrity (rleft - .070 * width,bottom + r_height*0.5,
+     1          ' PRESSURE (HPA) ',16,1,90,0)
 !           endif
 
 
@@ -1944,12 +1936,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                         x = right + width * .015
                         iht_km = i
                         write(c4_string,2014)iht_km
-                        call pwrity (x, y, c4_string, 4, 1, 0, 0)
+                        call pwrity (x, y, c4_string, 4, 0, 0, 0)
                     endif
 
                 end do
-                call pwrity (right + .090 * width,bottom + r_height*0.5,
-     1          'HEIGHT  (KM MSL)',16,2,270,0)
+                call pwrity (right + .070 * width,bottom + r_height*0.5,
+     1          'HEIGHT  (KM MSL)',16,1,270,0)
             endif
 
 
@@ -1976,7 +1968,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 
         if(i_contour .eq. 1)then
-            call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, bottom, top,1)
 
             mini = icolors(i_graphics_overlay)
             maxi = icolors(i_graphics_overlay)
@@ -2019,8 +2012,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
      1                           ,NX_P, 11, NX_P-10
-     1                           ,NX_P, 13, NX_P- 8
+     1                           ,NX_P, iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
+
 
                     call conrec_line
      1              (field_vert3(1,ibottom),NX_P,NX_P,NX_P
@@ -2053,7 +2047,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
      1                           ,NX_P, 11, NX_P-10
-     1                           ,NX_P, 13, NX_P- 8
+     1                           ,NX_P, iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
 
                 call conrec_line
@@ -2082,15 +2076,16 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         if(i_contour .eq. 2)then ! Plot Wind Barbs
             call setusv_dum(2hIN,icolors(i_graphics_overlay))
 
-            call set(.10, .90, .10, .90, rleft, right, rleft, right,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, rleft, right,1)
             du=0.4
             rot = 0.
             do i = NX_C,1,-3
-                rk_terrain = max(height_to_zcoord(terrain_vert1d(i),ista
-     1tus),1.0)
+                rk_terrain = 
+     1          max(height_to_zcoord(terrain_vert1d(i),istatus),1.0)
                 do k = ibottom,NZ_C
                     if(u_vert(i,k) .ne. r_missing_data .and.
-     1         v_vert(i,k) .ne. r_missing_data .and.
+     1                 v_vert(i,k) .ne. r_missing_data .and.
      1                abs(u_vert(i,k)) .lt. 1e6      )then
                         x1 = i
                         y1 = (k-ibottom) * float(NX_C-1)
@@ -2110,7 +2105,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         endif ! i_contour = 2
 
         if(i_contour .eq. 3)then ! Plot Cloud Type
-            call set(.10, .90, .10, .90, rleft, right, rleft, right,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, rleft, right,1)
             du=0.4
             rot = 0.
             do i = NX_C,1,-2
@@ -2133,7 +2129,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         endif ! i_contour = 3
 
         if(i_contour .eq. 4)then ! Plot Icing Index
-            call set(.10, .90, .10, .90, rleft, right, rleft, right,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, rleft, right,1)
             du=0.4
             rot = 0.
             do i = NX_C,1,-1
@@ -2176,7 +2173,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         if(i_contour .eq. 5)then ! Plot Precip Type
             call setusv_dum(2hIN,icolors(i_graphics_overlay))
 
-            call set(.10, .90, .10, .90, rleft, right, rleft, right,1)
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, rleft, right,1)
             do i = NX_C,1,-1
                 do k = ibottom+1,NZ_C
                     i_precip_type = field_2d(i,k)
@@ -2198,7 +2196,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 9999    continue
 
 !       Contour in the terrain surface
-        call set(.10, .90, .10, .90, rleft, right, bottom, top,1)
+        call set(vxmin, vxmax, vymin, vymax
+     1         , rleft, right, bottom, top,1)
         n_div = 20
         call setusv_dum(2hIN,3)
 
@@ -2211,13 +2210,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                                  ,pres_2d,0,istatus)
         IF(istatus .ne. 1)THEN
             write(6,*)' Error Reading Surface Pressure Analysis'
-            write(6,*)' Converting Terrain to Sfc Pressure with Std Atmo
-     1sphere'
+            write(6,*)
+     1        ' Converting Terrain to Sfc Pressure with Std Atmosphere'       
             istat_sfc_pres = 0
         else
-            call interp_2d
-     1     (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
-     1                 NX_L,NY_L,NX_C,r_missing_data)
+            call interp_2d(pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NX_C,r_missing_data)
             istat_sfc_pres = 1
         endif
 
@@ -2226,8 +2224,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             if(istat_sfc_pres .eq. 1)then
                 ycoord(i) = max(zcoord_of_pressure(pres_1d(i)),1.0)
             else
-                ycoord(i) = max(height_to_zcoord(terrain_vert1d(i),istat
-     1us),1.0)
+                ycoord(i) = 
+     1            max(height_to_zcoord(terrain_vert1d(i),istatus),1.0)
             endif
 
             if(i .gt. 1)then
@@ -2246,9 +2244,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         if(l_sta)then ! Label location of station
 
 !          This lets up plot outside the main box
-           call set(.00, 1.0, .00, 1.0, rleft - width/8., right + width/
-     18.,
-     1        bottom - r_height/8., top + r_height/8.,1)
+           call set(.00, 1.0, vymin2 , vymax2
+     1             , rleft  - width/8.   , right + width/8.
+     1             , bottom - r_height/8., top   + r_height/8. ,1)
 
            x = pos_sta
            write(6,*)'     Labelling ',c3_sta,pos_sta
@@ -2273,9 +2271,10 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                i4time_label = i4time_ref/laps_cycle_time*laps_cycle_time
      1                                          -laps_cycle_time
 
-               call label_other_stations(i4time_label,standard_longitude
-     1        ,y,xsta,lat,lon,NX_L,NY_L
-     1  ,xlow,xhigh,ylow,yhigh,NX_C,bottom,r_height,maxstns)
+               call label_other_stations(i4time_label,standard_longitude       
+     1                                  ,y,xsta,lat,lon,NX_L,NY_L
+     1                                  ,xlow,xhigh,ylow,yhigh
+     1                                  ,NX_C,bottom,r_height,maxstns)
 
            endif
 
@@ -2284,7 +2283,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
            if(.not. l_atms)then
 
 !              This lets up plot outside the main box
-               call set(.00, 1.0, .00, 1.0
+               call set(.00, 1.0, vymin2 , vymax2
      1                , rleft - width/8., right + width/8.
      1                , bottom - r_height/8., top + r_height/8.,1)
 
