@@ -44,6 +44,7 @@ EXEDIRS = src/accum \
           src/ingest/sao \
           src/ingest/satellite/goes8/lambert \
           src/ingest/satellite/goes8/lambert/table \
+          src/ingest/satellite/sounding \
           src/lapsplot \
           src/sched \
           src/sfc \

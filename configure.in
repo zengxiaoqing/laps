@@ -108,7 +108,7 @@ AC_FC_BYTE_UNSIGNED
 AC_FC_BYTE_SIGNED
 AC_FC_INT1
 
-exit
+#exit
 if test $ac_fc_inc_val -eq 0
 then
   F77INC="util/f77inc.in"
@@ -225,6 +225,7 @@ AC_OUTPUT(src/lib/Makefile
           src/ingest/sao/Makefile
           src/ingest/satellite/goes8/lambert/Makefile
           src/ingest/satellite/goes8/lambert/table/Makefile
+          src/ingest/satellite/sounding/Makefile
           src/lapsplot/Makefile
           src/sched/Makefile
           src/sfc/Makefile
