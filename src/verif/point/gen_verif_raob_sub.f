@@ -77,6 +77,7 @@ cdis
       logical           lrunbal
 
       character*1       type_obs
+      character*3       cpads_type
       character*8       c8_project
       character*150     path_to_raw_profiler
       character*150     path_to_raw_sounding
@@ -120,7 +121,7 @@ c     call s_len(verif_output_bal,bal_len)
 
       call get_c8_project(c8_project,istatus)
       call upcase(c8_project,c8_project)
-      call get_balance_nl(lrunbal,adv_anal_by_t_min,istatus)
+      call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
          stop
