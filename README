@@ -1087,11 +1087,12 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                       ----   2.3.6  RAOBs ---
 
      RAOBs (snd):
-           FSL NIMBUS, WFO Advanced (except that a few software changes are 
-           needed for the slightly different CDL), CWB, or AFWA databases. 
-           These are available in real-time from FSL with some restrictions. 
-           This data, in 'WFO/AWIPS' NetCDF format, is distributed via FSL's
-           MADIS project at http://www-sdd.fsl.noaa.gov/MADIS/
+           FSL NIMBUS, WFO/AWIPS (except that a few software changes are 
+           currently being developed and tested for the different WFO CDL), 
+           CWB, or AFWA databases. These are available in real-time from FSL 
+           with some restrictions. This data, in 'WFO/AWIPS' NetCDF format, is
+           distributed via FSL's MADIS project at 
+           http://www-sdd.fsl.noaa.gov/MADIS/
 
                       ----   2.3.7  Satellite ---
 
