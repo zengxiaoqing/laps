@@ -40,17 +40,17 @@ OBJS=$(SRC:.f=.o)
 all:	$(EXE1) $(EXE2)
 
 $(EXE1):$(OBJS)
-	$(FC) -o $(EXE1) $(MAIN1) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIB) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
+	$(FC) -o $(EXE1) $(FFLAGS) $(MAIN1) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIB) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
 	rm -f *.o
 
 $(EXE2):$(OBJS)
-	$(FC) -o $(EXE2) $(MAIN2) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIB) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
+	$(FC) -o $(EXE2) $(FFLAGS) $(MAIN2) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIB) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
 	rm -f *.o
 
 debug: $(SRC)
 	$(RM) $(EXE1) $(RM) $(EXE2) ;
 	$(MAKE) LAPSLIBS='$(DBLAPSLIB)' LIB='$(DEBUGLIB)' MTHERMOLIB='$(DBMTHERMOLIB)' UTILLIB='$(DBUTILLIB)' \
-	FFLAGS='$(DBFFLAGS)'
+	FFLAGS='$(DBFLAGS)'
 
 install: all
 	$(INSTALL) $(EXE1) $(INSTALLROOT)/bin/$(EXE1); \
