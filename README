@@ -66,8 +66,8 @@
          3.2.9 ..................  RAOB + Satellite Sounding (SND) Ingest
          3.2.10 .................  Cloud Drift Wind (CDW) Ingest
          3.2.11 .................  Surface Data Ingest
-                3.2.11.1..............Ingest routines
-                3.2.11.2..............How to Blacklist stations 
+                3.2.11.1 ............. Ingest routines
+                3.2.11.2 ............. How to Blacklist stations 
          3.3 ..............  ANALYSIS PROCESSES
          3.3.1 ..................  WIND
          3.3.2 ..................  SFC (LSX) 
@@ -1826,7 +1826,7 @@ Outputs: (Feeds wind.exe)
                                         
 ------ 3.2.11 -------------- Surface Data Ingest ------------------------------
 
------- 3.2.11.1  Ingest routines  
+------ 3.2.11.1   Ingest routines --- 
 
 Process: (obs_driver.x) LAPS Surface Ingest
      (author: Pete Stamus - stamus@fsl.noaa.gov)
@@ -1852,7 +1852,7 @@ no one really knows how good the obs are.  These expected accuracies will be use
 in the quality control routines sometime in the future.  The lat/lons are in decimal 
 degrees.
 
------- 3.2.11.2  How to Blacklist stations
+------ 3.2.11.2   How to Blacklist stations ---
 
      (author: Pete Stamus - stamus@fsl.noaa.gov)
      (description updated: 20 Dec 1999)
@@ -1878,6 +1878,7 @@ file:
 
 These are the valid codes for variables to blacklist:
 
+<pre>
         "ALL" - Set all variables at this station to bad
         "TMP" - Set temperature bad
         "DEW" - Set dew point temperature bad
@@ -1893,6 +1894,7 @@ These are the valid codes for variables to blacklist:
         "SOL" - Set solar to bad (if reported)
         "SWT" - Set soil/water temperature to bad (if reported)
         "SWM" - Set soil moisture to bad (if reported)
+</pre>
 
 An incorrect variable code generates a warning message, and the code should
 continue without acting on the station in question.
