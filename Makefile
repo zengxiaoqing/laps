@@ -51,6 +51,7 @@ EXEDIRS = src/accum \
           src/ingest/satellite/sounding \
           src/ingest/sfc_qc \
           src/sfc \
+          src/sfc/pbl \
           src/sfc/table \
           src/soil \
           src/temp \
@@ -109,6 +110,7 @@ DATADIRS = log/qc \
            lapsprd/lmr \
            lapsprd/lmt \
            lapsprd/ln3 \
+           lapsprd/lpbl \
            lapsprd/lps \
            lapsprd/lq3 \
            lapsprd/lrp \
@@ -138,6 +140,7 @@ DATADIRS = log/qc \
 	   lapsprd/model/varfiles \
 	   lapsprd/model/output \
 	   lapsprd/model/sfc \
+           lapsprd/pbl \
            lapsprd/pig \
            lapsprd/pin \
            lapsprd/prg \
@@ -242,6 +245,13 @@ lapsplot: lib
 
 install_lapsplot: lib
 	cd src/lapsplot; $(MAKE) install
+
+ldmtools: 
+	cd src/ldmtools; $(MAKE)
+
+install_ldmtools: 
+	cd src/ldmtools; $(MAKE) install
+
 
 ridds: 	
 	cd $(LAPSROOT)/src/lib/radar/nexrad_nssl; $(MAKE)

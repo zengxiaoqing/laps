@@ -40,18 +40,22 @@ dnl Check for host architecture
 
 ARCHIVE="ar"
 ANSICFLAGS=$CFLAGS
-KRCFLAGS=$CFLAGS
 dnl
 dnl guess arch if not set by user
 dnl
 AC_INIT_ARCH($arch)
-# AC_PROG_CC
-
-dnl guess c compiler if not set by user
-if test -z "$CC" 
+AC_PROG_CC
+if test "$GCC"
 then
-  AC_CHECK_PROGS(CC,xlc cc xlC gcc CC,,$PATH)
+  DBFLAGS="-g"
+else
+  DBFLAGS="-g -C"
 fi
+dnl guess c compiler if not set by user
+dnl if test -z "$CC" 
+dnl then
+dnl   AC_CHECK_PROGS(CC,xlc cc xlC gcc CC,,$PATH)
+dnl fi
 dnl
 dnl Find path to netcdf ***required by LAPS***
 dnl
@@ -86,7 +90,6 @@ then
   if test -z "$GCC"
   then
       OTHERLIBS="$OTHERLIBS -lm"
-      KRCFLAGS="$CFLAGS"
       CFLAGS="$CFLAGS -Aa"
       CPPFLAGS="$CPPFLAGS "
   fi
@@ -166,11 +169,6 @@ AC_SUBST(OPTIMIZE)
 AC_SUBST(OTHERLIBS)
 AC_SUBST(ARCHIVE)
 AC_SUBST(FC_USE_TRIGD)
-if test -z "$KRCFLAGS"
-then
-  KRCFLAGS="$CFLAGS"
-fi
-AC_SUBST(KRCFLAGS)
 
 dnl Checks for programs.
 dnl AC_PROG_AWK
@@ -182,6 +180,7 @@ AC_PROG_RANLIB
 INSTALL='$(LAPSROOT)/util/install-sh'
 AC_SUBST(INSTALL)
 AC_SUBST(INCLUDE)
+AC_SUBST(DBFLAGS)
 
 dnl Checks for libraries.
 dnl Replace `main' with a function in -lcurses:
@@ -227,6 +226,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/realtime.pl
           etc/ramrsf.pl
 	  etc/laps_localization.pl
+          etc/sendLAPS.pl
           etc/wfo_post.pl)
 
 
