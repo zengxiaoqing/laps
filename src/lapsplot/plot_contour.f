@@ -226,8 +226,19 @@ C --- Do contouring
 !         call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.020)
           call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.013)
           call CPSETC('ILT',' ')
-          call cpseti('NSD',2)
-!         call cpseti('NLS',2)
+
+          if(FMAX .eq. 100. .and. FMIN .le. 5.0)then ! RH case
+              NSD = 3
+              NLS = 1
+          else
+              NSD = 2
+              NLS = 1
+          endif
+
+          call cpseti('NSD',NSD)
+          call cpseti('NLS',NLS)
+
+          write(6,*)' FMAX/NSD/NLS = ',FMAX,NSD,NLS
 
           CALL CPSETI ('HIC', icol_current)
           CALL CPSETI ('LOC', icol_current)
