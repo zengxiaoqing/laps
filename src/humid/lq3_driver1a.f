@@ -892,7 +892,7 @@ c     make call to goes moisture insertion
      1           sat_skip,      ! normally 1 for full resolution
      1           gw1,gw2,gw3,
      1           gww1,gww2,gww3,
-     1           gvap_p,
+     1           gvap_p,istatus_gvap,
      1           ii,jj,kk
      1           )
             

@@ -54,7 +54,7 @@ cdis
      1     sat_skip,            ! normally 1 for full resolution
      1     gw1,gw2,gw3,
      1     gww1,gww2,gww3,
-     1     gvap_p,
+     1     gvap_p,istatus_gvap,
      1     ii,jj,kk             ! grid dimensions
      1     )
 
@@ -105,6 +105,7 @@ c     parameter list variables
       real gw2(ii,jj),gww2(ii,jj)
       real gw3(ii,jj),gww3(ii,jj)
       real gvap_p (ii,jj)
+      integer istatus_gvap
       integer ngoes
       integer isnd
       integer sat_skip
