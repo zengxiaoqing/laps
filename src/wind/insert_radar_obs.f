@@ -294,7 +294,8 @@ csms$ignore begin
      1                                di_wind,
      1                                speed)
 
-                      call open_dxx(idx_radar,i4time,lun_dxx,istatus)
+                      call open_dxx(i_illuminated_last,i4time,lun_dxx
+     1                             ,istatus)
                       write(lun_dxx,321)i-1,j-1,k-1,di_wind,speed
 321                   format(1x,3i4,2f6.1,2f6.1)
                   endif
