@@ -75,7 +75,7 @@ cdis
         endif
         write(6,*)' grid_spacing = ',grid_spacing_m
 
-        call check_domain(lat,lon,imax,jmax,grid_spacing_m,5,istatus)
+        call check_domain(lat,lon,imax,jmax,grid_spacing_m,1,istatus)
         write(6,*)' check_domain: istatus = ',istatus
 
         return

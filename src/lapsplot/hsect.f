@@ -1021,6 +1021,7 @@ cdis
                   write(6,*)' Radar 3d vel data NOT successfully read in
      1'
      1                       ,(n_vel_grids(i),i=1,n_radars)
+                  return
                 endif
 
 
@@ -4340,30 +4341,6 @@ c
         call GSFACI(icol)                 
 
         icol_current = icol
-
-        return
-        end
-
-
-        function albedo_to_cloudfrac(albedo)
-
-!       This version assumes 0.15 land albedo and 0.85 cloud albedo if
-!       the albedo fields are tuned properly.
-!       cloud_frac_vis = (albedo - 0.15) / (0.85 - 0.15)
-
-!       This version assumes 0.15 land albedo and 0.556 cloud albedo to
-!       compensate for a bias in the albedo fields.
-!       New value of "Cloud counts" should be 156 in normalize_laps.
-!       to fix the problem.
-        cloud_frac_vis = (albedo - 0.15) / (0.556 - 0.15)
-
-!       Move out by 30% on either side
-        cloud_frac_vis = 0.5 + (cloud_frac_vis - 0.5) * 1.7
-
-!       Add a 10% fudge factor to compensate for a drift in sensitivity
-        cloud_frac_vis = cloud_frac_vis + 0.10
-
-        albedo_to_cloudfrac = cloud_frac_vis
 
         return
         end
