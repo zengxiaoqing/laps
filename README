@@ -977,14 +977,14 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      to the geography data are correct in 'data/static/nest7grid.parms'.
 
      When running LAPS as a whole for the archived data, the 'etc/sched.pl' 
-     script will accept a -t command line argument. This forces the script
+     script will accept a '-a' command line argument. This forces the script
      to run for the time you are inputting instead of the current realtime. 
      The inputted value should be the number of seconds since 0000 UTC 
      Jan 1, 1970. This is also the value found in line 2 of 
      'data/time/c_time.dat'. An example is shown as follows; note that
      'ssssssss' represents the ctime.
 
-     prompt> perl sched.pl  -t sssssssss $LAPS_ROOT $LAPS_DATA_ROOT
+     prompt> perl sched.pl  -a sssssssss $LAPS_ROOT $LAPS_DATA_ROOT
 
      One can also initiate individual executables (bin directory) listed in the
      'sched.pl' to run on the test data. Note that $LAPS_DATA_ROOT needs to
