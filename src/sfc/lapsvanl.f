@@ -35,7 +35,7 @@ c
      &     itheta_in,redp_lvl,
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
-     &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,obs,
+     &     mslp_s,pred_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,obs,
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,sp_bk,vis_bk,tgd_bk_f,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
@@ -266,7 +266,7 @@ c
 
 	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
 	real t_s(mxstn), td_s(mxstn), ff_s(mxstn)
-	real pstn_s(mxstn), mslp_s(mxstn), vis_s(mxstn)
+	real pstn_s(mxstn), mslp_s(mxstn), pred_s(mxstn), vis_s(mxstn)
         real ob_full(mxstn)
 c
 	character stn(mxstn)*20
@@ -736,7 +736,7 @@ c
 	beta = 100.
 C
 C TH: 29 November 2002 Begin hack.
-C We set 'name' to be 'PRESSURE' so the spline routine lnows how to set
+C We set 'name' to be 'PRESSURE' so the spline routine knows how to set
 C the mask_sea flag.
 C
         name = 'PRESSURE'
@@ -1375,6 +1375,22 @@ c
 	call move(mslp,d1,imax,jmax)
 	call multcon(d1,.01,imax,jmax)
 	call verify(d1,mslp_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+	title = 'Reduced pressure background verification (mb)'   
+	ea = 0.68
+	call zero(d1,imax,jmax)
+	call move(rp_bk,d1,imax,jmax)
+!	call multcon(d1,.01,imax,jmax)
+	call verify(d1,pred_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+	title = 'Reduced pressure verification (mb)'   
+	ea = 0.68
+	call zero(d1,imax,jmax)
+	call move(rp,d1,imax,jmax)
+	call multcon(d1,.01,imax,jmax)
+	call verify(d1,pred_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c	
 	title = 'Ground Temperature background verification (deg F)'
