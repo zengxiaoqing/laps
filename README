@@ -3606,6 +3606,82 @@ Process: lfmpost.exe - Post-processes MM5/WRF model forecast files into formats
 
 Source directory: 'laps/src/lfmpost'
 
+   The lfmpost program consists of a Fortran 90 executable: 
+     $LAPSINSTALLROOT/bin/lfmpost.exe
+
+   LFMPOST is used to post-process raw model output files from the 
+   following models:
+
+     1. MM5 (Version 3 binary output format)
+     2. WRF (NCAR EM core, Version 1.3 netCDF output format)
+     3. WRF (NCAR EM core, Version 2 netCDF output format)
+   
+   It performs the following functions:
+   
+     1.  Read in model output for each time
+     2.  Destagger variables to LAPS grid points
+     3.  Vertically interpolation to isobaric levels
+     4.  Output various formats, including LAPS fua/fsf netcdf
+         format, Vis5D format, GRIB-1, and tabular text 
+         point forecast files.
+
+   It is controlled by the namelist file "lfmpost.nl".  If processing
+   point forecasts, you also need to set up "lfmpost_points.txt".  Samples
+   of these two files can be found in your LAPS_SRC_ROOT/data/static
+   directory.  To use lfmpost, you will need to copy these two files into
+   MM5_DATA_ROOT/static or MOAD_DATAROOT/static (for MM5 or WRF, respectively)
+   and edit them to your liking.  If you are going to output LAPS fua/fsf
+   files with lfmpost, you will need a valid LAPS_DATA_ROOT for the same
+   model domain, and your pressure levels selected in lfmpost.nl must be 
+   the same levels selected in LAPS_DATA_ROOT/static/pressures.nl.  Note that
+   for this option, lfmpost expects the horizontal domain (dimensions, 
+   projection, etc.) to identically match for LAPS and the model being used.  
+
+   Namelist settings are described in the sample lfmpost.nl file. 
+
+   To execute lfmpost, you should set the following environment variables 
+   as necessary:
+
+     MM5_DATA_ROOT (if running MM5)
+     MOAD_DATAROOT (if running WRF)
+     LAPS_DATA_ROOT (if fua/fsf output is desired)
+
+   LFMPOST expects to find the raw output files in:
+     MM5_DATA_ROOT/mm5prd/raw (MM5)
+     MOAD_DATAROOT/wrfprd     (WRF v1 and v2)
+
+   Output from lfmpost goes into:
+     MM5_DATAROOT/mm5prd/d##/  (for MM5)
+     MOAD_DATAROOT/wrfprd/d##/ (for WRF)
+
+   Within the output directories, the following subdirectories need
+   to exist to contain the specific output formats:
+
+     fsf  -> For LAPS fsf files (2d and surface fields)
+     fua  -> For LAPS fua files (3d isobaric output)
+     grib -> GRIB data
+     points -> Tabular text point forecasts
+     v5d  -> Vis5D files
+
+   After setting the appropriate environment variables and ensuring your 
+   namelists are configured properly, the syntax is:
+
+    lfmpost.exe NAME DOMNUM
+      where NAME is one of "mm5", "wrf", or "wrf2" for MM5, WRFv1.3, 
+      or WRFv2, respectively.  DOMNUM is the nest to process.  
+
+   LFMPOST is designed to operate on "incremental" raw model output
+   data, so when you run MM5 or WRF, be sure to output each time
+   period to a separate file.
+
+   Finally, when running lfmpost for WRF output, there is a Perl script
+   which can be used:
+     $LAPSINSTALLROOT/etc/wrfpost.pl
+
+   For use with MM5, assuming you are using the FSL/LAPS packaged version
+   of MM5, you can use MM5INSTALLROOT/etc/mm5post.pl
+
+
 -------- 4.0 --  Porting code mods from LAPS users back to FSL --------------
 
    We would like to encourage suggestions from LAPS users on how to improve
