@@ -96,7 +96,7 @@ CONTAINS
   ALLOCATE (p_pa (z3+1))
   ! Build the output file name
  
-  output_prefix = TRIM(laps_data_root)// '/lapsprd/lapsprep/' // &
+  output_prefix = TRIM(laps_data_root)// '/lapsprd/dprep/' // &
                   TRIM(output_format) // '_INIT'
   yyyyddd = valid_yyyy*1000 + valid_jjj
   CALL wrf_date_to_ymd(yyyyddd, valid_yyyy, valid_mm, valid_dd) 
