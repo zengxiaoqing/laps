@@ -28,6 +28,12 @@ tar cvf - time/systime.dat \
           lapsprd/snd/$a9time.snd \
           lapsprd/cdw/$a9time.cdw \
           lapsprd/pin/$a9time.pin \
+          lapsprd/d01/$a9time.d01 \
+          lapsprd/d02/$a9time.d02 \
+          lapsprd/d03/$a9time.d03 \
+          lapsprd/d04/$a9time.d04 \
+          lapsprd/d05/$a9time.d05 \
+          lapsprd/d06/$a9time.d06 \
           lapsprd/sag/$a9time.sag \
           lapsprd/pig/$a9time.pig \
           lapsprd/prg/$a9time.prg \
