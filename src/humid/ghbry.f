@@ -59,14 +59,11 @@ c     internal variables
       real r                    ! gas constant of dry air
       real kkk                  ! (r/cp) where cp is the specific heat
       save g,r,kkk              ! inserted save to be safe, probably not needed
-      real y1min
-      
+
       data g / 980.665/         !  cm/s**2  (cgs units)
       data r / 2.8704e6/        !  erg/g/k  (cgs units)
       data kkk / 0.2857/        ! (dimensionless)
-      
-      logical test              ! to test above the surface or not
-      
+
 c     note: in the computation of n2 the units of pressure cancel since
 c     the pressure occurs both in the numerator and denominator....therefore
 c     mb are sufficient units for pressure and the relationship
@@ -104,28 +101,25 @@ c     section is for better boundary layer analysis
  
 c     now decide where the "height of the boundary layer" is
 
-      y1min = 0.0
       do j = 1,jj
          do i = 1,ii
-            
-            test = .false.
-            do k = 1,kk
-               
-               if (pb(i,j) .ge. plevel(k) 
-     1              .and. n2(i,j,k) .lt. 0.0) then
-                  test = .true.
+
+            y2 = 2.             ! number greater than zero for test below
+
+c     search upward for n2(k+1) being negative, then interpolate there
+
+            do k = 1,kk-1
                   x1 = plevel(k)
                   y1 = n2(i,j,k)
-                  y1min = min(y1,y1min)
-               endif
-               
-               if (test .and. pb(i,j) .ge. plevel(k) 
-     1              .and. n2(i,j,k) .ge. 0.0) then
-                  test = .false.
-                  x2 = plevel(k)
-                  y2 = n2(i,j,k)
+
+               if (pb(i,j) .ge. plevel(k+1) 
+     1              .and. n2(i,j,k+1) .lt. 0.0) then
+
+                  x2 = plevel(k+1)
+                  y2 = n2(i,j,k+1)
 c     bail out of loop here to not affect regions above 1st inversion
                   go to 111
+
                endif
                
             enddo
@@ -133,19 +127,22 @@ c     divert code here to not fall into section 111
             go to 112
  111        continue
             
-            if (y1.ne.y2)   then
+            if (y2.lt.0.0)   then !actually found negative level
+c     this test prevents going to the top of the column w/o inversion
+c     should never happen, but this is safeguard.
                
 c     interpolate in height space
                call interp( 0.,y1,y2,log(x1),log(x2),htby(i,j) )
                htby(i,j) = exp(htby(i,j))
-               
+
+c     double safeguard on making sure htby is not below ground level.
+               htby(i,j) = min (htby(i,j),pb(i,j))
+
             endif
             
  112        continue
             
          enddo
- 
-         y1 = 0.0
 
       enddo
       
