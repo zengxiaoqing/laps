@@ -1,5 +1,11 @@
-#ifdef rtu
+#ifdef FORTRANUNDERSCORE
 #define c_scan_adjust c_scan_adjust_
+#endif
+#ifdef FORTRANDOUBLEUNDERSCORE
+#define c_scan_adjust c_scan_adjust__
+#endif
+#ifdef FORTRANCAPS
+#define c_scan_adjust C_SCAN_ADJUST
 #endif
 
 #ifdef __STDC__
