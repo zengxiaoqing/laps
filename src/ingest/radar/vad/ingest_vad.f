@@ -92,7 +92,7 @@
  
        subroutine get_vad_parms(path_to_vad,istatus)
 
-       character*150 path_to_vad,filename
+       character*150 path_to_vad
        namelist /vad_nl/ path_to_vad
  
        character*150 static_dir,filename

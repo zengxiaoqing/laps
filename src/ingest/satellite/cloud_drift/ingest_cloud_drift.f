@@ -125,7 +125,7 @@
        integer max_paths
        parameter(max_paths=2)
 
-       character*150 path_to_cloud_drift(max_paths),filename
+       character*150 path_to_cloud_drift(max_paths)
        namelist /cloud_drift_nl/ path_to_cloud_drift
  
        character*150 static_dir,filename
