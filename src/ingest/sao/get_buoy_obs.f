@@ -32,6 +32,7 @@ cdis
 c
 c
 	subroutine get_buoy_obs(maxobs,maxsta,i4time,data_file,
+     &                      buoy_format,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_buoy_g,n_buoy_b,stations,
@@ -96,7 +97,7 @@ c
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
 	character  stname(maxobs)*8, save_stn(maxobs)*8
-	character  data_file*(*), timech*9, time*4
+	character  data_file*(*), timech*9, time*4, buoy_format*(*)
 	character  stations(maxsta)*20, provider(maxsta)*11
 	character  weather(maxobs)*25, wx(maxsta)*25
 	character  reptype(maxobs)*6, atype(maxobs)*6
@@ -122,43 +123,58 @@ c.....	Zero out the counters.
 c
 	n_buoy_g = 0		! # of buoy obs in the laps grid
 	n_buoy_b = 0		! # of buoy obs in the box
-c
-c.....  Get the data from the NetCDF file.  First, open the file.
-c.....  If not there, return.
-c
-	nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
 
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *, data_file
-           go to 990
-	endif
+        call s_len(buoy_format, len_buoy_format)
+!       if(buoy_format(1:len_buoy_format) .eq. 'FSL')then ! FSL NetCDF format
+        if(.true.)then
 c
-c.....  Get the dimension of some of the variables.
+c.....      Get the data from the NetCDF file.  First, open the file.
+c.....      If not there, return.
 c
-c.....  "recNum"
+	    nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
+
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *, data_file
+               go to 990
+	    endif
 c
-	nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *,'dim recNum'
-	endif
-	nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *,'dim recNum'
-	endif
+c.....      Get the dimension of some of the variables.
 c
-c.....  Call the read routine.
+c.....      "recNum"
 c
-	call read_buoy(nf_fid , recNum, iplat_type,
-     &     td, elev, equivspd, lats, lons, 
-     &     pcp1, pcp24, pcp6,
-     &     wx, dp, dpchar,
-     &     mslp, sea_temp, stname, t,
-     &     timeobs, vis, t_wet, dd, ffg, ff,
-     &     badflag, istatus)
+	    nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *,'dim recNum'
+	    endif
+	    nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *,'dim recNum'
+	    endif
+
+	    call read_buoy(nf_fid , recNum, iplat_type,
+     &         td, elev, equivspd, lats, lons, 
+     &         pcp1, pcp24, pcp6,
+     &         wx, dp, dpchar,
+     &         mslp, sea_temp, stname, t,
+     &         timeobs, vis, t_wet, dd, ffg, ff,
+     &         badflag, istatus)
 c
+        else ! Read buoy obs in CWB format
+            recNum = 150
+
+	    call read_buoy_cwb(nf_fid , recNum, iplat_type,
+     &         td, elev, equivspd, lats, lons, 
+     &         pcp1, pcp24, pcp6,
+     &         wx, dp, dpchar,
+     &         mslp, sea_temp, stname, t,
+     &         timeobs, vis, t_wet, dd, ffg, ff,
+     &         badflag, istatus)
+
+        endif
+
 	if(istatus .ne. 1) go to 990
 	n_buoy_all = recNum
 c
@@ -501,7 +517,7 @@ c
 c
  990	 continue		! no data available
 	 jstatus = 0
-	 print *,' ERROR.  No data available from READ_BUOY.'
+	 print *,' WARNING.  No data available from READ_BUOY.'
 	 return
 c
 	 end

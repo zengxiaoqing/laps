@@ -226,7 +226,7 @@ C Below are some Taiwan FGGE routines
      .                     mslp,                            ! O
      .                     istatus)                         ! O
 
-      parameter ( i_record=86 )
+      parameter ( i_record=83 )
       parameter ( nlevel=16, nvar=5 )  ! nlevel=nz
 
       PARAMETER ( MAX_BUF=320000, MAX_PTS=160000 )
@@ -325,6 +325,8 @@ c                           Sfc field
       enddo
 
       CALL CLOSE_FGGE_FILE(ISTAT)
+
+      istatus = 0 ! Success
 
       return
       end
@@ -625,6 +627,7 @@ C     Dummy routine for other platforms
       x = 1.0
       write(6,*)' WARNING: routine read_fa not supported '
      1         ,'on this platform'
+      istatus = 1 ! Failure
       RETURN
       END
 #endif

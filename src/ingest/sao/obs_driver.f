@@ -368,7 +368,7 @@ c
 cc	data_file_b = '/data/fxa/point/maritime/netcdf/' // filename13
 	print*,'Getting buoy/ship data ', data_file_b
 c
-        call get_buoy_obs(maxobs,maxsta,i4time,data_file_b,
+        call get_buoy_obs(maxobs,maxsta,i4time,data_file_b,metar_format,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_buoy_g,n_buoy_b,stations,
