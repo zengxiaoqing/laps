@@ -298,7 +298,7 @@ c
 c
 ccc	include '../../source/sfc/laps_sfc.inc'
         implicit none
-        integer maxobs, imax, jmax
+        integer imax, jmax
 	real*4 to(imax,jmax), t(imax,jmax), val(imax*jmax)
 	real*4 h1(imax,jmax), h2(imax,jmax)
 	integer*4 iob(imax*jmax), job(imax*jmax), dx, dy
