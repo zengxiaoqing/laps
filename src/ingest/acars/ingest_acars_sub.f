@@ -3,77 +3,100 @@
      1                                    ,NX_L,NY_L
      1                                    ,filename,istatus)
 
-!     Ken Dritz     15-Jul-1997      Changed LAPS_DOMAIN_FILE to 'nest7grid'
-!     Ken Dritz     15-Jul-1997      Removed include of lapsparms.for
-!     Steve Albers  22-Jul-1997      Added NX_L, NY_L to dummy argument list
-!     Steve Albers     Dec-1997      Updated for CDL change
+      character*70 filename
 
 !.............................................................................
 
-C     FORTRAN TEMPLATE FOR FILE= 972881800q.cdf                          
-      PARAMETER (NVARS=36) !NUMBER OF VARIABLES
-      PARAMETER (NREC=   50000)   !CHANGE THIS TO GENERALIZE
-C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 36
-      INTEGER*4 RCODE
-      INTEGER*4 RECDIM
-C     ****VARIABLES FOR THIS NETCDF FILE****
+      include 'netcdf.inc'
+      integer recNum,nf_fid, nf_vid, nf_status
 C
-      INTEGER*4   missingInputMinutes            
-      CHARACTER*1 minDate                        (  30)
-      CHARACTER*1 maxDate                        (  30)
-      REAL*8      minSecs                        
-      REAL*8      maxSecs                        
-      REAL*4      latitude                       (NREC)
-      REAL*4      longitude                      (NREC)
-      REAL*4      altitude                       (NREC)
-      REAL*8      timeObs                        (NREC)
-      REAL*4      temperature                    (NREC)
-      REAL*4      windDir                        (NREC)
-      REAL*4      windSpeed                      (NREC)
-      REAL*4      heading                        (NREC)
-      REAL*4      waterVaporMR                   (NREC)
-      REAL*4      medTurbulence                  (NREC)
-      REAL*4      maxTurbulence                  (NREC)
-      REAL*4      vertAccel                      (NREC)
-      CHARACTER*1 tailNumber                     (   6,NREC)
-      LOGICAL*1   airline                        (NREC)
-      LOGICAL*1   dataDescriptor                 (NREC)
-      LOGICAL*1   errorType                      (NREC)
-      LOGICAL*1   rollFlag                       (NREC)
-      LOGICAL*1   waterVaporQC                   (NREC)
-      LOGICAL*1   interpolatedTime               (NREC)
-      LOGICAL*1   interpolatedLL                 (NREC)
-      LOGICAL*1   tempError                      (NREC)
-      LOGICAL*1   windDirError                   (NREC)
-      LOGICAL*1   windSpeedError                 (NREC)
-      LOGICAL*1   speedError                     (NREC)
-      LOGICAL*1   bounceError                    (NREC)
-      LOGICAL*1   correctedFlag                  (NREC)
-      CHARACTER*1 flight                         (  13,NREC)
-      CHARACTER*1 rptStation                     (   4,NREC)
-      REAL*8      timeReceived                   (NREC)
-      CHARACTER*1 origAirport                    (   6,NREC)
-      CHARACTER*1 destAirport                    (   6,NREC)
-C*************************************
-      INTEGER*4 START(10)
-      INTEGER*4 COUNT(10)
-      INTEGER VDIMS(10) !ALLOW UP TO 10 DIMENSIONS
-      CHARACTER*31 DUMMY
+C  Open netcdf File for reading
+C
+      nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'NF_OPEN ',filename
+      endif
+C
+C  Fill all dimension values
+C
+C
+C Get size of recNum
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim recNum'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim recNum'
+      endif
+      call main_sub(nf_fid, recNum,
+!.............................................................................
+     1              i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
+!.............................................................................
 
-!     Non-automatic declarations...............................................
+      return
+      end
+C
+C
+      subroutine main_sub(nf_fid, recNum,
+!.............................................................................
+     1              i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
+!.............................................................................
 
-      character*1 c1_dataDescriptor                 (NREC)
-      equivalence(c1_dataDescriptor,dataDescriptor)
+      include 'netcdf.inc'
+      integer recNum,nf_fid, nf_vid, nf_status
+      integer airline(recNum), bounceError(recNum),
+     +     correctedFlag(recNum), 
+     +     interpolatedLL(recNum),
+     +     interpolatedTime(recNum), missingInputMinutes,
+     +     rollFlag(recNum), speedError(recNum), tempError(recNum),
+     +     waterVaporQC(recNum), windDirError(recNum),
+     +     windSpeedError(recNum)
+      real altitude(recNum), heading(recNum), latitude(recNum),
+     +     longitude(recNum), maxTurbulence(recNum),
+     +     medTurbulence(recNum), temperature(recNum),
+     +     vertAccel(recNum), waterVaporMR(recNum), windDir(recNum),
+     +     windSpeed(recNum)
+      double precision maxSecs, minSecs, timeObs(recNum),
+     +     timeReceived(recNum)
+      character*4 rptStation(recNum)
+      character*6 destAirport(recNum)
+      character*30 minDate
+      character*6 origAirport(recNum)
+      character*6 tailNumber(recNum)
+      character*30 maxDate
+      character*13 flight(recNum)
 
-      character*1 c1_errorType                      (NREC)
-      equivalence(c1_errorType,errorType)
+!.............................................................................
 
-      character*70 filename
+      character*1 dataDescriptor                 (recNum)
+      character*1 errorType                      (recNum)
+
       character*9 a9_timeObs,a9_recptTime 
       character*7 c7_skycover
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
+
+!............................................................................
+
+      call read_netcdf(nf_fid, recNum, airline, bounceError, 
+     +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
+     +     interpolatedTime, missingInputMinutes, rollFlag, 
+     +     speedError, tempError, waterVaporQC, windDirError, 
+     +     windSpeedError, altitude, heading, latitude, longitude, 
+     +     maxTurbulence, medTurbulence, temperature, vertAccel, 
+     +     waterVaporMR, windDir, windSpeed, maxSecs, minSecs, 
+     +     timeObs, timeReceived, destAirport, flight, maxDate, 
+     +     minDate, origAirport, rptStation, tailNumber)
+C
+C The netcdf variables are filled - your code goes here
+C
+!............................................................................
 
       call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a, 
      1            topo_a,1.0,rnorth,south,east,west,istatus)
@@ -82,508 +105,22 @@ C*************************************
           return
       endif
 
-      NCID=NCOPN(filename
-!............................................................................
-     +,NCNOWRIT,RCODE)
-      CALL NCINQ(NCID,NDIMS,NVARS,NGATTS,RECDIM,RCODE)
-      CALL NCDINQ(NCID,RECDIM,DUMMY,NRECS,RCODE)
-C     !NRECS! NOW CONTAINS NUM RECORDS FOR THIS FILE
-C
-C    statements to fill missingInputMinutes            
-C
-      CALL NCVINQ(NCID, 1,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  10 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  10  CONTINUE
-      CALL NCVGT(NCID, 1,START,COUNT,
-     +missingInputMinutes            ,RCODE)
-C
-C    statements to fill minDate                        
-C
-      CALL NCVINQ(NCID, 2,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  20 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  20  CONTINUE
-      CALL NCVGTC(NCID, 2,START,COUNT,
-     +minDate                        ,LENSTR,RCODE)
-C
-C    statements to fill maxDate                        
-C
-      CALL NCVINQ(NCID, 3,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  30 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  30  CONTINUE
-      CALL NCVGTC(NCID, 3,START,COUNT,
-     +maxDate                        ,LENSTR,RCODE)
-C
-C    statements to fill minSecs                        
-C
-      CALL NCVINQ(NCID, 4,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  40 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  40  CONTINUE
-      CALL NCVGT(NCID, 4,START,COUNT,
-     +minSecs                        ,RCODE)
-C
-C    statements to fill maxSecs                        
-C
-      CALL NCVINQ(NCID, 5,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  50 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  50  CONTINUE
-      CALL NCVGT(NCID, 5,START,COUNT,
-     +maxSecs                        ,RCODE)
-C
-C    statements to fill latitude                       
-C
-      CALL NCVINQ(NCID, 6,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  60 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  60  CONTINUE
-      CALL NCVGT(NCID, 6,START,COUNT,
-     +latitude                       ,RCODE)
-C
-C    statements to fill longitude                      
-C
-      CALL NCVINQ(NCID, 7,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  70 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  70  CONTINUE
-      CALL NCVGT(NCID, 7,START,COUNT,
-     +longitude                      ,RCODE)
-C
-C    statements to fill altitude                       
-C
-      CALL NCVINQ(NCID, 8,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  80 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  80  CONTINUE
-      CALL NCVGT(NCID, 8,START,COUNT,
-     +altitude                       ,RCODE)
-C
-C    statements to fill timeObs                        
-C
-      CALL NCVINQ(NCID, 9,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  90 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  90  CONTINUE
-      CALL NCVGT(NCID, 9,START,COUNT,
-     +timeObs                        ,RCODE)
-C
-C    statements to fill temperature                    
-C
-      CALL NCVINQ(NCID,10,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 100 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 100  CONTINUE
-      CALL NCVGT(NCID,10,START,COUNT,
-     +temperature                    ,RCODE)
-C
-C    statements to fill windDir                        
-C
-      CALL NCVINQ(NCID,11,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 110 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 110  CONTINUE
-      CALL NCVGT(NCID,11,START,COUNT,
-     +windDir                        ,RCODE)
-C
-C    statements to fill windSpeed                      
-C
-      CALL NCVINQ(NCID,12,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 120 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 120  CONTINUE
-      CALL NCVGT(NCID,12,START,COUNT,
-     +windSpeed                      ,RCODE)
-C
-C    statements to fill heading                        
-C
-      CALL NCVINQ(NCID,13,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 130 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 130  CONTINUE
-      CALL NCVGT(NCID,13,START,COUNT,
-     +heading                        ,RCODE)
-C
-C    statements to fill waterVaporMR                   
-C
-      CALL NCVINQ(NCID,14,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 140 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 140  CONTINUE
-      CALL NCVGT(NCID,14,START,COUNT,
-     +waterVaporMR                   ,RCODE)
-C
-C    statements to fill medTurbulence                  
-C
-      CALL NCVINQ(NCID,15,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 150 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 150  CONTINUE
-      CALL NCVGT(NCID,15,START,COUNT,
-     +medTurbulence                  ,RCODE)
-C
-C    statements to fill maxTurbulence                  
-C
-      CALL NCVINQ(NCID,16,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 160 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 160  CONTINUE
-      CALL NCVGT(NCID,16,START,COUNT,
-     +maxTurbulence                  ,RCODE)
-C
-C    statements to fill vertAccel                      
-C
-      CALL NCVINQ(NCID,17,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 170 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 170  CONTINUE
-      CALL NCVGT(NCID,17,START,COUNT,
-     +vertAccel                      ,RCODE)
-C
-C    statements to fill tailNumber                     
-C
-      CALL NCVINQ(NCID,18,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 180 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 180  CONTINUE
-      CALL NCVGTC(NCID,18,START,COUNT,
-     +tailNumber                     ,LENSTR,RCODE)
-C
-C    statements to fill airline                        
-C
-      CALL NCVINQ(NCID,19,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 190 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 190  CONTINUE
-      CALL NCVGT(NCID,19,START,COUNT,
-     +airline                        ,RCODE)
-C
-C    statements to fill dataDescriptor                 
-C
-      CALL NCVINQ(NCID,20,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 200 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 200  CONTINUE
-      CALL NCVGT(NCID,20,START,COUNT,
-     +dataDescriptor                 ,RCODE)
-C
-C    statements to fill errorType                      
-C
-      CALL NCVINQ(NCID,21,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 210 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 210  CONTINUE
-      CALL NCVGT(NCID,21,START,COUNT,
-     +errorType                      ,RCODE)
-C
-C    statements to fill rollFlag                       
-C
-      CALL NCVINQ(NCID,22,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 220 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 220  CONTINUE
-      CALL NCVGT(NCID,22,START,COUNT,
-     +rollFlag                       ,RCODE)
-C
-C    statements to fill waterVaporQC                   
-C
-      CALL NCVINQ(NCID,23,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 230 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 230  CONTINUE
-      CALL NCVGT(NCID,23,START,COUNT,
-     +waterVaporQC                   ,RCODE)
-C
-C    statements to fill interpolatedTime               
-C
-      CALL NCVINQ(NCID,24,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 240 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 240  CONTINUE
-      CALL NCVGT(NCID,24,START,COUNT,
-     +interpolatedTime               ,RCODE)
-C
-C    statements to fill interpolatedLL                 
-C
-      CALL NCVINQ(NCID,25,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 250 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 250  CONTINUE
-      CALL NCVGT(NCID,25,START,COUNT,
-     +interpolatedLL                 ,RCODE)
-C
-C    statements to fill tempError                      
-C
-      CALL NCVINQ(NCID,26,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 260 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 260  CONTINUE
-      CALL NCVGT(NCID,26,START,COUNT,
-     +tempError                      ,RCODE)
-C
-C    statements to fill windDirError                   
-C
-      CALL NCVINQ(NCID,27,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 270 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 270  CONTINUE
-      CALL NCVGT(NCID,27,START,COUNT,
-     +windDirError                   ,RCODE)
-C
-C    statements to fill windSpeedError                 
-C
-      CALL NCVINQ(NCID,28,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 280 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 280  CONTINUE
-      CALL NCVGT(NCID,28,START,COUNT,
-     +windSpeedError                 ,RCODE)
-C
-C    statements to fill speedError                     
-C
-      CALL NCVINQ(NCID,29,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 290 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 290  CONTINUE
-      CALL NCVGT(NCID,29,START,COUNT,
-     +speedError                     ,RCODE)
-C
-C    statements to fill bounceError                    
-C
-      CALL NCVINQ(NCID,30,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 300 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 300  CONTINUE
-      CALL NCVGT(NCID,30,START,COUNT,
-     +bounceError                    ,RCODE)
-C
-C    statements to fill correctedFlag                  
-C
-      CALL NCVINQ(NCID,31,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 310 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 310  CONTINUE
-      CALL NCVGT(NCID,31,START,COUNT,
-     +correctedFlag                  ,RCODE)
-C
-C    statements to fill flight                         
-C
-      CALL NCVINQ(NCID,32,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 320 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 320  CONTINUE
-      CALL NCVGTC(NCID,32,START,COUNT,
-     +flight                         ,LENSTR,RCODE)
-C
-C    statements to fill rptStation                     
-C
-      CALL NCVINQ(NCID,33,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 330 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 330  CONTINUE
-      CALL NCVGTC(NCID,33,START,COUNT,
-     +rptStation                     ,LENSTR,RCODE)
-C
-C    statements to fill timeReceived                   
-C
-      CALL NCVINQ(NCID,34,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 340 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 340  CONTINUE
-      CALL NCVGT(NCID,34,START,COUNT,
-     +timeReceived                   ,RCODE)
-C
-C    statements to fill origAirport                    
-C
-      CALL NCVINQ(NCID,35,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 350 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 350  CONTINUE
-      CALL NCVGTC(NCID,35,START,COUNT,
-     +origAirport                    ,LENSTR,RCODE)
-C
-C    statements to fill destAirport                    
-C
-      CALL NCVINQ(NCID,36,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 360 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 360  CONTINUE
-      CALL NCVGTC(NCID,36,START,COUNT,
-     +destAirport                    ,LENSTR,RCODE)
-C
-C     HERE IS WHERE YOU WRITE STATEMENTS TO USE THE DATA
-C
-C
-C
-!.............................................................................
-
-      if(NRECS .gt. NREC)then
-          write(6,*)' Warning: NRECS > NREC ',NRECS,NREC
-      else
-          write(6,*)' NRECS, NREC = ',NRECS,NREC
-      endif
-
-      num_acars = min(NREC,NRECS)
+      num_acars = recNum
+      write(6,*)' # of acars = ',recNum
 
       do i = 1,num_acars
 
           write(6,*)
-          write(6,*)' acars #',i,'  ',c1_dataDescriptor(i)
-     1                               ,c1_errorType(i)
+          write(6,*)' acars #',i,'  ',dataDescriptor(i)
+     1                               ,errorType(i)
 !         write(6,*)' location = '
 !    1             ,latitude(i),longitude(i),altitude(i)
 
-          if(c1_dataDescriptor(i) .eq. 'X')then
-            if(c1_errorType(i) .eq. 'W' .or. 
-     1         c1_errorType(i) .eq. 'B'                         )then
-              write(6,*)' QC flag is bad - reject ',c1_dataDescriptor(i)   
-     1                                             ,c1_errorType(i)
+          if(dataDescriptor(i) .eq. 'X')then
+            if(errorType(i) .eq. 'W' .or. 
+     1         errorType(i) .eq. 'B'                         )then
+              write(6,*)' QC flag is bad - reject ',dataDescriptor(i)   
+     1                                             ,errorType(i)
               goto 900
             endif
           endif
@@ -650,8 +187,575 @@ C
 
  900  enddo ! i
 
+!............................................................................
+
       return
+      end
+C
+C  Subroutine to read the file "ACARS data" 
+C
+      subroutine read_netcdf(nf_fid, recNum, airline, bounceError, 
+     +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
+     +     interpolatedTime, missingInputMinutes, rollFlag, 
+     +     speedError, tempError, waterVaporQC, windDirError, 
+     +     windSpeedError, altitude, heading, latitude, longitude, 
+     +     maxTurbulence, medTurbulence, temperature, vertAccel, 
+     +     waterVaporMR, windDir, windSpeed, maxSecs, minSecs, 
+     +     timeObs, timeReceived, destAirport, flight, maxDate, 
+     +     minDate, origAirport, rptStation, tailNumber)
+C
+      include 'netcdf.inc'
+      integer recNum,nf_fid, nf_vid, nf_status
+      integer airline(recNum), bounceError(recNum),
+     +     correctedFlag(recNum), ! dataDescriptor(recNum),
+     +     interpolatedLL(recNum),
+     +     interpolatedTime(recNum), missingInputMinutes,
+     +     rollFlag(recNum), speedError(recNum), tempError(recNum),
+     +     waterVaporQC(recNum), windDirError(recNum),
+     +     windSpeedError(recNum)
+      real altitude(recNum), heading(recNum), latitude(recNum),
+     +     longitude(recNum), maxTurbulence(recNum),
+     +     medTurbulence(recNum), temperature(recNum),
+     +     vertAccel(recNum), waterVaporMR(recNum), windDir(recNum),
+     +     windSpeed(recNum)
+      double precision maxSecs, minSecs, timeObs(recNum),
+     +     timeReceived(recNum)
+      character*4 rptStation(recNum)
+      character*6 destAirport(recNum)
+      character*30 minDate
+      character*6 origAirport(recNum)
+      character*6 tailNumber(recNum)
+      character*30 maxDate
+      character*13 flight(recNum)
 
 !.............................................................................
 
-      END
+      character*1 dataDescriptor                 (recNum)
+      character*1 errorType                      (recNum) 
+
+!.............................................................................
+
+C   Variables of type REAL
+C
+C     Variable        NETCDF Long Name
+C      altitude     
+C
+        nf_status = NF_INQ_VARID(nf_fid,'altitude',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var altitude'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,altitude)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var altitude'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      heading      "heading of flight path over ground"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'heading',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var heading'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,heading)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var heading'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      latitude     
+C
+        nf_status = NF_INQ_VARID(nf_fid,'latitude',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var latitude'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,latitude)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var latitude'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      longitude    
+C
+        nf_status = NF_INQ_VARID(nf_fid,'longitude',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var longitude'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,longitude)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var longitude'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      maxTurbulence"Maximum eddy dissipation rate"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'maxTurbulence',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var maxTurbulence'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,maxTurbulence)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var maxTurbulence'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      medTurbulence"Median eddy dissipation rate"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'medTurbulence',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var medTurbulence'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,medTurbulence)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var medTurbulence'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      temperature  
+C
+        nf_status = NF_INQ_VARID(nf_fid,'temperature',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var temperature'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,temperature)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var temperature'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      vertAccel    "peak vertical acceleration"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'vertAccel',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var vertAccel'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,vertAccel)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var vertAccel'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      waterVaporMR "water vapor mixing ratio"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'waterVaporMR',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var waterVaporMR'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,waterVaporMR)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var waterVaporMR'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windDir      "Wind Direction"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'windDir',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDir'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,windDir)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDir'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windSpeed    "Wind Speed"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'windSpeed',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpeed'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,windSpeed)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpeed'
+      endif
+
+C   Variables of type INT
+C
+C
+C     Variable        NETCDF Long Name
+C      airline      "Airline"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'airline',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var airline'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,airline)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var airline'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      bounceError  "Aircraft altitude variance error"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'bounceError',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var bounceError'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,bounceError)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var bounceError'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      correctedFlag"Corrected data indicator"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'correctedFlag',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var correctedFlag'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,correctedFlag)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var correctedFlag'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      dataDescriptor"AWIPS-type data descriptor"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'dataDescriptor',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var dataDescriptor'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,dataDescriptor)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var dataDescriptor'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      errorType    
+C
+        nf_status = NF_INQ_VARID(nf_fid,'errorType',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var errorType'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,errorType)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var errorType'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      interpolatedLL"UPS ascent/descent lat&lon interpolation indicator"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'interpolatedLL',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var interpolatedLL'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,interpolatedLL)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var interpolatedLL'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      interpolatedTime"UPS ascent/descent time interpolation indicator"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'interpolatedTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var interpolatedTime'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,interpolatedTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var interpolatedTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      missingInputMinutes"missing minutes of input data"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'missingInputMinutes',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var missingInputMinutes'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,missingInputMinutes)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var missingInputMinutes'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      rollFlag     "Aircraft roll angle flag "
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rollFlag',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rollFlag'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,rollFlag)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rollFlag'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      speedError   "Aircraft ground speed error"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'speedError',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var speedError'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,speedError)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var speedError'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tempError    
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tempError',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tempError'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,tempError)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tempError'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      waterVaporQC "water vapor mixing ratio QC character"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'waterVaporQC',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var waterVaporQC'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,waterVaporQC)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var waterVaporQC'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windDirError 
+C
+        nf_status = NF_INQ_VARID(nf_fid,'windDirError',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDirError'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,windDirError)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDirError'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windSpeedError
+C
+        nf_status = NF_INQ_VARID(nf_fid,'windSpeedError',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpeedError'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,windSpeedError)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpeedError'
+      endif
+
+C   Variables of type DOUBLE
+C
+C
+C     Variable        NETCDF Long Name
+C      maxSecs      "maximum observation time"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'maxSecs',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var maxSecs'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,maxSecs)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var maxSecs'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      minSecs      "minimum observation time"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'minSecs',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var minSecs'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,minSecs)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var minSecs'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      timeObs      "time of observation"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'timeObs',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeObs'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,timeObs)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeObs'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      timeReceived "time data was received at ground station"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'timeReceived',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeReceived'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,timeReceived)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeReceived'
+      endif
+
+
+C   Variables of type CHAR
+C
+C
+C     Variable        NETCDF Long Name
+C      destAirport  "Destination Airport"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'destAirport',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var destAirport'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,destAirport)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var destAirport'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      flight       "Flight number"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'flight',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var flight'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,flight)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var flight'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      maxDate      "maximum observation date"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'maxDate',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var maxDate'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,maxDate)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var maxDate'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      minDate      "minimum observation date"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'minDate',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var minDate'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,minDate)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var minDate'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      origAirport  "Originating Airport"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'origAirport',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var origAirport'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,origAirport)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var origAirport'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      rptStation   "Station reporting through"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rptStation',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rptStation'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rptStation)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rptStation'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tailNumber   "tail number"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tailNumber',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tailNumber'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,tailNumber)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tailNumber'
+      endif
+
+      nf_status = nf_close(nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'nf_close'
+      endif
+
+      return
+      end

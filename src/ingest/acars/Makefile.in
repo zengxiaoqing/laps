@@ -78,5 +78,5 @@ distclean: clean
 
 
 
-ingest_acars_sub.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+ingest_acars_sub.f:  @NETCDFINC@/netcdf.inc 
 

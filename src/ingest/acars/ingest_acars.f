@@ -89,22 +89,6 @@
           endif
       enddo
 
-!     Read from the "latest" NetCDF pirep file and write to the opened PIN file
-      filename_in = dir_in(1:len_dir_in)//'latest_q.cdf'
-      write(6,*)' Opening ',filename_in
-      open(21,file=filename_in,status='old',err=980)
-      close(21) 
-
-      write(6,*)' Reading from "latest_q.cdf" acars file'
-      call get_acars_data(i4time_sys,ilaps_cycle_time
-     1                                      ,NX_L,NY_L
-     1                                      ,filename_in,istatus)
-
-      go to 990
-
- 980  write(6,*)' Note: no "latest_q.cdf" acars file'
-      close(21)
-
  990  close(11) ! Output PIN file
 
  999  continue
