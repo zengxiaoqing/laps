@@ -1672,13 +1672,20 @@ c
 
                   call get_ref_base(ref_base,istatus)
 
+                  write(6,*)' Leaving missing data points alone'
+                  i_miss = 0
                   do i = 1,NX_L
                   do j = 1,NY_L
                       if(field_2d(i,j) .eq. r_missing_data)then
-                          field_2d(i,j) = ref_base
+!                         field_2d(i,j) = ref_base
+                          i_miss = i_miss + 1
                       endif
                   enddo ! j
                   enddo ! i
+
+                  pct_miss = float(i_miss) / float(NX_L*NY_L) * 100.
+
+                  write(6,*)' Percent coverage = ', 100. - pct_miss
 
                 elseif(c_type .eq. 'rd')then ! read data from v01, v02, etc.
 
@@ -5057,7 +5064,7 @@ c                   cint = -1.
                     call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltyp
      1e)
                     write(6,2041)
-2041                format('         Enter Radar #   ',45x,'? ',$)
+2041                format('         Enter Radar # (0=all)',40x,'? ',$)       
                     read(5,*)i_radar
 
                     idum1_array = 0
@@ -5069,6 +5076,9 @@ c                   cint = -1.
                         i_radar_start = 1
                         i_radar_end = max_radars
                     endif
+
+                    write(6,*)' Start/End radars = '
+     1                       ,i_radar_start,i_radar_end
 
                     call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
      1                  ,i_radar_start,i_radar_end
