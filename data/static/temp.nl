@@ -3,7 +3,7 @@
  l_adjust_heights=.true.,
  weight_bkg_const_temp=5e28,
  pres_mix_thresh=20000.,
- rms_thresh_temp=0.5,
+ rms_thresh_temp=1.0,
  max_snd_grid=1500,
  max_obs=100000,
  /
