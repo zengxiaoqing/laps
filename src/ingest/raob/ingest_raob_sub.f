@@ -535,10 +535,24 @@ C
               idupe = i
               write(6,*)' Remove duplicate ht level '
      1                  ,idupe,htout(indx(idupe))
-          elseif(prout(indx(i)) .eq. prout(indx(i-1)))then          
+
+          elseif( prout(indx(i)) .eq. prout(indx(i-1))
+     1     .and.  prout(indx(i)) .ne. r_missing_data    )then          
+              idupe_pr = 0
+
+!             We would like to retain the mandatory report that also has winds
+              if(wdout(indx(i)) .ne. r_missing_data)then
+                  idupe_pr = i-1 ! Previous Sig T level can be removed
+              elseif(wdout(indx(i-1)) .ne. r_missing_data)then
+                  idupe_pr = i   ! Previous Sig T level can be removed
+              endif
+            
               write(6,*)' Duplicate pr level detected'
-     1                  ,i,prout(indx(i))
-          endif
+     1                  ,i,idupe_pr,prout(indx(i))
+
+!             idupe = idupe_pr
+
+          endif ! duplicate level
 
           if(idupe .gt. 0)then
               do j = idupe,n_good_levels-1
@@ -589,7 +603,7 @@ C
 
       enddo ! i
 
-      if(.true.)then ! write out the sounding with original code
+      if(.false.)then ! write out the sounding with original code
 
           write(6,*)
           write(6,511,err=998)
@@ -632,9 +646,9 @@ C
       else ! call write_snd for single sounding
 
           call write_snd  (11                                     ! I
-     1                    ,maxsnd,maxlvl,1                        ! I
-     1                    ,iwmostanum                             ! I
-     1                    ,stalat,stalon,staelev                  ! I
+     1                    ,1,maxlvl,1                             ! I
+     1                    ,wmostanum(isnd)                        ! I
+     1                    ,stalat(isnd),stalon(isnd),staelev(isnd)! I
      1                    ,staname(1,isnd),a9time_raob,c8_obstype ! I
      1                    ,n_good_levels                          ! I
      1                    ,htout_sort                             ! I
