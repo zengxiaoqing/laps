@@ -41,7 +41,7 @@ c
         subroutine read_surface_sa(infile,maxsta,atime,n_obs_g,
      &   n_obs_b,stn,reptype,atype,lat,lon,elev,wx,
      &   t,td,dd,ff,ddg,ffg,pstn,pmsl,alt,kloud,ceil,lowcld,cover,rad,
-     &   idp3,store_emv,store_amt,store_hgt,vis,obstime,istatus)
+     &   sfct,idp3,store_emv,store_amt,store_hgt,vis,obstime,istatus)       
 c
 cdoc    This routine calls 'read_surface_data' and is used primarily to read
 cdoc    in cloud info along the lines of the arrays in the "old" LSO format.

@@ -88,7 +88,7 @@ cdis
         real*4   ffg(maxstns),pstn(maxstns),pmsl(maxstns),alt(maxstns)
      1                                          ,ht_base_ret(maxstns,5)
         real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
-     1          ,vis(maxstns),rad(maxstns)
+     1          ,vis(maxstns),rad(maxstns),sfct(maxstns)
 c
         Integer*4   obstime(maxstns),n_cloud_layers_ret(maxstns)
      1                              ,idp3(maxstns)
@@ -150,7 +150,7 @@ c
      1   n_obs_g,n_obs_b,c_stations,obstype,atype,
      1   lat_sta_ret,lon_sta_ret,elev,wx,t,td,dd,ff,ddg,
      1   ffg,pstn,pmsl,alt,n_cloud_layers_ret,ceil,lowcld,cover_a,
-     1   rad,idp3,store_emv,       
+     1   rad,sfct,idp3,store_emv,       
      1   amt_ret,ht_base_ret,vis,obstime,istatus)
 
         if(istatus .ne. 1)then
