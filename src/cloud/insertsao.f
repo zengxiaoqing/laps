@@ -259,7 +259,8 @@ c place station at proper laps grid point
 
               if(ht_base .gt. ht_defined+1.)then
 
-                if(amt_ret(i,l) .ne. ' CLR')then ! Clouds
+                if(amt_ret(i,l) .ne. ' CLR' .AND.
+     1             amt_ret(i,l) .ne. ' SKC'      )then ! Clouds
 
                   if(.true.)then ! Allow a redefinition of ht_defined
                     write(6,*)' WARNING, inconsistent SAO data,'
@@ -302,8 +303,11 @@ c place station at proper laps grid point
               endif
 
 C CLOUDS ARE NOW IN MSL
-!             Fill in clear for entire column for SAO or up to ht_base for AWOS
-              if(amt_ret(i,l).eq.' CLR')then
+!             Fill in clear for entire column for METAR or up to ht_base for 
+!             AWOS or up to ht_base for VV.
+              if(amt_ret(i,l).eq.' CLR'    .or.
+     1           amt_ret(i,l).eq.' SKC'    .or.
+     1           amt_ret(i,l).eq.'  VV'          )then
                   cover=.01
                   do k=1,nk
                       if(     cld_hts(k).le.ht_base
@@ -314,9 +318,9 @@ C CLOUDS ARE NOW IN MSL
                       endif
                   enddo
 
-                  write(6,*)' Filled in CLR from bottom of domain up'       
-     1                     ,' to ',nint(min(ht_base,ht_defined))
-     1                     ,' meters'     
+                  write(6,*)' Filled in ',amt_ret(i,l),' from bottom'
+     1                     ,' of domain up to '
+     1                     ,nint(min(ht_base,ht_defined)),' meters'     
 
 !                 go to 125 ! Loop to next station
               endif
@@ -339,13 +343,13 @@ C CLOUDS ARE NOW IN MSL
                   endif
               enddo
 
-              if(amt_ret(i,l).eq.'-SCT')then
-                  cover=.15 ! .2
+              if(amt_ret(i,l).eq.' FEW')then
+                  cover=.05
                   ht_top=ht_base+1000.
                   do k=1,nk
 
-                      if(cld_hts(k).ge.ht_base.and.cld_hts(k).le.ht_top)
-     1then
+                      if(cld_hts(k).ge.ht_base .and. 
+     1                   cld_hts(k).le.ht_top        )then
 
 !                         Search for model d(cldcv)/dz within cloud layer
                           call modify_sounding(
@@ -377,8 +381,8 @@ C CLOUDS ARE NOW IN MSL
                   ht_top=ht_base+1000.
                   do k=1,nk
 
-                      if(cld_hts(k).ge.ht_base.and.cld_hts(k).le.ht_top)
-     1then
+                      if(cld_hts(k).ge.ht_base .and. 
+     1                   cld_hts(k).le.ht_top        )then
 
 !                         Search for model d(cldcv)/dz within cloud layer
                           call modify_sounding(
@@ -410,8 +414,8 @@ C CLOUDS ARE NOW IN MSL
                   ht_top=ht_base+1000.
                   do k=1,nk
 
-                      if(cld_hts(k).ge.ht_base.and.cld_hts(k).le.ht_top)
-     1then
+                      if(cld_hts(k).ge.ht_base .and. 
+     1                   cld_hts(k).le.ht_top        )then
 
 !                         Search for model d(cldcv)/dz within cloud layer
                           call modify_sounding(
@@ -444,8 +448,8 @@ C CLOUDS ARE NOW IN MSL
 
                   do k=1,nk
 
-                      if(cld_hts(k).ge.ht_base.and.cld_hts(k).le.ht_top)
-     1then
+                      if(cld_hts(k).ge.ht_base .and. 
+     1                   cld_hts(k).le.ht_top        )then
 
 !                         Search for model d(cldcv)/dz within cloud layer
                           call modify_sounding(
@@ -477,8 +481,8 @@ C CLOUDS ARE NOW IN MSL
                   ht_top=ht_base+1000.
                   do k=1,nk
 
-                      if(cld_hts(k).ge.ht_base.and.cld_hts(k).le.ht_top)
-     1then
+                      if(cld_hts(k).ge.ht_base .and. 
+     1                   cld_hts(k).le.ht_top        )then
 
 !                         Search for model d(cldcv)/dz within cloud layer
                           call modify_sounding(
@@ -510,8 +514,8 @@ C CLOUDS ARE NOW IN MSL
                   ht_top=ht_base+cld_thk(ht_base) ! 1500.
 
                   do k=1,nk
-                      if(cld_hts(k).ge.ht_base.and.cld_hts(k).le.ht_top)
-     1then
+                      if(cld_hts(k).ge.ht_base .and. 
+     1                   cld_hts(k).le.ht_top        )then
 
 !                         Search for model d(cldcv)/dz within cloud layer
                           call modify_sounding(
@@ -548,8 +552,8 @@ C CLOUDS ARE NOW IN MSL
                   ht_top=ht_base+cld_thk(ht_base) ! 1500.
 
                   do k=1,nk
-                      if(cld_hts(k).ge.ht_base.and.cld_hts(k).le.ht_top)
-     1then
+                      if(cld_hts(k).ge.ht_base .and. 
+     1                   cld_hts(k).le.ht_top        )then
 
 !                         Search for model d(cldcv)/dz within cloud layer
                           call modify_sounding(

@@ -106,17 +106,17 @@ cdis
         real*4 surface_sao_buffer
         parameter (surface_sao_buffer = 800.)
 
-        real*4 thresh_cvr,default_top,default_base,default_clear_cover
-     1                   ,default_ceiling
+        real*4 thresh_cvr_smf,default_top,default_base
+     1                       ,default_clear_cover,default_ceiling
 
-        parameter       (thresh_cvr = 0.65) ! Used to "binaryize" cloud cover
+        parameter       (thresh_cvr_smf = 0.65) ! Used to "binaryize" cloud cover
 
         parameter       (default_clear_cover = .01)
 
         real*4 thresh_cvr_base,thresh_cvr_top,thresh_cvr_ceiling
         parameter (thresh_cvr_base = 0.1)
         parameter (thresh_cvr_top  = 0.1)
-        parameter (thresh_cvr_ceiling = thresh_cvr)
+        parameter (thresh_cvr_ceiling = thresh_cvr_smf)
 
         real*4 thresh_thin_lwc_ice     ! Threshold cover for thin cloud LWC/ICE
         parameter (thresh_thin_lwc_ice = 0.1)
@@ -731,12 +731,12 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
 !                   Test for Cloud Top
                     do k = KCLOUD-1,1,-1
-                        if(clouds_3d(i,j,k  ) .gt. thresh_cvr .and.
-     1                     clouds_3d(i,j,k+1) .le. thresh_cvr)then
-                            cloud_top_m = 0.5 * (cld_hts(k) + cld_hts(k+
-     11))
-                            if(cloud_top_m .gt. heights_3d(i,j,NZ_L))the
-     1n
+                        if(clouds_3d(i,j,k  ) .gt. thresh_cvr_smf .and.       
+     1                     clouds_3d(i,j,k+1) .le. thresh_cvr_smf )then        
+                            cloud_top_m = 0.5 * (cld_hts(k) 
+     1                                         + cld_hts(k+1))
+                            if(cloud_top_m .gt. heights_3d(i,j,NZ_L)
+     1                                                            )then
                                 cloud_top_m = heights_3d(i,j,NZ_L)
                             endif
                            goto150
@@ -1671,9 +1671,8 @@ C       EW SLICES
 
         subroutine compare_cloud_radar(radar_ref_3d,dbz_max_2d,cvr_max
      1          ,ref_base,cloud_frac_vis_a
-     1          ,vis_radar_thresh_cvr,vis_radar_thresh_dbz,r_missing_dat
-     1a
-     1          ,ni,nj,nk)
+     1          ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
+     1          ,r_missing_data,ni,nj,nk)
 
         real*4 radar_ref_3d(ni,nj,nk)
         real*4 dbz_max_2d(ni,nj)

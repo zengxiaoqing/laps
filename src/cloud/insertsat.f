@@ -275,8 +275,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 
 
         write(6,*)
-        write(6,*)'  i  k   frac_k   cldtop_temp_k  cldtop_m',
-     1                  '     sfc T       Topo'
+        write(6,*)'  i  k   frac_k   cldtop_temp_f  cldtop_m',
+     1                  '     sfc T (f)   Topo'
 
         init_co2 = 0 ! Initializes CO2 Slicing routine
         n_valid_co2 = 0
