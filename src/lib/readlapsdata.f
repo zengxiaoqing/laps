@@ -162,6 +162,7 @@ C
          goto 999
       endif
 
+      if (istatus .eq. -5)  goto 992  !file not there
       if (istatus .eq. -4)  goto 990  !error in version 
       if (istatus .eq. -3)  goto 980  !error in dimensioning arrays
       if (istatus .eq. -2)  goto 970  !error retrieving data
@@ -192,6 +193,10 @@ C
 990     if (flag .ne. 1)
      1    write (6,*) 'Error in version, not a valid LAPS file...
      1read aborted.'
+        istatus=error(2)
+        goto 999
+C
+992     continue
         istatus=error(2)
         goto 999
 C
