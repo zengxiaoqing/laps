@@ -97,8 +97,6 @@ MINIMIZATN = \
         Minimizatn.f90 \
         Functn.f90 \
         Functn_ad.f90 \
-        FunctnDiv.f90 \
-        FunctnDiv_ad.f90 \
         Iterates.f90 \
         Minimize.f90 \
         RF1D.f90 \
