@@ -306,21 +306,20 @@ c
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
-     .          htave,tpave,shave,uwave,vwave,
-     .          msgflg                       !Missing data value
+     .          htave,tpave,shave,uwave,vwave
 c
-      integer   i4time_now,ct4,ct,
+      integer   ct,
      .          ihour,imin,
      .          lga_files,lga_times(max_files),lga_valid(max_files),
      .          bgtime,bgvalid,
      .          ip(5*nz_laps),
-     .          i,ic,ii,j,jj,k,kk,l,ll,n,
+     .          i,ic,ii,j,jj,k,kk,l,
      .          istatus
 c
       character*255 lgapath
       character*100 lga_names(max_files)
       character*13  fname13,fname9_to_wfo_fname13
-      character*9   a9,fname,wfo_fname13_to_fname9
+      character*9   fname
       character*2   gproj
       character*150  outdir, fullname
       character*31  ext
@@ -329,8 +328,8 @@ c
       character*4   lvl_coord(5*nz_laps)
       character*10  units(5*nz_laps)
       character*125 comment(5*nz_laps)
-      integer len_dir, ntime, last_time,next_time, nf
-      integer nxbg, nybg, nzbg(5),ntbg, ivaltimes(20)
+      integer len_dir, ntime, nf
+      integer nxbg, nybg, nzbg(5),ntbg
 
 c
 
@@ -429,6 +428,10 @@ c
      .                       gproj,istatus)
  
          elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
+            ntbg=10 
+            
+            call get_sbn_dims(bgpath,fname,nxbg,nybg,nzbg,ntbg)
+
             call read_conus_211(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .                            nxbg,nybg,nzbg,ntbg,
      .                            prbg,htbg,tpbg,shbg,uwbg,vwbg,
@@ -470,6 +473,7 @@ c            l=index(bgpath,' ')-1
             print *,'Error reading background model data for: ',
      .         bgpath(1:l)//'/'//fname13
             print *,'Process aborted for this file.'
+            lga_status= -nf
             return
          endif
 c
