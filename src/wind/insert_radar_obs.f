@@ -58,10 +58,51 @@ csms$ignore begin
 !     This routine takes the data from all the radars and adds the derived
 !     radar obs into uobs_diff_spread and vobs_diff_spread
 
-      if(.not. l_multi_doppler_new)then
+      if(.not. l_multi_doppler_new)then ! original radar analysis method
 
 !       Loop through the radars
         do i_radar = 1,n_radars
+
+!         Begin Filtering Section
+          write(6,*)' Filtering radar obs into superobs'
+     1             ,rlat_radar(i_radar),rlon_radar(i_radar)
+          n_radarobs_tot_fltrd = 0
+          i_radar_reject = 0
+
+          write(6,*)' LVL  # Obs  Intvl  # FLTR'
+
+          do k=1,kmax
+
+!           Filter to make the filtered ob array more sparse
+            call filter_radar_obs(
+     1                  imax,jmax,                     ! Input
+     1                  vr_obs_unfltrd(1,1,k,i_radar), ! Input
+     1                  wt_p_radar(1,1,k),weight_radar,! Input
+     1                  thresh_2_radarobs_lvl_unfltrd, ! Input
+     1                  thresh_4_radarobs_lvl_unfltrd, ! Input
+     1                  r_missing_data,                ! Input
+     1                  vr_obs_fltrd(1,1,k),           ! Input/Output
+     1                  i_radar_reject,                ! Input/Output
+     1                  n_radarobs_lvl_unfltrd,        ! Output
+     1                  n_radarobs_lvl_fltrd,          ! Output
+     1                  intvl_rad)                     ! Output
+
+            n_radarobs_tot_fltrd = n_radarobs_tot_fltrd 
+     1                           + n_radarobs_lvl_fltrd
+
+            write(6,501)k,n_radarobs_lvl_unfltrd,intvl_rad
+     1                 ,n_radarobs_lvl_fltrd
+501         format(1x,i3,i6,i7,i9)
+
+          enddo ! k
+
+          write(6,*)' # Radar Obs Rejected due to other data = '
+     1             ,i_radar_reject
+          write(6,502)n_radarobs_tot_unfltrd(i_radar)
+     1               ,n_radarobs_tot_fltrd
+502       format(1x,' # Radar Obs TOTAL UNFILTERED / FILTERED = ',2i7)       
+
+!         End filter section
 
           write(6,*)' Generate derived radar "vector" obs, radar # '
      1             ,i_radar
@@ -73,8 +114,8 @@ csms$ignore begin
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar_a(i_radar)               ! Input
      1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input
-     1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
-     1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
+!    1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
+!    1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar(i_radar),rlon_radar(i_radar)    ! Input
@@ -85,7 +126,7 @@ csms$ignore begin
      1  ,l_derived_output,l_grid_north              ! Input
      1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input
+!    1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input
      1  ,vr_obs_fltrd                               ! Local
      1  ,l_good_multi_doppler_ob                    ! Input/Output
      1  ,istatus                                    ! Input/Output
@@ -97,8 +138,8 @@ csms$ignore begin
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar_a(i_radar)               ! Input
      1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input
-     1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
-     1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
+!    1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
+!    1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar(i_radar),rlon_radar(i_radar)    ! Input
@@ -109,7 +150,7 @@ csms$ignore begin
      1  ,l_derived_output,l_grid_north              ! Input
      1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input
+!    1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input
      1  ,vr_obs_fltrd                               ! Local
      1  ,l_good_multi_doppler_ob                    ! Input/Output
      1  ,istatus                                    ! Input/Output
@@ -147,12 +188,11 @@ csms$ignore begin
 
         enddo ! i_radar
 
-      endif ! l_multi_doppler_new
 
-      icount_radar_total = 0
+        icount_radar_total = 0
 
-!     Use only multiple Doppler obs if mode = 2, use all obs if mode = 1
-      do k = 1,kmax
+!       Use only multiple Doppler obs if mode = 2, use all obs if mode = 1
+        do k = 1,kmax
           icount_good_lvl = 0
           if(mode .eq. 1)then ! Use all Doppler obs
               do j = 1,jmax
@@ -190,7 +230,55 @@ csms$ignore begin
 
           icount_radar_total = icount_radar_total + icount_good_lvl
 
-      enddo ! k
+        enddo ! k
+
+      else ! call new multi-doppler routine
+        if(n_radars .gt. kmax)then
+!           Dimensioning of 'vr_obs_fltrd' should be reworked
+            write(6,*)' Software error with new multi-doppler routine'       
+            stop
+        endif
+
+        do k = 1,kmax
+          do i_radar = 1,n_radars
+
+!             Filter radar at this level to make the filtered ob array sparser
+              call filter_radar_obs(
+     1                  imax,jmax,                     ! Input
+     1                  vr_obs_unfltrd(1,1,k,i_radar), ! Input
+     1                  wt_p_radar(1,1,k),weight_radar,! Input
+     1                  thresh_2_radarobs_lvl_unfltrd, ! Input
+     1                  thresh_4_radarobs_lvl_unfltrd, ! Input
+     1                  r_missing_data,                ! Input
+     1                  vr_obs_fltrd(1,1,i_radar),     ! Input/Output
+     1                  i_radar_reject,                ! Input/Output
+     1                  n_radarobs_lvl_unfltrd,        ! Output
+     1                  n_radarobs_lvl_fltrd,          ! Output
+     1                  intvl_rad)                     ! Output
+
+          enddo ! i_radar
+
+          do j = 1,jmax
+          do i = 1,imax
+
+!             Assess which radars have data at this grid point
+              do i_radar = 1,n_radars
+                  n_illuminated = 0
+                  if(vr_obs_fltrd(i,j,i_radar) .ne. r_missing_data
+     1                                                             )then       
+                      n_illuminated = n_illuminated + 1
+                  endif
+              enddo ! i_radar
+
+              call multiwind(u,v,rms,u0,v0,x,y,height
+     1                      ,n_illuminated,xx,yy,ht,vr,rmsmax,ier)
+
+          enddo ! i
+          enddo ! j
+
+        enddo ! k
+
+      endif ! l_multi_doppler_new
 
       write(6,*)
      1     ' Finished insert_derived_radar_obs, icount_radar_total = '
@@ -207,8 +295,8 @@ csms$ignore end
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar                          ! Input
      1  ,vr_obs_unfltrd                             ! Input
-     1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
-     1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
+!    1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
+!    1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar,rheight_radar        ! Input
@@ -218,7 +306,7 @@ csms$ignore end
      1  ,l_derived_output,l_grid_north              ! Input
      1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1  ,n_radarobs_tot_unfltrd                     ! Input
+!    1  ,n_radarobs_tot_unfltrd                     ! Input
      1  ,vr_obs_fltrd                               ! Local
      1  ,l_good_multi_doppler_ob                    ! Input/Output
      1  ,istatus                                    ! Input/Output
@@ -236,74 +324,14 @@ csms$ignore end
       logical  l_good_multi_doppler_ob(imax,jmax,kmax),l_derived_output
       logical  l_grid_north, l_multi_doppler_new
 
-      integer*4 thresh_2_radarobs_lvl_unfltrd
-     1         ,thresh_4_radarobs_lvl_unfltrd
+!     integer*4 thresh_2_radarobs_lvl_unfltrd
+!    1         ,thresh_4_radarobs_lvl_unfltrd
 
       character*31 ext
 
       data l_multi_doppler_new /.false./
 
 csms$ignore begin
-      write(6,*)' Filtering radar obs into superobs',rlat_radar,rlon_rad
-     1ar
-      n_radarobs_tot_fltrd = 0
-      i_radar_reject = 0
-
-      write(6,*)' LVL  # Obs  Intvl  # FLTR'
-
-      do k=1,kmax
-
-!       Count number of unfiltered obs after rejecting obs having non-radar data
-        n_radarobs_lvl_unfltrd = 0
-        do j=1,jmax
-        do i=1,imax
-            if(vr_obs_unfltrd(i,j,k) .ne. r_missing_data)then
-                if(wt_p_radar(i,j,k) .ne. weight_radar .and.
-     1     wt_p_radar(i,j,k) .ne. r_missing_data)then ! Non-radar ob
-                    vr_obs_unfltrd(i,j,k) = r_missing_data
-                    i_radar_reject = i_radar_reject + 1
-                else
-                    n_radarobs_lvl_unfltrd = n_radarobs_lvl_unfltrd + 1
-                endif
-            endif
-        enddo ! i
-        enddo ! j
-
-!       Filter to make the filtered ob array more sparse
-        call filter_radar_obs(
-     1                  n_radarobs_lvl_unfltrd,       ! Input
-     1                  imax,jmax,                    ! Input
-     1                  vr_obs_unfltrd(1,1,k),        ! Input
-     1                  thresh_2_radarobs_lvl_unfltrd,! Input
-     1                  thresh_4_radarobs_lvl_unfltrd,! Input
-     1                  r_missing_data,               ! Input
-     1                  vr_obs_fltrd(1,1,k),          ! Input/Output
-     1                  intvl_rad)                    ! Output
-
-!       Count number of filtered obs
-        n_radarobs_lvl_fltrd = 0
-        do j=1,jmax
-        do i=1,imax
-          if(vr_obs_fltrd(i,j,k) .ne. r_missing_data)then
-            n_radarobs_lvl_fltrd = n_radarobs_lvl_fltrd + 1
-          endif
-        enddo ! i
-        enddo ! j
-
-        n_radarobs_tot_fltrd = n_radarobs_tot_fltrd 
-     1                       + n_radarobs_lvl_fltrd
-
-        write(6,501)k,n_radarobs_lvl_unfltrd,intvl_rad
-     1             ,n_radarobs_lvl_fltrd
-501     format(1x,i3,i6,i7,i9)
-
-      enddo ! k
-
-      write(6,*)' # Radar Obs Rejected due to other data = ',i_radar_rej
-     1ect
-      write(6,502)n_radarobs_tot_unfltrd,n_radarobs_tot_fltrd
-502   format(1x,' # Radar Obs TOTAL UNFILTERED / FILTERED = ',2i7)
-
 
 c  convert radar obs into u & v by using tangential component of first pass
       write(6,*)
@@ -447,13 +475,16 @@ csms$ignore end
 
 
       subroutine filter_radar_obs(
-     1                  n_radarobs_lvl_unfltrd,       ! Input
      1                  imax,jmax,                    ! Input
      1                  vr_obs_unfltrd,               ! Input
+     1                  wt_p_radar,weight_radar,      ! Input
      1                  thresh_2_radarobs_lvl_unfltrd,! Input
      1                  thresh_4_radarobs_lvl_unfltrd,! Input
      1                  r_missing_data,               ! Input
      1                  vr_obs_fltrd,                 ! Input/Output
+     1                  i_radar_reject,               ! Input/Output
+     1                  n_radarobs_lvl_unfltrd,       ! Output
+     1                  n_radarobs_lvl_fltrd,         ! Output
      1                  intvl_rad)                    ! Output
 
 !       Filter to make the filtered ob array more sparse
@@ -468,13 +499,30 @@ csms$ignore end
 
         integer*4 n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
         real*4 vr_obs_unfltrd(imax,jmax)
+        real*4 wt_p_radar(imax,jmax)
         real*4 vr_obs_fltrd(imax,jmax)
-        real*4 r_missing_data
+        real*4 r_missing_data, weight_radar
 
         logical l_found_one, l_imax_odd, l_jmax_odd
-        integer i,j,ii,jj
+        integer i,j,ii,jj,i_radar_reject,n_radarobs_lvl_fltrd
 
 csms$ignore begin
+!       Count number of unfiltered obs after rejecting obs having non-radar data
+        n_radarobs_lvl_unfltrd = 0
+        do j=1,jmax
+        do i=1,imax
+          if(vr_obs_unfltrd(i,j) .ne. r_missing_data)then       
+            if(wt_p_radar(i,j) .ne. weight_radar .and.
+     1         wt_p_radar(i,j) .ne. r_missing_data)then ! Non-radar ob
+                vr_obs_unfltrd(i,j) = r_missing_data
+                i_radar_reject = i_radar_reject + 1
+            else
+                n_radarobs_lvl_unfltrd = n_radarobs_lvl_unfltrd + 1
+            endif
+          endif
+        enddo ! i
+        enddo ! j
+
         l_imax_odd = 1 .eq. mod(imax,2)
         l_jmax_odd = 1 .eq. mod(jmax,2)
 
@@ -546,6 +594,16 @@ csms$ignore begin
            enddo
            enddo
       endif
+
+!     Count number of filtered obs
+      n_radarobs_lvl_fltrd = 0
+      do j=1,jmax
+      do i=1,imax
+        if(vr_obs_fltrd(i,j) .ne. r_missing_data)then
+          n_radarobs_lvl_fltrd = n_radarobs_lvl_fltrd + 1
+        endif
+      enddo ! i
+      enddo ! j
 
 csms$ignore end
       return
