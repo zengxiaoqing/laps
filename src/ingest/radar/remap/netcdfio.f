@@ -134,6 +134,9 @@ c      Determine filename extension
                endif
            endif
 
+           call s_len(c_filespec,lenspec)
+           write(6,*)' Input filespec = ',c_filespec(1:lenspec)
+
            write(6,*)' # of 2nd tilt raw files = ',i_nbr_files_2nd
 
            I4_elapsed = ishow_timer()
@@ -210,6 +213,11 @@ c      Determine filename extension
      1           ' Looking for earliest unprocessed input file back to '       
      1           ,a9_time
 
+               i4_latest_window = i4time_sys + laps_cycle_time + 1800
+               call make_fnam_lp(i4_latest_window,a9_time,istatus)
+
+               write(6,*)' Files accepted up to ',a9_time
+
                do i = latest_raw_file,1,-1
                    if(i .eq. latest_raw_file)then ! Write latest raw filetime
                        call make_fnam_lp(i4times_raw(i),a9_time,istatus)
@@ -224,7 +232,10 @@ c      Determine filename extension
                    enddo ! j
 
                    if( (.not. l_output)                      .AND. 
-     1                i4times_raw(i) .gt. i4_earliest_window       )then
+     1                i4times_raw(i) .ge. i4_earliest_window       
+     1                              .AND.
+     1                i4times_raw(i) .le. i4_latest_window
+     1                                                           )then
                        i4time_process = i4times_raw(i)
                    endif
 
