@@ -221,58 +221,37 @@
         write(6,*)
         write(6,*)' Obtain wind tendency from model first guesses:'
 
-!  ***  Read in MODEL data   ********************************************
-        do NT = NTMIN,NTMAX
+        var_2d = 'U3'
 
-          if(NT .ne. 1)then
+        call get_fg_var(
+     1          i4time_lapswind,ilaps_cycle_time               ! Input
+     1          ,NX_L,NY_L,NZ_L                                ! Input
+     1          ,NTMIN,NTMAX                                   ! Input
+     1          ,var_2d                                        ! Input
+     1          ,u_mdl_bkg_4d                                  ! Output
+     1          ,istatus                                       ! Output
+     1                                  )
 
-            write(6,*)' Reading u_mdl_bkg_4d, NT= ',NT
-            var_2d = 'U3'
-            call get_modelfg_3d(i4time_lapswind+ilaps_cycle_time*NT      
-     1          ,var_2d,NX_L,NY_L,NZ_L
-     1          ,u_mdl_bkg_4d(1,1,1,NT),istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Aborting from LAPS Wind Anal'
-     1                   ,' - Error reading MODEL Wind'
-                return
-            endif
-            write(6,*)'u_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT) = '
-     1                ,u_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT)
+        if(istatus .ne. 1)then
+            write(6,*)' Error processing model first guess for ',var_2d       
+            return
+        endif
 
+        var_2d = 'V3'
 
-            write(6,*)' Reading v_mdl_bkg_4d, NT= ',NT
-            var_2d = 'V3'
-            call get_modelfg_3d(i4time_lapswind+ilaps_cycle_time*NT      
-     1          ,var_2d,NX_L,NY_L,NZ_L
-     1          ,v_mdl_bkg_4d(1,1,1,NT),istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Aborting from LAPS Wind Anal'
-     1                   ,' - Error reading MODEL Wind'
-                return
-            endif
-            write(6,*)'v_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT) = '
-     1                ,v_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT)
+        call get_fg_var(
+     1          i4time_lapswind,ilaps_cycle_time               ! Input
+     1          ,NX_L,NY_L,NZ_L                                ! Input
+     1          ,NTMIN,NTMAX                                   ! Input
+     1          ,var_2d                                        ! Input
+     1          ,v_mdl_bkg_4d                                  ! Output
+     1          ,istatus                                       ! Output
+     1                                  )
 
-          else ! NT = 1
-
-!           Note that we can eventually read in the data for NT=1 directly
-!           after all obs data is processed "the right way" WRT time
-            do k = 1,NZ_L
-            do j = 1,NY_L
-            do i = 1,NX_L
-                u_mdl_bkg_4d(i,j,k,1) = 2. * u_mdl_bkg_4d(i,j,k,0) 
-     1                                -      u_mdl_bkg_4d(i,j,k,-1) 
-                v_mdl_bkg_4d(i,j,k,1) = 2. * v_mdl_bkg_4d(i,j,k,0) 
-     1                                -      v_mdl_bkg_4d(i,j,k,-1)    
-            enddo ! i
-            enddo ! j
-            enddo ! k
-
-          endif ! NT .ne. 1
-
-        enddo ! NT
-
-        I4_elapsed = ishow_timer()
+        if(istatus .ne. 1)then
+            write(6,*)' Error processing model first guess for ',var_2d       
+            return
+        endif
 
         write(6,*)' Using Model Winds for u/v_laps_fg'       
 
@@ -283,6 +262,66 @@
      1            ,u_laps_fg(NX_L/2+1,NY_L/2+1,1)
         write(6,*)'v_laps_fg(NX_L/2+1,NY_L/2+1,1) = '
      1            ,v_laps_fg(NX_L/2+1,NY_L/2+1,1)
+
+        return
+        end
+
+
+        subroutine get_fg_var(
+     1          i4time_lapswind,ilaps_cycle_time               ! Input
+     1          ,NX_L,NY_L,NZ_L                                ! Input
+     1          ,NTMIN,NTMAX                                   ! Input
+     1          ,var_2d                                        ! Input
+     1          ,var_mdl_bkg_4d                                ! Output
+     1          ,istatus                                       ! Output
+     1                                  )
+
+!       1999    Steve Albers - FSL
+
+        dimension var_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
+
+        character*3 var_2d
+
+        write(6,*)
+        write(6,*)' Obtain field tendency from model first guesses:'
+
+!  ***  Read in MODEL data   ********************************************
+        do NT = NTMIN,NTMAX
+
+          if(NT .ne. 1)then
+
+            write(6,*)' Reading var_mdl_bkg_4d, var/NT= ',var_2d,NT
+            call get_modelfg_3d(i4time_lapswind+ilaps_cycle_time*NT      
+     1          ,var_2d,NX_L,NY_L,NZ_L
+     1          ,var_mdl_bkg_4d(1,1,1,NT),istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Aborting from get_fg_var'
+     1                   ,' - Error reading MODEL Data ',var_2d,NT
+                return
+            endif
+            write(6,*)'var_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT) = '
+     1                ,var_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT)
+
+          else ! NT = 1
+
+!           Note that we can eventually read in the data for NT=1 directly
+!           after all obs data is processed "the right way" WRT time
+!           The current strategy allows for "NULL" testing of doing improved
+!           time interpolation of obs.
+            do k = 1,NZ_L
+            do j = 1,NY_L
+            do i = 1,NX_L
+                var_mdl_bkg_4d(i,j,k,1) = 2. * var_mdl_bkg_4d(i,j,k,0) 
+     1                                -        var_mdl_bkg_4d(i,j,k,-1)        
+            enddo ! i
+            enddo ! j
+            enddo ! k
+
+          endif ! NT .ne. 1
+
+        enddo ! NT
+
+        I4_elapsed = ishow_timer()
 
         return
         end
