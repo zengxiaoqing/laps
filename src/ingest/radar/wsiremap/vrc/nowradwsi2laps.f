@@ -62,9 +62,11 @@ c confines.
       real    absent_site_lon(maxradars)
       real    radar_lat(maxradars)
       real    radar_lon(maxradars)
+      real    radar_elev(maxradars)
 
       real*4 lat(imax,jmax)
       real*4 lon(imax,jmax)
+      real*4 height_grid(imax,jmax)
       real*4 rdbz(imax,jmax)
       real*4 radar_dist_min(imax,jmax)
       real*4 ri(imax,jmax)
@@ -199,9 +201,10 @@ c ---------------------------------------------------
 
 c----------------------------------------------------
 c Determine which radars in wsi grid are in this domain
-c and save the minimum distance to radar.
+c and compute/save the minimum distance to radar.
 c----------------------------------------------------
       call get_r_missing_data(r_missing_data,istatus)
+      call  read_static_grid(imax,jmax,'AVG',height_grid,istatus)
       nradars_dom=0
       if(ctype.eq.'wsi')then
          do i=1,nsites_present
@@ -215,6 +218,9 @@ c----------------------------------------------------
               nradars_dom = nradars_dom + 1
               radar_lat(nradars_dom)=present_site_lat(i)
               radar_lon(nradars_dom)=present_site_lon(i)
+              call bilinear_laps(rii,rjj,imax,jmax,height_grid
+     &                          ,result)
+              radar_elev(nradars_dom)=result
            endif
         enddo
         print*
@@ -224,12 +230,12 @@ c----------------------------------------------------
 
         do j=1,jmax
         do i=1,imax
+
            distmin=r_missing_data
            do k=1,nradars_dom
-              rlatdif=(lat(i,j)-radar_lat(k))*111100.      !m
-              rlondif=(lon(i,j)-radar_lon(k))*111100.
-              dist=sqrt(rlatdif*rlatdif + rlondif*rlondif)
-              if(dist.lt.distmin)distmin=dist
+              call latlon_to_radar(lat(i,j),lon(i,j),height_grid(i,j)
+     1,azimuth,slant_range,elev,radar_lat(k),radar_lon(k),radar_elev(k))     
+              if(slant_range.lt.distmin)distmin=slant_range
            enddo
            radar_dist_min(i,j)=distmin
        enddo
