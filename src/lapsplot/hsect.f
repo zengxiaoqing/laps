@@ -165,6 +165,8 @@ cdis
         real*4, allocatable, dimension(:,:,:,:) :: grid_ra_vel
         real*4, allocatable, dimension(:,:,:,:) :: grid_ra_nyq
 
+        integer*4 idx_radar(MAX_RADARS)
+
         real*4 grid_ra_ref_dum(1,1,1,1)
         real*4 grid_ra_vel_dum(1,1,1,1)
         real*4 field_3d(NX_L,NY_L,NZ_L)
@@ -343,7 +345,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
      1      ,',   [pt,pb] Theta, Blnc Theta'
      1      /'     HGTS: [ht,hb,hr,bh] (LAPS,LGA,FUA,QBAL),'
-     1      /'           [hh] Height of Const Temp Sfc'               )
+     1      /'           [hh,bl] Ht of Const Temp Sfc, PBL'      )
 
         write(6,12)
  12     format(
@@ -1239,12 +1241,54 @@ c       include 'satellite_dims_lvd.inc'
                 cint = 5.
             endif
 
-!           call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_3dw
-!    1                   ,c33_label
-!    1                   ,i_overlay,c_display,lat,lon,jdot       
-!    1                   ,NX_L,NY_L,r_missing_data,laps_cycle_time)
-
             scale = 1.
+            call plot_field_2d(i4time_3dw,c_type,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
+
+        elseif(c_type(1:2) .eq. 'bl')then
+            write(6,*)
+
+            write(6,826)
+ 826        format(/'  SELECT FIELD (VAR_2D):  '
+     1       /
+     1       /'     PBL (stability): [ptp,pdm] ? ',$)       
+
+            read(lun,824)var_2d
+!824        format(a)
+            call upcase(var_2d,var_2d)
+
+            ext = 'pbl'
+
+            write(6,*)' Getting pregenerated file',ext(1:3),' ',var_2d       
+
+            call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
+     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                                  ,field_2d,0,istatus)
+
+            i4time_3dw = i4time_nearest
+            call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
+            
+            if(var_2d(1:3) .eq. 'PTP')then
+                clow = 500.
+                chigh = 1100.
+            else
+                clow = 0.
+                chigh = 5000.
+            endif
+
+            if(units_2d(1:2) .eq. 'PA')then
+                units_2d = 'hPa'
+                scale = 100.
+            else
+                scale = 1.
+            endif
+
+            cint = 0.
+
+            c33_label = comment_2d(1:29)//' '//units_2d(1:3)
+
             call plot_field_2d(i4time_3dw,c_type,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
@@ -1733,7 +1777,7 @@ c
      1                i4time_get,100000000,i4time_radar_a
      1               ,max_radars,n_radars,ext_radar_a,r_missing_data       
      1               ,.true.,NX_L,NY_L,NZ_L
-     1               ,grid_ra_vel,grid_ra_nyq,v_nyquist_in_a
+     1               ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a       
      1               ,n_vel_grids_a
      1               ,rlat_radar_a,rlon_radar_a,rheight_radar_a
      1               ,radar_name_a      
@@ -3984,8 +4028,15 @@ c                   cint = -1.
 
             endif
 
-            c33_label = 'Sfc Bkgnd/Fcst  '//fcst_hhmm//' '
-     1                  //ext(1:3)//'/'//var_2d(1:3)
+!           c33_label = 'Sfc Bkgnd/Fcst  '//fcst_hhmm//' '
+!    1                  //ext(1:3)//'/'//var_2d(1:3)
+
+            if(ext(1:3) .eq. 'fsf')then
+                c33_label = comment_2d(1:28)//' '//fcst_hhmm
+            else
+                c33_label = comment_2d(1:24)
+     1                      //' '//var_2d(1:3)//' '//fcst_hhmm
+            endif
 
             call make_fnam_lp(i4_valid,asc9_tim,istatus)
 
