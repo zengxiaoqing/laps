@@ -107,7 +107,7 @@ c-------------------------------------------------------------------------------
 c
 c *** Comments used in writing netcdf files only.
 c
-      integer istat, i
+      integer istat, i, no_infinite_loops
 c
 c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
@@ -147,8 +147,11 @@ c
       call get_systime(i4time_now,a9,lga_status)
       lga_status = 0 
 
-      do while(lga_status.le.0 .and. i.le.nbgmodel)
-c         print *,'HERE:',lga_status, i, bg_files,reject_cnt
+      no_infinite_loops=0
+      do while(lga_status.le.0 .and. i.le.nbgmodel
+     +     .and. no_infinite_loops.lt.30)
+         no_infinite_loops=no_infinite_loops+1
+         print *,'HERE:',lga_status, i, bg_files,reject_cnt
          if(bg_files.le.reject_cnt) then
             i=i+1 
             bgmodel = bgmodels(i)
@@ -206,7 +209,9 @@ c
         endif
         
       enddo
-
+      if(no_infinite_loops.ge.30) then
+         print*,'ERROR: LGA infinite loop condition found'
+      endif
 c
       if(lga_status.eq.0) goto 965
       print *,'LGA...Normal completion.'
@@ -263,6 +268,8 @@ c
      .          max_files, lga_status, laps_cycle_time,
      .          bgmodel
       integer icnt
+      integer i_mx, i_mn, j_mx, j_mn, nan_flag
+      real diff, diff_mx, diff_mn
       real prbot, delpr
       character*(*) lapsroot, laps_domain_file, bgpath, bg_names(2)
      +     , cmodel
@@ -665,45 +672,115 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
                lga_status = -nf
                return
             endif
-            if (ht(i,j,k) .ne. ht(i,j,k) .or. 
-     .           tp(i,j,k) .ne. tp(i,j,k) .or.
-     .           sh(i,j,k) .ne. sh(i,j,k) .or. 
-     .           uw(i,j,k) .ne. uw(i,j,k) .or.
-     .           vw(i,j,k) .ne. vw(i,j,k)) then
-               print *,'ERROR: NaN detected:',i,j,k
-               lga_status = -nf
-               return
-            endif
+cc            if (ht(i,j,k) .ne. ht(i,j,k) .or. 
+cc     .           tp(i,j,k) .ne. tp(i,j,k) .or.
+cc     .           sh(i,j,k) .ne. sh(i,j,k) .or. 
+cc     .           uw(i,j,k) .ne. uw(i,j,k) .or.
+cc     .           vw(i,j,k) .ne. vw(i,j,k)) then
+cc               print *,'ERROR: NaN detected:',i,j,k
+cc               lga_status = -nf
+cc               return
+cc            endif
          enddo
       enddo
       enddo
 c
+      call checknan_3d(ht,nx_laps,ny_laps,nz_laps,nan_flag)
+      if(nan_flag .ne. 1) then
+         print *,' ERROR: NaN found in array ht'
+         lga_status = -nf
+         return
+      endif
+c
+      call checknan_3d(tp,nx_laps,ny_laps,nz_laps,nan_flag)
+      if(nan_flag .ne. 1) then
+         print *,' ERROR: NaN found in array tp'
+         lga_status = -nf
+         return
+      endif
+c
+      call checknan_3d(sh,nx_laps,ny_laps,nz_laps,nan_flag)
+      if(nan_flag .ne. 1) then
+         print *,' ERROR: NaN found in array sh'
+         lga_status = -nf
+         return
+      endif
+c
+      call checknan_3d(uw,nx_laps,ny_laps,nz_laps,nan_flag)
+      if(nan_flag .ne. 1) then
+         print *,' ERROR: NaN found in array uw'
+         lga_status = -nf
+         return
+      endif
+c
+      call checknan_3d(vw,nx_laps,ny_laps,nz_laps,nan_flag)
+      if(nan_flag .ne. 1) then
+         print *,' ERROR: NaN found in array vw'
+         lga_status = -nf
+         return
+      endif
+c
 c compute sfc p for NOGAPS background
 c    "      "   for AVN. Takes advantage of LAPS terrain.
+c Now trying all models....
 c
-      if(bgmodel.eq.6.or.bgmodel.eq.8)then
+cc      if(bgmodel.eq.6.or.bgmodel.eq.8)then
 
 c check for T > Td before sfc p computation. Due to large scale
 c interpolation we can have slightly larger (fractional) Td than T.
 c
          icnt=0
+         diff_mx = -1.e30
+         diff_mn =  1.e30
+         i_mx = 0
+         j_mx = 0
+         i_mn = 0
+         j_mn = 0
          do j=1,ny_laps
          do i=1,nx_laps
             if(sh_sfc(i,j).gt.tp_sfc(i,j))then
+               diff = sh_sfc(i,j) - tp_sfc(i,j)
                sh_sfc(i,j)=tp_sfc(i,j)
                icnt=icnt+1
+               if(diff .gt. diff_mx) then
+                  diff_mx = diff
+                  i_mx = i
+                  j_mx = j
+               endif
+               if(diff .lt. diff_mn) then
+                  diff_mn = diff
+                  i_mn = i
+                  j_mn = j
+               endif
             endif
          enddo
          enddo
 
-         if(icnt.gt.0)then
-            print*,'Found ',icnt, 'points, Td > T'
+cc         if(icnt.gt.0)then
+cc            print*,'Found ',icnt, 'points, Td > T'
+cc         endif
+
+         print *,' Dewpoint check:'
+         print *,'     Dewpt greater than temp at ',icnt,' points.'
+         if(icnt .gt. 0) then
+            write(6,9901) 'Max', diff_mx, i_mx, j_mx
+            write(6,9901) 'Min', diff_mx, i_mx, j_mx
          endif
-
-         call sfcprs(tp, sh, ht, tp_sfc, sh_sfc, topo, pr,
+ 9901    format(8x,a3,' difference of ',f12.4,' at i,j ',i5,',',i5)
+c
+c..... Do the temp, moisture, and pressures
+c
+         call sfcprs(bgmodel, tp, sh, ht, tp_sfc, sh_sfc, topo, pr,
      .               nx_laps, ny_laps, nz_laps, pr_sfc)
+c
+c..... Do the winds
+c
+         call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
+     &                         nz_laps,missingflag,uw_sfc)
+         call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
+     &                         nz_laps,missingflag,vw_sfc)
 
-      endif
+cc      endif
 c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
@@ -1037,3 +1114,120 @@ c
       source = comment(1:12)
       return
       end
+c
+c
+      subroutine checknan_2d(x,ni,nj,nan_flag)
+c
+c     Routine to check a real 2-d array for NaN's.
+c
+      integer ni,nj
+      real*4 x(ni,nj)
+c
+      nan_flag = 1
+c
+      do j=1,nj
+      do i=1,ni
+         if( nan( x(i,j) ) .eq. 1) then
+            print *,' ** ERROR. Found a NaN at ', i, j
+            nan_flag = -1
+            return
+         endif
+      enddo !i
+      enddo !j
+c
+      return
+      end
+c
+c
+      subroutine checknan_3d(x,ni,nj,nk,nan_flag)
+c
+c     Routine to check a real 3-d array for NaN's.
+c
+      integer ni,nj,nk
+      real*4 x(ni,nj,nk)
+c
+      nan_flag = 1
+c
+      do k=1,nk
+      do j=1,nj
+      do i=1,ni
+         if( nan( x(i,j,k) ) .eq. 1) then
+            print *,' ** ERROR. Found a NaN at ', i, j, k
+            nan_flag = -1
+            return
+         endif
+      enddo !i
+      enddo !j
+      enddo !k
+c
+      return
+      end
+c
+c
+      subroutine interp_to_sfc(sfc_2d,field_3d,heights_3d,ni,nj,nk,
+     &                         badflag,interp_2d)
+c
+c=================================================================
+c     
+c     Routine to interpolate a 3-d field to a 2-d surface.  The
+c     2-d surface can be the actual "surface" (the topography),
+c     or any other 2-d surface within the grid.
+c
+c     Based on code in the LAPS wind analysis, Steve Albers, FSL.
+c
+c     Original: 04-09-99  Peter A. Stamus, NOAA/FSL
+c     Changes:
+c
+c=================================================================
+c
+      real sfc_2d(ni,nj), field_3d(ni,nj,nk), heights_3d(ni,nj,nk)
+      real interp_2d(ni,nj)
+c
+
+      write(6,*)' Interpolating 3-d field to 2-d surface.'
+
+cc      i_sfc_bad = 0
+c
+c..... Interpolate from the 3-d grid to the 2-d surface at each point.
+c
+      do j=1,nj
+      do i=1,ni
+c
+         zlow = height_to_zcoord2(sfc_2d(i,j),heights_3d,ni,nj,nk,
+     &                                                  i,j,istatus)
+         if(istatus .ne. 1)then
+            write(6,*) ' Error in height_to_zcoord2 in interp_to_sfc',
+     &                 istatus       
+            write(6,*) i,j,zlow,sfc_2d(i,j),(heights_3d(i,j,k),k=1,nk)     
+            return
+         endif
+c
+         klow = max(zlow, 1.)
+         khigh = klow + 1
+         fraclow = float(khigh) - zlow
+         frachigh = 1.0 - fraclow
+c
+         if( field_3d(i,j,klow)  .eq. badflag .or.
+     &       field_3d(i,j,khigh) .eq. badflag) then
+
+            write(6,3333)i,j
+ 3333       format(' Warning: cannot interpolate to sfc at ',2i5)       
+cc            i_sfc_bad = 1
+            interp_2d(i,j) = badflag
+
+         else
+
+            interp_2d(i,j) = field_3d(i,j,klow ) * fraclow  +  
+     &                       field_3d(i,j,khigh) * frachigh
+
+         endif
+c
+      enddo !i
+      enddo !j
+c
+c..... That's all.
+c
+      return
+      end
+
+
