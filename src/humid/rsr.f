@@ -57,15 +57,41 @@ cdis
        ext = 'lsr'
        call get_directory('lsr',dir,len)
 
+c     install new changes for revise satellite path
+
+ 
+       if (ngoes.eq.8) then
+          dir = dir(1:len)//'goes08/'
+          len = len + 7
+       elseif (ngoes.eq.9) then
+          dir = dir(1:len)//'goes09/'
+          len = len + 7
+       elseif (ngoes.eq.10) then
+          dir = dir(1:len)//'goes10/'
+          len = len + 7
+       endif
+
+
        call get_latest_file (dir,i4time_in,filename1,istatus)
 
        if (istatus.ne.1) return
 
+       write (6,*) ' ' 
+       write (6,*) ' ' 
+       write (6,*) ' ' 
+       write (6,*) 'Directory path is: ', dir
        write (6,*) 'Attempting: ', filename1
 c     convert filename to i4time
        call i4time_fname_lp (filename1,i4time,istatus)
 
        write (6,*) 'Sounder time difference (sec)', i4time-i4time_in
+
+c     put in test for old data, reject data if older than 1 hour.
+
+       if( i4time-i4time_in .gt. 3600) then
+         write (6,*) 'Sounder data is too old to use, GT one hour old'
+         return
+       endif
 
        do k = 1,19
           var_lsr(k) = ' '
