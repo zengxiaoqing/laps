@@ -85,6 +85,7 @@ c**************new routine as adapted at FSL**************************
      1                          ,v_sfc                              ! I
      1                          ,p_sfc_pa                           ! I
      1                          ,r_missing_data                     ! I
+     1                          ,i4time                             ! I
      1                          ,fosberg_2d                         ! O
      1                          ,haines_mid_2d                      ! O
      1                          ,haines_hi_2d                       ! O
@@ -150,6 +151,7 @@ c**************new routine as adapted at FSL**************************
      1                           ,v_sfc                              ! I
      1                           ,p_sfc_pa                           ! I
      1                           ,r_missing_data                     ! I
+     1                           ,i4time                             ! I
      1                           ,fosberg_2d                         ! O
      1                           ,haines_mid_2d                      ! O
      1                           ,haines_hi_2d                       ! O
