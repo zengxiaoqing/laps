@@ -607,33 +607,35 @@ c
 c
 c.....	Fill in the boundary of each field.
 c
+        i_boundary = 2
+
 	print *,' Boundary for    U:'
 	call set_boundary(u1,imax,jmax,ii,jj,uu,u_bk,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 	print *,' Boundary for    V:'
 	call set_boundary(v1,imax,jmax,ii,jj,vv,v_bk,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 	print *,' Boundary for    T:'
 	call set_boundary(t1,imax,jmax,ii,jj,t_s,t_bk,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 	print *,' Boundary for   TD:'
 	call set_boundary(td1,imax,jmax,ii,jj,td_s,td_bk,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 	print *,' Boundary for REDP:'
 	call set_boundary(rp1,imax,jmax,ii,jj,pred_s,rp_bk,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 	print *,' Boundary for STNP:'
 	call set_boundary(sp1,imax,jmax,ii,jj,pstn_s,stnp_bk,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 	print *,' Boundary for MSLP:'
 	call set_boundary(mslp1,imax,jmax,ii,jj,pmsl_s,mslp_bk,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 	print *,' Boundary for  VIS:'
 	call set_boundary(vis1,imax,jmax,ii,jj,vis_s,vis_bk,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 	print *,' Boundary for ELEV:'
 	call set_boundary(elev1,imax,jmax,ii,jj,elev_s,topo,n_obs_b,
-     &                    badflag,mxstn)
+     &                    badflag,mxstn,i_boundary)
 c
 c.....	Check the brightness temperatures for clouds.
 c
@@ -821,122 +823,6 @@ c
 	end
 c
 c
-	subroutine fill_bounds(x,imax,jmax,ii,jj,x_ob,
-     &                           n_obs_b,badflag,mxstn)
-c
-c======================================================================
-c
-c       Routine to fill the boundary of an array with values from a
-c       wide-area Barnes analysis.
-c
-c       Orginal:  P. Stamus  NOAA/FSL  c.1990
-c       Changes:  P. Stamus  27 Aug 1997  Changes for dynamic LAPS
-c
-c======================================================================
-c
-	real*4 x(imax,jmax), x_ob(mxstn)
-	real*4 fnorm(0:imax-1,0:jmax-1)
-	real*4 dum(imax,jmax)  !work array
-c
-	integer ii(mxstn), jj(mxstn)
-c
-	npass = 1
-	call zero(dum,imax,jmax)
-c
-c.....	Call the wide-area Barnes.
-c
-	rom2 = 0.01
-	call dynamic_wts(imax,jmax,0,rom2,d,fnorm)
-	call barnes_wide(dum,imax,jmax,ii,jj,x_ob,n_obs_b,badflag,
-     &                   mxstn,npass,fnorm) 
-c
-c.....	Copy the boundaries from the dummy array to the main array--if--
-c.....	there isn't a station there already.
-c
-	do i=1,imax
-	 if(x(i,1).eq.0. .or. x(i,1).eq.badflag) x(i,1) = dum(i,1)
-	 if(x(i,jmax).eq.0..or.x(i,jmax).eq.badflag) 
-     &                                     x(i,jmax) = dum(i,jmax)
-	enddo !i
-	do j=1,jmax
-	 if(x(1,j).eq.0. .or. x(1,j).eq.badflag) x(1,j) = dum(1,j)
-	 if(x(imax,j).eq.0..or.x(imax,j).eq.badflag) 
-     &                                     x(imax,j) = dum(imax,j)
-	enddo !j
-c
-c
-        do i=1,imax
-           do j=1,2
-              x(i,j)=dum(i,j)
-           enddo
-           do j=jmax-1,jmax
-              x(i,j)=dum(i,j)
-           enddo
-        enddo
-
-        do j=1,jmax
-           do i=1,2
-              x(i,j)=dum(i,j)
-           enddo
-           do i=imax-1,imax
-              x(i,j)=dum(i,j)
-           enddo
-        enddo
-	return
-	end
-c
-c
-	subroutine back_bounds(x,imax,jmax,dum,badflag)
-c
-c======================================================================
-c
-c       Routine to fill the boundary of an array with values from an
-c       earlier analysis...for when we have limited data.
-c
-c       Orginal: P. Stamus  NOAA/FSL  c.1990
-c       Changes: P. Stamus  27 Aug 1997  Pass in bad flag value.
-c                J. Smart   15 Jul 1998  background put on the boundary
-c                                        + 2 grid points in.
-c                                  (McGinley and Stamus approved this mod)
-c
-c======================================================================
-c
-	real*4 x(imax,jmax), dum(imax,jmax)
-c
-c.....	Copy the boundaries from the dummy array to the main array--if--
-c.....	there isn't a station there already.
-c
-	do i=1,imax
-	 if(x(i,1).eq.0. .or. x(i,1).eq.badflag) x(i,1) = dum(i,1)
-	 if(x(i,jmax).eq.0..or.x(i,jmax).eq.badflag) 
-     &                                     x(i,jmax) = dum(i,jmax)
-	enddo !i
-	do j=1,jmax
-	 if(x(1,j).eq.0. .or. x(1,j).eq.badflag) x(1,j) = dum(1,j)
-	 if(x(imax,j).eq.0..or.x(imax,j).eq.badflag) 
-     &                                     x(imax,j) = dum(imax,j)
-	enddo !j
-c
-        do i=1,imax
-           do j=1,2
-              x(i,j)=dum(i,j)
-           enddo
-           do j=jmax-1,jmax
-              x(i,j)=dum(i,j)
-           enddo
-        enddo
-
-        do j=1,jmax
-           do i=1,2
-              x(i,j)=dum(i,j)
-           enddo
-           do i=imax-1,imax
-              x(i,j)=dum(i,j)
-           enddo
-        enddo
-
-	return
-	end
 c
 c
       subroutine splie2(x1a,x2a,ya,m,n,y2a)
@@ -1038,7 +924,7 @@ c	15 May 1991 Birkenheuer
 c
 c
 	subroutine set_boundary(x,imax,jmax,ii,jj,x_ob,x_bk,n_obs_b,
-     &                          badflag,mxstn)
+     &                          badflag,mxstn,i_boundary)
 c
 c======================================================================
 c
@@ -1072,6 +958,11 @@ c
 	call dynamic_wts(imax,jmax,0,rom2,d,fnorm)
 	call barnes_wide(dum,imax,jmax,ii,jj,x_ob,n_obs_b,badflag,
      &                   mxstn,npass,fnorm,istatus)
+
+        if(i_boundary .eq. 0)then
+           write(6,*)' Skipping boundary fill'
+           return
+        endif
 c
 c.....	Copy the boundaries from the dummy array to the main array.
 c
@@ -1079,18 +970,18 @@ c
 	   print *,' Filling boundary using Barnes.'
 c
 	   do i=1,imax
-	      do j=1,2
+	      do j=1,i_boundary
 		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = dum(i,j)
 	      enddo !j
-	      do j=jmax-1,jmax
+	      do j=jmax+1-i_boundary,jmax
 		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = dum(i,j)
 	      enddo !j
 	   enddo !i
 	   do j=1,jmax
-	      do i=1,2
+	      do i=1,i_boundary
 		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = dum(i,j)
 	      enddo !i
-	      do i=imax-1,imax
+	      do i=imax+1-i_boundary,imax
 		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = dum(i,j)
 	      enddo !i
 	   enddo !j
@@ -1099,18 +990,18 @@ c
 	   print *,' Problem calculating boundary. Using background.'
 c
 	   do i=1,imax
-	      do j=1,2
+	      do j=1,i_boundary
 		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = x_bk(i,j)
 	      enddo !j
-	      do j=jmax-1,jmax
+	      do j=jmax+1-i_boundary,jmax
 		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = x_bk(i,j)
 	      enddo !j
 	   enddo !i
 	   do j=1,jmax
-	      do i=1,2
+	      do i=1,i_boundary
 		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = x_bk(i,j)
 	      enddo !i
-	      do i=imax-1,imax
+	      do i=imax+1-i_boundary,imax
 		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = x_bk(i,j)
 	      enddo !i
 	   enddo !j
