@@ -4651,7 +4651,14 @@ c                   cint = -1.
             call array_range(field_2d,NX_L,NY_L,pres_low_pa,pres_high_pa
      1                      ,r_missing_data)
 
-            if(c_type_i .ne. 'pp')then
+            if(c_type_i .eq. 'pp' .and. i_image .eq. 1)then ! p_prime image
+                clow = +4.0
+                chigh = -4.0
+                cint = 0.1
+
+                plot_parms%ncols = nint(abs(chigh-clow)/cint)
+ 
+            else ! default pressure plot
                 pres_high_mb = pres_high_pa / scale
                 pres_low_mb  = pres_low_pa / scale
                 range = ((pres_high_pa - pres_low_pa) / scale) 
@@ -4668,22 +4675,9 @@ c                   cint = -1.
                 icint   = cint
                 clow = int(pres_low_mb) / 4 * 4
                 chigh = (int(pres_high_mb) / icint) * icint + icint
-
-            else ! perturbation pressure (pp)
-                clow = +4.0
-                chigh = -4.0
-                cint = 0.1
-
-                plot_parms%ncols = nint(abs(chigh-clow)/cint)
- 
             endif
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
-
-!           call plot_cont(field_2d,1e+2,clow,chigh,cint,asc9_tim_t
-!    1                    ,namelist_parms,plot_parms,c33_label
-!    1                    ,i_overlay,c_display,lat,lon,jdot
-!    1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
