@@ -38,7 +38,7 @@ sub help_sub{
     print "   --dataroot = Root directory of the installed laps data (@datadir@)\n";
     print "   --srcroot  = Root directory of the laps source code    (@top_srcdir@)\n";
     print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
-    print "   --satid    = g8 or g9 (guessed based on -100.0W)\n";
+    print "   --satid    = g8 or g10 (guessed based on -100.0W)\n";
     print "   --quiet    = Do not query user for verification\n";
     print "   --help     = print this message and exit\n";
     exit;
@@ -344,16 +344,16 @@ sub wfo_localization{
 
   if($satid eq "g8"){
       $goes = 8;
-  }elsif($satid eq "g9"){
-      $goes = 9;
+  }elsif($satid eq "g10"){
+      $goes = 10;
   }elsif(-r $file1){
       open(LOCFILE,$file1) or die "Can't find $file1.";
       my $line = <LOCFILE>;
       close(LOCFILE);
-      $goes=9 if($line =~ /WEST/i);      
+      $goes=10 if($line =~ /WEST/i);      
       $goes=8 if($line =~ /EAST/i);      
   }else{
-      $goes = $lon>-100 ? 8:9;  # identifies the goes sat to use based on longitude
+      $goes = $lon>-100 ? 8:10;  # identifies the goes sat to use based on longitude
   }
   #First files:  the namelist files.
 
@@ -406,7 +406,7 @@ sub wfo_localization{
 	      if($goes==8){
 		  print OUTFILE " ISATS = 1,0,0,0,\n";
 	      }else{
-		  print OUTFILE " ISATS = 0,1,0,0,\n";
+		  print OUTFILE " ISATS = 0,0,1,0,\n";
 	      }
 	      
           }elsif(/\sgoes_switch\s*=/){
@@ -415,7 +415,10 @@ sub wfo_localization{
 	      if($goes==8){
 		  print OUTFILE " ITYPES = 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,\n";
 	      }else{
-		  print OUTFILE " ITYPES = 0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,\n";
+		  print OUTFILE " ITYPES = 0,0,0,0,
+                                           0,0,0,0,
+                                           0,1,0,0,
+                                           0,0,0,0,\n";
 	      }
 
 	  }else{
