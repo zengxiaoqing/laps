@@ -4,39 +4,19 @@
 #
 #
 
-LAPSROOT = /usr/nfs/lapb/parallel/laps
-DOMAIN   = /data/lapb/parallel/laps/data
-
+LAPSROOT = ../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
-
-
-
-
-
-
-
-
-
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
 
-
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
-
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .exe
 
 EXE = build_sfc_static.exe  checkbi.exe 
 SRC = build_sfc_static.f  checkbi.f
-
-
-
-
-
 
 all: exe
 

@@ -6,17 +6,11 @@
 
 LAPSROOT=../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
 
 NCARGFC=ncargf77
 
 FFLAGS=$(DBFLAGS)
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
            $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
@@ -26,17 +20,10 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(LAPSROOT)/src/lib/util/libdebugutil.a  \
 
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = lapsplot.exe
-
-
-
-
 
 SRC= lapsplot_main.f \
      lapsplot_sub.f \
@@ -62,8 +49,6 @@ SRC= lapsplot_main.f \
 
 MAIN=lapsplot_main.f
 
-
-
 LIB=liblapsplot.a
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
@@ -75,8 +60,6 @@ exe: $(ARCHIVE) $(EXE)
 $(EXE): $(ARCHIVE) $(MAIN)
 	$(NCARGFC) $(MAIN) $(DBFFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
-
-
 
 debug: $(SRC)
 	$(RM) $(EXE) ;
@@ -91,6 +74,7 @@ clean:
 
 
 distclean: clean
+
 %.f : %.F
 	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 

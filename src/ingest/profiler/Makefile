@@ -6,37 +6,20 @@
 
 LAPSROOT=../../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
 
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
-
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
 EXE = ingest_pro.exe
 
-
-
-
-
 SRC=ingest_pro.f \
     ingest_sub_pro.f \
     ingest_sub_blppro.f
-
 
 all: exe
 
@@ -56,6 +39,7 @@ clean:
 
 
 distclean: clean
+
 install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
 

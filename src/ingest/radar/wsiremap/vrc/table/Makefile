@@ -6,36 +6,20 @@
 
 LAPSROOT=../../../../../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a   \
            $(LAPSROOT)/src/lib/nav/libnav.a \
            $(LAPSROOT)/src/lib/goesinav/libgoesinav.a 
 
-
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
              $(LAPSROOT)/src/lib/nav/libdebugnav.a \
              $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a 
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .x .exe
 
 EXE = genvrclut.exe
-
-
-
 
 SRC = gen_llij_lut_wfo.f \
       gen_llij_lut_wsi.f \
@@ -56,13 +40,6 @@ $(EXE): $(ARCHIVE) $(MAIN)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-#$(EXE.F): $(MAIN) $(ARCHIVE)
-#	rm -f $*.f
-#	$(CPP) $(CPPFLAGS) $*.F 
-#	mv $*.i $*.f
-#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
-#	rm -f *.o $*.f
-
 debug: $(SRC)
 	$(RM) $(EXE) ;
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' \
@@ -73,6 +50,7 @@ clean:
 
 
 distclean: clean
+
 install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
 

@@ -11,9 +11,8 @@
 #
 
 LAPSROOT=../..
+
 include $(LAPSROOT)/src/include/makefile.inc
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/bgdata/libbgdata.a \
            $(LAPSROOT)/src/lib/liblaps.a  
@@ -21,16 +20,10 @@ LAPSLIBS = $(LAPSROOT)/src/lib/bgdata/libbgdata.a \
 DBLAPSLIBS = $(LAPSROOT)/src/lib/bgdata/libdebugbgdata.a \
            $(LAPSROOT)/src/lib/libdebuglaps.a  
 
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = dprep.exe
-
-
-
-
 
 SRC=dprep_eta_conusc.f dprep_laps.f
 
@@ -39,7 +32,6 @@ MAIN= dprep.f
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 
 LIB=libdprep.a
-
 
 all: exe
 
@@ -62,6 +54,7 @@ clean:
 
 
 distclean: clean
+
 %.f : %.F
 	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 

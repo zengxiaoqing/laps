@@ -6,17 +6,7 @@
 
 LAPSROOT=../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/temp/libtemp.a  \
            $(LAPSROOT)/src/lib/liblaps.a  \
@@ -28,19 +18,12 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/temp/libdebugtemp.a  \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(LAPSROOT)/src/lib/util/libdebugutil.a  \
 
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
 EXE = temp.exe
 
-
-
-
-
 SRC=puttmpanal_drv.f
-
 
 all: exe
 

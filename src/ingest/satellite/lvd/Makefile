@@ -6,17 +6,7 @@
 
 LAPSROOT=../../../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a \
            $(LAPSROOT)/src/lib/satellite/libsatellite.a \
@@ -30,16 +20,10 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a \
              $(LAPSROOT)/src/lib/nav/libdebugnav.a \
              $(LAPSROOT)/src/lib/util/libdebugutil.a
 
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = lvd_sat_ingest.exe
-
-
-
-
 
 SRC = lvd_driver_sub.f \
   readcdf.f \
@@ -64,7 +48,6 @@ SRC = lvd_driver_sub.f \
   set_missing_sat.f \
   setmissingflag.f \
   satdatfill.f \
-  stats.f \
   satfill1.f \
   imagecomp.f \
   check_data.f \
@@ -91,13 +74,6 @@ $(EXE): $(ARCHIVE) $(MAIN)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-#$(EXE.F): $(MAIN) $(ARCHIVE)
-#	rm -f $*.f
-#	$(CPP) $(CPPFLAGS) $*.F 
-#	mv $*.i $*.f
-#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
-#	rm -f *.o $*.f
-
 debug: $(SRC)
 	$(RM) $(EXE) ;
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' \
@@ -111,6 +87,7 @@ clean:
 
 
 distclean: clean
+
 %.f : %.F
 	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 

@@ -6,41 +6,22 @@
 
 LAPSROOT=../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
            $(LAPSROOT)/src/lib/fm/libfm.a \
 	   $(LAPSROOT)/src/lib/powell/libpowell.a \
 	   $(LAPSROOT)/src/lib/mthermo/libmthermo.a   
 
-
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
              $(LAPSROOT)/src/lib/fm/libdebugfm.a \
              $(LAPSROOT)/src/lib/powell/libdebugpowell.a \
 	     $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a   
 
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = lq3driver.x
-
-
-
-
-
 
 SRC=analq.f            ghbry.f            lq3_driver1a.f     rsr.f \
     climate_sm.f       glsp.f             sh2mr.f            tiros.f \
@@ -51,9 +32,7 @@ SRC=analq.f            ghbry.f            lq3_driver1a.f     rsr.f \
     get_rad.f          lh3_compress.f     raob_step.f        writef_sp.f \
     getmapsdf.f        locate.f           read_lvd_3_4_5.f   writefile.f
 
-
 MAIN=lq3driver.f
-
 
 LIB=liblq3.a
 
@@ -70,13 +49,6 @@ $(EXE): $(ARCHIVE) $(MAIN)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-#$(EXE.F): $(MAIN) $(ARCHIVE)
-#	rm -f $*.f
-#	$(CPP) $(CPPFLAGS) $*.F 
-#	mv $*.i $*.f
-#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
-#	rm -f *.o $*.f
-
 debug: $(SRC)
 	$(RM) $(EXE) ;
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' \
@@ -90,6 +62,7 @@ clean:
 
 
 distclean: clean
+
 %.f : %.F
 	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 

@@ -6,17 +6,7 @@
 
 LAPSROOT=../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/cloud/libcloud.a  \
            $(LAPSROOT)/src/lib/liblaps.a  \
@@ -30,20 +20,12 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/cloud/libdebugcloud.a  \
              $(LAPSROOT)/src/lib/goeslib/libdebuggoeslib.a  \
              $(LAPSROOT)/src/lib/util/libdebugutil.a 
 
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
 EXE = deriv.exe
 
-
-
-
-
 SRC=laps_deriv.f      laps_deriv_sub.f      put_derived_wind_prods.f 
-
 
 all: exe
 

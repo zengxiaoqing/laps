@@ -6,17 +6,7 @@
 
 LAPSROOT=../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
            $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
@@ -26,19 +16,12 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(LAPSROOT)/src/lib/util/libdebugutil.a  \
 
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
 EXE = accum.exe
 
-
-
-
-
 SRC=get_precip_accum.f  laps_accum.f  laps_accum_sub.f
-
 
 all: exe
 

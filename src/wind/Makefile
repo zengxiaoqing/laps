@@ -6,17 +6,7 @@
 
 LAPSROOT=../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
            $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
@@ -30,17 +20,10 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
              $(LAPSROOT)/src/lib/blas/libdebugblas.a  \
              $(LAPSROOT)/src/lib/util/libdebugutil.a  \
 
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = wind.exe
-
-
-
-
 
 SRC= main_sub.f \
      get_wind_obs.f \
@@ -67,8 +50,6 @@ SRC= main_sub.f \
 
 MAIN=main.f
 
-
-
 LIB=libwind.a
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
@@ -80,13 +61,6 @@ exe: $(ARCHIVE) $(EXE)
 $(EXE): $(ARCHIVE) $(MAIN)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
-
-#$(EXE.F): $(MAIN) $(ARCHIVE)
-#	rm -f $*.f
-#	$(CPP) $(CPPFLAGS) $*.F 
-#	mv $*.i $*.f
-#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
-#	rm -f *.o $*.f
 
 debug: $(SRC)
 	$(RM) $(EXE) ;
@@ -101,6 +75,7 @@ clean:
 
 
 distclean: clean
+
 %.f : %.F
 	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 

@@ -6,38 +6,20 @@
 
 LAPSROOT=../../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
 
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
-
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
 EXE = ingest_pireps.exe
 
-
-
-
-
 SRC=ingest_pireps.f \
      ingest_pireps_sub.f \
      skycover_to_frac.f
-
-
 
 all: exe
 
@@ -57,6 +39,7 @@ clean:
 
 
 distclean: clean
+
 install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
 

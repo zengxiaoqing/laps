@@ -6,17 +6,7 @@
 
 LAPSROOT=../../../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/radar/remap_ftn/libremap_ftn.a  \
            $(LAPSROOT)/src/lib/liblaps.a  
@@ -24,20 +14,12 @@ LAPSLIBS = $(LAPSROOT)/src/lib/radar/remap_ftn/libremap_ftn.a  \
 DBLAPSLIBS = $(LAPSROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
              $(LAPSROOT)/src/lib/libdebuglaps.a  
 
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
 EXE = remap_polar_netcdf.exe
 
-
-
-
-
 SRC=remap.f netcdfio.f get_tilt_netcdf.f
-
 
 all: exe
 

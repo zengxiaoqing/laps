@@ -6,17 +6,7 @@
 
 LAPSROOT=../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
            $(LAPSROOT)/src/lib/bgdata/libbgdata.a \
@@ -26,23 +16,15 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
              $(LAPSROOT)/src/lib/bgdata/libdebugbgdata.a \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
 
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = lga.exe
 
-
-
-
-
 SRC=lga_interp.f  lga_util.f           \
     lprep_eta_conusc.f  lprep_ruc2_pub.f
 
 MAIN=lga.f
-
-
 
 LIB=liblga.a
 
@@ -66,7 +48,6 @@ install: exe
 
 clean:
 	rm -f $(EXE) $(LIB) *.o *~ *# *.i
-
 
 distclean: clean
 %.f : %.F

@@ -6,17 +6,7 @@
 
 LAPSROOT=../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/temp/libtemp.a  \
            $(LAPSROOT)/src/lib/liblaps.a  \
@@ -26,18 +16,10 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/temp/libdebugtemp.a  \
              $(LAPSROOT)/src/lib/libdebuglaps.a  \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  
 
-
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = laps_sfc.x
-
-
-
-
 
 SRC   = mdatlaps.f \
 	lapsvanl.f \
@@ -46,8 +28,6 @@ SRC   = mdatlaps.f \
 	qc_data.f 
 
 MAIN=laps_sfc.f 
-
-
 
 LIB=libsfc.a
 
@@ -60,13 +40,6 @@ exe: $(ARCHIVE) $(EXE)
 $(EXE): $(ARCHIVE) $(MAIN)
 	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
-
-#$(EXE.F): $(MAIN) $(ARCHIVE)
-#	rm -f $*.f
-#	$(CPP) $(CPPFLAGS) $*.F 
-#	mv $*.i $*.f
-#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
-#	rm -f *.o $*.f
 
 debug: $(SRC)
 	$(RM) $(EXE) ;
@@ -81,6 +54,7 @@ clean:
 
 
 distclean: clean
+
 %.f : %.F
 	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 
