@@ -15,7 +15,8 @@ KRCFLAGS=-g $(INC)
 LIB      = libwsi.a
 DEBUGLIB = libdebugwsi.a
 
-SRC=rd_wsi_3dradar_cdf.f get_nl_parms.f genllijlut.f
+SRC=rd_wsi_nowrad_cdf.f   rd_wsi_nexrad_cdf.f \
+    get_nl_parms.f        genllijlut.f
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
