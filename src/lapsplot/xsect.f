@@ -1129,9 +1129,16 @@ c read in laps lat/lon and topo
                 endif
             enddo ! i
             enddo ! k
-            clow = -100.
-            chigh = +1000.
-            cint = 10. / density
+
+            clow =  0.
+            chigh = +200.
+            if(i_image .eq. 0)then
+                cint = 10. / density
+            else
+                colortable = 'spectral'
+                cint = 20.
+            endif
+
             i_contour = 1
 
             if    (c_prodtype .eq. 'N')then
@@ -1165,9 +1172,16 @@ c read in laps lat/lon and topo
                 endif
             enddo ! i
             enddo ! k
-            clow = -100.
-            chigh = +1000.
-            cint = 10. / density
+
+            clow =  0.
+            chigh = +200.
+            if(i_image .eq. 0)then
+                cint = 10. / density
+            else
+                colortable = 'spectral'
+                cint = 20.
+            endif
+
             i_contour = 1
 
             if    (c_prodtype .eq. 'N')then
@@ -1201,9 +1215,16 @@ c read in laps lat/lon and topo
                 endif
             enddo ! i
             enddo ! k
-            clow = -100.
-            chigh = +1000.
-            cint = 10. / density
+
+            clow =  0.
+            chigh = +200.
+            if(i_image .eq. 0)then
+                cint = 10. / density
+            else
+                colortable = 'spectral'
+                cint = 20.
+            endif
+
             i_contour = 1
 
             if       (c_prodtype .eq. 'N')then
