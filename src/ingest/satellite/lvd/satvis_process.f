@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-      subroutine process_vis_satellite(c_sat_id,
+      subroutine process_vis_satellite(csatid,
      &           c_sat_type,
      &           i4time,
      &           ni,nj,lat,lon,
@@ -39,7 +39,6 @@ cdis
      &           r_llij_lut_ri,
      &           r_llij_lut_rj,
      &           sublat_d,sublon_d,range_m,
-     &           l_national,iskip_bilin,
      &           laps_vis_raw,laps_vis_norm,albedo,
      &           istatus)
 c
@@ -63,7 +62,7 @@ c                                    subroutine.
 c          "          10-21-96       Incorporated new normalize brightness procedure to
 c				     account for vis data that has been pre-normalized (ie., gvar fsl-conus)
 c          "          03-07-97      New normalize brightness routine that accounts for missing data.
-c          "          03-12-97      Added c_sat_id to argument list. This directs the normalization procedure.
+c          "          03-12-97      Added csatid to argument list. This directs the normalization procedure.
 c          "          07-06-99      Added emission_angle_d as output from normalize_brightness and input
 c                                   to vis_2_albedo.
 c
@@ -102,7 +101,6 @@ c
        real*4 lon(ni,nj)
 c
        integer n_vis_lines,n_vis_elem
-       integer iskip_bilin
        integer i_dir
        integer n_missing_albedo
        integer len_dir
@@ -118,8 +116,6 @@ c
        real*4 rspacing_dum
        real*4 r_missing_data
 c
-       logical l_national
-
        integer istatus_a
        integer istatus_l
        integer istatus_m
@@ -140,19 +136,28 @@ c      real*4 maxdiff
 c      real*4 mindiff
        real*4 ave,adev,sdev,var,skew,curt
 
+       real   visin1_g8,visin2_g8
+       real   visout1_g8,visout2_g8
+       real   visin1_cur,visin2_cur
+       real   visout1_cur,visout2_cur
+
        integer*4 icnt
 c
        integer i4time,imax,jmax
+       integer isat
 c
        character*255 dataroot
        character*3   var_2d
        character*3   c_sat_type
-       character*6   c_sat_id
+       character*6   csatid
        character*150  directory
        character*31  ext
        character*40  domain_name
        character*10  units_2d
        character*125 comment_2d
+
+       include 'satellite_dims_lvd.inc'
+       include 'satellite_common_lvd.inc'
 c
 c Start
 c ----------------------
@@ -208,13 +213,23 @@ c
 c
 c.....       Normalize the VIS data.
 c
+c
+c Our standard is goes08 and we know how to stretch this
+c to look like goes07; therefore we should always need the
+c goes8-to-goes7 stretch parameters:
+
+       visin1_g8=vis_cnt_range_in(1,1)
+       visin2_g8=vis_cnt_range_in(2,1)
+       visout1_g8=vis_cnt_range_out(1,1)
+       visout2_g8=vis_cnt_range_out(2,1)
+
 c For locally produced (ground station SBN look-alike) visible we
 c want to reverse the already applied normalization (national scale
 c normalization) and then "re-normalized" for the local domain.
 c
-c
-       if(c_sat_id.eq.'goes08'.and.c_sat_type.eq.'cdf')then    !this switch is for gvar conus /public data
-c 	  						       that is a pre-normalized display-ready image.
+       if(csatid.eq.'goes08'.and.c_sat_type.eq.'cdf')then    !this switch is for gvar conus /public data
+c  					       that is a pre-normalized display-ready image.
+          isat = 1
 
           do j=1,jmax
           do i=1,imax
@@ -231,7 +246,7 @@ c have been normalized with l_national = .true.
           write(6,*)'Reverse the normalization'
 
           call normalize_brightness(i4time,lat,lon,laps_vis_norm
-     &,imax,jmax,sublat_d,sublon_d,range_m,.true.,iskip_bilin         !note: l_national is hardwired true here.
+     &,imax,jmax,sublat_d,sublon_d,range_m,.true.,iskip_bilin   !note: l_national is hardwired true here.
      &,r_missing_data,6,i_dir,phase_angle_d,specular_ref_angle_d
      &,emission_angle_d,istatus_n)
 c
@@ -244,17 +259,33 @@ c
 c
 c The standard is to save the raw (true) satellite vis counts (svs).
 c
+          print*,'stretch ',c_sat_type,' visible'
+          print*,'vis-cnt-stretch-in  1/2: ',visin1_g8,visin2_g8
+          print*,'vis-cnt-stretch-out 1/2: ',visout1_g8,visout2_g8
+
           do j=1,jmax
           do i=1,imax
 c
 c Since this data looks like raw goes-7 counts (due to normalization by
 c FD), we must reverse the stretch.
 c
+
              if(laps_vis_norm(i,j).ne.r_missing_data)then
+
+c              call stretch(visout1_g8,visout2_g8
+c    &                     ,visin1_g8,visin2_g8
+c    &                     ,laps_vis_norm(i,j))
+
                call stretch(0., 255., 0., 303.57, laps_vis_norm(i,j))  !reverse the stretch 
                laps_vis_raw(i,j)=laps_vis_norm(i,j)                    !OK, save these. This is svs!
+
 c for goes8 - make it look like goes7
+c              call stretch(visin1_g8,visin2_g8
+c    &                     ,visout1_g8,visout2_g8
+c    &                     ,laps_vis_norm(i,j))
+
                call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
+
 c laps_vis_norm is now ready for local normalization
              endif
 
@@ -270,18 +301,42 @@ c
        elseif(c_sat_type.eq.'wfo')then 
 
           write(6,*)'These vis data will get normalized - WFO'
-          if(c_sat_id.eq.'goes08')then
-             write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
+
+          if(csatid.eq.'goes08')then
+
+             isat = 1
+             print*,'Stretch ',csatid,' to goes7 look-a-like'
+             print*,'stretch ',c_sat_type,' visible'
+             print*,'In: ',visin1_g8,visin2_g8
+             print*,'Out: ',visout1_g8,visout2_g8
+
              do j=1,jmax
              do i=1,imax
                if(laps_vis_norm(i,j).ne.r_missing_data)then
 c for goes8 - make it look like goes7
+c                call stretch(visin1_g8,visin2_g8
+c    &                     ,visout1_g8,visout2_g8
+c    &                     ,laps_vis_norm(i,j))
+
                  call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
                endif
              enddo
              enddo
-          elseif(c_sat_id.eq.'goes09'.or.c_sat_id.eq.'goes10')then
-             write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
+
+          elseif(csatid.eq.'goes10')then
+
+             isat = 3
+             print*,'Stretch ',csatid,' to goes7 look-a-like'
+             print*,'stretch ',csatid,' visible'
+
+             visin1_cur=vis_cnt_range_in(1,isat)
+             visin2_cur=vis_cnt_range_in(2,isat)
+             visout1_cur=vis_cnt_range_out(1,isat)
+             visout2_cur=vis_cnt_range_out(2,isat)
+
+             print*,'In: ',visin1_cur,visin2_cur
+             print*,'Out: ',visout1_cur,visout2_cur
+
              do j=1,jmax
              do i=1,imax
                if(laps_vis_norm(i,j).ne.r_missing_data)then
@@ -290,11 +345,20 @@ c J. Smart 2-23-99.
 c                 call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
 c          3-08-99 commented out and added new stretch parameters for goes10.
 c          8-27-99 re-activated the 305 stretch for WFO.
+c
+c                 call stretch(visin1_cur,visin2_cur,
+c    &                         visout1_cur,visout2_cur,
+c    &                         laps_vis_norm(i,j))
+
                   call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
 
 c                 call stretch(0.,295.,0.,255.,laps_vis_norm(i,j))
 
 c for goes8 - make it look like goes7
+c                 call stretch(visin1_g8,visin2_g8
+c    &                     ,visout1_g8,visout2_g8
+c    &                     ,laps_vis_norm(i,j))
+
                   call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
                endif
              enddo
@@ -306,19 +370,44 @@ c=======================================
 c GVAR Switch
 c
        elseif(c_sat_type.eq.'gvr'.or.c_sat_type.eq.'gwc')then
-          write(6,*)'GVAR Visible data: ',c_sat_id
-          if(c_sat_id.eq.'goes08')then
-             write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
+
+          write(6,*)'GVAR Visible data: ',csatid
+
+          if(csatid.eq.'goes08')then
+
+             isat = 1
+             print*,'Stretch ',csatid,' to goes7 look-a-like'
+             print*,csatid,' vis stretch vars from namelist: '
+             print*,' In:  ',visin1_g8,visin2_g8
+             print*,' Out: ',visout1_g8,visout2_g8
+
              do j=1,jmax
              do i=1,imax
                 if(laps_vis_norm(i,j).ne.r_missing_data)then
 c for goes8 - make it look like goes7
-                   call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
+                   call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
+
+c                  call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
                 endif
              enddo
              enddo
-          elseif(c_sat_id.eq.'goes09'.or.c_sat_id.eq.'goes10')then
-             write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
+
+          elseif(csatid.eq.'goes10')then
+
+             isat = 3
+             print*,'Stretch ',csatid,' to goes7 look-a-like'
+             print*,'stretch ',csatid,' visible'
+
+             visin1_cur=vis_cnt_range_in(1,isat)
+             visin2_cur=vis_cnt_range_in(2,isat)
+             visout1_cur=vis_cnt_range_out(1,isat)
+             visout2_cur=vis_cnt_range_out(2,isat)
+
+             print*,'In: ',visin1_cur,visin2_cur
+             print*,'Out: ',visout1_cur,visout2_cur
+
              do j=1,jmax
              do i=1,imax
                 if(laps_vis_norm(i,j).ne.r_missing_data)then
@@ -326,8 +415,17 @@ c for goes9 - make it look like goes8; no goes09. New stretch for goes10
 c J. Smart 2-23-99.
 c                  call stretch(0., 255., 0.,193.,laps_vis_norm(i,j))
 
+c                  call stretch(visin1_cur,visin2_cur
+c    &                     ,visout1_cur,visout2_cur
+c    &                     ,laps_vis_norm(i,j))
+
                    call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
+
 c for goes8 - make it look like goes7
+c                  call stretch(visin1_g8,visin2_g8
+c    &                     ,visout1_g8,visout2_g8
+c    &                     ,laps_vis_norm(i,j))
+
                    call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
                 endif
              enddo
@@ -336,17 +434,35 @@ c for goes8 - make it look like goes7
           endif
           i_dir = 1
 
-       elseif(c_sat_id.eq.'gmssat'.and.c_sat_type.eq.'twn')then
+       elseif(csatid.eq.'gmssat'.and.c_sat_type.eq.'twn')then
 
+          isat = 4
 c         print*,'stretch twn visible: 40.,250.,68.,220.'
 c         print*,'stretch twn visible: 38.,320.,68.,220.' !11-12-02
 c         print*,'stretch twn visible: 38.,350.,68.,220.' !11-15-02
+
+          visin1_cur=vis_cnt_range_in(1,isat)
+          visin2_cur=vis_cnt_range_in(2,isat)
+          visout1_cur=vis_cnt_range_out(1,isat)
+          visout2_cur=vis_cnt_range_out(2,isat)
+
+          print*,'Current stretch (not longer hardwired) '
           print*,'stretch twn visible: 38.,400.,68.,220.' !11-22-02
+          print*
+          print*,csatid,' vis stretch parameters from namelist: '
+          print*,' In:  ',visin1_cur,visin2_cur
+          print*,' Out: ',visout1_cur,visout2_cur
+
           do j=1,jmax
           do i=1,imax
              if(laps_vis_norm(i,j).ne.r_missing_data)then
 c J. Smart 1-25-02.
-                call stretch(38.,400.,68.,220.,laps_vis_norm(i,j))
+c   "      2-05-03
+                   call stretch(visin1_cur,visin2_cur
+     &                     ,visout1_cur,visout2_cur
+     &                     ,laps_vis_norm(i,j))
+
+c               call stretch(38.,400.,68.,220.,laps_vis_norm(i,j))
              endif
           enddo
           enddo
@@ -390,7 +506,7 @@ c =============================================
        endif
 
        istatus_a = 1
-       call vis_to_albedo(i4time,c_sat_id,
+       call vis_to_albedo(i4time,csatid,
      &                    laps_vis_norm,
      &                    lat,lon,
      &                    imax,jmax,

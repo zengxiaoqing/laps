@@ -917,7 +917,6 @@ c                    endif
      &                      r_llij_lut_ri(1,1,ispec),
      &                      r_llij_lut_rj(1,1,ispec),
      &                      sublat_d,sublon_d,range_m,
-     &                      l_national,iskip_bilin,
      &                      visraw,visnorm,albedo,
      &                      istatus_vis)
 c
