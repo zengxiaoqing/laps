@@ -58,3 +58,22 @@ c          gam is sqd error of wind/sqd error of press
 c          with mslp error at 50pa,eqn of motion residual (1m/s/hr)^2
 c
 c..... if del=0., then variational section would be skipped for (u,v,p)
+c
+c..... ANALYSIS QC THREHOLDS
+c
+c      The following list represents the default QC thresholds. These 
+c      parameters can be added to this namelist to override the default values
+c      set in the code...
+c
+c       QC parms: # of standard deviations 
+c       bad_p  = 3.0 	        ! for reduced pressure
+c       bad_mp = 4.0 	        ! for MSL pressure
+c       bad_t  = 2.5 	        ! for temperature
+c       bad_td = 2.0 	        ! for dewpoint
+c       bad_u  = 4.0 	        ! for u-wind
+c       bad_v  = 4.0 	        ! for v-wind
+c       bad_th = 3.5 	        ! for theta
+c       bad_the = 2.5           ! for theta-e
+c       bad_vis = 500. 	        ! for visibility
+c       bad_tb8 = 5.0 	        ! for tb8 Brightness temps.
+c
