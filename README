@@ -2249,7 +2249,7 @@ Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
 ------ 3.3.2 ----------------- SFC (LSX) -------------------------------------
 
 Surface processing - laps_sfc.x (LSX) 
-     (authors: Pete Stamus / Steve Albers)
+     (authors: John McGinley / Pete Stamus / Steve Albers)
 
 
 The surface package collects surface data from the LSO intermediate data file  
@@ -2279,6 +2279,11 @@ The station pressure analysis (PS) is calculated using the model background
 gridded 'PS' gridded field. This has already been converted from the 
 background model terrain to the LAPS terrain within the LGB file.
 
+Visibility is arrived at by first analyzing the surface visibility 
+observations. A second step is applied to decrease the visibility in areas
+that have high RH and are near the cloud base that is given by the cloud
+analysis (in the previous time cycle).
+
 Several derived variables are calculated before the LSX file is written.  Also,
 a dependent data validation is done by interpolating several variables back to
 the observation locations and comparing the analysis to the obs.  Output from 
@@ -2288,10 +2293,6 @@ this check is written to files located in
 
 
 <pre>
-
-
-LSX process - LAPS surface data analysis
-        (author: Pete Stamus)
 
 Inputs:
          LSO    surface observations
@@ -2308,11 +2309,11 @@ Inputs:
                     - or -
          LWM    (background sfc wind from 3-D analysis - used for wind only)
 
+         LC3    Cloud cover (for visibility)
 	 LM1    Soil moisture (for fire wx calc)
          LM2    Snow cover (for fire wx calc)
 
 Output: 
-
          LSX    LAPS surface data grids (23 2-d fields packed in one file)
 
                 Includes various fields such as...
@@ -2340,6 +2341,9 @@ Output:
              stay out of the direct sun, take frequent breaks if working 
              outside, etc.
 </pre>
+Source directory: laps/src/sfc
+
+Parameter namelist file: 'static/surface_analysis.nl'
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
 
