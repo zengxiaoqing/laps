@@ -35,7 +35,7 @@ c
      &     itheta,redp_lvl,
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
-     &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,
+     &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,obs,
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,sp_bk,vis_bk,tgd_bk,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
@@ -227,6 +227,7 @@ c
 	real rp(ni,nj), psfc(ni,nj), vis(ni,nj)
 	real t(ni,nj), theta(ni,nj), thetae(ni,nj), tb8(ni,nj)
 	real td(ni,nj), mslp(ni,nj)
+        real tgd(ni,nj)
 c
 c.....	Grids for the variational analyses of rp, u, v
 c
@@ -268,6 +269,9 @@ c
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
+        include 'sfcob.inc'
+        type (sfcob) obs(mxstn)
+
 	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
 	real t_s(mxstn), td_s(mxstn), ff_s(mxstn)
 	real pstn_s(mxstn), mslp_s(mxstn), vis_s(mxstn)
@@ -433,11 +437,6 @@ c
 	   call move_3dto2d(dm1,13,t5,ni,nj,nk)  ! lvl 13 = 500 hPa
 	endif
 c
-c.....  Convert units.
-c
-!       call conv_k2f(td7,td7,imax,jmax)  ! conv K to F
-!	call conv_k2f(t7,t7,imax,jmax)	  ! conv K to F
-c
 c.....  Get lapse rate (usually std), and mean pressure.
 c
 	print *,' '
@@ -576,15 +575,6 @@ c	beta_td = 3.0
         call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,err, !gamma = 0
      &        imax,jmax,rms_thresh_norm,bad_tmd,imiss,mxstn,
      &        obs_error_td,name)
-c
-c.....	Convert the analysed perturbations back to t, td, and tb8 (do the
-c.....	t and td backgrounds for a verification check).
-c
-!	call add(t,tt,t,imax,jmax)
-!	call add(t_bk,tt,t_bk,imax,jmax)
-!	call add(td,ttd,td,imax,jmax)
-!	call add(tb8,tt,tb8,imax,jmax)
-!	call add(td_bk,ttd,td_bk,imax,jmax)
 c
  887	continue
 c
@@ -760,6 +750,13 @@ c
 	call spline(vis,vis1,vis_bk,alf,alf2a,beta,zcon,z,cormax,err,
      &        imax,jmax,rms_thresh_norm,bad_vs,imiss,mxstn,
      &        obs_error_vis,name)
+
+        write(6,*)' Analyze TGD observations'
+        bad_tgd = 3.0
+        call barnes_multivariate_sfc_jacket('tgd',obs,mxstn,tgd_bk
+     1                                     ,badflag,imax,jmax
+     1                                     ,rms_thresh_norm,bad_tgd
+     1                                     ,tgd,istatus)
 c
 c.....	If no background fields are available, skip over the variational
 c.....	section.  Fields will be Barnes/splines, and derived values will be
@@ -1299,7 +1296,7 @@ c
 	ea = 2.00
 	call zero(d1,imax,jmax)
 	call windspeed(u_bk,v_bk,d1,imax,jmax)	! calc windspeed
-!	call conv_ms2kt(spd,d1,imax,jmax)
+ 	call conv_ms2kt(d1,d1,imax,jmax)
 	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
