@@ -225,6 +225,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/sched.pl
           etc/realtime.pl
           etc/ramrsf.pl
+          etc/localize_optran.com
 	  etc/laps_localization.pl
           etc/sendLAPS.pl
           etc/wfo_post.pl
