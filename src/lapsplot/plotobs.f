@@ -44,7 +44,7 @@ cdis
         real*4 topo(imax,jmax)
 
         character*150 directory
-        character*31 ext
+        character*31 ext,c3_obsext
         character*10  units_2d
         character*125 comment_2d
         character*13 filename13
@@ -401,8 +401,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1_meso)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                          ,size_meso)
 
         endif ! k .eq. k_level
 
@@ -448,8 +448,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1_meso)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                          ,size_meso)
 
         endif ! k .eq. k_level
 
@@ -496,8 +496,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1_prof)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                          ,size_prof)
                 write(6,111,err=121)alat,alon,dir,spd_kt
 121             continue
 
@@ -512,7 +512,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 !       Plot Pirep winds  ***********************************************
 911     write(6,*)
-        write(6,*)' ACARS Winds'
+        write(6,*)' ACARS/CDW Winds'
 
         lun = 32
         ext = 'pig'
@@ -521,7 +521,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1  ,status='old',err=1011)
 
         do while (.true.)
-            read(32,*,end=51)ri,rj,rk,dir,speed_ms
+            read(32,*,end=51)ri,rj,rk,dir,speed_ms,c3_obsext
             ri = ri + 1.
             rj = rj + 1.
             rk = rk + 1.
@@ -531,9 +531,17 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
             if(abs(k - k_level) .le. vert_rad_pirep)then
 
                 if(k .eq. k_level)then
-                    call setusv_dum(2hIN,12)
+                    if(c3_obsext .eq. 'pin')then
+                        call setusv_dum(2hIN,12)
+                    else
+                        call setusv_dum(2hIN,8)
+                    endif
                 else
-                    call setusv_dum(2hIN,15)
+                    if(c3_obsext .eq. 'pin')then
+                        call setusv_dum(2hIN,15)
+                    else
+                        call setusv_dum(2hIN,34)
+                    endif
                 endif
 
 !               call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
@@ -541,9 +549,10 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
-                write(6,111)ri,rj,max(dir,-99.),spd_kt
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1_pirep)
+                write(6,921)ri,rj,max(dir,-99.),spd_kt,c3_obsext
+921             format(1x,2f8.1,4x,f7.0,f7.0,2x,a3)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                          ,size_pirep)
 
             endif ! k .eq. k_level
 
@@ -571,7 +580,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         do while (.true.)
 
             read(32,*,end=922)
-     1  k_grid,dum,dum,i_grid,j_grid,u_grid,v_grid
+     1          k_grid,dum,dum,i_grid,j_grid,u_grid,v_grid
 
             alat = lat(i_grid,j_grid)
             alon = lon(i_grid,j_grid)
@@ -589,8 +598,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 spd_kt = SPEED_ms / mspkt
 
 !               write(6,111)alat,alon,max(dir,-99.),spd_kt
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1_maps)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                          ,size_maps)
 
             endif ! k .eq. k_level
 
@@ -657,13 +666,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 iflag = 3
  
-                if(c8_obstype(1:2) .eq. 'RA')then
+                if(c8_obstype(1:2) .eq. 'RA')then       ! RASS, RAOB
                     icol_in = 12
-                    call setusv_dum(2hIN,12)
-                else
+                elseif(c8_obstype(1:2) .eq. 'SA')then   ! SATSND
                     icol_in = 17
-                    call setusv_dum(2hIN,17)
+                else                                    ! ACARS
+                    icol_in = 3
                 endif
+
+                call setusv_dum(2hIN,icol_in)
 
                 call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
      1                          ,lat,lon,imax,jmax,size_temp,icol_in

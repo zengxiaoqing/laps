@@ -2623,7 +2623,7 @@ c
             endif
 
             write(6,1615)
-1615        format(10x,'plot rh or q [r/q]? ',$)
+1615        format(10x,'plot rh or q [r/q]  ? ',$)
             read(5,*)qtype
 
             if(qtype.eq.'q')then
@@ -2744,10 +2744,10 @@ c
             if(qtype.eq.'q')then
 
               call mklabel33(k_level,' LGA Spec Hum (x1e3)'
-     1,c33_label)
+     1                      ,c33_label)
               if(c_type.eq.'fr')then
                  call mklabel33(k_level,' RAM Spec Hum (x1e3)'
-     1,c33_label)
+     1                         ,c33_label)
               endif
 
               clow = 0.
@@ -2757,13 +2757,13 @@ c             cint = -1.
 
               call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
-!           do i = 1,NX_L
-!           do j = 1,NY_L
-!               if(q_3d(i,j,k_level) .eq. r_missing_data)then
-!                   q_3d(i,j,k_level) = 0.
-!               endif
-!           enddo ! j
-!           enddo ! i
+!             do i = 1,NX_L
+!             do j = 1,NY_L
+!                 if(q_3d(i,j,k_level) .eq. r_missing_data)then
+!                     q_3d(i,j,k_level) = 0.
+!                 endif
+!             enddo ! j
+!             enddo ! i
 
               call plot_cont(q_3d(1,1,k_level),1e-3,clow,chigh,cint,
      1             asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
@@ -2771,6 +2771,10 @@ c             cint = -1.
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(qtype .eq. 'r')then
+
+              write(6,1635)
+1635          format(10x,'input t_ref [deg C] ? ',$)
+              read(5,*)t_ref
 
               var_2d = 'T3 '
               call get_modelfg_3d_sub(i4_valid,var_2d,ext
@@ -2780,10 +2784,10 @@ c             cint = -1.
               endif
 
               call mklabel33(k_level,'  LGA rh (computed) (%) '
-     1,c33_label)
+     1                      ,c33_label)
               if(c_type.eq.'fr')then
                  call mklabel33(k_level,'  RAM rh (computed) (%) '
-     1,c33_label)
+     1                         ,c33_label)
               endif
 
               clow = 0.
@@ -2795,8 +2799,8 @@ c             cint = -1.
               do i = 1,NX_L
               do j = 1,NY_L
                 rh_3d(i,j,k_level)=make_rh(float(k_mb)
-     1                               ,temp_3d(i,j,k_level)-273.15
-     1                               ,q_3d(i,j,k_level)*1000.,-100.)*100.
+     1                              ,temp_3d(i,j,k_level)-273.15
+     1                              ,q_3d(i,j,k_level)*1000.,t_ref)*100.      
               enddo ! j
               enddo ! i
 
