@@ -2742,6 +2742,7 @@ trap 'rm -fr `echo "src/lib/Makefile
           src/lib/mthermo/Makefile 
           src/lib/nav/Makefile
           src/lib/powell/Makefile
+          src/lib/radar/remap_ftn/Makefile
           src/lib/temp/Makefile
           src/lib/util/Makefile
           src/accum/Makefile 
@@ -2886,6 +2887,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/lib/Makefile
           src/lib/mthermo/Makefile 
           src/lib/nav/Makefile
           src/lib/powell/Makefile
+          src/lib/radar/remap_ftn/Makefile
           src/lib/temp/Makefile
           src/lib/util/Makefile
           src/accum/Makefile 
