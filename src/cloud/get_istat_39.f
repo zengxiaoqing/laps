@@ -98,7 +98,7 @@ cdis
                         istat_39_a(i,j) = -1                  ! Warm - no cloud
                     endif
 
-                    if(t39_diff .gt. +0.0 .and. t39_diff .lt. +5.0
+                    if(t39_diff .gt. +0.0 .and. t39_diff .lt. +2.5
      1                          .AND. tb8_c .gt. 0.    
      1                          .AND. rlaps_land_frac(i,j) .lt. 0.5)then ! sea
                         istat_39_a(i,j) = -1                  ! Warm - no cloud
