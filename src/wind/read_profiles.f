@@ -271,12 +271,16 @@ c
             if(nlevels_obs_pr(i_pr) .gt. 0)then
 
               if(l_use_all_nontower_lvls .OR. 
-     1           obstype(i_pr)(1:5) .eq. 'TOWER')then
+     1           obstype(i_pr)(1:5) .eq. 'TOWER')then ! remap all levels
 
                 write(6,311)i_pr,i_ob,j_ob,nlevels_obs_pr(i_pr)
      1                     ,obstype(i_pr),c5_name_a(i_pr)
  311            format(1x,' Remapping profile ',4i6,1x,a8,1x,a5
      1                ,' (all levels)')      
+
+                rklaps_min = r_missing_data
+                rklaps_max = 0.
+                n_good_lvl = 0
 
                 do lvl = 1,nlevels_obs_pr(i_pr)
                     ob_height = ob_pr_ht_obs(i_pr,lvl)
@@ -288,6 +292,10 @@ c
                     klaps = nint(rklaps)
 
                     if(istatus .eq. 1)then
+                        rklaps_min = min(rklaps,rklaps_min)
+                        rklaps_max = max(rklaps,rklaps_max)
+                        n_good_lvl = n_good_lvl + 1
+
 !                       Obtain time terms
                         call get_time_term(u_mdl_bkg_4d,imax,jmax,kmax
      1                                    ,NTMIN,NTMAX
@@ -336,7 +344,16 @@ c
 
                 enddo ! lvl
 
-              else
+!               Calculate mean # of laps levels between sounding levels
+                if(n_good_lvl .gt. 1)then
+                    rklaps_mean = (rklaps_max - rklaps_min) 
+     1                           / float(n_good_lvl-1)
+                    write(6,*)' n_good_lvl,rklaps_mean',rklaps_mean
+
+!                   Adjust the weights for this profile?
+                endif
+
+              else ! interpolate from levels to LAPS grid
                 do level = 1,kmax
 
                     ht = heights_3d(i_ob,j_ob,level)
