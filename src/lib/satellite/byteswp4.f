@@ -50,6 +50,11 @@ C   UNIX 31-24   23-16   15-08   07-00
 C     
 C***********************************************************************
 
+      byte1=0
+      byte2=0
+      byte3=0
+      byte4=0
+
       byte4 = IBITS(VAXINT,0,8)  
       byte3 = IBITS(VAXINT,8,8)
       byte2 = IBITS(VAXINT,16,8)

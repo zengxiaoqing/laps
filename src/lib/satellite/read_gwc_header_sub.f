@@ -147,7 +147,7 @@ cc      REAL*4 PMA           !Pitch Misalignment Angle
       real*8    r8time
 
       integer   byteswp2, byteswp4
-      character input(1024) !just read it all and sort it later!
+      character input(1024)*1 !just read it all and sort it later!
 
 c      BYTE JUNK512(512)     !Byte array used to 'read over' unneeded
 c                            !data
