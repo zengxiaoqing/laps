@@ -52,8 +52,7 @@
 !     Open output SND file for appending
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
           ext = 'snd'
-          call open_lapsprd_file_append(lun_out,i4time_sys,ext(1:3)
-     1                                                    ,istatus)       
+          call open_ext(lun_out,i4time_sys,ext(1:3),istatus)
       else
           write(6,*)' No raw data files identified:',' *.',ext_in
           goto999
