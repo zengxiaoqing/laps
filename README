@@ -3252,14 +3252,24 @@ Outputs:
                                     negative area is subtracted from the 
                                     positive area.
 
-                                CIN  (Convective Inhibition)
+                                CIN (Convective Inhibition)
                                     Negative area in the sounding.
 
-                                LI   (Lifted Index)
+                                LI (Lifted Index)
                                     Environmental minus parcel temperature at
                                     500 mb. 
 
-	lwm	2d grid		interpolated surface winds
+                                SI (Showalter Index)
+
+                                TT (Total Totals Index) 
+
+                                K (K Index) 
+
+                                LCL (Lifted Condensation Level)
+
+                                WB0 (Wet Bulb Zero)
+
+	lwm	2d grid		interpolated surface winds (U and V - grid N)
 
 	lhe	2d grid		Helicity (Storm Relative Environmental). This 
                                 is integrated from the sfc to 3-km AGL. It
@@ -3634,10 +3644,14 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
           	LMT  LMT  etop     1  Max Echo Tops
           	     LLR  llr	   1  Low Level Reflectivity
 
-                LST
-		     LI   li       1  Lifted Index
+                LST  LI   li       1  Lifted Index
 		     PBE  pbe      1  Positive Bouyant Energy
 		     NBE  nbe      1  Negative Bouyant Energy
+                     SI   si       1  Showalter Index
+                     TT   tt       1  Total Totals Index
+                     K    k        1  K Index
+                     LCL  lcl      1  Lifted Condensation Level
+                     WB0  wb0      1  Wet-Bulb Zero
 
                 LWM  SU   u        1  Surface wind u
                      SV   v        1  Surface wind v
