@@ -1,0 +1,36 @@
+c       File: remap.cmn
+
+c
+c       Look Up Table Stuff
+c
+        integer*2 gate_elev_to_z_lut(LUT_GATES,0:LUT_ELEVS)
+        integer*2 gate_elev_to_projran_lut(LUT_GATES,0:LUT_ELEVS)
+        integer*2 azran_to_igrid_lut(0:LUT_AZIMUTHS,0:LUT_RANGES)
+        integer*2 azran_to_jgrid_lut(0:LUT_AZIMUTHS,0:LUT_RANGES)
+        real*4    dbz_to_z_lut(-1000:+1000)
+        logical*1 lgate_vel_lut(MAX_GATES)
+        logical*1 lgate_ref_lut(MAX_GATES)
+        logical*1 lgate_lut(MAX_GATES)
+c
+        common /radar_lut/ gate_elev_to_z_lut,
+     :                     gate_elev_to_projran_lut,
+     :                     azran_to_igrid_lut,
+     :                     azran_to_jgrid_lut,
+     :                     dbz_to_z_lut,
+     :                     lgate_vel_lut,
+     :                     lgate_ref_lut,
+     :                     lgate_lut
+
+c
+        character*4 c4_radarname_cmn
+        real*4 rlat_radar_cmn, rlon_radar_cmn, rheight_radar_cmn
+        common /radar_coords/ c4_radarname_cmn,
+     :                        rlat_radar_cmn,
+     :                        rlon_radar_cmn,
+     :                        rheight_radar_cmn
+
+c
+c       History Stuff for QC
+c
+        integer*4 i4time_old(10),n_ref_obs_old(10)
+        common /radar_history/ i4time_old,n_ref_obs_old
