@@ -60,6 +60,7 @@
      1                       t_pass1,
      1                       r_pass1,
      1                       azimuth,
+     1                       lat(i,j),
      1                       lon(i,j))
 
                 else

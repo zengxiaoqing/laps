@@ -594,6 +594,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1                          v_grid,
      1                          dir,
      1                          speed_ms,
+     1                          alat,
      1                          alon)
 
                 spd_kt = SPEED_ms / mspkt

@@ -321,7 +321,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     SFC: [p,pm,ps,tf,tc,df,dc,ws,vv,hu,ta,th,te,vo,mr'       
      1       ,',mc,dv,ha,ma,sp]'
      1       /'          [cs,vs,tw,fw,hi]'
-     1       /'          [of,oc,os,qf,qc,qs] obs plot/station locations'       
+     1       /'          [of,oc,ov,os,qf,qc,qv,qs] obs plots'       
      1       ,'  [bs] Sfc background'
      1       /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
      1       /'          [s] Other Stability Indices'
@@ -607,6 +607,7 @@ c       include 'satellite_dims_lvd.inc'
      1                                  v_2d(i,j),
      1                                  dir(i,j),
      1                                  spds(i,j),
+     1                                  lat(i,j),
      1                                  lon(i,j)     )
                         spds(i,j) = spds(i,j) / mspkt
                     endif
@@ -1006,6 +1007,8 @@ c       include 'satellite_dims_lvd.inc'
      1                          .or. c_type .eq. 'qf'   
      1                          .or. c_type .eq. 'qc'   
      1                          .or. c_type .eq. 'qs'   
+     1                          .or. c_type .eq. 'ov'   
+     1                          .or. c_type .eq. 'qv'   
      1                                                )then
             i4time_plot = i4time_ref ! / laps_cycle_time * laps_cycle_time
             call get_filespec('lso',2,c_filespec,istatus)
@@ -3796,15 +3799,13 @@ c                   cint = -1.
         elseif(c_type .eq. 'sp')then
             ext = 'lsx'
             var_2d = 'U'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,u_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,u_2d,0,istatus)
             var_2d = 'V'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,v_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,v_2d,0,istatus)       
 
 
             IF(istatus .ne. 1)THEN
@@ -3821,7 +3822,7 @@ c                   cint = -1.
             do i = 1,NX_L
             do j = 1,NY_L
                     if(u_2d(i,j) .eq. r_missing_data
-     1    .or. v_2d(i,j) .eq. r_missing_data)then
+     1            .or. v_2d(i,j) .eq. r_missing_data)then
                         dir(i,j)  = r_missing_data
                         spds(i,j) = r_missing_data
                     else
@@ -3829,6 +3830,7 @@ c                   cint = -1.
      1                                  v_2d(i,j),
      1                                  dir(i,j),
      1                                  spds(i,j),
+     1                                  lat(i,j),
      1                                  lon(i,j)     )
                         spds(i,j) = spds(i,j) / mspkt
                     endif
@@ -4242,19 +4244,20 @@ c                   cint = -1.
             asc_tim_24 = '                        '
         endif
 
-
+        n_missing = 0
         vmax = -1e30
         vmin = 1e30
 
         do i = 1,NX_L
         do j = 1,NY_L
             if(array(i,j) .ne. r_missing_data)then
-                array_plot(i,j) = array(i,j) / scale
+                array_plot(i,j) = array(i,j) / scale 
+                vmax = max(vmax,array_plot(i,j))
+                vmin = min(vmin,array_plot(i,j))
             else
                 array_plot(i,j) = array(i,j) 
+                n_missing = n_missing + 1
             endif
-            vmax = max(vmax,array_plot(i,j))
-            vmin = min(vmin,array_plot(i,j))
         enddo ! i
         enddo ! j
 
@@ -4333,7 +4336,7 @@ c                   cint = -1.
         endif
 
         write(6,*)' CLOW,HIGH,CINT ',clow,chigh,cint
-        write(6,*)' Max/Min = ',vmax,vmin
+        write(6,*)' Max/Min/n_missing = ',vmax,vmin,n_missing
 
         call setusv_dum(2hIN,icolors(i_overlay))
 
@@ -4969,7 +4972,7 @@ c
      &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
      &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,       
      &           store_emv,
-     &           store_amt,store_hgt,vis,obstime,istatus)
+     &           store_amt,store_hgt,vis_s,obstime,istatus)
 
 100     write(6,*)'     n_obs_b',n_obs_b
 
@@ -5055,9 +5058,30 @@ c
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,11)
 
-                if(c_field(2:2) .ne. 'c')then ! Fahrenheit
+                if(c3_presob .eq. 'msl')then
+                    pressure = pmsl(i)
+                elseif(c3_presob .eq. 'alt')then
+                    pressure = alt(i)
+                elseif(c3_presob .eq. 'stn')then 
+                    pressure = pstn(i)
+                else
+                    pressure = r_missing_data
+                endif
+
+                if(c_field(2:2) .eq. 'v')then ! Ceiling & Visibility
+                    temp = badflag
+                    if(vis_s(i) .ne. badflag)then
+                        dewpoint = vis_s(i)
+                    else
+                        dewpoint = badflag
+                    endif
+
+                    pressure = r_missing_data
+
+                elseif(c_field(2:2) .ne. 'c')then ! Fahrenheit
                     temp = t_s(i)
                     dewpoint = td_s(i)
+
                 else                          ! Celsius
                     if(t_s(i) .ne. badflag)then
                         temp = f_to_c(t_s(i))
@@ -5070,16 +5094,6 @@ c
                     else
                         dewpoint = badflag
                     endif
-                endif
-
-                if(c3_presob .eq. 'msl')then
-                    pressure = pmsl(i)
-                elseif(c3_presob .eq. 'alt')then
-                    pressure = alt(i)
-                elseif(c3_presob .eq. 'stn')then 
-                    pressure = pstn(i)
-                else
-                    pressure = r_missing_data
                 endif
 
                 call plot_mesoob(dd_s(i),ff_s(i),ffg_s(i)

@@ -865,6 +865,7 @@ cdoc    Being phased out?
      1                               t_radar,    ! O
      1                               r_radar,    ! O
      1                               azimuth,    ! I
+     1                               latitude,   ! I
      1                               longitude)  ! I
 
 cdoc    Convert U and V (grid north) to Tangential and Radial velocity,
@@ -876,6 +877,7 @@ cdoc    given the radar azimuth and geographic longitude.
      1                            v_grid,
      1                            di_true,
      1                            speed,
+     1                            latitude,
      1                            longitude)
 
         call disptrue_to_radar(di_true,
@@ -916,6 +918,7 @@ cdoc    given the radar azimuth.
      1                                  v_grid,    ! I
      1                                  di_true,   ! O
      1                                  speed,     ! O
+     1                                  latitude,  ! I
      1                                  longitude) ! I
 
 cdoc    Convert U and V (grid north) to DIR and SPEED (true north),

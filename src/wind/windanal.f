@@ -1180,6 +1180,7 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                       t_radar,
      1                       r_radar,
      1                       azimuth,
+     1                       lat(i,j),
      1                       lon(i,j) )
 
                     call radar_to_uvgrid(t_radar,
