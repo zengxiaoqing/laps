@@ -53,5 +53,7 @@
 
        if(l_parse(c_obstype,'ACARS'))i4_window_ob = ilaps_cycle_time / 2     
 
+       i4_window_ob = min(i4_window_ob,5400)
+
        return
        end

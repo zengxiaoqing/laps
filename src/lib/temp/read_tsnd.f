@@ -105,6 +105,7 @@ c                               not exactly match the LAPS analysis time.
 !       real*4 t_maps_inc(imax,jmax,kmax)
 
         character ext*31
+        character ext_uc*31
         character*255 c_filespec
 
         logical l_use_raob,l_3d
@@ -135,7 +136,9 @@ c                               not exactly match the LAPS analysis time.
             enddo
         enddo
 
-        i4_window_rass_ob   = ilaps_cycle_time
+        call get_tempob_time_window('LRS',i4_window_ob,istatus)
+        if(istatus .ne. 1)return
+
         i4_window_rass_file = 3600
 
         ext = 'tmg'
@@ -145,6 +148,7 @@ c                               not exactly match the LAPS analysis time.
 ! ***   Read in rass data from nearest filetime ******************************
 
         ext = 'lrs'
+        call upcase(ext,ext_uc)
         call get_filespec(ext,2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time_sys,i4time_file)
 
@@ -166,7 +170,7 @@ c                               not exactly match the LAPS analysis time.
 
 400     do i_pr = 1,max_snd_obs
 
-340         continue
+340         iwrite=1
 
             read(12,401,err=406,end=500)
      1      ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
@@ -174,7 +178,7 @@ c                               not exactly match the LAPS analysis time.
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9,1x,a8)
 
             if(nlevels_in .gt. max_snd_levels)then
-                write(6,*)' ERROR: too many levels in LRS file '       
+                write(6,*)' ERROR: too many levels in file ',ext_uc(1:3)       
      1                   ,i_pr,nlevels_in,max_snd_levels
                 istatus = 0
                 return
@@ -187,10 +191,10 @@ c                               not exactly match the LAPS analysis time.
             i_ob = nint(ri)
             j_ob = nint(rj)
 
-            write(6,407,err=408)i_pr,ista,nlevels_in
+            write(6,407,err=408)ext_uc(1:3),i_pr,ista,nlevels_in
      1                 ,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
      1                 ,i_ob,j_ob,c5_name(i_pr),a9time,c8_obstype(i_pr)       
-407         format(/' LRS #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9
+407         format(/' ',a3,' #',i5,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9
      1                       ,1x,a8)
 
 408         do level = 1,nlevels_in
@@ -220,16 +224,16 @@ c311                format(1x,i6,i4,5f8.1)
      1         nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
      1                                                  )then
                 write(6,*)'  In Bounds - Vertically Interpolating the '
-     1                   ,'Rass'
+     1                   ,c8_obstype(i_pr)
             else
                 write(6,*)'  Out of Bounds or < 2 levels',nlevels_in
                 nlevels_good(i_pr)=0 ! This effectively throws out the Rass
             endif
 
             call cv_asc_i4time(a9time,i4time_ob)
-            if(abs(i4time_ob-i4time_sys) .gt. i4_window_rass_ob)then
+            if(abs(i4time_ob-i4time_sys) .gt. i4_window_ob)then
                 write(6,*)' Out of time bounds:',i4time_ob-i4time_sys
-     1                                          ,i4_window_rass_ob
+     1                                          ,i4_window_ob
                 nlevels_good(i_pr)=0 ! This effectively throws out the Rass    
             endif
 
@@ -244,7 +248,7 @@ c311                format(1x,i6,i4,5f8.1)
                     call interp_tsnd_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
      1                          t_diff,temp_bkg_3d,
      1                          ob_pr_t(i_pr,level),
-     1                          i_pr,
+     1                          i_pr,iwrite,
      1                          level,l_3d,
      1                          nlevels_good,
      1                          lat_pr,lon_pr,i_ob,j_ob,
@@ -298,6 +302,8 @@ c
 ! ***   Read in SND data  ***************************************
 
         ext = 'snd'
+        call get_tempob_time_window('SND',i4_window_ob,istatus)
+        if(istatus .ne. 1)return
         call get_filespec(ext,2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time_sys,i4time_nearest)
 
@@ -318,6 +324,12 @@ c
 
         do i_pr = n_rass+1,max_snd_obs
 
+            if(i_pr .le. 200 .or. i_pr .eq. (i_pr/10)*10)then
+                iwrite = 1
+            else
+                iwrite = 0
+            endif
+
 640         continue
 
             read(12,801,err=706,end=800)
@@ -332,11 +344,11 @@ c
             i_ob = nint(ri)
             j_ob = nint(rj)
 
-            write(6,707,err=708)i_pr,ista,nlevels_in
+            if(iwrite .eq. 1)write(6,707,err=708)i_pr,ista,nlevels_in
      1                 ,lat_pr(i_pr),lon_pr(i_pr)
      1                 ,elev_pr(i_pr),i_ob,j_ob,c5_name(i_pr),a9time
      1                 ,c8_obstype(i_pr)
-707         format(/' SND #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9,1x,a8)       
+707         format(/' SND #',i5,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9,1x,a8)       
 
             if(nlevels_in .gt. max_snd_levels)then
                 write(6,*)' ERROR: too many levels in SND file '       
@@ -364,8 +376,9 @@ c
      1                     ,imax,jmax,kmax,i_ob,j_ob,ht_buff,istatus)
                         if(istatus .ne. 1)goto710
                         ht_in = ht_buff
-                        write(6,*)' Pressure was given, ht was derived:'       
-     1                            ,pr_in,ht_in
+                        if(iwrite .eq. 1)write(6,*)
+     1                      ' Pressure was given, ht was derived:'       
+     1                      ,pr_in,ht_in
                     endif
                 endif
 
@@ -377,7 +390,7 @@ c
                     ob_pr_ht_obs(i_pr,nlevels_good(i_pr)) = ht_in
                     ob_pr_t_obs(i_pr,nlevels_good(i_pr)) =  t_in + 273.15
 
-c                   write(6,611,err=312)ista,i_pr
+c                   if(iwrite .eq. 1)write(6,611,err=312)ista,i_pr
 c       1                ,ob_pr_ht_obs(i_pr,nlevels_good(i_pr))
 c       1                ,ob_pr_t_obs(i_pr,nlevels_good(i_pr))
 c611                format(1x,i6,i4,5f8.1)
@@ -387,14 +400,24 @@ c611                format(1x,i6,i4,5f8.1)
 612             continue
             enddo ! level
 
+            call cv_asc_i4time(a9time,i4time_ob)
+            if(abs(i4time_ob-i4time_sys) .gt. i4_window_ob)then
+                if(iwrite .eq. 1)write(6,*)' Out of time bounds:'
+     1                                          ,i4time_ob-i4time_sys       
+     1                                          ,i4_window_ob
+                nlevels_good(i_pr)=0 ! This effectively throws out the sounding
+            endif
+
             if(i_ob .ge. 1 .and. i_ob .le. imax .and.
      1         j_ob .ge. 1 .and. j_ob .le. jmax .and.
      1         nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
      1                                                  )then
-                write(6,*)'  In Bounds - Vertically Interpolating the '
+                if(iwrite .eq. 1)write(6,*)
+     1                   '  In Bounds - Vertically Interpolating the '       
      1                   ,'Sonde'
             else
-                write(6,*)'  Out of Bounds or < 2 levels ',nlevels_in
+                if(iwrite .eq. 1)write(6,*)
+     1              '  Out of Bounds or < 2 levels ',nlevels_in
                 nlevels_good(i_pr)=0 ! This effectively throws out the Sonde
             endif
 
@@ -409,7 +432,7 @@ c611                format(1x,i6,i4,5f8.1)
                     call interp_tsnd_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
      1                         t_diff,temp_bkg_3d,
      1                         ob_pr_t(i_pr,level),
-     1                         i_pr,
+     1                         i_pr,iwrite,
      1                         level,l_3d,
      1                         nlevels_good,
      1                         lat_pr,lon_pr,i_ob,j_ob,

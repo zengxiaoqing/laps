@@ -33,7 +33,7 @@ cdis
         subroutine interp_tsnd_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
      1                             t_diff,temp_bkg_3d,
      1                             t_interp,
-     1                             i_pr,level,l_3d,
+     1                             i_pr,iwrite,level,l_3d,
      1                             nlevels_obs,
      1                             lat_pr,lon_pr,i_ob,j_ob,
      1                             ni,nj,nk,
@@ -111,8 +111,9 @@ cdis
 
                  t_interp = temp_ob - height_ob_diff * t_lapse
 
-                 write(6,1)level,rk_ob,height_ob,temp_ob,t_lapse
-     1                    ,t_interp      
+                 if(iwrite .eq. 1)
+     1               write(6,1)level,rk_ob,height_ob,temp_ob,t_lapse
+     1                        ,t_interp      
  1               format(' level rk_ob height_ob temp_ob t_lapse '
      1                 ,'t_interp'     
      1                  /i5,f8.3,f10.1,f8.3,f10.6,f8.3)
