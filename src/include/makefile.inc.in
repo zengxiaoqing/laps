@@ -1,0 +1,26 @@
+# 
+# 
+#
+INSTALLROOT=@prefix@
+DATAROOT=@datadir@
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@ 
+DBCFLAGS=@CFLAGS@ $(INC) -g -C -DDEBUG=1
+
+FC       = @FC@
+
+FFLAGS = @FFLAGS@ $(INC) @OPTIMIZE@
+DBFLAGS = @FFLAGS@ $(INC) -g -C
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+CPPFLAGS = @CPPFLAGS@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL=@INSTALL@
+PERL = @PERL@
