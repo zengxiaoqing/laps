@@ -138,7 +138,7 @@ c     get most recent file in directory
      1           gvap_p(i)
          elseif (IHOP_flag .eq. 1) then
             read(22,*,end=665,err=665) idummy,idummy,lat(i),lon(i),
-     1           wt(i), w1(i),w2(i),w3(i),
+     1           wt(i), w1(i),w2(i),w3(i),dummy,
      1           gvap_p(i)   
          endif  ! IHOP special format
 
@@ -165,14 +165,14 @@ c     write(6,*) (wt(i),i=1,nn)
 
 c     reading goes 10
 c     skip reading goes 10 if IHOP flag is set to on
-c      if(IHOP_flag .eq. 1) then
-c         write (6,*) 'IHOP activated, skipping GOES-west'
-c         istatus_10 = 0
-c         go to 700
-c      endif
+      if(IHOP_flag .eq. 1) then
+         write (6,*) 'IHOP activated, skipping GOES-west'
+         istatus_10 = 0
+         go to 700
+      endif
 
 c     get most recent file in directory
-
+      
       write (6,*)
       write (6,*) 'Acquiring GOES west GVAP info'
       write (6,*)
