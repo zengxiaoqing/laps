@@ -3,7 +3,8 @@
 c
       implicit none
 c
-      integer nx,ny,nz,nvars,recdim,i,j,k,istatus
+c     integer nx,ny,nz,nvars,recdim,i,j,k,istatus
+      integer nx,ny,nz,i,j,k,istatus
 c
       real*4 tp(nx,ny,nz),
      .       rh(nx,ny,nz),   ! in as rh out as sh
@@ -12,7 +13,7 @@ c
      .      rh_sfc(nx,ny),   ! in as rh out as sh
      .      pr_sfc(nx,ny)
 
-      real make_ssh
+c     real make_ssh
 c
 c
       character*2   gproj

@@ -75,15 +75,16 @@ cdis
 
         character*9 filename, filename_start
 
-        character*13 filename13
+c       character*13 filename13
 
         character*31  radarext_3d_accum
 
-        character var*3,comment*125,directory*150,ext*31,units*10
+c       character var*3,comment*125,directory*150,ext*31,units*10
+        character var*3,directory*150,ext*31,units*10
 
         character*125 comment_s,comment_r
 
-        character*80 c80_domain_file
+c       character*80 c80_domain_file
 
         integer j_status(20),iprod_number(20)
 
