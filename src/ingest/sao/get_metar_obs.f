@@ -57,6 +57,7 @@ c                          05-01-98  Add soil moisture variables.
 c                          06-21-99  Change ob location check to gridpt space.
 c                                      Figure box size in gridpoint space from
 c                                      user-defined size (deg) and grid_spacing.
+c                          07-22-99  Add elev ck for badflag.  Fix wmoid var.
 c
 c
 c*****************************************************************************
@@ -84,7 +85,7 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  itime60, wmoid(maxobs)
+	integer*4  itime60, wmoid(maxobs), wmoid_in(maxobs)
 	integer*4  before, after
 	integer    rtime, dpchar(maxobs)
 	integer    maxSkyCover, recNum, nf_fid, nf_vid, nf_status
@@ -161,7 +162,7 @@ c
      &     reptype_in, mslp, cvr, ht,
      &     snowcvr, stname, tt, t,
      &     timeobs, vis, dd, ffg, ff,
-     &     wmoid, badflag, istatus)
+     &     wmoid_in, badflag, istatus)
 c
 	if(istatus .ne. 1) go to 990
 	n_sao_all = recNum
@@ -240,6 +241,7 @@ c
 c
 c.....  Elevation ok?
 c
+          if(elev(i) .eq. badflag) go to 125 !from read_metar (missing elev)
           if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125
 c
 c.....  Check to see if its in the desired time window (if the flag
@@ -502,6 +504,7 @@ c
 c
 	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
 	 provider(nn)(1:11) = 'NWS        '     ! data provider (all from NWS)
+	 wmoid(nn) = wmoid_in(i)
 c
 	 store_1(nn,1) = lats(i)                ! station latitude
 	 store_1(nn,2) = lons(i)                ! station longitude
