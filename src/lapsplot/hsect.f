@@ -1012,7 +1012,12 @@ c       include 'satellite_dims_lvd.inc'
                 enddo ! j
 
                 scale = 1e-1
-                cint = -1.0
+                if(i_image .eq. 0)then
+                    cint = -1. * 2. ** (-density)
+                else
+                    cint = -1.0
+                endif
+
                 chigh = 40.
                 clow = -40.
 
@@ -1020,7 +1025,7 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'spectral')       
+     1                        ,NX_L,NY_L,r_missing_data,'omega')       
 
                 call move(w_2d,field_2d,NX_L,NY_L)
 
@@ -1356,7 +1361,7 @@ c       include 'satellite_dims_lvd.inc'
             call plot_stations(a9time,c33_label,c_type,i_overlay
      1                        ,namelist_parms,plot_parms
      1                        ,c_display,lat,lon,c_file,iflag
-     1                        ,NX_L,NY_L,laps_cycle_time,zoom)
+     1                        ,NX_L,NY_L,NZ_L,laps_cycle_time,zoom)
 
         elseif(c_type(1:2) .eq. 'he')then
             write(6,*)
@@ -6130,7 +6135,7 @@ c             if(cint.eq.0.0)cint=0.1
         subroutine plot_stations(asc_tim_9,c_label,c_field,i_overlay
      1   ,namelist_parms,plot_parms
      1   ,c_display,lat,lon,c_file,iflag
-     1   ,NX_L,NY_L,laps_cycle_time,zoom)
+     1   ,NX_L,NY_L,NZ_L,laps_cycle_time,zoom)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, laps_cycle_time as
 !                                   dummy arguments
