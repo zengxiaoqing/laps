@@ -73,8 +73,6 @@ c
       character*4   af
       character*2   gproj
  
-c     character*13  fname13_to_FA_filename,cfname13
- 
       character*16  cFA_filename
       character*3   c3ext,  c3_FA_ext
       character*2   cwb_type
@@ -186,6 +184,9 @@ c    +,istatus)
          endif
 
       elseif(bgmodel.eq.3)then
+
+c note: library function fname13_to_FA_filename could be used
+c       to covert the FA filename but currently is not.  J.Smart
 
          call downcase(cmodel(nclen-1:nclen),cwb_type)
          c3ext=c3_FA_ext(af) 
