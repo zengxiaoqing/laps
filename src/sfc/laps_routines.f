@@ -1256,6 +1256,7 @@ c*****************************************************************************
 c
 	integer ni,nj
 	real bkg_field(ni,nj)
+	real bkg_field_dum(ni,nj)
 c
 	integer i4time_in, lvl_in, bkg_time, bkg_status
 c
@@ -1311,6 +1312,9 @@ cc	   var(2) = 'MSL'  ! LGB variable
      &       ' Invalid variable request sent to get_background_sfc'
 	   return
 	endif
+
+
+        if(.true.)then ! old way
 c
 c.....  Get the background data.  Try for a SFM forecast first.  If not
 c.....  available, try the LGB file.  If that's not there either, use a
@@ -1382,7 +1386,7 @@ c
 c
 c.....  Try LGB.
 c
- 200	ilgb_bk = 1
+ 200	imodel_bk = 1
 	print *,' Trying for LGB background '
 c	bkg_dir = '../lapsprd/lgb/'
 	bkg_ext = 'lgb'
@@ -1420,26 +1424,41 @@ c
   	   if(istatus .ne. 1) then
 	      print *,' LGB field ',var(2),' not available at '
      1               , filename13
-	      ilgb_bk = 0
+	      imodel_bk = 0
 	      go to 300
 	   endif
 c
 	else
 c
 	   print *,' No LGB file with proper valid time.'
-	   ilgb_bk = 0
+	   imodel_bk = 0
 	   go to 300
 
 	endif
+
+	print *,'  Found background at ',filename13
+
+!       write(6,*)' Test of new call'
+!       call get_modelfg_2d(i4time_in,var(2),ni,nj,bkg_field_dum
+!    1                                            ,istat_dum)      
+!       print *,'...test checking field.'
+!	call check_field_2d(bkg_field_dum,ni,nj,fill_val,istat_dum)
+
+        else ! new way
+           call get_modelfg_2d(i4time_in,var(2),ni,nj,bkg_field,istatus)
+           if(istatus .ne. 1)then
+	       print *,' No LGB/RSF file with proper valid time.'
+	       imodel_bk = 0
+	       go to 300
+           endif
+
+        endif
+
 c
 c.....  Check the field for NaN's and other bad stuff.
 c
-	print *,'  Found LGB background at ',filename13,
-     &          '...checking field.'
+	print *,'...checking field.'
 	call check_field_2d(bkg_field,ni,nj,fill_val,istatus)
-
-!       Call new 'get_modelfg_2d' routine
-!       call get_modelfg_2d(i4time_bk,var(2),ni,nj,bkg_field,istatus)       
 
 	if(istatus .eq. 1) then
 	   bkg_status = 1
@@ -1447,7 +1466,7 @@ c
 	   return
 	else
 	   print *,
-     &    '  Problem with LGB background, check status = ', istatus
+     &    '  Problem with LGB/RSF background, check status = ', istatus       
 	endif
 c
 c.....	Try the previous LSX.
@@ -1686,7 +1705,7 @@ c.....  Try LGB.
 c
 	var_u = 'USF'
 	var_v = 'VSF'
-	ilgb_bk = 1
+	imodel_bk = 1
 	print *,' Trying for LGB background '
 c	bkg_dir = '../lapsprd/lgb/'
 	bkg_ext = 'lgb'
@@ -1726,14 +1745,14 @@ c
 
   	   if(istatus_u.ne.1 .or. istatus_v.ne.1) then
 	      print *,' ERROR reading LGB file at ', filename13
-	      ilgb_bk = 0
+	      imodel_bk = 0
 	      go to 300
 	   endif
 c
 	else
 c
 	   print *,' No LGB file with proper valid time.'
-	   ilgb_bk = 0
+	   imodel_bk = 0
 	   go to 300
 
 	endif
