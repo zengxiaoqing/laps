@@ -203,6 +203,82 @@ cdis
 
         return
         end
+c
+        subroutine get_2dgrid_dname(directory
+     1         ,i4time_needed,i4tol,i4time_nearest
+     1         ,EXT,var_2d,units_2d
+     1         ,comment_2d,imax,jmax,field_2d,ilevel,istatus)
+
+!       Steve Albers            1990
+!           J Smart             1998
+
+        include 'lapsparms.inc'
+
+        character*9 asc9_tim
+
+        character*150 DIRECTORY
+        character*31 EXT
+
+        character*125 comment_2d
+        character*10 units_2d
+        character*3 var_2d
+        integer*4 LVL_2d
+        character*4 LVL_COORD_2d
+
+        real*4 field_2d(imax,jmax)
+
+        character*255 c_filespec
+
+        do i = 1,31
+            if(ext(i:i) .eq. ' ')goto20
+        enddo
+20      lenext = i-1
+
+        len_dir=index(directory,' ')-1
+        c_filespec = directory(1:len_dir)//'*.'//ext(1:lenext)
+        call get_file_time(c_filespec,i4time_needed,i4time_nearest)
+
+        if(abs(i4time_needed - i4time_nearest) .le. i4tol)then
+            if(ilevel .ne. 0)then
+                if(vertical_grid .eq. 'HEIGHT')then
+                    lvl_2d = zcoord_of_level(k)/10
+                    lvl_coord_2d = 'MSL'
+                elseif(vertical_grid .eq. 'PRESSURE')then
+                    lvl_2d = ilevel
+                    lvl_coord_2d = 'MB'
+                endif
+
+            else
+                lvl_2d = 0
+                lvl_coord_2d = 'MSL'
+
+            endif
+
+            call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
+
+            write(6,11)directory(1:52),asc9_tim,ext(1:5),var_2d
+11          format(' Reading 2d ',a52,1x,a9,1x,a5,1x,a3)
+
+            CALL READ_LAPS_DATA(I4TIME_nearest,DIRECTORY,EXT,imax,jmax,
+     1  1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
+     1                     COMMENT_2D,field_2d,ISTATUS)
+
+!           Spot check for missing data
+            if(istatus .eq. 1 .and.
+     1                 field_2d(imax/2,jmax/2) .eq. r_missing_data)then
+                write(6,*)' Missing Data Value Detected in 2D Field'
+                istatus = -1
+            endif
+
+        else
+            write(6,*)' No field found within window ',ext(1:10)
+            istatus = 0
+
+        endif
+
+        return
+        end
+
 
 
 
