@@ -258,8 +258,20 @@ c                                   diff variables.  Rm alf2 as array.
 c                       11-23-99  Put background (tb) into output (t) array if
 c                                   no obs or all obs bad in data array (to).
 c
+c         S. Albers     2001      Adding in data structures towards the goal of
+c                                 directly analyzing obs external to the grid
 c*******************************************************************************
 c
+        logical l_barnes_wide, l_struct
+        data l_struct /.false./        ! Using data structures?
+        data l_barnes_wide /.true./    ! Using barnes_wide routine on boundary?
+
+        integer*4 max_obs
+        parameter (max_obs = 40000)       
+
+        include 'barnesob.inc'
+        type (barnesob_qc) obs_barnes(max_obs)
+
 	real t(imax,jmax), to(imax,jmax), s(imax,jmax), s_in(imax,jmax)
 	real RESS(1000), tb(imax,jmax) !, alf2(imax,jmax)
 c
@@ -287,6 +299,34 @@ c
  	write(6,910)analysis_mode
  910	format(' subroutine spline: analysis_mode = ',i3)
 
+!       Fill data structure
+        rinst_err = 1.5
+        n_obs = 0
+
+        if(l_struct)then ! Define "to" array from data structure
+            to = 0.0     ! f90 assignment
+            do iob = 1,n_obs
+                i = obs_barnes(iob)%i
+                j = obs_barnes(iob)%j
+                to(i,j) = obs_barnes(n_obs)%value(1)
+            enddo ! iob
+
+        else             ! Define data structure from input "to" array
+            do i = 1,imax
+            do j = 1,jmax
+                if(to(i,j) .ne. 0.0)then
+                    n_obs = n_obs + 1
+                    obs_barnes(n_obs)%i = i
+                    obs_barnes(n_obs)%j = j
+                    obs_barnes(n_obs)%k = 1
+                    obs_barnes(n_obs)%weight   = 1./rinst_err**2       
+                    obs_barnes(n_obs)%value(1) = to(i,j)
+                    obs_barnes(n_obs)%qc = .true.
+                endif
+            enddo ! j
+            enddo ! i
+        endif
+
 	imiss = 0
 	ovr = 1.4
 	iflag = 0
@@ -305,16 +345,45 @@ c.....  Count the number of observations in the field (not counting the
 c.....  boundaries.
 
 c
-	n_obs_var = 0
+        if(l_barnes_wide)then
+            ilow = 3
+            ihigh = imax-2
+            jlow = 3
+            jhigh = jmax-2
+        else
+            ilow = 1
+            ihigh = imax
+            jlow = 1
+            jhigh = jmax
+        endif
 
-        l_boundary = .true. ! f90 assignment
+        n_obs_var = 0
+        if(l_barnes_wide)l_boundary = .true. ! f90 assignment
 
-	do j=3,jmax-2
-	do i=3,imax-2
-          l_boundary(i,j) = .false.
-	  if(to(i,j) .ne. 0.) n_obs_var = n_obs_var + 1
-	enddo !i
-	enddo !j
+        if(l_struct)then
+            if(l_barnes_wide)then
+                do iob = 1,n_obs
+                    i = obs_barnes(iob)%i
+                    j = obs_barnes(iob)%j
+                    if(i.ge.ilow .and. i.le.ihigh .and. 
+     1                 j.ge.jlow .and. j.le.jhigh      )then ! interior point
+                        l_boundary(i,j) = .false.            
+                        n_obs_var = n_obs_var + 1
+                    endif
+                enddo ! iob
+            else
+                n_obs_var = n_obs
+            endif
+        else
+	    do j=jlow,jhigh
+	    do i=ilow,ihigh
+                if(l_barnes_wide)l_boundary(i,j) = .false.  ! interior point
+  	        if(to(i,j) .ne. 0.) n_obs_var = n_obs_var + 1
+	    enddo !i
+	    enddo !j
+        endif
+
+        n_valid_obs = n_obs
 
 	if(n_obs_var .eq. 0) then
 	  print *,'  WARNING.  No observations found in data array. '
@@ -339,8 +408,8 @@ c
 c
 c.....	Compute standard deviation of the obs
 c
-	do j=3,jmax-2
-	do i=3,imax-2
+	do j=jlow,jhigh
+	do i=ilow,ihigh
 	  if(to(i,j) .eq. 0.) go to 99
 	  sum = sum + ((to(i,j) - tb(i,j)) ** 2)
 	  cnt = cnt + 1.
@@ -372,37 +441,57 @@ c
 	sumdif = 0.
 	numdif = 0
 
-        do j = 1,jmax
-        do i = 1,imax
-           if(l_boundary(i,j))then ! Normalize boundary ob
+        if(l_struct)then
+            do iob = 1,n_obs
+                i = obs_barnes(iob)%i
+                j = obs_barnes(iob)%j
+                if(i.ge.ilow .and. i.le.ihigh .and. 
+     1             j.ge.jlow .and. j.le.jhigh      )then ! interior point
+
+!                   eliminate bad data from the interior while normalizing
+!                   to the background
+                   
+
+                else ! normalize boundary ob
+ 	            to(i,j) = to(i,j) - tb(i,j)
+ 
+                endif
+
+            enddo ! iob
+
+        else ! .not. l_struct
+          do j = 1,jmax
+          do i = 1,imax
+            if(l_boundary(i,j) .and. l_barnes_wide)then ! Normalize boundary ob
 	       to(i,j) = to(i,j) - tb(i,j)
 
-           else ! eliminate bad data from the interior while normalizing to
-                ! the background
+            else ! eliminate bad data from the interior while normalizing to
+                 ! the background
 
-	       if(to(i,j) .eq. 0.) go to 98
-	       diff = to(i,j) - tb(i,j)
-	       if(abs(diff) .lt. bad) then
-	           to(i,j) = diff
-	           sumdif = sumdif + diff
-	           numdif = numdif + 1
-	       else
-	           iflag = 1
-	           write(6,1099) i,j,to(i,j), diff
-	           to(i,j) = 0.
-	           n_obs_var = n_obs_var - 1
-	       endif
+	       if(to(i,j) .ne. 0.) then
+	           diff = to(i,j) - tb(i,j)
+	           if(abs(diff) .lt. bad) then
+	               to(i,j) = diff
+	               sumdif = sumdif + diff
+	               numdif = numdif + 1
+	           else
+	               iflag = 1
+	               write(6,1099) i,j,to(i,j), diff
+	               to(i,j) = 0.
+	               n_obs_var = n_obs_var - 1
+	           endif
 
- 98	       continue 
- 1099	       format(1x,'bad data at i,j ',2i5,': value ',e12.4
-     1               ,', diff ',e12.4)
+               endif
+ 
+            endif ! Boundary point
 
-           endif ! Boundary point
+          enddo ! j
+          enddo ! i
 
-        enddo ! j
-        enddo ! i
-
-
+        endif ! l_struct       
+ 
+1099	format(1x,'bad data at i,j ',2i5,': value ',e12.4
+     1        ,', diff ',e12.4)
 c
 	print *,' '
 	if(numdif .ne. n_obs_var) then
@@ -472,7 +561,6 @@ c
 c
 c.....  Have obs, so set starting field so spline converges faster.
 c
-
         if(analysis_mode .eq. 1)then
 	    amean_start = sumdif / numdif
 	    print *,' Using mean of '
@@ -487,18 +575,18 @@ c
 
 !           rms_thresh_norm  = 1.0  ! a la wind.nl
             weight_bkg_const = 5e28 ! a la wind.nl
-            rinst_err = 1.5
 
             call barnes_multivariate_sfc(to,imax,jmax               ! Inputs
-     1                                    ,smsng                    ! Input
-     1                                    ,max_snd                  ! Input
-     1                                    ,rms_thresh_norm          ! Input
-     1                                    ,rinst_err                ! Input
-     1                                    ,weight_bkg_const         ! Input
-     1                                    ,n_fnorm                  ! Input
-     1                                    ,l_boundary               ! Input
-     1                                    ,t                        ! Output
-     1                                    ,istatus)                 ! Output
+     1                                ,smsng                        ! Input
+     1                                ,max_snd                      ! Input
+     1                                ,rms_thresh_norm              ! Input
+     1                                ,rinst_err                    ! Input
+     1                                ,weight_bkg_const             ! Input
+     1                                ,n_fnorm                      ! Input
+     1                                ,l_boundary                   ! Input
+     1                                ,n_valid_obs,obs_barnes       ! Input
+     1                                ,t                            ! Output
+     1                                ,istatus)                     ! Output
         endif
 c
 cc	print *,' Using smooth Barnes to start the analysis.'
@@ -599,6 +687,9 @@ cc	    enddo
 
  7119	    format(2i5,f10.2)
 
+  	    write(6,1000) ithold ,corhold !it, cormax
+ 1000	    format(1x,' it/cormax= ',i4,e12.4)
+
         endif ! Do the spline
 
 cc	return
@@ -615,9 +706,6 @@ c
 	enddo !i
 	enddo !j
 c
- 6	write(6,1000) ithold ,corhold !it, cormax
- 1000	format(1x,' it/cormax= ',i4,e12.4)
-
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
 	   write(9,923)
  923	   format(1x,' solution after spline')
