@@ -1003,10 +1003,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      These include information on which types of radar data are processed 
      via the various intermediate data files.
 
-     For details on using each radar ingest process, we should establish 
-     whether your raw data is in polar or Cartesian form. If polar, please take
-     a look at the "Polar Radar Data" subsection in Section 3. NOWRAD / WSI 
-     (Cartesian) data is covered separately within Section 3.
+     Further information on using individual radar ingest processes is in 
+     Section 3. Specifically we should establish whether your raw data is in 
+     polar or Cartesian form. If polar, please take a look at "Polar Radar 
+     Data" in section 3.2.3. NOWRAD / WSI (Cartesian) data is covered separately 
+     within Section 3.2.4.
       
                        ----   2.3.3  Surface Data ---
 
