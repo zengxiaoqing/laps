@@ -16,11 +16,12 @@ main                                                    remap.f
         fill_common                                     fill_common.f
         radar_init (2nd call)                           netcdfio.f
             get_tilt_netcdf_data                        get_tilt_netcdf.f
+        read_data_88d                                   readdata.f
+            lgate_lut_gen                               lut_gen.f
+            ld_ray                                      ld_ray.f
+            rayqckz                                     rayqckz.f
+            unfold                                      unfold.f
         remap_process                                   remap_process.f
-            read_data_88d                               readdata.f
-                ld_ray                                  ld_ray.f
-                rayqckz                                 rayqckz.f
-                unfold                                  unfold.f
             ref_fill_horz                               ref_fill_horz.f
             put_laps_multi_3d                           laps_io.f
             put_remap_vrc                               remap_process.f
