@@ -179,7 +179,7 @@ CONTAINS
         TRIM(grid_type),'.  I quit.'
     STOP 'unsupported projection'
   END IF
-  WRITE(output_unit,'(I1,2F10.1,7F10.3)') proj_flag, dx, dy, &
+  WRITE(output_unit,'(I1,2F10.1,7F10.3)') proj_flag, dx*1000, dy*1000, &
                                           la1, lo1, la2, lo2, &
                                           latin1_out, lov, &
                                           latin2_out
