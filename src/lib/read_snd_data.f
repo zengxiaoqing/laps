@@ -34,6 +34,12 @@ cdoc    Returns sounding data from the SND file
 
         rcycles_pr = 0
 
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus .ne. 1)then
+          write(6,*) ' Error getting r_missing_data'
+          GO TO 600
+      endif
+
       call open_lapsprd_file_read(lun,i4time_snd,ext,istatus)
       if(istatus .ne. 1)then
           write(6,*) ' Error opening SND file'
@@ -48,9 +54,9 @@ cdoc    Returns sounding data from the SND file
             iwrite = 0
         endif
 
-        read(12,511,err=530,end=550)ista,nlevels_in,
+        read(lun,511,err=530,end=550)ista,nlevels_in,
      1       lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),
-     1       c5_name,a9time_ob,obstype(i_pr)
+     1       c5_name(i_pr),a9time_ob,obstype(i_pr)
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
 !       obstype(i_pr) = 'RAOB'
@@ -60,7 +66,7 @@ cdoc    Returns sounding data from the SND file
 
         if(iwrite .eq. 1)write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)       
      1             ,lon_pr(i_pr)
-     1             ,elev_pr(i_pr),rcycles_pr,c5_name,a9time_ob
+     1             ,elev_pr(i_pr),rcycles_pr,c5_name(i_pr),a9time_ob       
      1             ,obstype(i_pr)     
  512    format(/' SND #',i4,i6,i5,2f8.2,e10.3,f8.2,1x,a5,3x,a9,1x,a8)       
 
@@ -68,7 +74,7 @@ cdoc    Returns sounding data from the SND file
 
         DO level = 1,nlevels_in
 
-          read(12,*,err=515)ht_in,pr_in,t_in,td_in,di_in,sp_in ! (sp = m/s)
+          read(lun,*,err=515)ht_in,pr_in,t_in,td_in,di_in,sp_in ! (sp = m/s)
 
 !         Test this by deliberately setting ht_in to missing
 !         ht_in = r_missing_data
@@ -154,7 +160,7 @@ c
 
   600 CONTINUE 
 
-      close(12)
+      close(lun)
 
       return
       end
@@ -196,6 +202,12 @@ cdoc    Returns sounding metadata from the SND file
 
         rcycles_pr = 0
 
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus .ne. 1)then
+          write(6,*) ' Error getting r_missing_data'
+          GO TO 600
+      endif
+
       call open_lapsprd_file_read(lun,i4time_snd,ext,istatus)
       if(istatus .ne. 1)then
           write(6,*) ' Error opening SND file'
@@ -210,9 +222,9 @@ cdoc    Returns sounding metadata from the SND file
             iwrite = 0
         endif
 
-        read(12,511,err=530,end=550)ista,nlevels_in,
+        read(lun,511,err=530,end=550)ista,nlevels_in,
      1       lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),
-     1       c5_name,a9time_ob,obstype(i_pr)
+     1       c5_name(i_pr),a9time_ob,obstype(i_pr)
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
 !       obstype(i_pr) = 'RAOB'
@@ -222,7 +234,7 @@ cdoc    Returns sounding metadata from the SND file
 
         if(iwrite .eq. 1)write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)       
      1             ,lon_pr(i_pr)
-     1             ,elev_pr(i_pr),rcycles_pr,c5_name,a9time_ob
+     1             ,elev_pr(i_pr),rcycles_pr,c5_name(i_pr),a9time_ob
      1             ,obstype(i_pr)     
  512    format(/' SND #',i4,i6,i5,2f8.2,e10.3,f8.2,1x,a5,3x,a9,1x,a8)       
 
@@ -230,7 +242,7 @@ cdoc    Returns sounding metadata from the SND file
 
         DO level = 1,nlevels_in
 
-          read(12,*,err=515)ht_in,pr_in,t_in,td_in,di_in,sp_in ! (sp = m/s)
+          read(lun,*,err=515)ht_in,pr_in,t_in,td_in,di_in,sp_in ! (sp = m/s)
 
 !         Test this by deliberately setting ht_in to missing
 !         ht_in = r_missing_data
@@ -316,7 +328,7 @@ c
 
   600 CONTINUE 
 
-      close(12)
+      close(lun)
 
       return
       end

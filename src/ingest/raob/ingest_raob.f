@@ -24,6 +24,8 @@
       character*40 c_vars_req
       character*(*) path_to_raw_raob
 
+      logical l_parse
+
 !     Define interval to be used (between timestamps) for creation of SND files
       integer i4_snd_interval
       parameter (i4_snd_interval = 3600)
@@ -65,7 +67,8 @@
           call get_file_times(c_filespec,max_files,c_fnames
      1                       ,i4times,i_nbr_files_ret,istatus)
 
-      elseif(c8_raob_format(1:5) .eq. 'AFGWC')then
+      elseif(      l_parse(c8_raob_format,'AFGWC')
+     1        .or. l_parse(c8_raob_format,'AFWA')   )then
           c_filespec = dir_in(1:len_dir_in)//'/raob.*'
           call get_file_names(c_filespec,i_nbr_files_ret,c_fnames
      1                      ,max_files,istatus)
@@ -127,7 +130,8 @@
               i4_contains_early = 10800
               i4_contains_late  = 0
 
-          elseif(c8_raob_format(1:6) .eq. 'AFGWC')then 
+          elseif(      l_parse(c8_raob_format,'AFGWC')
+     1            .or. l_parse(c8_raob_format,'AFWA')   )then
               filename_in = dir_in(1:len_dir_in)//'/raob.'//
      1                                            a8_time_orig(i)
               i4_contains_early = 3600
@@ -193,7 +197,8 @@
      1                ,i4time_raob_earliest,i4time_raob_latest
      1                ,filename_in,istatus)
 
-              elseif(c8_raob_format(1:6) .eq. 'AFGWC')then
+              elseif(      l_parse(c8_raob_format,'AFGWC')
+     1                .or. l_parse(c8_raob_format,'AFWA')   )then
                   call get_raob_data_af(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest,a9_time       

@@ -165,7 +165,8 @@ c
 
           call filter_string(obstype(i))
 
-          if(l_parse(c8_project,'AFGWC'))then
+          if(l_parse(c8_project,'AFGWC') .or. 
+     1       l_parse(c8_project,'AFWA')       )then
               atype(i)='U'//atype(i)(2:6)
           endif
 

@@ -96,7 +96,7 @@ c
 
         istatus = 1
 
-        close(12)
+        close(lun)
 
   500   CONTINUE
 
@@ -201,7 +201,7 @@ c
 
         istatus = 1
 
-        close(12)
+        close(lun)
 
   500   CONTINUE
 

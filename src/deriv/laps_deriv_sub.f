@@ -141,6 +141,7 @@ cdis
         logical l_flag_icing_index
         logical l_flag_bogus_w
         logical l_flag_snow_potential
+        logical l_parse
 
         logical l_sao_lso
         data l_sao_lso /.true./ ! Do things the new way?
@@ -498,7 +499,8 @@ c read in laps lat/lon and topo
      1             obstype(i)(1:4) .eq. 'CDOT'     .OR.
      1             obstype(i)(7:8) .eq. '1A'       .OR.
      1             wx_s(i)(1:7)    .eq. 'UNKNOWN'  .OR.       ! Already in LSO
-     1             c8_project(1:5) .eq. 'AFGWC'        )then
+     1             l_parse(c8_project,'AFGWC')     .OR.
+     1             l_parse(c8_project,'AFWA')             )then
                     wx_s(i) = 'UNKNOWN'
 
                 endif
