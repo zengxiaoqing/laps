@@ -12,6 +12,10 @@
       character c_radar_mosaic*3
 
       call get_laps_config('nest7grid',istatus)
+
+      ISTAT = INIT_TIMER()
+
+      nc = 0
 c
 c Radar mosaic. There are two types:  wideband remapper (vxx series - rrv output)
 c and rpg narrow band (wfo arena: rdr/./vrc/).
@@ -24,16 +28,11 @@ c     c_mosaic_type='rdr'
       call mosaic_radar_nl(c_radar_mosaic,n_radars,c_radar_ext,
      & i_window,imosaic_3d,istatus)
     
-c     if(c_radar_mosaic.eq.'vxx')then
-c        n_radars=3
-c        c_radar_ext(1)='v01'
-c        c_radar_ext(2)='v02'
-c        c_radar_ext(3)='v03'
-c     else
-c        n_radars=2
-c        c_radar_ext(1)='001'
-c        c_radar_ext(2)='002'
-c     endif
+      if(n_radars .eq. -1)then
+          call get_max_radars(n_radars,istatus)
+          if(istatus .ne. 1)goto1000
+          write(6,*)' setting n_radars = max_radars_cmn = ',n_radars
+      endif
 
       if(n_radars.gt.max_radars_mosaic)then
          print*,'the namelist item n_radars exceeds',
@@ -356,6 +355,8 @@ c    &              units_3d, comment_3d, rheight_laps, IStatus)
             l_low_level=.false.
          endif
       endif
+
+      I4_elapsed = ishow_timer()
 c
 c These subroutines could be in loop (do i=1,n_mosaics).
 c ----------------------------------------------------------
@@ -387,6 +388,8 @@ c ----------------------------------------------------------
 
       endif
 
+      I4_elapsed = ishow_timer()
+
 c
 c Determine max reflectivity 2-d field as composite of all radar files for
 c the given time. Test i_ra_count > 1. If not then no need to mosaic!
@@ -395,10 +398,13 @@ c -------------------------------------------------------------------------
 
 c this subroutine does not yet use imosaic_3d parameter.
 
-         call mosaic_ref_multi(i_ra_count,n_radars,l_low_level,
-     & c_radar_id,lat,lon,nx_l,ny_l,nz_l,rlat_radar,rlon_radar,
-     & rheight_radar,topo,rheight_laps,grid_ra_ref,grid_mosaic
-     &_3dref,istatus)
+         call mosaic_ref_multi(i_ra_count,n_radars,l_low_level,           ! I
+     &                         c_radar_id,lat,lon,nx_l,ny_l,nz_l,         ! I
+     &                         rlat_radar,rlon_radar,rheight_radar,       ! I
+     &                         topo,rheight_laps,grid_ra_ref,             ! I
+     &                         imosaic_3d,                                ! I
+     &                         grid_mosaic_3dref,istatus)                 ! O
+         if(istatus .ne. 1)return
 
       elseif(i_ra_count.eq.1)then
 
@@ -431,6 +437,8 @@ c
       enddo
 31    format(2(2x,i4),1x,f8.1)
  
+      I4_elapsed = ishow_timer()
+
 c
 c vrc output. there should be a corresponding vrz output as well.
 c
@@ -472,6 +480,8 @@ c
          end if
 
       endif
+
+      I4_elapsed = ishow_timer()
 
 c
 c vrz output. 
@@ -540,6 +550,7 @@ c
 
       endif
 
+      I4_elapsed = ishow_timer()
 
       goto 1000
 
