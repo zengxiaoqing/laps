@@ -93,8 +93,8 @@ c             end if
      1                            .AND.
      1          (rland_frac(i,j) .gt. 0.5 
      1                         .or. specular_ref_angle_d(i,j) .gt. 10.)
-!    1                            .AND.
-!    1                    emission_angle_d(i,j) .gt. 15.       
+     1                            .AND.
+     1                    emission_angle_d(i,j) .gt. 15.       
      1                                                            )then       
 
                    arg = (r_norm_vis_cnts_in(i,j)- rlnd_cnts) /
