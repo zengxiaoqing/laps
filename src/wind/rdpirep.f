@@ -95,11 +95,11 @@ cdis
             call open_lapsprd_file(lun_pig,i4time,ext,istatus)
             if(istatus .ne. 1)go to 888
 
-            call get_windob_time_window('PIREP',i4_window_pirep,istatus)
+            call get_windob_time_window('ACARS',i4_window_ob,istatus)
             if(istatus .eq. 1)then
-                write(6,*)' i4_window_pirep = ',i4_window_pirep
+                write(6,*)' i4_window_ob = ',i4_window_ob
             else
-                write(6,*)' Error getting i4_window_pirep'
+                write(6,*)' Error getting i4_window_ob'
                 return
             endif
 
@@ -107,26 +107,18 @@ cdis
             call open_lapsprd_file_append(lun_pig,i4time,ext,istatus)       
             if(istatus .ne. 1)go to 888
 
-            call get_windob_time_window('CDW',i4_window_pirep,istatus)
+            call get_windob_time_window('CDW',i4_window_ob,istatus)
             if(istatus .eq. 1)then
-                write(6,*)' i4_window_pirep = ',i4_window_pirep
+                write(6,*)' i4_window_ob = ',i4_window_ob
             else
-                write(6,*)' Error getting i4_window_pirep'
+                write(6,*)' Error getting i4_window_ob'
                 return
             endif
 
         endif
 
-        call get_laps_cycle_time(ilaps_cycle_time,istatus)
-        if(istatus .eq. 1)then
-            write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
-        else
-            write(6,*)' Error getting laps_cycle_time'
-            return
-        endif
-
         write(6,*)
-        write(6,*)'             Reading Pirep Obs: ',ext_in
+        write(6,*)'             Reading Point Obs: ',ext_in
         write(6,*)
      1  '   n   i  j  k    u      v       dd     ff      azi    ran '
 
@@ -150,12 +142,9 @@ cdis
 
         if(l_eof)goto900
 
-        call cv_asc_i4time(asc9_tim_pirep,i4time_pirep)
+        call cv_asc_i4time(asc9_tim_pirep,i4time_ob)
 
-        if(abs(i4time_pirep - i4time) .le. i4_window_pirep)then
-
-            rcycles = float(i4time - i4time_pirep) 
-     1              / float(ilaps_cycle_time)
+        if(abs(i4time_ob - i4time) .le. i4_window_ob)then
 
 !           Climo QC check
             if(dd .lt. 500. .and. i_qc .eq. 1)then
@@ -168,7 +157,7 @@ cdis
                 if(i_grid .ge.  1 .and. j_grid .ge. 1 .and.
      1             i_grid .le. ni .and. j_grid .le. nj)then
 
-!                   Pirep is in horizontal domain
+!                   Point ob is in horizontal domain
 
                     if(ext_in .eq. 'pin')then
 !                       Assume ACARS elev is geometric height MSL
@@ -189,7 +178,7 @@ cdis
 
                     if(istatus_rk .eq. 1
      1             .and. k_grid .le. nk
-     1             .and. k_grid .ge. 1    )then ! Pirep is in vertical domain
+     1             .and. k_grid .ge. 1    )then ! Ob is in vertical domain
 
                         n_pirep_obs = n_pirep_obs + 1
 
@@ -217,13 +206,13 @@ cdis
                         call get_time_term(u_mdl_bkg_4d,ni,nj,nk
      1                                    ,NTMIN,NTMAX
      1                                    ,i_grid,j_grid,k_grid
-     1                                    ,i4time,i4time_pirep
+     1                                    ,i4time,i4time_ob
      1                                    ,u_time_interp,u_diff,istatus)       
 
                         call get_time_term(v_mdl_bkg_4d,ni,nj,nk
      1                                    ,NTMIN,NTMAX
      1                                    ,i_grid,j_grid,k_grid
-     1                                    ,i4time,i4time_pirep
+     1                                    ,i4time,i4time_ob
      1                                    ,v_time_interp,v_diff,istatus)       
 
                         pirep_u(n_pirep_obs) = u_temp - u_diff
@@ -270,14 +259,14 @@ cdis
 
         else
             write(6,*)' Out of temporal bounds'
-     1                              ,abs(i4time_pirep - i4time)
+     1                              ,abs(i4time_ob - i4time)
 
         endif ! In temporal bounds
 
 100     goto10
 
-900     write(6,*)' End of PIREP ',ext_in,' file, Cumulative # obs = '
-     1                                          ,n_pirep_obs
+900     write(6,*)' End of RDPIREP',ext_in,' file
+     1           , Cumulative # obs = ',n_pirep_obs
 
         close(lun_in)
         close(lun_pig)
@@ -286,7 +275,7 @@ cdis
 
         return
 
-999     write(6,*)' No pirep data present'
+999     write(6,*)' No point ob data present'
         istatus = 1
         return
 
