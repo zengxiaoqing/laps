@@ -30,12 +30,12 @@ cdis
 cdis 
 cdis 
 
-        subroutine read_tsnd(i4time,heights_3d,temp_3d,sh_3d,
+        subroutine read_tsnd(i4time_sys,heights_3d,temp_3d,sh_3d,
      1                   lat_pr,lon_pr,
      1                   lat,lon,
      1                   ob_pr_t,
      1                   c5_name,
-     1                   i4time_raob_window,
+     1                   i4_window_raob_file,
 !    1                   t_maps_inc,
      1                   bias_htlow,
      1                   n_rass,n_snde,n_tsnd,
@@ -44,16 +44,21 @@ cdis
      1                   r_missing_data
      1                                  )
 
-!       1992 Steve Albers   Read RASS data from lrs files
-!       1994 Steve Albers   Withold RASS surface ob
-!       1994 Steve Albers   Use SH instead of RH
-c       1995 Keith Brewster, CAPS, Added reading of .snd files for
-c                            soundings
-c       1996 Steve Albers   Read nearest LRS file, even if its time does
-c                           not exactly match the LAPS analysis time. 
-!       1997 Ken Dritz      Change NZ_L_MAX to kmax, making ob_pr_t an
-!                           automatic array (resizability change).
-!       1997 Ken Dritz      Add r_missing_data as a dummy argument.
+!       1992     Steve Albers   Read RASS data from lrs files
+!       1994     Steve Albers   Withold RASS surface ob
+!       1994     Steve Albers   Use SH instead of RH
+c       1995     Keith Brewster, CAPS, Added reading of .snd files for
+c                                soundings
+c       1996     Steve Albers   Read nearest LRS file, even if its time does
+c                               not exactly match the LAPS analysis time. 
+!       1997     Ken Dritz      Change NZ_L_MAX to kmax, making ob_pr_t an
+!                               automatic array (resizability change).
+!       1997     Ken Dritz      Add r_missing_data as a dummy argument.
+!       1998 Jan Steve Albers   General cleanup including error messages.
+!                               Improved the handling of observation times. 
+!                               The a9time is now being read in for both rass
+!                               and raobs. Time thresholding was introduced 
+!                               for rass.
 
 !       Note that max_snd needs to be the same throughout insert_tsnd.f
 !                                                     and read_tsnd.f
@@ -77,6 +82,7 @@ c                           not exactly match the LAPS analysis time.
         real ob_pr_ht_obs(max_snd,max_snd_levels)
         real ob_pr_t_obs(max_snd,max_snd_levels)
         character*5 c5_name(max_snd) 
+        character*9 a9time
 
         real*4 heights_3d(imax,jmax,kmax)
         real*4 temp_3d(imax,jmax,kmax)
@@ -107,33 +113,34 @@ c                           not exactly match the LAPS analysis time.
 
         do i_pr = 1,max_snd
             do level = 1,kmax
-
                 ob_pr_t(i_pr,level)  = r_missing_data
-
             enddo
         enddo
 
+        i4_window_rass_ob   = ilaps_cycle_time
+        i4_window_rass_file = 3600
 
 ! ***   Read in rass data from nearest filetime ******************************
 
         ext = 'lrs'
         call get_filespec(ext,2,c_filespec,istatus)
-        call get_file_time(c_filespec,i4time,i4time_rassfile)
-        call open_lapsprd_file(12,i4time_rassfile,ext,istatus)
-        if(istatus .ne. 1)go to 590
+        call get_file_time(c_filespec,i4time_sys,i4time_file)
 
         lag_time = 0 ! Middle of rass hourly sampling period
-        i4time_rass_offset = i4time - (i4time_rassfile + lag_time)
+        i4time_rass_offset = i4time_sys - (i4time_file + lag_time)
         rcycles = float(i4time_rass_offset) / float(ilaps_cycle_time)     
 
         write(6,*)' i4time_rass_offset/rcycles = '
      1             ,i4time_rass_offset,rcycles
 
-        if(i4time_rass_offset .gt. 3600)then
-            write(6,*)' RASS is greater than 60 minutes from LAPS time'       
+        if(i4time_rass_offset .gt. i4_window_rass_file)then 
+            write(6,*)' RASS file is > 60 minutes from LAPS time'       
             write(6,*)' Skipping the use of RASS'
             go to 590
         endif
+
+        call open_lapsprd_file(12,i4time_file,ext,istatus)
+        if(istatus .ne. 1)go to 590
 
 400     do i_pr = 1,max_snd
 
@@ -141,8 +148,8 @@ c                           not exactly match the LAPS analysis time.
 
             read(12,401,err=406,end=500)
      1     ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1                                              ,c5_name(i_pr)
-401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5)
+     1                                       ,c5_name(i_pr),a9time
+401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9)
 
 !           Determine if rass is in the LAPS domain
 406         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon,i
@@ -154,8 +161,8 @@ c                           not exactly match the LAPS analysis time.
 
             write(6,407,err=408)i_pr,ista,nlevels_in
      1                 ,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1                 ,i_ob,j_ob,c5_name(i_pr)
-407         format(/' RASS #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5)
+     1                 ,i_ob,j_ob,c5_name(i_pr),a9time
+407         format(/' RASS #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9)
 
 408         do level = 1,nlevels_in
 
@@ -187,6 +194,13 @@ c311                format(1x,i6,i4,5f8.1)
             else
                 write(6,*)'  Out of Bounds or < 2 levels',nlevels_in
                 nlevels_good(i_pr)=0 ! This effectively throws out the Rass
+            endif
+
+            call cv_asc_i4time(a9time,i4time_ob)
+            if(abs(i4time_ob-i4time_sys) .gt. i4_window_rass_ob)then
+                write(6,*)' Out of time bounds:',i4time_ob-i4time_sys
+     1                                          ,i4_window_rass_ob
+                nlevels_good(i_pr)=0 ! This effectively throws out the Rass    
             endif
 
             if(nlevels_good(i_pr) .gt. 0)then
@@ -266,7 +280,7 @@ c       1                ,t_diff
 512                 continue
                 enddo ! level
 
-            endif ! # levels > 0
+            endif ! # levels > 0 (good rass)
 
         enddo  ! i_pr
         write(6,*)' WARNING: Used all space in temperature arrays'
@@ -286,24 +300,24 @@ c       1                ,t_diff
 c
 c       Process sounding data
 c
-        i4time_snd = i4time
+        i4time_snd = i4time_sys
         lag_time = 0 ! sounding files are time stamped hourly
-        rcycles = float(i4time - i4time_snd + lag_time)
+        rcycles = float(i4time_sys - i4time_snd + lag_time)
      1                                  / float(ilaps_cycle_time)
 
 ! ***   Read in Sonde data  ***************************************
 
         ext = 'snd'
         call get_filespec(ext,2,c_filespec,istatus)
-        call get_file_time(c_filespec,i4time,i4time_nearest)
+        call get_file_time(c_filespec,i4time_sys,i4time_nearest)
 
-        i4time_diff = abs(i4time - i4time_nearest)
-        if(i4time_diff .le. i4time_raob_window)then
+        i4time_diff = abs(i4time_sys - i4time_nearest)
+        if(i4time_diff .le. i4_window_raob_file)then
           write(6,*)' Nearest SND file is within time window'
-     1                ,i4time_diff,i4time_raob_window
+     1                ,i4time_diff,i4_window_raob_file
         else
           write(6,*)' Nearest SND file is outside time window'
-     1                ,i4time_diff,i4time_raob_window
+     1                ,i4time_diff,i4_window_raob_file
           go to 890
         endif
 
@@ -317,22 +331,21 @@ c
 640         continue
 
             read(12,801,err=706,end=800)
-     1     ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1                                              ,c5_name(i_pr)
-801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5)
+     1      ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
+     1                                        ,c5_name(i_pr),a9time
+801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
 
 !           Determine if sonde is in the LAPS domain
-706         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon,i
-     1max,jmax
-     1                          ,ri,rj,istatus)
+706         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
+     1                              ,imax,jmax,ri,rj,istatus)
 
             i_ob = nint(ri)
             j_ob = nint(rj)
 
             write(6,707,err=708)i_pr,ista,nlevels_in
      1                 ,lat_pr(i_pr),lon_pr(i_pr)
-     1                 ,elev_pr(i_pr),i_ob,j_ob,c5_name(i_pr)
-707         format(/' Sonde #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5)
+     1                 ,elev_pr(i_pr),i_ob,j_ob,c5_name(i_pr),a9time
+707         format(/' Sonde #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9)
 
 708         do level = 1,nlevels_in
 
@@ -430,7 +443,7 @@ c       1                ,t_diff
             endif ! # levels > 0
 
         enddo  ! i_pr
-        write(6,*)' WARNING: Use all space in temperature arrays'
+        write(6,*)' ERROR: Used all space in temperature arrays'
         write(6,*)' while reading sondes.  Check max_snd: ',max_snd
 
 800     continue ! Exit out of loop when file is done
@@ -438,7 +451,7 @@ c       1                ,t_diff
         close(12)
         goto 900
 
-890     write(6,*)' Error opening snd (or equivalent) file'
+890     write(6,*)' Warning: could not open current SND file'
 
 900     n_tsnd = n_rass + n_snde
  
