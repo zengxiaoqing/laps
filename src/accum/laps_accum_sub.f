@@ -92,8 +92,8 @@ cdis
 
         ISTAT = INIT_TIMER()
 
-        write(6,*)' Welcome to the LAPS gridded snow/precip accum analys
-     1is'
+        write(6,*)
+     1         ' Welcome to the LAPS gridded snow/precip accum analysis'       
 
         c_vars_req = 'radarext_3d_accum'
 
@@ -109,10 +109,21 @@ cdis
         write(6,*)' radarext_3d_accum = ',radarext_3d_accum
 
 c read in laps lat/lon and topo
-        call get_laps_domain(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo,ist
-     1atus)
+        call get_laps_domain(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo
+     1                      ,istatus)
         if(istatus .eq. 0)then
             write(6,*)' Error getting LAPS domain'
+            return
+        endif
+
+        icen = NX_L/2 + 1
+        jcen = NY_L/2 + 1
+        call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
+     1                              ,grid_spacing_cen_m,istatus)
+        if(istatus .eq. 1)then
+            write(6,*)' Actual grid spacing in domain center = '
+     1                              ,grid_spacing_cen_m
+        else
             return
         endif
 
@@ -152,10 +163,10 @@ c read in laps lat/lon and topo
 
         minutes = ilaps_cycle_time / 60
 
-        write(6,*)' Getting Snow/Precip Accumulation over ',minutes,' mi
-     1n'
+        write(6,*)' Getting Snow/Precip Accumulation over ',minutes
+     1           ,' min'
 50      call get_precip_accum(i4time_beg,i4time_end,NX_L,NY_L,NZ_L
-     1          ,lat,lon,topo,ilaps_cycle_time
+     1          ,lat,lon,topo,ilaps_cycle_time,grid_spacing_cen_m
      1          ,radarext_3d_accum                     ! Input
      1          ,snow_2d,precip_2d,frac_sum,istatus_inc)
 
@@ -255,8 +266,8 @@ c read in laps lat/lon and topo
 !       Add current hour snow accumulation to storm total
         if(istatus_inc .eq. 1 .and. istatus_tot .eq. 1
      1                        .and. i_suff_pcp  .eq. 1)then
-            write(6,*)' Adding latest increment for new Storm Total Accu
-     1mulation'
+            write(6,*)' Adding latest increment for new Storm Total '
+     1               ,'Accumulation'
             call add(snow_2d,  snow_2d_tot,  snow_2d_tot,  NX_L,NY_L)
             call add(precip_2d,precip_2d_tot,precip_2d_tot,NX_L,NY_L)
 

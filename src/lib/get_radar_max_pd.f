@@ -66,9 +66,6 @@ cdis
 
         character*3 ext_radar
         character*150  directory
-        character*31  ext
-!       character*10  units_2d
-!       character*125 comment_2d
 
         character*4 radar_name
 
@@ -88,15 +85,14 @@ c       rmax_so_far = 0.
      1                         ' to ',asc_tim_9_end
 
 !       Get File Times
-        ext = 'vrc'
-        call get_directory(ext,directory,len_dir)
-        c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+        call get_directory(ext_radar,directory,len_dir)
+        c_filespec = directory(1:len_dir)//'*.'//ext_radar
 
-        call    Get_file_names(  c_filespec,
-     1                   i_nbr_files_ret,
-     1                   c_fnames,
-     1                   max_files,
-     1                   i_status )
+        call Get_file_names(c_filespec,
+     1                      i_nbr_files_ret,
+     1                      c_fnames,
+     1                      max_files,
+     1                      i_status )
 
         min_diff = 1999999999
 
@@ -113,9 +109,9 @@ c       rmax_so_far = 0.
             call i4time_fname_lp(asc_tim_9,I4time_file(i),istatus)
         enddo
 
-        call get_fracs_radar(i4time_beg,i4time_end,max_radar_gap,i_nbr_f
-     1iles_ret
-     1            ,i4time_file,frac,frac_sum,istatus)
+        call get_fracs_radar(i4time_beg,i4time_end,max_radar_gap
+     1                      ,i_nbr_files_ret
+     1                      ,i4time_file,frac,frac_sum,istatus)
 
         if(istatus .ne. 1)then
             return
@@ -143,7 +139,7 @@ c       rmax_so_far = 0.
 !101        format(' Time, Frac = ',a9,2x,f6.3)
 
             c255_radar_filename
-     1      = c_fnames(ifile)(1:lenf)//asc_tim_9//'.'//ext(1:3)
+     1      = c_fnames(ifile)(1:lenf)//asc_tim_9//'.'//ext_radar
 
             write(6,*)
 

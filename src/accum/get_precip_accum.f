@@ -31,12 +31,12 @@ cdis
 cdis
 
         subroutine get_precip_accum(i4time_beg,i4time_end   ! Input
-     1          ,imax,jmax,kmax                   ! Input
-     1          ,lat,lon,topo      ! Input
-     1          ,ilaps_cycle_time  ! Input
-     1          ,radarext_3d_accum ! Input
-     1          ,snow_accum,precip_accum,frac_sum      ! Outputs
-     1          ,istatus)                 ! Output
+     1          ,imax,jmax,kmax                             ! Input
+     1          ,lat,lon,topo                               ! Input
+     1          ,ilaps_cycle_time,grid_spacing_cen_m        ! Input
+     1          ,radarext_3d_accum                          ! Input
+     1          ,snow_accum,precip_accum,frac_sum           ! Outputs
+     1          ,istatus)                                   ! Output
 
 !       Steve Albers 1991
 !       Steve Albers 1995 Dec  Modify radar call to read_radar_ref
@@ -242,7 +242,7 @@ cdis
 !                   (typically one half of the laps cycle time).
 
                     call cpt_pcp_type_3d(temp_3d,rh_3d,pressures_mb
-     1                  ,grid_ra_ref,l_mask
+     1                  ,grid_ra_ref,l_mask,grid_spacing_cen_m
      1                  ,imax,jmax,kmax,i2_cldpcp_type_3d,istatus)
                     if(istatus .ne. 1)then
                         return
@@ -492,8 +492,8 @@ cdis
             enddo ! i
             enddo ! j
 
-            write(6,202)dbz_2d(im,jm),snow_rate(im,jm),snow_accum_pd(im,
-     1jm)
+            write(6,202)dbz_2d(im,jm),snow_rate(im,jm)
+     1                 ,snow_accum_pd(im,jm)
 202         format(1x,'dbz/rate/accum_pd',3e12.4)
 
           endif ! Frac > 0 (This radar file is within the accumulating window
@@ -513,8 +513,8 @@ cdis
 
         write(6,*)' Compute 3D precip type over masked area'
 
-        call cpt_pcp_type_3d(temp_3d,rh_3d,pressures_mb,grid_ra_ref,l_ma
-     1sk
+        call cpt_pcp_type_3d(temp_3d,rh_3d,pressures_mb,grid_ra_ref
+     1          ,l_mask,grid_spacing_cen_m
      1          ,imax,jmax,kmax,i2_cldpcp_type_3d,istatus)
         if(istatus .ne. 1)then
             return
@@ -555,15 +555,15 @@ cdis
                     endif
 
                     if(r_pcp_type_thresh .eq. 2.0)then
-                        snow_accum(i,j) = snow_accum(i,j) + snow_accum_p
-     1d(i,j)
+                        snow_accum(i,j) = snow_accum(i,j) 
+     1                                  + snow_accum_pd(i,j)
                         n_snw_pts = n_snw_pts + 1
                     endif
 
                 elseif(iarg .eq. 0)then ! precip type is no precip
                     n_nopcp_pts = n_nopcp_pts + 1
-                    if(n_nopcp_pts .le. 20)write(6,*)' No2dPcpType pt at
-     1',i,j
+                    if(n_nopcp_pts .le. 20)write(6,*)
+     1                                    ' No2dPcpType pt at ',i,j       
                 elseif(iarg .eq. 3)then ! precip type is freezing rain
                     n_zr_pts = n_zr_pts + 1
                 endif
@@ -585,11 +585,11 @@ cdis
      1                          ,i2_pcp_type_2d(im,jm)
      1                          ,(ipcp_1d(k),k=1,min(kmax,10))
 
-        write(6,*)' # of Points Snow/Precip/ZR = ',n_snw_pts,n_pcp_pts,n
-     1_zr_pts
+        write(6,*)' # of Points Snow/Precip/ZR = ',n_snw_pts,n_pcp_pts
+     1                                            ,n_zr_pts
 
-        if(n_nopcp_pts .gt. 0)write(6,*)' WARNING: n_nopcp_pts = ',n_nop
-     1cp_pts
+        if(n_nopcp_pts .gt. 0)write(6,*)' WARNING: n_nopcp_pts = '
+     1                                            ,n_nopcp_pts
 
         write(6,*)' Converting from average rate to actual accumulation'
 
@@ -635,11 +635,11 @@ cdis
             ibeg = i
             iend = i+1
 
-            interval_between_files = i4time_file(iend) - i4time_file(ibe
-     1g)
+            interval_between_files = i4time_file(iend) 
+     1                             - i4time_file(ibeg)
 
             frac_between_files = float(interval_between_files)
-     1                 /     float(i4_interval)
+     1                     /     float(i4_interval)
 
             if(i4time_file(ibeg) .ge. i4time_beg .and.
      1       i4time_file(iend) .le. i4time_end        )then ! Fully Within Pd
@@ -732,8 +732,8 @@ cdis
 
         if(i_nbr_files_ret .gt. 0)then
             if(i4time_file(1) .gt. i4time_beg)then
-                write(6,*)' Radar files begin after start of accumulatio
-     1n window'
+                write(6,*)
+     1          ' Radar files begin after start of accumulation window'
                 frac_sum = -1.0 ! Turns off the wait loop for more radar
             endif
         endif

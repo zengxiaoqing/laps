@@ -32,14 +32,13 @@ cdis
 
         subroutine get_cloud_deriv(ni,nj,nk,clouds_3d,cld_hts,
      1                          temp_3d,rh_3d_pct,heights_3d,
-     1                          istat_radar,radar_3d,
+     1                          istat_radar,radar_3d,grid_spacing_m,
      1                          l_mask_pcptype,ibase_array,itop_array,
      1                          iflag_slwc,slwc_3d,cice_3d,thresh_cvr,
      1                          l_flag_cloud_type,cldpcp_type_3d,
      1                          l_flag_mvd,mvd_3d,
      1                          l_flag_icing_index,icing_index_3d,
      1                          l_flag_bogus_w,omega_3d,istatus)
-!    1                          iflag_snow_potential,snow_2d,lwc_res_3d)
 
 !       Steve Albers
 !       This routine calculates SLWC, Cloud Type, MVD, and Icing Index
@@ -302,9 +301,10 @@ c                   if(i .eq. 1)write(6,*)i,j,k,' Cloud Base'
      1                         ,pressures_pa,ni,nj,nk,i,j,istatus))
 
                         if(istatus .ne. 1)then
-                            write(6,*)
-     1        ' Returning from get_cloud_deriv (height_to_zcoord3 call)'
-     1              ,cld_base_m,cld_top_m,(heights_3d(i,j,kk),kk=1,nk)
+                            write(6,*)' Returning from '
+     1                       ,'get_cloud_deriv (height_to_zcoord3 call)'  
+     1                       ,cld_base_m,cld_top_m
+     1                       ,(heights_3d(i,j,kk),kk=1,nk)
                             return
                         endif
 
@@ -318,12 +318,13 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                         if(l_flag_cloud_type)then ! Get 1d Stability & Cloud type
                             call get_stability(nk,temp_1d,heights_1d
-     1                  ,pressures_mb,k_1d_base,k_1d_top,d_thetae_dz_1d)
+     1                                         ,pressures_mb,k_1d_base
+     1                                         ,k_1d_top,d_thetae_dz_1d)
 
                             do k_1d = k_1d_base,k_1d_top
                                 call get_cloudtype(temp_1d(k_1d)
-     1                        ,d_thetae_dz_1d(k_1d),cld_base_m,cld_top_m
-     1                        ,itype,c2_type)
+     1                           ,d_thetae_dz_1d(k_1d),cld_base_m
+     1                           ,cld_top_m,itype,c2_type)
 
                                 if(radar_3d(i,j,k_1d) .gt. 45.)then
                                     itype = 10 ! CB
@@ -360,9 +361,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                                 cld_base_qc_m =
      1                          min(cld_base_m,cld_top_qc_m - 110.)
                                 write(6,501)i,j,nint(heights_1d(nk))
-     1                        ,nint(cld_base_qc_m),nint(cld_top_qc_m)
-501                             format(1x,'QC data for SMF, ht/bs/tp',2i
-     14,3i6)
+     1                          ,nint(cld_base_qc_m),nint(cld_top_qc_m)
+501                             format(1x,'QC data for SMF, ht/bs/tp'
+     1                                ,2i4,3i6)
 
                             else ! normal case
                                 cld_top_qc_m = cld_top_m
@@ -409,8 +410,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                             if(iflag_slwc .ne. 0)then
                               if(slwc_1d(k_1d) .gt. 0.)then
                                 if(istat_radar .eq. 1
-     1                    .and. temp_3d(i,j,k_1d) .lt. 273.15
-     1                                  )then ! Apply Radar Depletion
+     1                                     .AND. 
+     1                             temp_3d(i,j,k_1d) .lt. 273.15
+     1                                            )then ! Apply Radar Depletion
 
 !                               if(.false.)then ! Don't Apply Radar Depletion
 
@@ -419,18 +421,17 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                                   if(radar_3d(i,j,k_1d) .le. 8.)then ! No Depletion
                                     continue
 
-                                  elseif(radar_3d(i,j,k_1d) .gt. 11.)the
-     1n ! Total Depletion
-                                    cice_1d(k_1d) = cice_1d(k_1d) + slwc
-     1_1d(k_1d)
+                                  elseif(radar_3d(i,j,k_1d) .gt. 11.
+     1                                                  )then ! Total Depletion
+                                    cice_1d(k_1d) = cice_1d(k_1d) 
+     1                                            + slwc_1d(k_1d)
                                     slwc_1d(k_1d) = -1e-30
 
                                   else ! Ramped Depletion
-                                    ramp = 1.0 - ((radar_3d(i,j,k_1d) -
-     18.) / 3.)
-                                    cice_1d(k_1d) = cice_1d(k_1d) + slwc
-     1_1d(k_1d)
-     1                                                    * (1.-ramp)
+                                    ramp = 1.0 - 
+     1                                  ((radar_3d(i,j,k_1d) - 8.) / 3.)       
+                                    cice_1d(k_1d) = cice_1d(k_1d) 
+     1                                       + slwc_1d(k_1d) * (1.-ramp)       
                                     slwc_1d(k_1d) = slwc_1d(k_1d) * ramp
 
                                   endif ! Dbz Sufficient for Depletion
@@ -450,8 +451,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                             endif ! iflag_slwc
 
                             if(l_flag_mvd)then
-                                call get_mvd(cloud_type_1d(k_1d),rmvd_mi
-     1crons)
+                                call get_mvd(cloud_type_1d(k_1d)
+     1                                      ,rmvd_microns)
                                 mvd_3d(i,j,k_1d) = rmvd_microns * 1e-6
                             endif
 
@@ -475,13 +476,12 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
             if(l_flag_bogus_w)then
               if(l_cloud)then
-                  call cloud_bogus_w(cloud_type_1d, heights_1d, nk, w_1d
-     1)
+                  call cloud_bogus_w(cloud_type_1d,heights_1d,nk,w_1d)       
 
                   do k = 1,nk ! Transfer the 1D w into the output omega array
                       if(w_1d(k) .ne. r_missing_data)then
-                          omega_3d(i,j,k) = w_to_omega(w_1d(k),pressures
-     1_pa(k))
+                          omega_3d(i,j,k) = w_to_omega(w_1d(k)
+     1                                       ,pressures_pa(k))
 !                     else
 !                         w_1d(k) = 0. ! Condition the array for the snow_diag
                       endif
@@ -493,8 +493,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         enddo ! j
         enddo ! i
 
-        write(6,*)' N_CLOUD_COLUMNS,N_SLWC_CALL = ',n_cloud_columns,n_sl
-     1wc_call
+        write(6,*)' N_CLOUD_COLUMNS,N_SLWC_CALL = ',n_cloud_columns
+     1                                             ,n_slwc_call
 
         I4_elapsed = ishow_timer()
 
@@ -513,8 +513,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
             write(6,*)' Computing 3D Precip type'
 
             call cpt_pcp_type_3d(temp_3d,rh_3d_pct,pressures_mb
-     1                  ,radar_3d,l_mask_pcptype,ni,nj,nk
-     1                  ,cldpcp_type_3d,istatus)
+     1                  ,radar_3d,l_mask_pcptype,grid_spacing_m
+     1                  ,ni,nj,nk,cldpcp_type_3d,istatus)
             if(istatus .ne. 1)then
                 write(6,*)'Bad status returned from cpt_pcp_type_3d'
                 return
@@ -561,7 +561,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
 
         subroutine cpt_pcp_type_3d(temp_3d,rh_3d_pct,pressures_mb
-     1  ,radar_3d,l_mask
+     1  ,radar_3d,l_mask,grid_spacing_m
      1  ,ni,nj,nk,cldpcp_type_3d,istatus)
 
 !       1991    Steve Albers
@@ -597,8 +597,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 !       5 - Hail
 
         zero_c = 273.15
-!       thresh_melt_c = 0.5
         rlayer_refreez_max = 0.0
+
+        hail_ref_thresh = 55. - grid_spacing_m/1000.
 
         n_zr = 0
         n_sl = 0
@@ -678,7 +679,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                     endif ! Temp is freezing
 
-                    if(radar_3d(i,j,k) .lt. 50.)then          ! Below Hail Thr
+                    if(radar_3d(i,j,k) .lt. hail_ref_thresh)then ! Not Hail
                         if(t_wb_c .ge. thresh_melt_c)then     ! Warm, got rain
                             iprecip_type = 1
                             iflag_melt = 1
@@ -743,7 +744,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                         endif ! t_wb_c
 
-                    else ! >= 50 dbz
+                    else ! >= hail_ref_thresh
                         iprecip_type = 5                      ! Hail
 
                     endif ! Intense enough for hail

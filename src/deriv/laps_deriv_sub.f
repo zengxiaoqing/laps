@@ -397,6 +397,17 @@ c read in laps lat/lon and topo
             return
         endif
 
+        icen = NX_L/2 + 1
+        jcen = NY_L/2 + 1
+        call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
+     1                              ,grid_spacing_cen_m,istatus)
+        if(istatus .eq. 1)then
+            write(6,*)' Actual grid spacing in domain center = '
+     1                              ,grid_spacing_cen_m
+        else
+            return
+        endif
+
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
         if(istatus .eq. 1)then
             write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
@@ -566,11 +577,11 @@ c read in laps lat/lon and topo
             var = 'RHL'
             ext = 'lh3'
             call get_laps_3dgrid(i4time,ilaps_cycle_time*2,i4time_rh
-     1  ,NX_L,NY_L,NZ_L,ext,var,units,comment,rh_3d_pct,istatus_rh)
+     1       ,NX_L,NY_L,NZ_L,ext,var,units,comment,rh_3d_pct,istatus_rh)     
 
             if(istatus_rh .ne. 1)then
-                write(6,*)' Error reading 3D RH - get_cloud_deriv not ca
-     1lled'
+                write(6,*)' Error reading 3D RH - '
+     1                   ,'get_cloud_deriv not called'
                 goto999
             endif
         endif
@@ -602,16 +613,17 @@ c read in laps lat/lon and topo
         l_flag_bogus_w = .true.
         l_flag_snow_potential = .true.
 
-        call get_cloud_deriv(NX_L,NY_L,NZ_L,clouds_3d,cld_hts,
-     1                          temp_3d,rh_3d_pct,heights_3d,
-     1                          istat_radar_3dref,radar_ref_3d,
-     1                          l_mask_pcptype,ibase_array,itop_array,
-     1                          iflag_slwc,slwc,cice,thresh_cvr,
-     1                          l_flag_cloud_type,cldpcp_type_3d,
-     1                          l_flag_mvd,mvd_3d,
-     1                          l_flag_icing_index,icing_index_3d,
-     1                          l_flag_bogus_w,w_3d,istatus)
-!    1                          l_flag_snow_potential,snow_2d,lwc_res_3d)
+        call get_cloud_deriv(
+     1                NX_L,NY_L,NZ_L,clouds_3d,cld_hts,
+     1                temp_3d,rh_3d_pct,heights_3d,
+     1                istat_radar_3dref,radar_ref_3d,grid_spacing_cen_m,       
+     1                l_mask_pcptype,ibase_array,itop_array,
+     1                iflag_slwc,slwc,cice,thresh_cvr,
+     1                l_flag_cloud_type,cldpcp_type_3d,
+     1                l_flag_mvd,mvd_3d,
+     1                l_flag_icing_index,icing_index_3d,
+     1                l_flag_bogus_w,w_3d,istatus)
+!    1                l_flag_snow_potential,snow_2d,lwc_res_3d)
 
         if(istatus .ne. 1)then
             write(6,*)' Bad status return from get_cloud_deriv'

@@ -302,21 +302,28 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         endif
 
         return
-
         end
 
-!********* THE PORTION ABOVE IS THE SAME IN OLDLAPS AND NEWLAPS **************
 
         subroutine get_laps_config(grid_fnam,istatus)
 
 !       1992 Steve Albers
-!       Read in parameters from parameter file
+
+!       Read in parameters from parameter file. The first time the routine
+!       is called, parameters are read in from the namelist. Subsequent
+!       calls will return these parameters (now stored in common), without
+!       rereading the namelist. This is more efficient if the routine is called
+!       many times.
 
         character*(*) grid_fnam   ! Input (Warning: trailing blanks won't work)
         character*150  directory
         character*31  ext
         character*8 a8
         character*200 tempchar
+
+        integer ipass
+        data ipass/0/
+        save ipass
 
         character*80 grid_fnam_common
         common / grid_fnam_cmn / grid_fnam_common
@@ -348,7 +355,10 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
      1  ,path_to_topt10m, path_to_pctl10m
 
 
-        if(iflag_lapsparms_cmn .eq. 1)goto999
+        if(ipass.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
+!          print *, 'It works'
+           goto999                                           ! Normal Return
+        endif
 
 !       While we are here, let's put the grid name into the common area
         grid_fnam_common = grid_fnam  ! Used in get_directory to modify
@@ -368,27 +378,26 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
 
         read(92,lapsparms_nl,err=910)
 
-1       format(a)
-2       format(a6)
-3       format(//a)
+        if(iflag_lapsparms_cmn .ne. 1)then                      ! Error Return
+            goto910                                    
 
-        if(iflag_lapsparms_cmn .ne. 1)goto910
+        else                                                    ! Normal Return
+            PRESSURE_0_L = PRESSURE_BOTTOM_L + PRESSURE_INTERVAL_L
+            write(6,*)' get_laps_config - parameters read in OK'
+            goto999                                     
 
-        PRESSURE_0_L = PRESSURE_BOTTOM_L + PRESSURE_INTERVAL_L
+        endif
 
-        write(6,*)' get_laps_config - parameters read in OK'
 
-        goto999
-
-900     write(6,*)' Open error in get_laps_config, parameter file not fo
-     1und'
+900     write(6,*)                                              ! Error Return
+     1  ' Open error in get_laps_config, parameter file not found'
         write(6,*)tempchar
         iflag_lapsparms_cmn = 0
         istatus = 0
         close(92)
         return
 
-910     write(6,*)' Read error in get_laps_config'
+910     write(6,*)' Read error in get_laps_config'              ! Error Return
         write(6,*)' Check runtime parameter file ',tempchar
         write(6,lapsparms_nl)
         close(92)
@@ -396,36 +405,21 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         istatus = 0
         return
 
-920     write(6,*)' Read error in get_laps_config'
+920     write(6,*)' Read error in get_laps_config'              ! Error Return
         write(6,*)' Truncated runtime parameter file ',tempchar
         close(92)
         iflag_lapsparms_cmn = 0
         istatus = 0
         return
 
-999     close(92)
+999     close(92)                                               ! Normal Return
 
-!       Obtain standard_latitude and standard_longitude, maproj from static file
-!       if(istatus_static .ne. 1)then
-!           iflag_lapsparms_cmn = 0
-!           istatus = 0
-!           return
-!       endif
-
-!       c6_maproj = 'plrstr'
-!       c6_maproj = 'lmbrt1'
-
+        ipass = 1
         istatus = 1
         return
 
         end
 
-c        block data
-c        include 'lapsparms.cmn'
-c        data iflag_lapsparms_cmn /0/
-c        end
-
-!********* THE PORTION BELOW IS THE SAME IN OLDLAPS AND NEWLAPS **************
 
       subroutine get_standard_longitude(std_lon,istatus)
 
