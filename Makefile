@@ -18,6 +18,7 @@ LIBDIRS = src/lib \
           src/lib/goesinav \
           src/lib/goeslib \
           src/lib/lapack \
+          src/lib/modules \
           src/lib/mthermo \
           src/lib/nav \
           src/lib/powell  \
@@ -51,12 +52,14 @@ EXEDIRS = src/accum \
           src/ingest/satellite/sounding \
           src/ingest/sfc_qc \
 	  src/lapsprep \
+          src/wfoprep \
           src/sfc \
           src/sfc/table \
           src/soil \
           src/temp \
           src/wind \
-          src/WFO/post
+          src/WFO/post \
+          src/wfoprep
 
 all: exe
 debug: debuglib
