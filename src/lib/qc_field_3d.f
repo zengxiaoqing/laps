@@ -24,15 +24,16 @@
       do k=1,nk
       do j=1,nj
       do i=1,ni
-          if(field_3d(i,j,k) .eq. r_missing_data)then
-              write(6,*)' QC Error detected in ',var_2d,' at ',i,j,k
-              write(6,*)' Value equals r_missing_data or '
-     1                 ,r_missing_data      
+          call check_nan(field_3d(i,j,k),istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' QC Error, Nan detected in ',var_2d,' at '
+     1                 ,i,j,k
               istatus = 0
               return
           endif
 
-          if(field_3d(i,j,k) .gt. upper_bound)then
+          if(field_3d(i,j,k) .gt. upper_bound .and.
+     1       field_3d(i,j,k) .ne. r_missing_data)then
               write(6,*)' QC Error detected in ',var_2d,' at ',i,j,k
               write(6,*)' Value exceeded upper bound of '
      1                 ,upper_bound,', value = ',field_3d(i,j,k)       
@@ -40,7 +41,8 @@
               return
           endif
 
-          if(field_3d(i,j,k) .lt. lower_bound)then
+          if(field_3d(i,j,k) .lt. lower_bound .and.
+     1       field_3d(i,j,k) .ne. r_missing_data)then
               write(6,*)' QC Error detected in ',var_2d,' at ',i,j,k
               write(6,*)' Value exceeded lower bound of '
      1                 ,lower_bound,', value = ',field_3d(i,j,k)       
@@ -52,7 +54,22 @@
       enddo ! j
       enddo ! k
 
+      do k=1,nk
+      do j=1,nj
+      do i=1,ni
+          if(field_3d(i,j,k) .eq. r_missing_data)then
+              write(6,*)' QC Warning detected in ',var_2d,' at ',i,j,k       
+              write(6,*)' Value equals r_missing_data or '
+     1                 ,r_missing_data      
+              istatus = -1
+              return
+          endif
+
+      enddo ! i
+      enddo ! j
+      enddo ! k
+
       istatus = 1
-  
       return
+
       end 
