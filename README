@@ -207,6 +207,7 @@
      /home_disk/
          raw_data/
          geog/
+             laps_terrain.tar
          laps-m-n-o.tar
          laps-m-n-o/                                                (laps_root)
              Makefile
@@ -246,6 +247,7 @@
 
      /data_disk/
          geog/
+             laps_terrain.tar
          raw_data/
          laps/                                        (--prefix in 'configure')
              bin/                                                 (executables)
@@ -283,7 +285,11 @@
      Go to the laps root directory and run...
      $ ./configure
 
-     'configure' supports many options, the most important is the
+     For IBM/AIX platforms, you will want to override the default FORTRAN
+     compiler with 'xlf' using the option --fc=xlf. For Solaris, you will want
+     to use --fc=f90.
+
+     'configure' supports many other options, the most important is the
      --prefix option which tells make where to install the laps system.
      The default is to install whereever the source is. A fully
      operational laps system can require up to 1 GB of disk space,
@@ -303,9 +309,6 @@
      data directories as described below. Separating the data directory
      also makes it a bit easier to maintain your own local set of parameters 
      that are unique to your domain. 
-
-     For IBM/AIX platforms, you will want to override the default FORTRAN
-     compiler with 'xlf' using the option --fc=xlf.
 
                 --- 2.2.3   Ingest Software changes ---
 
