@@ -250,9 +250,10 @@ c
 c
 c
          Subroutine reorder(ta,tda,dda,ffa,lata,lona,eleva,pstna,
-     &     pmsla,alta,stna,providera,reptypea,
+     &     pmsla,alta,stna,providera,reptypea,indexa,
      &     tb,tdb,ddb,ffb,latb,lonb,elevb,pstnb,pmslb,altb,stnb,
-     &     providerb,reptypeb,maxstaa,maxstab,m,badflag)
+     &     providerb,reptypeb,indexb,
+     &     maxstaa,maxstab,m,badflag)
 c
 c*********************************************************************
 c
@@ -263,6 +264,8 @@ c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
 c       07 Oct 1998  Peter Stamus, NOAA/FSL
 c          Added provider and report type variables.
+c       22 Oct 1998  Peter Stamus, NOAA/FSL
+c          Added index variables to track ob location in arrays.
 c
 c     Notes:
 c
@@ -272,6 +275,7 @@ c
          real pstna(m),pmsla(m),alta(m)
          real tb(m),tdb(m),ddb(m),ffb(m),latb(m),lonb(m),elevb(m)
          real pstnb(m),pmslb(m),altb(m)
+         integer indexa(m), indexb(m), iholdx
          character stna(m)*5,stnb(m)*5,holdnam*5
          character providera(m)*11, providerb(m)*11, holdprov*11
          character reptypea(m)*6, reptypeb(m)*6, holdrep*6
@@ -318,6 +322,7 @@ c         enddo
             enddo !l
             if(iflag.eq.0) then !the station needs to be added to the list
                maxstab=maxstab+1
+               indexb(maxstab) = indexa(k)
                stnb(maxstab)=stna(k)
                latb(maxstab)=lata(k)
                lonb(maxstab)=lona(k)
@@ -341,6 +346,7 @@ c
             do l=1,maxstaa
                if (stna(l).eq.stnb(k)) then
                   iflag=1
+                  iholdx = indexa(k)
                   holdt=ta(k)
                   holdtd=tda(k)
                   holddd=dda(k)
@@ -354,6 +360,7 @@ c
                   holdnam=stna(k)
                   holdprov = providera(k)
                   holdrep = reptypea(k)
+                  indexa(k) = indexa(l)
                   ta(k)=ta(l)
                   tda(k)=tda(l)
                   dda(k)=dda(l)
@@ -367,6 +374,7 @@ c
                   stna(k)=stna(l)
                   providera(k) = providera(l)
                   reptypea(k) = reptypea(l)
+                  indexa(l) = iholdx
                   ta(l)=holdt
                   tda(l)=holdtd
                   dda(l)=holddd
@@ -387,6 +395,7 @@ c
 c make a place for the master list station in putit in the new obs
                maxstaa=maxstaa+1
                do l =maxstaa,k+1,-1
+                  indexa(l) = indexa(l-1)
                   stna(l)=stna(l-1)
                   providera(l) = providera(l-1)
                   reptypea(l) = reptypea(l-1)
@@ -401,6 +410,7 @@ c make a place for the master list station in putit in the new obs
                   pmsla(l)=pmsla(l-1)
                   alta(l)=alta(l-1)
                enddo !on l
+               indexa(k) = maxstaa
                stna(k)=stnb(k)
                providera(k) = providerb(k)
                reptypea(k) = reptypeb(k)
@@ -515,9 +525,8 @@ c
 c*********************************************************************
 c
         parameter(badflag=-99.9)
-        parameter(im=500,jm=500)
         common tab(10000),pi,re,rdpdg,reorpd 
-        real t(m),tfl(im),lat(m),lon(m),elev(m),theta(m)
+        real t(m),tfl(m),lat(m),lon(m),elev(m),theta(m)
         real lapse
         character stn(m)*5
 c     
@@ -721,11 +730,10 @@ c     Notes:
 c
 c*********************************************************************
 c
-        parameter (im=500,jm=500)
         parameter(badflag=-99.9)    
         real dt(m),y(m),xt(m),x(m),wr(m),vr(m),ar(m),me,oe,ce
-        real tdt(im),b(im),tmb(im),tob(im),tcb(im),
-     &        tmr(im),tor(im),tcr(im),totr(im),totb(im)
+        real tdt(m),b(m),tmb(m),tob(m),tcb(m),
+     &        tmr(m),tor(m),tcr(m),totr(m),totb(m)
         integer sca(2,2),scf(2,2),scb(2,2),imax,qcstat(m),on,off
         integer scat(2,2),scft(2,2),scbt(2,2)
 c
@@ -743,6 +751,7 @@ c
         endif
         thresh=oberr*badthr 
         do i=1,imax
+           ii = i * 7 + 11
            iiiii=ran1(ii)*2000000.-1000000.
            if (dt(i).ne.badflag) then
               tdt(i)=.25*(dt(i)-oberr*ffz(iiiii,20))+
