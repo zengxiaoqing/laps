@@ -161,7 +161,7 @@ cdis
 
       write(6,*)' Subroutine laps_anl...'
 
-csms$serial(:default=ignore)  begin
+csms$serial(default=ignore)  begin              
 
 !     Compare background to obs
       call compare_wind(
@@ -200,7 +200,7 @@ csms$serial end
       do iter = 1,n_iter_wind
 
 csms$serial(<varobs_diff_spread, wt_p_spread,
-csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
+csms$>       fnorm, l_analyze, rms_thresh , out>:default=ignore)  begin
       if(.true.)then ! Experimental
           if(iter .ge. 2)then
               write(6,*)
@@ -529,7 +529,7 @@ csms$serial end
      1        ,l_analyze,l_3d,rms_thresh,weight_bkg_const
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
-csms$serial(:default=ignore)  begin
+csms$serial(default=ignore)  begin              
 
       write(6,*)' Allocating upass1,vpass1'
 
@@ -879,7 +879,7 @@ csms$insert      stop
 csms$serial end
       enddo ! n_iter_wind
 
-csms$serial(:default=ignore)  begin
+csms$serial(default=ignore)  begin              
 !     Compare final analysis to obs
       call compare_wind(
      1            uanl,vanl,'LAPS',
@@ -938,8 +938,6 @@ csms$serial end
       logical  l_good_multi_doppler_ob(imax,jmax,kmax)               ! Local
       logical  l_analyze(kmax),l_derived_output,l_grid_north
 
-c DSS TBD: Work-around for SMS bug
-csms$insert      imax = imax
 csms$ignore begin
       write(6,*)' Entering insert_derived_radar_obs, mode =',mode
 
@@ -1127,8 +1125,6 @@ csms$ignore end
 
       character*31 ext
 
-c DSS TBD: Work-around for SMS bug
-csms$insert      imax = imax
 csms$ignore begin
       write(6,*)' Filtering radar obs into superobs',rlat_radar,rlon_rad
      1ar
@@ -1351,8 +1347,6 @@ csms$ignore end
         logical l_found_one, l_imax_odd, l_jmax_odd
         integer i,j,ii,jj
 
-c DSS TBD: Work-around for SMS bug
-csms$insert      imax = imax
 csms$ignore begin
         l_imax_odd = 1 .eq. mod(imax,2)
         l_jmax_odd = 1 .eq. mod(jmax,2)
@@ -1463,8 +1457,6 @@ csms$ignore end
       parameter (r0_vert_sfc   = 2500.)
       parameter (r0_vert_prof  = 2500.)
 
-c DSS TBD: Work-around for SMS bug
-csms$insert      imax = imax
 csms$ignore begin
       call get_r_missing_data(r_missing_data, istatus)
       if(istatus .ne. 1)return
@@ -1650,8 +1642,6 @@ csms$ignore end
 
       real*4    wt_p_spread(imax,jmax,kmax)                        ! Input
 
-c DSS TBD: Work-around for SMS bug
-csms$insert      imax = imax
 csms$ignore begin
 
       write(6,*)

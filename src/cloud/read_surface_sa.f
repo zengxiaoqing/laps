@@ -194,8 +194,8 @@ c
      &    sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
      &    maxsta,jstatus)
 c
-        if(jstatus .ne. 1) then
-           print *,' ERROR.  No LSO file found for ', filename
+        if(jstatus .ne. 1 .and. jstatus .ne. -1) then
+           print *,' ERROR: No valid LSO file found for ', filename       
            istatus = -1
            return
         endif

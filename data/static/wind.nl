@@ -6,7 +6,7 @@
  rms_thresh_wind=1.0,
  max_pr=1500,
  max_pr_levels=300,
- i_3d=0,
+ i_3d=1,
  /
 
 c WIND PARAMETERS

@@ -112,7 +112,7 @@ cdis
 
         character*3 c_field
         character*2 c_metacode
-        character*3 c_type
+        character*4 c_type
         character*3 cstatic
         character*3 c_bkg
         character c19_label*19,c33_label*33
@@ -374,7 +374,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /'         [cv/cg] Cloud Cover (2-D)'
      1       ,' [cy,py] Cloud/Precip Type'
      1       /'         [sa-i/pa-i] Snow/Pcp Accum,'
-     1       ,' [sc-i] Snow Cvr'
+     1       ,' [sc-i/csc-i] Snow Cvr'
      1      //'     STATIC INFO: [gg] '
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
      1       ,'Polar Orbiter'
@@ -384,7 +384,7 @@ c       include 'satellite_dims_lvd.inc'
  15     format(a2)
 
         read(lun,16)c_type
- 16     format(a3)
+ 16     format(a4)
 
 !       c4_log = 'h '//c_type
 !       if(lun .eq. 5 .and. c_type .ne. 'q ')call logit(c4_log)
@@ -2114,7 +2114,6 @@ c
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'ref')
-
 
         elseif( c_type .eq. 'rx')then
             write(6,1311)
@@ -4159,42 +4158,37 @@ c                   cint = -1.
 
             endif
 
-        elseif(c_type(1:2) .eq. 'sc')then
-            var_2d = 'SC'
-            ext = 'lm2'
+        elseif(c_type(1:2) .eq. 'sc' .or. c_type(1:3) .eq. 'csc')then       
+            if(c_type(1:2) .eq. 'sc')then
+                var_2d = 'SC'
+                ext = 'lm2'
+                c33_label = 'LAPS Snow Cover        (TENTHS)  '
+            else
+                var_2d = 'CSC'
+                ext = 'lcv'
+                c33_label = 'LAPS SatObs Snow Cover (TENTHS)  '
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
      1                          ,field_2d,0,istatus)
 
             IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
-                write(6,*)' Error Reading Snow Cover'
+                write(6,*)' Error Reading Snow Cover ',ext(1:3)
+     1                   ,' ',var_2d
                 goto1200
             endif
 
-            c33_label = 'LAPS Snow Cover       (TENTHS)   '
+            clow = 0.
+            chigh = +10.
+            cint = 2.
+            scale=0.1
 
-            call make_fnam_lp(i4time_pw,asc9_tim,istatus)
-
-            if(c_type(3:3) .ne. 'i')then
-                clow = 0.
-                chigh = +10.
-                cint = 2.
-
-                call plot_cont(field_2d,1e-1,clow,chigh,cint,
-     1            asc9_tim,c33_label,i_overlay,c_display,lat,lon,
-     1            jdot,NX_L,NY_L,r_missing_data,laps_cycle_time)
-
-            else
-                call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
-     1                     ,n_image)      
-                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                                    ,i_overlay)
-                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
-
-            endif
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'linear')
 
         elseif(c_type(1:2) .eq. 'cb' .or. c_type(1:2) .eq. 'ct' 
      1                               .or. c_type .eq. 'cc')then
@@ -5754,6 +5748,8 @@ c
         character*(*) c_type, c33_label, c_display, colortable
         character*9 asc9_tim_t
 
+        real*4 field_2d(NX_L,NY_L)
+
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)
 
@@ -5769,7 +5765,9 @@ c
             clow = clow_in
         endif
 
-        if(c_type(3:3) .ne. 'i')then
+        call s_len(c_type,len_type)
+
+        if(c_type(len_type:len_type) .ne. 'i')then
             call plot_cont(field_2d,scale,clow,chigh,cint
      1                        ,asc9_tim_t,c33_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L,NY_L

@@ -47,6 +47,7 @@ c
       integer*4 jproj,jjlts,jgrid,jus,jdot,ier
 c
       COMMON/SUPMP9/DS,DI,DSRDI
+      common /zoom/       zoom
 
 !     DI = 50.
 !     polat=90.
@@ -68,7 +69,7 @@ c
           write(6,*)' Subroutine draw_county_map...'
       endif
 
-      domsize = (max(ni,nj)-1.) * grid_spacing_m
+      domsize = (max(ni,nj)-1.) * grid_spacing_m / zoom
 
 !     Plot Counties
       jus=-4

@@ -14,13 +14,14 @@
 
 c Obs Driver ingest (obs_driver.exe)
 c
-c 'path_to_metar' - Directory for metars
+c 'path_to_metar' - Directory for metar/synop data
 c
-c 'path_to_local_data' - Directory for local data
+c 'path_to_local_data' - Directory for local/mesonet or LDAD data
 c
-c 'path_to_buoy data' - Directory for buoy data
+c 'path_to_buoy data' - Directory for buoy/ship (maritime) data
 c
-c 'path_to_gps data' - Directory for gps data
+c 'path_to_gps data' - Directory for gps/profiler surface data in the event
+c                      this is stored separately from LDAD
 c
 c 'metar_format' - A value of 'default' means that we are using the 
 c                  'c8_project' in 'nest7grid.parms' to specify the METAR
