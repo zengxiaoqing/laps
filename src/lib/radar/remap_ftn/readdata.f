@@ -40,6 +40,7 @@ cdis
      :               i_tilt,           ! Input
      :               vel_thr_rtau,
      :               r_missing_data,
+     :               namelist_parms,
      :               gate_spacing_m_ret,   ! Output
      :               i_scan_mode,
      :               num_sweeps,
@@ -143,6 +144,26 @@ c
      :              istatus)
         IF( istatus .ne. 1 )  GO TO 998
   100 CONTINUE
+
+      if(namelist_parms%l_line_ref_qc)then
+          write(6,*)' read_data_88d: calling rayqckz...'
+!         iscale = 2
+!         miss = nint(b_missing_data)
+!         call rayqckz(MAX_REF_GATES,N_RAYS,iscale
+!    1                ,miss,reflect,az_array)
+      endif
+
+      if(namelist_parms%l_unfold)then
+          if(v_nyquist_tilt .ne. r_missing_data)then
+              write(6,*)' read_data_88d: calling unfold...'
+              call unfold(MAX_VEL_GATES,N_RAYS,velocity
+     1                   ,az_array,v_nyquist_tilt,r_missing_data)       
+              v_nyquist_ray = r_missing_data ! prevent further dealiasing
+              v_nyquist_tilt = r_missing_data ! prevent further dealiasing
+          else
+              write(6,*)' Nyquist is missing - skipping unfold call'
+          endif
+      endif
 
       RETURN
 
