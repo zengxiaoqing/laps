@@ -1,9 +1,9 @@
-#include "config.h"
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
-#include "/usr/local/apps/netcdf-3.3.1/include/netcdf.h"
+#include <netcdf.h>
 #define SYSCMD "ncgen -o %s %s"
 
 #ifndef DEBUG

@@ -83,7 +83,7 @@ c
       end
 c
 c
-      subroutine stats(sc,m,n)
+      subroutine stats_qc(sc,m,n)
 
 c
 c*********************************************************************
@@ -870,11 +870,11 @@ c zero out scoring arraYs
         write(8,1008) scf(1,1), scf(1,2), scf(2,1),scf(2,2)
  1008   format(//1x,'QC EFFICIENCY FOR MD'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats(scf,2,2)
+        call stats_qc(scf,2,2)
         write(8,1010) scb(1,1), scb(1,2), scb(2,1),scb(2,2)
  1010   format(//1x,'QC EFFICIENCY FOR OB'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats(scb,2,2)
+        call stats_qc(scb,2,2)
         write(8,1009) sca(1,1), sca(1,2), sca(2,1),sca(2,2)
  1009   format(//1x,'QC EFFICIENCY FOR CM'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
@@ -888,15 +888,15 @@ c zero out scoring arraYs
         write(8,1018) scft(1,1), scft(1,2), scft(2,1),scft(2,2)
  1018   format(//1x,'CUM QC EFFNCY FOR MD'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats(scft,2,2)
+        call stats_qc(scft,2,2)
         write(8,1020) scbt(1,1), scbt(1,2), scbt(2,1),scbt(2,2)
  1020   format(//1x,'CUM QC EFFNCY FOR OB'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats(scbt,2,2)
+        call stats_qc(scbt,2,2)
         write(8,1019) scat(1,1), scat(1,2), scat(2,1),scat(2,2)
  1019   format(//1x,'CUM QC EFFNCY FOR CM'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
-        call stats(scat,2,2)
+        call stats_qc(scat,2,2)
 c
         return
         end

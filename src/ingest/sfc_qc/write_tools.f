@@ -206,9 +206,9 @@ c*********************************************************************
 c Local variables
 
         character filename*200, cdl_path*190, gtime*9, fcst_hh_mm*4
-	integer   fn_len, ext_len, sta_len, pro_len, type_len;
-	integer   istatus, error(2); 
-	integer*4 i_reftime, i_valtime;
+	integer   fn_len, ext_len, sta_len, pro_len, type_len
+	integer   istatus, error(2) 
+	integer*4 i_reftime, i_valtime
 c
 c begin
 c
