@@ -314,35 +314,32 @@ cdis
                 call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
      1                                  ,lat,lon,ni,nj,ri,rj,istatus)       
                 if(istatus .ne. 1)then
-                    write(6,*)
-     1                ' ERROR... Profile apparently outside domain'
-                    return
-                endif
+                    write(6,*)' NOTE... Profile is outside domain'  
 
-                i_ob = nint(ri)
-                j_ob = nint(rj)
+                else ! inside domain
+                    i_ob = nint(ri)
+                    j_ob = nint(rj)
 
-                write(6,*)' Remapping profile',i_pr,i_ob,j_ob
+                    write(6,*)' Remapping profile',i_pr,i_ob,j_ob
 
-                do k = 1,nk
+                    do k = 1,nk
+                        if(ob_pr_u(i_pr,k) .ne. r_missing_data)then
 
-                     if(ob_pr_u(i_pr,k) .ne. r_missing_data)then
+                            ob_u = ob_pr_u (i_pr,k)
+                            ob_v = ob_pr_v (i_pr,k)
 
-                         ob_u = ob_pr_u (i_pr,k)
-                         ob_v = ob_pr_v (i_pr,k)
+!                 ***       Map Observation onto LAPS grid   ***
+                            if(l_profiler)then
+                                grid_laps_u(i_ob,j_ob,k) = ob_u
+                                grid_laps_v(i_ob,j_ob,k) = ob_v
+                                grid_laps_wt(i_ob,j_ob,k) = weight_prof       
+                                write(6,11)k,ob_u,ob_v
+ 11                             format(10x,i4,2f8.1)
+                            endif
 
-!                 ***    Map Observation onto LAPS grid   ***
-                         if(l_profiler)then
-                             grid_laps_u(i_ob,j_ob,k) = ob_u
-                             grid_laps_v(i_ob,j_ob,k) = ob_v
-                             grid_laps_wt(i_ob,j_ob,k) = weight_prof
-                             write(6,11)k,ob_u,ob_v
- 11                          format(10x,i4,2f8.1)
-                         endif
-
-                     endif ! In bounds vertically (of profile data)
-                enddo ! level
-
+                        endif ! In bounds vertically (of profile data)
+                   enddo ! level
+               endif ! istatus
             endif ! data present
         enddo ! i_pr
         I4_elapsed = ishow_timer()
