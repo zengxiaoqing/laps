@@ -271,7 +271,8 @@ c ---------------------------------------------
 c --------------------------------------------------------------------
 c Read look-up table for mapping lat/lon data pixels to real i/j pairs
 c --------------------------------------------------------------------
-      if(csatid.ne.'gmssat'.or.csattype.eq.'twn')then
+      if(csatid.ne.'gmssat'.or.csattype.eq.'twn'.or.
+     &   csattype.eq.'hko')then
 
          call readlut(csatid,csattype,maxchannels,nchannels,
      &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
@@ -283,7 +284,7 @@ c --------------------------------------------------------------------
          else
             write(6,*)'Got the mapping look-up-tables '
          endif
-         if(csattype.eq.'twn')then
+         if(csattype.eq.'twn')then  !.or.csattype.eq.'hko')then
             where (r_llij_lut_ri .lt. 0.5)r_llij_lut_ri=1.0
             where (r_llij_lut_rj .lt. 0.5)r_llij_lut_rj=1.0
          endif 
@@ -414,7 +415,25 @@ c June 2001 added Taiwan (gms) sat ingest
             return
          endif
 
+c March 2003 added HKO (gms) sat ingest
+
+      elseif(csattype.eq.'hko')then
+
+         call read_gms_hko(path_to_raw_sat(1,jtype,isat)
+     &,n_lines_ir(jtype,isat),n_pixels_ir(jtype,isat)        !<-- full array size raw data
+     &,maxchannels,max_files,nchannels,csatid,csattype
+     &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
+     &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
+     &,image_67,image_12,nimages,nft,ntm,c_type,i4time_data
+     &,istatus)
+
+         if (istatus.eq.0) then
+            print*,'Error returned: read_gms_hko'
+            return
+         endif
+
       endif
+
 c --------------------------------------------------------------------
 c Get image resolution information
 c --------------------------------
@@ -518,9 +537,10 @@ c ------------------------------------------------------------
 c check for and fill-in for any missing data in current images
 c ------------------------------------------------------------
 c
+
       lsatqc=.true.
       if(csattype.eq.'asc'.or.csattype.eq.'gwc'.or.
-     &csattype.eq.'twn')lsatqc=.false.
+     &csattype.eq.'twn'.or.csattype.eq.'hko')lsatqc=.false.
       
       if(lsatqc)then
 
@@ -602,7 +622,8 @@ c ------------------------------------------------------------
 c convert from counts to brightness temps for CDF data use the
 c pre-generated lut's. For ascii data divide all by 10.
 c ------------------------------------------------------------
-       if(csattype.ne.'asc')then
+
+       if(csattype.ne.'asc'.and.csattype.ne.'hko')then
           write(6,*)
           write(6,*)'Convert counts to brightness temps'
           do i = 1,nft
@@ -688,7 +709,7 @@ c
           write(6,*)'Done with conversion'
           write(6,*)
        else
-          write(6,*)'Cannot convert image to btemps yet'
+          write(6,*)'Cannot convert image to btemps '
        endif
 c
 c ------------------------------------------------------------------------------------------------
@@ -699,6 +720,7 @@ c than one time due to rapid scan; 3) there are file times within threshold i_sa
 c (found in static/nest7grid.parms). nft must never exceed parameter max_images (satellite_lvd.nl).
 c This is insured within the getcdf, getafgwc, etc code.
 c ------------------------------------------------------------------------------------------------
+
       write(6,*)
       write(6,*)'Ready to remap satellite data'
       write(6,*)'-----------------------------'
@@ -732,7 +754,8 @@ c
 
 c
 c ----------  GMS SATELLITE SWITCH -------
-         if(csatid.eq.'gmssat'.and.csattype.ne.'twn')goto 310
+         if(csatid.eq.'gmssat'.and. csattype.ne.'twn'
+     &      .and. csattype.ne.'hko')goto 310
 
 
          do j = 1,ntm(i)
