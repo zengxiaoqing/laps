@@ -446,7 +446,7 @@ PROGRAM lfmpost
         dir_pt = NINT(dir_pt_r/10.)*10  ! Integer to nearest 10 degrees
        
         ! Convert wind speed
-        IF (point_windspd_units .EQ. 'KT ') THEN
+        IF (point_windspd_units .EQ. 'KTS') THEN
           spd_pt = NINT(spd_pt_r * 1.9425) ! Convert to knots
         ELSEIF (point_windspd_units .EQ. 'MPH') THEN
           spd_pt = NINT(spd_pt_r * 2.2369)

@@ -515,6 +515,8 @@ CONTAINS
     INTEGER              :: status
     REAL, ALLOCATABLE    :: tempsigma ( : )
     REAL                 :: lat1,lon1,stdlon,dx_m,dy_m
+    CHARACTER(LEN=255)   :: wrfinitfile
+    INTEGER              :: luninit
 
     ALLOCATE (latdot (nx,ny))
     ALLOCATE (londot (nx,ny))
@@ -553,8 +555,16 @@ CONTAINS
      CALL get_wrfsi_static_latlon(moad_dataroot,'N',latdot,londot)
     
      ! Get the terrain height
-     CALL get_wrfsi_static_2d(moad_dataroot, 'avg', terdot)
-     
+!     CALL get_wrfsi_static_2d(moad_dataroot, 'avg', terdot)
+     wrfinitfile = TRIM(moad_dataroot)//'/wrfprd/wrfinput_d01'
+     CALL open_wrfnc(wrfinitfile,luninit,status)
+     IF (status .NE. 0) THEN
+       PRINT *, 'WRF Input File not found: ', TRIM(wrfinitfile)
+       PRINT *, 'Needed for terrain heights!'
+       STOP
+     ENDIF
+     CALL get_wrfnc_2d(luninit, "HGT","A",nx,ny,1,terdot,status)  
+     CALL close_wrfnc(luninit)
     ENDIF
     ! Use the map_set routine to set up the projection information structure
     SELECT CASE(projection)

@@ -548,6 +548,16 @@ CONTAINS
       DO k=1,ksigh
         zsig(:,:,k) =  0.5*(zsigf(:,:,k)+zsigf(:,:,k+1))
       ENDDO
+      
+      !  Check lowest level heights
+      do j=1,ny
+        do i=1,nx
+          if (zsig(i,j,1).LE.terdot(i,j))then
+            print*, 'zsig1 < ter',i, j,zsig(i,j,1),terdot(i,j)
+            stop
+          endif
+        enddo
+      enddo
       DEALLOCATE(ph)
       DEALLOCATE(phb)
       DEALLOCATE(zsigf)
@@ -675,6 +685,13 @@ CONTAINS
         ENDDO
       ENDIF 
     ENDIF
+
+!DIAGNOSTIC
+dz = zsig(nx/2,ny/2,1) - (terdot(nx/2,ny/2) + 2.)
+dtdz = ( tsig(nx/2,ny/2,2) - tsig(nx/2,ny/2,1) ) / &
+       ( zsig(nx/2,ny/2,2) - zsig(nx/2,ny/2,1) )
+print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
+  tsfc(nx/2,ny/2),tsig(nx/2,ny/2,1)-dtdz*dz,dz,dtdz
 
     ! Make sure we have tsfc
     IF (MAXVAL(tsfc) .LT. 150.) THEN
@@ -1156,7 +1173,7 @@ CONTAINS
       CALL get_mm5_3d(current_lun, 'TKE      ', time_to_proc, tkesig, &
                       'D    ', status)
     ELSEIF (mtype .EQ. 'wrf') THEN
-      CALL get_wrfnc_3d(current_lun,'TKE','A',nx,ny,ksigf,1,tkesig,status)
+      CALL get_wrfnc_3d(current_lun,'TKE_MYJ','A',nx,ny,ksigf,1,tkesig,status)
     ENDIF
     IF (status .EQ. 0) THEN
       PRINT *, 'Vertically interpolating TKE'
