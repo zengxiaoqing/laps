@@ -2952,12 +2952,13 @@ Process: qbalpe.exe - "Quasi-geostrophic balance of height, wind and clouds.
         Cloud fields are now balanced with the other fields.
 <pre>
 Inputs: 
-      * lw3          grid       LAPS 3-d wind analysis
-      * lt1          grid       LAPS 3-d temperature analysis
-      * lsx          grid       LAPS 2-d station pressure (PS field)
-      * lwc          grid       LAPS 3-d Cloud Liquid/Ice/Precip
-        lco          grid       LAPS 3-d Cloud Omega
-        lga          grid       Model 3-d first guess grids
+      * lw3          3d grid       LAPS wind analysis
+      * lt1          3d grid       LAPS temperature analysis
+      * lsx          2d grid       LAPS sfc station pressure (PS field)
+      * lwc          3d grid       LAPS Cloud Liquid/Ice/Precip
+        lh3          3d grid       LAPS humidity
+        lco          3d grid       LAPS Cloud Omega
+        lga          3d grid       Model first guess grids
 
 Outputs:
         lt1          3d grid    in lapsprd/balance/lt1 (ht and t field)
@@ -2970,7 +2971,7 @@ Parameter namelist file: 'static/balance.nl'
 
 The balance package starts by inputting the results from a simple, offline 
 cloud model which retrieves liquid and ice partitioning and an estimate of 
-vertical motion from the observed clouds (lco/lwc). The variational scheme 
+vertical motion from the observed clouds (lwc/lco). The variational scheme 
 is designed to accept cloud vertical motion estimates and ice and water 
 content as observations. The cloud observations are fully coupled to the 
 three dimensional mass and momentum field using dynamical constraints 
@@ -3144,7 +3145,7 @@ Source directory: 'laps/src/lapsprep'
    procedures in the first two paragraphs of this section be followed.
 
 
--------  5.0 --  LAPS Variables and netCDF File Organization -----------------
+-------  5.0 --  LAPS Output Variables and netCDF File Organization -----------
 
 LAPS Variables and netCDF File Organization
         (author: Linda Wharton - wharton@fsl.noaa.gov)
