@@ -1732,7 +1732,7 @@ Source directory: The source code for this is in 'src/background'.
 
 Library directory: Associated library modules are in 'src/lib/bgdata'.
 
-Parameter file: 'static/background.nl'
+Parameter namelist file: 'static/background.nl'
 
 Sample Input/Output: May be available in the test data case.
 
@@ -2004,7 +2004,7 @@ Output: (feeds wind)
 
 Source directory: laps/src/ingest/profiler
 
-Parameter files: static/nest7grid.parms, static/vad.nl
+Parameter namelist files: static/nest7grid.parms, static/vad.nl
 
 Sample Input/Output: Should be available in the test data case.
 
@@ -2130,7 +2130,7 @@ Inputs:
 	GOES 8/9 cloud drift winds in ASCII format
         AFWA format also allowed.
 
-Parameter file: 'static/cloud_drift.nl'
+Parameter namelist file: 'static/cloud_drift.nl'
 
 Outputs: (Feeds wind.exe)
 	cdw	intermediate data (ASCII)       Satellte cloud drift winds
@@ -2368,7 +2368,7 @@ Outputs:
 </pre>
 Source directory: laps/src/cloud
 
-Parameter file: static/nest7grid.parms 
+Parameter namelist file: static/nest7grid.parms 
 
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
@@ -2760,7 +2760,7 @@ Outputs:
 </pre>
 Source directory: laps/src/accum
 
-Parameter file: static/nest7grid.parms 
+Parameter namelist file: static/nest7grid.parms 
 
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
@@ -2788,10 +2788,8 @@ Outputs:
         lw3          3d grid    in lapsprd/balance/lw3 (u3, v3 and om field)
 </pre>
 Source directory: laps/src/balance
-Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
-                  off meaning that the ported software does not run qbalpe.exe.
-********************************************************************************
-********************************************************************************
+
+Parameter namelist file: 'static/balance.nl'
 
 ------- 3.4  -------------  Model Initialization --------------------------
 
@@ -2823,7 +2821,7 @@ Outputs:
         E*  (e.g.)          grid       Lateral Boundary Conditions    
 </pre>
 
-Parameter file: 'static/dprep.nl'
+Parameter namelist file: 'static/dprep.nl'
 
 Outputs: 'lapsprd/dprep' directory
 
