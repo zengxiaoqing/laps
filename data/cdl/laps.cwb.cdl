@@ -58,8 +58,8 @@ netcdf laps
 	data_variables 	= 46;
 	namelen	 	= 132;
 	charsPerLevel 	= 10;
-	x 		= 199; 
-	y 		= 247;
+	x = 199,
+	y = 247,
 
         // arbitrary counters for number of levels
         levels_1	= 1;
@@ -811,25 +811,25 @@ netcdf laps
              staticSpacing:_FillValue = -99999.f;
 
 // global attributes:
-     :cdlDate = "20000815" ;
+     :cdlDate = "20001009";
      :depictorName = "cwblaps" ;
-     :projIndex = 3 ;                       
+     :projIndex = 3 ;
      :projName = "LAMBERT_CONFORMAL";
-     :centralLat = 10.f ;                   
-     :centralLon = 120.f ;                  
-     :rotation = 40.f ;                     
-     :xMin = -0.025650f ;                   
-     :xMax = 0.036983f ;                    
-     :yMax = -0.795383f ;                   
-     :yMin = -0.873200f ;                   
-     :lat00 = 17.8164f ;                    
-     :lon00 = 116.065f ;                    
-     :latNxNy = 29.18094f ;                 
-     :lonNxNy = 126.2259f ;                 
-     :dxKm = 9.9958f ;                      
-     :dyKm = 9.9958868f ;                   
-     :latDxDy = 23.50f ;                    
-     :lonDxDy = 121.15f ;                   
+     :centralLat = 10.f ;
+     :centralLon = 120.f ;
+     :rotation = 40.f ;
+     :xMin = -0.025650f ;
+     :xMax = 0.36983f ;
+     :yMax = -0.795383f ;
+     :yMin = -0.873200f ;
+     :lat00 = 17.8164f ;
+     :lon00 = 116.065f ;
+     :latNxNy = 29.18094f ;
+     :lonNxNy = 126.2259f ;
+     :dxKm = 5.000f ;
+     :dyKm = 5.000f ;
+     :latDxDy = 23.5f ;
+     :lonDxDy = 121.15f ;
 
     data:
 	origin 		= "NOAA/ERL Forecast Systems Laboratory, Boulder CO";

@@ -50,7 +50,7 @@ c                     03-27-97  Add ability to do interactive runs (removes
 c                                 the need for 'obs_driveri').  Remove equivs.
 c
 c          J. Edwards 07-14-97  Made dynamic and moved data paths 
-c                               to nest7grid.parms
+c                               to parameter file
 c
 c          P. Stamus  03-23-98  Changes for stand-alone QC; LS2 format.
 c                     05-01-98  Added soil moisture variables.
@@ -76,11 +76,11 @@ c
         character*200 path_to_local_data
         character*200 path_to_buoy_data
         character*200 path_to_gps_data
-        character*8   metar_format
+        character*8   metar_format, c8_project
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 	if (istatus .ne. 1) then
-           write (6,*) 'Error returned from get_laps_config'
+           write (6,*) 'Error returned from get_config'
 	   stop
 	endif
 
@@ -97,10 +97,12 @@ c
         if(istatus .ne. 1)stop
 
 !       Get default value for metar_format
-        call get_c8_project(metar_format,istatus)
+        call get_c8_project(c8_project,istatus)
         if(istatus .ne. 1)stop
 
-!       Note that metar_format will be updated only if specified in namelist
+        metar_format = 'default'
+
+!       Note that metar_format is updated only when fully specified in namelist
         call get_obs_driver_parms(
      1                            path_to_metar
      1                           ,path_to_local_data
@@ -113,6 +115,11 @@ c
      1                           ,maxobs
      1                           ,istatus)
         if(istatus .ne. 1)stop
+
+        call s_len(metar_format,len_metar_format)
+        if(metar_format(1:len_metar_format) .eq. 'default')then
+            metar_format = c8_project
+        endif
 
         call obs_driver_sub(      nx,ny
      1                           ,maxobs,laps_cycle_time
@@ -239,7 +246,7 @@ c
 	grid_south = 90.
 	do i=1,ni
 	  if(lat(i,nj) .gt. grid_north) grid_north = lat(i,nj)
-	  if(lat(i,1) .lt. grid_south) grid_south = lat(i,1)
+	  if(lat(i,1)  .lt. grid_south) grid_south = lat(i,1)
 	enddo !i
 	do j=1,nj	
 	  if(lon(ni,j) .gt. grid_east) grid_east = lon(ni,j)
@@ -634,7 +641,7 @@ c
  
        character*150 static_dir,filename
  
-       call get_directory('nest7grid',static_dir,len_dir)
+       call get_directory('static',static_dir,len_dir)
 
        filename = static_dir(1:len_dir)//'/obs_driver.nl'
  

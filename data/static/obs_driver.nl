@@ -20,9 +20,9 @@ c 'path_to_buoy data' - Directory for buoy data
 c
 c 'path_to_gps data' - Directory for gps data
 c
-c 'metar_format' - Normally not specified here since it defaults to 
-c                  'c8_project' in 'nest7grid.parms'. An override to this 
-c                  can be specified as follows:
+c 'metar_format' - A value of 'default' means that we are using the 
+c                  'c8_project' in 'nest7grid.parms' to specify the METAR
+c                  format. An override to this can be specified as follows:
 c
 c                  'NIMBUS' denotes FSL NetCDF format and NIMBUS file timestamp
 c                  'WFO' denotes FSL NetCDF format and WFO file timestamp
