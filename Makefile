@@ -137,13 +137,10 @@ install: mkdirs
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
 
-mkdirs: mkdatadirs
-	if [ ! -d  $(INSTALLROOT) ] ; then  \
-	mkdir -p $(INSTALLROOT) ; fi 
-	if [ ! -d $(INSTALLROOT)/util ] ; then  \
-	ls $(LAPSROOT)/util; cp -r $(LAPSROOT)/util $(INSTALLROOT)/util ; fi 
-	if [ ! -d $(INSTALLROOT)/etc ] ; then  \
-	ls -l  $(LAPSROOT)/etc; cp -r $(LAPSROOT)/etc  $(INSTALLROOT)/etc ; ls -l $(INSTALLROOT)/etc ; fi
+mkdirs: mkdir -p $(INSTALLROOT)
+	ls -l  $(LAPSROOT)/util; cp -r $(LAPSROOT)/util $(INSTALLROOT) ; ls -l $(INSTALLROOT)/util 
+	ls -l  $(LAPSROOT)/etc;  cp -r $(LAPSROOT)/etc  $(INSTALLROOT) ; ls -l $(INSTALLROOT)/etc 
+        mkdatadirs
 
 mkdatadirs:
 	$(PERL) $(LAPSROOT)/etc/makedatadirs.pl --srcroot=$(LAPSROOT) --installroot=$(INSTALLROOT) \
