@@ -4,6 +4,7 @@
 !      Steve Albers      May-1999       Original Version
 
        character*150 path_to_raw_raob,path_to_local_raob
+       character*150 path_to_raw_drpsnd
        character*150 path_to_raw_satsnd
        character*200 path_to_raw_tower
        character*8 c8_raob_format, c8_project
@@ -11,6 +12,7 @@
        call get_laps_config('nest7grid',istatus)
 
        call get_snd_parms(path_to_raw_raob,path_to_local_raob
+     1                   ,path_to_raw_drpsnd
      1                   ,path_to_raw_satsnd,path_to_raw_tower,istatus)       
        if(istatus .ne. 1)goto999
 
@@ -25,6 +27,11 @@
            write(6,*)
            write(6,*)' Call ingest_raob'
            call ingest_raob(path_to_raw_raob,c8_raob_format)
+
+           c8_raob_format = c8_project
+           write(6,*)
+           write(6,*)' Call ingest_drpsnd'
+           call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format)
 
        else ! RSA project
            c8_raob_format = 'WFO'
@@ -75,16 +82,19 @@
 
 
        subroutine get_snd_parms(path_to_raw_raob,path_to_local_raob
+     1                         ,path_to_raw_drpsnd
      1                         ,path_to_raw_satsnd
      1                         ,path_to_raw_tower,istatus)
 
        character*150 path_to_raw_raob,path_to_local_raob
+     1              ,path_to_raw_drpsnd
      1              ,path_to_raw_satsnd
 
        character*200 path_to_raw_tower
 
        namelist /snd_nl/ path_to_raw_raob,path_to_local_raob
      1                  ,path_to_raw_satsnd,path_to_raw_tower
+     1                  ,path_to_raw_drpsnd
  
        character*150 static_dir,filename
  
