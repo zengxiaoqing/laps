@@ -285,12 +285,15 @@ c       write(6,*)' i = ',i
 301                 format(1x,i2,f8.1,f10.2,f10.2,f10.0,f10.2,f10.1)
                 enddo
 
-                IF(IFLAG1*IFLAG2.EQ.0)SWEAT=0.0
+                SWEAT=0.0
+!               IF(IFLAG1*IFLAG2.EQ.0)SWEAT=0.0
+
                  WRITE(6,430)DD85,FF85,DD50,FF50,T500
  430            FORMAT(' 850MB WIND',2F5.0,'         500MB WIND',2F5.0
      #         ,'    500MB TEMP= ',F6.1)
 
-                IF(IO2.EQ.1)GOTO1000
+!               IF(IO2.EQ.1)GOTO1000
+
                 WRITE(6,60)LI,SI,BLI
  60             FORMAT(' LI= ',F5.1,20X,'SI= ',F5.1,15X,'BLI= ',F5.1)
 
@@ -903,6 +906,7 @@ C  USE AITKEN'S FORMULA TO ACCELERATE CONVERGENCE
         GOTO750
 C
  890    TEMNEW=TEMPNW(ITER)
+        IOUT=0
         IF(IOUT.EQ.0.OR.IO.LT.3)GOTO900
         WRITE(6,666)ITER,TEMNEW,SLOPE,EPSILN
         WRITE(6,203)

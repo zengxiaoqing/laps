@@ -50,10 +50,10 @@ cdis
         do j = 1,nj
         do i = 1,ni
 
-            if(dbz .eq. ref_base)then
-                s_2d_out(i,j) = +1e-30
+!           if(dbz .eq. ref_base)then
+!               s_2d_out(i,j) = +1e-30
 
-            else
+!           else
                 ratio = snow_to_rain_ratio(temp_col_max(i,j))
                 n_snow_pts = n_snow_pts + 1
                 s_2d_out(i,j) = precip_rate(i,j) * ratio
@@ -62,7 +62,7 @@ cdis
                     write(6,*)i,j,temp_col_max(i,j)-273.15, ratio
                 endif
 
-            endif
+!           endif
 
         enddo
         enddo

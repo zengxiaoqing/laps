@@ -659,8 +659,11 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                         endif
 
+                        pressure_interval_pa = pres_3d(i,j,k) 
+     1                                       - pres_3d(i,j,k+1)
+
                         rlayer_refreez = rlayer_refreez
-     1             + abs(tbar_c * PRESSURE_INTERVAL_L * frac_below_zero)
+     1            + abs(tbar_c * pressure_interval_pa * frac_below_zero)     
 
 !                       if(rlayer_refreez .ge. 75000.)then
                         if(rlayer_refreez .ge. 25000.)then
