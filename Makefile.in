@@ -53,6 +53,7 @@ EXEDIRS = src/accum \
 DATADIRS = log/qc \
            static \
            time \
+           cdl \
            lapsprd/d01 \
            lapsprd/d02 \
            lapsprd/d03 \
