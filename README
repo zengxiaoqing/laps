@@ -1630,6 +1630,13 @@ Sample Output: Should be available in the test data case. The grids start with
 Package: gensfclut.exe - Writes surface lookup tables, run by localization
                          script. (contact: John McGinley / Steve Albers)
 
+Source directory: laps/src/sfc/table
+
+<pre>
+Output:
+        static/drag_coef.dat      Binary grid   Drag Coefficients
+</pre>
+
 ------- 3.2  ------------------  Ingest Processes ---------------------------
 
 As mentioned above, a flow chart for the ingest processes may be found at
