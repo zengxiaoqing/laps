@@ -65,9 +65,9 @@ tar cvf - time/systime.dat \
 
 date
 
-echo "Running followup_ncarg.com on jayhawk via ssh..."
+echo "Running followup_ncarg.com on toro via ssh..."
 
-ssh brain ssh jayhawk /usr/nfs/common/lapb/www/followup_ncarg.com $REMOTE_DATA_ROOT $DOMAIN_NAME /usr/nfs/lapb/builds/laps
+ssh brain ssh toro /usr/nfs/common/lapb/www/followup_ncarg.com $REMOTE_DATA_ROOT $DOMAIN_NAME /usr/nfs/lapb/builds/laps
 
 date
 
