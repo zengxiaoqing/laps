@@ -101,8 +101,8 @@ c
 	n_meso_pos = 0
 c
 	do n=1,mxstn
-	   ivals1(n) = imising
-	   ivals2(n) = imising
+	   ivals1(n) = imissing
+	   ivals2(n) = imissing
 	do i=1,26
 	   rely(i,n)   = imissing
 	   rely_l(i,n) = imissing

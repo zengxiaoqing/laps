@@ -69,6 +69,7 @@ ccccc	include 'laps_sfc.inc'
 c
 c.....	Grids for the outputs, weights, and stuff 
 c
+        integer ni,nj
 	real*4 akk(ni,nj)
 	real*4 top(ni,nj), d1(ni,nj), d2(ni,nj)
         real*4 fnorm(0:ni-1,0:nj-1)
@@ -83,7 +84,7 @@ c
 	character dir_s*150,ext_s*31,units*10,comment*125,var_s*3
         integer imx,jmx, imn, jmn, icnt, npass, i_tmn, j_tmn
         integer i_tmx, j_tmx, n_obs_var, i, j, imaxm1, jmaxm1
-        integer imax, jmax, ni, nj, istatus
+        integer imax, jmax, istatus
         real slope1, slope2, slp, std, ave, smin, smax, con, scale
         real co_max_scl,co_topo_range , termx, x, pi, fno, smsng, rom2
         real topo_range, d, pbldz, top_adj, topmx, topo_mx, topo_mn
@@ -443,9 +444,10 @@ c
 c=====================================================================
 c
 	implicit none
+        integer imax,jmax 
         real*4 fnorm(0:imax-1,0:jmax-1)
         real pi, con, area, fno, rr, d, rom2
-        integer n_obs_var, imax, jmax, dx, dy
+        integer n_obs_var,  dx, dy
           
 ccc	include '../../source/sfc/laps_sfc.inc'
 c

@@ -170,7 +170,7 @@ c
 	jmax = nj
 	icnt = 0
 	delt = 0.035
-	zeros = 1.e-38
+
 	rog = 0.286 / 9.8 * 6.5
 c
 c.....  Stuff for checking the background windspeed.
