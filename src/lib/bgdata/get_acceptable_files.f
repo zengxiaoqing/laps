@@ -1,5 +1,5 @@
 
-      subroutine get_acceptable_files(i4time_now,bgpath,bgmodel,names
+      subroutine get_acceptable_files(i4time_anal,bgpath,bgmodel,names
      +     ,max_files,oldest_forecast,max_forecast_delta,use_analysis
      +     ,bg_files,accepted_files,forecast_length,cmodel,NX,NY,NZ
      +     ,rejected_files,rejected_cnt)
@@ -12,10 +12,9 @@
       integer max_files, NX,NY,NZ,rejected_cnt
       character*256 names(max_files)
       character*256 rejected_files(max_files)
-      character*256 bgpath
       character*132 cmodel
       integer oldest_forecast, bg_files,forecast_length
-      integer i, j, k, kk, ij
+      integer i, j, k, kk, ij, jj
       integer max_forecast_delta
       integer ntbg,nvt
       parameter (ntbg=100)
@@ -31,32 +30,41 @@
       logical use_analysis
       character*9   fname,wfo_fname13_to_fname9,fname9
       integer itimes(max_files)
-      integer i4time_now,bgtime,bgtime2,previous_time,next_time,len
-      integer lenf,bg_len,ifile
-      integer bigint, ihour, n, accepted_files, final_time, lend
-      parameter(bigint=2000000000)
-      logical print_message
-      data print_message/.true./
-      integer nlapsprds,lentodot,nc
-      integer record
+      integer i4time_anal
+      integer bgtime_init
+      integer len,lenf,bg_len,ifile
+      integer ihour, n, accepted_files, final_time, lend
+      integer lentodot,nc
+      character*9 bkgd(3500)
+      character*4 fcst(3000,120),finit1,finit2
+      integer  ifcst,ibkgd
+      integer  ifcst_bkgd(3000)
+      integer  i4timeinit(3000)
+      integer  valid_time_1,valid_time_2
+      integer  i4time_min_diff
+      integer  indx_for_best_init
+      integer  indx_for_best_fcst
       character*2 cwb_model_type
 
       character(len=256), allocatable :: bg_names(:)
       character(len=256), allocatable :: bgnames_tmp(:)
 
-      parameter (nlapsprds=5)
-      character*3 lapsprds(nlapsprds)
-
-      data lapsprds/'lq3','lt1','lsx','lw3','fua'/
+      character*256 bgpath
 
 C
-C if forecast_length < 0 return only the file which matches i4time_now 
-C if forecast_length = 0 return files for i4time_now and the preceeding
-C forecast.  if forecast_length > 0 return all files for i4time_now
-C to >= i4time_now+forecast_length
+C if forecast_length < 0 return only the file which matches i4time_anal 
+C if forecast_length = 0 return files for i4time_anal and the preceeding
+C forecast.  if forecast_length > 0 return all files for i4time_anal
+C to >= i4time_anal+forecast_length
 C      
+      print*, '-----------------------------'
+      print*, 'get_acceptable_files: 2-27-04'
+      print*, '-----------------------------'
+
       if(.not.allocated(bg_names))allocate(bg_names(max_files))
 
+      bg_files=0
+       
       call s_len(bgpath,len)
       if(bgpath(len:len).ne.'/')then
          len=len+1
@@ -71,25 +79,27 @@ C
          enddo
       enddo
 
-      if(bgmodel.eq.0 .and. cmodel.ne.'LAPS_FUA'.and.
-     +   cmodel.ne.'MODEL_FUA')then
-         do i=max(0,forecast_length),0,-1
-            bg_files=bg_files+1
-            call make_fnam_lp(i4time_now+3600*i
-     +           ,bg_names(bg_files),istatus)
-            bg_names(bg_files)(10:13) = '0000'
-            bg_names(bg_files)(14:14) = char(0)
-         enddo
-         call s_len(bg_names(bg_files),j)
+c     if(bgmodel.eq.0 .and. cmodel.ne.'LAPS_FUA'.and.
+c    +   cmodel.ne.'MODEL_FUA')then
+c        do i=max(0,forecast_length),0,-1
+c           bg_files=bg_files+1
+c           call make_fnam_lp(i4time_anal+3600*i
+c    +           ,bg_names(bg_files),istatus)
+c           bg_names(bg_files)(10:13) = '0000'
+c           bg_names(bg_files)(14:14) = char(0)
+c        enddo
+c        call s_len(bg_names(bg_files),j)
 
-      elseif(bgmodel.eq.3)then
+c     elseif(bgmodel.eq.3)then
+
+      if(bgmodel.eq.3)then
 
          nvt=0
          call s_len(cmodel,nc)
          cwb_model_type = cmodel(nc-1:nc)
          call downcase(cwb_model_type,cwb_model_type)
-         next_time=bigint
-         final_time=i4time_now+3600*max(0,forecast_length)
+         final_time=i4time_anal+3600*max(0,forecast_length)
+c        final_time=i4time_anal+3600*max(0,oldest_forecast)
          call get_file_times(cfilespec,max_files,names,itimes
      +,bg_files,istatus)
          if(istatus.ne.1)then
@@ -121,8 +131,7 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
 
       else
 
-         next_time=bigint
-         final_time = i4time_now+3600*max(0,forecast_length)
+         final_time = i4time_anal+3600*max(0,forecast_length)
          call get_file_times(cfilespec,max_files,names,itimes
      +,bg_files,istatus)
          if(istatus.ne.1)then
@@ -186,9 +195,11 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
       
       endif
 
-c ok, if we do not want initial cond files (analysis files) then filter them.
+c ok, if we do not want 0-hr fcst files (analysis files) then filter them.
+c ---------------------------------------------------------------------------
       ij=0
-      if(.not.use_analysis)then
+      if(bg_files .gt.0)then
+         if(.not.use_analysis)then
           allocate(bgnames_tmp(bg_files))
           call s_len(bg_names(1),j)
           do i=1,bg_files
@@ -201,189 +212,150 @@ c ok, if we do not want initial cond files (analysis files) then filter them.
           do i=1,bg_files
              bg_names(i)=' '
           enddo
+
+          if(ij.eq.0)then
+             print*,'All files must be initial files. Return to main'
+             deallocate(bgnames_tmp)
+             return
+          endif
+
           bg_files=ij
           do i=1,bg_files
              bg_names(i)=bgnames_tmp(i)
           enddo
           deallocate(bgnames_tmp)
+         endif
+      else
+          print*,'Variable bg_files = 0, return to main'
+          print*
+          return
       endif
 
       print*,TRIM(bg_names(bg_files)),bg_files
-
-      bgtime2=0
-      accepted_files = 0
-      n=bg_files+1
-      previous_time = 0
-      do while((previous_time.eq.0
-     +     .or.(forecast_length.lt.0.and.accepted_files.lt.1))
-     +     .and.bg_files.gt.0.and.n.gt.1)
-         n=n-1
-
-         do i=1,rejected_cnt
-            if(bg_names(n).eq.rejected_files(i)) goto 40
-         enddo
-            
-         call s_len(bg_names(n),bg_len)
-	 if(bg_len.gt.0.and.bg_len.le.13)then
-	    if(bg_names(n)(1:1).eq.'0'.or.
-     +         bg_names(n)(1:1).eq.'1'.or.
-     +         bg_names(n)(1:1).eq.'2'.or.
-     +         bg_names(n)(1:1).eq.'9')then
-                  fname=bg_names(n)(1:9)
-                  af=bg_names(n)(10:13)
-                  read(af,'(i4)',err=888) ihour
-                  if(bgmodel.eq.0.and.cmodel.eq.'LAPS_FUA'.or.
-     +               cmodel.eq.'MODEL_FUA')ihour=ihour/100
-	    else
-	       print*,'Ignoring weird filename ',bg_names(n)(1:bg_len)
-	    endif 
-         endif
-
-         call i4time_fname_lp(fname,bgtime,istatus)
-
-         if(bgtime.lt.bgtime2.and. .not.use_analysis) then
-            print*, 'Trying earlier forecast ',bgtime,bgtime2,fname,af
-            bgtime2=bgtime
-            accepted_files=0
-            previous_time=0
-            next_time=bigint
-         endif
-c     
-c *** File names are returned sorted from newest to oldest ***
-c     process only the newest which is at least as old as the laps time
 c
-      
-         if(bgtime.gt.i4time_now .and. .not. use_analysis) then
-            print*,
-     +           'Background model newer than requested - skipping'
-            print*,'This behavior can be changed in the namelist '
-            print*,'parameter use_analysis '
-            goto 40
-         endif  
-         
-c
-c ****** Do NOT process model fcst if fcst is greater than oldest_forecast hours.
-c
-         if (ihour .gt. oldest_forecast)then
-            if(print_message)then
-               print *,'IHOUR > ',oldest_forecast,' no file created.'
-               print*,'oldest_forecast is a namelist parameter'
-               print_message=.false.
-            endif
-            goto 40
-         endif
-c     
-         if(forecast_length.lt.0) then
-            if(accepted_files.le.0.and.
-     +           bgtime+ihour*3600.eq.i4time_now) then
-               accepted_files=1
-               names(accepted_files) = bg_names(n)
-               previous_time=bigint
-               next_time=0
-            endif
+c categorize file by init and fcst times. convert init time to i4time
+c -------------------------------------------------------------------
+      ij=0
+      ifcst=1
+      ibkgd=1
+      do n=1,bg_files-1
+         finit1=bg_names(n)(6:9)
+         finit2=bg_names(n+1)(6:9)
+         if(finit1 .eq. finit2)then
+            fcst(ibkgd,ifcst)=bg_names(n)(10:13) !4 character time (ffff) of forecast time assoc with initial.
+            ifcst=ifcst+1
          else
-            if(bgtime+ihour*3600.ge.final_time.and.
-     +           bgtime+ihour*3600.lt.next_time) then
-               next_time = bgtime+ihour*3600
-               accepted_files=1
-               names(accepted_files) = bg_names(n)
-               bgtime2=bgtime
-cc               print *, '1: ',next_time,accepted_files,bg_names(n)
-            else if(bgtime+ihour*3600.ge.i4time_now.and.
-     +              bgtime+ihour*3600.lt.next_time) then
-               next_time = bgtime+ihour*3600
-               if(bgtime+ihour*3600.lt.final_time) then
-                  accepted_files=accepted_files+1
-               endif
-               names(accepted_files) = bg_names(n)
-cc               print *, '2: ',next_time,accepted_files,bg_names(n)
-            endif
-c            print*,bg_names(n),bgtime+ihour*3600,i4time_now,n
-            if(bgtime+ihour*3600.lt.i4time_now.and.
-     +           bgtime+ihour*3600.gt.previous_time) then
-               if(forecast_length.gt.0) then
-c
-c If this is a forecast request we want the first forecast > i4time_now
-c to be the last file on the list 
-c
-                  if(next_time.ge.i4time_now) then  !was .gt.
-                     previous_time=next_time
-                  else
-                     names(accepted_files) = ' '
-                     accepted_files=accepted_files-1
-                     previous_time=next_time
-                  endif
-                     
-c              else if(next_time.lt.bigint.and. 
-
-                  if(next_time.lt.bigint.and. 
-     +              (next_time-(bgtime+ihour*3600))
-     +              .le.max_forecast_delta*3600) then
-                     previous_time = bgtime+ihour*3600
-                     accepted_files=accepted_files+1
-                     names(accepted_files) = bg_names(n)
-                  endif
-                  
-               else
-c     
-c     otherwise the latest model is incomplete and doesn't have a current forecast 
-c     look for an older one
-c
-               endif
-cc       print *, '3: ',next_time,accepted_files,bg_names(n),previous_time
-            endif
+            fcst(ibkgd,ifcst)=bg_names(n)(10:13)
+            bkgd(ibkgd)=bg_names(n)(1:9) !9 character name of the background initial time
+            ifcst_bkgd(ibkgd)=ifcst        !number of fcsts for this initial background time
+            call i4time_fname_lp(bkgd(ibkgd),i4timeinit(ibkgd),istatus)
+            ibkgd=ibkgd+1
+            ifcst=1
          endif
-      
- 40      continue
-
       enddo
 
-c      print*,accepted_files,previous_time,
-c     +     forecast_length,bg_files,n
+      ifcst_bkgd(ibkgd)=ifcst
+      fcst(ibkgd,ifcst)=bg_names(bg_files)(10:13)
+      bkgd(ibkgd)=bg_names(bg_files)(1:9)
+      call i4time_fname_lp(bkgd(ibkgd),i4timeinit(ibkgd),istatus)
 
+      print*,'Found ',ibkgd,' initial backgrounds '
 
-      if (previous_time.eq.0 .or. next_time.eq.bigint) then
-        print*, 'Did not find acceptable background files:'
-     +          ,previous_time,next_time
-      endif
+c     do n=1,ibkgd,10
+c        print*,'bkgd ',n, bkgd(n),' has ',ifcst_bkgd(n),' fcsts'
+c     enddo
 
+c
+c this section determines only the two fcsts bounding the analysis (i4time_anal) time.
+c -----------------------------------------------------------------------------------
+      n=1
+      i4time_min_diff=100000
+      do while(n.le.ibkgd)
+         if(i4timeinit(n).le.i4time_anal .and.
+     +      i4timeinit(n)+forecast_length*3600 .gt. i4time_anal)then   !let "forecast_length" window on init time qualify
 
+            print*,'Found bkgd init that corresp to anal: ',bkgd(n)
+            print*,'Num of fcst = ',ifcst_bkgd(n)
 
-      do i=1,accepted_files
-         print*,'Accepted name ',i, '= ',names(i)(1:j)
+            do jj=2,ifcst_bkgd(n)
+               af=fcst(n,jj-1)
+               read(af,'(i4)',err=888) ihour
+               valid_time_1=i4timeinit(n)+ihour*3600
+               af=fcst(n,jj)
+               read(af,'(i4)',err=888) ihour
+               valid_time_2=i4timeinit(n)+ihour*3600
+               if(valid_time_1.le.i4time_anal.and.
+     +            valid_time_2.ge.i4time_anal)then
+                  if(abs(i4timeinit(n)-i4time_anal).lt.i4time_min_diff)
+     +            then
+                     i4time_min_diff=abs(i4timeinit(n)-i4time_anal)
+                     indx_for_best_init=n
+                     indx_for_best_fcst=jj-1
+                  endif
+                  print*,'Found fcsts bounding anal'
+c                 print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
+c                 print*,'Full name 2: ', bkgd(n),fcst(n,jj)
+                  print*
+               endif
+            enddo
+
+         endif
+         n=n+1
       enddo
 
-      if(accepted_files.gt.0)then
-
-       call get_fname_length(names(1),lenf)
-       fullname=bgpath(1:len)//names(1)(1:lenf)
-       if(bgmodel.eq.0) then
-          call get_laps_dimensions(nz,istatus)
-          call get_grid_dim_xy(nx,ny,istatus)
-       else if(bgmodel.eq.1) then
-          NX = 81
-          NY = 62
-          NZ = 25        
-       else if(bgmodel.eq.7) then
-          NX = 185
-          NY = 129
-          NZ = 42
-       else if(bgmodel.eq.9) then
-          call get_conus_dims(fullname,NX,NY,NZ)
-          print *,'nws:',NX,NY,NZ
-       endif
-
+c
+c now restore the filename corresponding to the actual original "raw" file name 
+c -----------------------------------------------------------------------------
+      if(indx_for_best_init.ne.0.and.indx_for_best_fcst.ne.0)then
+         accepted_files = 2
+         names(2) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
+     +,indx_for_best_fcst)
+         names(1) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
+     +,indx_for_best_fcst+1)
+         print*,'Accepted file 1: ',TRIM(names(1))
+         print*,'Accepted file 2: ',TRIM(names(2))
       else
-
-       print*
-       rejected_cnt=bg_files
-       do j=1,bg_files
-          rejected_files(j)=bg_names(j)
-       enddo
-       print*,'return to main'
-       print*
-
+         print*,'!******************************************'
+         print*,'!*** WARNING: Did not find acceptable files'
+         print*,'!*** -------> Returning to main'
+         print*,'!******************************************'
+         accepted_files = 0
+         return
       endif
+
+c     if(bg_len.gt.0.and.bg_len.le.13)then
+c        if(bg_names(n)(1:1).eq.'0'.or.
+c    +         bg_names(n)(1:1).eq.'1'.or.
+c    +         bg_names(n)(1:1).eq.'2'.or.
+c    +         bg_names(n)(1:1).eq.'9')then
+c                 fname=bg_names(n)(1:9)
+c                 af=bg_names(n)(10:13)
+c                 read(af,'(i4)',err=888) ihour
+c                 if(bgmodel.eq.0.and.cmodel.eq.'LAPS_FUA'.or.
+c    +               cmodel.eq.'MODEL_FUA')ihour=ihour/100
+c        else
+c           print*,'Ignoring unexpected filename ',TRIM(bg_names(n))
+c        endif 
+c     endif
+
+      call get_fname_length(names(1),lenf)
+      fullname=bgpath(1:len)//names(1)(1:lenf)
+      if(bgmodel.eq.0) then
+         call get_laps_dimensions(nz,istatus)
+         call get_grid_dim_xy(nx,ny,istatus)
+      else if(bgmodel.eq.1) then
+         NX = 81
+         NY = 62
+         NZ = 25        
+      else if(bgmodel.eq.7) then
+         NX = 185
+         NY = 129
+         NZ = 42
+      else if(bgmodel.eq.9) then
+         call get_conus_dims(fullname,NX,NY,NZ)
+         print *,'nws:',NX,NY,NZ
+      endif
+
       return
 
 888   print*,'Error decoding fname ',fname

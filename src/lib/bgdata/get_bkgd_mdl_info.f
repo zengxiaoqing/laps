@@ -243,16 +243,15 @@ c All SBN grids!
 c ----------------
       if(bgmodel.eq.4)then
 
-         j=lenfn
-         j=j-13
-         if(index(fullname(j+1:j+13),'/').eq.0 .and.
+         j=lenfn-13
+         if(index(fullname(j+1:j+13),'_').eq.0 .and.
      +            fullname(j:j).eq.'/') then
             fname13=fname9_to_wfo_fname13(fullname(j+1:j+9))
 c           cf=fullname(j+6:j+9)
 c           fullname=fullname(1:j)//fname13//cf
             fullname=fullname(1:j)//fname13            !//cf
          else
-            print*,'cannot convert fullname to WFO format'
+            print*,'didnt convert fullname to WFO format'
             print*,'in get_bkgd_mdl_info ',fullname(1:lenfn)
          endif
 
