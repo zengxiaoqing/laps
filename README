@@ -240,7 +240,10 @@
 
      $LAPSROOT - The location of installed binaries and scripts (bin and etc).
 
-     $LAPS_DATA_ROOT - The location of output data and namelists.
+     $LAPS_DATA_ROOT - The location of output data and namelists. This includes
+     lapsprd subdirectories containing both LAPS output grids and intermediate
+     data files. Input data in its "raw" form is stored outside the 
+     $LAPS_DATA_ROOT tree.
 
      All three of these environment variables can either be part of one
      directory tree or split out into separate trees as discussed at various
