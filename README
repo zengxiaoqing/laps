@@ -2282,10 +2282,23 @@ Output:
              Relates things like temp, humidity and wind to fire potential.
 
          Colorado Severe Storms Index: 
-             Severe storm potential mostly geared to the Colorado area.
+             Severe storm potential mostly geared to the Colorado area. This
+             uses a decision tree and various empirical functions.
 
          Heat Index:
              A function of temperature and humidity for discomfort due to heat.
+
+             This is based on a formula from Lans Rothfusz, NOAA/NWS. It is
+             calculated only when the surface air temperature exceeds 75 deg F.
+
+             The idea is to give a "feels like" temperature.  For example, if 
+             the temperature is 85 F but the heat index is 100 F, most people 
+             would respond physically like it was 100 F actual temperature.  
+             It's generally used to warn people that the temperature and 
+             humidity will combine to make it seem hotter than it actually is, 
+             and that they should take precautions like drinking more water, 
+             stay out of the direct sun, take frequent breaks if working 
+             outside, etc.
 </pre>
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
