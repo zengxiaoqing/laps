@@ -20,6 +20,7 @@
       C_SAT_TYPES(2,2)='wfo'
       C_SAT_TYPES(4,2)='gwc'
       C_SAT_TYPES(1,3)='gvr'
+      C_SAT_TYPES(4,3)='gwc'
       C_SAT_TYPES(4,4)='gwc'
 c ----
 c goes08
@@ -70,6 +71,12 @@ c goes10
       C_CHANNEL_TYPES(3,1,3)='wv '
       C_CHANNEL_TYPES(4,1,3)='11u'
       C_CHANNEL_TYPES(5,1,3)='12u'
+
+      C_CHANNEL_TYPES(1,4,3)='vis'
+      C_CHANNEL_TYPES(2,4,3)='4u '
+      C_CHANNEL_TYPES(3,4,3)='wv '
+      C_CHANNEL_TYPES(4,4,3)='11u'
+      C_CHANNEL_TYPES(5,4,3)='12u'
 c gmssat
       C_CHANNEL_TYPES(1,4,4)='vis'
       C_CHANNEL_TYPES(3,4,4)='wvp'
