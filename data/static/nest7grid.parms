@@ -33,8 +33,10 @@
  path_to_landuse30s='/data/lapb/geog/landuse_30s',
  path_to_soiltype_top30s='/data/lapb/geog/soiltype_top_30s',
  path_to_soiltype_bot30s='/data/lapb/geog/soiltype_bot_30s',
- path_to_greenfrac_10m = '/data/lapb/geog/green_frac_10m',
- path_to_soiltemp1deg  = '/data/lapb/geog/soiltemp_1deg',
+ path_to_greenfrac = '/data/lapb/geog/greenfrac_ncep',
+ path_to_soiltemp1deg  = '/data/lapb/geog/soiltemp_1deg_30',
+ path_to_albedo  = '/nodata/lapb/geog/albedo_ncep',
+ path_to_sst = '/nodata/lapb/geog/sst',
 
  path_to_raw_pirep_cmn='/public/data/pirep/netcdf/',
  path_to_raw_rass_cmn='/public/data/profiler/rass/noaanet/netcdf/',
