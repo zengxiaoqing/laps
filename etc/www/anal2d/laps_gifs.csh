@@ -117,6 +117,11 @@ echo "Generating Graphical Wind Product"; date -u
 setenv prod wd0
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
+# Wind Graphic Product
+echo "Generating Graphical Wind Product"; date -u
+setenv prod h5b
+$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
 # Storm Total Graphic Product (Precip or Snow)
 echo "Generating Graphical Storm Total Product (Precip or Snow)"; date -u
 setenv prod sto
