@@ -31,6 +31,7 @@ c===============================================================================
 c
       subroutine qbalpe(nx,ny,nz)
 c
+      include 'trigd.inc'
       implicit none
 c
       integer*4 nx,ny,nz

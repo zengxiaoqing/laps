@@ -4,9 +4,8 @@ c
 c
       include 'netcdf.inc'
 c
+      integer nx,ny,nz, j, ncid
       integer vdims(10),start(10),count(10)
-      integer ncid,nx,ny,nz,j
-      integer*2 nx2,ny2,nz2
       integer ntp,nvdim,nvs,lenstr,ndsize,rcode
 c
       character*(*) fname
@@ -15,50 +14,47 @@ c_______________________________________________________________________________
 c
 c *** Open the netcdf file.
 c
-      ncid=ncopn(fname,ncnowrit,rcode)
+      rcode=NF_OPEN(fname,NF_NOWRITE,ncid)
 c
 c *** Statements to fill nx.
 c
-      call ncvinq(ncid,16,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,16,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,16,start,count,nx2,rcode)
+      rcode=NF_GET_VARA_INT(ncid,16,start,count,nx)
 c
 c *** Statements to fill ny.
 c
-      call ncvinq(ncid,17,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,17,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,17,start,count,ny2,rcode)
+      rcode=NF_GET_VARA_INT(ncid,17,start,count,ny)
 c
 c *** Statements to fill nz.
 c
-      call ncvinq(ncid,18,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,18,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,18,start,count,nz2,rcode)
+      rcode=NF_GET_VARA_INT(ncid,18,start,count,nz)
 c
       rcode=nf_close(ncid)
 c
-      nx=nx2
-      ny=ny2
-      nz=nz2
-c
+
       return 
       end
 c
@@ -70,9 +66,9 @@ c
       implicit none
 c
       include 'netcdf.inc'
-      integer ncid, lenstr, ntp, nvdim, nvs, ndsize
 c
       integer nx,ny,nz,len
+      integer nvs, ndsize, ncid, ntp, nvdim, lenstr
 c
       integer rcode
 c
@@ -118,80 +114,80 @@ c *** Open the netcdf file.
 c
       call s_len(path,len)
       bgname=path(1:len)//'/'//fname//af
-      ncid=ncopn(bgname,ncnowrit,rcode)
+      rcode=NF_OPEN(bgname,NF_NOWRITE,ncid)
 c
 c *** Read netcdf data.
 c *** Statements to fill prn.
 c
-      call ncvinq(ncid,1,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,1,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,1,start,count,prn,rcode)
+      rcode=NF_GET_VARA_REAL(ncid,1,start,count,prn)
 c
 c *** Statements to fill ht.
 c
-      call ncvinq(ncid,2,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,2,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,2,start,count,ht,rcode)
+      rcode=NF_GET_VARA_REAL(ncid,2,start,count,ht)
 c
 c *** Statements to fill tp.
 c
-      call ncvinq(ncid,3,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,3,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,3,start,count,tp,rcode)
+      rcode=NF_GET_VARA_REAL(ncid,3,start,count,tp)
 c
 c *** Statements to fill sh.
 c
-      call ncvinq(ncid,4,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,4,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,4,start,count,sh,rcode)
+      rcode=NF_GET_VARA_REAL(ncid,4,start,count,sh)
 c
 c *** Statements to fill uw.
 c
-      call ncvinq(ncid,5,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,5,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,5,start,count,uw,rcode)
+      rcode=NF_GET_VARA_REAL(ncid,5,start,count,uw)
 c
 c *** Statements to fill vw.
 c
-      call ncvinq(ncid,6,dummy,ntp,nvdim,vdims,nvs,rcode)
+      call NCVINQ(ncid,6,dummy,ntp,nvdim,vdims,nvs,rcode)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,rcode)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,rcode)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,6,start,count,vw,rcode)
+      rcode=NF_GET_VARA_REAL(ncid,6,start,count,vw)
 c
 c *** Close netcdf file.
 c

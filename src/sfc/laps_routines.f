@@ -1290,9 +1290,10 @@ c
 c
 c*****************************************************************************
 c
+	integer ni,nj
 	real*4 bkg_field(ni,nj)
 c
-	integer*4 i4time_in, lvl_in, bkg_time, ni, nj, bkg_status
+	integer*4 i4time_in, lvl_in, bkg_time, bkg_status
 c
 	character bkg_ext*31, var_in*4, var(3)*3
 	character bkg_dir*256, filename*9
@@ -1560,9 +1561,10 @@ c
 c
 c*****************************************************************************
 c
+	integer ni,nj
 	real*4 bkg_u(ni,nj), bkg_v(ni,nj)
 c
-	integer*4 i4time_in, lvl_in, bkg_time, ni, nj, bkg_status
+	integer*4 i4time_in, lvl_in, bkg_time, bkg_status
 c
 	character bkg_ext*31, var_u*3, var_v*3
 	character bkg_dir*256, filename*9

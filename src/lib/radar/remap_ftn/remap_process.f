@@ -92,8 +92,6 @@ c
       character*3 laps_radar_ext, c3_radar_subdir
       character*(*) path_to_vrc
 
-      integer*2 i2_fn_length
-
 c
 c     Functions
 c
@@ -602,9 +600,9 @@ c
         call s_len(ext_in,end_ext)
         dir='../lapsprd/'//ext_in(1:end_ext)//'/'
         call cvt_fname_data(dir,gtime,fhh,ext_in,full_fname
-     1                                     ,i2_fn_length,istatus)
+     1                                     ,i4_fn_length,istatus)
 
-        i4_fn_length = i2_fn_length
+
 !       call s_len(full_fname,i4_fn_length)
 
         write(6,895) n_vel_grids_prelim,n_vel_grids_final,
