@@ -9,196 +9,196 @@ netcdf lvd {
         namelen = 132;
 		
     variables:
-        //	goes IR band-8 bright temp warmest pixl
+        //	satellite IR channel 4 b-temp: warmest pixl
 
 	float                                  
             s8w(record,z,y,x);
             s8w:navigation_dim = "nav";
             s8w:record = "valtime, reftime";
             s8w:_FillValue = 1.e+37f;
-            s8w:long_name="goes IR band-8 bright temp warmest pixel";
+            s8w:long_name="IR channel 4 (11.2u) b-temp: warmest pixel";
             s8w:units="degrees Kelvin";
             s8w:valid_range= 0.f, 400.f;
             s8w:LAPS_var="S8W";
             s8w:lvl_coord=" ";
             s8w:LAPS_units="K";
                 	        
-        //	goes IR band-8 bright temp coldest pixl
+        //	satellite IR channel 4 b-temp: coldest pixl
 
 	float                                  
             s8c(record,z,y,x);
             s8c:navigation_dim = "nav";
             s8c:record = "valtime, reftime";
             s8c:_FillValue = 1.e+37f;
-            s8c:long_name="goes IR band-8 bright temp coldest pixel";
+            s8c:long_name="IR channel 4 (11.2u) b-temp: coldest pixel";
             s8c:units="degrees Kelvin";
             s8c:valid_range= 0.f, 400.f;
             s8c:LAPS_var="S8C";
             s8c:lvl_coord=" ";
             s8c:LAPS_units="K";
                 	        
-        //	goes vis satellite - raw 
+        //	satellite vis counts - raw 
 
 	float                                  
             svs(record,z,y,x);
             svs:navigation_dim = "nav";
             svs:record = "valtime, reftime";
             svs:_FillValue = 1.e+37f;
-            svs:long_name="goes visible satellite - raw";
+            svs:long_name="visible satellite counts - raw";
             svs:units="counts";
-            svs:valid_range= 0, 100;
+            svs:valid_range= 0, 255;
             svs:LAPS_var="SVS";
             svs:lvl_coord="   ";
             svs:LAPS_units="COUNTS";
                 	        
-        //	 goes vis satellite - normalized
+        //	 satellite vis counts - normalized
 
 	float                                  
             svn(record,z,y,x);
             svn:navigation_dim = "nav";
             svn:record = "valtime, reftime";
             svn:_FillValue = 1.e+37f;
-            svn:long_name="goes visible satellite - normalized";
+            svn:long_name="visible satellite counts - normalized";
             svn:units="counts";
-            svn:valid_range= 0, 100;
+            svn:valid_range= 0, 255;
             svn:LAPS_var="SVN";
             svn:lvl_coord=" ";
             svn:LAPS_units="COUNTS";
                 	        
-        //	albedo
+        //	laps-albedo
 
 	float                                  
             alb(record,z,y,x);
             alb:navigation_dim = "nav";
             alb:record = "valtime, reftime";
             alb:_FillValue = 1.e+37f;
-            alb:long_name="albedo";
+            alb:long_name="laps derived albedo";
             alb:units="none";
-            alb:valid_range= -20000.f, 20000.f;
+            alb:valid_range= -1.f, 1.f;
             alb:LAPS_var="ALB";
             alb:lvl_coord=" ";
             alb:LAPS_units=" ";
                 	        
-        //	goes IR band-3 bright temp averaged
+        //	satellite IR channel 2 b-temp: averaged
 
 	float                                  
             s3a(record,z,y,x);
             s3a:navigation_dim = "nav";
             s3a:record = "valtime, reftime";
             s3a:_FillValue = 1.e+37f;
-            s3a:long_name="goes IR band-3 bright temp averaged";
+            s3a:long_name="IR channel 2 (3.9u) b-temp: averaged";
             s3a:units="degrees Kelvin";
             s3a:valid_range= 0.f, 400.f;
             s3a:LAPS_var="S3A";
             s3a:lvl_coord=" ";
             s3a:LAPS_units="K";
                 	        
-        //	goes IR band-3 bright temp filtered
+        //	satellite IR channel 2 b-temp: filtered
 
 	float                                  
             s3c(record,z,y,x);
             s3c:navigation_dim = "nav";
             s3c:record = "valtime, reftime";
             s3c:_FillValue = 1.e+37f;
-            s3c:long_name="goes IR band-3 bright temp filtered";
+            s3c:long_name="IR channel 2 (3.9u) b-temp: filtered";
             s3c:units="degrees Kelvin";
             s3c:valid_range= 0.f, 400.f;
             s3c:LAPS_var="S3C";
             s3c:lvl_coord=" ";
             s3c:LAPS_units="K";
 
-        //	goes IR band-4 bright temp averaged	
+        //	satellite IR channel 3 b-temp: averaged	
 
 	float                                  
             s4a(record,z,y,x);
             s4a:navigation_dim = "nav";
             s4a:record = "valtime, reftime";
             s4a:_FillValue = 1.e+37f;
-            s4a:long_name="goes IR band-4 bright temp averaged";
+            s4a:long_name="IR channel 3 (6.7u) b-temp: averaged";
             s4a:units="degrees Kelvin";
             s4a:valid_range= 0.f, 400.f;
             s4a:LAPS_var="S4A";
             s4a:lvl_coord=" ";
             s4a:LAPS_units="K";
 
-        //	goes IR band-4 bright temp filtered
+        //	satellite IR channel 3 b-temp: filtered
 
 	float                                  
             s4c(record,z,y,x);
             s4c:navigation_dim = "nav";
             s4c:record = "valtime, reftime";
             s4c:_FillValue = 1.e+37f;
-            s4c:long_name="goes IR band-4 bright temp filtered";
+            s4c:long_name="IR channel 3 (6.7u) b-temp: filtered";
             s4c:units="degrees Kelvin";
             s4c:valid_range= 0.f, 400.f;
             s4c:LAPS_var="S4C";
             s4c:lvl_coord=" ";
             s4c:LAPS_units="K";
 
-        //	goes IR band-5 bright temp averaged
+        //	satellite IR unused
 
 	float                                  
             s5a(record,z,y,x);
             s5a:navigation_dim = "nav";
             s5a:record = "valtime, reftime";
             s5a:_FillValue = 1.e+37f;
-            s5a:long_name="goes IR band-5 bright temp averaged";
+            s5a:long_name="unused";
             s5a:units="degrees Kelvin";
             s5a:valid_range= 0.f, 400.f;
             s5a:LAPS_var="S5A";
             s5a:lvl_coord=" ";
             s5a:LAPS_units="K";
 
-        //	goes IR band-5 bright temp filtered
+        //	satellite IR unused
 
 	float                                  
             s5c(record,z,y,x);
             s5c:navigation_dim = "nav";
             s5c:record = "valtime, reftime";
             s5c:_FillValue = 1.e+37f;
-            s5c:long_name="goes IR band-5 bright temp filtered";
+            s5c:long_name="unused";
             s5c:units="degrees Kelvin";
             s5c:valid_range= 0.f, 400.f;
             s5c:LAPS_var="S5C";
             s5c:lvl_coord=" ";
             s5c:LAPS_units="K";
 
-        //	 goes IR band-8 bright temp averaged
+        //	 satellite IR channel 4 b-temp: averaged
 
 	float                                  
             s8a(record,z,y,x);
             s8a:navigation_dim = "nav";
             s8a:record = "valtime, reftime";
             s8a:_FillValue = 1.e+37f;
-            s8a:long_name="goes IR band-8 bright temp averaged";
+            s8a:long_name="IR channel 4 (11.2u) b-temp: averaged";
             s8a:units="degrees Kelvin";
             s8a:valid_range= 0.f, 400.f;
             s8a:LAPS_var="S8A";
             s8a:lvl_coord=" ";
             s8a:LAPS_units="K";
 
-        //	goes IR band-12 bright temp averaged
+        //	satellite IR channel 5 b-temp: averaged
 
 	float                                  
             sca(record,z,y,x);
             sca:navigation_dim = "nav";
             sca:record = "valtime, reftime";
             sca:_FillValue = 1.e+37f;
-            sca:long_name="goes IR band-12 bright temp averaged";
+            sca:long_name="IR channel 5 (12.0u) b-temp: averaged";
             sca:units="degrees Kelvin";
             sca:valid_range= 0.f, 400.f;
             sca:LAPS_var="SCA";
             sca:lvl_coord=" ";
             sca:LAPS_units="K";
 
-        //	goes IR band-12 bright temp filtered
+        //	satellite IR channel 5 b-temp: filtered
 
 	float                                  
             scc(record,z,y,x);
             scc:navigation_dim = "nav";
             scc:record = "valtime, reftime";
             scc:_FillValue = 1.e+37f;
-            scc:long_name="goes IR band-12 bright temp filtered";
+            scc:long_name="IR channel 5 (12.0u) b-temp: filtered";
             scc:units="degrees Kelvin";
             scc:valid_range= 0.f, 400.f;
             scc:LAPS_var="SCC";
