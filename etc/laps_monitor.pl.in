@@ -10,15 +10,12 @@
 
 select STDOUT; $|=1;
 $ENV{PATH}="";
-my(%lapsprds)=( "AWIPS" =>  '/data/fxa/laps/lapsprd',
-                "WFO30" =>  '/data/lapb/wfo/data/lapsprd',
-                "WFO5KM" => '/data/lapb/wfo5km/data/lapsprd', 
-                "TW/FSL" => '/data/lapb/tw/fsl/data/lapsprd',
-  	        "TW/CWB" => '@laps_data_root@/lapsprd');
+my(%lapsprds)=( "AWIPS"      => '/data/fxa/laps/lapsprd',
+  	        "WFOJ"       => '/data/lapb/wfoj/data/lapsprd');
 
 # This defines the order of the sources in the table
 #
-my(@order) = qw(AWIPS WFO30 WFO5KM TW/FSL TW/CWB);
+my(@order) = qw(AWIPS WFOJ);
 
 my(%min_age,$min_age,%max_age,$max_age,%files_per_hour,$fph,$model,%green,%yellow,%red,$dir,@filelist,$file,$age,$image,$time,$i);
 
@@ -93,10 +90,10 @@ print  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 //EN\">\n";
 print  "<html>\n";
 print  "<head>\n";
 print  "<META HTTP-EQUIV=\"REFRESH\" CONTENT=3600>\n";
-print  "<title>WFO/Taiwan Product Monitor</title>\n";
+print  "<title>AWIPS/LAPS Product Monitor</title>\n";
 print  "</head>\n";
 print  "<body>\n";
-print  "<center><h1> WFO/Taiwan Product Monitor </h1></center>\n";
+print  "<center><h1> AWIPS/LAPS Product Monitor </h1></center>\n";
 #print  "<IMG SRC=\"./glite.gif\" VSPACE=2 HSPACE=6 Height=26 Width=40 ALIGN=LEFT >";
 #print  "indicates that product is up to date and consistantly filled <br><br><br> <br>\n";
 #print  "<IMG SRC=\"./ylite.gif\" VSPACE=2 HSPACE=6 Height=26 Width=40 ALIGN=LEFT >" ;
