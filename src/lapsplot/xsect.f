@@ -88,6 +88,7 @@ cdis
         logical l_radar_read, l_wind_read,l_arrival_gate
         logical iflag_mvd,iflag_icing_index,iflag_cloud_type
         logical iflag_snow_potential,iflag_bogus_w
+        logical l_low_fill, l_high_fill
 
         data lapsplot_pregen /.true./
 
@@ -128,7 +129,7 @@ cdis
 
         data c_filespec_qg/'USER_DATA:*.lqo'/
 
-        character*31 ext_wind
+        character*31 ext_wind, ext_radar
 
         character*3 var_2d
         character*150  directory
@@ -682,7 +683,7 @@ c read in laps lat/lon and topo
      1l Diam)'
      1  /
      1  /'           cv (cloud cover contours)'
-     1  /'           rf (reflectivity-graphic), ri (ref-image)]'
+     1  /'           rf (ref-graphic), ri (ref-image), rv (ref-obs)]'
      1  //'     Difference field: [df]  '
      1  /' ',49x,'q (quit/display)]   ? ',$)
 
@@ -1436,7 +1437,7 @@ c read in laps lat/lon and topo
 !           call make_fnam_lp(i4time_radar,a9time,istatus)
 
         elseif(c_field .eq. 'ri' .or. c_field .eq. 'rj' 
-     1    .or. c_field .eq. 'rs')then ! Reflectivity Image
+     1    .or. c_field .eq. 'rs' .or. c_field .eq. 'rv')then ! Reflectivity Image
             i_image = 1
             if(c_field .eq. 'ri')then
                 i4time_get = i4time_ref/laps_cycle_time 
@@ -1445,93 +1446,150 @@ c read in laps lat/lon and topo
                 i4time_get = i4time_ref
             endif
 
-            if(c_field .eq. 'ri')goto1500 ! Skip next part
+            if(c_field .ne. 'ri')then
+                if(c_field .eq. 'rv')then
+!                   Ask which radar number (extension)
+                    write(6,*)
+                    write(6,2026)
+2026                format('  Enter Radar extension (for reflectivity)'      
+     1                                                     ,28x,'? ',$)       
+                    read(lun,*)ext_radar
 
-            if(.not. l_radar_read)then
-!               Obtain height field
-                ext = 'lt1'
-                var_2d = 'HT'
-                call get_laps_3dgrid(
+                    write(6,*)' Reading reflectivity data from radar '
+     1                                          ,ext_radar
+
+                    write(6,*)
+
+                    call get_ref_base(ref_base,istatus)
+
+                    call get_filespec(ext_radar,2,c_filespec,istatus)
+                    call get_file_time(c_filespec,i4time_get
+     1                                ,i4time_radar)    
+
+                    if(ext_radar .ne. 'vrz')then ! vxx
+                        l_low_fill = .true.                        
+                        l_high_fill = .true.                        
+
+                        call read_radar_3dref(i4time_radar,
+!    1                   .true.,ref_base,
+     1                   .true.,r_missing_data,
+     1                   NX_L,NY_L,NZ_L,ext_radar,
+     1                   lat,lon,topo,l_low_fill,l_high_fill,
+     1                   field_3d,
+     1                   grid_ra_ref,
+     1                   rlat_radar,rlon_radar,rheight_radar,radar_name,       
+     1                   n_ref_grids,istat_radar_2dref,
+     1                   istat_radar_3dref)      
+
+                    else
+                        write(6,*)
+     1                  ' Getting Radar VRZ mosaic via get_laps_3dgrid'       
+                        ext = 'vrz'
+                        var_2d = 'REF'
+
+                        call get_laps_3dgrid(i4time_get,86400
+     1                    ,i4time_radar
+     1                    ,NX_L,NY_L,NZ_L,ext,var_2d
+     1                    ,units_2d,comment_2d,grid_ra_ref,istatus)
+
+                        if(istatus .ne. 1)then
+                            write(6,*)
+     1                      ' Could not read lps via get_laps_3dgrid'       
+                            goto100
+                        endif
+
+                        call make_fnam_lp(i4time_radar,a9time,istatus)
+                        c33_label = 'Reflectivity dBz             '
+     1                              //ext_radar(1:3)
+
+                    endif
+
+!                   i4time_radar = i4time_get
+
+                elseif(.not. l_radar_read)then
+!                   Obtain height field
+                    ext = 'lt1'
+                    var_2d = 'HT'
+                    call get_laps_3dgrid(
      1                   i4time_get,10000000,i4time_ht,
      1                   NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,heights_3d,istatus)
-                if(istatus .ne. 1)then
-                    write(6,*)' Error locating height field'
-                    go to 100
+                    if(istatus .ne. 1)then
+                        write(6,*)' Error locating height field'
+                        go to 100
+                    endif
+
+                    call get_radar_ref(i4time_get,2000,i4time_radar,1
+     1                ,1,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
+     1                ,heights_3d
+     1                ,grid_ra_ref,n_ref
+     1                ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
+     1                ,istat_3dref)
+
+                    if(istat_2dref .le. 0)goto 100
+
+                    l_radar_read = .true.
+
+                    if(istat_3dref .le. 0)then
+                        if(istat_2dref .eq. 1)then
+                            write(6,*)
+     1                      ' Radar Xsect unavailable, try earlier time'
+                        endif
+                        goto 100
+                    endif
+
                 endif
 
-                call get_radar_ref(i4time_get,2000,i4time_radar,1
-     1            ,1,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
-     1            ,heights_3d
-     1            ,grid_ra_ref,n_ref
-     1            ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
-     1            ,istat_3dref)
+            else ! 'ri'
+                call input_product_info(i4time_ref              ! I
+     1                                 ,laps_cycle_time         ! I
+     1                                 ,3                       ! I
+     1                                 ,c_prodtype              ! O
+     1                                 ,ext                     ! O
+     1                                 ,directory               ! O
+     1                                 ,a9time                  ! O
+     1                                 ,fcst_hhmm               ! O
+     1                                 ,i4_initial              ! O
+     1                                 ,i4_valid                ! O
+     1                                 ,istatus)                ! O
 
-                if(istat_2dref .le. 0)goto 100
+                var_2d = 'REF'
 
-                l_radar_read = .true.
+                if(c_prodtype .eq. 'A')then
+                    write(6,*)' Getting Radar data via get_laps_3dgrid'
+                    ext = 'lps'
 
-            endif
+                    call get_laps_3dgrid(i4time_get,86400,i4time_radar
+     1                  ,NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
+                    if(istatus .ne. 1)then
+                        write(6,*)
+     1                  ' Could not read lps via get_laps_3dgrid'       
+                        goto100
+                    endif
 
-            if(istat_3dref .le. 0)then
-                if(istat_2dref .eq. 1)then
-                    write(6,*)
-     1              ' Radar Xsect unavailable, try earlier time'
-                endif
-                goto 100
-            endif
+                    call make_fnam_lp(i4time_radar,a9time,istatus)
+                    c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
 
-            goto1510
+                elseif(c_prodtype .eq. 'F')then
+                    call get_lapsdata_3d(i4_initial,i4_valid
+     1                                  ,NX_L,NY_L,NZ_L       
+     1                                  ,directory,var_2d
+     1                                  ,units_2d,comment_2d,grid_ra_ref       
+     1                                  ,istatus)
+                    if(istatus .ne. 1)then
+                        write(6,*)' Could not read forecast ref'       
+                        goto100
+                    endif
+                    c33_label = 'LAPS  FUA Reflectivity '//fcst_hhmm
+     1                        //'   dbz'
 
-1500        continue
-
-            call input_product_info(i4time_ref              ! I
-     1                             ,laps_cycle_time         ! I
-     1                             ,3                       ! I
-     1                             ,c_prodtype              ! O
-     1                             ,ext                     ! O
-     1                             ,directory               ! O
-     1                             ,a9time                  ! O
-     1                             ,fcst_hhmm               ! O
-     1                             ,i4_initial              ! O
-     1                             ,i4_valid                ! O
-     1                             ,istatus)                ! O
-
-            var_2d = 'REF'
-
-            if(c_prodtype .eq. 'A')then
-                write(6,*)' Getting Radar data via get_laps_3dgrid'
-                ext = 'lps'
-
-                call get_laps_3dgrid(i4time_get,86400,i4time_radar
-     1              ,NX_L,NY_L,NZ_L,ext,var_2d
-     1              ,units_2d,comment_2d,grid_ra_ref,istatus)
-                if(istatus .ne. 1)then
-                    write(6,*)' Could not read lps via get_laps_3dgrid'       
+                else
                     goto100
+
                 endif
-
-                call make_fnam_lp(i4time_radar,a9time,istatus)
-                c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
-
-            elseif(c_prodtype .eq. 'F')then
-                call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
-     1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d,grid_ra_ref
-     1                              ,istatus)
-                if(istatus .ne. 1)then
-                    write(6,*)' Could not read forecast ref'       
-                    goto100
-                endif
-                c33_label = 'LAPS  FUA Reflectivity '//fcst_hhmm
-     1                    //'   dbz'
-
-            else
-                goto100
 
             endif
-
-1510        continue
 
             call get_ref_base(ref_base,istatus)
 
