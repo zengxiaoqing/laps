@@ -203,10 +203,10 @@ if($opt_q || $opt_Q){
     print TFILE "#!/bin/sh\n";
 
     if($opt_q){
-        print TFILE "#PBS -lnodes=1:$node_type,walltime=30:00 -A $opt_q\n";
+        print TFILE "#PBS -lnodes=1:$node_type,walltime=20:00 -A $opt_q\n";
     }elsif($opt_Q){ 
         print TFILE "#\$ -pe $node_type 1\n";
-        print TFILE "#\$ -l h_rt=0:30:00\n";
+        print TFILE "#\$ -l h_rt=0:20:00\n";
         print TFILE "#\$ -A $opt_Q\n";
         print TFILE "#\$ -S /bin/sh\n";
         print TFILE "#\$ -cwd\n";
@@ -230,7 +230,7 @@ if($opt_q || $opt_Q){
     close(TFILE);
 
     chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
-    $command = "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_$exe.sh";
+    $command = "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_$exe.sh";
     print "Executing $command\n";
     system("$command");
 
