@@ -1,4 +1,4 @@
- &mm5post_nl
+ &lfmpost_nl
  DOMAIN_NUM = 1,
  MODEL_NAME = 'mm5hot'
  KEEP_FDDA = .FALSE., 
