@@ -59,15 +59,15 @@ c       cost and return.
         real radiance (18)
         real theta,tau(40),tskin
 
-        real p,t,w,ozo
-        common/atmos/p(40),t(40),w(40),ozo(40)
-        common/cost_var/radiance_ob(3), p_cost(40), t_cost(40),ozo_cost(
-     140),
-     1  tskin_cost, lsfc_cost,psfc_cost,theta_cost,w_cost(40),
-     1    ngoes_cost,isnd_cost
-        real radiance_ob,p_cost,t_cost,ozo_cost,tskin_cost,psfc_cost,
-     1  p_cost,theta_cost,w_cost
         integer lsfc_cost
+        real radiance_ob(3),p_cost(40),t_cost(40),
+     1  ozo_cost(40),tskin_cost,psfc_cost,
+     1  theta_cost,w_cost(40)
+        real p(40),t(40),w(40),ozo(40)
+        common/atmos/p,t,w,ozo
+        common/cost_var/radiance_ob, p_cost, t_cost,ozo_cost,
+     1  tskin_cost, lsfc_cost,psfc_cost,theta_cost,w_cost,
+     1  ngoes_cost,isnd_cost
 
         integer i,j
 

@@ -237,7 +237,6 @@ c lat lon variables
         character*3 var_2d
         integer len_dir
         character*200 fname
-        integer len
  
 c rams stuff--------
         character*9

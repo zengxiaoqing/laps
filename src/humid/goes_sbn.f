@@ -136,17 +136,17 @@ c       parameter list variables
 
 c internal variables
 
-      integer istatus, len
+      integer istatus
       integer i4time_sat
       integer i,j,k,k2
-      real model_p
+      real local_model_p(40)
 
-c       climate model variables
-        integer*4 julian_day
-        real
-     1   standard_press(40),
-     1   tempertur_guess(40),
-     1   mixratio_guess(40),lat
+c climate model variables
+      integer*4 julian_day
+      real
+     1     standard_press(40),
+     1     tempertur_guess(40),
+     1     mixratio_guess(40)
       real rmd
       integer kanch(3)
       data kanch /10,8,7/
@@ -154,61 +154,62 @@ c       climate model variables
 
 c dynamic dependent variables
 
-        real ch3(nx_l,ny_l),ch4(nx_l,ny_l),ch5(nx_l,ny_l)
-        real mr(nx_l,ny_l,nz_l)
-        real t_l(nz_l,nx_l,ny_l), mr_l (nz_l,nx_l,ny_l)
+      real ch3(nx_l,ny_l),ch4(nx_l,ny_l),ch5(nx_l,ny_l)
+      real mr(nx_l,ny_l,nz_l)
+      real t_l(nz_l,nx_l,ny_l), mr_l (nz_l,nx_l,ny_l)
 
-        real model_t(40,nx_l,ny_l), model_mr(40,nx_l,ny_l)
+      real model_t(40,nx_l,ny_l), model_mr(40,nx_l,ny_l)
 
 
-c       forward model variables
-        real radiance(nx_l,ny_l,3),tskin(nx_l,ny_l),psfc(nx_l,ny_l),
+c forward model variarles
+      real radiance(nx_l,ny_l,3),tskin(nx_l,ny_l),psfc(nx_l,ny_l),
      1  theta(nx_l,ny_l),
      1  ozo(40),gimrad,tau(40)
-        real emiss
-        integer kan,lsfc(nx_l,ny_l)
-        real t_fm,w_fm,ozo_fm
-        common/atmos/model_p(40),t_fm(40),w_fm(40),ozo_fm(40)
-        real btemp(nx_l,ny_l,3),britgo,plango
-        real zenith ! function call
-        real pi, d2r
+      real emiss
+      integer kan,lsfc(nx_l,ny_l)
+      real model_p(40)
+      real t_fm(40),w_fm(40),ozo_fm(40)
+      common/atmos/model_p,t_fm,w_fm,ozo_fm
+      real btemp(nx_l,ny_l,3),britgo,plango
+      real zenith               ! function call
+      real pi, d2r
 
 c       powell specific arrays
-        real x(3)
-        real xi(3,3)
-        real ftol,fret
-        integer iter(nx_l,ny_l)
+      real x(3)
+      real xi(3,3)
+      real ftol,fret
+      integer iter(nx_l,ny_l)
       integer ngoes_cost,isnd_cost
-        common/cost_var/radiance_ob(3), p_cost(40), t_cost(40),ozo_cost(
-     140),
-     1        tskin_cost, lsfc_cost,psfc_cost,theta_cost,w_cost(40),
+      real radiance_ob(3),p_cost(40),t_cost(40),ozo_cost(40),
+     1  tskin_cost,psfc_cost,
+     1        theta_cost,w_cost(40)
+      integer lsfc_cost
+      common/cost_var/radiance_ob, p_cost, t_cost,ozo_cost,
+     1        tskin_cost, lsfc_cost,psfc_cost,theta_cost,w_cost,
      1        ngoes_cost,isnd_cost
-        real radiance_ob,p_cost,t_cost,ozo_cost,tskin_cost,psfc_cost,
-     1        p_cost,theta_cost,w_cost
-        integer lsfc_cost
-        real func, func3 ! function typing for cost function
-        external func,func3
+      real func, func3          ! function typing for cost function
+      external func,func3
 
-c       analysis of the factor field
-        integer pn
-        real points(3,nx_l*ny_l)
-        real data_anal(nx_l,ny_l)
+c  analysis of the factor field
+      integer pn
+      real points(3,nx_l*ny_l)
+      real data_anal(nx_l,ny_l)
 
-c       cloud variables
-        real cld(nx_l,ny_l)
+c  cloud variables
+      real cld(nx_l,ny_l)
 
-c       moisture modified field
-        real factor(nx_l,ny_l), factor2(nx_l,ny_l)
+c  moisture modified field
+      real factor(nx_l,ny_l), factor2(nx_l,ny_l)
 
-c       get latest filename
-        character*256 path
+c  get latest filename
+      character*256 path
 
-c       laplace solver variables
-        integer mask(nx_l,ny_l)
+c  laplace solver variables
+      integer mask(nx_l,ny_l)
 
-c       misc variables
-        integer failures
-        character*4 blank
+c  misc variables
+      integer failures
+      character*4 blank
 d        integer*4 mlevel(nz_l)
 d        character*125 commentline
 d        character*64 dummy_string
@@ -217,9 +218,9 @@ d        real s_btemp(nx_l,ny_l,18)  !sounder b_temp
 d        real s_radiance(nx_l,ny_l,18)  ! sounder radiance
 d        real w_model (39)  ! forward model weighting function
 d        real p_dm (39)  ! derivate pressures
-d        real rads (nx_l,ny_l,18)
+      real rads (nx_l,ny_l,18)
 
-        data    model_p/.1,.2,.5,1.,1.5,2.,3.,4.,5.,7.,10.,15.,
+        data local_model_p/.1,.2,.5,1.,1.5,2.,3.,4.,5.,7.,10.,15.,
      1  20.,25.,30.,
      1  50.,60.,70.,85.,100.,115.,135.,150.,200.,250.,300.,350.,400.,
      1  430.,475.,500.,570.,620.,670.,700.,780.,850.,920.,950.,1000./
@@ -232,14 +233,17 @@ d        real rads (nx_l,ny_l,18)
 
 c assign satellite number for func routine in powell
 
-
            ngoes_cost = ngoes
+
+c assign pressure to global array
+
+           do i = 1,40
+              model_p(i) = local_model_p (i)
+           enddo !i
 
 c pass imager/sounder information to routine func for powell
 
            isnd_cost = isnd
-
-
 
 c       constants
 
@@ -267,18 +271,11 @@ c       set laps grid                               !test removal later
         enddo
         enddo
 
-
-
-c       
-
-
-
 c       get satellite IMAGE radiance data for the laps grid
 
       if (isnd .eq. 0) then ! seek imager data
 
-        call get_directory('lvd',path,len)
-c        path = '../lapsprd/lvd/'
+        path = '../lapsprd/lvd/'
 
         call get_latest_file (path,i4time,filename1,istatus)
 
@@ -308,22 +305,22 @@ c       convert filename to i4time_sat
 
 c  acquire sounder data (experimental)
 
-c      if(isnd.eq.1) then ! get SOUNDER data only, still experimental
+      if(isnd.eq.1) then ! get SOUNDER data only, still experimental
 
-d       do kan = 1,18
-d       call rsr (kan,rads(1,1,kan),ii,jj)
-d       enddo
+       do kan = 1,18
+       call rsr (kan,rads(1,1,kan),ii,jj)
+       enddo
 
-c      endif ! only get SOUNDER data , experimental commment out.
+      endif ! only get SOUNDER data , experimental commment out.
 
 
-c       set up time for regular laps interval
-c       generate filename from 14time for julian day extraction later
+c   set up time for regular laps interval
+c   generate filename from 14time for julian day extraction later
 
         call make_fnam_lp (i4time, filename, istatus)
 
 
-c       get laps surface temperature
+c   get laps surface temperature
         print*, 'getting surface temperature (lsx)'
         call glst(i4time,tskin,ii,jj,istatus)
 
@@ -339,7 +336,7 @@ c       get laps surface temperature
         endif
 
 
-c       get laps surface pressure
+c   get laps surface pressure
         print*, 'getting surface pressure (lsx)'
         call glsp(i4time,psfc,ii,jj,istatus)
 
@@ -354,7 +351,7 @@ c       get laps surface pressure
 
         endif
 
-c       convert pressure to hpa
+c  convert pressure to hpa
         do j = 1,jj
         do i = 1,ii
         psfc(i,j) = psfc(i,j)/100.
@@ -362,7 +359,7 @@ c       convert pressure to hpa
         enddo
 
 
-c       setup cloud test (cloud array passed in)
+c  setup cloud test (cloud array passed in)
 
         do j = 1,jj
         do i = 1,ii
@@ -401,33 +398,33 @@ c       now modify for cloud top.
 
 
         do j = 1,jj
-        do i = 1,ii
+           do i = 1,ii
 
 c       print*, ' '
 
-        do k = kk,1,-1
+              do k = kk,1,-1
 
-                if(cloud(i,j,k).ge.1.0) then ! assume cloud top
+                 if(cloud(i,j,k).ge.1.0) then ! assume cloud top
 
-                if(p(k).lt.psfc(i,j)) then ! above ground level, assign
-                psfc(i,j) = p(k)
-                tskin(i,j) = t(i,j,k)
-                cld(i,j) = cloud(i,j,k)
-                call locate(model_p,40,psfc(i,j),lsfc(i,j))
+                    if(p(k).lt.psfc(i,j)) then ! above ground level, assign
+                       psfc(i,j) = p(k)
+                       tskin(i,j) = t(i,j,k)
+                       cld(i,j) = cloud(i,j,k)
 
-                else
+                       call locate(model_p,40,psfc(i,j),lsfc(i,j))
 
-                print*, 'cloud below ground'
+                    else
 
-                endif
-        go to 55
-                endif
+                       print*, 'cloud below ground'
 
-        enddo
+                    endif
+                    go to 55
+                 endif
+              enddo
 
-55      continue
+ 55           continue
 
-        enddo
+           enddo
         enddo
 
 
@@ -436,76 +433,76 @@ c       assign 0.0 moisture where there is missing data.
 
 
         do i = 1,ii
-        do j = 1,jj
-        do k = 1,kk
+           do j = 1,jj
+              do k = 1,kk
 
-        if(sh(i,j,k) .ne. -1.e30) then
-        call sh2mr (sh(i,j,k), mr(i,j,k) )
-        mr_l(k,i,j) = mr(i,j,k)
-        else
-        mr_l(k,i,j) = 0.0
-        endif
+                 if(sh(i,j,k) .ne. -1.e30) then
+                    call sh2mr (sh(i,j,k), mr(i,j,k) )
+                    mr_l(k,i,j) = mr(i,j,k)
+                 else
+                    mr_l(k,i,j) = 0.0
+                 endif
 
-        t_l (k,i,j) = t(i,j,k)
+                 t_l (k,i,j) = t(i,j,k)
 
+              enddo
+           enddo
         enddo
-        enddo
-        enddo
 
-c       interpolate to forward model coordinates
+c  interpolate to forward model coordinates
 
-c       we have laps variables in t_l, and mr_l organized with pressure
-c       p (laps p, given), desire in model_p space for the forward model
+c  we have laps variables in t_l, and mr_l organized with pressure
+c  p (laps p, given), desire in model_p space for the forward model
 c
 
-        do k = 20,40 ! for each desired pressure
+        do k = 20,40            ! for each desired pressure
 
-        call locate(p,kk,model_p(k),k2)
+           call locate(p,kk,model_p(k),k2)
 
-        do i = 1,ii
-        do j = 1,jj
-
-
-        if (p(k2).eq.model_p(k)) then
-                model_t(k,i,j) = t_l(k2,i,j)
-                model_mr(k,i,j) = mr_l(k2,i,j) * 1000. ! g/kg
-        else
-                call interp (model_p(k),p(k2),p(k2+1),
-     1  t_l(k2,i,j),t_l(k2+1,i,j),model_t(k,i,j))
-                call interp (model_p(k),p(k2),p(k2+1),
-     1  mr_l(k2,i,j)*1000.,mr_l(k2+1,i,j)*1000.,
-     1  model_mr(k,i,j))                        ! g/kg
-        endif
+           do i = 1,ii
+              do j = 1,jj
 
 
+                 if (p(k2).eq.model_p(k)) then
+                    model_t(k,i,j) = t_l(k2,i,j)
+                    model_mr(k,i,j) = mr_l(k2,i,j) * 1000. ! g/kg
+                 else
+                    call interp (model_p(k),p(k2),p(k2+1),
+     1                   t_l(k2,i,j),t_l(k2+1,i,j),model_t(k,i,j))
+                    call interp (model_p(k),p(k2),p(k2+1),
+     1                   mr_l(k2,i,j)*1000.,mr_l(k2+1,i,j)*1000.,
+     1                   model_mr(k,i,j)) ! g/kg
+                 endif
 
 
+
+
+              enddo
+           enddo
         enddo
-        enddo
-        enddo
 
-c       now we need to fill in the climotology in the upper levels of the
-c       sounding in model_p space.
+c  now we need to fill in the climotology in the upper levels of the
+c   sounding in model_p space.
 
 
 
         read (filename(3:5),22) julian_day
-22      format (i3)
+ 22     format (i3)
 
         call climate_sm (lat(1,1),julian_day,standard_press,
-     1  tempertur_guess,mixratio_guess,istatus)
+     1       tempertur_guess,mixratio_guess,istatus)
 
         do j = 1,jj
-        do i = 1,ii
-        do k = 1,19
+           do i = 1,ii
+              do k = 1,19
 
 
-        model_t(k,i,j) = tempertur_guess(k)
-        model_mr(k,i,j) = mixratio_guess(k) ! g/kg
+                 model_t(k,i,j) = tempertur_guess(k)
+                 model_mr(k,i,j) = mixratio_guess(k) ! g/kg
 
 
-        enddo
-        enddo
+              enddo
+           enddo
         enddo
 
 
@@ -517,76 +514,80 @@ c  prepare to use forward model functions
 c now in experimental code, we have both sounder and imager data
 c we now test and use the appropriate one.  default d_line code.
 c if d_lines are not activated, then we will use IMAGE data at all times
-d
-d     if(isnd .eq.1) then ! use sounder data for ch3, ch4, ch5
-d        do j = 1, jj
-d        do i = 1, ii
-d         if(rads(i,j,10).eq.rmd) then
-d          ch3(i,j) = rmd
-d         else
-d          ch3(i,j) = britgo(rads(i,j,10),10)
-d         endif
-d         if(rads(i,j,8).eq.rmd) then
-d          ch4(i,j) = rmd
-d         else
-d          ch4(i,j) = britgo(rads(i,j,8),8)
-d         endif
-d         if(rads(i,j,7).eq.rmd) then
-d          ch5(i,j) = rmd
-d         else
-d          ch5(i,j) = britgo(rads(i,j,7),7)
-d         endif
-d        enddo
-d        enddo
-d      endif   ! sounder used
+
+        if(isnd .eq.1) then     ! use sounder data for ch3, ch4, ch5
+           do j = 1, jj
+              do i = 1, ii
+                 if(rads(i,j,10).eq.rmd) then
+                    ch3(i,j) = rmd
+                 else
+                    ch3(i,j) = britgo(rads(i,j,10),10)
+                 endif
+                 if(rads(i,j,8).eq.rmd) then
+                    ch4(i,j) = rmd
+                 else
+                    ch4(i,j) = britgo(rads(i,j,8),8)
+                 endif
+                 if(rads(i,j,7).eq.rmd) then
+                    ch5(i,j) = rmd
+                 else
+                    ch5(i,j) = britgo(rads(i,j,7),7)
+                 endif
+              enddo
+           enddo
+        endif                   ! sounder used
 
 
 
-c       call forward model with these profiles and output radiances
+c  call forward model with these profiles and output radiances
 
         call pfcgim (ngoes)
 
-c       do for each gridpoint
+c  do for each gridpoint
         do j = 1,jj
-        do i = 1,ii
+           do i = 1,ii
 
 
-        theta(i,j) = zenith(lat(i,j)*d2r,lon(i,j)*d2r,0.*d2r,-75.*d2r)
-        emiss = .99
-
-
-
-
-c       perform forward model computation for radiance
-
-      if(isnd.eq.0) then ! IMAGER computation
-        do kan = 1,3
-
-        call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
-     1  theta(i,j),ngoes,kan+22,tau)
-        radiance(i,j,kan) = gimrad(tau,model_t(1,i,j),tskin(i,j),
-     1  kan+22,lsfc(i,j),psfc(i,j),emiss)
-        btemp(i,j,kan) = britgo(radiance(i,j,kan),kan+22)
-
-        enddo ! kan
-      endif ! IMAGER computation
+              theta(i,j) = zenith(lat(i,j)*d2r,
+     1             lon(i,j)*d2r,0.*d2r,-75.*d2r)
+              emiss = .99
 
 
 
-      if(isnd.eq.1) then ! SOUNDER computation
-        do kan = 1,3
 
-        call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
-     1  theta(i,j),ngoes,kanch(kan),tau)
-        radiance(i,j,kan) = gimrad(tau,model_t(1,i,j),tskin(i,j),
-     1  kanch(kan),lsfc(i,j),psfc(i,j),emiss)
-        btemp(i,j,kan) = britgo(radiance(i,j,kan),kanch(kan))
+c perform forward model computation for radiance
 
-        enddo ! kan
-      endif ! SOUNDER computation
+              if(isnd.eq.0) then ! IMAGER computation
+                 do kan = 1,3
+
+                    call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
+     1                   theta(i,j),ngoes,kan+22,tau)
+                    radiance(i,j,kan) = gimrad(tau,model_t(1,i,j),
+     1                   tskin(i,j),
+     1                   kan+22,lsfc(i,j),psfc(i,j),emiss)
+                    btemp(i,j,kan) = britgo(radiance(i,j,kan),kan+22)
+
+                 enddo          ! kan
+              endif             ! IMAGER computation
 
 
-d          do kan = 1,18  !sounder channels for research
+
+              if(isnd.eq.1) then ! SOUNDER computation
+                 do kan = 1,3
+
+                    call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
+     1                   theta(i,j),ngoes,kanch(kan),tau)
+                    radiance(i,j,kan) = gimrad(tau,model_t(1,i,j),
+     1                   tskin(i,j),
+     1                   kanch(kan),lsfc(i,j),psfc(i,j),emiss)
+                    btemp(i,j,kan) = britgo(radiance(i,j,kan),
+     1                   kanch(kan))
+
+                 enddo          ! kan
+              endif             ! SOUNDER computation
+
+
+d          do kan = 1,18 !sounder channels for research
 
 d        call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
 d    1                  theta(i,j),ngoes,kan,tau)
@@ -598,8 +599,8 @@ d        s_btemp(i,j,kan) = britgo(s_radiance(i,j,kan),kan)
 d          enddo ! Kan for sounder
 
 
-        enddo
-        enddo
+      enddo
+      enddo
 
 c  generate table of clear sounder btemps, computed and observed
 
@@ -633,110 +634,112 @@ c   attempt powell method correction of layer humidity in clear areas
 c   only for starters.
 
 
-        do j = 1,jj
-        do i = 1,ii
+      do j = 1,jj
+         do i = 1,ii
 
-        factor(i,j) = rmd
-        factor2(i,j) = rmd
-
-
-
-        if (ch3(i,j).eq.rmd) then
-        print*, 'missing data in channel 3 abort', i,j
-
-        elseif (ch4(i,j).eq.rmd) then
-        print*, 'missing data in channel 4 abort', i,j
-
-        elseif (ch5(i,j).eq.rmd) then
-        print*, 'missing data in channel 5 abort', i,j
-
-        else
-        continue
+            factor(i,j) = rmd
+            factor2(i,j) = rmd
 
 
-                if( (cld(i,j) .eq. 0 .or. cld(i,j).ge.1.)
-     1  .and.
-     1  abs(ch4(i,j)-btemp(i,j,2)).le.1.) then !clear
+
+            if (ch3(i,j).eq.rmd) then
+               print*, 'missing data in channel 3 abort', i,j
+
+            elseif (ch4(i,j).eq.rmd) then
+               print*, 'missing data in channel 4 abort', i,j
+
+            elseif (ch5(i,j).eq.rmd) then
+               print*, 'missing data in channel 5 abort', i,j
+
+            else
+               continue
+
+
+               if( (cld(i,j) .eq. 0 .or. cld(i,j).ge.1.)
+     1              .and.
+     1              abs(ch4(i,j)-btemp(i,j,2)).le.1.) then !clear
 
 c   print out the "clear" radiances for 6.7 micron only
 c   and compare these to the forward model radiances
 
-        write(6,32) ' Observed=',ch3(i,j),' Modeled='
-     1        ,btemp(i,j,1),' Diff=',(ch3(i,j)-btemp(i,j,1))
-32      format(1x,a10,f8.3,a9,f8.3,a6,f8.3)
+                  write(6,32) ' Observed=',ch3(i,j),' Modeled='
+     1                 ,btemp(i,j,1),' Diff=',(ch3(i,j)-btemp(i,j,1))
+ 32               format(1x,a10,f8.3,a9,f8.3,a6,f8.3)
 
 
 
-        do k = 1,3
-        xi(k,k) = -.0001
-        x(k) = 1.0
-        enddo
+                  do k = 1,3
+                     xi(k,k) = -.0001
+                     x(k) = 1.0
+                  enddo
 
 
-      if(isnd.eq.0) then  ! USE AS IMAGER DATA
-        radiance_ob(1) = plango(ch3(i,j),23)
-        radiance_ob(2) = plango(ch4(i,j),24)
-        radiance_ob(3) = plango(ch5(i,j),25)
-      endif
+                  if(isnd.eq.0) then ! USE AS IMAGER DATA
+                     radiance_ob(1) = plango(ch3(i,j),23)
+                     radiance_ob(2) = plango(ch4(i,j),24)
+                     radiance_ob(3) = plango(ch5(i,j),25)
+                  endif
 
-      if(isnd.eq.1) then ! USE AS SOUNDER DATA
-        radiance_ob(1) = plango(ch3(i,j),10)
-        radiance_ob(2) = plango(ch4(i,j),8)
-        radiance_ob(3) = plango(ch5(i,j),7)
-      endif
-
-
-        do k = 1,40
-                w_cost(k) = model_mr(k,i,j)
-                t_cost(k) = model_t (k,i,j)
-                ozo_cost(k) = ozo(k)
-                p_cost(k) = model_p(k)
-        enddo
-
-                tskin_cost = tskin(i,j)
-                theta_cost = theta(i,j)
-                lsfc_cost = lsfc(i,j)
-                psfc_cost = psfc(i,j)
+                  if(isnd.eq.1) then ! USE AS SOUNDER DATA
+                     radiance_ob(1) = plango(ch3(i,j),10)
+                     radiance_ob(2) = plango(ch4(i,j),8)
+                     radiance_ob(3) = plango(ch5(i,j),7)
+                  endif
 
 
+                  do k = 1,40
+                     w_cost(k) = model_mr(k,i,j)
+                     t_cost(k) = model_t (k,i,j)
+                     ozo_cost(k) = ozo(k)
+                     p_cost(k) = model_p(k)
+                  enddo
 
-        if(cld(i,j).eq.0.) then
-c                 don't match low atmosphere (use func, not func3)
-                call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
+                  tskin_cost = tskin(i,j)
+                  theta_cost = theta(i,j)
+                  lsfc_cost = lsfc(i,j)
+                  psfc_cost = psfc(i,j)
+
+
+
+                  if(cld(i,j).eq.0.) then
+c don't match low atmosphere (use func, not func3)
+
+                     call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
+
 c               else !clouds... don't match low atmosphere
 c               call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
-        endif
+                  endif
 
 
-        write(6,33) abs(x(1)), abs(x(2)),abs(x(3)),
-     1  i,j,psfc(i,j),iter(i,j)
-33      format(3(f7.2,2x),i3,i3,1x,f7.2,i3)
-
-
-
-        if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 50
-     1  .and. abs(abs(x(2))-1.) .lt. .05 ) then
-                factor(i,j) = abs(x(3))
-                factor2(i,j) = abs(x(2))
-        else
-        write(6,*) i,j, '  .... coordinate rejected', abs(x(2)),
-     1  iter(i,j), cld(i,j)
-
-        failures = failures + 1
-
-        endif
-
-
-         write(6,*) blank
-
-                endif  !end of powell function
+                  write(6,33) abs(x(1)), abs(x(2)),abs(x(3)),
+     1                 i,j,psfc(i,j),iter(i,j)
+ 33               format(3(f7.2,2x),i3,i3,1x,f7.2,i3)
 
 
 
-        endif ! end of missing data flag test
+                  if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 50
+     1                 .and. abs(abs(x(2))-1.) .lt. .05 ) then
+                     factor(i,j) = abs(x(3))
+                     factor2(i,j) = abs(x(2))
+                  else
+                     write(6,*) i,j, '  .... coordinate rejected', 
+     1                    abs(x(2)),iter(i,j), cld(i,j)
 
-        enddo
-        enddo
+                     failures = failures + 1
+
+                  endif
+
+
+                  write(6,*) blank
+
+               endif            !end of powell function
+
+
+
+            endif               ! end of missing data flag test
+
+         enddo
+      enddo
 
        write(6,*) failures,' failures occurred due to layer confusion' 
        write(6,*) '...non-convergence, or clouds'
@@ -744,26 +747,26 @@ c               call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
 
 
 
-c       modify original lq3 file with new factors for comparison tests.
-c       modify lq3 only in clear areas as defined by lc3.
+c  modify original lq3 file with new factors for comparison tests.
+c modify lq3 only in clear areas as defined by lc3.
 
 
-c        analyze top level adjustments.
+c  analyze top level adjustments.
 
-        pn = 0
+       pn = 0
 
-        do j = 1,jj
-        do i = 1,ii
-        if (factor(i,j).ne.rmd ) then
+       do j = 1,jj
+          do i = 1,ii
+             if (factor(i,j).ne.rmd ) then
                 pn = pn+1
                 points(1,pn) = factor(i,j)
                 points(2,pn) = i
                 points(3,pn) = j
                 mask(i,j) = 1
                 data_anal(i,j) = factor(i,j)
-         endif
-        enddo
-        enddo
+             endif
+          enddo
+       enddo
 
 c  d-lines that follow are for  RESEARCH purposes!
 
@@ -788,33 +791,34 @@ d    1            ii,jj,kk,istatus)
 d        call opngks
 d        call plotfield(sh(1,1,17),ii,jj)
 
-        if (pn.ne.0) then
+      if (pn.ne.0) then
 
-        call prep_grid(ii,jj,data_anal,points,pn)
-        call slv_laplc (data_anal,mask,ii,jj)
-        call smooth_grid2 (ii,jj,data_anal,1)
+         call prep_grid(ii,jj,data_anal,points,pn)
+         call slv_laplc (data_anal,mask,ii,jj)
+         call smooth_grid2 (ii,jj,data_anal,1)
 d        call plotfield (data_anal,ii,jj)
 
 
 
-        else
-        print*, 'pn = 0,   no acceptable data to analyze for adjustment'
-        return
+      else
+         write(6,*) 
+     1        'pn = 0,no acceptable data to analyze for adjustment'
+         return
 
-        endif
+      endif
 
 c       modify lq3 field  top level
 
-        do j = 1,jj
-        do i = 1,ii
-        do k = 14,21     !between 475 and 100 mb
+      do j = 1,jj
+         do i = 1,ii
+            do k = 14,21        !between 475 and 100 mb
 
-        sh(i,j,k) = sh(i,j,k) * data_anal(i,j)
+               sh(i,j,k) = sh(i,j,k) * data_anal(i,j)
 
 
-        enddo
-        enddo
-        enddo
+            enddo
+         enddo
+      enddo
 
 
 
@@ -843,6 +847,6 @@ d    1       ii,jj,kk, istatus)
 
 
 
-        return
-        end
+      return
+      end
 
