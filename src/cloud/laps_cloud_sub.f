@@ -115,17 +115,16 @@ cdis
         real*4 surface_sao_buffer
         parameter (surface_sao_buffer = 800.)
 
-        real*4 thresh_cvr_smf,default_top,default_base
-     1                       ,default_clear_cover,default_ceiling
+        real*4 thresh_cvr_ceiling,default_top,default_base
+     1                           ,default_clear_cover,default_ceiling       
 
-        parameter       (thresh_cvr_smf = 0.65) ! Used to "binaryize" cloud cover
+        parameter       (thresh_cvr_ceiling = 0.65) ! Used to "binaryize" cloud cover
 
         parameter       (default_clear_cover = .001)
 
         real*4 thresh_cvr_base,thresh_cvr_top,thresh_cvr_ceiling
         parameter (thresh_cvr_base = 0.1)
         parameter (thresh_cvr_top  = 0.1)
-        parameter (thresh_cvr_ceiling = thresh_cvr_smf)
 
         real*4 thresh_thin_lwc_ice     ! Threshold cover for thin cloud LWC/ICE
         parameter (thresh_thin_lwc_ice = 0.1)
@@ -543,7 +542,10 @@ C READ IN RADAR DATA
 
 !       if(abs(i4time - i4time_radar) .le. 1200)then
 
+            i4_tol = 1200
+
             call read_multiradar_3dref(i4time,                           ! I
+     1                 i4_tol,i4_ret,                                    ! I
      1                 .true.,ref_base,                                  ! I
      1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,                 ! I
      1                 lat,lon,topo,.true.,.true.,                       ! I
@@ -798,8 +800,10 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
 !                   Test for Cloud Top
                     do k = KCLOUD-1,1,-1
-                        if(clouds_3d(i,j,k  ) .gt. thresh_cvr_smf .and.       
-     1                     clouds_3d(i,j,k+1) .le. thresh_cvr_smf )then        
+                        if(clouds_3d(i,j,k  ) .gt. thresh_cvr_ceiling 
+     1                                       .AND.       
+     1                     clouds_3d(i,j,k+1) .le. thresh_cvr_ceiling 
+     1                                                            )then 
                             cloud_top_m = 0.5 * (cld_hts(k) 
      1                                         + cld_hts(k+1))
                             if(cloud_top_m .gt. heights_3d(i,j,NZ_L)
