@@ -111,7 +111,7 @@ if(defined $opt_s){ # "surface only"
     @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M);
 
 }elsif($c8_project eq "AIRDROP"){
-    @LAPS_EXE = qw(lga.exe
+    @LAPS_EXE = qw(lga.exe ingest_sounding.exe
                    wind.exe laps_sfc.x
                    temp.exe cloud.exe
                    lq3driver.x deriv.exe
