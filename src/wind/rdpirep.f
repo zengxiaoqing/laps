@@ -75,8 +75,6 @@ cdis
         real*4 u_maps_inc(ni,nj,nk)
         real*4 v_maps_inc(ni,nj,nk)
 
-        character*13 filename13
-
         character*9 asc9_tim_pirep
         character ext*31, ext_in*3
 

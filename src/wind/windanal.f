@@ -872,7 +872,6 @@
       logical  l_good_multi_doppler_ob(imax,jmax,kmax),l_derived_output
       logical  l_grid_north
 
-      character*13 filename13
       character*31 ext
 
       write(6,*)' Filtering radar obs into superobs',rlat_radar,rlon_rad

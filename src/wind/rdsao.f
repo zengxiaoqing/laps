@@ -67,7 +67,7 @@ cdis
 
         character*13 filename13,c13_fname
 
-        character asc_tim_9*9,asc_tim_vol*24
+        character asc_tim_9*9
 
         real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
         real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)

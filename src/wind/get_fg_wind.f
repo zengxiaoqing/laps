@@ -21,8 +21,6 @@
 
         dimension u_laps_fg(NX_L,NY_L,NZ_L),v_laps_fg(NX_L,NY_L,NZ_L)
 
-        character*125 comment_2d
-        character*10 units_2d
         character*3 var_2d
 
 !       Control which LAPS background can be read in
@@ -223,8 +221,6 @@
         dimension v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
         dimension u_laps_fg(NX_L,NY_L,NZ_L),v_laps_fg(NX_L,NY_L,NZ_L)
 
-        character*125 comment_2d
-        character*10 units_2d
         character*3 var_2d
 
 !       Control which LAPS background can be read in

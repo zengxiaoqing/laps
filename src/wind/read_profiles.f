@@ -46,6 +46,7 @@ c                             time of the current LAPS analysis time.
 !       Profiler Observations
 
         integer nlevels_obs_pr(MAX_PR)
+        character*8 obstype(MAX_PR)
         real ob_pr_ht_obs(MAX_PR,MAX_PR_LEVELS)
         real ob_pr_di_obs(MAX_PR,MAX_PR_LEVELS)
         real ob_pr_sp_obs(MAX_PR,MAX_PR_LEVELS)
@@ -68,7 +69,6 @@ c                             time of the current LAPS analysis time.
         real*4 u_maps_inc(imax,jmax,kmax)
         real*4 v_maps_inc(imax,jmax,kmax)
 
-        character*13 filename13
         character*255 c_filespec
         character ext*31
         character*5 c5_name
@@ -120,8 +120,10 @@ c                             time of the current LAPS analysis time.
         ext = 'pro'
         call get_filespec(ext,2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_prof)
-        call open_lapsprd_file(12,i4time_prof,ext,istatus)
+        call open_lapsprd_file_read(12,i4time_prof,ext,istatus)
         if(istatus .ne. 1)go to 420
+
+        call get_windob_time_window('PROFILER',i4_window_prof,istatus)       
 
         do i_pr = 1,max_pr
 
@@ -129,6 +131,8 @@ c                             time of the current LAPS analysis time.
      1         ista,nlevels_obs_pr(i_pr),lat_pr(i_pr),lon_pr(i_pr)
      1         ,elev_pr(i_pr),c5_name,a9time_ob
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,1x,3x,a9)
+
+            obstype(i_pr) = 'PROFILER'
 
             call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
 
@@ -202,6 +206,8 @@ c
           go to 600
       endif
 
+      call get_windob_time_window('RAOB',i4_window_raob,istatus)
+
       i4time_raob_file_window = 0
 
       ext = 'snd'
@@ -220,7 +226,7 @@ c
 
       i4time_snd = i4time_nearest
 
-      call open_lapsprd_file(12,i4time_snd,ext,istatus)
+      call open_lapsprd_file_read(12,i4time_snd,ext,istatus)
       if(istatus .ne. 1)then
           write(6,*) ' Error opening SND file'
           GO TO 600
@@ -231,6 +237,8 @@ c
      1  ista,nlevels_in,
      1  lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),c5_name,a9time_ob
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
+
+        obstype(i_pr) = 'RAOB'
 
         call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
         rcycsnd = float(i4time - i4time_ob) / float(ilaps_cycle_time)
@@ -354,8 +362,21 @@ c
                 nlevels_obs_pr(i_pr)=0 ! This effectively throws out the profile
             endif
 
+            if(obstype(i_pr) .eq. 'PROFILER')then
+                rcyc_thresh = float(i4_window_prof)
+     1                      /float(ilaps_cycle_time)
+            elseif(obstype(i_pr) .eq. 'RAOB')then
+                rcyc_thresh = float(i4_window_raob)
+     1                      /float(ilaps_cycle_time)
+            else
+                write(6,*)' Warning: unknown obstype'
+                rcyc_thresh = 1.0
+            endif
+
+            rcyc_thresh = min(1.0,rcyc_thresh)
+
 !           Determine if profile was obtained close enough in time....
-            if(abs(rcycles_pr(i_pr)) .gt. 1.0)then
+            if(abs(rcycles_pr(i_pr)) .gt. rcyc_thresh)then
                 write(6,*)'Profile  # ',i_pr,' Out of time bounds:'
      1                                      ,rcycles_pr(i_pr)
                 nlevels_obs_pr(i_pr)=0 ! This effectively throws out the profile
