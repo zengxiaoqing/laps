@@ -151,6 +151,8 @@ c *** Get current time from systime.dat
 c
       call get_systime(i4time_now,a9,lga_status)
 
+      print*,'Analysis systime: ',a9,' ',i4time_now
+
       lga_status = 0 
       i4time_now_lga=i4time_now
 
@@ -184,7 +186,7 @@ c
      +        ,use_analysis,bg_files,0,cmodel(i),ntbg
      +        ,nx_bg,ny_bg,nz_bg,reject_files,reject_cnt)
 
-        if(bg_files.le.1) then
+        if(bg_files.eq.0) then
            print*,'No Acceptable files found for model: ',bgpath,
      +          bgmodel 
            lga_status = 0
@@ -219,18 +221,24 @@ c
               lga_status = 0
               i4time_now_lga = i4time_now-laps_cycle_time
               time_minus_one = .false.
+              print*
+              print*,'Start time-minus-one cycle time interpolation'
+              print*
            endif
 
            if(lga_status.eq.1.and.time_plus_one)then
               lga_status = 0
               i4time_now_lga = i4time_now + laps_cycle_time
               time_plus_one = .false.
+              print*
+              print*,'Start time-plus-one cycle time interpolation'
+              print*
            endif
 
         endif
         
       enddo
-      if(no_infinite_loops.ge.30) then
+      if(no_infinite_loops.gt.oldest_forecast) then
          print*,'ERROR: LGA infinite loop condition found'
       endif
 c
@@ -420,11 +428,18 @@ c
          pr(k)=prbot-delpr*float(k-1)
       enddo
 c
-c *** Determine which of these "names" has not already been processed
+c *** Determine which of the "bg_names" has not already been processed
 c
       do j=1,max_files
          names(j)=bg_names(j)
       enddo
+      do j=1,bg_files
+         call i4time_fname_lp(names(j)(1:9),bg_times(j),istatus)
+         read(bg_names(j)(12:13),'(i2)')ihour
+         bg_valid(j)=ihour*3600
+         i4time_bg_valid(j)=bg_times(j)+bg_valid(j)
+      enddo
+
       call get_directory('lga',lgapath,ldl)
       call get_file_times(lgapath,max_files,lga_names
      1                      ,lga_times,nlga,istatus)
@@ -437,10 +452,6 @@ c
             lga_valid=ihour*3600+imin*60
 
             do j=1,bg_files
-               call i4time_fname_lp(names(j)(1:9),bg_times(j),istatus)
-               i4time_bg_valid(j)=bg_times(j)
-               read(bg_names(j)(12:13),'(i2)')ihour
-               bg_valid(j)=ihour*3600
                if(bg_times(j).eq.lga_times(k).and.
      1            bg_valid(j).eq.lga_valid)then
                   names(j)=' '
@@ -894,29 +905,30 @@ c
 c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
 c
-      call s_len(bg_names(1),j)
-      print*,bg_names(1)(1:j)
-      print*,bg_names(2)(1:j)
+      do i=1,nbg
+         call s_len(bg_names(i),j)
+         print*,'bg_name: ',i,bg_names(i)(1:j)
+      enddo
 c
-c *** Determine if new file needs to be created and perform
-c        linear interpolation.
-
-      i=2  !nbg
-      print*,i,bg_files,bg_times(i),bg_times(i-1),
+c *** Determine if new file needs to (can) be created and perform
+c        linear time interpolation.
+      if(bg_files.gt.1)then
+         i=bg_files
+         print*,i,bg_files,bg_times(i),bg_times(i-1),
      +     bg_valid(i),bg_valid(i-1),laps_cycle_time,
      +     i4time_bg_valid(i),i4time_bg_valid(i-1)
 
-         if(i4time_bg_valid(i-1) .gt.i4time_now.and.
-     .      i4time_bg_valid(i).lt.i4time_now     )then
+         if(i4time_bg_valid(i-1) .gt.i4time_now   .and.
+     +      i4time_bg_valid(i)   .lt.i4time_now  )then
             ext = 'lga'
             call get_directory(ext,outdir,len_dir) 
             print*,outdir,ext,nz_laps
 
             call time_interp(outdir,ext,
-     .           nx_laps,ny_laps,nz_laps,5,pr,
-     .           i4time_bg_valid(i),i4time_bg_valid(i-1),
-     .           i4time_now,bg_times(i-1),bg_valid(i-1),
-     .           bg_times(i  ),bg_valid(i  ))
+     +           nx_laps,ny_laps,nz_laps,5,pr,
+     +           i4time_bg_valid(i),i4time_bg_valid(i-1),
+     +           i4time_now,bg_times(i-1),bg_valid(i-1),
+     +           bg_times(i  ),bg_valid(i  ))
 
             if(bgmodel.ne.1.or.bgmodel.ne.7)then
                ext = 'lgb'
@@ -924,17 +936,22 @@ c        linear interpolation.
                print*,outdir,ext
 
                call time_interp(outdir,ext,
-     .           nx_laps,ny_laps,1,7,pr(1),
-     .           i4time_bg_valid(i),i4time_bg_valid(i-1),
-     .           i4time_now,bg_times(i-1),bg_valid(i-1),
-     .           bg_times(i  ),bg_valid(i  ))
-
+     +           nx_laps,ny_laps,1,7,pr(1),
+     +           i4time_bg_valid(i),i4time_bg_valid(i-1),
+     +           i4time_now,bg_times(i-1),bg_valid(i-1),
+     +           bg_times(i  ),bg_valid(i  ))
             endif
             lga_status = 1
          else
             print*,'Time Interpolation Not Necessary!'
             lga_status = 1
          endif
+
+      else
+         print*,'Currently no t interp when nbg < 2'
+         print*
+         lga_status=1
+      endif
 
       return
       end
