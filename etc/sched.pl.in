@@ -27,6 +27,8 @@
 #             
 # -d                   Delay in hours (lag time or displaced real-time)
 #
+# -e                   Extend time in hours (allow for long runs beyond cycle time)
+#
 # -r -m N              where "N" is the (default) maximum number of files 
 #                      to be kept in each product directory by the purger
 #
@@ -38,11 +40,11 @@
               
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_t $opt_r $opt_m);
+use vars qw($opt_d $opt_c $opt_t $opt_r $opt_m $opt_e);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:t:rm:');
+getopts('d:c:t:rm:e:');
 
 my $initial_time = time();
 #
@@ -78,6 +80,9 @@ $cycle_time = $opt_c if($opt_c>0);
 
 my $delay_time = 0;
 $delay_time = $opt_d if($opt_d > 0);
+
+my $extend_time=0;
+$extend_time = $opt_e if($opt_e >0);
 
 my $archive_time = 0;
 $archive_time = $opt_t if($opt_t > 0);
@@ -176,7 +181,7 @@ foreach $exe (@LAPS_EXE){
 	print $t."WARNING: $exe not found\n";
     }
     my $cur_time = time();
-    if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)){
+    if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)+$extend_time*3600){
 	print "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
 	print LOG "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
 	last;
@@ -250,8 +255,7 @@ sub systime{
     my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
     $year= $year-100 if($year>99);
     $year='0'.$year if(length($year)<2);
-
-
+    $mday = '0'.$mday if(length($mday)<2);
 
 #
 #  This resets to the top of the cycle
