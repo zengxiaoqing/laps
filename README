@@ -3224,6 +3224,9 @@ Process: dprep.exe - Does some analysis post processing for model
    It also takes background model fields to generate the forecast
    model lateral boundary conditions. 
 
+   Note that we are phasing this program out of the main Makefile and this
+   program is mostly not being used anymore.
+
 <pre>
 Inputs: 
       * lw3                 grid       LAPS 3-d wind analysis
