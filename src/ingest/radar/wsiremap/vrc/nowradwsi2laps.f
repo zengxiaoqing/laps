@@ -63,6 +63,8 @@ c confines.
       real    radar_lat(maxradars)
       real    radar_lon(maxradars)
       real    radar_elev(maxradars)
+      real    radar_ri(maxradars)
+      real    radar_rj(maxradars)
 
       real*4 lat(imax,jmax)
       real*4 lon(imax,jmax)
@@ -99,6 +101,7 @@ c confines.
       character ctype*3
 
       integer image(nelems,nlines)
+      integer indxofthosein(maxradars)
 
       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 
@@ -226,12 +229,21 @@ c----------------------------------------------------
          rdistmax=480000.
          xgrddismx=imax+rdistmax/grid_spacing_m
          ygrddismx=jmax+rdistmax/grid_spacing_m
+         xgrddismn=-rdistmax/grid_spacing_m
+         ygrddismn=-rdistmax/grid_spacing_m
          height_sum=0.0
 
-         print*,'num of grid points for search x: ',xgrddismx
-         print*,'num of grid points for search y: ',ygrddismx
+         print*,'mx num grid points for search x: ',xgrddismx
+         print*,'mx num grid points for search y: ',ygrddismx
+         print*,'mn num grid points for search x: ',xgrddismn
+         print*,'mn num grid points for search y: ',ygrddismn
 
          do i=1,nsites_present
+c
+c fudge factor on site lat/lon due to unknown systematic
+c offset.
+           present_site_lat(i)=present_site_lat(i)-0.07
+           present_site_lon(i)=present_site_lon(i)+0.02
 
            call latlon_to_rlapsgrid(present_site_lat(i),
      &                              present_site_lon(i),
@@ -243,11 +255,17 @@ c----------------------------------------------------
            ridis=abs(rii)
            rjdis=abs(rjj)
 
-           if(ridis.le. xgrddismx .and. rjdis .le. ygrddismx)then
+c          if(ridis.le.xgrddismx .and. rjdis.le.ygrddismx)then
+
+           if( (rii.le.xgrddismx .and. rii.ge.xgrddismn) .and.
+     &         (rjj.le.ygrddismx .and. rjj.ge.ygrddismn)  )then
 
               nradars_tot = nradars_tot + 1
               radar_lat(nradars_tot)=present_site_lat(i)
               radar_lon(nradars_tot)=present_site_lon(i)
+              radar_ri(nradars_tot)=rii
+              radar_rj(nradars_tot)=rjj
+              radar_elev(nradars_tot)=r_missing_data
 
               if( (rii.gt.0.0  .and.  rii.lt.imax) .and.
      &            (rjj.gt.0.0  .and.  rjj.lt.jmax)  )then
@@ -256,12 +274,9 @@ c----------------------------------------------------
      &                    ,height_grid,result,istatus)
 
                  height_sum=height_sum+result
-
                  radar_elev(nradars_tot)=result
                  nradars_in=nradars_in+1
-
-              else
-                 radar_elev(nradars_tot)=r_missing_data
+                 indxofthosein(nradars_in)=nradars_tot
               endif
 
            endif
@@ -283,6 +298,16 @@ c----------------------------------------------------
         print*,'Found ',nradars_tot,' to consider in min dist array'
         print*,'Mean height of radars = ',height_mean
         print*
+
+        do i=1,nradars_tot
+        do j=1,nradars_in
+         ii=indxofthosein(j)
+         if(ii.eq.i)then
+          print*,'#/ri/rj/lat/lon/elev: ',ii,radar_ri(ii),radar_rj(ii)
+     .,radar_lat(ii),radar_lon(ii),radar_elev(ii)
+         endif
+        enddo
+        enddo
 
         where(radar_elev.eq.r_missing_data)radar_elev=height_mean_grid
         
