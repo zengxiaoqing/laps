@@ -193,15 +193,18 @@
 
      'Lapsplot' is designed to work with version 3.2 (or higher) of NCAR 
      graphics. The environment variable $NCARG_ROOT should be set when
-     compiling or running 'lapsplot.exe'. 
-
-     Lapsplot is built as a special option to 'make', simply type 
-     'make lapsplot' or 'make install_lapsplot'. 
-     It is not built with a plain run of 'make'.
-     Check that 'ncargf77' or 'ncargf90' is in your path, depending on which
-     FORTRAN compiler you are using.
+     configuring, compiling, or running 'lapsplot.exe'. 
+     
+     While running 'configure', check that 'ncargf77' or 'ncargf90'
+     is in your path, depending on which FORTRAN compiler you are using.
      The script 'ncargf90' (if you're using this one) should be using the 
      appropriate FORTRAN compiler; you may have to edit the script.
+     An alternate to setting this path during 'configure' is to edit
+     'src/include/makefile.inc' with the full path for 'NCARGFC'.
+
+     Lapsplot is built as a special option to 'make', simply type 
+     'make lapsplot' or 'make install_lapsplot'. It is not built with a plain 
+     run of 'make'.
 
      'Lapsplot' can be modified to show political boundaries outside of the 
      U.S. The following data files are relevant from the 'static/ncarg' 
