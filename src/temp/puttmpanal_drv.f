@@ -100,7 +100,7 @@ cdis
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
-        real*4 pres_3d(NX_L,NY_L,NZ_L), pres_3d_mb(NX_L,NY_L,NZ_L)
+        real*4 pres_3d_pa(NX_L,NY_L,NZ_L), pres_3d_mb(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L), pres_sfc_mb(NX_L,NY_L)
         real*4 pbl_top_pa(NX_L,NY_L), pbl_top_mb(NX_L,NY_L)
@@ -171,12 +171,12 @@ c read in LAPS_DOMAIN
      1          ,NX_L,NY_L,NZ_L                  ! Input
      1          ,heights_3d                      ! Output
      1          ,lat,lon,topo                    ! Input
-     1          ,temp_sfc_k                      ! Input/Output
+     1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
      1          ,iflag_write                     ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,grid_spacing_m                  ! Input
-     1          ,temp_3d,pres_3d,istatus)        ! Output
+     1          ,temp_3d,pres_3d_pa,istatus)     ! Output
 
 !  ******************** PBL SECTION ******************************************
 
@@ -185,7 +185,8 @@ c read in LAPS_DOMAIN
             pres_3d_mb  = pres_3d_pa / 100.
             pres_sfc_mb = pres_sfc_pa / 100.
 
-            call ghbry (i4time_needed,pres_3d_mb,pres_sfc_mb,temp_3d  ! I
+            call ghbry (i4time_needed,pres_3d_mb,pres_sfc_mb          ! I
+     1                 ,temp_sfc_k,temp_3d                            ! I
      1                 ,pbl_top_mb                                    ! O
      1                 ,NX_L,NY_L,NZ_L                                ! I
      1                 ,istatus)                                      ! O
@@ -207,7 +208,7 @@ c read in LAPS_DOMAIN
 
             do i = 1,NX_L
             do j = 1,NY_L
-                call pres_to_ht(pbl_top_pa(i,j),pres_3d,heights_3d
+                call pres_to_ht(pbl_top_pa(i,j),pres_3d_pa,heights_3d
      1                         ,NX_L,NY_L,NZ_L,i,j,pbl_top_m,istatus)       
 
 !               call pressure_to_height(pbl_top_pa(i,j),heights_3d
