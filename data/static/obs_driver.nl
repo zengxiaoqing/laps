@@ -41,10 +41,10 @@ c
 c 'itime_before'
 c 'itime_after'
 c.....      Time window.  Set these variables for time filtering the data.
-c.....      Units are seconds.  For example, if you want data with a time
-c.....      stamp from 15 min before to 5 min after the analysis time to
-c.....      be included in the LSO file, use 900 and 300 for time_before
-c.....      and time_after, respectively.
+c.....      Units are seconds.  For example, if you want data with an 
+c.....      observation time from 15 min before to 5 min after the analysis 
+c.....      time to be included in the LSO file, use 900 and 300 for 
+c.....      time_beforeand time_after, respectively.
 c
 c 'maxobs' - max number of surface stations in raw data
 c

@@ -2,6 +2,7 @@
  use_lso_qc = 0,
  skip_internal_qc = 0,
  itheta=5,
+ redp_lvl=1500.,
  del=1.e6,
  gam=.0008,
  ak=1.e-6, 
@@ -42,6 +43,18 @@ c
 c..........     Recommended:  Use 700 mb most places, 500 mb over higher
 c..........                   terrain areas (like Colorado).
 c
+c.......... redp_lvl (Pressure reduction):  The main pressure analysis that 
+c               LAPS produces is a reduction to this elevation (m).  For 
+c               example, the Colorado LAPS uses 1500 m, about the elevation of
+c               Denver, since it is representative of the elevations in the 
+c               region of interest.
+c
 c..... comments on del, gam, ak are in the surface code
+c
+c          wse is assumed to be low .50 so that winds are retained and 
+c          most adjustment is in p ...
+c          del is sqd error of wind/sqd error in eqn of motion
+c          gam is sqd error of wind/sqd error of press
+c          with mslp error at 50pa,eqn of motion residual (1m/s/hr)^2
 c
 c..... if del=0., then variational section would be skipped for (u,v,p)
