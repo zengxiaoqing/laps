@@ -218,12 +218,18 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
 
         NAMELIST /lapsparms_NL/ iflag_lapsparms_cmn
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
-     1  ,vertical_grid,nk_laps,standard_latitude,standard_latitude2
+     1  ,nk_laps,standard_latitude,standard_latitude2       
      1  ,standard_longitude,NX_L_CMN, NY_L_CMN, I_PERIMETER_CMN
-     1  ,c50_lowres_directory,c6_maproj
      1  ,l_highres,l_pad1,l_pad2,l_pad3
      1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
-     1  ,laps_cycle_time_cmn
+     1  ,laps_cycle_time_cmn, min_to_wait_for_metars_cmn
+     1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
+     1  ,ref_base_cmn,ref_base_useable_cmn,maxstns_cmn,N_PIREP_CMN
+     1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
+     1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
+     1  ,silavwt_parm_cmn,toptwvl_parm_cmn
+     1  ,maxstations_cmn,maxobs_cmn
+     1  ,vertical_grid,c50_lowres_directory,c6_maproj
      1  ,radarext_3d_cmn,radarext_3d_accum_cmn
      1  ,path_to_raw_pirep_cmn
      1  ,path_to_raw_rass_cmn,path_to_raw_profiler_cmn
@@ -231,12 +237,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
      1  ,path_to_wsi_2d_radar_cmn,path_to_wsi_3d_radar_cmn
      1  ,path_to_qc_acars_cmn,path_to_raw_raob_cmn
      1  ,path_to_metar_data_cmn,path_to_local_data_cmn
-     1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
-     1  ,ref_base_cmn,ref_base_useable_cmn,maxstns_cmn,N_PIREP_CMN
-     1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
-     1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
-     1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
-     1  ,maxstations_cmn,maxobs_cmn
+     1  ,path_to_buoy_data_cmn,c8_project_common
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
 
