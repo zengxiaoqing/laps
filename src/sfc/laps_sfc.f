@@ -163,7 +163,7 @@ c
         real ff_s(mxstn), ffg_s(mxstn), ff_ea(mxstn)
 
         real alt_s(mxstn), alt_ea(mxstn), delp(mxstn)
-	real pstn_s(mxstn), pmsl_s(mxstn), p_ea(mxstn)
+	real pstn_s(mxstn), pmsl_s(mxstn), p_ea(mxstn), pred_s(mxstn)
 
 	real store_hgt(mxstn,5) 
 
@@ -776,7 +776,8 @@ c
 	call mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,lat,
      &     lon,topo,x1a,x2a,y2a,redp_lvl,
      &     lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, 
-     &     alt_s, vis_s, stations, rii, rjj, ii, jj, n_obs_b, n_sao_g,
+     &     alt_s, pred_s, vis_s, stations, rii, rjj, ii, jj, n_obs_b, 
+     &     n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk,
      &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, 
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
@@ -802,6 +803,7 @@ c                                v  in kt
      &     itheta,redp_lvl,laps_cycle_time,
      &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
+     &     pred_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g, obs,
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,stnp_bk,vis_bk,tgd_bk_f,   
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 

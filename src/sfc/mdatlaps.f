@@ -34,6 +34,7 @@ c
 	subroutine mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,
      &    lat,lon,topo,x1a,x2a,y2a,redp_lvl,
      &     lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, alt_s, 
+     &     pred_s,
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
      &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, 
