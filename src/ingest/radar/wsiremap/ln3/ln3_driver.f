@@ -121,6 +121,8 @@ c
        integer   msng_radar
        integer   lines,elements
 
+       character c_gridfname*50
+       character c_generic_dataroot*255
        character c_filetime*9
        character ctype_data*2
        character c_data_types(n_data_types)*2
@@ -131,8 +133,8 @@ c
        character cpathwsi3d*200
        character c_filenames_proc(max_files)*200
 c
-c eventually these should be runtime parameters placed in
-c either static/ln3/ln3_parms.dat or nest7grid.parms
+c these could be runtime parameters placed in
+c static/ln3/ln3_parms.dat. 
 c
        data c_data_types /'ll','lm','lh','et','cr','vi'/
 
@@ -259,7 +261,9 @@ c
        var_ll(1)='LAT'
        var_ll(2)='LON'
 
-       call rd_laps_static(dir_static, 'nest7grid', nx_l, ny_l, 2,
+       call find_domain_name(c_generic_dataroot,c_gridfname,istatus)
+
+       call rd_laps_static(dir_static, c_gridfname, nx_l, ny_l, 2,
      &     var_ll, units_ll, comment_ll, data, grid_spacing,
      &     istatus)
 
