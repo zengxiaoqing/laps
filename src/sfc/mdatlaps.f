@@ -309,7 +309,7 @@ c
 	      amax_stn_id = stn(i)(1:5)
 	   endif
  330	enddo !i
- 400	format(1x,i3,':',1x,a5,' at i,j ',2i3,':',3f12.2,f12.0)
+ 400	format(1x,i5,':',1x,a5,' at i,j ',2i5,':',3f12.2,f12.0)
 	write(6,405) diff_mx, stn_mx
  405	format(1x,' Max difference of ',f12.2,'  at ',a5)
 	write(6,406) diff_mn, stn_mn
@@ -325,7 +325,7 @@ c.....  probably bad.  Zero out the wt arrays so they won't be used.
 c
 	print *,' '
 	write(6,420) bksp_mx, ibksp, jbksp
- 420	format(1x,' Background field max: ',f12.2,' at ',i3,',',i3)
+ 420	format(1x,' Background field max: ',f12.2,' at ',i4,',',i4)
 	write(6,421) amax_stn, amax_stn_id
  421	format(1x,' Max speed at station: ',f12.2,' at ',a5)
 c
