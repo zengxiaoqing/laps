@@ -120,7 +120,7 @@ c
 
         implicit none
 
-        include 'lapsparms.for'
+c        include 'lapsparms.for'
 
 c       parameter list variables
 
@@ -154,23 +154,23 @@ c climate model variables
 
 c dynamic dependent variables
 
-      real ch3(nx_l,ny_l),ch4(nx_l,ny_l),ch5(nx_l,ny_l)
-      real mr(nx_l,ny_l,nz_l)
-      real t_l(nz_l,nx_l,ny_l), mr_l (nz_l,nx_l,ny_l)
+      real ch3(ii,jj),ch4(ii,jj),ch5(ii,jj)
+      real mr(ii,jj,kk)
+      real t_l(kk,ii,jj), mr_l (kk,ii,jj)
 
-      real model_t(40,nx_l,ny_l), model_mr(40,nx_l,ny_l)
+      real model_t(40,ii,jj), model_mr(40,ii,jj)
 
 
 c forward model variarles
-      real radiance(nx_l,ny_l,3),tskin(nx_l,ny_l),psfc(nx_l,ny_l),
-     1  theta(nx_l,ny_l),
+      real radiance(ii,jj,3),tskin(ii,jj),psfc(ii,jj),
+     1  theta(ii,jj),
      1  ozo(40),gimrad,tau(40)
       real emiss
-      integer kan,lsfc(nx_l,ny_l)
+      integer kan,lsfc(ii,jj)
       real model_p(40)
       real t_fm(40),w_fm(40),ozo_fm(40)
       common/atmos/model_p,t_fm,w_fm,ozo_fm
-      real btemp(nx_l,ny_l,3),britgo,plango
+      real btemp(ii,jj,3),britgo,plango
       real zenith               ! function call
       real pi, d2r
 
@@ -178,7 +178,7 @@ c       powell specific arrays
       real x(3)
       real xi(3,3)
       real ftol,fret
-      integer iter(nx_l,ny_l)
+      integer iter(ii,jj)
       integer ngoes_cost,isnd_cost
       real radiance_ob(3),p_cost(40),t_cost(40),ozo_cost(40),
      1  tskin_cost,psfc_cost,
@@ -192,33 +192,33 @@ c       powell specific arrays
 
 c  analysis of the factor field
       integer pn
-      real points(3,nx_l*ny_l)
-      real data_anal(nx_l,ny_l)
+      real points(3,ii*jj)
+      real data_anal(ii,jj)
 
 c  cloud variables
-      real cld(nx_l,ny_l)
+      real cld(ii,jj)
 
 c  moisture modified field
-      real factor(nx_l,ny_l), factor2(nx_l,ny_l)
+      real factor(ii,jj), factor2(ii,jj)
 
 c  get latest filename
       character*256 path
 
 c  laplace solver variables
-      integer mask(nx_l,ny_l)
+      integer mask(ii,jj)
 
 c  misc variables
       integer failures
       character*4 blank
-d        integer*4 mlevel(nz_l)
+d        integer*4 mlevel(kk)
 d        character*125 commentline
 d        character*64 dummy_string
-d        real research_output (nx_l,ny_l,nz_l)
-d        real s_btemp(nx_l,ny_l,18)  !sounder b_temp
-d        real s_radiance(nx_l,ny_l,18)  ! sounder radiance
+d        real research_output (ii,jj,kk)
+d        real s_btemp(ii,jj,18)  !sounder b_temp
+d        real s_radiance(ii,jj,18)  ! sounder radiance
 d        real w_model (39)  ! forward model weighting function
 d        real p_dm (39)  ! derivate pressures
-      real rads (nx_l,ny_l,18)
+      real rads (ii,jj,18)
 
         data local_model_p/.1,.2,.5,1.,1.5,2.,3.,4.,5.,7.,10.,15.,
      1  20.,25.,30.,
