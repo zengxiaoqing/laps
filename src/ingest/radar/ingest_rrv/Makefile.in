@@ -55,7 +55,7 @@ SRC =  genv01lut_sub.f \
        rrvdat2laps_v01.f \
        buildcomment.f
 
-MAIN=ingest_rrv.f
+MAIN=ingest_rrv.f $(LAPSROOT)/src/lib/block_data.f
 
 LIB=libgenrrv.a
 
