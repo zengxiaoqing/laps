@@ -4,8 +4,7 @@ setenv LAPS_ROOT $1
 setenv LAPS_BIN  $2/bin
 setenv LAPS_DATA_ROOT $3
 setenv RUN $4
-setenv BUILD_DIR $5
-setenv PLATFORM $6
+setenv PLATFORM $5
 
 echo " "
 echo "List of file update times and building errors..."
