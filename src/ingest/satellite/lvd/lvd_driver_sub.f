@@ -463,7 +463,8 @@ c
 
             call lvd_file_specifier(c_type(i,j),ispec,istat)
 
-            if(ispec.eq.1.and.csatid.ne.'gmssat')then
+            if( ispec.eq.1.and.
+     &        ( csatid.ne.'gmssat'.or.csatid.ne.'meteos'))then
                call read_gvarimg_cnt2btemp_lut(csatid,
      &c_type(i,j),vis_cnt_to_cnt_lut,istatus)
             elseif(ispec.eq.2)then
@@ -617,14 +618,13 @@ c ------------------------------------------------------------
 
                 elseif(ispec.eq.1)then
 
-                   if( (csattype.eq.'gvr'.or.csattype.eq.'gwc').and.
-     &                  csatid.ne.'gmssat')then
+                   if(csatid.ne.'gmssat'.and.csatid.ne.'meteos')then
 
                        call btemp_convert(n_vis_elem,n_vis_lines,
      &                          vis_cnt_to_cnt_lut,
      &                          r_missing_data,
      &                          image_vis(1,1,i))
-                    write(*,*)'GVAR vis data converted - cnt-to-cnt lut'
+                       write(*,*)'VIS data converted - cnt-to-cnt lut'
                    else
                     write(*,*)'Not converting ',csattype,' vis data'
                    endif
