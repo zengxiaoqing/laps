@@ -837,6 +837,8 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
            The profiler data for wind goes into the 'pro' intermediate file, 
            and RASS temperature profiles go into the 'lrs' intermediate file. 
+           Note that the cdl's associated with each data source indicate the
+           time frequency of the data that our ingest code can process.
 
            To summarize...
 <pre>
@@ -849,11 +851,13 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
                                                                  rass06.cdl
 
            BLP wind        NIMBUS/internet   PRO     915 MHz     wpdn60.cdl
-                                                                 wpdn06.cdl
+                                                                 wpdn30.cdl*
 
            BLP RASS        NIMBUS/internet   LRS                 rass60.cdl
-                                                                 rass06.cdl
+                                                                 rass30.cdl*
 
+           * Indicates that this data with this cdl is available, but our
+             ingest code would need modification to process it.
 </pre>                 
 
      Radar VAD Algorithm winds (pro)
