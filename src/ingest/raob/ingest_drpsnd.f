@@ -55,6 +55,12 @@
           go to 999
       endif
 
+      call get_laps_dimensions(NZ_L,istatus)
+      if (istatus .ne. 1) then
+          write (6,*) 'Error getting vertical domain dimension'
+          go to 999
+      endif
+
       call get_laps_cycle_time(ilaps_cycle_time,istatus)
       if(istatus .eq. 1)then
           write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
@@ -230,10 +236,11 @@
 
               elseif(c8_drpsnd_format(1:3) .eq. 'SND')then
 
-                  write(6,*)' combine_snd_file routine not fully set up'       
+                  write(6,*)' calling combine_snd_file...'       
 
-!                 Call combine_snd_file
-                  call combine_snd_file(i4times(i),istatus)
+                  call combine_snd_file(i4times(i),i4time_sys
+     1                                 ,NX_L,NY_L,NZ_L
+     1                                 ,lun_out,istatus)
 
               elseif(c8_drpsnd_format(1:3) .eq. 'CWB')then
                   call get_drpsnd_data_cwb(i4time_sys, ilaps_cycle_time,       
@@ -268,11 +275,20 @@
       return
       end
 
-      subroutine combine_snd_file(i4time_file,istatus)
+      subroutine combine_snd_file(i4time_file,i4time_sys,ni,nj,nk
+     1                           ,lun_out,istatus)       
 
       integer MAX_PR, MAX_PR_LEVELS
       parameter (MAX_PR=100)
       parameter (MAX_PR_LEVELS=1000)
+
+      integer nlevels_obs_pr(MAX_PR)
+      integer i4time_ob_pr(MAX_PR)
+      integer iwmostanum(MAX_PR)
+
+      real stalat(MAX_PR)
+      real stalon(MAX_PR)
+      real staelev(MAX_PR)
 
       real height_m(MAX_PR,MAX_PR_LEVELS)
       real pressure_mb(MAX_PR,MAX_PR_LEVELS)
@@ -283,40 +299,85 @@
       real temp_c(MAX_PR,MAX_PR_LEVELS)
       real dewpoint_c(MAX_PR,MAX_PR_LEVELS)
 
+      real*4 heights_3d(ni,nj,nk)
+
+      character*5 c5_name(MAX_PR)
+      character*8 c8_obstype(MAX_PR)
+      character*9 a9time_ob(MAX_PR)
+
+      logical l_fill_ht
+
       lun_in = 59
+      mode = 1
       n_profiles = 0
 
+      l_fill_ht = .false.
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus .ne. 1)return
+      heights_3d = r_missing_data
+
+      staelev = -999. ! missing value for Dropsondes
+
 !     Call Read Routine for input SND file
-!     call read_snd_data(lun_in,i4time_file,'SND'                      ! I
-!    1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
-!    1                         ,lat,lon,imax,jmax,kmax                 ! I
-!    1                         ,heights_3d                             ! I
-!    1                         ,mode                                   ! I
-!    1                         ,n_profiles                             ! I/O
-!    1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
-!    1                         ,c5_name,i4time_ob_pr,obstype           ! O
-!    1                         ,height_m,pressure_mb                   ! O
-!    1                         ,ob_pr_u_obs,ob_pr_v_obs                ! O
-!    1                         ,ob_pr_t_obs,ob_pr_td_obs               ! O
-!    1                         ,istatus)                               ! O
+      call read_snd_data(lun_in,i4time_file,'SND'                      ! I
+     1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
+     1                         ,stalat,stalon,imax,jmax,kmax           ! I
+     1                         ,heights_3d,l_fill_ht                   ! I
+     1                         ,mode                                   ! I
+     1                         ,n_profiles                             ! I/O
+     1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
+     1                         ,c5_name,i4time_ob_pr,c8_obstype        ! O
+     1                         ,height_m,pressure_mb                   ! O
+     1                         ,ob_pr_u_obs,ob_pr_v_obs                ! O
+     1                         ,temp_c,dewpoint_c                      ! O
+     1                         ,istatus)                               ! O
+      if(istatus .ne. 1)then
+          write(6,*)' WARNING: Bad istatus from read_snd_data, '
+     1             ,'abort execution of combine_snd'
+          return
+      endif
 
       do i = 1,n_profiles
-!         Call Write Routine to append to output SND file
-!         call write_snd(lun_out                           ! I
-!    1                    ,maxsnd,maxlvl,nsnd              ! I
-!    1                    ,iwmostanum                      ! I
-!    1                    ,stalat,stalon,staelev           ! I
-!    1                    ,c5_staid,a9time_ob,c8_obstype   ! I
-!    1                    ,nlvl                            ! I
-!    1                    ,height_m                        ! I
-!    1                    ,pressure_mb                     ! I
-!    1                    ,temp_c                          ! I
-!    1                    ,dewpoint_c                      ! I
-!    1                    ,dir_deg                         ! I
-!    1                    ,spd_mps                         ! I
-!    1                    ,istatus)                        ! O
+          do j = 1,nlevels_obs_pr(i)
+              if(ob_pr_u_obs(i,j) .ne. r_missing_data .and.
+     1           ob_pr_v_obs(i,j) .ne. r_missing_data       )then
+                  call uv_to_disp(ob_pr_u_obs(i,j),ob_pr_v_obs(i,j)
+     1                           ,dir_deg(i,j),spd_mps(i,j))
+              else
+                  dir_deg(i,j) = r_missing_data
+                  spd_mps(i,j) = r_missing_data
+              endif
+
+          enddo ! j
+
+          call make_fnam_lp(i4time_ob_pr(i),a9time_ob(i),istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' error in i4time ',i4time_ob_pr(i)
+              return
+          endif
 
       enddo ! i
+
+      call open_ext(lun_out,i4time_sys,'snd',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Could not open output SND file with open_ext'
+          return
+      endif
+
+!     Call Write Routine to append to output SND file
+      call write_snd(lun_out                               ! I
+     1                    ,MAX_PR,MAX_PR_LEVELS,n_profiles ! I
+     1                    ,iwmostanum                      ! I
+     1                    ,stalat,stalon,staelev           ! I
+     1                    ,c5_name,a9time_ob,c8_obstype    ! I
+     1                    ,nlevels_obs_pr                  ! I
+     1                    ,height_m                        ! I
+     1                    ,pressure_mb                     ! I
+     1                    ,temp_c                          ! I
+     1                    ,dewpoint_c                      ! I
+     1                    ,dir_deg                         ! I
+     1                    ,spd_mps                         ! I
+     1                    ,istatus)                        ! O
 
       return
       end
