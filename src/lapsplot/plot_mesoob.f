@@ -46,6 +46,7 @@ c
 
         real*4 lat(imax,jmax),lon(imax,jmax)
         character*3 t1,td1,p1
+        character*4 c4_pcp
 
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
 !       write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
@@ -142,7 +143,7 @@ c
                endif
             endif           
 
-        else ! C&V plot
+        elseif(iflag_cv .eq. 1)then ! C&V plot
             call plot_circle(u,v,du*0.8)
 
 !           Plot Visibility
@@ -152,6 +153,16 @@ c
                CALL PCLOQU(u+du_t,v-dv,td1,charsize,ANGD,CNTR)
             endif
  31         continue
+
+        else                    ! Precip obs plot
+!           Plot 1hr Precip Ob
+            if(td.gt.-75. .and. td.lt.100.) then
+               write(c4_pcp,103,err=32) td
+ 103           format(f4.2)
+               call left_justify(c4_pcp)
+               CALL PCLOQU(u+du_t,v-dv,c4_pcp,charsize,ANGD,CNTR)
+            endif
+ 32         continue
 
         endif
 

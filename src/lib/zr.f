@@ -59,6 +59,12 @@ cdis
             stop
         endif
 
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting r_missing_data in zr'
+            stop
+        endif
+
         n_leq_pts = 0
 !       n_warm_pts = 0
 
@@ -70,7 +76,10 @@ cdis
         do i = 1,ni
             dbz = z_2d_in(i,j)
 
-            if(dbz .lt. ref_base_useable)then
+            if(dbz .eq. r_missing_data)then
+                r_2d_out(i,j) = r_missing_data
+
+            elseif(dbz .lt. ref_base_useable)then
 !               r_2d_out(i,j) = +1e-30
                 r_2d_out(i,j) = 0.
 

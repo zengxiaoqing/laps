@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
       subroutine ccpfil(field_in,MREG,NREG,scale_l_in,scale_h_in
-     1                 ,colortable)       
+     1                 ,colortable,n_image)       
 
 C 
 C Define error file, Fortran unit number, and workstation type,
@@ -48,6 +48,8 @@ C
       character*(*)colortable
       
       write(6,*)' Subroutine ccpfil for solid fill plot...'
+
+      n_image = n_image + 1
 
       if(scale_l_in .lt. scale_h_in)then
           ireverse = 0
@@ -175,7 +177,7 @@ C
               call GSCR(IWKID, i, rintens, rintens, rintens)
           enddo ! i
 
-      elseif(colortable .eq. 'hues')then
+      elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref')then       
           ncols = 50
           call color_ramp(1,ncols/8,IWKID
      1                   ,0.5,0.15,0.6                 ! Pink
@@ -192,6 +194,12 @@ C
           call color_ramp(90*ncols/100,ncols,IWKID
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.2)                ! Hot
+
+          if(colortable .eq. 'ref')then
+              do i = 1,3
+                  call GSCR(IWKID, i, 0., 0., 0.)
+              enddo 
+          endif
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable

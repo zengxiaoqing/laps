@@ -1,4 +1,4 @@
-
+ 
       subroutine get_pres_3d_old(i4time,ni,nj,nk,pres_3d,istatus)
 
 cdoc  Returns a 3-D grid of pressures. This is useful if we have a non-uniform
@@ -69,7 +69,12 @@ cdoc  pressure grid. This does not support an arbitrary vertical grid.
       close(1)
 
       do k = 1,nk
+        if(pressures(k) .le. 0. .or. pressures(k) .gt. 150000.)goto902       
         pres_1d_out(k) = pressures(k)
+      enddo                  ! k
+
+      do k = 2,nk
+        if(pressures(k) .ge. pressures(k-1))goto902       
       enddo                  ! k
 
       write(6,*)' Success in get_pres_1d'
@@ -81,6 +86,11 @@ cdoc  pressure grid. This does not support an arbitrary vertical grid.
       return
 
   901 print*,'error reading pressures_nl in ',filename
+      write(*,pressures_nl)
+      istatus = 0
+      return
+
+  902 print*,'error in pressures_nl values in ',filename
       write(*,pressures_nl)
       istatus = 0
       return

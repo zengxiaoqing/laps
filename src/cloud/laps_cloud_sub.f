@@ -1036,8 +1036,8 @@ C       EW SLICES
 
 
         write(6,1101)
-1101    format('  Max Cloud Cover              3.9 micron         ',
-     1            20x,'              Final Analysis')
+1101    format('  Max Cloud Cover   3.9u     (nocld:cld:added=3:7:9)',      
+     1       18x,'              Final Analysis')
 
 !       Set 3.9 micron plot mask
         do i = 1,NX_L
