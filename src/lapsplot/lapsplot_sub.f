@@ -139,6 +139,7 @@ cdis
 !       Set Default plot parameters
         plot_parms%rimage_intensity = 1.0
         plot_parms%zoom = 1.0
+        plot_parms%ncols = 0.
 
 1100    write(6,1110)
 1110    format(/////'     [h/hz]  Horizontal Plan View '
