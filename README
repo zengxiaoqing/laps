@@ -314,27 +314,34 @@
            should provide enough information to get you started.  Direct
            questions about surface data to Pete Stamus (stamus@fsl.noaa.gov).
 <pre>
-     Radar (vrc)                 - WSI-NOWRAD, stored at FSL in NetCDF.
+     Radar: The following are intermediate files for various forms of radar
+            data.
 
-                                 - single level reflectivity, possibly a mosaic
-                                   from multiple radars.
+           (vrc)                 - single low-level reflectivity, possibly a 
+                                   mosaic from multiple radars. For example, 
+                                   our ingest at FSL processes WSI-NOWRAD, 
+                                   stored at FSL in NetCDF, to create the 'vrc'
+                                   intermediate file.
 
-           (v01, v02, ... )      - WSR-88Ds or other Doppler radar.
+           (v01, v02, ... )      - WSR-88Ds or other radar data stored as
+                                   a full volume in sparse arrays.
 
-                                 - each v## file has 3-d reflectivity,
+                                 - each 'vxx' file has 3-d reflectivity,
                                    velocity, and nyquist velocity for a radar.
-                                   multiple v## files are allowed and are
+                                   multiple 'vxx' files are allowed and are
                                    especially useful for velocity.
 
-           (vrz)                 - 3-D reflectivity mosaic from multiple 
-                                   radars (v## files).
+           (vrz)                 - 3-D reflectivity mosaic from multiple radars
+                                   ('vxx' files). This file has horizontal and 
+                                   vertical gaps filled in.
 
            (ln3)                 - Layer reflectivity and echo tops
 </pre>
-           More details about radar data usage in LAPS are on the World Wide 
-           Web at... 
-           'http://laps.fsl.noaa.gov/frd/laps/albers/radar_decision_tree.txt'
 
+     More details about radar data usage in LAPS are on the World Wide Web at:
+     'http://laps.fsl.noaa.gov/frd/laps/albers/radar_decision_tree.txt'. This
+     includes information on which types of radar data are processed via the
+     various intermediate data files.
 
      Satellite Image Ingest (lvd): GOES-8 or GOES-9 data ingest. Data stored at
            FSL in NetCDF or SBN data (also in netcdf). Ingest of Air Force 
@@ -1171,7 +1178,7 @@ Auxiliary functions:
 Inputs: (from PRO, PIN, LGA/RAM, CDW)       '*' = essential input
       * lga/ram grid            model data analysis/forecast
                                 needed for current and previous cycle times
-	pro     inter data      profiler winds
+	pro     inter data      profiler, VAD, SODAR winds
         snd     inter data      RAOB data including winds
 	pin	inter data      pireps/clouds
         cdw     inter data      cloud drift wind
@@ -1181,11 +1188,10 @@ Inputs: (from PRO, PIN, LGA/RAM, CDW)       '*' = essential input
 	v01-v20 grid            3-D radar reflectivity/radial velocity 
 
 Outputs: (LW3 is main output)
-	msg	inter data	mesonet winds  (none of these five really have
-	pig	inter data	acars winds     to be part of the Wind Anlysis,
-	prg	inter data	profiler winds   they are used for lapsplot
-	sag	inter data	SAOs              output)
-	d01-d20 inter data (3d)	derived radar obs
+	pig	inter data	acars winds    (none of these four really have 
+	prg	inter data	profiler winds  to be part of the Wind Anlysis,
+	sag	inter data	SAOs             they are used for lapsplot 
+	d01-d20 inter data (3d)	derived radar obs output)
 
 	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
 	lwm	2d grid		surface winds
