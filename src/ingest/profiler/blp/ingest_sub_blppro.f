@@ -58,8 +58,9 @@ C       NOTE: Profiler winds are written out in KNOTS
 
 	parameter (max_modes = 3)
 	parameter (max_gates = 50)
-        integer*2 nmodes_short             
+        character nmodes_short(4)
 	integer nmodes
+        equivalence(nmodes,nmodes_short)
 
         real u(max_modes,max_gates)
         real v(max_modes,max_gates), prs
@@ -68,8 +69,12 @@ C       NOTE: Profiler winds are written out in KNOTS
         character*4 c4_qc
         real*4 level(max_modes,max_gates)
 
-        integer*2 ngates_short(max_modes)
+        character ngates_short(max_modes*4)
+        character tmpgates    (max_modes*4)
         integer   ngates      (max_modes)
+
+
+        equivalence(ngates,tmpgates)
 
         real ht_out(n_levels)
         real di_out(n_levels)
@@ -156,17 +161,11 @@ C
 C       Open an output file.
 C
         ext = 'pro'
-        call open_lapsprd_file(1,i4time,ext,istatus)
+        call open_lapsprd_file_append(1,i4time,ext,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error opening product file',ext
             return
         endif
-
-!       Read to end of file so we can append to it
-        do i = 1,1000000
-            read(1,*,end=2)
-        enddo ! i
- 2      continue
 
         outfile = filename13(i4time,'pro')
         asc9_tim = outfile(1:9)
@@ -292,14 +291,15 @@ C
           CALL NCVGTC(cdfid, varid, start, count, 
      1                prof_name(ista), staNamLen, status)
           prof_name(ista)(6:6) = ' '
+          
 
           write(6,*)
           write(6,*)' Looping for profiler ',prof_name(ista)
 C
+          nmodes = 0
 	  CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'numModesUsed',
-     1                     0,nmodes_short,
+     1                     0,nmodes_short(3),
      $			   status)
-	  nmodes = nmodes_short		! INT*2 in file for compactness.
 
           if(status .ne. 0)then
             write(6,*)prof_name(ista)
@@ -314,7 +314,10 @@ C
      $			   status)
 
 	  do i = 1, max_modes
-		ngates(i) = ngates_short(i)
+             ngates(i) = 0
+             do j=1,2
+                tmpgates((i-1)*4+j+2) = ngates_short(2*(i-1)+j)
+             enddo
 	  enddo
 
           if(status .ne. 0)then
@@ -493,23 +496,24 @@ C
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
-            write(6,401)wsmr_wmo_id,n_good_levels+n_good_sfc,rlat
+            write(*,401)wsmr_wmo_id,n_good_levels+n_good_sfc,rlat
      1                 ,rlon,elev,prof_name(ista),a9time_ob
             write(1,401)wsmr_wmo_id,n_good_levels+n_good_sfc,rlat
      1                 ,rlon,elev,prof_name(ista),a9time_ob
 401         format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9)
-
             if(n_good_sfc .eq. 1)then
 !               write surface winds as first level
                 write(1,301)elev,di_sfc,sp_sfc ! /r_mspkt
                 write(6,301)elev,di_sfc,sp_sfc ! /r_mspkt
             endif
 
+            rms = 1.0
+
             do i = 1,n_good_levels
 !           do i = n_good_levels, 1, -1
-                write(1,301,err=303)ht_out(i),di_out(i),sp_out(i) ! /r_mspkt
-                write(6,301,err=303)ht_out(i),di_out(i),sp_out(i) ! /r_mspkt
-301             format(1x,f6.0,f6.0,f6.1)
+                write(1,301,err=303)ht_out(i),di_out(i),sp_out(i),rms
+                write(6,301,err=303)ht_out(i),di_out(i),sp_out(i),rms
+301             format(1x,f6.0,f6.0,2f6.1)
 303             continue
             enddo ! i
 

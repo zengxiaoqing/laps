@@ -123,13 +123,6 @@ C
 
         character*6 prof_name(n_profilers)
 
-!       data prof_name /'PLTC2 ','LTHM7 ','FBYN1 ','HBRK1 ','WSMN5 '
-!    1        ,'HVLK1 ','NDSK1 ','LMNO2 ','VCIO2 ','HKLO2 ','PRCO2 '
-!    1        ,'CNWM7 ','SLAI4 ','NLGN1 ','WNCI2 ','BLRW3 ','WLCI3 '
-!    1        ,'BLMM7 ','SBYM3 ','WDLM5 ','DQUA4 ','OKOM6 ','WNFL1 '
-!    1        ,'PATT2 ','JTNT2 ','TCUN5 ','GDAC2 ','RWDN1 ','MRRN1 '
-!    1        ,'MBWW4 ','AZCN5 ','BLMCT ','HMRA2 '/
-
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
@@ -546,11 +539,13 @@ C
                 write(6,301)elev,di_sfc,sp_sfc ! /r_mspkt
             endif
 
+            rms = 1.0
+
 !           do i = 1,n_good_levels
             do i = n_good_levels, 1, -1
-                write(1,301,err=303)ht_out(i),di_out(i),sp_out(i) ! /r_mspkt
-                write(6,301,err=303)ht_out(i),di_out(i),sp_out(i) ! /r_mspkt
-301             format(1x,f6.0,f6.0,f6.1)
+                write(1,301,err=303)ht_out(i),di_out(i),sp_out(i),rms 
+                write(6,301,err=303)ht_out(i),di_out(i),sp_out(i),rms 
+301             format(1x,f6.0,f6.0,2f6.1)
 303             continue
             enddo ! i
 
