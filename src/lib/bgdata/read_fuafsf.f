@@ -6,6 +6,7 @@ C
       implicit none
       include 'netcdf.inc'
       character*(*) fullname
+      character*200 cfname_int
       character*80 c8_proj
       integer x, y, z, nf_fid, nf_vid, nf_status
       integer lname,lname_in,lend,l,lenc8
@@ -38,13 +39,13 @@ C
 C  Open netcdf File for reading
 C
       call s_len(fullname,lname_in)
-      fullname=fullname(1:lname_in)//'.fua'
-      call s_len(fullname,lname)
-      print*,'Open/read ',fullname(1:lname)
-      nf_status = NF_OPEN(fullname,NF_NOWRITE,nf_fid)
+      cfname_int=fullname(1:lname_in)//'.fua'
+      call s_len(cfname_int,lname)
+      print*,'Open/read ',cfname_int(1:lname)
+      nf_status = NF_OPEN(cfname_int,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN ',fullname(1:lname)
+        print *,'NF_OPEN ',cfname_int(1:lname)
         return
       endif
 C
@@ -189,29 +190,32 @@ c     if(c8_proj(1:lenc8).eq.'airdrop')
 c
 c now fsf file:
 c
-      call get_directory_length(fullname,lend)
+      call get_directory_length(cfname_int,lend)
       search_dir: do l=lend,1,-1
-         if(fullname(l:l).eq.'f')then
-            if(fullname(l:l+2).eq.'fua')then
+         if(cfname_int(l:l).eq.'f')then
+            if(cfname_int(l:l+2).eq.'fua')then
                exit search_dir
             endif
          endif
       enddo search_dir
 
       if(l.le.1)then
-         print*,'Unable to determine location of fua in'
-         print*,'directory string for fsf. Return with no data'
+         print*,'didnt determine location of fua in'
+         print*,'string for fsf. Return with no data'
+         print*,'read_fuafsf.f: abort'
          return
       endif
 
-      fullname(l:l+2)='fsf'
+      cfname_int(l:l+2)='fsf'
 
-      fullname=fullname(1:lname_in)//'.fsf'
-      print*,'Open/read ',fullname(1:lname)
-      nf_status = NF_OPEN(fullname,NF_NOWRITE,nf_fid)
+      cfname_int=cfname_int(1:lname_in)//'.fsf'
+
+      call s_len(cfname_int,lname)
+      print*,'Open/read ',cfname_int(1:lname)
+      nf_status = NF_OPEN(cfname_int,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN ',fullname(1:lname)
+        print *,'NF_OPEN ',cfname_int(1:lname)
         return
       endif
 
@@ -325,6 +329,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var zsfc'
+        return
+      endif
+
+      nf_status = nf_close(nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'nf_close'
         return
       endif
 
