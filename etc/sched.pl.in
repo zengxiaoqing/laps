@@ -13,6 +13,8 @@ $ENV{XLFRTEOPTS}='namelist=old' if($mach eq 'AIX');
 $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
 
+$ENV{PATH}.=":@NETCDFBIN@";
+
 $fxa_sys =  &Get_env'fxa; #'
 
 $ENV{LAPS_DATA_ROOT} = shift ;
