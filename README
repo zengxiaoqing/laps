@@ -402,7 +402,8 @@
 20                      * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/sched.pl                          /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
 03,19,34,49             * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/laps_driver.pl vrc_driver.x       /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
 08,14,23,29,38,45,53,59 * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/laps_driver.pl lvd_sat_ingest.exe /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
-22,30                   * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/laps_driver.pl ingest_lrs.exe     /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
+22,30                   * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/laps_driver.pl lsr_driver.exe     /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
+09                      * * * * /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/laps_driver.pl -e RADARNAME=KFTG,LAPS_REMAP_EXT=v02 remap_polar_netcdf.exe /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
 </pre>
 
      Once each hour (or other cycle time), the main './etc/sched.pl' runs.
