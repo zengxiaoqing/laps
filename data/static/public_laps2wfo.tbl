@@ -43,6 +43,7 @@ l1s  rto   z  stpa     levels_1   SFC 0
 l1s  s01   z  s1hr     levels_1   SFC 0
 l1s  sto   z  stot     levels_1   SFC 0
 lcv  lcv   z  ccov     levels_1   SFC 0
+lmt  lmt   z  mret     levels_1   SFC 0
 lmt  llr   z  llr      levels_1   SFC 0
 lhe  lhe   z  heli     levels_1   SFC 0
 lct  pty   z  spt      levels_1   SFC 0
