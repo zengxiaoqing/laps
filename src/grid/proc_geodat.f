@@ -204,7 +204,7 @@ c from Brent Shaw pseudocode
       lentd=INDEX(TITLE,' ')-1
       CALL JCLGET(29,TITLE(1:lentd),'FORMATTED',1,istatus)
       if(istatus .ne. 1)then
-         write(6,*)'Error: proc_geodat_tiles opening HEADER: check'
+         write(6,*)'Warning: proc_geodat_tiles opening HEADER: check'
      1            ,'geog paths and HEADER file'
          return
       endif
@@ -269,8 +269,7 @@ c from Brent Shaw pseudocode
      1,ntn,ctile_name_list,istatus)
 
       if(istatus.ne.1)then
-         print*,'Error condition returned from '
-         print*,'get_tile_list'
+         print*,'Error:  returned from get_tile_list'
          return
       endif
 
