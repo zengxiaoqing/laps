@@ -33,10 +33,14 @@ c
 c
 	subroutine get_metar_obs(maxobs,maxsta,i4time,data_file,
      &                      eastg,westg,anorthg,southg,nn,
-     &                      n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,
-     &                      stations,store,wx,obstype,
-     &                      store_emv,store_amt,store_hgt,
-     &                      num_var,jstatus)
+     &                      n_sao_g,n_sao_b,stations,
+     &                      reptype,atype,weather,wmoid,
+     &                      store_1,store_2,store_2ea,
+     &                      store_3,store_3ea,store_4,store_4ea,
+     &                      store_5,store_5ea,store_6,store_6ea,
+     &                      store_7,store_cldht,store_cldamt,
+     &                      provider, jstatus)
+
 c
 c*****************************************************************************
 c
@@ -47,34 +51,47 @@ c		P. Stamus  10-30-96  Original version (from get_sao_obs).
 c                          11-13-96  Pass in full path to data.
 c                          12-06-96  Put Atype (01 or 02) in obstype var.
 c	                   06-09-97  Changes for new METAR CDL.
+c                          01-29-98  Upgrades for LS2.
+c                          05-01-98  Add soil moisture variables.
 c
 c*****************************************************************************
 c
+	include 'netcdf.inc'
 	include 'surface_obs.inc'
 c
         integer maxobs,maxsta
 	real*8  timeobs(maxobs)
 	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
-	real*4  t(maxobs), td(maxobs), dd(maxobs), ff(maxobs)
-	real*4  tt(maxobs), ttd(maxobs)
-	real*4  mslp(maxobs), alt(maxobs), ht(6,maxobs), ffg(maxobs)
-	real*4  vis(maxobs), precip1(maxobs)
-	real*4	store(maxsta,num_var), store_hgt(maxsta,5)
+	real*4  t(maxobs), td(maxobs), tt(maxobs), ttd(maxobs)
+	real*4  dd(maxobs), ff(maxobs), ffg(maxobs)
+	real*4  mslp(maxobs), alt(maxobs)
+	real*4  ht(6,maxobs), vis(maxobs), dp(maxobs)
+	real*4  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)
+	real*4  max24t(maxobs), min24t(maxobs), snowcvr(maxobs)
 c
-	integer*4  correction(maxobs), itime60
+	real*4  store_1(maxsta,4), 
+     &          store_2(maxsta,3), store_2ea(maxsta,3),
+     &          store_3(maxsta,4), store_3ea(maxsta,2),
+     &          store_4(maxsta,5), store_4ea(maxsta,2),
+     &          store_5(maxsta,4), store_5ea(maxsta,4),
+     &          store_6(maxsta,5), store_6ea(maxsta,2),
+     &          store_7(maxsta,3),
+     &          store_cldht(maxsta,5)
+c
+	integer*4  itime60, wmoid(maxobs)
 	integer*4  before, after
 	integer    rtime, dpchar(maxobs)
-        real       dp(maxobs)
+	integer    maxSkyCover, recNum, nf_fid, nf_vid, nf_status
 c
-	character  stname(maxobs)*5, atype(maxobs)*6, timech*9, time*4
-	character  weather(maxobs)*25 
-	character  store_amt(maxsta,5)*4, store_emv(maxsta,5)*1
-	character  stations(maxsta)*3, wx(maxsta)*8,auto*5,rept*4
-	character  obstype(maxsta)*8,reptype(maxobs)*6
-	character  data_file*80
-	character  save_stn(maxobs)*3
+	character  stname(maxobs)*5, save_stn(maxobs)*5
+	character  data_file*(*), timech*9, time*4
+	character  cvr(6,maxobs)*8
+	character  stations(maxsta)*20, provider(maxsta)*11
+	character  weather(maxobs)*25, wx(maxobs)*25
+	character  reptype(maxobs)*6, atype(maxobs)*6
+	character  reptype_in(maxobs)*6, atype_in(maxobs)*6
+	character  store_cldamt(maxsta,5)*4
 c
-	character  stname_in(maxobs)*5, cvr(6,maxobs)*8
 c
 c.....	Set jstatus flag for the sao data to bad until we find otherwise.
 c
@@ -90,65 +107,105 @@ c
 c.....	Zero out the counters.
 c
 	n_sao_g = 0		! # of saos in the laps grid
-	n_sao_pos_g = 0		! total # of saos possible in laps grid
 	n_sao_b = 0		! # of saos in the box
-	n_sao_pos_b = 0		! total # of saos possible in the box
 c
-c.....  Call the routine that reads the METAR data files.
+c.....  Get the data from the NetCDF file.  First, open the file.
 c
-        call read_metar(data_file,n_sao_all,maxobs,
-     &                   stname_in,
-     &                   lats,lons,elev,
-     &                   timeobs,reptype,atype,
-     &                   cvr,ht,vis,weather,
-     &                   mslp,t,tt,td,ttd,dd,ff,ffg,alt,
-     &                   dpchar,dp,precip1,istatus)
+	nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
+
+	if(nf_status.ne.NF_NOERR) then
+	   print *, NF_STRERROR(nf_status)
+	   print *, data_file
+	endif
+c
+c.....  Get the dimension of some of the variables.
+c.....  "maxSkyCover"
+c
+	nf_status = NF_INQ_DIMID(nf_fid,'maxSkyCover',nf_vid)
+	if(nf_status.ne.NF_NOERR) then
+	   print *, NF_STRERROR(nf_status)
+	   print *,'dim maxSkyCover'
+	endif
+	nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxSkyCover)
+	if(nf_status.ne.NF_NOERR) then
+	   print *, NF_STRERROR(nf_status)
+	   print *,'dim maxSkyCover'
+	endif
+c
+c.....  "recNum"
+c
+	nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+	if(nf_status.ne.NF_NOERR) then
+	   print *, NF_STRERROR(nf_status)
+	   print *,'dim recNum'
+	endif
+	nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+	if(nf_status.ne.NF_NOERR) then
+	   print *, NF_STRERROR(nf_status)
+	   print *,'dim recNum'
+	endif
+c
+c.....  Call the read routine.
+c
+	call read_metar(nf_fid , maxSkyCover, recNum, alt,
+     &     atype_in, td, ttd, elev,
+     &     lats, lons, max24t, min24t,
+     &     pcp1, pcp24, pcp3, pcp6,
+     &     wx, dp, dpchar,
+     &     reptype_in, mslp, cvr, ht,
+     &     snowcvr, stname, tt, t,
+     &     timeobs, vis, dd, ffg, ff,
+     &     wmoid, badflag, istatus)
 c
 	if(istatus .ne. 1) go to 990
+	n_sao_all = recNum
 c
 c.....  First check the data coming from the NetCDF file.  There can be
 c.....  "FloatInf" (used as fill value) in some of the variables.  These
-c.....  are not handled the same by different operating systems.  In our
-c.....  case, IBM systems make "FloatInf" into "NaN" and store them that
+c.....  are not handled the same by different operating systems.  For 
+c.....  example, IBM systems make "FloatInf" into "NaN" and store them that
 c.....  way in the LSO, which messes up other LAPS routines.  This code
 c.....  checks for "FloatInf" and sets the variable to 'badflag'.  If the
-c.....  "FloatInf" is in the lat, lon, or elevation, we toss the whole ob
-c.....  since we don't know where it is.
+c.....  "FloatInf" is in the lat, lon, elevation, or time of observation,
+c.....  we toss the whole ob since we can't be sure where it is.
 c
 	do i=1,n_sao_all
 c
-c.....  Toss the ob if lat/lon/elev bad by setting lat to badflag (-99.9),
-c.....  which causes the bounds check to think its outside the LAPS domain.
+c.....  Toss the ob if lat/lon/elev or observation time are bad by setting 
+c.....  lat to badflag (-99.9), which causes the bounds check to think that
+c.....  the ob is outside the LAPS domain.
 c
-	   if(lats(i)+1. .eq. lats(i)) lats(i) = badflag
-	   if(lons(i)+1. .eq. lons(i)) lats(i) = badflag
-	   if(elev(i)+1. .eq. elev(i)) lats(i) = badflag
+	   if( nan( lats(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nan( lons(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nan( elev(i) ) .eq. 1 ) lats(i)  = badflag
+c
+	   if( nan( timeobs(i) ) .eq. 1 ) lats(i) = badflag
+c
+	   if( nan( vis(i)  ) .eq. 1 ) vis(i)   = badflag
+	   if( nan( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
+	   if( nan( t(i)    ) .eq. 1 ) t(i)     = badflag
+	   if( nan( td(i)   ) .eq. 1 ) td(i)    = badflag
+	   if( nan( tt(i)   ) .eq. 1 ) tt(i)    = badflag
+	   if( nan( ttd(i)  ) .eq. 1 ) ttd(i)   = badflag
+	   if( nan( dd(i)   ) .eq. 1 ) dd(i)    = badflag
+	   if( nan( ff(i)   ) .eq. 1 ) ff(i)    = badflag
+	   if( nan( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
+	   if( nan( alt(i)  ) .eq. 1 ) alt(i)   = badflag
+	   if( nan( pcp1(i) ) .eq. 1 ) pcp1(i)  = badflag
+	   if( nan( pcp3(i) ) .eq. 1 ) pcp3(i)  = badflag
+	   if( nan( pcp6(i) ) .eq. 1 ) pcp6(i)  = badflag
+	   if( nan( pcp24(i)) .eq. 1 ) pcp24(i) = badflag
+	   if( nan( dp(i)   ) .eq. 1 ) dp(i)    = badflag
+c
+	   if( nan( snowcvr(i) ) .eq. 1 ) snowcvr(i) = badflag
+	   if( nan( max24t(i)  ) .eq. 1 ) max24t(i)  = badflag
+	   if( nan( min24t(i)  ) .eq. 1 ) min24t(i)  = badflag
 c
 	   do j=1,5
-	      if(ht(j,i)+1. .eq. ht(j,i)) ht(j,i) = badflag
+	      if( nan( ht(j,i) ) .eq. 1 ) ht(j,i) = badflag
 	   enddo !j
 c
-	   if(vis(i)+1.  .eq.  vis(i)) vis(i)  = badflag
-	   if(mslp(i)+1. .eq. mslp(i)) mslp(i) = badflag
-	   if(t(i)+1.    .eq.    t(i)) t(i)    = badflag
-	   if(td(i)+1.   .eq.   td(i)) td(i)   = badflag
-	   if(tt(i)+1.   .eq.   tt(i)) tt(i)   = badflag
-	   if(ttd(i)+1.  .eq.  ttd(i)) ttd(i)  = badflag
-	   if(dd(i)+1.   .eq.   dd(i)) dd(i)   = badflag
-	   if(ff(i)+1.   .eq.   ff(i)) ff(i)   = badflag
-	   if(ffg(i)+1.  .eq.  ffg(i)) ffg(i)  = badflag
-	   if(alt(i)+1.  .eq.  alt(i)) alt(i)  = badflag
-c
 	enddo !i
-c
-c.....  Fix for metars....until can rig better
-c
-	do i=1,n_sao_all
-	   stname(i) = '     '
-cc	   write(6,9999) i, stname_in(i)
-	   stname(i)(1:3) = stname_in(i)(2:4)
-	enddo !i
- 9999	format(1x,i4,2x,a5)
 c
 c.....  Set up the time window.
 c
@@ -162,10 +219,11 @@ c
 	jfirst = 1
 	do 125 i=1,n_sao_all
 c
-c.....  Check if station is in the box.
+c.....  Check if station is in the box and the elevation is ok.
 c
 	  if(lons(i).gt.east .or. lons(i).lt.west) go to 125
 	  if(lats(i).gt.anorth .or. lats(i).lt.south) go to 125
+          if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125
 c
 c.....  Check to see if its in the desired time window (if the flag
 c.....  says to check this).
@@ -187,17 +245,17 @@ c.....  time period.
 c
 	  if(jfirst .eq. 1) then
 	     icount = 1
-	     save_stn(1) = stname(i)(1:3)
+	     save_stn(1) = stname(i)
 	     jfirst = 0
 	     go to 150
 	  endif
 c
 	  do k=1,icount
-	     if(stname(i)(1:3) .eq. save_stn(k)) go to 125
+	     if(stname(i) .eq. save_stn(k)) go to 125
 	  enddo !k
 c
 	  icount = icount + 1
-	  save_stn(icount) = stname(i)(1:3)   ! only one...save for checking
+	  save_stn(icount) = stname(i)  ! only one...save for checking
 c
  150	  nn = nn + 1
 	  n_sao_b = n_sao_b + 1		!station is in the box
@@ -209,43 +267,9 @@ c
 	 n_sao_g = n_sao_g + 1
  151	 continue
 c
-c.....	Figure out the report type.
-c
-cc	  rept = '    '
-cc	  auto = '     '
-cc	  rept = reptype(i)(1:4)
-cc	  auto = atype(i)(1:5)
-
-	  obstype(nn) = '        '
-	  obstype(nn)(1:5) = reptype(i)(1:5)
-	  if(atype(i)(1:1) .eq. 'A') obstype(nn)(8:8) = 'A'
-	  if(atype(i)(3:3) .eq. '1') obstype(nn)(7:7) = '1'
-	  if(atype(i)(3:3) .eq. '2') obstype(nn)(7:7) = '2'
-c
-cc	  if(rept(3:3) .eq. ' ') then
-cc	    obstype(nn)(1:4) = rept
-cc	    obstype(nn)(4:8) = auto
-cc	  else
-cc	    obstype(nn)(4:8) = auto
-cc	    obstype(nn)(1:4) = rept
-cc	  endif
-c
-c+++++++++++++++++++++++++++++++++++
-c
-c       Temp fix for missing elev
-c
-c
-	  if(stname(i)(1:3) .eq. 'ITR') elev(i) = 1125.
-
-c+++++++++++++++++++++++++++++++++++
-c
-c
 c.....	Figure out the cloud data.
 c
 	  kkk = 0               ! number of cloud layers
-	  cover = badflag
-	  hgt_ceil = 22500.0	! set to no ceiling to start
-	  hgt_low = 22500.0	! set to no lowest cloud to start
 c
 	  if(cvr(1,i)(1:1) .eq. ' ') then
 	     kkk = 0
@@ -255,80 +279,25 @@ c
 	     enddo !k
 	  endif
 c
-c
-cc	kkk = 0
-c
-c
 	  if(kkk .eq. 0) then	! no cloud data...probably AMOS station
-	    cover    = badflag
-	    hgt_ceil = badflag
-	    hgt_low  = badflag
 	    go to 126		! skip rest of cloud stuff
 	  endif
-	  iceiling = 0
-	  ilow = 0
 	  do ii=1,kkk
 	    if(ht(ii,i) .gt. 25000.0) ht(ii,i) = badflag
-	    if(cvr(ii,i)(1:3).eq.'CLR' .or.
-     &                            cvr(ii,i)(1:3).eq.'SKC') then
-	      cover = 0.
-	      cvr(ii,i)(1:3) = 'CLR'
-	      if(atype(i)(1:1) .eq. ' ') then    ! man station
-		 hgt_ceil = 22500.0
-		 hgt_low = 22500.0
-		 ht(ii,i) = 22500.0
-	      else                        ! auto station (12000 ft hgt limit)
-		 hgt_ceil = 3657.4
-		 hgt_low = 3657.4
-		 ht(ii,i) = 3657.4
-	      endif
-	    elseif(cvr(ii,i)(1:3).eq.'FEW' 
-     &                      .or. cvr(ii,i)(1:4).eq.'-FEW') then
-	      cover = .1
-	      if(ilow .eq. 0) then
-	        hgt_low = ht(ii,i)
-	        ilow = 1
-	      endif
-	    elseif(cvr(ii,i)(1:3).eq.'SCT' 
-     &                      .or. cvr(ii,i)(1:4).eq.'-SCT') then
-	      cover = .3
-	      if(ilow .eq. 0) then
-	        hgt_low = ht(ii,i)
-	        ilow = 1
-	      endif
-	    elseif(cvr(ii,i)(1:3).eq.'BKN' 
-     &                      .or. cvr(ii,i)(1:4).eq.'-BKN') then
-	      cover = .7
-	      if(iceiling .eq. 0) then
-	        hgt_ceil = ht(ii,i)
-	        iceiling = 1
-	      endif
-	      if(ilow .eq. 0) then
-	        hgt_low = ht(ii,i)
-	        ilow = 1
-	      endif
-	    elseif(cvr(ii,i)(1:3).eq.'OVC' 
-     &                      .or. cvr(ii,i)(1:4).eq.'-OVC' 
-     &                      .or. cvr(ii,i)(1:2).eq.'VV') then
-	      cover = 1.
-	      if(iceiling .eq. 0) hgt_ceil = ht(ii,i)
-	      if(ilow .eq. 0) hgt_low = ht(ii,i)
-	      if(cvr(ii,i)(1:2) .eq. 'VV') cvr(ii,i)(1:2) = 'X '
+c
+	    if(cvr(ii,i)(1:3) .eq. 'SKC') then
+	       ht(ii,i) = 22500.0
+	    endif
+c
+	    if(cvr(ii,i)(1:3) .eq. 'CLR') then
+	       ht(ii,i) = 3657.4
 	    endif
 	  enddo !ii
  126	  continue
 c
-c.....	check cloud info for very high heights...set to max if greater
-c.....	also convert agl cloud heights to msl by adding elevation.
+c.....	Check cloud info for very high heights...set to max if greater.
+c.....	Also convert agl cloud heights to msl by adding elevation.
 c
-	if(hgt_ceil .ge. 0.) then	! if not...badflag
-	  hgt_ceil = hgt_ceil + elev(i)	! convert cld hts from agl to msl
-	  if(hgt_ceil .gt. 22500.) hgt_ceil = 22500.
-	endif
-	if(hgt_low .ge. 0.) then	! if not...badflag
-	  hgt_low = hgt_low + elev(i)	! convert agl to msl
-	  if(hgt_low  .gt. 22500.) hgt_low  = 22500.
-	endif
 	if(kkk .gt. 0) then
 	  do ii=1,kkk
 	    if(ht(ii,i) .ge. 0.) then
@@ -339,96 +308,222 @@ c
 	endif
 c
 c
-c.....  Convert units, while doing a quick and dirty qc on the data.
+c.....  Convert units for storage.
 c
-
-	if(alt(i).gt.25. .and. alt(i).lt.34.) 
-     &                            alt(i) = alt(i) * 33.8624
-
-	alt(i) = alt(i) * 0.01                                   !Pa to mb
-	mslp(i) = mslp(i) * 0.01                                 !Pa to mb
-	if(alt(i).lt.900. .or. alt(i).gt.1150.) alt(i) = badflag !alt (mb)
-	if(mslp(i).lt.900. .or. mslp(i).gt.1150.) mslp(i) = badflag !MSL p (mb)
+c.....  Temperature and dewpoint
 c
-	t(i) = ((t(i) - 273.16) * 9./5.) + 32.
-	td(i) = ((td(i) - 273.16) * 9./5.) + 32.
-	if(t(i).lt.-50. .or. t(i).gt.130.)  t(i) = badflag   !temp
-	if(td(i).lt.-50. .or. td(i).gt.90.) td(i) = badflag  !dewpoint
-	tt(i) = ((tt(i) - 273.16) * 9./5.) + 32.
-	ttd(i) = ((ttd(i) - 273.16) * 9./5.) + 32.
-	if(tt(i).lt.-50. .or. tt(i).gt.130.)  tt(i) = badflag   !temp
-	if(ttd(i).lt.-50. .or. ttd(i).gt.90.) ttd(i) = badflag  !dewpoint
-c
-	temp_f = tt(i)
-	dewp_f = ttd(i)
-	if(temp_f .eq. badflag) temp_f = t(i)
-	if(dewp_f .eq. badflag) dewp_f = td(i)
-c
-	if(dd(i).lt.0. .or. dd(i).gt.360.)dd(i) = badflag
-	ff(i) = 1.94254 * ff(i)                             !m/s to kt
-	ffg(i) = 1.94254 * ffg(i)                           !m/s to kt
-	if(ff(i).lt.0. .or. ff(i).gt.120.)ff(i) = badflag
-	if(ffg(i).lt.0. .or. ffg(i).gt.140.)ffg(i) = badflag
-	ddg = dd(i)
-	if(ffg(i) .eq. badflag) ddg = badflag
-c
-	vis(i) = vis(i) * .001				!m to km
-	vis(i) = 0.621371 * vis(i)                      !km to miles
-	if(vis(i) .gt. 200.) vis(i) = badflag			! visibility
-	if(vis(i) .lt.   0.) vis(i) = badflag
-c
-c.....  Figure out the pressure tendency.  NOTE:  As of 11-94, there
-c.....  is a bug in the NetCDF SAO files, such that pressure changes
-c.....  over 9.9 mb are not recorded properly.  When this is fixed in
-c.....  the NetCDF files, this section of code will have to be changed.
-c
-	if(dpchar(i).le.-1.or.dpchar(i).gt.9.or.abs(dp(i)).gt.99900) then
-	   rdp3 = badflag
+	temp_k = tt(i)                        !set to temp_from_tenths
+	if(temp_k .eq. badflag) temp_k = t(i) !no temp_from_tenths, set to t
+	if(temp_k .eq. badflag) then          !t bad too?
+	   temp_f = badflag                   !          bag
 	else
-	   rdp3 = real((dpchar(i) * 100) + dp(i)*0.01)
+	   temp_f = ((temp_k - 273.16) * 9./5.) + 32.  ! K to F
 	endif
+c
+	dewp_k = ttd(i)                        !set to dp_from_tenths
+	if(dewp_k .eq. badflag) dewp_k = td(i) !no dp_from_tenths, set to dp
+	if(dewp_k .eq. badflag) then           !dp bad too?
+	   dewp_f = badflag                    !         bag
+	else
+	   dewp_f = ((dewp_k - 273.16) * 9./5.) + 32.  ! K to F
+	endif
+c
+c..... Wind speed and direction
+c
+	ddg = badflag
+	if(ff(i)  .ne. badflag) ff(i)  = 1.94254 * ff(i)   !m/s to kt
+	if(ffg(i) .ne. badflag) then
+	   ffg(i) = 1.94254 * ffg(i) !m/s to kt
+	   ddg = dd(i)
+	endif
+c
+c..... Pressure...MSL and altimeter, 3-h pressure change
+c
+	if(alt(i)  .ne. badflag)  alt(i) =  alt(i) * 0.01   !Pa to mb
+	if(mslp(i) .ne. badflag) mslp(i) = mslp(i) * 0.01   !Pa to mb
+	if(dp(i)   .ne. badflag)   dp(i) =   dp(i) * 0.01   !Pa to mb
+c
+c..... Visibility
+c
+	if(vis(i) .ne. badflag) then
+	   vis(i) = vis(i) * .001      !m to km
+	   vis(i) = 0.621371 * vis(i)  !km to miles
+	endif
+c
+c..... Climo-type stuff...Precip and snow cover, Max/min temps
+c
+	if(pcp1(i)  .ne. badflag)  pcp1(i) =  pcp1(i) * 39.370079 ! m to in
+	if(pcp3(i)  .ne. badflag)  pcp3(i) =  pcp3(i) * 39.370079 ! m to in
+	if(pcp6(i)  .ne. badflag)  pcp6(i) =  pcp6(i) * 39.370079 ! m to in
+	if(pcp24(i) .ne. badflag) pcp24(i) = pcp24(i) * 39.370079 ! m to in
+	if(snowcvr(i) .ne. badflag) snowcvr(i) = snowcvr(i) * 39.370079 ! m to in
+	if(max24t(i) .ne. badflag) then
+	   max24t(i) = ((max24t(i) - 273.16) * 9./5.) + 32. ! K to F
+	endif
+	if(min24t(i) .ne. badflag) then
+	   min24t(i) = ((min24t(i) - 273.16) * 9./5.) + 32.  ! K to F
+	endif
+c
+c
+c..... Fill the expected accuracy arrays.  Values are based on information
+c..... in the 'Federal Meteorological Handbook No. 1' for the METARs, 
+c..... Appendix C (http://www.nws.noaa.gov/oso/oso1/oso12/fmh1/fmh1appc.htm)
+c..... Note that we convert the units in Appendix C to match what we're 
+c..... using here.
+c
+c..... Temperature (deg F)
+c
+	fon = 9. / 5.  !ratio when converting C to F
+	store_2ea(nn,1) = 5.0 * fon        ! start...we don't know what we have
+	if(temp_f .ne. badflag) then
+	   if(temp_f.ge.c2f(-62.) .and. temp_f.le.c2f(-50.)) then
+	      store_2ea(nn,1) = 1.1 * fon  ! conv to deg F
+	   elseif(temp_f.gt.c2f(-50.) .and. temp_f.lt.c2f(50.)) then
+	      store_2ea(nn,1) = 0.6 * fon  ! conv to deg F
+	   elseif(temp_f.ge.c2f(50.) .and. temp_f.le.c2f(54.)) then
+	      store_2ea(nn,1) = 1.1 * fon  ! conv to deg F
+	   endif
+	endif
+c
+c..... Dew point (deg F).  Also estimate a RH accuracy based on the dew point.
+c..... Estimates for the RH expected accuracy are from playing around with the
+c..... Psychrometric Tables for various T/Td combinations (including their
+c..... accuracies from the FMH-1 Appendix C).
+c
+	 store_2ea(nn,2) = 5.0 * fon       ! start...don't know what we have 
+	 store_2ea(nn,3) = 50.0            ! Relative Humidity %
+	 if(dewp_f .ne. badflag) then
+	    if(dewp_f.ge.c2f(-34.) .and. dewp_f.lt.c2f(-24.)) then
+	       store_2ea(nn,2) = 2.2 * fon ! conv to deg F
+	       store_2ea(nn,3) = 20.0      ! RH (%) 
+	    elseif(dewp_f.ge.c2f(-24.) .and. dewp_f.lt.c2f(-1.)) then
+	       store_2ea(nn,2) = 1.7 * fon ! conv to deg F
+	       store_2ea(nn,3) = 12.0      ! RH (%) 
+	    elseif(dewp_f.ge.c2f(-1.) .and. dewp_f.le.c2f(30.)) then
+	       store_2ea(nn,2) = 1.1 * fon ! conv to deg F
+	       store_2ea(nn,3) = 8.0       ! RH (%) 
+	    endif
+	 endif
+c
+c..... Wind direction (deg) and speed (kts)
+c
+	 store_3ea(nn,1) = 10.0    ! deg 
+	 store_3ea(nn,2) =  1.0    ! kt
+	 if(ff(i) .ne. badflag) then
+	    if(ff(i).ge.1.0 .and. ff(i).le.10.0) then
+	       store_3ea(nn,2) = 1.0          ! kt
+	    elseif(ff(i) .gt. 10.0) then
+	       store_3ea(nn,2) = ff(i) * 0.1  ! 10% of speed (kts)
+	    endif
+c
+	    if(ff(i) .ge. 5.0) then    ! dir check
+	       store_3ea(nn,1) = 5.0   ! deg
+	    endif
+	 endif
+c
+c..... Pressure and altimeter (mb)
+c
+	 store_4ea(nn,1) = 0.68            ! pressure (mb)
+	 store_4ea(nn,2) = 0.68            ! altimeter (mb)
+c
+c..... Visibility (miles).  For automated stations use a guess based 
+c..... on Table C-2 in Appendix C of FMH-1.  For manual stations, use
+c..... a guess based on the range between reportable values (e.g., for
+c..... reported visibility between 0 and 3/8th mile, set accuracy to 
+c..... 1/16th mile).  This isn't ideal, but its a start.
+c
+	 store_5ea(nn,1) = 10.00         ! Start with this (miles)
+	 if(vis(i) .ne. badflag) then
+	    if(atype_in(i)(1:2) .eq. 'A0') then   ! have an auto station
+	       if(vis(i) .lt. 2.0) then
+		  store_5ea(nn,1) = 0.25         ! miles
+	       elseif(vis(i).ge.2.0 .and. vis(i).lt.3.0) then
+		  store_5ea(nn,1) = 0.50         ! miles
+	       elseif(vis(i) .gt. 3.0) then
+		  store_5ea(nn,1) = 1.00         ! miles
+	       endif
+	    else		! have a manual station
+	       if(vis(i) .le. 0.375) then
+		  store_5ea(nn,1) = 0.0625       ! miles
+	       elseif(vis(i).gt.0.375 .and. vis(i).le.2.0) then
+		  store_5ea(nn,1) = 0.125        ! miles
+	       elseif(vis(i).gt.2.0 .and. vis(i).le.3.0) then
+		  store_5ea(nn,1) = 0.25         ! miles
+	       elseif(vis(i).gt.3.0 .and. vis(i).le.15.0) then
+		  store_5ea(nn,1) = 1.00         ! miles
+	       elseif(vis(i) .gt. 15.0) then
+		  store_5ea(nn,1) = 5.00         ! miles
+	       endif
+	    endif
+	 endif
+c
+c..... Other stuff.  Don't really know about the precip, but probably
+c..... worse that this guess.
+c
+	 store_5ea(nn,2) = 0.0             ! solar radiation 
+	 store_5ea(nn,3) = 0.0             ! soil/water temperature
+	 store_5ea(nn,4) = 0.0             ! soil moisture 
+c
+	 store_6ea(nn,1) = 0.01            ! precipitation (in)
+	 store_6ea(nn,2) = 1.0             ! snow cover (in) 
+c
 c
 c..... Output the data to the storage arrays
 c
-	 stations(nn) = stname(i)(1:3)          ! station name
-	 wx(nn) = '        '
-	 wx(nn) = weather(i)(1:8)               ! observed wx
-	 store(nn,1) = lats(i)			! station latitude
-	 store(nn,2) = lons(i)			! station longitude
-	 store(nn,3) = elev(i)			! station elevation
-	 store(nn,4) = rtime			! observation time
-	 store(nn,5) = temp_f			! t (deg f)
-	 store(nn,6) = dewp_f			! td (deg f)
-	 store(nn,7) = dd(i)			! dd (deg)
-	 store(nn,8) = ff(i)			! ff (kt)
-	 store(nn,9) = ddg			! gust dd (deg)
-	 store(nn,10) = ffg(i)			! gust ff (kt)
-	 store(nn,11) = badflag			! station pressure (mb)
-	 store(nn,12) = mslp(i)			! MSL pressure (mb)
-	 store(nn,13) = alt(i)			! altimeter setting (mb)
-	 store(nn,14) = float(kkk)		! number of cloud layers
-	 store(nn,15) = hgt_ceil		! ceiling height (m msl)
-	 store(nn,16) = hgt_low			! lowest cloud height (m msl)
-	 store(nn,17) = cover			! cld cover (tenths)
-	 store(nn,18) = vis(i)			! visibility (miles)
-	 store(nn,19) = badflag			! solar radiation 
-	 store(nn,20) = rdp3			! 3-h pressure tendency (mb)
+	 call s_len(stname(i), len)
+	 stations(nn)(1:len) = stname(i)(1:len) ! station name
 c
-c.....	Store cloud info if we have any.  New...make sure that the first
-c.....  character in the string is either a '-' or a blank (necessary for
-c.....  the LAPS cloud analysis).
+	 call s_len(atype_in(i), len)
+	 atype(nn)(1:len) = atype_in(i)(1:len)  ! auto stn type
+c
+	 call s_len(reptype_in(i), len)
+	 reptype(nn)(1:len) = reptype_in(i)(1:len)  ! report type
+c
+	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
+	 provider(nn)(1:11) = 'NWS        '     ! data provider (all from NWS)
+c
+	 store_1(nn,1) = lats(i)                ! station latitude
+	 store_1(nn,2) = lons(i)                ! station longitude
+	 store_1(nn,3) = elev(i)                ! station elevation
+	 store_1(nn,4) = rtime                  ! observation time
+c
+	 store_2(nn,1) = temp_f                 ! temperature (deg f)
+	 store_2(nn,2) = dewp_f                 ! dew point (deg f)
+	 store_2(nn,3) = badflag                ! Relative Humidity
+c
+	 store_3(nn,1) = dd(i)                  ! wind dir (deg)
+	 store_3(nn,2) = ff(i)                  ! wind speed (kt)
+	 store_3(nn,3) = ddg                    ! wind gust dir (deg)
+	 store_3(nn,4) = ffg(i)                 ! wind gust speed (kt)
+c
+	 store_4(nn,1) = alt(i)                 ! altimeter setting (mb)
+	 store_4(nn,2) = badflag                ! station pressure (mb)
+	 store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
+	 store_4(nn,4) = float(dpchar(i))       ! 3-h press change character
+         store_4(nn,5) = dp(i)                  ! 3-h press change (mb)
+c
+	 store_5(nn,1) = vis(i)                 ! visibility (miles)
+	 store_5(nn,2) = badflag                ! solar radiation 
+	 store_5(nn,3) = badflag                ! soil/water temperature
+	 store_5(nn,4) = badflag                ! soil moisture
+c
+	 store_6(nn,1) = pcp1(i)                ! 1-h precipitation
+	 store_6(nn,2) = pcp3(i)                ! 3-h precipitation
+	 store_6(nn,3) = pcp6(i)                ! 6-h precipitation
+	 store_6(nn,4) = pcp24(i)               ! 24-h precipitation
+	 store_6(nn,5) = snowcvr(i)             ! snow cover
+c
+	 store_7(nn,1) = float(kkk)             ! number of cloud layers
+	 store_7(nn,2) = max24t(i)              ! 24-h max temperature
+	 store_7(nn,3) = min24t(i)              ! 24-h min temperature
+c
+c.....	Store cloud info if we have any. 
 c
 	 if(kkk .gt. 0) then
 	   do ii=1,kkk
-	     if(cvr(ii,i)(1:2) .eq. '-X') ht(ii,i) = badflag !thin obscd=no ht
-	     store_hgt(nn,ii) = ht(ii,i)
-	     store_emv(nn,ii) = '   '             !emv(ii,i)
-	     if(cvr(ii,i)(1:1) .eq. '-') then
-	        store_amt(nn,ii)(1:4) = cvr(ii,i)(1:4)
-	     else
-		store_amt(nn,ii)(1:1) = ' '
-		store_amt(nn,ii)(2:4) = cvr(ii,i)(1:3)
-	     endif
+	     store_cldht(nn,ii) = ht(ii,i)
+	     store_cldamt(nn,ii)(1:1) = ' '
+	     store_cldamt(nn,ii)(2:4) = cvr(ii,i)(1:3)
 	   enddo !ii
 	 endif
 c
@@ -438,8 +533,6 @@ c
 c
 c.....  That's it...lets go home.
 c
-	 n_sao_pos_g = n_sao_g
-	 n_sao_pos_b = n_sao_b
 	 print *,' Found ',n_sao_b,' METARs in the LAPS box'
 	 print *,' Found ',n_sao_g,' METARs in the LAPS grid'
 	 print *,' '
@@ -452,3 +545,13 @@ c
 	 return
 c
 	 end
+c
+c
+	function c2f(temp_c)
+c
+c       Takes a single value in deg C and returns deg F.
+c
+	c2f = (temp_c * 9./5.) + 32.
+c
+	return
+	end

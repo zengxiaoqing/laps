@@ -31,10 +31,11 @@ cdis
 cdis 
 c
 c
-	subroutine write_surface_obs(btime,outfile,n_meso,n_meso_pos,
-     &    n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_pos_g,
-     &    n_obs_b,n_obs_pos_b,stations,store,wx,obstype,store_emv,
-     &    store_amt,store_hgt,maxsta,num_var,badflag,jstatus)
+	subroutine write_surface_obs(btime,outfile,n_obs_g,
+     &    n_obs_b,wmoid,stations,provider,wx,reptype,autostntype,
+     &    store_1,store_2,store_3,store_4,store_5,store_6,store_7,
+     &    store_2ea,store_3ea,store_4ea,store_5ea,store_6ea,
+     &    store_cldamt,store_cldht,maxsta,jstatus)
 c
 c*****************************************************************************
 c
@@ -42,17 +43,28 @@ c	Routine to write the LAPS surface data file.   The data is passed
 c       to this routine via the 'store' array.
 c
 c	Changes:
-c		P. Stamus  10-27-94  Original version (from get_surface_obs).
+c		P. Stamus  03-27-98  Original version (from old format
+c                                      version of write_surface_obs).
+c                          05-01-98  Added soil moisture to 'store_5' & '_5ea'
+c                          09-04-98  Final adjustments for operational use.
 c
 c*****************************************************************************
 c
-	real*4 store(maxsta,num_var), store_hgt(maxsta,5)
+	real*4 store_1(maxsta,4), 
+     &         store_2(maxsta,3), store_2ea(maxsta,3),
+     &         store_3(maxsta,4), store_3ea(maxsta,2),
+     &         store_4(maxsta,5), store_4ea(maxsta,2),
+     &         store_5(maxsta,4), store_5ea(maxsta,4),
+     &         store_6(maxsta,5), store_6ea(maxsta,2),
+     &         store_7(maxsta,3),
+     &         store_cldht(maxsta,5)
 c
-	integer*4 jstatus
+	integer*4 jstatus, wmoid(maxsta)
 c
-	character btime*24,outfile*70, store_amt(maxsta,5)*4,
-     &		store_emv(maxsta,5)*1,stations(maxsta)*3,
-     &		wx(maxsta)*8,obstype(maxsta)*8
+	character btime*24, outfile*(*), 
+     &         stations(maxsta)*20, provider(maxsta)*11,
+     &         wx(maxsta)*25,reptype(maxsta)*6, 
+     &         autostntype(maxsta)*6,store_cldamt(maxsta,5)*4
 c
 c
 c.....	Write the file.
@@ -62,42 +74,75 @@ c
 c.....	Write the header.
 c
 	write(11,900) btime,		! time
-     &               n_meso,		! # of mesonet stations
-     &               n_meso_pos,	! total # mesonet stations possible
-     &               n_sao_g,		! # of saos in the laps grid
-     &               n_sao_pos_g,	! total # of saos possible in laps grid
-     &               n_sao_b,		! # of saos in the box
-     &               n_sao_pos_b,	! total # of saos possible in the box
      &               n_obs_g,		! # of obs in the laps grid
-     &               n_obs_pos_g,	! total # of obs psbl in the laps grid
-     &               n_obs_b,		! # of obs in the box
-     &               n_obs_pos_b 	! total # of obs possible in the box
-900	format(1x,a24,10(1x,i4))
+     &               n_obs_b		! # of obs in the box
+ 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Write the station data.
 c
 	do k=1,n_obs_b
-	  write(11,901) stations(k)(1:3),(store(k,i),i=1,3),obstype(k),
-     &                 nint(store(k,4)),wx(k)
-901	  format(1x,a3,1x,2(f7.2,1x),f5.0,1x,a8,1x,i4,1x,a8)
 c
-	  write(11,903) (store(k,i),i=5,13)
-903	  format(4x,2(f6.1,1x),4(f5.0,1x),3(f6.1,1x))
+	   write(11,901) stations(k),           !station id
+     &                   wmoid(k),              !WMO id number
+     &                   provider(k),           !data provider
+     &                   (store_1(k,i),i=1,3),  !lat, lon, elev
+     &                   nint(store_1(k,4))     !obs time
+ 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
-	  kkk_s = nint(store(k,14))
-	  write(11,905) kkk_s,(store(k,i),i=15,19),nint(store(k,20))
-905	  format(4x,i2,2(1x,f7.1),1x,f5.1,1x,f7.3,1x,f6.1,1x,i4)
+	  write(11,903)  reptype(k),            !station report type
+     &                   autostntype(k),        !station type (manual/auto)
+     &                   wx(k)                  !present weather
+ 903	  format(5x,a10,2x,a10,2x,a30)
+c
+	  write(11,905) store_2(k,1), store_2ea(k,1),   !temp, temp expected accuracy
+     &                  store_2(k,2), store_2ea(k,2),   !dew point, dew point exp. accuracy
+     &                  store_2(k,3), store_2ea(k,3)    !Rel hum, rh expected accuracy
+ 905	  format(5x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2)
+c
+	  write(11,907) store_3(k,1), store_3(k,2),     !wind dir, wind speed
+     &                  store_3(k,3), store_3(k,4),     !wind gust dir, wind gust speed
+     &                  store_3ea(k,1), store_3ea(k,2)  !dir expected accuracy, spd exp accuracy
+ 907	  format(5x,4(f8.1,2x),2(f6.2,2x))
+c
+	  write(11,909) store_4(k,1),                   !altimeter
+     &                  store_4(k,2),                   !station pressure
+     &                  store_4(k,3),                   !MSL pressure
+     &                  nint(store_4(k,4)),             !3-h press change character
+     &                  store_4(k,5),                   !3-h pressure change
+     &                  store_4ea(k,1), store_4ea(k,2)  !pressure exp accuracy, alt exp accuracy
+ 909	  format(5x,f8.2,2x,f8.2,2x,f8.2,2x,i4,2x,f6.2,2x,f6.2,2x,f6.2)
+c
+	  write(11,911) store_5(k,1), store_5ea(k,1),   !visibility, vis exp accuracy
+     &                  store_5(k,2), store_5ea(k,2),   !solar, solar exp accuracy
+     &                  store_5(k,3), store_5ea(k,3),   !soil/water temp, soil/water temp exp accuracy
+     &                  store_5(k,4), store_5ea(k,4)    !soil moisture, soil moist exp accuracy
+ 911	  format(5x,f8.0,2x,f6.3,2x,f8.0,2x,f6.1,2x,4f8.2)
+c
+	  write(11,913)  store_6(k,1),                  !1-h precipitation
+     &                   store_6(k,2),                  !3-h precipitation
+     &                   store_6(k,3),                  !6-h precipitation
+     &                   store_6(k,4),                  !24-h precipitation
+     &                   store_6(k,5),                  !snow depth
+     &                   store_6ea(k,1), store_6ea(k,2) !precip and snow exp accuracy
+ 913	  format(5x,4(f8.2,2x),f6.1,2x,f8.2,2x,f4.1)
+c
+	  kkk_s = int(store_7(k,1))
+	  write(11,915) kkk_s,                     !num cld layers (store_7(k,1))
+     &                  store_7(k,2),              !24-h max temperature
+     &                  store_7(k,3)               !24-h min temperature
+ 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Write the cloud data if we have any.
 c
 	  if(kkk_s .gt. 0) then
 	    do ii=1,kkk_s
-	   write(11,907) store_emv(k,ii),store_amt(k,ii),store_hgt(k,ii)
-907	      format(5x,a1,1x,a4,1x,f7.1)
+  	      write(11,917) store_cldamt(k,ii), store_cldht(k,ii)   !layer cloud amount and height
 	    enddo !ii
 	  endif
+ 917	  format(10x,a8,2x,f8.0)
 c
 	enddo !k
+c
 	endfile(11)
 	close(11)	
 c

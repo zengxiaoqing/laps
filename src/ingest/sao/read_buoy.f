@@ -1,72 +1,46 @@
 c
 c
-      subroutine read_metar(nf_fid , maxSkyCover, recNum, altimeter,
-     &     autoStationType, dewpoint, dpFromTenths, elevation,
-     &     latitude, longitude, maxTemp24Hour, minTemp24Hour,
-     &     precip1Hour, precip24Hour, precip3Hour, precip6Hour,
-     &     presWeather, pressChange3Hour, pressChangeChar,
-     &     reportType, seaLevelPress, skyCover, skyLayerBase,
-     &     snowCover, stationName, tempFromTenths, temperature,
-     &     timeObs, visibility, windDir, windGust, windSpeed, wmoId,
-     &     badflag, istatus)
+      subroutine read_buoy(nf_fid , recNum, 
+     +     dataPlatformType, dewpoint, elevation, equivWindSpeed10m,
+     +     latitude, longitude, precip1Hour, precip24Hour,
+     +     precip6Hour, presWeather, pressChange3Hour,
+     +     pressChangeChar, seaLevelPress, seaSurfaceTemp,
+     +     stationName, temperature, timeObs,
+     +     visibility, wetBulbTemperature, windDir, windGust,
+     +     windSpeed, badflag, istatus)
 c
-c======================================================================
+c**********************************************************************
 c
-c     Routine to read the METAR NetCDF files at FSL.
+c     Routine to read the NetCDF Maritime observation files at FSL.
 c     Code created with 'xgennet.pl' by J. Edwards, NOAA/FSL.
 c     
-c     Original:  P. Stamus, NOAA/FSL  12 Mar 1998
-c     Changes:
-c        P. Stamus, NOAA/FSL  01 Sep 1998  Fix for differences in
-c           /public vs WFO cdls (no snowCover in WFO at this time.)
+c     Original:  P. Stamus, NOAA/FSL  26 Aug 1998
 c
-c======================================================================
+c**********************************************************************
 c
       include 'netcdf.inc'
-c
-      integer maxSkyCover, recNum, nf_fid, nf_vid, nf_status
-      integer ifilval
-c
-      character*6 autoStationType(recNum)
+      integer recNum, nf_fid, nf_vid, nf_status, ifilval
+
       character*25 presWeather(recNum)
-      character*6 reportType(recNum)
-      character*8 skyCover( maxSkyCover, recNum)
-      character*5 stationName(recNum)
-      integer*4   pressChangeChar(recNum), wmoId(recNum)
+      character*8 stationName(recNum)
+      integer dataPlatformType(recNum), pressChangeChar(recNum)
+
+      real dewpoint(recNum), elevation(recNum),
+     +     equivWindSpeed10m(recNum), latitude(recNum),
+     +     longitude(recNum), precip1Hour(recNum),
+     +     precip24Hour(recNum), precip6Hour(recNum),
+     +     pressChange3Hour(recNum), seaLevelPress(recNum),
+     +     seaSurfaceTemp(recNum), temperature(recNum),
+     +     visibility(recNum), wetBulbTemperature(recNum),
+     +     windDir(recNum), windGust(recNum), windSpeed(recNum)
+
+      real filval
 
       double precision timeObs(recNum), dfilval
-
-      real*4 altimeter(recNum), dewpoint(recNum), dpFromTenths(recNum)
-      real*4 elevation(recNum), latitude(recNum), longitude(recNum)
-      real*4 maxTemp24Hour(recNum), minTemp24Hour(recNum)
-      real*4 precip1Hour(recNum), precip24Hour(recNum)
-      real*4 precip3Hour(recNum), precip6Hour(recNum)
-      real*4 pressChange3Hour(recNum), seaLevelPress(recNum)
-      real*4 skyLayerBase( maxSkyCover, recNum), snowCover(recNum)
-      real*4 tempFromTenths(recNum), temperature(recNum)
-      real*4 visibility(recNum), windDir(recNum), windGust(recNum)
-      real*4 windSpeed(recNum)
-
-      real*4 filval
 c
-c
-c..... Start.
+c..... Start here.
 c
       istatus = 0
-C
-C     Variable        NETCDF Long Name
-C      autoStationType"automated station type" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'autoStationType',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var autoStationType'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,autoStationType)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ autoStationType '
-      endif
 C
 C     Variable        NETCDF Long Name
 C      presWeather  "present weather" 
@@ -83,35 +57,7 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      reportType   "report type" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'reportType',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var reportType'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,reportType)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ reportType '
-      endif
-C
-C     Variable        NETCDF Long Name
-C      skyCover     "sky cover" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'skyCover',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var skyCover'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,skyCover)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ skyCover '
-      endif
-C
-C     Variable        NETCDF Long Name
-C      stationName  "alphanumeric station identification" 
+C      stationName  "alphanumeric station name" 
 C
         nf_status = NF_INQ_VARID(nf_fid,'stationName',nf_vid)
       if(nf_status.ne.NF_NOERR) then
@@ -123,6 +69,29 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in NF_GET_VAR_ stationName '
       endif
+C
+C     Variable        NETCDF Long Name
+C      dataPlatformType"maritime data platform type" 
+C
+        nf_status = NF_INQ_VARID(nf_fid,'dataPlatformType',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var dataPlatformType'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,dataPlatformType)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in NF_GET_VAR_ dataPlatformType '
+      endif
+        nf_status = NF_GET_ATT_INT(nf_fid,nf_vid,'_FillValue',ifilval)
+      if(nf_status .ne. NF_NOERROR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var dataPlatformType'
+      endif
+      do i=1,recNum
+         if(dataPlatformType(i) .eq. ifilval) 
+     &                         dataPlatformType(i) = int(badflag)
+      enddo !i
 C
 C     Variable        NETCDF Long Name
 C      pressChangeChar"character of pressure change" 
@@ -148,49 +117,7 @@ C
       enddo !i
 C
 C     Variable        NETCDF Long Name
-C      wmoId        "numeric WMO identification" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'wmoId',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var wmoId'
-      endif
-        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,wmoId)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ wmoId '
-      endif
-        nf_status = NF_GET_ATT_INT(nf_fid,nf_vid,'_FillValue',ifilval)
-      if(nf_status .ne. NF_NOERROR) then
-         print *, NF_STRERROR(nf_status)
-         print *, ' in var wmoId'
-      endif
-      do i=1,recNum
-         if(wmoId(i) .eq. ifilval) wmoId(i) = int(badflag)
-      enddo !i
-C
-C     Variable        NETCDF Long Name
-C      altimeter    "altimeter setting" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'altimeter',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var altimeter'
-      endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,altimeter)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ altimeter '
-      endif
-        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
-         print *, NF_STRERROR(nf_status)
-         print *, ' in var altimeter'
-      endif
-      call ck_array_real(altimeter, recNum, filval, badflag)
-C
-C     Variable        NETCDF Long Name
-C      dewpoint     "dewpoint" 
+C      dewpoint     "dew point temperature" 
 C
         nf_status = NF_INQ_VARID(nf_fid,'dewpoint',nf_vid)
       if(nf_status.ne.NF_NOERR) then
@@ -208,26 +135,6 @@ C
          print *, ' in var dewpoint'
       endif
       call ck_array_real(dewpoint, recNum, filval, badflag)
-C
-C     Variable        NETCDF Long Name
-C      dpFromTenths "dewpoint from tenths of a degree Celsius" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'dpFromTenths',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dpFromTenths'
-      endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,dpFromTenths)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ dpFromTenths '
-      endif
-        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
-         print *, NF_STRERROR(nf_status)
-        print *,'in var dpFromTenths'
-      endif
-      call ck_array_real(dpFromTenths, recNum, filval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      elevation    "elevation" 
@@ -248,6 +155,26 @@ C
          print *,'in var elevation'
       endif
       call ck_array_real(elevation, recNum, filval, badflag)
+C
+C     Variable        NETCDF Long Name
+C      equivWindSpeed10m"equivalent wind speed at 10 meters" 
+C
+        nf_status = NF_INQ_VARID(nf_fid,'equivWindSpeed10m',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var equivWindSpeed10m'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,equivWindSpeed10m)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in NF_GET_VAR_ equivWindSpeed10m '
+      endif
+        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+      if(nf_status .ne. NF_NOERROR) then
+         print *, NF_STRERROR(nf_status)
+         print *,'in var equivWindSpeed10m'
+      endif
+      call ck_array_real(equivWindSpeed10m, recNum, filval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      latitude     "latitude" 
@@ -290,46 +217,6 @@ C
       call ck_array_real(longitude, recNum, filval, badflag)
 C
 C     Variable        NETCDF Long Name
-C      maxTemp24Hour"24 hour max temperature" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'maxTemp24Hour',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var maxTemp24Hour'
-      endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,maxTemp24Hour)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ maxTemp24Hour '
-      endif
-        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
-         print *, NF_STRERROR(nf_status)
-         print *,'in var maxTemp24Hour'
-      endif
-      call ck_array_real(maxTemp24Hour, recNum, filval, badflag)
-C
-C     Variable        NETCDF Long Name
-C      minTemp24Hour"24 hour min temperature" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'minTemp24Hour',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var minTemp24Hour'
-      endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,minTemp24Hour)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ minTemp24Hour '
-      endif
-        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
-         print *, NF_STRERROR(nf_status)
-         print *,'in var minTemp24Hour'
-      endif
-      call ck_array_real(minTemp24Hour, recNum, filval, badflag)
-C
-C     Variable        NETCDF Long Name
 C      precip1Hour  "1 hour precipitation" 
 C
         nf_status = NF_INQ_VARID(nf_fid,'precip1Hour',nf_vid)
@@ -368,26 +255,6 @@ C
          print *, ' in var precip24Hour'
       endif
       call ck_array_real(precip24Hour, recNum, filval, badflag)
-C
-C     Variable        NETCDF Long Name
-C      precip3Hour  "3 hour precipitation" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'precip3Hour',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precip3Hour'
-      endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,precip3Hour)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ precip3Hour '
-      endif
-        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
-         print *, NF_STRERROR(nf_status)
-         print *, ' in var precip3Hour'
-      endif
-      call ck_array_real(precip3Hour, recNum, filval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      precip6Hour  "6 hour precipitation" 
@@ -450,68 +317,24 @@ C
       call ck_array_real(seaLevelPress, recNum, filval, badflag)
 C
 C     Variable        NETCDF Long Name
-C      skyLayerBase "sky cover layer base" 
+C      seaSurfaceTemp"sea surface temperature" 
 C
-        nf_status = NF_INQ_VARID(nf_fid,'skyLayerBase',nf_vid)
+        nf_status = NF_INQ_VARID(nf_fid,'seaSurfaceTemp',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'in var skyLayerBase'
+        print *,'in var seaSurfaceTemp'
       endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,skyLayerBase)
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,seaSurfaceTemp)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ skyLayerBase '
+        print *,'in NF_GET_VAR_ seaSurfaceTemp '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
       if(nf_status .ne. NF_NOERROR) then
          print *, NF_STRERROR(nf_status)
-         print *, ' in var skyLayerBase'
+         print *, ' in var seaSurfaceTemp'
       endif
-      call ck_array_real(skyLayerBase, recNum, filval, badflag)
-C
-C     Variable        NETCDF Long Name
-C      snowCover    "snow cover" 
-C
-        nf_status = NF_INQ_VARID(nf_fid,'snowCover',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var snowCover'
-        do i=1,recNum
-           snowCover(i) = badflag
-        enddo !i
-        go to 500
-      endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,snowCover)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ snowCover '
-      endif
-        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
-         print *, NF_STRERROR(nf_status)
-         print *, ' in var snowCover'
-      endif
-      call ck_array_real(snowCover, recNum, filval, badflag)
-C
-C     Variable        NETCDF Long Name
-C      tempFromTenths"temperature from tenths of a degree Celsius" 
-C
- 500  nf_status = NF_INQ_VARID(nf_fid,'tempFromTenths',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var tempFromTenths'
-      endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tempFromTenths)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ tempFromTenths '
-      endif
-        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
-         print *, NF_STRERROR(nf_status)
-         print *, ' in var tempFromTenths'
-      endif
-      call ck_array_real(tempFromTenths, recNum, filval, badflag)
+      call ck_array_real(seaSurfaceTemp, recNum, filval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      temperature  "temperature" 
@@ -552,6 +375,26 @@ C
          print *, ' in var visibility'
       endif
       call ck_array_real(visibility, recNum, filval, badflag)
+C
+C     Variable        NETCDF Long Name
+C      wetBulbTemperature"wet bulb temperature" 
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wetBulbTemperature',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wetBulbTemperature'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wetBulbTemperature)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in NF_GET_VAR_ wetBulbTemperature '
+      endif
+        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+      if(nf_status .ne. NF_NOERROR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var wetBulbTemperature'
+      endif
+      call ck_array_real(wetBulbTemperature, recNum, filval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      windDir      "wind direction" 
@@ -635,29 +478,13 @@ C
          if(timeObs(i) .eq. dfilval) timeObs(i) = badflag
       enddo !i
 c
-c
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
       endif
 c
-c..... That's it.
-c
       istatus = 1
-c
-      return
-      end
-c
-c
-      subroutine ck_array_real(var, recNum, filval, badflag)
-c
-      integer recNum
-      real*4 var(recNum), filval, badflag
-c
-      do i=1,recNum
-         if(var(i) .eq. filval) var(i) = badflag
-      enddo !i
 c
       return
       end
