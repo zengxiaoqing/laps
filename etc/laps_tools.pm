@@ -290,7 +290,7 @@ sub mkdatadirs{
 lf1 lga lh3 lh4 lhe lil liw lm1 lm2 lmd lmr lmt 
 lpbl lps lq3 lrp lrs lso lsx lt1 lty 
 lvd lvd/goes08 lvd/goes10 lvd/meteos lvd/gmssat lw3 lwc lwm 
-msg pig pin prg pro sag vrc snd 
+msg pig pin prg pro sag vrc vrz snd 
 v01 v02 v03 v04 v05 v06 v07 v08 v09 v10 v11 v12 
 v13 v14 v15 v16 v17 v18 v19 vdr 
 d01 d02 d03 d04 d05 d06 d07 d08 d09 d10 d11 d12 
