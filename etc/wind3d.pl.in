@@ -58,6 +58,15 @@ open(FILE,$filename) or die "Can't open $filename.";
 close FILE;
 print "\nReading from log file $filename\n\n";
 
+# Determine analysis validtime.
+$searchstring = "systime =";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($validtime) = split(" ",$1); 
+    last; } 
+}
+print "ANALYSIS VALID TIME (yydddhhmm): $validtime UTC\n\n";
+
 # Determine background model.
 
 $modeltype = "missing";

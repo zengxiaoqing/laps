@@ -57,6 +57,15 @@ open(FILE,$filename) or die "Can't open $filename.";
 close FILE;
 print "\nReading from log file $filename\n\n";
 
+# Determine analysis validtime.
+$searchstring = "Getting surface data at:";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($validtime) = split(" ",$1); 
+    last; } 
+}
+print "ANALYSIS VALID TIME (yydddhhmm): $validtime UTC\n\n";
+
 # Check for disaster.
 
 $searchstring = "No sfc obs from LSO";
