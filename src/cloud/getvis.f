@@ -218,11 +218,11 @@ cdis
      1                               ,static_albedo,istat_sfc_alb)       
         if(istat_sfc_alb.eq.0 .or. istat_sfc_alb.eq.1)istat_sfc_alb=1 
 
-!       if(istat_sfc_alb .ne. 1)then ! Read sfc albedo from fixed database
+        if(istat_sfc_alb .ne. 1)then ! Read sfc albedo from fixed database
             write(6,*)' Monthly Albedo Data N/A, look for fixed data'
             var = 'ALB'
             call read_static_grid(ni,nj,var,static_albedo,istat_sfc_alb)
-!       endif
+        endif
 
         do i = 1,ni
         do j = 1,nj
