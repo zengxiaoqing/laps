@@ -305,7 +305,7 @@ rdr/001/vrc rdr/001/raw rdr/002/vrc rdr/002/raw rdr/003/vrc rdr/003/raw
 rdr/004/vrc rdr/004/raw rdr/005/vrc rdr/005/raw rdr/006/vrc rdr/006/raw
 rdr/007/vrc rdr/007/raw rdr/008/vrc rdr/008/raw rdr/009/vrc rdr/009/raw 
 lgb ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/cdf 
-dprep stats balance balance/lt1 balance/lw3 balance/lh3 balance/lq3
+dprep stats balance balance/lt1 balance/lw3 balance/lh3 balance/lq3 balance/air
 grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
 
      if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
@@ -403,11 +403,9 @@ sub get_pressures {
      my @plines = <PRES>;
      close PRES;
      my $i=0;
-     my $l;
      foreach (@plines){
-       if(/\s*\d+/){
-          $l=length($_);
-          @pressures[$i]=substr($_,1,$l-4);
+       if(/\s*(\d+)/){
+          @pressures[$i]=$1;
           $i++
        }
      }
