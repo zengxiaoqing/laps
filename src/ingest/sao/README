@@ -18,7 +18,7 @@ main                                      obs_driver.f
             read_metar_af                 read_metar_af.f        AFWA
 
         get_local_obs                     get_local_obs.f        mesonet (LDAD)
-            read_local_obs                read_local_obs.f       NIMBUS/WFO
+            read_ldad_madis_netcdf        read_ldad_madis_data.f NIMBUS/WFO/MADIS
 
         get_local_cwb                     get_local_cwb.f        CWB mesonets
             read_local_cwb                read_local_cwb.f       CWB mesonets
