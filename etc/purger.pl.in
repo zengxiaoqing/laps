@@ -20,6 +20,7 @@ if($realclean eq "FULLPURGE"){
     $clean_dirs{lcv} = 2.1;
     $clean_dirs{l1s} = 2.1;
     $clean_dirs{lm2} = 1.5;
+    $clean_dirs{'../log'} = 30.0;
 #
 # Don't ever completely empty the directories 
 #
@@ -39,7 +40,11 @@ foreach (@subdirs){
 
 foreach $dir (keys(%clean_dirs)){
     opendir(DIR,$dir);
-    @filelist = grep(/^\d\d/, readdir(DIR));
+    if($dir eq '../log'){
+	@filelist = grep(/\d\d$/, readdir(DIR));
+    }else{
+	@filelist = grep(/^\d\d/, readdir(DIR));
+    }
     closedir(DIR);
     print "Purging in $dir\n";
     next if($#filelist < $min_files);

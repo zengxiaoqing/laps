@@ -1,36 +1,50 @@
 #!@PERL@
-# @configure_input@
+# @confiure_input@
 # Run the LAPS suite of programs 
 #
-require "getopt.pl";
+use strict;
+use Getopt::Std;
+my($opt_o);
+getopt();
 
 umask 002;
 
-$LAPSROOT=shift || die "LAPS root directory required\n";
+#
+# List here the laps products to be executed in the order that they should 
+# be executed.
+#
+
+my @LAPS_EXE = qw(lga.exe systime.exe obs_driver.x ingest_lrs.exe ingest_blplrs.exe
+		  ingest_raob.exe laps_sfc.x  temp.exe ingest_pireps.exe
+		  ingest_acars.exe ingest_pro.exe ingest_blppro.exe 
+		  wind.exe cloud.exe lq3driver.x deriv.exe accum.exe  
+		  lsm5.exe);
+
+my $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
 
 $ENV{PATH}.=":@NETCDFBIN@";
 
-$fxa_sys =  &Get_env'fxa; #'
+my $fxa_sys =  &Get_env'fxa; #'
 
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
-$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 #
 # This sends the stdout to the run log file
 #
-$hh = (gmtime)[2];
-$mm = (gmtime)[1];
-$hhmm = 100*$hh+$mm;
+my $hh = (gmtime)[2];
+my $mm = (gmtime)[1];
+my $hhmm = 100*$hh+$mm;
 $hhmm = "0".$hhmm while(length($hhmm)<4);
-
+my($LAPS_LOG_PATH);
 if($fxa_sys!=0){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
 }
 
-unless($opt_o==1){
+unless($opt_o){
     open(SAVEOUT,">&STDOUT");
     open(SAVEERR,">&STDERR");
     open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm") || die "Can't redirect stdout";
@@ -39,69 +53,26 @@ unless($opt_o==1){
     select(STDOUT); $| = 1;
 }
 
-$t=gmtime(); print $t." Running systime.exe\n";
-system("$LAPSROOT/bin/systime.exe");
 
-$t=gmtime(); print $t." Running purger\n";
+my $t=gmtime(); print $t." Running purger\n";
 system("@PERL@ $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
 
-$t=gmtime(); print $t." Running obs_driver\n";
-system("$LAPSROOT/bin/obs_driver.x 1> $LAPS_LOG_PATH/obs_driver.log.$hhmm 2>&1");
+my($exe);
+foreach $exe (@LAPS_EXE){
+    $t=gmtime(); print $t." Running $exe\n";
+    my $log = $exe;
+    $log =~ s/\..*$/\.log\.$hhmm/;
+    system("$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1");
+}
 
-$t=gmtime(); print $t." Running rass ingest\n";
-system("$LAPSROOT/bin/ingest_lrs.exe 1> $LAPS_LOG_PATH/rass.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running BLP rass ingest\n";
-system("$LAPSROOT/bin/ingest_blplrs.exe 1> $LAPS_LOG_PATH/rass_blp.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running raob ingest\n";
-system("$LAPSROOT/bin/ingest_raob.exe 1> $LAPS_LOG_PATH/raob.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running laps_sfc\n";
-system("$LAPSROOT/bin/laps_sfc.x 1> $LAPS_LOG_PATH/laps_sfc.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running temp.exe\n";
-system("$LAPSROOT/bin/temp.exe 1> $LAPS_LOG_PATH/temp.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running ingest_pireps\n";
-system("$LAPSROOT/bin/ingest_pireps.exe 1> $LAPS_LOG_PATH/ingest_pireps.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running ingest_acars\n";
-system("$LAPSROOT/bin/ingest_acars.exe 1> $LAPS_LOG_PATH/ingest_acars.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running ingest_pro\n";
-system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_LOG_PATH/ingest_pro.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running ingest_blppro\n";
-system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_LOG_PATH/ingest_blppro.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running wind\n";
-system("$LAPSROOT/bin/wind.exe 1> $LAPS_LOG_PATH/wind.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running cloud\n";
-system("$LAPSROOT/bin/cloud.exe 1> $LAPS_LOG_PATH/cloud.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running lq3driver\n";
-system("$LAPSROOT/bin/lq3driver.x 1> $LAPS_LOG_PATH/lq3.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running deriv\n";
-system("$LAPSROOT/bin/deriv.exe 1> $LAPS_LOG_PATH/deriv.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running accum\n";
-system("$LAPSROOT/bin/accum.exe 1> $LAPS_LOG_PATH/accum.log.$hhmm 2>&1");
-
-$t=gmtime(); print $t." Running lsm5\n";
-system("$LAPSROOT/bin/lsm5.exe 1> $LAPS_LOG_PATH/lsm5.log.$hhmm 2>&1");
-
-
-$time = gmtime;
+$t = gmtime;
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
-print LOG "$time\n";
+print LOG "$t\n";
 close(LOG);
 
 
 if($fxa_sys!=0){
-    print LOG $time." Running wfo postprocessing\n";
+    print LOG $t." Running wfo postprocessing\n";
     system("@PERL@ $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
 }
 
