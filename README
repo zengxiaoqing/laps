@@ -2408,10 +2408,23 @@ Author: Steve Albers (albers@fsl.noaa.gov)
         Other               30 m/s
 </pre>
 
-	In a second step, the Doppler radial velocities are mixed in.  The 
-        azimuthal component is estimated by using the results of the first 
-        step.  Radial velocities are taken from the Doppler radars after 
-        dealiasing and other quality control steps are done.
+        The first step analyzes the non-radar data and background using
+        a successive correction technique.
+
+	In an optional second step, any multiple-Doppler radial velocities are
+        mixed in. Radial velocities are taken from the Doppler radars after 
+        dealiasing and other quality control steps are done. If more than one 
+        radar illuminates a given grid-point, a full wind-vector is constructed
+        from a combination of the radial velocities and the preliminary 
+        non-radar analysis.
+
+        In the final step, for grid-points illuminated by a single radar, the 
+        azimuthal component is estimated by using the results of the previous 
+        step (i.e. non-radar data and/or multi-radar data).
+
+        The omega field is calculated by kinematically integrating the 
+        horizontal wind divergence. The lower boundary condition is specified
+        by the surface wind and terrain gradient.
 <pre>
 Auxiliary functions:
 	write out graphical products
@@ -3185,6 +3198,10 @@ The scheme performs the analysis on the difference from an input model
 background with the benefit that existing background model balances need not 
 be recreated each model cycle and that background model error daily compiled 
 is input explicitly on a gridpoint by gridpoint basis.
+
+Reference: McGinley, J.A. and J.R. Smart, 2001: On providing a cloud-balanced 
+initial condition for diabatic initialization. Preprints, 18th Conf. on Weather
+Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc. 
 
 ------- 3.4  -------------  Model Initialization --------------------------
 
