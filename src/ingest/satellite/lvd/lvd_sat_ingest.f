@@ -39,8 +39,9 @@ c
 c
 c ========================== START ==============================
 c 
-      call get_laps_config('nest7grid',istatus)
+      call get_config(istatus)
       if(istatus.ne.1)then
+         print*,'Error returned from get_config'
          goto 1000
       endif
       write(6,*)'LAPS nest7grid.parms obtained'
