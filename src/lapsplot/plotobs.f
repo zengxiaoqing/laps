@@ -205,7 +205,7 @@ cdis
      1                          .ne. r_missing_data)then
                 call plot_vr(i_grid,j_grid
      1              ,grid_ra_vel(i_grid,j_grid,k_grid),imax,jmax
-     1              ,c1_plottype,rlat_radar,rlon_radar)
+     1              ,c1_plottype)
               endif
 
             endif ! at the right level to plot
