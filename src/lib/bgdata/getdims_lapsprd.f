@@ -1,6 +1,6 @@
       subroutine getdims_lapsprd(fullname,x,y,z,istatus)
-      include 'netcdf.inc'
       implicit none
+      include 'netcdf.inc'
       integer record, x, y, z
       integer nf_fid, nf_vid, nf_status, ln
       integer istatus
@@ -82,8 +82,8 @@ C
      +     Dx, Dy, La1, Lo1, Latin1, Latin2, LoV, 
      +     grid_type, La2,Lo2, istatus)
 C
-      include 'netcdf.inc'
       implicit none
+      include 'netcdf.inc'
       integer nf_fid, nf_vid, nf_status
       integer Nx, Ny      !<-- not returned as these are x/y from dims call
       integer ln
