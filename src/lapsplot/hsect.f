@@ -148,6 +148,7 @@ cdis
         character*150  directory
         character*31  ext
         character*10  units_2d
+        character*4   LVL_COORD_2D
         character*125 comment_2d
         character*9 comment_a,comment_b
 
@@ -5192,7 +5193,7 @@ c                   cint = -1.
 
 !               call set(x_1,x_2,y_1,y_2,1.,float(NX_L),1.,float(NY_L))
 
-                call plot_grid_2d(interval,size,NX_L,NY_L,lat,lon)
+                call plot_grid_2d(NX_L,NY_L,lat,lon)
 
             endif
 
