@@ -631,7 +631,7 @@ c         convert to wfo if necessary
              enddo
           else
              print*
-             do ii=1,nbg
+             do ii=1,accepted_files
                 if(fname_bg(nf).eq.bg_names(ii))then
                    reject_cnt=reject_cnt+1
                    reject_names(reject_cnt)=bg_names(ii)
