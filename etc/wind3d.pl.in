@@ -148,13 +148,6 @@ print "   $greplines[0]";
 # Wind profiles, including VADs.
 
 foreach (@lines) {
-  if (/PROFILER/) {
-    @list = split;
-    if(@list == 12){
-        push(@profilers,$list[9]);
-        push(@profilernums,$list[2]);
-    }
-    next;}
   if (/VAD/) {
     @list = split;
     if(@list == 12){
@@ -176,29 +169,19 @@ foreach (@lines) {
         push(@dropsndnums,$list[2]);
     }
     next; } 
-  if (/TOWER/) {
-    @list = split;
-    if(@list == 12){
-        push(@towers,$list[9]);
-        push(@towernums,$list[2]);
-    }
-    next; } 
             }
 
-#print "@profilers\n";
-#print "@profilernums\n";
-
-print "\nProfilers:  ";
-$searchstring = "Remapping profile ";
+#Print Profiler
+$i=0; $iprint=0; $ihead=0;
+print "\nProfilers: "; 
 foreach (@lines) {
-  if (/$searchstring(.*)/) {
-    ($profilenum,$lapsi,$lapsj) = split(" ",$1);
-    $i=0;
-    foreach $item (@profilernums) {
-#     print "$profilenum $item\n";
-#     if ($profilenum eq $item) {print "$profilers[$i], $lapsi, $lapsj \n";}
-      if ($profilenum eq $item) {print "$profilers[$i] ";}
-      $i=$i+1; } } }
+  if (/Remapping profile/ && /PROFILER/) {
+    @list = split;
+    print "$list[7] "; $iprint=$iprint+1;
+    if ($iprint > 11) {print "\n        "; $iprint=0;} 
+    $i=$i+1; 
+  }
+}
 print "\n";
 
 print "\nVADs:  ";
@@ -245,24 +228,16 @@ foreach (@lines) {
 if($i > 0){print "\n";}
 
 #Print TOWER
-$searchstring = "Remapping profile ";
 $i=0; $iprint=0; $ihead=0;
 foreach (@lines) {
-  if (/$searchstring(.*)/) {
-    ($profilenum,$lapsi,$lapsj) = split(" ",$1);
-    foreach $item (@towernums) {
-#     if ($profilenum eq $item) {print "$towers[$i], $lapsi, $lapsj \n";}
-      if ($profilenum eq $item) {
-          if($ihead == 0){print "\nTOWERs: "; $ihead=1;}
-          print "$towers[$i] "; $iprint=$iprint+1;
-#         if ($iprint > 12) {print "\n  line feed $profilenum $item $i $iprint "; $iprint=1;} 
-          if ($iprint > 11) {print "\n        "; $iprint=0;} 
-          $i=$i+1; 
-      }
-    } 
+  if (/Remapping profile/ && /TOWER/) {
+    @list = split;
+    if($ihead == 0){print "\nTOWERs: "; $ihead=1;}
+    print "$list[7] "; $iprint=$iprint+1;
+    if ($iprint > 11) {print "\n        "; $iprint=0;} 
+    $i=$i+1; 
   }
 }
-#print "End of Tower Section\n";
 if($iprint > 0){print "\n";}
 
 # SAO's (METAR's).
