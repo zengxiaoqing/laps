@@ -63,8 +63,12 @@ c
 	real lat(ni,nj), lon(ni,nj)
 	real lats(maxobs), lons(maxobs), elev(maxobs)
         real t(maxobs), td(maxobs), rh(maxobs)
-        real dd(maxobs), ff(maxobs)
-        real stnp(maxobs), mslp(maxobs), pcp(maxobs)
+        real t24max(maxobs), t24min(maxobs)
+        real stnp(maxobs)
+        real pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
+        real dd(maxobs), ff(maxobs), wgdd(maxobs), wgff(maxobs)
+        real mslp(maxobs) 
+        real pcc(maxobs), pc(maxobs), sr(maxobs), st(maxobs)       
 
         integer    wmoid(maxobs)
         integer    rtime
@@ -148,13 +152,16 @@ c
      1                 ,badflag,ibadflag,i4time_file                     ! I
      1                 ,stname(ix)                                       ! O
      1                 ,lats(ix),lons(ix),elev(ix)                       ! O
-     1                 ,i4time_ob_a(ix),t(ix),td(ix),rh(ix)              ! O
-     1                 ,pcp(ix),stnp(ix),mslp(ix),dd(ix),ff(ix)          ! O
+     1                 ,t(ix),t24max(ix),t24min(ix),td(ix),rh(ix)        ! O
+     1                 ,pcp1hr(ix),pcp3hr(ix),pcp6hr(ix)                 ! O
+     1                 ,dd(ix),ff(ix),wgdd(ix),wgff(ix)                  ! O
+     1                 ,stnp(ix),mslp(ix)                                ! O
+     1                 ,pcc(ix),pc(ix),sr(ix),st(ix)                     ! O
      1                 ,num,istatus)                                     ! O
 
 	    if(istatus .ne. 1)then
                 write(6,*)
-     1          '     Warning: bad status return from READ_LOCAL'       
+     1          '     Warning: bad status return from READ_LOCAL_CWB'       
                 n_local_file = 0
 
             else
@@ -186,6 +193,8 @@ c........  the ob is outside the LAPS domain.
 	   if( nanf( lats(i) ) .eq. 1 ) lats(i)  = badflag
 	   if( nanf( lons(i) ) .eq. 1 ) lats(i)  = badflag
 	   if( nanf( elev(i) ) .eq. 1 ) lats(i)  = badflag
+
+           i4time_ob_a(i) = i4time_sys
 
 	   call make_fnam_lp(i4time_ob_a(i),a9time_a(i),istatus)
 
@@ -351,23 +360,23 @@ c
 c
          store_3(nn,1) = dd(i)                  ! wind dir (deg)
          store_3(nn,2) = ff(i)                  ! wind speed (kt)
-         store_3(nn,3) = badflag                ! wind gust dir (deg)
-         store_3(nn,4) = badflag                ! wind gust speed (kt)
+         store_3(nn,3) = wgdd(i)                ! wind gust dir (deg)
+         store_3(nn,4) = wgff(i)                ! wind gust speed (kt)
 c
          store_4(nn,1) = badflag                ! altimeter setting (mb)
          store_4(nn,2) = stnp(i)                ! station pressure (mb)
          store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
-         store_4(nn,4) = badflag                ! 3-h press change character
-         store_4(nn,5) = badflag                ! 3-h press change (mb)
+         store_4(nn,4) = pcc(i)                 ! 3-h press change character
+         store_4(nn,5) = pc(i)                  ! 3-h press change (mb)
 c
          store_5(nn,1) = badflag                ! visibility (miles)
-         store_5(nn,2) = badflag                ! solar radiation 
-         store_5(nn,3) = badflag                ! soil/water temperature
+         store_5(nn,2) = sr(i)                  ! solar radiation 
+         store_5(nn,3) = st(i)                  ! soil/water temperature
          store_5(nn,4) = badflag                ! soil moisture 
 c
-         store_6(nn,1) = pcp(i)                 ! 1-h precipitation
-         store_6(nn,2) = badflag                ! 3-h precipitation
-         store_6(nn,3) = badflag                ! 6-h precipitation
+         store_6(nn,1) = pcp1hr(i)              ! 1-h precipitation
+         store_6(nn,2) = pcp3hr(i)              ! 3-h precipitation
+         store_6(nn,3) = pcp6hr(i)              ! 6-h precipitation
          store_6(nn,4) = badflag                ! 24-h precipitation
          store_6(nn,5) = badflag                ! snow cover
 c
@@ -395,3 +404,11 @@ c
 c
          end
 
+
+        subroutine get_box_size(box_size,istatus)
+
+        istatus = 1
+        box_size = 1.1
+
+        return
+        end
