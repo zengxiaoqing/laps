@@ -33,7 +33,9 @@
 #
 # -e                   Extend time in hours (allow for long runs beyond cycle time)
 #
-# -q  A                Use QSUB_WAIT (e.g. on 'jet') where A is the project name
+# -q  P                Use QSUB_WAIT (with PBS on jet/ijet) where P is the project name
+#
+# -Q  P                Use QSUB_WAIT (with SGE on jet/ijet) where P is the project name
 #
 # -n                   Node type to be used with -q (default=comp)
 #
@@ -61,12 +63,12 @@
               
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_n $opt_w 
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
             $opt_s $opt_l $opt_p $opt_v $opt_A);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:n:A:wslvp:');
+getopts('d:c:a:rm:t:e:q:Q:n:A:wslvp:');
 
 my $initial_time = time();
 
@@ -272,7 +274,7 @@ foreach $exe (@LAPS_EXE){
     my $log = $exe;
     $log =~ s/\..*$/\.log\.$hhmm/;
 
-    if(! $opt_q){ # Normal run of an executable
+    if( (! $opt_q) && (! $opt_Q) ){ # Normal run of an executable
         if($exe eq "qbalpe.exe"){
             foreach $wgi_script (@WHAT_GOT_IN){
                 print $t." Running what-got-in script $wgi_script.pl\n";
@@ -289,7 +291,7 @@ foreach $exe (@LAPS_EXE){
 	    print $t."WARNING: $exe not found\n";
         }
 
-    }else{ # -q option
+    }else{ # -q or -Q option
 #       Set up QSUB_WAIT so that each process (one or more executables in each) submits the next qsub_wait process at the end
         $execount = $execount + 1;
         $exenext = $execount + 1;
@@ -324,14 +326,26 @@ foreach $exe (@LAPS_EXE){
                 print $t." Opening $LAPS_LOG_PATH/run_qsub_$scriptcount.sh starting with executable # $execount\n";
                 open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
                 print TFILE "#!/bin/sh\n";
-                print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_min:00 -A $opt_q\n";
+
+                if($opt_q){
+                    print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_min:00 -A $opt_q\n";
+                }elsif($opt_Q){ 
+                    print TFILE "#$ -pe $node_type $nodes_current\n";
+                    print TFILE "#$ -l h_rt=$cycle_time_min:00\n";
+                    print TFILE "#$ -A $opt_Q\n";
+                    print TFILE "#$ -S /bin/sh\n";
+                    print TFILE "#$ -cwd\n";
+                }
+
                 print TFILE "  \n";
                 print TFILE "cd $LAPS_LOG_PATH\n";
                 print TFILE "  \n";
 
                 if($node_type eq "rt"){
                     print TFILE "export PBS_SERVER_LIST=/PBSHOME/lib/server.rt\n";
-                    print TFILE "export PBS_MODE=1\n";
+                    if($opt_q){
+                        print TFILE "export PBS_MODE=1\n";
+                    }
                     print TFILE "  \n";
                 }
 
@@ -388,7 +402,7 @@ foreach $exe (@LAPS_EXE){
 
         $nodes_last = $nodes_current;
 
-    } # if $opt_q
+    } # if $opt_q or $opt_Q
 
     my $cur_time = time();
     if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)+$extend_time*3600){
@@ -404,7 +418,7 @@ print "$date\n";
 
 print LOG "$t\n";
 
-if($fxa_sys!=0 || ($opt_w && (! $opt_q) ) ){
+if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
     print LOG $t." Running wfo postprocessing\n";
 
     if($opt_w){
@@ -417,7 +431,7 @@ if($fxa_sys!=0 || ($opt_w && (! $opt_q) ) ){
 
     &forksub($sys,$lockfile);
 
-}elsif($opt_w && $opt_q){
+}elsif($opt_w && ($opt_q || $opt_Q) ){
 
   if (index($LAPS_DATA_ROOT,"usfsfire/f1") != -1) {
 

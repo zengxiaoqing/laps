@@ -25,7 +25,9 @@
 #
 # Command line arguments
 #
-# -q  A                Use QSUB (e.g. on 'jet') where A is the project name
+# -q  P                Use QSUB (PBS syntax on 'jet/ijet') where P is the project name
+#
+# -Q  P                Use QSUB (SGE syntax on 'jet/ijet') where P is the project name
 #
 # -n                   Node type to be used with -q (default=comp)
 #
@@ -42,10 +44,10 @@
 #
 
 use strict;
-use vars qw($opt_o $opt_e $opt_l $opt_q $opt_n);
+use vars qw($opt_o $opt_e $opt_l $opt_q $opt_Q $opt_n);
 use Getopt::Std;
 
-getopts('e:lq:n:');
+getopts('e:lq:Q:n:');
 
 my $exe = shift || die "Program name and LAPS root directory required";
 my $LAPSROOT=shift || die "LAPS root directory required";
@@ -138,7 +140,7 @@ my $command;
 my $t;
 my $node_type = "comp";
 
-if($opt_q){
+if($opt_q || $opt_Q){
     if($opt_n){
         $node_type = $opt_n;
     }
@@ -146,9 +148,21 @@ if($opt_q){
     print $t." Opening $LAPS_LOG_PATH/run_qsub_$exe.sh starting with executable $exe\n";
     open(TFILE,">$LAPS_LOG_PATH/run_qsub_$exe.sh");
     print TFILE "#!/bin/sh\n";
-    print TFILE "#PBS -lnodes=1:$node_type,walltime=30:00 -A $opt_q\n";
+
+    if($opt_q){
+        print TFILE "#PBS -lnodes=1:$node_type,walltime=30:00 -A $opt_q\n";
+    }elsif($opt_Q){ 
+        print TFILE "#$ -pe $node_type 1\n";
+        print TFILE "#$ -l h_rt=30:00\n";
+        print TFILE "#$ -A $opt_Q\n";
+        print TFILE "#$ -S /bin/sh\n";
+        print TFILE "#$ -cwd\n";
+    }
+
     print TFILE "  \n";
-    print TFILE "export PBS_MODE=1\n";
+    if($opt_q){
+        print TFILE "export PBS_MODE=1\n";
+    }
     print TFILE "  \n";
     print TFILE "cd $LAPS_LOG_PATH\n";
     print TFILE "  \n";
