@@ -737,7 +737,8 @@ c
 c===============================================================================
 c===============================================================================
 c
-      subroutine lat_lon_2_ceij
+
+      subroutine cylindrical_equidistant
 c
 c routine to convert from cylindrical equidistant to grid ri/rj
 c used for mapping the WSI radar data to laps.
@@ -799,6 +800,45 @@ c
          y=r*(glat(n)*dg2rd)
          lli(n)=(x-xmin)/dx + 1.
          llj(n)=float(ny)-((y-ymin)/dy) + 1.
+      enddo
+
+      return
+c
+c===============================================================================
+c
+      entry ceij_2_latlon(np,lli,llj,glat,glon)
+c
+c equation set: rlat (phi) = y/r
+c               rlon (lambda) = rlonc + x/(R cos(rlatc))
+c        where:
+c               r= earth radius
+c               rlonc= central meridian
+c               rlatc= central parallel
+
+      pi=acos(-1.0)
+      dg2rd=pi/180.
+
+      xmin=r*((nw(2)-rlonc)*dg2rd)*cosd(rlatc)
+      ymin=r*se(1)*dg2rd
+      xmax=r*((se(2)-rlonc)*dg2rd)*cosd(rlatc)
+      ymax=r*nw(1)*dg2rd
+
+      if(xmax.eq.xmin)xmax=abs(xmin)
+      if(ymax.eq.ymin)ymax=abs(ymin)
+
+      dx=(xmax-xmin)/(nx-1)
+      dy=(ymax-ymin)/(ny-1)
+
+      coslatc=cosd(rlatc)
+
+      do n=1,np
+
+         glon(n)=rlonc*dg2rd +
+     &           (xmin+(lli(n)+1.0)*dx)/(r*coslatc)
+         glat(n)=(ymin+(ny-llj(n)+1.0)*dy)/r
+
+         glon(n)=glon(n)/dg2rd
+         glat(n)=glat(n)/dg2rd
       enddo
 
       return
