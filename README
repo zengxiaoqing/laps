@@ -83,6 +83,7 @@
          3.3.8 ..................  BALANCE
          3.4 ..............  Model Initialization
          3.4.1 ..................  DPREP
+         3.4.2 ..................  MM5 Initialization
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Variables and netCDF File Organization 
 
@@ -92,9 +93,7 @@
 
      Below is a description of the tar file containing the LAPS data ingest and
      analysis code. The predictive component of LAPS (MM5, RAMS/SFM, ETA) is
-     set up separately. The main FSL contacts for information on how we
-     use the analyses to initialize the forecasts are as follows: Brent Shaw 
-     for MM5, Paul Schultz for RAMS/SFM, and Adrian Marroquin for ETA.     
+     set up separately (see Section 3.4). 
 
      Please note that FSL provides support for LAPS software only if a prior
      agreement is made to that effect. Additionally, questions concerning LAPS
@@ -2735,11 +2734,16 @@ Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
 
 ------- 3.4  -------------  Model Initialization --------------------------
 
+   The main FSL contacts for information on how we use the analyses to 
+   initialize the forecasts are as follows: Brent Shaw for MM5, Paul Schultz 
+   for RAMS/SFM, and Adrian Marroquin for ETA. The models themselves are not
+   included in this tar file.
+
 ------ 3.4.1 ---------------------DPREP--------------------------------------
 
 Process: dprep.exe - Does some analysis post processing for model 
                      initialization
-     (authors: Jim Edwards / Paul Schultz [schultz@fsl.noaa.gov])
+     (author: Paul Schultz [schultz@fsl.noaa.gov])
 
    This process takes LAPS analysis output to create the forecast model initial
    conditions. It also takes background model fields to generate the forecast
@@ -2758,7 +2762,186 @@ Outputs: 'lapsprd/dprep' directory
 
 Source directory: 'laps/src/dprep'
 
-   Please contact the authors for additional information.
+   Please contact the author for additional information.
+
+------ 3.4.2 -------------- MM5 Initialization ------------------------------
+
+
+CURRENT FSL MM5 IMPLEMENTATION                (by Brent Shaw, April 2000)
+------------------------------
+
+The current setup of MM5 can run in an automated mode using LAPS for the
+initial and boundary conditions for the FDDA nudging period and AVN for 
+the lower and lateral boundary conditions for the free forecast period.  The
+current implementation consists of three major steps:
+
+1.  Preprocessing.  The preprocessing stage is where the LAPS, AVN, SST, and 
+SNOW data are processed by the PREGRID to reformat them to what REGRID expects.
+REGRID uses the output of REGRID in conjunction with the TERRAIN data file
+to horizontally and temporally interpolate the background fields to the 
+model grid domain.  The output of REGRID is then read by INTERPF which 
+vertically interpolates to
+ the sigma coordinates and then outputs the 
+initial conditions file, lower boundary conditions file, and lateral boundary
+conditions file.  These three files are required to initial the MM5 forecast
+model. Currently, this phase of the system is executed on gossamer using the
+following crontab entry (shaw):
+
+45 6,18 * * * /scratch/localhost/shaw/mm5_work/SCRIPTS/pregrid_avn.ksh > /dev/null 2>&1
+05 11 * * * /scratch/localhost/shaw/mm5_work/SCRIPTS/pregrid_sst_snow.ksh > /dev/null 2>&1
+50 08 * * * /scratch/localhost/shaw/mm5_work/SCRIPTS/mm5init.ksh t2 06 > /dev/null 2>&1
+
+These scripts can also be run manually.  The two required command line 
+arguments for mm5init.ksh are the window name (t2) and the hour for which
+you want the 00hour forecast (excluding any FDDA period) to be valid.  Note
+that pregrid_avn.ksh and pregrid_sst_snow.ksh must be run prior to mm5init.ksh!
+
+In this example, pregrid runs twice daily to process the 00Z and 12Z AVN runs 
+using the GRIB data found in /public/data/grids/avn/global-65160/grib.  
+Pregrid is also run once a day to get the NCEP SST and SNOW data from 
+/public/data/grids/ncep/sst/grib and /public/data/grids/ncep/snow/grib.  
+Files to intialize MM5 are built once a day for the "t2" window using
+an initial (00hr forecast) valid for 0600Z (for 6 hours of FDDA, this will
+require the 00Z-06Z LAPS analyses).   
+
+The top-level directory for the pre-processing system on gossamer is 
+/scratch/localhost/shaw/mm5_work.  Within that directory are the following
+sub-directories:
+
+SCRIPTS: Contains the scripts that can be run from cron or manually.
+CONFIG: Contains files that one can edit to control processing.  The 
+        only files that really should be edited are in the subdirectory
+        named for the window of interest (e.g., "t2").  The wincfg.ksh
+        file defines the desired time length for the boundary conditions
+        of the free-forecast period, the time interval between consecutive
+        analyses, the maximum desired length of the FDDA period.  The 
+        "CUTOFF" variable is currently not used.  
+DATA: Contains subdirectories for global data and window-specific data.  By
+      data, this would be the output from the pre-processor programs.  
+     
+WORK: Contains subdirectories for global and window-specific work areas.  When
+      the scripts run, they soft-link the required input data files and 
+      executables into the window-specific directory to run.  This is to allow
+      multiple windows to be run simulataneously.
+EXE:  Contains the binary executables.
+LOGS: Contains ASCII logs generated during execution of pregrid, regrid,
+      and interp.  
+mm5v3: Contains the source code for the preprocessor programs in various 
+       subdirectories.  When they are compiled, the executables are copied
+       into EXE.  
+       
+When mm5init.ksh is run to produce the required files for model initialization,
+the files are named in accordance with the MM5 documentation with one exception.
+The exception is that a date/time stamp representing the model initialization
+time and in the case of the BC and IC files,
+the length of the pre-forecast period (in hours) is appended to the
+file name.  These files are then copied to a directory on the system where
+the forecast model is run (e.g., B52) and this file naming convention is
+required for the mm5.run script to work properly.  Example file names:
+
+{TOPDIR}/DATA/t2/REGRID_DOMAIN1.2000031706
+  This is the regrid output produced to support a model run with an
+  intialization time of 06Z on March 17, 2000.
+  
+{TOPDIR}/DATA/t2/MMINPUT_DOMAIN1.2000031706.06
+{TOPDIR}/DATA/t2/LOWBDY_DOMAIN1.2000031706.06
+{TOPDIR}/DATA/t2/BDYOUT_DOMAIN1.2000031706.06
+  These are the three files needed to run the forecast model.  These
+  files are sent to b52 using and rcp command, and older files are 
+  deleted on gossamer automatically to keep the disk from filling up.  The .06 
+  appended means these files were generated to support a pre-forecast
+  period of 6 hours.  Therefore, the initial conditions file contains
+  the LAPS analyses from 0, 3, and 6 UTC and we will consider 06Z on March
+  17 to be the 00hr forecast when we post-process the data.  The script
+  determines the length of the FDDA period based on LAPS availability and the
+  setting in the wincfg.ksh file.  It will always be between 0 and FDDALEN.  
+{TOPDIR}/DATA/t2/LANDUSE.TBL
+{TOPDIR}/DATA/t2/TERRAIN_DOMAIN1
+  These are static files that never get deleted. The TERRAIN_DOMAIN1 is 
+  generated by the MM5 TERRAIN module when you first define the window and
+  is required by REGRIDDER. 
+   
+2.  Forecast.  The forecast stage is essentially the execution of the MM5
+model.  Nominally this execution consists of some "pre-forecast" FDDA period
+where the model solution is nudged to a series of LAPS analyses using
+Newtonian relaxation.  Normally, this is a 6-hour period which utilizes three
+LAPS analyses at 3-hour increments.  However, the scripts have some logic
+built in to allow a shorter FDDA period if all of the LAPS analyses aren't 
+available.  The actual desired maximum FDDA pre-forecast period is controlled
+by a configuration file when the pre-processors are run (this will be 
+explained later).  The model "initialization" or "cycle" time is defined to be
+the END of the FDDA period (i.e., the beginning of the free forecast period).  
+Thus, a model which has an initial time (i.e., 0 hour forecast) of 0600UTC
+that used 6-hours of FDDA would have to have the 00UTC, 03UTC, and 06UTC LAPS
+analyses and would use the AVN forecast for boundary conditions from 06UTC
+through the end of the forecast period.  
+
+The top-level directory on b52 containing the required data, scripts,
+and executables for running the model and post-processor is 
+/scratch9/mm5.  The following subdirectories are used:
+
+EXE: Contains a COMMON subdirectory which contains binary executables that
+     are window independent (e.g., mmpost.exe).  Also contains a directory
+     named for the window of interest (e.g., "t2") that contains the 
+     executable that is window-specific. This mainly pertains to MM5.  The
+     executable currently in this directory was compiled to support only 
+     1 domain (you have to use NESTDOWN if you want to run a nest) for
+     a maximum window size of 162x132.  It was compiled with FDDA support,
+     Reinser mixed-phase physics w/lookup table, Grell cumulus parameterization,
+     and the MRF boundary layer scheme.  If you want to change the configuration
+     and it requires a re-compile, you have to copy the new executable into
+     this directory.
+CONFIG: Contains a directory for each coarse grid (only t2 for now).  Within
+     the window subdirectory are namelist files used to control execution
+     of the MM5 model and MMPOST.  There are currenly three namelist for MM5:
+       mmlif.fdda00 is for no FDDA nudging period.
+       mmlif.fdda03 is for a 3-hour nudging period.
+       mmlif.fdda06 is for a 6-hour nudging period.
+     When the mm5.run script runs, it uses the tag at the end of the 
+     model initialization files to grab the correct namelist.  Regardless
+     of which namelist is used, they are currently set up to produce and 18-hour
+     free-forecast period.  If you want to change the output frequency, etc.
+     you can edit these namelists.  
+     There are also two namelist for the post-processor.
+       mmpost.fort.8 is only an example, as it is built dynamically by 
+       the mm5.run script at run time.
+       mmpost.fort.9 controls the output of the post-processor, and for now
+        should not be edited. 
+WORK: Same concept as the pre-processor WORK directory.
+DATA: Same concept as the pre-processor DATA directory.  When the model run
+    is complete, the MMOUT_DOMAIN1 file in the WORK/t2 directory is moved to
+    this location and renamed to out.t2a.YYYYMMDDHH where the YYYYMMDDHH is
+    the model intialization time as described earlier.  The script does not
+    yet purge old files!!!
+    It also contains the Vis5D files produced by the post-processor.  These
+    vis5d files are also copied to /scratch/frd/shaw/DATA/t2.
+LOGS: Self-explanatory
+SCRIPTS: Contains the run scripts.
+  mm5.run:  Executes the model and MMPOST using the window name as the one
+            argument.  Based on the window name, it gets the latest available
+            initial/boundary condition files found in DATA/{window} and
+            then executes in the WORK/{window} directory.  The initial and
+            boundary condition files must be named in accordance with what
+            was described in the pre-processing section. The number of 
+            processors used for the run is set in set_openMP_env.ksh.
+ 
+Here is how the model has been set to run via cron:
+15 09 * * * /scratch9/mm5/SCRIPTS/mm5.run t2
+
+It is currently set to run at 0915Z each day, because mm5init.ksh is run
+on gossamer at 0850 for the 06Z model run each day.  Upon completion, the
+script sends an e-mail to shaw@fsl.noaa.gov containing the master log file.  
+
+
+3.  Post-processing.  This stage consists of converting the model output
+to variables on pressure surfaces and automatic product generation.  This
+phase makes use of two programs: MMPOST and Vis5D. 
+
+MMPOST is executed by the mm5.run script.  This produces a vis5d format file
+that can be found on the nfs directory /scratch/frd/shaw/DATA/t2.  To 
+produce the GIF images, one has to run vis5d on gossamer and use the 
+mm5_products.tcl script.  I hope to have this process automated shortly.  Until
+then, you can use vis5d to view the files directly.  
 
 -------- 4.0 --  Porting code mods from LAPS users back to FSL --------------
 
