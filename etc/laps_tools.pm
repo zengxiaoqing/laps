@@ -34,6 +34,8 @@ sub get_nl_value{
 
    my @nlf=<NLF>;
    my $nlf=@nlf;
+   close (NLF);
+
    my @nlcomps;
    my @nl_values;
    my $nlcomps;
@@ -306,7 +308,8 @@ rdr/004/vrc rdr/004/raw rdr/005/vrc rdr/005/raw rdr/006/vrc rdr/006/raw
 rdr/007/vrc rdr/007/raw rdr/008/vrc rdr/008/raw rdr/009/vrc rdr/009/raw 
 lgb ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/cdf 
 dprep stats balance balance/lt1 balance/lw3 balance/lh3 balance/lq3 balance/air
-grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
+grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc
+verif verif/noBal verif/Bal verif/Bkgd);
 
      if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
         print "using LAPS_DATA_ROOT nest7grid.parms for fdda dirs\n";
@@ -345,6 +348,7 @@ grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
 #    if( -e "$LAPSSRCROOT/data/lapsprd")    {
 #        opendir(DATADIRS,"$LAPSSRCROOT/data/lapsprd");
 #        @lapsprddirs = readdir DATADIRS;   }
+#        close(DATADIRS);
 
   foreach (@lapsprddirs) {
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777;
@@ -470,12 +474,13 @@ sub get_system_type {
     print "The dataroot = $dataroot \n";
 
     my @dirs;
-    opendir(DIR,$dataroot)
-        or die "Can't open $dataroot";
+    opendir(DIR,$dataroot) or die "Can't open $dataroot";
+    @dirs = readdir DIR;
+    close(DIR);
 
     my $wrfsystem=0;
     my $lapssystem=0;
-    @dirs = readdir DIR;
+
     foreach (@dirs) {
 #      print "'$_',\n";
        if($_ eq "siprd"   || $_ eq "silog"){$wrfsystem=1;}

@@ -248,6 +248,8 @@ if( $CONFIG_DOMAIN eq "true" ) {
 
      if($all_roots_equal eq "F") {
         print "Save static and cdl subdirectories\n";
+#Note: some "static" directories might be busy and the constructs
+#      below do not allow for a safe directory move (rename).
         if(-e "$LAPS_DATA_ROOT/static\_save"){
            print "Found static_save and removing\n";
            system("rm -rf $LAPS_DATA_ROOT/static_save");}
@@ -426,18 +428,14 @@ if( -e "$LAPS_DATA_ROOT/static\_save"){
     $success=system("rm -rf $LAPS_DATA_ROOT/static\_save");
     if($success != 0){
        print "Failed to remove $LAPS_DATA_ROOT/static\_save\n";
-       opendir(TEMPDIR, "$LAPS_DATA_ROOT/static\_save");
-       my @filelist = readdir TEMPDIR;
-       closedir TEMPDIR;
-       foreach (@filelist){
-          print "$LAPS_DATA_ROOT/static/$_\n";
-       }
-
     }
 }
 if( -e "$LAPS_DATA_ROOT/cdl\_save"){
     print "removing $LAPS_DATA_ROOT/cdl\_save\n";
-    system("rm -rf $LAPS_DATA_ROOT/cdl\_save");
+    $success=system("rm -rf $LAPS_DATA_ROOT/cdl\_save");
+    if($success != 0){
+       print "Failed to remove $LAPS_DATA_ROOT/cdl\_save\n";
+    }
 }
 
 print "update prod subdirectory - synchronize with repository\n";
