@@ -231,6 +231,8 @@ d        real p_dm (39)  ! derivate pressures
         character*9 filename1,  filename
         character*9 grid_name
 
+        integer len
+
 c assign satellite number for func routine in powell
 
            ngoes_cost = ngoes
@@ -275,9 +277,9 @@ c       get satellite IMAGE radiance data for the laps grid
 
       if (isnd .eq. 0) then ! seek imager data
 
-        path = '../lapsprd/lvd/'
+         call get_directory('lvd',path,len)
 
-        call get_latest_file (path,i4time,filename1,istatus)
+         call get_latest_file (path,i4time,filename1,istatus)
 
         if (istatus.ne.1) return
 
