@@ -210,6 +210,7 @@ c
      1                                a9_time_init,
      1                                a4_time_fcst,
      1                                ifcst_intrvl,
+     1                                isim_time_hr,
      1                                istatus)
 c
 cdoc  Reads static/osse.nl file.
@@ -223,6 +224,7 @@ cdoc  Reads static/osse.nl file.
       integer        len_dir
       integer        i,n_sim_obs
       integer        ifcst_intrvl
+      integer        isim_time_hr
 
       character      nest7grid*150
       character      path_to_model*150
@@ -232,7 +234,7 @@ cdoc  Reads static/osse.nl file.
       character      cmodel*10
 
       namelist /osse_nl/path_to_model,cmodel,c_obs_types,
-     1a9_time_init,a4_time_fcst,ifcst_intrvl
+     1a9_time_init,a4_time_fcst,ifcst_intrvl,isim_time_hr
 
       istatus = 0
 
