@@ -227,7 +227,11 @@ c311                format(1x,i6,i4,5f8.1)
                 write(6,*)'  In Bounds - Vertically Interpolating the '
      1                   ,c8_obstype(i_tsnd)
             else
-                write(6,*)'  Out of Bounds or < 2 levels',nlevels_in
+                if(nlevels_in .lt. 2)then
+                    write(6,*)'  Less than 2 levels ',nlevels_in
+                else
+                    write(6,*)'  Out of Bounds ',nlevels_in
+                endif
                 nlevels_good(i_tsnd)=0 ! This effectively throws out the Rass
             endif
 
@@ -418,19 +422,26 @@ c611                format(1x,i6,i4,5f8.1)
      1                                          ,i4time_ob-i4time_sys       
      1                                          ,i4_window_ob
                 nlevels_good(i_tsnd)=0 ! This effectively throws out the sounding
-            endif
 
-            if(i_ob .ge. 1 .and. i_ob .le. imax .and.
-     1         j_ob .ge. 1 .and. j_ob .le. jmax .and.
-     1         nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
-     1                                                  )then
-                if(iwrite .eq. 1)write(6,*)
+            else ! In time bounds
+                if(i_ob .ge. 1 .and. i_ob .le. imax .and.
+     1             j_ob .ge. 1 .and. j_ob .le. jmax .and.
+     1             nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
+     1                                                      )then
+                    if(iwrite .eq. 1)write(6,*)
      1                   '  In Bounds - Vertically Interpolating the '       
-     1                   ,'Sonde'
-            else
-                if(iwrite .eq. 1)write(6,*)
-     1              '  Out of Bounds or < 2 levels ',nlevels_in
-                nlevels_good(i_tsnd)=0 ! This effectively throws out the Sonde
+     1                  ,'Sonde'
+                else
+                    if(nlevels_in .lt. 2)then
+                        if(iwrite .eq. 1)write(6,*)
+     1                      '  Less than 2 levels ',nlevels_in
+                    else
+                        if(iwrite .eq. 1)write(6,*)
+     1                      '  Out of Bounds ',nlevels_in
+                    endif
+                    nlevels_good(i_tsnd)=0 ! This effectively throws out the Sonde
+                endif
+
             endif
 
             if(nlevels_good(i_tsnd) .gt. 0)then
