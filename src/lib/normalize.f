@@ -31,7 +31,8 @@ cdis
 cdis 
         Subroutine Normalize_Brightness(i4time,lat,lon,image,ni,nj
      1  ,sublat_d,sublon_d,range_m,l_national,iskip_bilin,r_missing_data
-     1  ,lun,i_dir,Phase_angle_d,Specular_ref_angle_d,istatus)
+     1  ,lun,i_dir,Phase_angle_d,Specular_ref_angle_d,Emission_angle_d
+     1  ,istatus)
 
 
 C***Normalize a vis satellite image for solar angle.
@@ -101,7 +102,8 @@ C***Local variables
      1          SF_UL,SF_UR,SF_LR,SF_LL,SF_U,SF_L,S_F,Weight,
      1                PF_UL,PF_UR,PF_LR,PF_LL,PF_U,PF_L,P_F,RBril,RBrih,
      1          Phase_factor(maxlut,maxlut),Phase_angle_d(ni,nj),
-     1          sat_radius,Emission_angle_d,Specular_ref_angle_d(ni,nj)       
+     1          sat_radius,Emission_angle_d(ni,nj),
+     1          Specular_ref_angle_d(ni,nj)       
 
         Integer nilut,njlut,I,J,img_i(maxlut),img_j(maxlut),
      1            ilut,jlut,ISpace,JSpace, ni2, nj2
@@ -179,11 +181,6 @@ C***Fill the solar brightness and phase angle arrays
           i = min(i,ni2)
           img_i(ilut) = i
 
-C   Compute equatorial coordinates of point on sfc of earth
-C         TX = cosd(lon(i,j)) * cosd(lat(i,j)) * radius_earth_m / au_m
-C         TY = sind(lon(i,j)) * cosd(lat(i,j)) * radius_earth_m / au_m
-C         TZ = sind(lat(i,j))                  * radius_earth_m / au_m
-
           call solar_position(lat(i,j),lon(i,j),i4time,solar_alt_d
      1                                  ,solar_dec_d,hr_angle_d)
 
@@ -197,20 +194,16 @@ C   Reduce and limit correction at terminator
 C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
  
           call sat_angular_alt(sat_radius,lat(i,j),lon(i,j)
-     .,SATX,SATY,SATZ,TX,TY,TZ,Emission_angle_d,istatus)
+     .,SATX,SATY,SATZ,TX,TY,TZ,Emission_angle_d(i,j),istatus)
 
-C         Call AngleVectors(SATX-TX,SATY-TY,SATZ-TZ,TX,TY,TZ
-C    1                            ,R8Emission_angle_r)
-C         Emission_angle_d = 90. - R8Emission_angle_r / rpd
-
-          if(Emission_angle_d .lt. 0.)then
+          if(Emission_angle_d(i,j) .lt. 0.)then
               istatus = 0
 
               if(image(i,j) .ne. r_missing_data)then ! valid image data
 
                 if(iwrite .le. 1)then
                   write(6,*)
-     1            ' Warning, Emission_angle_d =', Emission_angle_d
+     1            ' Warning, Emission_angle_d = ', Emission_angle_d(i,j)
                   write(6,*)
      1            ' You are normalizing beyond the earths limb'     
                   write(6,*)
@@ -218,13 +211,13 @@ C         Emission_angle_d = 90. - R8Emission_angle_r / rpd
                   write(6,*)'i,j,lat(i,j),lon(i,j),sublat_d,sublon_d'        
                   write(6,*)i,j,lat(i,j),lon(i,j),sublat_d,sublon_d
                   iwrite = iwrite + 1
-                  Emission_angle_d = 0.0
+                  Emission_angle_d(i,j) = 0.0
                 else ! iwrite .le. 1
                   write(6,*)
      1'Warning, Emission_angle_d < 0 (i/j/lat/lon/E): ',i,j,lat(i,j)
-     1,lon(i,j),Emission_angle_d
+     1,lon(i,j),Emission_angle_d(i,j)
                   iwrite=iwrite+1
-                  Emission_angle_d = 0.0
+                  Emission_angle_d(i,j) = 0.0
                 endif
 
               endif ! valid image pixel intensity
@@ -256,16 +249,16 @@ C   Compute Specular Reflection Angle
           if(i .lt. 40)then ! for testing
 
           Phase_factor(ilut,jlut) = cosd(phase_angle_d(i,j))**6
-!    1                    * sind(emission_angle_d)**1.0
+!    1                    * sind(emission_angle_d(i,j))**1.0
 !    1                    * sind(solar_alt_d)**1.0
-     1                    * sind(emission_angle_d)**0.5
+     1                    * sind(emission_angle_d(i,j))**0.5
      1                    * sind(solar_alt_d)**0.25
 
           else
           Phase_factor(ilut,jlut) = cosd(phase_angle_d(i,j))**6
-!    1                    * sind(emission_angle_d)**1.0
+!    1                    * sind(emission_angle_d(i,j))**1.0
 !    1                    * sind(solar_alt_d)**1.0
-     1                    * sind(emission_angle_d)**0.5
+     1                    * sind(emission_angle_d(i,j))**0.5
      1                    * sind(solar_alt_d)**0.125
 
 
@@ -284,7 +277,7 @@ C   Compute Specular Reflection Angle
               imgtmp=image(i,j)
               if(imgtmp.eq.r_missing_data)imgtmp=-99.00
               write(lun,50)ilut,jlut,solar_alt_d
-     1                  ,emission_angle_d,phase_angle_d(i,j)
+     1                  ,emission_angle_d(i,j),phase_angle_d(i,j)
      1                  ,phase_factor(ilut,jlut),imgtmp
      1                  ,specular_ref_angle_d(i,j)
      1                  ,lat(i,j),lon(i,j)

@@ -7,6 +7,7 @@
      &                           r_missing_data,
      &                           phase_angle_d,
      &                           specular_ref_angle_d,
+     &                           emission_angle_d,
      &                           rland_frac,
      &                           albedo_out,
      &                           albedo_min,
@@ -23,6 +24,7 @@ c     S. Albers      22-Nov-1995           Extra phase angle constraint
 c     S. Albers      22-Aug-1996           Extra specular ref angle constraint
 c     J. Smart        8-Apr-1998           Added csatid to argument list, added to
 c                                          formatted output.
+c       "             6-Jul-1999           Added Emission_angle_d to argument list
 c
 C***Parameter and variables list
 c
@@ -52,6 +54,7 @@ c
         Real*4          albedo_min,albedo_max
         Real*4          r_missing_data
         Real*4          jline, iline, jdiff, idiff
+        Real*4          Emission_angle_d(imax,jmax)
         Integer         istatus, n_missing_albedo
         Integer         i,j
 
@@ -83,12 +86,15 @@ c                write(6,29)i,j,r_norm_vis_cnts_in(i,j),solar_alt_d
 c29               format(1x,2i3,2x,2f8.2)
 c             end if
 
-                 if(         solar_alt_d .gt. 15. 
+!                Test for favorable geometry
+                 if(      solar_alt_d .gt. 15. 
      1                            .AND.
      1          (solar_alt_d .gt. 23. .or. phase_angle_d(i,j) .gt. 20.)
      1                            .AND.
      1          (rland_frac(i,j) .gt. 0.5 
-     1                         .or. specular_ref_angle_d(i,j) .gt. 10.)       
+     1                         .or. specular_ref_angle_d(i,j) .gt. 10.)
+!    1                            .AND.
+!    1                    emission_angle_d(i,j) .gt. 15.       
      1                                                            )then       
 
                    arg = (r_norm_vis_cnts_in(i,j)- rlnd_cnts) /
