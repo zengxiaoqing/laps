@@ -9,7 +9,7 @@
       integer   imosaic_3d
       integer   i
       character c_radar_ext(max_radars_mosaic)*3
-      character c_radar_mosaic*3
+      character c_radar_mosaic*3, ext_dum*3
 
       call get_laps_config('nest7grid',istatus)
 
@@ -48,6 +48,11 @@ c namelist items
           c_radar_mosaic='vxx'
 
 !         Set c_radar_ext
+          do i = 1,n_radars
+              write(c_radar_ext(i),11)i
+ 11           format('v',i2.2)
+          enddo ! i
+
 !         Duplicate code section
 
           if(n_radars .gt. max_radars_mosaic)then
@@ -82,6 +87,11 @@ c namelist items
           c_radar_mosaic='rdr'
 
 !         Set c_radar_ext
+          do i = 1,n_radars
+              write(c_radar_ext(i),12)i
+ 12           format(i3.3)
+          enddo ! i
+
 !         Duplicate code section
 
           if(n_radars .gt. max_radars_mosaic)then
@@ -358,8 +368,10 @@ c              write(6,*)c_filename_vxx(l,i)(1:nn)
           enddo ! radar
 
           if(.not.found_data)then
-             write(6,*)'No files in any vxx directories'
-             write(6,*)'No data to process for this time'
+             write(6,*)
+     1           'No current files in any radar directories of type '    
+     1           ,c_mosaic_type
+             write(6,*)'No data will be processed for this time'
              goto 895
           endif
 c
