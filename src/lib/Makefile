@@ -150,6 +150,7 @@ SRC	= machine_dependent.F \
           wfo_fname_conversions.f \
           windspeed.f \
           writelaps.f \
+          writelapscompressed.f \
           writelapsdata.f \
           writelapslvls.f \
           wrt_laps_static.f \
