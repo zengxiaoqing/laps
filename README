@@ -540,7 +540,7 @@
 	This should be consistent with the horizontal grid dimensions in
                                    './data/static/nest7grid.parms'. 
 
-        Three sets of variables need to be modified in nest7grid.cdl:
+        Three sets of variables need to be modified in 'nest7grid.cdl':
 <pre> 
         a) x and y in the dimensions area should be set to match NX_L
            and NY_L.
@@ -1150,7 +1150,7 @@ Output: (feeds wind)
                                               speed     (meters/sec)  (ASCII)
 </pre>
 
-Source directory: laps/nest7grid/source/ingest/profiler
+Source directory: laps/src/ingest/profiler
 
 Sample Output: Should be available in the test data case.
 
@@ -1186,7 +1186,7 @@ Outputs: (The two executables are run sequentially, feeds LSX and temp.exe)
 	lrs	inter data	RASS Virtual Temperatures (ASCII)
 </pre>
 
-Source directory: laps/nest7grid/source/ingest/rass
+Source directory: laps/src/ingest/rass
 
 Sample Output: Should be available in the test data case.
 
@@ -1283,8 +1283,8 @@ Outputs: (LW3 is main output)
 	lwm	2d grid		surface winds
 
 </pre>                                        
-Source directory: laps/nest7grid/source/wind
-Compile-time parameters: laps/nest7grid/source/wind/windparms.inc
+Source directory: laps/src/wind
+Compile-time parameters: laps/src/include/windparms.inc
 
 CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
 
@@ -1368,7 +1368,7 @@ Inputs: (from LGA, LSX, RAM [if available], LRS)       '*' = essential input
 Outputs: (LW3 used by LBA)
 	lt1	3d grid		3-D temperature (K), 3-D Heights (M-MSL)
 </pre>
-Source directory: laps/nest7grid/source/temp
+Source directory: laps/src/temp
 
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
@@ -1424,7 +1424,7 @@ Outputs:
 
 	lcv     2d grid		column max cloud cover / snow cover
 </pre>
-Source directory: laps/nest7grid/source/cloud
+Source directory: laps/src/cloud
 
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
@@ -1440,10 +1440,10 @@ Last updated: August 1996 by Daniel Birkenheuer
 Code organization:
 
    The moisture code is coordinated by the LQ3 modules all of which (with
-   the exception of libraries) exist under ./nest7grid/source/humid/.  The
+   the exception of libraries) exist under ./src/humid/.  The
    main driver, lq3driver.x contains only one subroutine call at this time.
 
-   ./nest7grid/source/humid/lq3_driver1a.f (Module) <active>
+   ./src/humid/lq3_driver1a.f (Module) <active>
 
    is the primary moisture processing module that sequences the various
    subroutines.
@@ -1451,7 +1451,7 @@ Code organization:
    There is a second routine that formerly was used for HSM satellite
    processing; it is currently deactivated:
 
-   ./nest7grid/source/humid/lq3_driver1b.f (Module) <deactivated>.
+   ./src/humid/lq3_driver1b.f (Module) <deactivated>.
 
    Now, using the GOES forward radiance model and more advanced techniques,
    the satellite inclusion takes place in the above "1a" module. Treat the
@@ -1744,7 +1744,7 @@ Outputs:
 	lf1	2d grid		2-D column max radar ref history (maximum 
                                 over time since the previous analysis cycle)
 </pre>
-Source directory: laps/nest7grid/source/deriv
+Source directory: laps/src/deriv
 
 References: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The 
             Local Analysis and Prediction System (LAPS): Analyses of clouds, 
@@ -1779,7 +1779,7 @@ Outputs:
 				Rain/Liquid Equivalent Precip (R01 field)
 				Storm Total Rain/Liquid Pcp   (RTO field)
 </pre>
-Source directory: laps/nest7grid/source/accum
+Source directory: laps/src/accum
 
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
