@@ -19,7 +19,8 @@ EXE = ingest_lrs.exe
 
 SRC= ingest_lrs.f \
      ingest_sub_lrs.f \
-     ingest_sub_blplrs.f
+     ingest_sub_blplrs.f \
+     ingest_sub_rsalrs.f
 
 all: exe
 
