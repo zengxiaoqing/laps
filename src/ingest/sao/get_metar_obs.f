@@ -166,6 +166,8 @@ c
 
             call s_len(path_to_metar,len_path)
 
+            n_sao_all = 0
+
             do i4time_file = i4time_file_b, i4time_file_a
      1                     , i4_file_interval
 
@@ -187,13 +189,11 @@ c
 
                 endif
 
-            enddo ! Move enddo down lower for full multiple file implementation
-
-            if(     l_parse(metar_format,'NIMBUS')
-     1         .or. l_parse(metar_format,'WFO')     )then
-
-                do while(.not. exists .and. 
-     &                    cnt .le. minutes_to_wait_for_metars)
+                do while(.not. exists 
+     &                           .AND. 
+     &                    cnt .le. minutes_to_wait_for_metars
+     &                           .AND.
+     &                    i4time_file .eq. i4time_file_a        )
 c
 	            INQUIRE(FILE=data_file,EXIST=exists)
                     if(.not. exists) then
@@ -206,64 +206,73 @@ c
 
 	        enddo ! While in waiting loop
 
-            endif
 c
-c.....      Get the data from the NetCDF file.  First, open the file.
-c
-	    nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
+c.....          Get the data from the NetCDF file.  First, open the file.
+c 
+	        nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
 
-	    if(nf_status.ne.NF_NOERR) then ! No file found to open
-	       print *, NF_STRERROR(nf_status)
-	       print *, data_file
-               write(6,*)' WARNING: no file found in get_metar_obs'
-               return
-	    endif
+	        if(nf_status.ne.NF_NOERR) then ! No file found to open
+	           print *, NF_STRERROR(nf_status)
+	           print *, data_file
+                   write(6,*)' WARNING: no file found in get_metar_obs'       
+                   return
+	        endif
 c
-c.....      Get the dimension of some of the variables.
-c.....      "maxSkyCover"
+c.....          Get the dimension of some of the variables.
+c.....          "maxSkyCover"
 c
-	    nf_status = NF_INQ_DIMID(nf_fid,'maxSkyCover',nf_vid)
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *,'dim maxSkyCover'
-	    endif
-	    nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxSkyCover)
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *,'dim maxSkyCover'
-	    endif
+	        nf_status = NF_INQ_DIMID(nf_fid,'maxSkyCover',nf_vid)
+	        if(nf_status.ne.NF_NOERR) then
+	           print *, NF_STRERROR(nf_status)
+	           print *,'dim maxSkyCover'
+	        endif
+	        nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxSkyCover)
+	        if(nf_status.ne.NF_NOERR) then
+	           print *, NF_STRERROR(nf_status)
+	           print *,'dim maxSkyCover'
+	        endif
 c
-c.....      "recNum"
+c.....          "recNum"
 c
-	    nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *,'dim recNum'
-	    endif
-	    nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *,'dim recNum'
-	    endif
+	        nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+	        if(nf_status.ne.NF_NOERR) then
+	           print *, NF_STRERROR(nf_status)
+	           print *,'dim recNum'
+	        endif
+	        nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+	        if(nf_status.ne.NF_NOERR) then
+	           print *, NF_STRERROR(nf_status)
+	           print *,'dim recNum'
+	        endif
 
 c
-c.....      Call the read routine.
+c.....          Call the read routine.
 c
-	    call read_metar(nf_fid , maxSkyCover, recNum, alt,
-     &         atype_in, td, ttd, elev,
-     &         lats, lons, max24t, min24t,
-     &         pcp1, pcp24, pcp3, pcp6,
-     &         wx, dp, dpchar,
-     &         reptype_in, mslp, cvr, ht,
-     &         snowcvr, stname, tt, t,
-     &         timeobs, vis, dd, ffg, ff,
-     &         wmoid_in, badflag, istatus)
+	        call read_metar(nf_fid , maxSkyCover, recNum, alt(ix),       
+     &             atype_in(ix), td(ix), ttd(ix), elev(ix),
+     &             lats(ix), lons(ix), max24t(ix), min24t(ix),
+     &             pcp1(ix), pcp24(ix), pcp3(ix), pcp6(ix),
+     &             wx(ix), dp(ix), dpchar(ix),
+     &             reptype_in(ix), mslp(ix), cvr(1,ix), ht(1,ix),
+     &             snowcvr(ix), stname(ix), tt(ix), t(ix),
+     &             timeobs(ix), vis(ix), dd(ix), ffg(ix), ff(ix),
+     &             wmoid_in(ix), badflag, istatus)
 
-	    if(istatus .ne. 1) go to 990
-	    n_sao_all = recNum
+                if(istatus .ne. 1)then
+                    write(6,*)
+     1              '     Warning: bad status return from READ_METAR'       
+                    n_metar_file = 0
+                else
+                    n_metar_file = recNum
+                    write(6,*)'     n_metar_file = ',n_metar_file
+                endif
 
+                ix = ix + n_metar_file
+
+            enddo ! i4time_file (in time window)
+
+            n_sao_all = ix - 1
             i4time_offset = 315619200
-
             c11_provider = 'NWS        '
 
         else ! Read CWB Metar and Synop Obs
