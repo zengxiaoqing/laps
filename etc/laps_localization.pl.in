@@ -179,10 +179,6 @@ run_sys::run_sys("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
 print "cleaning out static/lvd directory of any old luts\n";
 run_sys::run_sys("rm -f $LAPS_DATA_ROOT/static/lvd/*.lut");
 
-#
-# finally initialize the systime.dat file
-#
-run_sys::run_sys("$LAPSROOT/bin/systime.exe");
 print "$0 complete\n";
 
 

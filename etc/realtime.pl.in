@@ -31,7 +31,7 @@ my $LAPSROOT=shift || die "LAPS root directory required";
 require "$LAPSROOT/etc/fxa.pm";
 
 my $fxa_sys =  &Get_env'fxa; #'
-$ENV{PATH}.=":@NETCDFBIN@";
+$ENV{PATH}.=":$LAPSROOT/model/bin:@NETCDFBIN@";
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
@@ -421,11 +421,11 @@ unless($opt_q>0){
 #
 # Write the ISANIN 
 #
-
+    my $nigrids=$#ifiles+1;
 
     open(ISAN,">ISANIN");
     print ISAN " \$ISAN_CONTROL\n";
-    print ISAN " NIGRIDS = $#ingrid,\n";
+    print ISAN " NIGRIDS = $nigrids,\n";
     print ISAN " NFEEDVAR = 0,\n";
     print ISAN " IFNVAR = \'$LAPS_DATA_ROOT/lapsprd/model/varfiles/',\n";
     print ISAN " IOFLGV = 1,\n";
