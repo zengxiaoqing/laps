@@ -55,20 +55,28 @@ cdis
         real*4 t_sfc_f(NX_L,NY_L)
         real*4 td_sfc_k(NX_L,NY_L)
         real*4 td_sfc_f(NX_L,NY_L)
+
         real*4 pbe_2d(NX_L,NY_L)
         real*4 nbe_2d(NX_L,NY_L)
         real*4 si_2d(NX_L,NY_L)
         real*4 tt_2d(NX_L,NY_L)
         real*4 k_2d(NX_L,NY_L)
         real*4 lcl_2d(NX_L,NY_L)
-        real*4 pres_sfc_mb(NX_L,NY_L)
+        real*4 wb0_2d(NX_L,NY_L)
+
         real*4 li(NX_L,NY_L)
+
+        real*4 pres_sfc_mb(NX_L,NY_L)
         real*4 t500laps(NX_L,NY_L)
         real*4 pres_3d(NX_L,NY_L,NZ_L)
-        character*10 units_2d_a(3)
-        character*125 comment_2d_a(3)
-        character*3 var_2d_a(3)
-        real*4 out_multi_2d(NX_L,NY_L,3)
+
+        integer nfields
+        parameter (nfields=8)
+
+        character*10 units_2d_a(nfields)
+        character*125 comment_2d_a(nfields)
+        character*3 var_2d_a(nfields)
+        real*4 out_multi_2d(NX_L,NY_L,nfields)
 
         character*31 EXT
 
@@ -101,8 +109,8 @@ cdis
         do k = 1,NZ_L
         do j = 1,NY_L
         do i = 1,NX_L
-            if(rh_3d_pct(i,j,k) .ge. 1. .and.
-     1         rh_3d_pct(i,j,k) .le. 100.       )then
+            if(rh_3d_pct(i,j,k) .ge. 0. .and.
+     1         rh_3d_pct(i,j,k) .le. 100.       )then    ! RH in valid range
 
                 t_c = temp_3d(i,j,k)-273.15
                 td_c = dwpt(t_c,rh_pct)
@@ -116,8 +124,19 @@ cdis
 !    1                        ,sh_3d(i,j,k)*1000.
 !    1                        ,-100.)
 
+            elseif(rh_3d_pct(i,j,k) .gt. 100. .and.
+     1             rh_3d_pct(i,j,k) .le. 101.       )then ! RH slightly high
+
+                td_3d_k(i,j,k) = temp_3d(i,j,k)
+                write(6,*)' WARNING: RH out of bounds',rh_3d_pct(i,j,k)       
+     1                   ,' at ',i,j,k,' setting td = t'
+
             else ! invalid value of rh to pass into dwpt
                 td_3d_k(i,j,k) = r_missing_data
+                write(6,*)' ERROR: RH out of bounds',rh_3d_pct(i,j,k)       
+     1                   ,' at ',i,j,k
+                istatus = 0
+                return
 
             endif
 
@@ -128,7 +147,7 @@ cdis
         call laps_be(NX_L,NY_L,NZ_L
      1              ,temp_sfc_k,td_sfc_k,pres_sfc_pa
      1              ,temp_3d,td_3d_k,heights_3d,topo   
-     1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d)
+     1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d)
 
 !       Fill pres_sfc_mb
         call move(pres_sfc_pa,pres_sfc_mb,NX_L,NY_L)
@@ -149,7 +168,12 @@ cdis
 !       call move
         call move(pbe_2d,out_multi_2d(1,1,1),NX_L,NY_L)
         call move(nbe_2d,out_multi_2d(1,1,2),NX_L,NY_L)
-        call move(li,out_multi_2d(1,1,3),NX_L,NY_L)
+        call move(    li,out_multi_2d(1,1,3),NX_L,NY_L)
+        call move(    si,out_multi_2d(1,1,4),NX_L,NY_L)
+        call move(    tt,out_multi_2d(1,1,5),NX_L,NY_L)
+        call move(     k,out_multi_2d(1,1,6),NX_L,NY_L)
+        call move(   lcl,out_multi_2d(1,1,7),NX_L,NY_L)
+        call move(   wb0,out_multi_2d(1,1,8),NX_L,NY_L)
 
 !       add var arrays
         ext = 'lst'
@@ -157,13 +181,32 @@ cdis
         var_2d_a(1) = 'PBE'
         var_2d_a(2) = 'NBE'
         var_2d_a(3) = 'LI'
+        var_2d_a(4) = 'SI'
+        var_2d_a(5) = 'TT'
+        var_2d_a(6) = 'K'
+        var_2d_a(7) = 'LCL'
+        var_2d_a(8) = 'WB0'
 
         units_2d_a(1) = 'J/KG'
         units_2d_a(2) = 'J/KG'
         units_2d_a(3) = 'K'
+        units_2d_a(4) = 'K'
+        units_2d_a(5) = 'K'
+        units_2d_a(6) = 'K'
+        units_2d_a(7) = 'M'
+        units_2d_a(8) = 'M'
+
+        comment_2d_a(1) = 'CAPE'
+        comment_2d_a(2) = 'CIN'
+        comment_2d_a(3) = 'Lifted Index'
+        comment_2d_a(4) = 'Showalter Index'
+        comment_2d_a(5) = 'Total Totals'
+        comment_2d_a(6) = 'K Index'
+        comment_2d_a(7) = 'LCL'
+        comment_2d_a(8) = 'Web Bulb Zero'
 
         call put_laps_multi_2d(i4time_needed,ext,var_2d_a,units_2d_a
-     1                        ,comment_2d_a,out_multi_2d,NX_L,NY_L,3    
+     1                        ,comment_2d_a,out_multi_2d,NX_L,NY_L,8    
      1                        ,istatus)
         if(istatus .ne. 1)then
             write(6,*)' LST output error'
@@ -178,7 +221,7 @@ cdis
 
         subroutine laps_be(ni,nj,nk
      1  ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
-     1                  ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d)
+     1        ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d)
 
 !       1991    Steve Albers
 !       Returns PBE and NBE in Joules, Parcel is lifted from lowest level
@@ -201,6 +244,7 @@ cdis
         real*4 tt_2d(ni,nj)
         real*4 k_2d(ni,nj)
         real*4 lcl_2d(ni,nj)
+        real*4 wb0_2d(ni,nj)
         
 
         COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
@@ -247,8 +291,9 @@ c       write(6,*)' i = ',i
             do k = n_first_level,nk
                 n = n + 1
                 P(N) = p_1d_mb(k)
-                T(N) = t_3d_k(i,j,k) - 273.15 ! K to C
-                TD(N)= t(n)
+                T(N) = t_3d_k(i,j,k)  - 273.15 ! K to C
+                TD(N)= td_3d_k(i,j,k) - 273.15 ! K to C
+!               TD(N)= t(n)
                 HT(N)= ht_3d_m(i,j,k)
             enddo ! k
 
@@ -267,7 +312,8 @@ c       write(6,*)' i = ',i
             si_2d(i,j) = SI
             tt_2d(i,j) = TT
             k_2d(i,j)  = K_INDEX
-            lcl_2d(i,j)= LCL                 ! Surface based parcel
+            lcl_2d(i,j)= LCL *304.8006            ! KFT to M
+            wb0_2d(i,j)= HWB0*304.8006            ! KFT to M
 
             IF(i .eq. ni/2 .and. j .eq. nj/2)then
 !           IF(i .eq. i/8*8 .and. j .eq. 12)then
@@ -356,9 +402,11 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
      1   ,WATER,IHOUR)
 
 !       1991    Steve Albers
-!       Only the PBENEG and PBEPOS active outputs in this version
+!       1999    Steve Albers    Adding more indices to active output
 
-        DIMENSION Q(70),W(70)! ,WB(70)
+!       Note that a surface parcel is currently used for the indices
+
+        DIMENSION Q(70),W(70),WB(70)
         COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
      1              ,VEL(20),temdif(70),partem(70),pbe(70)
      1              ,DD85,FF85,DD50,FF50
@@ -399,7 +447,7 @@ C  CALCULATE SHOWALTER INDEX
 
 C                                                                         
 C  CALCULATE TOTAL TOTALS AND SWEAT AND K INDICIES                        
- 400	    CALL ITPLV(P,T,NLEVEL,700.,TMAN70,IO)        
+ 	    CALL ITPLV(P,T,NLEVEL,700.,TMAN70,IO)        
  	    CALL ITPLV(P,TD,NLEVEL,700.,TDMN70,IO)       
  	    TT=TMAN85+TDMN85-2.*TMAN50                   
  	    A=max(TDMN85,0.)                             
@@ -421,15 +469,60 @@ C  CALCULATE TOTAL TOTALS AND SWEAT AND K INDICIES
 
         ENDIF
 
+C                                                                         
+C  CALCULATE WET BULB ZERO LEVEL                                          
+ 	IOUT=MIN(IO,1)                                                          
+ 	IF(WB(1).GE.0.)GOTO150                                                  
+!	IF(IO.GE.2)WRITE(6,87)                                                  
+ 87	format(' SURFACE WETBULB TEMP IS BELOW ZERO')                          
+ 	HWB0=0.                                                                 
+ 	PWB0=0.                                                                 
+ 	GOTO400                                                                 
+C                                                                         
+ 150	DO 200 N=2,NLEVEL                                                    
+ 	IF(WB(N)*WB(N-1))250,250,200                                            
+ 200	CONTINUE                                                             
+C                                                                         
+ 250	SLOPE=(WB(N)-WB(N-1))/(P(N)-P(N-1))                                  
+ 	WTBLB0=WB(N)                                                            
+ 	PWB0=P(N)                                                               
+ 	ITER=0                                                                  
+ 	GOTO262                                                                 
+C                                                                         
+C	ENTER NEWTON ITERATION LOOP                                            
+ 260	CONTINUE                                                             
+ 	CALL ITPLV(P, T,NLEVEL,PWB0,TWB0 ,IO)                                     
+ 	CALL ITPLV(P,TD,NLEVEL,PWB0,TDWB0,IO)                                   
+ 	QQ=ES(TDWB0)*EPSILN/PWB0                                                
+ 	WWB0=QQ/(1.-QQ)                                                         
+ 	WTBLB0=WTBLB(PWB0,TWB0,WWB0,IOUT)                                       
+ 262    CONTINUE
+
+!   	IF(IO.GE.2)WRITE(6,265)N,PWB0,TWB0,TDWB0,WTBLB0,SLOPE,DELTA          
+ 265	format(' WTBLB0 LOOP',I3,F12.3,5F12.5)                                
+ 	IF(ABS(WTBLB0).LE..05)GOTO300                                           
+ 	CALL NEWTN(PWB0,POLD,WTBLB0,WETOLD,SLOPE,ITER,IO,1000.)                 
+ 	GOTO260                                                                 
+C                                                                         
+ 300	CONTINUE                                                             
+ 	CALL BLAYR(P,T,Q,DUM1,DUM2,DUM3,P(1)-PWB0,NLEVEL,HWB0,1,IO)             
+!	IF(IO.GE.1)WRITE(6,351)PWB0,HWB0                                        
+ 351	format(' WETBULB ZERO IS AT',F6.1,'MB     OR',F6.2,'KFT  AGL')        
+
+ 400    CONTINUE
+
 !3      FORMAT(' LVL(',I2,')',3F10.1,F11.6,F10.2)
 
+!       Calculate theta(e) based on sfc parcel
         THETAE=OE_FAST(T(1),TD(1),P(1)) + 273.15
 
+!       Calculate "fast" LCL based on sfc parcel
         CALL LCL_fast(P(1),T(1),TD(1),LCL_AGL,TLCL_PBE,PLCL_PBE)
 
 !       This LCL is for the surface parcel passed in
         LCL_PBE = LCL_AGL + HT(1)
 
+!       Calculate CAPE/CIN based on sfc parcel
         CALL POTBE(Q,NLEVEL,P(1),T(1),W(1),PLCL_PBE
      1   ,TLCL_PBE,LCL_PBE,0.,THETAE,ICP,ICT,IO,PBENEG,PBEPOS
      1   ,VELNEG)
@@ -461,6 +554,9 @@ c     1              ,VEL(20),temdif(70),partem(70),pbe(70)
 c     #              ,DD85,FF85,DD50,FF50
 c        DATA PBE/70*0./
 c        end
+C
+C
+C
 C
 C
 C

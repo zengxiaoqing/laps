@@ -50,6 +50,76 @@ netcdf lst {
             nbe:lvl_coord="AGL";
             nbe:LAPS_units="J/KG";
  
+         //      showalter index        //
+
+         float
+            si(record,z,y,x);
+            si:navigation_dim = "nav";
+            si:record = "valtime, reftime";
+            si:_FillValue = 1.e+37f;
+            si:long_name="showalter index";
+            si:units="degrees kelvin";
+            si:valid_range= -20000.f, 20000.f;
+            si:LAPS_var="SI";
+            si:lvl_coord="AGL";
+            si:LAPS_units="K";
+ 
+         //      total totals index         //
+
+         float
+            tt(record,z,y,x);
+            tt:navigation_dim = "nav";
+            tt:record = "valtime, reftime";
+            tt:_FillValue = 1.e+37f;
+            tt:long_name="total totals index";
+            tt:units="degrees kelvin";
+            tt:valid_range= -20000.f, 20000.f;
+            tt:LAPS_var="TT";
+            tt:lvl_coord="AGL";
+            tt:LAPS_units="K";
+ 
+         //      k index         //
+
+         float
+            k(record,z,y,x);
+            k:navigation_dim = "nav";
+            k:record = "valtime, reftime";
+            k:_FillValue = 1.e+37f;
+            k:long_name="k index";
+            k:units="degrees kelvin";
+            k:valid_range= -20000.f, 20000.f;
+            k:LAPS_var="K";
+            k:lvl_coord="AGL";
+            k:LAPS_units="K";
+ 
+         //      lifted condensation level         //
+
+         float
+            lcl(record,z,y,x);
+            lcl:navigation_dim = "nav";
+            lcl:record = "valtime, reftime";
+            lcl:_FillValue = 1.e+37f;
+            lcl:long_name="lifted condensation level";
+            lcl:units="meters";
+            lcl:valid_range= -20000.f, 20000.f;
+            lcl:LAPS_var="LCL";
+            lcl:lvl_coord="MSL";
+            lcl:LAPS_units="M";
+ 
+         //      wet bulb zero         //
+
+         float
+            wb0(record,z,y,x);
+            wb0:navigation_dim = "nav";
+            wb0:record = "valtime, reftime";
+            wb0:_FillValue = 1.e+37f;
+            wb0:long_name="wet bulb zero";
+            wb0:units="meters";
+            wb0:valid_range= -20000.f, 20000.f;
+            wb0:LAPS_var="WB0";
+            wb0:lvl_coord="MSL";
+            wb0:LAPS_units="M";
+ 
         //	LAPS variables
 
         long
@@ -62,6 +132,11 @@ netcdf lst {
             li_comment(record,z,namelen),
             pbe_comment(record,z,namelen),
             nbe_comment(record,z,namelen),
+            si_comment(record,z,namelen),
+            tt_comment(record,z,namelen),
+            k_comment(record,z,namelen),
+            lcl_comment(record,z,namelen),
+            wb0_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -78,6 +153,26 @@ netcdf lst {
         short
             nbe_fcinv(record, z);
             nbe_fcinv:_FillValue= 0s;
+              	
+        short
+            si_fcinv(record, z);
+            si_fcinv:_FillValue= 0s;
+              	
+        short
+            tt_fcinv(record, z);
+            tt_fcinv:_FillValue= 0s;
+              	
+        short
+            k_fcinv(record, z);
+            k_fcinv:_FillValue= 0s;
+              	
+        short
+            lcl_fcinv(record, z);
+            lcl_fcinv:_FillValue= 0s;
+              	
+        short
+            wb0_fcinv(record, z);
+            wb0_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
