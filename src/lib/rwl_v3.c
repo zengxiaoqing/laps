@@ -2067,9 +2067,13 @@ fint4 *status;
           }
         }
         else { /* file is there...*/
-          /* 10/14/97 for write_laps_data with no append, write over it anyway */
-          if (((*called_from == 0) || (*called_from == 1)) && (*append == 0)){
-            system(syscmd); /* added 10/14/97 */
+          if ((strncmp(ext,"lga",3) == 0) || (strncmp(ext,"lgb",3) == 0)) { /* allow multiple writes to file */
+            *called_from = 2;
+          }
+          else { /* 10/14/97 for write_laps_data with no append, write over it anyway */
+            if (((*called_from == 0) || (*called_from == 1)) && (*append == 0)){
+              system(syscmd); /* added 10/14/97 */
+            }
           }
           istatus = nc_open(filename,NC_WRITE, &cdfid);
           if (istatus != NC_NOERR) {  /* error opening file */
@@ -2106,7 +2110,12 @@ fint4 *status;
           i_record = (int)num_record;
         }
         else {
-          i_record = (int)num_record - 1;
+          if (*append == 0) {
+            i_record = 0;
+          }
+          else {
+            i_record = (int)num_record - 1;
+          }
           if (*called_from == 2) { /* ok to write into existing record */
             if (*append == 0) { /* if only one analysis allowed in a file */
               if (i_record == 0) {  /* things are OK */
@@ -2135,6 +2144,7 @@ fint4 *status;
             }
             else {
               printf("Append option not currently implemented.\n");
+              printf("location 3\n");
               *status = -6;
               istatus = nc_close(cdfid);
               free(ext);
