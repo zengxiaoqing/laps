@@ -195,12 +195,7 @@ c place station at proper laps grid point
               goto 125
           endif
 
-          n_analyzed = n_analyzed + 1
-          n_cld_snd = n_cld_snd + 1
-
-          ista_snd(n_cld_snd) = i
-
-!         What is the height limit of the cloud observation?
+!         What is the height limit of the cloud observation? Is obstype valid?
           if(      obstype(i)(1:5) .eq. 'METAR'
      1        .or. obstype(i)(1:5) .eq. 'TESTM' 
      1        .or. obstype(i)(1:5) .eq. 'SPECI' 
@@ -212,17 +207,27 @@ c place station at proper laps grid point
               else                                     ! Non-Automated
                   ht_defined = 99999.
               endif
-          else                                         ! Old LSO file format
-              write(6,*)' WARNING, questionable obstype: ',obstype(i)       
 
-              if(obstype(i)(5:5) .ne. ' ' .and.
-     1           obstype(i)(4:7) .ne. 'AMOS')then      ! Automated Station 
-                                                       ! (12000' limit)
-                  ht_defined = elev(i) + 12000./3.281
-              else                                     ! Non-Automated
-                  ht_defined = 99999.
-              endif
-          endif
+          else                                         ! Non-sanctioned cld type
+              write(6,*)' WARNING, questionable obstype having '
+     1                 ,'cloud layers - reject: ',obstype(i)
+     1                 ,' ',c_stations(i)
+
+              goto 125
+
+!             if(obstype(i)(5:5) .ne. ' ' .and.
+!    1           obstype(i)(4:7) .ne. 'AMOS')then      ! Automated Station 
+!                                                      ! (12000' limit)
+!                 ht_defined = elev(i) + 12000./3.281
+!             else                                     ! Non-Automated
+!                 ht_defined = 99999.
+!             endif
+
+          endif ! Sanctioned obstype for reporting cloud layers
+
+          n_analyzed = n_analyzed + 1
+          n_cld_snd = n_cld_snd + 1
+          ista_snd(n_cld_snd) = i
 
           c5_outstring = c_stations(i)
 

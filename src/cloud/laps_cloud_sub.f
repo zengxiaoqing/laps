@@ -42,7 +42,7 @@ cdis
      1                        j_status)
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
-     1                  sys_abort_prod
+     1                sys_abort_prod
 
         parameter (ss_normal      =1, ! success
      1             sys_bad_prod   =2, ! inappropriate data, insufficient data
@@ -131,7 +131,7 @@ cdis
         real*4 solar_alt(NX_L,NY_L)
         real*4 solar_ha(NX_L,NY_L)
 
-        logical l_packed_output
+        logical l_packed_output, l_use_vis
         logical l_evap_radar
 
         data l_packed_output /.false./
@@ -403,6 +403,12 @@ c read in laps lat/lon and topo
             return
         endif
 
+        call get_cloud_parms(l_use_vis,pct_req_lvd_s8a,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' laps_cloud_sub: Error getting cloud parms'
+            stop
+        endif
+
         n_lc3 = 1
         n_lps = 2
         n_lcb = 3
@@ -583,11 +589,6 @@ C READ IN AND INSERT SAO DATA
 
 
 C READ IN PIREPS
-        rnorth = 43.
-        south = 36.
-        west = -108.
-        east = -101.
-
         write(6,*)' Using Pireps stored in LAPS realtime system'
 
         call insert_pireps(i4time,cldcv1,cld_hts,wtcldcv
@@ -604,11 +605,22 @@ C READ IN PIREPS
 
 C DO ANALYSIS on SAO and PIREP data
         write(6,*)
-        write(6,*)' Analyzing SAO and PIREP data'
+        write(6,*)' Analyzing SFC Obs and PIREP data'
+
+        max_obs = n_cld_snd * KCLOUD
+
+!       Set weight for using model background clouds beyond a certain effective
+!       radius of influence from the sfc obs/pireps
+        weight_modelfg = 0.    ! Model wt inactive, obs used to infinite radius
+!       weight_modelfg = 1.    ! Model used beyond ~100km from nearest obs
+!       weight_modelfg = .01   ! Model used beyond ~200km from nearest obs
+!       weight_modelfg = .0001 ! Model used beyond ~400km from nearest obs
+
         call barnes_r5(clouds_3d,NX_L,NY_L,KCLOUD,cldcv1,wtcldcv
      1     ,cf_modelfg,l_perimeter,cld_snd,wt_snd,r_missing_data
-     1     ,grid_spacing_cen_m,i_snd,j_snd,n_cld_snd,max_cld_snd,istatus      
-     1     ,NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm)
+     1     ,grid_spacing_cen_m,i_snd,j_snd,n_cld_snd,max_cld_snd
+     1     ,max_obs,weight_modelfg,NX_DIM_LUT,NY_DIM_LUT
+     1     ,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm,istatus)      
         if(istatus .ne. 1)then
             write(6,*)
      1      ' Error: Bad status from barnes_r5, aborting cloud analysis'

@@ -32,8 +32,9 @@ cdis
 
       subroutine barnes_r5(t,imax,jmax,kmax,to,wt_p,cf_modelfg
      1  ,l_perimeter,cld_snd,wt_snd,r_missing_data
-     1  ,grid_spacing_m,i_snd,j_snd,n_cld_snd,max_cld_snd,istatus
-     1  ,NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm)
+     1  ,grid_spacing_m,i_snd,j_snd,n_cld_snd,max_cld_snd
+     1  ,max_obs,weight_modelfg,NX_DIM_LUT,NY_DIM_LUT
+     1  ,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm,istatus)
 
 !     1997 Aug 01  K. Dritz  - Added NX_DIM_LUT, NY_DIM_LUT, IX_LOW,
 !                              IX_HIGH, IY_LOW, IY_HIGH, and n_fnorm as
@@ -52,9 +53,6 @@ cdis
 
       integer*4 lowi_lut(imax)
       integer*4 lowj_lut(jmax)
-
-      integer*4 max_obs
-      parameter (max_obs = 9049)
 
       dimension to(imax,jmax,kmax),t(imax,jmax,kmax),fnorm(n_fnorm)
      1  ,iob(max_obs),job(max_obs),kob(max_obs),nob(max_obs)
@@ -75,12 +73,11 @@ cdis
       write(6,1234)
  1234 format(1x,'barnes_r5 called')
 
-!     Set weight for using model background clouds beyond a certain effective
-!     radius of influence from the sfc obs/pireps
-      weight_modelfg = 0.    ! Model wt not active, obs used to infinite radius
-!     weight_modelfg = 1.    ! Model used beyond ~100km from nearest obs
-!     weight_modelfg = .01   ! Model used beyond ~200km from nearest obs
-!     weight_modelfg = .0001 ! Model used beyond ~400km from nearest obs
+      if(n_cld_snd .gt. max_cld_snd)then
+          write(6,*)' barnes_r5: ERROR, too many cloud soundings'
+          istatus = 0
+          return
+      endif 
 
 !     Obtain and/or iterate for value of iskip
       iskip = nint(20000. / grid_spacing_m)
@@ -242,7 +239,7 @@ cdis
         if((l_analyze(k) .and. nobs .ge. 1) .or. k .eq. 1)then
 
           write(6,50)k,nstart,nstop,nobs
-50        format(' lvl,nstart,nstop,nobs=',4i5)
+50        format(' lvl,nstart,nstop,nobs=',4i6)
 
 !         height_level = height_of_level(k)
 

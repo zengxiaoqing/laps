@@ -102,7 +102,8 @@ cdis
               num_pirep = num_pirep + 1
 
               if(num_pirep .gt. max_pireps)then
-                  write(6,*)' Too many pireps, check N_PIREP parameter'
+                  write(6,*)' insert_pireps: Error, too many pireps,'
+     1                     ,' check N_PIREP parameter'
                   istatus = 0
                   return
               endif
@@ -286,7 +287,7 @@ cdis
         istatus = 1
         return
 
-998     write(6,*)' Error, could not find the pirep file'
+998     write(6,*)' Warning, could not find the pirep file'
         istatus = 1
         return
 
