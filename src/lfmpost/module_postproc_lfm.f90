@@ -333,11 +333,11 @@ CONTAINS
     IF (.NOT.ALLOCATED(rainmrsfc) )    ALLOCATE (rainmrsfc   ( nx , ny ) )
     IF (.NOT.ALLOCATED(snowmrsfc) )    ALLOCATE (snowmrsfc   ( nx , ny ) )
     IF (.NOT.ALLOCATED(graupmrsfc) )   ALLOCATE (graupmrsfc  ( nx , ny ) )
-    IF ((.NOT.ALLOCATED(abs_vort)).AND.(make_v5d)) &
+    IF ((.NOT.ALLOCATED(abs_vort)).AND.(make_v5d(domain_num))) &
          ALLOCATE ( abs_vort (nx, ny, kprs) )
-    IF ((.NOT.ALLOCATED(thick_10_5)).AND.(make_v5d)) &
+    IF ((.NOT.ALLOCATED(thick_10_5)).AND.(make_v5d(domain_num))) &
          ALLOCATE ( thick_10_5 (nx,ny))
-    IF ((.NOT.ALLOCATED(snowcover)).AND.(make_v5d)) &
+    IF ((.NOT.ALLOCATED(snowcover)).AND.(make_v5d(domain_num))) &
          ALLOCATE ( snowcover (nx,ny))
     RETURN
 
@@ -980,7 +980,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
      
      ! Compute 1000-500mb thickness if make_v5d is set.
 
-     IF (make_v5d) thick_10_5 = zprs(:,:,k500)-zprs(:,:,k1000)
+     IF (make_v5d(domain_num)) thick_10_5 = zprs(:,:,k500)-zprs(:,:,k1000)
 
      ! Convert THETA into temperature
      !print *, 'Converting interpolated theta to temp..'
@@ -1226,7 +1226,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     PRINT *, '      Min/Max SR Helicity:    ', minval(srhel),maxval(srhel)
     PRINT *, '      Min/Max TKE:            ', minval(tkeprs),maxval(tkeprs)
     ! If making Vis5D output, compute vorticity
-    IF (make_v5d) THEN
+    IF (make_v5d(domain_num)) THEN
        recipdx = 1.0 / (2.0 * grid_spacing)
        DO k = 1,kprs
          DO j = 2,ny-1
@@ -1605,7 +1605,7 @@ print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
     ENDIF  
     WHERE(rainnon .LT. .00001) rainnon = 0.
 
-    IF (make_v5d) THEN
+    IF (make_v5d(domain_num)) THEN
       IF (mtype .EQ. 'mm5') THEN
          CALL get_mm5_2d(current_lun, 'SNOWCOVR ', time_to_proc, snowcover, &
                       'D   ', status)

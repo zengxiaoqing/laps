@@ -249,10 +249,11 @@ PROGRAM lfmpost
     ALLOCATE ( hah_index       ( nx , ny ) )
     ALLOCATE ( fwi_index        ( nx , ny ) )
 
-    IF (make_v5d) ALLOCATE ( abs_vort (nx,ny,kprs))
-    IF (make_v5d) ALLOCATE ( thick_10_5 (nx,ny)) 
-    IF (make_v5d) ALLOCATE ( snowcover (nx,ny))
-
+    IF (make_v5d(domain_num)) THEN
+      ALLOCATE ( abs_vort (nx,ny,kprs))
+      ALLOCATE ( thick_10_5 (nx,ny)) 
+      ALLOCATE ( snowcover (nx,ny))
+    ENDIF
     PRINT '("PROCESSING TIME ",A24," FILE = ",A," UNIT # = ",I4)', &
              current_time, TRIM(data_file), lun_data
     CALL process_one_lfm(lun_data,current_time)
@@ -273,7 +274,7 @@ PROGRAM lfmpost
         CALL SMOOTH(redp,nx,ny,1,1.)
         CALL SMOOTH(zprs,nx,ny,kprs,1.)
         CALL SMOOTH(srhel,nx,ny,1,1.) 
-        IF (make_v5d) THEN
+        IF (make_v5d(domain_num)) THEN
            CALL SMOOTH(abs_vort,nx,ny,kprs,1.)
            CALL SMOOTH(thick_10_5,nx,ny,1,1.)
         ENDIF
@@ -283,7 +284,7 @@ PROGRAM lfmpost
     ! to a routine to write whatever format you want
 
   
-    IF (make_laps) THEN 
+    IF (make_laps(domain_num)) THEN 
       PRINT *, 'Making LAPS output files (fua/fsf)...'
       ! For LAPS, some of the variables need to be manipulated a bit
 
@@ -328,7 +329,8 @@ PROGRAM lfmpost
                             upbl, vpbl, vnt_index,ham_index,hah_index,fwi_index,&
                             prslvl*0.01,lfmprd_dir,laps_data_root,domain_num,&
                             laps_reftime,laps_valtime,nx,ny,kprs,realtime, &
-                            write_to_lapsdir,model_name,make_donefile)
+                            write_to_lapsdir(domain_num) , &
+                            model_name,make_donefile)
 
       DEALLOCATE(cldliqcon_prs)
       DEALLOCATE(cldicecon_prs)
@@ -339,7 +341,7 @@ PROGRAM lfmpost
 
     ! Make GRIB output as required
 
-    IF ( (gribsfc).OR.(gribua)) THEN
+    IF ( (gribsfc(domain_num)).OR.(gribua(domain_num))) THEN
       IF (t .EQ. 1) THEN
         CALL make_igds(proj,igds)
       ENDIF
@@ -358,9 +360,10 @@ PROGRAM lfmpost
       PRINT *, 'OPENED FUNIT ', funit, ' for ',TRIM(gribfile)
       startb = 1
       nbytes = 0
-      IF (gribsfc) THEN
+      IF (gribsfc(domain_num)) THEN
         CALL grib_sfc_vars(table_version,center_id,subcenter_id, &
-              process_id, laps_reftime,laps_valtime,period_sec,igds,nx,ny, &
+              process_id(domain_num) , laps_reftime,laps_valtime, &
+              period_sec,igds,nx,ny, &
               tsfc,tdsfc,rhsfc,usfc,vsfc, &
               wsfc,pmsl,psfc,totpcpwater,pcp_inc,pcp_tot,snow_inc, &
               snow_tot,thetasfc,thetaesfc,cape,cin,srhel, &
@@ -372,10 +375,11 @@ PROGRAM lfmpost
               pcptype_sfc, funit,startb,nbytes)
         startb = startb + nbytes
       ENDIF
-      IF (gribua) THEN
+      IF (gribua(domain_num)) THEN
   
         CALL grib_ua_vars(table_version,center_id,subcenter_id, &
-             process_id,laps_reftime,laps_valtime,period_sec,igds,nx,ny,kprs, &
+             process_id(domain_num),laps_reftime,laps_valtime, &
+             period_sec,igds,nx,ny,kprs, &
              prslvl*0.01,zprs,uprs,vprs,wprs,omprs,tprs,shprs,rhprs,&
              cldliqmr_prs,cldicemr_prs,rainmr_prs,snowmr_prs,graupelmr_prs, &
              pcptype_prs,refl_prs,tkeprs,funit,startb,nbytes)
@@ -391,7 +395,7 @@ PROGRAM lfmpost
     ENDIF
     ! Make Vis5D output if requested in namelist
 
-    IF (make_v5d) THEN 
+    IF (make_v5d(domain_num)) THEN 
 
       PRINT *, 'Making Vis5D output...'
       ! If this is the first output time, then the Vis5D file
@@ -428,7 +432,7 @@ PROGRAM lfmpost
    
     ENDIF
 
-    IF (make_points) THEN
+    IF (make_points(domain_num)) THEN
       CALL split_date_char(point_times(t),year,month,day,hour,minute,second)
       WRITE(date_str, '(I2.2,"/",I2.2,"/",I4.4,1x,I2.2,":",I2.2)') month, &
         day, year,hour,minute
@@ -627,7 +631,7 @@ PROGRAM lfmpost
     DEALLOCATE ( hah_index )
     DEALLOCATE ( fwi_index )
 
-    IF (make_v5d) THEN
+    IF (make_v5d(domain_num)) THEN
       DEALLOCATE (abs_vort)
       DEALLOCATE (thick_10_5)
       DEALLOCATE (snowcover)

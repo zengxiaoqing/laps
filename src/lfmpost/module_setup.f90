@@ -46,7 +46,6 @@ MODULE setup
   IMPLICIT NONE
 
   ! File/path names
-
   CHARACTER(LEN=1)              :: domain_num_str
   CHARACTER(LEN=2)              :: domain_num_str2
   CHARACTER(LEN=255)            :: laps_data_root
@@ -58,8 +57,10 @@ MODULE setup
   CHARACTER(LEN=255)            :: terrain_file
   CHARACTER(LEN=10)             :: mtype 
   ! Run configuration
+  INTEGER                       :: num_domains
   INTEGER                       :: domain_num
   INTEGER                       :: kprs
+  INTEGER                       :: domarg
   REAL, ALLOCATABLE             :: prslvl(:)
   REAL                          :: redp_lvl
   LOGICAL                       :: keep_fdda
@@ -72,19 +73,19 @@ MODULE setup
   INTEGER                       :: stop_file_num
   INTEGER                       :: file_num_inc
   LOGICAL                       :: file_num3
-  LOGICAL                       :: make_laps
-  LOGICAL                       :: write_to_lapsdir
-  LOGICAL                       :: make_v5d
-  LOGICAL                       :: make_points
+  LOGICAL                       :: make_laps(10)
+  LOGICAL                       :: write_to_lapsdir(10)
+  LOGICAL                       :: make_v5d(10)
+  LOGICAL                       :: make_points(10)
   INTEGER                       :: v5d_compress
   CHARACTER(LEN=32)             :: model_name
   LOGICAL                       :: do_smoothing
-  LOGICAL                       :: gribsfc
-  LOGICAL                       :: gribua
+  LOGICAL                       :: gribsfc(10)
+  LOGICAL                       :: gribua(10)
   INTEGER                       :: table_version
   INTEGER                       :: center_id
   INTEGER                       :: subcenter_id
-  INTEGER                       :: process_id
+  INTEGER                       :: process_id(10)
 
   ! Time information
   INTEGER                       :: num_times_avail
@@ -169,15 +170,11 @@ CONTAINS
     IMPLICIT NONE
     INTEGER  :: lun_data, lun_terrain, status
     LOGICAL   :: file_ready
-
+    CHARACTER(LEN=2) :: domarg_str
     ! Main lfmpost.nl namelist is in LAPS_DATA_ROOT, so we must
     ! have one set
    
     CALL GETENV("LAPS_DATA_ROOT",laps_data_root)
-    IF (laps_data_root(1:3).EQ."   ") THEN
-        PRINT *, 'SETUP: Need to set LAPS_DATA_ROOT environment variable'
-        STOP
-      ENDIF
 
     ! Get the 1st argument which tells us which model type is being
     ! run.  (mtype)
@@ -186,8 +183,18 @@ CONTAINS
     IF (mtype .EQ. 'lfmpost.ex') THEN
       !Must be an HP!
       CALL GETARG(2,mtype)
+      CALL GETARG(3,domarg_str)
+    ELSE  
+      CALL GETARG(2, domarg_str)
     ENDIF
-
+   
+    READ (domarg_str, '(I2)') domarg
+    PRINT *, 'Domain number provided as argument: ',domarg
+    IF(domarg .GT. 0) THEN
+       domain_num = domarg
+    ELSE 
+       domain_num = 1
+    ENDIF
     IF ((mtype .EQ. 'WRF       ').OR.(mtype .EQ. 'wrf       ')) THEN
       mtype = 'wrf       '
     ELSEIF ((mtype .EQ. 'MM5       ').OR.(mtype .EQ. 'mm5       ')) THEN
@@ -204,7 +211,7 @@ CONTAINS
         PRINT *, 'SETUP: Need to set MM5_DATA_ROOT environment variable.'
         STOP
       ENDIF
-      
+
       lfmprd_dir = TRIM(mm5_data_root)//"/mm5prd"
       lfm_data_root = mm5_data_root
     ELSEIF (mtype(1:3) .eq. "wrf") THEN
@@ -265,12 +272,12 @@ CONTAINS
 
     ENDIF
     ! If we want to make points, then set this up now
-    IF (make_points) THEN
+    IF (make_points(domain_num)) THEN
       CALL init_points(status)
       IF (status .NE. 0) THEN
         PRINT *, 'Point output requested, but cannot be fulfilled.'
         PRINT *, 'Ensure MM5_DATA_ROOT/static/lfmpost_points.txt file exists.'
-        make_points = .false.
+        make_points(domain_num) = .false.
       ELSE 
         PRINT '(A,I3)', 'Points initialized: ', num_points
       ENDIF
@@ -287,9 +294,9 @@ CONTAINS
     REAL                        :: levels_mb(max_levels)
     LOGICAL                     :: used
     CHARACTER(LEN=255)          :: namelist_file    
-    CHARACTER(LEN=32)           :: lfm_name
+    CHARACTER(LEN=32)           :: lfm_name(10)
 
-    NAMELIST /lfmpost_nl/ domain_num, keep_fdda, split_output, levels_mb,&
+    NAMELIST /lfmpost_nl/ num_domains, keep_fdda, split_output, levels_mb,&
         redp_lvl,lfm_name , proc_by_file_num, start_file_num, stop_file_num, &
              file_num_inc, file_num3, make_laps,realtime, write_to_lapsdir, &
              make_donefile,make_v5d, v5d_compress,max_wait_sec, do_smoothing, &
@@ -325,7 +332,7 @@ CONTAINS
     ENDIF
 
     ! Initialize some values 
-    domain_num = 1
+    num_domains = 1
     model_name = '                                '
     kprs = 1
     levels_mb(:)=-1.
@@ -338,21 +345,21 @@ CONTAINS
     stop_file_num = 999
     file_num_inc = 1
     file_num3 = .false.
-    make_v5d = .false.
-    make_laps = .true.
-    make_points = .false.
+    make_v5d(:) = .false.
+    make_laps(:) = .true.
+    make_points(:) = .false.
     v5d_compress = 2
     realtime = .true.
     make_donefile = .true.
     do_smoothing = .true.
     ! Default GRIB settings
-    gribsfc = .false.
-    gribua = .false.
+    gribsfc(:) = .false.
+    gribua(:) = .false.
     table_version = 2
     center_id = 59   ! FSL
     subcenter_id = 2 ! LAPB
-    process_id = 0
-    write_to_lapsdir = .false.
+    process_id(:) = 255
+    write_to_lapsdir(:) = .false.
     point_tz_utcoffset = 0
     point_tz_label = 'UTC'
     point_temp_units = 'F'
@@ -360,6 +367,24 @@ CONTAINS
     point_vent_units = 'm^2/s'
     READ(UNIT=nml_unit, NML=lfmpost_nl)
     CLOSE (nml_unit)
+
+    ! See if we have to have LAPS_DATA_ROOT
+    IF (make_laps(domain_num)) THEN
+      IF (laps_data_root(1:3) .EQ. "   ") THEN
+         PRINT *, 'No LAPS_DATA_ROOT environment variable set!'
+         PRINT *, 'Either set LAPS_DATA_ROOT or set MAKE_LAPS = .FALSE.'
+         STOP
+      ENDIF
+    ENDIF
+  
+    ! Check domain number
+    IF (domain_num .GT. num_domains) THEN
+      PRINT *, 'You requested domain number: ', domain_num
+      PRINT *, 'But lfmpost.nl indicates only ', num_domains, &
+                ' domains are configured.'
+      STOP
+    ENDIF
+
     ! Count up number of levels requested.  They must be in monotonically 
     ! decreasing order (bottom to top atmospherically)
 
@@ -383,10 +408,10 @@ CONTAINS
     DO k = 1,kprs
       PRINT '(A,F9.1,A)', 'Level: ', prslvl(k), 'Pa'
     ENDDO
-    model_name =lfm_name
+    model_name =lfm_name(domain_num)
 
     ! Check point settings 
-    IF (make_points) THEN
+    IF (make_points(domain_num)) THEN
       ! Timezone stuff
       IF( (point_tz_utcoffset .LT. -12).OR.&
           (point_tz_utcoffset .GT.  12)) THEN
@@ -539,9 +564,6 @@ CONTAINS
     CHARACTER(LEN=255)   :: wrfinitfile
     INTEGER              :: luninit
     LOGICAL              :: fileready
-    ALLOCATE (latdot (nx,ny))
-    ALLOCATE (londot (nx,ny))
-    ALLOCATE (terdot (nx,ny))
 
     IF (mtype .eq. 'mm5') THEN
       CALL get_mm5_map(lun_terrain,projection, proj_cent_lat, proj_cent_lon, &
@@ -607,7 +629,7 @@ CONTAINS
                      stdlon,truelat1,truelat2,nx,ny,proj) 
     END SELECT
 
-    IF (make_v5d) THEN  
+    IF (make_v5d(domain_num)) THEN  
       ALLOCATE (mapfac_d(nx,ny)) 
       ALLOCATE (coriolis(nx,ny))
       IF (mtype .eq. 'mm5') THEN
