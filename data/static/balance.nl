@@ -1,5 +1,5 @@
  &balance_nl
- lrunbal=.false.
+ lrunbal=.true.
  gamo=1.e-2,
  delo=1.e9,
  /
