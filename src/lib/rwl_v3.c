@@ -30,7 +30,7 @@
 #ifdef FORTRANUNDERSCORE
 #define dim_size_v3 dim_size_v3_
 #define check_laps_inv check_laps_inv_
-#define get_lvl_coord get_lvl_coord_v3_
+#define get_lvl_coord_v3 get_lvl_coord_v3_
 #define get_index_v3 get_index_v3_
 #define free_read_var free_read_var_
 #define retrieve_hdr_v3 retrieve_hdr_v3_
@@ -57,7 +57,7 @@
 #ifdef FORTRANCAPS
 #define dim_size_v3 DIM_SIZE_V3
 #define check_laps_inv CHECK_LAPS_INV
-#define get_lvl_coord GET_LVL_COORD_V3
+#define get_lvl_coord_v3 GET_LVL_COORD_V3
 #define get_index_v3 GET_INDEX_V3
 #define free_read_var FREE_READ_VAR
 #define retrieve_hdr_v3 RETRIEVE_HDR_V3
@@ -84,7 +84,7 @@
 #ifdef FORTRANDOUBLEUNDERSCORE
 #define dim_size_v3 dim_size_v3__
 #define check_laps_inv check_laps_inv__
-#define get_lvl_coord get_lvl_coord_v3__
+#define get_lvl_coord_v3 get_lvl_coord_v3__
 #define get_index_v3 get_index_v3__
 #define free_read_var free_read_var__
 #define retrieve_hdr_v3 retrieve_hdr_v3__
