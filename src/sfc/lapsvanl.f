@@ -564,7 +564,7 @@ c
 	    alf2a = 0.
 	    beta = 100.  
             call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,
-     &        err,imax,jmax,rms_thresh_norm,bad_tmd,imiss,mxstn,
+     &        err,imax,jmax,rms_thresh_norm*1.2,bad_tmd,imiss,mxstn,
      &        obs_error_td,name,topo,ldf)
         else ! use data structures for handling obs
             call barnes_multivariate_sfc_jacket('td',obs,mxstn,td_bk
