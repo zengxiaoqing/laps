@@ -97,7 +97,7 @@ c           directory = laps_data_root(1:len_lapsroot)//'etc/'
         endif
 
         if(ext(1:3) .eq. 'cdl')then
-           directory = laps_data_root(1:len_lapsroot)//'data/cdl/'
+           directory = laps_data_root(1:len_lapsroot)//'cdl/'
            goto 999
         endif
 
