@@ -292,6 +292,8 @@ c
 c this section determines only the two fcsts bounding the analysis (i4time_anal) time.
 c -----------------------------------------------------------------------------------
       n=1
+      indx_for_best_init=0
+      indx_for_best_fcst=0
       i4time_min_diff=100000
       do while(n.le.ibkgd)
          if(i4timeinit(n).le.i4time_anal .and.
@@ -321,8 +323,8 @@ c whereas the second section below is ffff = hhhh.
                       indx_for_best_fcst=jj-1
                    endif
                    print*,'Found fcsts bounding anal'
-c                  print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
-c                  print*,'Full name 2: ', bkgd(n),fcst(n,jj)
+                   print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
+                   print*,'Full name 2: ', bkgd(n),fcst(n,jj)
                    print*
                   endif
                enddo
@@ -345,8 +347,8 @@ c                  print*,'Full name 2: ', bkgd(n),fcst(n,jj)
                     indx_for_best_fcst=jj-1
                  endif
                  print*,'Found fcsts bounding anal'
-c                print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
-c                print*,'Full name 2: ', bkgd(n),fcst(n,jj)
+                 print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
+                 print*,'Full name 2: ', bkgd(n),fcst(n,jj)
                  print*
               endif
              enddo
@@ -373,6 +375,7 @@ c -----------------------------------------------------------------------------
          print*,'!*** -------> Returning to main'
          print*,'!******************************************'
          accepted_files = 0
+         bg_files = 0
          return
       endif
 
