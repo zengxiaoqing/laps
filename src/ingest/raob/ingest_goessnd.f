@@ -61,9 +61,6 @@ cdis
 
       istatus = 0
 
-c     New call for Steve Albers check of lun
-      call open_ext ( lun_out, i4time_sys, 'snd', istatus)
-
 c     get missing data flag
       call get_r_missing_data (mdf,istatus) 
 
@@ -114,6 +111,8 @@ c     go through list of filenames and test their valid times against window
          return
       endif
 
+c     New call for Steve Albers check of lun
+      call open_ext ( lun_out, i4time_sys, 'snd', istatus)
 
 c     what is the new file name length (same for all files)
 
