@@ -41,7 +41,7 @@ OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
-EXE = cloud.exe
+EXE = remap_polar_netcdf.exe
 
 
 # Define other variables 
