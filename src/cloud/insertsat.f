@@ -575,6 +575,7 @@ c
 
 !             Find a thinner value for cloud cover consistent with the new
 !             higher cloud top and the known brightness temperature.
+!             This works OK if tb8_k is warmer than T at the assumed cloud top
               if(.true.)then ! Should this depend on co2?
 
 !                 Note that cover is not really used here as an input
@@ -584,7 +585,7 @@ c
      1                              ,heights_3d
      1                              ,imax,jmax,klaps,i,j,istatus)
                   if(istatus .ne. 1)then
-                      write(6,*)' Correct_cover: t_cld > tb8_k'
+                      write(6,*)' Correct_cover: tb8_k < t_cld'
                       write(6,*)cldtop_old,cldtop_m(i,j)
      1                         ,htbase_init,thk_def,cover
                       write(6,*)(heights_3d(i,j,k),k=1,klaps)
