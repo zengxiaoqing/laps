@@ -36,6 +36,8 @@ cdis
 
         function omega_to_w(omega,pressure_pa)
 
+cdoc    Convert Omega to W
+
         real*4 omega_to_w
 
         real*4 scale_height
@@ -48,6 +50,8 @@ cdis
 
         function w_to_omega(w,pressure_pa)
 
+cdoc    Convert W to Omega
+
         real*4 w_to_omega
 
         real*4 scale_height
@@ -59,8 +63,11 @@ cdis
         end
 
         subroutine latlon_to_radar(lat_grid,lon_grid,height_grid
-     1                  ,azimuth,slant_range,elev
-     1                  ,rlat_radar,rlon_radar,rheight_radar)
+     1                            ,azimuth,slant_range,elev
+     1                            ,rlat_radar,rlon_radar,rheight_radar)       
+
+cdoc    Convert Lat/Lon/Elev to Radar Azimuth / Slant Range / Elevation Angle
+
         include 'trigd.inc'
 
         implicit real*4 (a-z)
@@ -88,7 +95,7 @@ cdis
 
         height_factor =
      1   (radius_earth + 0.5 * (rheight_radar + height_grid))
-     1  /radius_earth
+     1   /radius_earth
 
         hor_dist = sqrt(delta_x**2 + delta_y**2) * height_factor
 
@@ -126,13 +133,14 @@ c       1                       ,hor_dist,curvature
         function height_to_zcoord(height_m,istatus) ! Using standard atmosphere
 
 !       Steve Albers FSL
-!       Note that this routine works with the standard atmosphere.
-!       When the vertical grid is pressure, the height is converted to
-!       pressure, then the interpolation to the vertical grid is performed.
-!       Thus if the height is midway between two LAPS levels in height space,
-!       the value of height_to_zcoord will not have a fraction of 0.5.
-!       If the pressure is midway between two LAPS levels, then the
-!       value of height_to_zcoord will have a fraction of 0.5.
+cdoc    Convert Height to fractional Z-coordinate
+cdoc    Note that this routine works with the standard atmosphere.
+cdoc    When the vertical grid is pressure, the height is converted to
+cdoc    pressure, then the interpolation to the vertical grid is performed.
+cdoc    Thus if the height is midway between two LAPS levels in height space,
+cdoc    the value of height_to_zcoord will not have a fraction of 0.5.
+cdoc    If the pressure is midway between two LAPS levels, then the
+cdoc    value of height_to_zcoord will have a fraction of 0.5.
 
         implicit real*4 (a-z)
 
@@ -173,19 +181,21 @@ c       1                       ,hor_dist,curvature
 
 
         function height_to_zcoord2(height_m,heights_3d
-     1                                          ,ni,nj,nk,i,j,istatus)
+     1                            ,ni,nj,nk,i,j,istatus)
 
 !       1994 Steve Albers FSL (Original)
 !       1998 Steve Albers FSL (Overhaul)
 
-!       Note that this routine works with the real atmosphere.
-!       The type of interpolation is similar to that in 'height_to_zcoord'.
-!       When the vertical grid is pressure, the height is converted to
-!       pressure, then the interpolation to the vertical grid is performed.
-!       Thus if the height is midway between two LAPS levels in height space,
-!       the value of 'height_to_zcoord2' will not have a fraction of 0.5.
-!       If the pressure is midway between two LAPS levels, then the
-!       value of 'height_to_zcoord2' will have a fraction of 0.5.
+cdoc    Convert from Height to fractional Z-coordinate. 3-D Heights 
+cdoc    are used as a reference.
+cdoc    Note that this routine works with the real atmosphere.
+cdoc    The type of interpolation is similar to that in 'height_to_zcoord2'.
+cdoc    When the vertical grid is pressure (e.g.), the height is converted to
+cdoc    pressure, then the interpolation to the vertical grid is performed.
+cdoc    Thus if the height is midway between two LAPS levels in height space,
+cdoc    the value of 'height_to_zcoord3' will not have a fraction of 0.5.
+cdoc    If the pressure is midway between two LAPS levels, then the
+cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
         implicit real*4 (a-z)
 
@@ -270,104 +280,15 @@ c       1                       ,hor_dist,curvature
         end
 
 
-        function height_to_zcoord2_old(height_m,heights_3d
-     1                                          ,ni,nj,nk,i,j,istatus)
-
-!       WARNING: This routine is designed to be efficient. As a result, it
-!       will fail if the input heights differ too much from the standard
-!       atmosphere. In such a case, the istatus will be returned as zero.
-
-!       1994 Steve Albers FSL
-
-!       Note that this routine works with the real atmosphere.
-!       The type of interpolation is similar to that in 'height_to_zcoord'.
-!       When the vertical grid is pressure, the height is converted to
-!       pressure, then the interpolation to the vertical grid is performed.
-!       Thus if the height is midway between two LAPS levels in height space,
-!       the value of 'height_to_zcoord2' will not have a fraction of 0.5.
-!       If the pressure is midway between two LAPS levels, then the
-!       value of 'height_to_zcoord2' will have a fraction of 0.5.
-
-        implicit real*4 (a-z)
-
-        integer i,j,k,ni,nj,nk,kref,istatus
-
-        real*4 heights_3d(ni,nj,nk)
-
-        logical ltest_vertical_grid
-
-        istatus = 1
-
-        if(ltest_vertical_grid('HEIGHT'))then
-           print*, 'Call is obsolete, please report this message to '
-           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!            height_to_zcoord2_old = height_m / HEIGHT_INTERVAL
-
-        elseif(ltest_vertical_grid('PRESSURE'))then
-            height_to_zcoord2_old = nk+1 ! Default value is off the grid
-
-          ! Standard Atmosphere Guess + a cushion
-!           This must always be >= height_to_zcoord2_old
-            kref = min(int(height_to_zcoord((height_m+600.)*1.2,istatus)
-     1),nk)
-
-            heights_above = heights_3d(i,j,kref)
-
-            if(height_m .gt. heights_above)then
-                istatus = 0
-                goto999
-            endif
-
-            do k = kref-1,1,-1
-                if(heights_above     .ge. height_m .and.
-     1           heights_3d(i,j,k) .le. height_m         )then
-                    thickness = heights_above - heights_3d(i,j,k)
-                    fraction = (height_m - heights_3d(i,j,k))/thickness
-                    pressure_low  = zcoord_of_level(k)
-                    pressure_high = zcoord_of_level(k+1)
-                    diff_log_space = log(pressure_high/pressure_low)
-                    pressure = pressure_low * exp(diff_log_space*fractio
-     1n)
-                    height_to_zcoord2_old = zcoord_of_pressure(pressure)
-
-!                   if(j .eq. 29)then
-!                       write(6,*)' height_to_zcoord2: kref,k,kref-k+1'
-!       1                                             ,kref,k,kref-k+1
-!                   endif
-
-                    goto999
-
-                endif
-
-                heights_above = heights_3d(i,j,k)
-
-            enddo ! k
-
-            istatus = 0
-            height_to_zcoord2_old = 0
-            write(6,101)kref,height_m,heights_3d(i,j,1)
-101         format('  Error: below domain in height_to_zcoord2, kref,h,h
-     1(1)',
-     1             i3,2e11.4)
-
-        else
-            write(6,*)' Error, vertical grid not supported,'
-     1               ,' this routine supports PRESSURE or HEIGHT'
-            istatus = 0
-            return
-
-        endif
-
-999     return
-        end
-
-
         function height_to_zcoord2_lin(height_m,heights_3d
      1                                  ,ni,nj,nk,i,j,istatus)
 
-!       WARNING: This routine is designed to be efficient. As a result, it
-!       will fail if the input heights differ too much from the standard
-!       atmosphere. In such a case, the istatus will be returned as zero.
+cdoc    Convert Height to fractional Z-coordinate, using 3-D heights as a 
+cdoc    reference. 
+
+cdoc    WARNING: This routine is designed to be efficient. As a result, it
+cdoc    will fail if the input heights differ too much from the standard
+cdoc    atmosphere. In such a case, the istatus will be returned as zero.
 
 !       1994 Steve Albers
 
@@ -440,18 +361,122 @@ c       1                       ,hor_dist,curvature
 999     return
         end
 
+
+
         function height_to_zcoord3(height_m,heights_3d,zcoords_1d
+     1                            ,ni,nj,nk,i,j,istatus)
+
+!       2000 Steve Albers
+
+cdoc    Convert from Height to fractional Z-coordinate. 3-D Heights and
+cdoc    1-D Z-coordinate values are used as a reference.
+cdoc    Note that this routine works with the real atmosphere.
+cdoc    The type of interpolation is similar to that in 'height_to_zcoord2'.
+cdoc    When the vertical grid is pressure (e.g.), the height is converted to
+cdoc    pressure, then the interpolation to the vertical grid is performed.
+cdoc    Thus if the height is midway between two LAPS levels in height space,
+cdoc    the value of 'height_to_zcoord3' will not have a fraction of 0.5.
+cdoc    If the pressure is midway between two LAPS levels, then the
+cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
+
+        implicit real*4 (a-z)
+
+        integer i,j,k,ni,nj,nk,kref,istatus
+
+        real*4 heights_3d(ni,nj,nk)
+        real*4 zcoords_1d(nk)
+
+        logical ltest_vertical_grid
+
+        data k_ref /1/
+        save k_ref
+
+        if(ltest_vertical_grid('HEIGHT'))then
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!          height_to_zcoord3 = height_m / HEIGHT_INTERVAL
+
+        elseif(ltest_vertical_grid('PRESSURE'))then
+            height_to_zcoord3 = nk+1 ! Default value is off the grid
+
+            k = k_ref
+
+            if(height_m .gt. heights_3d(i,j,nk))then
+                height_to_zcoord3 = nk+1 
+!               write(6,101)kref,height_m,heights_3d(i,j,nk)
+!101            format('  Note: above domain in height_to_zcoord3,'       
+!    1                ,' kref,h,h(nk)',i3,2e11.4)
+                istatus = 0
+                return
+
+            elseif(height_m .lt. heights_3d(i,j,1))then
+                height_to_zcoord3 = 0
+                write(6,102)kref,height_m,heights_3d(i,j,1)
+102             format('  Warning: below domain in height_to_zcoord3,'
+     1                ,' kref,h,h(1)',i3,2e11.4)
+                istatus = 0
+                return
+
+            endif ! input height is outside domain
+
+            do iter = 1,nk
+                if(heights_3d(i,j,k+1) .ge. height_m .and.
+     1             heights_3d(i,j,k)   .le. height_m         )then
+                    thickness = heights_3d(i,j,k+1) - heights_3d(i,j,k)
+                    fraction = (height_m - heights_3d(i,j,k))/thickness
+                    pressure_low  = zcoords_1d(k)
+                    pressure_high = zcoords_1d(k+1)
+                    diff_log_space = log(pressure_high/pressure_low)
+                    pressure = pressure_low 
+     1                         * exp(diff_log_space*fraction)
+                    height_to_zcoord3 = zcoord_of_pressure(pressure)
+
+                    goto999
+
+                elseif(height_m .gt. heights_3d(i,j,k+1))then
+                    k = min(k+1,nk-1)
+
+                elseif(height_m .lt. heights_3d(i,j,k))then
+                    k = max(k-1,1)
+
+                endif
+
+            enddo ! iter
+
+            height_to_zcoord3 = 0
+            write(6,*)' Error, iteration limit in height_to_zcoord3'
+            istatus = 0
+            return
+
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
+        endif
+
+999     k_ref = k       ! Successful return
+        istatus = 1
+        return
+
+        end
+
+
+
+        function height_to_zcoord3_old(height_m,heights_3d,zcoords_1d       
      1                                  ,ni,nj,nk,i,j,istatus)
 
 
-!       Note that this routine works with the real atmosphere.
-!       The type of interpolation is similar to that in 'height_to_zcoord'.
-!       When the vertical grid is pressure, the height is converted to
-!       pressure, then the interpolation to the vertical grid is performed.
-!       Thus if the height is midway between two LAPS levels in height space,
-!       the value of 'height_to_zcoord3' will not have a fraction of 0.5.
-!       If the pressure is midway between two LAPS levels, then the
-!       value of 'height_to_zcoord3' will have a fraction of 0.5.
+cdoc    Old routine being phased out. Do not call.
+cdoc    Note that this routine works with the real atmosphere.
+cdoc    The type of interpolation is similar to that in 'height_to_zcoord'.
+cdoc    When the vertical grid is pressure, the height is converted to
+cdoc    pressure, then the interpolation to the vertical grid is performed.
+cdoc    Thus if the height is midway between two LAPS levels in height space,
+cdoc    the value of 'height_to_zcoord3' will not have a fraction of 0.5.
+cdoc    If the pressure is midway between two LAPS levels, then the
+cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
         implicit real*4 (a-z)
 
@@ -509,7 +534,7 @@ c       1                       ,hor_dist,curvature
             enddo ! k
 
             istatus = 0
-            height_to_zcoord3 = 0
+            height_to_zcoord3_old = 0
             write(6,101)kref,height_m,heights_3d(i,j,1)
 101         format('  Error: below domain in height_to_zcoord3, kref,h,h
      1(1)',
@@ -528,7 +553,10 @@ c       1                       ,hor_dist,curvature
 
 
         function height_to_pressure(height_m,heights_3d
-     1                          ,pressures_1d,ni,nj,nk,i,j)
+     1                             ,pressures_1d,ni,nj,nk,i,j)
+
+cdoc    Convert height to pressure, using 3-D heights and 1-D pressures as
+cdoc    a reference.
 
         implicit real*4 (a-z)
         integer i,j,k,ni,nj,nk
@@ -541,7 +569,6 @@ c       1                       ,hor_dist,curvature
         if(ltest_vertical_grid('HEIGHT'))then
            print*, 'Call is obsolete, please report this message to '
            print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!            height_to_zcoord2 = height_m / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_pressure = -999. ! Default value is off the grid
@@ -572,7 +599,9 @@ c       1                       ,hor_dist,curvature
 
 
         subroutine pressure_to_height(pres_pa,heights_3d
-     1                             ,ni,nj,nk,i,j,height_out,istatus)
+     1                               ,ni,nj,nk,i,j,height_out,istatus)       
+
+cdoc    Convert Pressure to Height, using a 3-D Height field for reference
 
         real*4 heights_3d(ni,nj,nk)
 
@@ -629,6 +658,8 @@ c       1                       ,hor_dist,curvature
 
         function height_of_level(level)
 
+cdoc    Calculate the height of a given pressure level, using standard atmos.
+
         implicit real*4 (a-z)
 
         integer*4 level,istatus
@@ -657,6 +688,8 @@ c       1                       ,hor_dist,curvature
 
 
         function zcoord_of_level(level)
+
+cdoc    Calculate zcoord (e.g. pressure) of a given level. Being phased out?
 
         implicit real*4 (a-z)
 
@@ -697,6 +730,8 @@ c       1                       ,hor_dist,curvature
 
         function pressure_of_level(level)
 
+cdoc    Calculate pressure of a given integer level. Being phased out?
+
         implicit real*4 (a-z)
 
         integer*4 level, istatus
@@ -720,6 +755,8 @@ c       1                       ,hor_dist,curvature
 
         function pressure_of_rlevel(rlevel)
 
+cdoc    Obtain pressure of a given real (fractional) level. Being phased out?
+
         implicit real*4 (a-z)
 
         integer istatus
@@ -742,6 +779,8 @@ c       1                       ,hor_dist,curvature
 
 
         function zcoord_of_pressure(pres_pa)
+
+cdoc    Convert pressure to a real (fractional) level. Being phased out?
 
         implicit real*4 (a-z)
 
@@ -778,7 +817,8 @@ c       1                       ,hor_dist,curvature
 
         function zcoord_of_logpressure(pres_pa)
 
-!       This routine interpolates between LAPS levels in logp space
+cdoc    Convert pressure to a real (fractional) level in log space. 
+cdoc    Being phased out?
 
         implicit real*4 (a-z)
 
@@ -820,57 +860,66 @@ c       1                       ,hor_dist,curvature
         end
 
 
-        subroutine   uvgrid_to_radar(u_grid,
-     1                       v_grid,
-     1                       t_radar,
-     1                       r_radar,
-     1                       azimuth,
-     1                       longitude)
+        subroutine   uvgrid_to_radar(u_grid,     ! I
+     1                               v_grid,     ! I
+     1                               t_radar,    ! O
+     1                               r_radar,    ! O
+     1                               azimuth,    ! I
+     1                               longitude)  ! I
+
+cdoc    Convert U and V (grid north) to Tangential and Radial velocity,
+cdoc    given the radar azimuth and geographic longitude.
 
         real longitude
 
-        call   uvgrid_to_disptrue      (u_grid,
-     1                          v_grid,
-     1                          di_true,
-     1                          speed,
-     1                          longitude)
+        call   uvgrid_to_disptrue(u_grid,
+     1                            v_grid,
+     1                            di_true,
+     1                            speed,
+     1                            longitude)
 
-        call disptrue_to_radar( di_true,
-     1                  speed,
-     1                  t_radar,
-     1                  r_radar,
-     1                  azimuth)
+        call disptrue_to_radar(di_true,
+     1                         speed,
+     1                         t_radar,
+     1                         r_radar,
+     1                         azimuth)
 
         return
         end
 
 
-        subroutine   uvtrue_to_radar(u_true,
-     1                       v_true,
-     1                       t_radar,
-     1                       r_radar,
-     1                       azimuth)
+        subroutine   uvtrue_to_radar(u_true,  ! I
+     1                               v_true,  ! I
+     1                               t_radar, ! O
+     1                               r_radar, ! O
+     1                               azimuth) ! I
+
+cdoc    Convert U and V (true north) to Tangential and Radial velocity,
+cdoc    given the radar azimuth.
 
         call   uv_to_disp(u_true,
-     1            v_true,
-     1            di_true,
-     1            speed)
+     1                    v_true,
+     1                    di_true,
+     1                    speed)
 
-        call disptrue_to_radar( di_true,
-     1                  speed,
-     1                  t_radar,
-     1                  r_radar,
-     1                  azimuth)
+        call disptrue_to_radar(di_true,
+     1                         speed,
+     1                         t_radar,
+     1                         r_radar,
+     1                         azimuth)
 
         return
         end
 
 
-        subroutine   uvgrid_to_disptrue(u_grid,
-     1                          v_grid,
-     1                          di_true,
-     1                          speed,
-     1                          longitude)
+        subroutine   uvgrid_to_disptrue(u_grid,    ! I
+     1                                  v_grid,    ! I
+     1                                  di_true,   ! O
+     1                                  speed,     ! O
+     1                                  longitude) ! I
+
+cdoc    Convert U and V (grid north) to DIR and SPEED (true north),
+cdoc    given the longitude.
 
         real longitude
 
@@ -896,11 +945,14 @@ c       1                       ,hor_dist,curvature
 
 
 
-        subroutine   disptrue_to_radar(di_true,
-     1                         speed,
-     1                         t_radar,
-     1                         r_radar,
-     1                         azimuth)
+        subroutine   disptrue_to_radar(di_true, ! I
+     1                                 speed,   ! I
+     1                                 t_radar, ! O
+     1                                 r_radar, ! O
+     1                                 azimuth) ! I
+
+cdoc    Convert DIR and SPEED (true north) to Tangential and Radial velocity,
+cdoc    given the radar azimuth.
 
         include 'trigd.inc'
 
@@ -914,58 +966,66 @@ c       1                       ,hor_dist,curvature
         end
 
 
-        subroutine   radar_to_uvgrid(t_radar,
-     1                       r_radar,
-     1                       u_grid,
-     1                       v_grid,
-     1                       azimuth,
-     1                       longitude)
+        subroutine   radar_to_uvgrid(t_radar,   ! I
+     1                               r_radar,   ! I
+     1                               u_grid,    ! O
+     1                               v_grid,    ! O
+     1                               azimuth,   ! I
+     1                               longitude) ! I
+
+cdoc    Convert Tangential and Radial velocity to U and V (grid north),
+cdoc    given the radar azimuth and geographic longitude.
 
         real longitude
 
-        call radar_to_disptrue( di_true,
-     1                  speed,
-     1                  t_radar,
-     1                  r_radar,
-     1                  azimuth)
-
-        call   disptrue_to_uvgrid      (di_true,
-     1                          speed,
-     1                          u_grid,
-     1                          v_grid,
-     1                          longitude)
-
-
-        return
-        end
-
-        subroutine   radar_to_uvtrue(t_radar,
-     1                       r_radar,
-     1                       u_true,
-     1                       v_true,
-     1                       azimuth)
-
-        call radar_to_disptrue( di_true,
-     1                  speed,
-     1                  t_radar,
-     1                  r_radar,
-     1                  azimuth)
-
-        call   disp_to_uv      (di_true,
-     1                  speed,
-     1                  u_true,
-     1                  v_true)
-
-
-        return
-        end
-
-        subroutine   radar_to_disptrue(di_true,
+        call radar_to_disptrue(di_true,
      1                         speed,
      1                         t_radar,
      1                         r_radar,
      1                         azimuth)
 
+        call   disptrue_to_uvgrid(di_true,
+     1                            speed,
+     1                            u_grid,
+     1                            v_grid,
+     1                            longitude)
+
+
+        return
+        end
+
+        subroutine   radar_to_uvtrue(t_radar,  ! I
+     1                               r_radar,  ! I
+     1                               u_true,   ! O
+     1                               v_true,   ! O
+     1                               azimuth)  ! I
+
+cdoc    Convert Tangential and Radial velocity to U and V (true north),
+cdoc    given the radar azimuth.
+
+        call radar_to_disptrue(di_true,
+     1                         speed,
+     1                         t_radar,
+     1                         r_radar,
+     1                         azimuth)
+
+        call   disp_to_uv(di_true,
+     1                    speed,
+     1                    u_true,
+     1                    v_true)
+
+
+        return
+        end
+
+        subroutine   radar_to_disptrue(di_true,  ! O
+     1                                 speed,    ! O
+     1                                 t_radar,  ! I
+     1                                 r_radar,  ! I
+     1                                 azimuth)  ! I
+
+cdoc    Convert Tangential and Radial velocity to DIR and SPEED (true north),
+cdoc    given the radar azimuth.
 
 !       real longitude
 
@@ -981,11 +1041,13 @@ c       1                       ,hor_dist,curvature
         return
         end
 
-        subroutine   disptrue_to_uvgrid(di_true,
-     1                          speed,
-     1                          u_grid,
-     1                          v_grid,
-     1                          longitude)
+        subroutine   disptrue_to_uvgrid(di_true,     ! I
+     1                                  speed,       ! I
+     1                                  u_grid,      ! O
+     1                                  v_grid,      ! O
+     1                                  longitude)   ! I
+
+cdoc    Convert DIR and SPEED (true north) to U and V (grid north)
 
         real longitude
 
@@ -1006,11 +1068,13 @@ c       1                       ,hor_dist,curvature
         return
         end
 
-        subroutine   uvtrue_to_uvgrid(  u_true,
-     1                          v_true,
-     1                          u_grid,
-     1                          v_grid,
-     1                          longitude)
+        subroutine   uvtrue_to_uvgrid(u_true,    ! I
+     1                                v_true,    ! I
+     1                                u_grid,    ! O
+     1                                v_grid,    ! O
+     1                                longitude) ! O
+
+cdoc    Convert wind vector from true north to grid north, given the longitude.
 
         real longitude
 
@@ -1032,11 +1096,13 @@ c       1                       ,hor_dist,curvature
         return
         end
 
-        subroutine   uvgrid_to_uvtrue(  u_grid,
-     1                          v_grid,
-     1                          u_true,
-     1                          v_true,
-     1                          longitude)
+        subroutine   uvgrid_to_uvtrue(u_grid,    ! I
+     1                                v_grid,    ! I
+     1                                u_true,    ! O
+     1                                v_true,    ! O
+     1                                longitude) ! I
+
+cdoc    Convert wind vector from grid north to true north, given the longitude
 
         real longitude
 
@@ -1051,10 +1117,10 @@ c       1                       ,hor_dist,curvature
 
 
         call         rotate_vec(u_grid,
-     1                  v_grid,
-     1                  u_true,
-     1                  v_true,
-     1                  angle)
+     1                          v_grid,
+     1                          u_true,
+     1                          v_true,
+     1                          angle)
 
         return
         end
@@ -1062,6 +1128,9 @@ c       1                       ,hor_dist,curvature
 
 
       subroutine rotate_vec(u1,v1,u2,v2,angle)
+
+cdoc  Rotate vector (u1,v1) through an angle to obtain vector (u2,v2)
+
       include 'trigd.inc'
       u2 =  u1 * cosd(angle) + v1 * sind(angle)
       v2 = -u1 * sind(angle) + v1 * cosd(angle)
@@ -1071,9 +1140,11 @@ c       1                       ,hor_dist,curvature
 
 
         subroutine   disp_to_uv(dir,
-     1                  speed,
-     1                  u,
-     1                  v)
+     1                          speed,
+     1                          u,
+     1                          v)
+cdoc    Convert DIR and SPEED to U and V
+
         include 'trigd.inc'
         u  = - sind(dir) * speed
         v  = - cosd(dir) * speed
@@ -1083,9 +1154,11 @@ c       1                       ,hor_dist,curvature
 
 
         subroutine   uv_to_disp(u,
-     1                  v,
-     1                  dir,
-     1                  speed)
+     1                          v,
+     1                          dir,
+     1                          speed)
+
+cdoc    Convert U and V to DIR and SPEED
 
         speed = sqrt( u**2 + v**2 )
 
@@ -1100,18 +1173,21 @@ c       1                       ,hor_dist,curvature
         end
 
         function k_to_f(x)
+cdoc    Convert Kelvin to Fahrenheit
         real*4 k_to_f
         k_to_f = (x - 273.15) * 1.8 + 32.
         return
         end
 
         function f_to_k(x)
+cdoc    Convert Fahrenheit to Kelvin
         real*4 f_to_k
         f_to_k = (x - 32.) / 1.8 + 273.15
         return
         end
 
         function k_to_c(x)
+cdoc    Convert Kelvin to Celsius
         real*4 k_to_c
         k_to_c = (x - 273.15)
         return

@@ -1,18 +1,26 @@
 #!/bin/csh 
 
+echo " "
+echo "Starting install_laps.csh...$6"
+
 #This script sets up the pre-compiled tar file and localizes it at CWB
-#Usage: install_laps.csh $LAPS_SRC_ROOT $LAPSINSTALLROOT $LAPS_DATA_ROOT $TEMPLATE `which perl` [w/p]
+#Usage: install_laps.csh $LAPS_SRC_ROOT $LAPSINSTALLROOT $LAPS_DATA_ROOT $TEMPLATE `which perl` [a/w/p]
 
 setenv LAPS_SRC_ROOT      $1
 setenv LAPSINSTALLROOT    $2
 setenv LAPS_DATA_ROOT     $3
 setenv TEMPLATEDIR        $4
+
+#Note that this can normally be set to 'perl'. The full path should be used if
+#the .cshrc does not have perl in its $path. The one other unusual time for
+#passing in the full path be when a precompiled tar file is used and we are 
+#using a special perl script to circumvent @INC problems (e.g. at CWB).
 setenv NEWPERL            $5
 
-#Last argument is optional
-#    Default is to do entire install (if omitted)
-#    p does binary (configure/install) setup only
-#    w does window localization only
+#Last argument $6
+#    a - do entire install 
+#    p - does binary (configure/install) setup only
+#    w - does window localization only
 
 #if ($i == p) then
 #    set arg1 = p
@@ -27,13 +35,16 @@ setenv NEWPERL            $5
 #setenv NEWPERL            /pj/fsl/albers/bin/perl
 #setenv NEWPERL            `which perl`
 
-echo "Starting install_laps.csh..."
+#Configure/install?
+if ($6 != w) then
 
-#Configure/install a precompiled tar file
-if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
+# Precompiled tar file?
+  if (! -e $LAPS_SRC_ROOT/Makefile) then
 
 #   This section does what "configure" would normally do on a precompiled tar file,
 #   (i.e. a substitution for section 2.2.2 in the README)
+
+    echo "Makefile not present, assuming precompiled tar file"
 
     echo "Configuring precompiled scripts in $LAPSINSTALLROOT/etc"
     cd $LAPS_SRC_ROOT
@@ -65,7 +76,7 @@ if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
     mkdir -p $LAPSINSTALLROOT
 
     if ($LAPS_SRC_ROOT != $LAPSINSTALLROOT) then
-        echo "We have a split directory tree"
+        echo "We have a split directory tree with the INSTALLED binaries separated from SRC"
 
         cd $LAPS_SRC_ROOT
 
@@ -83,8 +94,25 @@ if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
 
     chmod -R g+w $LAPSINSTALLROOT
 
+  else
+    echo "Makefile present, assuming a regular tar file"
+    echo "We can proceed with configure/make if desired"
+
+    cd $LAPS_SRC_ROOT
+
+    echo " "
+    echo "make debug"
+    make debug >& make_debug.out 
+    ls -l make_debug.out
+
+    echo " "
+    echo "chmod"
+    chmod -R g+w $LAPS_SRC_ROOT
+
+  endif
+
 else
-    echo "Skipping configure/install step for precompiled tar file"
+  echo "Skipping configure/install step"
 
 endif
 
@@ -102,7 +130,7 @@ if ($6 != p) then
 
     if ($LAPS_SRC_ROOT/data != $LAPS_DATA_ROOT) then
 
-        echo "We have a split directory tree"
+        echo "We have a split directory tree with the DATA separated from SRC"
 
         if (! -e $LAPS_SRC_ROOT/data) then
             echo "Warning: data directory not available in LAPS_SRC_ROOT, making it"
@@ -147,6 +175,9 @@ if ($6 != p) then
         setenv config_domain t
     endif
 
+    echo " "
+    echo "Calling window_laps_rt.pl, config_domain = $config_domain ..."
+
     $NEWPERL $LAPSINSTALLROOT/etc/window_laps_rt.pl -c$config_domain -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT 
 
 #   cd $LAPS_SRC_ROOT
@@ -178,5 +209,7 @@ else
     echo "Skipping window setup step"
 
 endif
+
+echo "End of install_laps.csh..."
 
 
