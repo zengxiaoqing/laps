@@ -186,7 +186,8 @@ C
       cvars(7)='p'  !sfc pressure
       if(cmodel(1:nclen).eq.'RUC40_NATIVE')then
          cvars(8)='mmsp'
-      elseif(cmodel(1:nclen).eq.'ETA48_CONUS')then
+      elseif(cmodel(1:nclen).eq.'ETA48_CONUS'.or.
+     .       cmodel(1:nclen).eq.'MesoEta_SBN')then
          cvars(8)='emsp'
       elseif(cmodel(1:nclen).eq.'AVN_SBN_CYLEQ')then
          cvars(8)='pmsl'
@@ -370,10 +371,16 @@ c
       real, intent(out)  ::     vw(nxbg,nybg,nzbguv)
       real, intent(out)  ::     ww(nxbg,nybg,nzbgww)
 c
-      real ::  prbg_ht(100)
-      real ::  prbg_sh(100)
-      real ::  prbg_uv(100)
-      real ::  prbg_ww(100)
+c     real ::  prbg_ht(100)
+c     real ::  prbg_sh(100)
+c     real ::  prbg_uv(100)
+c     real ::  prbg_ww(100)
+
+      real, allocatable ::  prbg_ht(:)
+      real, allocatable ::  prbg_sh(:)
+      real, allocatable ::  prbg_uv(:)
+      real, allocatable ::  prbg_ww(:)
+
 
 c in the near future this array will be used to read
 c the sbn grids so that we avoid some inconsistencies
@@ -422,7 +429,7 @@ c
           integer        nlvls
           character*4    cvar
           character*132  cmodel
-          real  ::       pr_levels_bg(100)
+          real  ::       pr_levels_bg(nlvls)
         end subroutine
 
         subroutine read_netcdf_real(nf_fid,fname,n1,f
@@ -510,12 +517,9 @@ c     if(.not.allocated(prbg_ww))allocate(prbg_ww(mxlvls))
 
       if(.not.allocated(data))allocate (data(nxbg,nybg,60)) 
 c
-c ****** Read netcdf data.
-c ****** Statements to fill ht.
-c
-
       kskp=1
       if(cmodel.eq.'AVN_SBN_CYLEQ')kskp=2
+      if(cmodel.eq.'MesoEta_SBN')kskp=0
 
 
       start(1)=1
@@ -551,6 +555,7 @@ c
 c get the pressures for this variable
 c
       cvar='gh'
+      allocate(prbg_ht(nzbght))
       call get_prbg(ncid,nzbght,cvar,cmodel,prbg_ht)
 c
 c ****** Statements to fill tp.
@@ -623,7 +628,8 @@ c
 c
 c get the pressures for this variable
 c
-      call get_prbg(ncid,nzbgsh+kskp,cvar,cmodel,prbg_sh)
+      allocate (prbg_sh(nzbgsh))
+      call get_prbg(ncid,nzbgsh,cvar,cmodel,prbg_sh)
 c
 c ****** Statements to fill uw. 
 c
@@ -662,7 +668,8 @@ c
 c
 c get the pressures for this variable
 c
-      call get_prbg(ncid,nzbguv+kskp,cvar,cmodel,prbg_uv)
+      allocate (prbg_uv(nzbguv))
+      call get_prbg(ncid,nzbguv,cvar,cmodel,prbg_uv)
 
 c
 c ****** Statements to fill vw.                           
@@ -729,8 +736,8 @@ c
 c
 c get the pressures for this variable
 c
-      call get_prbg(ncid,nzbgww+kskp,cvar,cmodel,prbg_ww)
-
+      allocate (prbg_ww(nzbgww))
+      call get_prbg(ncid,nzbgww,cvar,cmodel,prbg_ww)
 
       deallocate (data)
 
@@ -769,7 +776,8 @@ c        return
 c
 c get mslp (this field name differs from one model to the other)
 c
-      if(cmodel.eq.'ETA48_CONUS') then
+      if(cmodel.eq.'ETA48_CONUS'.or.
+     .   cmodel.eq.'MesoEta_SBN')then
 
          cvar='emsp'
          call read_netcdf_real(ncid,cvar,nxbg*nybg,mslp
@@ -846,7 +854,8 @@ c
       enddo
       enddo
 
-c     deallocate (prbg_ht,prbg_sh,prbg_uv,prbg_ww)
+      deallocate (prbg_ht,prbg_sh,prbg_uv,prbg_ww)
+
 c for laps-lgb
 
       call s_len(ctype,lent)
@@ -883,6 +892,8 @@ c
          enddo
 
       endif
+
+      print*,'done computing sfc q'
 
       if(ibdtp.gt.0.or.ibduv.gt.0)then
          print*,'Found bad sfc data (tp/uv) ',ibdtp,ibduv
@@ -923,12 +934,20 @@ c
 
       ibdsh=0
       if(ctype(1:lent).eq.'lapsb')then
+         print*,'computing 3d sh'
+         print*,'nzbgsh/nzbgtp = ',nzbgsh,nzbgtp
          do k=1,nzbgsh
             do kk=1,nzbgtp
                if(prbght(1,1,kk).eq.prbgsh(1,1,k))then
                   goto500
                endif
             enddo
+            print*,'------------------------------------'
+            print*,'Error: no match prbght and prbgsh'
+            print*,'       in read_sbn_grids.'
+            print*,'Return with no data.'
+            print*,'------------------------------------'
+            goto 999 
 500         do i=1,nxbg
             do j=1,nybg
                if (sh(i,j,k).lt.200)then
@@ -950,6 +969,8 @@ c                  sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
          enddo
 
       endif
+
+      print*,'done computing 3d sh'
 
       if(ibdsh.gt.0)then
          print*,'Found bad rh 3d data',ibdsh
@@ -997,7 +1018,7 @@ c     endif
 c -----------------------------------------------------------
 
       subroutine get_prbg(nf_fid,nlvls,cvar,cmodel
-     +,pr_levels_bg)
+     +,prlevels_bg)
 
       implicit none
 
@@ -1016,6 +1037,7 @@ c -----------------------------------------------------------
       character      cnewvar*10
       character      ctmp*10
  
+      real prlevels_bg(nlvls)
       real pr_levels_bg(100)
 
       include 'netcdf.inc'
@@ -1029,13 +1051,16 @@ c -----------------------------------------------------------
          return
       endif
 
+      clvln11 = '           '
+      clvln10 = '          '
+
       call s_len(cmodel,nclen)
       if(cmodel(1:nclen).eq.'AVN_SBN_CYLEQ')then
          nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,clvln11)
       else
          nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,clvln10)
          if(nf_status.eq.NF_NOERR)then
-            do k=1,nlvls
+            do k=1,100
                clvln11(k)=clvln10(k)
             enddo
          endif
@@ -1047,7 +1072,7 @@ c -----------------------------------------------------------
       endif
       pr_levels_bg = 0.0
       kk=0
-      do k=1,nlvls
+      do k=1,100
          call s_len(clvln11(k),lc)
          if(clvln11(k)(1:2).eq.'MB')then
             kk=kk+1
@@ -1055,6 +1080,9 @@ c -----------------------------------------------------------
             read(ctmp,'(i4.4)')level
             pr_levels_bg(kk)=float(level)
          endif
+      enddo
+      do k=1,kk
+         prlevels_bg(k)=pr_levels_bg(k)
       enddo
 
       return

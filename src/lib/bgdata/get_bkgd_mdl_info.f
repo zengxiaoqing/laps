@@ -200,6 +200,9 @@ c for global AVN, nav code expects grid 1,1 in nw corner
             nzbg_sh=nzbg_sh-2
             print*,'var set ',rlat00,latnxny,gproj,
      .nzbg_tp,nzbg_uv,nzbg_sh
+         elseif(cmodel(1:nclen).eq. 'MesoEta_SBN')then
+            print*,'MesoEta SBN grids'
+            gproj='LC'
          else
             print*,'Unknown SBN model type: cmodel = ',cmodel
          endif
