@@ -32,18 +32,12 @@ cdis
         subroutine lapsplot(field,ni,nj,clow,chigh,cint,lat,lon
      1                  ,c_metacode,jdot_in)
 
-!       implicit none
-
         common /supmp1/ dummy,part
         common /supmp6/ umin,umax,vmin,vmax
-!       common /mapcol/ mpcol1,mpcol2,mpcol3,mpcol4
         real*4 dummy(8),part
-!       common /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
-!       We need to set SIZEL
-!       COMMON/LABS/IA(2),NC,NREP,NCRT,ILAB,NULBLL,SIZEL,SIZEM,SIZEP
         common /ERROR/ IFRAME, IERRR
+        common /image/ n_image
 
-        character*9   c_file
         integer*4       idummy(6),ioffm,istatus
 
         integer*4 ni,nj,i
@@ -97,7 +91,6 @@ cdis
 
         character*2 c_metacode
 
-        c_file = 'nest7grid'
 
         call get_r_missing_data(r_missing_data, istatus)
         if(istatus .ne. 1)then
@@ -112,9 +105,13 @@ cdis
 
         if(c_metacode .eq. 'm ')then
 
-c           set up supmap for plot
+            if(n_image .gt. 0)then
+                write(6,*)' Skipping map plot - already done with image'       
 
-            call lapsplot_setup(ni,nj,lat,lon,jdot_in)
+            else ! set up supmap for plot
+                call lapsplot_setup(ni,nj,lat,lon,jdot_in)
+
+            endif
 
             return
 

@@ -43,9 +43,6 @@ C       Steve Albers               Sep-1996         WFO database compatability
 !       Ken Dritz                3-Jul-1997  Changed include of lapsparms.for
 !                                            to laps_static_parameters.inc.
 !       Ken Dritz                3-Jul-1997  Added call to get_r_missing_data.
-!       Ken Dritz                8-Jul-1997  Replaced LAPS_DOMAIN_FILE with
-!                                            'nest7grid' and removed include
-!                                            of laps_static_parameters.inc.
 C
 C       This file shows examples of how the use PROF_CDF subroutines to read
 C       WPDN 60-minute RASS data in netCDF files.
@@ -142,8 +139,13 @@ C
 
         r_mspkt = .518
 
-        call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat,lon,    
-     1                  topo,1.0,rnorth,south,east,west,istatus)
+        call get_latlon_perimeter(NX_L,NY_L,1.0
+     1                           ,lat,lon,topo
+     1                           ,rnorth,south,east,west,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading LAPS perimeter'
+            return
+        endif
 
         CALL PROF_CDF_SET_ERROR(error_code,status)
         if(status.ne.0)then
@@ -187,7 +189,7 @@ C
         call s_len(dir_in,len_dir_in) ! Slash should be on the end of dir_in
 
 !       Determine whether we are using /public or WFO Advanced filenames...
-        if(.false.)then
+        if(.true.)then
             call get_c8_project(c8_project,istatus)
             if (istatus .ne. 1) then
                write(6,*)'Error getting c8_project'
@@ -200,6 +202,10 @@ C
 C           Determine file format by looking at the file name convention
             call get_file_names(dir_in(1:len_dir_in),numoffiles
      1                         ,c_filenames,max_files,istatus)
+
+!           Note that the GFN call may not work unless we also call
+!           'filter_nonnumeric_fnames'.
+
             if(istatus .ne. 1 .or. numoffiles .eq. 0)then
                 write(6,*)' Error calling get_file_names'
                 istatus = 0

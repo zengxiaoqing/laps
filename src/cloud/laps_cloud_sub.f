@@ -88,7 +88,6 @@ cdis
 !       1997 Jul 31 K. Dritz  - Added N_PIREP, maxstns, and max_cld_snd as
 !                               dummy arguments.  Removed the PARAMETER
 !                               statement for max_cld_snd.
-!       1997 Jul 31 K. Dritz  - Changed LAPS_DOMAIN_FILE to 'nest7grid'.
 !       1997 Jul 31 K. Dritz  - Added call to get_ref_base.
 !       1997 Aug 01 K. Dritz  - Compute NX_DIM_LUT, NY_DIM_LUT, and n_fnorm as
 !                               they were previously computed in barnes_r5.

@@ -41,7 +41,6 @@ cdis
 !       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
 !                                   as dummy arguments
 !       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
-!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 !       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NZ_L, NX_C, NZ_C
 !                                   to interp_3d
@@ -59,6 +58,7 @@ cdis
 !       97-Aug-25     Steve Albers  Removed equivalence of pcp_type_3d,rh_3d.
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
+        real*4 rlaps_land_frac(NX_L,NY_L)
 
         integer*4 NX_C,NZ_C,NZ_B
 !       parameter (NX_C = 61)   ! NX_L ! Number of horizontal points in X-Sect
@@ -302,8 +302,8 @@ cdis
         lapsplot_pregen = .true.
 
 c read in laps lat/lon and topo
-        call get_laps_domain(NX_L,NY_L,'nest7grid',lat,lon,topo
-     1                      ,istatus)
+        call get_laps_domain_95(NX_L,NY_L,lat,lon,topo,rlaps_land_frac
+     1                      ,grid_spacing_dum,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
             return
@@ -362,8 +362,7 @@ c read in laps lat/lon and topo
 !       Define Segment for Cross Section on LAPS Grid
 80      continue
 
-        c80_domain = 'nest7grid'
-        if(c80_domain(1:4) .eq. 'nest')then
+        if(.true.)then
             write(6,102)
 102         format(/
      1  '    Type of Xsect ',

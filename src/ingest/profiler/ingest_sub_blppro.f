@@ -43,9 +43,6 @@ C       Steve Albers                   1996         BL Profilers
 !       Ken Dritz                3-Jul-1997  Changed include of lapsparms.for
 !                                            to laps_static_parameters.inc.
 !       Ken Dritz                3-Jul-1997  Added call to get_r_missing_data.
-!       Ken Dritz                8-Jul-1997  Replaced LAPS_DOMAIN_FILE with
-!                                            'nest7grid' and removed include
-!                                            of laps_static_parameters.inc.
 C
 C       This file shows examples of how the use PROF_CDF subroutines to read
 C       WPDN 60-minute RASS data in netCDF files.
@@ -139,8 +136,9 @@ C
  
         r_mspkt = .518
 
-        call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat,lon,
-     1                  topo,1.0,rnorth,south,east,west,istatus)
+        call get_latlon_perimeter(NX_L,NY_L,1.0
+     1                           ,lat,lon,topo
+     1                           ,rnorth,south,east,west,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS perimeter'
             return

@@ -1,4 +1,5 @@
-      subroutine ccpfil(field_in,MREG,NREG,scale_l,scale_h,colortable)       
+      subroutine ccpfil(field_in,MREG,NREG,scale_l_in,scale_h_in
+     1                 ,colortable)       
 
 C 
 C Define error file, Fortran unit number, and workstation type,
@@ -6,12 +7,21 @@ C and workstation ID.
 C 
       PARAMETER (IERRF=6, LUNIT=2, IWTYPE=1, IWKID=1)
       REAL XREG(MREG),YREG(NREG),ZREG(MREG,NREG),field_in(MREG,NREG)
-
       character*(*)colortable
       
-      EXTERNAL COLOR2
+!     EXTERNAL COLOR2
 
       write(6,*)' Subroutine ccpfil for solid fill plot...'
+
+      if(scale_l_in .lt. scale_h_in)then
+          ireverse = 0
+          scale_l = scale_l_in
+          scale_h = scale_h_in
+      else
+          ireverse = 1
+          scale_l = scale_h_in
+          scale_h = scale_l_in
+      endif
 
 !     Apply scaling to the array
       scale = scale_h - scale_l
@@ -30,8 +40,8 @@ C
 C      
 C Call Conpack color fill routine
 C      
-      write(6,*)' Colortable is ',colortable
-      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,COLOR2,IWKID,scale)
+      write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
+      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale,ireverse)
 C      
 C Close frame
 C      
@@ -44,12 +54,14 @@ C
 !     CALL GCLKS
 
       call color
+
+      jdot = 1
       
       return
       END
 
       
-      SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,COLOR2,IWKID,scale)
+      SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse)
       
       PARAMETER (LRWK=150000,LIWK=150000,LMAP=1000000,NWRK=150000
      1          ,NOGRPS=5)       
@@ -58,11 +70,14 @@ C
       INTEGER MAP(LMAP),IAREA(NOGRPS),IGRP(NOGRPS)
       
       EXTERNAL FILL
-      EXTERNAL COLOR2
+!     EXTERNAL COLOR2
+
+      ncols = 20
 C      
 C Set up color table
+      write(6,*)' ccpfil_sub - scale = ',scale
 C      
-      CALL COLOR2(IWKID)
+      CALL COLOR2(IWKID,ncols,ireverse)
 C      
 C Initialize Areas
 C      
@@ -73,9 +88,9 @@ C
 !      CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',NCL)
 
       CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',+1)
-      CALL CPSETR('CIS',0.1*scale)
-      CALL CPSETR('CMN',0.0*scale)
-      CALL CPSETR('CMX',1.0*scale)
+      CALL CPSETR('CIS', abs(scale) / float(ncols))
+      CALL CPSETR('CMN',0.0 * abs(scale))
+      CALL CPSETR('CMX',1.0 * abs(scale))
 
       CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      
@@ -126,16 +141,19 @@ C
 
 
       
-      SUBROUTINE COLOR2(IWKID)
+      SUBROUTINE COLOR2(IWKID,ncols,ireverse)
 C 
 C BACKGROUND COLOR
 C BLACK
+
+      rcols = ncols - 1
 C
       CALL GSCR(IWKID,0,0.,0.,0.)
 
       do i = 1,255
-!         rintens = min(max(float(i-2) / 9.,0.),1.)
-          rintens = min(max(float(i-2) / 9.,0.),1.)
+!         rintens = min(max(float(i-2) / rcols,0.),1.)
+          rintens = min(max(float(i-2) / rcols,0.),1.)
+          if(ireverse .eq. 1)rintens = 1.0 - rintens
           call GSCR(IWKID, i, rintens, rintens, rintens)
       enddo ! i
 
@@ -144,3 +162,44 @@ C
 C 
       END
 
+      subroutine hsi_to_rgb(hue,sat,rintens,red,grn,blu)
+
+!     Hue is 0:R, 1:B, 2:G, 3:R
+      hue1 = hue + 3.0
+
+      red = max(abs(hue1 - 3.0),0.0)
+      grn = max(abs(hue  - 2.0),0.0)
+      blu = max(abs(hue  - 1.0),0.0)
+
+      red = (red*sat) + 1.0*(1.0-sat)
+      grn = (grn*sat) + 1.0*(1.0-sat)
+      blu = (blu*sat) + 1.0*(1.0-sat)
+
+      red = red * rintens
+      grn = grn * rintens
+      blu = blu * rintens
+
+      return
+      end
+
+      subroutine color_ramp(ncol1,ncol2,ncol        ! I
+     1                     ,hue1,sat1,rintens1      ! I
+     1                     ,hue2,sat2,rintens2      ! I
+     1                     ,red_a,grn_a,blu_a)      ! I/O
+
+      real*4 red_a(ncol), grn_a(ncol), blu_a(ncol)
+
+      do icol = ncol1,ncol2
+          frac = float(icol-ncol1) / float(ncol2-ncol1)
+
+          hue     = (1.0 - frac) * hue1     + frac * hue2  
+          sat     = (1.0 - frac) * sat1     + frac * sat2
+          rintens = (1.0 - frac) * rintens1 + frac * rintens2
+
+          call hsi_to_rgb(hue,sat,rintens
+     1                   ,red_a(icol),grn_a(icol),blu_a(icol))
+
+      enddo
+
+      return
+      end

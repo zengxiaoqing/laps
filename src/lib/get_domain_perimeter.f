@@ -1,7 +1,60 @@
 
+        subroutine get_latlon_perimeter(ni,nj,r_buffer             ! I
+     1                  ,lat,lon,topo                              ! O
+     1                  ,rnorth,south,east,west,istatus)           ! O
+
+cdoc    Obtain lat/lon box surrounding laps grid, including a buffer
+cdoc    Works on the basis of max/min lat/lons and limited accounting
+cdoc    for when the dateline or poles are near the box.
+cdoc    This version is more generic with static file source.
+
+        real*4 lat(ni,nj),lon(ni,nj)
+        real*4 topo(ni,nj),fracland(ni,nj)
+
+        call get_laps_domain_95(ni,nj,lat,lon,topo,fracland,gridsp
+     1                      ,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting LAPS domain'
+            return
+        endif
+
+        rnorth = -90.
+        south  = +90.
+        west = +1000.
+        east = -1000.
+
+        do i = 1,ni
+        do j = 1,nj
+            rnorth = max(rnorth,lat(i,j))
+            south  = min(south ,lat(i,j))
+            east   = max(east  ,lon(i,j))
+            west   = min(west  ,lon(i,j))
+        enddo ! j
+        enddo ! i
+
+        rnorth = rnorth + r_buffer
+        south  = south  - r_buffer
+        east   = east   + r_buffer
+        west   = west   - r_buffer
+
+        rnorth = min(rnorth, +90.)
+        south  = max(south , -90.)
+        east   = min(east  ,+180.)
+        west   = max(west  ,-180.)
+
+        write(6,101)rnorth,south,east,west
+101     format(1x,' Lat/lon box around LAPS grid - NSEW ',4f9.2)
+
+        return
+        end
+
         subroutine get_domain_perimeter(ni,nj,LAPS_DOMAIN_FILE
      1                  ,lat,lon,topo
      1                  ,r_buffer,rnorth,south,east,west,istatus)
+
+cdoc    Obtain lat/lon box surrounding laps grid, including a buffer
+cdoc    Works on the basis of max/min lat/lons and limited accounting
+cdoc    for when the dateline or poles are near the box.
 
         real*4 lat(ni,nj),lon(ni,nj)
         real*4 topo(ni,nj)
@@ -49,6 +102,10 @@ C -----------------------------------------------------------
         subroutine get_domain_perimeter_grid(ni,nj,LAPS_DOMAIN_FILE
      1                  ,lat,lon
      1                  ,r_buffer,rnorth,south,east,west,istatus)
+
+cdoc    Obtain lat/lon box surrounding laps grid, including a buffer
+cdoc    Works on the basis of lat/lons and greater accounting
+cdoc    for when the dateline or poles are near or in the box.
 
         implicit none
         integer ni,nj,i,j

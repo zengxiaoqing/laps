@@ -104,7 +104,7 @@ cdis
  
        character*150 static_dir,filename
  
-       call get_directory('nest7grid',static_dir,len_dir)
+       call get_directory('static',static_dir,len_dir)
 
        filename = static_dir(1:len_dir)//'/cloud.nl'
  

@@ -262,42 +262,34 @@ c       include 'satellite_dims_lvd.inc'
 !       Get fdda_model_source from parameter file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
 
-        ext = 'nest7grid'
+        ext = 'static'
 
 !       Get the location of the static grid directory
         call get_directory(ext,directory,len_dir)
 
         var_2d='LAT'
-        call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1                       units_2d,comment_2d,
-     1                       lat,rspacing_dum,istatus)
+        call read_static_grid(nx_l,ny_l,var_2d,lat,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-lat'
             return
         endif
 
         var_2d='LON'
-        call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1                       units_2d,comment_2d,
-     1                       lon,rspacing_dum,istatus)
+        call read_static_grid(nx_l,ny_l,var_2d,lon,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-lon'
             return
         endif
 
         var_2d='AVG'
-        call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1                       units_2d,comment_2d,
-     1                       topo,rspacing_dum,istatus)
+        call read_static_grid(nx_l,ny_l,var_2d,topo,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-topo'
             return
         endif
 
         var_2d='LDF'
-        call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1                       units_2d,comment_2d,
-     1                       rlaps_land_frac,rspacing_dum,istatus)
+        call read_static_grid(nx_l,ny_l,var_2d,rlaps_land_frac,istatus)       
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-ldf'
             return
@@ -621,8 +613,8 @@ c       include 'satellite_dims_lvd.inc'
                 call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(dir,1e0,clow,chigh,30.,asc9_tim_3dw,
-     1          c33_label,i_overlay,c_display,lat,lon,jdot,       
-     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1              c33_label,i_overlay,c_display,lat,lon,jdot,       
+     1              NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'sp')then
                 c19_label = ' Isotachs (kt)     '
@@ -635,8 +627,8 @@ c       include 'satellite_dims_lvd.inc'
                 endif
 
                 call plot_cont(spds,1e0,0.,300.,cint,asc9_tim_3dw,
-     1           c33_label,i_overlay,c_display,lat,lon,jdot,       
-     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               c33_label,i_overlay,c_display,lat,lon,jdot,       
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'u ')then
                 if(c_type .eq. 'wf')then
@@ -654,8 +646,8 @@ c       include 'satellite_dims_lvd.inc'
                 call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(u_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
-     1           c33_label,i_overlay,c_display,lat,lon,jdot,
-     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               c33_label,i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'v ')then
                 if(c_type .eq. 'wf')then
@@ -672,8 +664,8 @@ c       include 'satellite_dims_lvd.inc'
                 call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(v_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
-     1           c33_label,i_overlay,c_display,lat,lon,jdot,       
-     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               c33_label,i_overlay,c_display,lat,lon,jdot,       
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type .eq. 'wf')then
@@ -768,8 +760,8 @@ c       include 'satellite_dims_lvd.inc'
                 enddo ! j
 
                 call plot_cont(w_2d,1e-1,0.,0.,-1.0,asc9_tim_3dw,
-     1          c33_label,i_overlay,c_display,lat,lon,jdot,       
-     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1              c33_label,i_overlay,c_display,lat,lon,jdot,       
+     1              NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'dv')then ! Display Divergence Field
                 call divergence(u_2d,v_2d,div,lat,lon,NX_L,NY_L
@@ -784,8 +776,8 @@ c       include 'satellite_dims_lvd.inc'
      1                                                  ,zoom,scale)
 
                 call plot_cont(div,scale,clow,chigh,cint,asc9_tim_3dw,
-     1           c33_label,i_overlay,c_display,lat,lon,jdot,
-     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               c33_label,i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             endif
 
@@ -1166,8 +1158,8 @@ c
              call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
              if(l_plot_image)then
-                 scale_l = 313.0
-                 scale_h = 223.0
+                 scale_l = +40.
+                 scale_h = -50.
 
                  n_image = n_image + 1
                  call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear')
@@ -1175,6 +1167,7 @@ c
                  call setusv_dum(2hIN,7)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
      1                                                    ,i_overlay)
+                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
              else ! contours
                  if(ilvd .eq. 1)then
@@ -3445,6 +3438,7 @@ c                   cint = -1.
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
      1                                                    ,i_overlay)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
 
@@ -4017,6 +4011,7 @@ c                   cint = -1.
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
      1                                                    ,i_overlay)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
 
@@ -4090,6 +4085,7 @@ c                   cint = -1.
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
      1                                                    ,i_overlay)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
 
@@ -4105,6 +4101,7 @@ c                   cint = -1.
                 scale = 3000.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear')
                 n_image = n_image + 1
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
             else
                 call plot_cont(topo,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
@@ -4188,7 +4185,6 @@ c                   cint = -1.
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character*1 c_display
-        character*9 c_file
 
         real*4 array(NX_L,NY_L)
         real*4 array_plot(NX_L,NY_L)
@@ -4199,8 +4195,6 @@ c                   cint = -1.
         include 'icolors.inc'
 
         Y_SPACING = 3
-
-        c_file = 'nest7grid'
 
         write(6,1505)c33_label,scale,asc_tim_9
 1505    format(7x,a33,4x,'Units = ',1pe9.0,6x,a9)
@@ -4347,7 +4341,6 @@ c                   cint = -1.
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
-        character*9 c_file
 
         real*4 u(NX_L,NY_L)
         real*4 v(NX_L,NY_L)
@@ -4364,8 +4357,6 @@ c                   cint = -1.
         include 'icolors.inc'
 
         logical l_obs
-
-        c_file = 'nest7grid'
 
         write(6,1505)c33_label,asc_tim_9
 1505    format(2x,a33,2x,a9)
@@ -4577,7 +4568,6 @@ c                   cint = -1.
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
-        character*9 c_file
 
         character cldpcp_type_2d(NX_L,NY_L)
         real*4 lat(NX_L,NY_L)
@@ -4592,8 +4582,6 @@ c                   cint = -1.
         include 'icolors.inc'
 
         logical l_obs
-
-        c_file = 'nest7grid'
 
         write(6,1505)c33_label,asc_tim_9
 1505    format(2x,a33,2x,a9)
@@ -5233,7 +5221,7 @@ c
 
         if(l_parse(ext,'lga') .or. l_parse(ext,'lgb'))go to 900 ! use LGA/LGB
 
-!       Get fdda_model_source from nest7grid.parms
+!       Get fdda_model_source from static file
         call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
  
         call s_len(directory,len_dir)
@@ -5263,7 +5251,7 @@ c
         enddo
 
         if(n_fdda_models.eq.0)then
-           print*,'fdda is not turned on in nest7grid.parms'
+           print*,'fdda is not turned on in static file'
            return 
         endif
 

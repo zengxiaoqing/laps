@@ -89,10 +89,11 @@ C The netcdf variables are filled - your code goes here
 C
 !............................................................................
 
-      call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a, 
-     1            topo_a,1.0,rnorth,south,east,west,istatus)
+      call get_latlon_perimeter(NX_L,NY_L,1.0
+     1                           ,lat_a,lon_a,topo_a
+     1                           ,rnorth,south,east,west,istatus)
       if(istatus .ne. 1)then
-          write(6,*)' Error in get_laps_perimeter'
+          write(6,*)' Error reading LAPS perimeter'
           return
       endif
 
