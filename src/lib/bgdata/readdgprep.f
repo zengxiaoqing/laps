@@ -41,7 +41,7 @@ c
 
       real*4 mrsat
       real*4 esat,xe
-      real*4 rp_init
+c     real*4 rp_init
       real*4 prsfc
 c
       character*(*) path

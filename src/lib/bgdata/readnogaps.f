@@ -7,7 +7,8 @@
 c
       implicit none
 c
-      integer nx,ny,nz,i,j,k,l,it
+c     integer nx,ny,nz,i,j,k,l,it
+      integer nx,ny,nz,i,j,k,l
       integer lun,istatus
       integer nvarsmax,nvars
      .       ,nshl
@@ -31,10 +32,11 @@ c
      .      ,mslp(nx,ny)
 
 c
-      character*9   fname
-      character*4   af
+c     character*9   fname
+c     character*4   af
 c
-      real*4 xe,esat
+c     real*4 xe,esat
+      real*4 esat
       common /estab/esat(15000:45000)
 c_______________________________________________________________________________
 c

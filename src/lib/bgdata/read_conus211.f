@@ -66,13 +66,17 @@ C
       integer slen, nf_status,nf_fid, i, istat
       character*(*) path, fname
       character*100 cdfname
-      integer ncid,nxbg,nybg,nzbg(5),ntbg , mtbg
-      integer ntp, nvdim, nvs, lenstr, ndsize
+      integer nxbg,nybg,nzbg(5),ntbg , mtbg
+C     integer ntp, nvdim, nvs, lenstr, ndsize
+      integer ntp, nvdim, nvs
       character*31 dummy
       integer id_fields(5), vdims(10)
       data id_fields/1,4,7,10,13/
       common /conus211/ntbg
       character*13 fname9_to_wfo_fname13, fname13
+C     Linda Wharton 10/27/98 removed several commented out lines:
+c        print *,'ndsize = ', ndsize
+C        value ndsize not set anywhere in this subroutine
 C
 C  Fill all dimension values
 C
@@ -97,20 +101,16 @@ C
 
       mtbg=ntbg
 
-cc      istat=NF_INQ_VARID(ncid,'valtimeMINUSreftime            ',i)
-cc      istat=NF_GET_VARA_INT(ncid,i,1,ntbg,ivaltimes)
+cc      istat=NF_INQ_VARID(nf_fid,'valtimeMINUSreftime            ',i)
+cc      istat=NF_GET_VARA_INT(nf_fid,i,1,ntbg,ivaltimes)
 cc      print *, ivaltimes
       do i=1,5
         call NCVINQ(nf_fid,id_fields(i),dummy,ntp,nvdim,vdims,nvs,istat)
 
         call NCDINQ(nf_fid,vdims(1),dummy,nxbg,nf_status)
-c        print *,'ndsize = ', ndsize
         call NCDINQ(nf_fid,vdims(2),dummy,nybg,nf_status)
-c        print *,'ndsize = ', ndsize
         call NCDINQ(nf_fid,vdims(3),dummy,nzbg(i),nf_status)
-c        print *,'ndsize = ', ndsize
 cc        call ncdinq(nf_fid,vdims(4),dummy,ntbg,nf_status)
-c        print *,'ndsize = ', ndsize
         
 c        print*, 'ntp = ',ntp
 c        print*, 'nvdim = ',nvdim
@@ -139,7 +139,8 @@ c
       include 'netcdf.inc'
       include 'bgdata.inc'
 
-      integer ncid, lenstr, ntp, nvdim, nvs, ndsize, model_out
+c     integer ncid, lenstr, ntp, nvdim, nvs, ndsize, model_out
+      integer ncid, model_out
 c
 c     model_out=1  => lga
 c     model_out=2  => dprep
@@ -186,8 +187,8 @@ c
      .       angle(nx,ny)
 c
       integer start(10),count(10)
-      integer vdims(10) 
-      character*31 dummy
+C     integer vdims(10) 
+C     character*31 dummy
 c
       integer i,j,k,n,ip,jp,ii,jj,kp1,it,istatus,slen
 c

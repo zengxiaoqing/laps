@@ -13,7 +13,8 @@
       integer ivaltimes(10), ntbg
       character*4   af
       character*100 bg_names(max_files), fullname
-      integer nf_status, nf_vid, nf_fid, istatus
+C     integer nf_status, nf_vid, nf_fid, istatus
+      integer istatus
       logical use_analysis
       character*9   fname,wfo_fname13_to_fname9
       integer i4time_now, bgtime, bgtime2,previous_time, next_time, len

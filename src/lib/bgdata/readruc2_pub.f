@@ -109,13 +109,14 @@ C
      +     ,hgt, p, qv, u, v, vpt, w,istatus)
       implicit none
       include 'netcdf.inc'
-      integer NX, NY, NZ, nf_fid, nf_vid, nf_status,istatus
+C     integer NX, NY, NZ, nf_fid, nf_vid, nf_status,istatus
+      integer NX, NY, NZ, nf_fid, nf_status,istatus
       character*(*) filename
       integer nxny,nxnynz
       real mmsp(nx,ny), hgt( NX,  NY,  NZ), 
      +     p( NX,  NY,  NZ), qv( NX,  NY,  NZ), 
      +     u( NX,  NY,  NZ), v( NX,  NY,  NZ), 
-     +     vpt( NX,  NY,  NZ), w( NX,  NY,  NZ), nfmissing
+     +     vpt( NX,  NY,  NZ), w( NX,  NY,  NZ)
 
       nxny=nx*ny
       nxnynz=nx*ny*nz
