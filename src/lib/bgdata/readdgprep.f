@@ -1,10 +1,20 @@
       subroutine read_dgprep(bgmodel,path,fname,af,nx,ny,nz
      .                      ,pr,ht,tp,sh,uw,vw
+     .                      ,ht_sfc,pr_sfc,sh_sfc,tp_sfc
+     .                      ,uw_sfc,vw_sfc,mslp
      .                      ,gproj,istatus)
 
 c
       implicit none
 c
+      integer   nvarsmax
+      parameter (nvarsmax=150)
+
+      integer   ivarid(nvarsmax)
+      integer   ivarcoord(nvarsmax)
+      integer   nlevs(nvarsmax)
+      integer   nvars
+
       integer   bgmodel,nx,ny,nz
      .         ,i,j,k,l,istatus
 c
@@ -19,9 +29,20 @@ c
      .      ,pr(nx,ny,nz)      !pressures (mb)
      .      ,prk(nz)
 
+      real*4 ht_sfc(nx,ny)
+     .      ,pr_sfc(nx,ny)
+     .      ,sh_sfc(nx,ny)
+     .      ,tp_sfc(nx,ny)
+     .      ,uw_sfc(nx,ny)
+     .      ,vw_sfc(nx,ny)
+     .      ,mslp(nx,ny)
+
+      real*4 p_levels(nz,nvarsmax)
+
       real*4 mrsat
       real*4 esat,xe
       real*4 rp_init
+      real*4 prsfc
 c
       character*(*) path
       character*9   fname
@@ -43,39 +64,61 @@ c
 c
       common /estab/esat(15000:45000)
 c
-      if(bgmodel.eq.6)then
-         prk( 1)=1000.
-         prk( 2)= 975.
-         prk( 3)= 950.
-         prk( 4)= 925.
-         prk( 5)= 900.
-         prk( 6)= 850.
-         prk( 7)= 800.
-         prk( 8)= 750.
-         prk( 9)= 700.
-         prk(10)= 650.
-         prk(11)= 600.
-         prk(12)= 550.
-         prk(13)= 500.
-         prk(14)= 450.
-         prk(15)= 400.
-         prk(16)= 350.
-         prk(17)= 300.
-         prk(18)= 250.
-         prk(19)= 200.
-         prk(20)= 150.
-         prk(21)= 100.
-         prk(22)=  70.
-         prk(23)=  50.
-         prk(24)=  30.
-         prk(25)=  20.
-         prk(26)=  10.
-      else
-         rp_init=1000.
-         do k=1,nz
-            prk(k)=rp_init-((k-1)*25.)
-         enddo
-      endif
+c reads model ".index" file. returns pressure of levels, variable id
+c and number of levels for each model variable in file.  (J. Smart 7-6-98).
+c
+c_______________________________________________________________________________
+c
+c *** Open data file.
+c
+      call s_len(path,l)
+      filename=path(1:l)//'/'//fname//af//'.index'
+      call s_len(filename,l)
+      call readindexfile(filename,nvarsmax,nz,nvars,nlevs
+     +,p_levels,ivarcoord,ivarid,istatus)
+      if(istatus.ne.0)goto 995
+
+      do j=1,nvars
+         if(ivarid(j).eq.11.and.ivarcoord(j).eq.100)then
+            do i=1,nlevs(j)
+               prk(i)=p_levels(i,j)
+            enddo
+         endif
+      enddo
+
+c     if(bgmodel.eq.6)then
+c        prk( 1)=1000.
+c        prk( 2)= 975.
+c        prk( 3)= 950.
+c        prk( 4)= 925.
+c        prk( 5)= 900.
+c        prk( 6)= 850.
+c        prk( 7)= 800.
+c        prk( 8)= 750.
+c        prk( 9)= 700.
+c        prk(10)= 650.
+c        prk(11)= 600.
+c        prk(12)= 550.
+c        prk(13)= 500.
+c        prk(14)= 450.
+c        prk(15)= 400.
+c        prk(16)= 350.
+c        prk(17)= 300.
+c        prk(18)= 250.
+c        prk(19)= 200.
+c        prk(20)= 150.
+c        prk(21)= 100.
+c        prk(22)=  70.
+c        prk(23)=  50.
+c        prk(24)=  30.
+c        prk(25)=  20.
+c        prk(26)=  10.
+c     else
+c        rp_init=1000.
+c        do k=1,nz
+c           prk(k)=rp_init-((k-1)*25.)
+c        enddo
+c     endif
 c
 c_______________________________________________________________________________
 c
@@ -102,9 +145,12 @@ c     read(1) prk
 
       if(bgmodel.eq.6)then
          call read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
+     +,nvarsmax,nvars,nlevs,ivarcoord,ivarid
+     +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
       else
          call read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
+     +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
       endif
  
@@ -114,7 +160,7 @@ c     read(1) prk
       endif
 c
 c *** Fill pressure array and
-c *** Convert 3d rh to specific humidity.
+c *** Convert rh to specific humidity.
 c
       print*,'convert rh to sh'
       do k=1,nz
@@ -128,6 +174,18 @@ c
          sh(i,j,k)=sh(i,j,k)*mrsat           !rh --> mr
          sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
       enddo
+      enddo
+      enddo
+
+      do j=1,ny
+      do i=1,nx
+         prsfc=pr_sfc(i,j)/100.
+         it=tp_sfc(i,j)*100
+         it=min(45000,max(15000,it))
+         xe=esat(it)
+         mrsat=0.00622*xe/(prsfc-xe)         !Assumes that rh units are %
+         sh_sfc(i,j)=sh_sfc(i,j)*mrsat             !rh --> mr
+         sh_sfc(i,j)=sh_sfc(i,j)/(1.+sh_sfc(i,j))  !mr --> sh
       enddo
       enddo
 c
@@ -163,52 +221,102 @@ c
       print *,'Error finding dgprep file.'
       istatus=0
       return
+995   print*,'Error reading model index file.',filename(1:l)
+      istatus=0
+      return
       end
 c
 c ********************************************************
       subroutine read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
+     +,nvarsmax,nvars,nlevs,ivarcoord,ivarid
+     +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
 
       implicit none
 
       integer   nx,ny,nz
-     .         ,i,j,k,istatus
+     .         ,i,j,k,l,istatus
+     .         ,nvarsmax,nvars
+     .         ,nlevs(nvarsmax)
+     .         ,ivarcoord(nvarsmax)
+     .         ,ivarid(nvarsmax)
+
 c
       integer  lun
+
       real*4 ht(nx,ny,nz)      !height (m)
      .      ,tp(nx,ny,nz)      !temperature (K)
      .      ,sh(nx,ny,nz)      !specific humidity (kg/kg)
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
      .      ,vw(nx,ny,nz)      !v-wind (m/s)
 
-c     real*4 dummy(nx,ny)
+      real*4 ht_sfc(nx,ny)
+     .      ,pr_sfc(nx,ny)
+     .      ,sh_sfc(nx,ny)
+     .      ,tp_sfc(nx,ny)
+     .      ,uw_sfc(nx,ny)
+     .      ,vw_sfc(nx,ny)
+     .      ,mslp(nx,ny)
+
+      real*4 dummy(nx,ny,nz)
 
       istatus=1
 
-      print*,'Read T'
+      print*,'read 3-d variables'
+c nvar = 1
       do k=1,nz
          read(lun,err=50) ((tp(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
-      print*,'Read u'
+c     print*,'Read u'
+c = 2
       do k=1,nz
          read(lun,err=50) ((uw(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
-      print*,'Read v'
+c     print*,'Read v'
+c = 3
       do k=1,nz
          read(lun,err=50) ((vw(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
-      print*,'Read Height'
+c     print*,'Read Height'
+c = 4
       do k=1,nz
          read(lun,err=50) ((ht(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
-      print*,'Read RH'
+c     print*,'Read RH'
+c = 5
       do k=1,nz-10+1    ! -> prk(17)=300mb = last moisture level.
          read(lun,err=50) ((sh(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
+c
+c read sfc avn variables
+c
+c = 6,7,8,9,10,11
+      print*,'read sfc variables'
+      read(lun,err=50) ((tp_sfc(i,j),i=1,nx),j=ny,1,-1)
+      read(lun,err=50) ((uw_sfc(i,j),i=1,nx),j=ny,1,-1)
+      read(lun,err=50) ((vw_sfc(i,j),i=1,nx),j=ny,1,-1)
+      read(lun,err=50) ((ht_sfc(i,j),i=1,nx),j=ny,1,-1)
+      read(lun,err=50) ((sh_sfc(i,j),i=1,nx),j=ny,1,-1)
+      read(lun,err=50) ((mslp(i,j),i=1,nx),j=ny,1,-1)
+c nvar = 12
+c
+      do l=12,nvars
+        if(ivarid(l).eq.1.and.ivarcoord(l).eq.1)then
+           read(lun,err=50) ((pr_sfc(i,j),i=1,nx),j=ny,1,-1)
+           goto  188
+        else
+           do k=1,nlevs(l)
+              read(lun,err=50)((dummy(i,j,k),i=1,nx),j=1,ny)
+           enddo
+        endif
+      enddo
+      print*,'Did not find mslp data!'
+
+188   continue
 c
 c As at AFWA, rh above level  (300mb)=10%
 c
@@ -230,6 +338,7 @@ c     print*,'set upper level rh to 10%'
 c
 c********************************************************
       subroutine read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
+     +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
 
       implicit none
@@ -244,28 +353,47 @@ c
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
      .      ,vw(nx,ny,nz)      !v-wind (m/s)
 
+      real*4 ht_sfc(nx,ny)
+     .      ,pr_sfc(nx,ny)
+     .      ,sh_sfc(nx,ny)
+     .      ,tp_sfc(nx,ny)
+     .      ,uw_sfc(nx,ny)
+     .      ,vw_sfc(nx,ny)
+     .      ,mslp(nx,ny)
+
       istatus=1
 
-      print*,'Read T'
+      print*,'read 3-d variables'
       do k=1,nz
          read(lun,err=50) ((tp(i,j,k),i=1,nx),j=1,ny)
       enddo
-      print*,'Read u'
+c     print*,'Read u'
       do k=1,nz
          read(lun,err=50) ((uw(i,j,k),i=1,nx),j=1,ny)
       enddo
-      print*,'Read v'
+c     print*,'Read v'
       do k=1,nz
          read(lun,err=50) ((vw(i,j,k),i=1,nx),j=1,ny)
       enddo
-      print*,'Read Height'
+c     print*,'Read Height'
       do k=1,nz
          read(lun,err=50) ((ht(i,j,k),i=1,nx),j=1,ny)
       enddo
-      print*,'Read RH'
+c     print*,'Read RH'
       do k=1,nz
          read(lun,err=50) ((sh(i,j,k),i=1,nx),j=1,ny)
       enddo
+
+c
+c read eta sfc variables
+c
+      print*,'read sfc variables'
+      read(lun,err=50) ((tp_sfc(i,j),i=1,nx),j=1,ny)
+      read(lun,err=50) ((uw_sfc(i,j),i=1,nx),j=1,ny)
+      read(lun,err=50) ((vw_sfc(i,j),i=1,nx),j=1,ny)
+      read(lun,err=50) ((ht_sfc(i,j),i=1,nx),j=1,ny)
+      read(lun,err=50) ((sh_sfc(i,j),i=1,nx),j=1,ny)
+      read(lun,err=50) ((mslp(i,j),i=1,nx),j=1,ny)
 
       istatus=0
       return

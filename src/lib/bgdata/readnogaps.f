@@ -1,6 +1,8 @@
-      subroutine read_nogaps(bgmodel,path,fname,af,nx,ny,nz,
-     .                       pr,ht,tp,sh,uw,vw,
-     .                       gproj,istatus)
+      subroutine read_nogaps(bgmodel,path,fname,af,nx,ny,nz
+     .                      ,pr,ht,tp,sh,uw,vw
+     .                      ,ht_sfc,pr_sfc,sh_sfc,tp_sfc
+     .                      ,uw_sfc,vw_sfc,mslp
+     .                      ,gproj,istatus)
 
 c
       implicit none
@@ -16,6 +18,15 @@ c
      .       vw(nx,ny,nz),     !NOGAPS v-wind (m/s)
      .       pr(nx,ny,nz),     !NOGAPS pressures (mb)
      .       prk(nz)
+
+      real*4 ht_sfc(nx,ny)
+     .      ,pr_sfc(nx,ny)
+     .      ,sh_sfc(nx,ny)
+     .      ,tp_sfc(nx,ny)
+     .      ,uw_sfc(nx,ny)
+     .      ,vw_sfc(nx,ny)
+     .      ,mslp(nx,ny)
+
 c
       character*(*) path
       character*9   fname
@@ -69,24 +80,24 @@ c     removed again J.Smart 6/14/98
 c     read(16) (prk(k),k=1,nz)
 c     end of insert
 
-      print*,'Read T'
+      print*,'Read 3-d variables'
       do k=1,nz
-      read(16) ((tp(i,j,k),i=1,nx),j=1,ny)
+         read(16,err=50) ((tp(i,j,k),i=1,nx),j=1,ny)
       enddo
 
-      print*,'Read u'
+c     print*,'Read u'
       do k=1,nz
-      read(16) ((uw(i,j,k),i=1,nx),j=1,ny)
+         read(16,err=50) ((uw(i,j,k),i=1,nx),j=1,ny)
       enddo
 
-      print*,'Read v'
+c     print*,'Read v'
       do k=1,nz
-      read(16) ((vw(i,j,k),i=1,nx),j=1,ny)
+         read(16,err=50) ((vw(i,j,k),i=1,nx),j=1,ny)
       enddo
 
-      print*,'Read Td'
+c     print*,'Read Td'
       do k=1,nz-9
-      read(16) ((sh(i,j,k),i=1,nx),j=1,ny) !Read in as dew point.
+         read(16,err=50) ((sh(i,j,k),i=1,nx),j=1,ny) !Read in as dew point.
       enddo
       do k=nz-8,nz
       do j=1,ny
@@ -96,10 +107,21 @@ c     end of insert
       enddo
       enddo
 
-      print*,'Read ht'
+c     print*,'Read ht'
       do k=1,nz
-      read(16) ((ht(i,j,k),i=1,nx),j=1,ny)
+         read(16,err=50) ((ht(i,j,k),i=1,nx),j=1,ny)
       enddo
+c
+c read sfc avn variables
+c
+      print*,'read sfc variables'
+      read(16,err=50) ((tp_sfc(i,j),i=1,nx),j=1,ny)
+      read(16,err=50) ((uw_sfc(i,j),i=1,nx),j=1,ny)
+      read(16,err=50) ((vw_sfc(i,j),i=1,nx),j=1,ny)
+      read(16,err=50) ((ht_sfc(i,j),i=1,nx),j=1,ny)
+      read(16,err=50) ((sh_sfc(i,j),i=1,nx),j=1,ny)
+      read(16,err=50) ((mslp(i,j),i=1,nx),j=1,ny)
+
       close(16)
 c
 c *** Convert dew point to specific humidity.
@@ -122,6 +144,19 @@ c
       enddo
       enddo
       enddo
+
+      if(.false.)then
+      do j=1,ny
+      do i=1,nx
+         pr_sfc(i,j)=pr_sfc(i,j)/100.
+         it=sh_sfc(i,j)*100
+         it=min(45000,max(15000,it))
+         xe=esat(it)
+         sh_sfc(i,j)=0.622*xe/(pr_sfc(i,j)-xe)
+         sh_sfc(i,j)=sh_sfc(i,j)/(1.+sh_sfc(i,j))
+      enddo
+      enddo
+      endif
 c
 c *** Fill the Lat-Lon common block variables.
 c
@@ -145,6 +180,10 @@ c
 
       return
 c
+50    print*,'Error reading nogaps files'
+      istatus=0
+      return
+
 990   continue
       print *,'Error finding nogaps file.'
       istatus=0
