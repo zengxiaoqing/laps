@@ -42,18 +42,18 @@ a2io_rt.o:	a2io.c
 		mv a2io.o a2io_rt.o
 
 precip_tp.o:	precip.c
-		$(CC) $(TP_FLAGS) $(CFLAGS) -c precip.c
+		$(CC) $(TP_FLAGS) $(CPPFLAGS) $(CFLAGS) -c precip.c
 		mv precip.o precip_tp.o
 
 precip_rt.o:	precip.c
-		$(CC) $(RT_FLAGS) $(CFLAGS) -c precip.c
+		$(CC) $(RT_FLAGS) $(CPPFLAGS) $(CFLAGS) -c precip.c
 		mv precip.o precip_rt.o
 
 read88da2.o:	read88da2.c
-		$(CC) $(CFLAGS) -c read88da2.c
+		$(CC) $(CPPFLAGS) $(CFLAGS) -c read88da2.c
 
 merge.o:	merge.c
-		$(CC) $(CFLAGS) -c merge.c
+		$(CC) $(CPPFLAGS) $(CFLAGS) -c merge.c
 
 $(LIBA2RT):	$(OBJA2RT)
 		$(AR) rcv $(LIBA2RT) $(OBJA2RT)

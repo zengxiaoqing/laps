@@ -22,6 +22,9 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/radar/a2io/liba2rt.a  \
              $(LAPSROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
              $(LAPSROOT)/src/lib/libdebuglaps.a  
 
+CMAIN_FSUB=-lxlf90
+OTHERLIBS2=$(OTHERLIBS) $(CMAIN_FSUB)
+
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
@@ -34,7 +37,7 @@ all: exe
 exe: $(EXE)
 
 $(EXE): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -I$(LAPSROOT)/src/include $(SRC) $(LAPSLIBS) $(OTHERLIBS2) -o $@
 	rm -f *.o
 
 debug: $(SRC)
