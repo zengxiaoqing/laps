@@ -450,10 +450,10 @@ c        which is a lga/get_acceptable_files function.
       allocate (names(max_files),reject_names(max_files)
      .         ,bg_names(max_files))
 
-      call get_acceptable_files(i4time_sys,bgpaths(1),bgmodels(1)
-     +        ,names,max_files,oldest_forecast,max_forecast_delta
-     +        ,use_analysis,bg_files,accepted_files,forecast_length
-     +        ,cmodels(1),nx,ny,nz,reject_names,rejected_cnt)
+!     call get_acceptable_files(i4time_sys,bgpaths(1),bgmodels(1)
+!    +        ,names,max_files,oldest_forecast,max_forecast_delta
+!    +        ,use_analysis,bg_files,accepted_files,forecast_length
+!    +        ,cmodels(1),nx,ny,nz,reject_names,rejected_cnt)
 
       deallocate (names,reject_names,bg_names)
 
