@@ -1201,11 +1201,14 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
                 Mercator:
                     Set to 'merctr'.
 
-                Generally, grids located at higher latitudes that include
-                a pole work best with Polar Stereographic. Mid latitudes 
-                (~20-50 degrees) are best with Lambert. Mercator is the best if
-                you're centered in the tropics, especially if the domain 
-                includes the equator.
+                In most cases, the Lambert projection is recommended.
+
+                Mercator is recommended if the domain includes the
+                equator, or if sin(latitude) varies by more than a factor 
+                of two over the domain.
+
+                If the domain includes one of the geographic poles, then
+                Polar Stereographic should be used instead.
 
                 See the note below regarding current map projection limitations.
                 
