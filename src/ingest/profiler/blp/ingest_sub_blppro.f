@@ -59,7 +59,7 @@ C       NOTE: Profiler winds are written out in KNOTS
 	parameter (max_modes = 3)
 	parameter (max_gates = 50)
         integer*2 nmodes_short             
-	integer nmodes,ngates
+	integer nmodes
 
         real u(max_modes,max_gates)
         real v(max_modes,max_gates), prs
