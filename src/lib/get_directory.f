@@ -50,7 +50,7 @@ cdis
 
         character*80 grid_fnam_common, grid_fnam
         common / grid_fnam_cmn / grid_fnam_common
-        character *201 laps_data_root, directory
+        character*201 laps_data_root, directory
 
         call get_directory_length(grid_fnam_common,len_dir)
 cc      
