@@ -31,6 +31,7 @@ cdis
 cdis 
        subroutine NOWRAD_to_LAPS(c_radtype,
      &                    filename,
+     &                    nlines,nelems,
      &                    imax,jmax,
      &                    lat,lon,
      &                    validTime,
@@ -44,9 +45,6 @@ c Routine reads netCDF nowrad (WSI) data using subroutine read_wsi_cdf.
 c Nowrad data is then remapped to LAPS domain given lat/lon of domain.
 c Routine automatically moves the boundary for any domain with the nowrad
 c confines.
-c
-ccc       include 'lapsparms.for'
-       include 'vrc.inc'
 
        real*4 lat(imax,jmax)
        real*4 lon(imax,jmax)
@@ -61,7 +59,6 @@ ccc       include 'lapsparms.for'
        integer istatus
        integer status
        integer i_base_value,increment
-       integer lines,elems
 
 cccccccccccccccccccccccccccccccccccccccccccccccccc
 
@@ -77,7 +74,7 @@ c
 
       if(c_radtype.eq.'wfo')then
          call read_wsi_cdf_wfo(filename,nlines,nelems,
-     1lines,elems,Dx,Dy,valTime,image,istatus)
+     1Dx,Dy,valTime,image,istatus)
          if(istatus.ne.0)then
             write(6,*)'Error reading nowrad data'
             goto 14
@@ -87,8 +84,8 @@ c
 
       elseif(c_radtype.eq.'wsi')then
 
-           call read_wsi_cdf_wsi(filename,nlines,nelems,lines,
-     +elems,dlat,dlon,lat2,lon1,validTime,Dx,Dy,image,status)
+           call read_wsi_cdf_wsi(filename,nlines,nelems,
+     +dlat,dlon,lat2,lon1,validTime,Dx,Dy,image,status)
            if(status.ne.0)then
               write(6,*)'Bad data detected'
               write(6,*)'Returning without data'
@@ -132,7 +129,7 @@ c
      &                  image,
      &                  r_llij_lut_ri,
      &                  r_llij_lut_rj,
-     &                  lines,elems, ! input array dimensions
+     &                  nlines,nelems, ! input array dimensions
      &                  rdbz,
      &                  istatus)
 

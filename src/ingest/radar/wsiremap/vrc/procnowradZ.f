@@ -35,7 +35,7 @@ cdis
      &     image_data,
      &     r_llij_lut_ri,
      &     r_llij_lut_rj,
-     &     line_dim,elem_dim,   ! input array dimensions
+     &     nline,nelem,   ! input array dimensions
      &     laps_dbz,
      &     istatus)
 
@@ -50,21 +50,20 @@ c      				    reflectivity data.
 c
       implicit none
 
-      include 'lapsparms.cmn'
-      include 'vrc.inc'
-
       integer max_elem,max_line
       integer imax,jmax
       parameter (max_elem = 15)
       parameter (max_line = 15)
-      integer line_dim,elem_dim
+      integer   nline,nelem
       real*4    r_grid_ratio
+      real*4    r_missing_data
+      real*4    ref_base
 
-      integer image_data(elem_dim,line_dim)
+      integer image_data(nelem,nline)
       integer image_to_dbz(0:15)
 
       real*4 laps_dbz(imax,jmax)
-      real*4 wsi_dbz_data(nelems,nlines)
+      real*4 wsi_dbz_data(nelem,nline)
       real*4 r_llij_lut_ri(imax,jmax)
       real*4 r_llij_lut_rj(imax,jmax)
 
@@ -91,6 +90,17 @@ c
       bad_data_flag = 16
       qcstatus=0
       fcount=0
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne.1)then
+         print*,'Error getting r_missing_data'
+         goto 1000
+      endif
+      call get_ref_base(ref_base,istatus)
+      if(istatus.ne.1)then
+         print*,'Error getting ref_base'
+         goto 1000
+      endif
 c
 c The "10" loop represents input image resolution < output grid resolution such
 c that there are enough pixels from the input image to get a representative
@@ -119,7 +129,7 @@ c****************************************************************************
                   iend   = int(elem_mx)
 
                   if(istart.le.0 .or. jstart.le.0 .or.
-     &                 iend.gt.elem_dim .or. jend.gt.line_dim)then
+     &                 iend.gt.nelem .or. jend.gt.nline)then
                      write(*,*)'insufficient data for lat/lon sector'
                      write(*,1020)i,j
  1020                format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
@@ -173,7 +183,7 @@ c
 
                      else   
 
-                        rdbz=ref_base_cmn
+                        rdbz=ref_base
                         fcount=fcount+1
 
                      endif
@@ -185,7 +195,7 @@ c
                         if(pixsum.gt.0)then
                            laps_dbz(i,j) = pixsum / float(npix)
                         else
-                           laps_dbz(i,j) = ref_base_cmn
+                           laps_dbz(i,j) = ref_base
                         endif
 
                      elseif(rdbz.gt.0.0)then
@@ -194,7 +204,7 @@ c
 
                      else
 
-                        laps_dbz(i,j) = ref_base_cmn
+                        laps_dbz(i,j) = ref_base
 
                      endif      ! npix .gt. 1
 
@@ -221,13 +231,13 @@ c
          write(6,*)'Image res .ge. output grid spacing'
          write(6,*)'Using bilinear interp to get dBZ '
 
-         do j=1,nlines
-            do i=1,nelems
+         do j=1,nline
+            do i=1,nelem
                if(image_data(i,j).le.bad_data_flag.and.
      &              image_data(i,j).ge.0)then
                   wsi_dbz_data(i,j)=image_to_dbz(image_data(i,j))
                else
-                  wsi_dbz_data(i,j)=r_missing_data_cmn
+                  wsi_dbz_data(i,j)=r_missing_data
                endif
             enddo
          enddo
@@ -238,22 +248,22 @@ c
                IF(laps_dbz(I,J).eq.0.) then
 c
 c bilinear_interp_extrap checks on boundary conditions and
-c uses ref_base_cmn if out of bounds.
+c uses ref_base if out of bounds.
 c
                   call bilinear_laps(
      &                 r_llij_lut_ri(i,j),
      &                 r_llij_lut_rj(i,j),
-     &                 elem_dim,line_dim,wsi_dbz_data,
+     &                 nelem,nline,wsi_dbz_data,
      &                 result)
 
-                  if(result .ne. r_missing_data_cmn .and.
+                  if(result .ne. r_missing_data .and.
      &                 result .gt. 0.0)then
 
                      laps_dbz(i,j) = result
 
                   else
                         
-                     laps_dbz(i,j) = ref_base_cmn
+                     laps_dbz(i,j) = ref_base
 
                   endif
                endif
@@ -264,7 +274,7 @@ c
 
       istatus = 1
 c
-      return
+1000  return
       end
 
 

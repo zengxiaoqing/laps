@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
        subroutine read_wsi_cdf_wfo(input_name,nlines,nelems,
-     1ilines,ielems,Dx,Dy,valtime,image,istatus)
+     1Dx,Dy,valtime,image,istatus)
 c
 c       This routines reads the WSI NOWRAD netcdf files and
 c        converts the image value to values of 0-15.
@@ -90,16 +90,19 @@ c A little qc check to be sure we are reading the proper data file
 c
         if(ilines.lt.nlines .or. ielems.lt.nelems)then
            write(6,*)'WARNING! '
-           write(6,*)'n lines from file: ',ilines
-           write(6,*)'n elems from file: ',ielems
-           write(6,*)'n lines expected : ',nlines
-           write(6,*)'n elems expected : ',nelems
+           write(6,*)'n lines from netcdf file: ',ilines
+           write(6,*)'n elems from netcdf file: ',ielems
+           write(6,*)'n lines from namelist: ',nlines
+           write(6,*)'n elems from namelist: ',nelems
         elseif(ilines.gt.nlines .or. ielems.gt.nelems)then
            write(6,*)'TERMINAL ERROR! '
-           write(6,*)'n lines from file: ',ilines
-           write(6,*)'n elems from file: ',ielems
-           write(6,*)'n lines expected : ',nlines
-           write(6,*)'n elems expected : ',nelems
+           write(6,*)'n lines from netcdf file: ',ilines
+           write(6,*)'n elems from netcdf file: ',ielems
+           write(6,*)'n lines from namelist: ',nlines
+           write(6,*)'n elems from namelist: ',nelems
+           print*,'Either change'
+           print*,'the path_to_wsi_2d_data in nest7grid.parms or,'
+           print*,'the c_raddat_type also in nest7grid.parms'
            istatus = -1
            return
         else
@@ -218,8 +221,8 @@ c              write(6,*) i, j, i_value
          enddo
       enddo
 c
-      write(6,*)'Number of bad data points (> ',bad_data_flag,' )'
-      write(6,*)'prior to calling c_scan_adjust: ',icount_bad
+      write(6,*)'Number of bad data points (> ',bad_data_flag,' ) ',
+     +icount_bad
       write(6,*)'Max value found in image array: ',imax_image_value
       write(6,*)'Min value found in image array: ',imin_image_value
       write(6,*)

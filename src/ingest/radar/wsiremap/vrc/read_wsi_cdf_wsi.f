@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-      subroutine read_wsi_cdf_wsi(input_name,nlines,nelems,lines,elems,
+      subroutine read_wsi_cdf_wsi(input_name,nlines,nelems,
      1dlat,dlon,lat2,lon1,validTime,Dx,Dy,image,status)
 
         

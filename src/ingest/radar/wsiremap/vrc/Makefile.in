@@ -40,7 +40,6 @@ OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
 
 EXE = vrc_driver.x
 
-
 # Define other variables 
 
 AR  = @ARCHIVE@
@@ -49,12 +48,14 @@ INSTALL = @INSTALL@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC=c_scan_adjust.c nowrad2laps.f       read_table.f        read_wsi_cdf_wsi.f  \
-    procnowradZ.f   read_wsi_cdf_wfo.f  readvrclut.f
-
+SRC= nowrad2laps.f \
+     read_table.f \
+     read_wsi_cdf_wsi.f \
+     procnowradZ.f \
+     read_wsi_cdf_wfo.f \
+     readvrclut.f
 
 MAIN=vrc_driver.f
-
 
 LIB=libvrc.a
 
@@ -96,22 +97,4 @@ install: exe
 %.o : %.F
 
 
-
-
-
-
-
-
-
-nowrad2laps.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/vrc.inc@F77INC@
-
-procnowradZ.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/vrc.inc@F77INC@
-
-read_wsi_cdf_wfo.f:  @NETCDFINC@/netcdf.inc $(LAPSROOT)/src/include/vrc.inc@F77INC@
-
 read_wsi_cdf_wsi.f:  @NETCDFINC@/netcdf.inc@F77INC@
-
-readvrclut.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-vrc_driver.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-

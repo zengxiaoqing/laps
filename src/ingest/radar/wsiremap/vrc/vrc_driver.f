@@ -30,8 +30,8 @@ cdis
 cdis 
 cdis 
        program vrc_driver
-       include 'lapsparms.cmn'
        
+       include 'lapsparms.cmn'
        Call get_laps_config('nest7grid',IStatus)
        if(istatus.eq.1)then
          write(*,*)'LAPS Parameters obtained'
@@ -40,18 +40,21 @@ cdis
           write(*,*)'Terminating LAPS-VRC. WSI remapping'
           stop
        end if
-       call vrc_driver_sub(NX_L_CMN,NY_L_CMN,c_raddat_type)
+
+       call vrc_driver_sub(nx_l_cmn,ny_l_cmn,c_raddat_type,
+     +path_to_wsi_2d_radar_cmn)
+ 
        stop
        end
 
-       subroutine vrc_driver_sub(nx_l,ny_l,c_raddat_type)
+       subroutine vrc_driver_sub(nx_l,ny_l,c_raddat_type,
+     +wsi_dir_path)
 c
 c Program drives transformation of NOWRAD high density (hd) radar to LAPS
 c domain (subroutine NOWRAD_to_LAPS). 'hd' files are assumed to reside in
 c /public/data/radar/wsi/nowrad/netcdf.  The pathway to these data can be
 c changed pretty easily.
 c
-ccc       include 'lapsparms.for'
 
        integer extreme_thrsh_70
        integer extreme_thrsh_47
@@ -71,9 +74,12 @@ ccc       include 'lapsparms.for'
        character*11 laps_dom_file
        character*4 lvl_coord_2d
 
-       real*4 lat(nx_l,ny_l),lon(nx_l,ny_l),rdbz(nx_l,ny_L)
+       real*4 lat(nx_l,ny_l)
+       real*4 lon(nx_l,ny_l)
+       real*4 rdbz(nx_l,ny_l)
        real*4 grid_spacing
        real*4 data(nx_l,ny_l,2)
+       real*4 rdum
 
        real*4 percent_extreme_47
        real*4 percent_extreme_70
@@ -89,6 +95,7 @@ ccc       include 'lapsparms.for'
        integer lvl_2d
        integer n,nn,nd, len
        integer n_vars_req
+       integer irad
 
        character*100 c_values_req
        character*40  c_vars_req
@@ -115,36 +122,18 @@ c
 
        if(c_raddat_type.eq.'wfo'.and.wsi_dir_path(2:7).ne.
      1'public')then
+          irad = 2
           c_fname_cur = c_fname_cur_temp
+       elseif(c_raddat_type.eq.'wfo'.and.wsi_dir_path(2:7).eq.
+     1'public')then
+          c_fname_cur = wfo_fname13_to_fname9(c_fname_cur_temp)
+          irad = 2
        else
           c_fname_cur = wfo_fname13_to_fname9(c_fname_cur_temp)
+          irad = 1
        endif
-c
-c get systime.
-c
        write(6,*)'Current (nominal) file time: ',c_fname_cur
 c
-c build directory path and filename for expected nowrad data file.
-c
-       write(6,*)'Read Static info - path_to_wsi_2d_radar'
-       n_vars_req = 1
-       c_vars_req='path_to_wsi_2d_radar'
-       call get_static_info(c_vars_req,c_values_req,n_vars_req
-     1                                               ,istatus)
-       if(istatus.eq.1)then
-
-          write(6,*)'Successful getting path_to_wsi_2d_radar'
-          write(6,*)'c_values_req = ',c_values_req
-          wsi_dir_path=c_values_req
-
-       else
-
-          write(6,*)'Error getting path_to_wsi_2d_radar'
-          write(6,*)'Terminating'
-          goto 898
-
-       endif
-
        n=index(wsi_dir_path,' ')
        write(6,*)'wsi_dir_path = ',wsi_dir_path(1:n-1)
 c
@@ -288,9 +277,13 @@ c *****************************************************************************
 c process the nowrad high density data. Remap to LAPS domain.  Generate output.
 c *****************************************************************************
 c
+       call get_wsi_parms_vrc(irad,nlines,nelems,
+     +rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,istatus)
+
        do k=1,nfiles
        call NOWRAD_to_LAPS(c_raddat_type,
      &                 c_filenames_proc(k),
+     &                 nlines,nelems,
      &                 nx_l,ny_l,
      &                 lat,
      &                 lon,
