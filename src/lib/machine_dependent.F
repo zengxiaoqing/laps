@@ -185,7 +185,7 @@ cdis
 
 #endif
       subroutine open_append(lun,file,status,istat)
-      integer unit,istat
+      integer istat
       character*(*) file,status
 
       istat=1
