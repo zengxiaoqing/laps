@@ -56,7 +56,7 @@ print "\nReading from log file $filename\n\n";
 # See if the analysis is done.
 @greplines = grep /End of Cloud Analysis Package/, @lines;
 $ngreplines = @greplines;
-if ($ngreplines == 0) {die "Cloud analysis isn't finished.\n";}
+if ($ngreplines == 0) {print "Cloud analysis isn't finished.\n";}
 
 # Determine background model.
 
