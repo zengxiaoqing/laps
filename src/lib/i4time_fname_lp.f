@@ -93,14 +93,22 @@ C
            END IF
         END DO
 C
-C       Convert these numbers in year, julian day, hours, and minutes.
-C
+C       Convert these numbers in year, day of year (julian day), hours, 
+C       and minutes.
         NYEAR = 10*INT_FILE(1) + INT_FILE(2)
         JDAY = 100*INT_FILE(3) + 10*INT_FILE(4) + INT_FILE(5)
         NHOUR = 10*INT_FILE(6) + INT_FILE(7)
         MIN = 10*INT_FILE(8) + INT_FILE(9)
+
+C       Get the actual year, here is where we assume what century it is...
+C       Steve Albers 1997
+        if(NYEAR .lt. 60)then
+            NYEAR = NYEAR + 2000
+        else
+            NYEAR = NYEAR + 1900
+        endif
 C
-C       Convert the julian day into month and day.
+C       Convert the day of year (julian day) into month and day.
 C
         CALL CV_JUL_MMDD_LP (JDAY, NYEAR, MONTH, NDAY, ISTATUS)
         IF (0 .EQ. ISTATUS)
@@ -147,13 +155,13 @@ C
         SUBROUTINE CV_JUL_MMDD_LP (JULIAN_DAY, YEAR, MONTH, DAY, ISTATUS
      1)
 C
-C       This routine converts from Julian days to month and day in
-C       integer format.
+C       This routine converts from day of year (Julian days) to month and 
+C       day in integer format.
 C
 C       ON INPUT
-C          JULIAN_DAY - The Julian date to be converted.
-C          YEAR - The year of the Julian date, if .lt. 100, it is assumed
-C                 to be the last two digits of 19xx.
+C          JULIAN_DAY - The Day of Year (Julian date) to be converted.
+C          YEAR - The year of the Day of Year (Julian date), if .lt. 100, 
+C                 it is assumed to be the last two digits of 19xx.
 C
 C       ON OUTPUT
 C          MONTH - The integer representation for the month (1-12)
@@ -188,7 +196,7 @@ C
            MNTH(2) = 28
         END IF
 C
-C       Check JULIAN_DAY for being too large or too small
+C       Check day of year (JULIAN_DAY) for being too large or too small
 C
         IF (JULIAN_DAY .LE. 0 .OR. JULIAN_DAY .GT. MAX_DAY) THEN
            ISTATUS = 0
