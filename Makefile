@@ -25,8 +25,7 @@ LIBDIRS = src/lib \
           src/lib/radar/remap_ftn \
           src/lib/satellite \
           src/lib/temp   \
-          src/lib/util  \
-          src/lib/wsi_ingest
+          src/lib/util  
 
 EXEDIRS = src/accum \
           src/background \
