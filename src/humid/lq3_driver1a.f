@@ -250,9 +250,9 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 3.7.10 successfully incorporates'
+      write (6,*) 'Release 3.7.10b successfully incorporates'
       write (6,*) '1) OPTRAN90 for BOTH imager and sounder data'
-      write (6,*) '2) Still Bigendian machines only, little endian soon'
+      write (6,*) '2) BOTH  Big and little endian formats'
       write (6,*) '3) Initiated removal of old optran code'
       write (6,*) 'Release 3.7.9 successfully incorporates'
       write (6,*) '1) OPTRAN90 upgrade for sounder data only'
