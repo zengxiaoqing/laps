@@ -1669,7 +1669,7 @@ since 3 layers are routinely available from NESDIS.
    the monitor output can be seen at 
    http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi.
    Green means optimum product continuity, red means the product is failing
-   to generate, yellow means it is generating now but has been interupted
+   to generate, yellow means it is generating now but has been interrupted
    in the past.
 
    Check the log files in the 'log' directory for occurrences of the string
