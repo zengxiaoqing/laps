@@ -708,6 +708,9 @@ C READ IN SATELLITE DATA
      1                   ,rlaps_land_frac,NX_L,NY_L                      ! I
      1                   ,istat_39_a)                                    ! O
 
+!       Cloud cover QC check
+        call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
+
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
      1       tb8_k,istat_tb8,                                           ! I
@@ -731,6 +734,9 @@ C READ IN SATELLITE DATA
             write(6,*)' Error: Bad status returned from insert_sat'
             goto999
         endif
+
+!       Cloud cover QC check
+        call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
         write(6,*)' Cloud top (Band 8 vs. Satellite Analysis)'
         scale = .0001
@@ -1813,6 +1819,35 @@ C       EW SLICES
             nint2 = nint(x*float(ifactor))
         else
             nint2 = 999999
+        endif
+
+        return
+        end
+
+        subroutine qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
+
+        real*4 clouds_3d(NX_L,NY_L,KCLOUD)
+
+        do i = 1,NX_L
+        do j = 1,NY_L
+        do k = 1,KCLOUD
+            call qc_clouds_0d(i,j,k,clouds_3d(i,j,k))
+        enddo ! k
+        enddo ! j
+        enddo ! i
+
+        return
+        end
+
+        subroutine qc_clouds_0d(i,j,k,clouds_3d)
+
+        real*4 clouds_3d
+
+        if(clouds_3d .gt. 1.0001)then
+            write(6,*)' Error, clouds_3d > 1',i,j,k,clouds_3d
+            stop
+        elseif(clouds_3d .gt. 1.0)then
+            write(6,*)' Warning, clouds_3d > 1',i,j,k,clouds_3d
         endif
 
         return

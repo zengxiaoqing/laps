@@ -145,11 +145,7 @@ cdis
             l_39_clr_2d = .false.
 
             do k = 1,nk
-                if(clouds_3d(i,j,k) .gt. 1.0)then
-                    write(6,*)' Error, clouds_3d > 1'
-     1                       ,i,j,k,clouds_3d(i,j,k)
-                    stop
-                endif
+                call qc_clouds_0d(i,j,k,clouds_3d(i,j,k))
 
                 cloud_frac_in = clouds_3d(i,j,k)
 
