@@ -134,37 +134,42 @@ C
       units_len = len(units(1))
       asc_len = len(asctime)
 
-      ngrids = imax*jmax*kmax
+      ngrids = imax*jmax*kdim
+      n_cmprs_max = imax*jmax*kdim
       call runlength_encode(ngrids,n_cmprs_max,data           ! I
      1                     ,n_cmprs,array,istatus)            ! O
+      if(istatus .ne. 1)goto 950
+C
+C **** write out compressed file
+C
+      write(6,*) 'laps_dom_file= ',laps_dom_file
 
       lun = 65
       call open_lapsprd_file(lun,i4time,ext,istatus)
       if(istatus .ne. 1)goto 940
 
-      write(lun)((array(i,j),j=1,2),i=1,n_cmprs)
+      write(lun,*)kdim
+
+      do k = 1,kdim
+          write(lun,*)comment(k)
+      enddo ! k
+
+      write(lun,*)n_cmprs
+
+      icheck_sum = 0
+
+!     write(lun,*)((array(i,j),j=1,2),i=1,n_cmprs)
+      do i = 1,n_cmprs
+          write(lun,*)nint(array(i,1)),array(i,2)
+          icheck_sum = icheck_sum + nint(array(i,1))
+      enddo ! i
 
       close(lun)
-C
-C **** write out compressed file
-C
-      write(6,*) 'laps_dom_file= ',laps_dom_file
-      call write_cdf_v3 (file_name,ext,var,comment,asctime,
-     1                   cdl_path, static_path, laps_dom_file,
-     1                   ldf_len, fn_length,
-     1                   ext_len,var_len, 
-     1                   comm_len, asc_len, cdl_path_len, 
-     1                   stat_len, i_reftime, i_valtime,imax, 
-     1                   jmax, kmax, kdim, 
-     1                   lvl, data, pr, n_levels, cdl_levels,
-     1                   called_from,append, istatus) 
-C
-      if (istatus .gt. 0) goto 980
-      IF (istatus .eq. -2) goto 940
-      IF (istatus .eq. -3) goto 950
-      IF (istatus .eq. -4) goto 960
-      IF (istatus .eq. -5) goto 970
-      IF (istatus .eq. -6) goto 990
+
+      if(icheck_sum .ne. ngrids)then
+          write(6,*)icheck_sum, ngrids
+          go to 980
+      endif
 C
 C ****  Return normally.
 C
@@ -200,7 +205,7 @@ C
         GOTO 999
 C
 950     IF (FLAG .NE. 1)
-     1    write (6,*) 'Error in imax,jmax,or n_levels..write aborted'
+     1    write (6,*) 'Error in runlength_encode...write aborted'
         ISTATUS=ERROR(2)
         GOTO 999
 C
@@ -217,7 +222,7 @@ C
 C
 980     IF (FLAG .NE. 1)
      1    write (6,*) 
-     1 'Some grids not written....could not convert LAPS variables.'
+     1   'Checksum error with runlength encoding'
         ISTATUS=ERROR(2)
         GOTO 999
 C
