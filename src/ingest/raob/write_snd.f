@@ -22,8 +22,8 @@
 !.............................................................................
 
       integer iwmostanum(maxsnd),nlvl(maxsnd)
-      real stalat(maxsnd),stalon(maxsnd),staelev(maxsnd)
-      character c5_staid(maxsnd)*5,a9time_ob(maxsnd)*9
+      real stalat(maxsnd,maxlvl),stalon(maxsnd,maxlvl),staelev(maxsnd)       
+      character c5_staid(maxsnd)*5,a9time_ob(maxsnd,maxlvl)*9
      1         ,c8_obstype(maxsnd)*8,c_line*132
 
       real height_m(maxsnd,maxlvl)
@@ -41,13 +41,13 @@
 
         write(6,511,err=990)
      1             iwmostanum(isnd),nlvl(isnd)
-     1            ,stalat(isnd),stalon(isnd),staelev(isnd)
-     1            ,c5_staid(isnd),a9time_ob(isnd),c8_obstype(isnd)
+     1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
+     1            ,c5_staid(isnd),a9time_ob(isnd,1),c8_obstype(isnd)
 
         write(lun_out,511,err=990)
      1             iwmostanum(isnd),nlvl(isnd)
-     1            ,stalat(isnd),stalon(isnd),staelev(isnd)
-     1            ,c5_staid(isnd),a9time_ob(isnd),c8_obstype(isnd)
+     1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
+     1            ,c5_staid(isnd),a9time_ob(isnd,1),c8_obstype(isnd)
 
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
@@ -67,7 +67,8 @@
      1              ,temp_c(isnd,lvl)
      1              ,dewpoint_c(isnd,lvl)
      1              ,dir_deg(isnd,lvl),spd_mps(isnd,lvl)
-     1              ,a9time_ob(isnd),stalat(isnd),stalon(isnd)
+     1              ,a9time_ob(isnd,lvl)
+     1              ,stalat(isnd,lvl),stalon(isnd,lvl)
               write(6,521)c_line
           endif
 
