@@ -24,7 +24,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
 EXE = lq3driver.x
 
 SRC=analq.f            ghbry.f            lq3_driver1a.f     rsr.f \
-    climate_sm.f       glsp.f             sh2mr.f            tiros.f \
+    glsp.f             sh2mr.f            tiros.f \
     func.f             glst.f             lsin.f             slv_laplc.f \
     gen_bl_file.f      glstd.f            mak_cld_grid.f     smooth_grid2.f \
     get_laps_gp.f      goes_sbn.f         plotfield.f        weight_func.f \
