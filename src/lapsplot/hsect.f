@@ -4165,7 +4165,7 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
-        elseif(c_type .eq. 'mc')then
+        elseif(c_type(1:2) .eq. 'mc')then
             var_2d = 'MRC'
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -4178,19 +4178,21 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Mstr Flux Conv  (x 1e-4)     '
+            c33_label = 'Sfc Mstr Flux Conv  (x 1e-4 s-1) '
 
-            clow = -100.
-            chigh = +100.
-            cint = 5.
+            clow = -40.
+            chigh = +40.
+            cint = 10.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-4,clow,chigh,cint,
-     1            asc9_tim_t,namelist_parms,plot_parms
-     1               ,c33_label,i_overlay,c_display
-     1                                          ,lat,lon,jdot,
-     1            NX_L,NY_L,r_missing_data,laps_cycle_time)
+            scale = 1e-4
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,chigh,clow,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'spectralr')
 
         elseif(c_type .eq. 'ws')then ! surface wind
             ext = 'lsx'
@@ -4860,15 +4862,19 @@ c                   cint = -1.
 
             c33_label = 'Sfc Divergence  (x 1e-5 s-1)     '
 
+            chigh = +40.
+            clow = -40.
+            cint = 10.
+
             scale = 1e-5
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
-     1                           ,zoom,density,scale)
+!           call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+!    1                           ,zoom,density,scale)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
      1                        ,chigh,clow,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'linear')
+     1                        ,NX_L,NY_L,r_missing_data,'spectralr')
 
         elseif(c_type .eq. 'ha')then ! Theta Advection
             var_2d = 'THA'
