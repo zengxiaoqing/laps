@@ -138,6 +138,10 @@ c      if (sum/ii/jj .gt. 0.75) return ! return if not enough data
 c     now have fairly full data array.  now analyze
 
       call prep_grid (ii,jj,data_out,nn,points,ncount,istatus)
+      if (istatus == 0) then
+         write (6,*) 'error in prep_grid'
+         return
+      endif
       call slv_laplc (data_out,mask,ii,jj)
 
 c     prep the weighting array for the above analyzed sheet

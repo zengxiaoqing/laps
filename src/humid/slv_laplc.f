@@ -92,7 +92,7 @@ c
 
 c       print*, maxerror
 
-        if(typical_data.ne.0.0) then
+        if(typical_data > 1.e-9) then
            if (maxerror/typical_data.le. 1.e-3) go to 22
         else
            if (maxerror.le. 1.e-3) then

@@ -1072,11 +1072,11 @@ c     saturate in cloudy areas.
             do j = 1,jj
                do i = 1,ii
 
-c                  call cloud_sat (cg(i,j,k),sat(i,j,k),data(i,j,k))
+                  call cloud_sat (cg(i,j,k),qadjust(i,j,k),data(i,j,k))
 
-                  if(cg(i,j,k).ge.1.0) then ! saturate only in cloud areas
-                     data(i,j,k) = sat(i,j,k)
-                  endif
+c                  if(cg(i,j,k).ge.1.0) then ! saturate only in cloud areas
+c                     data(i,j,k) = sat(i,j,k)
+c                  endif
 
                enddo
             enddo

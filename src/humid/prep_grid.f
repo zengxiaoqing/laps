@@ -80,16 +80,20 @@ c     i perimeter set
                elseif (points(k,2) .ne. 0) then
                   
                   dist = sqrt( (i-points(k,2))**2+(j-points(k,3))**2)
-                  weight = 1./dist
-                  data(i,j) = data(i,j) + weight*points(k,1)
-                  weight_t = weight_t + weight
-                  
-                  
+                  if (dist > 1.e-9) then
+                     weight = 1./dist
+                     data(i,j) = data(i,j) + weight*points(k,1)
+                     weight_t = weight_t + weight
+                  else
+                     weight = 1.e9
+                     data(i,j) = data(i,j) + weight*points(k,1)
+                     weight_t = weight_t + weight
+                  endif
                endif
                
             enddo               !k
             
-            if(weight_t.ne.0.) then
+            if(weight_t > 1.e-9) then
                data(i,j) = data(i,j) / weight_t
             else
                write(6,*) 'error in divide'
@@ -102,7 +106,7 @@ c     i perimeter set
       
       
       if(weight_t.eq.0.) then 
-         istatus = 1
+         istatus = 0
          write(6,*) 'returning from prep_grid.f on istatus 0'
          return
       endif
@@ -126,16 +130,20 @@ c     j perimeter set
                elseif (points(k,2).ne.0) then
                   
                   dist = sqrt( (i-points(k,2))**2+(j-points(k,3))**2)
-                  weight = 1./dist
-                  data(i,j) = data(i,j) + weight*points(k,1)
-                  weight_t = weight_t + weight
-                  
-                  
+                  if (dist > 1.e-9) then
+                     weight = 1./dist
+                     data(i,j) = data(i,j) + weight*points(k,1)
+                     weight_t = weight_t + weight
+                  else
+                     weight = 1.e9
+                     data(i,j) = data(i,j) + weight*points(k,1)
+                     weight_t = weight_t + weight
+                  endif
                endif
                
             enddo               !k
             
-            if(weight_t.ne.0.) then
+            if(weight_t > 1.e-9) then
                data(i,j) = data(i,j) / weight_t
             else
                write (6,*) 'error in divide'
@@ -148,7 +156,7 @@ c     j perimeter set
       
       
       if(weight_t.eq.0.) then 
-         istatus = 1
+         istatus = 0
          write(6,*) 'returning from prep_grid.f on istatus 0'
          return
       endif
