@@ -4210,7 +4210,7 @@ c                   cint = -1.
 
             call s_len2(comment_2d,len_fcst)
             call s_len2(units_2d,len_units)
-            call s_len2(c_model,len_model)
+            call s_len(c_model,len_model)
 
             call upcase(c_model,c_model)
 
@@ -6307,14 +6307,15 @@ c             if(cint.eq.0.0)cint=0.1
         if(l_parse(ext,'lga') .or. l_parse(ext,'lgb'))go to 900 ! use LGA/LGB
 
 !       Get fdda_model_source from static file
-!       call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
+        call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
 
 !       call get_file_names(directory,n_fdda_models,c_fdda_mdl_src
 !    1                                             ,maxbgmodels,istatus)       
 
-        n_fdda_models = 2
-        c_fdda_mdl_src(1) = 'mm5'
-        c_fdda_mdl_src(2) = 'mm5hot'
+        n_fdda_models = n_fdda_models + 1
+        c_fdda_mdl_src(n_fdda_models) = 'mm5'
+        n_fdda_models = n_fdda_models + 1
+        c_fdda_mdl_src(n_fdda_models) = 'mm5hot'
 
         call s_len(directory,len_dir)
         cansw='n'
@@ -6332,7 +6333,9 @@ c             if(cint.eq.0.0)cint=0.1
 
         do l = 1,n_fdda_models
             call s_len(c_fdda_mdl_src(l),lfdda)
-            write(6,*)' ',c_fdda_mdl_src(l)(1:lfdda)
+            if(c_fdda_mdl_src(l)(1:lfdda) .ne. 'lga')then
+                write(6,*)' ',c_fdda_mdl_src(l)(1:lfdda)
+            endif
         enddo ! l
 
         call s_len(c_fdda_mdl_src(1),lfdda)
