@@ -115,7 +115,6 @@ c
 c*******************************************************************************
 c
         real*4          badflag
-        parameter       (badflag = -99.9)
 c
 c.....  Input arrays (for new format LSO)
 c
@@ -155,6 +154,8 @@ c
 c.....  Start here.  Set the status to nothing, zero out the cloud storage
 c.....  and character arrays.
 c
+        call get_sfc_badflag(badflag,istatus)
+
         istatus = 0
         ibadflag = int(badflag)
 c
@@ -243,5 +244,16 @@ c
         istatus = 1             ! everything's ok...
         print *, ' Normal completion of new READ_SURFACE_SA'
 c
+        return
+        end
+
+
+        subroutine get_sfc_badflag(badflag_out,istatus)
+
+        include 'laps_sfc.inc'
+
+        badflag_out = badflag
+
+        istatus = 1
         return
         end

@@ -31,16 +31,19 @@ cdis
 cdis
 c
 c
-        subroutine insert_sat(i4time,cldcv,cldcv_sao,cld_hts,rlat,rlon,
+        subroutine insert_sat(i4time,cldcv,
+     1  cldcv_sao,cld_hts,rlat,rlon,                                     ! I
      1  pct_req_lvd_s8a,default_clear_cover,                             ! I
-     1  i4_sat_window,i4_sat_window_offset,                              ! I
-     1  tb8_cold_k,tb8_k,grid_spacing_m,surface_sao_buffer,
+     1  tb8_k,istat_tb8,                                                 ! I
+     1  sst_k,istat_sst,                                                 ! I
+     1  tb8_cold_k,                                                      ! O
+     1  grid_spacing_m,surface_sao_buffer,                               ! I
 !    1  cloud_frac_vis_a,istat_vis,
      1  solar_alt,solar_ha,solar_dec,                                    ! I
      1  cloud_frac_co2_a,                                                ! O
      1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
-     1  t_gnd_k,sst_k,                                                   ! O
+     1  t_gnd_k,                                                         ! O
      1  cldtop_m_co2,cldtop_m_tb8,cldtop_m,                              ! O
      1  istatus)                                                         ! O
 c
@@ -66,7 +69,6 @@ c
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
         real*4 surface_sao_buffer
-!       parameter (surface_sao_buffer = 800.)
 
 !       Prevents adding cloud using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
@@ -102,6 +104,7 @@ c
         real*4 cldcv_sao(imax,jmax,kcld)       ! 3D Cloud cover array
         real*4 rlat(imax,jmax),rlon(imax,jmax)
         real*4 tb8_k(imax,jmax)
+        real*4 sst_k(imax,jmax)
         real*4 tb8_cold_k(imax,jmax)
         real*4 topo(imax,jmax)
         real*4 rlaps_land_frac(imax,jmax)
@@ -116,7 +119,6 @@ c
 
 !       Output
         real*4 t_gnd_k(imax,jmax)
-        real*4 sst_k(imax,jmax)
         real*4 cldtop_m(imax,jmax)
         real*4 cldtop_m_co2(imax,jmax)
         real*4 cldtop_m_tb8(imax,jmax)
@@ -175,14 +177,15 @@ c
 11          format(1x,2i3)
         enddo ! k
 
-        write(6,*)' Getting IR satellite data from LVD file'
-        ext = lvd_ext
-        var = 'S8A'
-        ilevel = 0
-        call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
-     1                     ,i4time_nearest,EXT,var,units
-     1                     ,comment,imax,jmax,tb8_k,ilevel,istatus)
-        if(istatus .ne. 1)then
+!       write(6,*)' Getting IR satellite data from LVD file'
+!       ext = lvd_ext
+!       var = 'S8A'
+!       ilevel = 0
+!       call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
+!   1                     ,i4time_nearest,EXT,var,units
+!   1                     ,comment,imax,jmax,tb8_k,ilevel,istatus)
+
+        if(istat_tb8 .ne. 1)then
             if(pct_req_lvd_s8a .gt. 0.)then
                 write(6,*)
      1              ' Error reading tb8_k - return from insert_sat'            
@@ -198,20 +201,12 @@ c
 
         endif
 
-!       Final QC check on band 8 (11.2 mm) brightness temps
-!       Hopefully, bad/missing  values were filtered out in the creation of LVD
-!       Any remaining bad/missing pixels will be evaluated in this QC check
+!       Calculate valid percentage
         icount = 0
         do j = 1,jmax
         do i = 1,imax
-            if(tb8_k(i,j) .lt. 173. .or. tb8_k(i,j) .gt. 350.)then
-                if(icount .le. 100)then
-                    write(6,*)' Bad LVD/S8A Satellite Brightness '       
-     1                       ,'Temperature of'
-     1                       ,tb8_k(i,j),' at',i,j
-                endif
+            if(tb8_k(i,j) .eq. r_missing_data)then
                 icount = icount + 1
-                tb8_k(i,j) = r_missing_data
             endif
         enddo
         enddo
@@ -253,16 +248,9 @@ c
 
 
 !       Calculate ground temperature
-        write(6,*)' Getting Sea Sfc Temps data from SST file'
-        ext = 'sst'
-        var = 'SST'
-        ilevel = 0
-        call get_laps_2dgrid(i4time,3600,i4time_nearest,EXT,var
-     1                ,units,comment,imax,jmax,sst_k,ilevel,istat_sst)       
         if(istat_sst .ne. 1)then
-            write(6,*)' Note: cannot read sst_k'
+            write(6,*)' Note: sst_k not available'
         endif
-
 
         do j = 1,jmax
         do i = 1,imax
@@ -372,8 +360,14 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
               if(cldcv(i,j,k) .gt. .04)then ! Efficiency test
 
 !               Find Temperature of this cloud grid point
-                z_temp = height_to_zcoord4(cld_hts(k),heights_3d,
+                if(.false.)then
+                    z_temp = height_to_zcoord4(cld_hts(k),heights_3d,
      1              zcoords_1d,krefs_1d(k),imax,jmax,klaps,i,j,istatus1)       
+                else
+                    z_temp = height_to_zcoord2(cld_hts(k),heights_3d,
+     1                                     imax,jmax,klaps,i,j,istatus1)       
+                endif
+
                 if(istatus1 .ne. 1)then
                     if(cld_hts(k) .gt. heights_3d(i,j,klaps))then
 !                       We cannot perform the cloud clearing when the cloud
@@ -381,7 +375,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
                         go to 500
                     else
                         write(6,*)
-     1                  ' Bad status returned from height_to_zcoord4'
+     1                   ' Error status returned from height_to_zcoord2'       
+     1                  ,k,klaps,cld_hts(k),heights_3d(i,j,klaps)
                         istatus = 0
                         return
                     endif

@@ -34,7 +34,7 @@ c
 
         subroutine get_sat_data(i4time,
      1  i4_sat_window,i4_sat_window_offset,                              ! I
-     1  imax,jmax,                                                       ! I
+     1  imax,jmax,r_missing_data,                                        ! I
      1  s8a_k,istat_s8a,                                                 ! O
      1  s3a_k,istat_s3a,                                                 ! O
      1  sst_k,istat_sst)                                                 ! O
@@ -50,7 +50,7 @@ c
         character*31 ext
         character var*3,comment*125,units*10
 
-        write(6,*)' Subroutine get_sat_data'
+        write(6,*)' Subroutine get_sat_data...'
 
         write(6,*)' Getting IR satellite data from LVD file'
         ext = lvd_ext

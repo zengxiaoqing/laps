@@ -640,7 +640,7 @@ C DO ANALYSIS on SAO and PIREP data
 
 C READ IN SATELLITE DATA
         call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,
-     1                    NX_L,NY_L,
+     1                    NX_L,NY_L,r_missing_data,
      1                    tb8_k,istat_tb8,
      1                    t39_k,istat_t39,
      1                    sst_k,istat_sst)
@@ -664,14 +664,16 @@ C READ IN SATELLITE DATA
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
-     1       i4_sat_window,i4_sat_window_offset,                        ! I
-     1       tb8_cold_k,tb8_k,grid_spacing_cen_m,surface_sao_buffer,
+     1       tb8_k,istat_tb8,                                           ! I
+     1       sst_k,istat_sst,                                           ! I
+     1       tb8_cold_k,                                                ! O
+     1       grid_spacing_cen_m,surface_sao_buffer,                     ! I
      1       solar_alt,solar_ha,solar_dec,                              ! I
      1       cloud_frac_co2_a,                                          ! O
      1       rlaps_land_frac,                                           ! I
      1       topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,               ! I
      1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,             ! I
-     1       t_gnd_k,sst_k,                                             ! O
+     1       t_gnd_k,                                                   ! O
      1       cldtop_m_co2,cldtop_m_tb8,cldtop_m,                        ! O
      1       istatus)                                                   ! O
 

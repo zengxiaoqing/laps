@@ -47,13 +47,7 @@ cdis
         call get_systime(i4time,a9_time,istatus)
         if(istatus .ne. 1)go to 999
 
-!      (-1) DUMMY PROCESS
-!       (0) Normal full Cloud Analysis
-!       (1) Calculate only main fields,
-!           derived fields were moved elsewhere
-!       (2) Reread data, then calc derived fields
-!           (for testing)
-!       (3) means derived prods only
+        write(6,*)' systime = ',a9_time
 
         isplit = 1
 

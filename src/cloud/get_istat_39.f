@@ -2,10 +2,11 @@
         subroutine get_istat_39(t39_k,tb8_k,solar_alt
      1                         ,r_missing_data,ni,nj,istat_39_a)
 
-!       This routine returns the status of cloud detection for each grid point.
-!       -1 = cloud is not present
+!       This routine returns the status of stratus cloud detection for each 
+!       grid point (containing liquid water).
+!       -1 = cloud is not present (of any kind)
 !        0 = indeterminate cloud existence
-!       +1 = cloud is present
+!       +1 = cloud is present (and is stratus)
 
 !       We think this works even with thin cloud scenarios that could cause
 !       an underestimation of cloud-top temperature when using 'tb8_k'.
@@ -37,10 +38,18 @@
      1                     .AND.
      1             solar_alt(i,j) .lt. 0.        )then
 
-                    if(tb8_k(i,j) - t39_k(i,j) .lt. -4.)then ! Sufficient diff
+                    if(t39_k(i,j) - tb8_k(i,j) .lt. -4.)then ! Sufficient diff
                         istat_39_a(i,j) = +1
+
+                        if(icount(1) .le. 20)then            ! Log output
+                            write(6,11)i,j,t39_c,tb8_c,t39_c-tb8_c
+ 11                         format(' Stratus present t39/tb8/df: '
+     1                            ,2i5,3f8.1)
+                        endif 
+
                     else                                     ! Insuff diff
                         istat_39_a(i,j) = -1
+
                     endif
 
                 else ! Sun above horizon or possibly cold cloud top: ambiguous
@@ -58,10 +67,8 @@
         enddo 
         enddo
 
-        do ic = -1,+1
-            write(6,*)' status value / number of grid points ',ic
-     1               ,icount(ic)
-        enddo ! ic
+        write(6,12)icount(-1),icount(0),icount(+1)
+ 12     format('  3.9u cloud mask status vals [-1,0,+1] =',3i8)       
 
         return
         end 
@@ -102,7 +109,7 @@
                     istat_39_lwc_a(i,j) = +1
 
                 elseif(solar_alt(i,j) .lt. 0.        )then
-                    if(tb8_k(i,j) - t39_k(i,j) .lt. -4.)then ! Sufficient diff
+                    if(t39_k(i,j) - tb8_k(i,j) .lt. -4.)then ! Sufficient diff
                         istat_39_lwc_a(i,j) = +1
                     else                                     ! Insuff diff
                         istat_39_lwc_a(i,j) = -1
@@ -118,15 +125,14 @@
 
             endif
 
-            icount(istat_39_lwc_a(i,j)) = icount(istat_39(i,j)) + 1       
+            icount(istat_39_lwc_a(i,j)) = 
+     1      icount(istat_39_lwc_a(i,j)) + 1       
 
         enddo 
         enddo
 
-        do ic = -1,+1
-            write(6,*)' status value / number of grid points ',ic
-     1               ,icount(ic)
-        enddo ! ic
+        write(6,12)icount(-1),icount(0),icount(+1)
+ 12     format('  3.9u cloud lwc status vals [-1,0,+1] =',3i8)       
 
         return
         end 
