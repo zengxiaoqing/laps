@@ -64,8 +64,7 @@
             call get_modelfg_3d(i4time_lapswind-ilaps_cycle_time      
      1          ,var_2d,NX_L,NY_L,NZ_L
      1          ,u_mdl_prev,istatus)
-            call qc_field_3d(var_2d,u_mdl_prev,NX_L,NY_L,NZ_L,istat_qc)       
-            if(istatus .ne. 1 .or. istat_qc .ne. 1)then
+            if(istatus .ne. 1)then
                 write(6,*)' Aborting from LAPS Wind Anal'
      1                   ,' - Error reading MODEL Wind'
                 return
@@ -80,8 +79,7 @@
             call get_modelfg_3d(i4time_lapswind-ilaps_cycle_time
      1          ,var_2d,NX_L,NY_L,NZ_L
      1          ,v_mdl_prev,istatus)
-            call qc_field_3d(var_2d,v_mdl_prev,NX_L,NY_L,NZ_L,istat_qc)       
-            if(istatus .ne. 1 .or. istat_qc .ne. 1)then
+            if(istatus .ne. 1)then
                 write(6,*)' Aborting from LAPS Wind Anal'
      1                   ,' - Error reading MODEL Wind'
                 return
@@ -95,8 +93,7 @@
             l_fill = .true.
             call get_modelfg_3d(i4time_lapswind,var_2d,NX_L,NY_L,NZ_L
      1          ,u_mdl_curr,istatus)
-            call qc_field_3d(var_2d,u_mdl_curr,NX_L,NY_L,NZ_L,istat_qc)       
-            if(istatus .ne. 1 .or. istat_qc .ne. 1)then
+            if(istatus .ne. 1)then
                 write(6,*)' Aborting from LAPS Wind Anal'
      1                   ,' - Error reading MODEL Wind'
                 return
@@ -110,8 +107,7 @@
             l_fill = .true.
             call get_modelfg_3d(i4time_lapswind,var_2d,NX_L,NY_L,NZ_L
      1               ,v_mdl_curr,istatus)
-            call qc_field_3d(var_2d,v_mdl_curr,NX_L,NY_L,NZ_L,istat_qc)       
-            if(istatus .ne. 1 .or. istat_qc .ne. 1)then
+            if(istatus .ne. 1)then
                 write(6,*)' Aborting from LAPS Wind Anal'
      1                   ,' - Error reading MODEL Wind'
                 return
@@ -218,37 +214,3 @@
         return
         end
 
-
-
-      subroutine qc_field_3d(var_2d,field_3d,ni,nj,nk,istatus)
-
-      character(*) var_2d
-
-      real*4 field_3d(ni,nj,nk)
-
-      if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
-          abs_thresh = 200.
-      elseif(var_2d .eq. 'T3')then
-          abs_thresh = 400.
-      else
-          abs_thresh = 1e10
-      endif
-
-      do k=1,nk
-      do j=1,nj
-      do i=1,ni
-          if(abs(field_3d(i,j,k)) .gt. abs_thresh)then
-              write(6,*)' QC Error detected in ',var_2d,' at ',i,j,k
-              write(6,*)' Absolute value exceeded threshold of '
-     1                 ,abs_thresh,', value = ',field_3d(i,j,k)       
-              istatus = 0
-              return
-          endif
-      enddo ! i
-      enddo ! j
-      enddo ! k
-
-      istatus = 1
-  
-      return
-      end 

@@ -54,10 +54,8 @@ cdis
 !       Jan 1996               - Now will handle 9 or 13 character versions
 !                                of lga filenames
 !       Feb 1997               - Added entry get_modelfg_3d.
-
-        include 'lapsparms.inc'
 !
-!      These three fields are no longer used and scheduled for removal
+!       These three fields are no longer used and scheduled for removal
 !
         real*4 field_3d_maps(1)     ! Local Dummy array
         real*4 field_3d_maps_1(1)   ! Local Dummy array
@@ -88,9 +86,6 @@ cdis
 
 !       1) No time interpolation is performed
 !       2) RAM/LGA file must be available valid at i4time/i4time_needed
-
-        
-        print*, imax,jmax,kmax,NX_L_CMN,NY_L_CMN,nk_laps
 
         i4time_needed = i4time
 
@@ -146,8 +141,8 @@ cdis
             enddo ! i
 
 
-            if(i_best_file .gt. 0)then
-
+            if(i_best_file .gt. 0)then ! File for this ext exists with proper
+                                       ! valid time.
                 i = i_best_file
                 a_filename = c_fnames(i)(lend+1:lenf)
 
@@ -175,7 +170,9 @@ cdis
 
                 if(istatus .ne. 1)then
                     write(6,*)'get_maps_laps_4d: Error reading 3-D file'
-                    return
+                else ! istatus = 1
+                    call qc_field_3d(var_2d,field_3d_laps
+     1                              ,imax,jmax,kmax,istatus)            
                 endif
 
             else ! i_best_file = 0
@@ -188,17 +185,17 @@ cdis
                 write(6,*)' Successfully obtained: '
      1                             ,c_fnames(i)(lend+1:lenf),' '
      1                             ,ext(1:6),var_2d
-                write(6,*)' Exiting get_maps_laps_4d (the new way)'
+                write(6,*)' Exiting get_modelfg_3d'
                 write(6,*)
                 return
             else
-                write(6,*)' No ',ext_a(1:6),' files available.'
+                write(6,*)' No good ',ext_a(1:6),' files available.'          
             endif
 
         enddo ! isource
 
         write(6,*)
-        write(6,*)' No Files: exiting get_maps_laps_4d'
+        write(6,*)' No Good Files: exiting get_maps_laps_4d'
 
         istatus = 0
         return
