@@ -98,6 +98,8 @@ c       character*80 c80_domain_file
         character*40 c_vars_req
         character*180 c_values_req
 
+        logical l_reset
+
         ISTAT = INIT_TIMER()
 
         write(6,*)
@@ -274,34 +276,50 @@ c read in laps lat/lon and topo
 
         endif
 
+        i4_beg_gmt = i4time_beg - ((i4time_beg/86400)*86400) 
 
-!       Add current hour snow accumulation to storm total
-        if(istatus_inc .eq. 1 .and. istatus_tot .eq. 1
-     1                        .and. i_suff_pcp  .eq. 1)then
-            write(6,*)' Adding latest increment for new Storm Total '
-     1               ,'Accumulation'
-            call add_miss(snow_2d,  snow_2d_tot,  snow_2d_tot  
-     1                   ,NX_L,NY_L)     
-            call add_miss(precip_2d,precip_2d_tot,precip_2d_tot
-     1                   ,NX_L,NY_L)
+!       Reset at 1200 GMT
+        if(i4_beg_gmt .eq. 12*3600)then
+            l_reset = .true.
+        else
+            l_reset = .false.
+        endif
 
-        elseif(istatus_inc .eq. 1)then
-            write(6,*)' Resetting Storm Total Accumulations to '
-     1               ,minutes,' min values'
+!       if(i_suff_pcp .eq. 1)then ! old method
+!           l_reset = .false.
+!       else
+!           l_reset = .true.
+!       endif
 
-!           Put the new reset time in the file header
-            call make_fnam_lp(i4time-ilaps_cycle_time,filename,istatus)
-            comment_s = filename//
-     1                  ' Time that storm total snow begins at.'
-            comment_r = filename//
-     1                  ' Time that storm total precip begins at.'
-
-            call move(snow_2d  ,snow_2d_tot  ,NX_L,NY_L)
-            call move(precip_2d,precip_2d_tot,NX_L,NY_L)
-
-        endif ! Valid continuation of storm total
+        write(6,*)' l_reset = ',l_reset
 
         if(istatus_inc .eq. 1)then
+!           Add current hour precip/snow accumulation to storm total
+            if(istatus_tot .eq. 1 .and. (.not. l_reset) )then
+                write(6,*)' Adding latest increment for new Storm Total'      
+     1                   ,' Accumulation'
+                call add_miss(snow_2d,  snow_2d_tot,  snow_2d_tot  
+     1                       ,NX_L,NY_L)     
+                call add_miss(precip_2d,precip_2d_tot,precip_2d_tot
+     1                       ,NX_L,NY_L)
+
+            else ! reset storm total
+                write(6,*)' Resetting Storm Total Accumulations to '
+     1                   ,minutes,' min values'
+
+!               Put the new reset time in the file header
+                call make_fnam_lp(i4time-ilaps_cycle_time,filename
+     1                           ,istatus)
+                comment_s = filename//
+     1                      ' Time that storm total snow begins at.'
+                comment_r = filename//
+     1                      ' Time that storm total precip begins at.'       
+
+                call move(snow_2d  ,snow_2d_tot  ,NX_L,NY_L)
+                call move(precip_2d,precip_2d_tot,NX_L,NY_L)
+
+            endif ! Valid continuation of storm total
+
             write(6,*)' Writing Incr / Storm Total Accumulations'
             write(6,*)comment_r(1:80)
             write(6,*)comment_s(1:80)
