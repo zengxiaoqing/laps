@@ -335,21 +335,27 @@ c
      &       istatus)
 	endif
 c
-	if(istatus.ne.1 .or. n_obs_b.eq.0) then	  !surface obs not available
-	  jstatus(1) = 0
-	  stop 'No surface obs available'
-	endif
+        if(istatus .ne. 1 .and. istatus .ne. -1)then
+            write(6,*)' bad istatus from read_surface_data..',istatus       
+            stop
+        endif
+
+!	if(istatus.ne.1 .or. n_obs_b.eq.0) then	  !surface obs not available
+!	  jstatus(1) = 0
+!	  stop 'No surface obs available'
+!	endif
 c
 	print *,' '
 	write(6,320) use,atime_s,n_obs_g,n_obs_b
 320	format(1x,a6,' data vaild time: ',a24,' Num obs: ',2i6)
 c
-	if(n_obs_b .lt. 1) then
-	   jstatus(1) = -2
-	   print *,' Insufficient number of surface observations'
-	   print *,' for a clean analysis.  Stopping.'
-	   stop 
-	endif
+!	if(n_obs_b .lt. 1) then
+!	   jstatus(1) = -2
+!	   print *,' Insufficient number of surface observations'
+!	   print *,' for a clean analysis.  Stopping.'
+!	   stop 
+!	endif
+
 	print *,' '
 c
 c.....  Copy 3 characters of the station name to another array for use

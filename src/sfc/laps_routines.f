@@ -1418,7 +1418,8 @@ c
  210	   call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
      &        var(2),lvl_in,lvlc,units,comment,bkg_field,istatus)
   	   if(istatus .ne. 1) then
-	      print *,' ERROR reading LGB file at ', filename13
+	      print *,' LGB field ',var(2),' not available at '
+     1               , filename13
 	      ilgb_bk = 0
 	      go to 300
 	   endif

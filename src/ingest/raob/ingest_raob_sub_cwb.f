@@ -6,9 +6,9 @@
       parameter ( loopNum=20, levelNum=100 )
 
       character*(*)  filename
-      character*9    a9time(loopNum), a10_to_a9
       character*3    reportFlag
       character*2    yy, mo, dd, hh, mn, flag
+      character*9    a9time(loopNum), a9timeDummy, a10_to_a9
       character*10   time
 
       real  lat_a(nx_l,ny_l), lon_a(nx_l,ny_l), topo_a(nx_l,ny_l)
@@ -108,8 +108,8 @@ c               ------ creat a9time in yydddhhmm format ------
          call i2a ( m2, mn )
 
          time= yy//mo//dd//hh//mn
-         a9time(i)= a10_to_a9(time,istatus)
-         call cv_asc_i4time( a9time(i), i4time_raob )
+         a9timeDummy= a10_to_a9(time,istatus)
+         call cv_asc_i4time( a9timeDummy, i4time_raob )
 
 c          ----------    test if raob is within time window    ----------
          if ( i4time_raob .ne. 0 ) then    
@@ -125,6 +125,7 @@ c          ----------    test if raob is within time window    ----------
 	       elevation(inNum)= elevationDummy
 	       latitude(inNum)= latitudeDummy
 	       longitude(inNum)= longitudeDummy
+	       a9time(inNum)= a9timeDummy
 
                layerNum(inNum)= logicRecNum -2
                do j= 1,layerNum(inNum)
@@ -176,10 +177,10 @@ c          ----------    test if raob is within time window    ----------
 50       recNum= recNum +1
       enddo
 
-c      ----------       examing data quality and changing units       ---------
+c      ----------     examing data quality and changing units     ---------    
+c      when elevation is missing, return -999. without change for the sake of 
+c      format f15.0 in snd files
 99    do 100 i= 1,inNum
-         if ( elevation(i) .eq. -999. )  elevation(i)= r_missing_data
-
       do 100 j= 1,layerNum(i)
 
          if ( pressure(i,j) .eq. -999. )  pressure(i,j)= r_missing_data
@@ -199,22 +200,17 @@ c      ----------       examing data quality and changing units       ---------
 100   continue
 
       do 900 i= 1,inNum
-!        write (11,*) wmoId(i), elevation(i), latitude(i), longitude(i),
-!    ~                a9time(i), layerNum(i)
-
-         write(11,511)
-     1             wmoId(i),layerNum(i)
-     1            ,latitude(i),longitude(i),elevation(i)
-     1            ,'     '             ! Station name (if known)       
-     1            ,a9time(i),'RAOB'
-  511    format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
+	 write(11,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
+     ~                 elevation(i), '     ', a9time(i), 'RAOB'
+895      format (i12, i12, f11.4, f15.4, f15.0, 1x, a5, 3x, a9, 1x, a8)
 
          do 900 j= 1,layerNum(i)
             write (11,*) height(i,j), pressure(i,j), temperature(i,j),
      ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
 900   continue
 
-      write (6,*) ' found', inNum, 'stations within time window in',       
+      write (6,*) ' found', inNum, 
+     ~            'stations available within time window in',
      ~            recNum, 'raob stations'
 
 1000  return

@@ -222,7 +222,7 @@ c  first guess here
 1002	format(1x,'OVR RLXTN CONST AT FNL ITTR = ',e10.4)
 1001	format(1x,'ITERATIONS= ',i4,' MAX RESIDUAL= ',e10.3,
      & ' MAX CORRECTION= ',e10.3, ' FIRST ITER MAX COR= ',e10.3,
-     & 'MAX BNDRY ERROR= ',e10.3)
+     & 'MAX BNDRY RESID= ',e10.3)
 c
 	return
 	end
@@ -441,18 +441,14 @@ c
         elseif(analysis_mode .eq. 2)then
             write(6,*)' Calling barnes_multivariate_sfc to start spline'       
 
-            call get_fnorm_max(ni,nj,r0_norm,r0_value_min,fnorm_max)
+            call get_fnorm_max(imax,jmax,r0_norm,r0_value_min,fnorm_max)   
             n_fnorm = int(fnorm_max) + 1
 
             rms_thresh_norm  = 1.0  ! a la wind.nl
             weight_bkg_const = 5e28 ! a la wind.nl
 
-            call get_grid_spacing(grid_spacing_m,istatus)
-            if(istatus .ne. 1)stop
-
             call barnes_multivariate_sfc(to,imax,jmax               ! Inputs
      1                                    ,smsng                    ! Input
-     1                                    ,grid_spacing_m           ! Input
      1                                    ,max_snd                  ! Input
      1                                    ,rms_thresh_norm          ! Input
      1                                    ,weight_bkg_const         ! Input
@@ -580,7 +576,8 @@ c
 	enddo !j
 c
  6	write(6,1000) ithold ,corhold !it, cormax
- 1000	format(1x,i4,e12.4)
+ 1000	format(1x,' it/cormax= ',i4,e12.4)
+
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
 	   write(9,923)
  923	   format(1x,' solution after spline')

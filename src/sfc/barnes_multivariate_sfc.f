@@ -1,7 +1,6 @@
 
-        subroutine barnes_multivariate_sfc(to_2d,ni,nj           ! Inputs
+        subroutine barnes_multivariate_sfc(to_2d_in,ni,nj        ! Inputs
      1                   ,r_missing_data                         ! Input
-     1                   ,grid_spacing_m                         ! Input
      1                   ,max_snd                                ! Input
      1                   ,rms_thresh_norm                        ! Input
      1                   ,weight_bkg_const                       ! Input
@@ -14,6 +13,7 @@
         parameter (nk=1)
 
         real*4 t_2d(ni,nj)                              ! Analyzed field
+        real*4 to_2d_in(ni,nj)                          ! Observations
         real*4 to_2d(ni,nj)                             ! Observations
 
         logical l_struct
@@ -33,6 +33,11 @@
 
         write(6,*)' Subroutine Barnes_univariate_sfc'
 
+        ISTAT = INIT_TIMER()
+
+        call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
+        if(istatus .ne. 1)stop
+
         l_analyze = .false.             ! array set
         wt_2d = 0.                      ! array set
 
@@ -43,10 +48,13 @@
             
         do i = 1,ni
         do j = 1,nj
-            if(to_2d(i,j) .ne. 0.0)then
+            if(to_2d_in(i,j) .ne. 0.0)then
                 wt_2d(i,j) = 1.0
                 sumsq_inst = sumsq_inst + 1./wt_2d(i,j)
                 n_obs_valid = n_obs_valid + 1
+                to_2d(i,j) = to_2d_in(i,j)
+            else
+                to_2d(i,j) = r_missing_data
             endif
         enddo ! j
         enddo ! i
@@ -65,13 +73,14 @@
         write(6,*)'rms_thresh_norm,rms_thresh'
      1            ,rms_thresh_norm,rms_thresh      
 
-        l_3d = .true. ! Use successive correction even though it's 2D
+        l_3d = .true.          ! Use successive correction even though it's 2D
         n_var = 1
+        rep_pres_intvl = 5000. ! Hardwire should work for a 2-D analysis
 
         call barnes_multivariate(
      1                      t_2d                            ! Outputs
      1                     ,n_var                           ! Input
-     1                     ,ni,nj,nk,grid_spacing_m         ! Inputs
+     1                     ,ni,nj,nk,grid_spacing_cen_m     ! Inputs
      1                     ,rep_pres_intvl                  ! Input
      1                     ,to_2d,wt_2d,fnorm,n_fnorm       ! Inputs
      1                     ,l_analyze,l_3d,rms_thresh       ! Input
@@ -80,3 +89,4 @@
 
         return
         end
+
