@@ -26,7 +26,7 @@ use vars qw($opt_d $opt_c $opt_r $opt_m);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:');
+getopts('d:c:rm:');
 
 
 my $initial_time = time();
