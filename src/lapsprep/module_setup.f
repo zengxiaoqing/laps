@@ -48,10 +48,10 @@ MODULE setup
 
    ! Namelist items
 
-   LOGICAL            :: hotstart,balance,adjust_rh
+   LOGICAL            :: hotstart,balance
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
-   REAL               :: snow_thresh, lwc_scale
+   REAL               :: snow_thresh, lwc2vapor_thresh
    CHARACTER (LEN=256):: output_prefix
   
   !  Output file info.
@@ -68,8 +68,8 @@ MODULE setup
    INTEGER , PARAMETER :: num_ext = 8
    CHARACTER(LEN=3),DIMENSION(num_ext) :: ext = (/ 'lt1' , 'lw3' , &
                                                    'lh3' , 'lsx',  &
-                                                   'lsx' , 'lwc',  &
-                                                   'lq3' , 'lm2' /)
+                                                   'lsx' , 'lq3',  &
+                                                   'lwc' , 'lm2' /)
 
    CHARACTER(LEN=3),DIMENSION(5,num_ext) :: cdf_var_name = RESHAPE ( &
                            (/ 'ht ' , 't3 ' , 'xxx' , 'xxx' , 'xxx' , & 
@@ -77,12 +77,12 @@ MODULE setup
                               'rhl' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
                               'u  ' , 'v  ' , 't  ' , 'rh ' , 'tgd' , &
                               'ps ',  'msl' , 'mr ' , 'vv ' , 'xxx' , &
-                              'lwc' , 'rai' , 'sno' , 'pic' , 'ice' , &
                               'sh ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
+                              'lwc' , 'rai' , 'sno' , 'pic' , 'ice' , &
                               'sc ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' /) , &
                                                (/ 5 , num_ext /) )
 
-   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,3,1,5,4,5,1,1/) 
+   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,3,1,5,4,1,5,1/) 
 
 CONTAINS
 
@@ -94,19 +94,17 @@ CONTAINS
 
       NAMELIST /lapsprep_nl/ hotstart      , &
                          balance           , &
-                         adjust_rh         , &
                          output_format     , &
                          snow_thresh       , &
-                         lwc_scale 
+                         lwc2vapor_thresh
 
       nml_unit = 77
 
       output_format(:) = '    '
       ! Set namelist defaults
       balance = .false.
-      adjust_rh = .false.
       snow_thresh = 0.5
-      lwc_scale = 1.0
+      lwc2vapor_thresh = 1.1
  
       ! Open the namelist
 

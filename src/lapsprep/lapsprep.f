@@ -97,7 +97,9 @@
                                         
     INTEGER :: out_loop, loop , var_loop , i, j, k, istatus
     LOGICAL :: file_present
-
+    REAL    :: rhmod, lwcmod, shmod
+    REAL    :: rhadj
+    
     ! Beginning of code
  
     ! Check for command line argument containing LAPS valid time
@@ -164,16 +166,9 @@
             TRIM(ext(loop))
       ELSE
         IF (balance) THEN
-          IF ( ( (TRIM(ext(loop)) .EQ. 'lh3').AND.(adjust_rh) ).OR. &
-               (TRIM(ext(loop)) .NE. 'lh3') )THEN
-            input_laps_file = TRIM(laps_data_root) //'/lapsprd/balance/' // &
-            TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
-            TRIM(ext(loop))
-          ELSE
-            input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
-              TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
-              TRIM(ext(loop))
-          ENDIF
+          input_laps_file = TRIM(laps_data_root) //'/lapsprd/balance/' // &
+          TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
+          TRIM(ext(loop))
         ELSE
           input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
               TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
@@ -250,7 +245,7 @@
         ! to mixing ratio values 
         ALLOCATE ( rho ( x , y , z3 ) )
         ALLOCATE ( virtual_t ( x , y , z3 ) )
-        ALLOCATE ( sh ( x , y , z ) )
+        ALLOCATE ( sh ( x , y , z3 ) )
         ALLOCATE ( mr ( x , y , z3+1 ) )
 
         ! Initialize the non-mandatory values
@@ -460,27 +455,49 @@
         rho(:,:,k) = p(k)*100. / (rdry * virtual_t(:,:,k))
       ENDDO
 
-      ! Convert 3d omega from Pa/s to m/s, or fill with sfc value if missing.
-
-      do k=1,z3
-      do j=1,y
-      do i=1,x
-        if (w(i,j,k) .eq. 1.e-30 .or. abs(w(i,j,k)) .gt. 100.) then
-          w(i,j,k)=w(i,j,z3+1)
-        else
-          w(i,j,k)=-w(i,j,k)/(rho(i,j,k)*g)
-        endif
-      enddo
-      enddo
-      enddo
-
       ! For each of the species, ensure they are not "missing".  If missing
       ! then set their values to 0.000.  Otherwise, divide by the density to 
       ! convert from concentration to mixing ratio.
 
       IF (MAXVAL(lwc) .LT. 99999.) THEN
         lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
-        lwc = lwc*lwc_scale  
+        IF (lwc2vapor_thresh .GT. 0.) THEN
+          DO k=1,z3
+            DO j=1,y
+              DO i=1,x  
+                IF (lwc(i,j,k).GT.0.) THEN
+                  CALL lwc2vapor(lwc(i,j,k),sh(i,j,k),t(i,j,k), &
+                                 p(k),lwc2vapor_thresh, &
+                                 lwcmod,shmod,rhmod)
+
+                  ! Update moisture arrays
+
+                  rhadj = rhmod-rh(i,j,k)
+                  if (rhadj .lt. 0.) then
+                    print *, 'WARNING:  Bad Cloud RH adjustment'
+                    print *, '  LWC/SH/RH: ', lwc(i,j,k),sh(i,j,k),rh(i,j,k)
+                    print *, '  MODIFIED:  ', lwcmod, shmod, rhmod
+                  endif
+                  if ((rhmod .LT. lwc2vapor_thresh*100.).and.(lwcmod>0.)) then 
+                    print *, 'WARNING: Cloud water in non-saturated box...'
+                    print *, '  lwcmod = ',lwcmod
+                    print *, '  rhmod  = ', rhmod
+                  endif
+                  lwc(i,j,k) = lwcmod
+                  sh(i,j,k) = shmod
+                  rh(i,j,k) = rhmod
+                  mr(i,j,k) = shmod/(1.-shmod)
+
+                  ! Recompute Tv and Rho for this point
+
+                  virtual_t(i,j,k) = ( 1. + 0.61*mr(i,j,k))*t(i,j,k)
+                  rho(i,j,k) =  p(k)*100. / (rdry * virtual_t(i,j,k))
+
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDIF
       ELSE
         PRINT *,'Cloud Liquid (lwc/lwc) appears to be missing, setting values to 0.0'
         lwc(:,:,:) = 0.0
@@ -513,6 +530,21 @@
         PRINT *, 'P. Ice (lwc/pic) appears to be missing, setting values to 0.0' 
         pic(:,:,:) = 0.0
       ENDIF
+
+      ! Convert 3d omega from Pa/s to m/s, or fill with sfc value if missing.
+
+      do k=1,z3
+      do j=1,y
+      do i=1,x
+        if (w(i,j,k) .eq. 1.e-30 .or. abs(w(i,j,k)) .gt. 100.) then
+          w(i,j,k)=w(i,j,z3+1)
+        else
+          w(i,j,k)=-w(i,j,k)/(rho(i,j,k)*g)
+        endif
+      enddo
+      enddo
+      enddo
+
 
     ENDIF
 
