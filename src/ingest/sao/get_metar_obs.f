@@ -493,8 +493,8 @@ c
                       i_reject = k
                    endif
 
-                   write(6,*)' Dupe METAR at ',stname(i),timech
-     1                                        ,k,i,i_reject
+                   write(6,*)' Dupe METAR at ',stname(i),timech,i,k
+     1                                        ,i_diff,k_diff,i_reject      
 
                 endif
 	     enddo ! k
@@ -504,15 +504,28 @@ c
 c
           endif
 
-  	  nn = nn + 1
+          if(i_reject .ne. i)then ! normal situation
+  	     nn = nn + 1
 
-          np = nn ! this can be set differently depending on i_reject
+             np = nn ! this can be set differently depending on i_reject
+          else                    ! multiple station rpt (at different time)
+             np = k
+             write(6,*)' Backfill METAR at closer time',i,k,np,stname(i)       
+          endif
 
           if(np .gt. maxsta)then
               write(6,*)' ERROR in get_metar_obs: increase maxsta '
      1                 ,np,maxsta
               stop
           endif
+
+          call init_station(np
+     1                      ,stations,provider,weather,reptype,atype      
+     1                      ,store_1,store_2,store_3,store_4,store_5
+     1                      ,store_6,store_7
+     1                      ,store_2ea,store_3ea,store_4ea,store_5ea
+     1                      ,store_6ea,dpchar,wmoid
+     1                      ,store_cldht,store_cldamt,maxsta,badflag)
 
 	  n_sao_b = n_sao_b + 1	!station is in the box
 c
