@@ -1374,7 +1374,7 @@ April 1996
    If you don't find the answer in these documents, send mail to 
    laps-bugs@fsl.noaa.gov   Include in your mail:
 <pre>
-   The version of LAPS (hopefully this is the latest one?)
+   LAPS version number (hopefully you're using the latest version?)
    The type of system (often, uname -a)
    The system limits (ulimit -a)
    The applicable compiler versions (often a -v or -V option to the compiler)
