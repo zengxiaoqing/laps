@@ -6,6 +6,7 @@
  time_zone=0.,
  c_vnt_units='KT-FT',
  c_units_type='english',
+ c_pbl_depth_units='metric',
  l_discrete=.false.,
  /
 
@@ -27,6 +28,8 @@ c c_vnt_units - units for use in Ventilation Index (valid values are
 c               'KT-FT' or 'default')
 c
 c c_units_type - default type of units ('english' or 'metric')
+c
+c c_pbl_depth_units - PBL depth units ('english' or 'metric')
 c
 c l_discrete - default type of image colortable, '.false.' means more
 c              continuous colors, '.true.' means fewer more discrete colors
