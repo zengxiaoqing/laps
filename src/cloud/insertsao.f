@@ -92,8 +92,7 @@ c
         Integer*4   n_cloud_layers_ret(maxstns)
         Integer*4   obstime(maxstns)
 c
-        Character   infile*170,atime*24 
-     1             ,obstype(maxstns)*6,atype(maxstns)*6
+        Character   obstype(maxstns)*6,atype(maxstns)*6
      1             ,wx(maxstns)*8
         character   amt_ret(maxstns,5)*4
 
@@ -141,12 +140,9 @@ c
 
 10      write(6,*)' Calling SAO ingest routine'
 
-        call cv_i4tim_asc_lp(i4time_database,atime,istatus)
-
 !       Access SAO data from LSO files
-        infile = c150_filename
-        call read_surface_sa(infile,maxstns,atime,                 ! I
-     1   n_obs_g,n_obs_b,c_stations,obstype,atype,                 ! O
+        call read_surface_sa(i4time_database,maxstns,              ! I
+     1   n_obs_b,c_stations,obstype,atype,                         ! O
      1   lat_sta_ret,lon_sta_ret,elev,wx,t,td,                     ! O
      1   n_cloud_layers_ret,amt_ret,ht_base_ret,                   ! O
      1   obstime,istatus)                                          ! O
@@ -162,7 +158,7 @@ c
             return
         endif
 
-        write(6,*)' # of obs (grid/box) = ',n_obs_g,n_obs_b
+        write(6,*)' # of obs (box) = ',n_obs_b
 
         write(6,*)' Now we are looping to insert the stations'
 
