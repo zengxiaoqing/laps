@@ -75,6 +75,12 @@ c     compute the fraction of data_out that is empty
          enddo
       enddo
 
+      if(ncount.eq.0) then      !abort gvap here
+         write(6,*) 'No GVAP data avail to process... abort'
+         istatus = 0
+         return
+      endif
+
       write (6,*) ncount, ' out of ', n, ' total avial data used'
       write (6,*) 'gvap field fraction empty = ', sum/ii/jj
 

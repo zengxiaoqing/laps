@@ -53,6 +53,10 @@ c     volitile arrays
       call analz_gvap (lat,lon,wt,nn,glat,glon,data_out,
      1     data_weights,ii,jj,istatus)
 
+      if(istatus.ne.1) then ! failure to get data
+         return
+      endif
+
       if(istatus.eq.1) then ! data_out can be used to normalize field
 c     note that the 0.1 factor is to convert mm (gvap) to cm (tpw).
          do i   = 1,ii
