@@ -18,10 +18,38 @@ netcdf lfr {
             vnt:_FillValue = 1.e+37f;
             vnt:long_name="ventilation index";
             vnt:units="meters**2 / second";
-            vnt:valid_range= 0.f, 10000.f;
+            vnt:valid_range= 0.f, 100000.f;
             vnt:LAPS_var="VNT";
-            vnt:lvl_coord="MSL ";
+            vnt:lvl_coord="NONE";
 	    vnt:LAPS_units="M**2/S";
+                	        
+        //	boundary layer mean u component
+
+	float                                  
+            upb(record,z,y,x);
+            upb:navigation_dim = "nav";
+            upb:record = "valtime, reftime";
+            upb:_FillValue = 1.e+37f;
+            upb:long_name="boundary layer mean u component";
+            upb:units="meters / second";
+            upb:valid_range= -200.f, 200.f;
+            upb:LAPS_var="UPB";
+            upb:lvl_coord="NONE";
+	    upb:LAPS_units="M/S";
+                	        
+        //	boundary layer mean v component
+
+	float                                  
+            vpb(record,z,y,x);
+            vpb:navigation_dim = "nav";
+            vpb:record = "valtime, reftime";
+            vpb:_FillValue = 1.e+37f;
+            vpb:long_name="boundary layer mean v component";
+            vpb:units="meters / second";
+            vpb:valid_range= -200.f, 200.f;
+            vpb:LAPS_var="VPB";
+            vpb:lvl_coord="NONE";
+	    vpb:LAPS_units="M/S";
                 	        
         //	mid-level haines index
         float 
@@ -33,7 +61,7 @@ netcdf lfr {
             ham:units = "none" ;
             ham:valid_range = 0.f, 6.0f ;
             ham:LAPS_var = "HAM" ;
-            ham:lvl_coord = "MSL" ;
+            ham:lvl_coord = "NONE" ;
             ham:LAPS_units = "NONE" ;
                 	        
         //	high-level haines index
@@ -46,7 +74,7 @@ netcdf lfr {
             hah:units = "none" ;
             hah:valid_range = 0.f, 6.0f ;
             hah:LAPS_var = "HAH" ;
-            hah:lvl_coord = "MSL" ;
+            hah:lvl_coord = "NONE" ;
             hah:LAPS_units = "NONE" ;
 
         //	Fosberg fire weather index
@@ -57,9 +85,9 @@ netcdf lfr {
             fwi:_FillValue = 1.e+37f;
             fwi:long_name = "fire weather index" ;
             fwi:units = "none" ;
-            fwi:valid_range = 0.f, 100.0f ;
+            fwi:valid_range = 0.f, 200.0f ;
             fwi:LAPS_var = "FWI" ;
-            fwi:lvl_coord = "MSL" ;
+            fwi:lvl_coord = "NONE" ;
             fwi:LAPS_units = "NONE" ;
 
         //	LAPS variables
@@ -72,6 +100,8 @@ netcdf lfr {
 
         char
             vnt_comment(record,z,namelen),
+            upb_comment(record,z,namelen),
+            vpb_comment(record,z,namelen),
             ham_comment(record,z,namelen),
             hah_comment(record,z,namelen),
             fwi_comment(record,z,namelen),
@@ -83,6 +113,14 @@ netcdf lfr {
         short
             vnt_fcinv(record, z);
             vnt_fcinv:_FillValue= 0s;
+              	
+        short
+            upb_fcinv(record, z);
+            upb_fcinv:_FillValue= 0s;
+              	
+        short
+            vpb_fcinv(record, z);
+            vpb_fcinv:_FillValue= 0s;
               	
         short
             ham_fcinv(record, z);
@@ -101,7 +139,7 @@ netcdf lfr {
         float 
             level(z);
             level:long_name="level of data";
-	    level:units = "hectopascals";
+	    level:units = "none";
                     	
         //      validtime of the grid 
 
