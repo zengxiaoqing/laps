@@ -189,7 +189,7 @@ c GOES data = 10 bit; METEOSAT data = 8 bit.
 
          if(isat.eq.2 .and. jtype.eq.4)then
 
-c METEOSAT origin is SW corner (wrt ri/rj lut). Make it NW corner
+c METEOSAT origin is SE corner (wrt ri/rj lut). Make it SW corner
             do j=1,nlfi
             do i=1,nefi
                image_temp(nefi-i+1,j)=image_decell_2d(i,j)
@@ -203,7 +203,7 @@ c METEOSAT origin is SW corner (wrt ri/rj lut). Make it NW corner
 
          endif
 c
-c now load that part within the LAPS domain
+c now load that part within the LAPS domain; convert to 10-bit.
 c
          jj=0
          do j=jstart,jend
@@ -218,63 +218,19 @@ c
 
       endif
 
-c leftover stuff from original AFWA code.
-C
-C**********************************************************************
-C  allocate space for the working INTEGER*1 array and the final image
-C  array
-C**********************************************************************
-C     ALLOCATE(IMAGEI1(YS*XS))
-C     ALLOCATE(IMAGE(XS,YS)) 
-C**********************************************************************
-C  Decellularize the data and fill the image array.  The 
-C  algorithm used is one I derived.  It make use of the number of
-C  pixels per cell and the width and depth of the image (measure in 
-C  cells) to compute the appropriate scanline(row) and pixel (column)
-C  coordinate for each piece of data.  All eight bits from each element 
-C  of the working array are extracted,using the standard Fortran
-C  function IBITS and stored in the final 2-D image array
-C**********************************************************************
-C
-C  This code now in subroutine decellularize_image
-c     DO I=1,YS*XS 
-c       CELL_NUM = (I-1)/PIXELS_PER_CELL + 1
-c       CELL_ROW = (I-1)/(PIXELS_PER_CELL*WIDTH) +1
-c       CELL_COLUMN = MOD( (I-1)/PIXELS_PER_CELL, WIDTH ) + 1
-c       RNUM = (I-((CELL_NUM-1)*PIXELS_PER_CELL)-1)/CELL_WIDTH
-c    &         + (CELL_ROW-1)*CELL_DEPTH + 1
-c       CNUM = MOD( (I-((CELL_NUM-1)*PIXELS_PER_CELL)-1), CELL_WIDTH)
-c    &         + 1 + (CELL_COLUMN-1)*256
-c       IMAGE(CNUM,RNUM)=IBITS(IMAGEI1(I),0,8)
-c     END DO
-C**********************************************************************
-C Open a file to write out the image array.  this is done for QC 
-C purposes only.  The file is write out one scanline at a time using a
-C Fortran 90 construct.  The record length is set to 2 times the width
-C of the image in pixels to account for the fact that the array type
-C is two byte integer
-C**********************************************************************
-C     OPEN(UNIT=9, FILE='output', ERR=100, IOSTAT=IOSTATUS,
-C    & ACCESS='DIRECT', FORM='UNFORMATTED',RECL= 2*XS)
-C     DO I=1,YS
-C       WRITE(9,REC=I)IMAGE(:,I)
-C     END DO
-C     CLOSE(9)
-
-
       istatus = 1
       goto 1000
 
 99    Write(6,*)'Error Reading GWC file'
       Write(6,*)'Filename = ',filename(1:nf)
       Close(8)
-      stop 
+      return 
+
 100   IF (IOSTATUS .NE. 0)THEN
         PRINT *, 'ERROR READING ',FILENAME, ' IO status is', 
      &  IOSTATUS
         istatus = -1
       END IF
-      goto 1000
 
 1000  RETURN
       END

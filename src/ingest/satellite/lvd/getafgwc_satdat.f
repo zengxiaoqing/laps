@@ -66,8 +66,8 @@ c GMS data
              print*,'Error returned from getgmsdata'
           endif
 
-       elseif( (isat.eq.2 .and. jtype.eq.4) .or.
-     .         (isat.eq.3 .and. jtype.eq.4) )then
+       elseif( (isat.eq.1 .or. isat.eq.2 .or. isat.eq.3) .and.
+     .         (jtype.eq.4) )then
 
 c          
 c GOES08, GOES10, and METEOSAT.
