@@ -180,6 +180,7 @@ C********************************************************************
         residualv = 0.
         sumu = 0.
         sumv = 0.
+        sumsp = 0.
 
         write(6,*)'Comparing ',c_ob,' Wind Obs (passing QC) to '
      1                       ,c_grid,' Grid'
@@ -194,11 +195,12 @@ C********************************************************************
               do k = 1,nk
 
                 if(grid_laps_wt(il,jl,k) .eq. weight_ob
-     1          .and. u_3d(il,jl,k) .ne. r_missing_data )then
+     1             .and. u_3d(il,jl,k) .ne. r_missing_data )then
                   nobs = nobs + 1
 
-                  diffu = u_3d(il,jl,k) - grid_laps_u(il,jl,k)
-                  diffv = v_3d(il,jl,k) - grid_laps_v(il,jl,k)
+!                 Calculate U/V Difference (Ob - Grid)
+                  diffu = grid_laps_u(il,jl,k) - u_3d(il,jl,k) 
+                  diffv = grid_laps_v(il,jl,k) - v_3d(il,jl,k) 
 
                   sumu = sumu + diffu
                   sumv = sumv + diffv
@@ -206,11 +208,24 @@ C********************************************************************
                   residualu = residualu + diffu ** 2
                   residualv = residualv + diffv ** 2
 
+!                 Calculate Speed Difference (Ob - Grid)
+                  call uv_to_disp(grid_laps_u(il,jl,k),
+     1                            grid_laps_v(il,jl,k),
+     1                            di_dum,
+     1                            grid_laps_sp)
+
+                  call uv_to_disp(u_3d(il,jl,k),
+     1                            v_3d(il,jl,k),
+     1                            di_dum,
+     1                            sp_3d)
+
+                  sumsp = sumsp + (grid_laps_sp - sp_3d)
+
                   if(nobs .le. 200 .OR. nobs .eq. (nobs/10)*10)then
                       write(6,101)il,jl,k
      1                  ,grid_laps_u(il,jl,k),grid_laps_v(il,jl,k)
      1                  ,u_3d(il,jl,k),v_3d(il,jl,k)
-     1                  ,-diffu,-diffv
+     1                  ,diffu,diffv
 101                   format(1x,3i4,3(2x,2f7.1))
                   endif
 
@@ -225,25 +240,25 @@ C********************************************************************
         if(nobs .gt. 0)then
             rmsu = sqrt(residualu/nobs)
             rmsv = sqrt(residualv/nobs)
-
-            biasu = -sumu / float(nobs)
-            biasv = -sumv / float(nobs)
+            biasu = sumu / float(nobs)
+            biasv = sumv / float(nobs)
+            biassp = sumsp / float(nobs)
 
         else
             rmsu = 0.
             rmsv = 0.
-
             biasu = 0.
             biasv = 0.
+            biassp = 0.
 
         endif
 
         rms  = sqrt(rmsu**2 + rmsv**2)
 
-        write(6,102)c_ob,c_grid,nobs,rmsu,rmsv,biasu,biasv,rms
-102     format(' RMS/BIAS between '
-     1        ,a,' & ',a,' (n,rmsu,rmsv,biasu,biasv,rms) = '
-     1        ,i4,5f5.1)
+        write(6,102)c_ob,c_grid,nobs,biasu,biasv,biassp,rmsu,rmsv,rms
+102     format(' BIAS/RMS between '
+     1        ,a,' & ',a,' (n,biasu,biasv,biassp,rmsu,rmsv,rms) = '
+     1        ,i4,6f5.1)
 
         return
 

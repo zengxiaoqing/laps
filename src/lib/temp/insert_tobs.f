@@ -564,3 +564,42 @@ cdis
         return
         end
 
+
+
+
+      subroutine get_obstype(c_obstype,i_obstype,mode)
+
+      integer n_obstypes
+      parameter (n_obstypes = 4)
+      character*8 c_obstype_a(n_obstypes),c_obstype
+
+      data c_obstype_a /
+     1     'RASS    ',
+     1     'RAOB    ',
+     1     'ACARS   ',
+     1     'SATSND  '/
+     
+      if(mode .eq. 1)then ! Convert c_obstype to i_obstype
+
+          call s_len(c_obstype,len1)
+
+          i_obstype = 0                            ! UNKNOWN
+
+          do i = 1,n_obstypes
+              call s_len(c_obstype_a(i),len2)
+              if(c_obstype(1:len1) .eq. 
+     1           c_obstype_a(i)(1:len2))i_obstype = i
+          enddo ! i
+
+      else                ! Convert i_obstype to c_obstype
+          if(i_obstype .gt. 0 .and. i_obstype .le. n_obstypes)then
+              c_obstype = c_obstype_a(i_obstype)
+          else
+              c_obstype = 'UNKNOWN'
+          endif
+
+      endif
+
+      return
+      end
+
