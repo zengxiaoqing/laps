@@ -220,6 +220,8 @@ c              call get_mxmn_2d(nx,ny,ww,rmx2d,rmn2d
 c    &,imx,jmx,imn,jmn)
 c              print*,'k mx/mn ww ',k,rmx2d,rmn2d
 c           enddo
+
+            ww=ww/36.
          endif
 
          nzsh=nz
