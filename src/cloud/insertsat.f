@@ -345,6 +345,16 @@ c
               endif
           endif
 
+          if(istat_39_a(i,j) .eq. 1)then ! 3.9u potl added
+              iwrite = iwrite + 1
+              if(iwrite .lt. 100)then
+                  write(6,114)i,j,istat_39_add_a(i,j),l_tb8
+     1                       ,l_cloud_present
+     1                       ,cldtop_m(i,j),cldtop_tb8_m(i,j)
+ 114              format(' 3.9u potl added ',2i5,i2,2l2,2e10.3)
+              endif
+          endif
+
           if(lstat_co2_a(i,j))then ! Using CO2 slicing method
 
 !           Clear out those levels higher than what the satellite is showing
@@ -545,9 +555,10 @@ c
             l_no_sao_vis = .false.
             mode_sao = 0
 
-            if(          istat_vis_potl_a(i,j) .eq. 1   ! Vis Sat present 
-     1                                .AND.             ! and
-     1                 ( ht_sao_base .eq. 1e30 .or.     ! No obvious SAO base
+            if(        ( istat_vis_added_a(i,j) .eq. 1   ! Vis/3.9 Sat present 
+     1              .or. istat_39_add_a(i,j)    .eq. 1 )
+     1                                .AND.              ! and
+     1                 ( ht_sao_base .eq. 1e30 .or.      ! No obvious SAO base
      1                   ht_sao_base .gt. cldtop_m(i,j) )
      1                                                      )then 
               n_no_sao_vis = n_no_sao_vis + 1
