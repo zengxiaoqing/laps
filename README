@@ -2231,7 +2231,7 @@ CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
 Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
            342-352. 
 
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
+           Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi
 
 
 ------ 3.3.2 ----------------- SFC (LSX) -------------------------------------
@@ -2492,7 +2492,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            precipitation, and temperature. Weather and Forecasting, 11, 
            273-287.
 
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+           Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi
 
  ------ 3.3.5 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
 
@@ -2699,6 +2699,13 @@ SATELLITE ALGORITHM:
      release, the coefficient adjustment is limited to above 500 hPa
      only.
 
+
+Reference: Birkenheuer, D. (1999): The effect of using digital 
+     satellite imagery in the LAPS moisture analysis. Published in
+     Wea. Forecasting (14), pp 782-788. 
+
+     Available at http://laps.fsl.noaa.gov/birk/papers/wf99/paper.htm
+
 ------ 3.3.6 ---------------------DERIV---------------------------------------
 
 Process: deriv.exe - Derived products
@@ -2846,13 +2853,13 @@ References: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The
             precipitation, and temperature. Weather and Forecasting, 11, 
             273-287.
 
-            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+            Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi
 
 
             Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 
             10, 342-352. 
 
-            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
+            Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi
 
 ------ 3.3.7 ---------------------ACCUM---------------------------------------
 
@@ -2884,7 +2891,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            precipitation, and temperature. Weather and Forecasting, 11, 
            273-287.
 
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+           Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi
 
 ------ 3.3.8 ---------------------BALANCE--------------------------------------
 
