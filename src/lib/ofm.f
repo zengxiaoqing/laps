@@ -64,7 +64,7 @@ c   further recompilation.
       
  
 
-      USE module_sfc_structure
+c      USE module_sfc_structure
 
       Implicit None
 
