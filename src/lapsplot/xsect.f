@@ -1987,8 +1987,11 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 if(istatus .ne. 1)goto100
 
                 call make_fnam_lp(i4time_nearest,a9time,istatus)
+
                 call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                         NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)      
+
+                c33_label = 'LAPS Relative Humidity (Anl)    %'
 
             elseif(c_prodtype .eq. 'B' .or. 
      1             c_prodtype .eq. 'F')then
@@ -2008,6 +2011,19 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                              ,istatus)
                 if(istatus .ne. 1)goto100
 
+                call interp_3d(rh_3d,field_vert
+     1                        ,xlow,xhigh,ylow,yhigh
+     1                        ,NX_L,NY_L,NZ_L,NX_C,NZ_C
+     1                        ,r_missing_data)      
+
+                if(c_prodtype .eq. 'B')then
+                    c33_label = 'LAPS  Bkgnd   RH     '//fcst_hhmm
+     1                                                 //'    %   '
+                elseif(c_prodtype .eq. 'F')then
+                    c33_label = 'LAPS  FUA     RH     '//fcst_hhmm
+     1                                                 //'    %   '
+                endif
+
                 call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
      1                          ,istatus)
 
@@ -2024,11 +2040,37 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 enddo ! j
                 enddo ! i
 
-                call make_fnam_lp(i4_valid,a9time,istatus)
-                call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
-     1                         NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)      
+            elseif(c_prodtype .eq. 'N')then
+                call get_directory('balance',directory,len_dir)
+                directory = directory(1:len_dir)//'lh3/'
 
-            endif
+                ext = 'lh3'
+
+                if(c_field .eq. 'rh')then
+                    var_2d = 'RH3'
+                elseif(c_field .eq. 'rl')then
+                    var_2d = 'RHL'
+                endif
+
+                write(6,*)' Reading balanced lh3 / ',var_2d
+
+                call get_3dgrid_dname(directory
+     1                  ,i4time_ref,10800,i4time_nearest       
+     1                  ,ext,var_2d,units_2d
+     1                  ,comment_2d,NX_L,NY_L,NZ_L,rh_3d,istatus)       
+                if(istatus .ne. 1)then
+                    write(6,*)' Data not found'
+                    goto100
+                endif
+
+                call make_fnam_lp(i4time_nearest,a9time,istatus)
+
+                c33_label = 'LAPS Relative Humidity (Bal)    %'
+
+            endif ! c_prodtype
+
+            call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)      
 
             do k = NZ_C,1,-1
             do i = 1,NX_C
@@ -2042,17 +2084,16 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +100.
             cint = 10.
             i_contour = 1
-            c33_label = 'LAPS Relative Humidity     %     '
 
             NULBLL = 1 ! for conrec (number of lines between labels)
 
         elseif(c_field .eq. 'cv')then
             var_2d = 'LCP'
             ext = 'lcp'
-            call get_laps_3dgrid
-     1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
-     1          ,ext,var_2d,units_2d,comment_2d
-     1                                  ,rh_3d,istatus)
+            call get_laps_3dgrid(i4time_ref,1000000,i4time_nearest
+     1                          ,NX_L,NY_L,NZ_L
+     1                          ,ext,var_2d,units_2d,comment_2d
+     1                          ,rh_3d,istatus)
             if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,a9time,istatus)

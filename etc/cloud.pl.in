@@ -103,8 +103,11 @@ foreach (@lines) {if (/$searchstring(.*)/) {print "$1\n";}}
 print "\nSatellite (IR):";
 @greplines = grep /Returning S8A/, @lines;
 print "$greplines[0]";
+@greplines = grep /No S8A/, @lines;
+print "$greplines[0]";
 @greplines = grep /required/, @lines;
-print "$greplines[0]\n";
+print "$greplines[0]";
+print "\n";
 
 print "Satellite (Visible Albedo):\n";
 @greplines = grep /Returning ALB/, @lines;
@@ -112,6 +115,8 @@ print "$greplines[0]";
 @greplines = grep /could not read albedo/, @lines;
 print "$greplines[0]";
 @greplines = grep /Visible albedo data used/, @lines;
+print "$greplines[0]";
+@greplines = grep /l_use_vis set to not use vis data/, @lines;
 print "$greplines[0]";
 print "\n";
 

@@ -137,7 +137,7 @@ if($opt_q){
     print $t." Opening $LAPS_LOG_PATH/run_qsub_$exe.sh starting with executable $exe\n";
     open(TFILE,">$LAPS_LOG_PATH/run_qsub_$exe.sh");
     print TFILE "#!/bin/sh\n";
-    print TFILE "#PBS -lnodes=$opt_q:comp,walltime=60:00\n";
+    print TFILE "#PBS -lnodes=$opt_q:comp,walltime=30:00 -A oplapb\n";
     print TFILE "  \n";
     print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 
