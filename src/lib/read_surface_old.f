@@ -41,7 +41,8 @@ c*******************************************************************************
 c
 cdoc    Routine to read surface data for LAPS that has been written into
 cdoc    the LSO/LSOQC file by the 'write_surface_obs' routine. Return arguments
-cdoc    are more in tune with an earlier lso format.
+cdoc    are more in tune with an earlier lso variable list. Calls 
+cdoc    'read_surface_data' and 'read_surface_dataqc'.
 c
 c       Changes:
 c               P. Stamus  12-30-92  Original version.
