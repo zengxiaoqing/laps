@@ -223,7 +223,7 @@ C Below are some Taiwan FGGE routines
      .                     r_missing_data,                  ! I
      .                     pressures_pa,                    ! O
      .                     ht, tp, rh, uw, vw,              ! O
-     .                     mslpr,                           ! O
+     .                     mslp,                            ! O
      .                     istatus)                         ! O
 
       parameter ( i_record=86 )
@@ -286,7 +286,7 @@ c                           Sfc field
             CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
             do 50 j= 1,ny
             do 50 i= 1,nx
-50             mslp(i,j)= fdata( i +nx*(j-1) )
+50             mslp(i,j)= fdata( i +nx*(j-1) )*100.
          endif
 
          do k= 1,nz

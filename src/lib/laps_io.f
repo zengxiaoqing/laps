@@ -1081,7 +1081,6 @@ c
            return
         endif
 
-c       call move_3dto2d(field_2d_lvd,1,field_2d,imax,jmax,maxsat)
         call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
 
         istatus=1
@@ -1112,6 +1111,10 @@ c
 !       Added multiple lvd file search for best domain cover for files that
 !       are within i4tol. If all files have the same domain cover (like 100%)
 !       then the first (and closest in time) file is returned.
+!
+!       John Smart              1999
+!       return the time closest to requested time in the event that more
+!       than 1 file with complete domain cover satisfies i4tol
 
         character*150 dir
         character*150 satdir
@@ -1123,8 +1126,11 @@ c
         integer*4 LVL_2d
         character*4 LVL_COORD_2d
 
+        integer max_lvd_files
+        parameter (max_lvd_files=10)
+
         real*4 field_2d(imax,jmax)
-        real*4 field_2d_save(imax,jmax,10)
+        real*4 field_2d_save(imax,jmax,max_lvd_files)
 
         integer max_files
         parameter (max_files = 600)
@@ -1140,6 +1146,7 @@ c
         character*255 c_filespec
         character*120 c_fnames(max_files)
         integer i4times(max_files)
+        integer i4times_data(max_lvd_files)
         integer i_selected(max_files)
         character*6 c_sat_id          !input satellite id's known to system
         logical lcont
@@ -1239,6 +1246,7 @@ c                           return
 
                  pctmiss(jf)=float(imiss)/float(imax*jmax)
                  asc9_time(jf)=asc9_tim
+                 i4times_data(jf)=i4times(j)
 
               endif
 
@@ -1249,25 +1257,38 @@ c             return
            endif ! File is closest unread file to desired time
 
         enddo ! ith file
-
+c
+c full domain coverage takes precedence over time matching.
+c
         pctmnmiss=1.0
+        jr=0
         if(jf.gt.1)then
            do i=1,jf
-              if(pctmiss(i).lt.pctmnmiss)then
-                 jr=i
+              if(pctmiss(i).le.pctmnmiss)then
+                 jr=jr+1
                  pctmnmiss=pctmiss(i)
               endif
            enddo
-        elseif(jf.eq.1)then
-           jr=jf
+           if(jr.gt.1)then
+              i4diffmn=1000.
+              do i=1,jr
+                 i4diff=abs(i4times_data(i)-i4time_needed)
+                 if(i4diff.lt.i4diffmn)then
+                    jf=i
+                    i4diffmn=i4diff
+                 endif
+              enddo
+           else
+              jf=jr
+           endif
         elseif(jf.eq.0)then
            istatus = 0
            return
         endif
 
-        call move(field_2d_save(1,1,jr),field_2d,imax,jmax)
+        call move(field_2d_save(1,1,jf),field_2d,imax,jmax)
         print*,'Returning requested field from',
-     1' get_laps_lvd    ',asc9_time(jr),'     ',var_2d
+     1' get_laps_lvd    ',asc9_time(jf),'     ',var_2d
         istatus = 1
 
         return 
