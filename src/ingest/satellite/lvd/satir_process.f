@@ -108,23 +108,7 @@ c
        integer nn
 
        real*4 badlow,badhigh
-       real*4 favgthr
-       real*4 favgthr_39u
-       real*4 favgthr_67u
-       real*4 favgthr_11u
-       real*4 favgthr_12u
-
        real*4 r_missing_data
-       real*4 ave
-       real*4 rmxbtemp,rmnbtemp
-       real*4 btempsum
-
-c these should be seasonally dependent. 6-13-99. 
-c used for "bad" meteosat (11u) data. 
-       data favgthr_39u /210.0/
-       data favgthr_67u /209.0/
-       data favgthr_11u /259.0/
-       data favgthr_12u /257.0/
 c
        integer i4time,imax,jmax
 
@@ -140,24 +124,18 @@ c
 c these values are bases upon the GVAR cnt-to-btemp lookup tables.
 c they are good estimates for satellites other than GOES.
 c
-c the favgthr (field avg threshold) doesn't work for all domains.
-c
        if(c_type.eq.'wv '.or.c_type.eq.'iwv'.or.c_type.eq.'wvp')then
           badlow=148.486
           badhigh=291.182
-          favgthr=favgthr_67u
        elseif(c_type.eq.'4u'.or.c_type.eq.'i39')then
           badlow=205.908
           badhigh=341.786
-          favgthr=favgthr_39u
        elseif(c_type.eq.'11u'.or.c_type.eq.'i11')then
           badlow=112.105
           badhigh=341.25  !in line with goes08 cnt-to-btemp lut max value.
-          favgthr=favgthr_11u
        else          !must be the 12u data
           badlow=110.611
           badhigh=336.347
-          favgthr=favgthr_12u
        endif
 
        imax = ni
@@ -239,43 +217,5 @@ c
 911    format(' WARNING! tb8 check istatus_w = ',i8)
 912    format(' WARNING! tc8 check istatus_f = ',i8)
 
-       print*
-       print*,'Computing IR field ave: ',c_type
-
-       rmxbtemp=0.0
-       rmnbtemp=999.
-       nn=0
-       btempsum=0.0
-       do j=1,jmax
-       do i=1,imax
-          if(ta8(i,j).ne.r_missing_data)then
-             nn=nn+1
-             btempsum=btempsum+ta8(i,j)
-             rmxbtemp=max(ta8(i,j),rmxbtemp)
-             rmnbtemp=min(ta8(i,j),rmnbtemp)
-          endif
-       enddo
-       enddo
-       if(nn.gt.0)then
-          ave=btempsum/nn
-          print*,'------------------------------------'
-          print*,'Field max:  ',rmxbtemp,' (K)'
-          print*,'Field min:  ',rmnbtemp,' (K)'
-          print*,'Field ave:  ',ave, ' (K)'
-c            print*,'Field sdev: ',sdev,' (K)'
-c            print*,'Field adev: ',adev,' (K)'
-          print*,'------------------------------------'
-       else
-          print*,'No Stats computed'
-       endif
-       print*
-
-      if(ave.lt.favgthr)then
-         print*,'field avg < threshold. no lvd output.'
-         istatus = 0
-      else
-         istatus = 1
-      endif
-     
 999   return
       end

@@ -171,6 +171,18 @@ c
       integer lvd_status
       integer nft,ntm(max_files),nft_prior
 
+      real*4 favgth39u
+      real*4 favgth67u
+      real*4 favgth11u
+      real*4 favgth12u
+c
+c these should be seasonally dependent. 6-13-99. 
+c used for "bad" meteosat (11u) data. 
+      data favgth39u /210.0/
+      data favgth67u /209.0/
+      data favgth11u /239.0/
+      data favgth12u /237.0/
+
       data rcal/0.106178/  !as specified by EUMETSAT User Services 5-May-99.
 
       include 'satellite_common_lvd.inc'
@@ -676,18 +688,26 @@ c ----------  GMS SATELLITE SWITCH -------
                if(istatus .ne. 1)then
                   write(*,*)'Error processing IR Satillite Data'
                else
-                  nlf=nlf+1
-                  call move(ta8,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf)  = 'S8A'       ! satellite, channel-4, averaged
-                  c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - AVERAGED'
-                  nlf=nlf+1
-                  call move(tb8,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf)='S8W'       ! satellite, channel-4, warm pixel
-                  c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS; WARM PIX'
-                  nlf=nlf+1
-                  call move(tc8,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf)='S8C'       ! satellite, channel-4, warm pixel
-                  c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - FILTERED'
+                  if(csatid.eq.'meteos')then
+                     call check_field_ave(nx_l,ny_l,ta8,favgth11u
+     &                                   ,istatus)
+                  endif
+                  if(istatus.eq.1)then
+                     nlf=nlf+1
+                     call move(ta8,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf)  = 'S8A'       ! satellite, channel-4, averaged
+                     c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - AVERAGED'
+                     nlf=nlf+1
+                     call move(tb8,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf)='S8W'       ! satellite, channel-4, warm pixel
+                     c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS; WARM PIX'
+                     nlf=nlf+1
+                     call move(tc8,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf)='S8C'       ! satellite, channel-4, warm pixel
+                     c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - FILTERED'
+                   else
+                     print*,'No output for this channel: ',c_type(j,k)
+                   endif
                endif
 
             else
@@ -711,18 +731,27 @@ c ----------  GMS SATELLITE SWITCH -------
                if(istatus .ne. 1)then
                   write(*,*)'Error processing IR Satillite Data'
                else
-                  nlf=nlf+1
-                  call move(ta4,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf) = 'S3A'       ! satellite, , averaged
-                  c_lvd(nlf)=csatid//' (3.9u) IR B-TEMPS - AVERAGED'
-                  nlf=nlf+1
-                  call move(tb4,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf)  = 'S3C'       ! satellite, , filtered
-                  c_lvd(nlf)=csatid//' (3.9u) IR B-TEMPS - FILTERED'
-               end if
+                  if(csatid.eq.'meteos')then
+                     call check_field_ave(nx_l,ny_l,ta4,favgth39u
+     &                                   ,istatus)
+                  endif
+                  if(istatus.eq.1)then
+                     nlf=nlf+1
+                     call move(ta4,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf) = 'S3A'       ! satellite, , averaged
+                     c_lvd(nlf)=csatid//' (3.9u) IR B-TEMPS - AVERAGED'
+                     nlf=nlf+1
+                     call move(tb4,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf)  = 'S3C'       ! satellite, , filtered
+                     c_lvd(nlf)=csatid//' (3.9u) IR B-TEMPS - FILTERED'
+                  else
+                     print*,'No output for this channel: ',c_type(j,k)
+                  end if
+               endif
             else
-                   write(6,*)'39u image not processed: missing data'
+               write(6,*)'39u image not processed: missing data'
             endif
+
             elseif(ispec.eq.5)then
             if(r_image_status(j,i).lt.0.3333)then
 
@@ -740,18 +769,27 @@ c ----------  GMS SATELLITE SWITCH -------
                if(istatus .ne. 1)then
                   write(*,*)'Error processing IR Satillite Data'
                else
-                  nlf=nlf+1
-                  call move(ta12,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf) = 'SCA'       ! satellite, averaged
-                  c_lvd(nlf)=csatid//' (12.0u) IR B-TEMPS - AVERAGED'
-                  nlf=nlf+1
-                  call move(tb12,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf) = 'SCC'       ! satellite, averaged
-                  c_lvd(nlf)=csatid//' (12.0u) IR B-TEMPS - FILTERED'
+                  if(csatid.eq.'meteos')then
+                     call check_field_ave(nx_l,ny_l,ta12,favgth12u
+     &                                   ,istatus)
+                  endif
+                  if(istatus.eq.1)then
+                     nlf=nlf+1
+                     call move(ta12,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf) = 'SCA'       ! satellite, averaged
+                     c_lvd(nlf)=csatid//' (12.0u) IR B-TEMPS - AVERAGED'
+                     nlf=nlf+1
+                     call move(tb12,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf) = 'SCC'       ! satellite, averaged
+                     c_lvd(nlf)=csatid//' (12.0u) IR B-TEMPS - FILTERED'
+                  else
+                     print*,'No output for this channel: ',c_type(j,k)
+                  end if
                endif
             else
-                   write(6,*)'12u image not processed: missing data'
+               write(6,*)'12u image not processed: missing data'
             endif
+
             elseif(ispec.eq.3)then
             if(r_image_status(j,i).lt.0.3333)then
 
@@ -769,18 +807,27 @@ c ----------  GMS SATELLITE SWITCH -------
                if(istatus .ne. 1)then
                   write(*,*)'Error processing wv Satillite Data'
                else
-                  nlf=nlf+1
-                  call move(ta6,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf) = 'S4A'       ! satellite, averaged
-                  c_lvd(nlf)=csatid//' (6.7u) IR B-TEMPS - AVERAGED'
-                  nlf=nlf+1
-                  call move(tb6,laps_data(1,1,nlf),nx_l,ny_l)
-                  var_lvd(nlf) = 'S4C'       ! satellite, filtered
-                  c_lvd(nlf)=csatid//' (6.7u) IR B-TEMPS - FILTERED'
-               end if
+                  if(csatid.eq.'meteos')then
+                     call check_field_ave(nx_l,ny_l,ta6,favgth67u
+     &                                   ,istatus)
+                  endif
+                  if(istatus.eq.1)then
+                     nlf=nlf+1
+                     call move(ta6,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf) = 'S4A'       ! satellite, averaged
+                     c_lvd(nlf)=csatid//' (6.7u) IR B-TEMPS - AVERAGED'
+                     nlf=nlf+1
+                     call move(tb6,laps_data(1,1,nlf),nx_l,ny_l)
+                     var_lvd(nlf) = 'S4C'       ! satellite, filtered
+                     c_lvd(nlf)=csatid//' (6.7u) IR B-TEMPS - FILTERED'
+                  else
+                     print*,'No output for this channel: ',c_type(j,k)
+                  end if
+               endif
             else
-                  write(6,*)'wv image not processed: missing data'
+               write(6,*)'wv image not processed: missing data'
             endif
+
             elseif(ispec.eq.1)then
             if(r_image_status(j,i).lt.0.3333)then
 
