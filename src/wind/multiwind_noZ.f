@@ -1,4 +1,4 @@
-       subroutine multiwind(u,v,rms,u0,v0,x,y,height
+       subroutine multiwind_noz(u,v,rms,u0,v0,x,y,height
      1                     ,n,xx,yy,ht,vr,rmsmax,ier)
 c***********************************************************************
 c description      : To derive horizontal wind from multi-radar radial
