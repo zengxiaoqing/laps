@@ -42,6 +42,7 @@ cdis
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
      1                    ,rlaps_land_frac,topo                     ! I
      1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb    ! O
+     1                    ,static_albedo                            ! O
      1                    ,comment                                  ! O
      1                    ,ni,nj,nk,r_missing_data                  ! I
      1                    ,istat_vis_a                              ! O
@@ -56,6 +57,7 @@ cdis
 
         real*4 lat(ni,nj)
         real*4 sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
+        real*4 static_albedo(ni,nj)   ! Static albedo database
         real*4 vis_albedo(ni,nj)
         real*4 rlaps_land_frac(ni,nj)
         real*4 topo(ni,nj)
@@ -95,7 +97,8 @@ cdis
 
         call get_sfc_albedo(ni,nj,lat,r_missing_data,i4time              ! I
      1                     ,rlaps_land_frac,topo                         ! I
-     1                     ,sfc_albedo,sfc_albedo_lwrb,istat_sfc_alb)    ! O   
+     1                     ,sfc_albedo,sfc_albedo_lwrb                   ! O
+     1                     ,static_albedo,istat_sfc_alb)                 ! O
 
 !       Determine whether to use VIS / ALBEDO data
         if(.not. l_use_vis)then
@@ -234,6 +237,7 @@ cdis
         subroutine get_sfc_albedo(ni,nj,lat,r_missing_data,i4time    ! I
      1                           ,rlaps_land_frac,topo               ! I
      1                           ,sfc_albedo,sfc_albedo_lwrb         ! O
+     1                           ,static_albedo                      ! O
      1                           ,istat_sfc_alb)                     ! O
 
 !       This returns the surface albedo. This is from the static database
