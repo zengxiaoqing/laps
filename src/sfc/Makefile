@@ -26,7 +26,6 @@ EXE = laps_sfc.x
 SRC   = mdatlaps.f \
 	lapsvanl.f \
 	lapsvanl_sub.f \
-	laps_routines.f \
         barnes_multivariate_sfc.f \
 	qc_data.f \
         visibility.f 
