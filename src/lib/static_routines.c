@@ -620,7 +620,7 @@ fint4 *status;
  
 /* create output file */
 #ifdef SMS
-       *status = pcl_system(syscmd, pcl_me());
+       *status = pcl_system(syscmd);
 #else
        system(syscmd);
 #endif

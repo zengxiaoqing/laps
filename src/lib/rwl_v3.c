@@ -2057,7 +2057,7 @@ fint4 *status;
 
 /*  create file, then open it */
 #ifdef SMS
-          istatus = pcl_system(syscmd, pcl_me());
+          istatus = pcl_system(syscmd);
 #else
           system(syscmd);
 #endif
@@ -2076,7 +2076,7 @@ fint4 *status;
           else { /* 10/14/97 for write_laps_data with no append, write over it anyway */
             if (((*called_from == 0) || (*called_from == 1)) && (*append == 0)){
 #ifdef SMS
-              istatus = pcl_system(syscmd, pcl_me());
+              istatus = pcl_system(syscmd);
 #else
               system(syscmd); /* added 10/14/97 */
 #endif
