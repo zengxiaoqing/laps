@@ -19,7 +19,7 @@
       call get_latest_file_time(cdir_ctp,i4time_latest)
       call get_systime(i4time_sys,a9_systime,istatus)
       i4timedif=abs(i4time_sys-i4time_latest)   !if negative then maybe a case rerun
-      if(i4timedif.gt.itime_ctp_window)then
+      if(i4timedif.le.itime_ctp_window)then
          istatus_ctp=1
       endif
       return

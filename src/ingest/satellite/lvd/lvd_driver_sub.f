@@ -1079,8 +1079,10 @@ c been mapped to the laps domain. AFWA's GMS so far.
             enddo
             cdomain_fname =generic_data_root(l:lend-1)
             if(cdomain_fname.eq.'laps12_goes'.or.
-     +         cdomain_fname.eq.'laps12_baseline')then
-            path_to_ctp='/data/ihop/lapb/casedate/data/sat/nesdis/'
+     +         cdomain_fname.eq.'laps12_baseline'.or.
+     +         cdomain_fname.eq.'laps12_llj')then
+c           path_to_ctp='/data/ihop/lapb/casedate/data/sat/nesdis/'
+            path_to_ctp='/tmp/casedate/data/sat/nesdis/'
      +//csat(1:ncs)//'/cloudtop/'
             else
             path_to_ctp='/no/data/ihop/lapb/casedate/data/sat/nesdis/'
