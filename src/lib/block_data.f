@@ -73,5 +73,10 @@ c     routine config_satellite_lvd (in file lapsgrid.f).
         include 'satellite_common_lvd.inc'
         include 'sat_data_static_lvd.inc'
         data iflag_lvd_common /0/ 
+
+c     routine config_ingest_rrv_parms
+        include 'ingest_rrv_dims.inc'
+        include 'ingest_rrv_common.inc'
+        include 'ingest_rrv_constants.dat'
       end
 
