@@ -70,6 +70,8 @@ c
 
          write(6,*)
 
+         I4_elapsed = ishow_timer()
+
          k = k+1
 
          call get_directory(c_extension_proc(k),directory,len_dir)
@@ -113,6 +115,8 @@ c check laps analysis values
             end do
 
 30          format(1x,2i3,1x,3f7.1,1x,2(f8.1,1x))
+
+            I4_elapsed = ishow_timer()
 
          endif
 
