@@ -392,6 +392,7 @@ ccc         print *,'here ',iflag_lapsparms_cmn
 
 910     write(6,*)' Read error in get_laps_config'
         write(6,*)' Check runtime parameter file ',tempchar
+        write(6,lapsparms_nl)
         close(92)
         iflag_lapsparms_cmn = 0
         istatus = 0
@@ -1022,7 +1023,7 @@ c
      +       i_delta_sat_t_sec,r_msng_sat_flag_cdf
      +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
      +       ,max_sat,max_sat_channel, max_images
- 
+
       call get_directory('nest7grid',nest7grid,len_dir)
 
       nest7grid = nest7grid(1:len_dir)//'/satellite.nl'
@@ -1080,3 +1081,32 @@ c-----------------------------------------------------------------------
       write(*,satellite_sounder_nl)
       stop 
       end 
+c
+c-----------------------------------------------------------------------
+c
+      subroutine config_satellite_lvd(istatus)
+
+      character nest7grid*150
+      include 'satellite_dims_lvd.inc'
+      include 'satellite_common_lvd.inc'
+      include 'satellite_namelist_lvd.cmn'
+
+      istatus = 0
+
+      call get_directory('nest7grid',nest7grid,len_dir)
+
+      nest7grid = nest7grid(1:len_dir)//'/satellite_lvd.nl'
+
+      open(1,file=nest7grid,status='old',err=900)
+      read(1,satellite_lvd_nl,err=901)
+      close(1)
+      iflag_lvd_common=1
+      istatus = 1
+      return
+
+ 900  print*,'error opening file ',nest7grid
+      return
+ 901  print*,'error reading satellite_nl in ',nest7grid
+      write(*,satellite_lvd_nl)
+      return
+      end
