@@ -32,6 +32,7 @@ cdis
 c
 c
 	subroutine get_metar_obs(maxobs,maxsta,i4time,data_file,
+     &                      metar_format,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_sao_g,n_sao_b,stations,
@@ -91,7 +92,7 @@ c
 	integer    maxSkyCover, recNum, nf_fid, nf_vid, nf_status
 c
 	character  stname(maxobs)*5, save_stn(maxobs)*5
-	character  data_file*(*), timech*9, time*4
+	character  data_file*(*), timech*9, time*4, metar_format*(*)
 	character  cvr(6,maxobs)*8
 	character  stations(maxsta)*20, provider(maxsta)*11
 	character  weather(maxobs)*25, wx(maxobs)*25
@@ -115,54 +116,72 @@ c.....	Zero out the counters.
 c
 	n_sao_g = 0		! # of saos in the laps grid
 	n_sao_b = 0		! # of saos in the box
-c
-c.....  Get the data from the NetCDF file.  First, open the file.
-c
-	nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
 
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *, data_file
-	endif
+        call s_len(metar_format,len_metar_format)
+
+        if(metar_format(1:len_metar_format) .eq. 'FSL')then
 c
-c.....  Get the dimension of some of the variables.
-c.....  "maxSkyCover"
+c.....      Get the data from the NetCDF file.  First, open the file.
 c
-	nf_status = NF_INQ_DIMID(nf_fid,'maxSkyCover',nf_vid)
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *,'dim maxSkyCover'
-	endif
-	nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxSkyCover)
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *,'dim maxSkyCover'
-	endif
+	    nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
+
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *, data_file
+	    endif
 c
-c.....  "recNum"
+c.....      Get the dimension of some of the variables.
+c.....      "maxSkyCover"
 c
-	nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *,'dim recNum'
-	endif
-	nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *,'dim recNum'
-	endif
+	    nf_status = NF_INQ_DIMID(nf_fid,'maxSkyCover',nf_vid)
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *,'dim maxSkyCover'
+	    endif
+	    nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxSkyCover)
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *,'dim maxSkyCover'
+	    endif
 c
-c.....  Call the read routine.
+c.....      "recNum"
 c
-	call read_metar(nf_fid , maxSkyCover, recNum, alt,
-     &     atype_in, td, ttd, elev,
-     &     lats, lons, max24t, min24t,
-     &     pcp1, pcp24, pcp3, pcp6,
-     &     wx, dp, dpchar,
-     &     reptype_in, mslp, cvr, ht,
-     &     snowcvr, stname, tt, t,
-     &     timeobs, vis, dd, ffg, ff,
-     &     wmoid_in, badflag, istatus)
+	    nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *,'dim recNum'
+	    endif
+	    nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *,'dim recNum'
+	    endif
+
+c
+c.....      Call the read routine.
+c
+	    call read_metar(nf_fid , maxSkyCover, recNum, alt,
+     &         atype_in, td, ttd, elev,
+     &         lats, lons, max24t, min24t,
+     &         pcp1, pcp24, pcp3, pcp6,
+     &         wx, dp, dpchar,
+     &         reptype_in, mslp, cvr, ht,
+     &         snowcvr, stname, tt, t,
+     &         timeobs, vis, dd, ffg, ff,
+     &         wmoid_in, badflag, istatus)
+
+!       else
+!           call read_metar_cwb(nf_fid , maxSkyCover, recNum, alt,   
+!    &         atype_in, td, ttd, elev,
+!    &         lats, lons, max24t, min24t,
+!    &         pcp1, pcp24, pcp3, pcp6,
+!    &         wx, dp, dpchar,
+!    &         reptype_in, mslp, cvr, ht,
+!    &         snowcvr, stname, tt, t,
+!    &         timeobs, vis, dd, ffg, ff,
+!    &         wmoid_in, badflag, istatus)
+
+        endif
 c
 	if(istatus .ne. 1) go to 990
 	n_sao_all = recNum

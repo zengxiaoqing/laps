@@ -41,11 +41,6 @@
  path_to_wsi_3d_radar_cmn='/public/data/radar/wsi/nexrad/netcdf/',
  path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
 
- path_to_metar_data_cmn='/public/data/metar/netcdf/',
- path_to_local_data_cmn='/public/data/ldad/mesonet/netcdf/',
- path_to_buoy_data_cmn='/data/fxa/point/maritime/netcdf/',
- min_to_wait_for_metars_cmn=10,
-
  i2_missing_data_cmn=-99,
  r_missing_data_cmn=+1e37,
  MAX_RADARS_CMN=3,        

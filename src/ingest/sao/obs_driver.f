@@ -121,9 +121,11 @@ c
 	character  dir_b*256, black_path*256, stations_b(maxsta)*20
 	character  var_b(maxobs,max_bvar)*3 
 c
-        character* (*) path_to_metar
-        character* (*) path_to_local_data
-        character* (*) path_to_buoy_data
+        character*200 path_to_metar
+        character*200 path_to_local_data
+        character*200 path_to_buoy_data
+        character*8   metar_format
+        character*8   a9_to_a8, a8_time
 c
         integer cnt, minutes_to_wait_for_metars
 c        parameter(minutes_to_wait_for_metars=10)
@@ -153,6 +155,15 @@ c
 	   i4time = i4time / laps_cycle_time * laps_cycle_time
 	   call cv_i4tim_asc_lp(i4time, atime, istatus) !find the atime
 	endif
+
+        call get_obs_driver_parms(path_to_metar
+     1                           ,path_to_local_data
+     1                           ,path_to_buoy_data
+     1                           ,metar_format
+     1                           ,minutes_to_wait_for_metars
+     1                           ,istatus)
+        if(istatus .ne. 1)stop
+
 c
 	call get_directory('lso',outfile,len)
 	outfile = outfile(1:len)//filename9(1:9)//'.lso'
@@ -235,28 +246,34 @@ c
 	      store_cldamt(i,j) = '    '
 	   enddo !j
 	enddo !i
+
 c
 c.....  Figure out if the data files are there, paths, etc.
 c
-        do while(.not. exists .and. 
-     &            cnt .lt. minutes_to_wait_for_metars)
+
+        call s_len(metar_format,len_metar_format)
+
+        if(metar_format(1:len_metar_format) .eq. 'FSL')then
+
+          do while(.not. exists .and. 
+     &              cnt .lt. minutes_to_wait_for_metars)
 c        
-	   len_path = index(path_to_METAR,' ') - 1
-	   data_file_m = 
+	    len_path = index(path_to_METAR,' ') - 1
+	    data_file_m = 
      &	      path_to_METAR(1:len_path)//filename9(1:9)// '0100o'
 c
-	   len_path = index(path_to_local_data,' ') - 1
-	   filename13=fname9_to_wfo_fname13(filename9(1:9))
-	   data_file_l = 
+	    len_path = index(path_to_local_data,' ') - 1
+	    filename13=fname9_to_wfo_fname13(filename9(1:9))
+	    data_file_l = 
      &	      path_to_local_data(1:len_path)//filename13
 c
- 	   len_path = index(path_to_buoy_data,' ') - 1
-	   filename13=fname9_to_wfo_fname13(filename9(1:9))
-	   data_file_b = 
+ 	    len_path = index(path_to_buoy_data,' ') - 1
+	    filename13=fname9_to_wfo_fname13(filename9(1:9))
+	    data_file_b = 
      &	      path_to_buoy_data(1:len_path)//filename13  
 c
-	   INQUIRE(FILE=data_file_m,EXIST=exists)
-	   if(.not. exists) then
+	    INQUIRE(FILE=data_file_m,EXIST=exists)
+	    if(.not. exists) then
 	      filename13=fname9_to_wfo_fname13(filename9(1:9))
 	      len_path = index(path_to_METAR,' ') - 1
 	      data_file_m = 
@@ -273,12 +290,24 @@ c
                  call waiting_c(60)
                  cnt = cnt+1               
 	      endif
-	   endif
-	enddo
-	if(.not.exists) then
-	   print *,' ERROR. File not Found: ', data_file_m
-	   stop 'Config error'
-        endif
+	    endif
+	  enddo
+	  if(.not.exists) then
+	    print *,' ERROR. File not Found: ', data_file_m
+	    stop 'Config error'
+          endif
+
+        elseif(metar_format(1:len_metar_format) .eq. 'CWB')then
+            a8_time = a9_to_a8(filename9(1:9))
+
+	    len_path = index(path_to_METAR,' ') - 1
+	    data_file_m = 'metar'//a8_time//'.dat'
+
+        else
+            write(6,*)' ERROR, unknown metar format'
+            stop
+       
+        endif ! FSL format
 c
 c.....  Call the routine that reads the METAR data files, then get
 c.....  the data.
@@ -286,6 +315,7 @@ c
 	print*,'Getting METAR data ', data_file_m
 c
         call get_metar_obs(maxobs,maxsta,i4time,data_file_m,
+     &                      metar_format,   
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_sao_g,n_sao_b,stations,
@@ -485,4 +515,47 @@ c
 	end
 
 
+ 
+       subroutine get_obs_driver_parms(path_to_metar
+     1                         ,path_to_local_data
+     1                         ,path_to_buoy_data
+     1                         ,metar_format
+     1                         ,minutes_to_wait_for_metars
+     1                         ,istatus)
+
+       character*200 path_to_metar
+       character*200 path_to_local_data
+       character*200 path_to_buoy_data
+       character*8   metar_format
+       integer       minutes_to_wait_for_metars
+
+       namelist /obs_driver_nl/ path_to_metar
+     1                         ,path_to_local_data
+     1                         ,path_to_buoy_data
+     1                         ,metar_format
+     1                         ,minutes_to_wait_for_metars
+ 
+       character*150 static_dir,filename
+ 
+       call get_directory('nest7grid',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/obs_driver.nl'
+ 
+       open(1,file=filename,status='old',err=900)
+       read(1,obs_driver_nl,err=901)
+       close(1)
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading obs_driver_nl in ',filename
+       write(*,obs_driver_nl)
+       istatus = 0
+       return
+ 
+       end
 
