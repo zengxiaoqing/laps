@@ -26,7 +26,7 @@ chomp($hhmm);
 if($fxa_sys!=0){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
-    $LAPS_LOG_PATH = "LAPS_DATA_DIR/log";
+    $LAPS_LOG_PATH = "$LAPS_DATA_DIR/log";
 }
 
 unless($opt_o==1){
