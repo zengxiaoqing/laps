@@ -58,60 +58,64 @@ c
 
         if( nindx .eq. 0) then
 
-        dirpath = pathname_in
-        filter = '*'
+           dirpath = pathname_in
+           filter = '*'
 
         else
 
-        nc = len(pathname_in)
-        i = nc
-        do while (pathname_in(i:i) .ne. '/' .and. i .gt. 0)
-        i = i-1
-        if (i.eq.0) goto 122
-        enddo
-122     continue
+           nc = len(pathname_in)
+           i = nc
+           do while (pathname_in(i:i) .ne. '/' .and. i .gt. 0)
+              i = i-1
+              if (i.eq.0) goto 122
+           enddo
+ 122       continue
 
-        if (i.gt.0) then
-        dirpath = pathname_in(1:i)
-        filter = pathname_in(i+1:nc)
-        else
-        dirpath = '.'
-        filter = pathname_in(i+1:nc)
+           if (i.gt.0) then
+              dirpath = pathname_in(1:i)
+              filter = pathname_in(i+1:nc)
+           else
+              dirpath = '.'
+              filter = pathname_in(i+1:nc)
+           endif
+
         endif
 
-        endif
 
+        call getfilenames_c (dirpath,file_names,numoffiles,filter
+     1       , status)
 
-        call getfilenames_c (dirpath,file_names,numoffiles,filter, statu
-     1s)
 
         if(numoffiles.gt.max_files) then
-        print *, 'Error calling Get_file_names'
-        print *, 'number of files returned exceeds array allocation for'
-        print *, 'file_names.  (numoffiles > max_files)'
-        istatus = 0 ! failure
-        print *, 'Maxfile is ',max_files
-        print *, 'Number of files returned is ',numoffiles
-        return
+           print *, 'Error calling Get_file_names'
+           print *, 'number of files returned exceeds array allocation'
+           print *, ' for file_names.  (numoffiles > max_files)'
+           istatus = 0          ! failure
+           print *, 'Maxfile is ',max_files
+           print *, 'Number of files returned is ',numoffiles
+           return
         endif
-
-        nindx2 = index(dirpath, ' ')
+        call s_len(dirpath,nindx2)
+c        print*,'>',dirpath,'<',
+c        print*,'nindx2 ',nindx2,string_space(dirpath)
+        
         do i = 1, numoffiles
-        nindx = index(file_names(i), ' ')
-
-        if( dirpath(nindx2-1:nindx2-1) .ne. '/')then
-        c_filenames(i) = dirpath(1:nindx2-1)//'/'
-     1//file_names(i)(1:nindx-2)
-        else
-        c_filenames(i) = dirpath(1:nindx2-1)//file_names(i)(1:nindx-2)
-        endif
+c           nindx = index(file_names(i), ' ')
+           call s_len(file_names(i),nindx)
+           if( dirpath(nindx2:nindx2) .ne. '/')then
+              c_filenames(i) = dirpath(1:nindx2)//'/'
+     1             //file_names(i)(1:nindx)
+           else
+              c_filenames(i) = dirpath(1:nindx2)
+     1             //file_names(i)(1:nindx)
+           endif
 
         enddo
 
         istatus = status
 
         if (istatus.ne.1) then
-        return
+           return
         endif
 
 c       sort data

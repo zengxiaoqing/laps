@@ -38,7 +38,7 @@ cdis
         include 'lapsparms.inc'
 
         character*9 asc9_tim
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_2d
@@ -95,7 +95,7 @@ cdis
         include 'lapsparms.inc'
 
         character*9 asc9_tim
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_2d
@@ -140,7 +140,7 @@ cdis
 
         character*9 asc9_tim
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_2d
@@ -219,7 +219,7 @@ cdis
 
         character*9 asc9_tim
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_2d
@@ -344,7 +344,7 @@ cdis
 
         include 'lapsparms.inc'
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_3d(NZ_L_MAX),comment_2d
@@ -405,7 +405,7 @@ cdis
 
         include 'lapsparms.inc'
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_3d(NZ_L_MAX),comment_2d
@@ -418,8 +418,9 @@ cdis
 
         call get_directory(ext,directory,len_dir)
 
-        write(6,11)directory,ext(1:5),var_2d
-11      format(' Reading 3d ',a50,1x,a5,1x,a3)
+        call s_len(ext,len)
+        write(6,11)directory(1:len_dir),ext(1:len),var_2d
+11      format(' Reading 3d ',a,1x,a5,1x,a3)
 
         do k = 1,kmax
             units_3d(k)   = units_2d
@@ -464,7 +465,7 @@ cdis
 
         include 'lapsparms.inc'
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_2d
@@ -502,7 +503,7 @@ cdis
 
 !       include 'lapsparms.inc'
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_2d
@@ -533,7 +534,7 @@ cdis
 
         include 'lapsparms.inc'
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_3d(NZ_L_MAX),comment_2d
@@ -582,7 +583,7 @@ cdis
         parameter (MAX_DIM_3D = MAX_FIELDS * NZ_L_MAX)
 
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_3d(MAX_DIM_3D),comment_2d(nf)
@@ -645,7 +646,7 @@ cdis
         integer*4 MAX_FIELDS
         parameter (MAX_FIELDS = 10)
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_a(nf)

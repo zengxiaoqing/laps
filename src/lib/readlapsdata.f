@@ -441,7 +441,7 @@ C ****  make fortran file_name
 C
       call downcase(ext,ext_in)
 
-      if (ext_in .eq. 'lga') then
+      if (ext_in(1:3) .eq. 'lga') then
         file_name=dir(1:end_dir)//rtime//fhh//'.'//ext_in(1:end_ext)
         fn_length = end_dir + 14 + end_ext
       else
