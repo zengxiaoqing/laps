@@ -698,6 +698,8 @@ cdoc                            calls read_multiradar_3dref.
 
             write(6,*)' istatus_vrc = ',istatus_vrc
 
+            closest_vrc = 180000.  ! This can later be made into an array
+
             if(istatus_vrc .eq. 1 .or. istatus_vrc .eq. -1)then       
                 if(l_parse(comment_2d,'WSI'))then
                     radar_name = 'WSI '
@@ -726,7 +728,7 @@ cdoc                            calls read_multiradar_3dref.
 
 !                       Set distant 3D radar points to msg to select NOWRAD/vrc
                         if(closest_vxx(i,j) .ne. r_missing_data
-     1               .and. closest_vxx(i,j) .gt. 260000.     )then       
+     1               .and. closest_vxx(i,j) .gt. closest_vrc )then       
                             istatus_3dref_a(i,j) = 0
                         endif
 
@@ -789,6 +791,13 @@ cdoc                            calls read_multiradar_3dref.
 
         write(6,*)'n_2dref,n_3dref=',n_2dref,n_3dref
         write(6,*)'n_missing/ref_missing=',n_missing,ref_missing
+
+        pct_radar_coverage =  float(n_2dref)/(imax*jmax) * 100.
+        pct_volume_coverage = float(n_3dref)/(imax*jmax) * 100.
+
+        write(6,901)pct_radar_coverage,pct_volume_coverage
+ 901    format(' Radar coverage is '      ,f6.2,'%    '
+     1        ,' Full volume coverage is ',f6.2,'%')
 
         return
         end
