@@ -8,8 +8,8 @@ LAPSROOT=../../../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a \
-           $(LAPSROOT)/src/lib/satellite/libsatellite.a \
+LAPSLIBS = $(LAPSROOT)/src/lib/satellite/libsatellite.a \
+           $(LAPSROOT)/src/lib/liblaps.a \
            $(LAPSROOT)/src/lib/goesinav/libgoesinav.a \
            $(LAPSROOT)/src/lib/nav/libnav.a \
            $(LAPSROOT)/src/lib/util/libutil.a
