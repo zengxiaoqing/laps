@@ -17,7 +17,7 @@ SUBROUTINE Minimize(id,ds)
   INCLUDE 'LBFGSB.f90'
 
   ! Local variables:
-  INTEGER          :: itr,nvar,idp
+  INTEGER          :: itr,nvar,idp,istatus
   ! Adjoint variables:
   DOUBLE PRECISION :: f,adf,dv(mvar),g(mvar)
   REAL             :: ada(mx,my,mt,2),rv(mvar)
@@ -31,6 +31,16 @@ SUBROUTINE Minimize(id,ds)
   factr = 1.0d+2
   iprnt = 1
   isbmn = 1
+
+  ! Allocate memory:
+  ALLOCATE(bdlow(mvar),bdupp(mvar),nbund(mvar),iwrka(3*mvar), &
+	wk(mvar*(2*msave+4)+12*msave*msave+12*msave), &
+	STAT=istatus)
+  IF (istatus .NE. 0) THEN
+     PRINT*,'Minimize: no space for LBFGSB workspace'
+     STOP
+  ENDIF
+
   nbund = 0
 
   ! Initial:
@@ -70,7 +80,8 @@ SUBROUTINE Minimize(id,ds)
 	! CALL adfunctndiv( a(1,1,1,id), l, n, ds, id, np, al, adf, ada )
      ENDIF
 
-     rv(1:nvar) = RESHAPE(ada(1:n(1),1:n(2),1:n(3),id:idp), (/ nvar /))
+     rv(1:nvar) = RESHAPE(ada(1:n(1),1:n(2),1:n(3),1:idp-id+1), &
+	(/ nvar /))
      g(1:nvar) = rv(1:nvar)
 
   ENDIF
@@ -97,5 +108,8 @@ SUBROUTINE Minimize(id,ds)
   CALL RF3D(a(1,1,1,id),l,n,al(1,id),np(1,id))
   IF (id .EQ. 201) &
      CALL RF3D(a(1,1,1,idp),l,n,al(1,idp),np(1,idp))
+
+  ! Deallocate memory:
+  DEALLOCATE(bdlow,bdupp,nbund,iwrka,wk,STAT=istatus)
   
 END SUBROUTINE Minimize
