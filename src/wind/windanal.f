@@ -56,7 +56,7 @@ cdis
 !    1     ,i_3d                                                       ! I
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding  ! I
 !    1     ,n_iter_wind_in
-     1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar
+     1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar! I
      1     ,istatus)
 
 !     This routine uses the inputted wind data and actually does the analysis
@@ -162,7 +162,7 @@ cdis
 
 !     These are the weights of the various data types (filling the 3D array)
       real*4 weight_cdw,weight_sfc,weight_pirep,weight_prof
-     1      ,weight_radar ! Input
+     1      ,weight_radar                                              ! Input
 
       integer*4 istatus         ! (1 is good)                          ! Output
 
@@ -762,7 +762,7 @@ csms$serial end
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_radar    ! I
      1                              ,n_var,max_obs,obs_radar          ! I/O
-     1                              ,ncnt_radar,weight_radar          ! O
+     1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
 
 !                 Combine radar (obs_radar) and non-radar (obs_point_qced) 
@@ -875,7 +875,7 @@ csms$serial end
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_radar    ! I
      1                              ,n_var,max_obs,obs_radar          ! I/O
-     1                              ,ncnt_radar,weight_radar          ! O
+     1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
 
 !                 Combine radar (obs_radar) and non-radar (obs_point_qced) 
@@ -999,7 +999,7 @@ csms$insert      print *, 'got to 10 processor=',me
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_radar    ! I
      1                              ,n_var,max_obs,obs_radar          ! I/O
-     1                              ,ncnt_radar,weight_radar          ! O
+     1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
 
 !             Combine radar (obs_radar) and non-radar (obs_point_qced) 
