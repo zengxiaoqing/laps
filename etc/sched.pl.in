@@ -88,7 +88,10 @@ if($fxa_sys!=0){
 
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
-open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm") || die "Can't redirect stdout";
+unless(open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm"))
+{ 
+  print "WARNING: $0 Can't redirect stdout\n";
+}
 open(STDERR, ">&STDOUT") || die "Can't dup stdout";
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
