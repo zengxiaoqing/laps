@@ -3333,20 +3333,21 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-!           Rotate sfc winds from grid north to true north
-            do i = 1,NX_L
-            do j = 1,NY_L
-                u_grid = u_2d(i,j)
-                v_grid = v_2d(i,j)
-                call uvgrid_to_uvtrue(  u_grid,
-     1                                  v_grid,
-     1                                  u_true,
-     1                                  v_true,
-     1                                  lon(i,j) )
-                u_2d(i,j) = u_true
-                v_2d(i,j) = v_true
-            enddo ! j
-            enddo ! i
+            if(.false.)then ! Rotate sfc winds from grid north to true north
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    u_grid = u_2d(i,j)
+                    v_grid = v_2d(i,j)
+                    call uvgrid_to_uvtrue(  u_grid,
+     1                                      v_grid,
+     1                                      u_true,
+     1                                      v_true,
+     1                                      lon(i,j) )
+                    u_2d(i,j) = u_true
+                    v_2d(i,j) = v_true
+                enddo ! j
+                enddo ! i
+            endif
 
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
      1                     ,asc9_tim_t,c33_label,c_field,k_level

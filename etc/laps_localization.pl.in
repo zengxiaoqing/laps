@@ -89,7 +89,7 @@ if(-d "$LAPS_SRC_ROOT/data"){
     &update_nl("$LAPS_SRC_ROOT/data","$LAPS_DATA_ROOT");
 
 }else{
-    print "Template directory $LAPS_SRC_ROOT/data not found - proceding assuming all namelists are up to date\n";
+    print "SRC_ROOT directory $LAPS_SRC_ROOT/data not found - proceding assuming all namelists are up to date\n";
 }
 
 if(-d $FXA_DATA){

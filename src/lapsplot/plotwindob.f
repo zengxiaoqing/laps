@@ -56,10 +56,10 @@ cdis
           goto 1
       endif
 
-      rot = (standard_longitude - lon(nint(ri),nint(rj))) / 57.295
+!     rot = projrot_latlon(lat(nint(ri),nint(rj))
+!    1                    ,lon(nint(ri),nint(rj)),istatus) / 57.295
 
-      rot = projrot_latlon(lat(nint(ri),nint(rj))
-     1                    ,lon(nint(ri),nint(rj)),istatus) / 57.295
+      rot = 0.
 
 !     Convert ri and rj to x1 and y1 (U and V)
 !     call supcon(alat,alon,x1,y1)

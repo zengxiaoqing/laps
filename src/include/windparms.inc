@@ -41,7 +41,7 @@
         logical l_grid_north
         logical l_grid_north_bkg, l_grid_north_anal, l_grid_north_out       
         parameter (l_grid_north      = .true.)
-        parameter (l_grid_north_bkg  = .false.)
+        parameter (l_grid_north_bkg  = .true.)
         parameter (l_grid_north_anal = .true.)
-        parameter (l_grid_north_out  = .false.)
+        parameter (l_grid_north_out  = .true.)
 
