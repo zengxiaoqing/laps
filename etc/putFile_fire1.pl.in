@@ -1,0 +1,33 @@
+#@PERL@
+#------------------------------------------------------------------------------
+#  NOAA/ERL
+#  Forecast Systems Laboratory
+#  Facility Division
+#  NIMBUS Software
+#
+#  This software and its documentation are in the public domain and are
+#  furnished "as is".  The United States government, its instrumentalities,
+#  officers, employees, and agents make no warranty, express or implied,
+#  as to the usefulness of the software and documentation for any purpose.
+#  They assume no responsibility (1) for the use of the software and
+#  documentation; or (2) to provide technical support to users.
+#
+#  12/19/01   S.Sahm            v1.1     copying LAPS TPW bigfile from jet
+#                                        to ds1-ncl
+#  10/24/02   L.Wharton                  modified for usfsfire/f1 to ds1-awc5
+#
+#  usage: putFile.pl filename
+#------------------------------------------------------------------------------
+my $LAPSROOT=shift || die "LAPS root directory required\n";
+require "$LAPSROOT/etc/run_sys.pm";
+
+my $scp = "/usr/bin/scp";
+my $fileName=shift || die "WFO format filename required as second argument.\n";
+
+# copy to ds1-awc5
+$remotehost = "ds1-awc5";
+$remotePath = "/case/data/fxa/Grid/FSL/netCDF/LAPS_Grid/laps_f1";
+$jetPath = "/p10/usfsfire/f1/data/lapsprd/bigfile";
+$cmd = "$scp $jetPath/$fileName $remotehost:$remotePath/$fileName";
+run_sys::run_sys($cmd);
+
