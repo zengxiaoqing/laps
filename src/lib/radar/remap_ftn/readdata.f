@@ -57,6 +57,7 @@ c
 c     Include files
 c
       include         'remap_constants.dat'
+      include         'remap_dims.inc'
       include         'remap_buffer.cmn'
 c
 c     Input variables

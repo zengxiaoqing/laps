@@ -159,8 +159,6 @@ c     For first scan, initialize sums and counters to zero.
 c
       IF (i_first_scan .eq. 1 .or. i_first_scan .eq. 999) THEN
 
-        ISTAT = INIT_TIMER()
-
         I4_elapsed = ishow_timer()
 
         write(6,806)
@@ -493,23 +491,13 @@ c       call radar_qc(NX_L,NY_L,NZ_L,grid_rvel,istatus_qc)
         n_ref_obs_old(1) = n_ref_grids
 c
 c     Determine filename extension
-c     Some day this could be a little less hard-coded
-c
-        IF( c7_radarname(1:4).eq.'KTLX' ) THEN
-          ext = 'v01'
-        ELSE IF( c7_radarname(1:4).eq.'KAMA' ) THEN
-          ext = 'v02'
-        ELSE IF( c7_radarname(1:4).eq.'KDDC' ) THEN
-          ext = 'v03'
-        ELSE
-          ext = 'v01'
-        END IF
-
-        call getenv('LAPS_EXT',c7_laps_ext)
+        call getenv('LAPS_REMAP_EXT',c7_laps_ext)
         call downcase(c7_laps_ext,c7_laps_ext)
         write(6,*)' REMAP_PROCESS > laps_ext = ',c7_laps_ext
         if(c7_laps_ext(1:1) .eq. 'v')then
           ext = c7_laps_ext
+        else
+          ext = 'v01'
         endif
 c
 c     Prepare to write out data

@@ -11,8 +11,19 @@
        character*9 a9_time
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
+       character*3 ext_out
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
+
+c
+c     Determine filename extension
+        call getenv('LAPS_REMAP_EXT',ext_out)
+        call downcase(ext_out,ext_out)
+        write(6,*)' REMAP_PROCESS > laps_ext = ',ext_out
+        if(ext_out(1:1) .ne. 'v')then
+          ext_out = 'v01'
+        endif
 
        i_last_scan = 0
 
@@ -25,6 +36,7 @@
        endif
 
        if(i_tilt_proc .eq. 1)then
+           c2_tilt = '01'
 
 !          Get path to file
            call get_remap_parms(path_to_wideband,istatus)
@@ -32,7 +44,7 @@
  
 !          Get i4time of 01 elevation file nearest to 15 minutes ago
            i4time_now = i4time_now_gg() 
-           c_filespec = path_to_wideband//'/*_elev'//c2_tilt
+           c_filespec = path_to_wideband(1:len_path)//'/*_elev'//c2_tilt       
 
            call get_file_times(c_filespec,max_files,c_fnames
      1                        ,i4times,i_nbr_files_out,istatus)
@@ -40,7 +52,7 @@
                stop
            endif
 
-           call get_filespec('v01',1,c_filespec,istatus)
+           call get_filespec(ext_out,1,c_filespec,istatus)
            call get_file_times(c_filespec,max_files,c_fnames
      1                   ,i4times_lapsprd,i_nbr_lapsprd_files,istatus)
 
@@ -77,6 +89,9 @@
      1                               ,radialAzim
      1                               ,Z
      1                               ,V
+     1                               ,resolutionV
+     1                               ,MAX_VEL_GATES, MAX_REF_GATES
+     1                               ,MAX_RAY_TILT
      1                               ,istatus)
 
        if(istatus .eq. 1)then
@@ -102,14 +117,14 @@
  
        subroutine get_remap_parms(path_to_wideband,istatus)
 
-       character*150 path_to_wideband,filename
+       character*150 path_to_wideband           
        namelist /remap_nl/ path_to_wideband
  
        character*150 static_dir,filename
  
        call get_directory('nest7grid',static_dir,len_dir)
 
-       filename = static_dir(1:len_dir)//'/nest7grid.parms'
+       filename = static_dir(1:len_dir)//'/remap.nl'
  
        open(1,file=filename,status='old',err=900)
        read(1,remap_nl,err=901)
@@ -123,6 +138,7 @@
        return
 
   901  print*,'error reading remap_nl in ',filename
+       write(*,remap_nl)
        istatus = 0
        return
 
@@ -132,6 +148,7 @@
        function get_altitude()
        integer get_altitude          ! Site altitude (meters)
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_altitude = nint(siteAlt)
@@ -143,6 +160,7 @@
        function get_latitude()
        integer get_latitude          ! Site latitude (degrees * 100000)
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_latitude = nint(siteLat*100000)
@@ -153,6 +171,7 @@
        function get_longitude()
        integer get_longitude         ! Site longitude (degrees * 100000)
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
 
        get_longitude = nint(siteLon*100000)
@@ -188,6 +207,7 @@
        function get_fixed_angle()
        integer get_fixed_angle     ! Beam tilt angle (degrees * 100)
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_fixed_angle = nint(elevationAngle * 100.)
@@ -198,6 +218,7 @@
        function get_scan()
        integer get_scan            ! Scan #
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_scan = elevationNumber
@@ -208,6 +229,7 @@
        function get_tilt()
        integer get_tilt            ! Tilt #
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_tilt = elevationNumber
@@ -218,6 +240,7 @@
        function get_num_rays()
        integer get_num_rays
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_num_rays = numRadials
@@ -227,6 +250,7 @@
  
        subroutine get_volume_time(i4time_process_ret)
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        i4time_process_ret = i4time_process
@@ -237,6 +261,7 @@
        function get_vcp()
        integer get_vcp
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_vcp = VCP
@@ -247,6 +272,7 @@
        function get_azi(iray) ! azimuth * 100.
        integer get_azi
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_azi = nint(radialAzim(iray)*100.)
@@ -257,6 +283,7 @@
        function get_nyquist()
        integer get_nyquist        ! Nyquist velocity of the radial (M/S*100)
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
        get_nyquist = nint(r_nyquist*100.)
@@ -279,21 +306,51 @@
        end
  
  
-       function get_data_field(index, data, n_ptr, n_gates)
+       function get_data_field(index, data, n_ptr, n_gates
+     1                                           , b_missing_data)
        integer get_data_field
 
+       include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
-       logical*1 data(n_gates)
+       real*4 data(n_gates)
 
        if(index .eq. 1)then ! reflectivity
            do i = 1,n_gates
                data(i) = Z(n_ptr + (i-1))
+
+!              Convert from signed to unsigned
+               if(data(i) .gt. 127.) then
+                   print *, 'error in Reflectivity: ',i,data(i)
+                   stop
+               endif
+               if(data(i) .lt. 0.) then
+                   data(i) = 256. - data(i)
+               endif
+
+               if(data(i) .ne. b_missing_data)then ! Scale
+                   data(i) = (count - 2.)/2.0 - 32.
+               endif
+
            enddo
 
        elseif(index .eq. 2)then ! velocity
            do i = 1,n_gates
                data(i) = V(n_ptr + (i-1))
+
+!              Convert from signed to unsigned
+               if(data(i) .gt. 127.) then
+                   print *, 'error in Velocity: ',i,data(i)
+                   stop
+               endif
+               if(data(i) .lt. 0.) then
+                   data(i) = 256. - data(i)
+               endif
+
+               if(data(i) .ne. b_missing_data)then ! Scale
+                   data(i) = (data(i) - 129.) * resolutionV
+               endif
+
            enddo
 
        endif

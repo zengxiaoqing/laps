@@ -1,10 +1,11 @@
 
         integer b_missing_cmn
-        integer b_ref_cmn(460,380)      ! (380 rays by 460 max gates)
-        integer b_vel_cmn(920,380)      ! (380 rays by 920 max gates)
+        integer b_ref_cmn(MAX_REF_GATES,MAX_RAY_TILT)  
+        integer b_vel_cmn(MAX_REF_GATES,MAX_RAY_TILT)  
 
         integer n_rays_cmn,i_tilt_cmn,n_ref_gates_cmn,n_vel_gates_cmn
-        real*4 azim_cmn(380),elev_cmn,v_nyquist_ray_a_cmn(380)
+        real*4 azim_cmn(MAX_RAY_TILT),elev_cmn,
+     1         v_nyquist_ray_a_cmn(MAX_RAY_TILT)
 
         common /buffer_cmn/b_ref_cmn,b_vel_cmn,n_rays_cmn,i_tilt_cmn,
      1  n_ref_gates_cmn,n_vel_gates_cmn,azim_cmn,elev_cmn,

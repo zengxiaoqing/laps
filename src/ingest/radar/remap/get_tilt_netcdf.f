@@ -11,447 +11,552 @@
      1                               ,radialAzim
      1                               ,Z  
      1                               ,V
+     1                               ,resolutionV
+     1                               ,V_bin_max, Z_bin_max, radial_max
      1                               ,istatus)
 
-!.............................................................................
-
-C     FORTRAN TEMPLATE FOR FILE= test.nc                                 
-      PARAMETER (NVARS=29) !NUMBER OF VARIABLES
-      PARAMETER (NREC=   380)   !CHANGE THIS TO GENERALIZE
-C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 29
-      INTEGER*4 RCODE
-      INTEGER*4 RECDIM
-C     ****VARIABLES FOR THIS NETCDF FILE****
-C
-      LOGICAL*1   Z                              ( 460,NREC)
-      LOGICAL*1   V                              ( 920,NREC)
-      LOGICAL*1   W                              ( 920,NREC)
-      INTEGER*2   elevationNumber                
-      REAL*4      elevationAngle                 
-      INTEGER*2   numRadials                     
-      REAL*4      radialAzim                     (NREC)
-      REAL*4      radialElev                     (NREC)
-      REAL*8      radialTime                     (NREC)
-      CHARACTER*1 siteName                       ( 132)
-      CHARACTER*1 radarName                      (   5)
-      REAL*4      siteLat                        
-      REAL*4      siteLon                        
-      REAL*4      siteAlt                        
-      INTEGER*2   VCP                            
-      REAL*8      esStartTime                    
-      REAL*8      esEndTime                      
-      REAL*4      unambigRange                   
-      REAL*4      firstGateRangeZ                
-      REAL*4      firstGateRangeV                
-      REAL*4      gateSizeZ                      
-      REAL*4      gateSizeV                      
-      INTEGER*2   numGatesZ                      
-      INTEGER*2   numGatesV                      
-      REAL*4      resolutionV                    
-      REAL*4      nyquist                        
-      REAL*4      calibConst                     
-      REAL*4      atmosAttenFactor               
-      REAL*4      powDiffThreshold               
-C*************************************
-      INTEGER*4 START(10)
-      INTEGER*4 COUNT(10)
-      INTEGER VDIMS(10) !ALLOW UP TO 10 DIMENSIONS
-      CHARACTER*31 DUMMY
-
-!     Non-automatic declarations...............................................
+!     Non automatic declarations
       character*70 filename
+      integer V_bin_max, Z_bin_max, radial_max
 
-      NCID=NCOPN(filename
-!............................................................................
-     +,NCNOWRIT,RCODE)
-      CALL NCINQ(NCID,NDIMS,NVARS,NGATTS,RECDIM,RCODE)
-      CALL NCDINQ(NCID,RECDIM,DUMMY,NRECS,RCODE)
-C     !NRECS! NOW CONTAINS NUM RECORDS FOR THIS FILE
-C
-C    statements to fill Z                              
-C
-      CALL NCVINQ(NCID, 1,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  10 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  10  CONTINUE
-      CALL NCVGT(NCID, 1,START,COUNT,
-     +Z                              ,RCODE)
-C
-C    statements to fill V                              
-C
-      CALL NCVINQ(NCID, 2,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  20 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  20  CONTINUE
-      CALL NCVGT(NCID, 2,START,COUNT,
-     +V                              ,RCODE)
-C
-C    statements to fill W                              
-C
-      CALL NCVINQ(NCID, 3,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  30 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  30  CONTINUE
-      CALL NCVGT(NCID, 3,START,COUNT,
-     +W                              ,RCODE)
-C
-C    statements to fill elevationNumber                
-C
-      CALL NCVINQ(NCID, 4,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  40 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  40  CONTINUE
-      CALL NCVGT(NCID, 4,START,COUNT,
-     +elevationNumber                ,RCODE)
-C
-C    statements to fill elevationAngle                 
-C
-      CALL NCVINQ(NCID, 5,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  50 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  50  CONTINUE
-      CALL NCVGT(NCID, 5,START,COUNT,
-     +elevationAngle                 ,RCODE)
-C
-C    statements to fill numRadials                     
-C
-      CALL NCVINQ(NCID, 6,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  60 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  60  CONTINUE
-      CALL NCVGT(NCID, 6,START,COUNT,
-     +numRadials                     ,RCODE)
-C
-C    statements to fill radialAzim                     
-C
-      CALL NCVINQ(NCID, 7,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  70 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  70  CONTINUE
-      CALL NCVGT(NCID, 7,START,COUNT,
-     +radialAzim                     ,RCODE)
-C
-C    statements to fill radialElev                     
-C
-      CALL NCVINQ(NCID, 8,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  80 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  80  CONTINUE
-      CALL NCVGT(NCID, 8,START,COUNT,
-     +radialElev                     ,RCODE)
-C
-C    statements to fill radialTime                     
-C
-      CALL NCVINQ(NCID, 9,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  90 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  90  CONTINUE
-      CALL NCVGT(NCID, 9,START,COUNT,
-     +radialTime                     ,RCODE)
-C
-C    statements to fill siteName                       
-C
-      CALL NCVINQ(NCID,10,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 100 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 100  CONTINUE
-      CALL NCVGTC(NCID,10,START,COUNT,
-     +siteName                       ,LENSTR,RCODE)
-C
-C    statements to fill radarName                      
-C
-      CALL NCVINQ(NCID,11,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 110 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 110  CONTINUE
-      CALL NCVGTC(NCID,11,START,COUNT,
-     +radarName                      ,LENSTR,RCODE)
-C
-C    statements to fill siteLat                        
-C
-      CALL NCVINQ(NCID,12,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 120 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 120  CONTINUE
-      CALL NCVGT(NCID,12,START,COUNT,
-     +siteLat                        ,RCODE)
-C
-C    statements to fill siteLon                        
-C
-      CALL NCVINQ(NCID,13,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 130 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 130  CONTINUE
-      CALL NCVGT(NCID,13,START,COUNT,
-     +siteLon                        ,RCODE)
-C
-C    statements to fill siteAlt                        
-C
-      CALL NCVINQ(NCID,14,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 140 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 140  CONTINUE
-      CALL NCVGT(NCID,14,START,COUNT,
-     +siteAlt                        ,RCODE)
-C
-C    statements to fill VCP                            
-C
-      CALL NCVINQ(NCID,15,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 150 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 150  CONTINUE
-      CALL NCVGT(NCID,15,START,COUNT,
-     +VCP                            ,RCODE)
-C
-C    statements to fill esStartTime                    
-C
-      CALL NCVINQ(NCID,16,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 160 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 160  CONTINUE
-      CALL NCVGT(NCID,16,START,COUNT,
-     +esStartTime                    ,RCODE)
-C
-C    statements to fill esEndTime                      
-C
-      CALL NCVINQ(NCID,17,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 170 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 170  CONTINUE
-      CALL NCVGT(NCID,17,START,COUNT,
-     +esEndTime                      ,RCODE)
-C
-C    statements to fill unambigRange                   
-C
-      CALL NCVINQ(NCID,18,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 180 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 180  CONTINUE
-      CALL NCVGT(NCID,18,START,COUNT,
-     +unambigRange                   ,RCODE)
-C
-C    statements to fill firstGateRangeZ                
-C
-      CALL NCVINQ(NCID,19,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 190 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 190  CONTINUE
-      CALL NCVGT(NCID,19,START,COUNT,
-     +firstGateRangeZ                ,RCODE)
-C
-C    statements to fill firstGateRangeV                
-C
-      CALL NCVINQ(NCID,20,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 200 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 200  CONTINUE
-      CALL NCVGT(NCID,20,START,COUNT,
-     +firstGateRangeV                ,RCODE)
-C
-C    statements to fill gateSizeZ                      
-C
-      CALL NCVINQ(NCID,21,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 210 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 210  CONTINUE
-      CALL NCVGT(NCID,21,START,COUNT,
-     +gateSizeZ                      ,RCODE)
-C
-C    statements to fill gateSizeV                      
-C
-      CALL NCVINQ(NCID,22,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 220 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 220  CONTINUE
-      CALL NCVGT(NCID,22,START,COUNT,
-     +gateSizeV                      ,RCODE)
-C
-C    statements to fill numGatesZ                      
-C
-      CALL NCVINQ(NCID,23,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 230 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 230  CONTINUE
-      CALL NCVGT(NCID,23,START,COUNT,
-     +numGatesZ                      ,RCODE)
-C
-C    statements to fill numGatesV                      
-C
-      CALL NCVINQ(NCID,24,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 240 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 240  CONTINUE
-      CALL NCVGT(NCID,24,START,COUNT,
-     +numGatesV                      ,RCODE)
-C
-C    statements to fill resolutionV                    
-C
-      CALL NCVINQ(NCID,25,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 250 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 250  CONTINUE
-      CALL NCVGT(NCID,25,START,COUNT,
-     +resolutionV                    ,RCODE)
-C
-C    statements to fill nyquist                        
-C
-      CALL NCVINQ(NCID,26,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 260 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 260  CONTINUE
-      CALL NCVGT(NCID,26,START,COUNT,
-     +nyquist                        ,RCODE)
-C
-C    statements to fill calibConst                     
-C
-      CALL NCVINQ(NCID,27,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 270 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 270  CONTINUE
-      CALL NCVGT(NCID,27,START,COUNT,
-     +calibConst                     ,RCODE)
-C
-C    statements to fill atmosAttenFactor               
-C
-      CALL NCVINQ(NCID,28,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 280 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 280  CONTINUE
-      CALL NCVGT(NCID,28,START,COUNT,
-     +atmosAttenFactor               ,RCODE)
-C
-C    statements to fill powDiffThreshold               
-C
-      CALL NCVINQ(NCID,29,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 290 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 290  CONTINUE
-      CALL NCVGT(NCID,29,START,COUNT,
-     +powDiffThreshold               ,RCODE)
-C
-C     HERE IS WHERE YOU WRITE STATEMENTS TO USE THE DATA
-C
-C
-C
 !.............................................................................
 
+      include 'netcdf.inc'
+      integer V_bin, Z_bin, radial,nf_fid, nf_vid, nf_status
+C
+C  Open netcdf File for reading
+C
+      nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'NF_OPEN ',filename
+        istatus = 0
+        return
+      endif
+C
+C  Fill all dimension values
+C
+C
+C Get size of V_bin
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'V_bin',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim V_bin'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,V_bin)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim V_bin'
+      endif
+C
+C Get size of Z_bin
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'Z_bin',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim Z_bin'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,Z_bin)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim Z_bin'
+      endif
+C
+C Get size of radial
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'radial',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim radial'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,radial)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim radial'
+      endif
+
+!.....Test whether dimensions of NetCDF file are within bounds...............
+
+      if(V_bin .gt. V_bin_max)then
+          write(6,*)' V_bin > permitted dimensions ',V_bin,V_bin_max
+          stop
+      endif
+
+      if(Z_bin .gt. Z_bin_max)then
+          write(6,*)' Z_bin > permitted dimensions ',Z_bin,Z_bin_max     
+          stop
+      endif
+
+      if(radial .gt. radial_max)then
+          write(6,*)' radial > permitted dimensions ',radial,radial_max       
+          stop
+      endif
+
+      call read_netcdf(nf_fid, V_bin_max, Z_bin_max, radial_max,
+!............................................................................
+     +     V, VCP, 
+     +     Z, elevationNumber, numGatesV, numGatesZ, numRadials, 
+     +     atmosAttenFactor, calibConst, elevationAngle, 
+     +     firstGateRangeV, firstGateRangeZ, gateSizeV, gateSizeZ, 
+     +     nyquist, powDiffThreshold, radialAzim, radialElev, 
+     +     resolutionV, siteAlt, siteLat, siteLon, unambigRange, 
+     +     esEndTime, esStartTime, radialTime, radarName, siteName)
+
+      istatus = 1
       return
 
-!.............................................................................
-      END
+      end
+C
+C
+C
+C  Subroutine to read the file "WSR-88D Wideband Data" 
+C
+      subroutine read_netcdf(nf_fid, V_bin, Z_bin, radial, V, VCP, 
+     +     Z, elevationNumber, numGatesV, numGatesZ, numRadials, 
+     +     atmosAttenFactor, calibConst, elevationAngle, 
+     +     firstGateRangeV, firstGateRangeZ, gateSizeV, gateSizeZ, 
+     +     nyquist, powDiffThreshold, radialAzim, radialElev, 
+     +     resolutionV, siteAlt, siteLat, siteLon, unambigRange, 
+     +     esEndTime, esStartTime, radialTime, radarName, siteName)
+C
+      include 'netcdf.inc'
+      integer V_bin, Z_bin, radial,nf_fid, nf_vid, nf_status
+      integer V( V_bin, radial), VCP, Z( Z_bin,
+     +     radial), elevationNumber, numGatesV, numGatesZ, numRadials
+      real atmosAttenFactor, calibConst, elevationAngle,
+     +     firstGateRangeV, firstGateRangeZ, gateSizeV, gateSizeZ,
+     +     nyquist, powDiffThreshold, radialAzim(radial),
+     +     radialElev(radial), resolutionV, siteAlt, siteLat,
+     +     siteLon, unambigRange
+      double precision esEndTime, esStartTime, radialTime(radial)
+      character*5 radarName
+      character*132 siteName
+
+
+C   Variables of type REAL
+C
+C     Variable        NETCDF Long Name
+C      atmosAttenFactor"Atmospheric attenuation factor"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'atmosAttenFactor',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var atmosAttenFactor'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,atmosAttenFactor)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var atmosAttenFactor'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      calibConst   "System gain calibration constant"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'calibConst',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var calibConst'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,calibConst)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var calibConst'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      elevationAngle"Elevation angle"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'elevationAngle',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var elevationAngle'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevationAngle)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var elevationAngle'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      firstGateRangeV"Range to 1st Doppler gate"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'firstGateRangeV',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var firstGateRangeV'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,firstGateRangeV)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var firstGateRangeV'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      firstGateRangeZ"Range to 1st Reflectivity gate"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'firstGateRangeZ',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var firstGateRangeZ'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,firstGateRangeZ)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var firstGateRangeZ'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      gateSizeV    "Doppler gate spacing"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'gateSizeV',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var gateSizeV'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,gateSizeV)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var gateSizeV'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      gateSizeZ    "Reflectivity gate spacing"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'gateSizeZ',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var gateSizeZ'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,gateSizeZ)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var gateSizeZ'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      nyquist      "Nyquist velocity"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'nyquist',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var nyquist'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,nyquist)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var nyquist'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      powDiffThreshold"Range de-aliasing threshold"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'powDiffThreshold',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var powDiffThreshold'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,powDiffThreshold)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var powDiffThreshold'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      radialAzim   "Radial azimuth angle"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'radialAzim',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var radialAzim'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,radialAzim)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var radialAzim'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      radialElev   "Radial elevation angle"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'radialElev',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var radialElev'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,radialElev)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var radialElev'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      resolutionV  "Doppler velocity resolution"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'resolutionV',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var resolutionV'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,resolutionV)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var resolutionV'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      siteAlt      "Altitude of site above mean sea level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'siteAlt',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var siteAlt'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,siteAlt)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var siteAlt'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      siteLat      "Latitude of site"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'siteLat',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var siteLat'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,siteLat)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var siteLat'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      siteLon      "Longitude of site"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'siteLon',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var siteLon'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,siteLon)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var siteLon'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      unambigRange "Unambiguous range"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'unambigRange',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var unambigRange'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,unambigRange)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var unambigRange'
+      endif
+
+C   Variables of type INT
+C
+C
+C     Variable        NETCDF Long Name
+C      V            "Velocity"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'V',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var V'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,V)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var V'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      VCP          "Volume Coverage Pattern"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'VCP',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var VCP'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,VCP)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var VCP'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      W            "Spectrum Width"
+C
+!        nf_status = NF_INQ_VARID(nf_fid,'W',nf_vid)
+!      if(nf_status.ne.NF_NOERR) then
+!        print *, NF_STRERROR(nf_status)
+!        print *,'in var W'
+!      endif
+!        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,W)
+!      if(nf_status.ne.NF_NOERR) then
+!        print *, NF_STRERROR(nf_status)
+!        print *,'in var W'
+!      endif
+C
+C     Variable        NETCDF Long Name
+C      Z            "Reflectivity"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Z',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Z'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,Z)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Z'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      elevationNumber"Elevation number"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'elevationNumber',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var elevationNumber'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,elevationNumber)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var elevationNumber'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      numGatesV    "Number of Doppler gates"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'numGatesV',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numGatesV'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesV)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numGatesV'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      numGatesZ    "Number of reflectivity gates"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'numGatesZ',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numGatesZ'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numGatesZ)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numGatesZ'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      numRadials   "Number of radials"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'numRadials',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numRadials'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numRadials)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numRadials'
+      endif
+
+C   Variables of type DOUBLE
+C
+C
+C     Variable        NETCDF Long Name
+C      esEndTime    "End time of elevation scan"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'esEndTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var esEndTime'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,esEndTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var esEndTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      esStartTime  "Start time of elevation scan"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'esStartTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var esStartTime'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,esStartTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var esStartTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      radialTime   "Time of radial"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'radialTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var radialTime'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,radialTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var radialTime'
+      endif
+
+
+C   Variables of type CHAR
+C
+C
+C     Variable        NETCDF Long Name
+C      radarName    "Official name of the radar"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'radarName',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var radarName'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,radarName)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var radarName'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      siteName     "Long name of the radar site"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'siteName',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var siteName'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,siteName)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var siteName'
+      endif
+
+      nf_status = nf_close(nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'nf_close'
+      endif
+
+      return
+      end

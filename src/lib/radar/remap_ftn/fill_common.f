@@ -47,10 +47,12 @@ c
 c
 c     Sizing parameters
 c
-      integer max_ray,max_ref_gates,max_vel_gates,n_ref,n_vel
-      parameter (max_ray=380,max_ref_gates=460,max_vel_gates=920)
-      parameter (n_ref=(max_ray*max_ref_gates),
-     :           n_vel=(max_ray*max_vel_gates))
+      include 'remap_dims.inc'
+      include 'remap_buffer.cmn'
+
+      integer n_ref,n_vel
+      parameter (n_ref=(max_ray_tilt*max_ref_gates),
+     :           n_vel=(max_ray_tilt*max_vel_gates))
 c
 c     Input declarations
 c
@@ -60,14 +62,10 @@ c
       integer*4 i_tilt
       integer*4 n_ref_gates
       integer*4 n_vel_gates
-      real*4 azim(max_ray)
-      real*4 v_nyquist(max_ray)
+      real*4 azim(max_ray_tilt)
+      real*4 v_nyquist(max_ray_tilt)
       real*4 eleva
       real*4 rmissing_data
-c
-c     Common block declarations
-c
-      include 'remap_buffer.cmn'
 c
 c     Misc internal variables
 c

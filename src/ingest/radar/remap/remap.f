@@ -18,20 +18,13 @@
       subroutine remap_sub(NX_L,NY_L,NZ_L,istatus)
 
       include 'remap.inc'
+      include 'remap_dims.inc'
 
-      integer NUM_REF_GATES
-      integer NUM_VEL_GATES
       integer MAX_REF_TILT
       integer MAX_VEL_TILT
-      integer MAX_RAY_TILT
-      integer NSIZE
 
-      parameter (NUM_REF_GATES = 460)
-      parameter (NUM_VEL_GATES = 920)
-      parameter (MAX_RAY_TILT = 380)
-      parameter (MAX_REF_TILT = NUM_REF_GATES * MAX_RAY_TILT)
-      parameter (MAX_VEL_TILT = NUM_VEL_GATES * MAX_RAY_TILT)
-      parameter (NSIZE = 920)
+      parameter (MAX_REF_TILT = MAX_REF_GATES * MAX_RAY_TILT)
+      parameter (MAX_VEL_TILT = MAX_VEL_GATES * MAX_RAY_TILT)
 
 !     Variables used only in remap_process
       integer i_last_scan,i_first_scan
@@ -40,9 +33,9 @@
 
 !     Variables used for data access and in fill_common 
    
-      logical*1 b_ref(MAX_REF_TILT)
-      logical*1 b_vel(MAX_VEL_TILT)
-      logical*1 b_missing_data, i4_to_byte
+      real*4 b_ref(MAX_REF_TILT)
+      real*4 b_vel(MAX_VEL_TILT)
+      real*4 b_missing_data, i4_to_byte
 
       real v_nyquist_ray_a(MAX_RAY_TILT)
       real azim(MAX_RAY_TILT)
@@ -93,11 +86,12 @@
 
 !     Beginning of Executable Code 
 !     Some initializations  
+      ISTAT = INIT_TIMER()
       VERBOSE = 1
 
-      n_vel_gates = NUM_VEL_GATES
-      n_ref_gates = NUM_REF_GATES
-      b_missing_data = i4_to_byte(255)
+      n_vel_gates = MAX_VEL_GATES
+      n_ref_gates = MAX_REF_GATES
+      b_missing_data = 255.
 
 !     strtm_ptr = string_time
 !     fnm_ptr = full_fname
@@ -144,11 +138,14 @@
 !     call lut_gen FORTRAN routine 
       call lut_gen(rname_ptr,radar_lat,radar_lon,radar_alt,NX_L,NY_L)        
 
+      I4_elapsed = ishow_timer()
+
 !     get data indices needed for other a2io library calls  
 
       ref_index=get_field_num('DBZ') 
-      write(6,*)'  Retrieved reflectivity index as ',ref_index  
       vel_index=get_field_num('VEL')
+      write(6,*)
+      write(6,*)'  Retrieved reflectivity index as ',ref_index  
       write(6,*)'  Retrieved velocity index as ',vel_index  
 
 !     Misc initializations  
@@ -197,7 +194,7 @@
             i_tilt = get_tilt() 
             num_rays = get_num_rays() 
 
-            if(VERBOSE .eq. 1)then
+            if(n_rays .eq. n_rays/10 * 10)then
 !             write(6,*)'  Good status received'
               write(6,*)'  i_angle, i_tilt = ', i_angle, i_tilt
             endif
@@ -236,7 +233,7 @@
               azim(n_rays) = 0.01 * get_azi(n_rays)
               v_nyquist_ray_a(n_rays) = 0.01 * get_nyquist() 
 
-              if(VERBOSE .eq. 1)then
+              if(n_rays-1 .eq. n_rays/10 * 10)then
                 write(6,*)'    n_rays = ',n_rays  
      1                   ,'    ref_ptr / vel_ptr = ' 
      1                   ,     ref_ptr,vel_ptr  
@@ -258,15 +255,17 @@
               endif
 
               io_stat = get_data_field(ref_index, b_ref(ref_ptr)
-     1                                ,ref_ptr  , NUM_REF_GATES) 
+     1                                ,ref_ptr  , MAX_REF_GATES
+     1                                , b_missing_data) 
               io_stat = get_data_field(vel_index, b_vel(vel_ptr)
-     1                                ,vel_ptr  , NUM_VEL_GATES) 
+     1                                ,vel_ptr  , MAX_VEL_GATES
+     1                                , b_missing_data) 
 
-!             parameter (MAX_REF_TILT = NUM_REF_GATES * MAX_RAY_TILT)
-!             parameter (MAX_VEL_TILT = NUM_VEL_GATES * MAX_RAY_TILT)
+!             parameter (MAX_REF_TILT = MAX_REF_GATES * MAX_RAY_TILT)
+!             parameter (MAX_VEL_TILT = MAX_VEL_GATES * MAX_RAY_TILT)
 
-              ref_ptr = ref_ptr + NUM_REF_GATES 
-              vel_ptr = vel_ptr + NUM_VEL_GATES 
+              ref_ptr = ref_ptr + MAX_REF_GATES 
+              vel_ptr = vel_ptr + MAX_VEL_GATES 
 
             else ! end of tilt
 

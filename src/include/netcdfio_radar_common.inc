@@ -1,12 +1,9 @@
 
-       integer max_rays
-       parameter (max_rays=380)
+       real radialAzim(MAX_RAY_TILT)
+       integer VCP, elevationNumber, numRadials
 
-       real*4 radialAzim(max_rays)
-       integer*2 VCP, elevationNumber, numRadials
-
-       LOGICAL*1   Z                              ( 460*max_rays)
-       LOGICAL*1   V                              ( 920*max_rays)
+       integer   Z(MAX_REF_GATES*MAX_RAY_TILT)
+       integer   V(MAX_VEL_GATES*MAX_RAY_TILT)
 
        common/radar_tilt_data/
      1                                siteLat                        
@@ -19,5 +16,6 @@
      1                               ,radialAzim
      1                               ,Z
      1                               ,V
+     1                               ,resolutionV
      1                               ,i4time_process
      1                               ,numRadials

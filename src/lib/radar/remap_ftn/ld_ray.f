@@ -61,6 +61,7 @@ c
 c
 c     Include files
 c
+      include 'remap_dims.inc'
       include 'remap_buffer.cmn'
 c
 c     Misc. Local Variables

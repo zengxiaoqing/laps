@@ -68,6 +68,7 @@ c
 c
 c     Include file
 c
+      include 'remap_dims.inc'
       include 'remap_buffer.cmn'
 c
 c     Misc internal variables
