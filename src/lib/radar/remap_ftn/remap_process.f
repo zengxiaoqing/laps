@@ -587,13 +587,14 @@ c
      1              comment_a,out_array_4d,NX_L,NY_L,NZ_L,nf,istatus)
 
         else ! Single level of data (as per WFO)
-!           call put_laps_vrc(i_product_i4time,comment_a(1),c7_laps_ext       
-!    1               c4_radarname,rlat_radar,rlon_radar,rheight_radar
-!    1               out_array_4d(1,1,1),NX_L,NY_L,NZ_L,istatus)
+            call put_remap_vrc(i_product_i4time,comment_a(1)
+     1                  ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L,istatus)   
 
         endif
 
         I4_elapsed = ishow_timer()
+
+        stop
 
         call make_fnam_lp(i_product_i4time,gtime,istatus)
         call downcase(ext,ext_in)
@@ -750,18 +751,11 @@ c            ext = 'v01'
         end
 
 
-!       call put_laps_vrc(i_product_i4time,comment_a(1)
-!    1               c4_radarname,rlat_radar,rlon_radar,rheight_radar
-!    1               out_array_4d(1,1,1),NX_L,NY_L,istatus)
 
-        subroutine put_laps_vrc(i4time,comment_2d,imax,jmax
-     1                         ,field_2d,istatus)
+        subroutine put_remap_vrc(i4time,comment_2d 
+     1                         ,field_3d,imax,jmax,kmax,istatus)
 
         character*7 c7_ext
-
-!       Get column max reflectivity
-!       call ref_fill_horz()
-
 
 !       Stuff from 'put_laps_2d' except how do we handle radar subdir?
 
@@ -775,9 +769,15 @@ c            ext = 'v01'
         integer*4 LVL_2d
         character*4 LVL_COORD_2d
 
+        real*4 field_3d(imax,jmax,kmax)
         real*4 field_2d(imax,jmax)
 
         character*8 radar_subdir
+
+!       Get column max reflectivity
+        call get_max_ref(field_3d,imax,jmax,kmax,field_2d)
+
+!       call ref_fill_horz()
 
         ext = 'vrc'
         var_2d = 'REF'
@@ -787,9 +787,9 @@ c            ext = 'v01'
         call downcase(radar_subdir,radar_subdir)
         write(6,*)' radar_init: radar_subdir = ',radar_subdir
 
-        call get_directory(radar_subdir,directory1,len_dir)
+        call get_directory('rdr',directory1,len_dir)
 
-        directory = directory1(1:len_dir)//'vrc'
+        directory = directory1(1:len_dir)//radar_subdir(1:3)//'/vrc/'  
 
         write(6,11)directory,ext(1:5),var_2d
 11      format(' Writing 2d ',a50,1x,a5,1x,a3)

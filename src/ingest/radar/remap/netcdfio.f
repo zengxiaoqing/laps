@@ -1,3 +1,4 @@
+
  
        subroutine radar_init(i_tilt_proc,i_last_scan)       
 !                                 I           O     
@@ -6,7 +7,7 @@
        integer max_files
        parameter(max_files=1000)
 
-       character*150 path_to_wideband,c_filespec,filename
+       character*150 path_to_wideband,c_filespec,filename,directory
      1              ,c_fnames(max_files)
        character*9 a9_time
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
@@ -61,7 +62,14 @@ c      Determine filename extension
                stop
            endif
 
-           call get_filespec(ext_out,1,c_filespec,istatus)
+           if(ext_out .ne. 'vrc')then
+               call get_filespec(ext_out,1,c_filespec,istatus)
+           else
+               call get_directory('rdr',directory,len_dir)
+               c_filespec = directory//radar_subdir(1:3)
+           endif
+
+
            call get_file_times(c_filespec,max_files,c_fnames
      1                   ,i4times_lapsprd,i_nbr_lapsprd_files,istatus)
 
@@ -103,7 +111,10 @@ c      Determine filename extension
      1                               ,MAX_RAY_TILT
      1                               ,istatus)
 
-       if(istatus .eq. 1)then
+       if(istatus .eq. 1
+     1             .AND.
+     1     .not. (ext_out .eq. 'vrc' .and. i_tilt_proc .gt. 1)
+     1                                                         )then
            if(i_tilt_proc .eq. 1)then
                write(6,201)elevationNumber, i_tilt_proc
  201           format(' elevationNumber, i_tilt_proc',2i4)
