@@ -32,7 +32,6 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
 cdis
 cdis
 cdis
@@ -42,7 +41,8 @@ cdis
 cdis
 cdis
 cdis
-      subroutine  process_gps (ii,jj,data_out,data_weights,
+cdis
+      subroutine  process_gps (ii,jj,gps_data_out,gps_data_weights,
      1     tpw,glat,glon,time_diff,
      1     path,filetime,istatus)
 
@@ -54,11 +54,11 @@ c     input variables
       character*9 filetime
       integer ii,jj,istatus
       integer time_diff         !time allowed for latency (sec)
-      real data_out(ii,jj),tpw(ii,jj)
+      real gps_data_out(ii,jj),tpw(ii,jj)
       real glat(ii,jj), glon(ii,jj)
       integer i4time
       character*256 path
-      real data_weights(ii,jj)
+      real gps_data_weights(ii,jj)
       
       integer gps_n, gps_num
       parameter (gps_n = 1000)
@@ -68,7 +68,6 @@ c     input variables
       real gps_lon(gps_n)
 
       integer i,j
-
 
       call read_gps (path, filetime, time_diff,
      1     gps_tpw, gps_error, gps_lat,
@@ -87,44 +86,27 @@ c     input variables
 
       else
 
-
          write(6,*) gps_num, ' number of stations read in file'
-
 
       endif
 
-      call analz_gvap (gps_lat,gps_lon,gps_tpw,gps_num,glat,
-     1     glon,data_out,
-     1     data_weights,ii,jj,istatus)
-
+      call analz_gps (gps_lat,gps_lon,gps_tpw,gps_num,glat,
+     1     glon,gps_data_out,
+     1     gps_data_weights,ii,jj,istatus)
       if(istatus.ne.1) then ! failure to get data
          return
       endif
 
-      if(istatus.eq.1) then ! data_out can be used to normalize field
-c     note that the 0.1 factor is to convert mm (gvap) to cm (tpw).
-         do i   = 1,ii
-            do j  = 1,jj
-               data_out(i,j) = data_out(i,j)/tpw(i,j)
-            enddo
-         enddo
-
-      endif
-
-c     data_out is now a fractional adjustment
-c     data_weights is how much of that fraction should be applied
-c     convert data_out to incremental weighted adjustment
-
-      do j = 1,jj
-         do i = 1,ii
-            data_out(i,j) = (data_out(i,j)-1.0) * data_weights(i,j)
-         enddo
-      enddo
-
-      call check_nan2(data_out,ii,jj,istatus)
+      call check_nan2(gps_data_out,ii,jj,istatus)
       if(istatus.ne.1) then
          write(6,*) 'data_out corrupted in processing gps data '
-         write(6,*) 'var:data_out     routine:process_gps.v'
+         write(6,*) 'var:gps_data_out     routine:process_gps.v'
+         return
+      endif
+      call check_nan2(gps_data_weights,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'data_out corrupted in processing gps data '
+         write(6,*) 'var:gps_data_weights     routine:process_gps.v'
          return
       endif
 

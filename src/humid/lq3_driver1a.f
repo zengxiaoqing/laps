@@ -55,7 +55,7 @@ c     parameter variables
       integer ii,jj,kk
       real mdf
       integer lct
-
+      
       
       integer*4
      1     jstatus(3)
@@ -156,6 +156,9 @@ c     gvap variables
 c     
       real gvap_data(ii,jj)
       real gvap_w (ii,jj)
+      real gw1(ii,jj),gww1(ii,jj)
+      real gw2(ii,jj),gww2(ii,jj)
+      real gw3(ii,jj),gww3(ii,jj)
       integer istatus_gvap
       
       real pressure_of_level    !function call
@@ -201,7 +204,6 @@ c     initialize laps field
       
 c     call get_laps congif to fill common block used in pressure assignment
 c     routine
-
       
       call get_directory(extpw,dirpw,len)
       call get_directory(ext3,dir3,len)
@@ -227,9 +229,9 @@ c     set namelist parameters to defaults
       sounder_switch = 0
       tiros_switch = 0
       sat_skip = 0
-      gvap_switch = 0
+      gvap_switch = 1
       time_diff = 0
-      gps_switch = 0
+      gps_switch = 1
       sfc_mix = 0
       mod_4dda_1 = 0
       mod_4dda_factor = 0.02
@@ -426,22 +428,16 @@ c     Get background field
          write (6,*) 'getting background field failed... abort'
          return
       endif
-      
-      
-      
-      
+
       call check_nan3 (data,ii,jj,kk,istatus)
       if (istatus.ne.1) then
          write(6,*) 'NaN detected from RUC/MAPS...abort'
          return
       endif
       
-      
       i4time = save_i4time
       filename = savefilename
-      
-      
-      
+
 c     check for negative input and warn
       
       do k = 1,kk
@@ -718,11 +714,13 @@ c     end report moisture change block
     
       endif
 
-c     gps data inserstion step
+c     gps data inserstion step (bias correction to gvap only)
 
       istatus_gps = 0
 
       if (gps_switch .eq. 1) then
+
+         write(6,*) 'Initiate bias correction of gps data'
 
          call process_gps (ii,jj,gps_data,gps_w,
      1        tpw,lat,lon,time_diff,
@@ -732,54 +730,43 @@ c     gvap data insertion step
          
       endif
 
-      istatus_gvap = 0
-      
-      if (gvap_switch.eq.1) then
+      if(istatus_gps.ne. 1) then !cannot complete
+         write(6,*) 'GPS problems, cannot complete gvap correction'
+      else
+         write(6,*) 'Got gps trying to get gvap data'
 
-         write(6,*) 
-         write(6,*) 'Begin GVAP insertion setep'
-         write(6,*) 
-         
-         call process_gvap(ii,jj,gvap_data,gvap_w,tpw,
-     1        lat,lon,time_diff,
-     1        path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
+         istatus_gvap = 0
 
-      endif
+         if (gvap_switch.eq.1) then
+            
+            write(6,*) 
+            write(6,*) 'Begin GVAP insertion setep'
+            write(6,*) 
+            
+            call process_gvap(ii,jj,gvap_data,gvap_w,
+     1           gw1,gw2,gw3,gww1,gww2,gww3,mdf,
+     1           lat,lon,time_diff,
+     1           path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
 
-      call check_nan3(data,ii,jj,kk,istatus)
-      if(istatus.ne.1) then
-         write(6,*) 'Failed in nan prior to adjust'
-         write(6,*) 'var:data  routine lq3driver'
-         return
-      endif
-         
-      if(istatus_gps.eq.1 .or. istatus_gvap.eq.1) then ! apply gvap and/or gps 
-
-      do k = 1,kk
-         do j = 1,jj
             do i = 1,ii
-               if(p_3d(i,j,k) .lt. 800.0) then !only apply above 800 hpa
-                  if(data(i,j,k).ge.0.0 .and. 
-     1                 (gvap_w(i,j)+gps_w(i,j)) .ne. 0.0 ) then
-                     data(i,j,k) = 
-     1                    gvap_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
-     1                    *(data(i,j,k) * gvap_data(i,j))
-     1                    +
-     1                    gps_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
-     1                    *(data(i,j,k) *gps_data(i,j))
-     1                    + data(i,j,k)
+               do j = 1,jj
+                  if (gw1(i,j) .ne. mdf )then
+                     write(6,*) gw1(i,j), gw2(i,j), gw3(i,j), i,j
                   endif
-               endif
-               call check_nan(data(i,j,k), istatus)
-               if (istatus.ne.1) then ! nan generated in computation
-c     write(6,*) 'Correcting Nan value, var:data',i,j,k
-                  data(i,j,k) = data_in(i,j,k)
-               endif
+               enddo
             enddo
-         enddo
-      enddo
-      
 
+            if(istatus_gvap.eq.1 .and. istatus_gps.eq.1) then ! correct gvap
+               continue  ! placeholder for correction call
+            endif  
+            
+         else
+            write(6,*) 'Gvap off, not using gvap or attempting' 
+            write(6,*) 'any adjustment'
+         endif
+
+      endif
+         
 c     CHECKING PROCESS OUTPUT
 
       call check_nan2(gvap_w,ii,jj,istatus)
@@ -789,7 +776,6 @@ c     CHECKING PROCESS OUTPUT
          return
       endif
          
-
       call check_nan2(gps_w,ii,jj,istatus)
       if(istatus.ne.1) then
          write(6,*) 'Failed in nan after adjust'
@@ -797,7 +783,6 @@ c     CHECKING PROCESS OUTPUT
          return
       endif
          
-
       call check_nan2(gps_data,ii,jj,istatus)
       if(istatus.ne.1) then
          write(6,*) 'Failed in nan after adjust'
@@ -805,7 +790,6 @@ c     CHECKING PROCESS OUTPUT
          return
       endif
          
-
       call check_nan2(gvap_data,ii,jj,istatus)
       if(istatus.ne.1) then
          write(6,*) 'Failed in nan after adjust'
@@ -813,7 +797,6 @@ c     CHECKING PROCESS OUTPUT
          return
       endif
          
-
       call check_nan3(data,ii,jj,kk,istatus)
       if(istatus.ne.1)then
          write(6,*) 'Nan report from TPW processing'
@@ -837,10 +820,6 @@ c     CHECKING PROCESS OUTPUT
       enddo
       
 
-      else
-         write(6,*) 'gvap weights not applied, istatus = 0'
-      endif
-            
 
       write(6,*) 
 
