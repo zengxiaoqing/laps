@@ -287,6 +287,8 @@ foreach $exe (@LAPS_EXE){
                 print TFILE "#!/bin/sh\n";
                 print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_min:00 -A $opt_q\n";
                 print TFILE "  \n";
+                print TFILE "cd $LAPS_LOG_PATH\n";
+                print TFILE "  \n";
 
                 if($node_type eq "rt"){
                     print TFILE "export PBS_SERVER_LIST=/PBSHOME/lib/server.rt\n";
@@ -302,8 +304,6 @@ foreach $exe (@LAPS_EXE){
 
                 print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
                 print TFILE "  \n";
-                print TFILE "cd $LAPS_LOG_PATH\n";
-#               print TFILE "  \n";
 #               print TFILE "date >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
 #               print TFILE "  \n";
 #               print TFILE "echo 'Running (from qsub) $LAPSROOT/bin/$exe' >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
@@ -314,7 +314,12 @@ foreach $exe (@LAPS_EXE){
         print " Adding to $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable #/nodes $execount $nodes_current $exe\n";
         print TFILE "  \n";
 
-        if($exe eq "qbalpe.exe"){ # Add perl commands to run what-got-in scripts into TFILE
+        if($exe eq "qbalpe.exe"){ # Add perl commands to run wfo_post & what-got-in scripts into TFILE
+
+            if($opt_w){ # Bigfile option within qsub environment
+                print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
+            }
+
             foreach $wgi_script (@WHAT_GOT_IN){
                 print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script.wgi.$yyjjjhhmm 2>&1\n";
             }
@@ -327,10 +332,6 @@ foreach $exe (@LAPS_EXE){
         }
        
         if($execount == $nexe){ # Last on the list
-
-            if($opt_w){ # Bigfile option within qsub environment
-                print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
-            }
 
             print TFILE "  \n";
             print TFILE "echo `date` [finished qsub scripts] >> $LAPS_LOG_PATH/runtime.log\n";
