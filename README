@@ -541,12 +541,19 @@
      NetCDf format is used for the raw data, a cdl file for the raw data is 
      sometimes included in the source code directory.
   
-     Depending on the data source, you may generally prefer one of two choices:
+     Depending on the data source, you may generally prefer one of three 
+     choices:
          1) Modify LAPS ingest code to accept your own raw data format, all
             that really counts is producing an intermediate data file. 
-            Generating a raw data output is not needed.
-         2) Convert your raw data to NetCDF format then run the LAPS ingest
+            Generating an FSL style raw data file is not needed.
+         2) Run a process independent of the LAPS ingest code that creates
+            the intermedate data file. 
+         3) Convert your raw data to NetCDF format then run the LAPS ingest
             code as is.
+
+     For gridded data sources such as the model background, generally (1) or
+     (3) is easiest. For point data sources, option (2) is often an attractive
+     option.
 
      You may note the following data sources used at FSL. These data sources
      are what the FSL ingest code is tailored to for producing intermediate
