@@ -408,14 +408,14 @@ c-------------------------------------------------------------------------------
 c
 c               14-may-84       added from csu vas code
 c                               (not on u. of w. source tape)
-        real*4  press,          !pressure
-     1  temp,           !temperature
-     1  mix_ratio       !mixing ratio
+        real*4  press(1),          !pressure
+     1  temp(1),           !temperature
+     1  mix_ratio(1)       !mixing ratio
 c-------------------------------------------------------------------------------
 
         call det_mix_rat_sm(press,temp,0.,      !calculate mixing ratio
      1              mix_ratio,1)
-        sat_pt_sm=mix_ratio
+        sat_pt_sm=mix_ratio(1)
 c
 c               14-may-84       return added
 c
