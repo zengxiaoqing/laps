@@ -34,7 +34,7 @@
          2.3.3 ..................  Surface Data
          2.3.4 ..................  Profiler / RASS
          2.3.5 ..................  PIREPS & ACARS from aircraft
-         2.3.6 ..................  RAOBs
+         2.3.6 ..................  RAOB/Dropsonde
          2.3.7 ..................  Satellite
          2.3.8 ..................  Other Data Sources
          2.4 ..............  Running LAPS Analyses 
@@ -74,7 +74,7 @@
          3.2.6 ..................  PROFILER/VAD/SODAR (PRO) Ingest
          3.2.7 ..................  RASSs (LRS) Ingest
          3.2.8 ..................  PIREPS/ACARS Ingest
-         3.2.9 ..................  RAOB + Satellite Sounding (SND) Ingest
+         3.2.9 ..................  Sounding (RAOB/Dropsonde/Sat) (SND) Ingest
          3.2.10 .................. LVD (Satellite Image + Cloud Top Pressure)
          3.2.11 .................  Cloud Drift Wind (CDW) Ingest
          3.3 ..............  ANALYSIS PROCESSES
@@ -1086,7 +1086,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            "PIN" file. An equivalent NetCDF database is available (with some
            restrictions) on the Web at http://acweb.fsl.noaa.gov.
 
-                      ----   2.3.6  RAOBs ---
+                      ----   2.3.6  RAOB/Dropsonde ---
 
      RAOBs (snd):
            FSL NIMBUS, WFO/AWIPS (except that a few software changes are 
@@ -1095,6 +1095,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            with some restrictions. This data, in 'WFO/AWIPS' NetCDF format, is
            distributed via FSL's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/
+
+           In most cases, dropsondes can be combined with the raw RAOB data.
 
                       ----   2.3.7  Satellite ---
 
@@ -2439,7 +2441,7 @@ Parameter namelist file (for data paths): 'static/nest7grid.parms'
 Sample Input/Output: Should be available in the test data case
 
  
------- 3.2.9 --------- RAOB + Satellite Sounding (SND) Ingest ----------------
+------ 3.2.9 --------- Sounding (RAOB/Dropsonde/Sat) (SND) Ingest -------------
 
 Process: (ingest_sounding.exe) LAPS Soundings
 
@@ -2447,7 +2449,8 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
-	RAOBs in various formats (FSL-NIMBUS CDL - NetCDF)
+	RAOB/Dropsonde in various formats:
+                                 (FSL-NIMBUS CDL - NetCDF)
                                  (WFO/AWIPS - except that software changes may
                                   be needed to address some CDL differences)
                                  (AFWA and CWB ASCII formats also allowed)
