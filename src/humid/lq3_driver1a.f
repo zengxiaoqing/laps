@@ -182,6 +182,7 @@ c     namelist data
       integer sounder_switch
       integer sat_skip
       integer gvap_switch
+      integer IHOP_flag
       integer time_diff         !time allowed for latency (sec)
       integer sfc_mix
       integer mod_4dda_1
@@ -193,7 +194,7 @@ c     namelist data
      1     raob_lookback, 
      1     raob_radius, goes_switch, cloud_switch, cloud_d
      1     ,tiros_switch, sounder_switch, sat_skip
-     1     ,gvap_switch, time_diff, gps_switch
+     1     ,gvap_switch, IHOP_flag, time_diff, gps_switch
      1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
      1     t_ref,path_to_gvap8,path_to_gvap10,path_to_gps
       
@@ -245,6 +246,7 @@ c     set namelist parameters to defaults
       tiros_switch = 0
       sat_skip = 0
       gvap_switch = 1
+      IHOP_flag = 0 
       time_diff = 0
       gps_switch = 1
       sfc_mix = 0
@@ -324,6 +326,12 @@ c     set namelist parameters to defaults
          write(6,*) 'Using goes derived pw, assume data connection'
       else
          write(6,*) 'GVAP not used... nominal state'
+      endif
+
+      if (IHOP_flag .eq. 1 ) then
+         write (6,*) 'IHOP data used over normal NESDIS GVAP data'
+      else
+         write(6,*) 'Normal NESDIS GVAP data used'
       endif
 
       if (gps_switch .eq. 1) then
@@ -795,7 +803,7 @@ c     gvap data acquisition
          
          call process_gvap(ii,jj,gvap_data,gvap_w,
      1        gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
-     1        lat,lon,time_diff,
+     1        lat,lon,time_diff,IHOP_flag,
      1        path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
          
 c         do i = 1,ii

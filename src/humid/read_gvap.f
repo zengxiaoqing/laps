@@ -43,7 +43,7 @@ cdis
 cdis
 cdis
       subroutine read_gvap (filename, nstations, path_to_gvap8,
-     1     path_to_gvap10,time_diff,
+     1     path_to_gvap10,time_diff,IHOP_flag,
      1     lat,lon, wt,w1,w2,w3,gvap_p,
      1     nn, istatus)
 
@@ -69,6 +69,7 @@ c     input variables
       integer nstations,nn,istatus,idummy,idummy2
       character*256 path_to_gvap8,path_to_gvap10
       integer time_diff         !time allowed for latency (sec)
+      integer IHOP_flag
       real lat(nstations)
       real lon(nstations)
       real wt(nstations)
@@ -128,9 +129,17 @@ c     get most recent file in directory
      1     status='old',err = 668)
       read(22,*,end=668,err=668) ! first header line is ignored
       do i = 1,nstations
-         read(22,*,end=665,err=665) idummy,idummy,lat(i),lon(i),
-     1        idummy,idummy,wt(i), w1(i),w2(i),w3(i),idummy, 
-     1        gvap_p(i)
+
+         if(IHOP_flag.eq.0) then
+            read(22,*,end=665,err=665) idummy,idummy,lat(i),lon(i),
+     1           idummy,idummy,wt(i), w1(i),w2(i),w3(i),idummy, 
+     1           gvap_p(i)
+         elseif (IHOP_flag .eq. 1) then
+            read(22,*,end=665,err=665) idummy,idummy,lat(i),lon(i),
+     1           wt(i), w1(i),w2(i),w3(i),
+     1           gvap_p(i)   
+         endif  ! IHOP special format
+
 
       enddo
 
