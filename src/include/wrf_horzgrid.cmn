@@ -1,16 +1,18 @@
-!Variables in hgridspec section of wrfsi.nl
-      include 'wrf_dims.inc'
+!Variables in hgridspec section of wrfsi.nl. File
+!wrf_dims.inc must also be in source file for parameter
+!10
 
       integer num_domains
-      integer xdim(max_domains), ydim(max_domains)
-      integer parent_id(max_domains)
-      integer ratio_to_parent(max_domains)
-      integer domain_origin_parent_x(max_domains)
-      integer domain_origin_parent_y(max_domains)
+      integer xdim(10), ydim(10)
+      integer parent_id(10)
+      integer ratio_to_parent(10)
+      integer domain_origin_parent_x(10)
+      integer domain_origin_parent_y(10)
       
       real moad_known_lat, moad_known_lon,
      +       moad_stand_lats(4), moad_stand_lons(4),
-     +       moad_delta_x, moad_delta_y
+     +       moad_delta_x, moad_delta_y,
+     +       silavwt_parm, toptwvl_parm
       character*8 moad_known_loc
       character*4 stagger_type
       character*32 map_proj_name
@@ -25,3 +27,4 @@
      +,moad_stand_lats, moad_stand_lons
      +,moad_delta_x, moad_delta_y
      +,moad_known_loc,stagger_type,map_proj_name,latlon_grid
+     +,silavwt_parm, toptwvl_parm
