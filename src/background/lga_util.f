@@ -112,7 +112,8 @@ c
 c
 c ****** Account for wrapping around effect of global data at Greenwich.
 c
-         if (bgmodel .eq. 3 .or. bgmodel .eq. 6) then
+         if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or.
+     .       bgmodel .eq. 8) then
             if (i .lt. 1) i=i+ix
             if (i .gt. ix) i=i-ix
          endif
@@ -124,7 +125,8 @@ c
 c
 c ************ Account for N-S wrapping effect of global data.
 c
-               if (bgmodel .eq. 3 .or. bgmodel .eq. 6) then
+               if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or.
+     .             bgmodel .eq. 8) then
                   if (j .lt. 1) then
                      j=2-j
                      i=i-ix/2

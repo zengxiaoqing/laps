@@ -214,7 +214,8 @@ c
 c
 c ****** Check for wrapping if a global data set.
 c
-         if (bgmodel .eq. 3 .or. bgmodel .eq. 6) then
+         if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or. 
+     .       bgmodel .eq. 8) then
             if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
             if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
             if (gry(i,j) .lt. 1) then

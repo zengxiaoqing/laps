@@ -40,14 +40,15 @@ c *** Read from standard input.
 c
 c        bgmodel = 1 ---> RUC (60 km native grid)
 c        bgmodel = 2 ---> ETA (48 km conus-c grid)
-c        bgmodel = 3 ---> NOGAPS
+c        bgmodel = 3 ---> NOGAPS (2.5 deg)
 c        bgmodel = 4 ---> SBN Conus211 (Eta or RUC)
 c        bgmodel = 5 ---> RUC (40 km native grid)
 c        bgmodel = 6 ---> AVN (360 x 181 lat-lon grid)
 c        bgmodel = 7 ---> ETA (48 km from grib file)
+c        bgmodel = 8 ---> NOGAPS (1.0 deg)
 c
       integer nbgmodel
-      parameter (nbgmodel=7)
+      parameter (nbgmodel=8)
 c
       integer bgmodel
 c
@@ -141,7 +142,7 @@ c         len = index(bgpaths(i),' ')
             nx_bg = 144
             ny_bg = 73
             nz_bg = 16        
-            cmodel = 'RUC60_NATIVE'            
+            cmodel = 'NOGAPS (2.5)'            
          else if(bgmodel.eq.4) then
             nx_bg = 93
             ny_bg = 65
@@ -162,6 +163,11 @@ c         len = index(bgpaths(i),' ')
             ny_bg = 129
             nz_bg = 39
             cmodel = 'ETA48_GRIB'
+         else if(bgmodel.eq.8) then
+            nx_bg = 360
+            ny_bg = 181
+            nz_bg = 16        
+            cmodel = 'NOGAPS (1.0)'            
          endif
          
 
@@ -576,7 +582,8 @@ c
      .                          prbg, htbg,tpbg,shbg,uwbg,vwbg,
      .                          gproj,istatus)
 
-         elseif (bgmodel .eq. 3) then ! Process NOGAPS data
+         elseif (bgmodel .eq. 3 .or. 
+     .           bgmodel .eq. 8) then ! Process NOGAPS data
             call read_nogaps(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .                       prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .                       gproj,istatus)
