@@ -882,8 +882,8 @@ April 1996
 ------ 2.14 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
    There may be some parameters in the satellite code that change when 
-   the domain is moved. The latest info is in the README in 
-   'source/ingest/satellite/goes8/lambert'. Please contact John Smart 
+   the domain is moved. The latest info documented in the file
+   './src/ingest/satellite/lvd/README'. Please contact John Smart 
    (smart@fsl.noaa.gov) for more details. 
 
 ------ 2.15 ----------------OTHER RUNTIME PARAMETERS---------------------------
