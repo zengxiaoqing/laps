@@ -885,10 +885,28 @@ April 1996
    files in data/static to make sure all the runtime parameters are
    correct. Some parameters worth noting are:
 
+<pre>
+
+   nest7grid.parms
+   _______________
+
    c8_project_common - Depends on which "realization" of LAPS you are running.
                        Allowed values are 'NIMBUS', 'WFOADV', 'AFGWC'.
                        This is currently used by the WPDN wind profiler ingest
                        software.
+
+
+
+   cloud.nl
+   ________
+
+   l_use_vis -         Boolean set to indicate whether we are confident in the
+                       calibration of the visible satellite data and albedo
+                       fields for use in the cloud analysis. This is normally 
+                       set to .true. at FSL and .false. for WFO and other 
+                       ports unless we are confident in the vis data 
+                       normalization.
+</pre>
 
 ------ 2.16 ----------------Reporting Installation Errors---------------------------
    
