@@ -137,7 +137,7 @@ c
 c
 c.....  Stuff for backgrounds.
 c
-	real u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
+	real u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj) ! Kt & Deg F
 	real wt_u(ni,nj), wt_v(ni,nj), wt_t(ni,nj), wt_td(ni,nj)
 	real rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
 	real wt_rp(ni,nj), wt_mslp(ni,nj), wt_stnp(ni,nj)
@@ -410,8 +410,10 @@ c
      1        ,2x,3f8.0)
 c
         call zero(wt, ni,nj)
-	call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
-     &              rii,rjj,wt,ni,nj,mxstn)
+        if(n_obs_b .gt. 0.)then
+	    call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
+     &                  rii,rjj,wt,ni,nj,mxstn)
+        endif
 c
 c.....  Zero the weights then get the background data.  Try for an FSF
 c.....  forecast first, except for surface winds from the 3d analysis, then
@@ -478,13 +480,13 @@ c
 	print *,' '
 	print *,' Getting temperature background....'
 	var_req = 'TEMP'
-	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,t_bk,
+	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,dum_2d,
      &          laps_cycle_time,ni,nj,istatus)
 	if(istatus .eq. 1) then
 	   ilaps_bk = 1
 	   call make_fnam_lp(ibkg_time,back,istatus)
 !          write(6,951) ext_bk(1:6), back
-	   call conv_k2f(t_bk,t_bk,ni,nj) ! conv K to deg F
+	   call conv_k2f(dum_2d,t_bk,ni,nj) ! conv K to deg F
 	   call move(wt, wt_t, ni,nj)
 	   back_t = 1
 	else
@@ -544,13 +546,13 @@ c
 	print *,' '
 	print *,' Getting dew point temperature background....'
 	var_req = 'DEWP'
-	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,td_bk,
+	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,dum_2d,
      &          laps_cycle_time,ni,nj,istatus)
 	if(istatus .eq. 1) then
 	   call make_fnam_lp(ibkg_time,back,istatus)
 !	   write(6,951) ext_bk(1:6), back
 	   call move(wt, wt_td, ni,nj)
-	   call conv_k2f(td_bk,td_bk,ni,nj) ! conv K to deg F
+	   call conv_k2f(dum_2d,td_bk,ni,nj) ! conv K to deg F
 	   back_td = 1
 	else
 	   print *,'     No background available for ',var_req
@@ -577,18 +579,22 @@ c
 	print *,' '
 	print *,' Getting ground temperature background....'
 	var_req = 'tgd'
-!       call get_modelfg_2d(i4time,var_req,ni,nj,dum_2d,istatus)       
-        istatus = 0 ! Temporary statement until 'get_modelfg_2d' is fixed
+        call get_modelfg_2d(i4time,var_req,ni,nj,dum_2d,istatus)       
+!       istatus = 0 ! Temporary statement until 'get_modelfg_2d' is fixed
 	if(istatus .eq. 1) then
 	   call make_fnam_lp(i4time,back,istatus)
 	   write(6,*) 'Read successful for ',var_req
 	   call move(wt, wt_tgd, ni,nj)
            call conv_k2f(dum_2d,tgd_bk_f,ni,nj) ! conv K to deg F
 	   back_tgd = 1
-	elseif(back_td .eq. 1)then
-           write(6,*)' Using the dewpoint bkg as a substitute'
-	   call move(td_bk, tgd_bk_f, ni,nj)
-!          call conv_f2k(tgd_bk,tgd_bk,ni,nj)   ! conv F to deg K
+	elseif(back_t .eq. 1 .and. back_td .eq. 1)then
+           write(6,*)' Using the temp & dewpoint bkg as a substitute'    
+           do j = 1,nj
+           do i = 1,ni
+               tgd_bk_f(i,j) = t_bk(i,j)  *       ldf(i,j) 
+     1                       + td_bk(i,j) * (1. - ldf(i,j))       
+           enddo ! i
+           enddo ! j
 	else
 	   print *,'     No background available for ',var_req
 	   call zero(tgd_bk_f, ni,nj)
