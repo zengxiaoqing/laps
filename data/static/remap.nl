@@ -1,11 +1,11 @@
  &remap_nl
- n_radars_remap=3,
+ n_radars_remap=4,
  path_to_vrc_nl='rdr',
  path_to_radar_a=
 '/public/data/radar/wsr88d/wideband/kftg/netcdf',
+'/public/data/radar/wsr88d/wideband/kama/netcdf',
 '/public/data/radar/wsr88d/wideband/kftg/netcdf',
-'/data/fxa/laps/lapsprd/rdr/001/raw',
-'',
+'/public/data/radar/wsr88d/wideband/kama/netcdf',
 '',
 '',
 '',
@@ -14,9 +14,9 @@
 '',
  laps_radar_ext_a=
 'v01',
+'v02',
 'vrc',
 'vrc',
-'',
 '',
 '',
 '',
