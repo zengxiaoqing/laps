@@ -2,13 +2,13 @@
 
 
         subroutine compare_wind (
-     1                upass1,vpass1,istat_radar_vel,max_radars,cgrid,
-     1                grid_ra_vel,rlat_radar,rlon_radar,rheight_radar,
+     1                upass1,vpass1,cgrid,
+     1                istat_radar_vel,max_radars,grid_ra_vel,n_radars,
+     1                rlat_radar,rlon_radar,rheight_radar,
      1                lat,lon,
      1                ni,nj,nk,r_missing_data,
      1                weight_pirep,weight_prof,weight_sfc,weight_cdw,       
-     1                grid_laps_u,grid_laps_v,grid_laps_wt,
-     1                n_radars)
+     1                grid_laps_u,grid_laps_v,grid_laps_wt,istatus)
 
 C****************************************************************************
 C
@@ -45,32 +45,35 @@ C***************** Declarations **************************************
         real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
      1                                          ,grid_laps_wt(ni,nj,nk)
 
+        character(*) cgrid
 
 C********************************************************************
 
+        write(6,*)' Subroutine compare_wind...',cgrid
+
         write(6,*)
-        write(6,*)'  Comparing LAPS First Pass to SFC Obs (passing QC)'       
+        write(6,*)'  Comparing ',cgrid,' to SFC Obs (passing QC)'       
         call comp_grid_windobs(upass1,vpass1,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
-     1        ,'PS1 ','SFC ',r_missing_data,rms)
+     1        ,cgrid,'SFC ',r_missing_data,rms)
 
         write(6,*)
-        write(6,*)'  Comparing LAPS First Pass to CDW Obs (passing QC)'       
-        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
-     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_cdw
-     1        ,'PS1 ','CDW ',r_missing_data,rms)
-
-        write(6,*)
-        write(6,*)'  Comparing LAPS First Pass to Profiler'
+        write(6,*)'  Comparing ',cgrid,' to Profiler'       
         call comp_grid_windobs(upass1,vpass1,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_prof
-     1        ,'PS1 ','PROF',r_missing_data,rms)
+     1        ,cgrid,'PROF',r_missing_data,rms)
 
         write(6,*)
-        write(6,*)'  Comparing LAPS First Pass to Pireps'
+        write(6,*)'  Comparing ',cgrid,' to Pireps'       
         call comp_grid_windobs(upass1,vpass1,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_pirep
-     1        ,'PS1 ','PRP ',r_missing_data,rms)
+     1        ,cgrid,'PRP ',r_missing_data,rms)
+
+        write(6,*)
+        write(6,*)'  Comparing ',cgrid,' to CDW Obs (passing QC)'       
+        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_cdw
+     1        ,cgrid,'CDW ',r_missing_data,rms)
 
 !       write(6,*)
 !       write(6,*)'  Comparing LAPS First Pass & Analysis'
@@ -83,9 +86,8 @@ C********************************************************************
 !    1             ,r_missing_data,rms_laps_maps)
 
         do l = 1,n_radars
-
             write(6,*)
-            write(6,*)'  Comparing LAPS First Pass to Radial Velocities'       
+            write(6,*)'  Comparing ',cgrid,' to Radial Velocities'       
      1                                                    ,' Radar #',l
             if(istat_radar_vel .eq. 1)
      1        call comp_laps_vr(grid_ra_vel(1,1,1,l),upass1,vpass1

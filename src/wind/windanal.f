@@ -115,6 +115,16 @@
 
 !****************END DECLARATIONS *********************************************
 
+!     Compare background to obs
+      call compare_wind(
+     1            u_laps_bkg,v_laps_bkg,' FG ',
+     1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
+     1            rlat_radar,rlon_radar,rheight_radar,
+     1            lat,lon,
+     1            imax,jmax,kmax,r_missing_data,
+     1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
+     1            uobs,vobs,wt_p,istatus)
+
       l_3d = .false. 
 
       rms_thresh_norm = rms_thresh_wind          ! Not used if l_3d = .false.
@@ -740,18 +750,29 @@
       enddo ! k
 
       if(iter .eq. n_iter_wind)then
-          write(6,*)' Calling comparisons'
-          call comparisons(
-     1            upass1,vpass1,istat_radar_vel,max_radars,
-     1            vr_obs_unfltrd,
+!         write(6,*)' Calling comparisons'
+!         call comparisons(
+!    1            upass1,vpass1,istat_radar_vel,max_radars,
+!    1            vr_obs_unfltrd,
+!    1            rlat_radar,rlon_radar,rheight_radar,
+!    1            lat,lon,
+!    1            uanl,vanl,u_laps_bkg,v_laps_bkg,
+!    1            istat_bal,
+!    1            imax,jmax,kmax,r_missing_data,
+!    1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
+!    1            uobs,vobs,wt_p,
+!    1            n_radars)
+
+!         Compare 1st pass analysis to obs
+          call compare_wind(
+     1            upass1,vpass1,'PS1 ',
+     1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
      1            rlat_radar,rlon_radar,rheight_radar,
      1            lat,lon,
-     1            uanl,vanl,u_laps_bkg,v_laps_bkg,
-     1            istat_bal,
      1            imax,jmax,kmax,r_missing_data,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
-     1            uobs,vobs,wt_p,
-     1            n_radars)
+     1            uobs,vobs,wt_p,istatus)
+
       endif ! Last iteration
 
       write(6,*)' Deallocate upass1, vpass1'
@@ -759,6 +780,16 @@
       deallocate(vpass1)
 
       enddo ! n_iter_wind
+
+!     Compare final analysis to obs
+      call compare_wind(
+     1            uanl,vanl,'LAPS',
+     1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
+     1            rlat_radar,rlon_radar,rheight_radar,
+     1            lat,lon,
+     1            imax,jmax,kmax,r_missing_data,
+     1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
+     1            uobs,vobs,wt_p,istatus)
 
       istatus = 1
 
