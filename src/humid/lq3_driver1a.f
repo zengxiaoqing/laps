@@ -32,7 +32,7 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
+cdis
 cdis
 cdis
 cdis
@@ -753,7 +753,7 @@ c     gvap data insertion step
       do k = 1,kk
          do j = 1,jj
             do i = 1,ii
-               if(plevel(k) .lt. 800.0) then !only apply above 800 hpa
+               if(p_3d(i,j,k) .lt. 800.0) then !only apply above 800 hpa
                   if(data(i,j,k).ge.0.0 .and. 
      1                 (gvap_w(i,j)+gps_w(i,j)) .ne. 0.0 ) then
                      data(i,j,k) = 
@@ -853,7 +853,7 @@ c     make call to TIROS moisture insertion
      1           data,          ! specific humidity g/g
      1           lat,lon,       ! lat and longitude (deg)
      1           i4time,        ! i4time of run (seconds)
-     1           plevel,        ! pressure hpa (laps vert grid)
+     1           p_3d,          ! pressure hpa (laps vert grid)
      1           cg,            ! cloud array
      1           lt1dat,        ! lt1 (laps 3d temps)
      1           14,            ! satellite number
@@ -896,7 +896,7 @@ c     make call to goes moisture insertion
      1           data,          ! 3-d specific humidity g/g
      1           lat,lon,       ! 2-d lat and longitude
      1           i4time,        ! i4time of run
-     1           plevel,        ! pressure mb
+     1           p_3d,          ! pressure mb
      1           cg,            ! 3-e cloud field 0-1 (1=cloudy)
      1           lt1dat,        ! laps lt1 (3-d temps)
      1           goes_switch,   ! goes switch and satellite number
@@ -1063,7 +1063,7 @@ c     repeat quality control check for supersaturation after pre-analysis
       write (6,*)  'perform qc for supersaturation'
       counter = 0
       do k = 1,kk
-         write(6,*) 'Level ',k, '    ', plevel(k)
+         write(6,*) 'Level ',k, '    ', p_3d(1,1,k)
          do j = jj,1,-1
             do i = 1,ii
                
@@ -1098,7 +1098,7 @@ c     repeat quality control check for supersaturation after pre-analysis
       
 c     recompute tpw including clouds and supersat corrections
       
-      call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+      call int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
       
 c     place the accepted missing data flag in output field
 c     sum over the entire grid for a total water sum value for 

@@ -46,7 +46,7 @@ cdis
      1     sh,                  ! specific humidity g/g
      1     lat,lon,             ! lat and longitude (deg)
      1     i4time,              !i4time of run (seconds)
-     1     p,                   !pressure hpa (laps vert grid)
+     1     p_3d,                !pressure hpa (laps vert grid)
      1     cloud,               !cloud array
      1     t,                   ! lt1 (laps 3d temps)
      1     ngoes,               ! goes satellite number
@@ -96,7 +96,7 @@ c     parameter list variables
       real sh(ii,jj,kk)
       real lat(ii,jj),lon(ii,jj)
       integer i4time
-      real t(ii,jj,kk),p(kk)
+      real t(ii,jj,kk),p_3d(ii,jj,kk)
       real cloud(ii,jj,kk)
       integer ngoes
       integer isnd
@@ -133,7 +133,7 @@ c dynamic dependent variables
 
       real ch3(ii,jj),ch4(ii,jj),ch5(ii,jj)
       real mr(ii,jj,kk)
-      real t_l(kk,ii,jj), mr_l (kk,ii,jj)
+      real t_l(kk,ii,jj), mr_l (kk,ii,jj),p_l(kk,ii,jj)
 
       real model_t(40,ii,jj), model_mr(40,ii,jj)
 
@@ -392,8 +392,8 @@ c     setup cloud test (cloud array passed in)
 
                  if(cloud(i,j,k).ge.1.0) then ! assume cloud top
 
-                    if(p(k).lt.psfc(i,j)) then ! above ground level, assign
-                       psfc(i,j) = p(k)
+                    if(p_3d(i,j,k).lt.psfc(i,j)) then ! above ground level
+                       psfc(i,j) = p_3d(i,j,k)
                        tskin(i,j) = t(i,j,k)
                        cld(i,j) = cloud(i,j,k)
 
@@ -425,6 +425,7 @@ c       assign 0.0 moisture where there is missing data.
                     mr_l(k,i,j) = 0.0
                  endif
                  t_l (k,i,j) = t(i,j,k)
+                 p_l (k,i,j) = p_3d(i,j,k)
 
               enddo
            enddo
@@ -477,7 +478,7 @@ c     insert call for OPTRAN for initial comparison with gimtau.f
 c     note that optran is configured to return both sounder and imager
 c     channels used in this algorithm.
 
-              call ofm ( kk, p, t_l(1,i,j), 
+              call ofm ( kk, p_l(1,i,j), t_l(1,i,j), 
      1             mr_l(1,i,j), tskin(i,j), psfc(i,j),
      1             julian_day, lat(i,j),theta(i,j), tbest) 
 
@@ -599,7 +600,7 @@ c   and compare these to the forward model radiances
 c fill powell common block with profile data for optran
 
                   do k = 1, kk
-                     cost_p(k) = p(k)
+                     cost_p(k) = p_l(k,i,j)
                      cost_t_l(k) = t_l(k,i,j)
                      cost_mr_l(k) = mr_l (k,i,j)
                   enddo
@@ -718,38 +719,40 @@ c     derive field statistics to determine outliers
          return
          
       endif
+
+      do j = 1,jj
+         do i = 1,ii
       
       
 c     find k500 (level at or above 500)
-      
-      do k = 1, kk
-         if (p(k) .le. 500.)then
-            k500 = k
-            go to 475
-         endif
-      enddo
- 475  continue
-      
+            
+            do k = 1, kk
+               if (p_3d(i,j,k) .le. 500.)then
+                  k500 = k
+                  go to 475
+               endif
+            enddo
+ 475        continue
+            
 c     find k700 (level at or above 700)
-      do k = 1, kk
-         if (p(k) .le. 700.)then
-            k700 = k
-            go to 476
-         endif
-      enddo
- 476  continue
-      
-      
+            do k = 1, kk
+               if (p_3d(i,j,k) .le. 700.)then
+                  k700 = k
+                  go to 476
+               endif
+            enddo
+ 476        continue
+            
+            
 c     modify lq3 field  top level
-      
-      do j = 1,jj
-         do i = 1,ii
+            
+            
             do k = k500+1, kk   !between 475 and 100 mb
                
                sh(i,j,k) = sh(i,j,k) * 
      1              ((abs(data_anal(i,j))-1.) * 
-     1              (p(k)/500.) +1.)
-
+     1              (p_3d(i,j,k)/500.) +1.)
+               
             enddo
          enddo
       enddo

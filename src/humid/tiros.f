@@ -43,15 +43,15 @@ cdis
 cdis
 cdis
       subroutine tiros (
-     1  sh,                 ! specific humidity g/g
-     1  lat,lon,            ! lat and longitude (deg)
-     1  i4time,             ! i4time of run (seconds)
-     1  p,                  ! pressure hpa (laps vert grid)
-     1  cloud,              ! cloud array
-     1  t,                  ! lt1 (laps 3d temps)
-     1  ntiros,             ! satellite number
-     1  ii,jj,kk            ! grid dimensions
-     1  )
+     1     sh,                  ! specific humidity g/g
+     1     lat,lon,             ! lat and longitude (deg)
+     1     i4time,              ! i4time of run (seconds)
+     1     p_3d,                ! pressure hpa (laps vert grid)
+     1     cloud,               ! cloud array
+     1     t,                   ! lt1 (laps 3d temps)
+     1     ntiros,              ! satellite number
+     1     ii,jj,kk             ! grid dimensions
+     1     )
 
 c   The module tiros.f is the current interface to use
 c   TOVS radiances in LAPS through variational methods. 
@@ -81,7 +81,7 @@ c  parameter list variables
       real    sh(ii,jj,kk)
       real    lat(ii,jj),lon(ii,jj)
       integer i4time
-      real    t(ii,jj,kk),p(kk)
+      real    t(ii,jj,kk),p_3d(ii,jj,kk)
       real    cloud(ii,jj,kk)
       integer ntiros
 
