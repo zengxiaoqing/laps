@@ -150,7 +150,12 @@ my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cy
 $cycle_time[0]=~/^(\d+),/;
 my $cycle_time = ($1>0)?$1:3600;
 $cycle_time = $opt_c if($opt_c>0);
+
 my $cycle_time_min = int($cycle_time/60);
+$cycle_time_min="0".$cycle_time_min if(length($cycle_time_min)<2);
+
+my $cycle_time_hr  = int($cycle_time/3600);
+$cycle_time_hr="0".$cycle_time_hr if(length($cycle_time_hr)<2);
 
 my $delay_time = 0;
 $delay_time = $opt_d if($opt_d > 0);
@@ -165,7 +170,7 @@ my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
 
 if(defined $opt_A){
    if(length($opt_A) != 16){
-      print "USEAGE: use -A to input time with the following format\n";
+      print "USAGE: use -A to input time with the following format\n";
       print "dd-mmm-yyyy-hhmm. Eg., 28-Aug-2002-1200 \n";
       exit;
    }
@@ -384,7 +389,7 @@ foreach $exe (@LAPS_EXE){
                 print TFILE "#!/bin/sh\n";
 
                 if($opt_q){
-                    print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_min:00 -A $opt_q\n";
+                    print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_hr:$cycle_time_min:00 -A $opt_q\n";
                 }elsif($opt_Q){ 
                     print TFILE "#\$ -pe $node_type $nodes_current\n";
                     print TFILE "#\$ -l h_rt=0:$cycle_time_min:00\n";
