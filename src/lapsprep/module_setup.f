@@ -49,7 +49,9 @@ MODULE setup
    ! Namelist items
 
    LOGICAL            :: hotstart,balance,adjust_rh
-   CHARACTER (LEN=4)  :: output_format
+   CHARACTER (LEN=4)  :: output_format(10)
+   INTEGER            :: num_output
+
    CHARACTER (LEN=256):: output_prefix
   
   !  Output file info.
@@ -88,7 +90,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      INTEGER :: ioerror, nml_unit
+      INTEGER :: ioerror, nml_unit, c
 
       NAMELIST /lapsprep_nl/ hotstart      , &
                          balance           , &
@@ -97,6 +99,7 @@ CONTAINS
 
       nml_unit = 77
 
+      output_format(:) = '    '
       ! Open the namelist
 
       input_laps_file = TRIM(laps_data_root) // '/static/lapsprep.nl'
@@ -120,6 +123,19 @@ CONTAINS
       ! Close the namelist
 
       CLOSE (nml_unit) 
+   
+      ! Determine number of output formats
+      num_output = 0
+      find_outputs: DO c = 1 , 10
+        IF (output_format(c).EQ.'    ')THEN
+          num_output = c - 1
+          EXIT find_outputs
+        ENDIF
+      ENDDO find_outputs
+      IF (num_output .LE. 0) THEN
+        PRINT '(A)','Must specify at least one output format!'
+        STOP 'READ_NAMELIST'
+      ENDIF
 
    END SUBROUTINE read_namelist
 

@@ -113,7 +113,7 @@ CONTAINS
   ! Build the output file name
  
   output_prefix = TRIM(laps_data_root)// '/lapsprd/lapsprep/' // &
-                  TRIM(output_format(1:3)) // '_laps'
+                  'mm5_laps'
   yyyyddd = valid_yyyy*1000 + valid_jjj
   CALL wrf_date_to_ymd(yyyyddd, valid_yyyy, valid_mm, valid_dd) 
   WRITE(hdate, '(I4.4,"-",I2.2,"-",I2.2,"_",I2.2,":",I2.2,":00.0000")') &

@@ -94,7 +94,7 @@
     
     ! Miscellaneous local variables
                                         
-    INTEGER :: loop , var_loop , k, istatus
+    INTEGER :: out_loop, loop , var_loop , k, istatus
     LOGICAL :: file_present
 
     ! Beginning of code
@@ -129,7 +129,7 @@
  
     PRINT '(A)', 'Getting horizontal grid specs from static file.'
     CALL get_horiz_grid_spec(laps_data_root)
-   
+
     !  Loop through each of the requested extensions for this date.  Each of the
     !  extensions has a couple of the variables that we want.
 
@@ -432,32 +432,35 @@
       pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
     ENDIF
 
-    ! Now it is time to output these arrays.  The arrays are ordered
-    !  as (x,y,z).  The origin is the southwest corner at the top of the 
-    ! atmosphere for the 3d arrays, where the last layer (z3+1) contains    
-    ! the surface information.  This is where you would insert a call
-    ! to a custom output routine.
+    ! Loop over the each desired output format
 
-    select_output: SELECT CASE (output_format)
-      CASE ('mm5 ')
-        CALL output_pregrid_format(p, t, ht, u, v, rh, slp, &
+    DO out_loop = 1, num_output
+      ! Now it is time to output these arrays.  The arrays are ordered
+      !  as (x,y,z).  The origin is the southwest corner at the top of the 
+      ! atmosphere for the 3d arrays, where the last layer (z3+1) contains    
+      ! the surface information.  This is where you would insert a call
+      ! to a custom output routine.
+
+      select_output: SELECT CASE (output_format(out_loop))
+        CASE ('mm5 ')
+          CALL output_pregrid_format(p, t, ht, u, v, rh, slp, &
                             lwc, rai, sno, ice, pic,snodep)
 
-      CASE ('wrf ')
-        CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
+        CASE ('wrf ')
+          CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
                              lwc, rai, sno, ice, pic,snodep)
      
-      CASE ('rams') 
-        CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snodep)
-      CASE ('sfm ')
-        PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
+        CASE ('rams') 
+          CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snodep)
+        CASE ('sfm ')
+          PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
 
-      CASE DEFAULT
-        PRINT '(2A)', 'Unrecognized output format: ', output_format
-        PRINT '(A)', 'Recognized formats include mm5, rams, wrf, and sfm'
+        CASE DEFAULT
+          PRINT '(2A)', 'Unrecognized output format: ', output_format
+          PRINT '(A)', 'Recognized formats include mm5, rams, wrf, and sfm'
 
-    END SELECT select_output
-   
+      END SELECT select_output
+    ENDDO 
     PRINT '(A)', 'LAPSPREP Complete.'
 
   END program lapsprep
