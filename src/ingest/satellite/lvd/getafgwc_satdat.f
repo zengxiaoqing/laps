@@ -76,66 +76,64 @@ c
        character c_fname_data(max_channels)*9
        character cfd*9
        character path*200
-       character cfname*255
-       character c_filename_sat(max_files)*255
+       character cfname*11
+       character c_afwa_fname*11
+       character cfilename*255
+c
 c first try for the ir data
 c
       istatus = -1   !bad status return
       ntm=0
 
-      cid4='go'//c_sat_id(isat)(5:6)
+c     cid4='go'//c_sat_id(isat)(5:6)
 
       do i = 1,nchannels
 
-         if(nt.le.0)nt=3
-
          call lvd_file_specifier(chtype(i),ispec,istat)
+         cfname=c_afwa_fname(c_sat_id(isat),chtype(i))
+         n=index(path_to_raw_sat(ispec,jtype,isat),' ')-1
+         cfilename=path_to_raw_sat(ispec,jtype,isat)(1:n)//cfname
 
-         goto(10,20,20,20,20)ispec   !(vis,3.9,wv,11.0,12.0)
+c        goto(10,20,20,20,20)ispec   !(vis,3.9,wv,11.0,12.0)
 
-10          if(lvis_flag)goto 30
-            path=path_to_raw_sat(ispec,jtype,isat)
-            csname='u'//cid4//'v1'
-            n=index(path,' ')-1
-            cfname=path(1:n)//csname//'*_'//chtype(i)
-            goto 15
+c10          if(lvis_flag)goto 30
+c           path=path_to_raw_sat(ispec,jtype,isat)
+c           csname='u'//cid4//'v1'
+c           n=index(path,' ')-1
+c           cfname=path(1:n)//csname//'*_'//chtype(i)
+c           goto 15
 
-20          csname='u'//cid4//'i1'
-            path=path_to_raw_sat(ispec,jtype,isat)
-            n=index(path,' ')-1
-            cfname=path(1:n)//csname//'*_'//chtype(i)
+c20          csname='u'//cid4/'i1'
+c           path=path_to_raw_sat(ispec,jtype,isat)
+c           n=index(path,' ')-1
+c           cfname=path(1:n)//csname//'*_'//chtype(i)
 c
-15          call get_file_names(cfname,ifiles_sat_raw,
-     &c_filename_sat,max_files,istatus_gfn)
-
-            if(ifiles_sat_raw .gt. 0)then
-
-               n=index(c_filename_sat(1),' ')
-               write(6,*)'Reading: ',c_filename_sat(1)(1:n)
+               n=index(cfilename,' ')
+               write(6,*)'Reading: ',cfilename(1:n)
 
                goto(21,22,23,24,25)ispec
 
-21             call read_afgwc_satdat(c_filename_sat(1),isat,jtype,
+21             call read_afgwc_satdat(cfilename,isat,jtype,
      &chtype(i),i_delta_sat_t_sec,i4time_current,nvislines,nviselem,
      &image_vis,i4time_data_io,iostatus)
                goto 26
 
-22             call read_afgwc_satdat(c_filename_sat(1),isat,jtype,
+22             call read_afgwc_satdat(cfilename,isat,jtype,
      &chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem,
      &image_39,i4time_data_io,iostatus)
                goto 26
 
-23             call read_afgwc_satdat(c_filename_sat(1),isat,jtype,
+23             call read_afgwc_satdat(cfilename,isat,jtype,
      &chtype(i),i_delta_sat_t_sec,i4time_current,nwvlines,nwvelem,
      &image_67,i4time_data_io,iostatus)
                goto 26
 
-24             call read_afgwc_satdat(c_filename_sat(1),isat,jtype,
+24             call read_afgwc_satdat(cfilename,isat,jtype,
      &chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem,
      &image_11,i4time_data_io,iostatus)
                goto 26
 
-25             call read_afgwc_satdat(c_filename_sat(1),isat,jtype,
+25             call read_afgwc_satdat(cfilename,isat,jtype,
      &chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem,
      &image_12,i4time_data_io,iostatus)
 
@@ -149,13 +147,9 @@ c
      &,fstatus)
                   write(6,*)'gwc data loaded: ',c_type(ntm)
                else
-                  write(6,*)'Error loading data - ',chtype(i)
+                  write(6,*)'No data loaded - ',chtype(i)
                   goto 1000
                endif  
-
-         else
-            write(*,*)'+++ No ',chtype(i),' Data Available +++ '
-         endif
 
 30    enddo
 c

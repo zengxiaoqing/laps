@@ -103,6 +103,9 @@ c
        integer i_dir
        integer n_missing_albedo
        integer len_dir
+       integer isave,jsave
+       integer ismax,jsmax
+       integer ismin,jsmin
 
        real*4 r_llij_lut_ri(ni,nj)
        real*4 r_llij_lut_rj(ni,nj)
@@ -131,8 +134,9 @@ c      real*4 meandiff
 c      real*4 meanabsdiff
 c      real*4 maxdiff
 c      real*4 mindiff
+       real*4 ave,adev,sdev,var,skew,curt
 
-c      integer*4 icnt
+       integer*4 icnt
 c
        integer i4time,imax,jmax
 c
@@ -336,7 +340,7 @@ c         i_dir = 1
 c=======================================
 c GVAR Switch
 c
-       elseif(c_sat_type.eq.'gvr')then
+       elseif(c_sat_type.eq.'gvr'.or.c_sat_type.eq.'gwc')then
           if(c_sat_id.eq.'goes08')then
              write(6,*)'GVAR GOES-8 Vis data'
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
@@ -420,12 +424,54 @@ c =============================================
        end if
        call check(albedo,r_missing_data,istatus_a,imax,jmax)
        if(istatus_a .lt. 1) then
-          write(6,915) istatus_a
- 915      format(' +++ WARNING. Visible status = ',i8)
+          print*,' +++ WARNING. Visible status = ',istatus_a
           istatus(3) = istatus_a
        endif
 c
-       write(*,*)'Successfully remapped satellite data to LAPS'
+       write(*,*)'Successfully remapped vis data'
+
+       call moment(albedo,imax*jmax,
+     &             ave,adev,sdev,var,skew,curt,
+     &             istatus)
+
+       icnt=0
+       do j=1,jmax
+       do i=1,imax
+          if(albedo(i,j)-ave.gt.3.0*sdev)then
+             icnt=icnt+1
+             isave=i
+             jsave=j
+          endif
+          if(albedo(i,j).eq.albedo_max)then
+             ismax=i
+             jsmax=j
+          endif
+          if(albedo(i,j).eq.albedo_min)then
+             ismin=i
+             jsmin=j
+          endif
+       enddo
+       enddo
+
+       i=isave
+       j=jsave
+       print*,'  ================='
+       print*,'  Albedo statistics'
+       print*,'  ================='
+       if(icnt.gt.0)then
+          print*,'  N > 3 standard dev = ',icnt
+          print*,'  Last i/j > 3 stand dev = ',i,j
+          print*,'  laps_vis_norm(i,j)= ',laps_vis_norm(i,j)
+       else
+          print*,'All albedo < 3 standard dev'
+       endif
+       print*,'Average albedo = ', ave
+       print*,'Standard dev = ',sdev
+       print*,'i/j/count of max albedo ',ismax,jsmax,
+     &laps_vis_norm(ismax,jsmax)
+       print*,'i/j/count of min albedo ',ismin,jsmin,
+     &laps_vis_norm(ismin,jsmin)
+
 
        goto 999
 898    write(6,*)'Error getting r_msng_sat_flag'

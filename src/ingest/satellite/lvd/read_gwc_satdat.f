@@ -24,6 +24,7 @@ c
       Integer     i_delta_t
       Integer     isat,jtype
       Integer     nefi,nlfi
+      Integer     lun
 
       INTEGER DECIMAT
       INTEGER STRPIX     !Start Pixel
@@ -54,10 +55,21 @@ c
       Character     chtype*3
       Character     c_filename*255
 
+      logical       lopen,lext
+
       istatus=0
  
       n=index(c_filename,' ')-1
 
+      inquire(file=c_filename,exist=lext,opened=lopen,number=lun)
+      if(.not.lext)then
+         print*,'File does not exist: ',c_filename(1:n)
+         goto 1000
+      endif
+      if(lopen)then
+         print*,'File is already open: ',c_filename(1:n)
+         goto 1000
+      endif
       call read_gwc_header(c_filename(1:n),STRPIX,STRSCNL,STPPIX,
      +    STPSCNL,REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,WIDTH,DEPTH,
      +   GOALPHA,STRBDY1,STRBDY2,STPBDY1,STPBDY2,BEPIXFC,BESCNFC,

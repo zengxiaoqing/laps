@@ -185,8 +185,8 @@ c
       integer nft,ntm(max_files)
 
       include 'satellite_common_lvd.inc'
-c
-c ----------------------------- START --------------------------------------
+c =========================================================================
+c ----------------------------- START -------------------------------------
 c
       itstatus=init_timer()
       itstatus=ishow_timer()
@@ -194,9 +194,9 @@ c
       csatid = c_sat_id(isat)
       csattype = c_sat_types(jtype,isat)
       smsng = float(i_msng_sat_flag(jtype,isat))
-c
+c -----------------
 c get current time.
-c ----------------------------------------------------------------------
+c -----------------
       i4time_cur = i4time_now_gg()
       call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
 c
@@ -211,9 +211,9 @@ c
 
       write(6,*)'Current LVD process time: ',
      &'filename: ',c_fname_cur,' i4time: ',i4time_cur
-c
+c ---------------------------------------------
 c acquiring LAPS latitude and longitude arrays.
-c ----------------------------------------------------------------------
+c ---------------------------------------------
       call get_domain_laps(nx_l,ny_l,'nest7grid',lat,lon,topo,
      &grid_spacing_laps_m,istatus)
       if(istatus.eq.1)then
@@ -223,7 +223,69 @@ c ----------------------------------------------------------------------
          write(6,*)'Error getting LAPS lat/lon data'
          stop
       end if
+c --------------------------------------------------------------------
+c Read look-up table for mapping lat/lon data pixels to real i/j pairs
+c --------------------------------------------------------------------
+      call readlut(csatid,csattype,maxchannels,nchannels,
+     &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+
+      if(istatus.eq.1)then
+
+         write(6,*)'LUT not obtained: ',csatid,'/',csattype
+         write(6,*)'Computing lut using genlvdlut_sub'
+         call genlvdlut_sub(nx_l,ny_l,gstatus)
+         if(gstatus.lt.0)then
+            write(6,*)'Error generating LUT - terminating'
+            goto 910
+         else
+            write(6,*)'**********************************'
+            write(6,*)
+            call rewrite_satellite_lvd_nl(istatus)
+            call readlut(csatid,csattype,maxchannels,nchannels,
+     &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+            if(istatus.eq.1)then
+               write(6,*)'Error reading new luts - terminating'
+               goto 909
+            endif
+         endif
+
+      else
+
+         write(6,*)'Got the mapping look-up-tables '
+         write(6,*)'Check if luts are up-to-date'
+
+         call check_luts(c_fname_cur,isat,jtype,
+     &chtype,maxchannels,nchannels,l_lut_flag,istatus)
+
+         if(l_lut_flag.and.istatus.eq.0)then
+            write(6,*)'Found difference in nav parms',
+     +' - rebuild the lut'
+            call genlvdlut_sub(nx_l,ny_l,gstatus)
+            if(gstatus.lt.0)then
+               write(6,*)'Error generating LUT - terminating'
+               goto 910
+            else
+               write(6,*)'**********************************'
+               write(6,*)
+               call rewrite_satellite_lvd_nl(istatus)
+               call readlut(csatid,csattype,maxchannels,nchannels,
+     &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+               if(istatus.eq.1)then
+                  write(6,*)'Error reading new luts - terminating'
+                  goto 909
+               endif
+            endif
+         elseif(istatus.eq.0)then
+            write(6,*)'Lut checked out ok'
+            write(6,*)
+         else
+            write(6,*)'Error status returned from check_lut'
+            goto 910
+         endif
+
+      endif
 c
+c -------------------------------------------------------------------------
 c Determine solar-altitude and set flag for visible sat data availability.
 c This flag will force  this process to not wait for vis data at the end of
 c the day when the sun is setting.
@@ -234,9 +296,9 @@ c
          write(6,*)'lvis_Flag set indicating no visible data'
       endif
 c
+c --------------------------------------------------------------------------
 c Find and read current satellite files... as many as 4 ir channels and vis.
 c --------------------------------------------------------------------------
-c 
       if(csattype.eq.'cdf'.or.csattype.eq.'gvr'.or.
      &   csattype.eq.'wfo')then
 
@@ -321,66 +383,9 @@ c
          endif 
 
       endif
-c
-c Read look-up table for mapping lat/lon data pixels to real i/j pairs
-c ----------------------------------------------------------------------
-      call readlut(csatid,csattype,maxchannels,
-     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-
-      if(istatus.eq.1)then
-
-         write(6,*)'LUT not obtained: ',csatid,'/',csattype
-         write(6,*)'Computing lut using genlvdlut_sub'
-         call genlvdlut_sub(nx_l,ny_l,gstatus)
-         if(gstatus.lt.0)then
-            write(6,*)'Error generating LUT - terminating'
-            goto 910
-         else
-            write(6,*)'**********************************'
-            write(6,*)
-            call rewrite_satellite_lvd_nl(istatus)
-            call readlut(csatid,csattype,maxchannels,
-     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-            if(istatus.eq.1)then
-               write(6,*)'Error reading new luts - terminating'
-               goto 909
-            endif
-         endif
-
-      else
-
-         write(6,*)'Got the mapping look-up-tables '
-         write(6,*)'Check if luts are up-to-date'
-         call check_luts(c_fname_cur,isat,jtype,
-     &chtype,maxchannels,nchannels,l_lut_flag,istatus)
-
-         if(l_lut_flag.and.istatus.eq.1)then
-            write(6,*)'Found difference in nav parms',
-     +' - rebuild the lut'
-            call genlvdlut_sub(nx_l,ny_l,gstatus)
-            if(gstatus.lt.0)then
-               write(6,*)'Error generating LUT - terminating'
-               goto 910
-            else
-               write(6,*)'**********************************'
-               write(6,*)
-               call rewrite_satellite_lvd_nl(istatus)
-               call readlut(csatid,csattype,maxchannels,
-     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-               if(istatus.eq.1)then
-                  write(6,*)'Error reading new luts - terminating'
-                  goto 909
-               endif
-            endif
-         else
-            write(6,*)'Lut checked out ok'
-            write(6,*)
-         endif
-
-      endif
-c
+c --------------------------------------------------------------------
 c Get image resolution information
-c
+c --------------------------------
       do j = 1,nft
       do i = 1,ntm(j)
 
@@ -398,8 +403,9 @@ c
       enddo
       enddo
 c
-c Compute look-up table for converting ir counts to brightness temp (Tb).
-c ----------------------------------------------------------------------
+c -----------------------------------------------------------------------
+c Compute or read ir/vis count to brightness temp (Tb)/vis count-to-count.
+c -----------------------------------------------------------------------
 c
       if(csattype.eq.'cdf'.or.csattype.eq.'wfo')then
 
@@ -461,13 +467,12 @@ c    &scalingGain,cnt2rad(1,i))
 
       endif
 c
+c ------------------------------------------------------------
 c check for and fill-in for any missing data in current images
-c While in theory this check could work for ascii files, it is disabled
-c because there are no previous ascii files (ie., 15 minutes prior to current time
-c ----------------------------------------------------------------------
+c ------------------------------------------------------------
 c
       lsatqc=.true.
-      if(csattype.eq.'asc')lsatqc=.false.
+      if(csattype.eq.'asc'.or.csattype.eq.'gwc')lsatqc=.false.
       
       if(lsatqc)then
 
@@ -486,8 +491,8 @@ c
          write(6,*)'TEST = skipping satfill section'
          write(6,*)'==============================='
 
-         write(6,*)'Not using fill routine - ascii data'
-         write(6,*)'Use set_missing_ascii '
+         write(6,*)'Not using fill routine '
+         write(6,*)'Only use set_missing_flag '
 
          call set_missing_flag(csattype,n_ir_elem,n_ir_lines,
      &             n_vis_elem,n_vis_lines,n_wv_elem,n_wv_lines,
@@ -501,10 +506,9 @@ c
       l_national = .false.
       iskip_bilin = 1
 c
-c get satellite range and sub-longitude.
-c As of 3-96 these were: goes8: range_m = 42156443.0 and sublon_d = -75.20586
-c As of 3-98 these parameters are acquired from static/satellite_master.nl
-
+c ---------------------------------------------------
+c satellite range and sub-longitude (namelist items).
+c ---------------------------------------------------
       radtodeg=180.0/acos(-1.)
       range_m = sat_range_m(isat)
       sublon_d = r_sat_sub_lon(isat)*radtodeg
@@ -514,7 +518,10 @@ c As of 3-98 these parameters are acquired from static/satellite_master.nl
       write(6,*)'sublon_d = ',sublon_d
       write(6,*)'LAPS grid spacing (m): ',grid_spacing_laps_m
       write(6,*)
-
+c
+c -------------------------------------------------
+c output info concerning the state of these images.
+c -------------------------------------------------
       do i = 1,nft
       do j = 1,ntm(i)
 
@@ -544,11 +551,11 @@ c
          write(6,*)'error getting r_missing_data'
          goto 16
       endif
-c------
-c convert from counts to brightness temps 
-c for CDF data use the pre-generated lut's.
-c for ascii data divide all by 10.
 c
+c ------------------------------------------------------------
+c convert from counts to brightness temps for CDF data use the
+c pre-generated lut's. For ascii data divide all by 10.
+c ------------------------------------------------------------
        if(csattype.ne.'asc')then
           write(6,*)
           write(6,*)'Convert counts to brightness temps'
@@ -589,7 +596,7 @@ c
 
              goto 17
 
-15           if(csattype.eq.'gvr')then
+15           if(csattype.eq.'gvr'.or.csattype.eq.'gwc')then
                 call btemp_convert(n_vis_elem,n_vis_lines,
      &                          vis_cnt_to_cnt_lut,
      &                          r_missing_data,
@@ -637,16 +644,17 @@ c
           write(6,*)'Cannot convert image to btemps yet'
        endif
 c
-c This loop starts the processing of satellite data files found for the current
-c run time. nft = number of file times. ntm(i) is the number of time matches
-c for each file time. nft can be > 1 if the code has been idle; 2)if there is more
-c than one time due to rapid scan; 3) there are satellite times with threshold i_sat_delta_t_sec
-c (found in static/nest7grid.parms). nft must never exceed parameter max_images (lapsparms.for).
-c
+c ------------------------------------------------------------------------------------------------
+c Start processing satellite image data found for the current run time.
+c nft = number of file times. ntm(i) is the number of time matches for each file time
+c nft can be > 1 if, 1) the code has been idle; 2) if there is more
+c than one time due to rapid scan; 3) there are file times within threshold i_sat_delta_t_sec
+c (found in static/nest7grid.parms). nft must never exceed parameter max_images (satellite_lvd.nl).
+c This is insured within the getcdf, getafgwc, etc code.
+c ------------------------------------------------------------------------------------------------
       write(6,*)
       write(6,*)'Ready to remap satellite data'
       write(6,*)'-----------------------------'
-c
 c
 c This for output.  LAPS LVD files as indicated.
 c
@@ -654,6 +662,8 @@ c
       dir_lvd=dir_lvd(1:len_lvd)//csatid//'/'
       len_lvd=index(dir_lvd,' ')-1
       ext_lvd = 'lvd'
+c
+c initialize output array
 c
       do i=1,n_lvd_fields_max
          lvl_lvd(i) = 0
@@ -680,7 +690,7 @@ c
              call lvd_file_specifier(c_type(j,i),ispec,istat)
 
              if(ispec.eq.4)then
-             if(r_image_status(j,i).eq.0.000)then
+             if(r_image_status(j,i).le.0.3333)then
 
                 call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
@@ -808,7 +818,7 @@ c
      &                      csattype,
      &                      i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
-     &                      n_vis_lines,n_vis_elem,
+     &                      n_vis_lines,n_vis_elem,    !array dimensions
      &                      r_grid_ratio(j,i),
      &                      image_vis(1,1,i),
      &                      r_llij_lut_ri(1,1,ispec),
@@ -904,7 +914,6 @@ c
 
 998   write(*,*)'No ',c_sat_id(isat),"/",c_sat_types(jtype,isat),
      &' satellite data.'
-      goto 16
 
  16   write(*,*)' lvd driver sub completed'
       itstatus=ishow_timer()

@@ -51,10 +51,6 @@ c
       integer idum
       integer i2dum
 
-      Real*4    r4dum_array(ny)
-      Real*4    r4dum
-      Real*8    r8dum
-      Real*8    r8dum_array(ny)
       real*4    image_in(nx,ny)
       real*4    image_temp(nx,ny)
       real*4    data(125)
@@ -76,7 +72,7 @@ c
       jbnd=ny
 c
 c the test is different depending on the value of smsng (satellite missing).
-c smsng = 255. for everything but gvar and gwc for which smsng = 0.0.
+c the missing satellite data values are defined in data/static/satellite_lvd.nl
 c
       rlow=0.0
       rhigh=smsng
@@ -85,16 +81,26 @@ c
          if(chtype.eq.'4u ')rlow=69.
          if(chtype.eq.'wv ')rlow=30.
          if(chtype.eq.'11u'.or.chtype.eq.'12u')rlow=16.
-         if(csat_type.eq.'gwc'.and.chtype.eq.'vis')then
-            rhigh = 255.0
-            rlow = 0.0
-         elseif(csat_type.eq.'gvr'.and.chtype.eq.'vis')then
-            rlow = 28.0
-         endif
+         if(chtype.eq.'vis')rlow=28.
+
+c        if(csat_type.eq.'gwc'.and.chtype.eq.'vis')then
+c           rhigh = 255.0
+c           rlow = 0.0
+c        elseif(csat_type.eq.'gvr'.and.chtype.eq.'vis')then
+c           rlow = 28.0
+c        endif
+
       endif
 
       istat_status=0
       imiss_status=0
+
+c     if(csat_type.eq.'gwc')then
+c        call setmsng_gwc(rlow,rhigh,smsng,nx,ny,image_in,
+c    &r_missing_data,imiss_status)
+c        print*,'N msng found in setmsng_gwc: ',imiss_status
+c        goto 1000
+c     endif
 
       do j=2,jbnd-1
       do i=2,ibnd-1
@@ -107,8 +113,8 @@ c
              do jj=j-1,j+1
              do ii=i-1,i+1
                 if(image_in(ii,jj).ne.smsng .and.
-     &              image_in(ii,jj).ge.rlow  .and.
-     &              image_in(ii,jj).le.rhigh )then
+     &              image_in(ii,jj).gt.rlow  .and.
+     &              image_in(ii,jj).lt.rhigh )then
                    n=n+1
                    data(n)=image_in(ii,jj)
                 endif
@@ -196,4 +202,26 @@ c
       istatus=imiss_status+istat_status
 
 1000  return
+      end
+c
+c===============================================================
+c
+      subroutine setmsng_gwc(rlow,rhigh,smsng,nx,ny,image_in,
+     &r_missing_data,imiss_status)
+
+      real*4 rlow,rhigh,smsng,r_missing_data
+      integer nx,ny,imiss_status
+      real*4 image_in(nx,ny)
+
+      do j=1,ny
+      do i=1,nx
+         if(image_in(i,j).eq.smsng.or.
+     &image_in(i,j).lt.rlow.or.image_in(i,j).gt.rhigh)then
+            image_in(i,j)=r_missing_data
+            imiss_status=imiss_status-1
+         endif
+      enddo
+      enddo
+
+      return
       end

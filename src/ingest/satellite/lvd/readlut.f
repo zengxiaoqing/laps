@@ -1,5 +1,5 @@
-      subroutine readlut(csat_id,csat_typ,maxch,nft,
-     &ntm,chtype,nx,ny,ri,rj,istatus)
+      subroutine readlut(csat_id,csat_typ,maxch,nch,
+     &chtype,nx,ny,ri,rj,istatus)
 c
       implicit none
 
@@ -7,13 +7,12 @@ c
       integer nx_in
       integer ny_in
       integer maxch
+      integer nch
       integer istatus
       integer i,j,n,np
       integer lend,lenf
       integer ispec
       integer istat
-      integer nft
-      integer ntm(nft)
 
       logical   lgot_lut(maxch)
 
@@ -27,7 +26,7 @@ c
       character*255 file
       character*6   csat_id
       character*3   csat_typ
-      character*3   chtype(maxch,nft)
+      character*3   chtype(maxch)
       character*3   ct
 c
 c-----------------------------------------------------------------------
@@ -42,16 +41,15 @@ c
          lgot_lut(i)=.false.
       enddo
 
-      do j=1,nft
-      do i=1,ntm(j)
+      do i=1,nch
 
-         call lvd_file_specifier(chtype(i,j),ispec,istat)
+         call lvd_file_specifier(chtype(i),ispec,istat)
          if(istat.eq.0)then
 
             if(.not.lgot_lut(ispec))then
               lgot_lut(ispec)=.true.
 
-              ct=chtype(i,j)
+              ct=chtype(i)
               goto(3,2,3,2,2)ispec
 2             ct='ir'
 
@@ -75,7 +73,6 @@ c
             endif
          endif
       enddo
-      enddo
 
       istatus = 0
       goto 1000
@@ -93,14 +90,22 @@ c================================================
 c
       subroutine check_luts(cfname_cur,isat,jtype,
      &chtype,maxchannels,nchannels,l_lut_flag,istatus)
-
+c
+c most applications will relocalize which will delete any
+c existing lut's and new ones are automatically generated.
+c For WFO and AFWA, the satellite data files can possibly
+c change. This is particularly true of AFWA satellite data.
+c
       implicit none
 
       integer        maxchannels
       integer        nchannels
 
-      character*(*)  cfname_cur
-      character*3    chtype(maxchannels)
+      character      cfname_cur*(*)
+      character      chtype(maxchannels)*3
+      character      cname*11
+      character      c_afwa_fname*11
+      character      cfname*200
 
       integer        i
       integer        isat,jtype,kch
@@ -110,17 +115,30 @@ c
       integer        ispec
       integer        ilat00,ilon00
       integer        i_la1,i_lo1
+      integer        lenf
+
+      integer        strpix,strscnl,stppix,stpscnl
+      integer        reqobstm,imgtype
+      integer        iwidth,idepth
+      integer        istrbdy1,istrbdy2,istpbdy1,istpbdy2
+      integer        bepixfc,bescnfc,fsci,idecimat
+
+      integer        istrtline,istrtpix
+      integer        nw_vis_line_gwc
+      integer        nw_vis_pix_gwc
 
       logical        l_lut_flag
 
       real resx,resy
       real rlat00,rlon00
       real dx,dy
+      real golatsbp,golonsbp,goalpha
      
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
 
-      istatus = 0
+      istatus = 1
+      l_lut_flag=.false.
 
       do i = 1,nchannels
       call lvd_file_specifier(chtype(i),ispec,istatus)
@@ -149,7 +167,9 @@ c
 
 c check if namelist parameters are current
 
-      l_lut_flag=.false.
+c
+c --- WFO --- 
+c
       if(c_sat_types(jtype,isat).eq.'wfo')then 
 
          call get_wfo_nav_parms(path_to_raw_sat(ispec,jtype,isat),
@@ -176,13 +196,46 @@ c check if namelist parameters are current
             l_lut_flag=.true.
          endif
 
+      elseif(c_sat_types(jtype,isat).eq.'gwc')then
+c
+c --- AFWA ---
+c
+         cname=c_afwa_fname(c_sat_id(isat),chtype(i))
+         lenf=index(path_to_raw_sat(ispec,jtype,isat),' ')-1
+         cfname=path_to_raw_sat(ispec,jtype,isat)(1:lenf)//cname
+
+         call read_gwc_header(cfname,strpix,strscnl,stppix,stpscnl,
+     &reqobstm,imgtype,golatsbp,golonsbp,iwidth,idepth,goalpha,istrbdy1,
+     &istrbdy2,istpbdy1,istpbdy2,bepixfc,bescnfc,fsci,idecimat,istatus)
+
+         if(istatus.eq.0)then
+c
+c this test is only good for the old SDHS data files.
+c
+            if(iwidth*256.ne.npix.or.idepth*64.ne.nlin)then
+               l_lut_flag=.true.
+            endif
+c
+c this test will help for both the old and new SDHS data files.
+c
+            istrtline = nw_vis_line_gwc(chtype(i),bescnfc,fsci)
+            istrtpix =  nw_vis_pix_gwc(chtype(i),bepixfc,goalpha)
+
+         else
+            print*,'gwc header not read. No lut update'
+         endif
+
       endif
 
-      enddo
 
+      enddo
+c
+c this check is for gvar type data only. once a day using
+c a current O&A block.
+c
       if(cfname_cur(6:8).eq.'000'.and.
-     &c_sat_types(jtype,isat).eq.'gvr'.or.
-     &c_sat_types(jtype,isat).eq.'gwc')then
+     &   (c_sat_types(jtype,isat).eq.'gvr'   .or.
+     &    c_sat_types(jtype,isat).eq.'gwc')       )then
          l_lut_flag=.true.
          write(6,*)'Auto-update the gvar navigation'
       endif

@@ -43,7 +43,7 @@ C**********************************************************************
       INTEGER WIDTH      !Number of Cells in Width of image
       INTEGER DEPTH      !Number of Cells in Depth of image
 
-      PARAMETER (HEADER_SIZE = 126) 
+      PARAMETER (HEADER_SIZE = 256) 
       PARAMETER (CELL_WIDTH = 256)
       PARAMETER (CELL_DEPTH = 64)
       PARAMETER (PIXELS_PER_CELL = CELL_WIDTH*CELL_DEPTH)
@@ -141,8 +141,8 @@ C**********************************************************************
       READ (8,REC=1,ERR=99)HEADER,IMAGEB
 
       Close(8)
-      imagelen=nlines*nelem/4
-      if(imagelen .ne. float(nlines*nelem)/4.) imagelen=imagelen+1
+      imagelen=nlfi*nefi/4
+      if(imagelen .ne. float(nlfi*nefi)/4.) imagelen=imagelen+1
 
       call decellularize_image(IMAGEB,imagelen,width,depth,
      &pixels_per_cell,cell_width,cell_depth,nefi,nlfi,image_data)

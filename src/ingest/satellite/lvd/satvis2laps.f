@@ -72,6 +72,7 @@ c                                          as function of input/output ratio
        Integer jend
        Integer istatus
        Integer qcstatus
+       Integer insufdata
 
        Real*4 r_missing_data
        Real*4 Temp
@@ -96,6 +97,7 @@ c      wdw_lat =  grid_spacing_deg / 2.
 c      wdw_lon = (grid_spacing_deg / 2.) / cosd(xlat(1,1))
 c      write(6,*)' GET VIS: wdw_lat, wdw_lon = ',wdw_lat,wdw_lon
 
+       insufdata=0
        if(r_grid_ratio .lt. 0.5)then  !0.75)then
 c      ------------------------------
 c In this block the average pixel value is used for remapping the visible
@@ -109,6 +111,9 @@ c
 c
 c compute the line and element for window surrounding LAPS grid point.
 c
+            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
+
             elem_mx = r_llij_lut_ri(i,j) + ((1./r_grid_ratio) * 0.5)
             elem_mn = r_llij_lut_ri(i,j) - ((1./r_grid_ratio) * 0.5)
             line_mx = r_llij_lut_rj(i,j) + ((1./r_grid_ratio) * 0.5)
@@ -120,9 +125,10 @@ c
 
             if(istart .le. 0 .or. jstart .le. 0 .or.
      &iend .gt. elem_dim .or. jend .gt. line_dim)then
-               write(*,*)'insufficient data for visible lat/lon sector'
-               write(*,1020)i,j
-1020	       format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
+c              write(*,*)'insufficient data for visible lat/lon sector'
+c              write(*,1020)i,j
+c1020	       format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
+               insufdata=insufdata+1
                sv(i,j)=r_missing_data
  	    else
  
@@ -172,6 +178,8 @@ Cd             endif
 
             end if
 
+          endif
+
    10     CONTINUE ! I,J
 
           write(6,*)'Max num vis pixels for avg: ',maxpix
@@ -195,21 +203,29 @@ c
 c bilinear_interp_extrap checks on boundary conditions and
 c uses r_missing_data if out of bounds.
 c
-            call bilinear_laps(
+
+            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
+
+               call bilinear_laps(
      &           r_llij_lut_ri(i,j),
      &           r_llij_lut_rj(i,j),
      &           elem_dim,line_dim,image_vis,
      &           result,istatus)
 
-            if(result .lt. r_missing_data .and.
-     &         result .gt. 0.0)then
+               if(result .lt. r_missing_data .and.
+     &            result .gt. 0.0)then
 
-                sv(i,j) = result
+                  sv(i,j) = result
+
+               else
+
+                  sv(i,j) = r_missing_data
+
+               endif
 
             else
-
-                sv(i,j) = r_missing_data
-
+               sv(i,j)=r_missing_data
             endif
 
    20     CONTINUE ! I,J
@@ -218,6 +234,11 @@ c
 
 C       WRITE(6,1234) IB,I4VTIME,ICT
 1234       FORMAT(1X,'BAND ',I4,' COUNT FOR I4TIME ',I10,' IS ',I8)
+
+        if(insufdata.gt.0)then
+           print*,'Found ',insufdata,' points that are too'
+           print*,'close to data edge to compute average'
+        endif
 
         istatus = 1
 c

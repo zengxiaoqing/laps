@@ -7,6 +7,8 @@ c
       dimension data(n)
       parameter (r_missing_data = +1e37)
       istatus=0
+
+      call get_r_missing_data(r_missing_data,istatus)
       if(n.le.1)then
             print *, 'n must be at least 2'
             istatus=1
@@ -14,7 +16,9 @@ c
       endif
       s=0.
       do 11 j=1,n
-        s=s+data(j)
+        if(data(j).lt.r_missing_data)then
+           s=s+data(j)
+        endif
 11    continue
       ave=s/n
       adev=0.
@@ -22,14 +26,16 @@ c
       skew=0.
       curt=0.
       do 12 j=1,n
-        s=data(j)-ave
-        adev=adev+abs(s)
-        p=s*s
-        var=var+p
-        p=p*s
-        skew=skew+p
-        p=p*s
-        curt=curt+p
+        if(data(j).lt.r_missing_data)then
+           s=data(j)-ave
+           adev=adev+abs(s)
+           p=s*s
+           var=var+p
+           p=p*s
+           skew=skew+p
+           p=p*s
+           curt=curt+p
+        endif
 12    continue
       adev=adev/n
       var=var/(n-1)

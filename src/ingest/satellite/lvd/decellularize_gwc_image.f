@@ -9,13 +9,19 @@
       integer imagelen
       integer cell_width,cell_depth
       integer pixels_per_cell
-      integer i,cell_num,cell_row,cell_column
+      integer i,j
+      integer cell_num,cell_row,cell_column
       integer rnum,cnum
 
       integer      IMAGEIN(imagelen)
 
       integer        IMAGEOUT(nelem,nlines)
 
+      do j=1,nlines
+      do i=1,nelem
+         imageout(i,j)=0
+      enddo
+      enddo
 
       DO I=1,nlines*nelem
 

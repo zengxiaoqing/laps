@@ -83,6 +83,7 @@ c       real*4 fraci,fracj
         integer istatus
         integer qcstatus
         integer fcount
+        integer insufdata
 
         CALL ZERO(ST,IMAX,JMAX)
         istatus = -1
@@ -95,6 +96,8 @@ c The "10" loop represents input image resolution < output grid resolution such
 c that there are enough pixels from the input image to get a representative
 c mean value for the remapped output grid value
 c
+        insufdata=0
+        if(r_grid_ratio .le.0.0)goto 1000
         if(r_grid_ratio .lt. 0.5)then  !0.75)then
 
           write(6,*)'Grid ratio .lt. 0.5'   !0.75'
@@ -108,6 +111,10 @@ c line/elem are floating point i/j positions in ISPAN grid for input lat/lon
 c also, use the lat/lon to real i/j look up table (r_llij_lut) to map out points
 c needed for satellite pixels.
 c****************************************************************************
+
+             if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+     &          r_llij_lut_rj(i,j).ne.r_missing_data)then
+
              elem_mx = r_llij_lut_ri(i,j) + ((1./r_grid_ratio) * 0.5)
              elem_mn = r_llij_lut_ri(i,j) - ((1./r_grid_ratio) * 0.5)
              line_mx = r_llij_lut_rj(i,j) + ((1./r_grid_ratio) * 0.5)
@@ -119,11 +126,12 @@ c****************************************************************************
 
              if(istart.le.0 .or. jstart.le.0 .or.
      &iend.gt.elem_dim .or. jend.gt.line_dim)then
-             write(*,*)'insufficient data for lat/lon sector'
-                write(*,1020)i,j
-1020	        format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
-                write(6,1021)elem_mx,elem_mn,line_mx,line_mn
-1021            format(1x,'elem mx/mn  line mx/mn ',4f7.1)
+                insufdata=insufdata+1
+c            write(*,*)'insufficient data for lat/lon sector'
+c               write(*,1020)i,j
+c1020	        format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
+c               write(6,1021)elem_mx,elem_mn,line_mx,line_mn
+c1021            format(1x,'elem mx/mn  line mx/mn ',4f7.1)
              else
 c
 c **** FIND PIXELS AROUND GRID POINT
@@ -218,6 +226,8 @@ c              write(6,1112) wm,wc
 
              end if  ! Enough data for num_lines .gt. 0
 
+             endif   !r_llij's .ne. r_missing_data
+
 ccd           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
 ccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
 ccd5555         format(1x,2i4,2f10.2,2i5,f10.2)
@@ -238,6 +248,7 @@ c
           write(6,*)'Using bilinear interp for IR Tb'
           DO 20 J=1,JMAX
           DO 20 I=1,IMAX
+
 c            if(i_found_it .ne. 1)then
 c              write(6,*)'Enter i and j point'
 c              read(5,*)ipt,jpt
@@ -245,29 +256,41 @@ c              i_found_it = 1
 c            end if
             IF(ST(I,J).NE.0.) GO TO 20
 c
-c line/elem are floating point i/j positions in ISPAN grid for input lat/lon
+c line/elem are floating point i/j positions for input lat/lon
 c
 c bilinear_interp_extrap checks on boundary conditions and
 c uses r_missing_data if out of bounds.
 c
-            call bilinear_laps(
-     &           r_llij_lut_ri(i,j),
-     &           r_llij_lut_rj(i,j),
-     &           elem_dim,line_dim,image_ir,
-     &           result,istatus)
+            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 
-	    if(result .ne. r_missing_data .and.
-     &         result .gt. 0.0)then
+               call  bilinear_interp_extrap(
+     &              r_llij_lut_ri(i,j),
+     &              r_llij_lut_rj(i,j),
+     &              elem_dim,line_dim,image_ir,
+     &              result,istatus)
 
-	        sa(i,j) = result
+c interp_extrap allows the satellite edge to be closer to the
+c laps grid than blinear_laps
+c
+c           call bilinear_laps(
+c    &           r_llij_lut_ri(i,j),
+c    &           r_llij_lut_rj(i,j),
+c    &           elem_dim,line_dim,image_ir,
+c    &           result,istatus)
 
-            else
+	       if(result .ne. r_missing_data .and.
+     &            result .gt. 0.0)then
 
-                sa(i,j) = r_missing_data
+	          sa(i,j) = result
 
-            endif
-            sc(i,j)=sa(i,j)
-            sT(i,j)=sa(i,j)
+               else
+
+                  sa(i,j) = r_missing_data
+
+               endif
+               sc(i,j)=sa(i,j)
+               sT(i,j)=sa(i,j)
 
 c            if(i.eq.ipt .and. j.eq.jpt)then
 c               write(29,39)ipt,jpt
@@ -277,6 +300,8 @@ c 39          format(1x,'ipt = ',i3,2x,'jpt = ',i3)
 c 49      format(1x,'ir_count = ',1x,f6.1,/,'--------------------',//)
 c            end if
 
+            endif  !lut's = r_missing_data
+
    20     CONTINUE ! I,J
 c          close(29)
 
@@ -285,7 +310,15 @@ c          close(29)
 c        WRITE(6,1234) IB,I4VTIME,ICT
 c1234       FORMAT(1X,'BAND ',I4,' COUNT FOR I4TIME ',I10,' IS ',I8)
 
+        if(insufdata.gt.0)then
+           print*,'Found ',insufdata,' points that are too'
+           print*,'close to data edge to compute average'
+        endif
         istatus = 1
+
+        goto 1000
+
+999     print*,'Sorry bad value for r_grid_ratio ', r_grid_ratio
 c
-        return
+1000    return
         end
