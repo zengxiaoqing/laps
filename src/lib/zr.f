@@ -33,10 +33,9 @@ cdis
 !       1       ,temp_sfc_k,td_sfc_k,pres_sta_pa,tw_sfc_k
      1                                          ,ni,nj,r_2d_out)
 
-!       1991                                            Steve Albers, J. Smart
+!           1991                                        Steve Albers, J. Smart
 !       Apr 1994 rate_max parameter disabled            SA
-
-        include 'lapsparms.inc'
+!       Jan 1998 Remove lapsparms.inc                   SA
 
         real*4 z_2d_in(ni,nj)
 !       real*4 temp_sfc_k(ni,nj)
@@ -54,6 +53,12 @@ cdis
         write(6,*)
      1   ' Converting from 2D Z to Rainfall Rate field'
 
+        call get_ref_base_useable(ref_base_useable,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting ref_base_useable in zr'
+            stop
+        endif
+
         n_leq_pts = 0
 !       n_warm_pts = 0
 
@@ -65,7 +70,6 @@ cdis
         do i = 1,ni
             dbz = z_2d_in(i,j)
 
-!           if(dbz .eq. ref_base)then
             if(dbz .lt. ref_base_useable)then
 !               r_2d_out(i,j) = +1e-30
                 r_2d_out(i,j) = 0.

@@ -31,13 +31,18 @@ cdis
 cdis
         subroutine zs(precip_rate,temp_col_max,ni,nj,s_2d_out)
 
-!       1994    Steve Albers
-
-        include 'lapsparms.inc'   ! ref_base
+!           1994    Steve Albers
+!       Jan 1998    Steve Albers     Remove lapsparms.inc and other cleanup
 
         real*4 precip_rate(ni,nj)
         real*4 temp_col_max(ni,nj) ! Deg K
         real*4 s_2d_out(ni,nj)
+
+        call get_ref_base(ref_base,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting ref_base in zs'
+            stop
+        endif
 
         n_snow_pts = 0
 !       n_warm_pts = 0
@@ -104,123 +109,3 @@ cdis
 
         return
         end
-
-        subroutine zs_old(z_2d_in,temp_col_max
-!       1       ,temp_sfc_k,td_sfc_k,pres_sta_pa,tw_sfc_k
-     1                                          ,ni,nj,s_2d_out)
-
-!       1991    Steve Albers
-!       1992    J. Smart        Add temperature bias adjustment
-
-        include 'lapsparms.inc'
-
-        integer*4 iTemp(2501)
-        integer*4 index_from_temp(24815:27315)  ! index to acquire adjustment
-                                                ! factor from temp.
-        integer*4 iT
-        real*4 ZS_bias_factor(2501)
-
-        real*4 z_2d_in(ni,nj)
-        real*4 temp_col_max(ni,nj)
-!       real*4 temp_sfc_k(ni,nj)
-!       real*4 td_sfc_k(ni,nj)
-!       real*4 pres_sta_pa(ni,nj)
-!       real*4 tw_sfc_k(ni,nj)
-        real*4 s_2d_out(ni,nj)
-
-        logical compute_bias_factor
-
-        real*4 a,b,rate_max
-        parameter (a = 50.)         ! Z S relationship
-        parameter (b = 1.8)         ! Z S relationship
-        parameter (rate_max = 10.0) ! cm/hr
-
-        common/zs_comm/ compute_bias_factor
-
-C
-C Snow depth temperature adjustment factor computation.  Resolution
-C is to 0.01 degrees.
-C Adjustment is based upon linear ramp in which precip at colder temps is
-C increased while at warmer temps it is decreased.  Presently the zero
-C adjustment (ie., ZS_bias_factor = 1.0) occurs at -8C max col temperature.
-C Temperatures colder than -25C are adjusted by the same amount as -25C.
-C Precip type does not allow snow accumulation if max col temperature > 0C.
-C The temperature is in K.
-
-        if(compute_bias_factor)then
-          icnt=0
-          do iT=0,2500
-            icnt=icnt+1
-            iTemp(icnt)=27315-iT
-            ZS_bias_factor(icnt)=(27848.33-FLOAT(iTemp(icnt)))/1333.33
-            index_from_temp(iTemp(icnt))=icnt
-          end do
-          compute_bias_factor = .false.
-        end if
-
-        write(6,*)
-     1   ' Converting from 2D Z to Snowfall Rate field'
-
-
-        n_snow_pts = 0
-!       n_warm_pts = 0
-
-        aterm = alog10(1./a)
-        bterm = 1./b
-        cterm = .01 / 3600  ! (M/S) / (CM/HR)
-
-        do j = 1,nj
-        do i = 1,ni
-            dbz = z_2d_in(i,j)
-
-            if(dbz .eq. ref_base)then
-                s_2d_out(i,j) = +1e-30
-
-            else
-                n_snow_pts = n_snow_pts + 1
-
-              ! Generate S (cm/hr) in Z=a*S**b
-                s_cm_hr = 10.**(bterm*(aterm + dBZ/10.))
-                s_2d_out(i,j) = min(s_cm_hr,rate_max) * cterm
-
-C adjust snow rate by max col temperature
-C
-                if((temp_col_max(i,j).ge.248.15) .and.
-     1     (temp_col_max(i,j).le.273.15))then
-
-                  iT = (temp_col_max(i,j)*100.)
-                  factor = ZS_bias_factor(index_from_temp(iT))
-                  s_2d_out(i,j) = s_2d_out(i,j)*factor
-
-                else if(temp_col_max(i,j).gt.273.15)then
-
-                  factor = ZS_bias_factor(1)
-                  s_2d_out(i,j) = s_2d_out(i,j)*factor
-
-                else    !temp < -25C
-
-                  s_2d_out(i,j) = s_2d_out(i,j)*ZS_bias_factor(2501)
-
-                end if
-
-!               if(tw_sfc_k(i,j) .gt. 273.65)then ! Wet Bulb > 0.5 Deg C
-!                   s_2d_out(i,j) = 0.
-!                   n_warm_pts = n_warm_pts + 1
-!               endif
-
-            endif
-
-        enddo
-        enddo
-
-        write(6,*)' n_snow_pts = ',n_snow_pts
-
-        return
-        end
-
-c        block data
-c        logical compute_bias_factor
-c        common/zs_comm/ compute_bias_factor
-c        data compute_bias_factor /.true./
-c        end
-
