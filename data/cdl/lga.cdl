@@ -80,6 +80,20 @@ netcdf lga {
             v3:lvl_coord="HPA";
             v3:LAPS_units="M/S";
  
+        //      Background w wind component           //
+
+        float
+            w3(record,z,y,x);
+            w3:navigation_dim = "nav";
+            w3:record = "valtime, reftime";
+            w3:_FillValue= 1.e+37f;
+            w3:long_name="Background w wind component";
+            w3:valid_range= -20000.f, 20000.f;
+            w3:units="pascals/second";
+            w3:LAPS_var="W3";
+            w3:lvl_coord="HPA";
+            w3:LAPS_units="PA/S";
+ 
 
         //	LAPS variables
 
@@ -95,6 +109,7 @@ netcdf lga {
             sh_comment(record,z,namelen),
             u3_comment(record,z,namelen),
             v3_comment(record,z,namelen),
+            w3_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -119,6 +134,10 @@ netcdf lga {
         short
             v3_fcinv(record, z);
             v3_fcinv:_FillValue= 0s;
+              	
+        short
+            w3_fcinv(record, z);
+            w3_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
