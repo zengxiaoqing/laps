@@ -1,0 +1,6 @@
+
+      character*80  grid_fnam_common
+      character*255 generic_data_root
+      common /grid_fnam_cmn/ grid_fnam_common,
+     1                       generic_data_root
+
