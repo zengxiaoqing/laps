@@ -32,8 +32,9 @@ cdis
 c
 c
 	subroutine get_metar_obs(maxobs,maxsta,i4time,data_file,
-     &                      eastg,westg,anorthg,southg,nn,
-     &                      n_sao_g,n_sao_b,stations,
+     &                      eastg,westg,anorthg,southg,
+     &                      lat,lon,ni,nj,grid_spacing,
+     &                      nn,n_sao_g,n_sao_b,stations,
      &                      reptype,atype,weather,wmoid,
      &                      store_1,store_2,store_2ea,
      &                      store_3,store_3ea,store_4,store_4ea,
@@ -53,6 +54,10 @@ c                          12-06-96  Put Atype (01 or 02) in obstype var.
 c	                   06-09-97  Changes for new METAR CDL.
 c                          01-29-98  Upgrades for LS2.
 c                          05-01-98  Add soil moisture variables.
+c                          06-21-99  Change ob location check to gridpt space.
+c                                      Figure box size in gridpoint space from
+c                                      user-defined size (deg) and grid_spacing.
+c
 c
 c*****************************************************************************
 c
@@ -68,6 +73,7 @@ c
 	real*4  ht(6,maxobs), vis(maxobs), dp(maxobs)
 	real*4  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)
 	real*4  max24t(maxobs), min24t(maxobs), snowcvr(maxobs)
+        real    lat(ni,nj), lon(ni,nj)
 c
 	real*4  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
@@ -97,12 +103,12 @@ c.....	Set jstatus flag for the sao data to bad until we find otherwise.
 c
 	jstatus = -1
 c
-c.....	Areal outline for the 'box' around the LAPS grid.
+c.....  Figure out the size of the "box" in gridpoints.  User defines
+c.....  the 'box_size' variable in degrees, then we convert that to an
+c.....  average number of gridpoints based on the grid spacing.
 c
-	east = eastg + box_size
-	west = westg - box_size
-	anorth = anorthg + box_size
-	south  = southg - box_size
+        box_length = box_size * 111.137 !km/deg lat (close enough for lon)
+        ibox_points = box_length / (grid_spacing / 1000.) !in km
 c
 c.....	Zero out the counters.
 c
@@ -217,12 +223,23 @@ c.....	Now loop over all the obs.
 c..................................
 c
 	jfirst = 1
+        box_low = 1. - float(ibox_points)    !buffer on west/south side
+        box_idir = float( ni + ibox_points)  !buffer on east
+        box_jdir = float( nj + ibox_points)  !buffer on north
+c 
 	do 125 i=1,n_sao_all
 c
-c.....  Check if station is in the box and the elevation is ok.
+c.....  Bounds check: is station in the box?  Find the ob i,j location
+c.....  on the LAPS grid, then check if outside past box boundary.
 c
-	  if(lons(i).gt.east .or. lons(i).lt.west) go to 125
-	  if(lats(i).gt.anorth .or. lats(i).lt.south) go to 125
+           if(lats(i) .lt. -90.) go to 125   !badflag (-99.9)...from nan ck
+           call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,
+     &                              ri_loc,rj_loc,istatus)
+           if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir) go to 125
+           if(rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) go to 125
+c
+c.....  Elevation ok?
+c
           if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125
 c
 c.....  Check to see if its in the desired time window (if the flag
@@ -252,20 +269,20 @@ c
 c
 	  do k=1,icount
 	     if(stname(i) .eq. save_stn(k)) go to 125
-	  enddo !k
+	  enddo	!k
 c
 	  icount = icount + 1
-	  save_stn(icount) = stname(i)  ! only one...save for checking
+	  save_stn(icount) = stname(i) ! only one...save for checking
 c
  150	  nn = nn + 1
-	  n_sao_b = n_sao_b + 1		!station is in the box
+	  n_sao_b = n_sao_b + 1	!station is in the box
 c
 c.....  Check if its in the LAPS grid.
 c
-	 if(lons(i).gt.eastg .or. lons(i).lt.westg) go to 151
-	 if(lats(i).gt.anorthg .or. lats(i).lt.southg) go to 151
-	 n_sao_g = n_sao_g + 1
- 151	 continue
+          if(ri_loc.lt.1. .or. ri_loc.gt.float(ni)) go to 151  !off grid
+          if(rj_loc.lt.1. .or. rj_loc.gt.float(nj)) go to 151  !off grid
+	  n_sao_g = n_sao_g + 1  !on grid...count it
+ 151	  continue
 c
 c.....	Figure out the cloud data.
 c

@@ -32,8 +32,9 @@ cdis
 c
 c
 	subroutine get_buoy_obs(maxobs,maxsta,i4time,data_file,
-     &                      eastg,westg,anorthg,southg,nn,
-     &                      n_buoy_g,n_buoy_b,stations,
+     &                      eastg,westg,anorthg,southg,
+     &                      lat,lon,ni,nj,grid_spacing,
+     &                      nn,n_buoy_g,n_buoy_b,stations,
      &                      reptype,atype,weather,wmoid,
      &                      store_1,store_2,store_2ea,
      &                      store_3,store_3ea,store_4,store_4ea,
@@ -48,6 +49,9 @@ c	Routine to gather data from the buoy files for LAPS.
 c
 c	Changes:
 c		P. Stamus  08-10-98  Original version (from get_metar_obs).
+c                          06-21-99  Change ob location check to gridpt space.
+c                                      Figure box size in gridpoint space from
+c                                      user-defined size (deg) and grid_spacing.
 c
 c       Notes:
 c         1. This routine is not set up to collect cloud data (from ship
@@ -71,6 +75,7 @@ c
 	real*4  vis(maxobs), dp(maxobs)
 	real*4  pcp1(maxobs), pcp6(maxobs), pcp24(maxobs)
 	real*4  equivspd(maxobs), sea_temp(maxobs), t_wet(maxobs)
+        real    lat(ni,nj), lon(ni,nj)
 c
 c.....  Output arrays.
 c
@@ -103,12 +108,12 @@ c.....	Set jstatus flag for the buoy data to bad until we find otherwise.
 c
 	jstatus = -1
 c
-c.....	Areal outline for the 'box' around the LAPS grid.
+c.....  Figure out the size of the "box" in gridpoints.  User defines
+c.....  the 'box_size' variable in degrees, then we convert that to an
+c.....  average number of gridpoints based on the grid spacing.
 c
-	east = eastg + box_size
-	west = westg - box_size
-	anorth = anorthg + box_size
-	south  = southg - box_size
+        box_length = box_size * 111.137 !km/deg lat (close enough for lon)
+        ibox_points = box_length / (grid_spacing / 1000.)  !in km
 c
 c.....	Zero out the counters.
 c
@@ -203,12 +208,23 @@ c.....	Now loop over all the obs.
 c..................................
 c
 	jfirst = 1
+        box_low = 1. - float(ibox_points)    !buffer on west/south side
+        box_idir = float( ni + ibox_points)  !buffer on east
+        box_jdir = float( nj + ibox_points)  !buffer on north
+c
 	do 125 i=1,n_buoy_all
 c
-c.....  Check if station is in the box and the elevation is ok.
+c.....  Bounds check: is station in the box?  Find the ob i,j location
+c.....  on the LAPS grid, then check if outside past box boundary.
 c
-	  if(lons(i).gt.east .or. lons(i).lt.west) go to 125
-	  if(lats(i).gt.anorth .or. lats(i).lt.south) go to 125
+           if(lats(i) .lt. -90.) go to 125   !badflag (-99.9)...from nan ck
+           call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,
+     &                              ri_loc,rj_loc,istatus)
+           if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir) go to 125
+           if(rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) go to 125
+c
+c.....  Elevation ok?
+c
           if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125
 c
 c.....  Check to see if its in the desired time window (if the flag
@@ -248,10 +264,10 @@ c
 c
 c.....  Check if its in the LAPS grid.
 c
-	 if(lons(i).gt.eastg .or. lons(i).lt.westg) go to 151
-	 if(lats(i).gt.anorthg .or. lats(i).lt.southg) go to 151
-	 n_buoy_g = n_buoy_g + 1
- 151	 continue
+          if(ri_loc.lt.1. .or. ri_loc.gt.float(ni)) go to 151  !off grid
+          if(rj_loc.lt.1. .or. rj_loc.gt.float(nj)) go to 151  !off grid
+	  n_buoy_g = n_buoy_g + 1  !on grid...count it
+ 151	  continue
 c
 c.....	Figure out the cloud data.
 c.....  NOTE: Not reading cloud data from ship/buoy file.  The data
