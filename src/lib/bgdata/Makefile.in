@@ -1,0 +1,81 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@
+
+FC       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC) @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a
+
+LIB      = libbgdata.a
+DEBUGLIB = libdebugbgdata.a
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+
+
+# Define all source code to be compiled and placed in local library.
+
+SRC= get_bkgnd_dims.f   readeta48_pub.f readconusnws.f \
+     readruc2_pub.f get_acceptable_files.f \
+     read_conus211.f readdgprep.f readnogaps.f readruc60native.f
+
+
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
+
+
+all: lib
+
+lib: $(LIB)
+
+$(LIB): $(ARCHIVE) 
+	$(RANLIB) $@
+
+
+debug: 
+	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g' \
+        FFLAGS='@FFLAGS@ $(INC) -g' KRCFLAGS='$(KRCFLAGS) -g' 
+
+install: lib
+
+
+clean:
+	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
+
+
+
+
+
+
+
