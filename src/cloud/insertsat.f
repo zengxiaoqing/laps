@@ -167,6 +167,8 @@ c
         jdelt(2) = +idelt_max
         jdelt(3) = -idelt_max
 
+        iwrite = 0
+
         do k = 1,klaps
             zcoords_1d(k) = zcoord_of_level(k)
             laps_p(k)     = pressure_of_level(k)
@@ -329,6 +331,17 @@ c
      1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
      1     ,cldtop_m(i,j),l_cloud_present                                 ! O
      1     ,sat_cover)                                                    ! O
+
+          if(istat_vis_potl_a(i,j) .eq. 1)then ! vis potl added
+              iwrite = iwrite + 1
+              if(iwrite .lt. 100)then
+                  write(6,113)i,j,istat_vis_added_a(i,j),l_tb8
+     1                       ,l_cloud_present
+     1                       ,cldtop_m(i,j),cldtop_tb8_m(i,j)
+     1                       ,cloud_frac_vis_a(i,j)
+ 113              format(' Vis potl added ',2i5,i2,2l2,3e10.3)
+              endif
+          endif
 
           if(lstat_co2_a(i,j))then ! Using CO2 slicing method
 
