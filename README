@@ -39,7 +39,7 @@
          3.1 ..............  Ingest Processes
          3.1.1 ..................  LGA Model
          3.1.2 ..................  LVD 
-         3.1.3 ..................  WSR 88-D WIDEBAND RADAR REMAPPER
+         3.1.3 ..................  WIDEBAND RADAR REMAPPER
          3.1.4 ..................  WSI - NOWRAD RADAR PREPROCESSING (VRC)
          3.1.5 ..................  PROFILERS (PRO) Ingest
          3.1.6 ..................  VAD (PRO) Ingest
@@ -996,7 +996,7 @@ Output:
          LVD/"SATID"	grid	LAPS satellite data file
 			`	SATID currently can be either goes08 or goes09
 
------- 3.1.3 ----------WSR 88D WIDEBAND RADAR REMAPPER------------------------
+------ 3.1.3 ----------------WIDEBAND RADAR REMAPPER---------------------------
 
 Process: remap_polar_netcdf.exe (Author Steve Albers - albers@fsl.noaa.gov)
 
@@ -1004,8 +1004,9 @@ Every volume scan
 Initiation: Completion of volume scan
 
 Inputs:
-	Raw WSR-88D Radar Data (reflectivity and velocity in polar NetCDF 
-        format - one per volume)
+	Wideband Radar Data (reflectivity and velocity in polar NetCDF 
+        format - one file per tilt). Note: narrowband data can be used if it is
+        converted to the required NetCDF format.
 
 Outputs (LAPS intermediate files):
 <pre>
