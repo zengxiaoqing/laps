@@ -66,6 +66,8 @@ C
           scale_h = scale_l_in
       endif
 
+      write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
+
 !     Apply scaling to the array
       scale = scale_h - scale_l
       call addcon(field_in,-scale_l,ZREG,MREG,NREG)
@@ -76,10 +78,13 @@ C
       do j = 1,NREG
           if(field_in(i,j) .eq. r_missing_data)then
               ZREG(i,j) = scale * 0.96
+          elseif(ireverse .eq. 1)then
+              ZREG(i,j) = scale - ZREG(i,j)
           endif
       enddo 
       enddo
 
+      ireverse = 0  ! Turn off later use of ireverse
 C      
 C Get data array
 C
@@ -93,7 +98,6 @@ C
 C      
 C Call Conpack color fill routine
 C      
-      write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale,ireverse
      1                                              ,colortable)      
 C      

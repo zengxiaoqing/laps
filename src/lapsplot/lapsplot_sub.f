@@ -116,12 +116,6 @@ cdis
             write(6,*)
             write(6,*)
      1    ' It will be located in ./gmeta'
-!       1'    For Ramteks other than RMA0, run trans on metacode file.'
-!           write(6,*)
-!           write(6,*)
-!       1'    For display devices beyond FSL, copy over metacode file located'
-!           write(6,*)
-!       1'    in HOME$[STORMFEST]for008.dat; then translate onto local device.'
         endif
 
 !       Supply reference time for matching the data
@@ -200,6 +194,10 @@ cdis
      1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,541       
      1                ,r_missing_data,laps_cycle_time,maxstns)
 
+        elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
+            call sounding(i4time_ref,lun,NX_L,NY_L,NZ_L,r_missing_data
+     1                   ,laps_cycle_time,maxstns)
+
         endif ! c_section
 
         write(6,901)
@@ -222,3 +220,8 @@ cdis
 
         end
 
+        subroutine sounding(i4time_ref,lun,NX_L,NY_L,NZ_L,r_missing_data       
+     1                     ,laps_cycle_time,maxstns)
+
+        return
+        end

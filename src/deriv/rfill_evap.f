@@ -64,6 +64,9 @@ cdis
 
         isum_test = nint(ref_base) * nk
 
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+
         do j = 1,nj
 c       write(6,*)' Doing Column ',j
 

@@ -1477,6 +1477,18 @@ c read in laps lat/lon and topo
 
 1510        continue
 
+            call get_ref_base(ref_base,istatus)
+
+            do i=1,NX_L
+            do j=1,NY_L
+            do k=1,NZ_L
+                if(grid_ra_ref(i,j,k) .eq. r_missing_data)then
+                    grid_ra_ref(i,j,k) = ref_base
+                endif  
+            enddo ! k
+            enddo ! j
+            enddo ! i
+
             if(c_field .ne. 'rs')then
                 call interp_3d(grid_ra_ref,field_vert
      1                        ,xlow,xhigh,ylow,yhigh

@@ -500,16 +500,20 @@ cdoc                            calls read_multiradar_3dref.
      1   rlat_radar,rlon_radar,rheight_radar,radar_name,
      1   n_ref_grids,n_2dref,n_3dref,istatus_2dref_a,istatus_3dref_a)       
 
- 900    if(n_2dref .eq. imax*jmax)then
-            istatus_2dref = 1
-        else
-            istatus_2dref = 0
+ 900    if(    n_2dref .eq. imax*jmax)then    ! Full coverage
+            istatus_2dref = +1                
+        elseif(n_2dref .gt. 0        )then    ! Partly missing
+            istatus_2dref = -1                
+        else                                  ! All missing
+            istatus_2dref = 0                 
         endif        
 
-        if(n_3dref .eq. imax*jmax)then
-            istatus_3dref = 1
-        else
-            istatus_3dref = 0
+        if(    n_3dref .eq. imax*jmax)then    ! Full coverage
+            istatus_3dref = +1                
+        elseif(n_3dref .gt. 0        )then    ! Partly missing
+            istatus_3dref = -1                
+        else                                  ! All missing
+            istatus_3dref = 0                 
         endif        
 
         write(6,*)'n_2dref,n_3dref=',n_2dref,n_3dref
@@ -541,6 +545,7 @@ cdoc                            calls read_multiradar_3dref.
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 heights_3d(imax,jmax,kmax)
         real*4 radar_2dref(imax,jmax)
+        real*4 closest_vxx(imax,jmax)
 
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
@@ -586,6 +591,8 @@ cdoc                            calls read_multiradar_3dref.
             write(6,*)' Error reading ref_base parameter'
             goto900
         endif
+
+        closest_vxx = r_missing_data
 
 !       Initialize 3d reflectivity array with default value
         grid_ra_ref = r_missing_data ! ref_base 
@@ -645,27 +652,29 @@ cdoc                            calls read_multiradar_3dref.
                 endif
 
                 if(l_low_fill .or. l_high_fill)then
-                    do k = 1,kmax
                     do j = 1,jmax
                     do i = 1,imax
-                        if(grid_ra_ref(i,j,k) .ne. r_missing_data)then
-
-!                           Set status for this gridpoint to missing
+                        istat_g = 0
+                        do k = 1,kmax
+                            if(grid_ra_ref(i,j,k) .ne. r_missing_data
+     1                                                             )then       
+                                istat_g = 1
+                            endif
+                        enddo ! k
+                      
+                        if(istat_g .eq. 1)then ! valid radar data at this point
                             istatus_2dref_a(i,j) = 1
                             istatus_3dref_a(i,j) = 1
+                            call latlon_to_radar(
+     1                          lat(i,j),lon(i,j),topo(i,j)
+     1                         ,azimuth,closest_vxx(i,j),elev
+     1                         ,rlat_radar,rlon_radar,rheight_radar)       
 
-
-!                       else
-
-!               We may want to remove this line eventually to allow calling
-!               routines to utilize the missing data flag in reflectivities.
-!               They are generally not set up to do this at present.
-
-!                           grid_ra_ref(i,j,k) = ref_base
                         endif
+
                     enddo ! i
                     enddo ! j
-                    enddo ! k
+
                 endif
 
             else
@@ -677,7 +686,7 @@ cdoc                            calls read_multiradar_3dref.
         endif ! 'vxx'
 
         if(radarext(1:3) .eq. 'vrc' .or. radarext(1:3) .eq. 'all')then       
-50          write(6,*)' Reading NOWRAD data'
+50          write(6,*)' Reading NOWRAD/vrc data' ! lumped together for now?
 
             radar_name = 'WSI '
 
@@ -691,7 +700,8 @@ cdoc                            calls read_multiradar_3dref.
                 if(radarext(1:3) .ne. 'all')then
                     istatus_2dref_a = 1
                     istatus_3dref_a = 0
-                else
+
+                else ! radarext = 'all'
                     do i = 1,imax
                     do j = 1,jmax
                         if(   radar_2dref(i,j)     .ne. r_missing_data       
@@ -700,25 +710,34 @@ cdoc                            calls read_multiradar_3dref.
                         endif
                     enddo ! j
                     enddo ! i                 
+
                 endif
 
-!               Fill up the 3D reflectivity array just for kicks
+!               Conditionally fill up the 3D reflectivity array 
 !                          (useful for precip type, get_low_ref)
 
                 if(l_low_fill .or. l_high_fill)then
-                    do k = 1,kmax
-                        do i = 1,imax
-                        do j = 1,jmax
-                          if(istatus_3dref_a(i,j) .eq. 0)then
-                            if(grid_ra_ref(i,j,k) .eq. r_missing_data
-     1                                                             )then       
-                                grid_ra_ref(i,j,k) = radar_2dref(i,j)
-                            endif
-                          endif ! istatus_3dref_a = 0
-                        enddo ! j
-                        enddo ! i
-                    enddo ! k
-                endif
+                    do i = 1,imax
+                    do j = 1,jmax
+
+!                       Set distant 3D radar points to msg to select NOWRAD/vrc
+                        if(closest_vxx(i,j) .ne. r_missing_data
+     1               .and. closest_vxx(i,j) .gt. 260000.     )then       
+                            istatus_3dref_a(i,j) = 0
+                        endif
+
+                        if(istatus_3dref_a(i,j) .eq. 0)then 
+                            do k = 1,kmax ! Fill column with NOWRAD/vrc
+!                               if(grid_ra_ref(i,j,k).eq.r_missing_data      
+!    1                                                             )then       
+                                    grid_ra_ref(i,j,k)=radar_2dref(i,j)      
+!                               endif
+                            enddo ! k
+                        endif ! istatus_3dref_a = 0
+                    enddo ! j
+                    enddo ! i
+
+                endif ! l_low_fill OR l_high_fill
 
             else
                 istatus_2dref_a = 0

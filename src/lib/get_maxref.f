@@ -138,6 +138,13 @@ cdis
      1             .or. radar_array(i,j) .eq. -102.    )then       
                     radar_array(i,j) = ref_base
                 endif
+
+            else ! r_missing_out = r_missing_data
+                if(     radar_array(i,j) .eq. -101.          ! QC flags
+     1             .or. radar_array(i,j) .eq. -102.    )then       
+                    radar_array(i,j) = ref_base
+                endif
+
             endif
         enddo
         enddo

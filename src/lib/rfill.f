@@ -34,8 +34,8 @@ cdis
      1           ,lat,lon,topo,heights_3d,rlat_radar,rlon_radar
      1           ,rheight_radar,istatus)
 
-!       Called from read_radar_3dref, hence from (cloud/accum/lplot) if 
-!       NOWRAD data is unavailable). Operates on V0x, but not VRC files.
+!       Called from read_radar_3dref, hence from (cloud/deriv/accum/lplot - 
+!       if NOWRAD data is unavailable). Operates on V0x, but not VRC files.
 !       This Routine Fills in the gaps in a 3D radar volume that has been
 !       stored as a sparse array. A linear interpolation in the vertical
 !       direction is used. An additional option 'l_low_fill' can be set to
@@ -282,14 +282,12 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
             endif ! l_low_fill
 
-          endif ! echo present
+!           Return valid ref values to io array
+            do k = 1,nk
+                ref_3d_io(i,j,k) = ref_3d(i,j,k)
+            enddo ! k
 
-!         Return valid ref values to io array
-          do k = 1,nk
-              if(ref_3d(i,j,k) .ne. ref_base)then
-                  ref_3d_io(i,j,k) = ref_3d(i,j,k)
-              endif
-          enddo ! k
+          endif ! echo present
 
         enddo ! i
         enddo ! j

@@ -78,7 +78,7 @@ cdis
         real*4 static_slpe_ln(NX_L,NY_L)
         real*4 static_slpe_lt(NX_L,NY_L)
 
-        character*1 c_display, qtype, tunits
+        character*1 c_display, qtype, tunits, c_prodtype
         character*1 cansw
         character*13 filename,a13_time
         character*3 c3_site
@@ -2339,7 +2339,7 @@ c
 
         elseif(c_type .eq. 'la' .or. c_type .eq. 'lj' .or.
      1         c_type .eq. 'sj' .or. c_type .eq. 'ls' .or.
-     1         c_type .eq. 'ss' .or. c_type .eq. 'ci'       )then
+     1         c_type .eq. 'ci'       )then
             write(6,1514)
 1514        format('     Enter Level in mb; OR [-1] for max in column'
      1                          ,21x,'? ',$)
@@ -2347,13 +2347,6 @@ c
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
-
-!           if(i4time_now_gg() - i4time_lwc .lt. 43200
-!       1                               .and. c_type .eq. 'ls')then
-                l_pregen = lapsplot_pregen
-!           else
-!               l_pregen = .false.
-!           endif
 
             if(c_type .eq. 'la')then
                 iflag_slwc = 1 ! Returns Adiabatic LWC
@@ -2386,10 +2379,8 @@ c
                 iflag_slwc = 13 ! Returns New Smith - Feddes LWC
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
-!    1                             ' Smt-Fed LWC g/m^3 ',c33_label)
      1                             ' Cloud LWC g/m^3   ',c33_label)
                 else
-!                   c33_label = 'LAPS Max Smith-Feddes  LWC g/m^3 '
                     c33_label = 'LAPS Column Max LWC        g/m^3 '
                 endif
 
@@ -2403,26 +2394,28 @@ c
                     c33_label = 'LAPS Max Smith-Feddes  ICE g/m^3 '
                 endif
 
-            elseif(c_type .eq. 'ss')then
-                iflag_slwc = 14 ! Returns Smith - Feddes SLWC
-                if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
-     1                             'Smt-Fed SLWC g/m^3 ',c33_label)
-                else
-!                   c33_label = 'LAPS Max Smith-Feddes SLWC g/m^3 '
-                    c33_label = 'LAPS Column Max SLWC       g/m^3 '
-                endif
-
             endif
 
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
 
-            if(l_pregen)then
+            if(c_type .ne. 'ci')then
+                var_2d = 'LWC'
+            else
+                var_2d = 'ICE'
+            endif
+
+            if(c_prodtype .eq. 'A')then
                 write(6,*)' Getting pregenerated LWC file'
-                if(c_type .ne. 'ci')then
-                    var_2d = 'LWC'
-                else
-                    var_2d = 'ICE'
-                endif
                 ext = 'lwc'
                 call get_directory(ext,directory,len_dir)
 
@@ -2451,7 +2444,23 @@ c
 
                 endif
 
-            endif ! L_pregen
+
+            elseif(c_prodtype .eq. 'F')then
+                call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,grid_ra_ref
+     1                              ,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Could not read forecast field'       
+                    goto1200
+                endif
+                c33_label(11:33) = ' FUA Cld '//var_2d(1:4)
+     1                             //fcst_hhmm//' g/m^3'
+
+            else
+                goto1200
+
+            endif
 
             call make_fnam_lp(i4time_lwc,asc9_tim_t,istatus)
 
@@ -2461,7 +2470,6 @@ c
 
             if(k_level .gt. 0)then ! Plot SLWC on const pressure sfc
                if(c_type .ne. 'ci')then
-!                if(l_pregen)then
                    call subcon(field2_2d,1e-30,field_2d,NX_L,NY_L)
                    call plot_cont(field_2d,1e-3,clow,chigh,cint
      1                           ,asc9_tim_t,c33_label,i_overlay
@@ -3861,7 +3869,7 @@ c                   cint = -1.
      1                        ,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,125.,-20.,'hues'
+                call ccpfil(field_2d,NX_L,NY_L,220.,-40.,'hues'
      1                     ,n_image)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)

@@ -231,14 +231,18 @@ cdis
      1                 n_ref_grids,istat_radar_2dref,istat_radar_3dref)       
 
 
-                if(istat_radar_2dref .eq. 1)then
-                    write(6,*)' Call get_max_ref'
+                if(istat_radar_2dref .eq.  1 .or. 
+     1             istat_radar_2dref .eq. -1          )then
+                    write(6,*)' Call get_max_reflect'
 
-                    call get_max_ref(grid_ra_ref,NX_L,NY_L,NZ_L
-     1                              ,ref_max(1,1,0))
+                    call get_max_reflect(grid_ra_ref,NX_L,NY_L,NZ_L
+     1                                  ,ref_base,ref_max(1,1,0))
+
+                    istat_radar_2dref = 1 ! since we can now use the data
+
                 endif
 
-            else ! ext_radar .ne. 'vrc'
+            else ! ext_radar = 'vrc'
                 call read_radar_2dref(i4time_sys,radar_name,
      1                  NX_L,NY_L,
      1                  ref_max(1,1,0),istat_radar_2dref)
@@ -251,7 +255,7 @@ cdis
      1                       ,' read in'
                 endif
 
-            endif ! radarext
+            endif ! ext_radar
 
 !       else
 !           write(6,*)' No radar data within time window ',ext_radar

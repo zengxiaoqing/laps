@@ -171,7 +171,10 @@ cdis
      1             .or. k_1d_top  .lt. 1 .or. k_1d_top  .gt. nk
      1             .or. istatus_base .ne. 1 .or. istatus_top .ne. 1)then       
                   write(6,*)' Bad return from height_to_zcoord3'
-                  write(6,*)k_1d_base,istatus_base,k_1d_top,istatus_top
+                  write(6,*)k_1d_base,istatus_base,cloud_base
+     1                     ,heights_3d(i,j,1)
+                  write(6,*)k_1d_top,istatus_top,cloud_top
+     1                     ,heights_3d(i,j,nk)     
                   istatus = 0
                   return
               endif
