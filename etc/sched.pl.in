@@ -333,7 +333,7 @@ foreach $exe (@LAPS_EXE){
             }
 
             print TFILE "  \n";
-            print TFILE "date >> $LAPS_LOG_PATH/runtime.log\n";
+            print TFILE "echo `date` [finished qsub scripts] >> $LAPS_LOG_PATH/runtime.log\n";
             print TFILE "  \n";
             print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable # $execount\n";
             close(TFILE);
