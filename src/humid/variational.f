@@ -322,9 +322,10 @@ c     assign sounder/imager parameter for powell method
 c     assign goes number for common block to make avail where needed for OPTRAN
       
       goes_number = ngoes
-      if (goes_number == 8) sat_index = 1
-      if (goes_number == 10) sat_index = 2
-      if (goes_number == 9) sat_index = 3
+      if (goes_number == 8) sat_index = 1 ! goes east
+      if (goes_number == 10) sat_index = 2 ! goes west
+      if (goes_number == 9) sat_index = 3 ! pacific goes
+      if (goes_number == 12) sat_index = 1 ! new goes east
       
       
 c     assign pressure to global array
@@ -374,6 +375,9 @@ c     install new changes for revised satellite path
             len = len + 7
          elseif (ngoes.eq.10) then
             path = path(1:len)//'goes10/'
+            len = len + 7
+         elseif (ngoes.eq.12) then
+            path = path(1:len)//'goes12/'
             len = len + 7
          endif
          

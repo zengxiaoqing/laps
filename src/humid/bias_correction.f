@@ -32,13 +32,6 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
-cdis
-cdis
-cdis
-cdis
-cdis
-cdis
 cdis
 cdis
 cdis
@@ -60,9 +53,9 @@ c     chief application GIMPAP/AFWA
       integer channel_index
       integer satellite         ! 8= goes 8,  10 = goes 10 etc
       integer sounder           ! 1= sounder, 0 = imager
-      real bias_8 (22), bias_10(22)
-      namelist /bias_coefficients_nl/ bias_8,bias_10
-      save bias_8, bias_10, first_time
+      real bias_8 (22), bias_10(22),bias_9(22), bias_12(22)
+      namelist /bias_coefficients_nl/ bias_8,bias_10,bias_9,bias_12
+      save bias_8, bias_10,bias_9, bias_12, first_time
       real raw_data
       character*200 fname
       integer len
@@ -70,6 +63,11 @@ c     chief application GIMPAP/AFWA
       data first_time /0/
 
 
+
+
+c     code***********************************************************
+
+      bias_correction = raw_data
 
       if (first_time .eq. 0) then !get coef
 
@@ -87,7 +85,7 @@ c     read in namelist
 
 c     end read namelist
 
-      bias_correction = raw_data
+
 
       if(satellite .eq. 8) then
          if(sounder .eq. 1) then ! correct raw_data to match Optran

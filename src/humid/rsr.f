@@ -81,6 +81,9 @@ c     install new changes for revise satellite path
        elseif (ngoes.eq.11) then
           dir = dir(1:len)//'goes11/'
           len = len + 7
+       elseif (ngoes.eq.12) then
+          dir = dir(1:len)//'goes12/'
+          len = len + 7
        endif
 
 c     insertion of wait for data   10/8/02 db
@@ -148,6 +151,8 @@ c fill ngoes from comment line
        if(comment(1)(5:5) .eq. '9') ngoes = 9
        if(comment(1)(5:5) .eq. 'a') ngoes = 10
        if(comment(1)(5:5) .eq. 'b') ngoes = 11
+       if(comment(1)(5:5) .eq. 'c') ngoes = 12
+
 
        do k = 1,kk
           do j = 1,jj
