@@ -377,7 +377,7 @@ c         j=index(names(i),' ')-14
          endif
       enddo
       bg_files=ct4
-      print *,'Number of bg_files found:',bg_files,ct4
+
 c
 c *** Get .lga file names.
 c
@@ -440,10 +440,10 @@ c
 c ****** Do NOT process model fcst file if model init is more than 6 hours old.
 c ****** Current time already read from systime.dat
 c
-         if (bgtime .lt. i4time_now-21600) then
-            print *,'BGTIME < I4TIME_NOW-21600, no lga file created.'
-            goto 40   
-         endif
+c         if (bgtime .lt. i4time_now-21600) then
+c            print *,'BGTIME < I4TIME_NOW-21600, no lga file created.'
+c            goto 40   
+c         endif
 c
 c ****** Do NOT process model fcst file if model init time is not a LAPS time.
 c
@@ -500,7 +500,8 @@ c
      +              ,fname,af,comment(1))
                call s_len(cmodel,i)
                if(cmodel(1:i) .eq. comment(1)(1:i)) then
-                  print *,'LGA file exists, not making one.' 
+                  print *,'LGA file exists, not making one. ' 
+     +                   ,lga_names(i)
                   lga_status=1
                   goto 80
                else
