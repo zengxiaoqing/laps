@@ -405,6 +405,7 @@ c
 c ****** Read background model data.
 c
       do nf=1,2
+
          call s_len(bg_names(nf),j)
          j=j-13
          fname = bg_names(nf)(j+1:j+9)
@@ -465,6 +466,7 @@ c
             
             call get_sbn_dims(bgpath,fname,nxbg,nybg,nzbg,ntbg)
 
+            print*,'entering read_conus_211'
             call read_conus_211(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .           nxbg,nybg,nzbg,ntbg,
      .           prbg,htbg,tpbg,shbg,uwbg,vwbg,
@@ -664,13 +666,16 @@ c
      +                 (abs(sh(i,j,k)) .gt. 1.) .or.
      +                 (abs(uw(i,j,k)) .gt. 100.) .or.
      +                 (abs(vw(i,j,k)) .gt. 100.) ) then
+
 c                  if (max(ht(i,j,k),tp(i,j,k),sh(i,j,k),
 c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
+
                print*,'ERROR: Missing or bad value detected: ',i,j,k
                print*,ht(i,j,k),tp(i,j,k),sh(i,j,k), uw(i,j,k),vw(i,j,k)
-               lga_status = -nf
-               return
-            endif
+                       lga_status = -nf
+                       return
+                  endif
+c-----------------------------------
 cc            if (ht(i,j,k) .ne. ht(i,j,k) .or. 
 cc     .           tp(i,j,k) .ne. tp(i,j,k) .or.
 cc     .           sh(i,j,k) .ne. sh(i,j,k) .or. 
@@ -680,9 +685,10 @@ cc               print *,'ERROR: NaN detected:',i,j,k
 cc               lga_status = -nf
 cc               return
 cc            endif
+c-----------------------------------
+               enddo
+            enddo
          enddo
-      enddo
-      enddo
 c
       call checknan_3d(ht,nx_laps,ny_laps,nz_laps,nan_flag)
       if(nan_flag .ne. 1) then
@@ -1000,7 +1006,8 @@ c
 
 c
  80      continue
-      enddo
+
+      enddo  !Main loop through two model backgrounds
 
       if(lga_status.le.0) return
 
