@@ -79,8 +79,10 @@ c
          k = k+1      ! Used for output arrays
          write(6,*)' radar #, i4_diff = ',kcount,k,i4_diff
 
+         i4_tol_radar = 0 
+
          call read_radar_3dref(i4_file_closest(kcount),               ! I
-!    1   i4_tol,i4_ret,
+     1   i4_tol_radar,i4_ret,                                         ! I/O
      1   l_apply_map,r_missing_data,
      1   imax,jmax,kmax,ext,                                          ! I
      1   lat,lon,topo,l_low_fill,l_high_fill,
