@@ -161,6 +161,10 @@ c                                           remove vis verification, added
 c                                           verif of T, Td, P backgrounds.
 c                               01-14-99  Remove spline for tb8 (sat data).
 c                                           Add vis field ck. 
+c                               01-19-99  Temp. turn off all splines, replace
+c                                           with Barnes.
+c                               01-28-99  Rm Barnes calls. Add check for t,td
+c                                           bkgs, if none use tt, ttd.
 c
 c*****************************************************************************
 cx
@@ -434,6 +438,29 @@ c
 	call mean_pres(n_obs_b,pstn_s,pbar)
 c
 c.....  Calculate the terrain est temps and pressure.
+c.....  If no t or td background, make one.
+c
+	if(back_t .ne. 1) then
+	   print *,' No t background.  Est from t7.'
+	   do j=1,jmax
+	   do i=1,imax
+	      dz = topo(i,j) - h7(i,j)
+	      t_bk(i,j) = t7(i,j) + (lapse_t * dz) 
+	   enddo !i
+	   enddo !j
+	endif
+c
+	if(back_td .ne. 1) then
+	   print *,' No td background.  Est from td7.'
+	   do j=1,jmax
+	   do i=1,imax
+	      dz = topo(i,j) - h7(i,j)
+	      td_bk(i,j) = td7(i,j) + (lapse_td * dz) 
+	   enddo !i
+	   enddo !j
+	endif
+c
+cc	go to 887
 c
 	do j=1,jmax
 	do i=1,imax
@@ -468,13 +495,16 @@ c
 	   dz = ter - h7(i,j)
 	   tt(i,j) = t7(i,j) + (lapse_t * dz)   
 	   ttd(i,j) = td7(i,j) + (lapse_td * dz)	
+c
 	   if(tb81(i,j) .ne. 0.) then
 	      tb81(i,j) = tb81(i,j) - tt(i,j)
 	   endif
-	   if(t_bk(i,j) .ne. 0.) then
+	   if(t_bk(i,j).ne.0. .and. back_t.eq.1) then
 	      t_bk_ltopo = t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
 	      diff_tbk = t_bk_ltopo - t_bk(i,j)
 	      t_bk(i,j) = t_bk_ltopo - tt(i,j)
+	   else
+	      t_bk(i,j) = t_bk(i,j) - tt(i,j)
 	   endif
 	   if(td_bk(i,j) .ne. 0.) then
 	      td_bk(i,j) = td_bk(i,j) - ttd(i,j)
@@ -482,6 +512,14 @@ c
 c
 	enddo !i
 	enddo !j
+c
+cc	do j=1,jmax
+c	   do i=1,imax
+c	      if(elev1(i,j) .ne. 0.) then
+c		 write(6,7119) i,j,elev1(i,j)
+c	      endif
+c	   enddo
+c	enddo
 c
 c.....	Now call the solution algorithm for the tb8 data.
 c
@@ -516,11 +554,13 @@ cc	   call zero(tb8, imax,jmax)
 	if(back_t .ne. 1) bad_tm = bad_t * 2.
 	print *,' '
 	print *,'  At spline call for t'
-	rom2 = 0.010
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(t,imax,jmax,t1,smsng,mxstn,npass,fnorm)
-cc        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb81,cormax,.3,imax,
-cc     &        jmax,roi,bad_tm,imiss,mxstn,obs_error_t,name)
+
+ 7119	format(2i5,f10.2)
+
+c	return
+
+        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb81,cormax,.003,
+     &        imax,jmax,roi,bad_tm,imiss,mxstn,obs_error_t,name)
 c
 c.....	Now call the solution algorithm for the dew point.
 c
@@ -533,11 +573,8 @@ c	beta_td = 3.0
 	print *,'  At spline call for td'
 	bad_tmd = bad_td
 	if(back_t .ne. 1) bad_tmd = bad_td * 2.
-	rom2 = 0.010
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(td,imax,jmax,td1,smsng,mxstn,npass,fnorm)
-cc        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,.3,
-cc     &        imax,jmax,roi,bad_tmd,imiss,mxstn,obs_error_td,name)
+        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,.003,
+     &        imax,jmax,roi,bad_tmd,imiss,mxstn,obs_error_td,name)
 c
 c.....	Convert the analysed perturbations back to t, td, and tb8 (do the
 c.....	t and td backgrounds for a verification check).
@@ -545,8 +582,13 @@ c
 	call add(t,tt,t,imax,jmax)
 	call add(t_bk,tt,t_bk,imax,jmax)
 	call add(td,ttd,td,imax,jmax)
-cc	call add(tb8,tt,tb8,imax,jmax)
+	call add(tb8,tt,tb8,imax,jmax)
 	call add(td_bk,ttd,td_bk,imax,jmax)
+c
+ 887	continue
+c
+cc	call conv_f2k(t, t, imax,jmax)
+cc	go to 888
 c
 c.....	Check to make sure that td is not greater than t...1st time.
 c
@@ -666,43 +708,32 @@ c
 	print *,'  At spline call for u'
 	bad_uw = bad_u
 	if(back_uv .ne. 1) bad_uw = bad_u * 2.
-	rom2 = 0.010
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(u,imax,jmax,u1,smsng,mxstn,npass,fnorm)
-cc	call spline(u,u1,u_bk,alf,wt_u,beta,0.,z,cormax,.1,imax,jmax,
-cc     &        roi,bad_uw,imiss,mxstn,obs_error_wind,name)
+	call spline(u,u1,u_bk,alf,wt_u,beta,0.,z,cormax,.01,imax,jmax,
+     &        roi,bad_uw,imiss,mxstn,obs_error_wind,name)
+c
 	print *,'  At spline call for v'
 	bad_vw = bad_v
 	if(back_uv .ne. 1) bad_vw = bad_v * 2.
-	rom2 = 0.010
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(v,imax,jmax,v1,smsng,mxstn,npass,fnorm)
-cc	call spline(v,v1,v_bk,alf,wt_v,beta,0.,z,cormax,.1,imax,jmax,
-cc     &        roi,bad_vw,imiss,mxstn,obs_error_wind,name)
+	call spline(v,v1,v_bk,alf,wt_v,beta,0.,z,cormax,.01,imax,jmax,
+     &        roi,bad_vw,imiss,mxstn,obs_error_wind,name)
+c
 	print *,'  At spline call for red_p'
 	bad_rp = bad_p
 	if(back_rp .ne. 1) bad_rp = bad_p * 2.
-	rom2 = 0.010
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(rp,imax,jmax,rp1,smsng,mxstn,npass,fnorm)
-cc	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,z,cormax,.1,imax,
-cc     &        jmax,roi,bad_rp,imiss,mxstn,obs_error_redp,name)
+	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,z,cormax,.01,imax,
+     &        jmax,roi,bad_rp,imiss,mxstn,obs_error_redp,name)
+c
 	print *,'  At spline call for msl p'
 	bad_mp = bad_p
 	if(back_mp .ne. 1) bad_mp = bad_p * 2.
-	rom2 = 0.010
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(mslp,imax,jmax,mslp1,smsng,mxstn,npass,fnorm)
-cc	call spline(mslp,mslp1,mslp_bk,alf,wt_mslp,beta,0.,z,cormax,
-cc     &      .1,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
+	call spline(mslp,mslp1,mslp_bk,alf,wt_mslp,beta,0.,z,cormax,
+     &      .01,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
+c
 	print *,'  At spline call for visibility'
 	bad_vs = bad_vis
 	if(back_vis .ne. 1) bad_vs = bad_vis * 2.
-	rom2 = 0.010
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(vis,imax,jmax,vis1,smsng,mxstn,npass,fnorm)
-cc	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,z,cormax,10.,
-cc     &        imax,jmax,roi,bad_vs,imiss,mxstn,obs_error_vis,name)
+	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,z,cormax,1.,
+     &        imax,jmax,roi,bad_vs,imiss,mxstn,obs_error_vis,name)
 c
 c.....	If no background fields are available, skip over the variational
 c.....	section.  Fields will be Barnes/splines, and derived values will be
