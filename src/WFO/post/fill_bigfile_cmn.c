@@ -382,6 +382,7 @@ int storeLAPSdata(long index, int cdfId, double reftime, double valtime,
         return ERROR;
         }
  
+/* commented out 11-06-01 LW variable is filled from cdl file
     varId = ncvarid(cdfId,(const char *)"valtimeMINUSreftime");
     if(varId == -1)
         {
@@ -395,6 +396,7 @@ int storeLAPSdata(long index, int cdfId, double reftime, double valtime,
       fprintf(stdout,"Error in ncvarput1 for 'valtimeMINUSreftime' variable.\n");
       return ERROR;
     }
+*/
  
 /* get number of levels in WFO for storing "variable" */
     dimId = ncdimid(cdfId, (const char *)levelName);

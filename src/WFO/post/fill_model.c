@@ -15,7 +15,12 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
     int cdfId_in, cdfId_out, dimId, varId;
     float *level, *data;
     short *LAPSinv;
-    long index, valtimeMINUSreftime, *vMr_array;
+    long index;
+#ifdef alpha
+    int valtimeMINUSreftime, *vMr_array;
+#else
+    long valtimeMINUSreftime, *vMr_array;
+#endif
     long start[1], count[1], n_valtimes, x_out, y_out;
     char timeString[MAX_TIMESTRING_LEN];
     char prevFilename[128];
@@ -37,7 +42,11 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
 /* determine which index to write into using valtimeMINUSreftime data from
    output file and calculation of (valtime - reftime) passed in */
 
+#ifdef alpha
+      valtimeMINUSreftime = (int)(valtime - reftime);
+#else
       valtimeMINUSreftime = (long)(valtime - reftime);
+#endif
 
       dimId = ncdimid(cdfId_out,"n_valtimes");
       if (dimId == -1) {
@@ -50,7 +59,11 @@ int processFill(char *r_filename, time_t reftime, time_t valtime,
           return ERROR;
         }
         else {
+#ifdef alpha
+          vMr_array = (int *)malloc(n_valtimes * sizeof(int));
+#else
           vMr_array = (long *)malloc(n_valtimes * sizeof(long));
+#endif
           varId = ncvarid(cdfId_out,"valtimeMINUSreftime");
           if (varId == -1) {
             fprintf(stdout,"No variable 'valtimeMINUSreftime' in output file.\n ");
