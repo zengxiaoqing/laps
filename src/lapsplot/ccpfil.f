@@ -215,7 +215,8 @@ C
               l_discrete = namelist_parms%l_discrete
           elseif(colortable .eq. 'tpw')then
               l_discrete = namelist_parms%l_discrete
-          elseif(colortable .eq. 'hues')then
+          elseif(colortable .eq. 'hues' .or. 
+     1           colortable .eq. 'omega')then
               if(l_divisible)then
                   l_discrete = namelist_parms%l_discrete
               else
@@ -254,6 +255,7 @@ C
       LMAP = min(LMAP,32000000)
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,scale,ireverse       
      1                               ,r_missing_data,plot_parms        ! I
+     1                               ,namelist_parms                   ! I
      1                               ,LMAP,log_scaling,l_set_contours  ! I
      1                               ,colortable                       ! I
      1                               ,ncols                            ! I/O
@@ -273,7 +275,7 @@ C
 c     Call local colorbar routine
       write(6,*)' Drawing colorbar: ',MREG,NREG
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-      call colorbar(MREG, NREG, 
+      call colorbar(MREG, NREG, namelist_parms, 
      1              ncols, ireverse_colorbar, log_scaling,             ! I
      1              scale_l, scale_h, colortable, scale,icol_offset,
      1              c5_sect, l_discrete, l_integral, l_set_contours,
@@ -288,6 +290,7 @@ c     Call local colorbar routine
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale_loc,scale
      1                                ,ireverse       
      1                                ,r_missing_data,plot_parms       ! I
+     1                                ,namelist_parms                  ! I
      1                                ,LMAP,log_scaling,l_set_contours
      1                                ,colortable                      ! I
      1                                ,ncols                           ! I/O
@@ -317,7 +320,7 @@ C Set up color table
 C      
       if(l_set_contours)then
           if(colortable .eq. 'acc')then
-              call get_pcp_vals(maxvals,nvals,vals)
+              call get_pcp_vals(maxvals,namelist_parms,nvals,vals)
           endif
 
           ncols = nvals - 1
@@ -532,44 +535,52 @@ C
       elseif(colortable .eq. 'haines')then       
           ncols = 5 
           call color_ramp(1,1
-     1                   ,IWKID,icol_offset
+     1                   ,IWKID,icol_offset,plot_parms
      1                   ,0.6,0.7,0.4                 ! Violet
      1                   ,0.6,0.7,0.4)                ! Violet
           call color_ramp(2,2
-     1                   ,IWKID,icol_offset       
+     1                   ,IWKID,icol_offset,plot_parms       
      1                   ,1.0,0.85,0.55               ! Blue
      1                   ,1.0,0.85,0.55)              ! Blue
           call color_ramp(3,3
-     1                   ,IWKID,icol_offset
+     1                   ,IWKID,icol_offset,plot_parms
      1                   ,2.0,0.4,0.4                 ! Green
      1                   ,2.0,0.4,0.4)                ! Green
           call color_ramp(4,4
-     1                   ,IWKID,icol_offset
+     1                   ,IWKID,icol_offset,plot_parms
      1                   ,2.5,0.95,0.60               ! Yellow
      1                   ,2.5,0.95,0.60)              ! Yellow
           call color_ramp(5,5
-     1                   ,IWKID,icol_offset
+     1                   ,IWKID,icol_offset,plot_parms
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.7)                ! Red
 
 !         Extra color at the top for r_missing_data
           call color_ramp(6,6
-     1                   ,IWKID,icol_offset
+     1                   ,IWKID,icol_offset,plot_parms
      1                   ,1.0,0.0,1.0                 ! White
      1                   ,1.0,0.0,1.0)                ! White
 
       elseif(colortable .eq. 'cwi')then       
           ncols = 2 
           call color_ramp(1,1
-     1                   ,IWKID,icol_offset
+     1                   ,IWKID,icol_offset,plot_parms
      1                   ,0.6,0.7,0.4                 ! Violet
      1                   ,0.6,0.7,0.4)                ! Violet
           call color_ramp(2,2
-     1                   ,IWKID,icol_offset
+     1                   ,IWKID,icol_offset,plot_parms
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.7)                ! Red
 
       elseif(colortable .eq. 'acc')then       
+          call generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                            ,plot_parms,istatus)
+
+      elseif(colortable .eq. 'omega')then       
+          if(.not. l_discrete)then
+              ncols = 60
+          endif
+
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,plot_parms,istatus)
 
@@ -593,8 +604,11 @@ C
       END
 
       subroutine color_ramp(ncol1,ncol2,IWKID,icol_offset       ! I
+     1                     ,plot_parms
      1                     ,hue1,sat1,rintens1                  ! I
      1                     ,hue2,sat2,rintens2)                 ! I
+
+      include 'lapsplot.inc'
 
       write(6,*)' Subroutine color_ramp.. ',ncol1,ncol2
 
@@ -608,6 +622,9 @@ C
           hue     = (1.0 - frac) * hue1     + frac * hue2  
           sat     = (1.0 - frac) * sat1     + frac * sat2
           rintens = (1.0 - frac) * rintens1 + frac * rintens2
+
+!         Modify intensity according to user input
+          rintens = rintens * plot_parms%rimage_intensity
 
           call hsi_to_rgb(hue,sat,rintens,red,grn,blu)
 
@@ -655,11 +672,14 @@ C
       end
 
 
-      subroutine colorbar(ni,nj,ncols,ireverse,log_scaling
+      subroutine colorbar(ni,nj,namelist_parms
+     1                   ,ncols,ireverse,log_scaling
      1                   ,scale_l,scale_h
      1                   ,colortable,scale,icol_offset,c5_sect
      1                   ,l_discrete,l_integral,l_set_contours          ! I
      1                   ,colorbar_int)                                 ! I
+
+      include 'lapsplot.inc'
 
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
@@ -926,7 +946,7 @@ c     Restore original color table
 !         Other fractions
 
           if(l_set_contours)then
-              call get_pcp_vals(maxvals,nvals,vals)
+              call get_pcp_vals(maxvals,namelist_parms,nvals,vals)
               do i = 1,nvals
                   frac_a(i) = float(i-1) / float(nvals-1)
               enddo ! i
@@ -1063,7 +1083,7 @@ c     Restore original color table
      1                         + sat_a(j+1)  *       frac_ramp
                       rint_col = rint_a(j)   * (1. - frac_ramp) 
      1                         + rint_a(j+1) *       frac_ramp
-                      call color_ramp(i,i,IWKID,icol_offset
+                      call color_ramp(i,i,IWKID,icol_offset,plot_parms    
      1                               ,hue_col,sat_col,rint_col
      1                               ,hue_col,sat_col,rint_col)
                   endif
@@ -1074,7 +1094,7 @@ c     Restore original color table
               i1 = 1 + nint(frac_a(i  ) * float(ncols-1))
               i2 = 1 + nint(frac_a(i+1) * float(ncols-1))
      
-              call color_ramp(i1,i2,IWKID,icol_offset
+              call color_ramp(i1,i2,IWKID,icol_offset,plot_parms
      1                       ,hue_a(i  ),sat_a(i  ),rint_a(i  )
      1                       ,hue_a(i+1),sat_a(i+1),rint_a(i+1) )
 
@@ -1130,7 +1150,9 @@ c     Restore original color table
       end
 
      
-      subroutine get_pcp_vals(maxvals,nvals,vals)
+      subroutine get_pcp_vals(maxvals,namelist_parms,nvals,vals)
+
+      include 'lapsplot.inc'
 
       real*4 vals(maxvals)
 
