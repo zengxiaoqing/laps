@@ -130,7 +130,7 @@ c
      1           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
      1           store_emv,store_amt,store_hgt,vis,obstime,istatus)
         else
-            call read_sfc_wind(i4time,'lso',n_obs_g,n_obs_b
+            call read_sfc_wind(i4time,'lso',n_obs_g,n_obs_b,obstime
      1                        ,stations,provider,lat_s,lon_s,elev_s
      1                        ,dd_s,ff_s,dd_ea,ff_ea,maxstns,istatus)
         endif
@@ -244,6 +244,7 @@ c
                 obs_point(nobs_point)%weight = weight_sfc
                 obs_point(nobs_point)%type   = 'sfc'
                 obs_point(nobs_point)%file   = 'lso'
+                obs_point(nobs_point)%i4time = obstime(n_sfc_obs)
 
             else
                 write(6,20)n_sfc_obs,stations(i)(1:5)
