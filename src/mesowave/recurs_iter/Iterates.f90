@@ -15,7 +15,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
   REAL,    INTENT(IN) :: ldf(nx,ny),ds(3)
 
   INTEGER :: iter,iobs,i,j,k,no_v,idp
-  REAL    :: y0,b(2,3),rms
+  REAL    :: y0,b(2,3),rms,stdv(nvlaps)
 
   ! Unified analysis of velocity:
   idp = id
@@ -27,8 +27,11 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 
      a(1:n(1),1:n(2),1:n(3),id:idp) = 0.0
 
-     ! QC: bound check:
-     IF (((id .EQ. 1) .OR. (id .EQ. 5)) .AND. (iter .EQ. 1)) THEN
+     ! QC: bound check and compute standard deviations:
+     IF (iter .EQ. 1) THEN
+
+	stdv(id) = 0.0
+	no_v = 0
 
         DO iobs=1,nobs
 
@@ -52,9 +55,57 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
                     ENDDO   
                  ENDDO
               ENDDO
+
+	      stdv(id) = stdv(id)+(o(1,iobs)-y0)**2
+	      no_v = no_v+1
+
+              IF ((id .EQ. 1) .OR. (id .EQ. 5)) THEN
+                 IF (ABS(o(1,iobs)-y0) .GT. 10.0) THEN
+	            PRINT*,'Bad QC: ',o(1,iobs),y0,vid(iobs),iobs
+	            o(1,iobs) = y0
+                    w(iobs) = 0.0
+                 ENDIF
+	      ENDIF
+
+	   ENDIF
+
+        ENDDO
+
+	stdv(id) = SQRT(stdv(id))/no_v
+
+	! IF (no_v .GT. 0) THEN
+	!    PRINT*,'Standard Deviation: ',stdv(id),id
+	! ELSE
+	!    PRINT*,'Standard Deviation: no observation'
+	! ENDIF
+
+	! Standard deviation check: with 4.0*stdv
+        DO iobs=1,nobs
+
+	   IF ((id .EQ. vid(iobs)) .AND. &
+	       (idx(1,iobs) .GT. nfic) .AND. &
+	       (idx(1,iobs) .LT. n(1)-nfic) .AND. &
+	       (idx(2,iobs) .GT. nfic) .AND. &
+               (idx(2,iobs) .LT. n(2)-nfic)) THEN
+
+              y0 = 0.0
         
-              IF (ABS(o(1,iobs)-y0) .GT. 10.0) THEN
-	         PRINT*,'Bad QC: ',o(1,iobs),y0,vid(iobs),iobs
+              b(1,1:3) = 1.0-coe(1:3,iobs)
+              b(2,1:3) = coe(1:3,iobs)
+              DO k=1,2
+                 DO j=1,2
+                    DO i=1,2
+                       Y0 = Y0 + bkgd(idx(1,iobs)+i-1-nfic, &
+                                      idx(2,iobs)+j-1-nfic, &
+                                      idx(3,iobs)+k-1,vid(iobs))* &
+                                 b(i,1)*b(j,2)*b(k,3)
+                    ENDDO   
+                 ENDDO
+              ENDDO
+
+              IF (ABS(o(1,iobs)-y0) .GT. 4.0*stdv(id)) THEN
+	         PRINT*,'Standard deviation QC: ', &
+			o(1,iobs),y0,vid(iobs),iobs
 	         o(1,iobs) = y0
                  w(iobs) = 0.0
               ENDIF
@@ -108,8 +159,8 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
         
            o(1,iobs) = o(1,iobs)-y0
 
-	   rms = rms + o(1,iobs)*o(1,iobs)
-           no_v = no_v + 1
+	   !rms = rms + o(1,iobs)*o(1,iobs)
+           !no_v = no_v + 1
 
 	ENDIF
 
