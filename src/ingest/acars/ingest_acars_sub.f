@@ -1,5 +1,5 @@
 
-      subroutine get_acars_data(i4time_sys,ilaps_cycle_time
+      subroutine get_acars_data(i4time_sys,i4_acars_window
      1                                    ,NX_L,NY_L
      1                                    ,filename,istatus)
 
@@ -35,7 +35,7 @@ C
       endif
       call acars_sub(nf_fid, recNum,
 !.............................................................................
-     1              i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
+     1              i4time_sys,i4_acars_window,NX_L,NY_L,istatus)
       return
 !.............................................................................
       end
@@ -43,7 +43,7 @@ C
 C
       subroutine acars_sub(nf_fid, recNum,
 !.............................................................................
-     1              i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
+     1              i4time_sys,i4_acars_window,NX_L,NY_L,istatus)
 !.............................................................................
 
       include 'netcdf.inc'
@@ -141,9 +141,9 @@ C
 
           call cv_asc_i4time(a9_timeObs,i4time_ob)
           i4_resid = abs(i4time_ob - i4time_sys)
-          if(i4_resid .gt. (ilaps_cycle_time / 2) )then ! outside time window
+          if(i4_resid .gt. i4_acars_window)then ! outside time window
               write(6,*)' time - reject '
-     1           ,a9_timeObs,i4_resid,ilaps_cycle_time / 2
+     1           ,a9_timeObs,i4_resid,i4_acars_window
               goto 900        
           endif
 

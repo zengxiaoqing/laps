@@ -1,5 +1,5 @@
 
-      subroutine get_acars_afwa(i4time_sys,ilaps_cycle_time
+      subroutine get_acars_afwa(i4time_sys,i4_acars_window
      1                                    ,NX_L,NY_L
      1                                    ,filename,istatus)
 
@@ -17,7 +17,9 @@
 
 !............................................................................
 
-      open(11,file=filename,status='old')
+      lun_in = 21
+
+      open(lun_in,file=filename,status='old')
 
       call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a, 
      1            topo_a,1.0,rnorth,south,east,west,istatus)
@@ -30,7 +32,7 @@
 
       do while (.true.)
 
-          read(11,101,err=890,end=999) !    NAME             UNITS & FACTOR
+          read(lun_in,101,err=890,end=999) !    NAME          UNITS & FACTOR
      1         I_A1CYCC,                       
      1         I_A1TYPE,
      1         I_A1DPD,
@@ -56,7 +58,7 @@
           write(6,*)' acars #',i
 
           latitude  =  float(I_A1LAT)/100.
-          longitude = -float(I_A1LON)/100.
+          longitude = +float(I_A1LON)/100.
           altitude  =  I_A1ALT
 
           write(6,*)' location = '
@@ -97,9 +99,9 @@
 !         call cv_asc_i4time(a9_timeObs,i4time_ob)
 
           i4_resid = abs(i4time_ob - i4time_sys)
-          if(i4_resid .gt. (ilaps_cycle_time / 2) )then ! outside time window
+          if(i4_resid .gt. i4_acars_window)then ! outside time window
               write(6,*)' time - reject '
-     1           ,a9_timeObs,i4_resid,ilaps_cycle_time / 2
+     1           ,a9_timeObs,i4_resid,i4_acars_window
               goto 900        
           endif
 
@@ -167,6 +169,8 @@
 !............................................................................
 
  999  write(6,*)' End of AFWA file detected'
+
+      close(lun_in)
       istatus = 1
       return
       end

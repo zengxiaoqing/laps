@@ -16,6 +16,8 @@
 
        i4_window_ob = ilaps_cycle_time
 
+       if(c_obstype .eq. 'ACARS')i4_window_ob = ilaps_cycle_time / 2     
+
        return
        end
 
@@ -36,6 +38,8 @@
        endif
 
        i4_window_ob = ilaps_cycle_time
+
+       if(c_obstype .eq. 'ACARS')i4_window_ob = ilaps_cycle_time / 2     
 
        return
        end

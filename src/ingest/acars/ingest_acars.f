@@ -33,14 +33,6 @@
           write (6,*) 'Error getting horizontal domain dimensions'
           go to 999
       endif
- 
-      call get_laps_cycle_time(ilaps_cycle_time,istatus)
-      if(istatus .eq. 1)then
-          write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
-      else
-          write(6,*)' Error getting laps_cycle_time'
-          return
-      endif
 
       lag_time_report = 3600
 
@@ -101,6 +93,15 @@
           goto999
       endif
 
+!     Get ACARS Time Window
+      call get_windob_time_window('ACARS',i4_wind_ob,istatus)
+      if(istatus .ne. 1)goto 997
+
+      call get_tempob_time_window('ACARS',i4_temp_ob,istatus)
+      if(istatus .ne. 1)goto 997
+
+      i4_acars_window = max(i4_wind_ob,i4_temp_ob)
+
 !     Loop through ACARS files and choose ones in time window
       write(6,*)' # of raw ACARS files = ',i_nbr_files_ret,' *.',ext_in
       do i = 1,i_nbr_files_ret
@@ -108,9 +109,9 @@
           filename_in = c_fnames(i)
 
 !         Test whether we want the NetCDF file for this time
-          i4time_file_earliest = i4time_sys - (ilaps_cycle_time / 2)
+          i4time_file_earliest = i4time_sys - i4_acars_window
      1                                      - lag_time_report
-          i4time_file_latest =   i4time_sys + (ilaps_cycle_time / 2) 
+          i4time_file_latest =   i4time_sys + i4_acars_window
           
           if(i4times(i) .lt. i4time_file_earliest)then
               write(6,*)' File is too early ',a9_time,i
@@ -123,13 +124,13 @@
               if(ext_in .eq. 'cdf')then ! NIMBUS NetCDF
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
-                  call get_acars_data(i4time_sys,ilaps_cycle_time
+                  call get_acars_data(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
      1                                      ,filename_in,istatus)
               elseif(ext_in .eq. 'ac')then ! AFWA ASCII
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
-                  call get_acars_afwa(i4time_sys,ilaps_cycle_time
+                  call get_acars_afwa(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
      1                                      ,filename_in,istatus)
               else
@@ -142,6 +143,10 @@
       enddo
 
  990  close(11) ! Output PIN file
+
+      go to 999
+
+ 997  write(6,*)' Error in ACARS ingest (ob time window)'
 
  999  continue
 
