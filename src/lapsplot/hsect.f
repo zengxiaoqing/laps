@@ -341,24 +341,24 @@ c       include 'satellite_dims_lvd.inc'
 
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  ',
-     1       /'     [wd,wb,wr,wf,bw] Wind'
-     1       ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
-     1       /'     [wo,co,bo,lo,fo] Anlyz/Cloud/Balance/Bkg/Fcst Omega'       
-     1       /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
-     1       /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
-     1       /
-     1       /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta,th,te'         
-     1       ,',vo,mr,mc,dv-i,ha,ma,sp]'
-     1       /'          [cs,vs,tw,fw-i,hi-i]'
-     1       /'          [of,oc,ov,os,op,qf,qc,qv,qs,qp] obs plots'       
-     1       ,'  [bs] Sfc background'
-     1       /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
-     1       /'          [s] Other Stability Indices'
-     1       /
-     1       /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
-     1       ,',   [pt,pb] Theta, Blnc Theta'
-     1       /'     HGTS: [ht,hb,hr,hy,bh] (LAPS,LGA,FUA,Hydrstc,QBAL),'
-     1       /'           [hh] Height of Const Temp Sfc'               )
+     1      /'     [wd,wb,wr,wf,bw] Wind'
+     1      ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
+     1      /'     [wo,co,bo,lo,fo] Anlyz/Cloud/Balance/Bkg/Fcst Omega'       
+     1      /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
+     1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
+     1      /
+     1      /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta,th,te'         
+     1      ,',vo,mr,mc,dv-i,ha,ma,sp]'
+     1      /'          [cs,vs,tw,fw-i,hi-i]'
+     1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
+     1      ,'  [bs] Sfc background'
+     1      /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
+     1      /'          [s] Other Stability Indices'
+     1      /
+     1      /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
+     1      ,',   [pt,pb] Theta, Blnc Theta'
+     1      /'     HGTS: [ht,hb,hr,hy,bh] (LAPS,LGA,FUA,Hydrstc,QBAL),'
+     1      /'           [hh] Height of Const Temp Sfc'               )
 
         write(6,12)
  12     format(
@@ -1128,17 +1128,20 @@ c       include 'satellite_dims_lvd.inc'
 
         elseif(c_type .eq. 'ms' .or. c_type .eq. 'ob'
      1                          .or. c_type .eq. 'st'   
-     1                          .or. c_type .eq. 'of'   
-     1                          .or. c_type .eq. 'oc'   
-     1                          .or. c_type .eq. 'os'   
-     1                          .or. c_type .eq. 'op'   
-     1                          .or. c_type .eq. 'qf'   
-     1                          .or. c_type .eq. 'qc'   
-     1                          .or. c_type .eq. 'qs'   
-     1                          .or. c_type .eq. 'ov'   
-     1                          .or. c_type .eq. 'qv'   
-     1                          .or. c_type .eq. 'qp'   
+     1                          .or. c_type .eq. 'of' ! Air T,Td in F
+     1                          .or. c_type .eq. 'oc' ! Air T,Td in C
+     1                          .or. c_type .eq. 'os' ! Stations  
+     1                          .or. c_type .eq. 'ov' ! Sky Cover, Visibility
+     1                          .or. c_type .eq. 'op' ! Precip 
+     1                          .or. c_type .eq. 'og' ! Soil/Water T
+     1                          .or. c_type .eq. 'qf' ! QC Air T,Td in F
+     1                          .or. c_type .eq. 'qc' ! QC Air T,Td in C
+     1                          .or. c_type .eq. 'qs' ! QC Stations
+     1                          .or. c_type .eq. 'qv' ! QC Sky Cover, Visib
+     1                          .or. c_type .eq. 'qp' ! QC Precip
+     1                          .or. c_type .eq. 'qg' ! QC Soil/Water T
      1                                                )then
+
             i4time_plot = i4time_ref ! / laps_cycle_time * laps_cycle_time
             call get_filespec('lso',2,c_filespec,istatus)
             call get_file_time(c_filespec,i4time_ref,i4time_plot)
@@ -1667,7 +1670,7 @@ c
 
                 elseif(c_type .eq. 'ra')then
                     radar_array = field_2d
-                    c33_label = 'LAPS Col. Max Ref (intermediate) '    
+                    c33_label = 'LAPS Col. Max Ref (interim-vrc)  '    
 
                 else
                     write(6,*)' Calling get_max_ref'
@@ -1697,21 +1700,32 @@ c
                 endif
 
             elseif(c_field(1:2) .eq. 'lr')then ! Low Lvl Reflectivity data
-                i4time_hour = (i4time_radar+laps_cycle_time/2)
-     1                          /laps_cycle_time * laps_cycle_time
+                if(c_type .eq. 'rf')then
+                    write(6,*)' Getting analyzed lmr file'
 
-                write(6,*)' Getting analysed llr field'
+                    i4time_hour = (i4time_radar+laps_cycle_time/2)
+     1                              /laps_cycle_time * laps_cycle_time
 
-                var_2d = 'LLR'
-                ext = 'lmt'
-                call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+                    var_2d = 'LLR'
+                    ext = 'lmt'
+                    call get_laps_2dgrid(i4time_ref,laps_cycle_time*100       
      1                              ,i4time_lr,ext,var_2d,units_2d
      1                              ,comment_2d,NX_L,NY_L
      1                              ,radar_array,0,istatus)
 
-                call make_fnam_lp(i4time_lr,asc9_tim_r,istatus)
+                    call make_fnam_lp(i4time_lr,asc9_tim_r,istatus)
 
-                c33_label = 'LAPS Low LVL Reflectivity   (DBZ)'
+                    c33_label = 'LAPS Low LVL Ref   (Anlyzd/DBZ)  '
+
+                elseif(c_type .eq. 'ra')then
+                    radar_array = field_2d
+                    c33_label = 'LAPS Low Lvl Ref  (interim-vrc)  '    
+
+                else
+                    write(6,*)' error: unknown c_type'
+                    stop
+
+                endif
 
 !               Display R field
                 if(c_field(3:3) .ne. 'i')then
