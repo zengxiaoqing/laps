@@ -43,6 +43,12 @@ select(STDOUT); $| = 1;
 $ENV{PATH}.=":@NETCDF@/bin";
 print "$0 running  for $fname\n";
 my $ftime;
+my @use_for_display;    
+
+if(`hostname` =~ /B52/i && $hh eq '03' || $hh  eq '15'){
+     system("rsh foghorn /usr/local/apps/bin/perl /data/mdlg/jedwards/gcf/bin/postproc.b52 $fname &"); 
+}
+
 for($ftime=0;$ftime<=$flast;$ftime+=$ffreq){
 
   my $head = "$modelout/$fname.a$ftime"."s.head";
@@ -66,7 +72,6 @@ for($ftime=0;$ftime<=$flast;$ftime+=$ffreq){
   my @lapsinterface=<LPTR>;
   close(LPTR);
   my $i;
-    
   for($i=0;$i<=$#lapsinterface;$i++){
     next if($lapsinterface[$i] =~ /^\s*&/);
     next if($lapsinterface[$i] =~ /^\s*\//);

@@ -827,11 +827,13 @@ sub run_parallel{
     close(PG);
 #    $sys = "$LAPSROOT/model/bin/mpirun -p4pg $rundir/procsfm $smsSrvr $rundir $procs $exe";
 #    $sys = "/opt/mpi/bin/mpirun $smsSrvr $rundir $procs $exe -np $procs $exe";
-#    $sys = "$LAPSROOT/model/bin/smsRun $procs $exe";
+
+
+    $sys = "$LAPSROOT/model/bin/smsRun $procs $exe";
 
     
 
-    $sys = "$smsSrvr $LAPS_DATA_ROOT/static/model/usr $procs $exe -p4pg $LAPS_DATA_ROOT/static/model/usr/procsfm";
+#    $sys = "$smsSrvr $LAPS_DATA_ROOT/static/model/usr $procs $exe -p4pg $LAPS_DATA_ROOT/static/model/usr/procsfm";
 
 #    $sys = "smsRun $procs $exe";
     print $sys;
