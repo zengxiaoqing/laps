@@ -188,7 +188,7 @@ foreach $model (keys %lapsprds){
 	@filelist = grep(/\d\d\d\d/, readdir(DIR));
 #       if($dir =~ "fua"){print "@filelist\n";}
 	closedir(DIR);       
-        next if($#filelist <=0);
+        next if($#filelist < 0);
 #       next unless($filelist[0]!='');
         my($file_count)=$#filelist+1;
         my($minage)=9999;
