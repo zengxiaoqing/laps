@@ -57,6 +57,8 @@ c
 c ----------------------------------------------------------------
 c
       function fname9_to_wfo_fname13(a9_time_in)
+
+      include 'lapsparms.for'
 c
 cdoc  Routine to convert LAPS 'yyjjjhhmm' time to 'yyyymmdd_hhmm' time.
 c
@@ -125,7 +127,11 @@ c
 !     if(chh(2:2) .eq. ' ') chh(2:2) = '0'
 !     if(cmin(1:1).eq. ' ') cmin(1:1)= '0'
 !     if(cmin(2:2).eq. ' ') cmin(2:2)= '0'
-      if(iyr.lt.90)then
+
+      iyear_earliest_century = (iyear_earliest/100) * 100
+      iyy_cutoff = iyear_earliest - iyear_earliest_century
+
+      if(iyr.lt.iyy_cutoff)then
          cyyyy='20'//cyr
       else
          cyyyy='19'//cyr
