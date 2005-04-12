@@ -753,7 +753,11 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                     icol_in = 12 ! Aqua
                 elseif(c8_obstype(1:3) .eq. 'RAO')then  ! RAOB
                     icol_in = 7  ! Yellow
+                elseif(c8_obstype(1:3) .eq. 'RAD')then  ! Radiometer
+                    icol_in = 7  ! Yellow
                 elseif(c8_obstype(1:3) .eq. 'DRO')then  ! Dropsonde
+                    icol_in = 17 ! Lavender
+                elseif(c8_obstype(1:2) .eq. 'GO')then   ! GOES Satellite
                     icol_in = 17 ! Lavender
                 elseif(c8_obstype(1:2) .eq. 'SA')then   ! SATSND
                     icol_in = 17 ! Lavender
