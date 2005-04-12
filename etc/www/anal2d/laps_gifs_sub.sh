@@ -166,9 +166,9 @@ cd  $WWW_DIR/anal2d/loop/$prod
 
 #Link to the files.cgi script
 cd    $WWW_DIR/anal2d/loop/$prod
-rm -f files.cgi
 
 if test -r $WWW_DIR/../../looper/files.cgi; then
+     rm -f files.cgi
      ln -s $WWW_DIR/../../looper/files.cgi files.cgi
 fi
 
