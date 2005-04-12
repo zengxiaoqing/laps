@@ -42,4 +42,10 @@ c       Maximum number of LAPS grid levels
         integer*4 MXLVLS
         parameter (MXLVLS=150)
 
-
+c       Century time cutoff. LAPS will be set to run with filenames having
+c       two digits for the year between the actual years of 'iyear_earliest'
+c       and 'iyear_earliest+99'. Valid values are from 1901 to 1999. Note that
+c       other time constraints may limit the usable time span of LAPS to less
+c       than a century.
+        integer*4 iyear_earliest
+        parameter (iyear_earliest=1950)
