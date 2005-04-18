@@ -31,6 +31,8 @@ cdis
 cdis
 C
         SUBROUTINE i4time_fname_lp (FNAME_IN, I4TIME, ISTATUS)
+
+        include 'lapsparms.for'
 C
 cdoc    This routine converts several different file name types (i.e. yydddhhmm)
 cdoc    into the corresponding I4 time.
@@ -106,11 +108,14 @@ C       and minutes.
         MIN = 10*INT_FILE(8) + INT_FILE(9)
 
 C       Get the actual year, here is where we assume what century it is...
-C       Steve Albers 1997
-        if(NYEAR .lt. 60)then
-            NYEAR = NYEAR + 2000
+
+        iyear_earliest_century = (iyear_earliest/100) * 100
+        iyy_cutoff = iyear_earliest - iyear_earliest_century
+
+        if(NYEAR .lt. iyy_cutoff)then
+            NYEAR = NYEAR + iyear_earliest_century + 100
         else
-            NYEAR = NYEAR + 1900
+            NYEAR = NYEAR + iyear_earliest_century
         endif
 C
 C       Convert the day of year (julian day) into month and day.
