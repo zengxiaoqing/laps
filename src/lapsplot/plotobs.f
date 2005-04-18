@@ -793,3 +793,147 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         return
         end
+
+        subroutine plot_td_obs(k_level,i4time,imax,jmax,kmax
+     1                        ,r_missing_data,lat,lon,topo,zoom
+     1                        ,plot_parms)
+
+        include 'lapsplot.inc'
+
+        character*3 ext
+        character*8 c8_obstype
+        character*150 directory
+        character*150 filename
+        character*13 filename13
+
+        logical l_found_file
+
+!       Plot Temperature Obs  ***********************************************
+
+!       size_temp = 8. * float(max(imax,jmax)) / 300.
+        size_temp = 1.1 ! 3.33
+
+        write(6,*)
+        write(6,*)' Plot Dewpoint Obs, size_td = ',size_temp
+
+        lun = 32
+        ext = 'tmg'
+        call get_directory(ext,directory,len_dir)
+
+        filename = directory(1:len_dir)//filename13(i4time,ext(1:3))
+        call s_len(filename,len_file)
+
+        open(lun,file=filename(1:len_file),status='old',err=31)
+        l_found_file = .true.
+        go to 32
+       
+ 31     write(6,*)' Could not open ',filename(1:len_file)
+        l_found_file = .false.
+        go to 42
+
+ 32     td = r_missing_data
+        p = r_missing_data
+        dir = r_missing_data
+        spd_kt = r_missing_data
+        gust = r_missing_data
+
+        nobs_temp = 0
+
+        do while (.true.) ! Count the temperature obs
+            read(32,*,end=41,err=36)ri,rj,rk,t_k,c8_obstype
+ 36         continue
+
+            ri = ri + 1.
+            rj = rj + 1.
+            rk = rk + 1.
+
+            k = nint(rk)
+            k_sfc = 2
+
+            if( k .eq. k_level  
+     1                      .OR.
+     1         (k_level .eq. 0 .and. k .eq. k_sfc)  )then
+
+              if(t_k .ne. r_missing_data)then
+
+                nobs_temp = nobs_temp + 1
+ 
+              endif ! t_k .ne. r_missing_data
+
+            endif ! k .eq. k_level
+
+        enddo
+
+41      continue
+
+        rewind(32)
+
+42      write(6,*)' Number of temperature obs = ',nobs_temp
+
+        do while (l_found_file) ! Plot the temp obs
+            read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype
+150         continue
+
+            ri = ri + 1.
+            rj = rj + 1.
+            rk = rk + 1.
+
+            k = nint(rk)
+            k_sfc = 2
+
+            if( k .eq. k_level  
+     1                      .OR.
+     1         (k_level .eq. 0 .and. k .eq. k_sfc)  )then
+
+              if(t_k .ne. r_missing_data)then
+
+                t_c = t_k - 273.15
+
+!               spd_kt = SPEED_ms  / mspkt
+
+                iflag = 3
+
+                if(c8_obstype(1:3) .eq. 'RAS')then      ! RASS
+                    icol_in = 12 ! Aqua
+                elseif(c8_obstype(1:3) .eq. 'RAO')then  ! RAOB
+                    icol_in = 7  ! Yellow
+                elseif(c8_obstype(1:3) .eq. 'RAD')then  ! Radiometer
+                    icol_in = 7  ! Yellow
+                elseif(c8_obstype(1:3) .eq. 'DRO')then  ! Dropsonde
+                    icol_in = 17 ! Lavender
+                elseif(c8_obstype(1:2) .eq. 'GO')then   ! GOES Satellite
+                    icol_in = 17 ! Lavender
+                elseif(c8_obstype(1:2) .eq. 'SA')then   ! SATSND
+                    icol_in = 17 ! Lavender
+                else                                    ! ACARS
+                    icol_in = 3  ! Red
+                endif
+
+                call setusv_dum(2hIN,icol_in)
+
+                iflag_cv = 0
+
+                call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
+     1                          ,lat,lon,imax,jmax,size_temp
+     1                          ,zoom,nobs_temp
+     1                          ,icol_in,du_loc,wx
+     1                          ,iflag,iflag_cv,namelist_parms
+     1                          ,plot_parms)
+
+
+                write(6,111,err=121)ri,rj,t_c,c8_obstype
+111             format(1x,3f8.1,1x,a8)
+121             continue
+
+              endif ! t_k .ne. r_missing_data
+
+            endif ! k .eq. k_level
+
+        enddo
+
+141     continue
+
+        close(32)
+
+        return
+        end
