@@ -120,8 +120,8 @@ cdis
         elseif(c2_field .eq. 'tp' .or. c2_field .eq. 'py')then
             nc = 1
 
-            if(imax .gt. 110 .or. jmax .gt. 110)then
-                iskip = 2
+            if(jmax .gt. 100)then
+                iskip = nint(float(jmax)/100.) + 1
                 isize = 0
             elseif(imax .gt. 90 .or. jmax .gt. 90)then
                 iskip = 2
