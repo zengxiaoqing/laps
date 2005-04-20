@@ -470,7 +470,7 @@ c            nzbg_sh=nzbg_sh-2
 c            nzbg_uv=nzbg_uv-2
 c         endif
  
-      elseif (bgmodel .eq. 5) then ! Process 40 km RUC data
+      elseif (bgmodel .eq. 5) then ! Process 40km RUC public-netcdf data
 
           call read_ruc2_hybb(fullname,nx_bg,ny_bg,nzbg_ht
      +,mslpbg,htbg,prbght,shbg,uwbg,vwbg,tpbg,wwbg,istatus)
@@ -522,78 +522,82 @@ c
      .,gproj,lon0,lat1,lat2,istatus)
 c
       endif
-      
-      call checknan_3d(htbg,nx_bg,ny_bg,nzbg_ht,nan_flag)
+c      
+c - 3d fields
+c
+      call check_nan3 (htbg,nx_bg,ny_bg,nzbg_ht,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in height array '
-         goto 99
+c        goto 99
       endif
 
-      call checknan_3d(tpbg,nx_bg,ny_bg,nzbg_tp,nan_flag)
+      call check_nan3 (tpbg,nx_bg,ny_bg,nzbg_tp,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in temperature array '
-         goto 99
+c        goto 99
       endif
 
-      call checknan_3d(shbg,nx_bg,ny_bg,nzbg_sh,nan_flag)
+      call check_nan3 (shbg,nx_bg,ny_bg,nzbg_sh,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in specif hum array '
-         goto 99
+c        goto 99
       endif
 
-      call checknan_3d(uwbg,nx_bg,ny_bg,nzbg_uv,nan_flag)
+      call check_nan3 (uwbg,nx_bg,ny_bg,nzbg_uv,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in u-comp array '
-         goto 99
+c        goto 99
       endif
 
-      call checknan_3d(vwbg,nx_bg,ny_bg,nzbg_uv,nan_flag)
+      call check_nan3 (vwbg,nx_bg,ny_bg,nzbg_uv,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in v-comp array '
-         goto 99
+c        goto 99
       endif
 
-      call checknan_3d(wwbg,nx_bg,ny_bg,nzbg_ww,nan_flag)
+      call check_nan3 (wwbg,nx_bg,ny_bg,nzbg_ww,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in w-comp array '
       endif
-
-      call checknan_2d(htbg_sfc,nx_bg,ny_bg,nan_flag)
+c
+c - 2d fields
+c
+      call check_nan2(htbg_sfc,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc height array '
       endif
 
-      call checknan_2d(prbg_sfc,nx_bg,ny_bg,nan_flag)
+      call check_nan2(prbg_sfc,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc pressure array '
       endif
 
-      call checknan_2d(tdbg_sfc,nx_bg,ny_bg,nan_flag)
+      call check_nan2(tdbg_sfc,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc temp array '
       endif
 
-      call checknan_2d(tpbg_sfc,nx_bg,ny_bg,nan_flag)
+      call check_nan2(tpbg_sfc,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc temp array '
       endif
 
-      call checknan_2d(shbg_sfc,nx_bg,ny_bg,nan_flag)
+      call check_nan2(shbg_sfc,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc spec hum array '
       endif
 
-      call checknan_2d(uwbg_sfc,nx_bg,ny_bg,nan_flag)
+      call check_nan2(uwbg_sfc,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc u-comp array '
       endif
 
-      call checknan_2d(vwbg_sfc,nx_bg,ny_bg,nan_flag)
+      call check_nan2(vwbg_sfc,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc v-comp array '
       endif
 
-      call checknan_2d(mslpbg,nx_bg,ny_bg,nan_flag)
+      call check_nan2(mslpbg,nx_bg,ny_bg,nan_flag)
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc mslp array '
       endif

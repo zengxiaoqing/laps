@@ -1076,31 +1076,6 @@ c     linear time interpolation to satisfy analysis time.
 c
 c---------------------------------------------------------------------------
 c
-      subroutine checknan_3d(x,ni,nj,nk,nan_flag)
-c
-c     Routine to check a real 3-d array for NaN's.
-c
-      integer ni,nj,nk
-      real*4 x(ni,nj,nk)
-c
-      nan_flag = 1
-c
-      do k=1,nk
-      do j=1,nj
-      do i=1,ni
-         if( nan( x(i,j,k) ) .eq. 1) then
-            print *,' ** ERROR. Found a NaN at ', i, j, k
-            nan_flag = -1
-            return
-         endif
-      enddo !i
-      enddo !j
-      enddo !k
-c
-      return
-      end
-c
-c
       subroutine tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,dmax,dmin)
 

@@ -315,12 +315,14 @@ c
      .          i,j,k,kk,
      .          istatus,nstatus
 c
-      real*4 pr(nz),weight,
-     .       grid1(nx,ny,nz),
-     .       grid2(nx,ny,nz),
-     .       gridn(nx,ny,nz)
+      real*4 pr(nz),weight
+
+      real,  allocatable :: 
+     .       grid1(:,:,:),
+     .       grid2(:,:,:),
+     .       gridn(:,:,:)
 c
-      integer nan
+      integer        nan_flag
       character*(*)  dir
       character*(*)  ext
       character*3    var(nz,ngrids)
@@ -374,6 +376,10 @@ c
       write(af,'(2i2.2)') ihour,imin
       print *,'Writing - ',fname9//af,'.'//ext//' (Backfill)'
 
+      allocate (grid1(nx,ny,nz)
+     &         ,grid2(nx,ny,nz)
+     &         ,gridn(nx,ny,nz))
+
       do n=1,ngrids
 
          call read_laps(time1,time1+fcst1,dir,ext,
@@ -396,27 +402,26 @@ c
 c *** Do interpolation with time for each new file.
 c
          warncnt = 0
+
+         call check_nan3(grid1,nx,ny,nz,nan_flag)
+         if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN found in grid1 array '
+            goto 99
+         endif
+c
+         call check_nan3(grid2,nx,ny,nz,nan_flag)
+         if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN found in grid1 array '
+            goto 99
+         endif
+
          do k=1,nz
          do j=1,ny
-            do i=1,nx
-               if(nan(grid1(i,j,k))+nan(grid2(i,j,k)).gt.0 .or.
-     +              grid1(i,j,k).ge.missingflag .or.
-     +              grid2(i,j,k).ge.missingflag) then
-
-                    if(warncnt.eq. 0)then
-                       print*,'Missingflag at ',i,j,k,
-     +                 grid1(i,j,k),grid2(i,j,k)
-                       warncnt = 1
-                    endif
-                    gridn(i,j,k) = missingflag
-               else
-               
-                  gridn(i,j,k)= (1.- weight)*grid1(i,j,k) +
+         do i=1,nx
+            gridn(i,j,k)= (1.- weight)*grid1(i,j,k) +
      +                               weight *grid2(i,j,k)
 
-               endif
-
-            enddo
+         enddo
          enddo
          enddo
 c
@@ -432,8 +437,10 @@ c
          endif
           
       enddo
+
+      deallocate (grid1, grid2, gridn)
 c
-      return
+99    return
       end
 
 c     subroutine erase_file(inittime,validtime,dir,ext)

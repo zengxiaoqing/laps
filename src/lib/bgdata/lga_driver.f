@@ -909,41 +909,42 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
             enddo
            enddo
 c
-           call checknan_3d(ht,nx_laps,ny_laps,nz_laps,nan_flag)
+           call check_nan3 (ht,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array ht'
             lga_status = -nf
             return
            endif
 c
-           call checknan_3d(tp,nx_laps,ny_laps,nz_laps,nan_flag)
+           call check_nan3 (tp,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array tp'
             lga_status = -nf
             return
            endif
 c
-           call checknan_3d(sh,nx_laps,ny_laps,nz_laps,nan_flag)
+           call check_nan3 (sh,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array sh'
             lga_status = -nf
             return
            endif
 c
-           call checknan_3d(uw,nx_laps,ny_laps,nz_laps,nan_flag)
+           call check_nan3 (uw,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array uw'
             lga_status = -nf
             return
            endif
 c
-           call checknan_3d(vw,nx_laps,ny_laps,nz_laps,nan_flag)
+           call check_nan3 (vw,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array vw'
             lga_status = -nf
             return
            endif
-           call checknan_3d(ww,nx_laps,ny_laps,nz_laps,nan_flag)
+c
+           call check_nan3 (ww,nx_laps,ny_laps,nz_laps,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array vw'
             lga_status = -nf
