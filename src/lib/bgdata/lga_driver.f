@@ -207,6 +207,7 @@ c
       logical llapsfua
       logical linterp
       logical smooth_fields
+      logical lgrid_missing
 
       data ntime/0/
       data ext/'lga'/
@@ -669,11 +670,13 @@ c         convert to wfo if necessary
 
  
        else   !processing the file
+
 c        endif
 c
 c ****** Vertically interpolate background data to LAPS isobaric levels.
 c
          if(linterp)then   ! this switch determines if we are going to h/v-interp or not
+
            itstatus(1)=init_timer()
 
            allocate( htvi(nx_bg,ny_bg,nz_laps),!Height (m)
@@ -792,12 +795,33 @@ c
             enddo
            endif
 c
-c ****** Horizontally interpolate background data to LAPS grid points.
+c ****** Horizontally interpolate background data to LAPS grid points. ********
 c
            itstatus(2)=init_timer()
 
            call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .        lat,lon,grx,gry,bgmodel,cmodel)
+
+c
+c ***** Check if bkgd model domain satisfies analysis domain **********
+           lgrid_missing=.false.
+
+           search_missing: do i=1,nx_laps
+                           do j=1,ny_laps
+              if(grx(i,j).eq.missingflag .or.
+     .           gry(i,j).eq.missingflag)then
+                 lgrid_missing=.true.
+                 exit search_missing
+              endif
+           enddo
+           enddo search_missing
+c
+           if(lgrid_missing)then
+
+              print*,'Error: bkgd domain size insufficient'
+
+           else
+                 
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,htvi,ht,bgmodel)
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
@@ -826,6 +850,7 @@ c
               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .           grx,gry,wwvi,ww,bgmodel)
            endif
+
            itstatus(2)=ishow_timer()
            print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
 c
@@ -880,17 +905,6 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
                      return
 
                   endif
-c-----------------------------------
-cc            if (ht(i,j,k) .ne. ht(i,j,k) .or. 
-cc     .           tp(i,j,k) .ne. tp(i,j,k) .or.
-cc     .           sh(i,j,k) .ne. sh(i,j,k) .or. 
-cc     .           uw(i,j,k) .ne. uw(i,j,k) .or.
-cc     .           vw(i,j,k) .ne. vw(i,j,k)) then
-cc               print *,'ERROR: NaN detected:',i,j,k
-cc               lga_status = -nf
-cc               return
-cc            endif
-c-----------------------------------
                enddo
             enddo
            enddo
@@ -941,7 +955,6 @@ c
            itstatus(3)=init_timer()
 
            if(bgmodel.ne.1.and.bgmodel.ne.9)then
-
            if(bgmodel.ne.3)then
 
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
@@ -1000,7 +1013,6 @@ c... of subroutine sfcbkgd_sfc. This routine uses the 2m Td and sfc_press
 c... 2D arrays directly from the background model.
 
            if(cmodel.eq.'ETA48_CONUS' .and. luse_sfc_bkgd)then
-
               call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc,td_sfc,tp_sfc
      .            ,sh_sfc,topo,pr,nx_laps, ny_laps, nz_laps, pr_sfc)
            else
@@ -1103,8 +1115,12 @@ c rotate them to the LAPS (output) domain as necessary.
            print*,'After rotation: elapsed time (sec): ',itstatus_rot
            print*
 
-         else
+          endif !if grx/gry from init_hinterp are defined
+
+         else !linterp is false
+
 c this is a grid compatible fua file
+
            ht=htbg
            tp=tpbg
            sh=shbg
@@ -1156,27 +1172,25 @@ c
            deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
      +                ,vwbg_sfc,tdbg_sfc, tpbg_sfc,mslpbg)
 
-         endif !(linterp)
+       endif !(linterp)
 c
 c Write LGA
 c ---------
-        itstatus(4)=init_timer()
-
-        bgvalid=time_bg(nf)+valid_bg(nf)
-        call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
+       itstatus(4)=init_timer()
+       bgvalid=time_bg(nf)+valid_bg(nf)
+       call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
      .bgvalid,cmodel,missingflag,pr,ht,tp,sh,uw,vw,ww,istatus)
-        if(istatus.ne.1)then
-         print*,'Error writing lga - returning to main'
-         return
-        endif
+       if(istatus.ne.1)then
+          print*,'Error writing lga - returning to main'
+          return
+       endif
 c         
 c Write LGB
 c ---------
 
         if(bgmodel.ne.7)then
- 
-         do j=1,ny_laps
-         do i=1,nx_laps
+          do j=1,ny_laps
+          do i=1,nx_laps
             if(pr_sfc(i,j) .lt. missingflag) then
                qsfc(i,j)=ssh2(pr_sfc(i,j)*0.01,
      +                   tp_sfc(i,j)-273.15,
@@ -1186,24 +1200,23 @@ c              sfcgrid(i,j,kk+4)=qsfc(i,j)
                qsfc(i,j) = missingflag
 c              sfcgrid(i,j,kk+4)=missingflag
             endif
-         enddo
-         enddo
-
-         call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
+          enddo
+          enddo
+          call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
      .,cmodel,missingflag,uw_sfc,vw_sfc,tp_sfc,qsfc,pr_sfc,mslp
      .,sh_sfc,rp_sfc,istatus)
-         if(istatus.ne.1)then
+          if(istatus.ne.1)then
             print*,'Error writing lgb - returning to main'
             return
-         endif
+          endif
 
-         itstatus(4)=ishow_timer()
-         print*,'Elapsed time - write grids (sec): ',itstatus(4)
-         print*
+          itstatus(4)=ishow_timer()
+          print*,'Elapsed time - write grids (sec): ',itstatus(4)
+          print*
 
         endif
 
-        lga_status = 1
+       lga_status = 1
 c
        endif !if the background file was properly read in in read_bgdata
 
