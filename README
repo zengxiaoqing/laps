@@ -3421,7 +3421,7 @@ Author: Steve Albers (Steve.Albers@noaa.gov)
 
 	LAPS incremental/storm total snowfall/liquid equivalent accumulation.
 <pre>
-Inputs: (from LSX, LZA processes)
+Inputs: 
       * lsx	     grid	LAPS surface data grids
       * lt1	     grid	LAPS 3-d temperature grid
         lh3          grid       LAPS 3-d Relative Humidity (normally previous)
