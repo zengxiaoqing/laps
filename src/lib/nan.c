@@ -62,7 +62,7 @@ typedef union
 #include <fp.h>
 #define IsNANorINF(X) (!finite((double) *x))
 #endif
-#if defined(alpha) || defined(i686)
+#if defined(alpha) || defined(i686) || defined(x86_64)
 #include <math.h>
 #define IsNANorINF(X) (!finite((double) *x))
 #endif

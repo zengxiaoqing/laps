@@ -429,7 +429,7 @@ C
 C	ARACODE
 C	next call is to create files on LITTLE_ENDIAN machine/correct the byte order!
 
-#if defined(ALPHA) || defined (alpha) || defined(DEC) || defined(i686)
+#if defined(ALPHA) || defined (alpha) || defined(DEC) || defined(i686) || defined (x86_64)
         foo = c_swap4(12,bds11)
 #endif
 
@@ -444,7 +444,7 @@ C
 C	ARACODE
 C	next call is to create files on LITTLE_ENDIAN machine/correct the byte order!
 
-#if defined(ALPHA) || defined (alpha) || defined(DEC) || defined(i686)
+#if defined(ALPHA) || defined (alpha) || defined(DEC) || defined(i686) || defined (x86_64)
       if(len.gt.0) then
         len_org = len
 
