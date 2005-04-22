@@ -37,12 +37,16 @@ cdis
      1              ,sh_3d              ! Input (3d specific humidity)
      1              ,topo               ! Input (terrain m)
      1              ,ni,nj,nk           ! Input (Dimensions)
-     1              ,heights_3d)        ! Output (m)
+     1              ,heights_3d         ! Output (m)
+     1              ,istatus)           ! Output
 
 !           1991        Steve Albers
 !       Nov 1991        Steve Albers    Change to Sfc P Input + Terrain
 !           1996        Steve Albers    Expanded 'esat_lut' array from -100C
 !                                       to the colder value of -120
+!
+!       For each horizontal gridpoint, the 'pres_sfc_pa' at the lowest level 
+!       must be greater than or equal to the reference (surface) pressure.
 
         real*4 esat_lut(-120:+100)
 
@@ -77,6 +81,9 @@ c       write(6,*)' Initialize and calculate first level'
         do it = -120,+100
             esat_lut(it) = esat(float(it))
         enddo
+
+        call get_r_missing_data(r_missing_data,istatus)
+        z_correction = r_missing_data
 
         do k = 1,nk
             do j = 1,nj
@@ -153,10 +160,31 @@ c           write(6,*)' Completed level',k
 
 cCCCCCCCCCCCCCCCCCC                         ISTAT = LIB$SHOW_TIMER(,,,)
 
+        ndiffp = 0
+        diffp_max = -abs(r_missing_data)
+        diffp_min = +abs(r_missing_data)
+        iwrite = 0
+
       ! Apply Constant of Integration to the heights
         do j = 1,nj
         do i = 1,ni
+            z_correction_orig = z_correction(i,j)
+            if(z_correction(i,j) .eq. r_missing_data)then
+                z_correction(i,j) = 0. ! Level 1 becomes the reference height
+                ndiffp = ndiffp + 1
+            endif
+
             heights_3d(i,j,1) = z_correction(i,j)
+
+!           Obtain diffp information
+            diffp = pres_sfc_mb(i,j) - pres_3d_mb(i,j,1) 
+            diffp_max = max(diffp,diffp_max)
+            diffp_min = min(diffp,diffp_min)
+            iwrite = iwrite + 1
+            if(iwrite .le. 10)then
+                write(6,*)i,j,pres_sfc_mb(i,j),pres_3d_mb(i,j,1)
+     1               ,diffp,diffp_max,diffp_min,ndiffp,z_correction_orig       
+            endif
         enddo ! i
         enddo ! j
 
@@ -172,7 +200,27 @@ cCCCCCCCCCCCCCCCCCC                         ISTAT = LIB$SHOW_TIMER(,,,)
 c       write(6,*)' Added in constant of integration to the heights'
 cCCCCCCCCCCCCCCCCCC                         ISTAT = LIB$SHOW_TIMER(,,,)
 
-999     return
+        write(6,*)' Range of diffp ( Psfc - P[1] ) = ',diffp_min
+     1                                                ,diffp_max,'mb'
+
+!       Return with diagnostic information
+        ngrid = ni*nj
+        if(ndiffp .eq. ngrid)then
+            write(6,*)' WARNING: surface extends outside '
+     1                ,'3D grid at all grid points'    
+            write(6,*)' Output heights are relative to level 1'
+            istatus = -1
+            return
+        elseif(ndiffp .gt. 0)then
+            write(6,*)' ERROR: surface extends outside '
+     1                ,'3D grid at some grid points',ndiffp    
+            istatus = 0
+            return
+        else
+            write(6,*)' Success in get_heights_hydrostatic'
+            istatus = 1
+            return
+        endif
 
         end
 
