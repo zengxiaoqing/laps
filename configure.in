@@ -165,6 +165,15 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     OPTIMIZE="-O2"
   fi
+  if test "$arch" = "x86_64"
+  then
+    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4 -fastsse"
+    FIXED="-Mnofree"
+    FREE="-Mfree"
+    CPP="$FC"
+    CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
+    OPTIMIZE="-O2"
+  fi
 fi  
 
 dnl  Check to see if we are running the mpif90
