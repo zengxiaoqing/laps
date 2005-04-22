@@ -99,7 +99,7 @@ c     internal variables
       istatus_8=0
       istatus_10 = 0
 
-      call s_len(path_to_gvap12, ptg_index, istatus)
+      call s_len(path_to_gvap12, ptg_index)
 
 
 c     reading goes 12
@@ -123,7 +123,7 @@ c     get most recent file in directory
       const_file = path_to_gvap12(1:ptg_index)//'20'//filefound
      1     //'.'//extension(1:extension_index)
 
-      call s_len(const_file, cf, istatus)
+      call s_len(const_file, cf)
 
       write(6,*) 'opening file ',const_file(1:cf)
       
@@ -179,7 +179,7 @@ c     get most recent file in directory
 
       istatus_10 = 1
 
-      call s_len(path_to_gvap10, ptg_index, istatus)
+      call s_len(path_to_gvap10, ptg_index)
 
       desired_ext = 'tpw'
 
@@ -195,7 +195,7 @@ c     get most recent file in directory
       const_file = path_to_gvap10(1:ptg_index)//'20'//filefound
      1     //'.'//extension(1:extension_index)
 
-      call s_len(const_file, cf, istatus)
+      call s_len(const_file, cf)
 
       write(6,*) 'opening file ',const_file(1:cf)
       

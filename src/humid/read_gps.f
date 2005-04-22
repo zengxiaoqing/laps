@@ -77,7 +77,7 @@ c     internal
 
 
 c     prep code
-      call s_len(path, ptg_index, istatus)
+      call s_len(path, ptg_index)
 
       file_name_length = 14
       desired_ext = 'nc'

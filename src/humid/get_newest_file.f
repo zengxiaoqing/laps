@@ -71,7 +71,7 @@ c     internal variables
 
 c     code
 
-      call s_len(de, dei, istatus)
+      call s_len(de, dei)
 
       
 c     get the  filenames available from get_filenames
@@ -98,7 +98,7 @@ c     get the  filenames available from get_filenames
          if (hashpoint .eq. 0) go to 15 ! try next file
          file_new = hash(hashpoint-file_name_length:hashpoint)
          ext = hash(hashpoint+1:256)
-         call s_len(ext, ei, istatus)
+         call s_len(ext, ei)
       
 c     determine i4 times of pertenant files
       
