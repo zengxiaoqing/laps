@@ -1,4 +1,4 @@
-#if defined(IBM) || defined(HP)
+#if defined(FORTRANNOUNDERSCORE)
 
 #define c_pause c_pause
 #define c_open_g c_open_g
@@ -11,7 +11,7 @@
 #define julian_date julian_date
 #define calandar_date calander_date
 
-#elif defined(SUN) || defined(SGI) || defined(i686) || defined(solaris)
+#elif defined(FORTRANUNDERSCORE)
 
 #define c_pause c_pause_
 #define c_open_g c_open_g_
@@ -26,7 +26,7 @@
 #define c_swap4 c_swap4_
 #define c_view4 c_view4_
 
-#elif defined(ALPHA) || defined(DEC) || defined(alpha)
+#elif defined(FORTRANDOUBLEUNDERSCORE)
 
 #define c_pause c_pause__
 #define c_open_g c_open_g__
