@@ -188,34 +188,34 @@ if( -e "$LAPS_DATA_ROOT/cdl\_err" ){
    system("rm -rf $LAPS_DATA_ROOT/cdl\_err");
 }
 
-# WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_LOCAL_DATA/laps_data) before removing it.
+# WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_DATA/laps_data) before removing it.
 #                 softlink data to laps_data appropriately (make "repository" data subdirectory..
 #                 otherwise: test if softlink has been broken re-establish it.
-if( defined $ENV{FXA_LOCAL_DATA} &&  $all_roots_equal eq "F" ) {
+if( defined $ENV{FXA_DATA} &&  $all_roots_equal eq "F" ) {
 
-   my $FXA_LOCAL_DATA = $ENV{FXA_LOCAL_DATA};
+   my $FXA_DATA = $ENV{FXA_DATA};
    my $LAPS_HOME = $ENV{"LAPS_HOME"};
 
 #test if first time "data" and link need to be established
-   if( ! -d "$FXA_LOCAL_DATA/laps_data"){
-       mkdir "$FXA_LOCAL_DATA/laps_data", 0777 or die "Can't make directory $FXA_LOCAL_DATA/laps_data";
-       system("cp -pr $LAPS_DATA_ROOT/static $FXA_LOCAL_DATA/laps_data/.");
-       system("cp -pr $LAPS_DATA_ROOT/cdl $FXA_LOCAL_DATA/laps_data/.");
-       system("rm -f $FXA_LOCAL_DATA/laps_data/static/lvd/goes-llij\*.lut");
+   if( ! -d "$FXA_DATA/laps_data"){
+       mkdir "$FXA_DATA/laps_data", 0777 or die "Can't make directory $FXA_DATA/laps_data";
+       system("cp -pr $LAPS_DATA_ROOT/static $FXA_DATA/laps_data/.");
+       system("cp -pr $LAPS_DATA_ROOT/cdl $FXA_DATA/laps_data/.");
+       system("rm -f $FXA_DATA/laps_data/static/lvd/goes-llij\*.lut");
        system("rm -f $LAPS_HOME/data") if( -e "$LAPS_HOME/data");
-       system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+       system("ln -s $FXA_DATA/laps_data $LAPS_HOME/data");
 
 #test if "repository" (link) exists
    }elsif(!-e "$LAPS_HOME/data" ){
-       print "re-establish softlink $LAPS_HOME/data -> $FXA_LOCAL_DATA/laps_data \n";
-       system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+       print "re-establish softlink $LAPS_HOME/data -> $FXA_DATA/laps_data \n";
+       system("ln -s $FXA_DATA/laps_data $LAPS_HOME/data");
 
 
 #test if link directory exists but link is broken
    }elsif(!-l "$LAPS_HOME/data" ){
-       print "re-establish softlink $LAPS_HOME/data -> $FXA_LOCAL_DATA/laps_data \n";
+       print "re-establish softlink $LAPS_HOME/data -> $FXA_DATA/laps_data \n";
        if(-e "$LAPS_HOME/data" ){system("rm -rf $LAPS_HOME/data");}
-       system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+       system("ln -s $FXA_DATA/laps_data $LAPS_HOME/data");
 
 #test if link exists but is the wrong name (this has happened but not sure how)
    }else{
@@ -225,11 +225,11 @@ if( defined $ENV{FXA_LOCAL_DATA} &&  $all_roots_equal eq "F" ) {
        $linkname = @filename[$#filename];
        if ($linkname ne "laps_data"){
           system("rm -rf $LAPS_HOME/data");
-          system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+          system("ln -s $FXA_DATA/laps_data $LAPS_HOME/data");
        }
    }
 
-   $LAPS_DATA_ROOT = $FXA_LOCAL_DATA."/laps";
+   $LAPS_DATA_ROOT = $FXA_DATA."/laps";
 }
 
 my $success;
@@ -579,7 +579,7 @@ if( $restore_files eq "true" ) {
 
     $success = &restorefiles("all");
 
-#   if( defined $ENV{FXA_LOCAL_DATA}){
+#   if( defined $ENV{FXA_DATA}){
 #       system("cp -p $DATAROOT/laps_data/static/$namelist $LAPS_DATA_ROOT/static/");
 #       system("cp -p $DATAROOT/laps_data/static/corners.dat $LAPS_DATA_ROOT/static/");
 #   }
@@ -625,6 +625,7 @@ exit;
 sub restorefiles
 {
     my ($type)=@_;
+    print "\n Here: restorefiles.  Type = $type\n";
     opendir(STATICDIR, "$LAPS_DATA_ROOT/static\_save");
     @filelist = grep !/^\.\.?$/,readdir STATICDIR;
     closedir STATICDIR;
@@ -672,20 +673,46 @@ sub restorefiles
                     }
            }
     }
-# commented 9-2-04 JS: We do not want to copy from "save" if nx,ny,nz have changed!
-    my $runthis = "false";
-    if($runthis eq "true"){
-       opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
-       @filelist = grep !/^\.\.?$/, readdir CDLDIR;
-       closedir CDLDIR;
-       foreach (@filelist)
-       {
-                if(/^wrfsi\.d(\d\d)/)
-                {
-                     next if($1 > $num_domains[0]);
-                     `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
-                }
-       }
+    opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
+    @filelist = grep !/^\.\.?$/, readdir CDLDIR;
+    closedir CDLDIR;
+
+    my @moad_num_domains     = &laps_tools::get_nl_value("wrfsi.nl","num_domains",$LAPS_DATA_ROOT);
+    my @moad_ratio_2_parent  = &laps_tools::get_nl_value("wrfsi.nl","ratio_to_parent",$LAPS_DATA_ROOT);
+    my @moad_domain_orig_lli = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_lli",$LAPS_DATA_ROOT);
+    my @moad_domain_orig_llj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_llj",$LAPS_DATA_ROOT);
+    my @moad_domain_orig_uri = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_uri",$LAPS_DATA_ROOT);
+    my @moad_domain_orig_urj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_urj",$LAPS_DATA_ROOT);
+    my ($deltai,$deltaj,@nest_nx,@nest_ny);
+    for ($i=0; $i<=$moad_num_domains[0]-1; $i++){
+         $deltai  = $moad_domain_orig_uri[$i]-$moad_domain_orig_lli[$i];
+         $deltaj  = $moad_domain_orig_urj[$i]-$moad_domain_orig_llj[$i];
+         $nest_nx[$i] = $deltai*$moad_ratio_2_parent[$i]+1;
+         $nest_ny[$i] = $deltaj*$moad_ratio_2_parent[$i]+1;
+    }
+
+    my (@cdllines,$nxwrfsi,$nywrfsi,$domnum);
+
+    foreach (@filelist)
+    {
+            if(/^wrfsi\.d(\d\d)/)
+            {
+               next if($1 > $moad_num_domains[0]);
+               $domnum = $1-1;
+               open(CDL,"$LAPS_DATA_ROOT/cdl/$_");
+               @cdllines=<CDL>;
+               foreach (@cdllines){
+                        if(/\s+x\s=\s(\d+)/){
+                           $nxwrfsi=$1;
+                        }
+                        if(/\s+y\s=\s(\d+)/){
+                           $nywrfsi=$1;
+                        }
+               }
+               next if($nest_nx[$domnum]==$nxwrfsi && $nest_ny[$domnum]==$nywrfsi);
+               print "Copy $LAPS_DATA_ROOT/cdl\_save/$_ to $LAPS_DATA_ROOT/cdl/$_\n";
+               `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
+            }
     }
     return 1;
 }
