@@ -79,8 +79,11 @@ if($opt_r){
 #
 my $vxx_time = 0.08;
 my $vrc_time = 0.16;
+my $web_time = 7.0;
 my(@radars) = qw(01 02 03 04 05 06 07 08 09 10 11 12 13 14 15);
+my(@webdirs) = qw(fw h5b ham llr p01 pbl pw sc td vnt xct fwi hah liw nbe pbe ptt rh sto tt wd0);
 my $radar;
+my $webdir;
 my($dir);
 
 if($min_files>0){
@@ -104,6 +107,11 @@ if($min_files>0){
         $clean_dirs{$dir} = $vrc_time;
         $dir="rdr/0$radar/vrc";
         $clean_dirs{$dir} = $vrc_time;
+    }
+
+    foreach $webdir (@webdirs){
+        $dir="www/anal2d/archive/$webdir";
+        $clean_dirs{$dir} = $web_time;
     }
 
     $clean_dirs{'lvd/goes08'} = (0.5<$hist_time)?0.5:$hist_time;;
