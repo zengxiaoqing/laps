@@ -625,7 +625,6 @@ exit;
 sub restorefiles
 {
     my ($type)=@_;
-    print "\n Here: restorefiles.  Type = $type\n";
     opendir(STATICDIR, "$LAPS_DATA_ROOT/static\_save");
     @filelist = grep !/^\.\.?$/,readdir STATICDIR;
     closedir STATICDIR;
@@ -673,46 +672,20 @@ sub restorefiles
                     }
            }
     }
-    opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
-    @filelist = grep !/^\.\.?$/, readdir CDLDIR;
-    closedir CDLDIR;
-
-    my @moad_num_domains     = &laps_tools::get_nl_value("wrfsi.nl","num_domains",$LAPS_DATA_ROOT);
-    my @moad_ratio_2_parent  = &laps_tools::get_nl_value("wrfsi.nl","ratio_to_parent",$LAPS_DATA_ROOT);
-    my @moad_domain_orig_lli = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_lli",$LAPS_DATA_ROOT);
-    my @moad_domain_orig_llj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_llj",$LAPS_DATA_ROOT);
-    my @moad_domain_orig_uri = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_uri",$LAPS_DATA_ROOT);
-    my @moad_domain_orig_urj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_urj",$LAPS_DATA_ROOT);
-    my ($deltai,$deltaj,@nest_nx,@nest_ny);
-    for ($i=0; $i<=$moad_num_domains[0]-1; $i++){
-         $deltai  = $moad_domain_orig_uri[$i]-$moad_domain_orig_lli[$i];
-         $deltaj  = $moad_domain_orig_urj[$i]-$moad_domain_orig_llj[$i];
-         $nest_nx[$i] = $deltai*$moad_ratio_2_parent[$i]+1;
-         $nest_ny[$i] = $deltaj*$moad_ratio_2_parent[$i]+1;
-    }
-
-    my (@cdllines,$nxwrfsi,$nywrfsi,$domnum);
-
-    foreach (@filelist)
-    {
-            if(/^wrfsi\.d(\d\d)/)
-            {
-               next if($1 > $moad_num_domains[0]);
-               $domnum = $1-1;
-               open(CDL,"$LAPS_DATA_ROOT/cdl/$_");
-               @cdllines=<CDL>;
-               foreach (@cdllines){
-                        if(/\s+x\s=\s(\d+)/){
-                           $nxwrfsi=$1;
-                        }
-                        if(/\s+y\s=\s(\d+)/){
-                           $nywrfsi=$1;
-                        }
-               }
-               next if($nest_nx[$domnum]==$nxwrfsi && $nest_ny[$domnum]==$nywrfsi);
-               print "Copy $LAPS_DATA_ROOT/cdl\_save/$_ to $LAPS_DATA_ROOT/cdl/$_\n";
-               `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
-            }
+# commented 9-2-04 JS: We do not want to copy from "save" if nx,ny,nz have changed!
+    my $runthis = "false";
+    if($runthis eq "true"){
+       opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
+       @filelist = grep !/^\.\.?$/, readdir CDLDIR;
+       closedir CDLDIR;
+       foreach (@filelist)
+       {
+                if(/^wrfsi\.d(\d\d)/)
+                {
+                     next if($1 > $num_domains[0]);
+                     `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
+                }
+       }
     }
     return 1;
 }
