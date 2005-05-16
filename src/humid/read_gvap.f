@@ -82,6 +82,7 @@ c     internal variables
 
       integer i
       real dummy
+      character*8 adummy
       integer ptg_index
       character*512 const_file
       integer cf
@@ -137,7 +138,7 @@ c     get most recent file in directory
      1           idummy,idummy,wt(i), w1(i),w2(i),w3(i),idummy, 
      1           gvap_p(i)
          elseif (IHOP_flag .eq. 1) then
-            read(22,*,end=665,err=665) idummy,idummy,lat(i),lon(i),
+            read(22,*,end=665,err=665) adummy,idummy,lat(i),lon(i),
      1           wt(i), w1(i),w2(i),w3(i),dummy,
      1           gvap_p(i)   
          endif  ! IHOP special format
