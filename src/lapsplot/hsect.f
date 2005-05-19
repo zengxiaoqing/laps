@@ -116,7 +116,7 @@ cdis
         character*4 c_type, c_type_i
         character*3 cstatic
         character*3 c_bkg
-        character c19_label*19,c33_label*33,c_label*100
+        character c19_label*19,c_label*100
 
 !       integer*4 ity,ily,istatus
 !       data ity/35/,ily/1010/
@@ -777,10 +777,10 @@ c       include 'satellite_dims_lvd.inc'
 
             if(c_field(1:2) .eq. 'di')then
                 c19_label = ' Isogons   (deg)   '
-                call mklabel33(k_mb,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c_label)
 
                 call plot_cont(dir,1e0,clow,chigh,30.,asc9_tim_3dw,
-     1              namelist_parms,plot_parms,c33_label,i_overlay,
+     1              namelist_parms,plot_parms,c_label,i_overlay,
      1              c_display,lat,lon,jdot,       
      1              NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -790,7 +790,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = c19_label(1:18)//'b'
                 endif
 
-                call mklabel33(k_mb,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c_label)
 
                 if(k_level .gt. 0 .and. k_mb .lt. 500)then
                     cint = 10.
@@ -808,7 +808,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call plot_field_2d(i4time_3dw,c_field,spds,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
@@ -827,7 +827,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' U  (anal)      M/S'
                 endif
 
-                call mklabel33(k_mb,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c_label)
 
                 scale = 1.0
                 call contour_settings(u_2d,NX_L,NY_L,clow,chigh,cint
@@ -835,7 +835,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call plot_field_2d(i4time_3dw,c_field,u_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -856,7 +856,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' V  (anal)      M/S'
                 endif
 
-                call mklabel33(k_mb,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c_label)
 
                 scale = 1.0
                 call contour_settings(v_2d,NX_L,NY_L,clow,chigh,cint
@@ -865,7 +865,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call plot_field_2d(i4time_3dw,c_field,v_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -948,7 +948,7 @@ c       include 'satellite_dims_lvd.inc'
      1                                  ,ext,var_2d,units_2d,comment_2d
      1                                  ,NX_L,NY_L,w_2d,k_mb,istatus)
                     call mklabel33(k_mb
-     1                     ,' Cloud Omega ubar/s',c33_label)       
+     1                     ,' Cloud Omega ubar/s',c_label)       
 
                     i4_valid = i4time_nearest
 
@@ -960,7 +960,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,w_2d,k_mb,istatus)
                     call mklabel33(k_mb
-     1                     ,' Anlyz Omega ubar/s',c33_label)       
+     1                     ,' Anlyz Omega ubar/s',c_label)       
 
                     i4_valid = i4time_nearest
 
@@ -975,7 +975,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ,units_2d,comment_2d,NX_L,NY_L,w_2d,k_mb,istatus)       
 
                     call mklabel33(k_mb
-     1                     ,' Balnc Omega ubar/s',c33_label)       
+     1                     ,' Balnc Omega ubar/s',c_label)       
 
                     i4_valid = i4time_3dw
 
@@ -1001,7 +1001,7 @@ c       include 'satellite_dims_lvd.inc'
      1             ,COMMENT_2d,w_2d,ISTATUS)
 
                    call mklabel33(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' OM ubar/s',c33_label)
+     1                         //' '//ext(1:3)//' OM ubar/s',c_label)
                 endif
 
                 do j = 1,NY_L
@@ -1024,7 +1024,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call plot_field_2d(i4_valid,c_type_i,w_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'omega')       
 
@@ -1050,7 +1050,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' DIV  (anal) 1e-5/s'
                 endif
 
-                call mklabel33(k_mb,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c_label)
 
                 scale = 1e-5
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
@@ -1058,7 +1058,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call plot_field_2d(i4time_3dw,c_type_i,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -1078,7 +1078,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' VORT (anal) 1e-5/s'
                 endif
 
-                call mklabel33(k_mb,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c_label)
 
                 scale = 1e-5
                 
@@ -1091,7 +1091,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call plot_field_2d(i4time_3dw,c_type_i,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
@@ -1102,7 +1102,7 @@ c       include 'satellite_dims_lvd.inc'
                 call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
                 call cpt_advection(field_2d,u_2d,v_2d,dx,dy,NX_L,NY_L
      1                            ,field2_2d)
-                call mklabel33(k_mb,' VORT ADV 1e-9/s**2',c33_label)
+                call mklabel33(k_mb,' VORT ADV 1e-9/s**2',c_label)
 
                 scale = 1e-9
                 call contour_settings(field2_2d,NX_L,NY_L
@@ -1110,7 +1110,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call plot_cont(field2_2d,scale,clow,chigh,cint,
      1               asc9_tim_3dw,namelist_parms,plot_parms,
-     1               c33_label,i_overlay,c_display,lat,lon,jdot,
+     1               c_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             endif
@@ -1251,14 +1251,14 @@ c       include 'satellite_dims_lvd.inc'
 
             if(len_units .gt. 0)then
                 if(units_2d(1:len_units) .eq. 'M')then
-                    c33_label = comment_2d(1:len_comment)
+                    c_label = comment_2d(1:len_comment)
      1                   //'   ('//units_2d(1:len_units)//'-MSL)    '
                 else
-                    c33_label = comment_2d(1:len_comment)
+                    c_label = comment_2d(1:len_comment)
      1                      //'   ('//units_2d(1:len_units)//')    '
                 endif
             else
-                c33_label = comment_2d(1:len_comment)
+                c_label = comment_2d(1:len_comment)
             endif
 
             scale = 1.
@@ -1267,7 +1267,7 @@ c       include 'satellite_dims_lvd.inc'
 
             call plot_cont(field_2d,scale,clow,chigh,cint
      1                    ,asc9_tim_t,namelist_parms,plot_parms
-     1                    ,c33_label,i_overlay,c_display,lat,lon,jdot
+     1                    ,c_label,i_overlay,c_display,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'tw')then
@@ -1357,11 +1357,11 @@ c       include 'satellite_dims_lvd.inc'
             if(c_type(2:2) .ne. 's' )iflag = 2
             if(c_type(1:2) .eq. 'mw')iflag = 0 ! MesoWx Points Locations
 
-            c33_label = '                                 '
+            c_label = '                                 '
 
             igrid = 0
 
-            call plot_stations(a9time,c33_label,c_type,i_overlay
+            call plot_stations(a9time,c_label,c_type,i_overlay
      1                        ,namelist_parms,plot_parms
      1                        ,c_display,lat,lon,c_file,iflag
      1                        ,NX_L,NY_L,NZ_L,laps_cycle_time,zoom)
@@ -1398,18 +1398,18 @@ c       include 'satellite_dims_lvd.inc'
 
             if(abs_max .gt. 1.)then ! new way
                 scale = 1.
-                c33_label = 'Storm Rel Helicity m**2/s**2     '           
+                c_label = 'Storm Rel Helicity m**2/s**2     '           
                 cint = 40.
             else                    ! old way
                 scale = 1e-4
-                c33_label = 'Helicity  sfc-500 1e-4m/s**2     '          
+                c_label = 'Helicity  sfc-500 1e-4m/s**2     '          
                 cint = 5.
             endif
 
             scale = 1.
             call plot_field_2d(i4time_3dw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -1593,7 +1593,7 @@ c
              endif
 
              if(ilvd.gt.1)then
-              c33_label='B-Temps (C): '//c_sat_id(k)//'/'//var_2d
+              c_label='B-Temps (C): '//c_sat_id(k)//'/'//var_2d
               vasmx=-255.
               vasmn=255.
               do i = 1,NX_L
@@ -1612,16 +1612,16 @@ c
               scale_l = +40.          ! for image plots
               scale_h = -50.          ! for image plots
              elseif(var_2d.eq.'ALB')then
-              c33_label='Albedo '//c_sat_id(k)
+              c_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
               cloud_albedo = .4485300
               scale_h = cloud_albedo  ! for image plots
              elseif(var_2d.eq.'SVS')then
-              c33_label='VIS counts (raw) - '//c_sat_id(k)
+              c_label='VIS counts (raw) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 100.          ! for image plots
              else
-              c33_label='VIS counts (normalized) - '//c_sat_id(k)
+              c_label='VIS counts (normalized) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 230.          ! for image plots
              endif
@@ -1633,7 +1633,7 @@ c
      1                ,n_image,scale,'hsect',plot_parms,namelist_parms)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call setusv_dum(2hIN,7)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
+                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                  call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -1655,7 +1655,7 @@ c
                  endif
 
                  call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1             namelist_parms,plot_parms,c33_label,
+     1             namelist_parms,plot_parms,c_label,
      1             i_overlay,c_display,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -1684,7 +1684,7 @@ c
             write(6,*)' Cant find ALB Analysis'
             goto1200
          endif
-         c33_label = 'VIS Cld Frac (tenths) '//c_sat_id(k)
+         c_label = 'VIS Cld Frac (tenths) '//c_sat_id(k)
          clow  =  -6.
          chigh = +16.
          cint = 2.0
@@ -1700,7 +1700,7 @@ c
          call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
          call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1        namelist_parms,plot_parms,c33_label,i_overlay,
+     1        namelist_parms,plot_parms,c_label,i_overlay,
      1        c_display,lat,lon,jdot,       
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -1714,7 +1714,7 @@ c
             write(6,*)' Cant find VAS/S8A Analysis'
             goto1200
          endif
-         c33_label = 'SFC T - Band 8  (K)  -'//c_sat_id(k)
+         c_label = 'SFC T - Band 8  (K)  -'//c_sat_id(k)
          clow = -8.0
          chigh = 20.
          cint = 4.
@@ -1740,7 +1740,7 @@ c
          call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
          call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1       namelist_parms,plot_parms,c33_label,i_overlay,c_display,
+     1       namelist_parms,plot_parms,c_label,i_overlay,c_display,
      1       lat,lon,jdot,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
 
@@ -1779,10 +1779,10 @@ c
           if(cchan(1:1).eq.' ')cchan(1:1)='0'
           if(cchan(2:2).eq.' ')cchan(2:2)='0'
 
-          c33_label = 'Polar Orbiter Channel '//cchan//' deg C'
+          c_label = 'Polar Orbiter Channel '//cchan//' deg C'
 
           call plot_cont(vas,1e0,clow,chigh,cint,asc9_tim,
-     1       namelist_parms,plot_parms,c33_label,i_overlay,c_display,
+     1       namelist_parms,plot_parms,c_label,i_overlay,c_display,
      1       lat,lon,jdot,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
           goto 21
@@ -1838,7 +1838,7 @@ c
 
             endif
 
-            c33_label='LCV '//comment_2d(1:24)
+            c_label='LCV '//comment_2d(1:24)
 
             if(var_2d_in .eq. 'S8A' .or. var_2d_in .eq. 'S3A')then
               do i = 1,NX_L
@@ -1853,20 +1853,20 @@ c
               scale_l = +40.          ! for image plots
               scale_h = -50.          ! for image plots
             elseif(var_2d_in.eq.'ALB')then
-!             c33_label='Albedo '//c_sat_id(k)
+!             c_label='Albedo '//c_sat_id(k)
               scale_l = 0.00          ! for image plots
               cloud_albedo = .4485300
               scale_h = cloud_albedo  ! for image plots
             elseif(var_2d_in.eq.'SVS')then
-              c33_label='VIS counts (raw) - '//c_sat_id(k)
+              c_label='VIS counts (raw) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 100.          ! for image plots
             elseif(var_2d_in.eq.'D39')then
-              c33_label='3.9u - 11u difference  (K)'
+              c_label='3.9u - 11u difference  (K)'
               scale_l = -10           ! for image plots
               scale_h = +10.          ! for image plots
             else
-!             c33_label='VIS counts (normalized) - '//c_sat_id(k)
+!             c_label='VIS counts (normalized) - '//c_sat_id(k)
               scale_l = 30.           ! for image plots
               scale_h = 230.          ! for image plots
             endif
@@ -1881,7 +1881,7 @@ c
      1                     ,namelist_parms)
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -1903,7 +1903,7 @@ c
                 endif
 
                 call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1             namelist_parms,plot_parms,c33_label,i_overlay,
+     1             namelist_parms,plot_parms,c_label,i_overlay,
      1             c_display,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2156,17 +2156,17 @@ c
      1                                  ,NX_L,NY_L,radar_array,0
      1                                  ,istatus)
 
-                    c33_label = 'Col. Max Reflectivity (lmr) '    
+                    c_label = 'Col. Max Reflectivity (lmr) '    
 
                 elseif(c_type .eq. 'ra')then
                     radar_array = field_2d
-                    c33_label = 'Col. Max Ref (interim-vrc)  '    
+                    c_label = 'Col. Max Ref (interim-vrc)  '    
 
                 else
                     write(6,*)' Calling get_max_ref'
                     call get_max_reflect(grid_ra_ref,NX_L,NY_L,NZ_L
      1                                  ,r_missing_data,radar_array)
-                    c33_label = 'Col. Max Ref (intermediate) '    
+                    c_label = 'Col. Max Ref (intermediate) '    
 
                 endif
 
@@ -2175,7 +2175,7 @@ c
 !               Display R field
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(radar_array,1e0,0.,chigh,cint_ref,
-     1               asc9_tim_r,namelist_parms,plot_parms,c33_label,
+     1               asc9_tim_r,namelist_parms,plot_parms,c_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
                 else
@@ -2184,7 +2184,7 @@ c
      1                         ,namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
-                    call write_label_lplot(NX_L,NY_L,c33_label
+                    call write_label_lplot(NX_L,NY_L,c_label
      1                                    ,asc9_tim_r,plot_parms
      1                                    ,namelist_parms,i_overlay
      1                                    ,'hsect')       
@@ -2209,11 +2209,11 @@ c
 
                     call make_fnam_lp(i4time_lr,asc9_tim_r,istatus)
 
-                    c33_label = 'Low LVL Ref   (Anlyzd/DBZ)  '
+                    c_label = 'Low LVL Ref   (Anlyzd/DBZ)  '
 
                 elseif(c_type .eq. 'ra')then
                     radar_array = field_2d
-                    c33_label = 'Low Lvl Ref  (interim-vrc)  '    
+                    c_label = 'Low Lvl Ref  (interim-vrc)  '    
 
                 else
                     write(6,*)' error: unknown c_type'
@@ -2225,7 +2225,7 @@ c
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(radar_array,1e0,0.,chigh,cint_ref
      1                        ,asc9_tim_r
-     1                        ,namelist_parms,plot_parms,c33_label
+     1                        ,namelist_parms,plot_parms,c_label
      1                        ,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data
      1                        ,laps_cycle_time)
@@ -2236,7 +2236,7 @@ c
      1                         ,namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
-                    call write_label_lplot(NX_L,NY_L,c33_label
+                    call write_label_lplot(NX_L,NY_L,c_label
      1                                    ,asc9_tim_r,plot_parms
      1                                    ,namelist_parms
      1                                    ,i_overlay,'hsect')       
@@ -2254,13 +2254,13 @@ c
                     c19_label = '  Reflectivity Anl '
                 endif
 
-                call mklabel33(k_mb,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c_label)
 
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(grid_ra_ref(1,1,k_level,1)
      1                        ,1e0,0.,chigh
      1                        ,cint_ref,asc9_tim_r,namelist_parms
-     1                        ,plot_parms,c33_label,i_overlay
+     1                        ,plot_parms,c_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L        
      1                        ,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2270,7 +2270,7 @@ c
      1                         ,'hsect',plot_parms,namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
-                    call write_label_lplot(NX_L,NY_L,c33_label
+                    call write_label_lplot(NX_L,NY_L,c_label
      1                                    ,asc9_tim_r,plot_parms
      1                                    ,namelist_parms
      1                                    ,i_overlay,'hsect')       
@@ -2280,7 +2280,7 @@ c
                 endif
 
             elseif(c_field .eq. 've')then
-                call mklabel33(k_mb,'  Radial Vel  (kt) ',c33_label)
+                call mklabel33(k_mb,'  Radial Vel  (kt) ',c_label)
 
                 write(6,2031)
 2031            format('         Enter Radar # (of ones available)  '
@@ -2292,13 +2292,13 @@ c
 
                 call plot_cont(grid_ra_vel(1,1,k_level,i_radar),.518
      1                        ,clow,chigh,5.,asc9_tim_r,namelist_parms       
-     1                        ,plot_parms,c33_label
+     1                        ,plot_parms,c_label
      1                        ,i_overlay,c_display,lat,lon        
      1                        ,jdot,NX_L,NY_L,r_missing_data
      1                        ,laps_cycle_time)                          
 
             elseif(c_field .eq. 'vi')then
-                call mklabel33(k_mb,'  Radial Vel  (kt) ',c33_label)
+                call mklabel33(k_mb,'  Radial Vel  (kt) ',c_label)
 
                 write(6,*)'               # of radars available = '
      1                    ,n_radars
@@ -2333,7 +2333,7 @@ c
 
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label
+                call write_label_lplot(NX_L,NY_L,c_label
      1                                ,asc9_tim_r,plot_parms
      1                                ,namelist_parms
      1                                ,i_overlay,'hsect')       
@@ -2467,11 +2467,11 @@ c
             call zs(radar_array,temp_2d,td_2d,pres_2d,tw_sfc_k,NX_L,NY_L
      1                                                  ,snow_2d)
 
-            c33_label = 'Snowfall Rate         in/hr      '
+            c_label = 'Snowfall Rate         in/hr      '
             scale = 1. / (10. * (100./2.54) * 3600.) ! DENOM = (IN snow/HR) / (M/S)
 
             call plot_cont(snow_2d,scale,0.,0.,-0.1,asc9_tim_r,
-     1          namelist_parms,plot_parms,c33_label,  
+     1          namelist_parms,plot_parms,c_label,  
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2525,15 +2525,15 @@ c
 2017            format(i4,' Hr')
                 if(c_type(1:2) .eq. 'sa')then
                     if(c_units_type .eq. 'english')then
-                        c33_label = 'Stm Tot Snow Acc (in)'//c7_string
+                        c_label = 'Stm Tot Snow Acc (in)'//c7_string
                     else ! metric
-                        c33_label = 'Stm Tot Snow Acc (mm)'//c7_string
+                        c_label = 'Stm Tot Snow Acc (mm)'//c7_string
                     endif
                 else
                     if(c_units_type .eq. 'english')then
-                        c33_label = 'Stm Tot Prcp Acc (in)'//c7_string
+                        c_label = 'Stm Tot Prcp Acc (in)'//c7_string
                     else ! metric
-                        c33_label = 'Stm Tot Prcp Acc (mm)'//c7_string
+                        c_label = 'Stm Tot Prcp Acc (mm)'//c7_string
                     endif
                 endif
 
@@ -2652,15 +2652,15 @@ c
 
                 if(c_type(1:2) .eq. 'sa')then
                     if(c_units_type .eq. 'english')then
-                        c33_label = c9_string//' Snow Accum  (in)'      
+                        c_label = c9_string//' Snow Accum  (in)'      
                     else ! metric
-                        c33_label = c9_string//' Snow Accum  (mm)'      
+                        c_label = c9_string//' Snow Accum  (mm)'      
                     endif
                 else
                     if(c_units_type .eq. 'english')then
-                        c33_label = c9_string//' Prcp Accum  (in)'
+                        c_label = c9_string//' Prcp Accum  (in)'
                     else ! metric
-                        c33_label = c9_string//' Prcp Accum  (mm)'
+                        c_label = c9_string//' Prcp Accum  (mm)'
                     endif
                 endif
 
@@ -2739,7 +2739,7 @@ c
 
             call plot_field_2d(i4time_accum,c_type,accum_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'acc')
 
@@ -2770,7 +2770,7 @@ c
             write(c9_string,2029)r_hours
 !2029        format(f5.1,' Hr ')
 
-            c33_label = c9_string//' Reflctvty History      '
+            c_label = c9_string//' Reflctvty History      '
 
             if(istatus .ne. 1)goto1200
 
@@ -2789,7 +2789,7 @@ c
 
             call plot_cont(radar_array,scale,
      1          0.,80.,cint_ref,asc9_tim_r,namelist_parms,plot_parms,
-     1          c33_label,i_overlay,c_display,lat,lon,jdot,
+     1          c_label,i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif( c_type_i .eq. 't'  .or. c_type_i .eq. 'pt'
@@ -2805,7 +2805,7 @@ c
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
                 call mklabel33(k_mb,'  Potential Temp  K'
-     1                        ,c33_label)      
+     1                        ,c_label)      
 
                 do i = 1,NX_L
                 do j = 1,NY_L
@@ -2819,7 +2819,7 @@ c
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
                 call mklabel33(k_mb,'  Balanced Theta  K'
-     1                                 ,c33_label)   
+     1                                 ,c_label)   
 
                 do i = 1,NX_L
                 do j = 1,NY_L
@@ -2838,7 +2838,7 @@ c
                 enddo ! i
 
                 call mklabel33(k_mb,' Temperature      C'
-     1                        ,c33_label)       
+     1                        ,c_label)       
 
             elseif(c_type_i .eq. 'bt')then
                 var_2d = 'T3'
@@ -2858,7 +2858,7 @@ c
                 enddo ! i
 
                 call mklabel33(k_mb,' Temp (Bal)       C'
-     1                        ,c33_label)
+     1                        ,c_label)
 
             endif
 
@@ -2884,7 +2884,7 @@ c
             call plot_field_2d(i4time_nearest,c_type
      1                        ,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -2914,7 +2914,7 @@ c
                 return
             endif
 
-            write(c33_label,1516)nint(temp_in_c)
+            write(c_label,1516)nint(temp_in_c)
 1516        format('Height of ',i3,'C Lvl (hft MSL)     ')
 
             do j = 1,NY_L
@@ -2946,7 +2946,7 @@ c
             call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
             call plot_cont(height_2d,1e2,clow,chigh,cint,asc9_tim_t,
-     1       namelist_parms,plot_parms,c33_label,i_overlay,c_display,
+     1       namelist_parms,plot_parms,c_label,i_overlay,c_display,
      1       lat,lon,jdot,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .  eq. 'la' .or. c_type   .eq. 'lj' .or.
@@ -2964,46 +2964,46 @@ c
                 iflag_slwc = 1 ! Returns Adiabatic LWC
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
-     1          ' Adiabt LWC  g/m^3 ',c33_label)
+     1          ' Adiabt LWC  g/m^3 ',c_label)
                 else
-                    c33_label = 'Maximum Adiabatic LWC g/m^3      '
+                    c_label = 'Maximum Adiabatic LWC g/m^3      '
                 endif
 
             elseif(c_type .eq. 'lj')then
                 iflag_slwc = 2 ! Returns Adjusted LWC
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
-     1          ' Adjstd LWC  g/m^3 ',c33_label)
+     1          ' Adjstd LWC  g/m^3 ',c_label)
                 else
-                    c33_label = 'Maximum Adjusted  LWC g/m^3      '
+                    c_label = 'Maximum Adjusted  LWC g/m^3      '
                 endif
 
             elseif(c_type .eq. 'sj')then
                 iflag_slwc = 3 ! Returns Adjusted SLWC
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
-     1          ' Adjstd SLWC g/m^3 ',c33_label)
+     1          ' Adjstd SLWC g/m^3 ',c_label)
                 else
-                    c33_label = 'Maximum Adjusted SLWC g/m^3      '
+                    c_label = 'Maximum Adjusted SLWC g/m^3      '
                 endif
 
             elseif(c_type_i .eq. 'ls')then
                 iflag_slwc = 13 ! Returns New Smith - Feddes LWC
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
-     1                             ' Cloud LWC g/m^3   ',c33_label)
+     1                             ' Cloud LWC g/m^3   ',c_label)
                 else
-                    c33_label = 'Column Max LWC        g/m^3      '
+                    c_label = 'Column Max LWC        g/m^3      '
                 endif
 
             elseif(c_type_i .eq. 'ci')then
                 iflag_slwc = 13 ! Returns Cloud Ice
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
-!    1                             ' Smt-Fed ICE g/m^3 ',c33_label)
-     1                             ' Cloud ICE g/m^3   ',c33_label)
+!    1                             ' Smt-Fed ICE g/m^3 ',c_label)
+     1                             ' Cloud ICE g/m^3   ',c_label)
                 else
-                    c33_label = 'Max Smith-Feddes  ICE g/m^3      '
+                    c_label = 'Max Smith-Feddes  ICE g/m^3      '
                 endif
 
             endif
@@ -3062,7 +3062,7 @@ c
                     write(6,*)' Could not read forecast field'       
                     goto1200
                 endif
-                c33_label(11:33) = ' FUA Cld '//var_2d(1:4)
+                c_label(11:33) = ' FUA Cld '//var_2d(1:4)
      1                             //fcst_hhmm//' g/m^3'
 
                 i4time_cloud = i4_valid
@@ -3085,7 +3085,7 @@ c
                    call plot_field_2d(i4time_lwc,c_type
      1                        ,field_2d,1e-3
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
@@ -3095,7 +3095,7 @@ c
                    call plot_field_2d(i4time_lwc,c_type
      1                        ,field_2d,1e-3
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
@@ -3123,7 +3123,7 @@ c
 
                call plot_cont(field_2d,1e-3,
      1                        clow,chigh,cint,asc9_tim_t,
-     1                        namelist_parms,plot_parms,c33_label,
+     1                        namelist_parms,plot_parms,c_label,
      1                        i_overlay,c_display,lat,lon,
      1                        jdot,NX_L,NY_L,r_missing_data,
      1                        laps_cycle_time)
@@ -3140,9 +3140,9 @@ c
             if(c_type .eq. 'mv')then
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb
-     1                            ,'     MVD     m^-6  ',c33_label)     
+     1                            ,'     MVD     m^-6  ',c_label)     
                 else
-                    c33_label = 'Mean Volume Diameter  m^-6       '
+                    c_label = 'Mean Volume Diameter  m^-6       '
                 endif
 
                 write(6,*)' Getting pregenerated LMD file'
@@ -3152,9 +3152,9 @@ c
             elseif(c_type .eq. 'ic')then
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,'   Icing Index     '
-     1                            ,c33_label)
+     1                            ,c_label)
                 else
-                    c33_label = '        LAPS Icing Index         '
+                    c_label = '        LAPS Icing Index         '
                 endif
 
                 write(6,*)' Getting pregenerated LRP file'
@@ -3192,13 +3192,13 @@ c
                        call subcon(mvd_2d,1e-30,field_2d,NX_L,NY_L)
                        call plot_cont(field_2d,0.9999e-6,
      1                   clow,chigh,cint,asc9_tim_t,namelist_parms,
-     1                   plot_parms,c33_label,
+     1                   plot_parms,c_label,
      1                   i_overlay,c_display,lat,lon,jdot,
      1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
                    else
                        call plot_cont(field_3d(1,1,k_level),0.9999e-6, ! mvd_3d
      1                   clow,chigh,cint,asc9_tim_t,
-     1                   namelist_parms,plot_parms,c33_label,
+     1                   namelist_parms,plot_parms,c_label,
      1                   i_overlay,c_display,lat,lon,jdot,
      1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
                    endif
@@ -3216,7 +3216,7 @@ c
 
                    call plot_cont(column_max,0.9999e-6,
      1               clow,chigh,cint,asc9_tim_t,namelist_parms,
-     1               plot_parms,c33_label,
+     1               plot_parms,c_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3231,7 +3231,7 @@ c
                    if(.true.)then
                        call plot_cont(field_2d,1e0,clow,chigh,cint
      1                      ,asc9_tim_t
-     1                      ,namelist_parms,plot_parms,c33_label
+     1                      ,namelist_parms,plot_parms,c_label
      1                      ,i_overlay,c_display     
      1                      ,lat,lon,jdot
      1                      ,NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -3253,7 +3253,7 @@ c
 
                    call plot_cont(column_max,1e0,
      1                  clow,chigh,cint,asc9_tim_t,namelist_parms,
-     1                  plot_parms,c33_label,
+     1                  plot_parms,c_label,
      1                  i_overlay,c_display,lat,lon,jdot,
      1                  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3286,12 +3286,12 @@ c
                     ext = 'lty'
                     var_2d = 'CTY'
                     call mklabel33
-     1                    (k_mb,'     Cloud Type    ',c33_label)
+     1                    (k_mb,'     Cloud Type    ',c_label)
 
                 else                   ! Read from 2-D cloud type
                     ext = 'lct'
                     var_2d = 'SCT'
-                    c33_label = '      LAPS    2-D Cloud Type     '
+                    c_label = '      LAPS    2-D Cloud Type     '
 
                 endif
 
@@ -3316,7 +3316,7 @@ c
 
                 call plot_cldpcp_type(i_array
      1                ,asc9_tim,namelist_parms
-     1                ,c33_label,c_type,k,i_overlay,c_display
+     1                ,c_label,c_type,k,i_overlay,c_display
      1                ,lat,lon,idum1_array
      1                ,NX_L,NY_L,laps_cycle_time,jdot)
 
@@ -3334,13 +3334,13 @@ c
             k_mb = k_level
 
             if(k_level .gt. 0)then
-                call mklabel33(k_mb,'    Precip Type    ',c33_label)
+                call mklabel33(k_mb,'    Precip Type    ',c_label)
                 ndim=3
             elseif(k_level .eq.  0)then
-                c33_label = 'Sfc Precip Type   (nothresh)     '
+                c_label = 'Sfc Precip Type   (nothresh)     '
                 ndim=2
             elseif(k_level .eq. -1)then
-                c33_label = 'Sfc Precip Type   (thresh)       '
+                c_label = 'Sfc Precip Type   (thresh)       '
                 ndim=2
             endif
 
@@ -3393,7 +3393,7 @@ c
                         write(6,*)' Could not read forecast field'       
                         goto1200
                     endif
-                    c33_label(11:33) = ' FUA     '//var_2d(1:4)
+                    c_label(11:33) = ' FUA     '//var_2d(1:4)
      1                                 //fcst_hhmm//'      '
 
                 else
@@ -3437,7 +3437,7 @@ c
 
             call plot_cldpcp_type(i_array
      1             ,asc9_tim,namelist_parms
-     1             ,c33_label,c_type,k,i_overlay,c_display  
+     1             ,c_label,c_type,k,i_overlay,c_display  
      1             ,lat,lon,idum1_array
      1             ,NX_L,NY_L,laps_cycle_time,jdot)
 
@@ -3451,7 +3451,7 @@ c
      1                         NX_L,NY_L,column_max,0,istatus)
 
           call make_fnam_lp(i4time_cloud,asc9_tim_t,istatus)
-          c33_label = 'Integrated LWC         (mm)      '
+          c_label = 'Integrated LWC         (mm)      '
 
           clow = 0.
           chigh = +0.
@@ -3459,7 +3459,7 @@ c
 
           call plot_cont(column_max,1e-3,
      1          clow,chigh,cint,asc9_tim_t,namelist_parms,plot_parms,
-     1          c33_label,i_overlay,c_display,lat,lon,jdot,
+     1          c_label,i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type(1:2) .eq. 'pe' .or. c_type(1:2) .eq. 'ne')then        
@@ -3491,7 +3491,7 @@ c
               call condition_cape(NX_L,NY_L,c_type,r_missing_data
      1                           ,field_2d)
 
-              c33_label = 'CAPE                (J/KG)       '
+              c_label = 'CAPE                (J/KG)       '
               clow = 0.
               chigh = 7000.
               cint = +500.
@@ -3521,7 +3521,7 @@ c
               enddo ! j
               enddo ! i
 
-              c33_label = 'CIN                 (J/KG)       '
+              c_label = 'CIN                 (J/KG)       '
               clow = -500  !   0.
               chigh = 50.  !  50.
               cint =  50.  ! -10.
@@ -3534,7 +3534,7 @@ c
 !    1                               ,clow,chigh,cint,zoom,density,1.)       
 
               call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t       
-     1           ,namelist_parms,plot_parms,c33_label,i_overlay
+     1           ,namelist_parms,plot_parms,c_label,i_overlay
      1           ,c_display,lat,lon,jdot
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3544,7 +3544,7 @@ c
      1                   ,namelist_parms)    
               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
               call setusv_dum(2hIN,7)
-              call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+              call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                              ,plot_parms,namelist_parms,i_overlay       
      1                              ,'hsect')
               call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -3583,7 +3583,7 @@ c
      1             ,ext,var_2d,units_2d,comment_2d
      1             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-                 call mklabel33(k_mb,' Spec Hum  (Bal) ',c33_label)
+                 call mklabel33(k_mb,' Spec Hum  (Bal) ',c_label)
               else
                  call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                             ,i4time_heights
@@ -3594,7 +3594,7 @@ c                call get_laps_3dgrid
 c    1           (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
 c    1          ,ext,var_2d,units_2d,comment_2d
 c    1                                  ,field_3d,istatus) ! q_3d
-                 call mklabel33(k_mb,' LAPS Spec Hum x1e3',c33_label)
+                 call mklabel33(k_mb,' LAPS Spec Hum x1e3',c_label)
               endif   
 
               if(istatus.ne.1 .and. istatus.ne.-1)then
@@ -3611,7 +3611,7 @@ c                cint = -1.
 
                  call plot_cont(field_2d,scale
      1               ,clow,chigh,cint,asc9_tim_t
-     1               ,namelist_parms,plot_parms,c33_label      
+     1               ,namelist_parms,plot_parms,c_label      
      1               ,i_overlay,c_display,lat,lon,jdot
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -3623,7 +3623,7 @@ c                cint = -1.
                  var_2d = 'RHL'
                  write(6,*)' Reading rhl / ',var_2d
                  call mklabel33(k_mb,' LAPS RH     (liq) %'
-     1                                 ,c33_label)
+     1                                 ,c_label)
                  call get_directory('balance',directory,lend)
                  directory=directory(1:lend)//'lh3/'
                  call get_2dgrid_dname(directory
@@ -3642,12 +3642,12 @@ c                cint = -1.
                   var_2d = 'RH3'
                   write(6,*)' Reading rh3 / ',var_2d
                   call mklabel33(k_mb,' LAPS RH     (rh3) %'
-     1                                 ,c33_label)     
+     1                                 ,c_label)     
                  elseif(qtype .eq. 'l')then
                   var_2d = 'RHL'
                   write(6,*)' Reading rhl / ',var_2d
                   call mklabel33(k_mb,' LAPS RH     (liq) %'
-     1                                 ,c33_label)     
+     1                                 ,c_label)     
                  endif
                  call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                             ,i4time_heights
@@ -3660,10 +3660,10 @@ c    1                ,ext,var_2d,units_2d,comment_2d
 c    1                ,field_3d,istatus)
                  if(qtype .eq. '3')then
                     call mklabel33(k_mb,' LAPS RH     (rh3) %'
-     1                                 ,c33_label)
+     1                                 ,c_label)
                  elseif(qtype .eq. 'l')then
                     call mklabel33(k_mb,' LAPS RH     (liq) %'
-     1                                 ,c33_label)
+     1                                 ,c_label)
                  endif
               endif 
               if(istatus.ne. 1)then
@@ -3680,7 +3680,7 @@ c    1                ,field_3d,istatus)
                 call plot_field_2d(i4time_heights,c_type
      1                        ,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'moist')
 
@@ -3739,7 +3739,7 @@ c
                 if(qtype.eq.'q' .and. istat_sh .eq. 1)then
 
                     call mklabel33(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' Q  (x1e3)',c33_label)
+     1                         //' '//ext(1:3)//' Q  (x1e3)',c_label)
 
                     clow = 0.
                     chigh = +40.
@@ -3751,7 +3751,7 @@ c                   cint = -1.
                     call plot_cont(sh_2d,scale
      1                            ,clow,chigh,cint ! q_3d
      1                            ,asc9_tim_t,namelist_parms,plot_parms       
-     1                            ,c33_label,i_overlay
+     1                            ,c_label,i_overlay
      1                            ,c_display
      1                            ,lat,lon,jdot,NX_L,NY_L
      1                            ,r_missing_data,laps_cycle_time)
@@ -3779,7 +3779,7 @@ c                   cint = -1.
                         endif
 
 !                       call mklabel33(k_mb,' '//fcst_hhmm
-!    1                         //' '//ext(1:3)//' rh %cptd ',c33_label)
+!    1                         //' '//ext(1:3)//' rh %cptd ',c_label)
 
                         comment_2d = 'rh'   ! for label
                         units_2d = '%cptd'  ! for label
@@ -3878,13 +3878,13 @@ c                   cint = -1.
                 scale = 10.
 
 !               call mklabel33(k_mb,' LAPS '//ext(1:3)//' Height dm'
-!    1                        ,c33_label)
+!    1                        ,c_label)
 
 !               call mklabel33(k_level,ext(1:3)//' '
-!    1                         //fcst_hhmm//' Fcst Ht dm',c33_label)
+!    1                         //fcst_hhmm//' Fcst Ht dm',c_label)
 
                 call mklabel33(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' Height dm',c33_label)
+     1                         //' '//ext(1:3)//' Height dm',c_label)
 
                 clow = 0.
                 chigh = 0.
@@ -3905,7 +3905,7 @@ c                   cint = -1.
 
             else  
                 call mklabel33(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' Temp    C',c33_label)
+     1                         //' '//ext(1:3)//' Temp    C',c_label)
 
                 scale = 1.
 
@@ -3940,7 +3940,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4_valid,c_type_i,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -3975,14 +3975,14 @@ c                   cint = -1.
      1             ,ext,var_2d,units_2d,comment_2d
      1             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-               call mklabel33(k_mb,' Height  (Bal)   dm',c33_label)       
+               call mklabel33(k_mb,' Height  (Bal)   dm',c_label)       
 
             else ! 'ht'
                call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                             ,i4time_heights
      1                             ,ext,var_2d,units_2d,comment_2d
      1                             ,NX_L,NY_L,field_2d,k_mb,istatus)       
-               call mklabel33(k_mb,' Height          dm',c33_label)       
+               call mklabel33(k_mb,' Height          dm',c_label)       
 
             endif
 
@@ -4014,7 +4014,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_heights,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -4031,7 +4031,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Total Precipitable Water  cm     '
+            c_label = 'Total Precipitable Water  cm     '
 
             clow = 0.00
             chigh = 5.50
@@ -4042,7 +4042,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
@@ -4069,7 +4069,7 @@ c                   cint = -1.
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'Sfc Temperature     (F)          '
+                c_label = 'Sfc Temperature     (F)          '
 
             elseif(c_type(1:2) .eq. 'gf')then
                 do i = 1,NX_L
@@ -4077,7 +4077,7 @@ c                   cint = -1.
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'Ground Temperature  (F)          '
+                c_label = 'Ground Temperature  (F)          '
 
             elseif(c_type(1:2) .eq. 'tc')then
                 do i = 1,NX_L
@@ -4085,7 +4085,7 @@ c                   cint = -1.
                     field_2d(i,j) = k_to_c(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'Sfc Temperature     (C)          '
+                c_label = 'Sfc Temperature     (C)          '
             endif
 
             IF(istatus .ne. 1)THEN
@@ -4100,7 +4100,7 @@ c                   cint = -1.
      1                               ,clow,chigh,cint,zoom,density,1.)       
 
                 call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t       
-     1           ,namelist_parms,plot_parms,c33_label,i_overlay
+     1           ,namelist_parms,plot_parms,c_label,i_overlay
      1           ,c_display,lat,lon,jdot
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4110,7 +4110,7 @@ c                   cint = -1.
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -4138,14 +4138,14 @@ c                   cint = -1.
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'Sfc Dew Point       (F)          '
+                c_label = 'Sfc Dew Point       (F)          '
             else
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_c(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c33_label = 'Sfc Dew Point       (C)          '
+                c_label = 'Sfc Dew Point       (C)          '
             endif
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
@@ -4156,7 +4156,7 @@ c                   cint = -1.
 
                 call plot_cont(field_2d,scale,clow,chigh,cint
      1               ,asc9_tim_t,namelist_parms,plot_parms
-     1               ,c33_label,i_overlay,c_display
+     1               ,c_label,i_overlay,c_display
      1               ,lat,lon,jdot
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4166,7 +4166,7 @@ c                   cint = -1.
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -4196,7 +4196,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Heat Index          (F)          '
+            c_label = 'Heat Index          (F)          '
 
             scale = 1.
 
@@ -4206,7 +4206,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -4223,7 +4223,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Mstr Flux Conv  (x 1e-4 s-1) '
+            c_label = 'Sfc Mstr Flux Conv  (x 1e-4 s-1) '
 
             clow = -40.
             chigh = +40.
@@ -4235,7 +4235,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,chigh,clow,cint,c33_label
+     1                        ,chigh,clow,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectralr')
 
@@ -4255,7 +4255,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Surface Wind            (kt)     '
+            c_label = 'Surface Wind            (kt)     '
 
             nxz = float(NX_L) / zoom
             nyz = float(NY_L) / zoom
@@ -4267,7 +4267,7 @@ c                   cint = -1.
 
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
      1                     ,asc9_tim_t,namelist_parms
-     1                     ,c33_label,c_field,k_level
+     1                     ,c_label,c_field,k_level
      1                     ,i_overlay,c_display
      1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
 !    1                     ,grid_ra_ref_dum,grid_ra_vel_dum
@@ -4290,7 +4290,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'PBL Mean Wind            (kt)    '
+            c_label = 'PBL Mean Wind            (kt)    '
 
             nxz = float(NX_L) / zoom
             nyz = float(NY_L) / zoom
@@ -4302,7 +4302,7 @@ c                   cint = -1.
 
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
      1                     ,asc9_tim_t,namelist_parms
-     1                     ,c33_label,c_field,k_level
+     1                     ,c_label,c_field,k_level
      1                     ,i_overlay,c_display
      1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
 !    1                     ,grid_ra_ref_dum,grid_ra_vel_dum
@@ -4635,11 +4635,11 @@ c                   cint = -1.
             endif
 
             if(c_type_i .eq. 'p')then
-                c33_label = comment_2d(1:23)//' (mb)     '       
+                c_label = comment_2d(1:23)//' (mb)     '       
             elseif(c_type_i .eq. 'pm')then
-                c33_label = 'MSL Pressure            (mb)     '
+                c_label = 'MSL Pressure            (mb)     '
             elseif(c_type_i .eq. 'pp')then
-                c33_label = 'Perturbation Pressure   (mb)     '
+                c_label = 'Perturbation Pressure   (mb)     '
             endif
 
             clow = 0.
@@ -4681,7 +4681,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -4698,7 +4698,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Surface Pressure        (mb)     '
+            c_label = 'Surface Pressure        (mb)     '
 
             scale = 100.
 
@@ -4709,7 +4709,7 @@ c                   cint = -1.
 
             call plot_cont(field_2d,scale,clow,chigh,cint
      1             ,asc9_tim_t,namelist_parms,plot_parms
-     1             ,c33_label,i_overlay,c_display
+     1             ,c_label,i_overlay,c_display
      1             ,lat,lon,jdot
      1             ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4725,7 +4725,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Vert Velocity     (cm/s)     '
+            c_label = 'Sfc Vert Velocity     (cm/s)     '
 
             clow = -200.
             chigh = +200.
@@ -4735,7 +4735,7 @@ c                   cint = -1.
 
             call plot_cont(field_2d,1e-2,clow,chigh,cint
      1                    ,asc9_tim_t,namelist_parms,plot_parms
-     1                    ,c33_label,i_overlay,c_display,lat,lon,jdot
+     1                    ,c_label,i_overlay,c_display,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type(1:2) .eq. 'hu')then
@@ -4751,7 +4751,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Rel Humidity   (PERCENT)     '
+            c_label = 'Sfc Rel Humidity   (PERCENT)     '
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -4762,7 +4762,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,1e0
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'moist')
 
@@ -4774,12 +4774,12 @@ c                   cint = -1.
      1                          ,comment_2d,NX_L,NY_L
      1                          ,field_2d,-1,istatus)
 
-            IF(istatus .ne. 1)THEN
+            IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
                 goto1200
             endif
 
-            c33_label = 'Soil Moisture      (PERCENT)     '
+            c_label = 'Soil Moisture      (PERCENT)     '
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -4787,9 +4787,11 @@ c                   cint = -1.
             chigh = 100.
             cint = 10.
 
+            plot_parms%ncols = nint(abs(chigh-clow)/cint)
+
             call plot_field_2d(i4time_pw,c_type,field_2d,1e0
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'moist')
 
@@ -4806,7 +4808,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Temp Adv (x 1e-5 Dg K/s)     '
+            c_label = 'Sfc Temp Adv (x 1e-5 Dg K/s)     '
 
             clow = -100.
             chigh = +100.
@@ -4816,7 +4818,7 @@ c                   cint = -1.
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
      1          asc9_tim_t,namelist_parms,plot_parms,
-     1          c33_label,i_overlay,c_display,lat,lon,jdot,
+     1          c_label,i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'th')then
@@ -4832,7 +4834,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Potential Temp   (Deg K)     '
+            c_label = 'Sfc Potential Temp   (Deg K)     '
 
             clow = +240.
             chigh = +320.
@@ -4841,7 +4843,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t
-     1                    ,namelist_parms,plot_parms,c33_label
+     1                    ,namelist_parms,plot_parms,c_label
      1                    ,i_overlay,c_display,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4858,7 +4860,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Equiv Potl Temp  (Deg K)     '
+            c_label = 'Sfc Equiv Potl Temp  (Deg K)     '
 
             clow = +250.
             chigh = +370.
@@ -4869,7 +4871,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -4886,7 +4888,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Rel Vorticity   (1e-5/s)     '
+            c_label = 'Sfc Rel Vorticity   (1e-5/s)     '
 
             clow = -100.
             chigh = +100.
@@ -4896,7 +4898,7 @@ c                   cint = -1.
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
      1             asc9_tim_t,namelist_parms,plot_parms
-     1            ,c33_label,i_overlay,c_display
+     1            ,c_label,i_overlay,c_display
      1            ,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4913,7 +4915,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Mixing Ratio      (g/kg)     '
+            c_label = 'Sfc Mixing Ratio      (g/kg)     '
 
             clow = -100.
             chigh = +100.
@@ -4923,7 +4925,7 @@ c                   cint = -1.
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
      1        asc9_tim_t,namelist_parms,plot_parms,
-     1        c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        c_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type(1:2) .eq. 'dv')then
@@ -4939,7 +4941,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Divergence  (x 1e-5 s-1)     '
+            c_label = 'Sfc Divergence  (x 1e-5 s-1)     '
 
             chigh = +40.
             clow = -40.
@@ -4951,7 +4953,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,chigh,clow,cint,c33_label
+     1                        ,chigh,clow,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectralr')
 
@@ -4968,7 +4970,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Theta Adv   (x 1e-5 K/s)     '
+            c_label = 'Sfc Theta Adv   (x 1e-5 K/s)     '
 
             clow = -100.
             chigh = +100.
@@ -4978,7 +4980,7 @@ c                   cint = -1.
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
      1        asc9_tim_t,namelist_parms,plot_parms,
-     1        c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        c_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ma')then
@@ -4994,7 +4996,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Mstr Adv (x 1e-5 g/kg/s)     '
+            c_label = 'Sfc Mstr Adv (x 1e-5 g/kg/s)     '
 
             clow = -100.
             chigh = +100.
@@ -5004,7 +5006,7 @@ c                   cint = -1.
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
      1        asc9_tim_t,namelist_parms,plot_parms,
-     1        c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        c_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type(1:2) .eq. 'sp')then
@@ -5024,7 +5026,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Wind Speed          (kt)     '
+            c_label = 'Sfc Wind Speed          (kt)     '
 
             do i = 1,NX_L
             do j = 1,NY_L
@@ -5057,7 +5059,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,spds,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
@@ -5076,7 +5078,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Wind '//c_type(1:1)//'        (kt)        '       
+            c_label = 'Sfc Wind '//c_type(1:1)//'        (kt)        '       
 
             do i = 1,NX_L
             do j = 1,NY_L
@@ -5094,7 +5096,7 @@ c                   cint = -1.
             scale = 1.
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
@@ -5111,7 +5113,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Colorado Severe Storm Index     '
+            c_label = 'Colorado Severe Storm Index     '
 
             clow = 0.
             chigh = +100.
@@ -5121,7 +5123,7 @@ c                   cint = -1.
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
      1        asc9_tim_t,namelist_parms,plot_parms,
-     1        c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        c_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type_i .eq. 'vs')then
@@ -5137,7 +5139,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Sfc Visibility       (miles)     '
+            c_label = 'Sfc Visibility       (miles)     '
 
             clow = 100.
             chigh = +0.
@@ -5148,7 +5150,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
@@ -5165,7 +5167,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'Fire Weather          (0-20)     '
+            c_label = 'Fire Weather          (0-20)     '
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -5176,7 +5178,7 @@ c                   cint = -1.
 
                 call plot_cont(field_2d,1.,clow,chigh,cint,
      1           asc9_tim_t,namelist_parms,plot_parms,
-     1           c33_label,i_overlay,c_display,lat,lon,jdot,       
+     1           c_label,i_overlay,c_display,lat,lon,jdot,       
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
                 call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'spectral'
@@ -5184,7 +5186,7 @@ c                   cint = -1.
      1                     ,namelist_parms)      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5196,11 +5198,11 @@ c                   cint = -1.
             if(c_type(1:2) .eq. 'sc')then
                 var_2d = 'SC'
                 ext = 'lm2'
-                c33_label = 'Snow Cover Analysis    (percent) '
+                c_label = 'Snow Cover Analysis    (percent) '
             else
                 var_2d = 'CSC'
                 ext = 'lcv'
-                c33_label = 'SatObs (CSC) Snow Cover (percent)'
+                c_label = 'SatObs (CSC) Snow Cover (percent)'
             endif
 
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -5221,7 +5223,7 @@ c                   cint = -1.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
 
@@ -5231,7 +5233,7 @@ c                   cint = -1.
 
             if(c_type(1:2) .eq. 'cb')then ! Cloud Base
                 var_2d = 'LCB'
-                c33_label = 'Cloud Base         m   MSL       '
+                c_label = 'Cloud Base         m   MSL       '
                 clow = 0.
                 chigh = 10000.
                 chigh_img = 8000.
@@ -5239,7 +5241,7 @@ c                   cint = -1.
 
             elseif(c_type(1:2) .eq. 'ct')then
                 var_2d = 'LCT'
-                c33_label = 'Cloud Top          m   MSL       '
+                c_label = 'Cloud Top          m   MSL       '
                 clow = 0.
                 chigh = 20000.
                 chigh_img = 14000.
@@ -5247,7 +5249,7 @@ c                   cint = -1.
 
             elseif(c_type .eq. 'cc')then ! Cloud Ceiling
                 var_2d = 'CCE'
-                c33_label = 'Cloud Ceiling      m   AGL       '
+                c_label = 'Cloud Ceiling      m   AGL       '
                 clow = 0.
                 chigh = 0.
                 cint = -100.
@@ -5269,7 +5271,7 @@ c                   cint = -1.
 
             if(c_type(3:3) .ne. 'i')then
                 call plot_cont(field_2d,1e0,clow,chigh,cint,
-     1               asc9_tim,namelist_parms,plot_parms,c33_label,       
+     1               asc9_tim,namelist_parms,plot_parms,c_label,       
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -5279,7 +5281,7 @@ c                   cint = -1.
      1                     ,namelist_parms)       
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5326,16 +5328,16 @@ c                   cint = -1.
                 read(comment_2d,3515)cloud_height
 3515            format(e20.8)
 
-                write(c33_label,3516)nint(cloud_height)
+                write(c_label,3516)nint(cloud_height)
 3516            format(i5,'  M MSL   Cloud Cover       ')
 
                 write(6,*)' LVL_CLD = ',lvl_cld
 
             elseif(k_level .eq. 0)then
-                c33_label = 'Cloud Cover (fraction)           '
+                c_label = 'Cloud Cover (fraction)           '
 
             else ! k_level .lt. 0
-                write(c33_label,3517)-k_level
+                write(c_label,3517)-k_level
 3517            format(i5,'  MB    Cloud Cover         ')
 
             endif
@@ -5345,7 +5347,7 @@ c                   cint = -1.
                 chigh = 0.8
                 cint = 0.2
                 call plot_cont(cloud_cvr,1e0,clow,chigh,cint,
-     1               asc9_tim,namelist_parms,plot_parms,c33_label,        
+     1               asc9_tim,namelist_parms,plot_parms,c_label,        
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -5363,7 +5365,7 @@ c                   cint = -1.
      1                     ,namelist_parms)     
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5389,14 +5391,14 @@ c                   cint = -1.
               clow = -400.
               chigh = +5000.
               cint = +200.
-              c33_label = 'Static Terrrain (m)        '
+              c_label = 'Static Terrrain (m)        '
 
               if(cstatic .eq. 'tni')then
                 write(6,*)' calling solid fill plot'
                 scale = 3000.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image
      1                     ,1e0,'hsect',plot_parms,namelist_parms)     
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5404,7 +5406,7 @@ c                   cint = -1.
               else
                 call plot_cont(topo,1e0,
      1               clow,chigh,cint,asc9_tim_t,
-     1               namelist_parms,plot_parms,c33_label,      
+     1               namelist_parms,plot_parms,c_label,      
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5425,14 +5427,14 @@ c                   cint = -1.
               clow = .01
               chigh = .99
               cint = .49
-              c33_label = 'Static Land Fraction         '
+              c_label = 'Static Land Fraction         '
               if(cstatic .eq. 'lfi')then
                 write(6,*)' calling solid fill plot'
                 scale = 1.
                 call ccpfil(static_grid,NX_L,NY_L,0.0,scale,'linear'
      1                     ,n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5441,7 +5443,7 @@ c                   cint = -1.
 
                 call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,
-     1               namelist_parms,plot_parms,c33_label,      
+     1               namelist_parms,plot_parms,c_label,      
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -5458,10 +5460,10 @@ c                   cint = -1.
               clow = 0.
               chigh = 20.
               cint = 1.
-              c33_label = 'Static Land Use           '
+              c_label = 'Static Land Use           '
               call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,
-     1               namelist_parms,plot_parms,c33_label,      
+     1               namelist_parms,plot_parms,c_label,      
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               i4time_topo = 0
@@ -5484,7 +5486,7 @@ c             clow = 0.
 c             chigh = 1.0
 c             cint = .05
 
-              c33_label = 'Interpolated Albedo     '
+              c_label = 'Interpolated Albedo     '
               asc9_tim_t=asc9_tim_t(1:5)//'1800'
 
               if(cstatic .eq. 'ali')then
@@ -5492,7 +5494,7 @@ c             cint = .05
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'linear'
      1                     ,n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5500,7 +5502,7 @@ c             cint = .05
               else
                 call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,
-     1               namelist_parms,plot_parms,c33_label,
+     1               namelist_parms,plot_parms,c_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5526,7 +5528,7 @@ c             if(cint.eq.0.0)cint=0.1
               clow = 4.0
               chigh = -2.0
 
-              c33_label = 'Interpolated Green Fraction     '
+              c_label = 'Interpolated Green Fraction     '
               call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
               asc9_tim_t=asc9_tim_t(1:5)//'1800'
 
@@ -5536,7 +5538,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'hues'
      1                     ,n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5547,7 +5549,7 @@ c             if(cint.eq.0.0)cint=0.1
                 cint = .10
                 call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,
-     1               namelist_parms,plot_parms,c33_label,
+     1               namelist_parms,plot_parms,c_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5567,14 +5569,14 @@ c             if(cint.eq.0.0)cint=0.1
      1                        ,clow,imx,jmx,imn,jmn)
 
               cint = (chigh-clow)/10.
-              c33_label = 'Mean Annual Soil Temp (K)  '
+              c_label = 'Mean Annual Soil Temp (K)  '
 
               if(cstatic .eq. 'tsi')then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh
      1               ,'hues',n_image,1e0,'hsect',plot_parms
      1               ,namelist_parms)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5582,7 +5584,7 @@ c             if(cint.eq.0.0)cint=0.1
               else
                 call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,
-     1               namelist_parms,plot_parms,c33_label,
+     1               namelist_parms,plot_parms,c_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5600,7 +5602,7 @@ c             if(cint.eq.0.0)cint=0.1
               clow = -1.
               chigh = 1.0
               cint = .025
-              c33_label = 'Longitude component terrain slope '
+              c_label = 'Longitude component terrain slope '
 
               if(cstatic .eq. 'sni')then
                 write(6,*)' calling solid fill plot'
@@ -5609,7 +5611,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)       
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5617,7 +5619,7 @@ c             if(cint.eq.0.0)cint=0.1
               else
                 call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,
-     1               namelist_parms,plot_parms,c33_label,
+     1               namelist_parms,plot_parms,c_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5635,7 +5637,7 @@ c             if(cint.eq.0.0)cint=0.1
               clow = -1.
               chigh = 1.0
               cint = .025
-              c33_label = 'Latitude component terrain slope  '
+              c_label = 'Latitude component terrain slope  '
 
               if(cstatic .eq. 'sli')then
                 write(6,*)' calling solid fill plot'
@@ -5644,7 +5646,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)       
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,plot_parms,namelist_parms
      1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
@@ -5652,7 +5654,7 @@ c             if(cint.eq.0.0)cint=0.1
               else
                 call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,
-     1               namelist_parms,plot_parms,c33_label,
+     1               namelist_parms,plot_parms,c_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -6015,7 +6017,7 @@ c             if(cint.eq.0.0)cint=0.1
 !       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to hardwire
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
-        character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
+        character c_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
 
         real*4 lat(NX_L,NY_L)
@@ -6078,10 +6080,10 @@ c             if(cint.eq.0.0)cint=0.1
             if(c_metacode .eq. 'y '
      1    .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-!                call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)      
+!                call pwrity(cpux(320),cpux(ity),c_label,33,2,0,0)      
 !                call pwrity
 !    1                (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
+                 call write_label_lplot(NX_L,NY_L,c_label,asc_tim_9
      1                                 ,plot_parms,namelist_parms
      1                                 ,i_overlay,'hsect')      
             endif
@@ -6106,7 +6108,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         subroutine plot_cldpcp_type(icldpcp_type_2d
      1     ,asc_tim_9,namelist_parms
-     1     ,c33_label,c_field,k_level,i_overlay,c_display
+     1     ,c_label,c_field,k_level,i_overlay,c_display
      1     ,lat,lon,ifield_2d
      1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
@@ -6116,7 +6118,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         include 'lapsplot.inc'
 
-        character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
+        character c_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
 
         integer*4 icldpcp_type_2d(NX_L,NY_L)
@@ -6133,7 +6135,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         logical l_obs
 
-        write(6,1505)c33_label,asc_tim_9
+        write(6,1505)c_label,asc_tim_9
 1505    format(2x,a33,2x,a9)
 
         call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
@@ -6206,7 +6208,7 @@ c             if(cint.eq.0.0)cint=0.1
             if(c_metacode .eq. 'y '
      1    .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
+                 call write_label_lplot(NX_L,NY_L,c_label,asc_tim_9
      1                                 ,plot_parms,namelist_parms
      1                                 ,i_overlay,'hsect')      
             endif
@@ -6325,15 +6327,15 @@ c             if(cint.eq.0.0)cint=0.1
      1  .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
 !                call pwrity
-!    1                (cpux(320),cpux(ity),c33_label,33,2,0,0)
+!    1                (cpux(320),cpux(ity),c_label,33,2,0,0)
 !                call pwrity
 !    1                (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
 
 !                if(iflag .ge. 1)then
-!                    c33_label = 'Sfc Obs'
+!                    c_label = 'Sfc Obs'
 !                endif
 
-!                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
+!                call write_label_lplot(NX_L,NY_L,c_label,asc_tim_9
 !    1                                 ,plot_parms,namelist_parms
 !    1                                 ,i_overlay,'hsect')      
             endif
@@ -6374,18 +6376,18 @@ c             if(cint.eq.0.0)cint=0.1
         end
 
 
-        subroutine mklabel33(k_level,c19_label,c33_label)
+        subroutine mklabel33(k_level,c19_label,c_label)
 
 !       97-Aug-17     Ken Dritz     Lines commented to (temporarily) hardwire
 !                                   VERTICAL_GRID at 'PRESSURE' (without
 !                                   accessing VERTICAL_GRID)
 !       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 
-        character c19_label*19,c33_label*33
+        character c19_label*19,c_label*33
 
         if(k_level .gt. 0)then
 !            if(VERTICAL_GRID .eq. 'HEIGHT')then
-!                write(c33_label,101)k_level,c19_label
+!                write(c_label,101)k_level,c19_label
 !101             format(I5,' km ',a19,5x)
 
 !            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
@@ -6398,16 +6400,16 @@ c             if(cint.eq.0.0)cint=0.1
 
                 endif
 
-                write(c33_label,102)ipres,c19_label
+                write(c_label,102)ipres,c19_label
 102             format(I5,' hPa',a19,4x)
 
 !            endif
         else if(k_level .eq. 0)then
-            write(c33_label,103)c19_label
+            write(c_label,103)c19_label
 103         format('Surface',a19,6x)
 
         else if(k_level .eq. -1)then
-            write(c33_label,104)
+            write(c_label,104)
 104         format('Steering Winds                   ')
 
         endif
