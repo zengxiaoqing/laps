@@ -286,7 +286,9 @@ cdis
                     c_label(13:38) = '1Hr Pcp (mm)/Snw Dpth (cm)'
                 endif
             elseif(iflag_cv .eq. 3)then
-                c_label(14:33) =  '   Sfc T & Solar Rad'
+!               c_label(14:33) =  '   Sfc T & Solar Rad'
+                c_label(14:51) =  
+     1                     '   Sfc Temp, Soil Moisture & Solar Rad'    
             endif
 
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -460,11 +462,16 @@ cdis
                 elseif(iflag_cv .eq. 3)then ! Soil/Water T (& solar radiation)
                     iplotsta = 0
                     temp = sfct(i)
-                    dewpoint = badflag
+                    dewpoint = sfcm(i)
                     pressure = badflag
 
                     if(temp .ne. badflag)then
                         write(6,*)' Sfc T = ',i,temp,c_staname
+                        iplotsta = 1
+                    endif
+
+                    if(dewpoint .ne. badflag)then
+                        write(6,*)' Sfc RH = ',i,dewpoint,c_staname
                         iplotsta = 1
                     endif
 
