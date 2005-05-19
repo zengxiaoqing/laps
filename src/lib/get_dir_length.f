@@ -389,6 +389,7 @@ C       string          char       I       string
         function l_string_contains(string,substring,istatus)
 
 cdoc    Returns boolean on whether 'string' contains 'substring'
+cdoc    The 'string' and 'substring' should be free of blanks.
 
         logical l_string_contains
 
@@ -425,7 +426,7 @@ cdoc    Returns boolean on whether 'string' contains 'substring'
         function l_parse(string1,string2)
 
 cdoc    Returns boolean on whether 'string1' contains 'string2'
-cdoc    Similar to 'l_string_contains'
+cdoc    Similar to 'l_string_contains' except that blanks are allowed
 
         logical l_parse
 
