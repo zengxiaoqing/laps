@@ -394,11 +394,17 @@ foreach $exe (@LAPS_EXE){
                 open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
                 print TFILE "#!/bin/sh\n";
 
+                my $wall_time_hr  = int( ( $cycle_time_min / 60.) + $extend_time  ); 
+
+                my $wall_time_min = int($cycle_time_min + ($extend_time * 60.) ) - ($wall_time_hr * 60);
+                $wall_time_min="0".$wall_time_min if(length($wall_time_min)<2);
+
                 if($opt_q){
-                    print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_hr:$cycle_time_min:00 -A $opt_q\n";
+                    $wall_time_hr="0".$wall_time_hr if(length($wall_time_hr)<2);
+                    print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$wall_time_hr:$wall_time_min:00 -A $opt_q\n";
                 }elsif($opt_Q){ 
                     print TFILE "#\$ -pe $node_type $nodes_current\n";
-                    print TFILE "#\$ -l h_rt=0:$cycle_time_min:00\n";
+                    print TFILE "#\$ -l h_rt=$wall_time_hr:$wall_time_min:00\n";
                     print TFILE "#\$ -A $opt_Q\n";
                     print TFILE "#\$ -S /bin/sh\n";
                     print TFILE "#\$ -cwd\n";
