@@ -581,7 +581,8 @@ cdis
      1                     ,n_var,n_obs_valid,obs_barnes      ! Input
      1                     ,ni,nj,nk,grid_spacing_m           ! Inputs
      1                     ,rep_pres_intvl                    ! Input
-     1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm   ! Inputs
+     1                     ,bias_obs_3d,i4_loop_total         ! I/O
+     1                     ,wt_3d,fnorm,n_fnorm               ! Inputs
      1                     ,l_analyze,l_not_struct,rms_thresh ! Input
      1                     ,weight_bkg_const                  ! Input
      1                     ,topo_dum,rland_frac_dum,1,1       ! Input

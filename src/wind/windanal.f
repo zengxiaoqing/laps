@@ -53,7 +53,7 @@ cdis
      1     ,i4time,grid_spacing_m                                      ! I
      1     ,r_missing_data                                             ! I
      1     ,heights_3d                                                 ! I
-!    1     ,i_3d                                                       ! I
+     1     ,i4_loop_total                                              ! O
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding  ! I
 !    1     ,n_iter_wind_in
      1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar! I
@@ -412,7 +412,7 @@ csms$serial end
       call barnes_multivariate(varbuff                                ! O
      1        ,n_var,ncnt_total,obs_point_qced                        ! I
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
-     1        ,aerr                                                   ! O 
+     1        ,aerr,i4_loop_total                                     ! O 
      1        ,wt_p,fnorm_dum,n_fnorm_dum                             ! I
      1        ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1        ,topo_dum,rland_frac_dum,1,1                            ! I
@@ -585,7 +585,7 @@ csms$serial end
               call barnes_multivariate(varbuff                           ! O
      1           ,n_var,ncnt_total,obs_barnes                            ! I
      1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
-     1           ,aerr                                                   ! O 
+     1           ,aerr,i4_loop_total                                     ! O 
      1           ,wt_p_radar,fnorm_dum,n_fnorm_dum                       ! I
      1           ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1           ,topo_dum,rland_frac_dum,1,1                            ! I
@@ -710,7 +710,7 @@ csms$serial end
               call barnes_multivariate(varbuff                          ! O
      1          ,n_var,ncnt_total                                       ! I
      1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl! I   
-     1          ,aerr                                                   ! O 
+     1          ,aerr,i4_loop_total                                     ! O 
      1          ,wt_p_radar,fnorm_dum,n_fnorm_dum                       ! I
      1          ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1          ,topo_dum,rland_frac_dum,1,1                            ! I
@@ -847,7 +847,7 @@ csms$insert      print *, 'got to 10 processor=',me
      1       ,n_var,ncnt_total,obs_barnes                             ! I
      1       ,imax,jmax,kmax                                          ! I
      1       ,grid_spacing_m,rep_pres_intvl                           ! I
-     1       ,aerr                                                    ! O 
+     1       ,aerr,i4_loop_total                                      ! O 
      1       ,wt_p_radar,fnorm_dum,n_fnorm_dum                        ! I
      1       ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const       ! I
      1       ,topo_dum,rland_frac_dum,1,1                             ! I
