@@ -10,3 +10,22 @@
       return
       end
 
+      subroutine jd_to_i4time(jd,i4time,istatus)
+
+      double precision jd, jd1960
+      integer i4time
+
+cdoc  Converts Julian Day (Number of days since Jan 1 4713BCE to i4time)
+
+!     Author: Steve Albers 2005
+
+      jd_1960 = 2436934.5
+
+      days_since_1960 = jd - jd_1960
+
+      i4time = int(days_since_1960 * 86400.)
+
+      istatus = 1
+
+      return
+      end
