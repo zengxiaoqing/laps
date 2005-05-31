@@ -104,6 +104,7 @@ c
         cycler=float(cycle)/3600.
         do n=1,ncycles
 	 i4prev(n) = i4time -(n-1)* cycle
+c	 i4prev(n) = i4time -(n+1)* cycle
         enddo
         istarttime=i4prev(ncycles)
         do i=1,m
@@ -180,14 +181,20 @@ c
      &      
         else
            print *,' Found LSO data (current) at ', atime_cur
+           print *,'Filename: ',fname1,n_obs_g,n_obs_b
            maxsta=n_obs_b
            ! call convuv(dd,ff,u,v,maxsta,m,badflag)
+
+	otmn = 86000.0
+	otmx = 0.0
            do k=1,maxsta
             nobs=nobs+1
             otime(nobs)=time(k)
             olat(nobs)=lat(k)
             olon(nobs)=lon(k)
             o(1,nobs)=t(k)
+	if (otmn .GT. time(k)) otmn = time(k)
+	if (otmx .LT. time(k)) otmx = time(k)
             ! if (dd(k).ne.badflag) then
             if ((dd(k).ne.badflag) .and. (dd(k).ne.badsfc)) then 
 	    ! YUANFU XIE modified
@@ -227,8 +234,9 @@ c
 	    o(4,nobs) = pmsl(k)
 
            enddo !k
+	print*,'Time range: ',otmn,otmx
         endif
-           print*, nobs,'obs read for cycle ',n
+           print*, nobs,maxsta,'obs read for cycle ',n
         enddo ! on n ...ob scycles
 c
 c...  That's it.
