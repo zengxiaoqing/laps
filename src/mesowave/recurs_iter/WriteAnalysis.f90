@@ -109,8 +109,6 @@ SUBROUTINE WriteAnalysis(a,n)
      CALL GridBarnes(a(1,1,it,6),n,n,pp)
      data(1:nx,1:ny,11) = a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,it,6)-&
 			  pp(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic)
-	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3),6)- &
-	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3)-1,6)
 
      CALL write_laps_data(istarttime+(it-1)*laps_cycle_time, &
                           dir_s,ext,nx,ny,n(4)+5,n(4)+5,varnames, &
