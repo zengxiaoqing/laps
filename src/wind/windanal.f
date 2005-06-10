@@ -80,10 +80,10 @@ cdis
       integer*4 max_obs
 !     parameter (max_obs = 40000)       
       include 'barnesob.inc'
-      type (barnesob) obs_point(max_obs)      ! Full Wind Obs  - Non-radar data
-      type (barnesob) obs_point_qced(max_obs) ! QC'd Obs       - Non-radar data
-      type (barnesob) obs_radar(max_obs)      ! Full Wind Obs  - Radar data
-      type (barnesob) obs_barnes(max_obs)     ! Full Wind Obs  - All Data
+      type (barnesob) :: obs_point(max_obs)   ! Full Wind Obs  - Non-radar data
+      type (barnesob) :: obs_point_qced(max_obs) ! QC'd Obs    - Non-radar data
+      type (barnesob) :: obs_radar(max_obs)   ! Full Wind Obs  - Radar data
+      type (barnesob) :: obs_barnes(max_obs)  ! Full Wind Obs  - All Data
 
       integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
@@ -1016,7 +1016,7 @@ csms$ignore end
 
       integer*4 max_obs
       include 'barnesob.inc'
-      type (barnesob) obs_barnes(max_obs)                           
+      type (barnesob) :: obs_barnes(max_obs)                           
 
 csms$ignore begin
 

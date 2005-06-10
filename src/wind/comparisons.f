@@ -70,7 +70,7 @@ C*********************************************************************
 
 C***************** Declarations **************************************
         include 'barnesob.inc'
-        type (barnesob) obs_barnes(max_obs)      
+        type (barnesob) :: obs_barnes(max_obs)      
 
         integer istat_radar_vel
         integer l,n_radars,ni,nj,nk,max_radars
@@ -158,7 +158,7 @@ C********************************************************************
      1  ,c_grid,c_obs,r_missing_data,rms)
 
         include 'barnesob.inc'
-        type (barnesob) obs_barnes(max_obs)      
+        type (barnesob) :: obs_barnes(max_obs)      
 
         real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
         real*4 grid_laps_wt(ni,nj,nk)
@@ -326,7 +326,7 @@ C********************************************************************
      1                         ,istatus)
 
         include 'barnesob.inc'
-        type (barnesob) obs_barnes(max_obs)      
+        type (barnesob) :: obs_barnes(max_obs)      
 
         character*12 c_obstype_a(max_obstypes)
 

@@ -69,7 +69,7 @@ c                             time of the current LAPS analysis time.
 !*****************************************************************************
 
         include 'barnesob.inc'
-        type (barnesob) obs_point(max_obs)                           
+        type (barnesob) :: obs_point(max_obs)                           
 
 !       LAPS Grid Dimensions
 

@@ -64,7 +64,7 @@ cdis
 !       1997 Jun     Ken Dritz       Removed include of 'lapsparms.for'.
 
         include 'barnesob.inc'
-        type (barnesob) obs_point(max_obs)                           
+        type (barnesob) :: obs_point(max_obs)                           
 
 !       LAPS Grid Dimensions
                                                    
@@ -283,7 +283,7 @@ cdis
 !       They have already been vertically interpolated
 
         include 'barnesob.inc'
-        type (barnesob) obs_point(max_obs)                           
+        type (barnesob) :: obs_point(max_obs)                           
 
 !       Profile Observations
 
