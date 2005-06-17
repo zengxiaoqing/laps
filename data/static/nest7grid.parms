@@ -54,12 +54,13 @@
  r_hybrid_first_gate_cmn=0.,
  maxstns_cmn=3600,         
  N_PIREP_CMN=3000,         
+ aircraft_time_window_cmn=0.5,     
  vert_rad_meso_cmn=1,     
  vert_rad_sao_cmn=1,      
  vert_rad_pirep_cmn=1,    
  vert_rad_prof_cmn=1,     
  toptwvl_parm_cmn=2.,     
- silavwt_parm_cmn=0.,     
+ silavwt_parm_cmn=0.,
  c8_project_common='NIMBUS', 
  fdda_model_source_cmn='lga',
  /
@@ -135,6 +136,11 @@ c
 c r_hybrid_first_gate_cmn - Flag to mask out gates near the radar for low tilts to 
 c                           emulate what happens with the hybrid reflectivity scan.
 c                           Allowed values are 0.0 (flag off) or 1.0 (flag on).
+c
+c aircraft_time_window_cmn - Time window (half width) for accepting aircraft 
+c                            data in both the PIN file and in the analyses. 
+c                            Measured as a fraction of 'laps_cycle_time'.
+c
 c
 c fdda_model_source_cmn - Enter the forecast model if you'd like to use
 c                         one for 4DDA (as a substitute for lga/lgb input
