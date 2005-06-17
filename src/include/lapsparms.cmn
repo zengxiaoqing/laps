@@ -30,6 +30,7 @@
         real*4 ref_base_cmn
         real*4 ref_base_useable_cmn
         real*4 r_hybrid_first_gate_cmn
+        real*4 aircraft_time_window_cmn
         integer  maxstns_cmn
         integer  N_PIREP_CMN
         integer vert_rad_meso_cmn
@@ -97,6 +98,7 @@
      1  ,maxstations_cmn,maxobs_cmn
      1  ,vertical_grid,c50_lowres_directory,c6_maproj
      1  ,radarext_3d_cmn,radarext_3d_accum_cmn
+     1  ,aircraft_time_window_cmn
      1  ,path_to_raw_pirep_cmn
      1  ,path_to_raw_rass_cmn,path_to_raw_profiler_cmn
      1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
