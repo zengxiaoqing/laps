@@ -499,6 +499,7 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn
      1  ,vertical_grid,c50_lowres_directory,c6_maproj
      1  ,radarext_3d_cmn,radarext_3d_accum_cmn
+     1  ,aircraft_time_window_cmn
      1  ,path_to_raw_pirep_cmn
      1  ,path_to_raw_rass_cmn,path_to_raw_profiler_cmn
      1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
@@ -989,6 +990,27 @@ c----------------------------------------------------------
       return
       end
 
+
+      subroutine get_aircraft_time_window(aircraft_time_window,istatus)       
+
+      include 'lapsparms.cmn'              ! laps_cycle_time_cmn
+      include 'grid_fname.cmn'             ! grid_fnam_common
+
+!     This routine accesses the aircraft_time_window_cmn variable from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
+      endif
+
+      aircraft_time_window = aircraft_time_window_cmn
+
+      istatus = 1
+      return
+      end
 
       subroutine get_laps_cycle_time(laps_cycle_time,istatus)
 
