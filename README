@@ -1260,6 +1260,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                ----   2.4.1  Cron timing considerations ---
 
+     The frequency of the cron entries for running 'sched.pl' is defined to be
+     the LAPS cycle time. This should correspond to the value of the 
+     'laps_cycle_time_cmn' parameter within the 'nest7grid.parms' file.
+
      The best timing of the cron is often related to the arrival time
      of the raw surface observations. For example, if most of the surface
      data arrives within 20 minutes of the observation time, then running
