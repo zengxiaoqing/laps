@@ -785,7 +785,7 @@ c truth profile and compute an average analysis error
          enddo
 
          call get_wind_parms(l_dum,l_dum,l_dum
-     1,rdum,rdum,rdum,rdum,max_pr,idum,idum,istatus)
+     1,rdum,rdum,rdum,rdum,rdum,max_pr,idum,idum,istatus)
 c
 c ---------------------------------------------------------------------------
 c nsnd = the max number of profiles (soundings); used for array dimensioning
