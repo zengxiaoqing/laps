@@ -41,6 +41,8 @@ $ENV{PATH}="$ENV{PATH}:@NETCDF@/bin";
 #       and also runs gridgen_model (producing the static file). If $opt_m
 #       is defined then only the namelists are updated (no ggm).
 #
+# opt_w is which type (either laps or wrfsi).
+#
 # In some cases LAPSINSTALLROOT = LAPS_SRC_ROOT. This is made possible
 # by perl module mkdatadirs in laps_tools.pm. It removes Makefile dependence.
 #
@@ -625,12 +627,16 @@ exit;
 sub restorefiles
 {
     my ($type)=@_;
-    opendir(STATICDIR, "$LAPS_DATA_ROOT/static\_save");
-    @filelist = grep !/^\.\.?$/,readdir STATICDIR;
-    closedir STATICDIR;
-    my($subf, @subflist);
-    if($type eq "all"){
-            foreach (@filelist){
+    print "\n Here: restorefiles.  Type = $type\n";
+
+    if(-e "$LAPS_DATA_ROOT/static\_save")
+    {
+       opendir(STATICDIR, "$LAPS_DATA_ROOT/static\_save");
+       @filelist = grep !/^\.\.?$/,readdir STATICDIR;
+       closedir STATICDIR;
+       my($subf, @subflist);
+       if($type eq "all"){
+          foreach (@filelist){
                if( -d "$LAPS_DATA_ROOT/static\_save/$_") {
                    opendir(SUBDIR, "$LAPS_DATA_ROOT/static\_save/$_");
                    @subflist = readdir SUBDIR;
@@ -641,20 +647,20 @@ sub restorefiles
                }else{
                    `cp -p $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
                }
-            }
-    }elsif($type eq "ncgm"){
+          }
+       }elsif($type eq "ncgm"){
             foreach (@filelist){
                      if( /ncgm/){
                          `mv $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
                      }
             }
-    }elsif($type eq "static"){
+       }elsif($type eq "static"){
             foreach (@filelist){
                      if( /^static\./){
                          `cp $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
                      }
             }
-    }elsif($type eq "ggm"){
+       }elsif($type eq "ggm"){
            foreach (@filelist){
                     next if(/\.nl$/ || /nest7grid.parms/);
                     if( /\.dat$/ || /^static/ || /wrfstatic/){
@@ -671,20 +677,51 @@ sub restorefiles
                        }
                     }
            }
+       }
     }
-# commented 9-2-04 JS: We do not want to copy from "save" if nx,ny,nz have changed!
-    my $runthis = "false";
-    if($runthis eq "true"){
+
+    if(-e "$LAPS_DATA_ROOT/cdl\_save" && $domain_type eq "wrfsi")
+    {
        opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
        @filelist = grep !/^\.\.?$/, readdir CDLDIR;
        closedir CDLDIR;
+
+       my @moad_num_domains     = &laps_tools::get_nl_value("wrfsi.nl","num_domains",$LAPS_DATA_ROOT);
+       my @moad_ratio_2_parent  = &laps_tools::get_nl_value("wrfsi.nl","ratio_to_parent",$LAPS_DATA_ROOT);
+       my @moad_domain_orig_lli = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_lli",$LAPS_DATA_ROOT);
+       my @moad_domain_orig_llj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_llj",$LAPS_DATA_ROOT);
+       my @moad_domain_orig_uri = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_uri",$LAPS_DATA_ROOT);
+       my @moad_domain_orig_urj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_urj",$LAPS_DATA_ROOT);
+       my ($deltai,$deltaj,@nest_nx,@nest_ny);
+       for ($i=0; $i<=$moad_num_domains[0]-1; $i++){
+         $deltai  = $moad_domain_orig_uri[$i]-$moad_domain_orig_lli[$i];
+         $deltaj  = $moad_domain_orig_urj[$i]-$moad_domain_orig_llj[$i];
+         $nest_nx[$i] = $deltai*$moad_ratio_2_parent[$i]+1;
+         $nest_ny[$i] = $deltaj*$moad_ratio_2_parent[$i]+1;
+       }
+
+       my (@cdllines,$nxwrfsi,$nywrfsi,$domnum);
+
        foreach (@filelist)
        {
-                if(/^wrfsi\.d(\d\d)/)
-                {
-                     next if($1 > $num_domains[0]);
-                     `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
-                }
+            if(/^wrfsi\.d(\d\d)/)
+            {
+               next if($1 > $moad_num_domains[0]);
+               $domnum = $1-1;
+               open(CDL,"$LAPS_DATA_ROOT/cdl/$_");
+               @cdllines=<CDL>;
+               foreach (@cdllines){
+                        if(/\s+x\s=\s(\d+)/){
+                           $nxwrfsi=$1;
+                        }
+                        if(/\s+y\s=\s(\d+)/){
+                           $nywrfsi=$1;
+                        }
+               }
+               next if($nest_nx[$domnum]==$nxwrfsi && $nest_ny[$domnum]==$nywrfsi);
+               print "Copy $LAPS_DATA_ROOT/cdl\_save/$_ to $LAPS_DATA_ROOT/cdl/$_\n";
+               `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
+            }
        }
     }
     return 1;
