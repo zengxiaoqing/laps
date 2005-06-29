@@ -1070,7 +1070,7 @@ c
          ne_ps(2)=ne2
       endif
 
-      if(gproj.eq.'NP')then
+      if(gproj.eq.'MC')then
          nx_np=nxbg
          ny_np=nybg
          sw_np(1)=sw1
@@ -1139,6 +1139,10 @@ c      print*,nxc,nyc,nzc,lat0,lon0,rota,sw,ne
          call latlon_2_ceij(nx_laps*ny_laps,lat,lon,grx,gry)
       elseif (gproj .eq. 'NP') then
          call latlon_2_npij(nx_laps*ny_laps,lat,lon,grx,gry)
+      elseif (gproj .eq. 'MC') then
+         call latlon_2_mcij(nx_laps*ny_laps,lat,lon,grx,gry)
+      else
+         print*,"Error: Unknown gproj spec in gridconv ",gproj
       endif
 c
 c *** Check that all LAPS grid points are within the background data coverage.
@@ -1238,7 +1242,7 @@ c
                   gry(i,j) = r_missing_data
 
            if(lprintmessage)then
-              print*,'LAPS gridpt outside of background data coverage.'
+              print*,'Domain gridpt outside of bkgd data coverage.'
               print*,'   data i,j,lat,lon - ',i,j,lat(i,j),lon(i,j)
               print*,'   grx, gry:',grx(i,j),gry(i,j)
               lprintmessage=.false.

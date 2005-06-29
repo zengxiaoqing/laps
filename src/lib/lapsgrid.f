@@ -1079,8 +1079,11 @@ c---------------------------------------------------------------
 
       if(lli_orig_cmn.eq.0)lli_orig_cmn=1
       if(llj_orig_cmn.eq.0)llj_orig_cmn=1
-      if(uri_orig_cmn.eq.0)uri_orig_cmn=1
-      if(urj_orig_cmn.eq.0)urj_orig_cmn=1
+      if(uri_orig_cmn.eq.0 .or. urj_orig_cmn.eq.0)then
+         call get_grid_dim_xy(nx,ny,istatus)
+         uri_orig_cmn=nx
+         urj_orig_cmn=ny
+      endif
 
       lli_orig=lli_orig_cmn
       llj_orig=llj_orig_cmn

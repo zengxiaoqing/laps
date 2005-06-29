@@ -2,7 +2,7 @@
       subroutine open_namelist (lun)
       implicit none
       integer lun
-      character*80 filename
+      character*255 filename
 
       lun = 10
       filename = 'wrfsi.nl'
@@ -28,7 +28,7 @@
       data iflag_simname_cmn/0/
       save iflag_simname_cmn
 
-      character*80 filename
+      character*255 filename
       character*80 simulation_name
       character*80 user_desc
 
@@ -66,7 +66,7 @@
       implicit none
       integer lun
 
-      character*80 fname
+      character*255 fname
       character*80 ftype
       character*80 order
       integer start_year, start_month, start_day, start_hour
@@ -95,7 +95,7 @@
       include 'wrf_horzgrid.cmn'
       include 'grid_fname.cmn'
 
-      character*80 filename
+      character*255 filename
 
       integer      istatus
       integer      iflag_horzgrid_cmn
@@ -152,7 +152,7 @@
      +,vertical_stretch, max_vertical_inc, levels
      +,vstagger_type
 
-      character*80 filename
+      character*255 filename
 
       integer      istatus
       integer      iflag_vgridspec_cmn
@@ -195,7 +195,7 @@
      &,greenfrac, soiltemp_1deg, albedo_ncep, maxsnowalb
      &,islope, sstemp
 
-      character*80 filename
+      character*255 filename
 
       integer      istatus
       integer      iflag_sfcfiles_cmn
@@ -231,7 +231,7 @@
       include 'wrf_rawdatapaths.cmn'
       include 'grid_fname.cmn'
 
-      character*80 filename
+      character*255 filename
 
       integer      istatus
       integer      iflag_rawdatapaths_cmn

@@ -364,8 +364,10 @@ c
          c6_maproj='lambrt'
       elseif(map_proj_name(1:len).eq.'mercator')then
          c6_maproj='merctr'
+       elseif(map_proj_name(1:len).eq.'rotlat')then
+          c6_maproj='rotlat'
       else
-         print*,'unknown map projection setting',' map_proj =
+         print*,'Error: Unknown map projection: ',' map_proj =
      1 ',map_proj_name(1:len),'.  Check the WRF namelist wrfsi.nl'
          return
       endif
