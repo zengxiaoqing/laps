@@ -1,6 +1,6 @@
 c
         subroutine get_local_towerobs(maxsta,i4time_sys,lun_out,
-     &                 path_to_local_data,local_format,
+     &                 path_to_local_data,local_format,ext,
      &                 itime_before,itime_after,
      &                 lat,lon,ni,nj, nsta, istatus)
 
@@ -14,7 +14,7 @@ c
         parameter (maxlvls=10)
         parameter (maxobs=10000) ! Raw stations in NetCDf files
 
-        character*(*) path_to_local_data, local_format
+        character*(*) path_to_local_data, local_format, ext
 
         real    lat(ni,nj), lon(ni,nj)
 c
@@ -33,22 +33,29 @@ c
 
         integer*4  i4time_ob_a(maxobs), before, after
 c
-c.....  Variables used by write_snd - all obs not yet whittled down
+c.....  Variables returned from 'read_local_tower'
 c
         integer    nsnd_all ! combined # of obs over multiple files
 	integer    wmoid(maxobs)
         real*4     stalat(maxobs),stalon(maxobs)
         real*4     staelev(maxobs)
+        real*4     soilMoisture(maxobs)
         character  c5_staid(maxobs)*5, a9time_ob(maxobs)*9
 !       character  c8_obstype(maxobs)*8
         real*4     height_m(maxobs,maxlvls), pressure_mb(maxobs,maxlvls)
         real*4     temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
         real*4     dir_deg(maxobs,maxlvls),spd_mps(maxobs,maxlvls)
 	character  stname(maxobs)*6
+        integer    tempQcFlag(maxlvls,maxobs)
+        integer    prsQcFlag(maxlvls,maxobs)
+        integer    rhQcFlag(maxlvls,maxobs)
+        integer    wsQcFlag(maxlvls,maxobs)
+        integer    wdQcFlag(maxlvls,maxobs)
+        integer    smQcFlag(maxobs)
 
         logical    l_closest_time(maxobs), l_closest_time_i
 c
-c.....  Output arrays.
+c.....  Output arrays used by 'write_snd' 
 c
         integer    nsnd_all_s ! combined # of obs over multiple files
         integer    nlvl_s(maxsta)
@@ -63,11 +70,6 @@ c
         real*4     dewpoint_c_s(maxsta,maxlvls)      
         real*4     dir_deg_s(maxsta,maxlvls),spd_mps_s(maxsta,maxlvls)       
 	character  stname_s(maxsta)*5
-        integer    tempQcFlag(maxlvls,maxobs)
-        integer    prsQcFlag(maxlvls,maxobs)
-        integer    rhQcFlag(maxlvls,maxobs)
-        integer    wsQcFlag(maxlvls,maxobs)
-        integer    wdQcFlag(maxlvls,maxobs)
 
 c.....  Unknown vars.
 	character  save_stn(maxsta)*6
@@ -151,12 +153,14 @@ c
      &         r_missing_data,                                    ! I
      &         nsnd_file, nlvl(ix), lvls_m(1,ix),                 ! O
      &         staelev(ix), stalat(ix), stalon(ix),               ! O
+     &         soilMoisture(ix),                                  ! O
      &         temp_c(ix,1), dewpoint_c(ix,1),                    ! O
      &         height_m(ix,1),                                    ! O
      &         dir_deg(ix,1), spd_mps(ix,1),                      ! O
 c    &         pressure_mb(ix,1), prsQcFlag(ix,1),                ! O
      &         tempQcFlag(ix,1), rhQcFlag(ix,1),                  ! O
      &         wsQcFlag(ix,1), wdQcFlag(ix,1),                    ! O
+     &         smQcFlag(ix),                                      ! O
      &         a9time_ob(ix), stname(ix), wmoid(ix),              ! O
      &         istatus)                                           ! O
  
@@ -276,11 +280,13 @@ c
 c
 c.....  Call the routine to write the SND file.
 c
-        if(nsta .gt. 0)then
-            call open_ext(lun_out,i4time_sys,'snd',istatus)
-        endif
+        if(ext(1:3) .eq. 'snd')then
 
-        call write_snd(    lun_out                               ! I
+            if(nsta .gt. 0)then
+                call open_ext(lun_out,i4time_sys,'snd',istatus)
+            endif
+
+            call write_snd(lun_out                               ! I
      1                    ,maxsta,maxlvl,nsta                    ! I
      1                    ,wmoid_s                               ! I
      1                    ,stalat_s,stalon_s,staelev_s           ! I
@@ -294,12 +300,14 @@ c
      1                    ,spd_mps_s                             ! I
      1                    ,istatus)                              ! O
 
-        if(istatus .ne. 1)then
-            write(6,*)
+            if(istatus .ne. 1)then
+                write(6,*)
      1       ' get_local_towerobs: Bad status returned from write_snd'       
-        endif
+            endif
 
-        return
+            return
+
+        endif
 c
  990    continue               ! no data available
         istatus = 0
@@ -313,10 +321,12 @@ c
      &         r_missing_data,                                    ! I
      &         nobs, nlvl, lvls_m,                                ! O
      &         staelev, stalat, stalon,                           ! O
+     &         soilMoisture,                                      ! O
      &         temp_c, dewpoint_c, height_m,                      ! O
      &         dir_deg, spd_mps,                                  ! O
 c    &         pressure_pa, prsQcFlag,                            ! O 
      &         tempQcFlag, rhQcFlag, wsQcFlag, wdQcFlag,          ! O
+     &         smQcFlag,                                          ! O
      &         a9time_ob, stname, wmoid,                          ! O
      &         istatus)                                           ! O
 
@@ -330,6 +340,7 @@ c    &         pressure_pa, prsQcFlag,                            ! O
       real*4        lvls_m(maxlvls,maxobs)
       real*4        staelev(maxobs)
       real*4        stalat(maxobs),stalon(maxobs)
+      real*4        soilMoisture(maxobs)
       real*4        dd(maxlvls,maxobs), ff(maxlvls,maxobs)
       real*4        temp_k, rh_pct,stationP,ws,wd
       integer       tempQcFlag(maxlvls,maxobs)
@@ -337,6 +348,7 @@ c    &         pressure_pa, prsQcFlag,                            ! O
       integer       rhQcFlag(maxlvls,maxobs)
       integer       wsQcFlag(maxlvls,maxobs)
       integer       wdQcFlag(maxlvls,maxobs)
+      integer       smQcFlag(maxobs)
       integer       tempQF, prsQF, rhQF, wsQF, wdQF
       real*4        height_m(maxobs,maxlvls)
       real*4        pressure_pa(maxobs,maxlvls)      
