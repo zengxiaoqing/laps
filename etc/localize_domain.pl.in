@@ -214,7 +214,7 @@ my @moad_domain_orig_uri;
 my @moad_domain_orig_urj;
 my @moad_ratio_2_parent;
 my @parent_id;
-my ($deltai,$deltaj, $dn, $cstring, $i);
+my ($deltai,$deltaj, $parent_id, $cstring, $dn, $i);
 if($WHICH_TYPE eq "wrfsi"){
    @moad_domain_orig_lli = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_lli",$DATA_ROOT);
    @moad_domain_orig_llj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_llj",$DATA_ROOT);
@@ -236,6 +236,7 @@ if($WHICH_TYPE eq "wrfsi"){
 opendir(CDL_DIR,"$DATA_ROOT/cdl");
 my @cdl_list = grep /\.cdl$/, readdir CDL_DIR;
 closedir CDL_DIR;
+sort @cdl_list;
 
 foreach(@cdl_list){
 
@@ -252,15 +253,16 @@ foreach(@cdl_list){
          $dn = $1-1;
      }
      if($dn > 0){
+        $parent_id=@parent_id[$dn]-1;  #!! subtract 1 for 0-based array indexing !!#
         $deltai  = $moad_domain_orig_uri[$dn]-$moad_domain_orig_lli[$dn];
         $deltaj  = $moad_domain_orig_urj[$dn]-$moad_domain_orig_llj[$dn];
-        if($moad_domain_orig_uri[$dn] > $xdim[$dn-1]){
+        if($moad_domain_orig_uri[$dn] > $xdim[$parent_id]){
            print "Error: Upper right x dim of child outside of parent domain\n";
-           print "       $moad_domain_orig_uri[$dn] $xdim[$dn-1]\n";
+           print "       $moad_domain_orig_uri[$dn] > $xdim[$parent_id] \n";
            exit;
-        }elsif($moad_domain_orig_urj[$dn] > $ydim[$dn-1]){
+        }elsif($moad_domain_orig_urj[$dn] > $ydim[$parent_id]){
            print "Error: Upper right y dim of child outside of parent domain\n";
-           print "       $moad_domain_orig_urj[$dn] $ydim[$dn-1]\n";
+           print "       $moad_domain_orig_urj[$dn] > $ydim[$parent_id] \n";
            exit;
         }
         $xdim[$dn] = $deltai*$moad_ratio_2_parent[$dn]+1;
@@ -268,6 +270,7 @@ foreach(@cdl_list){
      }
      print "dims for domain $1: x,y = $xdim[$dn],$ydim[$dn]\n";
    }
+
    open(CDL,"$DATA_ROOT/cdl/$_");
    my @cdl = <CDL>;
    close(CDL);
@@ -350,134 +353,123 @@ if($WHICH_TYPE eq "laps"){
 
 print "$0 complete\n";
 
-
 sub update_nl{
+    print "In localize_domain:update_nl\n";
     my($srcroot,$dataroot,$type) = @_;
+
+    my $srcdir  = "$srcroot/static";
+    my $datadir = "$dataroot/static";
 #
-# open and compare nest7grid.parms and *.nl in $srcroot/static and $dataroot/static
-# Add variables and files found in $srcroot/static but not $dataroot/static 
+# Add variables and files found in $srcroot/static but not $dataroot/static
 # Retain the values of variables found in $dataroot/static for variables in both files
 #
 # First find all of the variable values in $dataroot/static
 #
 
-    opendir(TDIR,"$dataroot/static");
-    my @nl = grep(/\.nl$/,readdir(TDIR));
+    my @nl;
+    opendir(TDIR,"$srcdir");
+    foreach (readdir TDIR) {
+      if  (/\w*.nl$/) {
+        push (@nl, "$_");
+      }
+    }
     closedir(TDIR);
     push(@nl,"nest7grid.parms") if(lc $type eq "laps");
 
-    my %nl_vals;
-    my %comments;
     my $nl_file;
 
     foreach $nl_file (@nl){
-	print "First pass of namelist parser $nl_file\n";
-	open(FILE,"$dataroot/static/$nl_file");
-	my @template = <FILE>;
-	close(FILE);
+    print "Processing $nl_file\n";
+        my %nl_vals;
+        my %comments;
+        if ( -f "$datadir/$nl_file") {
+          print "Found existing $nl_file in dataroot, reading...\n";
 
-	my $var='';
-	my $mark=0;
-	my $line;
-	foreach $line (@template){
-	    if($line =~ /^\s*\&/){
-		$mark=1;
-		next;
-	    }elsif($line =~ /^\s*\//){
-		$mark=2;
-		next;
-	    }elsif($line =~ /^[!cC]/){
-		$comments{$nl_file} .= $line;
-		$mark=3;
-		next;
-	    }elsif($line =~ /^\s*(\S+)\s*=\s*(.*)$/){
-		$var = $1;
-                $var =~ tr/a-z/A-Z/;
-		$nl_vals{$var} = $2;
-		next;
-	    }elsif($line =~ /^(.*)$/){
-		$nl_vals{$var} .= "\n$1";
-		next;
-	    }
-	    if($mark>0){
-		$var = '';
-		$mark=0;
-	    }
-	}
+          open(FILE,"$datadir/$nl_file");
+          my @template = <FILE>;
+          close(FILE);
 
-        run_sys::run_sys("cp $dataroot/static/$nl_file $dataroot/static/$nl_file.bak");
-    }
-    
-    opendir(TDIR,"$srcroot/static");
-    my @nnl = grep(/\.nl$/,readdir(TDIR));
-    closedir(TDIR);
-    push(@nnl,"nest7grid.parms") if($type eq "laps");
-    
-    my ($comm, $fnd);
-    foreach $nl_file (@nnl){
-	open(INFILE,"$srcroot/static/$nl_file");
-	my @infile = <INFILE>;
-	close(INFILE);
-	
-	print "merging $srcroot/static/$nl_file into $dataroot/static/$nl_file\n";
-	open(OUTFILE,">$dataroot/static/$nl_file") or die "Could not open $dataroot/static/$nl_file to write";
-        my($var, $val, $line, $eon);
+          my $var='';
+          my $mark=0;
+          my $line;
+          foreach $line (@template){
+              if($line =~ /^\s*\&/){
+                  $mark=1;
+                  next;
+              }elsif($line =~ /^\s*\//){
+                  $mark=2;
+                  next;
+              }elsif($line =~ /^[!cC]/){
+                  $comments{$nl_file} .= $line;
+                  $mark=3;
+                  next;
+              }elsif($line =~ /^\s*(\S+)\s*=\s*(.*)$/){
+                  $var = $1;
+                  $var =~ tr/a-z/A-Z/;
+                  $nl_vals{$var} = $2;
+                  next;
+              }elsif($line =~ /^(.*)$/){
+                  $nl_vals{$var} .= "\n$1";
+                  next;
+              }
+              if($mark>0){
+                  $var = '';
+                  $mark=0;
+              }
+           }
+          system("cp $datadir/$nl_file $datadir/$nl_file.bak");
+      }
 
- 	my @comments = split("\n",$comments{$nl_file});
+      open(INFILE,"$srcdir/$nl_file");
+      my @infile = <INFILE>;
+      close(INFILE);
 
-	foreach $line (@infile){
-            next if($line eq "\n");
-#            print ">$line< ".length($line)."\n";
-	    if($line =~ /^\s*\//){
-		print "End of namelist section found\n";
-		$eon = 1;
-                print OUTFILE "\/\n";
-                next;
-	    }
-	    
-	    if($line =~ /^\s*(\S+)\s*=\s*(.*)$/){
-		$var = $1;
-                
-                $var =~ tr/a-z/A-Z/;
-		$val = $2;
-		if(exists $nl_vals{$var}){
-#                    print "Found $var = $val\n";
-		    $val = $nl_vals{$var};
-		}
-                $val =~ s/\n$//;
-		print OUTFILE " $var = $val\n";
-		next;
-            }elsif($line =~ /^[!cC]/){
-		chomp($line);
-                $fnd = 0;
-                foreach $comm (@comments) {
-                  if ($line eq $comm) {
-                    $fnd  = 1;
-                    last;
-                  }
-                }
-                if ($fnd == 0) {
-                  push(@comments,$line);
-                }
-                next;
-            }elsif($line =~ /^\s*&/){
-		print OUTFILE $line;
-		next;
-	    }elsif(($line =~ /^(\s*[^&\/].*)$/) && exists $nl_vals{$var}){
-		next;
-	    }
-	    print OUTFILE $line;
+      open(OUTFILE,">$datadir/$nl_file") or
+          die "Could not open $datadir/$nl_file to write";
+      my($var, $val, $line, $eon);
+      my @comments = split("\n",$comments{$nl_file});
 
-	}
-#       print OUTFILE " \/\n";
-	foreach(@comments){
-	    print OUTFILE "$_\n";
-	}
-	close(OUTFILE);
-    }
+      foreach $line (@infile){
+          next if($line eq "\n");
+          if($line =~ /^\s*\//){
+              print "End of namelist found\n";
+              $eon = 1;
+              print OUTFILE "\/\n";
+              next;
+          }
 
+          if($line =~ /^\s*(\S+)\s*=\s*(.*)$/){
+              $var = $1;
+              $var =~ tr/a-z/A-Z/;
+              $val = $2;
+              if(exists $nl_vals{$var}){
+                  $val = $nl_vals{$var};
+              }
+              $val =~ s/\n$//;
+              print OUTFILE " $var = $val\n";
+              next;
+          }elsif($line =~ /^[!cC]/){
+              chomp($line);
+              my $tmpline = $line;
+              $tmpline =~ s/[(\[\]\\\/\(\)\!\$\^)]/\$1/g;
+              next if(grep(/$tmpline/,@comments)>0);
+              push(@comments,$line);
+              next;
+          }elsif($line =~ /^\s*&/){
+              print OUTFILE $line;
+              next;
+          }elsif(($line =~ /^(\s*[^&\/].*)$/) && exists $nl_vals{$var}){
+              next;
+          }
+          print OUTFILE $line;
+
+      }
+      foreach(@comments){
+          print OUTFILE "$_\n";
+      }
+      close(OUTFILE);
+  }
 }
-
 
 sub safe_cp{
     my($indir,$outdir) = @_;
