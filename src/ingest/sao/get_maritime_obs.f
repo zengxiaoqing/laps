@@ -457,20 +457,21 @@ c
 c.....  Check to see if its in the desired time window.
 c
 	   i4time_ob = nint(timeobs(i)) + i4time_offset
+   	   call make_fnam_lp(i4time_ob,a9time,istatus)
+
 	   if(i4time_ob .lt. i4time_before 
      1   .or. i4time_ob .gt. i4time_after) then
                if(i .le. max_write)then
                    write(6,91,err=125)i,wmoid_in(i),stname(i)
-     1                               ,i4time_ob,i4time_before
+     1                               ,a9time,i4time_ob,i4time_before
      1                               ,i4time_after
- 91		   format(i6,i7,1x,a8,' out of time',3i12)
+ 91		   format(i6,i7,1x,a8,1x,a9,' out of time',3i12)
                endif
                go to 125
            endif
 c
 c.....  Right time, right location...
 
- 	  call make_fnam_lp(i4time_ob,a9time,istatus)
 	  time = a9time(6:9)
 	  read(time,*) rtime
 c
