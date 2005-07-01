@@ -22,7 +22,12 @@
 !      The parse routine should help to handle blanks OK, hopefully it won't
 !      get fooled by "look alike" obstypes.
 
-       if(l_parse(c_obstype,'ACARS'))i4_window_ob = ilaps_cycle_time / 2     
+       if(l_parse(c_obstype,'ACARS'))then
+           call get_aircraft_time_window(aircraft_time_window,istatus)
+           i4_window_ob = 
+     1         nint(float(ilaps_cycle_time) * aircraft_time_window)
+       endif
+
        if(l_parse(c_obstype,'VAD'))  i4_window_ob = 1800    
 
        return
@@ -51,7 +56,11 @@
 !      The parse routine should help to handle blanks OK, hopefully it won't
 !      get fooled by "look alike" obstypes.
 
-       if(l_parse(c_obstype,'ACARS'))i4_window_ob = ilaps_cycle_time / 2     
+       if(l_parse(c_obstype,'ACARS'))then
+           call get_aircraft_time_window(aircraft_time_window,istatus)
+           i4_window_ob = 
+     1         nint(float(ilaps_cycle_time) * aircraft_time_window)
+       endif
 
        i4_window_ob = min(i4_window_ob,5400)
 
