@@ -276,9 +276,11 @@
      and 'FC' within 'src/include/makefile.inc'. If configure wants you to use 
      'ncargf90', you may consider soft linking 'ncargf90' to the 'ncargf77' 
      script or copying 'ncargf77' to a new location and calling it 'ncargf90'. 
+
      If you only have an 'ncarg90' script (i.e. no 'ncargf77'), you may want 
-     to create a copy or link called 'ncargf77' to help configure make the 
-     switch over from 'ncargf77' to 'ncargf90'.
+     to also make a script called 'ncargf77' that lists the 'f77' compiler.
+     This can help 'configure' do its test for making the switch over from 
+     'ncargf77' to 'ncargf90'.
 
      Lapsplot is built as a special option to 'make', simply type 
      'make lapsplot' or 'make install_lapsplot'. It is not built with a plain 
