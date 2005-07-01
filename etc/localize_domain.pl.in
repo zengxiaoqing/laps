@@ -69,7 +69,7 @@ my $q_sub;
 if(defined $qspn){
    print "using qsub: qsub project name = $qspn\n";
    if(defined $ENV{HOSTTYPE}){
-      if( substr($ENV{HOSTTYPE},0,4) eq "i386"){
+      if( substr($ENV{HOSTTYPE},0,4) eq "i386"|| $ENV{HOSTTYPE) eq "x86_64-linux"){
          $q_sub="Q";
       }elsif( substr($ENV{HOSTTYPE},0,5) eq "alpha"){
          $q_sub="q";
