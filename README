@@ -270,13 +270,15 @@
      graphics. The environment variable $NCARG_ROOT should be set when
      configuring, compiling, or running 'lapsplot.exe'. 
      
-     Before running 'configure', check that 'ncargf77' is in your path, if
-     you are using 'f77'. If you are using another compiler, check after
-     running 'configure' to see that the right thing was done by inspecting 
-     'NCARGFC' and 'FC' within 'src/include/makefile.inc'. If configure wants 
-     you to use 'ncargf90', you may consider soft linking 'ncargf90' to the
-     'ncargf77' script or copying 'ncargf77' to a new location and calling
-     it 'ncargf90'.
+     Before running 'configure', check that 'ncargf77' is in your path.
+     If you are using a compiler other than 'f77', check after running 
+     'configure' to see that the right thing was done by inspecting 'NCARGFC' 
+     and 'FC' within 'src/include/makefile.inc'. If configure wants you to use 
+     'ncargf90', you may consider soft linking 'ncargf90' to the 'ncargf77' 
+     script or copying 'ncargf77' to a new location and calling it 'ncargf90'. 
+     If you only have an 'ncarg90' script (i.e. no 'ncargf77'), you may want 
+     to create a copy or link called 'ncargf77' to help configure make the 
+     switch over from 'ncargf77' to 'ncargf90'.
 
      Lapsplot is built as a special option to 'make', simply type 
      'make lapsplot' or 'make install_lapsplot'. It is not built with a plain 
