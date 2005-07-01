@@ -1705,7 +1705,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
         The default cycle time is 60 minutes. To change this, do as follows...
  
      1. Edit runtime parameter file 'data/static/nest7grid.parms' 
-        to change the value of 'laps_cycle_time'.
+        to change the value of 'laps_cycle_time_cmn'.
 
  ----- 2.10 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
 
