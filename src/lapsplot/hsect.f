@@ -2537,133 +2537,6 @@ c
                     endif
                 endif
 
-            elseif(.false.)then ! Phasing this out
-!               Near Realtime - look for snow accumulation files
-                if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
-                   !Find latest time of radar data
-                    if(.true.)then ! Read MHR packed data
-                        c_filespec = c_filespec_ra
-                    else
-                        c_filespec = c_filespec_src
-                    endif
-
-                    call get_file_time(c_filespec,i4time_ref1,i4time_acc
-     1um)
-                else
-!                   i4time_accum = (i4time_ref1+60) / 120 * 120 ! Rounded off time
-                    i4time_accum = i4time_ref1
-                endif
-
-                i4time_end = i4time_accum
-                i4time_interval = nint(r_hours * 3600.)
-                i4time_start = i4time_end - i4time_interval
-
-!               Round down to nearest cycle time
-                i4time_endfile   = i4time_end  
-     1                           / laps_cycle_time*laps_cycle_time
-
-!               Round up to nearest cycle time
-                i4time_startfile = i4time_start
-     1                           / laps_cycle_time*laps_cycle_time
-
-                if(i4time_start .gt. i4time_startfile)
-     1          i4time_startfile = i4time_startfile + laps_cycle_time
-
-                if(i4time_startfile .lt. i4time_endfile)then
-                    istatus_file = 1
-                    write(6,*)
-     1     ' Looking for Storm Total Accumulations Stored In Files'
-
-                    call get_laps_2d(i4time_endfile,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,field_2d_buf,istatus_file
-     1)
-                    if(istatus_file .ne. 1)goto2100
-                    comment_b = comment_2d(1:9)
-
-                    call i4time_fname_lp(comment_2d(1:9),I4time_reset,is
-     1tatus)
-                    istatus = 1
-
-                    if(i4time_startfile .ne. i4time_reset)then
-                        call get_laps_2d(i4time_startfile,ext,var_2d
-     1             ,units_2d,comment_2d,NX_L,NY_L,accum_2d,istatus_file)
-                        if(istatus_file .ne. 1)goto2100
-                        comment_a = comment_2d(1:9)
-
-                        if(comment_a .ne. comment_b)then
-                            write(6,*)' Storm Total was reset at '
-     1                                            ,comment_b
-                            write(6,*)
-     1               ' Cannot subtract storm totals to get accumulation'
-                            istatus_file = 0
-                            goto2100
-                        endif
-
-                    else ! Reset time = Start File Time
-                        write(6,*)
-     1           ' Start File Time = Reset time, Set Init Accum to 0'
-                        call zero(accum_2d,NX_L,NY_L)
-
-                    endif
-
-                    write(6,*)
-     1     ' Subtracting Storm Totals to yield Accumulation over period'
-                    call diff(field_2d_buf,accum_2d,accum_2d,NX_L,NY_L)
-
-                    do j = 1,NY_L
-                    do i = 1,NX_L
-                        if(accum_2d(i,j) .lt. 0.)then
-                            write(6,*)' This should never happen:'
-                            write(6,*)' Negative accum; Storm Total was
-     1reset'
-                            istatus_file = 0
-                            goto2100
-                        endif
-                    enddo ! i
-                    enddo ! j
-
-                else
-                    istatus_file = 0
-
-                endif
-
-2100            if(istatus_file .eq. 1)then ! Fill in ends of Pd with radar etc. data
-                    if(i4time_start .lt. i4time_startfile)then
-                        write(6,*)' Sorry, no L1S files present'
-                        goto 1200
-
-                    endif
-
-                    if(i4time_end .gt. i4time_endfile)then
-                        write(6,*)' Sorry, no L1S files present'
-                        goto 1200
-
-                    endif
-
-                else ! Get entire time span from radar etc. data
-
-                 write(6,*)' Sorry, no L1S files present'
-                 goto 1200
-
-                endif
-
-!               encode(9,2029,c9_string)r_hours
-                write(c9_string,2029)r_hours
-
-                if(c_type(1:2) .eq. 'sa')then
-                    if(c_units_type .eq. 'english')then
-                        c_label = c9_string//' Snow Accum  (in)'      
-                    else ! metric
-                        c_label = c9_string//' Snow Accum  (mm)'      
-                    endif
-                else
-                    if(c_units_type .eq. 'english')then
-                        c_label = c9_string//' Prcp Accum  (in)'
-                    else ! metric
-                        c_label = c9_string//' Prcp Accum  (mm)'
-                    endif
-                endif
-
             elseif(.true.)then ! under construction
 !               Near Realtime - look for snow accumulation files
                 if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
@@ -2700,21 +2573,24 @@ c
 
             if(c_units_type .eq. 'english')then
                 scale = 1. / ((100./2.54)) ! DENOMINATOR = (IN/M)
-                if(c_type(1:2) .eq. 'sa')then
-                    c_label = c9_string//' Snow Accum  (in)'
-                else
-                    c_label = c9_string//' Prcp Accum  (in)'
+                if(r_hours .ne. -99.)then ! Already have label for Storm Total
+                    if(c_type(1:2) .eq. 'sa')then
+                        c_label = c9_string//' Snow Accum  (in)'
+                    else
+                        c_label = c9_string//' Prcp Accum  (in)'
+                    endif
                 endif
 
             else ! metric
                 scale = .001               ! NUMERATOR   = (M/MM)
-                if(c_type(1:2) .eq. 'sa')then
-                    c_label = c9_string//' Snow Accum  (mm)'
-                else
-                    c_label = c9_string//' Prcp Accum  (mm)'
+                if(r_hours .ne. -99.)then ! Already have label for Storm Total
+                    if(c_type(1:2) .eq. 'sa')then
+                        c_label = c9_string//' Snow Accum  (mm)'
+                    else
+                        c_label = c9_string//' Prcp Accum  (mm)'
+                    endif
                 endif
-
-            endif
+            endif ! units type
 
             clow = 0.
 
