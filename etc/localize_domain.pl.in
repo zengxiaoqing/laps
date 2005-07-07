@@ -69,14 +69,19 @@ my $q_sub;
 if(defined $qspn){
    print "using qsub: qsub project name = $qspn\n";
    if(defined $ENV{HOSTTYPE}){
-      if( substr($ENV{HOSTTYPE},0,4) eq "i386"|| $ENV{HOSTTYPE) eq "x86_64-linux"){
+      if( substr($ENV{HOSTTYPE},0,4) eq "i386" || $ENV{HOSTTYPE} eq "x86_64-linux"){
          $q_sub="Q";
       }elsif( substr($ENV{HOSTTYPE},0,5) eq "alpha"){
          $q_sub="q";
       }else{print "ERROR: not able to determine HOSTTYPE for q sub\n";
             print "Abort\n";
-            exit;}
+            exit;
+      }
+   }else{
+      print "ERROR: Env Var HOSTTYPE not available\n";
+      exit;
    }
+       
 }
 
 #flush buffer; ie., prevent buffering of output
