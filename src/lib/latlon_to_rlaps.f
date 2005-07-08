@@ -53,19 +53,21 @@ cdoc    or mercator projection.
         save init,umin,umax,vmin,vmax
         data init/0/
 
+        include 'grid_fname.cmn'
+
         if (abs(rlat) > 90.000) then
            write(6,*) 'rejecting invalid latitude ',rlat
            istatus = -1
            return
         endif
 
-        if(init .eq. 0)then
+        if(init.ne.nest)then
             call latlon_to_uv(lat(1,1),lon(1,1),umin,vmin,istatus)
             call latlon_to_uv(lat(ni,nj),lon(ni,nj),umax,vmax,istatus)
 
             write(6,101)umin,umax,vmin,vmax
 101         format(1x,' Initializing latlon_to_rlapsgrid',4f10.5)
-            init = 1
+            init = nest
         endif
 
         uscale = (umax - umin) / (float(ni) - 1.)
@@ -80,7 +82,7 @@ cdoc    or mercator projection.
 
         if(uscale .eq. 0. .or. vscale .eq. 0.)then
             write(6,*)
-     1      ' SEVERE ERROR: (u|v)scale = 0 in latlon_to_rlapsgrid'     
+     1      ' SEVERE ERROR: (u|v)scale = 0 in latlon_to_rlapsgrid'
             stop
         else
             ri = (ulaps - u0) / uscale
@@ -116,13 +118,15 @@ cdoc    or mercator projection.
         save init,umin,umax,vmin,vmax
         data init/0/
 
-        if(init .eq. 0)then
+        include 'grid_fname.cmn'
+
+        if(init .ne. nest)then
             call latlon_to_uv(lat(1,1),lon(1,1),umin,vmin,istatus)
             call latlon_to_uv(lat(ni,nj),lon(ni,nj),umax,vmax,istatus)
 
             write(6,101)umin,umax,vmin,vmax
 101         format(1x,' Initializing rlapsgrid_to_latlon',4f10.5)
-            init = 1
+            init = nest 
         endif
 
         uscale = (umax - umin) / (float(ni) - 1.)
