@@ -1,6 +1,7 @@
       subroutine get_tile_list(min_lat,max_lat,min_lon,max_lon
-     1,maxtiles,isbego,iwbego,iblksizo,ctiletype,itilesize
-     1,num_tiles_needed,ctile_name_list,istatus)
+     1,maxtiles,isbego,iwbego,itilesize,ctiletype
+     1,num_tiles_needed,ctile_name_list,iwoc1,iwoc2
+     1,isoc1,isoc2,istatus)
 
       implicit  none
 
@@ -9,7 +10,6 @@
 
       integer   num_tiles_needed
       integer   isbego,iwbego
-      integer   iblksizo
       integer   itilesize
       integer   itile_ns
       integer   iwoc0
@@ -32,14 +32,14 @@
 
       istatus = 1
 
-      r8term=(min_lat-float(isbego))/float(iblksizo)
-      ISOC1=(INT(r8term+200.)-200)*IBLKSIZO+ISBEGO
-      r8term=(min_lon-float(iwbego))/float(iblksizo)
-      IWOC1=(INT(r8term+400.)-400)*IBLKSIZO+IWBEGO
-      r8term=(max_lat-float(isbego))/float(iblksizo)
-      ISOC2=(INT(r8term+200.)-200)*IBLKSIZO+ISBEGO
-      r8term=(max_lon-float(iwbego))/float(iblksizo)
-      IWOC2=(INT(r8term+400.)-400)*IBLKSIZO+IWBEGO
+      r8term=(min_lat-float(isbego))/float(itilesize)
+      ISOC1=(INT(r8term+200.)-200)*itilesize+ISBEGO
+      r8term=(min_lon-float(iwbego))/float(itilesize)
+      IWOC1=(INT(r8term+400.)-400)*itilesize+IWBEGO
+      r8term=(max_lat-float(isbego))/float(itilesize)
+      ISOC2=(INT(r8term+200.)-200)*itilesize+ISBEGO
+      r8term=(max_lon-float(iwbego))/float(itilesize)
+      IWOC2=(INT(r8term+400.)-400)*itilesize+IWBEGO
 
       num_tiles_needed=0
 
@@ -51,12 +51,15 @@
 c        else
 c           IWOC1=360+IWOC1
          endif
+c     elseif(IWOC1.gt.180)then
+c        IWOC1=360-IWOC1
       endif
       print*,'Noddy IWOC1, IWOC2 ',IWOC1,IWOC2
       do IWOC = IWOC1,IWOC2,itilesize
+
          IWOC0 = IWOC
          IF(IWOC.LT.-180)IWOC0=360+IWOC0
-         IF(IWOC.GT.+180)IWOC0=360-IWOC0
+c        IF(IWOC.GT.+180)IWOC0=360-IWOC0
 
          IWOCPH=ABS(IWOC0)/100
          IWOCPT=(ABS(IWOC0)-IWOCPH*100)/10
