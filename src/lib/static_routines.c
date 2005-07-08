@@ -7,6 +7,8 @@
 #define SYSCMD "ncgen -o %s %s"
 #define LAT "lat"
 #define LON "lon"
+#define LAH "lah"
+#define LOH "loh"
 #ifndef DEBUG
 #define DEBUG 0
 #endif
@@ -231,6 +233,15 @@ char *fname;
 *               LoV             standard longitude
 *               Latin1          first standard latitude
 *               Latin2          second standard latitude
+*               Center_lat      latitude of domain center
+*               Center_lon      longitude of domain center
+*               lli             lower left (SW) i coordinate of domain
+*               llj             lower left (SW) j coordinate of domain
+*               uri             upper right (NE) i coordinate of domain
+*               urj             upper right (NE) j coordinate of domain
+*               parent_id       Domain number of parent within which current domain resides
+*               ratio_2_parent  Integer number of grid points minus 1 in current domain between
+*                               two grid points of parent domain
 *               origin          site where LAPS being run
 *               map_proj	map projection
 *	Output:
@@ -243,15 +254,21 @@ char *fname;
 #ifdef __STDC__
 int cdf_wrt_hdr_stat(int cdf_id, fint4 *n_grids, float *grid_spacing,
                      char *asctime, int asc_len, char *model, 
-                     fint4 *nx, fint4 *ny, float *dx, float *dy, 
-                     float *la1, float *lo1, float *la2, float *lo2,
-                     float *lov, float *latin1, float *latin2, 
+                     fint4 *nx, fint4 *ny,
+                     float *dx, float *dy, float *lov, float *latin1, 
+                     float *latin2, float *la1, float *lo1, 
+                     float *la2, float *lo2, float *center_lat, 
+                     float *center_lon, int wrfsi,
+		     fint4 *lli, fint4 *llj, fint4 *uri, fint4 *urj,
+		     fint4 *parent_id, fint4 *ratio_2_parent,
                      char *origin, char *map_proj, double unixtime,
                      fint4 *status)
 #else
-int cdf_wrt_hdr_stat(cdf_id, n_grids, grid_spacing, asctime, asc_len,model,
-                     nx, ny, dx, dy, la1, lo1, la2, lo2, lov, latin1, latin2,
-                     origin, map_proj, unixtime, status)
+int cdf_wrt_hdr_stat(cdf_id, n_grids, grid_spacing, asctime, asc_len,model, nx, 
+                     ny, dx, dy, lov, latin1, latin2, la1,lo1, la2, lo2, 
+		     center_lat, center_lon, wrfsi, lli, llj, uri, urj,
+		     parent_id, ratio_2_parent, origin, 
+                     map_proj, unixtime, status)
 int cdf_id; 
 fint4 *n_grids; 
 float *grid_spacing;
@@ -262,13 +279,22 @@ fint4 *nx;
 fint4 *ny;
 float *dx; 
 float *dy; 
+float *lov; 
+float *latin1;
+float *latin2; 
 float *la1;
 float *lo1;
 float *la2;
 float *lo2;
-float *lov; 
-float *latin1;
-float *latin2; 
+fint4 *center_lat;
+fint4 *center_lon;
+int wrfsi;
+fint4 *lli;
+fint4 *llj;
+fint4 *uri;
+fint4 *urj;
+fint4 *parent_id;
+fint4 *ratio_2_parent;
 char *origin; 
 char *map_proj;
 double unixtime;
@@ -372,6 +398,30 @@ fint4 *status;
     ncvarput(cdf_id, i_varid, start, edges, (void *)dy);
     if(DEBUG==1) printf("cdf_wrt_hdr_stat: 5 %d\n",edges[0]);
       
+/* store LoV */
+    if ((i_varid = ncvarid (cdf_id, "LoV")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return -5;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)lov);
+    if(DEBUG==1) printf("cdf_wrt_hdr_stat: 8 %d\n",edges[0]);
+      
+/* store Latin1 */
+    if ((i_varid = ncvarid (cdf_id, "Latin1")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return -5;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)latin1);
+    if(DEBUG==1) printf("cdf_wrt_hdr_stat: 9 %d\n",edges[0]);
+
+/* store Latin2 */
+    if ((i_varid = ncvarid (cdf_id, "Latin2")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return -5;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)latin2);
+    if(DEBUG==1) printf("cdf_wrt_hdr_stat: 10 %d\n",edges[0]);
+
 /* store La1 */
     if ((i_varid = ncvarid (cdf_id, "La1")) == (-1)) {
       *status = -5;	/* returns "error writing header" */
@@ -404,29 +454,75 @@ fint4 *status;
     ncvarput(cdf_id, i_varid, start, edges, (void *)lo2);
     if(DEBUG==1) printf("cdf_wrt_hdr_stat: 7 %d\n",edges[0]);
       
-/* store LoV */
-    if ((i_varid = ncvarid (cdf_id, "LoV")) == (-1)) {
-      *status = -5;	/* returns "error writing header" */
+/* store center_lat */
+    if ((i_varid = ncvarid (cdf_id, "center_lat")) == (-1)) {
+      *status = -5;     /* returns "error writing header" */
       return -5;
     }
-    ncvarput(cdf_id, i_varid, start, edges, (void *)lov);
-    if(DEBUG==1) printf("cdf_wrt_hdr_stat: 8 %d\n",edges[0]);
-      
-/* store Latin1 */
-    if ((i_varid = ncvarid (cdf_id, "Latin1")) == (-1)) {
-      *status = -5;	/* returns "error writing header" */
-      return -5;
-    }
-    ncvarput(cdf_id, i_varid, start, edges, (void *)latin1);
-    if(DEBUG==1) printf("cdf_wrt_hdr_stat: 9 %d\n",edges[0]);
-
-/* store Latin2 */
-    if ((i_varid = ncvarid (cdf_id, "Latin2")) == (-1)) {
-      *status = -5;	/* returns "error writing header" */
-      return -5;
-    }
-    ncvarput(cdf_id, i_varid, start, edges, (void *)latin2);
+    ncvarput(cdf_id, i_varid, start, edges, (void *)center_lat);
     if(DEBUG==1) printf("cdf_wrt_hdr_stat: 10 %d\n",edges[0]);
+
+/* store center_lon */
+    if ((i_varid = ncvarid (cdf_id, "center_lon")) == (-1)) {
+      *status = -5;     /* returns "error writing header" */
+      return -5;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)center_lon);
+    if(DEBUG==1) printf("cdf_wrt_hdr_stat: 10 %d\n",edges[0]);
+
+/* write out 6 extra variables if domain is wrfsi */
+
+    if (wrfsi == 1) {
+
+/* store lower left i -> lli*/
+      if ((i_varid = ncvarid (cdf_id, "SW_i")) == (-1)) {
+        *status = -5;     /* returns "error writing header" */
+        return -5;
+      }
+
+      ncvarput1(cdf_id, i_varid, (const long *) &zero, (void *)lli);
+
+/* store lower left j -> llj*/
+      if ((i_varid = ncvarid (cdf_id, "SW_j")) == (-1)) {
+        *status = -5;     /* returns "error writing header" */
+        return -5;
+      }
+
+      ncvarput1(cdf_id, i_varid, (const long *) &zero, (void *)llj);
+
+/* store upper right i -> uri*/
+      if ((i_varid = ncvarid (cdf_id, "NE_i")) == (-1)) {
+        *status = -5;     /* returns "error writing header" */
+        return -5;
+      }
+
+      ncvarput1(cdf_id, i_varid, (const long *) &zero, (void *)uri);
+
+/* store upper right j -> urj*/
+      if ((i_varid = ncvarid (cdf_id, "NE_j")) == (-1)) {
+        *status = -5;     /* returns "error writing header" */
+        return -5;
+      }
+
+      ncvarput1(cdf_id, i_varid, (const long *) &zero, (void *)urj);
+
+/* store parent_id*/
+      if ((i_varid = ncvarid (cdf_id, "Parent_ID")) == (-1)) {
+        *status = -5;     /* returns "error writing header" */
+        return -5;
+      }
+
+      ncvarput1(cdf_id, i_varid, (const long *) &zero, (void *)parent_id);
+
+/* store ratio_2_parent*/
+      if ((i_varid = ncvarid (cdf_id, "Ratio_to_Parent")) == (-1)) {
+        *status = -5;     /* returns "error writing header" */
+        return -5;
+      }
+
+      ncvarput1(cdf_id, i_varid, (const long *) &zero, (void *)ratio_2_parent);
+
+    }
 
 /* store valtime */
     if ((i_varid = ncvarid (cdf_id, "valtime")) == (-1)) {
@@ -507,14 +603,22 @@ void write_cdf_static(char *filname, fint4 *s_length, char *f_asctime, fint4 *f_
                       fint4 *ldf_len, fint4 *imax, fint4 *jmax, fint4 *n_grids,
                       fint4 *nx_lp, fint4 *ny_lp, float *data, char *f_model, 
                       float *grid_spacing, float *dx, float *dy, float *lov, 
-                      float *latin1, float *latin2, char *f_origin, 
-                      fint4 *origin_len, char *f_map_proj, fint4 *map_len, 
+                      float *latin1, float *latin2,
+                      float *la1, float *lo1, float *la2, float* lo2, 
+                      float *center_lat, float *center_lon,
+                      fint4 *lli, fint4 *llj, fint4 *uri, fint4 *urj,
+                      fint4 *parent_id, fint4 *ratio_2_parent,
+                      char *f_origin, fint4 *origin_len,
+                      char *f_map_proj, fint4 *map_len, 
                       fint4 *unixtime, fint4 *status)
 #else
 void write_cdf_static(filname, s_length, f_asctime, f_asc_len, f_cdl_dir, cdl_len,
                       f_var, var_len, f_comment, com_len, f_ldf, ldf_len,
-                      imax, jmax, n_grids, nx_lp, ny_lp, data, f_model, 
-                      grid_spacing, dx, dy, lov, latin1, latin2, f_origin, 
+                      imax, jmax, n_grids, nx_lp, ny_lp, data, f_model,
+                      grid_spacing, dx, dy, lov, latin1, latin2,
+                      la1,lo1,la2,lo2,
+                      center_lat, center_lon, lli, llj, uri, urj,
+                      parent_id, ratio_2_parent, f_origin,
                       origin_len, f_map_proj, map_len, unixtime, status)
 
 char *filname;
@@ -542,6 +646,18 @@ float *dy;
 float *lov;
 float *latin1;
 float *latin2;
+float *la1;
+float *lo1;
+float *la2;
+float *lo2;
+fint4 *center_lat;
+fint4 *center_lon;
+fint4 *lli;
+fint4 *llj;
+fint4 *uri;
+fint4 *urj;
+fint4 *parent_id;
+fint4 *ratio_2_parent;
 char *f_origin;
 fint4 *origin_len;
 char *f_map_proj;
@@ -554,12 +670,11 @@ fint4 *status;
 	char *prefix, *comm_var, *model, *asctime, *fname, *map_proj;
 	char *var, *comment, *ldf, *p_var, *pf_var, *p_com, *pf_com;
         char *origin, *units;
-	int mod_len, asc_len, c_var_len, c_com_len;
+	int mod_len, asc_len, c_var_len, c_com_len, wrfsi;
 	int out_file, istat, i_varid, i, process_vr, count;
         int lat_index, lon_index, hdr_status;
         int xdimid, ydimid;
         static char *syscmd, *cdlfile;
-        float la1, lo1, la2, lo2;
         double d_unixtime;
         long nx_cdl, ny_cdl;
 
@@ -608,6 +723,14 @@ fint4 *status;
         ldf = malloc(((*ldf_len) + 1) * sizeof(char));
         nstrncpy(ldf,f_ldf,*ldf_len);
         strcat(cdlfile,ldf);
+
+/* determine if ldf is nest7grid or wrfsi */
+        if (strncmp(ldf,"wrfsi", 5) == 0) {
+          wrfsi = 1; 
+        } else {
+          wrfsi = 0; 
+        }
+
         free(ldf);
         strcat(cdlfile,".cdl");
         *cdl_len = strlen(cdlfile);
@@ -648,42 +771,49 @@ fint4 *status;
                              comment, NULL, fname);
           return;
         }
+/* check to see if we're working with LAPS...if we are, la1, lo1, la2, lo2 will all be -999.0 */
+/* if they're filled, its wrfsi and they are passed in */
 
-/* get La1 and Lo1 (SW corner lat and lon) and
-     La2 and Lo2 (NE corner lat and lon) from data array */
-        lat_index = -1; 
-        lon_index = -1;
-        for (i = 0; i < *n_grids; i++) {
-          p_var = var + (i * c_var_len);
-          if (strcmp(p_var, LAT) == 0) lat_index = i;
-          if (strcmp(p_var, LON) == 0) lon_index = i;
-        }
+        if ((*la1==-999.0)&&(*lo1==-999.0)&&(*la2==-999.0)&&(*lo2==-999.0)) {
 
-        if (lat_index == (-1)) {
-          la1 = -999.99;
-          la2 = -999.99;
-        }
-        else {
-          la1 = *(data + (lat_index*(*imax)*(*jmax)));
-          la2 = *(data + ((lat_index+1)*(*imax)*(*jmax)) - 1);
-        }
+/* get La1 and Lo1 (SW corner lat and lon) and La2 and Lo2 (NE corner lat and lon) from data array */
+          lat_index = -1;
+          lon_index = -1;
+          for (i = 0; i < *n_grids; i++) {
+            p_var = var + (i * c_var_len);
+            if (strcmp(p_var, LAT) == 0) lat_index = i;
+            if (strcmp(p_var, LON) == 0) lon_index = i;
+          }
 
-        if (lon_index == (-1)) {
-          lo1 = -999.99;
-          lo2 = -999.99;
-        }
-        else {
-          lo1 = *(data + (lon_index*(*imax)*(*jmax)));
-          lo2 = *(data + ((lon_index+1)*(*imax)*(*jmax)) - 1);
-          if (lo1 < 0.0) lo1 = 360.0 + lo1;
-          if (lo2 < 0.0) lo2 = 360.0 + lo2;
+          if (lat_index == (-1)) {
+            *la1 = -999.99;
+            *la2 = -999.99;
+          }
+          else {
+            *la1 = *(data + (lat_index*(*imax)*(*jmax)));
+            *la2 = *(data + ((lat_index+1)*(*imax)*(*jmax)) - 1);
+          }
+
+          if (lon_index == (-1)) {
+            *lo1 = -999.99;
+            *lo2 = -999.99;
+          }
+          else {
+            *lo1 = *(data + (lon_index*(*imax)*(*jmax)));
+            *lo2 = *(data + ((lon_index+1)*(*imax)*(*jmax)) - 1);
+            if (*lo1 < 0.0) *lo1 = 360.0 + *lo1;
+            if (*lo2 < 0.0) *lo2 = 360.0 + *lo2;
+          }
         }
 
 /* write header info to output file */
         d_unixtime = (double)*unixtime;
         hdr_status = cdf_wrt_hdr_stat(out_file, n_grids, grid_spacing, 
                                       asctime, asc_len,model, imax, jmax, dx, dy, 
-                                      &la1, &lo1, &la2, &lo2, lov, latin1, latin2, 
+                                      lov, latin1, latin2,la1,lo1,la2,lo2, 
+                                      center_lat, center_lon, wrfsi,
+                                      lli, llj, uri, urj,
+                                      parent_id, ratio_2_parent,
                                       origin, map_proj,d_unixtime, status);
         if (hdr_status != 0) {
           *status = hdr_status;
@@ -709,6 +839,7 @@ fint4 *status;
                 	 	    comm_var,p_com);
             if (istat == -1) {
               *status = -4;
+	      printf("1st case \n");
               ncclose(out_file);
               return;
             }
@@ -1090,6 +1221,7 @@ fint4 *status;
 
             if (istat == -1) {
               *status = -4;
+	      printf("2nd case \n");
               ncclose(cdfid);
               free_static_malloc(prefix, NULL, NULL, NULL, 
                                  var, comment, units, fname);
