@@ -12,43 +12,43 @@ netcdf static {
         namelen = 132;
 		
     variables:
-        //	grid latitudes
+        //	Grid latitudes
 
 	float                                  
             lat(record,z,y,x);
             lat:navigation_dim = "nav";
             lat:record = "valtime, reftime";
             lat:_FillValue = 1.e+37f;
-            lat:long_name="LAPS grid latitudes";
+            lat:long_name="Grid latitudes";
             lat:units="degrees";
             lat:valid_range= -90.f, 90.f;
 	    lat:LAPS_units="DEGREES";
                 	        
-        //	grid longitudes
+        //	Grid longitudes
 
 	float                                  
             lon(record,z,y,x);
             lon:navigation_dim = "nav";
             lon:record = "valtime, reftime";
             lon:_FillValue = 1.e+37f;
-            lon:long_name="LAPS grid longitudes";
+            lon:long_name="Grid longitudes";
             lon:units="degrees";
             lon:valid_range= -180.f, 180.f;
 	    lon:LAPS_units="DEGREES";
                 	        
-        //	LAPS grid average elevation 
+        //	Grid average elevation 
 
 	float                                  
             avg(record,z,y,x);
             avg:navigation_dim = "nav";
             avg:record = "valtime, reftime";
             avg:_FillValue = 1.e+37f;
-            avg:long_name="LAPS grid average elevation";
+            avg:long_name="Analysis grid average elevation";
             avg:units="meters MSL";
-            avg:valid_range= 0.f, 5000.f;
+            avg:valid_range= -200.f, 5000.f;
 	    avg:LAPS_units="METERS MSL";
                 	        
-        //	LAPS grid std dev of elevation
+        //	Grid std dev of elevation
 
 	float                                  
             std(record,z,y,x);
@@ -60,7 +60,7 @@ netcdf static {
             std:valid_range= -5000.f, 5000.f;
 	    std:LAPS_units="METERS";
                 	        
-        //	LAPS grid envelope	
+        //	Grid envelope	
 
 	float                                  
             env(record,z,y,x);
@@ -115,9 +115,9 @@ netcdf static {
             use:navigation_dim = "nav";
             use:record = "valtime, reftime";
             use:_FillValue = 1.e+37f;
-            use:long_name="land use";
+            use:long_name="land use dominant category";
             use:units="none";
-            use:valid_range= 0.f, 24.f;
+            use:valid_range= 1.f, 24.f;
 	    use:LAPS_units="none";
                 	        
         //      albedo climo
@@ -132,7 +132,7 @@ netcdf static {
             alb:valid_range= 0.f, 1.f;
             alb:LAPS_units="none";
 
-        //      lon component mean terrain slope
+        //      mean longitudinal terrain slope
 
         float
             sln(record,z,y,x);
@@ -144,7 +144,7 @@ netcdf static {
             sln:valid_range= -1.f, 1.f;
             sln:LAPS_units="M/M";
 
-        //      lat component mean terrain slope
+        //      mean latitudinal terrain slope
 
         float
             slt(record,z,y,x);
@@ -163,7 +163,7 @@ netcdf static {
             stl:navigation_dim = "nav";
             stl:record = "valtime, reftime";
             stl:_FillValue = 1.e+37f;
-            stl:long_name="top layer (0-30cm) soiltype";
+            stl:long_name="top layer (0-30cm) dom cat soiltype";
             stl:units="categorical";
             stl:valid_range= 0.f, 16.f;
             stl:LAPS_units="categorical";
@@ -175,7 +175,7 @@ netcdf static {
             sbl:navigation_dim = "nav";
             sbl:record = "valtime, reftime";
             sbl:_FillValue = 1.e+37f;
-            sbl:long_name="bottom layer (30-90cm) soiltype";
+            sbl:long_name="bottom layer (30-90cm) dom cat soiltype";
             sbl:units="categorical";
             sbl:valid_range= 0.f, 16.f;
             sbl:LAPS_units="categorical";
@@ -1337,7 +1337,39 @@ netcdf static {
         float   Latin2(nav);
                 Latin2:long_name = "orientation of grid" ;
                 Latin2:units = "degrees_east";
-  
+
+        float   center_lat(nav);
+                center_lat:long_name = "center latitude of grid" ;
+                center_lat:units = "degrees -90,+90";
+
+        float   center_lon(nav);
+                center_lon:long_name = "center longitude of grid" ;
+                center_lon:units = "degrees -180,+180";
+
+        long    SW_i(nav);
+                SW_i:long_name = "Southwest corner i of mother domain" ;
+                SW_i:units = "integer";
+
+        long    SW_j(nav);
+                SW_j:long_name = "Southwest corner j of mother domain" ;
+                SW_j:units = "integer";
+
+        long    NE_i(nav);
+                NE_i:long_name = "Northeast corner i of mother domain" ;
+                NE_i:units = "integer";
+
+        long    NE_j(nav);
+                NE_j:long_name = "Northeast corner j of mother domain" ;
+                NE_j:units = "integer";
+
+        long    Parent_ID(nav);
+                Parent_ID:long_name = "Parent ID of mother domain" ;
+                Parent_ID:units = "integer";
+
+        long    Ratio_to_Parent(nav);
+                Ratio_to_Parent:long_name = "Ratio of grid points relative to mother domain" ;
+                Ratio_to_Parent:units = "integer";
+
         char    grid_type(nav, namelen);
                 grid_type:long_name = "GRIB-1 grid type";
   
