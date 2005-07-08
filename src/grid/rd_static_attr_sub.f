@@ -1,6 +1,6 @@
       subroutine rd_static_attr_sub(staticfile, Nx, Ny
      .,La1, Latin1, Latin2, Lo1, LoV, Dx, Dy
-     .,istatus)
+     .,c8_maproj,istatus)
 C
       include 'netcdf.inc'
       integer nf_fid, nf_vid, nf_status
@@ -10,6 +10,7 @@ C
 
       character*132 grid_type
       character*132 grid_name
+      character*8   c8_maproj
       character*(*) staticfile
 C
 C  Open netcdf File for reading
@@ -233,6 +234,27 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var grid_type'
         return
+      endif
+
+      call downcase(grid_type,grid_type)
+      call s_len(grid_type,lgt)
+      if(grid_type(1:lgt).eq.'tangential'.or.
+     &grid_type(1:lgt).eq.'secant')then
+         c8_maproj='lambert'
+      elseif(grid_type(1:lgt).eq.'mercator')then
+         c8_maproj='mercator'
+      else
+         c8_maproj='polar'
+      endif
+      call s_len(grid_type,lgt)
+
+      if(TRIM(grid_type).eq.'tangential lambert conformal'
+     &.or.TRIM(grid_type).eq.'secant lambert conformal')then
+         c8_maproj='lambert'
+      elseif(TRIM(grid_type).eq.'mercator')then
+         c8_maproj='mercator'
+      elseif(TRIM(grid_type).eq.'polar')then
+         c8_maproj='polar'
       endif
 C
       nf_status = nf_close(nf_fid)

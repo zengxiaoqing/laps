@@ -1,6 +1,5 @@
-
-      subroutine compute_latlon(nnxp,nnyp,n_staggers
-     + ,deltax,xtn,ytn,lats,lons,istatus)
+      subroutine compute_latlon(nnxp,nnyp,n_staggers,mdlat,mdlon
+     +,deltax,xtn,ytn,lats,lons,istatus)
 
 
       implicit none
@@ -37,11 +36,11 @@ c A-c staggers contained within these arrays.
 
       deltay=deltax
 
-      call get_grid_center(mdlat,mdlon,istatus)
-      if(istatus .ne. 1)then
-         write(6,*)' Error returned: get_grid_center'
-         return
-      endif
+c     call get_grid_center(mdlat,mdlon,istatus)
+c     if(istatus .ne. 1)then
+c        write(6,*)' Error returned: get_grid_center'
+c        return
+c     endif
 
       call get_earth_radius(erad,istatus)
       if(istatus .ne. 1)then
@@ -563,6 +562,143 @@ c
 
          comment(ngrids)= '\0'
 
+	ELSEIF (ngrids .eq. 103) then ! rotlat case
+
+         var(1)   = 'LAH'  ! Mass(H)-point lats
+         var(2)   = 'LOH'  ! Mass(H)-point lons
+         var(3)   = 'LAV'  ! Wind(V)-point lats
+         var(4)   = 'LOV'  ! Wind(V)-point lons
+         var(5)   = 'LDF'  ! Land Fraction
+         var(6)   = 'USE'  ! landuse dominant category
+         var(7)   = 'LND'  ! Land-Water Mask based on USGS landuse
+         var(8)   = 'STL'  ! Soiltype top layer dominant category
+         var(9)   = 'SBL'  ! Soiltype bot layer dominant category
+     
+         i=10
+                                                                        
+         var(i)     = 'SPR'  ! Sin(projection rotation) from true
+         var(i+1)   = 'CPR'  ! Cos(projection rotation) from true
+         var(i+2)   = 'CPH'  ! Horizontal component of coriolis parameter
+         var(i+3)   = 'CPV'  ! Vertical component of coriolis parameter
+         var(i+4)   = 'ALB'  ! Maximum snow albedo
+         var(i+5)   = 'STD'  ! Standard Deviation of Elevation Data (m)
+         var(i+6)  = 'SLN'  ! Terrain Slope; Longitudinal Component (m/m)
+         var(i+7)  = 'SLT'  ! Terrain Slope; Latitudinal Component (m/m)
+         var(i+8)  = 'AVC'  ! Topo (m) on mass points 
+
+        i=18
+         do j=1,24
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          var(i+j)= 'U'//cat
+         enddo
+                                                                         
+         i=42
+         do j=1,16
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          var(i+j)= 'T'//cat   !top layer (0-30cm) soiltype (% dist)
+         enddo
+         i=58
+         do j=1,16
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          var(i+j)= 'B'//cat   ! bot layer (30-90cm) soiltype (% dist)
+         enddo
+         i=74
+         do j=1,12
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          var(i+j)= 'G'//cat   ! vegetation greenness fraction
+         enddo
+                                                                          
+         var(87)='TMP'
+                                                                              
+         i=87
+         do j=1,12
+            write(cat,'(i2.2)')j
+            if(cat(1:1).eq.' ')cat(1:1)='0'
+            if(cat(2:2).eq.' ')cat(2:2)='0'
+            var(i+j)= 'A'//cat   ! monthly albedo
+         enddo
+                                                                           
+         var(100) = 'SLP'      !terrain slope index, dominant category
+         var(101) = 'GNX'      !max greenness fraction
+         var(102) = 'GNN'      !min greenness fraction
+         var(ngrids)   = 'ZIN'
+
+         comment(1) = 'H-point (mass) latitudes \0'
+         comment(2) = 'H-point (mass) longitudes \0'
+         comment(3) = 'V-point (mass) latitudes \0'
+         comment(4) = 'V-point (mass) longitudes \0'
+         comment(5)= 'Land Fraction  \0'
+         comment(6)= 'Land Use Dominant category \0'
+         comment(7)= 'Land-Water Mask (0=water; 1 otherwise) \0'
+         comment(8)= 'Soiltype Top Layer dominant category \0'
+         comment(9)= 'Soiltype Bot Layer dominant category \0'
+                                                                                         
+         i=10
+         comment(i)= 'Sin of projection rotation (rad) \0'
+         comment(i+1)= 'Cosine of projection rotation (rad) \0'
+         comment(i+2)= 'Horizontal component coriolis parameter \0'
+         comment(i+3)= 'Vertical component coriolis parameter \0'
+         comment(i+4)= 'Maximum Snow Albedo (%) over land only \0'
+         comment(i+5)= 'Standard Deviation of Elevation data (m)\0'
+         comment(i+6)= 'Mean longitudinal terrain slope (m/m)\0'
+         comment(i+7)= 'Mean latitudinal terrain slope (m/m)\0'
+         comment(i+8)= 'Average terrain elevation (c-stagger) (m)\0'
+                                                                               
+         i=18
+         do j=1,24
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          var(i+j)= 'U'//cat
+          comment(i+j)= '% Dist Land Use Category '//cat//' \0'
+         enddo
+
+         i=42
+         do j=1,16
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          comment(i+j)='% Dist Top Layer Soiltype Category '//cat
+         enddo
+
+         i=58
+         do j=1,16
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          comment(i+j)= '% Dist Bot Layer Soiltype Category '//cat
+         enddo
+
+         i=74
+         do j=1,12
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          comment(i+j)= 'vegetation greenness fraction: mon = '//cat
+         enddo
+
+         comment(87)='1 degree mean annual soiltemp (deg K)'
+         i=87
+         do j=1,12
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          comment(i+j)= 'climatological albedo: mon = '//cat
+         enddo
+
+         comment(100)=  'terrain slope index'
+         comment(101)=  'annual max greenness fraction'
+         comment(102)=  'annual min greenness fraction'
+         comment(ngrids)= '\0'
+
       endif
       return
       end
@@ -570,15 +706,16 @@ c
 c ********************************************************************
 
 	subroutine read_dem(unit_no,unit_name,nn1,nn2,i1,i2
-     &,data)
+     &,data,istat)
+
 	implicit none
 
 	integer countx,county,unit_no,nn1,nn2
 
         character  cdata(nn1,nn2)*2
-        integer    idata(nn1,nn2)
-	real        data(nn1,nn2)
-	integer len, lend, i1, i2, ia
+        integer,   allocatable :: idata(:,:)
+	real       data(nn1,nn2)
+	integer len, lend, i1, i2, ia, istat
         real multiplier
 c       logical l1,l2
 	character*(*) unit_name
@@ -592,6 +729,16 @@ C	read(unit_no,rec=1) idata
 	call s_len(unit_name,len)
         call get_directory_length(unit_name,lend)
         ctiletype=unit_name(lend+1:lend+1)
+
+        if(.not.allocated(idata))then
+           allocate (idata(nn1,nn2),stat=istat)
+           if(istat.ne.0)then
+              print*,'unable to allocate idata array: read_dem'
+              print*,'nn1/nn2/istat: ',nn1,nn2,istat
+              return
+           endif
+        endif
+
 
         multiplier=1.0
 	if(ctiletype.eq.'T'.or.ctiletype.eq.'U')then
@@ -630,6 +777,8 @@ c JS00 some machines do not account for signed integers
 	enddo
 	enddo
         endif
+ 
+        if(allocated (idata))deallocate(idata)
 
 ccc	 close(unit_no)
 	return
@@ -658,12 +807,14 @@ C       . recl=nn2*nn1*2)
 C       inquire(unit_no,exist=l1,opened=l2)
 C       read(unit_no,rec=1) idata
 
-        call s_len(unit_name,len)
-        print*,'allocate idata in read_dem_g'
-        allocate (idata(nn4,nn1,nn2),stat=istat)
-        if(istat.ne.0)then
-           print*,'unable to allocate idata array: read_dem_g'
-           return
+        if(.not.allocated(idata))then
+           print*,'allocate idata in read_dem_g'
+           allocate (idata(nn4,nn1,nn2),stat=istat)
+           if(istat.ne.0)then
+              print*,'unable to allocate idata array: read_dem_g'
+              print*,'nn1/nn2/nn4/istat: ',nn1,nn2,nn4,istat
+              return
+           endif
         endif
 
         call s_len(unit_name,len)
@@ -713,15 +864,25 @@ c SG97 this format is wrapped around to have upper-left corner as its start.
 
         endif
 
-c we'll resurrect the actually categories when done
-c processing but for now we want categories 1-9 for
+c we'll resurrect the actual categories later
+c but for now we want categories 1-9 for
 c terrain slope index.
         if(ctype == 'I')then
-           where(data .eq. 13)data = 8
-           where(data .eq. 0)data = 9
+           do county=1,nn2
+           do countx=1,nn1
+              if(data(countx,county,1,1).eq.13)then
+                 data(countx,county,1,1)=8
+              elseif(data(countx,county,1,1).eq.0)then
+                 data(countx,county,1,1)=9
+              endif
+           enddo
+           enddo
+c          where(data .eq. 13)data = 8
+c          where(data .eq. 0)data = 9
         endif
 
-        deallocate(idata)
+        if(allocated(idata))deallocate(idata)
+
 ccc      close(unit_no)
         return
         end
@@ -766,12 +927,12 @@ C
         integer  N, II1, II2, JJ, ISN, M, NBIT, MSHFT, IA2, ispval
         INTEGER  BIT_1, BIT_2                            
 !                                                    
-        BIT_1 = '200'O     ! BINARY '10000000'        
-        BIT_2 = '377'O     ! BINARY '11111111'       
+        BIT_1 = O'200'     ! BINARY '10000000'        
+        BIT_2 = O'377'     ! BINARY '11111111'       
         IA    = 0                                   
 !                                                
         II1 = ICHAR(CHR(1:1))                     
-        if(II1 < 0) ii1=ii1+256
+        if(II1 < 0) II1=II1+256
 
 ! .. GET THE SIGN -- ISN=0 POSITIVE, ISN=1 NEGATIVE:
         JJ  = IAND(II1,BIT_1)                        
@@ -792,7 +953,7 @@ C
 !   .. GET THE BYTE FROM CHR: 
         DO M = 1,N          
          II2 = ICHAR(CHR(M:M)) 
-         if(ii2 < 0) ii2 = ii2 + 256
+         if(II2 < 0) II2=II2+256
          MSHFT = (N-M)*8      
          IA2   = ISHFT(II2,MSHFT)
 !   .. THE ABS(INTEGER):          
@@ -814,8 +975,8 @@ C
      1        XDIF,YDIF
 C
        INTEGER   NX,NY
-       INTEGER   IDIR  !positive going from center Lat/Lon to SW X/Y;
-C                       negative going from SW Lat/Lon to center X/Y.
+       INTEGER   IDIR  !positive (1.) going from center Lat/Lon to SW X/Y;
+C                       negative (-1.) going from SW Lat/Lon to center X/Y.
 C
        RAD=3.141592654/180.
 
@@ -1085,7 +1246,13 @@ c
       call s_len(path_to_tiles,ldir)
       open(22,file=path_to_tiles(1:ldir)//'/LATMEANTEMP.DAT'
      &,form='formatted',status='old',iostat=istat)
-      if(istat.ne.0)goto 3
+      if(istat.ne.0) then
+	write(6,*) 'insert bogus temp of 280'
+	temp=280.0
+	istat=1
+	return
+!	goto 3
+      endif
       do i=1,180
          read(22,222,err=4)temp(i)
       enddo
@@ -1143,22 +1310,26 @@ c
      .,cgrid_fname,La1_dom,Lo1_dom,istatus)
 
 c routine performs the following:
-c 1. tests if the static file has been generated for this domain or nest?
+c 1. tests if the static file has been generated for this domain
 c 2. tests if the static variables consistent with the current namelist specs
 c
-c if 1 or 2 is false then we need to either localize or re-localize
-c the domain and "localize" is returned indicating such (true or false).
+c if 1 or 2 is false then we either localize or re-localize
+c the domain; "localize" is returned indicating such (true or false).
 c
       implicit  none
 
-      integer   nest
+      integer   nest,ifl
       integer   Nx,Ny
       integer   nx_dom,ny_dom
-      integer   lf
+      integer   lf,ldir,len_cfl
       integer   istatus
 
       character cstaticdir*200
+      character cstaticfile*200
       character cgrid_fname*10
+      character c6_maproj*6
+      character c8_maproj*8
+      character cfl*3
       character cnest*2
 
       logical   localize
@@ -1168,24 +1339,78 @@ c
       real      grid_spacing_dom_m,grid_spacing_m
       real      La1_dom,Lo1_dom
 
-      localize = .false.
+      call GETENV('FORCE_LOCALIZATION',cfl)
+      call s_len(cfl,len_cfl)
+
+      if(len_cfl.eq.1)then
+         print*,'Environment Variable FORCE_LOCALIZATION= ',cfl
+         read(cfl,'(i1.1)')ifl
+         if(ifl.eq.nest)then
+            localize = .true.
+            return
+         endif
+      elseif(len_cfl.gt.1)then
+         call downcase(cfl,cfl)
+         if(cfl.eq.'all')then
+            localize = .true.
+            return
+         else
+            print*,'Unknown FORCE_LOCALIZATION setting ',cfl
+            stop
+         endif
+      endif
+
+      if(cgrid_fname.eq."wrfsi")then
+         localize=.false.
+      else
+         localize=.true.
+         return
+      endif
+
+      call get_c6_maproj(c6_maproj,istatus)
+
+      call s_len(cstaticdir,ldir)
 
       call rd_static_attr(cstaticdir,nest,cgrid_fname
      .,Nx, Ny, Dx, Dy, La1, Lo1, Latin1, Latin2, LoV
-     .,istatus)
+     .,c8_maproj,istatus)
+
+      if(c8_maproj.eq.'lambert'.and. c6_maproj.ne.'lambrt')then
+         print*,'Static file map-proj differs from namelist'
+         print*,'**** Relocalize this domain ****'
+         localize=.true.
+         return
+      elseif(c8_maproj.eq.'polar'.and. c6_maproj.ne.'plrstr')then
+         print*,'Static file map-proj differs from namelist'
+         print*,'**** Relocalize this domain ****'
+         localize=.true.
+         return
+      elseif(c8_maproj.eq.'mercator'.and. c6_maproj.ne.'merctr')then
+         print*,'Static file map-proj differs from namelist'
+         print*,'**** Relocalize this domain ****'
+         localize=.true.
+         return
+      endif
+
+      write(cnest,'(i2.2)')nest
+      cstaticfile=TRIM(cstaticdir)//'static.'//TRIM(cgrid_fname)
+      cstaticfile=TRIM(cstaticfile)//'.d'//cnest
 
       IF (istatus .NE. 1) THEN
-        print '(A,I5)',' Failure reading WRF static file: ',istatus
+        print *,' Eval Localization: Did not read WRF static file'
+        print *,' Status = ',istatus
         localize = .true.
         return
       END IF 
 
-      call get_grid_spacing(grid_spacing_dom_m,istatus)
-      call get_grid_dim_xy(nx_dom,ny_dom,istatus)
-      if(Nx.ne.nx_dom)localize=.true.
-      if(Ny.ne.ny_dom)localize=.true.
       if(La1.ne.La1_dom)localize=.true.
       if(Lo1.ne.Lo1_dom)localize=.true.
+
+      call get_grid_dim_xy(nx_dom,ny_dom,istatus) 
+      if(Nx.ne.nx_dom)localize=.true.
+      if(Ny.ne.ny_dom)localize=.true.
+c
+      call get_grid_spacing(grid_spacing_dom_m,istatus)
       if(dx.ne.grid_spacing_dom_m)localize=.true.
 
       RETURN
@@ -1195,7 +1420,7 @@ c --------------------------------------------------------
 c
       subroutine rd_static_attr(cstaticdir,nest
      .,cgrid_fname,nx,ny,dx,dy,La1,Lo1,Latin1
-     .,Latin2,LoV,istatus)
+     .,Latin2,LoV,c8_maproj,istatus)
 
 c routine performs the following:
 c 1. tests if the static file has been generated for this domain or nest?
@@ -1213,6 +1438,7 @@ c
       character staticfile*200
       character cstaticdir*200
       character cgrid_fname*10
+      character c8_maproj*8
       character cnest*2
 
       logical   localize
@@ -1224,19 +1450,24 @@ c
       istatus = 1
 
       staticfile=TRIM(cstaticdir)//'static.'//cgrid_fname
-      if(nest.gt.1)then
+      if(TRIM(cgrid_fname).eq.'wrfsi')then
          write(cnest,'(i2.2)')nest
-         staticfile=TRIM(staticfile)//'_d'//cnest
+         staticfile=TRIM(staticfile)//'.d'//cnest
       endif
 
       INQUIRE(FILE=staticfile, EXIST=static_exists)
+
       IF (static_exists) THEN
+
+        print*,'Static file exists: rd_static_attr'
+        print*,'Static filename: ',TRIM(staticfile)
 
         call rd_static_attr_sub(staticfile, Nx, Ny
      .,La1, Latin1, Latin2, Lo1, LoV, Dx, Dy
-     .,istatus)
+     .,c8_maproj,istatus)
 
         IF (istatus .NE. 1) THEN
+	write(6,*) '2nd time'
            print '(A,I5)', ' Error reading WRF static file: ',istatus
            return
         END IF
@@ -1248,10 +1479,92 @@ c
 
       ELSE
 
-        PRINT '(A)', 'Static file not found: ', staticfile
+        PRINT '(A)', 'Static file not found: ', TRIM(staticfile)
         istatus = 0
 
       ENDIF
+
+      return
+      end
+c
+c --------------------------------------------------------------------------
+c
+      subroutine gridcompare(nx,ny,ii,datain,datalm,istatus)
+
+      implicit none
+
+      integer nx,ny
+      integer i,ii,j
+      integer cntww
+      integer cntwnw
+      integer cntnww
+      integer cntnwnw
+      integer istatus
+
+      real datain(nx,ny)  !input data to compare to land mask
+      real datalm(nx,ny)  !land mask
+      real rmsng,thresh
+
+      call get_r_missing_data(rmsng,istatus)
+
+      cntwnw =0
+      cntww  =0
+      cntnww =0
+      cntnwnw=0
+
+      if(ii == 1)then
+         thresh=0.0                 !terrain
+         print*,'Array Comparison:   Terrain'
+      elseif(ii == 2 .or. ii==3)then
+         thresh=14                  !soil texture
+         print*,'Array Comparison:   Soil Texture'
+      elseif(ii == 4)then 
+         thresh=0.0                 !max greenness
+         print*,'Array Comparison:   Greeness: mo 6'  ! Max Greenness'
+      elseif(ii == 5)then
+         thresh=0.0                 !min greenness
+         print*,'Array Comparison:   Min Greenness'
+      elseif(ii == 6)then
+         thresh=rmsng               !deep soil temp
+         print*,'Array Comparison:   Deep Soil Temp'
+      elseif(ii == 7)then
+         thresh=0.0                 !terrain slope index
+         print*,'Array Comparison:   Terrain Slope Index'
+      elseif(ii == 8)then
+         thresh=0.08                !albedo: month 6
+         print*,'Array Comparison:   Albedo: month 6'
+      elseif(ii == 9)then
+         thresh=0.08                !max snow albedo
+         print*,'Array Comparison:   Max Snow Albedo'
+      elseif(ii == 10)then
+         thresh=16                  !dominant cat landuse
+         print*,'Array Comparison:   Dominant Cat Landuse'
+      endif
+
+
+      do j=1,ny
+      do i=1,nx
+
+         if(datalm(i,j)    .eq.0 .and. datain(i,j).ne.thresh)then
+            cntwnw=cntwnw+1
+         elseif(datalm(i,j).eq.0 .and. datain(i,j).eq.thresh)then
+            cntww=cntww+1
+         elseif(datalm(i,j).eq.1 .and. datain(i,j).eq.thresh)then
+            cntnww=cntnww+1
+         elseif(datalm(i,j).eq.1 .and. datain(i,j).ne.thresh)then
+            cntnwnw=cntnwnw+1
+         endif
+
+      enddo
+      enddo
+
+      print*,'============================================'
+      print*,'============================================'
+      print*,'land mask=water, data array = water        : ',cntww
+      print*,'land mask=not water, data array = not water: ',cntnwnw
+      print*,'land mask=water, data array = not water    : ',cntwnw
+      print*,'land mask=not water, data array = water    : ',cntnww
+      print*
 
       return
       end
