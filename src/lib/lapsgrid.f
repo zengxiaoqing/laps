@@ -440,6 +440,10 @@ c
 
 c use the "grid namelist" to load lapsparms.cmn with appropriate values.
         if(grid_fnam_common(1:9).eq.'nest7grid')then
+
+c****  Because LAPS does not "nest", we hardwire it as 1 for now *****
+c****  --------------------------------------------------------- *****
+           nest=1
            call get_laps_config_sub(grid_fnam_common,istatus)
            if(istatus.ne.1)then
               print*,'Error returned from get_laps_config_sub'
