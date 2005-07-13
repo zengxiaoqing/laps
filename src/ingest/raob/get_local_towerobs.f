@@ -519,6 +519,35 @@ c     read var longitude(recNum) -> stalon(maxobs)
         return
       endif 
 
+c     read var soilMoisture(recNum) -> soilMoisture(maxobs)
+      nf_status = NF_INQ_VARID(nf_fid,'soilMoisture',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'finding var soilMoisture'
+      endif
+      nf_status = NF_GET_VARA_REAL(nf_fid,nf_vid,
+     1 start1,count1,soilMoisture)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'reading var soilMoisture'
+        print *, 'Aborting read'
+        nf_status = NF_CLOSE(nf_fid)
+        istatus = 0
+        return
+      endif 
+      
+c     read dim smQcFlag -> smQcFlag
+      nf_status = NF_INQ_DIMID(nf_fid,'smQcFlag',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'Error finding dim smQcFlag' 
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,smQcFlag)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'Error reading dim smQcFlag'
+      endif
+
 c LW
       print *, 'b4 read levels: nlvls / nobs ',nlvls,' / ',nobs
 
