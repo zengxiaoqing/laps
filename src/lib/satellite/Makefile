@@ -44,7 +44,6 @@ SRC=bcdtoint.F \
     readnet.f \
     rewrite_satellite_lvd_nl.f \
     satsublatlon.f \
-    stats.f \
     update_gvarimg_parms.f \
     write_orb_att.f \
     write_att_c.c
