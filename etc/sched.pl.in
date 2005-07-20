@@ -61,10 +61,14 @@
 # -v                   Run verification binaries 
 #
 # -f                   Run followup script to generate GIF images for the web.
-#                      The argument value is a shorthand name for the domain.
+#                      The argument value is a shorthand name for the domain and
+#                      can be given a dummy value if the FSL Gizmo server is invisible
+#                      to you.
 #                      
 # -F                   Run followup script to generate GIF images for the web.
-#                      No other executables are run.
+#                      No other executables are run. The argument value is a shorthand 
+#                      name for the domain and can be given a dummy value if the 
+#                      FSL Gizmo server is invisible to you.
 #                      
 
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
