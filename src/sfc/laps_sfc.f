@@ -436,8 +436,14 @@ c
                obs(ista)%elev_diff = elev_diff
 
                rland_frac_grid = ldf(obs(ista)%i,obs(ista)%j) ! for testing
-               call bilinear_laps(obs(ista)%ri,obs(ista)%rj,ni,nj
-     1                           ,ldf,obs(ista)%ldf)
+
+               if(.false.)then ! nearest gridpoint to determine land fraction
+                   obs(ista)%ldf = ldf(obs(ista)%i,obs(ista)%j)
+
+               else
+                   call bilinear_laps(obs(ista)%ri,obs(ista)%rj,ni,nj
+     1                               ,ldf,obs(ista)%ldf)
+               endif
 
                write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
      &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)       
