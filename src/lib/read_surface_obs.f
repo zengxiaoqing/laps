@@ -110,17 +110,17 @@ c
      &                   delp(k),                !3-h pressure change (mb)
      &                   p_ea(k), alt_ea(k)      !pressure exp accuracy, alt exp accuracy
 c
-	  read(11,911)   vis(k), vis_ea(k),      !visibility, vis exp accuracy
-     &                   solar(k), solar_ea(k),  !solar, solar exp accuracy
-     &                   sfct(k), sfct_ea(k),    !soil/water temp, soil/water temp exp accuracy
-     &                   sfcm(k), sfcm_ea(k)     !soil moist, soil moist temp exp accuracy
+	  read(11,911)   vis(k), vis_ea(k),      !visibility, vis exp accuracy (miles)
+     &                   solar(k), solar_ea(k),  !solar, solar exp accuracy (watts/meter**2)
+     &                   sfct(k), sfct_ea(k),    !soil/water temp, soil/water temp exp accuracy (Deg F)
+     &                   sfcm(k), sfcm_ea(k)     !soil moist, soil moist temp exp accuracy (%)
 c
-	  read(11,913)   pcp1(k),                !1-h precipitation
-     &                   pcp3(k),                !3-h precipitation
-     &                   pcp6(k),                !6-h precipitation
-     &                   pcp24(k),               !24-h precipitation
-     &                   snow(k),                !snow depth
-     &                   pcp_ea(k), snow_ea(k)   !precip and snow exp accuracy
+	  read(11,913)   pcp1(k),                !1-h precipitation (inches)
+     &                   pcp3(k),                !3-h precipitation (inches)
+     &                   pcp6(k),                !6-h precipitation (inches)
+     &                   pcp24(k),               !24-h precipitation 
+     &                   snow(k),                !snow depth (inches)
+     &                   pcp_ea(k), snow_ea(k)   !precip and snow exp accuracy (inches)
 c
 	  read(11,915)  kkk_s(k),                !num cld layers 
      &                  max24t(k),               !24-h max temperature (Deg F)
