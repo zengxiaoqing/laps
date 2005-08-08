@@ -437,7 +437,7 @@ c
 
                rland_frac_grid = ldf(obs(ista)%i,obs(ista)%j) ! for testing
 
-               if(.false.)then ! nearest gridpoint to determine land fraction
+               if(.true.)then ! nearest gridpoint to determine land fraction
                    obs(ista)%ldf = ldf(obs(ista)%i,obs(ista)%j)
 
                else
