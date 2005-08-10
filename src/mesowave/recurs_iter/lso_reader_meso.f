@@ -229,9 +229,8 @@ c
 
 	! PRINT*,'Reduced: ',o(4,nobs),elev(k),o(6,nobs)
 
-            ! o(6,nobs)=pmsl(k)
-	    ! This 6th variable is msl pressure:
-	    o(4,nobs) = pmsl(k)
+	    ! Use 4th variable for visibility:
+	    o(4,nobs) = vis(k)
 
            enddo !k
 	print*,'Time range: ',otmn,otmx
