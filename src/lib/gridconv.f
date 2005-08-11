@@ -897,17 +897,17 @@ cc     implicit none
       include 'trigd.inc'
 
       integer n,i
+      integer nx,ny
       real*4 rlat(n),rlon(n),ri(n),rj(n)
       real*4 rlonc,dlon,rlatc,dlat
       real*4 sw(2),ne(2)
       real*4 x,y
-      real*4 nx,ny
       real*4 xmax,ymax
       real*4 xmin,ymin
       real*4 dx,dy
       real*4 R,PI
       real*4 deg2rad
-      common /mcgrid/rlonc,rlatc,nx,ny,sw,ne,dx,dy
+      common /mcgrid/rlonc,rlatc,nx,ny,sw,ne
 
       call get_earth_radius(R,istatus)
 
@@ -920,8 +920,8 @@ cc     implicit none
       xmax=R*(deg2rad*(ne(2)-rlonc))
       xmin=R*(deg2rad*(sw(2)-rlonc))
 
-      dx=(xmax-xmin)/(nx-1)
-      dy=(ymax-ymin)/(ny-1)
+      dx=(xmax-xmin)/float(nx-1)
+      dy=(ymax-ymin)/float(ny-1)
 
       do i=1,n
          dlon=rlon(i)-rlonc
@@ -1020,7 +1020,13 @@ c
       integer nx_np,ny_np
       real    sw_np(2),ne_np(2)
       common /npgrid/nx_np,ny_np,sw_np,ne_np
-
+c
+c *** Common block variables for mercator grid.
+c
+      integer nx_mc,ny_mc          !No. of domain grid points
+      real    sw_mc(2),ne_mc(2)    !SW lat, lon, NE lat, lon
+      real    rlatc_mc,rlonc_mc    !Center lat/lon of domain
+      common /mcgrid/rlonc_mc,rlatc_mc,nx_mc,ny_mc,sw_mc,ne_mc
 
       if(gproj.eq.'LC')then
          nx_lc=nxbg
@@ -1071,12 +1077,14 @@ c
       endif
 
       if(gproj.eq.'MC')then
-         nx_np=nxbg
-         ny_np=nybg
-         sw_np(1)=sw1
-         sw_np(2)=sw2
-         ne_np(1)=ne1
-         ne_np(2)=ne2
+         nx_mc=nxbg
+         ny_mc=nybg
+         rlatc_mc=cenlat
+         rlonc_mc=cenlon
+         sw_mc(1)=sw1
+         sw_mc(2)=sw2
+         ne_mc(1)=ne1
+         ne_mc(2)=ne2
       endif
 
       return
