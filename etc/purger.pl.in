@@ -77,7 +77,7 @@ if($opt_r){
 #
 # exceptions - overridden if $min_files==0
 #
-my $vxx_time = 0.08;
+my $vxx_time = 0.16;
 my $vrc_time = 0.16;
 my $web_time = 7.0;
 my(@radars) = qw(01 02 03 04 05 06 07 08 09 10 11 12 13 14 15);
