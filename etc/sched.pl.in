@@ -367,7 +367,7 @@ foreach $exe (@LAPS_EXE){
 #       Set up QSUB_WAIT so that each process (one or more executables in each) submits the next qsub_wait process at the end
         $exenext = $execount + 1;
 
-        $sms_path = "/home/schaffer/sms-2.6.0";
+        $sms_path = "SMSINSTALLROOT";
 
         if($exe =~ "wind"){
             $nodes_current = 1; # 4
@@ -388,6 +388,8 @@ foreach $exe (@LAPS_EXE){
                     print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
                     close(TFILE);
+                    close(TFILE_SUB);
+                    system("chmod +x $LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh");
                 }
 
 #               Start new qsub_wait script
@@ -396,6 +398,7 @@ foreach $exe (@LAPS_EXE){
 
                 print $t." Opening $LAPS_LOG_PATH/run_qsub_$scriptcount.sh starting with executable # $execount\n";
                 open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
+                open(TFILE_SUB,">$LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh");
                 print TFILE "#!/bin/sh\n";
 
                 my $wall_time_hr  = int( ( $cycle_time_min / 60.) + $extend_time  ); 
@@ -454,20 +457,22 @@ foreach $exe (@LAPS_EXE){
         }
 
         if($nodes_current > 1){
-            print TFILE "$sms_path/bin/smsRun $nodes_current $LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
-            print "WARNING: wgi script not running for executable $exe\n";
+            print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh\n";
+            print TFILE_SUB "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
+            print TFILE_SUB "$LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
             print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
-            if(-e "$LAPSROOT/etc/$wgi_script_name.pl"){
-               if( $wgi_script_name eq "sfc"){
-                   $exe_name = $1 if($exe =~ /^(\S+)\./);
-                   print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script_name.pl -r $exe_name $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1\n";
-               }else{
-                   print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script_name.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1\n";
-               }
-            }
         }
        
+        if(-e "$LAPSROOT/etc/$wgi_script_name.pl"){
+           if( $wgi_script_name eq "sfc"){
+               $exe_name = $1 if($exe =~ /^(\S+)\./);
+               print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script_name.pl -r $exe_name $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1\n";
+           }else{
+               print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script_name.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1\n";
+           }
+        }
+
         if($execount == $nexe){ # Last on the list
 
             if($opt_f || $opt_F){ 
@@ -486,6 +491,8 @@ foreach $exe (@LAPS_EXE){
             print TFILE "  \n";
             print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable # $execount\n";
             close(TFILE);
+            close(TFILE_SUB);
+            system("chmod +x $LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh");
 
             chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
             $command = "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_1.sh";
