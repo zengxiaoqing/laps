@@ -23,6 +23,9 @@ PLATFORM=`uname -s`
 #export NCARG_ROOT=/usr/local/apps/ncarg-4.0.1
 #setenv NCARG_ROOT `cat /usr/nfs/lapb/bin/ncarg_root`
 
+echo "Start laps_gifs_sub.sh..."
+echo "PATH=$PATH"
+
 cd
 if test -r etc/ncarg_root; then
     export NCARG_ROOT=`cat etc/ncarg_root`
@@ -86,6 +89,11 @@ elif test -r /usr/local/apps/ncarg-4.2.2-pgi/lib/libncarg.a; then
     ctransext=sun
     netpbm=yes
 
+elif test -r /opt/ncarg/bin/ctrans; then
+    ctransarg=sun
+    ctransext=sun
+    netpbm=yes
+
 elif test "$PLATFORM" = "AIX"; then
     ctransarg=avs
     ctransext=x
@@ -102,10 +110,16 @@ else
 
 fi
 
+echo "ctransarg=$ctransarg"
+echo "ctransext=$ctransext"
+echo "netpbm=$netpbm"
+
 if test "$netpbm" = "yes"; then 
     date
     echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file"
-    $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
+    `which ppmtogif`
+    echo "$NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif"
+          $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
     date
 
 else
