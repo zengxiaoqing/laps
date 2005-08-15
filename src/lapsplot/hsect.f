@@ -384,7 +384,7 @@ c       include 'satellite_dims_lvd.inc'
      1       ,' [cb,ct] Cld Base/Top (MSL)'      
      1       /'         [cv/cg] Cloud Cover (2-D)'
      1       ,' [cy,py] Cloud/Precip Type'
-     1       /'         [sa/pa] Snow/Pcp Accum,'
+     1       /'         [pc,rn,sn] Precip Conc, [sa/pa] Snow/Pcp Accum,'
      1       ,' [sc/csc] Snow Cvr'
      1      //'     STATIC INFO: [gg] '
      1       /'     [lv(d),lr(lsr),v3,v5,po,lc] lvd; lsr; VCF; '             
@@ -2419,7 +2419,7 @@ c
 
             endif ! c_field
 
-        elseif( c_type .eq. 'sn')then
+        elseif( c_type .eq. 'sr')then
             mode = 1
 
             call make_fnam_lp(I4time_radar,asc9_tim_r,istatus)
@@ -2827,7 +2827,8 @@ c
 
         elseif(c_type .  eq. 'la' .or. c_type   .eq. 'lj' .or.
      1         c_type   .eq. 'sj' .or. c_type_i .eq. 'ls' .or.
-     1         c_type_i .eq. 'ci'       )then
+     1         c_type_i .eq. 'ci' .or. c_type_i .eq. 'pc' .or.
+     1         c_type_i .eq. 'rn' .or. c_type_i .eq. 'sn'     )then
             write(6,1514)
 1514        format('     Enter Level in mb; OR [-1] for max in column'
      1                          ,21x,'? ',$)
@@ -2876,10 +2877,27 @@ c
                 iflag_slwc = 13 ! Returns Cloud Ice
                 if(k_level .gt. 0)then
                     call mklabel33(k_mb,
-!    1                             ' Smt-Fed ICE g/m^3 ',c_label)
      1                             ' Cloud ICE g/m^3   ',c_label)
                 else
                     c_label = 'Max Smith-Feddes  ICE g/m^3      '
+                endif
+
+            elseif(c_type_i .eq. 'pc')then
+                if(k_level .gt. 0)then
+                    call mklabel33(k_mb,
+     1                             ' Precip Conc g/m^3 ',c_label)
+                endif
+
+            elseif(c_type_i .eq. 'rn')then
+                if(k_level .gt. 0)then
+                    call mklabel33(k_mb,
+     1                             ' Precip Rain g/m^3 ',c_label)
+                endif
+
+            elseif(c_type_i .eq. 'sn')then
+                if(k_level .gt. 0)then
+                    call mklabel33(k_mb,
+     1                             ' Precip Snow g/m^3 ',c_label)
                 endif
 
             endif
@@ -2896,7 +2914,13 @@ c
      1                             ,i4_valid                ! O
      1                             ,istatus)                ! O
 
-            if(c_type_i .ne. 'ci')then
+            if(c_type_i .eq. 'pc')then
+                var_2d = 'PCN'
+            elseif(c_type_i .eq. 'rn')then
+                var_2d = 'RAI'
+            elseif(c_type_i .eq. 'sn')then
+                var_2d = 'SNO'
+            elseif(c_type_i .ne. 'ci')then
                 var_2d = 'LWC'
             else
                 var_2d = 'ICE'
@@ -2938,7 +2962,7 @@ c
                     write(6,*)' Could not read forecast field'       
                     goto1200
                 endif
-                c_label(11:33) = ' FUA Cld '//var_2d(1:4)
+                c_label(11:29) = ' FUA '//var_2d(1:4)
      1                             //fcst_hhmm//' g/m^3'
 
                 i4time_cloud = i4_valid
@@ -3258,6 +3282,7 @@ c
      1                    ,i4time_nearest,ext,var_2d
      1                    ,units_2d,comment_2d,NX_L,NY_L
      1                    ,field_2d,k_mb,istatus)
+                    call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
                 elseif(c_prodtype .eq. 'F')then
                     CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
@@ -3294,7 +3319,7 @@ c
      1                      ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,field_2d,0,istatus)
                     if(istatus .ne. 1)goto1200
-                    call make_fnam_lp(i4time_pcp,asc9_tim,istatus)
+                    call make_fnam_lp(i4time_temp,asc9_tim,istatus)
 
                 else
                     write(6,*)' Not yet supported'
