@@ -57,9 +57,12 @@ cdis
      1  umin,umax,vmin,vmax
 
         integer*4 N_CONTOURS
-        parameter (N_CONTOURS = 20)
+        parameter (N_CONTOURS = 23)
         real*4 factor(N_CONTOURS)
         data factor/
+     1  .001,
+     1  .002,
+     1  .005,
      1  .01,
      1  .02,
      1  .05,
@@ -138,7 +141,7 @@ cdis
             IOFFP = 1              ! we may need this
             SPVAL = r_missing_data ! we may need this
 
-            write(6,*)' lapsplot: call "conrec"'
+            write(6,*)' lapsplot: call "conrec", cint = ',cint
 
             if(cint .ge. 0.)then
                 call conrec_line(field,ni,ni,nj,clow,chigh,cint
@@ -151,16 +154,16 @@ cdis
 
                 do i = 1,N_CONTOURS
                     cvalue = factor(i)
-                    if(      cvalue .ge. abs(cint) 
-!    1                 .and. cvalue .le. abs(chigh)
-     1                                                  )then
-                        write(6,*)' Contouring at +/-',cvalue
+                    if( cvalue .ge. abs(cint) )then
+                        write(6,*)' Contouring at +/-',i,cvalue
                         call conrec_line(field,ni,ni,nj,cvalue
      1                                  ,cvalue,1e-6,plot_parms
      1                                  ,-1,0,-1848,0)
                         call conrec_line(field,ni,ni,nj,-cvalue
      1                                  ,-cvalue,1e-6,plot_parms
      1                                  ,-1,0,-1848,0)
+                    else
+                        write(6,*)' Skip contouring at +/-',i,cvalue
                     endif
                 enddo
             endif
