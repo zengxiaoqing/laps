@@ -79,6 +79,10 @@ C
 
       call get_r_missing_data(r_missing_data,istatus)
 
+      call array_range(field_in,MREG,NREG,rmin,rmax,r_missing_data)
+      write(6,*)' input array range: ',rmin,rmax
+      write(6,*)' input scale: ',scale
+
 !     if(n_image .gt. 1)then
 !         write(6,*)' Image was already plotted - returning from ccpfil'
 !         return
