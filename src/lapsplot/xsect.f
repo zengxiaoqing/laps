@@ -136,6 +136,7 @@ cdis
         character*31  ext
         character*10  units_2d
         character*125 comment_2d
+        character*20 c_model
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(NX_C,1)
@@ -188,9 +189,12 @@ cdis
         include 'icolors.inc'
 
         integer*4 N_CONTOURS
-        parameter (N_CONTOURS = 20)
+        parameter (N_CONTOURS = 23)
         real*4 factor(N_CONTOURS)
         data factor/
+     1  .001,
+     1  .002,
+     1  .005,
      1  .01,
      1  .02,
      1  .05,
@@ -682,8 +686,8 @@ c read in laps lat/lon and topo
                                           ! ,        ss (SLWC - Smith-Feddes)'
      1  /'           ci (cloud ice)'
      1  /
-     1  /'           ic (icing index)    pc (precip conc)    mv (Mean Vo
-     1l Diam)'
+     1  /'           ix (icing index)    mv (Mean Vol Diam)'
+     1  /'           pc/rn/sn/ic (precip/rain/snow/ice concentration)'
      1  /
      1  /'           cv (cloud cover contours)'
      1  /'           rf (ref-graphic), ri (ref-image), rv (ref-obs)]'
@@ -2369,6 +2373,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                         .or. c_field .eq. 'ss'
      1                         .or. c_field .eq. 'ci'
      1                         .or. c_field .eq. 'pc'
+     1                         .or. c_field .eq. 'rn'
+     1                         .or. c_field .eq. 'sn'
+     1                         .or. c_field .eq. 'ic'
      1                                          )then
 
             call input_product_info(i4time_ref              ! I
@@ -2406,29 +2413,39 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                     c_label = 'LAPS Smith-Feddes SLWC  g/m^3    '
                 elseif(c_field .eq. 'pc')then
                     c_label = 'LAPS Precip Concen      g/m^3    '
+                elseif(c_field .eq. 'rn')then
+                    c_label = 'LAPS Rain Concen        g/m^3    '
+                elseif(c_field .eq. 'sn')then
+                    c_label = 'LAPS Snow Concen        g/m^3    '
+                elseif(c_field .eq. 'ic')then
+                    c_label = 'LAPS Ice Concen         g/m^3    '
                 endif
             endif
 
             l_pregen = lapsplot_pregen
 
-            write(6,*)' Getting pregenerated LWC file'
             if(c_field .eq. 'ls')then
                 var_2d = 'LWC'
             elseif(c_field .eq. 'ci')then
                 var_2d = 'ICE'
             elseif(c_field .eq. 'pc')then
                 var_2d = 'PCN'
+            elseif(c_field .eq. 'rn')then
+                var_2d = 'RAI'
+            elseif(c_field .eq. 'sn')then
+                var_2d = 'SNO'
+            elseif(c_field .eq. 'ic')then
+                var_2d = 'ICE'
             endif
 
             if(c_prodtype .eq. 'A')then   
+                write(6,*)' Getting pregenerated LWC file'
                 ext = 'lwc'
                 call get_laps_3dgrid(i4time_lwc,86400,i4time_valid,
      1              NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,slwc_3d,istatus)
 
                 call make_fnam_lp(i4time_valid,a9time,istatus)
-
-                scale = 1e-3
 
             elseif(c_prodtype .eq. 'B' .or. 
      1             c_prodtype .eq. 'F')then
@@ -2440,6 +2457,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                              ,istatus)
                 if(istatus .ne. 1)goto100
 
+                call downcase(units_2d,units_2d)
+                if(units_2d .eq. 'kg/m**3')then
+                    units_2d = 'g/m**3'
+                endif
+
+                call directory_to_cmodel(directory,c_model)
+
                 call mk_fcst_xlabel(comment_2d,fcst_hhmm
      1                                 ,ext(1:3),units_2d
      1                                 ,c_model,c_label)
@@ -2450,16 +2474,27 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call interp_3d(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
-            clow = 0.
-            chigh = 0.
-            if(c_field .eq. 'pc')then
-                cint = -0.01 
-            else
-                cint = -0.01
-            endif
+            scale = 1e-3
+
             i_contour = 1
 
-        elseif(c_field .eq. 'ic')then
+            if(i_image .eq. 1)then
+                clow = 0.
+                chigh = 1.
+                cint = 0.1 
+!               cint = 0.0 ! this should force a dynamic setting of clow/chigh
+                colortable = 'linear' 
+            else
+                clow = 0.
+                chigh = 0.
+                if(c_field .eq. 'pc')then
+                    cint = -0.005 
+                else
+                    cint = -0.005
+                endif
+            endif
+
+        elseif(c_field .eq. 'ix')then
 
             iflag_slwc = 13
             c_label = '    LAPS Icing Index             '
@@ -2572,7 +2607,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             i_contour = 5
             call make_fnam_lp(i4time_radar,a9time,istatus)
 
-        elseif(c_field .eq. 'ic')then
+        elseif(c_field .eq. 'ix')then
             iflag_slwc = 0
             c_label = '     LAPS Icing Severity Index   '
 
@@ -2682,16 +2717,17 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 !                       call set(x_1,x_2,y_1,y_2,0.15,0.85,0.15,0.85,1) ! New
 
-                        if(cint .eq. 0.)then
-                            write(6,*)' cint = 0, calling array_range'
+                        if(cint .le. 0.)then
+                            write(6,*)' cint <= 0, calling array_range'
                             call array_range(field_vert3,NX_P,NX_P
      1                                      ,rmin,rmax,r_missing_data)
                             clow = rmin
                             chigh = rmax
                         endif
 
-                        write(6,*)' calling solid fill plot'
-     1                           ,clow,chigh,cint       
+                        write(6,*)
+     1                      ' calling solid fill plot (clow/chigh/cint)'
+     1                      ,clow,chigh,cint       
 
 !                       Blank out the edges external to the X-section
 !                       write(6,*)' Blackening the edges'
@@ -2703,10 +2739,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                       enddo ! j
 !                       enddo ! i
 
+!                       if(scale .ne. 0.)then
+!                           scale_inv = 1. / scale
+!                       endif
+
 !                       This method remaps well - with large border artifacts
                         call ccpfil(field_vert3,NX_P,NX_P
      1                             ,clow,chigh
-!    1                             ,'cpe',n_image,scale,'xsect'
      1                             ,colortable,n_image,scale,'xsect'
      1                             ,plot_parms,namelist_parms)       
 
@@ -3934,6 +3973,8 @@ c
         character*100 c_label
 
         character*4 fcst_hhmm_in,fcst_hhmm
+
+        call downcase(units_2d,units_2d)
 
         call s_len2(comment_2d,len_fcst)
         call s_len2(units_2d,len_units)
