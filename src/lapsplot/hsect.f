@@ -277,6 +277,8 @@ c       include 'satellite_dims_lvd.inc'
 
         call find_domain_name(c_dataroot,c10_grid_fname,istatus)
 
+        ndim_read = 2
+
         ialloc_vel = 0
 
         icen = NX_L/2+1
@@ -354,7 +356,7 @@ c       include 'satellite_dims_lvd.inc'
      1      ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, BAL), '
      1      /'     [wo,co,bo,lo,fo] '      
      1      ,'Anlyz/Cloud/Balance/Bkg/Fcst Omega'      
-     1      /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
+     1      /'     RADAR: [ra] Intermediate VRC, [rf] Anal/Fcst fields'       
      1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1      /
      1      /'     SFC: [p,pm,ps,pp,tf,tc,df,dc,ws,wp,vv,hu,ta'         
@@ -1915,6 +1917,8 @@ c
      1    .or.  c_type .eq. 'rr' .or. c_type .eq. 'rf'
      1    .or.  c_type .eq. 'rd' .or. c_type .eq. 'rv')then
 
+            ndim_read = 2 ! default
+
             if(c_type .eq. 'ra')mode = 1
             if(c_type .eq. 'gc')mode = 2
 
@@ -2117,24 +2121,13 @@ c
 
             endif
 
-
             read(lun,824)c_field
 
-            if(      c_type .eq. 'rf' 
-     1         .and. c_field(1:2) .ne. 'mr'
-     1         .and. c_field(1:2) .ne. 'lr')then
-!             Obtain LPS reflectivity field
-              write(6,*)' Reading LPS radar volume reflectivity'
-              ext = 'lps'
-              var_2d = 'REF'
-              call get_laps_3dgrid(
-     1                   i4time_get,1000000,i4time_radar,
-     1                   NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
-
-              call make_fnam_lp(i4time_radar,asc9_tim_r,istatus)
-
-            endif
+            if(c_field(3:3) .eq. 'i')then
+                i_image = 1
+            else
+                i_image = 0
+            endif               
 
             if(  c_field(1:2) .eq. 'rf' .or. c_field(1:2) .eq. 'rv' 
      1      .or. c_field(1:2) .eq. 'vi' .or. c_field(1:2) .eq. 've')then       
@@ -2142,6 +2135,56 @@ c
 2025            format('         Enter Level in mb ',45x,'? ',$)
                 call input_level(lun,k_level,k_mb,pres_3d
      1                          ,NX_L,NY_L,NZ_L)       
+            endif
+
+            if(      c_type .eq. 'rf' 
+     1         .and. c_field(1:2) .ne. 'mr'
+     1         .and. c_field(1:2) .ne. 'lr')then
+
+              call input_product_info(i4time_get            ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+              var_2d = 'REF'
+
+              if(c_prodtype .eq. 'A')then
+!               Obtain LPS reflectivity field
+                write(6,*)' Reading LPS radar volume reflectivity'
+                ext = 'lps'
+                call get_laps_3dgrid(
+     1                   i4time_get,1000000,i4time_radar,
+     1                   NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
+
+                call make_fnam_lp(i4time_radar,asc9_tim_r,istatus)
+
+                ndim_read = 3
+
+              elseif(c_prodtype .eq. 'F')then
+                CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,k_mb,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 field_2d,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Could not read forecast field'       
+                    goto1200
+                endif
+
+!               i4time_radar = i4_valid
+
+                call directory_to_cmodel(directory,c_model)
+
+              endif
+
             endif
 
             if(c_field(1:2) .eq. 'mr')then ! Column Max Reflectivity data
@@ -2171,6 +2214,8 @@ c
                 endif
 
                 call make_fnam_lp(i4time_radar,asc9_tim_r,istatus)
+
+                write(6,*)' c_field = ',c_field,' ',c_field(3:3)
 
 !               Display R field
                 if(c_field(3:3) .ne. 'i')then
@@ -2247,7 +2292,7 @@ c
 
             elseif(c_field(1:2) .eq. 'rf')then
                 if(c_type .eq. 'rv')then
-                    c19_label = 'Reflectivity '//ext_radar(1:3)//' '
+!                   c19_label = 'Reflectivity '//ext_radar(1:3)//' '
                     c19_label = ' Ref (dBZ) '//radar_name(1:4)//' '
      1                                       //ext_radar(1:3)
                 else
@@ -2255,10 +2300,26 @@ c
                 endif
 
                 call mklabel33(k_mb,c19_label,c_label)
+        
+                scale = 1e0
+                clow = 0.
 
-                if(c_field(3:3) .ne. 'i')then
+                if(c_prodtype .eq. 'F' .and. ndim_read .eq. 2)then
+                    call mk_fcst_hlabel(k_mb,comment_2d,fcst_hhmm
+     1                                 ,ext(1:3),units_2d
+     1                                 ,c_model,c_label)
+
+                    scale = 1e0
+                    call plot_field_2d(i4_valid,c_field
+     1                        ,field_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,-10.,70.,cint_ref,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'ref')
+
+                elseif(c_field(3:3) .ne. 'i')then
                     call plot_cont(grid_ra_ref(1,1,k_level,1)
-     1                        ,1e0,0.,chigh
+     1                        ,scale,clow,chigh
      1                        ,cint_ref,asc9_tim_r,namelist_parms
      1                        ,plot_parms,c_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L        
@@ -2951,28 +3012,50 @@ c
 
                 endif
 
-            elseif(c_prodtype .eq. 'F')then
-!               call get_lapsdata_2d if k_mb .ne. -1?
+                i4time_lwc = i4time_cloud
 
-                call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
+            elseif(c_prodtype .eq. 'F')then
+                if(k_mb .ne. -1)then ! Get 2D Grid
+                    CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,k_mb,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 field2_2d,istatus)
+
+                else
+                    call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,grid_ra_ref
      1                              ,istatus)
+                endif
+
                 if(istatus .ne. 1)then
                     write(6,*)' Could not read forecast field'       
                     goto1200
                 endif
-                c_label(11:29) = ' FUA '//var_2d(1:4)
-     1                             //fcst_hhmm//' g/m^3'
 
-                i4time_cloud = i4_valid
+!               c_label(11:29) = ' FUA '//var_2d(1:4)
+!    1                             //fcst_hhmm//' g/m^3'
+
+                call directory_to_cmodel(directory,c_model)
+
+                units_2d = 'g/m**3'
+
+                call mk_fcst_hlabel(k_mb,comment_2d,fcst_hhmm
+     1                                 ,ext(1:3),units_2d
+     1                                 ,c_model,c_label)
+
+                i4time_lwc = i4_valid
 
             else
                 goto1200
 
             endif
 
-            call make_fnam_lp(i4time_cloud,asc9_tim_t,istatus)
+            call make_fnam_lp(i4time_lwc,asc9_tim_t,istatus)
+
+            write(6,*)' Ascii valid time = ',asc9_tim_t
 
             clow = 0.
             chigh = 1.0
@@ -6302,7 +6385,7 @@ c             if(cint.eq.0.0)cint=0.1
                 endif
 
                 write(c_label,102)ipres,c19_label
-102             format(I5,' hPa',a19,4x)
+102             format(I4,' hPa',a19,5x)
 
 !            endif
         else if(k_level .eq. 0)then
@@ -6658,6 +6741,9 @@ c             if(cint.eq.0.0)cint=0.1
 
         endif
 
+        write(6,*)' Exit input_background_info, ASCII valid time = ',
+     1            asc9_tim_t
+
         return
         end
 
@@ -6766,7 +6852,7 @@ c             if(cint.eq.0.0)cint=0.1
         common /image/ n_image, i_image 
         common /zoom/  zoom, density
 
-        write(6,*)' Subroutine plot_field_2d...'
+        write(6,*)' Subroutine plot_field_2d: i4time = ',i4time
 
         c_type = c_type_in
 
@@ -6859,7 +6945,10 @@ c             if(cint.eq.0.0)cint=0.1
         c_label = ' '
 
         call s_len2(comment_2d,len_fcst)
+        write(6,*)'comment_2d = ',comment_2d(1:len_fcst)
+
         call s_len2(units_2d,len_units)
+        write(6,*)'units_2d = ',units_2d(1:len_units)
 
         if(ext .eq. 'lga')then
             c_model = 'lga'
@@ -6870,7 +6959,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         if(k_mb .gt. 0)then
             write(c_label,102)k_mb
-102         format(I5,' hPa ')
+102         format(I4,' hPa ')
         endif
 
         if(fcst_hhmm_in(3:4) .eq. '00')then
@@ -6879,19 +6968,20 @@ c             if(cint.eq.0.0)cint=0.1
             fcst_hhmm = fcst_hhmm_in
         endif
 
-        ist = 37
+        ic = 10  ! Position where comment info should begin
+        ist = 37 ! Position where forecast time should begin
 
         if(len_units .gt. 0)then
-            c_label(11:11+len_fcst+len_units+2) = comment_2d(1:len_fcst)
+            c_label(ic:ic+len_fcst+len_units+2) = comment_2d(1:len_fcst)
      1                         //' ('//units_2d(1:len_units)//')'
         else
-            c_label(11:11+len_fcst+len_units) = comment_2d(1:len_fcst)
+            c_label(ic:ic+len_fcst+len_units) = comment_2d(1:len_fcst)
         endif
 
         c_label(ist:ist+5) = fcst_hhmm(1:4)//' '
 
         if(len_model .gt. 0)then
-            c_label(ist+5:ist+11+len_model) = 
+            c_label(ist+5:ist+ic+len_model) = 
      1                            c_model(1:len_model)//' Fcst'       
         else
             c_label(ist+5:ist+8) = 'Fcst'       
@@ -6963,6 +7053,37 @@ c             if(cint.eq.0.0)cint=0.1
             enddo ! i
 
         enddo ! i4time
+
+        return
+        end
+
+        subroutine directory_to_cmodel(directory,c_model)
+
+        character*(*) directory,c_model
+        character*255 dir_local
+
+        call s_len(directory,len_full)
+        if(directory(len_full:len_full) .eq. '/')then
+            dir_local = directory(1:len_full-1) ! trim slash at the end
+        else
+            dir_local = directory(1:len_full) 
+        endif        
+
+        call get_directory_length(dir_local,len_path)
+
+        call s_len(dir_local,len_path_and_model)
+
+        write(6,*)' directory = ',directory
+        write(6,*)' dir_local = ',dir_local
+
+        istart = len_path+1
+        if(istart .le. len_path_and_model)then        
+            c_model = dir_local(istart:len_path_and_model)
+        else
+            write(6,*)' Could not decode model name '
+        endif
+
+        write(6,*)' c_model = ',c_model
 
         return
         end
