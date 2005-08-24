@@ -1367,9 +1367,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      You may want to check that any analysis outputs from this time are not 
      present, leaving only the 'ingest' outputs in place. This may improve
      the results of comparisons of your own output with FSL analysis output, 
-     though this step is not always necessary. You might consider commenting 
-     the ingest processes from the 'sched.pl' for this test, since the ingest 
-     outputs (i.e. analysis inputs) will already be present.
+     though this step is not always necessary. You might consider adding the
+     '-T' command line option when you run 'sched.pl' so that we run the
+     analysis executables only thus skipping the ingest processes. This can
+     be done if the ingest outputs (i.e. analysis inputs) are already present
+     in the various 'lapsprd' subdirectories.
 
      One way to supply the analysis inputs is as follows for each input (taken
      from a list of ingest outputs, see section 3.2):
@@ -3533,7 +3535,7 @@ Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc.
 ------- 3.4  ----  Model Initialization & Postprocessing ---------------------
 
    The main FSL contact for information on how we use the analyses to 
-   initialize the forecasts is as follows: Paul Schultz for 
+   initialize the forecasts is as follows: Chris Anderson for 
    RAMS/SFM/MM5/WRF/Eta. The models themselves are not included in this tar 
    file. There is some documentation for the model interfacing at this
    URL: http://laps.fsl.noaa.gov/mm5doc/README_lapsmm5.htm
