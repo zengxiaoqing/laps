@@ -85,8 +85,10 @@ cdis
            cint = 5.
        elseif(range .gt. 6)then  ! From   6-30, cint = 2  (3  - 15 contours)
            cint = 2.
-       elseif(range .ge. 1)then  ! From   1- 6, cint = 1  (1  -  6 contours)
+       elseif(range .gt. 1)then  ! From   1- 6, cint = 1  (1  -  6 contours)
            cint = 1.
+       elseif(range .gt. 0.5)then  ! From   1- 6, cint = 1  (1  -  6 contours)
+           cint = 0.5
        else ! range < 1          
            cint = 0.1
        endif
