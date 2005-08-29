@@ -27,7 +27,7 @@
 #
 # -A                   Run for input analysis time specified as dd-mmm-yyyy-hhmm
 #                      which can also be a substitute input for archive time
-#                      Eg., 28-Aug-2002-1200
+#                      Eg., 28-Aug-2002-1200. Purger is not run.
 #
 # -d                   Delay in hours (lag time or displaced real-time)
 #
@@ -68,8 +68,10 @@
 # -F                   Run followup script to generate GIF images for the web.
 #                      No other executables are run. The argument value is a shorthand 
 #                      name for the domain and can be given a dummy value if the 
-#                      FSL Gizmo server is invisible to you.
+#                      FSL Gizmo server is invisible to you. Purger is not run.
 #                      
+# -T                   Run with analysis only executables, useful with the
+#                      test dataset that comes with the LAPS software release.
 
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
@@ -80,11 +82,11 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F);
+            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:Q:KM:n:A:f:F:wslvp:');
+getopts('d:c:a:rm:t:e:q:Q:KM:n:A:f:F:wslvp:T');
 
 my $initial_time = time();
 
@@ -130,6 +132,12 @@ if(defined $opt_s){ # "surface only"
 
 }elsif($c8_project eq "RRV"){
     @LAPS_EXE = qw(mosaic_radar.x);
+
+}elsif(defined $opt_T){ # Analysis only executables (for running with test data)
+    @LAPS_EXE = qw(sfc_qc.exe wind.exe 
+                  laps_sfc.x temp.exe 
+                  mosaic_radar.x cloud.exe lq3driver.x deriv.exe accum.exe  
+		  lsm5.exe qbalpe.exe lapsprep.exe);
 
 }else{      # Full product set
     @LAPS_EXE = qw(lga.exe 
@@ -257,7 +265,7 @@ system("uname -ns");
 my $t=gmtime(); 
 my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
 
-if(! defined $opt_A && ! defined $opt_a){
+if(! defined $opt_A && ! defined $opt_a && ! defined $opt_F){
     print $t." Running purger\n";
     $sys .= "-r " if($opt_r);
     $sys .= "-m $opt_m " if($opt_m);
@@ -418,6 +426,7 @@ foreach $exe (@LAPS_EXE){
                 }
 
                 print TFILE "  \n";
+                print TFILE "umask 002\n";
                 print TFILE "cd $LAPS_LOG_PATH\n";
                 print TFILE "  \n";
 
@@ -458,6 +467,7 @@ foreach $exe (@LAPS_EXE){
 
         if($nodes_current > 1){
             print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh\n";
+            print TFILE_SUB "umask 002\n";
             print TFILE_SUB "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
             print TFILE_SUB "$LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
