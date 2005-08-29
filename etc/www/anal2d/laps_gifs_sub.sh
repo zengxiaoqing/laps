@@ -114,7 +114,24 @@ echo "ctransarg=$ctransarg"
 echo "ctransext=$ctransext"
 echo "netpbm=$netpbm"
 
-if test "$netpbm" = "yes"; then 
+if test -r /opt/ncarg/bin/ctrans; then
+    date
+    echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file on EJET using SSH to IJET"
+#   `which ppmtogif`
+    COMFILE=$LAPS_DATA_ROOT/myctrans
+    echo "COMFILE = $COMFILE"
+    echo "#!/bin/csh" > $COMFILE                     
+    echo "cd $LAPS_DATA_ROOT/lapsprd/www/anal2d; setenv NCARG_ROOT /opt/bin; ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif" >> $COMFILE                            
+    chmod 775 $COMFILE                     
+    cat $COMFILE                   
+    echo "ssh jet-vis $COMFILE"                          
+          ssh jet-vis $COMFILE                              
+    date
+
+#   For testing only...
+    cp gmeta gmeta_$prod
+
+elif test "$netpbm" = "yes"; then 
     date
     echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file"
     `which ppmtogif`
@@ -126,9 +143,6 @@ else
     echo "Running $NCARG_ROOT/bin/ctrans to make gmeta_$prod.$ctransext file"
 
     $NCARG_ROOT/bin/ctrans -verbose -d $ctransarg -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/gmeta_$prod.$ctransext
-
-    #For testing only...
-    #cp gmeta gmeta_$prod
 
     ls -l $SCRATCH_DIR/gmeta_$prod.$ctransext
     date
@@ -152,17 +166,19 @@ mkdir -p                                                               $WWW_DIR/
 
 $CP $SCRATCH_DIR/gmeta_$prod.gif                                    $WWW_DIR/anal2d/archive/$prod/$datetime.gif
 
-rm -f                                                               $WWW_DIR/anal2d/recent/gmeta_$prod$uscore$latest.gif
-ln -s $WWW_DIR/anal2d/archive/$prod/$datetime.gif                   $WWW_DIR/anal2d/recent/gmeta_$prod$uscore$latest.gif
+cd $WWW_DIR/anal2d/recent
 
-rm -f                                                               $WWW_DIR/anal2d/recent/$prod/gmeta_$prod$uscore$latest.gif
-ln -s $WWW_DIR/anal2d/archive/$prod/$datetime.gif                   $WWW_DIR/anal2d/recent/$prod/gmeta_$prod$uscore$latest.gif
+rm -f                                                               gmeta_$prod$uscore$latest.gif
+ln -s ../archive/$prod/$datetime.gif                                gmeta_$prod$uscore$latest.gif
 
-rm -f                                                               $WWW_DIR/anal2d/recent/gmeta_$prod$uscore$utc_hhmm.gif
-#ln -s $WWW_DIR/anal2d/archive/$prod/$datetime.gif                  $WWW_DIR/anal2d/recent/gmeta_$prod$uscore$utc_hhmm.gif
+rm -f                                                               $prod/gmeta_$prod$uscore$latest.gif
+ln -s ../../archive/$prod/$datetime.gif                             $prod/gmeta_$prod$uscore$latest.gif
 
-rm -f                                                               $WWW_DIR/anal2d/recent/$prod/gmeta_$prod$uscore$utc_hhmm.gif
-ln -s $WWW_DIR/anal2d/archive/$prod/$datetime.gif                   $WWW_DIR/anal2d/recent/$prod/gmeta_$prod$uscore$utc_hhmm.gif
+rm -f                                                               gmeta_$prod$uscore$utc_hhmm.gif
+#ln -s ../archive/$prod/$datetime.gif                               gmeta_$prod$uscore$utc_hhmm.gif
+
+rm -f                                                               $prod/gmeta_$prod$uscore$utc_hhmm.gif
+ln -s ../../archive/$prod/$datetime.gif                             $prod/gmeta_$prod$uscore$utc_hhmm.gif
 
 #ln -s $WWW_DIR/anal2d/archive/$prod/$datetime.gif                  $WWW_DIR/anal2d/loop/$prod/$datetime.gif
 
