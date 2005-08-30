@@ -120,9 +120,9 @@ c     change units of integrated(q) to  g/kg
       if (lpw2 .ne. mdf) lpw2 = lpw2 *1.e3 
       if (lpw3 .ne. mdf) lpw3 = lpw3 *1.e3 
 c     add surface layer qs (already in g/kg) to first level
-      if (lpw1 .ne. mdf) lpw1 = lpw1 
-     1     + ( qs + data(kstart) *1.e3 ) /2.
-     1     * (ps-p_1d(kstart) )
+c      if (lpw1 .ne. mdf) lpw1 = lpw1 
+c     1     + ( qs + data(kstart) *1.e3 ) /2.
+c     1     * (ps-p_1d(kstart) )
 c     comvert g/kg to mm <-- millimeters, not cm!
       if (lpw1 .ne. mdf) lpw1 = lpw1 / 10. / 9.8
       if (lpw2 .ne. mdf) lpw2 = lpw2 / 10. / 9.8

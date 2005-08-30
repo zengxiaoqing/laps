@@ -97,6 +97,9 @@ c   the imager or sounding instrument can be used with the software without
 c   further recompilation. 
 
 c   
+c
+
+
       use module_sfc_structure
       implicit none
       include 'Constants.inc'
@@ -231,12 +234,17 @@ c     optran common block
       
 c     gvap common block
       
-      common /cost_gvap/cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight,
+      common /cost_gvap/cost_w1_x,cost_w2_x,cost_w3_x,
+     1     cost_w1_y,cost_w2_y,cost_w3_y,
+     1     cost_gvap_p,cost_weight,
      1     cost_gvap_istatus,cost_data,cost_kstart,cost_qs,
-     1     cost_ps, cost_p1d, cost_mdf
-      real cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight
+     1     cost_ps, cost_p1d, cost_mdf,cost_grad_x,cost_grad_y
+      real cost_w1_x,cost_w2_x,cost_w3_x,cost_gvap_p,cost_weight,
+     1     cost_w1_y,cost_w2_y,cost_w3_y
       integer cost_gvap_istatus
       real cost_data(500)
+      real cost_grad_x(500)
+      real cost_grad_y(500)
       integer cost_kstart
       real cost_qs
       real cost_ps
@@ -306,7 +314,11 @@ c     misc variables
       character*9 grid_name
 
       integer len
+
+c     code *******************************************************************
       
+      write(6,*) 'new version 3/7/05 uses satellite gradients'
+      write (6,*)
 
       cost_rad_istatus = 1      ! assume good
       goes_good = 1             ! assume good
@@ -805,7 +817,13 @@ c     fill cost function for background atmosphere
                cost_t_l(k) = t_l(k,i,j) 
                cost_mr_l(k) = mr_l (k,i,j)
                cost_p1d(k) = p_3d(i,j,k)
-               
+               if (i.ne.1 .and. j.ne.1 .and. i.ne.ii .and. j.ne.jj)then
+                  cost_grad_x(k) = (sh(i+1,j,k)-sh(i-1,j,k))*0.5
+                  cost_grad_y(k) = (sh(i,j+1,k)-sh(i,j-1,k))*0.5
+               else
+                  cost_grad_x(k) = 0.0
+                  cost_grad_y(k) = 0.0
+               endif
                cost_data(k) = sh(i,j,k)
             enddo
 
@@ -820,14 +838,40 @@ c     fill cost function for background atmosphere
             cost_sfc_refl = sfc_data(i,j)%sfc_refl(1)
             cost_sec_solar = sfc_data(i,j)%secsola
 
-c     cost function data for gvap
+c     cost function data for gvap (now include gradients in x and y instead of actual values.
             
-            cost_w1 = gw1(i,j)
-            cost_w2 = gw2(i,j)
-            cost_w3 = gw3(i,j)
+            cost_gvap_istatus = istatus_gvap
+            if (i.gt.1 .and. j.gt.1 .and. i.lt.ii .and. j.lt.jj)then             
+               cost_w1_x = (gw1(i+1,j)-gw1(i-1,j))*0.5
+               cost_w2_x = (gw2(i+1,j)-gw2(i-1,j))*0.5
+               cost_w3_x = (gw3(i+1,j)-gw3(i-1,j))*0.5
+               cost_w1_y = (gw1(i,j+1)-gw1(i,j-1))*0.5
+               cost_w2_y = (gw2(i,j+1)-gw2(i,j-1))*0.5
+               cost_w3_y = (gw3(i,j+1)-gw3(i,j-1))*0.5
+               IF (gw1(i+1,j)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw2(i+1,j)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw3(i+1,j)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw1(i-1,j)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw2(i-1,j)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw3(i-1,j)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw1(i,j+1)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw2(i,j+1)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw3(i,j+1)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw1(i,j-1)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw2(i,j-1)==MDF) cost_gvap_istatus = 0 ! skip
+               IF (gw3(i,j-1)==MDF) cost_gvap_istatus = 0 ! skip
+            else
+               cost_w1_x = 0.0
+               cost_w2_x = 0.0
+               cost_w3_x = 0.0
+               cost_w1_y = 0.0
+               cost_w2_y = 0.0
+               cost_w3_y = 0.0
+               cost_gvap_istatus = 0  ! skip this boundary part
+            endif
+
             cost_weight = gww1(i,j)
             cost_gvap_p = gvap_p(i,j)
-            cost_gvap_istatus = istatus_gvap
             cost_kstart = kstart (i,j)
             cost_qs = qs (i,j)
             cost_ps = sfc_data(i,j)%sfc_pres

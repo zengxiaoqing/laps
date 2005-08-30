@@ -102,12 +102,17 @@ c     optran common
 
 c     gvap common
 
-      common /cost_gvap/cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight,
+      common /cost_gvap/cost_w1_x,cost_w2_x,cost_w3_x,
+     1     cost_w1_y,cost_w2_y,cost_w3_y,
+     1     cost_gvap_p,cost_weight,
      1     cost_gvap_istatus,cost_data,cost_kstart,cost_qs,
-     1     cost_ps, cost_p1d, cost_mdf
-      real cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight
+     1     cost_ps, cost_p1d, cost_mdf,cost_grad_x,cost_grad_y
+      real cost_w1_x,cost_w2_x,cost_w3_x,cost_gvap_p,cost_weight,
+     1     cost_w1_y,cost_w2_y,cost_w3_y
       integer cost_gvap_istatus
       real cost_data(500)
+      real cost_grad_x(500)
+      real cost_grad_y(500)
       integer cost_kstart
       real cost_qs
       real cost_ps
@@ -198,15 +203,7 @@ c     externals
       
       real plango
 
-
-
-
-
-
-      
 c     code
-
-      
 
       cloud_thresh = 0.6
       tbest = 0.0 ! initialize tbest array to zero each call (no carryover)
@@ -456,13 +453,16 @@ c     determine sigma level pressure analogs
             call sigma_to_p (0.1, cost_gvap_p, 0.7, p2)
             call sigma_to_p (0.1, cost_gvap_p, 0.3, p3)
 
-            call int_layerpw(x,cost_data,cost_kstart,
+c     now broken into gradiants in x and y
+c     first the x grad
+
+            call int_layerpw(x,cost_grad_x,cost_kstart,
      1           cost_qs,cost_gvap_p,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
      1           cost_kk,cost_mdf)
             
             if (p1 <= 300.0) then
                write(6,*)'TEMM ', x, p1,p2,p3,lpw1,lpw2,lpw3,
-     1              cost_w1,cost_w2,cost_w3
+     1              cost_w1_x,cost_w2_x,cost_w3_x
             endif
             
             if (lpw2 == cost_mdf) then
@@ -473,27 +473,53 @@ c     determine sigma level pressure analogs
             max_func_gvap2 = 0.0
             max_func_gvap3 = 0.0
             
-            if (lpw1 /= cost_mdf) then
+            if (abs(lpw1) .lt.  1000.) then
                max_func_gvap1 =  
-     1              (lpw1-cost_w1)**2*cost_weight
+     1              (lpw1-cost_w1_x)**2*cost_weight
             endif
-            if (lpw2 /= cost_mdf) then
+            if (abs(lpw2) .lt.  1000.) then
                max_func_gvap2 =
-     1              (lpw2-cost_w2)**2*cost_weight
+     1              (lpw2-cost_w2_x)**2*cost_weight
             endif
-            if (lpw3 /= cost_mdf) then
+            if (abs(lpw3) .lt. 1000.) then
                max_func_gvap3 =  
-     1              (lpw3-cost_w3)**2*cost_weight
+     1              (lpw3-cost_w3_x)**2*cost_weight
             endif
-            
-c     lpw and cost are in mm tpw.  layer 1 is weighted very low since
-c     it seems to always disagree with model computations by a significant
-c     amount.  this are under research
-
-c            max_func_gvap1 = 0.0  ! give layer 1 no influence
-            
+          
             max_func_gvap = (max_func_gvap1+max_func_gvap2
      1           +max_func_gvap3)
+
+c     now repeat for the y gradient
+
+            call int_layerpw(x,cost_grad_y,cost_kstart,
+     1           cost_qs,cost_gvap_p,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
+     1           cost_kk,cost_mdf)
+            
+            if (p1 <= 300.0) then
+               write(6,*)'TEMM ', x, p1,p2,p3,lpw1,lpw2,lpw3,
+     1              cost_w1_y,cost_w2_y,cost_w3_y
+            endif
+            
+            if (lpw2 == cost_mdf) then
+               i = i
+            endif
+
+            if (abs(lpw1) .lt.1000.) then
+               max_func_gvap1 =  
+     1              (lpw1-cost_w1_y)**2*cost_weight
+            endif
+            if (abs(lpw2) .lt.1000.) then
+               max_func_gvap2 =
+     1              (lpw2-cost_w2_y)**2*cost_weight
+            endif
+            if (abs(lpw3) .lt.1000.) then
+               max_func_gvap3 =  
+     1              (lpw3-cost_w3_y)**2*cost_weight
+            endif
+          
+            max_func_gvap = (max_func_gvap1+max_func_gvap2
+     1           +max_func_gvap3) + max_func_gvap
+            max_func_gvap = max_func_gvap * 10000. ! analytic immportance
 
 c     max_func_gvap is in mm (above) now divide by mm error to make
 c     dimensionless
