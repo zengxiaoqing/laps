@@ -1,6 +1,6 @@
       subroutine tcbogus(jx,ix,nz,ht,tp,rh_c,uw,vw,
      +                   pss,tps,rhs,uws,vws,mslp,
-     +                   pressures_pa,filename,bgmodel)
+     +                   pressures_pa,filename,bgmodel,cwb_type)
 !
 !     Bogusing balanced tropical cyclones based on Rankin Vortex
 !     Input file : tcbogus.nl
@@ -22,12 +22,12 @@
 !         pss       hPa       surface pressure (not necessary!)
 !
 !      Guo-Ji Jian (CWB,Taiwan)       June, 2002
-!
+!      wen-ho Wang modify slightly     Sep, 2004
 
       parameter(max_no=3)
       parameter(kb=7,k300=8,k850=4)
 
-      character filename*255,nest7grid*150
+      character filename*255,nest7grid*150,cwb_type*8
       integer bgmodel,ix,jx,nz,itc_no,icount,cen_i,cen_j,l,
      +        y1,y2,y3,y4,m1,m2,d1,d2,a1,a2,b1,b2,istatus
       real ht(jx,ix,nz),tp(jx,ix,nz),rh_c(jx,ix,nz),uw(jx,ix,nz),
@@ -51,6 +51,9 @@
      +     rs,rout,xix,xjx,dealbox,beta(kb),r,ang
       real year_m,month_m,day_m,hour_m,tothour_m,year,month,day,hour,
      +     tothour
+      integer i4time_latest,i4time_now,dt,i4time1
+      real dt1
+      character*9 name1,a9
       logical bogus
       include 'grid_fname.cmn'
       data beta/0.90,1.00,0.90,0.80,0.60,0.45,0.35/
@@ -60,12 +63,36 @@
 
 
 ! Bogusing namelist and driver
-      call get_directory(grid_fnam_common,nest7grid,len_dir)
-      nest7grid=nest7grid(1:len_dir)//'/tcbogus.nl'
+!!      call get_directory(grid_fnam_common,nest7grid,len_dir)
+!!      nest7grid=nest7grid(1:len_dir)//'/tcbogus.nl'
+      call get_directory('tcbogus',nest7grid,len_dir)
+      call get_latest_file_time(nest7grid,i4time_latest)
+      call make_fnam_lp(i4time_latest,name1,istatus)
+      nest7grid=nest7grid(1:len_dir)//name1//'_tcbogus.nl'
+      print*,'--- the table of tcbogus is following ---'
       print *,nest7grid
       open(99,file=nest7grid,status='old',form='formatted')
       read(99,tcbogus_nl)
       close(99)
+!  -- set i4time_now be laps_time ---
+!      i4time1=i4time_now_gg()
+      call get_systime(i4time_now,a9,istatus)
+      dt=i4time_now - i4time_latest
+      dt1=dt/3600.
+        print*,'---check the file time:(sec) ---'
+        print*,'-- dt,laps_time,latest ---',dt,i4time_now,i4time_latest
+!       if ( dt .ge. 10800 ) then 
+       if ( dt .ge. 12000 ) then 
+        print*,'---- the data is too old to use( about 3.3 hrs )---',dt1
+           bogus=.false.
+       else if ( dt .le. -2700) then  ! at most new 45 mins
+        print*,'---- the data is too new to use(sec)---',dt
+           bogus=.false.
+       else 
+        print*,'---- the data should be used (? hrs)---',dt1
+           bogus=.true.
+       end if
+!
       if (bogus) then
        print *,' '
        print *,'Do Tropical cyclone bogusing'
@@ -75,9 +102,12 @@
       endif
 
       call s_len(filename,l)
+       print *,' test cyclone bogusing',filename
 
-      if (bgmodel.eq.3 .and. filename(l-15:l-14).eq.'nf') then
-! CWB NFS model
+!      if (bgmodel.eq.3 .and. filename(l-15:l-14).eq.'nf') then
+      if (bgmodel.eq.3 .and. cwb_type.eq.'nf') then
+! OLD CWB NFS_15KM model
+       print *,'----- Using OLD CWB ---- '
        lat1=10.
        lat2=40.
        lon0=120.
@@ -85,6 +115,48 @@
        sw(2)=+109.24
        ne(1)=34.987
        ne(2)=+131.60
+       dskm=15.
+      elseif (bgmodel.eq.3 .and. cwb_type.eq.'nf15' .or. 
+     +        cwb_type.eq.'gfs') then
+! NEW CWB NFS_15KM & GFS_180 (interpolated into 15KM) model
+       print *,'----- Using NEW CWB ---- '
+       lat1=10.
+       lat2=40.
+       lon0=120.
+       sw(1)=9.28194
+       sw(2)=+109.7727
+       ne(1)=35.26665
+       ne(2)=+137.7342
+       dskm=15.
+      elseif (bgmodel.eq.3 .and. cwb_type.eq.'nf45') then
+! NEW CWB NFS_45km  model
+       print *,'----- Using NEW CWB 45 ---- '
+       lat1=10.
+       lat2=40.
+       lon0=120.
+       sw(1)=-5.34068
+       sw(2)=+77.9186
+       ne(1)=42.9281
+       ne(2)=+180.2034
+       dskm=45.
+      elseif (bgmodel.eq.3 .and. cwb_type.eq.'tfs') then
+! NEW CWB TFS_45KM  model
+       print *,'----- Using NEW CWB TFS  ---- '
+       lat1=10.
+       lat2=40.
+       lon0=120.
+       sw(1)=-9.902
+       sw(2)=+82.854
+       ne(1)=52.219
+       ne(2)=+199.610
+       dskm=45.
+      else
+       print *,'Other model'
+       return
+      endif
+!!
+       print *,'----- Using cwb_type is ---- ',cwb_type
+
        call lc_param11(s,cone,xmin,ymin,dx,dy,jx,ix,
      +                 nz,lat1,lat2,lon0,sw,ne)
 
@@ -121,10 +193,6 @@
        day_m=10.*d1+d2
        hour_m=10.*(a1+b1)+(a2+b2)
  
-      else
-       print *,'Other model'
-       return
-      endif
 
 ! Tropical cyclone information
       call hourcalc(year,month,day,hour,tothour)
