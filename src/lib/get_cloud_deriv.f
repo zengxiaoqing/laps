@@ -181,47 +181,28 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 
         if(iflag_slwc .ne. 0)then
             write(6,*)' Initializing SLWC/CICE arrays'
-            call constant_3d(slwc_3d,zero,ni,nj,nk)
-            call constant_3d(cice_3d,zero,ni,nj,nk)
+            slwc_3d = zero
+            cice_3d = zero
         endif
 
         if(l_flag_bogus_w)then
             write(6,*)' Initializing Omega array'
-            do k = 1,nk
-            do j = 1,nj
-            do i = 1,ni
-                omega_3d(i,j,k) = r_missing_data
-            enddo
-            enddo
-            enddo
+            omega_3d = r_missing_data
         endif
 
         if(l_flag_mvd)then
             write(6,*)' Initializing MVD array'
-            call constant_3d(mvd_3d,zero,ni,nj,nk)
+            mvd_3d = zero
         endif
 
-!       if(.true.)then
         if(l_flag_cloud_type)then
             write(6,*)' Initializing Cloud Type Array'
-            do k = 1,nk
-            do j = 1,nj
-            do i = 1,ni
-                cldpcp_type_3d(i,j,k) = 0
-            enddo
-            enddo
-            enddo
+            cldpcp_type_3d = 0
         endif
 
         if(l_flag_icing_index)then
             write(6,*)' Initializing Icing Index Array'
-            do k = 1,nk
-            do j = 1,nj
-            do i = 1,ni
-                icing_index_3d(i,j,k) = 0
-            enddo
-            enddo
-            enddo
+            icing_index_3d = 0
         endif
 
         I4_elapsed = ishow_timer()
@@ -256,6 +237,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
                 k = max(ibase_array(i,j) - 1,1)
                 k_highest = itop_array(i,j) - 1
 
+!               First time around will exclude cloud type and MVD?
                 do while (k .le. k_highest)
                   if(clouds_3d(i,j,k+1) .ge. THRESH_CVR .and.
      1               clouds_3d(i,j,k  ) .lt. THRESH_CVR
@@ -298,8 +280,6 @@ c                   if(i .eq. 1)write(6,*)i,j,k,' Cloud Base'
 !                       Make sure cloud base and top stay in LAPS domain
                         k_1d_base = min(k_1d_base,nk)
                         k_1d_top  = min(k_1d_top ,nk)
-!                       k_1d_base = max(k_1d_base,1)
-!                       k_1d_top  = max(k_1d_top ,1)
 
 c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
@@ -460,7 +440,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
 1000              k = k + 1
 
-                enddo ! k
+                enddo ! k (cloud layer loop)
 
             endif ! ibase_array (At least one layer exists)
 
