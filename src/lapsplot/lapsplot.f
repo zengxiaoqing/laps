@@ -57,9 +57,12 @@ cdis
      1  umin,umax,vmin,vmax
 
         integer*4 N_CONTOURS
-        parameter (N_CONTOURS = 23)
+        parameter (N_CONTOURS = 26)
         real*4 factor(N_CONTOURS)
         data factor/
+     1  .0001,
+     1  .0002,
+     1  .0005,
      1  .001,
      1  .002,
      1  .005,
