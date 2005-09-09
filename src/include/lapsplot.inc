@@ -11,6 +11,7 @@
 
           integer latlon_int
           integer mode_supmap
+          integer icol_barbs
 
           character*3 c3_time_zone
           character*9 c_institution
@@ -32,6 +33,7 @@
 
           integer contour_line_width
           integer ncols
+          integer icol_barbs
 
 	end type plot_type
 
