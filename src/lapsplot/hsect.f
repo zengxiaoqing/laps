@@ -935,7 +935,7 @@ c       include 'satellite_dims_lvd.inc'
                 endif
 
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom
-     1               ,interval,asc9_tim_3dw,namelist_parms
+     1               ,interval,asc9_tim_3dw,namelist_parms,plot_parms      
      1               ,c_label,c_field,k_level,i_overlay,c_display       
      1               ,NX_L,NY_L,NZ_L,MAX_RADARS
 !    1               ,grid_ra_ref_dum,grid_ra_vel_dum       
@@ -1487,6 +1487,10 @@ c       include 'satellite_dims_lvd.inc'
                 cint = 0.
 
                 colortable = 'vnt'
+
+                if(i_image .eq. 1)then
+                    plot_parms%icol_barbs = +1 ! keep future barbs plots bright
+                endif
 
             elseif(var_2d(1:2) .eq. 'HA')then
                 clow = 2.
@@ -3014,13 +3018,15 @@ c
 
                 i4time_lwc = i4time_cloud
 
+                cint = -0.05
+
             elseif(c_prodtype .eq. 'F')then
                 if(k_mb .ne. -1)then ! Get 2D Grid
                     CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
      1                                 EXT,NX_L,NY_L,1,1,       
      1                                 VAR_2d,k_mb,LVL_COORD_2d,
      1                                 UNITS_2d,COMMENT_2d,
-     1                                 field2_2d,istatus)
+     1                                 field_2d,istatus)
 
                 else
                     call get_lapsdata_3d(i4_initial,i4_valid
@@ -3047,6 +3053,7 @@ c
      1                                 ,c_model,c_label)
 
                 i4time_lwc = i4_valid
+                cint = -0.002
 
             else
                 goto1200
@@ -3059,10 +3066,17 @@ c
 
             clow = 0.
             chigh = 1.0
-            cint = -0.1
 
             if(k_level .gt. 0)then ! Plot SLWC on const pressure sfc
-               if(c_type_i .ne. 'ci')then
+               if(c_prodtype .eq. 'F')then
+                   call plot_field_2d(i4time_lwc,c_type
+     1                        ,field_2d,1e-3
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'linear')
+
+               elseif(c_type_i .ne. 'ci')then
                    call subcon(field2_2d,1e-30,field_2d,NX_L,NY_L)
 
                    call plot_field_2d(i4time_lwc,c_type
@@ -4250,7 +4264,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
-     1                     ,asc9_tim_t,namelist_parms
+     1                     ,asc9_tim_t,namelist_parms,plot_parms
      1                     ,c_label,c_field,k_level
      1                     ,i_overlay,c_display
      1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
@@ -4285,7 +4299,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
-     1                     ,asc9_tim_t,namelist_parms
+     1                     ,asc9_tim_t,namelist_parms,plot_parms
      1                     ,c_label,c_field,k_level
      1                     ,i_overlay,c_display
      1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
@@ -4531,6 +4545,7 @@ c                   cint = -1.
      1                             ,'vnt',n_image,scale,'hsect' 
      1                             ,plot_parms,namelist_parms) 
                     endif
+                    plot_parms%icol_barbs = +1 ! keep future barbs plots bright
                 elseif(var_2d(1:2) .eq. 'HA')then
                     call ccpfil(field_2d,NX_L,NY_L,2.,6.
      1                         ,'haines',n_image,scale,'hsect' 
@@ -5046,6 +5061,10 @@ c                   cint = -1.
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectral')
+
+            if(i_image .eq. 1)then
+                plot_parms%icol_barbs = +1 ! keep future barbs plots bright
+            endif
 
         elseif(c_type_i .eq. 'u' .or. c_type_i .eq. 'v')then
             call upcase(c_type,c_type)
@@ -5843,7 +5862,7 @@ c             if(cint.eq.0.0)cint=0.1
 
 
         subroutine plot_barbs(u,v,lat,lon,topo,size,zoom,
-     1  interval,asc_tim_9,namelist_parms,
+     1  interval,asc_tim_9,namelist_parms,plot_parms,
      1  c_label,
      1  c_field,k_level,i_overlay,c_display,imax,jmax,kmax,max_radars,       
 !    1  grid_ra_ref_dum,grid_ra_vel_dum,
@@ -5869,6 +5888,9 @@ c             if(cint.eq.0.0)cint=0.1
 !       data ity/35/,ily/1010/
 
         include 'icolors.inc'
+
+!       i_image: whether this particular plot is an image
+        common /image/ n_image, i_image 
 
         logical l_obs
 
@@ -5972,7 +5994,16 @@ c             if(cint.eq.0.0)cint=0.1
                     return
                 endif
 
-                call setusv_dum(2hIN,icolors(i_overlay))
+                if(n_image .ge. 1 .and. 
+     1             plot_parms%icol_barbs .lt. +1)then
+                    call setusv_dum(2hIN,0)
+                    write(6,*)' Plotting black wind barbs'
+     1                       ,n_image,plot_parms%icol_barbs
+                else
+                    call setusv_dum(2hIN,icolors(i_overlay))
+                    write(6,*)' Plotting wind barbs, color = '
+     1                       ,icolors(i_overlay)
+                endif
 
                 call get_border(NX_L,NY_L,x_1,x_2,y_1,y_2)
 
