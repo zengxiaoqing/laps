@@ -1080,7 +1080,7 @@ c read in laps lat/lon and topo
                 enddo ! i
                 enddo ! k
 
-                cint = -1.
+                cint = -1. * 2. ** (-density)
 
             else ! Not LCO field
                 call interp_3d(field_3d,field_vert
@@ -1106,7 +1106,7 @@ c read in laps lat/lon and topo
                 enddo ! i
                 enddo ! k
 
-                cint = -1.
+                cint = -1. * 2. ** (-density)
 
             endif ! LCO field
 
@@ -2488,9 +2488,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 clow = 0.
                 chigh = 0.
                 if(c_field .eq. 'pc')then
-                    cint = -0.005 
+                    cint = -0.005 * 2. ** (-density)
                 else
-                    cint = -0.005
+                    cint = -0.005 * 2. ** (-density)
                 endif
             endif
 
@@ -2525,7 +2525,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = 0.
             chigh = 0.
-            cint = -0.1
+            cint = -0.1 * 2. ** (-density)
             i_contour = 4
             call make_fnam_lp(i4time_cloud,a9time,istatus)
 
