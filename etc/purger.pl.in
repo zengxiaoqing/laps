@@ -57,7 +57,7 @@ my $DATAROOT=shift || die "LAPS_DATA_ROOT required";
 #
 # Other exceptions can be listed below...
 #
-my(%clean_dirs, $hist_time, $min_files);
+my(%clean_dirs, $hist_time, $min_files, $log_time);
 
 if($opt_r){
     if(defined $opt_t){
@@ -66,6 +66,8 @@ if($opt_r){
        $hist_time = 0;
        $min_files = ($opt_m)?$opt_m:0;
     }
+
+    $log_time = 1.5;
 }else{
     $hist_time = ($opt_t)?$opt_t:1.5;
 #
@@ -73,6 +75,8 @@ if($opt_r){
 #
 
     $min_files = ($opt_m)?$opt_m:5;
+
+    $log_time = $hist_time;
 }
 #
 # exceptions - overridden if $min_files==0
@@ -123,7 +127,7 @@ if($min_files>0){
     $clean_dirs{lapsprep} = (0.25<$hist_time)?0.25:$hist_time;;
     $clean_dirs{'model/output'} = (0.25<$hist_time)?0.25:$hist_time;;
     $clean_dirs{'model/varfiles'} = (0.25<$hist_time)?0.25:$hist_time;;
-    $clean_dirs{'../log'} = 1.5;
+    $clean_dirs{'../log'} = $log_time;
 
     if(open(OVERRIDES,"$DATAROOT/../static/purger.dat")){
       foreach(<OVERRIDES>){
@@ -148,6 +152,7 @@ if($min_files>0){
 
 print "Running $0 for data in $DATAROOT default purge time is $hist_time days \n";
 print "Leave a minimum of $min_files in each directory\n";
+print "Log file purge time is $log_time\n";
 
 
 
