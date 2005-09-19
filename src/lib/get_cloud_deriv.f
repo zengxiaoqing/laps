@@ -149,12 +149,8 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         endif
 
         write(6,*)' Generating Lowest Base and Highest Top Arrays'
-        do j = 1,nj
-        do i = 1,ni
-            ibase_array(i,j) = KCLOUD_P1
-            itop_array(i,j) = 0
-        enddo
-        enddo
+        ibase_array = KCLOUD_P1
+        itop_array = 0
 
         do k = KCLOUD,1,-1
             do j = 1,nj
@@ -207,7 +203,8 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 
         I4_elapsed = ishow_timer()
 
-        n_cloud_columns = 0
+        n_cloud_columns_cty_vv = 0
+        n_cloud_columns_slwc = 0
         n_slwc_call = 0
 
         write(6,*)' Finding Cloud Layers and Computing Output Field(s)'
@@ -220,7 +217,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 
             if(ibase_array(i,j) .ne. KCLOUD_P1)then ! At least one layer exists
                 l_cloud = .true.
-                n_cloud_columns = n_cloud_columns + 1
+                n_cloud_columns_cty_vv = n_cloud_columns_cty_vv + 1
 
                 do k = 1,nk ! Initialize
                     temp_1d(k) = temp_3d(i,j,k)
@@ -237,7 +234,11 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
                 k = max(ibase_array(i,j) - 1,1)
                 k_highest = itop_array(i,j) - 1
 
-!               First time around will exclude cloud type and MVD?
+!               First time around has lower threshold
+!                                     keep stability & cloud type
+!                                     exclude SLWC 
+!                                     keep MVD
+                                      
                 do while (k .le. k_highest)
                   if(clouds_3d(i,j,k+1) .ge. THRESH_CVR .and.
      1               clouds_3d(i,j,k  ) .lt. THRESH_CVR
@@ -304,6 +305,83 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                                 cldpcp_type_3d(i,j,k_1d) = itype
                             enddo
                         endif
+
+!                       We have now defined a cloud base and top
+                        do k_1d = k_1d_base,k_1d_top ! Loop through the cloud layer
+                            if(l_flag_mvd)then
+                                call get_mvd(cloud_type_1d(k_1d)
+     1                                      ,rmvd_microns)
+                                mvd_3d(i,j,k_1d) = rmvd_microns * 1e-6
+                            endif
+
+                        enddo ! k_1d
+
+                        goto1000
+
+                      endif ! Found Cloud Top
+
+                      k = k + 1
+
+                    enddo ! k
+
+                  endif ! Found Cloud Base
+
+1000              k = k + 1
+
+                enddo ! k (cloud layer loop)
+
+!               Get Base and Top
+                k = max(ibase_array(i,j) - 1,1)
+                k_highest = itop_array(i,j) - 1
+
+!               Second time around has higher threshold
+!                   remove redundant stability & cloud type
+!                   keep SLWC
+!                   remove MVD
+                do while (k .le. k_highest)
+                  if(clouds_3d(i,j,k+1) .ge. THRESH_CVR .and.
+     1               clouds_3d(i,j,k  ) .lt. THRESH_CVR
+     1                              .OR.
+     1             k .eq. 1 .and. clouds_3d(i,j,k) .ge. THRESH_CVR
+     1                                                  )then
+                    cld_base_m = 0.5 * (cld_hts(k) + cld_hts(k+1))
+                    k_base = k + 1
+
+c                   if(i .eq. 1)write(6,*)i,j,k,' Cloud Base'
+
+                    k = k + 1
+
+                    do while (k .le. kcloud-1)
+                      if(clouds_3d(i,j,k  ) .gt. THRESH_CVR .and.
+     1                   clouds_3d(i,j,k+1) .le. THRESH_CVR)then
+                        cld_top_m = 0.5 * (cld_hts(k) + cld_hts(k+1))
+
+!                       Constrain cloud top to top of domain
+                        cld_top_m = min(cld_top_m,heights_3d(i,j,nk))
+
+                        k_top = k
+
+!                       We have now defined a cloud base and top
+                        k_1d_base = int(height_to_zcoord3(
+     1                              cld_base_m,heights_3d
+     1                         ,pressures_pa,ni,nj,nk,i,j,istatus)) + 1       
+                        k_1d_top  = int(height_to_zcoord3(
+     1                              cld_top_m ,heights_3d
+     1                         ,pressures_pa,ni,nj,nk,i,j,istatus))
+
+                        if(istatus .ne. 1)then
+                            write(6,*)' Returning from '
+     1                       ,'get_cloud_deriv (height_to_zcoord3 call)'  
+     1                       ,cld_base_m,cld_top_m
+     1                       ,(heights_3d(i,j,kk),kk=1,nk)
+                            return
+                        endif
+
+!                       Make sure cloud base and top stay in LAPS domain
+                        k_1d_base = min(k_1d_base,nk)
+                        k_1d_top  = min(k_1d_top ,nk)
+
+c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
 !                       We have now defined a cloud base and top
                         if(iflag_slwc .ne. 0)then
@@ -420,15 +498,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                             endif ! iflag_slwc
 
-                            if(l_flag_mvd)then
-                                call get_mvd(cloud_type_1d(k_1d)
-     1                                      ,rmvd_microns)
-                                mvd_3d(i,j,k_1d) = rmvd_microns * 1e-6
-                            endif
-
                         enddo ! k_1d
 
-                        goto1000
+                        goto2000
 
                       endif ! Found Cloud Top
 
@@ -438,7 +510,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                   endif ! Found Cloud Base
 
-1000              k = k + 1
+2000              k = k + 1
 
                 enddo ! k (cloud layer loop)
 
@@ -464,8 +536,11 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         enddo ! j
         enddo ! i
 
-        write(6,*)' N_CLOUD_COLUMNS,N_SLWC_CALL = ',n_cloud_columns
-     1                                             ,n_slwc_call
+        write(6,*)
+     1    ' N_CLOUD_COLUMNS_CTY_VV,N_CLOUD_COLUMNS_SLWC,N_SLWC_CALL = '
+     1                                       ,n_cloud_columns_cty_vv     
+     1                                       ,n_cloud_columns_slwc
+     1                                       ,n_slwc_call
 
         I4_elapsed = ishow_timer()
 
