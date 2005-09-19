@@ -6,27 +6,35 @@ setenv MONTH $2
 setenv DATE $3
 setenv HOUR $4
 setenv YYDDD $5
-
-setenv INPUTROOT   /data/ihop/$MONTH/$DATE/data/radar/wsr88d/level2
+setenv LAPS_DATA_ROOT $6
+setenv SKIP $7                 # skip processing if NetCDF radar is there?
+setenv REMAP $8                # run remap_polar_netcdf.exe [yes,no]
+setenv LAPSINSTALLROOT $9
+setenv INPUTROOT $10           # location of Archive II data
+                               # e.g. /data/ihop/$MONTH/$DATE/data/radar/wsr88d/level2
 
 echo "Start wideband2nc.csh..."
+date
 
-if (-e /home/lapb/albers/bin/ihop) then
-    setenv INSTALLROOT /home/lapb/albers/bin/ihop
-else if (-e /home/albers/bin/ihop) then
-    setenv INSTALLROOT /home/albers/bin/ihop
-else
+#setenv OUTPUTROOT  /scratch/lapb/albers/radar
+#setenv OUTPUTROOT  /data/lapb/ihop_work/raw/wsr88d/wideband
+
+# Location of 'widebandlist.txt'
+if (! -e $LAPS_DATA_ROOT/static/widebandlist.txt) then
+    echo "ERROR: data file $LAPS_DATA_ROOT/static/widebandlist.txt not found..."
+    exit
+endif
+
+setenv INSTALLROOT `head -1 $LAPS_DATA_ROOT/static/widebandlist.txt`
+if (! -e $INSTALLROOT) then
     echo "ERROR: WIDEBAND INSTALLROOT $INSTALLROOT not found..."
     exit
 endif
 
-#setenv OUTPUTROOT  /scratch/lapb/albers/radar
-#setenv OUTPUTROOT  /data/lapb/ihop_work/raw/wsr88d/wideband
-setenv OUTPUTROOT  $6
+setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
 
 echo " "
-date
-echo "Start wideband2nc.csh..."
+
 echo "INPUTROOT=$INPUTROOT"
 echo "INSTALLROOT=$INSTALLROOT"
 echo "OUTPUTROOT=$OUTPUTROOT"
@@ -38,9 +46,9 @@ if (! -e $NEXRAD_SITES) then
 endif
 
 #Check and skip over any radars that were already processed for the hour 
-setenv SKIP $7 
 
-foreach RADAR (kama kcys kddc kfdr kftg kfws kgld kict kinx klbb ktlx kvnx)
+foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
+#foreach RADAR (kama kcys kddc kfdr kftg kfws kgld kict kinx klbb ktlx kvnx)
 #foreach RADAR (kcys kama)
 
   echo " "
@@ -71,8 +79,16 @@ foreach RADAR (kama kcys kddc kfdr kftg kfws kgld kict kinx klbb ktlx kvnx)
 
   if($COUNT == "0" || $SKIP != "yes")then
       echo "Generating radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
-      find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+
+#     This works with the archived radar data for IHOP
+#     find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+#                                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
+
+#     Use this filename convention for realtime data
+      ls -l $INPUTROOT/$RADAR/$YEAR$MONTH$DATE$HOUR*
+      find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
                                                  -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
+
       echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
       setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
       echo "Number of files generated is $COUNT"
@@ -85,6 +101,10 @@ foreach RADAR (kama kcys kddc kfdr kftg kfws kgld kict kinx klbb ktlx kvnx)
   
   echo " "
 
+  if($REMAP == "yes")then
+      echo "Running LAPS remapper"
+      $LAPSINSTALLROOT/bin/remap_polar_netcdf.exe > $LAPS_DATA_ROOT/log/remap_polar_netcdf.log.$YYDDD$HOUR
+  endif
 end
 
 
