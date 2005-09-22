@@ -199,6 +199,7 @@ c
         character*8   a9_to_a8, a8_time
 
         logical l_allow_empty_lso
+        logical l_identical_a(maxsta)
 c
         integer cnt
         data cnt/0/
@@ -521,8 +522,21 @@ c       Call subroutine to check for duplicate obs
         call check_for_dupes(      maxsta,n_obs_b,stations
      1                            ,store_1,store_2,store_3
      1                            ,store_4,store_5,store_6
-     1                            ,store_7,badflag)
+     1                            ,store_7,badflag,l_identical_a)
 
+!       Remove identical stations by calling 'init_station'
+        do i = 1,n_obs_b
+            if(l_identical_a(i) .and. .true.)then
+                write(6,*)' Removing identical station',i
+                call init_station(i
+     1                      ,stations,provider,weather,reptype,atype      
+     1                      ,store_1,store_2,store_3,store_4,store_5
+     1                      ,store_6,store_7
+     1                      ,store_2ea,store_3ea,store_4ea,store_5ea
+     1                      ,store_6ea,dpchar,wmoid
+     1                      ,store_cldht,store_cldamt,maxsta,badflag)
+            endif
+        enddo
 c
 !       Final QC check 
         call get_ibadflag(ibadflag,istatus)
@@ -855,7 +869,7 @@ c
         subroutine check_for_dupes(maxsta,n_obs_b,stations
      1                            ,store_1,store_2,store_3
      1                            ,store_4,store_5,store_6
-     1                            ,store_7,badflag)
+     1                            ,store_7,badflag,l_identical_a)
 
 	character  stations(maxsta)*20
         logical l_identical_a(maxsta),l_identical
@@ -879,7 +893,7 @@ c
                     l_identical = .true.
 
                     do k = 1,4
-                        if(store_1(i,k) .ne. store_1(j,k)) then ! different sta
+                        if(store_1(i,k) .ne. store_1(j,k)) then ! different loc/time
                             l_identical = .false.
                         endif
 	            enddo ! k
@@ -897,6 +911,15 @@ c
                             l_identical = .false.
                         endif
                     endif ! l_identical
+
+                    call s_len(stations(i),leni)
+!                   call s_len(stations(j),lenj)
+                    if(stations(i) .eq. stations(j) .and. 
+     1                 leni .gt. 0                        )then     
+                        write(6,*)' Names are identical: '
+     1                           ,i,j,stations(i)     
+                        l_identical = .true.
+                    endif
 
                     if(l_identical)then
                         l_identical_a(j) = .true.
@@ -964,22 +987,22 @@ c
 	atype(i)    = '      '
 c
 	do j=1,2
-	    store_3ea(i,j) = badflag
-	    store_4ea(i,j) = badflag
-	    store_6ea(i,j) = badflag
+	    store_3ea(i,j) = 0. ! badflag
+	    store_4ea(i,j) = 0. ! badflag
+	    store_6ea(i,j) = 0. ! badflag
 	enddo !j
 c
 	do j=1,3
 	    store_2(i,j) = badflag
 	    store_7(i,j) = badflag
-	    store_2ea(i,j) = badflag
+	    store_2ea(i,j) = 0. ! badflag
 	enddo !j
 c
 	do j=1,4
 	    store_1(i,j) = badflag
 	    store_3(i,j) = badflag
 	    store_5(i,j) = badflag
-	    store_5ea(i,j) = badflag
+	    store_5ea(i,j) = 0. ! badflag
 	enddo !j
 c
 	do j=1,5
