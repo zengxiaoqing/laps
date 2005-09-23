@@ -17,6 +17,7 @@ c     USE laps_static
       character*30  projname
       character*13  fname13
       character*13  fname9_to_wfo_fname13
+      character*8   c8_project_common
       character*4   cf
       character*2   gproj
       character*1   cgrddef
@@ -181,6 +182,15 @@ c        call s_len(projname,leng)
             gproj='LC'
          elseif(projname(1:l).eq. 'mercator')then
             gproj='MC'
+c specifically for PADS since input domain center is = LAPS (output) domain.
+            call get_c8_project(c8_project_common,istatus)
+            call upcase(c8_project_common,c8_project_common)
+            if(c8_project_common.eq.'AIRDROP')then
+               call get_grid_center(La1in,LoV,istatus)
+            else   !otherwise with cmodel="MODEL_FUA" take average of corners for center.
+               La1in=(La1+La2)*0.5
+               LoV=(Lo1+Lo2)*0.5
+            endif
          elseif(projname(1:l).eq.'secant lambert conformal')then
            gproj='LC'
          else
