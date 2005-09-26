@@ -1634,13 +1634,11 @@ c    &,istatus)
         else
 
            igrn=12
-
-           call adjust_geog(nnxp,nnyp,12,'greenfrac',istatus_grn
-     &,lats(1,1,ns),data(1,1,indxter),data(1,1,ilndmsk),GEODAT3D(1,1,:)
+          
+           call adjust_geog(nnxp,nnyp,igrn,'greenfrac',istatus_grn
+     &,lats(:,:,ns),data(:,:,indxter),data(:,:,ilndmsk),GEODAT3D
      &,istatus)
-
         endif
-
         do j=1,12
            data(:,:,igrn+j)=GEODAT3D(:,:,j)
         enddo
@@ -1753,7 +1751,7 @@ c
         else
 
             call adjust_geog(nnxp,nnyp,1,'soiltemp',istatus_grn
-     &,lats(1,1,ns),data(1,1,indxter),data(1,1,ilndmsk),GEODAT2D
+     &,lats(:,:,ns),data(:,:,indxter),data(:,:,ilndmsk),GEODAT2D
      &,istatus)
 
         endif 
@@ -2985,10 +2983,10 @@ c
 c
 cc ------------------------------------------------------------------
 c
-      subroutinevfinit                                                  
+      subroutine vfinit                                                  
       character*1vc,vcscr(0:63)                                         
       common/vform/vc(0:63)                                             
-      datavcscr/'0','1','2','3','4','5','6','7','8','9'                 
+      data vcscr/'0','1','2','3','4','5','6','7','8','9'                 
      +,'A','B','C','D','E','F','G','H','I','J'                          
      +,'K','L','M','N','O','P','Q','R','S','T'                          
      +,'U','V','W','X','Y','Z','a','b','c','d'                          
