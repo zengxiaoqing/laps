@@ -63,6 +63,7 @@ getopts('e:lwq:Q:n:L:g:');
 $|=1;
 
 my $exe = shift || die "Program name and LAPS root directory required";
+my $args = " ";
 my $LAPSROOT=shift || die "LAPS root directory required";
 require "$LAPSROOT/etc/fxa.pm";
 umask 002;
@@ -71,6 +72,10 @@ $ENV{PATH}.=":@NETCDF@/bin";
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+
+if($exe eq "wideband2nc.csh"){ # command line args for realtime runs
+    $args = "$LAPS_DATA_ROOT no no $LAPSROOT realtime"
+}
 
 if($opt_e){
     foreach(split(/,/,$opt_e)){
@@ -226,7 +231,7 @@ if($opt_q || $opt_Q){
 
     print " Adding to $LAPS_LOG_PATH/run_qsub_$exe.sh with executable/nodes $exe $opt_q\n";
     print TFILE "  \n";
-    print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+    print TFILE "$LAPSROOT/bin/$exe $args 1> $LAPS_LOG_PATH/$log 2>&1\n";
 
     print TFILE "  \n";
     print $t." Closing $LAPS_LOG_PATH/run_qsub_$exe.sh with executable $exe\n";
@@ -242,7 +247,7 @@ if($opt_q || $opt_Q){
     system("$command");
 
 }else{
-    my $sys = "$LAPSROOT/bin/$exe ";
+    my $sys = "$LAPSROOT/bin/$exe $args";
 #   system($sys);
 #   unlink "$lockfile";
     &forksub($sys,$lockfile);
