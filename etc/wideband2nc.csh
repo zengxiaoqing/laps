@@ -1,20 +1,23 @@
 #!/bin/csh
 
 #Define Casedate (and hour within)
-setenv YEAR $1
-setenv MONTH $2
-setenv DATE $3
-setenv HOUR $4
-setenv YYDDD $5
-setenv LAPS_DATA_ROOT $6
-setenv SKIP $7                 # skip processing if NetCDF radar is there?
-setenv REMAP $8                # run remap_polar_netcdf.exe [yes,no]
-setenv LAPSINSTALLROOT $9
-setenv INPUTROOT $10           # location of Archive II data
-                               # e.g. /data/ihop/$MONTH/$DATE/data/radar/wsr88d/level2
+setenv LAPS_DATA_ROOT $1
+setenv SKIP $2                 # skip processing if NetCDF radar is there?
+setenv REMAP $3                # run remap_polar_netcdf.exe [yes,no]
+setenv LAPSINSTALLROOT $4
+setenv MODETIME $5 
+
+setenv SUFFIX "_elev01"
 
 echo "Start wideband2nc.csh..."
 date
+
+#Only needed for archive cases possibly
+setenv YEAR `head -5 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c8-11`
+setenv MONTH 09
+setenv DATE `head -5 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c1-2`
+setenv HOUR `head -3 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
+setenv YYDDD `head -6 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
 
 #setenv OUTPUTROOT  /scratch/lapb/albers/radar
 #setenv OUTPUTROOT  /data/lapb/ihop_work/raw/wsr88d/wideband
@@ -26,6 +29,12 @@ if (! -e $LAPS_DATA_ROOT/static/widebandlist.txt) then
 endif
 
 setenv INSTALLROOT `head -1 $LAPS_DATA_ROOT/static/widebandlist.txt`
+if (! -e $INSTALLROOT) then
+    echo "ERROR: WIDEBAND INSTALLROOT $INSTALLROOT not found..."
+    exit
+endif
+
+setenv INPUTROOT `head -2 $LAPS_DATA_ROOT/static/widebandlist.txt | tail -1`
 if (! -e $INSTALLROOT) then
     echo "ERROR: WIDEBAND INSTALLROOT $INSTALLROOT not found..."
     exit
@@ -51,9 +60,6 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 #foreach RADAR (kama kcys kddc kfdr kftg kfws kgld kict kinx klbb ktlx kvnx)
 #foreach RADAR (kcys kama)
 
-  echo " "
-  echo "Start radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
-
 # Output Directories
   mkdir -p $OUTPUTROOT
   mkdir -p $OUTPUTROOT/$RADAR
@@ -78,21 +84,67 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
   echo "Number of pre-existing files is $COUNT"
 
   if($COUNT == "0" || $SKIP != "yes")then
-      echo "Generating radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
-
-#     This works with the archived radar data for IHOP
-#     find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
-#                                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
-
 #     Use this filename convention for realtime data
-      ls -l $INPUTROOT/$RADAR/$YEAR$MONTH$DATE$HOUR*
-      find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
-                                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
 
-      echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
-      setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
-      echo "Number of files generated is $COUNT"
-      echo "Finished radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
+      if($MODETIME == "realtime")then
+
+#         We assume that less than 24 hours of realtime Archive-II data are available on disk at any given time
+
+          echo "Generating radar $RADAR in realtime..."
+
+          pushd $INPUTROOT/$RADAR
+              foreach file (*)
+                  echo " "
+                  echo "processing Archive-II file $file"
+
+                  setenv HOUR   `echo $file | cut -c9-10`
+                  setenv MINUTE `echo $file | cut -c11-12`
+
+                 
+#                 find /$OUTPUTROOT/$RADAR -name "$OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX" -exec ls -1 "{}" \;
+
+#                 ls -l $OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX
+#                 ls -1 $OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX | wc -l
+
+                  setenv OUTCOUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX | wc -l`
+
+                  echo "OUTCOUNT = "$OUTCOUNT
+
+#                 ls -al --time-style=+%Y%m | awk '{print $6}'
+
+#                 if (-e '$OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX') then
+#                 if ($exist == "yes") then
+
+                  if($OUTCOUNT != "0")then
+                      echo "output file already exists for     $HOUR$MINUTE$SUFFIX"
+                  else
+                      echo "output file does not yet exist for $HOUR$MINUTE$SUFFIX"
+                      $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+                                              -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t $INPUTROOT/$RADAR/$file
+                  endif
+
+#                 find /$INPUTROOT/$RADAR -name "$INPUTROOT/$RADAR/$file*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+#                                         -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
+              end
+          popd
+   
+          echo "listing of output files for this hour "$YYDDD$HOUR
+          echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
+
+      else # archive case
+#         This works with the archived radar data for IHOP
+          echo "Generating radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
+
+          find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+                                  -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
+
+          echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
+          setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
+          echo "Number of files generated is $COUNT"
+          echo "Finished radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
+
+      endif
+
   else
       echo "Pre-existing output: skipped radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
   endif
