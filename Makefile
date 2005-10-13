@@ -58,6 +58,7 @@ EXEDIRS = src/accum \
           src/sfc \
           src/sfc/table \
 	  src/mesowave/recurs_iter \
+	  src/mesowave/stmas_mg \
           src/soil \
           src/temp \
           src/verif/point \
