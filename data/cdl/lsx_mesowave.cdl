@@ -3,8 +3,8 @@ netcdf lsx {
     dimensions:
         record = unlimited,
         z = 1,
-	x = 489,
-	y = 722,
+	x = 721,
+	y = 539,
         nav = 1,
         namelen = 132;
 		
@@ -218,6 +218,20 @@ netcdf lsx {
             spd:LAPS_var="SPD";
             spd:lvl_coord="AGL";
             spd:LAPS_units="M/S";
+
+         //      visability              //
+
+         float
+            vis(record,z,y,x);
+            vis:navigation_dim = "nav";
+            vis:record = "valtime, reftime";
+            vis:_FillValue = 1.e+37f;
+            vis:long_name="visibility";
+            vis:units="meters";
+            vis:valid_range= -20000.f, 20000.f;
+            vis:LAPS_var="VIS";
+            vis:lvl_coord="AGL";
+            vis:LAPS_units="M";
 
         //      ground temperature
         float
