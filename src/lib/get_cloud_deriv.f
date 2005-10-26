@@ -33,7 +33,8 @@ cdis
         subroutine get_cloud_deriv(ni,nj,nk,clouds_3d,cld_hts,
      1                          temp_3d,rh_3d_pct,heights_3d,pres_3d,
      1                          istat_radar,radar_3d,grid_spacing_cen_m,       
-     1                          l_mask_pcptype,ibase_array,itop_array,
+     1                          l_mask_pcptype,
+     1                          ibase_array_lwc,itop_array_lwc,
      1                          iflag_slwc,slwc_3d,cice_3d,thresh_cvr,
      1                          l_flag_cloud_type,cldpcp_type_3d,
      1                          l_flag_mvd,mvd_3d,
@@ -100,8 +101,11 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(ni,nj)
-        integer ibase_array(ni,nj)
-        integer itop_array(ni,nj)
+        integer ibase_array_lwc(ni,nj)
+        integer itop_array_lwc(ni,nj)
+        integer ibase_array_cty_vv(ni,nj)
+        integer itop_array_cty_vv(ni,nj)
+
 
         EXTERNAL        LIB$INIT_TIMER,
      1                  LIB$SHOW_TIMER,
@@ -122,6 +126,9 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         character*2 c2_type
 
         write(6,*)' Start LWC/Omega/Snow Potential Routine'
+
+        thresh_cvr_cty_vv = thresh_cvr
+        thresh_cvr_lwc = thresh_cvr
 
         zero = 0.
 
@@ -149,14 +156,19 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         endif
 
         write(6,*)' Generating Lowest Base and Highest Top Arrays'
-        ibase_array = KCLOUD_P1
-        itop_array = 0
+        ibase_array_lwc = KCLOUD_P1
+        itop_array_lwc = 0
+        ibase_array_cty_vv = KCLOUD_P1
+        itop_array_cty_vv = 0
 
         do k = KCLOUD,1,-1
             do j = 1,nj
             do i = 1,ni
-                if(clouds_3d(i,j,k) .ge. THRESH_CVR)then
-                    ibase_array(i,j) = k
+                if(clouds_3d(i,j,k) .ge. THRESH_CVR_CTY_VV)then
+                    ibase_array_cty_vv(i,j) = k
+                endif
+                if(clouds_3d(i,j,k) .ge. THRESH_CVR_LWC)then
+                    ibase_array_lwc(i,j) = k
                 endif
             enddo
             enddo
@@ -165,8 +177,11 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         do k = 1,KCLOUD
             do j = 1,nj
             do i = 1,ni
-                if(clouds_3d(i,j,k) .ge. THRESH_CVR)then
-                    itop_array(i,j) = k
+                if(clouds_3d(i,j,k) .ge. THRESH_CVR_CTY_VV)then
+                    itop_array_cty_vv(i,j) = k
+                endif
+                if(clouds_3d(i,j,k) .ge. THRESH_CVR_LWC)then
+                    itop_array_lwc(i,j) = k
                 endif
             enddo
             enddo
@@ -215,7 +230,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 
 !           Generate vertical sounding at this grid point and call SLWC routine
 
-            if(ibase_array(i,j) .ne. KCLOUD_P1)then ! At least one layer exists
+            if(ibase_array_cty_vv(i,j) .ne. KCLOUD_P1)then ! At least one layer exists
                 l_cloud = .true.
                 n_cloud_columns_cty_vv = n_cloud_columns_cty_vv + 1
 
@@ -231,8 +246,8 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 !               cloud_top(i,j)  = 5000. ! Dummied in for testing
 
 !               Get Base and Top
-                k = max(ibase_array(i,j) - 1,1)
-                k_highest = itop_array(i,j) - 1
+                k = max(ibase_array_cty_vv(i,j) - 1,1)
+                k_highest = itop_array_cty_vv(i,j) - 1
 
 !               First time around has lower threshold
 !                                     keep stability & cloud type
@@ -240,10 +255,10 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 !                                     keep MVD
                                       
                 do while (k .le. k_highest)
-                  if(clouds_3d(i,j,k+1) .ge. THRESH_CVR .and.
-     1               clouds_3d(i,j,k  ) .lt. THRESH_CVR
+                  if(clouds_3d(i,j,k+1) .ge. THRESH_CVR_CTY_VV .and.
+     1               clouds_3d(i,j,k  ) .lt. THRESH_CVR_CTY_VV
      1                              .OR.
-     1             k .eq. 1 .and. clouds_3d(i,j,k) .ge. THRESH_CVR
+     1             k .eq. 1 .and. clouds_3d(i,j,k).ge.THRESH_CVR_CTY_VV      
      1                                                  )then
                     cld_base_m = 0.5 * (cld_hts(k) + cld_hts(k+1))
                     k_base = k + 1
@@ -253,8 +268,8 @@ c                   if(i .eq. 1)write(6,*)i,j,k,' Cloud Base'
                     k = k + 1
 
                     do while (k .le. kcloud-1)
-                      if(clouds_3d(i,j,k  ) .gt. THRESH_CVR .and.
-     1                   clouds_3d(i,j,k+1) .le. THRESH_CVR)then
+                      if(clouds_3d(i,j,k  ) .gt. THRESH_CVR_CTY_VV .and.
+     1                   clouds_3d(i,j,k+1) .le. THRESH_CVR_CTY_VV)then       
                         cld_top_m = 0.5 * (cld_hts(k) + cld_hts(k+1))
 
 !                       Constrain cloud top to top of domain
@@ -331,18 +346,18 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                 enddo ! k (cloud layer loop)
 
 !               Get Base and Top
-                k = max(ibase_array(i,j) - 1,1)
-                k_highest = itop_array(i,j) - 1
+                k = max(ibase_array_lwc(i,j) - 1,1)
+                k_highest = itop_array_lwc(i,j) - 1
 
 !               Second time around has higher threshold
 !                   remove redundant stability & cloud type
 !                   keep SLWC
 !                   remove MVD
                 do while (k .le. k_highest)
-                  if(clouds_3d(i,j,k+1) .ge. THRESH_CVR .and.
-     1               clouds_3d(i,j,k  ) .lt. THRESH_CVR
+                  if(clouds_3d(i,j,k+1) .ge. THRESH_CVR_LWC .and.
+     1               clouds_3d(i,j,k  ) .lt. THRESH_CVR_LWC
      1                              .OR.
-     1             k .eq. 1 .and. clouds_3d(i,j,k) .ge. THRESH_CVR
+     1             k .eq. 1 .and. clouds_3d(i,j,k) .ge. THRESH_CVR_LWC
      1                                                  )then
                     cld_base_m = 0.5 * (cld_hts(k) + cld_hts(k+1))
                     k_base = k + 1
@@ -352,8 +367,8 @@ c                   if(i .eq. 1)write(6,*)i,j,k,' Cloud Base'
                     k = k + 1
 
                     do while (k .le. kcloud-1)
-                      if(clouds_3d(i,j,k  ) .gt. THRESH_CVR .and.
-     1                   clouds_3d(i,j,k+1) .le. THRESH_CVR)then
+                      if(clouds_3d(i,j,k  ) .gt. THRESH_CVR_LWC .and.
+     1                   clouds_3d(i,j,k+1) .le. THRESH_CVR_LWC)then
                         cld_top_m = 0.5 * (cld_hts(k) + cld_hts(k+1))
 
 !                       Constrain cloud top to top of domain
@@ -514,7 +529,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                 enddo ! k (cloud layer loop)
 
-            endif ! ibase_array (At least one layer exists)
+            endif ! ibase_array_cty_vv (At least one layer exists)
 
             if(l_flag_bogus_w)then
               if(l_cloud)then
