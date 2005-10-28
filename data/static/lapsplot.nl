@@ -2,7 +2,7 @@
  latlon_int=0,
  continent_line_width=1.0,
  c3_time_zone='UTC',
- c_institution='NOAA/FSL',
+ c_institution='NOAA/GSD',
  time_zone=0.,
  c_vnt_units='KT-FT',
  c_units_type='english',
