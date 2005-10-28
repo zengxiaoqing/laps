@@ -167,8 +167,6 @@ cdis
 
       integer*4  n_fnorm_dum
 
-      character*3 c3_string
-
 !****************END DECLARATIONS *********************************************
 
       write(6,*)' Subroutine laps_anl...'
@@ -199,7 +197,7 @@ csms$serial end
       do iter = 1,n_iter_wind
 
 csms$serial(<wt_p_radar, 
-csms$>       rms_thresh , out>:default=ignore)  begin
+csms$>       rms_thresh, rep_pres_intvl, out>:default=ignore)  begin
 
 !     Subtract the background from the non-radar obs, then apply QC thresholds
 !     and spread the obs vertically.
@@ -209,22 +207,6 @@ csms$>       rms_thresh , out>:default=ignore)  begin
      1         ,' then spreading the obs vertically.'
      1         /'       i    j    k  kk   udf   vdf     '
      1         ,'uob   vob     ubg   vbg vcdf  wt')
-
-      n_qc_acrft_bad = 0
-      n_qc_cdw_bad = 0
-      n_qc_sfc_bad = 0
-      n_qc_prof_bad = 0
-      n_qc_total_bad = 0
-
-      n_qc_acrft_good = 0
-      n_qc_cdw_good = 0
-      n_qc_sfc_good = 0
-      n_qc_prof_good = 0
-      n_qc_total_good = 0
-
-      iwrite = 1
-
-      qc_thresh = 30. ! Threshold speed for throwing out the ob
 
       allocate( pres_3d(imax,jmax,kmax), STAT=istat_alloc )
       if(istat_alloc .ne. 0)then
@@ -240,165 +222,42 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
       deallocate(pres_3d)
 
-      if(l_point_struct)then
-          do i_ob = 1,nobs_point
-              i = obs_point(i_ob)%i                       
-              j = obs_point(i_ob)%j                       
-              k = obs_point(i_ob)%k                       
+!     QC the obs and place in different data structure
+      call calc_qced_obs( 
+     &  max_obs,nobs_point,u_laps_bkg,v_laps_bkg,
+     &  imax,jmax,kmax,
+     &  obs_point(:)%i,obs_point(:)%j,obs_point(:)%k,
+     &  obs_point(:)%ri,obs_point(:)%rj,obs_point(:)%rk,
+     &  obs_point(:)%valuef(1),obs_point(:)%valuef(2),
+     &  obs_point(:)%value(1), obs_point(:)%value(2),
+     &  obs_point(:)%weight,
+     &  obs_point(:)%elev,
+     &  obs_point(:)%ldf,
+     &  obs_point(:)%mask_sea,
+     &  obs_point(:)%i4time,
+     &  obs_point(:)%type,
+     &  obs_point(:)%file,
+     &  obs_point_qced(:)%i,obs_point_qced(:)%j,obs_point_qced(:)%k,
+     &  obs_point_qced(:)%ri,obs_point_qced(:)%rj,obs_point_qced(:)%rk,
+     &  obs_point_qced(:)%valuef(1),obs_point_qced(:)%valuef(2),
+     &  obs_point_qced(:)%value(1),obs_point_qced(:)%value(2),
+     &  obs_point_qced(:)%weight,
+     &  obs_point_qced(:)%elev,
+     &  obs_point_qced(:)%ldf,
+     &  obs_point_qced(:)%mask_sea,
+     &  obs_point_qced(:)%i4time,
+     &  obs_point_qced(:)%type,
+     &  obs_point_qced(:)%file, 
+     &  n_qc_total_good)
 
-              u = obs_point(i_ob)%valuef(1)
-              v = obs_point(i_ob)%valuef(2)
-
-              speed_bkg  = sqrt(u_laps_bkg(i,j,k)**2
-     1                        + v_laps_bkg(i,j,k)**2)
-
-              u_diff = u - u_laps_bkg(i,j,k)
-              v_diff = v - v_laps_bkg(i,j,k)
-              speed_diff = sqrt(u_diff**2 + v_diff**2)
-
-!             speed_thresh = max(10.,0.2 * speed_bkg)
-
-!             Apply QC check to the OB against the background analysis
-              if(
-!                Make sure we actually have a real reference background
-     1           (speed_bkg .gt. 0.) .and.
-
-!                General QC check
-     1           (speed_diff .gt. qc_thresh
-
-!              Stricter QC check for pireps
-     1                       .OR. 
-     1         (speed_diff .gt. 10. .and. 
-     1                              obs_point(i_ob)%file .eq. 'pin')        
-
-!              Stricter QC check for Cloud Drift Winds
-     1                       .OR. 
-     1         (speed_diff .gt. 10. .and. 
-     1                              obs_point(i_ob)%file .eq. 'cdw')        
-
-!              Stricter QC check for profilers
-     1                       .OR. 
-     1         (speed_diff .gt. 22. .and. 
-     1                              obs_point(i_ob)%file .eq. 'pro')        
-     1                                                                 )
-
-     1                                                          )then
-
-!                 Throw out the ob
-                  if(obs_point(i_ob)%file .eq. 'pin')then
-                      n_qc_acrft_bad = n_qc_acrft_bad + 1
-                  elseif(obs_point(i_ob)%file .eq. 'cdw')then
-                      n_qc_cdw_bad = n_qc_cdw_bad + 1
-                  elseif(obs_point(i_ob)%file .eq. 'lso')then
-                      n_qc_sfc_bad = n_qc_sfc_bad + 1
-                  elseif(obs_point(i_ob)%file .eq. 'pro')then
-                      n_qc_prof_bad = n_qc_prof_bad + 1
-                  endif
-
-                  write(6,231,err=232)obs_point(i_ob)%type(1:5)
-     1                  ,i,j,k
-     1                  ,u_diff
-     1                  ,v_diff
-     1                  ,u
-     1                  ,v
-     1                  ,u_laps_bkg(i,j,k)
-     1                  ,v_laps_bkg(i,j,k)
-     1                  ,speed_diff
-     1                  ,obs_point(i_ob)%weight
-231               format(a5,' QCed out - ',2i5,i4,1x,3(2x,2f5.0)
-     1                                        ,f5.0,f5.2)
-232               continue
-
-                  n_qc_total_bad = n_qc_total_bad + 1
-
-              else ! keep and write out the good OB
-                  if(obs_point(i_ob)%file .eq. 'pin')then
-                      n_qc_acrft_good = n_qc_acrft_good + 1
-                      c3_string = 'Prp'
-                  endif
-
-                  if(obs_point(i_ob)%file .eq. 'cdw')then
-                      n_qc_cdw_good  = n_qc_cdw_good + 1
-                      c3_string = 'Cdw'
-                  endif
-
-                  if(obs_point(i_ob)%file .eq. 'lso')then
-                      n_qc_sfc_good   = n_qc_sfc_good + 1
-                      c3_string = 'Sfc'
-                  endif
-
-                  if(obs_point(i_ob)%file .eq. 'pro')then
-                      n_qc_prof_good  = n_qc_prof_good + 1
-                      c3_string = 'Prf'
-                  endif
-
-                  n_qc_total_good = n_qc_total_good + 1
-
-!                 Assign data structure element (using difference ob)
-                  obs_point_qced(n_qc_total_good) = obs_point(i_ob)
-                  obs_point_qced(n_qc_total_good)%value(1) = u_diff
-                  obs_point_qced(n_qc_total_good)%value(2) = v_diff
-
-                  if(n_qc_total_good .le. 500 .OR. 
-     1               n_qc_total_good .eq. (n_qc_total_good/10)*10)then
-                      iwrite = 1
-                  else
-                      iwrite = 0
-                  endif
-
-                  if(iwrite .eq. 1)then
-                      write(6,201,err=302)c3_string,i,j,k
-     1                  ,u_diff
-     1                  ,v_diff
-     1                  ,u
-     1                  ,v
-     1                  ,u_laps_bkg(i,j,k)
-     1                  ,v_laps_bkg(i,j,k)
-     1                  ,speed_diff
-     1                  ,obs_point_qced(n_qc_total_good)%weight
-201                   format(1x,a3,2i5,i4,4x,f6.1,f6.1,2(2x,2f6.1)
-     1                         ,f5.1,f5.2)
-302                   continue
-                  endif
-
-              endif ! passed the QC test
-
-          enddo ! i_ob
-
-          ncnt_total = n_qc_total_good
-
-      endif ! l_point_struct
-
-      write(6,*)
-      write(6,*)' QC info for non-radar data (after remapping to grid)'
-      write(6,601)n_qc_acrft_good,n_qc_acrft_bad
-     1           ,pct_rejected(n_qc_acrft_good,n_qc_acrft_bad)
- 601  format(' # of Aircraft   GOOD/BAD QC = ',2i6,7x
-     1      ,'% rejected = ',f6.1)
-
-      write(6,602)n_qc_cdw_good,n_qc_cdw_bad
-     1           ,pct_rejected(n_qc_cdw_good,n_qc_cdw_bad)
- 602  format(' # of CDWs       GOOD/BAD QC = ',2i6,7x
-     1      ,'% rejected = ',f6.1)
-
-      write(6,603)n_qc_sfc_good,n_qc_sfc_bad
-     1           ,pct_rejected(n_qc_sfc_good,n_qc_sfc_bad)
- 603  format(' # of SFC        GOOD/BAD QC = ',2i6,7x
-     1      ,'% rejected = ',f6.1)
-
-      write(6,604)n_qc_prof_good,n_qc_prof_bad
-     1           ,pct_rejected(n_qc_prof_good,n_qc_prof_bad)
- 604  format(' # of PROFs      GOOD/BAD QC = ',2i6,7x
-     1      ,'% rejected = ',f6.1)
-
-      write(6,605)n_qc_total_good,n_qc_total_bad
-     1           ,pct_rejected(n_qc_total_good,n_qc_total_bad)
- 605  format(/' # of Non-Radar  GOOD/BAD QC = ',2i6,7x
-     1       ,'% rejected = ',f6.1)
-
-      I4_elapsed = ishow_timer()
-
+!     Debugging only
+      write(6,*)'obs_point(1)'
+      write(6,*)obs_point(1)
+      write(6,*)'obs_point_qced(1)'
+      write(6,*)obs_point_qced(1)
 csms$serial end
+
+      ncnt_total = n_qc_total_good
 
       if(l_variational)then ! call variational routine
           return
@@ -480,11 +339,11 @@ csms$serial(default=ignore)  begin
           l_analyze(k) = .false.
       enddo ! k
 
+csms$serial end
+
 !     Fill 'obs_barnes' at this point in case there is no radar data
       obs_barnes = obs_point_qced
       ncnt_total = n_qc_total_good
-
-csms$serial end
 
       if(n_radars .le. 1 .or. .not. l_3pass)then ! Single Doppler (or no radar) Option
 
@@ -1055,3 +914,271 @@ csms$ignore end
       return
       end
 
+
+
+      subroutine calc_qced_obs (
+     &  max_obs,nobs_point,u_laps_bkg,v_laps_bkg,
+     &  imax,jmax,kmax,
+     &  obs_i,obs_j,obs_k,
+     &  obs_ri,obs_rj,obs_rk,
+     &  obs_fu,obs_fv,
+     &  obs_u,obs_v,
+     &  obs_weight,
+     &  obs_elev,
+     &  obs_ldf,
+     &  obs_mask_sea,
+     &  obs_i4time,
+     &  obs_type,
+     &  obs_file,
+     &  qced_i,qced_j,qced_k,
+     &  qced_ri,qced_rj,qced_rk,
+     &  qced_fu,qced_fv,
+     &  qced_u,qced_v,
+     &  qced_weight,
+     &  qced_elev,
+     &  qced_ldf,
+     &  qced_mask_sea,
+     &  qced_i4time,
+     &  qced_type,
+     &  qced_file, 
+     &  n_qc_total_good)
+
+!      QC the obs and place in different arrays 
+
+       real        , intent(in ) :: u_laps_bkg(imax,jmax,kmax)
+       real        , intent(in ) :: v_laps_bkg(imax,jmax,kmax)
+       integer     , intent(in ) :: obs_i(max_obs)
+       integer     , intent(in ) :: obs_j(max_obs)
+       integer     , intent(in ) :: obs_k(max_obs)
+       real        , intent(in ) :: obs_ri(max_obs)
+       real        , intent(in ) :: obs_rj(max_obs)
+       real        , intent(in ) :: obs_rk(max_obs)
+       real        , intent(in ) :: obs_fu(max_obs)
+       real        , intent(in ) :: obs_fv(max_obs)
+       real        , intent(in ) :: obs_u(max_obs)
+       real        , intent(in ) :: obs_v(max_obs)
+       real        , intent(in ) :: obs_weight(max_obs)
+       real        , intent(in ) :: obs_elev(max_obs)
+       real        , intent(in ) :: obs_ldf(max_obs)
+       integer     , intent(in ) :: obs_mask_sea(max_obs)
+       integer     , intent(in ) :: obs_i4time(max_obs)
+       character*12, intent(in ) :: obs_type(max_obs)
+       character*12, intent(in ) :: obs_file(max_obs)
+       integer     , intent(out) :: qced_i(max_obs)
+       integer     , intent(out) :: qced_j(max_obs)
+       integer     , intent(out) :: qced_k(max_obs)
+       real        , intent(out) :: qced_ri(max_obs)
+       real        , intent(out) :: qced_rj(max_obs)
+       real        , intent(out) :: qced_rk(max_obs)
+       real        , intent(out) :: qced_fu(max_obs)
+       real        , intent(out) :: qced_fv(max_obs)
+       real        , intent(out) :: qced_u(max_obs)
+       real        , intent(out) :: qced_v(max_obs)
+       real        , intent(out) :: qced_weight(max_obs)
+       real        , intent(out) :: qced_elev(max_obs)
+       real        , intent(out) :: qced_ldf(max_obs)
+       integer     , intent(out) :: qced_mask_sea(max_obs)
+       integer     , intent(out) :: qced_i4time(max_obs)
+       character*12, intent(out) :: qced_type(max_obs)
+       character*12, intent(out) :: qced_file(max_obs)
+       integer     , intent(out) :: n_qc_total_good
+
+       character*3 c3_string ! local
+ 
+csms$serial(< qced_i, qced_k, qced_ri, qced_rj, qced_rk, qced_u, qced_v,
+csms$>       qced_weight, qced_elev, qced_mask_sea, qced_i4time,
+csms$>       qced_type, qced_file, n_qc_total_good, out>: default=ignore) begin
+!
+      write(6,*)' Subroutine calc_qced_obs...'
+
+      n_qc_acrft_bad = 0
+      n_qc_cdw_bad = 0
+      n_qc_sfc_bad = 0
+      n_qc_prof_bad = 0
+      n_qc_total_bad = 0
+
+      n_qc_acrft_good = 0
+      n_qc_cdw_good = 0
+      n_qc_sfc_good = 0
+      n_qc_prof_good = 0
+      n_qc_total_good = 0
+
+      qc_thresh = 30. ! Threshold speed for throwing out the ob
+
+      if(.true.)then ! l_point_struct
+
+          do i_ob = 1,nobs_point
+              i = obs_i(i_ob)
+              j = obs_j(i_ob)
+              k = obs_k(i_ob)
+
+              u = obs_fu(i_ob)
+              v = obs_fv(i_ob)
+
+              speed_bkg  = sqrt(u_laps_bkg(i,j,k)**2
+     1                        + v_laps_bkg(i,j,k)**2)
+
+              u_diff = u - u_laps_bkg(i,j,k)
+              v_diff = v - v_laps_bkg(i,j,k)
+              speed_diff = sqrt(u_diff**2 + v_diff**2)
+
+!             speed_thresh = max(10.,0.2 * speed_bkg)
+
+!             Apply QC check to the OB against the background analysis
+              if(
+!                Make sure we actually have a real reference background
+     1           (speed_bkg .gt. 0.) .and.
+
+!                General QC check
+     1           (speed_diff .gt. qc_thresh
+
+!              Stricter QC check for pireps
+     1                       .OR. 
+     1         (speed_diff .gt. 10. .and. 
+     1                              obs_file(i_ob) .eq. 'pin')        
+
+!              Stricter QC check for Cloud Drift Winds
+     1                       .OR. 
+     1         (speed_diff .gt. 10. .and. 
+     1                              obs_file(i_ob) .eq. 'cdw')        
+
+!              Stricter QC check for profilers
+     1                       .OR. 
+     1         (speed_diff .gt. 22. .and. 
+     1                              obs_file(i_ob) .eq. 'pro')        
+     1                                                                 )
+
+     1                                                          )then
+
+!                 Throw out the ob
+                  if(obs_file(i_ob) .eq. 'pin')then
+                      n_qc_acrft_bad = n_qc_acrft_bad + 1
+                  elseif(obs_file(i_ob) .eq. 'cdw')then
+                      n_qc_cdw_bad = n_qc_cdw_bad + 1
+                  elseif(obs_file(i_ob) .eq. 'lso')then
+                      n_qc_sfc_bad = n_qc_sfc_bad + 1
+                  elseif(obs_file(i_ob) .eq. 'pro')then
+                      n_qc_prof_bad = n_qc_prof_bad + 1
+                  endif
+
+                  write(6,231,err=232) obs_type(i_ob)(1:5)
+     1                  ,i,j,k
+     1                  ,u_diff
+     1                  ,v_diff
+     1                  ,u
+     1                  ,v
+     1                  ,u_laps_bkg(i,j,k)
+     1                  ,v_laps_bkg(i,j,k)
+     1                  ,speed_diff
+     1                  ,obs_weight(i_ob)
+231               format(a5,' QCed out - ',2i5,i4,1x,3(2x,2f5.0)
+     1                                        ,f5.0,f5.2)
+232               continue
+
+                  n_qc_total_bad = n_qc_total_bad + 1
+
+              else ! keep and write out the good OB
+                  if( obs_file(i_ob) .eq. 'pin')then
+                      n_qc_acrft_good = n_qc_acrft_good + 1
+                      c3_string = 'Prp'
+                  endif
+
+                  if( obs_file(i_ob) .eq. 'cdw')then
+                      n_qc_cdw_good  = n_qc_cdw_good + 1
+                      c3_string = 'Cdw'
+                  endif
+
+                  if( obs_file(i_ob) .eq. 'lso')then
+                      n_qc_sfc_good   = n_qc_sfc_good + 1
+                      c3_string = 'Sfc'
+                  endif
+
+                  if( obs_file(i_ob) .eq. 'pro')then
+                      n_qc_prof_good  = n_qc_prof_good + 1
+                      c3_string = 'Prf'
+                  endif
+
+                  n_qc_total_good = n_qc_total_good + 1
+
+!                 Assign array [data structure] element (using difference ob)
+!                 obs_point_qced(n_qc_total_good) = obs_point(i_ob) [old way]
+                  qced_i(n_qc_total_good) = obs_i(i_ob)
+                  qced_j(n_qc_total_good) = obs_j(i_ob)
+                  qced_k(n_qc_total_good) = obs_k(i_ob)
+                  qced_ri(n_qc_total_good) = obs_ri(i_ob)
+                  qced_rj(n_qc_total_good) = obs_rj(i_ob)
+                  qced_rk(n_qc_total_good) = obs_rk(i_ob)
+                  qced_fu(n_qc_total_good) = obs_fu(i_ob)
+                  qced_fv(n_qc_total_good) = obs_fv(i_ob)
+                  qced_weight(n_qc_total_good) = obs_weight(i_ob)
+                  qced_elev(n_qc_total_good) = obs_elev(i_ob)
+                  qced_ldf(n_qc_total_good) = obs_ldf(i_ob)
+                  qced_mask_sea(n_qc_total_good) = obs_mask_sea(i_ob)
+                  qced_i4time(n_qc_total_good) = obs_i4time(i_ob)
+                  qced_type(n_qc_total_good) = obs_type(i_ob)
+                  qced_file(n_qc_total_good) = obs_file(i_ob)
+
+                  qced_u(n_qc_total_good) = u_diff
+                  qced_v(n_qc_total_good) = v_diff
+
+                  if(n_qc_total_good .le. 500 .OR. 
+     1               n_qc_total_good .eq. (n_qc_total_good/10)*10)then
+                      iwrite = 1
+                  else
+                      iwrite = 0
+                  endif
+
+                  if(iwrite .eq. 1)then
+                      write(6,201,err=302)c3_string,i,j,k
+     1                  ,u_diff
+     1                  ,v_diff
+     1                  ,u
+     1                  ,v
+     1                  ,u_laps_bkg(i,j,k)
+     1                  ,v_laps_bkg(i,j,k)
+     1                  ,speed_diff
+     1                  ,qced_weight(n_qc_total_good)
+201                   format(1x,a3,2i5,i4,4x,f6.1,f6.1,2(2x,2f6.1)
+     1                         ,f5.1,f5.2)
+302                   continue
+                  endif
+
+              endif ! passed the QC test
+
+          enddo ! i_ob
+
+      endif
+
+      write(6,*)
+      write(6,*)' QC info for non-radar data (after remapping to grid)'
+      write(6,601)n_qc_acrft_good,n_qc_acrft_bad
+     1           ,pct_rejected(n_qc_acrft_good,n_qc_acrft_bad)
+ 601  format(' # of Aircraft   GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)
+
+      write(6,602)n_qc_cdw_good,n_qc_cdw_bad
+     1           ,pct_rejected(n_qc_cdw_good,n_qc_cdw_bad)
+ 602  format(' # of CDWs       GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)
+
+      write(6,603)n_qc_sfc_good,n_qc_sfc_bad
+     1           ,pct_rejected(n_qc_sfc_good,n_qc_sfc_bad)
+ 603  format(' # of SFC        GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)
+
+      write(6,604)n_qc_prof_good,n_qc_prof_bad
+     1           ,pct_rejected(n_qc_prof_good,n_qc_prof_bad)
+ 604  format(' # of PROFs      GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)
+
+      write(6,605)n_qc_total_good,n_qc_total_bad
+     1           ,pct_rejected(n_qc_total_good,n_qc_total_bad)
+ 605  format(/' # of Non-Radar  GOOD/BAD QC = ',2i6,7x
+     1       ,'% rejected = ',f6.1)
+
+      I4_elapsed = ishow_timer()
+
+csms$serial end
+
+      return
+      end
