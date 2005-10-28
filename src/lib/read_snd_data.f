@@ -688,6 +688,7 @@ c
         call get_r_missing_data(r_missing_data,istatus)
         call get_sfc_badflag(badflag,istatus)
 
+        n_profiles = 0
         n_good_snd = 0
         ext = 'snd'
         lun = 44
