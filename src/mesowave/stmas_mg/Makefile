@@ -74,9 +74,12 @@ distclean: clean
 
 # Source code generator:
 Definition.f90: Def_Cons.f90 Def_Vars.f90
-	cpp -P Definition.F90 > Definition.f90
+	$(CPP) $(CPPFLAGS) Definition.F90 
+	mv Definition.i Definition.f90
 LAPSDatSrc.f90: LAPSInfo.f90 LAPSBKGD.f90 LAPSOBSV.f90 LAPS_QCs.f90 \
 	LAPSConf.f90 LAPSIntp.f90
-	cpp -P LAPSDatSrc.F90 > LAPSDatSrc.f90
+	$(CPP) $(CPPFLAGS) LAPSDatSrc.F90
+	mv LAPSDatSrc.i LAPSDatSrc.f90
 STMASAnalz.f90: STMASAna.f90
-	cpp -P STMASAnalz.F90 > STMASAnalz.f90
+	$(CPP) $(CPPFLAGS) STMASAnalz.F90 
+	mv STMASAnalz.i STMASAnalz.f90
