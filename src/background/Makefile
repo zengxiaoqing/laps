@@ -20,7 +20,6 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
-.SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = lga.exe
