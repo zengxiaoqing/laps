@@ -1178,50 +1178,55 @@ c set tolerance based upon the grid spacing as a function of grx/gry
 c
 c *** First, check for wrapping if a global data set.
 c
+cWNI WNI COMMENT:  THIS SECTION NOT NEEDED BECAUSE
+cWNI  THE LATLON_2_LLIJ ALREADY HANDLES THIS
       call s_len(cmodel,lenc)
 
       if ( bgmodel .eq. 6 .or. 
      .     bgmodel .eq. 8) then
-         do j=1,ny_laps
-            do i=1,nx_laps
-               if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
-               if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               if (gry(i,j) .lt. 1.) then
-                  gry(i,j)=2.-gry(i,j)
-                  grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
-                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               endif
-               if (gry(i,j) .gt. ny_bg) then
-                  gry(i,j)=float(2*ny_bg)-gry(i,j)
-                  grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
-                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               endif
-               if (grx(i,j) .lt. 1) then
-                  grx(i,j)=grx(i,j)+1.
-               endif
-            enddo
-         enddo
-      elseif(bgmodel.eq.4.and.cmodel(1:lenc).eq.'AVN_SBN_CYLEQ')then
-         do j=1,ny_laps
-            do i=1,nx_laps
-               if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
-               if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               if (gry(i,j) .lt. 1.) then
-                  gry(i,j)=2.-gry(i,j)
-                  grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
-                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               endif
-               if (gry(i,j) .gt. ny_bg) then
-                  gry(i,j)=float(2*ny_bg)-gry(i,j)
-                  grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
-                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               endif
-            enddo
-         enddo
+CWNI     do j=1,ny_laps
+CWNI        do i=1,nx_laps
+CWNI           if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
+CWNI           if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+CWNI           if (gry(i,j) .lt. 1.) then
+CWNI              gry(i,j)=2.-gry(i,j)
+CWNI              grx(i,j)=grx(i,j)-float(nx_bg/2)
+CWNI              if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
+CWNI              if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+CWNI           endif
+CWNI           if (gry(i,j) .gt. ny_bg) then
+CWNI              gry(i,j)=float(2*ny_bg)-gry(i,j)
+CWNI              grx(i,j)=grx(i,j)-float(nx_bg/2)
+CWNI              if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
+CWNI              if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+CWNI           endif
+CWNI           if (grx(i,j) .lt. 1) then
+CWNI              grx(i,j)=grx(i,j)+1.
+CWNI           endif
+CWNI        enddo
+CWNI     enddo
+CWNI  elseif(bgmodel.eq.4.and.cmodel(1:lenc).eq.'AVN_SBN_CYLEQ')then
+      elseif( (bgmodel.eq.4.and.cmodel(1:lenc).eq.'AVN_SBN_CYLEQ') .OR. !WNI
+     .         (bgmodel .eq. 10 .and. cmodel .eq. 'GFS_ISO')) then      !WNI
+
+CWNI     do j=1,ny_laps
+CWNI        do i=1,nx_laps
+CWNI           if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
+CWNI           if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+CWNI           if (gry(i,j) .lt. 1.) then
+CWNI              gry(i,j)=2.-gry(i,j)
+CWNI              grx(i,j)=grx(i,j)-float(nx_bg/2)
+CWNI              if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
+CWNI              if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+CWNI           endif
+CWNI           if (gry(i,j) .gt. ny_bg) then
+CWNI              gry(i,j)=float(2*ny_bg)-gry(i,j)
+CWNI              grx(i,j)=grx(i,j)-float(nx_bg/2)
+CWNI              if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
+CWNI              if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+CWNI           endif
+CWNI        enddo
+CWNI     enddo
 
 c
 c ****** If not a global data set, then check that LAPS domain is fully
@@ -1324,14 +1329,30 @@ c *** Values greater than 1.0e30 indicate missing data.
 c
       dimension ab(ix,iy),r(4),scr(4)
       integer bgmodel
+      logical wrapped ! WNI added
       include 'bgdata.inc'
 c_______________________________________________________________________________
 c
+CWNI  Add a section to identify wrapped grid and set the wrapped flag
+      wrapped = .FALSE.              ! WNI
+      IF (bgmodel .eq. 6 .or.        ! WNI
+     .       bgmodel .eq. 8 .or.     ! WNI
+     .       bgmodel .eq. 10.) THEN  ! WNI
+        wrapped = .true.             ! WNI
+      ENDIF                          !WNI
+C WNI END ADDITON
+
       iy1=int(stay)-1
       if(stay.lt.1.0)iy1=1.0
       iy2=iy1+3
       ix1=int(stax)-1
-      if(stax.lt.1.0)ix1=1.0
+      if(stax.lt.1.0) THEN 
+        IF (wrapped) THEN   ! WNI
+          ix1 = ix1 + ix
+        ELSE ! WNI
+          ix1=1.0
+        ENDIF ! WNI
+      endif ! WNI
       ix2=ix1+3
       staval=missingflag
       fiym2=float(iy1)-1
@@ -1342,9 +1363,8 @@ c
 c
 c ****** Account for wrapping around effect of global data at Greenwich.
 c
-         if (bgmodel .eq. 6 .or.
-     .       bgmodel .eq. 8) then
-            if (i .lt. 1) i=i+ix
+         if (wrapped) then    ! WNI
+            if (i .lt. 1) i=i+ix  
             if (i .gt. ix) i=i-ix
          endif
 
@@ -1356,8 +1376,7 @@ c
 c
 c ************ Account for N-S wrapping effect of global data.
 c
-               if (bgmodel .eq. 6 .or.
-     .             bgmodel .eq. 8) then
+               if (wrapped) THEN  !WNI
                   if (j .lt. 1) then
                      j=2-j
                      i=i-ix/2
