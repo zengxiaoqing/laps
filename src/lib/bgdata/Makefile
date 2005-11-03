@@ -29,7 +29,7 @@ SRC= bkgd_stn_interp.f   bkgd_util.f            es_table.f             \
      read_netcdf_field.f read_sbn_grids.f       readdgprep.f           \
      readnogaps.f        readruc60native.f      rdmodelindex.f         \
      sfcbkgd.f           sfcbkgd_sfc.f          tcbogus.f              \
-     writelgalgb.f
+     writelgalgb.f read_unidata_grids.f
 
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
@@ -37,6 +37,7 @@ DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
 
 
 all: lib
+	( cd wrf; $(MAKE); $(MAKE) cleanup )
 
 lib: $(LIB)
 
@@ -47,9 +48,12 @@ $(LIB): $(ARCHIVE)
 debug: $(SRC)
 	$(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
+	( cd wrf; $(MAKE) debug; $(MAKE) cleanup )
 
 install: lib
 
+cleanup:
+	rm -f *.o *.mod
 
 clean:
 	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
