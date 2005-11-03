@@ -521,6 +521,26 @@ c
      .,htbg,tpbg,shbg,uwbg,vwbg
      .,gproj,lon0,lat1,lat2,istatus)
 c
+C WNI-BLS
+      elseif (bgmodel .eq. 10) then ! Process Unidata NetCDF
+       IF ( (cmodel .EQ. 'RUC_ISO') .OR.
+     +      (cmodel .EQ. 'GFS_ISO') )THEN
+          call read_unidata_iso(fullname,af_bg,cmodel
+     .   ,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     .   ,prbght,prbgsh,prbguv,prbgww
+     .   ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
+     .   ,htbg_sfc,prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc
+     .   ,tpbg_sfc,mslpbg,ctype,istatus)
+       elseif(cmodel .EQ. 'RUC_HYB') THEN
+           call read_unidata_ruc_hyb(fullname,af_bg,cmodel
+     .   ,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     .   ,prbght,prbgsh,prbguv,prbgww
+     .   ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
+     .   ,htbg_sfc,prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc
+     .   ,tpbg_sfc,mslpbg,ctype,istatus)
+         print *, "Completed read of RUC_HYB"
+       endif
+
       endif
 c      
 c - 3d fields
