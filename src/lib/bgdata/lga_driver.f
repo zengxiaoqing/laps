@@ -517,7 +517,7 @@ c          endif
           enddo
 
           nbg = nbg+1
-          if(bgmodel.eq.4)then
+          if(bgmodel.eq.4.or.bgmodel.eq.10)then
              fname_bg(nbg)=
      1 cvt_fname13_to_wfo_fname13(bg_names(j)(1:13))
           else
@@ -635,7 +635,7 @@ c         convert to wfo if necessary
           print*
           print*,'Updating reject information: '
 
-          if(bgmodel.eq.4)then
+          if(bgmodel.eq.4 .or. (bgmodel.eq.10))then   !WNI -- added bgmodel 10
              print*,'WFO Update'
              fname13=wfo_fname13_to_fname9(fname_bg(nf))
              fname13=fname13(1:9)//af_bg(nf)
