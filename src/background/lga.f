@@ -51,9 +51,9 @@ c        bgmodel = 6 ---> AVN (360 x 181 lat-lon grid)
 c        bgmodel = 7 ---> ETA (48 km from grib file)
 c        bgmodel = 8 ---> NOGAPS (1.0 deg)
 c        bgmodel = 9 ---> NWS Conus (RUC, ETA, NGM, AVN)
-c
-c
-c
+cWNIBLS ... Added bgmodel = 10, 11
+c        bgmodel = 10 ---> Unidata default netCDF format from gribtonc  !WNI
+c        bgmodel = 11 ---> WRF-ARW raw netcdf files (single time per file) !WNI
 c------------------> GRID DIMENSION SPECIFICATION <-----------------------------
 c
 c *** The following variables specify the various model grid dimensions.
@@ -217,7 +217,6 @@ c        if(i.eq.nbgmodels)i=0
             cmodel =  cmodels(i)
             reject_cnt = 0
          endif
-
          if (bgmodel .lt. 0 .or. bgmodel .gt. maxbgmodels) then
             print*
             print*,' Cannot proceed with model specification in LGA'
@@ -234,88 +233,101 @@ c is still doing the job even though it is difficult software
 c to work with. get_acceptable_files is also used in dprep.f 
 c
 c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
+         IF (bgmodel .NE. 11) THEN !WNI
+           print*,'Calling get_acceptable_files '
+           print*,'bgpath:  ',TRIM(bgpath)
+           print*,'cmodel:  ',TRIM(cmodel)
+           print*,'bgmodel: ',bgmodel
+           print*
 
-         print*,'Calling get_acceptable_files '
-         print*,'bgpath:  ',TRIM(bgpath)
-         print*,'bgmodel: ',bgmodel
-         print*
-
-         call get_acceptable_files(i4time_now_lga,bgpath,bgmodel
+           call get_acceptable_files(i4time_now_lga,bgpath,bgmodel
      +        ,names,max_files,use_analysis,bg_files,accepted_files
      +        ,forecast_length,cmodel
      +        ,nx_bg,ny_bg,nz_bg,reject_names,reject_cnt)
 
 
-         if(accepted_files.eq.0.and.bg_files.eq.0) then
+           if(accepted_files.eq.0.and.bg_files.eq.0) then
 
-           print*,'No Acceptable files found for background model:'
-           print*,'bgpath =  ',TRIM(bgpath)
-           print*,'bgmodel = ',bgmodel 
+             print*,'No Acceptable files found for background model:'
+             print*,'bgpath =  ',TRIM(bgpath)
+             print*,'bgmodel = ',bgmodel 
 
-           no_infinite_loops=no_infinite_loops+1
-           reject_cnt=reject_cnt+1
-           if(i.eq.nbgmodels)lga_status = 0 
+             no_infinite_loops=no_infinite_loops+1
+             reject_cnt=reject_cnt+1
+             if(i.eq.nbgmodels)lga_status = 0 
 
-         elseif(accepted_files.eq.0 .and. cmodel .eq. 'LAPS')then
+           elseif(accepted_files.eq.0 .and. cmodel .eq. 'LAPS')then
 
-              print*,'Time interp previous LAPS analyses',
+             print*,'Time interp previous LAPS analyses',
      +'and write result for current and cycle_time+1 backgrounds'
-              print*,'Code not yet available'
-
+             print*,'Code not yet available'
+ 
 c             i4time_lga=i4time_now_lga+laps_cycle_time
 c             call advance_analyses(i4time_now_lga,i4time_lga,nx_laps
 c    +,ny_laps,nz_laps)
 c             print*,'Finished in advance_analyses'
 
-         elseif(accepted_files.eq.0.and.reject_cnt.eq.bg_files)then
+           elseif(accepted_files.eq.0.and.reject_cnt.eq.bg_files)then
 
-              reject_cnt=reject_cnt+1
+               reject_cnt=reject_cnt+1
 
-         else
+           else
 
-           print *, ' '
-           print *, 'Input Parameters'
-           print *, '----------------'
-           print *
-           print *, ' Analysis setup: '
-           print *, nx_laps,ny_laps,nz_laps
-           print *, laps_cycle_time
-           print *
+             print *, ' '
+             print *, 'Input Parameters'
+             print *, '----------------'
+             print *
+             print *, ' Analysis setup: '
+             print *, nx_laps,ny_laps,nz_laps
+             print *, laps_cycle_time
+             print *
 
-           if(luse_sfc_bkgd.and.cmodel.ne.'ETA48_CONUS')then
-              print*,'Error: Inconsistency Found'
-              print*,'Error: If you set namelist parameter luse_sfc_'
-              print*,'bkgd=true then cmodel must eq to ETA48_CONUS'
-              stop
-           endif
+             if(luse_sfc_bkgd.and.cmodel.ne.'ETA48_CONUS')then
+                print*,'Error: Inconsistency Found'
+                print*,'Error: If you set namelist parameter luse_sfc_'
+                print*,'bkgd=true then cmodel must eq to ETA48_CONUS'
+                stop
+             endif
 c
 c *** Call lga driver and, if necessary, interpolate acceptable files.
 c
-           call lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd,
+             call lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .          reject_names,names,max_files,accepted_files,
      .          i4time_now_lga, smooth_fields,lga_status)
 
-c
+           endif
+
+         else  
+cc
+c wrf-arw2.1 netcdf data processing
+c ---------------------------------
+           call lga_driver_wrfarw(
+     .             bgpath,cmodel(1:12),use_analysis,forecast_length,
+     .             luse_sfc_bkgd,
+     .             i4time_now_lga,smooth_fields,lga_status)
+
+         endif     
+
 c these constructs force t-1 and t+1 cycle time background generation.
 c these should be removed when lga runs outside sched.pl
 c
-           print*
-           if(lga_status.eq.1.and.ltime(itime_inc))then
-c             lga_status = -99 
-              ltime(itime_inc) = .false.
-              if(itime_inc.lt.0)then
-                 print*,'Completed time-minus-one cycle time interp'
-              elseif(itime_inc.eq.0)then
-                 print*,'Completed cycle time interpolation'
-              else
-                 print*,'Completed time-plus-one cycle time interp'
-              endif
-           endif
-           print*
-
-           if(lga_status.le.0)no_infinite_loops=no_infinite_loops+1
-
+         if(lga_status.eq.1.and.ltime(itime_inc))then
+c             lga_status = -99
+            ltime(itime_inc) = .false.
+            if(itime_inc.lt.0)then
+              print*,'Completed time-minus-one cycle time interp'
+            elseif(itime_inc.eq.0)then
+              print*,'Completed cycle time interpolation'
+            else
+               print*,'Completed time-plus-one cycle time interp'
+            endif
+         endif
+         print*
+                                                                                                                                              
+         if(lga_status.ne.1) then 
+           reject_cnt = 1
+           bg_files = 0
          endif
 
       enddo !do while
