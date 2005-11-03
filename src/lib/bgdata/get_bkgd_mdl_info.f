@@ -17,7 +17,6 @@ c     USE laps_static
       character*30  projname
       character*13  fname13
       character*13  fname9_to_wfo_fname13
-      character*8   c8_project_common
       character*4   cf
       character*2   gproj
       character*1   cgrddef
@@ -269,8 +268,9 @@ c ----------
       endif
 
 c All SBN grids!
+C WNI-BLS ... or Unidata 
 c ----------------
-      if(bgmodel.eq.4)then
+      if((bgmodel.eq.4).or.(bgmodel.eq.10))then
 
          j=lenfn-13
          if(index(fullname(j+1:j+13),'_').eq.0 .and.
@@ -281,77 +281,114 @@ c           fullname=fullname(1:j)//fname13//cf
 
             cfname_internal=fullname(1:j)//fname13            !//cf
          else
-            print*,'didnt convert fullname to WFO format'
-            print*,'in get_bkgd_mdl_info ',fullname(1:lenfn)
+            cfname_internal = fullname
          endif
 
          call s_len(cfname_internal,lenfn)
-         call get_sbn_dims(cfname_internal,cmodel
-     +,nxbg,nybg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
-     +,n_valtimes,istatus)
+         IF (bgmodel .eq. 4) THEN
+           call get_sbn_dims(cfname_internal,cmodel
+     +       ,nxbg,nybg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     +       ,n_valtimes,istatus)
+           if(istatus.ne. 1)then
+              print*,'Error: get_sbn_dims'
+	      print*,bgmodel,cmodel(1:nclen)
+	      return
+           endif
 
-         if(istatus.ne. 1)then
-            print*,'Error: get_sbn_dims'
-	    print*,bgmodel,cmodel(1:nclen)
-	    return
-         endif
+           print*,'call get_attribute_sbn'
+           call get_attribute_sbn(cfname_internal,centralLat
+     +       ,centralLon,rlat00,rlon00,latNxNy,lonNxNy,latdxdy
+     + ,londxdy,dxbg,dybg,nxbg,nybg,rotation,projname,istatus)
 
-         print*,'call get_attribute_sbn'
-         call get_attribute_sbn(cfname_internal,centralLat
-     +,centralLon,rlat00,rlon00,latNxNy,lonNxNy,latdxdy
-     +,londxdy,dxbg,dybg,nxbg,nybg,rotation,projname,istatus)
-
-         if(istatus.ne. 1)then
-            print*,'Error: get_attribute_sbn'
-            print*,bgmodel,cmodel(1:nclen)
-            return
-         endif
-
+           if(istatus.ne. 1)then
+              print*,'Error: get_attribute_sbn'
+              print*,bgmodel,cmodel(1:nclen)
+              return
+           endif
+ 
 c set projection type for gridconv.f
 
-         call s_len(projname,leng)
+           call s_len(projname,leng)
 
-         if(projname(1:leng).eq.'LAMBERT_CONFORMAL')gproj='LC'
-         if(projname(1:leng).eq.'STEREOGRAPHIC')gproj='PS'
-         if(projname(1:leng).eq.'CYLINDRICAL_EQUIDISTANT')gproj='LE'
+           if(projname(1:leng).eq.'LAMBERT_CONFORMAL')gproj='LC'
+           if(projname(1:leng).eq.'STEREOGRAPHIC')gproj='PS'
+           if(projname(1:leng).eq.'CYLINDRICAL_EQUIDISTANT')gproj='LE'
 
-         if(cmodel(1:nclen).eq.'RUC40_NATIVE'.or.
-     .      cmodel(1:nclen).eq.'ETA48_CONUS')then
+           if(cmodel(1:nclen).eq.'RUC40_NATIVE'.or.
+     .        cmodel(1:nclen).eq.'ETA48_CONUS')then
 
-            nzbg_tp=nzbg_tp-1
-            nzbg_uv=nzbg_uv-1
-            nzbg_sh=nzbg_sh-1
-            print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
+              nzbg_tp=nzbg_tp-1
+              nzbg_uv=nzbg_uv-1
+              nzbg_sh=nzbg_sh-1
+              print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
 
-         elseif(cmodel(1:nclen).eq.'AVN_SBN_CYLEQ')then
+           elseif(cmodel(1:nclen).eq.'AVN_SBN_CYLEQ')then
 
 c for global AVN, nav code expects grid 1,1 in nw corner
-            print*,'set return variables'
-            rlat00 =-1.*rlat00
-            latNxNY=-1.*latNxNy
-            nzbg_tp=nzbg_tp-2
-            nzbg_uv=nzbg_uv-2
-            nzbg_sh=nzbg_sh-2
-            print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
-         elseif(cmodel(1:7).eq.'MesoEta')then
-            print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
-         else 
-            print*,'Unknown SBN model type: cmodel = ',cmodel
-         endif
+              print*,'set return variables'
+              rlat00 =-1.*rlat00
+              latNxNY=-1.*latNxNy
+              nzbg_tp=nzbg_tp-2
+              nzbg_uv=nzbg_uv-2
+              nzbg_sh=nzbg_sh-2
+              print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
+           elseif(cmodel(1:7).eq.'MesoEta')then
+              print*,'Retrieved SBN attributes for ',cmodel(1:nclen)
+           else 
+              print*,'Unknown SBN model type: cmodel = ',cmodel
+           endif
 
-         Lon0=centralLon
-         Lat0=centralLat
-         Lat1=Lat0        !this has be the second latitude (tangent lambert) since no Lat1.
-         dlat=dxbg/111.1
-         dlon=dybg/111.1
-         sw(1)=rlat00 
-         sw(2)=rlon00
-         ne(1)=latNxNy
-         ne(2)=lonNxNy
+           Lon0=centralLon
+           Lat0=centralLat
+           Lat1=Lat0 ! This has be the second latitude 
+                     !(tangent lambert) since no Lat1.
+           dlat=dxbg/111.1
+           dlon=dybg/111.1
+           sw(1)=rlat00 
+           sw(2)=rlon00
+           ne(1)=latNxNy
+           ne(2)=lonNxNy
+
+        elseif(bgmodel.eq.10) THEN  ! WNI-BLS
+
+           call get_unidata_grid(cfname_internal,cmodel
+     +       ,nxbg,nybg,Lat0,Lat1,Lon0,La1in,Lo1in,La2in,Lo2in
+     +       ,dxbg,dybg,gproj,istatus)
+                                           
+           if (gproj .EQ. "LL") THEN
+             cgrddef = 'S'
+             dlat = dybg
+             dlon = dxbg
+             lat0 = la1in
+             lon0 = lo1in
+             print *, "UNIDATA LL: dlat/dlon/lat0/lon0 =",
+     +          dlat,dlon,lat0,lon0
+           endif      
+           if(istatus.ne. 1)then
+              print*,'Error: get_unidata_grid'
+              print*,bgmodel,cmodel(1:nclen)
+              return
+           endif
+           sw(1) = La1in
+           sw(2) = Lo1in
+           ne(1) = La2in
+           ne(2) = Lo2in
+
+           call get_unidata_dims(cfname_internal,cmodel
+     +       ,nxbg,nybg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     +       ,n_valtimes,istatus)
+           if(istatus.ne. 1)then
+              print*,'Error: get_unidata_dims'
+              print*,bgmodel,cmodel(1:nclen)
+              return
+           endif
+         print *,'nx / ny / nzbg_ht = ',nxbg ,nybg, nzbg_ht
+         print *,'corners  = ', sw(1),sw(2),ne(1),ne(2)
+         print *,' gproj = ', gproj
+
+        endif
 
       endif
-
-
 c RUC Public
 c ----------
       if(bgmodel.eq.5.and.cmodel(1:nclen).eq.'RUC40_NATIVE'
