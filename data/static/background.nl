@@ -29,14 +29,15 @@ c
 c bgmodels describes the model type for the files found in each path
 c          this variable works in conjunction with cmodel as indicated.
 c 
-c allowable values are:    (cmodel)
+c allowable values are:             (cmodel)
+c -------------------------------------------------------------------------------------
 c        bgmodels = 0 ----> LAPS_FUA,  MODEL_FUA,  LAPS 
-c                           - LAPS_FUA: uses lapsprd/"model"/fua and fsf for backgrounds
+c                           - LAPS_FUA: uses lapsprd/"model"/fua and fsf for backgrounds;
 c                             fua/fsf on same domain; veritcal and time interpolation possible.
 c                           - MODEL_FUA: uses lapsprd/"model"/fua and fsf from a different
 c                             laps domains; horiz and vertical interpolation required; time interp
 c                             possible.
-c                            (LAPS not tested)
+c                           - LAPS not tested, but under construction 
 c        bgmodels = 1 ----> RUC60_NATIVE                         (obsolete!)
 c        bgmodels = 2 ----> ETA48_CONUS                          (tested)
 c                           ORSM_HKO (Hong Kong Observ model     (tested) 
@@ -44,10 +45,10 @@ c
 c        bgmodels = 3 ----> CWB_20FA_LAMBERT
 c                                "          _NF                  (tested, obsolete)
 c                                "          _RE                  (tested, obsolete)
-c                                "          _NF15                (tested)
-c                                "          _GFS                 (tested)
-c                                "          _NF45                (not avail yet)
-c                                "          _TFS                 (not avail yet)
+c                                "          _NF15                (tested, working)
+c                                "          _GFS                 (tested, working)
+c                                "          _NF45                (tested, working)
+c                                "          _TFS                 (tested, working)
 c
 c        bgmodels = 4 ----> (SBN: RUC, ETA, AVN, MesoEta)        (all tested)
 c                                 RUC40_NATIVE,
@@ -60,14 +61,26 @@ c                             or AVN_FSL_NETCDF)(only AVN_FSL_NETCDF tested)
 c        bgmodels = 7 ----> ETA48_GRIB                           (not tested)
 c        bgmodels = 8 ----> NOGAPS_AFWA_DEGRID                   (not tested)
 c        bgmodels = 9 ----> NWS_CONUS                            (obsolete!)
+c        bgmodels = 10 ---> GFSISO or RUCISO.  This lets us ingest
+c                     netCDF files created from GFS or RUC GRIB data run through
+c                     Unidatas gribtonc decoders.  The tar file includes a a bug
+c                     fix to lib/gridconv.f to handle the global 1x1 degree GFS
+c                     data for domains that span the prime meridian.  
 c
+c        bgmodels = 11 --->  WRFARW.  This allows raw netcdf output files from
+c                     WRF-ARW v2.1 and create the required lga/lgb files.
+c                     Does not time interpolation yet, though, so if you don't
+c                     have a raw WRF file with an exact match of the lga background
+c                     time needed, it returns to the main lga program with a 0
+c                     status to force lga to look for the next bgmodel source in your
+c                     background.nl list. 
 c
-c forecast_length = the length in hrs of the oldest forecast that can be used
+c forecast_length = the length in hrs of the oldest forecast allowed (to be processed by lga)
 c                   as a background in laps
 c
-c use_analysis =  forces backgrounds to be produced from model initial times.
-c                 Note: this logical does not necessarily work as intended
-c
+c use_analysis =  .true. -> forces backgrounds to be produced from model initial times.
+c                 .false.-> lga only uses model forecasts, no initial time allowed.
+
 c cmodel: this variable describes the specific type for a given value of bgmodel:
 c         allowable names are included above with the allowable values of bgmodel.
 c         new SBN (bgmodel=4) grid available 5-02 - MesoEta_SBN
