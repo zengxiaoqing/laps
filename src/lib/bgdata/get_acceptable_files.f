@@ -11,13 +11,14 @@
       integer bgmodel
       integer max_files, NX,NY,NZ,rejected_cnt
       character*256 names(max_files)
+      character*256 names_tmp(max_files)
       character*256 rejected_files(max_files)
       character*132 cmodel
       integer bg_files,forecast_length
       integer i, j, k, kk, ij, jj,l,nclen
       integer ntbg,nvt
       parameter (ntbg=100)
-      integer ivaltimes(ntbg)
+      integer ivaltimes(100)
       integer nvaltimes
       character*4   af,c4valtime,c4_FA_valtime
       character*3   c_fa_ext
@@ -35,7 +36,8 @@
       integer ihour, n, accepted_files, final_time, lend
       integer lentodot,nc
       character*9 bkgd(3500)
-      character*4 fcst(3000,120),finit1,finit2
+      character*4 fcst(3000,120)
+      character*9 finit1,finit2
       integer  ifcst,ibkgd
       integer  ifcst_bkgd(3000)
       integer  i4timeinit(3000)
@@ -62,13 +64,13 @@ C forecast.  if forecast_length > 0 return all files for i4time_anal
 C to >= i4time_anal+forecast_length
 C      
       print*, '-----------------------------'
-      print*, 'get_acceptable_files: 2-27-04'
+      print*, 'get_acceptable_files: 11-03-05'
       print*, '-----------------------------'
 
       call get_laps_cycle_time(laps_cycle_time,istatus)
 
       if(.not.allocated(bg_names))allocate(bg_names(max_files))
-
+   
       call s_len(cmodel,nclen)
 
       bg_files=0
@@ -176,15 +178,20 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
             if (j .ge. 0) then
                if(index(names(i)(j+1:j+13),'/').eq.0 .and.
      +              names(i)(j:j).eq.'/') then
-
-                  if (bgmodel .eq. 4) then
-
+CWNI-BLS ... Support for bgmodel = 10, assuming one uses the YYYYMMDD_HHMM
+CWNI-BLS     convention
+                  if ((bgmodel .eq. 4).OR.(bgmodel.eq.10)) then
 c     print *, 'SBN file:',names(i)(j+1:j+13)
-
                      fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
-                     
-                     call get_nvaltimes(names(i),sbnvaltimes,ivaltimes
+CWNI-BLS ... Call to new version of get_nvaltimes for Unidata
+                     IF (bgmodel .EQ. 4) THEN                     
+                       call get_nvaltimes(names(i),sbnvaltimes,ivaltimes
      +                                 ,istatus)
+                     ELSEIF (bgmodel.EQ.10) THEN
+                       print *,"Reading Unidata: ",TRIM(names(i))
+                       call get_nvaltimes_unidata(names(i),sbnvaltimes,
+     +                                 ivaltimes,istatus)
+                     ENDIF
                      if(istatus.ne.1) then
                         print*,'error returned from get_sbn_model_id '
      +                         ,fname
@@ -195,27 +202,26 @@ c     print *, 'SBN file:',names(i)(j+1:j+13)
                          kk=kk+1
                          if(kk.le.sbnvaltimes)then
                            write(af,'(i4.4)') ivaltimes(kk)/3600
-                           bg_names(k)=fname//af
-c     print*,'SBN: ',bg_names(k),k
+                           bg_names(k)=TRIM(fname)//af
+                           names_tmp(k) = names(i)
+                           nvaltimes = nvaltimes + 1
                          endif
                         enddo
-
-                        nvaltimes = k-1
+                        
                      endif
                   else 
-
-c     if(names(i)(j:j) .eq. '/') then
                      bg_names(i)=names(i)(j+1:j+13)
-c     print*,'NOTSBN: ',bg_names(i),bg_files
                   endif
                endif
             endif
          enddo
 
-         if(bgmodel.eq.4)then
+         if((bgmodel.eq.4) .or. (bgmodel .eq. 10))then
             bg_files = nvaltimes-1
+            DO i=1,bg_files
+              names(i) = names_tmp(i)
+            ENDDO
          endif
-      
       else
          print*,'LAPS analysis selected as background'
          print*,'Checking lapsprd/lt1 subdirectory'
@@ -236,6 +242,7 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
        
       endif
 
+      print *, "Total (nvaltimes) = ",nvaltimes
 c ok, if we do not want 0-hr fcst files (analysis files) then filter them.
 c ---------------------------------------------------------------------------
       if(cmodel.eq.'LAPS' .and. (.not.use_analysis))then
@@ -243,7 +250,7 @@ c ---------------------------------------------------------------------------
          print*,'use_analysis must = true when cmodel = LAPS'
          return
       endif
-
+      
       ij=0
       if(bg_files .gt.0)then
          if(.not.use_analysis)then
@@ -253,6 +260,9 @@ c ---------------------------------------------------------------------------
              if(bg_names(i)(j-3:j).ne.'0000')then
                 ij=ij+1
                 bgnames_tmp(ij)=bg_names(i)
+                IF ((bgmodel .EQ. 4).OR.(bgmodel.EQ.10))THEN
+                  names_tmp(ij) = names(i)
+                endif 
              endif
           enddo
           print*,'Removed ',bg_files-ij,' initial cond files '
@@ -269,53 +279,66 @@ c ---------------------------------------------------------------------------
           bg_files=ij
           do i=1,bg_files
              bg_names(i)=bgnames_tmp(i)
+             IF ((bgmodel .EQ. 4).OR.(bgmodel.EQ.10))THEN
+               names(i) = names_tmp(i)
+             ENDIF
+             print *, TRIM(bg_names(i)),":", TRIM(names(i))
           enddo
           deallocate(bgnames_tmp)
          endif
       else
           print*,'Variable bg_files = 0, return to main'
           print*
+          accepted_files=0
           return
       endif
-
-      print*,TRIM(bg_names(bg_files)),bg_files
 c
 c categorize file by init and fcst times. convert init time to i4time
 c -------------------------------------------------------------------
       ij=0
-      ifcst=1
       ibkgd=1
-      do n=1,bg_files-1
-         finit1=bg_names(n)(6:9)
-         finit2=bg_names(n+1)(6:9)
-         if(finit1 .eq. finit2)then
-            fcst(ibkgd,ifcst)=bg_names(n)(10:13) !4 character time (ffff) of forecast time assoc with initial.
-            ifcst=ifcst+1
-         else
-            if(bgmodel.eq.0 .and. cmodel.eq.'LAPS_FUA'.or.
-     +cmodel.eq.'MODEL_FUA'.or.cmodel.eq.'LAPS')then
-               fcst(ibkgd,ifcst)=bg_names(n)(10:11)
-            else
-               fcst(ibkgd,ifcst)=bg_names(n)(10:13)
-            endif
-            bkgd(ibkgd)=bg_names(n)(1:9) !9 character name of the background initial time
-            ifcst_bkgd(ibkgd)=ifcst        !number of fcsts for this initial background time
+cwni      do n=1,bg_files-1
+      do n=1,bg_files
+C -- WNI-BLS ... Reworked this whole section
+         if (n .EQ. 1) then
+            bkgd(ibkgd)=bg_names(n)(1:9)
+            ifcst_bkgd(ibkgd)=1
             call i4time_fname_lp(bkgd(ibkgd),i4timeinit(ibkgd),istatus)
-            ibkgd=ibkgd+1
-            ifcst=1
+            print *, "First: ",ibkgd, ifcst_bkgd(ibkgd)
+         else
+           finit1=bg_names(n-1)(1:9)
+           finit2=bg_names(n)(1:9)
+           if(finit1 .eq. finit2)then
+C            Same as previous init tim
+             ifcst_bkgd(ibkgd) = ifcst_bkgd(ibkgd) + 1
+           else
+C            Start a new init time
+             ibkgd = ibkgd + 1
+             bkgd(ibkgd)=bg_names(n)(1:9)
+             ifcst_bkgd(ibkgd)=1 
+             call i4time_fname_lp(bkgd(ibkgd),i4timeinit(ibkgd),istatus)
+           endif
+
          endif
+         if(bgmodel.eq.0 .and. cmodel.eq.'LAPS_FUA'.or.
+     +       cmodel.eq.'MODEL_FUA'.or.cmodel.eq.'LAPS')then
+             fcst(ibkgd,ifcst)=bg_names(n)(10:11)
+         else
+             fcst(ibkgd,ifcst_bkgd(ibkgd))=bg_names(n)(10:13)
+             IF (bgmodel .EQ. 4 .OR. bgmodel .EQ. 10) THEN
+               IF (ifcst_bkgd(ibkgd).EQ.1)THEN
+                 names_tmp(ibkgd) = names(n)
+                 print *,"**** ",TRIM(names_tmp(ibkgd))
+               ENDIF
+             endif
+         endif
+
       enddo
 
-      ifcst_bkgd(ibkgd)=ifcst
-      fcst(ibkgd,ifcst)=bg_names(bg_files)(10:13)
-      bkgd(ibkgd)=bg_names(bg_files)(1:9)
-      call i4time_fname_lp(bkgd(ibkgd),i4timeinit(ibkgd),istatus)
-
-      print*,'Found ',ibkgd,' initial backgrounds '
-
-c     do n=1,ibkgd,10
-c        print*,'bkgd ',n, bkgd(n),' has ',ifcst_bkgd(n),' fcsts'
-c     enddo
+      print *,'Found ',ibkgd,' initial backgrounds '
+      do n=1,ibkgd
+        print *,'bkgd ',n, bkgd(n),' has ',ifcst_bkgd(n),' fcsts'
+      enddo
 
 c
 c this section determines only the two fcsts bounding the analysis (i4time_anal) time.
@@ -380,6 +403,7 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
                     indx_for_best_fcst=jj-1
                  endif
                  print*,'Found fcsts bounding anal'
+                 print*, "Index = ",n
                  print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
                  print*,'Full name 2: ', bkgd(n),fcst(n,jj)
                  print*
@@ -433,9 +457,9 @@ c -----------------------------------------------------------------------------
          if(indx_for_best_init.ne.0.and.indx_for_best_fcst.ne.0)then
             accepted_files = 2
             names(2) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
-     +,indx_for_best_fcst)
+     +        ,indx_for_best_fcst)
             names(1) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
-     +,indx_for_best_fcst+1)
+     +        ,indx_for_best_fcst+1)
             print*,'Accepted file 1: ',TRIM(names(1))
             print*,'Accepted file 2: ',TRIM(names(2))
          else
@@ -453,8 +477,13 @@ c At t = cycle time or t+1 cycle time we need to use previous analyses to
 c advance fields in lga.
          if(indx_for_best_init1.ne.0.or.indx_for_best_init2.ne.0)then
             accepted_files=2
-            names(2)=bkgd(indx_for_best_init2)
-            names(1)=bkgd(indx_for_best_init1)
+            IF (bgmodel.EQ.4 .or. bgmodel .eq. 10) THEN
+              names(2) = names_tmp(indx_for_best_init2)
+              names(1) = names_tmp(indx_for_best_init1)
+            ELSE
+              names(2)=bkgd(indx_for_best_init2)
+              names(1)=bkgd(indx_for_best_init1)
+            ENDIF
             print*,'Accepted file 1: ',TRIM(names(1))
             print*,'Accepted file 2: ',TRIM(names(2))
          else
