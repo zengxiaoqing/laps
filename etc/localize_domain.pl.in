@@ -160,7 +160,6 @@ if(-d $FXA_DATA){
   $satid = &wfo_localization($SOURCE_ROOT,$INSTALL_ROOT,$DATA_ROOT,$FXA_DATA,$satid);
   $sattype = "wfo";
 }
-#
 # first get the info from the appropriate namelist
 open(PARMS,"$DATA_ROOT/static/$namelist");
 my(@xdim,@ydim,$zdim,$varx,$vary,$varz);
@@ -354,6 +353,14 @@ if($WHICH_TYPE eq "laps"){
     run_sys::run_sys("mkdir $DATA_ROOT/static/lvd");
    }
    &static_parms_to_cdl("$DATA_ROOT");
+
+# -------------------------------------------
+# make a safe copy of the satellite namelist
+# -------------------------------------------
+   $command="cp $DATA_ROOT/static/satellite_lvd.nl $DATA_ROOT/static/satellite_lvd_rep.nl";
+   print "Copy satellite_lvd.nl to satellite_lvd_rep.nl";
+   run_sys::run_sys($command);
+
 }
 
 print "$0 complete\n";
