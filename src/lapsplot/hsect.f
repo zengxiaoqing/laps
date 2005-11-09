@@ -1917,14 +1917,14 @@ c
              write(6,*)' Copying vas array to field_2d to support diff'       
              call move(vas,field_2d,NX_L,NY_L) ! Supports the diff option
 
-        elseif( c_type .eq. 'ra' .or. c_type .eq. 'gc'
+        elseif( c_type .eq. 'ra' .or. c_type .eq. 'cl'
      1    .or.  c_type .eq. 'rr' .or. c_type .eq. 'rf'
      1    .or.  c_type .eq. 'rd' .or. c_type .eq. 'rv')then
 
             ndim_read = 2 ! default
 
             if(c_type .eq. 'ra')mode = 1
-            if(c_type .eq. 'gc')mode = 2
+            if(c_type .eq. 'cl')mode = 2
 
             i4time_tmp1 = (i4time_ref)/laps_cycle_time * laps_cycle_time
             i4time_tmp2 = (i4time_ref-2400)/laps_cycle_time 
@@ -4045,9 +4045,8 @@ c                   cint = -1.
      1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
         elseif(c_type .eq. 'tt' 
-     1    .or. c_type .eq. 'tf' .or. c_type .eq. 'tfi'
-     1    .or. c_type .eq. 'gf' .or. c_type .eq. 'gfi'
-     1                          .or. c_type .eq. 'tc')then
+     1    .or. c_type(1:2) .eq. 'tf' .or. c_type(1:2) .eq. 'gf' 
+     1    .or. c_type(1:2) .eq. 'gc' .or. c_type(1:2) .eq. 'tc')then
 
             if(c_type(1:1) .eq. 't')then
                 var_2d = 'T'
@@ -4061,29 +4060,28 @@ c                   cint = -1.
      1                          ,comment_2d,NX_L,NY_L
      1                          ,field_2d,0,istatus)
 
-            if(c_type(1:2) .eq. 'tf')then
+            if(c_type(1:1) .eq. 't')then
+                c_label = 'Sfc Temperature   '
+            elseif(c_type(1:1) .eq. 'g')then
+                c_label = 'Ground Temperature'
+            endif
+
+            call s_len2(c_label,len_c_label)
+
+            if(c_type(2:2) .eq. 'f')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c_label = 'Sfc Temperature     (F)          '
-
-            elseif(c_type(1:2) .eq. 'gf')then
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    field_2d(i,j) = k_to_f(field_2d(i,j))
-                enddo ! j
-                enddo ! i
-                c_label = 'Ground Temperature  (F)          '
-
-            elseif(c_type(1:2) .eq. 'tc')then
+                c_label = c_label(1:len_c_label)//' (F)'
+            elseif(c_type(2:2) .eq. 'c')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_c(field_2d(i,j))
                 enddo ! j
                 enddo ! i
-                c_label = 'Sfc Temperature     (C)          '
+                c_label = c_label(1:len_c_label)//' (C)'
             endif
 
             IF(istatus .ne. 1)THEN
@@ -4874,7 +4872,7 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
-        elseif(c_type .eq. 'vo')then
+        elseif(c_type(1:2) .eq. 'vo')then
             var_2d = 'VOR'
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -4892,14 +4890,21 @@ c                   cint = -1.
             clow = -100.
             chigh = +100.
             cint = 5.
+            scale = 1e-5
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1             asc9_tim_t,namelist_parms,plot_parms
-     1            ,c_label,i_overlay,c_display
-     1            ,lat,lon,jdot,
-     1             NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
+
+!           call plot_cont(field_2d,1e-5,clow,chigh,cint,
+!    1             asc9_tim_t,namelist_parms,plot_parms
+!    1            ,c_label,i_overlay,c_display
+!    1            ,lat,lon,jdot,
+!    1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'mr')then
             var_2d = 'MR'
