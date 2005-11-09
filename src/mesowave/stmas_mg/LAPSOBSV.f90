@@ -22,7 +22,8 @@ SUBROUTINE LAPSOBSV(m)
 
   INTEGER :: nog,nob		! Number obs over grid/box
   INTEGER :: wid		! WMO id
-  INTEGER :: otm(m)		! Observation time
+  INTEGER*4 :: otm(m)		! Observation time
+  INTEGER*4 :: cld(m)		! Number of cloud layers
 
   REAL*4 :: lat(m),lon(m), &	! Lat/Lon
 	    elv(m)		! Elevation
@@ -46,7 +47,6 @@ SUBROUTINE LAPSOBSV(m)
 	    pc3(m),pc6(m), &
 	    p24(m), &		! 3,6,24-hour precipitation
 	    snw(m),snwea(m), &	! Snow depth/EA
-	    cld(m), &		! Number of cloud layers
 	    mxt(m),mnt(m)	! 24-hour maximum/minimum temperature
   REAL*4 :: cht(m,5)		! cloud layer heights
   
@@ -112,6 +112,9 @@ SUBROUTINE LAPSOBSV(m)
 	CASE ("VISB")
 	  rawobs(1,1+numobs(j):nob+numobs(j),j) = vis(1:nob)
 	  weight(1+numobs(j):nob+numobs(j),j) = visea(1:nob)
+        CASE ("CEIL")
+	  rawobs(1,1+numobs(j):nob+numobs(j),j) = cht(1:nob,1)
+	  weight(1+numobs(j):nob+numobs(j),j) = 1.0
 	CASE ("REDP")
 	  DO k=1,nob
 	    ! Collect either station pressure or altimeter:

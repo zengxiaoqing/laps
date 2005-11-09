@@ -67,6 +67,7 @@
   INTEGER :: numtmf		! Number of LAPS bkgd frames
   INTEGER :: numvar		! Number of Analysis vars
   INTEGER :: needbk(MAXVAR)	! Add background to incements
+  INTEGER :: bounds(MAXVAR)	! Bound constraints
   INTEGER :: verbal		! Print message option
   INTEGER :: savdat		! Save background and obs
   INTEGER :: saveid		! Index for saving variable

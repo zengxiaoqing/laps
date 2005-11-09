@@ -1,6 +1,6 @@
 SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 		    obsv,nobs,wght,ospc,indx,coef, &
-		    ipar,rpar)
+		    bund,ipar,rpar)
 		    
 
 !==========================================================
@@ -15,8 +15,9 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 
   INTEGER, INTENT(IN) :: ngrd(3)	! Grid numbers
   INTEGER, INTENT(IN) :: nfrm		! Bkgd time frames
-  INTEGER, INTENT(INOUT) :: nobs		! Number of obs
+  INTEGER, INTENT(INOUT) :: nobs	! Number of obs
   INTEGER, INTENT(IN) :: indx(6,nobs)	! Indices (intepolate)
+  INTEGER, INTENT(IN) :: bund		! Bound constraints
   INTEGER, INTENT(IN) :: ipar(1)	! Integer parameter
   REAL, INTENT(IN) :: dxyt(3)		! Grid spacing
   REAL, INTENT(IN) :: domn(2,3)		! Domain
@@ -114,7 +115,7 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
       ENDIF
 
       ! Analyzing:
-      CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght)
+      CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght,bund)
 
     ENDDO
   ENDDO

@@ -85,7 +85,7 @@ PROGRAM STMAS_MG
 	domain,bkgrnd(1,1,1,i),numtmf, &
 	qc_obs(1,1,i),numobs(i),weight(1,i), &
 	obsspc(1,i),indice(1,1,i),coeffs(1,1,i), &
-	stmasi,stmasr)
+	bounds(i),stmasi,stmasr)
   ENDDO
 
   ! Add increment to the background:

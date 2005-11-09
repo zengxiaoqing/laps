@@ -69,7 +69,7 @@ SUBROUTINE PrPstNLs
   dir = dirstc(1:dirlen)//'stmas_mg.vr'
   OPEN(unit=11,file=dir(1:dirlen+12),form='formatted')
   DO nam=1,numvar
-    READ(11,*) varnam(nam),thresh(nam),needbk(nam)
+    READ(11,*) varnam(nam),thresh(nam),needbk(nam),bounds(nam)
   ENDDO
   CLOSE(11)
 
@@ -155,6 +155,18 @@ SUBROUTINE PrPstLSX
       vnm(nvr) = 'VIS'
       vun(nvr) = 'M  '
       cmt(nvr) = 'Visibilty'
+      dat(1:ngd(1),1:ngd(2),nvr) = &
+	analys(numfic(1)+1:numgrd(1)-numfic(1), &
+	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)
+    CASE ("CEIL")	! Visibility
+      nvr = nvr+1
+      IF (nvr .GT. LSXVAR) THEN
+	WRITE(*,2)
+        STOP
+      ENDIF
+      vnm(nvr) = 'CC'
+      vun(nvr) = 'M  '
+      cmt(nvr) = 'Cloud ceiling'
       dat(1:ngd(1),1:ngd(2),nvr) = &
 	analys(numfic(1)+1:numgrd(1)-numfic(1), &
 	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)

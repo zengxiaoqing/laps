@@ -1,4 +1,5 @@
-SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef,wght)
+SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
+		    wght,bund)
 
 !==========================================================
 !  This routine minimizes the STMAS cost function.
@@ -10,6 +11,7 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef,wght)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: mlds(3),ngrd(3),nobs,indx(6,nobs)
+  INTEGER, INTENT(IN) :: bund
   REAL, INTENT(IN) :: obsv(4,nobs),coef(6,nobs),wght(nobs)
   REAL, INTENT(INOUT) :: sltn(mlds(1),mlds(2),mlds(3))
 
@@ -46,8 +48,9 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef,wght)
   iprnt = 1
   isbmn = 1
 
-  ! No bounds for controls:
-  nbund = 0
+  ! Simple bound constraints for controls (only low bound used here):
+  nbund = bund
+  if (bund .EQ. 1) bdlow = 0.0
 
   ! Initial:
   itr = 0

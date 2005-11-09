@@ -52,12 +52,16 @@ SUBROUTINE LAPSBKGD
       ENDDO
 
     ! Other fields:
-    ELSE IF (varnam(j) .NE. 'WNDV') THEN	! V in with U
+    ELSE IF ((varnam(j) .NE. 'WNDV') .AND. &	! V in with U
+	     (varnam(j) .NE. 'CEIL')) THEN	! No ceiling bkg
       DO i=1,numtmf
         CALL GET_BACKGROUND_SFC(i4prev(i),varnam(j),ext,tim, &
 	  bkgrnd(1,1,i,j),lapsdt,numgrd(1),numgrd(2),err)
 	IF (err .EQ. 0) WRITE(*,13) varnam(j),i4prev(i),i,j
       ENDDO
+    ELSE
+      IF (needbk(j) .EQ. 0) &
+        bkgrnd(1:numgrd(1),1:numgrd(2),1:numtmf,j) = 0.0
     ENDIF
   ENDDO
 13 FORMAT('STMAS>LAPSBKGD: Background is not found for: ',A4,i16,2i3)
