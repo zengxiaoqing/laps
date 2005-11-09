@@ -37,8 +37,11 @@
 #
 # -Q  P                Use QSUB_WAIT (with SGE on jet/ijet) where P is the project name
 #
-# -M                   Runs just the executables for the Mesowave analysis where M is
-#                      the name of the Mesowave executable
+# -M                   Runs just the executables for the surface analysis. The argument value
+#                      denotes the name of the surface analysis executable (e.g. 'recurs_iter.x' 
+#                      or 'laps_sfc.x')
+#
+# -s                   Runs surface analysis only (equivalent to '-M laps_sfc.x')
 #
 # -K                   Runs just the executables for the Kalman filter
 #
@@ -51,8 +54,6 @@
 #                      to be kept in each product directory by the purger
 #
 # -t                   override default purge time expressed in days
-#
-# -s                   runs surface (all LSX variables) and 3-D wind analyses only
 #
 # -l                   Write logs in LAPS_DATA_ROOT/log, even if on AWIPS
 #
@@ -116,7 +117,7 @@ if(defined $opt_s){ # "surface only"
 }elsif(defined $opt_K){ # Kalman only
     @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
 
-}elsif(defined $opt_M){ # Mesowave
+}elsif(defined $opt_M){ # Mesowave or other "surface only" LAPS
     @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M);
 
 }elsif(defined $opt_F){ # Followup Only
