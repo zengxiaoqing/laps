@@ -566,8 +566,6 @@ c
      1                        ,icol_in,du2,wx,iflag,iflag_cv
      1                        ,namelist_parms,plot_parms)
 
-        include 'lapsparms.cmn'
-
         include 'lapsplot.inc'
 
         real*4 lat(imax,jmax),lon(imax,jmax)

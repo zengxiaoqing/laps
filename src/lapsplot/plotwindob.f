@@ -40,8 +40,6 @@ cdis
       subroutine plot_windob(dir,spd,ri,rj,lat,lon,imax,jmax,relsize
      1                      ,c4_rot)
 
-      include 'lapsparms.cmn'
-
       real*4 lat(imax,jmax),lon(imax,jmax)
       character*4 c4_rot
 

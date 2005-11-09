@@ -54,9 +54,6 @@ cdis
 
         common /zoom/ zoom,density
 
-
-        include 'lapsparms.cmn'
-
 !       integer*4 nk
 !       common /get_packed_data2/ nk
 
