@@ -1,29 +1,29 @@
-!dis   
+!dis
 !dis    Open Source License/Disclaimer, Forecast Systems Laboratory
 !dis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
-!dis    
+!dis
 !dis    This software is distributed under the Open Source Definition,
 !dis    which may be found at http://www.opensource.org/osd.html.
-!dis    
+!dis
 !dis    In particular, redistribution and use in source and binary forms,
 !dis    with or without modification, are permitted provided that the
 !dis    following conditions are met:
-!dis    
+!dis
 !dis    - Redistributions of source code must retain this notice, this
 !dis    list of conditions and the following disclaimer.
-!dis    
+!dis
 !dis    - Redistributions in binary form must provide access to this
 !dis    notice, this list of conditions and the following disclaimer, and
 !dis    the underlying source code.
-!dis    
+!dis
 !dis    - All modifications to this software must be clearly documented,
 !dis    and are solely the responsibility of the agent making the
 !dis    modifications.
-!dis    
+!dis
 !dis    - If significant modifications or enhancements are made to this
 !dis    software, the FSL Software Policy Manager
 !dis    (softwaremgr@fsl.noaa.gov) should be notified.
-!dis    
+!dis
 !dis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
 !dis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
 !dis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
@@ -31,27 +31,29 @@
 !dis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 !dis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 !dis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
-!dis   
-!dis 
+!dis
+!dis
+!  Module to handle I/O from a WRF v2 netCDF file
+!
 
 MODULE wrf_netcdf
 
 ! F90 module to deal with reading WRF output files (WRFv1 netcdf)
 
   USE grid_utils
+  include 'netcdf.inc'
   PRIVATE
     
   PUBLIC open_wrfnc
   PUBLIC close_wrfnc
-  PUBLIC get_wrf_map
+  PUBLIC get_wrfsi_map
   PUBLIC get_wrf2_map
-  PUBLIC get_wrf_misc
+  PUBLIC get_wrf2_timeinfo
   PUBLIC get_wrf2_misc
   PUBLIC get_wrf_scalar
   PUBLIC get_wrf_1d
   PUBLIC get_wrfnc_2d
   PUBLIC get_wrfnc_3d
-  PUBLIC make_wrf_file_name 
   PUBLIC make_wrf2_file_name
   PUBLIC wrfio_wait
 
@@ -59,7 +61,7 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE open_wrfnc(fname, lun, status)
 
-    ! Opens a WRF v1 netCDF file, returning the CDF id of the file
+    ! Opens a WRF netCDF file, returning the CDF id of the file
 
     IMPLICIT NONE
     include 'netcdf.inc'  
@@ -70,7 +72,6 @@ CONTAINS
     INTEGER, INTENT(OUT)                   :: status
 
     status = 0
-
     lun = NCOPN(fname, NCNOWRIT,   status)
 
     IF (status .ne. 0) then
@@ -94,111 +95,7 @@ CONTAINS
     return
  END SUBROUTINE close_wrfnc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrf_map(lun, projection, lat1, lon1, stdlon, &
-                         truelat1, truelat2, dx_m, dy_m, &
-                         nx, ny, status)
-  
-    ! Reads from a WRFSI static file to get mapping information for a WRF domain
-    ! NOTE:  The parameters returned are the non-staggered grid parameters,
-    ! as defined in the wrfsi.nl file.  The dimensions found in the wrfout
-    ! netCDF files require have one less element in each direction.
-
-    ! Assumes that the static file has been opened with the open_wrfnc routine
-    ! and the CDF ID is the "lun". 
-
-    IMPLICIT NONE
-    include 'netcdf.inc' 
-    ! Args
-    INTEGER, INTENT(IN)                    :: lun  
-    CHARACTER (LEN=32), INTENT(OUT)        :: projection
-    REAL, INTENT(OUT)                      :: lat1
-    REAL, INTENT(OUT)                      :: lon1 
-    REAL, INTENT(OUT)                      :: stdlon
-    REAL, INTENT(OUT)                      :: truelat1
-    REAL, INTENT(OUT)                      :: truelat2
-    REAL, INTENT(OUT)                      :: dx_m
-    REAL, INTENT(OUT)                      :: dy_m
-    INTEGER, INTENT(OUT)                   :: nx
-    INTEGER, INTENT(OUT)                   :: ny
-    INTEGER, INTENT(OUT)                   :: status
-
-   !Locals
-    INTEGER :: vid, rcode
-    CHARACTER(LEN=132) :: dum
-    CHARACTER(LEN=132) :: grid_type
-    INTEGER, DIMENSION(2) :: startc, countc
-    INTEGER, DIMENSION(4) :: start, count
- 
-    status = 0
-
-    ! Get x-y dimensions
-
-    vid = NCVID(lun, 'x', rcode)
-    CALL NCDINQ(lun,vid,dum,nx,rcode)
-    IF (rcode .NE. 0) THEN
-       PRINT *, 'Error getting nx.'
-       status = 1
-    ENDIF
-
-    vid = NCVID(lun, 'y', rcode)
-    CALL NCDINQ(lun,vid,dum,ny,rcode)
-    IF (rcode .NE. 0) THEN
-       PRINT *, 'Error getting nx.'
-       status = 1
-    ENDIF
- 
-    !  Get projection
-    startc = (/1,1/)
-    countc = (/132,1/)
-    vid = NCVID(lun, 'grid_type', rcode)
-    CALL NCVGTC(lun,vid,startc,countc,grid_type, 132, rcode)
-
-    SELECT CASE(grid_type)
-      CASE ('mercator') 
-        projection = 'MERCATOR                        '
-      CASE ('secant lambert conformal')
-        projection = 'LAMBERT CONFORMAL               '
-      CASE ('tangential lambert conformal')
-        projection = 'LAMBERT CONFORMAL               '
-      CASE ('polar stereographic')
-        projection = 'POLAR STEREOGRAPHIC             '
-      CASE DEFAULT
-        print *, 'Unrecognized grid type: ', grid_type
-        status = 1
-    END SELECT
-
-    ! Get SW corner point
-    vid = NCVID(lun, 'La1', rcode)
-    CALL NCVGT1(lun, vid, 1, lat1, rcode)
-    vid = NCVID(lun, 'Lo1', rcode)
-    CALL NCVGT1(lun, vid, 1, lon1, rcode)
-
-    ! Get Truelat1/trulat2
-    vid = NCVID(lun, 'Latin1', rcode)
-    CALL NCVGT1(lun, vid, 1, truelat1, rcode)
-    vid = NCVID(lun, 'Latin2', rcode)
-    CALL NCVGT1(lun, vid, 1, truelat2, rcode)
-
-    ! Get standard longitude
-    vid = NCVID(lun, 'LoV', rcode)
-    CALL NCVGT1(lun, vid, 1, stdlon, rcode)
-
-    ! Get dx/dy
-    vid = NCVID(lun, 'Dx', rcode)
-    CALL NCVGT1(lun, vid, 1, dx_m, rcode)
-    vid = NCVID(lun, 'Dy', rcode)
-    CALL NCVGT1(lun, vid, 1, dy_m, rcode)
-
-    ! Clean up
-    if (lon1 .gt. 180.) lon1 = lon1 - 360.
-    if (stdlon .gt. 180.) stdlon = stdlon - 360.
- 
-    RETURN
-
-  END SUBROUTINE get_wrf_map 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrf2_map(lun, projection, lat1, lon1, stdlon, &
+  SUBROUTINE get_wrfsi_map(lun, projection, lat1, lon1, stdlon, &
                          truelat1, truelat2, dx_m, dy_m, &
                          nx, ny, status)
   
@@ -298,87 +195,140 @@ CONTAINS
  
     RETURN
 
-  END SUBROUTINE get_wrf2_map 
+  END SUBROUTINE get_wrfsi_map 
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrf_misc(cdfid, nzh, nzf, ptop, clwflag, iceflag, &
-                          graupelflag)
-
-    ! Subroutine to get a few key parameters from the WRF model for the 
-    ! model post processor.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE get_wrf2_timeinfo(lun,reftime,dt,itimestep,tau_hr,tau_min,tau_sec, &
+                               status)
 
     IMPLICIT NONE
-    include 'netcdf.inc' 
-    INTEGER, INTENT(IN)                :: cdfid   ! netCDF file handle
-    INTEGER, INTENT(OUT)               :: nzh     ! number of half-levels
-    INTEGER, INTENT(OUT)               :: nzf     ! number of full-levels
-    REAL,    INTENT(OUT)               :: ptop    ! Top pressure in Pa
-    LOGICAL, INTENT(OUT)               :: clwflag ! Cloud liquid fields avail
-    LOGICAL, INTENT(OUT)               :: iceflag ! Ice species avail
-    LOGICAL, INTENT(OUT)               :: graupelflag  ! Grauple included
+    include 'netcdf.inc'
 
-    ! Local variables
-     
-    INTEGER :: vid, rcode,mp_level
-    CHARACTER(LEN=132) :: dum
+    INTEGER, INTENT(IN)                  :: lun
+    CHARACTER(LEN=19), INTENT(OUT)       :: reftime
+    REAL, INTENT(OUT)                    :: dt
+    INTEGER, INTENT(OUT)                 :: itimestep
+    INTEGER, INTENT(OUT)                 :: tau_hr, tau_min, tau_sec, status
 
-    ! Get Ptop, which is not really needed for anything in the em version
-    vid = NCVID(cdfid, 'P_TOP', rcode)
-    rcode  = NF_GET_VAR_REAL(cdfid,vid,ptop)
+    INTEGER   :: rcode, vid
 
-    ! Get the vertical dimensions
-    rcode = NF_GET_ATT_INT(cdfid, nf_global, 'BOTTOM-TOP_GRID_DIMENSION',nzh)
-    nzf = nzh + 1
+    reftime = '????-??-??_??:??:??' 
+    tau_hr = 0
+    tau_min = 0
+    tau_sec = 0
+    status = 0
 
-    ! Determine which microphysics package is used and set flags 
-    ! accordingly
- 
-    rcode = NF_GET_ATT_INT(cdfid, nf_global, 'MP_PHYSICS',mp_level) 
-   
-    SELECT CASE (mp_level)
+    rcode = NF_GET_ATT_TEXT(lun,0,"SIMULATION_START_DATE",reftime)
+    rcode = NF_GET_ATT_REAL(lun,0,"DT",dt)
+    rcode = NF_INQ_VARID(lun,"ITIMESTEP",vid)
+    rcode = NF_GET_VAR_INT(lun,vid,itimestep)
+    
+    tau_hr = INT(FLOAT(itimestep)*dt)/3600
+    tau_sec = MOD(INT(FLOAT(itimestep)*dt),3600)
+    tau_min = tau_sec / 60
+    tau_sec = MOD(tau_sec,60) 
 
-      CASE(0)  ! No microphysics
-        clwflag = .false.
-        iceflag = .false. 
-        graupelflag = .false.
+    RETURN
+END SUBROUTINE get_wrf2_timeinfo
+    
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE get_wrf2_map(lun, stag, projcode, lat1, lon1, stdlon, &
+                          truelat1, truelat2, dx_m, dy_m, &
+                          nx, ny, nz, status)
 
-      CASE(1) ! Kessler warm rain
-        clwflag = .true.
-        iceflag = .false.
-        graupelflag = .false.
+    IMPLICIT NONE
+    include 'netcdf.inc'
+    ! Args
+    INTEGER, INTENT(IN)                    :: lun
+    CHARACTER (LEN=1)                      :: stag
+    INTEGER, INTENT(OUT)                   :: projcode  
+    REAL, INTENT(OUT)                      :: lat1
+    REAL, INTENT(OUT)                      :: lon1
+    REAL, INTENT(OUT)                      :: stdlon
+    REAL, INTENT(OUT)                      :: truelat1
+    REAL, INTENT(OUT)                      :: truelat2
+    REAL, INTENT(OUT)                      :: dx_m
+    REAL, INTENT(OUT)                      :: dy_m
+    INTEGER, INTENT(OUT)                   :: nx
+    INTEGER, INTENT(OUT)                   :: ny
+    INTEGER, INTENT(OUT)                   :: nz
+    INTEGER, INTENT(OUT)                   :: status
 
-      CASE(2) ! Lin et al.
-        clwflag = .true.
-        iceflag = .true.
-        graupelflag = .true.
   
-      CASE(3)   ! NCEP 3-class
-        clwflag = .true.
-        iceflag = .true.
-        graupelflag = .false.
-      CASE(4)   ! NCEP 5-class
-        clwflag = .true.
-        iceflag = .true.
-        graupelflag = .false.
+    ! Local variables
+    INTEGER   :: rcode,dimid,vid
+    INTEGER   :: projcode_wrf
 
-      CASE(5)   ! Eta Ferrier 2-class
-        clwflag = .true.
-        iceflag = .false.
-        graupelflag = .false.
+    ! Initialization
+    lat1 = -999.
+    lon1 = -999.
+    projcode = 0     
+    projcode_wrf = 0
+    stdlon = -999.
+    truelat1 = -999.
+    truelat2 = -999.
+    dx_m  = -999.
+    dy_m  = -999.
+    nx = 0
+    ny = 0
+    nz =0
+    status = 0
 
+    rcode = NF_GET_ATT_INT(lun, 0, "MAP_PROJ", projcode_wrf)
+    SELECT CASE (projcode_wrf)
+      CASE(1)
+        projcode = 3
+      CASE(2)
+        projcode = 5
+      CASE(3)
+        projcode = 1
       CASE DEFAULT
-        print *, 'WARNING:  Cannot determine microphysics option!'
-        print *, '          Assuming all species present.'
-        clwflag = .true.
-        iceflag = .true.
-        graupelflag = .true.
+        projcode = 99
+    END SELECT 
+    rcode = NF_GET_ATT_REAL(lun, 0, "STAND_LON",stdlon)
+    rcode = NF_GET_ATT_REAL(lun, 0, "TRUELAT1",truelat1)
+    rcode = NF_GET_ATT_REAL(lun, 0, "TRUELAT2",truelat2)
+    rcode = NF_GET_ATT_REAL(lun, 0, "DX", dx_m)
+    rcode = NF_GET_ATT_REAL(lun, 0, "DY", dy_m)
+    
+    ! Dimenions
+    rcode = NF_INQ_DIMID(lun, "west_east", dimid)
+    rcode = NF_INQ_DIMLEN(lun, dimid, nx)
+    rcode = NF_INQ_DIMID(lun, "south_north", dimid)
+    rcode = NF_INQ_DIMLEN(lun, dimid, ny)
+    rcode = NF_INQ_DIMID(lun, "bottom_top", dimid)
+    rcode = NF_INQ_DIMLEN(lun, dimid, nz)
+
+    SELECT CASE (stag)
+      CASE('T')
+        rcode = NF_INQ_VARID(lun,"LAT_LL_T",vid)
+        rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+        rcode = NF_INQ_VARID(lun,"LON_LL_T",vid)
+        rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+
+      CASE('U')
+        rcode = NF_INQ_VARID(lun,"LAT_LL_U",vid)
+        rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+        rcode = NF_INQ_VARID(lun,"LON_LL_U",vid)
+        rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+        nx = nx + 1
+ 
+      CASE('V')
+        rcode = NF_INQ_VARID(lun,"LAT_LL_V",vid)
+        rcode = NF_GET_VAR_REAL(lun,vid,lat1)
+        rcode = NF_INQ_VARID(lun,"LON_LL_V",vid)
+        rcode = NF_GET_VAR_REAL(lun,vid,lon1)
+        ny = ny + 1
 
     END SELECT
 
     RETURN
+  END SUBROUTINE get_wrf2_map
 
-  END SUBROUTINE get_wrf_misc 
+ 
 
+    
+    
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE get_wrf2_misc(cdfid, nzh, nzf, ptop, clwflag, iceflag, &
                           graupelflag)
@@ -872,29 +822,6 @@ CONTAINS
   END SUBROUTINE get_wrfnc_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE make_wrf_file_name(prddir,domnum,time_min,fname)
-
-    ! Creates the WRF output file name based on the working directory, 
-    ! domain number, and number of minutes into simulation
-
-    IMPLICIT NONE
-
-    CHARACTER(LEN=*), INTENT(IN)               :: prddir
-    INTEGER, INTENT(IN)                        :: domnum
-    INTEGER, INTENT(IN)                        :: time_min
-    CHARACTER(LEN=255), INTENT(OUT)            :: fname
-
-    CHARACTER(LEN=2)                           :: domstr
-    CHARACTER(LEN=6)                           :: timestr
-
-    WRITE(domstr, '(I2.2)') domnum
-    WRITE(timestr, '(I6.6)') time_min
-
-    fname = TRIM(prddir) // '/wrfout_d' // domstr // '_' // timestr
-    RETURN
-  END SUBROUTINE make_wrf_file_name
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE make_wrf2_file_name(prddir,domnum,timestr,fname)
 
     ! Creates the WRF output file name based on the working directory, 
@@ -920,20 +847,21 @@ CONTAINS
     IMPLICIT NONE
     CHARACTER(LEN=255)  :: filename
     CHARACTER(LEN=8)    :: date_ready
-    CHARACTER(LEN=10)    :: time_ready
+    CHARACTER(LEN=10)   :: time_ready
+    LOGICAL             :: file_exists
     LOGICAL             :: file_ready
     INTEGER             :: num_checks
     INTEGER             :: max_wait_sec
-    INTEGER, PARAMETER  :: pause_sec = 60
+    INTEGER, PARAMETER  :: pause_sec = 30
     INTEGER             :: secs_waited
+    INTEGER             :: cdf, rcode, dimid, ntimes,status,vid,itimestep
     file_ready = .false.
+    file_exists = .false.
     num_checks = 0
+    print *, "Checking status of ",trim(filename)
     DO WHILE (.NOT.file_ready)
-      INQUIRE(FILE=TRIM(filename), EXIST=file_ready)
-      ! In case this file was just created, wait to 
-      ! give the file a chance to be completely written.  Also, this
-      ! keeps us from banging on the disk unnecessarily.
-      IF (.NOT. file_ready) THEN
+      INQUIRE(FILE=TRIM(filename), EXIST=file_exists)
+      IF (.NOT. file_exists) THEN
         print *, 'File not ready: ', TRIM(filename)
         print '(A,I3,A)', 'Sleeping for ', pause_sec, ' seconds'
         CALL sleep(pause_sec)
@@ -946,15 +874,42 @@ CONTAINS
           STOP 'io_wait'
         ENDIF
       ELSE 
-        ! Give a little slop time to make sure file is completely written
-        CALL sleep(pause_sec)
-        CALL date_and_time(date_ready,time_ready) 
-        PRINT *, TRIM(filename), ' ready at ', date_ready, '/',time_ready
-        
+        num_checks = 0
+        ! Make sure it has been populated with at least 1 time period    
+        DO WHILE (.NOT. file_ready)
+       
+          CALL open_wrfnc(filename,cdf,status)  
+          rcode = NF_INQ_DIMID(cdf, "Time", dimid)
+          rcode = NF_INQ_DIMLEN(cdf, dimid, ntimes)
+           
+          print *,"rcode/ntimes =", rcode,ntimes
+          IF (ntimes.GT.0) THEN
+            rcode = NF_INQ_VARID(cdf,"ITIMESTEP",vid)
+            rcode = NF_GET_VAR_INT(cdf,vid,itimestep)
+            print *,"rcode/itimestep ", rcode,itimestep
+            IF ((rcode .EQ. NF_NOERR) .AND. (itimestep .GE. 0))THEN
+              CALL date_and_time(date_ready,time_ready)
+              PRINT *, TRIM(filename), ' ready at ', date_ready, '/',time_ready
+              file_ready = .true.
+              !CALL sleep(pause_sec)
+            ELSE 
+              CALL sleep(pause_sec)
+            ENDIF
+          ELSE 
+            CALL sleep(pause_sec)
+            num_checks = num_checks + 1
+            secs_waited = num_checks * pause_sec
+            IF (secs_waited .GE. max_wait_sec) THEN
+              PRINT *, 'IO_WAIT:  Timeout waiting for file: ', TRIM(filename)
+              PRINT '(A,I5,A)', '    Maximum wait time set to ', max_wait_sec, 's'
+              STOP 'io_wait'
+            ENDIF
+          ENDIF
+          CALL close_wrfnc(cdf)
+        ENDDO 
       ENDIF
     ENDDO 
     RETURN
   END SUBROUTINE wrfio_wait
-
 
 END MODULE wrf_netcdf
