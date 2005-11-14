@@ -196,7 +196,7 @@ C
         call s_len(dir_in,len_dir_in) ! Slash should be on the end of dir_in
 
 !       Determine whether we are using /public or WFO Advanced filenames...
-        if(.true.)then
+        if(.false.)then !! WNI-BLS ... changed to false to force file name determination
             call get_c8_project(c8_project,istatus)
             if (istatus .ne. 1) then
                write(6,*)'Error getting c8_project'
@@ -207,11 +207,16 @@ C
 
         else
 C           Determine file format by looking at the file name convention
-            call get_file_names(dir_in(1:len_dir_in),numoffiles
+            call get_file_names(dir_in(1:len_dir_in),numoffiles_ret
      1                         ,c_filenames,max_files,istatus)
 
 !           Note that the GFN call may not work unless we also call
 !           'filter_nonnumeric_fnames'.
+            call Filter_non_numeric_fnames(c_filenames,
+     1                   numoffiles_ret,
+     1                   numoffiles,
+     1                   max_files,
+     1                   istatus)
 
             if(istatus .ne. 1 .or. numoffiles .eq. 0)then
                 write(6,*)' Error calling get_file_names'
