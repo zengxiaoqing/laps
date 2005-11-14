@@ -1245,7 +1245,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      Cloud Drift Winds (cdw):
            We are ingesting the ASCII satellite cloud-drift wind files
            for use in the wind analysis. These come from NESDIS (via NIMBUS)
-           as well as from CWB and AFWA.
+           as well as from CWB and AFWA. We can also utilize NetCDF files from
+           MADIS.
 
                ---  2.4  Running LAPS Analyses  ---
 
@@ -1954,19 +1955,21 @@ since 3 layers are routinely available from NESDIS.
    http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi to see an example of the 
    monitor output. Green means optimum product continuity, red means the 
    product is failing to generate, yellow means it is generating OK now but has
-   failed in the past.
+   failed in the past. The numbers in the columns indicate the number of files
+   in each directory, as well as the youngest and oldest file ages in hours.
+   The data flow is generally from top to bottom on the product list, starting
+   with analyses and ending with forecast model (fua/fsf) output being listed 
+   at the very bottom.
 
-   Check the log files in the 'log' directory for occurrences of the string
-   'error' and 'warning'. The errors are generally more significant. If any
-   core dumps occur they can usually be flagged by searching for the 'sh:'
-   string in 'sched.log.*'.
+   To check what model background and observational data was used in the 
+   analyses as well as some QC and error (verification) statistics, you can 
+   view the log file summaries in the files 
+   '$LAPS_DATA_ROOT/log/*.wgi.yydddhhmm'.   
 
-   To check what data got into the analyses as well as some QC and error
-   (verification) statistics, you can run a series of perl scripts located in
-   '$LAPSINSTALLROOT/etc'. This includes 'sfc.pl', 'wind.pl', 'temp.pl', 
-   'lq3driver.pl', and 'cloud.pl'. These scripts operate mainly by distilling 
-   other log file output. The output from these scripts is also stored in the 
-   files '$LAPS_DATA_ROOT/log/*.wgi.yydddhhmm'.   
+   For more details, check the log files in the '$LAPS_DATA_ROOT/log' directory 
+   for occurrences of the string 'error' and 'warning'. The errors are 
+   generally more significant. If any core dumps occur they can usually be 
+   flagged by searching for the 'sh:' string in 'sched.log.*'.
 
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
@@ -2643,6 +2646,7 @@ Author: Steve Albers (Steve.Albers@noaa.gov)
 <pre>
 Inputs:
 	GOES cloud drift winds in NESDIS (ASCII) format
+        MADIS NetCDF format
         AFWA & CWB formats are also allowed.
 
 Outputs: (Feeds wind.exe)
