@@ -49,11 +49,13 @@ MODULE wrf_netcdf
   PUBLIC get_wrfsi_map
   PUBLIC get_wrf2_map
   PUBLIC get_wrf2_timeinfo
+  PUBLIC get_wrf_misc
   PUBLIC get_wrf2_misc
   PUBLIC get_wrf_scalar
   PUBLIC get_wrf_1d
   PUBLIC get_wrfnc_2d
   PUBLIC get_wrfnc_3d
+  PUBLIC make_wrf_file_name
   PUBLIC make_wrf2_file_name
   PUBLIC wrfio_wait
 
@@ -325,10 +327,85 @@ END SUBROUTINE get_wrf2_timeinfo
     RETURN
   END SUBROUTINE get_wrf2_map
 
- 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE get_wrf_misc(cdfid, nzh, nzf, ptop, clwflag, iceflag, &
+                          graupelflag)
 
-    
-    
+    ! Subroutine to get a few key parameters from the WRF model for the
+    ! model post processor.
+
+    IMPLICIT NONE
+    include 'netcdf.inc'
+    INTEGER, INTENT(IN)                :: cdfid   ! netCDF file handle
+    INTEGER, INTENT(OUT)               :: nzh     ! number of half-levels
+    INTEGER, INTENT(OUT)               :: nzf     ! number of full-levels
+    REAL,    INTENT(OUT)               :: ptop    ! Top pressure in Pa
+    LOGICAL, INTENT(OUT)               :: clwflag ! Cloud liquid fields avail
+    LOGICAL, INTENT(OUT)               :: iceflag ! Ice species avail
+    LOGICAL, INTENT(OUT)               :: graupelflag  ! Grauple included
+
+    ! Local variables
+
+    INTEGER :: vid, rcode,mp_level
+    CHARACTER(LEN=132) :: dum
+
+    ! Get Ptop, which is not really needed for anything in the em version
+    vid = NCVID(cdfid, 'P_TOP', rcode)
+    rcode  = NF_GET_VAR_REAL(cdfid,vid,ptop)
+
+    ! Get the vertical dimensions
+    rcode = NF_GET_ATT_INT(cdfid, nf_global, 'BOTTOM-TOP_GRID_DIMENSION',nzh)
+    nzf = nzh + 1
+
+    ! Determine which microphysics package is used and set flags
+    ! accordingly
+
+    rcode = NF_GET_ATT_INT(cdfid, nf_global, 'MP_PHYSICS',mp_level)
+
+    SELECT CASE (mp_level)
+
+      CASE(0)  ! No microphysics
+        clwflag = .false.
+        iceflag = .false.
+        graupelflag = .false.
+
+      CASE(1) ! Kessler warm rain
+        clwflag = .true.
+        iceflag = .false.
+        graupelflag = .false.
+
+      CASE(2) ! Lin et al.
+        clwflag = .true.
+        iceflag = .true.
+        graupelflag = .true.
+
+      CASE(3)   ! NCEP 3-class
+        clwflag = .true.
+        iceflag = .true.
+        graupelflag = .false.
+      CASE(4)   ! NCEP 5-class
+        clwflag = .true.
+        iceflag = .true.
+        graupelflag = .false.
+
+      CASE(5)   ! Eta Ferrier 2-class
+        clwflag = .true.
+        iceflag = .false.
+        graupelflag = .false.
+
+      CASE DEFAULT
+        print *, 'WARNING:  Cannot determine microphysics option!'
+        print *, '          Assuming all species present.'
+        clwflag = .true.
+        iceflag = .true.
+        graupelflag = .true.
+
+    END SELECT
+
+    RETURN
+
+  END SUBROUTINE get_wrf_misc
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE get_wrf2_misc(cdfid, nzh, nzf, ptop, clwflag, iceflag, &
                           graupelflag)
@@ -820,7 +897,28 @@ END SUBROUTINE get_wrf2_timeinfo
 
     RETURN
   END SUBROUTINE get_wrfnc_2d
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE make_wrf_file_name(prddir,domnum,time_min,fname)
 
+! Creates the WRF output file name based on the working directory,
+! domain number, and number of minutes into simulation
+
+    IMPLICIT NONE
+
+    CHARACTER(LEN=*), INTENT(IN)               :: prddir
+    INTEGER, INTENT(IN)                        :: domnum
+    INTEGER, INTENT(IN)                        :: time_min
+    CHARACTER(LEN=255), INTENT(OUT)            :: fname
+
+    CHARACTER(LEN=2)                           :: domstr
+    CHARACTER(LEN=6)                           :: timestr
+
+    WRITE(domstr, '(I2.2)') domnum
+    WRITE(timestr, '(I6.6)') time_min
+
+    fname = TRIM(prddir) // '/wrfout_d' // domstr // '_' // timestr
+    RETURN
+  END SUBROUTINE make_wrf_file_name
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE make_wrf2_file_name(prddir,domnum,timestr,fname)
 
