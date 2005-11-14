@@ -21,6 +21,7 @@ SRC=ingest_cloud_drift.f  \
     cloud_drift_sub.f  \
     cloud_drift_sub_af.f \
     cloud_drift_sub_cwb_hdsw.f \
+    cloud_drift_sub_madis.f \
     cloud_drift_sub_cwb_satob.f 
 
 all: exe
