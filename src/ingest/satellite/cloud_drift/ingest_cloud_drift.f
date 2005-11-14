@@ -13,8 +13,10 @@
       parameter(max_files = 3000)
       character*255 c_fnames(max_files)
       integer i4times(max_files)
-
+ 
       character*9 a9_time, a10_to_a9
+      character*13 wfo13_time
+      character*9 wfo_fname13_to_fname9
       character*10 a10_time
 
 !     Output file
@@ -66,7 +68,9 @@
               c_filespec = dir_in(1:len_dir_in)//'/satob*.dat'
           elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then
               c_filespec = dir_in(1:len_dir_in)//'/hdsw*.dat'
-          else
+          elseif(cloud_drift_format(ipath) .eq. 'MADIS')then
+              c_filespec = dir_in(1:len_dir_in)//'*'
+          else 
               c_filespec = dir_in(1:len_dir_in)
           endif
 
@@ -147,8 +151,17 @@
                   call i4time_fname_lp(a9_time,i4times(i),istatus)
                   write(6,*)c_fnames(i)(1:len_fname),i4times(i)
               enddo ! i
-
-
+           elseif(cloud_drift_format(ipath) .eq. 'MADIS')then
+              i4_contains_early = 1800 
+              i4_contains_late =  1800
+!             Obtain file times from file names
+              do i = 1,i_nbr_files_ret
+                  call s_len(c_fnames(i),len_fname)
+                  wfo13_time=c_fnames(i)(len_fname-12:len_fname)
+                  a9_time = wfo_fname13_to_fname9(wfo13_time)
+                  call i4time_fname_lp(a9_time,i4times(i),istatus)
+                  write(6,*)c_fnames(i)(1:len_fname),i4times(i)
+              enddo ! i
           else
               write(6,*)' ERROR, unknown cloud_drift_format '
      1                 ,cloud_drift_format(ipath)
@@ -189,8 +202,8 @@
      1                                          ,NX_L,NY_L
      1                                          ,filename_in,istatus)
 
-                  elseif(cloud_drift_format(ipath) .eq. 'AFWA')then       
-                      call open_ext(lun_out,i4time_sys,ext(1:3),istatus)       
+                  elseif(cloud_drift_format(ipath) .eq. 'AFWA')then
+                      call open_ext(lun_out,i4time_sys,ext(1:3),istatus)
                       if(istatus .ne. 1)then
                           write(6,*)' Error opening output file ',ext
                           stop
@@ -205,12 +218,15 @@
      1                                          ,i4_window,NX_L,NY_L
      1                                          ,filename_in,istatus)
 
-                  elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then        
+                  elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then
                       call get_cloud_drift_cwb_hdsw(i4time_sys
      1                                          ,i4_window,NX_L,NY_L
      1                                          ,filename_in,istatus)
+                  elseif(cloud_drift_format(ipath) .eq. 'MADIS')then
+                     call get_cloud_drift_madis(i4time_sys,
+     +                  i4_window,filename_in,istatus)
                   else
-                      write(6,*)' ERROR, unknown cloud_drift_format '       
+                      write(6,*)' ERROR, unknown cloud_drift_format ' 
      1                          ,cloud_drift_format(ipath)
 
                   endif ! cloud_drift_format
