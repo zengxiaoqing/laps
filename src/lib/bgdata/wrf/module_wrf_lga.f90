@@ -86,7 +86,7 @@ CONTAINS
 
      IMPLICIT NONE
 
-     CHARACTER(LEN=*), INTENT(IN) :: wrffile
+     CHARACTER(LEN=255), INTENT(IN) :: wrffile
      CHARACTER(LEN=12), INTENT(IN) :: cmodel
      INTEGER, INTENT(IN)          :: i4time
      INTEGER                      :: i4reftime
