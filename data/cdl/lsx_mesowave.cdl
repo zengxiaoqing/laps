@@ -233,6 +233,20 @@ netcdf lsx {
             vis:lvl_coord="AGL";
             vis:LAPS_units="M";
 
+         //      cloud ceiling              //
+
+         float
+            cc(record,z,y,x);
+            cc:navigation_dim = "nav";
+            cc:record = "valtime, reftime";
+            cc:_FillValue = 1.e+37f;
+            cc:long_name="cloud ceiling";
+            cc:units="meters";
+            cc:valid_range= 0.f, 20000.f;
+            cc:LAPS_var="VIS";
+            cc:lvl_coord="AGL";
+            cc:LAPS_units="M";
+
         //      ground temperature
         float
             tgd(record,z,y,x);
@@ -276,6 +290,7 @@ netcdf lsx {
             spd_comment(record,z,namelen),
             css_comment(record,z,namelen),
             vis_comment(record,z,namelen),
+            cc_comment(record,z,namelen),
             fwx_comment(record,z,namelen),
             hi_comment(record,z,namelen),
             tgd_comment(record,z,namelen),
@@ -371,6 +386,10 @@ netcdf lsx {
         short
             vis_fcinv(record, z);
             vis_fcinv:_FillValue= 0s;
+              	
+        short
+            cc_fcinv(record, z);
+            cc_fcinv:_FillValue= 0s;
               	
         short
             fwx_fcinv(record, z);
