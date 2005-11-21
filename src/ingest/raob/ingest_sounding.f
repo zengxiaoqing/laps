@@ -6,6 +6,7 @@
        character*150 path_to_raw_raob,path_to_local_raob
        character*150 path_to_raw_drpsnd
        character*150 path_to_raw_satsnd
+       character*150 path_to_raw_poessnd
        character*200 path_to_raw_tower
        character*200 path_to_raw_radiometer
        character*8 c8_raob_format, c8_project
@@ -44,6 +45,7 @@
        call get_snd_parms(path_to_raw_raob,path_to_local_raob
      1                   ,path_to_raw_drpsnd
      1                   ,path_to_raw_satsnd
+     1                   ,path_to_raw_poessnd
      1                   ,path_to_raw_tower
      1                   ,path_to_raw_radiometer
      1                   ,istatus)       
@@ -118,11 +120,16 @@
  
 
 !      Satellite soundings -- added goes (7/26/04 db)
+
        write(6,*)
        if(c8_project .eq. 'AFWA')then
-           write(6,*)' Call ingest_satsnd...'
-           call ingest_satsnd(path_to_raw_satsnd)
+           write(6,*)' Call ingest_satsnd for AFWA...'
+           call ingest_satsnd(path_to_raw_satsnd,c8_project,lun_out)
        else
+           write(6,*)' Call ingest_satsnd for POES...'
+           call ingest_satsnd(path_to_raw_poessnd,c8_project,lun_out)
+
+           write(6,*)
            write(6,*)' Call ingest_goessnd...'
            call ingest_goessnd (path_to_raw_satsnd, i4time_sys, 
      1                          lun_out, istatus)
@@ -158,6 +165,7 @@
        subroutine get_snd_parms(path_to_raw_raob,path_to_local_raob
      1                         ,path_to_raw_drpsnd
      1                         ,path_to_raw_satsnd
+     1                         ,path_to_raw_poessnd
      1                         ,path_to_raw_tower
      1                         ,path_to_raw_radiometer
      1                         ,istatus)
@@ -165,12 +173,14 @@
        character*150 path_to_raw_raob,path_to_local_raob
      1              ,path_to_raw_drpsnd
      1              ,path_to_raw_satsnd
+     1              ,path_to_raw_poessnd
      1              ,path_to_raw_radiometer
 
        character*200 path_to_raw_tower
 
        namelist /snd_nl/ path_to_raw_raob,path_to_local_raob
-     1                  ,path_to_raw_satsnd,path_to_raw_tower
+     1                  ,path_to_raw_satsnd
+     1                  ,path_to_raw_poessnd,path_to_raw_tower
      1                  ,path_to_raw_drpsnd,path_to_raw_radiometer       
  
        character*150 static_dir,filename
