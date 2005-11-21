@@ -1,5 +1,5 @@
 
-      subroutine ingest_satsnd(path_to_raw_satsnd)
+      subroutine ingest_satsnd(path_to_raw_satsnd,c8_project,lun_out)
 
 !     Steve Albers      May-1999       Original Version
 
@@ -18,6 +18,7 @@
       character*31    ext
 
       character*(*) path_to_raw_satsnd
+      character*8 c8_project
 
       call get_systime(i4time_sys,a9_time,istatus)
       if(istatus .ne. 1)go to 999
@@ -37,7 +38,15 @@
       ext_in = 'satsnd'
 
       call s_len(dir_in,len_dir_in)
-      c_filespec = dir_in(1:len_dir_in)//'/'//'*00.'//ext_in
+      if(c8_project .eq. 'AFWA')then
+          c_filespec = dir_in(1:len_dir_in)//'/'//'*00.'//ext_in
+          i4_contains_early = 0
+          i4_contains_late  = 0
+      else ! MADIS POES
+          c_filespec = dir_in(1:len_dir_in)//'/'//'*00'
+          i4_contains_early = 0
+          i4_contains_late  = 3600
+      endif
 
 !     Get list of files
       call get_file_times(c_filespec,max_files,c_fnames
@@ -46,8 +55,7 @@
       call get_tempob_time_window('SATSND',i4_satsnd_window,istatus)
       if(istatus .ne. 1)return
 
-      lun_in = 21
-      lun_out = 11
+      lun_in = 22
 
 !     Open output SND file for appending
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
@@ -67,8 +75,11 @@
 
 !         Test whether we want the NetCDF file for this time
           i4time_file_earliest = i4time_sys - i4_satsnd_window
+     1                                      - i4_contains_late     
      1                                      - lag_time_report
+
           i4time_file_latest =   i4time_sys + i4_satsnd_window
+     1                                      + i4_contains_early     
           
           if(i4times(i) .lt. i4time_file_earliest)then
               write(6,*)' File is too early ',a9_time,i
@@ -80,13 +91,24 @@
 
 !             Read from the SATSND file 
 !             Write to the opened SND file
-              call get_satsnd_afwa(i4time_sys,i4_satsnd_window
-     1                            ,NX_L,NY_L
-     1                            ,lun_in,filename_in,lun_out,istatus)       
+              if(c8_project .eq. 'AFWA')then
+                  call get_satsnd_afwa(i4time_sys,i4_satsnd_window
+     1                                ,NX_L,NY_L,lun_in,filename_in
+     1                                ,lun_out,istatus)       
+              else
+                  call get_poes_data
+     +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L
+     +                   ,i4time_earliest,i4time_latest
+     +                   ,filename_in
+     +                   ,lun_out
+     +                   ,istatus)
+              endif
           endif
       enddo
 
- 990  close(lun_out) ! Output SND file
+ 990  continue
+
+!     close(lun_out) ! Output SND file
 
  999  continue
 
