@@ -40,6 +40,7 @@ $filename = "$request_root/lapsplot/selected.in";
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
 close FILE;
+#print "lines in selected.in = @lines<br>";
 my $default_domain = @lines[0];
 chomp $default_domain;
 
@@ -47,7 +48,7 @@ chomp $default_domain;
 my $DomainDir;
 $DomainDir = "$web_root/domains";
 my $laps_data_root;
-$laps_data_root = "$DomainDir/$default_domain/data";
+$laps_data_root = "$DomainDir/$default_domain/private_data";
 #print "laps_data_root = $laps_data_root<br>";
 
 #print " test output: Start of laps.cgi \n"; 
@@ -274,7 +275,7 @@ EOF
   foreach $file (@domainlist) {
 
     if($file ne "anal2d" && $file ne "fcst2d" && $file ne "t2" && $file ne "." && $file ne ".."){
-      if(-e "$DomainDir/$file/data/lapsprd"){
+      if(-e "$DomainDir/$file/private_data/lapsprd"){
         if($file eq $default_domain ) { print "<option selected>$file\n"; } 
         else               { print "<option>$file\n"; } 
       }
@@ -353,6 +354,7 @@ print <<"EOF";
 <option $selected{'OMEGA'}> OMEGA
 <option $selected{'C_OMEGA'}> C_OMEGA
 <option $selected{'MCONV'}> MCONV
+<option $selected{'P_PRIME'}> P_PRIME
 <option $selected{'THETAE'}> THETAE
 <option $selected{'CAPE'}> CAPE
 <option $selected{'CIN'}> CIN
@@ -373,7 +375,7 @@ print <<"EOF";
 <option $selected{'VIS_ALB'}> VIS_ALB
 <option $selected{'REFLCT'}>  REFLCT
 <option $selected{'REF_MAX'}> REF_MAX
-<option $selected{'PCP_1HR'}> PCP_1HR
+<option $selected{'PCP_INC'}> PCP_INC
 <option $selected{'PCP_STO'}> PCP_STO
 <option $selected{'PRCP_H2O'}> PRCP_H2O
 <option $selected{'SNOW_1HR'}> SNOW_1HR
@@ -403,6 +405,7 @@ print <<"EOF";
 <option $selected{'msl_p'}> msl_p
 <option $selected{'red_p'}> red_p
 <option $selected{'stn_p'}> stn_p
+<option $selected{'p_prime'}> p_prime
 <option $selected{'theta'}> theta
 <option $selected{'thetae'}> thetae
 <option $selected{'cape'}> cape
@@ -426,8 +429,11 @@ print <<"EOF";
 <option $selected{'vis_alb'}> vis_alb
 <option $selected{'reflct'}> reflct
 <option $selected{'ref_max'}> ref_max
+<option $selected{'pcp_cnc'}> pcp_cnc
+<option $selected{'pcp_rai'}> pcp_rai
+<option $selected{'pcp_sno'}> pcp_sno
 <option $selected{'pcp_typ'}> pcp_typ
-<option $selected{'pcp_1hr'}> pcp_1hr
+<option $selected{'pcp_inc'}> pcp_inc
 <option $selected{'pcp_sto'}> pcp_sto
 <option $selected{'prcp_h2o'}> prcp_h2o
 <option $selected{'snow_1hr'}> snow_1hr
