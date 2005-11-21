@@ -252,7 +252,7 @@ SUBROUTINE LAPSOBSV(m)
   CHARACTER :: amt(m,5)*4	! cloud amount
 
   INTEGER :: nog,nob		! Number obs over grid/box
-  INTEGER :: wid		! WMO id
+  INTEGER :: wid(m)		! WMO id
   INTEGER*4 :: otm(m)		! Observation time
   INTEGER*4 :: cld(m)		! Number of cloud layers
 
