@@ -30,6 +30,7 @@ SRC=ingest_sounding.f \
     avapsread_sub.f \
     ingest_goessnd.f \
     process_goes_snd.f \
+    get_poes_data.f \
     ingest_satsnd.f \
     ingest_satsnd_af.f \
     tower_driver.f \
