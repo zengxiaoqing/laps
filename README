@@ -32,7 +32,7 @@
          2.3.1 ..................  Model Background (lga/lgb)
          2.3.2 ..................  Radar ingest
          2.3.3 ..................  Surface Data
-         2.3.4 ..................  Profiler / RASS
+         2.3.4 ..................  Wind Profiler / RASS
          2.3.5 ..................  PIREPS & ACARS from aircraft
          2.3.6 ..................  RAOB / Dropsonde / Radiometer
          2.3.7 ..................  Satellite
@@ -1096,7 +1096,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            This data, in 'WFO/AWIPS' NetCDF format, is distributed via GSD's
            MADIS project at http://www-sdd.fsl.noaa.gov/MADIS/
       
-                      ----   2.3.4  Profiler / RASS ---
+                      ----   2.3.4  Wind Profiler / RASS ---
 
      Profilers/RASS (pro/lrs) - The raw data are obtained from GSD's NIMBUS 
            database and/or AWIPS in NetCDF format where they are stored in 
@@ -1136,9 +1136,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
              ingest code would need modification to process it.
 </pre>                 
 
-           The profiler data is also available via another route from GSD with
-           some restrictions. This data, in 'WFO/AWIPS' NetCDF format, is 
-           distributed via GSD's MADIS project at 
+           The NPN wind profiler data is also available via another route from 
+           GSD with some restrictions. This data, in 'WFO/AWIPS' NetCDF format,
+           is distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/
 
 
