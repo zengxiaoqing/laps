@@ -51,6 +51,11 @@ then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=1056x885
 
+elif test "$2" = "wide"
+then
+    WINDOW=0.0:0.08:1.0:0.92
+    RESOLUTION=1056x885
+
 elif test "$2" = "f3"
 then
     WINDOW=0.0:0.08:1.0:0.92
