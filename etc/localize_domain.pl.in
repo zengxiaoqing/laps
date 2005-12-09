@@ -240,7 +240,7 @@ if($WHICH_TYPE eq "wrfsi"){
 opendir(CDL_DIR,"$DATA_ROOT/cdl");
 my @cdl_list = grep /\.cdl$/, readdir CDL_DIR;
 closedir CDL_DIR;
-sort @cdl_list;
+@cdl_list = sort @cdl_list;
 
 foreach(@cdl_list){
 
