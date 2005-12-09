@@ -14,7 +14,7 @@ my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
                         'dataroot=s',      \$DATA_ROOT,
                         'beg_time=s',      \$beg_time,
                         'end_time=s',      \$end_time,
-                        'run_sched',       \$runsched,
+                        'run_sched=s',     \$runsched,
                         'laps_driver=s',   \$lapsdriver,
                         'wideband_2_nc=s', \$wideband_2_netcdf,
 			'linktmpdirs',     \$link_tmp_dirs,
@@ -27,7 +27,7 @@ my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
 #install_root:    install root for laps binaries.
 #data_root:       dataroot for post analysis runs output.
 #laps_driver:     run the laps_driver modules (lvd, vrc, lsr, remap, ln3, or all).
-#run_sched:       run LAPS sched.pl
+#run_sched:       run LAPS sched.pl: Add in dbl quotes command line variables for sched.
 #laps_driver:     activate data ingest via laps_driver.pl routine (satellite, radar, remap)
 #wideband_2_nc:   activate radar netcdf format generator
 #link_tmp_dirs:  call tmplink module to softlink appropriate raw data directories to
@@ -44,7 +44,8 @@ sub help_sub
     print "-end_time:        Ending    time of analysis period: [dd-mmm-yyyy-hhmm] \n";
     print "-install_root:    Installroot for LAPS binaries\n";
     print "-dataroot:        Dataroot [output] for analysis products\n";
-    print "-run_sched:       If defined, then run sched.pl\n";
+    print "-run_sched:       If defined, then run sched.pl. Add in dbl quotes any additional command\n";
+    print "                  line entries desired for sched.pl\n";
     print "-laps_driver:     Used to run lvd, vrc, lsr, ln3, remap or all\n";
     print "                  Enter (lvd, vrc, lsr, ln3, remap, or all) depending on your needs.\n";
     print "                  You will get the intermediate ingest files between each cycle.\n";
@@ -425,7 +426,7 @@ while ($i4time70<=$i4time70_end)
      {
         $time_of_run = `date`;
         print "\n Start Sched: $time_of_run \n";
-        $command="@PERL@ $INSTALL_ROOT/etc/sched.pl -A $dy-$mon-$year-$hr$mn $INSTALL_ROOT $DATA_ROOT";
+        $command="@PERL@ $INSTALL_ROOT/etc/sched.pl -A $dy-$mon-$year-$hr$mn $runsched $INSTALL_ROOT $DATA_ROOT";
         run_sys::run_sys($command);
      }
 
