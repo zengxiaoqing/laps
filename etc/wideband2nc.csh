@@ -10,6 +10,8 @@ setenv MODETIME $5
 setenv SUFFIX "_elev01"
 
 echo "Start wideband2nc.csh..."
+
+setenv TZ GMT
 date
 
 #Only needed for archive cases possibly
@@ -70,8 +72,8 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 # rm -f $OUTPUTROOT/$RADAR/netcdf/.tmp/*
 
 # Log Directories
-  mkdir -p $INSTALLROOT/$RADAR
-  mkdir -p $INSTALLROOT/$RADAR/log
+# mkdir -p $INSTALLROOT/$RADAR
+# mkdir -p $INSTALLROOT/$RADAR/log
 
   echo " "
   echo "Look for logs in $OUTPUTROOT/$RADAR/log..."
