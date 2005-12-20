@@ -200,5 +200,8 @@ cd    $WWW_DIR/anal2d/loop/$prod
 if test -r $WWW_DIR/../../looper/files.cgi; then
      rm -f files.cgi
      ln -s $WWW_DIR/../../looper/files.cgi files.cgi
+else # this can be modified for your own server location
+     rm -f files.cgi
+     ln -s /w3/lapb/domains/$DOMAIN_SUFFIX/../../looper/files.cgi files.cgi
 fi
 
