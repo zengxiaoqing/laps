@@ -1118,29 +1118,33 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
            To summarize...
 <pre>
-            Network        Database(s)       file   frequency     cdl(s)
-            -------        -----------       ----   ---------  -----------
-           NPN wind        NIMBUS/AWIPS      PRO     404 MHz     wpdn60.cdl
-                                                                 wpdn06.cdl
+           Network      Database(s)          file   frequency     cdl(s)
+           -------      -----------          ----   ---------  -----------
+           NPN wind     NIMBUS/AWIPS/MADIS/  PRO     404 MHz     wpdn60.cdl
+                        FTP                                      wpdn06.cdl
 
-           NPN RASS        NIMBUS            LRS                 rass60.cdl
+           NPN RASS     NIMBUS/FTP           LRS                 rass60.cdl
                                                                  rass06.cdl
 
-           BLP wind        NIMBUS/internet   PRO     915 MHz     wpdn60.cdl
+           BLP wind     NIMBUS/FTP           PRO     915 MHz     wpdn60.cdl
                                                                  wpdn30.cdl*
 
-           BLP RASS        NIMBUS/internet   LRS                 rass60.cdl
+           BLP RASS     NIMBUS/FTP           LRS                 rass60.cdl
                                                                  rass30.cdl*
 
            * Indicates that this data with this cdl is available, but our
              ingest code would need modification to process it.
 </pre>                 
 
-           The NPN wind profiler data is also available via another route from 
+           The NPN wind profiler data is available via another route from 
            GSD with some restrictions. This data, in 'WFO/AWIPS' NetCDF format,
            is distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/
 
+           Another method to obtain NPN wind and RASS files is from the FTP
+           server mentioned above, more specifically at this location...
+           ftp://oak.fsl.noaa.gov/outgoing/npn/ 
+           
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
@@ -1932,7 +1936,7 @@ since 3 layers are routinely available from NESDIS.
    http://laps.fsl.noaa.gov/software/release_notes.html URL.
 
    If you don't find the answer in these documents, send mail to 
-   oplapb@fsl.noaa.gov   Include in your mail:
+   oplapb.gsd@noaa.gov   Include in your mail:
 <pre>
    LAPS version number (hopefully you're using the latest version?)
    The type of system (often, uname -a)
@@ -1940,7 +1944,7 @@ since 3 layers are routinely available from NESDIS.
    The applicable compiler versions (often a -v or -V option to the compiler)
    The entire output of configure 
    The entire output of make (standard output + error output)
-   The entire output of localize_domain.pl (found in $LAPS_DATA_ROOT/log/localize_domain.log)
+   The entire output of localize_domain.pl (found in $LAPS_DATA_ROOT/log/localize_domain.log*)
 </pre>
 
                    ----  2.13.1 Runtime Monitoring ---
