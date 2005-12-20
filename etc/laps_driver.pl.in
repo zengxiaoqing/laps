@@ -73,8 +73,11 @@ $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 
+my $exedir = "bin";
+
 if($exe eq "wideband2nc.csh"){ # command line args for realtime runs
-    $args = "$LAPS_DATA_ROOT no no $LAPSROOT realtime"
+    $args = "$LAPS_DATA_ROOT no yes $LAPSROOT realtime";
+    $exedir = "etc";
 }
 
 if($opt_e){
@@ -95,8 +98,8 @@ if(($fxa_sys!=0)and(! $opt_l)){
 #
 # Make sure the requested program exists
 #
-unless(-x "$LAPSROOT/bin/$exe"){
-    die "Program $LAPSROOT/bin/$exe not found or not executable";
+unless(-x "$LAPSROOT/$exedir/$exe"){
+    die "Program $LAPSROOT/$exedir/$exe not found or not executable";
 }
 
 #
@@ -231,7 +234,7 @@ if($opt_q || $opt_Q){
 
     print " Adding to $LAPS_LOG_PATH/run_qsub_$exe.sh with executable/nodes $exe $opt_q\n";
     print TFILE "  \n";
-    print TFILE "$LAPSROOT/bin/$exe $args 1> $LAPS_LOG_PATH/$log 2>&1\n";
+    print TFILE "$LAPSROOT/$exedir/$exe $args 1> $LAPS_LOG_PATH/$log 2>&1\n";
 
     print TFILE "  \n";
     print $t." Closing $LAPS_LOG_PATH/run_qsub_$exe.sh with executable $exe\n";
@@ -247,7 +250,7 @@ if($opt_q || $opt_Q){
     system("$command");
 
 }else{
-    my $sys = "$LAPSROOT/bin/$exe $args";
+    my $sys = "$LAPSROOT/$exedir/$exe $args";
 #   system($sys);
 #   unlink "$lockfile";
     &forksub($sys,$lockfile);
