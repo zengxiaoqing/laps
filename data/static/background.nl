@@ -61,12 +61,9 @@ c                             or AVN_FSL_NETCDF)(only AVN_FSL_NETCDF tested)
 c        bgmodels = 7 ----> ETA48_GRIB                           (not tested)
 c        bgmodels = 8 ----> NOGAPS_AFWA_DEGRID                   (not tested)
 c        bgmodels = 9 ----> NWS_CONUS                            (obsolete!)
-c        bgmodels = 10 ---> GFSISO or RUCISO.  This lets us ingest
+c        bgmodels = 10 ---> GFS_ISO or RUC_ISO.  This lets us ingest
 c                     netCDF files created from GFS or RUC GRIB data run through
-c                     Unidatas gribtonc decoders.  The tar file includes a a bug
-c                     fix to lib/gridconv.f to handle the global 1x1 degree GFS
-c                     data for domains that span the prime meridian.  
-c
+c                     Unidatas gribtonc decoders.
 c        bgmodels = 11 --->  WRFARW.  This allows raw netcdf output files from
 c                     WRF-ARW v2.1 and create the required lga/lgb files.
 c                     Does not time interpolation yet, though, so if you don't
@@ -74,6 +71,7 @@ c                     have a raw WRF file with an exact match of the lga backgro
 c                     time needed, it returns to the main lga program with a 0
 c                     status to force lga to look for the next bgmodel source in your
 c                     background.nl list. 
+c -------------------------------------------------------------------------------------
 c
 c forecast_length = the length in hrs of the oldest forecast allowed (to be processed by lga)
 c                   as a background in laps
