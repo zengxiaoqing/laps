@@ -50,7 +50,7 @@ debug: $(SRC)
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 	( cd wrf; $(MAKE) debug; $(MAKE) cleanup )
 
-install: lib
+install: all
 
 cleanup:
 	rm -f *.o *.mod
