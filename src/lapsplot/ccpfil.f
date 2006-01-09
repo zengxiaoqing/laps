@@ -316,9 +316,10 @@ c     Call local colorbar routine
       REAL ZREG(MREG,NREG),RWRK(LRWK), XWRK(NWRK), YWRK(NWRK)
       INTEGER MREG,NREG,IWRK(LIWK)
       INTEGER MAP(LMAP),IAREA(NOGRPS),IGRP(NOGRPS)
+      INTEGER COLIA(MREG,NREG)
       character*(*) colortable
       character*5 c5_sect
-      logical log_scaling, l_discrete, l_set_contours
+      logical log_scaling, l_discrete, l_set_contours, l_raster
 
       integer maxvals
       parameter (maxvals=100)
@@ -327,6 +328,7 @@ c     Call local colorbar routine
       
       EXTERNAL FILL
 
+      l_raster = .true.
 C      
 C Set up color table
       write(6,*)' ccpfil_sub - scale,scale_loc = ',scale,scale_loc
@@ -397,16 +399,36 @@ C
 
       call cpsetr ('SPV',r_missing_data)
 
-      CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
+!     if(.not. l_raster .and. NREG .lt. 500)then
+      if(.true.)then
+          CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      
 C Add contours to area map
 C      
-      CALL CPCLAM(ZREG, RWRK, IWRK, MAP)
+          CALL CPCLAM(ZREG, RWRK, IWRK, MAP)
 C      
 C Set fill style to solid, and fill contours
 C      
-      CALL GSFAIS(1)
-      CALL ARSCAM(MAP, XWRK, YWRK, NWRK, IAREA, IGRP, NOGRPS, FILL)
+          CALL GSFAIS(1)
+          CALL ARSCAM(MAP, XWRK, YWRK, NWRK, IAREA, IGRP, NOGRPS, FILL)       
+
+      else
+          cmn = (0.0           ) * abs(scale_loc) + 2.0*cis
+          cmx = (1.0+col_offset) * abs(scale_loc) + 2.0*cis       
+          crange = cmx-cmn
+          do m = 1,MREG
+          do n = 1,NREG
+              COLIA(m,n) = nint( (ZREG(m,n)-cmn)/cis )       
+     1                   + 2
+          enddo ! n
+          enddo ! m
+
+          write(6,*)' Calling GCA for Raster Fill Experiment'
+          call get_border(MREG,NREG,x_1,x_2,y_1,y_2)
+          CALL GCA (x_1, y_1, x_2, y_2, MREG, NREG, 1,  1,
+     1              MREG, NREG, COLIA)
+
+      endif
 C      
 C Draw Perimeter
 C      
