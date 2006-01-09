@@ -4661,7 +4661,7 @@ c                   cint = -1.
                 range = ((pres_high_pa - pres_low_pa) / scale) 
      1                                    / (sqrt(zoom) * density)
 
-                if(range .gt. 30.)then
+                if(range .gt. 35.)then
                     cint = 4.
                 elseif(range .gt. 8.)then
                     cint = 2.
