@@ -111,10 +111,10 @@ C
      +     staLon(recNum), staPress(recNum), temperature( maxLevels,
      +     recNum), zenithAngle(recNum)
       double precision validTime(recNum)
-      character temperatureDD( maxLevels, recNum)
-      character*7 staName(recNum)
-      character*8 staticIds(maxStaticIds)
       character mixingRatioDD( maxLevels, recNum)
+      character*7 staName(recNum)
+      character temperatureDD( maxLevels, recNum)
+      character*8 staticIds(maxStaticIds)
 
 !     Declarations for 'write_snd' call
       integer iwmostanum(recNum)
@@ -188,9 +188,10 @@ C
 
           dewpoint_c = r_missing_data
           do ilvl = 1,maxLevels
-              if(mixingRatio(iob,ilvl) .gt. 0.)then
+              if(        mixingRatio(ilvl,iob) .gt. 0.
+     1             .and. mixingRatio(ilvl,iob) .le. 1.)then
                   dewpoint_c(ilvl) =
-     1              tmr(mixingRatio(iob,ilvl)*1000.,pressure_mb(ilvl))
+     1              tmr(mixingRatio(ilvl,iob)*1000.,pressure_mb(ilvl))
               endif
           enddo
 
@@ -273,10 +274,10 @@ C
      +     staLon(recNum), staPress(recNum), temperature( maxLevels,
      +     recNum), zenithAngle(recNum)
       double precision validTime(recNum)
-      character temperatureDD( maxLevels, recNum)
-      character*7 staName(recNum)
-      character*8 staticIds(maxStaticIds)
       character mixingRatioDD( maxLevels, recNum)
+      character*7 staName(recNum)
+      character temperatureDD( maxLevels, recNum)
+      character*8 staticIds(maxStaticIds)
 
 
 C   Variables of type REAL
