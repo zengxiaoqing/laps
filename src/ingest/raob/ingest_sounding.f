@@ -124,10 +124,12 @@
        write(6,*)
        if(c8_project .eq. 'AFWA')then
            write(6,*)' Call ingest_satsnd for AFWA...'
-           call ingest_satsnd(path_to_raw_satsnd,c8_project,lun_out)
+           call ingest_satsnd(path_to_raw_satsnd,c8_project
+     1                       ,i4time_sys,lun_out)
        else
            write(6,*)' Call ingest_satsnd for POES...'
-           call ingest_satsnd(path_to_raw_poessnd,c8_project,lun_out)
+           call ingest_satsnd(path_to_raw_poessnd,c8_project
+     1                       ,i4time_sys,lun_out)
 
            write(6,*)
            write(6,*)' Call ingest_goessnd...'
