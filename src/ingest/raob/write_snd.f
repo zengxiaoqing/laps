@@ -26,6 +26,8 @@
       character c5_staid(maxsnd)*5,a9time_ob(maxsnd,maxlvl)*9
      1         ,c8_obstype(maxsnd)*8,c_line*200
 
+      character*9 a9_time
+
       character*5 c5_sta
 
       real height_m(maxsnd,maxlvl)
@@ -37,7 +39,37 @@
 
 !............................................................................
 
+!     Get RAOB Time Window
+      call get_windob_time_window('RAOB',i4_wind_ob,istatus)
+      if(istatus .ne. 1)goto 990
+
+      call get_tempob_time_window('RAOB',i4_temp_ob,istatus)
+      if(istatus .ne. 1)goto 990
+
+      i4_raob_window = max(i4_wind_ob,i4_temp_ob)
+
+!     Get systime
+      call GETENV('LAPS_A9TIME',a9_time)
+      call s_len(a9_time,ilen)
+
+      if(ilen .eq. 9)then
+!       write(6,*)' systime (from env) = ',a9_time
+        call i4time_fname_lp(a9_time,i4time_sys,istatus)
+      else
+        call get_systime(i4time_sys,a9_time,istatus)
+        if(istatus .ne. 1)go to 990
+!       write(6,*)' systime = ',a9_time
+      endif
+
       do isnd = 1,nsnd
+
+!       Reject observation times outside time window        
+        call i4time_fname_lp(a9time_ob(isnd,1),i4time_raob,status)
+        if(abs(i4time_raob - i4time_sys) .gt. i4_raob_window)then
+            write(6,*)a9time_ob(isnd,1),
+     1                ' is outside time window with sounding #',isnd
+            goto 900
+        endif
 
         call s_len(c5_staid(isnd),len_sta)
         if(len_sta .gt. 0)then
@@ -88,6 +120,9 @@
           endif
 
         enddo ! lvl
+
+ 900    continue
+
       enddo ! isnd
 
       go to 999
