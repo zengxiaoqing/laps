@@ -83,6 +83,12 @@ cdis
            stop
         endif
 
+        call get_standard_longitude(standard_longitude,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting value of standard_longitude'
+           stop
+        endif
+
         call get_maxstns(maxstns,istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error getting value of maxstns'
