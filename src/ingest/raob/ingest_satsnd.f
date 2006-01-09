@@ -1,5 +1,6 @@
 
-      subroutine ingest_satsnd(path_to_raw_satsnd,c8_project,lun_out)
+      subroutine ingest_satsnd(path_to_raw_satsnd,c8_project
+     1                        ,i4time_sys,lun_out)
 
 !     Steve Albers      May-1999       Original Version
 
@@ -20,9 +21,6 @@
       character*(*) path_to_raw_satsnd
       character*8 c8_project
 
-      call get_systime(i4time_sys,a9_time,istatus)
-      if(istatus .ne. 1)go to 999
-
 !     i4time = (i4time/3600) * 3600
 
       call get_grid_dim_xy(NX_L,NY_L,istatus)
@@ -30,8 +28,6 @@
           write (6,*) 'Error getting horizontal domain dimensions'
           go to 999
       endif
- 
-      lag_time_report = 3600
 
       dir_in = path_to_raw_satsnd
 
@@ -42,10 +38,12 @@
           c_filespec = dir_in(1:len_dir_in)//'/'//'*00.'//ext_in
           i4_contains_early = 0
           i4_contains_late  = 0
+          lag_time_report = 3600
       else ! MADIS POES
           c_filespec = dir_in(1:len_dir_in)//'/'//'*00'
           i4_contains_early = 0
           i4_contains_late  = 3600
+          lag_time_report = 0 ! Pretty much an obsolete variable?
       endif
 
 !     Get list of files
