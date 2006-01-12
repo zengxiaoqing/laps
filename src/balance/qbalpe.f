@@ -44,6 +44,7 @@ c
      .      ,lat(nx,ny),lon(nx,ny),ter(nx,ny)
      .      ,phi(nx,ny,nz),t(nx,ny,nz)
      .      ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
+     .      ,db(nx,ny,nz)
 c    .      ,phib(nx,ny,nz),tb(nx,ny,nz)
 c    .      ,ub(nx,ny,nz),vb(nx,ny,nz),shb(nx,ny,nz)
 c    .      ,phibs(nx,ny,nz),tbs(nx,ny,nz)
@@ -81,6 +82,13 @@ c    .      ,wb(nx,ny,nz)
      .      ,u_grid,v_grid
      .      ,u_true,v_true
      .      ,dpp
+     .      ,dpht     ! drop height (m)
+     .      ,distnf   ! no fly radius around drop zone (m)
+     .      ,errwnds
+     .      ,errdds
+     .      ,errmod
+     .      ,o
+
 
       real*4 g,sumdt,omsubs,sk,bnd,ff,fo,err,rog,rod
      .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl
@@ -89,6 +97,7 @@ c    .      ,wb(nx,ny,nz)
 
       real*4 smsng,rdum,dd,ddmin,cx,cy
       real*4 rstats(7)
+      real*4 phi3dvar(nz)
 
 c made 2d 2-20-01 JS.
       real*4  tau(nx,ny)
@@ -103,6 +112,7 @@ c
      .         ,i4time_airdrop
      .         ,i,j,k,kk,l,ll,istatus
      .         ,ii,jj,iii,icount
+     .         ,io,jo
 
       integer   itstatus
       integer   init_timer
@@ -154,6 +164,7 @@ c
          stop
       endif
       print*,'lrotate = ',lrotate
+      call downcase(cpads_type,cpads_type)
 c
 c switch to run balance package or not
 c
@@ -490,8 +501,10 @@ c     delo is scaled as 10% of expected eqn of motion residual ro*U**2/L
       if(rog.gt.1.) rog=1.
       if(rod.gt.1.) rod=1.
       delo=100.*sl**2/sumv2**2/rod**2           
-c if this is for airdrop there is no need to run the balance package, only 
+c
+c if this is for AIRDROP there is no need to run the balance package, only 
 c continuity. set delo=0. In balcon this will skip the balance sequence.
+c
       if(c8_project .eq. 'AIRDROP') delo=0.
 c
 c print these arrays now.
@@ -800,6 +813,7 @@ c
             n_snd=1
          else
             nsnd=max_pr
+            n_snd=4
          endif
 
          allocate(udrop(nsnd,nz),udropc(nz)
@@ -820,6 +834,42 @@ c
             call readprg(a9_time,nx,ny,nz,nsnd
      1,udrop,vdrop,tdrop,rri,rrj,rrk,rrit,rrjt,rrkt,n_snd,istatus)
 
+         elseif(cpads_type.eq.'pln')then
+
+            print*,'*********************************************'
+            print*,'LAPS PLANNING run for PADS Airdrop mission'
+            print*,'*********************************************'
+            print*
+c
+c calculate background density array and convert t to potential temperature
+c
+            io=nx/2+1
+            jo=ny/2+1
+
+            do k=1,nz
+            phi3dvar(k)=phi(io,jo,k)
+            do j=1,ny
+            do i=1,nx
+               db(i,j,k)=p(k)/287.04/tb(i,j,k)/(p(k)/100000.)**(2./7.)
+                t(i,j,k)=o(t(i,j,k)-273.15,p(k)/100.)
+            enddo
+            enddo
+            enddo
+            dt=300        ! operational dropsonde time cycle in sec
+            dpht=5000     ! drop height (m)
+            distnf= 2000. ! no fly radius around drop zone (m)
+            errwnds=1.
+            errdds=.1
+            errmod=3.
+c -------------------------------------------------------------------------
+CC #### PADS Planning tool variance estimator ####
+c -------------------------------------------
+            call var3d (ub,vb,db,tb,smsng,grid_spacing_cen_m
+     &,dt,dpht,distnf,p,phi3dvar,errwnds,errdds,errmod,io,jo
+     &,nx,ny,nz,lat,lon,ter,a9_time_airdrop)
+
+            goto 998
+
          else
 
             print*,'********************************************'
@@ -831,7 +881,7 @@ c
          endif
 
          if(istatus.eq.-3)then
-         print*,'Failure status: ',cpads_type,' istatus=',istatus
+         print*,'Warning status: ',cpads_type,' istatus=',istatus
             print*,'Dropsonde data not available; using default '
      1    ,'dropsonde (profile in center of grid)'
             go to 99
@@ -1030,7 +1080,7 @@ c    1 nx,ny,nz,rri,rrj,zter,alt)
 
       endif
 
-      deallocate(lapsrh)
+ 998  deallocate(lapsrh)
 
  999  return
       end
