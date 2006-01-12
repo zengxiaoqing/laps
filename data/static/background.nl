@@ -1,6 +1,6 @@
  &background_nl
  bgpaths='/public/data/grids/ruc/hyb_A236/netcdf',
-'/public/data/grids/eta/48km_nat_isobaric/netcdf',
+'/public/data/grids/nam/conus211/netcdf',
 '',
  bgmodels=5,2,0,
  forecast_length=12,
