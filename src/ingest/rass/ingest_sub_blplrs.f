@@ -226,12 +226,15 @@ C
 C 	read global attribute avgTimePeriod from input file and set lag_time
         call prof_i4_avg_wdw(i4_avg_wdw_sec,cdfid,istatus)
         if(istatus .eq. 1)then
-            lag_time = i4_avg_wdw_sec/2
+            write(6,*)' i4_avg_wdw_sec from file = ',i4_avg_wdw_sec
         else
+            i4_avg_wdw_sec = 3600
             write(6,*)' ingest_sub_blplrs: '
-     1               ,'Error obtaining i4_avg_wdw_sec'
-            return
+     1               ,'Warning: could not obtain i4_avg_wdw_sec'
+            write(6,*)' Assuming i4_avg_wdw_sec = ',i4_avg_wdw_sec
         endif
+
+        lag_time = i4_avg_wdw_sec/2
 C
 C       Open an output file.
 C
