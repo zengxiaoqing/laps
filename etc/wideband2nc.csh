@@ -152,15 +152,15 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
   endif
 
   date
-  
-  echo " "
 
-  if($REMAP == "yes")then
-      echo "Running LAPS remapper"
-      $LAPSINSTALLROOT/bin/remap_polar_netcdf.exe > $LAPS_DATA_ROOT/log/remap_polar_netcdf.log.$YYDDD$HOUR
-  endif
+  echo " "
+  
 end
 
+if($REMAP == "yes")then
+  echo "Running LAPS remapper"
+  $LAPSINSTALLROOT/bin/remap_polar_netcdf.exe > $LAPS_DATA_ROOT/log/remap_polar_netcdf.log.$YYDDD$HOUR
+endif
 
 
 
