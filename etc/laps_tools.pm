@@ -7,7 +7,7 @@ umask 002;
 #
 # routine get_nl_values returns value of namelist variable given
 # LAPS_DATA_ROOT -> location of namelists (-d opt or environ var);
-# namelist filename -> commaind line (-n) input;
+# namelist filename -> command line (-n) input;
 # namelist variable name -> command line (-v) input;
 # namelist to open is a template or not (template is defined or not)
 #          in such case LAPS_DATA_ROOT = path to template files.
@@ -241,7 +241,7 @@ sub laps_domain_name{
       if($i != 1){$isave=$i-1;} }
       $i++;}
       $isave=$i-1 if($isave == 0);
-   return my $DOMAIN_NAME = @components[$isave];
+   return my $DOMAIN_NAME = $components[$isave];
 }
 1;
 #
@@ -259,7 +259,7 @@ sub laps_data_root{
    $isave=$i-1 if($isave == 0);
    $i=0;
    while ($i <= $isave) {
-      $DATAROOT="$DATAROOT"."@components[$i]"."/";
+      $DATAROOT="$DATAROOT"."$components[$i]"."/";
       $i++;}
    return $DATAROOT;
 }
@@ -337,13 +337,13 @@ verif verif/noBal verif/Bal verif/Bkgd);
 
      print "adding fdda_model_source subdirectories to lapsprd dirs\n";
      my $ii = 0;
-     @fua_dirs[$ii] = 'fua';
-     @fsf_dirs[$ii] = 'fsf';
+     $fua_dirs[$ii] = 'fua';
+     $fsf_dirs[$ii] = 'fsf';
      foreach (@fdda_dirs){
         if($_ ne "lga"){
               $ii++;
-              @fua_dirs[$ii]=@fua_dirs[0]."/".$_;
-              @fsf_dirs[$ii]=@fsf_dirs[0]."/".$_;
+              $fua_dirs[$ii]=$fua_dirs[0]."/".$_;
+              $fsf_dirs[$ii]=$fsf_dirs[0]."/".$_;
         }
      }
      print "fua dirs: @fua_dirs\n";
@@ -464,7 +464,7 @@ sub get_pressures {
      my $i=0;
      foreach (@plines){
        if(/\s*(\d+)/){
-          @pressures[$i]=$1;
+          $pressures[$i]=$1;
           $i++
        }
      }
@@ -540,20 +540,24 @@ sub get_system_type {
 
     my $wrfsystem=0;
     my $lapssystem=0;
+    my $system_type;
 
     foreach (@dirs) {
 #      print "'$_',\n";
        if($_ eq "siprd"   || $_ eq "wrfprd"){$wrfsystem=1;}
-       if($_ eq "lapsprd" || $_ eq "log")  {$lapssystem=1;}
+       if($_ eq "lapsprd" && -e "$dataroot/static/nest7grid.parms")  {$lapssystem=1;}
        }
     if($wrfsystem==1 && $lapssystem==1){
-       print "Found ambiguous system \n";
-       print "Both siprd and lapsprd in dataroot \n";
+       print "System type is ambiguous \n";
+       print "Check your domain name or dataroot \n";
     }elsif($wrfsystem==1){
        print "Welcome to WRF\n";
+       $system_type = "WRFSI";
     }else{
        print "Welcome to LAPS\n";
+       $system_type = "LAPS";
     }
+    return $system_type;
 }
 1;
 #
