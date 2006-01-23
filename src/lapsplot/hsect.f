@@ -287,6 +287,8 @@ c       include 'satellite_dims_lvd.inc'
         c_vnt_units = namelist_parms%c_vnt_units
         c_units_type = namelist_parms%c_units_type
 
+        plot_parms%iraster = namelist_parms%iraster
+
 !       Surface Temperature Ranges
         if(namelist_parms%l_discrete)then
             sfctf_h = 120.
@@ -350,7 +352,11 @@ c       include 'satellite_dims_lvd.inc'
             return
         endif
 
-1200    write(6,11)
+1200    continue
+
+        plot_parms%l_discrete = namelist_parms%l_discrete
+
+        write(6,11)
 11      format(//'  SELECT FIELD: (append with "i" for image)',       
      1      /'     [wd,wb,wr,wf,bw] Wind'
      1      ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, BAL), '
@@ -1002,8 +1008,19 @@ c       include 'satellite_dims_lvd.inc'
      1             ,NX_L,NY_L,1,1,VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d
      1             ,COMMENT_2d,w_2d,ISTATUS)
 
-                   call mklabel33(k_mb,' '//fcst_hhmm
+                   call s_len(c_model,len_model)
+                   if(ext(1:3) .eq. 'fua' .and. len_model .gt. 0)then
+!                      call mklabel33(k_mb,' '//fcst_hhmm
+!    1                         //' '//c_model(1:len_model)
+!    1                         //' OM ubar/s',c_label)
+
+                       call mk_fcst_hlabel(k_mb,'Omega',fcst_hhmm
+     1                                 ,ext(1:3),'ubar/s'
+     1                                 ,c_model,c_label)
+                   else
+                       call mklabel33(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' OM ubar/s',c_label)
+                   endif
                 endif
 
                 do j = 1,NY_L
@@ -1021,8 +1038,19 @@ c       include 'satellite_dims_lvd.inc'
                     cint = -1.0
                 endif
 
-                chigh = 40.
-                clow = -40.
+!               if(plot_parms%iraster .lt. 1)then
+!                   plot_parms%discrete = .true.
+!               endif
+
+                call get_grid_spacing_cen(grid_spacing_m,istatus)
+                if(grid_spacing_m .ge. 5000.)then
+                    chigh = 40.
+                    clow = -40.
+                else
+                    plot_parms%iraster = 1
+                    chigh = 80.
+                    clow = -80.
+                endif
 
                 call plot_field_2d(i4_valid,c_type_i,w_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -1070,17 +1098,25 @@ c       include 'satellite_dims_lvd.inc'
 
                 if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' VORT (diff) 1e-5/s'
+                    call mklabel33(k_mb,c19_label,c_label)
                 elseif(c_type_i(1:2) .eq. 'wb')then
                     c19_label = ' VORT (lga)  1e-5/s'
+                    call mklabel33(k_mb,c19_label,c_label)
                 elseif(c_type_i(1:2) .eq. 'wr')then
                     c19_label = ' VORT (fua)  1e-5/s'
+
+!                   Note that c_model is blank in this case
+                    call mk_fcst_hlabel(k_mb,'Vort',fcst_hhmm
+     1                                 ,ext(1:3),'1e-5/s'
+     1                                 ,c_model,c_label)
+
                 elseif(c_type_i(1:2) .eq. 'bw')then
                     c19_label = ' VORT (bal)  1e-5/s'
+                    call mklabel33(k_mb,c19_label,c_label)
                 else
                     c19_label = ' VORT (anal) 1e-5/s'
+                    call mklabel33(k_mb,c19_label,c_label)
                 endif
-
-                call mklabel33(k_mb,c19_label,c_label)
 
                 scale = 1e-5
                 
@@ -3881,8 +3917,12 @@ c                   cint = -1.
 !               call mklabel33(k_level,ext(1:3)//' '
 !    1                         //fcst_hhmm//' Fcst Ht dm',c_label)
 
-                call mklabel33(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' Height dm',c_label)
+!               call mklabel33(k_mb,' '//fcst_hhmm
+!    1                         //' '//ext(1:3)//' Height dm',c_label)
+
+                call mk_fcst_hlabel(k_mb,'Height',fcst_hhmm
+     1                                 ,ext(1:3),'dm'
+     1                                 ,c_model,c_label)
 
                 clow = 0.
                 chigh = 0.
@@ -3902,9 +3942,12 @@ c                   cint = -1.
                 endif
 
             else  
-                call mklabel33(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' Temp    C',c_label)
+!               call mklabel33(k_mb,' '//fcst_hhmm
+!    1                         //' '//ext(1:3)//' Temp    C',c_label)
 
+                call mk_fcst_hlabel(k_mb,'Temperature',fcst_hhmm
+     1                                 ,ext(1:3),'Deg C'
+     1                                 ,c_model,c_label)
                 scale = 1.
 
                 do i = 1,NX_L
@@ -6403,12 +6446,12 @@ c             if(cint.eq.0.0)cint=0.1
 !                                   accessing VERTICAL_GRID)
 !       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 
-        character c19_label*19,c_label*33
+        character c19_label*(*),c_label*33
 
         if(k_level .gt. 0)then
 !            if(VERTICAL_GRID .eq. 'HEIGHT')then
 !                write(c_label,101)k_level,c19_label
-!101             format(I5,' km ',a19,5x)
+!101             format(I5,' km ',a,5x)
 
 !            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
                 if(k_level .gt. 50)then ! k_level is given in pressure (mb)
@@ -6421,12 +6464,12 @@ c             if(cint.eq.0.0)cint=0.1
                 endif
 
                 write(c_label,102)ipres,c19_label
-102             format(I4,' hPa',a19,5x)
+102             format(I4,' hPa',a,5x)
 
 !            endif
         else if(k_level .eq. 0)then
             write(c_label,103)c19_label
-103         format('Surface',a19,6x)
+103         format('Surface',a,6x)
 
         else if(k_level .eq. -1)then
             write(c_label,104)
@@ -7005,7 +7048,7 @@ c             if(cint.eq.0.0)cint=0.1
         endif
 
         ic = 10  ! Position where comment info should begin
-        ist = 37 ! Position where forecast time should begin
+        ist = 36 ! Position where forecast time should begin
 
         if(len_units .gt. 0)then
             c_label(ic:ic+len_fcst+len_units+2) = comment_2d(1:len_fcst)
