@@ -221,22 +221,22 @@ C
               if(scale_h_in .eq. 50. .and. scale_l_in .eq. 0.)then 
                   l_discrete = .true. 
               else
-                  l_discrete = namelist_parms%l_discrete
+                  l_discrete = plot_parms%l_discrete
               endif
           elseif(colortable .eq. 'moist')then
-              l_discrete = namelist_parms%l_discrete
+              l_discrete = plot_parms%l_discrete
           elseif(colortable .eq. 'tpw')then
-              l_discrete = namelist_parms%l_discrete
+              l_discrete = plot_parms%l_discrete
           elseif(colortable .eq. 'hues' .or. 
      1           colortable .eq. 'omega')then
               if(l_divisible)then
-                  l_discrete = namelist_parms%l_discrete
+                  l_discrete = plot_parms%l_discrete
               else
                   l_discrete = .false.
               endif
           elseif(colortable .eq. 'cpe' .and. scale_h_in .eq. 7000.)then       
               if(l_divisible)then
-                  l_discrete = namelist_parms%l_discrete
+                  l_discrete = plot_parms%l_discrete
               else
                   l_discrete = .false.
               endif
@@ -327,8 +327,6 @@ c     Call local colorbar routine
       real*4 vals(maxvals),vals_scaled(maxvals)
       
       EXTERNAL FILL
-
-      l_raster = .true.
 C      
 C Set up color table
       write(6,*)' ccpfil_sub - scale,scale_loc = ',scale,scale_loc
@@ -399,8 +397,38 @@ C
 
       call cpsetr ('SPV',r_missing_data)
 
-!     if(.not. l_raster .and. NREG .lt. 500)then
-      if(.true.)then
+!     NREG threshold =    0 means do raster image whenever possible
+!     NREG threshold =  500 means do raster image for large domains (e.g. STMAS)
+!     NREG threshold = 9999 means never do raster image 
+      if(NREG .ge. 300)then ! set raster default
+          l_raster = .true.
+      else
+          l_raster = .false.
+      endif
+
+!     Override default with parameter input
+      if(plot_parms%iraster .eq. 1)then
+          l_raster = .true.
+      elseif(plot_parms%iraster .eq. -1)then
+          l_raster = .false.
+      endif
+
+      if(l_raster .and. (.not. l_set_contours))then ! do raster image
+          cmn = (0.0           ) * abs(scale_loc) + 2.0*cis
+          cmx = (1.0+col_offset) * abs(scale_loc) + 2.0*cis       
+          crange = cmx-cmn
+          do m = 1,MREG
+          do n = 1,NREG
+              COLIA(m,n) = int( (ZREG(m,n)-cmn)/cis ) + 3
+          enddo ! n
+          enddo ! m
+
+          write(6,*)' Calling GCA for Raster Fill Experiment'
+          call get_border(MREG,NREG,x_1,x_2,y_1,y_2)
+          CALL GCA (x_1, y_1, x_2, y_2, MREG, NREG, 1,  1,
+     1              MREG, NREG, COLIA)
+
+      else                                           ! regular contour fill
           CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      
 C Add contours to area map
@@ -411,22 +439,6 @@ C Set fill style to solid, and fill contours
 C      
           CALL GSFAIS(1)
           CALL ARSCAM(MAP, XWRK, YWRK, NWRK, IAREA, IGRP, NOGRPS, FILL)       
-
-      else
-          cmn = (0.0           ) * abs(scale_loc) + 2.0*cis
-          cmx = (1.0+col_offset) * abs(scale_loc) + 2.0*cis       
-          crange = cmx-cmn
-          do m = 1,MREG
-          do n = 1,NREG
-              COLIA(m,n) = nint( (ZREG(m,n)-cmn)/cis )       
-     1                   + 2
-          enddo ! n
-          enddo ! m
-
-          write(6,*)' Calling GCA for Raster Fill Experiment'
-          call get_border(MREG,NREG,x_1,x_2,y_1,y_2)
-          CALL GCA (x_1, y_1, x_2, y_2, MREG, NREG, 1,  1,
-     1              MREG, NREG, COLIA)
 
       endif
 C      
