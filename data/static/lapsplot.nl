@@ -9,6 +9,7 @@
  c_pbl_depth_units='metric',
  l_discrete=.false.,
  mode_supmap=3,
+ iraster=0,
  /
 
 c LAPSPLOT PARAMETERS
@@ -37,5 +38,9 @@ c              continuous colors, '.true.' means fewer more discrete colors
 c
 c mode_supmap - (1) use map database in 'data/static/ncarg/*'
 c               (3) use ezmap database in 'NCARG_ROOT/lib/ncarg/database'
+c
+c iraster - (0)  use default settings for raster image plots (vs contour fill)
+c           (+1) use faster raster image plots whenever possible    
+c           (-1) use contour fill image plots exclusively for better quality
 c
 
