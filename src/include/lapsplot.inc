@@ -12,6 +12,7 @@
           integer latlon_int
           integer mode_supmap
           integer icol_barbs
+          integer iraster
 
           character*3 c3_time_zone
           character*9 c_institution
@@ -28,12 +29,15 @@
 	type plot_type
           sequence
 
+          logical l_discrete
+
           real rimage_intensity
           real zoom
 
           integer contour_line_width
           integer ncols
           integer icol_barbs
+          integer iraster
 
 	end type plot_type
 
