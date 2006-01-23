@@ -336,6 +336,9 @@ cdis
         igrid=0
         idiff=0
 
+        plot_parms%iraster = -1 ! ensure raster image plots are off
+        plot_parms%l_discrete = namelist_parms%l_discrete
+
         lapsplot_pregen = .true.
 
 c read in laps lat/lon and topo
@@ -818,6 +821,7 @@ c read in laps lat/lon and topo
 !               call get_directory(ext_wind,directory,len_dir)
                 call s_len(directory,len_dir)
                 c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
+                call directory_to_cmodel(directory,c_model)
 
             endif
 
@@ -947,7 +951,7 @@ c read in laps lat/lon and topo
 
                 len_label = len(c_label)                          ! debug
                 write(6,*)' label length = ',len_label            ! debug
-
+ 
                 call mk_fcst_xlabel(comment_2d,fcst_hhmm
      1                             ,ext(1:3),units_2d,c_model,c_label)       
             else
@@ -1021,8 +1025,16 @@ c read in laps lat/lon and topo
             else
 !               cint = 0.
                 cint = 10. 
-                clow = -40.
-                chigh = +40.
+
+                call get_grid_spacing_cen(grid_spacing_m,istatus)
+                if(grid_spacing_m .ge. 5000.)then
+                    chigh = 40.
+                    clow = -40.
+                else
+                    chigh = 80.
+                    clow = -80.
+                endif
+
                 i_contour = -1
             endif
 
@@ -1036,8 +1048,12 @@ c read in laps lat/lon and topo
                 c_label = 'LAPS  Bkgnd   Omega  '//fcst_hhmm
      1                                             //'  ubar/s'
             else   if(c_prodtype .eq. 'F')then
-                c_label = 'LAPS  FUA     Omega  '//fcst_hhmm
-     1                                             //'  ubar/s'
+!               c_label = 'LAPS  FUA     Omega  '//fcst_hhmm
+!    1                                             //'  ubar/s'
+!               c_label = 'LAPS  '//c_model//' Omega  '//fcst_hhmm
+!    1                                             //'  ubar/s'
+                call mk_fcst_xlabel('Omega',fcst_hhmm
+     1                             ,ext(1:3),'ubar/s',c_model,c_label)       
             else
                 c_label = '                                 '
             endif
@@ -2054,8 +2070,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                     c_label = 'LAPS  Bkgnd   T      '//fcst_hhmm
      1                                                 //'  Deg C '
                 elseif(c_prodtype .eq. 'F')then
-                    c_label = 'LAPS  FUA     T      '//fcst_hhmm
-     1                                                 //'  Deg C '
+!                   c_label = 'LAPS  FUA     T      '//fcst_hhmm
+!                                                      //'  Deg C '
+
+                    call directory_to_cmodel(directory,c_model)
+                    call mk_fcst_xlabel('Temperature',fcst_hhmm
+     1                          ,ext(1:3),'Deg C',c_model,c_label)       
+
                 endif
 
             else
@@ -3974,7 +3995,7 @@ c
 
         character*4 fcst_hhmm_in,fcst_hhmm
 
-        call downcase(units_2d,units_2d)
+!       call downcase(units_2d,units_2d)
 
         call s_len2(comment_2d,len_fcst)
         call s_len2(units_2d,len_units)
@@ -3995,8 +4016,9 @@ c
             fcst_hhmm = fcst_hhmm_in
         endif
 
-        ist = 31
+        ist = 27
 
+!       Field and Units Info
         if(len_units .gt. 0)then
             c_label(1:ist-1) = comment_2d(1:len_fcst)
      1                         //' ('//units_2d(1:len_units)//')'
@@ -4004,8 +4026,10 @@ c
             c_label(1:ist-1) = comment_2d(1:len_fcst)
         endif
 
+!       Fcst time info
         c_label(ist:ist+5) = fcst_hhmm(1:4)//' '
 
+!       Model info
         if(len_model .gt. 0)then
             c_label(ist+5:ist+11+len_model) = 
      1                            c_model(1:len_model)//' Fcst'       
