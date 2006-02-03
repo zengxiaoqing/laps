@@ -87,6 +87,7 @@ c    .      ,wb(nx,ny,nz)
      .      ,errwnds
      .      ,errdds
      .      ,errmod
+     .      ,errdis
      .      ,o
 
 
@@ -855,17 +856,18 @@ c
             enddo
             enddo
             enddo
-            dt=300        ! operational dropsonde time cycle in sec
+            dt=1000        ! operational dropsonde time cycle in sec
             dpht=5000     ! drop height (m)
-            distnf= 2000. ! no fly radius around drop zone (m)
-            errwnds=1.
-            errdds=.1
-            errmod=3.
+            distnf= 20000. ! no fly radius around drop zone (m)
+            errwnds=1. ! dropsonde wind error
+            errdds=.1 ! model  density error in kg/m**3
+            errmod=3. ! model wind error (m/sec)
+            errdis=100000. ! model error displacement in m
 c -------------------------------------------------------------------------
 CC #### PADS Planning tool variance estimator ####
 c -------------------------------------------
-            call var3d (ub,vb,db,tb,smsng,grid_spacing_cen_m
-     &,dt,dpht,distnf,p,phi3dvar,errwnds,errdds,errmod,io,jo
+            call var3d (u,v,db,t ,smsng,grid_spacing_cen_m
+     &,dt,dpht,distnf,p,phi3dvar,errwnds,errdds,errmod,errdis,io,jo
      &,nx,ny,nz,lat,lon,ter,a9_time_airdrop)
 
             goto 998
