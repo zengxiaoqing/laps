@@ -10,7 +10,8 @@ c     subroutine var3d (u,v,d,t,up,vp,dp,smsng,dx,dt,dpht,distnf,
 c    &p,ht,errwnds,errdds,errmod,io,jo,nx,ny,nz,slat,slon,ter)
 
       subroutine var3d (u,v,d,t,smsng,dx,dt,dpht,distnf,p,ht
-     &,errwnds,errdds,errmod,io,jo,nx,ny,nz,slat,slon,ter,a9_time)
+     &,errwnds,errdds,errmod,errdis,io,jo,nx,ny,nz,slat,slon,
+     &ter,a9_time)
 
       implicit none
      
@@ -61,25 +62,64 @@ c             wt3(nx,ny,nz)
      &      uav(nz),vav(nz),wav(nz),utv(nz),vtv(nz),wtv(nz),
      &      dav(nz),dbv(nz),pav(nz),htav(nz),tav(nz)
 
-       real eponexy,gamma,sumw,nofly2,idist2,ca,ddd2,ct,epone
+       real eponexy,gamma,sumw,ca,ddd2,ct,epone
        real ss2,sa,sumt,tpvs,sn2,sumww,sumdd,zter,smax,sumvv,sumuu
        real errmod,dt,dx,smsng,dpht,errdds,errwnds,distnf,st,ubar
-       real vbar,vbtot,ubtot
+       real vbar,vbtot,ubtot,errdis
+       real ri,rj,ter_hgt_drop,droplat,droplon
 
        integer i,j,k,kk,l,mm,lsave,n,lmax,m,in,jo,io, ncnt,ix,jy
-       integer ktop
+       integer ktop,kbot,nofly2,idist2
+       integer istatus
 
        data index /1,2,3,4,12,13,14,23,24,34,123,124,134,234,1234/
 
-       print*,'nx/ny/nz ',nx,ny,nz
-       print*,' var3d'
+       print*,'Module var3d'
+       print*,'nx/ny/nz:      ',nx,ny,nz
+       print*,'grid center:   ',io,jo
+       print*,'nofly radius:  ',distnf
+       print*,'drop height:   ',dpht
+       print*,'delta t (sec): ',dt
         
+c find kbot and ktop
+
+c Note: This assumes the grid center of the domain is the drop
+c       location for the PADS mission. Ie., drop location is specified
+c       by vars grid_cen_lat_cmn & grid_cen_lon_cmn in nest7grid.parms
+
+       call get_grid_center(droplat,droplon,istatus)
+
+       call latlon_to_rlapsgrid(droplat,droplon,slat,slon,nx,ny,ri,rj
+     1                                ,istatus)
+       call bilinear_laps(ri,rj,nx,ny,ter,ter_hgt_drop)
+
+c   compute ktop
+       do k=1,nz
+        if (dpht.lt.ht(k)) then
+         ktop=k
+         go to 5
+        endif
+       enddo
+c   compute kbot
+5      do k=1,nz
+        if (ht(k).ge.ter_hgt_drop) then
+         kbot=k
+         go to 6
+        endif
+       enddo
+
+       if(kbot.gt.ktop)then
+          print*,'Error: kbot > ktop in var3dsub '
+          print*,'Terminating ', kbot,ktop
+          stop
+       endif
+
 c determine mean wind and compute profiles
 
-       sumu=0.
+6      sumu=0.
        sumv=0.
        ncnt=0
-       do k=1,nz
+       do k=kbot,ktop 
         do j=1,ny
          do i=1,nx
           if (u(i,j,k).ne.smsng) then
@@ -97,18 +137,16 @@ c determine mean wind and compute profiles
        if(vbar.lt.1.and.vbar.ge.0.) vbar=1
        if(ubar.gt.-1.and.ubar.lt.0.) vbar=-1
        print*,'ubar,vbar ',ubar,vbar
-c   compute ktop
-       do k=1,nz
-        if (dpht.lt.ht(k)) then
-         ktop=k
-         go to 5
-        endif
-       enddo
+
 c profiles
- 5     ubtot=0.
+       ubtot=0.
        vbtot=0.
        print*, 'ktop ', ktop
-       do k=1,nz
+       print*, 'kbot ', kbot
+       print*
+       print*, 'Height profile in drop layer'
+       do k=kbot,ktop
+        print*,'k, ht(m) ',k,ht(k)
         up(k)=u(io,jo,k)
         vp(k)=v(io,jo,k)
         wp(k)=0.
@@ -137,8 +175,13 @@ c profiles
        enddo
 c compute weight function
        allocate (wt(nx,ny))
-       alph=.05
-       beta=.5
+c   alpha is the along flow weight tuning parameter based on expected model 
+c   phase error in meters (errdis), the grid distance dx (m).D=errdis/dx 
+c   alpha is 1/D**2 making the weight 1/e for distance D (in I,J space)
+c   beta is the cross flow fall off value and is set to 3*alpha  
+
+       alph=(dx/errdis)**2     
+       beta=3.*alph
        ix=ubar*dt/dx+.5
        jy=vbar*dt/dx+.5     
        print*, 'full wind offset i,j', ix,jy
@@ -163,7 +206,7 @@ c compute weight function
 c compute variance estimate
        allocate (wt3(nx,ny,nz))
        tpvs=0.
-       do k=1,nz
+       do k=kbot,ktop
         sumu=0.
         sumv=0.
         sumt=0.
@@ -182,9 +225,9 @@ c compute variance estimate
          enddo 
         enddo
 c variances for forecast quality
-        upv(k)=sumu/sumw        
-        vpv(k)=sumv/sumw        
-        tpv(k)=upv(k)+vpv(k) 
+        upv(k)=sumu/sumw !u variance due to model error at drop location
+        vpv(k)=sumv/sumw !v variance due to model error at drop location
+        tpv(k)=upv(k)+vpv(k) ! total variance 
         if(k.le.ktop)tpvs=tpvs+tpv(k)
         dpv(k)=sumd/float(ncnt)
         write(6,1000) 'uv,vv,tot,dv ',upv(k),vpv(k),tpv(k),dpv(k)
@@ -201,7 +244,7 @@ c recompute ubar and vbar below ktop
        sumu=0.
        sumv=0.
        ncnt=0
-       do k=1,ktop 
+       do k=kbot,ktop 
         do j=1,ny
          do i=1,nx
           if (u(i,j,k).ne.smsng) then
@@ -212,20 +255,22 @@ c recompute ubar and vbar below ktop
          enddo
         enddo
        enddo
-       ubar=sumu/float(ncnt)
+       ubar=sumu/float(ncnt) ! mean wind through drop layer
        vbar=sumv/float(ncnt)
        if(ubar.lt.1.and.ubar.ge.0.) ubar=1
        if(ubar.gt.-1.and.ubar.lt.0.) ubar=-1
        if(vbar.lt.1.and.vbar.ge.0.) vbar=1
        if(ubar.gt.-1.and.ubar.lt.0.) vbar=-1
        print*,'ubar,vbar below ktop ',ubar,vbar
-
-       alph=.05
-       beta=.15
+c the tuning parameters alph,beta, and gamma now mimic an isentropic
+c elliptical weighting function so values are different from previous 
+c using correlation distance as a scaling parameter
+       alph=(2.*dx/errdis)**2
+       beta=2.*alph
        gamma=0.001
        ix=ubar*dt/dx+.5
        jy=vbar*dt/dx+.5     
-       print*, 'offset i,j', ix,jy
+       print*, 'offset i,j in drop layer', ix,jy
        st=vbar/sqrt(ubar**2+vbar**2)
        ct=ubar/sqrt(ubar**2+vbar**2)
        do j=1,ny
@@ -240,8 +285,8 @@ c recompute ubar and vbar below ktop
          ss2=(sa+ca)**2                
          sn2=ddd2-ss2                 
          eponexy= alph*ss2+beta*sn2         
- 333     do k=1,nz     
-          do kk=ktop,1,-1
+ 333     do k=kbot,nz     
+          do kk=ktop,kbot,-1
              if(u(i,j,k).ne.smsng) then
                 epone=eponexy+gamma*(t(i,j,k)-tp(kk))**2
                 wt3(i,j,k)=exp(-epone)
@@ -257,7 +302,7 @@ c now add up all the weights below ktop
         do i=1,nx
          wt(i,j)=0.
          ncnt=0
-         do k=1,ktop
+         do k=kbot,ktop
           if(wt3(i,j,k).ne.smsng) then
            wt(i,j)=wt(i,j)+wt3(i,j,k)
            ncnt=ncnt+1
@@ -298,7 +343,7 @@ c compute variance for each sonde set or scenario
        sumv=0.
        sumd=0.
        sumw=0.
-       do k=1,ktop
+       do k=kbot,ktop
         sumuu=0.
         sumvv=0.
         sumdd=0.
@@ -332,7 +377,7 @@ c    &                 vav(k),tav(k),dav(k)
        dpi(l)=(sumd/sumw)
        write(6,1003)'scenario ',index(l),' uvar ',upi(l),' vvar ',vpi(l)
      & ,' tot  ',twi(l),' denvar ',dpi(l),' pct  ',twi(l)/tpvs*100. 
- 1003  format(1x,a9,i6,3(a6,f5.3),a8,f7.5,a6,f6.3)
+ 1003  format(1x,a9,i6,3(a6,f6.3),a8,f7.5,a6,f6.3)
 c determine variance minimum 
       call write_plan_errors(a9_time,p,ht,up,vp,wp,tp,dp,ud,vd,
      & ubb,vbb,wbb,uab,vab,wab,dbb,dab,vbtot,vbtot,ubv,vbv,wbv
@@ -370,6 +415,9 @@ c rank scenarios as a funcion of variance reduction
       end
 
       subroutine decode_index(l,index,in,inx,lmax,ns)
+c this routine takes in an integer index (l) and breaks it down into 
+c individual members in array inx, counts the members..in
+c example input 123, inx(l) is 3, 2, 1, and in=3   
       integer index(lmax),in,inx(lmax)
       do i100000=0,9 
        do i10000=0,9
