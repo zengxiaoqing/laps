@@ -29,8 +29,9 @@ c 'metar_format' - A value of 'default' means that we are using the
 c                  'c8_project' in 'nest7grid.parms' to specify the METAR
 c                  format. An override to this can be specified as follows:
 c
-c                  'NIMBUS' denotes FSL NetCDF format and NIMBUS file timestamp
-c                  'WFO' denotes FSL NetCDF format and WFO file timestamp
+c                  'NIMBUS' denotes GSD NetCDF format and NIMBUS file timestamp
+c                  'WFO' denotes AWIPS NetCDF format and WFO file timestamp,
+c                        as well as MADIS
 c                  'CWB' is Central Weather Bureau in Taiwan
 c                  'AFWA' is Air Force Weather Agency
 c
