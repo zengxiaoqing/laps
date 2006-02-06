@@ -220,8 +220,6 @@ if(defined $multi_machine){
            system("ln -sf /tmp/laps_casererun_log/runtime.log.$yrmonday-$hrmin $DATA_ROOT/log/runtime.log");
 }
 
-if(-e $wideband_2_netcdf){
-}
 
 # this is pretty specific and allows the path in remap.nl to work when the
 # scratch disk is scratch2
@@ -314,8 +312,11 @@ while ($i4time70<=$i4time70_end)
                }
                else
                {
-#                 $command ="/home/lapb/albers/ihop/radar_scripts/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$dddw $wideband_2_netcdf yes";
-                  $command ="$INSTALL_ROOT/etc/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$dddw $wideband_2_netcdf yes";
+#                 $command ="$INSTALL_ROOT/etc/wideband2nc.csh $yearw $mow $dyw $hrw $yrw$dddw $wideband_2_netcdf yes";
+
+#                 We can potentially read some time information from 'systime.dat' internally from 'wideband2nc.csh' so fewer command line args would be needed.
+#                 With this alternate scenario the 'systime.dat' info can be updated for each hour that we would want to process Archive-II data.
+                  $command ="$INSTALL_ROOT/etc/wideband2nc.csh $DATA_ROOT yes no $INSTALL_ROOT archive $wideband_2_netcdf $yearw $mow $dyw $hrw $yrw$dddw";
                }
 
                print "Running $command\n";
