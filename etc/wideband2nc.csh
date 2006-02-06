@@ -1,11 +1,16 @@
 #!/bin/csh
 
+#Convert Archive-II radar files into Polar NetCDF
+
+#This script reads additional info from $LAPS_DATA_ROOT/static/widebandlist.txt
+
 #Define Casedate (and hour within)
 setenv LAPS_DATA_ROOT $1
 setenv SKIP $2                 # skip processing if NetCDF radar is there?
 setenv REMAP $3                # run remap_polar_netcdf.exe [yes,no]
 setenv LAPSINSTALLROOT $4
-setenv MODETIME $5 
+setenv MODETIME $5             # run mode [realtime,archive]
+setenv OUTPUTROOT_ARCHIVE $6   # location of output Polar NetCDF files (active only for archive mode)
 
 setenv SUFFIX "_elev01"
 
@@ -14,35 +19,59 @@ echo "Start wideband2nc.csh..."
 setenv TZ GMT
 date
 
-#Only needed for archive cases possibly
-setenv YEAR `head -5 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c8-11`
-setenv MONTH 09
-setenv DATE `head -5 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c1-2`
-setenv HOUR `head -3 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
-setenv YYDDD `head -6 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
-
 #setenv OUTPUTROOT  /scratch/lapb/albers/radar
 #setenv OUTPUTROOT  /data/lapb/ihop_work/raw/wsr88d/wideband
 
-# Location of 'widebandlist.txt'
+# Check location of 'widebandlist.txt'
 if (! -e $LAPS_DATA_ROOT/static/widebandlist.txt) then
     echo "ERROR: data file $LAPS_DATA_ROOT/static/widebandlist.txt not found..."
     exit
 endif
 
+#Obtain location of installed software that converts radar files
 setenv INSTALLROOT `head -1 $LAPS_DATA_ROOT/static/widebandlist.txt`
 if (! -e $INSTALLROOT) then
-    echo "ERROR: WIDEBAND INSTALLROOT $INSTALLROOT not found..."
+    echo "ERROR: WIDEBAND software INSTALLROOT $INSTALLROOT not found..."
     exit
 endif
 
+#Obtain location of Archive-II data files
 setenv INPUTROOT `head -2 $LAPS_DATA_ROOT/static/widebandlist.txt | tail -1`
-if (! -e $INSTALLROOT) then
-    echo "ERROR: WIDEBAND INSTALLROOT $INSTALLROOT not found..."
+if (! -e $INPUTROOT) then
+    echo "ERROR: WIDEBAND INPUTROOT data directory $INPUTROOT not found..."
     exit
 endif
 
-setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
+if($MODETIME == "realtime")then
+    setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
+    setenv HR1 `head -3 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
+    set HR2=$HR1
+    @ HR2++
+    if($HR2 == 24)then
+        set HR2=1
+    endif
+    echo "Processing hours $HR1 and $HR2"
+
+else # archive case
+
+#   Access additional command line args
+    setenv YEAR $7
+    setenv DATE $8
+    setenv HOUR $9
+    setenv YYDDD $10
+    setenv MONTH $11
+
+#   This could be done if 'systime.dat' is updated actively by 'casererun.pl'
+#   setenv YEAR `head -5 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c8-11`
+#   setenv DATE `head -5 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c1-2`
+#   setenv HOUR `head -3 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
+#   setenv YYDDD `head -6 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
+
+#   Need to run perl script to convert YEAR and DDD to MONTH
+#   setenv MONTH 09 
+
+    setenv OUTPUTROOT  $OUTPUTROOT_ARCHIVE
+endif
 
 echo " "
 
@@ -80,61 +109,56 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
   echo "Look for output in $OUTPUTROOT/$RADAR/netcdf..."
   echo " "
 
-# Test for existence of output data already present?
-  echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
-  setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
-  echo "Number of pre-existing files is $COUNT"
+# Use this filename convention for realtime data
 
-  if($COUNT == "0" || $SKIP != "yes")then
-#     Use this filename convention for realtime data
+  if($MODETIME == "realtime")then
 
-      if($MODETIME == "realtime")then
+#     We assume that less than 24 hours of realtime Archive-II data are available on disk at any given time
 
-#         We assume that less than 24 hours of realtime Archive-II data are available on disk at any given time
+      echo "Generating radar $RADAR in realtime..."
 
-          echo "Generating radar $RADAR in realtime..."
+      pushd $INPUTROOT/$RADAR
+          foreach file (*)
+              echo " "
+              echo "checking Archive-II file $file"
 
-          pushd $INPUTROOT/$RADAR
-              foreach file (*)
-                  echo " "
-                  echo "processing Archive-II file $file"
-
-                  setenv HOUR   `echo $file | cut -c9-10`
-                  setenv MINUTE `echo $file | cut -c11-12`
-
+              setenv HOUR   `echo $file | cut -c9-10`
+              setenv MINUTE `echo $file | cut -c11-12`
                  
-#                 find /$OUTPUTROOT/$RADAR -name "$OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX" -exec ls -1 "{}" \;
+#             echo "testing time $HOUR $HR1 $HR2"
 
-#                 ls -l $OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX
-#                 ls -1 $OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX | wc -l
-
+              if ($HOUR == "$HR1" || $HOUR == "$HR2") then
+#                 echo "matching time $HOUR $HR1 $HR2"
                   setenv OUTCOUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX | wc -l`
 
                   echo "OUTCOUNT = "$OUTCOUNT
 
-#                 ls -al --time-style=+%Y%m | awk '{print $6}'
-
-#                 if (-e '$OUTPUTROOT/$RADAR/netcdf/*$HOUR$MINUTE$SUFFIX') then
-#                 if ($exist == "yes") then
-
-                  if($OUTCOUNT != "0")then
-                      echo "output file already exists for     $HOUR$MINUTE$SUFFIX"
+                  if ($OUTCOUNT != "0") then
+                      echo "output file $HOUR$MINUTE$SUFFIX already exists"
                   else
-                      echo "output file does not yet exist for $HOUR$MINUTE$SUFFIX"
+                      echo "processing output file $HOUR$MINUTE$SUFFIX that does not yet exist"
                       $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
                                               -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t $INPUTROOT/$RADAR/$file
                   endif
 
-#                 find /$INPUTROOT/$RADAR -name "$INPUTROOT/$RADAR/$file*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
-#                                         -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
-              end
-          popd
-   
-          echo "listing of output files for this hour "$YYDDD$HOUR
-          echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
+              else
+#                 echo "no matching time $HOUR $HR1 $HR2"
+                  echo "outside time window $HOUR$MINUTE$SUFFIX"
 
-      else # archive case
-#         This works with the archived radar data for IHOP
+              endif
+          end
+      popd
+
+  else # archive case
+#     Test for existence of output data already present?
+      echo "listing of output files for this hour "$YYDDD$HOUR
+      echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
+
+      setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
+      echo "Number of pre-existing files is $COUNT"
+
+      if($COUNT == "0" || $SKIP != "yes")then
+#         This works with the archived radar data (e.g. for IHOP)
           echo "Generating radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
           find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
@@ -145,21 +169,32 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
           echo "Number of files generated is $COUNT"
           echo "Finished radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
+      else
+          echo "Pre-existing output: skipped radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
+
       endif
 
-  else
-      echo "Pre-existing output: skipped radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
   endif
 
   date
 
   echo " "
-  
+
 end
 
 if($REMAP == "yes")then
-  echo "Running LAPS remapper"
-  $LAPSINSTALLROOT/bin/remap_polar_netcdf.exe > $LAPS_DATA_ROOT/log/remap_polar_netcdf.log.$YYDDD$HOUR
+    echo "Running LAPS remapper"
+
+    if($MODETIME == "realtime")then
+        setenv TIMESTAMP `date +%y%j%H%M`
+        $LAPSINSTALLROOT/bin/remap_polar_netcdf.exe > $LAPS_DATA_ROOT/log/remap_polar_netcdf.log.$TIMESTAMP
+        echo "remap log file is remap_polar_netcdf.log.$TIMESTAMP"
+
+    else # archive case
+        $LAPSINSTALLROOT/bin/remap_polar_netcdf.exe > $LAPS_DATA_ROOT/log/remap_polar_netcdf.log.$YYDDD$HOUR
+        echo "remap log file is remap_polar_netcdf.log.$YYDDD$HOUR"
+
+    endif
 endif
 
 
