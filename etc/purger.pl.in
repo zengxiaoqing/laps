@@ -26,7 +26,7 @@ use Getopt::Std;
 getopts('rt:m:');
 
 
-my $DATAROOT=shift || die "LAPS_DATA_ROOT required";
+my $DATAROOT=shift || die "LAPS_DATA_ROOT required (generally appended by /lapsprd)";
 
 # This script purges old data files in directories under the 'lapsprd' 
 # directory.  More generally, it purges one or more levels below the
@@ -81,6 +81,7 @@ if($opt_r){
 #
 # exceptions - overridden if $min_files==0
 #
+my $wideband_time = 0.125;
 my $vxx_time = 0.16;
 my $vrc_time = 0.16;
 my $web_time = 7.0;
@@ -157,6 +158,22 @@ print "Log file purge time is $log_time\n";
 
 
 chdir($DATAROOT) || die "could not chdir to $DATAROOT";
+
+if(-d "rdr/wideband"){
+    print "wideband directory exists...\n";
+    opendir(DIR,'rdr/wideband');
+        my(@wideband) = readdir(DIR);
+        print "wideband directory contents are @wideband\n";
+        my ($widebanddir);
+        foreach $widebanddir (@wideband){
+            next if($widebanddir eq '.' || $widebanddir eq '..');
+            $dir="rdr/wideband/$widebanddir/netcdf";
+            $clean_dirs{$dir} = $wideband_time;
+            print "Setting purge for $dir to $clean_dirs{$dir} \n";
+        }
+    closedir(DIR);
+}
+
 my @subdirs = &dodir('.','.');
 foreach (@subdirs){
     next if($_ eq '.');
@@ -186,7 +203,7 @@ foreach $dir (keys(%clean_dirs)){
 
     closedir(DIR);
     next unless(-d $dir);
-    print "Purging in $dir\n";
+    print "Purging in $dir $clean_dirs{$dir}\n";
     next if($#filelist < $min_files);
     $i=$#filelist;
     my($file, $age);
@@ -194,12 +211,13 @@ foreach $dir (keys(%clean_dirs)){
         stat("$dir/$file");
         $age = -M _;
 	next if(-d "$dir/$file");
-#        print "$file $age\n";
 
         if($age > $clean_dirs{$dir} && $i >= $min_files){
             $i--;
             print "Removing file $dir/$file $age $clean_dirs{$dir}\n";
             system("rm -f $dir/$file") ;
+        }else{
+#           print "Keeping file $dir/$file $age $clean_dirs{$dir}\n";
 	}         
 
     }
