@@ -131,7 +131,7 @@ c           goto 1000
 c        endif
 c     enddo
 
-      if(i4time_proc-i4time_latest.gt.i_snddata_age)then
+      if(abs(i4time-i4time_latest).gt.i_snddata_age)then
 c
 c put in wait for data here
 c
@@ -139,6 +139,8 @@ c
          write(6,*)'Returning to main without new sounder data'
          istatus = -1
          goto 1000
+      else
+         print*,'i4time age difference = ',i4time_proc-i4time_latest
       endif
 c
 c We have "current" data. Determine if it has already been processed.
@@ -185,7 +187,8 @@ c
          write(6,*)'Getlsrdata.f'
          return
       endif
-      write(6,*)'Sounding data obtained'
+
+      write(6,*)'Attributes for sounding data obtained'
 
       goto 1000
 
