@@ -24,7 +24,7 @@ c
       real*4        pi
       real*8        rl_div
       real*8        rp_div
-      real*4        radtodeg
+      real*4        rd2dg
       real*4        rsndr_res_m
       real*4        rsndr_res_km
       real*4        r_missing_data
@@ -32,7 +32,8 @@ c
       real*4        pct_covered
       real*4        pct_req_lsr
 
-      real*8        r8lat,r8lon
+      real*8        r8lat(2),r8lon(2)
+      real*8        r8sl,r8sp,r8el,r8ep
       real*8        ELEV,SCAN
       real*8        RL
       real*8        RP
@@ -42,6 +43,7 @@ c
       Real*8        t
       Real*8        f_time
       Real*8        SatSubLAT,SatSubLON
+      Real*8        EVLN,SCPX
 c
       Integer     ewCycles,ewIncs
       Integer     nsCycles,nsIncs
@@ -79,10 +81,10 @@ c
 c ---------------------------------------------------------
 c read static information for gvarimage navigation
 c
-      if(istatus.ne.1)then
-         print*,'Error returned get_r_missing_data'
-         return
-      endif
+c     if(istatus.ne.1)then
+c        print*,'Error returned get_r_missing_data'
+c        return
+c     endif
 
       istatus = -1
 
@@ -103,7 +105,7 @@ c     if(imc.ne.0)imc=1
       imc=1
       INSTR=2          !1=Imager, 2=Sounder
       pi=3.141592653589793
-      radtodeg=180.0/pi
+      rd2dg=180.0/pi
 
       call bcd_to_int(orbAt(12),time_spec)
       time_50 = time50(time_spec)
@@ -113,19 +115,53 @@ c     if(imc.ne.0)imc=1
       call SETCON(INSTR,nsCycles,nsIncs,ewCycles,ewIncs)
       call LMODEL(t,t50_8,OrbAt,imc,SatSubLAT,SatSubLON)
 
-      write(6,*)'Sat Subpoint lat (deg) ',SatSubLAT*radtodeg
-      write(6,*)'Sat Subpoint lon (deg) ',SatSubLON*radtodeg
-      write(6,*)'***********************************'
+      write(6,*)'Sat Subpoint lat (deg) ',SatSubLAT*rd2dg
+      write(6,*)'Sat Subpoint lon (deg) ',SatSubLON*rd2dg
+      print*,'-------------------------------------------'
+      print*
+      print*,'This satellite sector lat/lon corner points'
+      print*,'-------------------------------------------'
+      r8sl=float(start_line)
+      r8el=float(end_line)
+      r8sp=float(start_pix)
+      r8ep=float(end_pix)
+      ELEV = EVLN(INSTR,r8sl)
+      SCAN = SCPX(INSTR,r8sp)
+      call LPOINT(ELEV,SCAN,r8lat(1),r8lon(1),IERR)
+      ELEV = EVLN(INSTR,r8sl)
+      SCAN = SCPX(INSTR,r8ep)
+      call LPOINT(ELEV,SCAN,r8lat(2),r8lon(2),IERR)
+
+      r8lat(1)=r8lat(1)*rd2dg
+      r8lon(1)=r8lon(1)*rd2dg
+      r8lat(2)=r8lat(2)*rd2dg
+      r8lon(2)=r8lon(2)*rd2dg
+      print*,'      NW                  NE'
+      write(6,101)r8lat(1),r8lon(1),r8lat(2),r8lon(2)
+101   format(5x,2(f8.2),2(f9.2))
+
+      ELEV = EVLN(INSTR,r8el)
+      SCAN = SCPX(INSTR,r8sp)
+      call LPOINT(ELEV,SCAN,r8lat(1),r8lon(1),IERR)
+      ELEV = EVLN(INSTR,r8el)
+      SCAN = SCPX(INSTR,r8ep)
+      call LPOINT(ELEV,SCAN,r8lat(2),r8lon(2),IERR)
+      r8lat(1)=r8lat(1)*rd2dg
+      r8lon(1)=r8lon(1)*rd2dg
+      r8lat(2)=r8lat(2)*rd2dg
+      r8lon(2)=r8lon(2)*rd2dg
+      print*,'      SW                  SE'
+      write(6,101)r8lat(1),r8lon(1),r8lat(2),r8lon(2)
 
       cstatus = 0
       npoints_out = 0
       do j=1,nyl
       do k=1,nxl
  
-         r8lat=lat(k,j)*pi/180.d0
-         r8lon=lon(k,j)*pi/180.d0
+         r8lat(1)=lat(k,j)*pi/180.d0
+         r8lon(1)=lon(k,j)*pi/180.d0
 
-         call GPOINT(r8lat,r8lon,ELEV,SCAN,IERR)
+         call GPOINT(r8lat(1),r8lon(1),ELEV,SCAN,IERR)
 
          if(IERR.ne.0)then
 c           write(6,*)'Error computing Elev/Scan in GPOINT from'
@@ -185,11 +221,13 @@ c           write(6,*)'Lat/Lon ', lat(k,j),lon(k,j)
          write(6,*)'100% Percent of domain covered '
       endif
 c
-c     do j = 1,nyl,20
-c     do k = 1,nxl,20
-c        write(6,*)'i,j,rpix,rline: ',k,j,rpix(k,j),rline(k,j)
-c     enddo
-c     enddo
+      if(.false.)then
+         do j = 1,nyl,20
+          do k = 1,nxl,20
+           write(6,*)'i,j,rpix,rline: ',k,j,rpix(k,j),rline(k,j)
+          enddo
+         enddo
+      endif
 c
 c compute image resolution in meters
 c
