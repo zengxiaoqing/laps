@@ -1,6 +1,6 @@
   
       This LAPS README file is viewable on the WWW via the LAPB home 
-      page at http://laps.fsl.noaa.gov/
+      page at http://laps.noaa.gov/
 
 
                        TABLE OF CONTENTS  
@@ -111,7 +111,7 @@
      support older versions of LAPS code. It is also recommended that LAPS 
      users try to take advantage of the latest LAPS updates by periodically 
      importing a fresh tar file every few months or so. Please check the
-     LAPS Software Page at 'http://laps.fsl.noaa.gov/cgi/LAPS_SOFTWARE.cgi'
+     LAPS Software Page at 'http://laps.noaa.gov/cgi/LAPS_SOFTWARE.cgi'
      for information about recent releases.
 
       ----------------  1.1   LAPS Software Disclaimer  ----------------
@@ -839,6 +839,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            regenerates static.nest7grid.
 </pre>
 
+     If you decide to manually change any parameters in $LAPS_DATA_ROOT/static
+     after running the localization, it is suggested to make the same change
+     in the $TEMPLATE directory as well. This will help preserve your local
+     changes in the future if you install an updated version of LAPS.
+
                         --- 2.2.6.2 Localization Method 2 ---
 
      This method is included partly for historical reasons and can be useful
@@ -899,7 +904,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      intermediate data files that are inputs to the analysis code. 
 
      A flow chart for the ingest processes may be found at
-     'http://laps.fsl.noaa.gov/wharton/slide1.html'.
+     'http://laps.noaa.gov/wharton/slide1.html'.
 
      The default LAPS ingest code obtains "raw" data, generally from the GSD 
      NIMBUS system. The raw data can either be in ASCII, NetCDF (as point 
@@ -1065,9 +1070,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 </pre>
 
      A flow chart showing radar data usage in LAPS is on the Web at:
-     'http://laps.fsl.noaa.gov/albers/laps/radar/laps_radar_ingest.html',
+     'http://laps.noaa.gov/albers/laps/radar/laps_radar_ingest.html',
      together with some text details in:
-     'http://laps.fsl.noaa.gov/albers/radar_decision_tree.txt'.
+     'http://laps.noaa.gov/albers/radar_decision_tree.txt'.
      These include information on which types of radar data are processed 
      via the various intermediate data files.
 
@@ -1207,10 +1212,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            format are processed.
 
      Satellite derived soundings (snd):
-           AFWA database format. Previously used at GSD but not currently.
-           We also have an interface to GOES binary format. For other formats
-           one will have to supply your own routine to convert your raw data 
-           into the 'snd' format.
+           We have interfaces to GOES binary and MADIS POES formats. AFWA 
+           database format was previously used at GSD though not currently.
+           For other formats you may wish to supply your own routine to 
+           convert your raw data into the 'snd' format.
 
                       ----   2.3.8  GPS ---
 
@@ -1348,7 +1353,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      in this README file. The data was created using the latest software 
      release. Our users can download this data at this URL:
 
-           'http://laps.fsl.noaa.gov/cgi/LAPS_SOFTWARE.cgi'.
+           'http://laps.noaa.gov/cgi/LAPS_SOFTWARE.cgi'.
 
      It is suggested here to test the localization procedure to ensure that all
      the static files needed to run LAPS are present. To do this, check that 
@@ -1421,6 +1426,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      For this type of test, you will want to download the 'rawdata*' tar files
      into your 'raw_data' directory to start the processing of LAPS. Recall
      that the 'raw_data' directory is on a separate tree than $LAPS_DATA_ROOT.
+
+     Raw data formats and filename conventions are consistent with the default
+     namelist settings taken from the repository (generally in NIMBUS format 
+     with associated file naming conventions). 
+
      The time information will be needed in the form of 'data/time/systime.dat';
      this can be extracted from the 'lapsdata*' tar file.
 
@@ -1931,9 +1941,9 @@ since 3 layers are routinely available from NESDIS.
    compare your build output with ours by clicking on "Results of Latest LAPS 
    Builds" on the LAPS Software page. Also double check that you've followed
    all the installation steps in this section of the README. There is also a 
-   FAQ available at http://laps.fsl.noaa.gov/birk/LAPS_FACTS.htm 
+   FAQ available at http://laps.noaa.gov/birk/LAPS_FACTS.htm 
    Finally, check the release notes at the 
-   http://laps.fsl.noaa.gov/software/release_notes.html URL.
+   http://laps.noaa.gov/software/release_notes.html URL.
 
    If you don't find the answer in these documents, send mail to 
    oplapb.gsd@noaa.gov   Include in your mail:
@@ -1956,7 +1966,7 @@ since 3 layers are routinely available from NESDIS.
    $LAPS_DATA_ROOT[s]). The monitor script writes HTML output to 'stdout'. This
    HTML output, if routed to a file or hooked up to a Web server, can be viewed
    with a browser. You can click on 
-   http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi to see an example of the 
+   http://laps.noaa.gov/monitors/Laps_Monitor.cgi to see an example of the 
    monitor output. Green means optimum product continuity, red means the 
    product is failing to generate, yellow means it is generating OK now but has
    failed in the past. The numbers in the columns indicate the number of files
@@ -2132,7 +2142,7 @@ Additional information on the lookup tables can be found in the file
 ------- 3.2  ------------------  Ingest Processes ---------------------------
 
 As mentioned above, a flow chart for the ingest processes may be found at
-'http://laps.fsl.noaa.gov/wharton/slide1.html'.
+'http://laps.noaa.gov/wharton/slide1.html'.
 
 ------ 3.2.1 -------------------- LGA Model ---------------------------------
 
@@ -2270,7 +2280,7 @@ This would be especially helpful when running an hourly LAPS while SYNOP
 stations report clouds only every 3 hours.
 
 More information is in the NWP conference paper on Kalman Filtering 
-(McGinley 2001) at http://laps.fsl.noaa.gov/cgi/LAPB.pubs_01.cgi
+(McGinley 2001) at http://laps.noaa.gov/cgi/LAPB.pubs_01.cgi
 
 ------ 3.2.2.3   How to Blacklist stations ---
 
@@ -2354,7 +2364,7 @@ Inputs:
         per volume scan (all with the same volume timestamp in the filenames).
         This data can be obtained from a WSR 88-D Level-II data feed or the
         equivalent. A description of how we obtain these Polar NetCDF files 
-        for Level-II is at 'http://laps.fsl.noaa.gov/albers/remapper_raw.html'.
+        for Level-II is at 'http://laps.noaa.gov/albers/remapper_raw.html'.
 
         The polar NetCDF files are named according to 'yydddhhmm_elevxx' where 
         'xx' is the tilt number.
@@ -2387,10 +2397,10 @@ analyses. One output file is written per volume scan.
 When running the remapper, files such as v01, v02, vrc, etc. are produced 
 depending on which radar is being used and on the input parameters. 
 A further description of how the remapper software functions may be found on 
-the World Wide Web at 'http://laps.fsl.noaa.gov/albers/remapper_laps.html'.
+the World Wide Web at 'http://laps.noaa.gov/albers/remapper_laps.html'.
 Also recall the flow chart showing the inputs and outputs for 
 'remap_polar_netcdf.exe' at 
-'http://laps.fsl.noaa.gov/albers/laps/radar/laps_radar_ingest.html'.
+'http://laps.noaa.gov/albers/laps/radar/laps_radar_ingest.html'.
 
 Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
@@ -2562,6 +2572,11 @@ Inputs:
                 Uses pressure altitude
                 Hourly NetCDF filename convention is 'yydddhh00q.cdf'
 
+            NetCDF files using MADIS CDLs
+                Same format as GSD-NIMBUS
+                Filenames may need to be changed to use the 'yydddhh00q.cdf' 
+                convention.
+
             NetCDF files using WFO/AWIPS CDLs
                 Uses pressure altitude
 
@@ -2595,7 +2610,7 @@ Inputs:
                                  (WFO/AWIPS CDL - NetCDF)
                                  (AFWA and CWB ASCII formats also allowed)
 
-        Satellite Soundings in AFWA or GOES format
+        Satellite Soundings (GOES binary, MADIS POES, or AFWA format)
 
         Dropsonde (AVAPS, CWB, or SND format)
 
@@ -2748,7 +2763,7 @@ Parameter namelist files: 'static/wind.nl', 'static/nest7grid.parms'
 
 Further description and reference is at:
 
-http://laps.fsl.noaa.gov/albers/laps/talks/wind/sld001.htm
+http://laps.noaa.gov/albers/laps/talks/wind/sld001.htm
 
 
 ------ 3.3.2 ----------------- SFC (LSX) -------------------------------------
@@ -2762,7 +2777,7 @@ and fields from selected background models.  Places surface data on LAPS grid
 and performs a simple quality control of the obs (climo + standard deviation
 checks). The quality control is described in the section below at (3.3.2.2).  
 A flow chart can be seen at this URL:
-http://laps.fsl.noaa.gov/albers/laps/talks/sfc/Sfc_anal.gif
+http://laps.noaa.gov/albers/laps/talks/sfc/Sfc_anal.gif
 
 The background fields come from the locally-run LAPS model (FSF file), other
 large-scale models (RUC, ETA, AVN - via the LGB file), or a previous analysis 
@@ -3011,7 +3026,7 @@ Source directory: laps/src/temp
 
 Further description and reference is at:
 
-http://laps.fsl.noaa.gov/albers/laps/talks/temp/sld001.htm
+http://laps.noaa.gov/albers/laps/talks/temp/sld001.htm
 
 ------ 3.3.4 ---------------------CLOUD---------------------------------------
 
@@ -3069,7 +3084,7 @@ Parameter namelist files: static/cloud.nl, static/nest7grid.parms
 
 Further description and reference is at:
 
-http://laps.fsl.noaa.gov/albers/laps/talks/cloud/sld001.htm
+http://laps.noaa.gov/albers/laps/talks/cloud/sld001.htm
 
 
  ------ 3.3.5 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
@@ -3282,7 +3297,7 @@ Reference: Birkenheuer, D. (1999): The effect of using digital
      satellite imagery in the LAPS moisture analysis. Published in
      Wea. Forecasting (14), pp 782-788. 
 
-     Available at http://laps.fsl.noaa.gov/birk/papers/wf99/paper.htm
+     Available at http://laps.noaa.gov/birk/papers/wf99/paper.htm
 
 ------ 3.3.6 ---------------------DERIV---------------------------------------
 
@@ -3452,11 +3467,11 @@ Source directory: laps/src/deriv
 
 Further description and references are at:
 
-http://laps.fsl.noaa.gov/albers/laps/talks/cloud/sld005.htm
+http://laps.noaa.gov/albers/laps/talks/cloud/sld005.htm
 
 and
 
-http://laps.fsl.noaa.gov/albers/laps/talks/wind/sld007.htm
+http://laps.noaa.gov/albers/laps/talks/wind/sld007.htm
 
 ------ 3.3.7 ---------------------ACCUM---------------------------------------
 
@@ -3494,7 +3509,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            precipitation, and temperature. Weather and Forecasting, 11, 
            273-287.
 
-           Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi
+           Available at http://laps.noaa.gov/frd-bin/LAPB.pubs_96.cgi
 
 ------ 3.3.8 ---------------------SOIL MOISTURE------------------------------
 
@@ -3573,7 +3588,7 @@ Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc.
    initialize the forecasts is as follows: Chris Anderson for 
    RAMS/SFM/MM5/WRF/Eta. The models themselves are not included in this tar 
    file. There is some documentation for the model interfacing at this
-   URL: http://laps.fsl.noaa.gov/mm5doc/README_lapsmm5.htm
+   URL: http://laps.noaa.gov/mm5doc/README_lapsmm5.htm
 
 ------ 3.4.1 --------------LAPSPREP------------------------------------------
 
