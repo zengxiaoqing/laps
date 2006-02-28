@@ -1756,143 +1756,103 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
         to change the value of 'laps_cycle_time_cmn'.
 
  ----- 2.10 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
-
+Recent changes as of February 26, 2006
 NAMELIST
 
-The namelist file ./laps/static/moisture_switch.nl controls the data
-assimilation within the moisture analysis.  This file is
-self-documented, refer to it for details.
-
+The namelist file ./laps/static/moisture_switch.nl controls the data 
+assimilation within the moisture analysis.  This file is self-documented, refer 
+to it for details.  This file has not changed in this latest update however, one 
+of it's controlling aspects is GVAP or GOES vapor (total precipitable water, 
+product data) and the application of this data has changed since a major 
+implementation change March 2005.
+  
 OPTRAN
 
-The NESDIS forward radiance model called OPTRAN is incorporated into
-the current release of LAPS.  Details of OPTRAN are available from:
-
+The NESDIS Community Radiative Transmittance Model (CRTM) and forward radiance 
+model called OPTRAN is incorporated into the current release of LAPS.  Details 
+of OPTRAN are available from: 
 Tom Kleespies
 NOAA/NESDIS
-tkleespies@nesdis.noaa.gov
+Thomas.J.Kleespies@noaa.gov
 
-Also OPTRAN can be used by any U.S. Government or U.S. Military
-entity without problem.  ALL other users need to contact NESDIS (Tom
-Kleespies) and receive authorization to use this software.  Generally a
-simple acknowledgement to give full credit to the program author is all
-that is required.  GSD assumes no obligation or responsibility in
-integrating this software as part of LAPS.  To disable the use of
-OPTRAN in LAPS, simply assign the GOES option in the moisture_switch.nl
-namelist file to zero.
+Also OPTRAN can be used by any U.S. Government or U.S. Military entity without 
+problem.  ALL other users need to contact NESDIS (Tom Kleespies) and receive 
+authorization to use this software.  Generally a simple acknowledgement to give 
+full credit to the program author is all that is required.  GSD assumes no 
+obligation or responsibility in integrating this software as part of LAPS.  To 
+disable the use of OPTRAN in LAPS, simply assign the GOES option in the 
+moisture_switch.nl namelist file to zero.
 
-The version of OPTRAN in LAPS is configured to work with GOES 8 and 10
-sounder or imager at this time.  Note also that GOES imager channel 3
-(water vapor) is currently not working for both satellites. 
-Furthermore sounder radiances for GOES 10 are deemed about 98%
-reliable, they are 100% reliable for GOES 8.  NaN values have been
-observed being generated from the GOES 10 sounder coefficients that
-currently accompany this software.  At this time there are only basic
-provisions to handle the NaN state conditions.  They have not been
-observed to crash the moisture analysis and seem to be handled
-gracefully to date.  Any observation otherwise needs to be communicated
+The version of OPTRAN in LAPS is configured to work with GOES-8 and -10 sounder 
+or imager at this time.  Note also that GOES imager channel 5 (water vapor split 
+window) is currently not available on GOES 11, 12 and future satellites since it 
+was replaced with a different band.  Therefore, the GOES imager data should not 
+be used in the moisture algorithm for any GOES satellite 11 and beyond.  There 
+are simply not enough moisture channels available to offer any useful 
+information about moisture depth due to this change.  Furthermore sounder 
+radiances for GOES-10 are deemed about 98% reliable, they are regarded to be 
+100% reliable for GOES-8.  NaN values have been observed being generated from 
+the GOES-10 sounder coefficients that currently accompany this software.  At 
+this time there are only basic provisions to handle the NaN state conditions.  
+They have not been observed to crash the moisture analysis and seem to be 
+handled gracefully to date.  Any observation otherwise needs to be communicated 
 to:
 
 Dan Birkenheuer
 NOAA/GSD
-Daniel.L.Birkenheuer
+Daniel.L.Birkenheuer@noaa.gov
 
-To model the atmosphere with OPTRAN, an atmosphere is formulated that
-extends to 0.1 hPa.  This is a composite of the normal LAPS analyzed
-vertical domain (nominally extending to 100 hPa), spliced together with
-a climatological atmosphere of 20 levels that extends to 0.1 hPa.  The
-joining of the two vertical coordinate systems is computed
-automatically and is continuous.  This will automatically take place
-even if the nominal LAPS levels are extended beyond 100 hPa.  In this
-upper region, temperature, and mixing ratio are functions of latitude
-and Julian day.  Ozone is based on the U.S.  Standard Atmosphere.
-
-CLOUD DATA
-
-Added a switch for enabling cloud data to be used in saturating the air
-in cloudy areas.  This is included as the last item in the
-moisture_switch.nl file that is maintained under the static area.  To
-enable cloud data for saturating the air this is (1) to disable the
-feature, set the character to (0).
-
-You might wonder why we need such a switch.  During October (96) we
-experienced problems with the cloud analysis.  This was inadvertently
-causing problems in the moisture analysis through the cloud saturation
-adjustment.  The incorrect moisture was in turn causing the models to
-blow up.  Hence we added this switch so that we could easily reactivate
-the feature once the cloud analysis was repaired without having to
-worry about recompiling any code.
-
-RAOB DATA
-
-The capability to ingest RAOB data into the moisture module has been
-available since 1996.
-
-There are two important items to know about:
-
-1) The RAOB data are contained in lapsprd/snd/*.snd files.  The
-moisture module will automatically use .snd data if present.  If you do
-not wish to use sounding data there are 2 ways to exclude these data,
-the most obvious is to not provide .snd files.
-
-2) In the event that you wish to exclude the use of sounding data and
-want them to be present in the data directory (possibly for some other
-application) you can avoid using them in the moisture code by modifying
-the file: ./data/static/moisture_switch.nl
-
-The first record of this ASCII file is used for the RAOB data
-inclusion.  The file itself is documented internally following the
-second record.  If the first record is "1" (nominal case), the use of
-sounding data will be on, and .snd files will be processed if present. 
-If this character is "0", the moisture code will not process sounding
-data.
+To model the atmosphere with OPTRAN, an atmosphere is formulated that extends to 
+0.1 hPa.  This is a composite of the normal LAPS analyzed vertical domain 
+(nominally extending to 100 hPa), spliced together with a climatological 
+atmosphere of 20 levels that extends to 0.1 hPa.  The joining of the two 
+vertical coordinate systems is computed automatically and is continuous.  This 
+will automatically take place even if the nominal LAPS levels are extended 
+beyond 100 hPa.  In this upper region, temperature, and mixing ratio are 
+functions of latitude and Julian day.  Ozone is based on the U.S. Standard 
+Atmosphere.
+  
 
 ADDENDUM:  routine RAOB_STEP.F
 
-It should be noted that some users have had to modify the parameter that
-defines dimensions in routine raob_step.f due to the fact that this can
-overflow array limits on some machines.  The current parameter snd_tot
-is set to 1000.  The primary reason for this is to accommodate satellite
-soundings of which there can be many in even a small area.  This
-parameter ties in to the dimensions of the weight matrix
-(ii,jj,snd_tot).  If a large horizontal domain is defined, and you don't
-have a lot of RAOB data and are not using satellite processed soundings,
-you may have better success at compiling this routine by reducing the
-value of snd_tot to a smaller value.
-
+It should be noted that some users have had to modify the parameter that defines 
+dimensions in routine raob_step.f due to the fact that this can overflow array 
+limits on some machines.  The current parameter snd_tot is set to 1000.  The 
+primary reason for this is to accommodate satellite soundings of which there can 
+be many in even a small area.  This parameter ties in to the dimensions of the 
+weight matrix (ii,jj,snd_tot).  If a large horizontal domain is defined, and you 
+don't have a lot of RAOB data and are not using satellite processed soundings, 
+you may have better success at compiling this routine by reducing the value of 
+snd_tot to a smaller value.  
 
 
 GVAP
 
-GVAP data are GOES sounder total precipitable water data acquired from
-the sounding retrieval process.  These data were added to LAPS under a
-grant from NOAA NESDIS.
+GVAP data are GOES sounder total precipitable water data acquired from the 
+sounding retrieval process.  These data were added to LAPS under a grant from 
+NOAA NESDIS.
+  
+The analysis for GVAP data has recently changed from the prior application.  Up 
+until the March 2005 release, GVAP data were used as a direct total moisture 
+data source in that the integrated state variable in the moisture routine (q) 
+was compared to GVAP totals and part of the minimization procedure was to 
+improve this match through variational techniques.
 
-The analysis for GVAP data is basically as follows.  Following the
-varational adjustment for sounder data, (1Dvar), the Q field is
-integrated to give total precipitable water (TPW) at each GVAP
-location.  These values are differenced against the GVAP data.  The
-differences are then analyzed as a 2D field (difference correction
-field) by solving Laplace's equation (minimizing the first derivative).
+It was learned during the IHOP 2002 experiment that the GVAP data were badly 
+biased, especially at asynoptic times.  (see 
+http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi for all publications, and 
+specifically http://laps.fsl.noaa.gov/birk/papers/Birkenheuer2005a/j.pdf for the 
+article about IHOP, or it can be located in the literature at:
+Birkenheuer, D., and S. Gutman, 2005: A comparison of the GOES moisture-derived 
+product and GPS-IPW during IHOP. J. Atmos. Oceanic Tech. 22, 1840-1847.)
 
-Routine weight_field.f is then called with a radius of influence of
-15km.  A weight field is then generated where a weight of 0.5 is
-defined to be at a distance of 15km from a GVAP observation.  GVAP data
-locations are provided in array MASK.  A weight_field array is
-populated with the highest weight value possible at each i,j, location
-determined by the proximity of that location to a GVAP observation
-position.
-
-The analysis concludes by applying the difference correction field to
-the Q field at all levels, (effectively scaling it up or down) and the
-magnitude of this adjustment is controlled by the weight field.  Note
-that it is felt that it is appropriate to scale the Q field with a
-ratio of TPW since TPW is an absolute measure of moisture as is Q. 
-This method assures continuous fields, and limits the corrections to
-the radius of influence (15km) deemed appropriate to GVAP measurements. 
-At this time the only TPW full column adjustment is made.  At a future
-time, it may be worthwhile to design an adjustment based on layer PW
-since 3 layers are routinely available from NESDIS.  
+As a result, the algorithm was modified to use GVAP gradients and to compute 
+gradients in the solution field and match these gradients to those from GVAP.  
+The advantage to using gradients in this procedure was that it eliminates bias 
+and improves data structure.  There is not a Tech Memo that has been published 
+and is also available on line that describes this new technique.  (refer to: 
+http://laps.fsl.noaa.gov/birk/papers/tech_memos/GSD_Tech_Memo_32.pdf or a copy 
+can be gotten directly from GSD)
 
 ------ 2.11 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
@@ -3087,49 +3047,89 @@ Further description and reference is at:
 http://laps.noaa.gov/albers/laps/talks/cloud/sld001.htm
 
 
- ------ 3.3.5 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
+------ 3.3.5 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
 
-Last updated: 5/27/99 by Daniel Birkenheuer
+Last updated: 2/24/2006 by Daniel Birkenheuer
 
 Code organization:
 
-   The moisture code is coordinated by the LQ3 modules all of which (with
-   the exception of libraries) exist under ./src/humid/.  The
-   main driver, lq3driver.x contains only one subroutine call at this time.
+The moisture code is coordinated by the LQ3 modules all of which (with the 
+exception of libraries) exist under ./src/humid/.  The main driver, lq3driver.x 
+contains only one subroutine call at this time. 
+ 
+./src/humid/lq3_driver1a.f (Module) <active>
 
-   ./src/humid/lq3_driver1a.f (Module) <active>
+is the primary moisture processing module that sequences the various 
+subroutines.  
 
-   is the primary moisture processing module that sequences the various
-   subroutines.
+   There is a second routine that formerly was used for HSM satellite 
+processing; it is currently deactivated: 
 
-   There is a second routine that formerly was used for HSM satellite
-   processing; it is currently deactivated:
+./src/humid/lq3_driver1b.f (Module) <deactivated>.
 
-   ./src/humid/lq3_driver1b.f (Module) <deactivated>.
-
-   Now, using the GOES forward radiance model and more advanced techniques,
-   the satellite inclusion takes place in the above "1a" module. Treat the
-   "1b" module as orphan code.
+Now, using the CRTM forward radiance model and more advanced techniques, the 
+satellite inclusion takes place in the above "1a" module. Treat the "1b" module 
+as orphan code.  Furthermore, a FORTRAN 90 compiler is required to fully compile 
+the forward model along with the rest of the moisture analysis system.
 
 
 Control file:
 
-   ./data/static/moisture_switch.nl
+./data/static/moisture_switch.nl
 
-   Is an ASCII file intended for easy editing and control of the moisture
-   modules activities.  The first record controls usage of RAOB data
-   (0=off, 1=on).  The second record controls usage of satellite data (LVD
-   files) and again (0=off; 8=on, use GOES-8, 9=on, use GOES-9).  This
-   module is exported with the RAOB feature OFF and the satellite feature
-   ON and SET FOR GOES-8.  The third switch enables (1) or disables (0)
-   saturating air in cloudy areas. The fourth now enables using sounder 
-   data in lieu of imager data (GOES only).  This should be set to (0) for
-   the current time.
+An ASCII file intended for easy editing and control of the moisture modules 
+activities.  The first record controls usage of RAOB data (0=off, 1=on).  The 
+second record controls usage of satellite data (LVD files) and again (0=off; 
+8=on, use GOES-8, 9=on, use GOES-9).  This module is exported with the RAOB 
+feature OFF and the satellite feature ON and SET FOR GOES-8.  The third switch 
+enables (1) or disables (0) saturating air in cloudy areas. The fourth now 
+enables using sounder data in lieu of imager data (GOES only).  This should be 
+set to (0) for the current time.
+
+Data Particulars:
+
+CLOUD DATA
+
+A "switch" has been added to enable cloud data use to saturate air in cloudy 
+areas.  This is included as the last item in the moisture_switch.nl file that is 
+maintained under the static area.  To enable cloud data for saturating the air 
+this is (1) to disable the feature, set the character to (0).
+
+You might wonder why we need such a switch.  During October (1996), we 
+experienced problems with the cloud analysis.  This was inadvertently causing 
+problems in the moisture analysis through the cloud saturation adjustment.  The 
+incorrect moisture was in turn causing the models runs to fail.  Hence we added 
+this switch so that we could easily reactivate the feature once the cloud 
+analysis was repaired without having to worry about recompiling any code.
+
+RAOB DATA
+
+The capability to ingest RAOB data into the moisture module has been available 
+since 1996.
+
+There are two important items to know about:
+
+1) The RAOB data are contained in lapsprd/snd/*.snd files.  The moisture module 
+will automatically use .snd data if present.  If you do not wish to use sounding 
+data there are 2 ways to exclude these data, the most obvious is to not provide 
+.snd files.  
+
+2) In the event that you wish to exclude the use of sounding data and want them 
+to be present in the data directory (possibly for some other application) you 
+can avoid using them in the moisture code by modifying the file: 
+./data/static/moisture_switch.nl 
+
+The first record of this ASCII file is used for the RAOB data inclusion.  The 
+file itself is documented internally following the second record.  If the first 
+record is "1" (nominal case), the use of sounding data will be on, and .snd 
+files will be processed if present.  If this character is "0", the moisture code 
+will not process sounding data.
 
 Input files:
 
-   Inputs (status as of August 1996) ("grid" designates LAPS netCDF grid
-   file unless otherwise stated):
+   Inputs (status as of August 1996) ("grid" designates LAPS netCDF grid file 
+unless otherwise stated):
+
 <pre>
   *LGA/FUA     grid    MAPS/RUC background analysis or forecast (FUA)
 
@@ -3172,132 +3172,96 @@ Outputs (note LH3 contains 2 fields):
 
 RAOB ENHANCEMENT:
 
-     The RAOB data are added to the analysis via a second pass Barnes
-     analysis.  Normally, a Barnes analysis consists of two parts.
-     The first fills the entire domain with values weighted by the
-     distance to the neighboring points.  In the second pass, a
-     difference field (derived from the difference of the first pass
-     and the observations) is added to the result from the first pass
-     with adjusted weights to better tune to the scale of interest.
+The RAOB data are added to the analysis via a second pass Barnes analysis.  
+Normally, a Barnes analysis consists of two parts.  The first fills the entire 
+domain with values weighted by the distance to the neighboring points.  In the 
+second pass, a difference field (derived from the difference of the first pass 
+and the observations) is added to the result from the first pass with adjusted 
+weights to better tune to the scale of interest.  
 
-     In this application we skip the first pass using instead the
-     "background" analysis in place of the result of the first pass
-     Barnes' result.  The difference field is then generated and
-     applied using a set of weights appropriate for the LAPS domain
-     resolution and density of observations.
+In this application we skip the first pass using instead the "background" 
+analysis in place of the result of the first pass Barnes' result.  The 
+difference field is then generated and applied using a set of weights 
+appropriate for the LAPS domain resolution and density of observations.
 
 SATELLITE ALGORITHM:
-     An essential ingredient of the variational method is a satellite
-     forward radiance model.  The forward model produces a simulated
-     radiance based on temperature, moisture, and ozone profiles along
-     with the temperature of the surface or cloud top, and the
-     pressure of that radiating surface (i.e., surface pressure or
-     cloud top pressure whichever applies).   Also needed are the
-     zenith angle, used to determine the air mass path and optical
-     depth between the radiator and the satellite.  The forward model
-     used for this work was obtained from NESDIS.  The forward model
-     coefficients used for this study were vintage late 1995.
 
-     In order to apply the forward model appropriately, a
-     determination of clear and cloudy fields-of-view (FOV) need to be
-     determined.  The LAPS cloud analysis is used to identify clear
-     and cloudy LAPS grid points.  The analysis as presented here is
-     only working from FOVs classified as clear.  Cloudy FOVs probably
-     can be used, but this is an early attempt at this technique, so a
-     conservative approach was chosen.  Later research may focus on
-     using a combination of both clear and cloudy FOVs in the
-     algorithm.
+An essential ingredient of the variational method is a satellite forward 
+radiance model.  The forward model produces a simulated radiance based on 
+temperature, moisture, and ozone profiles along with the temperature of the 
+surface or cloud top, and the pressure of that radiating surface (i.e., surface 
+pressure or cloud top pressure whichever applies).   Also needed are the zenith 
+angle, used to determine the air mass path and optical depth between the 
+radiator and the satellite.  The forward model used for this work was obtained 
+from NESDIS.  The forward model coefficients used for this study were vintage 
+late 1995.  
 
-     The first step in the algorithm is to assure all the data needed
-     for proper execution are present.  These include channel
-     radiances derived from AWIPS imagery, the LAPS cloud analysis
-     output, the LAPS surface temperature output, and LAPS 3-D
-     temperatures.  The forward model also requires an ozone profile
-     along with moisture and temperature profiles above 100 hPa.
-     These are gotten from climatology since LAPS extends only to 100
-     hPa.  The entire ozone profile is provided by the forward model
-     since LAPS does not analyze this parameter.
+In order to apply the forward model appropriately, a determination of clear and 
+cloudy fields-of-view (FOV) need to be determined.  The LAPS cloud analysis is 
+used to identify clear and cloudy LAPS grid points.  The analysis as presented 
+here is only working from FOVs classified as clear.  Cloudy FOVs probably can be 
+used, but this is an early attempt at this technique, so a conservative approach 
+was chosen.  Later research may focus on using a combination of both clear and 
+cloudy FOVs in the algorithm.
+  
+The first step in the algorithm is to assure all the data needed for proper 
+execution are present.  These include channel radiances derived from AWIPS 
+imagery, the LAPS cloud analysis output, the LAPS surface temperature output, 
+and LAPS 3-D temperatures.  The forward model also requires an ozone profile 
+along with moisture and temperature profiles above 100 hPa.  These are gotten 
+from climatology since LAPS extends only to 100 hPa.  The entire ozone profile 
+is provided by the forward model since LAPS does not analyze this parameter.  
+     
+Next, the forward model is run to verify "clear" LAPS gridpoints, where clear is 
+defined as those points in which both the modeled and measured GOES image 
+radiances in channel 4 (11 micron) agree to with 2K.  This step uses the LAPS 
+thermal and as yet unmodified moisture profiles.  Disparity in the channel 4 
+brightness temperature comparison indicates that the LAPS thermal profile is too 
+far off or perhaps it is really cloudy where the LAPS cloud analysis is 
+indicating it is clear.  (It doesn't have to be totally cloudy for a disparity 
+to exist, it can be partially cloudy and this will still be detectable in this 
+difference test.)   This is a conservative test; it really goes beyond simple 
+cloud detection though that is a likely cause of differences, the forward model 
+check is very sensitive and in many ways eliminates any thermal profiles that 
+subsequent variational technique will find difficult to deal with.  We are 
+basically saying that we will not worry about moisture adjustment unless the 
+thermal profiles are reasonable.  
+     
+At this point, all gridpoints offering promise of moisture adjustment have been 
+identified.  If the domain is totally cloudy, the GOES adjustment is 
+discontinued and returns unmodified moisture values which are passed to the 
+final QC step.  Assuming some gridpoints have been classified as clear, the next 
+step is a variational adjustment at those locations.  The functional evaluated 
+at each gridpoint has and is best described in the literature (see articles 
+under http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi.  
 
-     Next, the forward model is run to verify "clear" LAPS gridpoints,
-     where clear is defined as those points in which both the modeled
-     and measured GOES image radiances in channel 4 (11 micron) agree
-     to with 2K.  This step uses the LAPS thermal and as yet
-     unmodified moisture profiles.  Disparity in the channel 4
-     brightness temperature comparison indicates that the LAPS thermal
-     profile is too far off or perhaps it is really cloudy where the
-     LAPS cloud analysis is indicating it is clear.  (It doesn't have
-     to be totally cloudy for a disparity to exist, it can be
-     partially cloudy and this will still be detectable in this
-     difference test.)   This is a conservative test; it really goes
-     beyond simple cloud detection though that is a likely cause of
-     differences, the forward model check is very sensitive and in
-     many ways eliminates any thermal profiles that subsequent
-     variational technique will find difficult to deal with.  We are
-     basically saying that we will not worry about moisture adjustment
-     unless the thermal profiles are reasonable.
+Basically a funcational is minimized that differences the perturbed solution 
+against observation.  The best perturbation is accepted as the "answer". The 
+first term in the functional maximizes agreement between the forward model and 
+observed radiance at the expense of only modifying the water vapor profile.  The 
+second term adds stability and gives more weight to solutions in which the 
+coefficients departure from unity (no change to the initial profile) is 
+minimized.  The stability term was discovered to be necessary since without it 
+some very good radiance matches were solved but with unreasonable coefficients.
 
-     At this point, all gridpoints offering promise of moisture
-     adjustment have been identified.  If the domain is totally
-     cloudy, the GOES adjustment is discontinued and returns
-     unmodified moisture values which are passed to the final QC step.
-     Assuming some gridpoints have been classified as clear, the next
-     step is a variational adjustment at those locations.  The
-     functional evaluated at each gridpoint has the form (using TEX-
-     type ASCII, ^=superscript and _=subscript),
-<pre>
-           5                             3
-     J = sum [R^o_i -R(t,o,cw)_i]^2  + sum  (1-c_k)^2        (1)
-         i=3                           k=1
-</pre>
-     where the goal is to determine the optimum set of three
-     coefficients.  Each coefficient, c_k is a scaling factor for the
-     moisture corresponding to three atmospheric layers (k).   The
-     layers range from surface to 700 hPa (k=1), 700 - 500 hPa (k=2),
-     and above 500 hPa (k=3).  The forward model radiance (R) is a
-     function of LAPS temperature (t), ozone climatology profile (o),
-     and LAPS mixing ratio (w).  The moisture profile is scaled with
-     the appropriate coefficient (c).  The observed radiance derived
-     from AWIPS image data is designated as R^o_i  where subscript i
-     indicates the imager channel number.
+Note that differences in all three channels are minimized in this technique, not 
+only the moisture channel.  Thus, any improvement in the "dirty window," channel 
+5, will also contribute to the solution.  A variational technique is used to 
+minimize this function and typically requires three to 10 iterations to 
+converge. A limit of 50 iterations was set as the maximum number to attempt.  If 
+limit was reached, that particular gridpoint was excluded and treated as cloudy.  
+Once the coefficients are determined, Laplace's equation is solved for interior 
+points for which coefficients have not been determined.  Then the entire domain 
+is averaged using a spatial invariant filter; simply averaging the values in a 
+3x3 gridpoint window, assigning that average to the window's central grid 
+location.
 
-     The first term in the functional maximizes agreement between the
-     forward model and observed radiance at the expense of only
-     modifying the water vapor profile.  The second term adds
-     stability and gives more weight to solutions in which the
-     coefficients departure from unity (no change to the initial
-     profile) is minimized.  The stability term was discovered to be
-     necessary since without it some very good radiance matches were
-     solved but with unreasonable coefficients.
+When the coefficients have been determined, they are applied to the specific 
+humidity field at each pressure level for which they are designated.  The 
+modified specific humidity field is then advanced to the final analysis step.
 
-     Note that differences in all three channels are minimized in this
-     technique, not only the moisture channel.  Thus, any improvement
-     in the "dirty window," channel 5, will also contribute to the
-     solution.  A variational technique is used to minimize this
-     function and typically requires three to 10 iterations to
-     converge. A limit of 50 iterations was set as the maximum number
-     to attempt.  If limit was reached, that particular gridpoint was
-     excluded and treated as cloudy.
+Reference: http://laps.fsl.noaa.gov/cgi/birk.pubs.cgi
 
-     Once the coefficients are determined, Laplaces equation is solved
-     for interior points for which coefficients have not been
-     determined.  Then the entire domain is averaged using a spatial
-     invariant filter; simply averaging the values in a 3x3 gridpoint
-     window, assigning that average to the window's central grid
-     location.
-
-     When the coefficients have been determined, they are applied to
-     the specific humidity  field at each pressure level for which
-     they are designated.  The modified specific humidity field is
-     then advanced to the final analysis step.  In this August 1996
-     release, the coefficient adjustment is limited to above 500 hPa
-     only.
-
-
-Reference: Birkenheuer, D. (1999): The effect of using digital 
-     satellite imagery in the LAPS moisture analysis. Published in
-     Wea. Forecasting (14), pp 782-788. 
-
-     Available at http://laps.noaa.gov/birk/papers/wf99/paper.htm
 
 ------ 3.3.6 ---------------------DERIV---------------------------------------
 
