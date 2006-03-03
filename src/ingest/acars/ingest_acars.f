@@ -5,13 +5,13 @@
       character*170 filename_in
       character*9 a9_time
       character*180 dir_in
-      character*3 ext_in
+      character*3 ext_in,fname_fmt
+      character*8 c8_file_fmt,c8_project
       character*255 c_filespec
       integer max_files
       parameter(max_files = 3000)
       character*255 c_fnames(max_files)
       integer i4times(max_files)
-      character*8 c8_project
       character*13 filename13, cvt_i4time_wfo_fname13
       logical l_use_tamdar ! applies to non-WFO, non_RSA runs
 
@@ -82,24 +82,38 @@
      1                   ,istatus)
           endif ! within time range to wait for data
 
+          c8_file_fmt = 'NIMBUS'
+
       elseif(c8_project .eq. 'AFWA')then
           ext_in = 'ac'
+          c8_file_fmt = 'AFWA'
           call s_len(dir_in,len_dir_in)
           c_filespec = dir_in(1:len_dir_in)//'/'//'*00q.'//ext_in
 
       else ! Create filespec for WFO format
           ext_in = 'wfo'
+          c8_file_fmt = 'WFO'
           call s_len(dir_in,len_dir_in)
           c_filespec = dir_in(1:len_dir_in)
 
       endif
 
+      fname_fmt = ext_in
+
 !     Get list of files
       call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
 
-      if(i_nbr_files_ret .eq. 0)then
-          write(6,*)' No raw *.cdf files (NIMBUS), trying *.ac (AFWA)'       
+!     Check to see if files are named (presumably) with the WFO convention 
+      if(i_nbr_files_ret .eq. 0 .and. fname_fmt .ne. 'wfo')then
+          write(6,*)' No raw files with filename convention of '
+     1              ,fname_fmt
+          write(6,*)
+     1        ' Try for wfo filename convention (e.g. MADIS ACARS)...'       
+          ext_in = 'wfo'
+          fname_fmt = 'wfo'
+          call s_len(dir_in,len_dir_in)
+          c_filespec = dir_in(1:len_dir_in)
           call get_file_times(c_filespec,max_files,c_fnames
      1                          ,i4times,i_nbr_files_ret,istatus)
       endif
@@ -108,7 +122,8 @@
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
           ext = 'pin'
       else
-          write(6,*)' No raw data files identified:',' *.',ext_in
+          write(6,*)' No raw data files identified of fname fmt '
+     1              ,fname_fmt
           goto999
       endif
 
@@ -122,7 +137,10 @@
       i4_acars_window = max(i4_wind_ob,i4_temp_ob)
 
 !     Loop through ACARS files and choose ones in time window
-      write(6,*)' # of raw ACARS files = ',i_nbr_files_ret,' *.',ext_in
+      write(6,*)' # of raw ACARS files = ',i_nbr_files_ret
+      write(6,*)' File Format = ',c8_file_fmt
+      write(6,*)' Filename Format = ',fname_fmt
+
       do i = 1,i_nbr_files_ret
           call make_fnam_lp(i4times(i),a9_time,istatus)
           filename_in = c_fnames(i)
@@ -143,26 +161,26 @@
               write(6,*)' File is in time window ',a9_time,i
               write(6,*)' Input file ',filename_in
 
-              if(ext_in .eq. 'cdf')then ! NIMBUS NetCDF
+              if(c8_file_fmt .eq. 'NIMBUS')then ! NIMBUS NetCDF
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
                   call get_acars_data(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
-     1                                      ,c8_project
+     1                                      ,c8_file_fmt
      1                                      ,ext
      1                                      ,l_use_tamdar
      1                                      ,filename_in,istatus)
-              elseif(ext_in .eq. 'wfo')then ! WFO NetCDF
+              elseif(c8_file_fmt .eq. 'WFO')then ! WFO NetCDF
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
                   filename13 = cvt_i4time_wfo_fname13(i4times(i))
                   call get_acars_data(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
-     1                                      ,c8_project
+     1                                      ,c8_file_fmt
      1                                      ,ext
      1                                      ,l_use_tamdar
      1                                      ,filename_in,status)
-              elseif(ext_in .eq. 'ac')then ! AFWA ASCII
+              elseif(c8_file_fmt .eq. 'AFWA')then ! AFWA ASCII
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
                   call get_acars_afwa(i4time_sys,i4_acars_window
@@ -170,7 +188,7 @@
      1                                      ,ext
      1                                      ,filename_in,istatus)
               else
-                  write(6,*)' ERROR, invalid ext_in: ',ext_in
+                  write(6,*)' ERROR, invalid c8_file_fmt: ',c8_file_fmt       
                   istatus = 0
                   return
               endif
