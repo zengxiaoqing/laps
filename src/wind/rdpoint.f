@@ -57,6 +57,9 @@ cdis
 !       1997 Jun    Ken Dritz     Removed include of 'lapsparms.for'.
 !       1998        Steve Albers  Called Sequentially for acars winds, 
 !                                 then cloud drift winds.
+!	2006 Feb    Yuanfu Xie	  Change rk attribute to rk from k_grid
+!				  and assign values of ri and rj for
+!			       	  obs_point.
 
 !******************************************************************************
 
@@ -314,7 +317,9 @@ cdis
                         obs_point(nobs_point)%i = i_grid
                         obs_point(nobs_point)%j = j_grid
                         obs_point(nobs_point)%k = k_grid
-                        obs_point(nobs_point)%rk = k_grid
+                        obs_point(nobs_point)%ri = ri	! Yuanfu
+                        obs_point(nobs_point)%rj = rj	! Yuanfu
+                        obs_point(nobs_point)%rk = rk ! k_grid ! Yuanfu
                         obs_point(nobs_point)%valuef(1) = u_temp-u_diff       
                         obs_point(nobs_point)%valuef(2) = v_temp-v_diff       
                         obs_point(nobs_point)%weight = weight_ob
