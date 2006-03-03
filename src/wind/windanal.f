@@ -420,6 +420,7 @@ csms$serial end
      1                              ,n_var,max_obs,obs_radar          ! I/O
      1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
+                  if(istatus .ne. 1)return
 
                   deallocate(varobs_diff_spread)
                   ialloc_varobs_diff_spread = 0
@@ -544,6 +545,7 @@ csms$serial end
      1                              ,n_var,max_obs,obs_radar          ! I/O
      1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
+                  if(istatus .ne. 1)return
 
                   deallocate(varobs_diff_spread)
                   ialloc_varobs_diff_spread = 0
@@ -679,6 +681,7 @@ csms$insert      print *, 'got to 10 processor=',me
      1                              ,n_var,max_obs,obs_radar          ! I/O
      1                              ,ncnt_radar,weight_radar_total    ! O
      1                              ,istatus)                         ! O
+              if(istatus .ne. 1)return
 
               deallocate(varobs_diff_spread)
               ialloc_varobs_diff_spread = 0
