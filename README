@@ -903,8 +903,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      LAPS user to modify the LAPS ingest code if necessary to generate the 
      intermediate data files that are inputs to the analysis code. 
 
-     A flow chart for the ingest processes may be found at
-     'http://laps.noaa.gov/wharton/slide1.html'.
+     A flow chart for the ingest processes may be found at this URL:
+     http://laps.noaa.gov/doc/slide1_v3.gif
 
      The default LAPS ingest code obtains "raw" data, generally from the GSD 
      NIMBUS system. The raw data can either be in ASCII, NetCDF (as point 
@@ -2102,7 +2102,7 @@ Additional information on the lookup tables can be found in the file
 ------- 3.2  ------------------  Ingest Processes ---------------------------
 
 As mentioned above, a flow chart for the ingest processes may be found at
-'http://laps.noaa.gov/wharton/slide1.html'.
+'http://laps.noaa.gov/doc/slide1_v3.gif'.
 
 ------ 3.2.1 -------------------- LGA Model ---------------------------------
 
@@ -2608,9 +2608,9 @@ Input:
 Output:
          LVD/'SATID'	grid	LAPS satellite data file
 				SATID (e.g. goes08 or goes09)
-</pre>
 
          CTP            grid    Cloud-top pressure information 
+</pre>
 
 Parameter namelist file: 'static/satellite_lvd.nl'
 
@@ -2806,10 +2806,13 @@ Inputs:
                     - or -
          LSO_QC QC'd surface observations
 
-	 LGB	Background model on LAPS grid
+         LGA    Background model (3-D fields) on LAPS grid
+                (State variables from 700mb and 500mb)
+
+	 LGB	Background model (surface fields) on LAPS grid
                 (TSF, PSF, SLP, DSF, P, VIS) fields
                     - or -
-         FSF    Background local model
+         FSF    Background local model (surface fields)
                 (T, PS, MSL, TD, P, VIS) fields
                     - or -
 	 LSX    (previous hour's LSX)
@@ -3019,8 +3022,8 @@ Inputs:                                          '*' = essential input
 
       * vrc/v01/vrz  grid          2-D or 3-D radar reflectivity	
 
-        lvd          grid          Infra-red and Visible satellite data
-                                            (not essential, though recommended)
+      * lvd          grid          Infra-red and Visible satellite data
+                                            (requirements are adjustable)
 	pin	     inter data	   pireps/clouds
         lm2          grid          composite snow cover (prev hour normally)
       * lga/fua      grid          model data analysis / forecast
@@ -3328,7 +3331,8 @@ Outputs:
                                     areas of snow virga not reaching the ground.
                                     The latter may be more useful for display
                                     purposes by end users. PTT also utilizes
-                                    METAR data to delineate areas of drizzle,
+                                    METAR data (in concert with analyzed cloud 
+                                    fraction) to delineate areas of drizzle,
                                     freezing drizzle, rain, freezing rain, 
                                     and snow - in areas that radar does not 
                                     detect echoes.
