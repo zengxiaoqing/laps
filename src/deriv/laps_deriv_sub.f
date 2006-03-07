@@ -995,7 +995,7 @@ c read in laps lat/lon and topo
         var = 'LRP'
         units = 'NONE'
         comment = 'Icing Severity Index '//
-     1  '1-LtInt,2-MdInt,3-HvInt,4-LtCnt,5-MdCnt,6-HvCnt'
+     1  '1-LtCnt,2-MdCnt,3-HvCnt,4-LtInt,5-MdInt,6-HvInt'
         call put_laps_3d(i4time,ext,var,units,comment,out_array_3d
      1                                  ,NX_L,NY_L,NZ_L)
 
