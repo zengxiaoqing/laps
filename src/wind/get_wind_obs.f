@@ -281,6 +281,7 @@ cdis
 
 !       Perform horizontal remapping of profile obs onto LAPS grid
 !       They have already been vertically interpolated
+!	2006	Yuanfu Xie	Use of the fraction grid values of obs_point.
 
         include 'barnesob.inc'
         type (barnesob) :: obs_point(max_obs)                           
@@ -363,6 +364,8 @@ cdis
                                     obs_point(nobs_point)%i = i_ob
                                     obs_point(nobs_point)%j = j_ob
                                     obs_point(nobs_point)%k = k
+                                    obs_point(nobs_point)%ri = ri    ! Yuanfu
+                                    obs_point(nobs_point)%rj = rj    ! Yuanfu
                                     obs_point(nobs_point)%rk = k
                                     obs_point(nobs_point)%valuef(1)=ob_u       
                                     obs_point(nobs_point)%valuef(2)=ob_v

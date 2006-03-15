@@ -64,6 +64,7 @@ c                             not exactly match the LAPS analysis time.
 c                             Accept only those profiler obs whose 
 c                             mid-window times are within one LAPS cycle
 c                             time of the current LAPS analysis time.
+c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
 
 
 !*****************************************************************************
@@ -331,6 +332,8 @@ c
                         obs_point(nobs_point)%i = i_ob
                         obs_point(nobs_point)%j = j_ob
                         obs_point(nobs_point)%k = klaps
+                        obs_point(nobs_point)%ri = ri	! Yuanfu
+                        obs_point(nobs_point)%rj = rj	! Yuanfu
                         obs_point(nobs_point)%rk = rklaps
                         obs_point(nobs_point)%valuef(1) = ob_u + u_diff       
                         obs_point(nobs_point)%valuef(2) = ob_v + v_diff
