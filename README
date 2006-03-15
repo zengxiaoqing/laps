@@ -1428,10 +1428,15 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      that the 'raw_data' directory is on a separate tree than $LAPS_DATA_ROOT.
 
      Raw data formats and filename conventions are consistent with the default
-     namelist settings taken from the repository (generally in NIMBUS format 
-     with associated file naming conventions). 
+     namelist settings taken from the repository. This is generally in NIMBUS 
+     (self describing NetCDF) format with associated file naming conventions. 
+     A typical filename on NIMBUS looks like this: '0606701000100o' meaning 
+     'yydddhhmmHHMM' where 'ddd' is the day of year, 'hhmm' is the time of day 
+     and 'HHMM' is the file recurrence interval. More about NIMBUS is detailed 
+     in publications on the web at this URL:
+     http://www-its.fsl.noaa.gov/papers/nimbus/welcome.html
 
-     The time information will be needed in the form of 'data/time/systime.dat';
+     Time information will be needed in the form of 'data/time/systime.dat';
      this can be extracted from the 'lapsdata*' tar file.
 
      The 'raw_data' directory is a convenient place to store test data. User
@@ -2534,8 +2539,8 @@ Inputs:
 
             NetCDF files using MADIS CDLs
                 Same format as GSD-NIMBUS
-                Filenames may need to be changed to use the 'yydddhh00q.cdf' 
-                convention.
+                Software can automatically switch to the MADIS filename
+                convention of 'yyyymmdd_hhmm' if needed.
 
             NetCDF files using WFO/AWIPS CDLs
                 Uses pressure altitude
