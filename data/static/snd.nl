@@ -9,7 +9,16 @@
  /
 c SOUNDING ingest (ingest_sounding.exe)
 c
-c Note that dropsonde 'drpsnd' data works for AVAPS and CWB formats at present
+c 'path_to_raw_drpsnd'
 c
-c The 'poessnd' data is for MADIS POES data (if project is not AFWA)
-c     WARNING: POES is still very much under construction
+c Note that dropsonde 'drpsnd' data works for AVAPS, CWB, and SND formats at 
+c present. If SND format is the input, then 'c8_project' should be set to
+c 'AIRDROP' in 'nest7grid.parms'. When we have the ASCII SND file in one 
+c directory being the input, and SND as output in a second directory, the 
+c software's main purpose is applying the time windowing to the observations.
+c
+c
+c 'path_to_raw_poessnd'
+c
+c The 'poessnd' data is for MADIS POES data (if 'c8_project' is not AFWA)
+c The default is for this to be "off" as this is still somewhat experimental.
