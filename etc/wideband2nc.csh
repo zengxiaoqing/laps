@@ -1,6 +1,12 @@
 #!/bin/csh
 
-#Convert Archive-II radar files into Polar NetCDF
+#Convert Archive-II radar files into Polar NetCDF using the GSD/ITS supplied software package.
+
+#In realtime mode, this script can be run in cron using 'laps_driver.pl'.
+#A cron line can be constructed that is analogous to this: 
+#00,05,10,15,20,25,30,35,40,45,50,55   * * * *  /usr/bin/perl /usr/nfs/lapb/builds/laps/etc/laps_driver.pl wideband2nc.csh /usr/nfs/lapb/builds/laps /data/lapb/projects/smg/rt 
+
+#In archive mode, this script can be run using 'casererun.pl' with appropriate command line arguments.  
 
 #This script reads additional info from $LAPS_DATA_ROOT/static/widebandlist.txt
 
