@@ -12,7 +12,7 @@ select STDOUT; $|=1;
 $ENV{PATH}="";
 my(%lapsprds)=( "AWIPS"      => '/data/fxa/laps/lapsprd',
                 "FSLD"       => '/data/fxa/sdd/laps/lapsprd',
-  	        "WFOJ"       => '/data/lapb/wfoj/data/lapsprd');
+  	        "WFOJ"       => '/data/lapb/projects/wfoj/data/lapsprd');
 
 # This defines the order of the sources in the table
 #
