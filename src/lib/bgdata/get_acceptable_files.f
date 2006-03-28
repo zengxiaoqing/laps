@@ -38,7 +38,7 @@
       character*9 bkgd(3500)
       character*4 fcst(3000,120)
       character*9 finit1,finit2
-      integer  ifcst,ibkgd
+      integer  ibkgd
       integer  ifcst_bkgd(3000)
       integer  i4timeinit(3000)
       integer  valid_time_1,valid_time_2
@@ -320,10 +320,11 @@ C            Start a new init time
            endif
 
          endif
-         if(bgmodel.eq.0 .and. cmodel.eq.'LAPS_FUA'.or.
-     +       cmodel.eq.'MODEL_FUA'.or.cmodel.eq.'LAPS')then
-             fcst(ibkgd,ifcst)=bg_names(n)(10:11)
-         else
+Curiously had to comment these lines as we now need 4 char to retain full filename
+c        if(bgmodel.eq.0 .and. cmodel.eq.'LAPS_FUA'.or.
+c    +       cmodel.eq.'MODEL_FUA'.or.cmodel.eq.'LAPS')then
+c            fcst(ibkgd,ifcst_bkgd(ibkgd))=bg_names(n)(10:11)
+c        else
              fcst(ibkgd,ifcst_bkgd(ibkgd))=bg_names(n)(10:13)
              IF (bgmodel .EQ. 4 .OR. bgmodel .EQ. 10) THEN
                IF (ifcst_bkgd(ibkgd).EQ.1)THEN
@@ -331,7 +332,7 @@ C            Start a new init time
                  print *,"**** ",TRIM(names_tmp(ibkgd))
                ENDIF
              endif
-         endif
+c        endif
 
       enddo
 
