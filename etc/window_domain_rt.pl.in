@@ -41,7 +41,7 @@ $ENV{PATH}="$ENV{PATH}:@NETCDF@/bin";
 #       and also runs gridgen_model (producing the static file). If $opt_m
 #       is defined then only the namelists are updated (no ggm).
 #
-# opt_w is which type (either laps or wrfsi).
+# opt_w is which type (laps, wrfsi, or wrfsi.rotlat).
 #
 # In some cases LAPSINSTALLROOT = LAPS_SRC_ROOT. This is made possible
 # by perl module mkdatadirs in laps_tools.pm. It removes Makefile dependence.
@@ -68,7 +68,7 @@ if(defined $opt_h){
    exit;}
 
 if(!defined $opt_w){die "\nYou must decide and use the -w command line input to
-                           specify the type of localization desired. Two options:
+                           specify the type of localization desired. Three options:
                            1. -w laps
                            2. -w wrfsi
                            3. -w wrfsi.rotlat\n\n";}
@@ -94,7 +94,7 @@ if($domain_type eq "laps"){
    $LAPS_DATA_ROOT = $ENV{MOAD_DATAROOT} if( $ENV{MOAD_DATAROOT} && !defined $LAPS_DATA_ROOT);
 }else{
    die "\nUnknown domain type entered with -w command line input: $domain_type.
-          You have two options:
+          You have three options:
           1. -w laps
           2. -w wrfsi
           3. -w wrfsi.rotlat\n\n";
@@ -549,7 +549,7 @@ if($restore_files eq "false" && !defined $opt_m){
 
    if($error_lines gt 0){
       print "Lines with error found in localize_domain.log\n";
-      print "Settting variable -- restore_files -- to true\n";
+      print "Setting variable -- restore_files -- to true\n";
       $restore_files="true";
       foreach(@loc){if( /error/i ){
                     print "$_\n";}
