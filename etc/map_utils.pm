@@ -2,7 +2,7 @@
 #  map_utils.pm
 #
 #  This is a Perl module for converting (i,j) to (lat,lon) and vice versa
-#  for any of 4 map projections:  Cylindrical Equadistant (lat-lon), 
+#  for any of 4 map projections:  Cylindrical Equidistant (lat-lon), 
 #  Mercator, lambert conformal (secant and tangent), and polar 
 #  stereographic.  
 #
@@ -86,7 +86,8 @@ my $earth_radius_m = 6371200.0;
 my %proj_descr = ( LL => "CYLINDRICAL EQUIDISTANT",
                    ME => "MERCATOR",
                    LC => "LAMBERT CONFORMAL",
-                   PS => "POLAR STEREOGRAPHIC"
+                   PS => "POLAR STEREOGRAPHIC",
+                   RL => "ROTATED LAT-LON"
                  );
 
 # Here is a hash cross-referencing the character string
@@ -95,7 +96,8 @@ my %proj_descr = ( LL => "CYLINDRICAL EQUIDISTANT",
 my %proj_codes = ( LL => 0,
                    ME => 1,
                    LC => 3,
-                   PS => 5
+                   PS => 5,
+                   RL => 3
                  );
 
 
@@ -140,6 +142,8 @@ sub map_set($$$$$$$$$$$) {
   # Get the input parameters
   my ($type, $knownlat, $knownlon, $kri, $krj, $dx, $stdlon, 
       $truelat1, $truelat2, $nx, $ny) = @_;
+
+     $type = 'LC' if $type =~ /RL/i;
 
   my %proj = map_set_sub($type, $knownlat, $knownlon, $dx, $stdlon,
                          $truelat1,$truelat2,$nx,$ny);
@@ -194,7 +198,7 @@ sub map_set_sub($$$$$$$$$) {
   # Ensure latitude of southwest corner is between -90 and 90 degrees
 
   if (abs($latsw) > 90.0) {
-    print "map_set: Invalide lat: $latsw\n";
+    print "map_set: Invalid lat: $latsw\n";
     print "  -90.0 <= latsw <= 90.\n";
     die;
   }else{
@@ -215,7 +219,7 @@ sub map_set_sub($$$$$$$$$) {
   if ( ($type ne "LL") and ($dx <= 0)){
     print "map_set: Invalid dx: $dx\n:";
     print "  For projections other than lat/lon, dx must be set to\n";
-    print "  a postive value in meters.\n";
+    print "  a positive value in meters.\n";
     die;
   }else{
    ${proj{dx}} = $dx;
