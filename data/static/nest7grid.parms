@@ -1,5 +1,5 @@
  &lapsparms_nl
- c80_description='NOAA/ERL Forecast Systems Laboratory, Boulder CO (PARALLEL)'
+ c80_description='NOAA/ESRL Global Systems Division, Boulder CO (PARALLEL)'
  iflag_lapsparms_cmn=1,              
 
  c6_maproj='plrstr',                 
