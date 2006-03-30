@@ -26,7 +26,7 @@ then
 fi
 if test "$datadir" = '${prefix}/share'
 then
-  datadir="$prefix/data"
+  datadir="$prefix/domains" # datadir="$prefix/data"
 fi
 echo "Installing data in $datadir"
 
@@ -319,5 +319,9 @@ AC_OUTPUT(src/include/trigd.inc
           etc/window_domain_rt.pl
           etc/wait4lapsprep.pl
           etc/wrfpost.pl
-          etc/xferData.pl)
+          etc/xferData.pl
+          etc/generate_images.pl
+          gui/make_gui.pl
+          gui/install_perlTk.sh
+          gui/guiTk/ui_system_tools.pl)
 
