@@ -1,0 +1,511 @@
+#!@PERL@
+# @configure_input@
+#
+# Usage: make_gui.pl $LAPS_SRC_ROOT $LAPSINSTALLROOT $LAPS_DATA_ROOT $TEMPLATE
+# Paula McCaslin  - Jan 2006
+#--------------------
+
+require 5.00503;
+umask 002;
+use strict;
+use English;
+use Getopt::Long;
+use Cwd;
+
+my $PATH_TO_PERL='@PERL@';
+my ($fline);
+# Set up some default roots before the help option, so that we
+# capture the use of SOURCE_ROOT, INSTALLROOT, DATAROOT
+# environment variables if set
+my ($defsrcroot, $definstallroot, $defdataroot,$deftemplates,
+    $defgeogdataroot, $defuitempdir);
+
+if ($ENV{LAPS_SRC_ROOT}) {
+  $defsrcroot=$ENV{LAPS_SRC_ROOT};
+}else{
+
+  if (($0 eq "make_gui.pl") or ($0 eq "./make_gui.pl")) {
+    $defsrcroot = cwd;
+  }else{
+    if ($0 =~ /S*\/make_gui.pl/){
+      $defsrcroot = $`;
+      chdir "$defsrcroot";
+      $defsrcroot = cwd;
+    }else{
+      die "Problem determining srcroot.  Either specify --source_root or
+           run from within the source directory!\n";
+    }
+  }
+}
+
+if ($ENV{LAPSINSTALLROOT}){
+  $definstallroot=$ENV{LAPSINSTALLROOT};
+}else{
+  $definstallroot=$defsrcroot;
+}
+
+if ($ENV{GEOG_DATAROOT}){
+  $defgeogdataroot=$ENV{GEOG_DATAROOT};
+}else{
+  $defgeogdataroot="$definstallroot/GEOG";
+}
+
+if ($ENV{DATAROOT}){
+  $defdataroot=$ENV{DATAROOT};
+}else{
+  $defdataroot="$definstallroot/../laps_domains";
+}
+
+if ($ENV{TEMPLATE}){
+  $deftemplates=$ENV{TEMPLATE};
+}else{
+  $deftemplates="$definstallroot/../laps_templates";
+}
+
+if ($ENV{UI_TEMPDIR}){
+  $defuitempdir=$ENV{UI_TEMPDIR};
+}else{
+  $defuitempdir="/tmp";
+}
+
+my($INSTALLROOT,$SRCROOT,$DATAROOT,
+   $GEOGDATAROOT, $TEMPLATES,$UI_TEMPDIR,$helpme);
+my $result = GetOptions("installroot=s" => \$INSTALLROOT,
+                       "source_root=s"  => \$SRCROOT,
+                       "dataroot=s" => \$DATAROOT,
+                       "templates=s"=> \$TEMPLATES,
+                       "geog_dataroot=s" => \$GEOGDATAROOT,
+                       "ui_tempdir=s" => \$UI_TEMPDIR,
+                       "help" => \$helpme, 
+                       );
+
+if ($helpme) {
+  print "
+LAPS Installation Script Usage:
+
+perl make_gui.pl [options]
+
+  Valid Options:
+
+    --installroot=INSTALLROOT
+      Top level directory to install code executable scripts/programs
+      DEFAULT: $definstallroot
+      (Supercedes INSTALLROOT environment variable)
+
+    --source_root=LAPS_SRC_ROOT   
+      Source root (contains src subdirectory)
+      DEFAULT: $defsrcroot
+      (Supercedes LAPS_SRC_ROOT environment variable)
+
+    --dataroot=DATAROOT
+      Area where domains will be created (large data volume)
+      DEFAULT: $defdataroot
+      (Supercedes DATAROOT environment variable)
+
+    --templates=TEMPLATES
+      Directory containing template subdirectories for window_domain script
+      DEFAULT: $deftemplates
+
+    --geog_dataroot=GEOG_DATAROOT
+      Top-level directory containing global landuse/topography data directories
+      DEFAULT: $defgeogdataroot
+      (Supercedes GEOG_DATAROOT environment variable)
+
+    --ui_tempdir=UI_TEMPDIR
+      Scratch directory for files created by the user interface. 
+      DEFAULT: $defuitempdir
+      (Supercedes UI_TEMPDIR environment variable)
+
+}
+exit;
+
+
+Typical Installation:
+
+ perl make_gui.pl 
+
+This will install the code in the bin and etc subdirectories of the 
+source directory created when you untarred the file.  DATAROOT 
+will also be in that same directory, and a template subdirectory
+will be created there as well.\n";
+exit;
+}
+
+# If srcroot was not specfied, then try and determine source root
+# based on the knowledge that the make_gui.pl script is usually
+# found in the SRCROOT.
+
+if (! $SRCROOT) { 
+  $SRCROOT = $defsrcroot;
+} 
+
+if (! $INSTALLROOT)   { 
+  if ($ENV{LAPSINSTALLROOT}){
+     $INSTALLROOT = $ENV{LAPSINSTALLROOT};
+  } else {
+     $INSTALLROOT = $definstallroot;
+  }
+} 
+
+if (! $TEMPLATES ) {
+  if ($ENV{TEMPLATES}){
+     $TEMPLATES = $ENV{TEMPLATES};
+  } else {
+     $TEMPLATES = "$INSTALLROOT/../laps_templates";
+  }
+}
+
+if (! $DATAROOT) {
+  if ($ENV{DATAROOT}){
+     $DATAROOT = $ENV{DATAROOT};
+  } else {
+     $DATAROOT = "$INSTALLROOT/../laps_domains";
+  }
+}
+
+if (! $GEOGDATAROOT) {
+  if ($ENV{GEOG_DATAROOT}){
+     $GEOGDATAROOT = $ENV{GEOG_DATAROOT};
+  } else {
+     $GEOGDATAROOT = "$INSTALLROOT/GEOG";
+  }
+}
+
+if (! $UI_TEMPDIR) {
+  if ($ENV{UI_TEMPDIR}){
+     $UI_TEMPDIR = $ENV{UI_TEMPDIR};
+  } else {
+     $UI_TEMPDIR = "/tmp";
+  }
+}
+
+# Main
+# ----
+$|=1; # Set autoflush on to disable buffering.
+print "Routine: make_gui.pl \n\n";
+print "Directory setup:\n";
+print "SRCROOT = $SRCROOT \n";
+print "INSTALLROOT = $INSTALLROOT \n";
+print "TEMPLATES = $TEMPLATES\n";
+print "DATAROOT = $DATAROOT \n";
+print "GEOG_DATAROOT = $GEOGDATAROOT\n";
+print "UI_TEMPDIR = $UI_TEMPDIR\n";
+
+
+#  Set up the templates directory using the TEMPLATE variable
+#------------------------------------
+my $deftempl = "$TEMPLATES/default";
+if (! -d "$deftempl"){
+  if (! -d "$TEMPLATES"){ mkdir "$TEMPLATES"; }
+  mkdir "$deftempl" ||  die "Could not mkdir $deftempl!\n";
+  system ("cp $SRCROOT/data/static/nest7grid.parms $deftempl");
+  system ("cp $SRCROOT/data/static/pressures.nl $deftempl");
+  system ("cp $SRCROOT/gui/data/static/domain.gif $deftempl"); 
+}
+
+# Make sure we have a data root as specified...if not, create it.
+if (! -d "$DATAROOT") {
+  mkdir "$DATAROOT", 0777 ||  die "Could not mkdir $DATAROOT!\n";
+}
+
+# Create default dataroot.txt file for gui.
+#--------------------------------------
+open(DT, ">$deftempl/dataroot.txt");
+print DT "$DATAROOT\n";
+close(DT);
+
+
+# Check to see if GEOG data is present.  
+#--------------------------------------
+print "\n";
+print "Checking to see if GEOG data is present, 30 second topography \n";
+my $topo_30s=0;
+if (-e "$GEOGDATAROOT/topo_30s/UHEADER") {
+  $topo_30s = 1;
+  print "...found in $GEOGDATAROOT\n";
+}else{
+  print " **NOT** found in $GEOGDATAROOT\n";
+}
+
+$GEOGDATAROOT =~ s/\/$//;
+# Edit the template directory/nest7grid.parms for some entries we know.
+#--------------------------------------
+if ($topo_30s) {
+ open(WNL, "$deftempl/nest7grid.parms");
+ my @nllines = <WNL>;
+ close(WNL);
+
+ open(WNL, ">$deftempl/nest7grid.parms");
+ foreach $fline (@nllines){
+
+   if ($fline =~ /path_to_topt30s/i) {
+     $fline = " path_to_topt30s = \'$GEOGDATAROOT/world_topo_30s\',\n";
+   }
+   if ($fline =~ /path_to_landuse30s/i) {
+     $fline = " path_to_landuse30s = \'$GEOGDATAROOT/landuse_30s\',\n";
+   }
+   if ($fline =~ /path_to_soiltype_top30s/i) {
+     $fline = " path_to_soiltype_top30s = \'$GEOGDATAROOT/soiltype_top_30s\',\n";
+   }
+   if ($fline =~ /path_to_soiltype_bot30s/i) {
+     $fline = " path_to_soiltype_bot30s = \'$GEOGDATAROOT/soiltype_bot_30s\',\n";
+   }
+   if ($fline =~ /path_to_greenfrac/i) {
+     $fline = " path_to_greenfrac = \'$GEOGDATAROOT/greenfrac_ncep\',\n";
+   }
+   if ($fline =~ /path_to_soiltemp1deg/i) {
+     $fline = " path_to_soiltemp1deg = \'$GEOGDATAROOT/soiltemp_1deg\',\n";
+   }
+   if ($fline =~ /path_to_albedo/i) {
+     $fline = " path_to_albedo = \'$GEOGDATAROOT/albedo_ncep\',\n";
+   }
+   if ($fline =~ /path_to_maxalbedo/i) {
+     $fline = " path_to_maxalbedo = \'$GEOGDATAROOT/maxsnowalb\',\n";
+   }
+   if ($fline =~ /path_to_islope/i) {
+     $fline = " path_to_islope = \'$GEOGDATAROOT/islope\',\n";
+   }
+   print WNL $fline;
+ }
+ close(WNL);
+}
+
+# Make SRCROOT/data/static/nest7grid.parms identical to the templates/default/nest7grid.parms.
+system("cp -f $deftempl/nest7grid.parms $SRCROOT/data/static/nest7grid.parms"); 
+
+
+# Set NCL vars.
+# -------------
+my ($ncarg_root,$ncl_command);
+if ($ENV{NCARG_ROOT}){
+  $ncarg_root=$ENV{NCARG_ROOT};
+} else {
+  $ncarg_root=`which 'idt'`;
+  $ncarg_root=~ s/\/bin\/idt//;
+  chomp($ncarg_root);
+}
+
+if ($ENV{NCL_COMMAND}){
+  $ncl_command=$ENV{NCL_COMMAND};
+} elsif (-e '$ENV{NCARG_ROOT}/bin/ncl'){
+  $ncl_command='$ENV{NCARG_ROOT}/bin/ncl';
+} else {
+  $ncl_command=`which 'ncl'`;
+  chomp($ncl_command);
+}
+
+# Create the config_paths file for use by the GUI and document all paths.
+# ---------------------------------------------
+my $SOURCE_ROOT=$SRCROOT;
+open (CFG, ">$INSTALLROOT/config_paths");
+print CFG "\$DATAROOT='$DATAROOT';\n";
+print CFG "\$TEMPLATES='$TEMPLATES';\n";
+print CFG "\$GEOG_DATAROOT='$GEOGDATAROOT';\n";
+print CFG "\$EXT_DATAROOT='null';\n";
+print CFG "\$INSTALLROOT='$INSTALLROOT';\n";
+print CFG "\$SOURCE_ROOT='$SOURCE_ROOT';\n";
+print CFG "\$UI_TEMPDIR='$UI_TEMPDIR';\n";
+print CFG "\$PATH_TO_PERL='$PATH_TO_PERL';\n\n";
+print CFG "# This file records the values for the default paths as\n";
+print CFG "# defined when the install script (make_gui.pl) ran.\n";
+print CFG "# This file was designed for the LAPS GUI. Definitions:\n#\n";
+print CFG "# DATAROOT:  Directory under which domains will be created.\n#\n";
+print CFG "# GEOG_DATAROOT:  Top directory containing subdirectories of \n";
+print CFG "# tile land use, topography, etc. data for use when localizing.\n#\n";
+print CFG "# TEMPLATES:  Directory containing template files.\n#\n";
+print CFG "# INSTALLROOT:  Path to compile/installed code and scripts.\n#\n";
+print CFG "# SOURCE_ROOT:  Path to original source code.\n#\n";
+print CFG "# PATH_TO_PERL: Path to the system location for perl.;\n\n";
+
+print CFG "\$NCARG_ROOT='$ncarg_root';\n";
+print CFG "\$NCL_COMMAND='$ncl_command';\n\n";
+print CFG "# When NCARG_ROOT and NCL_COMMAND are set there will be an additional user \n";
+print CFG "# interface tab 'Domain Graphics' located under gui's 'Domain Selection' Tool.\n";
+print CFG "# See wrfsi.noaa.gov/gui/faq_ncl for more info. \n\n"; 
+close (CFG);
+
+# Run $SRCROOT/gui/install_gui.pl, which will:
+# o check for installation of Perl/Tk
+# o install Perl/Tk, if necessary.
+
+# Link files with installroot, if necessary.
+#--------------------------------------------
+my $myLOG="$SOURCE_ROOT/gui/gui_install.log";
+open (LOG, ">> $myLOG");
+print LOG "Starting install_gui.pl\n\n";
+
+# Make directories and copy files to installroot, if necessary.
+#--------------------------------------------
+if ($SOURCE_ROOT ne $INSTALLROOT) {
+  chdir "$INSTALLROOT";
+
+  # Copy files to installroot, if necessary.
+  #--------------------------------------------
+  foreach my $gui_file ("gui/guiTk") {
+     if(!-e "$INSTALLROOT/$gui_file" ){
+         system("cp -Rf $SOURCE_ROOT/$gui_file $INSTALLROOT/$gui_file");
+     }
+  }
+  
+  # Link files with installroot, if necessary.
+  #--------------------------------------------
+  foreach my $gui_file ("gui/data") {
+     if(!-e "$INSTALLROOT/$gui_file" ){
+         system("ln -s $SOURCE_ROOT/$gui_file $INSTALLROOT/$gui_file");
+     }
+  }
+}
+
+# Check for installation of code by listing files.
+# ------------------------------------------------------
+print LOG "\nCheck configure in $INSTALLROOT/gui/guiTk\n";
+system("ls -rtal $INSTALLROOT/gui/guiTk/*.pl 1>> $myLOG 2>&1");
+print LOG "\nCheck installation in $INSTALLROOT/gui\n";
+system("ls -rtal $INSTALLROOT/gui 1>> $myLOG 2>&1");
+
+# Check for the binaries.
+# ------------------------------------------------------
+chdir "$SOURCE_ROOT";
+print LOG "\nMakefile success?\n";
+if( -e "$INSTALLROOT/bin/pwrap_ll_xy_convert.exe" &&
+    -e "$INSTALLROOT/bin/gen_map_bkgnd.exe" ){
+   print "\nBinaries used in GUI successfully installed\n";
+   system("ls -rtal $INSTALLROOT/bin");
+} else {
+   print "\nBinaries used in GUI not installed\n";
+   open(MIO,"$myLOG");
+   my @mio=<MIO>;
+   close(MIO);
+   foreach(@mio){next if !/error/i && !/ignored/i;
+                print "$_\n";}
+   print "\n";
+} 
+
+# Check for installation of Perl/Tk by running perl with 'use Tk'.
+# ------------------------------------------------------
+chdir "$SOURCE_ROOT/gui";
+print "\nDomain gui build complete.  Next step(s):\n";
+print "\to Determine if Perl/Tk is installed.\n";
+print LOG "\n\nDomain gui build complete.  Next step(s):\n";
+print LOG "\to Determine if Perl/Tk is installed.\n";
+
+my $sys_call_arg="$PATH_TO_PERL -e 'use Tk'";
+my $ans=system("$sys_call_arg 1>> $myLOG 2>&1");
+print "\to Perl/Tk is available on system if status=0. Status=$ans for '$sys_call_arg'\n\n";
+print LOG "\to Perl/Tk is available on system, if status=0. Status=$ans for '$sys_call_arg'\n\n";
+
+
+my $opt_perl="-Mblib=$SOURCE_ROOT/gui/perlTk/blib";
+if ($ans != 0) {
+# Perl/Tk is not included with the standard system perl libraries, i.e. @INC. 
+# You want Version 800.023 or higher.
+ 
+    # Make directory, if necessary.
+    my $gui_dir="$SOURCE_ROOT/gui/perlTk";
+    if(!-e "$gui_dir"){ mkdir "$gui_dir", 0777 or die "Won't mkdir $gui_dir $!\n";}
+
+    # Check $SOURCE_ROOT for a user installed perlTk/blib directory. 
+    my @perltk_found="";
+    @perltk_found=`find perlTk/blib -name Tk.pm`;
+
+    if (@perltk_found) {
+       # Perl/Tk is installed.
+    } else {
+       # Install Perl/Tk.
+       print "\to Perl/Tk not found; \n";
+       print "\t  Installing Perl/Tk now, in addition to the Domain GUI; \n";
+       print "\t  This could take 10 mins; \n";
+       print "\t  Successful test of Perl/Tk installation will cause windows to \n";
+       print "\t  flash (i.e. display and quickly disappear) on your screen.\n";
+ 
+       print LOG "\to Perl/Tk not found; installing now (this takes 10 mins...)\n";
+       $ENV{SOURCE_ROOT}=$SOURCE_ROOT; 
+       system("$SOURCE_ROOT/gui/install_perlTk.sh 1> perlTk_install.log 2>&1");
+    }
+
+    # Test installation of Perl/Tk.
+    $ENV{PERL5OPT}=$opt_perl; 
+    my $ans2=system("$sys_call_arg 1>> $myLOG 2>&1");
+    print "\nPerl/Tk has been built in the SOURCE_ROOT directory. \n";
+    print LOG "\nPerl/Tk has been built in the SOURCE_ROOT directory. \n";
+   
+    if ($ans2 == 0) {
+       # Success.
+       if (-d "$SOURCE_ROOT/gui/Tk800.023") { 
+          system("rm -rf $SOURCE_ROOT/gui/Tk800.023"); };
+       print "\to To use this version set env variable PERL5OPT to the following value\n";
+       print "\t 'setenv PERL5OPT $opt_perl'.\n";
+       print LOG "\to To use this version set env variable PERL5OPT to the following value\n";
+       print LOG "\t 'setenv PERL5OPT $opt_perl'.\n";
+
+    } else {
+       # Fail.
+       print "\to Perl/Tk FAILURE, installation failed or could be corrupt:\n";
+       print "\t\t $SOURCE_ROOT/gui/perlTk\n";
+       print "\to Exiting install_gui.pl with error status.\n";
+       print LOG "\to Perl/Tk FAILURE, installation failed or could be corrupt:\n";
+       print LOG "\t\t $SOURCE_ROOT/gui/perlTk\n";
+       print LOG "\to Exiting install_gui.pl with error status.\n";
+       # Exit on error.
+       exit;
+    };
+
+}
+$sys_call_arg="$PATH_TO_PERL -v | grep version";
+system("$sys_call_arg 2> /dev/null");    # for output to screen.
+system("$sys_call_arg 1>> $myLOG 2>&1"); # for output to LOG file.
+$sys_call_arg="$PATH_TO_PERL -e 'use Tk; print \"\to This is perl/Tk, version \$Tk::VERSION installed in library \$Tk::library\"' ";
+system("$sys_call_arg 2> /dev/null");    # for output to screen.
+system("$sys_call_arg 1>> $myLOG 2>&1"); # for output to LOG file.
+
+my $ifile="$INSTALLROOT/ui_tools";
+my $ofile="$UI_TEMPDIR/ui_tools.log";
+print "\n\nThe Perl/Tk installation is successful.  Next step:\n";
+print "\to Run $ifile to set up gui.\n\n";
+print LOG "\n\nThe Perl/Tk installation is successful.  Next step:\n";
+print LOG "\to Run '$ifile' to set up gui.\n";
+close (LOG);
+ 
+# Create ui_tools script to launch the Domain GUI. 
+# ------------------------------------------------------
+open (SRT, ">$ifile");
+print SRT "#!$PATH_TO_PERL\n";
+print SRT "# Script to launch the Domain GUI.\n#\n";
+print SRT "umask 000;\n";
+if ($ans) { 
+  print SRT "\$ENV{PERL5OPT}='$opt_perl';\n"; 
+} else {
+  print SRT "# \$ENV{PERL5OPT}='$opt_perl';\n\n";
+}
+
+print SRT "my \$ans=system(\"$INSTALLROOT/gui/guiTk/ui_system_tools.pl 1> $ofile 2>&1\");\n";
+print SRT "if (\$ans) { print \"Look at file $ofile\\n\"; };\n";
+print SRT "exit;";
+close (SRT);
+chmod 0775, "$ifile";
+chmod 0775, "$INSTALLROOT/gui/guiTk/ui_system_tools.pl";
+
+# Create symbolic link to ui_tools.
+# ------------------------------------------------------
+chdir "$INSTALLROOT";
+if( -e "$INSTALLROOT/ui_tools" && !-e "$INSTALLROOT/ui_tools") {
+     system ("ln -s ui_tools ui_tools"); 
+}
+
+# Installation complete
+# ---------------------------------------------
+print "\n\n";
+print "**********************************************************************\n"; 
+print "Installation complete.  Next steps:\n";
+print "**********************************************************************\n\n";
+
+if (-e "$INSTALLROOT/ui_tools") {
+  print "-- Use the LAPS GUI to set up your domains.\n";
+  print "   >>> use this script '$INSTALLROOT/ui_tools' to start the LAPS GUI <<<\n\n";
+}
+
+# Fini.
+# ----
+exit;
+
+__END__

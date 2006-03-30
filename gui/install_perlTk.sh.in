@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# -------------------------------------------------------
+# Installing Perl/Tk for use with WRF SI.
+# 
+# Assuming you're on Unix, use a web browser and go to 
+# http://www.cpan.org/authors/id/NI-S "Comprehensive Perl Archive 
+# Network Site", "authors", "Nick Ing-Simmons".  Grab the latest 
+# Perl/Tk tar file, presumably "Tk-804.027.tar.gz" and download it.  
+# Like all well behaved Perl modules, the following steps should 
+# suffice for installation: 
+#
+#  Linux: gtar -zxvpf Tk-804.027.tar.gz 
+
+   echo '----- Uncompressing and untarring Tk-804.027.tar.gz'
+   tar -xvzf Tk-804.027.tar.gz
+   if [ $? != 0 ]
+      then
+        echo '----- tar -z flag does NOT work, use 2nd method'
+        gunzip Tk-804.027.tar.gz
+        tar -xvf Tk-804.027.tar
+        gzip Tk-804.027.tar
+   fi
+   cd Tk-804.027 
+
+   echo '----- perl Makefile.PL'
+   PERL5OPT=""; export PERL5OPT
+   @PERL@ Makefile.PL 
+
+   if [ $LANG = "en_US.utf8" ]
+      then
+        echo '----- RedHat known bug: env variable LANG changed from "'$LANG'" to "en_US".'
+        export LANG=en_US
+   fi
+
+   echo '----- make'
+   make 
+
+   echo '----- make test'
+   make test 
+
+# To clean-up do the following.
+
+   cd ..
+   mkdir perlTk
+
+   echo '----- cp -R Tk-804.027/blib perlTk'
+   cp -R Tk-804.027/blib perlTk
+
+   echo '----- exiting install_perlTk.sh'
+   exit

@@ -1,0 +1,34 @@
+ 
+GUI binary cartographic data file informaion.
+ 
+These files originate from the AWIPS map data files.
+The map background files are found by searching i
+nstall_dir/gui/data/maps for .bcd using a 'find' 
+command in the GUI. e.g. Latlon10.bcd.
+
+These file have little endian structure.
+
+conandsta   |.bcd |Continent and state boundary map data
+uscounty    |.bcd |US county boundary map data
+reg_zones   |.bcd |Zones map data
+latlon10    |.bcd |Lat/Lon 10 deg over ocean
+artcchi     |.bcd |Air Route Traffic Control Center ARTCC Sectors
+2m_trans    |.bcd |state roads background map
+statehwy    |.bcd |state highways background map
+interstate  |.bcx |interstate background map
+major_rivers|.bcd |major rivers background map
+2m_hydro    |.bcd |State rivers background map
+basins      |.bcd |State river drainage basins background map
+fireWxZones |.bcd |fire weather zones background map
+reg_county  |.bcd |Regional county map data
+usa_cwa     |.bcd |County Warning Areas
+usa_rfc     |.bcd |RFC boundaries
+reg_lake    |.bcd |RFC boundaries
+
+For more information see:
+http://www.nws.noaa.gov/geodata
+http://www.nws.noaa.gov/geodata/catalog/hydro/html/rivers.htm
+http://www.nws.noaa.gov/geodata/catalog/wsom/html/marinezones.htm
+
+and the directory doc/
+

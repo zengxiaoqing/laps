@@ -1,0 +1,77 @@
+LAPS GUI
+
+1.0 INTRO
+---------
+
+The WRF standard initialization graphical user interface (GUI) 
+package automates domain localization.
+
+
+2.0 INSTALLING the LAPS GUI:
+---------------------
+
+2.1 Installation Requirements
+-----------------------------
+
+The following packages are required:
+
+      ---   2.1.1  Perl           ---
+
+The perl package is also required for LAPS; it is available
+via internet at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.
+Perl 5.003 or higher is required. Check that 'perl' is in your path.
+
+      ---   2.1.2  Perl/Tk        ---
+
+The Tk extension does not come with the standard Perl distribution. If it is not
+on your system it is easy to install by visiting the CPAN (Comprehensive Perl
+Archive Network) at www.cpan.org/authors/id/NI-S, looking for the most recent
+version in the form of Tk800.023.tar.gz. Once you get the tar file, unzip,
+untar and install it.
+
+The WRF GUI is located with the WRF source code in a directory called laps/gui.
+
+      ---   2.1.3  C             ---
+
+There are a few C routines in the library.  gcc is the recommended
+compiler.
+
+      ---   2.1.4   make          ---
+
+The Makefiles (top level, src/lib and src/grid) work with either
+Unix or GNU make utilities (version 3.75 or higher).  GNU make
+is available at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.
+You can check the version of gnu make by typing 'make -v'. 
+
+
+2.2  LAPS Directory Overview
+-----------------------------
+Before building and running the LAPS system, it is useful to understand
+the directory structure we use and the rationale.  There are four distinct
+"top-level" directories refer to the LAPS README.
+
+
+2.3 Building LAPS GUI
+----------------------
+ 
+perl install_gui.pl --source_root=$SOURCE_ROOT --installroot=$INSTALLROOT 
+
+   --source_root=/your/source/root
+     Set if you want to use a different set of source code than
+             the one contained in the directory with the install script
+   --installroot=/your/installroot/
+     Set this to install in a directory other than SOURCE_ROOT
+
+By installing, you get:
+
+$INSTALLROOT/gui/data
+     "          /data
+     "          /data/maps
+     "          /doc
+     "          /guiTk
+     "          /guiTk/icons
+     "          /perlTk
+     "          /src
+
+bin:        contains the two required binary executables;
+gui/guiTk:  contains the perl/Tk scripts and modules to run GUI;
