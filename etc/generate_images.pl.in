@@ -1,0 +1,758 @@
+#!@PERL@
+##################################################################################
+# generate_images.pl *** ORIGINAL AUTHOR: Thomas Helman, NOAA FSL FRD *** ########
+##################################################################################
+# CHANGE HISTORY INFORMATION:
+# 
+# DATE-		AUTHOR-			DESCRIPTION OF MODIFICATIONS-
+# --------------------------------------------------------------------------------
+# 04/15/2003	thomas.helman@noaa.gov	CREATION OF INITIAL SCRIPT DESIGN
+# 11/22/2003    john.r.smart@noaa.gov   ADDED DOMAIN NESTING CAPABILITY
+# 11/08/2005           "                USE FOR LAPS (static.nest7grid) DOMAIN
+# 
+##################################################################################
+# USAGE INFORMATION:
+#
+# EXAMPLE-
+# generate_images.pl -domain=/wrfsi/domains/japan -type=avc -type=use -mode=meta -grid=01
+#
+# REQUIRED-
+# [-domain]  	// FULL path to domain containing data for image processing
+#
+# NCAR Graphics // Version 4.1.1 or higher required for NCL scripts
+#               // Version 4.3.0 or higher is suggested for best results
+#               // NCAR graphics program "ncl" must be installed.
+#
+# ---------------------------------------------------------------------------------
+# OPTIONAL-
+# [-type]	// DEFAULT: 
+#		// if no "-type" specified, script generates default image set
+#		// defined by the @DEFAULT_TYPES array in this script.
+#		//
+#		// OPTION(S):
+#		// will process N-number of user defined "-type" values
+#		//
+#               // WRFSI valid types: avc use lnd stl sbl gnn gnx tmp slp alb albint
+#               // LAPS  valid types: avg use ldf alb albint\n";
+#			
+# [-mode]	// DEFAULT: 
+#		// -mode=single <-generates ONLY individual *.ncgm files for
+#		//		  type(s) requested.
+#		//
+#		// OPTION(S):
+#		// -mode=meta   <-generates individual AND aggregate *.ncgm files
+#		//
+#
+# [-grid]       // OPTION(S):
+#               // Only valid for WRFSI\n";
+#               // specify grid (1, 2, etc., up to NUM_DOMAINS [in wrfsi.nl]) or do
+#               // all domains (1 to NUM_DOMAINS) if -grid omitted.
+#
+# HELP-
+# [-h, -help]	// DEFAULT:
+# 		// prints out the above usage information.
+#
+##################################################################################
+##################################################################################
+
+use strict;
+use Getopt::Long;
+use Env qw(NCARG_ROOT);
+use Env qw(NCL_COMMAND);
+
+my @WRFSI_TYPES = qw(avc use lnd stl sbl gnn gnx tmp slp alb albint);
+my @LAPS_TYPES =  qw(avg use ldf alb albint);
+my @DEFAULT_TYPES;
+my @OPTION_TYPES;
+my @ACTIVE_TYPES;
+
+my $DOMAIN;
+my $MODE;
+my $GRID;
+my $METSYS;
+my $HELP;
+my $CURRENT_TYPE;
+my $CURRENT_TYPE_NAME;
+my $CURRENT_NAME;
+my $CURRENT_META_NAME;
+my @NUM_DOMAINS;
+my ($i,$dom);
+my $type_name;
+my $num_requested = 0;
+my $num_generated = 0;
+my $exitcode = -1;
+my $addncgm;
+my ($static_name,$staticname);
+
+&GetOptions("domain=s" => \$DOMAIN, 
+            "type=s" =>   \@OPTION_TYPES,
+            "mode=s" =>   \$MODE,
+            "grid=s" =>   \$GRID,
+            "h" =>        \&printHelpMessage,
+            "help" =>     \&printHelpMessage,
+            "<>"  =>      \&printHelpMessage);
+
+my $ncarg_version = ncarg_working_version();
+
+if($ncarg_version == 1)
+{
+   print "Acceptable version of NCAR graphics: $ncarg_version\n\n";
+}
+else
+{
+   print "*!* You should change your NCARG_ROOT and NCL_COMMAND Environment Variables *!*\n";
+   print "*!* The NCL scripts recommend using NCARG-4.1.1 or higher. *!*\n\n";
+   exit;
+}
+
+my $STATIC_PATH;
+my $namelist;
+
+if(defined $DOMAIN)
+{
+        $STATIC_PATH = "$DOMAIN/static";
+}
+elsif(defined $ENV{MOAD_DATAROOT})
+{
+        $DOMAIN=$ENV{MOAD_DATAROOT};
+        $STATIC_PATH = "$DOMAIN/static";
+}
+elsif(defined $ENV{LAPS_DATA_ROOT})
+{
+        $DOMAIN=$ENV{LAPS_DATA_ROOT};
+        $STATIC_PATH = "$DOMAIN/static";
+}
+else
+{
+	printHelpMessage(); 
+        exit;
+}
+
+my $NCL = "$NCARG_ROOT/bin/ncl";
+
+require "@prefix@/etc/laps_tools.pm";
+
+$METSYS = &laps_tools::get_system_type($DOMAIN);
+
+$static_name = "wrfsi";
+$static_name="nest7grid" unless $METSYS eq "WRFSI";
+
+print "\n\n>>> PROGRAM START: generate_images.pl <<<\n\n";
+if (validateOptions() && validatePaths() )      #&& generateStaticLink())
+{
+	print "<*> INITIALIZATION: OK\n\n";
+	
+	print "<*> GENERATING IMAGES FOR DOMAIN: $DOMAIN\n";
+	print "<*> DATA WILL BE CREATED IN: $DOMAIN/static\n\n";
+
+        if($METSYS eq "WRFSI")
+        {
+	        @NUM_DOMAINS = &laps_tools::get_nl_value("wrfsi.nl","num_domains",$DOMAIN);
+                @ACTIVE_TYPES=@WRFSI_TYPES;
+                @DEFAULT_TYPES=@WRFSI_TYPES;
+                $namelist = "wrfsi.nl";
+        }else{
+                @NUM_DOMAINS[0] = 1;
+                @ACTIVE_TYPES=@LAPS_TYPES;
+                @DEFAULT_TYPES=@LAPS_TYPES;
+                $namelist = "nest7grid.parms";
+        }
+
+        if(defined $GRID)
+	{
+		if($GRID > $NUM_DOMAINS[0])
+		{	print "<*> GRID NUMBER ENTERED EXCEEDS NUM_DOMAINS IN $namelist\n";
+                        print "<*> Grid Number = $GRID; Num_domains = $NUM_DOMAINS[0]\n\n";
+			exit;
+		}
+		$NUM_DOMAINS[0]=$GRID;
+	}else{
+		$GRID=1;
+		$NUM_DOMAINS[0]=$GRID;
+        }
+
+	if ($OPTION_TYPES[0] eq "GENERATE_DEFAULT")
+	{
+		print "<*> NO SPECIFIC TYPE(S) REQUESTED, GENERATING DEFAULT IMAGE SET\n\n";
+		@ACTIVE_TYPES = @DEFAULT_TYPES;
+	}
+	else
+	{
+		@ACTIVE_TYPES = @OPTION_TYPES;
+	}
+
+        for ($i=$GRID; $i<=$NUM_DOMAINS[0]; $i++) {
+
+             if(generateStaticLink())
+             {
+
+	     	foreach $type_name (@ACTIVE_TYPES)
+		{
+          		$CURRENT_TYPE = $type_name;
+			#print "### DEBUG: \$CURRENT_TYPE = $CURRENT_TYPE\n";
+                	albint() if($CURRENT_TYPE  eq "albint");
+			runNCL();
+			$num_requested++;
+		}
+                if ($MODE eq "meta")
+                {
+                        generateMetaNCGM();
+                }
+
+	     }
+             else
+             {
+                #EXIT STATUS: ERROR
+                print "*!* INITIALIZATION: FAILED\n";
+                $exitcode = 0;
+                programExit();
+             }
+
+	}
+
+	reportSuccessRate();
+}
+else
+{
+	#EXIT STATUS: ERROR
+       	print "*!* INITIALIZATION: FAILED\n\n";
+        printHelpMessage();
+       	$exitcode = 0;
+       	programExit();
+}
+#EXIT STATUS: OK
+$exitcode = 1;
+programExit();
+##################################################################################
+# END MAIN PROGRAM LOGIC##########################################################
+##################################################################################
+
+
+
+
+sub reportSuccessRate
+{
+	$num_generated = 0;
+
+        for ($i=$GRID; $i<=$NUM_DOMAINS[0]; $i++)
+        {
+             if($METSYS eq "WRFSI")
+             {
+                   if($i<10)
+                   {
+                      $dom="d0$i";
+                   }
+                   else
+                   {
+                      $dom="d$i";
+                   }
+                   $CURRENT_META_NAME = "meta.".$dom.".ncgm";
+             }
+             else
+             {
+                   $CURRENT_META_NAME = "meta.ncgm";
+             }
+
+             foreach $type_name (@ACTIVE_TYPES)
+             {
+                     $CURRENT_TYPE = $type_name;
+		     $CURRENT_TYPE =~ s/.ncl//g;
+                     if($METSYS eq "WRFSI")
+                     {
+                          $CURRENT_NAME = $CURRENT_TYPE.".".$dom.".ncgm";
+                     }
+                     else
+                     {
+                          $CURRENT_NAME = $CURRENT_TYPE.".ncgm";
+                     }
+                if (-e "$STATIC_PATH/$CURRENT_NAME")
+                {
+                        $num_generated++;
+                }
+             }
+	     print "\n[*] SUCCESSFULLY GENERATED $num_generated OF $num_requested NCGM FILE(S) REQUESTED\n";
+	     if ($MODE eq "meta")
+             {
+	         if (-e "$STATIC_PATH/$CURRENT_META_NAME")
+	 	 {
+			print "[*] SUCCESSFULLY GENERATED FILE: $CURRENT_META_NAME\n";
+		 }
+		 else
+		 {
+			print "*!* FAILED TO GENERATE FILE: $CURRENT_META_NAME\n";
+			$exitcode = 0;
+        		programExit();
+		 }
+	     }
+        }
+}
+
+
+
+
+sub generateMetaNCGM
+{
+        my $META_STRING = "med";
+	$num_generated = 0;
+
+        if($METSYS eq "WRFSI")
+        {
+              if($i<10)
+              {
+                 $dom="d0$i";
+              }
+              else
+              {
+                 $dom="d$i";
+              }
+              $CURRENT_META_NAME = "meta.".$dom.".ncgm";
+        }
+        else
+        {
+              $CURRENT_META_NAME = "meta.ncgm";
+        } 
+
+	print "\n<*> META - BUILDING LIST FOR AGGREGATE FILE: meta.$dom.ncgm\n";
+	
+	if (-e "$STATIC_PATH/$CURRENT_META_NAME")
+        {
+		`rm -f $STATIC_PATH/$CURRENT_META_NAME`;
+	}
+
+	foreach $type_name (@ACTIVE_TYPES)
+	{
+		$CURRENT_TYPE = $type_name;
+		$CURRENT_TYPE =~ s/.ncl//g;
+                if($METSYS eq "WRFSI")
+                {
+                        $CURRENT_TYPE_NAME = $CURRENT_TYPE.".".$dom.".ncgm";
+                }
+                else
+                {
+                        $CURRENT_TYPE_NAME = $CURRENT_TYPE.".ncgm";
+                }
+
+		if (-e "$STATIC_PATH/$CURRENT_TYPE_NAME") 
+		{
+			$addncgm = system("med -e 'r $STATIC_PATH/$CURRENT_TYPE_NAME'");
+			if($addncgm == 0)
+			{
+				print "<*> META - ADDING FILE: $CURRENT_TYPE_NAME\n";
+				$META_STRING = $META_STRING . " -e 'r $CURRENT_TYPE_NAME'";
+				$num_generated++;
+			}
+			else
+			{
+				print ">!< WARNING: META FILE not readable -> $CURRENT_TYPE_NAME\n";
+				print ">!< WARNING: Not adding $CURRENT_TYPE_NAME to meta ncgm\n";
+			}
+		}
+	}
+
+	if ($num_generated > 0)
+	{
+		print "<*> META - GENERATING AGGREGATE NCGM FILE: $CURRENT_META_NAME\n";
+		$META_STRING = $META_STRING . " -e 'w $CURRENT_META_NAME'";
+		#print "###DEBUG: \$META_STRING = $META_STRING\n";
+		
+		`cd $STATIC_PATH;$META_STRING`;
+
+		if (!(-e "$STATIC_PATH/$CURRENT_META_NAME"))
+		{
+			print "*!* META - FAILED TO CREATE FILE: $CURRENT_META_NAME\n";
+		     	$exitcode = 0;
+       			programExit();
+		}
+	}
+	else
+	{
+		print "*!* META - CANNOT CREATE $CURRENT_META_NAME FILE, ZERO REQUESTED NCGM FILES FOUND\n";
+		$exitcode = 0;
+                programExit();
+	}
+}
+
+
+
+
+sub runNCL
+{
+	$CURRENT_TYPE =~ s/.ncl//g;
+	if (-e "$CURRENT_TYPE.ncl")
+	{
+                if($METSYS eq "WRFSI")
+                {
+                      if($i<10)
+                      {
+                         $dom="d0$i";
+                      }
+                      else
+                      {
+                         $dom="d$i";
+                      }
+                      $CURRENT_NAME = $CURRENT_TYPE.".".$dom.".ncgm";
+                }
+                else
+                {
+                      $CURRENT_NAME = $CURRENT_TYPE.".ncgm";
+                }
+
+		if (-e $CURRENT_NAME)
+		{
+			`rm $CURRENT_NAME`;
+		}
+        	print "<*> RUNNING NCL SCRIPT: $CURRENT_TYPE.ncl\n";
+		
+		$num_generated++;
+		
+		`$NCL_COMMAND < $CURRENT_TYPE.ncl > ncl.out`;
+		`rm -f $STATIC_PATH/$CURRENT_NAME`;
+			
+		if (-e "$CURRENT_TYPE.ncgm")
+                {
+                        `mv $CURRENT_TYPE.ncgm $STATIC_PATH/$CURRENT_NAME`;
+                }
+		else
+		{
+			print ">!< WARNING: $CURRENT_TYPE.ncl FAILED TO GENERATE NCGM FILE: $CURRENT_NAME\n";
+		}
+        }
+        else
+        {
+        	print ">!< REQUESTED NCL FILE NOT FOUND: $CURRENT_TYPE.ncl <-SKIPPING: $CURRENT_TYPE\n";
+        }
+}
+
+
+
+sub generateStaticLink
+{
+        $dom="";
+        chomp $dom;
+        if($METSYS eq "WRFSI")
+        {
+           if($i<10)
+           {  
+                $dom=".d0$i";
+           }
+           else
+           {
+                 $dom=".d$i";
+           }
+        }
+
+	#CHECK FOR STATIC FILE
+        $staticname=$STATIC_PATH."/static.".$static_name.$dom;
+        if (-e $staticname)
+	{
+		if (-e "static.cdf")
+		{
+			#REMOVE OLD .CDF LINK
+			`rm -f static.cdf`;
+		}
+		#CREATE NEW .CDF LINK
+		`ln -fs $staticname static.cdf`;
+	
+		#CHECK FOR SUCCESSFUL .CDF LINK CREATION
+                if (-e "static.cdf")
+                {
+			return 1;
+                }
+                else
+		{
+			print "*!* UNABLE TO CREATE LINK: static.cdf\n";
+			return 0;
+		}
+        }
+	else
+        {
+                print "*!* REQUIRED: $staticname FILE NOT FOUND\n"; return 0;
+	}
+}
+
+
+
+
+sub validateOptions
+{
+	if (!$DOMAIN)
+	{
+		print "*!* REQUIRED: DOMAIN VALUE NOT SET\n";
+		return 0;
+	}
+
+	if (!$OPTION_TYPES[0])
+	{
+		#IF TYPE NOT SET, GENERATE DEFAULT IMAGES
+		$OPTION_TYPES[0] = "GENERATE_DEFAULT";
+	}
+	
+	if (!$MODE)
+	{
+		$MODE = "single";
+	}
+
+        if(!$METSYS)
+        {
+                print "*! REQUIRED:  System type not set\n";
+                print "*! Use -metsys to input either WRFSI or LAPS\n";
+                return 0;
+
+        }elsif($METSYS != "WRFSI" || $METSYS != "LAPS")
+        {
+                print "*! REQUIRED:  System type not properly set\n";
+                print "*! Use -metsys to input either WRFSI or LAPS\n";
+                return 0;
+        }
+        if($METSYS eq "LAPS" && $GRID > 1)
+        {
+                print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+                print "!!!      Inconsistent parms      !!!\n";
+                print "!!!   -grid > 1 when system=LAPS !!!\n";
+                print "!!!  Do not use -grid for a LAPS !!!\n";
+                print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+                return 0;
+        }
+
+	return 1;
+}
+
+
+
+
+sub validatePaths
+{
+#print "### DEBUG: \$STATIC_PATH = $STATIC_PATH\n";
+#print "### DEBUG: \$NCARG_ROOT = $NCARG_ROOT\n\n";
+
+        if (defined $ENV{LAPS_DATA_ROOT} && defined $ENV{MOAD_DATAROOT})
+        {
+                print "*!* Both WRFSI and LAPS DATAROOTS set - \n";
+                print "WRFSI: $ENV{MOAD_DATAROOT}\n";
+                print "LAPS : $ENV{LAPS_DATA_ROOT}\n";
+                return 0;
+        }
+
+	if (!(-e "$STATIC_PATH"))
+	{
+		print "*!* REQUIRED: PATH DOES NOT EXIST $STATIC_PATH\n";
+		return 0;
+	}
+        elsif (!$NCARG_ROOT)
+        {
+                print "*!* REQUIRED: ENVIRONMENT VARIABLE NOT SET - \$NCARG_ROOT\n";
+                return 0;
+        }
+        elsif (!(-e "$NCARG_ROOT"))
+        {
+                print "*!* REQUIRED: PATH DOES NOT EXIST $NCARG_ROOT\n";
+                return 0;
+        }
+	elsif (!$NCL_COMMAND)
+        {
+                print "*!* REQUIRED: ENVIRONMENT VARIABLE NOT SET - \$NCL_COMMAND\n";
+                return 0;
+        }
+        elsif (!(-e "$NCL_COMMAND"))
+        {
+                print "*!* REQUIRED: COMMAND DOES NOT EXIST \$NCL_COMMAND: $NCL_COMMAND\n";
+                return 0;
+        }
+	return 1;
+}
+
+
+
+sub printHelpMessage
+{
+	print "\n";
+        print "##################################################################################\n";
+	print "# USAGE INFORMATION: generate_images.pl\n";
+	print "#\n";
+	print "# EXAMPLE-\n";
+	print "# generate_images.pl -domain=/wrfsi/domains/japan -type=avc -type=use -mode=meta\n";
+	print "#\n";
+	print "# REQUIRED-\n";
+	print "# [-domain]     // FULL path to domain containing data for image processing\n";
+	print "#\n";
+        print "# NCAR Graphics // Version 4.3.0 or higher required for NCL scripts\n";
+        print "#               // NCAR graphics ncl program must be installed.\n";
+        print "#\n";
+	print "# -------------------------------------------------------------------------\n";
+	print "# OPTIONAL-\n";
+	print "# [-type]       // DEFAULT:\n";
+	print "#               // if no '-type' specified, script generates default image set\n";
+	print "#               // defined by the \@DEFAULT_TYPES array in this script.\n";
+	print "#               //\n";
+	print "#               // OPTION(S):\n";
+	print "#               // will process N-number of user defined '-type' values\n";
+        if($METSYS eq "WRFSI")
+        {
+              print "#                  WRFSI valid types: avc use lnd stl sbl gnn gnx tmp slp alb albint\n";
+        }elsif($METSYS eq "LAPS")
+        {
+              print "#                  LAPS  valid types: avg use ldf alb albint\n";
+        }else{
+              print "#                  WRFSI valid types: avc use lnd stl sbl gnn gnx tmp slp alb albint\n";
+              print "#                  LAPS  valid types: avg use ldf alb albint\n";
+        }
+	print "#               //\n";
+	print "#\n";
+	print "# [-mode]       // DEFAULT:\n";
+	print "#               // -mode=single <-generates ONLY individual *.ncgm files for\n";
+	print "#               //                type(s) requested.\n";
+	print "#               //\n";
+	print "#               // OPTION(S):\n";
+	print "#               // -mode=meta   <-generates individual AND aggregate *.ncgm files\n";
+	print "#               //\n";
+        print "#\n";
+        print "# [-grid]       // OPTION(S):\n";
+        print "#               // Only valid for WRFSI\n";
+        print "#               // specify grid (1, 2, etc up to NUM_DOMAINS [wrfsi.nl]) or do\n";
+        print "#               // all domains (1 to NUM_DOMAINS) if -grid omitted.\n";
+	print "##################################################################################\n\n";
+        exit;
+}
+
+
+#-------------------------------------------------------------------
+sub albint
+{
+
+       my $timetext = gmtime();
+       my $timestring = "climatological albedo for $timetext"; 
+#print "timestring is $timestring\n";
+       my $i4time = time;
+       my ($yr,$mo,$dy,$hr,$mn,$sc) = &laps_tools::i4time_to_date($i4time);
+#print "after calling sub,
+#       yr is $yr
+#       mo is $mo
+#       dy is $dy
+#       hr is $hr
+#       mn is $mn
+#       sc is $sc\n";
+#$yr = 2003;
+#$mo = 1;
+#$dy = 12;
+#$hr = 12;
+#$mn = 0;
+#$sc = 0;
+#($i4time) = &laps_tools::date_to_i4time($yr,$mo,$dy,$hr,$mn,$sc);
+
+#print "i4time is $i4time\n";
+
+# Compute i4times for 18Z the 15th of each month, and put in the
+# array midtime.  Indexes of the midtime array are zero-based
+# (i.e. January is $midtime[0], December is $midtime[11]
+
+       $mo = 1;
+       $dy = 15;
+       $hr = 18;
+       $mn = 0;
+       $sc = 0;
+
+       my @midtime;
+       my ($time1,$time2,$calb1,$calb2);
+       my ($month1,$month2,$weight1,$weight2);
+       while ($mo <= 12) {
+             ($midtime[$mo-1]) = &laps_tools::date_to_i4time($yr,$mo,$dy,$hr,$mn,$sc);
+              $mo++;
+       }
+
+# Find bounding times and create weights and strings to be used by NCL code
+
+       if ($i4time < $midtime[0]) {
+           $yr--;
+           $mo = 12;
+          ($time1) = &laps_tools::date_to_i4time($yr,$mo,$dy,$hr,$mn,$sc);
+           $time2 = $midtime[0];
+           $calb1 = "a12";
+           $calb2 = "a01";
+       } elsif ($i4time > $midtime[11]) {
+           $yr++;
+           $mo = 1;
+           $time1 = $midtime[11];
+          ($time2) = &laps_tools::date_to_i4time($yr,$mo,$dy,$hr,$mn,$sc);
+           $calb1 = "a12";
+           $calb2 = "a01";
+       } else {
+           $mo = 1;
+           while ($i4time >= $midtime[$mo-1] && $mo <= 12) {
+                  $mo++;
+       }
+       $month1 = $mo-1;
+       $month2 = $mo;
+       $time1 = $midtime[$mo-2];
+       $time2 = $midtime[$mo-1];
+       if ($month1 < 10) {
+           $month1 = "0" . $month1;
+       }
+       if ($month2 < 10) {
+           $month2 = "0" . $month2;
+       }
+       $calb1 = "a$month1";
+       $calb2 = "a$month2";
+       }
+
+#print "bounding times are $time1 and $time2\n";
+
+       $weight1 = ($time2 - $i4time) / ($time2 - $time1);
+       $weight2 = ($i4time - $time1) / ($time2 - $time1);
+
+#print "weights are $weight1 and $weight2\n"; 
+#print "fields are $calb1 and $calb2\n";
+
+       open (PARMFILE, ">albintparms.txt");
+       print PARMFILE "$weight1\n$weight2\n$calb1\n$calb2\n$timestring\n";
+       close PARMFILE;
+
+}
+
+#-------------------------------------------------------------------
+sub cleanUp
+{
+	#NOTHING TO DO
+}
+#-------------------------------------------------------------------
+sub programExit
+{
+	print "\n>>> PROGRAM EXIT -- STATUS: ";
+	if ($exitcode eq 1)
+	{
+		print "OK";	
+	}
+	elsif ($exitcode eq 0)
+	{
+		print "ERROR";
+	}
+	else
+	{
+		print "UNDEFINED";
+	}
+	print " <<<\n\n\n";
+	cleanUp();
+	exit;
+}
+sub ncarg_working_version
+{
+    my @ncgv=`$NCARG_ROOT/bin/ncargversion`;
+    my ($ncargversion,$ncgv);
+    my $lowestversion="411";
+    foreach (@ncgv)
+    {
+             if($_ =~ /(\d.\d.\d)/){
+                @ncgv = split /\./, $1;
+                $ncargversion = $1;
+                $ncgv = $ncgv[0].$ncgv[1].$ncgv[2];
+                last;
+             }
+    }
+    print "\n";
+    if($ncgv < $lowestversion){
+       print "*!* NCARG Version $ncargversion DOES NOT work *!*\n";
+       return 0;
+    }else{
+       print ">>> Using NCARG Version: $ncargversion <<< \n";
+       return 1;
+    }
+}
