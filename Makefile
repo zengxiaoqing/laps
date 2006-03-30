@@ -2,7 +2,6 @@
 # This Makefile is designed for gnu make version 3.75 or newer
 # Please report problems to lapsbugs@fsl.noaa.gov
 
-
 SRCROOT=.
 include $(SRCROOT)/src/include/makefile.inc
 
@@ -153,6 +152,16 @@ mkdatadirs:
 	$(PERL) $(SRCROOT)/etc/makedatadirs.pl --srcroot=$(SRCROOT) --installroot=$(INSTALLROOT) \
                          --dataroot=$(DATAROOT) --system_type='laps'
 
+mkgui: cgui cguiinstall 
+	$(PERL) $(SRCROOT)/gui/make_gui.pl --source_root=$(CWD) --installroot=$(INSTALLROOT) \
+                         --dataroot=$(DATAROOT)
+cgui:
+	(cd $(SRCROOT)/gui/src/ ; \
+	$(MAKE) )
+
+cguiinstall: 
+	(cd $(SRCROOT)/gui/src/ ; \
+	$(MAKE) install )
 
 clean:
 	$(RM) *~ *# *.o 
