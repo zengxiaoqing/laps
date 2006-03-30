@@ -1,0 +1,387 @@
+#!@PERL@
+# ---------------------------------------------------------------------   
+#    Open Source License/Disclaimer, Forecast Systems Laboratory
+#    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
+#    
+#    This software is distributed under the Open Source Definition,
+#    which may be found at http://www.opensource.org/osd.html.
+#    
+#    In particular, redistribution and use in source and binary forms,
+#    with or without modification, are permitted provided that the
+#    following conditions are met:
+#    
+#    - Redistributions of source code must retain this notice, this
+#    list of conditions and the following disclaimer.
+#    
+#    - Redistributions in binary form must provide access to this
+#    notice, this list of conditions and the following disclaimer, and
+#    the underlying source code.
+#    
+#    - All modifications to this software must be clearly documented,
+#    and are solely the responsibility of the agent making the
+#    modifications.
+#    
+#    - If significant modifications or enhancements are made to this
+#    software, the FSL Software Policy Manager
+#    (softwaremgr@fsl.noaa.gov) should be notified.
+#    
+#    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
+#    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
+#    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
+#    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
+#    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
+#    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
+#    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
+#   
+#
+# This software is in the public domain, furnished "as is", without technical
+# support, and with no warranty, express or implied, as to its usefulness for
+# any purpose.
+#
+#
+# srt_demo.pl (Demonstrate WRF SI GUI)
+#
+# Author: Paula McCaslin   10 Feb 2003  Original Version
+# ---------------------------------------------------------------------------
+
+use vars qw($VERSION);
+$VERSION = '1.000'; 
+umask 000;
+
+package Tk;
+use Tk::Trace;
+
+{
+
+package mdl_tool;
+use Tk 800.023;
+require 5.005;
+
+#use warnings;
+#use strict;
+use strict 'subs';
+use strict 'refs';
+use English;
+
+# ---- srt_user_interface ----
+use Tk::Adjuster;
+use Tk::Balloon;
+use Tk::BrowseEntry;
+use Tk::ColorEditor;
+use Tk::HList;
+use Tk::ItemStyle;
+use Tk::FBox;
+use Tk::LabFrame;
+use Tk::NoteBook;
+use Tk::Pane;
+use Tk::ProgressBar;
+use Tk::WinPhoto;
+require Tk::Dialog;
+
+#----
+
+my $config_file="@prefix@/config_paths";
+if (-e $config_file) { do $config_file; };
+
+if ($SOURCE_ROOT)   {$ROOT_SOURCE=$SOURCE_ROOT} else 
+                    {$ROOT_SOURCE="@top_srcdir@"};
+if ($INSTALLROOT)   {$ROOT_INSTALL=$INSTALLROOT} else 
+                    {$ROOT_INSTALL="@prefix@"};
+if ($GEOG_DATAROOT) {$ROOT_GEOG=$GEOG_DATAROOT} else 
+                    {$ROOT_GEOG="$ROOT_INSTALL/extdata/GEOG"}; 
+if ($DATAROOT)      {$ROOT_DATA=$DATAROOT} else 
+                    {$ROOT_DATA="$ROOT_INSTALL/domains"}; 
+if ($TEMPLATES)     {$ROOT_TEMPLATES=$TEMPLATES} else 
+                    {$ROOT_TEMPLATES="$ROOT_INSTALL/templates"}; 
+if ($SYS_PERL)      {$sys_perl=$SYS_PERL} else
+                    {$sys_perl="@PERL@"};
+$NCARG_ROOT=$ENV{NCARG_ROOT} if($ENV{NCARG_ROOT} && !defined $NCARG_ROOT);
+
+
+$GUI_EXE="$ROOT_INSTALL/gui/bin";
+$GUI_MAP="$ROOT_INSTALL/gui/data/maps";
+$GUI_TK ="$ROOT_INSTALL/gui/guiTk";
+
+require "$ROOT_INSTALL/etc/laps_tools.pm";
+require "$ROOT_INSTALL/etc/map_utils.pm";
+require "$ROOT_INSTALL/etc/run_sys.pm";
+
+require "$GUI_TK/ExecuteCommand2.pm";
+require "$GUI_TK/FileDialog.pm";
+require "$GUI_TK/srt_vars.pl";
+require "$GUI_TK/srt_user_interface.pl";
+require "$GUI_TK/srt_controls.pl";
+require "$GUI_TK/srt_horiz_editor.pl";
+require "$GUI_TK/srt_localize_domain.pl";
+require "$GUI_TK/srt_vert_editor.pl";
+require "$GUI_TK/srt_bounding_box.pl";
+
+
+# -------- Main --------
+
+$|=1; # Flush buffer.
+
+   $Tk::strictMotif=0;
+ 
+   use vars qw($demo_mode);
+   $demo_mode=1;
+
+   my $demo_color='#27ef645aaa7e';
+   ## Create main window.
+   $mw = MainWindow->new(-bg => '#d9d9d9');
+   $mw->withdraw;
+   $mw->configure(-bg => $demo_color, -bd => 4);
+
+   ## Create splash window.
+   $splash = $mw->Toplevel(-title => "Loading...",
+                              -bg => '#d9d9d9',
+                              -visual => 'truecolor');
+   $splash->geometry("+300+400");
+   $splash->focus;  
+   $splash->protocol('WM_DELETE_WINDOW', \&confirm_exit);
+ 
+   ## Create and show splash image.
+   my $s_photo=$mw->Photo(-file => $SplashFile="$GUI_TK/icons/wrf_logo.gif");
+   my $imgLabel=$splash->Label(-image => $s_photo,
+                               -anchor => 'center')
+                       ->pack( -side => 'top', -anchor => 'nw');
+
+   $pctComplete=5;
+   $splash->ProgressBar(
+                        -width => 10, 
+                        -length => 140,
+                        -from => 0,
+                        -to => 100,
+                        -blocks => 20,
+                        -colors => [0, $demo_color],
+                        -variable => \$pctComplete,
+                        -bg => $demo_color, 
+                        -bd => 2)
+          ->pack( -side => 'top', -anchor => 'nw');
+   $splash->update();
+
+#----
+
+   ## Set Model: WRF, LAPS 
+   $model_name="WRF";
+   &define_env_vars;
+   
+   ## Set Domian_New: 1=New.
+   $domain_mode=1;
+
+   ## Initalize variables
+   $show_welcome=1;
+   &set_app_variables;
+
+   ## Load variables
+   &load_namelist;
+   &splash_val(20);
+   &trace_vars;
+   &splash_val(20);
+
+   ## Create Graphical User Interface
+   &create_topLevel;
+   &splash_val(20);
+   &present_grid_editor($domain_mode);
+   &splash_val(10);
+   &find_existingDomains;
+   &splash_val(10);
+
+   ## Activate gridSpacing.
+   &set_gridSpacing(1);
+   ## Set state of domain entry widgets
+   &set_domain_widget_state(0);
+
+   ## Start Application with the following panel:
+   &splash_val(10);
+   $panel_index=1;
+   &raise_panel;
+   &splash_val(20);
+
+   ## The loading should be done, so clean up 
+   ## and show the application.
+   $mw->sizefrom("user");
+   $mw->title("$model_name Domain Localization Tool");
+   $mw->iconname("$model_name Tool");
+   $mw->geometry("+100+25");
+   $mw->protocol('WM_DELETE_WINDOW', \&confirm_exit);
+   $mw->deiconify;
+   &splash_val(0);
+
+# -------- Run Demo --------
+
+   # Start application.
+   sleep(1);
+   $b_start->invoke();
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   # Select 'Edit existing domain'.
+   $domain_mode=1;
+   $domain_mb->cget(-menu)->invoke($domain_mode);
+   sleep(1);
+
+   # Select 'default' domain.
+   #$domain_lb->see('default'); # not working
+   my $x1=0;
+   foreach (@domain_found) {
+      if (m/default/) { last; }
+      $x1++;
+   }
+   my $x2=scalar(@domain_found+1);
+   $domain_lb->yview(moveto => ($x1/$x2));
+   $mw->update;
+   $mw->idletasks;
+   sleep(1.5);
+
+   $domain_lb->selectionSet('default');
+   $mw->update;
+   $mw->idletasks;
+   sleep(1.5);
+
+   &load_domain;
+   &set_button_state(1,$cntl_next);
+   $mw->update;
+   $mw->idletasks;
+   sleep(.5);
+  
+   # Press 'Next>'.
+   $cntl_next->invoke();
+   $mw->update;
+   $mw->idletasks;
+   sleep(.5);
+  
+   # Change map size.
+   $var_restrict=0;
+   $rb_edit_bbox->invoke();
+   $mw->update;
+   $mw->idletasks;
+   foreach (0 .. 5) { 
+     $grid_spacing_km--;
+     if ($grid_spacing_km <= 0) { $grid_spacing_km=0.1; }
+     $pix_per_gpoint=$pix_per_gpoint / $dx_orig * $grid_spacing_km;
+     &adjust_bbox;
+     $mw->update;
+     $mw->idletasks;
+     sleep(.1);
+   };
+   my $ii=0;
+   until ($ii>=20) { 
+     $ii=$ii+5;
+     $ny_dim--;
+     &adjust_bbox;
+     $mw->update;
+     $mw->idletasks;
+     sleep(.1);
+   };
+   $b_update->invoke();
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   # Change map background file.
+   $bcd_mb->cget(-menu)->invoke('US_AirTrfCntlSect');
+   $b_update->invoke();
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   # Change map background file.
+   $bcd_mb->cget(-menu)->invoke('US_CountyWarnArea');
+   $b_update->invoke();
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+if (0) {
+   # Change map line colors. 
+   #&selectColor($map_lines_arg[1]);
+   #$can->itemconfigure($tag, -fill => $cColor);
+
+   my $tag = $map_lines_arg[1];
+   #my $tag = 'map_lines';
+   #my $tag2="$tag";
+
+   #my $cColor->grabRelease;
+   my $cColor = $can->chooseColor(
+        -initialcolor => $can->itemcget($tag, -fill),
+        -popover => $can, 
+        -popanchor => 'w',
+        -overanchor => 'e', 
+        -title => "Select Color");
+   #$cColor->invoke('Accept');
+   $can->itemconfigure($tag, -fill => $cColor) if defined $cColor;
+#}
+   # Change map line colors. 
+   $can->itemconfigure('bcd_lines', -fill => 'yellow');
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+  
+   # Change map line colors. 
+   $can->itemconfigure('map_lines', -fill => 'white');
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+}
+  
+
+   # Press 'Next>'.
+   $cntl_next->invoke();
+   $mw->update;
+   $mw->idletasks;
+
+   # Change Vertical Scheme parameters.
+   &select_vert_scheme($vscheme[2]);
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   $v::logp=0;
+   &set_sig_disp_mode;
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   &select_vert_scheme($vscheme[3]);
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   $nz_vert=40;
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   &activate_vert_scheme;
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   $geog_path_orig=$geog_path;
+
+   # Press 'Next>'.
+   $cntl_next->invoke();
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   # Press 'Next>'.
+   $cntl_next->invoke();
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   # Press 'Next>'.
+   $cntl_next->invoke();
+   $mw->update;
+   $mw->idletasks;
+   sleep(1);
+
+   # Exit.
+   exit;
+ 
+#MainLoop;
+}
+__END__

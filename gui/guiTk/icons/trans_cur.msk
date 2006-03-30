@@ -1,0 +1,4 @@
+#define trans_cur_width 1
+#define trans_cur_height 1
+static unsigned char trans_cur_bits[] = {
+   0x01};

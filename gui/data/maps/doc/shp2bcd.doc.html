@@ -1,0 +1,183 @@
+<html>
+<title>shp2bcd doc</title>
+<pre>
+This program is a standalone program for converting the information
+from ARCINFO shape files into AWIPS .bcd or .bcx files, which are
+the file formats that the workstation actually reads to draw map
+backgrounds.
+
+The program allows the user two different methods by which to convert
+shape files into AWIPS cartographic data format. It also provides
+four different methods that allow the user to summarize the contents
+of a shape file in order to better use its contents. These are
+summarized here and explained in detail below:
+
+- Convert the contents of a shape file to a .bcd file.
+- Convert the contents of a shape  file to a .bcx file.
+- Write verbose summary of a shape file to standard output.
+- Write table of selected attributes to standard output.
+- Write bounding box of each shape to standard output.
+- Write table of selected attributes to standard output using edit
+  directives.
+
+User note 1:
+The second and the last usage mode make use of edit directives,
+which are summarized at the end of the file.
+
+User note 2:
+Path names to shape files should not contain the .shp, .shx, or .bdf
+file extension.
+
+
+For the mode that converts the contents of a shape file to a .bcd file,
+the usage is as follows:
+
+shp2bcd c shape_file bcd_file att_filter reg_exp
+
+c: the letter `c'
+shape_file: path name to the input shape_file.
+bcd_file: full name of the bcd file to write.
+att_filter (optional): name of character attribute to filter output with.
+reg_exp (optional): regular expression that value of `att_filter' must match.
+
+
+This section discusses the mode that converts the contents of a shape file
+to a .bcx file. For this usage mode, one should keep in mind that the
+workstation code that reads bcx files can only handle label lengths up
+to 30 characters. The usage for this mode is as follows:
+
+shp2bcd x shape_file bcd_file att_names format att_filter reg_exp
+
+x: the letter `x'
+shape_file: path name to the input shape_file.
+bcd_file: full name of the bcx file to write.
+att_names: attribute names plus edit directives used to make labels.
+format: format string used to make labels.
+att_filter (optional): name of character attribute to filter output with.
+reg_exp (optional): regular expression that value of `att_filter' must match.
+
+
+For the mode that writes a verbose summary to standard output,
+the usage is as follows:
+
+shp2bcd i shape_file
+
+i: the letter `i'
+shape_file: path name to the input shape_file.
+
+
+For the mode that writes a table of selected attributes to standard output,
+the usage is as follows:
+
+shp2bcd a shape_file att_one att_two att_three ...
+
+a: the letter `a'
+shape_file: path name to the input shape_file.
+att_one: name of an attribute to tabulate the value of.
+att_two (optional): name of another attribute to tabulate the value of.
+att_three (optional): name of another attribute to tabulate the value of.
+
+
+For the mode that writes the bounding box of each shape to standard output,
+the usage is as follows:
+
+shp2bcd b shape_file att_one att_two att_three ...
+
+b: the letter `b'
+shape_file: path name to the input shape_file.
+att_one (optional): name of a character attribute to tabulate the value of.
+att_two (optional): name of a character attribute to tabulate the value of.
+att_three (optional): name of a character attribute to tabulate the value of.
+
+
+For the mode that writes a table of selected attributes to standard output
+using edit directives, the usage is as follows:
+
+shp2bcd e shape_file att_names format att_filter reg_exp
+
+e: the letter `e'
+shape_file: path name to the input shape_file.
+att_names: attribute names plus edit directives used to create output.
+format: format string used to create output.
+att_filter (optional): name of character attribute to filter output with.
+reg_exp (optional): regular expression that value of `att_filter' must match.
+
+
+Here is an explanation of how to mold an arbitrary list of attributes
+into the desired output string using edit directives.
+
+When using the edit directives, the entire list of attributes to
+used for output needs to be in a single string, so in general this
+argument (`att_names') needs to be quoted, as does the `format'
+argument. One can replicate simple operations using the `e' mode with
+no directives. For example, the following command using the simple
+tabulate operation
+
+shp2bcd a shape_file ATT_A ATT_B ATT_C
+
+would yield the same result as the following command using the edit
+directives mode
+
+shp2bcd e shape_file "ATT_A ATT_B ATT_C" "%s %s %s"
+
+on the assumption that each attribute listed was a character attribute.
+When using the `e' or `x' option, it is the user's responsibility to
+us a %s format descriptor for character attributes, a %f format descriptor
+for floating point data, and any of the various format descriptors that
+work with integer data for an integer attribute.
+
+When actually using edit directives, the attribute list argument will
+look something like this
+
+   "ATT_A|dAAA|dAAA ATT_B|dAAA ATT_C|dAAA|dAAA|dAAA"
+
+Each attribute can have any number of edit directives attached to it,
+separated by vertical bars but no spaces. The `d' refers to the
+directive type, and the AAA refers to the directive argument.
+The edit directive is always a single character, but the argument
+can have any number of characters in it, or possibly be non-existent.
+The way the final output string is created is to interpret each
+attribute value with its corresponding format descriptor to create
+a string, then apply each edit directive in turn, then reinsert the
+resulting string into the format to produce the output string.
+
+Here is a table of the edit directives and how their arguments are
+interpreted:
+
+directive
+character   function and argument interpretation
+
+    #       Remove leading and trailing spaces, no argument used.
+    ^       Make all upper case, no argument used.
+    v       Make all lower case, no argument used.
+    <       Prepend text of the argument.
+    >       Append text of the argument.
+    {       Argument is how many characters to remove from beginning of string.
+    }       Argument is how many characters to remove from end of string.
+    [       Argument is length to truncate string to from the beginning.
+    ]       Argument is length to truncate string to from the end
+    P       Parse string using first character of the argument as delimiter.
+            Remainder of argument is which field to use in output; >0
+            means count from beginning, <0 means count from end.
+    p       Same as uppercase P except delimiter is a space or, in the case
+            where the first character of the argument is a backslash, a
+            vertical bar.
+
+Here is an example. Suppose the text for your attribute list with edit
+directives were
+
+  "ZONE|#|<00|[3 STATE ZONE|#|<00|[3"
+
+and your format string were
+
+  "%s | %sZ%s"
+
+Then, in the case where the value of the character ZONE attribute were "10 "
+and the value of the character STATE attribute were "WA", this would yield
+an output of "010 | WAZ010".  Note that the vertical bar in the format
+has no relationship to the vertical bars in the edit directives.
+</pre>
+<hr>
+<h5>Author: Jim Ramer
+<br>Last update: 11 Jan 02</h5>
+</html>

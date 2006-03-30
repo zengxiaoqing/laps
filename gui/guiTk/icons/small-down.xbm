@@ -1,0 +1,4 @@
+#define down_width 7
+#define down_height 4
+static char down_bits[] = {
+   0x7f, 0x3e, 0x1c, 0x08};

@@ -1,0 +1,14 @@
+Width: 111
+Height: 16
+RGB
+72 pixels
+
+GIMP
+H 215
+S  63
+V  64
+R  61
+G 103
+B 165
+Hex Triplet: #3d67a5
+

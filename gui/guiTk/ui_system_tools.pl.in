@@ -1,0 +1,749 @@
+#!@PERL@
+# ---------------------------------------------------------------------   
+#    Open Source License/Disclaimer, Forecast Systems Laboratory
+#    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
+#    
+#    This software is distributed under the Open Source Definition,
+#    which may be found at http://www.opensource.org/osd.html.
+#    
+#    In particular, redistribution and use in source and binary forms,
+#    with or without modification, are permitted provided that the
+#    following conditions are met:
+#    
+#    - Redistributions of source code must retain this notice, this
+#    list of conditions and the following disclaimer.
+#    
+#    - Redistributions in binary form must provide access to this
+#    notice, this list of conditions and the following disclaimer, and
+#    the underlying source code.
+#    
+#    - All modifications to this software must be clearly documented,
+#    and are solely the responsibility of the agent making the
+#    modifications.
+#    
+#    - If significant modifications or enhancements are made to this
+#    software, the FSL Software Policy Manager
+#    (softwaremgr@fsl.noaa.gov) should be notified.
+#    
+#    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
+#    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
+#    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
+#    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
+#    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
+#    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
+#    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
+#   
+#
+# This software is in the public domain, furnished "as is", without technical
+# support, and with no warranty, express or implied, as to its usefulness for
+# any purpose.
+#
+#
+# ui_system_tools.pl - Model system tools.
+#
+# Author: Paula McCaslin   30 Jan 2003  Original Version
+# ---------------------------------------------------------------------------
+
+use vars qw($VERSION);
+$VERSION = '1.000'; 
+umask 000;
+
+{
+
+package system_tool;
+use Tk 800.023;
+require 5.005;
+
+#use warnings;
+#use strict;
+use strict 'subs';
+use strict 'refs';
+use English;
+
+# ---- srt_user_interface ----
+use Tk::Adjuster;
+use Tk::Balloon;
+use Tk::BrowseEntry;
+use Tk::ColorEditor;
+use Tk::HList;
+use Tk::ItemStyle;
+use Tk::FBox;
+use Tk::LabFrame;
+use Tk::NoteBook;
+use Tk::Pane;
+use Tk::ProgressBar;
+use Tk::TextUndo;
+use Tk::WinPhoto;
+{
+package Tk;
+use Tk::Trace;
+}
+use Sys::Hostname;
+
+
+#----
+
+$sys_perl='@PERL@';
+my $config_file="@prefix@/config_paths";
+if (-e $config_file) { do $config_file; } else {print "$config_file does NOT exist\n"};
+if ($SOURCE_ROOT)   {$ROOT_SOURCE=$SOURCE_ROOT} else {print "ROOT_SOURCE is null\n"};
+if ($INSTALLROOT)   {$ROOT_INSTALL=$INSTALLROOT} else {print "ROOT_INSTALL is null\n"};
+if ($GEOG_DATAROOT) {$ROOT_GEOG=$GEOG_DATAROOT} else {print "ROOT_GEOG is null\n"}; 
+if ($EXT_DATAROOT)  {$ROOT_EXT=$EXT_DATAROOT} else {print "ROOT_EXT is null\n"};  #Applys to WRF only
+if ($DATAROOT)      {$ROOT_DATA=$DATAROOT} else {print "ROOT_DATA is null\n"}; 
+if ($TEMPLATES)     {$ROOT_TEMPLATES=$TEMPLATES} else {print "ROOT_TEMPLATES is null\n"}; 
+if ($UI_TEMPDIR)    {$tempdir=$UI_TEMPDIR} else {$tempdir="/tmp"};
+if ($NCARG_ROOT && $NCL_COMMAND) {
+   # Set internal vars.
+   $ROOT_NCARG=$NCARG_ROOT;
+   $ROOT_NCL=$NCL_COMMAND;
+   # Set environment vars.
+   if (!$ENV{NCARG_ROOT}){ $ENV{NCARG_ROOT}=$NCARG_ROOT; }
+   if (!$ENV{NCL_COMMAND}){ $ENV{NCL_COMMAND}=$NCL_COMMAND; }
+ 
+} else {
+ print "If you have NCAR Graphics software and set NCARG_ROOT 
+ and NCL_COMMAND inside $config_file you would be able to 
+ generate geographical data images.
+ See wrfsi.noaa.gov/gui/faq_ncl for more info. \n\n"; 
+}
+
+
+
+# For NWS NMM.
+$load_env=0;        #$ENV{load_env};
+if($load_env) {
+$ROOT_SOURCE   = $ENV{'SOURCE_ROOT'};
+$ROOT_INSTALL  = $ENV{'INSTALLROOT'};
+$ROOT_GEOG     = $ENV{'GEOG_DATAROOT'};
+$ROOT_EXT      = $ENV{'EXT_DATAROOT'};
+$ROOT_DATA     = $ENV{'DATAROOT'};
+$ROOT_TEMPLATES= $ENV{'TEMPLATES'};
+$sys_perl      = $ENV{'PATH_TO_PERL'};
+$ROOT_NCARG    = $ENV{'NCARG_ROOT'};
+$ROOT_NCL      = $ENV{'NCL_COMMAND'};
+}
+
+
+# If user sets "nmm 1", then this GUI can be used for
+# the WRF-NMM model core, in addition to the current
+# WRF-ARW model core.
+# Specifically, the "Rot Lat-Lon (NMM)" is available to
+# the user as a projection choice and the grid spacing
+# is displayed in radian degrees.
+#
+# Note: additional software development needs to be
+# completed for the gridgen_nmm.exe, hinterp and
+# vinterp to run (but the GUI design in implemented).
+$nmm=0;
+
+# If user sets "restrict_ui 1", then only the Domain Tool 
+# will be available to the users. This means that the 
+# Initial Tool and Interp Tool, which invoke the scripts 
+# grib_prep.pl and wrfprep.pl, respectivly, are suppressed.
+$restrict_ui=1;  #$ENV{RESTRICT_UI}; 
+
+# If user sets "restrict_sigma 1", then the vertical
+# editor becomes uneditable, only viewable.
+$restrict_sigma=0;  #$ENV{RESTRICT_SIG};
+
+
+
+$GUI_EXE="$ROOT_INSTALL/bin";
+$GUI_MAP="$ROOT_INSTALL/gui/data/maps";
+$GUI_TK ="$ROOT_INSTALL/gui/guiTk";
+
+require "$ROOT_INSTALL/etc/laps_tools.pm";
+require "$ROOT_INSTALL/etc/map_utils.pm";
+require "$ROOT_INSTALL/etc/run_sys.pm";
+
+require "$GUI_TK/ExecuteCommand2.pm";
+require "$GUI_TK/FileDialog.pm";
+require "$GUI_TK/ui_initial_data.pl";
+require "$GUI_TK/ui_interp_data.pl";
+require "$GUI_TK/ui_vars.pl";
+require "$GUI_TK/ui_controls.pl";
+require "$GUI_TK/ui_domain_srt.pl";
+require "$GUI_TK/srt_bounding_box.pl";
+require "$GUI_TK/srt_horiz_editor.pl";
+require "$GUI_TK/srt_vert_editor.pl";
+require "$GUI_TK/srt_localize_domain.pl";
+
+
+# -------- Main --------
+
+   ## Select #WRF, LAPS 
+   $model_name="LAPS"; 
+
+   $|=1; # Flush buffer.
+   $Tk::strictMotif=0;
+
+   ## Create main window.
+   $mw = MainWindow->new(-bg => '#d9d9d9');
+   $mw->withdraw;
+
+   ## Create splash window.
+   $splash = $mw->Toplevel(-title => "Loading...",
+                           -visual => 'best');
+   $splash->geometry("+250+250");
+   $splash->focus;  
+   $splash->protocol('WM_DELETE_WINDOW', \&confirm_exit);
+ 
+   ## Create and show splash image.
+   my $s_photo=$mw->Photo(-file => $SplashFile="$GUI_TK/icons/wrf_logo.gif");
+   if ($model_name eq "LAPS") { $s_photo=$mw->Photo(-file => $SplashFile="$GUI_TK/icons/laps_logo.gif"); }
+   my $imgLabel=$splash->Label(-image => $s_photo,
+                               -anchor => 'center')
+                       ->pack( -side => 'top', -anchor => 'nw');
+
+   $pctComplete=5;
+   $splash->ProgressBar(
+                        -width => 10, 
+                        -length => 140,
+                        -from => 0,
+                        -to => 100,
+                        -blocks => 20,
+                        -colors => [0, 'navy'],
+                        -variable => \$pctComplete)
+          ->pack( -side => 'top', -anchor => 'nw');
+   $splash->update();
+
+#----
+
+   ## Initalize application variables.
+   gui_vars();
+   set_app_variables();
+   define_mdl_vars();
+   $domain_mode=1;     #1=New, 0=Existing.
+
+   ## Create the main window.
+   create_system_tools_mw();
+   create_paths_prefs_mw();
+   create_initial_data_mw();
+
+   ## Initalize model variables
+   load_namelist();
+   read_grib_namelist();
+
+   ## Create input data tool.
+   create_interp_data_mw();
+
+   splash_val(20);
+   trace_vars();
+   splash_val(20);
+
+   ## Create Domain Selection
+   create_domain_mw();
+   splash_val(20);
+   present_grid_editor($domain_mode);
+   splash_val(10);
+   find_existingDomains();
+   splash_val(10);
+
+   ## Activate gridSpacing.
+   set_gridSpacing(1);
+   # Set state of domain entry widgets
+   set_domain_widget_state(0);
+
+   ## Start Domain Selection with the following panel:
+   splash_val(10);
+   $panel_index=1;
+   raise_panel(0);
+   splash_val(20);
+
+   ## Present application.
+   $hint_msg="Choose one of the system tools from the selector buttons on the left.";
+   $mw->geometry("980x710+30+20");
+   $mw->deiconify;
+   splash_val(0);
+
+
+MainLoop;
+
+
+# ----------------------------------------
+# create_system_tools_mw 
+#
+# Top level window with choices to setup and run_model.
+# ----------------------------------------
+sub create_system_tools_mw {
+  no strict 'refs';
+  use subs qw/file_menuitems edit_menuitems help_menuitems/;
+
+  # Set MainWindow values.
+  my $my_core;
+  if ($model_name eq "WRF") {$my_core="ARW";}
+  if ($model_name eq "WRF" and $nmm) {$my_core="NMM";}
+  $mw->sizefrom("user");
+  my $hostname=hostname();
+  $mw->title("$model_name System Tools $my_core -- $hostname");
+  $mw->iconname("$model_name Tools");
+  $mw->protocol('WM_DELETE_WINDOW', [\&confirm_exit]);
+
+ 
+  #--- System Tools menubar ---------------------
+  $mw->configure(-menu => my $mbar = $mw->Menu);
+  my $file = $mbar->cascade(-label => 'File', -menuitems => file_menuitems,
+                            -tearoff => 0);
+  my $edit = $mbar->cascade(-label => 'Edit', -menuitems => edit_menuitems,
+                            -tearoff => 0);
+  my $help = $mbar->cascade(-label => 'Help', -menuitems => help_menuitems);
+
+
+sub file_menuitems {
+  [
+     [ 'command' => "Save", -command => [\&write_domain_files_and_image] ],
+       '', # Separator.
+     [ 'command' => "Exit", -command => [\&confirm_exit] ],
+  ];
+   
+}
+
+sub edit_menuitems {
+ if ($model_name eq "WRF" && !$nmm) {
+  [
+     [ 'command' => "Path Preferences", -command => [\&present_tool, 4] ],
+       '', # Separator.
+     [ 'checkbutton' => "Force Localization", -command => [\&present_fwidget],
+          -variable => \$show_forceWidget, -indicator => 1 ],
+  ];
+ } else {
+  [
+     [ 'command' => "Path Preferences", -command => [\&present_tool, 4] ],
+  ];
+ }
+
+}
+
+sub help_menuitems {
+  $cb_balloon=1;
+  [
+       #[ 'command' => "Getting Started", -state => 'disabled', -command => [\&nyi] ],
+       [ 'command' => "Help files via Mozilla:", -foreground => 'blue',
+               -font => "-*-helvetica-bold-o-*-*-12-*-*-*-*-*-*-*"],
+       [ 'command' => " Users Guide", -command => [\&launch_webpage, $helpURL] ],
+       [ 'command' => " $model_name README file", -command => [\&launch_webpage, $readmeURL] ],
+         '', # Separator.
+       [ 'checkbutton' => "Tooltips", -command => [\&show_balloon_tips],
+          -variable => \$cb_balloon, -indicator => 1 ],
+       [ 'command' => "About", -command => [\&about_gui] ],
+  ];
+}
+
+
+  #--- System Tools main frame ---------------------
+  $main_mw = $mw->Frame() #-bg => $colorN)
+                ->pack(-expand => 1, -fill => 'both', -padx => 2);
+
+  #--- System Tools canvas
+  $sys_can=$main_mw->Canvas(-relief => 'flat', -bd => 2, -bg => $colorL)
+                ->pack(-expand => 1, -fill => 'both',
+                       -side => 'left', -padx => 1, -pady => 2);
+
+  #--- Grip used to resize frames.
+  $main_mw->Adjuster(#-relief => 'raised', -bd => 2,# -foreground => $colorN,
+                  -widget => $sys_can, -side => 'left')
+                 ->pack(-fill => 'both', -side => 'left');
+ 
+  #--- System Tools frame 
+  #$sys_frm=$main_mw->Frame(-relief => 'sunken', -bd => 2)
+  #              ->pack(-expand => 1, -fill => 'both',
+  #                     -side => 'left', -padx => 1, -pady => 2);
+
+  $sys_frm=$main_mw->Scrolled('Pane', 
+                              (-relief => 'flat', -bd => 2,
+                               -width => 805,
+                               -sticky => 'nwes'),
+                        -scrollbars => 'osoe')
+                ->pack(-expand => 1, -fill => 'both',
+                       -side => 'left', -padx => 1, -pady => 3);
+  $sys_frm->Subwidget('xscrollbar')->configure(-width => 10);
+  $sys_frm->Subwidget('yscrollbar')->configure(-width => 10);
+
+  #---
+  $banner_frm=$sys_frm->Frame()
+                ->pack(-expand => 1, -fill => 'both', -pady => 90);
+
+  $banner_frm->Label(-image => $banner_image,
+                  -height => 310, -width => 750) # 490)
+          ->pack( -expand => 0, -fill => 'x', 
+                  -side => 'top',
+                  -padx => 0, -pady => 0);
+
+  $banner_frm->Label(-text => "System Tools",
+                  -font => $large_font, 
+                  -fg => $colorN) 
+          ->pack( -expand => 0, -fill => 'x', 
+                  -side => 'top',
+                  -padx => 0, -pady => 5);
+
+  $banner_frm->Label(-text => "This series of tools assists a user to edit and run
+$model_name software and underlying configuration files.")
+          ->pack( -expand => 0, -fill => 'x', 
+                  -side => 'top',
+                  -padx => 0, -pady => 0);
+
+  # -- User Hint & Information
+  $mw->Frame(-relief => 'sunken', -bd => 1, -height => 2)
+                ->pack(-side => 'top', 
+                       -expand => 0, -fill => 'x');
+
+  $hint_frame = $mw->Frame(-relief => 'groove', -bd => 2)
+                ->pack(-side => 'bottom', -anchor => 's',
+                       -expand => 0, -fill => 'x', 
+                       -padx => 5, -pady => 5);
+
+  $hint_frame->Label(-relief => 'flat', -bd => 2,
+                            -fg => $colorN,
+                            -anchor => 'w',
+                            -height => 3,
+                            -justify => 'left',
+                            -padx => 20, -pady => 3, 
+                            -textvariable => \$hint_msg)
+            ->pack(-expand => 1, -fill => 'both',
+                   -padx => 6, -pady => 6);
+
+
+  #--------- Hints Label ----------
+  $hint_frame->Label(-text => "User Hints & Information  ")
+             ->place(-x => 10, -y => -5);
+
+  $hints_label;
+  $hint_frame->Label(-textvariable => \$hints_label, -fg => $colorN)
+             ->place(-x => 170, -y => -5);
+
+
+  #--- System Tools canvas widgets ---
+  $sys_can->Label(-text => "$model_name Standard\nInitialization Tools:",
+                  -fg => $colorN, -bg => $colorL) 
+          ->pack(-anchor => 'w', -padx => 10, -pady => 20);
+
+  $ds_tool=$sys_can->Button(-text => "Domain Selection",
+                   -command => [\&present_tool, 1],
+                   -width => 14,
+                   -relief => 'groove',
+                   -activebackground => $colorY);
+
+  $bc_tool=$sys_can->Button(-text => "Initial Data",
+                   -command => [\&present_tool, 2],
+                   -width => 14,
+                   -relief => 'groove',
+                   -activebackground => $colorY);
+
+  $id_tool=$sys_can->Button(-text => "Interpolate Data",
+                   -command => [\&present_tool, 3],
+                   -width => 14,
+                   -relief => 'groove',
+                   -activebackground => $colorY);
+  # Disable this button.
+  #set_button_state(0,$id_tool);
+
+  $ms_tool=$sys_can->Button(-text => "Model Setup",
+                   -command => [\&nyi],
+                   -width => 14,
+                   -relief => 'groove',
+                   -activebackground => $colorY);
+
+  # Pack buttons and arrows in canvas. 
+  my $centerline=65;
+  my $lmargin=40;
+
+  #$sys_can->createWindow($lmargin, 150, -window => $ds_tool);
+  $ds_tool->pack(-padx => 8, -pady => 8, -anchor => 'w');
+
+  # If user sets "restrict_ui 1", then only the Domain Tool 
+  # will be available to the users. This means that the 
+  # Initial Tool and Interp Tool, which invoke the scripts 
+  # grib_prep.pl and wrfprep.pl, respectivly, are suppressed.
+  if(!$restrict_ui) {
+
+     #-->
+     my $my_y=108;
+     $sys_can->createLine($centerline, $my_y, $centerline, $my_y+15, 
+                          -arrow => 'last', 
+                          -fill => $colorN);
+
+     #$sys_can->createWindow($lmargin, 50, -window => $bc_tool);
+     $bc_tool->pack(-padx => 8,-pady => 8,  -anchor => 'w');
+
+     #-->
+     $my_y=150;
+     $sys_can->createLine($centerline, $my_y, $centerline, $my_y+15, 
+                          -arrow => 'last',
+                          -fill => $colorN);
+ 
+     #$sys_can->createWindow($lmargin, 350, -window => $id_tool);
+     $id_tool->pack(-padx => 8, -pady => 8, -anchor => 'w');
+  }
+
+
+  # Add balloon message box for any widget to utilize.
+  $balloon=$mw->Balloon(-background => "#ffffbb",
+                        -initwait => 500,
+                        -balloonposition => 'mouse');
+                        #-font => $balloon_font,
+                        #-balloonmsg => "Select to launch dialogbox",
+                        #-statusmsg => "Status bar message",
+ 
+
+
+  # Add balloon message to inform user
+  $balloon->attach($ds_tool, -msg => 
+    "Select a domain (by creating or editing one)\nand localize domain."); 
+  $balloon->attach($bc_tool, -msg => 
+    "Edit input files for initial and boundary\nconditions of GRIB data you wish to process\n(via grib_prep.pl)."); 
+  $balloon->attach($id_tool, -msg => 
+    "Interpolate gridded data to a specific\ndomain (via wrfprep.pl).\nNOTE: A domain needs to be selected first."); 
+  $balloon->attach($ms_tool, -msg => 
+    "Set model parameters and physics options."); 
+}
+
+# ----------------------------------
+# present_tool 
+#
+# Present one of the system tool based on the button pressed. 
+# ----------------------------------
+sub present_tool {
+  my ($my_arg)=@_;
+
+  if ($my_arg == $tool_num) { return; } # No action is necessary. 
+
+  # Check 'Path Preference' vars.
+  if ($tool_num==4) {
+   if ($model_name ne "LAPS") {
+     # Reset EXT_DATAROOT if it has changed AND is valid.
+     if (!set_ext_dataroot()) {
+        if ($grib_prep_nl ne $grib_prep_nl_NEW) {
+           $grib_prep_nl=$grib_prep_nl_NEW;
+           # Load grib_prep.nl
+           read_grib_namelist();
+           clear_grib_prep_cmd();
+           if ($g_nb->raised() != 1) {$g_nb->raise(1);} 
+        }
+     } else { return; }
+   }
+   # Reset GEOG_DATAROOT if it has changed AND is valid.
+   if (set_geog_dataroot()) { return; }
+  }
+
+
+  # Reset tool_num.
+  $tool_num=$my_arg;
+
+  # Clear all buttons.
+  $ds_tool->configure(-bg => $bg_color);
+  $bc_tool->configure(-bg => $bg_color);
+  $id_tool->configure(-bg => $bg_color);
+
+  # Remove all frames.
+  $banner_frm->packForget;
+  $paths_mw->packForget;
+  $domain_mw->packForget;
+  $bkgnd_dat_mw->packForget;
+  $interp_mw->packForget;
+
+  # Load the selected frame and highlight its cooresponding button.
+  if ($my_arg == 1) {
+    $domain_mw   ->pack(-expand => 1, -fill => 'both');
+    $ds_tool->configure(-bg => $update_color);
+    $hint_msg="Domain Selection - allows the user to select a domain.
+Choose the domain selection mode by pressing 'Choose Mode'.";
+
+  } elsif ($my_arg == 2) {
+    $bkgnd_dat_mw->pack(-expand => 1, -fill => 'both');
+    $bc_tool->configure(-bg => $update_color);
+    $hint_msg="Initial Data - controls the execution of grib_prep which decodes GRIB files.\n";
+
+  } elsif ($my_arg == 3) {
+    
+    if ($domain_select eq "") {
+       info_dbox("Domain Not Selected", "Go to Domain Selection to load a localized domain.  Without 
+selecting a localized domain the script wrfprep cannot run successfully."); 
+       return; 
+    } 
+     
+    if ($d_nb->raised() != 1) {$d_nb->raise(1);} 
+    $interp_mw   ->pack(-expand => 1, -fill => 'both');
+    $id_tool->configure(-bg => $update_color);
+    $hint_msg="Interpolate Data - controls the execution of wrfprep which interpolates gridded data to a specific domain.\n";
+
+  } elsif ($my_arg == 4) {
+    $paths_mw    ->pack(-expand => 1, -fill => 'both');
+    $hint_msg="Path Preferences - allows the user to set or confirm default paths.";
+  }
+
+  # Get focus off of EXT_DATAROOT.
+  switch_focus_main();
+
+#  $sys_frm->configure(-scrollregion => [0,0, 900,900] );# $sys_frm->bbox($sys_frm) ]);
+
+}
+
+# ----------------------------------
+# create_paths_prefs_mw 
+#
+# When the user first starts app they are 
+# able to set EXT_DATAROOT & GEOG_DATAROOT.
+# ----------------------------------
+sub create_paths_prefs_mw {
+
+  ## Create Interp Data frame.
+  $paths_mw=$sys_frm->Frame(-relief => 'raised', -bd => 2);
+  $paths_frame=$paths_mw->Frame(-relief => 'groove', -bd => 2)
+        ->pack(-expand => 0, -fill => 'both',
+               -padx => 20, -pady => 20);
+
+  #--------- Path Prefercenes Label --------
+  $paths_frame->Label(-text => "Path Preferences")
+      ->place( -x => 5, -y => -7);
+
+
+  $paths_frame->gridRowconfigure(0, -minsize => 30);
+  $paths_frame->gridRowconfigure(2, -minsize => 30);
+  $paths_frame->gridRowconfigure(5, -minsize => 20);
+  $paths_frame->gridRowconfigure(10, -minsize => 300);
+  $paths_frame->gridColumnconfigure(0, -minsize => 12);
+  $paths_frame->gridColumnconfigure(2, -minsize =>  3);
+  $paths_frame->gridColumnconfigure(4, -minsize =>  3);
+  $paths_frame->gridColumnconfigure(7, -minsize => 200);
+if(0){
+  for ($k=2; $k < 28; $k+=1) {
+    $paths_frame->gridRowconfigure($k, -minsize => 15); }
+}
+ 
+
+  my $pwidth=55;
+  my $row_count=1;
+  $paths_frame->Label(-text => "Default paths to $model_name directories defined when the install script ran.",
+                      -font => $thin_font) 
+               ->grid(-row => $row_count, -column => 1, -columnspan => 4, -sticky => 'nw');
+if(0){
+  $row_count+=2;
+  $paths_frame->Label(-text => "Path to original source code (SOURCE_ROOT)",
+                      -font => $thin_font, -fg => $colorN,
+                      -justify => 'left')
+               ->grid(-row => $row_count++, -column => 1, -sticky => 'nw');
+  $paths_frame->Entry(-width => $pwidth,
+                      -justify => 'left',
+                      -state => 'disabled',
+                      -fg => $colorG,
+                      -textvariable => \$ROOT_SOURCE)
+               ->grid(-row => $row_count, -column => 1);
+
+  $row_count+=2;
+  $paths_frame->Label(-text => "Path to compiled/installed code and scripts (INSTALLROOT)",
+                      -font => $thin_font, -fg => $colorN,
+                      -justify => 'left')
+               ->grid(-row => $row_count++, -column => 1, -sticky => 'nw');
+  $paths_frame->Entry(-width => $pwidth,
+                      -justify => 'left',
+                      -state => 'disabled',
+                      -fg => $colorG,
+                      -textvariable => \$ROOT_INSTALL)
+               ->grid(-row => $row_count, -column => 1);
+}
+
+if ($model_name ne "LAPS") {
+  $row_count+=2;
+  my $label_e=$paths_frame->Label(
+                      -text => "Path to external data (i.e. EXT_DATAROOT)",
+                      -font => $thin_font, -fg => $colorN,
+                      -justify => 'left')
+               ->grid(-row => $row_count++, -column => 1, -sticky => 'w');
+  my $entry_e=$paths_frame->Entry(-width => $pwidth,
+                      -justify => 'left',
+                      -textvariable => \$ROOT_EXT)
+               ->grid(-row => $row_count, -column => 1);
+
+  # Bind action to entrybox.
+  $entry_e->bind('<Return>', [\&set_ext_dataroot]);
+
+  $paths_frame->Button(-text => "Browse...", 
+                       -width => 9,
+                       -command => [\&wrap_set_ext_dataroot])
+               ->grid(-row => $row_count, 
+                      -column => 3, 
+                      -sticky => 'sw');
+ 
+}
+
+  $row_count+=2;
+  my $label_g=$paths_frame->Label(
+                      -text => "Path to geographical data (i.e. GEOG_DATAROOT)",
+                      -font => $thin_font, -fg => $colorN,
+                      -justify => 'left')
+               ->grid(-row => $row_count, -column => 1, -sticky => 'w');
+  $row_count++;
+  my $entry_g=$paths_frame->Entry(-width => $pwidth,
+                      -justify => 'left',
+                      -textvariable => \$ROOT_GEOG)
+               ->grid(-row => $row_count, -column => 1);
+
+  # Bind action to entrybox.
+  $entry_g->bind('<Return>', [\&set_geog_dataroot]);
+
+  $paths_frame->Button(-text => "Browse...", 
+                       -width => 9,
+                       -command => [\&wrap_set_geog_dataroot])
+               ->grid(-row => $row_count, 
+                      -column => 3, 
+                      -sticky => 'sw');
+ 
+  # Add balloon message to inform user
+if ($model_name ne "LAPS") {
+  $balloon->attach($label_e, -msg => 
+   "Directory containing configuration files, work space, and output 
+from the grib_prep program. This EXT_DATAROOT can support 
+multiple MOAD_DATAROOTs.");
+}
+  $balloon->attach($label_g, -msg => 
+"Top directory containing subdirectories of tile land 
+use, topography, etc. data for use when localizing.");
+
+
+if(0){
+  $row_count+=2;
+  $paths_frame->Label(-text => "Directory under which MOAD_DATAROOTs will be created (DATAROOT)",
+                      -font => $thin_font, -fg => $colorN,
+                      -justify => 'left')
+               ->grid(-row => $row_count++, -column => 1, -columnspan => 4, -sticky => 'nw');
+  $paths_frame->Entry(-width => $pwidth,
+                      -justify => 'left',
+                      -textvariable => \$ROOT_DATA)
+               ->grid(-row => $row_count, -column => 1);
+
+  $row_count+=2;
+  $paths_frame->Label(-text => "Directory containing template files (TEMPLATES)",
+                      -font => $thin_font, -fg => $colorN,
+                      -justify => 'left')
+               ->grid(-row => $row_count++, -column => 1, -sticky => 'nw');
+  $paths_frame->Entry(-width => $pwidth,
+                      -justify => 'left',
+                      -textvariable => \$ROOT_TEMPLATES)
+               ->grid(-row => $row_count, -column => 1);
+
+  $row_count+=2;
+  $paths_frame->Label(-text => "NCAR Graphics  Root (NCARG_ROOT)",
+                      -font => $thin_font, -fg => $colorN,
+                      -justify => 'left')
+               ->grid(-row => $row_count++, -column => 1, -sticky => 'nw');
+  $paths_frame->Entry(-width => $pwidth,
+                      -justify => 'left',
+                      -textvariable => \$ROOT_NCARG)
+               ->grid(-row => $row_count, -column => 1);
+
+  $row_count+=2;
+  $paths_frame->Label(-text => "NCL Command (NCL_COMMAND)",
+                      -font => $thin_font, -fg => $colorN,
+                      -justify => 'left')
+               ->grid(-row => $row_count++, -column => 1, -sticky => 'nw');
+  $paths_frame->Entry(-width => $pwidth,
+                      -justify => 'left',
+                      -textvariable => \$ROOT_NCL)
+               ->grid(-row => $row_count, -column => 1);
+}
+
+}
+
+}
+__END__

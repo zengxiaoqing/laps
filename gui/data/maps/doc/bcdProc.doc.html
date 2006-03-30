@@ -1,0 +1,119 @@
+<html>
+<title>bcdProc doc</title>
+<pre>
+This program is a standalone program for performing operations on WFO
+Advanced .bcd (binary cartographic data files) or .bcx files (extended
+binary cartographic data files), which are the file formats that the
+workstation actually reads to draw map backgrounds. A .bcd file contains
+vector data in lat/lon coordinates. A .bcx is esentially a .bcd file
+with a text string associated with each record. Both input and output
+are assumed to be the same file type.
+
+The program allows the user 6 different operations which can be
+performed on either .bcd or .bcx files except where noted.  These are
+summarized here and explained in detail below:
+
+- remove identical vectors
+- clip based on a depictor file
+- collapse short vectors
+- clip an ASCII file based on a depictor file
+- clip an ASCII file based on a depictor file with lat/lon units conversion
+- convert an ASCII file to a bcd file
+- shorten records to a standard length
+
+
+For the mode that removes identical vectors, the usage is as follows:
+
+bcdProc r {x} input_file output_file
+
+r: the letter `r'
+x (optional): if the letter `x' is present, assume .bcx file.
+input_file: pathname of file to read.
+output_file: pathname of file to write.
+
+
+For the mode that clips based on a depictor file, the usage is as follows:
+
+bcdProc c {x} input_file depictor output_file
+
+c: the letter `c'
+x (optional): if the letter `x' is present, assume .bcx file.
+input_file: pathname of file to read.
+depictor: pathname of depictor file (.sup file) to clip with.
+output_file: pathname of file to write.
+
+
+For the mode that collapses short vectors, the usage is as follows:
+
+bcdProc t {x} input_file dist output_file
+
+t: the letter `t'
+x (optional): if the letter `x' is present, assume .bcx file.
+input_file: pathname of file to read.
+dist: vectors shorter that this distance in km will be collapsed.
+output_file: pathname of file to write.
+
+
+For the mode that converts an ASCII file to a bcd file, the usage is as
+follows:
+
+bcdProc b {x} input_file output_file
+
+b: the letter `b'
+x (optional): if the letter `x' is present, assume .bcx file.
+input_file: pathname of file to read.
+output_file: pathname of file to write.
+
+
+This mode reads lines from an ASCII file, finds first two consecutive
+space-delimited words that can be a lat/lon, and removes the record
+if that lat/lon is not within the area of the depictor file. To be
+a lat/lon, a word must contain a decimal point and represent a floating
+point number within the allowable range of values for lats and lons in
+degrees. The usage is as follows:
+
+bcdProc a input_file depictor output_file
+
+a: the letter `a'
+input_file: pathname of file to read.
+depictor: pathname of depictor file (.sup file) to clip with.
+output_file: pathname of file to write.
+
+
+This mode reads lines from an ASCII file, find first two consecutive
+space-delimited words that can be a lat/lon, and removes the record
+if that lat/lon is not within the area of the depictor file. To be
+a lat/lon, a word must represent a floating point or integer number.
+This mode can perform units conversions on lats and lons. Validity of
+number as a lat/lon is checked after the units conversion.
+The usage is as follows:
+
+bcdProc i input_file depictor output_file {c1} {latmult} {lonmult}
+
+i: the letter `i'
+input_file: pathname of file to read.
+depictor: pathname of depictor file (.sup file) to clip with.
+output_file: pathname of file to write.
+c1 (optional): Number of characters to skip in each line of text before
+               trying to find lats and lons.  Defaults to 0.
+latmult (optional): Units conversion for latitudes, defaults to 1.
+lonmult (optional): Units conversion for latitudes, defaults to 1.
+
+
+This mode reads a bcd or bcx file that may not have records truncated
+to the standard number of points (currently 500) and writes out a
+file with records that are truncated in that manner.
+The usage is as follows:
+
+bcdProc s {x} input_file output_file
+
+s: the letter `s'
+x (optional): if the letter `x' is present, assume .bcx file.
+input_file: pathname of file to read.
+depictor: pathname of depictor file (.sup file) to clip with.
+output_file: pathname of file to write.
+</pre>
+<hr>
+<h5>Author: Jim Ramer
+<br>Last update: 31 Jan 02</h5>
+</html>
