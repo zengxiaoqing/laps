@@ -53,13 +53,13 @@ if ($ENV{GEOG_DATAROOT}){
 if ($ENV{DATAROOT}){
   $defdataroot=$ENV{DATAROOT};
 }else{
-  $defdataroot="$definstallroot/../laps_domains";
+  $defdataroot="$definstallroot/domains";
 }
 
 if ($ENV{TEMPLATE}){
   $deftemplates=$ENV{TEMPLATE};
 }else{
-  $deftemplates="$definstallroot/../laps_templates";
+  $deftemplates="$definstallroot/laps_templates";
 }
 
 if ($ENV{UI_TEMPDIR}){
@@ -151,7 +151,7 @@ if (! $TEMPLATES ) {
   if ($ENV{TEMPLATES}){
      $TEMPLATES = $ENV{TEMPLATES};
   } else {
-     $TEMPLATES = "$INSTALLROOT/../laps_templates";
+     $TEMPLATES = "$INSTALLROOT/laps_templates";
   }
 }
 
@@ -159,7 +159,7 @@ if (! $DATAROOT) {
   if ($ENV{DATAROOT}){
      $DATAROOT = $ENV{DATAROOT};
   } else {
-     $DATAROOT = "$INSTALLROOT/../laps_domains";
+     $DATAROOT = "$INSTALLROOT/domains";
   }
 }
 
@@ -196,8 +196,8 @@ print "UI_TEMPDIR = $UI_TEMPDIR\n";
 #------------------------------------
 my $deftempl = "$TEMPLATES/default";
 if (! -d "$deftempl"){
-  if (! -d "$TEMPLATES"){ mkdir "$TEMPLATES"; }
-  mkdir "$deftempl" ||  die "Could not mkdir $deftempl!\n";
+  if (! -d "$TEMPLATES"){ mkdir "$TEMPLATES",0777; }
+  mkdir "$deftempl",0777 ||  die "Could not mkdir $deftempl!\n";
   system ("cp $SRCROOT/data/static/nest7grid.parms $deftempl");
   system ("cp $SRCROOT/data/static/pressures.nl $deftempl");
   system ("cp $SRCROOT/gui/data/static/domain.gif $deftempl"); 
@@ -415,8 +415,6 @@ if ($ans != 0) {
        print "\to Perl/Tk not found; \n";
        print "\t  Installing Perl/Tk now, in addition to the Domain GUI; \n";
        print "\t  This could take 10 mins; \n";
-       print "\t  Successful test of Perl/Tk installation will cause windows to \n";
-       print "\t  flash (i.e. display and quickly disappear) on your screen.\n";
  
        print LOG "\to Perl/Tk not found; installing now (this takes 10 mins...)\n";
        $ENV{SOURCE_ROOT}=$SOURCE_ROOT; 
