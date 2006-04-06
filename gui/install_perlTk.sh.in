@@ -25,6 +25,11 @@
 
    echo '----- perl Makefile.PL'
    PERL5OPT=""; export PERL5OPT
+   if [ $OBJECT_MODE = 64 ]
+      then
+        echo '----- env variable OBJECT_MODE changed from "'$OBJECT_MODE'" to "32".'
+  	OBJECT_MODE=32; export OBJECT_MODE
+   fi
    @PERL@ Makefile.PL 
 
    if [ $LANG = "en_US.utf8" ]
@@ -36,16 +41,13 @@
    echo '----- make'
    make 
 
-   echo '----- make test'
-   make test 
-
 # To clean-up do the following.
 
    cd ..
    mkdir perlTk
 
-   echo '----- cp -R Tk-804.027/blib perlTk'
-   cp -R Tk-804.027/blib perlTk
+   echo '----- mv Tk-804.027/blib perlTk'
+   mv Tk-804.027/blib perlTk/
 
    echo '----- exiting install_perlTk.sh'
    exit
