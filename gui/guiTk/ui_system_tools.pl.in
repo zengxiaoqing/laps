@@ -83,7 +83,6 @@ use Sys::Hostname;
 
 #----
 
-$sys_perl='@PERL@';
 my $config_file="@prefix@/config_paths";
 if (-e $config_file) { do $config_file; } else {print "$config_file does NOT exist\n"};
 if ($SOURCE_ROOT)   {$ROOT_SOURCE=$SOURCE_ROOT} else {print "ROOT_SOURCE is null\n"};
