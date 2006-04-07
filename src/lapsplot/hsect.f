@@ -80,7 +80,7 @@ cdis
 
         real,  allocatable  :: static_grid(:,:)
 
-        character*1 c_display, qtype, tunits, c_prodtype
+        character*1 c_display, qtype, tunits, c_prodtype, clvl_soil
         character*1 cansw
         character*13 filename,a13_time
         character*3 c3_site
@@ -4809,17 +4809,22 @@ c                   cint = -1.
         elseif(c_type(1:2) .eq. 'sm')then
             var_2d = 'LSM'
             ext = 'lm1'
+
+            lvl_soil = 1
+            write(clvl_soil,736)lvl_soil
+ 736        format(i1)
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
-     1                          ,field_2d,-1,istatus)
+     1                          ,field_2d,-lvl_soil,istatus)
 
             IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
                 goto1200
             endif
 
-            c_label = 'Soil Moisture      (PERCENT)     '
+            c_label = 'Soil Moisture Level '//clvl_soil//' (PERCENT) '
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
