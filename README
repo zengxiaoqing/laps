@@ -2646,6 +2646,12 @@ Note: Sounding data is used if the observations lie in the time window
 
 ------- 3.3  -------------  ANALYSIS PROCESSES --------------------------------
 
+     A flow chart for the analysis processes may be found at this URL:
+     http://laps.noaa.gov/doc/LAPS_flow_v_02.png
+
+     Listed below is a summary of each analysis process in the order it
+     is typically run by the 'sched.pl' script.
+
 ------ 3.3.1 -------------------- WIND ----------------------------------------
 
 Process: wind.exe - WIND analysis and related fields
@@ -2865,6 +2871,12 @@ Output:
              and that they should take precautions like drinking more water, 
              stay out of the direct sun, take frequent breaks if working 
              outside, etc.
+
+         Ground Temperature:
+             A single level analysis using land/sea surface (skin) temperature 
+             observations combined with background model information (if 
+             available). 
+             
 </pre>
 Source directory: laps/src/sfc
 
@@ -3498,15 +3510,28 @@ Inputs:
         lcv          grid       LAPS satellite derived snow cover
 
 Outputs:
-	LM1/LM2      2d grids   Soil moisture and snow cover
+	LM1          3d grid    Soil moisture (3-layer)
+	LM2          2d grids   Snow Cover and additional Soil Moisture info
 
 </pre>
 
 This program is in the early stages of development and provides a three
-layer analysis of soil conditions. A snow cover analysis is included.
+layer analysis of soil conditions. The three layers are as follows:
+
+<pre>
+    layer 1 (0-6in [0-0.152m])
+    layer 2 (6-12in [.152-.305m])
+    layer 3 (12-36in [.305-0.914m]) 
+</pre>
+
+A snow cover analysis is included.
 The fractional snow cover is a composite over time of information from the 
 cloud analysis (visible and IR satellite), and snow accumulation (derived 
 mainly from radar). More documentation can be found within the source code.
+
+Note that a soil temperature analysis is not included at this time. The closest
+thing we have to this is a single layer "ground temperature" analysis in the 
+LSX surface output file. 
 
 Source directory: laps/src/soil
 
@@ -3808,6 +3833,7 @@ Process surface:LSX  U    su       1  Surface wind u (grid north)
         	     PP   pp       1  Perturbation Pressure (if available)
             	     T    st       1  Temp 
 		     TD   std      1  Dewpt Temp
+                     TGD  tgd      1  Ground Temp (land surface/SST)
         	     VV   vv	   1  Vertical Velocity
 		     RH   srh      1  Relative Humidity
 		     MSL  mp	   1  MSL Pressure
