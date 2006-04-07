@@ -176,12 +176,12 @@ then
   fi
   if test "$arch" = "x86_64"
   then
-    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4 -fastsse"
+    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
-    OPTIMIZE="-O2"
+    OPTIMIZE="-O2 -fastsse"
   fi
 fi  
 
