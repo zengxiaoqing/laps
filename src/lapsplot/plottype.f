@@ -182,7 +182,7 @@ cdis
  1234   format(1x,4i5,4e12.4,i4)
 
         call get_border(imax,jmax,x_1,x_2,y_1,y_2)
-        call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
+        call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax),ltype)       
 
         call pwrity (ri, rj, c_type, nc, isize, 0, 0)
 
