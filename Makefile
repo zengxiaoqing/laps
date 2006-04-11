@@ -153,8 +153,8 @@ mkdatadirs:
                          --dataroot=$(DATAROOT) --system_type='laps'
 
 mkgui: cgui cguiinstall 
-	$(PERL) $(SRCROOT)/gui/make_gui.pl --source_root=$(CWD) --installroot=$(INSTALLROOT) \
-                         --dataroot=$(DATAROOT)
+	$(PERL) $(SRCROOT)/gui/make_gui.pl --source_root=$(CWD) --installroot=$(INSTALLROOT)
+
 cgui:
 	(cd $(SRCROOT)/gui/src/ ; \
 	$(MAKE) )
