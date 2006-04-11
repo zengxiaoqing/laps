@@ -53,7 +53,7 @@ if ($ENV{GEOG_DATAROOT}){
 if ($ENV{DATAROOT}){
   $defdataroot=$ENV{DATAROOT};
 }else{
-  $defdataroot="$definstallroot/domains";
+  $defdataroot="$definstallroot/laps_domains";
 }
 
 if ($ENV{TEMPLATE}){
@@ -159,7 +159,7 @@ if (! $DATAROOT) {
   if ($ENV{DATAROOT}){
      $DATAROOT = $ENV{DATAROOT};
   } else {
-     $DATAROOT = "$INSTALLROOT/domains";
+     $DATAROOT = "$INSTALLROOT/laps_domains";
   }
 }
 
@@ -476,7 +476,7 @@ if ($ans) {
   print SRT "# \$ENV{PERL5OPT}='$opt_perl';\n\n";
 }
 
-print SRT "my \$ans=system(\"$INSTALLROOT/gui/guiTk/ui_system_tools.pl 1> $ofile 2>&1\");\n";
+print SRT "my \$ans=system(\"$PATH_TO_PERL $INSTALLROOT/gui/guiTk/ui_system_tools.pl 1> $ofile 2>&1\");\n";
 print SRT "if (\$ans) { print \"Look at file $ofile\\n\"; };\n";
 print SRT "exit;";
 close (SRT);
