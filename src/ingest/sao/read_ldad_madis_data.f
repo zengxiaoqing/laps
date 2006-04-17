@@ -7,7 +7,7 @@ C
      +     dewpoint, elevation, latitude, longitude, 
      +     meanWeightedTemperature, precipAccum, precipRate, 
      +     pressChange3Hour, relHumidity, seaLevelPressure, 
-     +     seaSurfaceTemp, soilMoisture, soilTemperature, 
+     +     seaSurfaceTemp, soilMoisturePercent, soilTemperature, 
      +     solarRadiation, stationPressure, temperature, visibility, 
      +     windDir, windDirMax, windGust, windSpeed, altimeterDD, 
      +     dataProvider, dewpointDD, precipAccumDD, precipRateDD, 
@@ -29,7 +29,7 @@ C
      +     meanWeightedTemperature(recNum), precipAccum(recNum),
      +     precipRate(recNum), pressChange3Hour(recNum),
      +     relHumidity(recNum), seaLevelPressure(recNum),
-     +     seaSurfaceTemp(recNum), soilMoisture(recNum),
+     +     seaSurfaceTemp(recNum), soilMoisturePercent(recNum),
      +     soilTemperature(recNum), solarRadiation(recNum),
      +     stationPressure(recNum), temperature(recNum),
      +     visibility(recNum), windDir(recNum), windDirMax(recNum),
@@ -434,32 +434,32 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C     soilMoisture  "Soil moisture"
+C     soilMoisturePercent  "Soil moisture"
 C
-      nf_status=NF_INQ_VARID(nf_fid,'soilMoisture',nf_vid)
+      nf_status=NF_INQ_VARID(nf_fid,'soilMoisturePercent',nf_vid)
       if(nf_status.ne.NF_NOERR) then
-       print *, NF_STRERROR(nf_status),' for soilMoisture'
-       print *,'Set soilMoisture to badflag'
-       soilMoisture = badflag
+       print *, NF_STRERROR(nf_status),' for soilMoisturePercent'
+       print *,'Set soilMoisturePercent to badflag'
+       soilMoisturePercent = badflag
       else
-       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,soilMoisture)
+       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,soilMoisturePercent)
        if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status),' for soilMoisture'
+        print *, NF_STRERROR(nf_status),' for soilMoisturePercent'
        endif
        nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',valfil)
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-     1         ,' for _FillValue - soilMoisture'
+     1         ,' for _FillValue - soilMoisturePercent'
        else
-        call ck_array_real(soilMoisture,recNum,valfil
+        call ck_array_real(soilMoisturePercent,recNum,valfil
      1                    ,badflag)
        endif
        nf_status=NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',valmis)
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-     1         ,' for missing_value - soilMoisture'
+     1         ,' for missing_value - soilMoisturePercent'
        else
-        call ck_array_real(soilMoisture,recNum,valmis
+        call ck_array_real(soilMoisturePercent,recNum,valmis
      1                    ,badflag)
        endif
       endif
