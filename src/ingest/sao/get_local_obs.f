@@ -112,7 +112,7 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
      +     meanWeightedTemperature(maxobs), precipAccum(maxobs),
      +     precipRate(maxobs), pressChange3Hour(maxobs),
      +     relHumidity(maxobs),
-     +     seaLevelPressure(maxobs), soilMoisture(maxobs),
+     +     seaLevelPressure(maxobs), soilMoisturePercent(maxobs),
      +     soilTemperature(maxobs), solarRadiation(maxobs),
      +     stationPressure(maxobs), temperature(maxobs),
      +     visibility(maxobs), windDir(maxobs), windDirMax(maxobs),
@@ -284,7 +284,8 @@ c
      +     longitude(ix), meanWeightedTemperature(ix), 
      +     precipAccum(ix), precipRate(ix), pressChange3Hour(ix), 
      +     relHumidity(ix), seaLevelPressure(ix), seaSurfaceTemp(ix), 
-     +     soilMoisture(ix), soilTemperature(ix), solarRadiation(ix), 
+     +     soilMoisturePercent(ix), soilTemperature(ix), 
+     +     solarRadiation(ix), 
      +     stationPressure(ix), temperature(ix), visibility(ix), 
      +     windDir(ix), windDirMax(ix), windGust(ix), windSpeed(ix), 
      +     altimeterDD(ix), dataProvider(ix), dewpointDD(ix), 
@@ -408,6 +409,8 @@ c
      1               seaSurfaceTemp(i) = badflag
 	   if( nanf( soilTemperature(i)) .eq. 1 ) 
      1               soilTemperature(i) = badflag
+	   if( nanf( soilMoisturePercent(i)) .eq. 1 ) 
+     1               soilMoisturePercent(i) = badflag
 	   if( nanf( windDir(i)   ) .eq. 1 ) windDir(i) = badflag       
 	   if( nanf( windSpeed(i)   ) .eq. 1 ) windSpeed(i) = badflag
 	   if( nanf( windGust(i)  ) .eq. 1 ) windGust(i)   = badflag
@@ -630,7 +633,7 @@ c
 c..... Sea Surface Temperature
 c
          seatemp_k = seaSurfaceTemp(i)                         
-         call sfc_climo_qc_r('tgd_k',seatemp_k)
+         call sfc_climo_qc_r('sst_k',seatemp_k)
          if(seatemp_k .ne. badflag) then          
             seatemp_f = k_to_f(seatemp_k)
          else
@@ -647,6 +650,13 @@ c
          else
             soiltemp_f = badflag
          endif
+
+c
+c..... Soil Moisture
+c
+         soilmoist_p = soilMoisturePercent(i)                         
+         if(soilmoist_p.lt.0. .or. soilmoist_p.gt.100.) 
+     1      soilmoist_p = badflag
 c
 c
 c..... Fill the expected accuracy arrays.  Values are based on information
@@ -742,7 +752,7 @@ c..... Other stuff.
 c
 	 store_5ea(nn,2) = 0.0             ! solar radiation 
 	 store_5ea(nn,3) = 1.0 * fon       ! soil/water temperature (F)
-	 store_5ea(nn,4) = 0.0             ! soil moisture
+	 store_5ea(nn,4) = 0.0             ! soil moisture (rh %)
 c
 	 store_6ea(nn,1) = 0.0             ! precipitation (in)
 	 store_6ea(nn,2) = 0.0             ! snow cover (in) 
@@ -786,7 +796,7 @@ c
 c
 	 store_2(nn,1) = temp_f                 ! temperature (deg f)
 	 store_2(nn,2) = dewp_f                 ! dew point (deg f) 
-	 store_2(nn,3) = rh_p                   ! Relative Humidity
+	 store_2(nn,3) = rh_p                   ! Relative Humidity (%)
 c
 	 store_3(nn,1) = dir                    ! wind dir (deg)
 	 store_3(nn,2) = spd                    ! wind speed (kt)
@@ -800,7 +810,7 @@ c
          store_4(nn,5) = badflag                ! 3-h press change (mb)
 c
          store_5(nn,1) = visibility(i)          ! visibility (miles)
-         store_5(nn,2) = solar_rad              ! solar radiation 
+         store_5(nn,2) = solar_rad              ! solar radiation (Watts/M**2)
 
          if(seatemp_f .ne. badflag)then
 	     store_5(nn,3) = seatemp_f          ! soil/water temperature (F)
@@ -808,7 +818,7 @@ c
 	     store_5(nn,3) = soiltemp_f         ! soil/water temperature (F)
          endif
 
-         store_5(nn,4) = badflag                ! soil moisture 
+         store_5(nn,4) = soilmoist_p            ! soil moisture (%)
 c
          store_6(nn,1) = badflag                ! 1-h precipitation
          store_6(nn,2) = badflag                ! 3-h precipitation
