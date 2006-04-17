@@ -153,6 +153,10 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
               endif
           end
+
+#         Cleanup
+          rm -rf $OUTPUTROOT/$RADAR/netcdf/.tmp
+
       popd
 
   else # archive case
