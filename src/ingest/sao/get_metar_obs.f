@@ -952,6 +952,10 @@ c
             if(arg .gt. 340.)arg = badflag
             if(arg .lt. 200.)arg = badflag
 
+        elseif(c_var .eq. 'sst_k')then
+            if(arg .gt. 313.)arg = badflag
+            if(arg .lt. 200.)arg = badflag
+
         elseif(c_var .eq. 'td_k')then
             if(arg .gt. 320.)arg = badflag
             if(arg .lt. 210.)arg = badflag
