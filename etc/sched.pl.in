@@ -61,6 +61,8 @@
 #
 # -v                   Run verification binaries 
 #
+# -V                   Run GSI, LAPS, STMAS analysis 
+#
 # -f                   Run followup script to generate GIF images for the web.
 #                      The argument value is a shorthand name for the domain and
 #                      can be given a dummy value if the FSL Gizmo server is invisible
@@ -83,11 +85,11 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T);
+            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:Q:KM:n:A:f:F:wslvp:T');
+getopts('d:c:a:rm:t:e:q:Q:KVM:n:A:f:F:wslvp:T');
 
 my $initial_time = time();
 
@@ -119,6 +121,13 @@ if(defined $opt_s){ # "surface only"
 
 }elsif(defined $opt_M){ # Mesowave or other "surface only" LAPS
     @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M);
+
+}elsif(defined $opt_V){ # GSI, LAPS and STMAS 3D analysis
+    @LAPS_EXE = qw(lga.exe 
+                  ingest_pro.exe obs_driver.x sfc_qc.exe
+                  ingest_sounding.exe 
+                  ingest_cloud_drift.exe ingest_aircraft.exe 
+                  GSIprep.exe) 
 
 }elsif(defined $opt_F){ # Followup Only
     @LAPS_EXE = ( );
@@ -311,7 +320,8 @@ foreach $exe (@LAPS_EXE){
     closedir(LOCKDIR);
     $wgi_script_name = $1 if($exe =~ /^(\S+)\./);
     if($wgi_script_name eq "laps_sfc" || 
-       $wgi_script_name eq "recurs_iter"){
+       $wgi_script_name eq "recurs_iter" ||
+       $wgi_script_name eq "stmas_mg"){
        $wgi_script_name = "sfc";
     }
 
