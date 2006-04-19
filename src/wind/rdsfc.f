@@ -123,6 +123,8 @@ c
         c13_fname = filename13(i4time,ext(1:3))
         infile = directory(1:len_dir)//c13_fname
 
+        n_obs_b = 0
+
         if(.false.)then
             call read_surface_old(infile,maxstns,atime,n_meso_g,
      1           n_meso_pos,
