@@ -127,7 +127,7 @@ if(defined $opt_s){ # "surface only"
                   ingest_pro.exe obs_driver.x sfc_qc.exe
                   ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
-                  GSIprep.exe) 
+                  GSI_prep.exe) 
 
 }elsif(defined $opt_F){ # Followup Only
     @LAPS_EXE = ( );
