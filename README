@@ -2331,10 +2331,7 @@ Inputs:
         equivalent. A description of how we obtain these Polar NetCDF files 
         for Level-II is at 'http://laps.noaa.gov/albers/remapper_raw.html'.
 
-        The polar NetCDF files are named according to 'yydddhhmm_elevxx' where 
-        'xx' is the tilt number.
-
-        Note that narrowband data (e.g. WSR 88D Level-III RPG)
+        Note that narrowband reflectivity data (e.g. WSR 88D Level-III RPG) 
         can also be used as long as it is converted to the required polar 
         coordinate, NetCDF format. This is in fact being done for the AWIPS 
         implementation of LAPS for a low-level tilt from a single radar, via 
@@ -2345,6 +2342,13 @@ Inputs:
         writes out the polar NetCDF files in the directory 
         '$LAPS_DATA_ROOT/lapsprd/rdr/???/raw' where ??? is the radar number.
         The second executable 'remap_polar_netcdf.exe' is run as part of LAPS.
+        We haven't been using Level-III velocity data since it is of limited
+        4-bit resolution and we're running only with the lowest tilt at present.
+
+        For both Level-II and Level-III the polar NetCDF files are named 
+        according to 'yydddhhmm_elevxx' where 'xx' is the tilt number. 
+        Sample polar NetCDF files including a CDL may be found at:
+        http://laps.noaa.gov/software/radar/wideband/
 
 Outputs (LAPS intermediate files - depending on input parameters):
 <pre>
