@@ -372,7 +372,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /'          [st,mw] obs/mesowx locations'    
      1      /'          [bs] Sfc background/forecast'
      1      /10x,'[li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
-     1      /10x,'[s] Other Stability Indices'
+     1      /10x,'[s] Other Stability Indices, [sm] Soil Moisture'
      1      /
      1      /'     TEMP: [t,tb,tr,to,bt] (LAPS,LGA,FUA,OBS,BAL)'       
      1      ,', [pt,pb] Theta, Bal Theta'
@@ -4810,7 +4810,11 @@ c                   cint = -1.
             var_2d = 'LSM'
             ext = 'lm1'
 
-            lvl_soil = 1
+!           Input level of soil moisture
+            write(6,735)
+ 735        format(35x,'Input soil level           [1,2,3] ? ',$)
+            read(5,*)lvl_soil
+
             write(clvl_soil,736)lvl_soil
  736        format(i1)
 
