@@ -17,7 +17,8 @@ fi
 
 if test -n "$user_optimize"
 then
-  OPTIMIZE="$user_optimize"
+  C_OPT="$user_optimize"
+  F_OPT="$user_optimize"
 fi
 
 if test "$prefix" = "NONE" 
@@ -82,7 +83,8 @@ then
   FFLAGS="$FFLAGS +FPVZO -K" 
   FIXED="+source=fixed"
   FREE="+source=free +langlvl=90"
-  OPTIMIZE="-O2 +Onolimit"
+  C_OPT="-O2 +Onolimit"
+  F_OPT="-O2 +Onolimit"
   LIBPATHFLAG=-Wl,-L
   echo "GCC = $GCC"
   if test -z "$GCC"
@@ -97,21 +99,24 @@ then
   FFLAGS="$FFLAGS"
   FIXED="-qfixed"
   FREE="-qfree=f90 -qsuffix=f=f90"
-  OPTIMIZE="-O3 -qstrict"
+  C_OPT="-O3 -qstrict"
+  F_OPT="-O3 -qstrict"
 fi
 if test "$arch" = "alpha"
 then
   FFLAGS="$FFLAGS -convert big_endian -fpe3"
   FIXED="-fixed"
   FREE="-free"
-  OPTIMIZE="-O4"
+  C_OPT="-O4"
+  F_OPT="-O4"
   CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
 fi  
 if test "$arch" = "sun4" 
 then
     AC_MSG_ERROR(LAPS no longer supports the sun4 OS)
 dnl  FFLAGS="$FFLAGS -native -xl -i4 -fnonstd"
-dnl   OPTIMIZE="-O"
+dnl   C_OPT="-O"
+dnl   F_OPT="-O"
 fi
 if test -z "$FC"
 then
@@ -163,7 +168,8 @@ then
     FREE="-Mfree"
     CPP="$FC"
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
-    OPTIMIZE="-O2"
+    C_OPT="-O2"
+    F_OPT="-O2"
   fi
   if test "$arch" = "i386"
   then
@@ -172,7 +178,8 @@ then
     FREE="-Mfree"
     CPP="$FC"
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
-    OPTIMIZE="-O2"
+    C_OPT="-O2"
+    F_OPT="-O2"
   fi
   if test "$arch" = "x86_64"
   then
@@ -181,7 +188,8 @@ then
     FREE="-Mfree"
     CPP="$FC"
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
-    OPTIMIZE="-O2 -fastsse"
+    C_OPT="-O2"
+    F_OPT="-O2 -fastsse"
   fi
 fi  
 
@@ -197,7 +205,8 @@ then
   then
     FFLAGS="$FFLAGS -w90 -w95 -cm"
     FREE="-FR"
-    OPTIMIZE=""
+    C_OPT=""
+    F_OPT=""
   fi
 fi  
 
@@ -231,7 +240,8 @@ AC_SUBST(CSH)
 AC_SUBST(FFLAGS)
 AC_SUBST(FREE)
 AC_SUBST(FIXED)
-AC_SUBST(OPTIMIZE)
+AC_SUBST(C_OPT)
+AC_SUBST(F_OPT)
 AC_SUBST(OTHERLIBS)
 AC_SUBST(ARCHIVE)
 AC_SUBST(FC_USE_TRIGD)
