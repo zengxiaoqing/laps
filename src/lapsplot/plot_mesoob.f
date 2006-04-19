@@ -286,7 +286,6 @@ cdis
                     c_label(13:38) = '1Hr Pcp (mm)/Snw Dpth (cm)'
                 endif
             elseif(iflag_cv .eq. 3)then
-!               c_label(14:33) =  '   Sfc T & Solar Rad'
                 c_label(14:51) =  
      1                     '   Sfc Temp, Soil Moisture & Solar Rad'    
             endif
@@ -466,7 +465,7 @@ cdis
                     pressure = badflag
 
                     if(temp .ne. badflag)then
-                        write(6,*)' Sfc T = ',i,temp,c_staname
+                        write(6,*)' Sfc T  = ',i,temp,c_staname
                         iplotsta = 1
                     endif
 
