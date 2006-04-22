@@ -303,12 +303,6 @@ SUBROUTINE LAPSOBSV(m)
     ELSE
       ! Assign LSO data to the corresponding arrays:
 
-      ! Check if time cross midnight: 0 no cross; 1 cross
-      nit = 0
-      ! Assume time is not lapsed over 12 hours:
-      IF (MAXVAL(otm(1:nob))-MINVAL(otm(1:nob)) &
-	.GT. 1200.00) nit = 1
-
       ! Retrieve location and time sequence:
       DO j=1,nob	! Through all obs sites
 	! X and Y:
@@ -319,11 +313,13 @@ SUBROUTINE LAPSOBSV(m)
 	! T: from LAPS time form: HHMM to seconds
 	hrs = otm(j)/100
 	mns = otm(j)-hrs*100
-
-	! If cross midnight, set morning hour to 24+:
-	IF ((nit .EQ. 1) .AND. (hrs .LE. 11)) hrs = 24+hrs
-	! Cross midnight:
 	xyt(3) = hrs*3600+mns*60
+	IF (otm(j) .LT. 0) xyt(3) = 2*86400	! Void: Bad data
+
+	! Adjust the time when crossing the midnight:
+	IF ((xyt(3)+86400 .GE. domain(1,3)) .AND. &
+	    (xyt(3)+86400 .LE. domain(2,3)) ) &
+	  xyt(3) = xyt(3)+86400
 
 	! Pass the location/time to obs arrays:
         DO k=1,numvar
@@ -426,23 +422,16 @@ SUBROUTINE LAPSOBSV(m)
   ! Check the data ranges:
   IF (verbal .EQ. 1) THEN
     DO i=1,numvar
-      WRITE(*,25) varnam(i), &
-        MINVAL(rawobs(4,1:numobs(i),i)), &
-        MAXVAL(rawobs(4,1:numobs(i),i)), &
-	(MAXVAL(rawobs(4,1:numobs(i),i))- &
-	 MINVAL(rawobs(4,1:numobs(i),i)))/3600.00
       WRITE(*,26) varnam(i), &
 		  MINVAL(rawobs(1,1:numobs(i),i)), &
 		  MAXVAL(rawobs(1,1:numobs(i),i))
     ENDDO
   ENDIF
-25 FORMAT('STMAS>LAPSOBSV: ',A4,' obs time interval: ', &
-     2F11.2,/,'STMAS>LAPSOBSV: Time length: ',F4.2,' hours')
 26 FORMAT('STMAS>LAPSOBSV: ',A4,' min/max values: ', 2F11.2)
 
   ! Write out requested obs for testing:
   IF (savdat .EQ. 1) THEN
-  OPEN(unit=10,file='STMAS_ob1.dat',form='formatted')
+    OPEN(unit=10,file='STMAS_ob1.dat',form='formatted')
     WRITE(10,*) numobs(saveid),numtmf,domain,grdspc(3)
     WRITE(10,*) rawobs(1:4,1:numobs(saveid),saveid)
     CLOSE(10)
