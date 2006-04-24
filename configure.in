@@ -51,7 +51,7 @@ fi
 dnl guess c compiler if not set by user
 dnl if test -z "$CC" 
 dnl then
-dnl   AC_CHECK_PROGS(CC,xlc cc xlC gcc CC,,$PATH)
+dnl   AC_CHECK_PROGS(CC,xlc cc xlC gcc CC pgcc,,$PATH)
 dnl fi
 dnl
 dnl Find path to netcdf ***required by LAPS***
@@ -156,6 +156,7 @@ fi
 dnl  Check to see if we are running Portland Group
 dnl  compilers on a PC. If so, set flags appropriately.
 
+dnl  Test for pgf compiler 
 grep 'pgf' << EOF
 $FC
 EOF
@@ -190,6 +191,18 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2 -fastsse"
+  fi
+fi  
+
+dnl  Test for pgcc compiler 
+grep 'pgcc' << EOF
+$CC
+EOF
+if test $? -eq 0
+then
+  if test "$arch" = "x86_64"
+  then
+    C_OPT="-O2 -fastsse"
   fi
 fi  
 
