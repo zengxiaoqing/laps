@@ -51,7 +51,7 @@
      +     rs,rout,xix,xjx,dealbox,beta(kb),r,ang
       real year_m,month_m,day_m,hour_m,tothour_m,year,month,day,hour,
      +     tothour
-      integer i4time_latest,i4time_now,dt,i4time1
+      integer i4time_latest,i4time_now,dt,i4time1,iread
       real dt1
       character*9 name1,a9
       logical bogus
@@ -69,11 +69,19 @@
       call get_latest_file_time(nest7grid,i4time_latest)
       call make_fnam_lp(i4time_latest,name1,istatus)
       nest7grid=nest7grid(1:len_dir)//name1//'_tcbogus.nl'
-      print*,'--- the table of tcbogus is following ---'
-      print *,nest7grid
-      open(99,file=nest7grid,status='old',form='formatted')
+!      print*,'--- the table of tcbogus is following ---'
+!      print *,nest7grid
+      open(99,file=nest7grid,status='old',form='formatted',iostat=iread,
+     + err=101)
       read(99,tcbogus_nl)
       close(99)
+ 101  if ( iread == 0 ) then 
+       print*,'--- open  tcbogus file successful ---'
+      else
+       print*,'--- No   tcbogus file  ---'
+      endif  
+
+      
 !  -- set i4time_now be laps_time ---
 !      i4time1=i4time_now_gg()
       call get_systime(i4time_now,a9,istatus)
