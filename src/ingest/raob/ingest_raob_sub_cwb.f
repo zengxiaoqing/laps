@@ -207,10 +207,13 @@ c      format f15.0 in snd files
                dewpoint(i,j)= r_missing_data
          endif
 
-         if ( windQua(i,j) .ne. 1 )  then
+c wen modify         if ( windQua(i,j) .ne. 1 )  then
+         if ( windQua(i,j) .eq. 11 ) go to 100 
+         if ( windQua(i,j) .eq. 21 ) go to 100 
+         if ( windQua(i,j) .eq. 31 ) go to 100 
+             write(*,*)' wen test windQua',windQua(i,j),windDir(i,j)
             windDir(i,j)= r_missing_data
             windSpeed(i,j)= r_missing_data
-         endif
 100   continue
 
 !     do 900 i= 1,inNum
