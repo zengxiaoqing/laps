@@ -61,7 +61,7 @@
 #
 # -v                   Run verification binaries 
 #
-# -V                   Run GSI, LAPS, STMAS analysis 
+# -V                   Run GSI analysis 
 #
 # -f                   Run followup script to generate GIF images for the web.
 #                      The argument value is a shorthand name for the domain and
@@ -122,7 +122,7 @@ if(defined $opt_s){ # "surface only"
 }elsif(defined $opt_M){ # Mesowave or other "surface only" LAPS
     @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M);
 
-}elsif(defined $opt_V){ # GSI, LAPS and STMAS 3D analysis
+}elsif(defined $opt_V){ # GSI analysis
     @LAPS_EXE = qw(lga.exe 
                   ingest_pro.exe obs_driver.x sfc_qc.exe
                   ingest_sounding.exe 
@@ -241,7 +241,7 @@ my $hh = (gmtime)[2];
 my $mm = (gmtime)[1];
 my $hhmm = 100*$hh+$mm;
 $hhmm = "0".$hhmm while(length($hhmm)<4);
-my($LAPS_LOG_PATH,$LAPS_LOCK_PATH);
+my($LAPS_LOG_PATH,$LAPS_LOCK_PATH,$log_name);
 if(($fxa_sys!=0)and(! $opt_l)){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
@@ -254,10 +254,15 @@ if( ((defined $opt_A)or(defined $opt_a))and(-e "/tmp/laps_casererun_log")){
     $LAPS_LOCK_PATH=$LAPS_LOG_PATH;
 }
 
+if(defined $opt_F){
+    $log_name = "sched_F\.log";    
+}else{
+    $log_name = "sched\.log";    
+}
+
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
-#unless(open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm"))
-unless(open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$yyjjjhhmm"))
+unless(open(STDOUT, ">$LAPS_LOG_PATH/$log_name.$yyjjjhhmm"))
 { 
   print "WARNING: $0 Can't redirect stdout\n";
 }
