@@ -238,10 +238,15 @@ c
       return
       end
 
-        subroutine get_sfc_obtime(int_obtime,i4time_lso
-     1                           ,i4time_ob,istatus)
+        subroutine get_sfc_obtime(int_obtime,i4time_lso ! I
+     1                           ,i4time_ob,istatus)    ! O
 
-        character*9 a9time
+        character*9 a9time                              ! L
+
+        if(int_obtime .lt. 0)then ! (e.g. flag value of -100)
+            write(6,*)' get_sfc_obtime: int_obtime = ',int_obtime
+            go to 900
+        endif
 
         call make_fnam_lp(i4time_lso,a9time,istatus)
         if(istatus .ne. 1)go to 900
@@ -266,7 +271,7 @@ c
         return
 
  900    write(6,*)' Error in get_sfc_obtime, unresolved ob time'
-        i4time_ob = i4time_lso
+        i4time_ob = i4time_lso ! Assume obtime equals the file time
         istatus = 0
         return
 
