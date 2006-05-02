@@ -1,5 +1,5 @@
        subroutine multiwind_noZ(u,v,rms,u0,v0,x,y,height
-     1                     ,n,xx,yy,ht,vr,rmsmax,ier)
+     1                         ,n,xx,yy,ht,vr,rmsmax,ier)
 c***********************************************************************
 c description      : To derive horizontal wind from multi-radar radial
 c                    velocity at constant height without reflectivity data.
@@ -11,17 +11,17 @@ c                                      in unit of m/s.
 c    O     rms              real       root mean square error relative to initial guess wind 
 c                                      in unit of m/s.
 c                                      rms=sqrt( (u-u0)**2 + (v-v0)**2 )
-c    I     u0,v0            real       initial guess (or model wind) horizontal wind
+c    I     u0,v0            real     initial guess (or model wind) horizontal wind
 c                                      in unit of m/s.
-c    I     x,y              real       the (x,y) coordinate at the wind position.
+c    I     x,y              real*4     the (x,y) coordinate at the wind position.
 c                                      in unit of meter.
-c    I     height           real       the height at the wind position 
+c    I     height           real*4     the height at the wind position 
 c                                      in unit of meter.
 c    I     n                integer    number of input radar data. (maximum number, n=4 )
-c    I     xx(n)            real array the x-coordinate of radar center in unit of meter.
-c    I     yy(n)            real array the y-coordinate of radar center in unit of meter.
-c    I     ht(n)            real array the height of radar antena in unit of meter.
-c    I     vr(n)            real array the radial velocity observed by radar in unit of m/s.
+c    I     xx(n)          real*4 array the x-coordinate of radar center in unit of meter.
+c    I     yy(n)          real*4 array the y-coordinate of radar center in unit of meter.
+c    I     ht(n)          real*4 array the height of radar antena in unit of meter.
+c    I     vr(n)          real*4 array the radial velocity observed by radar in unit of m/s.
 c    I     rmsmax           real       the maximum value of root mean square error relative
 c                                      to initial guess wind in unit of m/s.
 c                                      If the rms of multi-radar (n>2) wind is greater than 
@@ -36,8 +36,15 @@ c Date :
 c   May. 14, 2004 (S.-M. Deng)
 c***********************************************************************
 
-      dimension xx(n),yy(n),ht(n),vr(n),xa(4),yb(4),d(4),vh(4)
-      dimension uu(6),vv(6),srms(6),vcos(6),wu(6),wv(6)
+      real*4 x,y,height
+      real*4 xx(n),yy(n),ht(n),vr(n)
+      real u,v,rms,u0,v0,rmsmax
+      integer n,ier,i,m
+
+      real xa(4),yb(4),d(4),vh(4)
+      real uu(6),vv(6),srms(6),vcos(6),wu(6),wv(6)
+      real rcos,su,sv
+      real vt
 
 c-----------------------------------------------------------------------
 c*  To check input data.
@@ -47,6 +54,8 @@ c*  To check input data.
           ier=1
           return
       endif
+      rmsmax=10.
+
       do i=1,n
          if( (ht(i).gt.height).or.(ht(i).gt.30000.) )then
              ier=2
@@ -181,6 +190,8 @@ c*  For multi-radar (n=4), to compute horizontal wind.
       end
 
       subroutine duwind(u,v,rms,vcos,u0,v0,x1,x2,y1,y2,d1,d2,v1,v2)
+      real u,v,rms,vcos,u0,v0,x1,x2,y1,y2,d1,d2,v1,v2
+      real det
       det=x1*y2-x2*y1
       if( abs(det).lt.2. )then
           u=-999.0
