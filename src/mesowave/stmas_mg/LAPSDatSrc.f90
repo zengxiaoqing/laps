@@ -71,6 +71,8 @@ SUBROUTINE LAPSInfo
 
   ! Get current system time:
   CALL GET_SYSTIME(i4time,fnm,err)
+  WRITE(6,1) fnm(1:9), 'LSO'	! Assume STMAS using LSO instead of LSO_QC
+1 format('STMAS>LAPSInfo: Getting surface data at: ',a9,' from ',a6)
 
   ! Get a flag for missing data:
   CALL GET_R_MISSING_DATA(mising,err)
@@ -85,9 +87,9 @@ SUBROUTINE LAPSInfo
 
   ! Check:
   IF (verbal .EQ. 1) THEN
-    WRITE(*,1) numgrd(1:3),lapsdt,mxstts,mising,badsfc
+    WRITE(*,2) numgrd(1:3),lapsdt,mxstts,mising,badsfc
   ENDIF
-1 FORMAT('STMAS>LAPSInfo: Num  gridpoints: ',3I6,/, &
+2 FORMAT('STMAS>LAPSInfo: Num  gridpoints: ',3I6,/, &
 	 'STMAS>LAPSInfo: LAPS cycle time: ',I6,/, &
 	 'STMAS>LAPSInfo: Maxnumber sites: ',I6,/, &
 	 'STMAS>LAPSInfo: Missing/bad ids: ',e16.8,f16.5)
