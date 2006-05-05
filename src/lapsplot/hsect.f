@@ -449,6 +449,8 @@ c       include 'satellite_dims_lvd.inc'
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
+                plot_parms%iraster = -1
+
                 call array_range(field_2d_diff,NX_L,NY_L,rmin,rmax
      1                          ,r_missing_data)
 
