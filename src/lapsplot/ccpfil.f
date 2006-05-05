@@ -854,6 +854,7 @@ c     Restore original color table
 !         ixl = 353 + nint(.05 * 1024.)
           ixl = nint((xlow - .005) * 1024.)
           CALL PCHIQU (  cpux(ixl),cpux(iy),ch_low,rsize ,0,+1.0)
+          write(6,*)' Colorbar left edge = ',ch_low
 
 !         Right Edge
           if(log_scaling)then
@@ -878,6 +879,7 @@ c     Restore original color table
 
           ixh = ixl + 525 ! 878
           CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
+          write(6,*)' Colorbar right edge = ',ch_high
 
       endif ! l_integral
 
@@ -919,6 +921,7 @@ c     Restore original color table
 
           ixm = (ixl+ixh)/2
           CALL PCHIQU (cpux(ixm),cpux(iy),ch_mid(1:len_mid),rsize,0,0.0)       
+          write(6,*)' Colorbar midpoint = ',ch_mid(1:len_mid)
 
       endif
 
