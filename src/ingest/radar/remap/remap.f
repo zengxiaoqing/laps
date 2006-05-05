@@ -230,7 +230,7 @@ cdis
 
       n_vel_gates = MAX_VEL_GATES
       n_ref_gates = MAX_REF_GATES
-      b_missing_data = 255.
+      b_missing_data = 255. ! flag value (corresponds to an unsigned integer)
 
       i_tilt_proc_curr = 1
 
