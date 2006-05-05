@@ -238,11 +238,7 @@ cdoc    Returns a 2-D grid. Inputs include the extension and time window.
 
         call get_directory(ext,directory,len_dir)
 
-
-        do i = 1,31
-            if(ext(i:i) .eq. ' ')goto20
-        enddo
-20      lenext = i-1
+        call s_len(ext,lenext)
 
         c_filespec = directory(1:len_dir)//'*.'//ext(1:lenext)
         call get_file_time(c_filespec,i4time_needed,i4time_nearest)
@@ -753,10 +749,7 @@ cdoc    Returns a 3-D analysis grid. Inputs include the extension and time windo
 
         call get_directory(ext,directory,len_dir)
 
-        do i = 1,31
-            if(ext(i:i) .eq. ' ')goto20
-        enddo
-20      lenext = i-1
+        call s_len(ext,lenext)
 
         c_filespec = directory(1:len_dir)//'*.'//ext(1:lenext)
         call get_file_time(c_filespec,i4time_needed,i4time_nearest)
