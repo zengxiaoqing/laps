@@ -196,6 +196,8 @@ c
       character*7 c7_laps_xmit
       character*7 c7_laps_purge
       character*7 c7_laps_sleep
+
+      save height_max, k_low
 c
 c     Beginning of executable code
 c
@@ -254,11 +256,11 @@ c
           n_pot_ref(i,j,k) = 0
   100   CONTINUE
 c
-c     Compute maximum height of data needed.
+c       Compute maximum height of data needed.
 c
         height_max = height_of_level(NZ_L)
 c
-c     Define Lower Limit of Radar Coverage in LAPS grid
+c       Define Lower Limit of Radar Coverage in LAPS grid
 c
         k_low = int(height_to_zcoord(rheight_radar,i_status))
         k_low = max(k_low,1)
