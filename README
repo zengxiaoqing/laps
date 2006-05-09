@@ -1106,15 +1106,14 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      Profilers/RASS (pro/lrs) - The raw data are obtained from GSD's NIMBUS 
            database and/or AWIPS in NetCDF format where they are stored in 
            four different directories. The data originally come from GSD's 
-           Demonstration Division (DD) from two main networks. The 30+ NPN 
+           Demonstration Branch (DB) from two main networks. The 30+ NPN 
            (National Profiler Network - NOAAnet) profiler network is located 
            mostly in the central U.S. 
 
-           We are also using a network of experimental boundary layer profilers
-           (BLP - external directory) for both wind and temperature. These
-           are available over the internet directly from GSD/DD at the 
-           following location...
-           ftp://oak.fsl.noaa.gov/outgoing/blp/ 
+           The second network supplies experimental boundary layer profilers
+           (BLP - external directory) for both wind and temperature, currently
+           just on NIMBUS. We can also read boundary layer profilers in the
+           RSA/LDAD format. 
 
            The profiler data for wind goes into the 'pro' intermediate file, 
            and RASS temperature profiles go into the 'lrs' intermediate file. 
@@ -1131,13 +1130,20 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            NPN RASS     NIMBUS/FTP           LRS                 rass60.cdl
                                                                  rass06.cdl
 
-           BLP wind     NIMBUS/FTP           PRO     915 MHz     wpdn60.cdl
+           BLP wind     NIMBUS               PRO     915 MHz     wpdn60.cdl
                                                                  wpdn30.cdl*
 
-           BLP RASS     NIMBUS/FTP           LRS                 rass60.cdl
+           BLP RASS     NIMBUS               LRS                 rass60.cdl
                                                                  rass30.cdl*
 
-           * Indicates that this data with this cdl is available, but our
+           BLP wind     RSA                  PRO     915 MHz     
+                                                      50 MHz
+                                                      SODAR
+
+           BLP RASS     RSA                  LRS     915 MHz
+                                                      50 MHz            
+
+           * Indicates that the data with this cdl is available, but our
              ingest code would need modification to process it.
 </pre>                 
 
@@ -1150,6 +1156,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            server mentioned above, more specifically at this location...
            ftp://oak.fsl.noaa.gov/outgoing/npn/ 
            
+           In the future we hope to add a LAPS module to access boundary-layer
+           profilers from the MADIS multi-agency profiler database.
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
@@ -1177,14 +1185,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      Dropsondes (snd):
            A Dropsonde ingest module has been developed for the CWB database. 
-           An ingest module has also been developed for AVAPS. 
-
-           We now allow the SND format to be used as input (so far just for
-           the "AIRDROP" project). For the SND input option, the ingest program
-           simply does a time windowing of the raw data.
-
-           We may include modules for other (e.g. NetCDF) databases in the  
-           future, such as NIMBUS or WFO/AWIPS.
+           An ingest module has also been developed for AVAPS. We now allow the
+           SND format to be used as input (so far just for the "AIRDROP" 
+           project). For the SND input option, the ingest program simply does a
+           time windowing of the raw data. We may include modules for other 
+           (e.g. NetCDF) databases in the future, such as NIMBUS or WFO/AWIPS.
 
      Radiometers (snd):
            A radiometer ingest module has been developed for the MADIS
