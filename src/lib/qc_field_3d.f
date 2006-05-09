@@ -19,10 +19,12 @@
      1   var_2d .eq.'USF' .or. var_2d .eq. 'VSF')then
           lower_bound = -200.
           upper_bound = +200.
-      elseif(var_2d .eq. 'T3'.or.var_2d.eq.'TSF'.or.
-     1       var_2d .eq. 'DSF')then
+      elseif(var_2d .eq. 'T3'.or.var_2d.eq.'TSF')then
           lower_bound = +173.
           upper_bound = +400.
+      elseif(var_2d .eq. 'DSF')then
+          lower_bound = +120.
+          upper_bound = +350.
       elseif(var_2d .eq.'PSF'.or.var_2d.eq.'SLP')then
           lower_bound = 40000.
           upper_bound = 110000.
