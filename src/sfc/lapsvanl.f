@@ -58,7 +58,7 @@ c	determines the extent to which pressure is modified 2. del,
 c	which determines the magnitude of the residual of the momentum 
 c	equations. 3.  tfact, the delta t factor.  This is the time 
 c	scale of the input data, the delta t of the wind change.
-c	Artificiallly varying this parameter can modulate the effects of
+c	Artificially varying this parameter can modulate the effects of
 c	local velocity change and provide a less or more geostrophic
 c	analysis.  Suggested values: 
 c	gam .01 to .00001 m**2/sec**2/pa**2
