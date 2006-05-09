@@ -7,7 +7,7 @@
 
       include 'netcdf.inc'
 
-      character*170 filename
+      character*(*) filename
 
       integer ICcheckNum, QCcheckNum, level, maxStaticIds,
      +     nInventoryBins, recNum,nf_fid, nf_vid, nf_status
