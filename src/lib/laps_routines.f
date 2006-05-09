@@ -1340,8 +1340,8 @@ cc	   var(2) = 'MSL'  ! LGB variable
         if(.true.)then ! new way
            call get_modelfg_2d(i4time_in,var(2),ni,nj,bkg_field,istatus)
            if(istatus .ne. 1)then
-	       print *,' No LGB/RSF file with proper valid time.'
-	       imodel_bk = 0
+	       print *,' No LGB/FSF file with proper valid time.'
+               bkg_status = 0
 	       go to 300
            endif
 
