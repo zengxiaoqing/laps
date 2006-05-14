@@ -130,6 +130,7 @@ c
       logical ltime(-1:1)
       logical luse_sfc_bkgd
       logical smooth_fields
+      logical lgb_only
 c_______________________________________________________________________________
 c
 c Read information from static/nest7grid.parms
@@ -143,7 +144,7 @@ c Read information from static/background.nl
 c
       call get_background_info(bgpaths,bgmodels
      +,forecast_length,use_analysis,cmodels
-     +,itime,smooth_fields,luse_sfc_bkgd)
+     +,itime,smooth_fields,luse_sfc_bkgd,lgb_only)
 
       nbgmodels=0
       do i=1,maxbgmodels
@@ -235,9 +236,10 @@ c
 c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
          IF (bgmodel .NE. 11) THEN !WNI
            print*,'Calling get_acceptable_files '
-           print*,'bgpath:  ',TRIM(bgpath)
-           print*,'cmodel:  ',TRIM(cmodel)
-           print*,'bgmodel: ',bgmodel
+           print*,'bgpath:   ',TRIM(bgpath)
+           print*,'cmodel:   ',TRIM(cmodel)
+           print*,'bgmodel:  ',bgmodel
+           print*,'lgb_only: ',lgb_only
            print*
 
            call get_acceptable_files(i4time_now_lga,bgpath,bgmodel
@@ -294,7 +296,7 @@ c
              call lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .          reject_names,names,max_files,accepted_files,
-     .          i4time_now_lga, smooth_fields,lga_status)
+     .          i4time_now_lga, smooth_fields,lgb_only,lga_status)
 
            endif
 
