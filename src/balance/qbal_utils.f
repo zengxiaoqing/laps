@@ -427,6 +427,7 @@ c     terscl=sqrt(sumt/(nx*ny))
       logical use_analysis
       logical luse_sfc_bkgd
       logical smooth_fields
+      logical lgb_only
 
       integer i4time_sys_sonde
      .       ,i4time_sys_drop
@@ -475,7 +476,8 @@ c
       allocate (cmodels(maxbgmodels),bgpaths(maxbgmodels))
 
       call get_background_info(bgpaths,bgmodels,forecast_length
-     +,use_analysis,cmodels,itime_inc,smooth_fields,luse_sfc_bkgd)
+     +,use_analysis,cmodels,itime_inc,smooth_fields,luse_sfc_bkgd
+     +,lgb_only)
 
       call s_len(cmodels(1),lenm)
 
