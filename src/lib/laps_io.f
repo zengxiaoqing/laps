@@ -1772,12 +1772,13 @@ c     include 'bgdata.inc'
       logical sfc_bkgd
       logical use_analysis
       logical smooth_fields
+      logical lgb_only
 
       integer   istatus,i
 
       call get_background_info(bgpaths,bgmodels
      +,forecast_length
-     +,use_analysis,cmodel,itime_inc,smooth_fields,sfc_bkgd)
+     +,use_analysis,cmodel,itime_inc,smooth_fields,sfc_bkgd,lgb_only)
 
       nbgm=0
       do i=1,maxbgmodels
