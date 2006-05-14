@@ -35,7 +35,7 @@ c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd
      .    ,laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt
      .    ,reject_names,bg_names,max_files,accepted_files
-     .    ,i4time_now,smooth_fields,lga_status)
+     .    ,i4time_now,smooth_fields,lgb_only,lga_status)
 
 c KML: CHANGES MADE APRIL 2004
 c tdbg_sfc (model 2m dew point) is now being read in from subroutine read_bgdata
@@ -80,6 +80,7 @@ c
 c sfc namelist stuff. for reduced pressure calc
       integer use_lso_qc, skip_internal_qc, itheta
       logical l_require_lso, luse_sfc_bkgd
+      logical lgb_only
       real    redp_lvl,del,gam,ak
       real    bad_t,bad_td,bad_u,bad_v,bad_p
       real    bad_mp,bad_th,bad_the
@@ -196,6 +197,7 @@ c
       character*200 fullname
       character*256 outdir
       character*31  ext
+      character*3   c_ext
       character*125 comment(nz_laps)
       character*4   af_bg(max_files)
       character*10  c_domain_name
@@ -469,7 +471,8 @@ c
          i4time_bg_valid(j)=bg_times(j)+bg_valid(j)
       enddo
 
-      call get_directory('lga',lgapath,ldl)
+      if(lgb_only)c_ext='lgb'
+      call get_directory(c_ext,lgapath,ldl)
       call get_file_times(lgapath,max_files,lga_names
      1                      ,lga_times,nlga,istatus)
 
@@ -1174,16 +1177,22 @@ c
      +                ,vwbg_sfc,tdbg_sfc, tpbg_sfc,mslpbg)
 
        endif !(linterp)
+
+       itstatus(4)=init_timer()
+       bgvalid=time_bg(nf)+valid_bg(nf)
+
 c
 c Write LGA
 c ---------
-       itstatus(4)=init_timer()
-       bgvalid=time_bg(nf)+valid_bg(nf)
-       call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
+       if(.not.lgb_only)then
+
+          call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
      .bgvalid,cmodel,missingflag,pr,ht,tp,sh,uw,vw,ww,istatus)
-       if(istatus.ne.1)then
-          print*,'Error writing lga - returning to main'
-          return
+          if(istatus.ne.1)then
+             print*,'Error writing lga - returning to main'
+             return
+          endif
+
        endif
 c         
 c Write LGB
@@ -1254,11 +1263,15 @@ c        endif
             print*,outdir,ext,nz_laps
 
 c interp 3D fields
-            call time_interp(outdir,ext,
+            if(.not.lgb_only)then
+
+               call time_interp(outdir,ext,
      +           nx_laps,ny_laps,nz_laps,6,pr,
      +           i4time_bg_valid(i),i4time_bg_valid(i-1),
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))
+
+            endif
 
             if(bgmodel.ne.1.or.bgmodel.ne.7)then
                ext = 'lgb'

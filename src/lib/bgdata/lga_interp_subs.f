@@ -307,13 +307,17 @@ c
       integer   i4time_valid1,
      .          i4time_valid2,
      .          i4time_now,
+     .          i4time_needed_in,
+     .          i4time_nearest,
      .          time1,time2,
      .          fcst1,fcst2,
-     .          ip(nz),
+     .          ip(nz),lend,
      .          newfcst,
      .          imin,ihour,
      .          i,j,k,kk,
      .          istatus,nstatus
+
+      logical   lexist
 c
       real*4 pr(nz),weight
 
@@ -323,6 +327,9 @@ c
      .       gridn(:,:,:)
 c
       integer        nan_flag
+
+      character*13   cfilename
+      character*255  cfilespec
       character*(*)  dir
       character*(*)  ext
       character*3    var(nz,ngrids)
@@ -365,16 +372,25 @@ c
 
       write(af,'(i4.4)') fcst1/3600
       call  make_fnam_lp(time1, fname9, nstatus)
-      print*,'Reading: ',fname9,af,'.'//ext
+      print*,'Time interp file 1: ',fname9,af,'.'//ext
       write(af,'(i4.4)') fcst2/3600
       call  make_fnam_lp(time2, fname9, nstatus)
-      print*,'Reading: ',fname9,af,'.'//ext
+      print*,'Time interp file 2: ',fname9,af,'.'//ext
 
       call make_fnam_lp(time1,fname9,istatus)
       imin=mod(newfcst,3600)/60
       ihour=newfcst/3600
       write(af,'(2i2.2)') ihour,imin
-      print *,'Writing - ',fname9//af,'.'//ext//' (Backfill)'
+      print *,'Time interp output file: ',fname9//af,'.'//ext(1:3)
+
+      call s_len(dir,lend)
+      cfilespec=dir(1:lend)//'/'//fname9//af
+      inquire(file=cfilespec,exist=lexist)
+      if(lexist)then
+         print*,'Output file already exists in ',ext
+         print*,'Returning to lga_driver. No time interp.'
+         return
+      endif
 
       allocate (grid1(nx,ny,nz)
      &         ,grid2(nx,ny,nz)

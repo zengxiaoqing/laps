@@ -152,7 +152,7 @@ c
       character*132 cmodels(maxbgmodels)
       character*132 cmodel
       integer oldest_forecast, max_forecast_delta
-      logical use_analysis, use_systime
+      logical use_analysis, use_systime, lgb_only
 
 c_______________________________________________________________________________
 c
@@ -165,7 +165,7 @@ c
       endif
       call get_background_info(bgpaths,bgmodels,oldest_forecast
      +,max_forecast_delta,forecast_length,use_analysis,cmodels
-     +,itime_inc)
+     +,itime_inc,lgb_only)
 
       nbgmodels=0
       do i=1,maxbgmodels
