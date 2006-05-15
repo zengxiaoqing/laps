@@ -46,8 +46,6 @@ SRC	= machine_dependent.F \
           convm2miles.f \
           convmiles2m.f \
           convms2kt.f \
-          cv_asc_i4time.f \
-          cv_i4tim_asc_lp.f \
           diff.f \
           downcase.f \
           esat1.f \
@@ -99,7 +97,6 @@ SRC	= machine_dependent.F \
           make_rh.f \
           make_ssh.f \
           make_td.f \
-          make_fnam_lp.f \
           make_optran_layers.f \
           map_proj.f \
           meanlapse.f \
