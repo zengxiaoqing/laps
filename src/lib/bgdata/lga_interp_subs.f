@@ -384,7 +384,7 @@ c
       print *,'Time interp output file: ',fname9//af,'.'//ext(1:3)
 
       call s_len(dir,lend)
-      cfilespec=dir(1:lend)//'/'//fname9//af
+      cfilespec=dir(1:lend)//'/'//fname9//af//'.'//ext
       inquire(file=cfilespec,exist=lexist)
       if(lexist)then
          print*,'Output file already exists in ',ext
