@@ -9,6 +9,14 @@
  /
 c SOUNDING ingest (ingest_sounding.exe)
 c
+c
+c 'path_to_raw_raob'
+c
+c This works for NIMBUS, WFO, MADIS, CWB, and AFWA formats. If WFO or MADIS
+c data are being used, the parameter 'c8_project_common' should be set to 'WFO'
+c in the 'nest7grid.parms' namelist.
+c
+c
 c 'path_to_raw_drpsnd'
 c
 c Note that dropsonde 'drpsnd' data works for AVAPS, CWB, and SND formats at 
