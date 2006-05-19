@@ -122,6 +122,14 @@ c                         'v01' (radar #1  volume data)
 c                         'v02' (radar #2  volume data)
 c                         'vxx' (radar #xx volume data)
 c
+c path_to_raw_blpprofiler_cmn - Path to Boundary Layer wind profiler data. If 
+c                               data is Multi-Agency MADIS then use 'WFO' for 
+c                               'c8_project_common'.
+c
+c path_to_raw_blprass_cmn - Path to Boundary Layer RASS data. If data is 
+c                           Multi-Agency MADIS then use 'WFO' for 
+c                           'c8_project_common'.
+c
 c MAX_RADARS_CMN - Number of wideband radars being used. This can be set to
 c                  0 if no radars are present to save computer memory 
 c                  (particularly in the wind analysis) along with other 
