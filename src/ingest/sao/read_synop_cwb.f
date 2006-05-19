@@ -104,6 +104,7 @@
 
       do i= 1,numSynop
          write(stnNo(i),'(i5)') wmoId(i)      
+         stname(i)(1:5)=stnNo(i)(1:5)
       enddo
 
       np= numSynop +1
