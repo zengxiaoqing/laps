@@ -61,16 +61,21 @@ cdis
         call get_c8_project(c8_project,istatus)
         if(istatus .ne. 1)goto999
 
-        if(c8_project .ne. 'RSA')then
-            write(6,*)
-            write(6,*)' Running BLP (NIMBUS) Rass ingest'
-            call ingest_blplrs(i4time,NX_L,NY_L,j_status)
-            write(6,*)' Return from BLP (NIMBUS) Rass ingest'
-        else
+        if(c8_project .eq. 'RSA')then
             write(6,*)
             write(6,*)' Running RSA/LDAD local RASS ingest '
             call ingest_rsalrs(i4time,NX_L,NY_L,j_status)
             write(6,*)' Return from RSA/LDAD local RASS ingest'
+        elseif(c8_project .eq. 'WFO')then
+            write(6,*)
+            write(6,*)' Running MADIS (WFO) Multi-agency profile ingest'       
+            call ingest_madis_map(i4time,NX_L,NY_L,'lrs',j_status)
+            write(6,*)' Return from MADIS (WFO) MAP ingest'
+        else
+            write(6,*)
+            write(6,*)' Running BLP (NIMBUS) Rass ingest'
+            call ingest_blplrs(i4time,NX_L,NY_L,j_status)
+            write(6,*)' Return from BLP (NIMBUS) Rass ingest'
         endif
 
 999     continue
