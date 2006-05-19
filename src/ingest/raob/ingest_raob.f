@@ -193,12 +193,10 @@
               if(c8_raob_format(1:6) .eq. 'NIMBUS' .or.
      1           c8_raob_format(1:3) .eq. 'WFO'         )then
 
-                  call open_ext(21,i4time_sys,'snd',istatus)
-
                   call get_raob_data   (i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest
-     1                ,filename_in,istatus)
+     1                ,filename_in,lun_out,istatus)
 
               elseif(c8_raob_format(1:3) .eq. 'RSA')then
                   write(6,*)
@@ -213,7 +211,7 @@
      1                .or. l_parse(c8_raob_format,'AFWA')   )then
 
 !                 Open output SND file 
-                  call open_ext(21,i4time_sys,'snd',istatus)
+                  call open_ext(lun_out,i4time_sys,'snd',istatus)
 
                   call get_raob_data_af(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
@@ -222,7 +220,7 @@
 
               elseif(c8_raob_format(1:3) .eq. 'CWB')then
 !                 Open output SND file 
-                  call open_ext(21,i4time_sys,'snd',istatus)
+                  call open_ext(lun_out,i4time_sys,'snd',istatus)
 
                   call get_raob_data_cwb(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L

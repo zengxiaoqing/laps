@@ -2,7 +2,7 @@
       subroutine get_raob_data(
      1                         i4time_sys,ilaps_cycle_time,NX_L,NY_L
      1                        ,i4time_raob_earliest,i4time_raob_latest       
-     1                        ,filename
+     1                        ,filename,lun_out
      1                        ,istatus)
 
       character*170 filename
@@ -122,7 +122,8 @@ C
      +     sigTLevel, sigWLevel, staNameLen, nlvl_out
 !.............................................................................
      1                        ,i4time_sys,ilaps_cycle_time,NX_L,NY_L
-     1                        ,i4time_raob_earliest,i4time_raob_latest       
+     1                        ,i4time_raob_earliest,i4time_raob_latest  
+     1                        ,lun_out     
      1                        ,istatus)
 
 
@@ -136,6 +137,7 @@ C
 !.............................................................................
      1                        ,i4time_sys,ilaps_cycle_time,NX_L,NY_L
      1                        ,i4time_raob_earliest,i4time_raob_latest       
+     1                        ,lun_out     
      1                        ,istatus)
 !.............................................................................
 
@@ -280,7 +282,7 @@ C
               endif
           endif
 
-          call sort_and_write(i4time_sys
+          call sort_and_write(i4time_sys,lun_out
      1                       ,recNum,isnd,r_missing_data,a9time_raob
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
@@ -301,7 +303,7 @@ C
       end
 
 
-      subroutine sort_and_write(i4time_sys
+      subroutine sort_and_write(i4time_sys,lun_out
      1                       ,NREC,isnd,r_missing_data,a9time_raob
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
@@ -571,8 +573,6 @@ C
           i = i+1
       enddo ! i
 
-      call open_ext(21,i4time_sys,'snd',istatus)
-
 !     QC and convert units, T and Td are converted to deg C
       do i = 1,n_good_levels
           ilevel = indx(i)
@@ -610,7 +610,9 @@ C
       lonout_sort = stalon(isnd)      ! assign entire array for this sounding
       a9time_out_sort = a9time_raob   ! assign entire array for this sounding
 
-      call write_snd  (21                                         ! I
+      call open_ext(lun_out,i4time_sys,'snd',istatus)
+
+      call write_snd  (lun_out                                    ! I
      1                ,1,maxlvl,1                                 ! I
      1                ,wmostanum(isnd)                            ! I
      1                ,latout_sort,lonout_sort,staelev(isnd)      ! I
