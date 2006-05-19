@@ -116,6 +116,8 @@ C
 !.............................................................................
 
       character*9 a9_timeObs,a9_recptTime,a9_closest,a9time_ob
+      character*8 c8_project
+      character*6 provider_ref
       character*(*)ext
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
@@ -153,18 +155,32 @@ C
       write(6,*)' # of profilers = ',nStaticIds
       write(6,*)' # of records = ',recnum
 
-      do i_sta = 1,nStaticIds
-        i_pr_ref = lastRecord(i_sta) + 1
-        assetId_ref = assetId(i_pr_ref)
+      call get_c8_project(c8_project,istatus)
 
-        write(6,*)' Looping for profiler ',i_sta,staticIds(i_sta)
-        write(6,*)' Station / last record ',i_sta,i_pr_ref,assetId_ref         
+      do i_sta = 1,nStaticIds
+        ilast_rec = lastRecord(i_sta) + 1 ! Offset going from C to FORTRAN
+        provider_ref = providerId(ilast_rec)
+
+        call s_len(staticIds(i_sta),len_id)
+
+        write(6,*)
+        write(6,*)' Looping for profiler ',i_sta
+     1                                    ,staticIds(i_sta)(1:len_id)
+
+        write(6,*)' Station / last record / provider '
+     1           ,i_sta,ilast_rec,provider_ref         
 
         i4_resid_closest = 999999
+        a9_closest = '---------'
 
         do irec = 1,recnum
 
-          if(assetId(irec) .eq. assetId_ref)then
+          call s_len(providerId(irec),len_prov)
+
+          if(providerId(irec) .eq. provider_ref)then
+
+              write(6,*)' ProviderId Match = ',irec
+     1                 ,providerId(irec)(1:len_prov)
 
               rlat = latitude(irec)
               rlon = longitude(irec)
@@ -172,11 +188,10 @@ C
               if(rlat .le. rnorth .and. rlat .ge. south .and.
      1           rlon .ge. west   .and. rlon .le. east            )then        
 
-                  write(6,*)staticIds(i_sta),' is in box'
+                  write(6,*)irec,providerId(irec)(1:len_prov)
+     1                     ,' is in box'       
 
                   elev = elevation(irec)
-
-                  write(6,*)staticIds(i_sta)
 
 !                 Convert u_std, v_std to rms
 
@@ -186,9 +201,9 @@ C
                       call c_time2fname(nint(observationTime(irec))
      1                                        ,a9_timeObs)
                   else
-                      write(6,*)' Bad observation time - reject'       
+                      write(6,*)' Bad observation time - reject record'         
      1                           ,observationTime(irec)
-                      goto 900
+                      goto 300
                   endif
 
                   call cv_asc_i4time(a9_timeObs,i4time_ob)
@@ -202,11 +217,18 @@ C
      1                      ,i4_resid,i4_resid_closest       
 
               else !
-                  write(6,*)staticIds(i_sta),' is outside of domain'
+                  write(6,*)irec,providerId(irec)(1:len_prov)
+     1                     ,' is outside of domain'
 
               endif ! in box
 
-          endif ! correct asset ID
+!         else
+!             write(6,*)' ProviderId = ',irec
+!    1                 ,providerId(irec)(1:len_prov)
+ 
+          endif ! correct provider ID
+
+ 300      continue
 
         enddo ! irec 
 
@@ -256,15 +278,17 @@ C
                     endif
                 enddo ! i
 
-                write(6,401)assetId_ref
+                call filter_string(provider_ref)
+
+                write(6,401)provider_ref
      1                     ,n_good_levels
      1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
      1                     ,a9time_ob,'PROFILER'
-                write(lun,401)assetId_ref
+                write(lun,401)provider_ref
      1                     ,n_good_levels
      1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
      1                     ,a9time_ob,'PROFILER'
-401             format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
+401             format(a12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
 
                 do i = 1,n_good_levels
                     write(lun,411,err=421)ht_out(i)
@@ -298,15 +322,17 @@ C
                     endif
                 enddo ! i
 
-                write(6,501)assetId_ref
+                call filter_string(provider_ref)
+
+                write(6,501)provider_ref
      1                     ,n_good_levels
      1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:5)
      1                     ,a9time_ob,'RASS    '
-                write(lun,501)assetId_ref
+                write(lun,501)provider_ref
      1                     ,n_good_levels
      1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:5)
      1                     ,a9time_ob,'RASS    '
-501             format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9,1x,a8)
+501             format(a12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9,1x,a8)
 
                 do i = 1,n_good_levels
                     write(lun,511,err=521)ht_out(i)
