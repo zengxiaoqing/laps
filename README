@@ -1110,10 +1110,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            (National Profiler Network - NOAAnet) profiler network is located 
            mostly in the central U.S. 
 
-           The second network supplies experimental boundary layer profilers
-           (BLP - external directory) for both wind and temperature, currently
-           just on NIMBUS. We can also read boundary layer profilers in the
-           RSA/LDAD format. 
+           The second network supplies boundary layer profilers for both wind 
+           and temperature, with formats including NIMBUS, MADIS Multi-Agency 
+           Profilers (LDAD), and RSA (LDAD) format. 
 
            The profiler data for wind goes into the 'pro' intermediate file, 
            and RASS temperature profiles go into the 'lrs' intermediate file. 
@@ -1136,11 +1135,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            BLP RASS     NIMBUS               LRS                 rass60.cdl
                                                                  rass30.cdl*
 
-           BLP wind     RSA                  PRO     915 MHz     
+           BLP wind     RSA/MADIS-MAP        PRO     915 MHz     
                                                       50 MHz
                                                       SODAR
 
-           BLP RASS     RSA                  LRS     915 MHz
+           BLP RASS     RSA/MADIS-MAP        LRS     915 MHz
                                                       50 MHz            
 
            * Indicates that the data with this cdl is available, but our
@@ -1155,9 +1154,6 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            Another method to obtain NPN wind and RASS files is from the FTP
            server mentioned above, more specifically at this location...
            ftp://oak.fsl.noaa.gov/outgoing/npn/ 
-           
-           In the future we hope to add a LAPS module to access boundary-layer
-           profilers from the MADIS multi-agency profiler database.
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
@@ -2146,8 +2142,10 @@ source file added to 'src/lib/bgdata/read*.f'. A key variable that
 relates to which model you're using is 'bgmodel'.
 
 Note that time interpolation is used if the required LAPS analysis time(s) are
-between the valid forecast times for two of the set of input files.
-
+between the valid forecast times for two of the set of input files. In this
+context output files are produced for the LAPS analysis time as well as +/- one
+LAPS analysis cycle time. Input data for LGA should thus be available over an 
+appropriate time span.
                                         
 ------ 3.2.2 -------------- Surface Data Ingest ------------------------------
 
@@ -2452,16 +2450,16 @@ Author: Steve Albers (Steve.Albers@noaa.gov)
 <pre>
 Inputs: (located in separate NetCDF directories)
 	NPN 404-MHz profiler wind data in netCDF format 
-            NetCDF CDLs from both GSD-NIMBUS and AWIPS are accepted. 
+            NetCDF CDLs from both GSD-NIMBUS and AWIPS/MADIS are accepted. 
 
 	Boundary layer 915-MHz profiler wind data in netCDF format
-            (GSD-NIMBUS/DD and AWIPS/LDAD CDLs).
+            (GSD-NIMBUS/DD, AWIPS-LDAD & MADIS-MAP CDLs).
 
-        50-MHz profiler in NetCDF (AWIPS/LDAD CDL). 
+        50-MHz profiler in NetCDF (AWIPS-LDAD & MADIS-MAP CDLs). 
 
 	Doppler Radar VADs in NetCDF (GSD-NIMBUS CDL) format
 
-        SODAR data in NetCDF format (AWIPS/LDAD CDL).
+        SODAR data in NetCDF format (AWIPS-LDAD & MADIS-MAP CDLs).
 
 Output: (feeds wind)
 	pro   inter data   wind profile direction and speed (ASCII-true North)
@@ -2518,9 +2516,9 @@ Author: Steve Albers (Steve.Albers@noaa.gov)
 
 <pre>
 Inputs:
-	WPDN RASS temperature data in netCDF format 
-	Boundary layer RASS data in netCDF format 
-        These are in two separate NetCDF directories (GSD-NIMBUS CDLs).
+	NPN RASS temperature data in NIMBUS netCDF format 
+	Boundary layer RASS data in netCDF formats 
+            (NIMBUS, RSA-LDAD, MADIS-MAP)
 
 Outputs: (feeds LSX and temp.exe)
 	lrs	inter data	RASS Virtual Temperatures (ASCII)
