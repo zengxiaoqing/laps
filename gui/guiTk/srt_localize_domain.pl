@@ -1460,6 +1460,9 @@ sub set_domain_id_num {
         set_graphics_but_state(0); 
     } else {
         $hint_msg="Create, View, or Delete $d_num graphic images from localization output.";
+        if($model_name eq "LAPS"){
+           $hint_msg="Create, View, or Delete graphic images from localization output.";}
+    
         # Continue if static_select exists.
         set_graphics_action_state();
     }
@@ -1472,6 +1475,8 @@ sub set_graphics_type {
     $view_graphics_mb->configure(-bg => $bg_color);
     set_graphics_action_state();
     $hint_msg="Create, View, or Delete $d_num graphic images from localization output.";
+    if($model_name eq "LAPS"){
+       $hint_msg="Create, View, or Delete graphic images from localization output.";}
 }
 
 # ----------------------------------
@@ -1693,12 +1698,36 @@ print "removing $ncg_file\n"; }
 sub view_graphics {
 
   my $ncg_cmd="$ROOT_NCARG/bin/idt -bg gray85";
+  print "Create ncl graphics command: $ncg_cmd\n";
+  if (!-e $ncg_cmd ) {
+     info_dbox("Problem with path", "'$ROOT_NCARG/bin/idt' does not exist.\n
+Variable 'NCARG_ROOT' is set to '$ROOT_NCARG' 
+in file '$ROOT_INSTALL/config_paths'
+this may need to be reset.\n");
+  }
 
   # Display graphics.
   if(-e $ncg_file) {
-    my $my_result=system ("$ncg_cmd $ncg_file &");
-    if($my_result != 0) {
-       info_dbox("Problem with NCARG.", "Cannot run '$ncg_cmd $ncg_file'.");
+    #my $my_result=system ("$ncg_cmd $ncg_file &");
+    #if($my_result != 0) {
+    #   info_dbox("Problem with NCARG.", "Cannot run '$ncg_cmd $ncg_file'.");
+    #}
+
+    my $my_catch=Tk::catch { `$ncg_cmd $ncg_file &`; };
+
+    if ($my_catch eq "") { 
+       # -- There is a major problem with the executable file.
+       run_sys::run_sys("$ncg_cmd",1);
+       fail_dbox("Script Problem", 
+        "Problem with image display command \n\nDoes $ncg_cmd exist? Look at log file $logFile for more information."); 
+   
+       return(1);
+
+    } elsif ($my_catch =~ m/fail|error|not work/i ) { 
+       fail_dbox("Runtime Error", 
+        "Error running command: $ncg_cmd: $my_catch");
+       print "Error running command: $ncg_cmd: $my_catch"; # for log_file, too.
+       return(1);
     }
 
   } else {
