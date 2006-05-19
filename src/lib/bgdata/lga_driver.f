@@ -471,6 +471,7 @@ c
          i4time_bg_valid(j)=bg_times(j)+bg_valid(j)
       enddo
 
+      c_ext='lga'
       if(lgb_only)c_ext='lgb'
       call get_directory(c_ext,lgapath,ldl)
       call get_file_times(lgapath,max_files,lga_names
