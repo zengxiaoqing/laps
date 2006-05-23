@@ -787,7 +787,7 @@ c       include 'satellite_dims_lvd.inc'
 
             if(c_field(1:2) .eq. 'di')then
                 c19_label = ' Isogons   (deg)   '
-                call mklabel33(k_mb,c19_label,c_label)
+                call mklabel(k_mb,c19_label,c_label)
 
                 call plot_cont(dir,1e0,clow,chigh,30.,asc9_tim_3dw,
      1              namelist_parms,plot_parms,c_label,i_overlay,
@@ -795,12 +795,20 @@ c       include 'satellite_dims_lvd.inc'
      1              NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field(1:2) .eq. 'sp')then
-                c19_label = ' Isotachs (kt) '//ext(1:3)
-                if(c_type_i .eq. 'bw')then
-                    c19_label = c19_label(1:18)//'b'
-                endif
+                if(c_type_i .eq. 'wb' .or. c_type_i .eq. 'wr')then
+                    call mk_fcst_hlabel(k_mb,'Isotachs',fcst_hhmm       
+     1                                 ,ext(1:3),'Kt'
+     1                                 ,c_model,c_label)
 
-                call mklabel33(k_mb,c19_label,c_label)
+                else
+                    c19_label = ' Isotachs (kt) '//ext(1:3)
+                    if(c_type_i .eq. 'bw')then
+                        c19_label = c19_label(1:18)//'b'
+                    endif
+
+                    call mklabel(k_mb,c19_label,c_label)
+     
+                endif
 
                 if(k_level .gt. 0 .and. k_mb .lt. 500)then
                     cint = 10.
@@ -825,19 +833,25 @@ c       include 'satellite_dims_lvd.inc'
             else if(c_field(1:1) .eq. 'u')then
                 if(c_type_i .eq. 'wf')then
                     c19_label = ' U  Diff        M/S'
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(c_type_i .eq. 'wb')then
-                    c19_label = ' U  (lga)       M/S'
+                    call mk_fcst_hlabel(k_mb,'U',fcst_hhmm
+     1                                 ,ext(1:3),'M/S'
+     1                                 ,c_model,c_label)
                 elseif(c_type_i .eq. 'wr')then
-                    c19_label = ' U  (fua)       M/S'
+                    call mk_fcst_hlabel(k_mb,'U',fcst_hhmm
+     1                                 ,ext(1:3),'M/S'
+     1                                 ,c_model,c_label)
                 elseif(c_type_i .eq. 'bw')then
                     c19_label = ' U  (bal)       M/S'
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(ext(1:3) .eq. 'lwm')then
                     c19_label = ' U  (lwm)       M/S'
+                    call mklabel(k_mb,c19_label,c_label)
                 else
                     c19_label = ' U  (anal)      M/S'
+                    call mklabel(k_mb,c19_label,c_label)
                 endif
-
-                call mklabel33(k_mb,c19_label,c_label)
 
                 scale = 1.0
                 call contour_settings(u_2d,NX_L,NY_L,clow,chigh,cint
@@ -854,19 +868,25 @@ c       include 'satellite_dims_lvd.inc'
             else if(c_field .eq. 'v' .or. c_field .eq. 'vi')then
                 if(c_type_i .eq. 'wf')then
                     c19_label = ' V  Diff        M/S'
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(c_type_i .eq. 'wb')then
-                    c19_label = ' V  (lga)       M/S'
+                    call mk_fcst_hlabel(k_mb,'V',fcst_hhmm
+     1                                 ,ext(1:3),'M/S'
+     1                                 ,c_model,c_label)
                 elseif(c_type_i .eq. 'wr')then
-                    c19_label = ' V  (fua)       M/S'
+                    call mk_fcst_hlabel(k_mb,'V',fcst_hhmm
+     1                                 ,ext(1:3),'M/S'
+     1                                 ,c_model,c_label)
                 elseif(c_type_i .eq. 'bw')then
                     c19_label = ' V  (bal)       M/S'
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(ext(1:3) .eq. 'lwm')then
                     c19_label = ' V  (lwm)       M/S'
+                    call mklabel(k_mb,c19_label,c_label)
                 else
                     c19_label = ' V  (anal)      M/S'
+                    call mklabel(k_mb,c19_label,c_label)
                 endif
-
-                call mklabel33(k_mb,c19_label,c_label)
 
                 scale = 1.0
                 call contour_settings(v_2d,NX_L,NY_L,clow,chigh,cint
@@ -883,13 +903,21 @@ c       include 'satellite_dims_lvd.inc'
 
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type_i .eq. 'wf')then
-                    c19_label = ' WIND diff (kt)    '
-                    call mklabel33(k_mb,c19_label,c_label)
+!                   c19_label = ' WIND diff (kt)    '
+!                   call mklabel(k_mb,c19_label,c_label)
+
+                    call mk_fcst_hlabel(k_mb,'WIND diff',fcst_hhmm
+     1                                 ,ext(1:3),'Kt'
+     1                                 ,c_model,c_label)
 
                 elseif(c_type_i.eq.'wb')then
-                    c19_label = ' WIND '//ext(1:3)//' '
-     1                                      //fcst_hhmm//'   kt'
-                    call mklabel33(k_mb,c19_label,c_label)
+!                   c19_label = ' WIND '//ext(1:3)//' '
+!    1                                      //fcst_hhmm//'   kt'
+!                   call mklabel(k_mb,c19_label,c_label)
+
+                    call mk_fcst_hlabel(k_mb,'WIND',fcst_hhmm
+     1                                 ,ext(1:3),'Kt'
+     1                                 ,c_model,c_label)
 
                 elseif(c_type_i.eq.'wr')then
                     if(k_level .eq. -1)then
@@ -909,16 +937,16 @@ c       include 'satellite_dims_lvd.inc'
 
                 elseif(c_type_i.eq.'bw'                       )then
                     c19_label = ' WIND  (bal)    kt'
-                    call mklabel33(k_mb,c19_label,c_label)
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(c_field .eq. 'ob')then
                     c19_label = ' WIND  (obs)    kt'
-                    call mklabel33(k_mb,c19_label,c_label)
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(ext(1:3) .eq. 'lwm')then
                     c19_label = ' WIND  (lwm)    kt'
-                    call mklabel33(k_mb,c19_label,c_label)
+                    call mklabel(k_mb,c19_label,c_label)
                 else
                     c19_label = ' WIND  (anl)    kt'
-                    call mklabel33(k_mb,c19_label,c_label)
+                    call mklabel(k_mb,c19_label,c_label)
                 endif
 
                 if(k_level .ne. 0)then
@@ -957,7 +985,7 @@ c       include 'satellite_dims_lvd.inc'
                     call get_laps_2dgrid(i4time_3dw,0,i4time_nearest
      1                                  ,ext,var_2d,units_2d,comment_2d
      1                                  ,NX_L,NY_L,w_2d,k_mb,istatus)
-                    call mklabel33(k_mb
+                    call mklabel(k_mb
      1                     ,' Cloud Omega ubar/s',c_label)       
 
                     i4_valid = i4time_nearest
@@ -969,7 +997,7 @@ c       include 'satellite_dims_lvd.inc'
                     call get_laps_2dgrid(i4time_3dw,0,i4time_nearest,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,w_2d,k_mb,istatus)
-                    call mklabel33(k_mb
+                    call mklabel(k_mb
      1                     ,' Anlyz Omega ubar/s',c_label)       
 
                     i4_valid = i4time_nearest
@@ -984,7 +1012,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ,laps_cycle_time*100,i4time_heights,ext,var_2d
      1              ,units_2d,comment_2d,NX_L,NY_L,w_2d,k_mb,istatus)       
 
-                    call mklabel33(k_mb
+                    call mklabel(k_mb
      1                     ,' Balnc Omega ubar/s',c_label)       
 
                     i4_valid = i4time_3dw
@@ -1012,7 +1040,7 @@ c       include 'satellite_dims_lvd.inc'
 
                    call s_len(c_model,len_model)
                    if(ext(1:3) .eq. 'fua' .and. len_model .gt. 0)then
-!                      call mklabel33(k_mb,' '//fcst_hhmm
+!                      call mklabel(k_mb,' '//fcst_hhmm
 !    1                         //' '//c_model(1:len_model)
 !    1                         //' OM ubar/s',c_label)
 
@@ -1020,7 +1048,7 @@ c       include 'satellite_dims_lvd.inc'
      1                                 ,ext(1:3),'ubar/s'
      1                                 ,c_model,c_label)
                    else
-                       call mklabel33(k_mb,' '//fcst_hhmm
+                       call mklabel(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' OM ubar/s',c_label)
                    endif
                 endif
@@ -1082,7 +1110,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' DIV  (anal) 1e-5/s'
                 endif
 
-                call mklabel33(k_mb,c19_label,c_label)
+                call mklabel(k_mb,c19_label,c_label)
 
                 scale = 1e-5
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
@@ -1100,10 +1128,10 @@ c       include 'satellite_dims_lvd.inc'
 
                 if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' VORT (diff) 1e-5/s'
-                    call mklabel33(k_mb,c19_label,c_label)
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(c_type_i(1:2) .eq. 'wb')then
                     c19_label = ' VORT (lga)  1e-5/s'
-                    call mklabel33(k_mb,c19_label,c_label)
+                    call mklabel(k_mb,c19_label,c_label)
                 elseif(c_type_i(1:2) .eq. 'wr')then
                     c19_label = ' VORT (fua)  1e-5/s'
 
@@ -1114,10 +1142,10 @@ c       include 'satellite_dims_lvd.inc'
 
                 elseif(c_type_i(1:2) .eq. 'bw')then
                     c19_label = ' VORT (bal)  1e-5/s'
-                    call mklabel33(k_mb,c19_label,c_label)
+                    call mklabel(k_mb,c19_label,c_label)
                 else
                     c19_label = ' VORT (anal) 1e-5/s'
-                    call mklabel33(k_mb,c19_label,c_label)
+                    call mklabel(k_mb,c19_label,c_label)
                 endif
 
                 scale = 1e-5
@@ -1142,7 +1170,7 @@ c       include 'satellite_dims_lvd.inc'
                 call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
                 call cpt_advection(field_2d,u_2d,v_2d,dx,dy,NX_L,NY_L
      1                            ,field2_2d)
-                call mklabel33(k_mb,' VORT ADV 1e-9/s**2',c_label)
+                call mklabel(k_mb,' VORT ADV 1e-9/s**2',c_label)
 
                 scale = 1e-9
                 call contour_settings(field2_2d,NX_L,NY_L
@@ -2341,7 +2369,7 @@ c
                     c19_label = '  Reflectivity Anl '
                 endif
 
-                call mklabel33(k_mb,c19_label,c_label)
+                call mklabel(k_mb,c19_label,c_label)
         
                 scale = 1e0
                 clow = 0.
@@ -2383,7 +2411,7 @@ c
                 endif
 
             elseif(c_field .eq. 've')then
-                call mklabel33(k_mb,'  Radial Vel  (kt) ',c_label)
+                call mklabel(k_mb,'  Radial Vel  (kt) ',c_label)
 
                 write(6,2031)
 2031            format('         Enter Radar # (of ones available)  '
@@ -2401,7 +2429,7 @@ c
      1                        ,laps_cycle_time)                          
 
             elseif(c_field .eq. 'vi')then
-                call mklabel33(k_mb,'  Radial Vel  (kt) ',c_label)
+                call mklabel(k_mb,'  Radial Vel  (kt) ',c_label)
 
                 write(6,*)'               # of radars available = '
      1                    ,n_radars
@@ -2783,7 +2811,7 @@ c
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
-                call mklabel33(k_mb,'  Potential Temp  K'
+                call mklabel(k_mb,'  Potential Temp  K'
      1                        ,c_label)      
 
                 do i = 1,NX_L
@@ -2797,7 +2825,7 @@ c
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
-                call mklabel33(k_mb,'  Balanced Theta  K'
+                call mklabel(k_mb,'  Balanced Theta  K'
      1                                 ,c_label)   
 
                 do i = 1,NX_L
@@ -2816,7 +2844,7 @@ c
                 enddo ! j
                 enddo ! i
 
-                call mklabel33(k_mb,' Temperature      C'
+                call mklabel(k_mb,' Temperature      C'
      1                        ,c_label)       
 
             elseif(c_type_i .eq. 'bt')then
@@ -2836,7 +2864,7 @@ c
                 enddo ! j
                 enddo ! i
 
-                call mklabel33(k_mb,' Temp (Bal)       C'
+                call mklabel(k_mb,' Temp (Bal)       C'
      1                        ,c_label)
 
             endif
@@ -2943,7 +2971,7 @@ c
             if(c_type .eq. 'la')then
                 iflag_slwc = 1 ! Returns Adiabatic LWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
+                    call mklabel(k_mb,
      1          ' Adiabt LWC  g/m^3 ',c_label)
                 else
                     c_label = 'Maximum Adiabatic LWC g/m^3      '
@@ -2952,7 +2980,7 @@ c
             elseif(c_type .eq. 'lj')then
                 iflag_slwc = 2 ! Returns Adjusted LWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
+                    call mklabel(k_mb,
      1          ' Adjstd LWC  g/m^3 ',c_label)
                 else
                     c_label = 'Maximum Adjusted  LWC g/m^3      '
@@ -2961,7 +2989,7 @@ c
             elseif(c_type .eq. 'sj')then
                 iflag_slwc = 3 ! Returns Adjusted SLWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
+                    call mklabel(k_mb,
      1          ' Adjstd SLWC g/m^3 ',c_label)
                 else
                     c_label = 'Maximum Adjusted SLWC g/m^3      '
@@ -2970,7 +2998,7 @@ c
             elseif(c_type_i .eq. 'ls')then
                 iflag_slwc = 13 ! Returns New Smith - Feddes LWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
+                    call mklabel(k_mb,
      1                             ' Cloud LWC g/m^3   ',c_label)
                 else
                     c_label = 'Column Max LWC        g/m^3      '
@@ -2979,7 +3007,7 @@ c
             elseif(c_type_i .eq. 'ci')then
                 iflag_slwc = 13 ! Returns Cloud Ice
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
+                    call mklabel(k_mb,
      1                             ' Cloud ICE g/m^3   ',c_label)
                 else
                     c_label = 'Max Smith-Feddes  ICE g/m^3      '
@@ -2987,19 +3015,19 @@ c
 
             elseif(c_type_i .eq. 'pc')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
+                    call mklabel(k_mb,
      1                             ' Precip Conc g/m^3 ',c_label)
                 endif
 
             elseif(c_type_i .eq. 'rn')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
+                    call mklabel(k_mb,
      1                             ' Precip Rain g/m^3 ',c_label)
                 endif
 
             elseif(c_type_i .eq. 'sn')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,
+                    call mklabel(k_mb,
      1                             ' Precip Snow g/m^3 ',c_label)
                 endif
 
@@ -3174,7 +3202,7 @@ c
 
             if(c_type .eq. 'mv')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb
+                    call mklabel(k_mb
      1                            ,'     MVD     m^-6  ',c_label)     
                 else
                     c_label = 'Mean Volume Diameter  m^-6       '
@@ -3186,7 +3214,7 @@ c
 
             elseif(c_type .eq. 'ic')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_mb,'   Icing Index     '
+                    call mklabel(k_mb,'   Icing Index     '
      1                            ,c_label)
                 else
                     c_label = '        LAPS Icing Index         '
@@ -3320,7 +3348,7 @@ c
                     k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
                     ext = 'lty'
                     var_2d = 'CTY'
-                    call mklabel33
+                    call mklabel
      1                    (k_mb,'     Cloud Type    ',c_label)
 
                 else                   ! Read from 2-D cloud type
@@ -3369,7 +3397,7 @@ c
             k_mb = k_level
 
             if(k_level .gt. 0)then
-                call mklabel33(k_mb,'    Precip Type    ',c_label)
+                call mklabel(k_mb,'    Precip Type    ',c_label)
                 ndim=3
             elseif(k_level .eq.  0)then
                 c_label = 'Sfc Precip Type   (nothresh)     '
@@ -3619,7 +3647,7 @@ c
      1             ,ext,var_2d,units_2d,comment_2d
      1             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-                 call mklabel33(k_mb,' Spec Hum  (Bal) ',c_label)
+                 call mklabel(k_mb,' Spec Hum  (Bal) ',c_label)
               else
                  call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                             ,i4time_heights
@@ -3630,7 +3658,7 @@ c                call get_laps_3dgrid
 c    1           (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
 c    1          ,ext,var_2d,units_2d,comment_2d
 c    1                                  ,field_3d,istatus) ! q_3d
-                 call mklabel33(k_mb,' LAPS Spec Hum x1e3',c_label)
+                 call mklabel(k_mb,' LAPS Spec Hum x1e3',c_label)
               endif   
 
               if(istatus.ne.1 .and. istatus.ne.-1)then
@@ -3658,7 +3686,7 @@ c                cint = -1.
               if(c_type(1:2).eq.'rb')then
                  var_2d = 'RHL'
                  write(6,*)' Reading rhl / ',var_2d
-                 call mklabel33(k_mb,' LAPS RH     (liq) %'
+                 call mklabel(k_mb,' LAPS RH     (liq) %'
      1                                 ,c_label)
                  call get_directory('balance',directory,lend)
                  directory=directory(1:lend)//'lh3/'
@@ -3677,12 +3705,12 @@ c                cint = -1.
                  if(qtype .eq. '3')then
                   var_2d = 'RH3'
                   write(6,*)' Reading rh3 / ',var_2d
-                  call mklabel33(k_mb,' LAPS RH     (rh3) %'
+                  call mklabel(k_mb,' LAPS RH     (rh3) %'
      1                                 ,c_label)     
                  elseif(qtype .eq. 'l')then
                   var_2d = 'RHL'
                   write(6,*)' Reading rhl / ',var_2d
-                  call mklabel33(k_mb,' LAPS RH     (liq) %'
+                  call mklabel(k_mb,' LAPS RH     (liq) %'
      1                                 ,c_label)     
                  endif
                  call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -3695,10 +3723,10 @@ c    1                ,i4time_nearest,NX_L,NY_L,NZ_L
 c    1                ,ext,var_2d,units_2d,comment_2d
 c    1                ,field_3d,istatus)
                  if(qtype .eq. '3')then
-                    call mklabel33(k_mb,' LAPS RH     (rh3) %'
+                    call mklabel(k_mb,' LAPS RH     (rh3) %'
      1                                 ,c_label)
                  elseif(qtype .eq. 'l')then
-                    call mklabel33(k_mb,' LAPS RH     (liq) %'
+                    call mklabel(k_mb,' LAPS RH     (liq) %'
      1                                 ,c_label)
                  endif
               endif 
@@ -3774,7 +3802,7 @@ c
 
                 if(qtype.eq.'q' .and. istat_sh .eq. 1)then
 
-                    call mklabel33(k_mb,' '//fcst_hhmm
+                    call mklabel(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' Q  (x1e3)',c_label)
 
                     clow = 0.
@@ -3814,7 +3842,7 @@ c                   cint = -1.
      1                            ,ext(1:3)
                         endif
 
-!                       call mklabel33(k_mb,' '//fcst_hhmm
+!                       call mklabel(k_mb,' '//fcst_hhmm
 !    1                         //' '//ext(1:3)//' rh %cptd ',c_label)
 
                         comment_2d = 'rh'   ! for label
@@ -3913,13 +3941,13 @@ c                   cint = -1.
             if(c_type_i(1:1) .eq. 'h')then
                 scale = 10.
 
-!               call mklabel33(k_mb,' LAPS '//ext(1:3)//' Height dm'
+!               call mklabel(k_mb,' LAPS '//ext(1:3)//' Height dm'
 !    1                        ,c_label)
 
-!               call mklabel33(k_level,ext(1:3)//' '
+!               call mklabel(k_level,ext(1:3)//' '
 !    1                         //fcst_hhmm//' Fcst Ht dm',c_label)
 
-!               call mklabel33(k_mb,' '//fcst_hhmm
+!               call mklabel(k_mb,' '//fcst_hhmm
 !    1                         //' '//ext(1:3)//' Height dm',c_label)
 
                 call mk_fcst_hlabel(k_mb,'Height',fcst_hhmm
@@ -3944,7 +3972,7 @@ c                   cint = -1.
                 endif
 
             else  
-!               call mklabel33(k_mb,' '//fcst_hhmm
+!               call mklabel(k_mb,' '//fcst_hhmm
 !    1                         //' '//ext(1:3)//' Temp    C',c_label)
 
                 call mk_fcst_hlabel(k_mb,'Temperature',fcst_hhmm
@@ -4018,14 +4046,14 @@ c                   cint = -1.
      1             ,ext,var_2d,units_2d,comment_2d
      1             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-               call mklabel33(k_mb,' Height  (Bal)   dm',c_label)       
+               call mklabel(k_mb,' Height  (Bal)   dm',c_label)       
 
             else ! 'ht'
                call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                             ,i4time_heights
      1                             ,ext,var_2d,units_2d,comment_2d
      1                             ,NX_L,NY_L,field_2d,k_mb,istatus)       
-               call mklabel33(k_mb,' Height          dm',c_label)       
+               call mklabel(k_mb,' Height          dm',c_label)       
 
             endif
 
@@ -6450,14 +6478,20 @@ c             if(cint.eq.0.0)cint=0.1
         end
 
 
-        subroutine mklabel33(k_level,c19_label,c_label)
+        subroutine mklabel(k_level,c19_label,c_label)
 
 !       97-Aug-17     Ken Dritz     Lines commented to (temporarily) hardwire
 !                                   VERTICAL_GRID at 'PRESSURE' (without
 !                                   accessing VERTICAL_GRID)
 !       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 
-        character c19_label*(*),c_label*33
+        character c19_label*(*),c_label*(*)
+
+!       Initialize with blanks
+        len_label = len(c_label)
+        do i = 1,len_label
+            c_label(i:i) = ' '
+        enddo ! i
 
         if(k_level .gt. 0)then
 !            if(VERTICAL_GRID .eq. 'HEIGHT')then
@@ -6825,6 +6859,7 @@ c             if(cint.eq.0.0)cint=0.1
                call make_fnam_lp(i4time_ref,a9time,istatus)
                write(6,*)' Could not find best file valid at: '
      1                   ,a9time
+               fcst_hhmm = 'N/A '
                istatus = 0
 
             endif
@@ -7034,13 +7069,18 @@ c             if(cint.eq.0.0)cint=0.1
 
         c_label = ' '
 
+        write(6,*)' mk_fcst_hlabel:'
+
         call s_len2(comment_2d,len_fcst)
         write(6,*)'comment_2d = ',comment_2d(1:len_fcst)
 
         call s_len2(units_2d,len_units)
         write(6,*)'units_2d = ',units_2d(1:len_units)
 
-        if(ext .eq. 'lga')then
+        call s_len2(c_model,len_model)
+
+        if(ext .eq. 'lga' .and. len_model .eq. 0)then
+            write(6,*)' c_model has zero length, using lga in label'
             c_model = 'lga'
         endif
 
@@ -7076,6 +7116,8 @@ c             if(cint.eq.0.0)cint=0.1
         else
             c_label(ist+5:ist+8) = 'Fcst'       
         endif
+
+        write(6,*)'c_label = ',c_label
 
         return
         end
