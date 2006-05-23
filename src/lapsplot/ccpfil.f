@@ -413,6 +413,10 @@ C
           l_raster = .false.
       endif
 
+      if(plot_parms%zoom .gt. 1.0)then
+          l_raster = .false.
+      endif       
+
       if(l_raster .and. (.not. l_set_contours))then ! do raster image
           cmn = (0.0           ) * abs(scale_loc) + 2.0*cis
           cmx = (1.0+col_offset) * abs(scale_loc) + 2.0*cis       
@@ -429,6 +433,8 @@ C
      1              MREG, NREG, COLIA)
 
       else                                           ! regular contour fill
+          write(6,*)' Regular image contour fill without raster'
+
           CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      
 C Add contours to area map
