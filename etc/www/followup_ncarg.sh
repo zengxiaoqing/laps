@@ -40,7 +40,8 @@ date
 
 #Determine shape (aspect ratio) of image based on domain name
 #In the future this could perhaps read the nx/ny to determine this
-#The threshold ratio is > 1.192 for using a rectangular window
+#The threshold ratio is > 1.192 for using a "wide" window and > 1.40 for
+#a "wide2" window
 if test "$2" = "wiap"  
 then
     WINDOW=0.0:0.08:1.0:0.92
@@ -60,6 +61,11 @@ elif test "$2" = "wide"
 then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=1056x885
+
+elif test "$2" = "wide2"
+then
+    WINDOW=0.0:0.14:1.0:0.86
+    RESOLUTION=1200x885
 
 elif test "$2" = "f3"
 then
