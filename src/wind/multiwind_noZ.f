@@ -169,16 +169,12 @@ c*  For multi-radar (n=4), to compute horizontal wind.
       return
 
  100  continue
+      rms=rmsmax
       do i=1,n
          vt=( u0*yb(i)-v0*xa(i) )/d(i)
          uu(i)=( vh(i)*xa(i)+vt*yb(i) )/d(i)
          vv(i)=( vh(i)*yb(i)-vt*xa(i) )/d(i)
          srms(i)=sqrt( (uu(i)-u0)**2 + (vv(i)-v0)**2 )
-      enddo
-      rms=srms(1)
-      u=uu(1)
-      v=vv(1)
-      do i=2,n
          if( rms.gt.srms(i) )then
              rms=srms(i)
              u=uu(i)
