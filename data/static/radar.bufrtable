@@ -1,0 +1,247 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|                                                                              |
+| NC006001 | A63243 | MSG TYPE 006-001 NEXRAD LVL 3 SUPEROB RADIAL WIND        |
+| NC006002 | A62244 | MSG TYPE 006-002 NEXRAD LVL 2.5 SUPEROB RADIAL WIND      |
+| NC006010 | A58010 | MSG TYPE 006-010 NEXRAD LVL 2 RADIAL WIND (00z)          |
+| NC006011 | A58011 | MSG TYPE 006-011 NEXRAD LVL 2 RADIAL WIND (01z)          |
+| NC006012 | A58012 | MSG TYPE 006-012 NEXRAD LVL 2 RADIAL WIND (02z)          |
+| NC006013 | A58013 | MSG TYPE 006-013 NEXRAD LVL 2 RADIAL WIND (03z)          |
+| NC006014 | A58014 | MSG TYPE 006-014 NEXRAD LVL 2 RADIAL WIND (04z)          |
+| NC006015 | A58015 | MSG TYPE 006-015 NEXRAD LVL 2 RADIAL WIND (05z)          |
+| NC006016 | A58016 | MSG TYPE 006-016 NEXRAD LVL 2 RADIAL WIND (06z)          |
+| NC006017 | A58017 | MSG TYPE 006-017 NEXRAD LVL 2 RADIAL WIND (07z)          |
+| NC006018 | A58018 | MSG TYPE 006-018 NEXRAD LVL 2 RADIAL WIND (08z)          |
+| NC006019 | A58019 | MSG TYPE 006-019 NEXRAD LVL 2 RADIAL WIND (09z)          |
+| NC006020 | A58020 | MSG TYPE 006-020 NEXRAD LVL 2 RADIAL WIND (10z)          |
+| NC006021 | A58021 | MSG TYPE 006-021 NEXRAD LVL 2 RADIAL WIND (11z)          |
+| NC006022 | A58022 | MSG TYPE 006-022 NEXRAD LVL 2 RADIAL WIND (12z)          |
+| NC006023 | A58023 | MSG TYPE 006-023 NEXRAD LVL 2 RADIAL WIND (13z)          |
+| NC006024 | A58024 | MSG TYPE 006-024 NEXRAD LVL 2 RADIAL WIND (14z)          |
+| NC006025 | A58025 | MSG TYPE 006-025 NEXRAD LVL 2 RADIAL WIND (15z)          |
+| NC006026 | A58026 | MSG TYPE 006-026 NEXRAD LVL 2 RADIAL WIND (16z)          |
+| NC006027 | A58027 | MSG TYPE 006-027 NEXRAD LVL 2 RADIAL WIND (17z)          |
+| NC006028 | A58028 | MSG TYPE 006-028 NEXRAD LVL 2 RADIAL WIND (18z)          |
+| NC006029 | A58029 | MSG TYPE 006-029 NEXRAD LVL 2 RADIAL WIND (19z)          |
+| NC006030 | A58030 | MSG TYPE 006-030 NEXRAD LVL 2 RADIAL WIND (20z)          |
+| NC006031 | A58031 | MSG TYPE 006-031 NEXRAD LVL 2 RADIAL WIND (21z)          |
+| NC006032 | A58032 | MSG TYPE 006-032 NEXRAD LVL 2 RADIAL WIND (22z)          |
+| NC006033 | A58033 | MSG TYPE 006-033 NEXRAD LVL 2 RADIAL WIND (23z)          |
+| NC006040 | A58040 | MSG TYPE 006-040 NEXRAD LVL 2 REFLECTIVITY (00z)         |
+| NC006041 | A58041 | MSG TYPE 006-041 NEXRAD LVL 2 REFLECTIVITY (01z)         |
+| NC006042 | A58042 | MSG TYPE 006-042 NEXRAD LVL 2 REFLECTIVITY (02z)         |
+| NC006043 | A58043 | MSG TYPE 006-043 NEXRAD LVL 2 REFLECTIVITY (03z)         |
+| NC006044 | A58044 | MSG TYPE 006-044 NEXRAD LVL 2 REFLECTIVITY (04z)         |
+| NC006045 | A58045 | MSG TYPE 006-045 NEXRAD LVL 2 REFLECTIVITY (05z)         |
+| NC006046 | A58046 | MSG TYPE 006-046 NEXRAD LVL 2 REFLECTIVITY (06z)         |
+| NC006047 | A58047 | MSG TYPE 006-047 NEXRAD LVL 2 REFLECTIVITY (07z)         |
+| NC006048 | A58048 | MSG TYPE 006-048 NEXRAD LVL 2 REFLECTIVITY (08z)         |
+| NC006049 | A58049 | MSG TYPE 006-049 NEXRAD LVL 2 REFLECTIVITY (09z)         |
+| NC006050 | A58050 | MSG TYPE 006-050 NEXRAD LVL 2 REFLECTIVITY (10z)         |
+| NC006051 | A58051 | MSG TYPE 006-051 NEXRAD LVL 2 REFLECTIVITY (11z)         |
+| NC006052 | A58052 | MSG TYPE 006-052 NEXRAD LVL 2 REFLECTIVITY (12z)         |
+| NC006053 | A58053 | MSG TYPE 006-053 NEXRAD LVL 2 REFLECTIVITY (13z)         |
+| NC006054 | A58054 | MSG TYPE 006-054 NEXRAD LVL 2 REFLECTIVITY (14z)         |
+| NC006055 | A58055 | MSG TYPE 006-055 NEXRAD LVL 2 REFLECTIVITY (15z)         |
+| NC006056 | A58056 | MSG TYPE 006-056 NEXRAD LVL 2 REFLECTIVITY (16z)         |
+| NC006057 | A58057 | MSG TYPE 006-057 NEXRAD LVL 2 REFLECTIVITY (17z)         |
+| NC006058 | A58058 | MSG TYPE 006-058 NEXRAD LVL 2 REFLECTIVITY (18z)         |
+| NC006059 | A58059 | MSG TYPE 006-059 NEXRAD LVL 2 REFLECTIVITY (19z)         |
+| NC006060 | A58060 | MSG TYPE 006-060 NEXRAD LVL 2 REFLECTIVITY (20z)         |
+| NC006061 | A58061 | MSG TYPE 006-061 NEXRAD LVL 2 REFLECTIVITY (21z)         |
+| NC006062 | A58062 | MSG TYPE 006-062 NEXRAD LVL 2 REFLECTIVITY (22z)         |
+| NC006063 | A58063 | MSG TYPE 006-063 NEXRAD LVL 2 REFLECTIVITY (23z)         |
+*                                                                              |
+*                                                                              |
+* THE FOLLOWING ARE TABLE D ENTRIES FOR SEQUENCES DEFINED IN TABLE A ENTRIES   |
+*                                                                              |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMMSS   | 301013 | TIME -- HOUR, MINUTE, SECOND                             |
+| LTLONC   | 301023 | LOCATION -- COARSE ACCURACY LATITUDE/LONGITUDE           |
+| NXID     | 361175 | NEXRAD STATION ID DATA                                   |
+| RWSOB    | 361176 | NEXRAD RADIAL WIND SUPEROB                               |
+| NL2RW    | 358001 | NEXRAD LVL 2 RADIAL WIND DATA                            |
+| NL2RF    | 358002 | NEXRAD LVL 2 REFLECTIVITY DATA                           |
+*                                                                              |
+*                                                                              |
+*             THE FOLLOWING ARE TABLE B ENTRIES FOR THE REPORT HEADER          |
+*                                                                              |
+| SSTN     | 001018 | RADAR STATION IDENTIFIER (SHORT)                         |
+| RPID     | 001198 | RADAR STATION IDENTIFIER                                 |
+| ANAZ     | 002134 | ANTENNA AZIMUTH ANGLE                                    |
+| ANEL     | 002135 | ANTENNA ELEVATION ANGLE                                  |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTE                                                   |
+| SECO     | 004006 | SECOND                                                   |
+| STDM     | 004075 | TIME DISPLACEMENT IN MINUTES FROM BASE TIME (SHORT)      |
+| CLAT     | 005002 | LATITUDE (COARSE ACCURACY)                               |
+| SUPLAT   | 005197 | LATITUDE OF RADIAL WIND SUPEROB(COARSE ACCURACY)         |
+| CLON     | 006002 | LONGITUDE (COARSE ACCURACY)                              |
+| DIST     | 006021 | DISTANCE (FROM ANTENNA TO GATE CENTER)                   |
+| SUPLON   | 006197 | LONGITUDE OF RADIAL WIND SUPEROB(COARSE ACCURACY)        |
+| DIST125M | 006210 | DISTANCE (FROM ANTENNA TO GATE CENTER) IN UNITS OF 125M  |
+| SELV     | 007001 | HEIGHT OF STATION                                        |
+| HEIT     | 007007 | HEIGHT OF RADIAL WIND SUPEROB                            |
+| HSMSL    | 007030 | HEIGHT OF STATION GROUND ABOVE MSL                       |
+| HSALG    | 007032 | HEIGHT OF ANTENNA ABOVE GROUND                           |
+| HREF     | 021001 | HORIZONTAL REFLECTIVITY                                  |
+| DMVR     | 021014 | DOPPLER MEAN RADIAL VELOCITY                             |
+| DVSW     | 021017 | DOPPLER VELOCITY SPECTRAL WIDTH                          |
+| RWND     | 021194 | RADIAL WIND RADIAL WIND SUPEROB                          |
+| RWAZ     | 021195 | AZIMUTH OF RADIAL WIND SUPEROB                           |
+| RSTD     | 021196 | STANDARD DEVIATION OF RADIAL WIND SUPEROB                |
+| QCRF     | 033250 | QUALITY MARK FOR REFLECTIVITIES ALONG RADIAL LINE        |
+| QCRW     | 033251 | QUALITY MARK FOR WINDS ALONG RADIAL LINE                 |
+| MGPT     | 050004 | BUFR MESSAGE NUMBER                                      |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC006001 | NXID  (RWSOB)                                                     |
+| NC006002 | NXID  MGPT  (RWSOB)                                               |
+| NC006010 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006010 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006011 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006011 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006012 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006012 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006013 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006013 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006014 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006014 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006015 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006015 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006016 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006016 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006017 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006017 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006018 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006018 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006019 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006019 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006020 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006020 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006021 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006021 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006022 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006022 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006023 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006023 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006024 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006024 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006025 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006025 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006026 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006026 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006027 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006027 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006028 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006028 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006029 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006029 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006030 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006030 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006031 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006031 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006032 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006032 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006033 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006033 | ANAZ ANEL QCRW (NL2RW)                                            |
+| NC006040 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006040 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006041 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006041 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006042 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006042 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006043 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006043 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006044 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006044 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006045 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006045 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006046 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006046 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006047 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006047 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006048 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006048 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006049 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006049 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006050 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006050 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006051 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006051 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006052 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006052 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006053 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006053 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006054 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006054 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006055 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006055 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006056 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006056 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006057 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006057 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006058 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006058 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006059 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006059 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006060 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006060 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006061 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006061 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006062 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006062 | ANAZ ANEL QCRF (NL2RF)                                            |
+| NC006063 | SSTN YYMMDD HHMMSS LTLONC HSMSL 202126 201118 HSALG 201000 202000 |
+| NC006063 | ANAZ ANEL QCRF (NL2RF)                                            |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+| HHMMSS   | HOUR  MINU  SECO                                                  |
+| LTLONC   | CLAT  CLON                                                        |
+| NXID     | RPID  CLAT  CLON  SELV  ANEL  YEAR  MNTH  DAYS  HOUR  MINU        |
+| RWSOB    | STDM  SUPLAT  SUPLON  HEIT  RWND  RWAZ  RSTD                      |
+| NL2RW    | DIST125M  DMVR  DVSW                                              |
+| NL2RF    | 202126 201124 DIST  201000 202000 HREF                                                        |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| SSTN     |    0 |           0 |  40 | CCITT IA5                |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| ANAZ     |    2 |           0 |  16 | DEGREES                  |-------------|
+| ANEL     |    2 |       -9000 |  15 | DEGREES                  |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | SECOND                   |-------------|
+| STDM     |    0 |        -128 |   8 | MINUTE                   |-------------|
+| CLAT     |    2 |       -9000 |  15 | DEGREES                  |-------------|
+| SUPLAT   |    2 |       -9000 |  15 | DEGREES                  |-------------|
+| CLON     |    2 |      -18000 |  16 | DEGREES                  |-------------|
+| DIST     |   -1 |           0 |  13 | METERS                   |-------------|
+| SUPLON   |    2 |      -18000 |  16 | DEGREES                  |-------------|
+| DIST125M |    0 |           0 |  12 | EIGHTHS OF A KM          |-------------|
+| SELV     |    0 |        -400 |  15 | METERS                   |-------------|
+| HEIT     |    0 |       -1000 |  17 | METERS                   |-------------|
+| HSMSL    |    1 |       -4000 |  17 | METERS                   |-------------|
+| HSALG    |    2 |           0 |  16 | METERS                   |-------------|
+| HREF     |    0 |         -64 |   7 | DECIBELS                 |-------------|
+| DMVR     |    1 |       -4096 |  13 | METERS/SEC               |-------------|
+| DVSW     |    1 |           0 |   8 | METERS/SEC               |-------------|
+| RWND     |    1 |       -4096 |  13 | METERS/SEC               |-------------|
+| RWAZ     |    2 |           0 |  16 | DEGREES                  |-------------|
+| RSTD     |    1 |           0 |  12 | METERS/SEC               |-------------|
+| QCRF     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| QCRW     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| MGPT     |    0 |           0 |   7 | NUMERIC                  |-------------|
+`------------------------------------------------------------------------------'
