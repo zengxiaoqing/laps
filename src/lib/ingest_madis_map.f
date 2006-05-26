@@ -64,8 +64,12 @@
 
         i4_prof_window = 1800 ! could be reset to laps_cycle_time
 
+        i4time_raw = i4time_sys
+
+        n_good_obs = 0
+
 C       READ IN THE RAW PROFILER/RASS DATA
-        a13_time = cvt_i4time_wfo_fname13(i4time_sys)
+ 500    a13_time = cvt_i4time_wfo_fname13(i4time_raw)
         fnam_in = dir_in(1:len_dir_in)//a13_time
         call s_len(fnam_in,len_fnam_in)
         write(6,*)' file = ',fnam_in(1:len_fnam_in)
@@ -80,12 +84,15 @@ C       READ IN THE RAW PROFILER/RASS DATA
      1                                    ,NX_L,NY_L                   ! I
      1                                    ,ext                         ! I
      1                                    ,fnam_in(1:len_fnam_in)      ! I
+     1                                    ,n_good_obs                  ! I/O
      1                                    ,istatus)                    ! O
 
             if(istatus.ne.1)then
                 write(6,*)' Warning: bad status in ingest_madis_map'
                 goto980
             endif
+
+            write(6,*)' n_good_obs = ',n_good_obs
 
  980        continue
 
@@ -94,6 +101,14 @@ C       READ IN THE RAW PROFILER/RASS DATA
      1                   ,fnam_in(1:len_fnam_in)
 
         endif ! file exists
+
+        i4time_raw = i4time_raw - 1800
+
+        if(abs(i4time_raw-i4time_sys) .le. 1800 .and. 
+     1                     n_good_obs .eq. 0          )then
+            write(6,*)' Looping back for earlier file time'
+            goto 500
+        endif
 
         write(6,*)
 
