@@ -112,24 +112,26 @@ C           READ IN THE RAW RASS DATA
 !     1                   ,ht_m_pr,di_dg_pr,sp_ms_pr                   ! O
 !     1                   ,u_std_ms_pr,v_std_ms_pr                     ! O
 !     1                   ,i4_mid_window_pr,istatus)                   ! O
-!               istatus = 0
 
+                istatus = 0
+
+                n_good_obs = 0
 
                 if(idir .eq. 1 .or. idir .eq. 2)then
                     call read_ldad_prof(i4time_sys,i4_prof_window      ! I
      1                                    ,NX_L,NY_L                   ! I
      1                                    ,ext                         ! I
      1                                    ,fnam_in(1:len_fnam_in)      ! I
+     1                                    ,n_good_obs                  ! I/O
      1                                    ,istatus)                    ! O
                 endif ! idir
 
                 if(istatus.ne.1)then
                     write(6,*)' Warning: bad status on read_ldad_prof'
      1                       ,istatus           
-                    goto980
+                else
+                    write(6,*)' n_good_obs = ',n_good_obs
                 endif
-
- 980            continue
 
             else
                 write(6,*)' Warning: cannot find file '

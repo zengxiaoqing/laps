@@ -108,12 +108,18 @@ C           READ IN THE RAW PROFILER DATA
 
                 istatus = 0
 
+                n_good_obs = 0
+
                 if(idir .eq. 1 .or. idir .eq. 2)then
                     call read_ldad_prof(i4time_sys,i4_prof_window      ! I
      1                                    ,NX_L,NY_L                   ! I
      1                                    ,ext                         ! I
      1                                    ,fnam_in(1:len_fnam_in)      ! I
+     1                                    ,n_good_obs                  ! I/O
      1                                    ,istatus)                    ! O
+
+                    write(6,*)' n_good_obs = ',n_good_obs
+
                 else ! idir .eq. 3
                     i4time_earliest = i4time_sys - i4_prof_window
                     i4time_latest   = i4time_sys + i4_prof_window
@@ -130,10 +136,7 @@ C           READ IN THE RAW PROFILER DATA
                 if(istatus.ne.1)then
                     write(6,*)' Warning: bad status on '
      1                       ,prof_subdirs(idir),istatus           
-                    goto980
                 endif
-
- 980            continue
 
             else
                 write(6,*)' Warning: cannot find file '
