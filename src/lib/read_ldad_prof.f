@@ -2,7 +2,7 @@
       subroutine read_ldad_prof(i4time_sys,i4_prof_window
      1                                    ,NX_L,NY_L
      1                                    ,ext
-     1                                    ,filename,istatus)
+     1                                    ,filename,n_good_obs,istatus)
 
       character*(*) filename,ext
 
@@ -11,6 +11,10 @@
       include 'netcdf.inc'
       integer level, maxStaticIds, nInventoryBins, recNum,nf_fid,
      +     nf_vid, nf_status
+
+      write(6,*)
+      write(6,*)' Subroutine read_ldad_prof...'
+
 C
 C  Open netcdf File for reading
 C
@@ -77,7 +81,7 @@ C
       call read_prof(nf_fid, level, maxStaticIds, nInventoryBins,
      +     recNum,ext,
 !.............................................................................
-     1              i4time_sys,i4_prof_window,NX_L,NY_L,istatus)
+     1     i4time_sys,i4_prof_window,NX_L,NY_L,n_good_obs,istatus)
 
       return
 !.............................................................................
@@ -88,13 +92,14 @@ C
       subroutine read_prof(nf_fid, level, maxStaticIds, nInventoryBins,       
      +     recNum,
 !.............................................................................
-     1              ext,i4time_sys,i4_prof_window,NX_L,NY_L,istatus)
+     1     ext,i4time_sys,i4_prof_window,NX_L,NY_L,n_good_obs,istatus)
 !.............................................................................
 
       include 'netcdf.inc'
       integer level, maxStaticIds, nInventoryBins, recNum,nf_fid,
      +     nf_vid, nf_status
-      integer assetId(recNum), firstInBin(nInventoryBins),
+      integer assetId(recNum), averageMinutes(recNum), 
+     +     firstInBin(nInventoryBins),
      +     firstOverflow, globalInventory, invTime(recNum),
      +     inventory(maxStaticIds), isOverflow(recNum),
      +     lastInBin(nInventoryBins), lastRecord(maxStaticIds),
@@ -130,9 +135,12 @@ C
 
 !............................................................................
 
+!     Initialize array
+      averageMinutes = -999
+
       call read_ldad_prof_netcdf(nf_fid, level, maxStaticIds, 
      +     nInventoryBins,       
-     +     recNum, assetId, firstInBin, firstOverflow, 
+     +     recNum, assetId, averageMinutes, firstInBin, firstOverflow, 
      +     globalInventory, invTime, inventory, isOverflow, 
      +     lastInBin, lastRecord, nStaticIds, prevRecord, tempQcFlag, 
      +     wdQcFlag, windDir, wsQcFlag, elevation, latitude, levels, 
@@ -171,6 +179,7 @@ C
      1           ,i_sta,ilast_rec,provider_ref         
 
         i4_resid_closest = 999999
+        i4_avg_window = -999
         a9_closest = '---------'
 
         do irec = 1,recnum
@@ -198,12 +207,21 @@ C
                   write(6,*)
 
                   if(abs(observationTime(irec))      .lt. 3d9)then
-                      call c_time2fname(nint(observationTime(irec))
-     1                                        ,a9_timeObs)
+                      ictime_ob = nint(observationTime(irec))
+
+                      if(averageMinutes(irec) .ne. -999)then
+                          i4_avg_window = averageMinutes(irec) * 60
+                          i4_avg_window_half = i4_avg_window / 2
+                          ictime_ob = ictime_ob - i4_avg_window_half
+                      endif
+
+                      call c_time2fname(ictime_ob,a9_timeObs)
+
                   else
                       write(6,*)' Bad observation time - reject record'         
      1                           ,observationTime(irec)
                       goto 300
+
                   endif
 
                   call cv_asc_i4time(a9_timeObs,i4time_ob)
@@ -213,12 +231,14 @@ C
                       i_pr_cl = irec
                       a9_closest = a9_timeobs
                   endif
-                  write(6,*)'i4_resid/closest = '
-     1                      ,i4_resid,i4_resid_closest       
+                  write(6,*)'i4_resid/closest/avg_window = '
+     1                      ,i4_resid,i4_resid_closest,i4_avg_window       
 
               else !
                   write(6,*)irec,providerId(irec)(1:len_prov)
      1                     ,' is outside of domain'
+
+                  go to 900 ! loop back to next station
 
               endif ! in box
 
@@ -233,7 +253,7 @@ C
         enddo ! irec 
 
         if(i4_resid_closest .gt. i4_prof_window)then ! outside time window
-            write(6,*)' time - reject '
+            write(6,*)' outside time window - reject '
      1               ,a9_closest,i4_resid,i4_prof_window
         
         else
@@ -246,6 +266,8 @@ C
                 write(6,*)' Error opening product file',ext
                 goto980
             endif
+
+            n_good_obs = n_good_obs + 1
 
             a9time_ob = a9_closest
 
@@ -362,7 +384,7 @@ C
 C  Subroutine to read the file 
 C
       subroutine read_ldad_prof_netcdf(nf_fid, level, maxStaticIds, 
-     +     nInventoryBins, recNum, assetId, firstInBin, 
+     +     nInventoryBins, recNum, assetId, averageMinutes, firstInBin,        
      +     firstOverflow, globalInventory, invTime, inventory, 
      +     isOverflow, lastInBin, lastRecord, nStaticIds, prevRecord, 
      +     tempQcFlag, wdQcFlag, windDir, wsQcFlag, elevation, 
@@ -374,7 +396,8 @@ C
       include 'netcdf.inc'
       integer level, maxStaticIds, nInventoryBins, recNum,nf_fid, 
      +     nf_vid, nf_status
-      integer assetId(recNum), firstInBin(nInventoryBins),
+      integer assetId(recNum), averageMinutes(recNum), 
+     +     firstInBin(nInventoryBins),
      +     firstOverflow, globalInventory, invTime(recNum),
      +     inventory(maxStaticIds), isOverflow(recNum),
      +     lastInBin(nInventoryBins), lastRecord(maxStaticIds),
@@ -510,6 +533,20 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var firstInBin'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      averageMinutes
+C
+        nf_status = NF_INQ_VARID(nf_fid,'averageMinutes',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var averageMinutes'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,averageMinutes)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var averageMinutes'
       endif
 C
 C     Variable        NETCDF Long Name
