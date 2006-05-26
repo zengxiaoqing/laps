@@ -7,7 +7,7 @@
 use strict;
 use English;
 use Getopt::Long;
-my($INSTALL_ROOT,$DATA_ROOT,$beg_time,$end_time,$lapsdriver,$runsched,$wideband_2_netcdf);
+my($INSTALL_ROOT,$DATA_ROOT,$beg_time,$end_time,$lapsdriver,$runsched,$driverargs,$wideband_2_netcdf);
 my($link_tmp_dirs,$multi_machine);
 
 my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
@@ -16,6 +16,7 @@ my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
                         'end_time=s',      \$end_time,
                         'run_sched=s',     \$runsched,
                         'laps_driver=s',   \$lapsdriver,
+                        'driver_args=s',   \$driverargs,
                         'wideband_2_nc=s', \$wideband_2_netcdf,
 			'linktmpdirs',     \$link_tmp_dirs,
 			'multimachine',    \$multi_machine,
@@ -29,6 +30,7 @@ my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
 #laps_driver:     run the laps_driver modules (lvd, vrc, lsr, remap, ln3, or all).
 #run_sched:       run LAPS sched.pl: Add in dbl quotes command line variables for sched.
 #laps_driver:     activate data ingest via laps_driver.pl routine (satellite, radar, remap)
+#driver_args:     Dbl quotes command line variables for laps_driver.
 #wideband_2_nc:   activate radar netcdf format generator
 #link_tmp_dirs:  call tmplink module to softlink appropriate raw data directories to
 #                 machine specific /tmp directory.  Specific to IHOP rerun strategy
@@ -49,6 +51,7 @@ sub help_sub
     print "-laps_driver:     Used to run lvd, vrc, lsr, ln3, remap or all\n";
     print "                  Enter (lvd, vrc, lsr, ln3, remap, or all) depending on your needs.\n";
     print "                  You will get the intermediate ingest files between each cycle.\n";
+    print "-driver_args:     Additional command line entries (in dbl quotes) if desired for laps_driver.pl\n";
     print "-wideband_2_nc:   Runs archive II to netcdf conversion - enter path to wideband root.\n";
     print "                  This converter software only runs on Linux machines.\n";
     print "-link_tmp_dirs:   Activates module tmplink which softlinks appropriate raw data directories to\n";
@@ -393,7 +396,11 @@ while ($i4time70<=$i4time70_end)
                      }
                      run_sys::run_sys($com_ld);
 
-                     $com_ld="@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -L $dy2-$mon2-$year2-$hr2$mn2 $laps_driver_exe $INSTALL_ROOT $DATA_ROOT";
+                     if(defined $driverargs){
+                         $com_ld="@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -L $dy2-$mon2-$year2-$hr2$mn2 $driverargs $laps_driver_exe $INSTALL_ROOT $DATA_ROOT";
+                     }else{
+                         $com_ld="@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -L $dy2-$mon2-$year2-$hr2$mn2             $laps_driver_exe $INSTALL_ROOT $DATA_ROOT";
+                     }
                      print "Running: $com_ld\n";
                      run_sys::run_sys($com_ld);
 
