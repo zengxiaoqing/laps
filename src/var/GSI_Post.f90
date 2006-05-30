@@ -38,7 +38,7 @@
       ! Variables for lwm: YUANFU XIE
       CHARACTER*3 :: ext_xie,var_a_xie(2),units_a_xie(2)
       CHARACTER*7 :: comment_a_xie(2)
-      REAL*4 :: out_sfc_3d(nxx,nyy,nzz,2)
+      REAL*4 :: out_sfc_2d(nxx,nyy,2)
 
       real*4 :: dam(nxx*nyy),pdam(nxx*nyy),vdf1(nxx*nyy*nzz),&
                 pres_3d(nxx*nyy*nzz),t_laps_bkg(nxx*nyy*nzz)
@@ -163,11 +163,11 @@
             comment_a_xie(i) = 'SFCWIND'
         enddo
 
-        call move(uanl_sfcitrp,out_sfc_3d(1,1,1),imax,jmax)
-        call move(vanl_sfcitrp,out_sfc_3d(1,1,2),imax,jmax)
+        call move(uanl_sfcitrp,out_sfc_2d(1,1,1),imax,jmax)
+        call move(vanl_sfcitrp,out_sfc_2d(1,1,2),imax,jmax)
 
         call put_laps_multi_2d(i4time,ext_xie,var_a_xie &
-           ,units_a_xie,comment_a_xie,out_sfc_3d,imax,jmax,2,istatus)
+           ,units_a_xie,comment_a_xie,out_sfc_2d,imax,jmax,2,istatus)
       !----------------------------------------------------------
       
       END PROGRAM
