@@ -15,15 +15,17 @@ include $(SRCROOT)/src/include/makefile.inc
 RM = rm -f
 FLAG = $(FFLAGS)
 
-LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
+LAPSLIBS = $(SRCROOT)/src/lib/temp/libtemp.a \
+           $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  \
-           $(SRCROOT)/src/lib/goeslib/libgoeslib.a 
+           $(SRCROOT)/src/lib/goeslib/libgoeslib.a
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
+DBLAPSLIBS = $(SRCROOT)/src/lib/temp/libdebugtemp.a \
+             $(SRCROOT)/src/lib/libdebuglaps.a  \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
-             $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a
+             $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a \
 
 LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
 
@@ -43,8 +45,9 @@ WINDLIB = $(SRCROOT)/src/wind/libwind.a
 #=============================================================
 
 PREP = GSI_Prep.exe
+POST = GSI_Post.exe
 
-GSI= GSI_Prep.f90 \
+GSIPR= GSI_Prep.f90 \
        LAPS_Parm.f90 \
        LAPS_Conf.f90 \
        LAPS_Bkgd.f90 \
@@ -53,25 +56,41 @@ GSI= GSI_Prep.f90 \
        LAPS_Memo.f90 \
        GSI_BkObs.f90 \
        LAPS2Mass.f90 \
-       wrfbkgout.f90
+       wrfbkgout.f90 \
+       GSI_radarbufr.f90
 
-all: $(PREP) # $(POST)
+GSIPO= GSI_Post.f90 \
+       LAPS2Mass.f90 \
+         $(WINDLIB) 
 
-$(PREP): $(GSI) $(LAPSLIBS) $(BUFRLIB) $(WINDLIB)
-	$(FC) $(FFLAGS) $(FREE) $(GSI) $(LAPSFC) $(LAPSLIBS) \
+
+GSICC= getradarfilename.c
+
+all: $(PREP) $(POST)
+
+$(PREP): $(GSIPR) $(GSICC) $(LAPSLIBS) $(WINDLIB)
+	cd bufr; make clean; make; cd ..;
+	$(CC) $(CPPFLAGS) -c $(GSICC)
+	$(FC) $(FFLAGS) $(FREE) $(GSIPR) getradarfilename.o $(LAPSFC) $(LAPSLIBS) \
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-debug: $(GSI)
-	$(RM) $(PREP) ;
+$(POST): $(GSIPO) $(LAPSLIBS) $(WINDLIB)
+	$(FC) $(FFLAGS) $(FREE) $(GSIPO) $(LAPSFC) $(LAPSLIBS) \
+	$(BUFRLIB) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+debug: $(GSIPR) $(GSIPO)
+	$(RM) $(PREP) $(POST);
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS) $(BUFRLIB)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
-install: $(PREP)
+install: $(PREP) $(POST)
 	$(INSTALL) $(PREP) $(INSTALLROOT)/bin/$(PREP)
+	$(INSTALL) $(POST) $(INSTALLROOT)/bin/$(POST)
 
 clean:
-	rm -f $(PREP)  *.o *~ *# *.mod
+	rm -f $(PREP) $(POST)  *.o *~ *# *.mod
 
 distclean: clean
 

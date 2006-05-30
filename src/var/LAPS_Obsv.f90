@@ -33,7 +33,8 @@ SUBROUTINE LAPS_Obsv
 !       u wind, v wind.
 !
 !  HISTORY: 
-! 	Creation: YUANFU XIE	3-2006
+! 	Creation: YUANFU XIE	3-2006	Wind obs;
+!	Modified: YUANFU XIE	5-2006	add temp obs;
 !==========================================================
 
   USE LAPS_Parm
@@ -47,6 +48,9 @@ SUBROUTINE LAPS_Obsv
   REAL*4 :: ulaps(n(1),n(2),n(3)),vlaps(n(1),n(2),n(3))
   REAL*4 :: wt(n(1),n(2),n(3)),weight_prof
 
+  INTEGER :: max_snd
+  LOGICAL :: l_adj_hgt
+  REAL :: bg_weight,rms_thresh,pres_mix_thresh
 
   ! Profiler Data:
   ntmin = -1
@@ -62,4 +66,198 @@ SUBROUTINE LAPS_Obsv
 	useable_radar,n_grid_vel,grid_radar_vel,         &
 	istatus_remap_pro,status)
 
+  ! Temperature parameters:
+  CALL get_temp_parms(l_raob,l_adj_hgt,bg_weight, &
+		      rms_thresh,pres_mix_thresh, &
+		      max_snd,maxtobs,status)
+
+  IF (maxtobs .GT. maxobs) THEN
+    WRITE(6,*) 'Too many temperature obs'
+    STOP
+  ENDIF
+  CALL get_temp_3d_obs(max_snd,maxtobs)
+
 END SUBROUTINE LAPS_Obsv
+
+SUBROUTINE get_temp_3d_obs(max_snd,max_obs)
+
+!==========================================================
+!  This routine retrieves 3D temperature observation data.
+!
+!  HISTORY:
+!	Creation: YUANFU XIE	5-2006.
+!==========================================================
+
+  USE LAPS_Parm
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: max_snd,max_obs
+
+  INTEGER*4 :: i_obstype
+  INTEGER :: status
+
+  include 'tempobs.inc'
+
+  ! Sonde temperature data:
+  CALL get_temp_snd(max_snd,temp_obs,max_obs,status)
+
+  ! ACAR temperature data:
+  CALL get_temp_acar(temp_obs,max_obs,status)
+
+  ! Copy to the output array:
+  obs_temp(1:max_obs,1:12) = temp_obs(1:max_obs,1:12)
+
+END SUBROUTINE get_temp_3d_obs
+
+SUBROUTINE get_temp_snd(max_snd,temp_obs,max_obs,error)
+
+!==========================================================
+!  This routine retrieves temperature obs from sonde data.
+!
+!  HISTORY:
+!	Adapted from insert_tobs: YUANFU XIE	5-2006.
+!==========================================================
+
+  USE LAPS_Parm
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: max_snd,max_obs
+  INTEGER, INTENT(OUT) :: error
+  REAL*4, INTENT(OUT) :: temp_obs(max_obs,12)	! tempobs.inc
+  
+  INTEGER*4 :: i4_window_raob
+  INTEGER :: status,n_rass,n_snde,n_tsnd
+  REAL :: lattsnd(max_snd),lontsnd(max_snd)
+  REAL :: tsnd(max_snd,n(3))
+  REAL :: inst_err_tsnd(max_snd)
+  REAL*4 :: bias_tsnd(max_snd,n(3)),bias_htlow(max_snd)
+  CHARACTER*5 c5name(max_snd)
+  CHARACTER*8 c8obstype(max_snd)
+  LOGICAL :: l_struct
+
+  INTEGER :: k,isnd,n_qc_snd
+  INTEGER*4 :: igrid(max_snd),jgrid(max_snd)
+  REAL :: ri,rj,p_pa,sh,tvir,tamb,devirt_sh
+  LOGICAL :: l_string_contains,l_qc
+
+  i4_window_raob = 0 		! Same as insert_tobs
+  l_struct = .true.
+
+  ! Read sonde temperature:
+  CALL read_tsnd(i4time,height3d,temptr3d,sphumd3d, &
+		 pressr3d,lattsnd,lontsnd,lat,lon, &
+                 max_snd,tsnd,inst_err_tsnd,c5name, &
+                 c8obstype,l_raob,l_struct, &
+                 i4_window_raob,bias_htlow, &
+                 n_rass,n_snde,n_tsnd,timelen,n(1), &
+                 n(2),n(3),rmissing,status)
+
+  ! QC temperature observation data:
+  n_qc_snd = 0
+  n_tobs = 0
+  DO isnd=1,n_tsnd
+
+    ! Location on the grid:
+    CALL latlon_to_rlapsgrid(lattsnd(isnd),lontsnd(isnd), &
+                             lat,lon,n(1),n(2),ri,rj,status)
+
+    ! Count obs within the domain:
+    IF (status .EQ. 1) THEN
+      igrid(isnd) = nint(ri)
+      jgrid(isnd) = nint(rj)
+
+      ! Find the sonde data:
+      DO k=1,n(3)
+        IF (tsnd(isnd,k) .NE. rmissing) THEN
+	  ! RASS observes the virtue temperature:
+          IF(l_string_contains(c8obstype(isnd),'RASS',status)) THEN       
+            ! Convert from virtual temperature to temperature
+            tvir = tsnd(isnd,k)
+            sh = sphumd3d(igrid(isnd),jgrid(isnd),k)       
+            p_pa = pressr3d(igrid(isnd),jgrid(isnd),k)    
+            tamb = devirt_sh(tvir,sh,p_pa)
+          ELSE
+            sh = 0.
+            tamb = tsnd(isnd,k)
+          END IF
+	  ! Save bias:
+          bias_tsnd(isnd,k) =  tamb - &
+            temptr3d(igrid(isnd),jgrid(isnd),k)
+
+	  ! HARD QC: 
+          IF (ABS(bias_tsnd(isnd,k)) .GT. 10.) THEN
+            l_qc = .true.
+            WRITE(6,*) ' ABS(Temp - FIRST GUESS) > 10., Temp NOT USED'       
+          ENDIF
+        ENDIF
+      ENDDO
+
+      ! Good sonde obs:
+      IF (.NOT. l_qc) THEN
+        n_qc_snd = n_qc_snd+1
+        ! Count the observations:
+        DO k=1,n(3)
+          IF (bias_tsnd(isnd,k) .NE. rmissing) THEN
+            n_tobs = n_tobs+1
+
+            IF (n_tobs .GT. max_obs) THEN
+              WRITE(6,*) 'Too many temperature sonde obs'
+              error = 0
+              RETURN
+            ENDIF
+
+            ! Pass the obs to temperature obs array:
+	    ! Note: Referring to tempobs.inc under include
+            temp_obs(n_tobs,1) = igrid(isnd)
+            temp_obs(n_tobs,2) = jgrid(isnd)
+            temp_obs(n_tobs,3) = k
+            temp_obs(n_tobs,4) = igrid(isnd)
+            temp_obs(n_tobs,5) = jgrid(isnd)
+            temp_obs(n_tobs,6) = k
+            temp_obs(n_tobs,8) = &
+              temptr3d(igrid(isnd),jgrid(isnd),k) &    
+              + bias_tsnd(isnd,k)
+            temp_obs(n_tobs,9) = bias_tsnd(isnd,k)
+            temp_obs(n_tobs,10) = &
+              1.0 / inst_err_tsnd(isnd)**2
+            temp_obs(n_tobs,11) = inst_err_tsnd(isnd)
+          ENDIF
+        ENDDO
+      ENDIF
+    ENDIF
+
+  ENDDO
+
+  WRITE(6,*) '# of sonde temperature obs: ',n_tobs,n_qc_snd
+
+END SUBROUTINE get_temp_snd
+
+SUBROUTINE get_temp_acar(temp_obs,max_obs,status)
+
+!==========================================================
+!  This routine reads in the temperature obs from ACAR.
+!
+!  HISTORY:
+!	Adapted from insert_tobs: YUANFU XIE	5-2006.
+!==========================================================
+
+  USE LAPS_Parm
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: max_obs
+  INTEGER, INTENT(OUT) :: status
+  REAL*4, INTENT(INOUT) :: temp_obs(max_obs,12)
+
+  INTEGER :: n_good_acars
+
+  CALL rd_acars_t(i4time,height3d,temptr3d &
+                 ,n_pirep,n_good_acars,'pin' &
+                 ,n(1),n(2),n(3),lat,lon,rmissing &
+                 ,temp_obs,max_obs,n_tobs,status)
+
+END SUBROUTINE get_temp_acar
+
+

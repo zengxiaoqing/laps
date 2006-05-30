@@ -52,4 +52,7 @@ PROGRAM GSI_Prep
   ! Deallocate dynamic memory:
   CALL LAPS_Remv
 
+  ! Radar Level III BUFR data:
+  CALL GSI_radarbufr
+
 END PROGRAM GSI_Prep

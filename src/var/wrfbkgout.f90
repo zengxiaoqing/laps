@@ -56,7 +56,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   REAL*4, INTENT(IN) :: lat(imax,jmax)	! Latitude
   REAL*4, INTENT(IN) :: lon(imax,jmax)	! Longitude
   REAL*4, INTENT(IN) :: ptop		! Pressure top
-  REAL*4, INTENT(IN) :: znu(kmax),znw(kmax)	! Eta,stagged eta
+  REAL*4, INTENT(IN) :: znu(kmax-1),znw(kmax)	! Staggered eta,Eta
   REAL*4, INTENT(IN) :: dxy			! grid spacing
   REAL*4, INTENT(IN) :: mapfac(imax,jmax)	! Map factor projection
   REAL*4, INTENT(IN) :: dam(imax,jmax)	! Dry air mass (column)
@@ -67,6 +67,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   REAL*4, INTENT(IN) :: v(imax,jmax,kmax)   ! V
 
   ! Local variables:
+  CHARACTER*10 :: empty
   INTEGER :: ncid				! file id
   INTEGER :: tmid,uid,vid,tid,muid,mubid	! var ids
   INTEGER :: qid,mapid,ptid,znuid,znwid	! var ids
@@ -81,6 +82,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   REAL :: unc(imax,jmax-1,kmax-1),tmp(imax,jmax,kmax)
   REAL :: vnc(imax-1,jmax,kmax-1),tnc(imax-1,jmax-1,kmax-1)
   REAL :: zmp(kmax),tmp1(imax*jmax*kmax)
+
+  empty = ' '
 
   ! Create the netcdf file:
   ncid = nccre('wrf_inout.nc',ncnoclob,ierr)
@@ -173,7 +176,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,tid,'description',ncchar,45, &
  	'perturbation potential temperature (theta-t0)',ierr)
   CALL ncaptc(ncid,tid,'units',ncchar,1,'K',ierr)
-  CALL ncaptc(ncid,tid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,tid,'stagger',ncchar,0,empty,ierr)
   ! MU:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -183,7 +186,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,muid,'description',ncchar,35, &
  	      'perturbation dry air mass in column',ierr)
   CALL ncaptc(ncid,muid,'units',ncchar,7,'pascals',ierr)
-  CALL ncaptc(ncid,muid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,muid,'stagger',ncchar,0,empty,ierr)
   ! MUB:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -193,7 +196,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,mubid,'description',ncchar,32, &
  	'base state dry air mass in column',ierr)
   CALL ncaptc(ncid,mubid,'units',ncchar,7,'pascals',ierr)
-  CALL ncaptc(ncid,mubid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,mubid,'stagger',ncchar,0,empty,ierr)
   ! QVAPOR:
   nd(1:3) = ndm1(1:3)
   nd(4) = time
@@ -202,7 +205,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,qid,'MemoryOrder',ncchar,3,'XYZ',ierr)
   CALL ncaptc(ncid,qid,'description',ncchar,1,'-',ierr)
   CALL ncaptc(ncid,qid,'units',ncchar,1,'-',ierr)
-  CALL ncaptc(ncid,qid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,qid,'stagger',ncchar,0,empty,ierr)
   ! MAPFAC_M:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -212,16 +215,16 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,mapid,'description',ncchar,29, &
  	      'Map scale factor on mass grid',ierr)
   CALL ncaptc(ncid,mapid,'units',ncchar,13,'dimensionless',ierr)
-  CALL ncaptc(ncid,mapid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,mapid,'stagger',ncchar,0,empty,ierr)
   ! P_TOP:
   nd(1) = scal
   nd(2) = time
   ptid = ncvdef(ncid,'P_TOP',ncfloat,2,nd,ierr)
   CALL ncapt(ncid,ptid,'FieldType',nclong,1,104,ierr)
   CALL ncaptc(ncid,ptid,'MemoryOrder',ncchar,3,'0  ',ierr)
-  CALL ncaptc(ncid,ptid,'description',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,ptid,'description',ncchar,0,empty,ierr)
   CALL ncaptc(ncid,ptid,'units',ncchar,1,'-',ierr)
-  CALL ncaptc(ncid,ptid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,ptid,'stagger',ncchar,0,empty,ierr)
   ! ZNU:
   nd(1) = ndm1(3)
   nd(2) = time
@@ -231,7 +234,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,znuid,'description',ncchar,32, &
  	      'eta values on half (mass) levels',ierr)
   CALL ncaptc(ncid,znuid,'units',ncchar,13,'dimensionless',ierr)
-  CALL ncaptc(ncid,znuid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,znuid,'stagger',ncchar,0,empty,ierr)
   ! ZNW:
   nd(1) = ndim(3)
   nd(2) = time
@@ -251,7 +254,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,latid,'description',ncchar,27, &
  	      'LATITUDE, SOUTH IS NEGATIVE',ierr)
   CALL ncaptc(ncid,latid,'units',ncchar,6,'degree',ierr)
-  CALL ncaptc(ncid,latid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,latid,'stagger',ncchar,0,empty,ierr)
   ! XLONG:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -261,7 +264,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,lonid,'description',ncchar,28, &
  	      'LONGITUDE, WEST IS NEGATIVE',ierr)
   CALL ncaptc(ncid,lonid,'units',ncchar,6,'degree',ierr)
-  CALL ncaptc(ncid,lonid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,lonid,'stagger',ncchar,0,empty,ierr)
   ! RDX:
   nd(1) = scal
   nd(2) = time
@@ -270,8 +273,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,rxid,'MemoryOrder',ncchar,3,'0  ',ierr)
   CALL ncaptc(ncid,rxid,'description',ncchar,21, &
  	      'INVERSE X GRID LENGTH',ierr)
-  CALL ncaptc(ncid,rxid,'units',ncchar,0,'',ierr)
-  CALL ncaptc(ncid,rxid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,rxid,'units',ncchar,0,empty,ierr)
+  CALL ncaptc(ncid,rxid,'stagger',ncchar,0,empty,ierr)
   ! RDY:
   nd(1) = scal
   nd(2) = time
@@ -280,8 +283,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,ryid,'MemoryOrder',ncchar,3,'0  ',ierr)
   CALL ncaptc(ncid,ryid,'description',ncchar,21, &
  	      'INVERSE Y GRID LENGTH',ierr)
-  CALL ncaptc(ncid,ryid,'units',ncchar,0,'',ierr)
-  CALL ncaptc(ncid,ryid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,ryid,'units',ncchar,0,empty,ierr)
+  CALL ncaptc(ncid,ryid,'stagger',ncchar,0,empty,ierr)
 
   ! Extra variables requested by GSI:
   ! PHB:
@@ -304,7 +307,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,lmkid,'description',ncchar,9, &
  	      'LAND MASK',ierr)
   CALL ncaptc(ncid,lmkid,'units',ncchar,4,'flag',ierr)
-  CALL ncaptc(ncid,lmkid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,lmkid,'stagger',ncchar,0,empty,ierr)
   ! XICE:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -313,8 +316,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,iceid,'MemoryOrder',ncchar,3,'XY ',ierr)
   CALL ncaptc(ncid,iceid,'description',ncchar,7, &
  	      'SEA ICE',ierr)
-  CALL ncaptc(ncid,iceid,'units',ncchar,0,'',ierr)
-  CALL ncaptc(ncid,iceid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,iceid,'units',ncchar,0,empty,ierr)
+  CALL ncaptc(ncid,iceid,'stagger',ncchar,0,empty,ierr)
   ! SST:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -324,7 +327,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,sstid,'description',ncchar,23, &
  	      'SEA SURFACE TEMPERATURE',ierr)
   CALL ncaptc(ncid,sstid,'units',ncchar,1,'K',ierr)
-  CALL ncaptc(ncid,sstid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,sstid,'stagger',ncchar,0,empty,ierr)
   ! IVGTYP:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -333,8 +336,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,vgid,'MemoryOrder',ncchar,3,'XY ',ierr)
   CALL ncaptc(ncid,vgid,'description',ncchar,15, &
  	      'VEGETATION TYPE',ierr)
-  CALL ncaptc(ncid,vgid,'units',ncchar,0,'',ierr)
-  CALL ncaptc(ncid,vgid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,vgid,'units',ncchar,0,empty,ierr)
+  CALL ncaptc(ncid,vgid,'stagger',ncchar,0,empty,ierr)
   ! ISLTYP:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -343,8 +346,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,slid,'MemoryOrder',ncchar,3,'XY ',ierr)
   CALL ncaptc(ncid,slid,'description',ncchar,9, &
  	      'SOIL TYPE',ierr)
-  CALL ncaptc(ncid,slid,'units',ncchar,0,'',ierr)
-  CALL ncaptc(ncid,slid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,slid,'units',ncchar,0,empty,ierr)
+  CALL ncaptc(ncid,slid,'stagger',ncchar,0,empty,ierr)
   ! VEGFRA:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -353,8 +356,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,vfid,'MemoryOrder',ncchar,3,'XY ',ierr)
   CALL ncaptc(ncid,vfid,'description',ncchar,19, &
  	      'VEGETATION FRACTION',ierr)
-  CALL ncaptc(ncid,vfid,'units',ncchar,0,'',ierr)
-  CALL ncaptc(ncid,vfid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,vfid,'units',ncchar,0,empty,ierr)
+  CALL ncaptc(ncid,vfid,'stagger',ncchar,0,empty,ierr)
   ! SNOW:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -363,8 +366,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,snwid,'MemoryOrder',ncchar,3,'XY ',ierr)
   CALL ncaptc(ncid,snwid,'description',ncchar,21, &
  	      'SNOW WATER EQUIVALENT',ierr)
-  CALL ncaptc(ncid,snwid,'units',ncchar,0,'',ierr)
-  CALL ncaptc(ncid,snwid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,snwid,'units',ncchar,0,empty,ierr)
+  CALL ncaptc(ncid,snwid,'stagger',ncchar,0,empty,ierr)
   ! U10:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -374,7 +377,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,u10id,'description',ncchar,9, &
  	      'U at 10 M',ierr)
   CALL ncaptc(ncid,u10id,'units',ncchar,3,'m/s',ierr)
-  CALL ncaptc(ncid,u10id,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,u10id,'stagger',ncchar,0,empty,ierr)
   ! V10:
   nd(1:2) = ndm1(1:2)
   nd(3) = time
@@ -384,7 +387,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,v10id,'description',ncchar,9, &
  	      'V at 10 M',ierr)
   CALL ncaptc(ncid,v10id,'units',ncchar,3,'m/s',ierr)
-  CALL ncaptc(ncid,v10id,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,v10id,'stagger',ncchar,0,empty,ierr)
   ! SMOIS:
   nd(1:2) = ndm1(1:2)
   nd(3) = nsol
@@ -394,7 +397,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,smsid,'MemoryOrder',ncchar,3,'XYZ',ierr)
   CALL ncaptc(ncid,smsid,'description',ncchar,13, &
  	      'SOIL MOISTURE',ierr)
-  CALL ncaptc(ncid,smsid,'units',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,smsid,'units',ncchar,0,empty,ierr)
   CALL ncaptc(ncid,smsid,'stagger',ncchar,1,'Z',ierr)
   ! TSLB:
   nd(1:2) = ndm1(1:2)
@@ -416,7 +419,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,tskid,'description',ncchar,24, &
  	      'SURFACE SKIN TEMPERATURE',ierr)
   CALL ncaptc(ncid,tskid,'units',ncchar,1,'K',ierr)
-  CALL ncaptc(ncid,tskid,'stagger',ncchar,0,'',ierr)
+  CALL ncaptc(ncid,tskid,'stagger',ncchar,0,empty,ierr)
 
   ! End defining mode:
   CALL ncendf(ncid,ierr)
@@ -429,24 +432,29 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncvptc(ncid,tmid,start,count,times,19,ierr)
   ! U:
   ! Stagger: Y and Z:
+
   tmp(1:imax,1:jmax-1,1:kmax) = 0.5*( &
  	u(1:imax,1:jmax-1,1:kmax)+ &
      	u(1:imax,2:jmax  ,1:kmax))
   unc(1:imax,1:jmax-1,1:kmax-1) = 0.5*( &
  	tmp(1:imax,1:jmax-1,1:kmax-1)+ &
      	tmp(1:imax,1:jmax-1,2:kmax  ))
+
   count(1) = imax
   count(2) = jmax-1
   count(3) = kmax-1
   CALL ncvpt(ncid,uid,start,count,unc,ierr)
   ! V:
   ! Stagger: X and Z:
+
+
   tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
  	v(1:imax-1,1:jmax,1:kmax)+ &
      	v(2:imax  ,1:jmax,1:kmax))
   vnc(1:imax-1,1:jmax,1:kmax-1) = 0.5*( &
  	tmp(1:imax-1,1:jmax,1:kmax-1)+ &
      	tmp(1:imax-1,1:jmax,2:kmax  ))
+ 
   count(1) = imax-1
   count(2) = jmax
   count(3) = kmax-1
@@ -462,6 +470,13 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   tnc(1:imax-1,1:jmax-1,1:kmax-1) = 0.5*( &
  	tmp(1:imax-1,1:jmax-1,1:kmax-1)+ &
      	tmp(1:imax-1,1:jmax-1,2:kmax  ))
+
+  ! Test stagger:
+  CALL StaggerLogP(ptop,dam,znw,tmp(1:imax-1,1:jmax-1,1:kmax),&
+	imax-1,jmax-1,kmax,tmp(1:imax-1,1:jmax-1,1:kmax-1))
+  tnc(1:imax-1,1:jmax-1,1:kmax-1) = tmp(1:imax-1,1:jmax-1,1:kmax-1)
+
+
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = kmax-1
@@ -523,11 +538,11 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncvpt(ncid,ptid,start,count,ptop,ierr)
   ! ZNU:
   ! Stagger: Z:
-  zmp(1:kmax-1) = 0.5*(znu(1:kmax-1)+znu(2:kmax))
   count(1) = kmax-1
   count(2) = 1
-  CALL ncvpt(ncid,znuid,start,count,zmp,ierr)
+  CALL ncvpt(ncid,znuid,start,count,znu,ierr)
   ! ZNW:
+  ! Unstagger: Z:
   count(1) = kmax
   count(2) = 1
   CALL ncvpt(ncid,znwid,start,count,znw,ierr)
@@ -662,3 +677,119 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
 
   return
   end
+
+
+SUBROUTINE StaggerLogP(ptop,psfc,znw,vin,nx,ny,nz,vout)
+
+!==========================================================
+!  This routine computes a grid function on a stagger grid
+!  using a given uniform grid function over a Log(p) grid.
+!
+!  Input:
+!	ptop: 	Top pressure;
+!	psfc:	Sfc pressure;
+!	znw:	Eta value for a uniform grid;
+!	vin:	Input grid function on a uniform grid;
+!		(nx*ny*nz)
+!	nx:	Number of uniform grid point in X;
+!	ny:	Number of uniform grid point in Y;
+!	nz:	Number of uniform vertical points;
+!
+!  Output:
+!	vout:	Output grid funcion on a stagger grid.
+!		(nx*ny*(nz-1))
+!
+!  HISTORY: APR. 2006 by YUANFU XIE.
+!==========================================================
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: nx,ny,nz
+  REAL*4, INTENT(IN) ::  ptop,psfc(nx,ny),znw(nz)
+  REAL, INTENT(IN) ::    vin(nx,ny,nz)
+  REAL, INTENT(OUT) ::   vout(nx,ny,nz-1)
+
+  ! Local variables:
+  INTEGER :: i,j,k
+  REAL :: a,b,p,p1,p2
+
+  ! Linear interpolation:
+  DO k=1,nz-1
+
+    DO j=1,ny
+      DO i=1,nx
+
+	p1 = znw(k)*(psfc(i,j)-ptop)+ptop
+	p2 = znw(k+1)*(psfc(i,j)-ptop)+ptop
+	! Pressure value at the stagger grid:
+	p = 0.5*(p1+p2)
+    	a = LOG(p1/p)
+    	b = LOG(p/p2)
+
+    	vout(i,j,k) = (b*vin(i,j,k  )+ &
+                       a*vin(i,j,k+1))/(a+b)
+
+      ENDDO
+    ENDDO
+
+  ENDDO
+
+END SUBROUTINE StaggerLogP
+
+
+SUBROUTINE UnStaggerLogP(ptop,psfc,znw,vin,nx,ny,nz,vout)
+
+!==========================================================
+!  This routine computes a grid function on a uniform grid
+!  using a given stagger grid function over a Log(p) grid.
+!
+!  Input:
+!	ptop: 	Top pressure;
+!	psfc:	Sfc pressure;
+!	znw:	Eta value for a uniform grid;
+!	vin:	Input grid function on a stagger grid;
+!		(nx*ny*(nz-1))
+!	nx:	Number of uniform grid point in X;
+!	ny:	Number of uniform grid point in Y;
+!	nz:	Number of uniform vertical points;
+!
+!  Output:
+!	vout:	Output grid funcion on a uniform grid.
+!		(nx*ny*nz)
+!
+!  HISTORY: APR. 2006 by YUANFU XIE.
+!==========================================================
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: nx,ny,nz
+  REAL*4, INTENT(IN) ::  ptop,psfc(nx,ny),znw(nz)
+  REAL, INTENT(IN) ::    vin(nx,ny,nz)
+  REAL, INTENT(OUT) ::   vout(nx,ny,nz-1)
+
+  ! Local variables:
+  INTEGER :: i,j,k
+  REAL :: a,b,p,p1,p2
+
+  ! Linear interpolation:
+  DO k=2,nz-1
+
+    DO j=1,ny
+      DO i=1,nx
+
+	p1 = znw(k)*(psfc(i,j)-ptop)+ptop
+	p2 = znw(k+1)*(psfc(i,j)-ptop)+ptop
+	! Pressure value at the stagger grid:
+	p = 0.5*(p1+p2)
+    	a = LOG(p1/p)
+    	b = LOG(p/p2)
+
+    	vout(i,j,k) = (b*vin(i,j,k  )+ &
+                       a*vin(i,j,k+1))/(a+b)
+
+      ENDDO
+    ENDDO
+
+  ENDDO
+
+END SUBROUTINE UnStaggerLogP

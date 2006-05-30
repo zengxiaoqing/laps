@@ -36,9 +36,9 @@ MODULE LAPS_Parm
 
   IMPLICIT NONE
 
-  include 'barnesob.inc'
-
   INTEGER, PARAMETER :: maxobs = 100000	! Maximum obs limit
+
+  include 'barnesob.inc'
 
   CHARACTER*16 :: asctime
 
@@ -47,12 +47,14 @@ MODULE LAPS_Parm
   INTEGER*4 :: i4time		! System time
   INTEGER :: imissing		! Integer missing data
   INTEGER :: nobs		! Number of observations
+  INTEGER :: n_tobs		! Number of temp observations
   INTEGER :: nobs_point		! Number of point observations
   INTEGER :: n_meso		! Number of mesonet data
   INTEGER :: n_sao		! Number of sfc aviation obs
   INTEGER :: n_pirep		! Number of pilot report obs
   INTEGER :: max_pr,max_pr_lvls	! Max profiles and the levels
   INTEGER :: max_radars		! Maximum number of radars
+  INTEGER :: maxtobs		! Maximum number of temp obs
   INTEGER :: istat_radar_vel
 
   LOGICAL :: l_raob, l_cdw, l_radial
@@ -70,6 +72,7 @@ MODULE LAPS_Parm
   REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: u_wind3d,v_wind3d
   REAL*4,ALLOCATABLE,DIMENSION(:,:,:,:) :: grid_radar_vel
 
+  REAL*4 :: obs_temp(maxobs,12)
   type (barnesob) :: obs_point(maxobs)
 
 END MODULE LAPS_Parm

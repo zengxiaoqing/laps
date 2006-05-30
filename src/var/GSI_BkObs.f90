@@ -47,7 +47,7 @@ SUBROUTINE GSI_BkObs
 
   ! Generate bufr files for observation: prepqc.laps
   CALL GSI_Obs(i4time,asctime,lat,lon,n(1),n(2),n(3), &
-	      nobs_point,obs_point)
+	      nobs_point,obs_point,n_tobs,obs_temp,maxtobs)
   
 
 END SUBROUTINE GSI_BkObs
@@ -187,9 +187,8 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
 END SUBROUTINE GSI_Bkg
 
 
-
 SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
-     		  nobs,obs_point)
+     		  nobs,obs_point,n_tobs,obs_temp,maxtobs)
 
 !==========================================================
 !  This routine generates a bufr format data file for GSI.
@@ -209,6 +208,8 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
   INTEGER*4, intent(in) :: i4time,nobs,imax,jmax,kmax
   REAL*4, intent(in) :: lat(imax,jmax),lon(imax,jmax)
   TYPE (barnesob) :: obs_point(*)
+  INTEGER, INTENT(IN) :: n_tobs,maxtobs
+  REAL*4, INTENT(IN) :: obs_temp(maxtobs,12)
 
   INTEGER, parameter :: MXMN = 8
   INTEGER, parameter :: MXLV = 255
@@ -229,6 +230,10 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
   ! Static access:
   CHARACTER :: dirstc*256,dir*200
   INTEGER :: dirlen
+
+  ! Ingest obs:
+  PRINT*,'Total wind obs into GSI: ',nobs
+  PRINT*,'Total temp obs into GSI: ',n_tobs
 
   ! Read background total pressure 3d field:
   CALL get_pres_3d(i4time,imax,jmax,kmax,pres_3d,istatus)
@@ -294,7 +299,7 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
   hourofreport = (ichar(asctime(13:13))-zero)*10+ &
      		  ichar(asctime(14:14))-zero
 
-  ! For every observation data:
+  ! For every wind observation data:
   DO iobs=1,nobs
 
     idate = ( ( yearofreport ) * 1000000 ) + 	&
@@ -372,6 +377,85 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
     CALL WRITSA  ( 11, ibfmsg, libf )
 
   ENDDO
+
+  ! For every temperature observation data:
+  DO iobs=1,n_tobs
+
+    idate = ( ( yearofreport ) * 1000000 ) + 	&
+     	    ( ( mnthofreport ) * 10000 )  +	&
+            ( ( daysofreport ) * 100 ) +	&
+     	    (   hourofreport       ) 
+
+    ! Open a rawinsonde BUFR message in order to store the new
+    ! data subset (i.e. report).
+
+    CALL OPENMB  ( 11, 'ADPUPA', idate )
+
+    ! Store the report date-time within the data subset.
+
+    r8arr (1,1) = ( yearofreport )
+    r8arr (2,1) = ( mnthofreport )
+    r8arr (3,1) = ( daysofreport )
+    r8arr (4,1) = ( hourofreport )
+
+    CALL UFBSEQ  ( 11, r8arr, MXMN, 1, nlv, 'UARTM' )
+
+    !   Store the station identification information within the
+    !   data subset.
+    !   cval = ( station ID, e.g. '72403', 'DBBH', etc.)
+    cval = '72403'
+
+    ! Convert to lat/lon:
+    CALL rlapsgrid_to_latlon(obs_temp(iobs,1),obs_temp(iobs,2), &
+                             lat,lon,imax,jmax,rlat,rlon,ierr)
+
+    r8arr (1,1) = rval
+    r8arr (3,1) = rlat		!( station latitude )
+    r8arr (2,1) = rlon		!( station longitude )
+    r8arr (4,1) = 0.0 		!( obs time; Enhance this later)
+    r8arr (5,1) = 210.0		!( prepbufr report type )
+    r8arr (6,1) = missing !( station elevation )
+
+    CALL UFBINT  ( 11, r8arr, MXMN, 1, nlv, &
+    		  'SID XOB YOB DHR TYP ELV ')
+
+    ! Store the level data within the data subset.
+
+    ! For LAPS data ingest, treat obs individually for now:
+    nlvst = 1 	!( number of data levels to be stored)
+
+    DO jj = 1, nlvst
+
+      ! Use trilinear_laps.f to interpolate pressure value at ri,rj,rk:
+      CALL trilinear_laps(obs_temp(iobs,1), &
+    			  obs_temp(iobs,2), &
+     			  obs_temp(iobs,3),imax,jmax,kmax, &
+     			  pres_3d,p)
+      r8arr(1,jj) = p/100.0	! (in mb)
+
+      ! r8arr (1,jj) = ztopsa(obs_point(iobs)%elev)
+
+      !899.0 !missing !( pressure, in mb, for level jj )
+      r8arr (2,jj) = missing !( SPECIFIC HUMIDITY OBSERVATION)
+      r8arr (3,jj) = obs_temp(iobs,7) !( temperature in C for level jj )
+      r8arr (4,jj) = missing !( height, in M, for level jj )
+      r8arr (5,jj) = missing !( U M/S, for level jj )
+      r8arr (6,jj) = missing !( V M/S, for level jj )
+      r8arr (7,jj) = missing  !( Precipitable water mm, for level jj )
+      r8arr (8,jj) = missing
+
+    ENDDO
+
+    CALL UFBINT ( 11, r8arr, MXMN, nlvst, nlv, &
+     		'POB QOB TOB ZOB UOB VOB PWO CAT' )
+
+    ! ( store any other available values in a similar manner )
+    ! Once all data values have been stored for this data subset,
+    ! we are now ready to store the data subset into the message.
+
+    CALL WRITSA  ( 11, ibfmsg, libf )
+
+  ENDDO
 	    
   ! Forcibly flush the last BUFR message, if any, from the
   ! BUFRLIB software.
@@ -379,6 +463,7 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
   CALL WRITSA  ( -11, ibfmsg, libf )
   CALL CLOSBF  ( 11 )
 
-  PRINT*,'Data converted: ',nobs
+  PRINT*,'Wind data converted: ',nobs
+  PRINT*,'Temp data converted: ',n_tobs
 
 END SUBROUTINE GSI_Obs
