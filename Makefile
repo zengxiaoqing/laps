@@ -27,7 +27,8 @@ LIBDIRS = src/lib \
           src/lib/radar/wsi_ingest \
           src/lib/satellite \
           src/lib/temp   \
-          src/lib/util
+          src/lib/util \
+          src/var/bufr 
 
 EXEDIRS = src/accum \
           src/background \
@@ -62,7 +63,8 @@ EXEDIRS = src/accum \
           src/temp \
           src/verif/point \
           src/wind \
-          src/WFO/post
+          src/WFO/post \
+          src/var
 
 all: exe
 debug: debuglib
