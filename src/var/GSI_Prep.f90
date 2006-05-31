@@ -53,6 +53,6 @@ PROGRAM GSI_Prep
   CALL LAPS_Remv
 
   ! Radar Level III BUFR data:
-  CALL GSI_radarbufr
+  ! CALL GSI_radarbufr
 
 END PROGRAM GSI_Prep
