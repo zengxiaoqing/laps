@@ -61,17 +61,20 @@
 #
 # -v                   Run verification binaries 
 #
-# -V                   Run GSI analysis 
+# -V O                 Run GSI analysis; Option O (GSI_Prep or GSI_Post) sets either GSI preparation or post process 
 #
 # -f                   Run followup script to generate GIF images for the web.
 #                      The argument value is a shorthand name for the domain and
 #                      can be given a dummy value if the FSL Gizmo server is invisible
-#                      to you.
+#                      to you. In this event, consider setting the value to 'wide' if
+#                      the aspect ratio (width/length) exceeds 1.192.
 #                      
 # -F                   Run followup script to generate GIF images for the web.
 #                      No other executables are run. The argument value is a shorthand 
-#                      name for the domain and can be given a dummy value if the 
-#                      FSL Gizmo server is invisible to you. Purger is not run.
+#                      name for the domain and can be given a dummy value if the GSD
+#                      Gizmo server is invisible to you. In this event, consider setting 
+#                      the value to 'wide' if the aspect ratio (width/length) exceeds 1.192.
+#                      Purger is not run.
 #                      
 # -T                   Run with analysis only executables, useful with the
 #                      test dataset that comes with the LAPS software release.
@@ -89,7 +92,7 @@ use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:Q:KVM:n:A:f:F:wslvp:T');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslvp:T');
 
 my $initial_time = time();
 
@@ -122,12 +125,16 @@ if(defined $opt_s){ # "surface only"
 }elsif(defined $opt_M){ # Mesowave or other "surface only" LAPS
     @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M);
 
-}elsif(defined $opt_V){ # GSI analysis
+}elsif($opt_V eq "GSI_Prep"){ # GSI analysis
     @LAPS_EXE = qw(lga.exe 
                   ingest_pro.exe obs_driver.x sfc_qc.exe
                   ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
-                  GSI_Prep.exe) 
+                  GSI_Prep.exe);
+
+}elsif($opt_V eq "GSI_Post"){ # GSI analysis
+    @LAPS_EXE = qw(GSI_Post.exe
+                  lapsprep.exe);
 
 }elsif(defined $opt_F){ # Followup Only
     @LAPS_EXE = ( );
@@ -241,7 +248,7 @@ my $hh = (gmtime)[2];
 my $mm = (gmtime)[1];
 my $hhmm = 100*$hh+$mm;
 $hhmm = "0".$hhmm while(length($hhmm)<4);
-my($LAPS_LOG_PATH,$LAPS_LOCK_PATH,$log_name);
+my($LAPS_LOG_PATH,$LAPS_LOCK_PATH,$log_name,$qsub_name);
 if(($fxa_sys!=0)and(! $opt_l)){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
@@ -258,6 +265,12 @@ if(defined $opt_F){
     $log_name = "sched_F\.log";    
 }else{
     $log_name = "sched\.log";    
+}
+
+if(defined $opt_V){
+    $qsub_name = $opt_V;    
+}else{
+    $qsub_name = "run_qsub";    
 }
 
 open(SAVEOUT,">&STDOUT");
@@ -408,21 +421,21 @@ foreach $exe (@LAPS_EXE){
 
                 if($execount > 1){ # after start
                     print TFILE "  \n";
-                    print TFILE "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
+                    print TFILE "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/$qsub_name\_$scriptnext.sh 1> $LAPS_LOG_PATH/$qsub_name\_$scriptnext.log 2>&1\n";
                     print TFILE "  \n";
-                    print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
+                    print $t." Closing $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh before executable # $execount\n";
                     close(TFILE);
                     close(TFILE_SUB);
-                    system("chmod +x $LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh");
+                    system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
                 }
 
 #               Start new qsub_wait script
                 $scriptcount = $scriptcount + 1;
                 $scriptnext = $scriptcount + 1;
 
-                print $t." Opening $LAPS_LOG_PATH/run_qsub_$scriptcount.sh starting with executable # $execount\n";
-                open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
-                open(TFILE_SUB,">$LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh");
+                print $t." Opening $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh starting with executable # $execount\n";
+                open(TFILE,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh");
+                open(TFILE_SUB,">$LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
                 print TFILE "#!/bin/sh\n";
 
                 my $wall_time_hr  = int( ( $cycle_time_min / 60.) + $extend_time  ); 
@@ -471,7 +484,7 @@ foreach $exe (@LAPS_EXE){
 
 	}
 
-        print " Adding to $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable #/nodes $execount $nodes_current $exe\n";
+        print " Adding to $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh with executable #/nodes $execount $nodes_current $exe\n";
         print TFILE "  \n";
 
         if($execount == $nexe){ # Add wfo_post into TFILE as necessary
@@ -482,7 +495,7 @@ foreach $exe (@LAPS_EXE){
         }
 
         if($nodes_current > 1){
-            print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh\n";
+            print TFILE "$sms_path/bin/smsRun -np $nodes_current $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh\n";
             print TFILE_SUB "umask 002\n";
             print TFILE_SUB "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
             print TFILE_SUB "$LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
@@ -515,13 +528,13 @@ foreach $exe (@LAPS_EXE){
             print TFILE "  \n";
             print TFILE "echo `date` [finished qsub_wait scripts] >> $LAPS_LOG_PATH/runtime.log\n";
             print TFILE "  \n";
-            print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable # $execount\n";
+            print $t." Closing $LAPS_LOG_PATH/$qsub_name\_$scriptcount.sh with executable # $execount\n";
             close(TFILE);
             close(TFILE_SUB);
-            system("chmod +x $LAPS_LOG_PATH/run_qsub_$scriptcount\_sub.sh");
+            system("chmod +x $LAPS_LOG_PATH/$qsub_name\_$scriptcount\_sub.sh");
 
             chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
-            $command = "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_1.sh";
+            $command = "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/$qsub_name\_1.sh";
             print "Executing $command\n";
             system("$command");
 
