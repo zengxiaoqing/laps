@@ -2122,6 +2122,13 @@ Inputs:
         formats for the background model are listed in 
         'data/static/background.nl'.
 
+        Tropical cyclone bogusing information is also an input in the form
+        of the 'tcbogus.nl' namelists. These are generated independently of LAPS
+        as "raw" data, yet are placed in the '$LAPS_DATA_ROOT/lapsprd/tcbogus'
+        subdirectory. The filename convention should be 'yydddhhmm_tcbogus.nl'.
+        To see the format check the sample file located in
+        'data/static/tcbogus.nl'.
+
 Outputs: (Feeds various analyses)
 <pre>
 	lga	grid	background model 3-D data analysis/forecast
@@ -2175,7 +2182,7 @@ Sample Input/Output: May be available in the test data case.
 
 Source directory: $LAPS_SRC_ROOT/src/ingest/sao (contains a README file)
 
-Parameter file (specifies input data paths and formats): 'obs_driver.nl'
+Parameter file (specifies input data paths and formats): 'static/obs_driver.nl'
 
 The LSO file is fairly self explanatory. The easiest way to see what
 goes where is to look at the routine 'read_surface_data' in the file 
