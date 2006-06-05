@@ -34,10 +34,10 @@ cdis
      1          ,i4time_needed_in,i4time_nearest)
 
 !       Steve Albers            1990
-C       Given a directory path with a wildcard  find the best
-C       matching file i4time in the given directory matching that wildcard.
-C       If there are very many files in the directory, you will need to
-C       use a directory name only, the ls command can't handle it otherwise.
+cdoc    Given a directory path with a wildcard and a desired time, find the best
+cdoc    matching file i4time in the given directory matching that wildcard.
+cdoc    If there are very many files in the directory, you will need to
+cdoc    use a directory name only, the ls command can't handle it otherwise.
 !       John Smart              1996
 C       modified the routines within to handle filenames of the type
 C       yyyymmdd_hhmm in addition to those of the form yyjjjmmhh.
@@ -132,10 +132,10 @@ C
         subroutine get_latest_file_time(c_filespec,i4time_latest)
 
 !       Steve Albers            1995
-C       Given a directory path with a wildcard  find the latest
-C       matching file i4time in the given directory matching that wildcard.
-C       If there are very many files in the directory, you will need to
-C       use a directory name only, the ls command can't handle it otherwise.
+cdoc    Given a directory path with a wildcard  find the latest
+cdoc    matching file i4time in the given directory matching that wildcard.
+cdoc    If there are very many files in the directory, you will need to
+cdoc    use a directory name only, the ls command can't handle it otherwise.
 
 !       Steve Albers            1998
 C       More generic
@@ -190,10 +190,10 @@ C       More generic
      1                      ,i4times,i_nbr_files_out,istatus)
 
 !       Steve Albers            1996
-C       Given a directory path with a wildcard find all files and
-C       return a list of the filenames and associated i4times
-C       If there are very many files in the directory, you will need to
-C       use a directory name only, the ls command can't handle it otherwise.
+cdoc    Given a directory path with a wildcard find all files and
+cdoc    return a list of the filenames and associated i4times
+cdoc    If there are very many files in the directory, you will need to
+cdoc    use a directory name only, the ls command can't handle it otherwise.
 
 !       Steve Albers            1998
 C       More generic
