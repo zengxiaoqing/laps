@@ -115,13 +115,13 @@ C
       character*4 homeWFO(recNum)
       character*24 dataProvider(recNum)
       character*6 providerId(recNum)
-      character*11 stationType(recNum)
+      integer stationType(recNum)
       character*30 staticIds(maxStaticIds)
       character*51 stationName(recNum)
 !.............................................................................
 
       character*9 a9_timeObs,a9_recptTime,a9_closest,a9time_ob
-      character*8 c8_project
+      character*8 c8_project,c8_format
       character*6 provider_ref
       character*(*)ext
       real*4 lat_a(NX_L,NY_L)
@@ -135,8 +135,19 @@ C
 
 !............................................................................
 
-!     Initialize array
+!     Initialize arrays
       averageMinutes = -999
+      stationId = 'UNK   '
+
+      call get_c8_project(c8_project,istatus)
+
+      if(c8_project .eq. 'RSA')then
+          c8_format = 'LDAD'
+      else
+          c8_format = 'MADIS'
+      endif
+
+      write(6,*)' Reading profiler/RASS data, format = ',c8_format
 
       call read_ldad_prof_netcdf(nf_fid, level, maxStaticIds, 
      +     nInventoryBins,       
@@ -146,7 +157,8 @@ C
      +     wdQcFlag, windDir, wsQcFlag, elevation, latitude, levels, 
      +     longitude, temperature, windSpeed, observationTime, 
      +     receiptTime, reportTime, dataProvider, homeWFO, 
-     +     providerId, staticIds, stationId, stationName, stationType)
+     +     providerId, staticIds, stationId, stationName, stationType,
+     +     c8_format)
 C
 C The netcdf variables are filled - your code goes here
 C
@@ -162,8 +174,6 @@ C
 
       write(6,*)' # of profilers = ',nStaticIds
       write(6,*)' # of records = ',recnum
-
-      call get_c8_project(c8_project,istatus)
 
       do i_sta = 1,nStaticIds
         ilast_rec = lastRecord(i_sta) + 1 ! Offset going from C to FORTRAN
@@ -302,14 +312,26 @@ C
 
                 call filter_string(provider_ref)
 
-                write(6,401)provider_ref
-     1                     ,n_good_levels
-     1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
-     1                     ,a9time_ob,'PROFILER'
-                write(lun,401)provider_ref
-     1                     ,n_good_levels
-     1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
-     1                     ,a9time_ob,'PROFILER'
+                if(c8_format .eq. 'LDAD')then
+                    write(6,401)provider_ref
+     1                         ,n_good_levels
+     1                         ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
+     1                         ,a9time_ob,'PROFILER'
+                    write(lun,401)provider_ref
+     1                         ,n_good_levels
+     1                         ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
+     1                         ,a9time_ob,'PROFILER'
+                else ! MADIS
+                    write(6,401)provider_ref
+     1                         ,n_good_levels
+     1                         ,rlat,rlon,elev,provider_ref(1:6)
+     1                         ,a9time_ob,'PROFILER'
+                    write(lun,401)provider_ref
+     1                         ,n_good_levels
+     1                         ,rlat,rlon,elev,provider_ref(1:6)
+     1                         ,a9time_ob,'PROFILER'
+                endif
+
 401             format(a12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
 
                 do i = 1,n_good_levels
@@ -346,14 +368,26 @@ C
 
                 call filter_string(provider_ref)
 
-                write(6,501)provider_ref
-     1                     ,n_good_levels
-     1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:5)
-     1                     ,a9time_ob,'RASS    '
-                write(lun,501)provider_ref
-     1                     ,n_good_levels
-     1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:5)
-     1                     ,a9time_ob,'RASS    '
+                if(c8_format .eq. 'LDAD')then
+                    write(6,501)provider_ref
+     1                         ,n_good_levels
+     1                         ,rlat,rlon,elev,stationId(i_pr_cl)(1:5)
+     1                         ,a9time_ob,'RASS    '
+                    write(lun,501)provider_ref
+     1                         ,n_good_levels
+     1                         ,rlat,rlon,elev,stationId(i_pr_cl)(1:5)
+     1                         ,a9time_ob,'RASS    '
+                else ! MADIS
+                    write(6,501)provider_ref
+     1                         ,n_good_levels
+     1                         ,rlat,rlon,elev,provider_ref(1:5)
+     1                         ,a9time_ob,'RASS    '
+                    write(lun,501)provider_ref
+     1                         ,n_good_levels
+     1                         ,rlat,rlon,elev,provider_ref(1:5)
+     1                         ,a9time_ob,'RASS    '
+                endif
+
 501             format(a12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9,1x,a8)
 
                 do i = 1,n_good_levels
@@ -391,7 +425,7 @@ C
      +     latitude, levels, longitude, temperature, windSpeed, 
      +     observationTime, receiptTime, reportTime, dataProvider, 
      +     homeWFO, providerId, staticIds, stationId, stationName, 
-     +     stationType)
+     +     stationType,c8_format)
 C
       include 'netcdf.inc'
       integer level, maxStaticIds, nInventoryBins, recNum,nf_fid, 
@@ -413,9 +447,11 @@ C
       character*4 homeWFO(recNum)
       character*24 dataProvider(recNum)
       character*6 providerId(recNum)
-      character*11 stationType(recNum)
+      integer stationType(recNum)
       character*30 staticIds(maxStaticIds)
       character*51 stationName(recNum)
+
+      character*8 c8_format
 
 
 C   Variables of type REAL
@@ -510,16 +546,16 @@ C
 C     Variable        NETCDF Long Name
 C      assetId      "RSA Asset Identifier"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'assetId',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var assetId'
-      endif
-        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,assetId)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var assetId'
-      endif
+!       nf_status = NF_INQ_VARID(nf_fid,'assetId',nf_vid)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var assetId'
+!     endif
+!       nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,assetId)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var assetId'
+!     endif
 C
 C     Variable        NETCDF Long Name
 C      firstInBin   
@@ -751,30 +787,30 @@ C
 C     Variable        NETCDF Long Name
 C      receiptTime  "File time stamp (time file was received)"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'receiptTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var receiptTime'
-      endif
-        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,receiptTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var receiptTime'
-      endif
+!       nf_status = NF_INQ_VARID(nf_fid,'receiptTime',nf_vid)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var receiptTime'
+!     endif
+!       nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,receiptTime)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var receiptTime'
+!     endif
 C
 C     Variable        NETCDF Long Name
 C      reportTime   "Time of observation"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'reportTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var reportTime'
-      endif
-        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,reportTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var reportTime'
-      endif
+!       nf_status = NF_INQ_VARID(nf_fid,'reportTime',nf_vid)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var reportTime'
+!     endif
+!       nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,reportTime)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var reportTime'
+!      endif
 
 
 C   Variables of type CHAR
@@ -797,16 +833,16 @@ C
 C     Variable        NETCDF Long Name
 C      homeWFO      "home WFO Id"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'homeWFO',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var homeWFO'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,homeWFO)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var homeWFO'
-      endif
+!       nf_status = NF_INQ_VARID(nf_fid,'homeWFO',nf_vid)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var homeWFO'
+!     endif
+!       nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,homeWFO)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var homeWFO'
+!     endif
 C
 C     Variable        NETCDF Long Name
 C      providerId   "Alphanumeric station name"
@@ -853,35 +889,44 @@ C
 C     Variable        NETCDF Long Name
 C      stationName  "alphanumeric station name"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'stationName',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationName'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,stationName)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationName'
-      endif
+!       nf_status = NF_INQ_VARID(nf_fid,'stationName',nf_vid)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var stationName'
+!     endif
+!       nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,stationName)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'in var stationName'
+!     endif
+
+
+!     For RSA, this variable doesn't contain any useful information.
+!     This could be useful if 'c8_format' is MADIS, if we read it in 
+!     given its "short" declaration as an INT variable.
+
 C
 C     Variable        NETCDF Long Name
 C      stationType  "LDAD station type"
 C
+      if(c8_format .eq. 'MADIS')then
+        write(6,*)' read stationType as short/integer'
         nf_status = NF_INQ_VARID(nf_fid,'stationType',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationType'
-      endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,stationType)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationType'
-      endif
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var stationType'
+        endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,stationType)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var stationType'
+        endif
 
-      nf_status = nf_close(nf_fid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'nf_close'
+        nf_status = nf_close(nf_fid)
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'nf_close'
+        endif
       endif
 
       return
