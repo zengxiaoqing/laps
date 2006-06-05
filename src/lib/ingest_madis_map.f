@@ -69,6 +69,10 @@
         n_good_obs = 0
 
 C       READ IN THE RAW PROFILER/RASS DATA
+
+!       The assumption is that the stated observation time (end of averaging 
+!       period) is for the 30 minute period ending at the file name....
+
  500    a13_time = cvt_i4time_wfo_fname13(i4time_raw)
         fnam_in = dir_in(1:len_dir_in)//a13_time
         call s_len(fnam_in,len_fnam_in)
