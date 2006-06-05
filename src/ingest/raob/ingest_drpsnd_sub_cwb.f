@@ -1,6 +1,6 @@
       subroutine get_drpsnd_data_cwb ( i4time_sys, ilaps_cycle_time,
      ~         nx_l, ny_l, i4time_drpsnd_earliest, i4time_drpsnd_latest,
-     ~         a9_time, filename, lun_out, istatus )
+     ~         a9_time, filename,lun_out, istatus )
 
       integer   loopNum, levelNum  
       parameter ( loopNum=100, levelNum=90 )
@@ -11,9 +11,19 @@
       character(2)   yy, mo, dd, hh, mn, flag
       character(9)   a9time(loopNum), a9timeDummy, a10_to_a9, a9_time
       character(10)  time
+  
+      real latitude_out(loopNum,levelNum)
+      real longitude_out(loopNum,levelNum)
+      character*9 a9time_out(loopNum,levelNum)
+      character c8_obstype(loopNum)*8
+      character c5_staid(loopNum)*5
 
       real  lat_a(nx_l,ny_l), lon_a(nx_l,ny_l), topo_a(nx_l,ny_l)
-      real  latitudeDummy, longitudeDummy
+c wen modify 
+c      real  latitudeDummy, longitudeDummy
+       real  lat1, lon1
+       integer  latitudeDummy, longitudeDummy
+c
       real  elevation(loopNum), latitude(loopNum), longitude(loopNum)
       real  pressure(loopNum,levelNum), height(loopNum,levelNum)
       real  temperature(loopNum,levelNum)
@@ -27,12 +37,6 @@
       integer temperatureQua(loopNum,levelNum),windQua(loopNum,levelNum)
       integer recNum, inNum, jumpNum, logicRecNum
       integer d(12)
-
-      real latitude_out(loopNum,levelNum)
-      real longitude_out(loopNum,levelNum)
-      character*9 a9time_out(loopNum,levelNum)
-      character c8_obstype(loopNum)*8
-      character c5_staid(loopNum)*5
 
       data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
 
@@ -56,7 +60,9 @@
          read (1,5,end=99,err=29) reportFlag, 
      ~                            latitudeDummy, longitudeDummy,
      ~                            iy, m1, id, ih, m2, logicRecNum
-5        format ( a3, i5, f4.0, 2f5.2, 2x, 5i2, i3 )
+c wen add 5        format ( a3, i5, f4.0, 2f5.2, 2x, 5i2, i3 )
+5        format ( a3,9x,i5,i5,2x, 5i2, i3 )
+ccccc               write(*,*)'!!!!1111!',reportFlag,iy,m1,id,ih,m2,logicRecNum
 
          if ( reportFlag /= '*15' )  then
             write (6,*) 
@@ -135,9 +141,14 @@ c          ----------    test if drpsnd is within time window    ----------
      ~                     yy, mo, dd, hh, mn, logicRecNum,
      ~                     ' Inside time window'
 	       inNum= inNum +1
+cc  wen modify
+c	       latitude(inNum)= latitudeDummy
+c	       longitude(inNum)= longitudeDummy
+	       lat1= latitudeDummy/100.
+	       lon1= longitudeDummy/100.
 
-	       latitude(inNum)= latitudeDummy
-	       longitude(inNum)= longitudeDummy
+	       latitude(inNum)= lat1
+	       longitude(inNum)= lon1
 	       a9time(inNum)= a9timeDummy
 
                layerNum(inNum)= logicRecNum -5
@@ -221,23 +232,27 @@ c      format f15.0 in snd files
                dewpoint(i,j)= r_missing_data
          endif
 
-         if ( windQua(i,j) /= 1 )  then
+c wen modi          if ( windQua(i,j) /= 1 )  then
+         if ( windQua(i,j) .eq. 11 ) go to 100
+         if ( windQua(i,j) .eq. 21 ) go to 100
+         if ( windQua(i,j) .eq. 31 ) go to 100
+             write(*,*)' wen test windQua',windQua(i,j),windDir(i,j)
+
             windDir(i,j)= r_missing_data
             windSpeed(i,j)= r_missing_data
-         endif
+c wen modi         endif
 100   continue
 
-!     do 900 i= 1,inNum
-!        write(11,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
-!    ~                 elevation(i), taskName(i), a9time(i), 'DRPSND'
+!      do 900 i= 1,inNum
+!	 write(*,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
+!     ~                 elevation(i), taskName(i), a9time(i), 'DRPSND'
 !895      format (i12, i12, f11.4, f15.4, f15.0, 1x, a5, 3x, a9, 1x, a8)
-
-!        do 900 j= 1,layerNum(i)
-!           write (11,*) height(i,j), pressure(i,j), temperature(i,j),
-!    ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
+!
+!         do 900 j= 1,layerNum(i)
+!            write (*,*) height(i,j), pressure(i,j), temperature(i,j),
+!     ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
 !900   continue
-
-      do 900 i= 1,inNum
+           do 900 i= 1,inNum
           latitude_out(i,:) = latitude(i)
           longitude_out(i,:) = longitude(i)
           a9time_out(i,:) = a9time(i)
@@ -259,6 +274,8 @@ c      format f15.0 in snd files
      1                    ,windDir                            ! I
      1                    ,windSpeed                          ! I
      1                    ,istatus)                           ! O
+
+
 
       write (6,*) ' found', inNum, 
      ~            'stations available within time window in',
