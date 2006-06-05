@@ -7,7 +7,7 @@
 
       include 'netcdf.inc'
 
-      character*170 filename
+      character*(*) filename
 
       integer maxLevels, maxStaticIds, nInventoryBins, recNum,nf_fid,
      +     nf_vid, nf_status
@@ -111,10 +111,10 @@ C
      +     staLon(recNum), staPress(recNum), temperature( maxLevels,
      +     recNum), zenithAngle(recNum)
       double precision validTime(recNum)
-      character mixingRatioDD( maxLevels, recNum)
-      character*7 staName(recNum)
       character temperatureDD( maxLevels, recNum)
       character*8 staticIds(maxStaticIds)
+      character*7 staName(recNum)
+      character mixingRatioDD( maxLevels, recNum)
 
 !     Declarations for 'write_snd' call
       integer iwmostanum(recNum)
@@ -222,7 +222,7 @@ C
      +                      ,1,nlevels_snd,1
      +                      ,iwmostanum
      +                      ,stalatl,stalonl,staElev(iob)
-     +                      ,staticIds(iob)
+     +                      ,staName(iob)
      +                      ,a9time_ob_l,c8_obstype
      +                      ,nlevels_snd
      +                      ,height_m
@@ -274,10 +274,10 @@ C
      +     staLon(recNum), staPress(recNum), temperature( maxLevels,
      +     recNum), zenithAngle(recNum)
       double precision validTime(recNum)
-      character mixingRatioDD( maxLevels, recNum)
-      character*7 staName(recNum)
       character temperatureDD( maxLevels, recNum)
       character*8 staticIds(maxStaticIds)
+      character*7 staName(recNum)
+      character mixingRatioDD( maxLevels, recNum)
 
 
 C   Variables of type REAL
