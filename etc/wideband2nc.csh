@@ -16,7 +16,7 @@ setenv SKIP $2                 # skip processing if NetCDF radar is there?
 setenv REMAP $3                # run remap_polar_netcdf.exe [yes,no]
 setenv LAPSINSTALLROOT $4
 setenv MODETIME $5             # run mode [realtime,archive]
-setenv OUTPUTROOT_ARCHIVE $6   # location of output Polar NetCDF files (active only for archive mode)
+#setenv OUTPUTROOT_ARCHIVE $6   # location of output Polar NetCDF files (active only for archive mode)
 
 setenv SUFFIX "_elev01"
 
@@ -48,12 +48,12 @@ if (! -e $INPUTROOT) then
     exit
 endif
 
-if($MODETIME == "realtime")then
+if ($MODETIME == "realtime") then
     setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
     setenv HR1 `head -3 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
     set HR2=$HR1
     @ HR2++
-    if($HR2 == 24)then
+    if ($HR2 == 24) then
         set HR2=1
     endif
     echo "Processing hours $HR1 and $HR2"
@@ -62,10 +62,16 @@ else # archive case
 
 #   Access additional command line args
     setenv YEAR $7
-    setenv DATE $8
-    setenv HOUR $9
-    setenv YYDDD $10
-    setenv MONTH $11
+    setenv MONTH $8
+    setenv DATE $9
+    setenv HOUR $10
+    setenv YYDDD $11
+
+    echo "YEAR=$YEAR"
+    echo "DATE=$DATE"
+    echo "HOUR=$HOUR"
+    echo "YYDDD=$YYDDD"
+    echo "MONTH=$MONTH"
 
 #   This could be done if 'systime.dat' is updated actively by 'casererun.pl'
 #   setenv YEAR `head -5 $LAPS_DATA_ROOT/time/systime.dat | tail -1 | cut -c8-11`
@@ -76,7 +82,8 @@ else # archive case
 #   Need to run perl script to convert YEAR and DDD to MONTH
 #   setenv MONTH 09 
 
-    setenv OUTPUTROOT  $OUTPUTROOT_ARCHIVE
+#   setenv OUTPUTROOT  $OUTPUTROOT_ARCHIVE
+    setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
 endif
 
 echo " "
@@ -117,7 +124,7 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
 # Use this filename convention for realtime data
 
-  if($MODETIME == "realtime")then
+  if ($MODETIME == "realtime") then
 
 #     We assume that less than 24 hours of realtime Archive-II data are available on disk at any given time
 
@@ -167,11 +174,18 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
       setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
       echo "Number of pre-existing files is $COUNT"
 
-      if($COUNT == "0" || $SKIP != "yes")then
+      if ($COUNT == "0" || $SKIP != "yes") then
 #         This works with the archived radar data (e.g. for IHOP)
           echo "Generating radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
-          find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+#         Filename convention for /public
+#         find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+#                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
+
+#         Filename convention for NCDC
+          ls -l $INPUTROOT/$RADAR
+          ls -l $INPUTROOT/$RADAR/*$YEAR$MONTH$DATE*
+          find /$INPUTROOT/$RADAR -name "*$YEAR$MONTH$DATE*" -exec $INSTALLROOT/bin/NCDC_TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
                                   -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
 
           echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
@@ -192,10 +206,10 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
 end
 
-if($REMAP == "yes")then
+if ($REMAP == "yes") then
     echo "Running LAPS remapper"
 
-    if($MODETIME == "realtime")then
+    if ($MODETIME == "realtime") then
         setenv TIMESTAMP `date +%y%j%H%M`
         $LAPSINSTALLROOT/bin/remap_polar_netcdf.exe > $LAPS_DATA_ROOT/log/remap_polar_netcdf.log.$TIMESTAMP
         echo "remap log file is remap_polar_netcdf.log.$TIMESTAMP"
