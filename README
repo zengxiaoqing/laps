@@ -1433,8 +1433,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      (self describing NetCDF) format with associated file naming conventions. 
      A typical filename on NIMBUS looks like this: '0606701000100o' meaning 
      'yydddhhmmHHMM' where 'ddd' is the day of year, 'hhmm' is the time of day 
-     and 'HHMM' is the file recurrence interval. More about NIMBUS is detailed 
-     in publications on the web at this URL:
+     and 'HHMM' is the file recurrence interval. The 'o' at the end means that
+     observations are binned into files according to observation time (instead
+     of 'r' for receipt time) More about NIMBUS is detailed in publications on 
+     the web at this URL:
      http://www-its.fsl.noaa.gov/papers/nimbus/welcome.html
 
      Time information will be needed in the form of 'data/time/systime.dat';
