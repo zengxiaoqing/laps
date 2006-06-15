@@ -26,6 +26,8 @@ $(LIB):
 	$(AR) -r $(LIB) *.o
 	rm -f *.f *.o README_BUFRLIB
 
+install: all
+
 clean:
 	rm -f $(LIB)
 
