@@ -51,7 +51,7 @@
      +     rs,rout,xix,xjx,dealbox,beta(kb),r,ang
       real year_m,month_m,day_m,hour_m,tothour_m,year,month,day,hour,
      +     tothour
-      integer i4time_latest,i4time_now,dt,i4time1,iread
+      integer i4time_closest,i4time_sys,dt,i4time1,iread
       real dt1
       character*9 name1,a9
       logical bogus
@@ -63,11 +63,10 @@
 
 
 ! Bogusing namelist and driver
-!!      call get_directory(grid_fnam_common,nest7grid,len_dir)
-!!      nest7grid=nest7grid(1:len_dir)//'/tcbogus.nl'
+      call get_systime(i4time_sys,a9,istatus)
       call get_directory('tcbogus',nest7grid,len_dir)
-      call get_latest_file_time(nest7grid,i4time_latest)
-      call make_fnam_lp(i4time_latest,name1,istatus)
+      call get_file_time(nest7grid,i4time_sys,i4time_closest)
+      call make_fnam_lp(i4time_closest,name1,istatus)
       nest7grid=nest7grid(1:len_dir)//name1//'_tcbogus.nl'
 !      print*,'--- the table of tcbogus is following ---'
 !      print *,nest7grid
@@ -82,13 +81,13 @@
       endif  
 
       
-!  -- set i4time_now be laps_time ---
-!      i4time1=i4time_now_gg()
-      call get_systime(i4time_now,a9,istatus)
-      dt=i4time_now - i4time_latest
+!  -- set i4time_sys be laps_time ---
+!      i4time1=i4time_sys_gg()
+      call get_systime(i4time_sys,a9,istatus)
+      dt=i4time_sys - i4time_closest
       dt1=dt/3600.
         print*,'---check the file time:(sec) ---'
-        print*,'-- dt,laps_time,latest ---',dt,i4time_now,i4time_latest
+        print*,'-- dt,laps_time,latest ---',dt,i4time_sys,i4time_closest
 !       if ( dt .ge. 10800 ) then 
        if ( dt .ge. 12000 ) then 
         print*,'---- the data is too old to use( about 3.3 hrs )---',dt1
