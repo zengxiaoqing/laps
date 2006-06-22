@@ -85,7 +85,8 @@ c
       real*4 VEL_MIS_CHECK
       parameter (VEL_MIS_CHECK = 100.)
 
-      integer*4 REF_MIS_CHECK,REF_GRIDS_CHECK
+      real*4 REF_MIS_CHECK
+      integer*4 REF_GRIDS_CHECK
       parameter (REF_MIS_CHECK = 100.)
       parameter (REF_GRIDS_CHECK = 0)
 
