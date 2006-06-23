@@ -497,7 +497,7 @@ c
       call lga_driver(nx,ny,nz,luse_sfc_bkgd,laps_cycle_time
      .         ,bgmodels(1),bgpaths(1),cmodels(1),rejected_cnt
      .         ,reject_names,names,max_files,accepted_files
-     .         ,i4time_sys_drop,smooth_fields,lga_status)
+     .         ,i4time_sys_drop,smooth_fields,lgb_only,lga_status)
 
       if(lga_status.ne.1)then
          print*,'error returned from lga_driver'
