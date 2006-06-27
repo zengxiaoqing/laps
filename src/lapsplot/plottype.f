@@ -37,13 +37,13 @@ cdis
 cdis   
 cdis
         subroutine plot_types_2d(icldpcp_type_2d,interval,size
-     1                          ,c2_field,l_meta
+     1                          ,c2_field,l_meta,plot_parms
      1                          ,imax,jmax,lat,lon,ifield_2d)
 
         integer*4 icldpcp_type_2d(imax,jmax)
         integer*4 ifield_2d(imax,jmax)
 
-        logical l_meta
+        logical l_meta,l_new
 
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
@@ -51,12 +51,13 @@ cdis
         character barg
         integer*4 iarg,byte_to_i4
 
+        include 'lapsplot.inc'
+
         character*2 c2_field,c2_type
 
-!       character*2 c2_cloud_types(0:10)
-!       1       /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
-
         character*2 c2_cloud_types(0:10)
+!       data c2_cloud_types
+!    1  /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
         data c2_cloud_types
      1  /'  ','ST','SC','CU','NS','AC','AS','CS','CI','CC','CB'/
 
@@ -67,7 +68,6 @@ cdis
         character*1 c1_precip_types(0:10)
         data c1_precip_types
      1  /' ','R','*','Z','I','H','L','F',' ',' ',' '/
-
 
 !       Pull out relavant bits
         do i = 1,imax
@@ -95,6 +95,8 @@ cdis
         if(.not. l_meta)return
 
         if(c2_field .eq. 'tc' .or. c2_field .eq. 'cy')then
+            l_new = .true. ! Testing as T/F for cloud type
+
             nc = 2
 
             if(jmax .gt. 230)then
@@ -118,6 +120,8 @@ cdis
             endif
 
         elseif(c2_field .eq. 'tp' .or. c2_field .eq. 'py')then
+            l_new = .false.
+
             nc = 1
 
             if(jmax .gt. 100)then
@@ -136,7 +140,15 @@ cdis
 
         endif
 
-        write(6,*)' isize,iskip',isize,iskip
+        if(l_new)then
+            size_z = size / plot_parms%zoom
+            iskip = max( nint( (jmax / 30) / plot_parms%zoom), 1)
+            write(6,*)' size_z, iskip = ',size_z,iskip
+            call get_border(imax,jmax,x_1,x_2,y_1,y_2)
+            call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax),1)
+        else
+            write(6,*)' isize,iskip',isize,iskip
+        endif
 
         do j = 1,jmax,iskip
         do i = 1,imax,iskip
@@ -159,9 +171,18 @@ cdis
 !                   c2_type = ' '
 !               endif
      
-                ri = i
-                rj = j
-                call plot_typeob(c2_type,nc,ri,rj,isize,imax,jmax)
+                if(.not. l_new)then ! old way
+!                   write(6,*)'Plot type: ',c2_type,i,j
+                    ri = i
+                    rj = j
+                    call plot_typeob(c2_type,nc,ri,rj,isize,imax,jmax)
+                else
+!                   write(6,*)'Plot type: ',c2_type,i,j
+                    ri = i
+                    rj = j
+!                   CALL PCLOQU(ri, rj, c2_type, size_z, ANGD, CNTR)
+                    CALL PCMEQU(ri, rj, c2_type, size_z, ANGD, CNTR)       
+                endif
             endif
 
         enddo ! i
