@@ -888,6 +888,7 @@ sub systime{
 
     my $jjj = &laps_tools::julian($year,$mon+1,$mday);
 
+    $mday = '0'.$mday if(length($mday)<2);
     $jjj="0".$jjj while(length($jjj)< 3);
 
     my $yyjjjhhmm = "$year$jjj$hour$min";
