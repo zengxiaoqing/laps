@@ -663,6 +663,15 @@ c  assume the namelist file is always in DATA_ROOT/static.
            i=i+1
         enddo
 
+        if(.not. lfound_name .OR. numoffiles .eq. 0)then
+          print*, 'ERROR in getting domain name from ',
+     +           data_root(1:len_root),'/static/'
+          print*, 'lfound_name = ',lfound_name
+          print*, 'numoffiles = ',numoffiles
+          istatus = 0
+          return
+        endif
+
         call s_len(grid_fnam,len_grid_fnam)
         if (len_grid_fnam .gt. 0) then
 
