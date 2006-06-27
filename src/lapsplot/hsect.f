@@ -2346,6 +2346,7 @@ c
      1                        ,laps_cycle_time)
 
                 else
+                    plot_parms%icol_barbs = +1 ! keep future barbs plots bright
                     call ccpfil(radar_array,NX_L,NY_L,-10.,70.,'ref'
      1                         ,n_image,1e0,'hsect',plot_parms
      1                         ,namelist_parms)
@@ -2396,6 +2397,8 @@ c
      1                        ,NY_L,r_missing_data,laps_cycle_time)
 
                 else
+                    plot_parms%icol_barbs = +1 ! keep future barbs plots bright
+
                     call ccpfil(grid_ra_ref(1,1,k_level,1)
      1                         ,NX_L,NY_L,-10.,70.,'ref',n_image,1e0
      1                         ,'hsect',plot_parms,namelist_parms)
@@ -3378,7 +3381,7 @@ c
                 enddo ! j
 
                 call plot_cldpcp_type(i_array
-     1                ,asc9_tim,namelist_parms
+     1                ,asc9_tim,namelist_parms,plot_parms
      1                ,c_label,c_type,k,i_overlay,c_display
      1                ,lat,lon,idum1_array
      1                ,NX_L,NY_L,laps_cycle_time,jdot)
@@ -3500,7 +3503,7 @@ c
             enddo ! j
 
             call plot_cldpcp_type(i_array
-     1             ,asc9_tim,namelist_parms
+     1             ,asc9_tim,namelist_parms,plot_parms
      1             ,c_label,c_type,k,i_overlay,c_display  
      1             ,lat,lon,idum1_array
      1             ,NX_L,NY_L,laps_cycle_time,jdot)
@@ -5450,6 +5453,8 @@ c                   cint = -1.
                     colortable = 'linear'
                 endif
 
+                plot_parms%icol_barbs = +1 ! keep future barbs plots bright
+
                 call ccpfil(cloud_cvr,NX_L,NY_L,0.0,1.0,colortable     
      1                     ,n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)     
@@ -5481,7 +5486,7 @@ c                   cint = -1.
               clow = -400.
               chigh = +5000.
               cint = +200.
-              c_label = 'Static Terrrain (m)        '
+              c_label = 'Static Terrain (m)         '
 
               if(cstatic .eq. 'tni')then
                 write(6,*)' calling solid fill plot'
@@ -6209,7 +6214,7 @@ c             if(cint.eq.0.0)cint=0.1
         end
 
         subroutine plot_cldpcp_type(icldpcp_type_2d
-     1     ,asc_tim_9,namelist_parms
+     1     ,asc_tim_9,namelist_parms,plot_parms
      1     ,c_label,c_field,k_level,i_overlay,c_display
      1     ,lat,lon,ifield_2d
      1     ,NX_L,NY_L,laps_cycle_time,jdot)
@@ -6262,9 +6267,10 @@ c             if(cint.eq.0.0)cint=0.1
         elseif(c_display .eq. 'v')then
 
             interval = 2
+            size = 8.0
 
             call plot_types_2d(icldpcp_type_2d,interval,size,c_field
-     1                        ,.false.
+     1                        ,.false.,plot_parms
      1                        ,NX_L,NY_L,lat,lon,ifield_2d)
             goto990
         else
@@ -6325,9 +6331,11 @@ c             if(cint.eq.0.0)cint=0.1
                     interval = 2
                 endif
 
-                size = 1.0
+                size = 8.0
+
                 call plot_types_2d(icldpcp_type_2d,interval,size,c_field      
-     1                            ,.true.,NX_L,NY_L,lat,lon,ifield_2d)
+     1                            ,.true.,plot_parms,NX_L,NY_L,lat,lon
+     1                            ,ifield_2d)
 !               call frame
 
             endif
@@ -7038,6 +7046,10 @@ c             if(cint.eq.0.0)cint=0.1
                 call contour_settings(field_2d,NX_L,NY_L
      1                               ,clow_img,chigh_img,cint       
      1                               ,zoom,density,scale)
+            endif
+
+            if(colortable .eq. 'linear')then
+                    plot_parms%icol_barbs = +1 ! keep future barbs plots bright
             endif
 
             call ccpfil(field_2d,NX_L,NY_L
