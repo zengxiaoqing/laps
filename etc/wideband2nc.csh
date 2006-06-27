@@ -16,7 +16,7 @@ setenv SKIP $2                 # skip processing if NetCDF radar is there?
 setenv REMAP $3                # run remap_polar_netcdf.exe [yes,no]
 setenv LAPSINSTALLROOT $4
 setenv MODETIME $5             # run mode [realtime,archive]
-#setenv OUTPUTROOT_ARCHIVE $6   # location of output Polar NetCDF files (active only for archive mode)
+setenv OUTPUTROOT_ARCHIVE $6   # location of output Polar NetCDF files (active only for archive mode)
 
 setenv SUFFIX "_elev01"
 
@@ -82,8 +82,8 @@ else # archive case
 #   Need to run perl script to convert YEAR and DDD to MONTH
 #   setenv MONTH 09 
 
-#   setenv OUTPUTROOT  $OUTPUTROOT_ARCHIVE
-    setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
+    setenv OUTPUTROOT  $OUTPUTROOT_ARCHIVE
+#   setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
 endif
 
 echo " "
