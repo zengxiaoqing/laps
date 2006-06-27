@@ -23,17 +23,32 @@ my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
                         'help',            \&help_sub,
                         '<>',              \&help_sub);
 
+# Summary of command line arguments
+
 #beg_time:        beginning time of post analysis period.
+#
 #end_time:        ending time of post analysis period.
+#
 #install_root:    install root for laps binaries.
+#
 #data_root:       dataroot for post analysis runs output.
+#
 #laps_driver:     run the laps_driver modules (lvd, vrc, lsr, remap, ln3, or all).
+#
 #run_sched:       run LAPS sched.pl: Add in dbl quotes command line variables for sched.
+#                 If there are no variables to pass in for the 'sched' a blank "   " entry is still needed 
+#
 #laps_driver:     activate data ingest via laps_driver.pl routine (satellite, radar, remap)
+#
 #driver_args:     Dbl quotes command line variables for laps_driver.
+#
 #wideband_2_nc:   activate radar netcdf format generator
-#link_tmp_dirs:  call tmplink module to softlink appropriate raw data directories to
+#                 the argument value is the root path of the Polar NetCDF radar files 
+#                 (e.g. $LAPS_DATA_ROOT/lapsprd/rdr/wideband)
+#
+#link_tmp_dirs:   call tmplink module to softlink appropriate raw data directories to
 #                 machine specific /tmp directory.  Specific to IHOP rerun strategy
+#
 #multi_machine:   indicates the need to generate "systime.dat" file in machine specific
 #                 /tmp directory and not in LAPS_DATA_ROOT/time/.
 
