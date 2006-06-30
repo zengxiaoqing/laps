@@ -66,6 +66,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   REAL*4, INTENT(IN) :: u(imax,jmax,kmax)   ! U
   REAL*4, INTENT(IN) :: v(imax,jmax,kmax)   ! V
 
+
   ! Local variables:
   CHARACTER*10 :: empty
   INTEGER :: ncid				! file id
@@ -82,6 +83,9 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   REAL :: unc(imax,jmax-1,kmax-1),tmp(imax,jmax,kmax)
   REAL :: vnc(imax-1,jmax,kmax-1),tnc(imax-1,jmax-1,kmax-1)
   REAL :: zmp(kmax),tmp1(imax*jmax*kmax)
+  integer*4 :: ii,jj,kk
+  real*4 :: pi,err,ftn,maxdata,stagu(imax,jmax-1,kmax-1),&
+            stag_diffu(imax,jmax-1,kmax-1),ppp(imax,jmax-1,kmax-1)
 
   empty = ' '
 
@@ -434,11 +438,64 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   ! Stagger: Y and Z:
 
   tmp(1:imax,1:jmax-1,1:kmax) = 0.5*( &
- 	u(1:imax,1:jmax-1,1:kmax)+ &
+  	u(1:imax,1:jmax-1,1:kmax)+ &
      	u(1:imax,2:jmax  ,1:kmax))
   unc(1:imax,1:jmax-1,1:kmax-1) = 0.5*( &
- 	tmp(1:imax,1:jmax-1,1:kmax-1)+ &
+  	tmp(1:imax,1:jmax-1,1:kmax-1)+ &
      	tmp(1:imax,1:jmax-1,2:kmax  ))
+
+!//compare stagger_data and real_function_data
+! pi = 4.0*ATAN(1.0)
+!
+!       do kk = 1,kmax-1
+!        do jj = 1,jmax-1
+!         do ii = 1,imax
+!	   ppp(ii,jj,kk) = znu(kk)*(dam(ii,jj)-ptop)+ptop
+!           stagu(ii,jj,kk) = sin(2.0*pi*(float(ii))/float(imax-1))*&
+!                    sin(2.0*pi*(float(jj)-0.5)/float(jmax-1))*&
+!                    sin(2.0*pi*(ppp(ii,jj,kk)-110000.0)/(ptop-110000.0))
+!         enddo
+!        enddo
+!       enddo
+!  write(*,*) 'mass_unstag_u=',u(4,4,1:21)
+!  write(*,*) 'mass_stag_u=',unc(4,4,1:20)
+!  write(*,*) 'stag_mass_pressure=',ppp(4,4,1:20)
+!  
+!  stag_diffu(1:imax,1:jmax-1,1:kmax-1) = unc(1:imax,1:jmax-1,1:kmax-1)&
+!                                       -stagu(1:imax,1:jmax-1,1:kmax-1)
+!
+!  do kk = 1,kmax-1
+!  write(*,*) 'k=',kk
+!  write(*,*) 'mass_unstag2stag_u_diff(4,4,k)(%)=',stag_diffu(4,4,kk)*100.0
+!  write(*,*) 'mass_unstag2stag_u=',unc(4,4,kk)
+!  write(*,*) 'real_mass_unstag2stag_u=',stagu(4,4,kk)
+!  write(*,*) '                                            '
+!  enddo
+!       err = 0.0
+!       ftn = 0.0
+!       maxdata = 0.0
+!       DO kk=1,kmax-1
+!         DO jj=1,jmax-1
+!           DO ii=1,imax
+!             err = err+stag_diffu(ii,jj,kk)**2
+!             ftn = ftn+stagu(ii,jj,kk)**2
+!             maxdata = max(maxdata,ABS(stag_diffu(ii,jj,kk)))
+!           ENDDO
+!         ENDDO
+!       ENDDO
+!        PRINT*,'Relative error of stagger conversion: ',sqrt(err/ftn)
+! 
+!      DO kk=1,kmax-1
+!         DO jj=1,jmax-1
+!           DO ii=1,imax
+!              if(ABS(stag_diffu(ii,jj,kk)) == maxdata) then
+!                 print*,'i=',ii,'j=',jj,'k=',kk,'maxdata=',maxdata
+!              endif
+!           ENDDO
+!         ENDDO
+!       ENDDO
+
+ 
 
   count(1) = imax
   count(2) = jmax-1

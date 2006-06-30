@@ -2,7 +2,7 @@
 
       IMPLICIT NONE
       integer*4,parameter :: nxx=300,nyy=300,nzz=30
-      INTEGER*4,PARAMETER :: n3d=3,ii1=6
+      INTEGER*4,PARAMETER :: n3d=3,ii1=7
       integer*4 :: imax,jmax,kmax,imax1,jmax1,kmax1
       INTEGER*4 :: i,j,k,ii,jj,kk,ij,ier,ncid
       integer*4 :: ijklow,ijkhigh,icenjcen
@@ -18,17 +18,20 @@
                 eta(nzz),lapsp(nzz),&
                 uvar1(nxx*nyy*nzz),&
                 vvar1(nxx*nyy*nzz),&
-                tvar1(nxx*nyy*nzz)
+                tvar1(nxx*nyy*nzz),&
+                qvar(nxx*nyy*nzz),&
+                iqvar(nxx*nyy*nzz),qvar1(nxx*nyy*nzz)
       REAL*4 :: uanl_sfcitrp(nxx*nyy),vanl_sfcitrp(nxx*nyy),&
                 topo(nxx*nyy),lat(nxx*nyy),lon(nxx*nyy),&    
                 rk_terrain(nxx*nyy),heights_3d(nxx*nyy*nzz)
-      real*4 :: ptop,grid_spacing_m,r_missing_data,            &
-                height_to_zcoord2,fraclow,frachigh
+      real*4 :: ptop,grid_spacing_m,r_missing_data,height_to_zcoord2,&
+                fraclow,frachigh,output_4d(nxx,nyy,nzz,2)
       INTEGER*4 :: gsi_i4time,i4time_asc_gg,i4time,namelen,istatus,&
                    klow,khigh,icen,jcen,istatus_ht,i4time_nearest
       CHARACTER :: times*19,atime*24,a9time*9
       CHARACTER*3 :: var_3d(n3d)=(/'U3','V3','OM'/)
       character*4 :: units_3d(n3d)=(/'M/S ','M/S ','PA/S'/) 
+      character*9 :: asc9_tim
       CHARACTER*10 :: units_2d
       CHARACTER*125 :: comment_3d(n3d)=(/'3DWIND',&
                        '3DWIND','3DWIND'/),comment_2d
@@ -38,15 +41,17 @@
       ! Variables for lwm: YUANFU XIE
       CHARACTER*3 :: ext_xie,var_a_xie(2),units_a_xie(2)
       CHARACTER*7 :: comment_a_xie(2)
-      REAL*4 :: out_sfc_2d(nxx,nyy,2)
+      REAL*4 :: out_sfc_2d(nxx,nyy,2),uma(nxx,nyy,nzz),pi
 
       real*4 :: dam(nxx*nyy),pdam(nxx*nyy),vdf1(nxx*nyy*nzz),&
-                pres_3d(nxx*nyy*nzz),t_laps_bkg(nxx*nyy*nzz)
+                pres_3d(nxx*nyy*nzz),t_laps_bkg(nxx*nyy*nzz),&
+                massp(153,141,21),dam1(153,141)
 		       
 ! To read path of wrf_inout.
 
       CALL get_directory('log',filename,namelen)        ! Yuanfu: use LAPS;
       filename = filename(1:namelen-4)//'tmpdirEjetlaps/wrf_inout'
+      !filename = 'wrf_inout.nc'
 
 ! To read gsi variables
       call read_gsi_dim(imax,jmax,kmax,ncid,filename,ier)
@@ -59,7 +64,7 @@
       jmax1=jmax-1
       kmax1=kmax-1
       call read_gsi_output(ii1,imax,jmax,kmax,imax1,jmax1,kmax1, &
-                           ncid,uu1,vv1,st,psfc1,ptop,eta,ier)
+                       ncid,uu1,vv1,st,psfc1,ptop,eta,qvar,ier)
       if( ier.ne.0 )then
           print*,'Cannot read in data of wrf_inout.'
           print*,'filenam: ',filename 
@@ -89,17 +94,48 @@
       call dryairmass(dam,pdam,imax,jmax,kmax,lapsp,heights_3d,pres_3d,&
                       t_laps_bkg)
 
-      !call comdif(imax,jmax,kmax,eta,lapsp,dam,uu1,vdf1)      
+          ij = 0              
+          do j=1,jmax
+          do i=1,imax
+             ij=ij+1
+             dam1(i,j)=dam(ij)
+          enddo
+          enddo
 
+      !call comdif(imax,jmax,kmax,eta,lapsp,dam,uu1,vdf1) //compare before_GSI and after_GSI              
       !uu1 = vdf1
 
+      do k = 1,kmax
+        do j = 1,jmax
+         do i = 1,imax
+      massp(i,j,k) = eta(k)*(dam1(i,j)-lapsp(kmax))+lapsp(kmax)
+         enddo
+        enddo
+      enddo 
+
       call stagger(imax,jmax,kmax,imax1,jmax1,kmax1,st,ist,psfc1,ipsfc,&
-                   uu1,vv1,uu2,vv2)
+                   uu1,vv1,uu2,vv2,massp,qvar,iqvar)
 
       ipsfc = dam
 
+!// uma is to substitute uu2
+!       pi = 4.0*atan(1.0)  
+!	ij = 0
+!	do k = 1,kmax
+!        do j = 1,jmax
+!         do i = 1,imax
+!           uma(i,j,k) = sin(2.0*pi*float(i-1)/float(imax-1))*&
+!                    sin(2.0*pi*float(j-1)/float(jmax-1))*&
+!                    sin(2.0*pi*(massp(i,j,k)-110000.0)&
+!                               /(10000.0-110000.0))
+!	   ij = ij+1
+!           uu2(ij) = uma(i,j,k)
+!         enddo
+!        enddo
+!       enddo
+
       CALL mass2p(lapsp,imax,jmax,kmax,uu2,vv2,ist,ipsfc,&
-           ptop,eta,uvar1,vvar1,tvar1)
+           ptop,eta,uvar1,vvar1,tvar1,iqvar,qvar1)
 
       call read_static_grid(imax,jmax,'LAT',lat,istatus)
       
@@ -169,6 +205,12 @@
         call put_laps_multi_2d(i4time,ext_xie,var_a_xie &
            ,units_a_xie,comment_a_xie,out_sfc_2d,imax,jmax,2,istatus)
       !----------------------------------------------------------
+
+      call make_fnam_lp(i4time,asc9_tim,istatus)
+      comment_2d(1:9) = asc9_tim
+
+      call write_temp_anal(i4time,imax,jmax,kmax,tvar1,heights_3d,&
+                           output_4d,comment_2d,istatus)
       
       END PROGRAM
 
@@ -207,7 +249,7 @@
 
 
       subroutine read_gsi_output(ii1,imax,jmax,kmax,imax1,jmax1,kmax1, &
-                                 ncid,uu1,vv1,st,psfc1,ptop,eta,ier)
+                          ncid,uu1,vv1,st,psfc1,ptop,eta,qvar,ier)
        
       implicit none
       include 'netcdf.inc'
@@ -220,13 +262,13 @@
       integer*4,dimension(4) :: start,count
       integer*4 :: i4time_asc_gg,istatus
       character :: vname*10
-      CHARACTER*5 :: vargsi(6)=(/'U    ','V    ','T    ','MUB  ',&
-                     'P_TOP','ZNW  '/)
+      CHARACTER*6 :: vargsi(7)=(/'U     ','V     ','T     ','MUB   ',&
+                     'P_TOP ','ZNW   ','QVAPOR'/)
       REAL*4,intent(out) :: uu1(imax,jmax1,kmax1),&
                 vv1(imax1,jmax,kmax1),&
                 st(imax1,jmax1,kmax1),&
                 psfc1(imax1,jmax1),&
-                ptop,eta(kmax)
+                ptop,eta(kmax),qvar(imax1,jmax1,kmax1)
      
   !   ncid = NCOPN(filename,NCNOWRIT,ier)
  
@@ -290,7 +332,21 @@
       count2 = (/kmax,1/)
       CALL NCVGT(ncid,vid,start2,count2,eta,ier)
       if( ier.ne.0 )return
-      
+
+      CASE(7)
+      DO kk=1,3
+        CALL NCDINQ(ncid,vdims(kk),vname,n(kk),ier)
+        if( ier.ne.0 )return
+      ENDDO
+      start = 1
+      count = (/n(1),n(2),n(3),1/)
+      CALL NCVGT(ncid,vid,start,count,qvar,ier)
+      if( ier.ne.0 )return
+     
+      do k = 1,20
+         write(*,*) 'qvar=',qvar(4,4,k)
+      enddo 
+  
       END SELECT
 
       ENDDO GSI_VARS
@@ -302,7 +358,7 @@
       end 
 
        subroutine stagger(imax,jmax,kmax,imax1,jmax1,kmax1,st,ist,psfc,&
-                          ipsfc1,uu1,vv1,uu2,vv2)
+                          ipsfc1,uu1,vv1,uu2,vv2,massp,qvar,iqvar)
       
        implicit none
        integer :: i,j,k
@@ -311,16 +367,23 @@
                  sx(imax,jmax,kmax),psx(imax,jmax),&
 		 psy(imax,jmax),uz(imax,jmax,kmax),&
                  uy(imax,jmax,kmax),vz(imax,jmax,kmax),&
-                 vx(imax,jmax,kmax) 
+                 vx(imax,jmax,kmax),qz(imax,jmax,kmax),&
+                 qy(imax,jmax,kmax),qx(imax,jmax,kmax) 
 
        real*4,intent(in) :: st(imax1,jmax1,kmax1),&
 			    psfc(imax1,jmax1),&
                             uu1(imax,jmax1,kmax1),&
-                            vv1(imax1,jmax,kmax1)
+                            vv1(imax1,jmax,kmax1),&
+                            massp(imax,jmax,kmax),&
+                            qvar(imax1,jmax1,kmax1)
        real*4,intent(out) :: ist(imax,jmax,kmax),& 
                              ipsfc1(imax,jmax),&
                              uu2(imax,jmax,kmax),&
-                             vv2(imax,jmax,kmax)  
+                             vv2(imax,jmax,kmax),&
+                             iqvar(imax,jmax,kmax)  
+       real*4 :: unstag_diffu(imax,jmax,kmax),unstagu(imax,jmax,kmax),&
+                 err,ftn,pi,maxdata
+       integer*4 :: ii,jj,kk
  
        do i = 1,imax1
           do j = 2,jmax1
@@ -409,8 +472,7 @@
        do k=1,kmax
           do i=1,imax
              do j=2,jmax1
-                   uy(i,j,k) = &
-                   0.5*(uz(i,j-1,k)+ uz(i,j,k))
+                   uy(i,j,k) = 0.5*(uz(i,j-1,k)+ uz(i,j,k))
              enddo
              uy(i,1,k) = &
                    1.5*uz(i,1,k)-&
@@ -422,6 +484,55 @@
        enddo
 
        uu2 = uy
+
+!// compare unstagger_data and real_function_data
+!      write(*,*) 'unstag_mass_pressure==',massp(4,4,1:21) 
+!      pi = 4.0*ATAN(1.0)
+!
+!       do kk = 1,kmax
+!        do jj = 1,jmax
+!         do ii = 1,imax
+!           unstagu(ii,jj,kk) = sin(2.0*pi*float(ii-1)/float(imax-1))*&
+!                    sin(2.0*pi*float(jj-1)/float(jmax-1))*&
+!                    sin(2.0*pi*(massp(ii,jj,kk)-110000.0)&
+!                               /(massp(ii,jj,kmax)-110000.0))
+!         enddo
+!        enddo
+!       enddo
+!
+!      unstag_diffu(1:imax,1:jmax,1:kmax) = uu2(1:imax,1:jmax,1:kmax)&
+!                                       -unstagu(1:imax,1:jmax,1:kmax)
+!
+!  do kk = 1,kmax
+!  write(*,*) 'k=',kk
+!  write(*,*) 'stag2unstag_mass_u_diff(4,4,k)(%)=',unstag_diffu(4,4,kk)*100.0
+!  write(*,*) 'stag2unstag_mass_u=',uu2(4,4,kk)
+!  write(*,*) 'real_stag2unstag_mass_unstag_u=',unstagu(4,4,kk)
+!  write(*,*) '                                                         '
+!  enddo
+!       err = 0.0
+!       ftn = 0.0
+!       maxdata = 0.0
+!       DO kk=1,kmax
+!         DO jj=1,jmax
+!           DO ii=1,imax
+!             err = err+unstag_diffu(ii,jj,kk)**2
+!             ftn = ftn+unstagu(ii,jj,kk)**2
+!             maxdata = max(maxdata,ABS(unstag_diffu(ii,jj,kk)))
+!           ENDDO
+!         ENDDO
+!       ENDDO
+!        PRINT*,'Relative error of unstagger conversion: ',sqrt(err/ftn)
+!
+!       DO kk=1,kmax
+!         DO jj=1,jmax
+!           DO ii=1,imax
+!              if(ABS(unstag_diffu(ii,jj,kk)) == maxdata) then
+!                 print*,'i=',ii,'j=',jj,'k=',kk,'maxdata=',maxdata
+!              endif
+!           ENDDO
+!         ENDDO
+!       ENDDO
         
       do i=1,imax1
           do j=1,jmax
@@ -452,29 +563,78 @@
        enddo
 
        vv2 = vx
+
+       do i=1,imax1
+          do j=1,jmax1
+             do k=2,kmax1
+                qz(i,j,k) = 0.5*(qvar(i,j,k-1)+ qvar(i,j,k))
+             enddo
+                  qz(i,j,1) = 1.5*qvar(i,j,1)-&
+                  0.5*qvar(i,j,2)
+                  qz(i,j,kmax) = 1.5*qvar(i,j,kmax1)-&
+                  0.5*qvar(i,j,kmax-2)
+          enddo
+       enddo
+
+       do k=1,kmax
+          do i=1,imax1
+             do j=2,jmax1
+                   qy(i,j,k) = &
+                   0.5*(qz(i,j-1,k)+ qz(i,j,k))
+             enddo
+             qy(i,1,k) = &
+                   1.5*qz(i,1,k)-&
+                   0.5*qz(i,2,k)
+             qy(i,jmax,k) = &
+                   1.5*qz(i,jmax1,k)-&
+                   0.5*qz(i,jmax-2,k)
+          enddo
+       enddo
+ 
+       do k=1,kmax
+          do j=1,jmax
+             do i=2,imax1
+                qx(i,j,k) = &
+                0.5*(qy(i-1,j,k)+ qy(i,j,k))
+             enddo
+             qx(1,j,k) = &
+                1.5*qy(1,j,k)-&
+                0.5*qy(2,j,k)
+             qx(imax,j,k) = &
+                1.5*qy(imax1,j,k)-&
+                0.5*qy(imax-2,j,k)
+          enddo
+       enddo
+
+       iqvar = qx
+
  
        return
        end 
 
        
       SUBROUTINE mass2p(vlp,imax,jmax,kmax,uu1,vv1,tt1,&
-                 psfc1,ptop1,eta,uu2,vv2,tt2)
+                 psfc1,ptop1,eta,uu2,vv2,tt3,iqvar,qvar1)
       
       IMPLICIT NONE
       
-      INTEGER :: i,j,k,k1,k2,kk,jj
+      INTEGER :: i,j,k,k1,k2,kk,jj,ii
+      real*4,parameter :: cp=1004.0, rc=287.0,t0=273.15
       INTEGER*4,INTENT(IN) :: imax,jmax,kmax 
       REAL*4 :: a,b,vlplog(kmax),pvar(imax,jmax,kmax),&
-                pvarlog(imax,jmax,kmax)
+                pvarlog(imax,jmax,kmax),tt2(imax,jmax,kmax)
       REAL*4,INTENT(OUT) :: uu2(imax,jmax,kmax),&
                             vv2(imax,jmax,kmax),&
-                            tt2(imax,jmax,kmax)
+                            tt3(imax,jmax,kmax),&
+                            qvar1(imax,jmax,kmax)
       REAL*4,INTENT(IN) :: uu1(imax,jmax,kmax),&
                 vv1(imax,jmax,kmax),&
                 tt1(imax,jmax,kmax),&
-                psfc1(imax,jmax)
+                psfc1(imax,jmax),iqvar(imax,jmax,kmax)
       REAL*4,INTENT(IN) :: ptop1,&
                 eta(kmax),vlp(kmax)
+      real*4 :: m2p(imax,jmax,kmax),m2p_diffu(imax,jmax,kmax),&
+                pi,err,ftn,maxdata
 
       DO k = 1,kmax  
          DO j = 1,jmax
@@ -501,6 +661,10 @@
                 vv2(i,j,k)=( vv1(i,j,1)*(vlplog(k)-pvarlog(i,j,2))  &
                             -vv1(i,j,2)*(vlplog(k)-pvarlog(i,j,1)) ) &
                           /( pvarlog(i,j,1)-pvarlog(i,j,2) )
+                qvar1(i,j,k)=( iqvar(i,j,1)*(vlplog(k)-pvarlog(i,j,2))  &
+                            -iqvar(i,j,2)*(vlplog(k)-pvarlog(i,j,1)) ) &
+                          /( pvarlog(i,j,1)-pvarlog(i,j,2) )
+
             else
                 do kk=2,kmax
                    if( vlp(k).ge.pvar(i,j,kk) )then
@@ -510,26 +674,87 @@
                    endif
                 enddo
  10             continue
-                tt2(i,j,k)=((vlplog(k)-pvarlog(i,j,k2))*tt1(i,j,k1)+&
-                           (pvarlog(i,j,k1)-vlplog(k))*tt1(i,j,k2))/&
-                           (pvarlog(i,j,k1)-pvarlog(i,j,k2))
-                uu2(i,j,k)=((vlplog(k)-pvarlog(i,j,k2))*uu1(i,j,k1)+&
-                           (pvarlog(i,j,k1)-vlplog(k))*uu1(i,j,k2))/&
-                           (pvarlog(i,j,k1)-pvarlog(i,j,k2))
-                vv2(i,j,k)=((vlplog(k)-pvarlog(i,j,k2))*vv1(i,j,k1)+&
-                           (pvarlog(i,j,k1)-vlplog(k))*vv1(i,j,k2))/&
-                           (pvarlog(i,j,k1)-pvarlog(i,j,k2))
+                tt2(i,j,k)=( tt1(i,j,k1)*(vlplog(k)-pvarlog(i,j,k2))  &
+                            -tt1(i,j,k2)*(vlplog(k)-pvarlog(i,j,k1)) ) &
+                          /( pvarlog(i,j,k1)-pvarlog(i,j,k2) )
+                uu2(i,j,k)=( uu1(i,j,k1)*(vlplog(k)-pvarlog(i,j,k2))  &
+                            -uu1(i,j,k2)*(vlplog(k)-pvarlog(i,j,k1)) ) &
+                          /( pvarlog(i,j,k1)-pvarlog(i,j,k2) )
+                vv2(i,j,k)=( vv1(i,j,k1)*(vlplog(k)-pvarlog(i,j,k2))  &
+                            -vv1(i,j,k2)*(vlplog(k)-pvarlog(i,j,k1)) ) &
+                          /( pvarlog(i,j,k1)-pvarlog(i,j,k2) ) 
+                qvar1(i,j,k)=( iqvar(i,j,k1)*(vlplog(k)-pvarlog(i,j,k2))  &
+                            -iqvar(i,j,k2)*(vlplog(k)-pvarlog(i,j,k1)) ) &
+                          /( pvarlog(i,j,k1)-pvarlog(i,j,k2) )             
             endif 
          ENDDO
+
          tt2(i,j,kmax)=tt1(i,j,kmax)
          uu2(i,j,kmax)=uu1(i,j,kmax)
          vv2(i,j,kmax)=vv1(i,j,kmax)
+         qvar1(i,j,kmax)=iqvar(i,j,kmax)
+
       enddo
       enddo
 
-      do k = 1,21
-      write(*,*) 'k=',k,'outu(4,4,k)=',uu2(4,4,k)
+      do k=1,kmax
+        tt3(1:imax,1:jmax,k) = (tt2(1:imax,1:jmax,k)+t0)*&
+       (vlp(k)/100000.0)**(rc/cp)
       enddo
+
+!      pi = 4.0*ATAN(1.0)
+!
+!      do k = 1,kmax
+!        do j = 1,jmax
+!         do i = 1,imax
+!           m2p(i,j,k) = sin(2.0*pi*float(i-1)/float(imax-1))*&
+!                    sin(2.0*pi*float(j-1)/float(jmax-1))*&
+!                    sin(2.0*pi*float(k-1)/float(kmax-1))
+!         enddo
+!        enddo
+!       enddo
+!
+!       m2p_diffu(1:imax,1:jmax,1:kmax) = uu2(1:imax,1:jmax,1:kmax)-&
+!                                        m2p(1:imax,1:jmax,1:kmax)
+!       do k = 1,kmax
+!       if (m2p(4,4,k) .ne. 0.0) then
+!       write(*,*) ' i=4 ',' j=4 ',' k= ',k,'laps_pressure=',vlp(k)
+!       write(*,*) 'abs_laps_u_diff(%)=',ABS(m2p_diffu(4,4,k)/m2p(4,4,k))*100.0
+!       write(*,*) 'mass2laps_u=',uu2(4,4,k)
+!       write(*,*) 'real_laps_u=',m2p(4,4,k)
+!       write(*,*) '                                                '
+!       else
+!       write(*,*) ' i=4 ',' j=4 ',' k= ',k,'laps_pressure=',vlp(k)
+!       write(*,*) 'laps_u_diff(%)=',m2p_diffu(4,4,k)*100.0
+!       write(*,*) 'mass2laps_u=',uu2(4,4,k)
+!       write(*,*) 'real_laps_u=',m2p(4,4,k)
+!       write(*,*) '                                                '
+!       endif
+!       enddo
+!
+!       err = 0.0
+!       ftn = 0.0
+!       maxdata = 0.0
+!       DO kk=1,kmax
+!         DO jj=1,jmax
+!           DO ii=1,imax
+!             err = err+m2p_diffu(ii,jj,kk)**2
+!             ftn = ftn+m2p(ii,jj,kk)**2
+!             maxdata = max(maxdata,ABS(m2p_diffu(ii,jj,kk)))
+!           ENDDO
+!         ENDDO
+!       ENDDO
+!        PRINT*,'Relative error of mass to pressure conversion: ',sqrt(err/ftn)
+!       
+!      DO kk=10,kmax
+!         DO jj=1,jmax
+!           DO ii=1,imax
+!              if(ABS(m2p_diffu(ii,jj,kk)) == maxdata) then
+!                 print*,'i=',ii,'j=',jj,'k=',kk,'maxdata=',maxdata
+!              endif
+!           ENDDO
+!         ENDDO
+!       ENDDO
 
       RETURN      
       END 
