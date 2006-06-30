@@ -98,8 +98,8 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
       dis = dis*0.5
       GOTO 1
     ENDIF
-    lvl(i) = MIN0(lvl(i),INT(ALOG(FLOAT(ngrd(i)-1))/ALOG(2.0))-2)
-    lvl(i) = MAX0(lvl(i),0)
+    lvl(i) = MIN0(lvl(i),INT(ALOG(FLOAT(ngrd(i)-1))/ALOG(2.0))-1)
+    lvl(i) = MAX0(lvl(i),1)
     IF (verbal .EQ. 1) WRITE(*,2) lvl(i)
   ENDDO
 2 FORMAT('STMASAna: Number of levels: ',I3)
