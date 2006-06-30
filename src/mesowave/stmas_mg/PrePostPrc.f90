@@ -83,6 +83,10 @@ SUBROUTINE PrPstLSX
 !
 ! HISTORY:
 ! Creation: YUANFU XIE 6-2005
+! Modified: YUANFU XIE 6-2006: Write out more time frame.
+! Modified: YUANFU XIE 6-2006: Add sfc pressure and change
+!			       the equations for theta and
+!			       thetae from REDP to SFCP.
 !==========================================================
 
   USE Definition
@@ -118,7 +122,8 @@ SUBROUTINE PrPstLSX
   REAL*4 :: dat(numgrd(1)-2*numfic(1),numgrd(2)-2*numfic(2),LSXVAR)
 
   ! Time frame to write out:
-  itm = numgrd(3)-numfic(3)	! Time frame
+  DO itm = numgrd(3)-numfic(3),numgrd(3)-numfic(3)-2,-1	! Time frame
+
   i4t = i4time			! i4time corresponding to itm
   mvr = LSXVAR
   lvl = 0
@@ -199,6 +204,18 @@ SUBROUTINE PrPstLSX
       vun(nvr) = 'PA '
       cmt(nvr) = '0  M REDUCED PRESSURE CHANGE'
       CALL PresChng(dat(1,1,nvr-1),ngd,dat(1,1,nvr))
+    CASE ("SFCP")	! Surface pressure
+      IF (nvr+1 .GT. LSXVAR) THEN
+	WRITE(*,2)
+        STOP
+      ENDIF
+      nvr = nvr+1
+      vnm(nvr) = 'PS '
+      vun(nvr) = 'PA '
+      cmt(nvr) = 'SURFACE PRESSURE'
+      dat(1:ngd(1),1:ngd(2),nvr) = &
+	analys(numfic(1)+1:numgrd(1)-numfic(1), &
+	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)
     CASE ("WNDU") 	! U wind binded with WNDV
       iwv = 0
       DO j=1,numvar
@@ -287,7 +304,7 @@ SUBROUTINE PrPstLSX
       ncm = ncm+1
       idx(2) = j
     ENDIF
-    IF (varnam(j) .EQ. "REDP") THEN
+    IF (varnam(j) .EQ. "SFCP") THEN
       ncm = ncm+1
       idx(3) = j
     ENDIF
@@ -388,6 +405,9 @@ SUBROUTINE PrPstLSX
   ! Write data to a lsx file:
   CALL WRITE_LAPS_DATA(i4t,dir,ext,ngd(1),ngd(2),nvr,nvr, &
      		       vnm,lvl,crd,vun,cmt,dat,sts)
+
+  ! End of writing a series of time frames:
+  ENDDO
 
 END SUBROUTINE PrPstLSX
 

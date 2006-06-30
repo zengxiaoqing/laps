@@ -238,6 +238,7 @@ SUBROUTINE LAPSOBSV(m)
 !
 !  HISTORY:
 ! 	Creation: YUANFU XIE	8-2005
+!	Modified: 6-2006 by YUANFU XIE: add sfc pressure.
 !==========================================================
 
   IMPLICIT NONE
@@ -365,6 +366,20 @@ SUBROUTINE LAPSOBSV(m)
 	    ELSE
 	      rawobs(1,numobs(j)+k,j) = badsfc
             ENDIF
+	  ENDDO
+	  weight(1+numobs(j):nob+numobs(j),j) = 1.0 ! altea(1:nob)
+	CASE ("SFCP")
+	  DO k=1,nob
+	    ! Collect either station pressure or altimeter:
+	    IF ((spr(k) .NE. mising) .AND. &
+		(spr(k) .NE. badsfc)) THEN
+	      rawobs(1,numobs(j)+k,j) = spr(k)
+	    ELSEIF ((alt(k) .NE. mising) .AND. &
+		    (alt(k) .NE. badsfc)) THEN
+	      rawobs(1,numobs(j)+k,j) = ALT_2_SFC_PRESS(alt(k),elv(k))
+	    ELSE
+	      rawobs(1,numobs(j)+k,j) = badsfc
+	    ENDIF
 	  ENDDO
 	  weight(1+numobs(j):nob+numobs(j),j) = 1.0 ! altea(1:nob)
 	CASE ("WNDU")
@@ -556,6 +571,7 @@ SUBROUTINE LAPSUnit
 !
 !  HISTORY:
 !	Creation: 8-2005 by YUANFU XIE.
+!	Modified: 6-2006 by YUANFU XIE: add sfc pressure.
 !==========================================================
 
   IMPLICIT NONE
@@ -587,6 +603,10 @@ SUBROUTINE LAPSUnit
       rawobs(1,1:numobs(i),i) = &
 	rawobs(1,1:numobs(i),i)*mile2m
     CASE ("REDP")
+      ! Convert to pascal from mb:
+      rawobs(1,1:numobs(i),i) = &
+	rawobs(1,1:numobs(i),i)*mb2pas
+    CASE ("SFCP")
       ! Convert to pascal from mb:
       rawobs(1,1:numobs(i),i) = &
 	rawobs(1,1:numobs(i),i)*mb2pas
