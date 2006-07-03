@@ -1207,10 +1207,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            Program lsr_driver.exe processes data from both satellites.
            Product files are yyjjjhhmm.lsr and stored in subdirectories 
            lapsprd/lsr/'satid'. Nineteen channels. Output is Radiance. The 
-           namelist data/static/sat_sounder.nl defines the appropriate 
+           namelist 'data/static/sat_sounder.nl' defines the appropriate 
            parameters for this ingest process. Only the moisture analysis is 
            using this product. Currently GSD /public sounder files in netCDF 
-           format are processed.
+           format are processed. This data is useful only when GOES Vapor
+           (GVAP) is unavailable.
 
      Satellite derived soundings (snd):
            We have interfaces to GOES binary and MADIS POES formats. AFWA 
