@@ -15,7 +15,10 @@ C
      1               istatus               !OUTPUT
 
       real*4         data(imax,jmax,kdim)    !INPUT Raw data to be written
-      real*4         array(imax*jmax*kdim,2) !LOCAL Compressed array
+
+!     real*4         array(imax*jmax*kdim,2) !LOCAL Compressed array
+      real*4, allocatable, dimension(:,:) :: array !LOCAL Compressed array
+
       character*(*)  dir                     !INPUT Directory to be written to
       character*(*)  ext                     !INPUT File name ext
       character*(*)  var(kdim)               !INPUT 3 letter ID of each field
@@ -47,6 +50,8 @@ C
       parameter (max_levels=100)
       real*4         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(max_levels)
+c
+      logical l_check_encoding
 C
       character*4    fcst_hh_mm
       character*9    gtime
@@ -134,11 +139,42 @@ C
       units_len = len(units(1))
       asc_len = len(asctime)
 
+!     Allocate array then do run-length encoding
+!     n_cmprs_max = imax*jmax*kdim
+      n_cmprs_max = 2000000  
+ 800  write(6,*)' Allocate array with size of ',n_cmprs_max
+      allocate( array(n_cmprs_max,2), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate array'
+          write(6,*)' Try reducing n_cmprs_max from ',n_cmprs_max
+          goto 950
+      endif
       ngrids = imax*jmax*kdim
-      n_cmprs_max = imax*jmax*kdim
+
       call runlength_encode(ngrids,n_cmprs_max,data           ! I
      1                     ,n_cmprs,array,istatus)            ! O
-      if(istatus .ne. 1)goto 950
+      if(istatus .eq. -1)then ! try increasing array allocation
+          deallocate(array)
+          n_cmprs_max = n_cmprs_max * 2
+          goto 800
+      elseif(istatus .ne. 1)then
+          goto 950
+      endif
+
+      l_check_encoding = .false.
+      if(l_check_encoding)then ! Just for debugging purposes
+          call runlength_decode(ngrids,n_cmprs,array                ! I
+     1                         ,data                                ! O
+     1                         ,istatus)                            ! O
+          if(istatus .ne. 1)then
+              write(6,*)
+     1            ' 1st Decoding test of compressed data unsuccessful'
+              goto 980
+          else
+              write(6,*)
+     1            ' 1st Decoding test of compressed data successful'
+          endif
+      endif
 C
 C **** write out compressed file
 C
@@ -167,8 +203,12 @@ C
 
       close(lun)
 
+      deallocate(array)
+
+!     Second "internal" checksum test
       if(icheck_sum .ne. ngrids)then
-          write(6,*)icheck_sum, ngrids
+          write(6,*)' 2nd checksum test discrepancy: '
+     1             ,icheck_sum, ngrids
           go to 980
       endif
 C
@@ -206,7 +246,7 @@ C
         GOTO 999
 C
 950     IF (FLAG .NE. 1)
-     1    write (6,*) 'Error in runlength_encode...write aborted'
+     1    write (6,*) 'Error in/near runlength_encode...write aborted'       
         ISTATUS=ERROR(2)
         GOTO 999
 C
@@ -252,9 +292,15 @@ C
                 i_count_same = i_count_same + 1
             else
                 n_cmprs = n_cmprs + 1
-                array(n_cmprs,1) = i_count_same
-                array(n_cmprs,2) = data(i-1)
-                i_count_same = 1
+                if(ncmprs .le. n_cmprs_max)then
+                    array(n_cmprs,1) = i_count_same
+                    array(n_cmprs,2) = data(i-1)
+                    i_count_same = 1
+                else
+                    write(6,*)' ERROR, increase n_cmprs_max',n_cmprs_max
+                    istatus = -1
+                    return
+                endif
             endif
 
         enddo ! i
@@ -269,12 +315,19 @@ C
         endif
 
         n_cmprs = n_cmprs + 1
-        array(n_cmprs,1) = i_count_same
-        array(n_cmprs,2) = data(i)
+        if(ncmprs .le. n_cmprs_max)then
+            array(n_cmprs,1) = i_count_same
+            array(n_cmprs,2) = data(i)
+        else
+            write(6,*)' ERROR, increase n_cmprs_max',n_cmprs_max
+            istatus = -1
+            return
+        endif
 
         write(6,*)' End of runlength_encode, number of pts = '
      1           ,n_cmprs,ngrids       
         write(6,*)' Compression ratio = ',float(n_cmprs)/float(ngrids)
 
+        istatus = 1
         return
         end
