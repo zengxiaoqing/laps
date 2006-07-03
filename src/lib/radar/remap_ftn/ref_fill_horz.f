@@ -181,7 +181,7 @@
 !           Copy buffer array to main array
             if(n_add_lvl .gt. 0)then ! efficiency test
                 write(6,11)k,n_add_lvl
- 11             format(' lvl/n_added ',2i4)
+ 11             format(' lvl/n_added ',2i7)
                 call move(ref_2d_buf,ref_3d(1,1,k),ni,nj)
             endif
 
