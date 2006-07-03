@@ -142,7 +142,7 @@ C
 
       n_cmprs_max = ngrids
 
-      call runlength_decode(ngrids,n_cmprs_max,n_cmprs,array    ! I
+      call runlength_decode(ngrids,n_cmprs,array                ! I
      1                     ,data_l                              ! O
      1                     ,istatus)                            ! O
       deallocate(array)
@@ -216,7 +216,7 @@ C
         END
 
 
-        subroutine runlength_decode(ngrids,n_cmprs_max,n_cmprs,array    ! I
+        subroutine runlength_decode(ngrids,n_cmprs,array                ! I
      1                     ,data                                        ! O
      1                     ,istatus)                                    ! O
 
@@ -226,13 +226,14 @@ C
 !       Setup for first point
         i_end = 0
 
-        do i = 1,n_cmprs
+        do i = 1,n_cmprs ! Loop through array list
             i_start = i_end + 1
-            i_end = i_start + array(i,1) - 1
+            i_end = i_start + nint(array(i,1)) - 1
 
             do ii = i_start,i_end
                 data(ii) = array(i,2)
             enddo ! ii
+
         enddo ! i
 
         if(i_end .ne. ngrids)then
