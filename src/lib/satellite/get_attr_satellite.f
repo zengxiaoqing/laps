@@ -12,6 +12,8 @@ C
       integer   nf_fid
       integer   lenf
       integer   nf_status
+      integer   nf_attid
+      integer   nf_attnum
       real      centralLat
       real      centralLon
       real      rlat00
@@ -37,6 +39,8 @@ c     endif
 C
 C Get centralLat
 C
+      nf_attid=0
+      nf_attnum=0
       nf_status = NF_INQ_ATTID(nf_fid,nf_attid,'centralLat',nf_attnum)
       if(nf_status.ne.NF_NOERR) then
          print*, NF_STRERROR(nf_status)

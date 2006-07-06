@@ -343,15 +343,15 @@ c
       integer       istatus
       integer       i4time_cur
       integer       nx,ny
-      real*4        centerlat
-      real*4        centerlon
-      real*4        rlat
-      real*4        rlon
-      real*4        rlatdxdy
-      real*4        rlondxdy
-      real*4        rlatnxny
-      real*4        rlonnxny
-      real*4        dx,dy
+      real          centerlat
+      real          centerlon
+      real          rlat
+      real          rlon
+      real          rlatdxdy
+      real          rlondxdy
+      real          rlatnxny
+      real          rlonnxny
+      real          dx,dy
 
       istatus = -1  !bad status return
 
