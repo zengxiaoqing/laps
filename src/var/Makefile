@@ -33,6 +33,7 @@ BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
 
 WINDLIB = $(SRCROOT)/src/wind/libwind.a
 
+HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f90 .a .f
@@ -57,11 +58,13 @@ GSIPR= GSI_Prep.f90 \
        GSI_BkObs.f90 \
        LAPS2Mass.f90 \
        wrfbkgout.f90 \
+       StagrLogP.f90 \
        GSI_radarbufr.f90
 
 GSIPO= GSI_Post.f90 \
        LAPS2Mass.f90 \
-         $(WINDLIB) 
+         $(WINDLIB)\
+         $(HUMIDLIB) 
 
 
 GSICC= getradarfilename.c
@@ -75,7 +78,7 @@ $(PREP): $(GSIPR) $(GSICC) $(LAPSLIBS) $(WINDLIB)
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-$(POST): $(GSIPO) $(LAPSLIBS) $(WINDLIB)
+$(POST): $(GSIPO) $(LAPSLIBS) $(WINDLIB) $(HUMIDLIB)
 	$(FC) $(FFLAGS) $(FREE) $(GSIPO) $(LAPSFC) $(LAPSLIBS) \
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
