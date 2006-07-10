@@ -27,10 +27,7 @@
 SUBROUTINE LAPS_Obsv
 
 !==========================================================
-!  This routine retrieves background fields by LAPS ingest.
-!  The 3 D background fields are:
-!	height, pressure, temperature, specific humidity,
-!       u wind, v wind.
+!  This routine retrieves observation through LAPS ingest.
 !
 !  HISTORY: 
 ! 	Creation: YUANFU XIE	3-2006	Wind obs;
