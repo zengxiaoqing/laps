@@ -39,7 +39,7 @@ cdis
 
 
 
-        subroutine ingest_blppro(i4time_sys,NX_L,NY_L,istatus)
+        subroutine ingest_blppro(i4time_sys,NX_L,NY_L,lun_out,istatus)       
 
 C       Michael Barth           12-Aug-1993
 C       Steve Albers               Nov-1993         Reworked for LAPS ingest
@@ -57,11 +57,11 @@ C
 C       NOTE: Profiler winds are written out in KNOTS
 
         integer cdfid,status,i,j,max_levels_out,n_profilers,file_n_prof       
-        parameter (max_levels_out = 150)
         parameter (n_profilers = 1000)
 
 	parameter (max_modes = 3)
 	parameter (max_levels = 50)
+        parameter (max_levels_out = max_modes * max_levels)
         character*2 nmodes_short
 	integer nmodes
 !       equivalence(nmodes,nmodes_short)
@@ -493,6 +493,13 @@ C
 
               nlevels = ngates(im)
 
+!             Check for used levels exceeding levels as stated in NetCDF file
+              if(nlevels .gt. max_levels)then
+                  write(6,*)' Warning: too many levels in blp-profiler'
+     1                     ,nlevels,max_levels
+                  nlevels = max_levels
+              endif
+
               do i = 1, nlevels
                 iqc_flag = qc_flag(im,i)
 
@@ -556,10 +563,14 @@ C
 C           Open an output file.
 C
             ext = 'pro'
-            call open_ext(1,i4time_sys,ext,istatus)
+
+            call s_len(ext,len_ext)
+            call open_ext(lun_out,i4time_sys,ext(1:len_ext),istatus)
             if(istatus .ne. 1)then
-                write(6,*)' Error opening product file',ext
+                write(6,*)' Error opening product file',ext(1:len_ext)
                 return
+            else
+                write(6,*)' opened/reopened extension ',ext(1:len_ext)       
             endif
 
             write(*,401)wsmr_wmo_id,n_good_levels+n_good_sfc,rlat
@@ -592,8 +603,6 @@ C
           write(6,*)prof_name(ista)
 
 900     enddo ! ista
-
-!       close(1)
 
 C       Close the netCDF file.  This isn't necessary, but here's a sample of
 C       the call.  A program could have up to 4 profiler netCDF files open at

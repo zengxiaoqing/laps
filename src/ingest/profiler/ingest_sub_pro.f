@@ -39,7 +39,7 @@ cdis
 
 
 
-        subroutine ingest_pro(i4time_sys,NX_L,NY_L,istatus)
+        subroutine ingest_pro(i4time_sys,NX_L,NY_L,lun_out,istatus)
 
 C       Michael Barth           12-Aug-1993
 C       Steve Albers               Nov-1993         Reworked for LAPS ingest
@@ -559,7 +559,7 @@ C
 C
 C           Open an output file if needed
             ext = 'pro'
-            call open_ext(1,i4time_sys,ext,istatus)
+            call open_ext(lun_out,i4time_sys,ext,istatus)
             if(istatus .ne. 1)then
                 write(6,*)' Error opening product file',ext
                 return
@@ -600,8 +600,6 @@ C           Open an output file if needed
         write(6,*)prof_name(ista)
 
 900     enddo ! stations
-
-!       close(1)
 
 
 C       Close the netCDF file.  This isn't necessary, but here's a sample of
