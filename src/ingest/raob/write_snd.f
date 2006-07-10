@@ -37,6 +37,10 @@
       real dir_deg(maxsnd,maxlvl)
       real spd_mps(maxsnd,maxlvl)
 
+      integer nsnd_total
+      data nsnd_total/0/
+      save nsnd_total
+
 !............................................................................
 
 !     Get RAOB Time Window
@@ -115,7 +119,7 @@
           write(lun_out,521)c_line(1:len_line)
   521     format(a)
 
-          if(isnd .le. 100)then
+          if(nsnd_total .le. 100)then
               write(6,521)c_line(1:len_line)
           endif
 
