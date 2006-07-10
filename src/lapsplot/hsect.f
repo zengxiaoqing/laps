@@ -4903,7 +4903,7 @@ c                   cint = -1.
      1          c_label,i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'th')then
+        elseif(c_type(1:2) .eq. 'th')then
             var_2d = 'TH'
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -4919,15 +4919,21 @@ c                   cint = -1.
             c_label = 'Sfc Potential Temp   (Deg K)     '
 
             clow = +240.
-            chigh = +320.
+            chigh = +330.
             cint = 2.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t
-     1                    ,namelist_parms,plot_parms,c_label
-     1                    ,i_overlay,c_display,lat,lon,jdot
-     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t
+!    1                    ,namelist_parms,plot_parms,c_label
+!    1                    ,i_overlay,c_display,lat,lon,jdot
+!    1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type(1:2) .eq. 'te')then
             var_2d = 'THE'
@@ -5183,8 +5189,14 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call contour_settings(field_2d,NX_L,NY_L
+            if(i_image .eq. 1)then
+                clow = -20.
+                chigh = +20.
+                cint = 5.
+            else
+                call contour_settings(field_2d,NX_L,NY_L
      1                           ,clow,chigh,cint,zoom,density,1.)       
+            endif
 
             scale = 1.
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
