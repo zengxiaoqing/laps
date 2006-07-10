@@ -87,6 +87,7 @@ C       READ IN THE RAW PROFILER/RASS DATA
             call read_ldad_prof(i4time_sys,i4_prof_window              ! I
      1                                    ,NX_L,NY_L                   ! I
      1                                    ,ext                         ! I
+     1                                    ,lun_out                     ! I
      1                                    ,fnam_in(1:len_fnam_in)      ! I
      1                                    ,n_good_obs                  ! I/O
      1                                    ,istatus)                    ! O

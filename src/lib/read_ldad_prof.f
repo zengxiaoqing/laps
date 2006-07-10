@@ -1,7 +1,7 @@
 
       subroutine read_ldad_prof(i4time_sys,i4_prof_window
      1                                    ,NX_L,NY_L
-     1                                    ,ext
+     1                                    ,ext,lun
      1                                    ,filename,n_good_obs,istatus)
 
       character*(*) filename,ext
@@ -267,7 +267,7 @@ C
      1               ,a9_closest,i4_resid,i4_prof_window
         
         else
-            lun=1 ! for both 'pro' and 'lrs'
+!           lun=1 ! for both 'pro' and 'lrs'
 C
 C           Open intermediate output file.
 C
