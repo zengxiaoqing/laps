@@ -41,10 +41,18 @@ cdis
 !       1997 Jul      Ken Dritz        Pass NX_L, NY_L to ingest_pro.
 
         character*9 a9_time
-        character*8 c8_project
+        character*8 c8_project,c8_blp_format,c8_blp_format_in
 
         call GETENV('LAPS_A9TIME',a9_time)
         call s_len(a9_time,ilen)
+
+        lun_out = 1
+
+        call get_c8_project(c8_project,istatus)
+        if(istatus .ne. 1)goto999
+
+        call get_pro_parms(c8_blp_format_in,istatus)
+        if(istatus .ne. 1)goto999
 
         if(ilen .eq. 9)then
             write(6,*)' systime (from env) = ',a9_time
@@ -64,7 +72,7 @@ cdis
 !       if(i4time .eq. (i4time / 3600) * 3600)then
             write(6,*)
             write(6,*)' Running WPDN (NIMBUS/WFO) profiler ingest'       
-            call ingest_pro(i4time,NX_L,NY_L,j_status)
+            call ingest_pro(i4time,NX_L,NY_L,lun_out,j_status)
             write(6,*)' Return from WPDN (NIMBUS/WFO) profiler ingest'              
 
 !       else
@@ -72,23 +80,28 @@ cdis
 
 !       endif
 
-        call get_c8_project(c8_project,istatus)
-        if(istatus .ne. 1)goto999
+        if(c8_blp_format_in .eq. 'default')then
+            c8_blp_format = c8_project
+        else
+            c8_blp_format = c8_blp_format_in
+        endif            
 
-        if(c8_project .eq. 'RSA')then
+        if(c8_blp_format .eq. 'RSA')then
             write(6,*)
             write(6,*)' Running RSA/LDAD local wind profile ingest '
-            call ingest_rsapro(i4time,NX_L,NY_L,j_status)
+            call ingest_rsapro(i4time,NX_L,NY_L,lun_out,j_status)
             write(6,*)' Return from RSA/LDAD local wind profile ingest'
-        elseif(c8_project .eq. 'WFO')then
+        elseif(c8_blp_format .eq. 'WFO' .or. 
+     1         c8_blp_format .eq. 'MADIS')then
             write(6,*)
             write(6,*)' Running MADIS (WFO) Multi-agency profile ingest'       
-            call ingest_madis_map(i4time,NX_L,NY_L,'pro',j_status)
+            call ingest_madis_map(i4time,NX_L,NY_L,'pro',lun_out
+     1                           ,j_status)
             write(6,*)' Return from MADIS (WFO) MAP ingest'
         else
             write(6,*)
             write(6,*)' Running BLP (NIMBUS) local profiler ingest'
-            call ingest_blppro(i4time,NX_L,NY_L,j_status)
+            call ingest_blppro(i4time,NX_L,NY_L,lun_out,j_status)
             write(6,*)' Return from BLP (NIMBUS) local profiler ingest'
         endif
 
@@ -99,7 +112,40 @@ cdis
 
  999    continue
 
-        close(1)
+        close(lun_out)
 
         end
 
+
+       subroutine get_pro_parms(c8_blp_format,istatus)
+
+       character*8 c8_blp_format
+
+       namelist /pro_nl/ c8_blp_format
+ 
+       character*150 static_dir,filename
+ 
+       call get_directory('static',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/ingest_pro.nl'
+ 
+       open(51,file=filename,status='old',err=900)
+       read(51,pro_nl,err=901)
+       close(51)
+
+       print*,'success reading pro_nl in ',filename
+       write(*,pro_nl)
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading pro_nl in ',filename
+       write(*,pro_nl)
+       istatus = 0
+       return
+
+       end
