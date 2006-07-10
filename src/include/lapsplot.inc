@@ -33,6 +33,8 @@
 
           real rimage_intensity
           real zoom
+          real xcen
+          real ycen
 
           integer contour_line_width
           integer ncols
