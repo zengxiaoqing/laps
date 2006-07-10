@@ -48,6 +48,8 @@
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
+        lun_out = 1
+
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error getting r_missing_data'
@@ -121,6 +123,7 @@ C           READ IN THE RAW RASS DATA
                     call read_ldad_prof(i4time_sys,i4_prof_window      ! I
      1                                    ,NX_L,NY_L                   ! I
      1                                    ,ext                         ! I
+     1                                    ,lun_out                     ! I
      1                                    ,fnam_in(1:len_fnam_in)      ! I
      1                                    ,n_good_obs                  ! I/O
      1                                    ,istatus)                    ! O
