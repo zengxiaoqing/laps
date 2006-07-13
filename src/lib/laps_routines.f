@@ -2073,9 +2073,14 @@ c
 	real x1a(ni), x2a(nj), y2a(ni,nj)
 	integer ii(mxstn), jj(mxstn)
 	character title*(*), stn(mxstn)*20, stn_mx*5, stn_mn*5
+        logical l_bilinear_interp 
 c
 c.... Start.
 c
+!       This will interpolate the grid to the stations using a significantly
+!       faster bilinear interpolation instead of the splines.
+        l_bilinear_interp = .true.
+
 	num = 0
 	num_ea1 = 0
 	num_ea2 = 0
@@ -2096,10 +2101,13 @@ c
 	ea1 = field_ea
 	ea2 = field_ea * 2.
 	ea3 = field_ea * 3.
+
+        if(.not. l_bilinear_interp)then
 c
-c....   Find the 2nd derivative table for use by the splines.
-c
-	call splie2(x1a,x2a,field,ni,nj,y2a)
+c....       Find the 2nd derivative table for use by the splines.
+	    call splie2(x1a,x2a,field,ni,nj,y2a)
+
+        endif
 c
 c....   Now call the spline for each station in the grid.
 c
@@ -2108,7 +2116,12 @@ c
 	   if(jj(i).lt.1 .or. jj(i).gt.nj) go to 500
 	   aii = float(ii(i))
 	   ajj = float(jj(i))
-	   call splin2(x1a,x2a,field,y2a,ni,nj,aii,ajj,interp_ob)
+
+           if(l_bilinear_interp)then
+               call bilinear_laps(aii,ajj,ni,nj,field,interp_ob)
+           else
+	       call splin2(x1a,x2a,field,y2a,ni,nj,aii,ajj,interp_ob)
+           endif
 c
 	   if(ob(i) .le. badflag) then
 	      diff = badflag
@@ -2153,15 +2166,15 @@ c
 
 	write(6,909) amean, num
 	write(iunit,909) amean, num
- 909	format(/,' Mean difference:    ',f10.2,' over ',i4,' stations.')       
+ 909	format(/,' Mean difference:    ',f10.2,' over ',i6,' stations.')       
 
 	write(6,910) ave_diff, num
 	write(iunit,910) ave_diff, num
- 910	format(' Average difference: ',f10.2,' over ',i4,' stations.')
+ 910	format(' Average difference: ',f10.2,' over ',i6,' stations.')
 
 	write(6,915) rms, num
 	write(iunit,915) rms, num
- 915	format(' RMS difference:     ',f10.2,' over ',i4,' stations.')
+ 915	format(' RMS difference:     ',f10.2,' over ',i6,' stations.')
 
 	write(iunit,920) diff_mx, stn_mx
  920	format(' Maximum difference of ',f10.2,' at ',a5)
