@@ -86,13 +86,13 @@ C***Check input arguments
 C***Do it.  Note that calculations are done in degrees.
         Dist=Range/km_per_Deg
 
-        TLat=ASinD(CosD(Azimuth)*SinD(Dist)*CosD(SLat) + SinD(SLat)*CosD
-     1(Dist))
+        TLat=dASinD(dCosD(Azimuth)*dSinD(Dist)*dCosD(SLat) 
+     1           + dSinD(SLat)*dCosD(Dist))
 
-        CosDLon=(CosD(Dist) - SinD(SLat)*SinD(TLat)) / (CosD(SLat)*CosD(
-     1TLat))
+        CosDLon=(dCosD(Dist) - dSinD(SLat)*dSinD(TLat)) 
+     1            / (dCosD(SLat)*dCosD(TLat))
         If(Abs(CosDLon).gt.1.)CosDLon=Sign(1.d0,CosDLon)
-        DLon=ACosD(CosDLon)
+        DLon=dACosD(CosDLon)
         If(Azimuth.ge..0.and.Azimuth.le.180.)Then
          TLon=SLon+DLon
         Else
