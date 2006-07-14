@@ -418,6 +418,8 @@ C ================================================================
 C
       subroutine read_wsi_image(cfname_in,elems,lines,image)
 
+      include 'netcdf.inc'
+
       integer elems, lines,nf_fid, nf_vid, nf_status
       integer image(elems,lines)
       character*(*) cfname_in
@@ -567,10 +569,12 @@ c ----------------------------------------------------------
 c
       subroutine read_nowrad_dims(ctype,cfname,elems,lines)
 
+      include 'netcdf.inc'
+
       integer elems,lines
       character*(*) cfname
       character*(*) ctype
-      character     cvarname(2)*10
+      character*10  cvarname(2)
 
 C
 C  Open netcdf File for reading
