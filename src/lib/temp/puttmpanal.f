@@ -261,6 +261,8 @@ cdis
 
         endif
 
+        I4_elapsed = ishow_timer()
+
 !       Insert Surface Temp at Lowest Levels
         blayer_thk_pres = 5000. 
 
@@ -552,6 +554,9 @@ c       1                               j_diff_thmax,k_diff_thmax
 
         write(6,*)
         write(6,*)' Temperature Analysis Complete'
+
+        I4_elapsed = ishow_timer()
+
         write(6,*)' Checking consistency of sfc and 3-D temps'
 
         if(iwarn .eq. 1)then
