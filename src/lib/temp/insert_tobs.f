@@ -476,7 +476,7 @@ cdis
 !       Added r_missing_data as dummy argument.
 
         integer*4 max_obs_b
-        parameter (max_obs_b = 40000)       
+        parameter (max_obs_b = 400000)       
         include 'barnesob.inc'
         type (barnesob) obs_barnes(max_obs_b)                           
 
@@ -539,6 +539,13 @@ cdis
 
                 sumsq_inst = sumsq_inst + temp_obs(i_ob,i_inst_err)**2
                 n_obs_valid = n_obs_valid + 1
+
+                if(n_obs_valid .gt. max_obs_b)then
+                    write(6,*)' ERROR in barnes_univariate_shell:' 
+                    write(6,*)' increase max_obs_b from ',max_obs_b
+                    istatus = 0
+                    return
+                endif
 
 !               Place ob from 'temp_obs' structure into 'obs_barnes' structure
                 obs_barnes(n_obs_valid)%i = temp_obs(i_ob,i_i) 
