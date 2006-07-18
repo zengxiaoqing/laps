@@ -195,6 +195,8 @@ c read in LAPS_DOMAIN
                 return
             endif
 
+            I4_elapsed = ishow_timer()
+
             pbl_top_pa = pbl_top_mb * 100.
 
 !           Convert to PBL height AGL
