@@ -297,6 +297,7 @@ c       Process sounding data
 c
         if(.not. l_use_raob)then
             write(6,*)' Skipping read of SND data'
+            istatus = 1
             goto 900
         endif
 
@@ -331,7 +332,12 @@ c
 
         do i_tsnd = n_rass+1,max_snd
 
-            if(i_tsnd .le. 200 .or. i_tsnd .eq. (i_tsnd/10)*10)then
+            if(i_tsnd .le. 200)then
+                iwrite = 1
+            elseif(i_t_snd .le. 1000 .and. 
+     1             i_tsnd .eq. (i_tsnd/10)*10)then
+                iwrite = 1
+            elseif(i_tsnd .eq. (i_tsnd/100)*100)then
                 iwrite = 1
             else
                 iwrite = 0
@@ -494,19 +500,21 @@ c       1                ,t_diff
         write(6,*)' ERROR: Used all space in temperature arrays'
         write(6,*)' while reading SND.  Check max_snd: '
      1            ,max_snd
+        istatus = 0
 
 800     continue ! Exit out of loop when file is done
         n_snde = i_tsnd - 1 - n_rass 
         close(12)
+        istatus = 1
         goto 900
 
 890     write(6,*)' Warning: could not open current SND file'
+        istatus = 1
 
 900     n_tsnd = n_rass + n_snde
  
         write(6,*) ' Read ',n_snde,' SND sounding(s)'
         write(6,*) ' Read ',n_tsnd,' Total LRS+SND sounding(s)'
 
-        istatus = 1
         RETURN
         end
