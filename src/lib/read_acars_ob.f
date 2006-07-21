@@ -12,6 +12,10 @@
 
         logical l_eof
 
+        integer*4 icount
+        data icount /0/
+        save icount
+
         dd = 99999.
         ff = 99999.
 
@@ -28,7 +32,7 @@
         endif
 
         if(string(2:4) .eq. 'Lat')then
-            read(lun,201)xlat,xlon,elev
+            read(lun,201,err=905)xlat,xlon,elev
 201         format(2(f8.3,2x), f6.0,2i5)
         endif
 
@@ -61,7 +65,11 @@
 500     goto5
 
 900     l_eof = .true.
-
         return
+
+ 905    write(6,*)' SEVERE ERROR in read_acars_ob: xlat,xlon,xlev= '
+     1                                            ,xlat,xlon,xlev
+        write(6,*)' icount = ',icount
+        stop
 
         end
