@@ -72,6 +72,10 @@ PRINT*,'N = ',n
   IF (status .NE. 1) THEN
     WRITE(6,*) 'LAPS_Conf: error in system times'
     STOP
+  ELSE
+    OPEN(10,file='i4time.txt')
+    WRITE(10,*) i4time
+    CLOSE(10)
   ENDIF
   CALL get_systime_all(i4time_sys,fnm,hr,mins,asctime,jday,status)
   IF (i4time .NE. i4time_sys) THEN
