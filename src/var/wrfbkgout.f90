@@ -83,6 +83,14 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   REAL :: unc(imax,jmax-1,kmax-1),tmp(imax,jmax,kmax)
   REAL :: vnc(imax-1,jmax,kmax-1),tnc(imax-1,jmax-1,kmax-1)
   REAL :: zmp(kmax),tmp1(imax*jmax*kmax)
+!! ltsung add new variables for subroutine StaggerXY
+  real :: u_out(imax,jmax-1,kmax),v_out(imax-1,jmax,kmax),&
+            t_out(imax-1,jmax-1,kmax),mu_out(imax-1,jmax-1,1),&
+            mub_out(imax-1,jmax-1,1),qvapor_out(imax-1,jmax-1,kmax),&
+            mapfac_m_out(imax-1,jmax-1,1),xlat_out(imax-1,jmax-1,1),&
+            xlong_out(imax-1,jmax-1,1)
+  real :: unc1(imax,jmax-1,kmax-1),vnc1(imax-1,jmax,kmax-1),&
+          tnc1(imax-1,jmax-1,kmax-1),qnc1(imax-1,jmax-1,kmax-1)
 
   empty = ' '
 
@@ -434,105 +442,131 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   ! U:
   ! Stagger: Y and Z:
 
-  tmp(1:imax,1:jmax-1,1:kmax) = 0.5*( &
-  	u(1:imax,1:jmax-1,1:kmax)+ &
-     	u(1:imax,2:jmax  ,1:kmax))
-  unc(1:imax,1:jmax-1,1:kmax-1) = 0.5*( &
-  	tmp(1:imax,1:jmax-1,1:kmax-1)+ &
-     	tmp(1:imax,1:jmax-1,2:kmax  ))
+  CALL StaggerXY_3D(u,imax,jmax,kmax,imax,jmax-1,kmax,u_out)
+  CALL StaggerLogP(ptop,dam,znw,u_out,imax,jmax-1,kmax,unc1)
+
+!  tmp(1:imax,1:jmax-1,1:kmax) = 0.5*( &
+!  	u(1:imax,1:jmax-1,1:kmax)+ &
+!     	u(1:imax,2:jmax  ,1:kmax))
+!  unc(1:imax,1:jmax-1,1:kmax-1) = 0.5*( &
+!  	tmp(1:imax,1:jmax-1,1:kmax-1)+ &
+!     	tmp(1:imax,1:jmax-1,2:kmax  ))
 
   count(1) = imax
   count(2) = jmax-1
   count(3) = kmax-1
-  CALL ncvpt(ncid,uid,start,count,unc,ierr)
+  CALL ncvpt(ncid,uid,start,count,unc1,ierr)
   ! V:
   ! Stagger: X and Z:
+  
+  call StaggerXY_3D(v,imax,jmax,kmax,imax-1,jmax,kmax,v_out)
+  call StaggerLogP(ptop,dam,znw,v_out,imax-1,jmax,kmax,vnc1)
 
-
-  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
- 	v(1:imax-1,1:jmax,1:kmax)+ &
-     	v(2:imax  ,1:jmax,1:kmax))
-  vnc(1:imax-1,1:jmax,1:kmax-1) = 0.5*( &
- 	tmp(1:imax-1,1:jmax,1:kmax-1)+ &
-     	tmp(1:imax-1,1:jmax,2:kmax  ))
+!  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
+! 	v(1:imax-1,1:jmax,1:kmax)+ &
+!     	v(2:imax  ,1:jmax,1:kmax))
+!  vnc(1:imax-1,1:jmax,1:kmax-1) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax,1:kmax-1)+ &
+!     	tmp(1:imax-1,1:jmax,2:kmax  ))
  
   count(1) = imax-1
   count(2) = jmax
   count(3) = kmax-1
-  CALL ncvpt(ncid,vid,start,count,vnc,ierr)
+  CALL ncvpt(ncid,vid,start,count,vnc1,ierr)
   ! T:
   ! Stagger: X, Y and Z:
-  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
- 	t(1:imax-1,1:jmax,1:kmax)+ &
-     	t(2:imax  ,1:jmax,1:kmax))
-  tmp(1:imax-1,1:jmax-1,1:kmax) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1:kmax)+ &
-     	tmp(1:imax-1,2:jmax  ,1:kmax))
-  tnc(1:imax-1,1:jmax-1,1:kmax-1) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1:kmax-1)+ &
-     	tmp(1:imax-1,1:jmax-1,2:kmax  ))
+
+  call StaggerXY_3D(t,imax,jmax,kmax,imax-1,jmax-1,kmax,t_out)
+  call StaggerLogP(ptop,dam,znw,t_out,imax-1,jmax-1,kmax,tnc1)  
+
+!  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
+! 	t(1:imax-1,1:jmax,1:kmax)+ &
+!     	t(2:imax  ,1:jmax,1:kmax))
+!  tmp(1:imax-1,1:jmax-1,1:kmax) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1:kmax)+ &
+!     	tmp(1:imax-1,2:jmax  ,1:kmax))
+!  tnc(1:imax-1,1:jmax-1,1:kmax-1) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1:kmax-1)+ &
+!     	tmp(1:imax-1,1:jmax-1,2:kmax  ))
 
   ! Test stagger:
-  CALL StaggerLogP(ptop,dam,znw,tmp(1:imax-1,1:jmax-1,1:kmax),&
-	imax-1,jmax-1,kmax,tmp(1:imax-1,1:jmax-1,1:kmax-1))
-  tnc(1:imax-1,1:jmax-1,1:kmax-1) = tmp(1:imax-1,1:jmax-1,1:kmax-1)
+!  CALL StaggerLogP(ptop,dam,znw,tmp(1:imax-1,1:jmax-1,1:kmax),&
+!	imax-1,jmax-1,kmax,tmp(1:imax-1,1:jmax-1,1:kmax-1))
+!  tnc(1:imax-1,1:jmax-1,1:kmax-1) = tmp(1:imax-1,1:jmax-1,1:kmax-1)
 
 
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = kmax-1
-  CALL ncvpt(ncid,tid,start,count,tnc,ierr)
+  CALL ncvpt(ncid,tid,start,count,tnc1,ierr)
   ! MU:
   ! Stagger: X, and Y:
-  tmp(1:imax-1,1:jmax,1) = 0.5*( &
- 	pdam(1:imax-1,1:jmax)+ &
-     	pdam(2:imax  ,1:jmax))
-  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1)+ &
-     	tmp(1:imax-1,2:jmax  ,1))
+
+  call StaggerXY_3D(pdam,imax,jmax,kmax,imax-1,jmax-1,1,mu_out)
+
+!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
+! 	pdam(1:imax-1,1:jmax)+ &
+!     	pdam(2:imax  ,1:jmax))
+!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1)+ &
+!     	tmp(1:imax-1,2:jmax  ,1))
+
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
-  CALL ncvpt(ncid,muid,start,count,tnc,ierr)
+  CALL ncvpt(ncid,muid,start,count,mu_out,ierr)
   ! MUB:
   ! Stagger: X, and Y:
-  tmp(1:imax-1,1:jmax,1) = 0.5*( &
- 	dam(1:imax-1,1:jmax)+ &
-     	dam(2:imax  ,1:jmax))
-  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1)+ &
-     	tmp(1:imax-1,2:jmax  ,1))
+
+  call StaggerXY_3D(dam,imax,jmax,kmax,imax-1,jmax-1,1,mub_out)
+
+!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
+! 	dam(1:imax-1,1:jmax)+ &
+!     	dam(2:imax  ,1:jmax))
+!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1)+ &
+!     	tmp(1:imax-1,2:jmax  ,1))
+
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
-  CALL ncvpt(ncid,mubid,start,count,tnc,ierr)
+  CALL ncvpt(ncid,mubid,start,count,mub_out,ierr)
   ! QVAPOR:
   ! Stagger: X, Y and Z:
-  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
- 	sh(1:imax-1,1:jmax,1:kmax)+ &
-     	sh(2:imax  ,1:jmax,1:kmax))
-  tmp(1:imax-1,1:jmax-1,1:kmax) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1:kmax)+ &
-     	tmp(1:imax-1,2:jmax  ,1:kmax))
-  tnc(1:imax-1,1:jmax-1,1:kmax-1) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1:kmax-1)+ &
-     	tmp(1:imax-1,1:jmax-1,2:kmax  ))
+
+  call StaggerXY_3D(sh,imax,jmax,kmax,imax-1,jmax-1,kmax,qvapor_out)
+  call StaggerLogP(ptop,dam,znw,qvapor_out,imax-1,jmax-1,kmax,qnc1)
+
+!  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
+! 	sh(1:imax-1,1:jmax,1:kmax)+ &
+!     	sh(2:imax  ,1:jmax,1:kmax))
+!  tmp(1:imax-1,1:jmax-1,1:kmax) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1:kmax)+ &
+!     	tmp(1:imax-1,2:jmax  ,1:kmax))
+!  tnc(1:imax-1,1:jmax-1,1:kmax-1) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1:kmax-1)+ &
+!     	tmp(1:imax-1,1:jmax-1,2:kmax  ))
+
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = kmax-1
-  CALL ncvpt(ncid,qid,start,count,tnc,ierr)
+  CALL ncvpt(ncid,qid,start,count,qnc1,ierr)
   ! MAPFAC_M:
   ! Stagger: X, and Y:
-  tmp(1:imax-1,1:jmax,1) = 0.5*( &
- 	mapfac(1:imax-1,1:jmax)+ &
-     	mapfac(2:imax  ,1:jmax))
-  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1)+ &
-     	tmp(1:imax-1,2:jmax  ,1))
+
+  call StaggerXY_3D(mapfac,imax,jmax,kmax,imax-1,jmax-1,1,mapfac_m_out)
+
+!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
+! 	mapfac(1:imax-1,1:jmax)+ &
+!     	mapfac(2:imax  ,1:jmax))
+!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1)+ &
+!     	tmp(1:imax-1,2:jmax  ,1))
+
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
-  CALL ncvpt(ncid,mapid,start,count,tnc,ierr)
+  CALL ncvpt(ncid,mapid,start,count,mapfac_m_out,ierr)
   ! P_TOP:
   count(1) = 1
   count(2) = 1
@@ -549,26 +583,34 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncvpt(ncid,znwid,start,count,znw,ierr)
   ! XLAT:
   ! Stagger: X, and Y:
-  tmp(1:imax-1,1:jmax,1) = 0.5*( &
- 	lat(1:imax-1,1:jmax)+lat(2:imax  ,1:jmax))
-  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1)+ &
-     	tmp(1:imax-1,2:jmax  ,1))
+  
+  call StaggerXY_3D(lat,imax,jmax,kmax,imax-1,jmax-1,1,xlat_out)
+
+!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
+! 	lat(1:imax-1,1:jmax)+lat(2:imax  ,1:jmax))
+!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1)+ &
+!     	tmp(1:imax-1,2:jmax  ,1))
+
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
-  CALL ncvpt(ncid,latid,start,count,tnc,ierr)
+  CALL ncvpt(ncid,latid,start,count,xlat_out,ierr)
   ! XLONG:
   ! Stagger: X, and Y:
-  tmp(1:imax-1,1:jmax,1) = 0.5*( &
- 	lon(1:imax-1,1:jmax)+lon(2:imax  ,1:jmax))
-  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
- 	tmp(1:imax-1,1:jmax-1,1)+ &
-     	tmp(1:imax-1,2:jmax  ,1))
+
+  call StaggerXY_3D(lon,imax,jmax,kmax,imax-1,jmax-1,1,xlong_out)
+
+!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
+! 	lon(1:imax-1,1:jmax)+lon(2:imax  ,1:jmax))
+!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
+! 	tmp(1:imax-1,1:jmax-1,1)+ &
+!     	tmp(1:imax-1,2:jmax  ,1))
+
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
-  CALL ncvpt(ncid,lonid,start,count,tnc,ierr)
+  CALL ncvpt(ncid,lonid,start,count,xlong_out,ierr)
   ! RDX:
   count(1:2) = 1
   CALL ncvpt(ncid,rxid,start,count,1.0/dxy,ierr)
