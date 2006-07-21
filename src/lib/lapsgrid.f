@@ -481,9 +481,9 @@ c****  --------------------------------------------------------- *****
         character*8 a8
         character*200 tempchar
 
-        integer ipass
-        data ipass/0/
-        save ipass
+        integer init
+        data init/0/
+        save init
 
         include 'lapsparms.cmn'
         include 'grid_fname.cmn'
@@ -517,12 +517,14 @@ c****  --------------------------------------------------------- *****
      1  ,path_to_islope,path_to_sst,fdda_model_source_cmn
 
 
-        if(ipass.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
+        if(init.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
 !          print *, 'It works'
 !          goto999                                           ! Normal Return
-!          ipass = 1
+!          init = 1
            istatus = 1
            return
+        else
+           iflag_lapsparms_cmn = 0 ! initializes variable
         endif
 
 !       While we are here, let's put the grid name into the common area
@@ -597,7 +599,7 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 
 999     close(92)                                               ! Normal Return
 
-        ipass = 1
+        init = 1
         istatus = 1
         return
 
@@ -987,14 +989,22 @@ c----------------------------------------------------------
       include 'lapsparms.cmn'              ! nk_laps
       include 'grid_fname.cmn'             ! grid_fnam_common
 
+      integer init
+      data init/0/
+      save init
+
 !     This routine accesses the nk variable from the
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      call get_laps_config(grid_fnam_common,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not successfully called'       
-          return
+      if(iflag_lapsparms_cmn .ne. 1 .or. init .eq. 0)then 
+          call get_laps_config(grid_fnam_common,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)
+     1            ' ERROR, get_laps_config not successfully called'      
+              return
+          endif
+          init = 1
       endif
 
       nk = nk_laps
@@ -1547,21 +1557,29 @@ c
       character*40  cvgrid_test
       character*40  cvgrid_laps
 
-      call get_laps_config(grid_fnam_common,istatus)
+      integer init
+      data init/0/
+      save init
 
-      if(istatus .ne. 1)then
-          write(6,*)' ltest_vertical_grid: Error detected in '
-     1             ,'calling get_laps_config'
-          ltest_vertical_grid = .false.
-          return
+      save cvgrid_laps,len_cmn
+
+      if(iflag_lapsparms_cmn .ne. 1 .or. init .eq. 0)then 
+          call get_laps_config(grid_fnam_common,istatus)
+
+          if(istatus .ne. 1)then
+              write(6,*)' ltest_vertical_grid: Error detected in '
+     1                 ,'calling get_laps_config'
+              ltest_vertical_grid = .false.
+              return
+          endif
+
+          call downcase(vertical_grid,cvgrid_laps)
+          call s_len(cvgrid_laps,len_cmn)
+          init = 1
       endif
 
       call downcase(c_vertical_grid,cvgrid_test)
-      call downcase(vertical_grid,cvgrid_laps)
-
-      call s_len(cvgrid_laps,len_cmn)
       call s_len(cvgrid_test,len_in)
-
 
       if(cvgrid_laps(1:len_cmn).eq.cvgrid_test(1:len_in))then
           ltest_vertical_grid = .true.
