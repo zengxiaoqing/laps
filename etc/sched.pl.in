@@ -501,6 +501,11 @@ foreach $exe (@LAPS_EXE){
             print TFILE_SUB "$LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
             print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            print TFILE "error=\$?\n";
+            print TFILE "if [ \${error} -ne 0 ]; then\n";
+            print TFILE "  echo \"ERROR: $exe crashed!  Exit status=\${error}\"\n";
+#           print TFILE "  exit \${error}\n";
+            print TFILE "fi\n";
         }
        
         if(-e "$LAPSROOT/etc/$wgi_script_name.pl"){
