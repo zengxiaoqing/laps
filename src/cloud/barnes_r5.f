@@ -157,19 +157,7 @@ cdis
       do k=1,kmax
 
         if(.not. l_perimeter)then
-            nlast(k) = ncnt
-            do j=1,jmax
-            do i=1,imax
-              if(to(i,j,k) .eq. r_missing_data) go to 223
-              ncnt=ncnt+1
-              iob(ncnt)=i
-              job(ncnt)=j
-              kob(ncnt)=k
-              nlast(k) = ncnt
-!             if(k .eq. 8)write(6,*)i,j,k,to(i,j,k)
-223           continue
-            enddo ! i
-            enddo ! j
+            write(6,*)' Code error: stop'
 
         else ! l_perimeter
             nlast(k) = ncnt
@@ -198,14 +186,7 @@ cdis
             l_analyze(k) = .false.
 
             if(.not. l_perimeter)then
-              do j=1,jmax
-              do i=1,imax
-                if(to(i,j,k) .ne. to(i,j,km1))then
-                    l_analyze(k) = .true.
-                    goto250
-                endif
-              enddo ! i
-              enddo ! j
+              write(6,*)' Code error: stop'
 
             else
               do n=1,n_cld_snd
@@ -283,13 +264,8 @@ cdis
             sum=0.
             sumwt=0.
             if(.not. l_perimeter)then
-                do n=nstart,nstop
-                  ii=iob(n)
-                  jj=job(n)
-                  weight = iiilut(i-ii,j-jj) * wt_p(ii,jj,k) ! Obs are being weighted
-                  sum=weight*to(ii,jj,k)+sum
-                  sumwt=sumwt+weight
-                enddo ! n
+                write(6,*)' Code error: stop'
+          
             else
                 do n=nstart,nstop
                   ii=iob(n)
