@@ -101,11 +101,17 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
 
   ! As default, a uniform mass vertical grid is used:
   ! eta = (p_d(k)-p_d(top))/(p_d(sfc)-p_d(top)):
+  ! DO k=1,kmax
+  !  znw(k) = 1.0-float(k-1)/float(kmax-1)
+  ! ENDDO
+  ! DO k=1,kmax-1
+  !   znu(k) = 1.0-(float(k-1)+0.5)/float(kmax-1)
+  ! ENDDO
   DO k=1,kmax
-    znw(k) = 1.0-float(k-1)/float(kmax-1)
+    znw(k) = (pressr1d(k)-pressr1d(kmax))/(pressr1d(1)-pressr1d(kmax))
   ENDDO
   DO k=1,kmax-1
-    znu(k) = 1.0-(float(k-1)+0.5)/float(kmax-1)
+    znu(k) = (0.5*(pressr1d(k)+pressr1d(k+1))-pressr1d(kmax))/(pressr1d(1)-pressr1d(kmax))
   ENDDO
 
   ! Map factor: use LAPS routine: get_sigma(lat,lon,fac,istatus)
@@ -130,14 +136,16 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
 		 znw,pressr1d,dam)
 
   ! U background:
+WRITE(10) imax,jmax,kmax,u_laps_bkg(1:imax,1:jmax,1:kmax),dam(1:imax,1:jmax)
   CALL laps2mass(u_laps_bkg,imax,jmax,kmax,u_mass_bkg, &
 		 znw,pressr1d,dam)
+WRITE(10) u_mass_bkg(1:imax,1:jmax,1:kmax)
 
   ! V background:
   CALL laps2mass(v_laps_bkg,imax,jmax,kmax,v_mass_bkg, &
 		 znw,pressr1d,dam)
 
-  WRITE(12) znw,pressr1d,dam
+  WRITE(12) znw,pressr1d,dam,znu
 
   times(1:4) = asctime(8:11)
   times(5:5) = '-'
