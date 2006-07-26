@@ -475,10 +475,10 @@ cdis
 !       Jun 16 1997             Ken Dritz
 !       Added r_missing_data as dummy argument.
 
-        integer*4 max_obs_b
-        parameter (max_obs_b = 400000)       
+!       integer*4 max_obs_b
+!       parameter (max_obs_b = 400000)       
         include 'barnesob.inc'
-        type (barnesob) obs_barnes(max_obs_b)                           
+        type (barnesob) obs_barnes(n_obs)                           
 
         logical l_struct,l_not_struct
         real*4 bias_tsnd(max_snd,nk)
@@ -498,7 +498,7 @@ cdis
 
         include 'tempobs.inc'
 
-        write(6,*)' Subroutine Barnes_univariate_shell'
+        write(6,*)' Subroutine Barnes_univariate_shell, n_obs = ',n_obs  
 
         do k = 1,nk
 
@@ -533,16 +533,17 @@ cdis
 
                 l_analyze(k) = .true.
 
-!               Should we reduce this?
-                write(6,71)i,j,k,bias_obs_3d(i,j,k),wt_3d(i,j,k)
-71              format(1x,3i4,2e11.4)
+                if(i_ob .le. 1000)then
+                    write(6,71)i,j,k,bias_obs_3d(i,j,k),wt_3d(i,j,k)
+71                  format(1x,3i4,2e11.4)
+                endif
 
                 sumsq_inst = sumsq_inst + temp_obs(i_ob,i_inst_err)**2
                 n_obs_valid = n_obs_valid + 1
 
-                if(n_obs_valid .gt. max_obs_b)then
+                if(n_obs_valid .gt. n_obs)then
                     write(6,*)' ERROR in barnes_univariate_shell:' 
-                    write(6,*)' increase max_obs_b from ',max_obs_b
+                    write(6,*)' increase n_obs from ',n_obs
                     istatus = 0
                     return
                 endif
