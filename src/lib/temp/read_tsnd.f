@@ -335,7 +335,7 @@ c
             if(i_tsnd .le. 200)then
                 iwrite = 1
             elseif(i_t_snd .le. 1000 .and. 
-     1             i_tsnd .eq. (i_tsnd/10)*10)then
+     1             i_t_snd .eq. (i_tsnd/10)*10)then
                 iwrite = 1
             elseif(i_tsnd .eq. (i_tsnd/100)*100)then
                 iwrite = 1
