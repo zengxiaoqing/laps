@@ -92,6 +92,7 @@ c
 	real*4  equivspd(maxobs), sea_temp(maxobs), t_wet(maxobs)
         real*4  skyLayerBase(maxSkyCover,maxobs)
         real    lat(ni,nj), lon(ni,nj)
+        real*4  k_to_f
 c
 c.....  Output arrays.
 c
@@ -583,8 +584,9 @@ c
 	if(seatemp_k .le. badflag) then          !t bad?
 	   seatemp_f = badflag                   !  bag
 	else
-	   seatemp_f = ((seatemp_k - 273.16) * 9./5.) + 32.  ! K to F
+	   seatemp_f = k_to_f(seatemp_k) 
 	endif
+        call sfc_climo_qc_r('t_f',seatemp_f)
 c
 c..... Fill the expected accuracy arrays.  Values are based on information
 c..... in the 'Coastal-Marine Automated Network (C-MAN) Users Guide', and 
