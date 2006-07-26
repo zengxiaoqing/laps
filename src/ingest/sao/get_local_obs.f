@@ -81,7 +81,8 @@ c.....  Local variables/arrays
 c
 	integer    rtime
         integer*4  i4time_ob_a(maxobs), before, after
-        real    lat(ni,nj), lon(ni,nj), k_to_f
+        real    lat(ni,nj), lon(ni,nj)
+        real*4  k_to_f
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_reject(maxobs), ltest_madis_qc
 c
@@ -352,9 +353,9 @@ c
      1   .or. i4time_ob_a(i) .gt. after) then
                if(i .le. max_write)then
                    write(6,71,err=105)i,wmoid(i),stationId(i)
-     1                               ,a9time_a(i),before
-     1                               ,after
- 71		   format(i6,i7,1x,a8,' out of time ',a11,2i12)
+     1                               ,a9time_a(i),i4time_ob_a(i)
+     1                               ,before,after
+ 71		   format(i6,i7,1x,a8,' out of time ',a11,3i12)
                endif
                l_reject(i) = .true.
                go to 105
