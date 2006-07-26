@@ -42,6 +42,7 @@ cdis
 
         character*9 a9_time
         character*8 c8_project,c8_blp_format,c8_blp_format_in
+        character*3 ext
 
         call GETENV('LAPS_A9TIME',a9_time)
         call s_len(a9_time,ilen)
@@ -95,7 +96,8 @@ cdis
      1         c8_blp_format .eq. 'MADIS')then
             write(6,*)
             write(6,*)' Running MADIS (WFO) Multi-agency profile ingest'       
-            call ingest_madis_map(i4time,NX_L,NY_L,'pro',lun_out
+            ext = 'pro'
+            call ingest_madis_map(i4time,NX_L,NY_L,ext,lun_out
      1                           ,j_status)
             write(6,*)' Return from MADIS (WFO) MAP ingest'
         else
