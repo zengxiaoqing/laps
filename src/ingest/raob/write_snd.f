@@ -39,7 +39,7 @@
 
       integer nsnd_total
       data nsnd_total/0/
-      save nsnd_total
+      save nsnd_total,i4time_sys
 
 !............................................................................
 
@@ -52,20 +52,24 @@
 
       i4_raob_window = max(i4_wind_ob,i4_temp_ob)
 
-!     Get systime
-      call GETENV('LAPS_A9TIME',a9_time)
-      call s_len(a9_time,ilen)
+      if(nsnd_total .eq. 0)then ! initialize variables
+!         Get systime
+          call GETENV('LAPS_A9TIME',a9_time)
+          call s_len(a9_time,ilen)
 
-      if(ilen .eq. 9)then
-!       write(6,*)' systime (from env) = ',a9_time
-        call i4time_fname_lp(a9_time,i4time_sys,istatus)
-      else
-        call get_systime(i4time_sys,a9_time,istatus)
-        if(istatus .ne. 1)go to 990
-!       write(6,*)' systime = ',a9_time
+          if(ilen .eq. 9)then
+!           write(6,*)' systime (from env) = ',a9_time
+            call i4time_fname_lp(a9_time,i4time_sys,istatus)
+          else
+            call get_systime(i4time_sys,a9_time,istatus)
+            if(istatus .ne. 1)go to 990
+!           write(6,*)' systime = ',a9_time
+          endif
       endif
 
       do isnd = 1,nsnd
+
+        nsnd_total = nsnd_total + 1
 
 !       Reject observation times outside time window        
         call i4time_fname_lp(a9time_ob(isnd,1),i4time_raob,status)
