@@ -29,7 +29,11 @@ cdis
 cdis
 cdis
 cdis
-        Subroutine Cloud_bogus_w (dx, cloud_type, height, nk, w)
+        Subroutine Cloud_bogus_w (dx, cloud_type, height, nk       ! I
+     1                           ,vv_to_height_ratio_Cu            ! I
+     1                           ,vv_to_height_ratio_Sc            ! I
+     1                           ,vv_for_St                        ! I
+     1                           ,w)                               ! O
 
 !Original version October 1990.
 
@@ -57,16 +61,6 @@ cdis
         Real*4 vv_to_height_ratio_Cu
         Real*4 vv_to_height_ratio_Sc
         Real*4 vv_for_St
-
-        ! Values below are the max VVs expected on a 10km grid for a 
-        ! cloud 10km deep
-!       data vv_to_height_ratio_Cu /1./  ! Changed from 4.0 on 10 Apr 03 BLS   
-!       data vv_to_height_ratio_Sc /0.1/ ! Changed from 0.5 on 10 Apr 03 BLS
-!       data vv_for_St /.02/              ! Changed from 0.05 on 10 Apr 03 BLS
-!       Adan add
-        data vv_to_height_ratio_Cu /0.5/  ! Changed from 1.0 on 10 Aug 03 BLS
-        data vv_to_height_ratio_Sc /0.05/ ! Changed from 0.1 on 10 Aug 03 BLS
-        data vv_for_St /.01/              ! Changed from 0.02 on 10 Aug 03 BLS
 
         Real*4 ratio, vv, Parabolic_vv_profile
 
