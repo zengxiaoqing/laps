@@ -1,7 +1,8 @@
  &balance_nl
- lrunbal = .true.
+ lrunbal = .true.,
  adv_anal_by_t_min = 0,
  cpads_type = 'snd',
+ INCL_CLOM = .true.,
  /
 c
 c   adv_anal_by_t_min: time in minutes to advance the analyses
@@ -17,3 +18,7 @@ c   cpads_type: For the Precision Airdrop Systems project that
 c indicates the analysis method. snd: new method and recommended.
 c pin: old method but available for backwards compatibility and
 c comparison statistics.
+c
+c
+c INCL_CLOM allows us to include or exclude cloud omega from 
+c balance package. 
