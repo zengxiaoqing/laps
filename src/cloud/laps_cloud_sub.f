@@ -1885,6 +1885,10 @@ C       EW SLICES
 
         nskip_max = 4 ! 'See barnes_r5'
 
+        I4_elapsed = ishow_timer()
+
+        write(6,*)' Subroutine qc_clouds_3d...'
+
         do i = 1,NX_L
         do j = 1,NY_L
             if(NX_L-i .le. nskip_max .or. NY_L-j .le. nskip_max)then
@@ -1894,11 +1898,39 @@ C       EW SLICES
             endif
 
             do k = 1,KCLOUD
-                call qc_clouds_0d(i,j,k,clouds_3d(i,j,k)
-     1                           ,NX_L,NY_L,l_poss_extrap)
+!               call qc_clouds_0d(i,j,k,clouds_3d(i,j,k)
+!    1                           ,NX_L,NY_L,l_poss_extrap)
+
+!               Subroutine code reproduced in calling routine for efficiency
+                clouds_0d = clouds_3d(i,j,k)
+
+                if(clouds_0d .gt. 1.0)then 
+                    if(.not. l_poss_extrap)then
+                        if(clouds_0d .gt. 1.001)then
+                            write(6,*)
+     1                          ' Error, clouds_0d > 1',i,j,k,clouds_0d       
+                            stop
+                        else ! just over 1.0 with no edge effect
+                            write(6,*)
+     1                      ' Warning, clouds_0d > 1 - reset'
+     1                      ,i,j,k,clouds_0d
+                            clouds_0d = 1.0
+                        endif
+                    else
+                        write(6,*)
+     1                 ' Warning, clouds_0d > 1 - reset for edge effect'       
+     1                  ,i,j,k,clouds_0d
+                        clouds_0d = 1.0
+                    endif
+                endif
+
+                clouds_3d(i,j,k) = clouds_0d
+
             enddo ! k
         enddo ! j
         enddo ! i
+
+        I4_elapsed = ishow_timer()
 
         return
         end
