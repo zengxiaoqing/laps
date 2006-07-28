@@ -56,16 +56,18 @@ GSIPR= GSI_Prep.f90 \
          $(WINDLIB) \
        LAPS_Memo.f90 \
        GSI_BkObs.f90 \
-       LAPS2Mass.f90 \
        wrfbkgout.f90 \
        StaggerXY.f90 \
-       StagrLogP.f90 \
-       GSI_radarbufr.f90
+       GSI_radarbufr.f90 \
+       LAPSMassConverter.f90 \
+       StaggerConverter.f90 \
+       Interpolation.f90
 
 GSIPO= GSI_Post.f90 \
-       LAPS2Mass.f90 \
-       StagrLogP.f90 \
        StaggerXY.f90 \
+       LAPSMassConverter.f90 \
+       StaggerConverter.f90 \
+       Interpolation.f90 \
          $(WINDLIB)\
          $(HUMIDLIB) 
 
