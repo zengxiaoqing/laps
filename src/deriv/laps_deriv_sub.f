@@ -201,6 +201,10 @@ cdis
         real*4 radar_ref_3d(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
 
+        Real*4 vv_to_height_ratio_Cu
+        Real*4 vv_to_height_ratio_Sc
+        Real*4 vv_for_St
+
         real*4 mvd_3d(NX_L,NY_L,NZ_L)
 !       real*4 lwc_res_3d(NX_L,NY_L,NZ_L)
         real*4 w_3d(NX_L,NY_L,NZ_L)
@@ -332,7 +336,11 @@ cdis
            stop
         endif
 
-        call get_deriv_parms(mode_evap,l_bogus_radar_w,istatus)
+        call get_deriv_parms(mode_evap,l_bogus_radar_w,
+     1                       vv_to_height_ratio_Cu,                  ! I
+     1                       vv_to_height_ratio_Sc,                  ! I
+     1                       vv_for_St,                              ! I
+     1                       istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error calling get_deriv_parms'
            stop
@@ -571,6 +579,9 @@ c read in laps lat/lon and topo
      1                l_flag_cloud_type,cldpcp_type_3d,
      1                l_flag_mvd,mvd_3d,
      1                l_flag_icing_index,icing_index_3d,
+     1                vv_to_height_ratio_Cu,                               ! I
+     1                vv_to_height_ratio_Sc,                               ! I
+     1                vv_for_St,                                           ! I
      1                l_flag_bogus_w,w_3d,istatus)
 !    1                l_flag_snow_potential,snow_2d,lwc_res_3d)
 
