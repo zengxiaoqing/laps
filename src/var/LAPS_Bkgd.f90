@@ -53,7 +53,6 @@ SUBROUTINE LAPS_Bkgd
     CALL LAPS_Remv
     STOP
   ENDIF
-PRINT*,'Height: ',height3d(1,1,1)
 
   ! Pressure:
   CALL get_pres_3d(i4time,n(1),n(2),n(3),pressr3d,status)
@@ -62,9 +61,7 @@ PRINT*,'Height: ',height3d(1,1,1)
     CALL LAPS_Remv
     STOP
   ENDIF
-PRINT*,'Pressure 3D: ',pressr3d(1,1,1)
   CALL get_pres_1d(i4time,n(3),pressr1d,status)
-PRINT*,'Pressure 1D: ',pressr1d(1)
 
   ! Temperature:
   varname = 'T3'
@@ -75,7 +72,6 @@ PRINT*,'Pressure 1D: ',pressr1d(1)
     CALL LAPS_Remv
     STOP
   ENDIF
-PRINT*,'Temperature: ',temptr3d(1,1,1)
 
   ! Specific:
   varname = 'SH'
@@ -86,7 +82,6 @@ PRINT*,'Temperature: ',temptr3d(1,1,1)
     CALL LAPS_Remv
     STOP
   ENDIF
-PRINT*,'Specific humidity: ',sphumd3d(1,1,1)
 
   ! U wind:
   varname = 'U3'
@@ -97,7 +92,6 @@ PRINT*,'Specific humidity: ',sphumd3d(1,1,1)
     CALL LAPS_Remv
     STOP
   ENDIF
-PRINT*,'U wind: ',u_wind3d(1,1,1)
 
   ! V wind:
   varname = 'V3'
@@ -108,6 +102,5 @@ PRINT*,'U wind: ',u_wind3d(1,1,1)
     CALL LAPS_Remv
     STOP
   ENDIF
-PRINT*,'V wind: ',v_wind3d(1,1,1)
 
 END SUBROUTINE LAPS_Bkgd

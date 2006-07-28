@@ -15,7 +15,7 @@
 !// for subroutine read_gsi_output
 
       INTEGER*4,PARAMETER :: ii1=8 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: uu1,vv1,st,qvar
+      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: uu1,vv1,tt1,qq1
       REAL*4,ALLOCATABLE,DIMENSION(:,:) :: psfc
       REAL*4,ALLOCATABLE,DIMENSION(:) :: eta,znu
       REAL*4 :: ptop 
@@ -50,12 +50,13 @@
 
 !// for subroutine unstagger
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: uu2,vv2,iqvar 
+      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: uu2,vv2,qq2 
 
-!// for subroutine mass2p
+!// for subroutine mass2laps
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: ist,uvar1,vvar1,&
-                                             tvar1,qvar1 
+      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: tt2,uvar1,vvar1,&
+                                             tvar1,qvar1,tvar 
+      REAL*4,PARAMETER :: cp=1004.0, rc=287.0,t0=273.15
 
 !// for subroutine read_static_grid
 
@@ -131,13 +132,14 @@
       allocate(uu2(imax,jmax,kmax))
       allocate(vv1(imax1,jmax,kmax1))
       allocate(vv2(imax,jmax,kmax))
-      allocate(st(imax1,jmax1,kmax1))
-      allocate(ist(imax,jmax,kmax))
+      allocate(tt1(imax1,jmax1,kmax1))
+      allocate(tt2(imax,jmax,kmax))
       allocate(uvar1(imax,jmax,kmax))
       allocate(vvar1(imax,jmax,kmax))
+      allocate(tvar(imax,jmax,kmax))
       allocate(tvar1(imax,jmax,kmax))
-      allocate(qvar(imax1,jmax1,kmax1))
-      allocate(iqvar(imax,jmax,kmax))
+      allocate(qq1(imax1,jmax1,kmax1))
+      allocate(qq2(imax,jmax,kmax))
       allocate(qvar1(imax,jmax,kmax))
       allocate(heights_3d(imax,jmax,kmax))
       allocate(out_sfc_2d(imax,jmax,2))
@@ -159,13 +161,13 @@
 
 ! To write out variables of wrf_inout(after GSI analysis)
 ! input :: ii1,imax,jmax,kmax,imax1,jmax1,kmax1,filename
-! output:: uu1(u wind),vv1(v wind),st(temperature),
+! output:: uu1(u wind),vv1(v wind),tt1(temperature),
 !          psfc(surface pressure),ptop(top pressure),
 !          eta(on constant p levels),znu(eta on mass levels)),&
-!          qvar(specific humidity)
+!          qq1(specific humidity)
  
       call read_gsi_output(ii1,imax,jmax,kmax,imax1,jmax1,kmax1, &
-                   filename,uu1,vv1,st,psfc,ptop,eta,znu,qvar,istatus)
+                   filename,uu1,vv1,tt1,psfc,ptop,eta,znu,qq1,istatus)
       if( istatus.ne.0 )then
           print*,'Cannot read in data of wrf_inout.'
           print*,'filenam: ',filename 
@@ -204,22 +206,24 @@
                       t_laps_bkg)
 
 ! To unstagger output data  of wrf_inout
-! input :: imax,jmax,kmax,imax1,jmax1,kmax1,st,uu1,vv1,qvar
+! input :: imax,jmax,kmax,imax1,jmax1,kmax1,tt1,uu1,vv1,qq1
 !          ptop,psfc,znu
-! output(unstagger):: ist(temperature),uu2(u wind),
-!                     vv2(v wind),iqvar(specific humidity)  
+! output(unstagger):: tt2(temperature),uu2(u wind),
+!                     vv2(v wind),qq2(specific humidity)  
 
-      call unstagger(imax,jmax,kmax,imax1,jmax1,kmax1,st,&
-           uu1,vv1,qvar,ist,uu2,vv2,iqvar,ptop,psfc,znu)
+      call unstagger(imax,jmax,kmax,imax1,jmax1,kmax1,tt1,&
+           uu1,vv1,qq1,tt2,uu2,vv2,qq2,ptop,dam,znu)
 
-! To transform mass to laps pressure
-! input :: pres_1d(laps p coordinate),imax,jmax,kmax,uu2,vv2,ist,
-!       dam(background surface p),iqvar,ptop,eta
-! output(mass to lasp coordinate):: uvar1(u wind),vvar1(v wind),
-!       tavr1(temperature),qvar1(specific humidity)
+! XIE: mass to laps transfer:
 
-      call mass2p(pres_1d,imax,jmax,kmax,uu2,vv2,ist,dam,&
-           iqvar,ptop,eta,uvar1,vvar1,tvar1,qvar1)
+      CALL Mass2LAPS(tvar,imax,jmax,kmax,pres_1d,dam,eta,4,0,tt2)
+      do k=1,kmax
+        tvar1(1:imax,1:jmax,k) = (tvar(1:imax,1:jmax,k)+t0)*&
+                               (pres_1d(k)/100000.0)**(rc/cp)
+      enddo
+      CALL Mass2LAPS(uvar1,imax,jmax,kmax,pres_1d,dam,eta,4,0,uu2)
+      CALL Mass2LAPS(vvar1,imax,jmax,kmax,pres_1d,dam,eta,4,0,vv2)
+      CALL Mass2LAPS(qvar1,imax,jmax,kmax,pres_1d,dam,eta,2,0,qq2)
 
 ! for background
       call read_static_grid(imax,jmax,'LAT',lat,istatus)
@@ -353,7 +357,7 @@
 
 
       SUBROUTINE read_gsi_output(ii1,imax,jmax,kmax,imax1,jmax1,kmax1, &
-                       filename,uu1,vv1,st,psfc,ptop,eta,znu,qvar,istatus)
+                       filename,uu1,vv1,tt1,psfc,ptop,eta,znu,qq1,istatus)
        
       implicit none
       include 'netcdf.inc'
@@ -361,10 +365,10 @@
       character*125,intent(in) :: filename
       real*4,intent(out) :: uu1(imax,jmax1,kmax1),&
                             vv1(imax1,jmax,kmax1),&
-                            st(imax1,jmax1,kmax1),&
+                            tt1(imax1,jmax1,kmax1),&
                             psfc(imax1,jmax1),ptop,&
                             eta(kmax),znu(kmax1),&
-                            qvar(imax1,jmax1,kmax1)
+                            qq1(imax1,jmax1,kmax1)
       integer*4 :: ncid
       integer*4 :: i,j,k,ii,jj,kk
       integer*4 :: istatus,vid,vtype,vn,&
@@ -413,7 +417,7 @@
           enddo
           start = 1
           count = (/n(1),n(2),n(3),1/)
-          call NCVGT(ncid,vid,start,count,st,istatus)
+          call NCVGT(ncid,vid,start,count,tt1,istatus)
           if( istatus.ne.0 )return
       
         CASE(4)
@@ -453,7 +457,7 @@
           enddo
           start = 1
           count = (/n(1),n(2),n(3),1/)
-          call NCVGT(ncid,vid,start,count,qvar,istatus)
+          call NCVGT(ncid,vid,start,count,qq1,istatus)
           if( istatus.ne.0 )return
   
       END SELECT
@@ -468,136 +472,47 @@
 
 
 
-      SUBROUTINE unstagger(imax,jmax,kmax,imax1,jmax1,kmax1,st,&
-                 uu1,vv1,qvar,ist,uu2,vv2,iqvar,ptop,psfc,znu)
+      SUBROUTINE unstagger(imax,jmax,kmax,imax1,jmax1,kmax1,tt1,&
+                 uu1,vv1,qq1,tt2,uu2,vv2,qq2,ptop,psfc,znu)
       
        implicit none
        integer :: i,j,k
        integer*4,intent(in) :: imax,jmax,kmax,imax1,jmax1,kmax1
-       real*4,intent(in) ::   st(imax1,jmax1,kmax1),&
+       real*4,intent(in) ::   tt1(imax1,jmax1,kmax1),&
                              uu1(imax,jmax1,kmax1),&
                              vv1(imax1,jmax,kmax1),&
-                             qvar(imax1,jmax1,kmax1),&
+                             qq1(imax1,jmax1,kmax1),&
                              ptop,psfc(imax1,jmax1),znu(kmax1)
-       real*4,intent(out) :: ist(imax,jmax,kmax),& 
+       real*4,intent(out) :: tt2(imax,jmax,kmax),& 
                              uu2(imax,jmax,kmax),&
                              vv2(imax,jmax,kmax),&
-                             iqvar(imax,jmax,kmax)  
+                             qq2(imax,jmax,kmax)  
        real*4 :: sz(imax1,jmax1,kmax),uz(imax,jmax1,kmax),&
                  vz(imax1,jmax,kmax),qz(imax1,jmax1,kmax),&
                  qout(imax,jmax,kmax)
         
 
-! get unstagger temperature variable ist
+! get unstagger temperature variable tt2
  
-       call UnStaggerLogP(ptop,psfc,znu,st,imax1,jmax1,kmax,sz)
-       call UntaggerXY_3D(sz,imax1,jmax1,kmax,imax,jmax,ist)
+       call UnStaggerZ(tt1,imax1,jmax1,kmax,ptop,psfc,znu,4,0,sz)
+       call UntaggerXY_3D(sz,imax1,jmax1,kmax,imax,jmax,tt2)
 
 ! get unstagger wind u component uu2 
 
-       call UnStaggerLogP(ptop,psfc,znu,uu1,imax,jmax1,kmax,uz)
+       call UnStaggerZ(uu1,imax,jmax1,kmax,ptop,psfc,znu,4,0,uz)
        call UntaggerXY_3D(uz,imax,jmax1,kmax,imax,jmax,uu2)
 
 ! get unstagger wind v component vv2 
        
-       call UnStaggerLogP(ptop,psfc,znu,vv1,imax1,jmax,kmax,vz)
+       call UnStaggerZ(vv1,imax1,jmax,kmax,ptop,psfc,znu,4,0,vz)
        call UntaggerXY_3D(vz,imax1,jmax,kmax,imax,jmax,vv2)
 
-! get unstagger specific humidity iqvar 
+! get unstagger specific humidity qq2 
 
-       call UnStaggerLogP(ptop,psfc,znu,qvar,imax1,jmax1,kmax,qz)
+       call UnStaggerZ(qq1,imax1,jmax1,kmax,ptop,psfc,znu,4,0,qz)
        call UntaggerXY_3D(qz,imax1,jmax1,kmax,imax,jmax,qout)
-       iqvar = ABS(qout)
+       qq2 = ABS(qout)
 
        RETURN
        END 
-
-       
-      SUBROUTINE mass2p(pres_1d,imax,jmax,kmax,uu2,vv2,ist,&
-               dam,iqvar,ptop,eta,uvar1,vvar1,tvar1,qvar1)
- 
-      implicit none
-      integer :: i,j,k,k1,k2,kk,jj,ii
-      real*4,parameter :: cp=1004.0, rc=287.0,t0=273.15
-      real*4 :: e,pres_1dlog(kmax),pvar(imax,jmax,kmax),&
-                pvarlog(imax,jmax,kmax),tt2(imax,jmax,kmax)
-      integer*4,intent(in) :: imax,jmax,kmax 
-      real*4,intent(in) :: pres_1d(kmax),&
-                           uu2(imax,jmax,kmax),&
-                           vv2(imax,jmax,kmax),&
-                           ist(imax,jmax,kmax),&
-                           dam(imax,jmax),iqvar(imax,jmax,kmax),&
-                           ptop,eta(kmax)
-      real*4,intent(out) :: uvar1(imax,jmax,kmax),&
-                            vvar1(imax,jmax,kmax),&
-                            tvar1(imax,jmax,kmax),&
-                            qvar1(imax,jmax,kmax)
-
-      do k = 1,kmax  
-         do j = 1,jmax
-	    do i = 1,imax
-	       pvar(i,j,k) =ptop+eta(k)*(dam(i,j)-ptop)
-               pvarlog(i,j,k)=log(pvar(i,j,k))
-            enddo
-	 enddo
-      enddo
-
-      pres_1dlog(1:kmax)=log(pres_1d(1:kmax))
-
-      do i = 1,imax
-        do j = 1,jmax
-          do k = 1,kmax-1
-            if( pres_1d(k).ge.pvar(i,j,1) ) then
-                tt2(i,j,k)=( ist(i,j,1)*(pres_1dlog(k)-pvarlog(i,j,2))  &
-                            -ist(i,j,2)*(pres_1dlog(k)-pvarlog(i,j,1)) ) &
-                          /( pvarlog(i,j,1)-pvarlog(i,j,2) )
-                uvar1(i,j,k)=( uu2(i,j,1)*(pres_1dlog(k)-pvarlog(i,j,2))  &
-                            -uu2(i,j,2)*(pres_1dlog(k)-pvarlog(i,j,1)) ) &
-                          /( pvarlog(i,j,1)-pvarlog(i,j,2) )
-                vvar1(i,j,k)=( vv2(i,j,1)*(pres_1dlog(k)-pvarlog(i,j,2))  &
-                            -vv2(i,j,2)*(pres_1dlog(k)-pvarlog(i,j,1)) ) &
-                          /( pvarlog(i,j,1)-pvarlog(i,j,2) )
-                qvar1(i,j,k)=( iqvar(i,j,1)*(pres_1dlog(k)-pvarlog(i,j,2))  &
-                            -iqvar(i,j,2)*(pres_1dlog(k)-pvarlog(i,j,1)) ) &
-                          /( pvarlog(i,j,1)-pvarlog(i,j,2) )
-
-            else
-                do kk=2,kmax
-                   if( pres_1d(k).ge.pvar(i,j,kk) )then
-                       k1=kk-1
-                       k2=kk
-                       go to 10
-                   endif
-                enddo
- 10             continue
-                tt2(i,j,k)=( ist(i,j,k1)*(pres_1dlog(k)-pvarlog(i,j,k2))  &
-                            -ist(i,j,k2)*(pres_1dlog(k)-pvarlog(i,j,k1)) ) &
-                          /( pvarlog(i,j,k1)-pvarlog(i,j,k2) )
-                uvar1(i,j,k)=( uu2(i,j,k1)*(pres_1dlog(k)-pvarlog(i,j,k2))  &
-                            -uu2(i,j,k2)*(pres_1dlog(k)-pvarlog(i,j,k1)) ) &
-                          /( pvarlog(i,j,k1)-pvarlog(i,j,k2) )
-                vvar1(i,j,k)=( vv2(i,j,k1)*(pres_1dlog(k)-pvarlog(i,j,k2))  &
-                            -vv2(i,j,k2)*(pres_1dlog(k)-pvarlog(i,j,k1)) ) &
-                          /( pvarlog(i,j,k1)-pvarlog(i,j,k2) ) 
-                qvar1(i,j,k)=( iqvar(i,j,k1)*(pres_1dlog(k)-pvarlog(i,j,k2))  &
-                            -iqvar(i,j,k2)*(pres_1dlog(k)-pvarlog(i,j,k1)) ) &
-                          /( pvarlog(i,j,k1)-pvarlog(i,j,k2) )             
-            endif 
-         enddo
-
-         tt2(i,j,kmax)=ist(i,j,kmax)
-         uvar1(i,j,kmax)=uu2(i,j,kmax)
-         vvar1(i,j,kmax)=vv2(i,j,kmax)
-         qvar1(i,j,kmax)=iqvar(i,j,kmax)
-
-        enddo
-      enddo
-
-      do k=1,kmax
-        tvar1(1:imax,1:jmax,k) = (tt2(1:imax,1:jmax,k)+t0)*&
-                               (pres_1d(k)/100000.0)**(rc/cp)
-      enddo
-
-      RETURN      
-      END 
 

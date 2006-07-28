@@ -433,193 +433,121 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   ! End defining mode:
   CALL ncendf(ncid,ierr)
 
+  !++++++++++++++++++++++++++++
   ! assign values to variables:
-  ! Times:
+  !++++++++++++++++++++++++++++
+
+  ! 1. Times:
   start = (/1,1,1,1/)
   count(1) = 19
   count(2:4) = 1
   CALL ncvptc(ncid,tmid,start,count,times,19,ierr)
-  ! U:
+
+  ! 2. U:
   ! Stagger: Y and Z:
-
   CALL StaggerXY_3D(u,imax,jmax,kmax,imax,jmax-1,kmax,u_out)
-  CALL StaggerLogP(ptop,dam,znw,u_out,imax,jmax-1,kmax,unc1)
-
-!  tmp(1:imax,1:jmax-1,1:kmax) = 0.5*( &
-!  	u(1:imax,1:jmax-1,1:kmax)+ &
-!     	u(1:imax,2:jmax  ,1:kmax))
-!  unc(1:imax,1:jmax-1,1:kmax-1) = 0.5*( &
-!  	tmp(1:imax,1:jmax-1,1:kmax-1)+ &
-!     	tmp(1:imax,1:jmax-1,2:kmax  ))
-
+  CALL StaggerZ(u_out,imax,jmax-1,kmax,ptop,dam,znw,4,0,unc1)
   count(1) = imax
   count(2) = jmax-1
   count(3) = kmax-1
   CALL ncvpt(ncid,uid,start,count,unc1,ierr)
-  ! V:
-  ! Stagger: X and Z:
-  
-  call StaggerXY_3D(v,imax,jmax,kmax,imax-1,jmax,kmax,v_out)
-  call StaggerLogP(ptop,dam,znw,v_out,imax-1,jmax,kmax,vnc1)
 
-!  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
-! 	v(1:imax-1,1:jmax,1:kmax)+ &
-!     	v(2:imax  ,1:jmax,1:kmax))
-!  vnc(1:imax-1,1:jmax,1:kmax-1) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax,1:kmax-1)+ &
-!     	tmp(1:imax-1,1:jmax,2:kmax  ))
- 
+  ! 3. V:
+  ! Stagger: X and Z:
+  call StaggerXY_3D(v,imax,jmax,kmax,imax-1,jmax,kmax,v_out)
+  CALL StaggerZ(v_out,imax-1,jmax,kmax,ptop,dam,znw,4,0,vnc1)
   count(1) = imax-1
   count(2) = jmax
   count(3) = kmax-1
   CALL ncvpt(ncid,vid,start,count,vnc1,ierr)
-  ! T:
+
+  ! 4. T:
   ! Stagger: X, Y and Z:
-
   call StaggerXY_3D(t,imax,jmax,kmax,imax-1,jmax-1,kmax,t_out)
-  call StaggerLogP(ptop,dam,znw,t_out,imax-1,jmax-1,kmax,tnc1)  
-
-!  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
-! 	t(1:imax-1,1:jmax,1:kmax)+ &
-!     	t(2:imax  ,1:jmax,1:kmax))
-!  tmp(1:imax-1,1:jmax-1,1:kmax) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1:kmax)+ &
-!     	tmp(1:imax-1,2:jmax  ,1:kmax))
-!  tnc(1:imax-1,1:jmax-1,1:kmax-1) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1:kmax-1)+ &
-!     	tmp(1:imax-1,1:jmax-1,2:kmax  ))
-
-  ! Test stagger:
-!  CALL StaggerLogP(ptop,dam,znw,tmp(1:imax-1,1:jmax-1,1:kmax),&
-!	imax-1,jmax-1,kmax,tmp(1:imax-1,1:jmax-1,1:kmax-1))
-!  tnc(1:imax-1,1:jmax-1,1:kmax-1) = tmp(1:imax-1,1:jmax-1,1:kmax-1)
-
-
+  CALL StaggerZ(t_out,imax-1,jmax-1,kmax,ptop,dam,znw,4,0,tnc1)
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = kmax-1
   CALL ncvpt(ncid,tid,start,count,tnc1,ierr)
-  ! MU:
+
+  ! 5. MU:
   ! Stagger: X, and Y:
-
   call StaggerXY_3D(pdam,imax,jmax,kmax,imax-1,jmax-1,1,mu_out)
-
-!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
-! 	pdam(1:imax-1,1:jmax)+ &
-!     	pdam(2:imax  ,1:jmax))
-!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1)+ &
-!     	tmp(1:imax-1,2:jmax  ,1))
-
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,muid,start,count,mu_out,ierr)
-  ! MUB:
+
+  ! 6. MUB:
   ! Stagger: X, and Y:
-
   call StaggerXY_3D(dam,imax,jmax,kmax,imax-1,jmax-1,1,mub_out)
-
-!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
-! 	dam(1:imax-1,1:jmax)+ &
-!     	dam(2:imax  ,1:jmax))
-!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1)+ &
-!     	tmp(1:imax-1,2:jmax  ,1))
-
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,mubid,start,count,mub_out,ierr)
-  ! QVAPOR:
+
+  ! 7. QVAPOR:
   ! Stagger: X, Y and Z:
-
   call StaggerXY_3D(sh,imax,jmax,kmax,imax-1,jmax-1,kmax,qvapor_out)
-  call StaggerLogP(ptop,dam,znw,qvapor_out,imax-1,jmax-1,kmax,qnc1)
-
-!  tmp(1:imax-1,1:jmax,1:kmax) = 0.5*( &
-! 	sh(1:imax-1,1:jmax,1:kmax)+ &
-!     	sh(2:imax  ,1:jmax,1:kmax))
-!  tmp(1:imax-1,1:jmax-1,1:kmax) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1:kmax)+ &
-!     	tmp(1:imax-1,2:jmax  ,1:kmax))
-!  tnc(1:imax-1,1:jmax-1,1:kmax-1) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1:kmax-1)+ &
-!     	tmp(1:imax-1,1:jmax-1,2:kmax  ))
-
+  CALL StaggerZ(qvapor_out,imax-1,jmax-1,kmax,ptop,dam,znw,4,0,qnc1)
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = kmax-1
   CALL ncvpt(ncid,qid,start,count,qnc1,ierr)
-  ! MAPFAC_M:
+
+  ! 8. MAPFAC_M:
   ! Stagger: X, and Y:
-
   call StaggerXY_3D(mapfac,imax,jmax,kmax,imax-1,jmax-1,1,mapfac_m_out)
-
-!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
-! 	mapfac(1:imax-1,1:jmax)+ &
-!     	mapfac(2:imax  ,1:jmax))
-!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1)+ &
-!     	tmp(1:imax-1,2:jmax  ,1))
-
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,mapid,start,count,mapfac_m_out,ierr)
-  ! P_TOP:
+
+  ! 9. P_TOP:
   count(1) = 1
   count(2) = 1
   CALL ncvpt(ncid,ptid,start,count,ptop,ierr)
-  ! ZNU:
+
+  ! 10. ZNU:
   ! Stagger: Z:
   count(1) = kmax-1
   count(2) = 1
   CALL ncvpt(ncid,znuid,start,count,znu,ierr)
-  ! ZNW:
+
+  ! 11. ZNW:
   ! Unstagger: Z:
   count(1) = kmax
   count(2) = 1
   CALL ncvpt(ncid,znwid,start,count,znw,ierr)
-  ! XLAT:
+
+  ! 12. XLAT:
   ! Stagger: X, and Y:
-  
   call StaggerXY_3D(lat,imax,jmax,kmax,imax-1,jmax-1,1,xlat_out)
-
-!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
-! 	lat(1:imax-1,1:jmax)+lat(2:imax  ,1:jmax))
-!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1)+ &
-!     	tmp(1:imax-1,2:jmax  ,1))
-
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,latid,start,count,xlat_out,ierr)
-  ! XLONG:
+
+  ! 13. XLONG:
   ! Stagger: X, and Y:
-
   call StaggerXY_3D(lon,imax,jmax,kmax,imax-1,jmax-1,1,xlong_out)
-
-!  tmp(1:imax-1,1:jmax,1) = 0.5*( &
-! 	lon(1:imax-1,1:jmax)+lon(2:imax  ,1:jmax))
-!  tnc(1:imax-1,1:jmax-1,1) = 0.5*( &
-! 	tmp(1:imax-1,1:jmax-1,1)+ &
-!     	tmp(1:imax-1,2:jmax  ,1))
-
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,lonid,start,count,xlong_out,ierr)
-  ! RDX:
+
+  ! 14. RDX:
   count(1:2) = 1
   CALL ncvpt(ncid,rxid,start,count,1.0/dxy,ierr)
-  ! RDY:
+
+  ! 15. RDY:
   count(1:2) = 1
   CALL ncvpt(ncid,ryid,start,count,1.0/dxy,ierr)
 
+  !+++++++++++++++++++++++++++++++++++++++++++
   ! Assign fake values to the extra variables:
-  ! PHB:
+  !+++++++++++++++++++++++++++++++++++++++++++
+  ! 16. PHB:
   ! Stagger: X, Y:
   DO k=1,kmax-1
     tnc(1:imax-1,1:jmax-1,k) = 40000.0+(k-1)*90000.0
@@ -628,70 +556,80 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(2) = jmax-1
   count(3) = kmax-1
   CALL ncvpt(ncid,phbid,start,count,tnc,ierr)
-  ! LANDMASK:
+
+  ! 17. LANDMASK:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 1.0
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,lmkid,start,count,tnc,ierr)
-  ! XICE:
+
+  ! 18. XICE:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,iceid,start,count,tnc,ierr)
-  ! SST:
+
+  ! 19. SST:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 280.0
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,sstid,start,count,tnc,ierr)
-  ! IVGTYP:
+
+  ! 20. IVGTYP:
   ! Stagger: X, and Y:
   itnc(1:imax-1,1:jmax-1,1) = 2
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,vgid,start,count,itnc,ierr)
-  ! ISLTYP:
+
+  ! 21. ISLTYP:
   ! Stagger: X, and Y:
   itnc(1:imax-1,1:jmax-1,1) = 1
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,slid,start,count,itnc,ierr)
-  ! VEGFRA:
+
+  ! 22. VEGFRA:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,vfid,start,count,tnc,ierr)
-  ! SNOW:
+
+  ! 23. SNOW:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,snwid,start,count,tnc,ierr)
-  ! U10:
+
+  ! 24. U10:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,u10id,start,count,tnc,ierr)
-  ! V10:
+
+  ! 25. V10:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,v10id,start,count,tnc,ierr)
-  ! SMOIS:
+
+  ! 26. SMOIS:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1:nsol) = 0.0
   count(1) = imax-1
@@ -699,7 +637,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 4
   count(4) = 1
   CALL ncvpt(ncid,smsid,start,count,tnc,ierr)
-  ! TSLB:
+
+  ! 27. TSLB:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1:nsol) = 280.0
   count(1) = imax-1
@@ -707,7 +646,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 4
   count(4) = 1
   CALL ncvpt(ncid,tslbid,start,count,tnc,ierr)
-  ! TSK:
+  ! 28. TSK:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 280.0
   count(1) = imax-1

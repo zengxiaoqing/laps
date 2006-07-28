@@ -128,22 +128,18 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
     temptr3d(1:imax,1:jmax,k) = temptr3d(1:imax,1:jmax,k)* &
                                (100000.0/pressr1d(k))**(rc/cp)-t0
   ENDDO
-  CALL laps2mass(temptr3d,imax,jmax,kmax,t_mass_bkg, &
-		 znw,pressr1d,dam)
+  CALL laps2mass(temptr3d,imax,jmax,kmax,pressr1d,dam,znw,4,0,t_mass_bkg)
 
   ! QVAPOR background:
-  CALL laps2mass(sphumd3d,imax,jmax,kmax,sh_mass_bkg, &
-		 znw,pressr1d,dam)
+  CALL laps2mass(sphumd3d,imax,jmax,kmax,pressr1d,dam,znw,4,0,sh_mass_bkg)
 
   ! U background:
 WRITE(10) imax,jmax,kmax,u_laps_bkg(1:imax,1:jmax,1:kmax),dam(1:imax,1:jmax)
-  CALL laps2mass(u_laps_bkg,imax,jmax,kmax,u_mass_bkg, &
-		 znw,pressr1d,dam)
+  CALL laps2mass(u_laps_bkg,imax,jmax,kmax,pressr1d,dam,znw,4,0,u_mass_bkg)
 WRITE(10) u_mass_bkg(1:imax,1:jmax,1:kmax)
 
   ! V background:
-  CALL laps2mass(v_laps_bkg,imax,jmax,kmax,v_mass_bkg, &
-		 znw,pressr1d,dam)
+  CALL laps2mass(v_laps_bkg,imax,jmax,kmax,pressr1d,dam,znw,4,0,v_mass_bkg)
 
   WRITE(12) znw,pressr1d,dam,znu
 
