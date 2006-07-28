@@ -132,6 +132,9 @@ c
       integer   n_snd,nsnd,mxz
 c
       logical lrunbal
+c 
+      logical incl_clom
+
       logical lrotate/.false./
       logical larray_diag/.false./
       logical frstone,lastone
@@ -159,7 +162,9 @@ c    Arrays for Airdrop application
       real, allocatable, dimension (:) :: udropc,vdropc,tdropc,rric,rrjc
 c_______________________________________________________________________________
 c
-      call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,istatus)
+
+      call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,
+     .                    incl_clom,istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
          stop
@@ -265,6 +270,19 @@ c
      .         ,lapsphi(nx,ny,nz)
      .         ,omo(nx,ny,nz))
 
+c 
+
+        if (.not.incl_clom) then
+
+      call get_laps_3d_analysis_data_isi(i4time_sys,nx,ny,nz
+     +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,istatus)
+      if (istatus .ne. 1) then
+         print *,'Error in get_laps_3d_analysis_data_isi...Abort.'
+         stop
+      endif
+
+	else
+
       call get_laps_3d_analysis_data(i4time_sys,nx,ny,nz
      +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,istatus)
 c omo is the cloud vertical motion from lco
@@ -272,6 +290,9 @@ c omo is the cloud vertical motion from lco
          print *,'Error getting LAPS analysis data...Abort.'
          stop
       endif
+
+	endif
+
 c
 c *** Get LAPS 2D surface pressure.
 c
@@ -4280,6 +4301,162 @@ c
 c
       return
       end
+
+
+c ============================================================
+c
+      subroutine get_laps_3d_analysis_data_isi(i4time,nx,ny,nz
+     +,phi,t,u,v,sh,omo,istatus)
+c
+      implicit none
+
+      integer   nx,ny,nz
+      integer   i4time
+      integer   istatus
+      integer   lendlco
+      integer   lends
+      integer   lendt
+      integer   lendw
+      integer   lendsh
+      integer   i,j,k
+      real*4  r_missing_data
+      real*4  phi(nx,ny,nz),t(nx,ny,nz)
+     .       ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
+     .       ,omo(nx,ny,nz)
+
+      real*4, allocatable :: om(:,:,:)
+
+
+      character*255 tempdir,winddir,sfcdir,shdir,lcodir
+      character*125 comment
+      character*31  tempext,windext,sfcext,shext,lcoext
+      character*10  units
+      logical found_lowest
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if (istatus .ne. 1) then
+         print *,'Error getting r_missing_data...Abort.'
+         return
+      endif
+
+      shext='lq3'
+      tempext='lt1'
+      windext='lw3'
+      sfcext='lsx'
+      lcoext='lco'
+
+      call get_directory(tempext,tempdir,lendt)
+      call get_directory(windext,winddir,lendw)
+      call get_directory(sfcext,sfcdir,lends)
+      call get_directory(shext,shdir,lendsh)
+      call get_directory(lcoext,lcodir,lendlco)
+
+      call get_laps_3d(i4time,nx,ny,nz
+     1  ,tempext,'ht ',units,comment,phi,istatus)
+
+      if (istatus .ne. 1) then
+         print *,'Error getting LAPS height data...Abort.'
+         return
+      endif
+c
+c *** Get laps temps
+c
+      call get_laps_3d(i4time,nx,ny,nz
+     1  ,tempext,'t3 ',units,comment,t,istatus)
+
+      if (istatus .ne. 1) then
+         print *,'Error getting LAPS temp data...Abort.'
+         return
+      endif
+c
+c *** Get laps spec humidity
+c
+      call get_laps_3d(i4time,nx,ny,nz
+     1  ,shext,'sh ',units,comment,sh,istatus)
+
+      if(istatus .ne. 1)then
+         print*,'Error getting LAPS sh  data ... Abort.'
+         return
+      endif
+C    The specific humidity field uses the missing value
+c    for below ground points, so we need to fill those in by
+c    replicating the lowest valid value downward (upward in array
+c    space).
+
+      DO j = 1, ny
+        DO i = 1, nx
+          k = 1
+          found_lowest = .false.
+
+          DO WHILE (.NOT. found_lowest)
+            IF (sh(i,j,k) .lt. 1.e37) THEN
+              found_lowest = .true.
+              sh(i,j,1:k) = sh(i,j,k)
+            ELSE
+              k = k + 1
+              IF (k .ge. nz) THEN
+                PRINT *, 'No valid SH found in column!'
+                PRINT *, 'I/J = ', i,j
+                STOP
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDDO
+      ENDDO
+
+c    Make sure we got it right!
+c      print *, 'Min/Max/Center values of SH:'
+c      DO k = 1, nz
+c        print *, minval(sh(:,:,k)),maxval(sh(:,:,k)),
+c     +           sh(nx/2,ny/2,k)
+c      ENDDO
+c
+c *** Get laps cloud omega
+c
+
+
+         istatus=0.
+      if(istatus .ne. 1)then
+         print*,'we are in the _isi version of get_laps_3d' 
+         print*,'No LAPS Cld Omega data ....'
+         print*,'Initializing omo array with zero'
+         call zero3d(omo,nx,ny,nz)
+      endif
+c
+c *** Get laps wind data.
+c
+      call get_laps_3d(i4time,nx,ny,nz
+     1  ,windext,'u3 ',units,comment,u,istatus)
+
+      if (istatus .ne. 1) then
+         print *,'Error getting LAPS time 0 u3 data...Abort.'
+         return
+      endif
+
+      call get_laps_3d(i4time,nx,ny,nz
+     1  ,windext,'v3 ',units,comment,v,istatus)
+
+      if (istatus .ne. 1) then
+         print *,'Error getting LAPS time 0 v3 data...Abort.'
+         return
+      endif
+
+      allocate (om(nx,ny,nz))
+
+      call get_laps_3d(i4time,nx,ny,nz
+     1  ,windext,'om ',units,comment,om,istatus)
+
+      if (istatus .ne. 1) then
+         print *,'Error getting LAPS time 0 v3 data...Abort.'
+         return
+      endif
+      ! BLS commented this out as a test on 11/19/02
+      !where(omo .eq. r_missing_data)omo=om
+
+      deallocate(om)
+      return
+      end
+c!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 c---------------------------------------------------------------------
       function RfKondo(ri)
 c
