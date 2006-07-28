@@ -29,7 +29,9 @@
 #                      which can also be a substitute input for archive time
 #                      Eg., 28-Aug-2002-1200. Purger is not run.
 #
-# -d                   Delay in hours (lag time or displaced real-time)
+# -d                   Delay in hours (lag time or displaced real-time). This generally 
+#                      should be set in cases where the wall clock time of the run will 
+#                      differ from the analysis time by more than the laps cycle time.
 #
 # -e                   Extend time in hours (allow for long runs beyond cycle time)
 #
@@ -84,7 +86,7 @@
 # last arg             $LAPS_DATA_ROOT, path to data directory
 #                      purger (see call to purger.pl)
 #
-              
+               
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
@@ -196,7 +198,9 @@ my $delay_time = 0;
 $delay_time = $opt_d if($opt_d > 0);
 
 my $extend_time=0;
-$extend_time = $opt_e if($opt_e >0);
+if(defined $opt_e){ # allow extend time to be either positive or negative
+    $extend_time = $opt_e;
+}
 
 my $archive_time = 0;
 $archive_time = $opt_a if($opt_a > 0);
