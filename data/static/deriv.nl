@@ -1,6 +1,9 @@
  &deriv_nl
  mode_evap=0,
  l_bogus_radar_w=.true.,
+ vv_to_height_ratio_Cu=0.5,
+ vv_to_height_ratio_Sc=0.05,
+ vv_for_St=.01,
  /
 
 c DERIV PARAMETERS
@@ -15,3 +18,8 @@ c
 c l_bogus_radar_w - flag for whether to call 'get_radar_deriv' to recalculate
 c                   the cloud omega with consideration of radar data
 c
+c vv_to_height_ratio_Cu - parameter for the cloud omega (vv) subroutinec
+c
+c vv_to_height_ratio_Sc - parameter for the cloud omega (vv) subroutine
+c
+c vv_for_St             - parameter for the cloud omega (vv) subroutine
