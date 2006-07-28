@@ -357,7 +357,7 @@ cdis
         elseif(nobs .gt. 0)then ! Obs are identical to lvl below; 
                                 ! Use analysis weights from last analyzed level
           write(6,51)k,nstart,nstop,nobs
-51        format(' lvl,nstart,nstop,nobs=',4i5,
+51        format(' lvl,nstart,nstop,nobs=',4i6,
      1           ' Identical Obs; Copy wts from last analyzed lvl')       
 
           km1 = k - 1
