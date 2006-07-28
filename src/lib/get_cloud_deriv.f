@@ -39,6 +39,9 @@ cdis
      1                          l_flag_cloud_type,cldpcp_type_3d,
      1                          l_flag_mvd,mvd_3d,
      1                          l_flag_icing_index,icing_index_3d,
+     1                          vv_to_height_ratio_Cu,                    ! I
+     1                          vv_to_height_ratio_Sc,                    ! I
+     1                          vv_for_St,                                ! I
      1                          l_flag_bogus_w,omega_3d,istatus)
 
 !       Steve Albers
@@ -91,6 +94,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         real*4 lwc_res_1d(nk)
         real*4 prob_laps(nk)
         real*4 d_thetae_dz_1d(nk)
+
         integer*4 cloud_type_1d(nk)
 
         integer*4 iarg
@@ -124,6 +128,10 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 !       parameter (THRESH_CVR = 0.75)
 
         character*2 c2_type
+
+        Real*4 vv_to_height_ratio_Cu
+        Real*4 vv_to_height_ratio_Sc
+        Real*4 vv_for_St
 
         write(6,*)' Start LWC/Omega/Snow Potential Routine'
 
@@ -534,7 +542,11 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
             if(l_flag_bogus_w)then
               if(l_cloud)then
                   call cloud_bogus_w
-     1            (grid_spacing_cen_m,cloud_type_1d,heights_1d,nk,w_1d)
+     1            (grid_spacing_cen_m,cloud_type_1d,heights_1d,nk  ! I
+     1                           ,vv_to_height_ratio_Cu            ! I
+     1                           ,vv_to_height_ratio_Sc            ! I
+     1                           ,vv_for_St                        ! I
+     1                           ,w_1d)                            ! O
 
                   do k = 1,nk ! Transfer the 1D w into the output omega array
                       if(w_1d(k) .ne. r_missing_data)then
