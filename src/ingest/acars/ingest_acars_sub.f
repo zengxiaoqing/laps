@@ -163,7 +163,13 @@ C
               goto 900
           endif
 
-          if(altitude(i) .gt. 20000.)then
+          if(nanf(altitude(i)) .eq. 1)then
+              if(l_debug)write(6,*)' Altitude failed Nan test - reject'       
+     1                            ,altitude(i)
+              goto 900
+          endif
+
+          if(altitude(i) .gt. 20000. .or. altitude(i) .lt. -1000)then
               if(l_debug)write(6,*)' Altitude is suspect - reject'
      1                            ,altitude(i)
               goto 900
