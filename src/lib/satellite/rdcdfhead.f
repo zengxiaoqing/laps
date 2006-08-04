@@ -21,7 +21,7 @@ C
 C
 C  Open netcdf File for reading
 C
-      call s_len(fname,nf,inf)
+      call s_len(fname,nf)
       print*,'Open and read file ',fname(1:nf)
       nf_status = NF_OPEN(fname,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
