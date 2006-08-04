@@ -12,7 +12,7 @@
       implicit none
       integer ni,nj,nk, istatus, i, j, k
       character*(*) var_2d
-      real field_3d(ni,nj,nk), lower_bound, upper_bound
+      real field_3d(ni,nj,nk), lower_bound, upper_bound, arg
       real r_missing_data
 
       if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3'.or.
@@ -36,33 +36,45 @@
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus .ne. 1)return
 
+      call check_nan3(field_3d,i,j,k,istatus) ! relatively efficient
+      if(istatus .eq. 0)then ! identify the grid point with the Nan
+          do k=1,nk
+          do j=1,nj
+          do i=1,ni
+              call check_nan(field_3d(i,j,k),istatus)
+              if(istatus .ne. 1)then
+                  write(6,*)' QC Error, Nan detected in ',var_2d,' at '       
+     1                     ,i,j,k
+                  istatus = 0
+                  return
+              endif
+          enddo ! i
+          enddo ! j
+          enddo ! k
+      endif
+
       do k=1,nk
       do j=1,nj
       do i=1,ni
-          call check_nan(field_3d(i,j,k),istatus)
-          if(istatus .ne. 1)then
-              write(6,*)' QC Error, Nan detected in ',var_2d,' at '
-     1                 ,i,j,k
-              istatus = 0
-              return
-          endif
-
-          if(field_3d(i,j,k) .gt. upper_bound .and.
-     1       field_3d(i,j,k) .ne. r_missing_data)then
+          arg = field_3d(i,j,k)
+          if(arg .gt. upper_bound)then
+            if(arg .ne. r_missing_data)then
               write(6,*)' QC Error detected in ',var_2d,' at ',i,j,k
               write(6,*)' Value exceeded upper bound of '
      1                 ,upper_bound,', value = ',field_3d(i,j,k)       
               istatus = 0
               return
+            endif
           endif
 
-          if(field_3d(i,j,k) .lt. lower_bound .and.
-     1       field_3d(i,j,k) .ne. r_missing_data)then
+          if(arg .lt. lower_bound)then
+            if(arg .ne. r_missing_data)then
               write(6,*)' QC Error detected in ',var_2d,' at ',i,j,k
               write(6,*)' Value exceeded lower bound of '
      1                 ,lower_bound,', value = ',field_3d(i,j,k)       
               istatus = 0
               return
+            endif
           endif
 
       enddo ! i
