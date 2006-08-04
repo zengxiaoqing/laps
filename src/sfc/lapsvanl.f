@@ -301,6 +301,8 @@ c
 c
 c.....	Start...set up constants, initialize arrays, etc.
 c
+        I4_elapsed = ishow_timer()
+
 	call tagit('laps_vanl', 19991123)
         rms_thresh_norm = 1.0    ! used for barnes_multivariate
 	zcon = 0.
@@ -495,6 +497,8 @@ c
 
 	enddo !i
 	enddo !j
+
+        I4_elapsed = ishow_timer()
 c
 cc	do j=1,jmax
 c	   do i=1,imax
