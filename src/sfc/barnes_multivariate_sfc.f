@@ -197,7 +197,7 @@ C
 
         write(6,*)' Subroutine Barnes_univariate_sfc'
 
-        ISTAT = INIT_TIMER()
+        I4_elapsed = ishow_timer()
 
         call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
         if(istatus .ne. 1)return
