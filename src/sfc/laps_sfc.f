@@ -292,6 +292,7 @@ c       QC parms: # of standard deviations
      1                       ,thresh_t,thresh_td,thresh_mslp
      1                       ,sfc_nl_parms,istatus)
 
+        ISTAT = INIT_TIMER()
 c
 c.....  Continue...get static stuff.
 c
@@ -464,6 +465,8 @@ c
  999    format(i5,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1
      1        ,2x,3f8.0,2x,2f8.3)
 c
+        I4_elapsed = ishow_timer()
+
         call zero(wt, ni,nj)
         if(n_obs_b .gt. 0.)then
 	    call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
@@ -476,6 +479,8 @@ c.....  a previous LAPS analysis. If both LAPS and FSF are missing, print a
 c.....  warning. Ground temp is read from 'get_modelfg_2d', that looks for
 c.....  an FSF forecast according to the fdda parameter, otherwise LGB.
 c
+        I4_elapsed = ishow_timer()
+
         call zero(wt_u, ni,nj)
         call zero(wt_v, ni,nj)
         call zero(wt_t, ni,nj)
@@ -519,6 +524,8 @@ c
 	   call zero(u_bk,ni,nj)
 	   call zero(v_bk,ni,nj)
 	endif
+
+        I4_elapsed = ishow_timer()
 c
 	print *,' '
 	print *,' Getting temperature background....'
@@ -658,6 +665,8 @@ c
 	enddo !j
 c
  600	continue
+
+        I4_elapsed = ishow_timer()
 c
 c.....	QC the surface data.
 c
@@ -792,6 +801,8 @@ c
 	   print *,' From MDAT_LAPS:  Error Return.  Stop.'
 	   stop 
 	endif
+
+        I4_elapsed = ishow_timer()
 c
 c
 c.....	Call LAPSVANL to do the actual variational analysis, and calculate
