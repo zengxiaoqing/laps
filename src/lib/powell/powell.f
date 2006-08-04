@@ -35,7 +35,7 @@ cdis
 cdis 
 
       SUBROUTINE POWELL(P,XI,N,NP,FTOL,ITER,FRET,func)
-      PARAMETER (NMAX=40,ITMAX=50)
+      PARAMETER (NMAX=40,ITMAX=5)
       EXTERNAL FUNC
       real func                 ! funciton type
       DIMENSION P(NP),XI(NP,NP),PT(NMAX),PTT(NMAX),XIT(NMAX)
