@@ -970,8 +970,8 @@ c     write out solution details
 c     criterion to accept the result is based on variational 
 c     performance, the cloud test is in the process of being dropped.
             
-c     if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 50
-            if ( iter(i,j) .lt. 50
+c     if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 5
+            if ( iter(i,j) .lt. 5
 c     1           .and. abs(abs(x(1))-1.) .lt. .1
      1           .and.
      1           iter(i,j) .gt. 0 
