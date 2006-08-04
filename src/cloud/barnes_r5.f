@@ -69,6 +69,8 @@ cdis
       logical l_perimeter
       real*4 cld_snd(max_cld_snd,kmax)
       real*4 wt_snd(max_cld_snd,kmax)
+      real*4 cld_snd_diff(max_cld_snd,kmax)
+      real*4 wt_snd_diff(max_cld_snd,kmax)
       integer*4 i_snd(max_cld_snd)
       integer*4 j_snd(max_cld_snd)
 
@@ -77,9 +79,11 @@ cdis
 
       real iiilut(-NX_DIM_LUT:NX_DIM_LUT,-NY_DIM_LUT:NY_DIM_LUT)
       integer nlast(KCLOUD)
-      logical l_analyze(KCLOUD)
+      logical l_analyze(KCLOUD), l_diff_snd
 
       write(6,*)' subroutine barnes_r5...'
+
+      l_diff_snd = .false.
 
       if(n_cld_snd .gt. max_cld_snd)then
           write(6,*)' barnes_r5: ERROR, too many cloud soundings'
@@ -117,7 +121,7 @@ cdis
           write(6,*)' Good value of nskip = ',nskip
       endif
 
-      if(l_perimeter)write(6,*)' Number of cloud soundings = ',n_cld_snd
+      write(6,*)' Number of cloud soundings = ',n_cld_snd
 
       istatus = 1
       exponent_distance_wt = 5.0
@@ -156,10 +160,8 @@ cdis
       ncnt=0
       do k=1,kmax
 
-        if(.not. l_perimeter)then
-            write(6,*)' Code error: stop'
+        if(.true.)then
 
-        else ! l_perimeter
             nlast(k) = ncnt
             do n = 1,n_cld_snd
               if(cld_snd(n,k) .eq. r_missing_data) go to 233
@@ -179,16 +181,14 @@ cdis
 233           continue
             enddo ! n
 
-        endif ! l_perimeter
+        endif 
 
         if(k .gt. 1)then
             km1 = k - 1
             l_analyze(k) = .false.
 
-            if(.not. l_perimeter)then
-              write(6,*)' Code error: stop'
+            if(.true.)then
 
-            else
               do n=1,n_cld_snd
                 if(cld_snd(n,k) .ne. cld_snd(n,km1))then
                     l_analyze(k) = .true.
@@ -196,7 +196,7 @@ cdis
                 endif
               enddo ! n
 
-            endif ! l_perimeter
+            endif 
 
 
 250         continue
@@ -206,6 +206,33 @@ cdis
         endif
 
       enddo ! k
+
+!     Calculate difference soundings (soundings relative to level below)
+!     This will allow more efficient summing
+!     It is assumed for now that 'wt_snd' is always 1.00 or 'r_missing_data'
+      if(l_diff_snd)then
+          do n = 1,n_cld_snd
+              cld_snd_diff(n,1) = cld_snd(n,1)
+              wt_snd_diff(n,1) = wt_snd(n,1)
+              
+              do k = 1,kmax              
+                  if(cld_snd(n,k) .ne. cld_snd(n,km1))then
+                      if(cld_snd(n,k) .eq. r_missing_data)then
+                          wt_snd_diff(n,k) = -wt_snd(n,k-1)
+                          cld_snd_diff(n,k) = cld_snd(n,k-1)
+                      elseif(cld_snd(n,k-1) .eq. r_missing_data)then
+                          wt_snd_diff(n,k) = wt_snd(n,k)
+                          cld_snd_diff(n,k) = cld_snd(n,k)
+                      else ! diff the two soundings
+                          cld_snd_diff(n,k) = cld_snd(n,k)
+     1                                      - cld_snd(n,k-1)      
+                          wt_snd_diff(n,k) = wt_snd(n,k)
+                      endif
+                  endif
+              enddo ! k
+
+          enddo ! n      
+      endif
 
       if(ncnt.eq.0) then
          write(6,1002)
@@ -258,6 +285,9 @@ cdis
           write(6,50)k,nstart,nstop,nobs
 50        format(' lvl,nstart,nstop,nobs=',4i6)
 
+          sum_a=0.
+          sumwt_a=0.
+
 !         Analyze every few grid points
           do j=1,jmax,nskip
           do i=1,imax,nskip
@@ -277,22 +307,26 @@ cdis
                 enddo ! n
             endif
 
-!           Save ob weight sums for possible later reuse
-            sum_a(i,j) = sum
+!         enddo ! i
+!         enddo ! j
+
+!         do j=1,jmax,nskip
+!         do i=1,imax,nskip
 
 !           Add in model first guess as an ob
             sum   = sum   + weight_modelfg * cf_modelfg(i,j,k)
             sumwt = sumwt + weight_modelfg
 
 !           Save ob weight sums for possible later reuse
+            sum_a(i,j) = sum
             sumwt_a(i,j) = sumwt
 
 !           Divide weights to get analysis = f(obs + background)
-            if (sumwt.eq.0.)then
+            if (sumwt_a(i,j).eq.0.)then
               t(i,j,k) = r_missing_data
               istatus = 0
             ELSE
-              t(i,j,k)=sum/sumwt
+              t(i,j,k)=sum_a(i,j)/sumwt_a(i,j)
             end if
 
           enddo ! i
