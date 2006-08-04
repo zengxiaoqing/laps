@@ -835,8 +835,11 @@ c
       end
 c
 c
-	subroutine bkgwts(lat,lon,topo,numsfc,lat_s,lon_s,elev_s,
-     &                    rii,rjj,wt,ni,nj,mxstn,istatus)
+	subroutine bkgwts(lat,lon,topo,numsfc,lat_s,lon_s,elev_s,     ! I
+     &                    rii,rjj,                                    ! I
+     &                    wt,                                         ! O
+     &                    ni,nj,mxstn,                                ! I
+     &                    istatus)                                    ! O
 c
 c***************************************************************************
 c
@@ -900,47 +903,52 @@ c
 	  num2 = 0
 	  amean = 0.
 	  numsta = 0
-	do ista=1,numsfc
-	  if(rii(ista).le.0. .or. rjj(ista).le.0.) go to 12
-	  if(rii(ista).gt.ni .or. rjj(ista).gt.nj) go to 12
-	  distx = float(i) - rii(ista)
-	  disty = float(j) - rjj(ista)
-	  dist = sqrt(distx*distx + disty*disty)
+
+          if(.false.)then
+	      do ista=1,numsfc
+                  riii = rii(ista)
+                  rjjj = rjj(ista)
+
+  	          if(riii.le.0. .or. rjjj.le.0.) go to 12
+	          if(riii.gt.ni .or. rjjj.gt.nj) go to 12
+
+                  distx = float(i) - riii
+                  disty = float(j) - rjjj
+	          dist = sqrt(distx*distx + disty*disty)
 c
-cc	  if(dist .le. 2.) num2 = num2 + 1
-cc	  if(dist .le. 5.) num5 = num5 + 1
-cc	  if(dist .le. 10.) num10 = num10 + 1
-cc	  if(dist .le. 20.) num20 = num20 + 1
-cc	  if(dist .le. 30.) num30 = num30 + 1
-cc	  if(dist .le. 40.) num40 = num40 + 1
-cc	  if(dist .le. 50.) num50 = num50 + 1
+                  amean = amean + dist
+	          numsta = numsta + 1
+ 12           enddo !ista
+
+          else ! approximate as final output is hopefully unaffected
+              numsta = 1
+              dist = ni/2
+              amean = dist
+
+          endif
 c
-	  amean = amean + dist
-	  numsta = numsta + 1
- 12    enddo !ista
-c
-        if(numsta .eq. 0)then
+          if(numsta .eq. 0)then
             write(6,*)' Aborting subroutine bkgwts, no obs in domain...'
             istatus = 0
             return
-        else
+          else
    	    gpmean(i,j) = amean / float(numsta)
-        endif
+          endif
 
-	if(gpmean(i,j) .lt. dist_min) then
-	  dist_min = gpmean(i,j)
-	  min_i = i
-	  min_j = j
-	endif
-	if(gpmean(i,j) .gt. dist_max) then
-	  dist_max = gpmean(i,j)
-	  max_i = i
-	  max_j = j
-	endif
+	  if(gpmean(i,j) .lt. dist_min) then
+	      dist_min = gpmean(i,j)
+	      min_i = i
+	      min_j = j
+	  endif
+	  if(gpmean(i,j) .gt. dist_max) then
+	      dist_max = gpmean(i,j)
+	      max_i = i
+	      max_j = j
+	  endif
 c
-!	write(9,900) i,j,num2,num5,num10,num20,gpmean(i,j)
-!	write(9,900) i,j,num20,num30,num40,num50,gpmean(i,j)
-!900	format(i3,i3,':',3x,i4,7x,i4,7x,i4,8x,i4,5x,f12.1)
+!	  write(9,900) i,j,num2,num5,num10,num20,gpmean(i,j)
+!	  write(9,900) i,j,num20,num30,num40,num50,gpmean(i,j)
+!900	  format(i3,i3,':',3x,i4,7x,i4,7x,i4,8x,i4,5x,f12.1)
 c
         enddo !i
         enddo !j
@@ -955,7 +963,11 @@ c.....	Now calculate the weight array by scaling the mean distances
 c.....	so that the larger the mean, the larger the weight.
 c
 	r = dist_min / dist_max
-	con =  (small - alarge * r) / (1. - r)
+
+        if(r .ne. 1.)then
+	    con =  (small - alarge * r) / (1. - r)
+        endif
+
 	x = alarge - con
 	wt_min = 1.e30
 	wt_max = -1.e30
