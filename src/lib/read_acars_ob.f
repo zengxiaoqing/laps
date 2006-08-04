@@ -16,6 +16,8 @@
         data icount /0/
         save icount
 
+        icount = icount + 1
+
         dd = 99999.
         ff = 99999.
 
