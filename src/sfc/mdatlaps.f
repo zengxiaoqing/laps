@@ -180,10 +180,18 @@ c
 	character stn_mx*5, stn_mn*5, amax_stn_id*5
 c       
 	integer jstatus(20)
+        logical l_bilinear_interp 
 c
 c.....	START.  Set up constants.
 c
+        I4_elapsed = ishow_timer()
+
 	call tagit('mdatlaps', 19990917)
+
+!       This will interpolate the grid to the stations using a significantly
+!       faster bilinear interpolation instead of the splines.
+        l_bilinear_interp = .true.
+
 	jstatus(1) = -1		! put something in the status
 	jstatus(2) = -1
 	ibt = 0
@@ -261,10 +269,14 @@ c
 	   endif
 	enddo !i
 	enddo !j
+
+        I4_elapsed = ishow_timer()
 c
 c.....  Find the 2nd derivative table for use by the splines later.
 c
-	call splie2(x1a,x2a,bk_speed,imax,jmax,y2a)
+        if(.not. l_bilinear_interp)then
+	    call splie2(x1a,x2a,bk_speed,imax,jmax,y2a)
+        endif
 c
 c.....  Now call the spline routine for each station in the grid.
 c
@@ -278,8 +290,15 @@ c
 	   if(jj(i).lt.1 .or. jj(i).gt.jmax) go to 330
 	   aii = float(ii(i))
 	   ajj = float(jj(i))
-	   call splin2(x1a,x2a,bk_speed,y2a,imax,jmax,aii,ajj,
+
+           if(l_bilinear_interp)then
+               call bilinear_laps(aii,ajj,imax,jmax,bk_speed
+     1                           ,interp_spd(i))
+           else
+	       call splin2(x1a,x2a,bk_speed,y2a,imax,jmax,aii,ajj,
      &                 interp_spd(i))
+           endif
+
 	   if(ff_s(i) .le. badflag) then
 	      diff = badflag
 	   else
@@ -319,6 +338,9 @@ c
  410	format(1x,' There were ',i4,
      &            ' locations exceeding threshold of ',f6.3,
      &            ' at speeds greater than ',f6.1,' kts.')
+
+        I4_elapsed = ishow_timer()
+
 c
 c.....  If too many stations exceed threshold, or if the max in the 
 c.....  background is too much larger than the max in the obs, backgrounds 
