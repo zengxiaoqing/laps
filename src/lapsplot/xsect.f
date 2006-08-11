@@ -2206,15 +2206,47 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             c_label = 'LAPS Wet Bulb       X-Sect  Deg K'
 
         elseif(c_field .eq. 'sh')then
-            var_2d = 'SH '
-            ext = 'lq3'
-            call get_laps_3dgrid
-     1      (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
-     1          ,ext,var_2d,units_2d,comment_2d
-     1                                  ,q_3d,istatus)
-            if(istatus .ne. 1)goto100
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
 
-            call make_fnam_lp(i4time_nearest,a9time,istatus)
+            var_2d = 'SH '
+
+            if(c_prodtype .eq. 'A')then
+                ext = 'lq3'
+                call get_laps_3dgrid
+     1          (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+     1              ,ext,var_2d,units_2d,comment_2d
+     1              ,q_3d,istatus)
+                if(istatus .ne. 1)goto100
+
+                call make_fnam_lp(i4time_nearest,a9time,istatus)
+
+                c_label = 'LAPS Specific Humidity    (x1e3) '
+
+            elseif(c_prodtype .eq. 'B' .or. 
+     1             c_prodtype .eq. 'F')then
+                var_2d = 'SH'
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,q_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+                call mk_fcst_xlabel('Specific Humidity',fcst_hhmm
+     1                          ,ext(1:3),'x1e3',c_model,c_label)       
+
+            endif
+
             call interp_3d(q_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
@@ -2223,7 +2255,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             cint = 1.0 / density
 !           cint = -1.
             i_contour = 1
-            c_label = 'LAPS Specific Humidity     x1e3  '
             scale = 1e-3
 
             colortable = 'moist'
