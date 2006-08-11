@@ -13,7 +13,7 @@
         character*13 a13_time,filename13,cvt_i4time_wfo_fname13,outfile       
         character*9 asc9_tim,a9time_ob
 
-        character*(*)   ext
+        character*3     ext
         integer*4       len_dir_in
 
         character*40 c_vars_req
