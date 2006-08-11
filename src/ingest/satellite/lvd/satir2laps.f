@@ -74,7 +74,7 @@ c       real*4 fraci,fracj
         real*4 r_missing_data
         real*4 result
 
-        integer i,j,ii,jj,iir,jir
+        integer i,j,ii,jj,iir,jir,max_wi,max_wj
         integer istart,jstart
         integer iend,jend
 	integer*4 npix, nwarm
@@ -103,6 +103,12 @@ c
 
           write(6,*)'Grid ratio .lt. 0.5'
           write(6,*)'Use pixel avg to get IR Tb'
+
+          max_wi=10.
+          max_wj=10.
+
+
+
           DO 10 J=1,JMAX
           DO 10 I=1,IMAX
 
@@ -229,7 +235,9 @@ c              write(6,1112) wm,wc
 
              endif   !r_llij's .ne. r_missing_data
 
-             if(sa(i,j).eq.r_missing_data)then
+cisid             if(sa(i,j).eq.r_missing_data)then
+        if((sa(i,j).eq.r_missing_data).and.(max_wi.lt.10)
+     &         .and.(max_wj.lt.10)) then
                 print*,'found missing data in ir remapping'
              endif
 ccd           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
