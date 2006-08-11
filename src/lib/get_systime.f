@@ -1,26 +1,52 @@
       subroutine get_systime(i4time_sys,a9_time,istatus)
 
       integer*4 i4time_sys
-      character*9 a9_time
+      character*9 a9_time,a9_time_save
       integer *4 istatus
 
       character*100 dir
       integer *4 length
 
-      call get_directory('time',dir,length)
+      integer*4 init,i4time_sys_save
+      data init/0/
+      save init,i4time_sys_save,a9_time_save
 
-      open(11,file=dir(1:length)//'systime.dat',status='old')
+      if(init .eq. 0)then
+          call GETENV('LAPS_A9TIME',a9_time)
+          call s_len(a9_time,ilen)
 
-      read(11,*,err=999)i4time_sys
-      read(11,2,err=999)a9_time
-2     format(1x,a9)
-      close(11)
+          if(ilen .eq. 9)then ! override file using environment variable
+              write(6,*)' systime (from env) = ',a9_time
+              call i4time_fname_lp(a9_time,i4time_sys,istatus)
+
+          else ! read systime from file
+              call get_directory('time',dir,length)
+
+              open(11,file=dir(1:length)//'systime.dat',status='old')
+
+              read(11,*,err=999)i4time_sys
+              read(11,2,err=999)a9_time
+2             format(1x,a9)
+              close(11)
+          endif
+
+          init = 1
+          i4time_sys_save = i4time_sys
+          a9_time_save = a9_time
+
+      else ! used saved variables for efficiency
+          i4time_sys = i4time_sys_save
+          a9_time = a9_time_save
+          
+      endif
+
       istatus = 1
       return
 
  999  print*,'Error reading systime file'
       istatus = 0
       return
+
       end
 
 C&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
