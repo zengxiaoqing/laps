@@ -485,10 +485,10 @@ cdis
         integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
 !       real*4 wt_tsnd(max_snd,nk)
 
-        real*4 bias_obs_3d(ni,nj,nk)
+        real*4 wt_b_3d(ni,nj,nk)                      ! Background weight array
         real*4 bias_3d(ni,nj,nk)
-        real*4 wt_3d(ni,nj,nk)
-        integer*4 n_obs_lvl(nk)                                ! Local
+        real*4 wt_3d_dum(ni,nj,nk)                    ! No longer used
+        integer*4 n_obs_lvl(nk)                       ! Local
 
         logical l_analyze(nk)
 
@@ -501,21 +501,10 @@ cdis
         write(6,*)' Subroutine Barnes_univariate_shell, n_obs = ',n_obs  
 
         do k = 1,nk
-
             l_analyze(k) = .false.
-
-            do i = 1,ni
-            do j = 1,nj
-
-                wt_3d(i,j,k) = 0.
-                bias_obs_3d(i,j,k) = r_missing_data
-
-            enddo ! j
-            enddo ! i
-
         enddo ! k
 
-        write(6,*)' filling bias_obs_3d array from data structure'
+        write(6,*)' Transfer from temp_obs to obs_barnes data structure'
 
         sumsq_inst = 0.
         n_obs_valid = 0
@@ -528,13 +517,10 @@ cdis
                 j = temp_obs(i_ob,i_j)
                 k = temp_obs(i_ob,i_k)
 
-                bias_obs_3d(i,j,k) = temp_obs(i_ob,i_bias)
-                wt_3d(i,j,k) = temp_obs(i_ob,i_wt)
-
                 l_analyze(k) = .true.
 
                 if(i_ob .le. 1000)then
-                    write(6,71)i,j,k,bias_obs_3d(i,j,k),wt_3d(i,j,k)
+                    write(6,71)i,j,k,temp_obs(i_ob,i_bias)
 71                  format(1x,3i4,2e11.4)
                 endif
 
@@ -584,13 +570,15 @@ cdis
 
         l_not_struct = .not. l_struct
 
+        wt_b_3d = weight_bkg_const
+
         call barnes_multivariate(
      1                      bias_3d                           ! Outputs
      1                     ,n_var,n_obs_valid,obs_barnes      ! Input
      1                     ,ni,nj,nk,grid_spacing_m           ! Inputs
      1                     ,rep_pres_intvl                    ! Input
-     1                     ,bias_obs_3d,i4_loop_total         ! I/O
-     1                     ,wt_3d,fnorm,n_fnorm               ! Inputs
+     1                     ,wt_b_3d,i4_loop_total             ! I/O
+     1                     ,wt_3d_dum,fnorm,n_fnorm           ! Inputs
      1                     ,l_analyze,l_not_struct,rms_thresh ! Input
      1                     ,weight_bkg_const                  ! Input
      1                     ,topo_dum,rland_frac_dum,1,1       ! Input
