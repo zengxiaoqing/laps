@@ -82,6 +82,7 @@ cdis
 
         character*1 c_display, qtype, tunits, c_prodtype, clvl_soil
         character*1 cansw
+        character*10 c_sat_plot
         character*13 filename,a13_time
         character*3 c3_site
         character*4 c4_string,fcst_hhmm
@@ -1608,11 +1609,50 @@ c       include 'satellite_dims_lvd.inc'
              return
           endif
 
+          write(6,*)' Available Satellites are:'
           do k=1,maxsat
            if(isats(k).eq.1)then
-            write(6,114)c_sat_id(k)
-114         format(5x,'plot the data for ',a6,34x,' [y/n] ? ',$)
-            read(lun,*)cansw
+            write(6,*)c_sat_id(k)
+           endif
+          enddo
+
+          write(6,105)
+ 105      format(/' Enter one satellite you would like to plot.'
+     1       /' To choose among multiple satellites enter "multi" : '      
+     1       ,$)       
+
+          read(lun,*)c_sat_plot
+          call filter_string(c_sat_plot)
+
+          isl = 1
+          ish = maxsat
+
+!         Determine which satellite was desired
+          if(c_sat_plot .ne. 'multi')then 
+              do k=1,maxsat
+                  if(isats(k).eq.1)then
+                      if(c_sat_id(k) .eq. c_sat_plot)then
+                          write(6,*)' You have selected satellite # ',k       
+                          isl = k
+                          ish = k
+                      endif
+                  endif
+              enddo
+          endif
+
+          write(6,*)
+
+          do k=isl,ish
+           if(isats(k).eq.1)then
+
+            if(isl .ne. ish)then
+                write(6,114)c_sat_id(k)
+114             format(5x,'plot the data for ',a6,34x,' [y/n] ? ',$)
+                read(lun,*)cansw
+            else
+                cansw = 'y'
+            endif
+
             if(cansw.eq.'y'.or.cansw.eq.'Y')then
 
              call get_directory(ext,directory,len_dir)
