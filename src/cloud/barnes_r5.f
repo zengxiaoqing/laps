@@ -307,6 +307,10 @@ cdis
                 enddo ! n
             endif
 
+!           Save ob weight sums for possible later reuse
+            sum_a(i,j) = sum
+            sumwt_a(i,j) = sumwt
+
 !         enddo ! i
 !         enddo ! j
 
@@ -317,16 +321,12 @@ cdis
             sum   = sum   + weight_modelfg * cf_modelfg(i,j,k)
             sumwt = sumwt + weight_modelfg
 
-!           Save ob weight sums for possible later reuse
-            sum_a(i,j) = sum
-            sumwt_a(i,j) = sumwt
-
 !           Divide weights to get analysis = f(obs + background)
-            if (sumwt_a(i,j).eq.0.)then
+            if (sumwt.eq.0.)then
               t(i,j,k) = r_missing_data
               istatus = 0
             ELSE
-              t(i,j,k)=sum_a(i,j)/sumwt_a(i,j)
+              t(i,j,k)=sum/sumwt
             end if
 
           enddo ! i
@@ -407,6 +407,7 @@ cdis
 !             Note that sumwt does not need to be modified
 
               sum   = sum   + weight_modelfg * cf_modelfg(i,j,k)
+              sumwt = sumwt + weight_modelfg
 
 !             Divide weights to get analysis = f(obs + background)
               if (sumwt.eq.0.)then
