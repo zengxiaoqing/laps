@@ -128,7 +128,8 @@ c
         slant_ranges_m(i) = float(i) * gate_spacing_m_ret
    50 CONTINUE
 
-      call lgate_lut_gen()   ! (used to be called from 'lut_gen')
+      call lgate_lut_gen(gsp_ref_m_cmn,gsp_vel_m_cmn
+     1                  ,n_ref_gates_cmn,n_vel_gates_cmn) 
 
       write(6,815)
   815 format(' READ_DATA_88D > Loading arrays')
@@ -138,7 +139,7 @@ c
      :              i_ray,
      :              n_gates,
      :              r_missing_data,
-     :              i_missing_data,
+!    :              i_missing_data,
      :              velocity(1,i_ray),
      :              reflect(1,i_ray),
      :              istatus)
