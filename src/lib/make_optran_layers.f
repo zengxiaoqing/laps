@@ -80,9 +80,9 @@ c     here a test is done to compare the values and if the pp(kk) is larger
 c     than p(kk), and average approximation is used for pp(kk)
 
       if (pp(kk) .gt. p(kk) .or. pp(kk) .lt. p(kk-1)) then ! error condition
-         write (6,*) 'ppkk too close', pp(kk), p(kk-1), p(kk)
+c         write (6,*) 'ppkk too close', pp(kk), p(kk-1), p(kk)
          pp(kk) = (p(kk)+p(kk-1)) /2.
-         write (6,*) 'ppkk changed to: ', pp(kk), p(kk-1), p(kk)
+c         write (6,*) 'ppkk changed to: ', pp(kk), p(kk-1), p(kk)
       endif
 
 c     use the above pressure to derive the temp and other parameter values
