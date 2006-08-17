@@ -43,7 +43,7 @@ cdis
      1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in,idx_radar_a             ! I
      1     ,n_var                                                      ! I
      1     ,uanl,vanl                                                  ! O
-     1     ,wt_p,weight_bkg_const,rms_thresh_wind                      ! I/L
+     1     ,wt_p,weight_bkg_const,rms_thresh_wind                      ! I
      1     ,max_radars                                                 ! I
      1     ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar ! I
      1     ,thresh_2_radarobs_lvl_unfltrd                              ! I
@@ -268,10 +268,12 @@ csms$serial end
      1                  ,rms_thresh_norm                              ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
+      aerr = weight_bkg_const ! set array to constant weight for now
+
       call barnes_multivariate(varbuff                                ! O
      1        ,n_var,ncnt_total,obs_point_qced                        ! I
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
-     1        ,aerr,i4_loop_total                                     ! O 
+     1        ,aerr,i4_loop_total                                     ! I/O 
      1        ,wt_p,fnorm_dum,n_fnorm_dum                             ! I
      1        ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1        ,topo_dum,rland_frac_dum,1,1                            ! I
@@ -445,7 +447,7 @@ csms$serial end
               call barnes_multivariate(varbuff                           ! O
      1           ,n_var,ncnt_total,obs_barnes                            ! I
      1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
-     1           ,aerr,i4_loop_total                                     ! O 
+     1           ,aerr,i4_loop_total                                     ! I/O 
      1           ,wt_p_radar,fnorm_dum,n_fnorm_dum                       ! I
      1           ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1           ,topo_dum,rland_frac_dum,1,1                            ! I
@@ -571,7 +573,7 @@ csms$serial end
               call barnes_multivariate(varbuff                          ! O
      1          ,n_var,ncnt_total                                       ! I
      1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl! I   
-     1          ,aerr,i4_loop_total                                     ! O 
+     1          ,aerr,i4_loop_total                                     ! I/O 
      1          ,wt_p_radar,fnorm_dum,n_fnorm_dum                       ! I
      1          ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1          ,topo_dum,rland_frac_dum,1,1                            ! I
@@ -709,7 +711,7 @@ csms$insert      print *, 'got to 10 processor=',me
      1       ,n_var,ncnt_total,obs_barnes                             ! I
      1       ,imax,jmax,kmax                                          ! I
      1       ,grid_spacing_m,rep_pres_intvl                           ! I
-     1       ,aerr,i4_loop_total                                      ! O 
+     1       ,aerr,i4_loop_total                                      ! I/O 
      1       ,wt_p_radar,fnorm_dum,n_fnorm_dum                        ! I
      1       ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const       ! I
      1       ,topo_dum,rland_frac_dum,1,1                             ! I
