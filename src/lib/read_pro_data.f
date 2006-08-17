@@ -2,7 +2,8 @@
         subroutine read_pro_metadata(lun,i4time_prof,ext              ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                  ! I
      1                         ,n_profiles                            ! O
-     1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr  ! O
+     1                         ,nlevels_obs_pr                        ! I/O
+     1                         ,lat_pr,lon_pr,elev_pr                 ! O
      1                         ,c5_name,i4time_ob_pr,obstype          ! O
      1                         ,ob_pr_ht_obs                          ! O
      1                         ,istatus)                              ! O
@@ -31,7 +32,8 @@ cdoc    Jacket for read_pro_data.
         call read_pro_data(     lun,i4time_prof,ext                   ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                  ! I
      1                         ,n_profiles                            ! O
-     1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr  ! O
+     1                         ,nlevels_obs_pr                        ! I/O
+     1                         ,lat_pr,lon_pr,elev_pr                 ! O
      1                         ,c5_name,i4time_ob_pr,obstype          ! O
      1                         ,ob_pr_ht_obs                          ! O
      1                         ,ob_pr_u_obs,ob_pr_v_obs               ! O
@@ -45,7 +47,8 @@ cdoc    Jacket for read_pro_data.
         subroutine read_pro_data(lun,i4time_prof,ext                  ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                  ! I
      1                         ,n_profiles                            ! O
-     1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr  ! O
+     1                         ,nlevels_obs_pr                        ! I/O
+     1                         ,lat_pr,lon_pr,elev_pr                 ! O
      1                         ,c5_name,i4time_ob_pr,obstype          ! O
      1                         ,ob_pr_ht_obs                          ! O
      1                         ,ob_pr_u_obs,ob_pr_v_obs               ! O
@@ -65,12 +68,17 @@ cdoc    Returns wind profile data from the PRO file
         real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS) ! includes sfc wind when valid
         real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS) ! includes sfc wind when valid
 
+!       Note that surface data access is still under development and may not
+!       be reliable yet
         real sfc_t(MAX_PR), sfc_p(MAX_PR), sfc_rh(MAX_PR)
         real sfc_u(MAX_PR), sfc_v(MAX_PR) 
 
         integer i4time_ob_pr(MAX_PR)
-        integer nlevels_obs_pr(MAX_PR)         ! includes sfc wind when valid
-
+        integer nlevels_obs_pr(MAX_PR)  ! Includes sfc wind when valid
+                                        ! Optionally can be initialized to 0.
+                                        ! by the calling program even though 
+                                        ! this isn't necessary for the proper
+                                        ! operation of this routine
         character*5 c5_name(MAX_PR)
         character*8 obstype(MAX_PR)
         character ext*(*)
@@ -94,12 +102,6 @@ cdoc    Returns wind profile data from the PRO file
      1           ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr)
      1          ,elev_pr(i_pr),c5_name(i_pr),a9time_ob,obstype(i_pr)       
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,1x,3x,a9,1x,a8)
-
-            if(nlevels_obs_pr(i_pr) .gt. MAX_PR_LEVELS)then
-                write(6,*)' ERROR: too many profiler (.pro) levels '
-     1                   ,i_pr,nlevels_obs_pr(i_pr),MAX_PR_LEVELS
-                goto430
-            endif
 
             call i4time_fname_lp(a9time_ob,i4time_ob_pr(i_pr),istatus)
 
@@ -164,6 +166,14 @@ cdoc    Returns wind profile data from the PRO file
  415            if(    ob_pr_di_obs_in .ne. badflag 
      1           .and. ob_pr_sp_obs_in .ne. badflag )then    ! good wind
                     level_out = level_out + 1
+
+                    if(level_out .gt. MAX_PR_LEVELS)then
+                        write(6,*)
+     1                      ' ERROR: too many profiler (.pro) levels '
+     1                      ,i_pr,level_out,MAX_PR_LEVELS
+                        goto430
+                    endif
+
                     ob_pr_ht_obs(i_pr,level_out) = ob_pr_ht_obs_in 
                     ob_pr_di_obs(level_out)      = ob_pr_di_obs_in 
                     ob_pr_sp_obs(level_out)      = ob_pr_sp_obs_in 
