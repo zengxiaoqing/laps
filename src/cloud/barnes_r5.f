@@ -291,25 +291,17 @@ cdis
 !         Analyze every few grid points
           do j=1,jmax,nskip
           do i=1,imax,nskip
-            sum=0.
-            sumwt=0.
-            if(.not. l_perimeter)then
-                write(6,*)' Code error: stop'
-          
-            else
+
+            if(.true.)then
                 do n=nstart,nstop
                   ii=iob(n)
                   jj=job(n)
                   nn=nob(n)
                   weight = iiilut(i-ii,j-jj) * wt_snd(nn,k) ! Obs are being weighted
-                  sum=weight*cld_snd(nn,k)+sum
-                  sumwt=sumwt+weight
+                  sum_a(i,j)=weight*cld_snd(nn,k)+sum_a(i,j)
+                  sumwt_a(i,j)=sumwt_a(i,j)+weight
                 enddo ! n
             endif
-
-!           Save ob weight sums for possible later reuse
-            sum_a(i,j) = sum
-            sumwt_a(i,j) = sumwt
 
 !         enddo ! i
 !         enddo ! j
@@ -318,8 +310,8 @@ cdis
 !         do i=1,imax,nskip
 
 !           Add in model first guess as an ob
-            sum   = sum   + weight_modelfg * cf_modelfg(i,j,k)
-            sumwt = sumwt + weight_modelfg
+            sum = sum_a(i,j) + weight_modelfg * cf_modelfg(i,j,k)
+            sumwt = sumwt_a(i,j) + weight_modelfg
 
 !           Divide weights to get analysis = f(obs + background)
             if (sumwt.eq.0.)then
