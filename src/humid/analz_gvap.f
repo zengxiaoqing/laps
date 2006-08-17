@@ -45,7 +45,7 @@ cdis
       subroutine analz_gvap (lat,lon,wt,w1,w2,w3,gvap_pres,nn,
      1     glat,glon,sfc_data,data_out,
      1     gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,
-     1     data_weights,ii,jj,istatus)
+     1     data_weights,ii,jj,print_switch,istatus)
 
       USE module_sfc_structure
 
@@ -53,7 +53,7 @@ cdis
 
       type (lbsi), dimension(ii,jj) :: sfc_data
 
-      integer ii,jj,nn,istatus
+      integer ii,jj,nn,istatus,print_switch
       real lat(nn),lon(nn),wt(nn),w1(nn),w2(nn),w3(nn),gvap_pres(nn)
       real gw1(ii,jj),gww1(ii,jj)
       real gw2(ii,jj),gww2(ii,jj)
@@ -130,7 +130,9 @@ c     foreach n element of wt, determine its location in ii,jj space
             point3(ncount,2) = i
             point3(ncount,3) = j
 
-            write(6,*)lat(n),lon(n), glat(i,j), glon(i,j), wt(n)
+            if (print_switch .eq. 1) then
+               write(6,*)lat(n),lon(n), glat(i,j), glon(i,j), wt(n)
+            endif
          else
             continue
          endif

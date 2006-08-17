@@ -68,8 +68,8 @@ c FORTRAN 90 CONSTRUCTS USED OVER F77 CODE
      1     q_snd,
      1     weight_snd,
      1     raob_switch,
-     1     ii,jj,kk             ! grid dimensions
-     1     )
+     1     ii,jj,kk,             ! grid dimensions
+     1     print_switch)
 
  
 c   By inclusion of the goes_sbn data into the laps moisture analysis, an
@@ -109,7 +109,7 @@ c     include 'lapsparms.for'
 
 c     parameter list variables
 
-      integer ::  ii,jj,kk
+      integer ::  ii,jj,kk,print_switch
       type (lbsi), dimension (ii,jj) :: sfc_data
       real :: sh(ii,jj,kk)
       integer :: i4time
@@ -738,26 +738,33 @@ c     new check for viable radiance location
             
             if(cost_rad_istatus.eq.1 .and. 
      1           abs(ch4(i,j)-btemp(i,j,2)).lt.5.) then
-               write(6,*) 'Radiance passed clear chan test',
-     1              abs(ch4(i,j)-btemp(i,j,2))
+               if(print_switch .eq. 1) then
+                  write(6,*) 'Radiance passed clear chan test',
+     1                 abs(ch4(i,j)-btemp(i,j,2))
+               endif
                continue         ! pass clear channel test
             elseif (cost_rad_istatus .eq. 1) then
-               write (6,*)'Radiance failed clear chan test',
-     1               abs(ch4(i,j)-btemp(i,j,2)), cost_rad_istatus
+               if (print_switch .eq.1) then
+                  write (6,*)'Radiance failed clear chan test',
+     1                 abs(ch4(i,j)-btemp(i,j,2)), cost_rad_istatus
+               endif
                cost_rad_istatus = 0 ! failing clear channel test
             endif
             
 c     radiance data quality known, continue with normal run
             
             if (cost_rad_istatus.eq.1) then
-               
-               write(6,32) ' Observed=',ch3(i,j),' Modeled='
-     1              ,btemp(i,j,1),' Diff=',(ch3(i,j)-btemp(i,j,1))
- 32            format(1x,a10,f8.3,a9,f8.3,a6,f8.3)
-               write(6,*) ch4(i,j),btemp(i,j,2)
-               write(6,*) ch5(i,j), btemp(i,j,3)
+               if (print_switch .eq. 1) then
+                  write(6,32) ' Observed=',ch3(i,j),' Modeled='
+     1                 ,btemp(i,j,1),' Diff=',(ch3(i,j)-btemp(i,j,1))
+ 32               format(1x,a10,f8.3,a9,f8.3,a6,f8.3)
+                  write(6,*) ch4(i,j),btemp(i,j,2)
+                  write(6,*) ch5(i,j), btemp(i,j,3)
+               endif
             else
-               write(6,*)'Radiance data not included in variational'
+               if(print_switch .eq. 1 )then
+                  write(6,*)'Radiance data not included in variational'
+               endif
             endif
             
 c     initialize cost function vector for scaling output
@@ -885,10 +892,6 @@ c     cost function data for cloud analysis
                cost_cloud(k) = cloud(i,j,k)
                cost_sat(k) = sat(i,j,k)
                cost_qadjust(k) = qadjust (i,j,k)
-c               write(6,*) 'TEMW ',
-c     1              cost_cloud(k), qadjust(i,j,k)/cost_sat(k),
-c     1              (cost_sat(k)-cost_data(k))/cost_sat(k),
-c     1              cost_p(k)
             enddo
 
 c     cost function data for gps
@@ -913,27 +916,12 @@ c     cost function data for SND, fill with mixing ratio
             enddo
             cost_snd_istatus = raob_switch
             
-
-ccccccccccccccccccccccccccc  test module cccccccccccccccccccccccccccc
-
-c            cpath = 
-c     1  '/usr/nfs/common/lapb/parallel/laps/data/static/optranlib/'  
-c            tpath = cpath
-
-c            call gen_btemps_rads(kk,cost_t_l,cost_p,cost_tskin,cost_psfc
-c     1           ,cost_data,133,i4time,cost_lat,-95.,12,
-c     1           cpath,tpath,
-c     1           testbest,testestrad)
-
-ccccccccccccccccccccccccccc end test ccccccccccccccccccccccccccccccccc
-            
-            
 c     executed variational search
 
             ftol = 0.01
 
             cost_comment_switch = 1 ! turn on for one print of gps&cloud
-c            write (24,*) '-  ',i,j
+
             call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
             
 c     check output of variational search for fret of 0.0 that
@@ -944,14 +932,10 @@ c     that the func will never be non-zero in real search.
             
             if (fret.eq.0.0) then ! assume that func set to no
                                 !convergence
-               write(6,*) ' FRET = 0, assume no converge, assign 1.0'
-c     new code to handle Jet errors, on this condition, bail out
-c               write(6,*)'Fatal error in variational module'
-c               write(6,*)'Non-convergence detected'
-c               write(6,*)'Aborting variational step and continuing'
-c               write(6,*)'to process with only background data'
-c               return
-               
+               if (print_switch .eq. 1) then
+                  write(6,*) ' FRET = 0, assume no converge, assign 1.0'
+               endif
+             
                do ijk = 1,3
                   x(ijk) = 1.0
                enddo
@@ -959,12 +943,14 @@ c               return
             
 c     write out solution details
             if (iter(i,j) .eq. 0) then
-               write(6,*) 'No iterations..',i,j,cost_gps_istatus, 
-     1              cost_gvap_istatus, cost_cloud_istatus, fret
-            else
-               write(6,33) 'TEML ',abs(x(1)), abs(x(2)),abs(x(3)),
-     1              i,j,fret,iter(i,j)
- 33            format(a5,3(e11.6,2x),i3,1x,i3,1x,e11.6,i3)
+               if (print_switch .eq. 1) then
+                  write(6,*) 'No iterations..',i,j,cost_gps_istatus, 
+     1                 cost_gvap_istatus, cost_cloud_istatus, fret
+               else
+                  write(6,33) 'TEML ',abs(x(1)), abs(x(2)),abs(x(3)),
+     1                 i,j,fret,iter(i,j)
+ 33               format(a5,3(e11.6,2x),i3,1x,i3,1x,e11.6,i3)
+               endif
             endif
                
 c     criterion to accept the result is based on variational 
@@ -984,21 +970,25 @@ c     1           .and. abs(abs(x(1))-1.) .lt. .1
 c     elseif (cld(i,j).gt.0.)then
 c     write(6,*) '  .... coordinate rejected, cloudy'
             else
-               write(6,*) i,j, '  .... coordinate rejected', 
+               if (print_switch .eq. 1) then
+                  write(6,*) i,j, '  .... coordinate rejected', 
 c     1                 abs(x(1)),iter(i,j), cld(i,j)
-     1              abs(x(1)),iter(i,j)
+     1                 abs(x(1)),iter(i,j)
+               endif
                
                failures = failures + 1
                
             endif
-            
-            write(6,*) blank
+            if (print_switch .eq. 1) then
+               write(6,*) blank
+            endif
          enddo
       enddo
       
-      
-      write(6,*) failures,' failures from variational processing' 
-      write(6,*) '...non-convergence '
+      if (print_switch .eq. 1) then
+         write(6,*) failures,' failures from variational processing' 
+         write(6,*) '...non-convergence '
+      endif
 
 c     ************* Section on processing resulting scaling fields  ****
       
@@ -1040,9 +1030,13 @@ c     derive field statistics to determine outliers
          if(points(i,1) .lt. upper_limit .and.
      1        points(i,1) .gt. lower_limit) then
             data_anal(int(points(i,2)),int(points(i,3))) = points (i,1)
-            write(6,*) points(i,1), 'assigned'
+            if (print_switch .eq. 1) then
+               write(6,*) points(i,1), 'assigned'
+            endif
          else
-            write(6,*) points(i,1), 'rejected ******************'
+            if (print_switch .eq. 1) then
+               write(6,*) points(i,1), 'rejected ******************'
+            endif
             points(i,2) = 0     ! flag for bad point in prep grid
          endif
       enddo
@@ -1054,16 +1048,22 @@ c     derive field statistics to determine outliers
             call slv_laplc (data_anal,mask,ii,jj)
             call smooth_grid2 (ii,jj,data_anal,1)
             call two_d_stats(ii,jj,data_anal,rmd)
-            write(6,*) 'TEMP processed slv_lapc 1'
+            if (print_switch .eq. 1) then
+               write(6,*) 'TEMP processed slv_lapc 1'
+            endif
             
          else
-            write(6,*) 'TEMP not enough data, skipping slv_lapc'
+            if (print_switch .eq. 1) then
+               write(6,*) 'TEMP not enough data, skipping slv_lapc'
+            endif
             data_anal = 1.0
          endif
          
       else
-         write(6,*) 
-     1        'TEMP pn = 0,no acceptable data to analyze for adjustment'
+         if (print_switch .eq. 1) then
+            write(6,*) 
+     1      'TEMP pn = 0,no acceptable data to analyze for adjustment'
+         endif
          data_anal = 1.0
          return
          
@@ -1141,9 +1141,13 @@ c     derive field statistics to determine outliers
          if(points(i,1) .lt. upper_limit .and.
      1        points(i,1) .gt. lower_limit) then
             data_anal(int(points(i,2)),int(points(i,3))) = points (i,1)
-            write(6,*) points(i,1), 'assigned'
+            if (print_switch .eq. 1) then
+               write(6,*) points(i,1), 'assigned'
+            endif
          else
-            write(6,*) points(i,1), 'rejected ******************'
+            if (print_switch .eq. 1) then
+               write(6,*) points(i,1), 'rejected ******************'
+            endif
             points(i,2) = 0     ! flag for bad point in prep grid
          endif
       enddo
@@ -1155,16 +1159,22 @@ c     derive field statistics to determine outliers
             call slv_laplc (data_anal,mask,ii,jj)
             call smooth_grid2 (ii,jj,data_anal,1)
             call two_d_stats(ii,jj,data_anal,rmd)
-            write (6,*) 'TEMP processed slv_lapc 2'
+            if (print_switch .eq. 1) then
+               write (6,*) 'TEMP processed slv_lapc 2'
+            endif
             
          else
-            write(6,*) 'TEMP not enough data, skipping slv_lapc'
+            if (print_switch .eq. 1) then
+               write(6,*) 'TEMP not enough data, skipping slv_lapc'
+            endif
             data_anal = 1.0
          endif
          
       else
-         write(6,*) 
+         if (print_switch .eq. 1) then
+            write(6,*) 
      1        'TEMP pn = 0,no acceptable data to analyze for adjustment'
+         endif
          data_anal = 1.0
          return
          
@@ -1218,9 +1228,13 @@ c     derive field statistics to determine outliers
          if(points(i,1) .lt. upper_limit .and.
      1        points(i,1) .gt. lower_limit) then
             data_anal(int(points(i,2)),int(points(i,3))) = points (i,1)
-            write(6,*) points(i,1), 'assigned'
+            if (print_switch .eq. 1) then
+               write(6,*) points(i,1), 'assigned'
+            endif
          else
-            write(6,*) points(i,1), 'rejected ******************'
+            if (print_switch .eq. 1) then
+               write(6,*) points(i,1), 'rejected ******************'
+            endif
             points(i,2) = 0     ! flag for bad point in prep grid
          endif
       enddo

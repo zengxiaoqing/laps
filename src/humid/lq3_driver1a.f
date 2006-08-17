@@ -182,6 +182,7 @@ c
       
 c     namelist data
 
+      integer print_switch
       integer  raob_switch
       integer  raob_lookback
       real raob_radius
@@ -201,7 +202,7 @@ c     namelist data
       real    t_ref
       integer gps_switch
       character*256 path_to_gvap12,path_to_gvap10,path_to_gps
-      namelist /moisture_switch_nl/ raob_switch,
+      namelist /moisture_switch_nl/ print_switch,raob_switch,
      1     raob_lookback, endian,
      1     raob_radius, goes_switch, cloud_switch, cloud_d
      1     ,tiros_switch, sounder_switch, sat_skip
@@ -250,13 +251,9 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 3.10.8 successfully incorporates'
-      write (6,*) '1) Fix to func_o.f in use of radiance data'
-      write (6,*) '2) OPTRAN90 for BOTH imager and sounder data'
-      write (6,*) '3) BOTH  Big and little endian formats'
-      write (6,*) '4) Initiated removal of old optran code'
-      write (6,*) '5) Removal of common block from .f90 modules'
-      write (6,*) '   For HP applications'
+      write (6,*) 'Release 4.0 successfully incorporates'
+      write (6,*) '1) option for shorter print outs'
+
 
       call get_directory(extpw,dirpw,len)
       call get_directory(ext3,dir3,len)
@@ -273,6 +270,7 @@ c     routine
 
 c     
 c     set namelist parameters to defaults 
+      print_switch = 0
       cloud_switch = 1
       cloud_d = 1
       raob_switch = 0
@@ -304,7 +302,11 @@ c     set namelist parameters to defaults
       
       close (23)
       
-      
+      if (print_switch .eq. 0) then
+         write (6,*) 'Printing disabled, expect short printouts'
+      else
+         write (6,*) 'Printing ENABLED, expect long print output'
+      endif
       if (cloud_switch.eq.0) then
          write(6,*) 'Cloud switch off, ignore clouds'
          write(6,*) 'If available, clouds will be used in GOES adjust'
@@ -787,11 +789,16 @@ c     perform initialquality control check for supersaturation after ingest
                   counter = counter + 1
                   data(i,j,k) = sat(i,j,k)
                else
-                  write (cdomain(i),34) int(data(i,j,k)/sat(i,j,k)*10.)
+               
+                  write (cdomain(i),34) 
+     1                 int(data(i,j,k)/sat(i,j,k)*10.)
+            
  34               format (i1)
                endif
             enddo
-            write(6,*) (cdomain(i),i=1,ii)
+            if (print_switch .eq. 1) then
+               write(6,*) (cdomain(i),i=1,ii)
+            endif
          enddo
       enddo
       
@@ -895,13 +902,15 @@ c     check fields after lsin call
       write(6,*) 'finished with routine lsin'
       if( sfc_mix.eq.1)then
          write(6,*) 'Lsin allowed to modify data field'
+
+         if(print_switch.eq.1) then
          
-         write(6,*) 'Reporting incremental boundary layer effects'
-         
-         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
-         
-         write(6,*) 'Reporting net change'
-         call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+            write(6,*) 'Reporting incremental boundary layer effects'
+            call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
+            write(6,*) 'Reporting net change'
+            call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+
+         endif
 
          data_in = data
 
@@ -963,7 +972,8 @@ c     gvap data acquisition
          call process_gvap(ii,jj,sfc_data,gvap_data,gvap_w,
      1        gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
      1        lat,lon,time_diff,IHOP_flag,
-     1        path_to_gvap12,path_to_gvap10,filename,istatus_gvap)
+     1        path_to_gvap12,path_to_gvap10,filename,print_switch,
+     1        istatus_gvap)
          
 
          if(istatus_gvap.eq.1 .and. istatus_gps.eq.1) then ! correct gvap
@@ -1013,13 +1023,14 @@ c     CHECKING PROCESS OUTPUT
          write(6,*) 'var:data  routine lq3driver1a.f'
          return
       endif
+
+      if (print_switch .eq. 1) then
       
-      write(6,*) 'Reporting changes from TPW data types'
-      
-      call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
-      
-      write(6,*) 'Reporting net change'
-      call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+         write(6,*) 'Reporting changes from TPW data types'
+         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
+         write(6,*) 'Reporting net change'
+         call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+      endif
 
       data_in = data
 
@@ -1103,15 +1114,18 @@ c     make call to variational solution, radiance no longer a prerequisite
      1        q_snd,
      1        weight_snd,
      1        raob_switch,
-     1        ii,jj,kk
-     1        )
+     1        ii,jj,kk,
+     1        print_switch)
          
-         write (6,*) 'GOES step complete, effects logged.'
-         
-         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
-         
-         write(6,*) 'Reporting net change'
-         call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+
+         if(print_switch .eq. 1) then
+
+            write (6,*) 'GOES step complete, effects logged.'
+            call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
+            write(6,*) 'Reporting net change'
+            call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+
+         endif
          
          data_in = data
          
@@ -1199,12 +1213,14 @@ c     saturate in cloudy areas.
             return
          endif
 
-         
-         write (6,*) 'Reporting cloud effects on analysis'
-         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
-         
-         write(6,*) 'Reporting net change'
-         call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+         if (print_switch .eq. 1) then
+            
+            write (6,*) 'Reporting cloud effects on analysis'
+            call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
+            write(6,*) 'Reporting net change'
+            call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+            
+         endif
          
          data_in = data
          
@@ -1225,8 +1241,12 @@ c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
          enddo
          
          write(6,*) ' mod_4dda loop complete'
+
+         if (print_switch .eq. 1) then
          
-         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
+            call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
+
+         endif
          
       endif
       
@@ -1256,7 +1276,9 @@ c     1              lt1dat(i,j,k)-273.15,t_ref )/1000.
                endif
 
             enddo
-            write(6,*) (cdomain(i),i=1,ii)
+            if (print_switch .eq. 1) then
+               write(6,*) (cdomain(i),i=1,ii)
+            endif
          enddo
       enddo
       
@@ -1335,7 +1357,7 @@ c     write total precipitable water field
 c     generate lh3 file (RH true, RH liquid)
       if (t_istatus.eq.1) then
          call lh3_compress(data,lt1dat,save_i4time,lvllm,t_ref,
-     1        ii,jj,kk,istatus)
+     1        ii,jj,kk,print_switch,istatus)
          if(istatus.eq.1)        jstatus(2) = 1
       else
          print*, 'no lh3 or rh data produced...'

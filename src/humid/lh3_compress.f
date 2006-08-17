@@ -43,7 +43,7 @@ cdis
 cdis
 cdis
       subroutine lh3_compress (data,tdata,i4time,lvl,t_ref,
-     1     ii,jj,kk,istatus)
+     1     ii,jj,kk,print_switch,istatus)
       
 c     $log: lh3_compress.for,v $
 c     revision 1.5  1996/03/05  21:11:36  birk
@@ -84,7 +84,7 @@ c     include 'parmtrs.inc'
 
 c     parameter variables
 
-      integer ii,jj,kk
+      integer ii,jj,kk,print_switch
 
       real data (ii,jj,kk)
       real tdata (ii,jj,kk)
@@ -173,8 +173,10 @@ c.... loop for rh computation
                   rhdata(i,j,k) = 0 ! pseudo bad data flag for albers routine
                   rhdata_l(i,j,k) = 0 ! pseudo bad "" " " "
                   if( k.gt.10) then
-                     write(6,*) 'lh3 wrote high-level zero at ', i,j,k
-                     write(6,*) 'this action is not nominal'
+                     if (print_switch .eq. 1) then
+                        write(6,*) 'lh3 wrote high-level zero at ',i,j,k
+                        write(6,*) 'this action is not nominal'
+                     endif
                   endif
                else
 

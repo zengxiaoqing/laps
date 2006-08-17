@@ -45,7 +45,7 @@ cdis
       subroutine  process_gvap (ii,jj,sfc_data,data_out,data_weights,
      1     gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
      1     glat,glon,time_diff,IHOP_flag,
-     1     path_to_gvap12,path_to_gvap10,filetime,istatus)
+     1     path_to_gvap12,path_to_gvap10,filetime,print_switch,istatus)
 
       USE module_sfc_structure
 
@@ -58,7 +58,7 @@ c     input variables
       type (lbsi), dimension(ii,jj) :: sfc_data
 
       character*9 filename,filetime
-      integer ii,jj,istatus
+      integer ii,jj,istatus,print_switch
       integer time_diff         !time allowed for latency (sec)
       real data_out(ii,jj)
       real gw1(ii,jj),gww1(ii,jj)
@@ -143,7 +143,7 @@ c     bias correct GVAP data per 3x3 IHOP correction
       call analz_gvap (lat,lon,wt,w1,w2,w3,gvap_pres,nn,
      1     glat,glon,sfc_data,data_out,
      1     gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,
-     1     data_weights,ii,jj,istatus)
+     1     data_weights,ii,jj,print_switch,istatus)
 
 c     temporary assignment made until gvap_p read okay from data bases
 c      gvap_p = mdf
