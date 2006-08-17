@@ -101,6 +101,8 @@ c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
         real ob_pr_sp(MAX_PR,kmax)                                          ! L
         real ob_pr_u (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! O
         real ob_pr_v (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! O
+
+!       Profiler surface data (not currently used)
         real sfc_t(MAX_PR), sfc_p(MAX_PR), sfc_rh(MAX_PR)                   ! L
         real sfc_u(MAX_PR), sfc_v(MAX_PR)                                   ! L
 
