@@ -312,7 +312,8 @@ c     Generate DbZ Lookup Table (graduated for each tenth of a dbz)
       end
 
 
-      subroutine lgate_lut_gen()
+      subroutine lgate_lut_gen(gsp_ref_m_cmn,gsp_vel_m_cmn
+     1                        ,n_ref_gates_cmn,n_vel_gates_cmn) 
 
 !     This routine is currently called from 'lut_gen'. We may want to move
 !     the call to 'ld_ray' (closer to where these luts are used) to help 
@@ -321,7 +322,22 @@ c     Generate DbZ Lookup Table (graduated for each tenth of a dbz)
       include 'remap_constants.dat'
       include 'remap.cmn'
 
+      ratio_vel = gsp_vel_m_cmn / GATE_SPACING_M
+      ratio_ref = gsp_ref_m_cmn / GATE_SPACING_M
+
 c     These lookup tables flag which gates actually need processing
+
+      lgate_ref_lut = .false.
+      lgate_vel_lut = .false.
+
+      DO igate_88d = 1,n_ref_gates_cmn
+          i = nint(float(igate_88d) * ratio_ref)
+
+          if(i .le. MAX_GATES .and. i .ge. INITIAL_REF_GATE)then
+              lgate_ref_lut(i) = .true.
+          endif ! i
+      ENDDO
+
       do i = 1,MAX_GATES
            
           if(i .le. 920       .and. i .ge. INITIAL_VEL_GATE)then
@@ -330,11 +346,11 @@ c     These lookup tables flag which gates actually need processing
               lgate_vel_lut(i) = .false.
           endif
 
-          if(i .eq. (i/4) * 4 .and. i .ge. INITIAL_REF_GATE)then
-              lgate_ref_lut(i) = .true.
-          else
-              lgate_ref_lut(i) = .false.
-          endif
+!         if(i .eq. (i/4) * 4 .and. i .ge. INITIAL_REF_GATE)then
+!             lgate_ref_lut(i) = .true.
+!         else
+!             lgate_ref_lut(i) = .false.
+!         endif
 
           if(lgate_vel_lut(i) .or. lgate_ref_lut(i))then
               lgate_lut(i) = .true.
