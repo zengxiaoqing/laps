@@ -1,19 +1,20 @@
  &moisture_switch_nl
- RAOB_SWITCH = 1,
+ PRINT_SWITCH = 0,
+ RAOB_SWITCH = 0,
  RAOB_LOOKBACK = 4500,
  ENDIAN = 1,
  RAOB_RADIUS = 45000.0,
  GOES_SWITCH = 0,
- CLOUD_SWITCH = 1,
- CLOUD_D = 0,
+ CLOUD_SWITCH = 0,
+ CLOUD_D = 1,
  SOUNDER_SWITCH = 1,
  TIROS_SWITCH = 0,
  SAT_SKIP = 1,
- GVAP_SWITCH = 1,
+ GVAP_SWITCH = 0,
  IHOP_FLAG = 1,
  TIME_DIFF = 3900,
- GPS_SWITCH = 1,
- SFC_MIX = 1,
+ GPS_SWITCH = 0,
+ SFC_MIX = 0,
  MOD_4DDA_1 = 0,
  MOD_4DDA_FACTOR = 0.02,
  T_REF = -132.0,
@@ -27,6 +28,7 @@ c   This is a switch for the module  lq3.  The data are delivered in
 c   default form.  It is up to the user to define these for their 
 c   particular applicaton.  Here are the definitions of the current 
 c   values used.
+c  PRINT_SWITCH = 0, disables long printouts, now default, use for debugging
 c  RAOB_SWITCH = 0,    raob on/off
 c  RAOB_LOOKBACK = 3600, raob latency seconds
 c  ENDIAN = 1 (big endian machines [default], =0 little endian machines)
