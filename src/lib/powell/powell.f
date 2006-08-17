@@ -34,14 +34,17 @@ cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
 cdis 
 
-      SUBROUTINE POWELL(P,XI,N,NP,FTOL,ITER,FRET,func)
+      SUBROUTINE POWELL(P,XI,N,NP,FTOL,ITER,FRET,func,print_switch)
       PARAMETER (NMAX=40,ITMAX=5)
       EXTERNAL FUNC
+      integer print_switch
       real func                 ! funciton type
       DIMENSION P(NP),XI(NP,NP),PT(NMAX),PTT(NMAX),XIT(NMAX)
       FRET=FUNC(P)
       if(fret.eq.0.0) then      !notify
-         write(6,*)'POWELL:fret = 0.0'
+         if (print_switch .eq. 1) then
+            write(6,*)'POWELL:fret = 0.0'
+         endif
       endif
       DO 11 J=1,N
          PT(J)=P(J)
@@ -69,7 +72,9 @@ c         write(6,*) fp, fret, ftol,'fp, fret,ftol'
       endif
 c     IF(ITER.EQ.ITMAX) PAUSE 'Powell exceeding maximum iterations.'
       IF(ITER.EQ.ITMAX) then
-         write(6,*) 'Powell exceeding maximum iterations.'
+         if (print_switch .eq. 1) then
+            write(6,*) 'Powell exceeding maximum iterations.'
+         endif
          return
       endif
       DO 14 J=1,N
