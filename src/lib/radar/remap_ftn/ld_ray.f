@@ -39,13 +39,15 @@ cdis
       subroutine LD_RAY(i_ray,                  ! Input
      :                  ngates_remap,           ! Input
      :                  r_missing_data,         ! Input
-     :                  i_missing_data,         ! Input
+!    :                  i_missing_data,         ! Input
      :                  velocity,               ! Output
      :                  reflect,                ! Output
      :                  istatus)                ! Output
 c
 c     PURPOSE:
-c       Transform a ray common block 88D data to output arrays.
+c       Transform a ray in the common block to output arrays that correspond
+c       to the lookup tables. In the output arrays, the reflectivity and
+c       velocity have been remapped to the same gate spacing.
 c
 c     Changed buffer storage so vel, ref stored as integer*2.
 c     This program converts reflectivity and velocity to real*4
@@ -58,7 +60,6 @@ c
       integer*4 i_ray
       integer*4 ngates_remap
       real*4 r_missing_data
-      integer*4 i_missing_data
 c
 c     Output variables
 c
@@ -70,6 +71,7 @@ c     Include files
 c
       include 'remap_dims.inc'
       include 'remap_buffer.cmn'
+      include 'remap_constants.dat'
 c
 c     Misc. Local Variables
 c
@@ -89,24 +91,30 @@ c
       END IF
 
       IF (n_vel_gates_cmn .ne. 920) THEN
-        write(6,815)
-  815   format
-     :(' LD_RAY is hard wired for 920 vel gates, error in LD_RAY')
-        write(6,820) n_vel_gates_cmn
-  820   format(' n_vel_gates_cmn = ',I12)
-        istatus = 0
-        RETURN
+        write(6,*)' WARNING: LD_RAY using non-standard # of vel gates'
       END IF
 
+!     IF (n_vel_gates_cmn .ne. MAX_VEL_GATES) THEN
+!       write(6,*)
+!    1       ' ERROR: LD_RAY is expecting n_vel_gates_cmn=MAX_VEL_GATES'       
+!       write(6,820) n_vel_gates_cmn,MAX_VEL_GATES
+! 820   format(' n_vel_gates_cmn/MAX_VEL_GATES = ',2I12)
+!       istatus = 0
+!       RETURN
+!     END IF
+
       IF (n_ref_gates_cmn .ne. 460) THEN
-        write(6,825)
-  825   format
-     :(' LD_RAY is hard wired for 460 ref gates, error in LD_RAY')
-        write(6,830) n_ref_gates_cmn
-  830   format(' n_ref_gates_cmn = ',I12)
-        istatus = 0
-        RETURN
+        write(6,*)' WARNING: LD_RAY using non-standard # of ref gates'
       END IF
+
+!     IF (n_ref_gates_cmn .ne. MAX_REF_GATES) THEN
+!       write(6,*)
+!    1       ' ERROR: LD_RAY is expecting n_ref_gates_cmn=MAX_REF_GATES'       
+!       write(6,830) n_ref_gates_cmn,MAX_REF_GATES
+! 830   format(' n_ref_gates_cmn/MAX_REF_GATES = ',2I12)
+!       istatus = 0
+!       RETURN
+!     END IF
 c
 c     Fill velocity and reflectivity ray.
 c      Output gates are 250 m spacing,
@@ -126,7 +134,7 @@ c
 
 c     Velocity
 
-      ratio_vel = gsp_vel_m_cmn / 250.
+      ratio_vel = gsp_vel_m_cmn / GATE_SPACING_M
       velocity = r_missing_data           ! Initialize array all at once
 
       DO i = 1,n_vel_gates_cmn
@@ -141,7 +149,7 @@ c     Velocity
 
 c     Reflectivity
 
-      ratio_ref = gsp_ref_m_cmn / 250.
+      ratio_ref = gsp_ref_m_cmn / GATE_SPACING_M
       reflect = r_missing_data            ! Initialize array all at once
 
       DO igate_88d = 1,n_ref_gates_cmn
