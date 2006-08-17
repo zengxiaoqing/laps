@@ -37,6 +37,118 @@ cdis
 cdis   
 cdis
 
+      subroutine get_tilt_netcdf_hdr(filename
+     1                               ,radarName
+     1                               ,siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,numRadials 
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,nyquist
+     1                               ,radialAzim
+     1                               ,resolutionV
+     1                               ,gateSizeV,gateSizeZ
+     1                               ,firstGateRangeV,firstGateRangeZ
+     1                               ,V_bin_max, Z_bin_max, radial_max
+     1                               ,istatus)
+
+!     Argument List
+      character*(*) filename
+      character*5  radarName
+      integer V_bin_max, Z_bin_max, radial_max
+      real radialAzim(radial_max)
+
+!     Local
+      real radialElev(radial_max)
+      character*132 siteName
+      double precision esEndTime, esStartTime, radialTime(radial_max)
+
+!.............................................................................
+
+      include 'netcdf.inc'
+      integer V_bin, Z_bin, radial,nf_fid, nf_vid, nf_status
+
+!     include 'remap_constants.dat' ! for debugging only
+!     include 'remap.cmn' ! for debugging only
+
+      write(6,*)' get_tilt_netcdf_hdr: reading ',filename
+C
+C  Open netcdf File for reading
+C
+      nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'NF_OPEN ',filename
+        istatus = 0
+        return
+      endif
+C
+C  Fill all dimension values
+C
+C
+C Get size of V_bin
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'V_bin',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim V_bin'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,V_bin)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim V_bin'
+      endif
+C
+C Get size of Z_bin
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'Z_bin',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim Z_bin'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,Z_bin)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim Z_bin'
+      endif
+C
+C Get size of radial
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'radial',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim radial'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,radial)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim radial'
+      endif
+
+!.....Test whether dimensions of NetCDF file are within bounds...............
+
+      if(V_bin .gt. V_bin_max)then
+          write(6,*)' V_bin > permitted dimensions ',V_bin,V_bin_max
+          stop
+      endif
+
+      if(Z_bin .gt. Z_bin_max)then
+          write(6,*)' Z_bin > permitted dimensions ',Z_bin,Z_bin_max     
+          stop
+      endif
+
+      if(radial .gt. radial_max)then
+          write(6,*)' radial > permitted dimensions ',radial,radial_max       
+          stop
+      endif
+
+      istatus = 1
+      return
+
+      end
+
       subroutine get_tilt_netcdf_data(filename
      1                               ,radarName
      1                               ,siteLat                        
