@@ -17,6 +17,8 @@ main                                                    remap.f
         radar_init (2nd call)                           netcdfio.f
             get_tilt_netcdf_data                        get_tilt_netcdf.f
         read_data_88d                                   readdata.f
+            get_scandata                                get_scandata.f
+            get_azimuths_deg                            get_azimuths_deg.f
             lgate_lut_gen                               lut_gen.f
             ld_ray                                      ld_ray.f
             rayqckz                                     rayqckz.f
