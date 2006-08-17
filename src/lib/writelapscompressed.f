@@ -16,8 +16,8 @@ C
 
       real*4         data(imax,jmax,kdim)    !INPUT Raw data to be written
 
-!     real*4         array(imax*jmax*kdim,2) !LOCAL Compressed array
-      real*4, allocatable, dimension(:,:) :: array !LOCAL Compressed array
+      integer*4, allocatable, dimension(:) :: array1 !LOCAL Compressed array
+      real*4,    allocatable, dimension(:) :: array2 !LOCAL Compressed array
 
       character*(*)  dir                     !INPUT Directory to be written to
       character*(*)  ext                     !INPUT File name ext
@@ -139,22 +139,32 @@ C
       units_len = len(units(1))
       asc_len = len(asctime)
 
-!     Allocate array then do run-length encoding
+!     Allocate arrays then do run-length encoding
 !     n_cmprs_max = imax*jmax*kdim
       n_cmprs_max = 2000000  
- 800  write(6,*)' Allocate array with size of ',n_cmprs_max
-      allocate( array(n_cmprs_max,2), STAT=istat_alloc )
+ 800  write(6,*)' Allocate arrays with size of ',n_cmprs_max
+
+      allocate( array1(n_cmprs_max), STAT=istat_alloc )
       if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate array'
+          write(6,*)' ERROR: Could not allocate array1'
           write(6,*)' Try reducing n_cmprs_max from ',n_cmprs_max
           goto 950
       endif
+
+      allocate( array2(n_cmprs_max), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate array2'
+          write(6,*)' Try reducing n_cmprs_max from ',n_cmprs_max
+          goto 950
+      endif
+
       ngrids = imax*jmax*kdim
 
       call runlength_encode(ngrids,n_cmprs_max,data           ! I
-     1                     ,n_cmprs,array,istatus)            ! O
-      if(istatus .eq. -1)then ! try increasing array allocation
-          deallocate(array)
+     1                     ,n_cmprs,array1,array2,istatus)    ! O
+      if(istatus .eq. -1)then ! try increasing array allocations
+          deallocate(array1)
+          deallocate(array2)
           n_cmprs_max = n_cmprs_max * 2
           goto 800
       elseif(istatus .ne. 1)then
@@ -163,7 +173,7 @@ C
 
       l_check_encoding = .false.
       if(l_check_encoding)then ! Just for debugging purposes
-          call runlength_decode(ngrids,n_cmprs,array                ! I
+          call runlength_decode(ngrids,n_cmprs,array1,array2        ! I
      1                         ,data                                ! O
      1                         ,istatus)                            ! O
           if(istatus .ne. 1)then
@@ -195,15 +205,15 @@ C
 
       icheck_sum = 0
 
-!     write(lun,*)((array(i,j),j=1,2),i=1,n_cmprs)
       do i = 1,n_cmprs
-          write(lun,*)nint(array(i,1)),array(i,2)
-          icheck_sum = icheck_sum + nint(array(i,1))
+          write(lun,*)array1(i),array2(i)
+          icheck_sum = icheck_sum + array1(i)
       enddo ! i
 
       close(lun)
 
-      deallocate(array)
+      deallocate(array1)
+      deallocate(array2)
 
 !     Second "internal" checksum test
       if(icheck_sum .ne. ngrids)then
@@ -276,10 +286,11 @@ C
         END
 
 
-        subroutine runlength_encode(ngrids,n_cmprs_max,data   ! I
-     1                             ,n_cmprs,array,istatus)    ! O
+        subroutine runlength_encode(ngrids,n_cmprs_max,data           ! I
+     1                             ,n_cmprs,array1,array2,istatus)    ! O
 
-        real*4 array(n_cmprs_max,2)
+        integer*4 array1(n_cmprs_max)
+        real*4 array2(n_cmprs_max)
         real*4 data(ngrids)
 
 !       Setup for first point
@@ -293,8 +304,8 @@ C
             else
                 n_cmprs = n_cmprs + 1
                 if(ncmprs .le. n_cmprs_max)then
-                    array(n_cmprs,1) = i_count_same
-                    array(n_cmprs,2) = data(i-1)
+                    array1(n_cmprs) = i_count_same
+                    array2(n_cmprs) = data(i-1)
                     i_count_same = 1
                 else
                     write(6,*)' ERROR, increase n_cmprs_max',n_cmprs_max
@@ -316,8 +327,8 @@ C
 
         n_cmprs = n_cmprs + 1
         if(ncmprs .le. n_cmprs_max)then
-            array(n_cmprs,1) = i_count_same
-            array(n_cmprs,2) = data(i)
+            array1(n_cmprs) = i_count_same
+            array2(n_cmprs) = data(i)
         else
             write(6,*)' ERROR, increase n_cmprs_max',n_cmprs_max
             istatus = -1

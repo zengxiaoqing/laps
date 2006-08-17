@@ -42,7 +42,8 @@ C
       real*4        data_o(iimax,jjmax,kdim)       !OUTPUT data
       real*4        data_l(iimax,jjmax,kdim,nf)    !LOCAL data
 
-      real*4, allocatable, dimension(:,:) :: array !LOCAL Compressed array
+      integer*4, allocatable, dimension(:) :: array1 !LOCAL Compressed array
+      real*4,    allocatable, dimension(:) :: array2 !LOCAL Compressed array
 C
       integer*4 fn_length,
      1          flag,                   !Print flag (1 = off)
@@ -114,18 +115,23 @@ C
 
       read(lun,*)n_cmprs
 
-      allocate(array(n_cmprs,2),STAT=istat_alloc)
+      allocate(array1(n_cmprs),STAT=istat_alloc)
       if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate array'
+          write(6,*)' ERROR: Could not allocate array1'
+          stop
+      endif
+
+      allocate(array2(n_cmprs),STAT=istat_alloc)
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate array2'
           stop
       endif
 
       icheck_sum = 0
 
-!     read(lun,*)((array(i,j),j=1,2),i=1,n_cmprs)
       do i = 1,n_cmprs
-          read(lun,*)array(i,1),array(i,2)
-          icheck_sum = icheck_sum + nint(array(i,1))
+          read(lun,*)array1(i),array2(i)
+          icheck_sum = icheck_sum + array1(i)
       enddo ! i
 
       close(lun)
@@ -142,10 +148,11 @@ C
 
       n_cmprs_max = ngrids
 
-      call runlength_decode(ngrids,n_cmprs,array                ! I
+      call runlength_decode(ngrids,n_cmprs,array1,array2        ! I
      1                     ,data_l                              ! O
      1                     ,istatus)                            ! O
-      deallocate(array)
+      deallocate(array1)
+      deallocate(array2)
       if(istatus .ne. 1)goto 970
 
 !     Position the data into the proper 3-D array
@@ -216,11 +223,12 @@ C
         END
 
 
-        subroutine runlength_decode(ngrids,n_cmprs,array                ! I
+        subroutine runlength_decode(ngrids,n_cmprs,array1,array2        ! I
      1                     ,data                                        ! O
      1                     ,istatus)                                    ! O
 
-        real*4 array(n_cmprs,2)
+        integer*4 array1(n_cmprs)
+        real*4 array2(n_cmprs)
         real*4 data(ngrids)
 
 !       Setup for first point
@@ -228,10 +236,10 @@ C
 
         do i = 1,n_cmprs ! Loop through array list
             i_start = i_end + 1
-            i_end = i_start + nint(array(i,1)) - 1
+            i_end = i_start + array1(i) - 1
 
             do ii = i_start,i_end
-                data(ii) = array(i,2)
+                data(ii) = array2(i)
             enddo ! ii
 
         enddo ! i
