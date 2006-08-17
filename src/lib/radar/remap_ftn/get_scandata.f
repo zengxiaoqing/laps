@@ -39,10 +39,10 @@ cdis
         subroutine  get_scandata(
      :          i_tilt,             ! Input  (Integer*4)
      :          r_missing_data,     ! Input  (Real*4)
-     :          max_rays,           ! Input  (Integer*4)
+     :          max_rays_in,        ! Input  (Integer*4)
      :          n_rays,             ! Output (Integer*4)
      :          n_gates,            ! Output (Integer*4)
-     :          gate_spacing_m,     ! Output (Real*4)
+     :          gate_spacing_m_ret, ! Output (Real*4)
      :          elevation_deg,      ! Output (Real*4)
      :          i_scan_mode,        ! Output (Integer*4)
      :          v_nyquist_tilt,     ! Output (Real*4)
@@ -60,22 +60,23 @@ c     Input variables
 c
       integer*4 i_tilt
       real*4 r_missing_data
-      integer*4 max_rays
+      integer*4 max_rays_in
 c
 c     Output variables
 c
       integer*4 n_rays
       integer*4 n_gates
-      real*4 gate_spacing_m
+      real*4 gate_spacing_m_ret
       real*4 elevation_deg
       integer*4 i_scan_mode
       real*4 v_nyquist_tilt
-      real*4 v_nyquist_ray(max_rays)
+      real*4 v_nyquist_ray(max_rays_in)
       integer*4 istatus
 c
 c     Include file
 c
       include 'remap_dims.inc'
+      include 'remap_constants.dat'
       include 'remap_buffer.cmn'
 c
 c     Misc internal variables
@@ -83,8 +84,8 @@ c
       integer i
 c
       n_rays = n_rays_cmn
-      n_gates = 1840
-      gate_spacing_m = 250.
+      n_gates = MAX_GATES
+      gate_spacing_m_ret = GATE_SPACING_M
       elevation_deg = elev_cmn
       i_scan_mode = 1
 c
