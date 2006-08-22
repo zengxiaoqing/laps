@@ -27,6 +27,7 @@
         real*4 ob_diff(mxstn)
         real*4 ob_full(mxstn)
         real*4 ob_bkg(mxstn)
+        real*4 to_2d_dum(ni,nj)
 
         write(6,*)' Subroutine barnes_multivariate_sfc_jacket for...'
      1           ,c_field      
@@ -175,7 +176,7 @@ C
 
         real*4 t_2d(ni,nj)                              ! Analyzed field
         real*4 to_2d_in(ni,nj)                          ! Observations
-        real*4 to_2d_dum(ni,nj)                         
+        real*4 wt_bkg_a(ni,nj)                         
         real*4 topo(ni,nj),ldf(ni,nj)                   ! Topo & Landfrac
 
         real*4 wt_2d(ni,nj)
@@ -331,14 +332,17 @@ C
         n_var = 1
         rep_pres_intvl = 5000. ! Hardwire should work for a 2-D analysis
 
+        wt_bkg_a = wt_bkg_const
+
         call barnes_multivariate(
      1                      t_2d                                  ! Outputs
      1                     ,n_var,n_obs_valid,obs_barnes_valid    ! Input
      1                     ,ni,nj,nk,grid_spacing_cen_m           ! Inputs
      1                     ,rep_pres_intvl                        ! Input
-     1                     ,to_2d_dum                             ! Input
+     1                     ,wt_bkg_a                              ! Input
      1                     ,i4_loop_total                         ! Output
-     1                     ,wt_2d,fnorm,n_fnorm                   ! Inputs
+     1                     ,wt_2d                                 ! Not used
+     1                     ,fnorm,n_fnorm                         ! Inputs
      1                     ,l_analyze,l_not_struct_out,rms_thresh ! Input
      1                     ,weight_bkg_const                      ! Input
      1                     ,topo,ldf,ni,nj                        ! Input
