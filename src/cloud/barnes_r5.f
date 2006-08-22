@@ -269,6 +269,11 @@ cdis
       enddo
       enddo
 
+      if(l_diff_snd)then
+          sum_a=0.  
+          sumwt_a=0.
+      endif
+
       do k=1,kmax
 
         if(k .eq. 1)then
@@ -285,29 +290,35 @@ cdis
           write(6,50)k,nstart,nstop,nobs
 50        format(' lvl,nstart,nstop,nobs=',4i6)
 
-          sum_a=0.
-          sumwt_a=0.
+          if(.not. l_diff_snd)then
+              sum_a=0.  
+              sumwt_a=0.
+          endif
 
-!         Analyze every few grid points
-          do j=1,jmax,nskip
-          do i=1,imax,nskip
-
-            if(.true.)then
-                do n=nstart,nstop
+          if(.true.)then
+              do n=nstart,nstop
                   ii=iob(n)
                   jj=job(n)
                   nn=nob(n)
-                  weight = iiilut(i-ii,j-jj) * wt_snd(nn,k) ! Obs are being weighted
-                  sum_a(i,j)=weight*cld_snd(nn,k)+sum_a(i,j)
-                  sumwt_a(i,j)=sumwt_a(i,j)+weight
-                enddo ! n
-            endif
 
-!         enddo ! i
-!         enddo ! j
+!                 Analyze every few grid points
+                  do j=1,jmax,nskip
+                  jmjj = j-jj
+                  do i=1,imax,nskip
+                      weight = iiilut(i-ii,jmjj) * wt_snd(nn,k) 
 
-!         do j=1,jmax,nskip
-!         do i=1,imax,nskip
+!                     Obs are being weighted
+
+                      sum_a(i,j)=weight*cld_snd(nn,k)+sum_a(i,j)
+                      sumwt_a(i,j)=sumwt_a(i,j)+weight
+
+                  enddo ! i
+                  enddo ! j
+              enddo ! n
+          endif
+
+          do j=1,jmax,nskip
+          do i=1,imax,nskip
 
 !           Add in model first guess as an ob
             sum = sum_a(i,j) + weight_modelfg * cf_modelfg(i,j,k)
