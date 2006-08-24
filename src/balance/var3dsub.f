@@ -35,42 +35,44 @@ c internal fields
 c             wt(nx,ny)
 c             wt3(nx,ny,nz)        
  
-       integer ns
+       integer*4 ns
        parameter (ns=4)
-       integer isave(ns),jsave(ns)
-       integer nse
+       integer*4 isave(ns),jsave(ns)
+       integer*4 nse
        parameter (nse=2**ns-1)
-       integer index(nse),inxx(nse)	
-       integer inx(nse)
+       integer*4 index(nse),inxx(nse)	
+       integer*4 inx(nse)
        character*9 a9_time
        character*24 lable,title
-       integer nx, ny, nz
-       real, intent(in) :: u(nx,ny,nz),v(nx,ny,nz),d(nx,ny,nz)
+       integer*4 nx, ny, nz
+       real*4, intent(in) :: u(nx,ny,nz),v(nx,ny,nz),d(nx,ny,nz)
      &,t(nx,ny,nz)
-       real, intent(in) :: slat(nx,ny),slon(nx,ny),ter(nx,ny)
+       real*4, intent(in) :: slat(nx,ny),slon(nx,ny),ter(nx,ny)
 
-       real upi(nse),vpi(nse),dpi(nse),twi(nse)
-       real, allocatable, dimension(:,:) :: wt
-       real, allocatable, dimension(:,:,:) :: wt3
-       real wtsave(ns),drpx(ns),drpy(ns)
-       real alph,beta,sumu,sumv,sumd
-       real p(nz),ht(nz)
-       real ud(nz),vd(nz),ubb(nz),vbb(nz),wbb(nz),uab(nz),vab(nz)
-       real up(nz),vp(nz),dp(nz),tp(nz),dd(nz)
-       real upv(nz),vpv(nz),tpv(nz),wp(nz),dpv(nz),
+       real*4 upi(nse),vpi(nse),dpi(nse),twi(nse)
+       real*4, allocatable, dimension(:,:) :: wt
+       real*4, allocatable, dimension(:,:,:) :: wt3
+       real*4 wtsave(ns),drpx(ns),drpy(ns)
+       real*4 alph,beta,sumu,sumv,sumd
+       real*4 p(nz),ht(nz)
+       real*4 ud(nz),vd(nz),ubb(nz),vbb(nz),wbb(nz),uab(nz),vab(nz)
+       real*4 up(nz),vp(nz),dp(nz),tp(nz),dd(nz)
+       real*4 upv(nz),vpv(nz),tpv(nz),wp(nz),dpv(nz),
      &      wab(nz),dbb(nz),dab(nz),ubv(nz),vbv(nz),wbv(nz),
      &      uav(nz),vav(nz),wav(nz),utv(nz),vtv(nz),wtv(nz),
      &      dav(nz),dbv(nz),pav(nz),htav(nz),tav(nz)
 
-       real eponexy,gamma,sumw,ca,ddd2,ct,epone
-       real ss2,sa,sumt,tpvs,sn2,sumww,sumdd,zter,smax,sumvv,sumuu
-       real errmod,dt,dx,smsng,dpht,errdds,errwnds,distnf,st,ubar
-       real vbar,vbtot,ubtot,errdis
-       real ri,rj,ter_hgt_drop,droplat,droplon
+       real*4 eponexy,gamma,sumw,ca,ddd2,ct,epone
+       real*4 ss2,sa,sumt,tpvs,sn2,sumww,sumdd,zter,smax,sumvv,sumuu
+       real*4 errmod,dt,dx,smsng,dpht,errdds,errwnds,distnf,st,ubar
+       real*4 vbar,vbtot,ubtot,errdis
+       real*4 ri,rj,ter_hgt_drop,droplat,droplon
 
-       integer i,j,k,kk,l,mm,lsave,n,lmax,m,in,jo,io, ncnt,ix,jy
-       integer ktop,kbot,nofly2,idist2
-       integer istatus
+       integer*4 i,j,k,kk,l,mm,lsave,n,lmax,m,in,jo,io, ncnt,ix,jy
+       integer*4 ktop,kbot,nofly2,idist2
+       integer*4 user_sonde_loc(2)
+       integer*4 nofly_area(nx,ny)
+       integer*4 istatus
 
        data index /1,2,3,4,12,13,14,23,24,34,123,124,134,234,1234/
 
@@ -312,6 +314,10 @@ c now add up all the weights below ktop
         enddo
        enddo
 c now find maximum wt for area
+c read PADS input of nofly area file and user sonde location information
+      call read_PADS_nofly_and_sonde(nx,ny
+     1,nofly_area,user_sonde_loc,istatus)
+
       idist2=(6.0*dt/dx)**2
       nofly2=(distnf/dx)**2
       do l=1,ns
@@ -661,5 +667,84 @@ c combined variance formula - err(3,2,k) contains covariance
  1008 format(1x,f5.0,f8.0,4f9.3)
 
   909 print*,'Error opening airdrop output file'
+      return
+      end
+C
+C -----------
+C
+      subroutine read_PADS_nofly_and_sonde(nx,ny
+     1,nofly_area,user_sonde_loc,istatus)
+
+      implicit none
+
+      character*255 directory
+      character*255 cfilespec
+      integer*4     nx,ny
+      integer*4     i,j,idum,jdum
+      integer*4     len_dir
+      integer*4     len_cfspec
+      integer*4     nofly_area(nx,ny)  !output
+      integer*4     user_sonde_loc(2)  !output
+      integer*4     istatus
+      logical       L1
+
+      istatus = 0
+c first is no-fly-area file
+      call get_directory('static',directory,len_dir)
+      cfilespec=directory(1:len_dir)//'/'//'no-fly-area.txt'
+      call s_len(cfilespec,len_cfspec)
+      inquire(file=cfilespec(1:len_cfspec),EXIST=L1)
+      if(.not.L1)then   !the file does not exist
+
+         print*,"User file no-fly-area.txt does not exist"
+         print*,"file spec: ",cfilespec(1:len_cfspec)
+         nofly_area=1       !No restricted fly zones anywhere in domain
+
+      else
+
+         print*,"Reading user provided file no-fly-area.txt"
+         open(10,FILE=cfilespec(1:len_cfspec),STATUS="old",ERR=90)
+         read(10,*)        !    50   50   : nRows nCols (1,1 = SW corner)
+         read(10,*)        !    Row   Col : 1=Fly, 0=No Fly
+         do i=1,nx
+          do j=1,ny
+            read(10,*,err=91,end=92)idum,jdum,nofly_area(i,j)
+          enddo
+         enddo
+         goto 95
+92       print*,"!! Warning: End-of-file. ",cfilespec(1:len_cfspec)
+95       close(10)
+
+      endif
+c second is user provided sonde location file
+      cfilespec=directory(1:len_dir)//'/'//'sonde_location.txt'
+      call s_len(cfilespec,len_cfspec)
+      inquire(file=cfilespec(1:len_cfspec),EXIST=L1)
+      user_sonde_loc(1)=-99
+      user_sonde_loc(2)=-99
+      if(.not.L1)then   !the file does not exist
+
+         print*,"User file sonde_location.txt does not exist"
+         print*,"file spec: ",cfilespec(1:len_cfspec)
+         print*,"Return missing data (-99) for sonde location"
+
+      else
+
+         print*,"Reading user provided file sonde_location.txt"
+         open(11,FILE=cfilespec(1:len_cfspec)
+     1,STATUS="old",ERR=90)
+         read(11,*,err=91,end=93)user_sonde_loc(1),user_sonde_loc(2)
+         goto 96
+93       print*,"!! Warning: End-of-file. ",cfilespec(1:len_cfspec)
+96       close(11)
+
+      endif
+      istatus = 1
+      return
+
+ 90   print*,"Error opening existing file: "
+      print*,"  filename: ",cfilespec(1:len_cfspec)
+      return
+ 91   print*,"Error reading file: ",cfilespec(1:len_cfspec)
       return
       end
