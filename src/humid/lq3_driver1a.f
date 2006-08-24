@@ -251,8 +251,9 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 4.0 successfully incorporates'
+      write (6,*) 'Release 4.0.2 successfully incorporates'
       write (6,*) '1) option for shorter print outs'
+      write (6,*) '2) capability to handle GOES 11 for GOES west'
 
 
       call get_directory(extpw,dirpw,len)
