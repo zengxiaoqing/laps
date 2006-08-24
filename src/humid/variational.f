@@ -360,6 +360,7 @@ c     assign goes number for common block to make avail where needed for OPTRAN
       if (goes_number == 10) sat_index = 2 ! goes west
       if (goes_number == 9) sat_index = 3 ! pacific goes
       if (goes_number == 12) sat_index = 1 ! new goes east
+      if (goes_number == 11) sat_index = 2 ! new goes west
       
       
 c     assign pressure to global array
@@ -412,6 +413,8 @@ c     install new changes for revised satellite path
             len = len + 7
          elseif (ngoes.eq.12) then
             path = path(1:len)//'goes12/'
+         elseif (ngoes.eq.11) then
+            path = path(1:len)//'goes11/'
             len = len + 7
          endif
          
