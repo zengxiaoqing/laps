@@ -73,6 +73,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         real*4 radar_3d(ni,nj,nk)        ! Input
 
         real*4 omega_3d(ni,nj,nk)        ! Input / Output (if l_flag_bogus_w = .true.)
+                                         !                (Omega is in Pa/S)
         real*4 slwc_3d(ni,nj,nk)         ! Output
         real*4 cice_3d(ni,nj,nk)         ! Output
         integer cldpcp_type_3d(ni,nj,nk) ! Output (1st 4bits pcp, 2nd 4 are cld)
@@ -90,7 +91,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         real*4 pressures_mb(nk)
         real*4 pressures_pa(nk)
         real*4 rlwc_laps1d(nk)
-        real*4 w_1d(nk)
+        real*4 w_1d(nk)                  ! Units are M/S
         real*4 lwc_res_1d(nk)
         real*4 prob_laps(nk)
         real*4 d_thetae_dz_1d(nk)
@@ -548,7 +549,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
      1                           ,vv_for_St                        ! I
      1                           ,w_1d)                            ! O
 
-                  do k = 1,nk ! Transfer the 1D w into the output omega array
+                  do k = 1,nk ! Transfer the 1D w (M/S) into the output 
+                              ! omega (Pa/S) array
                       if(w_1d(k) .ne. r_missing_data)then
                           omega_3d(i,j,k) = w_to_omega(w_1d(k)
      1                                       ,pressures_pa(k))
