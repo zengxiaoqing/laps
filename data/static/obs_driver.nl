@@ -18,7 +18,8 @@ c Obs Driver ingest (obs_driver.exe)
 c
 c 'path_to_metar' - Directory for metar/synop data
 c
-c 'path_to_local_data' - Directory for local/mesonet or LDAD data
+c 'path_to_local_data' - Directory for local/mesonet or LDAD mesonet data
+c                        This can include ASOS data or MADIS LDAD mesonet.
 c
 c 'path_to_buoy_data' - Directory for buoy/ship (maritime) data
 c
