@@ -284,22 +284,23 @@ cdis
         nstop = nlast(k)
 
         nobs = nstop-nstart+1
+        nanl = 0
 
         if((l_analyze(k) .and. nobs .ge. 1) .or. k .eq. 1)then
 
-          write(6,50)k,nstart,nstop,nobs
-50        format(' lvl,nstart,nstop,nobs=',4i6)
-
-          if(.not. l_diff_snd)then
+          if(.not. l_diff_snd .or. k .eq. 1)then
               sum_a=0.  
               sumwt_a=0.
           endif
 
-          if(.true.)then
-              do n=nstart,nstop
-                  ii=iob(n)
-                  jj=job(n)
-                  nn=nob(n)
+          do n=nstart,nstop
+              ii=iob(n)
+              jj=job(n)
+              nn=nob(n)
+
+              if(.not. l_diff_snd .or. k .eq. 1)then
+
+                  nanl = nanl + 1
 
 !                 Analyze every few grid points
                   do j=1,jmax,nskip
@@ -308,14 +309,40 @@ cdis
                       weight = iiilut(i-ii,jmjj) * wt_snd(nn,k) 
 
 !                     Obs are being weighted
-
                       sum_a(i,j)=weight*cld_snd(nn,k)+sum_a(i,j)
                       sumwt_a(i,j)=sumwt_a(i,j)+weight
 
                   enddo ! i
                   enddo ! j
-              enddo ! n
-          endif
+
+              else ! process difference soundings
+
+                  if(wt_snd_diff(nn,k) .ne. r_missing_data)then
+
+                      nanl = nanl + 1
+
+!                     Analyze every few grid points
+                      do j=1,jmax,nskip
+                      jmjj = j-jj
+                      do i=1,imax,nskip
+                          weight = iiilut(i-ii,jmjj) * wt_snd_diff(nn,k) 
+
+!                         Obs are being weighted
+                          sum_a(i,j)=weight*cld_snd_diff(nn,k)
+     1                                     +sum_a(i,j)      
+                          sumwt_a(i,j)=sumwt_a(i,j)+weight
+
+                      enddo ! i
+                      enddo ! j
+
+                  endif
+
+              endif
+
+          enddo ! n
+
+          write(6,50)k,nstart,nstop,nobs,nanl
+50        format(' lvl,nstart,nstop,nobs,nanl=',5i6)
 
           do j=1,jmax,nskip
           do i=1,imax,nskip
@@ -393,8 +420,8 @@ cdis
 
         elseif(nobs .gt. 0)then ! Obs are identical to lvl below; 
                                 ! Use analysis weights from last analyzed level
-          write(6,51)k,nstart,nstop,nobs
-51        format(' lvl,nstart,nstop,nobs=',4i6,
+          write(6,51)k,nstart,nstop,nobs,nanl
+51        format(' lvl,nstart,nstop,nobs,nanl=',5i6,
      1           ' Identical Obs; Copy wts from last analyzed lvl')       
 
           km1 = k - 1
@@ -424,8 +451,8 @@ cdis
           enddo ! j
 
         else ! No Obs; Set level to model first guess
-          write(6,52)k,nstart,nstop,nobs
-52        format(' lvl,nstart,nstop,nobs=',4i5,
+          write(6,52)k,nstart,nstop,nobs,nanl
+52        format(' lvl,nstart,nstop,nobs,nanl=',5i5,
      1                  ' No Obs; Set level to model fg')
 
           do j=1,jmax
