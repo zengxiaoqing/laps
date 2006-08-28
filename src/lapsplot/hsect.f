@@ -5672,8 +5672,8 @@ c    1                        ,clow,imx,jmx,imn,jmn)
 c             cint = (chigh-clow)/10.
 c             if(cint.eq.0.0)cint=0.1
 
-              clow = 4.0
-              chigh = -2.0
+              clow = 0.0
+              chigh = 1.0
 
               c_label = 'Interpolated Green Fraction     '
               call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
@@ -5682,7 +5682,7 @@ c             if(cint.eq.0.0)cint=0.1
               if(cstatic .eq. 'gni')then
 
                 write(6,*)' calling solid fill plot'
-                call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'hues'
+                call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'green'
      1                     ,n_image,1e0,'hsect',plot_parms
      1                     ,namelist_parms)
                 call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
@@ -5691,8 +5691,6 @@ c             if(cint.eq.0.0)cint=0.1
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
      1                             ,namelist_parms,plot_parms)
               else
-                clow = 0.0
-                chigh = 1.0
                 cint = .10
                 call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,
