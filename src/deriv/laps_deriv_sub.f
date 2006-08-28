@@ -136,6 +136,8 @@ cdis
         real*4 solar_alt(NX_L,NY_L)
         real*4 solar_ha(NX_L,NY_L)
 
+        real*4 k_to_c
+
         logical l_packed_output
         logical l_evap_radar
 
@@ -788,7 +790,7 @@ c read in laps lat/lon and topo
               write(6,*)' Comparing precip type to the obs:',n_obs_pos_b
               write(6,*)' Sta PTY PTT dbz   T(anl)  Td(anl)'//
      1                  '  T(ob)  Td(ob)  PTY(ob)'//
-     1                  '        Tw(anl)  Tw(ob)  Celg'
+     1                  '        Tw(anl) Tw(ob) Elev(ob) Celg'
               do i = 1,n_obs_pos_b
                 call latlon_to_rlapsgrid(lat_s(i),lon_s(i),lat,lon
      1                     ,NX_L,NY_L,ri,rj,istatus)
@@ -815,14 +817,14 @@ c read in laps lat/lon and topo
                         c3_pt_flag = '   '
                     endif
 
-                    t_sfc_c  = t_sfc_k(i_i,i_j)  - 273.15    ! K to C
-                    td_sfc_c = td_sfc_k(i_i,i_j) - 273.15    ! K to C
+                    t_sfc_c  = k_to_c(t_sfc_k(i_i,i_j))
+                    td_sfc_c = k_to_c(td_sfc_k(i_i,i_j))
                     p_sfc_mb = pres_sfc_pa(i_i,i_j) / 100.
 
                     tw_sfc_c = tw(t_sfc_c,td_sfc_c,p_sfc_mb)
 
-                    t_s_c  = (t_s(i)-32.) / 1.8              ! F to C
-                    td_s_c = (td_s(i)-32.) / 1.8             ! F to C
+                    t_s_c  = f_to_c(t_s(i))
+                    td_s_c = f_to_c(td_s(i))
 
                     if(t_s_c .gt. -50. .and. td_s_c .gt. -50.)then
                         tw_s_c = tw(t_s_c,td_s_c,p_sfc_mb)
@@ -867,11 +869,13 @@ c read in laps lat/lon and topo
      1                          ,c3_pt_flag
      1                          ,tw_sfc_c
      1                          ,tw_s_c
+     1                          ,elev_s(i)
      1                          ,iceil
      1                          ,cvr_max(i_i,i_j)
      1                          ,c1_r,c1_s,obstype(i)(7:8)
 1101                format(1x,a3,2x,a2,2x,a2,i4,4f8.1,3x,a8,2x,a3
-     1                                ,2f8.1,i7,f5.2,1x,2a1,1x,a2)
+     1                                ,3f8.1,i7,f5.2,1x,2a1,1x,a2
+     1                                ,' ptvrf')
 1102            endif ! ob is in domain
               enddo ! i
             endif
@@ -899,6 +903,7 @@ c read in laps lat/lon and topo
      1                           radar_ref_3d,clouds_3d,cld_hts,
      1                           temp_3d,heights_3d,pres_3d,
      1                           ibase_array,itop_array,thresh_cvr,
+     1                           vv_to_height_ratio_Cu,                 ! I
      1                           cldpcp_type_3d,w_3d,istat_radar_deriv)       
               if(istat_radar_deriv .ne. 1)then
                 write(6,*)' Bad status return from get_radar_deriv'
