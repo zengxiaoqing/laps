@@ -627,10 +627,6 @@ C
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.7)                ! Red
 
-      elseif(colortable .eq. 'acc')then       
-          call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
-
       elseif(colortable .eq. 'omega')then       
           if(l_discrete)then
               ncols = 19
@@ -640,6 +636,10 @@ C
               ncols = 79
           endif
 
+          call generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                            ,plot_parms,istatus)
+
+      elseif(colortable .eq. 'green' .or. colortable .eq. 'acc')then       
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,plot_parms,istatus)
 
