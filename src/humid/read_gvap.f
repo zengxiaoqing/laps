@@ -233,7 +233,7 @@ c     get most recent file in directory
       
       nn = i-1
       if (nn .eq. 0) go to 666
-      write(6,*) nn-n8, ' number of records read GOES 10'
+      write(6,*) nn-n8, ' number of records read GOES west'
       istatus = 1
 c      write(6,*) (wt(i),i=1,nn)
 
