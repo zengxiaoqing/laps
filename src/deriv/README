@@ -21,8 +21,12 @@ main                                                     laps_deriv.f
             sao_snow_correction                              "
             sao_precip_correction                            "
             get_radar_deriv                              lib/get_radar_deriv.f
+                get_con_str                                  " 
+                radar_bogus_w                                " 
             cpt_pcp_cnc                                  lib/pcpcnc.f
                 zr                                       lib/zr.f
+                cpt_fall_velocity                        lib/pcpcnc.f
+                cpt_concentration                            "
   
 ...............................................................................
 
