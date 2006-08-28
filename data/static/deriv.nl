@@ -18,8 +18,12 @@ c
 c l_bogus_radar_w - flag for whether to call 'get_radar_deriv' to recalculate
 c                   the cloud omega with consideration of radar data
 c
-c vv_to_height_ratio_Cu - parameter for the cloud omega (vv) subroutinec
+c vv_to_height_ratio_Cu - parameter for the cloud omega (cloud_bogus_w) routine
+c                         (units are inverse seconds)
+c                         This is used in both cloud and radar bogusing
 c
-c vv_to_height_ratio_Sc - parameter for the cloud omega (vv) subroutine
+c vv_to_height_ratio_Sc - parameter for the cloud omega (cloud_bogus_w) routine
+c                         (units are inverse seconds)
 c
-c vv_for_St             - parameter for the cloud omega (vv) subroutine
+c vv_for_St             - parameter for the cloud omega (cloud_bogus_w) routine
+c                         (units are meters/second)
