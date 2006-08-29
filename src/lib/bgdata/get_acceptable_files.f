@@ -55,7 +55,7 @@
       character(len=256), allocatable :: bg_names(:)
       character(len=256), allocatable :: bgnames_tmp(:)
 
-      character*256 bgpath
+      character*256 bgpath, null_string
 
 C
 C if forecast_length < 0 return only the file which matches i4time_anal 
@@ -83,10 +83,12 @@ C
 
       cfilespec=bgpath(1:len)//'*'
 
+      do i=1,256
+         null_string(i:i) = char(0)
+      enddo
+
       do ifile=1,max_files
-         do i=1,256
-            bg_names(ifile)(i:i) = char(0)
-         enddo
+         bg_names(ifile) = null_string
       enddo
 
 c     if(bgmodel.eq.0 .and. cmodel.ne.'LAPS_FUA'.and.
