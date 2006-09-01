@@ -330,6 +330,15 @@ c     These lookup tables flag which gates actually need processing
       lgate_ref_lut = .false.
       lgate_vel_lut = .false.
 
+      DO igate_88d = 1,n_vel_gates_cmn
+          i = nint(float(igate_88d) * ratio_vel)
+
+          if(i .le. MAX_GATES .and. i .ge. INITIAL_VEL_GATE
+     1 .and. i .le. 920                                    )then
+              lgate_vel_lut(i) = .true.
+          endif ! i
+      ENDDO
+
       DO igate_88d = 1,n_ref_gates_cmn
           i = nint(float(igate_88d) * ratio_ref)
 
@@ -340,11 +349,11 @@ c     These lookup tables flag which gates actually need processing
 
       do i = 1,MAX_GATES
            
-          if(i .le. 920       .and. i .ge. INITIAL_VEL_GATE)then
-              lgate_vel_lut(i) = .true.
-          else
-              lgate_vel_lut(i) = .false.
-          endif
+!         if(i .le. 920       .and. i .ge. INITIAL_VEL_GATE)then
+!             lgate_vel_lut(i) = .true.
+!         else
+!             lgate_vel_lut(i) = .false.
+!         endif
 
 !         if(i .eq. (i/4) * 4 .and. i .ge. INITIAL_REF_GATE)then
 !             lgate_ref_lut(i) = .true.
