@@ -1922,6 +1922,11 @@ C       EW SLICES
      1                  ,i,j,k,clouds_0d
                         clouds_0d = 1.0
                     endif
+
+                elseif(clouds_0d .lt. 0.0)then 
+                    write(6,*)' Error, clouds_0d < 0',i,j,k,clouds_0d
+                    stop
+
                 endif
 
                 clouds_3d(i,j,k) = clouds_0d
