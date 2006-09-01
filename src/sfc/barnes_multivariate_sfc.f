@@ -332,7 +332,7 @@ C
         n_var = 1
         rep_pres_intvl = 5000. ! Hardwire should work for a 2-D analysis
 
-        wt_bkg_a = wt_bkg_const
+        wt_bkg_a = weight_bkg_const
 
         call barnes_multivariate(
      1                      t_2d                                  ! Outputs
