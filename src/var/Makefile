@@ -77,7 +77,6 @@ GSICC= getradarfilename.c
 all: $(PREP) $(POST)
 
 $(PREP): $(GSIPR) $(GSICC) $(LAPSLIBS) $(WINDLIB)
-	cd bufr; make clean; make; cd ..;
 	$(CC) $(CPPFLAGS) -c $(GSICC)
 	$(FC) $(FFLAGS) $(FREE) $(GSIPR) getradarfilename.o $(LAPSFC) $(LAPSLIBS) \
 	$(BUFRLIB) $(OTHERLIBS) -o $@

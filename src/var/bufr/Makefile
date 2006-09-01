@@ -9,10 +9,11 @@ SRCROOT=../../../
 
 include $(SRCROOT)/src/include/makefile.inc
 
+FFLAGS= -O2
+DBFLAGS= -g
 
 LIB      = libbufr.a
-DEBUGLIB = libdebugbufr.a
-
+DEBUGLIB = libbufr.a
 
 #
 # machine_dependent needs to be first
@@ -177,11 +178,12 @@ lib: $(LIB)
 
 $(LIB): $(ARCHIVE) 
 	$(RANLIB) $@
-	rm -f *.f *.o README_BUFRLIB
+	rm -f *.f *.o
 
 debug: $(SRC)
 	$(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
+	rm -f *.f *.o
 
 install: lib
 
