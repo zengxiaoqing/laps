@@ -121,7 +121,7 @@ c
          DO J=1,JMAX
          DO I=1,IMAX
 
-            if(r_llij_lut_ri(i,j).ne.r_missing_data.or.
+            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
      &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 
 c
