@@ -1098,10 +1098,12 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            in the '.../src/ingest/sao' directory should provide enough 
            information to get you started on any needed modifications.
 
-           The surface data, including all the types mentioned above, over much
-           of the U.S. is available in realtime from GSD with some restrictions. 
-           This data, in 'WFO/AWIPS' NetCDF format, is distributed via GSD's
-           MADIS project at http://www-sdd.fsl.noaa.gov/MADIS/
+           The surface data, including many the types mentioned above, over much
+           of the world are available in realtime from GSD with some 
+           restrictions. This data, in 'WFO/AWIPS' NetCDF format, are 
+           distributed via GSD's MADIS project at 
+           http://www-sdd.fsl.noaa.gov/MADIS/. The supported MADIS LDAD surface
+           observation dataset is 'mesonet'
       
                       ----   2.3.4  Wind Profiler / RASS ---
 
