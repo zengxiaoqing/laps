@@ -211,24 +211,54 @@ cdis
 !     This will allow more efficient summing
 !     It is assumed for now that 'wt_snd' is always 1.00 or 'r_missing_data'
       if(l_diff_snd)then
+
+          write(6,*)' Calculating difference soundings'
+
+!         Initialize arrays
+          cld_snd_diff = r_missing_data
+          wt_snd_diff = r_missing_data
+
           do n = 1,n_cld_snd
+
+              k = 1
               cld_snd_diff(n,1) = cld_snd(n,1)
               wt_snd_diff(n,1) = wt_snd(n,1)
+              if(n .le. 10)then 
+                  write(6,*)
+                  write(6,*)' Cloud sounding # ',n
+                  write(6,901,err=902)k
+     1                       ,cld_snd(n,k),cld_snd_diff(n,k)
+     1                       ,wt_snd(n,k),wt_snd_diff(n,k)
+ 902              continue
+              endif
               
-              do k = 1,kmax              
-                  if(cld_snd(n,k) .ne. cld_snd(n,km1))then
+              do k = 2,kmax              
+                  if(cld_snd(n,k) .ne. cld_snd(n,k-1))then ! cloud 
                       if(cld_snd(n,k) .eq. r_missing_data)then
                           wt_snd_diff(n,k) = -wt_snd(n,k-1)
                           cld_snd_diff(n,k) = cld_snd(n,k-1)
                       elseif(cld_snd(n,k-1) .eq. r_missing_data)then
                           wt_snd_diff(n,k) = wt_snd(n,k)
                           cld_snd_diff(n,k) = cld_snd(n,k)
-                      else ! diff the two soundings
+                      else ! diff the two soundings (both levels are present)
                           cld_snd_diff(n,k) = cld_snd(n,k)
      1                                      - cld_snd(n,k-1)      
-                          wt_snd_diff(n,k) = wt_snd(n,k)
+!                         if(cld_snd_diff(n,k) .eq. 0.)then ! identical
+!                             wt_snd_diff(n,k) = r_missing_data
+!                         else                              ! different
+                              wt_snd_diff(n,k) = 0.
+!                         endif
                       endif
                   endif
+
+                  if(n .le. 10)then
+                      write(6,901,err=904)k
+     1                           ,cld_snd(n,k),cld_snd_diff(n,k)
+     1                           ,wt_snd(n,k),wt_snd_diff(n,k)
+ 901                  format(i4,4(1x,f9.3))
+ 904                  continue
+                  endif
+
               enddo ! k
 
           enddo ! n      
@@ -241,7 +271,7 @@ cdis
          istatus = 1
          return
       else
-         write(6,*)' Ncnt = ',ncnt
+         write(6,*)' Ncnt/l_diff_snd = ',ncnt,l_diff_snd
       endif
 
       radm2=1.533/100.
@@ -317,7 +347,25 @@ cdis
 
               else ! process difference soundings
 
-                  if(wt_snd_diff(nn,k) .ne. r_missing_data)then
+!                 Check if both sounding levels have valid values          
+                  if(wt_snd_diff(nn,k) .eq. 0.)then 
+                      nanl = nanl + 1
+
+!                     Analyze every few grid points
+                      do j=1,jmax,nskip
+                      jmjj = j-jj
+                      do i=1,imax,nskip
+                          weight = iiilut(i-ii,jmjj) * wt_snd(nn,k) 
+
+!                         Obs are being weighted
+                          sum_a(i,j)=weight*cld_snd_diff(nn,k)
+     1                                     +sum_a(i,j)      
+
+                      enddo ! i
+                      enddo ! j
+
+!                 Check if we are changing between valid and missing values
+                  elseif(wt_snd_diff(nn,k) .ne. r_missing_data)then
 
                       nanl = nanl + 1
 
