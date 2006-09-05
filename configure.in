@@ -13,6 +13,7 @@ fi
 if test -n "$user_fflags"
 then
   FFLAGS="$user_fflags"
+  LITTLEFLAGS="$user_fflags"
 fi
 
 if test -n "$user_optimize"
@@ -81,6 +82,7 @@ LIBPATHFLAG=-L
 if test "$arch" = "hpux" 
 then
   FFLAGS="$FFLAGS +FPVZO -K" 
+  LITTLEFLAGS="$LITTLEFLAGS +FPVZO -K" 
   FIXED="+source=fixed"
   FREE="+source=free +langlvl=90"
   C_OPT="-O2 +Onolimit"
@@ -97,6 +99,7 @@ fi
 if test "$arch" = "rs6000" 
 then
   FFLAGS="$FFLAGS"
+  LITTLEFLAGS="$LITTLEFLAGS"
   FIXED="-qfixed"
   FREE="-qfree=f90 -qsuffix=f=f90"
   C_OPT="-O3 -qstrict"
@@ -105,6 +108,7 @@ fi
 if test "$arch" = "alpha"
 then
   FFLAGS="$FFLAGS -convert big_endian -fpe3"
+  LITTLEFLAGS="$LITTLEFLAGS -convert little_endian -fpe3"
   FIXED="-fixed"
   FREE="-free"
   C_OPT="-O4"
@@ -115,6 +119,7 @@ if test "$arch" = "sun4"
 then
     AC_MSG_ERROR(LAPS no longer supports the sun4 OS)
 dnl  FFLAGS="$FFLAGS -native -xl -i4 -fnonstd"
+dnl  LITTLEFLAGS="$LITTLEFLAGS -native -xl -i4 -fnonstd"
 dnl   C_OPT="-O"
 dnl   F_OPT="-O"
 fi
@@ -142,6 +147,7 @@ then
   then
 dnl module flags for solaris 
 	FFLAGS="$FFLAGS -M\$(SRCROOT)/src/lib -M\$(SRCROOT)/src/lib/modules"
+	LITTLEFLAGS="$LITTLEFLAGS -M\$(SRCROOT)/src/lib -M\$(SRCROOT)/src/lib/modules"
         FIXED="-fixed"
         FREE="-free"
 dnl
@@ -150,6 +156,7 @@ dnl
 	CPP="/usr/ucb/cc -P"
 else
 	FFLAGS="$FFLAGS -I\$(SRCROOT)/src/lib"
+	LITTLEFLAGS="$LITTLEFLAGS -I\$(SRCROOT)/src/lib"
 fi
 fi
 
@@ -165,6 +172,7 @@ then
   if test "$arch" = "i686"
   then
     FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4"
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
@@ -175,6 +183,7 @@ then
   if test "$arch" = "i386"
   then
     FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4"
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
@@ -185,6 +194,7 @@ then
   if test "$arch" = "x86_64"
   then
     FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4"
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
@@ -217,6 +227,7 @@ then
   if test "$arch" = "i686"
   then
     FFLAGS="$FFLAGS -w90 -w95 -cm"
+    LITTLEFLAGS="$LITTLEFLAGS -w90 -w95 -cm"
     FREE="-FR"
     C_OPT=""
     F_OPT=""
@@ -251,6 +262,7 @@ AC_SUBST(CPPFLAGS)
 AC_SUBST(PERL)
 AC_SUBST(CSH)
 AC_SUBST(FFLAGS)
+AC_SUBST(LITTLEFLAGS)
 AC_SUBST(FREE)
 AC_SUBST(FIXED)
 AC_SUBST(C_OPT)
@@ -303,7 +315,6 @@ AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(gettimeofday re_comp regcomp)
 
 #LAPS_PARMS_CONFIG
-
 
 AC_OUTPUT(src/include/trigd.inc
           src/include/makefile.inc

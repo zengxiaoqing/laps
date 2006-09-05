@@ -9,8 +9,8 @@ SRCROOT=../../../
 
 include $(SRCROOT)/src/include/makefile.inc
 
-FFLAGS= -O2
-DBFLAGS= -g
+FFLAGS= $(LITTLEFLAGS)
+DBFLAGS= -g $(LITTLEFLAGS)
 
 LIB      = libbufr.a
 DEBUGLIB = libbufr.a
