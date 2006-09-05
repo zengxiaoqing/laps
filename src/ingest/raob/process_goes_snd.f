@@ -174,7 +174,7 @@ C
       irec = 0
 c     read header information
 
-      READ(70,REC=1,END=9999) NBUF 
+      READ(70,REC=1,ERR=9999) NBUF 
       nrec = nbuf(1)
       write(6,*) 'Header Record Contents:'
       write(6,*) '-----------------------'
@@ -195,7 +195,7 @@ c     read header information
         DO 205 LLL=1,210
            NBUF(LLL) = 0
   205   CONTINUE
-        READ(70,REC=ILIN,END=9999) NBUF 
+        READ(70,REC=ILIN,ERR=9999) NBUF 
         DO 210 MM = 1,210
            RBUF(MM) = (NBUF(MM)/FLOAT(ISCALE(MM)))
   210   CONTINUE
