@@ -54,7 +54,7 @@ SRC = lvd_driver_sub.f \
   satfill1.f \
   imagecomp.f \
   check_data.f \
-  check_nav_lut.f \
+  compute_nav_llij.f \
   genbtemplut.f \
   btempconvert.f \
   btempconv_asc.f \

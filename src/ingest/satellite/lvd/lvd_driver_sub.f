@@ -36,6 +36,7 @@ cdis
      &               n_vis_lines,n_vis_elem,
      &               chtype,maxchannels,nchannels,
      &               i4time_cur,i_delta_t,
+     &               gri,grj,
      &               lvd_status)
 c
 c Program drives generation of LAPS lvd.  Processes satellite data.
@@ -169,8 +170,8 @@ c
       real*4      r12_cnt_to_btemp_lut(0:1023)
       real*4      r39_cnt_to_btemp_lut(0:1023)
       real*4      r67_cnt_to_btemp_lut(0:1023)
-      real*4      r_llij_lut_ri(nx_l,ny_l,maxchannels)
-      real*4      r_llij_lut_rj(nx_l,ny_l,maxchannels)
+      real*4      gri(nx_l,ny_l,maxchannels)	!Input: i values for mapping satellite data to domain
+      real*4      grj(nx_l,ny_l,maxchannels)	!Input: j values for mapping satellite data to domain
       real*4      good_vis_data_thresh
 c
 c dimensions for lvd
@@ -282,19 +283,35 @@ c --------------------------------------------------------------------
      &   csattype.eq.'hko')then
 
          call readlut(csatid,csattype,maxchannels,nchannels,
-     &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+     &chtype,nx_l,ny_l,gri,grj,istatus)
 
-         if(istatus.eq.1)then
-            write(6,*)'LUT not obtained: ',csatid,'/',csattype
-            istatus = -1
-            return
-         else
-            write(6,*)'Got the mapping look-up-tables '
-         endif
+c        if(istatus.eq.1)then
+c           write(6,*)'Grid mapping arrays not obtained: '
+c           write(6,*)'    ',csatid,'/',csattype
+c           istatus = -1
+c           return
+c        else
+c           write(6,*)'Successfully obtained mapping arrays '
+c        endif
+
          if(csattype.eq.'twn')then  !.or.csattype.eq.'hko')then
-            where (r_llij_lut_ri .lt. 0.5)r_llij_lut_ri=1.0
-            where (r_llij_lut_rj .lt. 0.5)r_llij_lut_rj=1.0
+            where (gri .lt. 0.5)gri=1.0
+            where (grj .lt. 0.5)grj=1.0
          endif 
+         do j=1,ny_l
+          do i=1,nx_l
+           do k=1,nchannels
+            if(gri(i,j,k).le.0 .or. gri(i,j,k).gt.100000.)then
+               print*,'Unacceptable gri value detected at ', i,j,k
+               stop
+            endif
+            if(grj(i,j,k).le.0 .or. grj(i,j,k).gt.100000.)then
+               print*,'Unacceptable gri value detected at ', i,j,k
+               stop
+            endif
+           enddo
+          enddo
+         enddo
       endif
 c
 c -------------------------------------------------------------------------
@@ -779,8 +796,8 @@ c ----------  GMS SATELLITE SWITCH -------
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
      &                      image_ir(1,1,i),
-     &                      r_llij_lut_ri(1,1,ispec),
-     &                      r_llij_lut_rj(1,1,ispec),
+     &                      gri(1,1,ispec),
+     &                      grj(1,1,ispec),
      &                      c_type(j,i),
      &                      ta8,tb8,tc8,
      &                      istatus)
@@ -828,8 +845,8 @@ c                    endif
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
      &                      image_39(1,1,i),
-     &                      r_llij_lut_ri(1,1,ispec),
-     &                      r_llij_lut_rj(1,1,ispec),
+     &                      gri(1,1,ispec),
+     &                      grj(1,1,ispec),
      &                      c_type(j,i),
      &                      ta4,tb4,tb4,
      &                      istatus)
@@ -866,8 +883,8 @@ c                    endif
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
      &                      image_12(1,1,i),
-     &                      r_llij_lut_ri(1,1,ispec),
-     &                      r_llij_lut_rj(1,1,ispec),
+     &                      gri(1,1,ispec),
+     &                      grj(1,1,ispec),
      &                      c_type(j,i),
      &                      ta12,tb12,tb12,
      &                      istatus)
@@ -904,8 +921,8 @@ c                    endif
      &                      n_wv_lines,n_wv_elem,
      &                      r_grid_ratio(j,i),
      &                      image_67(1,1,i),
-     &                      r_llij_lut_ri(1,1,ispec),
-     &                      r_llij_lut_rj(1,1,ispec),
+     &                      gri(1,1,ispec),
+     &                      grj(1,1,ispec),
      &                      c_type(j,i),
      &                      ta6,tb6,tb6,
      &                      istatus)
@@ -944,8 +961,8 @@ c                    endif
      &                      n_vis_lines,n_vis_elem,    !array dimensions
      &                      r_grid_ratio(j,i),
      &                      image_vis(1,1,i),
-     &                      r_llij_lut_ri(1,1,ispec),
-     &                      r_llij_lut_rj(1,1,ispec),
+     &                      gri(1,1,ispec),
+     &                      grj(1,1,ispec),
      &                      sublat_d,sublon_d,range_m,
      &                      visraw,visnorm,albedo,
      &                      istatus_vis)

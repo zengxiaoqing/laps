@@ -145,6 +145,14 @@ c
                   istatus=-1
                   goto 125
                endif
+
+
+cisido          
+		write(6,*)'la1_ir',la1_ir,'lo1_ir',lo1_ir,
+     &                     'Dx_ir',Dx_ir,'Dy_ir',Dy_ir,
+     &                     'Latin_ir',Latin_ir,'Lov_ir',Lov_ir 
+cisid
+
 c
                if(ispec .eq. 2)then 
                   call move(ir_image,image_39(1,1,i),nelemir,nlinesir)
@@ -177,6 +185,17 @@ c
                   Write(6,*)'NOT Successful!!'
                   istatus=-1
                endif
+
+cisido
+                write(6,*)'la1_vis',la1_vis,'lo1_vis',lo1_vis,
+     &                     'Dx_vis',Dx_vis,'Dy_vis',Dy_vis,
+     &                     'Latin_vis',Latin_vis,'Lov_vis',Lov_vis
+cisid
+
+
+
+
+
 c
 c load vis attributes
 c
@@ -203,6 +222,16 @@ c
                   Write(6,*)'NOT Successful!!'
                   istatus=-1
                endif
+
+cisido
+                write(6,*)'la1_wv',la1_wv,'lo1_wv',lo1_wv,
+     &                     'Dx_wv',Dx_wv,'Dy_wv',Dy_wv,
+     &                     'Latin_wv',Latin_wv,'Lov_wv',Lov_wv
+cisid
+
+
+
+
 
 c
 c load vis attributes

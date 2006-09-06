@@ -16,9 +16,9 @@ c
 
       real*4    ri(nx,ny,maxch)
       real*4    rj(nx,ny,maxch)
-      real*4    ri_in(nx,ny)
-      real*4    rj_in(nx,ny)
-      real*4    rdummy(nx,ny)
+c     real*4    ri_in(nx,ny)
+c     real*4    rj_in(nx,ny)
+c     real*4    rdummy(nx,ny)
 
       character*100 cpath
       character*255 file
@@ -35,37 +35,46 @@ c
       cpath=cpath(1:lend)//'lvd/'
       lend=index(cpath,' ')-1
 
+c JS: 8-31-06. No longer reading a mapping look-up-table (lut).
+c  
       do i=1,maxch
-         lgot_lut(i)=.false.
+         lgot_lut(i)=.true.   !!!.false.
       enddo
 
       do i=1,nch
 
          call lvd_file_specifier(chtype(i),ispec,istat)
          if(istat.eq.0)then
-            if(.not.lgot_lut(ispec))then
-               lgot_lut(ispec)=.true.
-               ct=chtype(i)
-               if(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
-                  ct='ir'
+c           if(.not.lgot_lut(ispec))then
+c              lgot_lut(ispec)=.true.
+c              ct=chtype(i)
+               if(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then  !all ir channels have the same ri/rj values
+                  call move(rj(1,1,2),rj(1,1,ispec),nx,ny)
+                  call move(ri(1,1,2),ri(1,1,ispec),nx,ny)
+c                 ct='ir'
                endif
-               n=index(ct,' ')-1
-               if(n.le.0)n=3
-               file=cpath(1:lend)//csat_id//'-llij-'
-               lenf=index(file,' ')-1
-               file=file(1:lenf)//ct(1:n)//'-'//csat_typ//'.lut'
-               n=index(file,' ')-1
-               open(12,file=file,
-     &form='unformatted',status='old',err=101)
-               write(6,*)'Reading ',file(1:n)
-               read(12,err=23,end=23) rdummy
-               read(12,err=23,end=23) rdummy
-               read(12,err=23,end=23) ri_in
-               read(12,err=23,end=23) rj_in
-               close (12)
-               call move(ri_in,ri(1,1,ispec),nx,ny)
-               call move(rj_in,rj(1,1,ispec),nx,ny)
-            endif
+
+c              n=index(ct,' ')-1
+c              if(n.le.0)n=3
+c              file=cpath(1:lend)//csat_id//'-llij-'
+c              lenf=index(file,' ')-1
+c              file=file(1:lenf)//ct(1:n)//'-'//csat_typ//'.lut'
+c              n=index(file,' ')-1
+c              open(12,file=file,
+c    &form='unformatted',status='old',err=101)
+c              write(6,*)'Reading ',file(1:n)
+c              read(12,err=23,end=23) rdummy
+c              read(12,err=23,end=23) rdummy
+c              read(12,err=23,end=23) ri_in
+c              read(12,err=23,end=23) rj_in
+c              close (12)
+c              call move(ri_in,ri(1,1,ispec),nx,ny)
+c              call move(rj_in,rj(1,1,ispec),nx,ny)
+c           else
+c              print*,'Not reading mapping look-up-table'
+c              print*,'Return without ri/rj values'
+c           endif
+
          endif
       enddo
 
@@ -272,8 +281,13 @@ c
      &   (c_sat_types(jtype,isat).eq.'gvr'   .or.
      &    c_sat_types(jtype,isat).eq.'gwc')       )then
          l_lut_flag=.true.
-         write(6,*)'Auto-update the gvar navigation'
+c        write(6,*)'Auto-update the gvar navigation'
       endif
+
+c 8-31-06: JS. forces an a-ok return and no regeneration of
+c mapping. All mapping now done on the fly.
+
+      l_lut_flag=.false.
 
       return
       end

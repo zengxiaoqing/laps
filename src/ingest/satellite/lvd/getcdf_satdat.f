@@ -193,18 +193,19 @@ C            10 minutes to be safe...BLS 19 Jul 2002
         call cv_asc_i4time(c_fname_in,i4time_in)
         call get_laps_cycle_time(laps_cycle_time,istatus)
         if(i4time_now-i4time_in .lt. 2*laps_cycle_time)then
-           if(c_fname_in(8:8).eq.'0')then
+c          if(c_fname_in(8:8).eq.'0')then
             print*
             write(6,*)'Adjusting I4time_In'
-            i4time_in = i4time_in-480
+c           i4time_in = i4time_in-480
+            i4time_in = i4time_in-i_delta_t
             call make_fnam_lp (i4time_in, c_fname_in, i4status)
             if(i4status.ne.1)then
                write(6,*)'Error converting i4time_in to new c_fname_in'
                goto 992
             endif
             write(6,*)'New time: ',c_fname_in
-           endif
-         endif
+c          endif
+        endif
       endif
 
       ifiles_sat_raw = 0
@@ -524,11 +525,10 @@ c
          nft=newcnt
 
       elseif(nft.gt.0)then
-
          icnt=0
          call i4time_fname_lp(c_fname_in,i4time,jstatus)
          do i = 1,nft
-            if( abs(i4time-i4time_data(i)).lt.i_delta_t)then
+c           if( abs(i4time-i4time_data(i)).lt.i_delta_t)then
                icnt=icnt+1
                ntmnew(icnt)=ntm(i)
                i4time_data_new(icnt)=i4time_data(i)
@@ -536,7 +536,7 @@ c
                do j=1,ntmnew(icnt)
                   c_mtype_new(j,icnt)=c_mtype(j,i)
                enddo
-            endif
+c           endif
          enddo
          nft=icnt
 

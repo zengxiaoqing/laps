@@ -40,6 +40,9 @@ c
       character*9 cfname_sys
       character   cgeneric_dataroot*255
       character   c_gridfname*50
+
+      real, allocatable :: gri(:,:,:)
+      real, allocatable :: grj(:,:,:)
 c
 c ========================== START ==============================
 c 
@@ -69,6 +72,9 @@ c this is designed to allow archive data runs!
          cfname_cur=cfname_sys
          i4time_cur=i4time_sys
       endif
+
+      allocate (gri(nx_l,ny_l,maxchannel),
+     &          grj(nx_l,ny_l,maxchannel))
 
 c---------------------------------------------------------------
 c Compute array dimensions for ir, vis, and wv.
@@ -112,7 +118,11 @@ c
         write(6,*)'Satellite TYPE: ',c_sat_types(j,k)
         write(6,40)(chtype(i),i=1,nchannels)
 40      format(1x,'Satellite CHANNELS:',5(1x,a3))
-
+        print*,'Path-to-raw-satellite'
+        write(6,*)'==============================='
+        do i=1,nchannels
+           print*,' ',i,' ',TRIM(path_to_raw_sat(i,j,k))
+        enddo
  
         if( (nlinesvis.eq.0.and.nelemvis.eq.0).and.
      +      (nlinesir .eq.0.and.nelemir .eq.0).and.
@@ -147,23 +157,23 @@ c            nav_status=1
 c         endif
 
           if(nav_status.eq.0)then
-            call check_nav_lut(nx_l,ny_l,maxchannel,nchannels,
-     &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,
+            call compute_nav_llij(nx_l,ny_l,maxchannel,nchannels,
+     &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,gri,grj,
      &nav_status)
 
             if(nav_status.eq.1)then
               print*,'configure satellite common ',c_sat_id(k)
      +,'/',c_sat_types(j,k)
               call config_satellite_lvd(istatus)
-              goto 50
+c             goto 50
             elseif(nav_status.lt.0)then
-              print*,'error returned from check_nav_lut - stop'
+              print*,'ERROR returned from compute_nav_llij - stop'
               goto 1000
             endif
           endif
 
         else
-          print*,'sat id = ',c_sat_id(k), ': LUT not needed'
+          print*,'sat id = ',c_sat_id(k), ': mapping not needed'
         endif
 c
 c ================================================================
@@ -174,7 +184,7 @@ c
      &                      nlinesvis,nelemvis,
      &                      chtype,maxchannel,nchannels,
      &                      i4time_cur,i_delta_sat_t_sec,
-     &                      istatus)
+     &                      gri,grj,istatus)
 
         if(istatus.ne.1)then
            write(6,*)'NO data was processed by lvd_driver_sub'
