@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
        subroutine gen_lut_mercator(isat,jtype,kchl,
-     &nx_l,ny_l,lat,lon,jstatus)
+     &nx_l,ny_l,lat,lon,ri_laps,rj_laps,jstatus)
 c
 c
       implicit none
@@ -255,12 +255,12 @@ c
       write(6,*)'Write lat/lon to i/j look up table'
       write(6,*)table_path(1:n1)
 
-      call write_table (table_path,nx_l,ny_l,xlat,xlon,
-     &ri_laps,rj_laps,istatus)
-      if(istatus .ne. 1)then
-         write(6,*)'Error writing look-up table'
-         goto 1000
-      endif
+c     call write_table (table_path,nx_l,ny_l,xlat,xlon,
+c    &ri_laps,rj_laps,istatus)
+c     if(istatus .ne. 1)then
+c        write(6,*)'Error writing look-up table'
+c        goto 1000
+c     endif
 
       if(elemstart.le.0)elemstart=1
       if(elemend.gt.nxmc)elemend=nxmc

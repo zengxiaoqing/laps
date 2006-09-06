@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
        subroutine gen_lut_lambert(isat,jtype,kchl,
-     &nx_l,ny_l,lat,lon,jstatus)
+     &nx_l,ny_l,lat,lon,ri_laps,rj_laps,jstatus)
 c
 c
       implicit none
@@ -241,10 +241,11 @@ c not wfo data type
 
          endif
 
-         call get_latest_file_time(path_to_raw_sat(kchl,jtype,isat),
-     +                             i4time_latest)
-         call make_fnam_lp(i4time_latest,cftime9,ifstat)
          call s_len(path_to_raw_sat(kchl,jtype,isat),np)
+         fname=path_to_raw_sat(kchl,jtype,isat)(1:np)
+         fname=fname(1:np)//'*_'//ct
+         call get_latest_file_time(fname,i4time_latest)
+         call make_fnam_lp(i4time_latest,cftime9,ifstat)
          fname=path_to_raw_sat(kchl,jtype,isat)(1:np)
          fname=fname(1:np)//cftime9//'_'//ct
          call  rdcdfhead(fname, nx3mx, ny3mx, center_id, 
@@ -427,20 +428,19 @@ c
          ct='ir'
          nt=2
       endif
-      cname=path(1:n1)//c_sat_id(isat)//'-llij-'//ct(1:nt)
-      n1=index(cname,' ')-1
-      table_path = cname(1:n1)//'-'//cdtype//'.lut'
 
-      n1=index(table_path,' ')
-      write(6,*)'Write lat/lon to i/j look up table'
-      write(6,*)table_path(1:n1)
-
-      call write_table (table_path,nx_l,ny_l,xlat,xlon,
-     &ri_laps,rj_laps,istatus)
-      if(istatus .ne. 1)then
-         write(6,*)'Error writing look-up table'
-         goto 1000
-      endif
+c     cname=path(1:n1)//c_sat_id(isat)//'-llij-'//ct(1:nt)
+c     n1=index(cname,' ')-1
+c     table_path = cname(1:n1)//'-'//cdtype//'.lut'
+c     n1=index(table_path,' ')
+c     write(6,*)'Write lat/lon to i/j look up table'
+c     write(6,*)table_path(1:n1)
+c     call write_table (table_path,nx_l,ny_l,xlat,xlon,
+c    &ri_laps,rj_laps,istatus)
+c     if(istatus .ne. 1)then
+c        write(6,*)'Error writing look-up table'
+c        goto 1000
+c     endif
 
       if(elemstart.le.0)elemstart=1
       if(elemend.gt.nx3mx)elemend=nx3mx

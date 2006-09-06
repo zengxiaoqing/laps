@@ -175,9 +175,11 @@ C
         print *,'in var process_id'
       endif
 C
-C     Variable        NETCDF Long Name
+C Variable not in some netCDF files. Commented on 9-6-06: JRS.
+C ------------------------------------------------------------
+c     Variable        NETCDF Long Name
 C      wmo_sat_id   "WMO satellite id number"
-C
+ 
         nf_status = NF_INQ_VARID(nf_fid,'wmo_sat_id',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)

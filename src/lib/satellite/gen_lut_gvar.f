@@ -1,5 +1,5 @@
       Subroutine gen_gvarimage_lut(isat,jtype,kchl,
-     &nx_l,ny_l,lat,lon,istatus)
+     &nx_l,ny_l,lat,lon,ri_laps,rj_laps,istatus)
 c
       implicit none
 c
@@ -658,8 +658,8 @@ c
       table_path = cname(1:n2)//'-'//csattype//'.lut'
       n2=index(table_path,' ')
 
-      call write_table (table_path,nx_l,ny_l,lat,lon,
-     &ri_laps,rj_laps,wstatus)
+c     call write_table (table_path,nx_l,ny_l,lat,lon,
+c    &ri_laps,rj_laps,wstatus)
 
       r_sat_sub_lat(isat) = SatSubLAT
       r_sat_sub_lon(isat) = SatSubLON

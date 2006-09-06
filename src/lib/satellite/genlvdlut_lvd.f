@@ -29,7 +29,8 @@ cdis
 cdis 
 cdis 
 cdis 
-      subroutine genlvdlut_lvd(nx_l,ny_l,lat,lon,it,js,istatus)
+      subroutine genlvdlut_lvd(nx_l,ny_l,maxch,lat,lon,it,js,
+     &gri,grj,istatus)
 c
       implicit none
 
@@ -37,11 +38,13 @@ c
 
       real*4    lat(nx_l,ny_l)
       real*4    lon(nx_l,ny_l)
-c     real*4    topo(nx_l,ny_l)    !is not used.
+      real*4    gri(nx_l,ny_l,maxch) 
+      real*4    grj(nx_l,ny_l,maxch) 
 
       integer istatus
       integer it,js,lc
-      integer jxd                  !amount of domain expansion needed for lut
+      integer maxch
+      integer jxd                  !amount of domain expansion needed for mapping
 c
 c dimensions for lat/lon
 c
@@ -61,41 +64,33 @@ c     end if
 c-----------------------------------------------------------------
 c
 c
-c input values js (representing the satellite id) and it (representing
+c input values "js" (representing the satellite id) and "it" (representing
 c the format type for that satellite) direct this subroutine to
-c generate the appropriate lut.
+c compute the appropriate mapping nav arrays.
 c
       istatus = -1
 
-c     do js=1,maxsat
+      if(c_sat_types(it,js).eq.'cdf'.or.
+     &   c_sat_types(it,js).eq.'wfo'.or.
+     &   c_sat_types(it,js).eq.'twn')then
 
-c      if(isats(js).eq.1)then
-
-c       do it = 1,maxtype
-c
-c        if(itypes(it,js).eq.1)then
-
-          if(c_sat_types(it,js).eq.'cdf'.or.
-     &       c_sat_types(it,js).eq.'wfo'.or.
-     &       c_sat_types(it,js).eq.'twn')then
-
-           do lc=1,maxchannel
+         do lc=1,maxchannel
 
             if(ichannels(lc,it,js).eq.1)then
 
              write(6,59)c_sat_id(js),c_sat_types(it,js),
      &c_channel_types(lc,it,js)
-59          format(1x,'Generating lookup table: ',a6,"/",a3,"/",a3)
+59          format(1x,'Generate Mapping Arrays: ',a6,"/",a3,"/",a3)
 
              call gen_lut_lambert(js,it,lc,nx_l,ny_l,
-     &                     lat,lon,istatus)
+     & lat,lon,gri(1,1,lc),grj(1,1,lc),istatus)
 
              if(istatus.eq.1)then
-              write(6,*)'LUT generated'
+              write(6,*)'Finished '
              elseif(istatus.eq.0)then
-              write(*,*)'ir LUT already generated'
+              write(*,*)'Mapping arrays already generated'
              else
-              write(6,*)'Error! LUT not generated ',
+              write(6,*)'Error! mapping arrays not generated ',
      &c_sat_id(js),'/',c_sat_types(it,js),'/',c_channel_types(lc,it,js)
              endif
 
@@ -104,57 +99,56 @@ c        if(itypes(it,js).eq.1)then
      &c_channel_types(lc,it,js)
             endif
 
-           enddo
+         enddo
 
-          elseif(c_sat_types(it,js).eq.'gvr'.or.
-     &           c_sat_types(it,js).eq.'gwc')then
+      elseif(c_sat_types(it,js).eq.'gvr'.or.
+     &       c_sat_types(it,js).eq.'gwc')then
 
-           do lc=1,maxchannel
+         do lc=1,maxchannel
 
             if(ichannels(lc,it,js).eq.1)then
 
              write(6,59)c_sat_id(js),c_sat_types(it,js),
-     &c_channel_types(lc,it,js)
+     & c_channel_types(lc,it,js)
              call gen_gvarimage_lut(js,it,lc,nx_l,ny_l,lat,lon,
-     &istatus)
+     & gri(1,1,lc),grj(1,1,lc),istatus)
              if(istatus.eq.1)then
-              write(6,*)'LUT generated'
+              write(6,*)'Mapping array generated'
              elseif(istatus.eq.0)then
-              write(*,*)'ir LUT already generated'
+              write(*,*)'IR mapping already generated'
              else
-              write(6,*)'LUT not generated ',c_channel_types(lc,it,js)
+              write(6,*)'IR mapping not generated ',
+     &c_channel_types(lc,it,js)
              endif
             else
              write(6,49)c_sat_id(js),c_sat_types(it,js),
      &c_channel_types(lc,it,js)
 49    format(3x,a6,"/",a3,"/",a3,1x,'not on in satellite namelist')
+
             endif
-           enddo
+
+         enddo
 
 c         elseif(c_sat_types(it,js).eq.'asc')then
 c
 c          write(6,*)'Generate LUTs for ascii data'
-
 c           do lc=1,maxchannel
 c              lc=ichannels(lc,it,js)
 c              call get_ascii_dimensions(path_to_data_cdf,
 c    &c_channel_types(lch,i,j),nelem,nlines,istatus)
-
 c              call gen_ascii_lut(path_to_data_cdf,
 c    &csatid,c_sat_types(i,j),c_channel_types(lch,i,j),
 c    &nelem,nlines,nx_l,ny_l,lat,lon,istatus)
-
 c              if(istatus.eq.1)then
 c                 write(6,*)'LUT generated'
 c              else
 c                 write(6,*)'LUT not generated ',c_channel_types(lch,i)
 c              endif
-
 c           enddo
 
-          elseif(c_sat_types(it,js).eq.'hko')then
+      elseif(c_sat_types(it,js).eq.'hko')then
 
-            print*,'Compute mapping lut for merc ll - hko'
+            print*,'Compute mapping arrays for merc ll - hko'
             do lc=1,maxchannel
 
                if(ichannels(lc,it,js).eq.1)then
@@ -163,7 +157,7 @@ c           enddo
      &c_channel_types(lc,it,js)
 
                   call gen_lut_mercator(js,it,lc,nx_l,ny_l,
-     &                     lat,lon,istatus)
+     & lat,lon,gri(1,1,lc),grj(1,1,lc),istatus)
 
                   if(istatus.eq.1)then
                      write(6,*)'LUT generated'
@@ -179,26 +173,23 @@ c           enddo
      &c_channel_types(lc,it,js)
                endif
 
-            enddo
+         enddo
 
-          elseif(c_sat_types(it,js).ne.'     ')then
+      elseif(c_sat_types(it,js).ne.'     ')then
 
            write(6,*)'Unknown satellite data type! '
            write(6,*)'Check static/satellite_lvd.nl'
 
-          endif
+      endif
 
 c        elseif(c_sat_types(it,js).ne.'   ')then
 c         write(6,47)c_sat_id(js), c_sat_types(it,js)
 c47     format(2x,a6,"/",a3,' not on in satellite namelist')
 c        endif
-
 c       enddo
-
 c      else
 c       write(*,*)c_sat_id(js),' not on in satellite namelist'
 c      endif
-
 c     enddo
 
 900   return 
