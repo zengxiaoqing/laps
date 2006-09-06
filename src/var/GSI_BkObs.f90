@@ -134,9 +134,7 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
   CALL laps2mass(sphumd3d,imax,jmax,kmax,pressr1d,dam,znw,4,0,sh_mass_bkg)
 
   ! U background:
-WRITE(10) imax,jmax,kmax,u_laps_bkg(1:imax,1:jmax,1:kmax),dam(1:imax,1:jmax)
   CALL laps2mass(u_laps_bkg,imax,jmax,kmax,pressr1d,dam,znw,4,0,u_mass_bkg)
-WRITE(10) u_mass_bkg(1:imax,1:jmax,1:kmax)
 
   ! V background:
   CALL laps2mass(v_laps_bkg,imax,jmax,kmax,pressr1d,dam,znw,4,0,v_mass_bkg)
@@ -186,7 +184,7 @@ WRITE(10) u_mass_bkg(1:imax,1:jmax,1:kmax)
   CALL wrfbkgout(times,imax,jmax,kmax,pressr1d(kmax), &
      		 znu,znw,grid_spacing,mapfac_m,xlat, &
      		 xlong,dam,pdam,t_mass_bkg, &
-     		 sh_mass_bkg,u_mass_bkg,v_mass_bkg)
+     		 sh_mass_bkg,u_mass_bkg,v_mass_bkg,topo)
 
 END SUBROUTINE GSI_Bkg
 
