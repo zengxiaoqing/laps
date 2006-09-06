@@ -597,7 +597,9 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
 
   ! 19. SST:
   ! Stagger: X, and Y:
-  tnc(1:imax-1,1:jmax-1,1) = 280.0
+  ! ARW description states: sea level temperature for MUB
+  ! Not sure if GSI uses SST for that.
+  tnc(1:imax-1,1:jmax-1,1) = t0
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
