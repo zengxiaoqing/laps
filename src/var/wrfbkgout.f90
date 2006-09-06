@@ -38,13 +38,16 @@
 !dis
 
 SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
-     		     mapfac,lat,lon,dam,pdam,t,sh,u,v)
+     		     mapfac,lat,lon,dam,pdam,t,sh,u,v,topo)
 
 !==========================================================
 !  This routine writes the background fields into wrf_inout
 !  in netcdf format to be used by GSI.
 !
 !  HISTORY: MAR. 2006 by YUANFU XIE.
+!           SEP. 2006 by YUANFU XIE: Compute MUB following
+!				     WRF convention (see
+!                                    ARW description pp.36)
 !==========================================================
 
   IMPLICIT NONE
@@ -65,6 +68,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   REAL*4, INTENT(IN) :: sh(imax,jmax,kmax)	! specific humidity
   REAL*4, INTENT(IN) :: u(imax,jmax,kmax)   ! U
   REAL*4, INTENT(IN) :: v(imax,jmax,kmax)   ! V
+  REAL*4, INTENT(IN) :: topo(imax,jmax)		! Topography
 
 
   ! Local variables:
@@ -77,7 +81,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   INTEGER :: slid,vfid,snwid,u10id,v10id	! var ids
   INTEGER :: smsid,tslbid,tskid		! var ids
   INTEGER :: start(4),count(4)		! netcdf start/count
-  INTEGER :: k,ierr				! error flag
+  INTEGER :: i,j,k,ierr				! error flag
   INTEGER :: time,dlen,ndim(4),ndm1(4),btop,we,sn,nd(4),scal,nsol
   INTEGER :: itnc(imax-1,jmax-1,kmax-1)
   REAL :: unc(imax,jmax-1,kmax-1),tmp(imax,jmax,kmax)
@@ -91,6 +95,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
             xlong_out(imax-1,jmax-1,1)
   real :: unc1(imax,jmax-1,kmax-1),vnc1(imax-1,jmax,kmax-1),&
           tnc1(imax-1,jmax-1,kmax-1),qnc1(imax-1,jmax-1,kmax-1)
+  real :: a0,p0,t0,terrain
 
   empty = ' '
 
@@ -470,21 +475,38 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = kmax-1
   CALL ncvpt(ncid,tid,start,count,tnc1,ierr)
 
-  ! 5. MU:
+  ! 5. MUB:
   ! Stagger: X, and Y:
-  call StaggerXY_3D(pdam,imax,jmax,kmax,imax-1,jmax-1,1,mu_out)
+  ! See ARW description page 36 for reference pressure:
+  p0 = 1.0e5
+  t0 = 273.15
+  a0 = 50.0
+
+  count(1) = imax-1
+  count(2) = jmax-1
+  count(3) = 1
+
+  DO j=1,count(2)
+    DO i=1,count(1)
+      terrain = 0.25*(topo(i,j  )+topo(i+1,j) &
+                     +topo(i,j+1)+topo(i+1,j+1))
+      mub_out(i,j) = p0*EXP(-t0/a0+sqrt((t0/a0)**2- &
+                     2.0*terrain*9.806/a0/287.0))
+    ENDDO
+  ENDDO
+
+  CALL ncvpt(ncid,mubid,start,count,mub_out,ierr)
+
+  ! 6. MU:
+  ! Stagger: X, and Y:
+  ! According to ARW description, this should be dry pressure-reference pressure:
+  call StaggerXY_3D(dam,imax,jmax,kmax,imax-1,jmax-1,1,mu_out)
+  mu_out = mu_out-mub_out
+
   count(1) = imax-1
   count(2) = jmax-1
   count(3) = 1
   CALL ncvpt(ncid,muid,start,count,mu_out,ierr)
-
-  ! 6. MUB:
-  ! Stagger: X, and Y:
-  call StaggerXY_3D(dam,imax,jmax,kmax,imax-1,jmax-1,1,mub_out)
-  count(1) = imax-1
-  count(2) = jmax-1
-  count(3) = 1
-  CALL ncvpt(ncid,mubid,start,count,mub_out,ierr)
 
   ! 7. QVAPOR:
   ! Stagger: X, Y and Z:
