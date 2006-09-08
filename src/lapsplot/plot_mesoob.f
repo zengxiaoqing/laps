@@ -229,16 +229,19 @@ cdis
         obs_size = plot_parms%contour_line_width
 
 !       At zoom=1-zoom_max, make the obs plot larger if there are few obs
+!       zoom_eff is inversely related to plot size
         zoom_max = 1.5
         if(zoom .lt. zoom_max)then
             if(n_obs_g .gt. 30)then
-                zoom_eff = 1.0 / obs_size ! smaller obs (depending on obs_size)
+                zoom_eff = 1.0                 ! smaller obs 
             else
                 zoom_eff = zoom / zoom_max     ! larger obs
             endif
         else
             zoom_eff = zoom / zoom_max         ! larger obs
         endif
+
+        zoom_eff = zoom_eff / obs_size
 
         du2 = du / zoom_eff
 
@@ -580,16 +583,19 @@ c
         obs_size = plot_parms%contour_line_width
 
 !       At zoom=1-zoom_max, make the obs plot larger if there are few obs
+!       zoom_eff is inversely related to plot size
         zoom_max = 1.5
         if(zoom .lt. zoom_max)then
             if(nobs .gt. 30)then
-                zoom_eff = 1.0 / obs_size ! smaller obs (depending on obs_size)
+                zoom_eff = 1.0                 ! smaller obs 
             else
                 zoom_eff = zoom / zoom_max     ! larger obs
             endif
         else
             zoom_eff = zoom / zoom_max         ! larger obs
         endif
+
+        zoom_eff = zoom_eff / obs_size
 
         relsize = relsize_in / zoom_eff
 
