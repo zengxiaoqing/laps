@@ -217,7 +217,11 @@ if($opt_q || $opt_Q){
         print TFILE "#PBS -lnodes=1:$node_type,walltime=20:00 -A $opt_q\n";
     }elsif($opt_Q){ 
         print TFILE "#\$ -pe $node_type 1\n";
-        print TFILE "#\$ -l h_rt=00:20:00\n";
+        if($exe eq "gridgen_model.exe"){ # allow localization to have more time
+            print TFILE "#\$ -l h_rt=06:00:00\n";
+        }else{
+            print TFILE "#\$ -l h_rt=00:20:00\n";
+        }
         print TFILE "#\$ -A $opt_Q\n";
         print TFILE "#\$ -S /bin/sh\n";
         print TFILE "#\$ -cwd\n";
