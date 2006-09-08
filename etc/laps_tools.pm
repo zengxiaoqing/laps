@@ -306,9 +306,16 @@ lpbl lps lq3 lrp lrs lso lsx lt1 lty lfr
 lvd lvd/goes08 lvd/goes09 lvd/goes10 lvd/goes12 lvd/meteos lvd/gmssat
 lw3 lwc lwm ctp msg pig pin prg pro sag vrc vrz snd 
 v01 v02 v03 v04 v05 v06 v07 v08 v09 v10 v11 v12 
-v13 v14 v15 v16 v17 v18 v19 vdr 
+v13 v14 v15 v16 v17 v18 v19 v20 v21 v22 v23 v24
+v25 v26 v27 v28 v29 v30 v31 v32 v33 v34 v35 v36
+v37 v38 v39 v40 v41 v42 v43 v44 v45 v46 v47 v48
+v49 v50
+vdr 
 d01 d02 d03 d04 d05 d06 d07 d08 d09 d10 d11 d12 
-d13 d14 d15 d16 d17 d18 d19 d20 
+d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24
+d25 d26 d27 d28 d29 d30 d31 d32 d33 d34 d35 d36
+d37 d38 d39 d40 d41 d42 d43 d44 d45 d46 d47 d48
+d49 d50
 ln3 
 lsr lsr/dmsp01 lsr/dmsp02 lsr/goes08 lsr/goes09 lsr/goes10 lsr/goes12
 lsr/tros12 lsr/tros14 cdw rdr 
