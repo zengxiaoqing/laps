@@ -78,6 +78,8 @@ foreach (@greplines) {
 }
 @greplines = grep /No S8A/, @lines;
 print "   $greplines[0]";
+@greplines = grep /insufficient/, @lines;
+print "$greplines[0]";
 @greplines = grep /required/, @lines;
 print "$greplines[0]";
 print "\n";
