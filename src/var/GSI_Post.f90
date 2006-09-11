@@ -1,3 +1,4 @@
+      call lh3_compress(qvar1,tvar1,i4time,lvl,t_ref,imax,jmax,kmax,1,istatus)
       PROGRAM gsi2laps
 
       IMPLICIT NONE
@@ -56,7 +57,7 @@
 
       REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: tt2,uvar1,vvar1,&
                                              tvar1,qvar1,tvar 
-      REAL*4,PARAMETER :: cp=1004.0, rc=287.0,t0=273.15
+      REAL*4,PARAMETER :: cp=1004.0, rc=287.0,t0=300.0 !273.15
 
 !// for subroutine read_static_grid
 
@@ -310,7 +311,7 @@
 
 ! To write relative humidity to lh3
 
-      call lh3_compress(qvar1,tvar1,i4time,lvl,t_ref,imax,jmax,kmax,istatus)
+      call lh3_compress(qvar1,tvar1,i4time,lvl,t_ref,imax,jmax,kmax,1,istatus)
 
       END PROGRAM
 

@@ -75,7 +75,7 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
   REAL*4, INTENT(IN) :: v_laps_bkg(imax,jmax,kmax)   ! v bkg
 
   ! Local variables:
-  REAL, PARAMETER :: cp=1004.0, rc=287.0,t0=273.15
+  REAL, PARAMETER :: cp=1004.0, rc=287.0,t0=300.0 !273.15
   CHARACTER varname*3, fnm*9, hr*2, mins*2, jday*5
   INTEGER*4 :: i4time_sys
   INTEGER :: istatus,i,j,k

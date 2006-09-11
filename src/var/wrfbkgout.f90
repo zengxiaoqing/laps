@@ -479,7 +479,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   ! Stagger: X, and Y:
   ! See ARW description page 36 for reference pressure:
   p0 = 1.0e5
-  t0 = 273.15
+  t0 = 300.0 !273.15 testing and will be added to LAPS_Parameter
   a0 = 50.0
 
   count(1) = imax-1
@@ -490,7 +490,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
     DO i=1,count(1)
       terrain = 0.25*(topo(i,j  )+topo(i+1,j) &
                      +topo(i,j+1)+topo(i+1,j+1))
-      mub_out(i,j) = p0*EXP(-t0/a0+sqrt((t0/a0)**2- &
+      mub_out(i,j,1) = p0*EXP(-t0/a0+sqrt((t0/a0)**2- &
                      2.0*terrain*9.806/a0/287.0))
     ENDDO
   ENDDO
