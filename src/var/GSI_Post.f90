@@ -1,4 +1,3 @@
-      call lh3_compress(qvar1,tvar1,i4time,lvl,t_ref,imax,jmax,kmax,1,istatus)
       PROGRAM gsi2laps
 
       IMPLICIT NONE
