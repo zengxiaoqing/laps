@@ -249,6 +249,7 @@ c
         real u_bk_ms(ni,nj), v_bk_ms(ni,nj)                       ! m/s
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
+        real*4 wt_bkg_a(ni,nj)                         
 c
 c.....	Grids for other stuff.
 c
@@ -344,6 +345,10 @@ c
 	call zero(f,imax,jmax)
 	call zero(du,imax,jmax)
 	call zero(dv,imax,jmax)
+
+        weight_bkg_const = 5e28 ! a la wind.nl
+
+        wt_bkg_a = weight_bkg_const
 c
 c.....  calculate Coriolis term for each grid point
 c
@@ -552,12 +557,12 @@ c
 	    if(ibt .eq. 0) gamma = 0.
             call spline(t,t1_f,t_bk,alf,alf2a,beta,gamma,tb81,cormax,
      &        err,imax,jmax,rms_thresh_norm*sfc_nl_parms%rms_temp,
-     &        bad_tm,imiss,mxstn,obs_error_t,name,topo,ldf)
+     &        bad_tm,imiss,mxstn,obs_error_t,name,topo,ldf,wt_bkg_a)
         else ! use data structures for handling obs
             call barnes_multivariate_sfc_jacket('t',obs,mxstn,t_bk
      1                                     ,badflag,imax,jmax
      1                                     ,rms_thresh_norm,bad_tm
-     1                                     ,topo,ldf,t,istatus)
+     1                                     ,topo,ldf,wt_bkg_a,t,istatus)       
         endif
 
 	print *,' '
@@ -571,12 +576,12 @@ c
 	    beta = 100.  
             call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,
      &        err,imax,jmax,rms_thresh_norm*sfc_nl_parms%rms_dewpoint,
-     &        bad_tmd,imiss,mxstn,obs_error_td,name,topo,ldf)
+     &        bad_tmd,imiss,mxstn,obs_error_td,name,topo,ldf,wt_bkg_a)
         else ! use data structures for handling obs
             call barnes_multivariate_sfc_jacket('td',obs,mxstn,td_bk
-     1                                     ,badflag,imax,jmax
-     1                                     ,rms_thresh_norm,bad_tmd
-     1                                     ,topo,ldf,td,istatus)
+     1                                    ,badflag,imax,jmax
+     1                                    ,rms_thresh_norm,bad_tmd
+     1                                    ,topo,ldf,wt_bkg_a,td,istatus)       
         endif
 c
 c
@@ -717,7 +722,7 @@ c
 	beta = 100.
 	call spline(u,u1,u_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
      &              rms_thresh_norm*sfc_nl_parms%rms_wind,bad_uw,imiss,
-     &              mxstn,obs_error_wind,name,topo,ldf)       
+     &              mxstn,obs_error_wind,name,topo,ldf,wt_bkg_a)       
 c
 	print *,' '
 	print *,'  At spline call for v (kt)'
@@ -728,7 +733,7 @@ c
 	beta = 100.
 	call spline(v,v1,v_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
      &              rms_thresh_norm*sfc_nl_parms%rms_wind,bad_vw,imiss,
-     &              mxstn,obs_error_wind,name,topo,ldf)        
+     &              mxstn,obs_error_wind,name,topo,ldf,wt_bkg_a)        
 c
 	print *,' '
 	print *,'  At spline call for red_p (mb)'
@@ -745,7 +750,7 @@ C
         name = 'PRESSURE'
 	call spline(rp,rp1,rp_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,
      &        jmax,rms_thresh_norm,bad_rp,imiss,mxstn,obs_error_redp,
-     &        name,topo,ldf)     
+     &        name,topo,ldf,wt_bkg_a)     
 	name = 'NOPLOT'	
 c
 	print *,' '
@@ -757,7 +762,7 @@ cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
         name = 'PRESSURE'
 	call spline(mslp,mslp1,mslp_bk,alf,alf2a,beta,zcon,z,cormax,
      &      err,imax,jmax,rms_thresh_norm,bad_mp,imiss,mxstn,
-     &      obs_error_mslp,name,topo,ldf)
+     &      obs_error_mslp,name,topo,ldf,wt_bkg_a)
 C
 C TH: End hack.
 C
@@ -776,14 +781,14 @@ c
 	beta = 100.
 	call spline(vis,vis1,vis_bk,alf,alf2a,beta,zcon,z,cormax,err,
      &        imax,jmax,rms_thresh_norm,bad_vs,imiss,mxstn,
-     &        obs_error_vis,name,topo,ldf)
+     &        obs_error_vis,name,topo,ldf,wt_bkg_a)
 
         write(6,*)' Analyze TGD observations'
         bad_tgd = 3.0
         call barnes_multivariate_sfc_jacket('tgd',obs,mxstn,tgd_bk_f
-     1                                     ,badflag,imax,jmax
-     1                                     ,rms_thresh_norm,bad_tgd
-     1                                     ,topo,ldf,d2,istatus)
+     1                                 ,badflag,imax,jmax
+     1                                 ,rms_thresh_norm,bad_tgd
+     1                                 ,topo,ldf,wt_bkg_a,d2,istatus)
 	call conv_f2k(d2,tgd_k,imax,jmax)                  ! conv F to K
 c
 c.....	If no background fields are available, skip over the variational
