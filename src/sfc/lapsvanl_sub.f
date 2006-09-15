@@ -230,7 +230,7 @@ c
 c
 	subroutine spline(t,to,tb,alf_in,alf2a_in,beta_in,a_in,s_in,
      &                    cormax,err,imax,jmax,rms_thresh_norm,bad_mult,
-     &                    imiss,mxstn,obs_error,name,topo,ldf)
+     &                    imiss,mxstn,obs_error,name,topo,ldf,wt_bkg_a)
 c
 c*******************************************************************************
 c	LAPS spline routine...based on one by J. McGinley.
@@ -275,6 +275,7 @@ c
 	real t(imax,jmax), to(imax,jmax), s(imax,jmax), s_in(imax,jmax)
 	real RESS(1000), tb(imax,jmax) !, alf2(imax,jmax)
         real topo(imax,jmax),ldf(imax,jmax)
+        real*4 wt_bkg_a(imax,jmax)                         
 c
 	real fnorm(0:imax-1,0:jmax-1)
 c	real alf2o(imax,jmax)  !work array
@@ -589,14 +590,12 @@ c
             call get_fnorm_max(imax,jmax,r0_norm,r0_value_min,fnorm_max)   
             n_fnorm = int(fnorm_max) + 1
 
-            weight_bkg_const = 5e28 ! a la wind.nl
-
             call barnes_multivariate_sfc(to,imax,jmax               ! Inputs
      1                                ,smsng                        ! Input
      1                                ,rms_thresh_norm              ! Input
      1                                ,rinst_err                    ! Input
      1                                ,bad                          ! Input
-     1                                ,weight_bkg_const             ! Input
+     1                                ,wt_bkg_a                     ! Input
      1                                ,n_fnorm                      ! Input
      1                                ,l_boundary,.true.,.false.    ! Input
      1                                ,n_valid_obs,obs_barnes       ! Input
