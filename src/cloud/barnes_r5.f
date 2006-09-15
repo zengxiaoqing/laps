@@ -66,7 +66,7 @@ cdis
      1                          ,cf_modelfg(imax,jmax,kmax)
       dimension wt_p(imax,jmax,kmax)
 
-      logical l_perimeter
+      logical l_perimeter, l_use_snd
       real*4 cld_snd(max_cld_snd,kmax)
       real*4 wt_snd(max_cld_snd,kmax)
       real*4 cld_snd_diff(max_cld_snd,kmax)
@@ -83,7 +83,9 @@ cdis
 
       write(6,*)' subroutine barnes_r5...'
 
-      l_diff_snd = .false.
+      l_diff_snd = .false.  
+
+!     n_cld_snd = 9 ! enable for debug testing (use 'n_cld_snd_in' in arg list)
 
       if(n_cld_snd .gt. max_cld_snd)then
           write(6,*)' barnes_r5: ERROR, too many cloud soundings'
@@ -225,7 +227,8 @@ cdis
               wt_snd_diff(n,1) = wt_snd(n,1)
               if(n .le. 10)then 
                   write(6,*)
-                  write(6,*)' Cloud sounding # ',n
+                  write(6,*)' Cloud sounding # ',n,' at ',i_snd(n)
+     1                                                   ,j_snd(n)
                   write(6,901,err=902)k
      1                       ,cld_snd(n,k),cld_snd_diff(n,k)
      1                       ,wt_snd(n,k),wt_snd_diff(n,k)
@@ -316,19 +319,45 @@ cdis
         nobs = nstop-nstart+1
         nanl = 0
 
-        if((l_analyze(k) .and. nobs .ge. 1) .or. k .eq. 1)then
+        if((l_analyze(k) .and. nobs .ge. 1) .or. k .eq. 1 
+     1                                      .or. l_diff_snd)then
 
           if(.not. l_diff_snd .or. k .eq. 1)then
               sum_a=0.  
               sumwt_a=0.
           endif
 
-          do n=nstart,nstop
-              ii=iob(n)
-              jj=job(n)
-              nn=nob(n)
+          if(l_diff_snd)then
+              n1 = 1
+              n2 = n_cld_snd
+          else
+              n1 = nstart
+              n2 = nstop
+          endif
 
-              if(.not. l_diff_snd .or. k .eq. 1)then
+          do n=n1,n2
+              if(.not. l_diff_snd)then
+                ii=iob(n)
+                jj=job(n)
+                nn=nob(n)
+                l_use_snd = .true.
+              else
+                l_use_snd = .true.
+
+!               Test if out of bounds of established perimeter around LAPS domain
+                if(i_snd(n) .lt. IX_LOW .or. 
+     1             i_snd(n) .gt. IX_HIGH) l_use_snd = .false.
+                if(j_snd(n) .lt. IY_LOW .or. 
+     1             j_snd(n) .gt. IY_HIGH) l_use_snd = .false.
+
+                ii = i_snd(n)
+                jj = j_snd(n)
+                nn = n
+              endif
+
+              if(l_use_snd)then
+
+                if(.not. l_diff_snd .or. k .eq. 1)then
 
                   nanl = nanl + 1
 
@@ -345,7 +374,7 @@ cdis
                   enddo ! i
                   enddo ! j
 
-              else ! process difference soundings
+                else ! process difference soundings
 
 !                 Check if both sounding levels have valid values          
                   if(wt_snd_diff(nn,k) .eq. 0.)then 
@@ -383,9 +412,11 @@ cdis
                       enddo ! i
                       enddo ! j
 
-                  endif
+                  endif ! wt_snd_diff
 
-              endif
+                endif ! l_diff_snd
+
+              endif ! l_use_snd
 
           enddo ! n
 
@@ -394,6 +425,17 @@ cdis
 
           do j=1,jmax,nskip
           do i=1,imax,nskip
+
+            if(l_diff_snd)then ! QC summations
+
+!             Prevent below zero values                 
+              sum_a(i,j) = max(sum_a(i,j),0.) 
+              sumwt_a(i,j) = max(sumwt_a(i,j),0.)
+
+!             Prevent sum from exceeding weight (cover > 1)
+              sum_a(i,j) = min(sum_a(i,j),sumwt_a(i,j))
+
+            endif
 
 !           Add in model first guess as an ob
             sum = sum_a(i,j) + weight_modelfg * cf_modelfg(i,j,k)
@@ -500,7 +542,7 @@ cdis
 
         else ! No Obs; Set level to model first guess
           write(6,52)k,nstart,nstop,nobs,nanl
-52        format(' lvl,nstart,nstop,nobs,nanl=',5i5,
+52        format(' lvl,nstart,nstop,nobs,nanl=',5i6,
      1                  ' No Obs; Set level to model fg')
 
           do j=1,jmax
