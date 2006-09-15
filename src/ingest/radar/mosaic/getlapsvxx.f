@@ -2,7 +2,7 @@
      &      n_radars,c_extension_proc,i4timefile_proc,i4_tol,rheight_3d, ! I   
      &      lat,lon,topo,i4_file_closest,                                ! I
      &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,          ! O
-     &      grid_ra_ref,grid_ra_vel,istatus)                             ! O
+     &      grid_ra_ref,istatus)                                         ! O
 c
        Integer       imax,jmax,kmax  !same as imax,jmax,kmax in lapsparms.for
        Integer       maxradar
@@ -22,7 +22,6 @@ c
        Integer       i4_file_closest(n_radars)
 
        Real*4          grid_ra_ref(imax,jmax,kmax,maxradar)
-       Real*4          grid_ra_vel(imax,jmax,kmax,maxradar)
        Real*4          rheight_3d (imax,jmax,kmax)
        Real*4          lat(imax,jmax)
        Real*4          lon(imax,jmax)
@@ -106,14 +105,14 @@ c check laps analysis values
 29          format(1x,'  i  j    lat   lon     topo    ref ')
             write(6,29)
 
-            do j=1,jmax,10
-            do i=1,imax,10
+            do j=1,jmax,20
+            do i=1,imax,20
                write(6,30)i,j,lat(i,j),lon(i,j),topo(i,j)
      &                   ,grid_ra_ref(i,j,level,k)
             end do
             end do
 
-30          format(1x,2i3,1x,3f7.1,1x,2(f8.1,1x))
+30          format(1x,2i5,1x,3f7.1,1x,2(f8.1,1x))
 
             I4_elapsed = ishow_timer()
 
