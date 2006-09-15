@@ -5,6 +5,7 @@
      1                                           ,rms_thresh_norm     ! I
      1                                           ,bad_mult            ! I
      1                                           ,topo,ldf            ! I
+     1                                           ,wt_bkg_a            ! I
      1                                           ,t_2d,istatus)       ! O
 
 !       This subroutine can be a substitute to the call to 'spline' and 
@@ -28,6 +29,7 @@
         real*4 ob_full(mxstn)
         real*4 ob_bkg(mxstn)
         real*4 to_2d_dum(ni,nj)
+        real*4 wt_bkg_a(ni,nj)                         
 
         write(6,*)' Subroutine barnes_multivariate_sfc_jacket for...'
      1           ,c_field      
@@ -124,8 +126,6 @@ C
         call get_fnorm_max(ni,nj,r0_norm,r0_value_min,fnorm_max)   
         n_fnorm = int(fnorm_max) + 1
 
-        weight_bkg_const = 5e28 ! a la wind.nl
-
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
 
@@ -140,7 +140,7 @@ C
      1                   ,rms_thresh_norm                        ! Input
      1                   ,rinst_err                              ! Input
      1                   ,bad                                    ! Input
-     1                   ,weight_bkg_const                       ! Input
+     1                   ,wt_bkg_a                               ! Input
      1                   ,n_fnorm                                ! Input
      1                   ,l_boundary,.false.,.true.              ! Input
      1                   ,mxstn,obs_barnes                       ! Input
@@ -159,7 +159,7 @@ C
      1                   ,rms_thresh_norm                        ! Input
      1                   ,rinst_err                              ! Input
      1                   ,bad                                    ! Input
-     1                   ,weight_bkg_const                       ! Input
+     1                   ,wt_bkg_a                               ! Input
      1                   ,n_fnorm                                ! Input
      1                   ,l_boundary,l_barnes_wide,l_struct_in   ! Input
      1                   ,n_obs,obs_barnes                       ! Input
@@ -331,8 +331,6 @@ C
         l_not_struct_out = .not. l_struct_out
         n_var = 1
         rep_pres_intvl = 5000. ! Hardwire should work for a 2-D analysis
-
-        wt_bkg_a = weight_bkg_const
 
         call barnes_multivariate(
      1                      t_2d                                  ! Outputs
