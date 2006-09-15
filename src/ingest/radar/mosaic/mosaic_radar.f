@@ -148,7 +148,6 @@ c
       Integer       x,y,z,record
 
       Real*4        grid_ra_ref(nx_l,ny_l,nz_l,n_radars)
-      Real*4        grid_ra_vel(nx_l,ny_l,nz_l,n_radars)
       Real*4        grid_mosaic_3dref(nx_l,ny_l,nz_l)
       Real*4        grid_mosaic_2dref(nx_l,ny_l)
       Real*4        lat(nx_l,ny_l)
@@ -221,6 +220,7 @@ c
      +             ,lvl_coord_3d(nz_l)*4
      +             ,units_3d(nz_l)*10
      +             ,comment_3d(nz_l)*125
+     +             ,comment_tmp*40
 
       character     units_2d*10
       character     var_2d*3
@@ -447,7 +447,7 @@ c ----------------------------------------------------------
      &          i_ra_count,c_ra_ext,i4time_mos,i_window_size,            ! I
      &          rheight_laps,lat,lon,topo,i4_file_closest,               ! I
      &          rlat_radar,rlon_radar,rheight_radar,n_valid_radars,      ! O
-     &          grid_ra_ref,grid_ra_vel,                                 ! O
+     &          grid_ra_ref,                                             ! O
      &          istatus)                                                 ! O
 
           elseif(c_mosaic_type(1:3).eq.'rdr')then ! rd 'vrc' files on LAPS grid
@@ -630,9 +630,10 @@ c
 
                  n_ref = 0
 
+!                Write comments in 3 columns each 40 characters wide
                  do i_radar = 1,n_valid_radars
-                     ii = i_radar + 1
-                     if(ii .le. nz_l)then
+                     if(i_radar .le. (nz_l-1) )then ! write in 1st column
+                         ii = i_radar + 1
                          write(comment_3d(ii),1)rlat_radar(i_radar)
      1                                         ,rlon_radar(i_radar)
      1                                         ,rheight_radar(i_radar)
@@ -640,9 +641,28 @@ c
      1                                         ,c_radar_id(i_radar)
 1                        format(2f9.3,f8.0,i7,a4)
 
+                     elseif(i_radar .le. 2*(nz_l-1) )then ! write in 2nd column
+                         write(comment_tmp,1)rlat_radar(i_radar)
+     1                                      ,rlon_radar(i_radar)
+     1                                      ,rheight_radar(i_radar)
+     1                                      ,n_ref
+     1                                      ,c_radar_id(i_radar)
+                         ii = i_radar - (nz_l-1) + 1
+                         comment_3d(ii)(41:77) = comment_tmp
+
+                     elseif(i_radar .le. 3*(nz_l-1) )then ! write in 3rd column
+                         write(comment_tmp,1)rlat_radar(i_radar)
+     1                                      ,rlon_radar(i_radar)
+     1                                      ,rheight_radar(i_radar)
+     1                                      ,n_ref
+     1                                      ,c_radar_id(i_radar)
+                         ii = i_radar - (2*(nz_l-1)) + 1
+                         comment_3d(ii)(81:117) = comment_tmp
+
                      else
                          write(6,*)
      1                   ' Error: too many radars for comment output'
+                         write(6,*)' Limit is ',i_radar-1
                          istatus = 0
                          return
 
