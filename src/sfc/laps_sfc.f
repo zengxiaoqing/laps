@@ -462,7 +462,7 @@ c
            endif
 
         enddo !ista
- 999    format(i5,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1
+ 999    format(i5,': ',a5,2x,a6,2x,a6,' is at i,j: ',f6.1,',',f6.1
      1        ,2x,3f8.0,2x,2f8.3)
 c
         I4_elapsed = ishow_timer()
