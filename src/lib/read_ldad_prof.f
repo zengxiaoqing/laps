@@ -79,7 +79,7 @@ C
         print *,'dim recNum'
       endif
       call read_prof(nf_fid, level, maxStaticIds, nInventoryBins,
-     +     recNum,ext,
+     +     recNum,ext,lun,
 !.............................................................................
      1     i4time_sys,i4_prof_window,NX_L,NY_L,n_good_obs,istatus)
 
@@ -90,9 +90,9 @@ C
 C
 C
       subroutine read_prof(nf_fid, level, maxStaticIds, nInventoryBins,       
-     +     recNum,
+     +     recNum,ext,lun,
 !.............................................................................
-     1     ext,i4time_sys,i4_prof_window,NX_L,NY_L,n_good_obs,istatus)
+     1     i4time_sys,i4_prof_window,NX_L,NY_L,n_good_obs,istatus)
 !.............................................................................
 
       include 'netcdf.inc'
@@ -322,17 +322,18 @@ C
      1                         ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
      1                         ,a9time_ob,'PROFILER'
                 else ! MADIS
-                    write(6,401)provider_ref
+                    write(6,402)i_sta
      1                         ,n_good_levels
      1                         ,rlat,rlon,elev,provider_ref(1:6)
      1                         ,a9time_ob,'PROFILER'
-                    write(lun,401)provider_ref
+                    write(lun,402)i_sta
      1                         ,n_good_levels
      1                         ,rlat,rlon,elev,provider_ref(1:6)
      1                         ,a9time_ob,'PROFILER'
                 endif
 
 401             format(a12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
+402             format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
 
                 do i = 1,n_good_levels
                     write(lun,411,err=421)ht_out(i)
@@ -378,17 +379,18 @@ C
      1                         ,rlat,rlon,elev,stationId(i_pr_cl)(1:5)
      1                         ,a9time_ob,'RASS    '
                 else ! MADIS
-                    write(6,501)provider_ref
+                    write(6,502)i_sta
      1                         ,n_good_levels
      1                         ,rlat,rlon,elev,provider_ref(1:5)
      1                         ,a9time_ob,'RASS    '
-                    write(lun,501)provider_ref
+                    write(lun,502)i_sta
      1                         ,n_good_levels
      1                         ,rlat,rlon,elev,provider_ref(1:5)
      1                         ,a9time_ob,'RASS    '
                 endif
 
 501             format(a12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9,1x,a8)
+502             format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9,1x,a8)
 
                 do i = 1,n_good_levels
                     write(lun,511,err=521)ht_out(i)
