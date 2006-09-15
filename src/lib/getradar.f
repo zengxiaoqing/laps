@@ -1337,6 +1337,7 @@ cdoc                            calls read_multiradar_3dref.
         character*150 directory
 
         character*125 comment_3d(kmax),comment_2d
+        character*40 comment_tmp
         character*10 units_3d(kmax),units_2d
         character*3 var_3d(kmax)
         integer*4 LVL_3d(kmax)
@@ -1394,9 +1395,10 @@ cdoc                            calls read_multiradar_3dref.
 
         write(6,*)' n_radars/max_radars = ',n_radars,max_radars
 
+!       Read comments from 3 columns each 40 characters wide
         do i_radar = 1,n_radars
-            ii = i_radar + 1
-            if(ii .le. kmax)then
+            if(i_radar .le. (kmax-1) )then       ! read in 1st column
+                ii = i_radar + 1
                 read(comment_3d(ii),1)rlat_radar(i_radar)
      1                               ,rlon_radar(i_radar)
      1                               ,rheight_radar(i_radar)
@@ -1407,9 +1409,34 @@ cdoc                            calls read_multiradar_3dref.
                 write(6,*)' Read radar ',c_radar_id(i_radar)
      1                   ,' Volume (via 3d-mosaic)'
 
+            elseif(i_radar .le. 2*(kmax-1) )then ! read in 2nd column
+                ii = i_radar - (kmax-1) + 1
+                comment_tmp = comment_3d(ii)(41:80)
+                read(comment_tmp,1)rlat_radar(i_radar)
+     1                            ,rlon_radar(i_radar)
+     1                            ,rheight_radar(i_radar)
+     1                            ,n_ref
+     1                            ,c_radar_id(i_radar)
+
+                write(6,*)' Read radar ',c_radar_id(i_radar)
+     1                   ,' Volume (via 3d-mosaic)'
+
+            elseif(i_radar .le. 3*(kmax-1) )then ! read in 3rd column
+                ii = i_radar - (2*(kmax-1)) + 1
+                comment_tmp = comment_3d(ii)(81:120)
+                read(comment_tmp,1)rlat_radar(i_radar)
+     1                            ,rlon_radar(i_radar)
+     1                            ,rheight_radar(i_radar)
+     1                            ,n_ref
+     1                            ,c_radar_id(i_radar)
+
+                write(6,*)' Read radar ',c_radar_id(i_radar)
+     1                   ,' Volume (via 3d-mosaic)'
+
             else
                 write(6,*)
      1          ' Error: too many radars for comment output'
+                write(6,*)' Limit is ',i_radar-1
                 istatus = 0
                 return
 
