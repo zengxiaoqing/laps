@@ -1030,9 +1030,15 @@ c read in laps lat/lon and topo
                 if(grid_spacing_m .ge. 5000.)then
                     chigh = 40.
                     clow = -40.
-                else
+                elseif(grid_spacing_m .ge. 2500.)then
                     chigh = 80.
                     clow = -80.
+                elseif(grid_spacing_m .ge. 1250.)then
+                    chigh = 160.
+                    clow = -160.
+                else
+                    chigh = 320.
+                    clow = -320.
                 endif
 
                 i_contour = -1
