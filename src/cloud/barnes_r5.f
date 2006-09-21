@@ -69,13 +69,15 @@ cdis
       logical l_perimeter, l_use_snd
       real*4 cld_snd(max_cld_snd,kmax)
       real*4 wt_snd(max_cld_snd,kmax)
-      real*4 cld_snd_diff(max_cld_snd,kmax)
-      real*4 wt_snd_diff(max_cld_snd,kmax)
+      real*8 cld_snd_diff(max_cld_snd,kmax)
+      real*8 wt_snd_diff(max_cld_snd,kmax)
       integer*4 i_snd(max_cld_snd)
       integer*4 j_snd(max_cld_snd)
 
-      real*4 sum_a(imax,jmax)
-      real*4 sumwt_a(imax,jmax)
+      real*8 sum_a(imax,jmax)
+      real*8 sumwt_a(imax,jmax)
+
+      real*8 weight
 
       real iiilut(-NX_DIM_LUT:NX_DIM_LUT,-NY_DIM_LUT:NY_DIM_LUT)
       integer nlast(KCLOUD)
@@ -429,11 +431,11 @@ cdis
             if(l_diff_snd)then ! QC summations
 
 !             Prevent below zero values                 
-              sum_a(i,j) = max(sum_a(i,j),0.) 
-              sumwt_a(i,j) = max(sumwt_a(i,j),0.)
+              sum_a(i,j) = dmax1(sum_a(i,j),0D0) 
+              sumwt_a(i,j) = dmax1(sumwt_a(i,j),0D0)
 
 !             Prevent sum from exceeding weight (cover > 1)
-              sum_a(i,j) = min(sum_a(i,j),sumwt_a(i,j))
+              sum_a(i,j) = dmin1(sum_a(i,j),sumwt_a(i,j))
 
             endif
 
