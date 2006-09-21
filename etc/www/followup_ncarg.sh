@@ -52,6 +52,11 @@ then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=1056x885
 
+elif test "$2" = "stmas-backup"
+then
+    WINDOW=0.0:0.08:1.0:0.92
+    RESOLUTION=1056x885
+
 elif test "$2" = "dwfe1-rcsv-nemo"
 then
     WINDOW=0.0:0.08:1.0:0.92
@@ -63,6 +68,11 @@ then
     RESOLUTION=1056x885
 
 elif test "$2" = "glaps"
+then
+    WINDOW=0.0:0.08:1.0:0.92
+    RESOLUTION=1056x885
+
+elif test "$2" = "wide"
 then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=1056x885
