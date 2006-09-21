@@ -6690,13 +6690,25 @@ c             if(cint.eq.0.0)cint=0.1
 
 !       Add resolution for Top Label
         call get_grid_spacing_cen(grid_spacing_m,istatus)
-        igrid_spacing = nint(grid_spacing_m/1000.)
-        if(igrid_spacing .le. 99 .and. igrid_spacing .ge. 1
-     1                           .and. c5_sect .ne. 'xsect'  )then
-            write(c4_grid,1)igrid_spacing
- 1          format(i2,'km')
-        else
-            c4_grid = '    '
+
+        if(grid_spacing_m .ge. 999.5)then ! 1-km or greater
+            igrid_spacing = nint(grid_spacing_m/1000.)
+            if(igrid_spacing .le. 99 .and. igrid_spacing .ge. 1
+     1                                .and. c5_sect .ne. 'xsect'  )then       
+                write(c4_grid,1)igrid_spacing
+ 1              format(i2,'km')
+            else
+                c4_grid = '    '
+            endif
+        else                              ! < 1-km
+            igrid_spacing = nint(grid_spacing_m)
+            if(igrid_spacing .le. 999 .and. igrid_spacing .ge. 1
+     1                                .and. c5_sect .ne. 'xsect'  )then       
+                write(c4_grid,2)igrid_spacing
+ 2              format(i3,'m')
+            else
+                c4_grid = '    '
+            endif
         endif
 
 !       Top Label               
