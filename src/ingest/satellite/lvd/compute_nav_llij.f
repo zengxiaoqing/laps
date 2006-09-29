@@ -61,13 +61,15 @@ c        call genlvdlut_sub(nx_l,ny_l,gstatus)
          if(gstatus.lt.0)then
             write(6,*)'Error generating mapping arrays - terminating'
             goto 910
-         endif
-
-c        else
-c           write(6,*)'rewrite satellite_lvd.nl'
-c           write(6,*)
-c           call rewrite_satellite_lvd_nl(istatus)
 c        endif
+
+         else
+            print*,'Still in test mode and rewriting nav info'
+            print*,'Current Version: 9-29-06'
+            print*,'rewrite satellite_lvd.nl'
+            print*
+            call rewrite_satellite_lvd_nl(istatus)
+         endif
 
          nstatus=1
 

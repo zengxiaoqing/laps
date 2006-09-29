@@ -202,6 +202,7 @@ c
       integer istatus_vis(3)
       integer istatus_ctp
       integer itstatus
+      integer nan_flag
       integer laps_cycle_time
       integer lvd_status
       integer nft,ntm(max_files),nft_prior
@@ -212,7 +213,7 @@ c
       real*4 favgth12u
 c
 c these should be seasonally dependent. 6-13-99. 
-c used for "bad" meteosat (11u) data. 
+c used for "bad" meteosat data. 
       data favgth39u /210.0/
       data favgth67u /209.0/
       data favgth11u /239.0/
@@ -295,24 +296,26 @@ c           write(6,*)'Successfully obtained mapping arrays '
 c        endif
 
          if(csattype.eq.'twn')then  !.or.csattype.eq.'hko')then
-            where (gri .lt. 0.5)gri=1.0
-            where (grj .lt. 0.5)grj=1.0
+            where (gri .lt. 0.5 .and. gri .gt. 0.0)gri=1.0
+            where (grj .lt. 0.5 .and. gri .gt. 0.0)grj=1.0
          endif 
-         do j=1,ny_l
-          do i=1,nx_l
-           do k=1,nchannels
-            if(gri(i,j,k).le.0 .or. gri(i,j,k).gt.100000.)then
-               print*,'Unacceptable gri value detected at ', i,j,k
-               stop
-            endif
-            if(grj(i,j,k).le.0 .or. grj(i,j,k).gt.100000.)then
-               print*,'Unacceptable gri value detected at ', i,j,k
-               stop
-            endif
-           enddo
-          enddo
-         enddo
+
+c sanity "nan" checker for grid mapping arrays.
+           call check_nan3(gri,nx_l,ny_l,maxchannels,nan_flag)
+           if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN in grid mapping array gri'
+            stop
+           endif
+
+c
+           call check_nan3 (grj,nx_l,ny_l,nchannels,nan_flag)
+           if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN in grid mapping array grj'
+            stop
+           endif
+
       endif
+
 c
 c -------------------------------------------------------------------------
 c Determine solar-altitude and set flag for visible sat data availability.
