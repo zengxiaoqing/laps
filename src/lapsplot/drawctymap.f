@@ -184,13 +184,14 @@ c
        character*6 c_vnt_units
        character*7 c_units_type
        character*7 c_pbl_depth_units
-       logical l_discrete
+       logical l_discrete,l_sphere
        real*4 time_zone
 
        namelist /lapsplot_nl/ latlon_int,continent_line_width
      1                       ,c3_time_zone,time_zone
      1                       ,c_institution,c_vnt_units
-     1                       ,c_units_type,c_pbl_depth_units,l_discrete       
+     1                       ,c_units_type,c_pbl_depth_units
+     1                       ,l_discrete, l_sphere       
      1                       ,mode_supmap, iraster
 
 !      Set defaults
@@ -202,6 +203,7 @@ c
        c_vnt_units = 'M**2/S'
        mode_supmap = 3
        iraster = 0
+       l_sphere = .false.
  
        call get_directory('static',static_dir,len_dir)
 
@@ -224,6 +226,7 @@ c
        namelist_parms%c_units_type = c_units_type
        namelist_parms%c_pbl_depth_units = c_pbl_depth_units
        namelist_parms%l_discrete = l_discrete
+       namelist_parms%l_sphere = l_sphere
        namelist_parms%mode_supmap = mode_supmap
        namelist_parms%iraster = iraster
 
