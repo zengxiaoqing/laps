@@ -8,6 +8,7 @@
  c_units_type='english',
  c_pbl_depth_units='metric',
  l_discrete=.false.,
+ l_sphere=.false.,
  mode_supmap=3,
  iraster=0,
  /
@@ -35,6 +36,10 @@ c c_pbl_depth_units - PBL depth units ('english' or 'metric')
 c
 c l_discrete - default type of image colortable, '.false.' means more
 c              continuous colors, '.true.' means fewer more discrete colors
+c
+c l_sphere - apply adjustements and compensating distortions to plots so they
+c            will appear better when viewed on a spherical projection device
+c            such as Science On a Sphere (TM)
 c
 c mode_supmap - (1) use map database in 'data/static/ncarg/*'
 c               (3) use ezmap database in 'NCARG_ROOT/lib/ncarg/database'
