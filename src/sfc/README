@@ -20,7 +20,9 @@ main                                           laps_sfc.f
             splin2                                  "
             alt_2_sfc_p                        lib/laps_routines.f
             reduce_p                                "
-            put_thermo                         mdatlaps.f
+            get_laps_2dvar                     lib/laps_io.f     
+            put_winds                          mdatlaps.f
+            put_thermo                              "
             procar                                  "
             set_boundary                            "
                 dynamic_wts                    lapsvanl_sub.f
