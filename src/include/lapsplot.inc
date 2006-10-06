@@ -5,6 +5,7 @@
           sequence
 
           logical l_discrete
+          logical l_sphere
 
           real continent_line_width
           real time_zone
