@@ -267,10 +267,10 @@ c
 
 	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
 	real t_s(mxstn), td_s(mxstn)
-        real dd_s(mxstn), ff_s(mxstn) ! true north
+        real dd_s(mxstn), ff_s(mxstn) ! true north (knots)
 	real pstn_s(mxstn), mslp_s(mxstn), pred_s(mxstn), vis_s(mxstn)
         real ob_full(mxstn)
-        real u_s(mxstn), v_s(mxstn) ! grid north
+        real u_s(mxstn), v_s(mxstn) ! grid north (knots)
 c
 	character stn(mxstn)*20
         character title*60, ver_file*256
@@ -1370,9 +1370,9 @@ c
 
         title = 'U Wind Component background verification (kt)'
  	ea = 2.00
- 	call zero(d1,imax,jmax)
- 	call conv_ms2kt(u_bk,d1,imax,jmax)
-        call verify(d1,u_s,stn,n_obs_b,title,iunit,
+!	call zero(d1,imax,jmax)
+!	call conv_ms2kt(u_bk,d1,imax,jmax)
+        call verify(u_bk,u_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
  	title = 'U Wind Component verification (kt)'
@@ -1384,9 +1384,9 @@ c
 
         title = 'V Wind Component background verification (kt)'
  	ea = 2.00
- 	call zero(d1,imax,jmax)
- 	call conv_ms2kt(v_bk,d1,imax,jmax)
-        call verify(d1,v_s,stn,n_obs_b,title,iunit,
+!	call zero(d1,imax,jmax)
+!	call conv_ms2kt(v_bk,d1,imax,jmax)
+        call verify(v_bk,v_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
  	title = 'V Wind Component verification (kt)'
