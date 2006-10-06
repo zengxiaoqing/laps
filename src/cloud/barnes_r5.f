@@ -38,7 +38,7 @@ cdis
 cdis
 
       subroutine barnes_r5(t,imax,jmax,kmax,to,wt_p,cf_modelfg
-     1  ,l_perimeter,cld_snd,wt_snd,r_missing_data
+     1  ,l_perimeter,cld_snd_in,wt_snd_in,r_missing_data
      1  ,grid_spacing_m,i_snd,j_snd,n_cld_snd,max_cld_snd
      1  ,max_obs,weight_modelfg,NX_DIM_LUT,NY_DIM_LUT
      1  ,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm,istatus)
@@ -67,8 +67,13 @@ cdis
       dimension wt_p(imax,jmax,kmax)
 
       logical l_perimeter, l_use_snd
-      real*4 cld_snd(max_cld_snd,kmax)
-      real*4 wt_snd(max_cld_snd,kmax)
+
+      real*4 cld_snd_in(max_cld_snd,kmax)
+      real*4 wt_snd_in(max_cld_snd,kmax)
+
+      real*8 cld_snd(max_cld_snd,kmax)
+      real*8 wt_snd(max_cld_snd,kmax)
+
       real*8 cld_snd_diff(max_cld_snd,kmax)
       real*8 wt_snd_diff(max_cld_snd,kmax)
       integer*4 i_snd(max_cld_snd)
@@ -79,11 +84,15 @@ cdis
 
       real*8 weight
 
-      real iiilut(-NX_DIM_LUT:NX_DIM_LUT,-NY_DIM_LUT:NY_DIM_LUT)
+      real*8 iiilut(-NX_DIM_LUT:NX_DIM_LUT,-NY_DIM_LUT:NY_DIM_LUT)
       integer nlast(KCLOUD)
       logical l_analyze(KCLOUD), l_diff_snd
 
       write(6,*)' subroutine barnes_r5...'
+
+!     Convert from real*4 to real*8
+      cld_snd = cld_snd_in 
+      wt_snd = wt_snd_in
 
       l_diff_snd = .false.  
 
@@ -251,7 +260,7 @@ cdis
 !                         if(cld_snd_diff(n,k) .eq. 0.)then ! identical
 !                             wt_snd_diff(n,k) = r_missing_data
 !                         else                              ! different
-                              wt_snd_diff(n,k) = 0.
+                              wt_snd_diff(n,k) = 0D0
 !                         endif
                       endif
                   endif
@@ -305,8 +314,8 @@ cdis
       enddo
 
       if(l_diff_snd)then
-          sum_a=0.  
-          sumwt_a=0.
+          sum_a=0D0  
+          sumwt_a=0D0
       endif
 
       do k=1,kmax
@@ -325,8 +334,8 @@ cdis
      1                                      .or. l_diff_snd)then
 
           if(.not. l_diff_snd .or. k .eq. 1)then
-              sum_a=0.  
-              sumwt_a=0.
+              sum_a=0D0  
+              sumwt_a=0D0
           endif
 
           if(l_diff_snd)then
