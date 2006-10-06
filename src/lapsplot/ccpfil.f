@@ -227,8 +227,10 @@ C
               l_discrete = plot_parms%l_discrete
           elseif(colortable .eq. 'tpw')then
               l_discrete = plot_parms%l_discrete
-          elseif(colortable .eq. 'hues' .or. 
-     1           colortable .eq. 'omega')then
+          elseif(colortable .eq. 'hues'  .or. 
+     1           colortable .eq. 'omega' .or.
+     1           colortable .eq. 'temp'
+     1                                       )then
               if(l_divisible)then
                   l_discrete = plot_parms%l_discrete
               else
@@ -546,14 +548,6 @@ C
 !             endif
 !         endif
 
-      elseif(colortable .eq. 'vnt')then       
-          if(.not. l_discrete)then
-              ncols = 60 
-          endif
-
-          call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,plot_parms,istatus)
-
       elseif(colortable .eq. 'tpw')then
           if(.not. l_discrete)then
               ncols = 60
@@ -634,6 +628,14 @@ C
               ncols = 19
           else
               ncols = 79
+          endif
+
+          call generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                            ,plot_parms,istatus)
+
+      elseif(colortable .eq. 'temp' .or. colortable .eq. 'vnt')then       
+          if(.not. l_discrete)then
+              ncols = 60
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
@@ -769,6 +771,7 @@ C
      1                     .or. colortable .eq. 'tpw'    ! TPW
      1                     .or. colortable .eq. 'vnt'    ! VNT
      1                     .or. l_divisible              ! divisible colorbars
+     1                     .or. colortable .eq. 'temp'
      1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
           if(l_set_contours)then
               l_loop = .false.
@@ -836,7 +839,7 @@ c     Restore original color table
 
       call setusv_dum(2hIN,7)  ! Yellow
 
-      rsize = .008
+      rsize = .0072 ! .008
       iy = (y_2+.021) * 1024
 
       if(.not. l_integral .and. .not. l_set_contours)then
@@ -1193,7 +1196,7 @@ c     Restore original color table
           colorbar_int = 100.
       elseif(range .gt. 200.)then
           colorbar_int = 50.
-      elseif(range .gt. 170.)then
+      elseif(range .gt. 190.)then
           colorbar_int = 20.
       elseif(range .gt. 45.)then
           colorbar_int = 10.
