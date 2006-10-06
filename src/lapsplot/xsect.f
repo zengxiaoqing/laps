@@ -3042,7 +3042,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                         if(dir .gt. -400. .and. 
      1                       k .ge. int(rk_terrain))then
                             call barbs(spd_ms/mspkt,dir,x1,y1,du,rot
-     1                                  ,-1e10,+1e10,-1e10,+1e10)
+     1                                  ,-1e10,+1e10,-1e10,+1e10,1.0)
                         endif
                     endif
                 enddo ! k
