@@ -297,7 +297,7 @@ c       include 'satellite_dims_lvd.inc'
             sfctf_h = 125.
         endif
 
-        sfctf_l = -20.
+        sfctf_l = -60.
         sfctdf_h = 120.
         sfctdf_l = -20.
 
@@ -854,9 +854,19 @@ c       include 'satellite_dims_lvd.inc'
                     call mklabel(k_mb,c19_label,c_label)
                 endif
 
+                if(k_level .gt. 0 .and. k_mb .lt. 500)then
+                    cint = 10.
+                    clow = -100.
+                    chigh = 100.
+                else
+                    cint = 5.
+                    clow =  -25.
+                    chigh = +25.
+                endif
+
                 scale = 1.0
-                call contour_settings(u_2d,NX_L,NY_L,clow,chigh,cint
-     1                               ,zoom,density,scale)
+!               call contour_settings(u_2d,NX_L,NY_L,clow,chigh,cint
+!    1                               ,zoom,density,scale)
 
                 call plot_field_2d(i4time_3dw,c_field,u_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -889,10 +899,19 @@ c       include 'satellite_dims_lvd.inc'
                     call mklabel(k_mb,c19_label,c_label)
                 endif
 
-                scale = 1.0
-                call contour_settings(v_2d,NX_L,NY_L,clow,chigh,cint
-     1                               ,zoom,density,scale)
+                if(k_level .gt. 0 .and. k_mb .lt. 500)then
+                    cint = 10.
+                    clow = -100.
+                    chigh = 100.
+                else
+                    cint = 5.
+                    clow =  -25.
+                    chigh = +25.
+                endif
 
+                scale = 1.0
+!               call contour_settings(v_2d,NX_L,NY_L,clow,chigh,cint
+!    1                               ,zoom,density,scale)
 
                 call plot_field_2d(i4time_3dw,c_field,v_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -4217,7 +4236,7 @@ c                   cint = -1.
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,sfctf_l,sfctf_h,'hues'       
+                call ccpfil(field_2d,NX_L,NY_L,sfctf_l,sfctf_h,'temp'       
      1                     ,n_image,1e-0,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -4320,7 +4339,7 @@ c                   cint = -1.
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'hues')
+     1                        ,NX_L,NY_L,r_missing_data,'temp')
 
         elseif(c_type(1:2) .eq. 'mc')then
             var_2d = 'MRC'
@@ -4613,7 +4632,7 @@ c                   cint = -1.
      1                         ,namelist_parms)        
                 elseif(var_2d .eq. 'TSF')then
                     call ccpfil(field_2d,NX_L,NY_L,sfctf_l,sfctf_h      
-     1                         ,'hues',n_image,scale,'hsect'
+     1                         ,'temp',n_image,scale,'hsect'
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'DSF')then
                     call ccpfil(field_2d,NX_L,NY_L,sfctdf_h,sfctdf_l
