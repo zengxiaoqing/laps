@@ -74,7 +74,12 @@ cdis
 !     y1 = vmin + (vmax - vmin) * (rj-1.) / float(jmax-1)
 
       if(dir .gt. -400.)then
-          call barbs(spd,dir,ri,rj,du,rot,-1e10,+1e10,-1e10,+1e10)
+          if(lat(nint(ri),nint(rj)) .ge. 0.)then
+              sense = +1.0
+          else
+              sense = -1.0
+          endif
+          call barbs(spd,dir,ri,rj,du,rot,-1e10,+1e10,-1e10,+1e10,sense)
       endif
 
     1 continue
@@ -169,7 +174,8 @@ cdis
 
 
 c
-        SUBROUTINE BARBS(SPD,DIR,U,V,DU,PROJROT,umin,umax,vmin,vmax)
+        SUBROUTINE BARBS(SPD,DIR,U,V,DU,PROJROT,umin,umax,vmin,vmax
+     1                                                        ,sense)
 C
 C---Wind barb plotter from barbs_gp.
 C
@@ -193,7 +199,7 @@ C
 C---DIRECTIONS:
 C
         DR=DIR*DEGRAD+PROJROT
-        DR1=(DIR+60.)*DEGRAD+PROJROT
+        DR1=(DIR+(60.*sense))*DEGRAD+PROJROT
         SIND=SIN(DR)
         SIND1=SIN(DR1)
         COSD=COS(DR)
