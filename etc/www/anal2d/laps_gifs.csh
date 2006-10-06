@@ -90,7 +90,7 @@ setenv SCRATCH_DIR   $LAPS_GIFS
 #setenv EXE_DIR       /usr/nfs/lapb/parallel/laps/bin
 setenv TIME_DIR      $LAPS_DATA_ROOT/time
 
-date
+date -u
 
 echo " "
 echo "Obtaining time info from systime.dat..."
@@ -112,7 +112,7 @@ limit
 echo " "
 
 cd $LAPS_GIFS
-date
+date -u
 
 # Wind Graphic Product
 echo "Generating Graphical Wind Product"; date -u
