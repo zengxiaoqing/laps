@@ -52,7 +52,7 @@ cdis
         call get_c8_project(c8_project,istatus)
         if(istatus .ne. 1)goto999
 
-        call get_pro_parms(c8_blp_format_in,istatus)
+        call get_c8_blpfmt(c8_blp_format_in,istatus)
         if(istatus .ne. 1)goto999
 
         if(ilen .eq. 9)then
@@ -120,6 +120,8 @@ cdis
 
 
        subroutine get_pro_parms(c8_blp_format,istatus)
+
+!      This subroutine and namelist isn't being used at the present time.
 
        character*8 c8_blp_format
 
