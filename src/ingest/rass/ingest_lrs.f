@@ -41,7 +41,7 @@ cdis
 !       1997 Jul      Ken Dritz        Pass NX_L, NY_L to ingest_lrs.
 
         character*9 a9_time
-        character*8 c8_project
+        character*8 c8_project, c8_blpfmt, c8_blpfmt_in
 
         call get_systime(i4time,a9_time,istatus)
         if(istatus .ne. 1)go to 999
@@ -57,8 +57,10 @@ cdis
         call ingest_lrs(i4time,NX_L,NY_L,j_status)
         write(6,*)' Return from WPDN (NIMBUS) Rass ingest'
 
-
         call get_c8_project(c8_project,istatus)
+        if(istatus .ne. 1)goto999
+
+        call get_c8_blpfmt(c8_blpfmt_in,istatus)
         if(istatus .ne. 1)goto999
 
         if(c8_project .eq. 'RSA')then
@@ -66,7 +68,8 @@ cdis
             write(6,*)' Running RSA/LDAD local RASS ingest '
             call ingest_rsalrs(i4time,NX_L,NY_L,j_status)
             write(6,*)' Return from RSA/LDAD local RASS ingest'
-        elseif(c8_project .eq. 'WFO')then
+        elseif(c8_project   .eq. 'WFO' .or. 
+     1         c8_blpfmt_in .eq. 'MADIS'    )then
             write(6,*)
             write(6,*)' Running MADIS (WFO) Multi-agency profile ingest'       
             call ingest_madis_map(i4time,NX_L,NY_L,'lrs',j_status)
