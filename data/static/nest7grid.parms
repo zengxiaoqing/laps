@@ -62,6 +62,7 @@
  toptwvl_parm_cmn=2.,     
  silavwt_parm_cmn=0.,
  c8_project_common='NIMBUS', 
+ c8_blpfmt_common='default', 
  fdda_model_source_cmn='lga',
  /
 c OVERALL LAPS PARAMETERS
@@ -99,6 +100,11 @@ c                     references to 'c8_project_common' are in the ingest
 c                     routines, though it also controls other specialized 
 c                     functions for 'AIRDROP'. Allowed values are 'NIMBUS', 
 c                     'WFO', 'AFWA', 'CWB', 'RSA', and 'AIRDROP'.
+c
+c c8_blpfmt_common - Specify the format of boundary layer profiler data
+c                    If set to 'default' the software will key off of the
+c                    value of 'c8_project_common'. Otherwise it can be
+c                    explicitly set to 'MADIS' as an override.
 c
 c radarext_3d_cmn - Determines input radar source for the cloud analysis.
 c                   Intermediate files used are already on the LAPS grid.
