@@ -509,7 +509,8 @@ c****  --------------------------------------------------------- *****
      1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
      1  ,path_to_wsi_2d_radar_cmn,path_to_wsi_3d_radar_cmn
      1  ,path_to_qc_acars_cmn
-     1  ,c8_project_common,c_raddat_type,c80_description
+     1  ,c8_project_common,c8_blpfmt_common
+     1  ,c_raddat_type,c80_description      
      1  ,path_to_topt30s ,path_to_topt10m
      1  ,path_to_soiltype_top30s, path_to_soiltype_bot30s
      1  ,path_to_landuse30s,path_to_greenfrac
@@ -908,6 +909,29 @@ c ---------------------------------------------------------------------
       endif
 
       c8_project = c8_project_common
+
+      istatus = 1
+      return
+      end
+
+      subroutine get_c8_blpfmt(c8_blpfmt,istatus)
+
+      include 'lapsparms.cmn' ! c8_blpfmt
+      include 'grid_fname.cmn'! grid_fnam_common
+
+      character*8 c8_blpfmt
+
+!     This routine accesses the c8_blpfmt_common variable from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' WARNING, get_laps_config not successfully called'       
+          return
+      endif
+
+      c8_blpfmt = c8_blpfmt_common
 
       istatus = 1
       return
