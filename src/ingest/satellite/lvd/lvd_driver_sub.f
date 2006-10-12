@@ -30,14 +30,9 @@ cdis
 cdis 
 cdis 
       subroutine lvd_driver_sub(nx_l,ny_l,
-     &               isat,jtype,nimages,
-     &               n_ir_lines,n_ir_elem,
-     &               n_wv_lines,n_wv_elem,
-     &               n_vis_lines,n_vis_elem,
-     &               chtype,maxchannels,nchannels,
-     &               i4time_cur,i_delta_t,
-     &               gri,grj,
-     &               lvd_status)
+     &               ksat,jtype,nimages,
+     &               chtype,i4time_cur,i_delta_t,
+     &               gri,grj,lvd_status)
 c
 c Program drives generation of LAPS lvd.  Processes satellite data.
 c
@@ -70,15 +65,16 @@ c
 
       include 'satellite_dims_lvd.inc'  ! dimensions for maxsat, maxtype, maxchannel
 c                                     used for variable in include 'satellite_common_lvd.inc'
+      include 'satellite_common_lvd.inc'
+      include 'satellite_namelist_lvd.cmn'
 
       integer   nx_l,ny_l
       integer   n_ir_elem,n_ir_lines
       integer   n_vis_elem,n_vis_lines
       integer   n_wv_elem,n_wv_lines
-      integer   maxchannels
       integer   nchannels
       integer   nimages
-      integer   isat,jtype
+      integer   ksat,jtype
 
       integer   n_lvd_fields_max
       parameter (n_lvd_fields_max = 14)
@@ -88,8 +84,8 @@ c                                     used for variable in include 'satellite_co
       integer   len_lvd
 
       character*3 csattype
-      character*3 c_type(maxchannels,max_files)
-      character*3 chtype(maxchannels)
+      character*3 c_type(maxchannel,max_files)
+      character*3 chtype(maxchannel)
       character*6 csatid
       character*6 csat  !this one used for cld top p path
       character*9 c_fname_cur
@@ -98,11 +94,11 @@ c                                     used for variable in include 'satellite_co
       character*50 c_gridfname
       character*255 c_generic_dataroot
 
-      real image_vis (n_vis_elem,n_vis_lines,nimages) 
-      real image_ir  (n_ir_elem,n_ir_lines,nimages)
-      real image_12  (n_ir_elem,n_ir_lines,nimages)
-      real image_39  (n_ir_elem,n_ir_lines,nimages)
-      real image_67  (n_wv_elem,n_wv_lines,nimages)
+      real, allocatable :: image_vis (:,:,:) !n_vis_elem,n_vis_lines,nimages) 
+      real, allocatable :: image_ir  (:,:,:) !n_ir_elem,n_ir_lines,nimages)
+      real, allocatable :: image_12  (:,:,:) !n_ir_elem,n_ir_lines,nimages)
+      real, allocatable :: image_39  (:,:,:) !n_ir_elem,n_ir_lines,nimages)
+      real, allocatable :: image_67  (:,:,:) !n_wv_elem,n_wv_lines,nimages)
 c
 c this stuff for cloud top pressure
 c
@@ -144,7 +140,7 @@ c
       real lat(nx_l,ny_l)
       real lon(nx_l,ny_l)
       real topo(nx_l,ny_l)
-      real r_grid_ratio(maxchannels,nimages)
+      real r_grid_ratio(maxchannel,nimages)
 
       real	range_m
       real      sublon_d
@@ -170,8 +166,8 @@ c
       real*4      r12_cnt_to_btemp_lut(0:1023)
       real*4      r39_cnt_to_btemp_lut(0:1023)
       real*4      r67_cnt_to_btemp_lut(0:1023)
-      real*4      gri(nx_l,ny_l,maxchannels)	!Input: i values for mapping satellite data to domain
-      real*4      grj(nx_l,ny_l,maxchannels)	!Input: j values for mapping satellite data to domain
+      real*4      gri(nx_l,ny_l,maxchannel)	!Input: i values for mapping satellite data to domain
+      real*4      grj(nx_l,ny_l,maxchannel)	!Input: j values for mapping satellite data to domain
       real*4      good_vis_data_thresh
 c
 c dimensions for lvd
@@ -185,8 +181,8 @@ c
       character*31 ext_lvd
 
       real*4 grid_spacing_laps_m
-      real*4 r_image_res_m(maxchannels,nimages)
-      real*4 r_image_status(maxchannels,max_files)
+      real*4 r_image_res_m(maxchannel,nimages)
+      real*4 r_image_status(maxchannel,max_files)
 
       integer ishow_timer
       integer init_timer
@@ -221,7 +217,6 @@ c used for "bad" meteosat data.
 
       data rcal/0.106178/  !as specified by EUMETSAT User Services 5-May-99.
 
-      include 'satellite_common_lvd.inc'
       include 'grid_fname.cmn'
 
 c =========================================================================
@@ -230,18 +225,18 @@ c
       itstatus=init_timer()
       itstatus=ishow_timer()
 
-      do i=1,nimages
-         call zero(image_ir(1,1,i),n_ir_elem,n_ir_lines)
-         call zero(image_vis(1,1,i),n_vis_elem,n_vis_lines)
-         call zero(image_67(1,1,i),n_wv_elem,n_wv_lines)
-         call zero(image_12(1,1,i),n_ir_elem,n_ir_lines)
-      enddo
+c     do i=1,nimages
+c        call zero(image_ir(1,1,i),n_ir_elem,n_ir_lines)
+c        call zero(image_vis(1,1,i),n_vis_elem,n_vis_lines)
+c        call zero(image_67(1,1,i),n_wv_elem,n_wv_lines)
+c        call zero(image_12(1,1,i),n_ir_elem,n_ir_lines)
+c     enddo
 
       call find_domain_name(c_generic_dataroot,c_gridfname,istatus)
 
-      csatid = c_sat_id(isat)
-      csattype = c_sat_types(jtype,isat)
-      smsng = float(i_msng_sat_flag(jtype,isat))
+      csatid = c_sat_id(ksat)
+      csattype = c_sat_types(jtype,ksat)
+      smsng = float(i_msng_sat_flag(jtype,ksat))
 c ----------------------------------------------------------------------
 c if current time is at beginning of new day, then adjust time back just
 c a few seconds to allow any data just before top of hour to have a chance
@@ -278,12 +273,12 @@ c ---------------------------------------------
          stop
       end if
 c --------------------------------------------------------------------
-c Read look-up table for mapping lat/lon data pixels to real i/j pairs
+c Read lat/lon to i/j look-up tables as needed.
 c --------------------------------------------------------------------
       if(csatid.ne.'gmssat'.or.csattype.eq.'twn'.or.
      &   csattype.eq.'hko')then
 
-         call readlut(csatid,csattype,maxchannels,nchannels,
+         call readlut(csatid,csattype,maxchannel,nchannels,
      &chtype,nx_l,ny_l,gri,grj,istatus)
 
 c        if(istatus.eq.1)then
@@ -301,14 +296,14 @@ c        endif
          endif 
 
 c sanity "nan" checker for grid mapping arrays.
-           call check_nan3(gri,nx_l,ny_l,maxchannels,nan_flag)
+           call check_nan3(gri,nx_l,ny_l,maxchannel,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN in grid mapping array gri'
             stop
            endif
 
 c
-           call check_nan3 (grj,nx_l,ny_l,nchannels,nan_flag)
+           call check_nan3 (grj,nx_l,ny_l,maxchannel,nan_flag)
            if(nan_flag .ne. 1) then
             print *,' ERROR: NaN in grid mapping array grj'
             stop
@@ -329,6 +324,97 @@ c
       endif
 c
 c --------------------------------------------------------------------------
+c Compute Dimensions and Allocate Raw satellite data arrays
+c --------------------------------------------------------------------------
+      nchannels=0
+      do i=1,maxchannel
+         if(ichannels(i,jtype,ksat).eq.1)then
+            nchannels=nchannels+1
+            chtype(nchannels)=c_channel_types(i,jtype,ksat)
+c Find and read current satellite files... as many as 4 ir channels and vis.
+            call lvd_file_specifier(c_channel_types(i,jtype,ksat)
+     &,ispec,istatus)
+            if(istatus.ne.0)then
+               write(6,*)'Error status returned from lvd_file_specifier'
+               return
+            endif
+            if(ispec.eq.1)then
+             n_vis_elem=i_end_vis(jtype,ksat)-i_start_vis(jtype,ksat)+1
+             n_vis_lines=j_end_vis(jtype,ksat)-j_start_vis(jtype,ksat)+1
+            elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
+             n_ir_elem=i_end_ir(jtype,ksat)-i_start_ir(jtype,ksat)+1
+             n_ir_lines=j_end_ir(jtype,ksat)-j_start_ir(jtype,ksat)+1
+            elseif(ispec.eq.3)then
+             n_wv_elem=i_end_wv(jtype,ksat)-i_start_wv(jtype,ksat)+1
+             n_wv_lines=j_end_wv(jtype,ksat)-j_start_wv(jtype,ksat)+1
+            endif
+         endif
+      enddo
+
+      print*,'Raw data line/elem dimensions: '
+      print*,'-------------------------------'
+      print*,'VIS: ',n_vis_lines,n_vis_elem
+      print*,'IR:  ',n_ir_lines, n_ir_elem
+      print*,'WV:  ',n_wv_lines, n_wv_elem
+
+      if(n_vis_lines.le.1 .or. n_vis_elem.le.1)then
+           print*,'Vis satellite array dimensions <= 0 '
+           print*,'Terminating. Check static/satellite_lvd.nl'
+           stop
+      endif
+      if(n_ir_lines.le.1.or.n_ir_elem.le.1)then
+           print*,'IR satellite array dimensions <= 0 '
+           print*,'Terminating. Check static/satellite_lvd.nl'
+           stop
+      endif
+      if(n_wv_lines.le.1.or.n_wv_elem.le.1)then
+           print*,'WV satellite array dimensions <= 0 '
+           print*,'Terminating. Check static/satellite_lvd.nl'
+           stop
+      endif
+
+      if(.not.allocated(image_vis))then
+       allocate(image_vis(n_vis_lines,n_vis_elem,nimages),stat=istat)
+       if(istat.ne.0)then
+         print*,'Error allocating visible data array ',istat
+         print*,'Error: Aborting process: Not enough memory'
+         stop
+       endif
+      endif
+      if(.not.allocated(image_ir))then
+       allocate(image_ir(n_ir_lines,n_ir_elem,nimages),stat=istat)
+       if(istat.ne.0)then
+         print*,'Error allocating 11.0u data array ',istat
+         print*,'Error: Aborting process: Not enough memory'
+         stop
+       endif
+      endif
+      if(.not.allocated(image_39))then
+       allocate(image_39(n_ir_lines,n_ir_elem,nimages),stat=istat)
+       if(istat.ne.0)then
+         print*,'Error allocating 3.9u data array ',istat
+         print*,'Error: Aborting process: Not enough memory'
+         stop
+       endif
+      endif
+      if(.not.allocated(image_67))then
+       allocate(image_67(n_wv_lines,n_wv_elem,nimages),stat=istat)
+       if(istat.ne.0)then
+         print*,'Error allocating WV data array ',istat
+         print*,'Error: Aborting process: Not enough memory'
+         stop
+       endif
+      endif
+      if(.not.allocated(image_12))then
+       allocate(image_12(n_ir_lines,n_ir_elem,nimages),stat=istat)
+       if(istat.ne.0)then
+         print*,'Error allocating 12.0u data array ',istat
+         print*,'Error: Aborting process: Not enough memory'
+         stop
+       endif
+      endif
+c
+c --------------------------------------------------------------------------
 c Find and read current satellite files... as many as 4 ir channels and vis.
 c --------------------------------------------------------------------------
       if(csattype.eq.'cdf'.or.csattype.eq.'gvr'.or.
@@ -339,13 +425,13 @@ c --------------------------------------------------------------------------
          call getcdf_satdat(csatid,
      &                      csattype,
      &                      nchannels,chtype,
-     &                      path_to_raw_sat(1,jtype,isat),
+     &                      path_to_raw_sat(1,jtype,ksat),
      &                      c_fname_cur,lvis_flag,
      &                      i_delta_t,
      &                      n_ir_lines, n_ir_elem,
      &                      n_vis_lines,n_vis_elem,
      &                      n_wv_lines,n_wv_elem,
-     &                      maxchannels,nimages,
+     &                      maxchannel,nimages,
      &                      nft,ntm,c_type,max_files,
      &                      image_ir,image_vis,
      &                      image_12,image_39,image_67,
@@ -359,8 +445,8 @@ c --------------------------------------------------------------------------
 
       elseif(csattype.eq.'asc')then   !then we are using ascii files for raw ingest sat data
 
-         call s_len(path_to_raw_sat(1,jtype,isat),in)
-         write(6,*)'datapath: ',path_to_raw_sat(1,jtype,isat)(1:in)
+         call s_len(path_to_raw_sat(1,jtype,ksat),in)
+         write(6,*)'datapath: ',path_to_raw_sat(1,jtype,ksat)(1:in)
          write(6,*)'Using getascii_satdat routine'
 
 c  only possible to have one time for ascii files (nft=1); however, the number of
@@ -374,7 +460,7 @@ c    &                        nchannels,chtype,
 c    &                        n_ir_lines, n_ir_elem,
 c    &                        n_vis_lines,n_vis_elem,
 c    &                        n_wv_lines,n_wv_elem,
-c    &                        path_to_raw_sat(1,jtype,isat), 
+c    &                        path_to_raw_sat(1,jtype,ksat), 
 c    &                        ntm(nft),c_type(1,1),maxchannel,
 c    &                        image_ir(1,1,1),
 c    &                        image_vis(1,1,1),
@@ -399,8 +485,8 @@ c
 
          nft=1    !default to start. can change within this routine depending on AFWA file times.
          nft_prior=nft
-         call getafgwc_satdat(isat,jtype,
-     &                        maxchannels,nchannels,chtype,
+         call getafgwc_satdat(ksat,jtype,
+     &                        maxchannel,nchannels,chtype,
      &                        i4time_cur,lvis_flag,
      &                        n_ir_lines,n_ir_elem,
      &                        n_vis_lines,n_vis_elem,
@@ -429,9 +515,9 @@ c June 2001 added Taiwan (gms) sat ingest
 
       elseif(csattype.eq.'twn')then
 
-         call read_gms_taiwan(path_to_raw_sat(1,jtype,isat)
-     &,n_lines_ir(jtype,isat),n_pixels_ir(jtype,isat)        !<-- full array size raw data
-     &,maxchannels,max_files,nchannels,csatid,csattype
+         call read_gms_taiwan(path_to_raw_sat(1,jtype,ksat)
+     &,n_lines_ir(jtype,ksat),n_pixels_ir(jtype,ksat)        !<-- full array size raw data
+     &,maxchannel,max_files,nchannels,csatid,csattype
      &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
      &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
      &,image_67,image_12,nimages,nft,ntm,c_type,i4time_data
@@ -446,9 +532,9 @@ c March 2003 added HKO (gms) sat ingest
 
       elseif(csattype.eq.'hko')then
 
-         call read_gms_hko(path_to_raw_sat(1,jtype,isat)
-     &,n_lines_ir(jtype,isat),n_pixels_ir(jtype,isat)        !<-- full array size raw data
-     &,maxchannels,max_files,nchannels,csatid,csattype
+         call read_gms_hko(path_to_raw_sat(1,jtype,ksat)
+     &,n_lines_ir(jtype,ksat),n_pixels_ir(jtype,ksat)        !<-- full array size raw data
+     &,maxchannel,max_files,nchannels,csatid,csattype
      &,chtype,i4time_cur,n_ir_elem,n_ir_lines,n_vis_elem
      &,n_vis_lines,n_wv_elem,n_wv_lines,image_ir,image_vis
      &,image_67,image_12,nimages,nft,ntm,c_type,i4time_data
@@ -469,11 +555,11 @@ c --------------------------------
 
          call lvd_file_specifier(c_type(i,j),ispec,istatus)
          if(ispec.eq.1)then
-            r_image_res_m(i,j)=r_resolution_x_vis(jtype,isat)
+            r_image_res_m(i,j)=r_resolution_x_vis(jtype,ksat)
          elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
-            r_image_res_m(i,j)=r_resolution_x_ir(jtype,isat)
+            r_image_res_m(i,j)=r_resolution_x_ir(jtype,ksat)
          elseif(ispec.eq.3)then
-            r_image_res_m(i,j)=r_resolution_x_wv(jtype,isat)
+            r_image_res_m(i,j)=r_resolution_x_wv(jtype,ksat)
          endif
 
       enddo
@@ -576,8 +662,8 @@ c
          call satdatfill(csatid,csattype,nft,ntm,
      &   n_ir_elem,n_ir_lines,n_vis_elem,n_vis_lines,
      &   n_wv_elem,n_wv_lines,c_type,smsng,
-     &   maxchannels,nimages,max_files,
-     &   i4time_data,path_to_raw_sat(1,jtype,isat),
+     &   maxchannel,nimages,max_files,
+     &   i4time_data,path_to_raw_sat(1,jtype,ksat),
      &   image_ir,image_39,image_12,image_67,image_vis,
      &   r_image_status)
 
@@ -591,7 +677,7 @@ c
 
          call set_missing_flag(csatid,csattype,n_ir_elem,n_ir_lines,
      &             n_vis_elem,n_vis_lines,n_wv_elem,n_wv_lines,
-     &             nft,ntm,c_type,smsng,maxchannels,nimages,
+     &             nft,ntm,c_type,smsng,maxchannel,nimages,
      &             image_ir,image_39,image_12,image_67,image_vis,
      &             r_image_status)
          write(6,*)
@@ -603,9 +689,9 @@ c ---------------------------------------------------
 c satellite range and sub-longitude (namelist items).
 c ---------------------------------------------------
       radtodeg=180.0/acos(-1.)
-      range_m = sat_range_m(isat)
-      sublon_d = r_sat_sub_lon(isat)*radtodeg
-      sublat_d = r_sat_sub_lat(isat)*radtodeg
+      range_m = sat_range_m(ksat)
+      sublon_d = r_sat_sub_lon(ksat)*radtodeg
+      sublat_d = r_sat_sub_lat(ksat)*radtodeg
       write(6,*)'range_m = ',range_m
       write(6,*)'sublat_d = ',sublat_d
       write(6,*)'sublon_d = ',sublon_d
@@ -1023,7 +1109,7 @@ c
 c following routine handles the case for which the data have already
 c been mapped to the laps domain. AFWA's GMS so far.
 
-310      call loadlapsdata(nx_l,ny_l,maxchannels,n_lvd_fields_max,
+310      call loadlapsdata(nx_l,ny_l,maxchannel,n_lvd_fields_max,
      &                     ntm(i),c_type(1,i),r_image_status(1,i),
      &                     csatid,image_vis(1,1,i),
      &                     image_39(1,1,i),image_67(1,1,i),
@@ -1067,9 +1153,11 @@ c been mapped to the laps domain. AFWA's GMS so far.
 
 997   enddo
 
+      deallocate(image_vis,image_ir,image_39,image_67,image_12)
+
       goto 17
 
-998   write(*,*)'No ',c_sat_id(isat),"/",c_sat_types(jtype,isat),
+998   write(*,*)'No ',c_sat_id(ksat),"/",c_sat_types(jtype,ksat),
      &' satellite image data.'
 
 
