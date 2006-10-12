@@ -145,14 +145,15 @@ c
       include 'satellite_common_lvd.inc'
 
       logical     lpoint
-      logical     lfirst(maxtype,maxsat)              !4 types x 4 sats (5-26-98) 6 sats (1-31-03)
-      data lfirst /.false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false./
-      save lfirst
+
+c     logical     lfirst(maxtype,maxsat)              !4 types x 4 sats (5-26-98) 6 sats (1-31-03)
+c     data lfirst /.false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false./
+c     save lfirst
 c
 c ---------------------------------------------------------
       istatus = 0
@@ -173,19 +174,20 @@ c ---------------------------------------------------------
 
       elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
-         if(.not.lfirst(jtype,isat))then
+c        if(.not.lfirst(jtype,isat))then
             ct='ir'
             elemstart_orig = i_start_ir(jtype,isat)
             elemend_orig   = i_end_ir(jtype,isat)
             linestart_orig = j_start_ir(jtype,isat)
             lineend_orig   = j_end_ir(jtype,isat)
-            lfirst(jtype,isat)=.true.
-         else
+c           lfirst(jtype,isat)=.true.
+c        else
 c
-c only need to generate IR lut once
+c only need to generate IR lut once. Removed by JS: 10-5-06
 c
-            return
-         endif 
+c           return
+
+c        endif 
 
       elseif(indx.eq.3)then
  
