@@ -624,7 +624,25 @@ c       include 'satellite_dims_lvd.inc'
      1                                   ,istatus)     
                         write(6,*)' Valid time = ',asc9_tim_3dw
 
-                    else ! lwm
+                    elseif(c_type_i.eq.'bw')then
+                        write(6,*)' Balanced LWM was chosen'
+
+                        call get_directory('balance',directory,lend)
+                        directory=directory(1:lend)//'lwm/'
+
+                        var_2d = 'SU'
+                        call get_2dgrid_dname(directory,i4time_3dw
+     1                    ,laps_cycle_time*100,i4time_heights,ext,var_2d      
+     1                    ,units_2d,comment_2d,NX_L,NY_L,u_2d,0
+     1                    ,istatus)      
+
+                        var_2d = 'SV'
+                        call get_2dgrid_dname(directory,i4time_3dw
+     1                    ,laps_cycle_time*100,i4time_heights,ext,var_2d      
+     1                    ,units_2d,comment_2d,NX_L,NY_L,v_2d,0
+     1                    ,istatus)      
+
+                    else ! lwm (unbalanced)
 !                       call get_directory(ext,directory,len_dir)
 !                       c_filespec = directory(1:len_dir)//'*.'//ext(1:3)      
 
@@ -5217,8 +5235,9 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
-            if(i_image .eq. 1)then
-                plot_parms%icol_barbs = +1 ! keep future barbs plots bright
+            if(i_image .eq. 1 .and. (.not. namelist_parms%l_sphere)
+     1                                                         )then      
+                plot_parms%icol_barbs = +1 ! keep future sfc barbs plots bright
             endif
 
         elseif(c_type_i .eq. 'u' .or. c_type_i .eq. 'v')then
