@@ -124,8 +124,8 @@ if test -r /opt/ncarg/bin/ctrans; then
     echo "cd $LAPS_DATA_ROOT/lapsprd/www/anal2d; setenv NCARG_ROOT /opt/bin; ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif" >> $COMFILE                            
     chmod 775 $COMFILE                     
     cat $COMFILE                   
-    echo "ssh jet-vis $COMFILE"                          
-          ssh jet-vis $COMFILE                              
+    echo "ssh v00 $COMFILE"                          
+          ssh v00 $COMFILE                              
     date
 
 #   For testing only...
