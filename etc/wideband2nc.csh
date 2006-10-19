@@ -58,6 +58,9 @@ if ($MODETIME == "realtime") then
     endif
     echo "Processing hours $HR1 and $HR2"
 
+#   Name of executable that converts from Nexrad format to NetCDF
+    setenv NEXRAD_2_NETCDF TarNexrad2NetCDF
+
 else # archive case
 
 #   Access additional command line args
@@ -84,6 +87,10 @@ else # archive case
 
     setenv OUTPUTROOT  $OUTPUTROOT_ARCHIVE
 #   setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
+
+#   Name of executable that converts from Nexrad format to NetCDF
+    setenv NEXRAD_2_NETCDF NCDC_TarNexrad2NetCDF
+
 endif
 
 echo " "
@@ -95,6 +102,12 @@ echo "OUTPUTROOT=$OUTPUTROOT"
 setenv NEXRAD_SITES $INSTALLROOT/NexradSite.cfg
 if (! -e $NEXRAD_SITES) then
     echo "ERROR: $NEXRAD_SITES not found..."
+    exit
+endif
+
+if (! -e $INSTALLROOT/bin/$NEXRAD_2_NETCDF) then
+    echo "ERROR: $INSTALLROOT/bin/$NEXRAD_2_NETCDF not found..."
+    echo "Check to see if executable should be renamed to $NEXRAD_2_NETCDF"
     exit
 endif
 
@@ -150,7 +163,7 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
                       echo "output file $HOUR$MINUTE$SUFFIX already exists"
                   else
                       echo "processing output file $HOUR$MINUTE$SUFFIX that does not yet exist"
-                      $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+                      $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
                                               -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t $INPUTROOT/$RADAR/$file
                   endif
 
@@ -179,13 +192,13 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
           echo "Generating radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
 #         Filename convention for /public
-#         find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+#         find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
 #                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
 
 #         Filename convention for NCDC
           ls -l $INPUTROOT/$RADAR
           ls -l $INPUTROOT/$RADAR/*$YEAR$MONTH$DATE*
-          find /$INPUTROOT/$RADAR -name "*$YEAR$MONTH$DATE*" -exec $INSTALLROOT/bin/NCDC_TarNexrad2NetCDF -l $OUTPUTROOT/$RADAR/log \
+          find /$INPUTROOT/$RADAR -name "*$YEAR$MONTH$DATE*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
                                   -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
 
           echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
