@@ -499,7 +499,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         write(6,*)
      1          ' Profile Winds (e.g. Profiler, Tower, Raob, Dropsonde)'       
 
-        call setusv_dum(2hIN,17)
+        call setusv_dum(2hIN,17) ! Lavender
 
         lun = 32
         ext = 'prg'
@@ -566,15 +566,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 if(k .eq. k_level)then
                     if(c3_obsext .eq. 'pin')then
-                        call setusv_dum(2hIN,12)
+                        call setusv_dum(2hIN,12) ! Aqua
                     else
-                        call setusv_dum(2hIN,8)
+                        call setusv_dum(2hIN,8)  ! Green-Yellow
                     endif
                 else
                     if(c3_obsext .eq. 'pin')then
-                        call setusv_dum(2hIN,15)
+                        call setusv_dum(2hIN,15) ! Slate Blue
                     else
-                        call setusv_dum(2hIN,34)
+                        call setusv_dum(2hIN,34) ! Grey
                     endif
                 endif
 
