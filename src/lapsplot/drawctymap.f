@@ -99,7 +99,7 @@ c
               call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                          jjlts,jgrid*1000,iout,jdot,ier)
           elseif(mode_supmap .eq. 3)then
-              write(6,*)' Calling MAPDRW, etc. for counties...'
+              write(6,*)' Calling MPLNDR, etc. for counties...'
 !             call mapdrw()
               call mapint
 !             call maplot
@@ -120,20 +120,24 @@ c
 
       endif
 
-      write(6,*)' Plotting States From Counties ',mode_supmap,jgrid
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
 
+      call GSLWSC(namelist_parms%continent_line_width)
+
       if(mode_supmap .eq. 1)then
+          write(6,*)' Plotting States From Counties ',mode_supmap,jgrid
           jus=-8
           call supmap_local(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid,jus,jdot,ier)
       elseif(mode_supmap .eq. 2)then
+          write(6,*)' Plotting States From Counties ',mode_supmap,jgrid
           iout = 0
           call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid*1000,iout,jdot,ier)
       elseif(mode_supmap .eq. 3)then
-          write(6,*)' Calling MAPDRW, etc. for states...'
+          write(6,*)' Calling MAPDRW, etc. for countries/states...'
+     1             ,namelist_parms%continent_line_width
 !         call mapdrw()
           call mapint
 !         call maplot
@@ -148,18 +152,18 @@ c
 
       call sflush
 
-      write(6,*)' Plotting Continents ',mode_supmap,jgrid
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
 
       jgrid=0                                ! Do not draw lat/lon lines
-      call GSLWSC(namelist_parms%continent_line_width)
 
       if(mode_supmap .eq. 1)then
+          write(6,*)' Plotting Continents ',mode_supmap,jgrid
           jus=-1
           call supmap_local(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid,jus,jdot,ier)
       elseif(mode_supmap .eq. 2)then
+          write(6,*)' Plotting Continents ',mode_supmap,jgrid
           iout = 2
           call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid*1000,iout,jdot,ier)
