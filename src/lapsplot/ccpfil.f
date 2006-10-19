@@ -633,9 +633,17 @@ C
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,plot_parms,istatus)
 
-      elseif(colortable .eq. 'temp' .or. colortable .eq. 'vnt')then       
+      elseif(colortable .eq. 'vnt')then       
           if(.not. l_discrete)then
               ncols = 60
+          endif
+
+          call generate_colortable(ncols,colortable,IWKID,icol_offset       
+     1                            ,plot_parms,istatus)
+
+      elseif(colortable .eq. 'temp')then       
+          if(.not. l_discrete)then
+              ncols = 76
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
