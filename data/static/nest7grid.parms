@@ -19,7 +19,7 @@
  max_radar_files_cmn=20000,
 
  l_compress_radar=.true.,                  
- l_use_tamdar=.false.,                  
+ l_use_tamdar=.true.,                  
  I_PERIMETER_CMN=10,                  
  c50_lowres_directory='NULL',
 
