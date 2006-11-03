@@ -82,7 +82,7 @@ cdis
       real*8 sum_a(imax,jmax)
       real*8 sumwt_a(imax,jmax)
 
-      real*8 weight
+      real*8 weight,sum,sumwt
 
       real*8 iiilut(-NX_DIM_LUT:NX_DIM_LUT,-NY_DIM_LUT:NY_DIM_LUT)
       integer nlast(KCLOUD)
