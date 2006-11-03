@@ -12,5 +12,11 @@
 08,14,23,29,38,45,53,59 * * * *  @PERL@ @prefix@/etc/laps_driver.pl lvd_sat_ingest.exe     @prefix@ @laps_data_root@
 22,30                   * * * *  @PERL@ @prefix@/etc/laps_driver.pl lsr_driver.exe         @prefix@ @laps_data_root@
 #02,12,22,32,42,52       * * * *  @PERL@ @prefix@/etc/laps_driver.pl ln3_driver.exe         @prefix@ @laps_data_root@ 
+
+# Accepts radar data from polar NetCDF files
 00,05,10,15,20,25,30,35,40,45,50,55   * * * *  @PERL@ @prefix@/etc/laps_driver.pl remap_polar_netcdf.exe @prefix@ @laps_data_root@
+
+# Accepts real-time radar data from archive-II files
+#00,05,10,15,20,25,30,35,40,45,50,55   * * * *  @PERL@ @prefix@/etc/laps_driver.pl wideband2nc.csh @prefix@ @laps_data_root@
+
 #40                      * * * *  @CSH@  @prefix@/etc/topc.csh  @laps_data_root@/log
