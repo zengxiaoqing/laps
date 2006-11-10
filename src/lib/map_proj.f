@@ -481,6 +481,10 @@ C
           u = x / erad
           v = y / erad
 
+      elseif(c6_maproj .eq. 'latlon')then 
+          u = x / erad
+          v = y / erad
+
       else
           write(6,*)'xy_to_uv - Error: invalid map projection '
      1             ,c6_maproj             
@@ -529,6 +533,10 @@ C
           y = v * (erad * rconst)
 
       elseif(c6_maproj .eq. 'merctr')then ! Haltiner & Williams 1-8-2
+          x = u * erad
+          y = v * erad
+
+      elseif(c6_maproj .eq. 'latlon')then 
           x = u * erad
           y = v * erad
 
