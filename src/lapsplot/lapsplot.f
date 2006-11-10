@@ -344,6 +344,13 @@ c       set up supmap for plot
             rrot  = 0.
             call maproj('ME',polat,polon,rrot)
 
+        elseif(c6_maproj .eq. 'latlon')then
+            jproj = 9
+            polat = 0.
+            polon = std_lon
+            rrot  = 0.
+            call maproj('CE',polat,polon,rrot)
+
         else
             write(6,*)' lapsplot_setup: Error, maproj = ',c6_maproj
 
