@@ -221,6 +221,15 @@ c           cenlon = grid_cen_lon_cmn
 
             call latlon_to_uv_mc(rlat,rlon,slat1,cenlon,u,v)
 
+        elseif(c6_maproj .eq. 'latlon')then ! latlon (cylindrical equidistant)
+            call get_grid_center(cenlat_dum,cenlon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_grid_center'
+               return
+            endif
+
+            call latlon_to_uv_ll(rlat,rlon,cenlon,u,v)
+
         else
             write(6,*)'latlon_to_uv: unrecognized projection '
      1                ,c6_maproj       
@@ -308,6 +317,23 @@ c           cenlon = grid_cen_lon_cmn
         return
         end
 
+        subroutine latlon_to_uv_ll(rlat,rlon,cenlon,u,v)
+
+        include 'trigd.inc'
+        real*4 pi, rpd
+
+        parameter (pi=3.1415926535897932)
+        parameter (rpd=pi/180.)
+
+!       Difference between two angles, result is between -180. and +180.
+        angdif(X,Y)=MOD(X-Y+540.,360.)-180.
+ 
+        u = angdif(rlon,cenlon) * rpd 
+        v = rlat                * rpd
+
+        return
+        end
+
 
         
         subroutine uv_to_latlon(u,v,rlat,rlon,istatus)
@@ -378,6 +404,15 @@ c           slat1  = standard_latitude
 c           cenlon = grid_cen_lon_cmn
 
             call uv_to_latlon_mc(u,v,slat1,cenlon,rlat,rlon)
+
+        elseif(c6_maproj .eq. 'latlon')then ! latlon (cylindrical equidistant)
+            call get_grid_center(cenlat_dum,cenlon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_grid_center'
+               return
+            endif
+
+            call uv_to_latlon_ll(u,v,cenlon,rlat,rlon)
 
         else
             write(6,*)'latlon_to_uv: unrecognized projection '
@@ -467,6 +502,20 @@ c           cenlon = grid_cen_lon_cmn
         endif
 
         rlon = u/b/rpd + cenlon
+        rlon = mod(rlon+540.,360.) - 180.          ! Convert to -180/+180 range
+
+        return
+        end
+
+        subroutine uv_to_latlon_ll(u,v,cenlon,rlat,rlon)
+
+        include 'trigd.inc'
+        parameter (pi=3.1415926535897932)
+        parameter (rpd=pi/180.)
+
+        rlat = v/rpd
+
+        rlon = u/rpd + cenlon
         rlon = mod(rlon+540.,360.) - 180.          ! Convert to -180/+180 range
 
         return
@@ -758,6 +807,8 @@ cdoc  as well as various grid conversion routines.
 
       real*4 lat(ni,nj),lon(ni,nj)
 
+      character*6  c6_maproj
+
       istatus = 1
       tolerance_m = 1000.
 
@@ -765,6 +816,12 @@ cdoc  as well as various grid conversion routines.
 
       write(6,*)
       write(6,*)' subroutine check_domain: checking latlon_to_rlapsgrid'
+
+      call get_c6_maproj(c6_maproj,istatus)
+      if(istatus.ne.1)then
+         print*,'Error from get_c6_maproj'
+         return
+      endif
 
       do i = 1,ni,intvl
       do j = 1,nj,intvl
@@ -873,22 +930,24 @@ cdoc  as well as various grid conversion routines.
 
 !...........................................................................
 
-      call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
-     1                                  ,dist_calc,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)
-     1    ' Error calling get_grid_spacing_actual from check_domain'       
-          return
-      endif
+      if(c6_maproj .ne. 'latlon')then
+          call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
+     1                                      ,dist_calc,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)
+     1        ' Error calling get_grid_spacing_actual from check_domain'       
+              return
+          endif
 
-      write(6,*)
+          write(6,*)
      1 ' calculated grid spacing on earths surface at domain center is:'       
      1     ,dist_calc
 
+      endif
 !...........................................................................
 
       call latlon_to_xy(lat(1,1),lon(1,1),erad,x1,y1)
-      call latlon_to_xy(lat(2,1),lon(2,1),erad,x2,y2)
+      call latlon_to_xy(lat(1,2),lon(1,2),erad,x2,y2)
 
       dist = sqrt((x2-x1)**2 + (y2-y1)**2)
 
