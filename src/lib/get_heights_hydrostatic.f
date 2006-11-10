@@ -70,6 +70,9 @@ cdis
         real*4 make_td, k_to_c
 
         include 'constants.inc'
+        real*4 C1
+        PARAMETER (C1 = EP_1) 
+
         real*4 C2
         PARAMETER (C2 = r_d / (2. * grav) )
 
@@ -104,11 +107,9 @@ c       write(6,*)' Initialize and calculate first level'
             pres_sfc_mb(i,j) = pres_sfc_pa(i,j) / 100.
             heights_below(i,j) = 0.
             t_2d_c_below = k_to_c(temp_3d_k(i,j,1))
-            td_2d_c_below = t_2d_c_below - 10.
-            td_2d_c_below = make_td(pres_3d_mb(i,j,1),t_2d_c_below
-     1                             ,sh_3d(i,j,1)*1000.,-132.)
-            A_below(i,j)= temp_3d_k(i,j,1)
-     1         * (C2 + W_laps(TD_2D_c_below,pres_3d_mb(i,j,1),esat_lut))       
+            sh_below = sh_3d(i,j,1)
+            w_below = sh_below / (1. - sh_below)
+            A_below(i,j)= temp_3d_k(i,j,1) * (1. + C1 * w_below)
         enddo ! i
         enddo ! j
 
@@ -118,15 +119,12 @@ cCCCCCCCCCCCCCCCCCC                         ISTAT = LIB$SHOW_TIMER(,,,)
 
             do j = 1,nj
             do i = 1,ni
-                t_1d_c  = k_to_c(temp_3d_k(i,j,k))
-                td_1d_c = t_1d_c - 10. ! Typical Dewpoint Depression
-                td_1d_c = make_td(pres_3d_mb(i,j,k),t_1d_c
-     1                           ,sh_3d(i,j,k)*1000.,-132.)       
+                sh_value = sh_3d(i,j,k)
+                w_value = sh_value / (1. - sh_value)
 
-                A1= temp_3d_k(i,j,k) *
-     1          (C2 + W_laps(TD_1D_c,pres_3d_mb(i,j,k),esat_lut))
+                A1= temp_3d_k(i,j,k) * (1. + C1 * w_value)
 
-                Z_add = (A1+A_below(i,j))*(alog_array(i,j,k-1))
+                Z_add = C2 * (A1+A_below(i,j)) * (alog_array(i,j,k-1))       
 
                 heights_3d(i,j,k) = heights_below(i,j) + z_add
 
@@ -305,6 +303,7 @@ C                     TEMPERATURES.
         FUNCTION W_laps(T,P,esat_lut)
 
 cdoc    Convert T(C) and P to W. This is a fast approximate routine.
+cdoc    Output W_laps is dimensionless mixing ratio
 
 !       This function really only works when T > -50C but the efficiency will
 !       outweigh the error when T < -50C in this application
