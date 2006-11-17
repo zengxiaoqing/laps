@@ -112,9 +112,10 @@ cdis
        include 'cloud.inc'
 
        logical l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39
-       logical l_use_metars 
+       logical l_use_metars, l_use_radar 
        namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial       
-     1                    ,l_use_39, l_use_metars, latency_co2
+     1                    ,l_use_39, l_use_metars, l_use_radar
+     1                    ,latency_co2
      1                    ,pct_req_lvd_s8a
      1                    ,i4_sat_window,i4_sat_window_offset
  
@@ -137,6 +138,7 @@ cdis
 
 !      Fill namelist_parms data structure
        namelist_parms%l_use_metars = l_use_metars
+       namelist_parms%l_use_radar = l_use_radar
 
        istatus = 1
        return
