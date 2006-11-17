@@ -40,14 +40,15 @@ cdis
 
 
         subroutine compare_wind (
-     1                upass1,vpass1,cgrid,
-     1                istat_radar_vel,max_radars,grid_ra_vel,n_radars,
-     1                rlat_radar,rlon_radar,rheight_radar,
-     1                lat,lon,
-     1                ni,nj,nk,r_missing_data,
-     1                obs_barnes,max_obs,ncnt_total,l_point_struct,
-     1                weight_pirep,weight_prof,weight_sfc,weight_cdw,       
-     1                grid_laps_u,grid_laps_v,grid_laps_wt,istatus)
+     1                upass1,vpass1,cgrid,                                ! I
+     1                istat_radar_vel,max_radars,grid_ra_vel,n_radars,    ! I
+     1                rlat_radar,rlon_radar,rheight_radar,                ! I
+     1                lat,lon,                                            ! I
+     1                ni,nj,nk,r_missing_data,                            ! I
+     1                obs_barnes_in,max_obs,ncnt_total_in,                ! I
+     1                l_point_struct,l_withheld_only,                     ! I
+     1                weight_pirep,weight_prof,weight_sfc,weight_cdw,     ! I
+     1                grid_laps_u,grid_laps_v,grid_laps_wt,istatus)       ! I/O
 
 C****************************************************************************
 C
@@ -70,6 +71,7 @@ C*********************************************************************
 
 C***************** Declarations **************************************
         include 'barnesob.inc'
+        type (barnesob) :: obs_barnes_in(max_obs)      
         type (barnesob) :: obs_barnes(max_obs)      
 
         integer istat_radar_vel
@@ -91,11 +93,38 @@ C***************** Declarations **************************************
 
         character*4 cgrid
         character*12 c_obstype_a(max_obstypes)
-        logical l_parse, l_point_struct
+        logical l_parse, l_point_struct, l_withheld_only, l_compare_ob
 
 C********************************************************************
 
         write(6,*)' Subroutine compare_wind...',cgrid
+
+!       Copy obs structure into local structure depending on 'l_withheld_only'
+        ncnt_total = 0
+        do i = 1,ncnt_total_in
+            if(l_withheld_only)then
+                if(obs_barnes_in(i)%l_withhold)then
+                    l_compare_ob = .true.
+                else
+                    l_compare_ob = .false.
+                endif
+            else
+                l_compare_ob = .true.
+            endif
+
+            if(l_compare_ob)then     
+                ncnt_total = ncnt_total + 1
+                obs_barnes(i) = obs_barnes_in(i)
+            endif
+        enddo ! i      
+
+        write(6,*)'l_withheld_only/ncnt_total_in/ncnt_total=',
+     1             l_withheld_only,ncnt_total_in,ncnt_total
+
+        if(ncnt_total .eq. 0)then
+            write(6,*)' No obs detected, returning...'
+            return
+        endif
 
         call get_obstypes      (obs_barnes,max_obs,ncnt_total        ! I
      1                         ,c_obstype_a,max_obstypes,n_obstypes  ! I/O
@@ -114,13 +143,17 @@ C********************************************************************
 
             if(c_obstype_a(i_obstype) .ne. 'radar')then
 
-              if(l_parse(cgrid,'FG'))then
+              if(l_withheld_only)then
                 write(6,11)cgrid,c_obstype_a(i_obstype)(1:len_obstype)       
  11             format(1x,'  Comparing ',a,' to ',a4
+     1                   ,' Obs (Withheld - prior to QC)')    
+              elseif(l_parse(cgrid,'FG'))then
+                write(6,12)cgrid,c_obstype_a(i_obstype)(1:len_obstype)       
+ 12             format(1x,'  Comparing ',a,' to ',a4
      1                   ,' Obs (prior to QC)')    
               else
-                write(6,12)cgrid,c_obstype_a(i_obstype)(1:len_obstype)
- 12             format(1x,'  Comparing ',a,' to ',a4
+                write(6,13)cgrid,c_obstype_a(i_obstype)(1:len_obstype)
+ 13             format(1x,'  Comparing ',a,' to ',a4
      1                   ,' Obs (passing QC)')    
               endif
 
