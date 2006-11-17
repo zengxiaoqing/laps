@@ -177,7 +177,6 @@ c
 
       if(.not. l_use_raob)then
           write(6,*)' Not using raobs, l_use_raob = ',l_use_raob
-          go to 600
       endif
 
       i4time_raob_file_window = 0
@@ -349,6 +348,11 @@ c
                         obs_point(nobs_point)%file = 'pro'      
                         obs_point(nobs_point)%i4time = 
      1                                        i4time_ob_pr(i_pr)           
+                        if(obstype(i_pr)(1:4) .eq. 'RAOB')then
+                          if(.not. l_use_raob)then
+                            obs_point(nobs_point)%l_withhold = .true.
+                          endif
+                        endif
                     endif ! istatus
 
                     call uv_to_disp(ob_u,ob_v,ob_di,ob_sp)

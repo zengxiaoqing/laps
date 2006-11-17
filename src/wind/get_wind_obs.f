@@ -179,7 +179,7 @@ cdis
      1          ,c5_name_a,i4time_ob_pr                           ! I
      1          ,r_missing_data                                   ! I
      1          ,weight_prof                                      ! O
-     1          ,l_profiler,l_use_all_nontower_lvls               ! I
+     1          ,l_profiler,l_use_raob,l_use_all_nontower_lvls    ! I
      1          ,istatus_remap_pro)                               ! O
 
 !  ***  Read in SFC wind data   *******************************************
@@ -276,7 +276,7 @@ cdis
      1          ,c5_name_a,i4time_ob_pr                              ! I
      1          ,r_missing_data                                      ! I
      1          ,weight_prof                                         ! O
-     1          ,l_profiler,l_use_all_nontower_lvls                  ! I
+     1          ,l_profiler,l_use_raob,l_use_all_nontower_lvls       ! I
      1          ,istatus)                                            ! O
 
 !       Perform horizontal remapping of profile obs onto LAPS grid
@@ -307,7 +307,7 @@ cdis
         real*4 grid_laps_v(ni,nj,nk)
         real*4 grid_laps_wt(ni,nj,nk)
 
-        logical l_profiler, l_use_all_nontower_lvls
+        logical l_profiler, l_use_all_nontower_lvls, l_use_raob
 
         write(6,*)
         write(6,*)' Subroutine remap_profiles: # of profiles = '
@@ -378,6 +378,13 @@ cdis
                                     obs_point(nobs_point)%file = 'pro'      
                                     obs_point(nobs_point)%i4time =
      1                                               i4time_ob_pr(i_pr)       
+                                    if(obstype(i_pr)(1:4) 
+     1                                                  .eq. 'RAOB')then
+                                      if(.not. l_use_raob)then
+                                        obs_point(nobs_point)%l_withhold       
+     1                                      = .true.
+                                      endif
+                                    endif
 
                                 endif ! l_profiler
 
