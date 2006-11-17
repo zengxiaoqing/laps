@@ -95,6 +95,7 @@ cdis
       wt_snd = wt_snd_in
 
       l_diff_snd = .false.  
+      n_debug = 1000
 
 !     n_cld_snd = 9 ! enable for debug testing (use 'n_cld_snd_in' in arg list)
 
@@ -236,7 +237,7 @@ cdis
               k = 1
               cld_snd_diff(n,1) = cld_snd(n,1)
               wt_snd_diff(n,1) = wt_snd(n,1)
-              if(n .le. 10)then 
+              if(n .le. n_debug)then 
                   write(6,*)
                   write(6,*)' Cloud sounding # ',n,' at ',i_snd(n)
      1                                                   ,j_snd(n)
@@ -265,7 +266,7 @@ cdis
                       endif
                   endif
 
-                  if(n .le. 10)then
+                  if(n .le. n_debug)then
                       write(6,901,err=904)k
      1                           ,cld_snd(n,k),cld_snd_diff(n,k)
      1                           ,wt_snd(n,k),wt_snd_diff(n,k)
