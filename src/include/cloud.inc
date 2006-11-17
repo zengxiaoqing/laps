@@ -3,6 +3,7 @@
           sequence
 
           logical l_use_metars
+          logical l_use_radar
 
 	end type namelist_type
 
