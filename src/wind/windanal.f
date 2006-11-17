@@ -83,7 +83,7 @@ cdis
       type (barnesob) :: obs_point(max_obs)   ! Full Wind Obs  - Non-radar data
       type (barnesob) :: obs_point_qced(max_obs) ! QC'd Obs    - Non-radar data
       type (barnesob) :: obs_radar(max_obs)   ! Full Wind Obs  - Radar data
-      type (barnesob) :: obs_barnes(max_obs)  ! Full Wind Obs  - All Data
+      type (barnesob) :: obs_barnes(max_obs)  ! QC'd obs       - All Data
 
       integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
@@ -154,7 +154,7 @@ cdis
       logical  l_grid_north     ! Flag for grid north or true north    ! Input
       logical  l_3pass          ! Flag for doing 3 pass analysis       ! Input
       logical  l_correct_unfolding ! Flag for dealiasing               ! Input
-      logical  l_point_struct, l_variational
+      logical  l_point_struct, l_variational, l_withheld_only
 
       real*4   rms_thresh                                              ! Input
       real*4   weight_bkg_const                                        ! Input
@@ -173,6 +173,7 @@ cdis
 
       l_point_struct = .true. 
       l_variational = .false.
+      l_withheld_only = .false.
 
       ialloc_varobs_diff_spread = 0
 
@@ -186,6 +187,7 @@ csms$serial(default=ignore)  begin
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
      1            obs_point,max_obs,nobs_point,l_point_struct,
+     1            l_withheld_only,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
 csms$serial end
@@ -235,6 +237,7 @@ csms$>       rms_thresh, rep_pres_intvl, out>:default=ignore)  begin
      &  obs_point(:)%ldf,
      &  obs_point(:)%mask_sea,
      &  obs_point(:)%i4time,
+     &  obs_point(:)%l_withhold,
      &  obs_point(:)%type,
      &  obs_point(:)%file,
      &  obs_point_qced(:)%i,obs_point_qced(:)%j,obs_point_qced(:)%k,
@@ -792,6 +795,7 @@ csms$serial(default=ignore)  begin
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
      1            obs_barnes,max_obs,ncnt_total,l_point_struct,
+     1            l_withheld_only,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
 
@@ -807,7 +811,7 @@ csms$serial end
 
 csms$serial(default=ignore)  begin              
 
-!     Compare final analysis to obs
+!     Compare final analysis to QC'd obs
       call compare_wind(
      1            uanl,vanl,'LAPS',
      1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
@@ -815,6 +819,20 @@ csms$serial(default=ignore)  begin
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
      1            obs_barnes,max_obs,ncnt_total,l_point_struct,
+     1            l_withheld_only,
+     1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
+     1            uobs,vobs,wt_p,istatus)
+
+!     Compare final analysis to withheld (Non-QC'd) obs
+      l_withheld_only = .true.
+      call compare_wind(
+     1            uanl,vanl,'LAPS',
+     1            istat_radar_vel,max_radars,vr_obs_unfltrd,n_radars,
+     1            rlat_radar,rlon_radar,rheight_radar,
+     1            lat,lon,
+     1            imax,jmax,kmax,r_missing_data,
+     1            obs_point,max_obs,nobs_point,l_point_struct,
+     1            l_withheld_only,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
 
@@ -933,6 +951,7 @@ csms$ignore end
      &  obs_ldf,
      &  obs_mask_sea,
      &  obs_i4time,
+     &  obs_l_withhold,
      &  obs_type,
      &  obs_file,
      &  qced_i,qced_j,qced_k,
@@ -967,6 +986,7 @@ csms$ignore end
        real        , intent(in ) :: obs_ldf(max_obs)
        integer     , intent(in ) :: obs_mask_sea(max_obs)
        integer     , intent(in ) :: obs_i4time(max_obs)
+       logical     , intent(in ) :: obs_l_withhold(max_obs)
        character*12, intent(in ) :: obs_type(max_obs)
        character*12, intent(in ) :: obs_file(max_obs)
        integer     , intent(out) :: qced_i(max_obs)
@@ -1051,6 +1071,10 @@ csms$>       qced_type, qced_file, n_qc_total_good, out>: default=ignore) begin
      1                       .OR. 
      1         (speed_diff .gt. 22. .and. 
      1                              obs_file(i_ob) .eq. 'pro')        
+
+!              Withhold observations for independent verification
+     1                       .OR.
+     1                obs_l_withhold(i_ob)
      1                                                                 )
 
      1                                                          )then
