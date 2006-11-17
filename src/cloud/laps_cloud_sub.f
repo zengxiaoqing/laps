@@ -540,11 +540,14 @@ C READ IN RADAR DATA
         call get_filespec(radarext_3d_cloud(1:3),2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_radar)
 
-!       if(abs(i4time - i4time_radar) .le. 1200)then
-
+        if(namelist_parms%l_use_radar)then
             i4_tol = 1200
+        else
+            write(6,*)' Withholding radar data from cloud analysis'
+            i4_tol = -1
+        endif
 
-            call read_multiradar_3dref(i4time,                           ! I
+        call read_multiradar_3dref(i4time,                               ! I
      1                 i4_tol,i4_ret,                                    ! I
      1                 .true.,ref_base,                                  ! I
      1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,                 ! I
@@ -556,12 +559,12 @@ C READ IN RADAR DATA
      1                 n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a,  ! O  
      1                 istat_radar_3dref_a)                              ! O
 
-            if(iqc_2dref .eq. 1)then
-                write(6,*)' Good quality 2d radar (e.g. NOWRAD)'
-                l_trust_narrowband = .true.
-            else
-                write(6,*)' Lesser quality 2d radar (e.g. narrowband)'      
-            endif
+        if(iqc_2dref .eq. 1)then
+            write(6,*)' Good quality 2d radar (e.g. NOWRAD)'
+            l_trust_narrowband = .true.
+        else
+            write(6,*)' Lesser quality 2d radar (e.g. narrowband)'      
+        endif
 
 !       else
 !           write(6,*)'radar data outside time window'
