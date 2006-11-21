@@ -259,6 +259,7 @@ c
 	real a(ni,nj), z(ni,nj), dx(ni,nj), dy(ni,nj)
 	real nu(ni,nj),nv(ni,nj), h7(ni,nj)
 	real t5(ni,nj), t7(ni,nj), td7(ni,nj)                     ! Deg K
+	real pres_3d(ni,nj,nk)
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
@@ -377,10 +378,33 @@ cz..... Compute T on the surface using the LGA (or equiv) 700 T and HT.
 c
 	i4time_tol = 21600
 	ext_lga = 'lga'
+
+c       Determine 3D grid levels closest to 700mb and 500mb. This makes the
+c       approximation that the 3D grid is on a constant pressure grid.
+
+        icen = ni/2
+        jcen = nj/2
+
+        call get_pres_3d(i4time,ni,nj,nk,pres_3d,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error: Bad status returned from get_pres_3d'       
+            return
+        endif
+
+        arg = rlevel_of_field(70000.
+     1                        ,pres_3d,ni,nj,nk,icen,jcen,istatus)
+        if(istatus .ne. 1)return
+        k_700 = nint(arg)
+
+        arg = rlevel_of_field(50000.
+     1                        ,pres_3d,ni,nj,nk,icen,jcen,istatus)
+        if(istatus .ne. 1)return
+        k_500 = nint(arg)
+
 c
 c.....  Get the latest 3d fields, pull out the var/lvls needed.
 c
-	print *,' Get LGA 700 T'
+	print *,' Get LGA 700 T, level ',k_700
 	itheta7 = 1
 	var_lga = 'T3 '
 	call get_modelfg_3d(i4time,var_lga,ni,nj,nk,dm1,istatus)
@@ -390,10 +414,10 @@ c
 	   call constant(t7,278.15,imax,jmax)
 	   itheta7 = 0
 	else
-	   call move_3dto2d(dm1,9,t7,ni,nj,nk)  ! lvl 9 = 700 hPa
+	   call move_3dto2d(dm1,k_700,t7,ni,nj,nk)  
 	endif
 c
-	print *,' Get LGA 700 HT'
+	print *,' Get LGA 700 HT, level ',k_700
 	var_lga = 'HT '
 	call get_modelfg_3d(i4time,var_lga,ni,nj,nk,dm1,istatus)
 c
@@ -401,10 +425,10 @@ c
 	   print *,' LGA 700 HT not available. Using constant 3000 m.'
 	   call constant(h7,3000.,imax,jmax)
 	else
-	   call move_3dto2d(dm1,9,h7,ni,nj,nk)  ! lvl 9 = 700 hPa
+	   call move_3dto2d(dm1,k_700,h7,ni,nj,nk)  ! lvl 9 = 700 hPa
 	endif
 c
-	print *,' Get LGA 700 TD'
+	print *,' Get LGA 700 TD, level ',k_700
 	var_lga = 'SH '  ! specific humidity 
 	call get_modelfg_3d(i4time,var_lga,ni,nj,nk,dm1,istatus)
 c
@@ -415,7 +439,7 @@ c
 	   do j=1,nj
 	   do i=1,ni
 	    t7_c = t7(i,j) - 273.15  !K to C
-	    qgkg = dm1(i,j,9) * 1000.   !lvl 9 = 700 hPa
+	    qgkg = dm1(i,j,k_700) * 1000.   
 	    td7(i,j) = make_td(700., t7_c, qgkg, 0.) + 273.15   ! in K
 	   enddo !i
 	   enddo !j
@@ -423,7 +447,7 @@ c
 c
 c.....  Get the 500 Temps while we're here
 c
-	print *,' Get LGA 500 T'
+	print *,' Get LGA 500 T, level ',k_500
 	itheta5 = 1
 	var_lga = 'T3 '
 	call get_modelfg_3d(i4time,var_lga,ni,nj,nk,dm1,istatus)
@@ -433,7 +457,7 @@ c
 	   call constant(t5,badflag,imax,jmax) 
 	   itheta5 = 0
 	else
-	   call move_3dto2d(dm1,13,t5,ni,nj,nk)  ! lvl 13 = 500 hPa
+	   call move_3dto2d(dm1,k_500,t5,ni,nj,nk)  
 	endif
 c
 c.....  Get lapse rate (usually std), and mean pressure.
