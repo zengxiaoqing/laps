@@ -490,7 +490,7 @@ c       1                               j_diff_max,k_diff_max
                     endif
                 endif
 
-                theta(k) = O_K(temp_3d(i,j,k),zcoord_of_level(k))
+                theta(k) = O_K(temp_3d(i,j,k),pres_3d(i,j,k))
 
             enddo ! k
 
@@ -545,7 +545,7 @@ c       1                               j_diff_thmax,k_diff_thmax
             enddo ! while k <= nk
 
             do k = 1,nk
-                temp_3d(i,j,k) = TDA_K(theta(k),zcoord_of_level(k))
+                temp_3d(i,j,k) = TDA_K(theta(k),pres_3d(i,j,k))
                 temp_3d(i,j,k) = max(temp_3d(i,j,k),cold_thresh)
             enddo ! k
 
