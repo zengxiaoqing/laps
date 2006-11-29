@@ -568,14 +568,14 @@ cdoc    Works only for constant pressure levels
 cdoc    Calculate zcoord (e.g. pressure) of a given level. 
 cdoc    Works only for constant pressure levels
 
-        logical ltest_vertical_grid
+        logical ltest_vertical_grid_lc
 
-        if(ltest_vertical_grid('HEIGHT'))then
+        if(ltest_vertical_grid_lc('height'))then
            print*, 'Call is obsolete, please report this message to '
            print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
 !           zcoord_of_level = height_interval * level
 
-        elseif(ltest_vertical_grid('PRESSURE'))then
+        elseif(ltest_vertical_grid_lc('pressure'))then
             zcoord_of_level = pressure_of_level(level)
 
         else
