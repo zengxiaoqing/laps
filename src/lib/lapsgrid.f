@@ -159,6 +159,8 @@ c       1994 Steve Albers
         character*10  units
         character*125 comment
 
+        character*6 c6_maproj
+
         include 'grid_fname.cmn'
 
         write(6,*)'    Reading in lat/lon/topo/land frac '
@@ -251,13 +253,28 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
             write(6,*)' Warning or Error in check_domain'
         endif
 
-        icen = ni/2 + 1
-        jcen = nj/2 + 1
-        call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
-     1                              ,grid_spacing_cen_m,istatus)
+        call get_c6_maproj(c6_maproj,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Error return from get_grid_spacing_actual'       
+            write(6,*)' Error reading map projection'
             return
+        endif
+
+!       Test for a conformal map projection
+        if(c6_maproj .ne. 'latlon' .and. c6_maproj .ne. 'icshdr')then 
+            icen = ni/2 + 1
+            jcen = nj/2 + 1
+            call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)       
+     1                                  ,grid_spacing_cen_m,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Error return from get_grid_spacing_actual'       
+                return
+            endif
+
+        else
+            write(6,*)' Non-conformal map projection: ',c6_maproj
+            write(6,*)' Set grid_spacing_cen_m to parameter value'
+            grid_spacing_cen_m = grid_spacing_m
+
         endif
 
         return
@@ -1609,6 +1626,56 @@ c
           ltest_vertical_grid = .true.
       else
           ltest_vertical_grid = .false.
+      endif
+
+      return
+      end
+c
+c-----------------------------------------------------------------------
+c
+      function ltest_vertical_grid_lc(c_vertical_grid)
+
+!     The input c_vertical_grid is a string you are testing
+!     The output (.true. OR .false.) states whether the input vertical_grid 
+!     name equals the vertical_grid in the Namelist
+
+!     The input vertical grid must be in lower case
+
+      include 'lapsparms.cmn' ! vertical_grid
+      include 'grid_fname.cmn'! grid_fnam_common
+
+      logical ltest_vertical_grid_lc
+      character*(*) c_vertical_grid
+      character*40  cvgrid_test
+      character*40  cvgrid_laps
+
+      integer init
+      data init/0/
+      save init
+
+      save cvgrid_laps,len_cmn
+
+      if(iflag_lapsparms_cmn .ne. 1 .or. init .eq. 0)then 
+          call get_laps_config(grid_fnam_common,istatus)
+
+          if(istatus .ne. 1)then
+              write(6,*)' ltest_vertical_grid_lc: Error detected in '
+     1                 ,'calling get_laps_config'
+              ltest_vertical_grid_lc = .false.
+              return
+          endif
+
+          call downcase(vertical_grid,cvgrid_laps)
+          call s_len(cvgrid_laps,len_cmn)
+          init = 1
+      endif
+
+      call s_len(c_vertical_grid,len_in)
+
+      if(cvgrid_laps(1:len_cmn).eq.c_vertical_grid(1:len_in))then
+          ltest_vertical_grid_lc = .true.
+      else
+          ltest_vertical_grid_lc = .false.
       endif
 
       return
