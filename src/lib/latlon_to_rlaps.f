@@ -641,6 +641,9 @@ cdoc                         true north. Units are degrees.
         elseif(c6_maproj .eq. 'merctr')then ! mercator
             projrot_laps = 0.
 
+        elseif(c6_maproj .eq. 'latlon')then ! latlon
+            projrot_laps = 0.
+
         else
             write(6,*)'projrot_laps: unrecognized projection ',c6_maproj       
             stop
@@ -774,6 +777,9 @@ cdoc    This routine is being phased out. Please try to use 'projrot_latlon'.
             projrot_laps = n * s * angdif(stdlon,rlon)
 
         elseif(c6_maproj .eq. 'merctr')then ! mercator
+            projrot_laps = 0.
+
+        elseif(c6_maproj .eq. 'latlon')then ! latlon
             projrot_laps = 0.
 
         else
