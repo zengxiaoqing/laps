@@ -35,6 +35,9 @@ program laps_wind                              main.f
             barnes_multivariate
                 barnes_multivariate_sub
             compare_wind                       comparisons.f
+                get_obstypes                      "
+                comp_grid_windobs                 "
+                comp_laps_vr                   comp_laps_vr.f
         wind_post_process                      main_sub.f
             put_laps_multi_2d                      
             vert_wind                          vertwind.f
