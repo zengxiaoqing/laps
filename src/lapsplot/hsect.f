@@ -5537,7 +5537,7 @@ c                   cint = -1.
             else ! 'cg'
                 write(6,*)' calling solid fill cloud plot'
                 
-                if(NX_L*NY_L .gt. 50000)then
+                if(NX_L*NY_L .gt. 55000)then
                     colortable = 'linear_reduced'
                 else
                     colortable = 'linear'
