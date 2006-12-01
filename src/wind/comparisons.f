@@ -105,6 +105,8 @@ C********************************************************************
             if(l_withheld_only)then
                 if(obs_barnes_in(i)%l_withhold)then
                     l_compare_ob = .true.
+                    write(6,*)i,obs_barnes_in(i)%i,
+     1                        obs_barnes_in(i)%j,obs_barnes_in(i)%type
                 else
                     l_compare_ob = .false.
                 endif
@@ -114,7 +116,7 @@ C********************************************************************
 
             if(l_compare_ob)then     
                 ncnt_total = ncnt_total + 1
-                obs_barnes(i) = obs_barnes_in(i)
+                obs_barnes(ncnt_total) = obs_barnes_in(i)
             endif
         enddo ! i      
 
@@ -168,6 +170,11 @@ C********************************************************************
             endif
 
         enddo
+
+        if(l_withheld_only)then
+            write(6,*)' Skip comparison for radial velocities'
+            return
+        endif
 
         do l = 1,n_radars
             write(6,*)
@@ -358,6 +365,8 @@ C********************************************************************
      1                         ,c_obstype_a,max_obstypes,n_obstypes
      1                         ,istatus)
 
+!       Obtain list of obstypes contained within the obs data structure
+
         include 'barnesob.inc'
         type (barnesob) :: obs_barnes(max_obs)      
 
@@ -371,7 +380,8 @@ C********************************************************************
             return
         endif        
 
-        write(6,*)' Subroutine get_obstypes, obstypes found...'
+        write(6,*)' Subroutine get_obstypes, number of obs...'
+     1            ,ncnt_total
 
         i = 1
         n_obstypes = 1
@@ -398,6 +408,19 @@ C********************************************************************
                 endif
             enddo ! i
         endif
+
+        write(6,*)
+
+!       Determine how many obs have each obs type
+        do itype = 1,n_obstypes
+            n_match = 0
+            do i = 1,ncnt_total
+                if(obs_barnes(i)%type .eq. c_obstype_a(itype))then
+                    n_match = n_match + 1
+                endif
+            enddo ! i
+            write(6,*)n_match,' obs of type ',c_obstype_a(itype)
+        enddo ! itype           
 
         istatus = 1
 
