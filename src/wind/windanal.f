@@ -269,6 +269,7 @@ csms$serial end
       call get_inst_err2(r_missing_data                               ! I
      1                  ,obs_point_qced,max_obs,n_qc_total_good       ! I
      1                  ,rms_thresh_norm                              ! I
+     1                  ,i4time                                       ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
       aerr = weight_bkg_const ! set array to constant weight for now
@@ -445,6 +446,7 @@ csms$serial end
               call get_inst_err2(r_missing_data                       ! I
      1                  ,obs_barnes,max_obs,ncnt_total                ! I
      1                  ,rms_thresh_norm                              ! I
+     1                  ,i4time                                       ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
               call barnes_multivariate(varbuff                           ! O
@@ -571,6 +573,7 @@ csms$serial end
               call get_inst_err2(r_missing_data                         ! I
      1                  ,obs_barnes,max_obs,ncnt_total                  ! I
      1                  ,rms_thresh_norm                                ! I
+     1                  ,i4time                                         ! I
      1                  ,rms_inst,rms_thresh)                           ! O
 
               call barnes_multivariate(varbuff                          ! O
@@ -708,6 +711,7 @@ csms$insert      print *, 'got to 10 processor=',me
           call get_inst_err2(r_missing_data                           ! I
      1                  ,obs_barnes,max_obs,ncnt_total                ! I
      1                  ,rms_thresh_norm                              ! I
+     1                  ,i4time                                       ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
           call barnes_multivariate(varbuff                            ! O
@@ -894,6 +898,7 @@ csms$ignore end
       subroutine get_inst_err2(r_missing_data                       ! I
      1                        ,obs_barnes,max_obs,nobs_barnes       ! I
      1                        ,rms_thresh_norm                      ! I
+     1                        ,i4time_sys                           ! I
      1                        ,rms_inst,rms_thresh)                 ! O
 
       integer*4 max_obs
@@ -904,8 +909,6 @@ csms$ignore begin
 
       write(6,*)
       write(6,*)' subroutine get_inst_err2...'
-
-      call get_systime_i4(i4time_sys,istatus)
 
       n_obs_total = 0
       wt_p_inv_total = 0.
