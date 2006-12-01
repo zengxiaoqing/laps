@@ -356,11 +356,13 @@ cdis
 !                                   grid_laps_u(i_ob,j_ob,k) = ob_u
 !                                   grid_laps_v(i_ob,j_ob,k) = ob_v
 !                                   grid_laps_wt(i_ob,j_ob,k) = weight_prof
-                                    write(6,11)k,ob_u,ob_v
- 11                                 format(10x,i4,2f8.1)
 
 !                                   Add to data structure (still is subsampling)
                                     nobs_point = nobs_point + 1
+
+                                    write(6,11)k,nobs_point,ob_u,ob_v
+ 11                                 format(10x,i4,i6,2f8.1)
+
                                     obs_point(nobs_point)%i = i_ob
                                     obs_point(nobs_point)%j = j_ob
                                     obs_point(nobs_point)%k = k
@@ -381,6 +383,7 @@ cdis
                                     if(obstype(i_pr)(1:4) 
      1                                                  .eq. 'RAOB')then
                                       if(.not. l_use_raob)then
+                                        write(6,*)' Withholding this ob'
                                         obs_point(nobs_point)%l_withhold       
      1                                      = .true.
                                       endif
