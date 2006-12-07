@@ -18,8 +18,12 @@ c
 c latlon_int - interval for plotting lat/lon lines in integer degrees
 c              (0) means no latlon lines plotted
 c
-c continent_line_width - width of continental boundaries (outside the 
-c                        contiguous U.S.)
+c continent_line_width - Width of continental boundaries is adjusted by this
+c                        parameter. County line width is unaffected by this 
+c                        parameter and will have a line width of 1.
+c
+c                        If this is set to 0 then all boundaries (including
+c                        continental, state, and county) will be suppressed.
 c
 c c3_time_zone - initials representing time zone (up to 3 characters)
 c
