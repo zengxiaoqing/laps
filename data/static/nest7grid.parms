@@ -8,9 +8,9 @@
  standard_longitude=-105.5,       
  grid_cen_lat_cmn=41.0,         
  grid_cen_lon_cmn=-105.5,         
- grid_spacing_m_cmn=10000.,          
- NX_L_CMN=125,                         
- NY_L_CMN=105,                         
+ grid_spacing_m_cmn=5000.,          
+ NX_L_CMN=249,                         
+ NY_L_CMN=209,                         
 
  vertical_grid='PRESSURE',
  nk_laps=21,                         
