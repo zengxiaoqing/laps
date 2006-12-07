@@ -86,7 +86,8 @@ c
 
       jgrid=namelist_parms%latlon_int        ! Draw lat/lon lines?
 
-      if(domsize .le. 1500e3)then
+      if(domsize .le. 1500e3 .and. 
+     1   namelist_parms%continent_line_width .gt. 0)then
           write(6,*)' Plotting Counties ',domsize,mode_supmap,jgrid
           call setusv_dum(2HIN,icol_cou)
 
@@ -116,7 +117,8 @@ c
           jgrid=0                        ! Do not draw subsequent lat/lon lines
 
       else
-          write(6,*)' Large domain, omitting counties ',domsize
+          write(6,*)' Omitting counties ',domsize
+     1             ,namelist_parms%continent_line_width
 
       endif
 
