@@ -37,40 +37,40 @@ c
 
       integer   nx_l,ny_l
 
-      real*4    lat(nx_l,ny_l)
-      real*4    lon(nx_l,ny_l)   ! laps lat/lon data  -  input
+      real    lat(nx_l,ny_l)
+      real    lon(nx_l,ny_l)   ! laps lat/lon data  -  input
 
-      real*4    xlat(nx_l+2,ny_l+2)
-      real*4    xlon(nx_l+2,ny_l+2) !expanded domain lats/lons
+      real    xlat(nx_l+2,ny_l+2)
+      real    xlon(nx_l+2,ny_l+2) !expanded domain lats/lons
  
-      real*4    dx,dy  !both in km from /public and /WFO SBN
-      real*4    du,dv
-      real*4    u_orig,v_orig
-      real*4    pi
-      real*4    u1,v1
+      real    dx,dy  !both in km from /public and /WFO SBN
+      real    du,dv
+      real    u_orig,v_orig
+      real    pi
+      real    u1,v1
 
-      real*4    lapterm
-      real*4    lovterm
-      real*4    latterm
-      real*4    lonterm
-      real*4    r_missing_data
-      real*4    rls,rle,res,ree
-      real*4    rlatin,rlap,rlov
-      real*4    centerlat,centerlon
-      real*4    rla1,rlo1
-      real*4    rla1nxny,rlo1nxny
-      real*4    rla100,rlo100
-      real*4    rlatdxdy,rlondxdy
+      real    lapterm
+      real    lovterm
+      real    latterm
+      real    lonterm
+      real    r_missing_data
+      real    rls,rle,res,ree
+      real    rlatin,rlap,rlov
+      real    centerlat,centerlon
+      real    rla1,rlo1
+      real    rla1nxny,rlo1nxny
+      real    rla100,rlo100
+      real    rlatdxdy,rlondxdy
 
-      real*4    ri(nx_l+2,ny_l+2)
-      real*4    rj(nx_l+2,ny_l+2)
-      real*4    rel_ri(nx_l+2,ny_l+2)
-      real*4    rel_rj(nx_l+2,ny_l+2)
-      real*4    ri_laps(nx_l,ny_l)
-      real*4    rj_laps(nx_l,ny_l)
-      real*4    u,v,u0,v0,uscale,vscale
-      real*4    usmin,usmax,vsmin,vsmax
-      real*4    usat,vsat
+      real    ri(nx_l+2,ny_l+2)
+      real    rj(nx_l+2,ny_l+2)
+      real    rel_ri(nx_l+2,ny_l+2)
+      real    rel_rj(nx_l+2,ny_l+2)
+      real    ri_laps(nx_l,ny_l)
+      real    rj_laps(nx_l,ny_l)
+      real    u,v,u0,v0,uscale,vscale
+      real    usmin,usmax,vsmin,vsmax
+      real    usat,vsat
 
       integer center_id
       integer process_id,wmo_sat_id

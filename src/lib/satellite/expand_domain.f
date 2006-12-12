@@ -39,17 +39,17 @@ c
       integer kmax,lmax
 
 c these are input lat/lon
-      real*4    lat(imax,jmax)
-      real*4    lon(imax,jmax)
+      real    lat(imax,jmax)
+      real    lon(imax,jmax)
 
 c these are output (expanded) lat/lon
-      real*4    xlat(kmax,lmax)
-      real*4    xlon(kmax,lmax)
+      real    xlat(kmax,lmax)
+      real    xlon(kmax,lmax)
 
-      real*4    g_space_deg
-      real*4    wdw_lat_ns
-      real*4    wdw_lon_ns
-      real*4    wdw_lon_ns_test
+      real    g_space_deg
+      real    wdw_lat_ns
+      real    wdw_lon_ns
+      real    wdw_lon_ns_test
       integer i,j
       integer ii,jj
       integer nxl,nyl

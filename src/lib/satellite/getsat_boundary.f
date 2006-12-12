@@ -17,14 +17,14 @@ c     integer*4 i_grid_spacing_2
       integer istatus
 c     integer*4 jstatus
 
-c     real*4 grid_spacing
-      real*4 r_llij_lut_ri(nxl+idx,nyl+idx)
-      real*4 r_llij_lut_rj(nxl+idx,nyl+idx)
-      real*4 rlinestart
-      real*4 rlineend
-      real*4 relemstart
-      real*4 relemend
-      real*4 r_missing_data
+c     real grid_spacing
+      real r_llij_lut_ri(nxl+idx,nyl+idx)
+      real r_llij_lut_rj(nxl+idx,nyl+idx)
+      real rlinestart
+      real rlineend
+      real relemstart
+      real relemend
+      real r_missing_data
 
       integer i,j
 c

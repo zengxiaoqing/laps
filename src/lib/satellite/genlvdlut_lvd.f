@@ -36,10 +36,10 @@ c
 
       integer nx_l,ny_l
 
-      real*4    lat(nx_l,ny_l)
-      real*4    lon(nx_l,ny_l)
-      real*4    gri(nx_l,ny_l,maxch) 
-      real*4    grj(nx_l,ny_l,maxch) 
+      real    lat(nx_l,ny_l)
+      real    lon(nx_l,ny_l)
+      real    gri(nx_l,ny_l,maxch) 
+      real    grj(nx_l,ny_l,maxch) 
 
       integer istatus
       integer it,js,lc

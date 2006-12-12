@@ -37,23 +37,23 @@ c
 
       integer   nx_l,ny_l
 
-      real*4    lat(nx_l,ny_l)
-      real*4    lon(nx_l,ny_l)   ! laps lat/lon data  -  input
+      real    lat(nx_l,ny_l)
+      real    lon(nx_l,ny_l)   ! laps lat/lon data  -  input
 
-      real*4    xlat(nx_l+2,ny_l+2)
-      real*4    xlon(nx_l+2,ny_l+2) !expanded domain lats/lons
+      real    xlat(nx_l+2,ny_l+2)
+      real    xlon(nx_l+2,ny_l+2) !expanded domain lats/lons
  
-      real*4    pi
+      real    pi
 
-      real*4    r_missing_data
-      real*4    rls,rle,res,ree
+      real    r_missing_data
+      real    rls,rle,res,ree
 
-      real*4    ri(nx_l+2,ny_l+2)
-      real*4    rj(nx_l+2,ny_l+2)
-      real*4    rel_ri(nx_l+2,ny_l+2)
-      real*4    rel_rj(nx_l+2,ny_l+2)
-      real*4    ri_laps(nx_l,ny_l)
-      real*4    rj_laps(nx_l,ny_l)
+      real    ri(nx_l+2,ny_l+2)
+      real    rj(nx_l+2,ny_l+2)
+      real    rel_ri(nx_l+2,ny_l+2)
+      real    rel_rj(nx_l+2,ny_l+2)
+      real    ri_laps(nx_l,ny_l)
+      real    rj_laps(nx_l,ny_l)
 
       integer isat,jtype,kchl
 c     integer i,j,n,nc

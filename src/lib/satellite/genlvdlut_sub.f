@@ -35,9 +35,9 @@ c
 
       integer nx_l,ny_l
 
-      real*4    lat(nx_l,ny_l)
-      real*4    lon(nx_l,ny_l)
-      real*4    topo(nx_l,ny_l)    !is not used.
+      real    lat(nx_l,ny_l)
+      real    lon(nx_l,ny_l)
+      real    topo(nx_l,ny_l)    !is not used.
 
       integer istatus
       integer it,js,lc

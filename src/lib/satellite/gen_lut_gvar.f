@@ -16,51 +16,51 @@ c
       Integer       nxe,nye
       Integer       nx,ny
 c
-      real*4        lat(nx_l,ny_l)
-      real*4        lon(nx_l,ny_l)
+      real        lat(nx_l,ny_l)
+      real        lon(nx_l,ny_l)
 
-      real*4        xlat (nx_l+idx,ny_l+idx)
-      real*4        xlon (nx_l+idx,ny_l+idx)
-      real*4        rline (nx_l+idx,ny_l+idx)
-      real*4        rpix  (nx_l+idx,ny_l+idx)
-      real*4        rel_ri(nx_l+idx,ny_l+idx)
-      real*4        rel_rj(nx_l+idx,ny_l+idx)
-      real*4        rl_abs(nx_l+idx,ny_l+idx)
-      real*4        rp_abs(nx_l+idx,ny_l+idx)
+      real        xlat (nx_l+idx,ny_l+idx)
+      real        xlon (nx_l+idx,ny_l+idx)
+      real        rline (nx_l+idx,ny_l+idx)
+      real        rpix  (nx_l+idx,ny_l+idx)
+      real        rel_ri(nx_l+idx,ny_l+idx)
+      real        rel_rj(nx_l+idx,ny_l+idx)
+      real        rl_abs(nx_l+idx,ny_l+idx)
+      real        rp_abs(nx_l+idx,ny_l+idx)
 
-      real*4        ri_laps(nx_l,ny_l)
-      real*4        rj_laps(nx_l,ny_l)
+      real        ri_laps(nx_l,ny_l)
+      real        rj_laps(nx_l,ny_l)
 
-      real*4        xmn(nx_l+idx),ymn(ny_l+idx)
-      real*4        xtn(nx_l+idx),ytn(ny_l+idx)
+      real        xmn(nx_l+idx),ymn(ny_l+idx)
+      real        xtn(nx_l+idx),ytn(ny_l+idx)
 
       real*8        pi
       real*8        rl_div, rp_div
       real*8        radtodeg, degtorad
-      real*4        r4lat,r4lon
-      real*4        r_img_res_m
-      real*4        rls,rle,res,ree
-      real*4        jdx,jdy
-      real*4        r_thin
-      real*4        nwpixabs,nwlinabs
-      real*4        nepixabs,nelinabs
-      real*4        swpixabs,swlinabs
-      real*4        sepixabs,selinabs
-      real*4        rmetx,rmety
-      real*4        golonsbp,golatsbp,goalpha
-      real*4        grid_spacing_proj_m
-      real*4        grid_spacing_actual_m
-      real*4        grid_spacing_m
-      real*4        grid_spacing_km
-      real*4        gssum1,gssum2
-      real*4        gspace1,gspace2,gspace3,gspace4
-      real*4        mdlat,mdlon
-      real*4        sat_res_m,erad
-      real*4        deltax,deltay
-      real*4        factor
-      real*4        r_ratio
-      real*4        lat1,lat2,lon0
-      real*4        r_missing_data
+      real        r4lat,r4lon
+      real        r_img_res_m
+      real        rls,rle,res,ree
+      real        jdx,jdy
+      real        r_thin
+      real        nwpixabs,nwlinabs
+      real        nepixabs,nelinabs
+      real        swpixabs,swlinabs
+      real        sepixabs,selinabs
+      real        rmetx,rmety
+      real        golonsbp,golatsbp,goalpha
+      real        grid_spacing_proj_m
+      real        grid_spacing_actual_m
+      real        grid_spacing_m
+      real        grid_spacing_km
+      real        gssum1,gssum2
+      real        gspace1,gspace2,gspace3,gspace4
+      real        mdlat,mdlon
+      real        sat_res_m,erad
+      real        deltax,deltay
+      real        factor
+      real        r_ratio
+      real        lat1,lat2,lon0
+      real        r_missing_data
 
       real*8        r8lat,r8lon
       real*8        ELEV,SCAN
