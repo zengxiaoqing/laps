@@ -24,7 +24,7 @@
      &+(topo(i,j)-rmx2d)**2)
        enddo
       enddo
-      terscl=sqrt(sumt/(nx*ny))
+      terscl=sqrt(sumt/(2.*nx*ny))
 
       return
       end
