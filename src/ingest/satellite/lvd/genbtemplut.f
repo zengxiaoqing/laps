@@ -9,8 +9,8 @@ c
       character*(*) ctype
       integer chid,i
       integer istatus
-      real*4  a,b,spc,rad,rcal
-      real*4    cnt2btemp(0:1023)
+      real  a,b,spc,rad,rcal
+      real    cnt2btemp(0:1023)
 
       istatus=1
 c

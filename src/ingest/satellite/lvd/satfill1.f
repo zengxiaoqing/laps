@@ -38,11 +38,11 @@ c
       character*200 c_filename
       character*255 pathname
 
-      real*4    image_main(n_elems,n_lines)
-      real*4    image_prev(n_elems,n_lines)
-      real*4    r_missing_data
-      real*4    percent_missing
-      real*4    smsng
+      real    image_main(n_elems,n_lines)
+      real    image_prev(n_elems,n_lines)
+      real    r_missing_data
+      real    percent_missing
+      real    smsng
 
       integer bcnt
       integer itot

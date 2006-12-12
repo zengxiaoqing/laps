@@ -86,19 +86,19 @@ c
 c
 c..... Grids to put the satellite data on.
 c
-       real*4 laps_vis_raw(ni,nj)
-       real*4 laps_vis_norm(ni,nj)
-       real*4 laps_vis_norm_natl(ni,nj)
-       real*4 albedo(ni,nj)
-       real*4 phase_angle_d(ni,nj)
-       real*4 specular_ref_angle_d(ni,nj)
-       real*4 emission_angle_d(ni,nj)
-       real*4 rland_frac(ni,nj)
+       real laps_vis_raw(ni,nj)
+       real laps_vis_norm(ni,nj)
+       real laps_vis_norm_natl(ni,nj)
+       real albedo(ni,nj)
+       real phase_angle_d(ni,nj)
+       real specular_ref_angle_d(ni,nj)
+       real emission_angle_d(ni,nj)
+       real rland_frac(ni,nj)
 c 
 c..... LAPS lat/lon files.
 c
-       real*4 lat(ni,nj)
-       real*4 lon(ni,nj)
+       real lat(ni,nj)
+       real lon(ni,nj)
 c
        integer n_vis_lines,n_vis_elem
        integer i_dir
@@ -108,13 +108,13 @@ c
        integer ismax,jsmax
        integer ismin,jsmin
 
-       real*4 r_llij_lut_ri(ni,nj)
-       real*4 r_llij_lut_rj(ni,nj)
-       real*4 r_grid_ratio
-       real*4 image_vis(n_vis_elem,n_vis_lines)
-       real*4 albedo_max,albedo_min
-       real*4 rspacing_dum
-       real*4 r_missing_data
+       real r_llij_lut_ri(ni,nj)
+       real r_llij_lut_rj(ni,nj)
+       real r_grid_ratio
+       real image_vis(n_vis_elem,n_vis_lines)
+       real albedo_max,albedo_min
+       real rspacing_dum
+       real r_missing_data
 c
        integer istatus_a
        integer istatus_l
@@ -126,15 +126,15 @@ c
        integer i,j
 c      integer imn,jmn,imx,jmx
 
-       real*4 sublat_d,sublon_d,range_m
-c      real*4 difference
-c      real*4 diffsum
-c      real*4 diffsum_abs
-c      real*4 meandiff
-c      real*4 meanabsdiff
-c      real*4 maxdiff
-c      real*4 mindiff
-       real*4 ave,adev,sdev,var,skew,curt
+       real sublat_d,sublon_d,range_m
+c      real difference
+c      real diffsum
+c      real diffsum_abs
+c      real meandiff
+c      real meanabsdiff
+c      real maxdiff
+c      real mindiff
+       real ave,adev,sdev,var,skew,curt
 
        real   visin1_g8,visin2_g8
        real   visout1_g8,visout2_g8

@@ -11,9 +11,9 @@ c
       integer n_lines
       integer iqstatus
       integer i,j
-      real*4    r_missing_data
-      real*4    image_main(n_elems,n_lines)
-      real*4    image_prev(n_elems,n_lines)
+      real    r_missing_data
+      real    image_main(n_elems,n_lines)
+      real    image_prev(n_elems,n_lines)
 c
       iqstatus=0
       do j=1,n_lines

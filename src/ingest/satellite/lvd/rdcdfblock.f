@@ -10,6 +10,7 @@ c
 
       include 'netcdf.inc'
       include 'satellite_dims_lvd.inc'
+      include 'satellite_common_lvd.inc'
 
       integer      RCODE
 c

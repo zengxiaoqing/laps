@@ -46,13 +46,13 @@ c
       integer imiss_status
       integer ibnd,jbnd
 
-      real*4    image_in(nx,ny)
-      real*4    image_temp(nx,ny)
-      real*4    data(125)
-      real*4    ave,adev,sdev,var,skew,curt
-      real*4    smsng
-      real*4    r_missing_data
-      real*4    rlow,rhigh
+      real    image_in(nx,ny)
+      real    image_temp(nx,ny)
+      real    data(125)
+      real    ave,adev,sdev,var,skew,curt
+      real    smsng
+      real    r_missing_data
+      real    rlow,rhigh
       character csattype*(*)
       character chtype*(*)
       character csatid*(*)

@@ -52,34 +52,34 @@ c================================================================
       Integer n_elem,n_lines,record
       INTEGER RCODE
 C
-      real*4      r4_image(n_elem,n_lines)
+      real      r4_image(n_elem,n_lines)
       integer  ib
       integer       bi (2)
       equivalence (ib,bi (1) )
-      character*30 c_valtime
-      character*30 c_Lov
-      character*30 c_xres
-      character*30 c_yres
-      Character*3  csat_type
-      character*3  chtype
-      character*6  csat_id
       integer istatus
       Integer   iDx
       Integer   iD
       INTEGER   Nx
       INTEGER   Ny
-      REAL*4    La1     (record)
-      REAL*4    Lo1     (record)
-      REAL*4    Dx      (record)
-      REAL*4    Dy      (record)
-      REAL*4    Latin   (record)
-      REAL*4    LoV     (record)
+      REAL      La1     (record)
+      REAL      Lo1     (record)
+      REAL      Dx      (record)
+      REAL      Dy      (record)
+      REAL      Latin   (record)
+      REAL      LoV     (record)
       INTEGER START(10)
       INTEGER COUNT(10)
       integer varid,ncid
       integer center_id, process_id,
      +     wmo_sat_id(record),ivalidtime
       double precision reftime(record), valtime(record)
+      character*30  c_valtime
+      character*30  c_Lov
+      character*30  c_xres
+      character*30  c_yres
+      Character*3   csat_type
+      character*3   chtype
+      character*6   csat_id
       character*132 origin_name
       character*132 x_dim
       character*132 y_dim

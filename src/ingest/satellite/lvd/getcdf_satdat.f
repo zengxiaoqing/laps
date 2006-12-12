@@ -86,30 +86,6 @@ c
       integer max_channel
       integer n_images
 
-      character*9   c_fname_in
-      character*9   cfname9
-      character*9   wfo_fname13_to_fname9
-      character*13  wfo_fname13_in
-      character*13  wfo_fname13
-      character*13  fname9_to_wfo_fname13
-      character*13  cvt_i4time_wfo_fname13
-      character*150 lvd_dir
-      character*3   chtype(max_channel)
-      character*3   c_mtype(max_channel,max_files)
-      character*3   c_mtype_new(max_channel,max_files)
-      character*3   cmt(max_channel)
-      character*3   c_type_sat(max_files,max_channel)
-      character*6   c_sat_id
-      character*3   c_sat_type
-      character*9   c_fname_data(max_files)
-      character*9   c_fname_data_new(max_files)
-      character*9   cfd
-      character*255 c_filename(max_files)
-      character*255 c_filename_sat(max_files)
-      character*255 c_filename_lvd(max_files)
-      character*200 path_to_raw_sat(max_channel)
-      character*255 pathname
-
       real image_vis (n_vis_elem,n_vis_lines,n_images) !ispan vis image polar NH
       real image_ir  (n_ir_elem,n_ir_lines,n_images) !ispan ir image polar NH
       real image_12  (n_ir_elem,n_ir_lines,n_images)
@@ -149,16 +125,41 @@ c
       integer lend
       integer laps_cycle_time
 
-      logical   first_time
-      logical   found_lvd_match
-      logical   found_it
-      logical   lvis_flag
+      logical first_time
+      logical found_lvd_match
+      logical found_it
+      logical lvis_flag
 
       integer istatus
       integer jstatus
       integer lstatus
       integer i4status
       integer gfn_status
+
+      character     c_fname_in*9
+      character     cfname9*9
+      character     wfo_fname13_to_fname9*9
+      character     wfo_fname13_in*13
+      character     wfo_fname13*13
+      character     fname9_to_wfo_fname13*13
+      character     cvt_i4time_wfo_fname13*13
+      character     lvd_dir*150
+      character     chtype(max_channel)*3
+      character     c_mtype(max_channel,max_files)*3
+      character     c_mtype_new(max_channel,max_files)*3
+      character     cmt(max_channel)*3
+      character     c_type_sat(max_files,max_channel)*3
+      character     c_sat_type*3
+      character     c_sat_id*6
+      character     c_fname_data(max_files)*9
+      character     c_fname_data_new(max_files)*9
+      character     cfd*9
+      character     path_to_raw_sat(max_channel)*200
+      character     pathname*255
+      character     c_filename(max_files)*255
+      character     c_filename_sat(max_files)*255
+      character     c_filename_lvd(max_files)*255
+
 c
 c ************************************************************
 c
@@ -217,10 +218,10 @@ c
          do j=1,nchannels
 
             call lvd_file_specifier(chtype(j),ispec,lstatus)
-            pathname=
-     &path_to_raw_sat(ispec)(1:in(j))//wfo_fname13_in(1:9)//'*'
-            n=index(pathname,' ')
-            write(*,*)'Data pathname: ',pathname(1:n-1)
+      pathname=path_to_raw_sat(ispec)(1:in(j))//wfo_fname13_in(1:9)//'*'
+         call s_len(pathname,n)
+c           n=index(pathname,' ')
+            print*,'Data pathname: ',TRIM(pathname)
  
             call get_file_names(pathname,
      &                     ifiles_sat,
@@ -269,8 +270,9 @@ c all satellite channels are in files within same directory.
 c assume j=1 represents this for the minimum # of channels to process.
 c
          pathname=path_to_raw_sat(1)(1:in(1))//c_fname_in(1:7)//'*'
-         n=index(pathname,' ')
-         write(*,*)'Data pathname: ',pathname(1:n-1)
+         call s_len(pathname,n)
+c        n=index(pathname,' ')
+         print*,'Data pathname: ',TRIM(pathname)
 c
 c get filenames for the indicated in pathname
 c

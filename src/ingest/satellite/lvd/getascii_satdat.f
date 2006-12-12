@@ -48,10 +48,10 @@ c
        real image_67  (nwvelem,nwvlines)
        real image_vis (nviselem,nvislines)
 
-       real*4 rlat_ir(n_ir_elem,n_ir_lines)
-       real*4 rlon_ir(n_ir_elem,n_ir_lines)
-       real*4 rlat_vis(n_vis_elem,n_vis_lines)
-       real*4 rlon_vis(n_vis_elem,n_vis_lines)
+       real rlat_ir(n_ir_elem,n_ir_lines)
+       real rlon_ir(n_ir_elem,n_ir_lines)
+       real rlat_vis(n_vis_elem,n_vis_lines)
+       real rlon_vis(n_vis_elem,n_vis_lines)
 
        integer imageline_ir(n_ir_elem,n_ir_lines)
        integer imageelem_ir(n_ir_elem,n_ir_lines)
@@ -60,10 +60,10 @@ c
 
        integer image_data(n_ir_elem,n_ir_lines)
 
-       real*4    grid_spacing
-       real*4    grid_spacing_km(max_channels)
-       real*4    r4time_data_ir
-       real*4    r4time_data_vis
+       real    grid_spacing
+       real    grid_spacing_km(max_channels)
+       real    r4time_data_ir
+       real    r4time_data_vis
 
        logical   lvis_flag
 

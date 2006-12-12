@@ -10,13 +10,13 @@ c
        integer nx_l,ny_l
        integer i4time
        logical   lvis_flag
-       real*4    lat(nx_l,ny_l)
-       real*4    lon(nx_l,ny_l)
+       real    lat(nx_l,ny_l)
+       real    lon(nx_l,ny_l)
 
        integer i,j
-       real*4    solar_alt_thresh
-       real*4    solar_alt_max
-       real*4    alt,dec,hrangle
+       real    solar_alt_thresh
+       real    solar_alt_max
+       real    alt,dec,hrangle
 c
 c
        solar_alt_thresh=14.0

@@ -16,7 +16,7 @@ c
 
       integer image_data(n_elem_max,n_lines_max)
 
-      real*4    r_image(nelem,nlines)
+      real    r_image(nelem,nlines)
 
       istatus = 1
       if(iend-istart+1 .gt. nelem)then

@@ -14,11 +14,11 @@ c
 
       logical   lgot_lut(maxch)
 
-      real*4    ri(nx,ny,maxch)
-      real*4    rj(nx,ny,maxch)
-c     real*4    ri_in(nx,ny)
-c     real*4    rj_in(nx,ny)
-c     real*4    rdummy(nx,ny)
+      real    ri(nx,ny,maxch)
+      real    rj(nx,ny,maxch)
+c     real    ri_in(nx,ny)
+c     real    rj_in(nx,ny)
+c     real    rdummy(nx,ny)
 
       character*100 cpath
       character*255 file

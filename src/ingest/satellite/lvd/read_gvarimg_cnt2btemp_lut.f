@@ -6,8 +6,8 @@ c
        integer i,idummy
        integer n,nn,np
        integer icnt
-       real*4  cnt2btemp(0:1023)
-       real*4  rdummy
+       real  cnt2btemp(0:1023)
+       real  rdummy
        integer istatus
 
        character*100 path

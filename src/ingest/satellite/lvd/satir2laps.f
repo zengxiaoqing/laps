@@ -56,23 +56,23 @@ c
 	parameter (max_elem = 15)
 	parameter (max_line = 15)
 	integer*4 line_dim,elem_dim
-        real*4    r_grid_ratio
+        real    r_grid_ratio
 
 	real image_ir(elem_dim,line_dim)
-        real*4 st(imax,jmax)
-        real*4 sc(imax,jmax)
-	real*4 sa(imax,jmax)
-        real*4 r_llij_lut_ri(imax,jmax)
-        real*4 r_llij_lut_rj(imax,jmax)
+        real st(imax,jmax)
+        real sc(imax,jmax)
+	real sa(imax,jmax)
+        real r_llij_lut_ri(imax,jmax)
+        real r_llij_lut_rj(imax,jmax)
 
-	real*4 line_mx,line_mn,elem_mx,elem_mn
-	real*4 t_array(max_elem*max_line)
-	real*4 wm, wc, btemp, tmean
-        real*4 frac
-c       real*4 fraci,fracj
-        real*4 pixsum 
-        real*4 r_missing_data
-        real*4 result
+	real line_mx,line_mn,elem_mx,elem_mn
+	real t_array(max_elem*max_line)
+	real wm, wc, btemp, tmean
+        real frac
+c       real fraci,fracj
+        real pixsum 
+        real r_missing_data
+        real result
 
         integer i,j,ii,jj,iir,jir,max_wi,max_wj
         integer istart,jstart

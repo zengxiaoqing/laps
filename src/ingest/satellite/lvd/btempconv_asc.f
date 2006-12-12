@@ -8,8 +8,8 @@ c
        integer nelems
        integer nlines
 
-       real*4  image(nelems,nlines)
-       real*4  r_missing_data
+       real  image(nelems,nlines)
+       real  r_missing_data
 
        do j=1,nlines
        do i=1,nelems

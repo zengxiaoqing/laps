@@ -1,6 +1,6 @@
        subroutine check(data,r_missing_data,istatus,nx_l,ny_l)
 c
-       real*4 data(nx_l,ny_l)
+       real data(nx_l,ny_l)
 c
        icnt = 0
        istatus = 0       ! error return

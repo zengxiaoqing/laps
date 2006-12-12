@@ -85,21 +85,21 @@ c
 c
 c..... Grids to put the satellite data on.
 c
-       real*4 ta8(ni,nj)
-       real*4 tb8(ni,nj)
-       real*4 tc8(ni,nj)
+       real ta8(ni,nj)
+       real tb8(ni,nj)
+       real tc8(ni,nj)
 c 
 c..... LAPS lat/lon files.
 c
-       real*4 lat(ni,nj)
-       real*4 lon(ni,nj)
+       real lat(ni,nj)
+       real lon(ni,nj)
 c
        integer n_ir_lines,n_ir_elem
 
-       real*4 r_llij_lut_ri(ni,nj)
-       real*4 r_llij_lut_rj(ni,nj)
-       real*4 r_grid_ratio
-       real*4 image_ir(n_ir_elem,n_ir_lines)
+       real r_llij_lut_ri(ni,nj)
+       real r_llij_lut_rj(ni,nj)
+       real r_grid_ratio
+       real image_ir(n_ir_elem,n_ir_lines)
 c
        integer istatus_a, istatus_f
        integer istatus_r
@@ -107,8 +107,8 @@ c
        integer i,j,ik
        integer nn
 
-       real*4 badlow,badhigh
-       real*4 r_missing_data
+       real badlow,badhigh
+       real r_missing_data
 c
        integer i4time,imax,jmax
 

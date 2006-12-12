@@ -11,9 +11,9 @@ c
        integer nelems
        integer nlines
 
-       real*4  image(nelems,nlines)
-       real*4  rcnt_to_btemp_lut(0:1023)
-       real*4  r_missing_data
+       real  image(nelems,nlines)
+       real  rcnt_to_btemp_lut(0:1023)
+       real  r_missing_data
 
        do j=1,nlines
        do i=1,nelems

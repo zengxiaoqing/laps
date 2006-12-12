@@ -36,14 +36,14 @@ c
       integer istat
       integer ispec
 
-      real*4    image_ir(nelemir,nlinesir,maximages)
-      real*4    image_12(nelemir,nlinesir,maximages)
-      real*4    image_39(nelemir,nlinesir,maximages)
-      real*4    image_67(nelemwv,nlineswv,maximages)
-      real*4    image_vis(nelemvis,nlinesvis,maximages)
-      real*4    wv_image(nelemwv,nlineswv)
-      real*4    ir_image(nelemir,nlinesir)
-      real*4    vis_image(nelemvis,nlinesvis)
+      real    image_ir(nelemir,nlinesir,maximages)
+      real    image_12(nelemir,nlinesir,maximages)
+      real    image_39(nelemir,nlinesir,maximages)
+      real    image_67(nelemwv,nlineswv,maximages)
+      real    image_vis(nelemvis,nlinesvis,maximages)
+      real    wv_image(nelemwv,nlineswv)
+      real    ir_image(nelemir,nlinesir)
+      real    vis_image(nelemvis,nlinesvis)
 
       character c_fname_data(max_files)*9
       character c_type(maxchannels,max_files)*3

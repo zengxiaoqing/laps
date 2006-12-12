@@ -161,14 +161,14 @@ c
       integer   nlf_prev
       integer   in,ncs
 c
-      real*4      vis_cnt_to_cnt_lut(0:1023)
-      real*4      ir_cnt_to_btemp_lut(0:1023) !this one is 11u
-      real*4      r12_cnt_to_btemp_lut(0:1023)
-      real*4      r39_cnt_to_btemp_lut(0:1023)
-      real*4      r67_cnt_to_btemp_lut(0:1023)
-      real*4      gri(nx_l,ny_l,maxchannel)	!Input: i values for mapping satellite data to domain
-      real*4      grj(nx_l,ny_l,maxchannel)	!Input: j values for mapping satellite data to domain
-      real*4      good_vis_data_thresh
+      real      vis_cnt_to_cnt_lut(0:1023)
+      real      ir_cnt_to_btemp_lut(0:1023) !this one is 11u
+      real      r12_cnt_to_btemp_lut(0:1023)
+      real      r39_cnt_to_btemp_lut(0:1023)
+      real      r67_cnt_to_btemp_lut(0:1023)
+      real      gri(nx_l,ny_l,maxchannel)	!Input: i values for mapping satellite data to domain
+      real      grj(nx_l,ny_l,maxchannel)	!Input: j values for mapping satellite data to domain
+      real      good_vis_data_thresh
 c
 c dimensions for lvd
 c
@@ -180,9 +180,9 @@ c
       character*150 dir_lvd
       character*31 ext_lvd
 
-      real*4 grid_spacing_laps_m
-      real*4 r_image_res_m(maxchannel,nimages)
-      real*4 r_image_status(maxchannel,max_files)
+      real grid_spacing_laps_m
+      real r_image_res_m(maxchannel,nimages)
+      real r_image_status(maxchannel,max_files)
 
       integer ishow_timer
       integer init_timer
@@ -203,10 +203,10 @@ c
       integer lvd_status
       integer nft,ntm(max_files),nft_prior
 
-      real*4 favgth39u
-      real*4 favgth67u
-      real*4 favgth11u
-      real*4 favgth12u
+      real favgth39u
+      real favgth67u
+      real favgth11u
+      real favgth12u
 c
 c these should be seasonally dependent. 6-13-99. 
 c used for "bad" meteosat data. 
@@ -222,6 +222,8 @@ c used for "bad" meteosat data.
 c =========================================================================
 c ----------------------------- START -------------------------------------
 c
+      lvd_status = 0
+
       itstatus=init_timer()
       itstatus=ishow_timer()
 
@@ -358,17 +360,17 @@ c Find and read current satellite files... as many as 4 ir channels and vis.
       print*,'WV:  ',n_wv_lines, n_wv_elem
 
       if(n_vis_lines.le.1 .or. n_vis_elem.le.1)then
-           print*,'Vis satellite array dimensions <= 0 '
+           print*,'Vis satellite array dimensions <= 1 '
            print*,'Terminating. Check static/satellite_lvd.nl'
            stop
       endif
       if(n_ir_lines.le.1.or.n_ir_elem.le.1)then
-           print*,'IR satellite array dimensions <= 0 '
+           print*,'IR satellite array dimensions <= 1 '
            print*,'Terminating. Check static/satellite_lvd.nl'
            stop
       endif
       if(n_wv_lines.le.1.or.n_wv_elem.le.1)then
-           print*,'WV satellite array dimensions <= 0 '
+           print*,'WV satellite array dimensions <= 1 '
            print*,'Terminating. Check static/satellite_lvd.nl'
            stop
       endif
@@ -651,7 +653,8 @@ c check for and fill-in for any missing data in current images
 c ------------------------------------------------------------
 c
 
-      lsatqc=.true.
+c     lsatqc=.true.
+      lsatqc=.false.
       if(csattype.eq.'asc'.or.csattype.eq.'gwc'.or.
      &csattype.eq.'twn'.or.csattype.eq.'hko')lsatqc=.false.
       
@@ -1139,6 +1142,7 @@ c been mapped to the laps domain. AFWA's GMS so far.
                write(*,*)'for: ',c_fname
                write(*,*)'i4 time: ',i4time_data(i)
                write(6,*)'*****************************'
+               istatus=0
             else
                write(*,*)' Error writing lvd file for this time'
                write(*,*)' i4Time: ',i4time_data(i)
@@ -1160,6 +1164,7 @@ c been mapped to the laps domain. AFWA's GMS so far.
 998   write(*,*)'No ',c_sat_id(ksat),"/",c_sat_types(jtype,ksat),
      &' satellite image data.'
 
+      deallocate(image_vis,image_ir,image_39,image_67,image_12)
 
 17    call get_c8_project(c8_project,istatus)
       if(c8_project.eq.'NIMBUS')then
@@ -1299,19 +1304,20 @@ c            print*,'path/filename out: ',dir_ctp
 
       endif
 
-      lvd_status = 1
-
       goto 16
 
  99   write(6,*)'Error opening count LUT: terminating. NO LVD'
+      lvd_status = 1
       goto 16
 
 909   write(6,*)'Error opening ll/ij look up table'
+      lvd_status = 1
       goto 16
 
 910   write(6,*)'Error getting mapping lut'
+      lvd_status = 1
 
- 16   write(*,*)' lvd driver sub completed'
+ 16   print*,'*** Finished in lvd driver sub ***'
       itstatus=ishow_timer()
       write(6,*)'Elapsed time (sec): ',itstatus
       return
