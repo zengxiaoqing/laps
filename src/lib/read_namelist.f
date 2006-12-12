@@ -94,7 +94,7 @@ c
 c-----------------------------------------------------------
 c
       subroutine get_balance_nl(lrunbal,adv_anal_by_t_min
-     .           ,cpads_type,incl_clom,istatus)
+     .           ,cpads_type,incl_clom,setdelo0,istatus)
 c
 cdoc  Reads static/balance.nl file.
 
@@ -105,13 +105,14 @@ cdoc  Reads static/balance.nl file.
       integer    adv_anal_by_t_min
       logical    lrunbal
       logical    incl_clom 
+      logical    setdelo0
       character  nest7grid*150
       character  cpads_type*3
 
       include   'grid_fname.cmn'       !grid_fnam_common
 
       namelist /balance_nl/lrunbal,adv_anal_by_t_min,cpads_type
-     1        ,incl_clom
+     1        ,incl_clom,setdelo0
 
       istatus = 0
 
@@ -123,7 +124,7 @@ cdoc  Reads static/balance.nl file.
 
       nest7grid = nest7grid(1:len_dir)//'balance.nl'
 
-         incl_clom=.true.
+      incl_clom=.true.
 
       open(1,file=nest7grid,status='old',err=900)
       read(1,balance_nl,err=901)
