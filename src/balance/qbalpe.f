@@ -93,7 +93,7 @@ c    .      ,wb(nx,ny,nz)
 
       real*4 g,sumdt,omsubs,sk,bnd,ff,fo,err,rog,rod
      .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl
-     .      ,sumtscl,sumkf,sumks,sldata,den,sumom2
+     .      ,sumtscl,sumkf,sumks,sldata,den,sumom2,sumomt2
      .      ,ffz,sumu,sumv
 
       real*4 smsng,rdum,dd,ddmin,cx,cy
@@ -139,6 +139,8 @@ c
       logical larray_diag/.false./
       logical frstone,lastone
       logical l_dum
+      logical setdelo0 !namelist variable that forces delo=0 if
+c                       set = .true.
 
       character*255 staticdir,sfcdir
 c     character*255 generic_data_root
@@ -164,7 +166,7 @@ c_______________________________________________________________________________
 c
 
       call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,
-     .                    incl_clom,istatus)
+     .                    incl_clom,setdelo0,istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
          stop
@@ -410,15 +412,16 @@ c an appropriate tau value.
       sumr=0.
       sumv2=0.
 
-c set the resolvable scale based on data nyquist inteval=4 spacing
+c set the resolvable scale based on a quarter wavelength for scaling 
+c purposes. We will use a mean wavelength (largest and smallest 
+c resolvable by the grid) and a data resolving wavelength based on
+c the nyquist interval (4 * data spacing)
 c this should be automated to be computed by the actual number of obs/area
 c guess number of obs over grid, put in sldata for now.
       sldata=9.  !number of good upper air obs (sonde quality)
-      sldata=4.*sqrt(float((nx-1)*(ny-1))*dx(nx/2,ny/2)**2/sldata)
-
-
-c set model scale - a low end wave resolvable by the grid
-      sl=4.*dx(nx/2,ny/2)
+      sldata=sqrt(float((nx-1)*(ny-1))*dx(nx/2,ny/2)**2/sldata)
+c set model scale - a mean wave resolvable by the grid
+      sl=(4.+sqrt(float((nx-1)**2+(ny-1)**2)))*dx(nx/2,ny/2)/8.
       fo=14.52e-5   !2*omega
 
       allocate (ks(nx,ny),kf(nx,ny),terscl(nx,ny))
@@ -500,40 +503,50 @@ c we seek to replicate the background vertical motions
       den=den/snxny/sk
       sumom2=sumom2/snxny/sk
       sumr=sqrt(g*sumdt/sumt/sumdz)
+c     delo is scaled as 10% of expected eqn of motion residual ro*U**2/L
+      rod=sqrt(sumv2)/(sumf*sldata)
+      rog=sqrt(sumv2)/(sumf*sl)
+      if(rog.gt.1.) rog=1.
+      if(rod.gt.1.) rod=1.
+      delo=100.*sl**2/sumv2**2/rog**2           
+      sumomt2=sumv2**3*sumt**2*den**2/(sl**2*rog**2*sumdt**2) 
       do j=1,ny
       do i=1,nx
          kfij=kf(i,j)
          ksij=ks(i,j)
          dpp=p(ksij)-p(kfij)
 c scale tau as of 1/(omega)**2 where omega is the background rms omega              
-c if background is missing sumom2 will be 0. Assume a nominal .5Pa/s vv
+c if background is missing sumom2 will be 0. In that case scale a 
+c vertical motion based on a scaled dynamic omega. Utilze the maximum 
+c estimated omega for setting the flow blocking parameter tau
         if(sumom2.ne.0.) then
-          tau(i,j)= 1./sumom2 
+        omsubs=sumom2
+         if(sumom2.lt.sumomt2) omsubs=sumomt2
+         tau(i,j)= 1./omsubs 
         else
-          tau(i,j)=1./0.5**2
+         tau(i,j)=1./sumomt2
         endif
 
       enddo
       enddo
       deallocate(ks,kf,terscl)
 
-c     delo is scaled as 10% of expected eqn of motion residual ro*U**2/L
-      rod=sqrt(sumv2)/(sumf*sldata)
-      rog=sqrt(sumv2)/(sumf*sl)
-      if(rog.gt.1.) rog=1.
-      if(rod.gt.1.) rod=1.
-      delo=100.*sl**2/sumv2**2/rod**2           
 c
 c if this is for AIRDROP there is no need to run the balance package, only 
 c continuity. set delo=0. In balcon this will skip the balance sequence.
 c
-      if(c8_project .eq. 'AIRDROP') delo=0.
+      if(c8_project .eq. 'AIRDROP'.or.setdelo0)then
+         delo=0.
+      endif
 c
 c print these arrays now.
+      print*,'length scales(m): mean wavelength, data wavelength ',sl,
+     &sldata 
       print*,'/dthet/thet/dz/den/N/V/f/delo/tau:' 
      &,sumdt,sumt,sumdz,den,sumr,sqrt(sumv2),sumf,delo,tau(1,1)
-      print*,'Omegab,Froude Num/DataRossby Num,aspectP/X:',sqrt(sumom2),
-     &    (sumr*sumdz/sqrt(sumv2)),rod ,(dpp/dx(nx/2,ny/2))
+      print*,'Omegab,Omegadyn,Froude Num ',
+     &'DataRossby Num,GrdRosby,aspectP/X:',sqrt(sumom2),sqrt(sumomt2),
+     &    (sumr*sumdz/sqrt(sumv2)),rod,rog ,(dpp/dx(nx/2,ny/2))
       
 c
 c *** Compute non-linear terms (nu,nv) and execute mass/wind balance.
@@ -645,6 +658,16 @@ c  the bs arrays are used as dummy arrays to go from stagger to non staggered
      & shbs,ombs,u,v,phi,t,sh,om,nx,ny,nz,p,ps,-1) 
 c   Prior to applying boundary subroutine put non-staggered grids back into
 c   u,v,om,t,sh,phi.
+
+c      do k=1,nz/2
+c      print*, 'After destagger level ',k
+c      call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'staggered U')
+c      call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'staggered V')
+c      call diagnose(ubs,nx,ny,nz,nx/2,ny/2,k,7,'unstaggd U ')
+c      call diagnose(vbs,nx,ny,nz,nx/2,ny/2,k,7,'unstaggd V ')
+c      call diagnose(lapsu,nx,ny,nz,nx/2,ny/2,k,7,'original U ')
+c      call diagnose(lapsv,nx,ny,nz,nx/2,ny/2,k,7,'original V ')
+c      enddo
 
       if(.false.)then
 
@@ -1485,6 +1508,15 @@ c apply continuity to input winds
        call leib_sub(nx,ny,nz,erf,tau,erru
      .,lat,dx,dy,ps,p,dp,uo,u,vo,v,
      . omo,om,omb,l,lmax)
+c
+c      do k=1,nz/2    
+c      print*, 'After continuitlevel ',k
+c      call diagnose(uo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED U ')
+c      call diagnose(vo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED V ')
+c      call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'CONTINTY U ')
+c      call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'CONTINTY V ')
+c      enddo
+
        if(delo.eq.0.) go to 111
 c move adjusted fields to observation fields 
        call move_3d(u,uo,nx,ny,nz)
@@ -1627,11 +1659,6 @@ c
        print*, 'max ',fmax, ' at ijk ',ismx,jsmx,ksmx
        print*, 'forcing fcn abs average ', sum/float(it*(kf-ks+1)*
      &       (nym1-1)*(nxm1-1)) 
-   
-      call diagnose(to,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT GEOPOTENTIALS')
-      call diagnose(uo,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT U-COMPONENT  ')
-      call diagnose(vo,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT V-COMPONENT  ')
-      call diagnose(omo,nx,ny,nz,ismx,jsmx,ksmx+1,7,'INPUT OMEGA')
 
 c     write(9,1000) it,cotmax,ovr,cotma1
 c     erf=0.
@@ -1721,10 +1748,6 @@ c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
      &               ,fldmxi,fldmxj,fldmni,fldmnj)
        endif
 c 
-       call diagnose(t,nx,ny,nz,ismx,jsmx,ksmx,7,'BALANCED PERT PHIS')
-       call diagnose(u,nx,ny,nz,ismx,jsmx,ksmx,7,'BALANCED U-PERTUR ')
-       call diagnose(v,nx,ny,nz,ismx,jsmx,ksmx,7,'BALANCED V-PERTUR ')
-       call diagnose(omo,nx,ny,nz,ismx,jsmx,ksmx,7,'BALANCED OMEGA')       
 
        if(larray_diag)then
         do k=1,nz
@@ -1755,6 +1778,14 @@ c Restore full winds and heights by adding back in background
          enddo
        enddo
 
+
+c      do k=1,nz/2    
+c      print*, 'After balance ',k
+c      call diagnose(uo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED U ')
+c      call diagnose(vo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED V ')
+c      call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'BALANCED U ')
+c      call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'BALANCED V ')
+c      enddo
 
        itstatus=ishow_timer()
        print*,'------------------------------------------'
@@ -1790,7 +1821,7 @@ c move adjusted fields (uo,vo,omo) to solution fields
       return
       end
 c
-c ---------------------------------------------------------------
+c --------------------------------------------------------------b-
 c
       subroutine leib_sub(nx,ny,nz,erf,tau,erru
      .,lat,dx,dy,ps,p,dp,uo,u,vo,v,
@@ -2300,8 +2331,8 @@ c
       nym1=ny-1
       nxm1=nx-1
       nzm1=nz-1
-      do j=2,nym1
-      do i=2,nxm1
+      do j=2,ny
+      do i=2,nx
          om(i,j,1)=bnd
          do k=2,nzm1
             if (ps(i,j) .le. p(k)) then ! point is below ground
@@ -2317,37 +2348,19 @@ c
       enddo
 c
       do k=2,nz
-         do j=1,ny
+         do j=2,ny
             if(ps(1,j) .le. p(k)) then
-c              u(1,j-1,k-1)=bnd   !commented out JS 01-17-01
-               u(1,j,k-1)=bnd     !added this
+               u(1,j-1,k-1)=bnd   
                om(1,j,k)=bnd
                om(1,j,k-1)=bnd
             endif
-            if(ps(nx,j) .le. p(k)) then
-c              u(nx,j-1,k-1)=bnd
-c              u(nxm1,j-1,k-1)=bnd !commented JS 01-17-01
-               u(nx,j,k-1)=bnd
-               u(nxm1,j,k-1)=bnd
-               om(nx,j,k)=bnd
-               om(nx,j,k-1)=bnd
-            endif
          enddo
 
-         do i=1,nx
+         do i=2,nx
             if(ps(i,1) .le. p(k)) then
-c              v(i-1,1,k-1)=bnd
-               v(i,1,k-1)=bnd
+               v(i-1,1,k-1)=bnd
                om(i,1,k)=bnd
                om(i,1,k-1)=bnd
-            endif
-            if(ps(i,ny) .le. p(k)) then
-c              v(i-1,ny,k-1)=bnd    !commented JS 01-17-01
-c              v(i-1,nym1,k-1)=bnd
-               v(i,ny,k-1)=bnd
-               v(i,nym1,k-1)=bnd
-               om(i,ny,k)=bnd
-               om(i,ny,k-1)=bnd
             endif
          enddo
       enddo
