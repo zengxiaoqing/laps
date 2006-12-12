@@ -2,8 +2,9 @@
  lrunbal = .true.,
  adv_anal_by_t_min = 0,
  cpads_type = 'snd',
- INCL_CLOM = .true.,
- /
+ incl_clom = .true.,
+ setdelo0  = .false.,
+/
 c
 c   adv_anal_by_t_min: time in minutes to advance the analyses
 c and background inputs. Output in lapsprd/balance/lt1,lw3,lq3
@@ -20,5 +21,11 @@ c pin: old method but available for backwards compatibility and
 c comparison statistics.
 c
 c
-c INCL_CLOM allows us to include or exclude cloud omega from 
+c incl_clom: allows us to include or exclude cloud omega from 
 c balance package. 
+c and background inputs. Output in lapsprd/balance/lt1,lw3,lq3
+c will be systime.dat + T. This namelist value is modified using
+c which case $DATAROOT/time/systime.dat is not rounded to the
+c
+c setdelo0: When set = .true. then only continuity adjustments are made
+c made and no dynamic balance.
