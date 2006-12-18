@@ -1,0 +1,118 @@
+Program:	laps2grib
+Author:		Brent Shaw, Weathernews Inc.
+Date:		7 Dec 2006
+LAPS Baseline:	0-30-13
+
+
+1.  Function
+This program reads a set of the LAPS output files and creates
+a consolidated file of GRIB-2 messages using the LAPS
+"A9" format file name (yydddhhmm.gr2).  See WMO publication
+FM92-XII for the details on the GRIB-2 format.
+
+2.  Source code added or modified from ESRL/GSD baseline:
+
+$LAPS_SRC_ROOT/Makefile (added compilation of grib2 lib and laps2grib)
+$LAPS_SRC_ROOT/etc/laps_tools.pm  (added creation of lapsprd/gr2 dir)
+$LAPS_SRC_ROOT/etc/sched.pl.in  (added execution of laps2grib.exe)
+$LAPS_SRC_ROOT/src/include/makefile.inc.in  (added GRIB2LIB)
+$LAPS_SRC_ROOT/src/laps2grib/    (New addition)
+$LAPS_SRC_ROOT/src/lib/grib2/    (New addition)
+$LAPS_SRC_ROOT/src/lib/modules/Makefile (Modified to add module_grib2.f90)
+$LAPS_SRC_ROOT/src/lib/modules/module_grib2.f90 (New addition)
+$LAPS_SRC_ROOT/src/lib/modules/module_map_utils.f90 (Minor bug fix)
+$LAPS_SRC_ROOT/data/static/laps2grib.nl (New addition)
+$LAPS_SRC_ROOT/data/static/laps2grib.vtab
+
+3.  Usage
+
+The program is run as the last step in the LAPS sched.pl file, and
+the LAPS_DATA_ROOT must be set if running by hand.
+
+The execution of the program is controlled by:
+
+$LAPS_DATA_ROOT/static/laps2grib.nl
+$LAPS_DATA_ROOT/static/laps2grib.vtab
+
+If you do not want to use the program, set "lrun_laps2grib = .false.'
+in the namelist file, and the program will exit immediately.
+
+The laps2grib.nl namelist file lets you set the following options:
+
+	lrun_laps2grib:  Logical, set to .true. to allow it to run
+
+       	center_id: Integer, set to center ID to use in GRIB PDS
+
+	subcenter_id: Integer, set to subcenter ID to use in GRIB PDS	
+
+ 	process_id:  Integer, set to process ID for GRIB PDS
+
+	prod_status: Integer, used to set production status in GRIB PDS
+	
+        output_path: Set the path for the output file to be written.  Set
+                     it to a null string to use the default path, which
+                     will be $LAPS_DATA_ROOT/lapsprd/gr2
+
+The laps2grib.vtab provides a means for the user
+to specify which LAPS variables are selected and output, and how they
+will be respresented in the GRIB-2 message.  A common set of variables
+is already configured.  To prevent output of any of the variables
+already configured, either delete the line or simply insert a space
+or any other character in column 1.  
+
+In this list, you can specify variables that are either 3-dimensional 
+(assumed to be on the LAPS pressure grid), or 2-dimensional.  To
+set up a 3D variable, the format is as follows:
+
+3d qbal,ext,var,pmin,pmax,conv_fac,scale_fac,discipline,category,parameter
+
+The "3d" must be exactly as shown and must start in column 1!  The remaining
+parameters are defined as such:
+
+qbal: Integer, set to 0 to extract standard LAPS analysis or 1 to use files
+      from $LAPS_DATA_ROOT/lapsprd/balance (obviously only applied to some
+      of the variables.
+
+ext:  The LAPS extension (lower case) of the file type to use
+
+var:  The LAPS netcdf variable name (lower case) to extract from
+      the file type defined in ext.
+
+pmin: Minimum pressure level (Pa) to output to the GRIB file
+
+pmax: Maximum pressure level (Pa) to output to the GRIB file
+
+conv_fac:  The value to multiply the LAPS variable by to make
+           it conform to the WMO GRIB-2 standard.  In most cases,
+           this will be 1.
+
+scale_fac: The scale factor to use in creating the GRIB-2 message. This
+           is expressed as a power of 10.  The raw data is multiplied by
+           this power of 10 before the GRIB compression, so this is how
+           you control the precision.  If you have a field with very
+           small values (e.g., mixing ratios), you will want to set this
+           to a positive value that represents the precision in terms
+           of number of decimal places.
+
+discipline: The GRIB-2 discipline table to be used.
+
+category:  The GRIB-2 parameter category within the discipline to be used.
+
+parameter:  The GRIB-2 parameter ID within the category/discipline.
+
+The 2-dimensional data is similar.  The format is:
+
+2d ext,var,conv_fac,scale_fac,l1t,l1s,l1v,l2t,l2s,l2v,discipline,category,parameter
+
+NOTE: To extract data from the static.nest7grid file, use "n7g" for the extension!
+The parameters that are common with the 3d type have the same definition.  In the case
+of the 2d variables, you must specify the level types and values to use as such:
+
+l1t:  Type of first level (GRIB2 code table 4.5)
+l1s:  Scale factor (power of 10) used to store the level value.  Level values
+      are stored as integers, so if your level requires fractions, you need 
+      to scale the value and specify the scaling used here.
+l1v:  The scaled value of the first level]
+l2t/l2s/l2v:  The same as the "l1?" values, but for level 2 in the case of 
+      a layered product.  For single level products, these should all be 
+      set to 255.
