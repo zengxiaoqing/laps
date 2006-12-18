@@ -170,9 +170,11 @@ c
 c TERRAIN SMOOTHING
 c           
 c toptwvl_parm_cmn: 
-c     As an example, 4 would represent 4 delta-x filtering of the terrain. You 
+c     As an example, 4. would represent 4 delta-x filtering of the terrain. You
 c     can change this to alter the smoothness of the terrain. Higher numbers 
-c     mean smoother terrain.
+c     mean smoother terrain. Minimum value should be 2 since setting to 0
+c     would cause the run to fail. We generally use even numbers (e.g. 2., 4., 
+c     or 6.)
 c
 c silavwt_parm_cmn : 
 c     This parameter allows the potential use of silhouette terrain which is 
