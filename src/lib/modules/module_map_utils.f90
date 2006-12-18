@@ -799,6 +799,7 @@ CONTAINS
     IF (proj%lat1 .NE. 0.) THEN
       proj%rsw = (ALOG(TAN(0.5*((proj%lat1+90.)*rad_per_deg))))/proj%dlon
     ENDIF
+    proj%cone = 0.0
     RETURN
   END SUBROUTINE set_merc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
