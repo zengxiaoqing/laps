@@ -690,46 +690,71 @@ c are used for the analysis (LAPS-nest7grid). For WRFSI, we use the
 c mass c-stagger (#4); staggered in both x and y. 
 
 !mp
-	IF (c6_maproj .ne. 'rotlat') THEN
 
-        call compute_latlon(nnxp,nnyp,n_staggers,mdlat,mdlon
-     +,deltax,xtn,ytn,lats,lons,istatus)
-        if(istatus.ne.1)then
-           print*,'Error returned: compute_latlon'
-           return
-        endif
 
-	ELSE ! rotlat
-
-        write(6,*) 'dlmd, dphd, mdlat, mdlon: ',dlmd,dphd,mdlat,mdlon
+	IF (c6_maproj .eq. 'rotlat') THEN
+          write(6,*) 'dlmd, dphd, mdlat, mdlon: ',dlmd,dphd,mdlat,mdlon       
                                                                                 
-        allocate(hlat(nnxp,nnyp),hlon(nnxp,nnyp))
-        allocate(vlat(nnxp,nnyp),vlon(nnxp,nnyp))
+          allocate(hlat(nnxp,nnyp),hlon(nnxp,nnyp))
+          allocate(vlat(nnxp,nnyp),vlon(nnxp,nnyp))
              
-        call etall(nnxp,nnyp,mdlat,mdlon,dlmd,dphd,hlat,hlon
+          call etall(nnxp,nnyp,mdlat,mdlon,dlmd,dphd,hlat,hlon
      &                  ,vlat,vlon)
              
-	write(6,*) 'EGRID CORNERS'
-        write(6,*) 'hlat(1,1),hlon(1,1): ', hlat(1,1),hlon(1,1)
-        write(6,*) 'hlat(1,jm),hlon(1,jm): ', hlat(1,nnyp),hlon(1,nnyp)
-        write(6,*) 'hlat(im,1),hlon(im,1): ', hlat(nnxp,1),
+	  write(6,*) 'EGRID CORNERS'
+          write(6,*) 'hlat(1,1),hlon(1,1): ', hlat(1,1),hlon(1,1)
+          write(6,*) 'hlat(1,jm),hlon(1,jm): ',hlat(1,nnyp),hlon(1,nnyp)       
+          write(6,*) 'hlat(im,1),hlon(im,1): ', hlat(nnxp,1),
      &			hlon(nnxp,1)
-        write(6,*) 'hlat(im,jm),hlon(im,jm): ', hlat(nnxp,nnyp),
+          write(6,*) 'hlat(im,jm),hlon(im,jm): ', hlat(nnxp,nnyp),
      &			hlon(nnxp,nnyp)
              
              
-        DO J=1,NNYP
-          DO I=1,NNXP
+          DO J=1,NNYP
+            DO I=1,NNXP
                 data(I,J,1)=hlat(I,J)
                 data(I,J,2)=hlon(I,J)
                 data(I,J,3)=vlat(I,J)
                 data(I,J,4)=vlon(I,J)
+            ENDDO
           ENDDO
-        ENDDO
+
+	ELSEIF(c6_maproj .eq. 'icshdr')then ! Read Icosahedral grid from a file
+          write(6,*)' Read Icosahedral grid from a file'
+
+          filename=static_dir(1:lens)//'ltln5C.txt'
+          open(7,file=filename)
+          read(7,*) lats, lons
+          close(7) 
+
+          rpd = 3.1415926535897932 / 180.
+
+          DO J=1,NNYP
+          DO I=1,NNXP
+          DO IS = 1,n_staggers
+              lats(i,j,is) = lats(i,j,is) / rpd
+              lons(i,j,is) = lons(i,j,is) / rpd
+              if(lons(i,j,is) .lt. -180.)then
+                  lons(i,j,is) = lons(i,j,is) + 360.
+              endif
+              if(lons(i,j,is) .gt. +180.)then
+                  lons(i,j,is) = lons(i,j,is) - 360.
+              endif
+          ENDDO
+          ENDDO
+          ENDDO
+
+        ELSE ! Conformal grid ('plrstr','merctr',lambrt')
+          call compute_latlon(nnxp,nnyp,n_staggers,mdlat,mdlon
+     +                         ,deltax,xtn,ytn,lats,lons,istatus)
+          if(istatus.ne.1)then
+             print*,'Error returned: compute_latlon'
+             return
+          endif
              
         ENDIF
 
-        IF (c6_maproj .ne. 'rotlat') THEN
+        IF (c6_maproj .ne. 'rotlat' .and. c6_maproj .ne. 'icshdr') THEN       
 
         ns = istag
 
@@ -756,7 +781,7 @@ C*****************************************************************
            return
         endif
 
-	ENDIF ! NOTE: totally avoided check_domain for rotlat
+	ENDIF ! NOTE: totally avoided check_domain for rotlat & icshdr
 
 
 ! We will end at this step given the showgrid or max/min lat lon
@@ -801,40 +826,46 @@ c
      +           topt_30_ln(nnxp,nnyp),
      +           topt_30_lt(nnxp,nnyp))
 
-        IF (c6_maproj .eq. 'rotlat') THEN
-	categorical=.false.
+       IF (c6_maproj .eq. 'rotlat') THEN
+	 categorical=.false.
 
-	NCAT=1
-	allocate(adum3d(NNXP,NNYP,NCAT))
-        allocate(adum2d(nnxp,nnyp))
+	 NCAT=1
+	 allocate(adum3d(NNXP,NNYP,NCAT))
+         allocate(adum2d(nnxp,nnyp))
 
-        CALL alt_10by10_all(nnxp,nnyp,1200,grid_spacing_m/1000.,
-     &  hlat,hlon,PATH_TO_TOPT30S,topt_30,adum3d,NCAT,topt_30_lt,
-     &  topt_30_ln,topt_30_s,categorical,2,0)
-
-
-	write(6,*) 'topo before smooth'
-        do J=nnyp,1,-nnyp/30
-        write(6,633) (topt_30(I,J),I=1,nnxp,nnxp/15)
-        enddo
+         CALL alt_10by10_all(nnxp,nnyp,1200,grid_spacing_m/1000.,
+     &   hlat,hlon,PATH_TO_TOPT30S,topt_30,adum3d,NCAT,topt_30_lt,
+     &   topt_30_ln,topt_30_s,categorical,2,0)
 
 
-	deallocate(adum3d)
+	 write(6,*) 'topo before smooth'
+         do J=nnyp,1,-nnyp/30
+           write(6,633) (topt_30(I,J),I=1,nnxp,nnxp/15)
+         enddo
+
+
+         deallocate(adum3d)
                                                                                 
-  633   format(20(f5.0,1x))
+  633    format(20(f5.0,1x))
                                                                                 
-!mp	bogus status value to keep things smooth below
-        istatus_30s=1
+!mp	 bogus status value to keep things smooth below
+         istatus_30s=1
 !mp
 
-	ELSE
+       ELSEIF (c6_maproj .eq. 'icshdr') THEN
+         allocate  (GEODAT3D(nnxp,nnyp,1))
+         call proc_geodat(nnxp,nnyp,1,path_to_topt30s
+     +       ,lats(1,1,1),lons(1,1,1),data(1,1,1)
+     +       ,GEODAT3D,istatus_30s)
 
-       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
-     +,ytn(1,1),deltax,deltay,TOPT_30,TOPT_30_S,TOPT_30_LN
-     +,TOPT_30_LT,PATH_TO_TOPT30S,TOPTWVL,SILAVWT,new_DEM,1
-     +,istatus_30s)
+       ELSE
 
-	ENDIF
+         CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
+     +   ,ytn(1,1),deltax,deltay,TOPT_30,TOPT_30_S,TOPT_30_LN
+     +   ,TOPT_30_LT,PATH_TO_TOPT30S,TOPTWVL,SILAVWT,new_DEM,1
+     +   ,istatus_30s)
+
+       ENDIF
 
        if(istatus_30s .ne. 1)then
 
