@@ -165,6 +165,7 @@ c original create from Brent Shaw pseudocode
       if(ctiletype.eq.'T'.or.
      1   ctiletype.eq.'A'.or.
      1   ctiletype.eq.'G'.or.
+     1   ctiletype.eq.'U'.or.
      1   ctiletype.eq.'M' )then
          print*,'tile type to process = ',ctiletype
       else
