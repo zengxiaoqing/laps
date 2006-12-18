@@ -27,7 +27,8 @@
 #
 # -A                   Run for input analysis time specified as dd-mmm-yyyy-hhmm
 #                      which can also be a substitute input for archive time
-#                      Eg., 28-Aug-2002-1200. Purger is not run.
+#                      Eg., 28-Aug-2002-1200. Purger is not run unless -r or -t is
+#                      specified.
 #
 # -d                   Delay in hours (lag time or displaced real-time). This generally 
 #                      should be set in cases where the wall clock time of the run will 
@@ -80,21 +81,22 @@
 #                      
 # -T                   Run with analysis only executables, useful with the
 #                      test dataset that comes with the LAPS software release.
+#
+# -W                   WNI Modification:  Added -W flag to specify WNI product set
 
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
 #                      purger (see call to purger.pl)
-#
                
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V);
+            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_W);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslvp:T');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslvp:TW');
 
 my $initial_time = time();
 
@@ -158,6 +160,16 @@ if(defined $opt_s){ # "surface only"
                   mosaic_radar.x cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe qbalpe.exe lapsprep.exe);
 
+}elsif(defined $opt_W){  # WNI Product Set
+    @LAPS_EXE = qw(lga.exe
+                  ingest_pro.exe obs_driver.x sfc_qc.exe
+                  ingest_sounding.exe
+                  ingest_cloud_drift.exe
+                  wind.exe
+                  laps_sfc.x temp.exe
+                  cloud.exe lq3driver.x deriv.exe
+                  qbalpe.exe lapsprep.exe accum.exe laps2grib.exe);
+
 }else{      # Full product set
     @LAPS_EXE = qw(lga.exe 
                   ingest_pro.exe obs_driver.x sfc_qc.exe
@@ -167,7 +179,7 @@ if(defined $opt_s){ # "surface only"
                   ingest_lrs.exe lvd_sat_ingest.exe 
                   laps_sfc.x temp.exe 
                   mosaic_radar.x cloud.exe lq3driver.x deriv.exe accum.exe  
-		  lsm5.exe qbalpe.exe lapsprep.exe);
+		  lsm5.exe qbalpe.exe lapsprep.exe laps2grib.exe);
 }
 
 if(defined $opt_v){
@@ -297,7 +309,7 @@ system("uname -ns");
 my $t=gmtime(); 
 my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
 
-if(! defined $opt_A && ! defined $opt_a && ! defined $opt_F){
+if( (! defined $opt_A && ! defined $opt_a && ! defined $opt_F) || defined $opt_r || defined $opt_t){
     print $t." Running purger\n";
     $sys .= "-r " if($opt_r);
     $sys .= "-m $opt_m " if($opt_m);
