@@ -20,12 +20,14 @@
       integer   iwocdif
       integer   istatus
       integer   maxtiles
+      integer   maxtiles_loc
 
+      parameter (maxtiles_loc = 1000)
 
       character*1 ctiletype
       character*3 nstitle
       character*4 ewtitle
-      character*8 ctilenamelist(500)
+      character*8 ctilenamelist(maxtiles_loc)
       character*(*) ctile_name_list(maxtiles)
 
       double precision r8term
@@ -91,6 +93,14 @@ c        ewtitle=ewtitle2//ewtitle1
             ENDIF
 
             num_tiles_needed=num_tiles_needed+1
+
+            if(num_tiles_needed .gt. maxtiles_loc)then
+                print*,'more tiles needed than array allocation'
+     1                ,maxtiles_loc
+                istatus = 0
+                return
+            endif
+
             ctilenamelist(num_tiles_needed)=nstitle//ewtitle
 
          enddo
