@@ -10,6 +10,7 @@ C
 
       character*132 grid_type
       character*132 grid_name
+      character*132 earth_shape
       character*8   c8_maproj
       character*(*) staticfile
 C
