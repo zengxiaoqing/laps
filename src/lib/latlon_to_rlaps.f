@@ -1052,6 +1052,60 @@ cdoc  Calculate actual grid spacing at any given lat/lon location
       return
       end
 
+      subroutine get_grid_spacing_actual_xy(rlat,rlon
+     1                        ,grid_spacing_actual_mx
+     1                        ,grid_spacing_actual_my
+     1                        ,istatus)
+
+cdoc  Calculate actual grid spacing (x,y directions) at any given lat/lon 
+cdoc  location. This works for conformal or 'latlon' grids
+
+      character*6 c6_maproj
+
+      call get_standard_latitudes(slat1,slat2,istatus)
+      if(istatus .ne. 1)then
+          return
+      endif
+
+      call get_grid_spacing(grid_spacing_m,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)
+     1 ' Error calling get_grid_spacing from get_grid_spacing_actual_xy'       
+          return
+      endif
+
+      call get_c6_maproj(c6_maproj,istatus)
+      if(istatus .ne. 1)then
+          return
+      endif
+
+      if(c6_maproj .ne. 'latlon')then
+          if(c6_maproj .eq. 'plrstr')then
+              call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+     1                                     ,grid_spacing_proj_m)
+          else
+              grid_spacing_proj_m = grid_spacing_m
+          endif
+
+          call get_sigma(rlat,rlon,sigma,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)
+     1        ' Error calling get_sigma from get_grid_spacing_actual'       
+              return
+          endif
+
+          grid_spacing_actual_mx = grid_spacing_proj_m / sigma
+          grid_spacing_actual_my = grid_spacing_proj_m / sigma
+
+      else
+          grid_spacing_actual_mx = grid_spacing_m * cosd(rlat)
+          grid_spacing_actual_my = grid_spacing_m 
+
+      endif
+
+      return
+      end
+
 
         subroutine get_grid_spacing_cen(grid_spacing_cen_m,istatus)
 
