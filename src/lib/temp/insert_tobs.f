@@ -485,10 +485,12 @@ cdis
         integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
 !       real*4 wt_tsnd(max_snd,nk)
 
-        real*4 wt_b_3d(ni,nj,nk)                      ! Background weight array
+        real*4 wt_b_3d(ni,nj,nk)       ! Background weight array
         real*4 bias_3d(ni,nj,nk)
-        real*4 wt_3d_dum(ni,nj,nk)                    ! No longer used
-        integer*4 n_obs_lvl(nk)                       ! Local
+
+        real*4 wt_3d_dum(ni,nj,nk)     ! No longer used in 'barnes_multivariate'
+                                       ! Used as zero array in verification
+        integer*4 n_obs_lvl(nk)        ! Local
 
         logical l_analyze(nk)
 
@@ -503,6 +505,8 @@ cdis
         do k = 1,nk
             l_analyze(k) = .false.
         enddo ! k
+
+        wt_3d_dum = 0.
 
         write(6,*)' Transfer from temp_obs to obs_barnes data structure'
 
@@ -541,6 +545,8 @@ cdis
                 obs_barnes(n_obs_valid)%weight = temp_obs(i_ob,i_wt)
                 obs_barnes(n_obs_valid)%value(1) = temp_obs(i_ob,i_bias)
                 obs_barnes(n_obs_valid)%i4time = i4time
+                obs_barnes(n_obs_valid)%type = 'ALL'
+                obs_barnes(n_obs_valid)%l_withhold = .false.
 
             endif
 
@@ -572,6 +578,17 @@ cdis
 
         wt_b_3d = weight_bkg_const
 
+        weight_sfc = 1.0                        ! for call to 'compare_temp'
+
+!       Verify background against dependent observations (innovations)
+        call compare_temp(
+     1                wt_3d_dum,' FG ',                                   ! I
+     1                ni,nj,nk,r_missing_data,                            ! I
+     1                obs_barnes,n_obs,n_obs_valid,                       ! I
+     1                l_withheld_only,                                    ! I
+     1                weight_sfc,                                         ! I  
+     1                istatus)                                            ! I/O
+
         call barnes_multivariate(
      1                      bias_3d                           ! Outputs
      1                     ,n_var,n_obs_valid,obs_barnes      ! Input
@@ -583,6 +600,15 @@ cdis
      1                     ,weight_bkg_const                  ! Input
      1                     ,topo_dum,rland_frac_dum,1,1       ! Input
      1                     ,n_obs_lvl,istatus)                ! Outputs
+
+!       Verify analysis against dependent observations (innovations)
+        call compare_temp(
+     1                bias_3d,'LAPS',                                     ! I
+     1                ni,nj,nk,r_missing_data,                            ! I
+     1                obs_barnes,n_obs,n_obs_valid,                       ! I
+     1                l_withheld_only,                                    ! I
+     1                weight_sfc,                                         ! I  
+     1                istatus)                                            ! I/O
 
         return
         end
