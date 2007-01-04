@@ -22,7 +22,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/temp/libdebugtemp.a  \
 
 EXE = temp.exe
 
-SRC=puttmpanal_drv.f
+SRC=puttmpanal_drv.f compare_temp.f
 
 all: exe
 
