@@ -147,22 +147,33 @@ cdoc    from unity elsewhere.
         real*4 n
         character*6 c6_maproj
 
-        call get_standard_latitudes(slat1,slat2,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)'get_sigma: bad istatus'
-            return
-        endif
+        integer*4 init
+        save init
+        data init/0/
 
-        call get_standard_longitude(slon,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)'get_sigma: bad istatus'
-            return
-        endif
+        save slat1,slat2,slon,c6_maproj
 
-        call get_c6_maproj(c6_maproj,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)'get_sigma: bad istatus'
-            return
+        if(init .eq. 0)then
+            call get_standard_latitudes(slat1,slat2,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)'get_sigma: bad istatus'
+                return
+            endif
+
+            call get_standard_longitude(slon,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)'get_sigma: bad istatus'
+                return
+            endif
+
+            call get_c6_maproj(c6_maproj,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)'get_sigma: bad istatus'
+                return
+            endif
+
+            init = 1
+
         endif
 
         colat0 = 90. - slat1
