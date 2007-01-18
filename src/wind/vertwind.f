@@ -173,6 +173,12 @@ cdis
 
         endif
 
+        if(c6_maproj .eq. 'latlon')then
+            write(6,*)' latlon grid, skipping omega...'
+            wanl = r_missing_data
+            return
+        endif
+
 !       Calculate terrain induced omega
         do j=2,jmaxm1
         do i=2,imaxm1
