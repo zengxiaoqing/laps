@@ -2004,7 +2004,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 c_label = 'LAPS Height    Vert X-Sect  dm'
 
-                call make_fnam_lp(i4time_nearest,a9time,istatus)
+                call make_fnam_lp(i4time_ht,a9time,istatus)
 
             elseif(c_prodtype .eq. 'B' .or. 
      1             c_prodtype .eq. 'F')then
@@ -2133,6 +2133,37 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             cint = 5. / density
             i_contour = 1
             c_label = 'LAPS Temp (Balanced)        Deg C'
+
+        elseif(c_field .eq. 'hb')then
+            var_2d = 'HT'
+            call make_fnam_lp(i4time_ref,a9time,istatus)
+            ext='lt1'
+
+            call get_directory('balance',directory,lend)
+            directory=directory(1:lend)//'lt1/'
+
+            call get_3dgrid_dname(directory
+     1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
+     1           ,ext,var_2d,units_2d
+     1           ,comment_2d,NX_L,NY_L,NZ_L,temp_3d,istatus)       
+
+            call make_fnam_lp(i4time_nearest,a9time,istatus)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            do k = 1,NZ_L
+            do i = 1,NX_C
+                field_vert(i,k) = k_to_c(field_vert(i,k))
+            enddo ! i
+            enddo ! k
+
+            clow = -100.
+            chigh = +2000.
+            cint = 100. / density
+            i_contour = 1
+            scale = 10.
+
+            c_label = 'LAPS HT (Balanced)     (dm)'
 
         elseif(c_field .eq. 'ts')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
