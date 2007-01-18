@@ -4118,7 +4118,7 @@ c                   cint = -1.
 
             ext='lt1'
 
-            if(c_type .eq. 'bh' )then
+            if(c_type(1:2) .eq. 'bh' )then
                call get_directory('balance',directory,lend)
                directory=directory(1:lend)//'lt1/'
                call get_2dgrid_dname(directory
