@@ -16,7 +16,6 @@ LIBDIRS = src/lib \
           src/lib/blas \
           src/lib/fm \
           src/lib/grib \
-          src/lib/grib2 \
           src/lib/goesinav \
           src/lib/goeslib \
           src/lib/lapack \
@@ -53,7 +52,6 @@ EXEDIRS = src/accum \
           src/ingest/satellite/lvd/table \
           src/ingest/satellite/sounding \
           src/ingest/sfc_qc \
-          src/laps2grib \
 	  src/lapsprep \
 	  src/lfmpost \
           src/wfoprep \
