@@ -1110,13 +1110,18 @@ cdoc  location. This works for conformal or 'latlon' grids
         subroutine get_grid_spacing_cen(grid_spacing_cen_m,istatus)
 
 cdoc    Calculate actual grid spacing at the center of the domain
+cdoc    If we have a lat/lon domain the Y direction spacing will be used
 
         call get_grid_center(grid_cen_lat,grid_cen_lon,istatus)
         if(istatus .ne. 1)return
 
-        call get_grid_spacing_actual(grid_cen_lat,grid_cen_lon
-     1                              ,grid_spacing_cen_m,istatus)
+        call get_grid_spacing_actual_xy(grid_cen_lat,grid_cen_lon
+     1                                 ,grid_spacing_actual_mx
+     1                                 ,grid_spacing_actual_my
+     1                                 ,istatus)
 
+        grid_spacing_cen_m = grid_spacing_actual_my
+ 
         return
         end
 
