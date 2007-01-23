@@ -86,6 +86,11 @@ print "@greplines[5]";
 
 print "\nSFC temperature analysis was blended in at lower boundary\n";
 
+print "\nVerification:\n";
+
+@greplines = grep /BIAS\/RMS/, @lines;
+print " @greplines";
+
 print "\n";
 @greplines = grep /Error/, @lines;
 print "@greplines";
