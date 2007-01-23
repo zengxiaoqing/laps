@@ -655,13 +655,18 @@ cdoc                            calls read_multiradar_3dref.
                 call get_max_radars(max_radars,istatus)
                 if(istatus .ne. 1)return
 
-                call read_vrz_3dref(i4time_radar                     ! I
-     1                             ,imax,jmax,kmax,max_radars        ! I
-     1                             ,readext,var_2d                   ! I
-     1                             ,lat,lon,topo                     ! I
-     1                             ,grid_ra_ref                      ! O
-     1                             ,closest_vxx                      ! O
-     1                             ,istatus)                         ! O
+                if(i4_tol .lt. 0)then ! Bypass reading of vrz
+                    istatus = 0
+                else
+                    call read_vrz_3dref(i4time_radar                     ! I
+     1                                 ,imax,jmax,kmax,max_radars        ! I
+     1                                 ,readext,var_2d                   ! I
+     1                                 ,lat,lon,topo                     ! I
+     1                                 ,grid_ra_ref                      ! O
+     1                                 ,closest_vxx                      ! O
+     1                                 ,istatus)                         ! O
+
+                endif
  
             endif
 
