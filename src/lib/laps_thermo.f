@@ -508,21 +508,25 @@ c       WRITE(6,15)
 C                                                                         
 C  CALCULATE LIFTED INDEX                                                 
  	CALL ITPLV(P,T,NLEVEL,500.,TMAN50,IO,istatus)                         
+!WNI Modified to check istatus of ITPLV.  When running LAPS
+!WNI for East Asia, some of the mountains extended above the 500mb
+!WNI level, which cause a complete abort of put stability.  Now,
+!WNI we just fill indices dependent on 500mb to missing if this happens.
+!WNI Brent Shaw, WNI, Dec 2006
 !	WREQ50=ES(TP500)/500.                                                   
 !	IF(WREQ50.LT.WMEAN)GOTO40                                               
 
 C                                                                         
 C  CALCULATE SHOWALTER INDEX                                              
-
         SI=r_missing_data
         TT=r_missing_data
         SWEAT=r_missing_data
         K=r_missing_data
-
- 	IF(P(1).GE.850.0)THEN                                                 
- 	    CALL ITPLV(P,T ,NLEVEL,850.,TMAN85,IO,istatus)                    
- 	    CALL ITPLV(P,TD,NLEVEL,850.,TDMN85,IO,istatus)                    
- 	    THETAE=THAE(TMAN85,TDMN85,850.)                           
+        IF (istatus .EQ. 1) THEN  !WNI .. 500mb below ground
+          IF(P(1).GE.850.0)THEN
+            CALL ITPLV(P,T ,NLEVEL,850.,TMAN85,IO,istatus)
+ 	    CALL ITPLV(P,TD,NLEVEL,850.,TDMN85,IO,istatus)
+ 	    THETAE=THAE(TMAN85,TDMN85,850.)
  	    CALL MSAD5(TP500,500.,THETAE,25.,20.,SLOPE,I1,I2,IA,0
      1                ,istatus)    
             if(istatus .ne. 1)then
@@ -549,7 +553,11 @@ C  CALCULATE TOTAL TOTALS AND SWEAT AND K INDICIES
  500	    SWEAT=12.*A+20.*B+2.*FF85+FF50+125.*C        
  	    K=TMAN85-TMAN50+TDMN85-TMAN70+TDMN70         
 
-        ENDIF
+          ENDIF
+        ELSE  !WNI 
+          PRINT *,"No 500mb level, some indices set to missing" !WNI
+          istatus = 1 ! WNI
+        ENDIF ! WNI
 
 C                                                                         
 C  CALCULATE WET BULB ZERO LEVEL                                          
@@ -1104,6 +1112,7 @@ cdoc    Interpolate any parameter from a pressure sounding to a specific pres
         if(p(1) .lt. pint)then
             write(6,*)' Error in ITPLV: p(1) < pint',p(1),pint
             istatus = 0
+            print *, p(:)  ! WNIDB
             return
         endif
 
