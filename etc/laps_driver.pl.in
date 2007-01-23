@@ -218,7 +218,7 @@ if($opt_q || $opt_Q){
     }elsif($opt_Q){ 
         print TFILE "#\$ -pe $node_type 1\n";
         if($exe eq "gridgen_model.exe"){ # allow localization to have more time
-            print TFILE "#\$ -l h_rt=06:00:00\n";
+            print TFILE "#\$ -l h_rt=08:00:00\n";
         }else{
             print TFILE "#\$ -l h_rt=00:20:00\n";
         }
