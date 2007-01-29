@@ -36,8 +36,8 @@ cdis
      1                   lat,lon,                                 ! Input
      1                   max_snd,                                 ! Input
      1                   ob_pr_t,inst_err_tsnd,                   ! Output
-     1                   c5_name,c8_obstype,                      ! Output
-     1                   l_use_raob,l_3d,                         ! Input
+     1                   c5_name,c8_sndtype,                      ! Output
+     1                   l_read_raob,l_3d,                        ! Input
      1                   i4_window_raob_file,                     ! Input
 !    1                   t_maps_inc,                              ! Input
      1                   bias_htlow,                              ! Output
@@ -79,7 +79,7 @@ c                               not exactly match the LAPS analysis time.
         real ob_pr_t (max_snd,kmax) ! Vertically interpolated TSND temp
         real inst_err_tsnd(max_snd)
         character*5 c5_name(max_snd) 
-        character*8 c8_obstype(max_snd) 
+        character*8 c8_sndtype(max_snd) 
 
 !       Local arrays
         integer num_pr(max_snd)
@@ -105,7 +105,7 @@ c                               not exactly match the LAPS analysis time.
         character ext_uc*31
         character*255 c_filespec
 
-        logical l_use_raob,l_3d,l_string_contains
+        logical l_read_raob,l_3d,l_string_contains
 
 !       Initialize
 
@@ -166,7 +166,7 @@ c                               not exactly match the LAPS analysis time.
             read(12,401,err=406,end=500)
      1      ista,nlevels_in,lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
      1                     ,elev_tsnd(i_tsnd)       
-     1                     ,c5_name(i_tsnd),a9time,c8_obstype(i_tsnd)       
+     1                     ,c5_name(i_tsnd),a9time,c8_sndtype(i_tsnd)       
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9,1x,a8)
 
             if(nlevels_in .gt. max_snd_levels)then
@@ -187,11 +187,11 @@ c                               not exactly match the LAPS analysis time.
             write(6,407,err=408)ext_uc(1:3),i_tsnd,ista,nlevels_in       
      1                 ,lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
      1                 ,elev_tsnd(i_tsnd),i_ob,j_ob,c5_name(i_tsnd)
-     1                 ,a9time,c8_obstype(i_tsnd)       
+     1                 ,a9time,c8_sndtype(i_tsnd)       
 407         format(/' ',a3,' #',i5,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9
      1                       ,1x,a8)
 
-            if(l_string_contains(c8_obstype(i_tsnd),'SAT',istatus))then       
+            if(l_string_contains(c8_sndtype(i_tsnd),'SAT',istatus))then       
                 inst_err_tsnd(i_tsnd) = 5.0
             else
                 inst_err_tsnd(i_tsnd) = 1.0
@@ -225,7 +225,7 @@ c311                format(1x,i6,i4,5f8.1)
      1         nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
      1                                                  )then
                 write(6,*)'  In Bounds - Vertically Interpolating the '
-     1                   ,c8_obstype(i_tsnd)
+     1                   ,c8_sndtype(i_tsnd)
             else
                 if(nlevels_in .lt. 2)then
                     write(6,*)'  Less than 2 levels ',nlevels_in
@@ -270,7 +270,7 @@ c       1                ,t_diff
 411                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
 412                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_tsnd,level)       
-     1                        ,c8_obstype(i_tsnd)
+     1                        ,c8_sndtype(i_tsnd)
                 enddo ! level
 
             endif ! # levels > 0 (good rass)
@@ -295,7 +295,7 @@ c       1                ,t_diff
 c
 c       Process sounding data
 c
-        if(.not. l_use_raob)then
+        if(.not. l_read_raob)then
             write(6,*)' Skipping read of SND data'
             istatus = 1
             goto 900
@@ -348,7 +348,7 @@ c
             read(12,801,err=706,end=800)
      1      ista,nlevels_in,lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
      1          ,elev_tsnd(i_tsnd) 
-     1          ,c5_name(i_tsnd),a9time,c8_obstype(i_tsnd)
+     1          ,c5_name(i_tsnd),a9time,c8_sndtype(i_tsnd)
 801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
 !           Determine if SND is in the LAPS domain
@@ -362,7 +362,7 @@ c
             if(iwrite .eq. 1)write(6,707,err=708)i_tsnd,ista,nlevels_in       
      1                 ,lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
      1                 ,elev_tsnd(i_tsnd),i_ob,j_ob,c5_name(i_tsnd)
-     1                 ,a9time,c8_obstype(i_tsnd)
+     1                 ,a9time,c8_sndtype(i_tsnd)
 707         format(/' SND #',i5,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9,1x,a8)       
 
             if(nlevels_in .gt. max_snd_levels)then
@@ -372,7 +372,7 @@ c
                 return
             endif
 
-            if(l_string_contains(c8_obstype(i_tsnd),'SAT',istatus))then       
+            if(l_string_contains(c8_sndtype(i_tsnd),'SAT',istatus))then       
                 inst_err_tsnd(i_tsnd) = 5.0
             else
                 inst_err_tsnd(i_tsnd) = 1.0
@@ -405,7 +405,7 @@ c
                     endif
                 endif
 
-                if(l_string_contains(c8_obstype(i_tsnd),'RADIO'
+                if(l_string_contains(c8_sndtype(i_tsnd),'RADIO'
      1                                                 ,istatus))then        
                     ht_agl = ht_in - elev_tsnd(i_tsnd)
                     if(ht_agl .gt. 3000.)then
@@ -491,7 +491,7 @@ c       1                ,t_diff
 711                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
 712                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_tsnd,level)       
-     1                        ,c8_obstype(i_tsnd)
+     1                        ,c8_sndtype(i_tsnd)
                 enddo ! level
 
             endif ! # levels > 0
