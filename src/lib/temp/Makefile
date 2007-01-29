@@ -30,7 +30,7 @@ DEBUGLIB = libdebugtemp.a
 
 
 SRC=insert_tobs.f   puttmpanal.f    read_tsnd.f  read_acars_t.f read_sfc_t.f \
-    interp_tobs.f   interp_rass.f   adjust_heights.f
+    interp_tobs.f   interp_rass.f   adjust_heights.f compare_temp.f
 
 
 
