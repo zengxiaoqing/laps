@@ -1,19 +1,12 @@
 
 !      Driver for sounding ingest
+       program snd_main
 
 !      Steve Albers      May-1999       Original Version
 
-       character*150 path_to_raw_raob,path_to_local_raob
-       character*150 path_to_raw_drpsnd
-       character*150 path_to_raw_satsnd
-       character*150 path_to_raw_poessnd
-       character*200 path_to_raw_tower
-       character*200 path_to_raw_radiometer
-       character*8 c8_raob_format, c8_project
+!      Access global parameters
+       character*8 c8_project
        character*9 a9_time
-       character*13 filename13,cvt_i4time_wfo_fname13
-
-!      call get_laps_config('nest7grid',istatus)
 
        call get_grid_dim_xy(ni,nj,istatus)
        if (istatus .ne. 1) then
@@ -41,6 +34,23 @@
            if(istatus .ne. 1)go to 999
            write(6,*)' systime = ',a9_time
        endif
+
+       call snd_sub(ni,nj,c8_project,laps_cycle_time,i4time_sys)          ! I
+
+ 999   continue
+
+       end
+
+       subroutine snd_sub(ni,nj,c8_project,laps_cycle_time,i4time_sys)    ! I
+
+       character*150 path_to_raw_raob,path_to_local_raob
+       character*150 path_to_raw_drpsnd
+       character*150 path_to_raw_satsnd
+       character*150 path_to_raw_poessnd
+       character*200 path_to_raw_tower
+       character*200 path_to_raw_radiometer
+       character*8 c8_raob_format, c8_project
+       character*13 filename13,cvt_i4time_wfo_fname13
 
        call get_snd_parms(path_to_raw_raob,path_to_local_raob
      1                   ,path_to_raw_drpsnd
@@ -161,7 +171,9 @@
 
        close(lun_out) ! Output SND file
 
- 999   end
+ 999   return
+       
+       end
 
 
        subroutine get_snd_parms(path_to_raw_raob,path_to_local_raob
