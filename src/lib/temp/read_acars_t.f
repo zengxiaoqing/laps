@@ -66,6 +66,7 @@ cdis
 
         character*9 asc9_tim_acars
         character ext*31, ext_in*3
+        character*8 c8_acars_type
 
         logical l_eof
 
@@ -105,6 +106,9 @@ cdis
             write(6,*)' Error getting i4_window_acars'
             return
         endif
+
+        c8_acars_type = 'ACARS'
+        call get_obstype(c8_acars_type,itype_acars,1)
 
         write(6,*)
         write(6,*)'             Reading ACARS Obs: ',ext_in
@@ -254,6 +258,7 @@ cdis
                             temp_obs(n_obs,i_wt) = 1.0
                             temp_obs(n_obs,i_bias) = bias
                             temp_obs(n_obs,i_inst_err) = 1.0
+                            temp_obs(n_obs,i_obstype) = itype_acars
  
 
                         else
