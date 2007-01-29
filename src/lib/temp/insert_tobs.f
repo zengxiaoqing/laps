@@ -82,14 +82,16 @@ cdis
         real*4 tsnd(max_snd,nk)     ! Vertically interpolated TSND temp
         real*4 inst_err_tsnd(max_snd) 
         character*5 c5_name(max_snd) 
-        character*8 c8_obstype(max_snd) 
+        character*8 c8_sndtype(max_snd) 
 
-        logical l_qc,l_flag_vv,l_use_raob
+        logical l_qc,l_flag_vv,l_use_raob,l_read_raob
         logical l_string_contains,l_struct,l_missing_data
 
         include 'tempobs.inc'
 
         l_struct = .true.
+
+        l_read_raob = .true.
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
@@ -115,8 +117,8 @@ cdis
      1                   lat,lon,                             ! Input
      1                   max_snd,                             ! Input
      1                   tsnd,inst_err_tsnd,                  ! Output
-     1                   c5_name,c8_obstype,                  ! Output
-     1                   l_use_raob,l_struct,                 ! Input
+     1                   c5_name,c8_sndtype,                  ! Output
+     1                   l_read_raob,l_struct,                ! Input
      1                   i4time_raob_window,                  ! Input
 !    1                   t_maps_inc,                          ! Input
      1                   bias_htlow,                          ! Output
@@ -153,6 +155,9 @@ cdis
           jgrid_tsnd(i_tsnd) = nint(rj)
 
 
+!         Convert obstype from character to integer
+          call get_obstype(c8_sndtype(i_tsnd),itype_ob,1)
+
           if(istatus .eq. 1)then
 
 !           Find Temperature bias for each level
@@ -168,14 +173,15 @@ cdis
                     write(6,*)
                     write(6,*)' Temperature bias, sounding # '
      1                       ,i_tsnd,'  ',c5_name(i_tsnd),'  '
-     1                       ,c8_obstype(i_tsnd)       
+     1                       ,c8_sndtype(i_tsnd),itype_ob
                     if(iwrite .eq. 1)write(6,*)
      1          '   k     Tobs        sh      tamb      tlaps      bias'
                 endif
 
                 l_missing_data = .false.
 
-                IF(l_string_contains(c8_obstype(i_tsnd),'RASS',istatus)
+                IF (l_string_contains(c8_sndtype(i_tsnd),'RASS',istatus)    
+!    1         .OR. l_string_contains(c8_sndtype(i_tsnd),'RADI',istatus)
      1                                                            ) THEN       
 !                   Convert from virtual temperature to temperature
                     tvir = tsnd(i_tsnd,k)
@@ -203,7 +209,7 @@ cdis
                 endif
 
 !               This should discriminate the vertical velocity data (inactive)
-                IF(l_string_contains(c8_obstype(i_tsnd),'RASS',istatus)
+                IF(l_string_contains(c8_sndtype(i_tsnd),'RASS',istatus)
      1                                                            ) THEN       
                     if(abs(tamb-267.7) .gt. 3.0)then
                         l_flag_vv = .false.
@@ -271,6 +277,7 @@ cdis
                         temp_obs(n_obs,i_bias) = bias_tsnd(i_tsnd,k)
                         temp_obs(n_obs,i_inst_err) = 
      1                      inst_err_tsnd(i_tsnd)     
+                        temp_obs(n_obs,i_obstype) = float(itype_ob)
                     endif
                 enddo ! k
 
@@ -349,6 +356,7 @@ cdis
      1      ,temp_obs,max_obs,n_obs                            ! I
      1      ,r_missing_data,i4time                             ! I
      1      ,l_struct,rms_thresh_norm                          ! I
+     1      ,l_use_raob                                        ! I
      1      ,igrid_tsnd,jgrid_tsnd,bias_tsnd                   ! I
      1      ,temp_3d                                           ! I/O
      1      ,istatus)                                          ! O
@@ -369,6 +377,7 @@ cdis
      1      ,temp_obs,max_obs,n_obs                               ! I
      1      ,r_missing_data,i4time                                ! I
      1      ,l_struct,rms_thresh_norm                             ! I
+     1      ,l_use_raob                                           ! I
      1      ,igrid_tsnd,jgrid_tsnd,bias_tsnd                      ! I
      1      ,temp_3d                                              ! I/O
      1      ,istatus)                                             ! I
@@ -391,7 +400,7 @@ cdis
 
         integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
 
-        logical l_analyze(nk),l_struct
+        logical l_analyze(nk),l_struct,l_use_raob
 
         include 'tempobs.inc'
 
@@ -419,6 +428,7 @@ cdis
      1               ,bias_3d                                ! Output
      1               ,l_analyze                              ! Output
      1               ,l_struct,rms_thresh_norm               ! Input
+     1               ,l_use_raob                             ! Input
      1               ,igrid_tsnd,jgrid_tsnd                  ! Inputs
      1               ,weight_bkg_const                       ! Input
      1               ,n_fnorm                                ! Input
@@ -464,6 +474,7 @@ cdis
      1                   ,bias_3d                                ! Output
      1                   ,l_analyze                              ! Output
      1                   ,l_struct,rms_thresh_norm               ! Input
+     1                   ,l_use_raob                             ! Input
      1                   ,igrid_tsnd,jgrid_tsnd                  ! Inputs
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
@@ -480,7 +491,7 @@ cdis
         include 'barnesob.inc'
         type (barnesob) obs_barnes(n_obs)                           
 
-        logical l_struct,l_not_struct
+        logical l_struct,l_not_struct,l_use_raob
         real*4 bias_tsnd(max_snd,nk)
         integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
 !       real*4 wt_tsnd(max_snd,nk)
@@ -491,6 +502,8 @@ cdis
         real*4 wt_3d_dum(ni,nj,nk)     ! No longer used in 'barnes_multivariate'
                                        ! Used as zero array in verification
         integer*4 n_obs_lvl(nk)        ! Local
+
+        character*8 c8_obstype
 
         logical l_analyze(nk)
 
@@ -538,6 +551,10 @@ cdis
                     return
                 endif
 
+!               Convert obstype from real to integer to character
+                itype_ob = temp_obs(i_ob,i_obstype)
+                call get_obstype(c8_obstype,itype_ob,2)       
+
 !               Place ob from 'temp_obs' structure into 'obs_barnes' structure
                 obs_barnes(n_obs_valid)%i = temp_obs(i_ob,i_i) 
                 obs_barnes(n_obs_valid)%j = temp_obs(i_ob,i_j)
@@ -545,7 +562,7 @@ cdis
                 obs_barnes(n_obs_valid)%weight = temp_obs(i_ob,i_wt)
                 obs_barnes(n_obs_valid)%value(1) = temp_obs(i_ob,i_bias)
                 obs_barnes(n_obs_valid)%i4time = i4time
-                obs_barnes(n_obs_valid)%type = 'ALL'
+                obs_barnes(n_obs_valid)%type = c8_obstype
                 obs_barnes(n_obs_valid)%l_withhold = .false.
 
             endif
@@ -619,13 +636,16 @@ cdis
       subroutine get_obstype(c_obstype,i_obstype,mode)
 
       integer n_obstypes
-      parameter (n_obstypes = 4)
+      parameter (n_obstypes = 7)
       character*8 c_obstype_a(n_obstypes),c_obstype
 
       data c_obstype_a /
-     1     'RASS    ',
-     1     'RAOB    ',
      1     'ACARS   ',
+     1     'RADIOMTR',
+     1     'GOES11  ',
+     1     'GOES12  ',
+     1     'RAOB    ',
+     1     'RASS    ',
      1     'SATSND  '/
      
       if(mode .eq. 1)then ! Convert c_obstype to i_obstype
