@@ -364,10 +364,12 @@ c.....	set up some other stuff (including grid intervals, etc.)
 c
 	do j=1,jmax
 	do i=1,imax
-	   call get_grid_spacing_actual(lat(i,j),lon(i,j)
-     &             ,grid_spacing_actual_m,istatus)
-	   dy(i,j) = grid_spacing_actual_m
-	   dx(i,j) = grid_spacing_actual_m
+	   call get_grid_spacing_actual_xy(lat(i,j),lon(i,j)
+     &             ,grid_spacing_actual_mx
+     &             ,grid_spacing_actual_my
+     &             ,istatus)
+	   dy(i,j) = grid_spacing_actual_my
+	   dx(i,j) = grid_spacing_actual_mx
            if(del .gt. 0.)then ! we will not divide by zero
 	       a(i,j) = - gam * rho2 / del
            endif
