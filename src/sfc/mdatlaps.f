@@ -584,6 +584,8 @@ c.....  with a smooth Barnes analysis of the obs.  This will allow
 c.....  us to cold start the analysis, or run the analysis in a 
 c.....  stand-alone mode.
 c
+        I4_elapsed = ishow_timer()
+c
 	n_obs_var = 0
 	npass = 1
 	rom2 = 0.005
@@ -656,6 +658,9 @@ c
 c
 c.....	Fill in the boundary of each field.
 c
+c
+        I4_elapsed = ishow_timer()
+
         i_boundary = 0 ! 2
 
 	print *,' Boundary for    U:'
@@ -685,6 +690,8 @@ c
 	print *,' Boundary for ELEV:'
 	call set_boundary(elev1,imax,jmax,ii,jj,elev_s,topo,n_obs_b,
      &                    badflag,mxstn,i_boundary)
+c
+        I4_elapsed = ishow_timer()
 c
 c.....	Check the brightness temperatures for clouds.
 c
