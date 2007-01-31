@@ -36,7 +36,7 @@
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus .ne. 1)return
 
-      call check_nan3(field_3d,i,j,k,istatus) ! relatively efficient
+      call check_nan3(field_3d,ni,nj,nk,istatus) ! relatively efficient
       if(istatus .eq. 0)then ! identify the grid point with the Nan
           do k=1,nk
           do j=1,nj
