@@ -34,8 +34,11 @@ if (-e /w3/lapb) then
     echo "updating on-the-fly page softlink..."
     mkdir -p /w3/lapb/domains/$DOMAIN_SUFFIX
     cd /w3/lapb/domains/$DOMAIN_SUFFIX
-    rm -f private_data
-    ln -s $LAPS_DATA_ROOT private_data
+
+    if (! -e private_data) then
+        ln -s $LAPS_DATA_ROOT private_data
+    endif
+
     ls -l /w3/lapb/domains/$DOMAIN_SUFFIX
     echo " "
 
