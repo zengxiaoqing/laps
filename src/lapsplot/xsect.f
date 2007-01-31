@@ -739,7 +739,7 @@ c read in laps lat/lon and topo
             call diff(field_vert,field_vert_buf,field_vert ! _diff
      1               ,NX_C,NZ_C)       
 
-            c_label = 'difference field'
+            c_label = 'difference field (b - a)'
 
             scale = 1.
             cint = 0.
@@ -1988,8 +1988,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                             ,istatus)                ! O
 
             if(c_prodtype .eq. 'A')then
-                iflag_temp = 1 ! Returns Ambient Temp (K)
-
 !               Obtain height field
                 ext = 'lt1'
                 var_2d = 'HT'
@@ -2012,7 +2010,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
      1                              ,directory,var_2d
-     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,units_2d,comment_2d,field_3d       
      1                              ,istatus)
                 if(istatus .ne. 1)goto100
 
@@ -2150,12 +2148,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call make_fnam_lp(i4time_nearest,a9time,istatus)
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
-
-            do k = 1,NZ_L
-            do i = 1,NX_C
-                field_vert(i,k) = k_to_c(field_vert(i,k))
-            enddo ! i
-            enddo ! k
 
             clow = -100.
             chigh = +2000.
