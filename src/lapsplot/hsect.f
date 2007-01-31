@@ -423,10 +423,10 @@ c       include 'satellite_dims_lvd.inc'
 
         if(c_type(1:2) .eq. 'di')then
             write(6,*)' Plotting difference field of last two entries'       
-            call diff_miss(field_2d_buf,field_2d,field_2d_diff
+            call diff_miss(field_2d,field_2d_buf,field_2d_diff
      1                                          ,NX_L,NY_L)       
 
-            c_label = 'difference field (a - b)'
+            c_label = 'difference field (b - a)'
 
 !           Use scale from the most recent plot?
 !           scale = 1.
