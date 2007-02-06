@@ -431,7 +431,9 @@ c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
 c
-           if(lats(i) .lt. -90.) go to 125   !badflag (-99.9)...from nan ck
+           if(lats(i)      .lt. -90.) go to 125 ! badflag (-99.9)...from nan ck
+           if(abs(lons(i)) .gt. 180.) go to 125 
+
            call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,
      &                              ri_loc,rj_loc,istatus)
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
