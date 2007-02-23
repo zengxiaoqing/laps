@@ -30,3 +30,10 @@ c 'path_to_raw_poessnd'
 c
 c The 'poessnd' data is for MADIS POES data (if 'c8_project' is not AFWA)
 c The default is for this to be "off" as this is still somewhat experimental.
+c
+c
+c 'path_to_raw_satsnd'
+c
+c For most values of 'c8_project' this refers to the path containing GOES 
+c sounding data. If 'c8_project' is set to 'AFWA' the path refers to AFWA
+c satellite sounding data instead.
