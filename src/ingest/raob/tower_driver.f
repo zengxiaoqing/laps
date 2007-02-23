@@ -3,10 +3,12 @@
      1                           ,maxobs,laps_cycle_time
      1                           ,path_to_local_data
      1                           ,itime_before,itime_after
-     1                           ,maxsta
+     1                           ,maxsta                          ! I
      1                           ,istatus)
 c        
         integer ni, nj, maxsta, maxobs 
+        integer maxlvls ! raw/processed stations for SND file
+        parameter (maxlvls=10)
 c
 	real    lat(ni,nj), lon(ni,nj), topo(ni,nj)
 c
@@ -25,6 +27,11 @@ c
         character*200 path_to_local_data
         character*8   metar_format
         character*8   a9_to_a8, a8_time
+
+c       Dummy for SND purposes
+        real*4     stalat_s(maxsta,maxlvls),stalon_s(maxsta,maxlvls)
+        real*4     staelev_s(maxsta)
+        real*4     soilmoist_p(maxsta)       
 c
 c.....	Start here.  
 c
@@ -63,17 +70,21 @@ c
 	write(6,*)'Getting Mesonet Tower Data...'
 c
         ext_s = 'snd'
-
-        call get_local_towerobs(maxsta,i4time_sys,lun_out,
+ 
+        call get_local_towerobs(maxsta,maxlvls,                          ! I
+     &                      i4time_sys,lun_out,
      &                      path_to_local_data,metar_format,
      &                      ext_s,
      &                      itime_before,itime_after,
 !    &                      grid_east,grid_west,grid_north,grid_south,
-     &                      lat,lon,ni,nj,
-     &                      nobs,
+     &                      lat,lon,ni,nj,                               ! I
+     &                      nobs,                                        ! O
 !    &                      stations,
 !    &                      reptype,atype,wmoid,
 !    &                      laps_cycle_time, 
+     &                      stalat_s,stalon_s,staelev_s,                 ! O
+     &                      stname_s,                                    ! O
+     &                      soilmoist_p,                                 ! O
      &                      istatus)
 
 	if(istatus .ne. 1) then
