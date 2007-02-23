@@ -34,16 +34,29 @@
       ext_in = 'satsnd'
 
       call s_len(dir_in,len_dir_in)
+
       if(c8_project .eq. 'AFWA')then
-          c_filespec = dir_in(1:len_dir_in)//'/'//'*00.'//ext_in
+          if(len_dir_in .gt. 0)then
+              c_filespec = dir_in(1:len_dir_in)//'/'//'*00.'//ext_in
+          else
+              c_filespec = ' '
+          endif
+
           i4_contains_early = 0
           i4_contains_late  = 0
           lag_time_report = 3600
+
       else ! MADIS POES
-          c_filespec = dir_in(1:len_dir_in)//'/'//'*00'
+          if(len_dir_in .gt. 0)then
+              c_filespec = dir_in(1:len_dir_in)//'/'//'*00'
+          else
+              c_filespec = ' '
+          endif
+
           i4_contains_early = 0
           i4_contains_late  = 3600
           lag_time_report = 0 ! Pretty much an obsolete variable?
+
       endif
 
 !     Get list of files
