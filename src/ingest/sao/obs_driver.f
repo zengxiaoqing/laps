@@ -140,7 +140,7 @@ c
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
      1                           ,path_to_gps_data
-     1                           ,metar_format
+     1                           ,c8_project,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
@@ -157,7 +157,7 @@ c
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
      1                           ,path_to_gps_data
-     1                           ,metar_format
+     1                           ,c8_project,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
@@ -195,7 +195,7 @@ c
         character*200 path_to_local_data
         character*200 path_to_buoy_data
         character*200 path_to_gps_data
-        character*8   metar_format
+        character*8   metar_format, c8_project
         character*8   a9_to_a8, a8_time
 
         logical l_allow_empty_lso
@@ -410,7 +410,6 @@ c
             call get_local_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
-     &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
      &                      reptype,atype,weather,wmoid,
@@ -505,6 +504,10 @@ c
                return
             endif
 
+        endif
+
+        if(c8_project(1:3) .eq. 'RSA')then ! Tower soil moisture
+            write(6,*)' Future stub for tower soil moisture'
         endif
 c
 c.....  Count up the obs.
