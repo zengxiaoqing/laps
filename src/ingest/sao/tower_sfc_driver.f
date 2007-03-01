@@ -1,10 +1,10 @@
 
-        subroutine tower_sfc_driver(ni,nj,lun_out
-     1                           ,maxobs,laps_cycle_time
-     1                           ,path_to_local_data
-     1                           ,itime_before,itime_after
-     1                           ,maxsta                          ! I
-     1                           ,istatus)
+        subroutine tower_sfc_driver(maxsta,i4time_sys               ! I
+     1                             ,path_to_tower_data              ! I
+     1                             ,lat,lon,ni,nj,grid_spacing      ! I
+     1                             ,laps_cycle_time                 ! I
+     1                             ,itime_before,itime_after        ! I
+     1                             ,istatus)                        ! O
 c        
         integer ni, nj, maxsta, maxobs 
         integer maxlvls ! raw/processed stations for SND file
@@ -24,7 +24,7 @@ c
 	character  data_file_l*150
 c
         character*200 path_to_metar
-        character*200 path_to_local_data
+        character*200 path_to_tower_data
         character*8   metar_format
         character*8   a9_to_a8, a8_time
 
@@ -32,6 +32,17 @@ c       Dummy for SND purposes
         real*4     stalat_s(maxsta,maxlvls),stalon_s(maxsta,maxlvls)
         real*4     staelev_s(maxsta)
         real*4     soilmoist_p(maxsta)       
+c
+c.....  Output arrays.
+c
+	real*4  store_1(maxsta,4), 
+     &          store_2(maxsta,3), store_2ea(maxsta,3),
+     &          store_3(maxsta,4), store_3ea(maxsta,2),
+     &          store_4(maxsta,5), store_4ea(maxsta,2),
+     &          store_5(maxsta,4), store_5ea(maxsta,4),
+     &          store_6(maxsta,5), store_6ea(maxsta,2),
+     &          store_7(maxsta,3),
+     &          store_cldht(maxsta,5)
 c
 c.....	Start here.  
 c
@@ -43,22 +54,9 @@ c
 
 c.....  Get the time from the scheduler or from the user if interactive.
 c
-        call get_systime(i4time_sys,filename9,istatus)
-	call cv_i4tim_asc_lp(i4time_sys,atime,istatus)
+        call make_fnam_lp(i4time_sys,filename9,istatus)
 c
         write(6,*)' systime = ',filename9
-c
-c.....  Read in lat/lon/topo
-c.....	Find east/west and north/south sides of grid (max extension of grid)
-c
-        call get_latlon_perimeter(ni,nj,0.0
-     1                           ,lat,lon,topo
-     1                           ,grid_north,grid_south
-     1                           ,grid_east,grid_west,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading LAPS perimeter'
-            return
-        endif
 c
 c.....  Call the routine that reads the mesonet data files, then get the data.
 c
@@ -66,7 +64,7 @@ c
 	write(6,*)'Getting Mesonet Tower Data...'
 c
         call get_local_towerobs(maxsta,i4time_sys,lun_out,
-     &                      path_to_local_data,metar_format,
+     &                      path_to_tower_data,metar_format,
      &                      ext_s,
      &                      itime_before,itime_after,
 !    &                      grid_east,grid_west,grid_north,grid_south,
