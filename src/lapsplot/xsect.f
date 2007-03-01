@@ -293,6 +293,8 @@ cdis
      1     -105.03,-104.76,-105.19,-104.64,-104.34, -97.60, -94.60,
      1      -97.43, -93.65, -98.32,-106.87/
 
+        O_K(T_K,P_PA)   =   O( T_K-273.15 , P_PA/100. )  + 273.15
+
         zoom = 1.0
 
 !       sizem = 1.0
@@ -1943,20 +1945,67 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             endif ! l_atms
 
         elseif(c_field .eq. 'pt')then
-            iflag_temp = 0 ! Returns Potential Temperature
-            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-!           if(istatus .ne. 1)goto100
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
 
-            call make_fnam_lp(i4time_nearest,a9time,istatus)
-            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+            if(c_prodtype .eq. 'A')then ! Original code
+                iflag_temp = 0 ! Returns Potential Temperature
+                call get_temp_3d(i4time_ref,i4_valid,iflag_temp
+     1                      ,NX_L,NY_L,NZ_L,field_3d,istatus)
+!               if(istatus .ne. 1)goto100
+                c_label = 'LAPS Potl Temp Vert X-Sect    K  '
+
+            elseif(c_prodtype .eq. 'B' .or. 
+     1             c_prodtype .eq. 'F')then
+                var_2d = 'T3'
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+!               Convert from T to Theta
+                do i = 1,NX_L
+                do j = 1,NY_L
+
+                    do k = 1,NZ_L
+                        theta = O_K(temp_3d(i,j,k),zcoord_of_level(k))         
+                        field_3d(i,j,k) = theta
+                    enddo ! k
+
+                enddo ! j
+                enddo ! i
+
+                if(c_prodtype .eq. 'B')then
+                    c_label = 'LAPS  Bkgnd   Theta  '//fcst_hhmm
+     1                                                 //'  Deg K '
+                elseif(c_prodtype .eq. 'F')then
+                    call directory_to_cmodel(directory,c_model)
+                    call mk_fcst_xlabel('Theta',fcst_hhmm
+     1                          ,ext(1:3),'Deg K',c_model,c_label)       
+
+                endif
+
+            endif
+
+            call make_fnam_lp(i4_valid,a9time,istatus)
+            call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             clow = 200.
             chigh = +500.
             cint = 5. / density
             i_contour = 1
-            c_label = 'LAPS Potl Temp Vert X-Sect    K  '
 
         elseif(c_field .eq. 'pb')then
             iflag_temp = 3 ! Returns Balanced Potential Temperature
@@ -3065,7 +3114,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                         if(dir .gt. -400. .and. 
      1                       k .ge. int(rk_terrain))then
                             call barbs(spd_ms/mspkt,dir,x1,y1,du,rot
-     1                                  ,-1e10,+1e10,-1e10,+1e10,1.0)
+     1                             ,-1e10,+1e10,-1e10,+1e10,1.0,1.0)
                         endif
                     endif
                 enddo ! k
