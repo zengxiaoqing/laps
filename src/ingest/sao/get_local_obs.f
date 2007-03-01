@@ -40,7 +40,6 @@ c
         subroutine get_local_obs(maxobs,maxsta,i4time_sys,
      &                 path_to_local_data,local_format,
      &                 itime_before,itime_after,
-     &                 eastg,westg,anorthg,southg,
      &                 lat,lon,ni,nj,grid_spacing,
      &                 nn,n_obs_g,n_obs_b,stations,
      &                 reptype,atype,weather,wmoid,
