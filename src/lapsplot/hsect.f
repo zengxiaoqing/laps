@@ -988,9 +988,8 @@ c       include 'satellite_dims_lvd.inc'
                 endif
 
                 if(k_level .ne. 0)then
-                    interval = (max(NX_L,NY_L) / 50) + 1
-                    size = float(interval) * .14
-
+                    interval = (NY_L / 50) + 1
+                    size = float(interval) * .11
                 else
                     nxz = float(NX_L) / zoom
                     nyz = float(NY_L) / zoom
@@ -2525,7 +2524,7 @@ c
                     do i_radar = 1,n_radars
                         write(6,*)'         Plotting radar # ',i_radar
                         call plot_obs(k_level,.false.,asc9_tim
-     1                      ,i_radar,i_radar
+     1                      ,i_radar,i_radar,namelist_parms
      1                      ,NX_L,NY_L,NZ_L,idum1_array,grid_ra_ref
      1                      ,grid_ra_vel(1,1,1,i_radar)    
      1                      ,lat,lon,topo,2)
@@ -2533,7 +2532,7 @@ c
 
                 else ! single radar
                     call plot_obs(k_level,.false.,asc9_tim
-     1                      ,i_radar,i_radar
+     1                      ,i_radar,i_radar,namelist_parms
      1                      ,NX_L,NY_L,NZ_L,idum1_array,grid_ra_ref
      1                      ,grid_ra_vel(1,1,1,i_radar)    
      1                      ,lat,lon,topo,2)
@@ -3563,6 +3562,24 @@ c
      1                                          ,field_2d,0,istatus)
                     if(istatus .ne. 1)goto1200
                     call make_fnam_lp(i4time_temp,asc9_tim,istatus)
+
+                elseif(c_prodtype .eq. 'F')then
+                    write(6,*)' Experimental model sfc precip type...'       
+
+                    level = 0
+                    var_2d = 'spt'
+
+                    CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,level,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 field_2d,istatus)
+                    if(istatus .ne. 1)then
+                        write(6,*)' Could not read forecast field'       
+                        goto1200
+                    endif
+                    c_label(11:33) = ' FUA     '//var_2d(1:4)
+     1                                 //fcst_hhmm//'      '
 
                 else
                     write(6,*)' Not yet supported'
@@ -6168,7 +6185,7 @@ c             if(cint.eq.0.0)cint=0.1
 
 !                   call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
                     call plot_obs(k_level,.true.,asc_tim_9(1:9)
-     1                  ,i_radar_start,i_radar_end
+     1                  ,i_radar_start,i_radar_end,namelist_parms
      1                  ,imax,jmax,kmax,n_plotted
      1                  ,grid_ra_ref,grid_ra_vel,lat,lon,topo,1)
                     return
@@ -6191,7 +6208,7 @@ c             if(cint.eq.0.0)cint=0.1
      1                                                             ,1)       
 
                 call plot_winds_2d(u,v,interval,size,zoom
-     1          ,NX_L,NY_L,lat,lon,r_missing_data)
+     1          ,NX_L,NY_L,lat,lon,r_missing_data,namelist_parms)
 !               call frame
 
             endif
