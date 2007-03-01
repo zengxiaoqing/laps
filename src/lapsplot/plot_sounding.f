@@ -447,7 +447,9 @@
                 if(istat_td .eq. 1)then
                     x1 = skewt(td_vert(iz-1),y1)
                     x2 = skewt(td_vert(iz),y2)
+                    CALL GSLN (3)
                     call line(x1,y1,x2,y2) 
+                    CALL GSLN (1)
                 endif
 
             elseif(pres_1d(iz) .gt. p_sfc_pa)then          ! below sfc
@@ -463,7 +465,9 @@
                 if(istat_td .eq. 1)then
                     x1 = skewt(td_vert(iz-1),y1)
                     x2 = skewt(td_vert(iz),y2)
+                    CALL GSLN (3)
                     call line(x1,y1,x2,y2) 
+                    CALL GSLN (1)
                 endif
 
             else                                           ! straddles the sfc
@@ -480,7 +484,9 @@
                 if(istat_td .eq. 1)then
                     x1 = skewt(td_vert(iz-1),y1)
                     x2 = skewt(k_to_c(td_sfc_k),y2)
+                    CALL GSLN (3)
                     call line(x1,y1,x2,y2) 
+                    CALL GSLN (1)
                 endif
 
 !               Plot line above the sfc              
@@ -496,7 +502,9 @@
                 if(istat_td .eq. 1)then
                     x1 = skewt(k_to_c(td_sfc_k),y1)
                     x2 = skewt(td_vert(iz),y2)
+                    CALL GSLN (3)
                     call line(x1,y1,x2,y2) 
+                    CALL GSLN (1)
                 endif
 
             endif
