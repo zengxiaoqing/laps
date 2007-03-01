@@ -642,7 +642,7 @@ c
                 if(dir .ge. 0.  .and. spd .ge. 0. .and.
      1             dir .le. 360 .and. spd .le. 200.       )then
                     call barbs(spd,dir,ri,rj,du_b,rot
-     1                        ,-1e10,+1e10,-1e10,+1e10,1.0)
+     1                        ,-1e10,+1e10,-1e10,+1e10,1.0,1.0)
                     if(spd .ge. 1.0)then
                         call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
                         call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)       
