@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
         subroutine plot_obs(k_level,l_ask_questions,asc9_tim
-     1    ,i_radar_start,i_radar_end
+     1    ,i_radar_start,i_radar_end,namelist_parms
      1    ,imax,jmax,kmax,n_plotted,grid_ra_ref,grid_ra_vel,lat,lon
      1    ,topo,mode)
 
@@ -45,6 +45,8 @@ cdis
 !       Steve A         Nov  1991       Adjustable Dimensions
 
         include 'trigd.inc'
+        include 'lapsplot.inc'
+
         common /zoom/ zoom
 
         real*4 grid_ra_ref(imax,jmax,kmax)
@@ -52,6 +54,8 @@ cdis
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
+
+        real*4 aspect_a(imax,jmax)          ! local
 
         integer*4 n_plotted(imax,jmax)
 
@@ -129,7 +133,7 @@ cdis
      1                + nint(pix_per_km * 3.02 * grid_scale)
         dusmall = dubase * pix_per_km/1.65
 
-        size_factor = float(max(imax,jmax)) / 300.
+        size_factor = float(jmax) / 300.
 
         size_prof = 3.  * size_factor / zoom
         size_pirep = 3. * size_factor / zoom
@@ -139,6 +143,31 @@ cdis
         size_suw = 1.   * size_factor / zoom
         size_radar = 1. * size_factor
         size_meso = 2.  * size_factor / zoom
+
+        aspect = 1.0 ! initialize to default value
+
+        if(namelist_parms%l_sphere)then
+            do i = 1,imax
+            do j = 1,jmax
+                arg = cosd(lat(i,j))
+                ratio_log = nint(log(arg) / log(0.5))
+                projfrac = 0.5**ratio_log
+
+                interval_i = nint(float(interval) / projfrac)
+
+                if(arg .gt. 0.)then
+                    aspect_a(i,j) = 1.0 / arg
+                else
+                    aspect_a(i,j) = 1.0
+                endif
+
+            enddo ! j
+            enddo ! i
+
+        else
+            aspect_a = 1.0
+
+        endif
 
         LUN_IN = 5
 
@@ -284,11 +313,13 @@ cdis
 
                 spd_kt = speed_ms / mspkt
 
-                write(6,*)nint(ri),nint(rj),dir,spd_kt
+                aspect = aspect_a(nint(ri),nint(rj))
+
+                write(6,*)nint(ri),nint(rj),dir,spd_kt,aspect
 
 !               Note the 'false' passed as DXX winds are grid north
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_radar,'false')
+     1                          ,size_radar,aspect,'false')
 
           elseif(k_ob .gt. k_level)then
                 goto1300
@@ -341,8 +372,10 @@ cdis
 c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 112             format(1x,f6.1,i4,2f7.0,4x,2f7.0,i4)
 
+                aspect = aspect_a(nint(ri),nint(rj))
+
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon
-     1                          ,imax,jmax,size_suw,'true')
+     1                          ,imax,jmax,size_suw,aspect,'true')
               endif
 
             end if ! Valid Wind
@@ -386,10 +419,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 spd_kt = SPEED_ms  / mspkt
 
                 write(6,111)alat,alon,max(dir,-99.),spd_kt
-111             format(1x,2f8.1,4x,f7.0,f7.0,i4,f8.3)
+111             format(1x,2f8.1,4x,f7.0,f7.0,i4,2f8.3)
+
+                aspect = aspect_a(nint(ri),nint(rj))
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_vad,'true')
+     1                          ,size_vad,aspect,'true')
 
 
             endif
@@ -426,8 +461,10 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         if(abs(k - k_level) .le. vert_rad_meso .or. k_level .eq. 0)then
 
+                aspect = aspect_a(nint(ri),nint(rj))
+
                 write(6,111)ri,rj,max(dir,-99.)
-     1                  ,speed_ms,k,wt_vert
+     1                  ,speed_ms,k,wt_vert,aspect
 
 !               call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
 !               call latlon_ram_laps(alat,alon,x,y,init,'p')
@@ -435,7 +472,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 spd_kt = SPEED_ms  / mspkt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_meso,'true')
+     1                          ,size_meso,aspect,'true')
 
         endif ! k .eq. k_level
 
@@ -473,8 +510,10 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         if(abs(k - k_level) .le. vert_rad_sao .or. k_level .eq. 0)then
 
+                aspect = aspect_a(nint(ri),nint(rj))
+
                 write(6,111)ri,rj,max(dir,-99.)
-     1                     ,speed_ms,k,wt_vert
+     1                     ,speed_ms,k,wt_vert,aspect
 
 !               call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
 !               call latlon_ram_laps(alat,alon,x,y,init,'p')
@@ -482,7 +521,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 spd_kt = SPEED_ms  / mspkt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_meso,'true')
+     1                          ,size_meso,aspect,'true')
 
         endif ! k .eq. k_level
 
@@ -529,9 +568,11 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
+                aspect = aspect_a(nint(ri),nint(rj))
+
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_prof,'true')
-                write(6,111,err=38)alat,alon,dir,spd_kt
+     1                          ,size_prof,aspect,'true')
+                write(6,111,err=38)alat,alon,dir,spd_kt,aspect
 38              continue
 
             endif ! k .eq. k_level
@@ -583,10 +624,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
+                aspect = aspect_a(nint(ri),nint(rj))
+
                 write(6,921)ri,rj,rk,max(dir,-99.),spd_kt,c3_obsext
 921             format(1x,3f8.1,4x,f7.0,f7.0,2x,a3)
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_pirep,'true')
+     1                          ,size_pirep,aspect,'true')
 
             endif ! k .eq. k_level
 
@@ -632,9 +675,11 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms / mspkt
 
-!               write(6,111)alat,alon,max(dir,-99.),spd_kt
+                aspect = aspect_a(nint(ri),nint(rj))
+
+!               write(6,111)alat,alon,max(dir,-99.),spd_kt,aspect
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_maps,'true')
+     1                          ,size_maps,aspect,'true')
 
             endif ! k .eq. k_level
 
