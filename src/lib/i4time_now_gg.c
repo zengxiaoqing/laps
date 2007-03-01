@@ -31,13 +31,16 @@ cdis
 cdis*/
 #include <config.h>
 
-
+/*
+LW Comment out ifdefs for sys/time.h and time.h below....just include time.h
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #ifndef TM_IN_SYS_TIME
 #include <time.h>
 #endif
+*/
+#include <time.h>
 
 #include <stdio.h>
 

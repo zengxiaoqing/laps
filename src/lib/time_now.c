@@ -49,14 +49,17 @@ c Date:     April 1, 1994
 #include <stdio.h>
 #include <stddef.h>
 
+/*
+LW commented out ifdefs for sys/time.h and time.h....just include time.h
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #ifndef TM_IN_SYS_TIME
 #include <time.h>
 #endif
+*/
 
-
+#include <time.h>
 
 #ifdef FORTRANUNDERSCORE
 #define time_now time_now_
