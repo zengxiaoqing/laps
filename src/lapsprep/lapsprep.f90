@@ -645,33 +645,34 @@
 !cj
 ! Sanity check on temperature lapse rates.
 ! Any lapse rate that exceeds adiabatic is set to neutral. 
-! The stability is checked from the highest pressure level downward.
-! Instability is diagnosed by dtheta/dz less than zero.
-! A neutral layer is created by setting the theta of the lower pressure level
-! equal to theta of the upper pressure level.
+! The stability is checked from the lowest to highest pressure level, ie from
+! highest to lowest elevation.
+! Instability is diagnosed by dtheta/dp less than zero.
+! A neutral layer is created by setting the theta of the higher pressure level
+! equal to theta of the lower pressure level.
 ! Pressure is in mb, and temperature is in K.
 ! As k increases, pressure decreases, meaning higher altitude with increasing k.
-      do k=1,z3-1
-      do j=1,y
-      do i=1,x
-        theta_upper = t(i,j,k)*(1000./p(k))**0.286
-        theta_lower = t(i,j,k+1)*(1000./p(k+1))**0.286
-        if (theta_upper .lt. theta_lower) then
-          print *, ' ' 
-          print *, ' ' 
-          print *, 'superadiabatic layer'
-          print *, i,j,k,z3
-          print *, 'theta top ',theta_upper,' theta bot',theta_lower
-          print *, 't top ',t(i,j,k),' t bot ',t(i,j,k+1)
-          print *, 'p top ',p(k),' p bot ',p(k+1)
-          t(i,j,k+1) = (theta_upper-0.25) / (1000./p(k+1))**0.286
-          theta_lower = t(i,j,k+1)*(1000./p(k+1))**0.286
-          print *, 'new t bot ',t(i,j,k+1)
-          print *, 'new theta bot ',theta_lower
-        endif
-      enddo
-      enddo
-      enddo
+!      do k=1,z3-1
+!      do j=1,y
+!      do i=1,x
+!        theta_upper = t(i,j,k)*(1000./p(k))**0.286
+!        theta_lower = t(i,j,k+1)*(1000./p(k+1))**0.286
+!        if (theta_upper .lt. theta_lower) then
+!          print *, ' ' 
+!          print *, ' ' 
+!          print *, 'superadiabatic layer'
+!          print *, i,j,k,z3
+!          print *, 'theta top ',theta_upper,' theta bot',theta_lower
+!          print *, 't top ',t(i,j,k),' t bot ',t(i,j,k+1)
+!          print *, 'p top ',p(k),' p bot ',p(k+1)
+!          t(i,j,k+1) = theta_upper / (1000./p(k+1))**0.286
+!          theta_lower = t(i,j,k+1)*(1000./p(k+1))**0.286
+!          print *, 'new t bot ',t(i,j,k+1)
+!          print *, 'new theta bot ',theta_lower
+!        endif
+!      enddo
+!      enddo
+!      enddo
 
     ! If make_sfc_uv set, then replace surface winds with 
     ! winds interpolated from the 3D field.
