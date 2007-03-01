@@ -37,7 +37,9 @@ cdis
 cdis   
 cdis
         subroutine plot_winds_2d(u,v,interval,size_in,zoom
-     1          ,imax,jmax,lat,lon,r_missing_data)
+     1          ,imax,jmax,lat,lon,r_missing_data,namelist_parms)
+
+        include 'lapsplot.inc'
 
         real*4 u(imax,jmax),v(imax,jmax)
         real*4 lat(imax,jmax),lon(imax,jmax)
@@ -59,8 +61,36 @@ cdis
         write(6,*)
         write(6,*) ' winds are assumed to be GRID north at this point'       
 
+        if(namelist_parms%l_sphere)then
+            write(6,*) ' aspect ratio is non-unity for spherical proj'       
+        endif
+
         do j = 1+isize,jmax-isize,interval
-        do i = 1+isize,imax-isize,interval
+
+          aspect = 1.0
+
+!         Adjust barb spacing for spherical projection (by powers of two)
+!         It is assumed a 'latlon' grid is being used
+
+          if(namelist_parms%l_sphere)then
+            arg = cosd(lat(1,j))
+            ratio_log = nint(log(arg) / log(0.5))
+            projfrac = 0.5**ratio_log
+
+            interval_i = nint(float(interval) / projfrac)
+
+            if(arg .gt. 0.)then
+                aspect = 1.0 / arg
+            endif
+
+            write(6,*)'j/intvl/aspect/lat=',j,interval_i,aspect,lat(1,j)       
+
+          else
+            interval_i = interval
+
+          endif
+
+          do i = 1+isize,imax-isize,interval_i
 
             alat = lat(i,j)
             alon = lon(i,j)
@@ -81,7 +111,7 @@ cdis
 
                 if(l_barbs)then 
                     call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                              ,relsize,'grid')
+     1                              ,relsize,aspect,'grid')
 
                 else ! plot wind arrows
 !                   call plot_windarrow()
@@ -91,7 +121,7 @@ cdis
             endif
 
 
-        enddo ! i
+          enddo ! i
         enddo ! j
 
         return
