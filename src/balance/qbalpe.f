@@ -620,9 +620,6 @@ c     call zero3d(om,nx,ny,nz)
 c     call zero3d(ombs,nx,ny,nz)
 c     call zero3d(oms,nx,ny,nz)
 
-      call terbnd(u,v,om,nx,ny,nz,ps,p,bnd)
-      call terbnd(us,vs,oms,nx,ny,nz,ps,p,bnd)
-      call terbnd(ubs,vbs,ombs,nx,ny,nz,ps,p,bnd)
 c
 c ****** Execute mass/wind balance.
 c  set maximum relaxation correction for phi in GPM
@@ -1357,7 +1354,12 @@ c        specified explicitly over the entire grid as determined from
 c        verification stats. The observed error is an array that takes into
 c        account both observation error and interpolation error.
 c        omo is the cloud consistent vertical motion
-
+c        Change added 2/23/07 to perform mass continity initially with 
+c        no terrain (terbnd is not applied) then balance. The final
+c        continuity application then zeros out winds on terrain faces
+c        so the final adjustment accounts for terrain. This change was
+c        applied owing to spurious mass adjustments owing to large shear
+c        on terrain faces and large adjustments to phi and thus temperature.
 c
       implicit none
 c
@@ -1375,7 +1377,7 @@ c
      .      ,tmp(nx,ny,nz)
 c    .,nu(nx,ny,nz),nv(nx,ny,nz),fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
-     .      ,ps(nx,ny),p(nz)
+     .      ,ps(nx,ny),p(nz),pso(nx,ny)
      .      ,lat(nx,ny),ff(nx,ny)
      .      ,erru(nx,ny,nz),errph(nx,ny,nz)
      .      ,errub(nx,ny,nz),errphb(nx,ny,nz)
@@ -1441,6 +1443,12 @@ c
 c
 c only need these calculations once
 c
+c set pso to bottom pressure level
+      do j=1,ny
+      do i=1,nx
+       pso(i,j)=p(1)
+      enddo
+      enddo 
       do k=1,nz
        do j=1,ny
         js=1
@@ -1506,16 +1514,16 @@ c  accuracy of wind
        erf=erf*dx(nx/2,ny/2)
 c apply continuity to input winds
        call leib_sub(nx,ny,nz,erf,tau,erru
-     .,lat,dx,dy,ps,p,dp,uo,u,vo,v,
+     .,lat,dx,dy,pso,p,dp,uo,u,vo,v,
      . omo,om,omb,l,lmax)
 c
-c      do k=1,nz/2    
-c      print*, 'After continuitlevel ',k
-c      call diagnose(uo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED U ')
-c      call diagnose(vo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED V ')
-c      call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'CONTINTY U ')
-c      call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'CONTINTY V ')
-c      enddo
+      do k=1,nz/2    
+      print*, 'After continuitlevel ',k
+      call diagnose(uo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED U ')
+      call diagnose(vo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED V ')
+      call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'CONTINTY U ')
+      call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'CONTINTY V ')
+      enddo
 
        if(delo.eq.0.) go to 111
 c move adjusted fields to observation fields 
@@ -1553,13 +1561,14 @@ c
 
          cotmax=0.
          sum=0.
+         do 2 k=ks,kf
          do 2 j=2,nym1
           do 2 i=2,nxm1
 
-           do 2 k=ks,kf
+cbeka           do 2 k=ks,kf
 
                if(k.ne.kf)then
-               if(ps(i,j).lt.p(k+1)) then 
+               if(pso(i,j).lt.p(k+1)) then 
                 term1=0.
                 term2=0.
                 term3=0.
@@ -1779,13 +1788,13 @@ c Restore full winds and heights by adding back in background
        enddo
 
 
-c      do k=1,nz/2    
-c      print*, 'After balance ',k
-c      call diagnose(uo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED U ')
-c      call diagnose(vo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED V ')
-c      call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'BALANCED U ')
-c      call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'BALANCED V ')
-c      enddo
+       do k=1,nz/2    
+       print*, 'After balance ',k
+       call diagnose(uo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED U ')
+       call diagnose(vo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED V ')
+       call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'BALANCED U ')
+       call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'BALANCED V ')
+       enddo
 
        itstatus=ishow_timer()
        print*,'------------------------------------------'
@@ -1796,6 +1805,10 @@ c      enddo
       enddo ! on lmax
 
 c apply continuity to final winds...done with backgrounds use ub,vb,omb
+c at this point introduc terrain and adjust winds over and around terrain
+c note that these winds will not be balanced
+      call terbnd(u,v,om,nx,ny,nz,ps,p,bnd)
+      call terbnd(ub,vb,omb,nx,ny,nz,ps,p,bnd)
        call leib_sub(nx,ny,nz,erf,tau,erru
      .,lat,dx,dy,ps,p,dp,u,ub,v,vb,
      . om,omb,omb,l,lmax)
@@ -1804,7 +1817,7 @@ c evaluate dynamic balance and continuity
      .                ,nu,nv,fu,fv,delo,tau
      .                ,nx,ny,nz
      .                ,lat,dx,dy,ps,p,dp,l,lmax)
-c move adjusted fields (uo,vo,omo) to solution fields 
+c move adjusted fields (ub,vb,omb) to solution fields 
        call move_3d(ub,u,nx,ny,nz)
        call move_3d(vb,v,nx,ny,nz)
        call move_3d(omb,om,nx,ny,nz)
@@ -2723,6 +2736,11 @@ c
          ermm=0.
          ia=0
          corlm=0.
+cbeka changing the loops order
+           do k=2,nz
+           dz=dp(k)
+           dz1s=dz*dz
+
          do j=2,ny
          js=1
          if(j.eq.ny)js=0
@@ -2731,9 +2749,9 @@ c
             if(i.eq.nx) is=0
             dx1s=dx(i,j)*dx(i,j)
             dy1s=dy(i,j)*dy(i,j)
-            do 2 k=2,nz
-            dz=dp(k)
-            dz1s=dz*dz
+cbeka           do 2 k=2,nz
+cbeka            dz=dp(k)
+cbeka            dz1s=dz*dz
             if (ps(i,j).lt.p(k)) go to 2 
             aa=h(i,j,k)
             if(ps(i+is,j).lt.p(k)) sol(i+1,j,k)=sol(i,j,k)
@@ -2755,6 +2773,7 @@ c
 2            continue
          enddo
          enddo
+	enddo
          reslm=corlm*cortm
 c         write(6,1001) it,reslm,corlm,corlmm,erb
 1200     format(1x,3e12.5)
