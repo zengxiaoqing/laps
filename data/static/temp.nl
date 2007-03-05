@@ -1,4 +1,5 @@
  &temp_nl
+ l_read_raob_t=.true.,
  l_use_raob_t=.true.,
  l_adjust_heights=.true.,
  weight_bkg_const_temp=5e28,
@@ -10,8 +11,12 @@
 
 c TEMPERATURE (LT1/temp.exe) PARAMETERS
 c
+c l_read_raob_t - flag to determine whether RAOB data from the 'snd' file are 
+c                 read in and potentially used
+c
 c l_use_raob_t - flag to determine whether to utilize RAOB data from the 'snd' 
-c                file
+c                file, given that the data are read in. This is active only 
+c                when 'l_read_raob_t' is set to .true.
 c
 c l_adjust_heights - The height field is computed using a hydrostatic 
 c                    integration of the temperatures. If the flag is .true.,
