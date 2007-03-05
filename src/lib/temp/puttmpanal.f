@@ -88,7 +88,7 @@ cdis
 
         integer*4 max_snd_grid,max_obs
 
-        logical l_fill,l_adjust_heights,l_use_raob
+        logical l_fill,l_adjust_heights,l_read_raob,l_use_raob
 
         O_K(T_K,P_PA)   =   O( T_K-273.15 , P_PA/100. )  + 273.15
         TDA_K(T_K,P_PA) = TDA( T_K-273.15 , P_PA/100. )  + 273.15
@@ -100,7 +100,8 @@ cdis
         icen = ni/2
         jcen = nj/2
 
-        call get_temp_parms(l_use_raob,l_adjust_heights,weight_bkg_const
+        call get_temp_parms(l_read_raob,l_use_raob,l_adjust_heights
+     1                     ,weight_bkg_const
      1                     ,rms_thresh,pres_mix_thresh,max_snd_grid
      1                     ,max_obs,istatus)
         if(istatus .ne. 1)then
@@ -212,6 +213,7 @@ cdis
      1                  ,pres_3d              ! Input
      1                  ,temp_3d              ! Input/Output
      1                  ,ilaps_cycle_time     ! Input
+     1                  ,l_read_raob          ! Input
      1                  ,l_use_raob           ! Input
      1                  ,weight_bkg_const     ! Input
      1                  ,rms_thresh           ! Input
@@ -712,13 +714,14 @@ c       1                               j_diff_thmax,k_diff_thmax
         end
 
 
-       subroutine get_temp_parms(l_use_raob_t,l_adjust_heights
+       subroutine get_temp_parms(l_read_raob_t,l_use_raob_t
+     1                 ,l_adjust_heights
      1                 ,weight_bkg_const_temp,rms_thresh_temp
      1                 ,pres_mix_thresh,max_snd_grid,max_obs,istatus)       
 
-       logical l_use_raob_t,l_adjust_heights
+       logical l_read_raob_t,l_use_raob_t,l_adjust_heights
 
-       namelist /temp_nl/ l_use_raob_t,l_adjust_heights
+       namelist /temp_nl/ l_read_raob_t,l_use_raob_t,l_adjust_heights       
      1                   ,weight_bkg_const_temp,rms_thresh_temp
      1                   ,pres_mix_thresh,max_snd_grid,max_obs       
  
