@@ -37,6 +37,7 @@ cdis
      1               ,pres_3d                       ! Input
      1               ,temp_3d                       ! Input/Output
      1               ,ilaps_cycle_time              ! Input
+     1               ,l_read_raob                   ! Input
      1               ,l_use_raob                    ! Input
      1               ,weight_bkg_const              ! Input
      1               ,rms_thresh_norm               ! Input
@@ -90,8 +91,6 @@ cdis
         include 'tempobs.inc'
 
         l_struct = .true.
-
-        l_read_raob = .true.
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
