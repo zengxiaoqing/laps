@@ -66,6 +66,7 @@ cdis
         character*13 filename13
         character*3 var_2d
         character*1 c1_plottype
+        character*8 c8_obstype
 
         character*13 fileradar
         character*24 atime_24
@@ -93,7 +94,7 @@ cdis
 
         Character
      1  c_obs_type*1,c_map*1,c_mode*1,c_anl*1,c_radial*1,
-     1  STRING
+     1  STRING,wx*25
 
         common /plotobs/ c_obs_type,c_map,c_mode,c_anl,c_radial
 
@@ -538,8 +539,6 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         write(6,*)
      1          ' Profile Winds (e.g. Profiler, Tower, Raob, Dropsonde)'       
 
-        call setusv_dum(2hIN,17) ! Lavender
-
         lun = 32
         ext = 'prg'
         call get_directory(ext,directory,len_dir)
@@ -547,7 +546,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1  ,status='old',err=911)
 
         do while (.true.)
-            read(32,*,end=41,err=39)ri,rj,rk,dir,speed_ms
+            read(32,*,end=41,err=39)ri,rj,rk,dir,speed_ms,c8_obstype
+ 33         format(1x,5f10.0,1x,a8)
             ri = ri ! + 1.
             rj = rj ! + 1.
             rk = rk ! + 1.
@@ -570,9 +570,16 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 aspect = aspect_a(nint(ri),nint(rj))
 
+                if(c8_obstype(1:4) .eq. 'RAOB')then
+                    call setusv_dum(2hIN,3)  ! Red
+                else
+                    call setusv_dum(2hIN,17) ! Lavender
+                endif
+
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_prof,aspect,'true')
-                write(6,111,err=38)alat,alon,dir,spd_kt,aspect
+                write(6,311,err=38)ri,rj,dir,spd_kt,aspect,c8_obstype
+311             format(1x,2f8.1,4x,f7.0,f7.0,f8.3,1x,a8)
 38              continue
 
             endif ! k .eq. k_level
