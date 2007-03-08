@@ -358,7 +358,8 @@ c
                     call uv_to_disp(ob_u,ob_v,ob_di,ob_sp)
 
 312                 write(32,313,err=314)ri,rj,rklaps,ob_di,ob_sp
-313                 format(1x,3f10.5,2f10.3)               
+     1                                  ,obstype(i_pr)
+313                 format(1x,3f10.5,2f10.3,1x,a8)               
 314                 continue
 
                 enddo ! lvl
@@ -432,6 +433,7 @@ c
 
 412                 write(32,313,err=414)ri,rj,float(level)
      1                        ,ob_pr_di(i_pr,level),ob_pr_sp(i_pr,level)       
+     1                        ,obstype(i_pr)
 414                 continue
 
                 enddo ! level
