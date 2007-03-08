@@ -1,10 +1,15 @@
 
-        subroutine tower_sfc_driver(maxsta,i4time_sys               ! I
-     1                             ,path_to_tower_data              ! I
-     1                             ,lat,lon,ni,nj,grid_spacing      ! I
-     1                             ,laps_cycle_time                 ! I
-     1                             ,itime_before,itime_after        ! I
-     1                             ,istatus)                        ! O
+        subroutine tower_sfc_driver(maxsta,i4time_sys                     ! I
+     1                             ,path_to_tower_data                    ! I
+     1                             ,lat,lon,ni,nj,grid_spacing            ! I
+     1                             ,laps_cycle_time                       ! I
+     1                             ,itime_before,itime_after              ! I
+     1                             ,nn,n_local_g,n_local_b,stations       ! I/O
+     1                             ,store_1,store_2,store_2ea             ! O
+     1                             ,store_3,store_3ea,store_4,store_4ea   ! O    
+     1                             ,store_5,store_5ea,store_6,store_6ea   ! O
+     1                             ,store_7,store_cldht,store_cldamt      ! O
+     1                             ,provider,istatus)                     ! O
 c        
         integer ni, nj, maxsta, maxobs 
         integer maxlvls ! raw/processed stations for SND file
@@ -15,7 +20,7 @@ c
         integer    wmoid(maxsta), istatus
         integer    dpchar(maxsta), narg, iargc
 c
-!       character  stations(maxsta)*20
+        character  stations(maxsta)*20, provider(maxsta)*11
         character  reptype(maxsta)*6, atype(maxsta)*6
 	character  atime*24
 	character  dir_s*256, ext_s*31, units*10, comment*125,var_s*3
@@ -63,7 +68,8 @@ c
         write(6,*)
 	write(6,*)'Getting Mesonet Tower Data...'
 c
-        call get_local_towerobs(maxsta,i4time_sys,lun_out,
+        call get_local_towerobs(maxsta,maxlvls,                          ! I
+     &                      i4time_sys,lun_out,
      &                      path_to_tower_data,metar_format,
      &                      ext_s,
      &                      itime_before,itime_after,
