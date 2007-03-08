@@ -36,8 +36,7 @@ SRC=ingest_sounding.f \
     tower_driver.f \
     get_rtamps_data.f \
     read_rtamps_data.f \
-    get_radiometer_data.f \
-    write_snd.f
+    get_radiometer_data.f
 
 all: exe
 
