@@ -507,7 +507,18 @@ c
         endif
 
         if(c8_project(1:3) .eq. 'RSA')then ! Tower soil moisture
-            write(6,*)' Future stub for tower soil moisture'
+	    print*,'Getting Tower soil moisture data...'
+            call tower_sfc_driver(  maxsta,i4time_sys                     ! I
+     1                             ,path_to_tower_data                    ! I
+     1                             ,lat,lon,ni,nj,grid_spacing            ! I
+     1                             ,laps_cycle_time                       ! I
+     1                             ,itime_before,itime_after              ! I
+     1                             ,nn,n_local_g,n_local_b,stations       ! I/O
+     1                             ,store_1,store_2,store_2ea             ! O
+     1                             ,store_3,store_3ea,store_4,store_4ea   ! O    
+     1                             ,store_5,store_5ea,store_6,store_6ea   ! O
+     1                             ,store_7,store_cldht,store_cldamt      ! O
+     1                             ,provider,istatus)                     ! O
         endif
 c
 c.....  Count up the obs.
