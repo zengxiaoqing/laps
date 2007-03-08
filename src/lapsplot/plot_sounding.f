@@ -149,8 +149,15 @@
 
             if(c_prodtype .eq. 'B')then
                 c33_label = 'LAPS Background Sounding '//fcst_hhmm
+
             elseif(c_prodtype .eq. 'F')then
+
+!               Note that is would be possible to get the c_model from the
+!               directory variable with some type of basename extraction
+!               subroutine
+
                 c33_label = 'LAPS Forecast Sounding '//fcst_hhmm
+
             endif
 
         else
@@ -259,13 +266,24 @@
 
             call s_len(directory,len_dir)
 
+            write(6,*)' Orig directory = ',directory
+            write(6,*)' ext = ',ext
+
             if(c_prodtype .eq. 'B')then
                 directory = directory(1:len_dir)//'../lgb'
-            else ! for now this is hardwired to mm5
-                directory = directory(1:len_dir)//'../fsf/mm5'
+            else ! Fcst
+                ext = 'fsf'
+                call s_len(directory,len_dir)
+                do i = 1,len_dir-2
+                    if(directory(i:i+2) .eq. 'fua')then
+                        directory(i:i+2) = ext(1:3)
+                        write(6,*)'Substituted directory string'
+                    endif
+                enddo ! i
             endif
 
-            write(6,*)' Directory = ',directory
+            write(6,*)' New directory = ',directory
+            write(6,*)' ext = ',ext
 
             var_2d = 'PSF'
             call get_lapsdata_2d(i4_initial,i4_valid
