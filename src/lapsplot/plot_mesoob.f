@@ -224,7 +224,7 @@ cdis
 
         size = 0.5
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
-        du = float(ni) / 300.
+        du = float(nj) / 252.
 
         obs_size = plot_parms%contour_line_width
 
@@ -574,7 +574,7 @@ c
         real*4 lat(imax,jmax),lon(imax,jmax)
         character*3 t1,td1,p1
         character*4 c4_pcp
-        character*(*)wx
+        character*25 wx
 
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
 !       write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
@@ -607,7 +607,7 @@ c
 !    1             ,relsize,du_b,jsize,zoom,obs_size,zoom_eff
 
         call get_border(imax,jmax,x_1,x_2,y_1,y_2)
-        call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
+        call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax),1)
 
 !       rot = (standard_longitude - lon(nint(ri),nint(rj))) / 57.295
 
