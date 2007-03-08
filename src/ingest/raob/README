@@ -110,7 +110,7 @@ snd_main                                        ingest_sounding.f
             get_rtamps_data                     get_rtamps_data.f 
                 read_rtamps_data                      "
                     read_rtamps_netcdf          read_rtamps_data.f
-                    write_snd                   write_snd.f
+                    write_snd                   lib/write_snd.f
         ingest_drpsnd                           ingest_drpsnd.f        
             avapsread_sub                       avapsread_sub.f
             get_drpsnd_data_cwb                 ingest_drpsnd_sub_cwb.f 
