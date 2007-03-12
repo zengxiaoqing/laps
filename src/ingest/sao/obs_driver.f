@@ -193,12 +193,16 @@ c
 c
         character*200 path_to_metar
         character*200 path_to_local_data
+        character*200 path_to_madis_data
         character*200 path_to_buoy_data
         character*200 path_to_gps_data
         character*8   metar_format, c8_project
         character*8   a9_to_a8, a8_time
+        character*7   madis_dirs(2)
 
-        logical l_allow_empty_lso
+        data madis_dirs /'mesonet','urbanet'/
+
+        logical l_allow_empty_lso,l_string_contains
         logical l_identical_a(maxsta)
 c
         integer cnt
@@ -407,7 +411,49 @@ c
 	write(6,*)'Getting Mesonet Data...'
 c
         if(metar_format(1:len_metar_format) .ne. 'CWB')then ! LDAD Netcdf
-            call get_local_obs(maxobs,maxsta,i4time_sys,
+
+            if(l_string_contains(path_to_local_data,'madis',istatus)
+     1                                                             )then      
+	        call s_len(path_to_local_data,len_path)
+
+                do imadis = 1,2
+
+	            path_to_madis_data = path_to_local_data(1:len_path)      
+     1                                   //'/'//madis_dirs(imadis)
+     1                                   //'/'//'netCDF/'
+
+                    write(6,*)' MADIS case: ',path_to_madis_data
+
+                    call get_local_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_madis_data,metar_format,
+     &                      itime_before,itime_after,
+     &                      lat,lon,ni,nj,grid_spacing,
+     &                      nn,n_local_g,n_local_b,stations,
+     &                      reptype,atype,weather,wmoid,
+     &                      store_1,store_2,store_2ea,
+     &                      store_3,store_3ea,store_4,store_4ea,
+     &                      store_5,store_5ea,store_6,store_6ea,
+     &                      store_7,store_cldht,store_cldamt,
+     &                      provider, laps_cycle_time, 
+     &                      local_obs_thresh, i4wait_local_obs_max, 
+     &                      jstatus)       
+
+	            if(jstatus .ne. 1) then
+	               print *, 
+     1                  ' WARNING. Bad status return from GET_LOCAL_...'       
+	               print *,' '
+	            endif
+
+                    if(nn .gt. maxsta)then
+                       write(6,*)' ERROR: nn > maxsta ',nn,maxsta
+                       return
+                    endif
+
+                enddo ! imadis
+
+            else 
+                write(6,*)' non-MADIS case'
+                call get_local_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
      &                      lat,lon,ni,nj,grid_spacing,
@@ -421,7 +467,20 @@ c
      &                      local_obs_thresh, i4wait_local_obs_max, 
      &                      jstatus)       
 
-        else
+	        if(jstatus .ne. 1) then
+	           print *, 
+     1                  ' WARNING. Bad status return from GET_LOCAL_...'       
+	           print *,' '
+	        endif
+
+                if(nn .gt. maxsta)then
+                   write(6,*)' ERROR: nn > maxsta ',nn,maxsta
+                   return
+                endif
+
+            endif
+
+        else ! CWB data
             call get_local_cwb(maxobs,maxsta,i4time_sys,
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
@@ -435,17 +494,18 @@ c
      &                      store_7,store_cldht,store_cldamt,
      &                      provider, laps_cycle_time, jstatus)
 
+	    if(jstatus .ne. 1) then
+	       print *, ' WARNING. Bad status return from GET_LOCAL_...'
+	       print *,' '
+	    endif
+
+            if(nn .gt. maxsta)then
+               write(6,*)' ERROR: nn > maxsta ',nn,maxsta
+               return
+            endif
+
         endif
 c
-	if(jstatus .ne. 1) then
-	   print *, ' WARNING. Bad status return from GET_LOCAL_...'
-	   print *,' '
-	endif
-
-        if(nn .gt. maxsta)then
-           write(6,*)' ERROR: nn > maxsta ',nn,maxsta
-           return
-        endif
 c
 c.....  Call the routine that reads the Buoy data files, then get
 c.....  the data.
