@@ -18,8 +18,14 @@ c Obs Driver ingest (obs_driver.exe)
 c
 c 'path_to_metar' - Directory for metar/synop data
 c
-c 'path_to_local_data' - Directory for local/mesonet or LDAD mesonet data
+c 'path_to_local_data' - Directory for local/mesonet or LDAD mesonet data.
 c                        This can include ASOS data or MADIS LDAD mesonet.
+c                        If the data are non-MADIS the full path should 
+c                        generally be given. If it's MADIS data, then give the 
+c                        parent directory just above the level where the 
+c                        'mesonet/netCDF' and 'urbanet/netCDF' data are being
+c                        stored. For MADIS data the 'path_to_local_data'
+c                        variable must include the string 'madis'.
 c
 c 'path_to_buoy_data' - Directory for buoy/ship (maritime) data
 c
