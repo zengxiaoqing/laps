@@ -35,8 +35,11 @@ c latency_co2 - Allowed time lag (in seconds) for using CO2-Slicing satellite
 c               data from the CTP file for cloud-top pressure information
 c               Setting this to a negative value turns off CO2-Slicing usage
 c
-c pct_req_lvd_s8a - percent coverage required for IR LVD data
-c                   Valid range is 0.-100. 
+c pct_req_lvd_s8a - percent coverage required of IR LVD data for the cloud
+c                   analysis to produce any output. Valid range is 0.-100. 
+c                   A value of 0. means that IR data are not required and 
+c                   the cloud analysis will produce output anyway using the 
+c                   other data sources. 
 c
 c i4_sat_window - half-width of time window for satellite data
 c
