@@ -72,7 +72,8 @@ c NX_L_CMN    - number of grid points in the horizontal direction
 c 
 c NY_L_CMN    - number of grid points in the vertical direction
 c
-c laps_cycle_time_cmn - LAPS cycle time in seconds. This should correspond
+c laps_cycle_time_cmn - LAPS cycle time in seconds. This is the interval
+c                       between successive LAPS analyses and should correspond
 c                       to the interval between cron entries that run the
 c                       'sched.pl' script.
 c
