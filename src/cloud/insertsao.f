@@ -251,10 +251,10 @@ c place station at proper laps grid point
 
           c5_outstring = c_stations(i)
 
-          write(6,1,err=110)c5_outstring,lat_sta_ret(i)
+          write(6,1,err=110)c5_outstring,n_cld_snd,lat_sta_ret(i)
      1         ,lon_sta_ret(i),n_cloud_layers_ret(i)
      1         ,ilaps,jlaps,obstype(i),atype(i),ht_defined ! ,obstime(i)
-1         format(1x,a5,2f8.2,i3,2i4,1x,a8,1x,a6,f8.0,i5)
+1         format(1x,a5,1x,i4,2f8.2,i3,2i4,1x,a8,1x,a6,f8.0,i5)
 
 110       do l = 1,n_cloud_layers_ret(i)
               write(6,2,err=3)amt_ret(i,l),ht_base_ret(i,l)
