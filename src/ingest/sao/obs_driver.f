@@ -83,6 +83,7 @@ c
         character*200 path_to_local_data
         character*200 path_to_buoy_data
         character*200 path_to_gps_data
+        character*200 path_to_tower_data
         character*8   metar_format, c8_project
 
         logical l_allow_empty_lso
@@ -119,6 +120,7 @@ c
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
      1                           ,path_to_gps_data
+     1                           ,path_to_tower_data
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
@@ -140,6 +142,7 @@ c
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
      1                           ,path_to_gps_data
+     1                           ,path_to_tower_data
      1                           ,c8_project,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
@@ -157,6 +160,7 @@ c
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
      1                           ,path_to_gps_data
+     1                           ,path_to_tower_data
      1                           ,c8_project,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
@@ -196,6 +200,7 @@ c
         character*200 path_to_madis_data
         character*200 path_to_buoy_data
         character*200 path_to_gps_data
+        character*200 path_to_tower_data
         character*8   metar_format, c8_project
         character*8   a9_to_a8, a8_time
         character*7   madis_dirs(2)
@@ -710,6 +715,7 @@ c
      1                         ,path_to_local_data
      1                         ,path_to_buoy_data
      1                         ,path_to_gps_data
+     1                         ,path_to_tower_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
@@ -723,6 +729,7 @@ c
        character*200 path_to_local_data
        character*200 path_to_buoy_data
        character*200 path_to_gps_data
+       character*200 path_to_tower_data
        character*8   metar_format
        logical l_allow_empty_lso
 
@@ -730,6 +737,7 @@ c
      1                         ,path_to_local_data
      1                         ,path_to_buoy_data
      1                         ,path_to_gps_data
+     1                         ,path_to_tower_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time

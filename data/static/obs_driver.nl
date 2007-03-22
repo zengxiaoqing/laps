@@ -3,6 +3,7 @@
  path_to_local_data='/public/data/ldad/mesonet/netcdf/',
  path_to_buoy_data='/public/data/maritime/netcdf/',
  path_to_gps_data='/null/public/data/gpsmet/netcdf/',
+ path_to_tower_data='/data/fxa/LDAD/mesonet/met-tower/netCDF/',
  metar_format='default',
  minutes_to_wait_for_metars=10,
  ick_metar_time=0,
@@ -31,6 +32,9 @@ c 'path_to_buoy_data' - Directory for buoy/ship (maritime) data
 c
 c 'path_to_gps_data' - Directory for gps/profiler surface data in the event
 c                      this is stored separately from LDAD
+c
+c 'path_to_tower_data' - Path to Met-tower data for soil moisture (when
+c                        c8_project='RSA')
 c
 c 'metar_format' - A value of 'default' means that we are using the 
 c                  'c8_project' in 'nest7grid.parms' to specify the METAR
