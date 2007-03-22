@@ -99,6 +99,7 @@ cdis
      1    .and. v(i,j) .ne. r_missing_data
      1    .and. abs(u(i,j)) .lt. 1e6               ! Deals with old data
      1    .and. abs(v(i,j)) .lt. 1e6
+     1    .and. aspect      .le. 10.               ! Cap on aspect ratio
      1                                                  )then
 
                 call         uv_to_disp(u(i,j),
