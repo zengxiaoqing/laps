@@ -34,5 +34,11 @@ main                                      obs_driver.f
         get_gps_obs                       get_gps_obs.f          gps obs
             read_gps                      read_gps.f             NIMBUS
 
+        tower_sfc_driver                  tower_sfc_driver.f     RSA
+
+        apply_blacklist                   obs_driver.f
+
+        check_for_dupes                        "
+
         write_surface_obs                 obs_driver.f
 
