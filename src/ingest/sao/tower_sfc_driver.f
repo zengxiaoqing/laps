@@ -68,10 +68,12 @@ c
         write(6,*)
 	write(6,*)'Getting Mesonet Tower Data...'
 c
+        ext_s = 'lso'
+
         call get_local_towerobs(maxsta,maxlvls,                          ! I
      &                      i4time_sys,lun_out,
      &                      path_to_tower_data,metar_format,
-     &                      ext_s,
+     &                      ext_s,                                       ! I
      &                      itime_before,itime_after,
 !    &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,                               ! I
