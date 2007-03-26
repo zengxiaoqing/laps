@@ -54,13 +54,16 @@ if(defined($schedtime)){
     system("$LAPSINSTALLROOT/util/fix_net \'20 \' $schedtime $LAPS_DATA_ROOT/cronfile");
 }
 
-print "numfiles = $numfiles\n";
-if(defined($numfiles)){
-    print "modifying numfiles\n";
-    system("$LAPSINSTALLROOT/util/fix_net sched.pl \'sched.pl -r -m $numfiles \' $LAPS_DATA_ROOT/cronfile");
+if(defined($followup)){
+    print "followup = $followup\n";
+    system("$LAPSINSTALLROOT/util/fix_net sched.pl \'sched.pl -f $followup \' $LAPS_DATA_ROOT/cronfile");
 }
 
-print "followup = $followup\n";
+print "numfiles = $numfiles\n";
+if(defined($numfiles)){
+    print "adding numfiles purge\n";
+    system("$LAPSINSTALLROOT/util/fix_net sched.pl \'sched.pl -r -m $numfiles \' $LAPS_DATA_ROOT/cronfile");
+}
 
 if(-e "$LAPS_DATA_ROOT/cronfile"){
     open(IN,"$LAPS_DATA_ROOT/cronfile");
@@ -68,22 +71,6 @@ if(-e "$LAPS_DATA_ROOT/cronfile"){
     close IN;
 
     foreach (@lines) {
-       if( /\@followup\@/ ){
-           if(defined($followup)){
-               $webdir="/usr/nfs/common/lapb/www";
-               $logdir="$LAPS_DATA_ROOT\/log";
-               if(-d "/public" && !-d "$webdir"){ # We're on a remote machine at FSL, run followup_ncarg_remote.sh 
-                   s/\@followup\@/\; $LAPSINSTALLROOT\/etc\/followup_ncarg_remote.sh $LAPS_DATA_ROOT $REMOTE_DATA_ROOT $followup $numfiles 1> $LAPS_DATA_ROOT\/followup_$followup\.log 2> $LAPS_DATA_ROOT\/followup_$followup\.err /;
-
-               }else{                             # Run followup_ncarg.sh
-                   s/\@followup\@/\; $LAPSINSTALLROOT\/etc\/www\/followup_ncarg.sh $LAPS_DATA_ROOT $followup $LAPSINSTALLROOT 1> $logdir\/followup_$followup\.log 2> $logdir\/followup_$followup\.err /;
-
-               }
-
-           }else{
-               s/\@followup\@/ /;
-           }
-       }
 
        if(defined($qsubproj)){
            if( /sched\.pl/ ){

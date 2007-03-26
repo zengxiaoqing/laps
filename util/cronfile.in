@@ -7,7 +7,7 @@
 # @ followup @                    can be used with a ';' to run your own followup script after the 'sched.pl'.
 #
 #
-20                      * * * *  @PERL@ @prefix@/etc/sched.pl                              @prefix@ @laps_data_root@ @followup@
+20                      * * * *  @PERL@ @prefix@/etc/sched.pl                              @prefix@ @laps_data_root@ 
 03,10,19,26,34,39,49,55 * * * *  @PERL@ @prefix@/etc/laps_driver.pl vrc_driver.x           @prefix@ @laps_data_root@
 08,14,23,29,38,45,53,59 * * * *  @PERL@ @prefix@/etc/laps_driver.pl lvd_sat_ingest.exe     @prefix@ @laps_data_root@
 22,30                   * * * *  @PERL@ @prefix@/etc/laps_driver.pl lsr_driver.exe         @prefix@ @laps_data_root@
