@@ -323,24 +323,26 @@ AC_OUTPUT(src/include/trigd.inc
           etc/LapsRadar_RSA.pl
           etc/casererun.pl
           etc/check_release.csh
-          etc/cloud.pl
           etc/change-center.pl
+          etc/cloud.pl
           etc/cronfile.pl
           etc/fxalogdir.pl
-          etc/lq3driver.pl
+          etc/laps_input_from_archive.pl
           etc/laps_driver.pl
+	  etc/laps_monitor.pl
+          etc/lq3driver.pl
           etc/sched.pl
           etc/realtime.pl
           etc/ramrsf.pl
           etc/localize_optran.pl
           etc/localize_domain.pl
-	  etc/laps_monitor.pl
           etc/makedatadirs.pl
           etc/prebuild_sms.pl
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
           etc/recurs_iter.pl
+          etc/ruc_grib2netcdf.csh
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
           etc/sfc.pl
