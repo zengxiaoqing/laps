@@ -182,6 +182,7 @@ c
       
 c     namelist data
 
+      integer covar_switch
       integer print_switch
       integer  raob_switch
       integer  raob_lookback
@@ -201,14 +202,16 @@ c     namelist data
       real    mod_4dda_factor
       real    t_ref
       integer gps_switch
-      character*256 path_to_gvap12,path_to_gvap10,path_to_gps
-      namelist /moisture_switch_nl/ print_switch,raob_switch,
+      character*256 path_to_gvap12,path_to_gvap10,path_to_gps,path2covar
+      namelist /moisture_switch_nl/ covar_switch,print_switch,
+     1     raob_switch,
      1     raob_lookback, endian,
      1     raob_radius, goes_switch, cloud_switch, cloud_d
      1     ,tiros_switch, sounder_switch, sat_skip
      1     ,gvap_switch, IHOP_flag, time_diff, gps_switch
      1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
-     1     t_ref,path_to_gvap12,path_to_gvap10,path_to_gps
+     1     t_ref,path_to_gvap12,path_to_gvap10,path_to_gps,
+     1     path2covar
       
       integer len
       character cdomain(ii)
@@ -251,9 +254,9 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 4.0.2 successfully incorporates'
-      write (6,*) '1) option for shorter print outs'
-      write (6,*) '2) capability to handle GOES 11 for GOES west'
+      write (6,*) 'Release 4.1 successfully incorporates'
+      write (6,*) '1) covariance error data for model background'
+  
 
 
       call get_directory(extpw,dirpw,len)
@@ -271,6 +274,7 @@ c     routine
 
 c     
 c     set namelist parameters to defaults 
+      covar_switch = 0
       print_switch = 0
       cloud_switch = 1
       cloud_d = 1
@@ -293,6 +297,7 @@ c     set namelist parameters to defaults
       path_to_gvap12 = ' '
       path_to_gvap10 = ' '
       path_to_gps = ' '
+      path2covar = ' '
       
       call get_directory('static',fname,len)
       open (23, file=fname(1:len)//'moisture_switch.nl',
@@ -302,7 +307,12 @@ c     set namelist parameters to defaults
       
       
       close (23)
-      
+      if (covar_switch.eq. 0) then
+         write (6,*) 'Covariances NOT used'
+      else
+         write(6,*) 'Covariance use is ENABLED'
+         write (6,*) 'covariance path', path2covar
+      endif
       if (print_switch .eq. 0) then
          write (6,*) 'Printing disabled, expect short printouts'
       else
