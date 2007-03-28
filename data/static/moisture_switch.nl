@@ -1,4 +1,5 @@
  &moisture_switch_nl
+ COVAR_SWITCH = 0,
  PRINT_SWITCH = 0,
  RAOB_SWITCH = 1,
  RAOB_LOOKBACK = 4500,
@@ -20,7 +21,8 @@
  T_REF = -132.0,
  PATH_TO_GVAP12 = '/public/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/',
  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
- PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
+ PATH_TO_GPS = '/public/data/gpsmet/netcdf/',
+ PATH2COVAR = ' '
 /
 c   
 c# PATH_TO_GVAP8 = '/public/data/sat/nesdis/goes8/tpw/sfov_ihop/ascii/',
