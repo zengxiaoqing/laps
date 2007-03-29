@@ -1126,7 +1126,8 @@ c     make call to variational solution, radiance no longer a prerequisite
      1        weight_snd,
      1        raob_switch,
      1        ii,jj,kk,
-     1        print_switch)
+     1        print_switch,
+     1        covar_switch,path2covar)
          
 
          if(print_switch .eq. 1) then

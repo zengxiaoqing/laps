@@ -69,7 +69,8 @@ c FORTRAN 90 CONSTRUCTS USED OVER F77 CODE
      1     weight_snd,
      1     raob_switch,
      1     ii,jj,kk,             ! grid dimensions
-     1     print_switch)
+     1     print_switch,
+     1     covar_switch,path2covar)
 
  
 c   By inclusion of the goes_sbn data into the laps moisture analysis, an
@@ -109,7 +110,7 @@ c     include 'lapsparms.for'
 
 c     parameter list variables
 
-      integer ::  ii,jj,kk,print_switch
+      integer ::  ii,jj,kk,print_switch,covar_switch
       type (lbsi), dimension (ii,jj) :: sfc_data
       real :: sh(ii,jj,kk)
       integer :: i4time
@@ -134,7 +135,7 @@ c     parameter list variables
       real :: weight_snd(ii,jj,kk)
       integer :: raob_switch
       real, dimension(18)  :: testestrad,testbest
-      character *256 cpath,tpath
+      character *256 cpath,tpath,path2covar
 
 
 
