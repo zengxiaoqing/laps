@@ -110,6 +110,7 @@ c     include 'lapsparms.for'
 
 c     parameter list variables
 
+
       integer ::  ii,jj,kk,print_switch,covar_switch
       type (lbsi), dimension (ii,jj) :: sfc_data
       real :: sh(ii,jj,kk)
@@ -141,6 +142,7 @@ c     parameter list variables
 
 c internal variables
 
+      real :: covar (kk,kk,ii,jj)
       integer :: istatus
       integer :: i4time_sat
       integer :: i,j,k,k2,ijk
