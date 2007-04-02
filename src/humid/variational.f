@@ -142,7 +142,7 @@ c     parameter list variables
 
 c internal variables
 
-      real :: covar (kk,kk,ii,jj)
+c      real covariance (kk,kk,ii,jj)
       integer :: istatus
       integer :: i4time_sat
       integer :: i,j,k,k2,ijk
