@@ -67,7 +67,9 @@ cdis
         real*4 ref_3d(ni,nj,nk)                  ! Local 3D reflctvy grid
         integer*4 isum_ref_2d(ni,nj)             ! Local array
 
-        logical l_low_fill, l_high_fill, l_test, l_nonmissing(ni,nj)       
+        logical l_low_fill, l_high_fill, l_test, l_nonmissing(ni,nj)  
+
+        rpd = 3.14159265/180.     
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -107,6 +109,7 @@ cdis
      1       ' ref_fill_vert: Interpolating vertically through gaps'      
 
         n_low_fill = 0
+        n_high_fill = 0
 
         isum_test = nint(ref_base) * nk
 
@@ -176,7 +179,7 @@ c       write(6,*)' Doing Column ',j
 
                 if(.not. l_test)goto100 ! No Top exists
 
-!               Top exists, Search for next bottom
+!               Echo Top exists, Search higher for next echo bottom
                 l_test = .false.
                 ref_below = ref_3d(i,j,k)
 
@@ -197,16 +200,30 @@ c       write(6,*)' Doing Column ',j
 
                 enddo
 
-                if(.not. l_test)goto100 ! No Bottom exists
+                if(.not. l_test)goto100 ! No Higher Echo Bottom exists
 
 !               Fill in gap if it exists and is small enough
-                gap_thresh = max(2000., slant_range * 0.02)
-                if(heights_3d(i,j,k_bottom) .lt.
-     1                    heights_3d(i,j,k_top) + gap_thresh)then
+                call latlon_to_radar(lat(i,j),lon(i,j)
+     1                  ,heights_3d(i,j,k_top)
+     1                  ,azimuth,slant_range,elev_top_deg
+     1                  ,rlat_radar,rlon_radar,rheight_radar)
 
-c                   write(6,*)' Filling gap between',i,j,k_bottom,k_top
+!               5 degrees is used because of larger tilt gaps in upper tilts
+                if(elev_top_deg .gt. 9.0)then
+                    tilt_gap_rad = 5.0 * rpd
+                else
+                    tilt_gap_rad = 2.0 * rpd
+                endif
+
+!               If gap_thresh is larger then more filling will be done
+                gap_thresh = max(2000., slant_range * tilt_gap_rad)
+
+                if(heights_3d(i,j,k_bottom) .lt.
+     1             heights_3d(i,j,k_top) + gap_thresh)then
+
+                    n_high_fill = n_high_fill + 1 
+
 c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
-101                 format(1x,17i4)
 
                     do k_bet = k_top+1,k_bottom-1
                         frac = float(k_bet-k_bottom)
@@ -216,7 +233,15 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
      1                            + ref_3d(i,j,k_top)*(frac)
                     enddo ! k
 
-c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
+                    if(n_high_fill .le. 8)then
+                        write(6,*)' Filled gap between'
+     1                            ,i,j,k_bottom,k_top
+     1                            ,elev_top_deg,gap_thresh
+                        write(6,101)
+     1                  (nint(max(ref_3d(i,j,kwrt),ref_base))
+     1                                            ,kwrt=1,nk)      
+101                     format(1x,100i4)
+                    endif
 
                 endif
 
@@ -306,6 +331,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         enddo ! j
 
         write(6,*)' n_low_fill = ',n_low_fill
+        write(6,*)' n_high_fill = ',n_high_fill
 
         istatus = 1
         return
