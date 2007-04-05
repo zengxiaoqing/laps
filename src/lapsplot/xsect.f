@@ -111,6 +111,7 @@ cdis
         character*4 fcst_hhmm
 
         character*4 c4_log
+        character*4 radar_name
 
         character*10 colortable
 
@@ -1525,6 +1526,21 @@ c read in laps lat/lon and topo
      1                                ,i4time_radar)    
 
                     if(ext_radar .ne. 'vrz')then ! vxx
+
+                        write(6,*)' Read height field for rfill purpose'
+
+!                       Obtain height field
+                        ext = 'lt1'
+                        var_2d = 'HT'
+                        call get_laps_3dgrid(
+     1                       i4time_radar,10000000,i4time_ht,
+     1                       NX_L,NY_L,NZ_L,ext,var_2d,
+     1                       units_2d,comment_2d,field_3d,istatus)
+                        if(istatus .ne. 1)then
+                            write(6,*)' Error locating height field'
+                            go to 100
+                        endif
+
                         l_low_fill = .true.                        
                         l_high_fill = .true.                        
 
@@ -1536,15 +1552,16 @@ c read in laps lat/lon and topo
      1                   .true.,r_missing_data,
      1                   NX_L,NY_L,NZ_L,ext_radar,
      1                   lat,lon,topo,l_low_fill,l_high_fill,
-     1                   field_3d,
+     1                   field_3d,         
      1                   grid_ra_ref,
      1                   rlat_radar,rlon_radar,rheight_radar,radar_name,       
      1                   n_ref_grids,istat_radar_2dref,
      1                   istat_radar_3dref)      
 
                         call make_fnam_lp(i4time_radar,a9time,istatus)
-                        c_label = 'Reflectivity dBz             '
-     1                              //ext_radar(1:3)
+                        c_label = 'Reflectivity dBz          '
+     1                            //ext_radar(1:3)//'    '
+     1                            //radar_name(1:4)       
 
                     else
                         write(6,*)
