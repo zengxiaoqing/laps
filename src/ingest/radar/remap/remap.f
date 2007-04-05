@@ -465,7 +465,7 @@ cdis
               endif
 
               if(min_ref_samples .eq. -1)then
-                  if(grid_spacing_m .le. 3500.)then
+                  if(grid_spacing_m .le. 5500.)then
                       min_ref_samples = 1
                   else
                       min_ref_samples = 4
