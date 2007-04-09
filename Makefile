@@ -62,8 +62,7 @@ EXEDIRS = src/accum \
           src/soil \
           src/temp \
           src/verif/point \
-          src/wind \
-          src/WFO/post
+          src/wind  
 
 all: exe
 debug: debuglib
