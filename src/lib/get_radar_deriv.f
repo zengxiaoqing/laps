@@ -61,12 +61,14 @@
         nxx = (nx-1)*nstep+1
         nyy = (ny-1)*nstep+1
        endif
+
+!      Determine convective and stratiform regions
        call get_con_str(nx,ny,nz,nxx,nyy,radar_ref_3d,
      1                  pres_3d,temp_3d,str_con_index,
      1                  radar_2d_max,r_miss,ier,index_random,
      1                  dx1)
        if( ier .eq. 0) then
-        write(*,*)'Can not seprate convection and stratiform region'
+        write(*,*)'Cannot separate convection and stratiform region'
         istatus = 0
         return
        endif
@@ -161,8 +163,8 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
         ztop  = heights(ktop)
 ! Add for recomputing ratio by using terminal velocity dervied by radar
 !         reflectivity  (Jen-Hsin Teng, Adan)
-        if ( strcon .eq. 2 ) then
-         if (rand_index .eq. 2) then
+        if ( strcon .eq. 2 ) then    ! convective
+         if (rand_index .eq. 2) then ! higher index 2/3 probability
           ratio_radar=0.
           depth = ztop - zbase
           if (depth.ne.0) then
@@ -174,19 +176,21 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           else
            write(6,*) 'depth =',depth, 'No changes to ratio'
           endif
-         else          ! for rand_index = 1
+
+         else          ! for rand_index = 1 (1/3 probability)
           ratio_radar=0.
           depth = ztop - zbase
           if (depth.ne.0) then
            if(radar_ref_max .gt. 0. ) then
-!            vvmax=4.32*radar_ref_max**0.0714286
+!           vvmax=4.32*radar_ref_max**0.0714286
             ratio_radar=vvmax / depth / 1.1
-!            if(ratio_radar .gt. ratio) ratio = ratio_radar
+!           if(ratio_radar .gt. ratio) ratio = ratio_radar
            endif
           else
            write(6,*) 'depth =',depth, 'No changes to ratio'
           endif
-         endif
+
+         endif ! rand_index
  
          Do k = 1, ktop
           vv = Parabolic_vv_profile (zbase, ztop, ratio, heights(k))
@@ -194,10 +198,16 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            w(k) = vv
           End if
          End do
-        elseif (strcon .eq. 1) then
+
+        elseif (strcon .eq. 1) then    ! stratiform
          if (temp(kbase) .le. 0. .or. 
-     1       temp(ktop) .gt. 0.) then 
-          if (rand_index .eq. 2) then
+     1       temp(ktop)  .gt. 0.) then ! doesn't straddle freezing level
+
+                                       ! Are warm layers fully below this level
+                                       ! treated the same as cold layers fully
+                                       ! above?
+
+          if (rand_index .eq. 2) then  ! higher index 2/3 probability
            ratio_radar=0.
            depth = ztop - zbase
            if (depth.ne.0) then
@@ -207,7 +217,8 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            else
             write(6,*) 'depth =',depth, 'No changes to ratio'
            endif
-          else     !  for rand_index = 1
+
+          else     !  for rand_index = 1 (1/3 probability)
            ratio = ratio * 0.001
            ratio_radar=0.
            depth = ztop - zbase
@@ -218,14 +229,17 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            else
             write(6,*) 'depth =',depth, 'No changes to ratio'
            endif
-          endif
+
+          endif ! rand_index
+
           Do k = 1, ktop
             vv = Parabolic_vv_profile (zbase, ztop, ratio, heights(k))
             If (vv .gt. 0.) then
              w(k) = vv
             End if
           End do
-         else
+
+         else                           ! straddles freezing level
           do k = kbase, ktop
            if (temp(k) .le. 0.) then 
             kmiddle = k
@@ -234,7 +248,8 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           enddo
 30        continue
           ztop = heights(kmiddle) 
-          if( rand_index .eq. 2) then
+
+          if( rand_index .eq. 2) then ! 2/3 probability
            ratio_radar=0.
            depth = ztop - zbase
            if (depth.ne.0) then
@@ -244,7 +259,8 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            else
             write(6,*) 'depth =',depth, 'No changes to ratio'
            endif
-          else    ! for rand_index = 1
+
+          else    ! for rand_index = 1 (1/3 probabilty)
            ratio = ratio * 0.001
            ratio_radar=0.
            depth = ztop - zbase
@@ -255,7 +271,9 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            else
             write(6,*) 'depth =',depth, 'No changes to ratio'
            endif
-          endif
+
+          endif ! rand_index
+
           do k = 1, kmiddle
            vv = Parabolic_vv_profile (zbase, ztop, ratio, heights(k))
            if ( vv .gt. 0.) then
@@ -265,7 +283,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 
           zbase = ztop
           ztop = heights(ktop)
-          if (rand_index .eq. 2) then
+          if (rand_index .eq. 2) then ! 2/3 probability
            ratio_radar=0.
            depth = ztop - zbase
            if (depth.ne.0) then
@@ -275,7 +293,8 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            else
             write(6,*) 'depth =',depth, 'No changes to ratio'
            endif
-          else      ! for rand_index = 1
+
+          else      ! for rand_index = 1 (1/3 probability)
            ratio = ratio * 0.001
            ratio_radar=0.
            depth = ztop - zbase
@@ -286,46 +305,23 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            else
             write(6,*) 'depth =',depth, 'No changes to ratio'
            endif
-          endif
+
+          endif ! rand_index
+
+!         Above the freezing layer while within the echo apply a parabolic 
+!         profile that extends only inside this layer
           do k = kmiddle, ktop
            vv = Parabolic_vv_profile1 (zbase, ztop, ratio, heights(k))
            if ( vv .gt. 0.) then
             w(k) = vv
            endif
           enddo
-         endif   ! temp 
+         endif  ! temp of layer doesn't straddle freezing level?
         endif   ! strcon
 100     continue
         return
         end
  
-!-------------------------------------------------------------------
-        Real*4 Function Parabolic_vv_profile1 (zbase, ztop, ratio, z)
-!The vertical velocity is zero at cloud top, peaks one third of the way up
-!from the base, and extends below the base by one third of the cloud depth.
-
-!  JUNE 2002 - No longer extending profile to below cloud base.
-
-        Implicit none
-        Real*4 zbase, ztop, ratio, z
-        Real*4 depth, vvmax, vvspan, halfspan, height_vvmax, x
-
-        depth = ztop - zbase
-        If (depth .le. 0.) then
-         Parabolic_vv_profile1 = 0.
-         Return
-        End if
-
-        vvmax = ratio * depth
-        vvspan = depth
-        halfspan = vvspan / 2.
-        height_vvmax = ztop - halfspan
-        x = -vvmax/(halfspan*halfspan)
-
-        Parabolic_vv_profile1 = x * (z-height_vvmax)**2 + vvmax
-
-        Return
-        End
 
           subroutine get_con_str(nx,ny,nz,nxx,nyy,radar_ref_3d,pres_3d,
      1                  temp_3d,str_con_index,radar_2d_max,r_miss,ier,
@@ -620,9 +616,9 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            if(str_con_index(i,j) .eq. 1) then
             call random_number(harver) 
             if(harver .lt. devide_random) then
-             index_random(i,j) = 1
+             index_random(i,j) = 1 ! probability = devide_random
             else
-             index_random(i,j) = 2
+             index_random(i,j) = 2 ! probability = 1. - devide_random
             endif
            endif
           enddo      ! nx
@@ -635,9 +631,9 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            if(str_con_index(i,j) .eq. 2) then
             call random_number(harver)
             if(harver .lt. devide_random) then
-             index_random(i,j) = 1
+             index_random(i,j) = 1 ! probability = devide_random
             else
-             index_random(i,j) = 2
+             index_random(i,j) = 2 ! probability = 1. - devide_random
             endif
            endif
           enddo      ! nx
