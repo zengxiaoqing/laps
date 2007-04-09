@@ -32,7 +32,7 @@ c
       Logical   found_height
       Logical   l_valid
 
-      integer   lr_2d(nx,ny)
+      integer   lr_2d(nx,ny)                     ! closest radar
 
       Character*4 radar_name(maxradars)
 
@@ -102,15 +102,24 @@ c
 
             enddo ! l
 
-            if(.true.)then 
+            lr_2d(i,j) = lr
+
+         enddo ! i
+         enddo ! j
+
+         do l = 1,i_ra_count ! mosaic in one radar at a time
+            do j = 1,ny
+            do i = 1,nx
+
+            if(l .eq. lr_2d(i,j))then ! closest radar at this grid point 
                r_dbzmax=ref_base
 
-               if(lr .gt. 0)then
+               if(.true.)then
 !                 Get max ref in column
                   do k=1,nz
-                     if(grid_ra_ref(i,j,k,lr).ne.ref_base .and.
-     1                  grid_ra_ref(i,j,k,lr).ne.r_missing_data)then
-                        r_dbzmax=max(r_dbzmax,grid_ra_ref(i,j,k,lr))
+                     if(grid_ra_ref(i,j,k,l).ne.ref_base .and.
+     1                  grid_ra_ref(i,j,k,l).ne.r_missing_data)then
+                        r_dbzmax=max(r_dbzmax,grid_ra_ref(i,j,k,l))
                      endif
                   enddo
 
@@ -122,18 +131,18 @@ c
 
                   elseif(imosaic_3d .eq. 1)then  ! vrz output only
                      do k=1,nz 
-                        grid_mosaic_3dref(i,j,k)=grid_ra_ref(i,j,k,lr)       
+                        grid_mosaic_3dref(i,j,k)=grid_ra_ref(i,j,k,l)       
                      enddo ! k 
 
                   elseif(imosaic_3d .eq. 2)then  ! both vrc & vrz
                      do k=1,nz 
                         grid_mosaic_2dref(i,j)=r_dbzmax 
-                        grid_mosaic_3dref(i,j,k)=grid_ra_ref(i,j,k,lr)       
+                        grid_mosaic_3dref(i,j,k)=grid_ra_ref(i,j,k,l)       
                      enddo ! k 
 
                   endif ! imosaic_3d
 
-               endif ! lr
+               endif ! .true.
 
 !              Increment stats
                if(r_dbzmax.ne.ref_base)then
@@ -148,10 +157,9 @@ c
 
             endif ! .true.
 
-            lr_2d(i,j) = lr
-
-         enddo ! i
-         enddo ! j
+            enddo ! i
+            enddo ! j
+         enddo ! l
 
       endif ! i_ra_count > 1
 
