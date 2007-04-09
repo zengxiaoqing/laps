@@ -493,7 +493,7 @@ c the given time. Test n_valid_radars > 1. If not then no need to mosaic!
 c -------------------------------------------------------------------------
           if(n_valid_radars .ge. 1)then
 
-c this subroutine does not yet use imosaic_3d parameter.
+c this subroutine does not yet use the imosaic_3d parameter.
 
              call mosaic_ref_multi(n_valid_radars,n_radars,l_low_level,   ! I
      &                         c_radar_id,lat,lon,nx_l,ny_l,nz_l,         ! I
@@ -503,6 +503,8 @@ c this subroutine does not yet use imosaic_3d parameter.
      &                         grid_mosaic_2dref,grid_mosaic_3dref,       ! I/O
      &                         closest_radar_m,istatus)                   ! O
              if(istatus .ne. 1)return
+
+             I4_elapsed = ishow_timer()
 
           elseif(.false.)then
 
