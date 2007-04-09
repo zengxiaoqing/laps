@@ -194,3 +194,34 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 
         Return
         End
+
+
+! The variant below is called from 'get_radar_deriv.f/radar_bogus_w'
+
+!-------------------------------------------------------------------
+        Real*4 Function Parabolic_vv_profile1 (zbase, ztop, ratio, z)
+!The vertical velocity is zero at cloud top, peaks one third of the way up
+!from the base, and extends below the base by one third of the cloud depth.
+
+!  JUNE 2002 - No longer extending profile to below cloud base.
+
+        Implicit none
+        Real*4 zbase, ztop, ratio, z
+        Real*4 depth, vvmax, vvspan, halfspan, height_vvmax, x
+
+        depth = ztop - zbase
+        If (depth .le. 0.) then
+         Parabolic_vv_profile1 = 0.
+         Return
+        End if
+
+        vvmax = ratio * depth
+        vvspan = depth
+        halfspan = vvspan / 2.
+        height_vvmax = ztop - halfspan
+        x = -vvmax/(halfspan*halfspan)
+
+        Parabolic_vv_profile1 = x * (z-height_vvmax)**2 + vvmax
+
+        Return
+        End
