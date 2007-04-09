@@ -22,7 +22,11 @@ main                                                     laps_deriv.f
             sao_precip_correction                            "
             get_radar_deriv                              lib/get_radar_deriv.f
                 get_con_str                                  " 
+                    dfconstr                                 "
+                    df_random_index                          "
                 radar_bogus_w                                " 
+                    parabolic_vv_profile                 lib/vv.f
+                    parabolic_vv_profile1                    "
             cpt_pcp_cnc                                  lib/pcpcnc.f
                 zr                                       lib/zr.f
                 cpt_fall_velocity                        lib/pcpcnc.f
