@@ -126,9 +126,10 @@ csms$ignore begin
           write(6,*)' # Radar Obs Rejected due to other data = '
      1             ,i_radar_reject(i_radar)
      1             ,i_radar,idx_radar_a(i_radar)
-          write(6,502)n_radarobs_tot_unfltrd(i_radar)
-     1               ,n_radarobs_tot_fltrd(i_radar)
-502       format(1x,' # Radar Obs TOTAL UNFILTERED / FILTERED = ',2i7)       
+          write(6,502)i_radar,n_radarobs_tot_unfltrd(i_radar)
+     1                       ,n_radarobs_tot_fltrd(i_radar)
+502       format(1x,' # Radar Obs TOTAL UNFILTERED / FILTERED = ',i3
+     1                                                           ,2i7)      
 
 !         End filter section
 
@@ -250,8 +251,9 @@ csms$ignore begin
      1                  n_radarobs_lvl_fltrd,          ! Output
      1                  intvl_rad)                     ! Output
 
-              write(6,*)' k,i_radar,unfiltered/filtered',k,i_radar
-     1                 ,n_radarobs_lvl_unfltrd,n_radarobs_lvl_fltrd
+              write(6,503)k,i_radar,n_radarobs_lvl_unfltrd
+     1                     ,n_radarobs_lvl_fltrd
+ 503          format(1x,'k,i_radar,unfiltered/filtered',i4,i4,2i6)
 
               n_radarobs_tot_fltrd(i_radar) =
      1        n_radarobs_tot_fltrd(i_radar) + n_radarobs_lvl_fltrd       
@@ -260,8 +262,8 @@ csms$ignore begin
                   write(6,*)' # Radar Obs Rejected due to other data = '
      1                     ,i_radar_reject(i_radar)
      1                     ,i_radar,idx_radar_a(i_radar)
-                  write(6,502)n_radarobs_tot_unfltrd(i_radar)
-     1                       ,n_radarobs_tot_fltrd(i_radar)
+                  write(6,502)i_radar,n_radarobs_tot_unfltrd(i_radar)
+     1                               ,n_radarobs_tot_fltrd(i_radar)
               endif ! k
 
               call latlon_to_xy(rlat_radar(i_radar),rlon_radar(i_radar)       
