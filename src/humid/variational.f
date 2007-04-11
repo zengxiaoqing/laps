@@ -142,7 +142,8 @@ c     parameter list variables
 
 c internal variables
 
-c      real covariance (kk,kk,ii,jj)
+      real*4 covar (19,19,93,65)
+      integer l
       integer :: istatus
       integer :: i4time_sat
       integer :: i,j,k,k2,ijk
@@ -227,6 +228,14 @@ c     optran specific arrays for powell function calling
       real cost_sec_solar
       
       real bias_correction      ! function
+
+c     background covariance common block
+      common /cost_background/ background_covar,cost_covar,covar_s
+      real*4 background_covar (3,93,65)
+      real*4 cost_covar (3)
+      integer level7, level5, covar_s
+      real*4 covar_sum
+      integer*4 covar_count
       
 c     optran common block
       
@@ -319,6 +328,119 @@ c     misc variables
       integer len
 
 c     code *******************************************************************
+
+
+c     read covariance data ---------------------------------------------------
+
+      if (covar_switch .ne. 0 ) then
+         level7 = 7  !Okyeon needs to determine 700 level
+         level5 = 13  !need to determine 500 level
+         covar_s = covar_switch
+         call s_len(path2covar,len)
+         write (6,*) path2covar(1:len),len
+         open(26, file=path2covar(1:len),form='unformatted',
+     1        access='sequential',status='old')
+         read (26) ((((covar(k,l,i,j),k = 1,19),l=1,19),i=1,93),j=1,65)
+         close (26)
+         write (6,*)((((covar(k,l,i,j),k = 1,19),l=1,19),i=1,93),j=1,65)
+
+         if (covar_switch .eq. 1) then ! constant diagonal terms
+
+            covar_sum = 0.0
+            covar_count = 0
+
+            do k = 1,19
+               do i = 1,93
+                  do j = 1,65
+                     covar_sum = covar(k,k,i,j) +covar_sum
+                     covar_count = covar_count +1
+                  enddo
+               enddo
+            enddo
+            covar_sum = covar_sum /float(covar_count) !covar_sum is avg
+
+            do k = 1,3
+               do i = 1, 93
+                  do j = 1,65
+                     background_covar(k,i,j) = covar_sum ! avg covar
+                  enddo
+               enddo
+            enddo
+
+
+
+         endif
+         if (covar_switch.eq.2) then ! constant diagonal terms at each i,j
+
+
+
+            do j = 1,65
+               do i = 1,93
+                  covar_sum = 0.0
+                  covar_count = 0
+                  do k = 1,19
+                     covar_sum = covar(k,k,i,j) +covar_sum
+                     covar_count = covar_count +1
+                  enddo
+                  covar_sum = covar_sum/float (covar_count)
+                  do k = 1,19
+                     background_covar(k,i,j) = covar_sum
+                  enddo
+               enddo
+            enddo
+           
+
+         endif
+         if (covar_switch.eq. 3) then! 3-layer diagnoal avg at each i,j
+
+            do j = 1,65
+               do i = 1,93
+                  covar_sum = 0.0
+                  covar_count = 0
+                  do k = 1,level7
+                     covar_sum = covar(k,k,i,j) +covar_sum
+                     covar_count = covar_count +1
+                  enddo
+                  covar_sum = covar_sum/float (covar_count)
+                  do k = 1,level7
+                     background_covar(k,i,j) = covar_sum
+                  enddo
+
+                  covar_sum = 0.0
+                  covar_count = 0
+                  do k = level7+1,level5
+                     covar_sum = covar(k,k,i,j) +covar_sum
+                     covar_count = covar_count +1
+                  enddo
+                  covar_sum = covar_sum/float (covar_count)
+                  do k = level7+1,level5
+                     background_covar(k,i,j) = covar_sum
+                  enddo
+
+                  covar_sum = 0.0
+                  covar_count = 0
+                  do k = level5+1,19
+                     covar_sum = covar(k,k,i,j) +covar_sum
+                     covar_count = covar_count +1
+                  enddo
+                  covar_sum = covar_sum/float (covar_count)
+                  do k = level5+1,19
+                     background_covar(k,i,j) = covar_sum
+                  enddo
+
+
+
+
+               enddo
+            enddo
+           
+
+
+         endif
+
+      endif
+
+c     end read covariance data -----------------------------------------------
       
       write(6,*) 'new version 3/7/05 uses satellite gradients'
       write (6,*)
@@ -822,6 +944,15 @@ c     check for bad data in btemp_ob
             
 c     fill powell common block with profile data for routine variational
 c     this code executed for all types of data
+
+c     OKYEON COVARIANCE TESTING
+
+            if (covar_switch.ne.0)then
+               do k = 1,3
+                  cost_covar(k) = background_covar(k,i,j)
+               enddo
+            endif
+        
             
 c     fill cost function for background atmosphere
             

@@ -93,6 +93,15 @@ c     optran specific arrays for powell function calling
       real cost_sfc_refl        ! surface reflectance for O90
       real cost_sec_solar       ! solar secant angle for O90
 
+
+c     background covariance common block
+      common /cost_background/ background_covar,cost_covar,covar_s
+      real*4 background_covar (3,93,65)
+      real*4 cost_covar(3)
+      integer level7, level5, covar_s
+      real*4 covar_sum
+      integer*4 covar_count
+
 c     optran common 
 
       common /cost_optran/btemp_ob, cost_kk, cost_p, cost_t_l,
@@ -398,18 +407,41 @@ c     END SATELLITE RADIANCE SECTION
 C     BACKGROUND SECTION
 
 c     background weighting, in effect even if radiance data are not present.
-      max_func_back = 0.0
 
-      do j = 1,3
-         max_func_back =   ((x(j) - 1.)**2) + max_func_back
-      enddo
+      if(covar_s .eq.0) then !old method, skip nam covar
+         max_func_back = 0.0
 
-      max_func_back = max_func_back/(0.005**2) ! background error small
+         do j = 1,3
+            max_func_back =   ((x(j) - 1.)**2) + max_func_back
+         enddo
 
-      func = func + max_func_back
+         max_func_back = max_func_back/(0.005**2) ! background error small
 
-      if (max_func_back .ne. 0.0) then
-         min_func_back = min(min_func_back,max_func_back)
+         func = func + max_func_back
+
+         if (max_func_back .ne. 0.0) then
+            min_func_back = min(min_func_back,max_func_back)
+         endif
+      endif
+
+c     OKYEON SECTION FOR 3 TESTS
+
+      if (covar_s.ne.0) then ! divide term by proper covar
+
+         max_func_back = 0.0
+
+         do j = 1,3
+            max_func_back=((x(j) - 1.)**2)/cost_covar(j)+max_func_back
+         enddo
+
+         max_func_back = max_func_back/(0.005**2) ! background error small
+
+         func = func + max_func_back
+
+         if (max_func_back .ne. 0.0) then
+            min_func_back = min(min_func_back,max_func_back)
+         endif
+
       endif
 
 c      write(6,*) 'func 1, ',func
