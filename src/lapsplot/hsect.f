@@ -3760,6 +3760,7 @@ c    1                                  ,field_3d,istatus) ! q_3d
 
               if(istatus.ne.1 .and. istatus.ne.-1)then
                  print*,'No plotting for the requested time period'
+
               else
                  clow = 0.
                  chigh = +40.
@@ -3770,11 +3771,13 @@ c                cint = -1.
 
                  scale = 1e-3
 
-                 call plot_cont(field_2d,scale
-     1               ,clow,chigh,cint,asc9_tim_t
-     1               ,namelist_parms,plot_parms,c_label      
-     1               ,i_overlay,c_display,lat,lon,jdot
-     1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+                 call plot_field_2d(i4time_heights,c_type_i,field_2d
+     1                        ,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
+
               endif
 
             elseif(qtype .eq. 'r')then
@@ -3909,13 +3912,11 @@ c                   cint = -1.
 
                     scale = 1e-3
 
-                    call plot_cont(sh_2d,scale
-     1                            ,clow,chigh,cint ! q_3d
-     1                            ,asc9_tim_t,namelist_parms,plot_parms       
-     1                            ,c_label,i_overlay
-     1                            ,c_display
-     1                            ,lat,lon,jdot,NX_L,NY_L
-     1                            ,r_missing_data,laps_cycle_time)
+                    call plot_field_2d(i4_valid,c_type_i,sh_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
 
                     call move(sh_2d,field_2d,NX_L,NY_L) ! supports diff option
 
