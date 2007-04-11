@@ -2164,7 +2164,7 @@ c
 c
 	   write(iunit,905) i, stn(i)(1:5), ii(i), jj(i), 
      1                      interp_ob, ob(i), diff
- 905	   format(5x,i4,1x,a5,1x,2i4,1x,3f10.2)
+ 905	   format(4x,i5,1x,a5,1x,i4,1x,i4,1x,3f10.2)
 c
  500	enddo !i
 c
