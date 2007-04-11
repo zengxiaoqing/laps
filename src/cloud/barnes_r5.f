@@ -82,11 +82,11 @@ cdis
       real*8 sum_a(imax,jmax)
       real*8 sumwt_a(imax,jmax)
 
-      real*8 weight,sum,sumwt
+      real*8 weight,sum,sumwt,fraci,fracj,z1,z2,z3,z4
 
       real*8 iiilut(-NX_DIM_LUT:NX_DIM_LUT,-NY_DIM_LUT:NY_DIM_LUT)
       integer nlast(KCLOUD)
-      logical l_analyze(KCLOUD), l_diff_snd
+      logical l_analyze(KCLOUD), l_diff_snd, l_debug
 
       write(6,*)' subroutine barnes_r5...'
 
@@ -94,8 +94,9 @@ cdis
       cld_snd = cld_snd_in 
       wt_snd = wt_snd_in
 
-      l_diff_snd = .false.  
-      n_debug = 1000
+      l_diff_snd = .false.  ! allow more efficiency
+
+      l_debug = .false.     ! debug more efficient calculations
 
 !     n_cld_snd = 9 ! enable for debug testing (use 'n_cld_snd_in' in arg list)
 
@@ -133,6 +134,26 @@ cdis
           endif
       else
           write(6,*)' Good value of nskip = ',nskip
+      endif
+
+      if(l_diff_snd .and. l_debug)then
+          nskip = 1
+          write(6,*)' Resetting nskip to ',nskip
+      endif
+
+      if(l_debug)then
+          n_debug = 1000
+
+!         Extra output for test sounding (AIA in ROC domain)
+          it1 = 169
+          jt1 = 129
+
+          it2 = it1-5
+          jt2 = jt1
+
+      else
+          n_debug = 10
+
       endif
 
       write(6,*)' Number of cloud soundings = ',n_cld_snd
@@ -241,6 +262,13 @@ cdis
                   write(6,*)
                   write(6,*)' Cloud sounding # ',n,' at ',i_snd(n)
      1                                                   ,j_snd(n)
+
+                  if(l_debug)then
+                      if(i_snd(n) .eq. it1 .and. j_snd(n) .eq. jt1)then
+                          write(6,*)' ******TEST SOUNDING ******'
+                      endif
+                  endif
+
                   write(6,901,err=902)k
      1                       ,cld_snd(n,k),cld_snd_diff(n,k)
      1                       ,wt_snd(n,k),wt_snd_diff(n,k)
@@ -270,7 +298,7 @@ cdis
                       write(6,901,err=904)k
      1                           ,cld_snd(n,k),cld_snd_diff(n,k)
      1                           ,wt_snd(n,k),wt_snd_diff(n,k)
- 901                  format(i4,4(1x,f9.3))
+ 901                  format(i4,4(1x,f19.13))
  904                  continue
                   endif
 
@@ -331,10 +359,17 @@ cdis
         nobs = nstop-nstart+1
         nanl = 0
 
+        if(l_debug)then
+            write(6,*)k
+     1                 ,sum_a(it1,jt1),sumwt_a(it1,jt1)
+!    1                 ,sum_a(it2,jt2),sumwt_a(it2,jt2)
+     1                 ,' SUM-A'
+        endif
+
         if((l_analyze(k) .and. nobs .ge. 1) .or. k .eq. 1 
      1                                      .or. l_diff_snd)then
 
-          if(.not. l_diff_snd .or. k .eq. 1)then
+          if( (.not. l_diff_snd) .OR. k .eq. 1)then
               sum_a=0D0  
               sumwt_a=0D0
           endif
@@ -369,7 +404,7 @@ cdis
 
               if(l_use_snd)then
 
-                if(.not. l_diff_snd .or. k .eq. 1)then
+                if( (.not. l_diff_snd) .OR. k .eq. 1)then
 
                   nanl = nanl + 1
 
@@ -385,6 +420,17 @@ cdis
 
                   enddo ! i
                   enddo ! j
+
+                  if(l_debug)then
+                      weight_dbg=iiilut(it1-ii,jt1-jj)*wt_snd(nn,k)      
+
+                      write(6,*)k,nn
+     1                              ,weight_dbg
+     1                              ,sum_a(it1,jt1),sumwt_a(it1,jt1)
+!    1                              ,sum_a(it2,jt2),sumwt_a(it2,jt2)
+     1                              ,' A'
+
+                  endif
 
                 else ! process difference soundings
 
@@ -405,6 +451,12 @@ cdis
                       enddo ! i
                       enddo ! j
 
+                      if(l_debug)then
+                          write(6,*)k,nn
+     1                              ,' B'
+
+                      endif
+
 !                 Check if we are changing between valid and missing values
                   elseif(wt_snd_diff(nn,k) .ne. r_missing_data)then
 
@@ -414,7 +466,7 @@ cdis
                       do j=1,jmax,nskip
                       jmjj = j-jj
                       do i=1,imax,nskip
-                          weight = iiilut(i-ii,jmjj) * wt_snd_diff(nn,k) 
+                          weight = iiilut(i-ii,jmjj) * wt_snd_diff(nn,k)
 
 !                         Obs are being weighted
                           sum_a(i,j)=weight*cld_snd_diff(nn,k)
@@ -424,6 +476,17 @@ cdis
                       enddo ! i
                       enddo ! j
 
+                      if(l_debug)then
+                          weight_dbg=
+     1                       iiilut(it1-ii,jt1-jj)*wt_snd_diff(nn,k)      
+
+                          write(6,*)k,nn
+     1                              ,weight_dbg
+     1                              ,sum_a(it1,jt1),sumwt_a(it1,jt1)
+!    1                              ,sum_a(it2,jt2),sumwt_a(it2,jt2)
+     1                              ,' C'
+                      endif
+
                   endif ! wt_snd_diff
 
                 endif ! l_diff_snd
@@ -431,6 +494,13 @@ cdis
               endif ! l_use_snd
 
           enddo ! n
+
+          if(l_debug .and. .false.)then
+                write(6,*)k
+     1                 ,sum_a(it1,jt1),sumwt_a(it1,jt1)
+!    1                 ,sum_a(it2,jt2),sumwt_a(it2,jt2)
+     1                 ,' SUM-B'
+          endif
 
           write(6,50)k,nstart,nstop,nobs,nanl
 50        format(' lvl,nstart,nstop,nobs,nanl=',5i6)
@@ -461,8 +531,26 @@ cdis
               t(i,j,k)=sum/sumwt
             end if
 
+            if(l_debug)then
+                if(i .eq. it1 .and. j .eq. jt1)then
+                  write(6,*)' Total sum',i,j,k,cf_modelfg(i,j,k)
+     1                        ,weight_modelfg,sum,sumwt,t(i,j,k)
+                endif
+                if(i .eq. it2 .and. j .eq. jt2)then
+                  write(6,*)' Total sum',i,j,k,cf_modelfg(i,j,k)
+     1                        ,weight_modelfg,sum,sumwt,t(i,j,k)
+                endif
+            endif ! l_debug
+
           enddo ! i
           enddo ! j
+
+          if(l_debug .and. .false.)then
+                write(6,*)k
+     1                 ,sum_a(it1,jt1),sumwt_a(it1,jt1)
+!    1                 ,sum_a(it2,jt2),sumwt_a(it2,jt2)
+     1                 ,' SUM-C'
+          endif
 
 !         Bilinearly interpolate to fill in rest of domain
 !         Fills in final analysis value and weights from obs alone
@@ -483,12 +571,21 @@ cdis
           do j=1,jmax
               jl = lowj_lut(j)
               jh = jl + nskip
-              fracj = float(j-jl)/float(nskip)
+              fracj = dble(j-jl)/dble(nskip)
 
               do i=1,imax
+
+                  if(l_debug .and. .false.)then
+                    if(i .eq. it1 .and. j .eq. jt1)then
+                        write(6,*)k
+     1                         ,sum_a(it1,jt1),sumwt_a(it1,jt1)
+     1                         ,' SUM-C1'
+                    endif
+                  endif
+
                   il = lowi_lut(i)
                   ih = il + nskip
-                  fraci = float(i-il)/float(nskip)
+                  fraci = dble(i-il)/dble(nskip)
 
 !                 Calculate interpolated cloud cover
                   Z1=t(il,jl,k)
@@ -519,6 +616,13 @@ cdis
 
               enddo ! i
           enddo ! j
+
+          if(l_debug .and. .false.)then
+                write(6,*)k
+     1                 ,sum_a(it1,jt1),sumwt_a(it1,jt1)
+!    1                 ,sum_a(it2,jt2),sumwt_a(it2,jt2)
+     1                 ,' SUM-D'
+          endif
 
         elseif(nobs .gt. 0)then ! Obs are identical to lvl below; 
                                 ! Use analysis weights from last analyzed level
