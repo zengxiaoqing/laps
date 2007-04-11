@@ -188,7 +188,14 @@ C
             i4time_desired = i4time_sys
             i4_avg_wdw_sec = 3600 ! default value
         endif
-        c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
+
+        if(len_dir_in .gt. 0)then
+            c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
+        else
+            write(6,*)' path_to_raw_rass has zero length'
+            istatus = 0
+            return
+        endif
 
 C       Wait for the data
         write(6,*)c_filespec(1:80)
