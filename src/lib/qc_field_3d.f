@@ -23,7 +23,7 @@
           lower_bound = +173.
           upper_bound = +400.
       elseif(var_2d .eq. 'DSF')then
-          lower_bound = +120.
+          lower_bound = +70.
           upper_bound = +350.
       elseif(var_2d .eq.'PSF'.or.var_2d.eq.'SLP')then
           lower_bound = 40000.
