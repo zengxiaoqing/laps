@@ -12,6 +12,9 @@ main                                           laps_sfc.f
         bkgwts                                 lib/laps_routines.f
         get_bkgwind_sfc                             "
         get_background_sfc                          "
+            get_modelfg_2d                     lib/get_maps_lapsgrid.f
+                get_modelfg_3d_sub                  "
+                    qc_field_2d                lib/qc_field_3d.f
         qcdata                                 qc_data.f
             dev_ck                                  "
             bkg_chk                                 "
@@ -29,7 +32,7 @@ main                                           laps_sfc.f
                 barnes_wide                         "
         laps_vanl                              lapsvanl.f
             zero                                    
-            get_modelfg_3d                          
+            get_modelfg_3d                     lib/get_maps_lapsgrid.f     
             mean_lapse                         lib/laps_routines.f
             mean_pressure                           "
             spline (t,td)                      lapsvanl_sub.f
