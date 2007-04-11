@@ -461,85 +461,91 @@ C
 C     Variable        NETCDF Long Name
 C      elevation    "Elevation above MSL"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'elevation',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'elevation',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var elevation'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,elevation)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var elevation'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var elevation'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      latitude     "Station latitude"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'latitude',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'latitude',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var latitude'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,latitude)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var latitude'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var latitude'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      levels       "Instrument Level, height above station"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'levels',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'levels',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var levels'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,levels)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var levels'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var levels'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      longitude    "Station longitude"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'longitude',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'longitude',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var longitude'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,longitude)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var longitude'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var longitude'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      temperature  "Temperature"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'temperature',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'temperature',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var temperature'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,temperature)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperature'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var temperature'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      windSpeed    "Wind Speed (scalar)"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'windSpeed',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'windSpeed',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var windSpeed'
-      endif
+      else
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,windSpeed)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeed'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var windSpeed'
+        endif
       endif
 
 C   Variables of type INT
@@ -562,211 +568,226 @@ C
 C     Variable        NETCDF Long Name
 C      firstInBin   
 C
-        nf_status = NF_INQ_VARID(nf_fid,'firstInBin',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'firstInBin',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var firstInBin'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,firstInBin)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var firstInBin'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var firstInBin'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      averageMinutes
 C
-        nf_status = NF_INQ_VARID(nf_fid,'averageMinutes',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'averageMinutes',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var averageMinutes'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,averageMinutes)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var averageMinutes'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var averageMinutes'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      firstOverflow
 C
-        nf_status = NF_INQ_VARID(nf_fid,'firstOverflow',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'firstOverflow',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var firstOverflow'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,firstOverflow)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var firstOverflow'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var firstOverflow'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      globalInventory
 C
-        nf_status = NF_INQ_VARID(nf_fid,'globalInventory',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'globalInventory',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var globalInventory'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,globalInventory)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var globalInventory'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var globalInventory'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      invTime      
 C
-        nf_status = NF_INQ_VARID(nf_fid,'invTime',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'invTime',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var invTime'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,invTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var invTime'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var invTime'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      inventory    
 C
-        nf_status = NF_INQ_VARID(nf_fid,'inventory',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'inventory',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var inventory'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,inventory)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var inventory'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var inventory'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      isOverflow   
 C
-        nf_status = NF_INQ_VARID(nf_fid,'isOverflow',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'isOverflow',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var isOverflow'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,isOverflow)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var isOverflow'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var isOverflow'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      lastInBin    
 C
-        nf_status = NF_INQ_VARID(nf_fid,'lastInBin',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'lastInBin',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var lastInBin'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,lastInBin)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var lastInBin'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var lastInBin'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      lastRecord   
 C
-        nf_status = NF_INQ_VARID(nf_fid,'lastRecord',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'lastRecord',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var lastRecord'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,lastRecord)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var lastRecord'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var lastRecord'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      nStaticIds   
 C
-        nf_status = NF_INQ_VARID(nf_fid,'nStaticIds',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'nStaticIds',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var nStaticIds'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,nStaticIds)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var nStaticIds'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var nStaticIds'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      prevRecord   
 C
-        nf_status = NF_INQ_VARID(nf_fid,'prevRecord',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'prevRecord',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var prevRecord'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,prevRecord)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var prevRecord'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var prevRecord'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      tempQcFlag   "RSA Temperature quality control flag"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'tempQcFlag',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'tempQcFlag',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var tempQcFlag'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,tempQcFlag)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var tempQcFlag'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var tempQcFlag'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      wdQcFlag     "RSA Wind direction quality control flag"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'wdQcFlag',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'wdQcFlag',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var wdQcFlag'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,wdQcFlag)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var wdQcFlag'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var wdQcFlag'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      windDir      "Wind Direction (scalar)"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'windDir',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'windDir',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var windDir'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,windDir)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDir'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var windDir'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      wsQcFlag     "RSA Wind speed quality control flag"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'wsQcFlag',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'wsQcFlag',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var wsQcFlag'
-      endif
+      else
         nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,wsQcFlag)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var wsQcFlag'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var wsQcFlag'
+        endif
       endif
 
 C   Variables of type DOUBLE
@@ -775,15 +796,16 @@ C
 C     Variable        NETCDF Long Name
 C      observationTime"Time of observation"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'observationTime',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'observationTime',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var observationTime'
-      endif
+      else
         nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,observationTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var observationTime'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var observationTime'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -821,15 +843,16 @@ C
 C     Variable        NETCDF Long Name
 C      dataProvider "Name of organization responsible for delivering the data"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'dataProvider',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'dataProvider',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var dataProvider'
-      endif
+      else
         nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,dataProvider)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dataProvider'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var dataProvider'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -849,43 +872,46 @@ C
 C     Variable        NETCDF Long Name
 C      providerId   "Alphanumeric station name"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'providerId',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'providerId',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var providerId'
-      endif
+      else
         nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,providerId)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var providerId'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var providerId'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      staticIds    
 C
-        nf_status = NF_INQ_VARID(nf_fid,'staticIds',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'staticIds',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var staticIds'
-      endif
+      else
         nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,staticIds)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var staticIds'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var staticIds'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
 C      stationId    "alphanumeric station Id"
 C
-        nf_status = NF_INQ_VARID(nf_fid,'stationId',nf_vid)
+      nf_status = NF_INQ_VARID(nf_fid,'stationId',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var stationId'
-      endif
+      else
         nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,stationId)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationId'
+        if(nf_status.ne.NF_NOERR) then
+          print *, NF_STRERROR(nf_status)
+          print *,'in var stationId'
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
@@ -917,18 +943,20 @@ C
         if(nf_status.ne.NF_NOERR) then
           print *, NF_STRERROR(nf_status)
           print *,'in var stationType'
-        endif
-        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,stationType)
-        if(nf_status.ne.NF_NOERR) then
-          print *, NF_STRERROR(nf_status)
-          print *,'in var stationType'
+        else
+          nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,stationType)
+          if(nf_status.ne.NF_NOERR) then
+            print *, NF_STRERROR(nf_status)
+            print *,'in var stationType'
+          endif
         endif
 
-        nf_status = nf_close(nf_fid)
-        if(nf_status.ne.NF_NOERR) then
-          print *, NF_STRERROR(nf_status)
-          print *,'nf_close'
-        endif
+      endif
+
+      nf_status = nf_close(nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'nf_close'
       endif
 
       return
