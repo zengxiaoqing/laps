@@ -142,7 +142,7 @@ c     parameter list variables
 
 c internal variables
 
-      real*4 covar (19,19,93,65)
+      real*4 covar (19,19,93,65),covar_temp(19,19,93,65)
       integer l
       integer :: istatus
       integer :: i4time_sat
@@ -334,7 +334,7 @@ c     read covariance data ---------------------------------------------------
 
       if (covar_switch .ne. 0 ) then
          level7 = 7  !Okyeon needs to determine 700 level
-         level5 = 13  !need to determine 500 level
+         level5 = 11  !need to determine 500 level
          covar_s = covar_switch
          call s_len(path2covar,len)
          write (6,*) path2covar(1:len),len
@@ -342,7 +342,23 @@ c     read covariance data ---------------------------------------------------
      1        access='sequential',status='old')
          read (26) ((((covar(k,l,i,j),k = 1,19),l=1,19),i=1,93),j=1,65)
          close (26)
-         write (6,*)((((covar(k,l,i,j),k = 1,19),l=1,19),i=1,93),j=1,65)
+c         write (6,*)((((covar(k,l,i,j),k = 1,19),l=1,19),i=1,93),j=1,65)
+
+C     INVERT COVAR since covar is direct from NAM and NOT laps.
+
+c     use f90 construce make arrays identical
+         covar_temp = covar
+
+         do k=1,19
+            do l = 1,19
+               do i = 1,93
+                  do j = 1,65
+                     covar (20-k,20-l,i,j) = covar_temp (k,l,i,j)
+                  enddo
+               enddo
+            enddo
+         enddo
+                     
 
          if (covar_switch .eq. 1) then ! constant diagonal terms
 
