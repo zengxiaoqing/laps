@@ -103,7 +103,7 @@ system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/a
 
 if ($opt_m eq "ruc") {
     print "Get ruc\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp-ruc-hyb/7/0/105/236/\* $public/data/grids/ruc/hyb_A236/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_hyb/7/0/105/236/\* $public/data/grids/ruc/hyb_A236/grib/");
 
     if (defined $opt_g) {
         print "Degrib ruc\n";
