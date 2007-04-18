@@ -126,6 +126,12 @@ ldmtools:
 install_ldmtools: 
 	cd src/ldmtools; $(MAKE) install
 
+wfopost: lib
+	cd src/WFO/post; $(MAKE)
+
+install_wfopost: lib
+	cd src/WFO/post; $(MAKE) install
+
 
 ridds: 	
 	cd $(SRCROOT)/src/lib/radar/nexrad_nssl; $(MAKE)
