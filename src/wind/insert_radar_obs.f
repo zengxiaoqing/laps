@@ -8,6 +8,7 @@
      1  ,vr_obs_unfltrd                             ! Input
      1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
      1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
+     1  ,thresh_9_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar                      ! Input
@@ -54,6 +55,7 @@
       integer*4 idx_radar_a(max_radars)                              ! Input
       integer*4 thresh_2_radarobs_lvl_unfltrd
      1         ,thresh_4_radarobs_lvl_unfltrd
+     1         ,thresh_9_radarobs_lvl_unfltrd
 
       logical  l_good_multi_doppler_ob(imax,jmax,kmax)               ! Local
       logical  l_analyze(kmax),l_derived_output,l_grid_north
@@ -107,6 +109,7 @@ csms$ignore begin
      1                  wt_p_radar(1,1,k),weight_radar,! Input
      1                  thresh_2_radarobs_lvl_unfltrd, ! Input
      1                  thresh_4_radarobs_lvl_unfltrd, ! Input
+     1                  thresh_9_radarobs_lvl_unfltrd, ! Input
      1                  r_missing_data,                ! Input
      1                  vr_obs_fltrd(1,1,k),           ! Input/Output
      1                  i_radar_reject(i_radar),       ! Input/Output
@@ -143,8 +146,6 @@ csms$ignore begin
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar_a(i_radar)               ! Input
      1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input
-!    1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
-!    1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar(i_radar),rlon_radar(i_radar)    ! Input
@@ -167,8 +168,6 @@ csms$ignore begin
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar_a(i_radar)               ! Input
      1  ,vr_obs_unfltrd(1,1,1,i_radar)              ! Input
-!    1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
-!    1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar(i_radar),rlon_radar(i_radar)    ! Input
@@ -244,6 +243,7 @@ csms$ignore begin
      1                  wt_p_radar(1,1,k),weight_radar,! Input
      1                  thresh_2_radarobs_lvl_unfltrd, ! Input
      1                  thresh_4_radarobs_lvl_unfltrd, ! Input
+     1                  thresh_9_radarobs_lvl_unfltrd, ! Input
      1                  r_missing_data,                ! Input
      1                  vr_obs_fltrd(1,1,i_radar),     ! Input/Output
      1                  i_radar_reject(i_radar),       ! Input/Output
@@ -251,9 +251,9 @@ csms$ignore begin
      1                  n_radarobs_lvl_fltrd,          ! Output
      1                  intvl_rad)                     ! Output
 
-              write(6,503)k,i_radar,n_radarobs_lvl_unfltrd
-     1                     ,n_radarobs_lvl_fltrd
- 503          format(1x,'k,i_radar,unfiltered/filtered',i4,i4,2i6)
+              write(6,503)k,i_radar,intvl_rad,n_radarobs_lvl_unfltrd
+     1                                       ,n_radarobs_lvl_fltrd
+ 503          format(1x,'k/rdr#/intvl/unfiltered/filtered',i4,i4,i4,2i6)
 
               n_radarobs_tot_fltrd(i_radar) =
      1        n_radarobs_tot_fltrd(i_radar) + n_radarobs_lvl_fltrd       
@@ -393,8 +393,6 @@ csms$ignore end
      1  ,r_missing_data                             ! Input
      1  ,i_radar,idx_radar                          ! Input
      1  ,vr_obs_unfltrd                             ! Input
-!    1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
-!    1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar,rheight_radar        ! Input
@@ -421,9 +419,6 @@ csms$ignore end
 
       logical  l_good_multi_doppler_ob(imax,jmax,kmax),l_derived_output
       logical  l_grid_north, l_multi_doppler_new
-
-!     integer*4 thresh_2_radarobs_lvl_unfltrd
-!    1         ,thresh_4_radarobs_lvl_unfltrd
 
 
 csms$ignore begin
@@ -567,6 +562,7 @@ csms$ignore end
      1                  wt_p_radar,weight_radar,      ! Input
      1                  thresh_2_radarobs_lvl_unfltrd,! Input
      1                  thresh_4_radarobs_lvl_unfltrd,! Input
+     1                  thresh_9_radarobs_lvl_unfltrd,! Input
      1                  r_missing_data,               ! Input
      1                  vr_obs_fltrd,                 ! Input/Output
      1                  i_radar_reject,               ! Input/Output
@@ -581,10 +577,13 @@ csms$ignore end
 !       Threshold number of radar obs on a given level
         integer*4 thresh_2_radarobs_lvl_unfltrd
      1           ,thresh_4_radarobs_lvl_unfltrd
+     1           ,thresh_9_radarobs_lvl_unfltrd
 !       parameter (thresh_2_radarobs_lvl_unfltrd = 300)
 !       parameter (thresh_4_radarobs_lvl_unfltrd = 600)
+!       parameter (thresh_9_radarobs_lvl_unfltrd = 900)
 
         integer*4 n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
+        integer*4 n_krn, n_krn_m1
         real*4 vr_obs_unfltrd(imax,jmax)
         real*4 wt_p_radar(imax,jmax)
         real*4 vr_obs_fltrd(imax,jmax)
@@ -616,7 +615,33 @@ csms$ignore begin
 !       Test against threshold for number of radar obs on a given level
 !       This logic is supposed to select a sparse subset of the radial
 !       velocities yet retain grid boxes that are isolated
-        if(n_radarobs_lvl_unfltrd .gt. thresh_4_radarobs_lvl_unfltrd
+        if(n_radarobs_lvl_unfltrd .gt. thresh_9_radarobs_lvl_unfltrd
+     1                                                         )then
+           ! Keep only every ninth ob.  Keep one ob out of every nine.
+           vr_obs_fltrd = r_missing_data
+           n_krn = 3
+           n_krn_m1 = n_krn - 1
+           intvl_rad = n_krn**2
+           do j=1,jmax-n_krn_m1,n_krn
+           do i=1,imax-n_krn_m1,n_krn
+              l_found_one = .false.
+              do jj = j,j+n_krn_m1
+              do ii = i,i+n_krn_m1
+                 if  ( l_found_one ) then
+                    continue
+                 elseif ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data
+     1                                                            )then
+                    vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(ii,jj)
+                    l_found_one = .true.
+                 else
+                    continue
+                 endif
+              enddo ! ii
+              enddo ! jj
+           enddo ! i
+           enddo ! j
+
+        elseif(n_radarobs_lvl_unfltrd .gt. thresh_4_radarobs_lvl_unfltrd
      1                                                         )then
            ! Keep only every fourth ob.  Keep one ob out of every `quad'.
            intvl_rad = 4
