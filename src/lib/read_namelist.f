@@ -361,6 +361,7 @@ c
        subroutine get_wind_parms(l_use_raob,l_use_cdw,l_use_radial_vel
      1                          ,thresh_2_radarobs_lvl_unfltrd
      1                          ,thresh_4_radarobs_lvl_unfltrd
+     1                          ,thresh_9_radarobs_lvl_unfltrd
      1                          ,weight_bkg_const_wind
      1                          ,weight_radar
      1                          ,rms_thresh_wind
@@ -376,6 +377,7 @@ c
        namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel
      1                   ,thresh_2_radarobs_lvl_unfltrd
      1                   ,thresh_4_radarobs_lvl_unfltrd
+     1                   ,thresh_9_radarobs_lvl_unfltrd
      1                   ,weight_bkg_const_wind
      1                   ,weight_radar
      1                   ,rms_thresh_wind
@@ -383,9 +385,6 @@ c
  
        character*150 static_dir,filename
  
-!      thresh_2_radarobs_lvl_unfltrd = 300 ! temporary assignment
-!      thresh_4_radarobs_lvl_unfltrd = 600 ! temporary assignment
-
        call get_directory(grid_fnam_common,static_dir,len_dir)
 
        filename = static_dir(1:len_dir)//'/wind.nl'
