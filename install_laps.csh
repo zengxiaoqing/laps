@@ -119,6 +119,11 @@ if ($6 != w) then
     ls -l make_install_lapsplot.out 
 
     echo " "
+    echo "make install_wfopost"
+    make install_wfopost >& make_install_wfopost.out 
+    ls -l make_install_wfopost.out 
+
+    echo " "
     echo "make debug"
     make debug >& make_debug.out 
     ls -l make_debug.out
