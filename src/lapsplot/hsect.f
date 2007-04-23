@@ -4203,7 +4203,7 @@ c                   cint = -1.
             c_label = 'Total Precipitable Water  cm     '
 
             clow = 0.00
-            chigh = 5.50
+            chigh = 7.00
             cint = 0.25
             scale = 1e-2
 
@@ -4701,7 +4701,7 @@ c                   cint = -1.
      1                         ,'moist',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'TPW')then
-                    call ccpfil(field_2d,NX_L,NY_L,0.,5.5
+                    call ccpfil(field_2d,NX_L,NY_L,0.,7.0
      1                         ,'tpw',n_image,scale,'hsect' 
      1                         ,plot_parms,namelist_parms) 
                 elseif(var_2d .eq. 'VNT')then
