@@ -108,7 +108,7 @@ if ($opt_m eq "ruc") {
     if (defined $opt_g) {
         print "Degrib ruc\n";
         if (! -d $opt_g){ die "$opt_g not found! \n";}
-        system ("@CSH@ @prefix@/etc/ruc_grib2netcdf.csh /home/oplapb/grib_converter $public/data/grids/ruc/hyb_A236");
+        system ("@CSH@ @prefix@/etc/ruc_grib2netcdf.csh $opt_g $public/data/grids/ruc/hyb_A236");
     }
 }
 
