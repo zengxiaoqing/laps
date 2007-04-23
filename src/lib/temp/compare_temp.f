@@ -121,7 +121,7 @@ C********************************************************************
             return
         endif
 
-        call get_obstypes      (obs_barnes,max_obs,ncnt_total        ! I
+        call get_temp_obstypes (obs_barnes,max_obs,ncnt_total        ! I
      1                         ,c_obstype_a,max_obstypes,n_obstypes  ! I/O
      1                         ,istatus)                             ! O
         if(istatus .ne. 1)stop
@@ -249,7 +249,7 @@ C********************************************************************
             write(6,102)c_obs_left(1:8),c_grid,nobs,bias_t,rmsu
 102         format(' BIAS/RMS between '
      1        ,a,' & ',a,' (n,bias_t,rms) = '
-     1        ,i5,6f5.1)
+     1        ,i6,6f5.1)
         endif
 
         return
@@ -257,9 +257,9 @@ C********************************************************************
         end
 
 
-        subroutine get_obstypes(obs_barnes,max_obs,ncnt_total
-     1                         ,c_obstype_a,max_obstypes,n_obstypes
-     1                         ,istatus)
+        subroutine get_temp_obstypes(obs_barnes,max_obs,ncnt_total
+     1                              ,c_obstype_a,max_obstypes,n_obstypes
+     1                              ,istatus)
 
         include 'barnesob.inc'
         type (barnesob) obs_barnes(max_obs)      
@@ -274,7 +274,7 @@ C********************************************************************
             return
         endif        
 
-        write(6,*)' Subroutine get_obstypes, obstypes found...'
+        write(6,*)' Subroutine get_temp_obstypes, obstypes found...'
 
         i = 1
         n_obstypes = 1
