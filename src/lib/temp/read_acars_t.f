@@ -108,7 +108,7 @@ cdis
         endif
 
         c8_acars_type = 'ACARS'
-        call get_obstype(c8_acars_type,itype_acars,1)
+        call get_temp_obstype(c8_acars_type,itype_acars,1)
 
         write(6,*)
         write(6,*)'             Reading ACARS Obs: ',ext_in

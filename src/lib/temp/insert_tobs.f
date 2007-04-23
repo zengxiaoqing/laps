@@ -155,7 +155,7 @@ cdis
 
 
 !         Convert obstype from character to integer
-          call get_obstype(c8_sndtype(i_tsnd),itype_ob,1)
+          call get_temp_obstype(c8_sndtype(i_tsnd),itype_ob,1)
 
           if(istatus .eq. 1)then
 
@@ -552,7 +552,7 @@ cdis
 
 !               Convert obstype from real to integer to character
                 itype_ob = temp_obs(i_ob,i_obstype)
-                call get_obstype(c8_obstype,itype_ob,2)       
+                call get_temp_obstype(c8_obstype,itype_ob,2)       
 
 !               Place ob from 'temp_obs' structure into 'obs_barnes' structure
                 obs_barnes(n_obs_valid)%i = temp_obs(i_ob,i_i) 
@@ -632,7 +632,7 @@ cdis
 
 
 
-      subroutine get_obstype(c_obstype,i_obstype,mode)
+      subroutine get_temp_obstype(c_obstype,i_obstype,mode)
 
       integer n_obstypes
       parameter (n_obstypes = 7)
