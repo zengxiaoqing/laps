@@ -38,7 +38,7 @@ c                         Recommended values: 0. < value <= 1e+30.
 c                         This controls how quickly the output values match the
 c                         background if far from obs.
 c
-c weight_radar - weight for derived Doppler wind obs - equivalent to 1/err**2
+c weight_radar - weight for derived Doppler wind obs - equivalent to 1/err^2
 c                where 'err' is the assumed radial velocity error in m/s. 
 c
 c rms_thresh_wind - Threshold for rms fit of analysis to obs (non-dimensional).
