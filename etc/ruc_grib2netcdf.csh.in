@@ -33,8 +33,11 @@ if (! -e $dataroot/grib) then
     exit
 endif
 
-cd $dataroot 
-foreach time ( $dataroot/* )
+cd $dataroot/grib 
+mkdir -p $dataroot/netcdf
+mkdir -p $dataroot/netcdf/.tmp
+foreach time ( * )
    echo "Converting GRIB to NetCDF for time $time"
-   $installroot/Grib2NetCDF -p ruc236 -l $dataroot -c $installroot/ruc_hyb_A236_ITS.cdl -f $dataroot/grib/$yy$ddd$hhhh$ffff -o $dataroot/netcdf -v
+   echo "$installroot/Grib2NetCDF -p ruc236 -l $dataroot -c $installroot/ruc_hyb_A236_ITS.cdl -f $dataroot/grib/$time -o $dataroot/netcdf -v"	
+   $installroot/Grib2NetCDF -p ruc236 -l $dataroot -c $installroot/ruc_hyb_A236_ITS.cdl -f $dataroot/grib/$time -o $dataroot/netcdf -v
 end
