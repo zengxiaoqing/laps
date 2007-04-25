@@ -254,7 +254,7 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
         
         include 'lapsparms.for'
         integer*4 MXL
-        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+        parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
      1  ,TDFCR(20,2),VEL(20)
@@ -446,7 +446,7 @@ cdoc    Calculate a variety of stability indices from an input sounding
 
         include 'lapsparms.for'
         integer*4 MXL
-        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+        parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         DIMENSION Q(MXL),W(MXL),WB(MXL)
         COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
@@ -696,7 +696,7 @@ cdoc    Calculate a PBE/LCL related indices from an input sounding
 
         include 'lapsparms.for'
         integer*4 MXL
-        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+        parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
      1              ,TDFCR(20,2),VEL(20)
@@ -956,7 +956,7 @@ cdoc    Calculate boundary layer mean values from an input sounding
 
         include 'lapsparms.for'
         integer*4 MXL
-        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+        parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         REAL INTLOG
         DIMENSION P(MXL),T(MXL),Q(MXL)
@@ -1105,7 +1105,7 @@ cdoc    Interpolate any parameter from a pressure sounding to a specific pres
 
         include 'lapsparms.for'
         integer*4 MXL
-        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+        parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         DIMENSION P(MXL),PARAM(MXL)
 
