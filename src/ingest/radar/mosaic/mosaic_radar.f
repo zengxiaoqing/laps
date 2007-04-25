@@ -175,9 +175,8 @@ c
       Character     c_rad_types(n_radars)
       Character     cradars*3
 
-      Integer       nfiles_vxx(maxfiles)
+      Integer       nfiles_vxx(mx_radars)
       Integer       i_ra_count
-      Integer       i_file_count(maxfiles)
       Integer       i_window_size
       Integer       len_dir
 
@@ -280,6 +279,7 @@ c
             print*,'Success in get_file_names. Numoffiles = ',numoffiles
             if(numoffiles .le. 0)then
                write(6,*)'No Data Available in: ',c_radar_ext(i)
+               nfiles_vxx(i)=0
                goto 333
             end if
 c
@@ -297,7 +297,7 @@ c              write(6,*)c_filename_vxx(l,i)(1:nn)
             stop
          end if
 
-333   enddo
+333   enddo ! i
 
       I4_elapsed = ishow_timer()
 
