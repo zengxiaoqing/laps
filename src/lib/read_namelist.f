@@ -373,6 +373,7 @@ c
        logical l_use_raob, l_use_cdw, l_use_radial_vel
        integer*4 thresh_2_radarobs_lvl_unfltrd
      1          ,thresh_4_radarobs_lvl_unfltrd
+     1          ,thresh_9_radarobs_lvl_unfltrd
 
        namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel
      1                   ,thresh_2_radarobs_lvl_unfltrd
