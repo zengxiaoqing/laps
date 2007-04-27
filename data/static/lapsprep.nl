@@ -1,10 +1,12 @@
 &lapsprep_nl
   hotstart = .true.,
   balance  = .true., 
+  hydrometeor_scale_factor = 0.5,
   output_format = 'wrf',
   snow_thresh = 1.1,
   lwc2vapor_thresh = 1.01,
   make_sfc_uv = .false.,
+	
 /
  
 c
@@ -15,6 +17,10 @@ c
 c  balance:
 c    Logical flag, set to true to use the balanced wind, temp, height 
 c    fields.  Normally set to true if hotstart is true.
+c
+c  hydrometeor_scale_factor:	
+c    A factor which scales the hydrometeor concentrations for a grid
+c    spacing. (hydrometeor_scale = hydrometeor_scale_factor/dx)
 c
 c  output_format:
 c    List of character strings, one specifying each output format to
