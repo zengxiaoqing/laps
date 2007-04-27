@@ -8,15 +8,19 @@
 
 #In archive mode, this script can be run using 'casererun.pl' with appropriate command line arguments.  
 
-#This script reads additional info from $LAPS_DATA_ROOT/static/widebandlist.txt
-
-#Define Casedate (and hour within)
+#Bring in command line arguments
 setenv LAPS_DATA_ROOT $1
 setenv SKIP $2                 # skip processing if NetCDF radar is there?
 setenv REMAP $3                # run remap_polar_netcdf.exe [yes,no]
 setenv LAPSINSTALLROOT $4
 setenv MODETIME $5             # run mode [realtime,archive]
 setenv OUTPUTROOT_ARCHIVE $6   # location of output Polar NetCDF files (active only for archive mode)
+
+#This script reads additional info from $LAPS_DATA_ROOT/static/widebandlist.txt as follows:
+
+#First line is location of installed software that converts radar files
+#Second line is location of input Archive-II data files 
+#Third line is a list of radars to process. Use lower case for real-time and upper case for archive (NCDC).
 
 setenv SUFFIX "_elev01"
 
@@ -48,6 +52,7 @@ if (! -e $INPUTROOT) then
     exit
 endif
 
+#Define Casedate (and hour within)
 if ($MODETIME == "realtime") then
     setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
     setenv HR1 `head -3 $LAPS_DATA_ROOT/time/systime.dat | tail -1`
@@ -59,7 +64,7 @@ if ($MODETIME == "realtime") then
     echo "Processing hours $HR1 and $HR2"
 
 #   Name of executable that converts from Nexrad format to NetCDF
-    setenv NEXRAD_2_NETCDF TarNexrad2NetCDF
+    setenv NEXRAD_2_NETCDF ArchiveNexrad2NetCDF
 
 else # archive case
 
@@ -89,7 +94,7 @@ else # archive case
 #   setenv OUTPUTROOT  $LAPS_DATA_ROOT/lapsprd/rdr/wideband
 
 #   Name of executable that converts from Nexrad format to NetCDF
-    setenv NEXRAD_2_NETCDF NCDC_TarNexrad2NetCDF
+    setenv NEXRAD_2_NETCDF ArchiveNexrad2NetCDF
 
 endif
 
@@ -164,7 +169,7 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
                   else
                       echo "processing output file $HOUR$MINUTE$SUFFIX that does not yet exist"
                       $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-                                              -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t $INPUTROOT/$RADAR/$file
+                                              -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t $INPUTROOT/$RADAR/$file
                   endif
 
               else
@@ -193,13 +198,13 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
 
 #         Filename convention for /public
 #         find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-#                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
+#                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
 
 #         Filename convention for NCDC
-          ls -l $INPUTROOT/$RADAR
-          ls -l $INPUTROOT/$RADAR/*$YEAR$MONTH$DATE*
-          find /$INPUTROOT/$RADAR -name "*$YEAR$MONTH$DATE*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-                                  -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -r $RADAR -t {} \;
+          ls -l $INPUTROOT
+          ls -l $INPUTROOT/*$RADAR$YEAR$MONTH$DATE*
+          find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+                                  -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
 
           echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
           setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
