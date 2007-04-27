@@ -28,9 +28,8 @@ program laps_wind                              main.f
             compare_wind                       comparisons.f
             qc_radar_obs                       qcradar.f
             insert_derived_radar_obs           insert_radar_obs.f
-                make_derived_radar_obs            "
-                    filter_radar_obs              "
-                    multiwind_noz              multiwind_noZ.f
+                filter_radar_obs                  "
+                multiwind_noz                  multiwind_noZ.f
             get_inst_err                       windanal.f
             barnes_multivariate
                 barnes_multivariate_sub
