@@ -252,8 +252,10 @@ if($parts[2] eq "scratch2"){
       system("rm -rf  /export/scratch/wideband");
    }
    system("ln -sf /export/scratch2/wideband /export/scratch/wideband");
-}else{
-   system("rm -rf  $wideband_2_netcdf");
+
+}else{ # remove any previous files within output netcdf subdirectories
+   system("rm -rf  $wideband_2_netcdf/*/netcdf");
+
 }
 #-------------------------
 # main loop for casererun
