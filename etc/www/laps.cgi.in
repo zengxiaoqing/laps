@@ -225,49 +225,35 @@ select multiple pressure levels.<br>
 -->
 <center>
 
-<table border=0 cellpadding=5>
+<table border=0 cellpadding=7>
 <tr>
 
-<td>
-
-<center>
-
+<td valign=top width=105>
 <strong>
-<A HREF="validtime.html">Valid Time</A> 
+<A HREF="validtime.html">Valid Time:</A> 
 </strong>
 <br>
 [<FONT COLOR="#00AA00">$yy$jjj</FONT>$hhmm]
 <br>
-(blank=latest):
-</center>
-<center>
+(blank=latest)
+
 <INPUT NAME="a9time" VALUE="$default_time" size=9>
-
 <br>
-<strong><A HREF="fcst.html">Forecast</A></strong> [hhmm]
+<p>
+<strong><A HREF="fcst.html">Forecast Time:</A></strong> [hhmm]
 <br>
-(blank=latest):
-</center>
-<center>
-<INPUT NAME="forecast_time" VALUE="$default_hhmm" size=4> 
-
-</center>
+(blank=latest)
+<INPUT NAME="forecast_time" VALUE="$default_hhmm" size=9> 
 
 </td>
 
 
-<td align=center>
+<td valign=top>
 <strong>
 <A HREF="/domains/anal2d/domains.html">Domain:</A>
 </strong>
-
 <br>
 
-<!--
-</td>
-
-<td>
--->
 
 <select name="domain">
 EOF
@@ -286,13 +272,12 @@ print <<"EOF";
 </select>
 </td>
 
-<td align="right">
+<td align="left" valign=top>
 <strong>
 <A HREF="sources.html">Source(s)</A>:
 </strong>
-</td>
+<br>
 
-<td align="center">
 <select name="sources" size=$n_choices multiple>
 EOF
 
@@ -332,13 +317,13 @@ print <<"EOF";
 </select>
 </td>
 
-<td align="right">
+<td align="left" valign=top>
 <strong>
 <A HREF="fields.html">Field(s)</A>:
 </strong>
-</td>
+<br>
 
-<td align="center">
+<valign=top>
 <select name="fields" size=$n_choices multiple>
 <option $selected{'HT'}> HT
 <option $selected{'TEMP'}> TEMP
@@ -355,7 +340,9 @@ print <<"EOF";
 <option $selected{'C_OMEGA'}> C_OMEGA
 <option $selected{'MCONV'}> MCONV
 <option $selected{'P_PRIME'}> P_PRIME
+<option $selected{'THETA'}> THETA
 <option $selected{'THETAE'}> THETAE
+<option $selected{'WTBLB0'}> WTBLB0
 <option $selected{'CAPE'}> CAPE
 <option $selected{'CIN'}> CIN
 <option $selected{'HELICITY'}> HELICITY
@@ -367,8 +354,8 @@ print <<"EOF";
 <option $selected{'CLD_TOP'}> CLD_TOP
 <option $selected{'CLD_LIQ'}> CLD_LIQ
 <option $selected{'CLD_ICE'}> CLD_ICE
-<option $selected{'SAT_12U'}> SAT_12U
 <option $selected{'SAT_11U'}> SAT_11U
+<option $selected{'SAT_12U'}> SAT_12U
 <option $selected{'SAT_WV'}>  SAT_WV
 <option $selected{'SAT_39U'}> SAT_39U
 <option $selected{'SAT_D39'}> SAT_D39
@@ -386,6 +373,7 @@ print <<"EOF";
 <option $selected{'SE_FLUX'}> SE_FLUX
 <option $selected{'LONG_WAVE'}> LONG_WAVE
 <option $selected{'SHRT_WAVE'}> SHRT_WAVE
+<option $selected{'GG'}> GG
 <option $selected{'ht'}> ht
 <option $selected{'temp'}> temp
 <option $selected{'sfct'}> sfct
@@ -408,10 +396,10 @@ print <<"EOF";
 <option $selected{'p_prime'}> p_prime
 <option $selected{'theta'}> theta
 <option $selected{'thetae'}> thetae
+<option $selected{'wtblb0'}> wtblb0
 <option $selected{'cape'}> cape
 <option $selected{'cin'}> cin
 <option $selected{'helicity'}> helicity
-<option $selected{'wtblb0'}> wtblb0
 <option $selected{'vsblty'}> vsblty
 <option $selected{'heatindex'}> heatindex
 <option $selected{'firewx'}> firewx
@@ -419,6 +407,7 @@ print <<"EOF";
 <option $selected{'haines'}> haines
 <option $selected{'cld_cvr'}> cld_cvr
 <option $selected{'cld_base'}> cld_base
+<option $selected{'cld_ceil'}> cld_ceil
 <option $selected{'cld_top'}> cld_top
 <option $selected{'cld_liq'}> cld_liq
 <option $selected{'cld_ice'}> cld_ice
@@ -440,6 +429,7 @@ print <<"EOF";
 <option $selected{'snow_sto'}> snow_sto
 <option $selected{'snow_cvr'}> snow_cvr
 <option $selected{'land_frac'}> land_frac
+<option $selected{'gg'}> gg
 </select>
 </td>
 EOF
@@ -449,13 +439,12 @@ EOF
 if ($num_pres > 0){ # New method of displaying pressure levels
 
 print <<"EOF";
-<td align="right">
+<td align="left" valign=top width=70>
 <strong>
 <A HREF="levels.html">Level(s):</A>
 </strong>
-</td>
+<br>
 
-<td align="center">
 <select name="pressure_levels" size=$n_choices multiple>
 
 EOF
@@ -469,6 +458,9 @@ foreach $file (@domain_pres) {
 
 print <<"EOF";
 <option $selected{'sfc/2d'}> sfc/2d
+<option $selected{'soil1'}> soil1
+<option $selected{'soil2'}> soil2
+<option $selected{'soil3'}> soil3
 <option $selected{'xsect'}> xsect
 <option $selected{'sndg'}> sndg
 </select>
@@ -478,7 +470,7 @@ EOF
 }else{ # Original method of displaying pressure levels
 
 print <<"EOF";
-<td align="right">
+<td align="left" valign=top>
 Level(s):
 </td>
 
@@ -512,50 +504,28 @@ Level(s):
 </td>
 EOF
 
-
 }
-
-
 
 
 print <<"EOF";
 
-<!--
-<td align="center">
--->
 
-<td>
-<A HREF="azim.html"> Zoom/Az</A>: <INPUT NAME="zoom" VALUE="$default_zoom" size=5>&nbsp;  
+<td valign=top width=75>
+<A HREF="azim.html"> Zoom/Az</A>: <INPUT NAME="zoom" VALUE="$default_zoom" size=5>
 <br>
-<A HREF="xsect.html">X-coord</A>: <INPUT NAME="xcen" VALUE="$default_xcen" size=5>&nbsp;  
+<A HREF="xsect.html">X-coord&nbsp;</A>:&nbsp;<INPUT NAME="xcen" VALUE="$default_xcen" size=5>
 <br>
-<A HREF="ysect.html">Y-coord</A>: <INPUT NAME="ycen" VALUE="$default_ycen" size=5>&nbsp;  
+<A HREF="ysect.html">Y-coord&nbsp;</A>:&nbsp;<INPUT NAME="ycen" VALUE="$default_ycen" size=5>
 <br>
-<A HREF="imgsize.html">Img Size</A>: <INPUT NAME="npix" VALUE="$default_npix" size=5>&nbsp;  
+<A HREF="imgsize.html">ImageSize</A>: <INPUT NAME="npix" VALUE="$default_npix" size=5>  
 </td>
 
 
-<td>
-
-
-
+<td valign=top>
 <input type="hidden" name="title" value="$default_title">
 
-<center>
-<strong>
-<input type="submit" value="Load">
-</center>
-
-
-<center>
-<input type="reset" value="Undo">
-</center>
-
-
-<center>
 Density:
 <br>
-
 <select name="density">
 EOF
   #display available densities
@@ -570,11 +540,9 @@ EOF
 print <<"EOF";
 </select>
 
-</center>
 
-
-<center>
-Thk/Size:
+<br>
+Thick/Size:
 <br>
 
 <select name="thickness">
@@ -591,7 +559,15 @@ EOF
 print <<"EOF";
 </select>
 
+<!--<p>-->
+<br>
+<br>
+<center>
+<strong>
+<input type="submit" value="Load">
+<input type="reset" value="Clear">
 </center>
+</strong>
 
 </td>
 
@@ -605,23 +581,28 @@ print <<"EOF";
 
 <p>
 <h4>
+<!--
 <A HREF="http://www.fsl.noaa.gov/fsl/docs/wthr/fsl-weather.html">FSL Wx</A>
 |
-<A HREF="/cgi/LAPB.homepage.cgi">LAPB home</A>
+-->
+<A HREF="/cgi/LAPB.homepage.cgi">LAPS home</A>
 |
 <A HREF="/cgi/laps_products.cgi">
 Realtime LAPS Products</A>
 |
-<!--
-<A HREF="/cgi/laps_anal3d.cgi">
-3-D Analyses</A>
-|
--->
 <A HREF="/forecasts/laps_products.cgi">
-3-D Forecasts</A>
+Forecasts</A>
+|
+Log Info:
+<A HREF="lapsplot/lapsplot.in">
+Input</A>
+-
+<A HREF="lapsplot/lapsplot.out">
+Output</A>
+
 <p>
 <em>
-    Prepared by <a href="mailto:albers\@fsl.noaa.gov">Steve Albers</a> 
+    Prepared by <a href="mailto:Steve.Albers\@noaa.gov">Steve Albers</a> 
 </em>
 <br>
 
