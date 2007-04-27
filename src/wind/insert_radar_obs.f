@@ -6,9 +6,9 @@
      1  ,r_missing_data                             ! Input
      1  ,heights_3d                                 ! Input
      1  ,vr_obs_unfltrd                             ! Input
-     1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
-     1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
-     1  ,thresh_9_radarobs_lvl_unfltrd              ! Input
+     1  ,thresh_2_radarobs_lvl_unfltrd_in           ! Input
+     1  ,thresh_4_radarobs_lvl_unfltrd_in           ! Input
+     1  ,thresh_9_radarobs_lvl_unfltrd_in           ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar                      ! Input
@@ -53,7 +53,12 @@
       integer*4 n_radarobs_tot_fltrd(max_radars)                     ! Local
       integer*4 i_radar_reject(max_radars)                           ! Local
       integer*4 idx_radar_a(max_radars)                              ! Input
-      integer*4 thresh_2_radarobs_lvl_unfltrd
+
+      integer*4 thresh_2_radarobs_lvl_unfltrd_in                     ! Input
+     1         ,thresh_4_radarobs_lvl_unfltrd_in
+     1         ,thresh_9_radarobs_lvl_unfltrd_in
+
+      integer*4 thresh_2_radarobs_lvl_unfltrd                        ! Local
      1         ,thresh_4_radarobs_lvl_unfltrd
      1         ,thresh_9_radarobs_lvl_unfltrd
 
@@ -79,7 +84,22 @@ csms$ignore begin
 !     Initialize l_good_multi_doppler_ob if mode = 2
       if(mode .eq. 2)then
           l_good_multi_doppler_ob = .false.
+          thresh_2_radarobs_lvl_unfltrd = 999999 ! disable filtering
+          thresh_4_radarobs_lvl_unfltrd = 999999
+          thresh_9_radarobs_lvl_unfltrd = 999999
+      else ! do filtering when we have single doppler obs
+          thresh_2_radarobs_lvl_unfltrd = 
+     1    thresh_2_radarobs_lvl_unfltrd_in     
+          thresh_4_radarobs_lvl_unfltrd = 
+     1    thresh_4_radarobs_lvl_unfltrd_in     
+          thresh_9_radarobs_lvl_unfltrd = 
+     1    thresh_9_radarobs_lvl_unfltrd_in     
       endif
+
+      write(6,*)' Filtering thresholds = ',
+     1                  thresh_2_radarobs_lvl_unfltrd, 
+     1                  thresh_4_radarobs_lvl_unfltrd, 
+     1                  thresh_9_radarobs_lvl_unfltrd
 
 !     This routine takes the data from all the radars and adds the derived
 !     radar obs into uobs_diff_spread and vobs_diff_spread
@@ -216,7 +236,7 @@ csms$ignore begin
 
         enddo ! i_radar
 
-      else ! call new multi-doppler routine
+      else ! call new multi-doppler routine (l_multi_doppler_new = T)
         if(n_radars .gt. kmax)then
 !           Dimensioning of 'vr_obs_fltrd' should be reworked
             write(6,*)' Software error with new multi-doppler routine'       
