@@ -1559,6 +1559,7 @@ c read in laps lat/lon and topo
      1                   istat_radar_3dref)      
 
                         call make_fnam_lp(i4time_radar,a9time,istatus)
+                        call filter_string(radar_name)
                         c_label = 'Reflectivity dBz          '
      1                            //ext_radar(1:3)//'    '
      1                            //radar_name(1:4)       
