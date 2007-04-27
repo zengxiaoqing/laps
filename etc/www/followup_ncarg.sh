@@ -69,8 +69,8 @@ then
 
 elif test "$2" = "glaps"
 then
-    WINDOW=0.0:0.08:1.0:0.92
-    RESOLUTION=1056x885
+    WINDOW=0.0:0.14:1.0:0.86
+    RESOLUTION=1200x885
 
 elif test "$2" = "glaps_sos"
 then
