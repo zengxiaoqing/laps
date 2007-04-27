@@ -161,7 +161,7 @@ foreach (@greplines) {
 }
 print "\n";
 
-print "Obs minus First Guess, before QC (m/s):\n";
+print "Obs minus First Guess, before QC, radar is unfiltered (m/s):\n";
 @greplines = grep /BIAS\/RMS/, @lines;
 $src=""; $nobs="obs"; $speedbias="speed bias"; $vecrms="vector RMS"; $ubias="U Bias"; $vbias="V Bias"; $urms="RMS U"; $vrms="RMS V";
 write;
