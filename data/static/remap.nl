@@ -67,11 +67,13 @@ c                      'lapsprd' and the use of only one radar is implied.
 c                      Additional radars would be overwriting in the same 
 c                      directory which is somewhat undesirable. 
 c 
-c 'laps_radar_ext_a' - Extension name representing the type of output that
-c                      will be generated. For full volume data (e.g. wideband)
-c                      set this to 'v01', or 'v02', etc. For single tilt data
-c                      or if just a few low-level tilts are available
-c                      (e.g. WFO narrowband data), set this to 'vrc'.
+c 'laps_radar_ext_a' - Extension names representing the type of output that
+c                      will be generated for the set of radars. For each 
+c                      radar having full volume data (e.g. wideband / level2) 
+c                      set this to 'v01', or 'v02', etc. Otherwise for each 
+c                      radar having single tilt data or if just a few low-level 
+c                      tilts are available (e.g. WFO Level 3 narrowband data), 
+c                      set this to 'vrc'.
 c
 c 'ref_min'          - Minimum threshold applied to reflectivity gates during
 c                      remapping step.
