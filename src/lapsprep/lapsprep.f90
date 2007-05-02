@@ -114,13 +114,23 @@
      
     ! Beginning of code
 
-        CALL get_systime(i4time,laps_file_time,istatus)
+    CALL get_systime(i4time,laps_file_time,istatus)
 
-	if (istatus.ne.1)then
+    if (istatus.ne.1)then
      	write(*,*)'bad istatus from get_systime'
 	stop
-        endif
- 
+    endif
+
+    PRINT *, 'LAPS_FILE_TIME = ', laps_file_time
+
+    READ(laps_file_time, '(I2.2,I3.3,I2.2,I2.2)') valid_yyyy, valid_jjj, &
+                                                   valid_hh, valid_min
+    IF (valid_yyyy.LT.80) THEN
+      valid_yyyy = 2000 + valid_yyyy
+    ELSE
+      valid_yyyy = 1900 + valid_yyyy
+    ENDIF
+
     PRINT '(2A)', 'Running LAPSPREP using A9_time of: ', laps_file_time
   
     ! Get the LAPS_DATA_ROOT from the environment.  
