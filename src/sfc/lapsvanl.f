@@ -34,7 +34,7 @@ c
 	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
      &     itheta_in,redp_lvl,sfc_nl_parms,
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
-     &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,dd_s,ff_s,pstn_s,
+     &     lat_s,lon_s,elev_s,t_s,td_s,dd_s,ff_s,pstn_s,
      &     mslp_s,pred_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,obs,
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,sp_bk,vis_bk,tgd_bk_f,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
@@ -289,7 +289,7 @@ c
 	integer jstatus(20)
 	character name*10, filename*9, infile*256
 	character var_fire*3, com_fire*125, units_fire*10, ext_f*31
-	character var_lga*3, ext_lga*31, laps_domain*9
+	character var_lga*3, ext_lga*31
 c
 c
 c.....	Stuff for LAPS outputs (i.e., standard forms).
