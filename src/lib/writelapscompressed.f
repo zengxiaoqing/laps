@@ -64,8 +64,6 @@ C
 C
       common         /prt/flag
 C
-!     include 'lapsparms.cmn'
-!     include 'grid_fname.cmn'
 C
 C-------------------------------------------------------------------------------
 C
