@@ -33,28 +33,46 @@ c
 c
 	program laps_sfc
 c
-        include 'lapsparms.cmn'
-!       include 'grid_fname.cmn'
+        call get_grid_dim_xy(NX_L, NY_L, istatus)
+        if (istatus .ne. 1) then
+            write(6,*) 'return get_grid_dim_xy, status: ', istatus
+            stop
+        endif
 
-	character laps_domain*9, c_dum*200
+        call get_laps_dimensions(NZ_L,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting vertical domain dimension'
+            stop
+        endif
 c
-	call get_config(istatus)
-	if(istatus .ne. 1) then
-	   write(6,*) 'LAPS_SFC: ERROR getting domain dimensions'
-	   stop
-	endif
-c
-        call find_domain_name(c_dum,laps_domain,istatus)
-!	laps_domain = grid_fnam_common
-	call laps_sfc_sub(nx_l_cmn,ny_l_cmn,nk_laps,maxstns_cmn,
-     &                    laps_cycle_time_cmn,grid_spacing_m_cmn,
-     &                    laps_domain)
+        call get_laps_cycle_time(laps_cycle_time,istatus)
+        if(istatus .eq. 1)then
+            write(6,*)' laps_cycle_time = ',laps_cycle_time
+        else
+            write(6,*)' Error getting laps_cycle_time'
+            stop
+        endif
+
+        call get_grid_spacing(grid_spacing_m,istatus)
+        if (istatus .ne. 1) then
+            write (6,*) 'Error getting grid spacing'
+            stop
+        endif
+
+        call get_maxstns(maxstns,istatus)
+        if (istatus .ne. 1) then
+            write (6,*) 'Error getting maxstns'
+            stop
+        endif
+
+	call laps_sfc_sub(NX_L,NY_L,NZ_L,maxstns,
+     &                    laps_cycle_time,grid_spacing_m)
 c
 	end
 c
 c
 	subroutine laps_sfc_sub(ni,nj,nk,mxstn,laps_cycle_time,
-     &                          grid_spacing,laps_domain)
+     &                          grid_spacing)
 c
 c
 c*****************************************************************************
@@ -134,8 +152,8 @@ c
 c
 	character atime*24, filename*9, filename_last*9
 	character infile_last*256
-	character dir_s*256,ext_s*31,units*10,comment*125,var_s*3
-	character laps_domain*9, use*6
+	character dir_s*256,units*10,comment*125,var_s*3
+	character use*6
 c
 c.....  Stuff for backgrounds.
 c
@@ -299,20 +317,29 @@ c
  501	continue
 
 	call get_directory('static', dir_s, len)
-	ext_s = laps_domain
 
-	var_s = 'LAT'
-        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      lat ,grid_spacing,istatus)
-	var_s = 'LON'
-        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      lon ,grid_spacing,istatus)
-	var_s = 'AVG'
-        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      topo ,grid_spacing,istatus)
-	var_s = 'LDF'
-        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
-     &                      ldf  ,grid_spacing,istatus)
+        call read_static_grid(ni,nj,'LAT',lat,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
+
+        call read_static_grid(ni,nj,'LON',lon,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
+
+        call read_static_grid(ni,nj,'AVG',topo,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
+
+        call read_static_grid(ni,nj,'LDF',ldf,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
+
+!       Get grid_spacing a la 'rd_laps_static'
+
 c
 c.....  Read in the obs and calculate a weight based on distance to each
 c.....  station.
@@ -817,7 +844,7 @@ c                                v  in kt
 c                                dd in kt
 	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,
      &     itheta,redp_lvl,sfc_nl_parms,laps_cycle_time,
-     &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, laps_domain,
+     &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
      &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s,       
      &     pred_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g, obs,
