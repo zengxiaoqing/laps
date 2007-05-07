@@ -2276,7 +2276,6 @@ More information is in the NWP conference paper on Kalman Filtering
 ------ 3.2.2.3   How to Blacklist stations ---
 
      (author: Steve Albers/Pete Stamus)
-     (description updated: Sept 2003)
 
 As part of the 'obs_driver' code, a Blacklisting function has been added.  This
 allows users to tell LAPS to skip stations with known bad variables (one or 
@@ -2339,6 +2338,24 @@ Format the file *exactly* as the 'Blacklist.example' file (using your station
 information, of course).  Save the file, and the next time 'obs_driver' runs, 
 it will use the blacklist information.  This will be noted in the 
 'obs_driver.log' file.  
+
+You may eliminate element specific or ALL data from a particular provider by 
+replacing the leading 0 with a 1 in the second column.  See the WXforYou example
+in the Blacklist.example file.  To ensure the elimination of the data by 
+provider, care must be taken to make certain the correct provider is listed in 
+the Blacklist.dat file.  
+
+Primarily, offending datasets are from stations received through LDAD. To find
+the provider for a given station you can look in the "log/sfc.wgi.*" files or
+in the input LDAD NetCDF files. 
+
+For AWIPS users a list of these stations are kept in ~ldad/data on your AWIPS 
+system.  Each .txt file in ~ldad/data will have a .desc file associated with 
+it which describes the data being ingested etc., by that provider. Look in a 
+particular .desc file of interest.  Go to the 3rd word of the 1st line which 
+is not commented out (e.g.  aprswxnet : -9999.00 | APRSWXNET).  For this 
+example, the APRSWXNET (3rd word) is the provider name and should be the entry 
+used if utilizing the elimination by provider feature of the Blacklist.
 
 ------ 3.2.3 --- Polar Radar Data (e.g. WSR 88D Level II, Level III) ---
 
@@ -2880,10 +2897,11 @@ Output:
              maximum value of 10. This index was developed primarily by 
              Matt Kelsch of GSD.
 
-         Colorado Severe Storms Index: 
+         Colorado Severe Storms Index (CSSI): 
              Severe storm potential mostly geared to the Colorado area. This
              uses a decision tree and various empirical functions. For more
-             info please check the documentation in subroutine 'make_cssi'.
+             info please check the documentation in subroutine 'make_cssi'
+             in file 'src/sfc/lapsvanl_sub.f'.
 
          Heat Index:
              A function of temperature and humidity for discomfort due to heat.
