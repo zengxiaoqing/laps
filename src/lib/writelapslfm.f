@@ -112,7 +112,6 @@ C
 C
       common         /prt/flag
 C
-      include 'lapsparms.cmn'
       include 'grid_fname.cmn'
 C
 C-------------------------------------------------------------------------------
@@ -140,10 +139,23 @@ C
      1' output file'
         endif
 
-        n_levels = nk_laps
-        n7g_nx = NX_L_CMN 
-        n7g_ny =  NY_L_CMN
-        v_g = VERTICAL_GRID
+        call get_laps_dimensions(n_levels,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting vertical domain dimension'
+           return
+        endif
+
+        call get_grid_dim_xy(n7g_nx, n7g_ny, istatus)
+        if (istatus .ne. 1) then
+            write(6,*) 'return get_grid_dim_xy, status: ', istatus
+            return
+        endif
+
+        call get_vertical_grid(v_g,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting vertical grid'
+           return
+        endif
 
 	if (v_g .ne. 'PRESSURE') goto 920
 
