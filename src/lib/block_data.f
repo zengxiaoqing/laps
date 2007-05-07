@@ -1,10 +1,5 @@
       block data
 
-!     routine lapsgrid.f
-
-!        include 'lapsparms.cmn'
-!        data iflag_lapsparms_cmn /0/
-
 c     routine supmap.f
 
         COMMON/SUPMP1/PI,TOVPI,DTR,RTD,EPS,OV90,CON1,CON2,PART
@@ -58,9 +53,5 @@ c       include 'satellite_common_lvd.inc'
 c       include 'sat_data_static_lvd.inc'
 c       data iflag_lvd_common /0/ 
 
-c     routine config_ingest_rrv_parms
-        include 'ingest_rrv_dims.inc'
-        include 'ingest_rrv_common.inc'
-        include 'ingest_rrv_constants.dat'
       end
 
