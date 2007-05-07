@@ -146,15 +146,7 @@ cdoc    value of height_to_zcoord will have a fraction of 0.5.
 
         integer*4 istatus
 
-        include 'lapsparms.cmn'
-
         logical ltest_vertical_grid
-
-        call get_config(istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
-            return
-        endif
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
