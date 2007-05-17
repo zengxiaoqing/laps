@@ -42,13 +42,15 @@ SUBROUTINE LAPS_Conf
   CHARACTER :: a9time*9,fnm*9,hr*2,mins*2,jday*5
   INTEGER :: status
   INTEGER*4 ::thresh_2_radarobs_lvl_unfltrd, &
-              thresh_4_radarobs_lvl_unfltrd, i4time_sys
+              thresh_4_radarobs_lvl_unfltrd, &
+              thresh_9_radarobs_lvl_unfltrd, i4time_sys
   INTEGER :: i_3d
   REAL :: weight_bkg_const_wind,weight_radar,rms_thresh_wind 
 
   NAMELIST /wind_nl/ l_raob, l_cdw, l_radial, &
                      thresh_2_radarobs_lvl_unfltrd, &
                      thresh_4_radarobs_lvl_unfltrd, &
+                     thresh_9_radarobs_lvl_unfltrd, &
                      weight_bkg_const_wind, &
                      weight_radar, &
                      rms_thresh_wind, &
@@ -106,6 +108,7 @@ PRINT*,'Missing: ',imissing,rmissing
   CALL get_wind_parms(l_raob,l_cdw,l_radial, &
 		      thresh_2_radarobs_lvl_unfltrd, &
 		      thresh_4_radarobs_lvl_unfltrd, &
+		      thresh_9_radarobs_lvl_unfltrd, &
 		      weight_bkg_const_wind, &
                       weight_radar,rms_thresh_wind, &
                       max_pr,max_pr_lvls,i_3d,status)
