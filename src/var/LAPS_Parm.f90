@@ -57,7 +57,7 @@ MODULE LAPS_Parm
   INTEGER :: maxtobs		! Maximum number of temp obs
   INTEGER :: istat_radar_vel
 
-  LOGICAL :: l_raob, l_cdw, l_radial
+  LOGICAL :: l_raob, l_use_raob, l_cdw, l_radial
 
   REAL :: rmissing		! Real missing data
   REAL :: dxy
