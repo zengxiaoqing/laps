@@ -64,9 +64,10 @@ SUBROUTINE LAPS_Obsv
 	istatus_remap_pro,status)
 
   ! Temperature parameters:
-  CALL get_temp_parms(l_raob,l_adj_hgt,bg_weight, &
-		      rms_thresh,pres_mix_thresh, &
-		      max_snd,maxtobs,status)
+  CALL get_temp_parms(l_raob,l_use_raob,l_adj_hgt,       &
+                      bg_weight,rms_thresh,              &
+                      pres_mix_thresh,max_snd,maxtobs,   &
+                      status)
 
   IF (maxtobs .GT. maxobs) THEN
     WRITE(6,*) 'Too many temperature obs'
