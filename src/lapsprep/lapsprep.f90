@@ -563,7 +563,8 @@
       ENDIF
 
       IF (MAXVAL(rai) .LT. 99999.) THEN
-        rai(:,:,:) = rai(:,:,:) * hydrometeor_scale
+!        rai(:,:,:) = rai(:,:,:) * hydrometeor_scale
+        rai(:,:,:) = rai(:,:,:) * 0.0
         rai(:,:,:) = rai(:,:,:)/rho(:,:,:)   ! Rain mixing ratio
       ELSE
         PRINT *, 'Missing rain, setting values to 0.0' 
@@ -571,7 +572,8 @@
       ENDIF
 
       IF (MAXVAL(sno) .LT. 99999.) THEN
-        sno(:,:,:) = sno(:,:,:) * hydrometeor_scale
+!        sno(:,:,:) = sno(:,:,:) * hydrometeor_scale
+        sno(:,:,:) = sno(:,:,:) * 0.0
         sno(:,:,:) = sno(:,:,:)/rho(:,:,:)   ! Snow mixing ratio
       ELSE
         PRINT *, 'Missing snow, setting values to 0.0'    
@@ -614,7 +616,8 @@
       ENDIF
 
       IF (MAXVAL(pic) .LT. 99999.) THEN
-         pic(:,:,:) = pic(:,:,:)*hydrometeor_scale
+!         pic(:,:,:) = pic(:,:,:)*hydrometeor_scale
+         pic(:,:,:) = pic(:,:,:)*0.0
         pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
       ELSE
         PRINT *, 'Missing pice, setting values to 0.0' 
