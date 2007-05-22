@@ -293,13 +293,20 @@ c       include 'satellite_dims_lvd.inc'
 !       Surface Temperature Ranges
         if(namelist_parms%l_discrete)then
             sfctf_h = 120.
+            sfctc_h = 50.
         else
             sfctf_h = 125.
+            sfctc_h = 50.
         endif
 
         sfctf_l = -60.
+        sfctc_l = -50.
+
         sfctdf_h = 120.
         sfctdf_l = -20.
+
+        sfctdc_h =  50.
+        sfctdc_l = -30.
 
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus)       
 
@@ -4216,7 +4223,7 @@ c                   cint = -1.
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
-        elseif(c_type .eq. 'tt' 
+        elseif(c_type(1:2) .eq. 'tt' 
      1    .or. c_type(1:2) .eq. 'tf' .or. c_type(1:2) .eq. 'gf' 
      1    .or. c_type(1:2) .eq. 'gc' .or. c_type(1:2) .eq. 'tc')then
 
@@ -4240,20 +4247,28 @@ c                   cint = -1.
 
             call s_len2(c_label,len_c_label)
 
-            if(c_type(2:2) .eq. 'f')then
+            if(c_units_type .eq. 'english')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
+
                 c_label = c_label(1:len_c_label)//' (F)'
-            elseif(c_type(2:2) .eq. 'c')then
+                sfct_l = sfctf_l
+                sfct_h = sfctf_h
+
+            elseif(c_units_type .ne. 'english')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_c(field_2d(i,j))
                 enddo ! j
                 enddo ! i
+
                 c_label = c_label(1:len_c_label)//' (C)'
+                sfct_l = sfctc_l
+                sfct_h = sfctc_h
+
             endif
 
             IF(istatus .ne. 1)THEN
@@ -4273,7 +4288,7 @@ c                   cint = -1.
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,sfctf_l,sfctf_h,'temp'       
+                call ccpfil(field_2d,NX_L,NY_L,sfct_l,sfct_h,'temp'       
      1                     ,n_image,1e-0,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -4300,20 +4315,27 @@ c                   cint = -1.
                 goto1200
             endif
 
-            if(c_type .ne. 'dc')then
+            if(c_units_type .eq. 'english')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_f(field_2d(i,j))
                 enddo ! j
                 enddo ! i
+
                 c_label = 'Sfc Dew Point       (F)          '
-            else
+                sfctd_l = sfctdf_l
+                sfctd_h = sfctdf_h
+
+            elseif(c_units_type .ne. 'english')then
                 do i = 1,NX_L
                 do j = 1,NY_L
                     field_2d(i,j) = k_to_c(field_2d(i,j))
                 enddo ! j
                 enddo ! i
                 c_label = 'Sfc Dew Point       (C)          '
+                sfctd_l = sfctdc_l
+                sfctd_h = sfctdc_h
+
             endif
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
@@ -4329,7 +4351,7 @@ c                   cint = -1.
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,sfctdf_h,sfctdf_l,'hues'       
+                call ccpfil(field_2d,NX_L,NY_L,sfctd_h,sfctd_l,'hues'       
      1                     ,n_image,scale,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
