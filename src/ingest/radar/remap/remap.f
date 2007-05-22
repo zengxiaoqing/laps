@@ -339,6 +339,11 @@ cdis
             i_scan = get_scan() 
             i_tilt = get_tilt() 
             num_rays = get_num_rays() 
+            if(num_rays .lt. 0 .or. num_rays .gt. 10000)then
+                write(6,*)' Warning: num_rays out of bounds',num_rays
+                istatus = 0
+                return
+            endif
 
             if(n_rays .eq. n_rays/10 * 10)then
 !             write(6,*)'  Good status received'
