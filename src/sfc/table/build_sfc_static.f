@@ -32,13 +32,50 @@ cdis
 cdis 
 c
 c
-        program build_sfc_static
-        include 'lapsparms.cmn'
-        integer istat
+        program locpost
+        integer istatus
 
-	call get_laps_config('nest7grid',istat)
-        call build_sfc_static_sub(NX_L_CMN,NY_L_CMN)
+        real*4, allocatable, dimension(:,:) :: lat
+        real*4, allocatable, dimension(:,:) :: lon
 
+        call get_grid_dim_xy(NX_L, NY_L, istatus)
+        if (istatus .ne. 1) then
+            write(6,*) 'return get_grid_dim_xy, status: ', istatus
+            return
+        endif
+
+        call build_sfc_static_sub(NX_L,NY_L)
+
+!       Allocate static arrays (lat, lon, topo)
+        allocate( lat(NX_L,NY_L), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate lat'
+            stop
+        endif
+
+        allocate( lon(NX_L,NY_L), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate lon'
+            stop
+        endif
+
+!       Read static arrays (lat, lon, topo)
+        call read_static_grid(NX_L,NY_L,'LAT',lat,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting LAPS LAT'
+            stop
+        endif
+
+        call read_static_grid(NX_L,NY_L,'LON',lon,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting LAPS LON'
+            stop
+        endif
+
+        lun = 31
+        lun_out = 19
+
+        call locpost_radar(NX_L,NY_L,lat,lon,lun,lun_out,istatus)
 
         end
 
@@ -295,7 +332,7 @@ c
  9999   print *,' '
 	print *,' Normal completion of build_sfc_static'
 c
-	stop
+	return
 	end
 c
 c
