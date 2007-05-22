@@ -322,6 +322,7 @@ c     Call local colorbar routine
       character*(*) colortable
       character*5 c5_sect
       logical log_scaling, l_discrete, l_set_contours, l_raster
+      logical l_uniform_col
 
       integer maxvals
       parameter (maxvals=100)
@@ -374,22 +375,36 @@ C
 
           CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',0)
 
+          l_uniform_col = .false.
+
       else
           col_offset = float(icol_offset) / float(ncols)
           write(6,*)' col_offset / scale_loc = ',col_offset,scale_loc       
+          cis = abs(scale_loc) / float(ncols)
+
+          icol_min = +1000000
+          icol_max = -1000000
 
           do m = 1,MREG
           do n = 1,NREG
               ZREG(m,n) = ZREG(m,n) + (col_offset * scale_loc)
+              COLIA(m,n) = int( (ZREG(m,n)-cmn)/cis ) + 3
+
+              icol_min = min(COLIA(m,n),icol_min)
+              icol_max = max(COLIA(m,n),icol_max)
           enddo ! n
           enddo ! m
 
+          if(icol_min .eq. icol_max)then
+              l_uniform_col = .true.
+          else
+              l_uniform_col = .false.
+          endif
 C      
 C         Set number of contour levels and initialize Conpack
 C      
 !         CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',NCL)
 
-          cis = abs(scale_loc) / float(ncols)
           CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',+1)
           CALL CPSETR('CIS', cis)
           CALL CPSETR('CMN',(0.0           ) * abs(scale_loc) + 2.0*cis)
@@ -406,6 +421,11 @@ C
           l_raster = .true.
       else
           l_raster = .false.
+      endif
+
+      if(l_uniform_col)then
+          write(6,*)' Uniform colors detected...'
+          l_raster = .true.
       endif
 
 !     Override default with parameter input
@@ -429,7 +449,7 @@ C
           enddo ! n
           enddo ! m
 
-          write(6,*)' Calling GCA for Raster Fill Experiment'
+          write(6,*)' Calling GCA for Raster Fill Plot'
           call get_border(MREG,NREG,x_1,x_2,y_1,y_2)
           CALL GCA (x_1, y_1, x_2, y_2, MREG, NREG, 1,  1,
      1              MREG, NREG, COLIA)
