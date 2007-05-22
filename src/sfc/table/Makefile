@@ -17,7 +17,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a
 
 EXE = gensfclut.exe
 
-SRC=build_sfc_static.f
+SRC=build_sfc_static.f locpost_radar.f
 
 all: exe
 
