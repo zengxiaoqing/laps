@@ -250,17 +250,17 @@ c311                format(1x,i6,i4,5f8.1)
 
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
-                    call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
-     1                          t_diff,temp_bkg_3d,
-     1                          ob_pr_t(i_tsnd,level),
-     1                          i_tsnd,iwrite,
-     1                          level,l_3d,
-     1                          nlevels_good,
-     1                          lat_tsnd,lon_tsnd,i_ob,j_ob,
-     1                          imax,jmax,kmax,
-     1                          max_snd,max_snd_levels,
-     1                          r_missing_data,      
-     1                          heights_3d)
+                    call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs, ! I
+     1                          t_diff,temp_bkg_3d,                    ! I
+     1                          ob_pr_t(i_tsnd,level),                 ! O
+     1                          i_tsnd,iwrite,                         ! I
+     1                          level,l_3d,                            ! I
+     1                          nlevels_good,                          ! I
+     1                          lat_tsnd,lon_tsnd,i_ob,j_ob,           ! I
+     1                          imax,jmax,kmax,                        ! I
+     1                          max_snd,max_snd_levels,                ! I
+     1                          r_missing_data,                        ! I
+     1                          heights_3d)                            ! I
 
 c                   write(6,411,err=412)ista,i_tsnd,level
 c       1                ,ob_pr_t(i_tsnd,level)
@@ -444,22 +444,40 @@ c611                format(1x,i6,i4,5f8.1)
 
             else ! In time bounds
                 if(i_ob .ge. 1 .and. i_ob .le. imax .and.
-     1             j_ob .ge. 1 .and. j_ob .le. jmax .and.
-     1             nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
-     1                                                      )then
-                    if(iwrite .eq. 1)write(6,*)
+     1             j_ob .ge. 1 .and. j_ob .le. jmax )then ! within domain
+
+                    if(nlevels_in .ge. 2)then ! Upper Lvl profile 
+                                              ! + sfc temps present
+
+                        if(iwrite .eq. 1)write(6,*)
      1                   '  In Bounds - Vertically Interpolating the '       
      1                  ,'Sonde'
-                else
-                    if(nlevels_in .lt. 2)then
+
+                    elseif(nlevels_in .eq. 1)then
                         if(iwrite .eq. 1)write(6,*)
-     1                      '  Less than 2 levels ',nlevels_in
-                    else
+     1                      '  Single level ',nlevels_in
+
+                        if(.not. l_3d)then
+                            write(6,*)
+     1                      ' ERROR, l_3d is false for 1 level sounding'       
+                            nlevels_good(i_tsnd)=0 ! effectively throws out Sonde
+                        endif
+
+                    else ! less than 1 level
                         if(iwrite .eq. 1)write(6,*)
-     1                      '  Out of Bounds ',nlevels_in
+     1                      '  Less than 1 level ',nlevels_in
+
+                        nlevels_good(i_tsnd)=0 ! effectively throws out Sonde
+
                     endif
-                    nlevels_good(i_tsnd)=0 ! This effectively throws out the Sonde
-                endif
+
+                else ! outside domain
+
+                    if(iwrite .eq. 1)write(6,*)
+     1                      '  Out of Bounds ',nlevels_in
+                    nlevels_good(i_tsnd)=0 ! effectively throws out Sonde
+
+                endif ! within domain
 
             endif
 
@@ -471,17 +489,17 @@ c611                format(1x,i6,i4,5f8.1)
 
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
-                    call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
-     1                         t_diff,temp_bkg_3d,
-     1                         ob_pr_t(i_tsnd,level),
-     1                         i_tsnd,iwrite,
-     1                         level,l_3d,
-     1                         nlevels_good,
-     1                         lat_tsnd,lon_tsnd,i_ob,j_ob,
-     1                         imax,jmax,kmax,
-     1                         max_snd,max_snd_levels,
-     1                         r_missing_data,
-     1                         heights_3d)
+                    call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs, ! I
+     1                         t_diff,temp_bkg_3d,                     ! I
+     1                         ob_pr_t(i_tsnd,level),                  ! O
+     1                         i_tsnd,iwrite,                          ! I
+     1                         level,l_3d,                             ! I
+     1                         nlevels_good,                           ! I
+     1                         lat_tsnd,lon_tsnd,i_ob,j_ob,            ! I
+     1                         imax,jmax,kmax,                         ! I
+     1                         max_snd,max_snd_levels,                 ! I
+     1                         r_missing_data,                         ! I
+     1                         heights_3d)                             ! I
 
 c                   write(6,711,err=712)ista,i_tsnd,level
 c       1                ,ob_pr_t(i_tsnd,level)
