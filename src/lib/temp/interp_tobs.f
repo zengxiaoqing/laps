@@ -30,15 +30,15 @@ cdis
 cdis 
 cdis 
 
-        subroutine interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
-     1                             t_diff,temp_bkg_3d,
-     1                             t_interp,
-     1                             i_pr,iwrite,level,l_3d,
-     1                             nlevels_obs,
-     1                             lat_pr,lon_pr,i_ob,j_ob,
-     1                             ni,nj,nk,
-     1                             max_rs,max_rs_levels,r_missing_data,
-     1                             heights_3d)
+        subroutine interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,        ! I
+     1                             t_diff,temp_bkg_3d,                  ! I
+     1                             t_interp,                            ! O
+     1                             i_pr,iwrite,level,l_3d,              ! I
+     1                             nlevels_obs,                         ! I
+     1                             lat_pr,lon_pr,i_ob,j_ob,             ! I
+     1                             ni,nj,nk,                            ! I
+     1                             max_rs,max_rs_levels,r_missing_data, ! I
+     1                             heights_3d)                          ! I
 
 !       Profiler Stuff
         real lat_pr(max_rs)
@@ -49,7 +49,11 @@ cdis
         real ob_pr_ht_obs(max_rs,max_rs_levels)
         real ob_pr_t_obs(max_rs,max_rs_levels)
 
-        logical l_3d ! Option requiring obs to be near the grid point
+        logical l_3d ! If true, we require obs to be near a vertical level
+                     ! and single (or multiple) level obs are allowed
+
+                     ! If false, obs aren't required to be near a vertical
+                     ! level. Only multiple level obs are allowed.
 
         real*4 heights_3d(ni,nj,nk)
         real*4 temp_bkg_3d(ni,nj,nk)
@@ -126,6 +130,12 @@ cdis
             enddo ! level (iobs)
 
         else ! not l_3d
+
+          if(nlevels_obs(i_pr) .eq. 1)then
+!           To avoid this warning set l_3d to TRUE or supply multiple levels
+            write(6,*)
+     1        'WARNING in interp_tobs - ignoring single level profile'
+          endif
 
           do i_obs = 1,nlevels_obs(i_pr)
 
