@@ -8,7 +8,8 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  
+LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a  \
+           $(SRCROOT)/src/lib/liblaps.a  
 
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a 
@@ -20,7 +21,6 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a
 EXE = wind.exe
 
 SRC= main_sub.f \
-     get_wind_obs.f \
      weights.f \
      comparisons.f \
      comp_vr_prof.f \
@@ -33,12 +33,7 @@ SRC= main_sub.f \
      multiwind_noZ.f \
      multiwind_yesZ.f \
      vertwind.f \
-     rdpoint.f \
-     rdsfc.f \
-     read_profiles.f \
-     interp_prof.f \
      qcradar.f \
-     get_fg_wind.f \
      windanal.f
 
 MAIN=main.f
