@@ -10,18 +10,17 @@ program laps_wind                              main.f
         get_laps_3dgrid
         get_modelfg_3d
         get_multiradar_vel
-        get_wind_3d_obs                        get_wind_obs.f
-            get_fg_wind_new                    get_fg_wind.f
-            read_profiles                      read_profiles.f
+        get_wind_3d_obs                        lib/get_wind_obs.f
+            get_fg_wind_new                    lib/get_fg_wind.f
+            read_profiles                      lib/read_profiles.f
                 read_pro_data                  lib/read_pro_data.f
                 read_snd_data                  lib/read_snd_data.f
-                get_time_term                  rdpoint.f    
-                interp_prof                    interp_prof.f
-            remap_profiles                     get_wind_obs.f
-            prof_anal
-            rdsfc                              rdsfc.f
-            rdpoint                            rdpoint.f
-                get_time_term                  get_time_term.f
+                get_time_term                  lib/rdpoint.f    
+                interp_prof                    lib/interp_prof.f
+            remap_profiles                     lib/get_wind_obs.f
+            rdsfc                              lib/rdsfc.f
+            rdpoint                            lib/rdpoint.f
+                get_time_term                     "
         uvtrue_to_uvgrid
         get_fnorm_max
         laps_anl                               windanal.f
