@@ -933,11 +933,11 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
          2) Run a process independent of the LAPS ingest code that creates
             the intermedate data file. 
 
-         3) Convert your raw data to NetCDF format then run the LAPS ingest
-            code as is. The CDLs and sample "raw" NetCDF files supplied with
-            our test dataset can serve as a guide to writing the software
-            to do this. If the CDL is unavailable, doing 'ncdump -h' on
-            the actual data file will yield equivalent information. We 
+         3) Convert your raw data to appropriate NetCDF formats then run the 
+            LAPS ingest code as is. The CDLs and sample raw/NIMBUS NetCDF files
+            supplied with our test dataset can serve as a guide to writing the 
+            software to do this. If the CDL is unavailable, doing 'ncdump -h'
+            on the actual data file will yield equivalent information. We 
             generally do not maintain or support any software for writing 
             "raw" NetCDF files as this is done external to LAPS. Sometimes by 
             posting a message to 'laps-users' you can obtain information from 
@@ -1085,24 +1085,32 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
       
                        ----   2.3.3  Surface Data ---
 
-     Sfc Obs (lso): GSD uses this data primarily in GSD's NIMBUS NetCDF format
-           as input. A few other formats are now being supported, as listed
-           in the 'static/obs_driver.nl' namelist. The GSD code is in the 
-           '.../src/ingest/sao' directory, and includes routines to read and 
-           reformat different surface data (METAR/SYNOP, mesonet or local/LDAD,
-           buoy/ship or maritime, and GPS/profiler surface obs). Users may need
-           to modify/write the necessary routines to read their data formats 
-           to be able to output the ASCII LSO file. Paths to the datasets 
-           are specified in the 'obs_driver.nl' file. Looking at the routines 
-           in the '.../src/ingest/sao' directory should provide enough 
-           information to get you started on any needed modifications.
+     Sfc Obs (lso): GSD uses surface data as input with the default being GSD's
+           NIMBUS NetCDF format. A few other METAR formats are now being 
+           supported as listed in the 'static/obs_driver.nl' namelist. The GSD
+           code is in the '.../src/ingest/sao' directory, and includes routines
+           to read and reformat various surface data types (METAR/SYNOP, mesonet
+           or local/LDAD, buoy/ship or maritime, and GPS/profiler surface obs).
+           There is a subroutine tree outline in the 'src/ingest/sao/README' 
+           file including information on the supported data formats for each 
+           observation type. Users may need to modify/write the necessary 
+           routines to read their data formats to be able to output the ASCII 
+           LSO file. Looking in detail at the routines in the 'src/ingest/sao'
+           directory may provide enough information to get you started on any
+           needed modifications. 
 
+           Paths to the datasets are specified in the 'obs_driver.nl' file. 
            The surface data, including many the types mentioned above, over much
            of the world are available in realtime from GSD with some 
-           restrictions. This data, in 'WFO/AWIPS' NetCDF format, are 
+           restrictions. This data, generally in 'WFO/AWIPS' NetCDF format, are
            distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/. The supported MADIS LDAD surface
-           observation dataset is 'mesonet'
+           observation dataset is 'mesonet'.
+
+           Note that only observations reasonably near the standard shelter
+           height (2 meters, except 10 meters for wind) should be included in 
+           the LSO file. Tower mounted instruments should instead be placed in
+           the SND file using "TOWER" for the observation type.
       
                       ----   2.3.4  Wind Profiler / RASS ---
 
