@@ -28,6 +28,7 @@ LIBDIRS = src/lib \
           src/lib/satellite \
           src/lib/temp   \
           src/lib/util \
+          src/lib/wind \
           src/var/bufr 
 
 EXEDIRS = src/accum \
