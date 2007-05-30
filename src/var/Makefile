@@ -31,7 +31,7 @@ LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
 
 BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
 
-WINDLIB = $(SRCROOT)/src/wind/libwind.a
+WINDLIB = $(SRCROOT)/src/lib/wind/libwind.a $(SRCROOT)/src/wind/libwind.a
 
 HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
 
@@ -59,6 +59,7 @@ GSIPR= GSI_Prep.f90 \
        wrfbkgout.f90 \
        StaggerXY.f90 \
        GSI_radarbufr.f90 \
+       GSI_noaa1d2bufr.f90 \
        LAPSMassConverter.f90 \
        StaggerConverter.f90 \
        Interpolation.f90
@@ -72,13 +73,13 @@ GSIPO= GSI_Post.f90 \
          $(HUMIDLIB) 
 
 
-GSICC= getradarfilename.c
+GSICC= getiofile.c
 
 all: $(PREP) $(POST)
 
 $(PREP): $(GSIPR) $(GSICC) $(LAPSLIBS) $(WINDLIB)
 	$(CC) $(CPPFLAGS) -c $(GSICC)
-	$(FC) $(FFLAGS) $(FREE) $(GSIPR) getradarfilename.o $(LAPSFC) $(LAPSLIBS) \
+	$(FC) $(FFLAGS) $(FREE) $(GSIPR) getiofile.o $(LAPSFC) $(LAPSLIBS) \
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
 
