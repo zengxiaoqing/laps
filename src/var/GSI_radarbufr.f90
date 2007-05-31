@@ -560,7 +560,7 @@
 !                                 =0, didnot read any data.
 !
 ! Modules Called :
-!   getradarfilename(getradarfilename.c)
+!   getfilenames(getiofile.c)
 !   difference_time
 !
 ! Date :
@@ -599,7 +599,7 @@
        do i=1,isize
           cdat(i:i)=char(0)
        enddo 
-       call getradarfilename(directory,isize,cdat,ier)
+       call getfilenames(directory,isize,cdat,ier)
        if( ier.ne.0 )go to 903
 
        numfile=0
