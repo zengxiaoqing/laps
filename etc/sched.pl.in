@@ -62,6 +62,8 @@
 #
 # -p T                 Advance analyses by T minutes for balanced output at systime + T
 #
+# -u                   Input a umask to override the default of 002
+#
 # -v                   Run verification binaries 
 #
 # -V O                 Run GSI analysis; Option O (GSI_Prep or GSI_Post) sets either GSI preparation or post process 
@@ -92,11 +94,16 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_W);
+            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_W);
 use Getopt::Std;
 
-umask 002;
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslvp:TW');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TW');
+
+if(defined $opt_u){
+    umask $opt_u;
+}else{
+    umask 002;
+}
 
 my $initial_time = time();
 

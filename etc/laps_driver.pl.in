@@ -36,6 +36,8 @@
 #
 # -Q  P                Use QSUB (SGE syntax on 'jet/ijet') where P is the project name
 #
+# -u                   Input a umask to override the default of 002
+#
 # -w                   Submits via qsub_wait to wait for processes to finish before exiting
 #                      (default without -w submits via qsub to background)
 #
@@ -54,10 +56,10 @@
 #
 
 use strict;
-use vars qw($opt_L $opt_g $opt_o $opt_e $opt_l $opt_q $opt_Q $opt_n $opt_w);
+use vars qw($opt_L $opt_g $opt_o $opt_e $opt_l $opt_q $opt_Q $opt_n $opt_u $opt_w);
 use Getopt::Std;
 
-getopts('e:lwq:Q:n:L:g:');
+getopts('e:lwq:Q:n:L:g:u:');
 
 #flush buffer; ie., prevent buffering of output
 $|=1;
@@ -66,7 +68,13 @@ my $exe = shift || die "Program name and LAPS root directory required";
 my $args = " ";
 my $LAPSROOT=shift || die "LAPS root directory required";
 require "$LAPSROOT/etc/fxa.pm";
-umask 002;
+
+if(defined $opt_u){
+    umask $opt_u;
+}else{
+    umask 002;
+}
+
 my $fxa_sys =  &Get_env'fxa; #'
 $ENV{PATH}.=":@NETCDF@/bin";
 $ENV{LAPS_DATA_ROOT} = shift ;
