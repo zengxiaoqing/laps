@@ -15,23 +15,27 @@ include $(SRCROOT)/src/include/makefile.inc
 RM = rm -f
 FLAG = $(FFLAGS)
 
-LAPSLIBS = $(SRCROOT)/src/lib/temp/libtemp.a \
+LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
+           $(SRCROOT)/src/wind/libwind.a \
+           $(SRCROOT)/src/lib/temp/libtemp.a \
            $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  \
            $(SRCROOT)/src/lib/goeslib/libgoeslib.a
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/temp/libdebugtemp.a \
+DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
+             $(SRCROOT)/src/wind/libwind.a \
+             $(SRCROOT)/src/lib/temp/libdebugtemp.a \
              $(SRCROOT)/src/lib/libdebuglaps.a  \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
-             $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a \
+             $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a
 
 LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
 
 BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
 
-WINDLIB = $(SRCROOT)/src/lib/wind/libwind.a $(SRCROOT)/src/wind/libwind.a
+WINDLIB = $(SRCROOT)/src/wind/libwind.a
 
 HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
 
@@ -53,7 +57,6 @@ GSIPR= GSI_Prep.f90 \
        LAPS_Conf.f90 \
        LAPS_Bkgd.f90 \
        LAPS_Obsv.f90 \
-         $(WINDLIB) \
        LAPS_Memo.f90 \
        GSI_BkObs.f90 \
        wrfbkgout.f90 \
@@ -65,11 +68,11 @@ GSIPR= GSI_Prep.f90 \
        Interpolation.f90
 
 GSIPO= GSI_Post.f90 \
+         $(WINDLIB) \
        StaggerXY.f90 \
        LAPSMassConverter.f90 \
        StaggerConverter.f90 \
        Interpolation.f90 \
-         $(WINDLIB)\
          $(HUMIDLIB) 
 
 
@@ -77,13 +80,13 @@ GSICC= getiofile.c
 
 all: $(PREP) $(POST)
 
-$(PREP): $(GSIPR) $(GSICC) $(LAPSLIBS) $(WINDLIB)
+$(PREP): $(GSIPR) $(GSICC) $(LAPSLIBS)
 	$(CC) $(CPPFLAGS) -c $(GSICC)
 	$(FC) $(FFLAGS) $(FREE) $(GSIPR) getiofile.o $(LAPSFC) $(LAPSLIBS) \
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-$(POST): $(GSIPO) $(LAPSLIBS) $(WINDLIB) $(HUMIDLIB)
+$(POST): $(GSIPO) $(LAPSLIBS) $(HUMIDLIB)
 	$(FC) $(FFLAGS) $(FREE) $(GSIPO) $(LAPSFC) $(LAPSLIBS) \
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
