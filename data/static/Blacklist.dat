@@ -1,4 +1,4 @@
- 00057
+ 00114
  BLDER                 001  WND
  KARL                  001  WND
  KFCS                  003  ALT  STP  MSL
@@ -54,5 +54,62 @@
  UDFCD                 101  ALT
  MNDOT                 101  ALT
  FTCOLLINS             101  ALT
- WXforYou              101  ALT               
+ WXforYou              102  WND  ALT               
  AP020                 001  ALT
+ KAVK                  003  TMP  DEW  HUM
+ KGMJ                  003  DEW  TMP  HUM
+ KGOK                  002  DEW  HUM
+ KIAB                  002  DEW  HUM
+ KPAI                  001  TMP
+ KRKR                  002  DEW  HUM
+ KYM2                  003  DEW  TMP  HUM
+ aw219                 001  WND
+ APRSWXNET             101  WND
+ ap264                 002  DEW  HUM
+ ap864                 001  TMP
+ as573                 002  DEW  HUM
+ CW1108                001  TMP 
+ CW3911                001  TMP
+ CW6032                003  DEW  TMP  HUM
+ KSDOT                 101  WND
+ K5002                 002  DEW  HUM
+ K5004                 002  DEW  HUM
+ K5CHY                 001  TMP
+ K5MAN                 002  DEW  HUM
+ K5SLN                 003  DEW  TMP  HUM
+ K5ELW                 003  DEW  TMP  HUM
+ K5MCP                 002  DEW  HUM
+ K5PEA                 002  DEW  HUM
+ K5WKY                 002  DEW  HUM
+ K5PTT                 002  DEW  HUM
+ K5KIO                 003  DEW  TMP  HUM
+ K5JCT                 003  TMP  DEW  HUM
+ AWS                   101  WND
+ DSOTO                 002  DEW  HUM
+ KBBEJ                 001  TMP
+ KKIES                 001  TMP
+ KLEES                 002  DEW  HUM
+ KLLES                 003  DEW  TMP  HUM
+ KLLMS                 002  DEW  HUM
+ KPRSE                 001  TMP 
+ KSASM                 002  DEW  HUM
+ RAWS                  101  WND
+ GLOBE                 101  WND
+ SCHLNET               101  WND
+ WXLAB                 101  WND
+ MesoWest              101  WND
+ UP250                 001  ALL
+ UP423                 001  ALL
+ UP393                 001  ALL
+ UP159                 001  ALL
+ DDMET                 101  WND
+ SG04                  002  DEW  HUM
+ SG12                  002  DEW  HUM
+ MOComAgNet            101  WND
+ NEDOR                 101  WND
+ GLDNWS                101  WND
+ CDOT                  101  WND
+ KDOT                  101  WND
+ ABLE                  101  WND
+ KSU                   101  WND
+ OCS                   101  WND 
