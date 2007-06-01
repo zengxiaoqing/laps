@@ -116,8 +116,7 @@ echo "netpbm=$netpbm"
 
 if test -r /opt/ncarg/bin/ctrans; then
     date
-    echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file on EJET using SSH to IJET"
-#   `which ppmtogif`
+    echo "Running ctrans and netpbm programs to make gmeta_$prod.gif file on EJET using SSH to IJET"
     COMFILE=$LAPS_DATA_ROOT/myctrans
     echo "COMFILE = $COMFILE"
     echo "#!/bin/csh" > $COMFILE                     
@@ -133,8 +132,9 @@ if test -r /opt/ncarg/bin/ctrans; then
 
 elif test "$netpbm" = "yes"; then 
     date
-    echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$prod.gif file"
-    `which ppmtogif`
+    echo "Running $NCARG_ROOT/bin/ctrans and netpbm programs to make gmeta_$prod.gif file"
+    which rasttopnm
+    which ppmtogif
     echo "$NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif"
           $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$prod.gif
     date
@@ -146,7 +146,7 @@ else
 
     ls -l $SCRATCH_DIR/gmeta_$prod.$ctransext
     date
-    echo "Running gmeta.$ctransext to GIF converter laps_prod.sh on $MACHINE"
+    echo "Running gmeta.$ctransext to GIF converter $LAPS_ETC/laps_prod.sh on $MACHINE"
     $LAPS_ETC/laps_prod.sh $prod $SCRATCH_DIR $SCRATCH_DIR $ctransext
 
     #Cleanup
