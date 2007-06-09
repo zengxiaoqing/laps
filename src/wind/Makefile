@@ -32,7 +32,6 @@ SRC= main_sub.f \
      insert_radar_obs.f \
      multiwind_noZ.f \
      multiwind_yesZ.f \
-     vertwind.f \
      qcradar.f \
      windanal.f
 
