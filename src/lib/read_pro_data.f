@@ -18,6 +18,7 @@ cdoc    Jacket for read_pro_data.
         real ob_pr_ht_obs(MAX_PR,MAX_PR_LEVELS)
         real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS)
         real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)
+        real ob_pr_rms_obs(MAX_PR,MAX_PR_LEVELS)
 
         real sfc_t(MAX_PR), sfc_p(MAX_PR), sfc_rh(MAX_PR)
         real sfc_u(MAX_PR), sfc_v(MAX_PR) 
@@ -37,6 +38,7 @@ cdoc    Jacket for read_pro_data.
      1                         ,c5_name,i4time_ob_pr,obstype          ! O
      1                         ,ob_pr_ht_obs                          ! O
      1                         ,ob_pr_u_obs,ob_pr_v_obs               ! O
+     1                         ,ob_pr_rms_obs                         ! O
      1                         ,sfc_t,sfc_p,sfc_rh,sfc_u,sfc_v        ! O
      1                         ,istatus)                              ! O
 
@@ -52,6 +54,7 @@ cdoc    Jacket for read_pro_data.
      1                         ,c5_name,i4time_ob_pr,obstype          ! O
      1                         ,ob_pr_ht_obs                          ! O
      1                         ,ob_pr_u_obs,ob_pr_v_obs               ! O
+     1                         ,ob_pr_rms_obs                         ! O
      1                         ,sfc_t,sfc_p,sfc_rh,sfc_u,sfc_v        ! O
      1                         ,istatus)                              ! O
 
@@ -67,6 +70,7 @@ cdoc    Returns wind profile data from the PRO file
         real ob_pr_sp_obs(MAX_PR_LEVELS)
         real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS) ! includes sfc wind when valid
         real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS) ! includes sfc wind when valid
+        real ob_pr_rms_obs(MAX_PR,MAX_PR_LEVELS)
 
 !       Note that surface data access is still under development and may not
 !       be reliable yet
@@ -123,6 +127,10 @@ cdoc    Returns wind profile data from the PRO file
      1                             ,ob_pr_di_obs_in
      1                             ,ob_pr_sp_obs_in
      1                             ,sfc_p(i_pr),sfc_t(i_pr),sfc_rh(i_pr)
+
+                
+                ob_pr_rms_obs_in = 1.0 ! Hardwired until available in PRO file
+
                 l_sfc = .true.
 
                 if(level .gt. 1)then
@@ -143,6 +151,7 @@ cdoc    Returns wind profile data from the PRO file
  410            read(line,*,err=430)ob_pr_ht_obs_in          ! Rd upr lvl only
      1                             ,ob_pr_di_obs_in
      1                             ,ob_pr_sp_obs_in
+     1                             ,ob_pr_rms_obs_in
                 l_sfc = .false.
 
                 if( abs(ob_pr_ht_obs_in - elev_pr(i_pr)) .lt. 1.)then
@@ -174,9 +183,10 @@ cdoc    Returns wind profile data from the PRO file
                         goto430
                     endif
 
-                    ob_pr_ht_obs(i_pr,level_out) = ob_pr_ht_obs_in 
-                    ob_pr_di_obs(level_out)      = ob_pr_di_obs_in 
-                    ob_pr_sp_obs(level_out)      = ob_pr_sp_obs_in 
+                    ob_pr_ht_obs(i_pr,level_out)  = ob_pr_ht_obs_in 
+                    ob_pr_di_obs(level_out)       = ob_pr_di_obs_in 
+                    ob_pr_sp_obs(level_out)       = ob_pr_sp_obs_in 
+                    ob_pr_rms_obs(i_pr,level_out) = ob_pr_rms_obs_in 
 
                     nlevels_obs_pr(i_pr) = level_out
 
