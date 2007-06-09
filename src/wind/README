@@ -10,16 +10,16 @@ program laps_wind                              main.f
         get_laps_3dgrid
         get_modelfg_3d
         get_multiradar_vel
-        get_wind_3d_obs                        lib/get_wind_obs.f
-            get_fg_wind_new                    lib/get_fg_wind.f
-            read_profiles                      lib/read_profiles.f
+        get_wind_3d_obs                        lib/wind/get_wind_obs.f
+            get_fg_wind_new                    lib/wind/get_fg_wind.f
+            read_profiles                      lib/wind/read_profiles.f
                 read_pro_data                  lib/read_pro_data.f
                 read_snd_data                  lib/read_snd_data.f
-                get_time_term                  lib/rdpoint.f    
+                get_time_term                  lib/wind/rdpoint.f    
                 interp_prof                    lib/interp_prof.f
             remap_profiles                     lib/get_wind_obs.f
-            rdsfc                              lib/rdsfc.f
-            rdpoint                            lib/rdpoint.f
+            rdsfc                              lib/wind/rdsfc.f
+            rdpoint                            lib/wind/rdpoint.f
                 get_time_term                     "
         uvtrue_to_uvgrid
         get_fnorm_max
@@ -36,10 +36,10 @@ program laps_wind                              main.f
                 get_obstypes                      "
                 comp_grid_windobs                 "
                 comp_laps_vr                   comp_laps_vr.f
-        wind_post_process                      main_sub.f
+        wind_post_process                      lib/wind/wind_post_process.f
             put_laps_multi_2d                      
-            vert_wind                          vertwind.f
-            put_laps_multi_3d_jacket           main_sub.f
+            vert_wind                          lib/wind/vertwind.f
+            put_laps_multi_3d_jacket           lib/wind/wind_post_process.f
                 move_3d                             
                 move_3d                             
                 move_3d                             
