@@ -94,6 +94,7 @@ c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
 !       real ob_pr_sp_obs(MAX_PR_LEVELS)                                    ! L
         real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS)                              ! L
         real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)                              ! L
+        real ob_pr_rms_obs(MAX_PR,MAX_PR_LEVELS)                            ! L
         real ob_pr_t_obs(MAX_PR,MAX_PR_LEVELS)                              ! L
         real ob_pr_td_obs(MAX_PR,MAX_PR_LEVELS)                             ! L
         real ob_pr_ht(MAX_PR,kmax)                                          ! L
@@ -165,6 +166,7 @@ c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
      1                         ,c5_name_a,i4time_ob_pr,obstype        ! O
      1                         ,ob_pr_ht_obs                          ! O
      1                         ,ob_pr_u_obs,ob_pr_v_obs               ! O
+     1                         ,ob_pr_rms_obs                         ! O
      1                         ,sfc_t,sfc_p,sfc_rh,sfc_u,sfc_v        ! O
      1                         ,istatus)                              ! O
 
