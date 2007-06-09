@@ -60,7 +60,7 @@ SRC  = boustro_flt.f \
 	timpr.f \
 	io_utils.c \
 	pk_swap.c
-	
+
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
@@ -73,7 +73,7 @@ $(LIB):	$(ARCHIVE)
 	$(RANLIB) $@
 
 clean:
-	$(RM) $(LIB) *.o *~ *#
+	$(RM) $(LIB) $(DEBUGLIB) *.o *~ *#
 
 distclean: 	clean
 
