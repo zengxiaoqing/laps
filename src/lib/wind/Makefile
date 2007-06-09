@@ -30,7 +30,7 @@ DEBUGLIB = libdebugwind.a
 
 
 SRC=get_fg_wind.f   get_wind_obs.f  interp_prof.f  rdpoint.f  rdsfc.f \
-    read_profiles.f 
+    read_profiles.f vertwind.f      wind_post_process.f
 
 
 
