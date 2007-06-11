@@ -72,14 +72,16 @@ lib:	$(LIB)
 $(LIB):	$(ARCHIVE)
 	$(RANLIB) $@
 
+debug:
+	$(MAKE) all LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
+	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
+
+install: 	lib
+
 clean:
 	$(RM) $(LIB) $(DEBUGLIB) *.o *~ *#
 
 distclean: 	clean
-
-debug:
-	$(MAKE) all LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
-	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
 ifdef USECPP
 %.o : %.F
