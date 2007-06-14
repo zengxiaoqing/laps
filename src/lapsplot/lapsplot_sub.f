@@ -222,8 +222,13 @@ cdis
 
             write(6,*)' NXSECT = ',NXSECT
 
+            NX_C = max(NX_L,NY_L)
+
+            write(6,*)' NX_C = ',NX_C
+
             call xsect(c_display,i4time_ref,lun,l_atms
-     1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,NXSECT       
+     1                ,standard_longitude,NX_L,NY_L,NZ_L
+     1                ,NX_C,NZ_L,NXSECT      
      1                ,r_missing_data,laps_cycle_time,maxstns
      1                ,density,plot_parms,namelist_parms)
 
