@@ -61,8 +61,14 @@ c       integer j_status(20),iprod_number(20),i4time_array(20)
            go to 999
         endif
 
+        call get_max_radar_files(MAX_RADAR_FILES, istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting max_radar_files'
+           go to 999
+        endif
+
         call laps_accum   (i4time,
-     1                     NX_L,NY_L,NZ_L,
+     1                     NX_L,NY_L,NZ_L,MAX_RADAR_FILES,
      1                     i_diag,
      1                     n_prods,
      1                     iprod_number,

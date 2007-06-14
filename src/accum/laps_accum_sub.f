@@ -38,7 +38,7 @@ cdis
 cdis
 
         subroutine laps_accum(i4time,
-     1                        NX_L,NY_L,NZ_L,
+     1                        NX_L,NY_L,NZ_L,MAX_RADAR_FILES,
      1                        i_diag,
      1                        n_prods,
      1                        iprod_number,
@@ -176,6 +176,7 @@ c read in laps lat/lon and topo
         write(6,*)' Getting Snow/Precip Accumulation over ',minutes
      1           ,' min'
 50      call get_precip_accum(i4time_beg,i4time_end,NX_L,NY_L,NZ_L
+     1          ,MAX_RADAR_FILES
      1          ,lat,lon,topo,ilaps_cycle_time,grid_spacing_cen_m
      1          ,radarext_3d_accum                     ! Input
      1          ,snow_2d,precip_2d,frac_sum,istatus_inc)

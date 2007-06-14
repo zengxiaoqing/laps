@@ -308,7 +308,9 @@ c       include 'satellite_dims_lvd.inc'
         sfctdc_h =  50.
         sfctdc_l = -30.
 
-        call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus)       
+        call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus) 
+
+        call get_max_radar_files(max_radar_files,istatus)      
 
         i_overlay = 0
         n_image = 0
@@ -2855,7 +2857,8 @@ c
      1           ' Getting Entire Time Span of Accumulation from Radar '       
      1          ,'Data, etc.'
                  call get_radar_max_pd(i4time_start,i4time_end
-     1                ,NX_L,NY_L,NZ_L,lat,lon,topo,grid_ra_ref
+     1                ,NX_L,NY_L,NZ_L,max_radar_files
+     1                ,lat,lon,topo,grid_ra_ref
      1                ,dummy_array,radar_array,frac_sum,istatus)
 
             endif

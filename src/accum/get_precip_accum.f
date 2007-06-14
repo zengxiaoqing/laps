@@ -39,6 +39,7 @@ cdis
 
         subroutine get_precip_accum(i4time_beg,i4time_end   ! Input
      1          ,imax,jmax,kmax                             ! Input
+     1          ,MAX_RADAR_FILES                            ! Input
      1          ,lat,lon,topo                               ! Input
      1          ,ilaps_cycle_time,grid_spacing_cen_m        ! Input
      1          ,radarext_3d_accum                          ! Input
@@ -57,9 +58,6 @@ cdis
 !       precip type calculations are performed only where there are accumulating
 !       echoes. In other words, this code is more complex that it would
 !       otherwise be so that real-time speed is optimized.
-
-        integer MAX_RADAR_FILES
-        parameter (MAX_RADAR_FILES = 20000)
 
 !       Input
         real*4 lat(imax,jmax)
