@@ -32,14 +32,12 @@ cdis
 
         subroutine get_radar_max_pd(i4time_beg,i4time_end,imax,jmax,kmax
      1                             ,heights_3d,ext_radar
+     1                             ,max_radar_files                      ! I
      1                             ,lat,lon,topo
      1                             ,radar_max,frac_sum,istatus)
 
 !       1992         Steve Albers
 !       1996 Feb     Steve Albers  Call read_radar_2dref for radar data
-
-        integer*4 MAX_RADAR_FILES
-        parameter (MAX_RADAR_FILES = 20000)
 
 !       Input
         real*4 lat(imax,jmax)
