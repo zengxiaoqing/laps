@@ -374,6 +374,7 @@ cc102                 format('R',i2)
             write(6,*)' Generating max reflectivity history analysis'
             call get_radar_max_pd(i4time_sys-ilaps_cycle_time
      1          ,i4time_sys,imax,jmax,kmax,heights_3d,ext_radar
+     1          ,max_radar_files                                         ! I
      1          ,lat,lon,topo
      1          ,ref_max(1,1,0),frac_sum,istat_radar_hist)
 
