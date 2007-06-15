@@ -1,6 +1,6 @@
       subroutine read_dgprep(bgmodel,cmodel,path,fname,af,nx,ny,nz
      .                      ,pr,ht,tp,sh,uw,vw,ww
-     .                      ,ht_sfc,pr_sfc,td_sfc,tp_sfc
+     .                      ,ht_sfc,pr_sfc,td_sfc,tp_sfc,t_at_sfc
      .                      ,uw_sfc,vw_sfc,mslp,istatus)
 
 c
@@ -17,7 +17,7 @@ c
       integer   bgmodel,nx,ny,nz,nzsh
      .         ,i,j,k,l,n,istatus,ksh
      .         ,icm(nz),icm_sfc
-     .         ,icn3d
+     .         ,icn3d,ipk(nz)
 c
       real*4   shsum(nz),sumtot,sumsfctd
       real*4   shavg
@@ -25,8 +25,9 @@ c
       integer  lun
       integer  iostat,iostatus
       integer  nclen,nflen,lenc
+      integer  version
 
-      logical  lopen,lext
+      logical  lopen,lext,ldo_tcbogus
 
       real*4 ht(nx,ny,nz)      !height (m)
      .      ,tp(nx,ny,nz)      !temperature (K)
@@ -46,15 +47,16 @@ c
      .      ,vw_sfc(nx,ny)
      .      ,mslp(nx,ny)
      .      ,accs(nx,ny)       !accum snow for /public AVN
-     .      ,sfc_dummy(nx,ny)  !only used for /public AVN  and CWB NF15... holds T @ sfc
+     .      ,t_at_sfc(nx,ny)   !only used for /public AVN  and CWB NF15... holds T @ sfc
         
       real   p_levels(nz,nvarsmax)
 
       double precision isoLevel(nz),reftime,valtime
 
-      real*4 mrsat
-      real*4 esat,xe
+c     real*4 mrsat
+c     real*4 esat,xe
 c     real*4 rp_init
+
       real*4 prsfc
       real*4 qsfc
       real*4 make_td
@@ -66,6 +68,7 @@ c     real*4 rp_init
       real*4 r_missing_data
       real*4 rfill
       real*4 rmx2d,rmn2d
+
       integer imx,jmx,imn,jmn
 
 c
@@ -80,10 +83,10 @@ c
       character*16  cFA_filename
       character*3   c3ext,  c3_FA_ext
       character*8   cwb_type
-      character*132 origin,model,nav,grid,version
+      character*132 origin,model,nav,grid
       character*255 filename,fname_index
 c
-      common /estab/esat(15000:45000)
+c     common /estab/esat(15000:45000)
 c
 c reads model ".index" file. returns pressure of levels, variable id
 c and number of levels for each model variable in file.  (J. Smart 7-6-98).
@@ -95,7 +98,11 @@ c ---------------------------------
       t_ref=-132.0
       rfill = -99999.
       r_bogus_sh = 1.0e-6
-      istatus = 1
+      istatus = 0
+c
+c This is set = .true. only for Taiwan runs ATM.
+c 
+      ldo_tcbogus=.false.
 c
       call get_r_missing_data(r_missing_data,istatus)
 
@@ -104,7 +111,7 @@ c
 
       lun=10
 c
-      if(bgmodel.eq.6.or.bgmodel.eq.8)then
+      if(bgmodel.eq.6.or.bgmodel.eq.8.or.bgmodel.eq.12)then
 
          call s_len(path,l)
          filename=path(1:l)//'/'//fname(1:nflen)   !//af
@@ -167,8 +174,9 @@ c    +,istatus)
 
                call read_avn_netcdf(filename, nz, 1, nx, ny,
      +     version, ACCS, ht , ht_sfc, pr_sfc, mslp, pw, sh, tp,
-     +     tp_sfc, sfc_dummy, uw, vw, ww, td_sfc, isoLevel,
+     +     tp_sfc, t_at_sfc, uw, vw, ww, td_sfc, isoLevel,
      +     reftime, valtime, grid, model, nav, origin, istatus)
+
 
                nzsh=nz-5
 
@@ -176,10 +184,25 @@ c    +,istatus)
 
                call qcmodel_sh(nx,ny,nzsh,sh)     !sh actually = RH for AVN.
 
+         elseif(cmodel(1:nclen).eq.'FMI_NETCDF_LL')then
+
+              call read_FMI_netcdf(filename, nz, 1, nx, ny,
+     +     ipk,td_sfc,ht,ht_sfc,mslp,pr_sfc,ww,sh,tp,tp_sfc,t_at_sfc,
+     +     uw, uw_sfc, vw, vw_sfc, model, origin, reftime, valtime,
+     +     istatus)
+              if(istatus.ne.0)then
+               print*,'Error!!! Model read failure!!!'
+               print*,'Filename ',TRIM(filename)
+               return
+              endif
+              prk=float(ipk)
+              nzsh=nz
          endif
 
       elseif(bgmodel.eq.3)then
 
+         ldo_tcbogus=.true.
+c
 c note: library function fname13_to_FA_filename could be used
 c       to covert the FA filename but currently is not.  J.Smart
 
@@ -249,9 +272,9 @@ c           enddo
 
             call read_nf15km(nx,ny,nz,filename,
      &                       ht,tp,sh,uw,vw,ww,        !Note: sh contains 3D rh
-     &                       pr_sfc,tp_sfc,td_sfc,     !Note: tp_sfc contains sfc rh
+     &                       pr_sfc,tp_sfc,td_sfc,     !Note: td_sfc contains sfc rh
      &                       uw_sfc,vw_sfc,mslp,
-     &                       prk,sfc_dummy,
+     &                       prk,t_at_sfc,
      &                       istatus)
 
             ww=ww/36.  !convert to pa/s
@@ -272,11 +295,17 @@ c           enddo
          return
       endif
 
-      call tcbogus(nx,ny,nz,ht,tp,sh,uw,vw,ht_sfc,
+      if(ldo_tcbogus)then
+
+         call tcbogus(nx,ny,nz,ht,tp,sh,uw,vw,ht_sfc,
      +             tp_sfc,td_sfc,uw_sfc,vw_sfc,mslp,
      +             prk,filename,bgmodel,cwb_type)
-c qc 
 
+      endif
+
+c ---------------------------------------------
+c qc 
+c --
       do k=1,nz
          if(k.le.nzsh)then
             ksh=k
@@ -285,7 +314,7 @@ c qc
          endif
          do j=1,ny
          do i=1,nx
-            if((abs(ht(i,j,k))  .gt. 100000.) .or.
+            if((abs(ht(i,j,k))  .gt. 110000.) .or.
      +             (ht(i,j,k)   .lt.-3000.)   .or.
      +         (abs(tp(i,j,k))  .gt. 1000.)   .or.
      +             (tp(i,j,k)   .le. 0.)      .or.
@@ -470,6 +499,16 @@ c
             endif
          enddo
          enddo
+
+      elseif(bgmodel.eq.12.and.
+     &cmodel(1:nclen).eq.'FMI_NETCDF_LL')then
+        do k=1,nz
+          do j=1,ny
+           do i=1,nx
+            pr(i,j,k)=prk(k)
+           enddo
+          enddo
+        enddo
 
       endif
 c
