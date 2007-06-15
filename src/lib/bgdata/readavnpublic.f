@@ -124,7 +124,7 @@ C
       character*132 model
       character*132 nav
       character*132 grid
-      character*(*) fname
+      character*255 fname
 C
 C
       istatus = 1
@@ -471,38 +471,6 @@ C
         print *,'in var model'
         return
       endif
-C
-C     Variable        NETCDF Long Name
-C      nav          "projection type"
-C
-c     nf_status = NF_INQ_VARID(nf_fid,'nav',nf_vid)
-c     if(nf_status.ne.NF_NOERR) then
-c       print *, NF_STRERROR(nf_status)
-c       print *,'in var nav'
-c       return
-c     endif
-c     nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,nav)
-c     if(nf_status.ne.NF_NOERR) then
-c       print *, NF_STRERROR(nf_status)
-c       print *,'in var nav'
-c       return
-c     endif
-C
-C     Variable        NETCDF Long Name
-C      origin       
-C
-c     nf_status = NF_INQ_VARID(nf_fid,'origin',nf_vid)
-c     if(nf_status.ne.NF_NOERR) then
-c       print *, NF_STRERROR(nf_status)
-c       print *,'in var origin'
-c       return
-c     endif
-c     nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,origin)
-c     if(nf_status.ne.NF_NOERR) then
-c       print *, NF_STRERROR(nf_status)
-c       print *,'in var origin'
-c       return
-c     endif
 
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
