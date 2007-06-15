@@ -32,13 +32,13 @@ c          this variable works in conjunction with cmodel as indicated.
 c 
 c allowable values are:             (cmodel)
 c -------------------------------------------------------------------------------------
-c        bgmodels = 0 ----> LAPS_FUA,  MODEL_FUA,  LAPS 
+c        bgmodels = 0 ----> LAPS_FUA,  MODEL_FUA, and  LAPS:
 c                           - LAPS_FUA: uses lapsprd/"model"/fua and fsf for backgrounds;
 c                             fua/fsf on same domain; veritcal and time interpolation possible.
 c                           - MODEL_FUA: uses lapsprd/"model"/fua and fsf from a different
 c                             laps domains; horiz and vertical interpolation required; time interp
 c                             possible.
-c                           - LAPS not tested, but under construction 
+c                           - LAPS: not tested, but under construction 
 c        bgmodels = 1 ----> RUC60_NATIVE                         (obsolete!)
 c        bgmodels = 2 ----> ETA48_CONUS                          (tested)
 c                           ORSM_HKO (Hong Kong Observ model     (tested) 
@@ -65,14 +65,19 @@ c        bgmodels = 9 ----> NWS_CONUS                            (obsolete!)
 c        bgmodels = 10 ---> GFS_ISO or RUC_ISO.  This lets us ingest
 c                     netCDF files created from GFS or RUC GRIB data run through
 c                     Unidatas gribtonc decoders.
-c        bgmodels = 11 --->  WRFARW.  This allows raw netcdf output files from
+c        bgmodels = 11 ---> WRFARW.  This allows raw netcdf output files from
 c                     WRF-ARW v2.1 and create the required lga/lgb files.
 c                     Does not time interpolation yet, though, so if you don't
 c                     have a raw WRF file with an exact match of the lga background
 c                     time needed, it returns to the main lga program with a 0
 c                     status to force lga to look for the next bgmodel source in your
 c                     background.nl list. 
-c -------------------------------------------------------------------------------------
+c        bgmodels = 12 ---> ECMWF - two options available as listed below:
+c                           ESRL_NETCDF_LL---> global  area netCDF file from ESRL ITS. (Not tested 6-07)
+c                           FMI_NETCDF_LL ---> limited area netCDF file with ECMWF data 
+c                                              designed specifically for FMI project area.
+c                                             (tested and working as of June-2007)
+c ----------------------------------------------------------------------------------------
 c
 c forecast_length = the length in hrs of the oldest forecast allowed (to be processed by lga)
 c                   as a background in laps
