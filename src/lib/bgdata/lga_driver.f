@@ -99,6 +99,7 @@ c
       real, allocatable  :: shbg_sfc(:,:)
       real, allocatable  :: tdbg_sfc(:,:)
       real, allocatable  :: tpbg_sfc(:,:)
+      real, allocatable  :: t_at_sfc(:,:)
       real, allocatable  :: htbg_sfc(:,:)
       real, allocatable  :: mslpbg(:,:)
 c
@@ -140,10 +141,11 @@ c
      .          lon(nx_laps,ny_laps),        !LAPS lon
      .          topo(nx_laps,ny_laps),       !LAPS avg terrain
      .          grx(nx_laps,ny_laps),        !hinterp factor
-     .          gry(nx_laps,ny_laps),         !hinterp factor
+     .          gry(nx_laps,ny_laps),        !hinterp factor
      .          ht_sfc(nx_laps,ny_laps),
      .          td_sfc(nx_laps,ny_laps),
-     .          tp_sfc(nx_laps,ny_laps),
+     .          tp_sfc(nx_laps,ny_laps),     !2m surface temperature
+     .          t_sfc (nx_laps,ny_laps),     !sea/land surface temp
      .          Tdsfc(nx_laps,ny_laps),
      .          sh_sfc(nx_laps,ny_laps),
      .          qsfc(nx_laps,ny_laps),
@@ -210,6 +212,7 @@ c
       logical linterp
       logical smooth_fields
       logical lgrid_missing
+      logical lhif_tsfc
 
       data ntime/0/
       data ext/'lga'/
@@ -222,7 +225,7 @@ c
      +,prbght,prbgsh,prbguv,prbgww
      +,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
+     +,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
 c
          real  :: prbg_sfc(nx_bg,ny_bg)
          real  :: uwbg_sfc(nx_bg,ny_bg)
@@ -230,6 +233,7 @@ c
          real  :: shbg_sfc(nx_bg,ny_bg)
          real  :: tdbg_sfc(nx_bg,ny_bg)
          real  :: tpbg_sfc(nx_bg,ny_bg)
+         real  :: t_at_sfc(nx_bg,ny_bg)
          real  :: htbg_sfc(nx_bg,ny_bg)
          real  :: mslpbg(nx_bg,ny_bg)
 c
@@ -547,7 +551,7 @@ c     print*,'process new model background'
 
       do nf=1,nbg
  
-c Removal of this loop causes already existing lga files to be overwritten
+c Removal of this if/loop causes already existing lga files to be overwritten
 c possibly with the same data.  However the error frequency on SBN may warrent
 c this extra work.  
        if(.false.) then
@@ -576,8 +580,9 @@ c             lga_status=1
        else
           fullname = bgpath(1:bglen)//'/'//fname_bg(nf)
        endif
+
        call s_len(fullname,i)
-c
+ 
        print*
        print*,'Reading - ',fullname(1:i)
        print*
@@ -601,7 +606,10 @@ c
        allocate (vwbg_sfc(nx_bg,ny_bg))
        allocate (tdbg_sfc(nx_bg,ny_bg))
        allocate (tpbg_sfc(nx_bg,ny_bg))
+       allocate (t_at_sfc(nx_bg,ny_bg))
        allocate (mslpbg(nx_bg,ny_bg))
+
+       t_at_sfc=missingflag
 
        call read_bgdata(nx_bg,ny_bg
      +    ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
@@ -610,7 +618,7 @@ c
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus_prep(nf))
+     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,istatus_prep(nf))
 
            if(.false.)then
            print*,'After read'
@@ -666,16 +674,32 @@ c         convert to wfo if necessary
                 endif
              enddo
           endif
+
           lga_status= -nf
 
-          deallocate(htbg, tpbg, shbg, uwbg, vwbg, wwbg
-     +,prbght, prbguv, prbgsh, prbgww, htbg_sfc, prbg_sfc
-     +,shbg_sfc, uwbg_sfc, vwbg_sfc, tdbg_sfc, tpbg_sfc, mslpbg)
+          deallocate(htbg, 
+     +               tpbg, 
+     +               shbg, 
+     +               uwbg, 
+     +               vwbg, 
+     +               wwbg,
+     +               prbght, 
+     +               prbguv, 
+     +               prbgsh, 
+     +               prbgww, 
+     +               htbg_sfc, 
+     +               prbg_sfc,
+     +               shbg_sfc, 
+     +               uwbg_sfc, 
+     +               vwbg_sfc, 
+     +               tdbg_sfc,
+     +               tpbg_sfc,
+     +               t_at_sfc,
+     +               mslpbg)
 
  
-       else   !processing the file
+       else   !processing the file because it is not a reject
 
-c        endif
 c
 c ****** Vertically interpolate background data to LAPS isobaric levels.
 c
@@ -684,11 +708,11 @@ c
            itstatus(1)=init_timer()
 
            allocate( htvi(nx_bg,ny_bg,nz_laps),!Height (m)
-     .          tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
-     .          shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
-     .          uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)
-     .          vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
-     .          wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
+     .               tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
+     .               shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
+     .               uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)
+     .               vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
+     .               wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
 
            call vinterp(nz_laps,nx_bg,ny_bg
      .       ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
@@ -702,7 +726,6 @@ c
            deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +,prbght, prbguv, prbgsh, prbgww )
 
-           allocate (msgpt(nx_bg,ny_bg))
 c
 c ****** Run 2dx filter on vertically interpolated fields.
 c ****** Only run filter on sh up to 300 mb, since the filter may
@@ -710,7 +733,10 @@ c           create small neg values when the field is small to begin with.
 c ****** If bgmodel=4, there exists missing data.  Don't use these points
 c           in the filter.
 c
+           allocate (msgpt(nx_bg,ny_bg))
+
            if (bgmodel .eq. 4 .or. bgmodel .eq. 9) then
+
             do j=1,ny_bg
             do i=1,nx_bg
                if (htvi(i,j,1) .eq. missingflag) then
@@ -720,7 +746,6 @@ c
                endif
             enddo
             enddo
-c
             do k=1,nz_laps
             do j=2,ny_bg-1
             do i=2,nx_bg-1
@@ -761,6 +786,7 @@ c
             enddo
             enddo
             enddo
+ 
            endif
 c
            do kk=nz_laps,1,-1
@@ -806,19 +832,43 @@ c
            call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .        lat,lon,grx,gry,bgmodel,cmodel)
 
+           print*,'Input Grid Corners'
+           print*, 'SW: grx(1,1)/gry(1,1) ', grx(1,1),gry(1,1)
+           print*, 'SE: grx(nx,1)/gry(nx_laps,1) '
+     +, grx(nx_laps,1),gry(nx_laps,1)
+           print*, 'NW: grx(1,ny/gry(1,ny) ',
+     + grx(1,ny_laps),gry(1,ny_laps)
+           print*, 'NE: grx(nx,ny)/gry(nx,ny) '
+     +, grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
+           print*
+
+
 c
 c ***** Check if bkgd model domain satisfies analysis domain **********
+c       ----------------------------------------------------
            lgrid_missing=.false.
-
-           search_missing: do i=1,nx_laps
-                           do j=1,ny_laps
-              if(grx(i,j).eq.missingflag .or.
+           search_grid_missing: do i=1,nx_laps
+            do j=1,ny_laps
+             if(grx(i,j).eq.missingflag .or.
      .           gry(i,j).eq.missingflag)then
                  lgrid_missing=.true.
-                 exit search_missing
-              endif
-           enddo
-           enddo search_missing
+                 exit search_grid_missing
+             endif
+            enddo
+           enddo search_grid_missing
+c
+c ***** Check if t_at_sfc is defined **********
+c       ----------------------------
+           lhif_tsfc=.true.
+           search_tsfc_missing: do i=1,nx_laps
+            do j=1,ny_laps
+             if(t_at_sfc(i,j).eq.missingflag)then
+                lhif_tsfc=.false.
+                exit search_tsfc_missing
+             endif
+            enddo
+           enddo search_tsfc_missing
+
 c
            if(lgrid_missing)then
 
@@ -904,6 +954,7 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
      +                          ,vwbg_sfc
      +                          ,tdbg_sfc
      +                          ,tpbg_sfc
+     +                          ,t_at_sfc
      +                          ,mslpbg)
 
                      return
@@ -979,6 +1030,18 @@ c
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,mslpbg,mslp,bgmodel)
 c
+c Because not all model backgrounds have t_at_sfc (ground and/or sst)
+c then no need to hinterp unless it exists.
+c
+            if(lhif_tsfc)then
+               print*,'Horizontally Interpolate T at Sfc'
+               call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .           grx,gry,t_at_sfc,t_sfc,bgmodel)
+            else
+               print*,'DO NOT Horizontally Interpolate T at Sfc'
+               t_sfc=missingflag
+            endif
+c
 c check for T > Td before sfc p computation. Due to large scale
 c interpolation we can have slightly larger (fractional) Td than T.
 c
@@ -1010,6 +1073,7 @@ c
            deallocate (vwbg_sfc)
            deallocate (tdbg_sfc)
            deallocate (tpbg_sfc)
+           deallocate (t_at_sfc) 
            deallocate (mslpbg)
 c
 c... Do the temp, moisture (sh_sfc returns with Td), and pressures
@@ -1173,11 +1237,11 @@ c
            endif !(cmodel .eq. 'LAPS_FUA')
 
            deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
-     +                ,prbght, prbguv, prbgsh, prbgww )
+     +        ,prbght, prbguv, prbgsh, prbgww )
            deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
-     +                ,vwbg_sfc,tdbg_sfc, tpbg_sfc,mslpbg)
+     +        ,vwbg_sfc,tdbg_sfc, tpbg_sfc, t_at_sfc, mslpbg)
 
-       endif !(linterp)
+         endif !(linterp)
 
        itstatus(4)=init_timer()
        bgvalid=time_bg(nf)+valid_bg(nf)
@@ -1214,8 +1278,8 @@ c              sfcgrid(i,j,kk+4)=missingflag
           enddo
           enddo
           call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
-     .,cmodel,missingflag,uw_sfc,vw_sfc,tp_sfc,qsfc,pr_sfc,mslp
-     .,sh_sfc,rp_sfc,istatus)
+     .,cmodel,missingflag,uw_sfc,vw_sfc,tp_sfc,t_sfc,qsfc
+     .,pr_sfc,mslp,sh_sfc,rp_sfc,istatus)
           if(istatus.ne.1)then
             print*,'Error writing lgb - returning to main'
             return
@@ -1227,9 +1291,10 @@ c              sfcgrid(i,j,kk+4)=missingflag
 
         endif
 
-       lga_status = 1
+        lga_status = 1
 c
-       endif !if the background file was properly read in in read_bgdata
+       endif !istatus_prep(nf) -> if the background file was properly read
+                                 !and no bad data was found
 
       enddo  !Main loop through two model backgrounds
 
@@ -1281,7 +1346,7 @@ c interp 3D fields
 
 c interp 2D fields
                call time_interp(outdir,ext,
-     +           nx_laps,ny_laps,1,8,pr(1),
+     +           nx_laps,ny_laps,1,9,pr(1),
      +           i4time_bg_valid(i),i4time_bg_valid(i-1),
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))
