@@ -4,7 +4,7 @@
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg, tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
+     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
 
 c KML: CHANGES MADE APRIL 2004
 c tdbg_sfc (model 2m dew point) is now read in during subroutine read_eta_conusc
@@ -59,6 +59,7 @@ c
       real, intent(out) :: vwbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: tdbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: tpbg_sfc(nx_bg,ny_bg)
+      real, intent(out) :: t_at_sfc(nx_bg,ny_bg)
 
       real      lon0,lat1,lat2
       real      ssh2
@@ -124,7 +125,7 @@ c
          subroutine read_dgprep(bgmodel,cmodel,path,fname,af
      .   ,nx,ny,nz
      .   ,pr,ht,tp,sh,uw,vw,ww
-     .   ,ht_sfc,pr_sfc,td_sfc,tp_sfc
+     .   ,ht_sfc,pr_sfc,td_sfc,tp_sfc,t_at_sfc
      .   ,uw_sfc,vw_sfc,mslp,istatus)
 
          integer bgmodel
@@ -143,6 +144,7 @@ c
          real*4 pr_sfc(nx,ny)
          real*4 td_sfc(nx,ny)
          real*4 tp_sfc(nx,ny)
+         real*4 t_at_sfc(nx,ny)
          real*4 uw_sfc(nx,ny)
          real*4 vw_sfc(nx,ny)
          real*4 mslp(nx,ny)
@@ -500,12 +502,13 @@ c bgmodel 3 = FA (Taiwan). bgmodel 6 = NOGAPS1.0. bgmodel 8 = AVN 1.0 deg
 c
       elseif (bgmodel .eq. 3 .or.
      .        bgmodel .eq. 6 .or.
-     .        bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
+     .        bgmodel .eq. 8 .or.
+     .        bgmodel .eq.12) then ! Process AVN, ECMWF or NOGAPS1.0 grib data
 
              call read_dgprep(bgmodel,cmodel,bgpath
      .,fname_bg,af_bg,nx_bg,ny_bg,nzbg_ht
      .,prbght,htbg,tpbg,shbg,uwbg,vwbg,wwbg
-     .,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     .,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,t_at_sfc
      .,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
 
              if(istatus.ne.0)goto 99
