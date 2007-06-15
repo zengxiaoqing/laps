@@ -194,7 +194,7 @@ c
 c -------------------------------------------------------------------------------
 c
       subroutine write_lgb(nx_laps,ny_laps,bgtime,bgvalid,cmodel
-     .,missflag,uw_sfc,vw_sfc,tp_sfc,qsfc,pr_sfc,mslp,td_sfc
+     .,missflag,uw_sfc,vw_sfc,tp_sfc,t_sfc,qsfc,pr_sfc,mslp,td_sfc
      .,rp_sfc,istatus)
 
       implicit none
@@ -207,6 +207,7 @@ c
 
       real*4    missflag
       real*4    tp_sfc(nx_laps,ny_laps),
+     .          t_sfc (nx_laps,ny_laps),
      .          td_sfc(nx_laps,ny_laps),
      .          qsfc(nx_laps,ny_laps),
      .          uw_sfc(nx_laps,ny_laps),
@@ -302,6 +303,27 @@ c --- T
      .           ,units,comment,tp_sfc,istatus)
       if (istatus .ne. 1) then
          print*,'Error writing interpolated data to LAPS lgb - T'
+         return
+      endif
+c --- T at Sfc
+      warncnt=0
+      do i=1,nx_laps
+      do j=1,ny_laps
+         if(t_sfc(i,j).ge.missflag.and.warncnt.lt.100)
+     +              then
+            print*,'Missing data at ',i,j,' in t_sfc'
+            warncnt=warncnt+1
+         endif
+      enddo
+      enddo
+      units='K'
+      var='TGD'
+      print*,'TGD'
+      call write_laps(bgtime,bgvalid,outdir,ext
+     .           ,nx_laps,ny_laps,1,1,var,0,lvl_coord
+     .           ,units,comment,t_sfc,istatus)
+      if (istatus .ne. 1) then
+         print*,'Error writing interpolated data to LAPS lgb - Tsfc'
          return
       endif
 c --- q
