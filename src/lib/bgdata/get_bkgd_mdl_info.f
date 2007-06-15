@@ -456,6 +456,32 @@ c --------------------
          cgrddef='S'
       endif
 
+c ECMWF 
+c --------------------
+      if(bgmodel.eq.12)then
+       if(cmodel(1:nclen).eq.'FMI_NETCDF_LL')
+     &then
+         gproj='LL'
+         nxbg=81
+         nybg=69
+         nzbg=16
+         nzbg_ht=nzbg
+         nzbg_tp=nzbg
+         nzbg_sh=nzbg
+         nzbg_uv=nzbg
+         nzbg_ww=nzbg
+         Lat0=72.0  !NW Corner
+         Lon0=15.0   !   "
+         sw(1)=54.75
+         sw(2)=15.0
+         ne(1)=72.
+         ne(2)=35.25
+         dlat=0.25
+         dlon=0.25
+         cgrddef='N'
+       endif
+      endif
+
 c Taiwan FA and NF models: Added NF_15KM, GFS, NF45 and TFS 4-27-04:
 c -----------------------------------------------------------------
       if(bgmodel.eq.3)then
