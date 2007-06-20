@@ -40,7 +40,7 @@
       real*4   wt_p_radar(imax,jmax,kmax)                            ! I/O
       real*4   heights_3d(imax,jmax,kmax)                            ! Input
 
-      real*4   vr_obs_fltrd(imax,jmax,kmax)                          ! Local
+      real*4   vr_obs_fltrd(imax,jmax,max_radars)                    ! Local
       real*4   upass1_buf(imax,jmax,kmax)                            ! Local
       real*4   vpass1_buf(imax,jmax,kmax)                            ! Local
 
@@ -116,12 +116,6 @@ csms$ignore begin
         continue
 
       else ! call new multi-doppler routine (l_multi_doppler_new = T)
-        if(n_radars .gt. kmax)then
-!           Dimensioning of 'vr_obs_fltrd' should be reworked
-            write(6,*)' Software error with new multi-doppler routine'       
-            stop
-        endif
-
 !       Set up x and y arrays
         call get_earth_radius(earth_radius,istatus)
 
@@ -484,7 +478,9 @@ csms$ignore begin
                    if(.not. l_found_one)then
                       vr_obs_fltrd(ii,j) = vr_obs_unfltrd(ii,j)
                       l_found_one = .true.
-                      n_superob(ii,jj) = 1
+                      n_superob(i,j) = 1
+                   else ! already found one
+                      n_superob(i,j) = n_superob(i,j) + 1
                    endif
                  endif
                enddo ! ii
@@ -517,10 +513,14 @@ csms$ignore begin
         enddo ! i
         enddo ! j
 
+        if(n_radarobs_lvl_unfltrd .gt. 0)then
+            write(6,*)'     Superob check ',n_radarobs_lvl_unfltrd
+     1                                     ,n_superob_tot
+        endif
+
         if(n_radarobs_lvl_unfltrd .ne. n_superob_tot)then
-            write(6,*)' WARNING, superob check is inconsistent'
-            write(6,*)' Superob check '
-     1                   ,n_radarobs_lvl_unfltrd,n_superob_tot
+            write(6,*)
+     1         ' NOTE: superob check is inconsistent - edge effects?'
             istatus = 0
             return
         endif
