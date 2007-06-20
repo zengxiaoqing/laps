@@ -126,8 +126,11 @@ cdoc    Returns wind profile data from the PRO file
      1                              ob_pr_ht_obs_in 
      1                             ,ob_pr_di_obs_in
      1                             ,ob_pr_sp_obs_in
-     1                             ,sfc_p(i_pr),sfc_t(i_pr),sfc_rh(i_pr)
+     1                             ,sfc_p_in,sfc_t_in,sfc_rh_in
 
+                sfc_p(i_pr) = sfc_p_in
+                sfc_t(i_pr) = sfc_t_in
+                sfc_rh(i_pr) = sfc_rh_in
                 
                 ob_pr_rms_obs_in = 1.0 ! Hardwired until available in PRO file
 
