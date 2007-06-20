@@ -12,7 +12,8 @@ LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a  \
            $(SRCROOT)/src/lib/liblaps.a  
 
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a 
+DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libdebugwind.a  \
+             $(SRCROOT)/src/lib/libdebuglaps.a 
 
 
 .SUFFIXES:
