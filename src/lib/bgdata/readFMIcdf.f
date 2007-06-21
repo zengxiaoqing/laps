@@ -74,9 +74,12 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim y'
       endif
-      call read_bgdata_data(nf_fid, numIsoLevel, record, x, y,
-     +     i4time_sys, ilaps_cycle_time, NX_L, NY_L, i4time_earliest,
-     +     i4time_latest, lun_out, istatus)
+
+      nf_status=nf_close(nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'nf_close'
+      endif
 
       return
       end
