@@ -81,7 +81,7 @@ if($opt_r){
 #
 # exceptions - overridden if $min_files==0
 #
-my $wideband_time = 0.125;
+my $wideband_time = 0.04166667;
 my $vxx_time = 0.16;
 my $vrc_time = 0.16;
 my $web_time = 7.0;
