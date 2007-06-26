@@ -198,6 +198,7 @@ C
 
           if(providerId(irec) .eq. provider_ref)then
 
+              write(6,*)
               write(6,*)' ProviderId Match = ',irec
      1                 ,providerId(irec)(1:len_prov)
 
@@ -214,8 +215,7 @@ C
 
 !                 Convert u_std, v_std to rms
 
-                  write(6,*)
-
+!                 Test observation time
                   if(abs(observationTime(irec))      .lt. 3d9)then
                       ictime_ob = nint(observationTime(irec))
 
@@ -234,6 +234,44 @@ C
 
                   endif
 
+!                 Test number of good levels
+                  n_good_levels = 0
+
+                  if(ext(1:3) .eq. 'pro')then ! test wind profile
+                      do i = 1,level
+                          if(windDir(i,irec) .ge. 0      .and.
+     1                       windDir(i,irec) .le. 360    .and.
+     1                 iqc_rsa(wdQcFlag(i,irec)) .ne. -1 .and.       
+     1                 iqc_rsa(wsQcFlag(i,irec)) .ne. -1     
+     1                                                          )then ! Good QC
+                              n_good_levels = n_good_levels + 1
+                          endif
+                      enddo ! i
+
+                  elseif(ext(1:3) .eq. 'lrs')then ! test temperature profile
+                      do i = 1,level
+                          if(iqc_rsa(tempQcFlag(i,irec)) .ne. -1
+     1                            .and.
+     1                        temperature(i,irec) .gt. 200.
+     1                            .and.
+     1                        temperature(i,irec) .lt. 400.
+     1                                                   )then ! Good QC
+                              n_good_levels = n_good_levels + 1
+                          endif
+                      enddo ! i
+                  endif
+
+                  if(n_good_levels .le. 0)then
+                      write(6,*)' No good levels - reject record'         
+     1                           ,observationTime(irec)
+                      goto 300
+
+                  else ! good levels detected
+                      write(6,*)' Good levels = ',n_good_levels
+     1                           ,observationTime(irec)
+                  endif
+
+!                 Determine if this report is closest to the analysis time
                   call cv_asc_i4time(a9_timeObs,i4time_ob)
                   i4_resid = abs(i4time_ob - i4time_sys)
                   if(i4_resid .lt. i4_resid_closest)then
@@ -261,6 +299,9 @@ C
  300      continue
 
         enddo ! irec 
+
+        write(6,*)
+        write(6,*)' Evaluating profile closest in time'
 
         if(i4_resid_closest .gt. i4_prof_window)then ! outside time window
             write(6,*)' outside time window - reject '
