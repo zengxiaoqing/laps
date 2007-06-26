@@ -88,7 +88,7 @@ c
 	   read(11,901)  stations(k),            !station id
      &                   wmoid(k),               !WMO id number
      &                   provider(k),            !data provider
-     &                   lat(k), lon(k), elev(k),!lat, lon, elev
+     &                   lat(k), lon(k), elev(k),!lat/lon (deg), elev (meters MSL)
      &                   time(k)		 !obs time
 c
 	  read(11,903)   reptype(k),             !station report type
