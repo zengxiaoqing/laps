@@ -58,6 +58,8 @@ netcdf lgb {
 
         float
             tgd(record,z,y,x);
+            tgd:navigation_dim = "nav";
+            tgd:record = "valtime, reftime";
             tgd:_FillValue = 1.e+37f;
             tgd:long_name="Ground Temperature";
             tgd:units="K";
@@ -65,7 +67,6 @@ netcdf lgb {
             tgd:LAPS_var="TGD";
             tgd:lvl_coord="AGL";
             tgd:LAPS_units="K";
-
                 	        
         //      surface dewpoint temperature    //
 
