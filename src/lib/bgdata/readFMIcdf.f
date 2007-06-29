@@ -282,8 +282,8 @@ C
 C Prepare Surface Temperature array for return. SST for water
 C points and skin temps for land points.
 C
-      do j=1,ny
-       do i=1,nx
+      do j=1,y
+       do i=1,x
         if(LSM(i,j,1).eq.1)then
          T_S(i,j,1)=SST(i,j,1)
         else
