@@ -93,8 +93,9 @@
          3.3.9 ..................  BALANCE
          3.4 ..............  Model Initialization & Postprocessing
          3.4.1 ..................  LAPSPREP
-         3.4.2 ..................  WFOPREP
-         3.4.3 ..................  LFMPOST
+         3.4.2 ..................  LAPS2GRIB
+         3.4.3 ..................  WFOPREP
+         3.4.4 ..................  LFMPOST
      4.0 ............  Porting code mods from LAPS users back to GSD
      5.0 ............  LAPS Output Variables and netCDF File Organization 
 
@@ -3727,7 +3728,20 @@ Parameter namelist file: 'static/lapsprep.nl'
 
 Source directory: 'laps/src/lapsprep'
 
------- 3.4.2 --------------WFOPREP------------------------------------------
+------ 3.4.2 --------------LAPS2GRIB------------------------------------------
+
+Process: laps2grib.exe - Converts LAPS analysis output into a single GRIB2
+                         file located in the 'lapsprd/gr2' subdirectory.
+
+     (author: Brent Shaw)
+
+Parameter namelist file: 'static/laps2grib.nl'
+
+Data file: 'static/laps2grib.vtab'
+
+Source directory: 'laps/src/laps2grib'
+
+------ 3.4.3 --------------WFOPREP------------------------------------------
 
 Process: wfoprep.exe - Processes AWIPS/WFO large-scale model forecast files 
                        into formats that can be used as lateral boundary
@@ -3745,7 +3759,7 @@ Parameter namelist file: 'static/wfoprep.nl'
 
 Source directory: 'laps/src/wfoprep'
 
------- 3.4.3 -------------- LFMPOST ------------------------------------------
+------ 3.4.4 -------------- LFMPOST ------------------------------------------
 
 Process: lfmpost.exe - Post-processes MM5/WRF model forecast files into formats
                        that can be used to feed back into LAPS analysis or
