@@ -29,7 +29,8 @@ c
       real image_data_vis(nvis_elem,nvis_lines)
       real image_data_wv(nwv_elem,nwv_lines)
 
-      Real*4      smsng
+      Real*4      rmsng
+      Real*4      smsng(maxchannels)
       Real*4      r_missing_data
       Real*4      tot_ir_pix,tot_vis_pix,tot_wv_pix
       Real*4      mstatus(maxchannels,nimages)
@@ -63,29 +64,34 @@ c
             if(ispec.eq.4)then
                call move(image_ir(1,1,i),image_data_ir,
      &                      nir_elem,nir_lines)
+               rmsng=smsng(ispec)
             elseif(ispec.eq.5)then
                call move(image_12(1,1,i),image_data_ir,
      &                      nir_elem,nir_lines)
+               rmsng=smsng(ispec)
             elseif(ispec.eq.2)then
                call move(image_39(1,1,i),image_data_ir,
      &                      nir_elem,nir_lines)
+               rmsng=smsng(ispec)
             elseif(ispec.eq.3)then
                call move(image_67(1,1,i),image_data_wv,
      &                      nwv_elem,nwv_lines)
+               rmsng=smsng(ispec)
             elseif(ispec.eq.1)then
                call move(image_vis(1,1,i),image_data_vis,
      &                      nvis_elem,nvis_lines)
+               rmsng=smsng(ispec)
             endif
 
             write(6,*)'Enter set missing sat: ',c_type(j,i)
 
             if(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
 
-               if(lcf)smsng=350.
+               if(lcf)rmsng=350.
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_ir,
      &               nir_elem,nir_lines,
-     &               smsng,r_missing_data,
+     &               rmsng,r_missing_data,
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_ir_pix
@@ -97,7 +103,7 @@ c
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_wv,
      &               nwv_elem,nwv_lines,
-     &               smsng,r_missing_data,
+     &               rmsng,r_missing_data,
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_wv_pix
@@ -109,7 +115,7 @@ c
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_vis,
      &               nvis_elem,nvis_lines,
-     &               smsng,r_missing_data,
+     &               rmsng,r_missing_data,
      &               istatus)
 
                mstatus(j,i)=float(abs(istatus))/tot_vis_pix
