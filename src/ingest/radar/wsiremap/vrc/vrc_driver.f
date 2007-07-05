@@ -73,9 +73,12 @@ c
        integer extreme_thrsh_70
        integer extreme_thrsh_47
        integer maxradars
+       integer*4 max_files
 
-       parameter (max_files=100,
-     &            extreme_thrsh_47=0.30,
+       include 'lapsparms.for' ! MAX_RADAR_FILES
+       parameter (max_files=MAX_RADAR_FILES)
+
+       parameter (extreme_thrsh_47=0.30,
      &            extreme_thrsh_70=0.10,
      &            maxradars=200)
 
