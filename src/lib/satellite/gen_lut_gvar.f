@@ -363,10 +363,11 @@ c
         if(csattype.eq.'gwc')r_thin=2.0
         x_step=x_step*r_thin
 
-        ewCycles=i_ewCycles(jtype,isat)
-        ewIncs=i_ewIncs(jtype,isat)
-        nsCycles=i_nsCycles(jtype,isat)
-        nsIncs=i_nsIncs(jtype,isat)
+c JS: Test using the 4 vars below taken directly from the netCDF file
+c       ewCycles=i_ewCycles(jtype,isat)
+c       ewIncs=i_ewIncs(jtype,isat)
+c       nsCycles=i_nsCycles(jtype,isat)
+c       nsIncs=i_nsIncs(jtype,isat)
 
         rp_div = 4.0*x_step
         rl_div = 4.0*y_step            !channels 2, 4, and 5 (3.9u, 11u, and 12u)

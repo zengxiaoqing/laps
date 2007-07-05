@@ -113,7 +113,7 @@ c
              call gen_gvarimage_lut(js,it,lc,nx_l,ny_l,lat,lon,
      & gri(1,1,lc),grj(1,1,lc),istatus)
              if(istatus.eq.1)then
-              write(6,*)'Mapping array generated'
+              write(6,*)'Mapping array successfully generated'
              elseif(istatus.eq.0)then
               write(*,*)'IR mapping already generated'
              else
@@ -175,10 +175,38 @@ c           enddo
 
          enddo
 
+c polar orbiter/netcdf/polar stereographic projected data
+c ---------------------------------------------------------
+      elseif(c_sat_types(it,js).eq.'ncp')then
+
+        print*,'Compute mapping arrays for polar stereo - ncp'
+        do lc=1,maxchannel
+           if(ichannels(lc,it,js).eq.1)then
+
+              write(6,59)c_sat_id(js),c_sat_types(it,js),
+     &c_channel_types(lc,it,js)
+
+              call gen_lut_ps(js,it,lc,nx_l,ny_l,
+     & lat,lon,gri(1,1,lc),grj(1,1,lc),istatus)
+
+              if(istatus.eq.1)then
+                 write(6,*)'Mapping arrays successfully generated'
+              else
+                write(6,*)'Error! LUT not generated ',
+     &c_sat_id(js),'/',c_sat_types(it,js),'/',c_channel_types(lc,it,js)
+              endif
+
+           else
+              write(6,49)c_sat_id(js),c_sat_types(it,js),
+     &c_channel_types(lc,it,js)
+           endif
+
+        enddo
+
       elseif(c_sat_types(it,js).ne.'     ')then
 
-           write(6,*)'Unknown satellite data type! '
-           write(6,*)'Check static/satellite_lvd.nl'
+        write(6,*)'Unknown satellite data type! '
+        write(6,*)'Check static/satellite_lvd.nl'
 
       endif
 
