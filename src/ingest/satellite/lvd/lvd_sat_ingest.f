@@ -36,8 +36,15 @@ c
       character*3 chtype(maxchannel)
       character*9 cfname_cur
       character*9 cfname_sys
+      character*6   csatid(maxsat)
+      character*3   csattypes(maxtype*maxsat)
+      character*3   cchanneltypes(maxchannel*maxtype*maxsat)
+      character*200 cpath2sat(maxtype*maxsat)
+
       character   cgeneric_dataroot*255
       character   c_gridfname*50
+
+      integer     i_qc_sat_flag(maxchannel*maxtype*maxsat)
 
       real, allocatable :: gri(:,:,:)
       real, allocatable :: grj(:,:,:)
@@ -91,23 +98,6 @@ c
            nchannels=nchannels+1
            chtype(nchannels)=c_channel_types(i,j,k)
 c--------------------------------------------------------------------
-c         call lvd_file_specifier(c_channel_types(i,j,k),ispec,istatus)
-c         if(istatus.ne.0)then
-c            write(6,*)'Error status returned from lvd_file_specifier'
-c            goto 1000
-c         endif
-
-c         if(ispec.eq.1)then
-c            nelemvis=i_end_vis(j,k)-i_start_vis(j,k)+1
-c            nlinesvis=j_end_vis(j,k)-j_start_vis(j,k)+1
-c         elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
-c            nelemir=i_end_ir(j,k)-i_start_ir(j,k)+1
-c            nlinesir=j_end_ir(j,k)-j_start_ir(j,k)+1
-c         elseif(ispec.eq.3)then
-c            nelemwv=i_end_wv(j,k)-i_start_wv(j,k)+1
-c            nlineswv=j_end_wv(j,k)-j_start_wv(j,k)+1
-c         endif
-c--------------------------------------------------------------------
 
          endif
 4        enddo
@@ -125,26 +115,6 @@ c--------------------------------------------------------------------
            print*,' ',i,' ',TRIM(path_to_raw_sat(i,j,k))
          enddo
  
-c       if( (nlinesvis.eq.0.and.nelemvis.eq.0).and.
-c    +      (nlinesir .eq.0.and.nelemir .eq.0).and.
-c    +      (nlineswv .eq.0.and.nelemwv .eq.0) ) then
-c            print*, 'All satellite array dimensions = 0 '
-c            print*, 'Abort. Check static/satellite_lvd.nl'
-c            stop
-c       endif
-c       if(nlinesir.eq.0.or.nelemir.eq.0)then
-c            nlinesir=1
-c            nelemir =1
-c       endif
-c       if(nlinesvis.eq.0.or.nelemvis.eq.0)then
-c            nlinesvis=1
-c            nelemvis =1
-c       endif
-c       if(nlineswv.eq.0.or.nelemwv.eq.0)then
-c            nlineswv=1
-c            nelemwv =1
-c       endif
-
          call compute_nav_llij(nx_l,ny_l,maxchannel,nchannels,
      &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,gri,grj,
      &nav_status)
