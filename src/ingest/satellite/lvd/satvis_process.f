@@ -156,6 +156,8 @@ c
        character*10  units_2d
        character*125 comment_2d
 
+       logical       lskpnorm
+
        include 'satellite_dims_lvd.inc'
        include 'satellite_common_lvd.inc'
 c
@@ -220,10 +222,10 @@ c goes8-to-goes7 stretch parameters:  When processing goes08
 c data we only need to stretch once with the g8 stretch parms;
 c all other satellite vis data require two stretches.
 
-       visin1_g8=vis_cnt_range_in(1,1)
-       visin2_g8=vis_cnt_range_in(2,1)
-       visout1_g8=vis_cnt_range_out(1,1)
-       visout2_g8=vis_cnt_range_out(2,1)
+       visin1_g8=0.0    !vis_cnt_range_in(1,1)
+       visin2_g8=303.57 !vis_cnt_range_in(2,1)
+       visout1_g8=0.0   !vis_cnt_range_out(1,1)
+       visout2_g8=255.0 !vis_cnt_range_out(2,1)
 
 c For locally produced (ground station SBN look-alike) visible we
 c want to reverse the already applied normalization (national scale
@@ -375,7 +377,7 @@ c                 call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
              enddo
              enddo
 
-          elseif(csatid.eq.'goes12')then
+          elseif(csatid.eq.'goes12'.or.csatid.eq.'goes11')then
 
              isat = 5
              print*,'Stretch ',csatid,' to goes7 look-a-like'
@@ -481,9 +483,10 @@ c    &                     ,laps_vis_norm(i,j))
              enddo
              enddo
 
-          elseif(csatid.eq.'goes12')then
+          elseif(csatid.eq.'goes12'.or.csatid.eq.'goes11')then
 
-             isat = 5
+             isat = 5 
+             if(csatid.eq.'goes11')isat=7
              print*,'Stretch ',csatid,' to goes7 look-a-like'
              print*,'Two step process:'
              print*,'1:  stretch ',csatid,'to goes08'
@@ -594,26 +597,65 @@ c                  call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
          enddo
          enddo
 
+       elseif(csatid.eq.'noaapo')then
+
+          write(6,*)'Normalize vis data - NOAA Polar Orbiter'
+
+          if(c_sat_type.eq.'ncp')then 
+
+             isat = 1
+             print*,'Stretch ',csatid,' to goes7 look-a-like'
+             print*,'stretch ',c_sat_type,' visible'
+             print*,'In: ',visin1_g8,visin2_g8
+             print*,'Out: ',visout1_g8,visout2_g8
+             print*
+             print*,'Add 5 min to file time for this data'
+             print*,'to approx sat movement to domain'
+             print*,'===================================='
+             i4time=i4time+300
+
+             do j=1,jmax
+             do i=1,imax
+               if(laps_vis_norm(i,j).ne.r_missing_data)then
+c for goes8 - make it look like goes7
+                 call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
+
+               endif
+             enddo
+             enddo
+
+          endif
+
        endif 
 c
 c ready to normalize vis counts to local domain
 c =============================================
-       call normalize_brightness(i4time,lat,lon,
+       lskpnorm=.false.
+       if(.not.lskpnorm)then
+
+          call normalize_brightness(i4time,lat,lon,
      &             laps_vis_norm,imax,jmax,
      &             sublat_d,sublon_d,
      &             range_m,l_national,iskip_bilin,
      &             r_missing_data,6,i_dir,phase_angle_d,
      &             specular_ref_angle_d,emission_angle_d,
      &             istatus_n)
-       if(istatus_n .ne. 1) then
-          write(*,*)'+++WARNING+++ Bad status returned from
+          if(istatus_n .ne. 1) then
+             write(*,*)'+++WARNING+++ Bad status returned from
      &NORMALIZE LAPS VIS'
-          istatus(2) = istatus_n
-       else
-          write(*,*)'Visible image normalized for local domain'
-          call check(laps_vis_norm
+             istatus(2) = istatus_n
+          else
+             print*,'Visible image normalized for local domain'
+             call check(laps_vis_norm
      &              ,r_missing_data,istatus_n,imax,jmax)
-          istatus(2)=istatus_n  
+             istatus(2)=istatus_n  
+          endif
+       else
+
+          print*,'Skip Normalization: ',csatid
+
        endif
 c =============================================
 
