@@ -66,7 +66,8 @@ c
       include 'satellite_dims_lvd.inc'  ! dimensions for maxsat, maxtype, maxchannel
 c                                     used for variable in include 'satellite_common_lvd.inc'
       include 'satellite_common_lvd.inc'
-      include 'satellite_namelist_lvd.cmn'
+c     include 'satellite_namelist_lvd.cmn'
+      include 'constants.inc'
 
       integer   nx_l,ny_l
       integer   n_ir_elem,n_ir_lines
@@ -143,9 +144,9 @@ c
       real r_grid_ratio(maxchannel,nimages)
 
       real	range_m
+      real      smsng(maxchannel)
       real      sublon_d
       real      sublat_d
-      real      smsng
       real      r_missing_data
       real      radtodeg
       real      rcal
@@ -201,7 +202,8 @@ c
       integer nan_flag
       integer laps_cycle_time
       integer lvd_status
-      integer nft,ntm(max_files),nft_prior
+      integer nft,ntm(100) !max_files)
+      integer nft_prior
 
       real favgth39u
       real favgth67u
@@ -238,7 +240,6 @@ c     enddo
 
       csatid = c_sat_id(ksat)
       csattype = c_sat_types(jtype,ksat)
-      smsng = float(i_msng_sat_flag(jtype,ksat))
 c ----------------------------------------------------------------------
 c if current time is at beginning of new day, then adjust time back just
 c a few seconds to allow any data just before top of hour to have a chance
@@ -328,6 +329,12 @@ c
 c --------------------------------------------------------------------------
 c Compute Dimensions and Allocate Raw satellite data arrays
 c --------------------------------------------------------------------------
+      n_vis_elem=1
+      n_vis_lines=1
+      n_ir_elem=1
+      n_ir_lines=1
+      n_wv_elem=1
+      n_wv_lines=1
       nchannels=0
       do i=1,maxchannel
          if(ichannels(i,jtype,ksat).eq.1)then
@@ -358,22 +365,6 @@ c Find and read current satellite files... as many as 4 ir channels and vis.
       print*,'VIS: ',n_vis_lines,n_vis_elem
       print*,'IR:  ',n_ir_lines, n_ir_elem
       print*,'WV:  ',n_wv_lines, n_wv_elem
-
-      if(n_vis_lines.le.1 .or. n_vis_elem.le.1)then
-           print*,'Vis satellite array dimensions <= 1 '
-           print*,'Terminating. Check static/satellite_lvd.nl'
-           stop
-      endif
-      if(n_ir_lines.le.1.or.n_ir_elem.le.1)then
-           print*,'IR satellite array dimensions <= 1 '
-           print*,'Terminating. Check static/satellite_lvd.nl'
-           stop
-      endif
-      if(n_wv_lines.le.1.or.n_wv_elem.le.1)then
-           print*,'WV satellite array dimensions <= 1 '
-           print*,'Terminating. Check static/satellite_lvd.nl'
-           stop
-      endif
 
       if(.not.allocated(image_vis))then
        allocate(image_vis(n_vis_lines,n_vis_elem,nimages),stat=istat)
@@ -417,10 +408,10 @@ c Find and read current satellite files... as many as 4 ir channels and vis.
       endif
 c
 c --------------------------------------------------------------------------
-c Find and read current satellite files... as many as 4 ir channels and vis.
+c Find and read current satellite files... as many as 5 ir channels and vis.
 c --------------------------------------------------------------------------
       if(csattype.eq.'cdf'.or.csattype.eq.'gvr'.or.
-     &   csattype.eq.'wfo')then
+     &   csattype.eq.'wfo'.or.csattype.eq.'ncp')then
 
        write(6,*)'Using getcdf_satdat routine'
 
@@ -660,6 +651,7 @@ c     lsatqc=.true.
       
       if(lsatqc)then
 
+         smsng(:)=float(i_msng_sat_flag(:,jtype,ksat))
          write(6,*)'Entering satdatfill routine'
 
          call satdatfill(csatid,csattype,nft,ntm,
@@ -678,6 +670,8 @@ c     lsatqc=.true.
          write(6,*)'Not using fill routine '
          write(6,*)'Only use set_missing_flag '
 
+         smsng(:)=float(i_msng_sat_flag(:,jtype,ksat))
+
          call set_missing_flag(csatid,csattype,n_ir_elem,n_ir_lines,
      &             n_vis_elem,n_vis_lines,n_wv_elem,n_wv_lines,
      &             nft,ntm,c_type,smsng,maxchannel,nimages,
@@ -686,13 +680,12 @@ c     lsatqc=.true.
          write(6,*)
 
       endif
-
 c
 c ---------------------------------------------------
 c satellite range and sub-longitude (namelist items).
 c ---------------------------------------------------
       radtodeg=180.0/acos(-1.)
-      range_m = sat_range_m(ksat)
+      range_m = sat_range_m(ksat)+eradius
       sublon_d = r_sat_sub_lon(ksat)*radtodeg
       sublat_d = r_sat_sub_lat(ksat)*radtodeg
       write(6,*)'range_m = ',range_m
@@ -739,7 +732,9 @@ c convert from counts to brightness temps for CDF data use the
 c pre-generated lut's. For ascii data divide all by 10.
 c ------------------------------------------------------------
 
-       if(csattype.ne.'asc'.and.csattype.ne.'hko')then
+       if(csattype.ne.'asc'.and.
+     &    csattype.ne.'hko'.and.
+     &    csattype.ne.'ncp')then
           write(6,*)
           write(6,*)'Convert counts to brightness temps'
           do i = 1,nft
