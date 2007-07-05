@@ -68,7 +68,7 @@ c the missing satellite data values are defined in data/static/satellite_lvd.nl
 c
       rlow=0.0
       if(smsng.gt.0.0)then
-         rhigh=smsng
+         rhigh=550.  !smsng
       else
          rhigh=255.
       endif
