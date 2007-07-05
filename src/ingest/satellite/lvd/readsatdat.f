@@ -1,5 +1,5 @@
       subroutine readsatdat(csat_id,
-     &                      csat_type,
+     &                      csat_type, 
      &                      c_dir_path,
      &                      c_fname_data,
      &                      c_type,
@@ -21,7 +21,7 @@ c
 
       include 'netcdf.inc'
 
-      integer i,j,n
+      integer i,j,n,id
       integer ntf
       integer nlinesir,nelemir
       integer nlinesvis,nelemvis
@@ -54,8 +54,6 @@ c
       character csat_id*6
       character csat_type*3
 c
-      INTEGER   Nx
-      INTEGER   Ny 
       INTEGER   record
       INTEGER   ncid
       INTEGER   rcode
@@ -71,64 +69,34 @@ c
 
       istatus=1
 
+      record=1
+
       do i=1,ntf
          do j=1,ntm(i)
 
             call lvd_file_specifier(c_type(j,i),ispec,istat)
 
-            if(csat_type.eq.'wfo')then
+            if(csat_type.eq.'wfo'.or.csat_type.eq.'ncp')then
                n=index(c_dir_path(ispec),' ')-1
                c_wfo_fname = fname9_to_wfo_fname13(c_fname_data(i))
                c_filename=c_dir_path(ispec)(1:n)//c_wfo_fname
-
-               n=index(c_filename,' ')-1
-               print*,'opening ',c_filename(1:n)
-               rcode = NF_OPEN(c_filename,NF_NOWRITE,ncid)
-
-               if(rcode.ne.NF_NOERR) then
-                  print *, NF_STRERROR(rcode)
-                  print *,'NF_OPEN ',c_filename(1:n)
-                  istatus=-1
-                  return
-               endif
-
-               print*,'calling get_attribute_wfo ',c_type(i,j)
-               call get_attribute_wfo(ncid,dummy,dummy,dummy,
-     &dummy,dummy,dummy,dummy,dummy,dummy,dummy,nx,ny,wstatus)
-
-               if(wstatus .lt. 0)then
-                  print*,'No attributes: get_attribute_wfo ',c_type(j,i)
-                  return
-               endif
-               record=1
                n=index(c_filename,' ')
-               write(6,*)'Reading: ',c_filename(1:n)
             else
                n=index(c_dir_path(1),' ')-1
                c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
      &'_'//c_type(j,i)
-               n=index(c_filename,' ')
-               write(6,*)'Reading: ',c_filename(1:n)
-
-               rcode=NF_OPEN(c_filename,NF_NOWRITE,NCID)
-               if(rcode.ne.nf_noerr) return
-
-               call get_cdf_dims(ncid,record,nx,ny,istatus)
-               record = 1
-               if(istatus.eq.1)then
-                  print*,'Error reading cdf dimensions'
-                  return
-               endif
-               istatus =1
-
             endif
+            n=index(c_filename,' ')
+            print*,'Reading: ',c_filename(1:n)
+
+            rcode=NF_OPEN(c_filename,NF_NOWRITE,NCID)
+            if(rcode.ne.nf_noerr) return
 
             if(ispec.ne.1.and.ispec.ne.3)then    !check for visible and water vapor
 
                call readcdf(csat_id,
      &                    csat_type,
      &                    c_type(j,i),
-     &                    nx,ny,
      &                    record,
      &                    nelemir,nlinesir,
      &                    ir_image,
@@ -167,7 +135,6 @@ c
                call readcdf(csat_id,
      &                    csat_type,
      &                    c_type(j,i),
-     &                    nx,ny,
      &                    record,
      &                    nelemvis,nlinesvis,
      &                    vis_image,
@@ -187,24 +154,19 @@ c
                endif
 
 cisido
-                write(6,*)'la1_vis',la1_vis,'lo1_vis',lo1_vis,
-     &                     'Dx_vis',Dx_vis,'Dy_vis',Dy_vis,
-     &                     'Latin_vis',Latin_vis,'Lov_vis',Lov_vis
+               write(6,*)'la1_vis',la1_vis,'lo1_vis',lo1_vis,
+     &                   'Dx_vis',Dx_vis,'Dy_vis',Dy_vis,
+     &                   'Latin_vis',Latin_vis,'Lov_vis',Lov_vis
 cisid
 
-
-
-
-
 c
-c load vis attributes
+c load water vapor attributes
 c
             elseif(ispec.eq.3)then
 
                call readcdf(csat_id,
      &                    csat_type,
      &                    c_type(j,i),
-     &                    nx,ny,
      &                    record,
      &                    nelemwv,nlineswv,
      &                    wv_image,
@@ -237,6 +199,9 @@ c
 c load vis attributes
 c
             endif
+
+            rcode= NF_CLOSE(ncid)
+
 125      enddo
       enddo
 c
