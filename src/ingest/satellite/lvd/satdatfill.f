@@ -27,7 +27,8 @@ c
       real image_67  (nwv_elem,nwv_lines,maximage)
 
       Real*4      r_missing_data
-      Real*4      smsng,smsng_vis
+      Real*4      rmsng
+      Real*4      smsng(maxchannels)
       Real*4      mstatus(maxchannels,maxfiles)
       Real*4      percent_missing
 
@@ -48,7 +49,6 @@ c
          write(6,*)'Error getting r_missing_data - satdatfill'
          return
       endif
-      smsng_vis=smsng
 c
 c fill missing pixels and pixels determined as bad with r_missing_data
 c
@@ -63,16 +63,17 @@ c
             call lvd_file_specifier(c_type(j,i),ispec,istat)
             if(ispec.eq.2)then
 c -------------------------------------------
+            rmsng=smsng(ispec)
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_39(1,1,i),nir_elem,nir_lines,
-     &               smsng,r_missing_data,istatus)
+     &               rmsng,r_missing_data,istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
             write(6,*)'  Enter Satfill1 for: ',c_type(j,i)
 
             c_satdir=sat_dir_path(ispec)
             call satfill1(csat_id,csat_type,
-     &               i4time_data(i),smsng,
+     &               i4time_data(i),rmsng,
      &               c_type(j,i),
      &               nir_lines,nir_elem,
      &               c_satdir,
@@ -88,9 +89,10 @@ c -------------------------------------------
 
             elseif(ispec.eq.4)then
 c -------------------------------------------
+            rmsng=smsng(ispec)
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_ir(1,1,i),nir_elem,nir_lines,
-     &               smsng,r_missing_data,
+     &               rmsng,r_missing_data,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
@@ -98,7 +100,7 @@ c -------------------------------------------
 
             c_satdir=sat_dir_path(ispec)
             call satfill1(csat_id,csat_type,
-     &               i4time_data(i),smsng,
+     &               i4time_data(i),rmsng,
      &               c_type(j,i),
      &               nir_lines,nir_elem,
      &               c_satdir,
@@ -114,9 +116,10 @@ c -------------------------------------------
 
             elseif(ispec.eq.5)then
 c -------------------------------------------
+            rmsng=smsng(ispec)
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_12(1,1,i),nir_elem,nir_lines,
-     &               smsng,r_missing_data,
+     &               rmsng,r_missing_data,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
@@ -124,7 +127,7 @@ c -------------------------------------------
 
             c_satdir=sat_dir_path(ispec)
             call satfill1(csat_id,csat_type,
-     &               i4time_data(i),smsng,
+     &               i4time_data(i),rmsng,
      &               c_type(j,i),
      &               nir_lines,nir_elem,
      &               c_satdir,
@@ -140,9 +143,10 @@ c -------------------------------------------
 
             elseif(ispec.eq.3)then
 c -------------------------------------------
+            rmsng=smsng(ispec)
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_67(1,1,i),nwv_elem,nwv_lines,
-     &               smsng,r_missing_data,
+     &               rmsng,r_missing_data,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
@@ -150,7 +154,7 @@ c -------------------------------------------
 
             c_satdir=sat_dir_path(ispec)
             call satfill1(csat_id,csat_type,
-     &               i4time_data(i),smsng,
+     &               i4time_data(i),rmsng,
      &               c_type(j,i),
      &               nwv_lines, nwv_elem,
      &               c_satdir,
@@ -166,18 +170,18 @@ c -------------------------------------------
 
             elseif(ispec.eq.1)then
 c -------------------------------------------
+            rmsng=smsng(ispec)
             c_satdir=sat_dir_path(ispec)  !Particularly wfo! The channel types are in order.
-            if(csat_type.eq.'cdf')smsng_vis=0.
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_vis(1,1,i),nvis_elem,nvis_lines,
-     &               smsng_vis,r_missing_data,
+     &               rmsng,r_missing_data,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)
 
             write(6,*)'  Enter Satellite fill '
             call satfill1(csat_id,csat_type,
-     &               i4time_data(i),smsng,
+     &               i4time_data(i),rmsng,
      &               c_type(j,i),
      &               nvis_lines, nvis_elem,
      &               c_satdir,
