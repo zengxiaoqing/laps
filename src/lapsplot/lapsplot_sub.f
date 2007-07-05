@@ -224,11 +224,13 @@ cdis
 
             NX_C = max(NX_L,NY_L)
 
-            write(6,*)' NX_C = ',NX_C
+            NX_T = 121
+
+            write(6,*)' NX_C/NX_T= ',NX_C,NX_T
 
             call xsect(c_display,i4time_ref,lun,l_atms
      1                ,standard_longitude,NX_L,NY_L,NZ_L
-     1                ,NX_C,NZ_L,NXSECT      
+     1                ,NX_C,NZ_L,NXSECT,NX_T      
      1                ,r_missing_data,laps_cycle_time,maxstns
      1                ,density,plot_parms,namelist_parms)
 
