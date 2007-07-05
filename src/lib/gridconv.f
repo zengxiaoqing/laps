@@ -1415,6 +1415,9 @@ c
          call binom(1.,2.,3.,4.,scr(1),scr(2),scr(3),scr(4),xx,staval)
       endif
 c
+      if(staval.eq.missingflag)then
+         print*,'Here: staval = missingflag'
+      endif
       return
       end
 c
