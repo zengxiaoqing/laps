@@ -38,8 +38,9 @@ cdis
 cdis
 
         subroutine xsect(c_display,i4time_ref,lun,l_atms
-     1                  ,standard_longitude,NX_L,NY_L,NZ_L,NX_C,NZ_C
-     1                  ,NX_P,r_missing_data,laps_cycle_time,maxstns
+     1                  ,standard_longitude
+     1                  ,NX_L,NY_L,NZ_L,NX_C,NZ_C,NX_P,NX_T
+     1                  ,r_missing_data,laps_cycle_time,maxstns      
      1                  ,density,plot_parms,namelist_parms)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
@@ -163,6 +164,7 @@ cdis
 !       equivalence(pcp_type_2d,rh_2d)
 
         real*4 field_2d(NX_C,NZ_C)
+        real*4 fieldt_2d(NX_T,NZ_C)
 
 !       COMMON/LABS/IA(2),NC,NREP,NCRT,ILAB,NULBLL,SIZEL,SIZEM,SIZEP
         character c9_radarage*9
@@ -241,7 +243,6 @@ cdis
         real*4 field_vert2(NX_C,NZ_C)
         real*4 field_vert3(NX_P,NX_P)
         real*4 w_2d(NX_C,NZ_C)
-        character cldpcp_type_2d(NX_C,NZ_C)
         real*4 mvd_2d(NX_C,NZ_C)
         integer icing_index_2d(NX_C,NZ_C)
         real*4 terrain_vert(NX_C,NZ_C)
@@ -2723,8 +2724,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1          ,units_2d,comment_2d,pcp_type_3d,istatus)
 
-            call interp_3dn(pcp_type_3d,field_2d,xlow,xhigh
-     1                     ,ylow,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C)
+            call interp_3dn(pcp_type_3d,fieldt_2d,xlow,xhigh
+     1                     ,ylow,yhigh,NX_L,NY_L,NZ_L,NX_T,NZ_C)
 
             i_contour = 3
             call make_fnam_lp(i4time_nearest,a9time,istatus)
@@ -2744,8 +2745,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1          ,units_2d,comment_2d,pcp_type_3d,istatus)
 
-                call interp_3dn(pcp_type_3d,field_2d,xlow,xhigh
-     1                         ,ylow,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C)
+                call interp_3dn(pcp_type_3d,fieldt_2d,xlow,xhigh
+     1                         ,ylow,yhigh,NX_L,NY_L,NZ_L,NX_T,NZ_C)
 
             else ! Calculate Precip Type on the Fly
 
@@ -3141,16 +3142,16 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         if(i_contour .eq. 3)then ! Plot Cloud Type
             call set(vxmin, vxmax, vymin, vymax
-     1             , rleft, right, rleft, right,1)
+     1             ,    1., float(NX_T), 1., float(NX_T), 1)
             du=0.4
             rot = 0.
-            do i = NX_C,1,-2
+            do i = NX_T,1,-2
                 do k = ibottom,NZ_C
-                    i_cloud_type = field_2d(i,k)
+                    i_cloud_type = fieldt_2d(i,k)
 
                     if(i_cloud_type .ne. 0)then
                         x = i
-                        y = (k-ibottom) * float(NX_C-1)
+                        y = (k-ibottom) * float(NX_T-1)
      1                                  / float(NZ_C-ibottom) + 1.
 
                         c2_cloud_type = c2_cloud_types(i_cloud_type)
@@ -3210,13 +3211,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call setusv_dum(2hIN,icolors(i_graphics_overlay))
 
             call set(vxmin, vxmax, vymin, vymax
-     1             , rleft, right, rleft, right,1)
-            do i = NX_C,1,-1
+     1             ,    1., float(NX_T), 1., float(NX_T), 1)
+            do i = NX_T,1,-1
                 do k = ibottom+1,NZ_C
-                    i_precip_type = field_2d(i,k)
+                    i_precip_type = fieldt_2d(i,k)
                     if(i_precip_type .ne. 0)then
                         x = i
-                        y = (k-ibottom) * float(NX_C-1)
+                        y = (k-ibottom) * float(NX_T-1)
      1                                  / float(NZ_C-ibottom) + 1.
 
                         c2_precip_type = c1_precip_types(i_precip_type)
