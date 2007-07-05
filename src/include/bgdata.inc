@@ -1,11 +1,11 @@
       integer maxbgmodels
-      parameter (maxbgmodels=11) ! WNI
+      parameter (maxbgmodels=12) ! WNI
       real missingflag
       parameter (missingflag=1.0e37)
       real esat(15000:45000), es(15000:45000) 	
       common /estab/ esat,es
       character  cbgmodel(maxbgmodels)*10
       data       cbgmodel/'ruc','eta','avn','nfs','fua',' '
-     1,' ',' ',' ',' ',' '/
+     1,' ',' ',' ',' ',' ',' '/
 c warning: localization scripting requires the cbgmodel statement above
 c All additional comments must be below this line
