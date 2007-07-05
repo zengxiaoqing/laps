@@ -31,6 +31,7 @@ SRC=bcdtoint.F \
     gen_lut_gvar.f \
     gen_lut_lambert.f \
     gen_lut_mercator.f \
+    genlutps.f \
     genlvdlut_sub.f \
     genlvdlut_lvd.f \
     get_attr_satellite.f \
@@ -42,7 +43,6 @@ SRC=bcdtoint.F \
     read_gwc_header_sub.f \
     read_orb_att.f \
     readnet.f \
-    rewrite_satellite_lvd_nl.f \
     satsublatlon.f \
     update_gvarimg_parms.f \
     write_orb_att.f \
