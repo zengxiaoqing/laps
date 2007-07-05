@@ -86,13 +86,13 @@ c
       integer max_channel
       integer n_images
 
-      real image_vis (n_vis_elem,n_vis_lines,n_images) !ispan vis image polar NH
-      real image_ir  (n_ir_elem,n_ir_lines,n_images) !ispan ir image polar NH
+      real image_vis (n_vis_elem,n_vis_lines,n_images)
+      real image_ir  (n_ir_elem,n_ir_lines,n_images)
       real image_12  (n_ir_elem,n_ir_lines,n_images)
       real image_39  (n_ir_elem,n_ir_lines,n_images)
       real image_67  (n_wv_elem,n_wv_lines,n_images)
 
-      integer i,j,k,n,jj
+      integer i,j,k,n,jj,il
       integer in(max_channel)
       integer ispec
       integer nft,ntm(max_files)
@@ -176,7 +176,8 @@ c
 c Adjust time when just past top of hour to insure processing files that are
 c just before top of hour.
  
-      if(c_sat_type.eq.'wfo')then
+      if(c_sat_type.eq.'wfo'.or.c_sat_type.eq.'ncp')then
+         print*,'Convert wfo or ncp to 9 char time'
          wfo_fname13_in=fname9_to_wfo_fname13(c_fname_in)
          if(wfo_fname13_in(12:12).eq.'0')then
             write(6,*)'Adjusting i4time'
@@ -185,7 +186,9 @@ C           i4time_in = i4time_in-480
 C            480 seconds is not enough to subtract if running at
 C            more than 7 minutes past the hour...make it
 C            10 minutes to be safe...BLS 19 Jul 2002
-            i4time_in = i4time_in - 600
+C            i4time_in = i4time_in - 600
+C Use namelist parameter for this time offset
+            i4time_in = i4time_in-i_delta_t
             wfo_fname13_in = cvt_i4time_wfo_fname13(i4time_in)
             write(6,*)'New time: ',wfo_fname13_in
          endif
@@ -213,7 +216,7 @@ c          endif
 c
 c Find raw satellite data files in the path_to_raw_sat.
 c
-      if(c_sat_type.eq.'wfo')then
+      if(c_sat_type.eq.'wfo'.or.c_sat_type.eq.'ncp')then  
 
          do j=1,nchannels
 
@@ -269,6 +272,7 @@ c
 c all satellite channels are in files within same directory.
 c assume j=1 represents this for the minimum # of channels to process.
 c
+
          pathname=path_to_raw_sat(1)(1:in(1))//c_fname_in(1:7)//'*'
          call s_len(pathname,n)
 c        n=index(pathname,' ')
@@ -304,8 +308,10 @@ c
             endif
          endif
 c
+         il=9
+         if(c_sat_type.eq.'ncp')il=13
          do i=1,ifiles_sat_raw
-            call i4time_fname_lp(c_filename_sat(i)(in(1)+1:in(1)+9),
+          call i4time_fname_lp(c_filename_sat(i)(in(1)+1:in(1)+il),
      &i4time_sat_raw(i),jstatus)
          enddo
 
@@ -355,9 +361,7 @@ c categorize the files by time and by the max number of channels selected.
 c
 c initialize
 c
-      do i=1,max_files
-         ntm(i)=0
-      enddo
+      ntm=0
       first_time=.true.
       nft=0
 
