@@ -8,25 +8,99 @@ cdoc  Reads static/satellite_lvd.nl file.
       include 'satellite_namelist_lvd.cmn'
       include 'grid_fname.cmn'
 
+      integer num_sat
+      integer num_types(maxsat)
+      integer num_channels(maxtype,maxsat)
+      integer i_qc_sat_flag(maxchannel*maxtype*maxsat)
+
+      character*6   csatid(maxsat)
+      character*3   csattypes(maxtype*maxsat)
+      character*3   cchanneltypes(maxchannel*maxtype*maxsat)
+      character*200 cpath2sat(maxtype*maxsat)
+      integer   max_files
+      parameter (max_files=20000)
+
+      character*200 c_filenames(max_files)
+
+      integer istatus
+
       include 'satdata_lvd.for'
 
       istatus = 0
 
       call get_directory(grid_fnam_common,nest7grid,len_dir)
-
       nest7grid = nest7grid(1:len_dir)//'/satellite_lvd.nl'
-
       open(1,file=nest7grid,status='old',err=900)
       read(1,satellite_lvd_nl,err=901)
       close(1)
       istatus = 1
+
+      call conf_isjtkc(maxsat,maxtype,maxchannel,
+     &csatid,csattypes,cchanneltypes,cpath2sat,
+     &i_qc_sat_flag,istatus)
+
+      if(.false.)then
+
+      is=0
+      kk=0
+      do i=1,maxsat
+       if(isats(i).eq.1)is=is+1
+      enddo
+      print*
+      print*,'Number of satellites to process: ',is
+      do i=1,maxsat
+       if(isats(i).eq.1)then
+        print*
+        print*,'Sat ',i,' ID: ',c_sat_id(i)
+        print*,'================================='
+       endif
+       do j=1,maxtype
+        if(itypes(j,i).eq.1)then
+         print*,'  Type: ',j, ' = ',c_sat_types(j,i)
+         print*,'  ***************************************'
+         print*,'  Attributes of this satellite and type: '
+         print*,'  ---------------------------------------'
+         print*,'   Latin/Lap/Lov: ',r_latin(j,i),r_lap(j,i),r_lov(j,i)
+         print*,'   vis/ir(x/y) res (km): ', r_resolution_x_vis(j,i),
+     &r_resolution_y_vis(j,i),r_resolution_x_ir(j,i),r_resolution_y_ir
+     &(j,i)
+         print*,'  ---------------------------------------'
+         do k=1,maxchannel
+          if(ichannels(k,j,i).eq.1)then
+           print*,'   Chn ',k,' = ',c_channel_types(k,j,i)(1:3)
+           print*,'   Path      = ',TRIM(path_to_raw_sat(k,j,i))
+           if(kk.lt.1)then
+            call get_file_names(path_to_raw_sat(k,j,i)
+     1,numoffiles,c_filenames, max_files,istatus)
+c           print*,'filenames: ',c_filenames(1:numoffiles)
+            if(numoffiles.le.0)then
+             print*
+             print*,'!!!! Error: No data in given path'
+             print*,'Path: ',TRIM(path_to_raw_sat(k,j,i))
+             print*
+             return
+            endif
+            kk=10
+           endif
+          endif
+         enddo
+        endif
+       enddo
+      enddo
+
+      endif
+
       return
 
  900  print*,'error opening file ',nest7grid
       return
  901  print*,'error reading satellite_nl in ',nest7grid
       write(*,satellite_lvd_nl)
-      
+
+c----- don't worry about the rep namelist atm.
+
+      return
+
       print*,'**************************************************'
       print*,'Now using repository version: satellite_lvd_rep.nl'
       print*,'**************************************************'
@@ -43,7 +117,6 @@ cdoc  Reads static/satellite_lvd.nl file.
  903  print*,'error reading satellite_lvd_rep.nl in ',nest7grid
       write(*,satellite_lvd_nl)
       return
-
       end
 c
 c =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -630,3 +703,943 @@ c
        return
 
        end
+c ------------------------------------------------------------------
+c New routine that configures the satellite information needed in
+c software using a limited satellite lvd namelist file
+c J. Smart 5/07
+c
+      subroutine conf_isjtkc(nsdim,ntdim,ncdim,
+     &csatid,csattypes,cchanneltypes,cpath2sat,
+     &i_qc_sat_flag,istatus)
+
+      include 'satellite_dims_lvd.inc'
+      include 'satellite_common_lvd.inc'
+      include 'satdata_lvd_table.for'
+
+      integer       i_qc_sat_flag(ncdim*ntdim*nsdim)
+      character*6   csatid(nsdim)
+      character*3   csattypes(ntdim*nsdim)
+      character*3   cchanneltypes(ncdim*ntdim*nsdim)
+      character*200 cpath2sat(ntdim*nsdim)
+
+      ISATS=0
+      do i=1,nsats
+       if(csatid(i).eq.'goes08')then
+         ISATS(1)=1
+         c_sat_id(1)=csatid(i)
+       elseif(csatid(i).eq.'meteos')then
+         ISATS(2)=1
+         c_sat_id(2)=csatid(i)
+       elseif(csatid(i).eq.'goes10')then
+         ISATS(3)=1
+         c_sat_id(3)=csatid(i)
+       elseif(csatid(i).eq.'gmssat')then
+         ISATS(4)=1
+         c_sat_id(4)=csatid(i)
+       elseif(csatid(i).eq.'goes12')then
+         ISATS(5)=1
+         c_sat_id(5)=csatid(i)
+       elseif(csatid(i).eq.'goes09')then
+         ISATS(6)=1
+         c_sat_id(6)=csatid(i)
+       elseif(csatid(i).eq.'goes11')then
+         c_sat_id(7)=csatid(i)
+         ISATS(7)=1
+       elseif(csatid(i).eq.'noaapo')then
+         c_sat_id(8)=csatid(i)
+         ISATS(8)=1
+       endif
+      enddo
+
+      ITYPES=0
+      jj=0
+      do i=1,nsats
+
+c first satellite (goes08)
+       if(csatid(i).eq.'goes08')then
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq.'gvr')then
+          ITYPES(1,1)=1
+          c_sat_types(1,1)=csattypes(jj)
+         elseif(csattypes(jj).eq.'wfo')then
+          ITYPES(2,1)=1
+          c_sat_types(2,1)=csattypes(jj)
+         elseif(csattypes(jj).eq.'cdf')then
+          ITYPES(3,1)=1
+          c_sat_types(3,1)=csattypes(jj)
+         elseif(csattypes(jj).eq.'rll')then
+          ITYPES(4,1)=1
+          c_sat_types(4,1)=csattypes(jj)
+         endif
+        enddo
+
+c second satellite (meteosat)
+       elseif(csatid(i).eq.'meteos')then
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq.'rll')then
+          ITYPES(4,2)=1
+          c_sat_types(4,2)=csattypes(jj)
+         elseif(csattypes(jj).eq.'cdf')then
+          ITYPES(3,2)=1
+          c_sat_types(3,2)=csattypes(jj)
+         endif
+        enddo
+
+c third satellite (goes10)
+       elseif(csatid(i).eq.'goes10')then
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq.'gvr')then
+          ITYPES(1,3)=1
+          c_sat_types(1,3)=csattypes(jj)
+         elseif(csattypes(jj).eq.'wfo')then
+          ITYPES(2,3)=1
+          c_sat_types(2,3)=csattypes(jj)
+         elseif(csattypes(jj).eq.'rll')then
+          ITYPES(4,3)=1
+          c_sat_types(4,3)=csattypes(jj)
+         endif
+        enddo
+
+c forth satellite (gms)
+       elseif(csatid(i).eq.'gmssat')then
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq.'hko')then
+          ITYPES(2,4)=1
+          c_sat_types(2,4)=csattypes(jj)
+         elseif(csattypes(jj).eq.'twn')then
+          ITYPES(3,4)=1
+          c_sat_types(3,4)=csattypes(jj)
+         elseif(csattypes(jj).eq.'rll')then
+          ITYPES(4,4)=1
+          c_sat_types(4,4)=csattypes(jj)
+         endif
+        enddo
+
+c fifth satellite (goes12)
+       elseif(csatid(i).eq.'goes12')then
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq.'gvr')then
+          ITYPES(1,5)=1
+          c_sat_types(1,5)=csattypes(jj)
+         elseif(csattypes(jj).eq.'wfo')then
+          ITYPES(2,5)=1
+          c_sat_types(2,5)=csattypes(jj)
+         elseif(csattypes(jj).eq.'cdf')then
+          ITYPES(3,5)=1
+          c_sat_types(3,5)=csattypes(jj)
+         elseif(csattypes(jj).eq.'rll')then
+          ITYPES(4,5)=1
+          c_sat_types(4,5)=csattypes(jj)
+         endif
+        enddo
+
+c sixth satllite (goes09)
+       elseif(csatid(i).eq.'goes09')then
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq.'gvr')then
+          ITYPES(1,6)=1
+          c_sat_types(1,6)=csattypes(jj)
+         elseif(csattypes(jj).eq.'cdf')then
+          ITYPES(3,6)=1
+          c_sat_types(3,6)=csattypes(jj)
+         elseif(csattypes(jj).eq.'rll')then
+          ITYPES(4,6)=1
+          c_sat_types(4,6)=csattypes(jj)
+         endif
+        enddo
+c seventh satellite (goes11)
+       elseif(csatid(i).eq.'goes11')then
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq.'gvr')then
+          ITYPES(1,7)=1
+          c_sat_types(1,7)=csattypes(jj)
+         elseif(csattypes(jj).eq.'wfo')then
+          ITYPES(2,7)=1
+          c_sat_types(2,7)=csattypes(jj)
+         elseif(csattypes(jj).eq.'cdf')then
+          ITYPES(3,7)=1
+          c_sat_types(3,7)=csattypes(jj)
+         elseif(csattypes(jj).eq.'rll')then
+          ITYPES(4,7)=1
+          c_sat_types(4,7)=csattypes(jj)
+         endif
+        enddo
+c eigth satellite (noaa polar orbiter)
+       elseif(csatid(i).eq.'noaapo')then
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq.'rll')then      !raw lat-lon > could be (likely is) netcdf format
+          ITYPES(4,8)=1
+          c_sat_types(4,8)=csattypes(jj)
+         elseif(csattypes(jj).eq.'ncp')then  !earth-projected polar stereographic netcdf format (FMI)
+          ITYPES(1,8)=1
+          c_sat_types(1,8)=csattypes(jj)
+         endif
+        enddo
+       endif
+      enddo
+
+c ----
+c goes08 (first satellite type)
+
+      ICHANNELS = 0
+      jj=0
+      kk=0
+      do i=1,nsats
+       if(csatid(i).eq.'goes08')then
+        do j=1,ntypes(i)
+         jj=jj+1
+c format type 1 (gvr)
+         if(csattypes(jj).eq.'gvr')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,1,1)=1
+            c_channel_types(1,1,1)=cchanneltypes(kk)
+            i_msng_sat_flag(1,1,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,1,1)=1
+            c_channel_types(2,1,1)=cchanneltypes(kk)
+            i_msng_sat_flag(2,1,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,1,1)=1
+            c_channel_types(3,1,1)=cchanneltypes(kk)
+            i_msng_sat_flag(3,1,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,1,1)=1
+            c_channel_types(4,1,1)=cchanneltypes(kk)
+            i_msng_sat_flag(4,1,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,1,1)=1
+            c_channel_types(5,1,1)=cchanneltypes(kk)
+            i_msng_sat_flag(5,1,1)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,1,1)=cpath2sat(jj)
+
+c format type 2 (wfo)
+         elseif(csattypes(jj).eq.'wfo')then
+          call s_len(cpath2sat(jj),n)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,2,1)=1
+            c_channel_types(1,2,1)=cchanneltypes(kk)
+            path_to_raw_sat(1,2,1)=cpath2sat(jj)(1:n)//'vis/regclip/'
+            i_msng_sat_flag(1,2,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i39')then
+            ICHANNELS(2,2,1)=1
+            c_channel_types(2,2,1)=cchanneltypes(kk)
+            path_to_raw_sat(2,2,1)=cpath2sat(jj)(1:n)//'i39/regclip/'
+            i_msng_sat_flag(2,2,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'iwv')then
+            ICHANNELS(3,2,1)=1
+            c_channel_types(3,2,1)=cchanneltypes(kk)
+            path_to_raw_sat(3,2,1)=cpath2sat(jj)(1:n)//'iwv/regclip/'
+            i_msng_sat_flag(3,2,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i11')then
+            ICHANNELS(4,2,1)=1
+            c_channel_types(4,2,1)=cchanneltypes(kk)
+            path_to_raw_sat(4,2,1)=cpath2sat(jj)(1:n)//'i11/regclip/'
+            i_msng_sat_flag(4,2,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i12')then
+            ICHANNELS(5,2,1)=1
+            c_channel_types(5,2,1)=cchanneltypes(kk)
+            path_to_raw_sat(5,2,1)=cpath2sat(jj)(1:n)//'i12/regclip/'
+            i_msng_sat_flag(5,2,1)=i_qc_sat_flag(kk)
+           endif
+          enddo
+
+c format type 3 (netcdf)
+         elseif(csattypes(jj).eq.'cdf')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,3,1)=1
+            c_channel_types(1,3,1)=cchanneltypes(kk)
+            i_msng_sat_flag(1,3,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i39')then
+            ICHANNELS(2,3,1)=1
+            c_channel_types(2,3,1)=cchanneltypes(kk)
+            i_msng_sat_flag(2,3,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'iwv')then
+            ICHANNELS(3,3,1)=1
+            c_channel_types(3,3,1)=cchanneltypes(kk)
+            i_msng_sat_flag(3,3,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i11')then
+            ICHANNELS(4,3,1)=1
+            c_channel_types(4,3,1)=cchanneltypes(kk)
+            i_msng_sat_flag(4,3,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i12')then
+            ICHANNELS(5,3,1)=1
+            c_channel_types(5,3,1)=cchanneltypes(kk)
+            i_msng_sat_flag(5,3,1)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,3,1)=cpath2sat(jj)
+
+c format type 4 (raw lat lon)
+         elseif(csattypes(jj).eq.'rll')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,4,1)=1
+            c_channel_types(1,4,1)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,4,1)=1
+            c_channel_types(2,4,1)=cchanneltypes(kk)
+            i_msng_sat_flag(2,4,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,4,1)=1
+            c_channel_types(3,4,1)=cchanneltypes(kk)
+            i_msng_sat_flag(3,4,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,4,1)=1
+            c_channel_types(4,4,1)=cchanneltypes(kk)
+            i_msng_sat_flag(4,4,1)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,4,1)=1
+            c_channel_types(5,4,1)=cchanneltypes(kk)
+            i_msng_sat_flag(5,4,1)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,4,1)=cpath2sat(jj)
+         endif
+        enddo !type for this sat -> end of types for goes08
+
+       elseif(csatid(i).eq.'meteos')then
+c
+c meteos    #goes09 --- 5-12-99 J. Smart changed to AFWA METEOSAT
+         
+        do j=1,ntypes(i)
+         jj=jj+1
+c format type 3 (raw lat lon)
+         if(csattypes(jj).eq.'cdf')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,3,2)=1
+            c_channel_types(1,3,2)=cchanneltypes(kk)
+            i_msng_sat_flag(1,3,2)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,3,2)=1
+            c_channel_types(2,3,2)=cchanneltypes(kk)
+            i_msng_sat_flag(2,3,2)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,3,2)=1
+            c_channel_types(3,3,2)=cchanneltypes(kk)
+            i_msng_sat_flag(3,3,2)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,3,2)=1
+            c_channel_types(4,3,2)=cchanneltypes(kk)
+            i_msng_sat_flag(4,3,2)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,3,2)=1
+            c_channel_types(5,3,2)=cchanneltypes(kk)
+            i_msng_sat_flag(5,3,2)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,4,2)=cpath2sat(jj)
+c format type 4 (raw lat lon)
+         elseif(csattypes(jj).eq.'rll')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,4,2)=1
+            c_channel_types(1,4,2)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,2)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,4,2)=1
+            c_channel_types(2,4,2)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,2)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,4,2)=1
+            c_channel_types(3,4,2)=cchanneltypes(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,4,2)=1
+            c_channel_types(4,4,2)=cchanneltypes(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,4,2)=1
+            c_channel_types(5,4,2)=cchanneltypes(kk)
+           endif
+          enddo
+         endif
+        enddo
+c end of types for meteos
+c
+c goes10 (third satellite type)
+       elseif(csatid(i).eq.'goes10')then
+c format type 1 (gvr)
+        do j=1,ntypes(i)
+         jj=jj+1
+         if(csattypes(jj).eq. 'gvr')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,1,3)=1
+            c_channel_types(1,1,3)=cchanneltypes(kk)
+            i_msng_sat_flag(1,1,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,1,3)=1
+            c_channel_types(2,1,3)=cchanneltypes(kk)
+            i_msng_sat_flag(2,1,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,1,3)=1
+            c_channel_types(3,1,3)=cchanneltypes(kk)
+            i_msng_sat_flag(3,1,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,1,3)=1
+            c_channel_types(4,1,3)=cchanneltypes(kk)
+            i_msng_sat_flag(4,1,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,1,3)=1
+            c_channel_types(5,1,3)=cchanneltypes(kk)
+            i_msng_sat_flag(5,1,3)=i_qc_sat_flag(kk)
+           endif
+          enddo
+c
+c     format type 2 (wfo)
+         elseif(csattypes(jj).eq. 'wfo')then
+          call s_len(cpath2sat,n)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,2,3)=1
+            c_channel_types(1,2,3)=cchanneltypes(kk)
+            path_to_raw_sat(1,2,3)=cpath2sat(jj)(1:n)//'vis/regclip/'
+            i_msng_sat_flag(1,2,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i39')then
+            ICHANNELS(2,2,3)=1
+            c_channel_types(2,2,3)=cchanneltypes(kk)
+            path_to_raw_sat(2,2,3)=cpath2sat(jj)(1:n)//'i39/regclip/'
+            i_msng_sat_flag(2,2,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'iwv')then
+            ICHANNELS(3,2,3)=1
+            c_channel_types(3,2,3)=cchanneltypes(kk)
+            path_to_raw_sat(3,2,3)=cpath2sat(jj)(1:n)//'iwv/regclip/'
+            i_msng_sat_flag(3,2,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i11')then
+            ICHANNELS(4,2,3)=1
+            c_channel_types(4,2,3)=cchanneltypes(kk)
+            path_to_raw_sat(4,2,3)=cpath2sat(jj)(1:n)//'i11/regclip/'
+            i_msng_sat_flag(4,2,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i12')then
+            ICHANNELS(5,2,3)=1
+            c_channel_types(5,2,3)=cchanneltypes(kk)
+            path_to_raw_sat(5,2,3)=cpath2sat(jj)(1:n)//'i12/regclip/'
+            i_msng_sat_flag(5,2,3)=i_qc_sat_flag(kk)
+           endif
+          enddo
+
+c     format type 4 (raw lat lon)
+         elseif(csattypes(jj).eq. 'rll')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,4,3)=1
+            c_channel_types(1,4,3)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,4,3)=1
+            c_channel_types(2,4,3)=cchanneltypes(kk)
+            i_msng_sat_flag(2,4,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,4,3)=1
+            c_channel_types(3,4,3)=cchanneltypes(kk)
+            i_msng_sat_flag(3,4,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,4,3)=1
+            c_channel_types(4,4,3)=cchanneltypes(kk)
+            i_msng_sat_flag(4,4,3)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,4,3)=1
+            c_channel_types(5,4,3)=cchanneltypes(kk)
+            i_msng_sat_flag(5,4,3)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,4,3)=cpath2sat(jj)
+
+         endif  ! switch for types for goes10 
+
+        enddo   ! all types for goes10
+c gmssat (fourth satellite type)
+       elseif(csatid(i).eq.'gmssat')then
+        do j=1,ntypes(i)
+c     format type 4 (rll)
+         jj=jj+1
+         if(csattypes(jj).eq.'rll')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,4,4)=1
+            c_channel_types(1,4,4)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wvp')then
+            ICHANNELS(3,4,4)=1
+            c_channel_types(3,4,4)=cchanneltypes(kk)
+            i_msng_sat_flag(3,4,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,4,4)=1
+            c_channel_types(4,4,4)=cchanneltypes(kk)
+            i_msng_sat_flag(4,4,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,4,4)=1
+            c_channel_types(5,4,4)=cchanneltypes(kk)
+            i_msng_sat_flag(5,4,4)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,4,4)=cpath2sat(jj)
+
+         elseif(csattypes(jj).eq.'hko')then
+
+c     format type 2 (hko):  for HKO (JS  and PW Li 3-20-03)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,2,4)=1
+            c_channel_types(1,2,4)=cchanneltypes(kk)
+            i_msng_sat_flag(1,2,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv ')then
+            ICHANNELS(3,2,4)=1
+            c_channel_types(3,2,4)=cchanneltypes(kk)
+            i_msng_sat_flag(3,2,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'ir1')then
+            ICHANNELS(4,2,4)=1
+            c_channel_types(4,2,4)=cchanneltypes(kk)
+            i_msng_sat_flag(4,2,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,2,4)=1
+            c_channel_types(5,2,4)=cchanneltypes(kk)
+            i_msng_sat_flag(5,2,4)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,2,4)=cpath2sat(jj)
+
+         elseif(csattypes(jj).eq.'twn')then
+
+c     format type 3 (twn):  for taiwan (JS  and BS Wang 6-7-01)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,3,4)=1
+            c_channel_types(1,3,4)=cchanneltypes(kk)
+            i_msng_sat_flag(1,3,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv ')then
+            ICHANNELS(3,3,4)=1 
+            c_channel_types(3,3,4)=cchanneltypes(kk)
+            i_msng_sat_flag(3,3,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,3,4)=1  !ir1
+            c_channel_types(4,3,4)=cchanneltypes(kk)
+            i_msng_sat_flag(4,3,4)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,3,4)=1  !<-- end 4th type
+            c_channel_types(5,3,4)=cchanneltypes(kk)
+            i_msng_sat_flag(5,3,4)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,3,4)=cpath2sat(jj)
+         endif
+        enddo  !all types for gmssat
+
+c goes12 (fifth satellite type)
+       elseif(csatid(i).eq.'goes12')then
+        do j=1,ntypes(i)
+         jj=jj+1
+c format type 1 (gvr)
+         if(csattypes(jj).eq.'gvr')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,1,5)=1
+            c_channel_types(1,1,5)=cchanneltypes(kk)
+            i_msng_sat_flag(1,1,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,1,5)=1
+            c_channel_types(2,1,5)=cchanneltypes(kk)
+            i_msng_sat_flag(2,1,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,1,5)=1
+            c_channel_types(3,1,5)=cchanneltypes(kk)
+            i_msng_sat_flag(3,1,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,1,5)=1
+            c_channel_types(4,1,5)=cchanneltypes(kk)
+            i_msng_sat_flag(4,1,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'13u')then
+            ICHANNELS(6,1,5)=1
+            c_channel_types(6,1,5)=cchanneltypes(kk)
+            i_msng_sat_flag(6,1,5)=i_qc_sat_flag(kk)
+c      C_CHANNEL_TYPES(5,1,5)='   '  !doesn't appear to be 12u for goes12
+           endif
+          enddo
+          path_to_raw_sat(1:6,1,5)=cpath2sat(jj)
+
+         elseif(csattypes(jj).eq.'wfo')then
+          call s_len(cpath2sat(jj),n)
+c format type 2 (wfo)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,2,5)=1
+            c_channel_types(1,2,5)=cchanneltypes(kk)
+            path_to_raw_sat(1,2,5)=cpath2sat(jj)(1:n)//'vis/regclip/'
+            i_msng_sat_flag(1,2,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i39')then
+            ICHANNELS(2,2,5)=1
+            c_channel_types(2,2,5)=cchanneltypes(kk)
+            path_to_raw_sat(2,2,5)=cpath2sat(jj)(1:n)//'i39/regclip/'
+            i_msng_sat_flag(2,2,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'iwv')then
+            ICHANNELS(3,2,5)=1
+            c_channel_types(3,2,5)=cchanneltypes(kk)
+            path_to_raw_sat(3,2,5)=cpath2sat(jj)(1:n)//'iwv/regclip/'
+            i_msng_sat_flag(3,2,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i11')then
+            ICHANNELS(4,2,5)=1
+            c_channel_types(4,2,5)=cchanneltypes(kk)
+            path_to_raw_sat(4,2,5)=cpath2sat(jj)(1:n)//'i11/regclip/'
+            i_msng_sat_flag(4,2,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i12')then
+            ICHANNELS(5,2,5)=1
+            c_channel_types(5,2,5)=cchanneltypes(kk)
+            path_to_raw_sat(5,2,5)=cpath2sat(jj)(1:n)//'i12/regclip/'
+            i_msng_sat_flag(5,2,5)=i_qc_sat_flag(kk)
+           endif
+          enddo
+
+         elseif(csattypes(jj).eq.'cdf')then
+c format type 3 (cdf)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,3,5)=1
+            c_channel_types(1,3,5)=cchanneltypes(kk)
+            i_msng_sat_flag(1,3,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,3,5)=1
+            c_channel_types(2,3,5)=cchanneltypes(kk)
+            i_msng_sat_flag(2,3,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,3,5)=1
+            c_channel_types(3,3,5)=cchanneltypes(kk)
+            i_msng_sat_flag(3,3,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,3,5)=1
+            c_channel_types(4,3,5)=cchanneltypes(kk)
+            i_msng_sat_flag(4,3,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,3,5)=1
+            c_channel_types(5,3,5)=cchanneltypes(kk)
+            i_msng_sat_flag(5,3,5)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,3,5)=cpath2sat(jj)
+
+         elseif(csattypes(jj).eq.'rll')then
+c format type 3 (raw lat lon)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,4,5)=1
+            c_channel_types(1,4,5)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,4,5)=1
+            c_channel_types(2,4,5)=cchanneltypes(kk)
+            i_msng_sat_flag(2,4,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,4,5)=1
+            c_channel_types(3,4,5)=cchanneltypes(kk)
+            i_msng_sat_flag(3,4,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,4,5)=1
+            c_channel_types(4,4,5)=cchanneltypes(kk)
+            i_msng_sat_flag(4,4,5)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,4,5)=1
+            c_channel_types(5,4,5)=cchanneltypes(kk)
+            i_msng_sat_flag(5,4,5)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,4,5)=cpath2sat(jj)
+         endif
+        enddo
+
+       elseif(csatid(i).eq.'goes09')then
+c goes09 (sixth satellite type)
+        do j=1,ntypes(i)
+         jj=jj+1
+c format type 1 (gvr)
+         if(csattypes(jj).eq.'gvr')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,1,6)=1
+            c_channel_types(1,1,6)=cchanneltypes(kk)
+            i_msng_sat_flag(1,1,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,1,6)=1
+            c_channel_types(2,1,6)=cchanneltypes(kk)
+            i_msng_sat_flag(2,1,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,1,6)=1
+            c_channel_types(3,1,6)=cchanneltypes(kk)
+            i_msng_sat_flag(3,1,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,1,6)=1
+            c_channel_types(4,1,6)=cchanneltypes(kk)
+            i_msng_sat_flag(4,1,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,1,6)=1
+            c_channel_types(5,1,6)=cchanneltypes(kk)
+            i_msng_sat_flag(5,1,6)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,1,6)=cpath2sat(jj)
+
+         elseif(csattypes(jj).eq.'cdf')then
+c format type 3 (cdf)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,3,6)=1
+            c_channel_types(1,3,6)=cchanneltypes(kk)
+            i_msng_sat_flag(1,3,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,3,6)=1
+            c_channel_types(2,3,6)=cchanneltypes(kk)
+            i_msng_sat_flag(2,3,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(3,3,6)=1
+            c_channel_types(3,3,6)=cchanneltypes(kk)
+            i_msng_sat_flag(3,3,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,3,6)=1
+            c_channel_types(4,3,6)=cchanneltypes(kk)
+            i_msng_sat_flag(4,3,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,3,6)=1
+            c_channel_types(5,3,6)=cchanneltypes(kk)
+            i_msng_sat_flag(5,3,6)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,3,6)=cpath2sat(jj)
+
+         elseif(csattypes(jj).eq.'cdf')then
+c format type 4 (rll)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,4,6)=1
+            c_channel_types(1,4,6)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,4,6)=1
+            c_channel_types(2,4,6)=cchanneltypes(kk)
+            i_msng_sat_flag(2,4,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(3,4,6)=1
+            c_channel_types(3,4,6)=cchanneltypes(kk)
+            i_msng_sat_flag(3,4,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,4,6)=1
+            c_channel_types(4,4,6)=cchanneltypes(kk)
+            i_msng_sat_flag(4,4,6)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,4,6)=1
+            c_channel_types(5,4,6)=cchanneltypes(kk)
+            i_msng_sat_flag(5,4,6)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,4,6)=cpath2sat(jj)
+
+         endif
+        enddo
+
+c satellite = goes11
+       elseif(csatid(i).eq.'goes11')then
+        do j=1,ntypes(i)
+         jj=jj+1
+c format type 1 (gvr)
+         if(csattypes(jj).eq.'gvr')then
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,1,7)=1
+            c_channel_types(1,1,7)=cchanneltypes(kk)
+            i_msng_sat_flag(1,1,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,1,7)=1
+            c_channel_types(2,1,7)=cchanneltypes(kk)
+            i_msng_sat_flag(2,1,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,1,7)=1
+            c_channel_types(3,1,7)=cchanneltypes(kk)
+            i_msng_sat_flag(3,1,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,1,7)=1
+            c_channel_types(4,1,7)=cchanneltypes(kk)
+            i_msng_sat_flag(4,1,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'13u')then
+            ICHANNELS(6,1,7)=1
+            c_channel_types(6,1,7)=cchanneltypes(kk)
+            i_msng_sat_flag(6,1,7)=i_qc_sat_flag(kk)
+c      C_CHANNEL_TYPES(5,1,7)='   '  !doesn't appear to be 12u for goes11 -> ? maybe there is?
+           endif
+          enddo
+          path_to_raw_sat(1:6,1,7)=cpath2sat(jj)
+
+         elseif(csattypes(jj).eq.'wfo')then
+          call s_len(cpath2sat(jj),n)
+c format type 2 (wfo)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,2,7)=1
+            c_channel_types(1,2,7)=cchanneltypes(kk)
+            path_to_raw_sat(1,2,7)=cpath2sat(jj)(1:n)//'vis/regclip/'
+            i_msng_sat_flag(1,2,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i39')then
+            ICHANNELS(2,2,7)=1
+            c_channel_types(2,2,7)=cchanneltypes(kk)
+            path_to_raw_sat(2,2,7)=cpath2sat(jj)(1:n)//'i39/regclip/'
+            i_msng_sat_flag(2,2,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'iwv')then
+            ICHANNELS(3,2,7)=1
+            c_channel_types(3,2,7)=cchanneltypes(kk)
+            path_to_raw_sat(3,2,7)=cpath2sat(jj)(1:n)//'iwv/regclip/'
+            i_msng_sat_flag(3,2,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i11')then
+            ICHANNELS(4,2,7)=1
+            c_channel_types(4,2,7)=cchanneltypes(kk)
+            path_to_raw_sat(4,2,7)=cpath2sat(jj)(1:n)//'i11/regclip/'
+            i_msng_sat_flag(4,2,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i12')then
+            ICHANNELS(5,2,7)=1
+            c_channel_types(5,2,7)=cchanneltypes(kk)
+            path_to_raw_sat(5,2,7)=cpath2sat(jj)(1:n)//'i12/regclip/'
+            i_msng_sat_flag(5,2,7)=i_qc_sat_flag(kk)
+           endif
+          enddo
+
+         elseif(csattypes(jj).eq.'cdf')then
+c format type 3 (cdf)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,3,7)=1
+            c_channel_types(1,3,7)=cchanneltypes(kk)
+            i_msng_sat_flag(1,3,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,3,7)=1
+            c_channel_types(2,3,7)=cchanneltypes(kk)
+            i_msng_sat_flag(2,3,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,3,7)=1
+            c_channel_types(3,3,7)=cchanneltypes(kk)
+            i_msng_sat_flag(3,3,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,3,7)=1
+            c_channel_types(4,3,7)=cchanneltypes(kk)
+            i_msng_sat_flag(4,3,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,3,7)=1
+            c_channel_types(5,3,7)=cchanneltypes(kk)
+            i_msng_sat_flag(5,3,7)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,3,7)=cpath2sat(jj)
+
+         elseif(csattypes(jj).eq.'rll')then
+c format type 4 (raw lat lon)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,4,7)=1
+            c_channel_types(1,4,7)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u')then
+            ICHANNELS(2,4,7)=1
+            c_channel_types(2,4,7)=cchanneltypes(kk)
+            i_msng_sat_flag(2,4,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'wv')then
+            ICHANNELS(3,4,7)=1
+            c_channel_types(3,4,7)=cchanneltypes(kk)
+            i_msng_sat_flag(3,4,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,4,7)=1
+            c_channel_types(4,4,7)=cchanneltypes(kk)
+            i_msng_sat_flag(4,4,7)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'12u')then
+            ICHANNELS(5,4,7)=1
+            c_channel_types(5,4,7)=cchanneltypes(kk)
+            i_msng_sat_flag(5,4,7)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,4,7)=cpath2sat(jj)
+
+         endif
+        enddo
+
+c satellite = NOAA POLAR ORBITER NETCDF
+       elseif(csatid(i).eq.'noaapo')then
+        do j=1,ntypes(i)
+         jj=jj+1
+c format type 1 (ncp): netcdf polar (FMI's data type). Stored like wfo
+         if(csattypes(jj).eq.'ncp')then
+          call s_len(cpath2sat(jj),n)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,1,8)=1
+            c_channel_types(1,1,8)=cchanneltypes(kk)
+            path_to_raw_sat(1,1,8)=cpath2sat(kk)(1:n)//'/vis/'
+            i_msng_sat_flag(1,1,8)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i39')then
+            ICHANNELS(2,1,8)=1
+            c_channel_types(2,1,8)=cchanneltypes(kk)
+            path_to_raw_sat(2,1,8)=cpath2sat(kk)(1:n)//'/i39/'
+            i_msng_sat_flag(2,1,8)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'i11')then
+            ICHANNELS(4,1,8)=1
+            c_channel_types(4,1,8)=cchanneltypes(kk)
+            path_to_raw_sat(4,1,8)=cpath2sat(kk)(1:n)//'/i11/'
+            i_msng_sat_flag(4,1,8)=i_qc_sat_flag(kk)
+           endif
+          enddo
+
+         elseif(csattypes(jj).eq.'rll')then
+c format type 4 (rll)
+          do k=1,nchannel(jj)
+           kk=kk+1
+           if(cchanneltypes(kk).eq.'vis')then
+            ICHANNELS(1,4,8)=1
+            c_channel_types(1,4,8)=cchanneltypes(kk)
+            i_msng_sat_flag(1,4,8)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'4u ')then
+            ICHANNELS(2,4,8)=1
+            c_channel_types(2,4,8)=cchanneltypes(kk)
+            i_msng_sat_flag(2,4,8)=i_qc_sat_flag(kk)
+           elseif(cchanneltypes(kk).eq.'11u')then
+            ICHANNELS(4,4,8)=1
+            c_channel_types(4,4,8)=cchanneltypes(kk)
+            i_msng_sat_flag(4,4,8)=i_qc_sat_flag(kk)
+           endif
+          enddo
+          path_to_raw_sat(1:6,4,8)=cpath2sat(jj)
+         endif
+        enddo
+       endif
+      enddo
+      print*,'Done in conf_isjtkc. Returning to conf_satellite'
+      return
+      end
