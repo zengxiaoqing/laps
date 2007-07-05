@@ -4,16 +4,16 @@
       integer itypes(maxtype,maxsat)
       integer ichannels(maxchannel,maxtype,maxsat)
       integer i_delta_sat_t_sec
-      integer i_msng_sat_flag(maxtype,maxsat)
-      integer n_images
+      integer i_msng_sat_flag(maxchannel,maxtype,maxsat)
       integer iskip_bilin
+      integer nsats,ntypes(maxsat),nchannel(maxtype*maxsat)
+      integer n_images
 
+!these are in the common block and used throughout the lvd code
       character c_sat_id(maxsat)*6
       character c_sat_types(maxtype,maxsat)*3
       character c_channel_types(maxchannel,maxtype,maxsat)*3
 
-      real*4 vis_cnt_range_in(2,maxsat)
-      real*4 vis_cnt_range_out(2,maxsat)
       real*4 r_sat_sub_lat(maxsat)
       real*4 r_sat_sub_lon(maxsat)
       real*4 sat_range_m(maxsat)
@@ -64,10 +64,14 @@
       real*4  r_resolution_y_ir(maxtype,maxsat)
       real*4  r_resolution_x_wv(maxtype,maxsat)
       real*4  r_resolution_y_wv(maxtype,maxsat)
+      real*4  vis_cnt_range_in(2,maxsat)
+      real*4  vis_cnt_range_out(2,maxsat)
+
 
       common /lvd_namelist_cmn/
      +l_cell_afwa,l_national,iskip_bilin,
      +isats,itypes,ichannels,
+     +nsats,ntypes,nchannel,
      +i_delta_sat_t_sec,i_msng_sat_flag,
      +sat_range_m,n_images,
      +r_sat_sub_lat, r_sat_sub_lon,
