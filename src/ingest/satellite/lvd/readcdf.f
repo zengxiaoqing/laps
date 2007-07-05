@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-      subroutine readcdf(csat_id,csat_type,chtype,Nx,Ny,
+      subroutine readcdf(csat_id,csat_type,chtype,
      1record,n_elem,n_lines,r4_image,La1,Lo1,Dx,Dy,Latin,
      1LoV, ivalidTime , ncid, istatus)
 
@@ -44,7 +44,8 @@ c			for vis, ir, wv and sounder. Block reading allows this.
 c     J Smart   4/97    Adapted code further to work with gvar. NetCDF headers for
 c                       raw gvar are different than for fsl-conus (ie., no La1, Lo1,
 c                       Lov, or Latin).
-c================================================================
+c     J Smart   5/07    Added capability to read FMI (Finish Met Inst) data
+c=====================================================================================
       implicit none
 
       Include 'netcdf.inc'
@@ -61,17 +62,22 @@ C
       Integer   iD
       INTEGER   Nx
       INTEGER   Ny
+      INTEGER   Nz
       REAL      La1     (record)
       REAL      Lo1     (record)
       REAL      Dx      (record)
       REAL      Dy      (record)
       REAL      Latin   (record)
       REAL      LoV     (record)
+      REAL      poLat
+      REAL      La2,Lo2,level
       INTEGER START(10)
       INTEGER COUNT(10)
       integer varid,ncid
       integer center_id, process_id,
-     +     wmo_sat_id(record),ivalidtime
+     +     wmo_sat_id(record),ivalidtime,nav
+      Integer imax,jmax,kmax,kdim
+      Integer channel_fcinv
       double precision reftime(record), valtime(record)
       character*30  c_valtime
       character*30  c_Lov
@@ -88,6 +94,8 @@ C
       character*132 grid_name
       character*132 process_name
       character*132 grid_type
+      character*132 channel_comment_
+      character*132 asctime
 c---------------------------------------------------------
 c   code
 
@@ -98,7 +106,11 @@ c   code
 
       call NCPOPT(0)
 
-      rcode = NF_INQ_VARID(ncid,'image',varid)
+      if(csat_type.eq.'ncp')then
+         rcode = NF_INQ_VARID(ncid,'channel',varid)
+      else
+         rcode = NF_INQ_VARID(ncid,'image',varid)
+      endif
       if(rcode.ne.NF_NOERR) then
          print *, NF_STRERROR(rcode)
          print *,'in var image'
@@ -109,8 +121,7 @@ C
       Write(6,*)'Calling rdblock_line_elem - image read sub'
 
       Call rdblock_line_elem(csat_id,csat_type,chtype,
-     &ncid,varid,n_elem,n_lines,1,nx,ny,
-     &r4_image,istatus)
+     &ncid,varid,n_elem,n_lines,r4_image,istatus)
 
       if(istatus .ne. 1)then
          write(6,*)'Error in rdblock_line_elem'
@@ -124,7 +135,6 @@ c                  such that NO header info exists and we must now jump over
 c                  the statements to read the header info. 
 c
       if(csat_type.eq.'cdf')then
-
          call read_netcdf_sat_head(ncid,record,
      + Nx, Ny, center_id,process_id, wmo_sat_id,Dx,Dy,
      + La1, Latin, Lo1, Lov, reftime, valtime, earth_shape,
@@ -135,8 +145,6 @@ c
       endif
 
       istatus = 1  ! ok!
-
-      rcode= NF_CLOSE(ncid)
 
       Return
       END
