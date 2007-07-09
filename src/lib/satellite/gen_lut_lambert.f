@@ -120,14 +120,14 @@ c
       logical     lwrite
       data lwrite /.false./
 
-      logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98) 6 sats (1-31-03)
-      data lfirst /.false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false./
-      save lfirst
+c     logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98) 6 sats (1-31-03)
+c     data lfirst /.false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false.,
+c    &             .false.,.false.,.false.,.false./
+c     save lfirst
 
       integer nxlc,nylc,nzlc
       real    lat1,lat2,lon0,sw(2),ne(2)
@@ -168,16 +168,18 @@ c
 
             elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
-              if(.not.lfirst(jtype,isat))then
+c             if(.not.lfirst(jtype,isat))then
+c --- experimental: go ahead and compute these for all satellite types
                  dx = r_resolution_x_ir(jtype,isat)
                  dy = r_resolution_y_ir(jtype,isat)
                  nx3 = n_pixels_ir(jtype,isat)
                  ny3 = n_lines_ir(jtype,isat)
-                 lfirst(jtype,isat)=.true.
-              else
-                 jstatus = 0
-                 goto 1000
-              endif
+
+c                lfirst(jtype,isat)=.true.
+c             else
+c                jstatus = 0
+c                goto 1000
+c             endif
 
             elseif(indx.eq.3)then
 
@@ -190,16 +192,16 @@ c
 
          elseif(istatus_wp.eq.0)then
 
-            if(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
-
-            if(.not.lfirst(jtype,isat))then
-                lfirst(jtype,isat)=.true.
-            else
-                jstatus = 0
-                goto 1000
-            endif
-
-            endif
+c --- experimental: set rlap/rlov for all satellite types.
+c     Note: types 2, 4, and 5 should all be the same lambert projections.
+c           if(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
+c           if(.not.lfirst(jtype,isat))then
+c               lfirst(jtype,isat)=.true.
+c           else
+c               jstatus = 0
+c               goto 1000
+c           endif
+c           endif
 
             rlap=centerlat
             rlov=centerlon
@@ -221,16 +223,19 @@ c not wfo data type
 
          elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
-            if(.not.lfirst(jtype,isat))then
+c See experimental comment above.
+c           if(.not.lfirst(jtype,isat))then
+
                dx = r_resolution_x_ir(jtype,isat)
                dy = r_resolution_y_ir(jtype,isat)
                nx3 = n_pixels_ir(jtype,isat)
                ny3 = n_lines_ir(jtype,isat)
-               lfirst(jtype,isat)=.true.
-            else
-               jstatus = 0
-               goto 1000
-            endif
+
+c              lfirst(jtype,isat)=.true.
+c           else
+c              jstatus = 0
+c              goto 1000
+c           endif
 
          elseif(indx.eq.3)then
 

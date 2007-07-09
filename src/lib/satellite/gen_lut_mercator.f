@@ -91,15 +91,6 @@ c
       logical     lwrite
       data lwrite /.true./
 
-      logical     lfirst(maxtype,maxsat)              !6 sats (1-31-03)
-      data lfirst /.false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false.,
-     &             .false.,.false.,.false.,.false./
-      save lfirst
-
       real    nxmc,nymc,nzmc
       real    dx,dy
       real    rlatc,rlonc,sw(2),ne(2)
