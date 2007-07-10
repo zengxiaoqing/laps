@@ -118,103 +118,103 @@
                   if(i_list .eq. 25)goto25
 
 1                 write(c_values_req,'(i10,90x)')
-     1                  laps_cycle_time_cmn
+     1                  laps_cycle_time
                   go to 900
 
 2                 write(c_values_req,'(i10,90x)')
-     1                  i_delta_sat_t_sec_cmn
+     1                  i_delta_sat_t_sec
                   go to 900
 
 3                 write(c_values_req,'(f10.3,90x)')
-     1                  r_msng_sat_flag_cdf_cmn
+     1                  r_msng_sat_flag_cdf
                   go to 900
 
 4                 write(c_values_req,'(a8)')
-     1                  radarext_3d_accum_cmn
+     1                  radarext_3d_accum
                   go to 900
 
 5                 write(c_values_req,'(a8)')
-     1                  radarext_3d_cmn
+     1                  radarext_3d
                   go to 900
 
 6                 write(c_values_req,'(a150)')
-     1                  path_to_raw_pirep_cmn
+     1                  path_to_raw_pirep
                   go to 900
 
 7                 write(c_values_req,'(a150)')
-     1                  path_to_raw_rass_cmn
+     1                  path_to_raw_rass
                   go to 900
 
 8                 write(c_values_req,'(a150)')
-     1                  path_to_raw_profiler_cmn
+     1                  path_to_raw_profiler
                   go to 900
 
 9                 write(c_values_req,'(a150)')
-     1                  path_to_raw_blprass_cmn
+     1                  path_to_raw_blprass
                   go to 900
 
 10                write(c_values_req,'(a150)')
-     1                  path_to_raw_blpprofiler_cmn
+     1                  path_to_raw_blpprofiler
                   go to 900
 
 11                write(c_values_req,'(a150)')
-     1                  path_to_raw_satellite_cdf_cmn
+     1                  path_to_raw_satellite_cdf
                   go to 900
 
 12                write(c_values_req,'(a150)')
-     1                  path_to_ruc_cmn
+     1                  path_to_ruc
                   go to 900
 
 13                write(c_values_req,'(a150)')
-     1                  path_to_ngm_cmn
+     1                  path_to_ngm
                   go to 900
 
 14                write(c_values_req,'(a150)')
-     1                  path_to_wsi_2d_radar_cmn
+     1                  path_to_wsi_2d_radar
                   go to 900
 
 15                write(c_values_req,'(a150)')
-     1                  path_to_wsi_3d_radar_cmn
+     1                  path_to_wsi_3d_radar
                   go to 900
 
 16                write(c_values_req,'(a150)')
-     1                  path_to_raw_satellite_gvr_cmn
+     1                  path_to_raw_satellite_gvr
                   go to 900
 
 17                write(c_values_req,'(a150)')
-     1                  path_to_qc_acars_cmn
+     1                  path_to_qc_acars
                   go to 900
 
 18                write(c_values_req,'(a150)')
-     1                  path_to_raw_raob_cmn
+     1                  path_to_raw_raob
                   go to 900
 
 19                write(c_values_req,'(f10.3,90x)')
-     1                  r_msng_sat_flag_gvr_cmn
+     1                  r_msng_sat_flag_gvr
                   go to 900
 
 20                write(c_values_req,'(f10.3,90x)')
-     1                  r_msng_sat_flag_asc_cmn
+     1                  r_msng_sat_flag_asc
                   go to 900
 
 21                write(c_values_req,'(a150)')
-     1                  path_to_raw_sat_wfo_vis_cmn
+     1                  path_to_raw_sat_wfo_vis
                   go to 900
 
 22                write(c_values_req,'(a150)')
-     1                  path_to_raw_sat_wfo_i39_cmn
+     1                  path_to_raw_sat_wfo_i39
                   go to 900
 
 23                write(c_values_req,'(a150)')
-     1                  path_to_raw_sat_wfo_iwv_cmn
+     1                  path_to_raw_sat_wfo_iwv
                   go to 900
 
 24                write(c_values_req,'(a150)')
-     1                  path_to_raw_sat_wfo_i11_cmn
+     1                  path_to_raw_sat_wfo_i11
                   go to 900
 
 25                write(c_values_req,'(a150)')
-     1                  path_to_raw_sat_wfo_i12_cmn
+     1                  path_to_raw_sat_wfo_i12
                   go to 900
 
               endif
