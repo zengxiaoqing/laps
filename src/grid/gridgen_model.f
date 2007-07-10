@@ -598,7 +598,10 @@ c calculate delta x and delta y using grid and map projection parameters
 
 	ELSE
 	
-	call get_nmm_grid_spacing(dlmd,dphd,grid_spacing_m)
+        write(6,*)
+     1  'ERROR: get_nmm_grid_spacing not currently supported for rotlat'       
+        stop
+!       call get_nmm_grid_spacing(dlmd,dphd,grid_spacing_m)
 
 	ENDIF
 
