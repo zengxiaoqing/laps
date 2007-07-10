@@ -75,7 +75,6 @@ SRC	= machine_dependent.F \
           getcld3d.f \
           getradar.f \
           get_time_window.f \
-          get_wrfsi_config.f \
           gettmp2d.f \
           gettmp3d.f \
           getuv3d.f \
