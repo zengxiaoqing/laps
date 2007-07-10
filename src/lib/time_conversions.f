@@ -87,6 +87,7 @@ C
      1                     NMIN,NSEC,ISTATUS)
 C
 cdoc    CV_I4TIM_INT_LP CONVERTS I4 TIME TO SIX INTEGERS
+cdoc    Note that NYEAR is the number of years since 1900
 C
 C================================================================
 C
