@@ -1,31 +1,31 @@
  &lapsparms_nl
  c80_description='NOAA/ESRL Global Systems Division, Boulder CO (PARALLEL)'
- iflag_lapsparms_cmn=1,              
+ iflag_lapsparms=1,              
 
  c6_maproj='plrstr',                 
  standard_latitude=40.0,        
  standard_latitude2=90.0,        
  standard_longitude=-105.5,       
- grid_cen_lat_cmn=41.0,         
- grid_cen_lon_cmn=-105.5,         
- grid_spacing_m_cmn=5000.,          
- NX_L_CMN=249,                         
- NY_L_CMN=209,                         
+ grid_cen_lat=41.0,         
+ grid_cen_lon=-105.5,         
+ grid_spacing_m=5000.,          
+ NX_L=249,                         
+ NY_L=209,                         
 
  vertical_grid='PRESSURE',
  nk_laps=21,                         
 
- laps_cycle_time_cmn=3600,           
- max_radar_files_cmn=20000,
+ laps_cycle_time=3600,           
+ max_radar_files_nl=20000,
 
  l_compress_radar=.true.,                  
  l_use_tamdar=.true.,                  
- I_PERIMETER_CMN=10,                  
+ I_PERIMETER=10,                  
  c50_lowres_directory='NULL',
 
  c_raddat_type='wsi',
- radarext_3d_cmn='all',
- radarext_3d_accum_cmn='xxx',
+ radarext_3d='all',
+ radarext_3d_accum='xxx',
  
  path_to_topt30s='/data/lapb/projects/geog/world_topo_30s',
  path_to_landuse30s='/data/lapb/projects/geog/landuse_30s',
@@ -37,45 +37,45 @@
  path_to_maxsnoalb = '/no/data/lapb/projects/geog/maxsnowalb',
  path_to_islope = '/no/data/lapb/projects/geog/islope',
 
- path_to_raw_pirep_cmn='/public/data/pirep/netcdf/',
- path_to_raw_rass_cmn='/public/data/profiler/rass/noaanet/netcdf/',
- path_to_raw_profiler_cmn='/public/data/profiler/wind/noaanet/netcdf/',
- path_to_raw_blprass_cmn='/public/data/profiler/rass/external/netcdf/',
- path_to_raw_blpprofiler_cmn='/public/data/profiler/wind/external/netcdf/',
- path_to_wsi_2d_radar_cmn='/public/data/radar/wsi/nowrad/netcdf/'
- path_to_wsi_3d_radar_cmn='/public/data/radar/wsi/nexrad/netcdf/',
- path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
+ path_to_raw_pirep='/public/data/pirep/netcdf/',
+ path_to_raw_rass='/public/data/profiler/rass/noaanet/netcdf/',
+ path_to_raw_profiler='/public/data/profiler/wind/noaanet/netcdf/',
+ path_to_raw_blprass='/public/data/profiler/rass/external/netcdf/',
+ path_to_raw_blpprofiler='/public/data/profiler/wind/external/netcdf/',
+ path_to_wsi_2d_radar='/public/data/radar/wsi/nowrad/netcdf/'
+ path_to_wsi_3d_radar='/public/data/radar/wsi/nexrad/netcdf/',
+ path_to_qc_acars='/public/data/acars/qc/netcdf/',
 
- i2_missing_data_cmn=-99,
- r_missing_data_cmn=+1e37,
- MAX_RADARS_CMN=13,        
- ref_base_cmn=-10.,       
- ref_base_useable_cmn=0., 
- r_hybrid_first_gate_cmn=0.,
- maxstns_cmn=3600,         
- N_PIREP_CMN=3000,         
- aircraft_time_window_cmn=0.5,     
- vert_rad_meso_cmn=1,     
- vert_rad_sao_cmn=1,      
- vert_rad_pirep_cmn=1,    
- vert_rad_prof_cmn=1,     
- toptwvl_parm_cmn=2.,     
- silavwt_parm_cmn=0.,
- c8_project_common='NIMBUS', 
- c8_blpfmt_common='default', 
- fdda_model_source_cmn='lga',
+ i2_missing_data=-99,
+ r_missing_data=+1e37,
+ MAX_RADARS=13,        
+ ref_base=-10.,       
+ ref_base_useable=0., 
+ r_hybrid_first_gate=0.,
+ maxstns=3600,         
+ N_PIREP=3000,         
+ aircraft_time_window=0.5,     
+ vert_rad_meso=1,     
+ vert_rad_sao=1,      
+ vert_rad_pirep=1,    
+ vert_rad_prof=1,     
+ toptwvl_parm=2.,     
+ silavwt_parm=0.,
+ c8_project='NIMBUS', 
+ c8_blpfmt='default', 
+ fdda_model_source='lga',
  /
 c OVERALL LAPS PARAMETERS
 c Many of these are stored in the common block in 'lapsparms.cmn'
 c
-c NX_L_CMN    - number of grid points in the horizontal direction
+c NX_L - number of grid points in the horizontal direction
 c 
-c NY_L_CMN    - number of grid points in the vertical direction
+c NY_L - number of grid points in the vertical direction
 c
-c laps_cycle_time_cmn - LAPS cycle time in seconds. This is the interval
-c                       between successive LAPS analyses and should correspond
-c                       to the interval between cron entries that run the
-c                       'sched.pl' script.
+c laps_cycle_time - LAPS cycle time in seconds. This is the interval
+c                   between successive LAPS analyses and should correspond
+c                   to the interval between cron entries that run the
+c                   'sched.pl' script.
 c
 c l_compress_radar - Compress "vxx" radar files using run-length encoding.
 c                    Note that this is experimental and departs from the 
@@ -86,98 +86,98 @@ c                functions only when the NIMBUS database is being used.
 c                For the WFO database, the TAMDAR data is always allowed 
 c                through if it is available.
 c
-c maxstns_cmn - max number of sfc stations you are likely to encounter in the
-c             - LSO file and various analyses, in and near the domain.
-c             - used in obs_driver.x, sfc_qc.exe, laps_sfc.x, and others?
+c maxstns - max number of sfc stations you are likely to encounter in the
+c         - LSO file and various analyses, in and near the domain.
+c         - used in obs_driver.x, sfc_qc.exe, laps_sfc.x, and others?
 c
 c path_to_soil_2m - this parameter is not yet active since we do not yet
 c                   supply the soil type database. It is there only for
 c                   software testing at this time.
 c
-c c8_project_common - Depends on which "realization" of LAPS you are running.
-c                     This sends information to various programs on things
-c                     like file formats, filename conventions, etc. Most 
-c                     references to 'c8_project_common' are in the ingest
-c                     routines, though it also controls other specialized 
-c                     functions for 'AIRDROP'. Allowed values are 'NIMBUS', 
-c                     'WFO', 'AFWA', 'CWB', 'RSA', and 'AIRDROP'.
+c c8_project - Depends on which "realization" of LAPS you are running.
+c              This sends information to various programs on things
+c              like file formats, filename conventions, etc. Most 
+c              references to 'c8_project' are in the ingest
+c              routines, though it also controls other specialized 
+c              functions for 'AIRDROP'. Allowed values are 'NIMBUS', 
+c              'WFO', 'AFWA', 'CWB', 'RSA', and 'AIRDROP'.
 c
-c c8_blpfmt_common - Specify the format of boundary layer profiler data
-c                    If set to 'default' the software will key off of the
-c                    value of 'c8_project_common'. Otherwise it can be
-c                    explicitly set to 'MADIS' as an override.
+c c8_blpfmt - Specify the format of boundary layer profiler data
+c             If set to 'default' the software will key off of the
+c             value of 'c8_project'. Otherwise it can be
+c             explicitly set to 'MADIS' as an override.
 c
-c radarext_3d_cmn - Determines input radar source for the cloud analysis.
-c                   Intermediate files used are already on the LAPS grid.
-c                   'all' first use 'vrz' 3D mosaic, then merge in 'lapsprd/vrc'
-c                   'a01' first use 'v01' volume data, then merge in 'lapsprd/vrc'
-c                   'v01' (radar #1  volume data)
-c                   'v02' (radar #2  volume data)
-c                   'vxx' (radar #xx volume data)
-c                   'vrc' (2d radar data [e.g. NOWRAD, NEXRAD Lvl 3 narrowband])
+c radarext_3d - Determines input radar source for the cloud analysis.
+c               Intermediate files used are already on the LAPS grid.
+c               'all' first use 'vrz' 3D mosaic, then merge in 'lapsprd/vrc'
+c               'a01' first use 'v01' volume data, then merge in 'lapsprd/vrc'
+c               'v01' (radar #1  volume data)
+c               'v02' (radar #2  volume data)
+c               'vxx' (radar #xx volume data)
+c               'vrc' (2d radar data [e.g. NOWRAD, NEXRAD Lvl 3 narrowband])
 c
-c radarext_3d_accum_cmn - Determines input radar source for precip accum analysis.
-c                         Intermediate files used are already on the LAPS grid.
-c                         'xxx' Choose 'vrc' or 'all' automatically based on
-c                               availability and frequency of 'vrc/vrz'.
-c                         'vrc' (2d radar data in lapsprd directory [e.g. NOWRAD, 
+c radarext_3d_accum - Determines input radar source for precip accum analysis.
+c                     Intermediate files used are already on the LAPS grid.
+c                     'xxx' Choose 'vrc' or 'all' automatically based on
+c                           availability and frequency of 'vrc/vrz'.
+c                     'vrc' (2d radar data in lapsprd directory [e.g. NOWRAD, 
 c                                                     NEXRAD Lvl 3, narrowband]  )
-c                         'vrz' (radar volume mosaic data)
-c                         'all' first use 'vrz', then merge in 'lapsprd/vrc'
-c                               at the times 'vrz' is present
-c                         'v01' (radar #1  volume data)
-c                         'v02' (radar #2  volume data)
-c                         'vxx' (radar #xx volume data)
+c                     'vrz' (radar volume mosaic data)
+c                     'all' first use 'vrz', then merge in 'lapsprd/vrc'
+c                           at the times 'vrz' is present
+c                     'v01' (radar #1  volume data)
+c                     'v02' (radar #2  volume data)
+c                     'vxx' (radar #xx volume data)
 c
-c path_to_raw_blpprofiler_cmn - Path to Boundary Layer wind profiler data. If 
-c                               data is Multi-Agency MADIS then use 'WFO' for 
-c                               'c8_project_common'.
+c path_to_raw_blpprofiler - Path to Boundary Layer wind profiler data. If 
+c                           data is Multi-Agency MADIS then use 'WFO' for 
+c                           'c8_project'.
 c
-c path_to_raw_blprass_cmn - Path to Boundary Layer RASS data. If data is 
-c                           Multi-Agency MADIS then use 'WFO' for 
-c                           'c8_project_common'.
+c path_to_raw_blprass - Path to Boundary Layer RASS data. If data is 
+c                       Multi-Agency MADIS then use 'WFO' for 
+c                       'c8_project'.
 c
-c MAX_RADARS_CMN - Number of wideband radars being used. This can be set to
-c                  0 if no radars are present to save computer memory 
-c                  (particularly in the wind analysis) along with other 
-c                  resources.
+c MAX_RADARS - Number of wideband radars being used. This can be set to
+c              0 if no radars are present to save computer memory 
+c              (particularly in the wind analysis) along with other 
+c              resources.
 c
-c max_radar_files_cmn - Maximum number of files expected in a radar directory
+c max_radar_files_nl - Maximum number of files expected in a radar directory
 c
-c ref_base_cmn - Reflectivity dbZ value assigned to areas with no echoes.
+c ref_base - Reflectivity dbZ value assigned to areas with no echoes.
 c
-c ref_base_useable_cmn - Threshold dbZ used to filter out low reflectivities 
-c                        thus acting as a ground clutter and noise filter.
-c                        Areas with reflectivities < 'ref_base_useable_cmn'
-c                        are generally reset to 'ref_base_cmn' (no echo 
-c                        value).
+c ref_base_useable - Threshold dbZ used to filter out low reflectivities 
+c                    thus acting as a ground clutter and noise filter.
+c                    Areas with reflectivities < 'ref_base_useable'
+c                    are generally reset to 'ref_base' (no echo 
+c                    value).
 c                      
-c r_hybrid_first_gate_cmn - Flag to mask out gates near the radar for low tilts to 
-c                           emulate what happens with the hybrid reflectivity scan.
-c                           Allowed values are 0.0 (flag off) or 1.0 (flag on).
+c r_hybrid_first_gate - Flag to mask out gates near the radar for low tilts to 
+c                       emulate what happens with the hybrid reflectivity scan.
+c                       Allowed values are 0.0 (flag off) or 1.0 (flag on).
 c
-c aircraft_time_window_cmn - Time window (half width) for accepting aircraft 
-c                            data in both the PIN file and in the analyses. 
-c                            Measured as a fraction of 'laps_cycle_time'.
+c aircraft_time_window - Time window (half width) for accepting aircraft 
+c                        data in both the PIN file and in the analyses. 
+c                        Measured as a fraction of 'laps_cycle_time'.
 c
 c
-c fdda_model_source_cmn - Enter the forecast model if you'd like to use
-c                         one for 4DDA (as a substitute for lga/lgb input
-c                         to the analyses). Examples are 'mm5', 'eta', etc. 
-c                         This corresponds to the available 'lapsprd/fua/*'
-c                         subdirectories. Lapsplot will plot only among those
-c                         listed elements.
+c fdda_model_source - Enter the forecast model if you'd like to use
+c                     one for 4DDA (as a substitute for lga/lgb input
+c                     to the analyses). Examples are 'mm5', 'eta', etc. 
+c                     This corresponds to the available 'lapsprd/fua/*'
+c                     subdirectories. Lapsplot will plot only among those
+c                     listed elements.
 c
 c TERRAIN SMOOTHING
 c           
-c toptwvl_parm_cmn: 
+c toptwvl_parm: 
 c     As an example, 4. would represent 4 delta-x filtering of the terrain. You
 c     can change this to alter the smoothness of the terrain. Higher numbers 
 c     mean smoother terrain. Minimum value should be 2 since setting to 0
 c     would cause the run to fail. We generally use even numbers (e.g. 2., 4., 
 c     or 6.)
 c
-c silavwt_parm_cmn : 
+c silavwt_parm : 
 c     This parameter allows the potential use of silhouette terrain which is 
 c     the maximum elevation in the local area. Useful range is anywhere 
 c     between 0-1. A value of zero uses the average terrain instead of the 
