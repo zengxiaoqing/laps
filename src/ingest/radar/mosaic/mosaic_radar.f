@@ -1,6 +1,5 @@
       program  mosaic_radar
 
-      include  'lapsparms.cmn'
       include  'radar_mosaic_dim.inc'
 
       integer   istatus
@@ -17,6 +16,12 @@
 
       n_radars_wideband = 0
       n_radars_narrowband = 0
+
+      call get_grid_dim_xy(NX_L,NY_L,istatus)
+      if(istatus .ne. 1)go to 1000
+
+      call get_laps_dimensions(NZ_L,istatus)
+      if(istatus .ne. 1)go to 1000
 
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus .ne. 1)go to 1000
@@ -72,7 +77,7 @@ c namelist items
           write(6,50)'Radar extensions: ',(c_radar_ext(i),i=1,n_radars)
 50        format(1x,a,10(:,a3,1x))
  
-          call mosaic_radar_sub(nx_l_cmn,ny_l_cmn,nk_laps,
+          call mosaic_radar_sub(nx_l,ny_l,nz_l,
      1         max_radars_mosaic,
      1         n_radars,c_radar_ext,c_radar_mosaic,i_window,
      1         r_missing_data,laps_cycle_time,mosaic_cycle_time,
