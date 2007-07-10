@@ -446,7 +446,7 @@ c
      1,fullname,gproj,istatus)
 c
 c acquires background projection parameters and uses them to
-c temporarily replace lapsparms_cmn parameters. It is then possible
+c temporarily replace lapsparms parameters. It is then possible
 c to use the library projection routines to calculate wind rotation
 c angles for the background.
 c
@@ -497,8 +497,8 @@ c
       if(isave.eq.0)then
          if(ldir)then
             c6_maproj_save=c6_maproj
-            centrallat_save=grid_cen_lat_cmn
-            centrallon_save=grid_cen_lon_cmn
+            centrallat_save=grid_cen_lat
+            centrallon_save=grid_cen_lon
             Lat0_save=standard_latitude
             Lat1_save=standard_latitude2
             Lon0_save=standard_longitude
@@ -509,8 +509,8 @@ c
          endif
       elseif(isave.eq.1)then        !restore original nest7grid.parms settings
          c6_maproj=c6_maproj_save
-         grid_cen_lat_cmn=centrallat_save
-         grid_cen_lon_cmn=centrallon_save
+         grid_cen_lat=centrallat_save
+         grid_cen_lon=centrallon_save
          standard_latitude=Lat0_save
          standard_latitude2=Lat1_save
          standard_longitude=Lon0_save
@@ -528,7 +528,7 @@ c
 
       call get_bkgd_mdl_info(bgmodel,cmodel,fullname
      &,nxbg,nybg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
-     &,gproj,dlat,dlon,grid_cen_lat_cmn,grid_cen_lon_cmn
+     &,gproj,dlat,dlon,grid_cen_lat,grid_cen_lon
      &,dxbg,dybg,standard_latitude,standard_latitude2
      &,standard_longitude,sw,ne,cgrddef,istatus)
 
