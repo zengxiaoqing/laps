@@ -318,7 +318,7 @@ c       2000    Steve Albers
       include 'lapsparms.cmn'
       character*(*) grid_fnam
       integer istatus
-      iflag_lapsparms_cmn=0
+      iflag_lapsparms=0
       call get_laps_config(grid_fnam,istatus)
       return
       end
@@ -467,7 +467,9 @@ c****  --------------------------------------------------------- *****
               return
            endif
         elseif(grid_fnam_common(1:5).eq.'wrfsi')then
-           call get_wrfsi_config(nest,istatus)
+!          Commented out by SA as a quick fix with respect to parameter name
+!          changes.
+!          call get_wrfsi_config(nest,istatus)
            if(istatus.ne.1)then
               print*,'Error returned from get_wrfsi_config'
               return
@@ -505,44 +507,44 @@ c****  --------------------------------------------------------- *****
         include 'lapsparms.cmn'
         include 'grid_fname.cmn'
 
-        NAMELIST /lapsparms_NL/ iflag_lapsparms_cmn
-     1  ,max_radar_files_cmn,PRESSURE_INTERVAL_L
+        NAMELIST /lapsparms_NL/ iflag_lapsparms
+     1  ,max_radar_files_nl,PRESSURE_INTERVAL_L
      1  ,nk_laps,standard_latitude,standard_latitude2       
-     1  ,standard_longitude,NX_L_CMN, NY_L_CMN, I_PERIMETER_CMN
+     1  ,standard_longitude,NX_L, NY_L, I_PERIMETER
      1  ,l_compress_radar,l_use_tamdar,l_3dvar
-     1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
-     1  ,laps_cycle_time_cmn, min_to_wait_for_metars_cmn
-     1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
-     1  ,ref_base_cmn,ref_base_useable_cmn,r_hybrid_first_gate_cmn
-     1  ,maxstns_cmn,N_PIREP_CMN
-     1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
-     1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
-     1  ,silavwt_parm_cmn,toptwvl_parm_cmn
+     1  ,grid_spacing_m,grid_cen_lat,grid_cen_lon
+     1  ,laps_cycle_time, min_to_wait_for_metars
+     1  ,i2_missing_data, r_missing_data, MAX_RADARS
+     1  ,ref_base,ref_base_useable,r_hybrid_first_gate
+     1  ,maxstns,N_PIREP
+     1  ,vert_rad_meso,vert_rad_sao
+     1  ,vert_rad_pirep,vert_rad_prof     
+     1  ,silavwt_parm,toptwvl_parm
      1  ,vertical_grid,c50_lowres_directory,c6_maproj
-     1  ,radarext_3d_cmn,radarext_3d_accum_cmn
-     1  ,aircraft_time_window_cmn
-     1  ,path_to_raw_pirep_cmn
-     1  ,path_to_raw_rass_cmn,path_to_raw_profiler_cmn
-     1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
-     1  ,path_to_wsi_2d_radar_cmn,path_to_wsi_3d_radar_cmn
-     1  ,path_to_qc_acars_cmn
-     1  ,c8_project_common,c8_blpfmt_common
+     1  ,radarext_3d,radarext_3d_accum
+     1  ,aircraft_time_window
+     1  ,path_to_raw_pirep
+     1  ,path_to_raw_rass,path_to_raw_profiler
+     1  ,path_to_raw_blprass,path_to_raw_blpprofiler
+     1  ,path_to_wsi_2d_radar,path_to_wsi_3d_radar
+     1  ,path_to_qc_acars
+     1  ,c8_project,c8_blpfmt
      1  ,c_raddat_type,c80_description      
      1  ,path_to_topt30s ,path_to_topt10m
      1  ,path_to_soiltype_top30s, path_to_soiltype_bot30s
      1  ,path_to_landuse30s,path_to_greenfrac
      1  ,path_to_soiltemp1deg,path_to_albedo,path_to_maxsnoalb
-     1  ,path_to_islope,path_to_sst,fdda_model_source_cmn
+     1  ,path_to_islope,path_to_sst,fdda_model_source
 
 
-        if(init.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
+        if(init.eq.1 .and. iflag_lapsparms .eq. 1) then ! Data already read in
 !          print *, 'It works'
 !          goto999                                           ! Normal Return
 !          init = 1
            istatus = 1
            return
         else
-           iflag_lapsparms_cmn = 0 ! initializes variable
+           iflag_lapsparms = 0 ! initializes variable
         endif
 
 !       While we are here, let's put the grid name into the common area
@@ -560,7 +562,7 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
            ext=grid_fnam
         endif
 
-        fdda_model_source_cmn = '         '
+        fdda_model_source = '         '
 
         call get_directory(ext,directory,len_dir)
 
@@ -574,12 +576,12 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
         call s_len(tempchar,len_dir)
  
 
-        min_to_wait_for_metars_cmn=10
+        min_to_wait_for_metars=10
         open(92,file=tempchar(1:len_dir),status='old',err=900)
 
         read(92,lapsparms_nl,err=910)
 
-        if(iflag_lapsparms_cmn .ne. 1)then                      ! Error Return
+        if(iflag_lapsparms .ne. 1)then                      ! Error Return
             goto910                                    
 
         else                                                    ! Normal Return
@@ -593,7 +595,7 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 900     write(6,*)                                              ! Error Return
      1  ' Open error in get_laps_config, parameter file not found'
         write(6,*)tempchar
-        iflag_lapsparms_cmn = 0
+        iflag_lapsparms = 0
         istatus = 0
         close(92)
         return
@@ -604,14 +606,14 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
         print*
         write(6,lapsparms_nl)
         close(92)
-        iflag_lapsparms_cmn = 0
+        iflag_lapsparms = 0
         istatus = 0
         return
 
 920     write(6,*)' Read error in get_laps_config'              ! Error Return
         write(6,*)' Truncated runtime parameter file ',tempchar
         close(92)
-        iflag_lapsparms_cmn = 0
+        iflag_lapsparms = 0
         istatus = 0
         return
 
@@ -754,7 +756,7 @@ c ---------------------------------------------------------------------
       end
 
 c ---------------------------------------------------------------------
-      subroutine get_standard_longitude(std_lon,istatus)
+      subroutine get_standard_longitude(std_lon_ret,istatus)
 
       include 'lapsparms.cmn' ! standard_longitude
       include 'grid_fname.cmn'! grid_fnam_common
@@ -769,16 +771,16 @@ c ---------------------------------------------------------------------
           return
       endif
 
-      std_lon = standard_longitude
+      std_lon_ret = standard_longitude
 
       istatus = 1
       return
       end
 
 
-      subroutine get_grid_spacing(grid_spacing_m,istatus)
+      subroutine get_grid_spacing(grid_spacing_m_ret,istatus)
 
-      include 'lapsparms.cmn' ! grid_spacing_m_cmn
+      include 'lapsparms.cmn' ! grid_spacing_m
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the standard_longitude variable from the
@@ -790,16 +792,17 @@ c ---------------------------------------------------------------------
           return
       endif
 
-      grid_spacing_m = grid_spacing_m_cmn
+      grid_spacing_m_ret = grid_spacing_m
 
       istatus = 1
       return
       end
 
 
-      subroutine get_grid_center(grid_cen_lat,grid_cen_lon,istatus)
+      subroutine get_grid_center(grid_cen_lat_ret,grid_cen_lon_ret
+     1                          ,istatus)
 
-      include 'lapsparms.cmn' ! grid_spacing_m_cmn
+      include 'lapsparms.cmn' ! grid_cen_lat,grid_cen_lon
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the standard_longitude variable from the
@@ -811,8 +814,8 @@ c ---------------------------------------------------------------------
           return
       endif
 
-      grid_cen_lat = grid_cen_lat_cmn
-      grid_cen_lon = grid_cen_lon_cmn
+      grid_cen_lat_ret = grid_cen_lat
+      grid_cen_lon_ret = grid_cen_lon
 
       istatus = 1
       return
@@ -886,12 +889,12 @@ c ---------------------------------------------------------------------
       end
 
 
-      subroutine get_maxstns(maxstns,istatus)
+      subroutine get_maxstns(maxstns_ret,istatus)
 
-      include 'lapsparms.cmn' ! maxstns_cmn
+      include 'lapsparms.cmn' ! maxstns
       include 'grid_fname.cmn'! grid_fnam_common
 
-!     This routine accesses the maxstns_cmn variable from the
+!     This routine accesses the maxstns variable from the
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
@@ -901,19 +904,19 @@ c ---------------------------------------------------------------------
           return
       endif
 
-      maxstns = maxstns_cmn
+      maxstns_ret = maxstns
 
       istatus = 1
       return
       end
 
 
-      subroutine get_c8_project(c8_project,istatus)
+      subroutine get_c8_project(c8_project_ret,istatus)
 
       include 'lapsparms.cmn' ! c8_project
       include 'grid_fname.cmn'! grid_fnam_common
 
-      character*8 c8_project
+      character*8 c8_project_ret
 
 !     This routine accesses the c8_project_common variable from the
 !     .parms file via the common block. Note the variable name in the
@@ -925,18 +928,18 @@ c ---------------------------------------------------------------------
           return
       endif
 
-      c8_project = c8_project_common
+      c8_project_ret = c8_project
 
       istatus = 1
       return
       end
 
-      subroutine get_c8_blpfmt(c8_blpfmt,istatus)
+      subroutine get_c8_blpfmt(c8_blpfmt_ret,istatus)
 
       include 'lapsparms.cmn' ! c8_blpfmt
       include 'grid_fname.cmn'! grid_fnam_common
 
-      character*8 c8_blpfmt
+      character*8 c8_blpfmt_ret
 
 !     This routine accesses the c8_blpfmt_common variable from the
 !     .parms file via the common block. Note the variable name in the
@@ -948,7 +951,7 @@ c ---------------------------------------------------------------------
           return
       endif
 
-      c8_blpfmt = c8_blpfmt_common
+      c8_blpfmt_ret = c8_blpfmt
 
       istatus = 1
       return
@@ -1038,7 +1041,7 @@ c----------------------------------------------------------
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1 .or. init .eq. 0)then 
+      if(iflag_lapsparms .ne. 1 .or. init .eq. 0)then 
           call get_laps_config(grid_fnam_common,istatus)
           if(istatus .ne. 1)then
               write(6,*)
@@ -1055,12 +1058,13 @@ c----------------------------------------------------------
       end
 
 
-      subroutine get_aircraft_time_window(aircraft_time_window,istatus)       
+      subroutine get_aircraft_time_window(aircraft_time_window_ret
+     1                                   ,istatus)       
 
-      include 'lapsparms.cmn'              ! laps_cycle_time_cmn
+      include 'lapsparms.cmn'              ! laps_cycle_time
       include 'grid_fname.cmn'             ! grid_fnam_common
 
-!     This routine accesses the aircraft_time_window_cmn variable from the
+!     This routine accesses the aircraft_time_window variable from the
 !     .parms file via the common block. Note the variable name in the
 !     argument list may be different in the calling routine
 
@@ -1070,15 +1074,15 @@ c----------------------------------------------------------
           return
       endif
 
-      aircraft_time_window = aircraft_time_window_cmn
+      aircraft_time_window_ret = aircraft_time_window
 
       istatus = 1
       return
       end
 
-      subroutine get_laps_cycle_time(laps_cycle_time,istatus)
+      subroutine get_laps_cycle_time(laps_cycle_time_ret,istatus)
 
-      include 'lapsparms.cmn'              ! laps_cycle_time_cmn
+      include 'lapsparms.cmn'              ! laps_cycle_time
       include 'grid_fname.cmn'             ! grid_fnam_common
 
 !     This routine accesses the laps_cycle_time variable from the
@@ -1091,7 +1095,7 @@ c----------------------------------------------------------
           return
       endif
 
-      laps_cycle_time = laps_cycle_time_cmn
+      laps_cycle_time_ret = laps_cycle_time
 
       istatus = 1
       return
@@ -1210,9 +1214,9 @@ c
       return
       end
 
-      subroutine get_grid_dim_xy(NX_L,NY_L,istatus)
+      subroutine get_grid_dim_xy(NX_L_ret,NY_L_ret,istatus)
 
-      include 'lapsparms.cmn'              ! NX_L_CMN, NY_L_CMN
+      include 'lapsparms.cmn'              ! NX_L, NY_L
       include 'grid_fname.cmn'             ! grid_fnam_common
 
 !     character*80 grid_fnam
@@ -1229,16 +1233,17 @@ c
           return
       endif
 
-      NX_L = NX_L_CMN
-      NY_L = NY_L_CMN
+      NX_L_ret = NX_L
+      NY_L_ret = NY_L
 
       istatus = 1
       return
       end
 
-      subroutine get_topo_parms(silavwt_parm,toptwvl_parm,istatus)
+      subroutine get_topo_parms(silavwt_parm_ret,toptwvl_parm_ret
+     1                         ,istatus)
 
-      include 'lapsparms.cmn' ! silavwt_cmn, toptwvl_cmn
+      include 'lapsparms.cmn' ! silavwt, toptwvl
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the silavwt_parm and toptwvl_parm
@@ -1252,16 +1257,16 @@ c
           return
       endif
 
-      silavwt_parm = silavwt_parm_cmn
-      toptwvl_parm = toptwvl_parm_cmn
+      silavwt_parm_ret = silavwt_parm
+      toptwvl_parm_ret = toptwvl_parm
 
       istatus = 1
       return
       end
 
-      subroutine get_meso_sao_pirep(n_meso,n_sao,n_pirep,istatus)
+      subroutine get_meso_sao_pirep(n_meso,n_sao,n_pirep_ret,istatus)
 
-      include 'lapsparms.cmn' ! maxstns_cmn, n_pirep_cmn
+      include 'lapsparms.cmn' ! maxstns, n_pirep
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the maxstns and n_pirep
@@ -1275,17 +1280,17 @@ c
           return
       endif
 
-      n_meso  = maxstns_cmn
-      n_sao   = maxstns_cmn
-      n_pirep = n_pirep_cmn
+      n_meso  = maxstns
+      n_sao   = maxstns
+      n_pirep_ret = n_pirep
 
       istatus = 1
       return
       end
 
-      subroutine get_max_radars (max_radars, istatus)
+      subroutine get_max_radars (max_radars_ret, istatus)
 
-      include 'lapsparms.cmn' ! max_radars_cmn
+      include 'lapsparms.cmn' ! max_radars
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the max_radars variable from the
@@ -1298,15 +1303,15 @@ c
           return
       endif
 
-      max_radars = max_radars_cmn
+      max_radars_ret = max_radars
 
       istatus = 1
       return
       end
 
-      subroutine get_max_stations (maxstns, istatus)
+      subroutine get_max_stations (maxstns_ret, istatus)
 
-      include 'lapsparms.cmn' ! maxstns_cmn
+      include 'lapsparms.cmn' ! maxstns
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the maxstns variable from the
@@ -1319,25 +1324,25 @@ c
           return
       endif
 
-      maxstns = maxstns_cmn
+      maxstns_ret = maxstns
 
       istatus = 1
       return
       end
 
-      subroutine get_vert_rads (vert_rad_pirep,
-     1                          vert_rad_sao,
-     1                          vert_rad_meso,
-     1                          vert_rad_prof,
+      subroutine get_vert_rads (vert_rad_pirep_ret,
+     1                          vert_rad_sao_ret,
+     1                          vert_rad_meso_ret,
+     1                          vert_rad_prof_ret,
      1                          istatus)
 
-      include 'lapsparms.cmn' ! vert_rad_pirep_cmn, etc.
+      include 'lapsparms.cmn' ! vert_rad_pirep, etc.
       include 'grid_fname.cmn'! grid_fnam_common
 
-      integer*4 vert_rad_pirep
-      integer*4 vert_rad_sao
-      integer*4 vert_rad_meso
-      integer*4 vert_rad_prof
+      integer*4 vert_rad_pirep_ret
+      integer*4 vert_rad_sao_ret
+      integer*4 vert_rad_meso_ret
+      integer*4 vert_rad_prof_ret
 
 !     This routine accesses the vert_rad_pirep, etc., variables from the
 !     .parms file via the common block. Note the variable names in the
@@ -1349,18 +1354,18 @@ c
           return
       endif
 
-      vert_rad_pirep = vert_rad_pirep_cmn
-      vert_rad_sao = vert_rad_sao_cmn
-      vert_rad_meso = vert_rad_meso_cmn
-      vert_rad_prof = vert_rad_prof_cmn
+      vert_rad_pirep_ret = vert_rad_pirep
+      vert_rad_sao_ret = vert_rad_sao
+      vert_rad_meso_ret = vert_rad_meso
+      vert_rad_prof_ret = vert_rad_prof
 
       istatus = 1
       return
       end
 
-      subroutine get_r_missing_data(r_missing_data, istatus)
+      subroutine get_r_missing_data(r_missing_data_ret, istatus)
 
-      include 'lapsparms.cmn' ! r_missing_data_cmn
+      include 'lapsparms.cmn' ! r_missing_data
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the r_missing_data variable from the
@@ -1373,15 +1378,15 @@ c
           return
       endif
 
-      r_missing_data = r_missing_data_cmn
+      r_missing_data_ret = r_missing_data
 
       istatus = 1
       return
       end
 
-      subroutine get_i2_missing_data(i2_missing_data, istatus)
+      subroutine get_i2_missing_data(i2_missing_data_ret, istatus)
 
-      include 'lapsparms.cmn' ! i2_missing_data_cmn
+      include 'lapsparms.cmn' ! i2_missing_data
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the i2_missing_data variable from the
@@ -1394,16 +1399,16 @@ c
           return
       endif
 
-      i2_missing_data = i2_missing_data_cmn
+      i2_missing_data_ret = i2_missing_data
 
       istatus = 1
       return
       end
 
 
-      subroutine get_i_perimeter(i_perimeter, istatus)
+      subroutine get_i_perimeter(i_perimeter_ret, istatus)
 
-      include 'lapsparms.cmn' ! i_perimeter_cmn
+      include 'lapsparms.cmn' ! i_perimeter
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the 'i_perimeter' variable from the
@@ -1416,16 +1421,16 @@ c
           return
       endif
 
-      i_perimeter = i_perimeter_cmn
+      i_perimeter_ret = i_perimeter
 
       istatus = 1
       return
       end
 
 
-      subroutine get_ref_base(ref_base, istatus)
+      subroutine get_ref_base(ref_base_ret, istatus)
 
-      include 'lapsparms.cmn' ! ref_base_cmn
+      include 'lapsparms.cmn' ! ref_base
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the 'ref_base' variable from the
@@ -1438,13 +1443,13 @@ c
           return
       endif
 
-      ref_base = ref_base_cmn
+      ref_base_ret = ref_base
 
       istatus = 1
       return
       end
 
-      subroutine get_ref_base_useable(ref_base_useable, istatus)
+      subroutine get_ref_base_useable(ref_base_useable_ret, istatus)
 
       include 'lapsparms.cmn' ! ref_base_useable
       include 'grid_fname.cmn'! grid_fnam_common
@@ -1459,13 +1464,14 @@ c
           return
       endif
 
-      ref_base_useable = ref_base_useable_cmn
+      ref_base_useable_ret = ref_base_useable
 
       istatus = 1
       return
       end
 
-      subroutine get_r_hybrid_first_gate(r_hybrid_first_gate, istatus)       
+      subroutine get_r_hybrid_first_gate(r_hybrid_first_gate_ret
+     1                                 , istatus)       
 
       include 'lapsparms.cmn' ! r_hybrid_first_gate
       include 'grid_fname.cmn'! grid_fnam_common
@@ -1480,15 +1486,15 @@ c
           return
       endif
 
-      r_hybrid_first_gate = r_hybrid_first_gate_cmn
+      r_hybrid_first_gate_ret = r_hybrid_first_gate
 
       istatus = 1
       return
       end
 
-      subroutine get_max_radar_files(max_radar_files, istatus)       
+      subroutine get_max_radar_files(max_radar_files_ret, istatus)       
 
-      include 'lapsparms.cmn' ! max_radar_files_cmn
+      include 'lapsparms.cmn' ! max_radar_files
       include 'grid_fname.cmn'! grid_fnam_common
 
 !     This routine accesses the 'max_radar_files' variable from the
@@ -1501,7 +1507,7 @@ c
           return
       endif
 
-      max_radar_files = max_radar_files_cmn
+      max_radar_files_ret = max_radar_files_nl
 
       istatus = 1
       return
@@ -1604,7 +1610,7 @@ c
 
       save cvgrid_laps,len_cmn
 
-      if(iflag_lapsparms_cmn .ne. 1 .or. init .eq. 0)then 
+      if(iflag_lapsparms .ne. 1 .or. init .eq. 0)then 
           call get_laps_config(grid_fnam_common,istatus)
 
           if(istatus .ne. 1)then
@@ -1655,7 +1661,7 @@ c
 
       save cvgrid_laps,len_cmn
 
-      if(iflag_lapsparms_cmn .ne. 1 .or. init .eq. 0)then 
+      if(iflag_lapsparms .ne. 1 .or. init .eq. 0)then 
           call get_laps_config(grid_fnam_common,istatus)
 
           if(istatus .ne. 1)then
@@ -1693,13 +1699,13 @@ c
       return
       end
 
-      subroutine get_fdda_model_source(fdda_model_source
+      subroutine get_fdda_model_source(fdda_model_source_ret
      1,n_fdda_models,istatus)
 
-      include 'lapsparms.cmn' ! FDDA_MODEL_SOURCE_CMN
+      include 'lapsparms.cmn' ! FDDA_MODEL_SOURCE
       include 'grid_fname.cmn'! grid_fnam_common
 
-      character*(*) fdda_model_source(maxbgmodels)
+      character*(*) fdda_model_source_ret(maxbgmodels)
       integer n_fdda_models,istatus
 
 !     This routine accesses the fdda_model_source variable from the
@@ -1707,7 +1713,7 @@ c
 !     argument list is different in the calling routine
 
 c     do i=1,maxbgmodels
-c        fdda_model_source_cmn(i) = ' '
+c        fdda_model_source(i) = ' '
 c     enddo
  
       call get_laps_config(grid_fnam_common,istatus)
@@ -1719,16 +1725,16 @@ c     enddo
 
       n_fdda_models = 0
       do i=1,maxbgmodels
-         if(fdda_model_source_cmn(i).ne. ' ')then
+         if(fdda_model_source(i).ne. ' ')then
             n_fdda_models=n_fdda_models+1
-            fdda_model_source(n_fdda_models)=fdda_model_source_cmn(i)
+            fdda_model_source_ret(n_fdda_models)=fdda_model_source(i)     
          endif
       enddo
 
       return
       end
 
-      subroutine get_path_to_topo_10m(path_to_topo_10m,istatus)
+      subroutine get_path_to_topo_10m(path_to_topo_10m_ret,istatus)
 
       include 'lapsparms.cmn' ! path_to_topt_10m
       include 'grid_fname.cmn'
@@ -1736,7 +1742,7 @@ c     enddo
 !     This routine accesses the path_to_topt_10m  variable from the
 !     .parms file via the common block.
 
-      character*200 path_to_topo_10m
+      character*200 path_to_topo_10m_ret
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1745,12 +1751,12 @@ c     enddo
           return
       endif
 
-      path_to_topo_10m =  path_to_topt10m
+      path_to_topo_10m_ret =  path_to_topt10m
 
       return
       end
 
-      subroutine get_path_to_topo_30s(path_to_topo_30s,istatus)
+      subroutine get_path_to_topo_30s(path_to_topo_30s_ret,istatus)
 
       include 'lapsparms.cmn' ! path_to_topt_30s
       include 'grid_fname.cmn'! grid_fnam_common
@@ -1758,7 +1764,7 @@ c     enddo
 !     This routine accesses the path_to_topt_10m  variable from the
 !     .parms file via the common block. 
 
-      character*200 path_to_topo_30s
+      character*200 path_to_topo_30s_ret
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1767,12 +1773,12 @@ c     enddo
           return
       endif
 
-      path_to_topo_30s =  path_to_topt30s
+      path_to_topo_30s_ret =  path_to_topt30s
 
       return
       end
 
-      subroutine get_path_to_soiltype_top(path_to_soiltype_top_30s
+      subroutine get_path_to_soiltype_top(path_to_soiltype_top_30s_ret
      +,istatus)
 
       include 'lapsparms.cmn' ! path_to_soiltype_top30s
@@ -1781,7 +1787,7 @@ c     enddo
 !     This routine accesses the path_to_soiltype_top30s  variable from the
 !     .parms file via the common block.
 
-      character*200 path_to_soiltype_top_30s
+      character*200 path_to_soiltype_top_30s_ret
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1790,12 +1796,12 @@ c     enddo
           return
       endif
 
-      path_to_soiltype_top_30s =  path_to_soiltype_top30s
+      path_to_soiltype_top_30s_ret =  path_to_soiltype_top30s
 
       return
       end
 
-      subroutine get_path_to_soiltype_bot(path_to_soiltype_bot_30s
+      subroutine get_path_to_soiltype_bot(path_to_soiltype_bot_30s_ret
      +,istatus)
 
       include 'lapsparms.cmn' ! path_to_soiltype_bot30s
@@ -1804,7 +1810,7 @@ c     enddo
 !     This routine accesses the path_to_soiltype_bot30s  variable from the
 !     .parms file via the common block.
 
-      character*200 path_to_soiltype_bot_30s
+      character*200 path_to_soiltype_bot_30s_ret
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1813,12 +1819,13 @@ c     enddo
           return
       endif
 
-      path_to_soiltype_bot_30s =  path_to_soiltype_bot30s
+      path_to_soiltype_bot_30s_ret =  path_to_soiltype_bot30s
 
       return
       end
 
-      subroutine get_path_to_landuse_30s(path_to_landuse_30s,istatus)
+      subroutine get_path_to_landuse_30s(path_to_landuse_30s_ret
+     1                                  ,istatus)
 
       include 'lapsparms.cmn' ! path_to_landuse30s
       include 'grid_fname.cmn'! grid_fnam_common
@@ -1826,7 +1833,7 @@ c     enddo
 !     This routine accesses the path_to_landuse30s  variable from the
 !     .parms file via the common block.
 
-      character*200 path_to_landuse_30s
+      character*200 path_to_landuse_30s_ret
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1835,13 +1842,13 @@ c     enddo
           return
       endif
 
-      path_to_landuse_30s =  path_to_landuse30s
+      path_to_landuse_30s_ret =  path_to_landuse30s
 
       return
       end
 c
 c-------------------------------------------------------------
-      subroutine get_path_to_green_frac(path_to_green_frac
+      subroutine get_path_to_green_frac(path_to_green_frac_ret
      &,istatus)
 
       include 'lapsparms.cmn' ! path_to_green_frac
@@ -1850,7 +1857,7 @@ c-------------------------------------------------------------
 !     This routine accesses the path_to_green_frac variable from the
 !     .parms file via the common block.
 
-      character*200 path_to_green_frac
+      character*200 path_to_green_frac_ret
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1859,13 +1866,13 @@ c-------------------------------------------------------------
           return
       endif
 
-      path_to_green_frac =  path_to_greenfrac
+      path_to_green_frac_ret =  path_to_greenfrac
 
       return
       end
 c
 c---------------------------------------------------------------
-      subroutine get_path_to_soiltemp_1deg(path_to_soiltemp_1deg
+      subroutine get_path_to_soiltemp_1deg(path_to_soiltemp_1deg_ret
      &,istatus)
 
       include 'lapsparms.cmn' ! path_to_soiltemp1deg
@@ -1874,7 +1881,7 @@ c---------------------------------------------------------------
 !     This routine accesses the path_to_landuse30s  variable from the
 !     .parms file via the common block.
 
-      character*200 path_to_soiltemp_1deg
+      character*200 path_to_soiltemp_1deg_ret
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1883,7 +1890,7 @@ c---------------------------------------------------------------
           return
       endif
 
-      path_to_soiltemp_1deg =  path_to_soiltemp1deg
+      path_to_soiltemp_1deg_ret =  path_to_soiltemp1deg
 
       return
       end
@@ -1912,7 +1919,7 @@ c---------------------------------------------------------------
       end
 c
 c---------------------------------------------------------------
-      subroutine get_path_to_maxsnoalb(pathtomaxsnoalb,istatus)
+      subroutine get_path_to_maxsnoalb(pathtomaxsnoalb_ret,istatus)
 
       include 'lapsparms.cmn' ! path_to_maxsnoalb
       include 'grid_fname.cmn'! grid_fnam_common
@@ -1920,7 +1927,7 @@ c---------------------------------------------------------------
 !     This routine accesses the path_to_maxsnoalb variable from the
 !     .parms file via the common block.
 
-      character*200 pathtomaxsnoalb
+      character*200 pathtomaxsnoalb_ret
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1929,13 +1936,13 @@ c---------------------------------------------------------------
           return
       endif
 
-      pathtomaxsnoalb = path_to_maxsnoalb
+      pathtomaxsnoalb_ret = path_to_maxsnoalb
 
       return
       end
 c
 c---------------------------------------------------------------
-	subroutine get_path_to_islope(pathtoislope,istatus)
+	subroutine get_path_to_islope(pathtoislope_ret,istatus)
 
 	include 'lapsparms.cmn' ! path_to_islope
 	include 'grid_fname.cmn'! grid_fnam_common
@@ -1943,7 +1950,7 @@ c---------------------------------------------------------------
 !	This routine accesses the path_to_islope variable from the
 !	.parms file via the common block.
 
-	character*200 pathtoislope
+	character*200 pathtoislope_ret
 
 	call get_laps_config(grid_fnam_common,istatus)
 
@@ -1952,7 +1959,7 @@ c---------------------------------------------------------------
 	  return
 	endif
 
-        pathtoislope = path_to_islope
+        pathtoislope_ret = path_to_islope
 
 	return
 	end
