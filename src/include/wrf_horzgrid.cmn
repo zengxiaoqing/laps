@@ -11,13 +11,13 @@
       integer domain_origin_llj(99)
       integer domain_origin_uri(99)
       integer domain_origin_urj(99)
-      integer i2_missing_data
+      integer i2_missing_data_wrf
       
       real moad_known_lat(10), moad_known_lon(10),
      +       moad_stand_lats(4), moad_stand_lons(4),
      +       moad_delta_x, moad_delta_y,
      +       silavwt_parm_wrf, toptwvl_parm_wrf
-      real r_missing_data
+      real r_missing_data_wrf
       character*8 moad_known_loc
       character*4 stagger_type
       character*32 map_proj_name
@@ -33,4 +33,4 @@
      +,moad_delta_x, moad_delta_y
      +,moad_known_loc,stagger_type,map_proj_name,latlon_grid
      +,silavwt_parm_wrf, toptwvl_parm_wrf
-     +,r_missing_data, i2_missing_data
+     +,r_missing_data_wrf, i2_missing_data_wrf
