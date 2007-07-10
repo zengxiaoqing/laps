@@ -51,7 +51,6 @@ EXEDIRS = src/accum \
           src/ingest/sao \
           src/ingest/satellite/cloud_drift \
           src/ingest/satellite/lvd \
-          src/ingest/satellite/lvd/table \
           src/ingest/satellite/sounding \
           src/ingest/sfc_qc \
 	  src/lapsprep \
