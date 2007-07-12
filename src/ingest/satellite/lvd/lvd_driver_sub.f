@@ -202,7 +202,7 @@ c
       integer nan_flag
       integer laps_cycle_time
       integer lvd_status
-      integer nft,ntm(100) !max_files)
+      integer nft,ntm(max_files)
       integer nft_prior
 
       real favgth39u
