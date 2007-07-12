@@ -1418,7 +1418,7 @@ c format type 3 (cdf)
             ICHANNELS(2,3,6)=1
             c_channel_types(2,3,6)=cchanneltypes(kk)
             i_msng_sat_flag(2,3,6)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'4u')then
+           elseif(cchanneltypes(kk).eq.'wv')then
             ICHANNELS(3,3,6)=1
             c_channel_types(3,3,6)=cchanneltypes(kk)
             i_msng_sat_flag(3,3,6)=i_qc_sat_flag(kk)
@@ -1434,7 +1434,7 @@ c format type 3 (cdf)
           enddo
           path_to_raw_sat(1:6,3,6)=cpath2sat(jj)
 
-         elseif(csattypes(jj).eq.'cdf')then
+         elseif(csattypes(jj).eq.'rll')then
 c format type 4 (rll)
           do k=1,nchannel(jj)
            kk=kk+1
@@ -1446,7 +1446,7 @@ c format type 4 (rll)
             ICHANNELS(2,4,6)=1
             c_channel_types(2,4,6)=cchanneltypes(kk)
             i_msng_sat_flag(2,4,6)=i_qc_sat_flag(kk)
-           elseif(cchanneltypes(kk).eq.'4u')then
+           elseif(cchanneltypes(kk).eq.'wv')then
             ICHANNELS(3,4,6)=1
             c_channel_types(3,4,6)=cchanneltypes(kk)
             i_msng_sat_flag(3,4,6)=i_qc_sat_flag(kk)
