@@ -166,7 +166,7 @@ my(@xdim,@ydim,$zdim,$varx,$vary,$varz);
 if($namelist eq "wrfsi.nl"){
    $varx="xdim";$vary="ydim";$varz="levels";
 }else{
-   $varx="NX_L_CMN";$vary="NY_L_CMN";$varz="NK_LAPS";
+   $varx="NX_L";$vary="NY_L";$varz="NK_LAPS";
 }
 
 while(<PARMS>){
@@ -593,10 +593,10 @@ sub wfo_localization{
               print OUTFILE " standard_latitude=$lat,\n";
           }elsif(/standard_longitude\s*=/i){
               print OUTFILE " standard_longitude=$lon,\n";
-          }elsif(/grid_cen_lat_cmn\s*=/i){
-              print OUTFILE " grid_cen_lat_cmn=$lat,\n";
-          }elsif(/grid_cen_lon_cmn\s*=/i){
-              print OUTFILE " grid_cen_lon_cmn=$lon,\n";
+          }elsif(/grid_cen_lat\s*=/i){
+              print OUTFILE " grid_cen_lat=$lat,\n";
+          }elsif(/grid_cen_lon\s*=/i){
+              print OUTFILE " grid_cen_lon=$lon,\n";
           }elsif(/\sISATS\s*=/i){
               if($goes==8){
                   print OUTFILE " ISATS = 1,0,0,0,0,0\n";
