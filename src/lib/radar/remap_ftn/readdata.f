@@ -154,13 +154,16 @@ c
 !    1                ,miss,reflect,az_array)
       endif
 
-      if(namelist_parms%l_unfold)then
+!     This has been disabled since it apparently uses up the memory when
+!     we run on the IBM
+      if(.false.)then
+!     if(namelist_parms%l_unfold)then
           write(6,*)' read_data_88d: v_nyquist_tilt = ',v_nyquist_tilt       
           if(v_nyquist_tilt .ne. r_missing_data .and. 
      1       v_nyquist_tilt .ne. 0.                   )then
               write(6,*)' read_data_88d: calling unfold...'       
-              call unfold(MAX_VEL_GATES,N_RAYS,velocity
-     1                   ,az_array,v_nyquist_tilt,r_missing_data)       
+!             call unfold(MAX_VEL_GATES,N_RAYS,velocity
+!    1                   ,az_array,v_nyquist_tilt,r_missing_data)       
               v_nyquist_ray = r_missing_data ! prevent further dealiasing
               v_nyquist_tilt = r_missing_data ! prevent further dealiasing
           else
