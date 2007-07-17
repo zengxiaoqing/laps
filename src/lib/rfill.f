@@ -83,6 +83,9 @@ cdis
             return
         endif
 
+        thresh_low_fill = 1.5     ! Elevation of echoes used to extrapolate
+                                  ! downward (degress)
+
 !       Set missing values to ref_base for internal & external processing
 !       write(6,*)' ref_fill_vert: Setting r_missing_data/qc values to '
 !    1             ,ref_base
@@ -298,20 +301,35 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
                     if(k_bottom .le. k_topo_buffer ! Echo base near ground
-!    1       .or. elev_bottom .lt. (elev_topo + 1.5) ! Echo below radar horizon
-     1                 .or. elev_bottom .lt. 1.5 ! Echo base near radar horizon
+!    1       .or. elev_bottom .lt. (elev_topo + thresh_low_fill) ! Echo below radar horizon
+     1                 .or. elev_bottom .lt. thresh_low_fill ! Echo base near radar horizon
      1                                                          )then ! Fill in
                         do k = k_topo,k_bottom ! -1
                             ref_3d(i,j,k) = ref_3d(i,j,k_bottom)
                         enddo ! k
 
-!                       write(6,211)i,j,k_topo,k_bottom,elev_topo,elev_bottom
-!       1                       ,slant_range,ref_3d(i,j,k_bottom)
-211                     format(' low fill ',4i5,2f6.1,2f8.0)
-
                         n_low_fill = n_low_fill + 1
 
-                    endif ! Fill in from ground to bottom of echo
+                        if(n_low_fill .le. 8)then
+!                       if(nint(azimuth) .eq. 222)then
+                            write(6,211)i,j
+     1                                 ,k_topo,k_topo_buffer,k_bottom
+     1                                 ,elev_bottom
+     1                                 ,slant_range,ref_3d(i,j,k_bottom)       
+211                         format(' low fill   ',5i5,f6.2,2f8.0)
+                        endif
+
+                   else
+                        if(.false.)then
+!                       if(nint(azimuth) .eq. 222)then
+                            write(6,212)i,j
+     1                                 ,k_topo,k_topo_buffer,k_bottom
+     1                                 ,elev_bottom
+     1                                 ,slant_range,ref_3d(i,j,k_bottom)       
+212                         format(' no low fill',5i5,f6.2,2f8.0)
+                        endif
+
+                   endif ! Fill in from ground to bottom of echo
 
                 endif ! Bottom of radar echo above ground
 
