@@ -1735,34 +1735,15 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 --------- 2.8  ----- CHANGING THE VERTICAL DOMAIN------------------------------
 
 
-   NUMBER OF LEVELS:
-
-     To do this, perform the following between untarring the tar file and
-    compiling 
-
-     1. Edit 'data/static/nest7grid.parms'
-       
-        Change the parameter 'nk_laps' to be equal to the (number of vertical 
-        levels).
-
-     2. Note that not all data sources have been tested with other than
-        21 vertical levels, particularly some aspects of the forward radiance
-        model used in satellite data processing, and compatibility with 
-        model background data will depend of the vertical extent of that 
-        data source.
-
    PRESSURE OF THE LEVELS (and vertical resolution):
 
      To do this, perform the following between untarring the tar file and
-     compiling
+     localizing LAPS
 
      1. Edit 'data/static/pressures.nl'
 
-        Update the list of pressures so that it is consistent with the
-        other vertical grid parameters mentioned above.
-
-     2. The balance package has the potential for becoming unstable if the 
-        spacing between vertical levels becomes much less than 25mb.
+        Update the list of pressures that go in sequence from higher to lower
+        pressures (bottom to top) 
 
      Note that the vertical grid uses pressure coordinates and that the 
      vertical pressure interval can vary between levels. Of course, the 
@@ -1770,6 +1751,18 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      extend below the terrain and below the observations. The pressure
      values must be in multiples of 100 pascals, corresponding to an integer
      number of millibars.
+
+   NUMBER OF LEVELS:
+
+     1. The default value of 'nk_laps' is set to 21 levels in 
+        'data/static/nest7grid.parms' and will automatically be reset 
+        during the localization (based on the contents of 'pressures.nl').
+       
+     2. Note that not all data sources have been tested with other than
+        21 vertical levels, particularly some aspects of the forward radiance
+        model used in satellite data processing, and compatibility with 
+        model background data will depend of the vertical extent of that 
+        data source.
 
    Note: If you are feeding LAPS output into an AWIPS workstation, then
    additional workstation related changes may be needed.
