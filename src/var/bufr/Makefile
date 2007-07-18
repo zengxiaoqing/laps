@@ -13,7 +13,7 @@ FFLAGS= $(LITTLEFLAGS)
 DBFLAGS= -g $(LITTLEFLAGS)
 
 LIB      = libbufr.a
-DEBUGLIB = libbufr.a
+DEBUGLIB = libdebugbufr.a
 
 #
 # machine_dependent needs to be first
