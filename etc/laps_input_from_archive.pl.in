@@ -14,6 +14,8 @@
 # -g degrib model background data (supply installroot for the degrib software)
 #
 # -s desired satellite (use 8 for goes8)
+#
+# -S skip all standard data download from the MSS
 
 # Require PERL version 5 or newer
 require 5;
@@ -27,9 +29,9 @@ use Time::Local;
 
 # Define command line variables
 # opt_t: time (GMT) of LAPS analysis in YYYYMMDD
-use vars qw($opt_p $opt_t $opt_m $opt_g $opt_s);
+use vars qw($opt_p $opt_t $opt_m $opt_g $opt_s $opt_S);
 
-getopts('p:t:m:s:g:');
+getopts('p:t:m:s:g:S');
 
 my $public = $opt_p;
 my ($analysis_yr, $analysis_mo, $analysis_dy, );
@@ -44,62 +46,65 @@ if ($opt_t =~ /^(\d\d\d\d)(\d\d)(\d\d)$/) {
  exit;
 }
 
-print "Get metar\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/metar/netcdf/\* $public/data/metar/netcdf/");
+if (! defined $opt_S) { 
 
-print "Get madis\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/LDAD/mesonet/netCDF/\* $public/data/madis/LDAD/mesonet/netCDF/");
+    print "Get metar\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/metar/netcdf/\* $public/data/metar/netcdf/");
 
-print "Get maritime\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/maritime/netcdf/\* $public/data/maritime/netcdf/");
+    print "Get madis\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/LDAD/mesonet/netCDF/\* $public/data/madis/LDAD/mesonet/netCDF/");
 
-print "Get wsi-nexrad\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/radar/wsi/nexrad/netcdf/\* $public/data/radar/wsi/nexrad/netcdf/");
+    print "Get maritime\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/maritime/netcdf/\* $public/data/maritime/netcdf/");
 
-print "Get wsi-nowrad\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/radar/wsi/nowrad/netcdf/\* $public/data/radar/wsi/nowrad/netcdf/");
+    print "Get wsi-nexrad\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/radar/wsi/nexrad/netcdf/\* $public/data/radar/wsi/nexrad/netcdf/");
 
-print "Get gps\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/gpsmet/netcdf/\* $public/data/gpsmet/netcdf/");
+    print "Get wsi-nowrad\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/radar/wsi/nowrad/netcdf/\* $public/data/radar/wsi/nowrad/netcdf/");
 
-print "Get radiometer\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/radiometer/netcdf/\* $public/data/madis/point/radiometer/netcdf/");
+    print "Get gps\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/gpsmet/netcdf/\* $public/data/gpsmet/netcdf/");
 
-print "Get goes12-sounding\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes12/sounding/binary/\* $public/data/sat/nesdis/goes12/sounding/binary/");
+    print "Get radiometer\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/radiometer/netcdf/\* $public/data/madis/point/radiometer/netcdf/");
 
-print "Get goes12-raw-sounder\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes12/raw/sounding/scan-area/netcdf/\* $public/data/sat/fsl-gs/goes12/raw/sounding/scan-area/netcdf/");
+    print "Get goes12-sounding\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes12/sounding/binary/\* $public/data/sat/nesdis/goes12/sounding/binary/");
 
-print "Get goes12-imager\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes12/raw/image/fsl-conus/netcdf/\* $public/data/sat/fsl-gs/goes12/raw/image/fsl-conus/netcdf/");
+    print "Get goes12-raw-sounder\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes12/raw/sounding/scan-area/netcdf/\* $public/data/sat/fsl-gs/goes12/raw/sounding/scan-area/netcdf/");
 
-print "Get goes12-tpw\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/\* $public/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/");
+    print "Get goes12-imager\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes12/raw/image/fsl-conus/netcdf/\* $public/data/sat/fsl-gs/goes12/raw/image/fsl-conus/netcdf/");
 
-print "Get fsl-conus\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-conus/gs/netcdf/\* $public/data/sat/fsl-conus/gs/netcdf/");
+    print "Get goes12-tpw\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/\* $public/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/");
 
-print "Get raob\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/raob/netcdf/\* $public/data/raob/netcdf/");
+    print "Get fsl-conus\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-conus/gs/netcdf/\* $public/data/sat/fsl-conus/gs/netcdf/");
 
-print "Get pirep\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/pirep/netcdf/\* $public/data/pirep/netcdf/");
+    print "Get raob\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/raob/netcdf/\* $public/data/raob/netcdf/");
 
-print "Get rass\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/profiler/rass/noaanet/netcdf/\* $public/data/profiler/rass/noaanet/netcdf/");
+    print "Get pirep\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/pirep/netcdf/\* $public/data/pirep/netcdf/");
 
-print "Get profiler\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/profiler/wind/noaanet/netcdf/\* $public/data/profiler/wind/noaanet/netcdf/");
+    print "Get rass\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/profiler/rass/noaanet/netcdf/\* $public/data/profiler/rass/noaanet/netcdf/");
 
-print "Get bl-rass\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/profiler/rass/external/netcdf/\* $public/data/profiler/rass/external/netcdf/");
+    print "Get profiler\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/profiler/wind/noaanet/netcdf/\* $public/data/profiler/wind/noaanet/netcdf/");
 
-print "Get bl-profiler\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/profiler/wind/external/netcdf/\* $public/data/profiler/wind/external/netcdf/");
+    print "Get bl-rass\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/profiler/rass/external/netcdf/\* $public/data/profiler/rass/external/netcdf/");
 
-print "Get acars\n";
-system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/acars/qc/netcdf/\* $public/data/acars/qc/netcdf/");
+    print "Get bl-profiler\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/profiler/wind/external/netcdf/\* $public/data/profiler/wind/external/netcdf/");
+
+    print "Get acars\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/acars/qc/netcdf/\* $public/data/acars/qc/netcdf/");
+}
 
 if ($opt_m eq "ruc") {
     print "Get ruc\n";
