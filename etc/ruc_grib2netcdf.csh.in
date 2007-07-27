@@ -4,6 +4,7 @@
 # second argument is DATAROOT for RUC GRIB input and RUC NetCDF output
 
 setenv NCGEN @NETCDF@/bin/ncgen
+setenv TZ GMT
 set installroot=$1
 set dataroot=$2
 
