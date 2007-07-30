@@ -163,7 +163,7 @@ SUBROUTINE PrPstLSX
       dat(1:ngd(1),1:ngd(2),nvr) = &
 	analys(numfic(1)+1:numgrd(1)-numfic(1), &
 	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)
-    CASE ("CEIL")	! Visibility
+    CASE ("CEIL")	! Cloud ceiling
       nvr = nvr+1
       IF (nvr .GT. LSXVAR) THEN
 	WRITE(*,2)
