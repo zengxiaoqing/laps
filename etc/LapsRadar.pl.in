@@ -295,14 +295,14 @@ if($fxa_sys!=0){
 
 #   if opt_n, use nest7grid.parms for laps_center_point rather than Laps_Center_Point.txt
     if ($opt_n) {
-      my $llatc = `grep -i "grid_cen_lat_cmn" $LAPS_DATA_ROOT/static/nest7grid.parms`;
+      my $llatc = `grep -i "grid_cen_lat" $LAPS_DATA_ROOT/static/nest7grid.parms`;
       ($junk,$lat_laps) = split("=",$llatc);
       chomp($lat_laps);
       chop($lat_laps);  # remove comma
       $lat_laps =~ s/ *//;  #remove any leading spaces
       $lat_lapsR = $lat_laps*($pi/180.0);
 
-      my $llonc = `grep -i "grid_cen_lon_cmn" $LAPS_DATA_ROOT/static/nest7grid.parms`;
+      my $llonc = `grep -i "grid_cen_lon" $LAPS_DATA_ROOT/static/nest7grid.parms`;
       ($junk,$lon_laps) = split("=",$llonc);
       chomp($lon_laps);
       chop($lon_laps);  # remove comma
@@ -469,6 +469,18 @@ if($fxa_sys!=0){
 # write  radars out to file $LAPS_DATA_ROOT/static/vxx/radar.lst 
 # @lapsrad should have the radars in radarsInUse.txt ordered by distance from Laps_Center_Point
 #   up to a maximum of MAX_RADARS_MOSAIC
+
+# verify that @lapsrad has <= MAX_RADARS_MOSAIC radars
+    $nRadars = scalar(@lapsrad);
+
+    my $popped;
+    while ($nRadars > $MAX_RADARS_MOSAIC) {
+      $popped = pop(@lapsrad);
+      print "Radar $popped removed from radar.lst...exceeds MAX_RADARS_MOSAIC=$MAX_RADARS_MOSAIC\n";
+      $nRadars = scalar(@lapsrad);
+    }
+
+# write to radar.lst file
     open(RADARLST, ">$LAPS_DATA_ROOT/static/vxx/radar.lst");  # open for write 
     foreach (@lapsrad) {
       print RADARLST "$_\n";
