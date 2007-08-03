@@ -30,7 +30,7 @@ require "$LAPSROOT/etc/fxa.pm";
 require "$LAPSROOT/etc/run_sys.pm";
 
 require "$LAPSROOT/etc/laps_tools.pm";
-my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project_common",$LAPS_DATA_ROOT);
+my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project",$LAPS_DATA_ROOT);
 my $c8_project = uc @c8_project[0];
 
 my $dsunavailable;
