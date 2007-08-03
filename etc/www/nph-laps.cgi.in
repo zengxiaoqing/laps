@@ -2,8 +2,6 @@
 # nph-laps.cgi (script to display LAPS data)
 
 $DEBUG=0;
-$IDL_DIR = "/usr/local/share/idl";
-$ENV{'IDL_DIR'} =  $IDL_DIR;   
 
 # STANDARD PREAMBLE vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 #for security
@@ -13,12 +11,11 @@ $ENV{'PATH'} = "/usr/bin:/bin";
 $|=1;  #force flush of buffers after each print
 open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
 
-#use lib "/w3/utilities"; # Bill's utilities (for cgi-lib.pl)
-#require "timelocal.pl";   #includes 'timegm' for calculations in gmt
-require "cgi-lib.pl";
-#require "./laps_cgi.pm";
-use lib ".."; 
-require "laps_tools.pm"; # comes from $LAPSINSTALLROOT/etc
+use lib "/w3/utilities"; # Set this to your path for 'cgi-lib.pl'
+require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www
+
+use lib "/usr/nfs/lapb/builds/laps/etc"; # Set this to your path for 'laps_tools.pm'
+require "laps_tools.pm";                 # comes from $LAPSINSTALLROOT/etc
     
 #set up some nice variables
 @month=(Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec);
@@ -248,7 +245,7 @@ chomp $forecast_time;
 print "time = $a9time$forecast_time ";
 
 my $units;
-if($domain_safe =~ "tw_" || $domain_safe =~ "tai" || $domain_safe =~ "th"){
+if($domain_safe =~ "tw_" || $domain_safe =~ "tai" || $domain_safe =~ "th" || $domain_safe =~ "fmi"){
     $units = "metric";
 }else{
     $units = "english";
@@ -284,8 +281,6 @@ EOI
 }
 
 if($err == 0) {
-#   print "open $IDL_DIR/bin/idl tke-ruc2.idl 2>&1 |\n";
-
 #   Write a lapsplot.in file
 #   $logFile = "$thisDir/lapsplot/lapsplot.in";
     $logFile = "$web_root/$ScratchDir/lapsplot.in_$$";
@@ -1374,6 +1369,30 @@ if($err == 0) {
                             printf LAPSPLOT "c\n"; 
                         }
 
+                    }elsif("$field" eq "SFCT" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tgdi\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+      
+                    }elsif("$field" eq "sfct" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tgd\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
                     }elsif("$field" eq "wind" ) { # lgb
                         printf LAPSPLOT "wb\n"; 
                         printf LAPSPLOT "0\n"; 
@@ -1733,14 +1752,14 @@ if($err == 0) {
 
                         }elsif("$field" eq "vis_alb"){ 
                             printf LAPSPLOT "lv\n"; 
-                            printf LAPSPLOT "y\n"; 
+                            printf LAPSPLOT "$hhmm\n"; 
                             printf LAPSPLOT "1\n"; 
                             printf LAPSPLOT "ALB\n";
 #                           printf LAPSPLOT "n\n";   
 
                         }elsif("$field" eq "VIS_ALB"){ 
                             printf LAPSPLOT "lv\n"; 
-                            printf LAPSPLOT "y\n"; 
+                            printf LAPSPLOT "$hhmm\n"; 
                             printf LAPSPLOT "-1\n"; 
                             printf LAPSPLOT "ALB\n";
 #                           printf LAPSPLOT "n\n";   
@@ -2838,9 +2857,9 @@ my $ydim;
 my $domain_nl = "nest7grid.parms";
 my $nl_var;
 if(-e "$laps_data_root/static/$domain_nl"){
-    $nl_var="NX_L_CMN";
+    $nl_var="NX_L";
     @xdim=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
-    $nl_var="NY_L_CMN";
+    $nl_var="NY_L";
     @ydim=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
     $xdim = @xdim[0];
     $ydim = @ydim[0];
@@ -2978,10 +2997,6 @@ EOI
 
 EOI
 }
-
-#This is where the IDL GIF is created?
-#open IDL,"$IDL_DIR/bin/idl tke-ruc2.idl 2>&1 |";
-
 
 #print " test output: write selected.in file \n"; 
 
