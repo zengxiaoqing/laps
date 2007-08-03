@@ -13,11 +13,12 @@ $| = 1;
 open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
 
 use Cwd 'chdir'; #from the camel book(387): "override chdir; keep PWD up to date"
-use lib "/w3/utilities"; # Bill's utilities (for cgi-lib.pl)
-require "timelocal.pl";   #includes 'timegm' for calculations in gmt
-require "cgi-lib.pl";
-use lib "/w3/lapb/request";
-require "laps_tools.pm"; # comes from $LAPSINSTALLROOT/etc
+
+use lib "/w3/utilities"; # Set this to your path for 'cgi-lib.pl'
+require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www
+
+use lib "/usr/nfs/lapb/builds/laps/etc"; # Set this to your path for 'laps_tools.pm'
+require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
 
 ##As per Bill's code, have form expire in 1 hour
 use HTTP::Date;
