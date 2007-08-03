@@ -114,7 +114,7 @@ $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 
 require "$LAPSROOT/etc/laps_tools.pm";
-my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project_common",$LAPS_DATA_ROOT);
+my @c8_project = &laps_tools::get_nl_value("nest7grid.parms","c8_project",$LAPS_DATA_ROOT);
 my $c8_project = uc @c8_project[0];
 
 #
@@ -202,7 +202,7 @@ if (! $opt_l ){
 }
 $ENV{PATH}.=":@NETCDF@/bin";
 
-my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cycle_time_cmn');
+my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cycle_time');
 $cycle_time[0]=~/^(\d+),/;
 my $cycle_time = ($1>0)?$1:3600;
 $cycle_time = $opt_c if($opt_c>0);

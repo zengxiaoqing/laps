@@ -120,7 +120,7 @@ my $archive_time = -99;  #insures that we don't force $yyjjjhhmm to the nearest 
 
 $archive_time = $opt_g if(defined $opt_g);
 
-my @cycle_time=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time_cmn",$LAPS_DATA_ROOT);
+my @cycle_time=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time",$LAPS_DATA_ROOT);
 my $cycle_time = ($cycle_time[0]>0)?$cycle_time[0]:3600;
 
 my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
