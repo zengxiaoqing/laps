@@ -133,6 +133,9 @@ print "Verification info:";
 @greprms = grep /RMS/, @lines;
 @greprms = grep /difference/, @greprms;
 
+@grepbias = grep /Mean/, @lines;
+@grepbias = grep /difference/, @grepbias;
+
 $i = 0;
 
 foreach $field (@grepfields) {
@@ -147,12 +150,19 @@ foreach $field (@grepfields) {
 
   ($dummya1,$dummya2,$dummya3,$dummya4,$dummya5,$dummya6) = split /\s+/, @greprms[$i+1];
 
-  print " rms diff against $dummya6 observations ";
+  print " compared with $dummya6 observations ";
   if("$dummy5" !~ "verification"){print " $dummy5";}
   print " $dummy6 $dummy7\n";
 
 # Print RMS values
-  print "        background: $dummyb4      analysis: $dummya4  \n";
+  print "        RMS ---- background: $dummyb4      analysis: $dummya4  \n";
+
+  ($dummyb1,$dummyb2,$dummyb3,$dummyb4,$dummyb5,$dummyb6) = split /\s+/, @grepbias[$i];
+
+  ($dummya1,$dummya2,$dummya3,$dummya4,$dummya5,$dummya6) = split /\s+/, @grepbias[$i+1];
+
+# Print BIAS values
+  print "        BIAS --- background: $dummyb4      analysis: $dummya4  \n";
 
   $i = $i + 2;
 }
