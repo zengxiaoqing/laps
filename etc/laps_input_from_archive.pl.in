@@ -69,18 +69,6 @@ if (! defined $opt_S) {
     print "Get radiometer\n";
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/point/radiometer/netcdf/\* $public/data/madis/point/radiometer/netcdf/");
 
-    print "Get goes12-sounding\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes12/sounding/binary/\* $public/data/sat/nesdis/goes12/sounding/binary/");
-
-    print "Get goes12-raw-sounder\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes12/raw/sounding/scan-area/netcdf/\* $public/data/sat/fsl-gs/goes12/raw/sounding/scan-area/netcdf/");
-
-    print "Get goes12-imager\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes12/raw/image/fsl-conus/netcdf/\* $public/data/sat/fsl-gs/goes12/raw/image/fsl-conus/netcdf/");
-
-    print "Get goes12-tpw\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/\* $public/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/");
-
     print "Get fsl-conus\n";
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-conus/gs/netcdf/\* $public/data/sat/fsl-conus/gs/netcdf/");
 
@@ -117,12 +105,37 @@ if ($opt_m eq "ruc") {
     }
 }
 
-if ($opt_s eq "8") {
-    print "Get goes$opt_s tpw\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes0$opt_s\/tpw/sfov_ihop/ascii/\* $public/data/grids/sat/nesdis/goes0$opt_s\/tpw/sfov_ihop/ascii/");
+if ($opt_s eq "8" || $opt_s eq "12") {
+    my $sat;
 
+#   Activate if necessary
+    if(length($opt_s) == 1){
+        $sat = "0$opt_s";
+    }else{
+        $sat = "$opt_s";
+    }
+
+#   Satellite imagery
     print "Get goes$opt_s imagery\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes0$opt_s\/raw/image/fsl-conus/netcdf/\* $public/data/grids/sat/nesdis/goes0$opt_s\/raw/image/fsl-conus/netcdf/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/raw/image/fsl-conus/netcdf/\* $public/data/grids/sat/nesdis/goes$opt_s\/raw/image/fsl-conus/netcdf/");
+
+#   Cloud drift winds 
+    print "Get goes$opt_s cloud-drift\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/wind/cloud-drift/ascii/\* $public/data/sat/nesdis/goes$opt_s\/wind/cloud-drift/ascii/");
+
+#   Data for the LQ3 analysis
+    print "Get goes$opt_s tpw\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/tpw/sfov_ihop/ascii/\* $public/data/grids/sat/nesdis/goes$opt_s\/tpw/sfov_ihop/ascii/");
+
+    print "Get goes$opt_s sounding\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/sounding/binary/\* $public/data/sat/nesdis/goes$opt_s\/sounding/binary/");
+
+    print "Get goes$opt_s raw-sounder\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes$opt_s\/raw/sounding/scan-area/netcdf/\* $public/data/sat/fsl-gs/goes$opt_s\/raw/sounding/scan-area/netcdf/");
+
+    print "Get goes$opt_s imager\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes$opt_s\/raw/image/fsl-conus/netcdf/\* $public/data/sat/fsl-gs/goes$opt_s\/raw/image/fsl-conus/netcdf/");
+
 }
 
 exit;
