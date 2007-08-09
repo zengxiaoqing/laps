@@ -3,7 +3,8 @@
      1                                           ,tb                  ! I
      1                                           ,badflag,ni,nj       ! I
      1                                           ,rms_thresh_norm     ! I
-     1                                           ,bad_mult            ! I
+     1                                           ,bad_mult_land       ! I
+     1                                           ,bad_mult_water      ! I
      1                                           ,topo,ldf            ! I
      1                                           ,wt_bkg_a            ! I
      1                                           ,t_2d,istatus)       ! O
@@ -106,13 +107,21 @@ C
             std = 0.
         endif
 
-        bad = bad_mult * std
-	print *,' std dev: ',std,', bad value: ',bad
-     1                          ,', ratio: ',bad_mult      
+        bad_land = bad_mult_land * std
+	print *,' std dev: ',std,', bad value: ',bad_land
+     1                          ,', ratio: ',bad_mult_land      
+
+        bad_water = bad_mult_water * std
+	print *,' std dev: ',std,', bad value: ',bad_water
+     1                          ,', ratio: ',bad_mult_water      
 
 !       Eliminate bad data from the data structure
         do i = 1,mxstn
             if(obs_barnes(i)%qc)then
+
+                bad =        obs_barnes(i)%ldf  * bad_land + 
+     1                (1.0 - obs_barnes(i)%ldf) * bad_water
+
                 if(ob_diff(i) .ge. bad)then
                     obs_barnes(i)%qc = .false.
                     write(6,1099) obs_barnes(i)%i, obs_barnes(i)%j
