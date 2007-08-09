@@ -810,10 +810,11 @@ c
      &        obs_error_vis,name,topo,ldf,wt_bkg_a)
 
         write(6,*)' Analyze TGD observations'
-        bad_tgd = 3.0
         call barnes_multivariate_sfc_jacket('tgd',obs,mxstn,tgd_bk_f
      1                                 ,badflag,imax,jmax
-     1                                 ,rms_thresh_norm,bad_tgd
+     1                                 ,rms_thresh_norm
+     1                                 ,sfc_nl_parms%bad_tgd_land
+     1                                 ,sfc_nl_parms%bad_tgd_water
      1                                 ,topo,ldf,wt_bkg_a,d2,istatus)
 	call conv_f2k(d2,tgd_k,imax,jmax)                  ! conv F to K
 c
