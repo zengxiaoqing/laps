@@ -1137,7 +1137,7 @@ cdoc    Convert DIR and SPEED (true north) to U and V (grid north)
      1                                v_true,    ! I
      1                                u_grid,    ! O
      1                                v_grid,    ! O
-     1                                longitude) ! O
+     1                                longitude) ! I
 
 cdoc    Convert wind vector from true north to grid north, given the longitude.
 
