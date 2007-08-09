@@ -54,8 +54,12 @@ cdis
 !       pre-existing cloud field, either at the horizontal grid location 
 !       in question or from a neighboring grid point that has existing cloud.
 
-!       If the echo top is below 2000m AGL, or no pre-existing cloud-base 
-!       is found, no cloud is added and the echo is blanked out.
+!       High echo tops with consistent cloud bases are treated as "resolved".
+!       Low echo tops are treated as "unresolved" as are echoes that lack
+!       pre-existing cloud.
+
+!       For all "unresolved" echoes no cloud is added and the echo is blanked 
+!       out.
 
 !       Narrowband radar is treated similarly, except that the echo top
 !       threshold does not apply. Instead, this subroutine will be actively
@@ -88,13 +92,19 @@ cdis
 !       Cloud not filled in unless radar echo is higher than base calculated
 !       with THIS threshold.
         real*4     thresh_cvr
-        parameter (thresh_cvr = 0.20)
+        parameter (thresh_cvr = 0.10)
 
         logical l_below_base, l_inserted
         logical l_unresolved(ni,nj)
 
 !       Calculate Cloud Bases
         unlimited_ceiling = 200000.
+
+!       Echo top threshold
+        echo_agl_thr = 2000.
+
+!       Search radius for cloud bases
+        search_radius_m = 120000.
 
         do j = 1,nj
         do i = 1,ni
@@ -121,10 +131,8 @@ cdis
         insert_count_tot = 0
         iwrite_inserted = 0
 
-        isearch_radius = nint(120000. / grid_spacing_m)
+        isearch_radius = nint(search_radius_m / grid_spacing_m)
         intvl = max((isearch_radius / 4),1)
-
-        echo_agl_thr = 2000.
 
         write(6,*)' isearch_radius/intvl = ',isearch_radius,intvl
 

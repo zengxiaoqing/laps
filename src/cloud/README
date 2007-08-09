@@ -14,6 +14,9 @@ main
         insert_co2ctp                                    insert_co2ctp.f
         barnes_r5                                        barnes_r5.f
         GET_SAT_DATA (read 3.9 micron)                   get_sat_data.f
+            get_laps_2dvar                               lib/laps_io.f
+                get_laps_sat                                 "
+                    get_laps_lvd                             "
         get_vis      (read vis data)                     getvis.f
             get_sfc_albedo
             albedo_to_cloudfrac2
