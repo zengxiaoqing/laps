@@ -42,8 +42,8 @@ LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a \
            $(SRCROOT)/src/lib/grib2/libgrib2.a
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
-             $(SRCROOT)/src/lib/libdebuggrib2.a \
-             $(SRCROOT)/src/lib/modules/libdebugmodules.a
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a \
+             $(SRCROOT)/src/lib/libdebuggrib2.a
 
 RM=rm -f 
 
