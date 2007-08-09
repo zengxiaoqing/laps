@@ -224,15 +224,6 @@ c.....  Namelist stuff
 c
 	integer use_lso_qc, skip_internal_qc, itheta
         logical l_require_lso
-	character nl_file*256
-c
-	namelist /surface_analysis/ use_lso_qc,skip_internal_qc,
-     1                              itheta, redp_lvl, del, gam, ak,       
-     1                              l_require_lso,
-     1                              bad_t,bad_td,bad_u,bad_v,bad_p,
-     1                              bad_mp,bad_th,bad_the,
-     1                              bad_vis,bad_tb8,
-     1                              thresh_t,thresh_td,thresh_mslp
 c
 c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
