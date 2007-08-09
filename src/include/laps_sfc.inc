@@ -19,6 +19,9 @@ c
           real rms_temp
           real rms_dewpoint
 
+          real bad_tgd_land
+          real bad_tgd_water
+
 	end type sfc_nl_type
 
         type (sfc_nl_type) sfc_nl_parms

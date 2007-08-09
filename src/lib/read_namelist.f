@@ -616,6 +616,7 @@ c
        real    bad_t,bad_td,bad_u,bad_v,bad_p
        real    bad_mp,bad_th,bad_the
        real    bad_vis,bad_tb8
+       real    bad_tgd_land,bad_tgd_water
        real    thresh_t,thresh_td,thresh_mslp
        real    rms_wind, rms_temp, rms_dewpoint
 
@@ -626,6 +627,7 @@ c
      1                              l_require_lso,
      1                              bad_t,bad_td,bad_u,bad_v,bad_p,
      1                              bad_mp,bad_th,bad_the,
+     1                              bad_tgd_land,bad_tgd_water,
      1                              bad_vis,bad_tb8,
      1                              thresh_t,thresh_td,thresh_mslp,
      1                              rms_wind, rms_temp, rms_dewpoint
@@ -645,6 +647,9 @@ c
        sfc_nl_parms%rms_wind = rms_wind
        sfc_nl_parms%rms_temp = rms_temp
        sfc_nl_parms%rms_dewpoint = rms_dewpoint
+       sfc_nl_parms%bad_tgd_land  = bad_tgd_land
+       sfc_nl_parms%bad_tgd_water = bad_tgd_water
+
 
        istatus = 1
        return

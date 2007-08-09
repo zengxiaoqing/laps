@@ -11,6 +11,8 @@
  bad_mp=5.0,
  bad_u=6.0,
  bad_v=6.0,
+ bad_tgd_land=3.0,
+ bad_tgd_water=3.0,
  thresh_t=30.,
  thresh_td=40.,
  thresh_mslp=10.,
@@ -90,6 +92,13 @@ c       bad_th = 3.5 	        ! for theta
 c       bad_the = 2.5           ! for theta-e
 c       bad_vis = 500. 	        ! for visibility
 c       bad_tb8 = 5.0 	        ! for tb8 Brightness temps.
+
+c       These parameters should be defined in this namelist as they aren't
+c       initialized in the code
+c       
+c       QC parms: # of standard deviations 
+c       bad_tgd_land            ! for ground temperature
+c       bad_tgd_water           ! for water/sea surface temperature
 c
 c       QC parms: threshold checks
 c       thresh_t                ! for temperature (deg F)
