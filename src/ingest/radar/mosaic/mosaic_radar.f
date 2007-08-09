@@ -48,7 +48,7 @@ c namelist items
           if(n_radars_wideband .eq. -1)then
               call get_max_radars(n_radars_wideband,istatus)
               if(istatus .ne. 1)goto1000
-              write(6,*)' setting n_radars_wideband = max_radars_cmn = '      
+              write(6,*)' setting n_radars_wideband = max_radars = '      
      1                 ,n_radars_wideband
           endif
 
@@ -116,7 +116,7 @@ c namelist items
           write(6,50)'Radar extensions: ',(c_radar_ext(i),i=1,n_radars)
 !50       format(1x,a,10(:,a3,1x))
  
-          call mosaic_radar_sub(nx_l_cmn,ny_l_cmn,nk_laps,
+          call mosaic_radar_sub(nx_l,ny_l,nz_l,
      1         max_radars_mosaic,
      1         n_radars,c_radar_ext,c_radar_mosaic,i_window,
      1         r_missing_data,laps_cycle_time,mosaic_cycle_time,
