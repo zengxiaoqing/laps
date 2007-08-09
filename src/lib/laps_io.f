@@ -1437,6 +1437,7 @@ c
         lcont=.true.
         jf=0
 
+        print*,'Number of files returned get_file_times',i_nbr_files_ret
 50      i4_diff_min = 999999999
         do j = 1,i_nbr_files_ret
            i4_diff = abs(i4times(j) - i4time_needed)
