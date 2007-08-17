@@ -64,11 +64,8 @@ cdis
         character*9 c9_string, asc_tim_9
         character*13 filename13
         character*2 c_field
-        character*3 c_staname, c3_presob
-
-!       Declarations for 'read_sfc_state' call
-        real*4 pr_s(maxsta), sr_s(maxsta)
-        character c3_stations_a(maxsta)*3
+        character*3 c3_presob
+        character*5 c_staname
 
 !       Declarations for 'read_surface_sa' call
 !       New arrays for reading in the SAO data from the LSO files
@@ -332,15 +329,16 @@ cdis
 
                 c20_stations = stations(i)
 
-                len_sta_plot = 3 ! maximum station name length allowed in plot
+                len_sta_plot = 5 ! maximum station name length allowed in plot
 
                 call left_justify(c20_stations)
                 call s_len(c20_stations,len_sta)
 
-                if(len_sta .eq. 4 .and. len_sta_plot .eq. 3)then
-                    c_staname = c20_stations(len_sta-2:len_sta)
+                if(len_sta .gt. len_sta_plot)then ! right justify
+                    ifirst = len_sta - len_sta_plot + 1
+                    c_staname = c20_stations(ifirst:len_sta)
                 else
-                    c_staname = c20_stations(1:len_sta_plot)
+                    c_staname = c20_stations(1:len_sta)
                 endif
 
                 charsize = .0040 / zoom_eff
