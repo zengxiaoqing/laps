@@ -827,8 +827,9 @@ C
       ylow =  y_2 + .01
       yhigh = y_2 + .03
 
+!     Set up for number of lines in colorbar
       ilow = 1
-      ihigh = 999
+      ihigh = 2000
 
       xrange = xhigh - xlow
       irange = ihigh - ilow
