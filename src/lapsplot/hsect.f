@@ -6846,9 +6846,19 @@ c             if(cint.eq.0.0)cint=0.1
 
         iy = y_1 * 1024
 
+!       Set for zoom
+        zfrac = 1.0 / plot_parms%zoom_wdw
+
+        zxcen = plot_parms%xcen * 1023.
+        zycen = plot_parms%ycen * 1023.
+
+        ix = nint( (float(ix) * zfrac) + zxcen * (1.0 - zfrac))
+        iy = nint( (float(iy) * zfrac) + zycen * (1.0 - zfrac))
+        rsize_zoom = rsize/plot_parms%zoom_wdw
+
         if(len_label .gt. 0)then
             CALL PCHIQU (cpux(ix),cpux(iy),c_label(1:len_label)
-     1                  ,rsize,0,-1.0)      
+     1                  ,rsize_zoom,0,-1.0)      
         else
             write(6,*)' Note that label has zero length...'
         endif
@@ -6860,6 +6870,11 @@ c             if(cint.eq.0.0)cint=0.1
             ix = 622
         endif
         iy = y_1 * 1024
+
+!       Set for zoom
+        ix = nint( (float(ix) * zfrac) + zxcen * (1.0 - zfrac))
+        iy = nint( (float(iy) * zfrac) + zycen * (1.0 - zfrac))
+
         call downcase(asc_tim_24(5:10),asc_tim_24(5:10))
         CALL PCHIQU (cpux(ix),cpux(iy),'VT '//asc_tim_24(1:17)
      1                                //namelist_parms%c3_time_zone
