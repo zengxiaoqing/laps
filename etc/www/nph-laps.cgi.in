@@ -504,7 +504,7 @@ if($err == 0) {
 
                           $zoom_lapsplot = $zoom_safe * ( $npix/885. );
 
-                          printf LAPSPLOT "$zoom_lapsplot,$density_safe,$thickness_safe\n";
+                          printf LAPSPLOT "$zoom_lapsplot,$density_safe,$thickness_safe,$zoom_safe\n";
                       }
                   }
 
