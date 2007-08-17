@@ -142,6 +142,9 @@ cdis
 !       Set Default plot parameters
         plot_parms%rimage_intensity = 1.0
         plot_parms%zoom = 1.0
+        plot_parms%xcen = 0.5
+        plot_parms%ycen = 0.5
+        plot_parms%zoom_wdw = 1.0
         plot_parms%ncols = 0.
         plot_parms%icol_barbs = 0
 
@@ -177,8 +180,13 @@ cdis
  101            format(
      1       '    Zoom,Density (contours/sfc wind barbs), Contour width'       
      1                ,15x,'     ? ',$)
-                read(lun,*)zoom,density,plot_parms%contour_line_width       
-!               plot_parms%contour_line_width = 1
+ 
+                read(lun,*)zoom,density
+     1                    ,plot_parms%contour_line_width       
+     1                    ,plot_parms%xcen
+     1                    ,plot_parms%ycen
+     1                    ,plot_parms%zoom_wdw
+
             else
                 zoom = 1.0
                 density = 1.0
