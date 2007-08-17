@@ -1967,6 +1967,12 @@ can be gotten directly from GSD)
    generally more significant. If any core dumps occur they can usually be 
    flagged by searching for the 'sh:' string in 'sched.log.*'.
 
+   If you are reporting runtime errors it can be useful to tar up your entire 
+   $LAPS_DATA_ROOT and send it to us or make it available on your web server. 
+   If you have the untarred files on your web server we can browse through 
+   the directories for the log and product files as needed to help diagnose 
+   the run.
+
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
        The following section contains information on which LAPS processes 
