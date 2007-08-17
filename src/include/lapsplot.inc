@@ -36,6 +36,7 @@
           real zoom
           real xcen
           real ycen
+          real zoom_wdw
 
           integer contour_line_width
           integer ncols
