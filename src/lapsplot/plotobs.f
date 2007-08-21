@@ -49,15 +49,15 @@ cdis
 
         common /zoom/ zoom
 
-        real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 grid_ra_vel(imax,jmax,kmax)
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
+        real grid_ra_ref(imax,jmax,kmax)
+        real grid_ra_vel(imax,jmax,kmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
 
-        real*4 aspect_a(imax,jmax)          ! local
+        real aspect_a(imax,jmax)          ! local
 
-        integer*4 n_plotted(imax,jmax)
+        integer n_plotted(imax,jmax)
 
         character*150 directory
         character*31 ext,c3_obsext
@@ -75,7 +75,7 @@ cdis
 
         data init/0/
 
-        Real*4
+        Real
      1  azimuth_deg,
      1  X,
      1  Y,
@@ -98,7 +98,7 @@ cdis
 
         common /plotobs/ c_obs_type,c_map,c_mode,c_anl,c_radial
 
-        integer*4               vert_rad_pirep,
+        integer               vert_rad_pirep,
      1                          vert_rad_sao,
      1                          vert_rad_meso,
      1                          vert_rad_prof

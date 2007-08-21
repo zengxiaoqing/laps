@@ -180,7 +180,7 @@ C                           PL2 lies on the right frame, PL3 lies on the lower
 C                           frame and PL4 lies on the upper frame.  Note that
 C                           in the calling program PL1 through PL4 will be
 C                           dimensioned:
-C                               Real*4  PL1(2),PL2(2),PL3(2),PL4(2)
+C                               Real  PL1(2),PL2(2),PL3(2),PL4(2)
 
 C                          .If JJLTS is positive, the SupMap call is plotted
 C                           below the map.  This is omitted if JJLTS is < 0.
@@ -741,7 +741,7 @@ c    3          MPCOL3,LDash3   /192,'1777'O/,  !Limb lines
 c    4          MPCOL4,LDash4   /255,'1777'O/   !Perimeter
 
         character       supmap_dir*150
-        integer*4       lsdir
+        integer       lsdir
 
         data iwrite /0/
 
@@ -1850,13 +1850,13 @@ c*******************************************************************************
 
         subroutine ichar_to_str (chars, nchars, str)
 
-        integer*4       chars(*), nchars
+        integer       chars(*), nchars
         character       str*(*)
 
 
-        integer*4       ic, ib, iw
+        integer       ic, ib, iw
 
-        integer*4       iword, ichr
+        integer       iword, ichr
         character       ibyte(4)
         equivalence     (ibyte(1), iword)
 
@@ -1887,7 +1887,7 @@ c*******************************************************************************
 
         subroutine dashln (idash_pat)
 
-        integer*4       idash_pat
+        integer       idash_pat
 
 
         return
@@ -1898,7 +1898,7 @@ c*******************************************************************************
 
         subroutine optn (iopt, ival)
 
-        integer*4       iopt, ival
+        integer       iopt, ival
 
 
         return
@@ -1909,8 +1909,8 @@ c*******************************************************************************
 
         subroutine pwrt (u, v, chars, nchars, isize, iorient)
 
-        real*4          u, v
-        integer*4       chars(*), nchars, isize, iorient
+        real          u, v
+        integer       chars(*), nchars, isize, iorient
 
 
         character       str*256
@@ -1928,8 +1928,8 @@ c*******************************************************************************
 
 c       subroutine set (x1, x2, y1, y2, u1, u2, v1, v2, itype)
 c
-c       real*4          x1, x2, y1, y2, u1, u2, v1, v2
-c       integer*4       itype
+c       real          x1, x2, y1, y2, u1, u2, v1, v2
+c       integer       itype
 c
 c
 c       return
@@ -1940,7 +1940,7 @@ c       end
 
         subroutine uliber2 (ier, chars)
 
-        integer*4       ier
+        integer       ier
 
         character       chars*(*)
 

@@ -327,7 +327,7 @@ c     Call local colorbar routine
       integer maxvals
       parameter (maxvals=100)
 
-      real*4 vals(maxvals),vals_scaled(maxvals)
+      real vals(maxvals),vals_scaled(maxvals)
       
       EXTERNAL FILL
 C      
@@ -781,8 +781,8 @@ C
       integer maxvals
       parameter (maxvals=100)
 
-      real*4 frac_a(maxvals)
-      real*4 vals(maxvals)
+      real frac_a(maxvals)
+      real vals(maxvals)
 
       write(6,*)' colorbar: scale_l,scale_h,scale',scale_l,scale_h,scale
 
@@ -1134,10 +1134,10 @@ c     Restore original color table
 
       character*200 path,filename
       character*(*)colortable
-      real*4 frac_a(300)
-      real*4 hue_a(300)
-      real*4 sat_a(300)
-      real*4 rint_a(300)
+      real frac_a(300)
+      real hue_a(300)
+      real sat_a(300)
+      real rint_a(300)
 
       write(6,*)' subroutine generate_colortable: ncols = ',ncols
 
@@ -1257,7 +1257,7 @@ c     Restore original color table
 
       include 'lapsplot.inc'
 
-      real*4 vals(maxvals)
+      real vals(maxvals)
 
       if(namelist_parms%c_units_type .eq. 'english')then ! (inches)
           vals(1) = 0.

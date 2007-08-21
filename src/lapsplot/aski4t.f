@@ -41,7 +41,7 @@ cdis
         function aski4t()
 
         character*9 asc9_tim
-        integer*4 aski4t
+        integer aski4t
 
         write(6,*)'Enter time, <yydddhhmm>, or <RETURN> for latest:'
 

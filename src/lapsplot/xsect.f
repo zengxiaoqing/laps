@@ -68,12 +68,12 @@ cdis
 
         include 'lapsplot.inc'
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
-        real*4 rlaps_land_frac(NX_L,NY_L)
-        real*4 dx(NX_L,NY_L)
-        real*4 dy(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
+        real rlaps_land_frac(NX_L,NY_L)
+        real dx(NX_L,NY_L)
+        real dy(NX_L,NY_L)
 
-        integer*4 NX_C,NZ_C,NZ_B
+        integer NX_C,NZ_C,NZ_B
 !       parameter (NX_C = 61)   ! NX_L ! Number of horizontal points in X-Sect
 !       parameter (NZ_C = NZ_L) ! Number of vertical levels in LAPS
 
@@ -81,7 +81,7 @@ cdis
 
         include 'laps_cloud.inc'
 
-        real*4 clouds_3d(NX_L,NY_L,KCLOUD)
+        real clouds_3d(NX_L,NY_L,KCLOUD)
 
         common/lapsplot_omega/l_convert
 
@@ -93,7 +93,7 @@ cdis
 
         data lapsplot_pregen /.true./
 
-        real*4 cld_pres(KCLOUD)
+        real cld_pres(KCLOUD)
 
         character*2 c2_cloud_type,c2_cloud_types(0:10)
         data c2_cloud_types
@@ -116,10 +116,10 @@ cdis
 
         character*10 colortable
 
-        real*4 dum1_array(NX_L,1)
-        real*4 dum2_array(NX_L,1)
-        real*4 dum3_array(NX_L,1)
-        real*4 dum4_array(NX_L,1)
+        real dum1_array(NX_L,1)
+        real dum2_array(NX_L,1)
+        real dum3_array(NX_L,1)
+        real dum4_array(NX_L,1)
 
         data mode_lwc/2/
 
@@ -142,46 +142,46 @@ cdis
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(NX_C,1)
-        integer*4 ibase_array(NX_C,1)
-        integer*4 itop_array(NX_C,1)
+        integer ibase_array(NX_C,1)
+        integer itop_array(NX_C,1)
 
-        real*4 u_3d(NX_L,NY_L,NZ_L)
-        real*4 v_3d(NX_L,NY_L,NZ_L)
-        real*4 field_3d(NX_L,NY_L,NZ_L)
-        real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 rh_3d(NX_L,NY_L,NZ_L)
-        real*4 q_3d(NX_L,NY_L,NZ_L)
-        real*4 slwc_3d(NX_L,NY_L,NZ_L)
-        real*4 cice_3d(NX_L,NY_L,NZ_L)
-        real*4 grid_ra_ref(NX_L,NY_L,NZ_L)
-        real*4 grid_ra_vel(NX_L,NY_L,NZ_L)
-!       real*4 grid_ra_rfill(NX_L,NY_L,NZ_L)
+        real u_3d(NX_L,NY_L,NZ_L)
+        real v_3d(NX_L,NY_L,NZ_L)
+        real field_3d(NX_L,NY_L,NZ_L)
+        real temp_3d(NX_L,NY_L,NZ_L)
+        real rh_3d(NX_L,NY_L,NZ_L)
+        real q_3d(NX_L,NY_L,NZ_L)
+        real slwc_3d(NX_L,NY_L,NZ_L)
+        real cice_3d(NX_L,NY_L,NZ_L)
+        real grid_ra_ref(NX_L,NY_L,NZ_L)
+        real grid_ra_vel(NX_L,NY_L,NZ_L)
+!       real grid_ra_rfill(NX_L,NY_L,NZ_L)
 
-        real*4 pcp_type_3d(NX_L,NY_L,NZ_L)
+        real pcp_type_3d(NX_L,NY_L,NZ_L)
 !       equivalence(pcp_type_3d,rh_3d)
 
-!       real*4 pcp_type_2d(NX_C,NZ_C)
+!       real pcp_type_2d(NX_C,NZ_C)
 !       equivalence(pcp_type_2d,rh_2d)
 
-        real*4 field_2d(NX_C,NZ_C)
-        real*4 fieldt_2d(NX_T,NZ_C)
+        real field_2d(NX_C,NZ_C)
+        real fieldt_2d(NX_T,NZ_C)
 
 !       COMMON/LABS/IA(2),NC,NREP,NCRT,ILAB,NULBLL,SIZEL,SIZEM,SIZEP
         character c9_radarage*9
 
-        real*4 lifted(NX_L,NY_L)
+        real lifted(NX_L,NY_L)
 
-!       real*4 cloud_cvr_2d(NX_L,NY_L)
-        real*4 cloud_ceil_2d(NX_L,NY_L)
-        real*4 vis_2d(NX_L,NY_L)
-        real*4 cloud_top_2d(NX_L,NY_L)
+!       real cloud_cvr_2d(NX_L,NY_L)
+        real cloud_ceil_2d(NX_L,NY_L)
+        real vis_2d(NX_L,NY_L)
+        real cloud_top_2d(NX_L,NY_L)
 
-        real*4 clouds_vert(NX_C,KCLOUD)
+        real clouds_vert(NX_C,KCLOUD)
 
-        real*4 cloud_ceil_1d(NX_C)
-        real*4 cloud_top_1d(NX_C)
+        real cloud_ceil_1d(NX_C)
+        real cloud_top_1d(NX_C)
 
-        real*4 k_to_c, make_rh
+        real k_to_c, make_rh
 
         common /MCOLOR/mini,maxi
 
@@ -191,9 +191,9 @@ cdis
 
         include 'icolors.inc'
 
-        integer*4 N_CONTOURS
+        integer N_CONTOURS
         parameter (N_CONTOURS = 23)
-        real*4 factor(N_CONTOURS)
+        real factor(N_CONTOURS)
         data factor/
      1  .001,
      1  .002,
@@ -220,38 +220,38 @@ cdis
      1  20000.
      1                  /
 
-        real*4 lat_1d(NX_C)
-        real*4 lon_1d(NX_C)
-        real*4 snow_1d(NX_C)
+        real lat_1d(NX_C)
+        real lon_1d(NX_C)
+        real snow_1d(NX_C)
 
-        real*4 pres_3d(NX_L,NY_L,NZ_L)
-        real*4 pres_2d(NX_L,NY_L)
-        real*4 pres_1d(NX_C)
+        real pres_3d(NX_L,NY_L,NZ_L)
+        real pres_2d(NX_L,NY_L)
+        real pres_1d(NX_C)
 
-        real*4 u_vert(NX_C,NZ_C)
-        real*4 v_vert(NX_C,NZ_C)
-        real*4 pres_vert(NX_C,NZ_C)
-        real*4 temp_2d(NX_C,NZ_C)
-        real*4 rh_2d(NX_C,NZ_C)
-        real*4 heights_2d(NX_C,NZ_C)
-        real*4 radar_2d(NX_C,NZ_C)
-        real*4 slwc_2d(NX_C,NZ_C)
-        real*4 cice_2d(NX_C,NZ_C)
-        real*4 field_vert(NX_C,NZ_C)
-        real*4 field_vert_buf(NX_C,NZ_C)
-        real*4 field_vert_diff(NX_C,NZ_C)
-        real*4 field_vert2(NX_C,NZ_C)
-        real*4 field_vert3(NX_P,NX_P)
-        real*4 w_2d(NX_C,NZ_C)
-        real*4 mvd_2d(NX_C,NZ_C)
+        real u_vert(NX_C,NZ_C)
+        real v_vert(NX_C,NZ_C)
+        real pres_vert(NX_C,NZ_C)
+        real temp_2d(NX_C,NZ_C)
+        real rh_2d(NX_C,NZ_C)
+        real heights_2d(NX_C,NZ_C)
+        real radar_2d(NX_C,NZ_C)
+        real slwc_2d(NX_C,NZ_C)
+        real cice_2d(NX_C,NZ_C)
+        real field_vert(NX_C,NZ_C)
+        real field_vert_buf(NX_C,NZ_C)
+        real field_vert_diff(NX_C,NZ_C)
+        real field_vert2(NX_C,NZ_C)
+        real field_vert3(NX_P,NX_P)
+        real w_2d(NX_C,NZ_C)
+        real mvd_2d(NX_C,NZ_C)
         integer icing_index_2d(NX_C,NZ_C)
-        real*4 terrain_vert(NX_C,NZ_C)
-        real*4 terrain_vert1d(NX_C)
-        real*4 lon_vert(NX_C)
+        real terrain_vert(NX_C,NZ_C)
+        real terrain_vert1d(NX_C)
+        real lon_vert(NX_C)
 
-        integer*4 iarg
+        integer iarg
 
-        real*4 mspkt 
+        real mspkt 
         data mspkt /.518/
 
         character*100 c_label
@@ -266,9 +266,9 @@ cdis
         character*24 asc_tim_24
         character*9 a9time,c9_string
         character*20 c20_sta
-        integer*4 ity
+        integer ity
 
-        integer*4 N_STATIONS
+        integer N_STATIONS
         parameter (N_STATIONS = 32)
 
         character*3 c3_sta_array(N_STATIONS)
@@ -279,7 +279,7 @@ cdis
      1   'ERI','MHR','CP3','CHL','UND','OKC','MKC',
      1   'ICT','DSM','GRI','ASE'/
 
-        real*4 sta_lat(N_STATIONS)
+        real sta_lat(N_STATIONS)
         data sta_lat
      1    /  40.29,  40.59,  40.59,  39.20,  39.36,  40.26,  39.75,
      1       39.23,  39.90,  39.75,  39.57,  38.82,  41.15,  41.32,
@@ -287,7 +287,7 @@ cdis
      1       40.10,  39.87,  39.95,  40.44,  40.10,  35.40,  39.12,
      1       37.65,  41.53,  40.97,  39.22/
 
-        real*4 sta_lon(N_STATIONS)
+        real sta_lon(N_STATIONS)
         data sta_lon
      1    /-103.05,-105.14,-105.14,-104.50,-103.04,-104.87,-104.87,
      1     -104.63,-105.12,-104.87,-104.85,-104.72,-104.82,-105.68,
@@ -3358,12 +3358,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NX_C, r_missing_data
 !                                   to interp_2d
 
-        integer*4 NX_C,NZ_C
+        integer NX_C,NZ_C
 !       parameter (NX_C = 61) ! NX_L
 !       parameter (NZ_C = NZ_L)
 
-        real*4 array_in(NX_L,NY_L,NZ_L)
-        real*4 array_out(NX_C,NZ_C)
+        real array_in(NX_L,NY_L,NZ_L)
+        real array_out(NX_C,NZ_C)
 
 !       array_out = r_missing_data
 
@@ -3388,12 +3388,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 !       Nearest neighbor interpolation of a vertical X-sect
 
-        integer*4 NX_C,NZ_C
+        integer NX_C,NZ_C
 !       parameter (NX_C = 61) ! NX_L
 !       parameter (NZ_C = NZ_L)
 
-        real*4 array_in(NX_L,NY_L,NZ_L)
-        real*4 array_out(NX_C,NZ_C)
+        real array_in(NX_L,NY_L,NZ_L)
+        real array_out(NX_C,NZ_C)
 
         do k = 1,NZ_L
              call interp_2dn(array_in(1,1,k),array_out(1,k)
@@ -3416,12 +3416,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NX_C, r_missing_data
 !                                   to interp_2d_spread
 
-        integer*4 NX_C,NZ_C
+        integer NX_C,NZ_C
 !       parameter (NX_C = 61) ! NX_L
 !       parameter (NZ_C = NZ_L)
 
-        real*4 array_in(NX_L,NY_L,NZ_L)
-        real*4 array_out(NX_C,NZ_C)
+        real array_in(NX_L,NY_L,NZ_L)
+        real array_out(NX_C,NZ_C)
 
         do k = 1,NZ_L
              call interp_2d_spread(array_in(1,1,k),array_out(1,k)
@@ -3443,12 +3443,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                                   was unused)
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
-        integer*4 NX_C,NZ_C
+        integer NX_C,NZ_C
 !       parameter (NX_C = 61) ! NX_L
 !       parameter (NZ_C = NZ_L)
 
-        real*4 array_in(NX_L,NY_L)
-        real*4 array_out(NX_C)
+        real array_in(NX_L,NY_L)
+        real array_out(NX_C)
 
         if(NX_C .gt. 1)then
             deltax = (xhigh - xlow) / (float(NX_C) - 1.)
@@ -3515,12 +3515,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 !       Nearest neighbor interpolation of a 2d array to a line.
 
-        integer*4 NX_C,NZ_C
+        integer NX_C,NZ_C
 !       parameter (NX_C = 61) ! NX_L
 !       parameter (NZ_C = NZ_L)
 
-        real*4 array_in(NX_L,NY_L)
-        real*4 array_out(NX_C)
+        real array_in(NX_L,NY_L)
+        real array_out(NX_C)
 
         deltax = (xhigh - xlow) / (float(NX_C) - 1.)
         deltay = (yhigh - ylow) / (float(NX_C) - 1.)
@@ -3552,12 +3552,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                                   latter was unused)
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
-        integer*4 NX_C,NZ_C
+        integer NX_C,NZ_C
 !       parameter (NX_C = 61) ! NX_L
 !       parameter (NZ_C = NZ_L)
 
-        real*4 array_in(NX_L,NY_L)
-        real*4 array_out(NX_C)
+        real array_in(NX_L,NY_L)
+        real array_out(NX_C)
 
         deltax = (xhigh - xlow) / (float(NX_C) - 1.)
         deltay = (yhigh - ylow) / (float(NX_C) - 1.)
@@ -3621,12 +3621,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         include 'laps_cloud.inc'
 
-        integer*4 NX_C,NZ_C
+        integer NX_C,NZ_C
 !       parameter (NX_C = 61) ! NX_L
 !       parameter (NZ_C = kcloud)
 
-        real*4 array_in(NX_L,NY_L,kcloud)
-        real*4 array_out(NX_C,kcloud)
+        real array_in(NX_L,NY_L,kcloud)
+        real array_out(NX_C,kcloud)
 
         do k = 1,kcloud
              call interp_2d(array_in(1,1,k),array_out(1,k)
@@ -3652,7 +3652,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         logical l_left, l_right, l_top, l_bottom
 
-        integer*4 NX_C,NZ_C
+        integer NX_C,NZ_C
 !       parameter (NX_C = 61) ! NX_L
 !       parameter (NZ_C = NZ_L)
 
@@ -3800,27 +3800,27 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 !       This routine labels stations on the X-sect in a logical manner
 
-        real*4 stapos_a(maxstns+1)
+        real stapos_a(maxstns+1)
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
-        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
-        real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
-        real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
+        real lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
+        real cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
+        real t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
+        real dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
      1       , ffg_s(maxstns)
-        real*4 vis_s(maxstns)
+        real vis_s(maxstns)
         character stations(maxstns)*3, wx_s(maxstns)*8    ! c5_stamus
 
 !       Declarations for new read_surface routine
 !       New arrays for reading in the SAO data from the LSO files
-        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
+        real   pstn(maxstns),pmsl(maxstns),alt(maxstns)
      1          ,store_hgt(maxstns,5)
-        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
+        real   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
      1          ,vis(maxstns)
      1                                          ,rad(maxstns)
 
-        Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
+        Integer   obstime(maxstns),kloud(maxstns),idp3(maxstns)
 
         Character   obstype(maxstns)*8
      1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
@@ -3951,7 +3951,7 @@ c
         end
 
         subroutine closest(r1,r2,rd1,rd2,tclo,rmin)
-        implicit real*4 (a-z)
+        implicit real (a-z)
 
 c       write(6,*)
 
@@ -3980,8 +3980,8 @@ c
      1                           ,ny_out,iylow_out,iyhigh_out
      1                           ,field_in,field_out,r_missing_data)
 
-        real*4 field_in(nx_in,ny_in)
-        real*4 field_out(nx_out,ny_out)
+        real field_in(nx_in,ny_in)
+        real field_out(nx_out,ny_out)
 
         call constant(field_out,r_missing_data,nx_out,ny_out)
 

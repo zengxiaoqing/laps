@@ -40,7 +40,7 @@ cdis
       subroutine plot_windob(dir,spd,ri,rj,lat,lon,imax,jmax,relsize
      1                      ,aspect,c4_rot)
 
-      real*4 lat(imax,jmax),lon(imax,jmax)
+      real lat(imax,jmax),lon(imax,jmax)
       character*4 c4_rot
 
       call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)

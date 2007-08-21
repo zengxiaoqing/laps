@@ -47,19 +47,19 @@ cdis
 
         include 'trigd.inc'
 
-        real*4 m ! Grid points per meter
+        real m ! Grid points per meter
 
         DATA scale/1./
 
-        real*4 lat(ni,nj),lon(ni,nj)
-        real*4 uanl(ni,nj),vanl(ni,nj)
-        real*4 uanl_grid(ni,nj),vanl_grid(ni,nj)
-        real*4 div(ni,nj)
-        real*4 one(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
+        real uanl(ni,nj),vanl(ni,nj)
+        real uanl_grid(ni,nj),vanl_grid(ni,nj)
+        real div(ni,nj)
+        real one(ni,nj)
 
-        real*4 dum1(ni,nj)
-        real*4 dum2(ni,nj)
-        real*4 dum3(ni,nj)
+        real dum1(ni,nj)
+        real dum2(ni,nj)
+        real dum3(ni,nj)
 
         character*6 c6_maproj
 
@@ -138,12 +138,12 @@ cdis
         subroutine vorticity_abs(uanl,vanl,vort,lat,lon,ni,nj
      1                          ,l_grid_north,r_missing_data)
 
-        real*4 lat(ni,nj),lon(ni,nj)
-        real*4 uanl(ni,nj),vanl(ni,nj)
-        real*4 coriolis(ni,nj)
-        real*4 vort(ni,nj)
-        real*4 div(ni,nj)
-        real*4 dx(ni,nj), dy(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
+        real uanl(ni,nj),vanl(ni,nj)
+        real coriolis(ni,nj)
+        real vort(ni,nj)
+        real div(ni,nj)
+        real dx(ni,nj), dy(ni,nj)
 
         call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
 
@@ -165,10 +165,10 @@ c
         integer nx,ny
         integer i,j
 
-        real*4  lat(nx,ny)
-        real*4  coriolis_rotation(nx,ny)
+        real  lat(nx,ny)
+        real  coriolis_rotation(nx,ny)
 
-        real*4  omega_ear
+        real  omega_ear
         data    omega_ear/7.292e-5/
 
         do j=1,ny

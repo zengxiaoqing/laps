@@ -5,25 +5,25 @@
 
         include 'lapsplot.inc'
 
-        real*4 pres_3d(NX_L,NY_L,NZ_L)
-        real*4 field_3d(NX_L,NY_L,NZ_L)
-!       real*4 rh_3d(NX_L,NY_L,NZ_L)
+        real pres_3d(NX_L,NY_L,NZ_L)
+        real field_3d(NX_L,NY_L,NZ_L)
+!       real rh_3d(NX_L,NY_L,NZ_L)
 
-        real*4 pres_2d(NX_L,NY_L)
-        real*4 t_2d(NX_L,NY_L)
-        real*4 td_2d(NX_L,NY_L)
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
+        real pres_2d(NX_L,NY_L)
+        real t_2d(NX_L,NY_L)
+        real td_2d(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
 
-        real*4 temp_vert(NZ_L)
-        real*4 rh_vert(NZ_L)
-        real*4 sh_vert(NZ_L)
-        real*4 td_vert(NZ_L)
+        real temp_vert(NZ_L)
+        real rh_vert(NZ_L)
+        real sh_vert(NZ_L)
+        real td_vert(NZ_L)
 
-        real*4 pres_1d(NZ_L)
-        real*4 logp_1d(NZ_L), logp_bottom, logp_top, logp, logp_sfc
+        real pres_1d(NZ_L)
+        real logp_1d(NZ_L), logp_bottom, logp_top, logp, logp_sfc
   
-        real*4 k_to_c, make_td
+        real k_to_c, make_td
 
         character*1 c_prodtype
         character*3 var_2d

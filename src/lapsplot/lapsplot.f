@@ -43,22 +43,22 @@ cdis
 
         common /supmp1/ dummy,part
         common /supmp6/ umin,umax,vmin,vmax
-        real*4 dummy(8),part
+        real dummy(8),part
         common /ERROR/ IFRAME, IERRR
         common /image/ n_image
 
-        integer*4       idummy(6),ioffm,istatus
+        integer       idummy(6),ioffm,istatus
 
-        integer*4 ni,nj,i
+        integer ni,nj,i
 
-        real*4 field(ni,nj),lat(ni,nj),lon(ni,nj)
+        real field(ni,nj),lat(ni,nj),lon(ni,nj)
 
-        real*4
+        real
      1  umin,umax,vmin,vmax
 
-        integer*4 N_CONTOURS
+        integer N_CONTOURS
         parameter (N_CONTOURS = 26)
-        real*4 factor(N_CONTOURS)
+        real factor(N_CONTOURS)
         data factor/
      1  .0001,
      1  .0002,
@@ -89,16 +89,16 @@ cdis
      1                  /
 
 
-        real*4 cint,cbase,cvalue,clow,chigh
+        real cint,cbase,cvalue,clow,chigh
 
-        integer*4
+        integer
      1  jlts,
      1  jnj,
      1  iusout,
      1  jdot,
      1  ier,iframe
 
-        real*4
+        real
      1  tx,ty,
      1  polon,
      1  rot,
@@ -188,22 +188,22 @@ cdis
 
         common /supmp1/ dummy,part
         common /supmp6/ umin,umax,vmin,vmax
-        real*4 dummy(8),part
+        real dummy(8),part
         common /ERROR/ IFRAME, IERRR
         common /image/ n_image
 
-        integer*4       idummy(6),ioffm,istatus
+        integer       idummy(6),ioffm,istatus
 
-        integer*4 ni,nj,i
+        integer ni,nj,i
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
-        real*4
+        real
      1  umin,umax,vmin,vmax
 
-        integer*4 N_CONTOURS
+        integer N_CONTOURS
         parameter (N_CONTOURS = 20)
-        real*4 factor(N_CONTOURS)
+        real factor(N_CONTOURS)
         data factor/
      1  .01,
      1  .02,
@@ -228,16 +228,16 @@ cdis
      1                  /
 
 
-        real*4 cint,cbase,cvalue,clow,chigh
+        real cint,cbase,cvalue,clow,chigh
 
-        integer*4
+        integer
      1  jlts,
      1  jnj,
      1  iusout,
      1  jdot,
      1  ier,iframe
 
-        real*4
+        real
      1  tx,ty,
      1  polon,
      1  rot,

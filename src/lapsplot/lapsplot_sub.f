@@ -42,7 +42,7 @@ cdis
         include 'lapsplot.inc'
 
         character*1 c_display
-        integer*4 SYS$TRNLOG,ASKI4T
+        integer SYS$TRNLOG,ASKI4T
         character*9 asc9_tim
         character*4 RM
         character*35 TIME
@@ -54,7 +54,7 @@ cdis
 
         common /zoom/ zoom,density
 
-!       integer*4 nk
+!       integer nk
 !       common /get_packed_data2/ nk
 
 !       nk = 17 ! A temporary fix as the blockdata won't work

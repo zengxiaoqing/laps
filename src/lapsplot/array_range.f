@@ -41,7 +41,7 @@ cdis
        subroutine contour_settings(a,ni,nj,clow,chigh,cint,zoom,density
      1                            ,scale)       
 
-       real*4 a(ni,nj)
+       real a(ni,nj)
 
        write(6,*)' Subroutine contour_settings...'
 
@@ -111,7 +111,7 @@ cdis
 
        subroutine array_range(a,ni,nj,rmin,rmax,r_missing_data)
 
-       real*4 a(ni,nj)
+       real a(ni,nj)
 
        rmin =  abs(r_missing_data)
        rmax = -abs(r_missing_data)
@@ -132,7 +132,7 @@ cdis
         subroutine condition_precip(NX_L,NY_L,c_type,accum_2d,scale
      1                             ,pthr)           
 
-        real*4 accum_2d(NX_L,NY_L), image_cutoff
+        real accum_2d(NX_L,NY_L), image_cutoff
         character*(*)c_type
 
         if(.true.)return
@@ -167,7 +167,7 @@ cdis
         subroutine condition_cape(NX_L,NY_L,c_type,r_missing_data
      1                           ,field_2d)
 
-        real*4 field_2d(NX_L,NY_L), image_cutoff
+        real field_2d(NX_L,NY_L), image_cutoff
         character*(*)c_type
 
         image_cutoff = 300.

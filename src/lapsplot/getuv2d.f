@@ -14,12 +14,12 @@
         character*125 comment_2d(2)
         character*10 units_2d(2)
         character*3 var(2)
-        integer*4 LVL_2d(2)
+        integer LVL_2d(2)
         character*4 LVL_COORD_2d(2), fcst_hhmm
         character*9 a9time
         character*13 a13_time
 
-        real*4 uv_2d(imax,jmax,2)
+        real uv_2d(imax,jmax,2)
 
         call get_directory(ext,directory,len_dir)
         call s_len(ext,lext)
@@ -117,10 +117,10 @@ cdoc    Used to read in one or more surface grids with inputs of time and ext
         character*125 comment_2d(nf)
         character*10 units_2d(nf)
         character*3 var_2d(nf)
-        integer*4 LVL_2d(nf)
+        integer LVL_2d(nf)
         character*4 LVL_COORD_2d(nf)
 
-        real*4 field_2d(imax,jmax,nf)
+        real field_2d(imax,jmax,nf)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then

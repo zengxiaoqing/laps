@@ -40,7 +40,7 @@ cdis
 
 !       1997 Steve Albers
 
-        real*4 lat(imax,jmax),lon(imax,jmax)
+        real lat(imax,jmax),lon(imax,jmax)
 
         common /supmp6/ umin_n,umax_n,vmin_n,vmax_n
 

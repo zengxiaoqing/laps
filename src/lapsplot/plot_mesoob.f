@@ -56,7 +56,7 @@ cdis
 
 !       This routine labels station locations on the H-sect
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
         character c_label*(*)
         character directory*150,ext*31,ext_lso*6
@@ -69,10 +69,10 @@ cdis
 
 !       Declarations for 'read_surface_sa' call
 !       New arrays for reading in the SAO data from the LSO files
-        real*4   ceil(maxsta),lowcld(maxsta),cover_a(maxsta)
+        real   ceil(maxsta),lowcld(maxsta),cover_a(maxsta)
      1          ,vis(maxsta)
 
-!       Integer*4   kloud(maxsta)
+!       Integer   kloud(maxsta)
 
 !       character atype(maxsta)*6
 
@@ -569,7 +569,7 @@ c
 
         include 'lapsplot.inc'
 
-        real*4 lat(imax,jmax),lon(imax,jmax)
+        real lat(imax,jmax),lon(imax,jmax)
         character*3 t1,td1,p1
         character*4 c4_pcp
         character*25 wx

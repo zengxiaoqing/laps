@@ -41,9 +41,9 @@ cdis
 
         include 'lapsplot.inc'
 
-        real*4 u(imax,jmax),v(imax,jmax)
-        real*4 lat(imax,jmax),lon(imax,jmax)
-        real*4 mspkt
+        real u(imax,jmax),v(imax,jmax)
+        real lat(imax,jmax),lon(imax,jmax)
+        real mspkt
 
         logical l_barbs
 

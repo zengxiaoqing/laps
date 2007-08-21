@@ -40,16 +40,16 @@ cdis
      1                          ,c2_field,l_meta,plot_parms
      1                          ,imax,jmax,lat,lon,ifield_2d)
 
-        integer*4 icldpcp_type_2d(imax,jmax)
-        integer*4 ifield_2d(imax,jmax)
+        integer icldpcp_type_2d(imax,jmax)
+        integer ifield_2d(imax,jmax)
 
         logical l_meta,l_new
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
 
         character barg
-        integer*4 iarg,byte_to_i4
+        integer iarg,byte_to_i4
 
         include 'lapsplot.inc'
 

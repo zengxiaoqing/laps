@@ -76,7 +76,7 @@ cdis
 
         include 'lapsplot.inc'
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
 
         real,  allocatable  :: static_grid(:,:)
 
@@ -99,9 +99,9 @@ cdis
         real clow,chigh,cint_ref
         data clow/-200./,chigh/+400/,cint_ref/10./
 
-        integer*4 idum1_array(NX_L,NY_L)
+        integer idum1_array(NX_L,NY_L)
 
-        real*4 dum1_array(NX_L,NY_L)
+        real dum1_array(NX_L,NY_L)
 
       ! Used for "Potential" Precip Type
         logical iflag_mvd,iflag_icing_index,iflag_cloud_type
@@ -109,8 +109,8 @@ cdis
         logical iflag_snow_potential, l_plot_image, l_image
         logical l_low_fill, l_high_fill
 
-        integer*4 ibase_array(NX_L,NY_L)
-        integer*4 itop_array(NX_L,NY_L)
+        integer ibase_array(NX_L,NY_L)
+        integer itop_array(NX_L,NY_L)
 
         character*3 c_field
         character*2 c_metacode
@@ -119,25 +119,25 @@ cdis
         character*3 c_bkg
         character c19_label*19,c_label*100
 
-!       integer*4 ity,ily,istatus
+!       integer ity,ily,istatus
 !       data ity/35/,ily/1010/
 
 !       Stuff to read in WIND file
-        integer*4 KWND
+        integer KWND
         parameter (KWND = 3)
-        real*4 u_2d(NX_L,NY_L) ! WRT True North
-        real*4 v_2d(NX_L,NY_L) ! WRT True North
-        real*4 w_2d(NX_L,NY_L)
-        real*4 liw(NX_L,NY_L)
-!       real*4 helicity(NX_L,NY_L)
-        real*4 vas(NX_L,NY_L)
-        real*4 cint
-        real*4 uv_2d(NX_L,NY_L,2)
+        real u_2d(NX_L,NY_L) ! WRT True North
+        real v_2d(NX_L,NY_L) ! WRT True North
+        real w_2d(NX_L,NY_L)
+        real liw(NX_L,NY_L)
+!       real helicity(NX_L,NY_L)
+        real vas(NX_L,NY_L)
+        real cint
+        real uv_2d(NX_L,NY_L,2)
 
-        real*4 dir(NX_L,NY_L)
-        real*4 spds(NX_L,NY_L)
+        real dir(NX_L,NY_L)
+        real spds(NX_L,NY_L)
 
-        real*4 sndr_po(19,NX_L,NY_L)
+        real sndr_po(19,NX_L,NY_L)
 
         character*4 var_2d, var_2d_in
         character*150  directory
@@ -148,69 +148,69 @@ cdis
         character*9 comment_a,comment_b
 
 !       For reading in radar data
-        real*4 dummy_array(NX_L,NY_L)
-        real*4 radar_array(NX_L,NY_L)
-!       real*4 radar_array_adv(NX_L,NY_L)
+        real dummy_array(NX_L,NY_L)
+        real radar_array(NX_L,NY_L)
+!       real radar_array_adv(NX_L,NY_L)
 
-        real*4 v_nyquist_in_a(MAX_RADARS)
-        real*4 rlat_radar_a(MAX_RADARS), rlon_radar_a(MAX_RADARS) 
-        real*4 rheight_radar_a(MAX_RADARS)
-        integer*4 i4time_radar_a(MAX_RADARS)
-        integer*4 n_vel_grids_a(MAX_RADARS)
+        real v_nyquist_in_a(MAX_RADARS)
+        real rlat_radar_a(MAX_RADARS), rlon_radar_a(MAX_RADARS) 
+        real rheight_radar_a(MAX_RADARS)
+        integer i4time_radar_a(MAX_RADARS)
+        integer n_vel_grids_a(MAX_RADARS)
         character*4 radar_name,radar_name_a(MAX_RADARS)
         character*31 ext_radar,ext_radar_a(MAX_RADARS)
 
-!       real*4 omega_3d(NX_L,NY_L,NZ_L)
-        real*4 grid_ra_ref(NX_L,NY_L,NZ_L,L_RADARS)
+!       real omega_3d(NX_L,NY_L,NZ_L)
+        real grid_ra_ref(NX_L,NY_L,NZ_L,L_RADARS)
 
-!       real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
-!       real*4 grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
-        real*4, allocatable, dimension(:,:,:,:) :: grid_ra_vel
-        real*4, allocatable, dimension(:,:,:,:) :: grid_ra_nyq
+!       real grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
+!       real grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
+        real, allocatable, dimension(:,:,:,:) :: grid_ra_vel
+        real, allocatable, dimension(:,:,:,:) :: grid_ra_nyq
 
-        integer*4 idx_radar(MAX_RADARS)
+        integer idx_radar(MAX_RADARS)
 
-        real*4 grid_ra_ref_dum(1,1,1,1)
-        real*4 grid_ra_vel_dum(1,1,1,1)
-        real*4 field_3d(NX_L,NY_L,NZ_L)
-        real*4 pres_3d(NX_L,NY_L,NZ_L)
+        real grid_ra_ref_dum(1,1,1,1)
+        real grid_ra_vel_dum(1,1,1,1)
+        real field_3d(NX_L,NY_L,NZ_L)
+        real pres_3d(NX_L,NY_L,NZ_L)
 
-!       real*4 lifted(NX_L,NY_L)
-        real*4 height_2d(NX_L,NY_L)
-        real*4 temp_2d(NX_L,NY_L)
-        real*4 tw_sfc_k(NX_L,NY_L)
-        real*4 td_2d(NX_L,NY_L)
-        real*4 pres_2d(NX_L,NY_L)
-        real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 pressures_mb(NZ_L)
+!       real lifted(NX_L,NY_L)
+        real height_2d(NX_L,NY_L)
+        real temp_2d(NX_L,NY_L)
+        real tw_sfc_k(NX_L,NY_L)
+        real td_2d(NX_L,NY_L)
+        real pres_2d(NX_L,NY_L)
+        real temp_3d(NX_L,NY_L,NZ_L)
+        real pressures_mb(NZ_L)
 
-!       real*4 slwc_int(NX_L,NY_L)
-        real*4 column_max(NX_L,NY_L)
-        integer*4 i_array(NX_L,NY_L)
+!       real slwc_int(NX_L,NY_L)
+        real column_max(NX_L,NY_L)
+        integer i_array(NX_L,NY_L)
 
-        real*4 field2_2d(NX_L,NY_L)
-        real*4 cice_2d(NX_L,NY_L)
-        real*4 field_2d(NX_L,NY_L)
-        real*4 field_2d_buf(NX_L,NY_L)
-        real*4 field_2d_diff(NX_L,NY_L)
+        real field2_2d(NX_L,NY_L)
+        real cice_2d(NX_L,NY_L)
+        real field_2d(NX_L,NY_L)
+        real field_2d_buf(NX_L,NY_L)
+        real field_2d_diff(NX_L,NY_L)
 
-        real*4 snow_2d(NX_L,NY_L)
-        real*4 snow_2d_buf(NX_L,NY_L)
-        real*4 precip_2d(NX_L,NY_L)
-        real*4 precip_2d_buf(NX_L,NY_L)
-        real*4 accum_2d(NX_L,NY_L)
+        real snow_2d(NX_L,NY_L)
+        real snow_2d_buf(NX_L,NY_L)
+        real precip_2d(NX_L,NY_L)
+        real precip_2d_buf(NX_L,NY_L)
+        real accum_2d(NX_L,NY_L)
 
-        real*4 dx(NX_L,NY_L)
-        real*4 dy(NX_L,NY_L)
+        real dx(NX_L,NY_L)
+        real dy(NX_L,NY_L)
 
 !       Local variables used in
         logical l_mask(NX_L,NY_L)
         integer ipcp_1d(NZ_L)
 
-        integer*4 iarg
+        integer iarg
 
-        real*4 cloud_cvr(NX_L,NY_L)
-!       real*4 cloud_2d(NX_L,NY_L)
+        real cloud_cvr(NX_L,NY_L)
+!       real cloud_2d(NX_L,NY_L)
 
         character*255 c_filespec_ra
         character*255 c_filespec_src
@@ -235,20 +235,20 @@ cdis
         logical lapsplot_pregen,l_precip_pregen,l_pregen,l_radar_read
         data lapsplot_pregen /.true./
 
-!       real*4 heights_3d(NX_L,NY_L,NZ_L)
+!       real heights_3d(NX_L,NY_L,NZ_L)
 
-        real*4 p_1d_pa(NZ_L)
-        real*4 rh_2d(NX_L,NY_L)
-        real*4 sh_2d(NX_L,NY_L)
+        real p_1d_pa(NZ_L)
+        real rh_2d(NX_L,NY_L)
+        real sh_2d(NX_L,NY_L)
 
-        real*4 k_to_f, k_to_c
-        real*4 make_rh
+        real k_to_f, k_to_c
+        real make_rh
 
         include 'laps_cloud.inc'
         include 'bgdata.inc'
 
-        real*4 clouds_3d(NX_L,NY_L,KCLOUD)
-        real*4 cld_pres(KCLOUD)
+        real clouds_3d(NX_L,NY_L,KCLOUD)
+        real cld_pres(KCLOUD)
 
         common /supmp1/ dummy,part
 
@@ -5935,15 +5935,15 @@ c             if(cint.eq.0.0)cint=0.1
 
         common /MCOLOR/mini,maxi
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L)
 
         character c_label*(*),asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character*1 c_display
 
-        real*4 array(NX_L,NY_L)
-        real*4 array_plot(NX_L,NY_L)
+        real array(NX_L,NY_L)
+        real array_plot(NX_L,NY_L)
 
-!       integer*4 ity,ily,istatus
+!       integer ity,ily,istatus
 !       data ity/35/,ily/1010/
 
         include 'icolors.inc'
@@ -6098,17 +6098,17 @@ c             if(cint.eq.0.0)cint=0.1
         character c_label*(*),asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
 
-        real*4 u(NX_L,NY_L)
-        real*4 v(NX_L,NY_L)
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real u(NX_L,NY_L)
+        real v(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
-        real*4 n_plotted(NX_L,NY_L)
-        real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 grid_ra_vel(imax,jmax,kmax)
+        real n_plotted(NX_L,NY_L)
+        real grid_ra_ref(imax,jmax,kmax)
+        real grid_ra_vel(imax,jmax,kmax)
 
-!       integer*4 ity,ily,istatus
+!       integer ity,ily,istatus
 !       data ity/35/,ily/1010/
 
         include 'icolors.inc'
@@ -6259,10 +6259,10 @@ c             if(cint.eq.0.0)cint=0.1
         character c_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
 
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
 
-!       integer*4 ity,ily,istatus
+!       integer ity,ily,istatus
 !       data ity/35/,ily/1010/
 
         include 'icolors.inc'
@@ -6360,14 +6360,14 @@ c             if(cint.eq.0.0)cint=0.1
         character c_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
 
-        integer*4 icldpcp_type_2d(NX_L,NY_L)
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
-        integer*4 ifield_2d(NX_L,NY_L)
+        integer icldpcp_type_2d(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
+        integer ifield_2d(NX_L,NY_L)
 
-        integer*4 iarg
+        integer iarg
 
-!       integer*4 ity,ily,istatus
+!       integer ity,ily,istatus
 !       data ity/35/,ily/1010/
 
         include 'icolors.inc'
@@ -6490,12 +6490,12 @@ c             if(cint.eq.0.0)cint=0.1
         character c_field*2,c_display*1
         character*(*) c_file
 
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
 
-        integer*4 iarg
+        integer iarg
 
-!       integer*4 ity,ily,istatus
+!       integer ity,ily,istatus
 !       data ity/35/,ily/1010/
 
         include 'icolors.inc'
@@ -7105,7 +7105,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         subroutine input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
-        real*4 pres_3d(NX_L,NY_L,NZ_L)
+        real pres_3d(NX_L,NY_L,NZ_L)
 
         icen = NX_L/2
         jcen = NY_L/2
@@ -7135,10 +7135,10 @@ c             if(cint.eq.0.0)cint=0.1
         character*10 c_type
         character*9 asc9_tim_t
 
-        real*4 field_2d(NX_L,NY_L)
+        real field_2d(NX_L,NY_L)
 
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
 
 !       i_image: whether this particular plot is an image
         common /image/ n_image, i_image 
@@ -7301,8 +7301,8 @@ c             if(cint.eq.0.0)cint=0.1
 !       This is written for just one field at present, though it can be
 !       readily expanded to two fields. 
 
-        real*4 pcp_2d(ni,nj,nf)
-        real*4 pcp_buf_2d(ni,nj,nf)
+        real pcp_2d(ni,nj,nf)
+        real pcp_buf_2d(ni,nj,nf)
         character*3 var_2d(nf)
         character*(*)ext
         character*1 c_pcp ! Used only if a single field is chosen

@@ -41,11 +41,11 @@ cdis
 
       include 'lapsplot.inc'
 c
-      real*4 sw(2),ne(2),pl1(2),pl2(2),pl3(2),pl4(2),
+      real sw(2),ne(2),pl1(2),pl2(2),pl3(2),pl4(2),
      +       polat,polon,rrot
 
 c
-      integer*4 jproj,jjlts,jgrid,jus,jdot,ier
+      integer jproj,jjlts,jgrid,jus,jdot,ier
 c
       COMMON/SUPMP9/DS,DI,DSRDI
       common /zoom/       zoom
@@ -191,7 +191,7 @@ c
        character*7 c_units_type
        character*7 c_pbl_depth_units
        logical l_discrete,l_sphere
-       real*4 time_zone
+       real time_zone
 
        namelist /lapsplot_nl/ latlon_int,continent_line_width
      1                       ,c3_time_zone,time_zone
