@@ -1,9 +1,14 @@
  &cloud_drift_nl
- n_paths_drift=3,
- path_to_cloud_drift='/public/data/sat/nesdis/goes8/wind/cloud-drift/ascii',
-                     '/public/data/sat/nesdis/goes9/wind/cloud-drift/ascii',
-                     '/public/data/sat/nesdis/goes10/wind/cloud-drift/ascii',
- cloud_drift_format='NESDIS','NESDIS','NESDIS',
+ n_paths_drift=8,
+ path_to_cloud_drift='/public/data/sat/nesdis/goes11/wind/cloud-drift/ascii',
+                     '/public/data/sat/nesdis/goes12/wind/cloud-drift/ascii',
+                     '/public/data/sat/nesdis/goes11/wind/vapor-drift/ascii',
+                     '/public/data/sat/nesdis/goes12/wind/vapor-drift/ascii',
+                     '/public/data/sat/nesdis/goes11/wind/visible/ascii',
+                     '/public/data/sat/nesdis/goes12/wind/visible/ascii',
+                     '/public/data/sat/nesdis/goes11/wind/sounder11/ascii',
+                     '/public/data/sat/nesdis/goes12/wind/sounder10/ascii',
+ cloud_drift_format='NESDIS','NESDIS','NESDIS','NESDIS','NESDIS','NESDIS','NESDIS','NESDIS',
  /
 
 c Cloud Drift ingest (ingest_cloud_drift.exe)
