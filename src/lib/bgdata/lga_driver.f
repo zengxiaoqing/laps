@@ -860,8 +860,8 @@ c
 c ***** Check if t_at_sfc is defined **********
 c       ----------------------------
            lhif_tsfc=.true.
-           search_tsfc_missing: do i=1,nx_laps
-            do j=1,ny_laps
+           search_tsfc_missing: do i=1,nx_bg
+            do j=1,ny_bg
              if(t_at_sfc(i,j).eq.missingflag)then
                 lhif_tsfc=.false.
                 exit search_tsfc_missing
