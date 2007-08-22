@@ -16,7 +16,8 @@ c    into the output files.
 c
 c  balance:
 c    Logical flag, set to true to use the balanced wind, temp, height 
-c    fields.  Normally set to true if hotstart is true.
+c    fields.  Normally set to true if hotstart is true. If this is set
+c    to true then lrunbal in balance.nl should also be set to true. 
 c
 c  hydrometeor_scale_factor:	
 c    A factor which scales the hydrometeor concentrations for a grid
