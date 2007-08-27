@@ -330,7 +330,7 @@ c     misc variables
 c     code *******************************************************************
 
 
-c     read covariance data ---------------------------------------------------
+c     read covariance data ----set for nam model ---------------------------------------
 
       if (covar_switch .ne. 0 ) then
          level7 = 7  !Okyeon needs to determine 700 level
@@ -346,7 +346,7 @@ c         write (6,*)((((covar(k,l,i,j),k = 1,19),l=1,19),i=1,93),j=1,65)
 
 C     INVERT COVAR since covar is direct from NAM and NOT laps.
 
-c     use f90 construce make arrays identical
+c     use f90 construct to make arrays identical
          covar_temp = covar
 
          do k=1,19

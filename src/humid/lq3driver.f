@@ -59,7 +59,7 @@ c     of cpu time when run without optimization.
       implicit none
       
 c      include 'lapsparms.cmn'
-      include 'grid_fname.cmn'
+c      include 'grid_fname.cmn'
       
       integer*4
      1     ii,jj,kk,
@@ -79,17 +79,34 @@ c      call get_laps_config(grid_fnam_common,istatus) ! commented out 6/11/07
 c     call get_laps_config('nest7grid',istatus)
 
       call get_grid_dim_xy(ii,jj,istatus)
+      if (istatus.ne.1) then
+         write (6,*) 'error in grid_dim_xy'
+         return
+      endif
       
 c      ii = nx_l_cmn
 c      jj = ny_l_cmn
 
       call get_laps_dimensions(kk,istatus)
+      if (istatus.ne.1) then
+         write (6,*) 'error in laps_dimensions (k)'
+         return
+      endif
 c      kk = nk_laps
 
       call get_r_missing_data(mdf,istatus)
+      if (istatus.ne.1) then
+         write (6,*) 'error in get_r_missing_data value'
+         return
+      endif
 c      mdf = r_missing_data_cmn
 
       call get_laps_cycle_time(lct,istatus)
+      if (istatus.ne.1) then
+         write (6,*) 'error in get_laps_cycle_time'
+         return
+      endif
+
 c      lct = laps_cycle_time_cmn
       
       call get_directory('etc',fname,len)
