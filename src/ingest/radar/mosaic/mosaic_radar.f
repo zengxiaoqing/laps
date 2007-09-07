@@ -170,9 +170,8 @@ c
       Character     c_filename_vxx(maxfiles,n_radars)*200
       Character     path_rdr*200
       Character     path*200
-      Character     fname*9
       Character     atime*24
-      Character     c_fname_pre*9
+      Character     a9time*9
       Character     c_radar_ext(mx_radars)*3
       Character     c_ra_ext(n_radars)*3
       Character     c_directory*256
@@ -246,7 +245,7 @@ c
 c
 c get current time. Make the time window.
 c --------------------------------------------------------
-      call get_systime_i4(i4time_sys,istatus)
+      call get_systime(i4time_sys,a9time,istatus)
 c
 c get lat/lon/topo data
 c
