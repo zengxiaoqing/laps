@@ -746,17 +746,17 @@
      STANDARD_LATITUDE = 10.0,
      STANDARD_LATITUDE2 = 40.0,
      STANDARD_LONGITUDE = +120.0,
-     GRID_CEN_LAT_CMN = +23.578,
-     GRID_CEN_LON_CMN = +120.91,
-     GRID_SPACING_M_CMN = 9000.,
-     NX_L_CMN = 153,
-     NY_L_CMN = 141,
+     GRID_CEN_LAT = +23.578,
+     GRID_CEN_LON = +120.91,
+     GRID_SPACING_M = 9000.,
+     NX_L = 153,
+     NY_L = 141,
 
      path_to_topt30s='/home/data_disk/geog/world_topo_30s',
      path_to_landuse30s='/home/data_disk/geog/landuse_30s',
      path_to_albedo  = '/home/data_disk/geog/albedo_ncep',
-     path_to_raw_profiler_cmn='/pj/fsldat/point/profiler/netcdf/',
-     path_to_qc_acars_cmn='/home/data_disk/dat/acars/',
+     path_to_raw_profiler='/pj/fsldat/point/profiler/netcdf/',
+     path_to_qc_acars='/home/data_disk/dat/acars/',
      c8_project_common='CWB',
      /
 </pre>
@@ -961,7 +961,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      give you a quick listing of the relevant parameters.
 
      Unless otherwise specified, the time window for data in the
-     intermediate data files should be '+/- laps_cycle_time_cmn'. 
+     intermediate data files should be '+/- laps_cycle_time'. 
      The time window for data in the raw data files is more variable and is 
      generally specified within the raw data (e.g. in the CDL).
 
@@ -1317,7 +1317,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      The frequency of the cron entries for running 'sched.pl' is defined to be
      the LAPS cycle time. This should correspond to the value of the 
-     'laps_cycle_time_cmn' parameter within the 'nest7grid.parms' file.
+     'laps_cycle_time' parameter within the 'nest7grid.parms' file.
 
      The best timing of the cron is often related to the arrival time
      of the raw surface observations. For example, if most of the surface
@@ -1505,7 +1505,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                 ----  2.7.1 Number of Grid Points ---
 
      Adjust the horizontal dimensions in terms of the number of grid points
-           (NX_L_CMN, NY_L_CMN) in './data/static/nest7grid.parms'.
+           (NX_L, NY_L) in './data/static/nest7grid.parms'.
 
 
      NOTE: Various files in the ./data/cdl directory are automatically edited
@@ -1517,13 +1517,13 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
 <pre>
                       
-        1) Modify the 'grid_spacing_m_cmn' parameter (only if you want to 
+        1) Modify the 'grid_spacing_m' parameter (only if you want to 
                 change from the default 10000m for the grid spacing).
 
                 Grid spacing in meters on the projection plane. Used for all 
                 projections.
                  
-        2) Modify the 'grid_cen_lat_cmn' and 'grid_cen_lon_cmn' parameters.
+        2) Modify the 'grid_cen_lat' and 'grid_cen_lon' parameters.
 
                 These are the latitude and longitude of the center of the
                 domain, expressed in degrees. The parameters are needed for
@@ -1570,23 +1570,23 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                                          
                 Polar Stereographic:
                     This is the latitude at which the grid spacing is exactly 
-                    the nominal value ('grid_spacing_m_cmn' e.g. 10km). 
+                    the nominal value ('grid_spacing_m' e.g. 10km). 
 
                     This parameter is usually set to +/-90 degrees to match
                     the latitude of the projection pole ('standard_latitude2'),
                     given that the projection pole is at one of earth's 
                     geographic poles. The actual grid spacing (measured on   
-                    the earth's surface) matches the 'grid_spacing_m_cmn' 
+                    the earth's surface) matches the 'grid_spacing_m' 
                     parameter at the projection pole, which may or may not be 
                     located within your domain. For domains distant from the 
                     projection pole, the actual grid spacing inside the domain
-                    becomes noticeably less. The value of 'grid_spacing_m_cmn'
+                    becomes noticeably less. The value of 'grid_spacing_m'
                     can be increased to compensate. The projection plane is
                     tangent to the earth's surface.
                     
                     When the projection pole is at a geographic pole, 
                     'standard_latitude' can be set to values other than +/-90.
-                    The 'grid_spacing_m_cmn' parameter then represents the 
+                    The 'grid_spacing_m' parameter then represents the 
                     true grid spacing (measured on the earth's surface) at a 
                     latitude of 'standard_latitude'. The projection plane
                     is secant to the earth's surface. 
@@ -1598,38 +1598,38 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                     'phi0'. This occurs when you are located at the 
                     'standard_latitude' for the case of a "secant" projection.
                     Note that the grid spacing for a particular location in
-                    the domain is equal to 'grid_spacing_m_cmn'/'sigma'.
+                    the domain is equal to 'grid_spacing_m'/'sigma'.
 
                      
-                    Example 1: grid_spacing_m_cmn = 10000.
+                    Example 1: grid_spacing_m = 10000.
                                standard_latitude  =   +90.
                                standard_latitude2 =   +90.
-                               grid_cen_lat_cmn   =   +40.
+                               grid_cen_lat =  +40.
                    
                                grid_spacing at projection (north) pole = 10km
                                grid_spacing at domain center (+40)     ~  8km
                                                     
                      
-                    Example 2: grid_spacing_m_cmn = 10000.
+                    Example 2: grid_spacing_m = 10000.
                                standard_latitude  =   +40.
                                standard_latitude2 =   +90.
-                               grid_cen_lat_cmn   =   +40.
+                               grid_cen_lat   =   +40.
                      
                                grid_spacing at projection (north) pole ~ 12km
                                grid_spacing at domain center (+40)     = 10km
                                                      
-                    Example 3: grid_spacing_m_cmn = 10000.
+                    Example 3: grid_spacing_m = 10000.
                                standard_latitude  =   -90.
                                standard_latitude2 =   -90.
-                               grid_cen_lat_cmn   =   +40.
+                               grid_cen_lat   =   +40.
                           
                                grid_spacing at projection (south) pole = 10km
                                grid_spacing at domain center (-40)     ~  8km
                      
-                    Example 4: grid_spacing_m_cmn = 10000.
+                    Example 4: grid_spacing_m = 10000.
                                standard_latitude  =   -40.
                                standard_latitude2 =   -90.
-                               grid_cen_lat_cmn   =   -40.
+                               grid_cen_lat       =   -40.
                         
                                grid_spacing at projection (south) pole ~ 12km
                                grid_spacing at domain center (-40)     = 10km
@@ -1637,7 +1637,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                     Note that the 'Dx' and 'Dy' values that appear in the 
                     'static.nest7grid' should equal the value of
-                    'grid_spacing_m_cmn'.
+                    'grid_spacing_m'.
                          
                 Lambert:
                     This is the latitude at which the grid spacing is exactly 
@@ -1708,7 +1708,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                    ----  2.7.3 Domain Resolution  ---
 
-     The default value of the 'grid_spacing_m_cmn' parameter is 10000m. This is
+     The default value of the 'grid_spacing_m' parameter is 10000m. This is
    one of the parameters used in constructing the static file (as mentioned 
    above). To date, we have run LAPS with resolutions ranging from 1000m to 
    48000m.
@@ -1717,7 +1717,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
     Edit the file 'data/static/nest7grid.parms'...
 <pre>
-        1) silavwt_parm_cmn: 
+        1) silavwt_parm: 
 
            Default value of 0. This parameter allows the potential use of 
            silhouette terrain which is the maximum elevation in the local area.
@@ -1725,7 +1725,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            average terrain instead of the maximum. Note that a value of 1 
            may reduce the apparent effect of filtering with 'toptwvl_parm'.
            
-        2) toptwvl_parm_cmn: 
+        2) toptwvl_parm: 
 
            For example, a value of 4 represents 4 delta-x filtering of the 
            terrain. You can change this to alter the smoothness of the 
@@ -1772,7 +1772,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
         The default cycle time is 60 minutes. To change this, do as follows...
  
      1. Edit runtime parameter file 'data/static/nest7grid.parms' 
-        to change the value of 'laps_cycle_time_cmn'.
+        to change the value of 'laps_cycle_time'.
 
  ----- 2.10 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
 Recent changes as of February 26, 2006
@@ -1962,16 +1962,17 @@ can be gotten directly from GSD)
    is generated by one of several executables than can provide the LAPS
    surface analysis depending on the runtime configuration.
 
-   For more details, check the log files in the '$LAPS_DATA_ROOT/log' directory 
-   for occurrences of the string 'error' and 'warning'. The errors are 
-   generally more significant. If any core dumps occur they can usually be 
+   For more details, check the various log files in the '$LAPS_DATA_ROOT/log' 
+   directory for occurrences of the string 'error' and 'warning'. The errors 
+   are generally more significant. If any core dumps occur they can usually be 
    flagged by searching for the 'sh:' string in 'sched.log.*'.
 
    If you are reporting runtime errors it can be useful to tar up your entire 
-   $LAPS_DATA_ROOT and send it to us or make it available on your web server. 
-   If you have the untarred files on your web server we can browse through 
-   the directories for the log and product files as needed to help diagnose 
-   the run.
+   $LAPS_DATA_ROOT and make it available on your web or FTP server as a 
+   compressed "tgz" file. If the data set is very large you might consider 
+   mailing us a CD or DVD. Alternatively if you have the untarred 
+   $LAPS_DATA_ROOT files on your web server we can browse through the 
+   directories for the log and product files as needed to help diagnose the run.
 
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
@@ -2456,7 +2457,7 @@ the country.  The vrc_driver.x also maps from conus to laps domain
 for the wfo data set.  The map transformation software is found in
 lib/gridconv, lib/nav, and lib/radar/wsi_ingest. The switch to use
 wsi versus wfo in variable c_raddat_type in nest7grid.parms. Pathway
-to data is variable path_to_wsi_2d_radar_cmn in nest7grid.parms.
+to data is variable path_to_wsi_2d_radar in nest7grid.parms.
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
@@ -4084,7 +4085,15 @@ Process lga.exe (background model):
                      U3   u       21  Model u wind component (grid north)
                      V3   v       21  Model v wind component (grid east)
 
-                LGB                   Sfc grids (U and V are grid north)
+		LGB  USF  usf 	   1  Model Surface wind u (grid north)
+	             VSF  vsf 	   1  Model Surface wind v (grid east)
+		     TSF  tsf 	   1  Model Surface Temperature
+		     TGD  tgd 	   1  Model Ground Temperature
+		     DSF  dsf 	   1  Model Dewpoint                 
+                     SLP  slp      1  Model MSL pressure
+                     PSF  psf      1  Model Surface pressure
+                     RSF  rsf      1  Model Specific Humidity
+		     P	  p 	   1  Model reduced pressure
 
 Process LH1: 	LH1  PW   pw	   1  Precipitable Water Vapor
 
