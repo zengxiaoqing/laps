@@ -37,7 +37,8 @@ cdis
 cdis   
 cdis
         subroutine insert_radar(i4time,cldcv,cld_hts
-     1         ,temp_3d,temp_sfc_k,grid_spacing_m,ni,nj,nk,kcloud
+     1         ,temp_3d,temp_sfc_k,td_sfc_k                          ! I
+     1         ,grid_spacing_m,ni,nj,nk,kcloud                       ! I
      1         ,cloud_base,ref_base                                  ! I
      1         ,topo,r_missing_data                                  ! I
      1         ,grid_ra_ref,dbz_max_2d                               ! I/O
@@ -76,6 +77,7 @@ cdis
         real*4 temp_3d(ni,nj,nk)
         real*4 heights_3d(ni,nj,nk)
         real*4 temp_sfc_k(ni,nj)
+        real*4 td_sfc_k(ni,nj)
 
         real*4 cldcv(ni,nj,kcloud)
         real*4 cld_hts(kcloud)
@@ -88,6 +90,7 @@ cdis
 
         real*4 echo_top(ni,nj)           ! L
         real*4 echo_top_agl(ni,nj)       ! L
+        real*4 lcl_agl(ni,nj)            ! L
 
 !       Cloud not filled in unless radar echo is higher than base calculated
 !       with THIS threshold.
@@ -122,6 +125,10 @@ cdis
             cloud_base_buf(i,j) = cloud_base(i,j)
 
             l_unresolved(i,j) = .false.
+
+!           Approximation based on a 4 deg F dewpoint depression for each
+!           1000 ft of cloud base above the ground
+            lcl_agl(i,j) = (temp_sfc_k(i,j) - td_sfc_k(i,j)) * 137.16 ! meters
 
         enddo ! i
         enddo ! j
@@ -256,7 +263,7 @@ c                   write(6,*)' khigh = ',kk
 
                                 endif
 
-                            endif
+                            endif ! Resolved Base tests
 
                         endif ! Below Cloud Base
 
@@ -285,8 +292,7 @@ c                   write(6,*)' khigh = ',kk
      1                                  ,nint(cloud_base_buf(i,j))
 81                          format(' Rdr     < Bse ',2i4,i3,2i7)
                         endif
-
-                    endif
+                    endif ! below base
 
                 endif ! Reflectivity > thresh
 
@@ -304,7 +310,8 @@ c                   write(6,*)' khigh = ',kk
 592         format(' Inserted radar',3i3,3i8)
 
 600         continue
-        enddo ! k
+
+        enddo ! k (LAPS grid level)
 
         write(6,*)' Total cloud grid points modified by radar = '
      1                                          ,insert_count_tot
