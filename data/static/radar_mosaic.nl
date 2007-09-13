@@ -26,3 +26,4 @@ c                     defaults to once per laps cycle.
 c
 c  imosaic_3d: = 0 for vrc output only; =1 for vrz output only; =2 for both.
 c              Option 2 is being developed and may not yet be functional.
+c              Option 2 is suggested only when n_radars_narrowband =0.
