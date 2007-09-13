@@ -78,7 +78,7 @@ cdis
 
 !********************ARGUMENT LIST********************************************
 
-      integer*4 max_obs
+      integer max_obs
 !     parameter (max_obs = 40000)       
       include 'barnesob.inc'
       type (barnesob) :: obs_point(max_obs)   ! Full Wind Obs  - Non-radar data
@@ -87,70 +87,70 @@ cdis
       type (barnesob) :: obs_barnes(max_obs)  ! QC'd obs       - All Data
 
       integer n_var                                                ! Input
-      integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
+      integer imax,jmax,kmax        ! 3D array dimensions        ! Input
 
 !     3D arrays of u/v observations, all data sources, one datum per gridpoint.
-      real*4 uobs(imax,jmax,kmax),vobs(imax,jmax,kmax)             ! Input
+      real uobs(imax,jmax,kmax),vobs(imax,jmax,kmax)             ! Input
 
-      integer*4 n_radars   ! Actual number of radars having data     Input
+      integer n_radars   ! Actual number of radars having data     Input
 
 !     Final pass analyzed winds
-      real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)             ! Output
-      real*4 varbuff(imax,jmax,kmax,n_var)                         ! Equiv Abv
+      real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)             ! Output
+      real varbuff(imax,jmax,kmax,n_var)                         ! Equiv Abv
 
 !     3D array of observation weights, depends on data type
 !     The choices are outlined below
-      real*4    wt_p(imax,jmax,kmax)                               ! Input
-      real*4    wt_p_radar(imax,jmax,kmax)                         ! Local
+      real    wt_p(imax,jmax,kmax)                               ! Input
+      real    wt_p_radar(imax,jmax,kmax)                         ! Local
 
 !     Model background field
-      real*4 u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
+      real u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
 
 !     Arrays of lat and lon for each gridpoint
-      real*4 lat(imax,jmax),lon(imax,jmax)                         ! Input
+      real lat(imax,jmax),lon(imax,jmax)                         ! Input
 
-      integer*4 i4time                                             ! Input
+      integer i4time                                             ! Input
 
-      real*4 grid_spacing_m                                        ! Input
-      real*4 r_missing_data                  ! missing data value    Input
+      real grid_spacing_m                                        ! Input
+      real r_missing_data                  ! missing data value    Input
 
 !-----Radar Data -----------------------------------------------------------
 
-      integer*4 max_radars            ! max possible # of radars         Input
+      integer max_radars            ! max possible # of radars         Input
 
 !     4D Radial velocity array (all radars)
-      real*4 vr_obs_unfltrd(imax,jmax,kmax,max_radars)                 ! Input
-      real*4 vr_nyq(imax,jmax,kmax,max_radars)                         ! Input
-      integer*4 idx_radar_a(max_radars)                                ! Input
+      real vr_obs_unfltrd(imax,jmax,kmax,max_radars)                 ! Input
+      real vr_nyq(imax,jmax,kmax,max_radars)                         ! Input
+      integer idx_radar_a(max_radars)                                ! Input
 
 !     Nyquist velocity (if known and constant) for each radar
-      real*4 v_nyquist_in(max_radars)                                  ! Input
+      real v_nyquist_in(max_radars)                                  ! Input
 
 !     Location of each radar
-      real*4 rlat_radar(max_radars),rlon_radar(max_radars)             ! Input
+      real rlat_radar(max_radars),rlon_radar(max_radars)             ! Input
      1                     ,rheight_radar(max_radars)
 
-      integer*4 thresh_2_radarobs_lvl_unfltrd                          ! Input
+      integer thresh_2_radarobs_lvl_unfltrd                          ! Input
      1         ,thresh_4_radarobs_lvl_unfltrd
      1         ,thresh_9_radarobs_lvl_unfltrd
 
 !     # of radar obs before filtering for each radar (modified by QC)
-      integer*4 n_radarobs_tot_unfltrd(max_radars)                     ! Input/Modified
-      real*4   heights_3d(imax,jmax,kmax)                              ! Input
+      integer n_radarobs_tot_unfltrd(max_radars)                     ! Input/Modified
+      real   heights_3d(imax,jmax,kmax)                              ! Input
 
 !--------------------------------------------------------------------------------
 
 !     First pass analyzed winds (innovation analysis with non-radar data)
-      real*4, allocatable, dimension(:,:,:) :: upass1                  ! Local
-      real*4, allocatable, dimension(:,:,:) :: vpass1                  ! Local
+      real, allocatable, dimension(:,:,:) :: upass1                  ! Local
+      real, allocatable, dimension(:,:,:) :: vpass1                  ! Local
 
-      real*4, allocatable, dimension(:,:,:) :: pres_3d                 ! Local
+      real, allocatable, dimension(:,:,:) :: pres_3d                 ! Local
 
 !     Note that aerr is only a dummy ATTM 
-      real*4, allocatable, dimension(:,:,:,:) :: varobs_diff_spread    ! Local
-      real*4 aerr(imax,jmax,kmax,n_var)                                ! Local
+      real, allocatable, dimension(:,:,:,:) :: varobs_diff_spread    ! Local
+      real aerr(imax,jmax,kmax,n_var)                                ! Local
 
-      integer*4 n_obs_lvl(kmax)                                        ! Local
+      integer n_obs_lvl(kmax)                                        ! Local
       logical  l_analyze(kmax) ! This depends on presence of radar obs ! Local
       logical  l_derived_output ! Flag for producing derived output    ! Input
       logical  l_grid_north     ! Flag for grid north or true north    ! Input
@@ -158,16 +158,16 @@ cdis
       logical  l_correct_unfolding ! Flag for dealiasing               ! Input
       logical  l_point_struct, l_variational, l_withheld_only
 
-      real*4   rms_thresh                                              ! Input
-      real*4   weight_bkg_const                                        ! Input
+      real   rms_thresh                                              ! Input
+      real   weight_bkg_const                                        ! Input
 
 !     These are the weights of the various data types (filling the 3D array)
-      real*4 weight_cdw,weight_sfc,weight_pirep,weight_prof
+      real weight_cdw,weight_sfc,weight_pirep,weight_prof
      1      ,weight_radar                                              ! Input
 
-      integer*4 istatus         ! (1 is good)                          ! Output
+      integer istatus         ! (1 is good)                          ! Output
 
-      integer*4  n_fnorm_dum
+      integer  n_fnorm_dum
 
 !****************END DECLARATIONS *********************************************
 
@@ -859,7 +859,7 @@ csms$serial end
      1                       ,wt_p,rms_thresh_norm                 ! I
      1                       ,rms_inst,rms_thresh)                 ! O
 
-      real*4    wt_p(imax,jmax,kmax)                               ! Input
+      real    wt_p(imax,jmax,kmax)                               ! Input
 
 csms$ignore begin
 
@@ -906,7 +906,7 @@ csms$ignore end
      1                        ,i4time_sys                           ! I
      1                        ,rms_inst,rms_thresh)                 ! O
 
-      integer*4 max_obs
+      integer max_obs
       include 'barnesob.inc'
       type (barnesob) :: obs_barnes(max_obs)                           
 

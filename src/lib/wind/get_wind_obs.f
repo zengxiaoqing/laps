@@ -68,15 +68,15 @@ cdis
 
 !       LAPS Grid Dimensions
                                                    
-        real*4 lat(NX_L,NY_L)                      
-        real*4 lon(NX_L,NY_L)                      
+        real lat(NX_L,NY_L)                      
+        real lon(NX_L,NY_L)                      
 
 !       Profiler Stuff
         real lat_pr(MAX_PR)                        
         real lon_pr(MAX_PR)                        
         character*8 obstype(MAX_PR)
         character*5 c5_name_a(MAX_PR)
-        integer*4 i4time_ob_pr(MAX_PR)
+        integer i4time_ob_pr(MAX_PR)
 
 !       Profiler Observations
 
@@ -99,9 +99,9 @@ cdis
         dimension u_laps_fg(NX_L,NY_L,NZ_L)
         dimension v_laps_fg(NX_L,NY_L,NZ_L)
 
-        real*4 heights_3d(NX_L,NY_L,NZ_L)
-        real*4 heights_1d(NZ_L)
-        real*4 grid_ra_vel(NX_L,NY_L,NZ_L)
+        real heights_3d(NX_L,NY_L,NZ_L)
+        real heights_1d(NZ_L)
+        real grid_ra_vel(NX_L,NY_L,NZ_L)
 
         character*3 ext_in
 
@@ -289,23 +289,23 @@ cdis
 !       Profile Observations
 
         integer nlevels_obs_pr(MAX_PR)
-        real*4 lat_pr(MAX_PR)
-        real*4 lon_pr(MAX_PR)
+        real lat_pr(MAX_PR)
+        real lon_pr(MAX_PR)
         character*8 obstype(MAX_PR)
         character*12 c_obstype
         character*5 c5_name_a(MAX_PR)
         character*9 a9time
-        integer*4 i4time_ob_pr(MAX_PR)
-        real*4 ob_pr_u (MAX_PR,nk) ! Vertically interpolated Profile wind
-        real*4 ob_pr_v (MAX_PR,nk) ! Vertically interpolated Profile wind
+        integer i4time_ob_pr(MAX_PR)
+        real ob_pr_u (MAX_PR,nk) ! Vertically interpolated Profile wind
+        real ob_pr_v (MAX_PR,nk) ! Vertically interpolated Profile wind
 
 !       Barnes Profile analysis
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
-        real*4 grid_laps_u(ni,nj,nk)
-        real*4 grid_laps_v(ni,nj,nk)
-        real*4 grid_laps_wt(ni,nj,nk)
+        real grid_laps_u(ni,nj,nk)
+        real grid_laps_v(ni,nj,nk)
+        real grid_laps_wt(ni,nj,nk)
 
         logical l_profiler, l_use_all_nontower_lvls, l_use_raob
 

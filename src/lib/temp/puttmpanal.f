@@ -66,27 +66,27 @@ cdis
         character*125 comment_2d
         character*3 var_2d
 
-        real*4 temp_3d(ni,nj,nk) ! Output
-        real*4 heights_3d(ni,nj,nk) ! Output
-        real*4 output_4d(ni,nj,nk,2)
+        real temp_3d(ni,nj,nk) ! Output
+        real heights_3d(ni,nj,nk) ! Output
+        real output_4d(ni,nj,nk,2)
 
-        real*4 sh_3d(ni,nj,nk)     ! Local
-        real*4 pres_3d(ni,nj,nk)   ! Output
-        real*4 temp_sfc_k(ni,nj)   ! Input
-        real*4 pres_sfc_pa(ni,nj)  ! Input
-        real*4 theta(nk)
+        real sh_3d(ni,nj,nk)     ! Local
+        real pres_3d(ni,nj,nk)   ! Output
+        real temp_sfc_k(ni,nj)   ! Input
+        real pres_sfc_pa(ni,nj)  ! Input
+        real theta(nk)
 
-        real*4 bkg_500(ni,nj)
+        real bkg_500(ni,nj)
 
-        real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj)
+        real lat(ni,nj),lon(ni,nj),topo(ni,nj)
 
         character*9 asc9_tim
 
-        real*4 diff_tol,cold_thresh
+        real diff_tol,cold_thresh
         parameter (diff_tol = 25.)
         parameter (cold_thresh = 170.)
 
-        integer*4 max_snd_grid,max_obs
+        integer max_snd_grid,max_obs
 
         logical l_fill,l_adjust_heights,l_read_raob,l_use_raob
 
@@ -670,7 +670,7 @@ c       1                               j_diff_thmax,k_diff_thmax
         subroutine write_temp_anal(i4time,imax,jmax,kmax,temp_3d
      1                  ,heights_3d,output_4d,comment_2d,istatus)
 
-        integer*4 nf
+        integer nf
         parameter (nf = 2)
 
         character*31 EXT
@@ -679,9 +679,9 @@ c       1                               j_diff_thmax,k_diff_thmax
         character*10 units_a(nf)
         character*3 var_a(nf)
 
-        real*4 temp_3d(imax,jmax,kmax)
-        real*4 heights_3d(imax,jmax,kmax)
-        real*4 output_4d(imax,jmax,kmax,2)
+        real temp_3d(imax,jmax,kmax)
+        real heights_3d(imax,jmax,kmax)
+        real output_4d(imax,jmax,kmax,2)
 
         EXT = 'lt1'
 

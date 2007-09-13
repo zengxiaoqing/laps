@@ -60,8 +60,8 @@ cdis
         include 'trigd.inc'
         real m ! Grid points per meter
 
-        real*4 wsum(ni,nj)
-        real*4  one(ni,nj)
+        real wsum(ni,nj)
+        real  one(ni,nj)
 
         logical l_grid_north ! Sfc & 3D winds
 
@@ -70,25 +70,25 @@ cdis
 
         DATA scale/1./
 
-        real*4 uanl(ni,nj,nk),vanl(ni,nj,nk)
-        real*4 wanl(ni,nj,nk) ! omega (pascals/second)
-        real*4 terrain_w(ni,nj),conv(ni,nj)
-        real*4 u_sfc(ni,nj),v_sfc(ni,nj)
-        real*4 topo_pa(ni,nj)
+        real uanl(ni,nj,nk),vanl(ni,nj,nk)
+        real wanl(ni,nj,nk) ! omega (pascals/second)
+        real terrain_w(ni,nj),conv(ni,nj)
+        real u_sfc(ni,nj),v_sfc(ni,nj)
+        real topo_pa(ni,nj)
 
-        real*4 lat(ni,nj)
-        real*4 lon(ni,nj)
-        real*4 topo(ni,nj)
+        real lat(ni,nj)
+        real lon(ni,nj)
+        real topo(ni,nj)
 
-        real*4 flu(ni,nj)
-        real*4 flv(ni,nj)
-        real*4 sigma(ni,nj)
+        real flu(ni,nj)
+        real flv(ni,nj)
+        real sigma(ni,nj)
 
-        real*4 u_sfc_grid(ni,nj),
+        real u_sfc_grid(ni,nj),
      1         v_sfc_grid(ni,nj)
-        real*4 beta_factor(ni,nj)
+        real beta_factor(ni,nj)
 
-        real*4 radius_earth
+        real radius_earth
         parameter (radius_earth = 6371e3)
 
         character*6 c6_maproj

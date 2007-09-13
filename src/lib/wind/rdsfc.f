@@ -57,8 +57,8 @@ cdis
 
         include 'windparms.inc' ! weight_sfc
 
-        real*4 lat(ni,nj)
-        real*4 lon(ni,nj)
+        real lat(ni,nj)
+        real lon(ni,nj)
 
 !       SFC
 
@@ -75,18 +75,18 @@ cdis
 
 !***************************************************************************
 
-        real*4 heights_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
 
         character*13 filename13,c13_fname
 
         character asc_tim_9*9
 
-        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
-        real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
-        real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)  
-        real*4 ffg_s(maxstns), vis_s(maxstns)
-        real*4 dd_ea(maxstns), ff_ea(maxstns)
+        real lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
+        real cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
+        real t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
+        real dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)  
+        real ffg_s(maxstns), vis_s(maxstns)
+        real dd_ea(maxstns), ff_ea(maxstns)
 c
 !       character stations(maxstns)*3, wx_s(maxstns)*8        ! c5_stamus
         character stations(maxstns)*20, provider(maxstns)*11
@@ -95,12 +95,12 @@ c
 
 !       Declarations for new read_surface routine
 !       New arrays.f reading in the SFC data from the LSO files
-        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
+        real   pstn(maxstns),pmsl(maxstns),alt(maxstns)
      1          ,store_hgt(maxstns,5)
-        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
+        real   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
      1          ,vis(maxstns),rad(maxstns)
 
-        Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
+        Integer   obstime(maxstns),kloud(maxstns),idp3(maxstns)
 
         Character   obstype(maxstns)*8
      1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4

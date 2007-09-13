@@ -59,11 +59,11 @@ cdis
 
 !       Apr 1993 - Removed arrays include
 
-        real*4 grid_ra_vel(ni,nj,nk)
-        real*4 grid_pr_r(ni,nj,nk)
-        real*4 heights_1d(nk)
-        real*4 lat(ni,nj)
-        real*4 lon(ni,nj)
+        real grid_ra_vel(ni,nj,nk)
+        real grid_pr_r(ni,nj,nk)
+        real heights_1d(nk)
+        real lat(ni,nj)
+        real lon(ni,nj)
         real max_weights_pr(ni,nj,nk)
         integer i_profiler_nearest(ni,nj,nk)
 

@@ -65,10 +65,10 @@ c                               not exactly match the LAPS analysis time.
 !       1998 Feb Steve Albers   Added feature to calculate the height from
 !                               the pressure if the height is missing.
 
-        integer*4 max_snd_levels
+        integer max_snd_levels
         parameter (max_snd_levels = 3000)
 
-        real*4 surface_rass_buffer
+        real surface_rass_buffer
         parameter (surface_rass_buffer = 30.)
 
 
@@ -90,16 +90,16 @@ c                               not exactly match the LAPS analysis time.
 
         character*9 a9time
 
-        real*4 heights_3d(imax,jmax,kmax)
-        real*4 temp_bkg_3d(imax,jmax,kmax)
-        real*4 sh_3d(imax,jmax,kmax)
-        real*4 pres_3d(imax,jmax,kmax)
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
+        real heights_3d(imax,jmax,kmax)
+        real temp_bkg_3d(imax,jmax,kmax)
+        real sh_3d(imax,jmax,kmax)
+        real pres_3d(imax,jmax,kmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
 
 !       These two arrays (not used yet) serve for incrementing the out of
 !       date rass obs according to the model rates of change.
-!       real*4 t_maps_inc(imax,jmax,kmax)
+!       real t_maps_inc(imax,jmax,kmax)
 
         character ext*31
         character ext_uc*31

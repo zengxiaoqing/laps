@@ -46,8 +46,8 @@ cdis
         include 'tempobs.inc'
 
 !       LAPS Grid Dimensions
-        real*4 lat(ni,nj)
-        real*4 lon(ni,nj)
+        real lat(ni,nj)
+        real lon(ni,nj)
 
 !       Acars
 
@@ -58,11 +58,11 @@ cdis
 
 !******************************************************************************
 
-        real*4 heights_3d(ni,nj,nk)
-        real*4 temp_bkg_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
+        real temp_bkg_3d(ni,nj,nk)
 
-        real*4 u_maps_inc(ni,nj,nk)
-        real*4 v_maps_inc(ni,nj,nk)
+        real u_maps_inc(ni,nj,nk)
+        real v_maps_inc(ni,nj,nk)
 
         character*9 asc9_tim_acars
         character ext*31, ext_in*3

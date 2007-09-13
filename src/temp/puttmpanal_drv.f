@@ -42,7 +42,7 @@ cdis
 !                                     NX_L, NY_L, NZ_L.
 !       1997 Jun        Ken Dritz     Now pass NX_L, NY_L, NZ_L to laps_temp.
  
-        integer*4 j_status(20),iprod_number(20)
+        integer j_status(20),iprod_number(20)
         character*9 a9_time
 
         call get_systime(i4time,a9_time,istatus)
@@ -89,26 +89,26 @@ cdis
 
         include 'laps_static_parameters.inc'
 
-        integer*4 j_status(20),iprod_number(20)
+        integer j_status(20),iprod_number(20)
 
 
 !  ************ DECLARATIONS **************************************************
 
-        real*4 output_4d(NX_L,NY_L,NZ_L,2)
+        real output_4d(NX_L,NY_L,NZ_L,2)
 
-        integer*4 iflag_write
+        integer iflag_write
 
-        real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 heights_3d(NX_L,NY_L,NZ_L)
-        real*4 pres_3d_pa(NX_L,NY_L,NZ_L), pres_3d_mb(NX_L,NY_L,NZ_L)
-        real*4 temp_sfc_k(NX_L,NY_L)
-        real*4 pres_sfc_pa(NX_L,NY_L), pres_sfc_mb(NX_L,NY_L)
-        real*4 pbl_top_pa(NX_L,NY_L), pbl_top_mb(NX_L,NY_L)
-        real*4 pbl_depth_m(NX_L,NY_L)
+        real temp_3d(NX_L,NY_L,NZ_L)
+        real heights_3d(NX_L,NY_L,NZ_L)
+        real pres_3d_pa(NX_L,NY_L,NZ_L), pres_3d_mb(NX_L,NY_L,NZ_L)
+        real temp_sfc_k(NX_L,NY_L)
+        real pres_sfc_pa(NX_L,NY_L), pres_sfc_mb(NX_L,NY_L)
+        real pbl_top_pa(NX_L,NY_L), pbl_top_mb(NX_L,NY_L)
+        real pbl_depth_m(NX_L,NY_L)
 
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
         character*31 EXT
 
@@ -117,7 +117,7 @@ cdis
         character*3 var_2d
 
         parameter (MAX_FIELDS=2)
-        real*4 field_array(NX_L,NY_L,MAX_FIELDS)
+        real field_array(NX_L,NY_L,MAX_FIELDS)
         character*125 comment_a(MAX_FIELDS)
         character*10 units_a(MAX_FIELDS)
         character*3 var_a(MAX_FIELDS)

@@ -77,15 +77,15 @@ C***************** Declarations **************************************
         integer istat_radar_vel
         integer l,n_radars,ni,nj,nk,max_radars
 
-        real*4 rlat_radar(max_radars),rlon_radar(max_radars)
+        real rlat_radar(max_radars),rlon_radar(max_radars)
      1                     ,rheight_radar(max_radars)
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
-        real*4 upass1(ni,nj,nk),vpass1(ni,nj,nk)
-        real*4 grid_ra_vel(ni,nj,nk,max_radars),r_missing_data
-        real*4 weight_pirep,weight_prof,weight_sfc,weight_cdw
-        real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
+        real upass1(ni,nj,nk),vpass1(ni,nj,nk)
+        real grid_ra_vel(ni,nj,nk,max_radars),r_missing_data
+        real weight_pirep,weight_prof,weight_sfc,weight_cdw
+        real grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
      1                                          ,grid_laps_wt(ni,nj,nk)
 
         integer max_obstypes
@@ -200,9 +200,9 @@ C********************************************************************
         include 'barnesob.inc'
         type (barnesob) :: obs_barnes(max_obs)      
 
-        real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
-        real*4 grid_laps_wt(ni,nj,nk)
-        real*4 u_3d(ni,nj,nk),v_3d(ni,nj,nk) 
+        real grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
+        real grid_laps_wt(ni,nj,nk)
+        real u_3d(ni,nj,nk),v_3d(ni,nj,nk) 
 
         character*4  c_grid
         character*12 c_ob_type,c_obs,c_obs_left,c_obs_right

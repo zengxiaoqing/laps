@@ -68,20 +68,20 @@ cdis
 !       Added call to get_r_missing_data.  Pass r_missing_data to
 !       read_tsnd and analyze_tsnd.
 
-        real*4 lat(ni,nj),lon(ni,nj)
-        real*4 temp_3d(ni,nj,nk)                    ! Input = model temp fg
+        real lat(ni,nj),lon(ni,nj)
+        real temp_3d(ni,nj,nk)                    ! Input = model temp fg
                                                     ! Output = analyzed temp
-        real*4 sh_3d(ni,nj,nk)
-        real*4 pres_3d(ni,nj,nk)
-        real*4 heights_3d(ni,nj,nk)
+        real sh_3d(ni,nj,nk)
+        real pres_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
 
-        real*4 bias_tsnd(max_snd,nk),bias_htlow(max_snd)
-!       real*4 wt_tsnd(max_snd,nk)
+        real bias_tsnd(max_snd,nk),bias_htlow(max_snd)
+!       real wt_tsnd(max_snd,nk)
 
-        real*4 lat_tsnd(max_snd),lon_tsnd(max_snd)
-        integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
-        real*4 tsnd(max_snd,nk)     ! Vertically interpolated TSND temp
-        real*4 inst_err_tsnd(max_snd) 
+        real lat_tsnd(max_snd),lon_tsnd(max_snd)
+        integer igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
+        real tsnd(max_snd,nk)     ! Vertically interpolated TSND temp
+        real inst_err_tsnd(max_snd) 
         character*5 c5_name(max_snd) 
         character*8 c8_sndtype(max_snd) 
 
@@ -390,14 +390,14 @@ cdis
 !       Added r_missing_data as dummy argument.  Pass r_missing_data to
 !       barnes_univariate_shell.
 
-        real*4 temp_3d(ni,nj,nk)
+        real temp_3d(ni,nj,nk)
 
 !       These arrays are passed in
-        real*4 bias_3d(ni,nj,nk)
-        real*4 bias_tsnd(max_snd,nk)
-!       real*4 wt_tsnd(max_snd,nk)
+        real bias_3d(ni,nj,nk)
+        real bias_tsnd(max_snd,nk)
+!       real wt_tsnd(max_snd,nk)
 
-        integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
+        integer igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
 
         logical l_analyze(nk),l_struct,l_use_raob
 
@@ -485,28 +485,28 @@ cdis
 !       Jun 16 1997             Ken Dritz
 !       Added r_missing_data as dummy argument.
 
-!       integer*4 max_obs_b
+!       integer max_obs_b
 !       parameter (max_obs_b = 400000)       
         include 'barnesob.inc'
         type (barnesob) obs_barnes(n_obs)                           
 
         logical l_struct,l_not_struct,l_use_raob
-        real*4 bias_tsnd(max_snd,nk)
-        integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
-!       real*4 wt_tsnd(max_snd,nk)
+        real bias_tsnd(max_snd,nk)
+        integer igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
+!       real wt_tsnd(max_snd,nk)
 
-        real*4 wt_b_3d(ni,nj,nk)       ! Background weight array
-        real*4 bias_3d(ni,nj,nk)
+        real wt_b_3d(ni,nj,nk)       ! Background weight array
+        real bias_3d(ni,nj,nk)
 
-        real*4 wt_3d_dum(ni,nj,nk)     ! No longer used in 'barnes_multivariate'
+        real wt_3d_dum(ni,nj,nk)     ! No longer used in 'barnes_multivariate'
                                        ! Used as zero array in verification
-        integer*4 n_obs_lvl(nk)        ! Local
+        integer n_obs_lvl(nk)        ! Local
 
         character*8 c8_obstype
 
         logical l_analyze(nk)
 
-        integer*4  n_fnorm
+        integer  n_fnorm
 
         dimension fnorm(0:n_fnorm)
 

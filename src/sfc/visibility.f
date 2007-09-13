@@ -39,7 +39,7 @@ c       visibility to zero.
 c
 c       01-14-92        P. Stamus
 c
-        real*4 vis(ni,nj), lvis(ni,nj)
+        real vis(ni,nj), lvis(ni,nj)
 
         vis_scale = 7.
  
@@ -67,7 +67,7 @@ c       its a very small number).
 c
 c       01-14-92        P. Stamus
 c
-        real*4 vis_s(mxstn)
+        real vis_s(mxstn)
  
         vis_scale = 7.
 
@@ -94,7 +94,7 @@ c       the log( vis ) to -10 for the analysis.
 c
 c       01-14-92        P. Stamus
 c
-        real*4 vis(ni,nj)
+        real vis(ni,nj)
 
         vis_scale = 7.
 

@@ -70,8 +70,8 @@ cdis
 
         include 'windparms.inc' ! weight_pirep, weight_cdw
 
-        real*4 lat(ni,nj)
-        real*4 lon(ni,nj)
+        real lat(ni,nj)
+        real lon(ni,nj)
 
 !       Point obs
 
@@ -89,8 +89,8 @@ cdis
 
 !******************************************************************************
 
-        real*4 heights_3d(ni,nj,nk)
-        real*4 pres_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
+        real pres_3d(ni,nj,nk)
 
         dimension u_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
@@ -387,9 +387,9 @@ cdis
         subroutine read_laps_cdw_wind(lun,xlat,xlon,pres,dd,ff
      1                                          ,asc9_tim_point,l_eof)
 
-        real*4 pres ! pa
-        real*4 dd   ! degrees (99999. is missing)
-        real*4 ff   ! meters/sec (99999. is missing)
+        real pres ! pa
+        real dd   ! degrees (99999. is missing)
+        real ff   ! meters/sec (99999. is missing)
 
         character*9 asc9_tim_point
 
@@ -418,7 +418,7 @@ cdis
 
 !      This routine does a time interpolation
 
-       real*4 field_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
+       real field_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
 
        call get_laps_cycle_time(laps_cycle_time,istatus)
        if(istatus .ne. 1)then

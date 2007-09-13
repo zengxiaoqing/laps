@@ -266,7 +266,7 @@ c
         data l_struct /.false./        ! Using data structures?
         data l_barnes_wide /.true./    ! Using barnes_wide routine on boundary?
 
-        integer*4 max_obs
+        integer max_obs
         parameter (max_obs = 40000)       
 
         include 'barnesob.inc'
@@ -275,7 +275,7 @@ c
 	real t(imax,jmax), to(imax,jmax), s(imax,jmax), s_in(imax,jmax)
 	real RESS(1000), tb(imax,jmax) !, alf2(imax,jmax)
         real topo(imax,jmax),ldf(imax,jmax)
-        real*4 wt_bkg_a(imax,jmax)                         
+        real wt_bkg_a(imax,jmax)                         
 c
 	real fnorm(0:imax-1,0:jmax-1)
 c	real alf2o(imax,jmax)  !work array

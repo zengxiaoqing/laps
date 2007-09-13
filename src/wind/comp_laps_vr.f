@@ -40,9 +40,9 @@ cdis
      1  ,cgrid,rms,lat,lon,rlat_radar,rlon_radar,rheight_radar)
 
 
-        real*4 grid_ra_vel(ni,nj,nk)
+        real grid_ra_vel(ni,nj,nk)
         dimension u(ni,nj,nk),v(ni,nj,nk)
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
         real lat_grid,lon_grid
 
         character*(*) cgrid

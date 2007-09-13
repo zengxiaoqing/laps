@@ -43,9 +43,9 @@ cdis
 
 !     Dec 1994    Steve Albers
 
-      real*4 temp_3d(ni,nj,nk)    ! Input
-      real*4 heights_3d(ni,nj,nk) ! Input/Output
-      real*4 ht_500_fg(ni,nj)     ! Local
+      real temp_3d(ni,nj,nk)    ! Input
+      real heights_3d(ni,nj,nk) ! Input/Output
+      real ht_500_fg(ni,nj)     ! Local
 
       write(6,*)' Subroutine adjust_heights'
 

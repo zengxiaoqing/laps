@@ -24,44 +24,44 @@
      1  ,istatus                                    ! Input/Output
      1                                                          )
 
-      real*4   vr_obs_unfltrd(imax,jmax,kmax,max_radars)             ! Input
-      real*4   rlat_radar(max_radars),rlon_radar(max_radars)         ! Input
-      real*4   rheight_radar(max_radars)                             ! Input
-      real*4   lat(imax,jmax),lon(imax,jmax)                         ! Input
+      real   vr_obs_unfltrd(imax,jmax,kmax,max_radars)             ! Input
+      real   rlat_radar(max_radars),rlon_radar(max_radars)         ! Input
+      real   rheight_radar(max_radars)                             ! Input
+      real   lat(imax,jmax),lon(imax,jmax)                         ! Input
 
 !     First pass analyzed winds (innovation analysis with non-radar data)
-      real*4   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)         ! Input
+      real   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)         ! Input
 
 !     Background winds
-      real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
+      real   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
 
-      real*4   uobs_diff_spread(imax,jmax,kmax)                      ! I/O
+      real   uobs_diff_spread(imax,jmax,kmax)                      ! I/O
      1        ,vobs_diff_spread(imax,jmax,kmax)
-      real*4   wt_p_radar(imax,jmax,kmax)                            ! I/O
-      real*4   heights_3d(imax,jmax,kmax)                            ! Input
+      real   wt_p_radar(imax,jmax,kmax)                            ! I/O
+      real   heights_3d(imax,jmax,kmax)                            ! Input
 
-      real*4   vr_obs_fltrd(imax,jmax,max_radars)                    ! Local
-      real*4   upass1_buf(imax,jmax,kmax)                            ! Local
-      real*4   vpass1_buf(imax,jmax,kmax)                            ! Local
+      real   vr_obs_fltrd(imax,jmax,max_radars)                    ! Local
+      real   upass1_buf(imax,jmax,kmax)                            ! Local
+      real   vpass1_buf(imax,jmax,kmax)                            ! Local
 
-      real*4   xx(max_radars),yy(max_radars)                         ! Local
-      real*4   xx2(max_radars),yy2(max_radars)                       ! Local
-      real*4   vr(max_radars),ht(max_radars)                         ! Local
-      real*4   x(imax,jmax),y(imax,jmax)                             ! Local
+      real   xx(max_radars),yy(max_radars)                         ! Local
+      real   xx2(max_radars),yy2(max_radars)                       ! Local
+      real   vr(max_radars),ht(max_radars)                         ! Local
+      real   x(imax,jmax),y(imax,jmax)                             ! Local
 
-      integer*4 n_radarobs_tot_unfltrd(max_radars)                   ! Input
-      integer*4 n_radarobs_tot_fltrd(max_radars)                     ! Local
-      integer*4 i_radar_reject(max_radars)                           ! Local
-      integer*4 idx_radar_a(max_radars)                              ! Input
+      integer n_radarobs_tot_unfltrd(max_radars)                   ! Input
+      integer n_radarobs_tot_fltrd(max_radars)                     ! Local
+      integer i_radar_reject(max_radars)                           ! Local
+      integer idx_radar_a(max_radars)                              ! Input
 
 !     Number of unfiltered radar obs associated with each filtered one
-      integer*4 n_superob(imax,jmax,kmax,max_radars)                 ! Local
+      integer n_superob(imax,jmax,kmax,max_radars)                 ! Local
 
-      integer*4 thresh_2_radarobs_lvl_unfltrd_in                     ! Input
+      integer thresh_2_radarobs_lvl_unfltrd_in                     ! Input
      1         ,thresh_4_radarobs_lvl_unfltrd_in
      1         ,thresh_9_radarobs_lvl_unfltrd_in
 
-      integer*4 thresh_2_radarobs_lvl_unfltrd                        ! Local
+      integer thresh_2_radarobs_lvl_unfltrd                        ! Local
      1         ,thresh_4_radarobs_lvl_unfltrd
      1         ,thresh_9_radarobs_lvl_unfltrd
 
@@ -319,22 +319,22 @@ csms$ignore end
         implicit none
 
 !       Threshold number of radar obs on a given level
-        integer*4 thresh_2_radarobs_lvl_unfltrd
+        integer thresh_2_radarobs_lvl_unfltrd
      1           ,thresh_4_radarobs_lvl_unfltrd
      1           ,thresh_9_radarobs_lvl_unfltrd
 !       parameter (thresh_2_radarobs_lvl_unfltrd = 300)
 !       parameter (thresh_4_radarobs_lvl_unfltrd = 600)
 !       parameter (thresh_9_radarobs_lvl_unfltrd = 900)
 
-        integer*4 n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
-        integer*4 n_krn, n_krn_i_m1, n_krn_j_m1, n_krn_i, n_krn_j
-        integer*4 n_superob(imax,jmax),n_superob_tot
-        integer*4 istatus
+        integer n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
+        integer n_krn, n_krn_i_m1, n_krn_j_m1, n_krn_i, n_krn_j
+        integer n_superob(imax,jmax),n_superob_tot
+        integer istatus
 
-        real*4 vr_obs_unfltrd(imax,jmax)
-        real*4 wt_p_radar(imax,jmax)
-        real*4 vr_obs_fltrd(imax,jmax)
-        real*4 r_missing_data, weight_radar
+        real vr_obs_unfltrd(imax,jmax)
+        real wt_p_radar(imax,jmax)
+        real vr_obs_fltrd(imax,jmax)
+        real r_missing_data, weight_radar
 
         logical l_found_one, l_imax_odd, l_jmax_odd
         integer i,j,ii,jj,i_radar_reject,n_radarobs_lvl_fltrd
@@ -532,7 +532,7 @@ csms$ignore end
 
       subroutine open_dxx(idx_radar,i4time,lun_dxx,istatus)
 
-      integer*4 i_open(200)
+      integer i_open(200)
 
       save i_open
       data i_open /200*0/

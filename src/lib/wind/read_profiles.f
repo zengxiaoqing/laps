@@ -74,8 +74,8 @@ c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
 
 !       LAPS Grid Dimensions
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
 
 !       Profile Stuff
         real lat_pr(MAX_PR)
@@ -109,7 +109,7 @@ c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
 
 !*****************************************************************************
 
-        real*4 heights_3d(imax,jmax,kmax)
+        real heights_3d(imax,jmax,kmax)
 
         dimension u_mdl_bkg_4d(imax,jmax,kmax,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(imax,jmax,kmax,NTMIN:NTMAX)

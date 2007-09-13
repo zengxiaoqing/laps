@@ -55,8 +55,8 @@ cdis
                      ! If false, obs aren't required to be near a vertical
                      ! level. Only multiple level obs are allowed.
 
-        real*4 heights_3d(ni,nj,nk)
-        real*4 temp_bkg_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
+        real temp_bkg_3d(ni,nj,nk)
 
         t_interp = r_missing_data
 

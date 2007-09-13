@@ -249,7 +249,7 @@ c
         real u_bk_ms(ni,nj), v_bk_ms(ni,nj)                       ! m/s
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
-        real*4 wt_bkg_a(ni,nj)                         
+        real wt_bkg_a(ni,nj)                         
 c
 c.....	Grids for other stuff.
 c

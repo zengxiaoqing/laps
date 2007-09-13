@@ -39,8 +39,8 @@ cdis
         subroutine comp_laps_maps(ulaps,vlaps,umaps,vmaps,ni,nj,nk
      1                         ,r_missing_data,rms)
 
-        real*4 ulaps(ni,nj,nk),vlaps(ni,nj,nk)
-        real*4 umaps(ni,nj,nk),vmaps(ni,nj,nk)
+        real ulaps(ni,nj,nk),vlaps(ni,nj,nk)
+        real umaps(ni,nj,nk),vmaps(ni,nj,nk)
 
         nobs_tot = 0
         residualu_tot = 0.

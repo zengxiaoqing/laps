@@ -146,7 +146,7 @@ c
 	real x1a(ni), x2a(nj), y2a(ni,nj)
 	real grid_spacing
 c
-	integer*4 i4time
+	integer i4time
 	integer jstatus(20)		! 20 is standard for prodgen drivers
 	integer narg, iargc
 c

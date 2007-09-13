@@ -73,11 +73,11 @@ C***************** Declarations **************************************
         integer istat_radar_vel
         integer l,n_radars,ni,nj,nk,max_radars
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
-        real*4 tpass1(ni,nj,nk)
-        real*4 r_missing_data
-        real*4 weight_sfc
+        real tpass1(ni,nj,nk)
+        real r_missing_data
+        real weight_sfc
 
         integer max_obstypes
         parameter (max_obstypes=10)
@@ -170,7 +170,7 @@ C********************************************************************
         include 'barnesob.inc'
         type (barnesob) obs_barnes(max_obs)      
 
-        real*4 t_3d(ni,nj,nk)
+        real t_3d(ni,nj,nk)
 
         character*4  c_grid
         character*12 c_ob_type,c_obs,c_obs_left,c_obs_right

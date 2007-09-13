@@ -326,8 +326,8 @@ c
      1              ,ii,jj,background_a,rely,badflag,n_obs_curr
      1              ,stn,mxstn,ni,nj,istatus)
 
- 	real*4 ob_s(mxstn), background_a(ni,nj)
-        real*4 badflag
+ 	real ob_s(mxstn), background_a(ni,nj)
+        real badflag
 	integer rely(26,mxstn), ii(mxstn), jj(mxstn)
         character*(*) c_field
 	character stn(mxstn)*3
@@ -421,10 +421,10 @@ c
 c
 	subroutine dev_ck(ifld,n_meso_g,n_obs_b,  aa_s,rely,  
      +	            n_obs_b_l,aa_l,rely_l,ivals)
-	real*4 aa_s(n_obs_b),aa_l(n_obs_b_l)
-	real*4 diff(n_obs_b),stdev(n_obs_b)  !work arrays
-	integer*4 rely(26,n_obs_b)  
-	integer*4 rely_l(26,n_obs_b),ivals(n_obs_b), qc
+	real aa_s(n_obs_b),aa_l(n_obs_b_l)
+	real diff(n_obs_b),stdev(n_obs_b)  !work arrays
+	integer rely(26,n_obs_b)  
+	integer rely_l(26,n_obs_b),ivals(n_obs_b), qc
 	missing = -99.
 	imissing = -99
 c

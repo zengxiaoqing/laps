@@ -53,11 +53,11 @@ cdis
      1          ,istatus                                    ! Input/Output
      1                                                          )
 
-      real*4   vr_obs(imax,jmax,kmax)
-      real*4   vr_nyq(imax,jmax,kmax)
-      real*4   lat(imax,jmax),lon(imax,jmax)
-      real*4   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)
-      real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax)
+      real   vr_obs(imax,jmax,kmax)
+      real   vr_nyq(imax,jmax,kmax)
+      real   lat(imax,jmax),lon(imax,jmax)
+      real   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)
+      real   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax)
 
       logical l_correct_unfolding,l_grid_north
 

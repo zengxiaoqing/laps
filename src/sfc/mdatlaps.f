@@ -758,10 +758,10 @@ c	User Notes:
 c
 c*******************************************************************************
 c
-	real*4 u_in(max_stn), v_in(max_stn), u(ni,nj), v(ni,nj)
-	real*4 wwu(ni,nj), wwv(ni,nj)
-        real*4 rii(max_stn), rjj(max_stn)
-        integer*4 ii(max_stn), jj(max_stn)
+	real u_in(max_stn), v_in(max_stn), u(ni,nj), v(ni,nj)
+	real wwu(ni,nj), wwv(ni,nj)
+        real rii(max_stn), rjj(max_stn)
+        integer ii(max_stn), jj(max_stn)
 c
 	zeros = 1.e-30
 	call zero(wwu, ni,nj)
@@ -827,8 +827,8 @@ c	User Notes:
 c
 c*******************************************************************************
 c
-	real*4 var_in(max_stn), x(ni,nj), w(ni,nj)
-        integer*4 ii(max_stn), jj(max_stn)
+	real var_in(max_stn), x(ni,nj), w(ni,nj)
+        integer ii(max_stn), jj(max_stn)
 c
 	zeros = 1.e-30
         call zero(w,ni,nj)
@@ -860,7 +860,7 @@ c
 c
 c
         Subroutine procar(a,imax,jmax,b,imax1,jmax1,iproc)
-        real*4 a(imax,jmax),b(imax1,jmax1)
+        real a(imax,jmax),b(imax1,jmax1)
         do 2 j=1,jmax
 	   jj=j
 	   if(jmax.gt.jmax1) jj=jmax1
@@ -904,11 +904,11 @@ c       Changes:
 c
 c======================================================================
 c
-	real*4 x(imax,jmax)                ! array to fill boundarys
-	real*4 x_bk(imax,jmax)             ! array with background field
-	real*4 x_ob(mxstn)                 ! array of observations
-	real*4 fnorm(0:imax-1,0:jmax-1)    ! Barnes weights
-	real*4 dum(imax,jmax)              ! work array
+	real x(imax,jmax)                ! array to fill boundarys
+	real x_bk(imax,jmax)             ! array with background field
+	real x_ob(mxstn)                 ! array of observations
+	real fnorm(0:imax-1,0:jmax-1)    ! Barnes weights
+	real dum(imax,jmax)              ! work array
 c
 	integer ii(mxstn), jj(mxstn)       ! obs location (in gridpts)
 c

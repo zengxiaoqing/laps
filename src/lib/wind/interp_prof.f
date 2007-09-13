@@ -58,7 +58,7 @@ cdis
         real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)
 
 !**************************** END ARRAYS.FOR ********************************
-        real*4 heights_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
 
         u_interp = r_missing_data
         v_interp = r_missing_data

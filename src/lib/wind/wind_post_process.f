@@ -11,15 +11,15 @@
      1                              ,r_missing_data,l_grid_north_out      ! I
      1                              ,istat_lw3)
 
-        real*4 uanl(NX_L,NY_L,NZ_L),vanl(NX_L,NY_L,NZ_L) ! WRT True North ! I
-        real*4 wanl(NX_L,NY_L,NZ_L)                                       ! L
-        real*4 uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)            ! I
+        real uanl(NX_L,NY_L,NZ_L),vanl(NX_L,NY_L,NZ_L) ! WRT True North ! I
+        real wanl(NX_L,NY_L,NZ_L)                                       ! L
+        real uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)            ! I
 
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
-        real*4 rk_terrain(NX_L,NY_L)
+        real rk_terrain(NX_L,NY_L)
 
         character*125 comment_3D(N_3D_FIELDS)
         character*10 units_3D(N_3D_FIELDS)
@@ -93,10 +93,10 @@ csms$ignore end
      1                                     ,NX_L,NY_L,NZ_L
      1                                     ,N_3D_FIELDS,istat_lw3)
 
-        real*4 uanl(NX_L,NY_L,NZ_L),vanl(NX_L,NY_L,NZ_L) ! WRT True North
-        real*4 wanl(NX_L,NY_L,NZ_L)
+        real uanl(NX_L,NY_L,NZ_L),vanl(NX_L,NY_L,NZ_L) ! WRT True North
+        real wanl(NX_L,NY_L,NZ_L)
 
-        real*4 outarray_4D(NX_L,NY_L,NZ_L,N_3D_FIELDS)
+        real outarray_4D(NX_L,NY_L,NZ_L,N_3D_FIELDS)
         character*125 comment_3D(N_3D_FIELDS)
         character*10 units_3D(N_3D_FIELDS)
         character*3 var_3D(N_3D_FIELDS)

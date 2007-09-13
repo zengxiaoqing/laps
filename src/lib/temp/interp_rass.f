@@ -17,9 +17,9 @@
         real ob_pr_ht_obs(max_rs,max_rs_levels)
         real ob_pr_t_obs(max_rs,max_rs_levels)
 
-        real*4 heights_3d(ni,nj,nk)
-        real*4 temp_bkg_3d(ni,nj,nk)
-        real*4 pres_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
+        real temp_bkg_3d(ni,nj,nk)
+        real pres_3d(ni,nj,nk)
 
         t_interp = r_missing_data
 

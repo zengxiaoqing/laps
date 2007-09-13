@@ -23,14 +23,14 @@
         include 'barnesob.inc'
         type (barnesob_qc) obs_barnes(mxstn)
 
-        real*4 tb(ni,nj)                                ! Background field
-        real*4 t_2d(ni,nj)                              ! Analyzed field
-        real*4 topo(ni,nj),ldf(ni,nj)                   ! Topo & Landfrac
-        real*4 ob_diff(mxstn)
-        real*4 ob_full(mxstn)
-        real*4 ob_bkg(mxstn)
-        real*4 to_2d_dum(ni,nj)
-        real*4 wt_bkg_a(ni,nj)                         
+        real tb(ni,nj)                                ! Background field
+        real t_2d(ni,nj)                              ! Analyzed field
+        real topo(ni,nj),ldf(ni,nj)                   ! Topo & Landfrac
+        real ob_diff(mxstn)
+        real ob_full(mxstn)
+        real ob_bkg(mxstn)
+        real to_2d_dum(ni,nj)
+        real wt_bkg_a(ni,nj)                         
 
         write(6,*)' Subroutine barnes_multivariate_sfc_jacket for...'
      1           ,c_field      
@@ -183,13 +183,13 @@ C
         integer nk
         parameter (nk=1)
 
-        real*4 t_2d(ni,nj)                              ! Analyzed field
-        real*4 to_2d_in(ni,nj)                          ! Observations
-        real*4 wt_bkg_a(ni,nj)                         
-        real*4 topo(ni,nj),ldf(ni,nj)                   ! Topo & Landfrac
+        real t_2d(ni,nj)                              ! Analyzed field
+        real to_2d_in(ni,nj)                          ! Observations
+        real wt_bkg_a(ni,nj)                         
+        real topo(ni,nj),ldf(ni,nj)                   ! Topo & Landfrac
 
-        real*4 wt_2d(ni,nj)
-        integer*4 n_obs_lvl
+        real wt_2d(ni,nj)
+        integer n_obs_lvl
 
         logical l_analyze(nk), l_use_ob, l_boundary(ni,nj)
 
@@ -202,7 +202,7 @@ C
         logical limit_analysis_increment
         data limit_analysis_increment /.true./
 
-        integer*4  n_fnorm
+        integer  n_fnorm
         dimension fnorm(0:n_fnorm)
 
         write(6,*)' Subroutine Barnes_univariate_sfc'
@@ -387,7 +387,7 @@ C
         subroutine get_sfcob_field(obs,mxstn,c_field,ob_1d,istatus)
 
         character*(*) c_field
-        real*4 ob_1d(mxstn)
+        real ob_1d(mxstn)
 
 !       Input observation data structure (all variables)
         include 'sfcob.inc'
