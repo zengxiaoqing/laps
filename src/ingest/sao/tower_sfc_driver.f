@@ -33,14 +33,15 @@ c
         character*8   metar_format
         character*8   a9_to_a8, a8_time
 
-c       Dummy for SND purposes
-        real*4     stalat_s(maxsta,maxlvls),stalon_s(maxsta,maxlvls)
-        real*4     staelev_s(maxsta)
-        real*4     soilmoist_p(maxsta)       
+c       Declared then used in 'get_local_towerobs' for SND purposes
+        real     stalat_s(maxsta,maxlvls),stalon_s(maxsta,maxlvls)
+        real     staelev_s(maxsta)
+        real     soilmoist_p(maxsta)       
+	character  stname_s(maxsta)*5
 c
 c.....  Output arrays.
 c
-	real*4  store_1(maxsta,4), 
+	real  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
      &          store_3(maxsta,4), store_3ea(maxsta,2),
      &          store_4(maxsta,5), store_4ea(maxsta,2),
