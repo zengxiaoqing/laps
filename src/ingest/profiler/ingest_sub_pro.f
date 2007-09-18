@@ -66,9 +66,9 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
      1                             ,sp_out(max_levels_out)
 
         character*1 c1_qc_flag(max_levels)        ! for /public
-        integer*4 i4_qc_flag(max_levels)          ! for WFO
+        integer i4_qc_flag(max_levels)          ! for WFO
 
-        real*4 level(max_levels)
+        real level(max_levels)
         integer good,bad,missing, start(2), count(2), staNamLen
         integer start_time(1), count_time(1)
         parameter (good = 0)
@@ -76,7 +76,7 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
         parameter (missing = -1)
         character*1 qc_char(3)
         data qc_char/'G','B','M'/
-        integer*4 byte_to_i4
+        integer byte_to_i4
 
         character*200 fnam_in
         character*180 dir_in
@@ -117,17 +117,17 @@ C
         character*9 asc9_tim,a9time_ob
 
         character*31    ext
-        integer*4       len_dir_in
+        integer       len_dir_in
 
         character*40 c_vars_req
         character*180 c_values_req
 
         character*6 prof_name(n_profilers)
         character*9 a9_timeObs
-        integer*4 timeObs
+        integer timeObs
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then

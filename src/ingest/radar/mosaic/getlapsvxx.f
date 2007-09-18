@@ -21,17 +21,17 @@ c
        Integer       i4timefile_proc
        Integer       i4_file_closest(n_radars)
 
-       Real*4          grid_ra_ref(imax,jmax,kmax,maxradar)
-       Real*4          rheight_3d (imax,jmax,kmax)
-       Real*4          lat(imax,jmax)
-       Real*4          lon(imax,jmax)
-       Real*4          topo(imax,jmax)
-       Real*4          rlat_radar(maxradar)
-       Real*4          rlon_radar(maxradar)
-       Real*4          rheight_radar(maxradar)
-       Real*4          r_missing_data
+       Real          grid_ra_ref(imax,jmax,kmax,maxradar)
+       Real          rheight_3d (imax,jmax,kmax)
+       Real          lat(imax,jmax)
+       Real          lon(imax,jmax)
+       Real          topo(imax,jmax)
+       Real          rlat_radar(maxradar)
+       Real          rlon_radar(maxradar)
+       Real          rheight_radar(maxradar)
+       Real          r_missing_data
 
-       Real*4          zcoord_of_level
+       Real          zcoord_of_level
 c
 c readlaps stuff
 c

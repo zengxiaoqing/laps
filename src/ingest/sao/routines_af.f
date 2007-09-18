@@ -55,16 +55,16 @@ c		P. Stamus  02-24-97  Original version.
 c
 c*****************************************************************************
 c
-	real*4 stn_lat(maxsta), stn_lon(maxsta), stn_elev(maxsta)
-        real*4 stn_t(maxsta), trend_t(maxsta)
-        real*4 stn_td(maxsta), trend_td(maxsta)
-        real*4 stn_u(maxsta), trend_u(maxsta)
-        real*4 stn_v(maxsta), trend_v(maxsta)
-        real*4 stn_alt(maxsta), trend_alt(maxsta)
+	real stn_lat(maxsta), stn_lon(maxsta), stn_elev(maxsta)
+        real stn_t(maxsta), trend_t(maxsta)
+        real stn_td(maxsta), trend_td(maxsta)
+        real stn_u(maxsta), trend_u(maxsta)
+        real stn_v(maxsta), trend_v(maxsta)
+        real stn_alt(maxsta), trend_alt(maxsta)
 c
-        integer*4 stn_ii(maxsta), stn_jj(maxsta)
-        integer*4 n_updates(maxsta)
-	integer*4 jstatus
+        integer stn_ii(maxsta), stn_jj(maxsta)
+        integer n_updates(maxsta)
+	integer jstatus
 c
         character master_file*70
 	character stn_name(maxsta)*5
@@ -130,15 +130,15 @@ c		P. Stamus  02-24-97  Original version.
 c
 c*****************************************************************************
 c
-	real*4 stn_lat(maxsta), stn_lon(maxsta), stn_elev(maxsta)
-        real*4 stn_t(maxsta), trend_t(maxsta)
-        real*4 stn_td(maxsta), trend_td(maxsta)
-        real*4 stn_u(maxsta), trend_u(maxsta)
-        real*4 stn_v(maxsta), trend_v(maxsta)
-        real*4 stn_alt(maxsta), trend_alt(maxsta)
+	real stn_lat(maxsta), stn_lon(maxsta), stn_elev(maxsta)
+        real stn_t(maxsta), trend_t(maxsta)
+        real stn_td(maxsta), trend_td(maxsta)
+        real stn_u(maxsta), trend_u(maxsta)
+        real stn_v(maxsta), trend_v(maxsta)
+        real stn_alt(maxsta), trend_alt(maxsta)
 c
-        integer*4 stn_ii(maxsta), stn_jj(maxsta)
-        integer*4 n_updates(maxsta)
+        integer stn_ii(maxsta), stn_jj(maxsta)
+        integer n_updates(maxsta)
 c
         character master_file*70
 	character stn_name(maxsta)*5
@@ -194,7 +194,7 @@ c
 c
 	parameter(flag = -99.9)
 c
-	real*4		uwind,vwind,direction,speed
+	real		uwind,vwind,direction,speed
 c
 	if(uwind.eq.flag .or. vwind.eq.flag) then
 	   speed = flag
@@ -230,8 +230,8 @@ C Status	 O	I*4	Standard system status
 
 	parameter	(flag = -99.9)
 
-	real*4		dd,ff,ucomp,vcomp
-	integer*4	istatus
+	real		dd,ff,ucomp,vcomp
+	integer	istatus
 
 	istatus = 1
 
@@ -262,10 +262,10 @@ c.....	Routine to find the i,j locations for each station.  Do not "round"
 c.....  the ii,jj's "up"...straight truncation puts the ob at the proper
 c.....  grid point on the major grid.
 c
-	real*4 lat_s(mxsta), lon_s(mxsta)
-        real*4 lat(ni,nj), lon(ni,nj)
-	integer*4 ii(mxsta), jj(mxsta)
-        real*4 rii(mxsta), rjj(mxsta)
+	real lat_s(mxsta), lon_s(mxsta)
+        real lat(ni,nj), lon(ni,nj)
+	integer ii(mxsta), jj(mxsta)
+        real rii(mxsta), rjj(mxsta)
 c
 	do ista=1,numsta
           call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat,lon,

@@ -19,14 +19,14 @@
       integer MAX_LEVELS
 
       parameter (MAX_LEVELS = 50)
-      real*4 RHEIGHT(MAX_LEVELS)
-      real*4 RH(MAX_LEVELS)
-      real*4 PRESSURE(MAX_LEVELS)
-      real*4 TEMP_K(MAX_LEVELS)
+      real RHEIGHT(MAX_LEVELS)
+      real RH(MAX_LEVELS)
+      real PRESSURE(MAX_LEVELS)
+      real TEMP_K(MAX_LEVELS)
 
-      real*4 lat_a(NX_L,NY_L)
-      real*4 lon_a(NX_L,NY_L)
-      real*4 topo_a(NX_L,NY_L)
+      real lat_a(NX_L,NY_L)
+      real lon_a(NX_L,NY_L)
+      real topo_a(NX_L,NY_L)
 
 !............................................................................
 

@@ -68,10 +68,10 @@ c
 	parameter (badflag = -99.9)
 	parameter (num_keep = 12)      !Num hrs to keep in master file.
 c
-	real*4 fnorm(0:ni-1,0:nj-1)
+	real fnorm(0:ni-1,0:nj-1)
 c
-	real*4  lat(ni,nj), lon(ni,nj), topo(ni,nj)
-	real*4  store_1(maxsta,4), 
+	real  lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	real  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
      &          store_3(maxsta,4), store_3ea(maxsta,2),
      &          store_4(maxsta,5), store_4ea(maxsta,2),
@@ -80,7 +80,7 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-        integer*4  wmoid(maxsta), jstatus, grid_spacing 
+        integer  wmoid(maxsta), jstatus, grid_spacing 
         integer    narg, iargc
 c
         character  stations(maxsta)*20, provider(maxsta)*11
@@ -91,48 +91,48 @@ c
 	character  dir_s*256, ext_s*31, units*10, comment*125,var_s*3
 	character  filename9*9
 c
-	real*4 rii(maxsta), rjj(maxsta)
-	real*4 u_c(maxsta), v_c(maxsta)
+	real rii(maxsta), rjj(maxsta)
+	real u_c(maxsta), v_c(maxsta)
 c
-	real*4 trend_t(maxsta), trend_td(maxsta), trend_alt(maxsta)
-	real*4 trend_u(maxsta), trend_v(maxsta)
-	real*4 t_est(maxsta), td_est(maxsta), alt_est(maxsta)
-	real*4 u_est(maxsta), v_est(maxsta)
-	real*4 trend_t_est(maxsta), trend_td_est(maxsta)
-	real*4 trend_alt_est(maxsta)
-	real*4 trend_u_est(maxsta), trend_v_est(maxsta)
+	real trend_t(maxsta), trend_td(maxsta), trend_alt(maxsta)
+	real trend_u(maxsta), trend_v(maxsta)
+	real t_est(maxsta), td_est(maxsta), alt_est(maxsta)
+	real u_est(maxsta), v_est(maxsta)
+	real trend_t_est(maxsta), trend_td_est(maxsta)
+	real trend_alt_est(maxsta)
+	real trend_u_est(maxsta), trend_v_est(maxsta)
 c
-	integer*4 ifound(maxsta)
-	integer*4 ii(maxsta), jj(maxsta)
+	integer ifound(maxsta)
+	integer ii(maxsta), jj(maxsta)
 c
 	character wx(maxsta)*8, obstype(maxsta)*8
 c
 	character master_file*256, laps_domain*9, time*4, up_c*3
 	character*(*) path_to_obs
 c
-	real*4 mstn_lat(maxsta), mstn_lon(maxsta), mstn_elev(maxsta)
-	real*4 mstn_t(maxsta), mtrend_t(maxsta)
-	real*4 mstn_td(maxsta), mtrend_td(maxsta)
-	real*4 mstn_u(maxsta), mtrend_u(maxsta)
-	real*4 mstn_v(maxsta), mtrend_v(maxsta)
-	real*4 mstn_alt(maxsta), mtrend_alt(maxsta)
+	real mstn_lat(maxsta), mstn_lon(maxsta), mstn_elev(maxsta)
+	real mstn_t(maxsta), mtrend_t(maxsta)
+	real mstn_td(maxsta), mtrend_td(maxsta)
+	real mstn_u(maxsta), mtrend_u(maxsta)
+	real mstn_v(maxsta), mtrend_v(maxsta)
+	real mstn_alt(maxsta), mtrend_alt(maxsta)
 c
-	integer*4 mstn_ii(maxsta), mstn_jj(maxsta)
-	integer*4 n_updates(maxsta)
-	integer*4 rtime
+	integer mstn_ii(maxsta), mstn_jj(maxsta)
+	integer n_updates(maxsta)
+	integer rtime
 c
         character mstn_name(maxsta)*5
 c
-	real*4 mstn_lat_new(maxsta), mstn_lon_new(maxsta)
-	real*4 mstn_elev_new(maxsta)
-	real*4 mstn_t_new(maxsta), mtrend_t_new(maxsta)
-	real*4 mstn_td_new(maxsta), mtrend_td_new(maxsta)
-	real*4 mstn_u_new(maxsta), mtrend_u_new(maxsta)
-	real*4 mstn_v_new(maxsta), mtrend_v_new(maxsta)
-	real*4 mstn_alt_new(maxsta), mtrend_alt_new(maxsta)
+	real mstn_lat_new(maxsta), mstn_lon_new(maxsta)
+	real mstn_elev_new(maxsta)
+	real mstn_t_new(maxsta), mtrend_t_new(maxsta)
+	real mstn_td_new(maxsta), mtrend_td_new(maxsta)
+	real mstn_u_new(maxsta), mtrend_u_new(maxsta)
+	real mstn_v_new(maxsta), mtrend_v_new(maxsta)
+	real mstn_alt_new(maxsta), mtrend_alt_new(maxsta)
 c
-	integer*4 mstn_ii_new(maxsta), mstn_jj_new(maxsta)
-	integer*4 n_updates_new(maxsta)
+	integer mstn_ii_new(maxsta), mstn_jj_new(maxsta)
+	integer n_updates_new(maxsta)
 c
         character mstn_name_new(maxsta)*5
 c
@@ -616,12 +616,12 @@ c
 c.....	Routine to do a Barnes analysis that will consider stations in
 c.....	the 't_ob' array that are outside the boundaries of the domain.
 c
-	real*4 fnorm(0:imax-1,0:jmax-1)
-	real*4 t_ob(imax*jmax) 
-	real*4 val(imax*jmax)
-	integer*4 iob(imax*jmax), job(imax*jmax)
-	integer*4 ii(imax*jmax), jj(imax*jmax)
-	integer*4 dx, dy, i_stn, j_stn
+	real fnorm(0:imax-1,0:jmax-1)
+	real t_ob(imax*jmax) 
+	real val(imax*jmax)
+	integer iob(imax*jmax), job(imax*jmax)
+	integer ii(imax*jmax), jj(imax*jmax)
+	integer dx, dy, i_stn, j_stn
 c
 c.....	loop over field only once
 c
@@ -725,8 +725,8 @@ c                         0.50     R = 0.53002d
 c
 c=====================================================================
 c
-	real*4 fnorm(0:imax-1,0:jmax-1)
-        integer*4 dx,dy
+	real fnorm(0:imax-1,0:jmax-1)
+        integer dx,dy
 c
 c.... First, find the area that each ob covers in gridpt space (this
 c.... of course assumes a uniform coverage).

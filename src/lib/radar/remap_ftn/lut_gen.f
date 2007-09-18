@@ -52,9 +52,9 @@ c     Variables from LAPS domain file
 c
 
       integer NX_L,NY_L,NZ_L
-      real*4 lat(NX_L,NY_L)
-      real*4 lon(NX_L,NY_L)
-      real*4 topo(NX_L,NY_L)
+      real lat(NX_L,NY_L)
+      real lon(NX_L,NY_L)
+      real topo(NX_L,NY_L)
 c
 c     Functions
 c

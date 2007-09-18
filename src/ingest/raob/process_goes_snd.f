@@ -134,8 +134,8 @@ C ?   ###########################################################
       character*6 cvar(37)
       character*4 chhmm
       CHARACTER*80 CTEXT
-      INTEGER*4 NBUF(210),ISCALE(210)
-      REAL*4 RBUF(210)
+      INTEGER NBUF(210),ISCALE(210)
+      REAL RBUF(210)
 
       DATA ISCALE /4*1,2*100,2*1,20*100,1,90*100,41*1,41*10,9*1/
       data cvar /'DAY   ','TIME  ','SATID ','MOD   ','LAT   ',

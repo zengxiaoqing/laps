@@ -52,9 +52,9 @@ cdis
       character*4 a4_time
       character*2 c2_sat_type
 
-      real*4 lat_a(NX_L,NY_L)
-      real*4 lon_a(NX_L,NY_L)
-      real*4 topo_a(NX_L,NY_L)
+      real lat_a(NX_L,NY_L)
+      real lon_a(NX_L,NY_L)
+      real topo_a(NX_L,NY_L)
 
       call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a, 
      1            topo_a,1.0,rnorth,south,east,west,istatus)

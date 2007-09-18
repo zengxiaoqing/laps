@@ -69,9 +69,9 @@ C       NOTE: Profiler winds are written out in KNOTS
         real u(max_modes,max_levels)
         real v(max_modes,max_levels), prs
 
-        integer*4 qc_flag(max_modes,max_levels)
+        integer qc_flag(max_modes,max_levels)
         character*4 c4_qc
-        real*4 level(max_modes,max_levels)
+        real level(max_modes,max_levels)
 
         character*2  ngates_short(max_modes)
         character tmpgates    (max_modes*4)
@@ -91,7 +91,7 @@ C       NOTE: Profiler winds are written out in KNOTS
         parameter (missing = -1)
         character*1 qc_char(3)
         data qc_char/'G','B','M'/
-        integer*4 byte_to_i4
+        integer byte_to_i4
 
         character*200 fnam_in
         character*180 dir_in
@@ -123,17 +123,17 @@ C
         character*9 asc9_tim,a9time_ob
 
         character*31    ext
-        integer*4       len_dir_in
+        integer       len_dir_in
 
         character*40 c_vars_req
         character*180 c_values_req
 
         character*6 prof_name(n_profilers)
         character*9 a9_timeObs
-        integer*4 timeObs
+        integer timeObs
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
@@ -622,7 +622,7 @@ C
         character*1 shortvar(2) 
         character*1 shortvar_loc(4)
         character*1 i4_to_byte
-        integer*4 i4var, i4var_loc
+        integer i4var, i4var_loc
         equivalence (shortvar_loc, i4var_loc)
 
         shortvar_loc(1) = shortvar(1)

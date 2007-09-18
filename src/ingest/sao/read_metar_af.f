@@ -57,20 +57,20 @@ c
 c-------------------------------------------------------------------------
 c
 c
-      real*4 lats(nmax), lons(nmax), elevs(nmax)
-      real*4 mslp(nmax), alt(nmax)
-      real*4 t(nmax), tdd, td(nmax)
-      real*4 dd(nmax), ff(nmax), ffg(nmax)
-      real*4 vis(nmax), time(nmax)
-      real*4 ht(5,nmax)
+      real lats(nmax), lons(nmax), elevs(nmax)
+      real mslp(nmax), alt(nmax)
+      real t(nmax), tdd, td(nmax)
+      real dd(nmax), ff(nmax), ffg(nmax)
+      real vis(nmax), time(nmax)
+      real ht(5,nmax)
 c
-      integer*4 timeo, timen
-      integer*4 dpch(nmax), dp(nmax)
-      integer*4 cvr, base, meth
-      integer*4 rtype, astype
-      integer*4 wx1, wx2, wx3, wx4, wx5, wx6, wx7
-      integer*4 cld1a, cld1h, cld2a, cld2h, cld3a, cld3h
-      integer*4 cld4a, cld4h, cld5a, cld5h
+      integer timeo, timen
+      integer dpch(nmax), dp(nmax)
+      integer cvr, base, meth
+      integer rtype, astype
+      integer wx1, wx2, wx3, wx4, wx5, wx6, wx7
+      integer cld1a, cld1h, cld2a, cld2h, cld3a, cld3h
+      integer cld4a, cld4h, cld5a, cld5h
 c
       character filetime*9, af_time*8, a9_to_a8*8, af_file*256
       character id*5, dum*132
@@ -296,7 +296,7 @@ c
 c
 c..... Routine to figure out the AF cloud amounts.
 c
-      integer*4 amt_in
+      integer amt_in
       character amt_out*3
 c
       amt_in = abs( amt_in )
@@ -317,8 +317,8 @@ c
 c
 c..... Routine to figure out the AF cloud heights.
 c
-      integer*4 ht_in
-      real*4 ht_out
+      integer ht_in
+      real ht_out
 c
       ht_out = -99.9
       if(ht_in .lt.  0) return

@@ -81,7 +81,7 @@ C       character*1 submode
         integer error_code
         data wsmr_wmo_id/74533/
         data error_code/1/
-        integer*4 byte_to_i4
+        integer byte_to_i4
 C
 C       Set error handling mode.  Note that you don't have to do this, if this
 C       call isn't made, default error processing will occur:
@@ -111,8 +111,8 @@ C
         character*9 a9_timeObs
         integer timeObs
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then

@@ -66,16 +66,16 @@ c
 c
 c     Input declarations
 c
-      real*4 ref(n_ref)
-      real*4 vel(n_vel)
-      integer*4 n_rays
-      integer*4 i_tilt
-      integer*4 n_ref_gates
-      integer*4 n_vel_gates
-      real*4 azim(max_ray_tilt)
-      real*4 v_nyquist(max_ray_tilt)
-      real*4 eleva
-      real*4 rmissing_data
+      real ref(n_ref)
+      real vel(n_vel)
+      integer n_rays
+      integer i_tilt
+      integer n_ref_gates
+      integer n_vel_gates
+      real azim(max_ray_tilt)
+      real v_nyquist(max_ray_tilt)
+      real eleva
+      real rmissing_data
 c
 c     Misc internal variables
 c

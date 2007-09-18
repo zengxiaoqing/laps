@@ -163,9 +163,9 @@ C
       character   staNameFile(staNameLen,recNum)
 !..............................................................................
 
-      real*4 lat_a(NX_L,NY_L)
-      real*4 lon_a(NX_L,NY_L)
-      real*4 topo_a(NX_L,NY_L)
+      real lat_a(NX_L,NY_L)
+      real lon_a(NX_L,NY_L)
+      real topo_a(NX_L,NY_L)
 
       character*9 a9time_syn, a9time_release, a9time_raob, a9time_sys
 
@@ -316,57 +316,57 @@ C
       integer     manLevel
       integer     sigTLevel
       integer     sigWLevel
-      INTEGER*4   wmoStaNum                      (NREC)
+      INTEGER   wmoStaNum                      (NREC)
       CHARACTER*1 staName                        (6,NREC)
-      REAL*4      staLat                         (NREC)
-      REAL*4      staLon                         (NREC)
-      REAL*4      staElev                        (NREC)
+      REAL      staLat                         (NREC)
+      REAL      staLon                         (NREC)
+      REAL      staElev                        (NREC)
 
-      INTEGER*4   numMand                        (NREC)
-      REAL*4      prMan                          (manLevel ,NREC)
-      REAL*4      htMan                          (manLevel ,NREC)
-      REAL*4      tpMan                          (manLevel ,NREC)
-      REAL*4      tdMan                          (manLevel ,NREC) ! Dwpt Dprs
-      REAL*4      wdMan                          (manLevel ,NREC)
-      REAL*4      wsMan                          (manLevel ,NREC)
+      INTEGER   numMand                        (NREC)
+      REAL      prMan                          (manLevel ,NREC)
+      REAL      htMan                          (manLevel ,NREC)
+      REAL      tpMan                          (manLevel ,NREC)
+      REAL      tdMan                          (manLevel ,NREC) ! Dwpt Dprs
+      REAL      wdMan                          (manLevel ,NREC)
+      REAL      wsMan                          (manLevel ,NREC)
 
-      REAL*4      prMan_good                     (manLevel)
-      REAL*4      htMan_good                     (manLevel)
-      REAL*4      tpMan_good                     (manLevel)
-      REAL*4      tdMan_good                     (manLevel)       ! Dwpt Dprs
-      REAL*4      wdMan_good                     (manLevel)
-      REAL*4      wsMan_good                     (manLevel)
+      REAL      prMan_good                     (manLevel)
+      REAL      htMan_good                     (manLevel)
+      REAL      tpMan_good                     (manLevel)
+      REAL      tdMan_good                     (manLevel)       ! Dwpt Dprs
+      REAL      wdMan_good                     (manLevel)
+      REAL      wsMan_good                     (manLevel)
 
-      INTEGER*4   numsigt                        (NREC)
-      REAL*4      prSigT                         (sigTLevel,NREC)
-      REAL*4      tpSigT                         (sigTLevel,NREC)
-      REAL*4      tdSigT                         (sigTLevel,NREC) ! Dwpt Dprs
+      INTEGER   numsigt                        (NREC)
+      REAL      prSigT                         (sigTLevel,NREC)
+      REAL      tpSigT                         (sigTLevel,NREC)
+      REAL      tdSigT                         (sigTLevel,NREC) ! Dwpt Dprs
 
-      INTEGER*4   numsigw                        (NREC)
-      REAL*4      htSigW                         (sigWLevel,NREC)
-      REAL*4      wdSigW                         (sigWLevel,NREC)
-      REAL*4      wsSigW                         (sigWLevel,NREC)
+      INTEGER   numsigw                        (NREC)
+      REAL      htSigW                         (sigWLevel,NREC)
+      REAL      wdSigW                         (sigWLevel,NREC)
+      REAL      wsSigW                         (sigWLevel,NREC)
 
-      integer*4   indx(NLVL_OUT)  
+      integer   indx(NLVL_OUT)  
       character*9 a9time_out_sort                (NLVL_OUT)
-      REAL*4      latout_sort                    (NLVL_OUT)
-      REAL*4      lonout_sort                    (NLVL_OUT)
-      REAL*4      prout                          (NLVL_OUT)
-      REAL*4      prout_sort                     (NLVL_OUT)
-      REAL*4      htout                          (NLVL_OUT)
-      REAL*4      htout_sort                     (NLVL_OUT)
-      REAL*4      tpout                          (NLVL_OUT)
-      REAL*4      tpout_sort_c                   (NLVL_OUT)
-      REAL*4      tpout_c_z                      (NLVL_OUT)
-      REAL*4      tdout                          (NLVL_OUT)  ! Dewpoint Depress
-      REAL*4      tdout_sort_c                   (NLVL_OUT)  ! Dewpoint Deg C
-      REAL*4      tdout_c_z                      (NLVL_OUT)  ! Dewpoint Deg C
-      REAL*4      wdout                          (NLVL_OUT)
-      REAL*4      wdout_sort                     (NLVL_OUT)
-      REAL*4      wsout                          (NLVL_OUT)
-      REAL*4      wsout_sort                     (NLVL_OUT)
+      REAL      latout_sort                    (NLVL_OUT)
+      REAL      lonout_sort                    (NLVL_OUT)
+      REAL      prout                          (NLVL_OUT)
+      REAL      prout_sort                     (NLVL_OUT)
+      REAL      htout                          (NLVL_OUT)
+      REAL      htout_sort                     (NLVL_OUT)
+      REAL      tpout                          (NLVL_OUT)
+      REAL      tpout_sort_c                   (NLVL_OUT)
+      REAL      tpout_c_z                      (NLVL_OUT)
+      REAL      tdout                          (NLVL_OUT)  ! Dewpoint Depress
+      REAL      tdout_sort_c                   (NLVL_OUT)  ! Dewpoint Deg C
+      REAL      tdout_c_z                      (NLVL_OUT)  ! Dewpoint Deg C
+      REAL      wdout                          (NLVL_OUT)
+      REAL      wdout_sort                     (NLVL_OUT)
+      REAL      wsout                          (NLVL_OUT)
+      REAL      wsout_sort                     (NLVL_OUT)
 
-      real*4 k_to_c
+      real k_to_c
 
       character*9 a9time_raob
       character*8 c8_obstype

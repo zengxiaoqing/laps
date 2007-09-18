@@ -51,7 +51,7 @@ cdis
      1              ,c_fnames(max_files)
        character*15 path_to_vrc
        character*9 a9_time
-       integer*4 i4times_raw(max_files),i4times_lapsprd(max_files)
+       integer i4times_raw(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
        character*3 laps_radar_ext, c3_radar_subdir
        character*8 radar_subdir, c8_fname_format
@@ -609,7 +609,7 @@ c      Determine filename extension
 !      meters per second, respectively. This is done for one radial for
 !      each call to this routine.
  
-       real*4 data(n_gates)
+       real data(n_gates)
 
        if(index .eq. 1)then ! reflectivity
            do i = 1,n_gates
@@ -637,7 +637,7 @@ c      Determine filename extension
 !      Convert integer Z count value to dbz
 
        integer zcounts
-       real*4 dbz,dbz_hold,b_missing_data                         
+       real dbz,dbz_hold,b_missing_data                         
 
        dbz_hold = zcounts
 
@@ -667,7 +667,7 @@ c      Determine filename extension
 !      Convert integer V count value to radial velocity (meters/sec)
 
        integer vcounts
-       real*4 vel_ms,vel_hold,b_missing_data                         
+       real vel_ms,vel_hold,b_missing_data                         
 
        vel_hold = vcounts
 

@@ -6,32 +6,32 @@
         integer maxlvl
         parameter (maxlvl=10000)
 
-        real*4 elapsed_time(maxlvl)
-        real*4 p(maxlvl),  p_out(maxlvl)          ! millibars
-        real*4             ht_out(maxlvl)
-        real*4 t(maxlvl),  t_out(maxlvl)
-        real*4 td(maxlvl), td_out(maxlvl)
-        real*4 rh(maxlvl)
-        real*4 u(maxlvl),  u_out(maxlvl)
-        real*4 v(maxlvl),  v_out(maxlvl)
-        real*4 ws(maxlvl), ws_out(maxlvl)
-        real*4 wd(maxlvl), wd_out(maxlvl)
-        real*4 dz(maxlvl)
-        real*4 lon(maxlvl)
-        real*4 lat(maxlvl)
-        real*4 rng(maxlvl)
-        real*4 az(maxlvl)
-        real*4 alt(maxlvl)
-        real*4 qp(maxlvl)
-        real*4 qt(maxlvl)
-        real*4 qh(maxlvl)
-        real*4 qu(maxlvl)
-        real*4 qv(maxlvl)
-        real*4 quv(maxlvl)
+        real elapsed_time(maxlvl)
+        real p(maxlvl),  p_out(maxlvl)          ! millibars
+        real             ht_out(maxlvl)
+        real t(maxlvl),  t_out(maxlvl)
+        real td(maxlvl), td_out(maxlvl)
+        real rh(maxlvl)
+        real u(maxlvl),  u_out(maxlvl)
+        real v(maxlvl),  v_out(maxlvl)
+        real ws(maxlvl), ws_out(maxlvl)
+        real wd(maxlvl), wd_out(maxlvl)
+        real dz(maxlvl)
+        real lon(maxlvl)
+        real lat(maxlvl)
+        real rng(maxlvl)
+        real az(maxlvl)
+        real alt(maxlvl)
+        real qp(maxlvl)
+        real qt(maxlvl)
+        real qh(maxlvl)
+        real qu(maxlvl)
+        real qv(maxlvl)
+        real quv(maxlvl)
 
-        real*4 lat_s,lon_s
+        real lat_s,lon_s
 
-        real*4 lat_a(maxlvl),lon_a(maxlvl)
+        real lat_a(maxlvl),lon_a(maxlvl)
 
         character*172 header_line(15)
         character*130 line

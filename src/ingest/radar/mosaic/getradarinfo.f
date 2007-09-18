@@ -3,22 +3,22 @@
 c
 c routine reads static/radarinfo.dat file and returns to the calling
 c program the 4 character radar_id, the 8 character radar_name,
-c the real*4 radar_lat and lon and the integer radar_elev in meters
+c the real radar_lat and lon and the integer radar_elev in meters
 c
       implicit none
 
-      integer*4    i
-      integer*4    lat_deg,lat_min,lat_sec
-      integer*4    lon_deg,lon_min,lon_sec
-      integer*4    max_radars_natl
+      integer    i
+      integer    lat_deg,lat_min,lat_sec
+      integer    lon_deg,lon_min,lon_sec
+      integer    max_radars_natl
 
-      real*4       rlat_deg,rlat_min,rlat_sec
-      real*4       rlon_deg,rlon_min,rlon_sec
+      real       rlat_deg,rlat_min,rlat_sec
+      real       rlon_deg,rlon_min,rlon_sec
 
-      real*4       radar_lat(max_radars_natl)
-      real*4       radar_lon(max_radars_natl)
+      real       radar_lat(max_radars_natl)
+      real       radar_lon(max_radars_natl)
 
-      integer*4    radar_elev(max_radars_natl)
+      integer    radar_elev(max_radars_natl)
 
       logical      end_of_file
 

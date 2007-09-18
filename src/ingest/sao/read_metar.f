@@ -70,22 +70,22 @@ c
       character*6 reportType(recNum)
       character*8 skyCover( maxSkyCover, recNum)
       character*5 stationName(recNum)
-      integer*4   pressChangeChar(recNum), wmoId(recNum)
+      integer   pressChangeChar(recNum), wmoId(recNum)
 
       double precision timeObs(recNum), dfilval
 
-      real*4 altimeter(recNum), dewpoint(recNum), dpFromTenths(recNum)
-      real*4 elevation(recNum), latitude(recNum), longitude(recNum)
-      real*4 maxTemp24Hour(recNum), minTemp24Hour(recNum)
-      real*4 precip1Hour(recNum), precip24Hour(recNum)
-      real*4 precip3Hour(recNum), precip6Hour(recNum)
-      real*4 pressChange3Hour(recNum), seaLevelPress(recNum)
-      real*4 skyLayerBase( maxSkyCover, recNum), snowCover(recNum)
-      real*4 tempFromTenths(recNum), temperature(recNum)
-      real*4 visibility(recNum), windDir(recNum), windGust(recNum)
-      real*4 windSpeed(recNum)
+      real altimeter(recNum), dewpoint(recNum), dpFromTenths(recNum)
+      real elevation(recNum), latitude(recNum), longitude(recNum)
+      real maxTemp24Hour(recNum), minTemp24Hour(recNum)
+      real precip1Hour(recNum), precip24Hour(recNum)
+      real precip3Hour(recNum), precip6Hour(recNum)
+      real pressChange3Hour(recNum), seaLevelPress(recNum)
+      real skyLayerBase( maxSkyCover, recNum), snowCover(recNum)
+      real tempFromTenths(recNum), temperature(recNum)
+      real visibility(recNum), windDir(recNum), windGust(recNum)
+      real windSpeed(recNum)
 
-      real*4 filval
+      real filval
 c
 c
 c..... Start.

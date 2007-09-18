@@ -71,23 +71,23 @@ c
 c
 c     Input variables
 c
-      integer*4 i_tilt
-      real*4 vel_thr_rtau
-      real*4 r_missing_data
+      integer i_tilt
+      real vel_thr_rtau
+      real r_missing_data
 c
 c     Output variables
 c
-      real*4 gate_spacing_m_ret
-      integer*4 num_sweeps
-      real*4 elevation_deg
-      integer*4 n_rays
-      integer*4 n_gates
-      real*4 slant_ranges_m(max_gates)
-      real*4 velocity(max_gates,max_rays)
-      real*4 reflect(max_gates,max_rays)
-      real*4 az_array(max_rays)
-      real*4 v_nyquist_tilt
-      integer*4 istatus
+      real gate_spacing_m_ret
+      integer num_sweeps
+      real elevation_deg
+      integer n_rays
+      integer n_gates
+      real slant_ranges_m(max_gates)
+      real velocity(max_gates,max_rays)
+      real reflect(max_gates,max_rays)
+      real az_array(max_rays)
+      real v_nyquist_tilt
+      integer istatus
 c
 c     Misc local variables
 c

@@ -54,13 +54,13 @@ c
 c
 c     Input variables
 c
-      integer*4 i_tilt
-      integer*4 Max_rays
+      integer i_tilt
+      integer Max_rays
 c
 c     Output variables
 c
-      real*4    az_array(Max_rays)
-      integer*4 istatus
+      real    az_array(Max_rays)
+      integer istatus
 c
 c     Include files
 c

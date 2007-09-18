@@ -72,14 +72,14 @@ c                                      user-defined size (deg) and grid_spacing.
 c
 c*****************************************************************************
 c
-	real*4  timeobs(maxsta)
-	real*4  lats(maxsta), lons(maxsta), elev(maxsta)
-	real*4  t(maxsta), td(maxsta), dd(maxsta), ff(maxsta)
-	real*4  mslp(maxsta), alt(maxsta), ht(5,maxsta), ffg(maxsta)
-	real*4  vis(maxsta)
+	real  timeobs(maxsta)
+	real  lats(maxsta), lons(maxsta), elev(maxsta)
+	real  t(maxsta), td(maxsta), dd(maxsta), ff(maxsta)
+	real  mslp(maxsta), alt(maxsta), ht(5,maxsta), ffg(maxsta)
+	real  vis(maxsta)
 	real    lat(ni,nj), lon(ni,nj)
 c
-	real*4	store_1(maxsta,4),
+	real	store_1(maxsta,4),
      &          store_2(maxsta,3), store_2ea(maxsta,3), 
      &          store_3(maxsta,4), store_3ea(maxsta,2), 
      &          store_4(maxsta,5), store_4ea(maxsta,2), 
@@ -88,8 +88,8 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  i4time_ob, wmoid(maxsta)
-	integer*4  rtime, dpchar(maxsta), dp(maxsta)
+	integer  i4time_ob, wmoid(maxsta)
+	integer  rtime, dpchar(maxsta), dp(maxsta)
 c
 	character  path_to_obs*(*) 
 	character  drib*2, ship*2

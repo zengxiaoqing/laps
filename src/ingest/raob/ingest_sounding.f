@@ -224,8 +224,8 @@
       subroutine get_nlevels_snd(pressure_mb,height_m,r_missing_data
      1                          ,nlevels_raw,nlevels_snd) 
 
-      real*4 pressure_mb(nlevels_raw)     
-      real*4 height_m(nlevels_raw)     
+      real pressure_mb(nlevels_raw)     
+      real height_m(nlevels_raw)     
 
       do i = 1,nlevels_raw
           if(abs(pressure_mb(i)) .le. 2000. .or.

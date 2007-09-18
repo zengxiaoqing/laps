@@ -83,20 +83,20 @@ c
         parameter (maxSkyCover = 2)
 
 	real*8  timeobs(maxobs)
-	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
-	real*4  t(maxobs), td(maxobs)
-	real*4  dd(maxobs), ff(maxobs), ffg(maxobs)
-	real*4  mslp(maxobs)
-	real*4  vis(maxobs), dp(maxobs)
-	real*4  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)       
-	real*4  equivspd(maxobs), sea_temp(maxobs), t_wet(maxobs)
-        real*4  skyLayerBase(maxSkyCover,maxobs)
+	real  lats(maxobs), lons(maxobs), elev(maxobs)
+	real  t(maxobs), td(maxobs)
+	real  dd(maxobs), ff(maxobs), ffg(maxobs)
+	real  mslp(maxobs)
+	real  vis(maxobs), dp(maxobs)
+	real  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)       
+	real  equivspd(maxobs), sea_temp(maxobs), t_wet(maxobs)
+        real  skyLayerBase(maxSkyCover,maxobs)
         real    lat(ni,nj), lon(ni,nj)
-        real*4  k_to_f
+        real  k_to_f
 c
 c.....  Output arrays.
 c
-	real*4  store_1(maxsta,4), 
+	real  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
      &          store_3(maxsta,4), store_3ea(maxsta,2),
      &          store_4(maxsta,5), store_4ea(maxsta,2),

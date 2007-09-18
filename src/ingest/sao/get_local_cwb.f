@@ -72,7 +72,7 @@ c
 
         integer    wmoid(maxobs), pcc(maxobs)
         integer    rtime
-        integer*4  i4time_ob_a(maxobs), before, after
+        integer  i4time_ob_a(maxobs), before, after
 
         character  stname(maxobs)*5
 	character  timech*9, time*4
@@ -84,7 +84,7 @@ c
 c
 c.....  Output arrays
 c
-        real*4 store_1(maxsta,4), 
+        real store_1(maxsta,4), 
      &         store_2(maxsta,3), store_2ea(maxsta,3),
      &         store_3(maxsta,4), store_3ea(maxsta,2),
      &         store_4(maxsta,5), store_4ea(maxsta,2),

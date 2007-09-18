@@ -14,17 +14,17 @@
         include 'remap_constants.dat'
         include 'remap.cmn'
 
-        real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflct grid
-        real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
+        real ref_3d(ni,nj,nk)                  ! Input/Output 3D reflct grid
+        real lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
 
-        real*4 ref_2d_buf(ni,nj)
-        real*4 radar_dist(ni,nj)
+        real ref_2d_buf(ni,nj)
+        real radar_dist(ni,nj)
         integer ngrids(ni,nj), ngrids_max
 
         logical l_fill
 
         parameter (ngrids_max = 10)
-        real*4 weight_a(-ngrids_max:+ngrids_max,-ngrids_max:+ngrids_max)
+        real weight_a(-ngrids_max:+ngrids_max,-ngrids_max:+ngrids_max)
 
         write(6,*)' Subroutine ref_fill_horz...'
 

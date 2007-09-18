@@ -15,15 +15,15 @@ C     FORTRAN TEMPLATE FOR FILE= 9614912000300o
       PARAMETER (NVARS=39) !NUMBER OF VARIABLES
       PARAMETER (NREC=   200)   !CHANGE THIS TO GENERALIZE
 C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 39
-      INTEGER*4 RCODE
-      INTEGER*4 RECDIM
+      INTEGER RCODE
+      INTEGER RECDIM
 C     ****VARIABLES FOR THIS NETCDF FILE****
 C
 
       character*170 filename
-      real*4 lat_a(NX_L,NY_L)
-      real*4 lon_a(NX_L,NY_L)
-      real*4 topo_a(NX_L,NY_L)
+      real lat_a(NX_L,NY_L)
+      real lon_a(NX_L,NY_L)
+      real topo_a(NX_L,NY_L)
 
       character*5 c5_staid
       character*11 a11_raob_reltime,a11_pibal_reltime

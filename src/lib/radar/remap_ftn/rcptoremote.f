@@ -51,7 +51,7 @@ cdis
       character*31 ext,ext_in
 
       character*91 full_fname
-      integer*4 len_fname
+      integer len_fname
 
       write(6,*)' Subroutine rcp_to_remote'
 

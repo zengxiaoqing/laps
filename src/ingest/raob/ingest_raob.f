@@ -20,7 +20,7 @@
 !     Output file
       character*13 filename13, cvt_i4time_wfo_fname13
       character*31    ext
-      integer*4       len_dir
+      integer       len_dir
 
       character*40 c_vars_req
       character*(*) path_to_raw_raob

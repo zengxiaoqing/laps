@@ -37,9 +37,9 @@ cdis
 cdis   
 cdis
       Subroutine Remap_process(
-     :         i_tilt,                                     ! Integer*4 (input)
-     :         i_last_scan,                                ! Integer*4 (input)
-     :         i_first_scan,                               ! Integer*4 (input)
+     :         i_tilt,                                     ! Integer (input)
+     :         i_last_scan,                                ! Integer (input)
+     :         i_first_scan,                               ! Integer (input)
      :         grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel, ! (output)
      :         grid_ref,ngrids_ref,n_pot_ref,                        ! (output)
      :         NX_L,NY_L,NZ_L,                             ! Integer   (input)
@@ -51,13 +51,13 @@ cdis
      1         Velocity,Reflect,                           !           (input)
      1         Az_Array,Elevation_deg,                     !           (input)
      1         vel_nyquist,                                !           (input)
-     :         ref_min,min_ref_samples,min_vel_samples,dgr,! Integer*4 (input)
+     :         ref_min,min_ref_samples,min_vel_samples,dgr,! Integer (input)
      :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
      :         path_to_vrc,                                ! Char      (input)
      :         namelist_parms,                             ! Struct    (input)
-     :         i_product_i4time,                           ! Integer*4 (input)
-     :         i_num_finished_products,                    ! Integer*4 (output)
-     :         i_status_tilt,i_status)                     ! Integer*4 (output)
+     :         i_product_i4time,                           ! Integer (input)
+     :         i_num_finished_products,                    ! Integer (output)
+     :         i_status_tilt,i_status)                     ! Integer (output)
 c
 c     Subroutine remap_process
 c
@@ -97,15 +97,15 @@ c
 c
 c     Input variables
 c
-      integer*4 i_tilt, i_status_tilt
-      integer*4 i_last_scan
-      integer*4 i_first_scan
-      integer*4 i_product_i4time
+      integer i_tilt, i_status_tilt
+      integer i_last_scan
+      integer i_first_scan
+      integer i_product_i4time
       integer   NX_L,NY_L,NZ_L
 
       integer min_ref_samples,min_vel_samples
 
-      real*4 ref_min,dgr
+      real ref_min,dgr
 c
 c     LAPS Grid Dimensions
 c
@@ -115,8 +115,8 @@ c
 c
 c     Output variables
 c
-      integer*4 i_num_finished_products
-      integer*4 i_status
+      integer i_num_finished_products
+      integer i_status
 c
 c     Processing parameters
 c
@@ -124,7 +124,7 @@ c
       parameter (re43 = 8503700.) ! 4/3 radius of the earth in meters
 c
 c
-      integer*4 max_fields
+      integer max_fields
       parameter (max_fields = 10)
 c
 c     Variables for NetCDF I/O
@@ -149,32 +149,32 @@ c     Misc local variables
 c
       integer igate,i_scan_mode,jray,end_ext,ilut_ref
 c
-      Real*4  Slant_ranges_m (max_gates),
+      Real  Slant_ranges_m (max_gates),
      :        Elevation_deg,
      :        Az_array(max_rays),
      :        Velocity(max_gates,max_rays),
      :        Reflect(max_gates,max_rays)
 
-      real*4, allocatable, dimension(:,:,:,:) :: out_array_4d
+      real, allocatable, dimension(:,:,:,:) :: out_array_4d
 
-      real*4 r_missing_data
+      real r_missing_data
 
-      real*4 lat(NX_L,NY_L)      
-      real*4 lon(NX_L,NY_L)      
-      real*4 topo(NX_L,NY_L)     
-      real*4 dum_2d(NX_L,NY_L)   ! Local
-      integer*4 k_eff(NX_L,NY_L) ! Local
+      real lat(NX_L,NY_L)      
+      real lon(NX_L,NY_L)      
+      real topo(NX_L,NY_L)     
+      real dum_2d(NX_L,NY_L)   ! Local
+      integer k_eff(NX_L,NY_L) ! Local
 c
       logical l_unfold, l_compress_output, l_domain_read
       save l_domain_read
       data l_domain_read /.false./
 c 
-      real*4 avgvel,vel_nyquist,vel_value,ref_value,lat_dum,lon_dum
-      real*4 v_nyquist_tilt(max_tilts)
-      real*4 v_nyquist_vol
-      real*4 gate_spacing_m_ret,grid_spacing_cen_m
-      real*4 height_grid,range_dum,range_new,azimuth,elevation_dum
-      real*4 height_guess
+      real avgvel,vel_nyquist,vel_value,ref_value,lat_dum,lon_dum
+      real v_nyquist_tilt(max_tilts)
+      real v_nyquist_vol
+      real gate_spacing_m_ret,grid_spacing_cen_m
+      real height_grid,range_dum,range_new,azimuth,elevation_dum
+      real height_guess
 c
       integer i,j,k,k_low,ielev,igate_lut,iter
       integer nazi,iran
@@ -915,12 +915,12 @@ c
 
         integer LVL_2D(2)
 
-        real*4 field_3d(imax,jmax,kmax)
-        real*4 fields_2d(imax,jmax,2)
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
-        real*4 dist(imax,jmax)
+        real field_3d(imax,jmax,kmax)
+        real fields_2d(imax,jmax,2)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
+        real dist(imax,jmax)
 
         character*9 a9time
         character*8 radar_subdir
@@ -1035,7 +1035,7 @@ c
 
 !       Apply a range dependent reflectivity threshold to filter ground clutter
 
-        real*4 ref(ni,nj), dist(ni,nj)
+        real ref(ni,nj), dist(ni,nj)
 
         do i = 1,ni
         do j = 1,nj

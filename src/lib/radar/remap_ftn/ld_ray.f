@@ -50,22 +50,22 @@ c       to the lookup tables. In the output arrays, the reflectivity and
 c       velocity have been remapped to the same gate spacing.
 c
 c     Changed buffer storage so vel, ref stored as integer*2.
-c     This program converts reflectivity and velocity to real*4
+c     This program converts reflectivity and velocity to real
 c     Keith Brewster, CAPS
 c
       implicit none
 c
 c     Input variables
 c
-      integer*4 i_ray
-      integer*4 ngates_remap
-      real*4 r_missing_data
+      integer i_ray
+      integer ngates_remap
+      real r_missing_data
 c
 c     Output variables
 c
-      real*4 velocity(ngates_remap)
-      real*4 reflect(ngates_remap)
-      integer*4 istatus
+      real velocity(ngates_remap)
+      real reflect(ngates_remap)
+      integer istatus
 c
 c     Include files
 c

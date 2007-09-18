@@ -79,13 +79,13 @@ c
 c.....  Local variables/arrays
 c
 	integer    rtime
-        integer*4  i4time_ob_a(maxobs), before, after
+        integer  i4time_ob_a(maxobs), before, after
         real    lat(ni,nj), lon(ni,nj)
-        real*4  k_to_f
+        real  k_to_f
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_reject(maxobs), ltest_madis_qc
 c
-	integer*4  wmoid(maxsta)
+	integer  wmoid(maxsta)
 	integer    recNum
 c
 	character  save_stn(maxobs)*6
@@ -144,7 +144,7 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
 c
 c.....  Output arrays.
 c
-	real*4  store_1(maxsta,4), 
+	real  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
      &          store_3(maxsta,4), store_3ea(maxsta,2),
      &          store_4(maxsta,5), store_4ea(maxsta,2),
@@ -874,9 +874,9 @@ c
 
          subroutine madis_qc_r(var,DD,badflag)
 
-         real*4 var
+         real var
          character*1 DD
-         real*4 badflag
+         real badflag
 
          if(DD .eq. 'X')then
              var = badflag

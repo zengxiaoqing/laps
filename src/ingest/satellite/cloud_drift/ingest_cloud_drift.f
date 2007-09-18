@@ -21,7 +21,7 @@
 
 !     Output file
       character*31    ext
-      integer*4       len_dir
+      integer       len_dir
 
       call get_systime(i4time_sys,a9_time,istatus)
       if(istatus .ne. 1)go to 999

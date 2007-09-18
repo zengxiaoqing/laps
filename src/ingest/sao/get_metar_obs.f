@@ -79,17 +79,17 @@ c
         integer maxobs ! raw data file
         integer maxsta ! output LSO file
 	real*8  timeobs(maxobs)
-	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
-	real*4  t(maxobs), td(maxobs), tt(maxobs), ttd(maxobs)
-	real*4  dd(maxobs), ddg(maxobs), ff(maxobs), ffg(maxobs)
-	real*4  stnp(maxobs), mslp(maxobs), alt(maxobs)
-	real*4  ht(6,maxobs), vis(maxobs), dp(maxobs)
-        real*4  rh(maxobs), sr(maxobs), st(maxobs)
-	real*4  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)
-	real*4  max24t(maxobs), min24t(maxobs), snowcvr(maxobs)
+	real  lats(maxobs), lons(maxobs), elev(maxobs)
+	real  t(maxobs), td(maxobs), tt(maxobs), ttd(maxobs)
+	real  dd(maxobs), ddg(maxobs), ff(maxobs), ffg(maxobs)
+	real  stnp(maxobs), mslp(maxobs), alt(maxobs)
+	real  ht(6,maxobs), vis(maxobs), dp(maxobs)
+        real  rh(maxobs), sr(maxobs), st(maxobs)
+	real  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)
+	real  max24t(maxobs), min24t(maxobs), snowcvr(maxobs)
         real    lat(ni,nj), lon(ni,nj), k_to_f
 c
-	real*4  store_1(maxsta,4), 
+	real  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
      &          store_3(maxsta,4), store_3ea(maxsta,2),
      &          store_4(maxsta,5), store_4ea(maxsta,2),
@@ -98,8 +98,8 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  i4time_ob, wmoid(maxobs), wmoid_in(maxobs)
-	integer*4  i4time_before, i4time_after
+	integer  i4time_ob, wmoid(maxobs), wmoid_in(maxobs)
+	integer  i4time_before, i4time_after
 	integer    rtime, dpchar(maxobs)
 	integer    maxSkyCover, recNum, nf_fid, nf_vid, nf_status
 c

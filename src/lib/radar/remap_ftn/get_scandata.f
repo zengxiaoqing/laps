@@ -37,17 +37,17 @@ cdis
 cdis   
 cdis
         subroutine  get_scandata(
-     :          i_tilt,             ! Input  (Integer*4)
-     :          r_missing_data,     ! Input  (Real*4)
-     :          max_rays_in,        ! Input  (Integer*4)
-     :          n_rays,             ! Output (Integer*4)
-     :          n_gates,            ! Output (Integer*4)
-     :          gate_spacing_m_ret, ! Output (Real*4)
-     :          elevation_deg,      ! Output (Real*4)
-     :          i_scan_mode,        ! Output (Integer*4)
-     :          v_nyquist_tilt,     ! Output (Real*4)
-     :          v_nyquist_ray,      ! Output (Real*4 array)
-     :          istatus )           ! Output (Integer*4)
+     :          i_tilt,             ! Input  (Integer)
+     :          r_missing_data,     ! Input  (Real)
+     :          max_rays_in,        ! Input  (Integer)
+     :          n_rays,             ! Output (Integer)
+     :          n_gates,            ! Output (Integer)
+     :          gate_spacing_m_ret, ! Output (Real)
+     :          elevation_deg,      ! Output (Real)
+     :          i_scan_mode,        ! Output (Integer)
+     :          v_nyquist_tilt,     ! Output (Real)
+     :          v_nyquist_ray,      ! Output (Real array)
+     :          istatus )           ! Output (Integer)
 
 c
 c     PURPOSE:
@@ -58,20 +58,20 @@ c
 c
 c     Input variables
 c
-      integer*4 i_tilt
-      real*4 r_missing_data
-      integer*4 max_rays_in
+      integer i_tilt
+      real r_missing_data
+      integer max_rays_in
 c
 c     Output variables
 c
-      integer*4 n_rays
-      integer*4 n_gates
-      real*4 gate_spacing_m_ret
-      real*4 elevation_deg
-      integer*4 i_scan_mode
-      real*4 v_nyquist_tilt
-      real*4 v_nyquist_ray(max_rays_in)
-      integer*4 istatus
+      integer n_rays
+      integer n_gates
+      real gate_spacing_m_ret
+      real elevation_deg
+      integer i_scan_mode
+      real v_nyquist_tilt
+      real v_nyquist_ray(max_rays_in)
+      integer istatus
 c
 c     Include file
 c

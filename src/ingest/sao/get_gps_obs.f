@@ -70,10 +70,10 @@ c.....  Local variables/arrays
 c
         real    lat(ni,nj), lon(ni,nj)
 	real*8  timeobs(maxobs)
-	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
-	real*4  t(maxobs), rh(maxobs), stnp(maxobs)
+	real  lats(maxobs), lons(maxobs), elev(maxobs)
+	real  t(maxobs), rh(maxobs), stnp(maxobs)
 
-	integer*4  i4time_ob, before, after, wmoid(maxobs)
+	integer  i4time_ob, before, after, wmoid(maxobs)
 	integer    rtime, dpchar(maxobs), iplat_type(maxobs)
 
         character*9 a9time_file
@@ -84,7 +84,7 @@ c
 c
 c.....  Output arrays.
 c
-	real*4  store_1(maxsta,4), 
+	real  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
      &          store_3(maxsta,4), store_3ea(maxsta,2),
      &          store_4(maxsta,5), store_4ea(maxsta,2),

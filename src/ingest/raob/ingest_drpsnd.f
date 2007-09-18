@@ -21,7 +21,7 @@
 !     Output file
       character*13 filename13, cvt_i4time_wfo_fname13
       character*31    ext
-      integer*4       len_dir
+      integer       len_dir
 
       character*40 c_vars_req
       character*(*) path_to_raw_drpsnd
@@ -306,9 +306,9 @@
       real temp_c(MAX_PR,MAX_PR_LEVELS)
       real dewpoint_c(MAX_PR,MAX_PR_LEVELS)
 
-      real*4 heights_3d(ni,nj,nk)
-      real*4 lat(ni,nj)
-      real*4 lon(ni,nj)
+      real heights_3d(ni,nj,nk)
+      real lat(ni,nj)
+      real lon(ni,nj)
 
       character*5 c5_name(MAX_PR)
       character*8 c8_obstype(MAX_PR)

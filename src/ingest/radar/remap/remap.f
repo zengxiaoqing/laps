@@ -44,7 +44,7 @@ cdis
       character path_to_radar*150, laps_radar_ext*3
      1         ,radar_subdir_dum*3, path_to_vrc*15
 
-      real*4, allocatable, dimension(:,:) :: lat,lon,topo
+      real, allocatable, dimension(:,:) :: lat,lon,topo
        
       call get_grid_dim_xy(NX_L,NY_L,istatus)
       if (istatus .ne. 1) then
@@ -159,20 +159,20 @@ cdis
 
 !     Variables used for data access and in fill_common 
    
-      real*4 b_ref(MAX_REF_TILT)
-      real*4 b_vel(MAX_VEL_TILT)
-      real*4 b_missing_data
+      real b_ref(MAX_REF_TILT)
+      real b_vel(MAX_VEL_TILT)
+      real b_missing_data
 
       real v_nyquist_ray_a(MAX_RAY_TILT)
       real azim(MAX_RAY_TILT)
       real eleva 
 
 !     Declarations for call to 'Read_data_88d'
-      Real*4  Slant_ranges_m (max_gates),
+      Real  Slant_ranges_m (max_gates),
      :        Elevation_deg,
      :        Az_array(max_rays) 
-      real*4, allocatable, dimension(:,:) :: Velocity
-      real*4, allocatable, dimension(:,:) :: Reflect
+      real, allocatable, dimension(:,:) :: Velocity
+      real, allocatable, dimension(:,:) :: Reflect
 
       integer ref_index, vel_index, io_stat
       integer n_rays, i_scan, i_tilt, n_ref_gates, n_vel_gates
@@ -187,9 +187,9 @@ cdis
       character*3 laps_radar_ext, c3_radar_subdir
       character*(*) path_to_vrc, path_to_radar
 
-      real*4 lat(NX_L,NY_L)      
-      real*4 lon(NX_L,NY_L)      
-      real*4 topo(NX_L,NY_L)     
+      real lat(NX_L,NY_L)      
+      real lon(NX_L,NY_L)      
+      real topo(NX_L,NY_L)     
 
 !     Misc Local variables
 
@@ -589,7 +589,7 @@ c
        include 'remap_constants.dat'      
        include 'radar_mosaic_dim.inc'      
 
-       integer*4 MAX_RADARS_REMAP
+       integer MAX_RADARS_REMAP
        parameter (MAX_RADARS_REMAP=max_radars_mosaic)
 
        character*150 path_to_radar_a(MAX_RADARS_REMAP),path_to_vrc_nl       
