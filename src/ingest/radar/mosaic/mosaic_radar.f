@@ -42,7 +42,8 @@ c namelist items
      & n_radars_narrowband,
      & istatus)      
     
-      if(n_radars_wideband .ne. 0)then       
+      if(n_radars_wideband .ne. 0)then  
+          write(6,*)     
           write(6,*)' Wideband scenario'
 
           if(n_radars_wideband .eq. -1)then
@@ -90,9 +91,17 @@ c namelist items
       endif
 
       if(n_radars_narrowband .ne. 0)then       
+          write(6,*)     
           write(6,*)' Narrowband scenario'
           n_radars = n_radars_narrowband
           c_radar_mosaic='rdr'
+
+          if(imosaic_3d .eq. 2)then
+              write(6,*)' WARNING: inconsistent parameter settings'
+              write(6,*)' n_radars_narrowband = ',n_radars_narrowband
+              write(6,*)' imosaic_3d = ',imosaic_3d
+              write(6,*)
+          endif
 
 !         Set c_radar_ext
           do i = 1,n_radars
@@ -152,19 +161,19 @@ c
 
       Integer       x,y,z,record
 
-      Real*4        grid_ra_ref(nx_l,ny_l,nz_l,n_radars)
-      Real*4        grid_mosaic_3dref(nx_l,ny_l,nz_l)
-      Real*4        grid_mosaic_2dref(nx_l,ny_l)
-      Real*4        lat(nx_l,ny_l)
-      Real*4        lon(nx_l,ny_l)
-      Real*4        topo(nx_l,ny_l)
-      Real*4        rheight_laps(nx_l,ny_l,nz_l)
-      Real*4        rlat_radar(n_radars)
-      Real*4        rlon_radar(n_radars)
-      Real*4        rheight_radar(n_radars)
-      Real*4        closest_radar_m(nx_l,ny_l)
+      Real        grid_ra_ref(nx_l,ny_l,nz_l,n_radars)
+      Real        grid_mosaic_3dref(nx_l,ny_l,nz_l)
+      Real        grid_mosaic_2dref(nx_l,ny_l)
+      Real        lat(nx_l,ny_l)
+      Real        lon(nx_l,ny_l)
+      Real        topo(nx_l,ny_l)
+      Real        rheight_laps(nx_l,ny_l,nz_l)
+      Real        rlat_radar(n_radars)
+      Real        rlon_radar(n_radars)
+      Real        rheight_radar(n_radars)
+      Real        closest_radar_m(nx_l,ny_l)
 
-      Real*4        zcoord_of_level
+      Real        zcoord_of_level
       Integer       lvl_3d(nz_l)
 c
       Character     c_filename_vxx(maxfiles,n_radars)*200
