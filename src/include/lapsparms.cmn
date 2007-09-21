@@ -8,36 +8,36 @@
         include 'bgdata.inc'
 
         integer    iflag_lapsparms
-        real*4       max_radar_files_nl   ! max_radar_files is in lapsparms.for
-        real*4       PRESSURE_INTERVAL_L
-        real*4       PRESSURE_0_L
+        real       max_radar_files_nl   ! max_radar_files is in lapsparms.for
+        real       PRESSURE_INTERVAL_L
+        real       PRESSURE_0_L
         integer    nk_laps
-        real*4       standard_latitude
-        real*4       standard_latitude2
-        real*4       standard_longitude
+        real       standard_latitude
+        real       standard_latitude2
+        real       standard_longitude
         integer    NX_L
         integer    NY_L
         integer    I_PERIMETER
-        real*4 grid_spacing_m
-        real*4 grid_cen_lat
-        real*4 grid_cen_lon
+        real grid_spacing_m
+        real grid_cen_lat
+        real grid_cen_lon
         integer    laps_cycle_time
         integer min_to_wait_for_metars
         integer i2_missing_data
-        real*4    r_missing_data
+        real    r_missing_data
         integer  MAX_RADARS
-        real*4 ref_base
-        real*4 ref_base_useable
-        real*4 r_hybrid_first_gate
-        real*4 aircraft_time_window
+        real ref_base
+        real ref_base_useable
+        real r_hybrid_first_gate
+        real aircraft_time_window
         integer  maxstns
         integer  N_PIREP
         integer vert_rad_meso
         integer vert_rad_sao
         integer vert_rad_pirep
         integer vert_rad_prof     
-        real*4 silavwt_parm
-        real*4 toptwvl_parm
+        real silavwt_parm
+        real toptwvl_parm
         integer maxstations, maxobs
         integer num_domains_cmn                             ! wrfsi
         integer lli_orig_cmn, llj_orig_cmn                  ! wrfsi
@@ -83,36 +83,36 @@
         logical*1    l_compress_radar,l_use_tamdar,l_3dvar,l_pad1
 
         common  /lapsparms/ iflag_lapsparms
-     1  ,max_radar_files_nl,PRESSURE_INTERVAL_L,PRESSURE_0_L
-     1  ,nk_laps,standard_latitude,standard_latitude2       
-     1  ,standard_longitude,NX_L, NY_L, I_PERIMETER
-     1  ,grid_spacing_m,grid_cen_lat,grid_cen_lon
-     1  ,laps_cycle_time, min_to_wait_for_metars
-     1  ,i2_missing_data, r_missing_data, MAX_RADARS
-     1  ,ref_base,ref_base_useable,r_hybrid_first_gate
-     1  ,maxstns,N_PIREP
-     1  ,vert_rad_meso,vert_rad_sao
-     1  ,vert_rad_pirep,vert_rad_prof     
-     1  ,silavwt_parm,toptwvl_parm
-     1  ,maxstations,maxobs
-     1  ,vertical_grid,c50_lowres_directory,c6_maproj
-     1  ,radarext_3d,radarext_3d_accum
-     1  ,aircraft_time_window
-     1  ,num_domains_cmn,lli_orig_cmn,llj_orig_cmn                  ! wrfsi
-     1  ,uri_orig_cmn,urj_orig_cmn, parent_id_cmn                   ! wrfsi
-     1  ,ratio_to_parent_cmn                                        ! wrfsi
-     1  ,path_to_raw_pirep
-     1  ,path_to_raw_rass,path_to_raw_profiler
-     1  ,path_to_raw_blprass,path_to_raw_blpprofiler
-     1  ,path_to_wsi_2d_radar,path_to_wsi_3d_radar
-     1  ,path_to_qc_acars,path_to_raw_raob
-     1  ,path_to_metar_data,path_to_local_data
-     1  ,path_to_buoy_data,c8_project,c8_blpfmt
-     1  ,c_raddat_type, c80_description, path_to_topt30s
-     1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
-     1  ,path_to_landuse30s,path_to_soiltype_top30s
-     1  ,path_to_soiltype_bot30s,path_to_greenfrac
-     1  ,path_to_soiltemp1deg,path_to_albedo,path_to_sst
-     1  ,path_to_maxsnoalb,path_to_islope
-     1  ,fdda_model_source
-     1  ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1
+     &  ,max_radar_files_nl,PRESSURE_INTERVAL_L,PRESSURE_0_L
+     &  ,nk_laps,standard_latitude,standard_latitude2       
+     &  ,standard_longitude,NX_L, NY_L, I_PERIMETER
+     &  ,grid_spacing_m,grid_cen_lat,grid_cen_lon
+     &  ,laps_cycle_time, min_to_wait_for_metars
+     &  ,i2_missing_data, r_missing_data, MAX_RADARS
+     &  ,ref_base,ref_base_useable,r_hybrid_first_gate
+     &  ,maxstns,N_PIREP
+     &  ,vert_rad_meso,vert_rad_sao
+     &  ,vert_rad_pirep,vert_rad_prof     
+     &  ,silavwt_parm,toptwvl_parm
+     &  ,maxstations,maxobs
+     &  ,vertical_grid,c50_lowres_directory,c6_maproj
+     &  ,radarext_3d,radarext_3d_accum
+     &  ,aircraft_time_window
+     &  ,num_domains_cmn,lli_orig_cmn,llj_orig_cmn                  ! wrfsi
+     &  ,uri_orig_cmn,urj_orig_cmn, parent_id_cmn                   ! wrfsi
+     &  ,ratio_to_parent_cmn                                        ! wrfsi
+     &  ,path_to_raw_pirep
+     &  ,path_to_raw_rass,path_to_raw_profiler
+     &  ,path_to_raw_blprass,path_to_raw_blpprofiler
+     &  ,path_to_wsi_2d_radar,path_to_wsi_3d_radar
+     &  ,path_to_qc_acars,path_to_raw_raob
+     &  ,path_to_metar_data,path_to_local_data
+     &  ,path_to_buoy_data,c8_project,c8_blpfmt
+     &  ,c_raddat_type, c80_description, path_to_topt30s
+     &  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
+     &  ,path_to_landuse30s,path_to_soiltype_top30s
+     &  ,path_to_soiltype_bot30s,path_to_greenfrac
+     &  ,path_to_soiltemp1deg,path_to_albedo,path_to_sst
+     &  ,path_to_maxsnoalb,path_to_islope
+     &  ,fdda_model_source
+     &  ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1
