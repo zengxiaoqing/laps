@@ -38,7 +38,7 @@ cdis
 cdis
         subroutine degfrom(xd,yd,deg_from)
 
-        real*4 deg_from,xd,yd,xx
+        real deg_from,xd,yd,xx
 
              if(yd .eq. 0.0 .and. xd .eq. 0.0)then
              deg_from = 360.

@@ -38,25 +38,25 @@ cdis
 
 !     The array pres_laps_1d begins at 900mb and decreases at 50mb steps.
 
-!     real*4 rlwc_laps(nk),prob_laps(nk)
-!     real*4 height_laps_1d(nk),pres_laps_1d(nk),temp_laps_1d(nk)
+!     real rlwc_laps(nk),prob_laps(nk)
+!     real height_laps_1d(nk),pres_laps_1d(nk),temp_laps_1d(nk)
 
 !     INPUTS
-      integer*4 nk              ! Number of LAPS vertical levels
-      real*4 cbase_m            ! Cloud base (Meters MSL)
-      real*4 ctop_m             ! Cloud top (Meters MSL)
-      integer*4 itype_in        ! Cloud type (Now Hardwired to 1) (Stratus)
-      real*4 height_laps_1d(nk) ! Vert array, Heights (Meters MSL)
-      real*4 pres_laps_1d(nk)   ! Vert array, LAPS Pressure Levels (MB)
-      real*4 temp_laps_1d(nk)   ! Vert array, Ambient Temperature (Deg K)
-      integer*4 mode            ! Not used (Can be removed)
+      integer nk              ! Number of LAPS vertical levels
+      real cbase_m            ! Cloud base (Meters MSL)
+      real ctop_m             ! Cloud top (Meters MSL)
+      integer itype_in        ! Cloud type (Now Hardwired to 1) (Stratus)
+      real height_laps_1d(nk) ! Vert array, Heights (Meters MSL)
+      real pres_laps_1d(nk)   ! Vert array, LAPS Pressure Levels (MB)
+      real temp_laps_1d(nk)   ! Vert array, Ambient Temperature (Deg K)
+      integer mode            ! Not used (Can be removed)
 
 
 !     OUTPUTS
-      real*4 rlwc_laps(nk)      ! Vert array, LWC (G/M**3)
+      real rlwc_laps(nk)      ! Vert array, LWC (G/M**3)
                                 ! Should be assigned for all LAPS levels within
                                 ! The cloud layer.
-      real*4 prob_laps(nk)      ! Vert array, Not used right now.
+      real prob_laps(nk)      ! Vert array, Not used right now.
 
       COMMON /PANT/ BOT(4),TOP(4),PRB(4),PRT(4),BTEM(4),TTEM(4)
       COMMON /QANT/ NLVL,HEITL(260),PRES(260),TEMP(260)
@@ -199,7 +199,7 @@ C
 C-------Set the minimums and the maximums of the different input
 C       parameters so there are no magic numbers floating around.
 C
-      real*4 TEMPMIN,TEMPMAX,PRESMIN,PRESMAX,HEITMIN,HEITMAX
+      real TEMPMIN,TEMPMAX,PRESMIN,PRESMAX,HEITMIN,HEITMAX
       PARAMETER (TEMPMIN  =   150.000)
       PARAMETER (TEMPMAX  =   349.999)
       PARAMETER (PRESMIN  =    50.000)
@@ -1083,10 +1083,10 @@ C=======================================================================
 C<End>
 C***********************************************************************
 C
-      INTEGER*4 NDIAMS
+      INTEGER NDIAMS
       PARAMETER   (NDIAMS = 6)
 
-      REAL*4 FREEZE,TOOCLD
+      REAL FREEZE,TOOCLD
       PARAMETER   (FREEZE = 273.15)
       PARAMETER   (TOOCLD = 243.15)
 C
@@ -1398,7 +1398,7 @@ C=======================================================================
 C<End>
 C***********************************************************************
 C
-      REAL*4       FREEZE
+      REAL       FREEZE
       PARAMETER   (FREEZE = 273.15)
 C
       COMMON /PANT/ BOT(4),TOP(4),PRB(4),PRT(4),BTEM(4),TTEM(4)
@@ -1550,7 +1550,7 @@ C=======================================================================
 C<End>
 C***********************************************************************
 C
-      REAL*4       FREEZE
+      REAL       FREEZE
       PARAMETER   (FREEZE = 273.15)
 C
       COMMON /PANT/ BOT(4),TOP(4),PRB(4),PRT(4),BTEM(4),TTEM(4)
@@ -1559,7 +1559,7 @@ C
 C
       DIMENSION ICP(4),WATR(4,2,260),XMVD(4)
 C
-      real*4 rlwc_laps(nk),prob_laps(nk)
+      real rlwc_laps(nk),prob_laps(nk)
 
       CHARACTER*70 TITLE
 C     CHARACTER*14 FILENM
@@ -2387,7 +2387,7 @@ CC    YIELDED
 CC     CLDRPS(R) = NUMBER OF DROPS/CM**3/2 MICRON INTERVAL
 CC
 CC   -------------------------------------------------------------
-      REAL*4 PI,DENSITY
+      REAL PI,DENSITY
       PARAMETER(PI=3.14159,DENSITY=1.0)
       REAL LWC,CLDRPS(4,40),DROPSZ(40),TND(10)
       INTEGER GMAFCT

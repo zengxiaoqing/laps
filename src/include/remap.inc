@@ -21,7 +21,7 @@ c
 !    :    grid_ref,ngrids_ref,n_pot_ref,
 
 
-!       real*4 out_array_4d(NX_L,NY_L,NZ_L,3)
+!       real out_array_4d(NX_L,NY_L,NZ_L,3)
 !       equivalence (out_array_4d(1,1,1,1),grid_ref(1,1,1))
 !       equivalence (out_array_4d(1,1,1,2),grid_rvel(1,1,1))
 !       equivalence (out_array_4d(1,1,1,3),grid_nyq(1,1,1))

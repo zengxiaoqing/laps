@@ -62,14 +62,14 @@ C**********************************************************************
 C
         implicit  none
 C
-      integer*4      reftime,              !INPUT I4time of model run 
+      integer      reftime,              !INPUT I4time of model run 
      1               valtime,              !INPUT I4time data is valid
      1               imax,jmax,kmax,       !INPUT # cols, # rows, # fields
      1               kdim,                 !INPUT K dimension of DATA array
      1               lvl(kdim),            !INPUT Level of each field 
      1               istatus               !OUTPUT
 
-      real*4         data(imax,jmax,kdim)  !INPUT Raw data to be written
+      real         data(imax,jmax,kdim)  !INPUT Raw data to be written
       character*(*)  datadir               !INPUT Directory to be written to
       character*(*)  cdldir                !INPUT Directory containing cdls
       character*(*)  ext                   !INPUT File name ext
@@ -78,7 +78,7 @@ C
       character*(*)  units(kdim)           !INPUT units of each field
       character*(*)  comment(kdim)         !INPUT Comments for each field
 C
-      integer*4      flag,                 !Print flag (1 = off)
+      integer      flag,                 !Print flag (1 = off)
      1               i_reftime,            !UNIX time of data
      1               i_valtime,            !UNIX time of data
      1               error(2),
@@ -99,7 +99,7 @@ C
      1               append                !0=no, 1=yes
 C
       parameter (max_levels=100)
-      real*4         pr(max_levels),       !pressures read from get_pres_1d
+      real         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(n_levels)
 C
       character*4    fcst_hh_mm

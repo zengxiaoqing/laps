@@ -36,7 +36,7 @@ c
 c.....  Routine to multiply all the elements of array 'a' by the
 c.....  corresponding elements of array 'b'.
 c
-        real*4 a(imax,jmax), b(imax,jmax), result(imax,jmax)
+        real a(imax,jmax), b(imax,jmax), result(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax

@@ -44,10 +44,10 @@ cdoc  If 'string' is 'none', then do just the QC without conversion
 
       character*(*) string
 
-      real*4 k_to_c
+      real k_to_c
 
-      real*4 array_in(n),array_out(n)
-      real*4 array_buf(n)
+      real array_in(n),array_out(n)
+      real array_buf(n)
 
       do i = 1,n
           if(abs(array_in(i)) .ge. 1e10 .or. 
@@ -90,11 +90,11 @@ cdoc  If 'string' is 'none', then do just the QC without conversion
 
       character*(*) string
 
-      real*4 k_to_c
+      real k_to_c
 
-      integer*4 array_in(n)
-      real*4 array_out(n)
-      real*4 array_buf(n)
+      integer array_in(n)
+      real array_out(n)
+      real array_buf(n)
 
       do i = 1,n
           if(abs(array_in(i)) .ge. 1000000 .or. 
@@ -132,7 +132,7 @@ cdoc  If 'string' is 'none', then do just the QC without conversion
       subroutine apply_qc_rsa(iflag_rsa,variable,nobs)
 
       integer iflag_rsa(nobs)
-      real*4 variable(nobs)
+      real variable(nobs)
 
       call get_r_missing_data(r_missing_data,istatus)
 

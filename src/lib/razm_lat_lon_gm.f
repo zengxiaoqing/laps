@@ -53,10 +53,10 @@ C Status         O      I*4     Standard system status.
         Parameter       (km_per_Deg=111.12d0)   !km per degree of latitude
 
 C***Parameter list variables
-        Real*4          r4_SLat,r4_SLon,r4_Range,r4_Azimuth,r4_TLat,r4_T
+        Real          r4_SLat,r4_SLon,r4_Range,r4_Azimuth,r4_TLat,r4_T
      1Lon
         Real*8          SLat,SLon,Range,Azimuth,TLat,TLon
-        Integer*4       Status
+        Integer       Status
 
 C***Local variables
         Real*8          Dist,CosDLon,DLon

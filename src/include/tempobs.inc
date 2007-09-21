@@ -5,13 +5,13 @@
 !       The floating point grid values are useful for verification, and just
 !       in case we need them for increased accuracy in the analysis.
 
-        integer*4 n_fields
+        integer n_fields
         parameter (n_fields=12)
 
-        real*4 temp_obs(max_obs,n_fields)
+        real temp_obs(max_obs,n_fields)
 
-        integer*4 i_ri,i_rj,i_rk,i_i,i_j,i_k,i_ob_raw,i_ob_grid
-        integer*4 i_bias,i_wt,i_inst_err
+        integer i_ri,i_rj,i_rk,i_i,i_j,i_k,i_ob_raw,i_ob_grid
+        integer i_bias,i_wt,i_inst_err
         parameter (i_ri = 1)
         parameter (i_rj = 2)
         parameter (i_rk = 3)

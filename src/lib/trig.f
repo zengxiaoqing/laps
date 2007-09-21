@@ -33,7 +33,7 @@ cdis
 
         function sind(x)
 
-        real*4 x,sind,pi,rpd
+        real x,sind,pi,rpd
 
         parameter (pi = 3.1415926535897932)
         parameter (rpd = pi / 180.)
@@ -45,7 +45,7 @@ cdis
 
         function cosd(x)
 
-        real*4 x,cosd,pi,rpd
+        real x,cosd,pi,rpd
 
         parameter (pi = 3.1415926535897932)
         parameter (rpd = pi / 180.)
@@ -57,7 +57,7 @@ cdis
 
         function tand(x)
 
-        real*4 x,tand,pi,rpd
+        real x,tand,pi,rpd
 
         parameter (pi = 3.1415926535897932)
         parameter (rpd = pi / 180.)
@@ -69,7 +69,7 @@ cdis
 
         function asind(x)
 
-        real*4 x,asind,pi,rpd
+        real x,asind,pi,rpd
 
         parameter (pi = 3.1415926535897932)
         parameter (rpd = pi / 180.)
@@ -81,7 +81,7 @@ cdis
 
         function acosd(x)
 
-        real*4 x,acosd,pi,rpd
+        real x,acosd,pi,rpd
 
         parameter (pi = 3.1415926535897932)
         parameter (rpd = pi / 180.)
@@ -94,7 +94,7 @@ cdis
 
         function atan2d(x,y)
 
-        real*4 x,y,atan2d,pi,rpd
+        real x,y,atan2d,pi,rpd
 
         parameter (pi = 3.1415926535897932)
         parameter (rpd = pi / 180.)

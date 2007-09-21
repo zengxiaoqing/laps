@@ -60,7 +60,7 @@ c...............................................................................
 c
         implicit none
         integer ni, nj, i, j
-        real*4 u(ni,nj), v(ni,nj), ff(ni,nj)
+        real u(ni,nj), v(ni,nj), ff(ni,nj)
 c
 c.....  Compute the wind speed at each point.
 c

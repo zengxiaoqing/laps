@@ -7,17 +7,17 @@ C**********************************************************************
 C
 !       implicit  none
 C
-      integer*4      i4time,               !INPUT I4time of data
+      integer      i4time,               !INPUT I4time of data
      1               i4_valtime,
      1               imax,jmax,kmax,       !INPUT # cols, # rows, # fields
      1               kdim,                 !INPUT K dimension of DATA array
      1               lvl(kdim),            !INPUT Level of each field 
      1               istatus               !OUTPUT
 
-      real*4         data(imax,jmax,kdim)    !INPUT Raw data to be written
+      real         data(imax,jmax,kdim)    !INPUT Raw data to be written
 
-      integer*4, allocatable, dimension(:) :: array1 !LOCAL Compressed array
-      real*4,    allocatable, dimension(:) :: array2 !LOCAL Compressed array
+      integer, allocatable, dimension(:) :: array1 !LOCAL Compressed array
+      real,    allocatable, dimension(:) :: array2 !LOCAL Compressed array
 
       character*(*)  dir                     !INPUT Directory to be written to
       character*(*)  ext                     !INPUT File name ext
@@ -26,7 +26,7 @@ C
       character*(*)  units(kdim)             !INPUT units of each field
       character*(*)  comment(kdim)           !INPUT Comments for each field
 C
-      integer*4      flag,                 !Print flag (1 = off)
+      integer      flag,                 !Print flag (1 = off)
      1               i_reftime,            !UNIX time of data
      1               i_valtime,            !UNIX time of data
      1               error(2),
@@ -48,7 +48,7 @@ C
      1               append                !0=no, 1=yes
 C
       parameter (max_levels=100)
-      real*4         pr(max_levels),       !pressures read from get_pres_1d
+      real         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(max_levels)
 c
       logical l_check_encoding
@@ -287,9 +287,9 @@ C
         subroutine runlength_encode(ngrids,n_cmprs_max,data           ! I
      1                             ,n_cmprs,array1,array2,istatus)    ! O
 
-        integer*4 array1(n_cmprs_max)
-        real*4 array2(n_cmprs_max)
-        real*4 data(ngrids)
+        integer array1(n_cmprs_max)
+        real array2(n_cmprs_max)
+        real data(ngrids)
 
 !       Setup for first point
         n_cmprs = 0

@@ -37,12 +37,12 @@ cdoc    THE TIME CORRESPONDING TO I4TIME.
 C
 C================================================================
 C
-        INTEGER*4 I4TIME, ISTATUS
+        INTEGER I4TIME, ISTATUS
         CHARACTER*9 FILE_NAME
 C
-        INTEGER*4 NYEAR, NMONTH, NDAY, NHOUR, NMIN, NSEC, NJULIAN, I
+        INTEGER NYEAR, NMONTH, NDAY, NHOUR, NMIN, NSEC, NJULIAN, I
 C
-        INTEGER*4 NJUL_DAYS(12)
+        INTEGER NJUL_DAYS(12)
         DATA NJUL_DAYS/0,31,59,90,120,151,181,212,243,273,304,334/
 C
 C================================================================
@@ -91,10 +91,10 @@ cdoc    Note that NYEAR is the number of years since 1900
 C
 C================================================================
 C
-C       INTEGER*4 I4TIME, NYEAR, NMONTH, NDAY, NHOUR, NMIN, NSEC, ISTATUS
+C       INTEGER I4TIME, NYEAR, NMONTH, NDAY, NHOUR, NMIN, NSEC, ISTATUS
 C
-        INTEGER*4 NSECMO(12), NSECYR, NSECDA, NSECHR, NSECMN
-        INTEGER*4 IBASE, I, NN, LFTOVR, NDAYS
+        INTEGER NSECMO(12), NSECYR, NSECDA, NSECHR, NSECMN
+        INTEGER IBASE, I, NN, LFTOVR, NDAYS
 
         PARAMETER (IBASE=60)
 
@@ -188,7 +188,7 @@ cdoc  Converts initial time and forecast time to a 13 character filename
 
 cdoc  Convert utime to a9time. Jacket routine that calls 'make_fnam_lp'.
 
-      integer*4 utime, i4time, istatus
+      integer utime, i4time, istatus
       character*(*) a9time
 
       i4time = utime + 315619200
@@ -215,7 +215,7 @@ cdoc  This is converted to i4time, number of sec since Jan 1, 1960 at 00z
 cdoc    Converts 9 character ascii time into i4time
 
         character*9 ascii_time
-        integer*4 i4time
+        integer i4time
 
         read(ascii_time(1:2),2)iyear
         read(ascii_time(3:5),3)idoy
@@ -257,7 +257,7 @@ C
 
         implicit        none
 
-        integer*4       i4time,
+        integer       i4time,
      1          istatus,
      1          rmndr,
      1          nsec,

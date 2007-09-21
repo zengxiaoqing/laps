@@ -57,7 +57,7 @@ C**********************************************************************
 C
       implicit  none
 C
-      integer*4       i4time,              !INPUT I4time of data
+      integer       i4time,              !INPUT I4time of data
      1                iimax,jjmax,kkmax,   !INPUT # cols, # rows, # fields
      1                kdim,                !INPUT K dimension of DATA array
      1                lvl_req(kdim),       !INPUT Requested levels
@@ -68,9 +68,9 @@ C
       character*(*)   lvl_coord_req(kdim)  !OUTPUT Vertical coordinate of fields
       character*(*)   units_req(kdim)      !OUTPUT Units of requested fields
       character*(*)   comment_req(kdim)    !OUTPUT Comments for requested fields
-      real*4        data(iimax,jjmax,kdim) !OUTPUT data
+      real        data(iimax,jjmax,kdim) !OUTPUT data
 C
-      integer*4 fn_length,
+      integer fn_length,
      1          i_reftime,              !UNIX time of data
      1          i_valtime,              !UNIX time of data
      1          flag,                   !Print flag (1 = off)
@@ -215,11 +215,11 @@ C**********************************************************************
       character*(*)     file_name
       character*4       fhh
 
-      integer*4         fn_length,
+      integer         fn_length,
      1                  ext_len,
      1                  istatus
 
-      integer*4         end_dir, end_ext, error(2)
+      integer         end_dir, end_ext, error(2)
 
 C#ifdefined NODYNAMIC
 C      character*31  ext_dn
@@ -278,9 +278,9 @@ C########################################################################
 
       implicit none
 
-      integer*4       valtime, reftime, istatus
-      integer*4       fcst_hr, fcst_min, fcst_min_sec, fcst_sec
-      integer*4       error(3)
+      integer       valtime, reftime, istatus
+      integer       fcst_hr, fcst_min, fcst_min_sec, fcst_sec
+      integer       error(3)
       character*4     fcst_hh_mm
       character*1     h1, h2, m1, m2
 

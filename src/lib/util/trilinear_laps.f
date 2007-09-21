@@ -43,7 +43,7 @@ cdis
 cdoc    Interpolate 3-d array to find the field value at a fractional grid
 cdoc    point.
 
-        real*4 array_3d(imax,jmax,kmax)
+        real array_3d(imax,jmax,kmax)
 
         k_low = int(rk)
         if(k_low .ge. kmax)k_low = kmax - 1 ! Extrapolate if on high end
@@ -70,7 +70,7 @@ cdoc    Interpolate 3-d array to find the field value at a fractional grid
 cdoc    point. This one allows you to extrapolate very slightly outside the 
 cdoc    grid.
 
-        real*4 array_3d(imax,jmax,kmax)
+        real array_3d(imax,jmax,kmax)
 
         k_low = int(rk)
         if(k_low .ge. kmax)k_low = kmax - 1 ! Extrapolate if on high end

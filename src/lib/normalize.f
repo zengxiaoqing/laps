@@ -76,15 +76,15 @@ C Specular_ref_angle_d O  R*4  A  Distance from specular reflection pt to sun
 C istatus        O        I*4     Standard status return.
         integer         ni,nj
 C***Parameter list variables
-        real*4          lat(ni,nj),lon(ni,nj)
-        Real*4          sublat_d,sublon_d,range_m
-        Integer*4       i4time,istatus
-        real*4          image(ni,nj)
+        real          lat(ni,nj),lon(ni,nj)
+        Real          sublat_d,sublon_d,range_m
+        Integer       i4time,istatus
+        real          image(ni,nj)
         logical         l_national
 
 C***Local variables
-        integer*4 maxlut
-        real*4 rpd
+        integer maxlut
+        real rpd
         Parameter   (maxlut=1400,         ! largest array size allowed
      1          rpd=3.1415926536/180.)
 
@@ -95,7 +95,7 @@ C***Local variables
      1          tx_n,ty_n,tz_n,
      1          refx,refy,refz
 
-        Real*4  normfac,imgtmp,
+        Real  normfac,imgtmp,
      1          solar_factor(maxlut,maxlut),solar_alt_d,XFrac,YFrac,
      1          SF_UL,SF_UR,SF_LR,SF_LL,SF_U,SF_L,S_F,Weight,
      1                PF_UL,PF_UR,PF_LR,PF_LL,PF_U,PF_L,P_F,RBril,RBrih,
@@ -384,7 +384,7 @@ C-------------------------------------------------------------------------------
 
         Implicit        None
 
-        Real*4          A,B,IL,IH,JL,JH,rarg
+        Real          A,B,IL,IH,JL,JH,rarg
 
         a = (jh - jl) / (ih - il)
         b =  jl - il * a
@@ -431,18 +431,18 @@ c
 
       integer  i,j,istatus
  
-      real*4     rpd,radius_earth_m
+      real     rpd,radius_earth_m
       Parameter (rpd = 3.1415926536/180.,
      1           radius_earth_m = 6378137.)
 
-      real*4  lat,lon
-      real*4  sat_radius,au_m
+      real  lat,lon
+      real  sat_radius,au_m
 
       real*8  TX,TY,TZ,
      1        SATX,SATY,SATZ,
      1        R8Emission_angle_r
 
-      real*4  Emission_angle_d
+      real  Emission_angle_d
 
 c================================================================
         au_m = 149000000.

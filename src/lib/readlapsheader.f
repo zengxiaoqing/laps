@@ -71,7 +71,7 @@ C**********************************************************************
 
         INTEGER         FN_LENGTH
 C
-        INTEGER*4       I4TIME,         ! Input I4time of data
+        INTEGER       I4TIME,         ! Input I4time of data
      1          FLAG,           ! Print flag (1 = off)
      1          no_laps_diag,   !if = 0, print diagnostic output
      1          REC,
@@ -84,7 +84,7 @@ C
      1                NUM_LEVELS,
      1          ISTATUS
 C
-        REAL*4          MSG_FLAG
+        REAL          MSG_FLAG
 C
         CHARACTER*150   DIR             ! Input Directory to read data from
         CHARACTER*31    EXT             ! Input File name ext (up to 31 chars)
@@ -294,7 +294,7 @@ C**********************************************************************
 C
       IMPLICIT  NONE
 
-      INTEGER*4 LVL(*),
+      INTEGER LVL(*),
      1          i, j,
      1          KDIM,
      1          NUM_LEVELS,

@@ -39,8 +39,8 @@ cdis
 !       Steve Albers            1990
 !       Steve Albers            1994     Test for missing data values
 
-        real*4 grid_ra_ref(imax,jmax,kmax)      ! Input 3D Array
-        real*4 radar_array(imax,jmax)           ! Output 2D Array
+        real grid_ra_ref(imax,jmax,kmax)      ! Input 3D Array
+        real radar_array(imax,jmax)           ! Output 2D Array
 
         common /laps_diag/ no_laps_diag
 
@@ -89,10 +89,10 @@ cdis
 
 !       Steve Albers            FSL
 
-        real*4 grid_ra_ref(imax,jmax,kmax)      ! Input 3D Array
-        real*4 r_missing_out                    ! Input - flag value for 
+        real grid_ra_ref(imax,jmax,kmax)      ! Input 3D Array
+        real r_missing_out                    ! Input - flag value for 
                                                 !         missing output
-        real*4 radar_array(imax,jmax)           ! Output 2D Array
+        real radar_array(imax,jmax)           ! Output 2D Array
 
         common /laps_diag/ no_laps_diag
 

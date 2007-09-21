@@ -34,9 +34,9 @@ cdis
 
 !       Steve Albers            1990
 
-        real*4 z_3d_in(ni,nj,nk)
-        real*4 radar_2d_out(ni,nj)
-        real*4 pres_sfc_pa(ni,nj)
+        real z_3d_in(ni,nj,nk)
+        real radar_2d_out(ni,nj)
+        real pres_sfc_pa(ni,nj)
 
         write(6,*)' Converting from 3D Z field to Low Level Z field'
 

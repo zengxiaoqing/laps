@@ -49,27 +49,27 @@ cdoc    in cloud info along the lines of the arrays in the "old" LSO format.
 cdoc    This is called only from the cloud analysis at present.
 c
 c
-        real*4          badflag
+        real          badflag
 c
 c.....  Input arrays (for new format LSO)
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
-	real*4 t(maxsta), t_ea(maxsta), max24t(maxsta), min24t(maxsta)
-	real*4 td(maxsta), td_ea(maxsta), rh(maxsta), rh_ea(maxsta)
-	real*4 dd(maxsta), ddg(maxsta), dd_ea(maxsta)
-	real*4 ff(maxsta), ffg(maxsta), ff_ea(maxsta)
-	real*4 alt(maxsta), alt_ea(maxsta), delp(maxsta)
-	real*4 pstn(maxsta), pmsl(maxsta), p_ea(maxsta)
-	real*4 vis(maxsta), vis_ea(maxsta)
-	real*4 rad(maxsta), solar_ea(maxsta)
-	real*4 sfct(maxsta), sfct_ea(maxsta)
-	real*4 sfcm(maxsta), sfcm_ea(maxsta)
-	real*4 pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
-	real*4 snow(maxsta), snow_ea(maxsta), pcp_ea(maxsta)
-	real*4 store_hgt(maxsta,5)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
+	real t(maxsta), t_ea(maxsta), max24t(maxsta), min24t(maxsta)
+	real td(maxsta), td_ea(maxsta), rh(maxsta), rh_ea(maxsta)
+	real dd(maxsta), ddg(maxsta), dd_ea(maxsta)
+	real ff(maxsta), ffg(maxsta), ff_ea(maxsta)
+	real alt(maxsta), alt_ea(maxsta), delp(maxsta)
+	real pstn(maxsta), pmsl(maxsta), p_ea(maxsta)
+	real vis(maxsta), vis_ea(maxsta)
+	real rad(maxsta), solar_ea(maxsta)
+	real sfct(maxsta), sfct_ea(maxsta)
+	real sfcm(maxsta), sfcm_ea(maxsta)
+	real pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
+	real snow(maxsta), snow_ea(maxsta), pcp_ea(maxsta)
+	real store_hgt(maxsta,5)
 c
-	integer*4 i4time, wmoid(maxsta), jstatus
-	integer*4 time(maxsta), delpch(maxsta), kloud(maxsta)
+	integer i4time, wmoid(maxsta), jstatus
+	integer time(maxsta), delpch(maxsta), kloud(maxsta)
 c
 	character filetime*9, infile*256 
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -78,7 +78,7 @@ c
 c
 c.....  Output arrays (as old format LSO if different)
 c
-        Integer*4   obstime(maxsta)
+        Integer   obstime(maxsta)
 c
         Character   atime*24,stn(maxsta)*3     
         character   store_emv(maxsta,5)*1, wx(maxsta)*8
@@ -203,7 +203,7 @@ c
 
 c       End of output arrays
 
-        real*4          badflag
+        real          badflag
 c
 	character filetime*9
 c

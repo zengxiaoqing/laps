@@ -149,10 +149,10 @@ c
        character*13 wfo_fname13
        character*9  wfo_fname13_to_fname9
        character*9  fname9
-       integer*4    cvt_wfo_fname13_i4time
-       integer*4    i4time
-C      INTEGER*4 INT_FILE(9), I, NYEAR, JDAY, NHOUR, MIN, MONTH, NDAY
-C      INTEGER*4 I4TIME_INT_LP
+       integer    cvt_wfo_fname13_i4time
+       integer    i4time
+C      INTEGER INT_FILE(9), I, NYEAR, JDAY, NHOUR, MIN, MONTH, NDAY
+C      INTEGER I4TIME_INT_LP
 
 cdoc   Convert wfo filename*13 to i4time
 
@@ -184,8 +184,8 @@ c
        character*9  fname9
        character*13 cvt_i4time_wfo_fname13
        character*13 fname9_to_wfo_fname13
-       integer*4    i4time
-       integer*4    i4time_temp
+       integer    i4time
+       integer    i4time_temp
 
 cdoc   Convert i4time to wfo filename*13
 

@@ -34,9 +34,9 @@ cdis
 !           1994    Steve Albers
 !       Jan 1998    Steve Albers     Remove lapsparms.inc and other cleanup
 
-        real*4 precip_rate(ni,nj)
-        real*4 temp_col_max(ni,nj) ! Deg K
-        real*4 s_2d_out(ni,nj)
+        real precip_rate(ni,nj)
+        real temp_col_max(ni,nj) ! Deg K
+        real s_2d_out(ni,nj)
 
         call get_ref_base(ref_base,istatus)
         if(istatus .ne. 1)then

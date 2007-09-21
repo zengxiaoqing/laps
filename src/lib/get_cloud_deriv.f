@@ -66,41 +66,41 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 !       iflag_slwc = 13 : New Smith-Feddes LWC
 !       iflag_slwc = 14 : New Smith-Feddes SLWC
 
-        real*4 temp_3d(ni,nj,nk)         ! Input
-        real*4 rh_3d_pct(ni,nj,nk)       ! Input
-        real*4 heights_3d(ni,nj,nk)      ! Input
-        real*4 pres_3d(ni,nj,nk)         ! Input
-        real*4 radar_3d(ni,nj,nk)        ! Input
+        real temp_3d(ni,nj,nk)         ! Input
+        real rh_3d_pct(ni,nj,nk)       ! Input
+        real heights_3d(ni,nj,nk)      ! Input
+        real pres_3d(ni,nj,nk)         ! Input
+        real radar_3d(ni,nj,nk)        ! Input
 
-        real*4 omega_3d(ni,nj,nk)        ! Input / Output (if l_flag_bogus_w = .true.)
+        real omega_3d(ni,nj,nk)        ! Input / Output (if l_flag_bogus_w = .true.)
                                          !                (Omega is in Pa/S)
-        real*4 slwc_3d(ni,nj,nk)         ! Output
-        real*4 cice_3d(ni,nj,nk)         ! Output
+        real slwc_3d(ni,nj,nk)         ! Output
+        real cice_3d(ni,nj,nk)         ! Output
         integer cldpcp_type_3d(ni,nj,nk) ! Output (1st 4bits pcp, 2nd 4 are cld)
 
-        real*4 mvd_3d(ni,nj,nk)          ! Output
+        real mvd_3d(ni,nj,nk)          ! Output
         integer icing_index_3d(ni,nj,nk) ! Output
-!       real*4 lwc_res_3d(ni,nj,nk)      ! Output
+!       real lwc_res_3d(ni,nj,nk)      ! Output
 
-!       real*4 snow_2d(ni,nj)            ! Output
+!       real snow_2d(ni,nj)            ! Output
 
-        real*4 temp_1d(nk)               ! Local
-        real*4 slwc_1d(nk)
-        real*4 cice_1d(nk)
-        real*4 heights_1d(nk)
-        real*4 pressures_mb(nk)
-        real*4 pressures_pa(nk)
-        real*4 rlwc_laps1d(nk)
-        real*4 w_1d(nk)                  ! Units are M/S
-        real*4 lwc_res_1d(nk)
-        real*4 prob_laps(nk)
-        real*4 d_thetae_dz_1d(nk)
+        real temp_1d(nk)               ! Local
+        real slwc_1d(nk)
+        real cice_1d(nk)
+        real heights_1d(nk)
+        real pressures_mb(nk)
+        real pressures_pa(nk)
+        real rlwc_laps1d(nk)
+        real w_1d(nk)                  ! Units are M/S
+        real lwc_res_1d(nk)
+        real prob_laps(nk)
+        real d_thetae_dz_1d(nk)
 
-        integer*4 cloud_type_1d(nk)
+        integer cloud_type_1d(nk)
 
-        integer*4 iarg
+        integer iarg
 
-        integer*4 iflag_slwc
+        integer iflag_slwc
         logical   l_flag_cloud_type,l_flag_mvd,l_flag_icing_index
      1           ,l_flag_bogus_w,l_cloud
 
@@ -118,21 +118,21 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 
         include 'laps_cloud.inc'
 
-        real*4 clouds_3d(ni,nj,KCLOUD)
+        real clouds_3d(ni,nj,KCLOUD)
 
-        Integer*4  KCLOUD_M1,  KCLOUD_P1
+        Integer  KCLOUD_M1,  KCLOUD_P1
         parameter (KCLOUD_M1 = KCLOUD - 1)
         parameter (KCLOUD_P1 = KCLOUD + 1)
 
-        real*4 thresh_cvr
+        real thresh_cvr
 !       parameter (THRESH_CVR = 0.65)
 !       parameter (THRESH_CVR = 0.75)
 
         character*2 c2_type
 
-        Real*4 vv_to_height_ratio_Cu
-        Real*4 vv_to_height_ratio_Sc
-        Real*4 vv_for_St
+        Real vv_to_height_ratio_Cu
+        Real vv_to_height_ratio_Sc
+        Real vv_for_St
 
         write(6,*)' Start LWC/Omega/Snow Potential Routine'
 
@@ -647,12 +647,12 @@ cdoc    Compute 3D Precip Type given profiles of T, RH, Reflectivity
 !       This program modifies the most significant 4 bits of the integer
 !       array by inserting multiples of 16.
 
-        real*4 temp_3d(ni,nj,nk)                          ! Input
-        real*4 rh_3d_pct(ni,nj,nk)                        ! Input
-        real*4 pres_3d(ni,nj,nk)                          ! Input
+        real temp_3d(ni,nj,nk)                          ! Input
+        real rh_3d_pct(ni,nj,nk)                        ! Input
+        real pres_3d(ni,nj,nk)                          ! Input
         integer cldpcp_type_3d(ni,nj,nk)                  ! Output
-        real*4 radar_3d(ni,nj,nk)
-        integer*4 itype
+        real radar_3d(ni,nj,nk)
+        integer itype
         logical l_mask(ni,nj) ! Used for "Potential" Precip Type
 
         call get_r_missing_data(r_missing_data,istatus)
@@ -867,15 +867,15 @@ cdoc    Compute 3D Precip Type given profiles of T, RH, Reflectivity
 
 cdoc    Compute Sfc Precip Type, given both sfc and 3D fields
 
-        real*4 pres_2d(ni,nj)             ! Input
-        real*4 t_sfc_k(ni,nj)             ! Input
-        real*4 td_sfc_k(ni,nj)            ! Input
+        real pres_2d(ni,nj)             ! Input
+        real t_sfc_k(ni,nj)             ! Input
+        real td_sfc_k(ni,nj)            ! Input
         integer cldpcp_type_3d(ni,nj,nk)  ! Input
-        real*4 dbz_2d(ni,nj)              ! Input (Low Level reflectivity)
+        real dbz_2d(ni,nj)              ! Input (Low Level reflectivity)
         integer pcp_type_2d(ni,nj)        ! Output
                                        ! Leftmost 4 bits contain the precip type
 
-        integer*4 iarg
+        integer iarg
 
         n_precip = 0
         n_chg_frz = 0
@@ -996,10 +996,10 @@ cdoc    Compute Sfc Precip Type, given both sfc and 3D fields
 
 cdoc    Determine cloud liquid profile within a given cloud layer
 
-        real*4 temp_1d(nk)
-        real*4 heights_1d(nk)
-        real*4 pressures_pa(nk)
-        real*4 slwc_1d(nk)  ! Output
+        real temp_1d(nk)
+        real heights_1d(nk)
+        real pressures_pa(nk)
+        real slwc_1d(nk)  ! Output
 
         do k = 1,nk ! Initialize
             slwc_1d(k) = zero
@@ -1073,10 +1073,10 @@ cdoc    Determine cloud liquid profile within a given cloud layer
 
 cdoc    Integrates cloud liquid through the column
 
-        real*4 slwc(imax,jmax,kmax)       ! Input in g/m**3
-        real*4 heights_3d(imax,jmax,kmax) ! Input 
-        real*4 slwc_int(imax,jmax)  ! Output in m (metric tons of water / m**2)
-        real*4 depth(kmax)          ! Local
+        real slwc(imax,jmax,kmax)       ! Input in g/m**3
+        real heights_3d(imax,jmax,kmax) ! Input 
+        real slwc_int(imax,jmax)  ! Output in m (metric tons of water / m**2)
+        real depth(kmax)          ! Local
 
         do j = 1,jmax
         do i = 1,imax
@@ -1205,11 +1205,11 @@ cdoc    Determine Cloud Type, given temperature and stability d(theta(e))/dz
 cdoc    This routine returns stability at a given level given 1D array inputs
 cdoc    Saturation is assumed and d(theta(e))/dz is returned
 
-        real*4 temp_1d(nk)                  ! Input
-        real*4 heights_1d(nk)               ! Input
-        real*4 pressures_mb(nk)             ! Input
-        real*4 d_thetae_dz_1d(nk)           ! Output
-        real*4 thetae_1d(nk)                ! Local
+        real temp_1d(nk)                  ! Input
+        real heights_1d(nk)               ! Input
+        real pressures_mb(nk)             ! Input
+        real d_thetae_dz_1d(nk)           ! Output
+        real thetae_1d(nk)                ! Local
 
 !       Calculate Stability
         klow  = max(kbottom-1,1)

@@ -42,9 +42,9 @@ cdis
 !       Note, these values are not logarithmically scaled
 !       Li * Omega is returned in Pa K/s
 
-        real*4 w_2d(imax,jmax) ! Omega (Pa/s)
-        real*4 lifted(imax,jmax) ! Lifted Index (K)
-        real*4 liw(imax,jmax) ! Pa K/s
+        real w_2d(imax,jmax) ! Omega (Pa/s)
+        real lifted(imax,jmax) ! Lifted Index (K)
+        real liw(imax,jmax) ! Pa K/s
 
         do j = 1,jmax,1
         do i = 1,imax,1

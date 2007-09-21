@@ -67,7 +67,7 @@ cdis
 
         include 'bgdata.inc'
 
-        real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
+        real field_3d_laps(imax,jmax,kmax)       ! Output array
 
         logical      lgab
 
@@ -181,7 +181,7 @@ c             subdir(n_fdda_models)=bgmodelnames(1:3) #replaces line below (need
      1                         ,imax,jmax,kmax,field_3d_laps,istatus)
 !
 !
-        real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
+        real field_3d_laps(imax,jmax,kmax)       ! Output array
 
         character*(*) var_2d
         character*(*) subdir
@@ -194,7 +194,7 @@ c             subdir(n_fdda_models)=bgmodelnames(1:3) #replaces line below (need
         character*150  directory
         character*255 c_filespec
 
-        integer*4 MAX_FILES
+        integer MAX_FILES
         parameter (MAX_FILES = 20000)
         character c_fnames(MAX_FILES)*180
 
@@ -419,7 +419,7 @@ c
 
         integer imax,jmax
 
-        real*4 field_2d_laps(imax,jmax)       ! Output array
+        real field_2d_laps(imax,jmax)       ! Output array
 
         character*3  var_2d
         character*9  a9_time

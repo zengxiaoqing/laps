@@ -33,9 +33,9 @@ cdis
         subroutine smooth_cross_laps(ni,nj,i_l,i_h,j_l,j_h,r4_img
      1                              ,n_cross_in)
 
-        integer*4 n_cross_in    ! ODD
-        real*4 r4_img(ni,nj) ! Input/Output
-        real*4 r4_buf(ni,nj) ! Local use
+        integer n_cross_in    ! ODD
+        real r4_img(ni,nj) ! Input/Output
+        real r4_buf(ni,nj) ! Local use
 
         if(n_cross_in .gt. ni .or. n_cross_in .gt. nj)then
             write(6,*)' Error in smooth_cross_laps',n_cross_in,ni,nj

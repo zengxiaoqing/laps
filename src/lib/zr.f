@@ -37,14 +37,14 @@ cdis
 !       Apr 1994 rate_max parameter disabled            SA
 !       Jan 1998 Remove lapsparms.inc                   SA
 
-        real*4 z_2d_in(ni,nj)
-!       real*4 temp_sfc_k(ni,nj)
-!       real*4 td_sfc_k(ni,nj)
-!       real*4 pres_sta_pa(ni,nj)
-!       real*4 tw_sfc_k(ni,nj)
-        real*4 r_2d_out(ni,nj)
+        real z_2d_in(ni,nj)
+!       real temp_sfc_k(ni,nj)
+!       real td_sfc_k(ni,nj)
+!       real pres_sta_pa(ni,nj)
+!       real tw_sfc_k(ni,nj)
+        real r_2d_out(ni,nj)
 
-        real*4 a,b,rate_max
+        real a,b,rate_max
         parameter (a = 200.)        ! Z-R relationship
         parameter (b = 1.6)         ! Z-R relationship
 !       parameter (rate_max = 10.0) ! mm/hr; equiv to 39 dBZ with Z=200R**1.6

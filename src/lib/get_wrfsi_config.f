@@ -14,16 +14,16 @@ c       include 'wrf_dims.inc'
 
         integer      nx_l,ny_l,nz_l
         character*8  c_vcoordinate
-        real*4       PRESSURE_BOTTOM
-        real*4       PRESSURE_INTERVAL
+        real       PRESSURE_BOTTOM
+        real       PRESSURE_INTERVAL
         integer      laps_cycle_time
         integer      i_perimeter
 c       integer      i2_missing_data
-c       real*4       r_missing_data
+c       real       r_missing_data
         integer      MAX_RADARS
-        real*4       ref_base
-        real*4       ref_base_useable
-        real*4       silavwt_parm,toptwvl_parm
+        real       ref_base
+        real       ref_base_useable
+        real       silavwt_parm,toptwvl_parm
         integer      maxstns
         integer      N_PIREP
         integer      vert_rad_meso
@@ -49,8 +49,8 @@ c       include 'wrf_laps_analysis.cmn'
         integer       i,nest,lvc,ltyp
         integer       istatus
 
-        real*4        grid_spacing_wrf_m
-        real*4        grid_spacing_m
+        real        grid_spacing_wrf_m
+        real        grid_spacing_m
         character*6   wrftolaps_c6_maprojname
         character*10  c_analysis_type
 

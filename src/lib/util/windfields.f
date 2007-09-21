@@ -31,10 +31,10 @@ cdis
 cdis 
         subroutine get_grid_spacing_array(lat,lon,imax,jmax,dx,dy)
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 dx(imax,jmax)
-        real*4 dy(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real dx(imax,jmax)
+        real dy(imax,jmax)
 
         do j=1,jmax
         do i=1,imax

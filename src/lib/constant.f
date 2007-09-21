@@ -35,7 +35,7 @@ c
 c
 c.....  routine to set an array to a real constant.
 c
-        real*4 a(imax,jmax)
+        real a(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax
@@ -52,7 +52,7 @@ c
 c
 c.....  routine to set an array to an integer constant.
 c
-        integer*4 a(imax,jmax)
+        integer a(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax
@@ -68,7 +68,7 @@ c
 c
 c.....  routine to set a 3d array to a real constant.
 c
-        real*4 a(imax,jmax,kmax)
+        real a(imax,jmax,kmax)
 c
         do k=1,kmax
         do j=1,jmax

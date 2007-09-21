@@ -46,11 +46,11 @@ c       (n2-1)/(n1-1) = dn.....and similarly for dm
 
         implicit none
 
-        integer*4 n1,n2,m1,m2,dn,dm
-        real*4 g1(n1,m1),g2(n2,m2)
+        integer n1,n2,m1,m2,dn,dm
+        real g1(n1,m1),g2(n2,m2)
 
-        real*4 factorI, factorJ, fracI, fracJ, sum
-        integer*4 intI,intJ,i,j
+        real factorI, factorJ, fracI, fracJ, sum
+        integer intI,intJ,i,j
 
 
         do j = 1,m2

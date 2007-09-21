@@ -60,7 +60,7 @@ c
         implicit none
         integer ni, nj, i, j
         real p1, p2, c1, term
-        real*4 t(ni,nj), es(ni,nj)
+        real t(ni,nj), es(ni,nj)
 c
         do j=1,nj
         do i=1,ni

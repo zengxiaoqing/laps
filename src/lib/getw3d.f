@@ -43,14 +43,14 @@ cdis
         character*125 comment_3d(kmax)
         character*10 units_3d(kmax)
         character*3 var_w(kmax)
-        integer*4 LVL_3d(kmax)
+        integer LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
         logical l_convert
 
         common /lapsplot_omega/l_convert
 
-        real*4 w_3d(imax,jmax,kmax)
+        real w_3d(imax,jmax,kmax)
 
         call get_directory(ext,directory,len_dir)
 

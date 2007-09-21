@@ -56,7 +56,7 @@ c                                    missing data
 c
 c*****************************************************************************
 c
-	real*4 store_1(maxsta,4), 
+	real store_1(maxsta,4), 
      &         store_2(maxsta,3), store_2ea(maxsta,3),
      &         store_3(maxsta,4), store_3ea(maxsta,2),
      &         store_4(maxsta,5), store_4ea(maxsta,2),
@@ -65,7 +65,7 @@ c
      &         store_7(maxsta,3),
      &         store_cldht(maxsta,5)
 c
-	integer*4 jstatus, wmoid(maxsta)
+	integer jstatus, wmoid(maxsta)
 c
 	character btime*24, outfile*(*), 
      &         stations(maxsta)*20, provider(maxsta)*11,
@@ -212,7 +212,7 @@ c
       subroutine ck_array_real(var, recNum, filval, badflag)
 c
       integer recNum
-      real*4 var(recNum), filval, badflag
+      real var(recNum), filval, badflag
 c
       do i=1,recNum
          if(var(i) .eq. filval) var(i) = badflag
@@ -228,7 +228,7 @@ c
 c
       integer recNum
       double precision var(recNum), filval
-      real*4 badflag
+      real badflag
 c
       do i=1,recNum
          if(var(i) .eq. filval) var(i) = badflag

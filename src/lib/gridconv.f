@@ -9,7 +9,7 @@ ccc      implicit none
 c
       integer np,n
 c
-      real*4 glat(np),glon(np),    !Earth lat (deg N), lon (deg +E)
+      real glat(np),glon(np),    !Earth lat (deg N), lon (deg +E)
      .       pslat,pslon,          !Pol ste. lat, lon (deg N, deg +E)
      .       psi(np),psj(np),      !Pol ste. i, j
      .       xmin,ymin,dx,dy
@@ -67,7 +67,7 @@ C     TSP 20/06-89
      +   ,plo1,pla90,argu2
 c
       integer nx,ny,nz           !No. of PS domain grid points
-      real*4 RLAT,WLON1,rota,       !Pol ste. std lat, lon and rotation
+      real RLAT,WLON1,rota,       !Pol ste. std lat, lon and rotation
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /psgrid/nx,ny,nz,RLAT,WLON1,rota,sw,ne
 c_______________________________________________________________________________
@@ -226,7 +226,7 @@ c
 ccc      implicit none
 c
       include 'trigd.inc'
-      real*4 pslat,pslon,      !Pol ste. lat, lon (deg N, deg +E)
+      real pslat,pslon,      !Pol ste. lat, lon (deg N, deg +E)
      .       psi,psj,          !Pol ste. i,j
      .       x,y,xmin,ymin,dx,dy,
      .       mag
@@ -250,7 +250,7 @@ c
 ccc      implicit none
 c
       include 'trigd.inc'
-      real*4 psi,psj,          !Pol ste. i,j
+      real psi,psj,          !Pol ste. i,j
      .       pslat,pslon,      !Pol ste. lat, lon (deg N, deg +E)
      .       x,y,dist,
      .       xmin,ymin,dx,dy 
@@ -301,7 +301,7 @@ C
 C     TSP 21 JUNE 89
 c
       integer nx,ny,nz           !No. of PS domain grid points
-      real*4 RLAT,WLON1,rota,      !Pol ste. std lat, lon and rotation
+      real RLAT,WLON1,rota,      !Pol ste. std lat, lon and rotation
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /psgrid/nx,ny,nz,RLAT,WLON1,rota,sw,ne
 c_______________________________________________________________________________
@@ -416,12 +416,12 @@ c
 ccc      implicit none
 c
       include 'trigd.inc'
-      real*4 pslat,pslon,
+      real pslat,pslon,
      .       xmin,xmax,ymin,ymax,
      .       dx,dy,mag
 c
       integer nx,ny,nz           !No. of PS domain grid points
-      real*4 lat0,lon0,rota,       !Pol ste. std lat, lon and rotation
+      real lat0,lon0,rota,       !Pol ste. std lat, lon and rotation
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /psgrid/nx,ny,nz,lat0,lon0,rota,sw,ne
 c
@@ -455,7 +455,7 @@ ccc      implicit none
 c
       integer np,n
 c
-      real*4 glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
+      real glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
      .       celat,celon,            !Con eq. lat, lon (deg N, deg +E)
      .       cei(np),cej(np)         !Con eq. i,j
 c
@@ -490,12 +490,12 @@ c
 ccc      implicit none
 c
       include 'trigd.inc'
-      real*4 glat,glon,      !Earth lat, lon (deg N, deg +E)
+      real glat,glon,      !Earth lat, lon (deg N, deg +E)
      .       celat,celon,    !Con eq. lat, lon (deg N, deg +E)
      .       x,y,z
 c
       integer nx,ny,nz
-      real*4 lat0,lon0,dphi,dlam
+      real lat0,lon0,dphi,dlam
       common /coneqgrid/nx,ny,nz,lat0,lon0,dphi,dlam
 c_______________________________________________________________________________
 c
@@ -516,13 +516,13 @@ c
 c
 ccc      implicit none
 c
-      real*4 celat,celon,      !Con eq. lat, lon (deg N, deg +E)
+      real celat,celon,      !Con eq. lat, lon (deg N, deg +E)
      .       cei,cej           !Con eq. i,j
 c
       integer nxt
 c
       integer nx,ny,nz
-      real*4 lat0,lon0,dphi,dlam
+      real lat0,lon0,dphi,dlam
       common /coneqgrid/nx,ny,nz,lat0,lon0,dphi,dlam
 c_______________________________________________________________________________
 c
@@ -539,13 +539,13 @@ c
 c
 ccc      implicit none
 c
-      real*4 cei,cej,          !Con eq. i,j
+      real cei,cej,          !Con eq. i,j
      .       celat,celon       !Con eq. lat, lon (deg N, deg +E)
 c
       integer nyt
 c
       integer nx,ny,nz
-      real*4 lat0,lon0,dphi,dlam
+      real lat0,lon0,dphi,dlam
       common /coneqgrid/nx,ny,nz,lat0,lon0,dphi,dlam
 c_______________________________________________________________________________
 c
@@ -563,11 +563,11 @@ c
 ccc      implicit none
 c
       include 'trigd.inc'
-      real*4 celat,celon,    !Con eq. lat, lon (deg N, deg +E)
+      real celat,celon,    !Con eq. lat, lon (deg N, deg +E)
      .       glat,glon       !Earth lat, lon (deg N, deg +E)
 c
       integer nx,ny,nz
-      real*4 lat0,lon0,dphi,dlam
+      real lat0,lon0,dphi,dlam
       common /coneqgrid/nx,ny,nz,lat0,lon0,dphi,dlam
 c_______________________________________________________________________________
 c
@@ -599,12 +599,12 @@ c
       include 'trigd.inc'
       integer np,n
 c
-      real*4 glat(np),glon(np),    !Earth lat (deg N), lon (deg +E)
+      real glat(np),glon(np),    !Earth lat (deg N), lon (deg +E)
      .       lci(np),lcj(np),      !Lambert-confomal i, j
      .       s,cone,r,
      .       xmin,ymin,dx,dy,x,y
 c
-      real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
+      real lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       integer nx,ny,nz           !No. of LC domain grid points
       common /lcgrid/nx,ny,nz,lat1,lat2,lon0,sw,ne
@@ -652,11 +652,11 @@ c
 ccc      implicit none
 c
       include 'trigd.inc'
-      real*4 s,cone,r,
+      real s,cone,r,
      .       xmin,xmax,ymin,ymax,
      .       dx,dy
 c
-      real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
+      real lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       integer nx,ny,nz           !No. of LC domain grid points
       common /lcgrid/nx,ny,nz,lat1,lat2,lon0,sw,ne
@@ -781,7 +781,7 @@ c
       implicit none
       integer np,n
  
-      real*4 glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
+      real glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
      .       lli(np),llj(np),        !Lat-lon grid i,j
      .       nw(2),se(2)             !NW grid lat/lon; SE grid lat/lon
 
@@ -794,12 +794,12 @@ c
      .                    ,dx,dy
      .                    ,drlatc,drlonc
      .                    ,dglat, dglon
-      real*4  r
+      real  r
  
       integer nx,ny,nz             !No. of LL domain grid points
-      real*4  rlatc,rlonc          !Grid center lat, lon
+      real  rlatc,rlonc          !Grid center lat, lon
 
-c     real*4 coslatc
+c     real coslatc
 
       data r/6.3712e6/             !this earth radius is = to that in lapsgrid.f
       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
@@ -898,15 +898,15 @@ cc     implicit none
 
       integer n,i
       integer nx,ny
-      real*4 rlat(n),rlon(n),ri(n),rj(n)
-      real*4 rlonc,dlon,rlatc,dlat
-      real*4 sw(2),ne(2)
-      real*4 x,y
-      real*4 xmax,ymax
-      real*4 xmin,ymin
-      real*4 dx,dy
-      real*4 R,PI
-      real*4 deg2rad
+      real rlat(n),rlon(n),ri(n),rj(n)
+      real rlonc,dlon,rlatc,dlat
+      real sw(2),ne(2)
+      real x,y
+      real xmax,ymax
+      real xmin,ymin
+      real dx,dy
+      real R,PI
+      real deg2rad
       common /mcgrid/rlonc,rlatc,nx,ny,sw,ne
 
       call get_earth_radius(R,istatus)
@@ -946,9 +946,9 @@ c lat-lon grid. Very similar to latlon_2_llij.
 c
       integer n,i
       integer nx,ny
-      real*4 rlat(n),rlon(n),ri(n),rj(n)
-      real*4 sw(2),ne(2)
-      real*4 dx,dy
+      real rlat(n),rlon(n),ri(n),rj(n)
+      real sw(2),ne(2)
+      real dx,dy
       common /npgrid/nx,ny,sw,ne
 
 c     print *, ' Inside latlon_2_npij'
@@ -991,7 +991,7 @@ c
 c *** Common block variables for lat-lon grid.
 c
       integer   nx_ll,ny_ll,nz_ll
-      real*4    lat0_ll,lon0_ll,d_lat,d_lon
+      real    lat0_ll,lon0_ll,d_lat,d_lon
       character*1 cgrddef_ll
       common /llgrid/nx_ll,ny_ll,nz_ll,lat0_ll,lon0_ll
      &,d_lat,d_lon,cgrddef_ll
@@ -999,20 +999,20 @@ c
 c *** Common block variables for lambert-conformal grid.
 c
       integer   nx_lc,ny_lc,nz_lc
-      real*4    lat1_lc,lat2_lc,lon0_lc,sw_lc(2),ne_lc(2)
+      real    lat1_lc,lat2_lc,lon0_lc,sw_lc(2),ne_lc(2)
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1_lc,lat2_lc
      &,lon0_lc,sw_lc,ne_lc
 c
 c *** Common block variables for cyclindrical equidistant grid.
 c
       integer   nx,ny,nz
-      real*4    rlatc,rlonc,nw(2),se(2),dx,dy
+      real    rlatc,rlonc,nw(2),se(2),dx,dy
       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 c
 c *** Common block variables for polar stereographic grid.
 c
       integer nx_ps,ny_ps,nz_ps    !No. of PS domain grid points
-      real*4 lat0_ps,lon0_ps,rota  !Pol ste. std lat, lon and rotation
+      real lat0_ps,lon0_ps,rota  !Pol ste. std lat, lon and rotation
      .      ,sw_ps(2),ne_ps(2)     !SW lat, lon, NE lat, lon
       common /psgrid/nx_ps,ny_ps,nz_ps,lat0_ps,lon0_ps
      .              ,rota,sw_ps,ne_ps
@@ -1100,7 +1100,7 @@ c
 c
       integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
 c
-      real*4 lat(nx_laps,ny_laps),lon(nx_laps,ny_laps),
+      real lat(nx_laps,ny_laps),lon(nx_laps,ny_laps),
      .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
 c
       integer i,j,k
@@ -1281,7 +1281,7 @@ c
 c *** Input vertically interpolated field.
 c *** Output Laps field
 c
-      real*4 fvi(nx_bg,ny_bg,nz),
+      real fvi(nx_bg,ny_bg,nz),
      .       flaps(nx_laps,ny_laps,nz),
      .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
 c

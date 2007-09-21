@@ -17,13 +17,13 @@ C directory specified in "dir".
 C Passed in variables
       character      dir*(*),laps_dom_file*(*)
       integer        imax, jmax, n_grids
-      real*4         dx, dy, lov, latin1, latin2
+      real         dx, dy, lov, latin1, latin2
       character*(*)  origin
       character*(*)  var(n_grids)
       character*(*)  comment(n_grids)
-      real*4         data(imax,jmax,n_grids)
+      real         data(imax,jmax,n_grids)
       character*(*)  model
-      real*4         grid_spacing
+      real         grid_spacing
       character*(*)  map_proj
       real           la1,lo1,la2,lo2
       real           center_lat,center_lon

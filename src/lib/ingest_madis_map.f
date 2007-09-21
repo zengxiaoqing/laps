@@ -14,16 +14,16 @@
         character*9 asc9_tim,a9time_ob
 
         character*3     ext
-        integer*4       len_dir_in
+        integer       len_dir_in
 
         character*40 c_vars_req
         character*180 c_values_req
 
         character*9 a9_timeObs
-        integer*4 timeObs
+        integer timeObs
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
         write(6,*)' Start ingest_madis_map, ext = ',ext
 

@@ -36,10 +36,10 @@ C       This subroutine is used to close a netCDF file of profiler data.
 C
 C INPUT:
 C
-C       CDFID           INTEGER*4:  The netCDF id of the file to be closed.  It
+C       CDFID           INTEGER:  The netCDF id of the file to be closed.  It
 C                       must previously have been opened by PROF_CDF_OPEN.
 C
-C       STATUS          INTEGER*4:  Returned status:  0 is good, -1 and +n are
+C       STATUS          INTEGER:  Returned status:  0 is good, -1 and +n are
 C                       errors returned by netCDF.  The definitions of these can
 C                       be found in NETCDF.INC.  In addition, these error
 C                       returns are from PROF_CDF_CLOSE:
@@ -122,9 +122,9 @@ C                       information) of the netCDF file to be opened.
 C
 C OUTPUT:
 C
-C       CDFID           INTEGER*4:  The netCDF id for the open file.
+C       CDFID           INTEGER:  The netCDF id for the open file.
 C
-C       STATUS          INTEGER*4:  Returned status:  0 is good, -1 and +n are
+C       STATUS          INTEGER:  Returned status:  0 is good, -1 and +n are
 C                       errors returned by netCDF.  The definitions of these can
 C                       be found in NETCDF.INC.  In addition, these error
 C                       returns are from PROF_CDF_OPEN:
@@ -347,7 +347,7 @@ C       The user must have previously opened the file via PROF_CDF_OPEN.
 C
 C INPUT:
 C
-C       CDFID           INTEGER*4:  The netCDF id for the file.
+C       CDFID           INTEGER:  The netCDF id for the file.
 C
 C       STANAME         CHARACTER*6:  The name of the station (e.g., 'PLTC2 ' --
 C                       note the trailing blank).  This is the primary way the
@@ -357,7 +357,7 @@ C
 C                       ***** Note that the station name must be all capital
 C                       letters (and a number).
 C
-C       WMOID           INTEGER*4:  The WMO block and station number (e.g.,
+C       WMOID           INTEGER:  The WMO block and station number (e.g.,
 C                       74533).  This is the alternative method of selecting
 C                       the station.
 C
@@ -369,7 +369,7 @@ C                       the desired variable (use the names in the netCDL
 C                       file describing the dataset in use).  This is
 C                       case-sensitive so the exact string must be used.
 C
-C       DTYPE           INTEGER*4:  0 - The variable is numeric data.
+C       DTYPE           INTEGER:  0 - The variable is numeric data.
 C                                   1 - The variable is character data.
 C
 C OUTPUT:
@@ -380,7 +380,7 @@ C                       validated.  The caller must use the appropriate type
 C                       (see the netCDL file) and know the expected amount
 C                       of data.
 C
-C       STATUS          INTEGER*4:  Returned status:  0 is good, -1 and +n
+C       STATUS          INTEGER:  Returned status:  0 is good, -1 and +n
 C                       are errors returned by netCDF.  The definitions of
 C                       these can be found in NETCDF.INC.  In addition, these
 C                       error returns are from PROF_CDF_READ:
@@ -582,7 +582,7 @@ C                               exit the program.
 C
 C OUTPUT:
 C
-C       STATUS          INTEGER*4:  Returned status:  0 is good, -1 and +n are
+C       STATUS          INTEGER:  Returned status:  0 is good, -1 and +n are
 C                       errors returned by netCDF.  The definitions of these can
 C                       be found in NETCDF.INC.  In addition, these error
 C                       returns are from PROF_CDF_SET_ERROR:
@@ -661,7 +661,7 @@ C       The user must have previously opened the file via PROF_CDF_OPEN.
 C
 C INPUT:
 C
-C       CDFID           INTEGER*4:  The netCDF id for the file.
+C       CDFID           INTEGER:  The netCDF id for the file.
 C
 C OUTPUT:
 C
@@ -670,10 +670,10 @@ C
 C       STANAME         CHARACTER*6 array:  The names of the stations (e.g.,
 C                       'PLTC2 ').
 C
-C       WMOID           INTEGER*4 array :  The WMO block and station numbers
+C       WMOID           INTEGER array :  The WMO block and station numbers
 C                       (e.g., 74533).
 C
-C       STATUS          INTEGER*4:  Returned status:  0 is good.  No netCDF
+C       STATUS          INTEGER:  Returned status:  0 is good.  No netCDF
 C                       calls are performed, so no errors are returned by
 C                       netCDF.  In addition, these error returns are from
 C                       PROF_CDF_GET_STATIONS:
@@ -761,7 +761,7 @@ C
         integer cdfid
 	character*20 timestr
         character*13 attname
-	integer*4    lenstr, sp_loc, units_loc, to_seconds, itime
+	integer    lenstr, sp_loc, units_loc, to_seconds, itime
         integer      tlen, ttype      ! attribute type and length
 
         include 'netcdf.inc'

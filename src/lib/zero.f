@@ -35,7 +35,7 @@ c
 c
 c.....  routine to set an array to zero.
 c
-        real*4 a(imax,jmax)
+        real a(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax
@@ -54,7 +54,7 @@ c
 c
       integer   nx,ny,nz,i,j,k
 c
-      real*4 a(nx,ny,nz)
+      real a(nx,ny,nz)
 c_______________________________________________________________________________
 c
       do k=1,nz

@@ -46,10 +46,10 @@ cdis
         character*125 comment,comment_2d(2)
         character*10 units,units_2d(2)
         character*3 var,var_2d(2)
-        integer*4 LVL,LVL_2d(2)
+        integer LVL,LVL_2d(2)
         character*4 LVL_COORD,LVL_COORD_2d(2)
 
-        real*4 wind_2d(imax,jmax,2)
+        real wind_2d(imax,jmax,2)
 
         write(6,11)directory,ext(1:5)
 11      format(' Writing 2d Wind ',a50,1x,a5,1x,a3)

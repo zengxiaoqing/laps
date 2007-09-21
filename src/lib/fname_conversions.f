@@ -78,7 +78,7 @@ cdoc    Convert a8_time (yyMMddhh) to a9_time (yydddhhmm)
         character*9 a9
         character*8 a8_time
 
-        integer*4 imon_a(12)
+        integer imon_a(12)
 
         data imon_a/0,31,59,90,120,151,181,212,243,273,304,334/
 

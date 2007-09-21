@@ -30,14 +30,14 @@ cdis
 cdis
 cdis
 
-      Real*4 Function ZtoPsa(Z)
+      Real Function ZtoPsa(Z)
 
 C*  This routine converts a height in meters into a pressure in a standard
 C*  atmosphere in millibars.
 
       Implicit None
 
-      Real*4 T0,gamma,p0,p11,z11,c1,c2,z,Flag,Flg
+      Real T0,gamma,p0,p11,z11,c1,c2,z,Flag,Flg
 
       Data Flag,Flg/99999.,99998./
       Data T0,gamma,p0/288.,.0065,1013.2/

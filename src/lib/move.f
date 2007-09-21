@@ -35,7 +35,7 @@ c
 c
 c.....  Routine to move array 'a' into array 'b'.
 c
-        real*4 a(imax,jmax), b(imax,jmax)
+        real a(imax,jmax), b(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax
@@ -52,7 +52,7 @@ c
 c
 c.....  Routine to move array 'a' into array 'b'.
 c
-        integer*4 a(imax,jmax), b(imax,jmax)
+        integer a(imax,jmax), b(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax
@@ -70,7 +70,7 @@ c
 c
 c.....  Routine to move (copy) array 'a' into array 'b'.
 c
-        real*4 a(imax,jmax,kmax), b(imax,jmax,kmax)
+        real a(imax,jmax,kmax), b(imax,jmax,kmax)
 c
         do k=1,kmax
         do j=1,jmax
@@ -91,7 +91,7 @@ c.....  of the 3d array 'b'.  The level is defined by 'index'.
 c
 c       Original:  P. Stamus  NOAA/FSL  15 Apr 1997
 c
-        real*4 a(imax,jmax), b(imax,jmax,kmax)
+        real a(imax,jmax), b(imax,jmax,kmax)
 c
         do j=1,jmax
         do i=1,imax
@@ -110,7 +110,7 @@ c.....  the 2d array 'b'.  The level is defined by 'index'.
 c
 c       Original:  P. Stamus  NOAA/FSL  15 Apr 1997
 c
-        real*4 a(imax,jmax,kmax), b(imax,jmax)
+        real a(imax,jmax,kmax), b(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax

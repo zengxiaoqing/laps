@@ -198,7 +198,7 @@ C     constants
 C
       implicit real*8 (a-h,o-z)
 
-      real*4 pla_r4,plo_r4,glat_r4,glon_r4,rlat_r4,wlon1_r4
+      real pla_r4,plo_r4,glat_r4,glon_r4,rlat_r4,wlon1_r4
 
       PLA = pla_r4
       PLO = plo_r4
@@ -446,7 +446,7 @@ C
       include 'trigd.inc'
 
       character*6 c6_maproj
-      real*4 n 
+      real n 
 
       call get_c6_maproj(c6_maproj,istatus)
       if(istatus .ne. 1)then
@@ -501,7 +501,7 @@ C
       include 'trigd.inc'
 
       character*6 c6_maproj
-      real*4 n 
+      real n 
 
       call get_c6_maproj(c6_maproj,istatus)
       if(istatus .ne. 1)then

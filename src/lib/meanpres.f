@@ -54,7 +54,7 @@ c       1.  Units are not changed in this routine.
 c
 c*******************************************************************************
 c
-        real*4 p_s(num_sfc)
+        real p_s(num_sfc)
 c
         sump = 0.
         cntp = 0.

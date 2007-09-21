@@ -33,7 +33,7 @@ cdis
 
 !       Steve Albers            1990
 
-      real*4 atan3d
+      real atan3d
 
       ATAN3D=MOD((ATAN2_DEG(X,Y)+360E0),360E0)
 

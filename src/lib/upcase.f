@@ -38,7 +38,7 @@ cdis
      1          output
 cc        character*500   string
 
-        integer*4       nchar,
+        integer       nchar,
 !       1               lnblnk,
 !     1          l,
      1          len,

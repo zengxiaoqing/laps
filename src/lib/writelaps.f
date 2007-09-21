@@ -63,14 +63,14 @@ C
 C
       include       'grid_fname.cmn'
 
-      integer*4      i4_reftime,           !INPUT I4time of run
+      integer      i4_reftime,           !INPUT I4time of run
      1               i4_valtime,           !INPUT I4time data is valid
      1               imax,jmax,kmax,       !INPUT # cols, # rows, # fields
      1               kdim,                 !INPUT K dimension of DATA array
      1               lvl(kdim),            !INPUT Level of each field 
      1               istatus               !OUTPUT
 
-      real*4         data(imax,jmax,kdim)  !INPUT Raw data to be written
+      real         data(imax,jmax,kdim)  !INPUT Raw data to be written
       character*(*)  dir                   !INPUT Directory to be written to
       character*(*)  ext                   !INPUT File name ext
       character*(*)  var(kdim)             !INPUT 3 letter ID of each field
@@ -78,7 +78,7 @@ C
       character*(*)  units(kdim)           !INPUT units of each field
       character*(*)  comment(kdim)         !INPUT Comments for each field
 C
-      integer*4      flag,                 !Print flag (1 = off)
+      integer      flag,                 !Print flag (1 = off)
      1               i_reftime,            !UNIX time of data
      1               i_valtime,            !UNIX time of data
      1               error(2),
@@ -100,7 +100,7 @@ C
      1               append                !0=no, 1=yes
 C
       parameter (max_levels = 100)
-      real*4         pr(max_levels),       !pressures read from get_pres_1d
+      real         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(max_levels),
      1               bott, top
 C

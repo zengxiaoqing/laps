@@ -124,13 +124,13 @@ C
       character*8 c8_project,c8_format
       character*6 provider_ref
       character*(*)ext
-      real*4 lat_a(NX_L,NY_L)
-      real*4 lon_a(NX_L,NY_L)
-      real*4 topo_a(NX_L,NY_L)
-      real*4 ht_out(200),di_out(200),sp_out(200),temp_out(200)
+      real lat_a(NX_L,NY_L)
+      real lon_a(NX_L,NY_L)
+      real topo_a(NX_L,NY_L)
+      real ht_out(200),di_out(200),sp_out(200),temp_out(200)
       integer iqc1_out(200),iqc2_out(200)
       integer assetId_ref
-      real*4 mspkt
+      real mspkt
       data mspkt/.518/
 
 !............................................................................

@@ -8,8 +8,8 @@ cdoc    Works on the basis of max/min lat/lons and limited accounting
 cdoc    for when the dateline or poles are near the box.
 cdoc    This version is more generic with static file source.
 
-        real*4 lat(ni,nj),lon(ni,nj)
-        real*4 topo(ni,nj),fracland(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
+        real topo(ni,nj),fracland(ni,nj)
 
         call get_laps_domain_95(ni,nj,lat,lon,topo,fracland,gridsp
      1                      ,istatus)
@@ -56,8 +56,8 @@ cdoc    Obtain lat/lon box surrounding laps grid, including a buffer
 cdoc    Works on the basis of max/min lat/lons and limited accounting
 cdoc    for when the dateline or poles are near the box.
 
-        real*4 lat(ni,nj),lon(ni,nj)
-        real*4 topo(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
+        real topo(ni,nj)
         character*(*) LAPS_DOMAIN_FILE
 
         call get_laps_domain(ni,nj,LAPS_DOMAIN_FILE,lat,lon,topo
@@ -112,7 +112,7 @@ cdoc    for when the dateline or poles are near or in the box.
         integer istatus
         real east,west,rnorth,south
         real r_buffer
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
         character*(*) LAPS_DOMAIN_FILE
         logical lfnddateline
         logical lfndgrenwich

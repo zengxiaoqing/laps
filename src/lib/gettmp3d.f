@@ -52,10 +52,10 @@ cdoc    for theta and/or balanced fields depending on the 'iflag' input.
         character*125 comment_3d(kmax)
         character*10 units_3d(kmax)
         character*3 var_t
-        integer*4 LVL_3d(kmax)
+        integer LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
-        real*4 field_3d(imax,jmax,kmax)
+        real field_3d(imax,jmax,kmax)
 
         character*255 c_filespec
 

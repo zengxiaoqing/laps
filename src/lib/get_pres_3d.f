@@ -7,14 +7,14 @@ cdoc  pressure grid. This does not support an arbitrary vertical grid.
       include 'grid_fname.cmn'                          ! grid_fnam_common
 
       integer nk       
-      real*4 pres_1d_out(nk)      
+      real pres_1d_out(nk)      
 
       integer max_p
       parameter (max_p=150) 
 
-      real*4 pressures(max_p)
+      real pressures(max_p)
 
-      integer*4 init
+      integer init
       data init /0/
 
       save init, pressures
@@ -71,8 +71,8 @@ cdoc  Returns a 3-D grid of pressures. This is useful if we have a non-uniform
 cdoc  pressure grid or other type of arbitrary vertical grid.
 
       integer ni,nj,nk       
-      real*4 pres_1d(nk)      
-      real*4 pres_3d(ni,nj,nk)      
+      real pres_1d(nk)      
+      real pres_3d(ni,nj,nk)      
 
       call get_pres_1d(i4time,nk,pres_1d,istatus)
 
@@ -106,7 +106,7 @@ cdoc  pressure grid (even perhaps an arbitrary vertical grid), especially if
 cdoc  there are more levels in the boundary layer.
 
       integer ni,nj,nk       
-      real*4 pres_3d(ni,nj,nk)     
+      real pres_3d(ni,nj,nk)     
 
       i = ni/2
       j = nj/2

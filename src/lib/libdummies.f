@@ -95,7 +95,7 @@ C==========================================
 C
         subroutine LIB$SHOW_TIMER(my_show_timer)
 !	Linda Wharton 26 Oct 1998 commented declaration of istatus never used
-C       integer*4 istatus
+C       integer istatus
 C
         write(6,10)
 10      format('Called Lib$show_Timer')
@@ -169,7 +169,7 @@ C
 C==========================================
 C
 C       Subroutine lib$signal(istatus)
-C       integer*4 istatus
+C       integer istatus
 C
 Cd      write(*,40)
 C40     format('Called lib$signal')
@@ -195,7 +195,7 @@ C
      1                  istatflag,           ! OUTPUT?
      1                  j_status)            ! INPUT
 
-        integer*4 prod_array(10)
+        integer prod_array(10)
 C
 Cd      write(*,60)
 C60     format('Called lib$find_file_end')

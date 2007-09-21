@@ -43,11 +43,11 @@ cdis
 cdoc    This routine assumes a polar stereographic, lambert conformal,
 cdoc    or mercator projection.
 
-        real*4 rlat                         ! Input Lat
-        real*4 rlon                         ! Input Lon
-        real*4 lat(ni,nj),lon(ni,nj)        ! Input (Arrays of LAT/LON)
+        real rlat                         ! Input Lat
+        real rlon                         ! Input Lon
+        real lat(ni,nj),lon(ni,nj)        ! Input (Arrays of LAT/LON)
         integer ni,nj                       ! Input (LAPS Dimensions)
-        real*4 ri,rj                        ! Output (I,J on LAPS Grid)
+        real ri,rj                        ! Output (I,J on LAPS Grid)
         integer istatus                     ! Output
 
         save init,umin,umax,vmin,vmax
@@ -108,11 +108,11 @@ cdoc    or mercator projection.
 cdoc    This routine assumes a polar stereographic, lambert conformal,
 cdoc    or mercator projection.
 
-        real*4 ri,rj                        ! Input (I,J on LAPS Grid)
-        real*4 lat(ni,nj),lon(ni,nj)        ! Input (Arrays of LAT/LON)
+        real ri,rj                        ! Input (I,J on LAPS Grid)
+        real lat(ni,nj),lon(ni,nj)        ! Input (Arrays of LAT/LON)
         integer ni,nj                       ! Input (LAPS Dimensions)
-        real*4 rlat                         ! Output Lat
-        real*4 rlon                         ! Output Lon
+        real rlat                         ! Output Lat
+        real rlon                         ! Output Lon
         integer istatus                     ! Output
 
         save init,umin,umax,vmin,vmax
@@ -283,7 +283,7 @@ c           cenlon = grid_cen_lon_cmn
         subroutine latlon_to_uv_lc(rlat,rlon,slat1,slat2,slon,u,v)
 
         include 'trigd.inc'
-        real*4 n
+        real n
 
 !       Difference between two angles, result is between -180. and +180.
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
@@ -300,7 +300,7 @@ c           cenlon = grid_cen_lon_cmn
         subroutine latlon_to_uv_mc(rlat,rlon,slat,cenlon,u,v)
 
         include 'trigd.inc'
-        real*4 pi, rpd
+        real pi, rpd
 
         parameter (pi=3.1415926535897932)
         parameter (rpd=pi/180.)
@@ -320,7 +320,7 @@ c           cenlon = grid_cen_lon_cmn
         subroutine latlon_to_uv_ll(rlat,rlon,cenlon,u,v)
 
         include 'trigd.inc'
-        real*4 pi, rpd
+        real pi, rpd
 
         parameter (pi=3.1415926535897932)
         parameter (rpd=pi/180.)
@@ -469,7 +469,7 @@ c           cenlon = grid_cen_lon_cmn
         subroutine uv_to_latlon_lc(u,v,slat1,slat2,slon,rlat,rlon)
 
         include 'trigd.inc'
-        real*4 n
+        real n
 
         call lambert_parms(slat1,slat2,n,s,rconst)
 
@@ -533,10 +533,10 @@ cdoc                         true north. Units are degrees.
 !                                          - grid north value of wind direction)
        
 !       Added 8/4/2000 to make sure these are declared even if not passed in
-        integer*4 istatus
-        real*4 rlat, rlon
+        integer istatus
+        real rlat, rlon
 
-        real*4 n
+        real n
 
         save init
         data init/0/
@@ -671,10 +671,10 @@ cdoc    This routine is being phased out. Please try to use 'projrot_latlon'.
 !                                          - grid north value of wind direction)
        
 !       Added 8/4/2000 to make sure these are declared even if not passed in
-        integer*4 istatus
-        real*4 rlat, rlon
+        integer istatus
+        real rlat, rlon
 
-        real*4 n
+        real n
 
         save init
         data init/0/
@@ -807,11 +807,11 @@ cdoc  as well as various grid conversion routines.
 !     1997 Steve Albers
 
       include 'trigd.inc'
-      real*4 pi, rpd
+      real pi, rpd
       parameter (pi=3.1415926535897932)
       parameter (rpd=pi/180.)
 
-      real*4 lat(ni,nj),lon(ni,nj)
+      real lat(ni,nj),lon(ni,nj)
 
       character*6  c6_maproj
 
@@ -971,7 +971,7 @@ cdoc  as well as various grid conversion routines.
       subroutine lambert_parms(slat1,slat2,n_out,s_out,rconst_out)
 
       include 'trigd.inc'
-      real*4 n,n_out
+      real n,n_out
 
 !     We only have to do the calculations once since the inputs are constants
       data init/0/

@@ -38,16 +38,16 @@ cdis
      1                                  ,sno_cnc_3d   ! Output (snow)
      1                                  ,pic_cnc_3d)  ! Output (precip ice)
 
-        real*4 temp_3d(ni,nj,nk)
-        real*4 ref_3d(ni,nj,nk)
+        real temp_3d(ni,nj,nk)
+        real ref_3d(ni,nj,nk)
         integer cldpcp_type_3d(ni,nj,nk)
 
-        real*4 pcp_cnc_3d(ni,nj,nk)
-        real*4 rai_cnc_3d(ni,nj,nk)
-        real*4 sno_cnc_3d(ni,nj,nk)
-        real*4 pic_cnc_3d(ni,nj,nk)
+        real pcp_cnc_3d(ni,nj,nk)
+        real rai_cnc_3d(ni,nj,nk)
+        real sno_cnc_3d(ni,nj,nk)
+        real pic_cnc_3d(ni,nj,nk)
 
-        real*4 rate_3d(ni,nj,nk)
+        real rate_3d(ni,nj,nk)
 
 !       Get 3D precip rates one layer at a time with ZR routine
         do k = 1,nk

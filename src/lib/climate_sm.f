@@ -68,19 +68,19 @@ c-------------------------------------------------------------------------------
 c    formal parameter declarations
 c-------------------------------------------------------------------------------
        save 
-       real*4  v_lat,
+       real  v_lat,
      1  standard_press(40),
      1  tempertur_guess(40),
      1  mixratio_guess(40)
 
-        integer*4       julian_day,
+        integer       julian_day,
      1          istatus
 
 
 c-------------------------------------------------------------------------------
 c    working variable declarations
 c-------------------------------------------------------------------------------
-        real*4  temp_tmp(40,2), !temporary temperature array
+        real  temp_tmp(40,2), !temporary temperature array
      1  temp_pres(40),  !temporary pressure array
      1  temp_mixrat(20,2),!temporary mixing ratio array
      1  temp_hgt(2),    !temporary height array
@@ -94,7 +94,7 @@ c-------------------------------------------------------------------------------
 c
 c.......temperatures are in degrees kelvin:
 c
-        integer*4       jan_tmp_15(40),         !15n latitude jan temp
+        integer       jan_tmp_15(40),         !15n latitude jan temp
      1  jan_tmp_30(40),         !30n latitude jan temp
      1  jan_tmp_45(40),         !45n latitude jan temp
      1  jan_tmp_60(40),         !60n latitude jan temp
@@ -105,7 +105,7 @@ c
      1  jul_tmp_60(40),         !60n latitude july temp
      1  jul_tmp_75(40)         !75n latitude july temp
 c
-        integer*4
+        integer
      1  jan_rel_hum_15(20),     !15n latitude jan rel hum
      1  jan_rel_hum_30(20),     !30n latitude jan rel hum
      1  jan_rel_hum_45(20),     !45n latitude jan rel hum
@@ -117,7 +117,7 @@ c
      1  jul_rel_hum_60(20),     !60n latitude july rel hum
      1  jul_rel_hum_75(20)     !75n latitude july rel hum
 c
-        integer*4
+        integer
      1          kelv_temp(40,5,2),      !3-dimen temp array in k
      1          iwvmr(20,5,2),          !3-dimen relative hum array
      1          ihite(5,2),             !height array( 5 levels )
@@ -385,7 +385,7 @@ c    variable declarations
 c-------------------------------------------------------------------------------
 
         integer nl
-        real*4  press(nl),
+        real  press(nl),
      1  temp(nl),
      1  dewpt_dep(nl),
      1  mix_ratio(nl),
@@ -408,7 +408,7 @@ c-------------------------------------------------------------------------------
 c     
 c     14-may-84       added from csu vas code
 c     (not on u. of w. source tape)
-      real*4  press(1),         !pressure
+      real  press(1),         !pressure
      1     temp(1),             !temperature
      1     depression(1),
      1     mix_ratio(1)         !mixing ratio

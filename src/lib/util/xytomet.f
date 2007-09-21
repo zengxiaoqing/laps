@@ -49,11 +49,11 @@ cdis
 !       Windsor         15-Aug-1985     Fixed so differentiates btwn 0 and 180
 
 
-        REAL*4   DEG_PER_RAD
+        REAL   DEG_PER_RAD
         PARAMETER (DEG_PER_RAD  = 180. / 3.14159)
 
 
-        REAL*4
+        REAL
      1  X,              ! X-coordinate.
      1  Y,              ! Y-coordinate (in same units as X).
      1  RANGE,          ! Output:  Range in same units as X and Y).

@@ -122,17 +122,17 @@ cdoc    Called from wind/lapsplot
 
         logical l_apply_map
 
-        real*4 grid_ra_vel(imax,jmax,kmax,max_radars)
-        real*4 grid_ra_nyq(imax,jmax,kmax,max_radars)
-        integer*4 idx_radar(max_radars)
+        real grid_ra_vel(imax,jmax,kmax,max_radars)
+        real grid_ra_nyq(imax,jmax,kmax,max_radars)
+        integer idx_radar(max_radars)
 
-        real*4 rlat_radar_a(max_radars),rlon_radar_a(max_radars)
+        real rlat_radar_a(max_radars),rlon_radar_a(max_radars)
      1    ,rheight_radar_a(max_radars),v_nyquist_in_a(max_radars)
 
         character*4 radar_name_a(max_radars)
 
-        integer*4 n_vel_a(max_radars)
-        integer*4 i4time_radar_a(max_radars)
+        integer n_vel_a(max_radars)
+        integer i4time_radar_a(max_radars)
 
         logical l_conus_vel
 
@@ -302,11 +302,11 @@ cdoc    Called from lapsplot
 
         character asc9_tim_radar*9
 
-        real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 heights_3d(imax,jmax,kmax)
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
+        real grid_ra_ref(imax,jmax,kmax)
+        real heights_3d(imax,jmax,kmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
 
         logical l_low_fill,l_high_fill,l_apply_map,l_clutter_found
 
@@ -456,12 +456,12 @@ cdoc                            reflectivity field. It is a jacket that
 cdoc                            calls read_multiradar_3dref.
 
 
-        real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 heights_3d(imax,jmax,kmax)
+        real grid_ra_ref(imax,jmax,kmax)
+        real heights_3d(imax,jmax,kmax)
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
 
 !       If a grid "overall" has the following...
 !       2dref=1, 3dref=1 - echo top from radar has better confidence than
@@ -469,10 +469,10 @@ cdoc                            calls read_multiradar_3dref.
 !       2dref=1, 3dref=0 - echo top from radar has less confidence
 !       2dref=0, 3dref=0 - missing data
 
-        integer*4 istatus_2dref
-        integer*4 istatus_3dref
-        integer*4 istatus_2dref_a(imax,jmax)
-        integer*4 istatus_3dref_a(imax,jmax)
+        integer istatus_2dref
+        integer istatus_3dref
+        integer istatus_2dref_a(imax,jmax)
+        integer istatus_3dref_a(imax,jmax)
 
         character*3 var_2d
         character*31  ext
@@ -559,15 +559,15 @@ cdoc                            calls read_multiradar_3dref.
 !                               merges 3D (vrz) and 2D (vrc) data.
 !                               The 'a01' option should merge (v01) with (vrc)
 
-        real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 heights_3d(imax,jmax,kmax)
-        real*4 radar_2dref(imax,jmax)
-        real*4 closest_vxx(imax,jmax)
-        real*4 closest_vrc(imax,jmax)
+        real grid_ra_ref(imax,jmax,kmax)
+        real heights_3d(imax,jmax,kmax)
+        real radar_2dref(imax,jmax)
+        real closest_vxx(imax,jmax)
+        real closest_vrc(imax,jmax)
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
 
 !       If a grid element has the following...
 !       2dref=1, 3dref=1 - echo top from radar has better confidence than
@@ -578,10 +578,10 @@ cdoc                            calls read_multiradar_3dref.
 !       iqc_2dref = 0 ! less confidence in 2dref data QC
 !       iqc_2dref = 1 ! more confidence in 2dref data (e.g. from NOWRAD)
 
-        integer*4 istatus_2dref
-        integer*4 istatus_3dref
-        integer*4 istatus_2dref_a(imax,jmax)
-        integer*4 istatus_3dref_a(imax,jmax)
+        integer istatus_2dref
+        integer istatus_3dref
+        integer istatus_2dref_a(imax,jmax)
+        integer istatus_3dref_a(imax,jmax)
 
         character*3 var_2d
         character*31  readext
@@ -886,7 +886,7 @@ cdoc                            calls read_multiradar_3dref.
 !           now called from (wind-derived via) get_radar_max_pd
 
 
-        real*4 ref_2d(imax,jmax)
+        real ref_2d(imax,jmax)
 
         character*3 var_2d
         character*31  ext
@@ -919,8 +919,8 @@ cdoc                            calls read_multiradar_3dref.
 
 !       Read in unmosaiced radar data from 'vrc' files (under construction)
 
-        real*4 ref_2d(imax,jmax)
-        real*4 radar_dist_2d(imax,jmax) ! Not yet filled
+        real ref_2d(imax,jmax)
+        real radar_dist_2d(imax,jmax) ! Not yet filled
 
         character*3 var_2d
         character*31  ext
@@ -965,8 +965,8 @@ cdoc                            calls read_multiradar_3dref.
 !       The domain must be specified using grid_fnam_common
 
 
-        real*4 grid_ra_vel(imax,jmax,kmax)
-        real*4 grid_ra_nyq(imax,jmax,kmax)
+        real grid_ra_vel(imax,jmax,kmax)
+        real grid_ra_nyq(imax,jmax,kmax)
 
         character*3 var_2d
         character*31  ext
@@ -1052,7 +1052,7 @@ cdoc                            calls read_multiradar_3dref.
         character*80 grid_fnam_common
         character*3  ext_gc
         character*31 radarext,ext
-        real*4 grid_ra_ref(imax,jmax,kmax)
+        real grid_ra_ref(imax,jmax,kmax)
         character*150 directory
 
         common / grid_fnam_cmn / grid_fnam_common
@@ -1144,16 +1144,16 @@ cdoc                            calls read_multiradar_3dref.
         character*10  units_2d
         character*125 comment_2d
 
-        real*4 ref_3d(imax,jmax,kmax)
-        real*4 heights_3d(imax,jmax,kmax)
+        real ref_3d(imax,jmax,kmax)
+        real heights_3d(imax,jmax,kmax)
 
-        real*4 ref_2d_04(imax,jmax)
-        real*4 ref_2d_48(imax,jmax)
-        real*4 ref_2d_8c(imax,jmax)
-        real*4 ref_2d_et(imax,jmax)
+        real ref_2d_04(imax,jmax)
+        real ref_2d_48(imax,jmax)
+        real ref_2d_8c(imax,jmax)
+        real ref_2d_et(imax,jmax)
 
-        integer*4 istatus_2dref_a(imax,jmax)
-        integer*4 istatus_3dref_a(imax,jmax)
+        integer istatus_2dref_a(imax,jmax)
+        integer istatus_3dref_a(imax,jmax)
 
         write(6,*)' Subroutine read_nowrad_3dref'
 
@@ -1326,16 +1326,16 @@ cdoc                            calls read_multiradar_3dref.
 
         character*(*) EXT, var_2d
 
-        real*4 ref_3d(imax,jmax,kmax)
-        real*4 closest_vxx(imax,jmax)
+        real ref_3d(imax,jmax,kmax)
+        real closest_vxx(imax,jmax)
 
-        real*4 rlat_radar(max_radars)
-        real*4 rlon_radar(max_radars)
-        real*4 rheight_radar(max_radars)
+        real rlat_radar(max_radars)
+        real rlon_radar(max_radars)
+        real rheight_radar(max_radars)
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
 
         character c_radar_id(max_radars)*4
         character*9 asc9_tim
@@ -1345,7 +1345,7 @@ cdoc                            calls read_multiradar_3dref.
         character*40 comment_tmp
         character*10 units_3d(kmax),units_2d
         character*3 var_3d(kmax)
-        integer*4 LVL_3d(kmax)
+        integer LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
         logical ltest_vertical_grid

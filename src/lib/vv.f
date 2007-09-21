@@ -51,21 +51,21 @@ cdis
 
 !Can be used with either regular LAPS analysis grid or the cloud analysis grid.
         Implicit none
-        Integer*4 nk, cloud_type(nk)
-        Real*4 dx, height(nk), w(nk)
+        Integer nk, cloud_type(nk)
+        Real dx, height(nk), w(nk)
 
 !The following specifies the maximum vv in two cloud types as functions
 !of cloud depth.  Make parabolic vv profile, except for stratiform clouds,
 !which get a constant value.  The values are tuned to give values that
 !an NWP model would typically produce.  
-        Real*4 vv_to_height_ratio_Cu
-        Real*4 vv_to_height_ratio_Sc
-        Real*4 vv_for_St
+        Real vv_to_height_ratio_Cu
+        Real vv_to_height_ratio_Sc
+        Real vv_for_St
 
-        Real*4 ratio, vv, Parabolic_vv_profile
+        Real ratio, vv, Parabolic_vv_profile
 
-        Integer*4 k, k1, kbase, ktop
-        Real*4 zbase, ztop
+        Integer k, k1, kbase, ktop
+        Real zbase, ztop
 
 !   Cloud Type      /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
 !   Integer Value     0     1    2    3    4    5    6    7    8    9   10
@@ -168,15 +168,15 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
         End
 
 !-------------------------------------------------------------------
-        Real*4 Function Parabolic_vv_profile (zbase, ztop, ratio, z)
+        Real Function Parabolic_vv_profile (zbase, ztop, ratio, z)
 !The vertical velocity is zero at cloud top, peaks one third of the way up
 !from the base, and extends below the base by one third of the cloud depth.
 
 !  JUNE 2002 - No longer extending profile to below cloud base.
 
         Implicit none
-        Real*4 zbase, ztop, ratio, z
-        Real*4 depth, vvmax, vvspan, halfspan, height_vvmax, x
+        Real zbase, ztop, ratio, z
+        Real depth, vvmax, vvspan, halfspan, height_vvmax, x
 
         depth = ztop - zbase
         If (depth .le. 0.) then
@@ -199,15 +199,15 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 ! The variant below is called from 'get_radar_deriv.f/radar_bogus_w'
 
 !-------------------------------------------------------------------
-        Real*4 Function Parabolic_vv_profile1 (zbase, ztop, ratio, z)
+        Real Function Parabolic_vv_profile1 (zbase, ztop, ratio, z)
 !The vertical velocity is zero at cloud top, peaks one third of the way up
 !from the base, and extends below the base by one third of the cloud depth.
 
 !  JUNE 2002 - No longer extending profile to below cloud base.
 
         Implicit none
-        Real*4 zbase, ztop, ratio, z
-        Real*4 depth, vvmax, vvspan, halfspan, height_vvmax, x
+        Real zbase, ztop, ratio, z
+        Real depth, vvmax, vvspan, halfspan, height_vvmax, x
 
         depth = ztop - zbase
         If (depth .le. 0.) then

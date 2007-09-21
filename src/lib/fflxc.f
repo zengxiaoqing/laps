@@ -144,10 +144,10 @@ cdoc    from unity elsewhere.
 !       Pages 32,33
 
         include 'trigd.inc'
-        real*4 n
+        real n
         character*6 c6_maproj
 
-        integer*4 init
+        integer init
         save init
         data init/0/
 

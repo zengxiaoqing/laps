@@ -35,7 +35,7 @@ c
 c
 c.....  Routine to convert a temperature array from degrees K to degrees F.
 c
-        real*4 t_f(imax,jmax), t_k(imax,jmax)
+        real t_f(imax,jmax), t_k(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax

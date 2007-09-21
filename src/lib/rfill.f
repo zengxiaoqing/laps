@@ -60,12 +60,12 @@ cdis
 !       ni,nj,nk are input LAPS grid dimensions
 !       rlat_radar,rlon_radar,rheight_radar are input radar coordinates
 
-        real*4 ref_3d_io(ni,nj,nk)               ! I/O   3D reflctvy grid
-        real*4 heights_3d(ni,nj,nk)              ! I
-        real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! I     2D grids
+        real ref_3d_io(ni,nj,nk)               ! I/O   3D reflctvy grid
+        real heights_3d(ni,nj,nk)              ! I
+        real lat(ni,nj),lon(ni,nj),topo(ni,nj) ! I     2D grids
 
-        real*4 ref_3d(ni,nj,nk)                  ! Local 3D reflctvy grid
-        integer*4 isum_ref_2d(ni,nj)             ! Local array
+        real ref_3d(ni,nj,nk)                  ! Local 3D reflctvy grid
+        integer isum_ref_2d(ni,nj)             ! Local array
 
         logical l_low_fill, l_high_fill, l_test, l_nonmissing(ni,nj)  
 

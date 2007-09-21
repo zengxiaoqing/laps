@@ -42,10 +42,10 @@ cdis
         character*125 comment_2d
         character*10 units_2d
         character*3 var_t
-        integer*4 LVL_2d
+        integer LVL_2d
         character*4 LVL_COORD_2d
 
-        real*4 temp_2d(imax,jmax)
+        real temp_2d(imax,jmax)
 
         character*255 c_filespec
 

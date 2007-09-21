@@ -7,7 +7,7 @@ c
         integer gate_elev_to_projran_lut(LUT_GATES,0:LUT_ELEVS)
         integer azran_to_igrid_lut(0:LUT_AZIMUTHS,0:LUT_RANGES)
         integer azran_to_jgrid_lut(0:LUT_AZIMUTHS,0:LUT_RANGES)
-        real*4    dbz_to_z_lut(-1000:+1000)
+        real    dbz_to_z_lut(-1000:+1000)
         logical*1 lgate_vel_lut(MAX_GATES)
         logical*1 lgate_ref_lut(MAX_GATES)
         logical*1 lgate_lut(MAX_GATES)
@@ -23,7 +23,7 @@ c
 
 c
         character*4 c4_radarname_cmn
-        real*4 rlat_radar_cmn, rlon_radar_cmn, rheight_radar_cmn
+        real rlat_radar_cmn, rlon_radar_cmn, rheight_radar_cmn
         common /radar_coords/ c4_radarname_cmn,
      :                        rlat_radar_cmn,
      :                        rlon_radar_cmn,

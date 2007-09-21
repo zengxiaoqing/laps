@@ -44,23 +44,23 @@ cdis
      1                  ,umean,vmean,steer_u,steer_v,
      1                                                    istatus)
 
-        integer*4 max_storms
+        integer max_storms
         parameter(max_storms=75)
 
 !       Dummy arrays
-        real*4 xlaps(ni,nj),ylaps(ni,nj),xradar(ni,nj),yradar(ni,nj)
-        real*4 grid_ra_vel(ni,nj,nk),grid_ra_ref(ni,nj,nk)
-        real*4 max2d_ref(ni,nj),max2d_refprv(ni,nj)
+        real xlaps(ni,nj),ylaps(ni,nj),xradar(ni,nj),yradar(ni,nj)
+        real grid_ra_vel(ni,nj,nk),grid_ra_ref(ni,nj,nk)
+        real max2d_ref(ni,nj),max2d_refprv(ni,nj)
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
-        real*4 iiilut(-ni:ni,-nj:nj)
+        real iiilut(-ni:ni,-nj:nj)
 
-        real*4 steer_u(ni,nj),steer_v(ni,nj)
+        real steer_u(ni,nj),steer_v(ni,nj)
      1       ,umean(ni,nj),vmean(ni,nj)    ! Unmodified mean winds WRT True N
      1       ,storm_u(max_storms),storm_v(max_storms),wt_ob(max_storms)
 
-        integer*4 i4time_latest,istatus,istorm(max_storms),jstorm(max_st
+        integer i4time_latest,istatus,istorm(max_storms),jstorm(max_st
      1orms)
 
         n_storms = 0
@@ -132,16 +132,16 @@ c    storm_v
      1        ,max_storms                               ! Input
      1  ,steer_u,steer_v                       )  ! Output
 
-        real*4 iiilut(-ni:ni,-nj:nj)
+        real iiilut(-ni:ni,-nj:nj)
 
-        real*4 steer_u(ni,nj),steer_v(ni,nj),umean(ni,nj),vmean(ni,nj),
+        real steer_u(ni,nj),steer_v(ni,nj),umean(ni,nj),vmean(ni,nj),
      1       storm_u(max_storms),storm_v(max_storms)
 
-c       integer*4 i4time_latest,istatus,istorm(max_storms),jstorm(max_st
+c       integer i4time_latest,istatus,istorm(max_storms),jstorm(max_st
 c    1orms)
-        integer*4 istorm(max_storms),jstorm(max_storms)
+        integer istorm(max_storms),jstorm(max_storms)
 
-        real*4 wt_ob(max_storms)
+        real wt_ob(max_storms)
 
         if(n_storms .gt. 0)then
             do i = 1,n_storms
@@ -173,20 +173,20 @@ c    1orms)
      1                  ,iob,job,obs,wt_ob,background_field
      1                                  ,iiilut,anal)
 
-      real*4 exponent_distance_wt,background_weight
+      real exponent_distance_wt,background_weight
       parameter (exponent_distance_wt = 5.0)
       parameter (background_weight = 1.0)
 
-      integer*4  n_fnorm
+      integer  n_fnorm
       parameter (n_fnorm = 10000)
 
       dimension  iob(max_obs),job(max_obs),obs(max_obs),wt_ob(max_obs)
      1  ,fnorm(n_fnorm)
      1        ,anal(ni,nj)
 
-      real*4 background_field(ni,nj)
+      real background_field(ni,nj)
 
-      real*4 iiilut(-ni:ni,-nj:nj)
+      real iiilut(-ni:ni,-nj:nj)
 
       write(6,*)' Barnes_r5th called'
 

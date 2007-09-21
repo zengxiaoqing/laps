@@ -59,8 +59,8 @@ c.....  NOTE:  The temperature and dewpoint must be in degrees K.
 c
         implicit none
         integer ni, nj, i, j
-        real*4 t(ni,nj), td(ni,nj), rh(ni,nj)
-        real*4 sat_t(ni,nj), sat_td(ni,nj)
+        real t(ni,nj), td(ni,nj), rh(ni,nj)
+        real sat_t(ni,nj), sat_td(ni,nj)
 c
 c.....  Calculate the actual and saturation vapor pressure, then the rh.
 c

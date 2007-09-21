@@ -32,8 +32,8 @@ cdis
       function aski4t_gg(time)
 
       implicit none
-      integer*4 aski4t_gg,i4time_now_gg
-      integer*4 i4time
+      integer aski4t_gg,i4time_now_gg
+      integer i4time
 
       character*35 time
       character*9 asc9_tim

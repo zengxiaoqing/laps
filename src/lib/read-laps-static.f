@@ -38,15 +38,15 @@ C
         IMPLICIT NONE
 C
         CHARACTER*(*) DIR, EXT
-        INTEGER*4 IDIM, JDIM, KMAX, KDIM
+        INTEGER IDIM, JDIM, KMAX, KDIM
         CHARACTER*(*) VAR(1), UNITS(1), COMMENT(1)
-        REAL*4 GRID(IDIM,JDIM,KDIM)
-        INTEGER*4 STATUS
+        REAL GRID(IDIM,JDIM,KDIM)
+        INTEGER STATUS
 C
-        INTEGER*4 NVARSMAX, I
+        INTEGER NVARSMAX, I
         PARAMETER (NVARSMAX=20)         ! may need to increase this someday
         CHARACTER*4 LVL_COORD(NVARSMAX)
-        INTEGER*4 LVL(NVARSMAX)
+        INTEGER LVL(NVARSMAX)
 
         write(6,*)
      1 ' WARNING: This routine reads static data in the old format.'

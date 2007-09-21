@@ -33,9 +33,9 @@ cdis
         subroutine get_maxtops(grid_ra_ref,heights_3d
      1                        ,imax,jmax,kmax,rmax_tops_m)
 
-        real*4 grid_ra_ref(imax,jmax,kmax)             ! I
-        real*4 heights_3d(imax,jmax,kmax)              ! I
-        real*4 rmax_tops_m(imax,jmax)                  ! O
+        real grid_ra_ref(imax,jmax,kmax)             ! I
+        real heights_3d(imax,jmax,kmax)              ! I
+        real rmax_tops_m(imax,jmax)                  ! O
 
         highest_top = 0.
         rf_thr = 0.

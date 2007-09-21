@@ -29,27 +29,27 @@ c
 
 !       Obs arrays (raw files)
         integer     nobs,nlvl(maxobs)
-        real*4      lvls_m(maxlvls,maxobs)
-        real*4      fill_stationP, fill_lvls, stationP
-        integer*4   i4time
+        real      lvls_m(maxlvls,maxobs)
+        real      fill_stationP, fill_lvls, stationP
+        integer   i4time
         character*51  stationName
         character*6   c_staId
-	real*4      dd(maxlvls,maxobs), ff(maxlvls,maxobs)
+	real      dd(maxlvls,maxobs), ff(maxlvls,maxobs)
 
-        integer*4  i4time_ob_a(maxobs), before, after
+        integer  i4time_ob_a(maxobs), before, after
 c
 c.....  Variables returned from 'read_local_tower'
 c
         integer    nsnd_all ! combined # of obs over multiple files
 	integer    wmoid(maxobs)
-        real*4     stalat(maxobs),stalon(maxobs)
-        real*4     staelev(maxobs)
-        real*4     soilMoisture(maxobs)
+        real     stalat(maxobs),stalon(maxobs)
+        real     staelev(maxobs)
+        real     soilMoisture(maxobs)
         character  c5_staid(maxobs)*5, a9time_ob(maxobs)*9
 !       character  c8_obstype(maxobs)*8
-        real*4     height_m(maxobs,maxlvls), pressure_mb(maxobs,maxlvls)
-        real*4     temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
-        real*4     dir_deg(maxobs,maxlvls),spd_mps(maxobs,maxlvls)
+        real     height_m(maxobs,maxlvls), pressure_mb(maxobs,maxlvls)
+        real     temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
+        real     dir_deg(maxobs,maxlvls),spd_mps(maxobs,maxlvls)
 	character  stname(maxobs)*6
         integer    tempQcFlag(maxlvls,maxobs)
         integer    prsQcFlag(maxlvls,maxobs)
@@ -64,17 +64,17 @@ c.....  Output arrays used by 'write_snd'
 c
         integer    nsnd_all_s ! combined # of obs over multiple files
         integer    nlvl_s(maxsta)
-	integer*4  wmoid_s(maxsta)
-        real*4     stalat_s(maxsta,maxlvls),stalon_s(maxsta,maxlvls)
-        real*4     staelev_s(maxsta)
+	integer  wmoid_s(maxsta)
+        real     stalat_s(maxsta,maxlvls),stalon_s(maxsta,maxlvls)
+        real     staelev_s(maxsta)
         character  c5_staid_s(maxsta)*5, a9time_ob_s(maxsta,maxlvls)*9
         character  c8_obstype_s(maxsta)*8
-        real*4     height_m_s(maxsta,maxlvls)
-        real*4     pressure_mb_s(maxsta,maxlvls)
-        real*4     temp_c_s(maxsta,maxlvls)
-        real*4     dewpoint_c_s(maxsta,maxlvls)      
-        real*4     dir_deg_s(maxsta,maxlvls),spd_mps_s(maxsta,maxlvls)       
-        real*4     soilmoist_p(maxsta)       
+        real     height_m_s(maxsta,maxlvls)
+        real     pressure_mb_s(maxsta,maxlvls)
+        real     temp_c_s(maxsta,maxlvls)
+        real     dewpoint_c_s(maxsta,maxlvls)      
+        real     dir_deg_s(maxsta,maxlvls),spd_mps_s(maxsta,maxlvls)       
+        real     soilmoist_p(maxsta)       
 	character  stname_s(maxsta)*5
 
 c.....  Unknown vars.
@@ -354,14 +354,14 @@ c    &         pressure_pa, prsQcFlag,                            ! O
       character*(*) filename 
       integer       maxobs ! raw stations for SND file
       integer       maxlvls ! raw/processed stations for SND file
-      real*4        r_missing_data 
+      real        r_missing_data 
       integer       nobs,nlvls,lev_set
-      real*4        lvls_m(maxlvls,maxobs)
-      real*4        staelev(maxobs)
-      real*4        stalat(maxobs),stalon(maxobs)
-      real*4        soilMoisture(maxobs)
-      real*4        dd(maxlvls,maxobs), ff(maxlvls,maxobs)
-      real*4        temp_k, rh_pct,stationP,ws,wd
+      real        lvls_m(maxlvls,maxobs)
+      real        staelev(maxobs)
+      real        stalat(maxobs),stalon(maxobs)
+      real        soilMoisture(maxobs)
+      real        dd(maxlvls,maxobs), ff(maxlvls,maxobs)
+      real        temp_k, rh_pct,stationP,ws,wd
       integer       tempQcFlag(maxlvls,maxobs)
       integer       prsQcFlag(maxlvls,maxobs)
       integer       rhQcFlag(maxlvls,maxobs)
@@ -369,12 +369,12 @@ c    &         pressure_pa, prsQcFlag,                            ! O
       integer       wdQcFlag(maxlvls,maxobs)
       integer       smQcFlag(maxobs)
       integer       tempQF, prsQF, rhQF, wsQF, wdQF
-      real*4        height_m(maxobs,maxlvls)
-      real*4        pressure_pa(maxobs,maxlvls)      
-      real*4        temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
-      real*4        dir_deg(maxobs,maxlvls),spd_mps(maxobs,maxlvls)
-      real*4        sp_fill,levels_fill
-      real*4        fill_t, fill_ws, fill_rh
+      real        height_m(maxobs,maxlvls)
+      real        pressure_pa(maxobs,maxlvls)      
+      real        temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
+      real        dir_deg(maxobs,maxlvls),spd_mps(maxobs,maxlvls)
+      real        sp_fill,levels_fill
+      real        fill_t, fill_ws, fill_rh
       integer       fill_wd
       integer       wmoid(maxobs),nlvl(maxobs),sp_id
       integer       istatus

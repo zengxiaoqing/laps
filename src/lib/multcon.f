@@ -35,7 +35,7 @@ c
 c
 c.....  Routine to multiply all the elements of array 'a' by 'const'.
 c
-        real*4 a(imax,jmax)
+        real a(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax

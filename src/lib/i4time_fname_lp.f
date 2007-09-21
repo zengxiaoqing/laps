@@ -52,10 +52,10 @@ C
         CHARACTER*(*) FNAME_IN
         CHARACTER*256 FNAME_BUF
         CHARACTER*20 c20_type
-        INTEGER*4 I4TIME, ISTATUS
+        INTEGER I4TIME, ISTATUS
 C
-        INTEGER*4 INT_FILE(9), I, NYEAR, JDAY, NHOUR, MIN, MONTH, NDAY
-        INTEGER*4 I4TIME_INT_LP
+        INTEGER INT_FILE(9), I, NYEAR, JDAY, NHOUR, MIN, MONTH, NDAY
+        INTEGER I4TIME_INT_LP
 C
 C================================================================
 C
@@ -180,9 +180,9 @@ C          ISTATUS - The return status.
 C
 C================================================================
 C
-        INTEGER*4 JULIAN_DAY, YEAR, DAY, ISTATUS
+        INTEGER JULIAN_DAY, YEAR, DAY, ISTATUS
 C
-        INTEGER*4 MNTH(12), TEMP_YEAR, MONTH, MAX_DAY
+        INTEGER MNTH(12), TEMP_YEAR, MONTH, MAX_DAY
         LOGICAL*1 LEAP
         DATA MNTH/31,0,31,30,31,30,31,31,30,31,30,31/
 C
@@ -238,13 +238,13 @@ cdoc    MINUTE, SECOND
 C
 C================================================================
 C
-        INTEGER*4 I4TIME_INT_LP
-        INTEGER*4 NYEAR, NMONTH, NDAY, NHOUR, NMIN, NSEC, ISTATUS
+        INTEGER I4TIME_INT_LP
+        INTEGER NYEAR, NMONTH, NDAY, NHOUR, NMIN, NSEC, ISTATUS
 C
-        INTEGER*4 NSECYR, NSECDA, NSECHR, NSECMN
-        INTEGER*4 NYR, NYRS, NLEAP
-        INTEGER*4 NDAYS(12), NSECMO(12)
-        INTEGER*4 IBASE, ISUM, I
+        INTEGER NSECYR, NSECDA, NSECHR, NSECMN
+        INTEGER NYR, NYRS, NLEAP
+        INTEGER NDAYS(12), NSECMO(12)
+        INTEGER IBASE, ISUM, I
         PARAMETER (IBASE=60)
 
         DATA NSECYR/31536000/NSECDA/86400/NSECHR/3600/NSECMN/60/

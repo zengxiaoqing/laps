@@ -30,7 +30,7 @@ cdis
 cdis
 cdis
 
-      Real*4 Function PsaToZ(psain)
+      Real Function PsaToZ(psain)
 
 C*  This routine converts a pressure in a standard atmosphere in millibars
 C*  into a height in meters

@@ -24,23 +24,23 @@ c                                    missing data
 c
 c*****************************************************************************
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
-	real*4 t(maxsta), t_ea(maxsta), max24t(maxsta), min24t(maxsta)
-	real*4 td(maxsta), td_ea(maxsta), rh(maxsta), rh_ea(maxsta)
-	real*4 dd(maxsta), ddg(maxsta), dd_ea(maxsta)
-	real*4 ff(maxsta), ffg(maxsta), ff_ea(maxsta)
-	real*4 alt(maxsta), alt_ea(maxsta), delp(maxsta)
-	real*4 stnp(maxsta), mslp(maxsta), p_ea(maxsta)
-	real*4 vis(maxsta), vis_ea(maxsta)
-	real*4 solar(maxsta), solar_ea(maxsta)
-	real*4 sfct(maxsta), sfct_ea(maxsta)
-	real*4 sfcm(maxsta), sfcm_ea(maxsta)
-	real*4 pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
-	real*4 snow(maxsta), snow_ea(maxsta), pcp_ea(maxsta)
-	real*4 store_cldht(maxsta,5)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
+	real t(maxsta), t_ea(maxsta), max24t(maxsta), min24t(maxsta)
+	real td(maxsta), td_ea(maxsta), rh(maxsta), rh_ea(maxsta)
+	real dd(maxsta), ddg(maxsta), dd_ea(maxsta)
+	real ff(maxsta), ffg(maxsta), ff_ea(maxsta)
+	real alt(maxsta), alt_ea(maxsta), delp(maxsta)
+	real stnp(maxsta), mslp(maxsta), p_ea(maxsta)
+	real vis(maxsta), vis_ea(maxsta)
+	real solar(maxsta), solar_ea(maxsta)
+	real sfct(maxsta), sfct_ea(maxsta)
+	real sfcm(maxsta), sfcm_ea(maxsta)
+	real pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
+	real snow(maxsta), snow_ea(maxsta), pcp_ea(maxsta)
+	real store_cldht(maxsta,5)
 c
-	integer*4 i4time, wmoid(maxsta), jstatus
-	integer*4 time(maxsta), delpch(maxsta), kkk_s(maxsta)
+	integer i4time, wmoid(maxsta), jstatus
+	integer time(maxsta), delpch(maxsta), kkk_s(maxsta)
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -169,10 +169,10 @@ c               S. Albers  2000      Expanded for OSSE use
 c
 c*****************************************************************************
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
 c
-	integer*4 i4time, wmoid(maxsta), jstatus
-        integer*4 time(maxsta)                 ! integer representation of HHMM
+	integer i4time, wmoid(maxsta), jstatus
+        integer time(maxsta)                 ! integer representation of HHMM
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -266,16 +266,16 @@ c                                    missing data
 c
 c*****************************************************************************
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
-	real*4 t(maxsta)
-	real*4 td(maxsta)
-	real*4 rh(maxsta)
-	real*4 dd(maxsta)
-	real*4 ff(maxsta)
-	real*4 alt(maxsta)
-	real*4 stnp(maxsta), mslp(maxsta)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
+	real t(maxsta)
+	real td(maxsta)
+	real rh(maxsta)
+	real dd(maxsta)
+	real ff(maxsta)
+	real alt(maxsta)
+	real stnp(maxsta), mslp(maxsta)
 c
-	integer*4 i4time, jstatus
+	integer i4time, jstatus
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -374,11 +374,11 @@ c		P. Stamus  04-13-98  Original version (from write_surface_LS2).
 c
 c*****************************************************************************
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
-	real*4 t(maxsta)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
+	real t(maxsta)
 
 c
-	integer*4 i4time, jstatus
+	integer i4time, jstatus
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -467,14 +467,14 @@ c		P. Stamus  04-13-98  Original version (from write_surface_LS2).
 c
 c*****************************************************************************
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
-	real*4 dd(maxsta)
-	real*4 ff(maxsta)
-	real*4 dd_ea(maxsta)
-	real*4 ff_ea(maxsta)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
+	real dd(maxsta)
+	real ff(maxsta)
+	real dd_ea(maxsta)
+	real ff_ea(maxsta)
 c
-	integer*4 i4time, jstatus
-        integer*4 obstime(maxsta)
+	integer i4time, jstatus
+        integer obstime(maxsta)
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -567,11 +567,11 @@ c                                    missing data
 c
 c*****************************************************************************
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
-	real*4 alt(maxsta)
-	real*4 stnp(maxsta), mslp(maxsta)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
+	real alt(maxsta)
+	real stnp(maxsta), mslp(maxsta)
 c
-	integer*4 i4time, jstatus
+	integer i4time, jstatus
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -667,11 +667,11 @@ c                                    missing data
 c
 c*****************************************************************************
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
-	real*4 pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
-	real*4 snow(maxsta)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
+	real pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
+	real snow(maxsta)
 c
-	integer*4 i4time, jstatus
+	integer i4time, jstatus
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -768,23 +768,23 @@ c		P. Stamus  12-17-98  Original version (from read_surface_data).
 c
 c*****************************************************************************
 c
-	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
-	real*4 t(maxsta), t_ea(maxsta), max24t(maxsta), min24t(maxsta)
-	real*4 td(maxsta), td_ea(maxsta), rh(maxsta), rh_ea(maxsta)
-	real*4 dd(maxsta), ddg(maxsta), dd_ea(maxsta)
-	real*4 ff(maxsta), ffg(maxsta), ff_ea(maxsta)
-	real*4 alt(maxsta), alt_ea(maxsta), delp(maxsta)
-	real*4 stnp(maxsta), mslp(maxsta), p_ea(maxsta)
-	real*4 vis(maxsta), vis_ea(maxsta)
-	real*4 solar(maxsta), solar_ea(maxsta)
-	real*4 sfct(maxsta), sfct_ea(maxsta)
-	real*4 sfcm(maxsta), sfcm_ea(maxsta)
-	real*4 pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
-	real*4 snow(maxsta), snow_ea(maxsta), pcp_ea(maxsta)
-	real*4 store_cldht(maxsta,5)
+	real lat(maxsta), lon(maxsta), elev(maxsta)
+	real t(maxsta), t_ea(maxsta), max24t(maxsta), min24t(maxsta)
+	real td(maxsta), td_ea(maxsta), rh(maxsta), rh_ea(maxsta)
+	real dd(maxsta), ddg(maxsta), dd_ea(maxsta)
+	real ff(maxsta), ffg(maxsta), ff_ea(maxsta)
+	real alt(maxsta), alt_ea(maxsta), delp(maxsta)
+	real stnp(maxsta), mslp(maxsta), p_ea(maxsta)
+	real vis(maxsta), vis_ea(maxsta)
+	real solar(maxsta), solar_ea(maxsta)
+	real sfct(maxsta), sfct_ea(maxsta)
+	real sfcm(maxsta), sfcm_ea(maxsta)
+	real pcp1(maxsta), pcp3(maxsta), pcp6(maxsta), pcp24(maxsta)
+	real snow(maxsta), snow_ea(maxsta), pcp_ea(maxsta)
+	real store_cldht(maxsta,5)
 c
-	integer*4 i4time, wmoid(maxsta), jstatus
-	integer*4 time(maxsta), delpch(maxsta), kkk_s(maxsta)
+	integer i4time, wmoid(maxsta), jstatus
+	integer time(maxsta), delpch(maxsta), kkk_s(maxsta)
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11

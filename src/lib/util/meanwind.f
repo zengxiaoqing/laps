@@ -6,18 +6,18 @@
 
         logical ltest_vertical_grid
 
-        real*4 umean(imax,jmax),vmean(imax,jmax)                    ! O
-        real*4 ustorm(imax,jmax),vstorm(imax,jmax)                  ! O
-        real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)            ! I
-        real*4 heights_3d(imax,jmax,kmax)                           ! I
+        real umean(imax,jmax),vmean(imax,jmax)                    ! O
+        real ustorm(imax,jmax),vstorm(imax,jmax)                  ! O
+        real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)            ! I
+        real heights_3d(imax,jmax,kmax)                           ! I
 
-        real*4 topo(imax,jmax)                                      ! I
+        real topo(imax,jmax)                                      ! I
 
-        real*4 sum(imax,jmax)                                       ! L
-        real*4 usum(imax,jmax)                                      ! L
-        real*4 vsum(imax,jmax)                                      ! L
-        integer*4 klow(imax,jmax)                                   ! L
-        integer*4 khigh(imax,jmax)                                  ! L
+        real sum(imax,jmax)                                       ! L
+        real usum(imax,jmax)                                      ! L
+        real vsum(imax,jmax)                                      ! L
+        integer klow(imax,jmax)                                   ! L
+        integer khigh(imax,jmax)                                  ! L
 
         write(6,*)
         write(6,*)' Calculating Mean Wind (BSM)'
@@ -100,16 +100,16 @@ C            THROUGH THE 0-6 KM MEAN WIND.
 
         logical ltest_vertical_grid
 
-        real*4 umean(imax,jmax),vmean(imax,jmax)                  ! Output
-        real*4 ustorm(imax,jmax),vstorm(imax,jmax)                ! Output
-        real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)          ! Input
+        real umean(imax,jmax),vmean(imax,jmax)                  ! Output
+        real ustorm(imax,jmax),vstorm(imax,jmax)                ! Output
+        real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)          ! Input
 
-        real*4 topo(imax,jmax)                                    ! Input
+        real topo(imax,jmax)                                    ! Input
 
-        real*4 sum(imax,jmax)                                     ! Local
-        real*4 usum(imax,jmax)                                    ! Local
-        real*4 vsum(imax,jmax)                                    ! Local
-        integer*4 klow(imax,jmax)                                 ! Local
+        real sum(imax,jmax)                                     ! Local
+        real usum(imax,jmax)                                    ! Local
+        real vsum(imax,jmax)                                    ! Local
+        integer klow(imax,jmax)                                 ! Local
 
         write(6,*)
         write(6,*)' Calculating Mean Wind (LSM)'

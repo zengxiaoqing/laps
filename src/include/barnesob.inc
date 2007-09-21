@@ -1,6 +1,6 @@
 
 
-        integer*4 max_var
+        integer max_var
         parameter (max_var = 2)       ! max vars (accomodates U & V)
 
 	type barnesob

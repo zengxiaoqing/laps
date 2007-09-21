@@ -23,7 +23,7 @@ C
       integer nf
       parameter (nf=3)
 
-      integer*4       i4time,               !INPUT I4time of data
+      integer       i4time,               !INPUT I4time of data
      1                iimax,jjmax,          !INPUT # cols, # rows
      1                kdim,                 !INPUT K dimension of DATA array
      1                lvl_req(kdim*nf),     !INPUT Requested levels
@@ -39,13 +39,13 @@ C
       character*(*)   comment_req_o(kdim)   !OUTPUT Comments for requested fields
       character*(125) comment_req_l(kdim,nf)!LOCAL  Comments for requested fields
 
-      real*4        data_o(iimax,jjmax,kdim)       !OUTPUT data
-      real*4        data_l(iimax,jjmax,kdim,nf)    !LOCAL data
+      real        data_o(iimax,jjmax,kdim)       !OUTPUT data
+      real        data_l(iimax,jjmax,kdim,nf)    !LOCAL data
 
-      integer*4, allocatable, dimension(:) :: array1 !LOCAL Compressed array
-      real*4,    allocatable, dimension(:) :: array2 !LOCAL Compressed array
+      integer, allocatable, dimension(:) :: array1 !LOCAL Compressed array
+      real,    allocatable, dimension(:) :: array2 !LOCAL Compressed array
 C
-      integer*4 fn_length,
+      integer fn_length,
      1          flag,                   !Print flag (1 = off)
      1          error(3),
      1          comm_len,
@@ -227,9 +227,9 @@ C
      1                     ,data                                        ! O
      1                     ,istatus)                                    ! O
 
-        integer*4 array1(n_cmprs)
-        real*4 array2(n_cmprs)
-        real*4 data(ngrids)
+        integer array1(n_cmprs)
+        real array2(n_cmprs)
+        real data(ngrids)
 
 !       Setup for first point
         i_end = 0

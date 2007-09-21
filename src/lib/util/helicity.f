@@ -43,12 +43,12 @@ cdis
 
 cdoc    Calculate storm relative helicity over a 2-D grid    
 
-        real*4 ustorm(imax,jmax),vstorm(imax,jmax)
-        real*4 usfc(imax,jmax),vsfc(imax,jmax)
-        real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)
-        real*4 heights_3d(imax,jmax,kmax)
-        real*4 helicity(imax,jmax)
-        real*4 topo(imax,jmax)
+        real ustorm(imax,jmax),vstorm(imax,jmax)
+        real usfc(imax,jmax),vsfc(imax,jmax)
+        real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)
+        real heights_3d(imax,jmax,kmax)
+        real helicity(imax,jmax)
+        real topo(imax,jmax)
 
 !       1998 Steve Albers - Overhauled
 

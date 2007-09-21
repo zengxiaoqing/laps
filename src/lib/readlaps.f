@@ -64,7 +64,7 @@ C**********************************************************************
 C
       implicit  none
 C
-      integer*4       reftime,             !INPUT I4time of model run
+      integer       reftime,             !INPUT I4time of model run
      1                valtime,             !INPUT I4time data is valid
      1                iimax,jjmax,kkmax,   !INPUT # cols, # rows, # fields
      1                kdim,                !INPUT K dimension of DATA array
@@ -76,9 +76,9 @@ C
       character*(*)   lvl_coord_req(kdim)  !OUTPUT Vertical coordinate of fields
       character*(*)   units_req(kdim)      !OUTPUT Units of requested fields
       character*(*)   comment_req(kdim)    !OUTPUT Comments for requested fields
-      real*4        data(iimax,jjmax,kdim) !OUTPUT data
+      real        data(iimax,jjmax,kdim) !OUTPUT data
 C
-      integer*4 fn_length,
+      integer fn_length,
      1          i_reftime,              !UNIX time of data
      1          i_valtime,              !UNIX time of data
      1          flag,                   !Print flag (1 = off)

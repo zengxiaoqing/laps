@@ -1829,7 +1829,7 @@ c
 c*****************************************************************************
 c
 	integer len
-	integer*4 code
+	integer code
 	character name*(*)
 c
 	call s_len(name, len)
@@ -1850,12 +1850,12 @@ c
 
         integer back_mp,back_sp
 
-        real*4 mslp_bk(ni,nj)                                    ! I
-        real*4 mslp(ni,nj)                                       ! I
-        real*4 mslp_diff(ni,nj)                                  ! L
+        real mslp_bk(ni,nj)                                    ! I
+        real mslp(ni,nj)                                       ! I
+        real mslp_diff(ni,nj)                                  ! L
         
-        real*4 stnp_bk(ni,nj)                                    ! I
-        real*4 stnp(ni,nj)                                       ! I/O
+        real stnp_bk(ni,nj)                                    ! I
+        real stnp(ni,nj)                                       ! I/O
 
 
         write(6,*)' Subroutine pstn_anal'

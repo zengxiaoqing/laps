@@ -46,33 +46,33 @@ cdis
 cdoc    Calculate and write out set of 2-D stability grids
 
 !       Arrays passed in
-        real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
-        real*4 heights_3d(NX_L,NY_L,NZ_L)
-        real*4 temp_sfc_k(NX_L,NY_L)
-        real*4 pres_sfc_pa(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real temp_3d(NX_L,NY_L,NZ_L)
+        real rh_3d_pct(NX_L,NY_L,NZ_L)
+        real heights_3d(NX_L,NY_L,NZ_L)
+        real temp_sfc_k(NX_L,NY_L)
+        real pres_sfc_pa(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
 !       Output
-        real*4 td_3d_k(NX_L,NY_L,NZ_L)
+        real td_3d_k(NX_L,NY_L,NZ_L)
 
 !       Local declarations for stability 
-        real*4 t_sfc_f(NX_L,NY_L)
-        real*4 td_sfc_k(NX_L,NY_L)
-        real*4 td_sfc_f(NX_L,NY_L)
+        real t_sfc_f(NX_L,NY_L)
+        real td_sfc_k(NX_L,NY_L)
+        real td_sfc_f(NX_L,NY_L)
 
-        real*4 pbe_2d(NX_L,NY_L)
-        real*4 nbe_2d(NX_L,NY_L)
-        real*4 si_2d(NX_L,NY_L)
-        real*4 tt_2d(NX_L,NY_L)
-        real*4 k_2d(NX_L,NY_L)
-        real*4 lcl_2d(NX_L,NY_L)
-        real*4 wb0_2d(NX_L,NY_L)
+        real pbe_2d(NX_L,NY_L)
+        real nbe_2d(NX_L,NY_L)
+        real si_2d(NX_L,NY_L)
+        real tt_2d(NX_L,NY_L)
+        real k_2d(NX_L,NY_L)
+        real lcl_2d(NX_L,NY_L)
+        real wb0_2d(NX_L,NY_L)
 
-        real*4 li(NX_L,NY_L)
+        real li(NX_L,NY_L)
 
-        real*4 pres_sfc_mb(NX_L,NY_L)
-        real*4 pres_3d(NX_L,NY_L,NZ_L)
+        real pres_sfc_mb(NX_L,NY_L)
+        real pres_3d(NX_L,NY_L,NZ_L)
 
         integer nfields
         parameter (nfields=8)
@@ -80,7 +80,7 @@ cdoc    Calculate and write out set of 2-D stability grids
         character*10 units_2d_a(nfields)
         character*125 comment_2d_a(nfields)
         character*3 var_2d_a(nfields)
-        real*4 out_multi_2d(NX_L,NY_L,nfields)
+        real out_multi_2d(NX_L,NY_L,nfields)
 
         character*31 EXT
 
@@ -88,7 +88,7 @@ cdoc    Calculate and write out set of 2-D stability grids
         character*10  units_2d
         character*125 comment_2d
 
-        real*4 k_to_f
+        real k_to_f
 
 !       Read in surface dewpoint data
         var_2d = 'TD'
@@ -233,27 +233,27 @@ cdoc    Calculate and write out set of 2-D stability grids
 cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
 !                                                                    i.e. sfc
 
-        real*4 t_sfc_k(ni,nj)
-        real*4 td_sfc_k(ni,nj)
-        real*4 p_sfc_pa(ni,nj)
-        real*4 topo(ni,nj)
-        real*4 t_3d_k(ni,nj,nk)
-        real*4 td_3d_k(ni,nj,nk)
-        real*4 ht_3d_m(ni,nj,nk)
-        real*4 p_1d_pa(nk)
-        real*4 p_1d_mb(nk)                   ! Local
-        real*4 pres_3d(ni,nj,nk)             ! Local
-        real*4 pbe_2d(ni,nj)
-        real*4 nbe_2d(ni,nj)
+        real t_sfc_k(ni,nj)
+        real td_sfc_k(ni,nj)
+        real p_sfc_pa(ni,nj)
+        real topo(ni,nj)
+        real t_3d_k(ni,nj,nk)
+        real td_3d_k(ni,nj,nk)
+        real ht_3d_m(ni,nj,nk)
+        real p_1d_pa(nk)
+        real p_1d_mb(nk)                   ! Local
+        real pres_3d(ni,nj,nk)             ! Local
+        real pbe_2d(ni,nj)
+        real nbe_2d(ni,nj)
 
-        real*4 si_2d(ni,nj)
-        real*4 tt_2d(ni,nj)
-        real*4 k_2d(ni,nj)
-        real*4 lcl_2d(ni,nj)
-        real*4 wb0_2d(ni,nj)
+        real si_2d(ni,nj)
+        real tt_2d(ni,nj)
+        real k_2d(ni,nj)
+        real lcl_2d(ni,nj)
+        real wb0_2d(ni,nj)
         
         include 'lapsparms.for'
-        integer*4 MXL
+        integer MXL
         parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
@@ -445,7 +445,7 @@ cdoc    Calculate a variety of stability indices from an input sounding
 !       Note that a surface parcel is currently used for the indices
 
         include 'lapsparms.for'
-        integer*4 MXL
+        integer MXL
         parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         DIMENSION Q(MXL),W(MXL),WB(MXL)
@@ -695,7 +695,7 @@ cdoc    Calculate a PBE/LCL related indices from an input sounding
 !       Steve Albers 1991
 
         include 'lapsparms.for'
-        integer*4 MXL
+        integer MXL
         parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
@@ -704,7 +704,7 @@ cdoc    Calculate a PBE/LCL related indices from an input sounding
      #              ,DD85,FF85,DD50,FF50
         REAL LCL,nbe_min
         DIMENSION Q(MXL),DELTAH(MXL)
-        real*4 GAMMA
+        real GAMMA
         parameter (GAMMA = .009760) ! Dry Adiabatic Lapse Rate Deg/m
         DATA G/9.80665/
 
@@ -955,7 +955,7 @@ cdoc    Calculate boundary layer mean values from an input sounding
 !       Steve Albers 1991
 
         include 'lapsparms.for'
-        integer*4 MXL
+        integer MXL
         parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         REAL INTLOG
@@ -1104,7 +1104,7 @@ cdoc    Interpolate any parameter from a pressure sounding to a specific pres
 !       Steve Albers 1991
 
         include 'lapsparms.for'
-        integer*4 MXL
+        integer MXL
         parameter (MXL=MAX_LVLS+1) ! number of 3D levels plus the sfc level
 
         DIMENSION P(MXL),PARAM(MXL)
@@ -1262,7 +1262,7 @@ C
 
 cdoc   COMPUTES THE DRY AIR POTENTIAL TEMPERATURE
 
-       real*4 AK
+       real AK
        parameter (AK=.28613105)
 
        AKS=AK * (1.0+1.608*W)/(1.0 + 1.941569*W)
@@ -1351,30 +1351,30 @@ cdoc    Quick way to get Theta(e) using lookup table
 
         character*31 ext
         character*150 directory
-        integer*4 len_dir
+        integer len_dir
 
-        integer*4 pres2_low,pres2_high,pres2_interval,n_pres2
+        integer pres2_low,pres2_high,pres2_interval,n_pres2
         parameter (pres2_low = 500)
         parameter (pres2_high = 1100)
         parameter (pres2_interval = 10)
 
         parameter (n_pres2 = (pres2_high - pres2_low) / pres2_interval)
 
-        integer*4 t_low,t_high,t_interval,n_t
+        integer t_low,t_high,t_interval,n_t
         parameter (t_low  = -60)
         parameter (t_high = +60)
         parameter (t_interval = 2)
 
         parameter (n_t = (t_high - t_low) / t_interval)
 
-        integer*4 tdprs_low,tdprs_high,tdprs_interval,n_tdprs
+        integer tdprs_low,tdprs_high,tdprs_interval,n_tdprs
         parameter (tdprs_low  = 0)
         parameter (tdprs_high = +30)
         parameter (tdprs_interval = 1)
 
         parameter (n_tdprs = (tdprs_high - tdprs_low) / tdprs_interval)
 
-        real*4 thetae_lut(0:n_t,0:n_tdprs,0:n_pres2)
+        real thetae_lut(0:n_t,0:n_tdprs,0:n_pres2)
 
         save init,thetae_lut
         data init/0/
@@ -1486,9 +1486,9 @@ cdoc    This uses a lookup table
 
         character*31 ext
         character*150 directory
-        integer*4 len_dir
+        integer len_dir
 
-        integer*4 thetae_low,thetae_high,thetae_interval,n_thetae
+        integer thetae_low,thetae_high,thetae_interval,n_thetae
         parameter (thetae_low  = 210)
         parameter (thetae_high = 410)
         parameter (thetae_interval = 1)
@@ -1496,14 +1496,14 @@ cdoc    This uses a lookup table
         parameter (n_thetae = (thetae_high - thetae_low) / thetae_interv
      1al)
 
-        integer*4 pres_low,pres_high,pres_interval,n_pres
+        integer pres_low,pres_high,pres_interval,n_pres
         parameter (pres_low = 50)
         parameter (pres_high = 1100)
         parameter (pres_interval = 5)
 
         parameter (n_pres = (pres_high - pres_low) / pres_interval)
 
-        real*4 t_moist(0:n_thetae,0:n_pres)
+        real t_moist(0:n_thetae,0:n_pres)
 
         save init,t_moist
         data init/0/
@@ -1643,12 +1643,12 @@ cdoc   Compute 2-D grid of LI, given a grid of parcels to launch
 
 !      1991     Steve Albers
 
-       real*4 tc(imax,jmax) ! Input T  in deg F
-       real*4 td(imax,jmax) ! Input Td in deg F
-       real*4 pr(imax,jmax) ! Input Pr in MB
-       real*4 li(imax,jmax) ! Output Li in Deg K/C
+       real tc(imax,jmax) ! Input T  in deg F
+       real td(imax,jmax) ! Input Td in deg F
+       real pr(imax,jmax) ! Input Pr in MB
+       real li(imax,jmax) ! Output Li in Deg K/C
 
-       real*4 t500laps(imax,jmax) ! Used Locally Only
+       real t500laps(imax,jmax) ! Used Locally Only
 
        character*13 filename13
 
@@ -2017,10 +2017,10 @@ cdoc    Calculate Wet Bulb, using a fast approximate method
 
 !       This routine is fast but only accurate near 0 degrees C (273K)
 
-        real*4 t_k(ni,nj)     ! Input
-        real*4 td_k(ni,nj)    ! Input
-        real*4 p_pa(ni,nj)    ! Input
-        real*4 tw_k(ni,nj)    ! Output
+        real t_k(ni,nj)     ! Input
+        real td_k(ni,nj)    ! Input
+        real p_pa(ni,nj)    ! Input
+        real tw_k(ni,nj)    ! Output
 
         const = alog(0.5)
 
@@ -2058,10 +2058,10 @@ cdoc    Calculate 2-D grid of Wet Bulb, using 'tw_fast'
 !       Steve Albers 1991
 !       WARNING: This routine may not work because it calls tw_fast
 
-        real*4 t_k(ni,nj)     ! Input
-        real*4 td_k(ni,nj)    ! Input
-        real*4 p_pa(ni,nj)    ! Input
-        real*4 tw_k(ni,nj)    ! Output
+        real t_k(ni,nj)     ! Input
+        real td_k(ni,nj)    ! Input
+        real p_pa(ni,nj)    ! Input
+        real tw_k(ni,nj)    ! Output
 
         do j = 1,nj
         do i = 1,ni
@@ -2080,10 +2080,10 @@ cdoc    Calculate 2-D grid of Wet Bulb, using 'tw'
 
 !       Steve Albers 1991
 
-        real*4 t_k(ni,nj)     ! Input
-        real*4 td_k(ni,nj)    ! Input
-        real*4 p_pa(ni,nj)    ! Input
-        real*4 tw_k(ni,nj)    ! Output
+        real t_k(ni,nj)     ! Input
+        real td_k(ni,nj)    ! Input
+        real p_pa(ni,nj)    ! Input
+        real tw_k(ni,nj)    ! Output
 
         do j = 1,nj
         do i = 1,ni

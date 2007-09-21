@@ -33,9 +33,9 @@ cdis
 
 !       Steve Albers            1990
 
-      real*4 atan3
+      real atan3
 
-      real*4 pi,pi2
+      real pi,pi2
       parameter (pi = 3.141592653589)
       parameter (pi2 = 2. * pi)
 

@@ -57,43 +57,43 @@ c                          from 35 dbz.
 
 C INCLUDES AND DECLARATION OF VAR PASSED IN  ===========================
 
-        integer*4 mxs
+        integer mxs
         parameter(mxs=75)
 
-	integer*4 ni, nj, nz, istatus
+	integer ni, nj, nz, istatus
 
-        real*4 lat(ni,nj), lon(ni,nj),xlaps(ni,nj),ylaps(ni,nj),
+        real lat(ni,nj), lon(ni,nj),xlaps(ni,nj),ylaps(ni,nj),
      1       xradar(ni,nj),yradar(ni,nj)
 
-        real*4 grid_ra_vel(ni,nj,nz),grid_ra_ref(ni,nj,nz),
+        real grid_ra_vel(ni,nj,nz),grid_ra_ref(ni,nj,nz),
      1       max2d_ref(ni,nj),max2d_refprv(ni,nj)
 
-        integer*4 i4time_latest
+        integer i4time_latest
 
-        real*4 stdlat
-        real*4 stdlon
+        real stdlat
+        real stdlon
 
-        real*4 umean(ni,nj)     ! u_2d = previous, umean=current.
-        real*4 vmean(ni,nj)     ! v"        "      v"      "
+        real umean(ni,nj)     ! u_2d = previous, umean=current.
+        real vmean(ni,nj)     ! v"        "      v"      "
 
-        real*4 storm_u(mxs),storm_v(mxs)
-        integer*4 istorm(mxs),jstorm(mxs),nstorm
+        real storm_u(mxs),storm_v(mxs)
+        integer istorm(mxs),jstorm(mxs),nstorm
 
 C LOCAL VARIABLE DECLARATIONS *ALL COMMENTED OUT FOR NOW* ==============
 
 c       include 'segparms.for'
 
-c       integer*4 maxseg,maxsegc
+c       integer maxseg,maxsegc
 c       parameter(maxseg = 1000, maxsegc = 75)
 
-c       integer*4       ss_normal,rtsys_bad_prod,rtsys_no_data,rtsys_abo
+c       integer       ss_normal,rtsys_bad_prod,rtsys_no_data,rtsys_abo
 c    1rt_prod
 c       parameter      (ss_normal        =1, ! success
 c    1          rtsys_bad_prod   =2, ! inappropriate data, insufficient data
 c    1          rtsys_no_data    =3, ! no data
 c    1          rtsys_abort_prod =4) ! failed to make a prod
 
-c       integer*4 j_status(20),iprod_number(20),i4time_array(20),
+c       integer j_status(20),iprod_number(20),i4time_array(20),
 c    1            prod_array(10),prod_number
 
 c       character atime*24, filename*9, yesno*1,no_data_type*13,
@@ -104,7 +104,7 @@ c    &            jdaytimes*7
 
 c       character*1 ichar_new(mxs)
 
-c       real*4 ref_max_seg(mxs,maxsegc),refbox_xmin(mxs),refbox_xmax(mxs
+c       real ref_max_seg(mxs,maxsegc),refbox_xmin(mxs),refbox_xmax(mxs
 c    1),
 c    1       refbox_ymin(mxs),refbox_ymax(mxs),refreg_max(mxs),
 c    1       ref_tot_area(mxs),refreg_xcent(mxs),refreg_ycent(mxs),
@@ -124,7 +124,7 @@ c    1       storm_dir(mxs),refeq_flag(mxs),refsegeq_flag(mxs),
 c    1       ref_change(mxs),
 c    1       dist_from(mxs)
 
-c       real*4
+c       real
 c    1       xstart_prv(mxs,maxsegc),xend_prv(mxs,maxsegc),
 c    1       ystart_prv(mxs,maxsegc),yend_prv(mxs,maxsegc),
 c    1              ref_change_prv(mxs),
@@ -143,7 +143,7 @@ c    1              storm_speed_prv(mxs),
 c    1              storm_dir_prv(mxs)
 
 
-c       integer*4  ir_cluster_name(maxseg),ir_seg_number(mxs),
+c       integer  ir_cluster_name(maxseg),ir_seg_number(mxs),
 c    1           i_merge_flag(mxs),i_valid_rclust(mxs),num_valid_rclust,
 c    1           i_seg_num(mxs),i_seg_num_prv(mxs),jgrid(maxseg),
 c    1           igrid_start(maxseg),istorm_id_prv(mxs),
@@ -157,9 +157,9 @@ c       logical available(maxseg),l_low_fill,l_high_fill
 
 c.....  Stuff for LAPS Surface file (standard).
 c
-c       real*4 sigecho_flag
+c       real sigecho_flag
 
-c       integer*4 i4time,imax,jmax,i4time_radar,
+c       integer i4time,imax,jmax,i4time_radar,
 c    1          i4time_wind_prv
 
 c       character time*35,cm_filename*34,ca_filespec*255
@@ -187,21 +187,21 @@ c       data wm_ext /'lwm'/
 c
 c  dimensions for derived laps surface variables
 c
-c       real*4 ref_thresh,thresh_ovlp,thresh_range
+c       real ref_thresh,thresh_ovlp,thresh_range
 c       data ref_thresh/30.0/,thresh_ovlp/-1.0E-3/,thresh_range/40.0/
 
-c       integer*4 thresh_run
+c       integer thresh_run
 c       data thresh_run/1/
 
-c       real*4 re
+c       real re
 c       data re /6371.2293/         !radius of earth
 
-c       real*4 dtr
+c       real dtr
 c       data dtr /0.01745329/       !degrees to radians
 
-c       real*4 r(4),
+c       real r(4),
 
-c       integer*4 i4time_tol,i4time_hour,
+c       integer i4time_tol,i4time_hour,
 c    1          i4time_get,sys$trnlog,lenfil,ISTATUS,
 c    1          itimes
 

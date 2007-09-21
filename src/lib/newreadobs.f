@@ -90,10 +90,10 @@ c       3.  INFILE is now passed in, complete and ready for the open statement.
 c
 c*******************************************************************************
 c
-        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
-        real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
-        real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns), ffg_s(maxst
+        real lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
+        real cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
+        real t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
+        real dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns), ffg_s(maxst
      1ns)
 c
         character stations(maxstns)*3, wx_s(maxstns)*8

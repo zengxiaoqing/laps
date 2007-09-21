@@ -52,14 +52,14 @@ cdis
 !                                  if file is before i4time = 969476400
         character*31 ext ! Input   File extension (normally 'LC3')
 !       byte b_cldcv(imax,jmax,kcloudin)    ! Output   Clouds in bytes
-        real*4 clouds_3d(IMAX,JMAX,KCLOUDIN)! Output 3D Array of Cloud Cover (0-1.2)
-        real*4 cld_pres(KCLOUDIN) ! Output Pressures of the vertical grid (Approx)
+        real clouds_3d(IMAX,JMAX,KCLOUDIN)! Output 3D Array of Cloud Cover (0-1.2)
+        real cld_pres(KCLOUDIN) ! Output Pressures of the vertical grid (Approx)
                                   ! In PASCALS
 
         include 'laps_cloud.inc'
 
 !       These two arrays deal with old cloud data files only
-        real*4 cld_hts_old(KCLOUD)
+        real cld_hts_old(KCLOUD)
 
         data cld_hts_old/1200.,1300.,1400.,1500.,1600.,1700.,1800.,
      11900.,2000.,2200.,2400.,2500.,2600.,2800.,3000.,3200.,
@@ -68,7 +68,7 @@ cdis
      413000.,14000.,15000.,16000.,17000.,18000.,19000.,20000./
 
 
-        real*4 cld_hts_new(KCLOUD)
+        real cld_hts_new(KCLOUD)
 
         data cld_hts_new/1200.,1300.,1400.,1500.,1600.,1700.,1800.,
      11900.,2000.,2100.,2200.,2400.,2600.,2800.,3000.,3200.,
@@ -87,7 +87,7 @@ cdis
         character*3 var_3d(KCLOUD),var_2d
         data var_2d/'LC3'/
 
-        integer*4 LVL_3d(KCLOUD)
+        integer LVL_3d(KCLOUD)
         character*4 LVL_COORD_3d(KCLOUD)
 
         logical l_packed_data
@@ -219,16 +219,16 @@ cdis
      1  ,kcloud,clouds_3d_pres,clouds_3d_height ! ,b_cldcv
      1  ,cld_hts,cld_pres_1d,cld_pres_3d,istatus)
 
-        integer*4 i4time_needed                      ! Input
-        integer*4 imax,jmax,kmax                     ! Input (LAPS Dims)
-        integer*4 kcloud                             ! Input (normally 42)
-        real*4 clouds_3d_pres(imax,jmax,kmax)        ! Output
-        real*4 clouds_3d_height(imax,jmax,kcloud)    ! Local Dummy Array
+        integer i4time_needed                      ! Input
+        integer imax,jmax,kmax                     ! Input (LAPS Dims)
+        integer kcloud                             ! Input (normally 42)
+        real clouds_3d_pres(imax,jmax,kmax)        ! Output
+        real clouds_3d_height(imax,jmax,kcloud)    ! Local Dummy Array
 !       byte   b_cldcv(imax,jmax,kcloud)             ! Local Dummy Array
-        real*4 cld_hts(kcloud)                       ! Local Dummy Array
-        real*4 cld_pres_1d(kcloud)                   ! Local Dummy Array
-        real*4 cld_pres_3d(imax,jmax,kcloud)         ! Local Dummy Array
-        integer*4 istatus                            ! Output
+        real cld_hts(kcloud)                       ! Local Dummy Array
+        real cld_pres_1d(kcloud)                   ! Local Dummy Array
+        real cld_pres_3d(imax,jmax,kcloud)         ! Local Dummy Array
+        integer istatus                            ! Output
 
         character*31 ext
 
@@ -264,12 +264,12 @@ cdis
         subroutine interp_height_pres(imax,jmax,kmax,kcloud
      1  ,clouds_3d_pres,clouds_3d_height,cld_pres_3d,istatus)
 
-        integer*4 imax,jmax,kmax                     ! Input (LAPS Dims)
-        integer*4 kcloud                             ! Input (normally 42)
-        real*4 clouds_3d_pres(imax,jmax,kmax)        ! Output
-        real*4 clouds_3d_height(imax,jmax,kcloud)    ! Input
-        real*4 cld_pres_3d(imax,jmax,kcloud)         ! Input
-        integer*4 istatus                            ! Output
+        integer imax,jmax,kmax                     ! Input (LAPS Dims)
+        integer kcloud                             ! Input (normally 42)
+        real clouds_3d_pres(imax,jmax,kmax)        ! Output
+        real clouds_3d_height(imax,jmax,kcloud)    ! Input
+        real cld_pres_3d(imax,jmax,kcloud)         ! Input
+        integer istatus                            ! Output
 
 !       Interpolate from height grid to pressure grid (Generating inputs can
 !       lead to slowness or inaccuracies)
@@ -322,13 +322,13 @@ cdis
         subroutine interp_height_pres_fast(imax,jmax,kmax,kcloud
      1  ,clouds_3d_pres,clouds_3d_height,heights_3d,cld_hts,istatus)
 
-        integer*4 imax,jmax,kmax                     ! Input (LAPS Dims)
-        integer*4 kcloud                             ! Input (normally 42)
-        real*4 clouds_3d_pres(imax,jmax,kmax)        ! Output
-        real*4 clouds_3d_height(imax,jmax,kcloud)    ! Input
-        real*4 heights_3d(imax,jmax,kmax)            ! Input
-        real*4 cld_hts (kcloud)
-        integer*4 istatus                            ! Output
+        integer imax,jmax,kmax                     ! Input (LAPS Dims)
+        integer kcloud                             ! Input (normally 42)
+        real clouds_3d_pres(imax,jmax,kmax)        ! Output
+        real clouds_3d_height(imax,jmax,kcloud)    ! Input
+        real heights_3d(imax,jmax,kmax)            ! Input
+        real cld_hts (kcloud)
+        integer istatus                            ! Output
 
 !       Interpolate from height grid to pressure grid (This is fast and
 !       accurate when heights are supplied)

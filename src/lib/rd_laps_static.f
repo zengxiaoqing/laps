@@ -15,7 +15,7 @@ C Passed in variables
       character*(*)  var(n_grids)
       character*(*)  units(n_grids)
       character*(*)  comment(n_grids)
-      real*4         data(imax,jmax,n_grids), grid_spacing
+      real         data(imax,jmax,n_grids), grid_spacing
       integer        status
 
 C Local variables
@@ -125,11 +125,11 @@ C**********************************************************************
 
       IMPLICIT  NONE
 
-      integer*4 end_dir, end_dom,
+      integer end_dir, end_dom,
      1          ERROR(2),
      1          status
 
-      integer*4 f_len
+      integer f_len
 
       character       dir*(*)       !Directory to read data from
       character       laps_dom_file*(*)

@@ -48,32 +48,32 @@ cdis
 !       For each horizontal gridpoint, the 'pres_sfc_pa' at the lowest level 
 !       must be greater than or equal to the reference (surface) pressure.
 
-        real*4 esat_lut(-120:+100)
+        real esat_lut(-120:+100)
 
-        real*4 temp_3d_k(ni,nj,nk)
-        real*4 pres_sfc_pa(ni,nj)
-        real*4 topo(ni,nj)
-        real*4 heights_3d(ni,nj,nk)
-        real*4 sh_3d(ni,nj,nk)
+        real temp_3d_k(ni,nj,nk)
+        real pres_sfc_pa(ni,nj)
+        real topo(ni,nj)
+        real heights_3d(ni,nj,nk)
+        real sh_3d(ni,nj,nk)
 
-        real*4 heights_below(ni,nj)
-        real*4 a_below(ni,nj)
-        real*4 pres_sfc_mb(ni,nj)
-        real*4 z_correction(ni,nj)
+        real heights_below(ni,nj)
+        real a_below(ni,nj)
+        real pres_sfc_mb(ni,nj)
+        real z_correction(ni,nj)
 
-        real*4 pres_3d(ni,nj,nk)                    
+        real pres_3d(ni,nj,nk)                    
 
-        real*4 pres_3d_mb(ni,nj,nk)               ! Local
-        real*4 p_1d_mb(nk)                        ! Local
-        real*4 alog_array(ni,nj,nk)               ! Local
+        real pres_3d_mb(ni,nj,nk)               ! Local
+        real p_1d_mb(nk)                        ! Local
+        real alog_array(ni,nj,nk)               ! Local
 
-        real*4 make_td, k_to_c
+        real make_td, k_to_c
 
         include 'constants.inc'
-        real*4 C1
+        real C1
         PARAMETER (C1 = EP_1) 
 
-        real*4 C2
+        real C2
         PARAMETER (C2 = r_d / (2. * grav) )
 
 cdoc    Generate heights of grid points using laps data and hydrostatic equation
@@ -257,10 +257,10 @@ C                     (287 KG/JOULE/DEG K) AND G IS THE ACCELERATION
 C                     DUE TO THE EARTH'S GRAVITY (9.8 M/S**2). THE
 C                     FACTOR OF 2 IS USED IN AVERAGING TWO VIRTUAL
 C                     TEMPERATURES.
-        real*4 esat_lut(-120:+100)
+        real esat_lut(-120:+100)
 
         include 'constants.inc' 
-        real*4 C1,C2
+        real C1,C2
         PARAMETER (C1 = .001 * EP_1)
         PARAMETER (C2 = r_d / (2. * grav) )
 
@@ -308,10 +308,10 @@ cdoc    Output W_laps is dimensionless mixing ratio
 !       This function really only works when T > -50C but the efficiency will
 !       outweigh the error when T < -50C in this application
 
-        real*4 esat_lut(-120:+100)
+        real esat_lut(-120:+100)
 
         include 'constants.inc'
-        real*4 C1,C2,const
+        real C1,C2,const
         PARAMETER (C1 = .001 * EP_1)
         PARAMETER (C2 = r_d / (2. * grav) )
 

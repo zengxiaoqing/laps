@@ -30,10 +30,10 @@ C***Parameter and variables list
 c
         Implicit None
 
-        Real*4          cld_cnts,cld_albedo,frac,term1,term2
-        Real*4          cloud_frac_vis
-        Real*4          albedo_to_cloudfrac,cloudfrac_to_albedo
-        Real*4          rlnd_cnts,rlnd_albedo
+        Real          cld_cnts,cld_albedo,frac,term1,term2
+        Real          cloud_frac_vis
+        Real          albedo_to_cloudfrac,cloudfrac_to_albedo
+        Real          rlnd_cnts,rlnd_albedo
         parameter       (cld_cnts=220.,
      &                   rlnd_cnts=68.,
      &                   cld_albedo=0.85,
@@ -42,23 +42,23 @@ c
         Integer         imax,jmax
         Integer         i4time
 
-        Real*4          r_norm_vis_cnts_in(imax,jmax)
-        Real*4          lat(imax,jmax)
-        Real*4          lon(imax,jmax)
-        Real*4          phase_angle_d(imax,jmax)
-        Real*4          specular_ref_angle_d(imax,jmax)
-        Real*4          rland_frac(imax,jmax)
-        Real*4          solar_alt_d
-        Real*4          albedo
-        Real*4          albedo_out(imax,jmax)
-        Real*4          albedo_min,albedo_max
-        Real*4          r_missing_data
-        Real*4          jline, iline, jdiff, idiff
-        Real*4          Emission_angle_d(imax,jmax)
+        Real          r_norm_vis_cnts_in(imax,jmax)
+        Real          lat(imax,jmax)
+        Real          lon(imax,jmax)
+        Real          phase_angle_d(imax,jmax)
+        Real          specular_ref_angle_d(imax,jmax)
+        Real          rland_frac(imax,jmax)
+        Real          solar_alt_d
+        Real          albedo
+        Real          albedo_out(imax,jmax)
+        Real          albedo_min,albedo_max
+        Real          r_missing_data
+        Real          jline, iline, jdiff, idiff
+        Real          Emission_angle_d(imax,jmax)
         Integer         istatus, n_missing_albedo
         Integer         i,j
 
-        Real*4 arg
+        Real arg
         Character*(*)   csatid
 c
 c     ------------------------- BEGIN ---------------------------------
@@ -179,7 +179,7 @@ C-------------------------------------------------------------------------------
 
         Implicit        None
 
-        Real*4          A,B,IL,IH,JL,JH,rarg
+        Real          A,B,IL,IH,JL,JH,rarg
 
         a = (jh - jl) / (ih - il)
         b =  jl - il * a

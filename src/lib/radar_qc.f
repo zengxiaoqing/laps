@@ -34,7 +34,7 @@ cdis
 
         common /laps_diag/ no_laps_diag
 
-        real*4 ref_3d(ni,nj,nk)
+        real ref_3d(ni,nj,nk)
 
         logical l_qc
 

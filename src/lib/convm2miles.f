@@ -35,7 +35,7 @@ c
 c
 c.....  Routine to convert an array from meters to miles.
 c
-        real*4 m(imax,jmax), miles(imax,jmax)
+        real m(imax,jmax), miles(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax

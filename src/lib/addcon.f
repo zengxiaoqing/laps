@@ -36,7 +36,7 @@ c
 cdoc    Routine to add the constant 'con' to array 'a' and put the
 cdoc    result into array 'result'.
 c
-        real*4 a(imax,jmax), result(imax,jmax)
+        real a(imax,jmax), result(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax
@@ -53,7 +53,7 @@ c
 cdoc    Routine to add the constant 'con' to array 'a' and put the
 cdoc    result into array 'result'. This takes account of 'r_missing_data'.
 c
-        real*4 a(imax,jmax), result(imax,jmax)
+        real a(imax,jmax), result(imax,jmax)
 c
         call get_r_missing_data(r_missing_data,istatus)
 

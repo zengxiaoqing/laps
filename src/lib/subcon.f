@@ -36,7 +36,7 @@ c
 c.....  Routine to subtract the constant 'con' from array 'a' and put the
 c.....  result into array 'result' .
 c
-        real*4 a(imax,jmax), result(imax,jmax)
+        real a(imax,jmax), result(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax

@@ -42,15 +42,15 @@ cdis
         character var*3,comment*125,ext*31,units*10
 
 
-        integer*4 imax,jmax         ! input
-        integer*4 i4time            ! input
-        integer*4 laps_cycle_time   ! input
-        real*4 lat(imax,jmax)       ! input
-        real*4 lon(imax,jmax)       ! input
-        real*4 r_missing_data       ! input
-        real*4 t_sfc_k(imax,jmax)   ! input
-        real*4 t_gnd_k(imax,jmax)   ! output
-        real*4 cvr_snow(imax,jmax)  ! local
+        integer imax,jmax         ! input
+        integer i4time            ! input
+        integer laps_cycle_time   ! input
+        real lat(imax,jmax)       ! input
+        real lon(imax,jmax)       ! input
+        real r_missing_data       ! input
+        real t_sfc_k(imax,jmax)   ! input
+        real t_gnd_k(imax,jmax)   ! output
+        real cvr_snow(imax,jmax)  ! local
 
         var = 'SC'
         ext = 'lm2'
@@ -92,7 +92,7 @@ cdis
         function t_ground_k(t_sfc_k,solar_alt,solar_ha
      1    ,solar_dec,rlat,cvr_snow,r_missing_data,i,j,ni,nj)
 
-        real*4 high_alt,low_alt,corr_low,corr_high,corr_ramp
+        real high_alt,low_alt,corr_low,corr_high,corr_ramp
 
         solar_transit_alt = 90. - abs(rlat - solar_dec)
 

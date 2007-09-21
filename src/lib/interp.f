@@ -42,7 +42,7 @@ c                   vi   <-----computed value (output)
 
         implicit none
 
-        real*4 li,l1,l2,v1,v2,output, range
+        real li,l1,l2,v1,v2,output, range
         
         range = l2-l1
         if (abs(range/li) .le.  1.0e-4) then

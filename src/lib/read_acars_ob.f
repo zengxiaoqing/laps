@@ -2,9 +2,9 @@
         subroutine read_acars_ob(lun,c_obtype,xlat,xlon,elev,arg1,arg2       
      1                                   ,asc9_tim_pirep,iwrite,l_eof)       
 
-        real*4 elev ! meters
-        real*4 dd   ! degrees (99999. is missing)
-        real*4 ff   ! meters/sec (99999. is missing)
+        real elev ! meters
+        real dd   ! degrees (99999. is missing)
+        real ff   ! meters/sec (99999. is missing)
 
         character*9 asc9_tim_pirep,asc9_tim_rcvd
         character*80 string
@@ -12,7 +12,7 @@
 
         logical l_eof
 
-        integer*4 icount
+        integer icount
         data icount /0/
         save icount
 

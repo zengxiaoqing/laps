@@ -40,32 +40,32 @@ cdis
 !       1996 Feb     Steve Albers  Call read_radar_2dref for radar data
 
 !       Input
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
-        real*4 heights_3d(imax,jmax,kmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
+        real heights_3d(imax,jmax,kmax)
 
 !       Output
-        real*4 radar_max(imax,jmax) ! M
+        real radar_max(imax,jmax) ! M
 
-        real*4 dbz_2d(imax,jmax)
+        real dbz_2d(imax,jmax)
 
         character*9 asc_tim_9,asc_tim_9_beg,asc_tim_9_end
-        integer*4 i4time_file(MAX_RADAR_FILES)
-        real*4 frac(MAX_RADAR_FILES)
+        integer i4time_file(MAX_RADAR_FILES)
+        real frac(MAX_RADAR_FILES)
         character c_fnames(MAX_RADAR_FILES)*80
 
         character*255 c255_radar_filename
         character*255 c_filespec
 
-        real*4 grid_ra_ref(imax,jmax,kmax)
+        real grid_ra_ref(imax,jmax,kmax)
 
         character*3 ext_radar
         character*150  directory
 
         character*4 radar_name
 
-        integer*4 max_radar_gap
+        integer max_radar_gap
         parameter (max_radar_gap = 4800)
 
         data mode_radar/1/
@@ -204,11 +204,11 @@ c         write(6,*)' Cycle to next file',rmax_so_far
      1          ,MAX_RADAR_FILES
      1          ,i_nbr_files_ret,i4time_file,frac,frac_sum,istatus)
 
-        integer*4 MAX_RADAR_FILES
+        integer MAX_RADAR_FILES
 
         character*9 asc_tim_9
-        real*4 frac(MAX_RADAR_FILES)
-        integer*4 i4time_file(MAX_RADAR_FILES)
+        real frac(MAX_RADAR_FILES)
+        integer i4time_file(MAX_RADAR_FILES)
 
         i4_interval = i4time_end - i4time_beg
 

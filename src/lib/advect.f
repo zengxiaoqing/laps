@@ -35,16 +35,16 @@ cdis
 
 !       1992                            Steve Albers
 
-        integer*4 imax,jmax            ! Input Array dimensions
-        real*4 u(imax,jmax),v(imax,jmax) ! Input Wind field (WRT True North)
-        real*4 lon(imax,jmax)          ! Input Longitude field
-        real*4 array_in(imax,jmax)     ! Input Field to be advected
-        real*4 array_out(imax,jmax)    ! Output Field to be advected
+        integer imax,jmax            ! Input Array dimensions
+        real u(imax,jmax),v(imax,jmax) ! Input Wind field (WRT True North)
+        real lon(imax,jmax)          ! Input Longitude field
+        real array_in(imax,jmax)     ! Input Field to be advected
+        real array_out(imax,jmax)    ! Output Field to be advected
 
-        real*4 array_buf(imax,jmax)    ! Dummy Array
+        real array_buf(imax,jmax)    ! Dummy Array
 
-        real*4 time                    ! Input Seconds for advection
-        real*4 frac                    ! Input scaling factor (normally 1.0)
+        real time                    ! Input Seconds for advection
+        real frac                    ! Input scaling factor (normally 1.0)
 
         write(6,*)' Calculating advected field Sec/Ratio:',time,frac
 
@@ -147,12 +147,12 @@ c               write(6,*)' Upgrade',array_buf(i,j),array_out(i,j)
 
         subroutine cpt_advection(field,u,v,dx,dy,ni,nj,advection)
 
-        real*4 field(ni,nj)
-        real*4 u(ni,nj)
-        real*4 v(ni,nj)
-        real*4 dx(ni,nj)
-        real*4 dy(ni,nj)
-        real*4 advection(ni,nj)
+        real field(ni,nj)
+        real u(ni,nj)
+        real v(ni,nj)
+        real dx(ni,nj)
+        real dy(ni,nj)
+        real advection(ni,nj)
 
 	do j=2,nj-1
 	do i=2,ni-1

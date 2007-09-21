@@ -39,7 +39,7 @@ C
 
         implicit        none
 
-        integer*4       i4time_asc_gg,  ! this function
+        integer       i4time_asc_gg,  ! this function
      1          i4time_int_lp,  ! function call
      1          istatus,        ! argument (exported)
      1          year,

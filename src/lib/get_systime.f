@@ -1,13 +1,13 @@
       subroutine get_systime(i4time_sys,a9_time,istatus)
 
-      integer*4 i4time_sys
+      integer i4time_sys
       character*9 a9_time,a9_time_save
       integer *4 istatus
 
       character*100 dir
       integer *4 length
 
-      integer*4 init,i4time_sys_save
+      integer init,i4time_sys_save
       data init/0/
       save init,i4time_sys_save,a9_time_save
 
@@ -53,11 +53,11 @@ C&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
       subroutine get_systime_i4(i4time_sys,istatus)
 
-      integer*4 i4time_sys
-      integer*4 istatus
+      integer i4time_sys
+      integer istatus
 
       character*100 dir
-      integer*4 length
+      integer length
 
       call get_directory('time',dir,length)
 
@@ -78,17 +78,17 @@ C&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
       subroutine get_systime_all(i4time_sys,a9_time,analysis_hr,
      1             analysis_min,asctim_str,yr_jday,istatus)
 
-      integer*4 i4time_sys
+      integer i4time_sys
       character*9 a9_time
       character*(*) analysis_hr, analysis_min
       character*(*) asctim_str
       character*(*) yr_jday
-      integer*4 istatus
+      integer istatus
 
       character*30 asc_str
       character*10 yjd_str
       character*100 dir
-      integer*4 length, loc_len, loc_asc_len, found, i
+      integer length, loc_len, loc_asc_len, found, i
 
       call get_directory('time',dir,length)
 

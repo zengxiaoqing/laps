@@ -42,7 +42,7 @@ cdis
 cdoc    Interpolate 2-d array to find the field value at a fractional grid
 cdoc    point.
 
-        real*4 array_2d(imax,jmax)
+        real array_2d(imax,jmax)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -95,7 +95,7 @@ cdoc    Interpolate 2-d array to find the field value at a fractional grid
 cdoc    point. This one allows you to extrapolate very slightly outside the 
 cdoc    grid.
 
-        real*4 array_2d(imax,jmax)
+        real array_2d(imax,jmax)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then

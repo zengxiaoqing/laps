@@ -38,9 +38,9 @@ cdis
 
 cdoc    Convert Omega to W
 
-        real*4 omega_to_w
+        real omega_to_w
 
-        real*4 scale_height
+        real scale_height
         parameter (scale_height = 8000.)
 
         omega_to_w = - (omega / pressure_pa) * scale_height
@@ -52,9 +52,9 @@ cdoc    Convert Omega to W
 
 cdoc    Convert W to Omega
 
-        real*4 w_to_omega
+        real w_to_omega
 
-        real*4 scale_height
+        real scale_height
         parameter (scale_height = 8000.)
 
         w_to_omega = - (w * pressure_pa) / scale_height
@@ -70,7 +70,7 @@ cdoc    Convert Lat/Lon/Elev to Radar Azimuth / Slant Range / Elevation Angle
 
         include 'trigd.inc'
 
-        implicit real*4 (a-z)
+        implicit real (a-z)
 
         if(rlat_radar .eq. 0.0)then
             write(6,*)' Warning, Radar Coords NOT Initialized'
@@ -142,9 +142,9 @@ cdoc    the value of height_to_zcoord will not have a fraction of 0.5.
 cdoc    If the pressure is midway between two LAPS levels, then the
 cdoc    value of height_to_zcoord will have a fraction of 0.5.
 
-        implicit real*4 (a-z)
+        implicit real (a-z)
 
-        integer*4 istatus
+        integer istatus
 
         logical ltest_vertical_grid
 
@@ -195,11 +195,11 @@ cdoc    the value of 'height_to_zcoord3' will not have a fraction of 0.5.
 cdoc    If the pressure is midway between two LAPS levels, then the
 cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
-        implicit real*4 (a-z)
+        implicit real (a-z)
 
         integer i,j,k,ni,nj,nk,k_ref,istatus
 
-        real*4 heights_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
 
         logical ltest_vertical_grid
 
@@ -294,12 +294,12 @@ cdoc    the value of 'height_to_zcoord3' will not have a fraction of 0.5.
 cdoc    If the pressure is midway between two LAPS levels, then the
 cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
-        implicit real*4 (a-z)
+        implicit real (a-z)
 
         integer i,j,k,ni,nj,nk,k_ref,istatus
 
-        real*4 heights_3d(ni,nj,nk)
-        real*4 zcoords_1d(nk)
+        real heights_3d(ni,nj,nk)
+        real zcoords_1d(nk)
 
         logical ltest_vertical_grid
 
@@ -384,13 +384,13 @@ cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 cdoc    Convert height to pressure, using 3-D heights and 1-D pressures as
 cdoc    a reference.
 
-        implicit real*4 (a-z)
+        implicit real (a-z)
         integer i,j,k,ni,nj,nk
 
         logical ltest_vertical_grid
 
-        real*4 heights_3d(ni,nj,nk)
-        real*4 pressures_1d(nk)
+        real heights_3d(ni,nj,nk)
+        real pressures_1d(nk)
 
         if(ltest_vertical_grid('HEIGHT'))then
            print*, 'Call is obsolete, please report this message to '
@@ -429,7 +429,7 @@ cdoc    a reference.
 
 cdoc    Convert Pressure to Height, using a 3-D Height field for reference
 
-        real*4 heights_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
 
         logical ltest_vertical_grid
 
@@ -488,8 +488,8 @@ cdoc    Convert Pressure to Height, using 3-D Pres & Ht fields for reference
 cdoc    This currently does a linear interpolation in the vertical. We can 
 cdoc    change this to a log interpolation later if needed.
 
-        real*4 pres_3d(ni,nj,nk)
-        real*4 heights_3d(ni,nj,nk)
+        real pres_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
 
 !       rk = zcoord_of_logpressure(pres_pa)
 
@@ -529,9 +529,9 @@ cdoc    change this to a log interpolation later if needed.
 cdoc    Calculate the height of a given pressure level, using standard atmos.
 cdoc    Works only for constant pressure levels
 
-        implicit real*4 (a-z)
+        implicit real (a-z)
 
-        integer*4 level,istatus
+        integer level,istatus
 
         logical ltest_vertical_grid
 
@@ -588,9 +588,9 @@ cdoc    Works only for constant pressure levels
 cdoc    Calculate pressure of a given integer level. 
 cdoc    Works only for constant pressure levels
 
-        real*4, allocatable, dimension(:) :: pres_1d
+        real, allocatable, dimension(:) :: pres_1d
 
-        integer*4 level, istatus, istat_alloc
+        integer level, istatus, istat_alloc
 
         call get_laps_dimensions(nk,istatus)
         if(istatus .ne. 1)stop
@@ -640,11 +640,11 @@ cdoc    Works only for constant pressure levels
 
 cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
-        implicit real*4 (a-z)
+        implicit real (a-z)
 
         integer i,j,k,ni,nj,nk,k_ref,istatus,isign
 
-        real*4 field_3d(ni,nj,nk)
+        real field_3d(ni,nj,nk)
 
         logical ltest_vertical_grid
 
@@ -733,11 +733,11 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 cdoc    Log vertical interpolation is used. Warning: under construction
 cdoc    as log code is not yet in place.
 
-        implicit real*4 (a-z)
+        implicit real (a-z)
 
         integer i,j,k,ni,nj,nk,k_ref,istatus,isign
 
-        real*4 field_3d(ni,nj,nk)
+        real field_3d(ni,nj,nk)
 
         logical ltest_vertical_grid
 
@@ -825,7 +825,7 @@ cdoc    as log code is not yet in place.
 cdoc    Convert pressure to a real (fractional) level. 
 cdoc    Works only for constant pressure levels.
 
-        real*4, allocatable, dimension(:) :: pres_1d
+        real, allocatable, dimension(:) :: pres_1d
 
         logical ltest_vertical_grid
 
@@ -1243,35 +1243,35 @@ cdoc    Convert U and V to DIR and SPEED
 
         function k_to_f(x)
 cdoc    Convert Kelvin to Fahrenheit
-        real*4 k_to_f
+        real k_to_f
         k_to_f = (x - 273.15) * 1.8 + 32.
         return
         end
 
         function f_to_k(x)
 cdoc    Convert Fahrenheit to Kelvin
-        real*4 f_to_k
+        real f_to_k
         f_to_k = (x - 32.) / 1.8 + 273.15
         return
         end
 
         function k_to_c(x)
 cdoc    Convert Kelvin to Celsius
-        real*4 k_to_c
+        real k_to_c
         k_to_c = (x - 273.15)
         return
         end
 
         function c_to_k(x)
 cdoc    Convert Celsius to Kelvin
-        real*4 c_to_k
+        real c_to_k
         c_to_k = (x + 273.15)
         return
         end
 
         function f_to_c(x)
 cdoc    Convert Fahrenheit to Celsius
-        real*4 f_to_c
+        real f_to_c
         f_to_c = (x - 32.) / 1.8 
         return
         end
@@ -1290,7 +1290,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         subroutine conv_meters_to_inches(data_in, numarr,prodno,
      1  imax, jmax)
 c   subroutine to convert accumulations meters to inches
-        REAL*4 data_in(imax, jmax, numarr)
+        REAL data_in(imax, jmax, numarr)
         Integer Prodno
 c   begin
         do j=1,jmax

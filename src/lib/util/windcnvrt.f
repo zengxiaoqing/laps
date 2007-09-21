@@ -51,10 +51,10 @@ C Speed          O      R*4     Wind speed (same units as input arguments)
 c
 C-----  If magnitude of UWind or VWind > 1E18, Speed and Direction set to -99.
 c
-        real*4          Flag
+        real          Flag
         Parameter      (Flag=1.e37)
 c
-        Real*4          UWind,VWind,Direction,Speed
+        Real          UWind,VWind,Direction,Speed
 c
         If(Abs(UWind).gt.1E18.or.Abs(VWind).gt.1E18)Then
          Speed=Flag

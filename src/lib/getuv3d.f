@@ -45,11 +45,11 @@ cdis
         character*10 units_3d(kmax)
         character*3 var_u(kmax)
         character*3 var_v(kmax)
-        integer*4 LVL_3d(kmax)
+        integer LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
-        real*4 u_3d(imax,jmax,kmax)
-        real*4 v_3d(imax,jmax,kmax)
+        real u_3d(imax,jmax,kmax)
+        real v_3d(imax,jmax,kmax)
 
         call get_directory(ext,directory,len_dir)
 

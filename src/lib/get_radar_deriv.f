@@ -18,32 +18,32 @@
        integer cldpcp_type_3d(nx,ny,nz)        !input
        integer ibase_array(nx,ny)              !input
        integer itop_array(nx,ny)               !input
-       real*4 dx,r_miss                        !input
-       real*4 radar_ref_3d(nx,ny,nz)           !input (dbZ)
-       real*4 clouds_3d(nx,ny,nz)              !input
-       real*4 cld_hts(nx,ny,nz)                !input
-       real*4 temp_3d(nx,ny,nz)                !input
-       real*4 heights_3d(nx,ny,nz)             !input
-       real*4 pres_3d(nx,ny,nz)                !input
-       real*4 thresh_cvr                       !input
-       real*4 w_3d(nx,ny,nz)                   !input and output
-       real*4 vv_to_height_ratio_Cu
+       real dx,r_miss                        !input
+       real radar_ref_3d(nx,ny,nz)           !input (dbZ)
+       real clouds_3d(nx,ny,nz)              !input
+       real cld_hts(nx,ny,nz)                !input
+       real temp_3d(nx,ny,nz)                !input
+       real heights_3d(nx,ny,nz)             !input
+       real pres_3d(nx,ny,nz)                !input
+       real thresh_cvr                       !input
+       real w_3d(nx,ny,nz)                   !input and output
+       real vv_to_height_ratio_Cu
 !      temprary variables
        integer i,j,k
        integer nxx,nyy,ier
        integer str_con_index(nx,ny)
        integer index_random(nx,ny)
-       real*4  radar_2d_max(nx,ny)             ! dbZ (while in this routine)
+       real  radar_2d_max(nx,ny)             ! dbZ (while in this routine)
        logical l_cloud
-       real*4 temp_1d(nz)
-       real*4 heights_1d(nz)
-       real*4 pressure_mb(nz)
-       real*4 pressure_pa(nz)
+       real temp_1d(nz)
+       real heights_1d(nz)
+       real pressure_mb(nz)
+       real pressure_pa(nz)
        integer iarg
        integer cloud_type_1d(nz)
-       real*4  radar_ref_max ! dbZ
-       real*4 w_1d(nz)
-       real*4 w_to_omega
+       real  radar_ref_max ! dbZ
+       real w_1d(nz)
+       real w_to_omega
        integer strcon
        integer rand_index
        integer dbz(nx,ny)
@@ -120,18 +120,18 @@
        Implicit none
        integer nz, cloud_type(nz), strcon
        integer rand_index
-       real*4 heights(nz), temp(nz), w(nz)
-       real*4 dx, radar_ref_max
-       real*4 vv_to_height_ratio
-       real*4 vv_to_height_ratio_Cu
+       real heights(nz), temp(nz), w(nz)
+       real dx, radar_ref_max
+       real vv_to_height_ratio
+       real vv_to_height_ratio_Cu
  
 !      data vv_to_height_ratio /0.5/
-       real*4 ratio, vv, parabolic_vv_profile
-       real*4 parabolic_vv_profile1
+       real ratio, vv, parabolic_vv_profile
+       real parabolic_vv_profile1
        integer k, k1, kbase, ktop, kmiddle
-       real*4 zbase, ztop
-       real*4 ratio_radar
-       real*4 depth, vvmax
+       real zbase, ztop
+       real ratio_radar
+       real depth, vvmax
 
 !   Cloud Type      /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
 !   Integer Value     0     1    2    3    4    5    6    7    8    9   10
@@ -594,9 +594,9 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
          integer i, j, k
          integer seed(1)
          character*9 a9time
-         integer*4 i4time
-         integer*4 istatus
-         integer*4 idate
+         integer i4time
+         integer istatus
+         integer idate
          real    harver
          integer count1
          call get_systime(i4time, a9time, istatus)

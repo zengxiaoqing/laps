@@ -33,10 +33,10 @@ cdis
         subroutine interpolate_3dfield(field_3d_in,nx,ny,
      1          nlvl_in,rlvls_in,nlvl_out,rlvls_out,field_3d_out)
 
-        real*4 field_3d_in(nx,ny,nlvl_in)
-        real*4 field_3d_out(nx,ny,nlvl_out)
-        real*4 rlvls_in(nlvl_in)
-        real*4 rlvls_out(nlvl_out)
+        real field_3d_in(nx,ny,nlvl_in)
+        real field_3d_out(nx,ny,nlvl_out)
+        real rlvls_in(nlvl_in)
+        real rlvls_out(nlvl_out)
 
         do kout = 1,nlvl_out
 

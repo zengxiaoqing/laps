@@ -42,10 +42,10 @@ cdoc    Used to read in a surface grid with inputs of time and ext
         character*125 comment_2d
         character*10 units_2d
         character*3 var_2d
-        integer*4 LVL_2d
+        integer LVL_2d
         character*4 LVL_COORD_2d
 
-        real*4 field_2d(imax,jmax)
+        real field_2d(imax,jmax)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -116,7 +116,7 @@ cdoc    by calling the new READ_LAPS routine
         integer   nfdda
         character*4 LVL_COORD_2d
 
-        real*4 field_2d(imax,jmax)
+        real field_2d(imax,jmax)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -221,10 +221,10 @@ cdoc    Returns a 2-D grid. Inputs include the extension and time window.
         character*125 comment_2d
         character*10 units_2d
         character*3 var_2d
-        integer*4 LVL_2d
+        integer LVL_2d
         character*4 LVL_COORD_2d
 
-        real*4 field_2d(imax,jmax)
+        real field_2d(imax,jmax)
 
         character*255 c_filespec
 
@@ -316,10 +316,10 @@ cdoc    Returns a 2-D grid. Inputs include the directory, ext, and time window.
         character*125 comment_2d
         character*10 units_2d
         character*3 var_2d
-        integer*4 LVL_2d
+        integer LVL_2d
         character*4 LVL_COORD_2d
 
-        real*4 field_2d(imax,jmax)
+        real field_2d(imax,jmax)
 
         character*255 c_filespec
 
@@ -414,10 +414,10 @@ cdoc    added lvd subdirectory flexibility. Only one 2d satellite field returned
         character*125 comment_2d
         character*10 units_2d
         character*3 var_2d
-        integer*4 LVL_2d
+        integer LVL_2d
         character*4 LVL_COORD_2d
 
-        real*4 field_2d(imax,jmax)
+        real field_2d(imax,jmax)
 
         integer max_files
         parameter (max_files = 20000)
@@ -576,10 +576,10 @@ cdoc    Returns a 3-D grid. Inputs include the extension and time.
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
         character*3 var_3d(kmax)
-        integer*4 LVL_3d(kmax)
+        integer LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
-        real*4 field_3d(imax,jmax,kmax)
+        real field_3d(imax,jmax,kmax)
 
         write(6,*)' Subroutine get_laps_3d...'
 
@@ -625,7 +625,7 @@ cdoc    Returns a 3-D fcst grid. Inputs include directory, initial and valid tim
         integer     nfdda,l
         character*4 LVL_COORD_3d(kmax)
 
-        real*4 field_3d(imax,jmax,kmax)
+        real field_3d(imax,jmax,kmax)
 
         logical ltest_vertical_grid
 
@@ -743,7 +743,7 @@ cdoc    Returns a 3-D analysis grid. Inputs include the extension and time windo
         character*10 units_2d
         character*3 var_2d
 
-        real*4 field_3d(imax,jmax,kmax)
+        real field_3d(imax,jmax,kmax)
 
         character*255 c_filespec
 
@@ -779,10 +779,10 @@ cc        character*31 EXT
         character*10 units_2d
 cc        character*3 var_2d
         character*(*) var_2d
-        integer*4 LVL_2d
+        integer LVL_2d
         character*4 LVL_COORD_2d
 
-        real*4 field_2d(imax,jmax)
+        real field_2d(imax,jmax)
 
         call get_directory(ext,directory,len_dir)
 
@@ -818,10 +818,10 @@ cdoc    Writes a 3-D grid. Inputs include the extension and time.
         character*125 comment_3d(nk),comment_2d
         character*10 units_3d(nk),units_2d
         character*3 var_3d(nk),var_2d
-        integer*4 LVL_3d(nk)
+        integer LVL_3d(nk)
         character*4 LVL_COORD_3d(nk)
 
-        real*4 field_3d(ni,nj,nk)
+        real field_3d(ni,nj,nk)
 
         call get_directory(ext,directory,len_dir)
 
@@ -868,10 +868,10 @@ cdoc    Writes multiple 3-D grids. Inputs include the extension and time.
         character*125 comment_3d(nk*nf),comment_2d(nf)
         character*10 units_3d(nk*nf),units_2d(nf)
         character*3 var_3d(nk*nf),var_2d(nf)
-        integer*4 LVL_3d(nk*nf)
+        integer LVL_3d(nk*nf)
         character*4 LVL_COORD_3d(nk*nf)
 
-        real*4 field_3d(ni,nj,nk,nf)
+        real field_3d(ni,nj,nk,nf)
 
         istatus = 0
 
@@ -932,10 +932,10 @@ cdoc    time.
         character*125 comment_3d(nk*nf),comment_2d(nf)
         character*10 units_3d(nk*nf),units_2d(nf)
         character*3 var_3d(nk*nf),var_2d(nf)
-        integer*4 LVL_3d(nk*nf)
+        integer LVL_3d(nk*nf)
         character*4 LVL_COORD_3d(nk*nf)
 
-        real*4 field_3d(ni,nj,nk,nf)
+        real field_3d(ni,nj,nk,nf)
 
         istatus = 0
 
@@ -987,7 +987,7 @@ cdoc    time.
 
 cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
 
-        integer*4 MAX_FIELDS
+        integer MAX_FIELDS
         parameter (MAX_FIELDS = 10)
 
         character*150 DIRECTORY
@@ -996,10 +996,10 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         character*125 comment_a(nf) ! ,comment
         character*10 units_a(nf)
         character*3 var_a(nf)
-        integer*4 LVL_2d(MAX_FIELDS)
+        integer LVL_2d(MAX_FIELDS)
         character*4 LVL_COORD_2d(MAX_FIELDS)
 
-        real*4 field_2d(ni,nj,nf)
+        real field_2d(ni,nj,nf)
 
         istatus = 0
 
@@ -1230,8 +1230,8 @@ c
 
         integer imax,jmax,maxsat
 
-        real*4    field_2d_lvd(imax,jmax,maxsat)
-        real*4    field_2d(imax,jmax)
+        real    field_2d_lvd(imax,jmax,maxsat)
+        real    field_2d(imax,jmax)
 
         integer   isats(maxsat)
         integer   nsats
@@ -1380,14 +1380,14 @@ c
         character*125 comment_2d
         character*10 units_2d
         character*3 var_2d
-        integer*4 LVL_2d
+        integer LVL_2d
         character*4 LVL_COORD_2d
 
         integer max_lvd_files
         parameter (max_lvd_files=10)
 
-        real*4 field_2d(imax,jmax)
-        real*4 field_2d_save(imax,jmax,max_lvd_files)
+        real field_2d(imax,jmax)
+        real field_2d_save(imax,jmax,max_lvd_files)
 
         integer max_files
         parameter (max_files = 600)
@@ -1395,9 +1395,9 @@ c
         character*9 asc9_tim
         character*9 asc9_time(max_files)
 
-        real*4 pctmiss(max_files)
-        real*4 pctmnmiss
-        real*4 r_missing_data
+        real pctmiss(max_files)
+        real pctmnmiss
+        real r_missing_data
         integer jf,jr,imiss
 
         character*255 c_filespec
@@ -1582,10 +1582,10 @@ cdoc    Returns a 3-D analysis grid. Inputs include a directory, ext, and time w
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
         character*3 var_3d(kmax),var_2d
-        integer*4 LVL_3d(kmax)
+        integer LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
-        real*4 field_3d(imax,jmax,kmax)
+        real field_3d(imax,jmax,kmax)
 
         character*255 c_filespec
 
@@ -1651,10 +1651,10 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
         character*3 var_3d(kmax)
-        integer*4 LVL_3d(kmax)
+        integer LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
-        real*4 field_3d(imax,jmax,kmax)
+        real field_3d(imax,jmax,kmax)
 
         character*255 c_filespec
 

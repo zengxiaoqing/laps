@@ -98,12 +98,12 @@ cdoc    Reads in lat/lon/topo/landfrac fields
 c
 c       1994 Steve Albers
 
-        integer*4 ni,nj               ! Input
+        integer ni,nj               ! Input
 
-        real*4 lat(ni,nj)             ! Output
-        real*4 lon(ni,nj)             ! Output
-        real*4 topo(ni,nj)            ! Output
-        real*4 rlaps_land_frac(ni,nj) ! Local
+        real lat(ni,nj)             ! Output
+        real lon(ni,nj)             ! Output
+        real topo(ni,nj)            ! Output
+        real rlaps_land_frac(ni,nj) ! Local
 
         character*(*) grid_fnam       ! Dummy
 
@@ -121,12 +121,12 @@ cdoc    Reads in lat/lon/topo fields with grid spacing
 c
 c       1994 Steve Albers
 c
-        integer*4 ni,nj               ! Input
+        integer ni,nj               ! Input
 
-        real*4 lat(ni,nj)             ! Output
-        real*4 lon(ni,nj)             ! Output
-        real*4 topo(ni,nj)            ! Output
-        real*4 rlaps_land_frac(ni,nj) ! Local
+        real lat(ni,nj)             ! Output
+        real lon(ni,nj)             ! Output
+        real topo(ni,nj)            ! Output
+        real rlaps_land_frac(ni,nj) ! Local
 
         character*(*) grid_fnam       ! Dummy
 
@@ -145,12 +145,12 @@ cdoc    Reads in lat/lon/topo/landfrac fields with grid spacing
 c
 c       1994 Steve Albers
 
-        integer*4 ni,nj               ! Input
+        integer ni,nj               ! Input
 
-        real*4 lat(ni,nj)             ! Output
-        real*4 lon(ni,nj)             ! Output
-        real*4 topo(ni,nj)            ! Output
-        real*4 rlaps_land_frac(ni,nj) ! Output
+        real lat(ni,nj)             ! Output
+        real lon(ni,nj)             ! Output
+        real topo(ni,nj)            ! Output
+        real rlaps_land_frac(ni,nj) ! Output
 
         character*2   cnest
         character*3   var
@@ -286,9 +286,9 @@ cdoc    Reads an arbitrary static field given an input 'var' string
 
 c       2000    Steve Albers
 
-        integer*4 ni,nj                       ! Input
+        integer ni,nj                       ! Input
         character*(*) var                     ! Input
-        real*4 static_grid(ni,nj)             ! Output
+        real static_grid(ni,nj)             ! Output
 
         character*150 directory
         character*31  ext
@@ -1339,10 +1339,10 @@ c
       include 'lapsparms.cmn' ! vert_rad_pirep, etc.
       include 'grid_fname.cmn'! grid_fnam_common
 
-      integer*4 vert_rad_pirep_ret
-      integer*4 vert_rad_sao_ret
-      integer*4 vert_rad_meso_ret
-      integer*4 vert_rad_prof_ret
+      integer vert_rad_pirep_ret
+      integer vert_rad_sao_ret
+      integer vert_rad_meso_ret
+      integer vert_rad_prof_ret
 
 !     This routine accesses the vert_rad_pirep, etc., variables from the
 !     .parms file via the common block. Note the variable names in the
@@ -2064,7 +2064,7 @@ c--------------------------------------------------------------
 c -----------------------------------------------------------------
       subroutine array_minmax(a,ni,nj,rmin,rmax,r_missing_data)
 
-      real*4 a(ni,nj)
+      real a(ni,nj)
 
       rmin =  abs(r_missing_data)
       rmax = -abs(r_missing_data)

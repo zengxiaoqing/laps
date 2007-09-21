@@ -35,7 +35,7 @@ c
 c
 c.....  Routine to convert a wind speed array from knots to meters per sec.
 c
-        real*4 kt(imax,jmax), ms(imax,jmax)
+        real kt(imax,jmax), ms(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax

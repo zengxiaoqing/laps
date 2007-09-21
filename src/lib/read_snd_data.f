@@ -40,11 +40,11 @@ cdoc    Also returns the lat/lon/time info from all the levels
         character*9 a9time_ob, a9time_in
         character ext*(*)
 
-        real*4 lat_in,lon_in
+        real lat_in,lon_in
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 heights_3d(imax,jmax,kmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real heights_3d(imax,jmax,kmax)
 
         logical l_good_level, l_fill_ht
 
@@ -289,9 +289,9 @@ cdoc    Returns sounding wind, T, Td data from the SND file
         character*9 a9time_ob
         character ext*(*)
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 heights_3d(imax,jmax,kmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real heights_3d(imax,jmax,kmax)
 
         logical l_good_level, l_fill_ht
 
@@ -508,8 +508,8 @@ cdoc    Returns sounding metadata from the SND file
         character*9 a9time_ob
         character ext*(*)
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
 
         istatus = 0
 
@@ -683,10 +683,10 @@ c
         real ob_pr_t_obs(MAX_PR,MAX_PR_LEVELS)                         ! O
         real ob_pr_td_obs(MAX_PR,MAX_PR_LEVELS)                        ! O
 
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
 
-        real*4 heights_3d_dum(imax,jmax,kmax)
+        real heights_3d_dum(imax,jmax,kmax)
 
         integer i4time_ob_pr(MAX_PR)
         integer nlevels_obs_pr(MAX_PR)

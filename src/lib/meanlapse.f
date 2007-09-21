@@ -64,7 +64,7 @@ c       1. Units are not changed in this routine.
 c
 c*******************************************************************************
 c
-        real*4 elev(num_sfc), t(num_sfc), td(num_sfc)
+        real elev(num_sfc), t(num_sfc), td(num_sfc)
 c
         badflag = -99.9
 c

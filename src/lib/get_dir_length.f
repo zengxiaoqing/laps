@@ -50,9 +50,9 @@ C
 C********************************************************************
 C
         character c_fname*(*)
-        integer*4 lenf
+        integer lenf
 C
-        integer*4 i, strlen
+        integer i, strlen
 C
 C****************************
 C
@@ -93,9 +93,9 @@ C
 C********************************************************************
 C
         character c_fname*(*)
-        integer*4 lenf
+        integer lenf
 C
-        integer*4 i, strlen
+        integer i, strlen
 C
 C****************************
 C
@@ -132,13 +132,13 @@ C
 C       Name            Type      I/O     Description
 C       ----            ---       --      -----------
 C       string          char       I       string
-C       s_length        integer*4  O       valid number characters
+C       s_length        integer  O       valid number characters
 C                                            in string
 
         implicit none
 
         character*(*)   string
-        integer*4       s_length, i, len_str, aval
+        integer       s_length, i, len_str, aval
         logical         space
 
         space = .false.
@@ -180,9 +180,9 @@ C
 C********************************************************************
 C
         character c_fname*(*)
-        integer*4 lenf
+        integer lenf
 C
-        integer*4 i, strlen, i_char_len
+        integer i, strlen, i_char_len
 C
 C****************************
 C
@@ -217,7 +217,7 @@ C       of the character string.
 C
 
         character*(*) c_fname
-        integer*4 lend,lent,lenf
+        integer lend,lent,lenf
 
         call get_directory_length(c_fname,lend)
         call s_len(c_fname,len_fname)
@@ -258,10 +258,10 @@ C       1998          Steve Albers
         character*(*) c_fname
         character*20 c20_type
 
-        integer*4 lend ! Directory length including the last 'slash'. 
-        integer*4 lenf ! Length of the filename excluding the path.
-        integer*4 lent ! Length of the filetime portion.
-        integer*4 leni ! Length of the initial non-filetime portion.
+        integer lend ! Directory length including the last 'slash'. 
+        integer lenf ! Length of the filename excluding the path.
+        integer lent ! Length of the filetime portion.
+        integer leni ! Length of the initial non-filetime portion.
                        ! This is often but not always the directory length.
 
         call filter_non_numeric_fnames(c_fname,1,num_out,1
@@ -368,7 +368,7 @@ C       string          char       I       string
         implicit none
 
         character*(*)   string
-        integer*4       i, len_str, aval
+        integer       i, len_str, aval
         logical         space
 
         space = .false.

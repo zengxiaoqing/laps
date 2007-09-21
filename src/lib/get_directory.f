@@ -52,7 +52,7 @@ cdis
         character*(*) ext_in         ! input
         character*80 ext             ! local
         character*(*) directory_out  ! output
-        integer*4 len_dir            ! output
+        integer len_dir            ! output
 
         include 'grid_fname.cmn'
 
