@@ -6,6 +6,6 @@
       common /estab/ esat,es
       character  cbgmodel(maxbgmodels)*10
       data       cbgmodel/'ruc','eta','avn','nfs','fua',' '
-     1,' ',' ',' ',' ',' ',' '/
+     &,' ',' ',' ',' ',' ',' '/
 c warning: localization scripting requires the cbgmodel statement above
 c All additional comments must be below this line
