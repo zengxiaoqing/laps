@@ -140,8 +140,8 @@ cdoc  Reads static/sat_sounder.nl file.
       character*150 nest7grid
       character*200 path_to_sat_sounder(max_sat)
 
-      real*4 channel_wavelength_u(max_ch,max_sat)
-      real*4 pct_req_lsr
+      real channel_wavelength_u(max_ch,max_sat)
+      real pct_req_lsr
 
       namelist /satellite_sounder_nl/ n_sndr,c_sndr_id,path_to_sat_sound
      +er,n_sndr_channels,channel_wavelength_u,imsng_sndr
@@ -438,13 +438,13 @@ c
      1                          ,weight_bkg_const_wind
      1                          ,weight_radar
      1                          ,rms_thresh_wind
-     1                          ,max_pr,max_pr_levels,i_3d
+     1                          ,max_pr,max_pr_levels,max_obs
      1                          ,istatus)
 
        include 'grid_fname.cmn'                          !grid_fnam_common
 
        logical l_use_raob, l_use_cdw, l_use_radial_vel
-       integer*4 thresh_2_radarobs_lvl_unfltrd
+       integer thresh_2_radarobs_lvl_unfltrd
      1          ,thresh_4_radarobs_lvl_unfltrd
      1          ,thresh_9_radarobs_lvl_unfltrd
 
@@ -455,7 +455,7 @@ c
      1                   ,weight_bkg_const_wind
      1                   ,weight_radar
      1                   ,rms_thresh_wind
-     1                   ,max_pr,max_pr_levels,i_3d
+     1                   ,max_pr,max_pr_levels,max_obs
  
        character*150 static_dir,filename
  
@@ -538,12 +538,12 @@ c
        character*1	type_obs
        character*150	path_to_raw_profiler
        character*150	path_to_raw_sounding
-       integer*4	raob_process_lag_Bal
-       integer*4	raob_process_lag
+       integer	raob_process_lag_Bal
+       integer	raob_process_lag
        integer          n_verif
        integer          i,len
        character*150	verif_output_dir(4)
-       real*4		verif_missing_data
+       real		verif_missing_data
        integer		istatus
        
        namelist /verif_nl/ type_obs,path_to_raw_profiler,
