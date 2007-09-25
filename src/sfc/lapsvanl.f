@@ -585,9 +585,13 @@ c
      &        err,imax,jmax,rms_thresh_norm*sfc_nl_parms%rms_temp,
      &        bad_tm,imiss,mxstn,obs_error_t,name,topo,ldf,wt_bkg_a)
         else ! use data structures for handling obs
+            bad_tm_land  = bad_tm
+            bad_tm_water = bad_tm
             call barnes_multivariate_sfc_jacket('t',obs,mxstn,t_bk
      1                                     ,badflag,imax,jmax
-     1                                     ,rms_thresh_norm,bad_tm
+     1                                     ,rms_thresh_norm
+     1                                     ,bad_tm_land
+     1                                     ,bad_tm_water
      1                                     ,topo,ldf,wt_bkg_a,t,istatus)       
         endif
 
@@ -604,9 +608,13 @@ c
      &        err,imax,jmax,rms_thresh_norm*sfc_nl_parms%rms_dewpoint,
      &        bad_tmd,imiss,mxstn,obs_error_td,name,topo,ldf,wt_bkg_a)
         else ! use data structures for handling obs
+            bad_tmd_land  = bad_tmd
+            bad_tmd_water = bad_tmd
             call barnes_multivariate_sfc_jacket('td',obs,mxstn,td_bk
      1                                    ,badflag,imax,jmax
-     1                                    ,rms_thresh_norm,bad_tmd
+     1                                    ,rms_thresh_norm
+     1                                    ,bad_tmd_land
+     1                                    ,bad_tmd_water
      1                                    ,topo,ldf,wt_bkg_a,td,istatus)       
         endif
 c
@@ -810,12 +818,15 @@ c
      &        obs_error_vis,name,topo,ldf,wt_bkg_a)
 
         write(6,*)' Analyze TGD observations'
-        call barnes_multivariate_sfc_jacket('tgd',obs,mxstn,tgd_bk_f
+        call barnes_multivariate_sfc_jacket('tgd',obs,mxstn
+     1                                 ,tgd_bk_f
      1                                 ,badflag,imax,jmax
      1                                 ,rms_thresh_norm
      1                                 ,sfc_nl_parms%bad_tgd_land
      1                                 ,sfc_nl_parms%bad_tgd_water
-     1                                 ,topo,ldf,wt_bkg_a,d2,istatus)
+     1                                 ,topo,ldf
+     1                                 ,wt_bkg_a
+     1                                 ,d2,istatus)
 	call conv_f2k(d2,tgd_k,imax,jmax)                  ! conv F to K
 c
 c.....	If no background fields are available, skip over the variational
