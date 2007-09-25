@@ -112,32 +112,32 @@ cdis
 
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
-        real*4 surface_sao_buffer
+        real surface_sao_buffer
         parameter (surface_sao_buffer = 800.)
 
-        real*4 thresh_cvr_ceiling,default_top,default_base
+        real thresh_cvr_ceiling,default_top,default_base
      1                           ,default_clear_cover,default_ceiling       
 
         parameter       (thresh_cvr_ceiling = 0.65) ! Used to "binaryize" cloud cover
 
         parameter       (default_clear_cover = .001)
 
-        real*4 thresh_cvr_base,thresh_cvr_top
+        real thresh_cvr_base,thresh_cvr_top
         parameter (thresh_cvr_base = 0.1)
         parameter (thresh_cvr_top  = 0.1)
 
-        real*4 thresh_thin_lwc_ice     ! Threshold cover for thin cloud LWC/ICE
+        real thresh_thin_lwc_ice     ! Threshold cover for thin cloud LWC/ICE
         parameter (thresh_thin_lwc_ice = 0.1)
 
-        real*4 vis_radar_thresh_cvr,vis_radar_thresh_dbz
+        real vis_radar_thresh_cvr,vis_radar_thresh_dbz
         parameter (vis_radar_thresh_cvr = 0.2)  ! 0.2, 0.0
         parameter (vis_radar_thresh_dbz = 30.)  ! 10., 5. , -99.
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
-        real*4 rlaps_land_frac(NX_L,NY_L)
-        real*4 solar_alt(NX_L,NY_L)
-        real*4 solar_ha(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
+        real rlaps_land_frac(NX_L,NY_L)
+        real solar_alt(NX_L,NY_L)
+        real solar_ha(NX_L,NY_L)
 
         logical l_packed_output, l_use_vis, l_use_vis_add 
         logical l_use_vis_partial, l_use_39
@@ -161,7 +161,7 @@ cdis
         include 'laps_cloud.inc'
 
 !       Nominal cloud heights. Actual ones used are fitted to the terrain.
-        real*4 cld_hts_new(KCLOUD)
+        real cld_hts_new(KCLOUD)
 
         data cld_hts_new/1200.,1300.,1400.,1500.,1600.,1700.,1800.,
      11900.,2000.,2100.,2200.,2400.,2600.,2800.,3000.,3200.,
@@ -171,59 +171,59 @@ cdis
 
         equivalence (cld_hts,cld_hts_new)
 
-        REAL*4 cldcv1(NX_L,NY_L,KCLOUD)
-        REAL*4 cf_modelfg(NX_L,NY_L,KCLOUD)
-        REAL*4 t_modelfg(NX_L,NY_L,KCLOUD)
+        REAL cldcv1(NX_L,NY_L,KCLOUD)
+        REAL cf_modelfg(NX_L,NY_L,KCLOUD)
+        REAL t_modelfg(NX_L,NY_L,KCLOUD)
 
-        real*4 clouds_3d(NX_L,NY_L,KCLOUD)
+        real clouds_3d(NX_L,NY_L,KCLOUD)
 
         integer ista_snd(max_cld_snd)
-        real*4 cld_snd(max_cld_snd,KCLOUD)
-        real*4 wt_snd(max_cld_snd,KCLOUD)
-        real*4 cvr_snd(max_cld_snd)
+        real cld_snd(max_cld_snd,KCLOUD)
+        real wt_snd(max_cld_snd,KCLOUD)
+        real cvr_snd(max_cld_snd)
         integer i_snd(max_cld_snd)
         integer j_snd(max_cld_snd)
 
         integer ihist_alb(-10:20)
 
-        real*4 cloud_top(NX_L,NY_L)
-        real*4 cloud_base(NX_L,NY_L)
-        real*4 cloud_ceiling(NX_L,NY_L)
+        real cloud_top(NX_L,NY_L)
+        real cloud_base(NX_L,NY_L)
+        real cloud_ceiling(NX_L,NY_L)
 
-        real*4 cldtop_m(NX_L,NY_L)
-        real*4 cldtop_co2_m(NX_L,NY_L)
-        real*4 cldtop_tb8_m(NX_L,NY_L)
-        real*4 cldtop_co2_pa_a(NX_L,NY_L)
+        real cldtop_m(NX_L,NY_L)
+        real cldtop_co2_m(NX_L,NY_L)
+        real cldtop_tb8_m(NX_L,NY_L)
+        real cldtop_co2_pa_a(NX_L,NY_L)
 
-        real*4 cldcv_sao(NX_L,NY_L,KCLOUD)
-        real*4 cld_pres_1d(KCLOUD)
-        real*4 pressures_pa(NZ_L)
-!       real*4 pres_3d(NX_L,NY_L,NZ_L)
-        real*4 wtcldcv(NX_L,NY_L,KCLOUD)
+        real cldcv_sao(NX_L,NY_L,KCLOUD)
+        real cld_pres_1d(KCLOUD)
+        real pressures_pa(NZ_L)
+!       real pres_3d(NX_L,NY_L,NZ_L)
+        real wtcldcv(NX_L,NY_L,KCLOUD)
 
-        real*4 CVHZ(NX_L,NY_L)
-        real*4 CVHZ1(NX_L,NY_L),CVEW1(NX_L,KCLOUD)
-        real*4 cvr_max(NX_L,NY_L),CVEW2(NX_L,KCLOUD)
-        real*4 cvr_sao_max(NX_L,NY_L)
-        real*4 cvr_snow_cycle(NX_L,NY_L)
-        real*4 cvr_water_temp(NX_L,NY_L)
-        real*4 cvr_snow(NX_L,NY_L)
-        real*4 plot_mask(NX_L,NY_L)
-        real*4 plot_maskr(NX_L,NY_L)
+        real CVHZ(NX_L,NY_L)
+        real CVHZ1(NX_L,NY_L),CVEW1(NX_L,KCLOUD)
+        real cvr_max(NX_L,NY_L),CVEW2(NX_L,KCLOUD)
+        real cvr_sao_max(NX_L,NY_L)
+        real cvr_snow_cycle(NX_L,NY_L)
+        real cvr_water_temp(NX_L,NY_L)
+        real cvr_snow(NX_L,NY_L)
+        real plot_mask(NX_L,NY_L)
+        real plot_maskr(NX_L,NY_L)
 
         character*4 radar_name
         character*31 radarext_3d_cloud
-        real*4 radar_ref_3d(NX_L,NY_L,NZ_L)
+        real radar_ref_3d(NX_L,NY_L,NZ_L)
         integer istat_radar_2dref_a(NX_L,NY_L)
         integer istat_radar_3dref_a(NX_L,NY_L)
         logical lstat_radar_3dref_orig_a(NX_L,NY_L)
        
-        real*4 heights_3d(NX_L,NY_L,NZ_L)
+        real heights_3d(NX_L,NY_L,NZ_L)
 
 !       Output array declarations
-        real*4 out_array_3d(NX_L,NY_L,6)
+        real out_array_3d(NX_L,NY_L,6)
 
-!       real*4 snow_2d(NX_L,NY_L)
+!       real snow_2d(NX_L,NY_L)
 
         character*2 c2_precip_types(0:10)
 
@@ -231,12 +231,12 @@ cdis
      1  /'  ','Rn','Sn','Zr','Sl','Ha','L ','ZL','  ','  ','  '/
 
         integer i2_pcp_type_2d(NX_L,NY_L)
-        real*4 r_pcp_type_2d(NX_L,NY_L)
+        real r_pcp_type_2d(NX_L,NY_L)
 
-        real*4 dum1_array(NX_L,NY_L)
-        real*4 dum2_array(NX_L,NY_L)
-        real*4 dum3_array(NX_L,NY_L)
-        real*4 dum4_array(NX_L,NY_L)
+        real dum1_array(NX_L,NY_L)
+        real dum2_array(NX_L,NY_L)
+        real dum3_array(NX_L,NY_L)
+        real dum4_array(NX_L,NY_L)
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(NX_L,NY_L)
@@ -259,36 +259,36 @@ cdis
         character*10  units_a(MAX_FIELDS)
 
 !       Arrays used to read in satellite data
-        real*4 tb8_k(NX_L,NY_L)
-        real*4 t39_k(NX_L,NY_L)
-        real*4 tb8_cold_k(NX_L,NY_L)
-        real*4 albedo(NX_L,NY_L)
-        real*4 static_albedo(NX_L,NY_L)              ! Static albedo database
-        real*4 cloud_frac_vis_a(NX_L,NY_L)
-        real*4 cloud_frac_co2_a(NX_L,NY_L)
+        real tb8_k(NX_L,NY_L)
+        real t39_k(NX_L,NY_L)
+        real tb8_cold_k(NX_L,NY_L)
+        real albedo(NX_L,NY_L)
+        real static_albedo(NX_L,NY_L)              ! Static albedo database
+        real cloud_frac_vis_a(NX_L,NY_L)
+        real cloud_frac_co2_a(NX_L,NY_L)
 
-        integer*4 istat_39_a(NX_L,NY_L)
-        integer*4 istat_39_add_a(NX_L,NY_L)
-        integer*4 istat_vis_potl_a(NX_L,NY_L)
-        integer*4 istat_vis_added_a(NX_L,NY_L)
+        integer istat_39_a(NX_L,NY_L)
+        integer istat_39_add_a(NX_L,NY_L)
+        integer istat_vis_potl_a(NX_L,NY_L)
+        integer istat_vis_added_a(NX_L,NY_L)
 
-        real*4 temp_3d(NX_L,NY_L,NZ_L)
+        real temp_3d(NX_L,NY_L,NZ_L)
 
-        real*4 t_sfc_k(NX_L,NY_L)
-        real*4 t_gnd_k(NX_L,NY_L)
-        real*4 sst_k(NX_L,NY_L)
-        real*4 td_sfc_k(NX_L,NY_L)
-        real*4 pres_sfc_pa(NX_L,NY_L)
+        real t_sfc_k(NX_L,NY_L)
+        real t_gnd_k(NX_L,NY_L)
+        real sst_k(NX_L,NY_L)
+        real td_sfc_k(NX_L,NY_L)
+        real pres_sfc_pa(NX_L,NY_L)
 
 !       Declarations for LSO file stuff
-        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
-        real*4 cover_s(maxstns)
-        real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
-        real*4 ffg_s(maxstns), vis_s(maxstns)
-        real*4 pstn_s(maxstns),pmsl_s(maxstns),alt_s(maxstns)
-        real*4 store_hgt(maxstns,5),ceil(maxstns),lowcld(maxstns)
-        real*4 cover_a(maxstns),rad_s(maxstns)
+        real lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
+        real cover_s(maxstns)
+        real t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
+        real dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
+        real ffg_s(maxstns), vis_s(maxstns)
+        real pstn_s(maxstns),pmsl_s(maxstns),alt_s(maxstns)
+        real store_hgt(maxstns,5),ceil(maxstns),lowcld(maxstns)
+        real cover_a(maxstns),rad_s(maxstns)
         integer obstime(maxstns),kloud(maxstns),idp3(maxstns)
         character store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
         character wx_s(maxstns)*8
@@ -297,19 +297,19 @@ cdis
         parameter (STATION_NAME_LEN = 3)                   
         character c_stations(maxstns)*(STATION_NAME_LEN)    
 
-        real*4 ri_s(maxstns), rj_s(maxstns)
+        real ri_s(maxstns), rj_s(maxstns)
 
 !       Product # notification declarations
         integer j_status(20),iprod_number(20)
 
 !       Stuff for 2d fields
-        real*4 ref_mt_2d(NX_L,NY_L)
-        real*4 dbz_low_2d(NX_L,NY_L)
-        real*4 dbz_max_2d(NX_L,NY_L)
+        real ref_mt_2d(NX_L,NY_L)
+        real dbz_low_2d(NX_L,NY_L)
+        real dbz_max_2d(NX_L,NY_L)
 
 !       SFC precip and cloud type (LCT file)
-        real*4 r_pcp_type_thresh_2d(NX_L,NY_L)
-        real*4 r_cld_type_2d(NX_L,NY_L)
+        real r_pcp_type_thresh_2d(NX_L,NY_L)
+        real r_cld_type_2d(NX_L,NY_L)
 
         character*40 c_vars_req
         character*180 c_values_req
@@ -1376,7 +1376,7 @@ C       EW SLICES
         integer LVL,LVL_2d(nfields)
         character*4 LVL_COORD_2d(nfields)
 
-        real*4 field_2dcloud(imax,jmax,nfields)
+        real field_2dcloud(imax,jmax,nfields)
 
         write(6,11)directory,ext(1:5)
 11      format(' Writing 2d Clouds ',a50,1x,a5,1x,a3)
@@ -1425,9 +1425,9 @@ C       EW SLICES
         integer LVL_3d(NZ_CLOUD_MAX)
         character*4 LVL_COORD_3d(NZ_CLOUD_MAX)
 
-        real*4 clouds_3d(ni,nj,nk)
-        real*4 cld_hts(nk)
-        real*4 cld_pres_1d(nk)
+        real clouds_3d(ni,nj,nk)
+        real cld_hts(nk)
+        real cld_pres_1d(nk)
 
         call get_directory(ext,directory,len_dir)
 
@@ -1459,11 +1459,11 @@ C       EW SLICES
         subroutine cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_tb8_m
      1             ,tb8_k,ni,nj,r_missing_data,cvr_snow_cycle)
 
-        real*4 cvr_max(ni,nj)          ! Input
-        real*4 cloud_frac_vis_a(ni,nj) ! Input
-        real*4 cldtop_tb8_m(ni,nj)     ! Input
-        real*4 tb8_k(ni,nj)            ! Input
-        real*4 cvr_snow_cycle(ni,nj)   ! Output
+        real cvr_max(ni,nj)          ! Input
+        real cloud_frac_vis_a(ni,nj) ! Input
+        real cldtop_tb8_m(ni,nj)     ! Input
+        real tb8_k(ni,nj)            ! Input
+        real cvr_snow_cycle(ni,nj)   ! Output
 
         logical l_cvr_max              ! Local
 
@@ -1551,15 +1551,15 @@ C       EW SLICES
      1  ,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD,n_cld_snd
      1  ,c_stations,lat_s,lon_s,elev_s,maxstns)
 
-        real*4 cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
+        real cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
      1        ,t_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
 
-        real*4 cld_snd(max_cld_snd,KCLOUD)
+        real cld_snd(max_cld_snd,KCLOUD)
         integer ista_snd(max_cld_snd)
-        real*4 cld_hts(KCLOUD)
+        real cld_hts(KCLOUD)
 
         character c_stations(maxstns)*(*)
-        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
+        real lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
 
         character*3 c3_discrep
         character*1 c1_c
@@ -1779,10 +1779,10 @@ C       EW SLICES
      1          ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
      1          ,r_missing_data,ni,nj,nk)
 
-        real*4 radar_ref_3d(ni,nj,nk)                   ! I
-        real*4 dbz_max_2d(ni,nj)                        ! I
-        real*4 cvr_max(ni,nj)                           ! I
-        real*4 cloud_frac_vis_a(ni,nj)                  ! I
+        real radar_ref_3d(ni,nj,nk)                   ! I
+        real dbz_max_2d(ni,nj)                        ! I
+        real cvr_max(ni,nj)                           ! I
+        real cloud_frac_vis_a(ni,nj)                  ! I
 
 !       This routine compares the cloud and radar fields and flags
 !       remaining differences that weren't caught in earlier processing
@@ -1884,7 +1884,7 @@ C       EW SLICES
 
         subroutine qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
-        real*4 clouds_3d(NX_L,NY_L,KCLOUD)
+        real clouds_3d(NX_L,NY_L,KCLOUD)
         logical l_poss_extrap ! used to allow for edge effects from 'barnes_r5'
 
         nskip_max = 4 ! 'See barnes_r5'
@@ -1951,7 +1951,7 @@ C       EW SLICES
         subroutine qc_clouds_0d(i,j,k,clouds_3d
      1                         ,NX_L,NY_L,l_poss_extrap)
 
-        real*4 clouds_3d
+        real clouds_3d
         logical l_poss_extrap ! used to allow for edge effects from 'barnes_r5'
 
         if(clouds_3d .gt. 1.0)then 

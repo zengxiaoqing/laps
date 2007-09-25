@@ -43,8 +43,8 @@ cdis
 
         Subroutine ConvC2P (maxrate, t, rate)
         Implicit none
-        Real*4 maxrate, t, rate
-        Real*4 pwr
+        Real maxrate, t, rate
+        Real pwr
         data pwr/2./
 
         rate = 0.
@@ -78,7 +78,7 @@ cdis
 
         Subroutine ConvC2R (maxrate, qc, qcmin, qr, rate)
         Implicit none
-        Real*4 maxrate, qc, qcmin, qr, rate
+        Real maxrate, qc, qcmin, qr, rate
 
         rate = 0.
 
@@ -103,7 +103,7 @@ cdis
 
         Subroutine ConvP2S (maxrate, qp, qpmin, qs, rate)
         Implicit none
-        Real*4 maxrate, qp, qpmin, qs, rate
+        Real maxrate, qp, qpmin, qs, rate
 
         rate = 0.
 
@@ -126,7 +126,7 @@ cdis
 
         Subroutine ConvC2S (maxrate, qc, qcmin, qs, rate)
         Implicit none
-        Real*4 maxrate, qc, qcmin, qs, rate
+        Real maxrate, qc, qcmin, qs, rate
 
         rate = 0.
         If (qs .lt. .0000001) Return    ! no autoconversion
@@ -150,7 +150,7 @@ cdis
 
         Subroutine ConvC2I (maxrate, qc, qcmin, qi, rate)
         Implicit none
-        Real*4 maxrate, qc, qcmin, qi, rate
+        Real maxrate, qc, qcmin, qi, rate
 
         rate = 0.
         If (qi .lt. .0000001) Return    ! no autoconversion
@@ -173,7 +173,7 @@ cdis
 
         Subroutine ConvS2R (maxrate, t, rate)
         Implicit none
-        Real*4 maxrate, t, rate
+        Real maxrate, t, rate
 
         rate = 0.
 
@@ -195,8 +195,8 @@ cdis
 
         Subroutine ConvR2I (maxrate, t, rate)
         Implicit none
-        Real*4 maxrate, t, rate
-        Real*4 pwr
+        Real maxrate, t, rate
+        Real pwr
         data pwr/2./
 
         rate = 0.
@@ -226,7 +226,7 @@ cdis
 
         Subroutine ConvR2V (maxrate, rv, rvsatliq, rate)
         Implicit none
-        Real*4 maxrate, rv, rvsatliq, rate
+        Real maxrate, rv, rvsatliq, rate
 
         rate = 0.
         If (rv .ge. rvsatliq) Return
@@ -243,7 +243,7 @@ cdis
 
         Subroutine ConvS2V (maxrate, rv, rvsatice, rate)
         Implicit none
-        Real*4 maxrate, rv, rvsatice, rate
+        Real maxrate, rv, rvsatice, rate
 
         rate = 0.
         If (rv .ge. rvsatice) Return
@@ -261,7 +261,7 @@ cdis
 
         Subroutine ConvI2V (maxrate, rv, rvsatice, rate)
         Implicit none
-        Real*4 maxrate, rv, rvsatice, rate
+        Real maxrate, rv, rvsatice, rate
 
         rate = 0.
         If (rv .ge. rvsatice) Return

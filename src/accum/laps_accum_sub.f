@@ -67,18 +67,18 @@ cdis
 
         integer i4time,i_diag,n_prods
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
-        real*4 snow_2d(NX_L,NY_L)
-        real*4 snow_2d_tot(NX_L,NY_L)
+        real snow_2d(NX_L,NY_L)
+        real snow_2d_tot(NX_L,NY_L)
 
-        real*4 precip_2d(NX_L,NY_L)
-        real*4 precip_2d_tot(NX_L,NY_L)
+        real precip_2d(NX_L,NY_L)
+        real precip_2d_tot(NX_L,NY_L)
 
-        real*4 field_2d(NX_L,NY_L,4)
+        real field_2d(NX_L,NY_L,4)
 
-        real*4 precip_type_2d(NX_L,NY_L)
+        real precip_type_2d(NX_L,NY_L)
 
         character*9 filename, filename_start
 
@@ -375,7 +375,7 @@ c read in laps lat/lon and topo
         integer LVL,LVL_2d(nfields)
         character*4 LVL_COORD,LVL_COORD_2d(nfields)
 
-        real*4 field_2dsnow(imax,jmax,nfields)
+        real field_2dsnow(imax,jmax,nfields)
 
         lend = len(directory)
         write(6,11)directory(1:lend),ext(1:5)

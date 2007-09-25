@@ -60,42 +60,42 @@ cdis
 !       otherwise be so that real-time speed is optimized.
 
 !       Input
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
 
 !       Output
-        real*4 snow_accum(imax,jmax) ! M
-        real*4 precip_accum(imax,jmax) ! M
+        real snow_accum(imax,jmax) ! M
+        real precip_accum(imax,jmax) ! M
 
 !       Local
-        real*4 precip_rateave(imax,jmax)
-        real*4 snow_rateave(imax,jmax)
-        real*4 snow_accum_pd(imax,jmax)
-        real*4 snow_rate(imax,jmax) ! M/S
-        real*4 precip_rate(imax,jmax) ! M/S
-        real*4 dbz_2d(imax,jmax)
-        real*4 t_sfc_k(imax,jmax)
-        real*4 td_sfc_k(imax,jmax)
-        real*4 pres_sfc_pa(imax,jmax)
-        real*4 tw_sfc_k(imax,jmax)
-        real*4 temp_3d(imax,jmax,kmax)
-        real*4 height_3d(imax,jmax,kmax)
-        real*4 temp_col_max(imax,jmax)
-        real*4 rh_3d(imax,jmax,kmax)
-        real*4 pres_3d(imax,jmax,kmax)
+        real precip_rateave(imax,jmax)
+        real snow_rateave(imax,jmax)
+        real snow_accum_pd(imax,jmax)
+        real snow_rate(imax,jmax) ! M/S
+        real precip_rate(imax,jmax) ! M/S
+        real dbz_2d(imax,jmax)
+        real t_sfc_k(imax,jmax)
+        real td_sfc_k(imax,jmax)
+        real pres_sfc_pa(imax,jmax)
+        real tw_sfc_k(imax,jmax)
+        real temp_3d(imax,jmax,kmax)
+        real height_3d(imax,jmax,kmax)
+        real temp_col_max(imax,jmax)
+        real rh_3d(imax,jmax,kmax)
+        real pres_3d(imax,jmax,kmax)
         logical l_mask(imax,jmax)
         integer i2_pcp_type_2d(imax,jmax)
         integer i2_cldpcp_type_3d(imax,jmax,kmax)
         integer ipcp_1d(kmax)
 
-        real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 grid_ra_vel(imax,jmax,kmax)
-        real*4 grid_ra_nyq(imax,jmax,kmax)
+        real grid_ra_ref(imax,jmax,kmax)
+        real grid_ra_vel(imax,jmax,kmax)
+        real grid_ra_nyq(imax,jmax,kmax)
 
         character*9 asc_tim_9,asc_tim_9_beg,asc_tim_9_end
         integer i4time_file(MAX_RADAR_FILES)
-        real*4 frac(MAX_RADAR_FILES)
+        real frac(MAX_RADAR_FILES)
 
         character*4  radar_name ! Local
 
@@ -689,9 +689,9 @@ cdis
         include 'read_sfc.inc'
         include 'constants.inc'
 
-        real*4 precip_accum(ni,nj) ! M
-        real*4 lat(ni,nj)
-        real*4 lon(ni,nj)
+        real precip_accum(ni,nj) ! M
+        real lat(ni,nj)
+        real lon(ni,nj)
 
         write(6,*)
         write(6,*)' Subroutine compare_gauge_values (1hr pcp inches)...'
@@ -753,7 +753,7 @@ cdis
         character c_fnames(MAX_RADAR_FILES)*80
         character*3 ext
 
-        real*4 frac(MAX_RADAR_FILES)
+        real frac(MAX_RADAR_FILES)
         integer i4time_file(MAX_RADAR_FILES)
 
         call get_filespec(ext,2,c_filespec,istatus)

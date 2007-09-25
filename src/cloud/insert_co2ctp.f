@@ -48,24 +48,24 @@ c
      1            ,istatus)                                               ! O
 
 !       Input
-        real*4 lat(imax,jmax),lon(imax,jmax)
-        real*4 cld_hts(kcloud)
-        real*4 heights_3d(imax,jmax,kmax)
+        real lat(imax,jmax),lon(imax,jmax)
+        real cld_hts(kcloud)
+        real heights_3d(imax,jmax,kmax)
 
 !       Arrays for cloud soundings
-        real*4 cld_snd(max_cld_snd,kcloud)
-        real*4 wt_snd(max_cld_snd,kcloud)
-        integer*4 i_snd(max_cld_snd)
-        integer*4 j_snd(max_cld_snd)
+        real cld_snd(max_cld_snd,kcloud)
+        real wt_snd(max_cld_snd,kcloud)
+        integer i_snd(max_cld_snd)
+        integer j_snd(max_cld_snd)
 
         logical lstat_co2_a(imax,jmax)
         logical l_use_co2
 
 !       Local
-        real*4 pct_pa(imax,jmax)
-        real*4 lca(imax,jmax)
-        real*4 cldtop_co2_pa_a(imax,jmax)
-        real*4 cloud_frac_co2_a(imax,jmax)
+        real pct_pa(imax,jmax)
+        real lca(imax,jmax)
+        real cldtop_co2_pa_a(imax,jmax)
+        real cloud_frac_co2_a(imax,jmax)
 
         character*31 ext
         character var*3,units*10

@@ -63,20 +63,20 @@ cdis
         character*3 exts(20)
 
 !       Array Variables
-        real*4 lat(imax,jmax),lon(imax,jmax),topo(imax,jmax)
-        real*4 rland_frac(imax,jmax)
+        real lat(imax,jmax),lon(imax,jmax),topo(imax,jmax)
+        real rland_frac(imax,jmax)
 
-        real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)
+        real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)
      1        ,wanl_2d(imax,jmax)
         
-        real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 dbz_max_2d(imax,jmax)
-        real*4 heights_3d(imax,jmax,kmax)
+        real grid_ra_ref(imax,jmax,kmax)
+        real dbz_max_2d(imax,jmax)
+        real heights_3d(imax,jmax,kmax)
 
 !       Stuff for SFC and MEAN winds
-        real*4 umean(NX_L,NY_L),vmean(NX_L,NY_L)
-        real*4 ustorm(NX_L,NY_L),vstorm(NX_L,NY_L)
-        real*4 out_lhe_3d(NX_L,NY_L,3)
+        real umean(NX_L,NY_L),vmean(NX_L,NY_L)
+        real ustorm(NX_L,NY_L),vstorm(NX_L,NY_L)
+        real out_lhe_3d(NX_L,NY_L,3)
 
 !       Stuff for reading radar reflectivity
         character*4 radar_name
@@ -84,30 +84,30 @@ cdis
         character*31 ext_radar
 
 !       Stuff for helicity
-        real*4 helicity(NX_L,NY_L)
+        real helicity(NX_L,NY_L)
 
 !       Dummy arrays
-        real*4 dum1_2d(NX_L,NY_L)
-        real*4 dum2_2d(NX_L,NY_L)
-        real*4 dum3_2d(NX_L,NY_L)
+        real dum1_2d(NX_L,NY_L)
+        real dum2_2d(NX_L,NY_L)
+        real dum3_2d(NX_L,NY_L)
         integer idum1_2d(NX_L,NY_L)
 
 !       Used for Steer Grid
-!       real*4 iiilut(-NX_L:NX_L,-NY_L:NY_L)
+!       real iiilut(-NX_L:NX_L,-NY_L:NY_L)
 
 !       Stuff for 2d fields
-        real*4 lifted(NX_L,NY_L),liw(NX_L,NY_L)
-        real*4 field_array(NX_L,NY_L,2)
+        real lifted(NX_L,NY_L),liw(NX_L,NY_L)
+        real field_array(NX_L,NY_L,2)
 
 !       Radar Stuff
         integer  n_fcst_radar
 !       parameter (n_fcst_radar = 7200 / laps_cycle_time) ! Out to 2 hours
         parameter (n_fcst_radar = 0) ! No forecasts for now
 
-        real*4 ref_max(NX_L,NY_L,0:n_fcst_radar)
+        real ref_max(NX_L,NY_L,0:n_fcst_radar)
 
-        real*4 ref_curr_2d(NX_L,NY_L)
-        real*4 ref_fcst_2d(NX_L,NY_L)
+        real ref_curr_2d(NX_L,NY_L)
+        real ref_fcst_2d(NX_L,NY_L)
 
         character*125 comment_2d,comment_a(0:10)
         character*10 units_2d,units_a(0:10)

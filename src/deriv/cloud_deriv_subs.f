@@ -45,19 +45,19 @@ cdis
         include 'laps_cloud.inc'
 
 !       Insert LWC and ICE in areas of thin cloud layers
-        real*4 clouds_3d(ni,nj,kcld)       ! Input
-        real*4 clouds_3d_pres(ni,nj,nk)    ! Input
-        real*4 heights_3d(ni,nj,nk)        ! Input
-        real*4 temp_3d(ni,nj,nk)           ! Input
-        real*4 slwc(ni,nj,nk)              ! Input/Output
-        real*4 cice(ni,nj,nk)              ! Input/Output
-        real*4 pres_3d(ni,nj,nk)           ! Input
-        real*4 pressures_pa(nk)            ! Local
+        real clouds_3d(ni,nj,kcld)       ! Input
+        real clouds_3d_pres(ni,nj,nk)    ! Input
+        real heights_3d(ni,nj,nk)        ! Input
+        real temp_3d(ni,nj,nk)           ! Input
+        real slwc(ni,nj,nk)              ! Input/Output
+        real cice(ni,nj,nk)              ! Input/Output
+        real pres_3d(ni,nj,nk)           ! Input
+        real pressures_pa(nk)            ! Local
 
         integer max_layers
         parameter (max_layers=100)
 
-        real*4 a(max_layers)       ! Cloud fractions of layers
+        real a(max_layers)       ! Cloud fractions of layers
         integer ik(max_layers)   ! Height level representative of cloud layers
         integer ktop(max_layers) ! Height level representative of cloud layers
         integer kbot(max_layers) ! Height level representative of cloud layers
@@ -243,14 +243,14 @@ cdis
 
 !       Adds drizzle to sfc precip type using SAO WX string data
 
-        real*4 cloud_ceiling(ni,nj)
-        real*4 pcp_type_2d(ni,nj)
-        real*4 ri_s(maxstns), rj_s(maxstns)
-        real*4 lat(ni,nj),lon(ni,nj)
-        real*4 t_sfc_k(ni,nj)
+        real cloud_ceiling(ni,nj)
+        real pcp_type_2d(ni,nj)
+        real ri_s(maxstns), rj_s(maxstns)
+        real lat(ni,nj),lon(ni,nj)
+        real t_sfc_k(ni,nj)
 
 !       Declarations for LSO file stuff
-        real*4 lat_s(maxstns), lon_s(maxstns)
+        real lat_s(maxstns), lon_s(maxstns)
         character wx_s(maxstns)*8, obstype(maxstns)*8
 
         write(6,*)' Adding drizzle information from SAOs'
@@ -347,16 +347,16 @@ cdis
 !                               thresholds on cloud cover and sfc dewpoint
 !                               depression.
 
-        real*4 cvr_max(ni,nj)
-        real*4 pcp_type_2d(ni,nj)
-        real*4 t_sfc_k(ni,nj)
-        real*4 td_sfc_k(ni,nj)
-        real*4 dbz_low_2d(ni,nj)
-        real*4 ri_s(maxstns), rj_s(maxstns)
-        real*4 lat(ni,nj),lon(ni,nj)
+        real cvr_max(ni,nj)
+        real pcp_type_2d(ni,nj)
+        real t_sfc_k(ni,nj)
+        real td_sfc_k(ni,nj)
+        real dbz_low_2d(ni,nj)
+        real ri_s(maxstns), rj_s(maxstns)
+        real lat(ni,nj),lon(ni,nj)
 
 !       Declarations for LSO file stuff
-        real*4 lat_s(maxstns), lon_s(maxstns)
+        real lat_s(maxstns), lon_s(maxstns)
         character wx_s(maxstns)*8, obstype(maxstns)*8
 
         write(6,*)' Adding snow information from SAOs'
@@ -462,16 +462,16 @@ cdis
 !                               rain in PTT field. Cloud ceiling threshold 
 !                               replaced with thresholds on cloud cover 
 
-        real*4 cvr_max(ni,nj)
-        real*4 pcp_type_2d(ni,nj)
-        real*4 t_sfc_k(ni,nj)
-        real*4 td_sfc_k(ni,nj)
-        real*4 dbz_low_2d(ni,nj)
-        real*4 ri_s(maxstns), rj_s(maxstns)
-        real*4 lat(ni,nj),lon(ni,nj)
+        real cvr_max(ni,nj)
+        real pcp_type_2d(ni,nj)
+        real t_sfc_k(ni,nj)
+        real td_sfc_k(ni,nj)
+        real dbz_low_2d(ni,nj)
+        real ri_s(maxstns), rj_s(maxstns)
+        real lat(ni,nj),lon(ni,nj)
 
 !       Declarations for LSO file stuff
-        real*4 lat_s(maxstns), lon_s(maxstns)
+        real lat_s(maxstns), lon_s(maxstns)
         character wx_s(maxstns)*8, obstype(maxstns)*8
 
         write(6,*)' Adding rain information from stations'
@@ -605,16 +605,16 @@ cdis
 !       This routine sets the precip type at such grid points to "no precip".
 !       The highest allowable reflectivity threshold for precip is 10 dbz.
 
-        real*4 cvr_max(ni,nj)
-        real*4 pcp_type_2d(ni,nj)
-        real*4 t_sfc_k(ni,nj)
-        real*4 td_sfc_k(ni,nj)
-        real*4 dbz_low_2d(ni,nj)
-        real*4 ri_s(maxstns), rj_s(maxstns)
-        real*4 lat(ni,nj),lon(ni,nj)
+        real cvr_max(ni,nj)
+        real pcp_type_2d(ni,nj)
+        real t_sfc_k(ni,nj)
+        real td_sfc_k(ni,nj)
+        real dbz_low_2d(ni,nj)
+        real ri_s(maxstns), rj_s(maxstns)
+        real lat(ni,nj),lon(ni,nj)
 
 !       Declarations for LSO file stuff
-        real*4 lat_s(maxstns), lon_s(maxstns)
+        real lat_s(maxstns), lon_s(maxstns)
         character wx_s(maxstns)*8, obstype(maxstns)*8
 
 !       This routine blanks the precip type if the neighboring station has no
@@ -832,12 +832,12 @@ cdis
      1                                     ,N_3D_FIELDS,istatus)       
 
 
-        real*4 array1(NX_L_1,NY_L_1,NZ_L_1)
-        real*4 array2(NX_L_2,NY_L_2,NZ_L_2)
-        real*4 array3(NX_L_3,NY_L_3,NZ_L_3)
-        real*4 array4(NX_L_4,NY_L_4,NZ_L_4)
-        real*4 array5(NX_L_5,NY_L_5,NZ_L_5)
-        real*4 array6(NX_L_6,NY_L_6,NZ_L_6)
+        real array1(NX_L_1,NY_L_1,NZ_L_1)
+        real array2(NX_L_2,NY_L_2,NZ_L_2)
+        real array3(NX_L_3,NY_L_3,NZ_L_3)
+        real array4(NX_L_4,NY_L_4,NZ_L_4)
+        real array5(NX_L_5,NY_L_5,NZ_L_5)
+        real array6(NX_L_6,NY_L_6,NZ_L_6)
         character*125 comment_3D(N_3D_FIELDS)
         character*10 units_3D(N_3D_FIELDS)
         character*3 var_3D(N_3D_FIELDS)
@@ -898,10 +898,10 @@ cdis
         character*125 comment_3d(nk*nf),comment_2d(nf)
         character*10 units_3d(nk*nf),units_2d(nf)
         character*3 var_3d(nk*nf),var_2d(nf)
-        integer*4 LVL_3d(nk*nf)
+        integer LVL_3d(nk*nf)
         character*4 LVL_COORD_3d(nk*nf)
 
-        real*4 field_3d(ni,nj,nk,nf)
+        real field_3d(ni,nj,nk,nf)
 
         istatus = 0
 

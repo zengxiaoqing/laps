@@ -74,8 +74,8 @@ cdis
         character*(*) c_stations(maxstns)
         character*5 c5_outstring
 
-        real*4 lat_sta_ret(maxstns)
-        real*4 lon_sta_ret(maxstns)
+        real lat_sta_ret(maxstns)
+        real lon_sta_ret(maxstns)
 
         logical l_sao_lso
         data l_sao_lso /.true./ ! Do things the new way?
@@ -86,11 +86,11 @@ cdis
         logical l_dry, l_parse
 
 !       Arrays for reading in the SAO data from the LSO files
-        Real*4   elev(maxstns),t(maxstns),td(maxstns)
-        real*4   ht_base_ret(maxstns,5)
+        Real   elev(maxstns),t(maxstns),td(maxstns)
+        real   ht_base_ret(maxstns,5)
 c
-        Integer*4   n_cloud_layers_ret(maxstns)
-        Integer*4   obstime(maxstns)
+        Integer   n_cloud_layers_ret(maxstns)
+        Integer   obstime(maxstns)
 c
         Character   obstype(maxstns)*6,atype(maxstns)*6
      1             ,wx(maxstns)*8
@@ -99,23 +99,23 @@ c
         character*8 c8_project
 
 !       Arrays for inserting the cloud data into the LAPS grid
-        real*4 cldcv(ni,nj,nk)
-        real*4 cf_modelfg(ni,nj,nk)
-        real*4 t_modelfg(ni,nj,nk)
-        real*4 topo(ni,nj)
-        real*4 t_sfc_k(ni,nj)
-        real*4 wtcldcv(ni,nj,nk)
-        real*4 cld_hts(nk)
-        real*4 lat(ni,nj),lon(ni,nj)
+        real cldcv(ni,nj,nk)
+        real cf_modelfg(ni,nj,nk)
+        real t_modelfg(ni,nj,nk)
+        real topo(ni,nj)
+        real t_sfc_k(ni,nj)
+        real wtcldcv(ni,nj,nk)
+        real cld_hts(nk)
+        real lat(ni,nj),lon(ni,nj)
         character*1 name_array(ni,nj,nk)
 
 !       Arrays for cloud soundings
-        integer*4 ista_snd(max_cld_snd)
-        real*4 cld_snd(max_cld_snd,nk)
-        real*4 wt_snd(max_cld_snd,nk)
-        real*4 cvr_snd(max_cld_snd)
-        integer*4 i_snd(max_cld_snd)
-        integer*4 j_snd(max_cld_snd)
+        integer ista_snd(max_cld_snd)
+        real cld_snd(max_cld_snd,nk)
+        real wt_snd(max_cld_snd,nk)
+        real cvr_snd(max_cld_snd)
+        integer i_snd(max_cld_snd)
+        integer j_snd(max_cld_snd)
 
         logical l_out_of_grid
 
@@ -756,12 +756,12 @@ C CLOUDS ARE NOW IN MSL
      1          ,i_in,j_in,k,ni,nj,nk,cld_hts
      1          ,ht_base,ht_top,init,l_dry)
 
-        real*4 cld_snd(max_cld_snd,nk)
-        real*4 cf_modelfg(ni,nj,nk)
-        real*4 t_modelfg(ni,nj,nk)
-        real*4 topo(ni,nj)
-        real*4 t_sfc_k(ni,nj)
-        real*4 cld_hts(nk)
+        real cld_snd(max_cld_snd,nk)
+        real cf_modelfg(ni,nj,nk)
+        real t_modelfg(ni,nj,nk)
+        real topo(ni,nj)
+        real t_sfc_k(ni,nj)
+        real cld_hts(nk)
 
         logical l_wait_for_base,l_dry,l_cf,l_inversion
         save l_wait_for_base,cf_model_base,t_model_base,l_inversion,t_su

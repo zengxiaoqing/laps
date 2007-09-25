@@ -49,18 +49,18 @@ c
      1  cldtop_co2_pa_a,cloud_frac_co2_a,istat_co2,lstat_co2_a)          ! O
 
 !       Output
-        real*4 s8a_k(imax,jmax)
-        real*4 s3a_k(imax,jmax)
-        real*4 sst_k(imax,jmax)
-        real*4 cldtop_co2_pa_a(imax,jmax)
-        real*4 cloud_frac_co2_a(imax,jmax)
+        real s8a_k(imax,jmax)
+        real s3a_k(imax,jmax)
+        real sst_k(imax,jmax)
+        real cldtop_co2_pa_a(imax,jmax)
+        real cloud_frac_co2_a(imax,jmax)
 
         logical lstat_co2_a(imax,jmax)
         logical l_use_39, l_use_co2
 
 !       Local
-        real*4 pct_pa(imax,jmax)
-        real*4 lca(imax,jmax)
+        real pct_pa(imax,jmax)
+        real lca(imax,jmax)
 
         character*3 lvd_ext
         data lvd_ext /'lvd'/

@@ -60,26 +60,26 @@ cdis
 !       echo is strong then visible is overruled and a minimal value of cloud 
 !       fraction of 0.2 is left in.
 
-        integer*4 ihist_alb(-10:20)
-        integer*4 ihist_frac_sat(-10:20)
-        integer*4 ihist_frac_in(-10:20)
-        integer*4 ihist_frac_out(-10:20)
-        integer*4 ihist_frac_in_out(-10:20,-10:20)
-        integer*4 ihist_frac_in_sat(-10:20,-10:20)
-        integer*4 ihist_colmaxin_sat(-10:20,-10:20)
-        integer*4 ihist_colmaxout_sat(-10:20,-10:20)
-        integer*4 istat_39_a(ni,nj)
+        integer ihist_alb(-10:20)
+        integer ihist_frac_sat(-10:20)
+        integer ihist_frac_in(-10:20)
+        integer ihist_frac_out(-10:20)
+        integer ihist_frac_in_out(-10:20,-10:20)
+        integer ihist_frac_in_sat(-10:20,-10:20)
+        integer ihist_colmaxin_sat(-10:20,-10:20)
+        integer ihist_colmaxout_sat(-10:20,-10:20)
+        integer istat_39_a(ni,nj)
         logical l_use_39, l_39_clr_2d
-        real*4 albedo(ni,nj)
-        real*4 topo(ni,nj)
-        real*4 dbz_max_2d(ni,nj)
-        real*4 radar_ref_3d(ni,nj,klaps)
-        real*4 clouds_3d(ni,nj,nk)
-        real*4 cld_hts(nk)
+        real albedo(ni,nj)
+        real topo(ni,nj)
+        real dbz_max_2d(ni,nj)
+        real radar_ref_3d(ni,nj,klaps)
+        real clouds_3d(ni,nj,nk)
+        real cld_hts(nk)
 
 !       This stuff is for reading VIS data from LVD file
-        real*4 cloud_frac_vis_a(ni,nj)
-        integer*4 mxstn
+        real cloud_frac_vis_a(ni,nj)
+        integer mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
 
         if(l_use_39)then

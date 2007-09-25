@@ -50,22 +50,22 @@ cdis
 
 !       Steve Albers 1997
 
-        integer*4 ihist_alb(-10:20)
-        integer*4 ihist_alb_sfc(-10:20)
-        integer*4 ihist_frac_sat(-10:20)
-        integer*4 istat_vis_a(ni,nj)            ! Cloud mask based on VIS
+        integer ihist_alb(-10:20)
+        integer ihist_alb_sfc(-10:20)
+        integer ihist_frac_sat(-10:20)
+        integer istat_vis_a(ni,nj)            ! Cloud mask based on VIS
 
-        real*4 lat(ni,nj)
-        real*4 sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
-        real*4 static_albedo(ni,nj)   ! Static albedo database
-        real*4 vis_albedo(ni,nj)
-        real*4 rlaps_land_frac(ni,nj)
-        real*4 topo(ni,nj)
+        real lat(ni,nj)
+        real sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
+        real static_albedo(ni,nj)   ! Static albedo database
+        real vis_albedo(ni,nj)
+        real rlaps_land_frac(ni,nj)
+        real topo(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
-        real*4 solar_alt(ni,nj)
-        real*4 cloud_frac_vis_a(ni,nj)
-        integer*4 mxstn
+        real solar_alt(ni,nj)
+        real cloud_frac_vis_a(ni,nj)
+        integer mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
         character*9 filename
         character*31 ext
@@ -246,17 +246,17 @@ cdis
 !       populated and can be used more at face value.
 
         character*3 var
-        real*4 lat(ni,nj)
-        real*4 sfc_albedo(ni,nj)      ! Populated with "reliable" values that
+        real lat(ni,nj)
+        real sfc_albedo(ni,nj)      ! Populated with "reliable" values that
                                       ! may include land/sea snow/ice
 
-        real*4 sfc_albedo_lwrb(ni,nj) ! Populated with lower bound (i.e. from
+        real sfc_albedo_lwrb(ni,nj) ! Populated with lower bound (i.e. from
                                       ! static database)
 
-        real*4 static_albedo(ni,nj)   ! Static albedo database
+        real static_albedo(ni,nj)   ! Static albedo database
 
-        real*4 rlaps_land_frac(ni,nj)
-        real*4 topo(ni,nj)
+        real rlaps_land_frac(ni,nj)
+        real topo(ni,nj)
 
         write(6,*)' Subroutine get_sfc_albedo...'
 

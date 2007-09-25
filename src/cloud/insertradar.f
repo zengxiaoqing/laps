@@ -74,27 +74,27 @@ cdis
 
 !       1992 - 2003        Steve Albers
 
-        real*4 temp_3d(ni,nj,nk)
-        real*4 heights_3d(ni,nj,nk)
-        real*4 temp_sfc_k(ni,nj)
-        real*4 td_sfc_k(ni,nj)
+        real temp_3d(ni,nj,nk)
+        real heights_3d(ni,nj,nk)
+        real temp_sfc_k(ni,nj)
+        real td_sfc_k(ni,nj)
 
-        real*4 cldcv(ni,nj,kcloud)
-        real*4 cld_hts(kcloud)
+        real cldcv(ni,nj,kcloud)
+        real cld_hts(kcloud)
 
-        real*4 grid_ra_ref(ni,nj,nk)
-        real*4 dbz_max_2d(ni,nj)
-        real*4 cloud_base(ni,nj)
-        real*4 cloud_base_buf(ni,nj) ! Lowest SAO/IR base within search radius
-        real*4 topo(ni,nj)
+        real grid_ra_ref(ni,nj,nk)
+        real dbz_max_2d(ni,nj)
+        real cloud_base(ni,nj)
+        real cloud_base_buf(ni,nj) ! Lowest SAO/IR base within search radius
+        real topo(ni,nj)
 
-        real*4 echo_top(ni,nj)           ! L
-        real*4 echo_top_agl(ni,nj)       ! L
-        real*4 lcl_agl(ni,nj)            ! L
+        real echo_top(ni,nj)           ! L
+        real echo_top_agl(ni,nj)       ! L
+        real lcl_agl(ni,nj)            ! L
 
 !       Cloud not filled in unless radar echo is higher than base calculated
 !       with THIS threshold.
-        real*4     thresh_cvr
+        real     thresh_cvr
         parameter (thresh_cvr = 0.10)
 
         logical l_below_base, l_inserted

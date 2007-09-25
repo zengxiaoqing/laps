@@ -15,32 +15,32 @@ c**************new routine as adapted at FSL**************************
 
       integer MAX_FIELDS
       parameter (MAX_FIELDS = 7)
-      real*4 field_array(ni,nj,MAX_FIELDS)
+      real field_array(ni,nj,MAX_FIELDS)
       character*3 var_a(MAX_FIELDS)
       character*125 comment_a(MAX_FIELDS)
       character*10  units_a(MAX_FIELDS)
       character*31 ext
 
-!     real*4 heights_3d(ni,nj,nk)                                   ! I
-      real*4 temp_3d(ni,nj,nk)                                      ! I
-      real*4 td_3d(ni,nj,nk)                                        ! I
-      real*4 u_3d(ni,nj,nk)
-      real*4 v_3d(ni,nj,nk)
+!     real heights_3d(ni,nj,nk)                                   ! I
+      real temp_3d(ni,nj,nk)                                      ! I
+      real td_3d(ni,nj,nk)                                        ! I
+      real u_3d(ni,nj,nk)
+      real v_3d(ni,nj,nk)
 
-      real*4 t_sfc_k(ni,nj)                                         ! I 
-      real*4 rh_sfc(ni,nj)                                          ! I 
-      real*4 p_sfc_pa(ni,nj)                                        ! I 
-      real*4 u_sfc(ni,nj)                                           ! I
-      real*4 v_sfc(ni,nj)                                           ! I
+      real t_sfc_k(ni,nj)                                         ! I 
+      real rh_sfc(ni,nj)                                          ! I 
+      real p_sfc_pa(ni,nj)                                        ! I 
+      real u_sfc(ni,nj)                                           ! I
+      real v_sfc(ni,nj)                                           ! I
 
-      real*4 pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                   ! L
-      real*4 pres_3d_pa(ni,nj,nk)                                   ! L
-      real*4 haines_mid_2d(ni,nj)                                   ! L
-      real*4 haines_hi_2d(ni,nj)                                    ! L
-      real*4 vent_2d(ni,nj)                                         ! L
-      real*4 fosberg_2d(ni,nj)                                      ! L
-      real*4 umean_2d(ni,nj),vmean_2d(ni,nj)                        ! L
-      real*4 cfwi(ni,nj)                                            ! L
+      real pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                   ! L
+      real pres_3d_pa(ni,nj,nk)                                   ! L
+      real haines_mid_2d(ni,nj)                                   ! L
+      real haines_hi_2d(ni,nj)                                    ! L
+      real vent_2d(ni,nj)                                         ! L
+      real fosberg_2d(ni,nj)                                      ! L
+      real umean_2d(ni,nj),vmean_2d(ni,nj)                        ! L
+      real cfwi(ni,nj)                                            ! L
 
       write(6,*)' Subroutine fire_fields (under construction)'
 
@@ -160,31 +160,31 @@ c**************new routine as adapted at FSL**************************
      1                           ,cfwi                               ! O
      1                           ,istatus)                           ! O
 
-       real*4 pres_3d_pa(ni,nj,nk)                                   ! I
-!      real*4 heights_3d(ni,nj,nk)                                   ! I
-       real*4 temp_3d(ni,nj,nk)                                      ! I
-       real*4 td_3d(ni,nj,nk)                                        ! I
-       real*4 u_3d(ni,nj,nk)
-       real*4 v_3d(ni,nj,nk)
+       real pres_3d_pa(ni,nj,nk)                                   ! I
+!      real heights_3d(ni,nj,nk)                                   ! I
+       real temp_3d(ni,nj,nk)                                      ! I
+       real td_3d(ni,nj,nk)                                        ! I
+       real u_3d(ni,nj,nk)
+       real v_3d(ni,nj,nk)
 
-       real*4 pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                   ! I
-       real*4 pbl_top_m(ni,nj)                                       ! L
+       real pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                   ! I
+       real pbl_top_m(ni,nj)                                       ! L
 
-       real*4 t_sfc_k(ni,nj)
-       real*4 rh_sfc(ni,nj)
-       real*4 u_sfc(ni,nj)
-       real*4 v_sfc(ni,nj)
-       real*4 p_sfc_pa(ni,nj)                                        ! I
-       real*4 p_sfc_mb(ni,nj)
+       real t_sfc_k(ni,nj)
+       real rh_sfc(ni,nj)
+       real u_sfc(ni,nj)
+       real v_sfc(ni,nj)
+       real p_sfc_pa(ni,nj)                                        ! I
+       real p_sfc_mb(ni,nj)
 
-       real*4 haines_mid_2d(ni,nj)                                   ! O
-       real*4 haines_hi_2d(ni,nj)                                    ! O
-       real*4 vent_2d(ni,nj)                                         ! O
-       real*4 umean_2d(ni,nj),vmean_2d(ni,nj)                        ! O
-       real*4 fosberg_2d(ni,nj)                                      ! O
-       real*4 cfwi(ni,nj)                                            ! O
+       real haines_mid_2d(ni,nj)                                   ! O
+       real haines_hi_2d(ni,nj)                                    ! O
+       real vent_2d(ni,nj)                                         ! O
+       real umean_2d(ni,nj),vmean_2d(ni,nj)                        ! O
+       real fosberg_2d(ni,nj)                                      ! O
+       real cfwi(ni,nj)                                            ! O
 
-       real*4 pres_3d_mb(ni,nj,nk)                                   ! L
+       real pres_3d_mb(ni,nj,nk)                                   ! L
 
        write(6,*)' Subroutine cpt_fire_fields...'
 
@@ -253,17 +253,17 @@ c**************new routine as adapted at FSL**************************
      1                             ,umean_2d,vmean_2d                     ! O
      1                             ,vent_2d,istatus)                      ! O
 
-!      real*4 heights_3d(ni,nj,nk)                                        ! I
-       real*4 pres_3d_pa(ni,nj,nk)                                        ! I
-       real*4 u_3d(ni,nj,nk)                                              ! I
-       real*4 v_3d(ni,nj,nk)                                              ! I
+!      real heights_3d(ni,nj,nk)                                        ! I
+       real pres_3d_pa(ni,nj,nk)                                        ! I
+       real u_3d(ni,nj,nk)                                              ! I
+       real v_3d(ni,nj,nk)                                              ! I
 
-       real*4 pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                        ! I
-       real*4 umean_2d(ni,nj),vmean_2d(ni,nj)                             ! O
-       real*4 vent_2d(ni,nj)                                              ! O
+       real pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                        ! I
+       real umean_2d(ni,nj),vmean_2d(ni,nj)                             ! O
+       real vent_2d(ni,nj)                                              ! O
 
-       real*4 topo(ni,nj)           ! Switch to sfc_pres_pa?
-       real*4 p_sfc_pa(ni,nj)                                             ! I
+       real topo(ni,nj)           ! Switch to sfc_pres_pa?
+       real p_sfc_pa(ni,nj)                                             ! I
 
        write(6,*)' Subroutine ventilation_index'
 
@@ -314,19 +314,19 @@ c**************new routine as adapted at FSL**************************
 
         logical ltest_vertical_grid
 
-        real*4 umean_2d(imax,jmax),vmean_2d(imax,jmax)            ! Output
-        real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)          ! Input
-        real*4 pres_3d_pa(imax,jmax,kmax)                         ! Input
+        real umean_2d(imax,jmax),vmean_2d(imax,jmax)            ! Output
+        real uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)          ! Input
+        real pres_3d_pa(imax,jmax,kmax)                         ! Input
 
-        real*4 topo(imax,jmax)                                    ! Input
-        real*4 p_sfc_pa(imax,jmax)                                ! Input
-        real*4 pbl_top_pa(imax,jmax)                              ! Input
+        real topo(imax,jmax)                                    ! Input
+        real p_sfc_pa(imax,jmax)                                ! Input
+        real pbl_top_pa(imax,jmax)                              ! Input
 
-        real*4 sum(imax,jmax)                                     ! Local
-        real*4 usum(imax,jmax)                                    ! Local
-        real*4 vsum(imax,jmax)                                    ! Local
-        integer*4 klow(imax,jmax)                                 ! Local
-        integer*4 khigh(imax,jmax)                                ! Local
+        real sum(imax,jmax)                                     ! Local
+        real usum(imax,jmax)                                    ! Local
+        real vsum(imax,jmax)                                    ! Local
+        integer klow(imax,jmax)                                 ! Local
+        integer khigh(imax,jmax)                                ! Local
 
 !       topo = 0.             ! Just for testing (also switch to pres_sfc_pa)?
 
@@ -402,12 +402,12 @@ c**************new routine as adapted at FSL**************************
 
        implicit none
 
-       real*4 spd_thresh
+       real spd_thresh
        parameter (spd_thresh = 79.90372)   ! 20mph squared in m/s
  
-       integer*4 ni,nj,i4time,pi4time,i,j,n,istatus
+       integer ni,nj,i4time,pi4time,i,j,n,istatus
 
-       real*4 rh_sfc(ni,nj),u_sfc(ni,nj),v_sfc(ni,nj)
+       real rh_sfc(ni,nj),u_sfc(ni,nj),v_sfc(ni,nj)
      .       ,rh(ni,nj),u(ni,nj),v(ni,nj)
      .       ,cfwi1(ni,nj,24),cfwi(ni,nj)
      .       ,speed

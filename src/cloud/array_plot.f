@@ -50,7 +50,7 @@ cdis
       integer ia(imax,jmax)
       character*1 c1a_array(imax,jmax),c1b_array(imax,jmax)
       character*1 name_array(imax,jmax)
-      real*4 cld_hts(kmax)
+      real cld_hts(kmax)
       CHARACTER NAME*10
       character*1 c1_cov(-1:13)
 

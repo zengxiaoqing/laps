@@ -51,16 +51,16 @@ cdis
 !       We think this works even with thin cloud scenarios that could cause
 !       an underestimation of cloud-top temperature when using 'tb8_k'.
 
-        real*4    t39_k(ni,nj)
-        real*4    tb8_k(ni,nj)
-        real*4    solar_alt(ni,nj)
-        real*4    rlaps_land_frac(ni,nj)
-        real*4    static_albedo(ni,nj)          ! Static albedo database
-        integer*4 istat_39_a(ni,nj)
-        integer*4 istat_39_buff(ni,nj)
-        integer*4 icount(-1:+1)
+        real    t39_k(ni,nj)
+        real    tb8_k(ni,nj)
+        real    solar_alt(ni,nj)
+        real    rlaps_land_frac(ni,nj)
+        real    static_albedo(ni,nj)          ! Static albedo database
+        integer istat_39_a(ni,nj)
+        integer istat_39_buff(ni,nj)
+        integer icount(-1:+1)
 
-        real*4 k_to_c
+        real k_to_c
 
         write(6,*)' Subroutine get_istat_39...'
 
@@ -182,13 +182,13 @@ cdis
 !       We think this works even with thin cloud scenarios that could cause
 !       an underestimation of cloud-top temperature when using 'tb8_k'.
 
-        real*4    t39_k(ni,nj)
-        real*4    tb8_k(ni,nj)
-        real*4    solar_alt(ni,nj)
-        integer*4 istat_39_lwc_a(ni,nj)
-        integer*4 icount(-1:+1)
+        real    t39_k(ni,nj)
+        real    tb8_k(ni,nj)
+        real    solar_alt(ni,nj)
+        integer istat_39_lwc_a(ni,nj)
+        integer icount(-1:+1)
 
-        real*4 k_to_c
+        real k_to_c
 
         do ic = -1,+1
             icount(ic) = 0

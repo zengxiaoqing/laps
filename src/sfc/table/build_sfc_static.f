@@ -35,8 +35,8 @@ c
         program locpost
         integer istatus
 
-        real*4, allocatable, dimension(:,:) :: lat
-        real*4, allocatable, dimension(:,:) :: lon
+        real, allocatable, dimension(:,:) :: lat
+        real, allocatable, dimension(:,:) :: lon
 
         call get_grid_dim_xy(NX_L, NY_L, istatus)
         if (istatus .ne. 1) then
@@ -107,17 +107,17 @@ c
 c.....	Grids for the outputs, weights, and stuff 
 c
         integer ni,nj
-	real*4 akk(ni,nj)
-	real*4 top(ni,nj), d1(ni,nj), d2(ni,nj)
-        real*4 fnorm(0:ni-1,0:nj-1)
+	real akk(ni,nj)
+	real top(ni,nj), d1(ni,nj), d2(ni,nj)
+        real fnorm(0:ni-1,0:nj-1)
 c
         character*80 grid_fnam_common
         common/grid_fnam_cmn/ grid_fnam_common
 c
 c..... LAPS Lat/lon grids.
 c
-	real*4 lat(ni,nj), lon(ni,nj), topo(ni,nj)
-	integer*4 grid_spacing, len
+	real lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	integer grid_spacing, len
 	character dir_s*150,ext_s*31,units*10,comment*125,var_s*3
         integer imx,jmx, imn, jmn, icnt, npass, i_tmn, j_tmn
         integer i_tmx, j_tmx, n_obs_var, i, j, imaxm1, jmaxm1
@@ -341,14 +341,14 @@ c
 ccc	include '../../source/sfc/laps_sfc.inc'
         implicit none
         integer imax, jmax
-	real*4 to(imax,jmax), t(imax,jmax), val(imax*jmax)
-	real*4 h1(imax,jmax), h2(imax,jmax)
-	integer*4 iob(imax*jmax), job(imax*jmax), dx, dy
+	real to(imax,jmax), t(imax,jmax), val(imax*jmax)
+	real h1(imax,jmax), h2(imax,jmax)
+	integer iob(imax*jmax), job(imax*jmax), dx, dy
         real badd
 	parameter(badd = 1.e6 - 2.)	! bad data value
         real sum, sumwt, sum2, sumwt2, smsng
         integer i,j,n, ipass, ncnt, npass 
-	real*4 fnorm(0:imax-1,0:jmax-1)
+	real fnorm(0:imax-1,0:jmax-1)
 
 	call zero(h1,imax,jmax)
 	call zero(h2,imax,jmax)
@@ -487,7 +487,7 @@ c=====================================================================
 c
 	implicit none
         integer imax,jmax 
-        real*4 fnorm(0:imax-1,0:jmax-1)
+        real fnorm(0:imax-1,0:jmax-1)
         real pi, con, area, fno, rr, d, rom2
         integer n_obs_var,  dx, dy
           

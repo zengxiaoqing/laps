@@ -6,7 +6,7 @@
         character*6 c6_chars
         character*7 c7_chars
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
         write(6,*)' Subroutine locpost_radar...'
 

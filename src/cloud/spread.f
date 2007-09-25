@@ -58,10 +58,10 @@ c     if(b .ne. 1.00)write(6,101)i,j,k,b
 c     This subroutine inserts the cloud sounding into the analysis arrays
 c     at one point location.
 
-      real*4 a_array(max_array,kmax)
-      real*4 b_array(max_array,kmax)
-      integer*4 i_array(max_array)
-      integer*4 j_array(max_array)
+      real a_array(max_array,kmax)
+      real b_array(max_array,kmax)
+      integer i_array(max_array)
+      integer j_array(max_array)
 
       a_array(n,k) = a
       b_array(n,k) = b

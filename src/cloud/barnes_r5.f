@@ -55,11 +55,11 @@ cdis
 
       integer NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH
 
-      integer*4 nskip,n_fnorm
+      integer nskip,n_fnorm
 !     parameter (nskip = 2)
 
-      integer*4 lowi_lut(imax)
-      integer*4 lowj_lut(jmax)
+      integer lowi_lut(imax)
+      integer lowj_lut(jmax)
 
       dimension to(imax,jmax,kmax),t(imax,jmax,kmax),fnorm(n_fnorm)
      1  ,iob(max_obs),job(max_obs),kob(max_obs),nob(max_obs)
@@ -68,16 +68,16 @@ cdis
 
       logical l_perimeter, l_use_snd
 
-      real*4 cld_snd_in(max_cld_snd,kmax)
-      real*4 wt_snd_in(max_cld_snd,kmax)
+      real cld_snd_in(max_cld_snd,kmax)
+      real wt_snd_in(max_cld_snd,kmax)
 
       real*8 cld_snd(max_cld_snd,kmax)
       real*8 wt_snd(max_cld_snd,kmax)
 
       real*8 cld_snd_diff(max_cld_snd,kmax)
       real*8 wt_snd_diff(max_cld_snd,kmax)
-      integer*4 i_snd(max_cld_snd)
-      integer*4 j_snd(max_cld_snd)
+      integer i_snd(max_cld_snd)
+      integer j_snd(max_cld_snd)
 
       real*8 sum_a(imax,jmax)
       real*8 sumwt_a(imax,jmax)
@@ -90,7 +90,7 @@ cdis
 
       write(6,*)' subroutine barnes_r5...'
 
-!     Convert from real*4 to real*8
+!     Convert from real to real*8
       cld_snd = cld_snd_in 
       wt_snd = wt_snd_in
 

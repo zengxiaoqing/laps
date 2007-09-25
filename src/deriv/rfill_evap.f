@@ -46,15 +46,15 @@ cdis
 
 !       ni,nj,nk are input LAPS grid dimensions
 
-        real*4 ref_3d(ni,nj,nk)                  ! I/O 3D reflctvy grid
-        real*4 temp_3d(ni,nj,nk)                 ! I
-        real*4 rh_3d_pct(ni,nj,nk)               ! I
-        real*4 heights_3d(ni,nj,nk)              ! I
+        real ref_3d(ni,nj,nk)                  ! I/O 3D reflctvy grid
+        real temp_3d(ni,nj,nk)                 ! I
+        real rh_3d_pct(ni,nj,nk)               ! I
+        real heights_3d(ni,nj,nk)              ! I
         integer cldpcp_type_3d(ni,nj,nk)         ! I
-        real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! I
-        real*4 cloud_base(ni,nj)                 ! I
+        real lat(ni,nj),lon(ni,nj),topo(ni,nj) ! I
+        real cloud_base(ni,nj)                 ! I
 
-        real*4 heights_1d(nk)                    ! L
+        real heights_1d(nk)                    ! L
 
         logical l_low_fill,l_high_fill,l_test
 
@@ -207,13 +207,13 @@ c       write(6,*)' Doing Column ',j
         subroutine modify_dbz_level(i,j,k_upper,k_lower,ref_3d,temp_3d
      1  ,rh_3d_pct,cldpcp_type_3d,heights_1d,ni,nj,nk,ref_base,istatus)       
 
-        real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflctvy grid
-        real*4 temp_3d(ni,nj,nk)                 ! Input 3D temp grid
-        real*4 rh_3d_pct(ni,nj,nk)               ! Input 3D rh grid
-        real*4 heights_1d(nk)                    ! Input
+        real ref_3d(ni,nj,nk)                  ! Input/Output 3D reflctvy grid
+        real temp_3d(ni,nj,nk)                 ! Input 3D temp grid
+        real rh_3d_pct(ni,nj,nk)               ! Input 3D rh grid
+        real heights_1d(nk)                    ! Input
         integer cldpcp_type_3d(ni,nj,nk)       ! Input 3D pcp type grid
 
-        real*4 maxrate_R2V,maxrate_S2V,maxrate_I2V
+        real maxrate_R2V,maxrate_S2V,maxrate_I2V
 !       parameter (maxrate_R2V = 0.83e-5) ! s**-1     (Original Schultz value)
 !       parameter (maxrate_S2V = 1.67e-5) ! s**-1     (Original Schultz value)
 !       parameter (maxrate_I2V = 3.33e-6) ! s**-1     (Original Schultz value)
@@ -349,7 +349,7 @@ c       write(6,*)' Doing Column ',j
 
         function dbz_to_rate(dbz,t,p,itype,istatus)
 
-        real*4 a,b,rate_max
+        real a,b,rate_max
         parameter (a = 200.)        ! Z-R relationship
         parameter (b = 1.6)         ! Z-R relationship
         parameter (rate_max = 1000.0) ! Currently disabled
@@ -376,7 +376,7 @@ c       write(6,*)' Doing Column ',j
 
         function rate_to_dbz(rate,t,p,ref_base,itype,istatus)
 
-        real*4 a,b
+        real a,b
         parameter (a = 200.)        ! Z-R relationship
         parameter (b = 1.6)         ! Z-R relationship
 

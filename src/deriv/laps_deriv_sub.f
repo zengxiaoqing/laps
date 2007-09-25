@@ -108,35 +108,35 @@ cdis
 
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
-        real*4 surface_sao_buffer
+        real surface_sao_buffer
         parameter (surface_sao_buffer = 800.)
 
-        real*4 thresh_cvr,default_top,default_base,default_clear_cover
+        real thresh_cvr,default_top,default_base,default_clear_cover
      1                   ,default_ceiling
 
         parameter       (thresh_cvr = 0.65) ! Used to "binaryize" cloud cover
 
         parameter       (default_clear_cover = .01)
 
-        real*4 thresh_cvr_base,thresh_cvr_top,thresh_cvr_ceiling
+        real thresh_cvr_base,thresh_cvr_top,thresh_cvr_ceiling
         parameter (thresh_cvr_base = 0.1)
         parameter (thresh_cvr_top  = 0.1)
         parameter (thresh_cvr_ceiling = thresh_cvr)
 
-        real*4 thresh_thin_lwc_ice     ! Threshold cover for thin cloud LWC/ICE
+        real thresh_thin_lwc_ice     ! Threshold cover for thin cloud LWC/ICE
         parameter (thresh_thin_lwc_ice = 0.1)
 
-        real*4 vis_radar_thresh_cvr,vis_radar_thresh_dbz
+        real vis_radar_thresh_cvr,vis_radar_thresh_dbz
         parameter (vis_radar_thresh_cvr = 0.2)  ! 0.2, 0.0
         parameter (vis_radar_thresh_dbz = 10.)  ! 5. , -99.
 
-        real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
-        real*4 rlaps_land_frac(NX_L,NY_L)
-        real*4 solar_alt(NX_L,NY_L)
-        real*4 solar_ha(NX_L,NY_L)
+        real lat(NX_L,NY_L),lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
+        real rlaps_land_frac(NX_L,NY_L)
+        real solar_alt(NX_L,NY_L)
+        real solar_ha(NX_L,NY_L)
 
-        real*4 k_to_c
+        real k_to_c
 
         logical l_packed_output
         logical l_evap_radar
@@ -161,7 +161,7 @@ cdis
         include 'laps_cloud.inc'
 
 !       Nominal cloud heights. Actual ones used are fitted to the terrain.
-        real*4 cld_hts_new(KCLOUD)
+        real cld_hts_new(KCLOUD)
 
         data cld_hts_new/1200.,1300.,1400.,1500.,1600.,1700.,1800.,
      11900.,2000.,2100.,2200.,2400.,2600.,2800.,3000.,3200.,
@@ -173,62 +173,62 @@ cdis
 
         equivalence (cld_hts,cld_hts_new)
 
-        real*4 clouds_3d(NX_L,NY_L,KCLOUD)
+        real clouds_3d(NX_L,NY_L,KCLOUD)
 
         integer ihist_alb(-10:20)
 
-        real*4 cloud_top(NX_L,NY_L)
-        real*4 cloud_base(NX_L,NY_L)
-        real*4 cloud_ceiling(NX_L,NY_L)
+        real cloud_top(NX_L,NY_L)
+        real cloud_base(NX_L,NY_L)
+        real cloud_ceiling(NX_L,NY_L)
 
-        real*4 cldtop_m(NX_L,NY_L)
-        real*4 cldtop_m_co2(NX_L,NY_L)
-        real*4 cldtop_m_tb8(NX_L,NY_L)
+        real cldtop_m(NX_L,NY_L)
+        real cldtop_m_co2(NX_L,NY_L)
+        real cldtop_m_tb8(NX_L,NY_L)
 
-        real*4 cld_pres_1d(KCLOUD)
-        real*4 pres_3d(NX_L,NY_L,NZ_L)
-        real*4 clouds_3d_pres(NX_L,NY_L,NZ_L)
+        real cld_pres_1d(KCLOUD)
+        real pres_3d(NX_L,NY_L,NZ_L)
+        real clouds_3d_pres(NX_L,NY_L,NZ_L)
 
-        real*4 CVHZ(NX_L,NY_L)
-        real*4 CVHZ1(NX_L,NY_L),CVEW1(NX_L,KCLOUD)
-        real*4 cvr_max(NX_L,NY_L),CVEW2(NX_L,KCLOUD)
-        real*4 cvr_sao_max(NX_L,NY_L)
-        real*4 cvr_snow_cycle(NX_L,NY_L)
-        real*4 cvr_water_temp(NX_L,NY_L)
-        real*4 cvr_snow(NX_L,NY_L)
-        real*4 band8_mask(NX_L,NY_L)
+        real CVHZ(NX_L,NY_L)
+        real CVHZ1(NX_L,NY_L),CVEW1(NX_L,KCLOUD)
+        real cvr_max(NX_L,NY_L),CVEW2(NX_L,KCLOUD)
+        real cvr_sao_max(NX_L,NY_L)
+        real cvr_snow_cycle(NX_L,NY_L)
+        real cvr_water_temp(NX_L,NY_L)
+        real cvr_snow(NX_L,NY_L)
+        real band8_mask(NX_L,NY_L)
 
         character*4 radar_name
         character*31 radarext_3d_cloud
-        real*4 radar_ref_3d(NX_L,NY_L,NZ_L)
-        real*4 heights_3d(NX_L,NY_L,NZ_L)
+        real radar_ref_3d(NX_L,NY_L,NZ_L)
+        real heights_3d(NX_L,NY_L,NZ_L)
 
-        Real*4 vv_to_height_ratio_Cu
-        Real*4 vv_to_height_ratio_Sc
-        Real*4 vv_for_St
+        Real vv_to_height_ratio_Cu
+        Real vv_to_height_ratio_Sc
+        Real vv_for_St
 
-        real*4 mvd_3d(NX_L,NY_L,NZ_L)
-!       real*4 lwc_res_3d(NX_L,NY_L,NZ_L)
-        real*4 w_3d(NX_L,NY_L,NZ_L)
+        real mvd_3d(NX_L,NY_L,NZ_L)
+!       real lwc_res_3d(NX_L,NY_L,NZ_L)
+        real w_3d(NX_L,NY_L,NZ_L)
 
         integer icing_index_3d(NX_L,NY_L,NZ_L)
 
         integer cldpcp_type_3d(NX_L,NY_L,NZ_L) ! Also contains 3D precip type
 
 !       Output array declarations
-!       real*4 out_array_4d(NX_L,NY_L,NZ_L,2)
-        real*4, allocatable, dimension(:,:,:,:) :: out_array_4d
-        real*4 out_array_3d(NX_L,NY_L,NZ_L)
+!       real out_array_4d(NX_L,NY_L,NZ_L,2)
+        real, allocatable, dimension(:,:,:,:) :: out_array_4d
+        real out_array_3d(NX_L,NY_L,NZ_L)
 
-        real*4 slwc(NX_L,NY_L,NZ_L),slwc_int(NX_L,NY_L)
-        real*4 cice(NX_L,NY_L,NZ_L)
+        real slwc(NX_L,NY_L,NZ_L),slwc_int(NX_L,NY_L)
+        real cice(NX_L,NY_L,NZ_L)
 
-        real*4 pcpcnc(NX_L,NY_L,NZ_L)
-        real*4 raicnc(NX_L,NY_L,NZ_L)
-        real*4 snocnc(NX_L,NY_L,NZ_L)
-        real*4 piccnc(NX_L,NY_L,NZ_L)
+        real pcpcnc(NX_L,NY_L,NZ_L)
+        real raicnc(NX_L,NY_L,NZ_L)
+        real snocnc(NX_L,NY_L,NZ_L)
+        real piccnc(NX_L,NY_L,NZ_L)
 
-!       real*4 snow_2d(NX_L,NY_L)
+!       real snow_2d(NX_L,NY_L)
 
         character*2 c2_precip_types(0:10)
 
@@ -240,12 +240,12 @@ cdis
         character*8 c8_project
 
         integer i2_pcp_type_2d(NX_L,NY_L)
-        real*4 r_pcp_type_2d(NX_L,NY_L)
+        real r_pcp_type_2d(NX_L,NY_L)
 
-        real*4 dum1_array(NX_L,NY_L)
-        real*4 dum2_array(NX_L,NY_L)
-        real*4 dum3_array(NX_L,NY_L)
-        real*4 dum4_array(NX_L,NY_L)
+        real dum1_array(NX_L,NY_L)
+        real dum2_array(NX_L,NY_L)
+        real dum3_array(NX_L,NY_L)
+        real dum4_array(NX_L,NY_L)
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(NX_L,NY_L)
@@ -271,32 +271,32 @@ cdis
         character*10  units_a(MAX_FIELDS)
 
 !       Arrays used to read in satellite data
-        real*4 tb8_k(NX_L,NY_L)
-        real*4 tb8_cold_k(NX_L,NY_L)
-        real*4 albedo(NX_L,NY_L)
-        real*4 cloud_frac_vis_a(NX_L,NY_L)
-        real*4 cloud_frac_co2_a(NX_L,NY_L)
+        real tb8_k(NX_L,NY_L)
+        real tb8_cold_k(NX_L,NY_L)
+        real albedo(NX_L,NY_L)
+        real cloud_frac_vis_a(NX_L,NY_L)
+        real cloud_frac_co2_a(NX_L,NY_L)
 
-        real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
-        real*4 model_3d(NX_L,NY_L,NZ_L)
+        real temp_3d(NX_L,NY_L,NZ_L)
+        real rh_3d_pct(NX_L,NY_L,NZ_L)
+        real model_3d(NX_L,NY_L,NZ_L)
 
-        real*4 t_sfc_k(NX_L,NY_L)
-        real*4 t_gnd_k(NX_L,NY_L)
-        real*4 sst_k(NX_L,NY_L)
-        real*4 td_sfc_k(NX_L,NY_L)
-        real*4 pres_sfc_pa(NX_L,NY_L)
+        real t_sfc_k(NX_L,NY_L)
+        real t_gnd_k(NX_L,NY_L)
+        real sst_k(NX_L,NY_L)
+        real td_sfc_k(NX_L,NY_L)
+        real pres_sfc_pa(NX_L,NY_L)
 
 !       Declarations for LSO file stuff
-        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
-        real*4 cover_s(maxstns)
-        real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns)
-        real*4 ddg_s(maxstns), ffg_s(maxstns)
-        real*4 vis_s(maxstns)
-        real*4 pstn_s(maxstns),pmsl_s(maxstns),alt_s(maxstns)
-        real*4 store_hgt(maxstns,5),ceil(maxstns),lowcld(maxstns)
-        real*4 cover_a(maxstns),rad_s(maxstns)
+        real lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
+        real cover_s(maxstns)
+        real t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
+        real dd_s(maxstns), ff_s(maxstns)
+        real ddg_s(maxstns), ffg_s(maxstns)
+        real vis_s(maxstns)
+        real pstn_s(maxstns),pmsl_s(maxstns),alt_s(maxstns)
+        real store_hgt(maxstns,5),ceil(maxstns),lowcld(maxstns)
+        real cover_a(maxstns),rad_s(maxstns)
         integer obstime(maxstns),kloud(maxstns),idp3(maxstns)
         character store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
         character wx_s(maxstns)*8, obstype(maxstns)*8
@@ -308,19 +308,19 @@ cdis
 
         character asc_tim_9*9
 
-        real*4 ri_s(maxstns), rj_s(maxstns)
+        real ri_s(maxstns), rj_s(maxstns)
 
 !       Product # notification declarations
         integer j_status(20),iprod_number(20)
 
 !       Stuff for 2d fields
-        real*4 ref_mt_2d(NX_L,NY_L)
-        real*4 dbz_low_2d(NX_L,NY_L)
-        real*4 dbz_max_2d(NX_L,NY_L)
+        real ref_mt_2d(NX_L,NY_L)
+        real dbz_low_2d(NX_L,NY_L)
+        real dbz_max_2d(NX_L,NY_L)
 
 !       SFC precip and cloud type (LCT file)
-        real*4 r_pcp_type_thresh_2d(NX_L,NY_L)
-        real*4 r_cld_type_2d(NX_L,NY_L)
+        real r_pcp_type_thresh_2d(NX_L,NY_L)
+        real r_cld_type_2d(NX_L,NY_L)
 
         character*40 c_vars_req
         character*180 c_values_req

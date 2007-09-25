@@ -70,75 +70,75 @@ c*************************************************************************
 c
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
-        real*4 surface_sao_buffer
+        real surface_sao_buffer
 
 !       Prevents adding cloud using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
-        real*4 surface_ir_buffer
+        real surface_ir_buffer
         parameter (surface_ir_buffer = 5000.) ! 3000.
 
 !       Default Thickness of Clouds Inserted by Satellite
-        real*4 thk_def
+        real thk_def
         parameter (thk_def            = 1500.)
 
 !       Cloud cover threshold in evaluating presence of SAO/PIREP layers
-        real*4 thr_sao_cvr
+        real thr_sao_cvr
         parameter (thr_sao_cvr = 0.1)
 
 !       Threshold for IR cloud detection (SFC temp - IR temp)
-        real*4 thresh_ir_diff1
+        real thresh_ir_diff1
         parameter (thresh_ir_diff1 = 8.)
 
 !       Second threshold for IR cloud detection (SFC temp - IR temp)
-        real*4 thresh_ir_diff2
+        real thresh_ir_diff2
         parameter (thresh_ir_diff2 = 21.)
 
         character*3 lvd_ext
         data lvd_ext /'lvd'/
 
 !       Input/Output
-        real*4 cldcv(imax,jmax,kcld)       ! 3D Cloud cover array
+        real cldcv(imax,jmax,kcld)       ! 3D Cloud cover array
 
         include 'laps_cloud.inc'
 
 !       Input
-!       real*4 cld_hts(kcloud)
-        real*4 cldcv_sao(imax,jmax,kcld)       ! 3D Cloud cover array
-        real*4 rlat(imax,jmax),rlon(imax,jmax)
-        real*4 tb8_k(imax,jmax)
-        real*4 sst_k(imax,jmax)
-        real*4 tb8_cold_k(imax,jmax)
-        real*4 topo(imax,jmax)
-        real*4 rlaps_land_frac(imax,jmax)
-        real*4 cloud_frac_vis_a(imax,jmax)   ! Used for cloud building with vis
-        real*4 cloud_frac_vis_s(imax,jmax)   ! Used for cloud building with vis
-        real*4 solar_alt(imax,jmax)
-        real*4 solar_ha(imax,jmax)
-        real*4 temp_3d(imax,jmax,klaps)
-        real*4 t_sfc_k(imax,jmax)
-        real*4 cvr_snow(imax,jmax)
-        real*4 pres_sfc_pa(imax,jmax)
-        real*4 heights_3d(imax,jmax,klaps)
-        real*4 cloud_frac_co2_a(imax,jmax)
-        real*4 cldtop_co2_pa_a(imax,jmax)
+!       real cld_hts(kcloud)
+        real cldcv_sao(imax,jmax,kcld)       ! 3D Cloud cover array
+        real rlat(imax,jmax),rlon(imax,jmax)
+        real tb8_k(imax,jmax)
+        real sst_k(imax,jmax)
+        real tb8_cold_k(imax,jmax)
+        real topo(imax,jmax)
+        real rlaps_land_frac(imax,jmax)
+        real cloud_frac_vis_a(imax,jmax)   ! Used for cloud building with vis
+        real cloud_frac_vis_s(imax,jmax)   ! Used for cloud building with vis
+        real solar_alt(imax,jmax)
+        real solar_ha(imax,jmax)
+        real temp_3d(imax,jmax,klaps)
+        real t_sfc_k(imax,jmax)
+        real cvr_snow(imax,jmax)
+        real pres_sfc_pa(imax,jmax)
+        real heights_3d(imax,jmax,klaps)
+        real cloud_frac_co2_a(imax,jmax)
+        real cldtop_co2_pa_a(imax,jmax)
 
-        integer*4 istat_39_a(imax,jmax)
-        integer*4 istat_39_add_a(imax,jmax)
-        integer*4 istat_vis_potl_a(imax,jmax)  ! Pot'l cloud building with vis
-        integer*4 istat_vis_added_a(imax,jmax) ! Actual cloud building with vis
+        integer istat_39_a(imax,jmax)
+        integer istat_39_add_a(imax,jmax)
+        integer istat_vis_potl_a(imax,jmax)  ! Pot'l cloud building with vis
+        integer istat_vis_added_a(imax,jmax) ! Actual cloud building with vis
 
 !       Output
-        real*4 t_gnd_k(imax,jmax)
-        real*4 cldtop_m(imax,jmax)
-        real*4 cldtop_co2_m(imax,jmax)
-        real*4 cldtop_tb8_m(imax,jmax)
+        real t_gnd_k(imax,jmax)
+        real cldtop_m(imax,jmax)
+        real cldtop_co2_m(imax,jmax)
+        real cldtop_tb8_m(imax,jmax)
 
 !       Local
 
-        real*4 k_terrain(imax,jmax)
-        real*4 zcoords_1d(klaps)
-        real*4 cldcv_1d(kcloud)
-        real*4 laps_p(klaps)
+        real k_terrain(imax,jmax)
+        real zcoords_1d(klaps)
+        real cldcv_1d(kcloud)
+        real laps_p(klaps)
 
         character*31 ext
         character var*3,comment*125,units*10
@@ -148,15 +148,15 @@ c
 
         logical lstat_co2_a(imax,jmax)
 
-        real*4 k_to_f
+        real k_to_f
 
 !       Control search box for SAO analyzed data
-        integer*4 idelt(3)
-        integer*4 jdelt(3)
+        integer idelt(3)
+        integer jdelt(3)
 !       data idelt/-5,0,+5/
 !       data jdelt/0,+5,-5/
 
-        integer*4 nidelt,njdelt
+        integer nidelt,njdelt
         data nidelt/3/,njdelt/3/
 
         write(6,*)' Subroutine insert_sat...'
@@ -887,43 +887,43 @@ c
 !       employed to yield a cloud top pressure and height. This is not yet
 !       fully integrated into the final cloud analysis.
 
-        real*4 zeros
+        real zeros
         parameter (zeros = 1.e-30)
 
 !       Argument list
-        integer*4 init_co2                      ! Input
-        integer*4 i4time                        ! Input
-        real*4 tb8_k                            ! Input
-        real*4 cloud_frac_vis_a(imax,jmax)      ! Input (vis cloud building)
-        real*4 cloud_frac_vis_s(imax,jmax)      ! Input (vis cloud building)
-        integer*4 i,j,imax,jmax,klaps           ! Input
-        real*4 t_gnd_k(imax,jmax)               ! Input
-        real*4 pres_sfc_pa(imax,jmax)           ! Input
-        real*4 thresh_ir_diff1                  ! Input
-        real*4 topo                             ! Input
-        real*4 r_missing_data                   ! Input
-        integer*4 istat_vis_potl                ! Input (vis cloud building)
-        real*4 heights_3d(imax,jmax,klaps)      ! Input
-        real*4 temp_3d(imax,jmax,klaps)         ! Input
-        real*4 k_terrain                        ! Input
-        real*4 laps_p(klaps)                    ! Input
-        integer*4 n_valid_co2,n_missing_co2     ! Input/Output
-        real*4 cldtop_co2_m                     ! Output
+        integer init_co2                      ! Input
+        integer i4time                        ! Input
+        real tb8_k                            ! Input
+        real cloud_frac_vis_a(imax,jmax)      ! Input (vis cloud building)
+        real cloud_frac_vis_s(imax,jmax)      ! Input (vis cloud building)
+        integer i,j,imax,jmax,klaps           ! Input
+        real t_gnd_k(imax,jmax)               ! Input
+        real pres_sfc_pa(imax,jmax)           ! Input
+        real thresh_ir_diff1                  ! Input
+        real topo                             ! Input
+        real r_missing_data                   ! Input
+        integer istat_vis_potl                ! Input (vis cloud building)
+        real heights_3d(imax,jmax,klaps)      ! Input
+        real temp_3d(imax,jmax,klaps)         ! Input
+        real k_terrain                        ! Input
+        real laps_p(klaps)                    ! Input
+        integer n_valid_co2,n_missing_co2     ! Input/Output
+        real cldtop_co2_m                     ! Output
         logical lstat_co2,l_use_39              ! Input
         integer istat_co2                       ! Output (not presently used)
-        real*4 cldtop_tb8_m                     ! Output
+        real cldtop_tb8_m                     ! Output
         logical l_tb8                           ! Output
-        real*4 cldtop_m                         ! Output
+        real cldtop_m                         ! Output
         logical l_cloud_present                 ! Output
-        real*4 sat_cover                        ! Output
+        real sat_cover                        ! Output
 
 !       Local
-!       real*4 dum_3d(imax,jmax,klaps)          ! Local (Dummy array for Q)
-        real*4 arg,frac_k,temp_above,cldtop_temp_k
-        integer*4 kl
+!       real dum_3d(imax,jmax,klaps)          ! Local (Dummy array for Q)
+        real arg,frac_k,temp_above,cldtop_temp_k
+        integer kl
 
 !       Function call
-        real*4 k_to_f
+        real k_to_f
 
 !       Call the CO2 slicing method to get cloud tops
 
@@ -1090,11 +1090,11 @@ c
 
         subroutine correlation(t,tb8_k,thresh,ni,nj)
 
-        integer*4 IBOX
+        integer IBOX
         parameter (IBOX = 3)
 
-        real*4 t(ni,nj),tb8_k(ni,nj)
-        integer*4 i_corr_array(-IBOX:IBOX,-IBOX:IBOX)
+        real t(ni,nj),tb8_k(ni,nj)
+        integer i_corr_array(-IBOX:IBOX,-IBOX:IBOX)
 
         write(6,*)
         write(6,*)' Checking Navigation of IR satellite, thresh = '
@@ -1152,8 +1152,8 @@ c
 !       Find a thinner value for cloud cover consistent with the new
 !       higher cloud top and the known brightness temperature.
 
-        real*4 temp_3d(imax,jmax,klaps)
-        real*4 heights_3d(imax,jmax,klaps)
+        real temp_3d(imax,jmax,klaps)
+        real heights_3d(imax,jmax,klaps)
 
         integer iwrite
         data iwrite /0/
@@ -1281,16 +1281,16 @@ c
 
         include 'laps_cloud.inc'
 
-        real*4 temp_3d(imax,jmax,klaps)
-        real*4 heights_3d(imax,jmax,klaps)
-        real*4 cvr_snow(imax,jmax)
-        real*4 tb8_k(imax,jmax),t_gnd_k(imax,jmax),t_sfc_k(imax,jmax)
-        real*4 a(100),f(100)
-        integer*4 ilyr(KCLOUD) ! Dimension needs to be changed to KCLOUD
-        real*4 a_new(100),f_new(100)
-        integer*4 ilyr_new(KCLOUD) ! Dimension needs to be changed to KCLOUD
-        real*4 cldcv(imax,jmax,kcld)
-        real*4 cldcv_1d(kcld) ! ,cld_hts(kcld)
+        real temp_3d(imax,jmax,klaps)
+        real heights_3d(imax,jmax,klaps)
+        real cvr_snow(imax,jmax)
+        real tb8_k(imax,jmax),t_gnd_k(imax,jmax),t_sfc_k(imax,jmax)
+        real a(100),f(100)
+        integer ilyr(KCLOUD) ! Dimension needs to be changed to KCLOUD
+        real a_new(100),f_new(100)
+        integer ilyr_new(KCLOUD) ! Dimension needs to be changed to KCLOUD
+        real cldcv(imax,jmax,kcld)
+        real cldcv_1d(kcld) ! ,cld_hts(kcld)
         logical l_correct,l_output
 
 !       This routine compares the analyzed clouds to the 11.2mm radiation
@@ -1605,17 +1605,17 @@ c
 
 !       Forward model for multiple cloud layers
 
-        real*4 thresh_cvr
+        real thresh_cvr
         parameter (thresh_cvr = 0.1)
 
-        real*4 a(100)          ! Cloud fractions of layers
-        real*4 f(100)          ! Apparent "cross-section" of cloud layers seen from above
-        integer*4 ik(100)      ! Height level representative of cloud layers
-        integer*4 ilyr(kcld)   ! Layer index for each cloud lvl (needs KCLOUD)
-        real*4 cvr(kcld)       ! Cloud cover from analysis
-        real*4 temp_3d(ni,nj,klaps),temp_lyr(100)
-        real*4 heights_3d(ni,nj,klaps)
-        real*4 cld_hts(kcld)
+        real a(100)          ! Cloud fractions of layers
+        real f(100)          ! Apparent "cross-section" of cloud layers seen from above
+        integer ik(100)      ! Height level representative of cloud layers
+        integer ilyr(kcld)   ! Layer index for each cloud lvl (needs KCLOUD)
+        real cvr(kcld)       ! Cloud cover from analysis
+        real temp_3d(ni,nj,klaps),temp_lyr(100)
+        real heights_3d(ni,nj,klaps)
+        real cld_hts(kcld)
 
 !       Convert from cloud cover to discreet cloud layer indices (cvr to a)
         nlyr = 0
@@ -1697,10 +1697,10 @@ c
      1                             ,cldcv_out,i_out,j_out,imax_out
      1                             ,jmax_out,kcld,f,ilyr,delta_cover)
 
-        real*4 cldcv_in(imax_in,jmax_in,kcld)
-        real*4 cldcv_out(imax_out,jmax_out,kcld)
-        real*4 f(100)
-        integer*4 ilyr(kcld)    ! Dimension needs to be changed to KCLOUD
+        real cldcv_in(imax_in,jmax_in,kcld)
+        real cldcv_out(imax_out,jmax_out,kcld)
+        real f(100)
+        integer ilyr(kcld)    ! Dimension needs to be changed to KCLOUD
 
 !       Apply correction to 3D cloud cover field
         do k = 1,kcld
@@ -1803,8 +1803,8 @@ c
         subroutine filter_2dx_array(array_in,r_missing_data,ni,nj
      1                             ,array_out)              
 
-        real*4 array_in(ni,nj)
-        real*4 array_out(ni,nj)
+        real array_in(ni,nj)
+        real array_out(ni,nj)
 
         do i = 1,ni
         do j = 1,nj       

@@ -55,20 +55,20 @@ cdis
 !       1999     Steve Albers   Added in LWC/ICE model first guess
 !                               Simple usage for the moment.
 
-        real*4 heights_3d(ni,nj,klaps)       ! Input
-        real*4 temp_3d(ni,nj,klaps)          ! Input
-        real*4 cf_modelfg(ni,nj,KCLOUD)      ! Output
-        real*4 t_modelfg(ni,nj,KCLOUD)       ! Output
-        real*4 cld_hts(KCLOUD)               ! Input
+        real heights_3d(ni,nj,klaps)       ! Input
+        real temp_3d(ni,nj,klaps)          ! Input
+        real cf_modelfg(ni,nj,KCLOUD)      ! Output
+        real t_modelfg(ni,nj,KCLOUD)       ! Output
+        real cld_hts(KCLOUD)               ! Input
 
-        real*4 model_q_3d(ni,nj,klaps)       ! Local
+        real model_q_3d(ni,nj,klaps)       ! Local
 
-        real*4 model_lwc_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
-        real*4 model_ice_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
+        real model_lwc_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
+        real model_ice_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
 
-        real*4 make_rh,lwc_modelfg,ice_modelfg
+        real make_rh,lwc_modelfg,ice_modelfg
 
-        real*4 icethresh, liqthresh
+        real icethresh, liqthresh
 
         character*31 ext
         character*3 var_2d

@@ -42,15 +42,15 @@ cdis
      1        ,lat,lon,ni,nj,nk,ix_low,ix_high,iy_low,iy_high,max_pireps ! I
      1        ,istatus)                                                  ! O
 
-        real*4 lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj)
 
-        real*4 cld_hts(nk)
+        real cld_hts(nk)
 
 !       Arrays for cloud soundings
-        real*4 cld_snd(max_cld_snd,nk)
-        real*4 wt_snd(max_cld_snd,nk)
-        integer*4 i_snd(max_cld_snd)
-        integer*4 j_snd(max_cld_snd)
+        real cld_snd(max_cld_snd,nk)
+        real wt_snd(max_cld_snd,nk)
+        integer i_snd(max_cld_snd)
+        integer j_snd(max_cld_snd)
 
         character*9  asc9_tim_pirep,asc9_tim_rcvd
         character*80 string

@@ -83,24 +83,24 @@ cdis
 
         integer j_status(20),iprod_number(20)
 
-        real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
-        real*4 td_3d_k(NX_L,NY_L,NZ_L)
-        real*4 heights_3d(NX_L,NY_L,NZ_L)
-        real*4 u_3d(NX_L,NY_L,NZ_L)
-        real*4 v_3d(NX_L,NY_L,NZ_L)
+        real temp_3d(NX_L,NY_L,NZ_L)
+        real rh_3d_pct(NX_L,NY_L,NZ_L)
+        real td_3d_k(NX_L,NY_L,NZ_L)
+        real heights_3d(NX_L,NY_L,NZ_L)
+        real u_3d(NX_L,NY_L,NZ_L)
+        real v_3d(NX_L,NY_L,NZ_L)
 
-        real*4 temp_sfc_k(NX_L,NY_L)
-        real*4 pres_sfc_pa(NX_L,NY_L)
-        real*4 rh_sfc_pct(NX_L,NY_L)
-        real*4 u_sfc_ms(NX_L,NY_L)
-        real*4 v_sfc_ms(NX_L,NY_L)
+        real temp_sfc_k(NX_L,NY_L)
+        real pres_sfc_pa(NX_L,NY_L)
+        real rh_sfc_pct(NX_L,NY_L)
+        real u_sfc_ms(NX_L,NY_L)
+        real v_sfc_ms(NX_L,NY_L)
 
-        real*4 dbz_max_2d(NX_L,NY_L)
+        real dbz_max_2d(NX_L,NY_L)
 
-        real*4 lat(NX_L,NY_L)
-        real*4 lon(NX_L,NY_L)
-        real*4 topo(NX_L,NY_L)
+        real lat(NX_L,NY_L)
+        real lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
         character*31 EXT
 
@@ -320,9 +320,9 @@ cdis
      1                            vv_for_St,                              ! I
      1                            istatus)
 
-       Real*4 vv_to_height_ratio_Cu
-       Real*4 vv_to_height_ratio_Sc
-       Real*4 vv_for_St
+       Real vv_to_height_ratio_Cu
+       Real vv_to_height_ratio_Sc
+       Real vv_for_St
 
        logical l_bogus_radar_w
 
