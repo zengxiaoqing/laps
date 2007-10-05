@@ -44,8 +44,8 @@ SUBROUTINE LAPS_Conf
   INTEGER*4 ::thresh_2_radarobs_lvl_unfltrd, &
               thresh_4_radarobs_lvl_unfltrd, &
               thresh_9_radarobs_lvl_unfltrd, i4time_sys
-  INTEGER :: i_3d
-  REAL :: weight_bkg_const_wind,weight_radar,rms_thresh_wind 
+  REAL :: weight_bkg_const_wind,weight_radar,rms_thresh_wind
+  INTEGER :: max_obs
 
   NAMELIST /wind_nl/ l_raob, l_cdw, l_radial, &
                      thresh_2_radarobs_lvl_unfltrd, &
@@ -54,7 +54,7 @@ SUBROUTINE LAPS_Conf
                      weight_bkg_const_wind, &
                      weight_radar, &
                      rms_thresh_wind, &
-                     max_pr,max_pr_lvls,i_3d
+                     max_pr,max_pr_lvls,max_obs
 
   ! Spatial dimensions:
   CALL get_grid_dim_xy(n(1),n(2),status)
@@ -111,7 +111,7 @@ PRINT*,'Missing: ',imissing,rmissing
 		      thresh_9_radarobs_lvl_unfltrd, &
 		      weight_bkg_const_wind, &
                       weight_radar,rms_thresh_wind, &
-                      max_pr,max_pr_lvls,i_3d,status)
+                      max_pr,max_pr_lvls,max_obs,status)
   IF (status .NE. 1) THEN
     PRINT*,'Conf: error: wind parameters'
     STOP
