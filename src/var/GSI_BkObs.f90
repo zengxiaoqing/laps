@@ -35,6 +35,7 @@ SUBROUTINE GSI_BkObs
 !
 !  HISTORY: 
 ! 	Creation: YUANFU XIE	3-2006
+!	Modified: YUANFU XIE	10-2007 adding height to wrf.
 !==========================================================
 
   USE LAPS_Parm
@@ -48,6 +49,7 @@ SUBROUTINE GSI_BkObs
   ! Generate bufr files for observation: prepqc.laps
   CALL GSI_Obs(i4time,asctime,lat,lon,n(1),n(2),n(3), &
 	      nobs_point,obs_point,n_tobs,obs_temp,maxtobs)
+  !CALL GSI_Obs_test
   
 
 END SUBROUTINE GSI_BkObs
@@ -81,6 +83,7 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
   INTEGER :: istatus,i,j,k
   REAL*4 :: t_mass_bkg(imax,jmax,kmax)
   REAL*4 :: sh_mass_bkg(imax,jmax,kmax)
+  REAL*4 :: geo_mass_bkg(imax,jmax,kmax)	! Geopotential
   REAL*4 :: u_mass_bkg(imax,jmax,kmax),v_mass_bkg(imax,jmax,kmax)
   REAL*4 :: dam(imax,jmax),pdam(imax,jmax)
   REAL*4 :: znw(kmax),znu(kmax-1),mapfac_m(imax,jmax)
@@ -139,6 +142,11 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
   ! V background:
   CALL laps2mass(v_laps_bkg,imax,jmax,kmax,pressr1d,dam,znw,4,0,v_mass_bkg)
 
+  ! Height background:
+  CALL laps2mass(height3d,imax,jmax,kmax,pressr1d,dam,znw,4,0,geo_mass_bkg)
+  ! Geopotential:
+  geo_mass_bkg = 9.80665*geo_mass_bkg
+
   WRITE(12) znw,pressr1d,dam,znu
 
   times(1:4) = asctime(8:11)
@@ -183,7 +191,7 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
   ! Write the variables into a wrf_inout netcdf file:
   CALL wrfbkgout(times,imax,jmax,kmax,pressr1d(kmax), &
      		 znu,znw,grid_spacing,mapfac_m,xlat, &
-     		 xlong,dam,pdam,t_mass_bkg, &
+     		 xlong,dam,pdam,t_mass_bkg,geo_mass_bkg, &
      		 sh_mass_bkg,u_mass_bkg,v_mass_bkg,topo)
 
 END SUBROUTINE GSI_Bkg
