@@ -34,6 +34,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
 LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
 
 BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
+DBBUFRLIB = $(SRCROOT)/src/var/bufr/libdebugbufr.a
 
 WINDLIB = $(SRCROOT)/src/wind/libwind.a
 
@@ -93,7 +94,7 @@ $(POST): $(GSIPO) $(LAPSLIBS) $(HUMIDLIB)
 
 debug: $(GSIPR) $(GSIPO)
 	$(RM) $(PREP) $(POST);
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS) $(BUFRLIB)' \
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS) $(DBBUFRLIB)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
 install: $(PREP) $(POST)
