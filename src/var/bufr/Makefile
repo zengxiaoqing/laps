@@ -167,23 +167,17 @@ SRC	= \
 	wrtree.f \
 	wtstat.f
 
-
-ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
-DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))
-
-
-all: lib
-
-lib: $(LIB)
-
-$(LIB): $(ARCHIVE) 
-	$(RANLIB) $@
+# As this lib saves its Fortran files in a tar file, Yuanfu made this change:
+all:
+	tar xvf BUFRLIB.tar
+	$(MAKE) $(addsuffix .o, $(basename $(SRC)))
+	ar rv $(LIB) $(addsuffix .o, $(basename $(SRC)))
+	ranlib $(LIB)
 	rm -f *.f *.o
 
-debug: $(SRC)
-	$(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
+debug: 
+	$(MAKE) LIB='$(DEBUGLIB)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
-	rm -f *.f *.o
 
 install: lib
 
@@ -192,14 +186,3 @@ clean:
 
 distclean: clean
 
-ifdef USECPP
-%.o : %.F
-	rm -f $*.f
-	$(CPP) $(CPPFLAGS) $< 
-	mv $*.i $*.f
-	$(FC) $(FFLAGS) -c $*.f
-endif
-
-
-addate.f:
-	tar xvf BUFRLIB.tar
