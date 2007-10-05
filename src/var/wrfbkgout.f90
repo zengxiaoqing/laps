@@ -38,7 +38,7 @@
 !dis
 
 SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
-     		     mapfac,lat,lon,dam,pdam,t,sh,u,v,topo)
+     		     mapfac,lat,lon,dam,pdam,t,geo,sh,u,v,topo)
 
 !==========================================================
 !  This routine writes the background fields into wrf_inout
@@ -48,6 +48,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
 !           SEP. 2006 by YUANFU XIE: Compute MUB following
 !				     WRF convention (see
 !                                    ARW description pp.36)
+!		OCT. 2007 by YUANFU XIE: ADD TRUE PH and PHB.
 !==========================================================
 
   IMPLICIT NONE
@@ -65,6 +66,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   REAL*4, INTENT(IN) :: dam(imax,jmax)	! Dry air mass (column)
   REAL*4, INTENT(IN) :: pdam(imax,jmax)	! Perturbation
   REAL*4, INTENT(IN) :: t(imax,jmax,kmax)   ! temperature
+  REAL*4, INTENT(IN) :: geo(imax,jmax,kmax)   ! temperature
   REAL*4, INTENT(IN) :: sh(imax,jmax,kmax)	! specific humidity
   REAL*4, INTENT(IN) :: u(imax,jmax,kmax)   ! U
   REAL*4, INTENT(IN) :: v(imax,jmax,kmax)   ! V
@@ -77,7 +79,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   INTEGER :: tmid,uid,vid,tid,muid,mubid	! var ids
   INTEGER :: qid,mapid,ptid,znuid,znwid	! var ids
   INTEGER :: latid,lonid,rxid,ryid		! var ids
-  INTEGER :: phbid,lmkid,iceid,sstid,vgid	! var ids
+  INTEGER :: phid,phbid,lmkid,iceid,sstid,vgid	! var ids
   INTEGER :: slid,vfid,snwid,u10id,v10id	! var ids
   INTEGER :: smsid,tslbid,tskid		! var ids
   INTEGER :: start(4),count(4)		! netcdf start/count
@@ -301,6 +303,17 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   CALL ncaptc(ncid,ryid,'stagger',ncchar,0,empty,ierr)
 
   ! Extra variables requested by GSI:
+  ! PH:
+  nd(1:2) = ndm1(1:2)
+  nd(3) = ndim(3)
+  nd(4) = time
+  phid = ncvdef(ncid,'PH',ncfloat,4,nd,ierr)
+  CALL ncapt(ncid,phbid,'FieldType',nclong,1,104,ierr)
+  CALL ncaptc(ncid,phbid,'MemoryOrder',ncchar,3,'XYZ',ierr)
+  CALL ncaptc(ncid,phbid,'description',ncchar,23, &
+ 	      'perturbation geopotential',ierr)
+  CALL ncaptc(ncid,phbid,'units',ncchar,10,'m{2} s{-2}',ierr)
+  CALL ncaptc(ncid,phbid,'stagger',ncchar,1,'Z',ierr)
   ! PHB:
   nd(1:2) = ndm1(1:2)
   nd(3) = ndim(3)
@@ -475,6 +488,21 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = kmax-1
   CALL ncvpt(ncid,tid,start,count,tnc1,ierr)
 
+  ! 16. PH:
+  ! Stagger: Z:
+  t_out = 0.0
+  count(1) = imax
+  count(2) = jmax
+  count(3) = kmax-1
+  CALL ncvpt(ncid,phid,start,count,t_out,ierr)
+  ! 17. PHB:
+  ! Stagger: Z:
+  call StaggerXY_3D(geo,imax,jmax,kmax,imax-1,jmax-1,kmax,t_out)
+  count(1) = imax-1
+  count(2) = jmax-1
+  count(3) = kmax
+  CALL ncvpt(ncid,phbid,start,count,t_out,ierr)
+
   ! 5. MUB:
   ! Stagger: X, and Y:
   ! See ARW description page 36 for reference pressure:
@@ -566,20 +594,11 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(1:2) = 1
   CALL ncvpt(ncid,ryid,start,count,1.0/dxy,ierr)
 
+
   !+++++++++++++++++++++++++++++++++++++++++++
   ! Assign fake values to the extra variables:
   !+++++++++++++++++++++++++++++++++++++++++++
-  ! 16. PHB:
-  ! Stagger: X, Y:
-  DO k=1,kmax-1
-    tnc(1:imax-1,1:jmax-1,k) = 40000.0+(k-1)*90000.0
-  ENDDO
-  count(1) = imax-1
-  count(2) = jmax-1
-  count(3) = kmax-1
-  CALL ncvpt(ncid,phbid,start,count,tnc,ierr)
-
-  ! 17. LANDMASK:
+  ! 18. LANDMASK:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 1.0
   count(1) = imax-1
@@ -587,7 +606,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,lmkid,start,count,tnc,ierr)
 
-  ! 18. XICE:
+  ! 19. XICE:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
@@ -595,7 +614,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,iceid,start,count,tnc,ierr)
 
-  ! 19. SST:
+  ! 20. SST:
   ! Stagger: X, and Y:
   ! ARW description states: sea level temperature for MUB
   ! Not sure if GSI uses SST for that.
@@ -605,7 +624,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,sstid,start,count,tnc,ierr)
 
-  ! 20. IVGTYP:
+  ! 21. IVGTYP:
   ! Stagger: X, and Y:
   itnc(1:imax-1,1:jmax-1,1) = 2
   count(1) = imax-1
@@ -613,7 +632,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,vgid,start,count,itnc,ierr)
 
-  ! 21. ISLTYP:
+  ! 22. ISLTYP:
   ! Stagger: X, and Y:
   itnc(1:imax-1,1:jmax-1,1) = 1
   count(1) = imax-1
@@ -621,7 +640,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,slid,start,count,itnc,ierr)
 
-  ! 22. VEGFRA:
+  ! 23. VEGFRA:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
@@ -629,7 +648,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,vfid,start,count,tnc,ierr)
 
-  ! 23. SNOW:
+  ! 24. SNOW:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
@@ -637,7 +656,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,snwid,start,count,tnc,ierr)
 
-  ! 24. U10:
+  ! 25. U10:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
@@ -645,7 +664,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,u10id,start,count,tnc,ierr)
 
-  ! 25. V10:
+  ! 26. V10:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 0.0
   count(1) = imax-1
@@ -653,7 +672,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 1
   CALL ncvpt(ncid,v10id,start,count,tnc,ierr)
 
-  ! 26. SMOIS:
+  ! 27. SMOIS:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1:nsol) = 0.0
   count(1) = imax-1
@@ -662,7 +681,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(4) = 1
   CALL ncvpt(ncid,smsid,start,count,tnc,ierr)
 
-  ! 27. TSLB:
+  ! 28. TSLB:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1:nsol) = 280.0
   count(1) = imax-1
@@ -670,7 +689,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   count(3) = 4
   count(4) = 1
   CALL ncvpt(ncid,tslbid,start,count,tnc,ierr)
-  ! 28. TSK:
+  ! 29. TSK:
   ! Stagger: X, and Y:
   tnc(1:imax-1,1:jmax-1,1) = 280.0
   count(1) = imax-1
