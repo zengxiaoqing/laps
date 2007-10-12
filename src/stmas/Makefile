@@ -62,15 +62,6 @@ STMAS= \
         output_analysis.f90 \
         main.f90
 
-GSIPO= GSI_Post.f90 \
-         $(WINDLIB) \
-       StaggerXY.f90 \
-       LAPSMassConverter.f90 \
-       StaggerConverter.f90 \
-       Interpolation.f90 \
-         $(HUMIDLIB) 
-
-
 all: $(ANA) 
 #$(POST)
 
