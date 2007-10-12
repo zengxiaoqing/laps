@@ -53,8 +53,6 @@ FILES= LAPS_Params.f90 \
        LAPS_Config.f90 \
        LAPS_Ingest.f90 \
        LAPS_Systim.f90 \
-       Conv_PrBufr.f90 \
-       Conv_WRFasc.f90 \
        BUFR_Convrt.f90 \
        WRFD_Convrt.f90
 
