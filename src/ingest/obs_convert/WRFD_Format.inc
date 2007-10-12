@@ -1,0 +1,7 @@
+101  FORMAT(1x,a14)
+102  FORMAT(2x,2(f7.2,3x))
+1021 FORMAT(2x,2(a40,3x))
+103  FORMAT( 2x,2(a16,2x),f8.0,2x,2(l4,2x),i5)
+104  FORMAT( 1x,6(f11.3,1x,f11.3,1x))
+105  FORMAT( 1x,9(f11.3,1x,f11.3,1x))
+106  FORMAT( (a,5x,f11.3,3x,f11.3))
