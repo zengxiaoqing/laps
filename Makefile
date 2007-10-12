@@ -41,6 +41,7 @@ EXEDIRS = src/accum \
           src/humid \
           src/humid/optran_setup \
           src/ingest/acars \
+          src/ingest/obs_convert \
           src/ingest/profiler \
           src/ingest/radar/mosaic \
           src/ingest/radar/remap \
@@ -65,7 +66,7 @@ EXEDIRS = src/accum \
           src/temp \
           src/verif/point \
           src/wind \
-	  src/var 
+	  src/var
 
 all: exe
 debug: debuglib
