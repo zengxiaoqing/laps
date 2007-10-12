@@ -1,0 +1,86 @@
+SUBROUTINE READ_SYSTIM(DDMMYYHM,TIMEOFCH,YYMMDDHM,EXSTATUS)
+
+!==============================================================================
+!  THIS ROUTINE DECODES AN ASCII TIME STRING INTO INTEGERS OF DAY, MONTH, YEAR,
+!  HOUR, MINUTE.
+!
+!  HISTORY:
+!	CREATION:	YUANFU XIE	JUN 2007
+!==============================================================================
+
+  IMPLICIT NONE
+
+  CHARACTER, INTENT(IN)  :: DDMMYYHM*16
+  CHARACTER, INTENT(OUT) :: TIMEOFCH*14
+  INTEGER,   INTENT(OUT) :: YYMMDDHM(5)
+  INTEGER,   INTENT(OUT) :: EXSTATUS
+
+  ! LOCAL VARIABLE:
+  INTEGER :: ZERO
+
+  ZERO = ICHAR('0')
+  EXSTATUS = 0
+
+  ! SECOND:
+  TIMEOFCH(13:14) = '00'
+
+  ! DAY:
+  YYMMDDHM(3) = (ICHAR(DDMMYYHM(1:1))-ZERO)*10+ICHAR(DDMMYYHM(2:2))-ZERO
+  TIMEOFCH(7:8) = DDMMYYHM(1:2)
+
+  ! MONTH:
+  SELECT CASE (DDMMYYHM(4:6))
+  CASE ('JAN') 
+    YYMMDDHM(2) =  1
+    TIMEOFCH(5:6) = '01'
+  CASE ('FEB') 
+    YYMMDDHM(2) =  2
+    TIMEOFCH(5:6) = '02'
+  CASE ('MAR')
+    YYMMDDHM(2) =  3
+    TIMEOFCH(5:6) = '03'
+  CASE ('APR')
+    YYMMDDHM(2) =  4
+    TIMEOFCH(5:6) = '04'
+  CASE ('MAY')
+    YYMMDDHM(2) =  5
+    TIMEOFCH(5:6) = '05'
+  CASE ('JUN')
+    YYMMDDHM(2) =  6
+    TIMEOFCH(5:6) = '06'
+  CASE ('JUL')
+    YYMMDDHM(2) =  7
+    TIMEOFCH(5:6) = '07'
+  CASE ('AUG')
+    YYMMDDHM(2) =  8
+    TIMEOFCH(5:6) = '08'
+  CASE ('SEP')
+    YYMMDDHM(2) =  9
+    TIMEOFCH(5:6) = '09'
+  CASE ('OCT')
+    YYMMDDHM(2) = 10
+    TIMEOFCH(5:6) = '10'
+  CASE ('NOV')
+    YYMMDDHM(2) = 11
+    TIMEOFCH(5:6) = '11'
+  CASE ('DEC')
+    YYMMDDHM(2) = 12
+    TIMEOFCH(5:6) = '12'
+  END SELECT
+
+  ! YEAR:
+  YYMMDDHM(1) = (ICHAR(DDMMYYHM(8 : 8))-ZERO)*1000+ &
+                (ICHAR(DDMMYYHM(9 : 9))-ZERO)*100 + &
+                (ICHAR(DDMMYYHM(10:10))-ZERO)*10+ &
+                 ICHAR(DDMMYYHM(11:11))-ZERO
+  TIMEOFCH(1:4) = DDMMYYHM(8:11)
+
+  YYMMDDHM(4) = (ICHAR(DDMMYYHM(13:13))-ZERO)*10+&
+                 ICHAR(DDMMYYHM(14:14))-ZERO
+  TIMEOFCH(9:10) = DDMMYYHM(13:14)
+
+  YYMMDDHM(5) = (ICHAR(DDMMYYHM(15:15))-ZERO)*10+&
+                 ICHAR(DDMMYYHM(16:16))-ZERO
+  TIMEOFCH(11:12) = DDMMYYHM(15:16)
+
+END SUBROUTINE READ_SYSTIM
