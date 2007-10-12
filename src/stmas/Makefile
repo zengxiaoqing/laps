@@ -80,9 +80,8 @@ debug: $(STMAS)
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS) $(BUFRLIB)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
-install: $(ANA) $(POST)
+install: $(ANA)
 	$(INSTALL) $(ANA) $(INSTALLROOT)/bin/$(ANA)
-	$(INSTALL) $(POST) $(INSTALLROOT)/bin/$(POST)
 
 clean:
 	rm -f $(ANA) $(POST)  *.o *~ *# *.mod
