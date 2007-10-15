@@ -31,13 +31,13 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
              $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a
 
-LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
+#LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
 
 BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
 
-WINDLIB = $(SRCROOT)/src/wind/libwind.a
+#WINDLIB = $(SRCROOT)/src/wind/libwind.a
 
-HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
+#HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f90 .a .f

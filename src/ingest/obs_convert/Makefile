@@ -31,9 +31,9 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/temp/libdebugtemp.a \
              $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a \
              $(SRCROOT)/src/var/bufr/libdebugbufr.a
 
-LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
+#LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
 
-HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
+#HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f90 .a .f
