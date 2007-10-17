@@ -169,7 +169,9 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
                   else
                       echo "processing output file $HOUR$MINUTE$SUFFIX that does not yet exist"
                       $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-                                              -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t $INPUTROOT/$RADAR/$file
+                                              -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf \
+                                              -c $INSTALLROOT/cdl/wsr88d_wideband.cdl \
+                                              -t $INPUTROOT/$RADAR/$file
                   endif
 
               else
@@ -197,23 +199,36 @@ foreach RADAR (`tail -1 $LAPS_DATA_ROOT/static/widebandlist.txt`)
           echo "Generating radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
 #         Filename convention for /public
-#         find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR*$RADAR*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+#         find /$INPUTROOT/$RADAR -name "$YEAR$MONTH$DATE$HOUR" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
 #                                 -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
 
 #         Filename convention for NCDC
           ls -l $INPUTROOT
           ls -l $INPUTROOT/*$RADAR$YEAR$MONTH$DATE*
-          find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
-                                  -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
+          setenv COUNT_NCDC `ls -1 $INPUTROOT/*$RADAR$YEAR$MONTH$DATE* | wc -l`
+          if ($COUNT_NCDC != "0") then
+            echo " "
+            echo "checking NCDC file format"
+            find /$INPUTROOT -name "*$RADAR$YEAR$MONTH$DATE*" -exec $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log \
+                                    -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t {} \;
 
-          echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
-          setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
-          echo "Number of files generated is $COUNT"
-          echo "Finished radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
+            echo "ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l"
+            setenv COUNT `ls -1 $OUTPUTROOT/$RADAR/netcdf/$YYDDD$HOUR* | wc -l`
+            echo "Number of files generated is $COUNT"
+            echo "Finished radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
 
+# If using data from the /public archive, the previous find command should return a COUNT of 0.
+# Then try to use the foreach command from the realtime portion of the loop above.
+          else
+            pushd $INPUTROOT/$RADAR
+            foreach file (*)
+              echo " "
+              echo "checking Archive-II file $INPUTROOT/$RADAR/$file"
+              $INSTALLROOT/bin/$NEXRAD_2_NETCDF -l $OUTPUTROOT/$RADAR/log -p $RADAR -o $OUTPUTROOT/$RADAR/netcdf -c $INSTALLROOT/cdl/wsr88d_wideband.cdl -t $INPUTROOT/$RADAR/$file
+            end
+          endif
       else
           echo "Pre-existing output: skipped radar $RADAR at $YEAR $MONTH $DATE $HOUR..."
-
       endif
 
   endif
