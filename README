@@ -765,14 +765,15 @@
 
      Generating new localizations, reconfiguring existing localizations, and 
      reconfiguring existing localizations without removing lapsprd or log 
-     information is made easier with the perl script 'etc/window_domain_rt.pl' 
-     ("window" hereafter). The window script makes use of namelist domain templates 
-     that specifically define a users localizations.  The window script uses 
-     environment variables $LAPS_SRC_ROOT, $LAPSINSTALLROOT, and $LAPS_DATA_ROOT, 
-     however, -s, -i, and -d command-line inputs override those environment 
-     variables as necessary depending on user needs.  The -t command-line input
-     specifies the domain template directory and the script saves the log/lapsprd 
-     history if command line switch '-c' is not used; or, completely removes 
+     information is made easier with the perl script 
+     '$LAPSINSTALLROOT/etc/window_domain_rt.pl' ("window" hereafter). The window 
+     script makes use of namelist domain templates that specifically define a 
+     user's localizations.  The window script uses environment variables 
+     $LAPS_SRC_ROOT, $LAPSINSTALLROOT, and $LAPS_DATA_ROOT, however, -s, -i, 
+     and -d command-line inputs override those environment variables as 
+     necessary depending on user needs.  The -t command-line input specifies the 
+     domain template directory and the script saves the log/lapsprd history if 
+     command line switch '-c' is not used; or, completely removes 
      $LAPS_DATA_ROOT, then does a 'mkdir $LAPS_DATAROOT' if '-c' is supplied. 
      The '-w laps' is always required. The window script can be run manually 
      when configuring or reconfiguring localizations. Window copies the domain 
@@ -800,6 +801,8 @@
 setenv LAPS_SRC_ROOT /usr/nfs/common/lapb/operational/laps
 setenv LAPSINSTALLROOT /usr/nfs/lapb/operational/laps
 setenv LAPS_DATA_ROOT "any new or existing LAPS_DATA_ROOT" 
+
+cd $LAPSINSTALLROOT
 
 a) perl window_domain_rt.pl -w laps:   
 
