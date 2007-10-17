@@ -57,7 +57,7 @@
           return
       endif
 
-      if(c8_project .eq. 'NIMBUS')then
+      if(c8_project .eq. 'NIMBUS' .or. c8_project .eq. 'CWB')then
           ext_in = 'cdf'
           call s_len(dir_in,len_dir_in)
           c_filespec = dir_in(1:len_dir_in)//'/'//'*00q.'//ext_in
