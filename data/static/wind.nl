@@ -36,7 +36,9 @@ c
 c weight_bkg_const_wind - Weight for Model Background. 
 c                         Recommended values: 0. < value <= 1e+30.
 c                         This controls how quickly the output values match the
-c                         background if far from obs.
+c                         background if far from obs. Nominally this is equal
+c                         to 1e30/err^2, where "1e30" is a scaling constant for
+c                         the weights and "err" is the background error in m/s.
 c
 c weight_radar - weight for derived Doppler wind obs - equivalent to 1/err^2
 c                where 'err' is the assumed radial velocity error in m/s. 
