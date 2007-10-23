@@ -2,96 +2,105 @@ Module mem_namelist
 
 include 'lapsparms.for'
 
+        integer    iflag_lapsparms
+        real       max_radar_files_nl   ! max_radar_files is in lapsparms.for
+        real       PRESSURE_INTERVAL_L
+        real       PRESSURE_0_L
+        integer    nk_laps
+        real       standard_latitude
+        real       standard_latitude2
+        real       standard_longitude
+        integer    NX_L
+        integer    NY_L
+        integer    I_PERIMETER
+        real grid_spacing_m
+        real grid_cen_lat
+        real grid_cen_lon
+        integer    laps_cycle_time
+        integer i2_missing_data
+        real    r_missing_data
+        integer  MAX_RADARS
+        real ref_base
+        real ref_base_useable
+        real r_hybrid_first_gate
+        real aircraft_time_window
+        integer  maxstns
+        integer  N_PIREP
+        integer vert_rad_meso
+        integer vert_rad_sao
+        integer vert_rad_pirep
+        integer vert_rad_prof     
+        real silavwt_parm
+        real toptwvl_parm
+        integer maxstations
 
-integer  :: iflag_lapsparms
-real     :: max_radar_files_nl   
-real     :: pressure_bottom_l ,pressure_interval_l ,pressure_0_l
-real     :: standard_latitude ,standard_latitude2  ,standard_longitude
-integer  :: nx_l   ,ny_l ,nk_laps ,i_perimeter
-real     :: grid_spacing_m ,grid_cen_lat  ,grid_cen_lon
-integer  :: laps_cycle_time
-real     :: r_hybrid_first_gate  ,aircraft_time_window
-integer  :: i_delta_sat_t_sec
-real     :: r_msng_sat_flag_cdf ,r_msng_sat_flag_gvr ,r_msng_sat_flag_asc
-integer  :: i2_missing_data
-real     :: r_missing_data
-integer  :: max_radars
-real     :: ref_base ,ref_base_useable
-integer  :: maxstns  ,n_pirep
-integer  :: vert_rad_meso   ,vert_rad_sao  ,vert_rad_pirep   ,vert_rad_prof
-real     :: silavwt_parm  ,toptwvl_parm
-integer  :: laps_background_model(maxbgmodels)
+        character*40  vertical_grid
+        character*50  c50_lowres_directory
+        character*6   c6_maproj
+        character*8   radarext_3d
+        character*8   radarext_3d_accum
+        character*200 path_to_raw_pirep
+        character*200 path_to_raw_rass
+        character*200 path_to_raw_profiler
+        character*200 path_to_raw_blprass
+        character*200 path_to_raw_blpprofiler
+        character*200 path_to_wsi_2d_radar
+        character*200 path_to_wsi_3d_radar
+        character*200 path_to_qc_acars
+        character*9   fdda_model_source(maxbgmodels)
+        character*8   c8_project
+        character*8   c8_blpfmt
+        character*3   c_raddat_type
+        character*80  c80_description
+        character*200 path_to_topt30s
+        character*200 path_to_topt10m
+        character*200 path_to_pctl10m
+        character*200 path_to_soil2m
+        character*200 path_to_landuse30s
+        character*200 path_to_soiltype_top30s
+        character*200 path_to_soiltype_bot30s
+        character*200 path_to_greenfrac
+        character*200 path_to_soiltemp1deg 
+        character*200 path_to_albedo
+        character*200 path_to_maxsnoalb
+        character*200 path_to_islope
+        character*200 path_to_sst
+
+        logical*1    l_compress_radar,l_use_tamdar,l_3dvar,l_pad1
 
 
-!        integer :: lli_orig,llj_orig  &
-!            ,uri_orig,urj_orig, parent_id,ratio_to_parent  &
-!            ,maxstations,num_domains
+        common  /lapsparms/ iflag_lapsparms &
+        ,max_radar_files_nl,PRESSURE_INTERVAL_L,PRESSURE_0_L &
+        ,nk_laps,standard_latitude,standard_latitude2        &
+        ,standard_longitude,NX_L, NY_L, I_PERIMETER          &
+        ,grid_spacing_m,grid_cen_lat,grid_cen_lon            &
+        ,laps_cycle_time                                     &
+        ,i2_missing_data, r_missing_data, MAX_RADARS         &
+        ,ref_base,ref_base_useable,r_hybrid_first_gate       &
+        ,maxstns,N_PIREP                                     &
+        ,vert_rad_meso,vert_rad_sao                          &
+        ,vert_rad_pirep,vert_rad_prof                        &
+        ,silavwt_parm,toptwvl_parm                           &
+        ,maxstations                                         &
+        ,vertical_grid,c50_lowres_directory,c6_maproj        &
+        ,radarext_3d,radarext_3d_accum                       &
+        ,aircraft_time_window                                &
+        ,path_to_raw_pirep                                   &
+        ,path_to_raw_rass,path_to_raw_profiler               &
+        ,path_to_raw_blprass,path_to_raw_blpprofiler         &
+        ,path_to_wsi_2d_radar,path_to_wsi_3d_radar           &
+        ,path_to_qc_acars                                    &
+        ,path_to_metar_data,path_to_local_data               &
+        ,path_to_buoy_data,c8_project,c8_blpfmt              &
+        ,c_raddat_type, c80_description, path_to_topt30s     &
+        ,path_to_topt10m, path_to_pctl10m, path_to_soil2m    &
+        ,path_to_landuse30s,path_to_soiltype_top30s          &
+        ,path_to_soiltype_bot30s,path_to_greenfrac           &
+        ,path_to_soiltemp1deg,path_to_albedo,path_to_sst     &
+        ,path_to_maxsnoalb,path_to_islope                    &
+        ,fdda_model_source                                   &
+        ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1        
 
-logical*1 :: l_compress_radar,l_use_tamdar,l_3dvar,l_pad1
-
-character(len=200) :: generic_data_root, cstaticdir, grid_fnam_common
-
-character(len=40 ) :: vertical_grid
-character(len=50 ) :: c50_lowres_directory
-character(len=6  ) :: c6_maproj
-character(len=8  ) :: radarext_3d               ,radarext_3d_accum
-character(len=200) :: path_to_raw_pirep         ,path_to_raw_rass  &
-                     ,path_to_raw_profiler      ,path_to_raw_blprass  &
-                     ,path_to_raw_blpprofiler   ,path_to_raw_satellite_cdf  &
-                     ,path_to_raw_satellite_gvr ,path_to_raw_sat_wfo_vis  &
-                     ,path_to_raw_sat_wfo_i39   ,path_to_raw_sat_wfo_iwv  &
-                     ,path_to_raw_sat_wfo_i11   ,path_to_raw_sat_wfo_i12  &
-                     ,path_to_wsi_2d_radar      ,path_to_wsi_3d_radar  &
-                     ,path_to_qc_acars
-character(len=8  ) :: c8_project
-
-character(len=9  ) :: fdda_model_source(maxbgmodels)
-character(len=100) :: path_to_background_model(maxbgmodels)
-
-character(len=3  ) :: c_raddat_type
-character(len=80 ) :: c80_description
-character(len=200) :: path_to_topt30s           ,path_to_topt10m    &
-                     ,path_to_pctl10m           ,path_to_soil2m  &
-                     ,path_to_landuse30s        ,path_to_soiltype_top30s  &
-                     ,path_to_soiltype_bot30s   ,path_to_greenfrac  &
-                     ,path_to_soiltemp1deg      ,path_to_albedo  &
-                     ,path_to_maxsnoalb         ,path_to_islope  &
-                     ,path_to_sst
-
-        common  /lapsparms_cmn/ iflag_lapsparms  &
-       ,max_radar_files_nl,PRESSURE_INTERVAL_L,PRESSURE_0_L  &
-       ,nk_laps,standard_latitude,standard_latitude2         &
-       ,standard_longitude,NX_L, NY_L, I_PERIMETER  &
-       ,grid_spacing_m,grid_cen_lat,grid_cen_lon  &
-       ,laps_cycle_time, min_to_wait_for_metars  &
-       ,i2_missing_data, r_missing_data, MAX_RADARS  &
-       ,ref_base,ref_base_useable,r_hybrid_first_gate  &
-       ,maxstns,N_PIREP  &
-       ,vert_rad_meso,vert_rad_sao  &
-       ,vert_rad_pirep,vert_rad_prof       &
-       ,silavwt_parm,toptwvl_parm  &
-       ,maxstations,maxobs  &
-       ,vertical_grid,c50_lowres_directory,c6_maproj  &
-       ,radarext_3d,radarext_3d_accum  &
-       ,aircraft_time_window  &
-!       ,num_domains,lli_orig,llj_orig  &
-!       ,uri_orig,urj_orig, parent_id  &
-!       ,ratio_to_parent  &
-       ,path_to_raw_pirep  &
-       ,path_to_raw_rass,path_to_raw_profiler  &
-       ,path_to_raw_blprass,path_to_raw_blpprofiler  &
-       ,path_to_wsi_2d_radar,path_to_wsi_3d_radar  &
-       ,path_to_qc_acars,path_to_raw_raob  &
-       ,path_to_metar,path_to_local_data  &
-       ,path_to_buoy_data,c8_project  &
-       ,c_raddat_type, c80_description, path_to_topt30s  &
-       ,path_to_topt10m, path_to_pctl10m, path_to_soil2m  &
-       ,path_to_landuse30s,path_to_soiltype_top30s  &
-       ,path_to_soiltype_bot30s,path_to_greenfrac  &
-       ,path_to_soiltemp1deg,path_to_albedo,path_to_sst  &
-       ,path_to_maxsnoalb,path_to_islope  &
-       ,fdda_model_source  &
-       ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1
 
 ! background_nl variables
 character(len=256)   :: bgpaths(MAXBGMODELS)
@@ -130,7 +139,7 @@ real    :: thresh_2_radarobs_lvl_unfltrd  &
           ,weight_bkg_const_wind  &
           ,weight_radar  &
           ,rms_thresh_wind
-integer :: max_pr,max_pr_levels,i_3d
+integer :: max_pr,max_pr_levels,max_obs
 
 ! pressures_nl variables
 integer, parameter   :: max_p=150
@@ -234,10 +243,11 @@ namelist/snd_nl/        path_to_raw_raob,path_to_local_raob  &
 namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
                   ,thresh_2_radarobs_lvl_unfltrd  &
                   ,thresh_4_radarobs_lvl_unfltrd  &
+                  ,thresh_9_radarobs_lvl_unfltrd  &
                   ,weight_bkg_const_wind  &
                   ,weight_radar  &
                   ,rms_thresh_wind  &
-                  ,max_pr,max_pr_levels,i_3d
+                  ,max_pr,max_pr_levels,max_obs
 
 namelist /surface_analysis/  &
                   use_lso_qc,skip_internal_qc, itheta  &
