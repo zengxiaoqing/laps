@@ -513,7 +513,7 @@ c****  --------------------------------------------------------- *****
      1  ,standard_longitude,NX_L, NY_L, I_PERIMETER
      1  ,l_compress_radar,l_use_tamdar,l_3dvar
      1  ,grid_spacing_m,grid_cen_lat,grid_cen_lon
-     1  ,laps_cycle_time, min_to_wait_for_metars
+     1  ,laps_cycle_time
      1  ,i2_missing_data, r_missing_data, MAX_RADARS
      1  ,ref_base,ref_base_useable,r_hybrid_first_gate
      1  ,maxstns,N_PIREP
