@@ -92,7 +92,7 @@ c       bad_th = 3.5 	        ! for theta
 c       bad_the = 2.5           ! for theta-e
 c       bad_vis = 500. 	        ! for visibility
 c       bad_tb8 = 5.0 	        ! for tb8 Brightness temps.
-
+c
 c       These parameters should be defined in this namelist as they aren't
 c       initialized in the code
 c       
@@ -105,7 +105,11 @@ c       thresh_t                ! for temperature (deg F)
 c       thresh_td               ! for dewpoint (deg F)
 c       thresh_mslp             ! for MSL pressure (millibars)
 c
-c       The following parms will adjust the analysis fit to the obs:
+c       The following parametsrs will adjust the RMS analysis fit to the obs,
+c       given the idealized case of flat terrain. They are multiplied by the 
+c       default instrument error (set at 1.5 deg F for T and Td, and 1.5kt for
+c       the U and V wind components).
+c
 c       rms_wind                ! scaling factor for wind rms threshold
 c       rms_temp                ! scaling factor for temperature rms threshold
 c       rms_dewpoint            ! scaling factor for dewpoint rms threshold
