@@ -179,8 +179,6 @@ debug:
 	$(MAKE) LIB='$(DEBUGLIB)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
-install: lib
-
 clean:
 	$(RM) $(LIB) $(DEBUGLIB) *.o *~ *#
 
