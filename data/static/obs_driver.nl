@@ -9,7 +9,7 @@
  ick_metar_time=0,
  itime_before=900,
  itime_after=900,
- maxobs=80000,
+ maxobs=160000,
  i4wait_local_obs_max=0,
  local_obs_thresh=0,
  l_allow_empty_lso=.false.,
