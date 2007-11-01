@@ -582,7 +582,7 @@ c
 	    gamma = 5.
 	    if(ibt .eq. 0) gamma = 0.
             call spline(t,t1_f,t_bk,alf,alf2a,beta,gamma,tb81,cormax,
-     &        err,imax,jmax,rms_thresh_norm*sfc_nl_parms%rms_temp,
+     &        err,imax,jmax,sfc_nl_parms%rms_temp,
      &        bad_tm,imiss,mxstn,obs_error_t,name,topo,ldf,wt_bkg_a)
         else ! use data structures for handling obs
             bad_tm_land  = bad_tm
@@ -605,7 +605,7 @@ c
 	    alf2a = 0.
 	    beta = 100.  
             call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,
-     &        err,imax,jmax,rms_thresh_norm*sfc_nl_parms%rms_dewpoint,
+     &        err,imax,jmax,sfc_nl_parms%rms_dewpoint,
      &        bad_tmd,imiss,mxstn,obs_error_td,name,topo,ldf,wt_bkg_a)
         else ! use data structures for handling obs
             bad_tmd_land  = bad_tmd
@@ -755,7 +755,7 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(u,u1,u_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
-     &              rms_thresh_norm*sfc_nl_parms%rms_wind,bad_uw,imiss,
+     &              sfc_nl_parms%rms_wind,bad_uw,imiss,
      &              mxstn,obs_error_wind,name,topo,ldf,wt_bkg_a)       
 c
 	print *,' '
@@ -766,7 +766,7 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(v,v1,v_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
-     &              rms_thresh_norm*sfc_nl_parms%rms_wind,bad_vw,imiss,
+     &              sfc_nl_parms%rms_wind,bad_vw,imiss,
      &              mxstn,obs_error_wind,name,topo,ldf,wt_bkg_a)        
 c
 	print *,' '
