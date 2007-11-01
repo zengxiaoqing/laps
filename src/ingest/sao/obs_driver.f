@@ -597,11 +597,15 @@ c       Call subroutine to blacklist the stations in the "store" arrays
      1                            ,store_4,store_5,store_6
      1                            ,store_7,badflag)
 
+        I4_elapsed = ishow_timer()
+
 c       Call subroutine to check for duplicate obs
         call check_for_dupes(      maxsta,n_obs_b,stations
      1                            ,store_1,store_2,store_3
      1                            ,store_4,store_5,store_6
      1                            ,store_7,badflag,l_identical_a)
+
+        I4_elapsed = ishow_timer()
 
 !       Remove identical stations by calling 'init_station'
         do i = 1,n_obs_b
@@ -997,7 +1001,8 @@ c
                     call s_len(stations(i),leni)
 !                   call s_len(stations(j),lenj)
                     if(stations(i) .eq. stations(j) .and. 
-     1                 leni .gt. 0                        )then     
+     1                 leni .gt. 0                  .and. 
+     1                 stations(i)(1:3) .ne. 'UNK'       )then
                         write(6,*)' Names are identical: '
      1                           ,i,j,stations(i)     
                         l_identical = .true.
