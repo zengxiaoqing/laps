@@ -83,7 +83,7 @@ c
         real    lat(ni,nj), lon(ni,nj)
         real  k_to_f
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
-        logical l_reject(maxobs), ltest_madis_qc
+        logical l_reject(maxobs), ltest_madis_qc, l_same_stn
 c
 	integer  wmoid(maxsta)
 	integer    recNum
@@ -177,6 +177,9 @@ c.....  average number of gridpoints based on the grid spacing.
 c
         box_length = box_size * 111.137 !km/deg lat (close enough for lon)
         ibox_points = box_length / (grid_spacing / 1000.) !in km
+        box_low = 1. - float(ibox_points)    !buffer on west/south side
+        box_idir = float( ni + ibox_points)  !buffer on east
+        box_jdir = float( nj + ibox_points)  !buffer on north
 
         nn_in = nn
 c
@@ -184,6 +187,7 @@ c.....	Zero out the counters.
 c
  10     nn = nn_in
         n_obs_g = 0	        ! # of local obs in the laps grid
+        n_obs_ng = 0	        ! # of local obs not in the laps grid
         n_obs_b = 0	        ! # of local obs in the box
 c
 c.....  Get the data from the NetCDF file.  First, open the file.
@@ -341,6 +345,51 @@ c........  the ob is outside the LAPS domain.
 	   if( nanf( elevation(i) ) .eq. 1 ) l_reject(i) = .true.
 	   if( nanf( observationTime(i) ) .eq. 1 ) l_reject(i) = .true.
 
+c
+c.....  Bounds check: is station in the box?  Find the ob i,j location
+c.....  on the LAPS grid, then check if outside past box boundary.
+c
+!          Test for invalid latitude
+           if(latitude(i) .lt. -90 .or. latitude(i) .gt. +90.)then
+               if(.true.)then
+                   write(6,81,err=82)i,n_local_all
+     1                               ,wmoid(i),stationId(i)
+     1                               ,latitude(i)
+ 81                format(2i7,i7,1x,a8,' invalid latitude ',e12.5)
+               endif
+ 82            l_reject(i) = .true.
+               go to 105
+           endif
+
+!          Test for badflag OR (close to S Pole but not quite at it)
+!          Check can also be generalized in 'latlon_to_rlapsgrid' for 'lambert'
+           if(latitude(i) .lt. -89.999 .and. latitude(i) .ne. -90.)then
+               l_reject(i) = .true.
+               go to 105
+           endif
+
+           call latlon_to_rlapsgrid(latitude(i),longitude(i),lat,lon,       
+     &                              ni,nj,ri_loc,rj_loc,istatus)
+           if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
+     1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
+               if(i .le. max_write)then
+                   write(6,91,err=92)i,wmoid(i),stationId(i)
+     1                               ,nint(ri_loc),nint(rj_loc)
+ 91                format(i6,i7,1x,a8,' out of box ',2i12)
+               endif
+ 92            l_reject(i) = .true.
+               go to 105
+           endif
+c
+c.....  Elevation ok?
+c
+	   if(elevation(i).gt.5200. .or. elevation(i).lt.-400.)then
+               l_reject(i) = .true.
+               go to 105
+           endif
+
+!          End of geographic location check
+
 	   i4time_ob_a(i) = nint(observationTime(i)) + 315619200
 	   call make_fnam_lp(i4time_ob_a(i),a9time_a(i),istatus)
 
@@ -351,37 +400,48 @@ c
 	   if(i4time_ob_a(i) .lt. before 
      1   .or. i4time_ob_a(i) .gt. after) then
                if(i .le. max_write)then
-                   write(6,71,err=105)i,wmoid(i),stationId(i)
+                   write(6,71,err=72)i,wmoid(i),stationId(i)
      1                               ,a9time_a(i),i4time_ob_a(i)
      1                               ,before,after
  71		   format(i6,i7,1x,a8,' out of time ',a11,3i12)
                endif
-               l_reject(i) = .true.
+ 72            l_reject(i) = .true.
                go to 105
            endif
 
+!          End of time check
+
 !          Pick closest station if multiple stations are in time window
            do k = 1,i-1
-             if(       stationId(i) .eq. stationId(k) 
-     1                          .AND.
-     1           ( (.not. l_reject(i)) .and. (.not. l_reject(k)) )
-     1                                                           )then
-                 i_diff = abs(i4time_ob_a(i) - i4time_sys)
-                 k_diff = abs(i4time_ob_a(k) - i4time_sys)
-
-                 if(i_diff .ge. k_diff)then
-                     i_reject = i
-                 else
-                     i_reject = k
+             if(stationId(i) .eq. stationId(k))then ! possibly the same stn
+                 l_same_stn = .true.
+                 if(latitude(i)  .ne. latitude(k) .or.
+     1              longitude(i) .ne. longitude(k)      )then
+                     l_same_stn = .false.
                  endif
 
-                 write(6,51)i,k,stationId(i),a9time_a(i),a9time_a(k)       
-     1                     ,i_reject
- 51		 format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
-     1                 ,1x,i6)
+                 if(l_same_stn)then ! added to if block for efficiency
+                   if( (.not. l_reject(i)) .and. (.not. l_reject(k)) 
+     1                                                             )then       
+                     i_diff = abs(i4time_ob_a(i) - i4time_sys)
+                     k_diff = abs(i4time_ob_a(k) - i4time_sys)
 
-                 l_reject(i_reject) = .true.
-             endif
+                     if(i_diff .ge. k_diff)then
+                         i_reject = i
+                     else
+                         i_reject = k
+                     endif
+
+                     write(6,51)i,k,stationId(i),a9time_a(i),a9time_a(k)       
+     1                         ,i_reject
+ 51		     format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
+     1                     ,1x,i6)
+
+                     l_reject(i_reject) = .true.
+                   endif ! both weren't rejected
+                 endif ! same station
+             endif ! possibly the same stn
+
            enddo ! k
 c
 c
@@ -419,54 +479,20 @@ c
  105       continue
 c
 	enddo !i
+
+        write(6,*)' Completed 1st QC loop'
+
+        I4_elapsed = ishow_timer()
 c
 c..................................
 c.....	Second QC loop over all the obs.
 c..................................
 c
 	jfirst = 1
-        box_low = 1. - float(ibox_points)    !buffer on west/south side
-        box_idir = float( ni + ibox_points)  !buffer on east
-        box_jdir = float( nj + ibox_points)  !buffer on north
 c
 	do i=1,n_local_all
 
            if(l_reject(i))go to 125
-c
-c.....  Bounds check: is station in the box?  Find the ob i,j location
-c.....  on the LAPS grid, then check if outside past box boundary.
-c
-!          Test for invalid latitude
-           if(latitude(i) .lt. -90 .or. latitude(i) .gt. +90.)then
-               if(.true.)then
-                   write(6,81,err=125)i,n_local_all
-     1                               ,wmoid(i),stationId(i)
-     1                               ,latitude(i)
- 81                format(2i7,i7,1x,a8,' invalid latitude ',e12.5)
-               endif
-               go to 125
-           endif
-
-!          Test for badflag OR (close to S Pole but not quite at it)
-!          Check can also be generalized in 'latlon_to_rlapsgrid' for 'lambert'
-           if(latitude(i) .lt. -89.999 .and. latitude(i) .ne. -90.) 
-     1                                                        go to 125       
-           call latlon_to_rlapsgrid(latitude(i),longitude(i),lat,lon,       
-     &                              ni,nj,ri_loc,rj_loc,istatus)
-           if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
-     1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
-               if(i .le. max_write)then
-                   write(6,91,err=125)i,wmoid(i),stationId(i)
-     1                               ,nint(ri_loc),nint(rj_loc)
- 91                format(i6,i7,1x,a8,' out of box ',2i12)
-               endif
-               go to 125
-           endif
-c
-c.....  Elevation ok?
-c
-	   if(elevation(i).gt.5200. .or. elevation(i).lt.-400.) 
-     1                                                        go to 125       
 c
 c.....  Right time, right location...
 
@@ -477,24 +503,27 @@ c
 c.....  Check if station is reported more than once this
 c.....  time period.
 c
-	   if(jfirst .eq. 1) then
-	     icount = 1
-	     save_stn(1) = stationId(i)
-	     jfirst = 0
-	     go to 150
-	   endif
+           if(.false.)then ! we may not need this second dupe check
+	     if(jfirst .eq. 1) then
+	       icount = 1
+	       save_stn(1) = stationId(i)
+	       jfirst = 0
+	       go to 150
+	     endif
 c
-	   do k=1,icount
-             if(stationId(i) .eq. save_stn(k)) then
+	     do k=1,icount
+               if(stationId(i) .eq. save_stn(k)) then
                  write(6,*)' Rejecting duplicate ',i,k,stationId(i)
      1                    ,' ',a9time_a(i),' ',a9time_a(k)
                  go to 125
-             endif
-	   enddo !k
+               endif
+	     enddo !k
 c
-	   icount = icount + 1
-	   save_stn(icount) = stationId(i)  ! only one...save for checking
-c
+	     icount = icount + 1
+	     save_stn(icount) = stationId(i)  ! only one...save for checking
+c 
+           endif ! second dupe check (set to .false.)
+
  150	   nn = nn + 1
 
            if(nn .gt. maxsta)then
@@ -507,10 +536,14 @@ c
 c
 c.....  Check if its in the LAPS grid.
 c
-           if(ri_loc.lt.1. .or. ri_loc.gt.float(ni)) go to 151 !off grid
-           if(rj_loc.lt.1. .or. rj_loc.gt.float(nj)) go to 151 !off grid
-           n_obs_g = n_obs_g + 1  !on grid...count it
- 151	   continue
+           call latlon_to_rlapsgrid(latitude(i),longitude(i),lat,lon,       
+     &                              ni,nj,ri_loc,rj_loc,istatus)
+           if(  (ri_loc.lt.1. .or. ri_loc.gt.float(ni)) .OR.
+     1          (rj_loc.lt.1. .or. rj_loc.gt.float(nj))     )then
+               n_obs_ng = n_obs_ng + 1 ! outside the grid (inside the box)
+           else
+               n_obs_g = n_obs_g + 1   ! on grid...count it
+           endif
 c
 c.....	Figure out the cloud data.
 c.....     NOTE: Not currently reading cloud data from mesonets.
@@ -861,6 +894,7 @@ c..... That's it...lets go home.
 c
        print *,' Found ',n_obs_b,' local obs in the LAPS box'
        print *,' Found ',n_obs_g,' local obs in the LAPS grid'
+       print *,'       ',n_obs_ng,' local obs outside the LAPS grid'
        print *,' '
        jstatus = 1            ! everything's ok...
        return
