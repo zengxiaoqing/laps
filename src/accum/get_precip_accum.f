@@ -1,43 +1,68 @@
-cdis   
-cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
-cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
-cdis    
-cdis    This software is distributed under the Open Source Definition,
-cdis    which may be found at http://www.opensource.org/osd.html.
-cdis    
-cdis    In particular, redistribution and use in source and binary forms,
-cdis    with or without modification, are permitted provided that the
-cdis    following conditions are met:
-cdis    
-cdis    - Redistributions of source code must retain this notice, this
-cdis    list of conditions and the following disclaimer.
-cdis    
-cdis    - Redistributions in binary form must provide access to this
-cdis    notice, this list of conditions and the following disclaimer, and
-cdis    the underlying source code.
-cdis    
-cdis    - All modifications to this software must be clearly documented,
-cdis    and are solely the responsibility of the agent making the
-cdis    modifications.
-cdis    
-cdis    - If significant modifications or enhancements are made to this
-cdis    software, the FSL Software Policy Manager
-cdis    (softwaremgr@fsl.noaa.gov) should be notified.
-cdis    
-cdis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
-cdis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
-cdis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
-cdis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
-cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
-cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
-cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
-cdis   
-cdis
-cdis
-cdis   
-cdis
 
-        subroutine get_precip_accum(i4time_beg,i4time_end   ! Input
+        subroutine get_precip_inc(i4time_beg,i4time_end     ! Input
+     1          ,imax,jmax,kmax                             ! Input
+     1          ,MAX_RADAR_FILES                            ! Input
+     1          ,lat,lon,topo                               ! Input
+     1          ,ilaps_cycle_time,grid_spacing_cen_m        ! Input
+     1          ,radarext_3d_accum                          ! Input
+     1          ,snow_accum,precip_accum,frac_sum           ! Outputs
+     1          ,istatus)                                   ! Output
+
+!       Calculate and return incremental precip for the analysis time cycle
+
+!       Input
+        real lat(imax,jmax)
+        real lon(imax,jmax)
+        real topo(imax,jmax)
+
+        character*31  radarext_3d_accum
+
+!       Output
+        real snow_accum(imax,jmax)   ! M
+        real precip_accum(imax,jmax) ! M
+
+!       Local
+        real pcp_bkg_m(imax,jmax)      ! background field for gauge analysis
+	character var_req*4
+
+        call get_precip_radar(i4time_beg,i4time_end         ! Input
+     1          ,imax,jmax,kmax                             ! Input
+     1          ,MAX_RADAR_FILES                            ! Input
+     1          ,lat,lon,topo                               ! Input
+     1          ,ilaps_cycle_time,grid_spacing_cen_m        ! Input
+     1          ,radarext_3d_accum                          ! Input
+     1          ,snow_accum,precip_accum,frac_sum           ! Outputs
+     1          ,istatus)                                   ! Output
+
+!       Read precip first guess (LGB/FSF)
+	var_req = 'r01'
+        call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m
+     1                     ,istat_bkg)       
+        if(istat_bkg .ne. 1)then
+            write(6,*)' No model first guess preicp, using zero field'       
+            write(6,*)' HELP - Isidora and Linda - HELP!!!!!!!!!'
+            pcp_bkg_m = 0.
+        endif
+
+!       Compare to gauge values
+        if(ilaps_cycle_time .eq. 3600)then
+            call get_maxstns(maxsta,istatus)
+            if(istatus .ne. 1)return
+
+            call get_r_missing_data(r_missing_data,istatus)
+            if(istatus .ne. 1)return
+
+            call compare_gauge_values(i4time_end,imax,jmax,maxsta  ! I
+     1                               ,r_missing_data               ! I
+     1                               ,lat,lon                      ! I
+     1                               ,pcp_bkg_m                    ! I
+     1                               ,precip_accum)                ! I/O
+        endif
+
+        return
+        end
+
+        subroutine get_precip_radar(i4time_beg,i4time_end   ! Input
      1          ,imax,jmax,kmax                             ! Input
      1          ,MAX_RADAR_FILES                            ! Input
      1          ,lat,lon,topo                               ! Input
@@ -65,7 +90,7 @@ cdis
         real topo(imax,jmax)
 
 !       Output
-        real snow_accum(imax,jmax) ! M
+        real snow_accum(imax,jmax)   ! M
         real precip_accum(imax,jmax) ! M
 
 !       Local
@@ -84,14 +109,13 @@ cdis
         real temp_col_max(imax,jmax)
         real rh_3d(imax,jmax,kmax)
         real pres_3d(imax,jmax,kmax)
-        logical l_mask(imax,jmax)
+        logical l_mask_pcp(imax,jmax)
+        logical l_mask_rdr(imax,jmax)
         integer i2_pcp_type_2d(imax,jmax)
         integer i2_cldpcp_type_3d(imax,jmax,kmax)
         integer ipcp_1d(kmax)
 
         real grid_ra_ref(imax,jmax,kmax)
-        real grid_ra_vel(imax,jmax,kmax)
-        real grid_ra_nyq(imax,jmax,kmax)
 
         character*9 asc_tim_9,asc_tim_9_beg,asc_tim_9_end
         integer i4time_file(MAX_RADAR_FILES)
@@ -129,6 +153,11 @@ cdis
      1                                 ' to ',asc_tim_9_end
 
 !       Get File Times and fractional time periods
+        i4time_now = i4time_now_gg()
+        i_wait = (i4time_end + (35*60) - i4time_now) / 60
+        write(6,*)' Number of potential wait cycles = ',i_wait
+
+ 50     continue
 
         if(radarext_3d_accum(1:3) .eq. 'xxx')then ! automatically select type(s)
             ext_local = 'vrc'
@@ -182,7 +211,19 @@ cdis
         write(6,*)' ext_local / nscans = ',ext_local,' ',nscans
 
         if(istatus .ne. 1)then
-            return
+            if(i_wait .gt. 0 .and. frac_sum .ge. 0.30)then
+                write(6,*)' Waiting 1 min for possible radar data'
+     1                    ,frac_sum
+                call snooze_gg(60.0,istat_snooze)
+                i_wait = i_wait - 1
+                goto50
+
+            else ! Will not wait for radar data
+                write(6,*)' WARNING: Insufficient data for accum'
+                write(6,*)' No accum output being generated'
+                return
+
+            endif
         endif
 
 !       Initialize both period and total precip/snow
@@ -212,7 +253,8 @@ cdis
             snow_rateave(i,j) = 0.
             snow_accum_pd(i,j) = 0.
             precip_rateave(i,j) = 0.
-            l_mask(i,j) = .false.
+            l_mask_pcp(i,j) = .false.
+            l_mask_rdr(i,j) = .false.
         enddo ! i
         enddo ! j
 
@@ -251,7 +293,7 @@ cdis
                     do j = 1,jmax
                     do i = 1,imax
                         if(snow_accum_pd(i,j) .gt. 1e-10)then
-                            l_mask(i,j) = .true.
+                            l_mask_pcp(i,j) = .true.
                         endif
                     enddo
                     enddo
@@ -266,7 +308,7 @@ cdis
 !                   (typically one half of the laps cycle time).
 
                     call cpt_pcp_type_3d(temp_3d,rh_3d,pres_3d
-     1                  ,grid_ra_ref,l_mask,grid_spacing_cen_m
+     1                  ,grid_ra_ref,l_mask_pcp,grid_spacing_cen_m
      1                  ,imax,jmax,kmax,i2_cldpcp_type_3d,istatus)
                     if(istatus .ne. 1)then
                         return
@@ -292,7 +334,7 @@ cdis
                     do j = 1,jmax
                     do i = 1,imax
 
-                        if(l_mask(i,j))then
+                        if(l_mask_pcp(i,j))then
                             n_pcp_pts = n_pcp_pts + 1
                             iarg = i2_pcp_type_2d(i,j)/16
 
@@ -337,7 +379,7 @@ cdis
                         iarg = i2_cldpcp_type_3d(im,jm,k) / 16
                         ipcp_1d(k) = iarg
                     enddo ! k
-                    write(6,101)l_mask(im,jm),snow_accum_pd(im,jm)
+                    write(6,101)l_mask_pcp(im,jm),snow_accum_pd(im,jm)
      1                          ,snow_rateave(im,jm)
      1                          ,t_sfc_k(im,jm),td_sfc_k(im,jm)
      1                          ,i2_pcp_type_2d(im,jm)
@@ -357,7 +399,7 @@ cdis
                 do j = 1,jmax
                 do i = 1,imax
                     snow_accum_pd(i,j) = 0.
-                    l_mask(i,j) = .false.
+                    l_mask_pcp(i,j) = .false.
                 enddo ! i
                 enddo ! j
 
@@ -498,6 +540,8 @@ cdis
             do k = 1,kmax
                 if(grid_ra_ref(i,j,k) .eq. r_missing_data)then
                     grid_ra_ref(i,j,k) = ref_base
+                else
+                    l_mask_rdr(i,j) = .true.
                 endif
             enddo ! k
             enddo ! j
@@ -516,6 +560,7 @@ cdis
             do j = 1,jmax
             do i = 1,imax
                 if(precip_rate(i,j)    .ne. r_missing_data .and.
+     1             l_mask_rdr(i,j)                         .and.
      1             precip_rateave(i,j) .ne. r_missing_data    )then
                     precip_rateave(i,j) = precip_rateave(i,j)
      1                                  + precip_rate(i,j) * frac(ifile)       
@@ -533,6 +578,7 @@ cdis
             do j = 1,jmax
             do i = 1,imax
                 if(snow_rate(i,j)     .ne. r_missing_data .and.
+     1             l_mask_rdr(i,j)                        .and.
      1             snow_accum_pd(i,j) .ne. r_missing_data    )then
                     snow_accum_pd(i,j) = snow_accum_pd(i,j)
      1                                 + snow_rate(i,j) * frac(ifile)
@@ -558,7 +604,7 @@ cdis
         do i = 1,imax
             if(snow_accum_pd(i,j) .gt. 1e-10 .and. 
      1         snow_accum_pd(i,j) .ne. r_missing_data)then
-                l_mask(i,j) = .true.
+                l_mask_pcp(i,j) = .true.
             endif
         enddo
         enddo
@@ -567,7 +613,7 @@ cdis
         write(6,*)' Compute 3D precip type over masked area'
 
         call cpt_pcp_type_3d(temp_3d,rh_3d,pres_3d,grid_ra_ref
-     1          ,l_mask,grid_spacing_cen_m
+     1          ,l_mask_pcp,grid_spacing_cen_m
      1          ,imax,jmax,kmax,i2_cldpcp_type_3d,istatus)
         if(istatus .ne. 1)then
             return
@@ -587,7 +633,7 @@ cdis
         do j = 1,jmax
         do i = 1,imax
 
-            if(l_mask(i,j))then
+            if(l_mask_pcp(i,j))then
                 n_pcp_pts = n_pcp_pts + 1
                 iarg = i2_pcp_type_2d(i,j) / 16
 
@@ -632,7 +678,7 @@ cdis
             iarg = i2_cldpcp_type_3d(im,jm,k) / 16
             ipcp_1d(k) = iarg
         enddo ! k
-        write(6,101)l_mask(im,jm),snow_accum_pd(im,jm)
+        write(6,101)l_mask_pcp(im,jm),snow_accum_pd(im,jm)
      1                           ,snow_rateave(im,jm)
      1                           ,t_sfc_k(im,jm),td_sfc_k(im,jm)
      1                           ,i2_pcp_type_2d(im,jm)
@@ -663,23 +709,17 @@ cdis
         enddo ! i
         enddo ! j
 
-        write(6,*)' Final snow_accum(im,jm) = ',snow_accum(im,jm)
-        write(6,*)' Final precip_accum(im,jm) = ',precip_accum(im,jm)
-
-!       Compare to gauge values
-        if(ilaps_cycle_time .eq. 3600)then
-            call get_maxstns(maxsta,istatus)
-            call compare_gauge_values(i4time_end,imax,jmax,maxsta  ! I
-     1                               ,r_missing_data               ! I
-     1                               ,lat,lon,precip_accum)        ! I
-        endif
+        write(6,*)' Radar snow_accum(im,jm) = ',snow_accum(im,jm)
+        write(6,*)' Radar precip_accum(im,jm) = ',precip_accum(im,jm)
 
         return
         end
 
         subroutine compare_gauge_values(i4time,ni,nj,maxsta        ! I
      1                                 ,r_missing_data             ! I
-     1                                 ,lat,lon,precip_accum)      ! I
+     1                                 ,lat,lon                    ! I
+     1                                 ,pcp_bkg_m                  ! I
+     1                                 ,precip_accum)              ! I/O
 
 
 !       Write out comparison of LAPS accumulation to gauge values where
@@ -689,9 +729,15 @@ cdis
         include 'read_sfc.inc'
         include 'constants.inc'
 
-        real precip_accum(ni,nj) ! M
+        real precip_accum(ni,nj) ! input radar analysis
+        real pcp_2d_in(ni,nj)    ! locally computed gauge analysis (IN)
+        real pcp_bkg_m(ni,nj)    ! background field for gauge analysis (M)
+        real pcp_bkg_in(ni,nj)   ! background field for gauge analysis (IN)
+        real wt_bkg_a(ni,nj)     ! background weight for gauge analysis
         real lat(ni,nj)
         real lon(ni,nj)
+
+        integer ilaps(maxsta),jlaps(maxsta)
 
         write(6,*)
         write(6,*)' Subroutine compare_gauge_values (1hr pcp inches)...'
@@ -702,8 +748,10 @@ cdis
      &           pcp1,pcp3,pcp6,pcp24,
      &           snow,maxsta,jstatus)
 
+        n_gauge_noradar = 0
+
 !       Loop through obs and write out precip values (when gauge reports precip)
-        do iob = 1,n_obs_g
+        do iob = 1,n_obs_b
 
 !           Obtain LAPS i,j at ob location
             call latlon_to_rlapsgrid(lat_s(iob),lon_s(iob),lat,lon
@@ -711,25 +759,74 @@ cdis
      1                              ,istatus)
             if(istatus.ne.1)goto20
 
-            ilaps = nint(ri)
-            jlaps = nint(rj)
+            ilaps(iob) = nint(ri)
+            jlaps(iob) = nint(rj)
 
-            if(ilaps .ge. 1 .and. ilaps .le. ni .and. 
-     1         jlaps .ge. 1 .and. jlaps .le. nj      )then
+            if(ilaps(iob) .ge. 1 .and. ilaps(iob) .le. ni .and. 
+     1         jlaps(iob) .ge. 1 .and. jlaps(iob) .le. nj      )then
 
-                pcp_laps = precip_accum(ilaps,jlaps) * ft_per_m * 12.       
+!               Convert from meters to inches
+                pcp_laps_m = precip_accum(ilaps(iob),jlaps(iob))
 
-                if(pcp1(iob) .ge. 0. .and. 
-     1             pcp_laps .ne. r_missing_data        )then
-                    write(6,11)iob,stations(iob)(1:10)
-     1                        ,pcp1(iob),pcp_laps      
-11                  format(i4,1x,a,2f6.2)             
+                if(pcp_laps_m .ne. r_missing_data)then
+                    pcp_laps_in = precip_accum(ilaps(iob),jlaps(iob)) 
+     1                          * ft_per_m * 12.       
+                else
+                    pcp_laps_in = r_missing_data
                 endif
+
+                if(pcp1(iob) .ge. 0.)then
+                   if(pcp_laps_in .ne. r_missing_data)then
+                      write(6,11)iob,stations(iob)(1:10)
+     1                          ,pcp1(iob),pcp_laps     
+11                    format(i6,1x,a,2f7.3,' RADAR')             
+                   else
+                      write(6,12)iob,stations(iob)(1:10)
+     1                          ,pcp1(iob),lat_s(iob),lon_s(iob)
+12                    format(i6,1x,a,f7.3,2f8.2,' NORADAR')             
+                      n_gauge_noradar = n_gauge_noradar + 1
+                   endif
+                endif
+
             endif
 
 20          continue
 
         enddo ! iob
+
+        if(.true.)then ! analyze gauge values
+
+            write(6,*)' Performing a gauge only analysis for testing'
+
+            wt_bkg_a = 5e28
+            pcp_bkg_in = pcp_bkg_m * in_per_m
+
+            call precip_barnes_jacket(           'pcp1'
+     1                                           ,ilaps,jlaps         ! I
+     1                                           ,pcp1                ! I
+     1                                           ,maxsta              ! I
+     1                                           ,pcp_bkg_in          ! I
+     1                                           ,badflag,ni,nj       ! I
+     1                                           ,topo,ldf            ! I
+     1                                           ,wt_bkg_a            ! I
+     1                                           ,pcp_2d_in,istatus)  ! O
+
+!           Substitute gauge analysis in radar gap areas
+            n_barnes = 0
+            do i = 1,ni
+            do j = 1,nj
+                if(precip_accum(i,j) .eq. r_missing_data)then 
+                    n_barnes = n_barnes + 1
+                    precip_accum(i,j) = pcp_2d_in(i,j) * meters_per_inch   
+                endif
+            enddo ! j
+            enddo ! i
+
+            write(6,*)' Number of gridpoints outside radar = ',n_barnes       
+            write(6,*)' Number of gauges outside radar = '
+     1               ,n_gauge_noradar     
+
+        endif
 
         return
         end
@@ -755,6 +852,8 @@ cdis
 
         real frac(MAX_RADAR_FILES)
         integer i4time_file(MAX_RADAR_FILES)
+
+        nscans = 0 ! initialize
 
         call get_filespec(ext,2,c_filespec,istatus)
 
