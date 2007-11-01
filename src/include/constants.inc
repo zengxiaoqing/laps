@@ -45,6 +45,8 @@
 
       REAL    , PARAMETER :: mspkt        = 0.514791
       REAL    , PARAMETER :: ft_per_m     = 1. / (.0254 * 12.)
+      REAL    , PARAMETER :: in_per_m     = 1. / (.0254)
+      REAL    , PARAMETER :: meters_per_inch  = .0254
 
       REAL    , PARAMETER ::  SVP1=0.6112
       REAL    , PARAMETER ::  SVP2=17.67
