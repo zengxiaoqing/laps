@@ -3,7 +3,8 @@ MODULE NAME                                              FILENAME
 
 main                                                     laps_accum.f
     laps_accum                                           laps_accum_sub.f
-        get_precip_accum                                 get_precip_accum.f
+        get_precip_inc                                   get_precip_accum.f
+        get_precip_radar                                        "
             get_fracs                                           "
             read_radar_3dref                                    "
             get_low_ref                                         "
@@ -13,4 +14,8 @@ main                                                     laps_accum.f
             get_sfc_preciptype                                  "
             nowrad_virga_correction                             "
             compare_gauge_values                                "
-                read_sfc_precip                                 
+                read_sfc_precip 
+                precip_barnes_jacket                     precip_barnes_jacket.f
+                    precip_barnes_sfc                           "
+                        barnes_multivariate_sfc
+        put_precip_2d                                    laps_accum_sub.f
