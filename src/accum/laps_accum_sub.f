@@ -128,14 +128,17 @@ c read in laps lat/lon and topo
 
         icen = NX_L/2 + 1
         jcen = NY_L/2 + 1
-        call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
-     1                              ,grid_spacing_cen_m,istatus)
-        if(istatus .eq. 1)then
-            write(6,*)' Actual grid spacing in domain center = '
-     1                              ,grid_spacing_cen_m
-        else
+        call get_grid_spacing_actual_xy(lat(icen,jcen),lon(icen,jcen)       
+     1                        ,grid_spacing_actual_mx
+     1                        ,grid_spacing_actual_my
+     1                        ,istatus)
+        if(istatus .ne. 1)then
             return
         endif
+
+        grid_spacing_cen_m = grid_spacing_actual_my
+        write(6,*)' Actual grid spacing in domain center = '
+     1                              ,grid_spacing_cen_m
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
         if(istatus .eq. 1)then
@@ -175,26 +178,17 @@ c read in laps lat/lon and topo
 
         write(6,*)' Getting Snow/Precip Accumulation over ',minutes
      1           ,' min'
-50      call get_precip_accum(i4time_beg,i4time_end,NX_L,NY_L,NZ_L
-     1          ,MAX_RADAR_FILES
-     1          ,lat,lon,topo,ilaps_cycle_time,grid_spacing_cen_m
-     1          ,radarext_3d_accum                     ! Input
-     1          ,snow_2d,precip_2d,frac_sum,istatus_inc)
+50      call get_precip_inc(i4time_beg,i4time_end,NX_L,NY_L,NZ_L   ! I
+     1          ,MAX_RADAR_FILES                                   ! I
+     1          ,lat,lon,topo                                      ! I
+     1          ,ilaps_cycle_time,grid_spacing_cen_m               ! I
+     1          ,radarext_3d_accum                                 ! I
+     1          ,snow_2d,precip_2d,frac_sum                        ! O
+     1          ,istatus_inc)                                      ! O
 
-        if(istatus_inc .ne. 1)then ! Decide whether to wait for radar data
-            if(i_wait .gt. 0 .and. frac_sum .ge. 0.30)then
-                write(6,*)' Waiting 1 min for possible radar data'
-     1                    ,frac_sum
-                call snooze_gg(60.0,istat_snooze)
-                i_wait = i_wait - 1
-                goto50
-
-            else ! Will not wait for radar data
-                write(6,*)' WARNING: Insufficient data for accum'
-                write(6,*)' No accum output being generated'
-                return
-
-            endif
+        if(istatus_inc .ne. 1)then 
+            write(6,*)' No incremental precip was generated'
+            return
         endif
 
         comment_r = '           Null Comment'
