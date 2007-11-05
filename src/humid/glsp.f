@@ -77,17 +77,17 @@ c variables with dynamic dependence
 
 c internal variables
 
-        integer*4 i,j
+        integer i,j
         character*256 dir
         character*31 ext
         character*3 var (1)
-        integer*4 lvl (1)
+        integer lvl (1)
         character*4 lvl_coord  (1)
         character*10 units (1)
         character*125 comment (1)
-        integer*4 kmax, ksurf, len
+        integer kmax, ksurf, len
 
-        real*4 numel,sum
+        real numel,sum
         data ext/'lsx'/
  
         call get_directory (ext,dir,len)

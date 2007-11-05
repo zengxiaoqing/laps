@@ -1163,9 +1163,9 @@ c	transmittance profile.
 	Real Sum,b1,b2,bs,tau1,tau2
 	Integer i
 
-	Real*4 C1 
+	Real C1 
         data C1 /1.1905e-5/
-	Real*4 C2 
+	Real C2 
         data C2 /1.4385/
 
 	Real Planck,Bright,V,Temp,Radiance

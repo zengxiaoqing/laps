@@ -63,7 +63,7 @@ c     parameter variables
 
      
       
-      integer*4
+      integer
      1     jstatus(3)
       
       
@@ -83,7 +83,7 @@ c     1        make_ssh !function type
       real sat(ii,jj,kk)        !saturation ssh at each location
       
       
-      real*4
+      real
      1     data(ii,jj,kk),
      1     tpw(ii,jj), tpw1(ii,jj), tpw2(ii,jj),
      1     tempsh
@@ -94,9 +94,9 @@ c     1        make_ssh !function type
       
       real bias_one
 
-      real*4 mask (ii,jj),cg(ii,jj,kk)
+      real mask (ii,jj),cg(ii,jj,kk)
       
-      real*4 lt1dat(ii,jj,kk)
+      real lt1dat(ii,jj,kk)
       
       character
      1     dirlt1*250,dir*250,rhdir*250,dirpw*250,dir3*250,
@@ -138,19 +138,19 @@ c     ------------------
       character*125 commentline
       
       
-      integer*4
+      integer
      1     i,j,k
       
-      integer*4 counter
+      integer counter
       
-      integer*4 lvllm(kk)
+      integer lvllm(kk)
       
-      real*4 maps_rh(ii,jj,kk)
+      real maps_rh(ii,jj,kk)
 
       character*3 desired_field
    
-      real*4 plevel(kk), p_3d(ii,jj,kk)
-      integer*4 mlevel(kk)
+      real plevel(kk), p_3d(ii,jj,kk)
+      integer mlevel(kk)
 
 c     CLOUD variables
 

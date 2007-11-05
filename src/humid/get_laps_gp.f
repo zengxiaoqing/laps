@@ -68,14 +68,14 @@ c input parameters
       integer rnum,igrid,jgrid
       real rlat(rnum),rlon(rnum)
       integer ix(rnum),jy(rnum)
-      real*4 glat(igrid,jgrid),glon(igrid,jgrid)
+      real glat(igrid,jgrid),glon(igrid,jgrid)
       character*31 static_ext
       character*200 static_dir
 c regular internal variables
 
 
 
-        integer*4 i,j,k  !indexes
+        integer i,j,k  !indexes
         integer len
         data static_ext /'nest7grid'/
 

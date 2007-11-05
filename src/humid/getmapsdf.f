@@ -115,7 +115,7 @@ c  internal variables
 
         integer laps_cycle_time
 
-        integer*4 
+        integer 
      1          i4time1,
      1          i,k
 

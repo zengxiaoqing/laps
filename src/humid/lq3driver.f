@@ -61,7 +61,7 @@ c     of cpu time when run without optimization.
 c      include 'lapsparms.cmn'
 c      include 'grid_fname.cmn'
       
-      integer*4
+      integer
      1     ii,jj,kk,
      1     i4time,
      1     istatus,

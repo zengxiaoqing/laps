@@ -75,23 +75,23 @@ c
 
         implicit none
 
-        real*4
+        real
      1  pw(4),
      1  plat(4),
      1  plon(4)
-        integer*4
+        integer
      1  i4time, !note this is satellite i4time
      1  npts,  !npfilepts in calling routine
      1  istat,
      1  istatus
 
 
-        integer*4
+        integer
      1  i4time_d, !desired i4time of the data in question
      1  i4time_f, !computed i4time of profiler data file to open
      1  twenty_seg !the twenty minute segment after the
 c                             hour (0,1,2)
-        integer*4
+        integer
      1  ny_d,
      1  nmo_d,
      1  nd_d,
@@ -99,16 +99,16 @@ c                             hour (0,1,2)
      1  nm_d,
      1  ns_d
 
-        real*4
+        real
      1  hour_fraction !fractional hour used in determining i4time_f
 
         character*9
      1  filename
-        integer*4
+        integer
      1  i,j,k,l,ii,jj,kk,ll
-        real*4
+        real
      1  data(10,4)
-        integer*4
+        integer
      1  weight(5)
 
         data weight/ -3,12,17,12,-3/
@@ -117,7 +117,7 @@ c                             hour (0,1,2)
         character*6 site, type
 
 
-        integer*4
+        integer
      1  iunit,
      1  ierror,
      1  points,
@@ -133,7 +133,7 @@ c                             hour (0,1,2)
      1  fh(30),
      1  qc(30)
 
-        real*4
+        real
      1  elevation,
      1  longitude,
      1  latitude,

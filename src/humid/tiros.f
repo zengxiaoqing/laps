@@ -92,7 +92,7 @@ c internal variables
 
 
 c climate model variables
-      integer*4 julian_day
+      integer julian_day
       real standard_press(40)
       real tempertur_guess(40)
       real mixratio_guess(40)

@@ -96,11 +96,11 @@ c     optran specific arrays for powell function calling
 
 c     background covariance common block
       common /cost_background/ background_covar,cost_covar,covar_s
-      real*4 background_covar (3,93,65)
-      real*4 cost_covar(3)
+      real background_covar (3,93,65)
+      real cost_covar(3)
       integer level7, level5, covar_s
-      real*4 covar_sum
-      integer*4 covar_count
+      real covar_sum
+      integer covar_count
 
 c     optran common 
 
