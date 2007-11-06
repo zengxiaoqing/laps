@@ -6878,7 +6878,7 @@ c             if(cint.eq.0.0)cint=0.1
         call downcase(asc_tim_24(5:10),asc_tim_24(5:10))
         CALL PCHIQU (cpux(ix),cpux(iy),'VT '//asc_tim_24(1:17)
      1                                //namelist_parms%c3_time_zone
-     1                                ,rsize,0,-1.0)
+     1                                ,rsize_zoom,0,-1.0)
 
 !       Resolution on Bottom Center
 !       ix = 520
