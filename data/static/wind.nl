@@ -10,13 +10,14 @@
  rms_thresh_wind=1.0,
  max_pr=1500,
  max_pr_levels=300,
- max_obs=80000,
+ max_wind_obs=80000,
  /
 
 c WIND PARAMETERS
 c
-c l_use_raob - flag to determine whether to utilize RAOB data from the 'snd' 
-c              file
+c l_use_raob - Flag to determine whether to utilize RAOB data from the 'snd' 
+c              file in the analysis. If RAOBs aren't analyzed they will be
+c              still be utilized for independent data verification.
 c
 c l_use_cdw  - flag to determine whether to utilize cloud drift wind data from
 c              the cdw file.
@@ -54,4 +55,4 @@ c max_pr - Maximum number of wind profiles allowed for 'pro' + 'snd' files.
 c
 c max_pr_levels - Maximum number of levels per wind profile.
 c
-c max_obs - Maximum total number of wind observations
+c max_wind_obs - Maximum total number of wind observations
