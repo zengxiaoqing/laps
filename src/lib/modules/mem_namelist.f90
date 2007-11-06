@@ -139,7 +139,7 @@ real    :: thresh_2_radarobs_lvl_unfltrd  &
           ,weight_bkg_const_wind  &
           ,weight_radar  &
           ,rms_thresh_wind
-integer :: max_pr,max_pr_levels,max_obs
+integer :: max_pr,max_pr_levels,max_wind_obs
 
 ! pressures_nl variables
 integer, parameter   :: max_p=150
@@ -247,7 +247,7 @@ namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
                   ,weight_bkg_const_wind  &
                   ,weight_radar  &
                   ,rms_thresh_wind  &
-                  ,max_pr,max_pr_levels,max_obs
+                  ,max_pr,max_pr_levels,max_wind_obs
 
 namelist /surface_analysis/  &
                   use_lso_qc,skip_internal_qc, itheta  &

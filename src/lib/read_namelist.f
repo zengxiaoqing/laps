@@ -438,7 +438,7 @@ c
      1                          ,weight_bkg_const_wind
      1                          ,weight_radar
      1                          ,rms_thresh_wind
-     1                          ,max_pr,max_pr_levels,max_obs
+     1                          ,max_pr,max_pr_levels,max_wind_obs
      1                          ,istatus)
 
        include 'grid_fname.cmn'                          !grid_fnam_common
@@ -455,7 +455,7 @@ c
      1                   ,weight_bkg_const_wind
      1                   ,weight_radar
      1                   ,rms_thresh_wind
-     1                   ,max_pr,max_pr_levels,max_obs
+     1                   ,max_pr,max_pr_levels,max_wind_obs
  
        character*150 static_dir,filename
  
