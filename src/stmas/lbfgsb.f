@@ -444,7 +444,7 @@ c     ************
       
       if (task .eq. 'START') then
 
-         call timer(time1)
+         call timer_1(time1)
 
 c        Generate the current machine precision.
 
@@ -628,7 +628,7 @@ c     Compute the Generalized Cauchy Point (GCP).
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-      call timer(cpu1) 
+      call timer_1(cpu1) 
       call cauchy(n,x,l,u,nbd,g,indx2,iwhere,t,d,z,
      +            m,wy,ws,sy,wt,theta,col,head,
      +            wa(1),wa(2*m+1),wa(4*m+1),wa(6*m+1),nint,
@@ -642,11 +642,11 @@ c         singular triangular system detected; refresh the lbfgs memory.
          theta  = one
          iupdat = 0
          updatd = .false.
-         call timer(cpu2) 
+         call timer_1(cpu2) 
          cachyt = cachyt + cpu2 - cpu1
          goto 222
       endif
-      call timer(cpu2) 
+      call timer_1(cpu2) 
       cachyt = cachyt + cpu2 - cpu1
       nintol = nintol + nint
 
@@ -671,7 +671,7 @@ c     Subspace minimization.
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-      call timer(cpu1) 
+      call timer_1(cpu1) 
 
 c     Form  the LEL^T factorization of the indefinite
 c       matrix    K = [-D -Y'ZZ'Y/theta     L_a'-R_z'  ]
@@ -691,7 +691,7 @@ c          refresh the lbfgs memory and restart the iteration.
          theta  = one
          iupdat = 0
          updatd = .false.
-         call timer(cpu2) 
+         call timer_1(cpu2) 
          sbtime = sbtime + cpu2 - cpu1 
          goto 222
       endif 
@@ -715,12 +715,12 @@ c          refresh the lbfgs memory and restart the iteration.
          theta  = one
          iupdat = 0
          updatd = .false.
-         call timer(cpu2) 
+         call timer_1(cpu2) 
          sbtime = sbtime + cpu2 - cpu1 
          goto 222
       endif
  
-      call timer(cpu2) 
+      call timer_1(cpu2) 
       sbtime = sbtime + cpu2 - cpu1 
  555  continue
  
@@ -735,7 +735,7 @@ c     Generate the search direction d:=z-x.
       do 40 i = 1, n
          d(i) = z(i) - x(i)
   40  continue
-      call timer(cpu1) 
+      call timer_1(cpu1) 
  666  continue
       call lnsrlb(n,l,u,nbd,x,f,fold,gd,gdold,g,d,r,t,z,stp,dnorm,
      +            dtd,xstep,stpmx,iter,ifun,iback,nfgv,info,task,
@@ -768,7 +768,7 @@ c             refresh the lbfgs memory and restart the iteration.
             iupdat = 0
             updatd = .false.
             task   = 'RESTART_FROM_LNSRCH'
-            call timer(cpu2)
+            call timer_1(cpu2)
             lnscht = lnscht + cpu2 - cpu1
             goto 222
          endif
@@ -777,7 +777,7 @@ c          return to the driver for calculating f and g; reenter at 666.
          goto 1000
       else 
 c          calculate and print out the quantities related to the new X.
-         call timer(cpu2) 
+         call timer_1(cpu2) 
          lnscht = lnscht + cpu2 - cpu1
          iter = iter + 1
  
@@ -878,7 +878,7 @@ c -------------------- the end of the loop -----------------------------
  
       goto 222
  999  continue
-      call timer(time2)
+      call timer_1(time2)
       time = time2 - time1
       call prn3lb(n,x,f,task,iprint,info,itfile,
      +            iter,nfgv,nintol,nskip,nact,sbgnrm,
@@ -3820,7 +3820,7 @@ c     Compute the new step.
       
 c====================== The end of dcstep ==============================
 
-      subroutine timer(ttime)
+      subroutine timer0(ttime)
       double precision ttime
 c     *********
 c
@@ -3858,6 +3858,11 @@ c     The first element of the array tarray specifies user time
 
       end
       
+      subroutine timer_1(ttime)
+      double precision ttime
+      ttime=0.0
+      return
+      end
 c====================== The end of timer ===============================
 
       double precision function dnrm2(n,x,incx)
