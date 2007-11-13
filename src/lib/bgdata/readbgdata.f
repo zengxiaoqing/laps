@@ -513,6 +513,11 @@ c
 
              if(istatus.ne.0)goto 99
 
+             if(bgmodel.eq.12.and.
+     &          cmodel(1:lencm).eq.'FMI_NETCDF_LL')then
+                tdbg_sfc=shbg_sfc
+             endif
+
              prbgsh=prbght
              prbguv=prbght
              prbgww=prbght
