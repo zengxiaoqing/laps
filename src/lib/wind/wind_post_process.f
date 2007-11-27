@@ -1,8 +1,8 @@
 
 
-        subroutine wind_post_process(i4time_sys,EXT,var_3d
-     1                              ,units_3d,comment_3d
+        subroutine wind_post_process(i4time_sys
      1                              ,uanl,vanl                            ! I
+     1                              ,wanl                                 ! O
      1                              ,NX_L,NY_L,NZ_L                       ! I
      1                              ,N_3D_FIELDS                          ! I
      1                              ,uanl_sfcitrp,vanl_sfcitrp            ! I
@@ -12,7 +12,7 @@
      1                              ,istat_lw3)
 
         real uanl(NX_L,NY_L,NZ_L),vanl(NX_L,NY_L,NZ_L) ! WRT True North ! I
-        real wanl(NX_L,NY_L,NZ_L)                                       ! L
+        real wanl(NX_L,NY_L,NZ_L)                                       ! O
         real uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)            ! I
 
         real lat(NX_L,NY_L)
@@ -20,11 +20,6 @@
         real topo(NX_L,NY_L)
 
         real rk_terrain(NX_L,NY_L)
-
-        character*125 comment_3D(N_3D_FIELDS)
-        character*10 units_3D(N_3D_FIELDS)
-        character*3 var_3D(N_3D_FIELDS)
-        character*3 EXT
 
         logical l_grid_north_out
 
@@ -48,6 +43,39 @@ csms$ignore begin
 
         I4_elapsed = ishow_timer()
 
+        return
+        end
+
+
+        subroutine write_wind_output(i4time_sys,EXT,var_3d
+     1                              ,uanl,vanl                            ! I
+     1                              ,wanl                                 ! I
+     1                              ,out_sfc_3d                           ! I
+     1                              ,NX_L,NY_L,NZ_L                       ! I
+     1                              ,N_3D_FIELDS                          ! I
+     1                              ,uanl_sfcitrp,vanl_sfcitrp            ! I
+     1                              ,topo,lat,lon,grid_spacing_m          ! I
+     1                              ,r_missing_data                       ! I
+     1                              ,istat_lw3)
+
+!       Stuff for 3D winds
+        real uanl(NX_L,NY_L,NZ_L),vanl(NX_L,NY_L,NZ_L) ! WRT True North ! I
+        real wanl(NX_L,NY_L,NZ_L)                                       ! I
+
+        character*125 comment_3D(N_3D_FIELDS)
+        character*10 units_3D(N_3D_FIELDS)
+        character*3 var_3D(N_3D_FIELDS)
+        character*3 EXT
+
+!       Stuff for SFC Winds
+        real uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)            ! I
+        real out_sfc_3D(NX_L,NY_L,2)
+
+        character*125 comment_a(2)
+        character*10 units_a(2)
+        character*3 var_a(2)
+
+        write(6,*)' Subroutine write_wind_output...'
 
 !       Header information for 3D wind
         EXT = 'lw3'
@@ -69,22 +97,43 @@ csms$ignore begin
         write(6,*)' Calling write routine for all grids ',ext(1:3)
      1                                  ,i4time_sys
 
-!       call move_3d(uanl,outarray_4D(1,1,1,1),NX_L,NY_L,NZ_L)
-!       call move_3d(vanl,outarray_4D(1,1,1,2),NX_L,NY_L,NZ_L)
-!       call move_3d(wanl,outarray_4D(1,1,1,3),NX_L,NY_L,NZ_L)
-
-!       call put_laps_multi_3d(i4time_sys,EXT,var_3d,units_3d,
-!    1     comment_3d,outarray_4D,NX_L,NY_L,NZ_L,N_3D_FIELDS,istat_lw3)
-
         call put_laps_multi_3d_jacket(i4time_sys,EXT,var_3d
      1                               ,units_3d,comment_3d
      1                               ,uanl,vanl,wanl
      1                               ,NX_L,NY_L,NZ_L,N_3D_FIELDS
      1                               ,istat_lw3)
+        if(istat_lw3 .eq. 1)then
+            write(6,*)' Success writing out LW3 file'
+        else
+            write(6,*)' Error writing out LW3 file'
+        endif
 
-csms$ignore end
+!       Write out derived winds file (sfc wind)
+        call move(uanl_sfcitrp,out_sfc_3D(1,1,1),NX_L,NY_L)
+        call move(vanl_sfcitrp,out_sfc_3D(1,1,2),NX_L,NY_L)
+
+        ext = 'lwm'
+
+        var_a(1) = 'SU'
+        var_a(2) = 'SV'
+
+        do i = 1,2
+            units_a(i) = 'm/s'
+            comment_a(i) = 'SFCWIND'
+        enddo
+
+        call put_laps_multi_2d(i4time_sys,ext,var_a
+     1      ,units_a,comment_a,out_sfc_3d,NX_L,NY_L,2,istat_lwm)
+
+        if(istat_lwm .eq. 1)then
+            write(6,*)' Success in writing out lwm file (SU,SV)'
+        else
+            write(6,*)' Error writing out lwm file (SU,SV)'
+        endif
+
         return
         end
+
 
 
         subroutine put_laps_multi_3d_jacket(i4time_sys,EXT,var_3d
