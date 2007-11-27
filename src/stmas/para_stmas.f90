@@ -35,11 +35,21 @@ MODULE PRMTRS_STMAS
   REAL(KIND=8)   ,ALLOCATABLE :: GRADINT(:,:,:,:,:) ! GRADIENT OF COST FUNCTION
   CHARACTER(LEN=100)          :: OBSFILE            ! OBSERVATION FILE NAME
 
-  INTEGER(KIND=4)             :: U_CMPNNT           ! U COMPONENT
-  INTEGER(KIND=4)             :: V_CMPNNT           ! V COMPONENT
-  INTEGER(KIND=4)             :: W_CMPNNT           ! W COMPONENT
-  INTEGER(KIND=4)             :: PRESSURE           ! PRESSURE
-  INTEGER(KIND=4)             :: TEMPRTUR           ! TEMPERATURE
+  INTEGER(KIND=4)             :: COSSTEP            ! THE ITERATE STEPS BEFORE MIDDLE GRID LEVEL
+  INTEGER(KIND=4)             :: MIDGRID            ! MIDDLE GRID LEVEL WHERE THE ITERATE STEP CHANGED
+  INTEGER(KIND=4)             :: FINSTEP            ! THE ITERATE STEPS AFTER MIDDLE GRID LEVEL
+
+  INTEGER(KIND=4)             :: U_CMPNNT           ! U COMPONENT INDEX
+  INTEGER(KIND=4)             :: V_CMPNNT           ! V COMPONENT INDEX
+  INTEGER(KIND=4)             :: W_CMPNNT           ! W COMPONENT INDEX
+  INTEGER(KIND=4)             :: PRESSURE           ! PRESSURE INDEX
+  INTEGER(KIND=4)             :: TEMPRTUR           ! TEMPERATURE INDEX
+
+  INTEGER(KIND=4)             :: XSL                ! X COORDINATE INDEX
+  INTEGER(KIND=4)             :: YSL                ! Y COORDINATE INDEX
+  INTEGER(KIND=4)             :: PSL                ! PRESSURE INDEX
+  INTEGER(KIND=4)             :: CSL                ! CORIOLIS FORCE INDEX
+  INTEGER(KIND=4)             :: DSL                ! DENSITY INDEX
 
   REAL(KIND=8)   ,ALLOCATABLE :: WWW(:,:,:,:)       ! W COMPONENT
   REAL(KIND=8)   ,ALLOCATABLE :: XXX(:,:)           ! DISTANCE OF HORIZONTAL DIMENSION 1
@@ -51,7 +61,7 @@ MODULE PRMTRS_STMAS
   REAL(KIND=8)   ,ALLOCATABLE :: DEN(:,:,:,:)       ! DENSITY
   REAL(KIND=8)   ,ALLOCATABLE :: SCL(:)             ! SCALING THE PHYSICAL VARIABLE
   REAL(KIND=8)   ,ALLOCATABLE :: SL0(:)             ! DEFAULT SCALING THE PHYSICAL VARIABLE
-  REAL(KIND=8)                :: SCP(5)             ! SCALING XXX,YYY,ZZZ OR PPP,COR,GRDBKGND
+  REAL(KIND=8)                :: SCP(5)             ! SCALING XXX,YYY,ZZZ OR PPP,COR,DEN
   REAL(KIND=8)                :: ORIVTCL
   REAL(KIND=8)   ,ALLOCATABLE :: XX0(:,:)           ! DISTANCE OF HORIZONTAL DIMENSION 1
   REAL(KIND=8)   ,ALLOCATABLE :: YY0(:,:)           ! DISTANCE OF HORIZONTAL DIMENSION 2
