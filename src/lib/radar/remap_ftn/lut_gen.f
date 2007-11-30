@@ -79,7 +79,7 @@ c
    50 CONTINUE
 c
       write(6,801)NX_L,NY_L
-  801 format('REMAP > Getting LAPS Domain: ',2i5)
+  801 format('REMAP > LUT_GEN - Getting LAPS Domain: ',2i5)
 c
       call get_domain_laps(NX_L,NY_L,'nest7grid',
      :                     lat,lon,topo,grid_spacing_cen_m,istatus)    
@@ -213,6 +213,13 @@ c
       write(6,840)
   840 format(' REMAP > Building Az/Ran to i,j lut')
 c
+      if(range_interval .le. 0.)then
+          write(6,*)' ERROR: range_interval = ',range_interval
+          stop
+      else
+          write(6,*)' range_interval = ',range_interval
+      endif
+
       DO 300 iran = 0,lut_ranges
 
         slant_range = iran*range_interval
@@ -251,6 +258,15 @@ c
       write(12)azran_to_igrid_lut,azran_to_jgrid_lut
       close(12)
   310 continue 
+
+!     Debugging output
+      write(6,*)' azran_to_[ij]grid_lut...'
+      do iran = 0,lut_ranges,10
+        slant_range = iran*range_interval
+        iaz = 0
+        write(6,*)iran,slant_range,azran_to_igrid_lut(iaz,iran),
+     1                             azran_to_jgrid_lut(iaz,iran)
+      enddo ! iran
 
 c     Generate DbZ Lookup Table (graduated for each tenth of a dbz)
       do i = -1000,+1000
