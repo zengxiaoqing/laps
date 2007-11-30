@@ -3,7 +3,7 @@
       subroutine skycover_to_frac(c_skycover,fraction,istatus)
 
       character*(*) c_skycover              ! Input 
-      real*4        fraction                ! Output
+      real        fraction                ! Output
 
       call s_len(c_skycover,ilen)
       ilen = max(ilen,1)

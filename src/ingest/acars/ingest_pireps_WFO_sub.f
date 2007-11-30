@@ -74,9 +74,9 @@ C
       integer i4time_sys, ilaps_cycle_time, NX_L, NY_L, istatus
       character*(*) ext
       character*9 a9_timeObs 
-      real*4 lat_a(NX_L,NY_L)
-      real*4 lon_a(NX_L,NY_L)
-      real*4 topo_a(NX_L,NY_L)
+      real lat_a(NX_L,NY_L)
+      real lon_a(NX_L,NY_L)
+      real topo_a(NX_L,NY_L)
 
 !.............................................................................
 C

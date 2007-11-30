@@ -11,10 +11,10 @@
       character*6 C6_A1ACID
       character*9 a9_timeObs,a9_recptTime 
 !     character*7 c7_skycover
-      real*4 lat_a(NX_L,NY_L)
-      real*4 lon_a(NX_L,NY_L)
-      real*4 topo_a(NX_L,NY_L)
-      real*4 latitude,longitude
+      real lat_a(NX_L,NY_L)
+      real lon_a(NX_L,NY_L)
+      real topo_a(NX_L,NY_L)
+      real latitude,longitude
 
 !............................................................................
 

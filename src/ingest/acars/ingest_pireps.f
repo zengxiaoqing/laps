@@ -20,7 +20,7 @@
 !     Output file
       character*13 filename13
       character*31    ext
-      integer*4       len_dir
+      integer       len_dir
 
       character*40 c_vars_req
       character*180 c_values_req
