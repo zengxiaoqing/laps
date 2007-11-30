@@ -41,8 +41,8 @@
 # -Q  P                Use QSUB_WAIT (with SGE on jet/ijet) where P is the project name
 #
 # -M                   Runs just the executables for the surface analysis. The argument value
-#                      denotes the name of the surface analysis executable (e.g. 'recurs_iter.x' 
-#                      or 'laps_sfc.x')
+#                      denotes the name of the surface analysis executable (e.g. 'stmas_mg.x' 
+#                      'laps_sfc.x', or 'recurs_iter.x')
 #
 # -s                   Runs surface analysis only (equivalent to '-M laps_sfc.x')
 #
