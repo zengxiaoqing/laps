@@ -253,6 +253,10 @@ then
 else
   CPPFLAGS="$CPPFLAGS -DNODYNAMIC"
 fi
+
+dnl Hardwired MULTI_EXEC for now
+CPPFLAGS="$CPPFLAGS -DMULTI_EXEC"
+
 dnl
 dnl How to compile fortran with ncarg?
 dnl
