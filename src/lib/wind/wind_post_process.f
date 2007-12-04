@@ -5,15 +5,16 @@
      1                              ,wanl                                 ! O
      1                              ,NX_L,NY_L,NZ_L                       ! I
      1                              ,N_3D_FIELDS                          ! I
+     1                              ,heights_3d                           ! I
      1                              ,uanl_sfcitrp,vanl_sfcitrp            ! I
      1                              ,topo,lat,lon,grid_spacing_m          ! I
-     1                              ,rk_terrain                           ! I
      1                              ,r_missing_data,l_grid_north_out      ! I
      1                              ,istat_lw3)
 
         real uanl(NX_L,NY_L,NZ_L),vanl(NX_L,NY_L,NZ_L) ! WRT True North ! I
+        real heights_3d(NX_L,NY_L,NZ_L)                                 ! I
         real wanl(NX_L,NY_L,NZ_L)                                       ! O
-        real uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)            ! I
+        real uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)            ! O
 
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
@@ -25,6 +26,58 @@
 
 csms$ignore begin
         write(6,*)' Subroutine wind_post_process...'
+
+!  **** Generate Interpolated SFC analysis ****
+
+        write(6,*)' Generating interpolated laps surface wind'
+
+        i_sfc_bad = 0
+
+        do j = 1,NY_L
+        do i = 1,NX_L
+
+!           Interpolate from three dimensional grid to terrain surface
+            zlow = height_to_zcoord2(topo(i,j),heights_3d,NX_L,NY_L,NZ_L
+     1                                                  ,i,j,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' lapswind_anal: error in height_to_zcoord2'
+     1                   ,' in sfc wind interpolation',istatus
+                write(6,*)i,j,zlow,topo(i,j),
+     1                    (heights_3d(i,j,k),k=1,NZ_L)
+                return
+            endif
+
+            rk_terrain(i,j) = zlow
+
+            klow = max(zlow,1.)
+            khigh = klow + 1
+            fraclow = float(khigh) - zlow
+            frachigh = 1.0 - fraclow
+
+            if( uanl(i,j,klow)  .eq. r_missing_data
+     1     .or. vanl(i,j,klow)  .eq. r_missing_data
+     1     .or. uanl(i,j,khigh) .eq. r_missing_data
+     1     .or. vanl(i,j,khigh) .eq. r_missing_data        )then
+
+                write(6,3333)i,j
+3333            format(' Warning: cannot interpolate to sfc at ',2i3)
+                i_sfc_bad = 1
+                uanl_sfcitrp(i,j) = r_missing_data
+                vanl_sfcitrp(i,j) = r_missing_data
+
+            else
+                uanl_sfcitrp(i,j) = uanl(i,j,klow ) * fraclow
+     1                            + uanl(i,j,khigh) * frachigh
+
+                vanl_sfcitrp(i,j) = vanl(i,j,klow ) * fraclow
+     1                            + vanl(i,j,khigh) * frachigh
+
+            endif
+
+        enddo ! j
+        enddo ! i
+
+        I4_elapsed = ishow_timer()
 
         write(6,*)' Computing Omega'
         call vert_wind(uanl,vanl,uanl_sfcitrp,vanl_sfcitrp                ! I
@@ -50,11 +103,9 @@ csms$ignore begin
         subroutine write_wind_output(i4time_sys,EXT,var_3d
      1                              ,uanl,vanl                            ! I
      1                              ,wanl                                 ! I
-     1                              ,out_sfc_3d                           ! I
+     1                              ,uanl_sfcitrp,vanl_sfcitrp            ! I
      1                              ,NX_L,NY_L,NZ_L                       ! I
      1                              ,N_3D_FIELDS                          ! I
-     1                              ,uanl_sfcitrp,vanl_sfcitrp            ! I
-     1                              ,topo,lat,lon,grid_spacing_m          ! I
      1                              ,r_missing_data                       ! I
      1                              ,istat_lw3)
 
