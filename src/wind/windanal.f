@@ -235,6 +235,7 @@ csms$>       rms_thresh, rep_pres_intvl, out>:default=ignore)  begin
      &  obs_point(:)%valuef(1),obs_point(:)%valuef(2),
      &  obs_point(:)%value(1), obs_point(:)%value(2),
      &  obs_point(:)%weight,
+     &  obs_point(:)%vert_rad_rat,
      &  obs_point(:)%elev,
      &  obs_point(:)%ldf,
      &  obs_point(:)%mask_sea,
@@ -247,6 +248,7 @@ csms$>       rms_thresh, rep_pres_intvl, out>:default=ignore)  begin
      &  obs_point_qced(:)%valuef(1),obs_point_qced(:)%valuef(2),
      &  obs_point_qced(:)%value(1),obs_point_qced(:)%value(2),
      &  obs_point_qced(:)%weight,
+     &  obs_point_qced(:)%vert_rad_rat,
      &  obs_point_qced(:)%elev,
      &  obs_point_qced(:)%ldf,
      &  obs_point_qced(:)%mask_sea,
@@ -955,6 +957,7 @@ csms$ignore end
      &  obs_fu,obs_fv,
      &  obs_u,obs_v,
      &  obs_weight,
+     &  obs_vert_rad_rat,
      &  obs_elev,
      &  obs_ldf,
      &  obs_mask_sea,
@@ -967,6 +970,7 @@ csms$ignore end
      &  qced_fu,qced_fv,
      &  qced_u,qced_v,
      &  qced_weight,
+     &  qced_vert_rad_rat,
      &  qced_elev,
      &  qced_ldf,
      &  qced_mask_sea,
@@ -990,6 +994,7 @@ csms$ignore end
        real        , intent(in ) :: obs_u(max_obs)
        real        , intent(in ) :: obs_v(max_obs)
        real        , intent(in ) :: obs_weight(max_obs)
+       real        , intent(in ) :: obs_vert_rad_rat(max_obs)
        real        , intent(in ) :: obs_elev(max_obs)
        real        , intent(in ) :: obs_ldf(max_obs)
        integer     , intent(in ) :: obs_mask_sea(max_obs)
@@ -1008,6 +1013,7 @@ csms$ignore end
        real        , intent(out) :: qced_u(max_obs)
        real        , intent(out) :: qced_v(max_obs)
        real        , intent(out) :: qced_weight(max_obs)
+       real        , intent(out) :: qced_vert_rad_rat(max_obs)
        real        , intent(out) :: qced_elev(max_obs)
        real        , intent(out) :: qced_ldf(max_obs)
        integer     , intent(out) :: qced_mask_sea(max_obs)
@@ -1148,6 +1154,8 @@ csms$>       qced_type, qced_file, n_qc_total_good, out>: default=ignore) begin
                   qced_fu(n_qc_total_good) = obs_fu(i_ob)
                   qced_fv(n_qc_total_good) = obs_fv(i_ob)
                   qced_weight(n_qc_total_good) = obs_weight(i_ob)
+                  qced_vert_rad_rat(n_qc_total_good) = 
+     1                                         obs_vert_rad_rat(i_ob)
                   qced_elev(n_qc_total_good) = obs_elev(i_ob)
                   qced_ldf(n_qc_total_good) = obs_ldf(i_ob)
                   qced_mask_sea(n_qc_total_good) = obs_mask_sea(i_ob)
