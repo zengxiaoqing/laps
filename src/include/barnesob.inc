@@ -14,6 +14,7 @@
           real valuef(max_var)        ! Values of full obs
           real value(max_var)         ! Values of incremental obs
           real weight
+          real vert_rad_rat           ! Vertical radius ratio 
           real elev                   ! Used for sfc obs
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
@@ -34,6 +35,7 @@
           real valuef(max_var)        ! Values of full obs
           real value(max_var)         ! Values of incremental obs
           real weight
+          real vert_rad_rat           ! Vertical radius ratio 
           real elev                   ! Used for sfc obs
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
