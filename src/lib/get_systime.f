@@ -2,10 +2,10 @@
 
       integer i4time_sys
       character*9 a9_time,a9_time_save
-      integer *4 istatus
+      integer istatus
 
       character*100 dir
-      integer *4 length
+      integer length
 
       integer init,i4time_sys_save
       data init/0/
