@@ -373,6 +373,8 @@ cdis
                                     obs_point(nobs_point)%valuef(2)=ob_v
                                     obs_point(nobs_point)%weight = 
      1                                                    weight_prof       
+                                    obs_point(nobs_point)%vert_rad_rat =
+     1                                                    1.0   
                                     call downcase(obstype(i_pr)
      1                                           ,c_obstype)    
                                     obs_point(nobs_point)%type = 

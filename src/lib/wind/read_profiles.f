@@ -341,6 +341,7 @@ c
                         obs_point(nobs_point)%valuef(1) = ob_u + u_diff       
                         obs_point(nobs_point)%valuef(2) = ob_v + v_diff
                         obs_point(nobs_point)%weight = weight_prof       
+                        obs_point(nobs_point)%vert_rad_rat = 1.0
                         if(obstype(i_pr)(1:5) .eq. 'TOWER')then
                             call downcase(obstype(i_pr),c_obstype)
                             obs_point(nobs_point)%type = c_obstype

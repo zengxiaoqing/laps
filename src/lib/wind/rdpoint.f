@@ -323,6 +323,7 @@ cdis
                         obs_point(nobs_point)%valuef(1) = u_temp-u_diff       
                         obs_point(nobs_point)%valuef(2) = v_temp-v_diff       
                         obs_point(nobs_point)%weight = weight_ob
+                        obs_point(nobs_point)%vert_rad_rat = 1.0
                         obs_point(nobs_point)%type   = ext_in
                         obs_point(nobs_point)%file   = ext_in
                         obs_point(nobs_point)%i4time = i4time_ob

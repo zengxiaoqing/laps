@@ -249,6 +249,7 @@ c
                 obs_point(nobs_point)%valuef(1) = sfc_u(n_sfc_obs)
                 obs_point(nobs_point)%valuef(2) = sfc_v(n_sfc_obs)
                 obs_point(nobs_point)%weight = weight_sfc
+                obs_point(nobs_point)%vert_rad_rat = 1.0
                 obs_point(nobs_point)%type   = 'sfc'
                 obs_point(nobs_point)%file   = 'lso'
 
