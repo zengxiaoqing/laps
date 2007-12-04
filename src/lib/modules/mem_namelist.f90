@@ -2,6 +2,10 @@ Module mem_namelist
 
 include 'lapsparms.for'
 
+!       Globally used variables that are independent of the namelists
+!       character(len=200) :: generic_data_root, cstaticdir, grid_fnam_common
+
+!       Declarations for namelist variables
         integer    iflag_lapsparms
         real       max_radar_files_nl   ! max_radar_files is in lapsparms.for
         real       PRESSURE_INTERVAL_L
@@ -133,12 +137,12 @@ character(len=256)   ::  path_to_raw_raob    ,path_to_local_raob     &
 
 ! wind_nl variables
 logical :: l_use_raob, l_use_cdw, l_use_radial_vel
-real    :: thresh_2_radarobs_lvl_unfltrd  &
-          ,thresh_4_radarobs_lvl_unfltrd  &
-          ,thresh_9_radarobs_lvl_unfltrd  &
-          ,weight_bkg_const_wind  &
+real    :: weight_bkg_const_wind  &
           ,weight_radar  &
           ,rms_thresh_wind
+integer :: thresh_2_radarobs_lvl_unfltrd  &
+          ,thresh_4_radarobs_lvl_unfltrd  &
+          ,thresh_9_radarobs_lvl_unfltrd  
 integer :: max_pr,max_pr_levels,max_wind_obs
 
 ! pressures_nl variables
@@ -320,7 +324,7 @@ elseif (namelist_name == 'pressures') then
    
 elseif (namelist_name == 'lapsparms') then
 
-   read (12, lapsparms_nl)
+   read (12, lapsparms_nl, err=901)
    
    ! QC the input variables if desired
    !  .
@@ -360,7 +364,7 @@ elseif (namelist_name == 'raob_ingest') then
 
 elseif (namelist_name == 'wind') then
 
-   read (12, wind_nl)
+   read (12, wind_nl, err=905)
    
    ! QC the input variables if desired
    !  .
@@ -413,6 +417,15 @@ endif
 close (12)
 
 return
+
+901  print*,'error reading lapsparms_nl'
+     write(*,lapsparms_nl)
+     stop
+
+905  print*,'error reading wind_nl'
+     write(*,wind_nl)
+     stop
+
 end subroutine
 
 !---------------------------------------------------------------------
