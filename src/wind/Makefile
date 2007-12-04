@@ -23,7 +23,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libdebugwind.a  \
 
 EXE = wind.exe
 
-SRC= main_sub.f \
+SRC= main_sub.F \
      weights.f \
      comparisons.f \
      comp_vr_prof.f \
