@@ -1110,6 +1110,7 @@ c format type 1 (gvr)
             i_msng_sat_flag(5,1,3)=i_qc_sat_flag(kk)
            endif
           enddo
+          path_to_raw_sat(1:6,1,3)=cpath2sat(jj)
 c
 c     format type 2 (wfo)
          elseif(csattypes(jj).eq. 'wfo')then
