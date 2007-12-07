@@ -81,7 +81,7 @@ c     call get_laps_config('nest7grid',istatus)
       call get_grid_dim_xy(ii,jj,istatus)
       if (istatus.ne.1) then
          write (6,*) 'error in grid_dim_xy'
-         return
+         stop
       endif
       
 c      ii = nx_l_cmn
@@ -90,21 +90,21 @@ c      jj = ny_l_cmn
       call get_laps_dimensions(kk,istatus)
       if (istatus.ne.1) then
          write (6,*) 'error in laps_dimensions (k)'
-         return
+         stop
       endif
 c      kk = nk_laps
 
       call get_r_missing_data(mdf,istatus)
       if (istatus.ne.1) then
          write (6,*) 'error in get_r_missing_data value'
-         return
+         stop
       endif
 c      mdf = r_missing_data_cmn
 
       call get_laps_cycle_time(lct,istatus)
       if (istatus.ne.1) then
          write (6,*) 'error in get_laps_cycle_time'
-         return
+         stop
       endif
 
 c      lct = laps_cycle_time_cmn
