@@ -324,6 +324,7 @@ c
                     obs_barnes(n_obs)%j = j
                     obs_barnes(n_obs)%k = 1
                     obs_barnes(n_obs)%weight   = 1./rinst_err**2       
+                    obs_barnes(n_obs)%vert_rad_rat = 1.0
                     obs_barnes(n_obs)%value(1) = to(i,j)
                     obs_barnes(n_obs)%qc = .true.
 C

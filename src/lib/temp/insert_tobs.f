@@ -559,6 +559,7 @@ cdis
                 obs_barnes(n_obs_valid)%j = temp_obs(i_ob,i_j)
                 obs_barnes(n_obs_valid)%k = temp_obs(i_ob,i_k)
                 obs_barnes(n_obs_valid)%weight = temp_obs(i_ob,i_wt)
+                obs_barnes(n_obs_valid)%vert_rad_rat = 1.0
                 obs_barnes(n_obs_valid)%value(1) = temp_obs(i_ob,i_bias)
                 obs_barnes(n_obs_valid)%i4time = i4time
                 obs_barnes(n_obs_valid)%type = c8_obstype

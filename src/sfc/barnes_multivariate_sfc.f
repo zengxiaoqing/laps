@@ -55,6 +55,7 @@
 
             obs_barnes(i)%k = 1
             obs_barnes(i)%weight = 1. / rinst_err**2
+            obs_barnes(i)%vert_rad_rat = 1.
             obs_barnes(i)%i4time = i4time_sys ! no time weight for now
 
             obs_barnes(i)%ldf = obs(i)%ldf
@@ -256,11 +257,13 @@ C
                 obs_barnes_valid(n_obs_valid)%j = obs_barnes(iob)%j
                 obs_barnes_valid(n_obs_valid)%k = obs_barnes(iob)%k
                 obs_barnes_valid(n_obs_valid)%weight 
-     1                                        = obs_barnes(iob)%weight
+     1                                    = obs_barnes(iob)%weight
+                obs_barnes_valid(n_obs_valid)%vert_rad_rat 
+     1                                    = obs_barnes(iob)%vert_rad_rat       
                 obs_barnes_valid(n_obs_valid)%i4time
-     1                                        = obs_barnes(iob)%i4time
+     1                                    = obs_barnes(iob)%i4time
                 obs_barnes_valid(n_obs_valid)%value(1) 
-     1                                        = obs_barnes(iob)%value(1)
+     1                                    = obs_barnes(iob)%value(1)
                 sumsq_inst = sumsq_inst 
      1                     + 1. / obs_barnes_valid(n_obs_valid)%weight
 
@@ -304,6 +307,7 @@ C
                 obs_barnes_valid(n_obs_valid)%j = j
                 obs_barnes_valid(n_obs_valid)%k = 1
                 obs_barnes_valid(n_obs_valid)%weight=1.0 / rinst_err**2
+                obs_barnes_valid(n_obs_valid)%vert_rad_rat = 1.0
                 obs_barnes_valid(n_obs_valid)%i4time = i4time_sys ! no time wt
                 obs_barnes_valid(n_obs_valid)%value(1) = to_2d_in(i,j)
                 obs_barnes_valid(n_obs_valid)%elev = topo(i,j)
