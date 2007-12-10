@@ -52,7 +52,7 @@ cdis
 !Can be used with either regular LAPS analysis grid or the cloud analysis grid.
         Implicit none
         Integer nk, cloud_type(nk)
-        Real dx, height(nk), w(nk)
+        Real dx, height(nk), w(nk) ! dx is M and w is M/S
 
 !The following specifies the maximum vv in two cloud types as functions
 !of cloud depth.  Make parabolic vv profile, except for stratiform clouds,
@@ -86,9 +86,11 @@ cdis
         Go to 100
 
 10      Do k = kbase, nk
-c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
+         If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 !     change to the cloudtop by Adan
-         If (cloud_type(k) .ne. 0) then
+c        If (cloud_type(k) .ne. 0) then
+C LW Changed comment to line above...was on "If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10)"
+C LW Change per Chris A......NOTE original change was added in ver 1.5 in 2003
           ktop = k
          Else
           Go to 20
