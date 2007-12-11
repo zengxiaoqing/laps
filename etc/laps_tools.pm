@@ -319,7 +319,9 @@ d25 d26 d27 d28 d29 d30 d31 d32 d33 d34 d35 d36
 d37 d38 d39 d40 d41 d42 d43 d44 d45 d46 d47 d48
 d49 d50
 ln3 
-lsr lsr/dmsp01 lsr/dmsp02 lsr/goes08 lsr/goes09 lsr/goes10 lsr/goes12
+lsr
+lsr/dmsp01 lsr/dmsp02
+lsr/goes08 lsr/goes09 lsr/goes10 lsr/goes11 lsr/goes12
 lsr/tros12 lsr/tros14 cdw rdr 
 rdr/001 rdr/002 rdr/003 rdr/004 rdr/005 rdr/006 rdr/007 rdr/008 rdr/009 
 rdr/001/vrc rdr/001/raw rdr/002/vrc rdr/002/raw rdr/003/vrc rdr/003/raw
