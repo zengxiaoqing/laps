@@ -351,9 +351,9 @@ if( defined($LAPS_TEMPLATE) ){
                }
             }
     }
-    if(defined $opt_m){
-       $success = &restorefiles("ggm");
-    }
+#   if(defined $opt_m){
+#      $success = &restorefiles("ggm");
+#   }
 }else{
    print "No template subdirectory. All roots equal(?): $all_roots_equal.\n";
 }
@@ -662,19 +662,19 @@ sub restorefiles
             }
        }elsif($type eq "ggm"){
            foreach (@filelist){
-                    next if(/\.nl$/ || /nest7grid.parms/);
+                    next if(/\.nl$/ || /nest7grid.parms/  || -d "$LAPS_DATA_ROOT/static\_save/$_");
                     if( /\.dat$/ || /^static/ || /wrfstatic/){
                        `cp $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
-                    }elsif(-d "$LAPS_DATA_ROOT/static\_save/$_"){
-                       opendir(SUBDIR, "$LAPS_DATA_ROOT/static\_save/$_");
-                       @subflist = grep !/^\.\.?$/, readdir SUBDIR;
-                       closedir SUBDIR;
-                       if(!-e "$LAPS_DATA_ROOT/static/$_/$subf"){
-                          mkdir "$LAPS_DATA_ROOT/static/$_/$subf",0777 or die "cant make directory $LAPS_DATA_ROOT/static/$_/$subf";
-                       }
-                       foreach $subf (@subflist){
-                               `cp $LAPS_DATA_ROOT/static\_save/$_/$subf $LAPS_DATA_ROOT/static/$_/$subf`;
-                       }
+#                   }elsif(-d "$LAPS_DATA_ROOT/static\_save/$_"){
+#                      opendir(SUBDIR, "$LAPS_DATA_ROOT/static\_save/$_");
+#                      @subflist = grep !/^\.\.?$/, readdir SUBDIR;
+#                      closedir SUBDIR;
+#                      if(!-e "$LAPS_DATA_ROOT/static/$_/$subf"){
+#                         mkdir "$LAPS_DATA_ROOT/static/$_/$subf",0777 or die "cant make directory $LAPS_DATA_ROOT/static/$_/$subf";
+#                      }
+#                      foreach $subf (@subflist){
+#                              `cp $LAPS_DATA_ROOT/static\_save/$_/$subf $LAPS_DATA_ROOT/static/$_/$subf`;
+#                      }
                     }
            }
        }
