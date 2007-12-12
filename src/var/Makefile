@@ -16,7 +16,6 @@ RM = rm -f
 FLAG = $(FFLAGS)
 
 LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
-           $(SRCROOT)/src/wind/libwind.a \
            $(SRCROOT)/src/lib/temp/libtemp.a \
            $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
@@ -24,7 +23,6 @@ LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
            $(SRCROOT)/src/lib/goeslib/libgoeslib.a
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
-             $(SRCROOT)/src/wind/libwind.a \
              $(SRCROOT)/src/lib/temp/libdebugtemp.a \
              $(SRCROOT)/src/lib/libdebuglaps.a  \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
@@ -35,8 +33,6 @@ LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
 
 BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
 DBBUFRLIB = $(SRCROOT)/src/var/bufr/libdebugbufr.a
-
-WINDLIB = $(SRCROOT)/src/wind/libwind.a
 
 HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
 
