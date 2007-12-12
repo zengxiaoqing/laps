@@ -55,7 +55,7 @@
 !// for subroutine mass2laps
 
       REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: tt2,uvar1,vvar1,&
-                                             tvar1,qvar1,tvar 
+                                        wvar1,tvar1,qvar1,tvar 
       REAL*4,PARAMETER :: cp=1004.0, rc=287.0,t0=300.0 !273.15
 
 !// for subroutine read_static_grid
@@ -136,6 +136,7 @@
       allocate(tt2(imax,jmax,kmax))
       allocate(uvar1(imax,jmax,kmax))
       allocate(vvar1(imax,jmax,kmax))
+      allocate(wvar1(imax,jmax,kmax))
       allocate(tvar(imax,jmax,kmax))
       allocate(tvar1(imax,jmax,kmax))
       allocate(qq1(imax1,jmax1,kmax1))
@@ -263,10 +264,34 @@
        
 ! To write wind to lw3
 
-      call wind_post_process(i4time,'lw3',var_3d,units_3d,&
-           comment_3d,uvar1,vvar1,imax,jmax,kmax,3,uanl_sfcitrp,&
-      	   vanl_sfcitrp,topo,lat,lon,grid_spacing_m,rk_terrain,&
-      	   r_missing_data,l_grid_north_out,istatus)
+! old-version-wind_post_process
+!      call wind_post_process(i4time,'lw3',var_3d,units_3d,&
+!           comment_3d,uvar1,vvar1,imax,jmax,kmax,3,uanl_sfcitrp,&
+!      	   vanl_sfcitrp,topo,lat,lon,grid_spacing_m,rk_terrain,&
+!      	   r_missing_data,l_grid_north_out,istatus)
+
+! new-version-wind_post_process
+
+        call wind_post_process(i4time                         &   ! I 
+                             ,uvar1,vvar1                     &   ! I
+                             ,wvar1                           &   ! O
+                             ,imax,jmax,kmax,3                &   ! I
+                             ,heights_3d                      &   ! I
+                             ,uanl_sfcitrp,vanl_sfcitrp       &   ! I
+                             ,topo,lat,lon,grid_spacing_m     &   ! I
+                             ,r_missing_data,l_grid_north_out &   ! I
+                             ,istatus)
+        
+        print*,"wvar1=",wvar1(1,1,1:10)
+
+        call write_wind_output(i4time,'lw3',var_3d            &   ! I
+                             ,uvar1,vvar1                     &   ! I
+                             ,wvar1                           &   ! I
+                             ,uanl_sfcitrp,vanl_sfcitrp       &   ! I
+                             ,imax,jmax,kmax,3                &   ! I
+                             ,r_missing_data                  &   ! I
+                             ,istatus)
+
 
       !----------------------------------------------------------
 ! Write lwm for display lw3: YUANFU XIE
