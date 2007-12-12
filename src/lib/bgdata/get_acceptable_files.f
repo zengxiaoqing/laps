@@ -351,7 +351,7 @@ c ------------------------------------------------------------------------------
       indx_for_best_init1=0
       indx_for_best_init2=0
       indx_for_best_fcst=0
-      i4time_min_diff=100000
+      i4time_min_diff=1000000
       do while(n.le.ibkgd)
          if(i4timeinit(n).le.i4time_anal .and.
      +i4timeinit(n)+forecast_length*3600 .gt. i4time_anal)then   !let "forecast_length" window on init time qualify
@@ -381,7 +381,9 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
                       indx_for_best_init=n
                       indx_for_best_fcst=jj-1
                    endif
-                   print*,'Found fcsts bounding anal'
+                   print*,'Found fcsts bounding anal init/fcst='
+     1                   , indx_for_best_init                
+     1                   , indx_for_best_fcst                
                    print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
                    print*,'Full name 2: ', bkgd(n),fcst(n,jj)
                    print*
@@ -406,7 +408,9 @@ c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel =
                     indx_for_best_fcst=jj-1
                  endif
                  print*,'Found fcsts bounding anal'
-                 print*, "Index = ",n
+                 print*, "Index/init/fcst = ",n
+     1                   , indx_for_best_init                
+     1                   , indx_for_best_fcst                
                  print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
                  print*,'Full name 2: ', bkgd(n),fcst(n,jj)
                  print*
@@ -470,6 +474,8 @@ c -----------------------------------------------------------------------------
             print*,'!*** WARNING: Did not find acceptable files'
             print*,'!*** -------> Returning to main'
             print*,'!******************************************'
+            print*,'indx_for_best_init/indx_for_best_fcst = '
+     1            , indx_for_best_init,indx_for_best_fcst 
             accepted_files = 0
             bg_files = 0
             return
