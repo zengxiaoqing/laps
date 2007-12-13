@@ -47,7 +47,7 @@ cdis
      1            N_SFC,N_PIREP,                                    ! I
      1            lat,lon,                                          ! I
      1            NTMIN,NTMAX,                                      ! I
-     1            u_laps_fg,v_laps_fg,                              ! O
+     1            u_mdl_bkg_4d, v_mdl_bkg_4d,                       ! I
      1            grid_laps_u,grid_laps_v,grid_laps_wt,             ! I/O
      1            max_obs,obs_point,nobs_point,                     ! I/O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
@@ -93,11 +93,11 @@ cdis
         logical L_profiler
         parameter (L_profiler = .true.)
 
-        dimension u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
-        dimension v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
+        real u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
+        real v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
 
-        dimension u_laps_fg(NX_L,NY_L,NZ_L)
-        dimension v_laps_fg(NX_L,NY_L,NZ_L)
+        real u_laps_fg(NX_L,NY_L,NZ_L)
+        real v_laps_fg(NX_L,NY_L,NZ_L)
 
         real heights_3d(NX_L,NY_L,NZ_L)
         real heights_1d(NZ_L)
@@ -118,27 +118,6 @@ cdis
             write(6,*)' Error getting laps_cycle_time'
             return
         endif
-
-        call get_fg_wind_new(
-     1          i4time_lapswind,ilaps_cycle_time               ! Input
-     1          ,NX_L,NY_L,NZ_L                                ! Input
-     1          ,NTMIN,NTMAX                                   ! Input
-     1          ,u_mdl_bkg_4d,v_mdl_bkg_4d                     ! Output
-     1          ,u_laps_fg,v_laps_fg                           ! Output
-     1          ,istatus)                                      ! Output
-
-        if(istatus .ne. 1)then
-            write(6,*)' Abort LAPS wind analysis - no first guess info'
-            return
-        endif
-
-        write(6,*)' Column of first guess winds'
-        write(6,*)'j  v_laps_fg(23,j,13)'
-        do j = 1,NY_L
-            write(6,5555)j,v_laps_fg(23,j,13)
- 5555       format(i4,4f7.2)
-        enddo ! j
-
 
 !  ***  Read in Profiler Data  ********************************************
 
