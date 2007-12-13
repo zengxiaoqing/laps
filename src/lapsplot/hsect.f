@@ -6849,8 +6849,14 @@ c             if(cint.eq.0.0)cint=0.1
 !       Set for zoom
         zfrac = 1.0 / plot_parms%zoom_wdw
 
-        zxcen = plot_parms%xcen * 1023.
-        zycen = plot_parms%ycen * 1023.
+        frame_factor = 1.0 / 0.9
+
+        zxcen = (0.5 + ((plot_parms%xcen - 0.5) * frame_factor)) * 1023.
+        zycen = (0.5 + ((plot_parms%ycen - 0.5) * frame_factor)) * 1023.
+
+        if(plot_parms%zoom_wdw .gt. 1.0)then
+            write(6,*)'frame_factor,zxcen,zycen',frame_factor,xcen,zycen
+        endif
 
         ix = nint( (float(ix) * zfrac) + zxcen * (1.0 - zfrac))
         iy = nint( (float(iy) * zfrac) + zycen * (1.0 - zfrac))
