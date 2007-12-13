@@ -3,7 +3,7 @@ Module mem_namelist
 include 'lapsparms.for'
 
 !       Globally used variables that are independent of the namelists
-!       character(len=200) :: generic_data_root, cstaticdir, grid_fnam_common
+        character(len=200) :: generic_data_root, cstaticdir, grid_fnam_common
 
 !       Declarations for namelist variables
         integer    iflag_lapsparms
