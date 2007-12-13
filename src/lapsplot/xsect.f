@@ -2249,8 +2249,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             enddo ! i
             enddo ! k
 
-            clow = +200.
-            chigh = +600.
+            clow = +250.
+            chigh = +450.
             cint = 5. / density
             i_contour = 1
             c_label = 'LAPS Theta(e) Sat   X-Sect  Deg K'
