@@ -66,12 +66,14 @@ clean:
 
 distclean: clean
 
+ifdef USECPP
 %.f : %.F
 	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 
 	mv $*.i $*.f
 
 %.o : %.F
+endif
 
 
 
