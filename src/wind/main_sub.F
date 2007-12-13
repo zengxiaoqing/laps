@@ -42,6 +42,7 @@ cdis
      1              NTMIN,NTMAX,                                     ! I
      1              N_MESO,N_SAO,                                    ! I
      1              lat,lon,topo,                                    ! I
+     1              heights_3d,                                      ! I
      1              uanl,vanl,uanl_sfcitrp,vanl_sfcitrp)             ! O
 
 !       1990         Steve Albers  (Original Version)
@@ -128,6 +129,14 @@ cdis
         real uanl(NX_L,NY_L,nk_laps),vanl(NX_L,NY_L,nk_laps) ! WRT True North
         real, allocatable, dimension(:,:,:) :: wanl
 
+#ifdef MULTI_EXEC
+        real, allocatable, dimension(:,:,:,:) ::
+     +                     u_mdl_bkg_4d, v_mdl_bkg_4d
+#else
+        real, pointer,dimension(:,:,:,:) ::
+     +                     u_mdl_bkg_4d, v_mdl_bkg_4d 
+#endif
+
         dimension u_laps_fg(NX_L,NY_L,nk_laps),
      1            v_laps_fg(NX_L,NY_L,nk_laps)
 
@@ -139,7 +148,6 @@ cdis
 
         character*125 comment_2d,comment_a(2)
         character*10 units_2d,units_a(2)
-        character*3 var_2d,var_a(2)
 
         character*31 EXT
         character*200 fname
@@ -237,21 +245,6 @@ cdis
         write(6,*)' selon ',lon(NX_L,   1)
         write(6,*)' nelon ',lon(NX_L,NY_L)
 
-        write(6,*)
-        write(6,*)' Getting 3_D Height Analysis from MODEL:'
-
-        istat_ht = 0
-        var_2d = 'HT'
-        call get_modelfg_3d(i4time_sys,var_2d
-     1                               ,NX_L,NY_L,NZ_L
-     1                               ,heights_3d,istat_ht)
-
-        if(istat_ht .ne. 1)then
-            write(6,*)
-     1    ' Aborting from LAPS Wind Anal - Error in getting MDL heights'
-            return
-        endif
-
 !       Initialize grids with the missing data value
         do k = 1,NZ_L
         do j = 1,NY_L
@@ -305,6 +298,36 @@ cdis
 
         write(6,*)
 
+!  ***  Access model first guess*********************************************
+#ifdef MULTI_EXEC
+        allocate (  u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX) )
+        allocate (  v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX) )
+         
+        call get_fg_wind_new(
+     1           i4time_sys,laps_cycle_time                    ! Input
+     1          ,NX_L,NY_L,NZ_L                                ! Input
+     1          ,NTMIN,NTMAX                                   ! Input
+     1          ,u_mdl_bkg_4d,v_mdl_bkg_4d                     ! Output
+     1          ,u_laps_fg,v_laps_fg                           ! Output
+     1          ,istatus)                                      ! Output 
+        if(istatus .ne. 1)then
+            write(6,*)' Abort LAPS wind analysis - no first guess info'
+            return
+        endif
+#else
+        u_mdl_bkg_4d => bgfields%u3
+        v_mdl_bkg_4d => bgfields%v3
+!       u_laps_fg = ?
+!       v_laps_fg = ?
+#endif
+
+        write(6,*)' Column of first guess winds'
+        write(6,*)'j  v_laps_fg(23,j,13)'
+        do j = 1,NY_L
+            write(6,5555)j,v_laps_fg(23,j,13)
+ 5555       format(i4,4f7.2)
+        enddo ! j
+
 !  ***  Read in Wind Obs **************************************************
 
 !       Initialize observation data structure
@@ -325,7 +348,7 @@ cdis
      1            N_SAO,N_PIREP,                                  ! I
      1            lat,lon,                                        ! I
      1            NTMIN,NTMAX,                                    ! I
-     1            u_laps_fg,v_laps_fg,                            ! O
+     1            u_mdl_bkg_4d, v_mdl_bkg_4d,                     ! I
      1            grid_laps_u,grid_laps_v,grid_laps_wt,           ! O
      1            max_wind_obs,obs_point,nobs_point,              ! I/O
      1            rlat_radar(1),rlon_radar(1),rheight_radar(1),   ! I
@@ -343,7 +366,9 @@ cdis
             return
         endif
 
-        n_meso_obs = 0
+#ifdef MULTI_EXEC
+        deallocate (u_mdl_bkg_4d, v_mdl_bkg_4d)
+#endif
 
         I4_elapsed = ishow_timer()
 
