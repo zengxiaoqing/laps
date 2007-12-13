@@ -48,9 +48,9 @@ cdis
 
 !       1998    Steve Albers - FSL
 
-        dimension u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
-        dimension v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
-        dimension u_laps_fg(NX_L,NY_L,NZ_L),v_laps_fg(NX_L,NY_L,NZ_L)
+        real u_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
+        real v_mdl_bkg_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
+        real u_laps_fg(NX_L,NY_L,NZ_L),v_laps_fg(NX_L,NY_L,NZ_L)
 
         character*3 var_2d
 
