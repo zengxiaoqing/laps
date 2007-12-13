@@ -41,7 +41,7 @@ c
         call get_grid_dim_xy(NX_L, NY_L, istatus)
         if (istatus .ne. 1) then
             write(6,*) 'return get_grid_dim_xy, status: ', istatus
-            return
+            stop
         endif
 
         call build_sfc_static_sub(NX_L,NY_L)
