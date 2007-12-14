@@ -39,7 +39,7 @@ c
       integer   nx,ny,nz   
 
 c
-      real*4 dx(nx,ny),dy(nx,ny),dp(nz)
+      real dx(nx,ny),dy(nx,ny),dp(nz)
      .      ,p(nz),pstag(nz),ps(nx,ny),psb(nx,ny)
      .      ,lat(nx,ny),lon(nx,ny),ter(nx,ny)
      .      ,phi(nx,ny,nz),t(nx,ny,nz)
@@ -53,16 +53,16 @@ c    .      ,phis(nx,ny,nz),ts(nx,ny,nz)
 c    .      ,us(nx,ny,nz),vs(nx,ny,nz),shs(nx,ny,nz)
 c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
 
-      real*4, allocatable, dimension (:,:,:) ::
+      real, allocatable, dimension (:,:,:) ::
      .        lapsu,lapsv,lapssh,lapstemp,lapsphi,omo
      .       ,phib,  tb,  ub,  vb,  shb,  omb
      .       ,phibs, tbs, ubs, vbs, shbs, ombs
      .       ,phis,  ts,  us,  vs,  shs,  oms
 
-      real*4 errt(nx,ny,nz),errw(nx,ny,nz)
+      real errt(nx,ny,nz),errw(nx,ny,nz)
      .      ,pd8(nz),pd5(nz),kpd8,kpd5
 
-      real*4 om(nx,ny,nz)
+      real om(nx,ny,nz)
 c    .      ,omo(nx,ny,nz)
 c    .      ,oms(nx,ny,nz)
 c    .      ,ombs(nx,ny,nz)
@@ -76,7 +76,7 @@ c    .      ,wb(nx,ny,nz)
      .      ,erru(nx,ny,nz),errv(nx,ny,nz),errub(nx,ny,nz)
      .      ,errphi(nx,ny,nz),errphib(nx,ny,nz)
      .      ,slastu,slastv,slastt,cor
-      real*4 grid_spacing_actual_m
+      real grid_spacing_actual_m
      .      ,grid_spacing_cen_m
      .      ,pdif,dpbl,dpblf
      .      ,u_grid,v_grid
@@ -91,18 +91,18 @@ c    .      ,wb(nx,ny,nz)
      .      ,o
 
 
-      real*4 g,sumdt,omsubs,sk,bnd,ff,fo,err,rog,rod
+      real g,sumdt,omsubs,sk,bnd,ff,fo,err,rog,rod
      .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl
      .      ,sumtscl,sumkf,sumks,sldata,den,sumom2,sumomt2
      .      ,ffz,sumu,sumv
 
-      real*4 smsng,rdum,dd,ddmin,cx,cy
-      real*4 rstats(7)
-      real*4 phi3dvar(nz)
+      real smsng,rdum,dd,ddmin,cx,cy
+      real rstats(7)
+      real phi3dvar(nz)
 
 c made 2d 2-20-01 JS.
-      real*4  tau(nx,ny)
-      real*4  ro(nx,ny)
+      real  tau(nx,ny)
+      real  ro(nx,ny)
       real,   allocatable,dimension (:,:) :: terscl
       integer,allocatable,dimension (:,:) :: ks,kf
       integer ksij,kfij,k8,k5,lmin
@@ -154,10 +154,10 @@ c     character*255 generic_data_root
       character*3   cpads_type
 
 c    Added by B. Shaw, 4 Sep 01
-      real*4, allocatable :: lapsrh(:,:,:)
-      real*4, external :: ssh, make_rh
-      real*4 shsat
-      real*4 ubias,vbias,urms,vrms,oberr
+      real, allocatable :: lapsrh(:,:,:)
+      real, external :: ssh, make_rh
+      real shsat
+      real ubias,vbias,urms,vrms,oberr
 c    Arrays for Airdrop application
       real, allocatable, dimension(:,:) :: udrop,vdrop,tdrop,rri,rrj,
      &    rrk,rrit,rrjt,rrkt,rrii,rrjj
@@ -1209,11 +1209,11 @@ c  u and v grids respectively
 c
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer nx,ny,nz
      .         ,nxm1,nym1,nzm1
      .         ,i,j,k,ks
 c
-      real*4 u(nx,ny,nz),v(nx,ny,nz)
+      real u(nx,ny,nz),v(nx,ny,nz)
      .      ,phi(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
@@ -1370,7 +1370,7 @@ c
      .         ,icnt,iwpt,istatus
      .         ,ucnt,vcnt,uwpt,vwpt
 c
-      real*4 t(nx,ny,nz),to(nx,ny,nz),tb(nx,ny,nz)
+      real t(nx,ny,nz),to(nx,ny,nz),tb(nx,ny,nz)
      .      ,u(nx,ny,nz),uo(nx,ny,nz),ub(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz),vb(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz),omb(nx,ny,nz)
@@ -1382,7 +1382,7 @@ c    .,nu(nx,ny,nz),nv(nx,ny,nz),fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,erru(nx,ny,nz),errph(nx,ny,nz)
      .      ,errub(nx,ny,nz),errphb(nx,ny,nz)
 
-      real*4 err,rdpdg,bnd,g,fo,r,re,ovr
+      real err,rdpdg,bnd,g,fo,r,re,ovr
      .      ,ang,f,cotmax,sin1,fs,cos1,beta
      .      ,a,bb,cortmt,rod
      .      ,dudy,dvdx,dnudx,dnvdy,tt,uot,vot,tot
@@ -1392,20 +1392,20 @@ c    .,nu(nx,ny,nz),nv(nx,ny,nz),fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,usum,vsum,delo,fuu,fvv
      .      ,angu,angv,dyu,dxv
 
-      real*4 term1,term2,term3,term4,term5,term6
+      real term1,term2,term3,term4,term5,term6
      .      ,term7,term8,term9,term10,term11
      .      ,euoay,euoax,snv,snu,dfvdy,dfudx
      .      ,eueub,fob,foax,foay
      .      ,fu2,fv2,fuangu,fvangv,dt
 
 c 2d array now (JS 2-20-01)
-      real*4 tau(nx,ny)
+      real tau(nx,ny)
 
 c these are used for diagnostics
       integer nf
       parameter (nf=10)
-      real*4  data(nf),fmax,sum
-      real*4  fldmax(nf,nz),fldmin(nf,nz)
+      real  data(nf),fmax,sum
+      real  fldmax(nf,nz),fldmin(nf,nz)
       integer fldmxi(nf,nz),fldmxj(nf,nz),ismx,jsmx,ksmx
       integer fldmni(nf,nz),fldmnj(nf,nz)
 
@@ -1846,16 +1846,16 @@ c
       integer nxm1,nym1,nzm1
       integer i,j,k,ks,l,lmax
 
-      real*4      u(nx,ny,nz),uo(nx,ny,nz)
+      real      u(nx,ny,nz),uo(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz),omb(nx,ny,nz)
      .      ,erru(nx,ny,nz)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz),dp(nz)
 
-      real*4 dldx,dldy,dldp,sum,sum1,cnt
+      real dldx,dldy,dldp,sum,sum1,cnt
      .,a,erf,bnd
-      real*4 tau(nx,ny)
+      real tau(nx,ny)
 
       real, allocatable, dimension(:,:,:) :: slam,f3,h
 
@@ -1953,7 +1953,7 @@ c
      .         ,i,j,k,iflag
      .         ,l,lmax,istatus
 c
-      real*4 t(nx,ny,nz),to(nx,ny,nz)
+      real t(nx,ny,nz),to(nx,ny,nz)
      .      ,u(nx,ny,nz),uo(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz)
@@ -1968,8 +1968,8 @@ c
      .      ,uot,vot,tot,uuu,vvv,contm,fuu,fvv,dxx,dyy
      .      ,ures,vres
 
-      real*4 tau(nx,ny)
-      real*4 r_missing_data
+      real tau(nx,ny)
+      real r_missing_data
 
 c_______________________________________________________________________________
 c
@@ -2155,7 +2155,7 @@ c
      .         ,i,j,k,iflag
      .         ,l,lmax,istatus
 c
-      real*4 t(nx,ny,nz),to(nx,ny,nz)
+      real t(nx,ny,nz),to(nx,ny,nz)
      .      ,u(nx,ny,nz),uo(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz)
@@ -2171,8 +2171,8 @@ c
      .      ,uot,vot,tot,uuu,vvv,contm,fuu,fvv,dxx,dyy
      .      ,ures,vres
 
-      real*4 tau(nx,ny)
-      real*4 r_missing_data
+      real tau(nx,ny)
+      real r_missing_data
 
 c_______________________________________________________________________________
 c
@@ -2335,7 +2335,7 @@ c
       integer   nxm1
       integer   nym1
 c
-      real*4 u(nx,ny,nz),v(nx,ny,nz)
+      real u(nx,ny,nz),v(nx,ny,nz)
      .      ,om(nx,ny,nz)
      .      ,ps(nx,ny),p(nz)
      .      ,bnd
@@ -2397,7 +2397,7 @@ c
      .         ,i,j,k
      .         ,imx,jmx,imn,jmn
 c
-      real*4 fu(nx,ny,nz),fv(nx,ny,nz)
+      real fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,ub(nx,ny,nz),vb(nx,ny,nz) 
      .      ,u(nx,ny,nz),v(nx,ny,nz),t(nx,ny,nz),bnd  
      .      ,dx(nx,ny),dy(nx,ny),dp(nz),ps(nx,ny),p(nz)
@@ -2406,8 +2406,8 @@ c
      .      ,dudp,dvdp,dudt,dvdt
      .      ,rmx2d,rmn2d,dps
 
-      real*4 gdtvdp_save(nx,ny),gdtudp_save(nx,ny)
-      real*4 gdtvdp,gdtudp
+      real gdtvdp_save(nx,ny),gdtudp_save(nx,ny)
+      real gdtvdp,gdtudp
 
       real   daudp,davdp
      .      ,daubdp,davbdp,dubdp,dvbdp
@@ -2556,7 +2556,7 @@ c
      .         ,nxm1,nym1,nzm1
      .         ,i,j,k
 c
-      real*4 nu(nx,ny,nz),nv(nx,ny,nz)
+      real nu(nx,ny,nz),nv(nx,ny,nz)
      .      ,u(nx,ny,nz),v(nx,ny,nz)     !time=t
      .      ,ub(nx,ny,nz),vb(nx,ny,nz)     !time=t
      .      ,om(nx,ny,nz),omb(nx,ny,nz)
@@ -2651,7 +2651,7 @@ c
       integer   nx,ny,nz,nzp1,nxp1,nyp1
      .         ,i,j,k,is,js,ks
 c
-      real*4 f3(nx+1,ny+1,nz+1),h(nx+1,ny+1,nz+1)
+      real f3(nx+1,ny+1,nz+1),h(nx+1,ny+1,nz+1)
      .      ,erru(nx,ny,nz)
      .      ,u(nx,ny,nz),v(nx,ny,nz)
      .      ,om(nx,ny,nz),lat(nx,ny)
@@ -2659,7 +2659,7 @@ c
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
      .      ,dpp,aa,dxx,dyy
      .      ,cont,formax
-      real*4 tau(nx,ny)
+      real tau(nx,ny)
 c_______________________________________________________________________________
 c
       print *,'fthree'
@@ -2702,7 +2702,7 @@ c
      .         ,ittr,is,js
      .         ,i,j,k,it,itmax,ia
 c
-      real*4 sol(nx+1,ny+1,nz+1)
+      real sol(nx+1,ny+1,nz+1)
      .      ,force(nx+1,ny+1,nz+1)
      .      ,h(nx+1,ny+1,nz+1)
      .      ,dx(nx,ny),dy(nx,ny)
@@ -2819,7 +2819,7 @@ c
      .         ,lpress,ittr,itmax,ia
      .         ,i,j,k,kk,it
 c
-      real*4 sol(nx,ny,nz),force(nx,ny,nz)
+      real sol(nx,ny,nz),force(nx,ny,nz)
      .      ,ps(nx,ny),p(nz)
      .      ,a(nx,ny),b(nx,ny),c(nx,ny)
      .      ,d(nx,ny),e(nx,ny)
@@ -4351,12 +4351,12 @@ c
       integer   lendw
       integer   lendsh
       integer   i,j,k
-      real*4  r_missing_data
-      real*4  phi(nx,ny,nz),t(nx,ny,nz)
+      real  r_missing_data
+      real  phi(nx,ny,nz),t(nx,ny,nz)
      .       ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
      .       ,omo(nx,ny,nz)
 
-      real*4, allocatable :: om(:,:,:)
+      real, allocatable :: om(:,:,:)
 
 
       character*255 tempdir,winddir,sfcdir,shdir,lcodir
