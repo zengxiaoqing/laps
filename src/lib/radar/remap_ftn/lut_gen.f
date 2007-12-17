@@ -67,6 +67,7 @@ c
       real rlat_radar,rlon_radar,rheight_radar
       real elev,elev_deg,coselev,azimuth,azi_deg
       real slant_range,sl_range_m,ri,rj,dbz,z,grid_spacing_cen_m
+      real difflat,difflon
       character*4 c4_radarname
       character*150 static_dir,filename
       character*3 ext
@@ -213,7 +214,7 @@ c
       write(6,840)
   840 format(' REMAP > Building Az/Ran to i,j lut')
 c
-      if(range_interval .le. 0.)then
+      if(range_interval .le. 0.)then ! QC check
           write(6,*)' ERROR: range_interval = ',range_interval
           stop
       else
@@ -232,6 +233,18 @@ c
           call radar_to_latlon(rlat_grid,rlon_grid,height_grid
      :                  ,azimuth,slant_range,elev
      :                  ,rlat_radar,rlon_radar,rheight_radar)
+
+!         QC check
+          difflat = rlat_grid - rlat_radar
+          difflon = rlon_grid - rlon_radar
+          if(slant_range .gt. 10000. .and. abs(difflat) .lt. .01
+     1                               .and. abs(difflon) .lt. .01)then
+              write(6,*)
+     1           ' ERROR: QC check failed after radar_to_latlon call'
+              write(6,*)'difflat,difflon,slant_range'
+     1                  ,difflat,difflon,slant_range
+              stop
+          endif
 
           call latlon_to_rlapsgrid(rlat_grid,rlon_grid,lat,lon,
      :                   NX_L,NY_L,ri,rj,istatus)
