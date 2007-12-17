@@ -124,7 +124,7 @@ c     a9_time = '022441400'
       if (istatus .ne. 1) then
         write(6,*)' Error in read_verif_nl '
         istatus = 0
-        return
+        stop
       endif
 
       
