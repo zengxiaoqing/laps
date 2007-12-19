@@ -8,10 +8,11 @@ C
         character*(*)  path
         character*(*)  sat_name_in
         character*15   sat_name_down
-        integer*4      num_atts
+
+        integer          num_atts
         real*8         orb_att(num_atts)
 C
-        integer*4      sat_name_len,
+        integer        sat_name_len,
      1                 end_path,
      1                 noerror, error,
      1                 istatus,

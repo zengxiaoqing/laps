@@ -40,7 +40,7 @@ C  3.  VAX Fortran Reference Manual from the SDHS programmer library
 C***********************************************************************
 
       INTEGER INTEGRIN   !The input integer that contains the bit string
-      REAL*4 REALOUT    !The output floating point number
+      REAL   REALOUT    !The output floating point number
       INTEGER SIGNBIT  !the sign bit
       INTEGER CHARACTS !the integer representation of the exponent before
                          !it is biased

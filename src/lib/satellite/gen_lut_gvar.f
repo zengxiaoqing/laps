@@ -61,14 +61,14 @@ c
       real        r_ratio
       real        lat1,lat2,lon0
       real        r_missing_data
+      real        time_50,time50
 
       real*8        r8lat,r8lon
       real*8        ELEV,SCAN
       real*8        RL, RP
-      Real*8        orbAt(336)
-      Real*4        time_50,time50
-      Real*8        t50_8, t, f_time
-      Real*8        SatSubLAT,SatSubLON
+      real*8        orbAt(336)
+      real*8        t50_8, t, f_time
+      real*8       SatSubLAT,SatSubLON
 c
       Integer     start_line
       Integer     start_pix
@@ -115,7 +115,7 @@ c
       Integer     jdiff_new
       integer     indx
 
-      Real*4      rdum
+      Real        rdum
       Integer     strtpix,strtline
       Integer     stoppix,stopline
 
@@ -760,11 +760,11 @@ c -------------------
        SUBROUTINE POLAR_GP(LAT,LON,X,Y,DX,DY,NX,NY)
 C
       include 'trigd.inc'
-       REAL*4 LAT,LON,X,Y,DX,DY,
+       REAL   LAT,LON,X,Y,DX,DY,
      1        ERAD,TLAT,TLON                                      ! ,PLAT,PLON,
      1        XDIF,YDIF
 C
-       INTEGER*4 NX,NY
+       INTEGER   NX,NY
 C
        RAD=3.141592654/180.
 

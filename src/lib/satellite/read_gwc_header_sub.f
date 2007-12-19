@@ -66,9 +66,9 @@ cc      INTEGER STPBDY2    !Requested Stop Boundary 2
       Integer   istpbdy2   !Returned Variable
 
 cc      INTEGER GOVISMD    !GOES Vis Mode
-      REAL*4 GOLONSBP      !GOES Longitude Subpoint
-      REAL*4 GOLATSBP      !GOES Latitude Subpoint
-      REAL*4 GOALPHA       !GOES Alpha
+      REAL   GOLONSBP      !GOES Longitude Subpoint
+      REAL   GOLATSBP      !GOES Latitude Subpoint
+      REAL   GOALPHA       !GOES Alpha
       Integer GOLONSBPI
       Integer GOLATSBPI
       Integer GOALPHAI
@@ -132,6 +132,7 @@ cc      REAL*4 PMA           !Pitch Misalignment Angle
       real*8   r8time1
       real*8   r8time2
       real*8   r8timeavg
+
       real     rdttop
       real     rdtbot
 

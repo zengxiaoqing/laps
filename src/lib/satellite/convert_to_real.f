@@ -20,8 +20,8 @@ C  2.  AFGWC/DONS PV-Wave program auto_convert.pro
 C  3.  VAX Fortran Reference Manual from the SDHS programmer library  
 C***********************************************************************
 
-      INTEGER*4 INTEGRIN   !The input integer that contains the bit string
-      REAL*4 REALOUT    !The output floating point number
+      INTEGER   INTEGRIN   !The input integer that contains the bit string
+      REAL      REALOUT    !The output floating point number
 c     INTEGER*4 INTEGRTEMP  !A temporary integer that contains the swapped
                             !bytes of the input interger INTEGRIN 
 

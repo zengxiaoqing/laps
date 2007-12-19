@@ -23,7 +23,7 @@ C  2.  AFGWC/DONS PV-Wave program auto_convert.pro
 C  3.  VAX Fortran Reference Manual from the SDHS programmer library  
 C***********************************************************************
 
-      INTEGER*4 INTEGRIN1,INTEGRIN2 !input integers that contain the 
+      INTEGER   INTEGRIN1,INTEGRIN2 !input integers that contain the 
                                     !the bit strings
       REAL*8 REALOUT     !The output double precision number
       INTEGER,dimension(2) ::  integrtemp !A working integer array 

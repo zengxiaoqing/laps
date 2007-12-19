@@ -62,35 +62,35 @@ c     INCLUDE 'is1_ingest_parameters_5.inc'
 
       CHARACTER ct*(*)
 
-      REAL*4 LATITUDE,
+      REAL   LATITUDE,
      &       LONGITUDE,
      &       X_COORD,
      &       Y_COORD
 
-      INTEGER*4 CSTATUS
+      INTEGER   CSTATUS
 
-      REAL*4 H
+      REAL   H
       PARAMETER (H = 35785.845)
-      REAL*4 RE
+      REAL   RE
       PARAMETER (RE = 6378.155)
-      REAL*4 A
+      REAL   A
       PARAMETER (A = 1.0/297.0)
-      REAL*4 RP
+      REAL   RP
       PARAMETER (RP = RE/(1.0+A))
-      REAL*4 PI
+      REAL   PI
       PARAMETER (PI = 3.141592653)
-      REAL*4 CDR
+      REAL   CDR
       PARAMETER (CDR = PI/180.0)
-      REAL*4 CRD 
+      REAL   CRD 
       PARAMETER (CRD = 180.0/PI)
-      INTEGER*4 LPSI2
+      INTEGER   LPSI2
       PARAMETER (LPSI2 = 1)
-      REAL*4 DELTAX
+      REAL   DELTAX
       PARAMETER (DELTAX = 18.0/2500.0)
-      REAL*4 DELTAY 
+      REAL   DELTAY 
       PARAMETER (DELTAY = 18.0/2500.0)
 
-      REAL*4 XFI,
+      REAL   XFI,
      &       XLA,
      &       ROM,
      &       Y,
@@ -105,8 +105,8 @@ c     INCLUDE 'is1_ingest_parameters_5.inc'
      &       PX,
      &       PY,
      &       TETA
-      REAL*4 RADJUST
-      Real*4    golonsbp
+      REAL   RADJUST
+      Real      golonsbp
       Integer   start_line
       Integer   stop_pix
       Integer   fsci

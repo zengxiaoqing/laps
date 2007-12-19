@@ -7,23 +7,23 @@ c
       include 'trigd.inc'
       implicit none
 
-      Real*8        rlat8_1,rlat8_2,rlat8_3
-      Real*8        rlon8_1,rlon8_2,rlon8_3
-      Real*8        elev1,elev2,scan1,scan2
-      Real*8        scpx,evln
-      Real*8        RL
-      Real*8        RP
+      Real*8      rlat8_1,rlat8_2,rlat8_3
+      Real*8      rlon8_1,rlon8_2,rlon8_3
+      Real*8      elev1,elev2,scan1,scan2
+      Real*8      scpx,evln
+      Real*8      RL
+      Real*8      RP
 
-      Real*4        rlat1,rlat2,rlat3,rlon1,rlon2,rlon3
-      Real*4        grid_spacing_scan,grid_spacing_elev
-      Real*4        rpix,rline
-      Real*8        radtodeg
-      Real*8        pi
-      Real*4        r_res_m
-c     Real*4        resscln
-c     Real*4        reselev
-      Real*8        rl_div
-      Real*8        rp_div
+      Real        rlat1,rlat2,rlat3,rlon1,rlon2,rlon3
+      Real        grid_spacing_scan,grid_spacing_elev
+      Real        rpix,rline
+      Real*8      radtodeg
+      Real*8      pi
+      Real        r_res_m
+c     Real        resscln
+c     Real        reselev
+      Real*8      rl_div
+      Real*8      rp_div
 
       Integer     instr
       Integer     istatus

@@ -43,12 +43,12 @@ c     CHARACTER*1 x_dim                          (   1,   8)
 c     CHARACTER*1 y_dim                          (   1,   8)
       INTEGER   Nx                             (   1)
       INTEGER   Ny                             (   1)
-      REAL*4      Lap                            (   1)
-      REAL*4      Lop                            (   1)
+      REAL        Lap                            (   1)
+      REAL        Lop                            (   1)
       Integer   x_resolution
       Integer   y_resolution
-      REAL*4      dx                             (   1)
-      REAL*4      dy                             (   1)
+      REAL        dx                             (   1)
+      REAL        dy                             (   1)
       character   filename*255
 c
 c*************************************

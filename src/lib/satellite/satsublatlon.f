@@ -8,12 +8,12 @@ c
       include 'instco.inc'
 
       Real*8        orbAt(336)
-      Real*4        time_50,time50
+      Real          time_50,time50
       Real*8        t50_8
       Real*8        t
       Real*8        f_time
       Real*8        SatSubLAT,SatSubLON
-      Real*4        pi,radtodeg
+      Real          pi,radtodeg
 
       Integer     ewc4,ewi4
       Integer     nsc4,nsi4
