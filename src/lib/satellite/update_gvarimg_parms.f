@@ -23,7 +23,7 @@ c
       implicit none
 
       Integer   max_files
-      parameter   (max_files = 500)
+      parameter   (max_files = 20000)
 
 c     Integer   i
 c     Integer   max_sat
@@ -48,9 +48,9 @@ c     Integer   max_channels
       Real*8      frameStartTime 
       Real*8      getftime
       Real*8      SatSubLAT,SatSubLON
-      Real*4      golonsbp
-      Real*4      golatsbp
-      Real*4      goalpha
+      Real        golonsbp
+      Real        golatsbp
+      Real        goalpha
       CHARACTER*1 imc(4)
       CHARACTER*4 c_imc
       INTEGER   ewCycles                 
@@ -63,7 +63,7 @@ c     Integer   nch
 
       logical   l_cell_afwa
 
-      REAL*8      orbitAttitude                  (336)
+      Real*8      orbitAttitude(336)
 
       Integer   i4time_now_gg
       Integer   i4time_cur
@@ -199,105 +199,7 @@ c
          endif
 c
 c ====================== gwc switch =======================
-c
-      elseif(cstype .eq. 'gwc')then
-
-         n=index(cdir_path,' ')-1
-         cfname=c_afwa_fname(cd6,chtype)
-         call s_len(cfname,nl)
-         filename_cdf=cdir_path(1:n)//cfname(1:nl)
-
-         call read_gwc_header(filename_cdf,l_cell_afwa,strtpix,
-     &strtline,stoppix,stopline,i_obstime,image_type,golatsbp,golonsbp,
-     &image_width,image_depth,goalpha,strbdy1,strbdy2,stpbdy1,
-     &stpbdy2,bepixfc,bescnfc,fsci,decimat,gstatus)
-         if(gstatus.ne.0)then
-            write(6,*)'Error in read_gwc_header'
-            istatus=-1 
-            goto 900
-         endif
-
-         SatSubLAT=golatsbp
-         SatSubLON=golonsbp
-c
-c no water vapor switch atm
-c
-         if(cd6.eq.'meteos')then
-            nw_vis_pix=stoppix
-            nw_vis_line=-(fsci+strtline)
-         else
-            nw_vis_pix = nw_vis_pix_gwc(chtype,decimat,bepixfc,goalpha)
-            nw_vis_line= nw_vis_line_gwc(chtype,decimat,bescnfc,fsci)
-         endif
-
-c        if(chtype.eq.'vis')then
-c           nw_vis_pix= (bepixfc/4+goalpha)*8
-c           nw_vis_line=(bescnfc+fsci)
-c        else
-c           nw_vis_pix=(bepixfc+goalpha)*8
-c           nw_vis_line=(bescnfc+fsci)*4 
-c        endif
-
-         if(l_cell_afwa)then
-            nx = image_width*256
-            ny = image_depth*64
-         else
-            nx = stoppix-strtpix+1
-            ny = stopline-strtline+1
-         endif
-         
-         write(6,*)'GWC nw_vis_pix/nw_vis_line: ',nw_vis_pix,nw_vis_line
-         write(6,*)
-
-c Currently no O&A data for METEOSAT
-         if(cd6.ne.'meteos')then
-
-           filename_cdf=cdir_path(1:n)//'*_OA_01.DAT'
-           nf=index(filename_cdf,' ')-1
-           call get_file_names(filename_cdf,numoffiles,c_filenames
-     1        ,max_files,istatus)
-
-           if(istatus.eq.1.and.numoffiles.gt.0)then
-
-           call get_gwc_oa(c_filenames(1),c_imc,orbitAttitude,336,
-     &gstatus)
-           if(gstatus.ne.0)then
-             write(6,*)'error: get_gwc_oa '
-             call get_directory('static',c_filespec,ld)
-             c_filespec=c_filespec(1:ld)//'/lvd'
-             ld=index(c_filespec, ' ')-1
-             print*,'try ',c_filespec(1:ld),'lvd/',cd6,'_orbatt.dat'
-             call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
-     &istatus)
-             if(istatus.ne.0)then
-                write(6,*)'O&A Data not obtained',c_filespec(1:ld)
-                goto 900
-             endif
-           else
-c            call make_fnam_lp(i4time_nearest,c_fname,istatus)
-c            filename_cdf=cdir_path(1:n)//c_fname//'.oad'
-c            ld=index(c_filespec, ' ')-1
-c            write(6,*)'Using: ',filename_cdf(1:ld)
-             write(6,*)'gwc O&A obtained '
-           endif
-
-           else
-
-             write(6,*)'No O&A files exist ',filename_cdf(1:nf)
-             call get_directory('static',c_filespec,ld)
-             c_filespec=c_filespec(1:ld)//'/lvd'
-             ld=index(c_filespec, ' ')-1
-             call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
-     &istatus)
-             if(istatus.ne.0)then
-                write(6,*)'O&A Data not obtained',c_filespec(1:ld)
-                goto 900
-             endif
-           endif
-         endif
-         frameStartTime=getftime()
-         x_step=decimat
-         y_step=decimat
+c =========== gwc switch removed on 12-2007: JRS ==========
 c
       endif
       istatus = 0
