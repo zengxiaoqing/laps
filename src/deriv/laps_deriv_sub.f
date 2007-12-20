@@ -584,9 +584,8 @@ c read in laps lat/lon and topo
      1                vv_to_height_ratio_Cu,                               ! I
      1                vv_to_height_ratio_Sc,                               ! I
      1                vv_for_St,                                           ! I
-     1                l_flag_bogus_w,w_3d,istatus)
-!    1                l_flag_snow_potential,snow_2d,lwc_res_3d)
-
+     1                l_flag_bogus_w,w_3d,l_bogus_radar_w,
+     1                istatus)                                             ! O
         if(istatus .ne. 1)then
             write(6,*)' Bad status return from get_cloud_deriv'
             return
