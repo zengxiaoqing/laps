@@ -24,7 +24,7 @@ c                         routine (units are inverse seconds)
 c                         This is used in both cloud and radar bogusing
 c
 c vv_to_height_ratio_Sc - parameter for the cloud omega (vv.f/cloud_bogus_w)
-c                         routine (units are inverse seconds)
+c                         routine (units are 10^-3 inverse seconds)
 c
 c vv_for_St   - parameter for the cloud omega (vv.f/cloud_bogus_w) routine
 c                         (units are meters/second)
