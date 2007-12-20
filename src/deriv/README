@@ -6,8 +6,10 @@ main                                                     laps_deriv.f
         laps_deriv_sub                                   laps_deriv_sub.f
             get_deriv_parms                              laps_deriv.f
             get_cloud_deriv                              lib/get_cloud_deriv.f
+                get_stability                                "
+                get_cloudtype                                "
+                get_mvd                                      "
                 get_sfm_1d                               lib/smf_wisp92.f
-                get_mvd                                  lib/get_cloud_deriv.f
                 cloud_bogus_w                            lib/vv.f
                 cpt_pcp_type_3d                          lib/get_cloud_deriv.f
                 isi3                                         "
