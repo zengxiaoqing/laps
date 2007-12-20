@@ -511,17 +511,20 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         if(abs(k - k_level) .le. vert_rad_sao .or. k_level .eq. 0)then
 
-                aspect = aspect_a(nint(ri),nint(rj))
+            aspect = aspect_a(nint(ri),nint(rj))
 
-                write(6,111)ri,rj,max(dir,-99.)
+            write(6,111)ri,rj,max(dir,-99.)
      1                     ,speed_ms,k,wt_vert,aspect
 
-!               call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
-!               call latlon_ram_laps(alat,alon,x,y,init,'p')
+            if(k .eq. k_level)then
+                call setusv_dum(2hIN,12) ! Aqua
+            else
+                call setusv_dum(2hIN,15) ! Slate Blue
+            endif
 
-                spd_kt = SPEED_ms  / mspkt
+            spd_kt = SPEED_ms  / mspkt
 
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+            call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_meso,aspect,'true')
 
         endif ! k .eq. k_level
