@@ -33,6 +33,7 @@ cdis
      1                           ,vv_to_height_ratio_Cu            ! I
      1                           ,vv_to_height_ratio_Sc            ! I
      1                           ,vv_for_St                        ! I
+     1                           ,l_bogus_radar_w                  ! I
      1                           ,w)                               ! O
 
 !Original version October 1990.
@@ -67,6 +68,8 @@ cdis
         Integer k, k1, kbase, ktop
         Real zbase, ztop
 
+        Logical l_bogus_radar_w
+
 !   Cloud Type      /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
 !   Integer Value     0     1    2    3    4    5    6    7    8    9   10
 
@@ -86,15 +89,19 @@ cdis
         Go to 100
 
 10      Do k = kbase, nk
-         If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
-!     change to the cloudtop by Adan
-c        If (cloud_type(k) .ne. 0) then
-C LW Changed comment to line above...was on "If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10)"
-C LW Change per Chris A......NOTE original change was added in ver 1.5 in 2003
-          ktop = k
-         Else
-          Go to 20
-         End if
+         If(l_bogus_radar_w)then ! We are doing Adan's radar bogus routine
+          If (cloud_type(k) .ne. 0) then ! change to the cloudtop by Adan
+           ktop = k
+          Else
+           Go to 20
+          End if
+         else ! Not doing Adan's radar bogus routine
+          If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
+           ktop = k
+          Else
+           Go to 20
+          End if
+         endif ! l_bogus_radar_w
         End do
 
 20      k1 = k          ! save our place in the column
