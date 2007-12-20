@@ -496,7 +496,7 @@ c       include 'satellite_dims_lvd.inc'
 
         if(    c_type_i      .eq. 'wd' .or. c_type_i      .eq. 'wb'  ! Wind fields
      1    .or. c_type_i(1:2) .eq. 'co' .or. c_type_i      .eq. 'wr'
-     1    .or. c_type_i      .eq. 'wf' .or. c_type_i      .eq. 'bw'
+     1    .or. c_type_i      .eq. 'wf' .or. c_type_i(1:2) .eq. 'bw'
      1    .or. c_type_i(1:2) .eq. 'bo' .or. c_type_i      .eq. 'lo'
      1    .or. c_type_i(1:2) .eq. 'fo' .or. c_type_i(1:2) .eq. 'wo')then       
 
@@ -996,10 +996,11 @@ c       include 'satellite_dims_lvd.inc'
                     call mklabel(k_mb,c19_label,c_label)
                 endif
 
-                if(k_level .ne. 0)then
-                    interval = (NY_L / 50) + 1
+                if(k_level .ne. 0)then ! upper air
+                    nyz = float(NY_L) / sqrt(zoom)
+                    interval = (nyz / 50) + 1
                     size = float(interval) * .11
-                else
+                else                   ! sfc
                     nxz = float(NX_L) / zoom
                     nyz = float(NY_L) / zoom
                     interval = int(max(nxz,nyz) / 85.) + 1
@@ -1797,7 +1798,7 @@ c
      1                              ,namelist_parms,plot_parms)
 
              else ! contours
-                 if(ilvd .eq. 1)then
+                 if(ilvd .eq. 1)then ! Visible data
                      if(var_2d.eq.'ALB')then
                          clow = 0.0
                          chigh = 1.
@@ -1809,6 +1810,10 @@ c
                          cint = 05.
                          scale = 1e0
                      endif
+                 else                ! IR data
+                     call contour_settings(vas,NX_L,NY_L
+     1                                   ,clow,chigh,cint
+     1                                   ,zoom,density,scale)
                  endif
 
                  call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
@@ -6849,13 +6854,15 @@ c             if(cint.eq.0.0)cint=0.1
 !       Set for zoom
         zfrac = 1.0 / plot_parms%zoom_wdw
 
-        frame_factor = 1.0 / 0.9
+        frame_factx = 1.0 / 0.75
+        frame_facty = 1.0 / 0.8
 
-        zxcen = (0.5 + ((plot_parms%xcen - 0.5) * frame_factor)) * 1023.
-        zycen = (0.5 + ((plot_parms%ycen - 0.5) * frame_factor)) * 1023.
+        zxcen = (0.5 + ((plot_parms%xcen - 0.5) * frame_factx)) * 1023.
+        zycen = (0.5 + ((plot_parms%ycen - 0.5) * frame_facty)) * 1023.
 
         if(plot_parms%zoom_wdw .gt. 1.0)then
-            write(6,*)'frame_factor,zxcen,zycen',frame_factor,xcen,zycen
+            write(6,*)'frame_factors,zxcen,zycen'
+     1               ,frame_factx,frame_facty,zxcen,zycen
         endif
 
         ix = nint( (float(ix) * zfrac) + zxcen * (1.0 - zfrac))
