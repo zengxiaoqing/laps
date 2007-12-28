@@ -3647,11 +3647,13 @@ Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc.
 
 ------- 3.4  ----  Model Initialization & Postprocessing ---------------------
 
-   The main GSD contact for information on how we use the analyses to 
-   initialize the forecasts is as follows: Chris Anderson for 
-   RAMS/SFM/MM5/WRF/Eta. The models themselves are not included in this tar 
-   file. There is some documentation for the model interfacing at this
-   URL: http://laps.noaa.gov/mm5doc/README_lapsmm5.htm
+   The main GSD contact for information on how we use the LAPS analyses to 
+   initialize the forecasts is as follows: Chris Anderson for the
+   RAMS/SFM/MM5/WRF/Eta models. The forecast models themselves are obtained 
+   separately from the LAPS analysis tar file. There is some documentation for 
+   the model interfacing at this URL: 
+     
+   http://laps.noaa.gov/mm5doc/README_lapsmm5.htm
 
 ------ 3.4.1 --------------LAPSPREP------------------------------------------
 
