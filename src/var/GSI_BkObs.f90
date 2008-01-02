@@ -379,6 +379,9 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
 
     CALL UFBINT ( 11, r8arr, MXMN, nlvst, nlv, &
      		'POB QOB TOB ZOB UOB VOB PWO CAT' )
+    r8arr = 0.0
+    CALL UFBINT ( 11, r8arr, MXMN, nlvst, nlv, &
+                'PQM QQM TQM ZQM WQM NUL PWQ' )
 
     ! ( store any other available values in a similar manner )
     ! Once all data values have been stored for this data subset,
@@ -458,6 +461,9 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
 
     CALL UFBINT ( 11, r8arr, MXMN, nlvst, nlv, &
      		'POB QOB TOB ZOB UOB VOB PWO CAT' )
+    r8arr = 0.0
+    CALL UFBINT ( 11, r8arr, MXMN, nlvst, nlv, &
+                'PQM QQM TQM ZQM WQM NUL PWQ' )
 
     ! ( store any other available values in a similar manner )
     ! Once all data values have been stored for this data subset,
