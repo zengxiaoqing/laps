@@ -35,7 +35,8 @@ c KML: END
       integer nan_flag
       integer nf_fid,nf_vid,nf_status
       integer istatus
-c
+
+
 c *** Background model grid data.
 c
       real, intent(out) :: prbght(nx_bg,ny_bg,nzbg_ht) !Pressure (mb) ht and temp
@@ -548,6 +549,29 @@ C WNI-BLS
      .   ,tpbg_sfc,mslpbg,ctype,istatus)
          print *, "Completed read of RUC_HYB"
        endif
+
+      elseif (bgmodel .eq. 13) then ! Process GRIB1/GRIB2
+
+         write(*,*) 'CALL UNGRIB_DATA:'
+         write(*,*) ' grib filename',fullname
+
+         call degrib_data(fullname, nx_bg, ny_bg, nzbg_ht, 
+     &      prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, 
+     &      htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, 
+     &      tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, istatus)
+
+            prbgsh(:,:,:)=prbght(:,:,:) 
+            prbguv(:,:,:)=prbght(:,:,:) 
+            prbgww(:,:,:)=prbght(:,:,:) 
+
+c        write(*, *) "READBGDATA htbg(3,30,1)", htbg(3,30,1)
+c        write(*, *) "READBGDATA tpbg(3,30,1)", tpbg(3,30,1)
+c        write(*, *) "READBGDATA wwbg(3,30,1)", wwbg(3,30,1)
+c        write(*, *) "READBGDATA tdbg_sfc(3,30)", tdbg_sfc(3,30)
+c        write(*, *) "READBGDATA shbg_sfc(3,30)", shbg_sfc(3,30)
+c        do j = 1, nzbg_ht 
+c           write(*, *) "READBGDATA shbg(3,30,",j, shbg(3,30,j)
+c        enddo
 
       endif
 c      

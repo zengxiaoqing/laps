@@ -13,6 +13,8 @@ c     USE laps_static
 
       character*200 fullname
       character*200 cfname_internal
+      character*200 outdir
+      character*200 vtable
       character*132 cmodel
       character*30  projname
       character*13  fname13
@@ -265,6 +267,26 @@ c ----------
          else
             print*,'Error - get_eta48_dims: ',fullname(1:lenfn)
          endif
+
+      elseif(cmodel(1:nclen).eq.'NH221_GSD_PUBLIC')then
+
+         call get_namnh221_dims(fullname,nxbg,nybg,nzbg
+     &         ,La1in,La2in,La1,Lo1,LoV,istatus)
+         if(istatus.eq.1)then
+            gproj='LC'
+            nzbg_ht=nzbg
+            nzbg_tp=nzbg
+            nzbg_sh=nzbg
+            nzbg_uv=nzbg
+            nzbg_ww=nzbg
+            sw(1)=La1
+            sw(2)=Lo1
+            centrallon=LoV
+            centrallat=La1in
+         else
+            print*,'Error - get_namnh221_dims: ',fullname(1:lenfn)
+         endif
+
       endif
 
 c All SBN grids!
@@ -605,6 +627,27 @@ c        lon0_lc=lon0
 c        dlat=1.0
 c        dlon=1.0
 c     endif
+
+c GRIB1 and GRIB2 (GFS is assumed)
+c --------------------
+      if(bgmodel.eq.13)
+     &then
+
+         write(*,*) "CALL UNGRIB_NAV:" 
+         write(*,*) " grib filename", fullname
+
+         call get_directory('static',outdir,lenfn)    
+c        vtable=outdir(1:lenfn)//'Vtable'
+         vtable=outdir(1:lenfn)//'Variable_Tables/Vtable.'//cmodel
+
+         call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
+     &     gproj,dlat,dlon,Lat0,Lon0,cgrddef,istatus)
+           nzbg_tp=nzbg_ht
+           nzbg_sh=nzbg_ht
+           nzbg_uv=nzbg_ht
+           nzbg_ww=nzbg_ht
+
+      endif
 
       return
       end
