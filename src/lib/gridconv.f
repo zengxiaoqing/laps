@@ -1101,7 +1101,7 @@ c
       integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
 c
       real lat(nx_laps,ny_laps),lon(nx_laps,ny_laps),
-     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
+     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps) 
 c
       integer i,j,k
       integer istatus
@@ -1207,7 +1207,7 @@ CWNI        enddo
 CWNI     enddo
 CWNI  elseif(bgmodel.eq.4.and.cmodel(1:lenc).eq.'AVN_SBN_CYLEQ')then
       elseif( (bgmodel.eq.4.and.cmodel(1:lenc).eq.'AVN_SBN_CYLEQ') .OR. !WNI
-     .         (bgmodel .eq. 10 .and. cmodel .eq. 'GFS_ISO')) then      !WNI
+     .        (bgmodel .eq. 10 .and. cmodel .eq. 'GFS_ISO')) then      !WNI
 
 CWNI     do j=1,ny_laps
 CWNI        do i=1,nx_laps
@@ -1227,6 +1227,10 @@ CWNI              if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
 CWNI           endif
 CWNI        enddo
 CWNI     enddo
+
+      elseif( bgmodel.eq.13) then !PTM
+              
+
 
 c
 c ****** If not a global data set, then check that LAPS domain is fully
@@ -1337,9 +1341,10 @@ CWNI  Add a section to identify wrapped grid and set the wrapped flag
       wrapped = .FALSE.              ! WNI
       IF (bgmodel .eq. 6 .or.        ! WNI
      .       bgmodel .eq. 8 .or.     ! WNI
+     .       bgmodel .eq. 13 .or.    ! PTM
      .       bgmodel .eq. 10.) THEN  ! WNI
         wrapped = .true.             ! WNI
-      ENDIF                          !WNI
+      ENDIF                          ! WNI
 C WNI END ADDITON
 
       iy1=int(stay)-1
