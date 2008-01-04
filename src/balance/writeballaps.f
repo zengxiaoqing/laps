@@ -13,7 +13,7 @@ C
 C
        integer      lend
 
-       REAL*4       PHI(IMAX,JMAX,KMAX),
+       REAL       PHI(IMAX,JMAX,KMAX),
      1              U(IMAX,JMAX,KMAX),
      1              V(IMAX,JMAX,KMAX),
      1              OM(IMAX,JMAX,KMAX),

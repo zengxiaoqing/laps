@@ -35,44 +35,44 @@ c internal fields
 c             wt(nx,ny)
 c             wt3(nx,ny,nz)        
  
-       integer*4 ns
+       integer ns
        parameter (ns=4)
-       integer*4 isave(ns),jsave(ns)
-       integer*4 nse
+       integer isave(ns),jsave(ns)
+       integer nse
        parameter (nse=2**ns-1)
-       integer*4 index(nse),inxx(nse)	
-       integer*4 inx(nse)
+       integer index(nse),inxx(nse)	
+       integer inx(nse)
        character*9 a9_time
        character*24 lable,title
-       integer*4 nx, ny, nz
-       real*4, intent(in) :: u(nx,ny,nz),v(nx,ny,nz),d(nx,ny,nz)
+       integer nx, ny, nz
+       real, intent(in) :: u(nx,ny,nz),v(nx,ny,nz),d(nx,ny,nz)
      &,t(nx,ny,nz)
-       real*4, intent(in) :: slat(nx,ny),slon(nx,ny),ter(nx,ny)
+       real, intent(in) :: slat(nx,ny),slon(nx,ny),ter(nx,ny)
 
-       real*4 upi(nse),vpi(nse),dpi(nse),twi(nse)
-       real*4, allocatable, dimension(:,:) :: wt
-       real*4, allocatable, dimension(:,:,:) :: wt3
-       real*4 wtsave(ns),drpx(ns),drpy(ns)
-       real*4 alph,beta,sumu,sumv,sumd
-       real*4 p(nz),ht(nz)
-       real*4 ud(nz),vd(nz),ubb(nz),vbb(nz),wbb(nz),uab(nz),vab(nz)
-       real*4 up(nz),vp(nz),dp(nz),tp(nz),dd(nz)
-       real*4 upv(nz),vpv(nz),tpv(nz),wp(nz),dpv(nz),
+       real upi(nse),vpi(nse),dpi(nse),twi(nse)
+       real, allocatable, dimension(:,:) :: wt
+       real, allocatable, dimension(:,:,:) :: wt3
+       real wtsave(ns),drpx(ns),drpy(ns)
+       real alph,beta,sumu,sumv,sumd
+       real p(nz),ht(nz)
+       real ud(nz),vd(nz),ubb(nz),vbb(nz),wbb(nz),uab(nz),vab(nz)
+       real up(nz),vp(nz),dp(nz),tp(nz),dd(nz)
+       real upv(nz),vpv(nz),tpv(nz),wp(nz),dpv(nz),
      &      wab(nz),dbb(nz),dab(nz),ubv(nz),vbv(nz),wbv(nz),
      &      uav(nz),vav(nz),wav(nz),utv(nz),vtv(nz),wtv(nz),
      &      dav(nz),dbv(nz),pav(nz),htav(nz),tav(nz)
 
-       real*4 eponexy,gamma,sumw,ca,ddd2,ct,epone
-       real*4 ss2,sa,sumt,tpvs,sn2,sumww,sumdd,zter,smax,sumvv,sumuu
-       real*4 errmod,dt,dx,smsng,dpht,errdds,errwnds,distnf,st,ubar
-       real*4 vbar,vbtot,ubtot,errdis
-       real*4 ri,rj,ter_hgt_drop,droplat,droplon
+       real eponexy,gamma,sumw,ca,ddd2,ct,epone
+       real ss2,sa,sumt,tpvs,sn2,sumww,sumdd,zter,smax,sumvv,sumuu
+       real errmod,dt,dx,smsng,dpht,errdds,errwnds,distnf,st,ubar
+       real vbar,vbtot,ubtot,errdis
+       real ri,rj,ter_hgt_drop,droplat,droplon
 
-       integer*4 i,j,k,kk,l,mm,lsave,n,lmax,m,in,jo,io, ncnt,ix,jy
-       integer*4 ktop,kbot,nofly2,idist2
-       integer*4 user_sonde_loc(2)
-       integer*4 nofly_area(nx,ny)
-       integer*4 istatus
+       integer i,j,k,kk,l,mm,lsave,n,lmax,m,in,jo,io, ncnt,ix,jy
+       integer ktop,kbot,nofly2,idist2
+       integer user_sonde_loc(2)
+       integer nofly_area(nx,ny)
+       integer istatus
 
        data index /1,2,3,4,12,13,14,23,24,34,123,124,134,234,1234/
 
@@ -679,13 +679,13 @@ C
 
       character*255 directory
       character*255 cfilespec
-      integer*4     nx,ny
-      integer*4     i,j,idum,jdum
-      integer*4     len_dir
-      integer*4     len_cfspec
-      integer*4     nofly_area(nx,ny)  !output
-      integer*4     user_sonde_loc(2)  !output
-      integer*4     istatus
+      integer     nx,ny
+      integer     i,j,idum,jdum
+      integer     len_dir
+      integer     len_cfspec
+      integer     nofly_area(nx,ny)  !output
+      integer     user_sonde_loc(2)  !output
+      integer     istatus
       logical       L1
 
       istatus = 0
