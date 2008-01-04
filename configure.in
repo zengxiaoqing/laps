@@ -95,6 +95,7 @@ then
       CFLAGS="$CFLAGS -Aa"
       CPPFLAGS="$CPPFLAGS "
   fi
+  W3="-DHP"
 fi
 if test "$arch" = "rs6000" 
 then
@@ -104,6 +105,7 @@ then
   FREE="-qfree=f90 -qsuffix=f=f90"
   C_OPT="-O3 -qstrict"
   F_OPT="-O3 -qstrict"
+  W3="-DIBM4"
 fi
 if test "$arch" = "alpha"
 then
@@ -114,6 +116,7 @@ then
   C_OPT="-O4"
   F_OPT="-O4"
   CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
+  W3="-DALPHA -DSWAPBYTE"
 fi  
 if test "$arch" = "sun4" 
 then
@@ -143,6 +146,13 @@ EOF
 if test $? -eq 0 
 then
   CPPFLAGS="$CPPFLAGS -DF90"
+  if test "$arch" = "rs6000"
+  then
+    W3="-DIBM4"
+  else
+    W3="-DLINUXF90 -DSWAPBYTE"
+  fi
+
   if test "$arch" = "solaris"
   then
 dnl module flags for solaris 
@@ -179,6 +189,7 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2"
+    W3="-DLINUX -DSWAPBYTE"
   fi
   if test "$arch" = "i386"
   then
@@ -190,6 +201,7 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2"
+    W3="-DLINUX -DSWAPBYTE"
   fi
   if test "$arch" = "x86_64"
   then
@@ -201,6 +213,7 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2 -fastsse"
+    W3="-DLINUX -DSWAPBYTE -DBIT64"
   fi
 fi  
 
@@ -257,6 +270,13 @@ fi
 dnl Hardwired MULTI_EXEC for now
 CPPFLAGS="$CPPFLAGS -DMULTI_EXEC"
 
+dnl For Grib decoder software some W3 libs need to have
+dnl architecture defined as -DCRAY90 -DHP -DSGI -DLINUX
+dnl -DLINUXF90 -DVPP5000 (Fujitsu) -DIBM4 -DIBM8 -DALPHA -DMAC
+dnl use WDEF to describe fortran externals to c
+dnl Also, set wordsize to -DBIT64 for 64 bit architecture, else assume 32
+  CDEGRIBFLAGS="$W3 $WDEF"
+
 dnl
 dnl How to compile fortran with ncarg?
 dnl
@@ -274,6 +294,8 @@ AC_SUBST(F_OPT)
 AC_SUBST(OTHERLIBS)
 AC_SUBST(ARCHIVE)
 AC_SUBST(FC_USE_TRIGD)
+AC_SUBST(DEGRIBFLAGS)
+AC_SUBST(CDEGRIBFLAGS)
 
 dnl Checks for programs.
 dnl AC_PROG_AWK
@@ -296,6 +318,15 @@ dnl Replace `main' with a function in -lnssl:
 # AC_CHECK_LIB(nssl, main)
 dnl Replace `main' with a function in -ltermcap:
 # AC_CHECK_LIB(termcap, main)
+dnl Replace `main' with a function in -ljasper:
+AC_CHECK_LIB(jasper, main)
+dnl Replace `main' with a function in -lpng:
+AC_CHECK_LIB(png, main)
+dnl Replace `main' with a function in -lz:
+AC_CHECK_LIB(z, main)
+
+dnl for Grib2 libraries: libjasper.a, libpng.a, libz.a
+  AC_PROG_GRIB2
 
 dnl Checks for header files.
 AC_HEADER_DIRENT

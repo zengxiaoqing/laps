@@ -600,6 +600,36 @@ then
 fi
 ])
 
+---
+dnl AC_PROG_GRIB2()
+AC_DEFUN(AC_PROG_GRIB2,
+[
+dnl
+dnl  Find the grib2 libraries by looking for libjasper.a, libpng.a and libz.a
+dnl    in system lib locations, i.e. /usr/lib
+dnl    - there must be a better way?
+dnl
+
+jtrue=0
+ptrue=0
+ztrue=0
+if test -n "`echo $LIBS | grep ljasper`"; then jtrue=1; fi
+if test -n "`echo $LIBS | grep lpng`"; then ptrue=1; fi
+if test -n "`echo $LIBS | grep lz`"; then ztrue=1; fi
+
+if test $jtrue == 1 && test $ptrue == 1 && test $ztrue == 1
+then
+  AC_MSG_RESULT(Found all grib2 libraries, i.e. $LIBS)
+    DEGRIBFLAGS="-DUSE_JPEG2000 -DUSE_PNG"
+else
+  AC_MSG_RESULT(Some Grib2 libraries -ljasper, -lpng, -lz were NOT FOUND ...only found >$LIBS<)
+    DEGRIBFLAGS=""
+fi
+
+])
+
+---
+
 dnl AC_PROG_NETCDF(PATH_TO_NETCDF)
 AC_DEFUN(AC_PROG_NETCDF,
 [

@@ -30,6 +30,9 @@ LIBDIRS = src/lib \
           src/lib/temp   \
           src/lib/util \
           src/lib/wind \
+          src/lib/w3lib \
+          src/lib/g2lib \
+          src/lib/degrib \
           src/var/bufr 
 
 EXEDIRS = src/accum \
