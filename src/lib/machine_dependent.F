@@ -35,7 +35,7 @@ cdoc    Converts an integer to a byte (character) variable
 
         character i4_to_byte
 
-        integer*4 i4_in,i4
+        integer i4_in,i4
 
         character barg(4)
         equivalence (barg,i4)
@@ -51,7 +51,7 @@ cdoc    Converts an integer to a byte (character) variable
 
 cdoc    Converts a byte (character) to an integer variable
 
-        integer*4 i4,byte_to_i4
+        integer i4,byte_to_i4
         character b_in
 
         character barg(4)
