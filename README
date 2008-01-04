@@ -1453,7 +1453,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      observations are binned into files according to observation time (instead
      of 'r' for receipt time) More about NIMBUS is detailed in publications on 
      the web at this URL:
-     http://www-its.fsl.noaa.gov/papers/nimbus/welcome.html
+     http://www.fsl.noaa.gov/its/papers/jb_ams94.html
 
      Time information will be needed in the form of 'data/time/systime.dat';
      this can be extracted from the 'lapsdata*' tar file.
