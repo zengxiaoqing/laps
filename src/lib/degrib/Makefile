@@ -14,7 +14,7 @@ INCLUDIR =  $(SRCROOT)/src/lib/g2lib
 # CDEGRIBFLAGS are -DLINUX, -DIBM, etc; -DSWAPBYTE; etc; 
 # DEGRIBFLAGS are USE_PNG, USE_JPEG2000 only;
 CFLAGS += $(CDEGRIBFLAGS) $(DEGRIBFLAGS)
-FFLAGS += $(FREE) $(CDEGRIBFLAGS) $(DEGRIBFLAGS)
+FFLAGS += $(FREE) $(CDEGRIBFLAGS) $(DEGRIBFLAGS) -I$(INCLUDIR)
 CPPFLAGS += $(CDEGRIBFLAGS) $(DEGRIBFLAGS) -I$(INCLUDIR)
 
 LIB      = libdegrib.a
@@ -66,7 +66,7 @@ $(LIB): $(ARCHIVE)
 debug: $(SRC)
 	$(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
 	CFLAGS='$(DBCFLAGS) $(CDEGRIBFLAGS) $(DEGRIBFLAGS)' \
-	FFLAGS='$(DBFLAGS) $(FREE) $(DEGRIBFLAGS)'
+	FFLAGS='$(DBFLAGS) $(FREE) $(DEGRIBFLAGS) -I$(INCLUDIR)'
 
 install: lib
 
@@ -74,9 +74,9 @@ install: lib
 ifdef USECPP 
 %.o : 	%.F90
 	$(CPP) $(CPPFLAGS) $< 
-	mv $*.i $*.f
-	$(FC) $(FFLAGS) -c $*.f
-	$(RM) $*.f
+	mv $*.i $*.f90
+	$(FC) $(FFLAGS) -c $*.f90
+	$(RM) $*.f90
 else
 
 %.o : 	%.F90
