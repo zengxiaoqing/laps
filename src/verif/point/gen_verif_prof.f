@@ -121,7 +121,7 @@ C     get verif info from verif.nl
       if (istatus .ne. 1) then
         write(6,*)' Error in read_verif_nl '
         istatus = 0
-        return
+        stop
       endif
 
       do i=1,n_verif
