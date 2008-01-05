@@ -1,8 +1,15 @@
-Support routines for grib2 compression:
+
+Software Purpose
+------------
+We have added support for the background models to now include 
+Grib-formatted files. This code was developed to allow lga.exe 
+to read and process Grib1 and Grib2-formatted files directly
+(without needing to convert to NetCDF-format).
 
 
-
-These have been incorporated into the LAPS code:
+Software Requirements
+-----------
+These libraries have been incorporated into the LAPS code:
 
 g2lib  from http://www.nco.ncep.noaa.gov/pmb/codes/GRIB2/
         version 1.0.7.1  (3/29/06)
@@ -11,8 +18,8 @@ w3lib  from http://www.nco.ncep.noaa.gov/pmb/codes/GRIB2/
         version 1.1  (3/29/06)
 
 
-
-These are external libraries that are assumed available:
+These are external libraries that are assumed available
+for Grib2 compression:
 
 jasper from http://www.ece.uvic.ca/~mdadams/jasper/ 
          (called jpeg2000 here)  (3/24/06)
@@ -23,6 +30,49 @@ zlib    from http://www.zlib.net
 libpng   from http://www.libpng.org/pub/png/libpng.html
         version 1.2.8  (3/30/06)
 
+These external compression libraries are usually found in 
+/usr/lib. You will need to have a system administrator 
+download and install external libraries if they are not 
+already installed on your system. 
 
-For additional information see the README file in 
-lib/g2lib
+
+Software Configure
+-----------
+The 'configure' script will determine if these compression 
+libraries are present. If found, 'configure' prepares the file 
+'src/include/makefile.inc' with DEGRIBLIBS and DEGRIBFLAGS 
+values allowing lga software to read both Grib1 and Grib2-
+formatted files. Without these compression libraries available 
+lga.exe can only read Grib1-formatted files. 
+
+Example from 'src/include/makefile.inc' that would build Grib2 
+decoding software:
+
+# Grib1 and Grib2 decoder libs and flags
+DEGRIBLIBS= -ljasper -lpng -lz
+DEGRIBFLAGS= -DUSE_PNG -DUSE_JPEG2000
+CDEGRIBFLAGS= -DIBM4
+
+
+Software Build
+------------
+Because of dependencies, build lib/w3lib/libw3.a first, 
+lib/g2lib/libg2_4.a second and lib/degrib/libdegrib.a third, 
+as is done in the top-level Makefile. If the DEGRIBFLAGS 
+change, 'make clean' and 'make' all three libraries.
+
+
+Software Run
+-----------
+Edit 'static/background.nl'. Set bgmodel=13 for GRIB. Set 
+cmodel='GFS', for example. Run lga.exe.
+
+To extract variables from Grib files there is a lookup 
+Vtable.XXX file corresponding to each model found in 
+data/static/Variable_Tables. Additional GRIB models can be 
+processed if you create a vtable for the model patterened like 
+the one for Vtable.GFS.
+
+
+For additional information see the README file in directory 
+g2lib.
