@@ -18,6 +18,7 @@
          2.1.6 ..................  Disk Space
          2.1.7 ..................  Memory Etc. (ulimit)
          2.1.8 ..................  Plotting / NCAR graphics library (optional)
+         2.1.9 ..................  GRIB2 external libraries (optional)
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
          2.2.2 ..................  Running Configure
@@ -171,7 +172,7 @@
      guarantee the portability of LAPS to all of these
      other platforms (e.g. Windows NT).
 
-                      --- 2.1.1   NetCDF library   ---
+                      --- 2.1.1  NetCDF library  ---
  
      The NetCDF package is required for laps, it is available via internet at 
      'http://www.unidata.ucar.edu/packages/netcdf/'
@@ -188,13 +189,13 @@
      LAPS FORTRAN routines. Please see the discussion in section 2.2.2.1 for
      details on troubleshooting this.
    
-                      --- 2.1.2  Perl             ---
+                      --- 2.1.2  Perl ---
 
      The perl package is also required for laps, it is available via internet 
      at any perl site such as http://www.perl.com. Perl 5.003 or higher is 
      required. Check that 'perl' is in your path (e.g. 'which perl').
 
-                      --- 2.1.3  make             ---
+                      --- 2.1.3  make ---
 
      Laps Makefiles work best by using gnu make (version 3.75 or higher).
      This is downloadable from gnu sites such as the following URL:
@@ -203,7 +204,7 @@
      also work, however if you find you are having problems in this area please
      try obtaining and using gnu make. Check that 'make' is in your path.
 
-                    ---  2.1.4  C Compiler ---
+                     --- 2.1.4  C Compiler ---
 
      In general, an ANSI compliant C compiler should be used. On some hardware
      ANSI compliance requires a compiler flag, if you're not sure check the 
@@ -217,8 +218,7 @@
 
      For HP-UX platforms, 'cc' is suggested.
 
-
-                  ---  2.1.5  FORTRAN Compiler ---
+                    ---  2.1.5  FORTRAN Compiler ---
 
      Please note that LAPS uses dynamic memory within the FORTRAN code in
      the form of automatic and allocatable arrays, as well as other FORTRAN 90
@@ -341,6 +341,24 @@
      Another note of interest is that LAPS is visualized as an integral part of
      the AWIPS system. If you have AWIPS, then LAPS should be running on it
      and you can view its output on the workstation.
+
+               --- 2.1.9  GRIB2 external libraries (optional) ---
+
+     We have added support for the background models to now include 
+     GRIB-formatted files. External compression libraries required for 
+     decoding GRIB2-formatted files are libjasper.a, libpng.a, and libz.a
+     and are usually found in /usr/lib. You will need to have a system 
+     administrator download and install external libraries if they are not
+     already on your system. 
+
+     The 'configure' script will determine if these libraries are present. 
+     If found, 'configure' prepares the file 'src/include/makefile.inc' with 
+     DEGRIBLIBS and DEGRIBFLAGS values allowing lga software to read both 
+     GRIB1 and GRIB2-formatted files. Without these compression libraries 
+     available lga can read GRIB1-formatted files. 
+
+     See source directory: $LAPS_SRC_ROOT/src/lib/degrib/README_LIBS file 
+     for additional information.
 
 
      ------------- 2.2 Installation Procedure Summary ------------------
@@ -1016,6 +1034,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      The Atlanta, Sterling, and Seattle WFOs have followed a more direct route,
      going from the RUC/Eta to the intermediate "lga" file, bypassing the 
      NetCDF file on the model grid. This includes RUC on isobaric surfaces. 
+
+     We have recently added support for the background models to include 
+     GRIB-formatted files.
 
                        ----   2.3.2  Radar ingest ---
 
@@ -2146,7 +2167,11 @@ Package: lga.exe - ingest background model data
 Inputs:
         Raw model data on the model's native grid. The acceptable models and 
         formats for the background model are listed in 
-        'data/static/background.nl'. For some models you might want to do a
+        'data/static/background.nl'. We have recently added support for the 
+        background models to include GRIB-formatted files. See source directory: 
+        $LAPS_SRC_ROOT/src/lib/degrib/README_LIBS file for detailed information.
+
+        For some models you might want to do a
         separate conversion of GRIB to NetCDF prior to running LGA. One software
         option for this is available from the GSD/ITS group as described in
         section 3 of this web document at the following URL:
