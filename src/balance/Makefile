@@ -43,7 +43,8 @@ all: exe
 exe: $(ARCHIVE) $(EXE)
 
 $(EXE): $(ARCHIVE) $(MAIN)
-	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) \
+	$(OTHERLIBS) $(DEGRIBLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
@@ -66,17 +67,3 @@ distclean: clean
 	mv $*.i $*.f
 
 %.o : %.F
-
-
-
-
-
-
-
-
-
-
-
-
-
-
