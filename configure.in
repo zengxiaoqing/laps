@@ -318,12 +318,12 @@ dnl Replace `main' with a function in -lnssl:
 # AC_CHECK_LIB(nssl, main)
 dnl Replace `main' with a function in -ltermcap:
 # AC_CHECK_LIB(termcap, main)
-dnl Replace `main' with a function in -ljasper:
-AC_CHECK_LIB(jasper, main)
-dnl Replace `main' with a function in -lpng:
-AC_CHECK_LIB(png, main)
 dnl Replace `main' with a function in -lz:
 AC_CHECK_LIB(z, main)
+dnl Replace `main' with a function in -lpng:
+AC_CHECK_LIB(png, main)
+dnl Replace `main' with a function in -ljasper:
+AC_CHECK_LIB(jasper, main)
 
 dnl for Grib2 libraries: libjasper.a, libpng.a, libz.a
   AC_PROG_GRIB2
