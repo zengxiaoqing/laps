@@ -268,25 +268,6 @@ c ----------
             print*,'Error - get_eta48_dims: ',fullname(1:lenfn)
          endif
 
-      elseif(cmodel(1:nclen).eq.'NH221_GSD_PUBLIC')then
-
-         call get_namnh221_dims(fullname,nxbg,nybg,nzbg
-     &         ,La1in,La2in,La1,Lo1,LoV,istatus)
-         if(istatus.eq.1)then
-            gproj='LC'
-            nzbg_ht=nzbg
-            nzbg_tp=nzbg
-            nzbg_sh=nzbg
-            nzbg_uv=nzbg
-            nzbg_ww=nzbg
-            sw(1)=La1
-            sw(2)=Lo1
-            centrallon=LoV
-            centrallat=La1in
-         else
-            print*,'Error - get_namnh221_dims: ',fullname(1:lenfn)
-         endif
-
       endif
 
 c All SBN grids!
@@ -633,7 +614,7 @@ c --------------------
       if(bgmodel.eq.13)
      &then
 
-         write(*,*) "CALL UNGRIB_NAV:" 
+         write(*,*) "CALL DEGRIB_NAV:" 
          write(*,*) " grib filename", fullname
 
          call get_directory('static',outdir,lenfn)    
