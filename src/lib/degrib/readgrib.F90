@@ -193,24 +193,24 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
 
 ! *** sfc background arrays.
-  real*4 :: prbg_sfc(nx,ny)
-  real*4 :: uwbg_sfc(nx,ny)
-  real*4 :: vwbg_sfc(nx,ny)
-  real*4 :: shbg_sfc(nx,ny)
-  real*4 :: tdbg_sfc(nx,ny)
-  real*4 :: tpbg_sfc(nx,ny)
-  real*4 :: t_at_sfc(nx,ny)
-  real*4 :: htbg_sfc(nx,ny)
-  real*4 :: mslpbg(nx,ny)
+  real :: prbg_sfc(nx,ny)
+  real :: uwbg_sfc(nx,ny)
+  real :: vwbg_sfc(nx,ny)
+  real :: shbg_sfc(nx,ny)
+  real :: tdbg_sfc(nx,ny)
+  real :: tpbg_sfc(nx,ny)
+  real :: t_at_sfc(nx,ny)
+  real :: htbg_sfc(nx,ny)
+  real :: mslpbg(nx,ny)
 
 ! *** 3D background arrays.
-  real*4 :: prbght(nx,ny,nz)
-  real*4 :: htbg(nx,ny,nz)
-  real*4 :: tpbg(nx,ny,nz)
-  real*4 :: shbg(nx,ny,nz)
-  real*4 :: uwbg(nx,ny,nz)
-  real*4 :: vwbg(nx,ny,nz)
-  real*4 :: wwbg(nx,ny,nz)
+  real :: prbght(nx,ny,nz)
+  real :: htbg(nx,ny,nz)
+  real :: tpbg(nx,ny,nz)
+  real :: shbg(nx,ny,nz)
+  real :: uwbg(nx,ny,nz)
+  real :: vwbg(nx,ny,nz)
+  real :: wwbg(nx,ny,nz)
 
   real   :: it,xe,mrsat,esat
 
@@ -397,18 +397,17 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
         if(tdbg_sfc(i,j).gt.0.0 .and. tdbg_sfc(i,j).lt.100.001)then
            prsfc=prbg_sfc(i,j)/100.
-              !print *, 'there is SH_SFC', shbg_sfc(i,j)
            if (is_there(200101,'SH_SFC')) then
-              !print *, 'there is SH_SFC'
+              !there is SH_SFC
               qsfc=shbg_sfc(i,j)
            else
-              !print *, 'there is no SH_SFC using RH_SFC'
+              !there is no SH_SFC, using RH_SFC
               qsfc=make_ssh(prsfc,tpbg_sfc(i,j)-273.15,tdbg_sfc(i,j)/100.,t_ref)
            endif
            tdbg_sfc(i,j)=make_td(prsfc,tpbg_sfc(i,j)-273.15,qsfc,t_ref)+273.15
         else
+           !Td is rfill
            tdbg_sfc(i,j)=rfill
-              print *, 'Td is fill', tdbg_sfc(i,j)
         endif
 
      enddo
