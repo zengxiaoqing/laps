@@ -41,7 +41,7 @@ SUBROUTINE LAPS_Conf
   ! Local variables:
   CHARACTER :: a9time*9,fnm*9,hr*2,mins*2,jday*5
   INTEGER :: status
-  INTEGER*4 ::thresh_2_radarobs_lvl_unfltrd, &
+  INTEGER ::thresh_2_radarobs_lvl_unfltrd, &
               thresh_4_radarobs_lvl_unfltrd, &
               thresh_9_radarobs_lvl_unfltrd, i4time_sys
   REAL :: weight_bkg_const_wind,weight_radar,rms_thresh_wind

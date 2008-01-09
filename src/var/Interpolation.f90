@@ -54,11 +54,11 @@ SUBROUTINE Intplt2(p,x,vin,vout)
 
   IMPLICIT NONE
 
-  REAL*4, INTENT(IN) :: p,x(2),vin(2)
-  REAL*4, INTENT(OUT) :: vout
+  REAL, INTENT(IN) :: p,x(2),vin(2)
+  REAL, INTENT(OUT) :: vout
 
   INTEGER :: i,j
-  REAL*4 :: e(2),r,b,c
+  REAL :: e(2),r,b,c
 
   ! Check the 4 grid points:
   DO i=1,2
@@ -117,11 +117,11 @@ SUBROUTINE Intplt4(p,x,vin,vout)
 
   IMPLICIT NONE
 
-  REAL*4, INTENT(IN) :: p,x(4),vin(4)
-  REAL*4, INTENT(OUT) :: vout
+  REAL, INTENT(IN) :: p,x(4),vin(4)
+  REAL, INTENT(OUT) :: vout
 
   INTEGER :: i,j
-  REAL*4 :: e(4),r,b,c
+  REAL :: e(4),r,b,c
 
   ! Check the 4 grid points:
   DO i=1,4

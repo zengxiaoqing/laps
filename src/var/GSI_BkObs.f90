@@ -70,23 +70,23 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
 
   IMPLICIT NONE
 
-  INTEGER*4, INTENT(IN) :: imax,jmax,kmax  	! Dimensions
-  REAL*4, INTENT(IN) :: xlat(imax,jmax),xlong(imax,jmax) 
-  REAL*4, INTENT(IN) :: grid_spacing
-  REAL*4, INTENT(IN) :: u_laps_bkg(imax,jmax,kmax)   ! u bkg
-  REAL*4, INTENT(IN) :: v_laps_bkg(imax,jmax,kmax)   ! v bkg
+  INTEGER, INTENT(IN) :: imax,jmax,kmax  	! Dimensions
+  REAL, INTENT(IN) :: xlat(imax,jmax),xlong(imax,jmax) 
+  REAL, INTENT(IN) :: grid_spacing
+  REAL, INTENT(IN) :: u_laps_bkg(imax,jmax,kmax)   ! u bkg
+  REAL, INTENT(IN) :: v_laps_bkg(imax,jmax,kmax)   ! v bkg
 
   ! Local variables:
   REAL, PARAMETER :: cp=1004.0, rc=287.0,t0=300.0 !273.15
   CHARACTER varname*3, fnm*9, hr*2, mins*2, jday*5
-  INTEGER*4 :: i4time_sys
+  INTEGER :: i4time_sys
   INTEGER :: istatus,i,j,k
-  REAL*4 :: t_mass_bkg(imax,jmax,kmax)
-  REAL*4 :: sh_mass_bkg(imax,jmax,kmax)
-  REAL*4 :: geo_mass_bkg(imax,jmax,kmax)	! Geopotential
-  REAL*4 :: u_mass_bkg(imax,jmax,kmax),v_mass_bkg(imax,jmax,kmax)
-  REAL*4 :: dam(imax,jmax),pdam(imax,jmax)
-  REAL*4 :: znw(kmax),znu(kmax-1),mapfac_m(imax,jmax)
+  REAL :: t_mass_bkg(imax,jmax,kmax)
+  REAL :: sh_mass_bkg(imax,jmax,kmax)
+  REAL :: geo_mass_bkg(imax,jmax,kmax)	! Geopotential
+  REAL :: u_mass_bkg(imax,jmax,kmax),v_mass_bkg(imax,jmax,kmax)
+  REAL :: dam(imax,jmax),pdam(imax,jmax)
+  REAL :: znw(kmax),znu(kmax-1),mapfac_m(imax,jmax)
 
   ! Times:
   CHARACTER*19 :: times
@@ -215,16 +215,16 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
   INCLUDE 'barnesob.inc'
 
   CHARACTER*16, intent(in) :: asctime
-  INTEGER*4, intent(in) :: i4time,nobs,imax,jmax,kmax
-  REAL*4, intent(in) :: lat(imax,jmax),lon(imax,jmax)
+  INTEGER, intent(in) :: i4time,nobs,imax,jmax,kmax
+  REAL, intent(in) :: lat(imax,jmax),lon(imax,jmax)
   TYPE (barnesob) :: obs_point(*)
   INTEGER, INTENT(IN) :: n_tobs,maxtobs
-  REAL*4, INTENT(IN) :: obs_temp(maxtobs,12)
+  REAL, INTENT(IN) :: obs_temp(maxtobs,12)
 
   INTEGER, parameter :: MXMN = 8
   INTEGER, parameter :: MXLV = 255
   REAL*8, parameter :: missing = 10.0e10
-  REAL*4 :: rlat,rlon,ztopsa,pres_3d(imax,jmax,kmax),p
+  REAL :: rlat,rlon,ztopsa,pres_3d(imax,jmax,kmax),p
   REAL*8 :: r8arr ( MXMN, MXLV ),rval
 
   INTEGER, parameter :: MXBF = 16000
@@ -426,7 +426,7 @@ SUBROUTINE GSI_Obs(i4time,asctime,lat,lon,imax,jmax,kmax, &
     r8arr (3,1) = rlat		!( station latitude )
     r8arr (2,1) = rlon		!( station longitude )
     r8arr (4,1) = 0.0 		!( obs time; Enhance this later)
-    r8arr (5,1) = 210.0		!( prepbufr report type )
+    r8arr (5,1) = 132.0		!( prepbufr report type )
     r8arr (6,1) = missing !( station elevation )
 
     CALL UFBINT  ( 11, r8arr, MXMN, 1, nlv, &

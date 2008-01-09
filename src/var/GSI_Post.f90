@@ -1,24 +1,28 @@
       PROGRAM gsi2laps
 
+!!       HISTORY:
+!!       Creation: LungTsung Cheng    8-2006
+
+
       IMPLICIT NONE
 
 !--- decalare variables ---------------------------------------
 
 !//common variables
 
-      INTEGER*4 :: imax,jmax,kmax
-      INTEGER*4 :: imax1,jmax1,kmax1  
-      INTEGER*4 :: i,j,k,ii,jj,kk,istatus
-      INTEGER*4 :: i4time,namelen
+      INTEGER :: imax,jmax,kmax
+      INTEGER :: imax1,jmax1,kmax1  
+      INTEGER :: i,j,k,ii,jj,kk,istatus
+      INTEGER :: i4time,namelen
       CHARACTER :: filename*125
 
 !// for subroutine read_gsi_output
 
-      INTEGER*4,PARAMETER :: ii1=8 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: uu1,vv1,tt1,qq1
-      REAL*4,ALLOCATABLE,DIMENSION(:,:) :: psfc
-      REAL*4,ALLOCATABLE,DIMENSION(:) :: eta,znu
-      REAL*4 :: ptop 
+      INTEGER,PARAMETER :: ii1=8 
+      REAL,ALLOCATABLE,DIMENSION(:,:,:) :: uu1,vv1,tt1,qq1
+      REAL,ALLOCATABLE,DIMENSION(:,:) :: psfc
+      REAL,ALLOCATABLE,DIMENSION(:) :: eta,znu
+      REAL :: ptop 
 
 !// for subroutine get_systime
 
@@ -26,58 +30,58 @@
 
 !// for subroutine get_pres_1d
 
-      REAL*4,ALLOCATABLE,DIMENSION(:) :: pres_1d
+      REAL,ALLOCATABLE,DIMENSION(:) :: pres_1d
 
 !// for subroutine get_r_missing_data
 
-      REAL*4 :: r_missing_data 
+      REAL :: r_missing_data 
 
 !// for subroutine get_pres_3d
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: pres_3d 
+      REAL,ALLOCATABLE,DIMENSION(:,:,:) :: pres_3d 
 
 !// for subroutine get_modelfg_3d
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: heights_3d 
+      REAL,ALLOCATABLE,DIMENSION(:,:,:) :: heights_3d 
 
 !// for subroutine get_modelfg_3d 
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: t_laps_bkg 
+      REAL,ALLOCATABLE,DIMENSION(:,:,:) :: t_laps_bkg 
 
 !// for subroutine dryairmass 
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:) :: dam,pdam 
+      REAL,ALLOCATABLE,DIMENSION(:,:) :: dam,pdam 
 
 !// for subroutine unstagger
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: uu2,vv2,qq2 
+      REAL,ALLOCATABLE,DIMENSION(:,:,:) :: uu2,vv2,qq2 
 
 !// for subroutine mass2laps
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: tt2,uvar1,vvar1,&
+      REAL,ALLOCATABLE,DIMENSION(:,:,:) :: tt2,uvar1,vvar1,&
                                         wvar1,tvar1,qvar1,tvar 
-      REAL*4,PARAMETER :: cp=1004.0, rc=287.0,t0=300.0 !273.15
+      REAL,PARAMETER :: cp=1004.0, rc=287.0,t0=300.0 !273.15
 
 !// for subroutine read_static_grid
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:) :: lat,lon,topo     
+      REAL,ALLOCATABLE,DIMENSION(:,:) :: lat,lon,topo     
 
 !// for subroutine get_grid_spacing_actual
 
-      REAL*4 :: grid_spacing_m
-      INTEGER*4 :: icen,jcen
+      REAL :: grid_spacing_m
+      INTEGER :: icen,jcen
 
 !// for subroutine wind_post_process
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:) :: rk_terrain,&
+      REAL,ALLOCATABLE,DIMENSION(:,:) :: rk_terrain,&
                                            uanl_sfcitrp,vanl_sfcitrp
       CHARACTER*3 :: var_3d(3)=(/'U3','V3','OM'/)
       CHARACTER*4 :: units_3d(3)=(/'M/S ','M/S ','PA/S'/) 
       CHARACTER*125 :: comment_3d(3)=(/'3DWIND',&
                                      '3DWIND','3DWIND'/)
       LOGICAL,PARAMETER :: l_grid_north_out = .true.		
-      REAL*4 :: height_to_zcoord2,fraclow,frachigh
-      integer*4 :: klow,khigh    
+      REAL :: height_to_zcoord2,fraclow,frachigh
+      integer :: klow,khigh    
  
 !// for subroutine make_fnam_lp
 
@@ -85,22 +89,22 @@
 
 !// for subroutine write_temp_anal
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:,:) ::  output_4d
+      REAL,ALLOCATABLE,DIMENSION(:,:,:,:) ::  output_4d
       CHARACTER*10 :: comment_2d
 
 !// for subroutine writefile
 
-      INTEGER*4,ALLOCATABLE,DIMENSION(:) :: lvl
+      INTEGER,ALLOCATABLE,DIMENSION(:) :: lvl
       CHARACTER*125,PARAMETER :: &
               commentline = 'maps with clouds and surface effects only'
 
 !// for subroutine lh3_compress
 
-      REAL*4 :: t_ref
+      REAL :: t_ref
 
 !//Variables for lwm: YUANFU XIE
 
-      REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: out_sfc_2d
+      REAL,ALLOCATABLE,DIMENSION(:,:,:) :: out_sfc_2d
       CHARACTER*3 :: ext_xie,var_a_xie(2),units_a_xie(2)
       CHARACTER*7 :: comment_a_xie(2)
 
@@ -270,7 +274,8 @@
 !      	   vanl_sfcitrp,topo,lat,lon,grid_spacing_m,rk_terrain,&
 !      	   r_missing_data,l_grid_north_out,istatus)
 
-! new-version-wind_post_process
+! wind_post_process for new version LAPS
+! modify : LungTsung Cheng  12-2007 
 
         call wind_post_process(i4time                         &   ! I 
                              ,uvar1,vvar1                     &   ! I
@@ -350,9 +355,9 @@
       implicit none
       include 'netcdf.inc'
       character*125,intent(in) :: filename 
-      integer*4,intent(out) :: imax,jmax,kmax
-      integer*4 :: kk,n(3),ncid
-      integer*4 :: istatus,vid,vtype,vn,&
+      integer,intent(out) :: imax,jmax,kmax
+      integer :: kk,n(3),ncid
+      integer :: istatus,vid,vtype,vn,&
                    vdims(MAXVDIMS),vnatt
       character(MAXNCNAM) :: vname
 
@@ -386,21 +391,21 @@
        
       implicit none
       include 'netcdf.inc'
-      integer*4,intent(in) :: ii1,imax,jmax,kmax,imax1,jmax1,kmax1
+      integer,intent(in) :: ii1,imax,jmax,kmax,imax1,jmax1,kmax1
       character*125,intent(in) :: filename
-      real*4,intent(out) :: uu1(imax,jmax1,kmax1),&
+      real,intent(out) :: uu1(imax,jmax1,kmax1),&
                             vv1(imax1,jmax,kmax1),&
                             tt1(imax1,jmax1,kmax1),&
                             psfc(imax1,jmax1),ptop,&
                             eta(kmax),znu(kmax1),&
                             qq1(imax1,jmax1,kmax1)
-      integer*4 :: ncid
-      integer*4 :: i,j,k,ii,jj,kk
-      integer*4 :: istatus,vid,vtype,vn,&
+      integer :: ncid
+      integer :: i,j,k,ii,jj,kk
+      integer :: istatus,vid,vtype,vn,&
                    vdims(MAXVDIMS),vnatt
-      integer*4,dimension(2) :: start2,count2
-      integer*4,dimension(3) :: start1,count1,n
-      integer*4,dimension(4) :: start,count
+      integer,dimension(2) :: start2,count2
+      integer,dimension(3) :: start1,count1,n
+      integer,dimension(4) :: start,count
       character(MAXNCNAM) :: vname
       character*6 :: vargsi(8)=(/'U     ','V     ','T     ','MUB   ',&
                      'P_TOP ','ZNW   ','ZNU   ','QVAPOR'/)
@@ -502,17 +507,17 @@
       
        implicit none
        integer :: i,j,k
-       integer*4,intent(in) :: imax,jmax,kmax,imax1,jmax1,kmax1
-       real*4,intent(in) ::   tt1(imax1,jmax1,kmax1),&
+       integer,intent(in) :: imax,jmax,kmax,imax1,jmax1,kmax1
+       real,intent(in) ::   tt1(imax1,jmax1,kmax1),&
                              uu1(imax,jmax1,kmax1),&
                              vv1(imax1,jmax,kmax1),&
                              qq1(imax1,jmax1,kmax1),&
                              ptop,psfc(imax1,jmax1),znu(kmax1)
-       real*4,intent(out) :: tt2(imax,jmax,kmax),& 
+       real,intent(out) :: tt2(imax,jmax,kmax),& 
                              uu2(imax,jmax,kmax),&
                              vv2(imax,jmax,kmax),&
                              qq2(imax,jmax,kmax)  
-       real*4 :: sz(imax1,jmax1,kmax),uz(imax,jmax1,kmax),&
+       real :: sz(imax1,jmax1,kmax),uz(imax,jmax1,kmax),&
                  vz(imax1,jmax,kmax),qz(imax1,jmax1,kmax),&
                  qout(imax,jmax,kmax)
         

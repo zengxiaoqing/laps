@@ -67,7 +67,7 @@ SUBROUTINE StaggerZ(vin,nx,ny,nz,ptop,psfc,znw,iorder,logP,vout)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: nx,ny,nz,logP,iorder
-  REAL*4, INTENT(IN) ::  ptop,psfc(nx,ny),znw(nz)
+  REAL, INTENT(IN) ::  ptop,psfc(nx,ny),znw(nz)
   REAL, INTENT(IN) ::    vin(nx,ny,nz)
   REAL, INTENT(OUT) ::   vout(nx,ny,nz-1)
 
@@ -192,7 +192,7 @@ SUBROUTINE UnStaggerZ(vin,nx,ny,nz,ptop,psfc,znu,iorder,logP,vout)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: nx,ny,nz,logP,iorder
-  REAL*4, INTENT(IN) ::  ptop,psfc(nx,ny),znu(nz-1)
+  REAL, INTENT(IN) ::  ptop,psfc(nx,ny),znu(nz-1)
   REAL, INTENT(IN) ::    vin(nx,ny,nz-1)
   REAL, INTENT(OUT) ::   vout(nx,ny,nz)
 

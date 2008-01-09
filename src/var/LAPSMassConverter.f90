@@ -48,20 +48,20 @@ SUBROUTINE LAPS2Mass(vlaps,imax,jmax,kmax,plaps,psurf,eta, &
 
   IMPLICIT NONE
       
-  INTEGER*4, INTENT(IN) :: imax,jmax,kmax  	! 3D array dimensions
-  INTEGER*4, INTENT(IN) :: iorder		! 2rd or 4th order 
+  INTEGER, INTENT(IN) :: imax,jmax,kmax  	! 3D array dimensions
+  INTEGER, INTENT(IN) :: iorder		! 2rd or 4th order 
 						! interpolation (2 or 4)
-  INTEGER*4, INTENT(IN) :: logP			! Use of log(p) in
+  INTEGER, INTENT(IN) :: logP			! Use of log(p) in
   						! interpolation
-  REAL*4, INTENT(IN) :: vlaps(imax,jmax,kmax)
-  REAL*4, INTENT(IN) :: eta(kmax)		! eta=(p-pt)/(ps-pt)
-  REAL*4, INTENT(IN) :: plaps(kmax)		! LAPS pressure level
-  REAL*4, INTENT(IN) :: psurf(imax,jmax)	! Surface pressure
-  REAL*4, INTENT(OUT) :: vmass(imax,jmax,kmax)
+  REAL, INTENT(IN) :: vlaps(imax,jmax,kmax)
+  REAL, INTENT(IN) :: eta(kmax)		! eta=(p-pt)/(ps-pt)
+  REAL, INTENT(IN) :: plaps(kmax)		! LAPS pressure level
+  REAL, INTENT(IN) :: psurf(imax,jmax)	! Surface pressure
+  REAL, INTENT(OUT) :: vmass(imax,jmax,kmax)
 
   ! Local variables:
   INTEGER :: i,j,k,l,mp,istart,iend
-  REAL*4 :: a(4),x(4),p
+  REAL :: a(4),x(4),p
 
   ! Conversion:
   DO j=1,jmax
@@ -134,20 +134,20 @@ SUBROUTINE Mass2LAPS(vlaps,imax,jmax,kmax,plaps,psurf,eta, &
 
   IMPLICIT NONE
       
-  INTEGER*4, INTENT(IN) :: imax,jmax,kmax  	! 3D array dimensions
-  INTEGER*4, INTENT(IN) :: iorder		! 2rd or 4th order 
+  INTEGER, INTENT(IN) :: imax,jmax,kmax  	! 3D array dimensions
+  INTEGER, INTENT(IN) :: iorder		! 2rd or 4th order 
 						! interpolation (2 or 4)
-  INTEGER*4, INTENT(IN) :: logP			! Use of log(p) in
+  INTEGER, INTENT(IN) :: logP			! Use of log(p) in
   						! interpolation
-  REAL*4, INTENT(OUT) :: vlaps(imax,jmax,kmax)
-  REAL*4, INTENT(IN) :: eta(kmax)		! eta=(p-pt)/(ps-pt)
-  REAL*4, INTENT(IN) :: plaps(kmax)		! LAPS pressure level
-  REAL*4, INTENT(IN) :: psurf(imax,jmax)	! Surface pressure
-  REAL*4, INTENT(IN) :: vmass(imax,jmax,kmax)
+  REAL, INTENT(OUT) :: vlaps(imax,jmax,kmax)
+  REAL, INTENT(IN) :: eta(kmax)		! eta=(p-pt)/(ps-pt)
+  REAL, INTENT(IN) :: plaps(kmax)		! LAPS pressure level
+  REAL, INTENT(IN) :: psurf(imax,jmax)	! Surface pressure
+  REAL, INTENT(IN) :: vmass(imax,jmax,kmax)
 
   ! Local variables:
   INTEGER :: i,j,k,l,mp,m,istart,iend
-  REAL*4 :: a(4),x(4),p
+  REAL :: a(4),x(4),p
 
   ! Conversion:
   DO j=1,jmax
@@ -225,13 +225,13 @@ SUBROUTINE dryairmass(dam,pdam,imax,jmax,kmax,pres_1d, &
 
   IMPLICIT NONE
 
-  INTEGER*4, INTENT(IN) :: imax,jmax,kmax  	! 3D array dimensions
-  REAL*4, INTENT(OUT) :: dam(imax,jmax)   ! dry air mass in column
-  REAL*4, INTENT(OUT) :: pdam(imax,jmax)  ! perturbation of dam
-  REAL*4, INTENT(IN) :: pres_1d(kmax)    ! pressure values@levels
-  REAL*4, INTENT(IN) :: heights_3d(imax,jmax,kmax)   ! heights
-  REAL*4, INTENT(IN) :: p_laps_bkg(imax,jmax,kmax)   ! p bkg
-  REAL*4, INTENT(IN) :: t_laps_bkg(imax,jmax,kmax)   ! t bkg
+  INTEGER, INTENT(IN) :: imax,jmax,kmax  	! 3D array dimensions
+  REAL, INTENT(OUT) :: dam(imax,jmax)   ! dry air mass in column
+  REAL, INTENT(OUT) :: pdam(imax,jmax)  ! perturbation of dam
+  REAL, INTENT(IN) :: pres_1d(kmax)    ! pressure values@levels
+  REAL, INTENT(IN) :: heights_3d(imax,jmax,kmax)   ! heights
+  REAL, INTENT(IN) :: p_laps_bkg(imax,jmax,kmax)   ! p bkg
+  REAL, INTENT(IN) :: t_laps_bkg(imax,jmax,kmax)   ! t bkg
 
   ! Local variables:
   INTEGER :: i,j,k

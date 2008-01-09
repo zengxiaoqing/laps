@@ -74,6 +74,14 @@ SUBROUTINE LAPS_Bkgd
   ENDIF
 
   ! Specific:
+  ! varname = 'RH'
+  ! CALL get_modelfg_3d(i4time,varname,n(1),n(2),n(3), &
+  !		sphumd3d,status)
+  ! IF (status .NE. 1) THEN
+  !  WRITE(6,*) 'LAPS_Pars: error retrieving relative humidity'
+  !  CALL LAPS_Remv
+  !  STOP
+  !ENDIF
   varname = 'SH'
   CALL get_modelfg_3d(i4time,varname,n(1),n(2),n(3), &
 		sphumd3d,status)

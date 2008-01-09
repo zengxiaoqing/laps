@@ -44,7 +44,7 @@ MODULE LAPS_Parm
 
   INTEGER :: n(3)		! Spatial dimensions
   INTEGER :: timelen		! Time interval
-  INTEGER*4 :: i4time		! System time
+  INTEGER :: i4time		! System time
   INTEGER :: imissing		! Integer missing data
   INTEGER :: nobs		! Number of observations
   INTEGER :: n_tobs		! Number of temp observations
@@ -63,16 +63,16 @@ MODULE LAPS_Parm
   REAL :: dxy
 
   ! Dynamic arrays:
-  REAL*4,ALLOCATABLE,DIMENSION(:) :: pressr1d,height1d
-  REAL*4,ALLOCATABLE,DIMENSION(:) :: rlat_radar,rlon_radar
-  REAL*4,ALLOCATABLE,DIMENSION(:) :: rhgt_radar,n_grid_vel
-  REAL*4,ALLOCATABLE,DIMENSION(:,:) :: lat,lon,topo
-  REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: height3d,pressr3d
-  REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: temptr3d,sphumd3d
-  REAL*4,ALLOCATABLE,DIMENSION(:,:,:) :: u_wind3d,v_wind3d
-  REAL*4,ALLOCATABLE,DIMENSION(:,:,:,:) :: grid_radar_vel
+  REAL,ALLOCATABLE,DIMENSION(:) :: pressr1d,height1d
+  REAL,ALLOCATABLE,DIMENSION(:) :: rlat_radar,rlon_radar
+  REAL,ALLOCATABLE,DIMENSION(:) :: rhgt_radar,n_grid_vel
+  REAL,ALLOCATABLE,DIMENSION(:,:) :: lat,lon,topo
+  REAL,ALLOCATABLE,DIMENSION(:,:,:) :: height3d,pressr3d
+  REAL,ALLOCATABLE,DIMENSION(:,:,:) :: temptr3d,sphumd3d
+  REAL,ALLOCATABLE,DIMENSION(:,:,:) :: u_wind3d,v_wind3d
+  REAL,ALLOCATABLE,DIMENSION(:,:,:,:) :: grid_radar_vel
 
-  REAL*4 :: obs_temp(maxobs,12)
+  REAL :: obs_temp(maxobs,12)
   type (barnesob) :: obs_point(maxobs)
 
 END MODULE LAPS_Parm

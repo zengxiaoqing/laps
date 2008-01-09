@@ -21,13 +21,13 @@ SUBROUTINE StaggerXY_3D(vin,nx,ny,nz,onx,ony,onz,vout)
 
   IMPLICIT NONE
 
-  INTEGER*4, INTENT(IN) :: nx,ny,nz,onx,ony,onz
-  REAL*4, INTENT(IN) ::    vin(nx,ny,nz)
-  REAL*4, INTENT(OUT) ::   vout(onx,ony,onz)
+  INTEGER, INTENT(IN) :: nx,ny,nz,onx,ony,onz
+  REAL, INTENT(IN) ::    vin(nx,ny,nz)
+  REAL, INTENT(OUT) ::   vout(onx,ony,onz)
 
   ! Local variables:
     
-    REAL*4 :: vinx(nx-1,ny,nz),viny(nx,ny-1,nz),vinyy(nx-1,ny-1,nz)
+  REAL :: vinx(nx-1,ny,nz),viny(nx,ny-1,nz),vinyy(nx-1,ny-1,nz)
 
   ! Linear interpolation:
   
@@ -95,13 +95,13 @@ SUBROUTINE StaggerXY_2D(vin,nx,ny,onx,ony,vout)
 
   IMPLICIT NONE
 
-  INTEGER*4, INTENT(IN) :: nx,ny,onx,ony
-  REAL*4, INTENT(IN) ::    vin(nx,ny)
-  REAL*4, INTENT(OUT) ::   vout(onx,ony)
+  INTEGER, INTENT(IN) :: nx,ny,onx,ony
+  REAL, INTENT(IN) ::    vin(nx,ny)
+  REAL, INTENT(OUT) ::   vout(onx,ony)
 
   ! Local variables:
     
-    REAL*4 :: vinx(nx-1,ny),viny(nx,ny-1),vinyy(nx-1,ny-1)
+  REAL :: vinx(nx-1,ny),viny(nx,ny-1),vinyy(nx-1,ny-1)
 
   ! Linear interpolation:
   
@@ -159,14 +159,14 @@ SUBROUTINE UntaggerXY_3D(vin,nx,ny,nz,onx,ony,vout)
 
   IMPLICIT NONE
 
-  INTEGER*4, INTENT(IN) :: nx,ny,nz,onx,ony
-  REAL*4, INTENT(IN) ::    vin(nx,ny,nz)
-  REAL*4, INTENT(OUT) ::   vout(onx,ony,nz)
+  INTEGER, INTENT(IN) :: nx,ny,nz,onx,ony
+  REAL, INTENT(IN) ::    vin(nx,ny,nz)
+  REAL, INTENT(OUT) ::   vout(onx,ony,nz)
 
   ! Local variables:
     
-    INTEGER*4 :: i,j,k
-    REAL*4 :: vinx(onx,ony,nz),viny(onx,ony,nz),vinyy(nx,ony,nz)
+  INTEGER :: i,j,k
+  REAL :: vinx(onx,ony,nz),viny(onx,ony,nz),vinyy(nx,ony,nz)
 
   ! Linear interpolation:
   
@@ -267,14 +267,14 @@ SUBROUTINE UntaggerXY_2D(vin,nx,ny,onx,ony,vout)
 
   IMPLICIT NONE
 
-  INTEGER*4, INTENT(IN) :: nx,ny,onx,ony
-  REAL*4, INTENT(IN) ::    vin(nx,ny)
-  REAL*4, INTENT(OUT) ::   vout(onx,ony)
+  INTEGER, INTENT(IN) :: nx,ny,onx,ony
+  REAL, INTENT(IN) ::    vin(nx,ny)
+  REAL, INTENT(OUT) ::   vout(onx,ony)
 
   ! Local variables:
     
-    INTEGER*4 :: i,j
-    REAL*4 :: vinx(onx,ony),viny(onx,ony),vinyy(nx,ony)
+    INTEGER :: i,j
+    REAL :: vinx(onx,ony),viny(onx,ony),vinyy(nx,ony)
 
   ! Linear interpolation:
   

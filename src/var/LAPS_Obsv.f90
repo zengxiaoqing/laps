@@ -41,9 +41,9 @@ SUBROUTINE LAPS_Obsv
   ! Local variables:
   INTEGER :: useable_radar,istatus_remap_pro,status
   INTEGER :: INIT_TIMER,ntmin,ntmax
-  REAL*4 :: u(n(1),n(2),n(3)),v(n(1),n(2),n(3))
-  REAL*4 :: ulaps(n(1),n(2),n(3)),vlaps(n(1),n(2),n(3))
-  REAL*4 :: wt(n(1),n(2),n(3)),weight_prof
+  REAL :: u(n(1),n(2),n(3)),v(n(1),n(2),n(3))
+  REAL :: ulaps(n(1),n(2),n(3)),vlaps(n(1),n(2),n(3))
+  REAL :: wt(n(1),n(2),n(3)),weight_prof
 
   INTEGER :: max_snd
   LOGICAL :: l_adj_hgt
@@ -92,7 +92,7 @@ SUBROUTINE get_temp_3d_obs(max_snd,max_obs)
 
   INTEGER, INTENT(IN) :: max_snd,max_obs
 
-  INTEGER*4 :: i_obstype
+  INTEGER :: i_obstype
   INTEGER :: status
 
   include 'tempobs.inc'
@@ -123,20 +123,20 @@ SUBROUTINE get_temp_snd(max_snd,temp_obs,max_obs,error)
 
   INTEGER, INTENT(IN) :: max_snd,max_obs
   INTEGER, INTENT(OUT) :: error
-  REAL*4, INTENT(OUT) :: temp_obs(max_obs,12)	! tempobs.inc
+  REAL, INTENT(OUT) :: temp_obs(max_obs,12)	! tempobs.inc
   
-  INTEGER*4 :: i4_window_raob
+  INTEGER :: i4_window_raob
   INTEGER :: status,n_rass,n_snde,n_tsnd
   REAL :: lattsnd(max_snd),lontsnd(max_snd)
   REAL :: tsnd(max_snd,n(3))
   REAL :: inst_err_tsnd(max_snd)
-  REAL*4 :: bias_tsnd(max_snd,n(3)),bias_htlow(max_snd)
+  REAL :: bias_tsnd(max_snd,n(3)),bias_htlow(max_snd)
   CHARACTER*5 c5name(max_snd)
   CHARACTER*8 c8obstype(max_snd)
   LOGICAL :: l_struct
 
   INTEGER :: k,isnd,n_qc_snd
-  INTEGER*4 :: igrid(max_snd),jgrid(max_snd)
+  INTEGER :: igrid(max_snd),jgrid(max_snd)
   REAL :: ri,rj,p_pa,sh,tvir,tamb,devirt_sh
   LOGICAL :: l_string_contains,l_qc
 
@@ -247,7 +247,7 @@ SUBROUTINE get_temp_acar(temp_obs,max_obs,status)
 
   INTEGER, INTENT(IN) :: max_obs
   INTEGER, INTENT(OUT) :: status
-  REAL*4, INTENT(INOUT) :: temp_obs(max_obs,12)
+  REAL, INTENT(INOUT) :: temp_obs(max_obs,12)
 
   INTEGER :: n_good_acars
 

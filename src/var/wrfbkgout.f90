@@ -56,21 +56,21 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   INCLUDE 'netcdf.inc'
 
   CHARACTER*19, INTENT(IN) :: times
-  INTEGER*4, INTENT(IN) :: imax,jmax,kmax  	! 3D array dimensions
-  REAL*4, INTENT(IN) :: lat(imax,jmax)	! Latitude
-  REAL*4, INTENT(IN) :: lon(imax,jmax)	! Longitude
-  REAL*4, INTENT(IN) :: ptop		! Pressure top
-  REAL*4, INTENT(IN) :: znu(kmax-1),znw(kmax)	! Staggered eta,Eta
-  REAL*4, INTENT(IN) :: dxy			! grid spacing
-  REAL*4, INTENT(IN) :: mapfac(imax,jmax)	! Map factor projection
-  REAL*4, INTENT(IN) :: dam(imax,jmax)	! Dry air mass (column)
-  REAL*4, INTENT(IN) :: pdam(imax,jmax)	! Perturbation
-  REAL*4, INTENT(IN) :: t(imax,jmax,kmax)   ! temperature
-  REAL*4, INTENT(IN) :: geo(imax,jmax,kmax)   ! temperature
-  REAL*4, INTENT(IN) :: sh(imax,jmax,kmax)	! specific humidity
-  REAL*4, INTENT(IN) :: u(imax,jmax,kmax)   ! U
-  REAL*4, INTENT(IN) :: v(imax,jmax,kmax)   ! V
-  REAL*4, INTENT(IN) :: topo(imax,jmax)		! Topography
+  INTEGER, INTENT(IN) :: imax,jmax,kmax  	! 3D array dimensions
+  REAL, INTENT(IN) :: lat(imax,jmax)	! Latitude
+  REAL, INTENT(IN) :: lon(imax,jmax)	! Longitude
+  REAL, INTENT(IN) :: ptop		! Pressure top
+  REAL, INTENT(IN) :: znu(kmax-1),znw(kmax)	! Staggered eta,Eta
+  REAL, INTENT(IN) :: dxy			! grid spacing
+  REAL, INTENT(IN) :: mapfac(imax,jmax)	! Map factor projection
+  REAL, INTENT(IN) :: dam(imax,jmax)	! Dry air mass (column)
+  REAL, INTENT(IN) :: pdam(imax,jmax)	! Perturbation
+  REAL, INTENT(IN) :: t(imax,jmax,kmax)   ! temperature
+  REAL, INTENT(IN) :: geo(imax,jmax,kmax)   ! temperature
+  REAL, INTENT(IN) :: sh(imax,jmax,kmax)	! specific humidity
+  REAL, INTENT(IN) :: u(imax,jmax,kmax)   ! U
+  REAL, INTENT(IN) :: v(imax,jmax,kmax)   ! V
+  REAL, INTENT(IN) :: topo(imax,jmax)		! Topography
 
 
   ! Local variables:
