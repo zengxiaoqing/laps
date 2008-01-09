@@ -101,15 +101,15 @@ SUBROUTINE PrPstLSX
   CHARACTER*3 :: crd(LSXVAR)		! Coordinates
 
   INTEGER :: i,j,ncm
-  INTEGER*4 :: ngd(2)	! Actual grid points
-  INTEGER*4 :: lvl(LSXVAR) ! Number of levels of each field
+  INTEGER :: ngd(2)	! Actual grid points
+  INTEGER :: lvl(LSXVAR) ! Number of levels of each field
   INTEGER :: itm	! Time frame to write out
-  INTEGER*4 :: i4t	! i4 time corresponding to itm
+  INTEGER :: i4t	! i4 time corresponding to itm
   INTEGER :: idx(MAXVAR)! Indices for derived variables;
   INTEGER :: iwv	! Index of V; 
-  INTEGER*4 :: nvr,mvr	! Number of variables;
+  INTEGER :: nvr,mvr	! Number of variables;
   INTEGER :: len
-  INTEGER*4 :: sts	! Return status
+  INTEGER :: sts	! Return status
 
   REAL, EXTERNAL :: EPT
   REAL :: tmp,dew
@@ -119,7 +119,7 @@ SUBROUTINE PrPstLSX
   REAL :: gdt(numgrd(1),numgrd(2))	! Theta
   REAL :: dum(numgrd(1),numgrd(2))	! Unused value
   REAL :: mrc(numgrd(1),numgrd(2))
-  REAL*4 :: dat(numgrd(1)-2*numfic(1),numgrd(2)-2*numfic(2),LSXVAR)
+  REAL :: dat(numgrd(1)-2*numfic(1),numgrd(2)-2*numfic(2),LSXVAR)
 
   ! Time frame to write out:
   DO itm = numgrd(3)-numfic(3),numgrd(3)-numfic(3)-2,-1	! Time frame
@@ -423,8 +423,8 @@ SUBROUTINE PresChng(pres,ngrd,chng)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: ngrd(2)
-  REAL*4, INTENT(IN) :: pres(ngrd(1),ngrd(2))
-  REAL*4, INTENT(OUT) :: chng(ngrd(1),ngrd(2))
+  REAL, INTENT(IN) :: pres(ngrd(1),ngrd(2))
+  REAL, INTENT(OUT) :: chng(ngrd(1),ngrd(2))
 
   ! Local variables:
   INTEGER :: i,j,nbi,nbj,nbs,ips
@@ -494,7 +494,7 @@ SUBROUTINE Extraplt(grid,ngrd)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: ngrd(2)
-  REAL*4, INTENT(INOUT) :: grid(ngrd(1),ngrd(2))
+  REAL, INTENT(INOUT) :: grid(ngrd(1),ngrd(2))
 
   ! X:
   grid(1,2:ngrd(2)-1) = &
