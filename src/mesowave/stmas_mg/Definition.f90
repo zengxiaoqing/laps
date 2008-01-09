@@ -90,7 +90,7 @@ MODULE Definition
   INTEGER, ALLOCATABLE, DIMENSION(:) &
 	  :: i4prev		! LAPStimes
 
-  REAL*4 :: mising		! Laps bad data flag
+  REAL :: mising		! Laps bad data flag
   REAL   :: badsfc		! Laps bad sfc flag
   REAL   :: thresh(MAXVAR)	! Threshold for obs agaist bkg
   REAL, ALLOCATABLE, DIMENSION(:,:) &
@@ -119,7 +119,7 @@ MODULE Definition
   REAL :: grdspc(3)		! Gridspacing in x, y, t
   REAL :: domain(2,3)		! Analysis domain
   REAL :: obsspc(3,MAXVAR)	! Observation spacing
-  REAL*4, ALLOCATABLE, DIMENSION(:,:,:,:) &
+  REAL, ALLOCATABLE, DIMENSION(:,:,:,:) &
        :: bkgrnd		! Background fields
   REAL, ALLOCATABLE, DIMENSION(:,:) &
        :: lndfac		! Land factor

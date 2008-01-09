@@ -256,12 +256,12 @@ SUBROUTINE LAPSOBSV(m)
 
   INTEGER :: nog,nob		! Number obs over grid/box
   INTEGER :: wid(m)		! WMO id
-  INTEGER*4 :: otm(m)		! Observation time
-  INTEGER*4 :: cld(m)		! Number of cloud layers
+  INTEGER :: otm(m)		! Observation time
+  INTEGER :: cld(m)		! Number of cloud layers
 
-  REAL*4 :: lat(m),lon(m), &	! Lat/Lon
+  REAL :: lat(m),lon(m), &	! Lat/Lon
 	    elv(m)		! Elevation
-  REAL*4 :: tmp(m),tmpea(m), &	! Temperature/expected accuracy
+  REAL :: tmp(m),tmpea(m), &	! Temperature/expected accuracy
 	    dew(m),dewea(m), &	! Dewpoint/EA
 	    rhd(m),rhdea(m), &	! Relative Humidity/EA
 	    wdi(m),wdiea(m), &	! Wind direction/EA
@@ -282,7 +282,7 @@ SUBROUTINE LAPSOBSV(m)
 	    p24(m), &		! 3,6,24-hour precipitation
 	    snw(m),snwea(m), &	! Snow depth/EA
 	    mxt(m),mnt(m)	! 24-hour maximum/minimum temperature
-  REAL*4 :: cht(m,5)		! cloud layer heights
+  REAL :: cht(m,5)		! cloud layer heights
   
   INTEGER :: i,j,k,err,iwv
   INTEGER :: hrs,mns,nit	! Time: hours, minutes and mid-night
