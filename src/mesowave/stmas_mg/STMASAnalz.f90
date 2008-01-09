@@ -235,9 +235,9 @@ SUBROUTINE Interpln(sltn,mlds,ngrd,incr)
 
   ! T direction:
   IF (incr(3) .EQ. 2) &
-    sltn(1:ngrd(1),1:ngrd(2),2:ngrd(3):2) = 0.5*( &
+    sltn(1:ngrd(1),1:ngrd(2),2:ngrd(3)-1:2) = 0.5*( &
       sltn(1:ngrd(1),1:ngrd(2),1:ngrd(3)-2:2)+ &
-      sltn(1:ngrd(1),1:ngrd(2),2:ngrd(3)  :2) )
+      sltn(1:ngrd(1),1:ngrd(2),3:ngrd(3)  :2) )
 
 END SUBROUTINE Interpln
 
