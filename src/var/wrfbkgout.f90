@@ -491,9 +491,9 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   ! 16. PH:
   ! Stagger: Z:
   t_out = 0.0
-  count(1) = imax
-  count(2) = jmax
-  count(3) = kmax-1
+  count(1) = imax-1
+  count(2) = jmax-1
+  count(3) = kmax
   CALL ncvpt(ncid,phid,start,count,t_out,ierr)
   ! 17. PHB:
   ! Stagger: Z:
