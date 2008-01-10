@@ -74,6 +74,7 @@ SUBROUTINE rd_grib1(IUNIT, gribflnm, level, field, hdate,  &
   integer, dimension(10) :: KSEC2 
   integer, dimension(40) :: infogrid
   real, dimension(40) :: ginfo
+  logical store_gridinfo
 !
 !-----------------------------------------------------------------------
   integer :: iparm, ktype
@@ -100,6 +101,7 @@ SUBROUTINE rd_grib1(IUNIT, gribflnm, level, field, hdate,  &
 ! next time we call this RD_GRIB subroutine.
 !
   if (iuarr(iunit).eq.0) then
+     store_gridinfo=.true.
      if (debug_level.gt.0) then
         call copen(iunit, nunit, gribflnm, 1, ierr,  1)
      else
@@ -240,79 +242,11 @@ SUBROUTINE rd_grib1(IUNIT, gribflnm, level, field, hdate,  &
      LVL2=KSEC1(10)
   ENDIF
 
-! Check to see that the combination of iparm, ktype, lvl1, and lvl2
-! match what has been requested in the Vtable.  If not, set the field
-! name to NULL, meaning that we do not want to process this one.
-
-  field = 'NULL'
-  do i = 1, maxvar
-     if (gcode(i).eq.iparm) then
-        if (lcode(i).eq.ktype) then
-           if ((level1(i).eq.lvl1) .or. (level1(i) == splatcode) ) then
-              if (level2(i).eq.lvl2) then
-                 field=namvar(i)
-                 if (ktype.eq.100) then ! Pressure-level
-                    level=lvl1
-                 elseif (ktype.eq.102) then
-                    level=201300.
-                 elseif ((ktype.eq.116.and.lvl1.le.50.and.lvl2.eq.0) .or. &
-                      (ktype.eq.105).or.(ktype.eq.1) .or. &
-                      (ktype.eq.111).or.(ktype.eq.112) ) then
-                    ! level=200100.
-                    level = float(200000+iprty(i))
-!-- tanya's change for non-isobaric levels
-                 elseif (ktype.eq.109) then
-                    level = lvl1
-!       print *,'LEVEL=',level
-                 endif
-              endif
-           endif
-        endif
-     endif
-  enddo
-
-  if (field .eq. 'NULL') then
-     call deallogrib
-     return
-  endif
-
-  if ((field.eq.'WEASD').or.(field.eq.'SNOW')) then
-     level = level + ksec1(19)+1
-  endif
-
-! Build the 19-character date string, based on GRIB header date and time
-! information, including forecast time information:
-
-  ICC=KSEC1(22)             ! CENTURY OF THE DATA
-  IYY=KSEC1(11)             ! (TWO-DIGIT) YEAR OF THE DATA
-  MONTH=KSEC1(12)           ! MONTH OF THE DATA
-  DAY=KSEC1(13)             ! DAY OF THE DATA
-  HOUR=KSEC1(14)            ! HOUR OF THE DATA
-  MINUTE=KSEC1(15)          ! MINUTE OF THE DATA
-  SECOND=0
-  if (ksec1(19) == 3) then
-     FCST = (KSEC1(17) + KSEC1(18))/2
-!  TEMPORARY AFWA FIX
-!  elseif (ksec1(19) == 4 .or. ksec1(19) == 5) then
-   elseif (ksec1(19) == 4 .or. ksec1(19) == 5 .or. ksec1(19) == 7) then
-     FCST = KSEC1(18)
-  else
-     FCST = KSEC1(17)
-  endif
-
-  if (IYY.EQ.00) then
-     YEAR = ICC*100
-  else
-     YEAR = (ICC-1)*100 + IYY
-  endif
-
-  hdate(1:19) = '                   '
-  call build_hdate(hdate,year,month,day,hour,minute,second)
-
-  call geth_newdate(hdate,hdate,3600*fcst)
 
 ! Store information about the grid on which the data is. 
 ! This stuff gets stored in the MAP variable, as defined in module GRIDINFO
+
+  if (store_gridinfo) then
 
   map%startloc = 'SWCORNER'
   map%grid_wind = .true.
@@ -384,12 +318,88 @@ SUBROUTINE rd_grib1(IUNIT, gribflnm, level, field, hdate,  &
      print*, 'Unknown ksec2(4): ', ksec2(4)
   endif
 
+     store_gridinfo=.false.
+  endif !store_gridinfo
+
 111  format(' igrid      : ', i3, /, &
           ' nx, ny     : ', 2I4, /, &
           ' truelat1, 2: ', 2F10.4, /, &
           ' Center Lon : ', F10.4, /, &
           ' LatLon(1,1): ', 2F10.4, /, &
           ' DX, DY     : ', F10.4, F10.4)
+
+
+! Check to see that the combination of iparm, ktype, lvl1, and lvl2
+! match what has been requested in the Vtable.  If not, set the field
+! name to NULL, meaning that we do not want to process this one.
+
+  field = 'NULL'
+  do i = 1, maxvar
+     if (gcode(i).eq.iparm) then
+        if (lcode(i).eq.ktype) then
+           if ((level1(i).eq.lvl1) .or. (level1(i) == splatcode) ) then
+              if (level2(i).eq.lvl2) then
+                 field=namvar(i)
+                 if (ktype.eq.100) then ! Pressure-level
+                    level=lvl1
+                 elseif (ktype.eq.102) then
+                    level=201300.
+                 elseif ((ktype.eq.116.and.lvl1.le.50.and.lvl2.eq.0) .or. &
+                      (ktype.eq.105).or.(ktype.eq.1) .or. &
+                      (ktype.eq.111).or.(ktype.eq.112) ) then
+                    ! level=200100.
+                    level = float(200000+iprty(i))
+!-- tanya's change for non-isobaric levels
+                 elseif (ktype.eq.109) then
+                    level = lvl1
+!       print *,'LEVEL=',level
+                 endif
+              endif
+           endif
+        endif
+     endif
+  enddo
+
+  if (field .eq. 'NULL') then
+     call deallogrib
+     return
+  endif
+
+  if ((field.eq.'WEASD').or.(field.eq.'SNOW')) then
+     level = level + ksec1(19)+1
+  endif
+
+! Build the 19-character date string, based on GRIB header date and time
+! information, including forecast time information:
+
+  ICC=KSEC1(22)             ! CENTURY OF THE DATA
+  IYY=KSEC1(11)             ! (TWO-DIGIT) YEAR OF THE DATA
+  MONTH=KSEC1(12)           ! MONTH OF THE DATA
+  DAY=KSEC1(13)             ! DAY OF THE DATA
+  HOUR=KSEC1(14)            ! HOUR OF THE DATA
+  MINUTE=KSEC1(15)          ! MINUTE OF THE DATA
+  SECOND=0
+  if (ksec1(19) == 3) then
+     FCST = (KSEC1(17) + KSEC1(18))/2
+!  TEMPORARY AFWA FIX
+!  elseif (ksec1(19) == 4 .or. ksec1(19) == 5) then
+   elseif (ksec1(19) == 4 .or. ksec1(19) == 5 .or. ksec1(19) == 7) then
+     FCST = KSEC1(18)
+  else
+     FCST = KSEC1(17)
+  endif
+
+  if (IYY.EQ.00) then
+     YEAR = ICC*100
+  else
+     YEAR = (ICC-1)*100 + IYY
+  endif
+
+  hdate(1:19) = '                   '
+  call build_hdate(hdate,year,month,day,hour,minute,second)
+
+  call geth_newdate(hdate,hdate,3600*fcst)
+
 
 ! Special for NCEP/NCAR Reanalysis Project:
 !      Throw out PSFC on lat/lon grid (save gaussian version)
