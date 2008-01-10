@@ -35,26 +35,31 @@ SUBROUTINE LAPS_Conf
 !========================================================== 
 
   USE LAPS_Parm
+  USE MEM_NAMELIST
 
   IMPLICIT NONE
 
   ! Local variables:
   CHARACTER :: a9time*9,fnm*9,hr*2,mins*2,jday*5
-  INTEGER :: status
-  INTEGER ::thresh_2_radarobs_lvl_unfltrd, &
-              thresh_4_radarobs_lvl_unfltrd, &
-              thresh_9_radarobs_lvl_unfltrd, i4time_sys
-  REAL :: weight_bkg_const_wind,weight_radar,rms_thresh_wind
-  INTEGER :: max_obs
+  INTEGER :: status,i4time_sys
+!  INTEGER ::thresh_2_radarobs_lvl_unfltrd, &
+!              thresh_4_radarobs_lvl_unfltrd, &
+!              thresh_9_radarobs_lvl_unfltrd, i4time_sys
+!  REAL :: weight_bkg_const_wind,weight_radar,rms_thresh_wind
+!  INTEGER :: max_obs
 
-  NAMELIST /wind_nl/ l_raob, l_cdw, l_radial, &
-                     thresh_2_radarobs_lvl_unfltrd, &
-                     thresh_4_radarobs_lvl_unfltrd, &
-                     thresh_9_radarobs_lvl_unfltrd, &
-                     weight_bkg_const_wind, &
-                     weight_radar, &
-                     rms_thresh_wind, &
-                     max_pr,max_pr_lvls,max_obs
+  ! Wind parameters:
+  CHARACTER*150 :: static_dir, filename
+  INTEGER       :: len_dir
+
+!  NAMELIST /wind_nl/ l_raob, l_cdw, l_radial, &
+!                     thresh_2_radarobs_lvl_unfltrd, &
+!                     thresh_4_radarobs_lvl_unfltrd, &
+!                     thresh_9_radarobs_lvl_unfltrd, &
+!                     weight_bkg_const_wind, &
+!                     weight_radar, &
+!                     rms_thresh_wind, &
+!                     max_pr,max_pr_lvls,max_obs
 
   ! Spatial dimensions:
   CALL get_grid_dim_xy(n(1),n(2),status)
@@ -105,13 +110,16 @@ PRINT*,'Time: ',i4time,a9time,timelen
 PRINT*,'Missing: ',imissing,rmissing
 
   ! Observations: wind:
-  CALL get_wind_parms(l_raob,l_cdw,l_radial, &
-		      thresh_2_radarobs_lvl_unfltrd, &
-		      thresh_4_radarobs_lvl_unfltrd, &
-		      thresh_9_radarobs_lvl_unfltrd, &
-		      weight_bkg_const_wind, &
-                      weight_radar,rms_thresh_wind, &
-                      max_pr,max_pr_lvls,max_obs,status)
+  ! CALL get_wind_parms(l_raob,l_cdw,l_radial, &
+!		      thresh_2_radarobs_lvl_unfltrd, &
+!		      thresh_4_radarobs_lvl_unfltrd, &
+!		      thresh_9_radarobs_lvl_unfltrd, &
+!		      weight_bkg_const_wind, &
+!                      weight_radar,rms_thresh_wind, &
+!                      max_pr,max_pr_lvls,max_obs,status)
+  CALL GET_DIRECTORY('static',static_dir,len_dir)
+  filename = static_dir(1:len_dir)//'/wind.nl'
+  CALL READ_NAMELIST_LAPS ('wind',filename)
   IF (status .NE. 1) THEN
     PRINT*,'Conf: error: wind parameters'
     STOP

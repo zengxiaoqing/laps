@@ -35,6 +35,7 @@ SUBROUTINE LAPS_Obsv
 !==========================================================
 
   USE LAPS_Parm
+  USE MEM_NAMELIST
 
   IMPLICIT NONE
 
@@ -47,7 +48,7 @@ SUBROUTINE LAPS_Obsv
 
   INTEGER :: max_snd
   LOGICAL :: l_adj_hgt
-  REAL :: bg_weight,rms_thresh,pres_mix_thresh
+  REAL :: bg_weight,rms_thresh
 
   ! Profiler Data:
   ntmin = -1
@@ -58,7 +59,7 @@ SUBROUTINE LAPS_Obsv
   CALL get_wind_3d_obs(n(1),n(2),n(3),rmissing,imissing, &
 	i4time,height3d,height1d,max_pr,max_pr_lvls,     &
 	weight_prof,l_raob,l_cdw,n_sao,n_pirep,lat,lon,  &
-	ntmin,ntmax,u,v,ulaps,vlaps,wt,maxobs,obs_point, &
+	ntmin,ntmax,u,v,ulaps,vlaps,wt,maxxobs,obs_point, &
 	nobs_point,rlat_radar,rlon_radar,rhgt_radar,     &
 	useable_radar,n_grid_vel,grid_radar_vel,         &
 	istatus_remap_pro,status)
@@ -69,7 +70,7 @@ SUBROUTINE LAPS_Obsv
                       pres_mix_thresh,max_snd,maxtobs,   &
                       status)
 
-  IF (maxtobs .GT. maxobs) THEN
+  IF (maxtobs .GT. maxxobs) THEN
     WRITE(6,*) 'Too many temperature obs'
     STOP
   ENDIF
@@ -108,7 +109,7 @@ SUBROUTINE get_temp_3d_obs(max_snd,max_obs)
 
 END SUBROUTINE get_temp_3d_obs
 
-SUBROUTINE get_temp_snd(max_snd,temp_obs,max_obs,error)
+SUBROUTINE get_temp_snd(max_snd,temp_obs,maxaobs,error)
 
 !==========================================================
 !  This routine retrieves temperature obs from sonde data.
@@ -121,9 +122,9 @@ SUBROUTINE get_temp_snd(max_snd,temp_obs,max_obs,error)
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) :: max_snd,max_obs
+  INTEGER, INTENT(IN) :: max_snd,maxaobs
   INTEGER, INTENT(OUT) :: error
-  REAL, INTENT(OUT) :: temp_obs(max_obs,12)	! tempobs.inc
+  REAL, INTENT(OUT) :: temp_obs(maxaobs,12)	! tempobs.inc
   
   INTEGER :: i4_window_raob
   INTEGER :: status,n_rass,n_snde,n_tsnd
@@ -200,7 +201,7 @@ SUBROUTINE get_temp_snd(max_snd,temp_obs,max_obs,error)
           IF (bias_tsnd(isnd,k) .NE. rmissing) THEN
             n_tobs = n_tobs+1
 
-            IF (n_tobs .GT. max_obs) THEN
+            IF (n_tobs .GT. maxaobs) THEN
               WRITE(6,*) 'Too many temperature sonde obs'
               error = 0
               RETURN
@@ -232,7 +233,7 @@ SUBROUTINE get_temp_snd(max_snd,temp_obs,max_obs,error)
 
 END SUBROUTINE get_temp_snd
 
-SUBROUTINE get_temp_acar(temp_obs,max_obs,status)
+SUBROUTINE get_temp_acar(temp_obs,maxaobs,status)
 
 !==========================================================
 !  This routine reads in the temperature obs from ACAR.
@@ -242,19 +243,20 @@ SUBROUTINE get_temp_acar(temp_obs,max_obs,status)
 !==========================================================
 
   USE LAPS_Parm
+  USE MEM_NAMELIST
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) :: max_obs
+  INTEGER, INTENT(IN) :: maxaobs
   INTEGER, INTENT(OUT) :: status
-  REAL, INTENT(INOUT) :: temp_obs(max_obs,12)
+  REAL, INTENT(INOUT) :: temp_obs(maxaobs,12)
 
   INTEGER :: n_good_acars
 
   CALL rd_acars_t(i4time,height3d,temptr3d &
                  ,n_pirep,n_good_acars,'pin' &
                  ,n(1),n(2),n(3),lat,lon,rmissing &
-                 ,temp_obs,max_obs,n_tobs,status)
+                 ,temp_obs,maxaobs,n_tobs,status)
 
 END SUBROUTINE get_temp_acar
 
