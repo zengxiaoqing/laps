@@ -117,11 +117,6 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 
               endif
 
-        nx=map%nx
-        ny=map%ny
-        nz=42
-       !gproj,dlat,dlon,centrallat,centrallon,dxbg,dybg,
-       !Lat0,Lat1,Lon0,istatus)
 
         if (map%igrid.eq.0) then ! Lat/Lon grid aka Cylindrical Equidistant
               gproj='LL'
@@ -133,6 +128,9 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
               gproj='GA'
         endif 
 
+        nx=map%nx
+        ny=map%ny
+        nz=42
         dx=map%dx
         dy=abs(map%dx)
         lat1=map%lat1
@@ -188,8 +186,8 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real    :: t_ref, rfill, prsfc, qsfc
   real    :: make_ssh, make_td
 
-  real    :: sumtot, shsum(26), shavg, r_bogus_sh
-  integer :: icn3d, icm(26)
+  real    :: sumtot, shsum(42), shavg, r_bogus_sh
+  integer :: icn3d, icm(42)
 
 
 ! *** sfc background arrays.
