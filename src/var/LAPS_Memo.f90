@@ -34,6 +34,7 @@ SUBROUTINE LAPS_Allc
 !==========================================================
 
   USE LAPS_Parm
+  USE MEM_NAMELIST
 
   IMPLICIT NONE
 
