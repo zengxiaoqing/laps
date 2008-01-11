@@ -844,7 +844,7 @@
 ! Date :
 !   Original     -- May. 05, 2006 (Shiow-Ming, Deng)
 !***********************************************************************
-       integer*4 MAXRADARS
+       integer MAXRADARS
        parameter (MAXRADARS=99)
        character*150 path_table,path_output,path_lvl2(MAXRADARS)
 
