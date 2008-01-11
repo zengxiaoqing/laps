@@ -56,6 +56,6 @@ PROGRAM GSI_Prep
   ! CALL GSI_radarbufr
 
   ! NOAA polar satellite 1D BUFR data: AMSU-A, AMSU-B, and HIRS
-    CALL GSI_noaa1d2bufr
+  ! CALL GSI_noaa1d2bufr
 
 END PROGRAM GSI_Prep
