@@ -119,7 +119,8 @@ PRINT*,'Missing: ',imissing,rmissing
 !                      max_pr,max_pr_lvls,max_obs,status)
   CALL GET_DIRECTORY('static',static_dir,len_dir)
   filename = static_dir(1:len_dir)//'/wind.nl'
-  CALL READ_NAMELIST_LAPS ('wind',filename)
+  !CALL READ_NAMELIST_LAPS ('wind',filename)
+  CALL READ_NAMELISTS ('wind',filename)
   IF (status .NE. 1) THEN
     PRINT*,'Conf: error: wind parameters'
     STOP
