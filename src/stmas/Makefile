@@ -13,7 +13,7 @@ SRCROOT=../..
 include $(SRCROOT)/src/include/makefile.inc
 
 RM = rm -f
-FLAG = $(FFLAGS) -bnoquiet #-bloadmap
+FLAG = $(FFLAGS)
 
 LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
            $(SRCROOT)/src/wind/libwind.a \
