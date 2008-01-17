@@ -937,27 +937,27 @@ c format type 2 (wfo)
            if(cchanneltypes(kk).eq.'vis')then
             ICHANNELS(1,2,1)=1
             c_channel_types(1,2,1)=cchanneltypes(kk)
-            path_to_raw_sat(1,2,1)=cpath2sat(jj)(1:n)//'vis/regclip/'
+            path_to_raw_sat(1,2,1)=cpath2sat(jj)(1:n)//'vis/regClip/'
             i_msng_sat_flag(1,2,1)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i39')then
             ICHANNELS(2,2,1)=1
             c_channel_types(2,2,1)=cchanneltypes(kk)
-            path_to_raw_sat(2,2,1)=cpath2sat(jj)(1:n)//'i39/regclip/'
+            path_to_raw_sat(2,2,1)=cpath2sat(jj)(1:n)//'i39/regClip/'
             i_msng_sat_flag(2,2,1)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'iwv')then
             ICHANNELS(3,2,1)=1
             c_channel_types(3,2,1)=cchanneltypes(kk)
-            path_to_raw_sat(3,2,1)=cpath2sat(jj)(1:n)//'iwv/regclip/'
+            path_to_raw_sat(3,2,1)=cpath2sat(jj)(1:n)//'iwv/regClip/'
             i_msng_sat_flag(3,2,1)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i11')then
             ICHANNELS(4,2,1)=1
             c_channel_types(4,2,1)=cchanneltypes(kk)
-            path_to_raw_sat(4,2,1)=cpath2sat(jj)(1:n)//'i11/regclip/'
+            path_to_raw_sat(4,2,1)=cpath2sat(jj)(1:n)//'i11/regClip/'
             i_msng_sat_flag(4,2,1)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i12')then
             ICHANNELS(5,2,1)=1
             c_channel_types(5,2,1)=cchanneltypes(kk)
-            path_to_raw_sat(5,2,1)=cpath2sat(jj)(1:n)//'i12/regclip/'
+            path_to_raw_sat(5,2,1)=cpath2sat(jj)(1:n)//'i12/regClip/'
             i_msng_sat_flag(5,2,1)=i_qc_sat_flag(kk)
            endif
           enddo
@@ -1120,27 +1120,27 @@ c     format type 2 (wfo)
            if(cchanneltypes(kk).eq.'vis')then
             ICHANNELS(1,2,3)=1
             c_channel_types(1,2,3)=cchanneltypes(kk)
-            path_to_raw_sat(1,2,3)=cpath2sat(jj)(1:n)//'vis/regclip/'
+            path_to_raw_sat(1,2,3)=cpath2sat(jj)(1:n)//'vis/regClip/'
             i_msng_sat_flag(1,2,3)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i39')then
             ICHANNELS(2,2,3)=1
             c_channel_types(2,2,3)=cchanneltypes(kk)
-            path_to_raw_sat(2,2,3)=cpath2sat(jj)(1:n)//'i39/regclip/'
+            path_to_raw_sat(2,2,3)=cpath2sat(jj)(1:n)//'i39/regClip/'
             i_msng_sat_flag(2,2,3)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'iwv')then
             ICHANNELS(3,2,3)=1
             c_channel_types(3,2,3)=cchanneltypes(kk)
-            path_to_raw_sat(3,2,3)=cpath2sat(jj)(1:n)//'iwv/regclip/'
+            path_to_raw_sat(3,2,3)=cpath2sat(jj)(1:n)//'iwv/regClip/'
             i_msng_sat_flag(3,2,3)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i11')then
             ICHANNELS(4,2,3)=1
             c_channel_types(4,2,3)=cchanneltypes(kk)
-            path_to_raw_sat(4,2,3)=cpath2sat(jj)(1:n)//'i11/regclip/'
+            path_to_raw_sat(4,2,3)=cpath2sat(jj)(1:n)//'i11/regClip/'
             i_msng_sat_flag(4,2,3)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i12')then
             ICHANNELS(5,2,3)=1
             c_channel_types(5,2,3)=cchanneltypes(kk)
-            path_to_raw_sat(5,2,3)=cpath2sat(jj)(1:n)//'i12/regclip/'
+            path_to_raw_sat(5,2,3)=cpath2sat(jj)(1:n)//'i12/regClip/'
             i_msng_sat_flag(5,2,3)=i_qc_sat_flag(kk)
            endif
           enddo
@@ -1297,27 +1297,27 @@ c format type 2 (wfo)
            if(cchanneltypes(kk).eq.'vis')then
             ICHANNELS(1,2,5)=1
             c_channel_types(1,2,5)=cchanneltypes(kk)
-            path_to_raw_sat(1,2,5)=cpath2sat(jj)(1:n)//'vis/regclip/'
+            path_to_raw_sat(1,2,5)=cpath2sat(jj)(1:n)//'vis/regClip/'
             i_msng_sat_flag(1,2,5)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i39')then
             ICHANNELS(2,2,5)=1
             c_channel_types(2,2,5)=cchanneltypes(kk)
-            path_to_raw_sat(2,2,5)=cpath2sat(jj)(1:n)//'i39/regclip/'
+            path_to_raw_sat(2,2,5)=cpath2sat(jj)(1:n)//'i39/regClip/'
             i_msng_sat_flag(2,2,5)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'iwv')then
             ICHANNELS(3,2,5)=1
             c_channel_types(3,2,5)=cchanneltypes(kk)
-            path_to_raw_sat(3,2,5)=cpath2sat(jj)(1:n)//'iwv/regclip/'
+            path_to_raw_sat(3,2,5)=cpath2sat(jj)(1:n)//'iwv/regClip/'
             i_msng_sat_flag(3,2,5)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i11')then
             ICHANNELS(4,2,5)=1
             c_channel_types(4,2,5)=cchanneltypes(kk)
-            path_to_raw_sat(4,2,5)=cpath2sat(jj)(1:n)//'i11/regclip/'
+            path_to_raw_sat(4,2,5)=cpath2sat(jj)(1:n)//'i11/regClip/'
             i_msng_sat_flag(4,2,5)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i12')then
             ICHANNELS(5,2,5)=1
             c_channel_types(5,2,5)=cchanneltypes(kk)
-            path_to_raw_sat(5,2,5)=cpath2sat(jj)(1:n)//'i12/regclip/'
+            path_to_raw_sat(5,2,5)=cpath2sat(jj)(1:n)//'i12/regClip/'
             i_msng_sat_flag(5,2,5)=i_qc_sat_flag(kk)
            endif
           enddo
@@ -1512,27 +1512,27 @@ c format type 2 (wfo)
            if(cchanneltypes(kk).eq.'vis')then
             ICHANNELS(1,2,7)=1
             c_channel_types(1,2,7)=cchanneltypes(kk)
-            path_to_raw_sat(1,2,7)=cpath2sat(jj)(1:n)//'vis/regclip/'
+            path_to_raw_sat(1,2,7)=cpath2sat(jj)(1:n)//'vis/regClip/'
             i_msng_sat_flag(1,2,7)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i39')then
             ICHANNELS(2,2,7)=1
             c_channel_types(2,2,7)=cchanneltypes(kk)
-            path_to_raw_sat(2,2,7)=cpath2sat(jj)(1:n)//'i39/regclip/'
+            path_to_raw_sat(2,2,7)=cpath2sat(jj)(1:n)//'i39/regClip/'
             i_msng_sat_flag(2,2,7)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'iwv')then
             ICHANNELS(3,2,7)=1
             c_channel_types(3,2,7)=cchanneltypes(kk)
-            path_to_raw_sat(3,2,7)=cpath2sat(jj)(1:n)//'iwv/regclip/'
+            path_to_raw_sat(3,2,7)=cpath2sat(jj)(1:n)//'iwv/regClip/'
             i_msng_sat_flag(3,2,7)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i11')then
             ICHANNELS(4,2,7)=1
             c_channel_types(4,2,7)=cchanneltypes(kk)
-            path_to_raw_sat(4,2,7)=cpath2sat(jj)(1:n)//'i11/regclip/'
+            path_to_raw_sat(4,2,7)=cpath2sat(jj)(1:n)//'i11/regClip/'
             i_msng_sat_flag(4,2,7)=i_qc_sat_flag(kk)
            elseif(cchanneltypes(kk).eq.'i12')then
             ICHANNELS(5,2,7)=1
             c_channel_types(5,2,7)=cchanneltypes(kk)
-            path_to_raw_sat(5,2,7)=cpath2sat(jj)(1:n)//'i12/regclip/'
+            path_to_raw_sat(5,2,7)=cpath2sat(jj)(1:n)//'i12/regClip/'
             i_msng_sat_flag(5,2,7)=i_qc_sat_flag(kk)
            endif
           enddo
