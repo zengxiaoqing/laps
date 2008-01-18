@@ -49,7 +49,8 @@ BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
 # STMAS_4D:
 #=============================================================
 
-ANA = ANALYSIS.exe
+#ANA = ANALYSIS.exe
+ANA = STMAS3D.exe
 
 STMAS= \
         para_stmas.f90 \
