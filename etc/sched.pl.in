@@ -136,12 +136,12 @@ if(defined $opt_s){ # "surface only"
 }elsif(defined $opt_M){ # Mesowave or other "surface only" LAPS
     @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M);
 
-}elsif($opt_V eq "GSI_Prep"){ # GSI analysis
+}elsif( ($opt_V eq "GSI_Prep") || ($opt_V eq "STMAS3D")) { # GSI analysis or STMAS 3D analysis
     @LAPS_EXE = qw(lga.exe 
                   ingest_pro.exe obs_driver.x sfc_qc.exe
                   ingest_sounding.exe 
-                  ingest_cloud_drift.exe ingest_aircraft.exe 
-                  GSI_Prep.exe);
+                  ingest_cloud_drift.exe ingest_aircraft.exe obs_convert.exe
+                  $opt_V.exe);
 
 }elsif($opt_V eq "GSI_Post"){ # GSI analysis
     @LAPS_EXE = qw(GSI_Post.exe
