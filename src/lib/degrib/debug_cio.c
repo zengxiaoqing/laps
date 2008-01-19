@@ -8,7 +8,7 @@
 #define cio_printf cio_printf_
 #define cio_printi cio_printi_
 #endif
-#ifdef _DOUBLEUNDERSCORE
+#ifdef FORTRANDOUBLEUNDERSCORE
 #define cio_set_log_filename cio_set_log_filename__
 #define cio_prints cio_prints__
 #define cio_printf cio_printf__
