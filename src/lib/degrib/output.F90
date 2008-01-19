@@ -355,6 +355,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
 
               if (field.eq.'HGT') then
                  htbg(:,:,idx) = scr2d
+              elseif (field.eq.'GEOPT') then
+                 htbg(:,:,idx) = scr2d
               elseif (field.eq.'TT') then
                  tpbg(:,:,idx) = scr2d
               elseif (field.eq.'RH') then
@@ -367,12 +369,16 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  wwbg(:,:,idx) = scr2d
               elseif (field.eq.'HGT_SFC') then
                  htbg_sfc = scr2d
+              elseif (field.eq.'GEOPT_SFC') then
+                 htbg_sfc = scr2d
               elseif (field.eq.'TT_SKIN') then
                  tpbg_sfc = scr2d
+              elseif (field.eq.'TD_SFC') then
+                 tdbg_sfc = scr2d 
               elseif (field.eq.'RH_SFC') then
-                 !shbg_sfc = scr2d
+                 shbg_sfc = scr2d
                  tdbg_sfc = scr2d  !See bgdata/readdgprep.f, line 183.
-     		 !write(*, *) "RH_SFC", scr2d(3,30)
+     		                   !write(*, *) "RH_SFC", scr2d(3,30)
               elseif (field.eq.'SH_SFC') then
                  shbg_sfc = scr2d
               elseif (field.eq.'UU_SFC') then
