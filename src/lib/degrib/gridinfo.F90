@@ -25,6 +25,8 @@ module gridinfo
      character (len=8) :: startloc  ! "CENTER  " or "SWCORNER"
      real :: lat1      ! Starting latitude
      real :: lon1      ! Starting longitude
+     real :: lat2      ! Last latitude
+     real :: lon2      ! Last longitude
      real :: dx        ! grid-spacing in the X direction (km or degrees)
      real :: dy        ! grid-spacing in the Y direction (km or degrees)
                        ! 
