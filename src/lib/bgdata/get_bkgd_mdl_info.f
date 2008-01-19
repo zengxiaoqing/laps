@@ -267,7 +267,6 @@ c ----------
          else
             print*,'Error - get_eta48_dims: ',fullname(1:lenfn)
          endif
-
       endif
 
 c All SBN grids!
@@ -609,7 +608,7 @@ c        dlat=1.0
 c        dlon=1.0
 c     endif
 
-c GRIB1 and GRIB2 (GFS is assumed)
+c GRIB1 and GRIB2 
 c --------------------
       if(bgmodel.eq.13)
      &then
@@ -618,11 +617,12 @@ c --------------------
          write(*,*) " grib filename", fullname
 
          call get_directory('static',outdir,lenfn)    
-c        vtable=outdir(1:lenfn)//'Vtable'
          vtable=outdir(1:lenfn)//'Variable_Tables/Vtable.'//cmodel
 
          call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
-     &     gproj,dlat,dlon,Lat0,Lon0,cgrddef,istatus)
+     &     gproj,dlat,dlon,Lat0,Lon0,cgrddef,
+     &     sw(1),sw(2),ne(1),ne(2),istatus)
+
            nzbg_tp=nzbg_ht
            nzbg_sh=nzbg_ht
            nzbg_uv=nzbg_ht
