@@ -1,0 +1,19 @@
+GRIB1| Level| Level| Level| degrib   |          |                                            |
+Param| Type |   1  |   2  | Name     |  Units   | Description                                |
+-----+------+------+------+----------+----------+--------------------------------------------+
+ 129 | 100  |   *  |      | GEOPT    | m2 s-2   | Geopotential Height (GEOPT)                | 
+ 130 | 100  |   *  |      | TT       | K        | Temperature                                |
+ 157 | 100  |   *  |      | RH       | %        | Relative Humidity                          |
+ 131 | 100  |   *  |      | UU       | m s-1    | U                                          |
+ 132 | 100  |   *  |      | VV       | m s-1    | V                                          |
+ 151 |  1   |   0  |      | PMSL     | Pa       | Sea-level Pressure                         |
+ 134 |  1   |   0  |      | PSFC     | Pa       |                                            |
+ 129 |  1   |   0  |      | GEOPT_SFC| m2 s-2   | Geopotential Height                        |
+ 235 |  1   |   0  |      | TT_SKIN  | K        | Skin Temperature                           |
+ 141 |  1   |   0  |      | WEASD    | kg m-2   | Water Equivalent of Accumulated Snow Depth |
+ 137 |  1   |   0  |      | PWAT     | kg/m2    | Precipitable water (Entire column)         | 
+ 167 |  1   |   0  |      | TT_SFC   | K        | Temperature   at 2m                        |
+ 168 |  1   |   0  |      | TD_SFC   | K        | Dewpoint Temp at 2m                        |
+ 165 |  1   |   0  |      | UU_SFC   | m s-1    | U             at 10m                       |
+ 166 |  1   |   0  |      | VV_SFC   | m s-1    | V             at 10m                       |
+-----+------+------+------+----------+----------+--------------------------------------------+
