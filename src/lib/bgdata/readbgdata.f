@@ -552,7 +552,7 @@ C WNI-BLS
 
       elseif (bgmodel .eq. 13) then ! Process GRIB1/GRIB2
 
-         write(*,*) 'CALL UNGRIB_DATA:'
+         write(*,*) 'CALL DEGRIB_DATA:'
          write(*,*) ' grib filename',fullname
 
          call degrib_data(fullname, nx_bg, ny_bg, nzbg_ht, 
