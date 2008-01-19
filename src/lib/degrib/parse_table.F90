@@ -78,19 +78,13 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
   if (ierr.ne.0) then
      inquire(file=vtablefn(1:s_length), exist=LEXIST)
      call mprintf(.true.,STDOUT," ***** ERROR in Subroutine PARSE_TABLE:")
-     call mprintf(.true.,LOGFILE," ***** ERROR in Subroutine PARSE_TABLE:")
      if (.not.lexist) then
        call mprintf(.true.,STDOUT,"Problem opening file Vtable.")
        call mprintf(.true.,STDOUT,"File ''Vtable'' does not exist.")
-       call mprintf(.true.,LOGFILE,"Problem opening file Vtable.")
-       call mprintf(.true.,LOGFILE,"File ''Vtable'' does not exist.")
      else
        call mprintf(.true.,STDOUT,"Problem opening file Vtable.")
        call mprintf(.true.,STDOUT,"File Vtable exists, but Fortran OPEN statement")
        call mprintf(.true.,STDOUT,"failed with error %i",i1=ierr)
-       call mprintf(.true.,LOGFILE,"Problem opening file Vtable.")
-       call mprintf(.true.,LOGFILE,"File Vtable exists, but Fortran OPEN statement")
-       call mprintf(.true.,LOGFILE,"failed with error %i",i1=ierr)
      endif
      call mprintf(.true.,ERROR," ***** Stopping in Subroutine PARSE_TABLE")
   endif
@@ -290,10 +284,6 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
 		 call mprintf(.true.,STDOUT,  &
 		    "This Grib2 Vtable line is incorrectly specified:")
 	         call mprintf(.true.,STDOUT," %s",s1=string)
-		 call mprintf(.true.,LOGFILE," ERROR reading Grib2 Discipline")
-		 call mprintf(.true.,LOGFILE,  &
-		    "This Grib2 Vtable line is incorrectly specified:")
-	         call mprintf(.true.,LOGFILE," %s",s1=string)
 		 call mprintf(.true.,ERROR,"Stopping in PARSE_TABLE")
               else
                  read(string(istart:ibar), *) g2code(1,maxvar)
@@ -309,10 +299,6 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
 		 call mprintf(.true.,STDOUT,  &
 		    "This Grib2 Vtable line is incorrectly specified:")
 	         call mprintf(.true.,STDOUT," %s",s1=string)
-		 call mprintf(.true.,LOGFILE," ERROR reading Grib2 Category")
-		 call mprintf(.true.,LOGFILE,  &
-		    "This Grib2 Vtable line is incorrectly specified:")
-	         call mprintf(.true.,LOGFILE," %s",s1=string)
 		 call mprintf(.true.,ERROR,"Stopping in PARSE_TABLE")
               else
                  read(string(istart:ibar), * ) g2code(2,maxvar)
@@ -329,11 +315,6 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
 		 call mprintf(.true.,STDOUT,  &
 		    "This Grib2 Vtable line is incorrectly specified:")
 	         call mprintf(.true.,STDOUT," %s",s1=string)
-		 call mprintf(.true.,LOGFILE, &
-		  " ERROR reading Grib2 Parameter Number ")
-		 call mprintf(.true.,LOGFILE,  &
-		    "This Grib2 Vtable line is incorrectly specified:")
-	         call mprintf(.true.,LOGFILE," %s",s1=string)
 		 call mprintf(.true.,ERROR,"Stopping in PARSE_TABLE")
               else
                  read(string(istart:ibar), * ) g2code(3,maxvar)
@@ -349,10 +330,6 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
 		   call mprintf(.true.,STDOUT,  &
 		      "This Grib2 Vtable line is incorrectly specified:")
 		   call mprintf(.true.,STDOUT," %s",s1=string)
-		   call mprintf(.true.,LOGFILE," ERROR reading Grib2 Level Type ")
-		   call mprintf(.true.,LOGFILE,  &
-		      "This Grib2 Vtable line is incorrectly specified:")
-		   call mprintf(.true.,LOGFILE," %s",s1=string)
 		   call mprintf(.true.,ERROR,"Stopping in PARSE_TABLE")
                  else
                     g2code(4,maxvar) = blankcode
@@ -362,10 +339,6 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
 	         call mprintf(.true.,STDOUT, &
 		  "Used a * in Grib2 level type...don't do this! ")
 	         call mprintf(.true.,STDOUT," %s ",s1=string)
-	         call mprintf(.true.,LOGFILE,"ERROR in Subroutine Parse_table: ")
-	         call mprintf(.true.,LOGFILE, &
-		  "Used a * in Grib2 level type...don't do this! ")
-	         call mprintf(.true.,LOGFILE," %s ",s1=string)
 		 call mprintf(.true.,ERROR," ***** Abort in Subroutine PARSE_TABLE")
               else
                  read(string(istart:ibar), *) g2code(4,maxvar)
@@ -390,7 +363,7 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
   do i = 1, maxtmp-1
      do j = i+1, maxtmp
         if ((nameout(i).eq.nameout(j)).and.(nameout(j).ne.' ')) then
-	   call mprintf(.true.,DEBUG,   &
+           call mprintf(.true.,STDOUT, &
 	     "Duplicate name.  Removing %s from output list.",s1=nameout(j))
            nameout(j:maxlines-1) = nameout(j+1:maxlines)
            unitout(j:maxlines-1) = unitout(j+1:maxlines)

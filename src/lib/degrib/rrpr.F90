@@ -126,8 +126,10 @@ subroutine rrpr(hstart, ntimes, interval, nlvl, maxlvl, plvl, debug_level, out_f
   TIMELOOP : do ntime = 1, ntimes
      idts = (ntime-1) * interval
      call geth_newdate(hdate, hstart, idts)
-     call mprintf(.true.,DEBUG, &
-     "RRPR: hstart = %s , hdate = %s , idts = %i",s1=hstart,s2=hdate,i1=idts)
+     if ( debug_level .gt. 100 ) then
+       call mprintf(.true.,DEBUG, &
+       "RRPR: hstart = %s , hdate = %s , idts = %i",s1=hstart,s2=hdate,i1=idts)
+     endif
 
 ! Loop over the output file dates, and do stuff if the file date matches
 ! the requested time we are working on now.
@@ -444,7 +446,7 @@ subroutine rrpr(hstart, ntimes, interval, nlvl, maxlvl, plvl, debug_level, out_f
                 is_there(200100, 'SPECHUMD')) then
               call get_dims(200100, 'TT')
               call compute_rh_spechumd(map%nx, map%ny)
-	      call mprintf(.true.,DEBUG, &
+	      call mprintf(.true.,STDOUT, &
                 "RRPR:   SURFACE RH is computed")
            elseif (is_there(200100, 'TT'       ).and. &
                 is_there(200100, 'DEWPT')) then
