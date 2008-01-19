@@ -8,13 +8,16 @@ SRCROOT=../../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-# g2lib is needed for rd_grib1.F90 only
+# g2lib is needed for rd_grib1.F90.
 INCLUDIR =  $(SRCROOT)/src/lib/g2lib
 
-# CDEGRIBFLAGS are -DLINUX, -DIBM, etc; -DSWAPBYTE; etc; 
-# DEGRIBFLAGS are USE_PNG, USE_JPEG2000 only;
+# map_utils is needed for readgrib.F90.
+EXTMODS=-L$(SRCROOT)/src/lib/modules -lmodules
+
+# CDEGRIBFLAGS are -DLINUX, -DIBM, etc; -DSWAPBYTE; etc.
+# DEGRIBFLAGS are USE_PNG, USE_JPEG2000.
 CFLAGS += $(CDEGRIBFLAGS) $(DEGRIBFLAGS)
-FFLAGS += $(FREE) $(DEGRIBFLAGS) -I$(INCLUDIR)
+FFLAGS += $(FREE) $(DEGRIBFLAGS) -I$(INCLUDIR) $(EXTMODS)
 CPPFLAGS += $(CDEGRIBFLAGS) $(DEGRIBFLAGS) -I$(INCLUDIR)
 
 LIB      = libdegrib.a
