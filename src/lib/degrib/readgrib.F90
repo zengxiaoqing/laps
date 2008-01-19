@@ -21,7 +21,8 @@
 !-------------------------------------------------------------------
 
 subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
-                      gproj, dx, dy, lat1, lon1, cgrddef, istatus)
+                      gproj, dx, dy, lat1, lon1, cgrddef, &
+                      sw1, sw2, ne1, ne2, istatus)
 
   use table
   use gridinfo
@@ -30,6 +31,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   use datarray
   use module_debug
   use stringutil
+  use map_utils
 
   implicit none
 
@@ -55,7 +57,12 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   integer :: nx, ny, nz
   character (LEN=2) ::  gproj
   character (LEN=1) ::  cgrddef
-  real :: dx, dy, lat1, lon1
+  real :: dx, dy  ! Required by Laps, in meters.
+  real :: lat1, lon1
+  real :: sw1, sw2, ne1, ne2
+  real :: realI, realJ
+  real :: stdlon, truelat1, truelat2
+  TYPE(proj_info) :: proj  ! Declared via "USE map_utils" 
 
 ! -----------------
 ! Determine GRIB Edition number
@@ -135,7 +142,43 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
         dy=abs(map%dx)
         lat1=map%lat1
         lon1=map%lon1
+        stdlon=map%lov
+        truelat1=map%truelat1
+        truelat2=map%truelat2
+        sw1=map%lat1
+        sw2=map%lon1
+        ne1=map%lat2
+        ne2=map%lon2
         cgrddef='N'
+
+        !if (grib_version.ne.2) then
+        !endif
+
+        if (sw2.gt.180.) then
+          sw2=sw2-360.
+          stdlon=stdlon-360.
+        endif
+
+        if (gproj.eq.'LC' .or. gproj.eq.'PS') then 
+           dx = dx * 1000. ! meters at 25.0 N, for example
+           dy = dy * 1000. 
+           call map_set(PROJ_LC,sw1,sw2,dx,stdlon,truelat1,truelat2, &
+                   nx,ny,proj)
+           realI=nx
+           realJ=ny
+           call ij_to_latlon(proj,realI,realJ,ne1,ne2);
+          !call latlon_to_ij(proj,sw1,sw2,realI,realJ); ! call args can be inversed.
+        endif
+
+        write(*, *) "---------- "
+        write(*, *) "proj ", gproj
+        write(*, *) "truelat1, truelat2, stdlon ", gproj, truelat1, truelat2, stdlon 
+        write(*, *) "dx, dy ", dx, dy
+        write(*, *) "nx, ny, nz ", nx, ny, nz
+        write(*, *) "sw1, sw2 ", sw1, sw2
+        write(*, *) "ne1, ne2 ", ne1, ne2
+        write(*, *) "---------- "
+        
 
         istatus=1
         if (ierr.eq.1) istatus=0
@@ -316,6 +359,8 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
         iuarr(nunit1) = 0
      endif 
 
+     !ptm call rrpr(hstart, ntimes, interval, nlvl, maxlvl, plvl, debug_level, out_format, prefix)
+     
 ! ------------- qcmodel sh ----------------
 
      nzsh=nz-5
