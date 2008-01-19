@@ -2028,7 +2028,7 @@ SUBROUTINE REORDER_IT (a, nx, ny, dx, dy, iorder)
 
       if (iorder .eq. 0 .and. dx .gt. 0. .and. dy .lt. 0) return
       k = 0
-      call mprintf(.true.,DEBUG, &
+      call mprintf(.true.,STDOUT, &
         "Reordering GRIB array : dx = %f  , dy = %f  , iorder = %i",  &
 	 f1=dx,f2=dy,i1=iorder)
       if (iorder .eq. 0 ) then
