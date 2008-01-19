@@ -90,7 +90,7 @@
       currlen=0
       ith=1
       scale_factor = 1e6
-      call mprintf(.false.,DEBUG,"Begin rd_grib2")
+      !ptm call mprintf(.false.,DEBUG,"Begin rd_grib2")
 
 !/* IOS Return Codes from BACIO:  */
 !/*  0    All was well                                   */
@@ -179,9 +179,9 @@
            !print *, 'hhmm  ',gfld%idsect(9),gfld%idsect(10)
    
            call build_hdate(hdate,year,month,day,hour,minute,second)
-	   call mprintf(.false.,DEBUG,"G2 hdate = %s ",s1=hdate)
+	   !ptm call mprintf(.false.,DEBUG,"G2 hdate = %s ",s1=hdate)
            call geth_newdate(hdate,hdate,3600*fcst)
-	   call mprintf(.false.,DEBUG,"G2 hdate (fcst?) = %s ",s1=hdate)
+	   !ptm call mprintf(.false.,DEBUG,"G2 hdate (fcst?) = %s ",s1=hdate)
 
            !--
 
@@ -239,6 +239,8 @@
               map%dy = gfld%igdtmpl(18)
               map%lat1 = gfld%igdtmpl(12)
               map%lon1 = gfld%igdtmpl(13)
+              map%lat2 = gfld%igdtmpl(15)
+              map%lon2 = gfld%igdtmpl(16)
               write(tmp8,'(b8.8)') gfld%igdtmpl(14)
 	      if (tmp8(5:5) .eq. '0') map%grid_wind = .false.
 	      map%r_earth = earth_radius (gfld%igdtmpl(1))
@@ -305,6 +307,8 @@
               map%dy = gfld%igdtmpl(18)    ! N - # of parallels between pole and equator
               map%lat1 = gfld%igdtmpl(12)  ! La1 - lat of 1st grid point
               map%lon1 = gfld%igdtmpl(13)  ! Lo1 - lon of 1st grid point
+              map%lat2 = gfld%igdtmpl(15)  ! La2 - lat of last grid point
+              map%lon2 = gfld%igdtmpl(16)  ! Lo2 - lon of last grid point
               write(tmp8,'(b8.8)') gfld%igdtmpl(14)  ! resolution/component flag
 	      if (tmp8(5:5) .eq. '0') map%grid_wind = .false.
 	      map%r_earth = earth_radius (gfld%igdtmpl(1))
@@ -458,7 +462,7 @@
 
        ireaderr=1
       else 
-       call mprintf (.false.,DEBUG,"open status failed because %i ",i1=ios)
+       call mprintf (.false.,STDOUT,"open status failed because %i ",i1=ios)
        hdate = '9999-99-99_99:99:99'
        ireaderr=2
       endif ! ireaderr check 
