@@ -137,7 +137,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 
         nx=map%nx
         ny=map%ny
-        nz=42
+        nz=39
         dx=map%dx
         dy=abs(map%dx)
         lat1=map%lat1
