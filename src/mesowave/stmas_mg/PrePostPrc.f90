@@ -122,7 +122,7 @@ SUBROUTINE PrPstLSX
   REAL :: dat(numgrd(1)-2*numfic(1),numgrd(2)-2*numfic(2),LSXVAR)
 
   ! Time frame to write out:
-  DO itm = numgrd(3)-numfic(3),numgrd(3)-numfic(3)-2,-1	! Time frame
+  DO itm = numgrd(3)-numfic(3),max0(1,numgrd(3)-numfic(3)-2),-1	! Time frame
 
   i4t = i4time			! i4time corresponding to itm
   mvr = LSXVAR
