@@ -12,8 +12,8 @@ LAPSLIBS = $(SRCROOT)/src/lib/bgdata/libbgdata.a \
            $(SRCROOT)/src/lib/liblaps.a \
            $(SRCROOT)/src/lib/util/libutil.a \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a \
-           $(SRCROOT)/src/lib/modules/libmodules.a \
            $(SRCROOT)/src/lib/degrib/libdegrib.a \
+           $(SRCROOT)/src/lib/modules/libmodules.a \
            $(SRCROOT)/src/lib/w3lib/libw3.a \
            $(SRCROOT)/src/lib/g2lib/libg2_4.a
 
@@ -22,8 +22,8 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a \
              $(SRCROOT)/src/lib/libdebuglaps.a \
              $(SRCROOT)/src/lib/util/libdebugutil.a \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a \
-             $(SRCROOT)/src/lib/modules/libdebugmodules.a \
              $(SRCROOT)/src/lib/degrib/libdebugdegrib.a \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a \
              $(SRCROOT)/src/lib/w3lib/libdebugw3.a \
              $(SRCROOT)/src/lib/g2lib/libdebugg2_4.a
 
