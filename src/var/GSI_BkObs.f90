@@ -147,7 +147,12 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
   ! Geopotential:
   geo_mass_bkg = 9.80665*geo_mass_bkg
 
+  ! Write out state variable for post-processing:
+  CALL get_directory('log',filename,namelen)
+  filename = filename(1:namelen)//'fort.12'
+  open(unit=12,file=filename(1:namelen+7),form='unformatted')
   WRITE(12) znw,pressr1d,dam,znu
+  close(12)
 
   times(1:4) = asctime(8:11)
   times(5:5) = '-'
