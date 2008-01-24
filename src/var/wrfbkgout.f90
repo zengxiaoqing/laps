@@ -75,6 +75,8 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
 
   ! Local variables:
   CHARACTER*10 :: empty
+  CHARACTER*125 :: filename			! NC filename
+  INTEGER :: namelen				! NC filename length
   INTEGER :: ncid				! file id
   INTEGER :: tmid,uid,vid,tid,muid,mubid	! var ids
   INTEGER :: qid,mapid,ptid,znuid,znwid	! var ids
@@ -102,7 +104,15 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
   empty = ' '
 
   ! Create the netcdf file:
-  ncid = nccre('wrf_inout.nc',ncnoclob,ierr)
+  CALL get_directory('log',filename,namelen)        ! Yuanfu: use LAPS;
+  filename = filename(1:namelen)//'wrf_inout.nc'
+  ! Check if the directory path is too long:
+  IF (namelen+12 .GT. 125) THEN
+    PRINT*,'ERROR: need longer name for filename'
+    STOP
+  ENDIF
+  # ncid = nccre('wrf_inout.nc',ncnoclob,ierr)
+  ncid = nccre(filename(1:namelen+12),ncnoclob,ierr)
 
   ! Global attributes:
   CALL ncaptc(ncid,ncglobal,'TITLE',ncchar,22, &
