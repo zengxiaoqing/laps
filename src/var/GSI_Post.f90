@@ -185,7 +185,10 @@
 !          print*,'Cannot get system time.'
 !          call exit(1)
 !      endif
-       open(10,file='i4time.txt')
+       get_directory('log',filename,namelen)
+       filename = filename(1:namelen)//'i4time.txt'
+       ! open(10,file='i4time.txt')
+       open(10,file=filename(1:namelen+10))
        read(10,*) i4time
        close(10)
 
