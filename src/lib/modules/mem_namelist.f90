@@ -187,7 +187,7 @@ Contains
 
 !-------------------------------------------------------------------
 
-subroutine read_namelists (namelist_name, filename)
+subroutine read_namelist_laps (namelist_name, filename)
 
 !use control_coms
 !use mem_grid
@@ -410,8 +410,8 @@ elseif (namelist_name == 'lapsprep') then
    read(12,lapsprep_nl)
    
 else
-   print*,'Illegal namelist_name in read_namelists:', trim(namelist_name)
-   stop 'read_namelists: illegal namelist_name'
+   print*,'Illegal namelist_name in read_namelist_laps:', trim(namelist_name)
+   stop 'read_namelist_laps: illegal namelist_name'
 endif
 
 close (12)
