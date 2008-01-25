@@ -42,8 +42,7 @@ cdis
      1              NTMIN,NTMAX,                                     ! I
      1              N_MESO,N_SAO,                                    ! I
      1              lat,lon,topo,                                    ! I
-     1              heights_3d,                                      ! I
-     1              uanl,vanl,uanl_sfcitrp,vanl_sfcitrp)             ! O
+     1              heights_3d)                                      ! I
 
 !       1990         Steve Albers  (Original Version)
 !       1992 Apr 30  Steve Albers  (Mod for multi-radar Doppler velocities)
@@ -87,10 +86,15 @@ cdis
 !       1998 Feb     Steve Albers  Call rdpirep with cloud drift winds also
 
         use mem_namelist
+        use mem_wind
+
 
 #ifdef SINGLE_EXEC
         use mem_background, only: bgfields%u3, bgfields%v3
 #endif
+
+        real, pointer, dimension(:,:,:) :: uanl, vanl, wanl 
+        real, pointer, dimension(:,:) :: uanl_sfcitrp,vanl_sfcitrp 
 
         include 'barnesob.inc'
         type (barnesob) :: obs_point(max_wind_obs)                           
@@ -126,8 +130,8 @@ cdis
 !       Stuff for call to LAPS analysis
 !       real upass1(NX_L,NY_L,nk_laps),vpass1(NX_L,NY_L,nk_laps)
 
-        real uanl(NX_L,NY_L,nk_laps),vanl(NX_L,NY_L,nk_laps) ! WRT True North
-        real, allocatable, dimension(:,:,:) :: wanl
+!        real uanl(NX_L,NY_L,nk_laps),vanl(NX_L,NY_L,nk_laps) ! WRT True North
+!        real, allocatable, dimension(:,:,:) :: wanl
 
 #ifdef MULTI_EXEC
         real, allocatable, dimension(:,:,:,:) ::
@@ -144,7 +148,6 @@ cdis
         parameter (N_3D_FIELDS = 3)
 
 !       real outarray_4D(NX_L,NY_L,nk_laps,N_3D_FIELDS)
-        character*3 var_3D(N_3D_FIELDS)
 
         character*125 comment_2d,comment_a(2)
         character*10 units_2d,units_a(2)
@@ -155,7 +158,7 @@ cdis
 !       character*31 ext_fg
 
 !       Stuff for SFC Winds
-        real uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)
+!        real uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)
 
         real grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS)
         real grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS)
@@ -173,6 +176,13 @@ cdis
         data i4_loop_total/0/
 
         NZ_L = nk_laps
+        
+        ! Set up pointers to mem_wind arrays so names do not need to be changed
+        !    Can't do this with the USE rename list
+        uanl => wind%uanl
+        vanl => wind%vanl
+        uanl_sfcitrp => wind%uanl_sfcitrp
+        vanl_sfcitrp => wind%vanl_sfcitrp
 
 !sms$serial(<grid_spacing_m, weight_bkg_const_wind, n_radars, 
 !sms$>       grid_ra_vel,grid_ra_nyq,idx_radar_a,    ! Not needed in || region?
@@ -232,8 +242,6 @@ cdis
         exts(n_d00) = 'd00'
         exts(n_lw3) = 'lw3'
         exts(n_lwm) = 'lwm'
-
-        EXT = 'lw3'
 
         write(6,*)' swlat ',lat(   1,   1)
         write(6,*)' nwlat ',lat(   1,NY_L)
@@ -317,8 +325,8 @@ cdis
 #else
         u_mdl_bkg_4d => bgfields%u3
         v_mdl_bkg_4d => bgfields%v3
-!       u_laps_fg = ?
-!       v_laps_fg = ?
+        u_laps_fg = bgfields%u3(:,:,:,0)
+        v_laps_fg = bgfields%v3(:,:,:,0)
 #endif
 
         write(6,*)' Column of first guess winds'
@@ -491,11 +499,16 @@ cdis
 
         I4_elapsed = ishow_timer()
 
-        allocate( wanl(NX_L,NY_L,nk_laps), STAT=istat_alloc )
+#ifdef MULTI_EXEC
+!       Need to allocate actual datatype member, can't use wanl pointer for 
+!       allocation
+        allocate( wind%wanl(NX_L,NY_L,nk_laps), STAT=istat_alloc )
         if(istat_alloc .ne. 0)then
-            write(6,*)' ERROR: Could not allocate wanl'
+            write(6,*)' ERROR: Could not allocate wind%wanl'
             stop
         endif
+#endif
+        wanl => wind%wanl
 
         call wind_post_process(i4time_sys
      1                        ,uanl,vanl                            ! I
@@ -506,15 +519,6 @@ cdis
      1                        ,topo,lat,lon,grid_spacing_m          ! I
      1                        ,r_missing_data,l_grid_north_out      ! I
      1                        ,istat_lw3)
-
-        call write_wind_output(i4time_sys,EXT,var_3d
-     1                        ,uanl,vanl                            ! I
-     1                        ,wanl                                 ! I
-     1                        ,uanl_sfcitrp,vanl_sfcitrp            ! I
-     1                        ,NX_L,NY_L,NZ_L,N_3D_FIELDS           ! I
-     1                        ,r_missing_data                       ! I
-     1                        ,istat_lw3)
-        deallocate(wanl)
 
         I4_elapsed = ishow_timer()
 
