@@ -38,11 +38,11 @@ program laps_wind                              main.f
                 comp_laps_vr                   comp_laps_vr.f
         wind_post_process                      lib/wind/wind_post_process.f
             vert_wind                          lib/wind/vertwind.f
-        write_wind_output                      lib/wind/wind_post_process.f
-            put_laps_multi_3d_jacket              "
-                move_3d                             
-                move_3d                             
-                move_3d                             
+    write_wind_output                          lib/wind/wind_post_process.f
+        put_laps_multi_3d_jacket                  "
+            move_3d                             
+            move_3d                             
+            move_3d                             
         put_laps_multi_2d                      
 
 
