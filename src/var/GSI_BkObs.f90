@@ -78,8 +78,8 @@ SUBROUTINE GSI_Bkg(imax,jmax,kmax,xlat,xlong, &
 
   ! Local variables:
   REAL, PARAMETER :: cp=1004.0, rc=287.0,t0=300.0 !273.15
-  CHARACTER varname*3, fnm*9, hr*2, mins*2, jday*5
-  INTEGER :: i4time_sys
+  CHARACTER varname*3, fnm*9, hr*2, mins*2, jday*5, filename*150
+  INTEGER :: i4time_sys,namelen
   INTEGER :: istatus,i,j,k
   REAL :: t_mass_bkg(imax,jmax,kmax)
   REAL :: sh_mass_bkg(imax,jmax,kmax)
