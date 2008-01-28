@@ -111,7 +111,7 @@ SUBROUTINE wrfbkgout(times,imax,jmax,kmax,ptop,znu,znw,dxy, &
     PRINT*,'ERROR: need longer name for filename'
     STOP
   ENDIF
-  # ncid = nccre('wrf_inout.nc',ncnoclob,ierr)
+  ! ncid = nccre('wrf_inout.nc',ncnoclob,ierr)
   ncid = nccre(filename(1:namelen+12),ncnoclob,ierr)
 
   ! Global attributes:
