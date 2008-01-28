@@ -53,7 +53,7 @@ PROGRAM GSI_Prep
   CALL LAPS_Remv
 
   ! Radar Level III BUFR data:
-  ! CALL GSI_radarbufr
+  CALL GSI_radarbufr
 
   ! NOAA polar satellite 1D BUFR data: AMSU-A, AMSU-B, and HIRS
   ! CALL GSI_noaa1d2bufr
