@@ -80,7 +80,10 @@ PRINT*,'N = ',n
     WRITE(6,*) 'LAPS_Conf: error in system times'
     STOP
   ELSE
-    OPEN(10,file='i4time.txt')
+    CALL get_directory('log',filename,len_dir)
+    filename = filename(1:len_dir)//'i4time.txt'
+    ! OPEN(10,file='i4time.txt')
+    OPEN(10,file=filename(1:len_dir+10))
     WRITE(10,*) i4time
     CLOSE(10)
   ENDIF
@@ -119,8 +122,8 @@ PRINT*,'Missing: ',imissing,rmissing
 !                      max_pr,max_pr_lvls,max_obs,status)
   CALL GET_DIRECTORY('static',static_dir,len_dir)
   filename = static_dir(1:len_dir)//'/wind.nl'
-  !CALL READ_NAMELIST_LAPS ('wind',filename)
-  CALL READ_NAMELISTS ('wind',filename)
+  CALL READ_NAMELIST_LAPS ('wind',filename)
+  ! CALL READ_NAMELISTS ('wind',filename)
   IF (status .NE. 1) THEN
     PRINT*,'Conf: error: wind parameters'
     STOP
