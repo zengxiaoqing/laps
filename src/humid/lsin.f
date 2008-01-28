@@ -37,7 +37,8 @@ cdis
 cdis
 cdis
 
-      subroutine lsin (i4time,p_3d,sfc_data,lt1dat,data,cg,tpw,bias_one,
+      subroutine lsin (i4time,p_3d,sfc_data,lt1dat,data,cg,tpw,
+     1     bias_one,t,td,
      1     kstart,qs,p,mdf,ii,jj,kk,istatus)
 
 c     this routine is the laps surface interface for water vapor
@@ -121,44 +122,37 @@ c-------------------------------code-----------------------------
       
 c     get required field variables
       
-      call glst(i4time,t,ii,jj,istatus)
-      if(istatus.ne.1) return
-
-      call check_nan2 (t,ii,jj,istatus)
-
-      if(istatus.ne.1) then
-         write(6,*) 'NaN detected in var:t  routine:lsin.f'
-         return
-      endif
 
 c     fill sfc data structure with temperature (K)
+c     t is now passed into routine from above
+
       sfc_data%sfc_temp = t
-      
-      call glsp(i4time,p,ii,jj,istatus)
-      if(istatus.ne.1) return
 
-      call check_nan2 (p,ii,jj,istatus)
 
-      if(istatus.ne.1) then
-         write(6,*) 'NaN detected in var:p  routine:lsin.f'
-         return
-      endif
+
       
-      
+
+c     p is now passed into routine from above
 c     convert p to mb
 
       p = p*0.01
       sfc_data%sfc_pres = p
-      
-      call glstd(i4time,td,ii,jj,istatus)
-      if(istatus.ne.1) return
 
-      call check_nan2 (td,ii,jj,istatus)
 
-      if(istatus.ne.1) then
-         write(6,*) 'NaN detected in var:td  routine:lsin.f'
-         return
-      endif
+
+
+c     td is now passed into routine from above
+
+
+
+
+
+
+
+
+
+
+c     compute boundry mixing
       
       call ghbry (i4time,p_3d,p,t,lt1dat,pu,ii,jj,kk,
      1     istatus)

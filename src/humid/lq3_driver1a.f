@@ -1,4 +1,3 @@
-
 cdis   
 cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
 cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
@@ -43,7 +42,9 @@ cdis
 cdis
 cdis
 cdis
-      subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
+      subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,lat,lon,p_3di,
+     1     lt1dat,lvllm,data,cg,c_istatus,i4timep,gt,gps,gtd,
+     1     lct,t_istatus,jstatus)
 
       USE module_sfc_structure
 
@@ -55,6 +56,10 @@ c     parameter variables
 
       integer ii,jj,kk
       real mdf
+      real lat(ii,jj), lon(ii,jj)
+      real gt(ii,jj), gps(ii,jj), gtd(ii,jj)
+      real t(ii,jj) ! surface temperature for lsin
+      real td (ii,jj)  ! surface dewpoint temp for lsin
       integer lct
       type (lbsi), dimension(ii,jj) :: sfc_data
       real :: pi, d2r, tempz(3,ii,jj), alt, sol_sub_lat, sol_sub_lon
@@ -90,7 +95,7 @@ c     1        make_ssh !function type
       
       integer kstart (ii,jj)
       real qs(ii,jj)
-      real ps(ii,jj)
+      real ps(ii,jj)   !  surface pressure for lsin passed in now from above
       
       real bias_one
 
@@ -100,22 +105,9 @@ c     1        make_ssh !function type
       
       character
      1     dirlt1*250,dir*250,rhdir*250,dirpw*250,dir3*250,
-     1     extlt1*31,ext*50,rhext*50,extpw*50,ext3*50,
-     1     varlt1(kk)*3,
-     1     lvl_coordlt1(kk)*4,
-     1     unitslt1(kk)*10,
-     1     commentlt1(kk)*125
+     1     extlt1*31,ext*50,rhext*50,extpw*50,ext3*50
+
       
-c     lat lon variables
-   
-      character*256  directory
-c      character*256 grid_fnam_common
-      real lat(ii, jj), lon(ii, jj)
-      real rspacing_dum
-      character*125 comment_2d
-      character*10  units_2d
-      character*3 var_2d
-      integer len_dir
       character*200 fname
       real factor
       
@@ -149,7 +141,7 @@ c     ------------------
 
       character*3 desired_field
    
-      real plevel(kk), p_3d(ii,jj,kk)
+      real plevel(kk), p_3d(ii,jj,kk),p_3di(ii,jj,kk)
       integer mlevel(kk)
 
 c     CLOUD variables
@@ -218,7 +210,7 @@ c     namelist data
       
       data extpw/'lh1'/
       data ext3/'lh2'/
-      data extlt1/'lt1'/
+ 
       data ext /'lq3'/
       data rhext /'lh3'/
 
@@ -235,10 +227,25 @@ c----------------------code   ------------------
 c     initialization
 c
 
+
 c     define PI
       pi = acos(-1.0)
       d2r = pi/180.
       write (6,*) 'Starting run for I4TIME', i4time
+
+c     assign local variables to passed in variable to protect them
+
+      ps = gps
+      t = gt
+      td = gtd
+      p_3d = p_3di
+
+
+
+c     change pressure array to hpa
+      
+      p_3d = p_3d * 0.01 ! convert 3d array to hPa
+
 c     initialize IR emissivity (1:n) and reflectance (1:n)
 
       do i = 1,ii
@@ -254,14 +261,13 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 4.1 successfully incorporates'
-      write (6,*) '1) covariance error data for model background'
-  
+      write (6,*) 'Release 5.1 successfully incorporates'
+      write (6,*) '1) state variables passed into this routine'
 
 
       call get_directory(extpw,dirpw,len)
       call get_directory(ext3,dir3,len)
-      call get_directory(extlt1,dirlt1,len)
+ 
       call get_directory(ext,dir,len)
       call get_directory(rhext,rhdir,len)
 
@@ -269,6 +275,7 @@ c     routine
 
       if(istatus .ne. 1)then
          write(6,*)' error in get_laps_config'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
 
@@ -564,7 +571,7 @@ c     set namelist parameters to defaults
 c     initialize field to lq3 internal missing data flag.
 c     initialize total pw to laps missing data flag
 
-      data = -1.e+30
+
       tpw = mdf
       gvap_w = 0.0
       gvap_data = 0.0
@@ -574,23 +581,10 @@ c     initialize total pw to laps missing data flag
       
       jstatus = 0               ! %loc(rtsys_abort_prod)
 
-      call get_pres_3d (i4time,ii,jj,kk,p_3d,istatus)
 
-      if(istatus.ne.1) then
-         write (6,*) 'error in getting 3d pressures'
-         write (6,*) 'aborting'
-         istatus = 0
-         return
-      endif
-
-c     dependence here now remains to one dimension
-
-      p_3d = p_3d * 0.01 ! convert 3d array to hPa
-
-      lvllm (1:kk)  = int( p_3d (1,1,1:kk))
 
       plevel (1:kk) = float (lvllm(1:kk))
-      mlevel = plevel
+      mlevel = plevel      !   used in output at current time, move to driver.
 
 c     mark the maps gridpoints -- archaic code ???
 
@@ -615,22 +609,7 @@ c     preserve the i4time
 
       save_i4time = i4time
 
-c     Get background field
-      
-      call get_modelfg_3d(i4time,'sh ',ii,jj,kk
-     1     ,data,istatus)
-      
-      if (istatus.ne.1) then 
-         write (6,*) 'getting background field failed... abort'
-         return
-      endif
 
-      call check_nan3 (data,ii,jj,kk,istatus)
-      if (istatus.ne.1) then
-         write(6,*) 'NaN detected from RUC/MAPS...abort'
-         return
-      endif
-      
       i4time = save_i4time
       filename = savefilename
 
@@ -639,70 +618,31 @@ c     check for negative input, assign zero value
       where (data < 0.0) 
          data = 0.0
       end where
+
+c     check dependence of using cloud data, abort if needed
       
-c     **** obtain lat lons for domain
-      
-      
-c      grid_fnam_common = 'nest7grid' ! used in get_directory to modify
-                                ! extension based on the grid domain
-      ext = 'nest7grid'
-      
-c     get the location of the static grid directory
-      call get_directory(ext,directory,len_dir)
-      
-      var_2d='lat'
-      call rd_laps_static (directory,ext,ii,jj,1,var_2d,
-     1     units_2d,comment_2d,
-     1     lat,rspacing_dum,istatus)
-      if(istatus .ne. 1)then
-         write(6,*)' error reading laps static-lat'
+      if (cloud_d.eq.1) then
+         if(c_istatus .ne. 1) then
+            write(6,*) 'cloud data not available'
+            write(6,*) 'terminating'
+            istatus = 0
+            p_3d = p_3d / 0.01  ! convert 3d array to Pa
+            return
+         endif
+      endif
+
+      c_istatus = 0
+      if (i4time.eq.i4timep) c_istatus = 1
+
+      if(cloud_d.eq.1 .and. c_istatus.eq.0) then
+         write(6,*) 'cloud data not available for exact time'
+         write(6,*) 'cloud_dependence switch is on'
+         write(6,*) 'aborting'
+         istatus = 0
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
 
-      call check_nan2 (lat,ii,jj,istatus)
-      if (istatus.ne.1) then
-         write(6,*) 'NaNs in lat file  abort'
-         return
-      endif
-      
-      var_2d='lon'
-      call rd_laps_static (directory,ext,ii,jj,1,var_2d,
-     1     units_2d,comment_2d,
-     1     lon,rspacing_dum,istatus)
-      if(istatus .ne. 1)then
-         write(6,*)' error reading laps static-lon'
-         return
-      endif
-      
-      call check_nan2 (lon,ii,jj,istatus)
-      if (istatus.ne.1) then
-         write(6,*) 'NaNs in lon file  abort'
-         return
-      endif      
-      
-      
-c     open file for laps temp data
-      varlt1 = 't3 '
-
-      call read_laps (save_i4time,save_i4time,
-     1     dirlt1,
-     1     extlt1,
-     1     ii,jj,kk,kk,
-     1     varlt1,
-     1     lvllm,
-     1     lvl_coordlt1,
-     1     unitslt1,
-     1     commentlt1,
-     1     lt1dat,
-     1     t_istatus)
-      if (t_istatus.ne.1) then
-         print*, 'no lt1 quality control performed...'
-         print*, 'missing 3-d temp data'
-         write(6,*) 'ABORTING MOISTURE RUN...!!!'
-         istatus = 0            ! failure
-         return
-      endif
-      
 c     fill new data structure surface data
 
       sfc_data%lat = lat
@@ -764,6 +704,7 @@ c     sun is assumed below horizon
       call check_nan3 (lt1dat,ii,jj,kk,istatus)
       if (istatus.ne.1) then
          write(6,*) 'NaN detected from lt1...ABORT'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
       
@@ -827,6 +768,7 @@ c     initial check for computed nans
          write(6,*) 'initial data corrupt after checking for'
          write(6,*) 'supsaturation... hosed before beginning'
          write(6,*) 'var:data  routine:lq3driver1a.f'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
 
@@ -850,36 +792,6 @@ c     ****  execute raob step if switch is on
          write(6,*) 'the raob switch is off... SND skipped'
       endif
       
-c     ****   laps cloud data. used for cloud, bl, goes
-      
-      call mak_cld_grid (i4time,i4timep,cg,ii,jj,kk,
-     1     lct,c_istatus)
-
-      if (cloud_d.eq.1) then
-         if(c_istatus .ne. 1) then
-            write(6,*) 'cloud data not available'
-            write(6,*) 'terminating'
-            istatus = 0
-            return
-         endif
-      endif
-
-      c_istatus = 0
-      if (i4time.eq.i4timep) c_istatus = 1
-
-      if(cloud_d.eq.1 .and. c_istatus.eq.0) then
-         write(6,*) 'cloud data not available for exact time'
-         write(6,*) 'cloud_dependence switch is on'
-         write(6,*) 'aborting'
-         istatus = 0
-         return
-      endif
-
-      call check_nan3 (cg,ii,jj,kk,istatus)
-      if (istatus.ne.1) then
-         write(6,*) 'NaN detected from Cloud Grid...ABORT'
-         return
-      endif
 
 c     ***   insert bl moisture
 
@@ -887,7 +799,8 @@ c     ***   insert bl moisture
 
       print*, 'calling lsin'
 c     insert boundary layer data
-      call lsin (i4time,p_3d,sfc_data,lt1dat,data,cg,tpw,bias_one,
+      call lsin (i4time,p_3d,sfc_data,lt1dat,data,cg,tpw,
+     1     bias_one,t,td,
      1     kstart,qs,ps,mdf,ii,jj,kk,istatus)
 
 c     check for supersaturation
@@ -901,12 +814,14 @@ c     check fields after lsin call
       if(istatus.ne.1) then
          write (6,*) 'Nan generated in lsin'
          write (6,*) 'var:data  routine:lq3driver1a.f'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
       call check_nan2(tpw,ii,jj,istatus)
       if(istatus.ne.1) then 
          write(6,*) 'Nan generated in lsin'
          write(6,*) 'var:tpw   routine:lq3driver1a.f'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
       
@@ -1004,6 +919,7 @@ c     CHECKING PROCESS OUTPUT
       if(istatus.ne.1) then
          write(6,*) 'Failed in nan after adjust'
          write(6,*) 'var:gvap_w  routine lq3driver'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
          
@@ -1011,6 +927,7 @@ c     CHECKING PROCESS OUTPUT
       if(istatus.ne.1) then
          write(6,*) 'Failed in nan after adjust'
          write(6,*) 'var:gps_w  routine lq3driver'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
          
@@ -1018,6 +935,7 @@ c     CHECKING PROCESS OUTPUT
       if(istatus.ne.1) then
          write(6,*) 'Failed in nan after adjust'
          write(6,*) 'var:gps_data  routine lq3driver'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
          
@@ -1025,6 +943,7 @@ c     CHECKING PROCESS OUTPUT
       if(istatus.ne.1) then
          write(6,*) 'Failed in nan after adjust'
          write(6,*) 'var:gsp_data  routine lq3driver'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
          
@@ -1032,6 +951,7 @@ c     CHECKING PROCESS OUTPUT
       if(istatus.ne.1)then
          write(6,*) 'Nan report from TPW processing'
          write(6,*) 'var:data  routine lq3driver1a.f'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
 
@@ -1192,17 +1112,20 @@ c     *** insert cloud moisture, this section now controled by a switch
          call check_nan3(cg,ii,jj,kk,istatus)
          if(istatus.ne.1)then
             write(6,*) 'Nan in cg data prior to saturation'
+            p_3d = p_3d / 0.01  ! convert 3d array to Pa
             return
          endif
          call check_nan3(lt1dat,ii,jj,kk,istatus)
          if(istatus.ne.1) then
             write(6,*) 'NaN in lt1dat prior to saturation'
+            p_3d = p_3d / 0.01  ! convert 3d array to Pa
             return
          endif
 
          call check_nan3(data,ii,jj,kk,istatus)
          if(istatus.ne.1)then
             write(6,*) 'Nan in data prior to saturation'
+            p_3d = p_3d / 0.01  ! convert 3d array to Pa
             return
          endif
 
@@ -1222,6 +1145,7 @@ c     saturate in cloudy areas.
          call check_nan3(data,ii,jj,kk,istatus)
          if(istatus.ne.1)then
             write(6,*) 'Nan in data AFTER call to saturation'
+            p_3d = p_3d / 0.01  ! convert 3d array to Pa
             return
          endif
 
@@ -1345,12 +1269,14 @@ c     check for NaN values and Abort if found
       call check_nan3(data,ii,jj,kk,istatus)
       if(istatus.ne.1) then
          write(6,*) 'NaN values detected (sh array)... aborting'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
       
       call check_nan2(tpw,ii,jj,istatus)
       if(istatus.ne.1) then
          write(6,*) 'NaN values detected (tpw array)... aborting'
+         p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
       
@@ -1380,6 +1306,8 @@ c     generate lh3 file (RH true, RH liquid)
       write (6,*) 'Reporting overall changes to moisture'
       
       call report_change (data_start, data, p_3d,mdf,ii,jj,kk)
+
+      p_3d = p_3d / 0.01 ! convert 3d array to Pa
       
       return
       
@@ -1387,6 +1315,8 @@ c     generate lh3 file (RH true, RH liquid)
       write(6,*) 'check to see it is under'
       write(6,*) fname(1:len)//'moisture_switch.nl'
       write(6,*) 'aborting'
+
+
       
       return
       
