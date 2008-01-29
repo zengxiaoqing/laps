@@ -86,7 +86,7 @@ c      include 'lapsparms.cmn'
 
       
       integer
-     1     ii,jj,kk,
+     1     ii,jj,kk,iout,
      1     i4time,
      1     istatus,
      1     jstatus(3)
@@ -147,6 +147,9 @@ c     surface variables preserved and passed
       integer len
 
 c  code
+
+
+      iout = 1 ! have subroutine generate output files
 
 
 
@@ -536,7 +539,7 @@ c     call the main humidity algorighm with filled state variables
 
       call lq3_driver1a (i4time,ii,jj,kk,mdf,lat,lon,p_3d,
      1     lt1dat,lvllm,data,cg,c_istatus,i4timep,gt,gp,gtd,
-     1     lct,t_istatus,jstatus)
+     1     lct,iout,t_istatus,jstatus)
       
       write(6,*) 'lq3, lh3, and lh4 (1=success)'
       write(6,*) jstatus, ' output matrix'

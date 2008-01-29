@@ -44,7 +44,7 @@ cdis
 cdis
       subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,lat,lon,p_3di,
      1     lt1dat,lvllm,data,cg,c_istatus,i4timep,gt,gps,gtd,
-     1     lct,t_istatus,jstatus)
+     1     lct,iout,t_istatus,jstatus)
 
       USE module_sfc_structure
 
@@ -54,7 +54,7 @@ cdis
 
 c     parameter variables
 
-      integer ii,jj,kk
+      integer ii,jj,kk,iout
       real mdf
       real lat(ii,jj), lon(ii,jj)
       real gt(ii,jj), gps(ii,jj), gtd(ii,jj)
@@ -1279,29 +1279,37 @@ c     check for NaN values and Abort if found
          p_3d = p_3d / 0.01     ! convert 3d array to Pa
          return
       endif
+
+c     ------------------------------ write output section
+      if (iout.eq.1) then
       
       
 c     write final 3-d sh field to disk
-      commentline = 'maps with clouds and surface effects only'
-      call writefile (save_i4time,commentline,mlevel,data,
-     1     ii,jj,kk,istatus)
-      if(istatus.eq.1)        jstatus(1) = 1
-      
+         commentline = 'maps with clouds and surface effects only'
+         call writefile (save_i4time,commentline,mlevel,data,
+     1        ii,jj,kk,istatus)
+         if(istatus.eq.1)        jstatus(1) = 1
+         
 c     write total precipitable water field
-      call write_lh4 (save_i4time,tpw,bias_one,ii,jj,istatus)
-      if(istatus.eq.1) jstatus(3) = 1
-      
-      
+         call write_lh4 (save_i4time,tpw,bias_one,ii,jj,istatus)
+         if(istatus.eq.1) jstatus(3) = 1
+         
+         
 c     generate lh3 file (RH true, RH liquid)
-      if (t_istatus.eq.1) then
-         call lh3_compress(data,lt1dat,save_i4time,lvllm,t_ref,
-     1        ii,jj,kk,print_switch,istatus)
-         if(istatus.eq.1)        jstatus(2) = 1
-      else
-         print*, 'no lh3 or rh data produced...'
-         print*, 'no laps 3-d temp data avail'
-         jstatus(2) = 0
-      endif
+         if (t_istatus.eq.1) then
+            call lh3_compress(data,lt1dat,save_i4time,lvllm,t_ref,
+     1           ii,jj,kk,print_switch,istatus)
+            if(istatus.eq.1)        jstatus(2) = 1
+         else
+            print*, 'no lh3 or rh data produced...'
+            print*, 'no laps 3-d temp data avail'
+            jstatus(2) = 0
+         endif
+         
+         
+      endif                     !output
+      
+c---------------------------end write output section
       
       write (6,*) 'Reporting overall changes to moisture'
       
