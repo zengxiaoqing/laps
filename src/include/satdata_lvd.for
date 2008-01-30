@@ -340,9 +340,9 @@ c -- Inputs to stretch for albedo calc --
       VIS_CNT_RANGE_IN(1,5)=0.00
       VIS_CNT_RANGE_IN(2,5)=364.00
       VIS_CNT_RANGE_IN(1,6)=0.00
-      VIS_CNT_RANGE_IN(2,6)=0.00
+      VIS_CNT_RANGE_IN(2,6)=305.00
       VIS_CNT_RANGE_IN(1,7)=0.00
-      VIS_CNT_RANGE_IN(2,7)=305.00
+      VIS_CNT_RANGE_IN(2,7)=364.00
       VIS_CNT_RANGE_IN(1,8)=0.00
       VIS_CNT_RANGE_IN(2,8)=303.57
 
@@ -357,7 +357,7 @@ c -- Inputs to stretch for albedo calc --
       VIS_CNT_RANGE_OUT(1,5)=0.00
       VIS_CNT_RANGE_OUT(2,5)=255.00
       VIS_CNT_RANGE_OUT(1,6)=0.00
-      VIS_CNT_RANGE_OUT(2,6)=0.00
+      VIS_CNT_RANGE_OUT(2,6)=255.00
       VIS_CNT_RANGE_OUT(1,7)=0.00
       VIS_CNT_RANGE_OUT(2,7)=255.00
       VIS_CNT_RANGE_OUT(1,8)=0.00
