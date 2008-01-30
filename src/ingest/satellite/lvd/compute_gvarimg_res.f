@@ -12,12 +12,12 @@ c
       Real*8        RL
       Real*8        RP
 
-      Real*4        rlat1,rlat2,rlat3,rlon1,rlon2,rlon3
-      Real*4        grid_spacing_scan,grid_spacing_elev
-      Real*4        rpix,rline
+      Real        rlat1,rlat2,rlat3,rlon1,rlon2,rlon3
+      Real        grid_spacing_scan,grid_spacing_elev
+      Real        rpix,rline
       Real*8        radtodeg
       Real*8        pi
-      Real*4        r_img_res_m
+      Real        r_img_res_m
       Real*8        rl_div
       Real*8        rp_div
 

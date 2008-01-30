@@ -30,12 +30,12 @@ c
 
       Logical       eof
 
-      Real*4        xlat,xlon
-      Real*4        rlat(nelems,nlines)
-      Real*4        rlon(nelems,nlines)
+      Real        xlat,xlon
+      Real        rlat(nelems,nlines)
+      Real        rlon(nelems,nlines)
 
-      Real*4        grid_spacing_deg
-      Real*4        grid_spacing_km
+      Real        grid_spacing_deg
+      Real        grid_spacing_km
 
       integer     n_vars_req
       character*100 c_values_req

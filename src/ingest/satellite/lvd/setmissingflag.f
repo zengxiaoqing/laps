@@ -29,11 +29,11 @@ c
       real image_data_vis(nvis_elem,nvis_lines)
       real image_data_wv(nwv_elem,nwv_lines)
 
-      Real*4      rmsng
-      Real*4      smsng(maxchannels)
-      Real*4      r_missing_data
-      Real*4      tot_ir_pix,tot_vis_pix,tot_wv_pix
-      Real*4      mstatus(maxchannels,nimages)
+      Real      rmsng
+      Real      smsng(maxchannels)
+      Real      r_missing_data
+      Real      tot_ir_pix,tot_vis_pix,tot_wv_pix
+      Real      mstatus(maxchannels,nimages)
 
       integer i,j
       integer ispec

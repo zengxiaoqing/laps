@@ -329,6 +329,7 @@ c
 c --------------------------------------------------------------------------
 c Compute Dimensions and Allocate Raw satellite data arrays
 c --------------------------------------------------------------------------
+c
       n_vis_elem=1
       n_vis_lines=1
       n_ir_elem=1
@@ -685,7 +686,7 @@ c ---------------------------------------------------
 c satellite range and sub-longitude (namelist items).
 c ---------------------------------------------------
       radtodeg=180.0/acos(-1.)
-      range_m = sat_range_m(ksat)+eradius
+      range_m = sat_range_m(ksat)+eradius   !adding eradius 07-2007: JRS
       sublon_d = r_sat_sub_lon(ksat)*radtodeg
       sublat_d = r_sat_sub_lat(ksat)*radtodeg
       write(6,*)'range_m = ',range_m
@@ -1137,7 +1138,7 @@ c been mapped to the laps domain. AFWA's GMS so far.
                write(*,*)'for: ',c_fname
                write(*,*)'i4 time: ',i4time_data(i)
                write(6,*)'*****************************'
-               istatus=0
+               lvd_status=1
             else
                write(*,*)' Error writing lvd file for this time'
                write(*,*)' i4Time: ',i4time_data(i)

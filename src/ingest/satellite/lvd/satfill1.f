@@ -19,11 +19,11 @@ c
       integer   i,n,j,nt
       integer   record
 
-      REAL*4      la1
-      REAL*4      lo1
-      REAL*4      dx,dy
-      REAL*4      latin
-      REAL*4      lov
+      REAL      la1
+      REAL      lo1
+      REAL      dx,dy
+      REAL      latin
+      REAL      lov
       INTEGER   validTime
       Integer   nx2,ny2
       integer   rcode,ncid

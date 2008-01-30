@@ -39,9 +39,9 @@ c
       INTEGER STRBDY2    !Requested Start Boundary 2
       INTEGER STPBDY1    !Requested Stop Boundary 1 
       INTEGER STPBDY2    !Requested Stop Boundary 2
-      REAL*4 GOLONSBP      !GOES Longitude Subpoint
-      REAL*4 GOLATSBP      !GOES Latitude Subpoint
-      REAL*4 GOALPHA       !GOES Alpha
+      REAL   GOLONSBP      !GOES Longitude Subpoint
+      REAL   GOLATSBP      !GOES Latitude Subpoint
+      REAL   GOALPHA       !GOES Alpha
 
       REAL   image_data  (nelems,nlines)
 

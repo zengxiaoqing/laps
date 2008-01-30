@@ -60,8 +60,8 @@ c     Parameter (imagelen_wv=nlines_wv_max*nelem_wv_max)
 c     INTEGER CELL_NUM   !The number of the cell
 c     INTEGER CELL_ROW   !The row number of a cell
 c     INTEGER CELL_COLUMN !The column number of a cell
-c     INTEGER*4 XS         !Pixels in width of image
-c     INTEGER*4 YS         !Scanlines depth of image
+c     INTEGER XS         !Pixels in width of image
+c     INTEGER YS         !Scanlines depth of image
 
       integer HEADER(HEADER_SIZE)!array used to read over the header
       INTEGER IOSTATUS   !I/O status variable

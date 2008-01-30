@@ -59,13 +59,13 @@ c
       INTEGER   rcode
       INTEGER   ivalidTime
       doubleprecision validtime
-      REAL*4    dummy
-      REAL*4    la1_vis,la1_ir,la1_wv
-      REAL*4    lo1_vis,lo1_ir,lo1_wv
-      REAL*4    dx_vis,dx_ir,dx_wv
-      REAL*4    dy_vis,dy_ir,dy_wv
-      REAL*4    latin_vis,latin_ir,latin_wv
-      REAL*4    lov_vis,lov_ir,lov_wv
+      REAL    dummy
+      REAL    la1_vis,la1_ir,la1_wv
+      REAL    lo1_vis,lo1_ir,lo1_wv
+      REAL    dx_vis,dx_ir,dx_wv
+      REAL    dy_vis,dy_ir,dy_wv
+      REAL    latin_vis,latin_ir,latin_wv
+      REAL    lov_vis,lov_ir,lov_wv
 
       istatus=1
 

@@ -26,11 +26,11 @@ c
       real image_39  (nir_elem,nir_lines,maximage)
       real image_67  (nwv_elem,nwv_lines,maximage)
 
-      Real*4      r_missing_data
-      Real*4      rmsng
-      Real*4      smsng(maxchannels)
-      Real*4      mstatus(maxchannels,maxfiles)
-      Real*4      percent_missing
+      Real        r_missing_data
+      Real        rmsng
+      Real        smsng(maxchannels)
+      Real        mstatus(maxchannels,maxfiles)
+      Real        percent_missing
 
       integer i4time_data(maxfiles)
       integer istatus
