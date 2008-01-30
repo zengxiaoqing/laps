@@ -9,11 +9,11 @@
 #
 # -t time desired for data (YYYYMMDD)
 #
-# -m desired model background (e.g. ruc)
+# -m desired model background (e.g. ruc or gfs)
 #
 # -g degrib model background data (supply installroot for the degrib software)
 #
-# -s desired satellite (use 8 for goes8)
+# -s desired satellite (e.g. use 8 for goes8)
 #
 # -S skip all standard data download from the MSS
 
@@ -180,10 +180,22 @@ if ($opt_m eq "ruc") {
         if (! -d $opt_g){ die "$opt_g not found! \n";}
         system ("@CSH@ @prefix@/etc/ruc_grib2netcdf.csh $opt_g $public/data/grids/ruc/hyb_A236");
     }
-}
 
-if ($opt_s eq "8" || $opt_s eq "12") {
+} else {
+
+    print "Get gfs\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\* $public/data/grids/gfs/grib/");
+
+    if (defined $opt_g) {
+        print "Degrib gfs\n";
+        if (! -d $opt_g){ die "$opt_g not found! \n";}
+        system ("@CSH@ @prefix@/etc/ruc_grib2netcdf.csh $opt_g $public/data/grids/gfs/netcdf");
+    }
+}	
+
+if ($opt_s eq "8" || $opt_s eq "11" || $opt_s eq "12") {
     my $sat;
+    my $satpath;
 
 #   Activate if necessary
     if(length($opt_s) == 1){
@@ -192,10 +204,21 @@ if ($opt_s eq "8" || $opt_s eq "12") {
         $sat = "$opt_s";
     }
 
+
+#   Changing the path based on the choice of satellite!
+
+    if ($opt_s eq "11") {
+	$satpath = "fsl-pacus"
+    } else {
+    	$satpath = "fsl-conus"
+    }	
+ 	
+
+
 #   Satellite imagery
     print "Get goes$opt_s imagery\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/raw/image/fsl-conus/netcdf/\* $public/data/grids/sat/nesdis/goes$opt_s\/raw/image/fsl-conus/netcdf/");
-    chdir "$public/data/grids/sat/nesdis/goes$opt_s\/raw/image/fsl-conus/netcdf/";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/nesdis/goes$opt_s\/raw/image/$satpath/netcdf/\* $public/data/grids/sat/nesdis/goes$opt_s\/raw/image/$satpath/netcdf/");
+    chdir "$public/data/grids/sat/nesdis/goes$opt_s\/raw/image/$satpath/netcdf/";
     system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
     system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
     system("rm \*\.tar"); 
@@ -257,8 +280,8 @@ if ($opt_s eq "8" || $opt_s eq "12") {
 
 
     print "Get goes$opt_s imager\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes$opt_s\/raw/image/fsl-conus/netcdf/\* $public/data/sat/fsl-gs/goes$opt_s\/raw/image/fsl-conus/netcdf/");
-    chdir "$public/data/sat/fsl-gs/goes$opt_s\/raw/image/fsl-conus/netcdf/";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/sat/fsl-gs/goes$opt_s\/raw/image/$satpath/netcdf/\* $public/data/sat/fsl-gs/goes$opt_s\/raw/image/$satpath/netcdf/");
+    chdir "$public/data/sat/fsl-gs/goes$opt_s\/raw/image/$satpath/netcdf/";
     system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
     system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
     system("rm \*\.tar"); 
