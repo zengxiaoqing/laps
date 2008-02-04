@@ -124,6 +124,32 @@ c
       end 
 c
 c
+       Subroutine writewvv(wvr,maxsta,m,ncycles,wvv,it) 
+
+c
+c*********************************************************************
+c     Subroutine puts the latest sets of errors into wvv     for
+c      error averaging over ncycles
+c
+c     Original: John McGinley, NOAA/FSL  Summer 2004
+c
+c*********************************************************************
+c
+       real wvr(m)
+       real wvv(ncycles,m)      
+c
+          do l=ncycles-1,1,-1
+             do i=1,maxsta
+                wvv(l+1,i)=wvv(l,i)       
+             enddo !i
+          enddo !l
+          do i=1,maxsta
+             wvv(1,i)=wvr(i)       
+          enddo !i
+c
+       return
+       end
+c
        Subroutine writemon(ta,tda,ua,va,pmsla,alta,
      &   nvar,maxsta,m,ncycles,monster,it) 
 c
@@ -150,11 +176,6 @@ c
              enddo !i
           enddo !l
        enddo !k
-       if(nvar.eq.1) then
-          do i=1,maxsta
-             monster(i,1,1)=ta(i)
-          enddo !i
-       else
           do i=1,maxsta
              monster(i,1,1)=ta(i)
              monster(i,1,2)=tda(i)
@@ -163,7 +184,6 @@ c
              monster(i,1,5)=pmsla(i)
              monster(i,1,6)=alta(i)
           enddo !i
-       endif
 c
        return
        end
@@ -225,7 +245,7 @@ c         file rather than the "temploc" file.
 c
 c*********************************************************************
 
-	integer*4 i4time_file  ! valid time of file
+	integer i4time_file  ! valid time of file
 	character dir*(*)      ! directory for output
 	character ext*(*)      ! ext for output
 	integer   m            ! dimension of data arrays
@@ -233,14 +253,14 @@ c*********************************************************************
         character*(*) stations(m) !should be length 20 
 	character*(*) provider(m) !should be length 11
         character*(*) reptype(m)  ! should be length 6
-	real*4    lat(m), lon(m), elev(m)
+	real    lat(m), lon(m), elev(m)
         integer   qcstat(m),qcstatd(m),qcstauv(m),qcstapm(m),qcstal(m)
-        real*4    t(m), td(m), u(m), v(m),  pmsl(m),  alt(m)
-        real*4    ta(m),tda(m),ua(m),va(m), pmsla(m), alta(m)
-        real*4    tb(m),tdb(m),ub(m),vb(m), pmslb(m), altb(m)
-        real*4    tc(m),tdc(m),uc(m),vc(m), pmslc(m), altc(m)
-        real*4    te(m),tde(m),ue(m),ve(m), pmsle(m), alte(m)
-        real*4    tf(m),tdf(m),uf(m),vf(m), pmslf(m), altf(m)
+        real    t(m), td(m), u(m), v(m),  pmsl(m),  alt(m)
+        real    ta(m),tda(m),ua(m),va(m), pmsla(m), alta(m)
+        real    tb(m),tdb(m),ub(m),vb(m), pmslb(m), altb(m)
+        real    tc(m),tdc(m),uc(m),vc(m), pmslc(m), altc(m)
+        real    te(m),tde(m),ue(m),ve(m), pmsle(m), alte(m)
+        real    tf(m),tdf(m),uf(m),vf(m), pmslf(m), altf(m)
 	integer   status
 
 c Local variables
@@ -248,7 +268,7 @@ c Local variables
         character filename*200, cdl_path*190, gtime*9, fcst_hh_mm*4
 	integer   fn_len, ext_len, sta_len, pro_len, type_len
 	integer   istatus, error(2) 
-	integer*4 i_reftime, i_valtime
+	integer i_reftime, i_valtime
 c
 c begin
 c
