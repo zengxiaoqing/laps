@@ -146,6 +146,13 @@ c     surface variables preserved and passed
 
       integer len
 
+      data extpw/'lh1'/
+      data ext3/'lh2'/
+      data ext/'lq3'/
+      data rhext/'lh3'/
+
+      
+
 c  code
 
 
