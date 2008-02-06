@@ -137,6 +137,20 @@ netcdf lgb {
             p:LAPS_var="P";
             p:lvl_coord="MSL";
             p:LAPS_units="PA";
+
+        //      Background precip surface
+
+        float
+            pcp(record,z,y,x);
+            pcp:navigation_dim = "nav";
+            pcp:record = "valtime, reftime";
+            pcp:_FillValue = 1.e+37f;
+            psf:long_name="Background surface precipitation";
+            pcp:units="kg/m**2";
+            pcp:valid_range= 0.f, 1000.f;
+            pcp:LAPS_var="PCP";
+            pcp:lvl_coord="MSL";
+            pcp:LAPS_units="PA";
                                 
         //	LAPS variables
 
@@ -156,6 +170,7 @@ netcdf lgb {
             slp_comment(record,z,namelen),
             tgd_comment(record,z,namelen),
             p_comment(record,z,namelen),
+            pcp_comment(record,z,namelen),
             asctime(record,namelen);
 
         //	inventory variables
@@ -187,6 +202,9 @@ netcdf lgb {
         short
             p_fcinv(record, z);
             p_fcinv:_FillValue= 0s;
+        short
+            pcp_fcinv(record, z);
+            pcp_fcinv:_FillValue= 0s;
 
         //	list of grid levels
 
