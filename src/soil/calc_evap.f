@@ -45,7 +45,7 @@ C       2/5/93
 C
 
 
-      integer*4 imax,jmax
+      integer imax,jmax
       Include 'soilm.inc'
 
       Real    Laps_u(Imax,Jmax)
@@ -55,7 +55,7 @@ C
       Real    Laps_Evap(Imax,Jmax)
       Real    Val1, Val2, Val3
       Real    WindSpeed, TempDegF, DewPoint_DegF
-      Integer*4 IStatus
+      Integer IStatus
 
       Do J = 1, Jmax
         Do I = 1, Imax

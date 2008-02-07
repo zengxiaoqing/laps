@@ -37,36 +37,126 @@ C
       Subroutine Soil_In5(imax,jmax,SoilType,IStatus) 
 
       include 'soilm.inc'
-      integer*4 imax,jmax
-      integer*4 nf
+      integer imax,jmax
+      integer nf
       integer SoilType(imax,jmax)
+      real,allocatable::static_stl(:,:)
       character*150 c_dir
       character*256 filename
+      character*3   var
+      character*150 directory
+      character*31  ext
+      character*10  units
+      character*125 comment
+c
+c Current categories for top layer soil texture types
+c in static file
+c ------------------------------
+c  1          SAND
+c  2          LOAMY SAND
+c  3          SANDY LOAM
+c  4          SILT LOAM
+c  5          SILT
+c  6          LOAM
+c  7          SANDY CLAY LOAM
+c  8          SILTY CLAY LOAM
+c  9          CLAY LOAM
+c 10          SANDY CLAY
+c 11          SILTY CLAY
+c 12          CLAY
+c 13          ORGANIC MATERIALS
+c 14          WATER
+c 15          BEDROCK
+c 16          OTHER (land-ice)
+c
+c Expected texture types for this lsm
+C 1. loamy sand:
+C 2. sandy loam:
+C 3. loam: 
+C 4. sandy clay loam:
+C 5. silty clay loam:
+C 6. silty clay
+c
+c Mapping between 16 category and 6 category.
+c
+c if type16 = 1 then type6 = 1
+c if type16 = 2 then type6 = 1
+c if type16 = 3 then type6 = 2
+c if type16 = 4 then type6 = 5
+c if type16 = 5 then type6 = 4
+c if type16 = 6 then type6 = 3
+c if type16 = 7 then type6 = 4
+c if type16 = 8 then type6 = 5
+c if type16 = 9 then type6 = 5
+c if type16 =10 then type6 = 6
+c if type16 =11 then type6 = 6
+c if type16 =12 then type6 = 6
+c if type16 =13 then type6 = 1
+c if type16 =14 then type6 = 5 !absurd but was = 5 prior to this
+c if type16 =15 then type6 = 5 !absurd but was = 5 prior to this
+c if type16 =16 then type6 = 5 !absurd but was = 5 prior to this
+c
 
       istatus = -1
 
-      call get_directory('static',c_dir,lend)
-      filename=c_dir(1:lend)//'soil/Soils.dat'
+      allocate(static_stl(imax,jmax))
+      ext='static'
+      call get_directory(ext,c_dir,lend)
 
-      open(Unit = 2, File = filename, Status = 'Old',
-     1  Access = 'Sequential', Iostat = IERR, ERR = 664)
+c     filename=c_dir(1:lend)//'soil/Soils.dat'
+c     open(Unit = 2, File = filename, Status = 'Old',
+c    1  Access = 'Sequential', Iostat = IERR, ERR = 664)
+c     do J = 1 , Jmax
+c        Read(2,*) (SoilType(I,J), I = 1, Imax)
+c     enddo
+c     close(2)
+c     nf = index(filename,' ')-1
+c     write(6,*) 'Got Soils Data from ',filename(1:nf)
+c     istatus = 0
+c     return
 
-      do J = 1 , Jmax
-         Read(2,*) (SoilType(I,J), I = 1, Imax)
-      enddo
-      close(2)
+      var='STL'
+      ext='nest7grid'
+      call rd_laps_static(c_dir,ext,imax,jmax,1,var,units
+     .,comment,static_stl,gridspace,istatus)
+      if(istatus.ne.1)then
+         print*,'Error reading static file for soil type'
+         return
+      endif
 
-      nf = index(filename,' ')-1
-      write(6,*) 'Got Soils Data from ',filename(1:nf)
-      istatus = 0
-      return
-
-664   write(6,*)'Using Default Soil Types'
+c664   write(6,*)'Using Default Soil Types'
+      print*,' Using static STL soil texture '
       do J = 1 , Jmax
          do I = 1, Imax
-            soiltype(I,J) = 5
+            if(static_stl(i,j).eq.1.)soiltype(i,j) = 1
+            if(static_stl(i,j).eq.2.)soiltype(i,j) = 1
+            if(static_stl(i,j).eq.3.)soiltype(i,j) = 2
+            if(static_stl(i,j).eq.4.)soiltype(i,j) = 5
+            if(static_stl(i,j).eq.5.)soiltype(i,j) = 4
+            if(static_stl(i,j).eq.6.)soiltype(i,j) = 3
+            if(static_stl(i,j).eq.7.)soiltype(i,j) = 4
+            if(static_stl(i,j).eq.8.)soiltype(i,j) = 5
+            if(static_stl(i,j).eq.9.)soiltype(i,j) = 5
+            if(static_stl(i,j).eq.10.)soiltype(i,j) = 6
+            if(static_stl(i,j).eq.11.)soiltype(i,j) = 6
+            if(static_stl(i,j).eq.12.)soiltype(i,j) = 6
+            if(static_stl(i,j).eq.13.)soiltype(i,j) = 1
+            if(static_stl(i,j).eq.14.)soiltype(i,j) = 5
+            if(static_stl(i,j).eq.15.)soiltype(i,j) = 5
+            if(static_stl(i,j).eq.16.)soiltype(i,j) = 5
          enddo
       enddo
+
+      do j=1,jmax
+      do i=1,imax
+         if(soiltype(i,j).eq.0)then
+           print*,'i/j= ',i,j,'soil type = 0 at i/j'
+         endif
+      enddo
+      enddo
+
+      deallocate (static_stl)
+
       istatus = 0
 
       Return

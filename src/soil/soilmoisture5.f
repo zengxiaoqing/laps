@@ -44,7 +44,7 @@ C     John Smart 12/1/93: Adapt the software to run in real time on the
 C     			  UNIX platform.  Set up LAPS standard I/O.
 c     John Smart 9/22/97: Dynamic array mods
 
-      integer*4 imax,jmax
+      integer imax,jmax
       Include 'soilm.inc'
 C
 C**** MODEL12 is a Soil Moisture Content model developed in June l986, and
@@ -56,7 +56,7 @@ C     Created by Groves.
 
       DIMENSION R(100)
       REAL 	KSAT,LAMDA,IN
-      real*4    rmiss
+      real    rmiss
       DATA 	DAY,SUMR,IN,OLDWEA/4*0./
       INTEGER   Istatus
       INTEGER   icycle_time
@@ -196,11 +196,18 @@ C ====================================================================
 C**** Subroutine provides default values for soil hydraulic parameters
       DIMENSION SATCON(6),RESPOR(6),EFFPOR(6),BUBPR(6)
       REAL KSAT,LAM(6),LAMDA
-      DATA SATCON/10.,3.5,.65,1.3,.08,.03/
-      DATA RESPOR/.04,.05,.08,.10,.08,.11/
-      DATA EFFPOR/.39,.4,.39,.32,.4,.38/
-      DATA BUBPR/10.,15.,27.,15.,80.,130./
-      DATA LAM/.43,.38,.31,.23,.23,.20/
+C**** 1. loamy sand:
+C     2. sandy loam:
+C     3. loam: 
+C     4. sandy clay loam:
+C     5. silty clay loam:
+C     6. silty clay
+C***********       1    2     3     4    5      6
+      DATA SATCON/ 10., 3.5, .65,  1.3, .08,  .03/
+      DATA RESPOR/.04, .05,  .08,  .10, .08,  .11/
+      DATA EFFPOR/.39, .4,   .39,  .32,  .4,  .38/
+      DATA BUBPR/  10., 15.,  27.,  15., 80., 130./
+      DATA LAM/   .43, .38,  .31,.  23, .23,  .20/
       THE=EFFPOR(ISOIL)
       KSAT=SATCON(ISOIL)/60.
       THR=RESPOR(ISOIL)

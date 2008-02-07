@@ -31,13 +31,13 @@ cdis
 cdis 
          subroutine readcsc(i4time_cur,imax,jmax,cscnew)
 C
-         integer*4  imax,jmax
+         integer  imax,jmax
 
-         real*4 csc(imax,jmax),lcv(imax,jmax),csctot(imax,jmax)
-         real*4 snow_total(imax,jmax)
-         real*4 snow_accum(imax,jmax)
-         real*4 missval,cscnew(imax,jmax)
-         integer*4 i4time,i4time_cur
+         real csc(imax,jmax),lcv(imax,jmax),csctot(imax,jmax)
+         real snow_total(imax,jmax)
+         real snow_accum(imax,jmax)
+         real missval,cscnew(imax,jmax)
+         integer i4time,i4time_cur
          CHARACTER*24 TIME
 c ************************************************************
 c
@@ -74,7 +74,7 @@ c
         rmnlcv=100.
         icsc=0
         ncycle_times=48*int(3600./float(laps_cycle_time))
-        do itime=1,ncycle_times
+        do itime=1,ncycle_times+1  !added +1 11-7-02 JS: Allows latest time
 c
            call cv_i4tim_asc_lp(i4time,time,istatus)
 c           if(time(13:14).eq.'13')goto 52
@@ -108,16 +108,14 @@ c
  522       continue
 c
            i4time=i4time+laps_cycle_time
+
         enddo
+
  101    format(1x,'First csc loop data search time: ',a17)
 c
         if(icsc.eq.0)then
-        write(6,*) '**** No lcv data available over 48 hours ****'
-          do i=1,imax
-          do j=1,jmax
-             csctot(i,j)=missval
-          enddo
-          enddo
+         write(6,*) '**** No lcv data available over 48 hours ****'
+         csctot = missval
         endif
 c
         call analyze(csctot,cscnew,imax,jmax,missval)
@@ -132,7 +130,7 @@ c
         write(6,*)'---------------------------------------'
         write(6,*)
 
-        do itime=1,ncycle_times
+        do itime=1,ncycle_times+1  !Added +1: 11-7-02: JS Allows for latest time
 c
            call cv_i4tim_asc_lp(i4time,time,istatus)
 c           if(time(13:14).eq.'13')goto 52
@@ -146,7 +144,18 @@ c   write over any previous time's snow_total obs.
 
            do i=1,imax
            do j=1,jmax
-             if(csc(i,j).le.1.1)cscnew(i,j)=csc(i,j)  
+             if(csc(i,j).le.1.1)cscnew(i,j)=csc(i,j)
+
+ !new ramping for csc (JS 4-25-01) will need sfc_T at current time
+ !           if(csc(i,j).le.1.1)then
+ !            if(sfcT(i,j).gt.273.15)then
+ !   &          cscnew(i,j)=csc(i,j)*((float(itime)/float(ncycle_times))
+ !   &                  *(ncycles_times*((sfc_T(i,j)-273.15)/273.15)))
+ !            else
+ !              cscnew(i,j)=csc(i,j)
+ !            endif
+ !           endif
+
 	     if(csc(i,j).le.0.1)cscnew(i,j)=0.0
            enddo
            enddo
@@ -160,12 +169,11 @@ c                    snow total to avoid false snow cover from "old"
 c                    snow total accumulation.
 c
         i4time=i4time_cur-48*3600
-        ncycle_times=48*int(3600./float(laps_cycle_time))
         write(6,*)
         write(6,*)'Accumulate hrly Snow for 48 hour total '
         write(6,*)'---------------------------------------'
 
-        do itime=1,ncycle_times
+        do itime=1,ncycle_times+1   !Added +1: 11-7-02: JS Allows for latest time
 
            call cv_i4tim_asc_lp(i4time,time,istatus)
            write(6,103)time
@@ -216,19 +224,19 @@ C
       SUBROUTINE GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
      &ISTATUS)
 C
-      Integer*4 imax,jmax
-      Integer*4 kmax
+      Integer imax,jmax
+      Integer kmax
       parameter(kmax = 2)
 c
-      INTEGER*4 I4TIME,LVL(KMAX),I,J,ERROR(2),ISTATUS
+      INTEGER I4TIME,LVL(KMAX),I,J,ERROR(2),ISTATUS
 C
-      REAL*4 lcv(imax,jmax),csc(imax,jmax)
-      Real*4 readv(imax,jmax,kmax)
+      REAL lcv(imax,jmax),csc(imax,jmax)
+      Real readv(imax,jmax,kmax)
 C
       CHARACTER*150 LDIR
       CHARACTER*31 EXT
       CHARACTER*3 VAR(KMAX)
-      CHARACTER*4 LVL_COORD(KMAX)
+      CHARACTER LVL_COORD(KMAX)
       CHARACTER*10 UNITS(KMAX)
       CHARACTER*125 COMMENT(KMAX)
 C
@@ -285,16 +293,16 @@ C
       SUBROUTINE GETLAPSL1S(I4TIME,snow_accum,imax,jmax,kmax,
      &ISTATUS)
 C
-      integer*4 imax,jmax,kmax
+      integer imax,jmax,kmax
 c
-      INTEGER*4 I4TIME,LVL(KMAX),I,J,ERROR(2),ISTATUS
+      INTEGER I4TIME,LVL(KMAX),I,J,ERROR(2),ISTATUS
 C
-      REAL*4 snow_accum(imax,jmax),readv(imax,jmax,kmax)		
+      REAL snow_accum(imax,jmax),readv(imax,jmax,kmax)		
 C
       CHARACTER*150 LDIR
       CHARACTER*31 EXT
       CHARACTER*3 VAR(KMAX)
-      CHARACTER*4 LVL_COORD(KMAX)
+      CHARACTER LVL_COORD(KMAX)
       CHARACTER*10 UNITS(KMAX)
       CHARACTER*125 COMMENT(KMAX)
 C
@@ -343,7 +351,7 @@ c
          dimension iimin(nruns,nboxes),
      1       iimax(nruns,nboxes),jjmin(nruns,nboxes),
      2       jjmax(nruns,nboxes),nbtot(nruns)
-         real*4 missval
+         real missval
 c
 c set up boundaries for boxes to do averaging over
 c

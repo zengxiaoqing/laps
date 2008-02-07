@@ -38,16 +38,16 @@ c type boundaries at this time.
 c
        implicit none
 
-       integer*4 nx_l,ny_l,nz
-       real*4 data(nx_l,ny_l,nz)
-       real*4 temp(9)
-       real*4 r_low,r_high
-       real*4 r_missing_data
-       real*4 ave,adev,sdev,var,skew,curt
-       integer*4 istatus
-       integer*4 i,j,k,n
-       integer*4 icntm,icnts
-       integer*4 ii, jj, istat
+       integer nx_l,ny_l,nz
+       real   data(nx_l,ny_l,nz)
+       real   temp(9)
+       real   r_low,r_high
+       real   r_missing_data
+       real   ave,adev,sdev,var,skew,curt
+       integer istatus
+       integer i,j,k,n
+       integer icntm,icnts
+       integer ii, jj, istat
 c
        icnts = 0
        icntm = 0
