@@ -384,7 +384,7 @@ c
 c     Routine to check a real 2-d array for NaN's.
 c
       integer ni,nj
-      real*4 x(ni,nj)
+      real   x(ni,nj)
 c
       nan_flag = 1
 c
@@ -407,7 +407,7 @@ c
 c     Routine to check a real 3-d array for NaN's.
 c
       integer ni,nj,nk
-      real*4 x(ni,nj,nk)
+      real   x(ni,nj,nk)
 c
       nan_flag = 1
 c
