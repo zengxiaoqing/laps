@@ -133,25 +133,25 @@ c
          integer nx,ny,nz
          integer istatus
 
-         real*4 ht(nx,ny,nz)
-         real*4 tp(nx,ny,nz)
-         real*4 sh(nx,ny,nz)
-         real*4 uw(nx,ny,nz)
-         real*4 vw(nx,ny,nz)
-         real*4 ww(nx,ny,nz)
-         real*4 pr(nx,ny,nz)
+         real   ht(nx,ny,nz)
+         real   tp(nx,ny,nz)
+         real   sh(nx,ny,nz)
+         real   uw(nx,ny,nz)
+         real   vw(nx,ny,nz)
+         real   ww(nx,ny,nz)
+         real   pr(nx,ny,nz)
 
-         real*4 ht_sfc(nx,ny)
-         real*4 pr_sfc(nx,ny)
-         real*4 td_sfc(nx,ny)
-         real*4 tp_sfc(nx,ny)
-         real*4 t_at_sfc(nx,ny)
-         real*4 uw_sfc(nx,ny)
-         real*4 vw_sfc(nx,ny)
-         real*4 mslp(nx,ny)
+         real   ht_sfc(nx,ny)
+         real   pr_sfc(nx,ny)
+         real   td_sfc(nx,ny)
+         real   tp_sfc(nx,ny)
+         real   t_at_sfc(nx,ny)
+         real   uw_sfc(nx,ny)
+         real   vw_sfc(nx,ny)
+         real   mslp(nx,ny)
 
-c        real*4 lon0
-c        real*4 lat1,lat2
+c        real   lon0
+c        real   lat1,lat2
 
          character cmodel*132
          character path*256

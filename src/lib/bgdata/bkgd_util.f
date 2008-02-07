@@ -11,16 +11,16 @@
       integer bgmodel
       integer istatus
       logical ldir
-      real*4  u_true,v_true
-      real*4  u_grid,v_grid
-      real*4  lon(nx,ny)
-      real*4  uw3d(nx,ny,nz)
-      real*4  vw3d(nx,ny,nz)
-      real*4  uw2d(nx,ny)
-      real*4  vw2d(nx,ny)
-      real*4  angle(nx,ny,2)  !both grid to true N and true to grid N.
-      real*4  latitude
-      real*4  projrot_latlon
+      real    u_true,v_true
+      real    u_grid,v_grid
+      real    lon(nx,ny)
+      real    uw3d(nx,ny,nz)
+      real    vw3d(nx,ny,nz)
+      real    uw2d(nx,ny)
+      real    vw2d(nx,ny)
+      real    angle(nx,ny,2)  !both grid to true N and true to grid N.
+      real    latitude
+      real    projrot_latlon
 
       include 'lapsparms.cmn'
 c

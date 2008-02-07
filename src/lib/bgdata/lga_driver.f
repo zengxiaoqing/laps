@@ -130,7 +130,7 @@ c
 c
 c *** Background data interpolated to LAPS grid.
 c
-      real*4    ht(nx_laps,ny_laps,nz_laps), !Height (m)
+      real      ht(nx_laps,ny_laps,nz_laps), !Height (m)
      .          tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
      .          sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
      .          uw(nx_laps,ny_laps,nz_laps), !!U-wind (m/s)
@@ -280,26 +280,26 @@ c
 
          integer nz_laps
 
-         real*4  ::  prbght(nx,ny,nzbg_ht)
-         real*4  ::  prbgsh(nx,ny,nzbg_sh)
-         real*4  ::  prbguv(nx,ny,nzbg_uv)
-         real*4  ::  prbgww(nx,ny,nzbg_ww)
-         real*4  ::  tpbg(nx,ny,nzbg_tp)
-         real*4  ::  htbg(nx,ny,nzbg_ht)
-         real*4  ::  shbg(nx,ny,nzbg_sh)
-         real*4  ::  uwbg(nx,ny,nzbg_uv)
-         real*4  ::  vwbg(nx,ny,nzbg_uv)
-         real*4  ::  wwbg(nx,ny,nzbg_ww)
+         real    ::  prbght(nx,ny,nzbg_ht)
+         real    ::  prbgsh(nx,ny,nzbg_sh)
+         real    ::  prbguv(nx,ny,nzbg_uv)
+         real    ::  prbgww(nx,ny,nzbg_ww)
+         real    ::  tpbg(nx,ny,nzbg_tp)
+         real    ::  htbg(nx,ny,nzbg_ht)
+         real    ::  shbg(nx,ny,nzbg_sh)
+         real    ::  uwbg(nx,ny,nzbg_uv)
+         real    ::  vwbg(nx,ny,nzbg_uv)
+         real    ::  wwbg(nx,ny,nzbg_ww)
 
 
-         real*4  ::  tpvi(nx,ny,nz_laps)
-         real*4  ::  htvi(nx,ny,nz_laps)
-         real*4  ::  shvi(nx,ny,nz_laps)
-         real*4  ::  uwvi(nx,ny,nz_laps)
-         real*4  ::  vwvi(nx,ny,nz_laps)
-         real*4  ::  wwvi(nx,ny,nz_laps)
+         real    ::  tpvi(nx,ny,nz_laps)
+         real    ::  htvi(nx,ny,nz_laps)
+         real    ::  shvi(nx,ny,nz_laps)
+         real    ::  uwvi(nx,ny,nz_laps)
+         real    ::  vwvi(nx,ny,nz_laps)
+         real    ::  wwvi(nx,ny,nz_laps)
 c
-         real*4  ::  prlaps(nz_laps)
+         real    ::  prlaps(nz_laps)
  
        end subroutine
 
@@ -336,7 +336,7 @@ c
          character  gproj*2
          character  cmodel*132
          integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
-         real*4 lat(nx_laps,ny_laps)
+         real   lat(nx_laps,ny_laps)
      .         ,lon(nx_laps,ny_laps)
      .         ,grx(nx_laps,ny_laps)
      .         ,gry(nx_laps,ny_laps)
@@ -347,7 +347,7 @@ c
      .,grx,gry,fvi,flaps,bgmodel)
 
          integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
-         real*4 fvi(nx_bg,ny_bg,nz)
+         real   fvi(nx_bg,ny_bg,nz)
      .         ,flaps(nx_laps,ny_laps,nz)
      .         ,grx(nx_laps,ny_laps)
      .         ,gry(nx_laps,ny_laps)
@@ -707,7 +707,7 @@ c
 
            itstatus(1)=init_timer()
 
-           allocate( htvi(nx_bg,ny_bg,nz_laps),!Height (m)
+           allocate( htvi(nx_bg,ny_bg,nz_laps),   !Height (m)
      .               tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
      .               shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
      .               uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)

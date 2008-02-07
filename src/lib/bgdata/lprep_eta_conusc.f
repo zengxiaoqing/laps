@@ -11,7 +11,7 @@ c     integer nx,ny,nz,nvars,recdim,i,j,k,istatus
 
       integer nx,ny,nz,i,j,k,istatus
 c
-      real*4 tp(nx,ny,nz),
+      real   tp(nx,ny,nz),
      .       rh(nx,ny,nz),   ! in as rh out as sh
      .       pr(nx,ny,nz),
      .      tp_sfc(nx,ny),

@@ -16,14 +16,14 @@ c     integer nx,ny,nz,i,j,k,l,it
      .       ,ivarcoord(nvarsmax)
      .       ,ivarid(nvarsmax)
 c
-      real*4 ht(nx,ny,nz),     !NOGAPS height (m)
+      real   ht(nx,ny,nz),     !NOGAPS height (m)
      .       tp(nx,ny,nz),     !NOGAPS temperature (K)
      .       sh(nx,ny,nz),     !NOGAPS specific humidity (kg/kg) 
      .       uw(nx,ny,nz),     !NOGAPS u-wind (m/s)
      .       vw(nx,ny,nz),     !NOGAPS v-wind (m/s)
      .       dummy(nx,ny,nz)
 
-      real*4 ht_sfc(nx,ny)
+      real   ht_sfc(nx,ny)
      .      ,pr_sfc(nx,ny)
      .      ,sh_sfc(nx,ny)
      .      ,tp_sfc(nx,ny)
@@ -35,8 +35,8 @@ c
 c     character*9   fname
 c     character*4   af
 c
-c     real*4 xe,esat
-      real*4 esat
+c     real   xe,esat
+      real   esat
       common /estab/esat(15000:45000)
 c_______________________________________________________________________________
 

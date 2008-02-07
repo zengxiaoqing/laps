@@ -82,15 +82,15 @@ c
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
      .          bkg_status                   !status returned from lga_driver
 c                                            ! 1=good 0=bad
-      real*4    prbot,delpr                  !LAPS bottom and delta pressures
+      real      prbot,delpr                  !LAPS bottom and delta pressures
 
       integer  nstns
       integer  stime(nstns)
-      real*4   slat(nstns)
-      real*4   slon(nstns)
-      real*4   selev(nstns)
+      real     slat(nstns)
+      real     slon(nstns)
+      real     selev(nstns)
 
-      real*4    stn_ht(nstns)
+      real      stn_ht(nstns)
      .         ,stn_tp(nstns)
      .         ,stn_td(nstns)
      .         ,stn_uw(nstns)
@@ -462,7 +462,7 @@ c
       character*132 cmodel
 
       character*256 fname_bg(max_files)
-      real*4    diff_mn,diff_mx
+      real      diff_mn,diff_mx
       integer   icnt
       integer   i_mx,j_mx
       integer   i_mn,j_mn
@@ -516,7 +516,7 @@ c
       real, allocatable  ::  pr_laps(:)
 
 c these are the station interpolated data at the background times
-      real*4    tp_sfc(nstns,nbg)
+      real      tp_sfc(nstns,nbg)
      .         ,sh_sfc(nstns,nbg)
      .         ,uw_sfc(nstns,nbg)
      .         ,vw_sfc(nstns,nbg)
@@ -525,7 +525,7 @@ c these are the station interpolated data at the background times
      .         ,alt_sfc(nstns,nbg)
 
 c these are the time interpolated (from the background times) stn info
-      real*4    stn_ht(nstns)
+      real      stn_ht(nstns)
      .         ,stn_tp(nstns)
      .         ,stn_td(nstns)
      .         ,stn_uw(nstns)
@@ -534,14 +534,14 @@ c these are the time interpolated (from the background times) stn info
      .         ,stn_mslp(nstns)
      .         ,stn_alt(nstns)
 
-      real*4    weight
-      real*4    rmissingflag
-      real*4    dlat,dlon,Lat1,Lat2,Lon0,Lat0
-      real*4    sw(2),ne(2)
-      real*4    dx,dy,cenlon,cenlat
+      real      weight
+      real      rmissingflag
+      real      dlat,dlon,Lat1,Lat2,Lon0,Lat0
+      real      sw(2),ne(2)
+      real      dx,dy,cenlon,cenlat
 
 c input station information
-      real*4    slat(nstns)
+      real      slat(nstns)
      .         ,slon(nstns)
      .         ,selev(nstns)
      .         ,grx(nstns)     !calculated by init_hinterp
@@ -635,26 +635,26 @@ c
 
          integer nz_laps
 
-         real*4  ::  prbght(nx,ny,nzbg_ht)
-         real*4  ::  prbgsh(nx,ny,nzbg_sh)
-         real*4  ::  prbguv(nx,ny,nzbg_uv)
-         real*4  ::  prbgww(nx,ny,nzbg_ww)
-         real*4  ::  tpbg(nx,ny,nzbg_tp)
-         real*4  ::  htbg(nx,ny,nzbg_ht)
-         real*4  ::  shbg(nx,ny,nzbg_sh)
-         real*4  ::  uwbg(nx,ny,nzbg_uv)
-         real*4  ::  vwbg(nx,ny,nzbg_uv)
-         real*4  ::  wwbg(nx,ny,nzbg_ww)
+         real    ::  prbght(nx,ny,nzbg_ht)
+         real    ::  prbgsh(nx,ny,nzbg_sh)
+         real    ::  prbguv(nx,ny,nzbg_uv)
+         real    ::  prbgww(nx,ny,nzbg_ww)
+         real    ::  tpbg(nx,ny,nzbg_tp)
+         real    ::  htbg(nx,ny,nzbg_ht)
+         real    ::  shbg(nx,ny,nzbg_sh)
+         real    ::  uwbg(nx,ny,nzbg_uv)
+         real    ::  vwbg(nx,ny,nzbg_uv)
+         real    ::  wwbg(nx,ny,nzbg_ww)
 
 
-         real*4  ::  tpvi(nx,ny,nz_laps)
-         real*4  ::  htvi(nx,ny,nz_laps)
-         real*4  ::  shvi(nx,ny,nz_laps)
-         real*4  ::  uwvi(nx,ny,nz_laps)
-         real*4  ::  vwvi(nx,ny,nz_laps)
-         real*4  ::  wwvi(nx,ny,nz_laps)
+         real    ::  tpvi(nx,ny,nz_laps)
+         real    ::  htvi(nx,ny,nz_laps)
+         real    ::  shvi(nx,ny,nz_laps)
+         real    ::  uwvi(nx,ny,nz_laps)
+         real    ::  vwvi(nx,ny,nz_laps)
+         real    ::  wwvi(nx,ny,nz_laps)
 c
-         real*4  ::  prlaps(nz_laps)
+         real    ::  prlaps(nz_laps)
  
        end subroutine
 
@@ -691,7 +691,7 @@ c
          character  gproj*2
          character  cmodel*132
          integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
-         real*4 lat(nx_laps,ny_laps)
+         real   lat(nx_laps,ny_laps)
      .         ,lon(nx_laps,ny_laps)
      .         ,grx(nx_laps,ny_laps)
      .         ,gry(nx_laps,ny_laps)
@@ -702,7 +702,7 @@ c
      .,grx,gry,fvi,flaps,bgmodel)
 
          integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
-         real*4 fvi(nx_bg,ny_bg,nz)
+         real   fvi(nx_bg,ny_bg,nz)
      .         ,flaps(nx_laps,ny_laps,nz)
      .         ,grx(nx_laps,ny_laps)
      .         ,gry(nx_laps,ny_laps)

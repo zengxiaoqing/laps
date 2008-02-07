@@ -346,8 +346,8 @@ c
       character*200 cdfname
       character*132 cmodel
 c
-      real*4 xe,mrsat
-      real*4 make_ssh
+      real   xe,mrsat
+      real   make_ssh
 
       integer nf_vid,nn,nf_status
       real cp,rcp, factor
@@ -363,7 +363,7 @@ c
           integer nf_fid
           integer istatus
           integer start(10),count(10)
-          real*4  f(n1)
+          real    f(n1)
           character*(*) fname
         end subroutine
       end interface
@@ -1290,7 +1290,7 @@ c
           integer nf_fid
           integer istatus
           integer start(10),count(10)
-          real*4  f(n1)
+          real    f(n1)
           character*(*) fname
         end subroutine
       end interface

@@ -75,7 +75,7 @@ c
 c
 c *** Output arrays.
 c
-      real*4 pr(nx,ny,nz)
+      real   pr(nx,ny,nz)
      .      ,ht(nx,ny,nz)
      .      ,tp(nx,ny,nz)
      .      ,sh(nx,ny,nz)
@@ -83,7 +83,7 @@ c
      .      ,vw(nx,ny,nz)
      .      ,prn(nz)
 c
-      real*4 lci(nx,ny),lcj(nx,ny),
+      real   lci(nx,ny),lcj(nx,ny),
      .       lat(nx,ny),lon(nx,ny)
 c
       integer start(10),count(10)
@@ -98,16 +98,16 @@ c
       character*4   af
       character*2   gproj
 c
-      real*4 msgflg
+      real   msgflg
 c
 c *** Common block variables for Lambert-conformal grid.
 c
       integer nx_lc,ny_lc,nz_lc  !No. of LC domain grid points
-      real*4 lat1,lat2,lon0,     !Lambert-conformal std lat1, lat, lon
+      real   lat1,lat2,lon0,     !Lambert-conformal std lat1, lat, lon
      .       sw(2),ne(2)         !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
-      real*4 lon0_lc
-      real*4 lat1_lc,lat2_lc
+      real   lon0_lc
+      real   lat1_lc,lat2_lc
 c_______________________________________________________________________________
 c
       istatus = 1

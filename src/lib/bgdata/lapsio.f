@@ -7,7 +7,7 @@ c
       include 'netcdf.inc'
 c
       integer*4 nx,ny
-      real*4 lat(nx,ny),
+      real   lat(nx,ny),
      .       lon(nx,ny)
 c
       integer*4 len,elen,i,istatus
@@ -83,7 +83,7 @@ c
       include 'netcdf.inc'
 c
       integer*4 nx,ny,nz
-      real*4 uw(nx,ny,nz)   !LAPS 3d u-wind (m/s)
+      real   uw(nx,ny,nz)   !LAPS 3d u-wind (m/s)
      .      ,vw(nx,ny,nz)   !LAPS 3d v-wind (m/s)
      .      ,gd(nx,ny,nz)
 c
@@ -188,7 +188,7 @@ c
       include 'netcdf.inc'
 c
       integer*4 nx,ny,nfld
-      real*4 grid(nx,ny,nfld)
+      real   grid(nx,ny,nfld)
       integer*4 fldid(nfld)
 c
       integer*4 len,elen,i4time,i,n,istatus
@@ -269,7 +269,7 @@ c
       include 'netcdf.inc'
 c
       integer*4 nx,ny
-      real*4 sht(nx,ny)
+      real   sht(nx,ny)
 c
       integer*4 len,elen,i,istatus
       integer*4 start(10),count(10)
@@ -343,12 +343,12 @@ c
       integer   lendw
       integer   lendsh
       integer   i,j,k
-      real*4  r_missing_data
-      real*4  phi(nx,ny,nz),t(nx,ny,nz)
+      real    r_missing_data
+      real    phi(nx,ny,nz),t(nx,ny,nz)
      .       ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
      .       ,omo(nx,ny,nz)
 
-      real*4, allocatable :: om(:,:,:)
+      real  , allocatable :: om(:,:,:)
 
 
       character*255 tempdir,winddir,sfcdir,shdir,lcodir

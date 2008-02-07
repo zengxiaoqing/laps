@@ -932,11 +932,11 @@
       subroutine lc_param11(s,cone,xmin,ymin,dx,dy,
      *                    nx,ny,nz,lat1,lat2,lon0,sw,ne)
 
-      real*4 s,cone,r,
+      real   s,cone,r,
      .       xmin,xmax,ymin,ymax,
      .       dx,dy
 c
-      real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
+      real   lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       integer nx,ny,nz           !No. of LC domain grid points
 c_______________________________________________________________________________

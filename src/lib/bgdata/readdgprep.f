@@ -19,8 +19,8 @@ c
      .         ,icm(nz),icm_sfc
      .         ,icn3d,ipk(nz)
 c
-      real*4   shsum(nz),sumtot,sumsfctd
-      real*4   shavg
+      real     shsum(nz),sumtot,sumsfctd
+      real     shavg
       integer  it
       integer  lun
       integer  iostat,iostatus
@@ -29,7 +29,7 @@ c
 
       logical  lopen,lext,ldo_tcbogus
 
-      real*4 ht(nx,ny,nz)      !height (m)
+      real   ht(nx,ny,nz)      !height (m)
      .      ,tp(nx,ny,nz)      !temperature (K)
      .      ,sh(nx,ny,nz)      !specific humidity (kg/kg) 
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
@@ -39,7 +39,7 @@ c
      .      ,pw(nx,ny,nz)      !precip h2o for /public AVN
      .      ,prk(nz)
 
-      real*4 ht_sfc(nx,ny)
+      real   ht_sfc(nx,ny)
      .      ,pr_sfc(nx,ny)
      .      ,td_sfc(nx,ny)     !for /public AVN this is RH @ 2m agl.
      .      ,tp_sfc(nx,ny)     !for /public AVN this is T @ 2m agl.
@@ -53,21 +53,21 @@ c
 
       double precision isoLevel(nz),reftime,valtime
 
-c     real*4 mrsat
-c     real*4 esat,xe
-c     real*4 rp_init
+c     real   mrsat
+c     real   esat,xe
+c     real   rp_init
 
-      real*4 prsfc
-      real*4 qsfc
-      real*4 make_td
-      real*4 make_ssh
-      real*4 r_bogus_sh
-      real*4 ssh2
-      real*4 t_ref
-      real*4 pcnt
-      real*4 r_missing_data
-      real*4 rfill
-      real*4 rmx2d,rmn2d
+      real   prsfc
+      real   qsfc
+      real   make_td
+      real   make_ssh
+      real   r_bogus_sh
+      real   ssh2
+      real   t_ref
+      real   pcnt
+      real   r_missing_data
+      real   rfill
+      real   rmx2d,rmn2d
 
       integer imx,jmx,imn,jmn
 
@@ -606,13 +606,13 @@ c
 c
       integer  lun
 
-      real*4 ht(nx,ny,nz)      !height (m)
+      real   ht(nx,ny,nz)      !height (m)
      .      ,tp(nx,ny,nz)      !temperature (K)
      .      ,sh(nx,ny,nz)      !specific humidity (kg/kg)
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
      .      ,vw(nx,ny,nz)      !v-wind (m/s)
 
-      real*4 ht_sfc(nx,ny)
+      real   ht_sfc(nx,ny)
      .      ,pr_sfc(nx,ny)
      .      ,sh_sfc(nx,ny)
      .      ,tp_sfc(nx,ny)
@@ -620,7 +620,7 @@ c
      .      ,vw_sfc(nx,ny)
      .      ,mslp(nx,ny)
 
-      real*4 dummy(nx,ny,nz)
+      real   dummy(nx,ny,nz)
 
       istatus=1
 
@@ -706,13 +706,13 @@ c
      .         ,i,j,k,istatus
 c
       integer  lun
-      real*4 ht(nx,ny,nz)      !height (m)
+      real   ht(nx,ny,nz)      !height (m)
      .      ,tp(nx,ny,nz)      !temperature (K)
      .      ,sh(nx,ny,nz)      !specific humidity (kg/kg)
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
      .      ,vw(nx,ny,nz)      !v-wind (m/s)
 
-      real*4 ht_sfc(nx,ny)
+      real   ht_sfc(nx,ny)
      .      ,pr_sfc(nx,ny)
      .      ,sh_sfc(nx,ny)
      .      ,tp_sfc(nx,ny)
@@ -769,7 +769,7 @@ C
 
       integer i,j,k,nx,ny,nz
 
-      real*4  sh(nx,ny,nz)
+      real    sh(nx,ny,nz)
 
       do k=1,nz
       do j=1,ny

@@ -56,7 +56,7 @@ c
 c *** Input background 3D variable.
 c
 
-      real*4 prbght(nx,ny,nzbg_ht),   !pressure (mb) of levels for hgt and T
+      real   prbght(nx,ny,nzbg_ht),   !pressure (mb) of levels for hgt and T
      .       prbgsh(nx,ny,nzbg_sh),   !pressure (mb) of levels for rh
      .       prbguv(nx,ny,nzbg_uv),   !pressure (mb) of levels for u/v comps
      .       prbgww(nx,ny,nzbg_ww),   !pressure (mb) of levels for vertical wind comp
@@ -70,15 +70,15 @@ c
 c
 c *** Output vertically interpolated variables.
 c
-      real*4 tpvi(nx,ny,nz_laps), !temperature (K)
+      real   tpvi(nx,ny,nz_laps), !temperature (K)
      .       htvi(nx,ny,nz_laps), !height (m)
      .       shvi(nx,ny,nz_laps), !specific humidity (kg/kg)
      .       uwvi(nx,ny,nz_laps), !u-wind (m/s)
      .       vwvi(nx,ny,nz_laps), !v-wind (m/s)
      .       wwvi(nx,ny,nz_laps)  !w-wind (omega [pa/s])
 c
-      real*4 prlaps(nz_laps),prilaps,fact1,fact2
-      real*4 datmsg,datmsg1,datmsg2
+      real   prlaps(nz_laps),prilaps,fact1,fact2
+      real   datmsg,datmsg1,datmsg2
       integer i,j,k,kk,lencm
 
       interface
@@ -319,7 +319,7 @@ c
 
       logical   lexist
 c
-      real*4 pr(nz),weight
+      real   pr(nz),weight
 
       real,  allocatable :: 
      .       grid1(:,:,:),

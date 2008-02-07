@@ -10,9 +10,9 @@
       integer warncnt
       integer ip(nz_laps)
 
-      real*4  missingflag
-      real*4  pr(nz_laps)
-      real*4  ht(nx_laps,ny_laps,nz_laps), !Height (m)
+      real    missingflag
+      real    pr(nz_laps)
+      real    ht(nx_laps,ny_laps,nz_laps), !Height (m)
      .        tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
      .        sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
      .        uw(nx_laps,ny_laps,nz_laps), !U-wind (m/s)
@@ -205,8 +205,8 @@ c
       integer i,j
       integer warncnt
 
-      real*4    missflag
-      real*4    tp_sfc(nx_laps,ny_laps),
+      real      missflag
+      real      tp_sfc(nx_laps,ny_laps),
      .          t_sfc (nx_laps,ny_laps),
      .          td_sfc(nx_laps,ny_laps),
      .          qsfc(nx_laps,ny_laps),

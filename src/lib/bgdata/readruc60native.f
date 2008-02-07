@@ -43,12 +43,12 @@ c
       integer ncid, ntp, nvdim, lenstr, nvs, ndsize
 c
       integer nx,ny,nz,rcode
-      real*4 cp,g,cpog
+      real   cp,g,cpog
       parameter (cp=1004.686,g=9.80665,cpog=cp/g)
 c
 c *** RUC arrays.
 c
-      real*4 pr(nx,ny,nz),       !Output ruc pressure (mb)
+      real   pr(nx,ny,nz),       !Output ruc pressure (mb)
      .       ht(nx,ny,nz),       !Output ruc height (m)
      .       tp(nx,ny,nz),       !Output ruc temperature (K)
      .       sh(nx,ny,nz),       !Output ruc specific humidity (kg/kg)
@@ -57,7 +57,7 @@ c
      .       th(nx,ny,nz),       !ruc virtual potential temperature
      .       pc(nx,ny,nz)        !ruc condensation pressure
 c
-      real*4 psi(nx,ny),psj(nx,ny),
+      real   psi(nx,ny),psj(nx,ny),
      .       lat(nx,ny),lon(nx,ny),
      .       mr,tv
 c
@@ -78,10 +78,10 @@ c
 c *** Common block variables for polar-stereographic grid.
 c
       integer nx_ps,ny_ps,nz_ps  !No. of PS domain grid points
-      real*4 lat0,lon0,rota,       !Pol ste. std lat, lon and rotation
+      real   lat0,lon0,rota,       !Pol ste. std lat, lon and rotation
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /psgrid/nx_ps,ny_ps,nz_ps,lat0,lon0,rota,sw,ne
-      real*4 lon0_ps             !returned for wind rotations
+      real   lon0_ps             !returned for wind rotations
 c_______________________________________________________________________________
 c      
 c *** Open the netcdf file.
