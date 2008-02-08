@@ -8,9 +8,9 @@ c
 c * A subroutine to read wideband level II data
 c   00 Nov 2001  Dongsoo Kim    Original
 c 
-      integer*4 rad_max, ang_max
+      integer rad_max, ang_max
       parameter (rad_max = 999, ang_max = 999)
-      integer*4 rad_dim, Z_dim, V_dim
+      integer rad_dim, Z_dim, V_dim
       byte  Z(Z_dim,rad_dim),W(V_dim,rad_dim)
      &     ,V(V_dim,rad_dim)
 c
