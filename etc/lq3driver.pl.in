@@ -78,6 +78,8 @@ print "$greplines[0]";
 print "$greplines[0]";
 @greplines = grep /tiros/i, @lines;
 print "$greplines[0]";
+@greplines = grep /GVAP records/i, @lines;
+print "$greplines[0]";
 print "\n";
 
 # Cloud analysis
