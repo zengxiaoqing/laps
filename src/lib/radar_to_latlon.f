@@ -120,14 +120,26 @@ cdoc    of radar echo
 !       write(12,*)r_range,azimuth
 
         call razm_lat_lon_gm(
-     1          rlat_radar,
-     1          rlon_radar,
-     1          r_range,
-     1          azimuth,
-     1          lat_grid,
-     1          lon_grid,
+     1          rlat_radar,                                           ! I
+     1          rlon_radar,                                           ! I
+     1          r_range,                                              ! I
+     1          azimuth,                                              ! I
+     1          lat_grid,                                             ! O
+     1          lon_grid,                                             ! O
      1          i_status )
 
+        difflat = lat_grid - rlat_radar
+        difflon = lon_grid - rlon_radar
+        if(r_range .gt. 10000. .and. abs(difflat) .lt. .01
+     1                         .and. abs(difflon) .lt. .01)then
+            write(6,*)
+     1           ' ERROR: QC check failed after razm_lat_lon_gm call'
+            write(6,*)'difflat,difflon,r_range'
+     1                ,difflat,difflon,r_range
+            write(6,*)'azimuth,rlat_radar,rlon_radar'
+     1                ,azimuth,rlat_radar,rlon_radar
+            stop
+        endif
 
         return
 
