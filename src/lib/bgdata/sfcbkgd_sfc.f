@@ -141,27 +141,27 @@ c KML: END
       integer bgm              !I, model type {if = 0, then tdsfc input = qsfc}
       integer istatus
                                                       
-      real*4 p(nz)             !I, pressure of levels
-      real*4 ter               !I, Terrain height at i,j
-      real*4 t_ref             !I, reference temp for library moisture conv routines
+      real   p(nz)             !I, pressure of levels
+      real   ter               !I, Terrain height at i,j
+      real   t_ref             !I, reference temp for library moisture conv routines
                                                      
-      real*4 height(nx,ny,nz)  !I, heights of pressure levels 3d
-      real*4 heightsfc         !I, height of surface at i,j
-      real*4 t(nx,ny,nz)       !I, temperatures 3d
-      real*4 q(nx,ny,nz)       !I, specific humidity 3d
-      real*4 psfc              !I/O, input bkgd model sfc p; output recalculated surface pressure, pa
-      real*4 tsfc              !I/O input model T, output recomputed T
-      real*4 tdsfc             !I/O input model Td, output  recomputed Td
-      real*4 td_sfc            !I, model Td
-      real*4 qsfc              !I/O surface spec hum, Input as q or computed internally
+      real   height(nx,ny,nz)  !I, heights of pressure levels 3d
+      real   heightsfc         !I, height of surface at i,j
+      real   t(nx,ny,nz)       !I, temperatures 3d
+      real   q(nx,ny,nz)       !I, specific humidity 3d
+      real   psfc              !I/O, input bkgd model sfc p; output recalculated surface pressure, pa
+      real   tsfc              !I/O input model T, output recomputed T
+      real   tdsfc             !I/O input model Td, output  recomputed Td
+      real   td_sfc            !I, model Td
+      real   qsfc              !I/O surface spec hum, Input as q or computed internally
                                                            
-      real*4 tbar
-      real*4 td1,td2
-      real*4 G,R
-      real*4 ssh2,make_ssh,make_td
-      real*4 dz,dzp,dtdz
-      real*4 tvsfc,tvk,tbarv
-      real*4 r_missing_data
+      real   tbar
+      real   td1,td2
+      real   G,R
+      real   ssh2,make_ssh,make_td
+      real   dz,dzp,dtdz
+      real   tvsfc,tvk,tbarv
+      real   r_missing_data
                                                         
       parameter (G         = 9.8,
      &           R         = 287.04)

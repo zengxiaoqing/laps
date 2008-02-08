@@ -406,17 +406,17 @@ c
       character*200 cdfname
       character*132 cmodel
 c
-      real*4 xe,mrsat
-      real*4 make_ssh
+      real   xe,mrsat
+      real   make_ssh
 c
 c *** Common block variables for Lambert-conformal grid.
 c
 c     integer nx_lc,ny_lc,nz_lc  !No. of LC domain grid points
-c     real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
+c     real   lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
 c    .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
 c     common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
-c     real*4 lon0_lc
-c     real*4 lat1_lc,lat2_lc
+c     real   lon0_lc
+c     real   lat1_lc,lat2_lc
 
       integer nf_vid,nn
       real cp,rcp, factor
@@ -441,7 +441,7 @@ c
           integer nf_fid
           integer istatus
           integer start(10),count(10)
-          real*4  f(n1)
+          real    f(n1)
           character*(*) fname
         end subroutine
       end interface
