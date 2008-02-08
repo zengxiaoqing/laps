@@ -13,14 +13,14 @@ c        rad_dim  !number of radials, slightly larger than 360
 c        Z_dim    !number reflectivity bins in each radial
 c        V_dim    !number wind bins in each radial
 c        VCP      !Volume coverage pattern
-      real*4  Refl(460,rad_max,16)
+      real  Refl(460,rad_max,16)
      &       ,Dwind(920,rad_max,16)
      &       ,SpecW(920,rad_max,16)
-      real*4  A_ang(rad_max,16), E_ang(rad_max,16)
+      real  A_ang(rad_max,16), E_ang(rad_max,16)
       integer   nsites
      &       ,vcpmode31(16),vcpmode11(16),vcpmode21(16)
-      real*4    site_lat, site_lon, site_alt
-      real*4    radar_lat(99), radar_lon(99), radar_alt(99)
+      real    site_lat, site_lon, site_alt
+      real    radar_lat(99), radar_lon(99), radar_alt(99)
       character radarname*5(99)
      &         ,sitename*132(99)
 
@@ -29,7 +29,7 @@ c * Working
       integer*2 image_Z(460, rad_max)
      &       ,image_V(920, rad_max)
      &       ,image_W(920, rad_max)
-      real*4  Azim_ang(rad_max), Elev_ang(rad_max), resolV
+      real  Azim_ang(rad_max), Elev_ang(rad_max), resolV
       integer   colia(460,rad_max),ibin,vlvl,nlvl,ELELVL
       real      xloc(460,460), yloc(460,460)
       integer   colia_v(920,rad_max)
