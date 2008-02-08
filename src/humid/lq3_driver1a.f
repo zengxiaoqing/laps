@@ -233,7 +233,7 @@ c     define PI
       d2r = pi/180.
       write (6,*) 'Starting run for I4TIME', i4time
 
-c     assign local variables to passed in variable to protect them
+c     assign local variables to passed in variable to protect them pressure only
 
       ps = gps
       t = gt
@@ -1281,7 +1281,7 @@ c     check for NaN values and Abort if found
       endif
 
 c     ------------------------------ write output section
-      if (iout.eq.1) then
+      if (iout.ne.0) then
       
       
 c     write final 3-d sh field to disk
