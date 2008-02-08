@@ -151,6 +151,40 @@ c     surface variables preserved and passed
       data ext/'lq3'/
       data rhext/'lh3'/
 
+
+c     namelist data
+
+      integer covar_switch
+      integer print_switch
+      integer  raob_switch
+      integer  raob_lookback
+      real raob_radius
+      integer endian  ! 1 = big, 0 = little , big default
+      integer goes_switch
+      integer cloud_switch
+      integer cloud_d
+      integer tiros_switch
+      integer sounder_switch
+      integer sat_skip
+      integer gvap_switch
+      integer IHOP_flag
+      integer time_diff         !time allowed for latency (sec)
+      integer sfc_mix
+      integer mod_4dda_1
+      real    mod_4dda_factor
+      real    t_ref
+      integer gps_switch
+      character*256 path_to_gvap12,path_to_gvap10,path_to_gps,path2covar
+      namelist /moisture_switch_nl/ covar_switch,print_switch,
+     1     raob_switch,
+     1     raob_lookback, endian,
+     1     raob_radius, goes_switch, cloud_switch, cloud_d
+     1     ,tiros_switch, sounder_switch, sat_skip
+     1     ,gvap_switch, IHOP_flag, time_diff, gps_switch
+     1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
+     1     t_ref,path_to_gvap12,path_to_gvap10,path_to_gps,
+     1     path2covar
+
       
 
 c  code
@@ -172,6 +206,52 @@ c  code
          write(6,*)' error in get_laps_config'
          stop
       endif
+
+
+
+c     fill namelist variables---------------------------------------------
+c     
+c     set namelist parameters to defaults 
+      covar_switch = 0
+      print_switch = 0
+      cloud_switch = 1
+      cloud_d = 1
+      raob_switch = 0
+      raob_lookback = 0
+      endian = 1 ! big endian is default
+      raob_radius = 45000.0  ! meters (45km)
+      goes_switch = 0
+      sounder_switch = 0
+      tiros_switch = 0
+      sat_skip = 0
+      gvap_switch = 1
+      IHOP_flag = 0 
+      time_diff = 0
+      gps_switch = 1
+      sfc_mix = 0
+      mod_4dda_1 = 0
+      mod_4dda_factor = 0.02
+      t_ref = -132.0
+      path_to_gvap12 = ' '
+      path_to_gvap10 = ' '
+      path_to_gps = ' '
+      path2covar = ' '
+      
+      call get_directory('static',fname,len)
+      open (23, file=fname(1:len)//'moisture_switch.nl',
+     1     status = 'old', err = 666)
+      
+      read(23,moisture_switch_nl,end=666)
+      
+      
+      close (23)
+
+
+c-----------------------end filling namelist ---
+
+
+
+
 
 
 
@@ -546,6 +626,30 @@ c     call the main humidity algorighm with filled state variables
 
       call lq3_driver1a (i4time,ii,jj,kk,mdf,lat,lon,p_3d,
      1     lt1dat,lvllm,data,cg,c_istatus,i4timep,gt,gp,gtd,
+     1     covar_switch,
+     1     print_switch,
+     1     cloud_switch,
+     1     cloud_d,
+     1     raob_switch,
+     1     raob_lookback,
+     1     endian,
+     1     raob_radius,
+     1     goes_switch,
+     1     sounder_switch,
+     1     tiros_switch,
+     1     sat_skip,
+     1     gvap_switch,
+     1     IHOP_flag, 
+     1     time_diff,
+     1     gps_switch,
+     1     sfc_mix,
+     1     mod_4dda_1,
+     1     mod_4dda_factor,
+     1     t_ref,
+     1     path_to_gvap12,
+     1     path_to_gvap10,
+     1     path_to_gps,
+     1     path2covar,
      1     lct,iout,t_istatus,jstatus)
       
       write(6,*) 'lq3, lh3, and lh4 (1=success)'
