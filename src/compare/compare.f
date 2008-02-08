@@ -43,7 +43,7 @@ c      parameter (jmax=NY_L_MAX)
       parameter (kmax=200)
       parameter (nlvl=200)
       
-      INTEGER*4	I4TIME,		!I4time of data
+      INTEGER	I4TIME,		!I4time of data
      1		KDIM,		!K dimension of DATA array
      1		LVL(nlvl),        !Level of each field (4 digit max)
      1		LVL_AVAIL(nlvl),        !Level of each field (4 digit max)
@@ -53,8 +53,8 @@ c      parameter (jmax=NY_L_MAX)
      1		I,J,K,start,
      1		ISTATUS
 C
-      REAL*4	DATA1(imax,jmax,kmax)	!Raw data to be written
-      REAL*4	DATA2(imax,jmax,kmax)	!Raw data to be written
+      REAL	DATA1(imax,jmax,kmax)	!Raw data to be written
+      REAL	DATA2(imax,jmax,kmax)	!Raw data to be written
 C
       CHARACTER*200	DIR_in  !Directory to be written to
       CHARACTER*200	DIR_out !Directory to be written to
