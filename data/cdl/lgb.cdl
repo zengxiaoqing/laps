@@ -145,7 +145,7 @@ netcdf lgb {
             pcp:navigation_dim = "nav";
             pcp:record = "valtime, reftime";
             pcp:_FillValue = 1.e+37f;
-            psf:long_name="Background surface precipitation";
+            pcp:long_name="Background surface precipitation";
             pcp:units="kg/m**2";
             pcp:valid_range= 0.f, 1000.f;
             pcp:LAPS_var="PCP";
