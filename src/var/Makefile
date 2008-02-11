@@ -21,20 +21,22 @@ LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
 	   $(SRCROOT)/src/lib/modules/libmodules.a \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  \
-           $(SRCROOT)/src/lib/goeslib/libgoeslib.a
+           $(SRCROOT)/src/lib/goeslib/libgoeslib.a \
+	   $(SRCROOT)/src/sfc/libsfc.a \
+	   $(SRCROOT)/src/var/bufr/libbufr.a 
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a \
+DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libdebugwind.a \
              $(SRCROOT)/src/lib/temp/libdebugtemp.a \
              $(SRCROOT)/src/lib/libdebuglaps.a  \
 	     $(SRCROOT)/src/lib/modules/libdebugmodules.a \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
-             $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a
+             $(SRCROOT)/src/lib/goeslib/libdebuggoeslib.a \
+	     $(SRCROOT)/src/sfc/libsfc.a \
+             $(SRCROOT)/src/var/bufr/libdebugbufr.a
 
-LAPSFC = $(SRCROOT)/src/sfc/libsfc.a
-
-BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
-DBBUFRLIB = $(SRCROOT)/src/var/bufr/libdebugbufr.a
+BUFRLIB = 
+DBBUFRLIB = 
 
 HUMIDLIB = $(SRCROOT)/src/humid/liblq3.a
 
