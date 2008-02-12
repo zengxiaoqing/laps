@@ -219,15 +219,7 @@ c     namelist data
       real    t_ref
       integer gps_switch
       character*256 path_to_gvap12,path_to_gvap10,path_to_gps,path2covar
-c      namelist /moisture_switch_nl/ covar_switch,print_switch,
-c     1     raob_switch,
-c     1     raob_lookback, endian,
-c     1     raob_radius, goes_switch, cloud_switch, cloud_d
-c     1     ,tiros_switch, sounder_switch, sat_skip
-c     1     ,gvap_switch, IHOP_flag, time_diff, gps_switch
-c     1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
-c     1     t_ref,path_to_gvap12,path_to_gvap10,path_to_gps,
-c     1     path2covar
+
       
       integer len
       character cdomain(ii)
@@ -306,41 +298,7 @@ c     routine
          return
       endif
 
-c     
-c     set namelist parameters to defaults 
-c      covar_switch = 0
-c      print_switch = 0
-c      cloud_switch = 1
-c      cloud_d = 1
-c      raob_switch = 0
-c      raob_lookback = 0
-c      endian = 1 ! big endian is default
-c      raob_radius = 45000.0  ! meters (45km)
-c      goes_switch = 0
-c      sounder_switch = 0
-c      tiros_switch = 0
-c      sat_skip = 0
-c      gvap_switch = 1
-c      IHOP_flag = 0 
-c      time_diff = 0
-c      gps_switch = 1
-c      sfc_mix = 0
-c      mod_4dda_1 = 0
-c      mod_4dda_factor = 0.02
-c      t_ref = -132.0
-c      path_to_gvap12 = ' '
-c      path_to_gvap10 = ' '
-c      path_to_gps = ' '
-c      path2covar = ' '
-      
-c      call get_directory('static',fname,len)
-c      open (23, file=fname(1:len)//'moisture_switch.nl',
-c     1     status = 'old', err = 24)
-      
-c      read(23,moisture_switch_nl,end=24)
-      
-      
-c      close (23)
+
       if (covar_switch.eq. 0) then
          write (6,*) 'Covariances NOT used'
       else
@@ -1345,14 +1303,5 @@ c---------------------------end write output section
       p_3d = p_3d / 0.01 ! convert 3d array to Pa
       
       return
-      
-c24   write(6,*) 'error finding moisture switch file'
-c     write(6,*) 'check to see it is under'
-c     write(6,*) fname(1:len)//'moisture_switch.nl'
-c     write(6,*) 'aborting'
-
-
-      
-c     return
       
       end
