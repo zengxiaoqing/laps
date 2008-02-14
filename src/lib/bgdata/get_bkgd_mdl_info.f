@@ -50,6 +50,8 @@ c     USE laps_static
       real          dxbg,dybg
       real          rotation
 
+      logical       cross_dateline 
+
       interface
 
         subroutine get_eta48_dims(filename,NX,NY,NZ
@@ -620,7 +622,7 @@ c --------------------
          vtable=outdir(1:lenfn)//'Variable_Tables/Vtable.'//cmodel
 
          call degrib_nav(fullname, vtable, nxbg, nybg, nzbg_ht,
-     &     gproj,dlat,dlon,Lat0,Lon0,cgrddef,
+     &     gproj,dlat,dlon,Lat0,Lat1,Lon0,cgrddef,cross_dateline,
      &     sw(1),sw(2),ne(1),ne(2),istatus)
 
            nzbg_tp=nzbg_ht
