@@ -51,9 +51,11 @@ c        bgmodel = 6 ---> AVN (360 x 181 lat-lon grid)
 c        bgmodel = 7 ---> ETA (48 km from grib file)
 c        bgmodel = 8 ---> NOGAPS (1.0 deg)
 c        bgmodel = 9 ---> NWS Conus (RUC, ETA, NGM, AVN)
-cWNIBLS ... Added bgmodel = 10, 11
-c        bgmodel = 10 ---> Unidata default netCDF format from gribtonc  !WNI
-c        bgmodel = 11 ---> WRF-ARW raw netcdf files (single time per file) !WNI
+c        bgmodel =10 ---> Unidata default netCDF format from gribtonc  !WNI
+c        bgmodel =11 ---> WRF-ARW raw netcdf files (single time per file) !WNI
+c        bgmodel =12 ---> ECMWF with two netcdf options: ESRL and FMI
+c        bgmodel =13 ---> GRIB1 and GRIB2-formatted: GFS, NAM, RUC, ECMWF, etc
+c
 c------------------> GRID DIMENSION SPECIFICATION <-----------------------------
 c
 c *** The following variables specify the various model grid dimensions.
@@ -65,7 +67,7 @@ c *** The fourth line specifies the LAPS domain designation.
 c *** Each following line specifies the grid dimensions for each corresponding
 c        bgmodel defined above.
 c
-      integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
+      integer nx_laps,ny_laps,nz_laps,       !LAPS grid dimensions
      .          laps_cycle_time,             !LAPS cycle time
      .          nx_bg,ny_bg,nz_bg,
      .          lga_status                   !status returned from lga_driver
