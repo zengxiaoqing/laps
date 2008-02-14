@@ -617,12 +617,12 @@ if test -n "`echo $LIBS | grep ljasper`"; then jtrue=1; fi
 if test -n "`echo $LIBS | grep lpng`"; then ptrue=1; fi
 if test -n "`echo $LIBS | grep lz`"; then ztrue=1; fi
 
-if test $jtrue == 1 && test $ptrue == 1 && test $ztrue == 1
+if test $jtrue = 1 && test $ptrue = 1 && test $ztrue = 1
 then
-  AC_MSG_RESULT(Found all grib2 libraries, i.e. $LIBS)
+  AC_MSG_RESULT(Found all Grib2 libraries, i.e. $LIBS)
     DEGRIBFLAGS="-DUSE_JPEG2000 -DUSE_PNG"
 else
-  AC_MSG_RESULT(Some Grib2 libraries -ljasper, -lpng, -lz were NOT FOUND ...only found >$LIBS<)
+  AC_MSG_RESULT(Some Grib2 libraries -ljasper -lpng -lz were NOT FOUND ...only found >$LIBS<)
     DEGRIBFLAGS=""
 fi
 
