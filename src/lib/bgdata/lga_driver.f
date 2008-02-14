@@ -832,9 +832,9 @@ c
            call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .        lat,lon,grx,gry,bgmodel,cmodel)
 
-           print*,'Input Grid Corners'
+           print*,'LAPS (Input) Grid Corners'
            print*, 'SW: grx(1,1)/gry(1,1) ', grx(1,1),gry(1,1)
-           print*, 'SE: grx(nx,1)/gry(nx_laps,1) '
+           print*, 'SE: grx(nx,1)/gry(nx,1) '
      +, grx(nx_laps,1),gry(nx_laps,1)
            print*, 'NW: grx(1,ny/gry(1,ny) ',
      + grx(1,ny_laps),gry(1,ny_laps)
