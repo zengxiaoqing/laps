@@ -1,5 +1,6 @@
-!-------------------------------------------------------------------
+!-------------------------------------------------------------------          !
 ! subroutines degrib_nav (to set up array sizes) and degrib_data (to read)    !
+! to get all the navigation and parm info that is needed.                     !
 !                                                                             !
 ! Externals:                                                                  !
 !    Module TABLE                                                             !
@@ -18,11 +19,11 @@
 ! adapted for WPS, 2006                                                       !
 ! adapted for LAPS, 2007                                                      !
 !                                                                             !
-!-------------------------------------------------------------------
+!-------------------------------------------------------------------          !
 
 subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
-                      gproj, dx, dy, lat1, lon1, cgrddef, &
-                      sw1, sw2, ne1, ne2, istatus)
+                      gproj, dx, dy, truelat1, truelat2, stdlon, cgrddef, &
+                      cross_dateline, sw1, sw2, ne1, ne2, istatus)
 
   use table
   use gridinfo
@@ -52,15 +53,15 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
   integer :: grib_version
   integer :: vtable_columns
   logical :: val_std = .false.
+  logical :: cross_dateline 
 
   integer :: istatus
   integer :: nx, ny, nz
   character (LEN=2) ::  gproj
   character (LEN=1) ::  cgrddef
   real :: dx, dy  ! Required by Laps, in meters.
-  real :: lat1, lon1
   real :: sw1, sw2, ne1, ne2
-  real :: realI, realJ
+  real :: realI, realJ, diff_lon
   real :: stdlon, truelat1, truelat2
   TYPE(proj_info) :: proj  ! Declared via "USE map_utils" 
 
@@ -94,16 +95,11 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
      vtable_columns=7 
   endif
 
-  if (maxvar.eq.0) then
-     ! On initial time through this subroutine parse the 
-     ! Vtable and increment 'maxvar' with each variable found.
-     call parse_table(vtablefn, debug_level,vtable_columns)
-  else 
-     ! On subsequent time through this subroutine just return, 
-     ! as we have all the navigation and parm info that is needed.
-!ptm If there are two choices of grib sources, this return is NOT appropriate 
-     return
-  endif 
+
+! Read Vtable.XXX file; its information in sent to the module 'table'
+! and 'maxvar' is incremented with each variable found.
+
+  call parse_table(vtablefn, debug_level,vtable_columns)
 
         nlvl = 0
         plvl = -999.
@@ -137,11 +133,23 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 
         nx=map%nx
         ny=map%ny
-        nz=39
+        nz=42
         dx=map%dx
         dy=abs(map%dx)
-        lat1=map%lat1
-        lon1=map%lon1
+
+        if (map%lat2.gt.10000.) map%lat2=map%lat2/1000000
+        if (map%lon2.gt.10000.) map%lon2=map%lon2/1000000
+
+        ! Cross dateline test. (Needs more thought.)
+        cross_dateline=.false.
+        if(map%lon2.gt.map%lon1) diff_lon=map%lon2-map%lon1
+        if(map%lon1.gt.map%lon2) diff_lon=map%lon1-map%lon2
+        if (diff_lon.gt.350) cross_dateline=.true.
+
+        if (map%lov .gt.180.) map%lov =map%lov -360
+        if (map%lon1.gt.180.) map%lon1=map%lon1-360
+        if (map%lon2.gt.180.) map%lon2=map%lon2-360
+
         stdlon=map%lov
         truelat1=map%truelat1
         truelat2=map%truelat2
@@ -150,14 +158,6 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
         ne1=map%lat2
         ne2=map%lon2
         cgrddef='N'
-
-        !if (grib_version.ne.2) then
-        !endif
-
-        if (sw2.gt.180.) then
-          sw2=sw2-360.
-          stdlon=stdlon-360.
-        endif
 
         if (gproj.eq.'LC' .or. gproj.eq.'PS') then 
            dx = dx * 1000. ! meters at 25.0 N, for example
@@ -168,22 +168,32 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
            realJ=ny
            call ij_to_latlon(proj,realI,realJ,ne1,ne2);
           !call latlon_to_ij(proj,sw1,sw2,realI,realJ); ! call args can be inversed.
+        elseif (gproj.eq.'LL') then 
+           ! This seems unconventional but follows the pattern used in get_bkgd_mdl_info.f
+           stdlon=map%lon1
+           truelat1=map%lat1
+           truelat2=0.
+           if (sw1.gt.ne1) then 
+              sw1=map%lat2
+              ne1=map%lat1
+           endif
         endif
 
         write(*, *) "---------- "
         write(*, *) "proj ", gproj
-        write(*, *) "truelat1, truelat2, stdlon ", gproj, truelat1, truelat2, stdlon 
+        write(*, *) "truelat1, truelat2, stdlon ", truelat1, truelat2, stdlon 
         write(*, *) "dx, dy ", dx, dy
         write(*, *) "nx, ny, nz ", nx, ny, nz
-        write(*, *) "sw1, sw2 ", sw1, sw2
-        write(*, *) "ne1, ne2 ", ne1, ne2
+        write(*, *) "sw corner ", sw1, sw2
+        write(*, *) "ne corner ", ne1, ne2
+        write(*, *) "longitude spans ", diff_lon, " degrees; global ", cross_dateline
         write(*, *) "---------- "
         
 
         istatus=1
-        if (ierr.eq.1) istatus=0
+        if (ierr.eq.1) print*, "iERR ", ierr !istatus=0
 
-      return
+  return
  end subroutine degrib_nav
 
 !-------------------------------------------------------------------
@@ -254,6 +264,12 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real :: wwbg(nx,ny,nz)
 
   real   :: it,xe,mrsat,esat
+
+! -----------------
+! Determine GRIB Edition number
+  grib_version=0
+  call edition_num(nunit1, gribflnm, grib_version, ierr)
+  call mprintf((ierr.eq.3),ERROR,"GRIB file problem")
 
 ! -----------------
 ! The "Vtable" file was read in degrib_nav (via 'call parse_table'); 
@@ -363,7 +379,8 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
      
 ! ------------- qcmodel sh ----------------
 
-     nzsh=nz-5
+     !nzsh=nz-5
+     nzsh=nz
      call qcmodel_sh(nx,ny,1,tdbg_sfc)  !td_sfc is actually = RH for GFS/AVN.
      call qcmodel_sh(nx,ny,nzsh,shbg)   !sh is actually = RH for GFS/AVN.
 
