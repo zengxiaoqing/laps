@@ -68,6 +68,25 @@ subroutine parse_table(vtablefn, debug_level,vtable_columns)
   splatcode = -88
 ! end added for IBM
 
+  if (maxvar.gt.0) then
+!  clear table entries
+     namvar = ' '
+     Dunits = ' '
+     Ddesc = ' '
+     nameout = ' '
+     unitout = ' '
+     descout = ' '
+     maxvar = 0
+     maxout = 0
+     gcode = 0
+     lcode = 0
+     g2code = 0
+     level1 = 0
+     level2 = 0
+     iprty = 0
+  endif
+
+
   s_length=index(vtablefn,' ')
 
   write (*,*) "PARSE_TABLE:", vtablefn(1:s_length)
