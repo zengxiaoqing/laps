@@ -42,7 +42,7 @@ cc-- variable for initialization --cc
       parameter         (dx=81.2705)
       parameter         (dy=81.2705)
 
-      integer*4         i4time
+      integer         i4time
       integer           num_of_ens       ! number of time lagged ensembles
       integer           iens
       integer           ilength
@@ -75,46 +75,46 @@ cc-- variable for readnet_nam --cc
 c      integer           nvars,nrec,ndims,namelen,nav,nrecord
 c      integer           ix,iy,iz,iblev
 c      real              dx,dy
-      integer*4         rcode              ! error code
-      integer*4         recdim             ! recode dimension
-      integer*4         ncid
+      integer         rcode              ! error code
+      integer         recdim             ! recode dimension
+      integer         ncid
 
-      real*4            gh_sfc(ix,iy,nrec)
-      real*4            gh(ix,iy,iz,nrec)
+      real            gh_sfc(ix,iy,nrec)
+      real            gh(ix,iy,iz,nrec)
 
-      real*4            rh_2mFH(ix,iy,nrec)
-      real*4            rh(ix,iy,iz,nrec)
-      real*4            rh_lbis(ix,iy,iblev,nrec)
+      real            rh_2mFH(ix,iy,nrec)
+      real            rh(ix,iy,iz,nrec)
+      real            rh_lbis(ix,iy,iblev,nrec)
 
-      real*4            t_2mFH(ix,iy,nrec)
-      real*4            t(ix,iy,iz,nrec)
-      real*4            t_lbis(ix,iy,iblev,nrec)
+      real            t_2mFH(ix,iy,nrec)
+      real            t(ix,iy,iz,nrec)
+      real            t_lbis(ix,iy,iblev,nrec)
 
-      real*4            uw_10mFH(ix,iy,nrec)
-      real*4            uw(ix,iy,iz,nrec)
-      real*4            uw_lbis(ix,iy,iblev,nrec)
+      real            uw_10mFH(ix,iy,nrec)
+      real            uw(ix,iy,iz,nrec)
+      real            uw_lbis(ix,iy,iblev,nrec)
 
-      real*4            vw(ix,iy,iz,nrec)
-      real*4            vw_lbis(ix,iy,iblev,nrec)
-      real*4            vw_10mFH(ix,iy,nrec)
+      real            vw(ix,iy,iz,nrec)
+      real            vw_lbis(ix,iy,iblev,nrec)
+      real            vw_10mFH(ix,iy,nrec)
 
-      real*4            av(ix,iy,iz,nrec)
-      real*4            pvv(ix,iy,iz,nrec)
-      real*4            p_sfc(ix,iy,nrec)
-      real*4            heli(ix,iy,nrec)
-      real*4            cape_sfc(ix,iy,nrec)
-      real*4            cape_lbis(ix,iy,nrec)
-      real*4            cin_sfc(ix,iy,nrec)
-      real*4            cin(ix,iy,nrec)
-      real*4            bli_lbis(ix,iy,nrec)
-      real*4            pli_lbis(ix,iy,nrec)
-      real*4            pw(ix,iy,nrec)
-      real*4            emspMSL(ix,iy,nrec)
-      real*4            prMSL(ix,iy,nrec)
-      real*4            cp_sfc(ix,iy,nrec)
-      real*4            tp_sfc(ix,iy,nrec)
-      integer*4         isoLevel(iz)
-      integer*4         boundryLevel(iblev)
+      real            av(ix,iy,iz,nrec)
+      real            pvv(ix,iy,iz,nrec)
+      real            p_sfc(ix,iy,nrec)
+      real            heli(ix,iy,nrec)
+      real            cape_sfc(ix,iy,nrec)
+      real            cape_lbis(ix,iy,nrec)
+      real            cin_sfc(ix,iy,nrec)
+      real            cin(ix,iy,nrec)
+      real            bli_lbis(ix,iy,nrec)
+      real            pli_lbis(ix,iy,nrec)
+      real            pw(ix,iy,nrec)
+      real            emspMSL(ix,iy,nrec)
+      real            prMSL(ix,iy,nrec)
+      real            cp_sfc(ix,iy,nrec)
+      real            tp_sfc(ix,iy,nrec)
+      integer         isoLevel(iz)
+      integer         boundryLevel(iblev)
       real*8            valtime(nrec)
       real*8            reftime(nrec)
       character*1       origin(namelen)
@@ -125,17 +125,17 @@ c      real              dx,dy
       integer*2         version
       integer*2         Ni(nav)
       integer*2         Nj(nav)
-      real*4            La1(nav)
-      real*4            La2(nav)
-      real*4            Lo1(nav)
-      real*4            Lo2(nav)
-      real*4            Di(nav)
-      real*4            Dj(nav)
-      real*4            IntLat1(nav)
-      real*4            IntLat2(nav)
-      real*4            Lon0(nav)
-      integer*4         start(ndims)            ! hyperslab starting index
-      integer*4         count(ndims)            ! hyperslab count from start
+      real            La1(nav)
+      real            La2(nav)
+      real            Lo1(nav)
+      real            Lo2(nav)
+      real            Di(nav)
+      real            Dj(nav)
+      real            IntLat1(nav)
+      real            IntLat2(nav)
+      real            Lon0(nav)
+      integer         start(ndims)            ! hyperslab starting index
+      integer         count(ndims)            ! hyperslab count from start
       integer           vdims(ndims)            ! max # of var dims
       character*1024    strbuf                  ! string buffer for var
                                                 !  and attr names
@@ -152,17 +152,17 @@ cc-- variable for covariance matrix --cc
 
       integer           inum
       integer           len_dir,inlen
-      integer*4         istatus
-      real*4            rh_con(ix,iy,iz,20)
-      real*4            t_con(ix,iy,iz,20)
-      real*4            q_con(ix,iy,iz,20)
-      real*4            q_inno(ix,iy,iz,20)
-      real*4            q_mean(ix,iy,iz)
-      real*4            q_mat(ix*iy*iz,20)
-      real*4            q_cov(ix*iy*iz,ix*iy*iz) ! full covariance matrix
-      real*4            qcovhor(9,9,ix,iy,iz)    ! horizontal covariance
-      real*4            qcovert(iz,iz,ix,iy)     ! vertical covariance 
-      real*4            aa,bb
+      integer         istatus
+      real            rh_con(ix,iy,iz,20)
+      real            t_con(ix,iy,iz,20)
+      real            q_con(ix,iy,iz,20)
+      real            q_inno(ix,iy,iz,20)
+      real            q_mean(ix,iy,iz)
+      real            q_mat(ix*iy*iz,20)
+      real            q_cov(ix*iy*iz,ix*iy*iz) ! full covariance matrix
+      real            qcovhor(9,9,ix,iy,iz)    ! horizontal covariance
+      real            qcovert(iz,iz,ix,iy)     ! vertical covariance 
+      real            aa,bb
  
       real              es(ix,iy,iz,20)
       real              e(ix,iy,iz,20)

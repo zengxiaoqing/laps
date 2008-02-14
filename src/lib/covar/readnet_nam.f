@@ -24,43 +24,43 @@ c     Variable ids run sequentially from 1 to nvars =   50
       parameter      (namelen=132)
       parameter      (nav=1)  
 
-      integer*4      rcode                     ! error code
-      integer*4      recdim                    ! record dimension
+      integer      rcode                     ! error code
+      integer      recdim                    ! record dimension
       integer        imx,imy,imz,iblev
       integer        num_of_ens   
 
-      real*4         gh_sfc(imx,imy,nrec)
-      real*4         gh(imx,imy,imz,nrec)
-      real*4         rh_2mFH(imx,imy,nrec)
-      real*4         rh(imx,imy,imz,nrec)
-      real*4         rh_lbis(imx,imy,iblev,nrec)
-      real*4         t_2mFH(imx,imy,nrec)
-      real*4         t(imx,imy,imz,nrec)
-      real*4         t_lbis(imx,imy,iblev,nrec)
-      real*4         uw_10mFH(imx,imy,nrec)
-      real*4         uw(imx,imy,imz,nrec)
-      real*4         uw_lbis(imx,imy,iblev,nrec)
-      real*4         vw(imx,imy,imz,nrec)
-      real*4         vw_lbis(imx,imy,iblev,nrec)
-      real*4         vw_10mFH(imx,imy,nrec)
-      real*4         av(imx,imy,imz,nrec)
-      real*4         pvv(imx,imy,imz,nrec)
-      real*4         p_sfc(imx,imy,nrec)
-      real*4         heli(imx,imy,nrec)
-      real*4         cape_sfc(imx,imy,nrec)
-      real*4         cape_lbis(imx,imy,nrec)
-      real*4         cin_sfc(imx,imy,nrec)
-      real*4         cin(imx,imy,nrec)
-      real*4         bli_lbis(imx,imy,nrec)
-      real*4         pli_lbis(imx,imy,nrec)
-      real*4         pw(imx,imy,nrec)
-      real*4         emspMSL(imx,imy,nrec)
-      real*4         prMSL(imx,imy,nrec)
-      real*4         cp_sfc(imx,imy,nrec)
-      real*4         tp_sfc(imx,imy,nrec)
+      real         gh_sfc(imx,imy,nrec)
+      real         gh(imx,imy,imz,nrec)
+      real         rh_2mFH(imx,imy,nrec)
+      real         rh(imx,imy,imz,nrec)
+      real         rh_lbis(imx,imy,iblev,nrec)
+      real         t_2mFH(imx,imy,nrec)
+      real         t(imx,imy,imz,nrec)
+      real         t_lbis(imx,imy,iblev,nrec)
+      real         uw_10mFH(imx,imy,nrec)
+      real         uw(imx,imy,imz,nrec)
+      real         uw_lbis(imx,imy,iblev,nrec)
+      real         vw(imx,imy,imz,nrec)
+      real         vw_lbis(imx,imy,iblev,nrec)
+      real         vw_10mFH(imx,imy,nrec)
+      real         av(imx,imy,imz,nrec)
+      real         pvv(imx,imy,imz,nrec)
+      real         p_sfc(imx,imy,nrec)
+      real         heli(imx,imy,nrec)
+      real         cape_sfc(imx,imy,nrec)
+      real         cape_lbis(imx,imy,nrec)
+      real         cin_sfc(imx,imy,nrec)
+      real         cin(imx,imy,nrec)
+      real         bli_lbis(imx,imy,nrec)
+      real         pli_lbis(imx,imy,nrec)
+      real         pw(imx,imy,nrec)
+      real         emspMSL(imx,imy,nrec)
+      real         prMSL(imx,imy,nrec)
+      real         cp_sfc(imx,imy,nrec)
+      real         tp_sfc(imx,imy,nrec)
 
-      integer*4      isoLevel(imz)
-      integer*4      boundryLevel(iblev)
+      integer      isoLevel(imz)
+      integer      boundryLevel(iblev)
 
       real*8         valtime(nrec)
       real*8         reftime(nrec)
@@ -75,18 +75,18 @@ c     Variable ids run sequentially from 1 to nvars =   50
       integer*2      Ni(nav) 
       integer*2      Nj(nav) 
 
-      real*4         La1(nav) 
-      real*4         La2(nav) 
-      real*4         Lo1(nav) 
-      real*4         Lo2(nav)
-      real*4         Di(nav) 
-      real*4         Dj(nav) 
-      real*4         IntLat1(nav) 
-      real*4         IntLat2(nav) 
-      real*4         Lon0(nav) 
+      real         La1(nav) 
+      real         La2(nav) 
+      real         Lo1(nav) 
+      real         Lo2(nav)
+      real         Di(nav) 
+      real         Dj(nav) 
+      real         IntLat1(nav) 
+      real         IntLat2(nav) 
+      real         Lon0(nav) 
 
-      integer*4      start(ndims)            ! hyperslab starting index
-      integer*4      count(ndims)            ! hyperslab count from start
+      integer      start(ndims)            ! hyperslab starting index
+      integer      count(ndims)            ! hyperslab count from start
       integer        vdims(ndims)            ! max # of var dims
       character*1024 strbuf                  ! string buffer for var
                                              !  and attr names

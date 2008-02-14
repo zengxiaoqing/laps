@@ -20,14 +20,14 @@ c ----------------------------------------------------------------------
       integer       i,j,k,l,m,n,ii,jj
       integer       ilength,jlength
       integer       ib,ie,jb,je,inc
-      integer*4     i4time
-      integer*4     isoLevel(iz)
+      integer     i4time
+      integer     isoLevel(iz)
       real          dx,dy
-      real*4        v_inno(ix,iy,iz,20)
-      real*4        amean(ix,iy,iz)
-      real*4        dev(ix,iy,iz,20)
-      real*4        var(ix,iy,iz)
-      real*4        covhor(9,9,ix,iy,iz)
+      real        v_inno(ix,iy,iz,20)
+      real        amean(ix,iy,iz)
+      real        dev(ix,iy,iz,20)
+      real        var(ix,iy,iz)
+      real        covhor(9,9,ix,iy,iz)
 
 c--------------- End of Diclaration -----------------------------------
 

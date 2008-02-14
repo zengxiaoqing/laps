@@ -17,13 +17,13 @@ c ----------------------------------------------------------------------
       integer       num_of_ens,iens
       integer       i,j,k,l,m,n,ii,jj
       integer       ilength,jlength
-      integer*4     i4time
-      integer*4     isoLevel(iz)
-      real*4        v_inno(ix,iy,iz,20)
-      real*4        amean(ix,iy,iz)
-      real*4        dev(ix,iy,iz,20)
-      real*4        var(ix,iy,iz)
-      real*4        covert(iz,iz,ix,iy)
+      integer     i4time
+      integer     isoLevel(iz)
+      real        v_inno(ix,iy,iz,20)
+      real        amean(ix,iy,iz)
+      real        dev(ix,iy,iz,20)
+      real        var(ix,iy,iz)
+      real        covert(iz,iz,ix,iy)
 
 c--------------- End of Diclaration -----------------------------------
 
