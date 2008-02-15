@@ -507,7 +507,8 @@ c
             print*,'Return to rotate_background_uv: isave=0; ldir=false'
             return 
          endif
-      elseif(isave.eq.1)then        !restore original nest7grid.parms settings
+      elseif(isave.eq.1)then        
+c Restore original nest7grid.parms settings
          c6_maproj=c6_maproj_save
          grid_cen_lat=centrallat_save
          grid_cen_lon=centrallon_save
@@ -532,16 +533,17 @@ c
      &,dxbg,dybg,standard_latitude,standard_latitude2
      &,standard_longitude,sw,ne,cgrddef,istatus)
 
+c Temporarily set c6_maproj.
       if(gproj.eq.'LC')c6_maproj='lambrt'
-C corrected line below from pltstr to plrstr (BLS 22 Mar 04)
       if(gproj.eq.'PS')c6_maproj='plrstr'
       if(gproj.eq.'MC')c6_maproj='merctr' 
 cc
 c if RUC_NATIVE
-      if(bgmodel.eq.5 .or. bgmodel.eq.3)then
+      if(bgmodel.eq.5 .or. bgmodel.eq.3 .or. bgmodel.eq.13)then
          if(TRIM(cmodel).eq.'CWB_20FA_LAMBERT_NF'.or.
      +      TRIM(cmodel).eq.'CWB_20FA_LAMBERT_RE'.or.
-     +      TRIM(cmodel).eq.'RUC40_NATIVE')then
+     +      TRIM(cmodel).eq.'RUC40_NATIVE'.or.
+     +      TRIM(cmodel).eq.'RUC')then  
             La1=sw(1)
             Lo1=sw(2)
             La2=ne(1)
