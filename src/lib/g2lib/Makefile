@@ -7,10 +7,13 @@ SRCROOT=../../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-# CDEGRIBFLAGS are -DLINUX, -DIBM, etc; DEGRIBFLAGS are USE_PNG, USE_JPEG2000 only; 
+# CDEGRIBFLAGS are -DLINUX, -DIBM, etc; 
+# DEGRIBFLAGS are USE_PNG, USE_JPEG2000 only; 
 CFLAGS += $(CDEGRIBFLAGS) $(DEGRIBFLAGS)
-FFLAGS += $(DEGRIBFLAGS)
-
+ifndef USECPP
+ FFLAGS += $(DEGRIBFLAGS)
+ DBFLAGS += $(DEGRIBFLAGS)
+endif
 
 LIB      = libg2_4.a
 DEBUGLIB = libdebugg2_4.a
@@ -40,7 +43,7 @@ $(LIB): $(ARCHIVE)
 debug: $(SRC)
 	$(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
 	CFLAGS='$(DBCFLAGS) $(CDEGRIBFLAGS) $(DEGRIBFLAGS)' \
-	FFLAGS='$(DBFLAGS) $(DEGRIBFLAGS)'
+	FFLAGS='$(DBFLAGS)'
 
 install: lib
 
@@ -51,7 +54,6 @@ ifdef USECPP
 	$(FC) -c $(FFLAGS) $*.f
 	$(RM) $*.f
 endif
-
 
 clean:
 	$(RM) $(LIB) $(DEBUGLIB) *.o *.mod *~ *#
