@@ -174,6 +174,11 @@ if (! defined $opt_S) {
 if ($opt_m eq "ruc") {
     print "Get ruc\n";
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_hyb/7/0/105/236/\* $public/data/grids/ruc/hyb_A236/grib/");
+    chdir "$public/data/grids/ruc/hyb_A236/grib/";
+    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+    system("rm \*\.tar");
+
 
     if (defined $opt_g) {
         print "Degrib ruc\n";
