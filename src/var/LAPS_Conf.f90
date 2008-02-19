@@ -110,7 +110,6 @@ PRINT*,'Time: ',i4time,a9time,timelen
     WRITE(6,*) 'LAPS_Conf: error obtaining integer missing_data'
     STOP
   ENDIF
-PRINT*,'Missing: ',imissing,rmissing
 
   ! Observations: wind:
   ! CALL get_wind_parms(l_raob,l_cdw,l_radial, &
@@ -124,10 +123,10 @@ PRINT*,'Missing: ',imissing,rmissing
   filename = static_dir(1:len_dir)//'/wind.nl'
   CALL READ_NAMELIST_LAPS ('wind',filename)
   ! CALL READ_NAMELISTS ('wind',filename)
-  IF (status .NE. 1) THEN
-    PRINT*,'Conf: error: wind parameters'
-    STOP
-  ENDIF
+  ! IF (status .NE. 1) THEN
+  !  PRINT*,'Conf: error: wind parameters'
+  !  STOP
+  ! ENDIF
 
   ! Radar info:
   CALL get_max_radars(max_radars,status)
