@@ -105,7 +105,7 @@ then
   FREE="-qfree=f90 -qsuffix=f=f90"
   C_OPT="-O3 -qstrict"
   F_OPT="-O3 -qstrict"
-  W3="-DIBM4"
+  W3="-DIBM4 -DAIX"
 fi
 if test "$arch" = "alpha"
 then
@@ -116,7 +116,7 @@ then
   C_OPT="-O4"
   F_OPT="-O4"
   CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
-  W3="-DALPHA -DSWAPBYTE"
+  W3="-DALPHA"
 fi  
 if test "$arch" = "sun4" 
 then
@@ -148,9 +148,7 @@ then
   CPPFLAGS="$CPPFLAGS -DF90"
   if test "$arch" = "rs6000"
   then
-    W3="-DIBM4"
-  else
-    W3="-DLINUXF90 -DSWAPBYTE"
+    W3="-DIBM4 -DAIX"
   fi
 
   if test "$arch" = "solaris"
@@ -189,7 +187,7 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2"
-    W3="-DLINUX -DSWAPBYTE"
+    W3="-DLINUX"
   fi
   if test "$arch" = "i386"
   then
@@ -201,7 +199,7 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2"
-    W3="-DLINUX -DSWAPBYTE"
+    W3="-DLINUX"
   fi
   if test "$arch" = "x86_64"
   then
@@ -213,8 +211,38 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2 -fastsse"
-    W3="-DLINUX -DSWAPBYTE -DBIT64"
+    W3="-DLINUX"
   fi
+fi  
+
+dnl  For W3, test for x86_64 compiler and 64-bit build
+if test "$arch" = "x86_64"
+then
+grep 'm32' << EOF
+$CFLAGS
+EOF
+  if test $? -eq 0
+  then
+    W3="-DLINUX"
+  else 
+    W3="-DLINUX -DBIT64"
+  fi  
+grep 'ifort' << EOF
+$FC
+EOF
+  if test $? -eq 0
+  then
+    W3="-DLINUX"
+  fi
+fi  
+
+dnl  For W3, test SWAPBYTE flag
+grep 'SWAPBYTE' << EOF
+$CFLAGS
+EOF
+if test $? -eq 0
+then
+  W3="$W3 -DSWAPBYTE"
 fi  
 
 dnl  Test for pgcc compiler 
