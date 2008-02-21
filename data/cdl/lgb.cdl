@@ -118,7 +118,7 @@ netcdf lgb {
             rsf:record = "valtime, reftime";
             rsf:_FillValue = 1.e+37f;
             rsf:long_name="Background specific humidity";
-            rsf:units="g/kg?";
+            rsf:units="g/kg";
             rsf:valid_range= 0.f, 100.f;
             rsf:LAPS_var="RSF";
             rsf:lvl_coord="AGL";
@@ -150,7 +150,7 @@ netcdf lgb {
             pcp:valid_range= 0.f, 1000.f;
             pcp:LAPS_var="PCP";
             pcp:lvl_coord="MSL";
-            pcp:LAPS_units="PA";
+            pcp:LAPS_units="kg/m**2";
                                 
         //	LAPS variables
 
