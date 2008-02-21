@@ -77,10 +77,13 @@ c                           ESRL_NETCDF_LL---> global  area netCDF file from ESR
 c                           FMI_NETCDF_LL ---> limited area netCDF file with ECMWF data 
 c                                              designed specifically for FMI project area.
 c                                             (tested and working as of June-2007)
-c        bgmodels = 13 ---> GFS 
+c        bgmodels = 13 ---> GFS  
 c                           NAM 
-c                     GRIB formatted files for which there is a Vtable.XXX found 
-c                     in dir data/static/Variable_Tables. (ECMWF coming soon.)
+c                           RUC (pressure grid) 
+c                           ECMWF
+c                           FIM
+c                     GRIB1 and GRIB2-formatted data files for which there is a 
+c                     Vtable.XXX found in dir 'data/static/Variable_Tables'. 
 c ----------------------------------------------------------------------------------------
 c
 c forecast_length = the length in hrs of the oldest forecast allowed (to be processed by lga)
