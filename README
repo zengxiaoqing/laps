@@ -22,7 +22,7 @@
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
          2.2.2 ..................  Running Configure
-         2.2.2.1 ...................  Modifying Compiler Flags     
+         2.2.2.1 .....................  Modifying Compiler Flags     
          2.2.3 ..................  Ingest Software changes
          2.2.4 ..................  Running make
          2.2.5 ..................  Geography databases
@@ -31,6 +31,7 @@
          2.2.6.2 .....................  Localization Method 2
          2.3 ..............  Raw data ingest 
          2.3.1 ..................  Model Background (lga/lgb)
+         2.3.1.1 .....................  Acquiring Model Background Data
          2.3.2 ..................  Radar ingest
          2.3.3 ..................  Surface Data
          2.3.4 ..................  Wind Profiler / RASS
@@ -49,7 +50,7 @@
          2.7 ..............  CHANGING THE HORIZONTAL DOMAIN
          2.7.1 ..................  Number of Grid Points
          2.7.2 ..................  Location of Domain (Map projections)
-         2.7.2.1 ...................... MAP PROJECTION FUNCTIONALITY/LIMITATIONS
+         2.7.2.1 .....................  MAP PROJECTION FUNCTIONALITY/LIMITATIONS
          2.7.3 ..................  Domain Resolution 
          2.7.4 ..................  Terrain Smoothing/Filtering  
          2.8 ..............  CHANGING THE VERTICAL DOMAIN
@@ -92,6 +93,7 @@
          3.3.7 ..................  ACCUM 
          3.3.8 ..................  SOIL MOISTURE
          3.3.9 ..................  BALANCE
+         3.3.10 .................  STMAS3D
          3.4 ..............  Model Initialization & Postprocessing
          3.4.1 ..................  LAPSPREP
          3.4.2 ..................  LAPS2GRIB
@@ -344,18 +346,19 @@
 
                --- 2.1.9  GRIB2 external libraries (optional) ---
 
-     We have added support for the background models to now include 
-     GRIB-formatted files. External compression libraries required for 
-     decoding GRIB2-formatted files are libjasper.a, libpng.a, and libz.a
-     and are usually found in /usr/lib. You will need to have a system 
-     administrator download and install external libraries if they are not
-     already on your system. 
+     We have added support for the background models read by lga to now 
+     include GRIB-formatted files. External compression libraries required 
+     for decoding GRIB2-formatted files are libjasper.a, libpng.a, and libz.a
+     and are usually found in /usr/lib. It is recommended to have a system 
+     administrator download and install these external libraries if they 
+     are not already on your system. 
 
      The 'configure' script will determine if these libraries are present. 
-     If found, 'configure' prepares the file 'src/include/makefile.inc' with 
-     DEGRIBLIBS and DEGRIBFLAGS values allowing lga software to read both 
-     GRIB1 and GRIB2-formatted files. Without these compression libraries 
-     available lga can read GRIB1-formatted files. 
+     If all are found, 'configure' prepares the file 'src/include/makefile.inc' 
+     with DEGRIBLIBS, DEGRIBFLAGS and CDEGRIBFLAGS values allowing the lga 
+     software to build to read both GRIB1 and GRIB2-formatted files. Without 
+     these three specific compression libraries available, lga is built to 
+     read only GRIB1-formatted files in addition to NetCDF-formatted files. 
 
      See source directory: $LAPS_SRC_ROOT/src/lib/degrib/README_LIBS file 
      for additional information.
@@ -1008,20 +1011,16 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      entry of "fdda_model_source" = 'lga'.
 
      The acceptable models and formats for the background model are listed in
-     'data/static/background.nl'. As of the current release only bgmodels
-     2, 3, 4, 5, and 6 have been tested and evaluated for Eta, RUC and
-     AVN and the Taiwan "nf" and "re" models.  There is not guarentee
-     that any other models specified in background.nl will work.  LAPS
-     developers will expand the list backgrounds in upcoming releases.
+     'data/static/background.nl'. Many models can be accepted in NetCDF format. 
+     A new capability in LAPS is to process GRIB input without first converting 
+     to NetCDF format. For Grib data to be decoded an associated Vtable.XXX needs 
+     to be found in directory 'data/static/Variable_Tables'. There is no guarentee 
+     that any model specified in background.nl will work.  
 
      RUC grids are ftp'ed from NCEP to GSD, then converted at GSD from 
      GRIB to NetCDF. This NetCDF file is the input for the LAPS ingest
-     process that writes "lga". 
-
-     You might wish to check the following URLs on the WWW for...
-
-     more RUC info:  'http://maps.fsl.noaa.gov/MAPS.rucinfo.cgi'
-     more GRIB info: 'http://sslab.colorado.edu:2222/datastandards.html'
+     process that writes "lga". For more information on RUC check the 
+     following URL for more RUC info:  'http://maps.fsl.noaa.gov/'
 
      RUC is also available from UNIDATA and distributed to universities 
      through private companies like Alden. 
@@ -1035,8 +1034,69 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      going from the RUC/Eta to the intermediate "lga" file, bypassing the 
      NetCDF file on the model grid. This includes RUC on isobaric surfaces. 
 
-     We have recently added support for the background models to include 
-     GRIB-formatted files.
+                 ----   2.3.1.1 Acquiring Model Background Data ---
+
+     GRIB-formatted background model files are now supported and can be
+     directly read into lga.
+
+     --- Where Can Users Find GRIB Data? ---
+     At the NCEP ftp server for real time data sets located at 
+     ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/. These products can be 
+     downloaded from the web or via anonymous ftp. The following is a discussion 
+     for locating and acquiring NAM, GFS, and RUC model backgrounds for use with 
+     lga. The models are available in grib1 and grib2 formats as indicated.
+
+     NAM Model:
+     NAM 221 High Resolution North American grid, 32-km can be
+     found at ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/nam/prod/ with the
+     directory and filenames as follows nam.{YYYYMMDD}/nam.t{CC}.awip32{FF}.tm00{.grib2}
+     where YYYYMMDD is the current date, CC is the model cycle
+     time (00, 06, 12, or 18) and FF is the forecast hour (00-84).
+     awip32 indicates the 32 km North America (NCEP grid 221). 
+
+     GFS Models:
+     GFS global longitude-latitude grid (360x181) 1.0 deg (fh 00-180) can be
+     found at ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/
+     gfs.{YYYYMMDDHH}{CC}/gfs.t{CC}z.pgrbf{XXX}{.grib2}, and
+     GFS global longitude-latitude grid (720x361) 0.5 deg (fh 00-180) can be
+     found at ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/
+     gfs.{YYYYMMDDHH}{CC}/gfs.t{CC}z.pgrb2f{XXX}
+     where CC is the model cycle time (i.e. 00, 06, 12, 18) and XXX is the 
+     forecast hour of product from 00 - 180.
+
+     The 1.0 degree GFS uses file identifier 'pgrb' (pressure-based grib) and 
+     is now available in grib2 as well when '.grib2' is present. The 0.5 degree 
+     GFS uses 'pgrb2' (pressure-based) and is only available in grib2.
+
+     RUC Model:
+     RUC Rapid Update Cycle 40km and 20km pressure data sets can be found at 
+     ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/ruc
+     ruc2a.{YYYYMMDDHH}/ruc2.t{CC}z.pgrb{XXX}{.grib2}
+     where CC is the model cycle time (i.e. 00, 06, 12, 18) and XXX is the 
+     forecast hour of product from 00 - 12 (or more). File identifier 'pgrb' 
+     is used for the 40km resolution and 'pgrb20' is used for the 20km.
+     
+     Additional description of NCEP products can be found at 
+     http://www.nco.ncep.noaa.gov/pmb/products/. A master list of NCEP GRIDS ID 
+     numbers (e.g. 211) and other specifications can be found at 
+     http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html
+
+     --- How Do Users Name The GRIB Data Files? ---
+     For LAPS initialization at NOAA/ESRL, we have a process that automatically 
+     downloads GRIB files to a designated directory. For example, 
+     /data/grid/gfs/global_0p5deg/, /data/grid/gfs/global_1p0deg/, and 
+     /data/grid/gfs/conus211/ are three directories for the GFS global 
+     0.5 degree, global 1.0 degree and CONUS 211 domains. The files within 
+     these directories are renamed from the complex patterns listed above to 
+     filenames with the following pattern: YYJJJHHMMFFFF. So, a file for GFS 
+     CONUS 211 on Jul 23, 2008, 12 UTC, 6 forecast would be named 
+     /data/grid/gfs/conus211/grib/08205120006.
+
+     --- How Does lga.exe Know Where To Find The Data? ---
+     For lga.exe, the acceptable models, directory paths and file formats are 
+     identified in 'data/static/background.nl'. In the example above if we wanted 
+     to use the US-scaled data, we would set bgpath='/data/grid/gfs/conus211/grib/',
+     bgmodel=13 (for GRIB), and cmodel='GFS'.
 
                        ----   2.3.2  Radar ingest ---
 
@@ -3669,6 +3729,17 @@ is input explicitly on a gridpoint by gridpoint basis.
 Reference: McGinley, J.A. and J.R. Smart, 2001: On providing a cloud-balanced 
 initial condition for diabatic initialization. Preprints, 18th Conf. on Weather
 Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc. 
+
+------ 3.3.10 ---------------------STMAS3D------------------------------------
+
+Process: STMAS3D.exe - Space-Time Mesoscale Analysis System in 3D
+
+   This analysis can substitute for 'wind.exe' and 'temp.exe' mentioned
+   above.
+
+Outputs:
+        lt1          3d grid    ht and t field
+        lw3          3d grid    u3, v3 and om field (grid north)
 
 ------- 3.4  ----  Model Initialization & Postprocessing ---------------------
 
