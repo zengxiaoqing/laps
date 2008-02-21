@@ -36,34 +36,32 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 
   implicit none
 
-  integer :: nunit1 = 12
   character(LEN=256) :: gribflnm
   character(LEN=256) :: vtablefn
-  integer :: debug_level = 0 
-  integer , parameter :: maxlvl = 100
-  real , dimension(maxlvl) :: plvl
+  character(LEN=19)  :: hdate
+  character(LEN=9)   :: field
+  character(LEN=2)   :: gproj
+  character(LEN=1)   :: cgrddef
+  integer, parameter :: maxlvl = 100
+  integer, dimension(255) :: iuarr = 0
   integer :: iplvl
   integer :: nlvl
-
-  real :: level
-  integer, dimension(255) :: iuarr = 0
-  character (LEN=9) ::  field
-  character (LEN=19) :: HDATE
   integer :: ierr
+  integer :: nunit1 = 12
+  integer :: debug_level = 0 
   integer :: grib_version
   integer :: vtable_columns
-  logical :: val_std = .false.
-  logical :: cross_dateline 
-
   integer :: istatus
   integer :: nx, ny, nz
-  character (LEN=2) ::  gproj
-  character (LEN=1) ::  cgrddef
-  real :: dx, dy  ! Required by Laps, in meters.
-  real :: sw1, sw2, ne1, ne2
-  real :: realI, realJ, diff_lon
-  real :: stdlon, truelat1, truelat2
-  TYPE(proj_info) :: proj  ! Declared via "USE map_utils" 
+  real, dimension(maxlvl) :: plvl
+  real    :: level
+  real    :: dx, dy  ! Required by Laps, in meters.
+  real    :: sw1, sw2, ne1, ne2
+  real    :: realI, realJ, diff_lon
+  real    :: stdlon, truelat1, truelat2
+  type(proj_info) :: proj  ! Declared via "USE map_utils" 
+  logical :: val_std = .false.
+  logical :: cross_dateline 
 
 ! -----------------
 ! Determine GRIB Edition number
@@ -191,7 +189,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
         
 
         istatus=1
-        if (ierr.eq.1) print*, "iERR ", ierr !istatus=0
+        !if (ierr.eq.1) print*, "iERR ", ierr !istatus=0
 
   return
  end subroutine degrib_nav
@@ -201,7 +199,7 @@ subroutine degrib_nav(gribflnm, vtablefn, nx, ny, nz, &
 subroutine degrib_data(gribflnm, nx, ny, nz, &
          prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, &
          htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, &
-         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, istatus)
+         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, istatus)
 
   use table
   use gridinfo
@@ -213,35 +211,30 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
 
   implicit none
 
-  integer :: nunit1 = 12
   character(LEN=150) :: gribflnm
+  character(LEN=19)  :: hdate
+  character(LEN=9)   :: field
+  integer, parameter :: maxlvl = 100
+  integer, dimension(255) :: iuarr = 0
+  integer :: nunit1 = 12
   integer :: debug_level = 0 
-  integer , parameter :: maxlvl = 100
-  real , dimension(maxlvl) :: plvl
   integer :: iplvl
   integer :: nlvl
-
-  real :: level
-  character (LEN=9) ::  field
-  character (LEN=3) ::  out_format
-  character (LEN=256) ::  prefix
-  logical :: readit
-  integer, dimension(255) :: iuarr = 0
-  character (LEN=19) :: HSTART, HEND, HDATE
   integer :: itime
   integer :: ntimes
   integer :: ierr
   integer :: grib_version
-  logical :: val_std = .false.
-
   integer :: istatus, i, j, k 
   integer :: nx, ny, nz, nzsh
+  integer :: icn3d, icm(42)
+  real, dimension(maxlvl) :: plvl
+  real    :: level
   real    :: t_ref, rfill, prsfc, qsfc
   real    :: make_ssh, make_td
-
   real    :: sumtot, shsum(42), shavg, r_bogus_sh
-  integer :: icn3d, icm(42)
-
+  real    :: it,xe,mrsat,esat
+  logical :: readit
+  logical :: val_std = .false.
 
 ! *** sfc background arrays.
   real :: prbg_sfc(nx,ny)
@@ -253,6 +246,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real :: t_at_sfc(nx,ny)
   real :: htbg_sfc(nx,ny)
   real :: mslpbg(nx,ny)
+  real :: pcpbg(nx,ny)
 
 ! *** 3D background arrays.
   real :: prbght(nx,ny,nz)
@@ -263,7 +257,6 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
   real :: vwbg(nx,ny,nz)
   real :: wwbg(nx,ny,nz)
 
-  real   :: it,xe,mrsat,esat
 
 ! -----------------
 ! Determine GRIB Edition number
@@ -354,7 +347,7 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
         call get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz, &
          prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, &
          htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, &
-         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, istatus)
+         tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, istatus)
 
 !-----
 
@@ -375,8 +368,6 @@ subroutine degrib_data(gribflnm, nx, ny, nz, &
         iuarr(nunit1) = 0
      endif 
 
-     !ptm call rrpr(hstart, ntimes, interval, nlvl, maxlvl, plvl, debug_level, out_format, prefix)
-     
 ! ------------- qcmodel sh ----------------
 
      !nzsh=nz-5

@@ -268,7 +268,7 @@ end subroutine output
 
 subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
          ,prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, htbg_sfc, tpbg_sfc, shbg_sfc& 
-         ,uwbg_sfc, vwbg_sfc, tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, istatus)
+         ,uwbg_sfc, vwbg_sfc, tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, istatus)
 !                                                                             !
 !*****************************************************************************!
 !  Write output to a file.
@@ -323,6 +323,7 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
      real :: t_at_sfc(nx,ny)
      real :: htbg_sfc(nx,ny)
      real :: mslpbg(nx,ny)
+     real :: pcpbg(nx,ny)
 
 ! *** 3D background arrays.
 
@@ -391,6 +392,8 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
                  prbg_sfc = scr2d
               elseif (field.eq.'PMSL') then
                  mslpbg = scr2d
+              elseif (field.eq.'ACPC') then
+                 pcpbg = scr2d
               endif
               nullify(scr2d)
 
@@ -443,6 +446,9 @@ subroutine get_lapsbg(nlvl, maxlvl, plvl, debug_level, nx, ny, nz&
 !     write(*, *) "OUTPUT shbg_sfc(3,30)", shbg_sfc(3,30)
 !     do jj = 1, 6 
 !        write(*, *) "OUTPUT shbg(3,30,",jj, shbg(3,30,jj)
+!     enddo
+!     do jj = 1, 26 
+!        write(*, *) "OUTPUT pcpbg(30,",jj, pcpbg(30,jj)
 !     enddo
 
 
