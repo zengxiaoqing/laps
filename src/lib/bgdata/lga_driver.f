@@ -102,6 +102,8 @@ c
       real, allocatable  :: t_at_sfc(:,:)
       real, allocatable  :: htbg_sfc(:,:)
       real, allocatable  :: mslpbg(:,:)
+      real, allocatable  :: pcpbg(:,:)       !Precip at surface, ACPC (k/m^2)
+
 c
 c *** 3D background arrays.
 c
@@ -153,7 +155,8 @@ c
      .          vw_sfc(nx_laps,ny_laps),
      .          pr_sfc(nx_laps,ny_laps),     !Stn pressure
      .          rp_sfc(nx_laps,ny_laps),     !Reduced pressure
-     .          mslp(nx_laps,ny_laps)
+     .          mslp(nx_laps,ny_laps),
+     .          pcp_sfc(nx_laps,ny_laps)
 
       real, allocatable :: rp_lvl(:,:)       !Reduced pressure lvl
       real, allocatable :: rp_tp(:,:)        !Reduced pressure temp (holder)
@@ -225,7 +228,7 @@ c
      +,prbght,prbgsh,prbguv,prbgww
      +,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
+     +,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,istatus)
 c
          real  :: prbg_sfc(nx_bg,ny_bg)
          real  :: uwbg_sfc(nx_bg,ny_bg)
@@ -236,6 +239,7 @@ c
          real  :: t_at_sfc(nx_bg,ny_bg)
          real  :: htbg_sfc(nx_bg,ny_bg)
          real  :: mslpbg(nx_bg,ny_bg)
+         real  :: pcpbg(nx_bg,ny_bg)
 c
          real  :: prbght(nx_bg,ny_bg,nzbg_ht)
          real  :: prbgsh(nx_bg,ny_bg,nzbg_sh)
@@ -608,6 +612,7 @@ c             lga_status=1
        allocate (tpbg_sfc(nx_bg,ny_bg))
        allocate (t_at_sfc(nx_bg,ny_bg))
        allocate (mslpbg(nx_bg,ny_bg))
+       allocate (pcpbg(nx_bg,ny_bg))
 
        t_at_sfc=missingflag
 
@@ -618,7 +623,7 @@ c             lga_status=1
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,istatus_prep(nf))
+     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,istatus_prep(nf))
 
            if(.false.)then
            print*,'After read'
@@ -695,7 +700,8 @@ c         convert to wfo if necessary
      +               tdbg_sfc,
      +               tpbg_sfc,
      +               t_at_sfc,
-     +               mslpbg)
+     +               mslpbg,
+     +               pcpbg)
 
  
        else   !processing the file because it is not a reject
@@ -955,7 +961,8 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
      +                          ,tdbg_sfc
      +                          ,tpbg_sfc
      +                          ,t_at_sfc
-     +                          ,mslpbg)
+     +                          ,mslpbg
+     +                          ,pcpbg)
 
                      return
 
@@ -1029,6 +1036,8 @@ c
      .        grx,gry,prbg_sfc,pr_sfc,bgmodel)
             call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,mslpbg,mslp,bgmodel)
+            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,pcpbg,pcp_sfc,bgmodel)
 c
 c Because not all model backgrounds have t_at_sfc (ground and/or sst)
 c then no need to hinterp unless it exists.
@@ -1075,6 +1084,7 @@ c
            deallocate (tpbg_sfc)
            deallocate (t_at_sfc) 
            deallocate (mslpbg)
+           deallocate (pcpbg)
 c
 c... Do the temp, moisture (sh_sfc returns with Td), and pressures
 c... Only ETA48_CONUS and namelist switch "luse_sfc_bkgd" enable the use
@@ -1205,6 +1215,7 @@ c          td_sfc=tdbg_sfc
            sh_sfc=shbg_sfc
            uw_sfc=uwbg_sfc
            vw_sfc=vwbg_sfc
+           pcp_sfc=pcpbg
 c
 c LAPS_FUA doesn't require interp but we still want to recompute
 c pr_sfc, tp_sfc and sh_sfc using high res terrain
@@ -1239,7 +1250,7 @@ c
            deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +        ,prbght, prbguv, prbgsh, prbgww )
            deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
-     +        ,vwbg_sfc,tdbg_sfc, tpbg_sfc, t_at_sfc, mslpbg)
+     +        ,vwbg_sfc,tdbg_sfc, tpbg_sfc, t_at_sfc, mslpbg, pcpbg)
 
          endif !(linterp)
 
@@ -1279,7 +1290,7 @@ c              sfcgrid(i,j,kk+4)=missingflag
           enddo
           call write_lgb(nx_laps,ny_laps,time_bg(nf),bgvalid
      .,cmodel,missingflag,uw_sfc,vw_sfc,tp_sfc,t_sfc,qsfc
-     .,pr_sfc,mslp,sh_sfc,rp_sfc,istatus)
+     .,pr_sfc,mslp,sh_sfc,rp_sfc,pcp_sfc,istatus)
           if(istatus.ne.1)then
             print*,'Error writing lgb - returning to main'
             return
@@ -1346,7 +1357,7 @@ c interp 3D fields
 
 c interp 2D fields
                call time_interp(outdir,ext,
-     +           nx_laps,ny_laps,1,9,pr(1),
+     +           nx_laps,ny_laps,1,10,pr(1),
      +           i4time_bg_valid(i),i4time_bg_valid(i-1),
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))

@@ -4,7 +4,7 @@
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg, tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tdbg_sfc,tpbg_sfc
-     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
+     +    ,t_at_sfc,uwbg_sfc,vwbg_sfc,mslpbg,pcpbg,istatus)
 
 c KML: CHANGES MADE APRIL 2004
 c tdbg_sfc (model 2m dew point) is now read in during subroutine read_eta_conusc
@@ -61,6 +61,7 @@ c
       real, intent(out) :: tdbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: tpbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: t_at_sfc(nx_bg,ny_bg)
+      real, intent(out) :: pcpbg(nx_bg,ny_bg)          !Precip at surface, ACPC (k/m^2)
 
       real      lon0,lat1,lat2
       real      ssh2
@@ -558,7 +559,7 @@ C WNI-BLS
          call degrib_data(fullname, nx_bg, ny_bg, nzbg_ht, 
      &      prbght, htbg, tpbg, shbg, uwbg, vwbg, wwbg, 
      &      htbg_sfc, tpbg_sfc, shbg_sfc, uwbg_sfc, vwbg_sfc, 
-     &      tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, istatus)
+     &      tdbg_sfc, t_at_sfc, prbg_sfc, mslpbg, pcpbg, istatus)
 
             prbgsh(:,:,:)=prbght(:,:,:) 
             prbguv(:,:,:)=prbght(:,:,:) 
@@ -570,7 +571,7 @@ c        write(*, *) "READBGDATA wwbg(3,30,1)", wwbg(3,30,1)
 c        write(*, *) "READBGDATA tdbg_sfc(3,30)", tdbg_sfc(3,30)
 c        write(*, *) "READBGDATA shbg_sfc(3,30)", shbg_sfc(3,30)
 c        do j = 1, nzbg_ht 
-c           write(*, *) "READBGDATA shbg(3,30,",j, shbg(3,30,j)
+c           write(*, *) "READBGDATA pcpbg(3,",j, pcpbg(3,j)
 c        enddo
 
       endif
@@ -653,6 +654,12 @@ c
       if(nan_flag .ne. 1) then
          print *,' ERROR: NaN found in sfc mslp array '
       endif
+
+      call check_nan2(pcpbg,nx_bg,ny_bg,nan_flag)
+      if(nan_flag .ne. 1) then
+         print *,' ERROR: NaN found in sfc pcpbg array '
+      endif
+
       istatus = 0
 
 99    if(istatus.ne. 0)then

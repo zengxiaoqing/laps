@@ -195,7 +195,7 @@ c ------------------------------------------------------------------------------
 c
       subroutine write_lgb(nx_laps,ny_laps,bgtime,bgvalid,cmodel
      .,missflag,uw_sfc,vw_sfc,tp_sfc,t_sfc,qsfc,pr_sfc,mslp,td_sfc
-     .,rp_sfc,istatus)
+     .,rp_sfc,pcp_sfc,istatus)
 
       implicit none
 
@@ -214,6 +214,7 @@ c
      .          vw_sfc(nx_laps,ny_laps),
      .          pr_sfc(nx_laps,ny_laps),
      .          rp_sfc(nx_laps,ny_laps),
+     .          pcp_sfc(nx_laps,ny_laps),
      .          mslp(nx_laps,ny_laps)
 
       character*256 outdir
@@ -428,6 +429,28 @@ c --- Reduced Pressure
      .           ,units,comment,rp_sfc,istatus)
       if (istatus .ne. 1) then
          print*,'Error writing interpolated data to LAPS lgb - P'
+         return
+      endif
+
+c --- Precipitation 
+      warncnt=0
+      do i=1,nx_laps
+      do j=1,ny_laps
+         if(rp_sfc(i,j).ge.missflag.and.warncnt.lt.100)
+     +              then
+            print*,'Missing data at ',i,j,' in precip - pcp '
+            warncnt=warncnt+1
+         endif
+      enddo
+      enddo
+      var='PCP'
+      units='k/m**2'
+      print*,'PCP'
+      call write_laps(bgtime,bgvalid,outdir,ext
+     .           ,nx_laps,ny_laps,1,1,var,0,lvl_coord
+     .           ,units,comment,pcp_sfc,istatus)
+      if (istatus .ne. 1) then
+         print*,'Error writing interpolated data to LAPS lgb - PCP'
          return
       endif
 

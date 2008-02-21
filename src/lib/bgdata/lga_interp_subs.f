@@ -364,6 +364,7 @@ c
          var(1,7)='DSF'
          var(1,8)='P  '
          var(1,9)='TGD'
+         var(1,10)='PCP'
       endif
 
       newfcst=fcst1-(i4time_valid2-i4time_now)
@@ -404,7 +405,7 @@ c
      .        grid1,istatus)
 c
          if(istatus.ne.1) then
-            print *, 'ERROR returned from read_laps'
+            print *, 'ERROR returned from read_laps, time1'
             stop 'lga_interp'
          endif
 
@@ -412,7 +413,7 @@ c
      .        nx,ny,nz,nz,var(1,n),ip,lvl_coord,units,comment,
      .        grid2,istatus)
          if(istatus.ne.1) then
-            print *, 'ERROR returned from read_laps'
+            print *, 'ERROR returned from read_laps, time2'
             stop 'lga_interp'
          endif
 c
