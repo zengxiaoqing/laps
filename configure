@@ -1497,6 +1497,13 @@ EOF
   else 
     W3="-DLINUX -DBIT64"
   fi  
+grep 'ifort' << EOF
+$FC
+EOF
+  if test $? -eq 0
+  then
+    W3="-DLINUX"
+  fi
 fi  
 
 grep 'SWAPBYTE' << EOF
