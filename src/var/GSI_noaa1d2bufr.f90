@@ -141,7 +141,7 @@
        ipath=index(path_satdat,' ')
        if( ipath.le.1 )then
            print*,'No setting environmental variable: POLARSAT'
-           call exit(1)
+           return
        endif
        print*,'directory of input data: ',path_satdat(1:ipath-1)
        path_satdat(ipath:ipath)=char(0)
@@ -153,7 +153,7 @@
        if( (ier.ne.0).or.(numfile.lt.1) )then
            print*,'No any NOAA satellite hdf format file.'
            print*,'directory of input data: ',path_satdat(1:ipath-1)
-           call exit(1)
+           return
        endif
 
 !-----------------------------------------------------------------------
@@ -163,7 +163,7 @@
        len=index(dir,' ')
        if( len.le.1 )then
            print*,'Cannot get LAPS_DATA_ROOT directory.'
-           call exit(1)
+           return
        endif
        sat_table(1:len-1)=dir(1:len-1)
        sat_table(len:len+23)='/log/satellite.bufrtable'
@@ -172,7 +172,7 @@
        if( .not.sattab )then
            print*,'satellite bufr table is not exist.'
            print*,'satellite bufr table: ',sat_table(1:len_sat_table)
-           call exit(1)
+           return
        endif 
        sat_table(len_sat_table+1:len_sat_table+1)=char(0)
        print*,'satellite bufr table: ',sat_table(1:len_sat_table)
@@ -869,7 +869,7 @@
        real stzn(xtrack),sozn(xtrack),staz(xtrack),soaz(xtrack)
        real brtmp(5,90)
        integer i,j,k,kk,ij,jday,mn,ihour
-       integer*4 in4
+       integer in4
 
        ier=0
        if( nbt.ne.12288 )then
@@ -1252,7 +1252,7 @@
        real stzn(xtrack),sozn(xtrack),staz(xtrack),soaz(xtrack)
        real brtmp(15,30)
        integer i,j,k,kk,ij,jday,mn,ihour
-       integer*4 in4
+       integer in4
 
        ier=0
        if( nbt.ne.4608 )then
@@ -1679,7 +1679,7 @@
        real stzn(xtrack),sozn(xtrack),staz(xtrack),soaz(xtrack)
        real brtmp(20,56),radiate
        integer i,j,k,kk,ij,jday,mn,ihour
-       integer*4 in4
+       integer in4
 
        ier=0
        if( nbt.ne.15872 )then
@@ -1918,7 +1918,7 @@
        byte genbyte(96),by4(4)
        integer machine,sateid,instrument,nline,ier
        integer year,month,day,hour,minute
-       integer*4 in4
+       integer in4
        integer i,j,jday,mn
 
        ier=0
@@ -2055,7 +2055,7 @@
 ! Usage :
 !    call by2int4(by4,in4)
 !
-! Description      : To transform 4-bytes to integer*4 for HP, SGI machine.
+! Description      : To transform 4-bytes to integer for HP, SGI machine.
 !
 ! Arguments :
 !  I/O/W   name,      type,       description
@@ -2063,12 +2063,12 @@
 !                                 =0, for HP, SGI machine.
 !                                 .not. 0, for DEC, PC machine.
 !    I     by4(4)     byte array  input 4 bytes.
-!    O     in4        integer*4   output integer*4.
+!    O     in4        integer   output integer.
 !
 ! Modules Called : none
 !***********************************************************************
 
-      integer*4 in4,ib
+      integer in4,ib
       byte by4(4),by_tem(4)
       equivalence (ib,by_tem(1))
       if( machine.eq.0 )then
