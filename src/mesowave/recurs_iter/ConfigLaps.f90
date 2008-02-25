@@ -22,14 +22,14 @@ MODULE ConfigLaps
   CHARACTER :: ext_s*30,dir_s*200      
   CHARACTER :: units*60,comment*60,name*100
   CHARACTER :: maproj*6,nest7grid*9,var_s*3 ! map projection character string
-  REAL*4    :: stanlat,stanlat2,stanlon,badflag,grid_spacingx,grid_spacingy
+  REAL      :: stanlat,stanlat2,stanlon,badflag,grid_spacingx,grid_spacingy
   ! gridded lat, lon , observation arrary o (variables, stations*time)
   REAL, ALLOCATABLE, DIMENSION (:,:) :: lat,lon,ldf,olaps
   ! observation lat, lon, ob time and weight
   REAL, ALLOCATABLE, DIMENSION (:) :: olat,olon,otime,wght
 
   ! Background fields:
-  REAL*4, ALLOCATABLE, DIMENSION (:,:,:,:) :: bkgd
+  REAL,   ALLOCATABLE, DIMENSION (:,:,:,:) :: bkgd
 
 CONTAINS
 

@@ -18,7 +18,7 @@ SUBROUTINE WriteAnalysis(a,n)
   CHARACTER :: ext*3,varnames(nvlaps+10)*3,vunits(nvlaps+10)*3
   CHARACTER :: lvl_coord(nvlaps+10)*3,comment(nvlaps+10)*125
   INTEGER   :: lvl(nvlaps+10),istatus,it,i,j
-  REAL*4    :: data(n(1)-2*nfic,n(2)-2*nfic,16)
+  REAL      :: data(n(1)-2*nfic,n(2)-2*nfic,16)
   REAL	    :: pp(n(1),n(2))
 
   CALL get_directory('lsx', dir_s, len)
@@ -35,10 +35,10 @@ SUBROUTINE WriteAnalysis(a,n)
   varnames(2) = 'U  '	! U
   vunits(2) = 'M/S'
   varnames(3) = 'V  '	! V
-  vunits(2) = 'M/S'
-  varnames(4) = 'MSL ' 	! Pressure
-  comment(4) = 'MSL PRESSURE'
-  vunits(4) = 'PA '
+  vunits(3) = 'M/S'
+  varnames(4) = 'VIS' 	! Visibility (m)
+  ! comment(4) = ''
+  vunits(4) = 'M'
   varnames(5) = 'TD '	! Dew point
   vunits(5) = 'K  '
   varnames(6) = 'P  '	! Reduced Pressure
@@ -81,9 +81,6 @@ SUBROUTINE WriteAnalysis(a,n)
      data(1:nx,1:ny,1:n(4)) = &
          a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,it,1:n(4))
 
-     !!! Temporarily use reduced pressure to replace MSL p:
-     data(1:nx,1:ny,4) = data(1:nx,1:ny,6)
-
      ! Theta_e: equivalent potential temperature
      DO j=1,ny
 	DO i=1,nx
@@ -98,7 +95,7 @@ SUBROUTINE WriteAnalysis(a,n)
 	                (100000.0/data(1:nx,1:ny,4))**(capr/cp)
 
      ! Flux convergence:
-     data(1:nx,1:ny,16) = data(1:nx,1:ny,4)/100.0
+     data(1:nx,1:ny,16) = data(1:nx,1:ny,6)/100.0
      CALL meso_anl(data(1,1,2),data(1,1,3),data(1,1,16),data(1,1,1), &
 	           data(1,1,5),data(1,1,n(4)+3),dxy(1,1,1),dxy(1,1,2), &
 	           data(1,1,n(4)+5),data(1,1,n(4)+4),data(1,1,n(4)+6), &
