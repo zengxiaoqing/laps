@@ -204,8 +204,8 @@ SUBROUTINE WRFD_SFCOBS(NUMBROBS,OBSTIMES,OBSVNLAT,OBSVNLON, &
   CHARACTER, INTENT(IN) :: STTNAMES(*)*20, &
                            REPORTYP(*)*6,PRVDNAME(*)*11
   INTEGER,   INTENT(IN) :: NUMBROBS
-  INTEGER*4, INTENT(IN) :: OBSTIMES(*)
-  REAL*4                :: OBSVNLAT(*),OBSVNLON(*),OBSVNELV(*), &
+  INTEGER,   INTENT(IN) :: OBSTIMES(*)
+  REAL                  :: OBSVNLAT(*),OBSVNLON(*),OBSVNELV(*), &
                            MSLPRESS(*),MSLPSERR(*), &
                            REFPRESS(*),REFPSERR(*), &
                            TEMPTOBS(*),TMPERROR(*), &
