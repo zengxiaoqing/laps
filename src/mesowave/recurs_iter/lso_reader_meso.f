@@ -79,7 +79,7 @@ c
 	! Background:
 	character*31 bkg_ext
  	integer      nx,ny,bkg_time
-        real*4	     bkgd(nx,ny,ncycles,6)
+        real	     bkgd(nx,ny,ncycles,6)
 
 	! Lapse rates: see laps mdatlap.f under sfc
 	REAL         lapse_t,lapse_td
@@ -138,13 +138,13 @@ c       Background: time order is reverse of LAPS reading order - YUANFU.
 	   STOP
 	ENDIF
 	print*,'TEMP BKGD: ',bkgd(1,1,ncycles-n+1,1),bkg_time
-        call get_background_sfc(i4prev(n),'MSLP',bkg_ext,bkg_time,
+        call get_background_sfc(i4prev(n),'VISB',bkg_ext,bkg_time,
      &       bkgd(1,1,ncycles-n+1,4),laps_cycle_time,nx,ny,jstatus)
         IF (jstatus .EQ. 0) THEN
-	   PRINT*,'lso_reader_meso: error in reading SFCP background'
-	   STOP
+	   PRINT*,'lso_reader_meso: No background for VISB'
+	   bkgd(1:nx,1:ny,ncycles-n+1,4) = 0.0
 	ENDIF
-	print*,'MSLP BKGD: ',bkgd(1,1,ncycles-n+1,4),bkg_time
+	print*,'VISB BKGD: ',bkgd(1,1,ncycles-n+1,4),bkg_time
         call get_bkgwind_sfc(i4prev(n),bkg_ext,bkg_time,
      &       bkgd(1,1,ncycles-n+1,2),bkgd(1,1,ncycles-n+1,3),
      &       laps_cycle_time,nx,ny,jstatus)
