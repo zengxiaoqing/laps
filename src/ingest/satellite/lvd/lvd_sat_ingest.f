@@ -28,14 +28,15 @@ c
       Integer laps_cycle_time
       Integer nav_status
       Integer nchannels
+      Integer nsat,ntype
 
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
       include 'satellite_namelist_lvd.cmn'
 
-      character*3 chtype(maxchannel)
-      character*9 cfname_cur
-      character*9 cfname_sys
+      character*3   chtype(maxchannel)
+      character*9   cfname_cur
+      character*9   cfname_sys
       character*6   csatid(maxsat)
       character*3   csattypes(maxtype*maxsat)
       character*3   cchanneltypes(maxchannel*maxtype*maxsat)
@@ -43,8 +44,6 @@ c
 
       character   cgeneric_dataroot*255
       character   c_gridfname*50
-
-      integer     i_qc_sat_flag(maxchannel*maxtype*maxsat)
 
       real, allocatable :: gri(:,:,:)
       real, allocatable :: grj(:,:,:)
@@ -84,70 +83,91 @@ c this is designed to allow archive data runs!
 c---------------------------------------------------------------
 c Compute array dimensions for ir, vis, and wv.
 c
+      nsat=0
       do k=1,maxsat
+
        if(isats(k).eq.1)then
+        nsat=nsat+1
+        ntype=0
 
-       do j=1,maxtype
-        if(itypes(j,k).eq.1)then
+        do j=1,maxtype
 
-         nav_status=0
+         if(itypes(j,k).eq.1)then
+          ntype=ntype+1
+          nchannels=0
+          nav_status=0
+          do i=1,maxchannel
+           if(ichannels(i,j,k).eq.1)then
+            nchannels=nchannels+1
+            chtype(nchannels)=c_channel_types(i,j,k)
+           endif
+          enddo
 
-50       nchannels=0
-         do 4 i=1,maxchannel
-          if(ichannels(i,j,k).eq.1)then
-           nchannels=nchannels+1
-           chtype(nchannels)=c_channel_types(i,j,k)
-c--------------------------------------------------------------------
-
-         endif
-4        enddo
+          if(nchannels.eq.0)then
+            print*,'!!Error: No channels specified',
+     &'for this satellite and type: ',c_sat_id(k),c_sat_types(j,k)
+            print*,'!!Terminating!!'
+            goto 1000
+          endif
  
-         print*,'=================================================='
-         print*,'          lvd process information'
-         print*,'--------------------------------------------------'
-         print*,'Satellite ID: ',c_sat_id(k)
-         print*,'Satellite TYPE: ',c_sat_types(j,k)
-         write(6,40)(chtype(i),i=1,nchannels)
-40       format(1x,'Satellite CHANNELS:',5(1x,a3))
-         print*,'Path-to-raw-satellite'
-         print*,'--------------------------------------------------'
-         do i=1,maxchannel
-           print*,' ',i,' ',TRIM(path_to_raw_sat(i,j,k))
-         enddo
+          print*,'=================================================='
+          print*,'          lvd process information'
+          print*,'--------------------------------------------------'
+          print*,'Satellite ID: ',c_sat_id(k)
+          print*,'Satellite TYPE: ',c_sat_types(j,k)
+          write(6,40)(chtype(i),i=1,nchannels)
+40        format(1x,'Satellite CHANNELS:',6(1x,a3))
+          print*,'Path-to-raw-satellite'
+          print*,'--------------------------------------------------'
+          do i=1,maxchannel
+            print*,' ',i,' ',TRIM(path_to_raw_sat(i,j,k))
+          enddo
  
-         call compute_nav_llij(nx_l,ny_l,maxchannel,nchannels,
+          call compute_nav_llij(nx_l,ny_l,maxchannel,nchannels,
      &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,gri,grj,
      &nav_status)
 
-         if(nav_status.eq.1)then
+          if(nav_status.eq.1)then
              print*,'Success computing mapping arrays ',c_sat_id(k)
      +,'/',c_sat_types(j,k)
 
-c             call config_satellite_lvd(istatus)
-c             goto 50
-
-         elseif(nav_status.lt.0)then
-              print*,'ERROR returned from compute_nav_llij - stop'
-              goto 1000
-         endif
+          elseif(nav_status.lt.0)then
+             print*,'ERROR returned from compute_nav_llij - stop'
+             print*,'!!Terminating!!'
+             goto 1000
+          endif
 c
 c ================================================================
 c
-         call lvd_driver_sub(nx_l,ny_l,k,j,n_images,
+          call lvd_driver_sub(nx_l,ny_l,k,j,n_images,
      &                      chtype,i4time_cur,i_delta_sat_t_sec,
      &                      gri,grj,istatus)
 
-         if(istatus.ne.1)then
-            write(6,*)'NO data was processed by lvd_driver_sub'
-         else
-            write(6,*)'Data was processed by lvd_driver_sub'
-         endif
+          if(istatus.ne.1)then
+            print*,'NO data processed by lvd_driver_sub: ',
+     &c_sat_id(k),'/',c_sat_types(j,k)
+          else
+            print*,'Data processed by lvd_driver_sub: ',
+     &c_sat_id(k),'/',c_sat_types(j,k)
+          endif
 
 c =================================================================
-        endif 
-       enddo
+         endif 
+        enddo
+        if(ntype.eq.0)then
+         print*,'!!Error: No type specified for this satellite:'
+         print*,'   c_sat_id(k)'
+         print*,'!!Terminating!!'
+         goto 1000
+        endif
        endif
       enddo
 
-1000  stop
+      if(nsat.eq.0)then
+       print*,'!!Error: No satellites specified for this lvd run'
+       print*,'!!Check static/satellite_lvd.nl:  NSATS or CSATID'
+       print*,'!!Terminating!!'
+      endif
+1000  deallocate (gri,grj)
+      stop
       end

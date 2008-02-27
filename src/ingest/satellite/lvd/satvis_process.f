@@ -141,7 +141,7 @@ c      real mindiff
        real   visin1_cur,visin2_cur
        real   visout1_cur,visout2_cur
 
-       integer*4 icnt
+       integer   icnt
 c
        integer i4time,imax,jmax
        integer isat
@@ -228,12 +228,20 @@ c all other satellite vis data require two stretches.
        visout2_g8=255.0 !vis_cnt_range_out(2,1)
 
 c For locally produced (ground station SBN look-alike) visible we
-c want to reverse the already applied normalization (national scale
-c normalization) and then "re-normalized" for the local domain.
+c want to reverse the already applied (national scale) normalization 
+c and then "re-normalized" for the local domain.  All satellites of
+c type 'cdf' qualify for the reverse. Only one satellite is selected
+c for type 'cdf' by GSD'S ITS group.
 c
-       if(csatid.eq.'goes08'.and.c_sat_type.eq.'cdf')then    !this switch is for gvar conus /public data
-c  					       that is a pre-normalized display-ready image.
-          isat = 1
+c Currently (2007) type 'cdf' is goes12.
+c
+       if(c_sat_type.eq.'cdf')then
+
+          if(csatid.eq.'goes08')isat=1
+          if(csatid.eq.'goes09')isat=6
+          if(csatid.eq.'goes10')isat=3
+          if(csatid.eq.'goes11')isat=7
+          if(csatid.eq.'goes12')isat=5    
 
           do j=1,jmax
           do i=1,imax
@@ -241,7 +249,7 @@ c  					       that is a pre-normalized display-ready image.
           enddo
           enddo
 
-          write(6,*)'These vis data are already normalized'
+          print*,csatid,'/',c_sat_type,' vis data already normalized'
           i_dir = -1
 
 c override the namelist value for these data. The fsl-conus data
@@ -274,7 +282,7 @@ c
           do i=1,imax
 c
 c Since this data looks like raw goes-7 counts (due to normalization by
-c FD), we must reverse the stretch.
+c FD, now ITS), we must reverse the stretch.
 c
 
              if(laps_vis_norm(i,j).ne.r_missing_data)then
@@ -345,7 +353,7 @@ c                call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
              visout1_cur=vis_cnt_range_out(1,isat)
              visout2_cur=vis_cnt_range_out(2,isat)
 
-             print*,'goes10 to goes08 stretch parameters:'
+             print*,csatid,' to goes08 stretch parameters:'
              print*,'   In:  ',visin1_cur,visin2_cur
              print*,'   Out: ',visout1_cur,visout2_cur
 
@@ -382,7 +390,7 @@ c                 call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
              isat = 5
              print*,'Stretch ',csatid,' to goes7 look-a-like'
              print*,'Two step process:'
-             print*,'1:  stretch ',csatid,'to goes08'
+             print*,'1:  stretch ',csatid,' to goes08'
              print*,'2:  stretch goes08 to look like goes07'
 
              visin1_cur=vis_cnt_range_in(1,isat)
@@ -390,7 +398,7 @@ c                 call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
              visout1_cur=vis_cnt_range_out(1,isat)
              visout2_cur=vis_cnt_range_out(2,isat)
 
-             print*,'goes12 to goes08 stretch parameters:'
+             print*,csatid, ' to goes08 stretch parameters:'
              print*,'   In:  ',visin1_cur,visin2_cur
              print*,'   Out: ',visout1_cur,visout2_cur
 
@@ -418,7 +426,7 @@ c for goes8 - make it look like goes7
 c
 c=======================================
 c GVAR Switch
-c
+c=======================================
        elseif(c_sat_type.eq.'gvr'.or.c_sat_type.eq.'gwc')then
 
           write(6,*)'GVAR Visible data: ',csatid
@@ -474,11 +482,12 @@ c    &                     ,laps_vis_norm(i,j))
                    call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
 
 c for goes8 - make it look like goes7
-c                  call stretch(visin1_g8,visin2_g8
-c    &                     ,visout1_g8,visout2_g8
-c    &                     ,laps_vis_norm(i,j))
+                   call stretch(visin1_g8,visin2_g8
+     &                     ,visout1_g8,visout2_g8
+     &                     ,laps_vis_norm(i,j))
 
-                   call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
+c                  call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
+
                 endif
              enddo
              enddo
@@ -497,7 +506,7 @@ c    &                     ,laps_vis_norm(i,j))
              visout1_cur=vis_cnt_range_out(1,isat)
              visout2_cur=vis_cnt_range_out(2,isat)
 
-             print*,'goes12 to goes08 stretch parameters:'
+             print*,csatid,' to goes08 stretch parameters:'
              print*,'   In:  ',visin1_cur,visin2_cur
              print*,'   Out: ',visout1_cur,visout2_cur
 
@@ -562,9 +571,16 @@ c               call stretch(38.,400.,68.,220.,laps_vis_norm(i,j))
 
           endif
 
-       elseif(csatid.eq.'goes09'.and.c_sat_type.eq.'cdf')then 
+c==========================
+c this switch is obsolete
+c==========================
+       elseif(c_sat_type.eq.'cdf')then
+
+        if(csatid.eq.'goes09'.or.csatid.eq.'goes11')then 
 
          isat = 6
+         if(csatid.eq.'goes11')isat=7
+
          print*,'Stretch ',csatid,' to goes7 look-a-like'
          print*,'Two step process:'
          print*,'1:  stretch ',csatid,'to goes08'
@@ -575,7 +591,7 @@ c               call stretch(38.,400.,68.,220.,laps_vis_norm(i,j))
          visout1_cur=vis_cnt_range_out(1,isat)
          visout2_cur=vis_cnt_range_out(2,isat)
 
-         print*,'goes09 to goes08 stretch parameters:'
+         print*,csatid, ' to goes08 stretch parameters:'
          print*,'   In:  ',visin1_cur,visin2_cur
          print*,'   Out: ',visout1_cur,visout2_cur
 
@@ -596,6 +612,16 @@ c                  call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
             endif
          enddo
          enddo
+
+        else
+
+         print*,'------------------------------------------'
+         print*,'!!Warning: unknown sat ID for cdf switch!!'
+         print*,'!!        sat ID = ',csatid,'           !!'
+         print*,'!!       Data NOT stretched             !!'
+         print*,'------------------------------------------'
+
+        endif
 
        elseif(csatid.eq.'noaapo')then
 

@@ -57,13 +57,13 @@ c                                          as function of input/output ratio
        Integer imax, jmax
        Integer line_dim, elem_dim
 
-       Real*4 sv(IMAX,JMAX)
-       Real*4 t_array(max_line*max_elem)
-       Real*4 image_vis(elem_dim,line_dim)
-       Real*4 r_llij_lut_ri(imax,jmax)
-       Real*4 r_llij_lut_rj(imax,jmax)
-       Real*4 elem_mn,elem_mx
-       Real*4 line_mn,line_mx
+       Real sv(IMAX,JMAX)
+       Real t_array(max_line*max_elem)
+       Real image_vis(elem_dim,line_dim)
+       Real r_llij_lut_ri(imax,jmax)
+       Real r_llij_lut_rj(imax,jmax)
+       Real elem_mn,elem_mx
+       Real line_mn,line_mx
 
 c      Integer i_s(imax*jmax)
 c      Integer j_s(imax*jmax)
@@ -78,11 +78,13 @@ c      Integer j_s(imax*jmax)
        Integer istatus
        Integer qcstatus
        Integer insufdata
+       Integer icnt
 
-       Real*4 r_missing_data
-       Real*4 Temp
-       Real*4 r_grid_ratio
-       Real*4 result
+       Real r_missing_data
+       Real Temp
+       Real r_grid_ratio
+       Real result
+       Logical lforce_switch
 c
 c -----------------------------begin--------------------------------
 c
@@ -103,7 +105,24 @@ c      wdw_lon = (grid_spacing_deg / 2.) / cosd(xlat(1,1))
 c      write(6,*)' GET VIS: wdw_lat, wdw_lon = ',wdw_lat,wdw_lon
 
        insufdata=0
-       if(r_grid_ratio .lt. 0.5)then  !0.75)then
+       lforce_switch=.false.
+       icnt=0
+       do j=1,line_dim
+       do i=1,elem_dim
+          if(image_vis(i,j).eq.r_missing_data)then
+             icnt=icnt+1
+          endif
+       enddo
+       enddo
+       if(icnt.gt.(.1*elem_dim*line_dim))then
+          lforce_switch=.true.
+          print*,'More than 10% of data missing: '
+     &,float(icnt)/float(imax*jmax)
+          print*,'Force grid point averaging in satir2laps'
+       endif
+
+       if(r_grid_ratio .lt. 0.5.or.lforce_switch)then
+
 c      ------------------------------
 c In this block the average pixel value is used for remapping the visible
 c satellite to the output LAPS grid.

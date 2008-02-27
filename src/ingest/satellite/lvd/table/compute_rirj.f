@@ -16,20 +16,20 @@ c
       integer nelems
       integer istatus
 
-      real*4    rlat(n_elems_tot,n_lines_tot)
-      real*4    rlon(n_elems_tot,n_lines_tot)
-      real*4    ri(nx,ny)
-      real*4    rj(nx,ny)
-      real*4    iline,jline
-      real*4    idiff,jdiff
+      real      rlat(n_elems_tot,n_lines_tot)
+      real      rlon(n_elems_tot,n_lines_tot)
+      real      ri(nx,ny)
+      real      rj(nx,ny)
+      real      iline,jline
+      real      idiff,jdiff
 
-      real*4    fraclat
-      real*4    fraclon
-      real*4    rlat_diff_deg
-      real*4    rlon_diff_deg
+      real      fraclat
+      real      fraclon
+      real      rlat_diff_deg
+      real      rlon_diff_deg
 
-      real*4    lat(nx,ny)
-      real*4    lon(nx,ny)
+      real      lat(nx,ny)
+      real      lon(nx,ny)
 
       logical   found_line
       logical   found_elem

@@ -23,24 +23,24 @@ c
       integer i4time_data
       integer istatus
 
-      real*4    rlat(nelem,nlines)
-      real*4    rlon(nelem,nlines)
-      real*4    ri(nx_l,ny_l)
-      real*4    rj(nx_l,ny_l)
-      real*4    iline,jline
-      real*4    idiff,jdiff
+      real      rlat(nelem,nlines)
+      real      rlon(nelem,nlines)
+      real      ri(nx_l,ny_l)
+      real      rj(nx_l,ny_l)
+      real      iline,jline
+      real      idiff,jdiff
 
-      real*4    grid_spacing_km
+      real      grid_spacing_km
 
-      real*4    lat(nx_l,ny_l)
-      real*4    lon(nx_l,ny_l)
+      real      lat(nx_l,ny_l)
+      real      lon(nx_l,ny_l)
 
       logical   firsttime_for_ir
       data      firsttime_for_ir/.true./
 
-      real*4 img_line(nelem,nlines)
-      real*4 img_elem(nelem,nlines)
-      real*4 image_data(nelem,nlines)
+      real   img_line(nelem,nlines)
+      real   img_elem(nelem,nlines)
+      real   image_data(nelem,nlines)
 
       integer gfn_status
 

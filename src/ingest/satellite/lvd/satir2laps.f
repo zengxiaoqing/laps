@@ -51,12 +51,13 @@ c.....          Changes:     SEP-1993       Add average (SA)
 c
 	implicit none
 
-	integer*4 max_elem,max_line
+	integer max_elem,max_line
         integer imax,jmax
 	parameter (max_elem = 15)
 	parameter (max_line = 15)
-	integer*4 line_dim,elem_dim
+	integer line_dim,elem_dim
         real    r_grid_ratio
+        real    rgrid_ratio_thresh
 
 	real image_ir(elem_dim,line_dim)
         real st(imax,jmax)
@@ -72,18 +73,22 @@ c
 c       real fraci,fracj
         real pixsum 
         real r_missing_data
+        real pcnt_msng_thresh
         real result
 
         integer i,j,ii,jj,iir,jir,max_wi,max_wj
         integer istart,jstart
         integer iend,jend
-	integer*4 npix, nwarm
+	integer npix, nwarm
         integer maxpix
         integer ipix
         integer istatus
         integer qcstatus
         integer fcount
         integer insufdata
+        integer icnt
+
+        logical lforce_switch
 
         CALL ZERO(ST,IMAX,JMAX)
         istatus = -1
@@ -94,12 +99,32 @@ c       write(6,*)'   I   J   WarmPix  ColdPix  NPix Nwarm  CldTemp'
 c
 c The "10" loop represents input image resolution < output grid resolution such
 c that there are enough pixels from the input image to get a representative
-c mean value for the remapped output grid value
+c mean value for the remapped output grid value. The "10" loop is also used
+c when we have significant missing data in the input image since the "gdtost"
+c routine can have deleterious effects.
 c
+        pcnt_msng_thresh=0.05
+        rgrid_ratio_thresh=1.5
+        lforce_switch=.false.
+        icnt=0
+        do j=1,line_dim
+        do i=1,elem_dim
+           if(image_ir(i,j).eq.r_missing_data)then
+              icnt=icnt+1
+           endif
+        enddo
+        enddo
+        if(icnt.gt.(pcnt_msng_thresh*elem_dim*line_dim))then
+           lforce_switch=.true.
+           print*,'More than 10% of data missing: '
+     &,float(icnt)/float(imax*jmax)
+           print*,'Force grid point averaging in satir2laps'
+        endif
+ 
         insufdata=0
         if(r_grid_ratio .le.0.0)goto 1000
 
-        if(r_grid_ratio .lt. 0.5)then
+        if(r_grid_ratio.lt.rgrid_ratio_thresh.or.lforce_switch)then
 
           write(6,*)'Grid ratio .lt. 0.5'
           write(6,*)'Use pixel avg to get IR Tb'
@@ -126,10 +151,10 @@ c****************************************************************************
              elem_mn = r_llij_lut_ri(i,j) - ((1./r_grid_ratio) * 0.5)
              line_mx = r_llij_lut_rj(i,j) + ((1./r_grid_ratio) * 0.5)
              line_mn = r_llij_lut_rj(i,j) - ((1./r_grid_ratio) * 0.5)
-             jstart = nint(line_mn+0.5)
-             jend   = int(line_mx)
-             istart = nint(elem_mn+0.5)
-             iend   = int(elem_mx)
+             jstart = nint(line_mn) !+0.5)
+             jend   = nint(line_mx)
+             istart = nint(elem_mn) !+0.5)
+             iend   = nint(elem_mx)
 
              if(istart.le.0 .or. jstart.le.0 .or.
      &iend.gt.elem_dim .or. jend.gt.line_dim)then
@@ -187,7 +212,8 @@ c
 
                 else   
 
-                   btemp=r_missing_data
+                   btemp = image_ir(II,JJ)
+c                  btemp=r_missing_data
                    fcount=fcount+1
 
                 endif
