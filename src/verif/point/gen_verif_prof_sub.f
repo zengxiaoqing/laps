@@ -40,12 +40,12 @@ cdis
       character*9	a9_time
       character*256     model_dir	!location of model data directories
                                         !lapsprd, or location of fua, fsf
-      integer*4		i4time		!i4time of LAPS/model file to read
+      integer		i4time		!i4time of LAPS/model file to read
       character*256	nl_dir		!directory where verify_prof.nl located
       integer           ni, nj, nk	!i, j and k grid dimensions
-      real*4 		stdLON		!standard Longitude
+      real 		stdLON		!standard Longitude
       integer		balance
-      real*4		r_missing_data	!value used from LAPS for missing data
+      real		r_missing_data	!value used from LAPS for missing data
       integer           max_verif       !Input: defines the maximum number of verification types
       integer           n_verif
       integer		istatus		!return value from subroutine
@@ -53,20 +53,20 @@ cdis
       character*256     prof_fname	!path and name of profiler file to read
       character*256     output_dir	!path for output file
       character*256     output_fname	!path and name of output file
-      real*4		lats(ni,nj) 	!domain lats
-      real*4		lons(ni,nj)	!domain lons
-      real*4            laps_levels_pa(nk) !laps pressure levels
-      real*4            laps_levels_mb(nk) !laps pressure levels
+      real		lats(ni,nj) 	!domain lats
+      real		lons(ni,nj)	!domain lons
+      real            laps_levels_pa(nk) !laps pressure levels
+      real            laps_levels_mb(nk) !laps pressure levels
 
       character*1       type_obs
       character*150     path_to_raw_profiler
       character*150     path_to_raw_sounding
-      integer*4		raob_process_lag
-      integer*4		raob_process_lag_bal
+      integer		raob_process_lag
+      integer		raob_process_lag_bal
       character*150     verif_output_dir(max_verif)
 c     character*150     verif_output_ext
 c     character*150     verif_output_bal
-      real*4		verif_missing_data
+      real		verif_missing_data
       integer		dir_len, model_len, bal_len, i,n
 C
 C     read verify.nl to get prof directory and output directory

@@ -13,21 +13,21 @@
       include 'netcdf.inc'
 
 !     Input Variables
-      integer*4     nx,ny,i4time_sys,i4time_raob_earliest,
+      integer     nx,ny,i4time_sys,i4time_raob_earliest,
      1              i4time_raob_latest,maxRaob,maxM,maxT,maxW
       character*(*) filename
-      real*4        lat(nx,ny),lon(nx,ny)
+      real        lat(nx,ny),lon(nx,ny)
 
 !     Variables filled for output
-      integer*4     timeSyn(maxRaob),timeRel(maxRaob),
+      integer     timeSyn(maxRaob),timeRel(maxRaob),
      1              numSigT(maxRaob),numSigW(maxRaob),
      1              istatus
       integer       numRaob, n_raobs_avail
-      real*4	    verif_missing_data,raob_missing_data
+      real	    verif_missing_data,raob_missing_data
       character*6   staName(maxRaob)
-      integer*4	    wmoStaNum(maxRaob),wmoStaNum_f
+      integer	    wmoStaNum(maxRaob),wmoStaNum_f
       character*1   typeW(maxW,maxRaob),typeT(maxT,maxRaob)
-      real*4        prSigT(maxT,maxRaob),tSigT(maxT,maxRaob),
+      real        prSigT(maxT,maxRaob),tSigT(maxT,maxRaob),
      1              tdSigT(maxT,maxRaob),
      1              htSigT(maxT,maxRaob),
      1              htSigW(maxW,maxRaob),wdSigW(maxW,maxRaob),
@@ -36,7 +36,7 @@
      1              staLat(maxRaob), staLon(maxRaob) 
 
 !     Other Variables
-      real*4        htMan(maxM,maxRaob), prMan(maxM,maxRaob),
+      real        htMan(maxM,maxRaob), prMan(maxM,maxRaob),
      1              tMan(maxM,maxRaob), tdMan(maxM,maxRaob),
      1              wsMan(maxM,maxRaob), wdMan(maxM,maxRaob),
      1              prSigTI(maxT,maxRaob),tSigTI(maxT,maxRaob),
@@ -49,12 +49,12 @@
      1              a9time_sys
       character*8   c8_project
       character*6   staName_f
-      integer*4     i, j, recNum, sigTLevel, sigWLevel, staNameLen, 
+      integer     i, j, recNum, sigTLevel, sigWLevel, staNameLen, 
      1              staNameLen_f, nf_fid, nf_vid, nf_status,
      1              nObs, i4time_syn, i4time_release, i4time_diff,
      1              i4time_raob, manLevel, numMan(maxRaob),
      1              itime_delay,status
-      real*4        staLat_f, staLon_f, staElev_f, ri, rj,
+      real        staLat_f, staLon_f, staElev_f, ri, rj,
      1              r_nc_missing_data
       integer       index_1(1), start(2), count(2)
 
@@ -636,12 +636,12 @@ C
 
       implicit none
 
-      integer*4     maxM,maxT,maxW,maxRaob,numRaob,
+      integer     maxM,maxT,maxW,maxRaob,numRaob,
      1              numSigT(maxRaob),numSigW(maxRaob),
      1              numMan(maxRaob)
-      real*4	    max_ht_m_proc, min_pres_mb_proc
+      real	    max_ht_m_proc, min_pres_mb_proc
       character*1   typeW(maxW,maxRaob),typeT(maxT,maxRaob)
-      real*4        htMan(maxM,maxRaob), prMan(maxM,maxRaob),
+      real        htMan(maxM,maxRaob), prMan(maxM,maxRaob),
      1              tMan(maxM,maxRaob), tdMan(maxM,maxRaob),
      1              wsMan(maxM,maxRaob), wdMan(maxM,maxRaob),
      1              staElev(maxRaob), raob_missing_data,
@@ -649,15 +649,15 @@ C
      1              tdSigTI(maxT,maxRaob),
      1              htSigWI(maxW,maxRaob),wdSigWI(maxW,maxRaob),
      1              wsSigWI(maxW,maxRaob)
-      real*4        prSigT(maxT,maxRaob),tSigT(maxT,maxRaob),
+      real        prSigT(maxT,maxRaob),tSigT(maxT,maxRaob),
      1              tdSigT(maxT,maxRaob),
      1              htSigT(maxT,maxRaob),
      1              htSigW(maxW,maxRaob),wdSigW(maxW,maxRaob),
      1              wsSigW(maxW,maxRaob), htSfc, prSfc,
      1              verif_missing_data
-      integer*4	    istatus
+      integer	    istatus
 
-      integer*4     mPtr, sPtr, jPtr, i, j
+      integer     mPtr, sPtr, jPtr, i, j
 
 C     BEGIN
 
@@ -665,27 +665,31 @@ C     loop through raobs to interleave Man with SigT and Man with SigW
       do i = 1, numRaob
 
 C       DEBUG  print out data
-c       write(6,*) 'Raob ',i
-c       write(6,*) 'htMan, wsMan, wdMan'
-c       do j = 1, numMan(i)
-c         write(6,*) j,htMan(j,i),wsMan(j,i),wdMan(j,i)
-c       enddo
+        if(.true.)then
 
-c       write(6,*) 'htSigWI, wsSigWI, wdSigWI'
-c       do j = 1, numSigW(i)
-c         write(6,*) j,htSigWI(j,i),wsSigWI(j,i),wdSigWI(j,i)
-c       enddo
+        write(6,*) 'Raob ',i
+        write(6,*) 'htMan, wsMan, wdMan'
+        do j = 1, numMan(i)
+          write(6,*) j,htMan(j,i),wsMan(j,i),wdMan(j,i)
+        enddo
 
-c       write(6,*) 'prMan, tMan, tdMan'
-c       do j = 1, numMan(i)
-c         write(6,*) j,prMan(j,i),tMan(j,i),tdMan(j,i)
-c       enddo
+        write(6,*) 'htSigWI, wsSigWI, wdSigWI'
+        do j = 1, numSigW(i)
+          write(6,*) j,htSigWI(j,i),wsSigWI(j,i),wdSigWI(j,i)
+        enddo
+
+        write(6,*) 'prMan, tMan, tdMan'
+        do j = 1, numMan(i)
+          write(6,*) j,prMan(j,i),tMan(j,i),tdMan(j,i)
+        enddo
 
         write(6,*) 'prSigTI, tSigTI, tdSigTI'
         do j = 1, numSigT(i)
           write(6,*) j,prSigTI(j,i),tSigTI(j,i),tdSigTI(j,i)
         enddo
         write(6,*)
+
+        endif
 
 C       get surface ht and pr setup
         jPtr = 1
@@ -971,8 +975,8 @@ C       set numSigT to mingled value
       subroutine calc_domain_perim(nx, ny, lat, lon, north, south,
      1                             east,west,r_buffer)
 
-      integer*4     nx, ny, i, j
-      real*4        north, south, east, west, r_buffer,
+      integer     nx, ny, i, j
+      real        north, south, east, west, r_buffer,
      1              lat(nx,ny), lon(nx,ny)
 
 !     calculate domain perimeter

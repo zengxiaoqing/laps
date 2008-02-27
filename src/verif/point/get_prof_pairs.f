@@ -42,18 +42,18 @@ cdis
       character*(*)     prof_fname	!path and name of profiler file to read
       character*(*)     model_dir	!location of model data directories
                                         !lapsprd, or location of fua, fsf
-      integer*4		i4time		!i4time of LAPS/model file to read
+      integer		i4time		!i4time of LAPS/model file to read
       character*(*)     output_fname	!path and name of output file
       character*(*)	nl_dir		!directory where verify_prof.nl located
       integer           ni, nj, nk	!i, j and k grid dimensions
-      real*4		lats(ni,nj) 	!domain lats
-      real*4		lons(ni,nj)	!domain lons
-      real*4 		stdLON		!standard Longitude
-      real*4            laps_levels_mb(nk) !laps pressure levels
-      real*4            laps_levels_pa(nk) !laps pressure levels
+      real		lats(ni,nj) 	!domain lats
+      real		lons(ni,nj)	!domain lons
+      real 		stdLON		!standard Longitude
+      real            laps_levels_mb(nk) !laps pressure levels
+      real            laps_levels_pa(nk) !laps pressure levels
       integer		balance
-      real*4		r_missing_data
-      real*4		verif_missing_data
+      real		r_missing_data
+      real		verif_missing_data
       integer		istatus		!return value from subroutine
 
       integer		MAX_PROFS
@@ -74,37 +74,37 @@ cdis
       character*6       staName_use(MAX_PROFS)
 
       integer           nProfs, nHts(MAX_PROFS)
-      integer*4		wmoStaNum(MAX_PROFS) 
+      integer		wmoStaNum(MAX_PROFS) 
       character*6       staName(MAX_PROFS) 
-      real*4            staLat(MAX_PROFS), staLon(MAX_PROFS), 
+      real            staLat(MAX_PROFS), staLon(MAX_PROFS), 
      1                  staElev(MAX_PROFS), 
      1                  ri(numHTS,MAX_PROFS),
      1                  rj(numHTS,MAX_PROFS), 
      1                  rk(numHTS,MAX_PROFS)
       character*9	a9_time(MAX_PROFS)
-      real*4            htMSL(numHTS, MAX_PROFS), 
+      real            htMSL(numHTS, MAX_PROFS), 
      1                  uP(numHTS,MAX_PROFS), 
      1                  vP(numHTS,MAX_PROFS),
      1                  wP(numHTS,MAX_PROFS), 
      1                  baseLevels(numHTS)
-      real*4            tSP(MAX_PROFS), rhSP(MAX_PROFS),
+      real            tSP(MAX_PROFS), rhSP(MAX_PROFS),
      1                  uSP(MAX_PROFS), vSP(MAX_PROFS)
 
-      real*4            uI(numHTS,MAX_PROFS), 
+      real            uI(numHTS,MAX_PROFS), 
      1                  vI(numHTS,MAX_PROFS),
      1                  wI(numHTS,MAX_PROFS), 
      1                  tSI(MAX_PROFS), rhSI(MAX_PROFS),
      1                  uSI(MAX_PROFS), vSI(MAX_PROFS)
 
-      real*4            htM(ni,nj,nk) 
-      real*4            tM(ni,nj,nk)
-      real*4            uM(ni,nj,nk)
-      real*4            vM(ni,nj,nk)
-      real*4            omM(ni,nj,nk)
-      real*4		tSM(ni,nj)
-      real*4		rhSM(ni,nj)
-      real*4		uSM(ni,nj)
-      real*4		vSM(ni,nj)
+      real            htM(ni,nj,nk) 
+      real            tM(ni,nj,nk)
+      real            uM(ni,nj,nk)
+      real            vM(ni,nj,nk)
+      real            omM(ni,nj,nk)
+      real		tSM(ni,nj)
+      real		rhSM(ni,nj)
+      real		uSM(ni,nj)
+      real		vSM(ni,nj)
 C
 C     BEGIN
 C
@@ -294,21 +294,21 @@ C     write output_file
       character*256	infile
       integer  		MAX_PROFS, numHTS, nProfs
       character*9       a9_time(MAX_PROFS)
-      real*4		stdLON
+      real		stdLON
       integer  		wmoStaNum(MAX_PROFS) 
       character*6       staName(MAX_PROFS) 
-      real*4            staLat(MAX_PROFS), staLon(MAX_PROFS), 
+      real            staLat(MAX_PROFS), staLon(MAX_PROFS), 
      1                  staElev(MAX_PROFS), PI
-      real*4            htMSL(numHTS, MAX_PROFS), 
+      real            htMSL(numHTS, MAX_PROFS), 
      1                  u(numHTS,MAX_PROFS), v(numHTS,MAX_PROFS),
      1                  w(numHTS,MAX_PROFS), 
      1 			verif_missing_data,
      1                  baseLevels(numHTS)
-      real*4            tSfc(MAX_PROFS), rhSfc(MAX_PROFS),
+      real            tSfc(MAX_PROFS), rhSfc(MAX_PROFS),
      1                  wsSfc(MAX_PROFS), wdSfc(MAX_PROFS),
      1                  uSfc(MAX_PROFS), vSfc(MAX_PROFS)
       real*8		timeObs(MAX_PROFS), prev_timeObs
-      real*4		prof_missing
+      real		prof_missing
 
       integer           istatus, i, j, i4time
       integer           lenf
@@ -891,25 +891,25 @@ c     endif
       integer		MAX_VAR
       parameter         (MAX_VAR=150)
 
-      integer*4		i4time		!i4time of LAPS/model file to read
+      integer		i4time		!i4time of LAPS/model file to read
       character*(*)     model_dir	!location of model data directories
       integer           ni, nj, nk	!i, j and k grid dimensions
       integer		balance
-      real*4            ht(ni,nj,nk)     !data to be read
-      real*4            t(ni,nj,nk)     !data to be read
-      real*4            u(ni,nj,nk)     !data to be read
-      real*4            v(ni,nj,nk)     !data to be read
-      real*4            om(ni,nj,nk)     !data to be read
-      real*4		tS(ni,nj)
-      real*4		rhS(ni,nj)
-      real*4		uS(ni,nj)
-      real*4		vS(ni,nj)
-      real*4		pS(ni,nj)
-      real*4            make_rh
+      real            ht(ni,nj,nk)     !data to be read
+      real            t(ni,nj,nk)     !data to be read
+      real            u(ni,nj,nk)     !data to be read
+      real            v(ni,nj,nk)     !data to be read
+      real            om(ni,nj,nk)     !data to be read
+      real		tS(ni,nj)
+      real		rhS(ni,nj)
+      real		uS(ni,nj)
+      real		vS(ni,nj)
+      real		pS(ni,nj)
+      real            make_rh
       integer		istatus		!return value from subroutine
 
       character*256     dir_in
-      real*4            laps_levels(nk) !laps pressure levels
+      real            laps_levels(nk) !laps pressure levels
       character*3       var(MAX_VAR)
       character*4       lvl_coord(MAX_VAR)      !Vertical coordinate for each field
       character*10      units(MAX_VAR)    	!units of each field
@@ -1204,13 +1204,13 @@ c note: pS is in pa so no need to multiply result by 100 (rh 0-100%)
 
       integer		whichIndex
       integer		MAX_PROFS, numHTS
-      real*4            laps_levels(nk) !laps pressure levels
+      real            laps_levels(nk) !laps pressure levels
       integer		nHts(MAX_PROFS)
-      real*4		lat_ob, lon_ob
-      real*4		lats(ni,nj) 	!domain lats
-      real*4		lons(ni,nj)	!domain lons
+      real		lat_ob, lon_ob
+      real		lats(ni,nj) 	!domain lats
+      real		lons(ni,nj)	!domain lons
       integer           ni, nj, nk	!i, j and k grid dimensions
-      real*4            htMSL(numHTS,MAX_PROFS), 
+      real            htMSL(numHTS,MAX_PROFS), 
      1                  ht(ni,nj,nk),
      1                  ri(numHTS,MAX_PROFS),
      1                  rj(numHTS,MAX_PROFS), 
@@ -1218,7 +1218,7 @@ c note: pS is in pa so no need to multiply result by 100 (rh 0-100%)
       integer		istatus
 
       integer		i, j, int_ri, int_rj
-      real*4		height_to_zcoord3
+      real		height_to_zcoord3
 
 C
 C     BEGIN
@@ -1287,9 +1287,9 @@ C     Calc rk for each level
       character*(*)     output_fname	!path and name of output file
       integer		MAX_PROFS, numHTS, nHts(MAX_PROFS)
       integer           n_profs_use, use_prof(MAX_PROFS), nProfs
-      integer*4		wmoStaNum(MAX_PROFS) 
+      integer		wmoStaNum(MAX_PROFS) 
       character*6       staName(MAX_PROFS) 
-      real*4            staLat(MAX_PROFS), staLon(MAX_PROFS), 
+      real            staLat(MAX_PROFS), staLon(MAX_PROFS), 
      1                  staElev(MAX_PROFS), 
      1                  htMSL(numHTS, MAX_PROFS), 
      1                  ri(numHTS,MAX_PROFS),
@@ -1300,7 +1300,7 @@ C     Calc rk for each level
      1                  wP(numHTS,MAX_PROFS), 
      1                  tSP(MAX_PROFS), rhSP(MAX_PROFS),
      1                  uSP(MAX_PROFS), vSP(MAX_PROFS)
-      real*4            uI(numHTS,MAX_PROFS), 
+      real            uI(numHTS,MAX_PROFS), 
      1                  vI(numHTS,MAX_PROFS),
      1                  wI(numHTS,MAX_PROFS), 
      1                  tSI(MAX_PROFS), rhSI(MAX_PROFS),
@@ -1382,7 +1382,7 @@ C         write surface data
       integer		whichIndex, MAX_PROFS, numHTS
       integer           nHts(MAX_PROFS)
       integer           ni, nj, nk	!i, j and k grid dimensions
-      real*4            ri(numHTS,MAX_PROFS),
+      real            ri(numHTS,MAX_PROFS),
      1                  rj(numHTS,MAX_PROFS), 
      1                  rk(numHTS,MAX_PROFS),
      1                  uI(numHTS,MAX_PROFS), 
@@ -1394,12 +1394,12 @@ C         write surface data
      1                  vM(ni,nj,nk), omM(ni,nj,nk),
      1      		tSM(ni,nj), rhSM(ni,nj),
      1      		uSM(ni,nj), vSM(ni,nj)
-      real*4		r_missing_data, verif_missing_data
+      real		r_missing_data, verif_missing_data
       integer		istatus
 
       integer           int_ri, int_rj, i, extrap
-      real*4		om, temp, pres
-      real*4		pressure_of_rlevel
+      real		om, temp, pres
+      real		pressure_of_rlevel
 C
 C     BEGIN
 C

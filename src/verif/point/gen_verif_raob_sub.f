@@ -42,37 +42,37 @@ cdis
       character*9       a9_time_raob    !adjust time corresponding to i4time_raob
       character*256     model_dir	!Input:  location of model data directories
                                         !lapsprd, or location of fua, fsf
-      integer*4		i4time_sys      !Input:  i4time of LAPS analysis to verify (from systime.dat)
-      integer*4         i4time_raob     !i4time of raob to process
-      integer*4         i4time_laps     !internal i4time = to the analysis time
+      integer		i4time_sys      !Input:  i4time of LAPS analysis to verify (from systime.dat)
+      integer         i4time_raob     !i4time of raob to process
+      integer         i4time_laps     !internal i4time = to the analysis time
       integer           max_verif       !Input:  maximum # of verification types
       integer           ni, nj, nk	!Inputs: i, j and k grid dimensions
-      real*4 		stdLON		!Input:  standard Longitude
+      real 		stdLON		!Input:  standard Longitude
       integer		balance         !Input:  1= processing balance; 0= not processing balance
-      real*4		r_missing_data	!Input:  value used from LAPS for missing data
-      real*4            max_ht_m_proc   !maximum height(m) to process up to
+      real		r_missing_data	!Input:  value used from LAPS for missing data
+      real            max_ht_m_proc   !maximum height(m) to process up to
       integer           n               !Input:  reference to which verification type
       integer		istatus		!return value from subroutine
 
       character*9	a9time_raob(2)
       character*25      fileNames(1)
-      integer*4		num_ret, i4timeraob(2)
-      integer*4         i4time_raob_latest, i4time_raob_earliest
-      integer*4		laps_cycle_time, i4_raob_window
+      integer		num_ret, i4timeraob(2)
+      integer         i4time_raob_latest, i4time_raob_earliest
+      integer		laps_cycle_time, i4_raob_window
       integer           min
       character*2	c_hr
       character*256	nl_dir		!directory where verify_raob.nl located
-      integer*4		i4time_prev, n_raob_files
+      integer		i4time_prev, n_raob_files
       integer           i4time_later
       character*256     raob_dir  	!path of raob file to read
       character*256     raob_fname	!filename of raob file to read
       character*256     output_dir  	!path for output file
       character*256     output_fname	!path and name of output file
-      real*4		lats(ni,nj) 	!domain lats
-      real*4		lons(ni,nj)	!domain lons
-      real*4            laps_levels_pa(nk) !laps pressure levels
-      real*4            laps_levels_mb(nk) !laps pressure levels
-      real*4            min_pres_mb_proc  !minimum pressure(mb) to process up to
+      real		lats(ni,nj) 	!domain lats
+      real		lons(ni,nj)	!domain lons
+      real            laps_levels_pa(nk) !laps pressure levels
+      real            laps_levels_mb(nk) !laps pressure levels
+      real            min_pres_mb_proc  !minimum pressure(mb) to process up to
 
       logical           lrunbal
 
@@ -90,7 +90,7 @@ cdis
       character*150     verif_output_dir(max_verif)
 c     character*150     verif_output_ext
 c     character*150     verif_output_bal
-      real*4		verif_missing_data
+      real		verif_missing_data
       logical           lexist
       integer		dir_len, ext_len, bal_len, i,ihr,lenn
 C

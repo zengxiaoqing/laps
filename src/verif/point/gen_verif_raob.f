@@ -41,20 +41,20 @@ cdis
 
       character*256     model_dir	!location of model data directories
                                         !lapsprd, or location of fua, fsf
-      integer*4		i4time		!i4time of LAPS/model file to read
+      integer		i4time		!i4time of LAPS/model file to read
       character*9	a9_time
       character*150     verif_output_dir(max_verif) ! -->
                                         !type of verif  desired ... builds output directory
                                         !names (noBal, Bal, Bkgd, grid)
       character*256	nl_dir		!directory where verify_raob.nl located
       integer           ni, nj, nk	!i, j and k grid dimensions
-      real*4 		stdLON		!standard Longitude
+      real 		stdLON		!standard Longitude
       integer		istatus		!return value from subroutines
       integer		len, balance,i
-      real*4		r_missing_data
+      real		r_missing_data
       character*2       cur_hr
-      integer*4		i4_raob_window 
-      real*4		max_ht_m_proc     !maximum height(m) to process up to
+      integer		i4_raob_window 
+      real		max_ht_m_proc     !maximum height(m) to process up to
 
       character*1       type_obs
       character*150     path_to_raw_profiler

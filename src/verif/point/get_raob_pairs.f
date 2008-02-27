@@ -43,23 +43,23 @@ cdis
       character*(*)     raob_fname	!path and name of raob file to read
       character*(*)     model_dir	!location of model data directories
                                         !lapsprd, or location of fua, fsf
-      integer*4		i4time		!i4time of LAPS/model file to read
+      integer		i4time		!i4time of LAPS/model file to read
       integer           i4time_sys
-      integer*4         i4time_raob_latest, i4time_raob_earliest
+      integer         i4time_raob_latest, i4time_raob_earliest
       character*256     output_fname	!path and name of output file
       character*(*)	nl_dir		!directory where verify_raob.nl located
       integer           ni, nj, nk	!i, j and k grid dimensions
-      real*4		lats(ni,nj) 	!domain lats
-      real*4		lons(ni,nj)	!domain lons
-      real*4 		stdLON		!standard Longitude
-      real*4            laps_levels_mb(nk) !laps pressure levels
-      real*4            laps_levels_pa(nk) !laps pressure levels
-      real*4            max_ht_m_proc   !maximum height(m) to process up to
-      real*4            min_pres_mb_proc  !minimum pressure(mb) to process up to
+      real		lats(ni,nj) 	!domain lats
+      real		lons(ni,nj)	!domain lons
+      real 		stdLON		!standard Longitude
+      real            laps_levels_mb(nk) !laps pressure levels
+      real            laps_levels_pa(nk) !laps pressure levels
+      real            max_ht_m_proc   !maximum height(m) to process up to
+      real            min_pres_mb_proc  !minimum pressure(mb) to process up to
 
       integer		balance
-      real*4		r_missing_data, raob_missing_data
-      real*4		verif_missing_data
+      real		r_missing_data, raob_missing_data
+      real		verif_missing_data
       integer		istatus		!return value from subroutine
 
       integer		MAX_RAOBS
@@ -77,7 +77,7 @@ cdis
       integer           all_raobs	! 1=use all raobs in domain
       integer           use_raob(MAX_RAOBS), n_raobs_use
       integer           lun, i, j, dir_len
-      integer*4 	statusL(2,6)
+      integer 	statusL(2,6)
       character*256     filename
       logical           l_eof
 
@@ -85,23 +85,23 @@ C     1d raob data
       integer		nRaobs, n_raobs_avail
       integer 		wmoNum_use(MAX_RAOBS)
       character*6       staName_use(MAX_RAOBS)
-      integer*4 	timeSyn(MAX_RAOBS),
+      integer 	timeSyn(MAX_RAOBS),
      1			wmoStaNum(MAX_RAOBS),
      1			timeRel(MAX_RAOBS),
      1			numSigT(MAX_RAOBS),
      1			numSigW(MAX_RAOBS) 
       character*6       staName(MAX_RAOBS) 
-      real*4            staLat(MAX_RAOBS), 
+      real            staLat(MAX_RAOBS), 
      1			staLon(MAX_RAOBS), 
      1                  staElev(MAX_RAOBS)
       character*9	a9_time(MAX_RAOBS)
 
 C     temp variables
-      integer*4 	numT(MAX_RAOBS),
+      integer 	numT(MAX_RAOBS),
      1                  timeLapsT(maxT,MAX_RAOBS),
      1			fileAvailTHR
       character*1	typeT(maxT,MAX_RAOBS)
-      real*4            tSigT(maxT,MAX_RAOBS),
+      real            tSigT(maxT,MAX_RAOBS),
      1                  tdSigT(maxT,MAX_RAOBS),
      1                  htSigT(maxT,MAX_RAOBS),
      1                  prSigT(maxT,MAX_RAOBS),
@@ -119,11 +119,11 @@ C     temp variables
      1                  htT(maxT,MAX_RAOBS) 
 
 C     wind variables
-      integer*4 	numW(MAX_RAOBS),
+      integer 	numW(MAX_RAOBS),
      1                  timeLapsW(maxW,MAX_RAOBS),
      1                  fileAvailUV
       character*1	typeW(maxW,MAX_RAOBS)
-      real*4            htSigW(maxW,MAX_RAOBS), 
+      real            htSigW(maxW,MAX_RAOBS), 
      1                  wsSigW(maxW,MAX_RAOBS), 
      1                  wdSigW(maxW,MAX_RAOBS), 
      1                  uIW(maxW,MAX_RAOBS), 
@@ -138,10 +138,10 @@ C     wind variables
      1                  htW(maxW,MAX_RAOBS) 
 
 C     data written out
-      integer*4         nHts(MAX_RAOBS),
+      integer         nHts(MAX_RAOBS),
      1                  timeLaps(MAX_HTS,MAX_RAOBS)
       character*1	type(MAX_HTS,MAX_RAOBS)
-      real*4            ri(MAX_HTS,MAX_RAOBS),
+      real            ri(MAX_HTS,MAX_RAOBS),
      1                  rj(MAX_HTS,MAX_RAOBS), 
      1                  rk(MAX_HTS,MAX_RAOBS),
      1                  lat(MAX_HTS,MAX_RAOBS), 
@@ -160,14 +160,14 @@ C     data written out
      1                  prI(MAX_HTS,MAX_RAOBS)
 
 C     Laps data read in
-      real*4            uLapsGS(ni,nj,nk), vLapsGS(ni,nj,nk),
+      real            uLapsGS(ni,nj,nk), vLapsGS(ni,nj,nk),
      1                  tLapsGS(ni,nj,nk), rhLapsGS(ni,nj,nk),
      1                  htLapsGS(ni,nj,nk),uLapsGP(ni,nj,nk),
      1                  vLapsGP(ni,nj,nk),tLapsGP(ni,nj,nk),
      1                  rhLapsGP(ni,nj,nk), htLapsGP(ni,nj,nk),
      1                  htLgaGS(ni,nj,nk), htLgaGP(ni,nj,nk)
        
-      integer*4		writeT,writeW
+      integer		writeT,writeW
 C
 C     BEGIN
 C
@@ -445,18 +445,18 @@ C         write output files
       character*256     output_fname	!path and name of output file
       integer		MAX_RAOBS, maxW,maxT
       integer           nRaobs, n_raobs_use, use_raob(MAX_RAOBS)
-      integer*4		writeT,writeW,wmoStaNum(MAX_RAOBS) 
+      integer		writeT,writeW,wmoStaNum(MAX_RAOBS) 
       character*6       staName(MAX_RAOBS) 
-      real*4            staLat(MAX_RAOBS), staLon(MAX_RAOBS), 
+      real            staLat(MAX_RAOBS), staLon(MAX_RAOBS), 
      1                  staElev(MAX_RAOBS)
       character*9	a9_time(MAX_RAOBS)
-      integer*4		timeSyn(MAX_RAOBS),
+      integer		timeSyn(MAX_RAOBS),
      1         		timeRel(MAX_RAOBS)
 
 C     temp variables
-      integer*4         numT(MAX_RAOBS),
+      integer         numT(MAX_RAOBS),
      1			timeLapsT(maxT,MAX_RAOBS)
-      real*4            riT(maxT,MAX_RAOBS),
+      real            riT(maxT,MAX_RAOBS),
      1                  rjT(maxT,MAX_RAOBS),
      1                  rkT(maxT,MAX_RAOBS),
      1                  latT(maxT,MAX_RAOBS),
@@ -470,9 +470,9 @@ C     temp variables
      1                  tdPT(maxT,MAX_RAOBS)
 
 C     wind variables
-      integer*4         numW(MAX_RAOBS),
+      integer         numW(MAX_RAOBS),
      1 			timeLapsW(maxW,MAX_RAOBS)
-      real*4            riW(maxW,MAX_RAOBS),
+      real            riW(maxW,MAX_RAOBS),
      1                  rjW(maxW,MAX_RAOBS),
      1                  rkW(maxW,MAX_RAOBS),
      1                  latW(maxW,MAX_RAOBS),
@@ -489,7 +489,7 @@ C     local variables
       integer		i, j
       character*256     output_fnameW   !path/name of wind output file
       character*256     output_fnameT   !path/name of temp output file
-      integer*4		output_len
+      integer		output_len
 
 C
 C     BEGIN

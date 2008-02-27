@@ -38,11 +38,11 @@ cdis
 
       character*256     model_dir	!location of model data directories
                                         !lapsprd, or location of fua, fsf
-      integer*4		i4time		!i4time of LAPS/model file to read
+      integer		i4time		!i4time of LAPS/model file to read
       character*9	a9_time
       character*256	nl_dir		!directory where verify_prof.nl located
       integer           ni, nj, nk	!i, j and k grid dimensions
-      real*4 		stdLON		!standard Longitude
+      real 		stdLON		!standard Longitude
       integer		istatus		!return value from subroutines
       integer		len, balance
       integer           max_verif
@@ -54,7 +54,7 @@ cdis
       character*1       type_obs
       integer           raob_process_lag_Bal
       integer           raob_process_lag
-      real*4		r_missing_data
+      real		r_missing_data
       real              verif_missing_data
 
 C

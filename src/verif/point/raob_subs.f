@@ -7,17 +7,17 @@
       implicit none
       include 'netcdf.inc'
 
-      integer*4       nx, ny, nk
+      integer       nx, ny, nk
       character*(*)   dir_in
-      integer*4       i4time_syn,status(2,6)
-      real*4          uLapsGS(nx,ny,nk), vLapsGS(nx,ny,nk), 
+      integer       i4time_syn,status(2,6)
+      real          uLapsGS(nx,ny,nk), vLapsGS(nx,ny,nk), 
      1                tLapsGS(nx,ny,nk), rhLapsGS(nx,ny,nk),
      1                htLapsGS(nx,ny,nk),uLapsGP(nx,ny,nk), 
      1                vLapsGP(nx,ny,nk),tLapsGP(nx,ny,nk), 
      1                rhLapsGP(nx,ny,nk), htLapsGP(nx,ny,nk),
      1                htLgaGS(nx,ny,nk), htLgaGP(nx,ny,nk)
-      real*4          laps_levels(nk) !laps pressure levels in mb
-      real*4          make_rh
+      real          laps_levels(nk) !laps pressure levels in mb
+      real          make_rh
 
       character*4     lvl_coord(nk)
       character*3     var(nk), ext
@@ -26,7 +26,7 @@
       character*125   comment(nk)
       character*180   fdir_in
       character*9     fnameSyn,fnamePrev,fnamePPrev,a9_time
-      integer*4       i, j, k, lvl(nk), fdir_len, i4time_Pprev,
+      integer       i, j, k, lvl(nk), fdir_len, i4time_Pprev,
      1                i4time_prev, len_dir_in, istatus,
      1                balance
       integer         i4time_init,i4time_fcst
@@ -395,13 +395,13 @@ c     enddo
 
       implicit none
 
-      real*4          height_to_zcoord3
-      integer*4       timeSyn, timeRel, numSigW, numW, fileAvail,
+      real          height_to_zcoord3
+      integer       timeSyn, timeRel, numSigW, numW, fileAvail,
      1                wmoStaNum
-      real*4          staLat, staLon, staElev,max_ht_m_proc
+      real          staLat, staLon, staElev,max_ht_m_proc
       character*1     typeW(maxW,maxRaob),typeWM(maxW,maxRaob)
-      integer*4       maxW, maxRaob,nx,ny,nk, raobId,statusL(2,6)
-      real*4          htSigW(maxW,maxRaob),
+      integer       maxW, maxRaob,nx,ny,nk, raobId,statusL(2,6)
+      real          htSigW(maxW,maxRaob),
      1                wdSigW(maxW,maxRaob), wsSigW(maxW,maxRaob),
      1                uLapsGS(nx,ny,nk), vLapsGS(nx,ny,nk),
      1                uLapsGP(nx,ny,nk), vLapsGP(nx,ny,nk),
@@ -414,11 +414,11 @@ c     enddo
      1                lonW(maxW,maxRaob),htW(maxW,maxRaob),
      1		      uIW(maxW,maxRaob),vIW(maxW,maxRaob),
      1		      uPW(maxW,maxRaob),vPW(maxW,maxRaob)
-      integer*4       timeLapsW(maxW,maxRaob), status
+      integer       timeLapsW(maxW,maxRaob), status
 
-      integer*4       j,lvl,timePrev,index, time_tot, istatus,
+      integer       j,lvl,timePrev,index, time_tot, istatus,
      1                timePrevComp, timeSynComp,int_ri,int_rj
-      real*4          prSigW, uSigW(maxW),vSigW(maxW),
+      real          prSigW, uSigW(maxW),vSigW(maxW),
      1                u_disp, v_disp, delta_h,delta_t, delta_u,
      1                delta_v, rise_rate, maxHtProc, rilaps, 
      1                rjlaps, rklaps, u_laps, v_laps, delta_s
@@ -598,16 +598,16 @@ C     pass back modified typeW
 
       implicit none
 
-      real*4          ztopsa, zcoord_of_logpressure, psatoz,
+      real          ztopsa, zcoord_of_logpressure, psatoz,
      1                make_ssh, k_to_c, make_td, c_to_k
 
-      integer*4       timeSyn, timeRel, numSigT, numT,
+      integer       timeSyn, timeRel, numSigT, numT,
      1                fileAvailUV, fileAvail,wmoStaNum
-      real*4          staLat, staLon, staElev,max_ht_m_proc
+      real          staLat, staLon, staElev,max_ht_m_proc
       character*1     typeT(maxT,maxRaob),typeTM(maxT,maxRaob)
-      integer*4       maxT, maxW, maxRaob,nx,ny,nk
-      integer*4       raobId, statusL(2,6)
-      real*4          prSigT(maxT,maxRaob),
+      integer       maxT, maxW, maxRaob,nx,ny,nk
+      integer       raobId, statusL(2,6)
+      real          prSigT(maxT,maxRaob),
      1                tSigT(maxT,maxRaob), 
      1                tdSigT(maxT,maxRaob), 
      1                htSigT(maxT,maxRaob), 
@@ -617,8 +617,8 @@ C     pass back modified typeW
      1                htLgaGS(nx,ny,nk), htLgaGP(nx,ny,nk),
      1                raob_missing_data,verif_missing_data,
      1                lat(nx,ny), lon(nx,ny), laps_levels(nk)
-      integer*4	      numSigW
-      real*4          htSigW(maxW,maxRaob), wdSigW(maxW,maxRaob),
+      integer	      numSigW
+      real          htSigW(maxW,maxRaob), wdSigW(maxW,maxRaob),
      1                wsSigW(maxW,maxRaob),
      1                riT(maxT,maxRaob),rjT(maxT,maxRaob),
      1                rkT(maxT,maxRaob),latT(maxT,maxRaob),
@@ -626,12 +626,12 @@ C     pass back modified typeW
      1		      prIT(maxT,maxRaob),tIT(maxT,maxRaob),
      1		      tdIT(maxT,maxRaob),prPT(maxT,maxRaob),
      1                tPT(maxT,maxRaob),tdPT(maxT,maxRaob)
-      integer*4       timeLapsT(maxT,maxRaob), status
+      integer       timeLapsT(maxT,maxRaob), status
 
-      integer*4       timePrevComp, timeSynComp,istatus,
+      integer       timePrevComp, timeSynComp,istatus,
      1                j,lvl,timePrev,index, time_tot,
      1                bkgPrev, bkgSyn,int_ri,int_rj
-      real*4          wd, ws, rh, q, t_ref, tC,
+      real          wd, ws, rh, q, t_ref, tC,
      1                u_disp, v_disp,delta_h,delta_t,delta_u,
      1                delta_v, rise_rate, maxHtProc,htM,htZ, 
      1                t_laps, ht, htPrev,delta_s,pres_pa
@@ -897,9 +897,9 @@ C     pass back modified typeT
      1                        ht, ws, wd, istatus)
 
       implicit none
-      integer*4    maxW, maxRaob, numSigW, raobId, maxHtProc, 
+      integer    maxW, maxRaob, numSigW, raobId, maxHtProc, 
      1             istatus, u, l, i, true, false, found, last
-      real*4       htSigW(maxW,maxRaob), wdSigW(maxW,maxRaob),
+      real       htSigW(maxW,maxRaob), wdSigW(maxW,maxRaob),
      1             wsSigW(maxW,maxRaob), ht, ws, wd, deltaWS
 
 ! begin
@@ -977,14 +977,14 @@ C     pass back modified typeT
      1                  n_raobs_use
 
 C     data written out
-      real*4            ri(MAX_HTS,MAX_RAOBS),
+      real            ri(MAX_HTS,MAX_RAOBS),
      1                  rj(MAX_HTS,MAX_RAOBS),
      1                  rk(MAX_HTS,MAX_RAOBS),
      1                  lat(MAX_HTS,MAX_RAOBS),
      1                  lon(MAX_HTS,MAX_RAOBS),
      1                  hts(MAX_HTS,MAX_RAOBS)
       character*1       type(MAX_HTS,MAX_RAOBS)
-      real*4            uP(MAX_HTS,MAX_RAOBS),
+      real            uP(MAX_HTS,MAX_RAOBS),
      1                  uI(MAX_HTS,MAX_RAOBS),
      1                  vP(MAX_HTS,MAX_RAOBS),
      1                  vI(MAX_HTS,MAX_RAOBS),
@@ -994,14 +994,14 @@ C     data written out
      1                  tdI(MAX_HTS,MAX_RAOBS),
      1                  prP(MAX_HTS,MAX_RAOBS),
      1                  prI(MAX_HTS,MAX_RAOBS)
-      integer*4         timeLaps(MAX_HTS,MAX_RAOBS),
+      integer         timeLaps(MAX_HTS,MAX_RAOBS),
      1                  nHts(MAX_RAOBS)
 
 C     temp variables
-      integer*4         numT(MAX_RAOBS),
+      integer         numT(MAX_RAOBS),
      1			timeLapsT(maxT,MAX_RAOBS)
       character*1       typeT(maxT,MAX_RAOBS)
-      real*4            riT(maxT,MAX_RAOBS),
+      real            riT(maxT,MAX_RAOBS),
      1                  rjT(maxT,MAX_RAOBS),
      1                  rkT(maxT,MAX_RAOBS),
      1                  latT(maxT,MAX_RAOBS),
@@ -1015,10 +1015,10 @@ C     temp variables
      1                  tdPT(maxT,MAX_RAOBS)
 
 C     wind variables
-      integer*4         numW(MAX_RAOBS),
+      integer         numW(MAX_RAOBS),
      1 			timeLapsW(maxW,MAX_RAOBS)
       character*1       typeW(maxW,MAX_RAOBS)
-      real*4            riW(maxW,MAX_RAOBS),
+      real            riW(maxW,MAX_RAOBS),
      1                  rjW(maxW,MAX_RAOBS),
      1                  rkW(maxW,MAX_RAOBS),
      1                  latW(maxW,MAX_RAOBS),
@@ -1029,14 +1029,14 @@ C     wind variables
      1                  uPW(maxW,MAX_RAOBS),
      1                  vPW(maxW,MAX_RAOBS)
 
-      real*4		verif_missing_data,
+      real		verif_missing_data,
      1                  raob_missing_data
-      integer*4		istatus
+      integer		istatus
 
 C     local variables
 
-      integer*4		tPtr,wPtr,index,i,j,nDiff
-      real*4		sumDiff,avgDiff,pctDiff,
+      integer		tPtr,wPtr,index,i,j,nDiff
+      real		sumDiff,avgDiff,pctDiff,
      1                  sumPctDiff,avgPctDiff,
      1                  rkDiff
 
