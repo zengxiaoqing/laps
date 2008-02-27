@@ -197,10 +197,10 @@ module module_grib
 ! for the CPP pass of the compiler.
 !
 !if defined (BIT32)
-  integer, parameter :: MWSIZE = 32 ! Machine word size in bits
-!elif defined (BIT64)
 #if defined (BIT64)
   integer, parameter :: MWSIZE = 64 ! Machine word size in bits
+#else
+  integer, parameter :: MWSIZE = 32 ! Machine word size in bits
 #endif
 
 
