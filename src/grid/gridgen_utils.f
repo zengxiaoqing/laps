@@ -305,10 +305,10 @@ c this used only for getting topography on the c-staggered grid
 
       implicit none
       integer i,j,imax,jmax
-      real*4 result
-      real*4 array_2d(imax,jmax)
-      real*4 Z1,Z2,Z3,Z4
-      real*4 fraci,fracj
+      real result
+      real array_2d(imax,jmax)
+      real Z1,Z2,Z3,Z4
+      real fraci,fracj
 
       fraci = 0.5
       fracj = 0.5
@@ -970,7 +970,7 @@ c
        SUBROUTINE POLAR_GP(LAT,LON,X,Y,DX,DY,NX,NY,DIR)
 C
       include 'trigd.inc'
-       REAL*4 LAT,LON,X,Y,DX,DY,
+       REAL LAT,LON,X,Y,DX,DY,
      1        ERAD,TLAT,TLON                                      ! ,PLAT,PLON,
      1        XDIF,YDIF
 C

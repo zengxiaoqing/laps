@@ -16,7 +16,7 @@
      1		KDIM,i,j,k,		!K dimension of DATA array
      1		ISTATUS
 C
-      REAL*4	DATA(imax,jmax,mkmax),	!Raw data to be written
+      REAL  	DATA(imax,jmax,mkmax),	!Raw data to be written
      1		grid_spacing,val,
      1          center_lat,center_lon,
      1          la1,lo1,la2,lo2
