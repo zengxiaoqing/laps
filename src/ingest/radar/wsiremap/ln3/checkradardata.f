@@ -7,9 +7,9 @@ c
       integer    i,j
       integer    imax,jmax
       integer    istatus
-      real*4     data(imax,jmax)
-      real*4     baddata
-      real*4     r_missing_data
+      real     data(imax,jmax)
+      real     baddata
+      real     r_missing_data
 c ============================================
       istatus=0
 

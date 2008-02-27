@@ -46,10 +46,10 @@ c Nowrad data is then remapped to LAPS domain given lat/lon of domain.
 c
        integer   nlev
 
-       real*4  lat(imax,jmax)
-       real*4  lon(imax,jmax)
-       real*4  ri(imax,jmax),rj(imax,jmax)
-       real*4  remapped_prod(imax,jmax)
+       real  lat(imax,jmax)
+       real  lon(imax,jmax)
+       real  ri(imax,jmax),rj(imax,jmax)
+       real  remapped_prod(imax,jmax)
        integer sum(imax,jmax)
        integer count(imax,jmax)
        integer i_max_value(imax,jmax)
@@ -72,20 +72,20 @@ c
        character lprefix(nlev)*2
        character cpathwsi3d*200
 
-       real*4 dgtord
-       real*4 rlat1, rlon1
-       real*4 rlat2, rlon2
-       real*4 rdlat, rdlon
-       real*4 starti,startj
-       real*4 endi,  endj
+       real dgtord
+       real rlat1, rlon1
+       real rlat2, rlon2
+       real rdlat, rdlon
+       real starti,startj
+       real endi,  endj
 
-       real*4 r_missing_data
+       real r_missing_data
 
        integer image(nelements,nlines)
        integer imdata
 
-       real*4  rlatc,rlonc
-       real*4  nw(2),se(2)
+       real  rlatc,rlonc
+       real  nw(2),se(2)
 
        common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 c

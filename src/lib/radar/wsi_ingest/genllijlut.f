@@ -42,20 +42,20 @@ c confines.
 c
        implicit none
 
-       integer*4 imax,jmax
-       real*4 lat(imax,jmax)
-       real*4 lon(imax,jmax)
-       real*4 ri(imax,jmax)
-       real*4 rj(imax,jmax)
+       integer imax,jmax
+       real lat(imax,jmax)
+       real lon(imax,jmax)
+       real ri(imax,jmax)
+       real rj(imax,jmax)
 
-       real*4 dx,dy
-       real*4 rla1,rlo1
-       real*4 rla2,rlo2
-       real*4 rlat,rlon
-       real*4 rlatc,rlonc
-       real*4 dlat,dlon
-       real*4 nw(2),se(2)
-       real*4 r_missing_data
+       real dx,dy
+       real rla1,rlo1
+       real rla2,rlo2
+       real rlat,rlon
+       real rlatc,rlonc
+       real dlat,dlon
+       real nw(2),se(2)
+       real r_missing_data
 
        integer i,j
        integer n,n1
@@ -154,33 +154,33 @@ c
 c
       implicit none
 
-      integer*4 imax,jmax
+      integer imax,jmax
 
-      real*4    lat(imax,jmax)
-      real*4    lon(imax,jmax)
-      real*4    rla1,rlo1
-      real*4    rla2,rlo2
-      real*4    dx,dy
-      real*4    du,dv
-      real*4    u_orig,v_orig
-      real*4    rlatin,rlov
-      real*4    pi
-      real*4    u,v
+      real    lat(imax,jmax)
+      real    lon(imax,jmax)
+      real    rla1,rlo1
+      real    rla2,rlo2
+      real    dx,dy
+      real    du,dv
+      real    u_orig,v_orig
+      real    rlatin,rlov
+      real    pi
+      real    u,v
 
-      real*4    ri1,rj1
-      real*4    ri2,rj2
-      real*4    ri3,rj3
-      real*4    ri4,rj4
+      real    ri1,rj1
+      real    ri2,rj2
+      real    ri3,rj3
+      real    ri4,rj4
 
-      real*4    lapterm
-      real*4    lovterm
-      real*4    latterm
-      real*4    lonterm
-      real*4    dxterm
-      real*4    dyterm
+      real    lapterm
+      real    lovterm
+      real    latterm
+      real    lonterm
+      real    dxterm
+      real    dyterm
 
-      real*4    ri(imax,jmax)
-      real*4    rj(imax,jmax)
+      real    ri(imax,jmax)
+      real    rj(imax,jmax)
 
       integer   i,j,n,nn
       integer   n1,n2
@@ -269,8 +269,8 @@ c
        integer nx,ny
        integer istatus
 
-       real*4  ri(imax,jmax),rj(imax,jmax)
-       real*4  r_missing_data
+       real  ri(imax,jmax),rj(imax,jmax)
+       real  r_missing_data
 
        call get_r_missing_data(r_missing_data,istatus)
        i_out=0

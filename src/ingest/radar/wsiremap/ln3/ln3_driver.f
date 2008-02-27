@@ -58,8 +58,8 @@ c
 
        implicit none
        integer   nx_l,ny_l
-       real*4  extreme_thrsh_70
-       real*4  extreme_thrsh_47
+       real  extreme_thrsh_70
+       real  extreme_thrsh_47
        integer n_data_types
        integer max_files
        integer nlevs
@@ -82,19 +82,19 @@ c
        character*11 laps_dom_file
        character*4 lvl_coord_2d(n_data_types)
 
-       real*4 lat(nx_l,ny_l)
-       real*4 lon(nx_l,ny_l)
-       real*4 remapped_prod(nx_l,ny_l)
-       real*4 laps_data(nx_l,ny_l,n_data_types)
-       real*4 grid_spacing
-       real*4 data(nx_l,ny_l,2)
+       real lat(nx_l,ny_l)
+       real lon(nx_l,ny_l)
+       real remapped_prod(nx_l,ny_l)
+       real laps_data(nx_l,ny_l,n_data_types)
+       real grid_spacing
+       real data(nx_l,ny_l,2)
 
-       real*4 percent_extreme_47
-       real*4 percent_extreme_70
-       real*4 baddata
-       real*4 r_missing_data
-       real*4 ref_base
-       real*4 rdum
+       real percent_extreme_47
+       real percent_extreme_70
+       real baddata
+       real r_missing_data
+       real ref_base
+       real rdum
 
        integer   n,k,j,i,nn,id
        integer   i4time_cur
