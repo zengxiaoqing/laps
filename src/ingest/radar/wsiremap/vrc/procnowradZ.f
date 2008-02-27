@@ -55,25 +55,25 @@ c
       parameter (max_elem = 20)
       parameter (max_line = 20)
       integer   nline,nelem
-      real*4    r_grid_ratio
-      real*4    r_missing_data
-      real*4    ref_base
+      real    r_grid_ratio
+      real    r_missing_data
+      real    ref_base
 
       integer image_data(nelem,nline)
       integer image_to_dbz(0:15)
 
-      real*4 laps_dbz(imax,jmax)
-      real*4 wsi_dbz_data(nelem,nline)
-      real*4 r_llij_lut_ri(imax,jmax)
-      real*4 r_llij_lut_rj(imax,jmax)
+      real laps_dbz(imax,jmax)
+      real wsi_dbz_data(nelem,nline)
+      real r_llij_lut_ri(imax,jmax)
+      real r_llij_lut_rj(imax,jmax)
 
-      real*4 line_mx,line_mn,elem_mx,elem_mn
-      real*4 z_array(max_elem*max_line)
-      real*4 zmax, zmin, zmean
-      real*4 rdbz
-      real*4 pixsum 
-      real*4 result
-      real*4 bad_data_flag_dbz
+      real line_mx,line_mn,elem_mx,elem_mn
+      real z_array(max_elem*max_line)
+      real zmax, zmin, zmean
+      real rdbz
+      real pixsum 
+      real result
+      real bad_data_flag_dbz
 
       integer i,j,ii,jj
       integer istart,jstart

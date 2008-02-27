@@ -73,7 +73,7 @@ c
        integer extreme_thrsh_70
        integer extreme_thrsh_47
        integer maxradars
-       integer*4 max_files
+       integer max_files
 
        include 'lapsparms.for' ! MAX_RADAR_FILES
        parameter (max_files=MAX_RADAR_FILES)
@@ -98,16 +98,16 @@ c
 
        logical     l_archive
 
-       real*4 lat(nx_l,ny_l)
-       real*4 lon(nx_l,ny_l)
-       real*4 rdbz(nx_l,ny_l)
-       real*4 grid_spacing
-       real*4 data(nx_l,ny_l,2)
-       real*4 radar_dist_min(nx_l,ny_l)
-       real*4 rdum
+       real lat(nx_l,ny_l)
+       real lon(nx_l,ny_l)
+       real rdbz(nx_l,ny_l)
+       real grid_spacing
+       real data(nx_l,ny_l,2)
+       real radar_dist_min(nx_l,ny_l)
+       real rdum
 
-       real*4 percent_extreme_47
-       real*4 percent_extreme_70
+       real percent_extreme_47
+       real percent_extreme_70
 
        integer i4time_cur
        integer i4time_latest_diff

@@ -66,28 +66,28 @@ c confines.
       real    radar_ri(maxradars)
       real    radar_rj(maxradars)
 
-      real*4 lat(imax,jmax)
-      real*4 lon(imax,jmax)
-      real*4 height_grid(imax,jmax)
-      real*4 rdbz(imax,jmax)
-      real*4 radar_dist_min(imax,jmax)
-      real*4 ri(imax,jmax)
-      real*4 rj(imax,jmax)
-      real*4 distmin,dist
-      real*4 rdistmax
-      real*4 xgrddismx
-      real*4 ygrddismx
-      real*4 grid_spacing_m
-      real*4 dlat,dlon
-      real*4 LoV, Latin, La1,La2,Lo1,Lo2
-      real*4 centerLon,topLat,dx,dy
-      real*4 nw(2),se(2)
-      real*4 pi,rad2dg,rii,rjj
-      real*4 r_missing_data
-      real*4 heigth_mean_grid
-      real*4 height_mean
-      real*4 height_sum
-      real*4 ridis,rjdis
+      real lat(imax,jmax)
+      real lon(imax,jmax)
+      real height_grid(imax,jmax)
+      real rdbz(imax,jmax)
+      real radar_dist_min(imax,jmax)
+      real ri(imax,jmax)
+      real rj(imax,jmax)
+      real distmin,dist
+      real rdistmax
+      real xgrddismx
+      real ygrddismx
+      real grid_spacing_m
+      real dlat,dlon
+      real LoV, Latin, La1,La2,Lo1,Lo2
+      real centerLon,topLat,dx,dy
+      real nw(2),se(2)
+      real pi,rad2dg,rii,rjj
+      real r_missing_data
+      real heigth_mean_grid
+      real height_mean
+      real height_sum
+      real ridis,rjdis
 
       integer image_to_dbz(0:15)
       integer validTime
