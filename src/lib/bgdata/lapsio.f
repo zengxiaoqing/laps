@@ -6,14 +6,14 @@ c
 c
       include 'netcdf.inc'
 c
-      integer*4 nx,ny
+      integer nx,ny
       real   lat(nx,ny),
      .       lon(nx,ny)
 c
-      integer*4 len,elen,i,istatus
-      integer*4 start(10),count(10)
-     .         ,ncid,ntp,nvdim,nvs,lenstr,ndsize,rcode
-      integer   vdims(10)
+      integer len,elen,i,istatus
+      integer start(10),count(10)
+     .       ,ncid,ntp,nvdim,nvs,lenstr,ndsize,rcode
+      integer vdims(10)
 c
       character*(*) dir
       character*(*) ext
@@ -82,15 +82,15 @@ c
 c
       include 'netcdf.inc'
 c
-      integer*4 nx,ny,nz
+      integer nx,ny,nz
       real   uw(nx,ny,nz)   !LAPS 3d u-wind (m/s)
      .      ,vw(nx,ny,nz)   !LAPS 3d v-wind (m/s)
      .      ,gd(nx,ny,nz)
 c
-      integer*4 len,elen,i4time,i,j,k,istatus
-      integer*4 start(10),count(10),
-     .          ncid,ntp,nvdim,nvs,lenstr,ndsize,rcode
-      integer   vdims(10)
+      integer len,elen,i4time,i,j,k,istatus
+      integer start(10),count(10),
+     .        ncid,ntp,nvdim,nvs,lenstr,ndsize,rcode
+      integer vdims(10)
 c
       character*(*) dir,ext
       character*500 ldir,lext,fname
@@ -187,14 +187,14 @@ c
 c
       include 'netcdf.inc'
 c
-      integer*4 nx,ny,nfld
+      integer nx,ny,nfld
       real   grid(nx,ny,nfld)
-      integer*4 fldid(nfld)
+      integer fldid(nfld)
 c
-      integer*4 len,elen,i4time,i,n,istatus
-      integer*4 start(10),count(10)
-     .         ,ncid,ntp,nvdim,nvs,lenstr,ndsize,rcode
-      integer   vdims(10)
+      integer len,elen,i4time,i,n,istatus
+      integer start(10),count(10)
+     .       ,ncid,ntp,nvdim,nvs,lenstr,ndsize,rcode
+      integer vdims(10)
 c
       character*(*) dir,ext
       character*500 ldir,lext,fname
@@ -268,13 +268,13 @@ c
 c
       include 'netcdf.inc'
 c
-      integer*4 nx,ny
+      integer nx,ny
       real   sht(nx,ny)
 c
-      integer*4 len,elen,i,istatus
-      integer*4 start(10),count(10)
-     .         ,ncid,ntp,nvdim,nvs,lenstr,ndsize,rcode
-      integer   vdims(10)
+      integer len,elen,i,istatus
+      integer start(10),count(10)
+     .       ,ncid,ntp,nvdim,nvs,lenstr,ndsize,rcode
+      integer vdims(10)
 c
       character*(*) dir
       character*500 ldir
