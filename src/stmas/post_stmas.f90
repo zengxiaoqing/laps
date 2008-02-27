@@ -141,12 +141,15 @@ SUBROUTINE RETRIEVAL
 !*************************************************
 ! RETRIEVAL THE ANALYSIS FIELD FOR OUTPUT
 ! HISTORY: AUGUST 2007, CODED by WEI LI.
+!          FEBRUARY 2008, MODIFIED BY YUANFU FOR
+!                         SKIPPING TEMPERATURE
+!                         KELVIN CONVERSION.
 !*************************************************
   IMPLICIT NONE
 ! --------------------
   INTEGER(KIND=4) :: I,J,K,T,S
 ! --------------------
-  DO S=4,4
+  DO S=4,1 ! 4  BY YUANFU FOR SKIPPING THIS CONVERSION
     DO T=1,NUMGRID(4)
     DO K=1,NUMGRID(3)
     DO J=1,NUMGRID(2)
