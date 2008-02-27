@@ -16,13 +16,13 @@ c
 
       Integer     i,j,k
 
-      Real*4        itb
-      Real*4        img_lin
-      Real*4        img_lin_prev
-      Real*4        img_ele
-      Real*4        img_line(nelems,nlines)
-      Real*4        img_elem(nelems,nlines)
-      Real*4        image_data(nelems,nlines)
+      Real        itb
+      Real        img_lin
+      Real        img_lin_prev
+      Real        img_ele
+      Real        img_line(nelems,nlines)
+      Real        img_elem(nelems,nlines)
+      Real        image_data(nelems,nlines)
 
       Integer     i4time_current
       Integer     i4time_data
@@ -32,12 +32,12 @@ c
 
       Logical       eof
 
-      Real*4        xlat,xlon
-      Real*4        rlat(nelems,nlines)
-      Real*4        rlon(nelems,nlines)
+      Real        xlat,xlon
+      Real        rlat(nelems,nlines)
+      Real        rlon(nelems,nlines)
 
-      Real*4        grid_spacing_deg
-      Real*4        grid_spacing_km
+      Real        grid_spacing_deg
+      Real        grid_spacing_km
       real          cosd
       integer     n_vars_req
       character*100 c_values_req

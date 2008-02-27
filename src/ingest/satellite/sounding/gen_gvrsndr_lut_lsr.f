@@ -15,22 +15,21 @@ c
       Integer     nch
 c
       real*8        wavelength(nch)
-      real*4        scalingBias(nlines,nch)
-      real*4        scalingGain(nlines,nch)
-      real*4        lat(nxl,nyl)
-      real*4        lon(nxl,nyl)
-      real*4        rline(nxl,nyl)
-      real*4        rpix(nxl,nyl)
-      real*4        pi
-      real*8        rl_div
-      real*8        rp_div
-      real*4        rd2dg
-      real*4        rsndr_res_m
-      real*4        rsndr_res_km
-      real*4        r_missing_data
-      real*4        rnx,rny,rnp
-      real*4        pct_covered
-      real*4        pct_req_lsr
+      real        scalingBias(nlines,nch)
+      real        scalingGain(nlines,nch)
+      real        lat(nxl,nyl)
+      real        lon(nxl,nyl)
+      real        rline(nxl,nyl)
+      real        rpix(nxl,nyl)
+      real        pi
+      real        rd2dg
+      real        rsndr_res_m
+      real        rsndr_res_km
+      real        r_missing_data
+      real        rnx,rny,rnp
+      real        pct_covered
+      real        pct_req_lsr
+      real        time_50,time50
 
       real*8        r8lat(2),r8lon(2)
       real*8        r8sl,r8sp,r8el,r8ep
@@ -38,12 +37,13 @@ c
       real*8        RL
       real*8        RP
       Real*8        orbAt(336)
-      Real*4        time_50,time50
       Real*8        t50_8
       Real*8        t
       Real*8        f_time
       Real*8        SatSubLAT,SatSubLON
       Real*8        EVLN,SCPX
+      real*8        rl_div
+      real*8        rp_div
 c
       Integer     ewCycles,ewIncs
       Integer     nsCycles,nsIncs

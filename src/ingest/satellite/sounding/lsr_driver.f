@@ -3,7 +3,7 @@ c
       include      'lsr_dims.inc'
 
       
-      real*4        r_channel_wavelengths(max_ch,max_sat)
+      real        r_channel_wavelengths(max_ch,max_sat)
       character     c_sat_id(max_sat)*6
       character     c_sounding_path(max_sat)*200
 
@@ -82,35 +82,35 @@ c
       Real*8,       allocatable :: lineTimeBeg(:,:)
       Real*8,       allocatable :: lineTimeEnd(:,:)
 
-      real*4        lat(nx_l,ny_l)
-      real*4        lon(nx_l,ny_l)
-      real*4        r_llij_lut_ri(nx_l,ny_l)
-      real*4        r_llij_lut_rj(nx_l,ny_l)
-      real*4        sa(nx_l,ny_l)
-      real*4        sc(nx_l,ny_l)
-      real*4        st(nx_l,ny_l)
-      real*4        laps_data(nx_l,ny_l,n_channels)
-      real*4        grid_spacing
-      real*4        grid_spacing_km
-      real*4        r_sndr_res_km
-      real*4        r_grid_ratio
-      real*4        rcount,rsb,rsg
+      real        lat(nx_l,ny_l)
+      real        lon(nx_l,ny_l)
+      real        r_llij_lut_ri(nx_l,ny_l)
+      real        r_llij_lut_rj(nx_l,ny_l)
+      real        sa(nx_l,ny_l)
+      real        sc(nx_l,ny_l)
+      real        st(nx_l,ny_l)
+      real        laps_data(nx_l,ny_l,n_channels)
+      real        grid_spacing
+      real        grid_spacing_km
+      real        r_sndr_res_km
+      real        r_grid_ratio
+      real        rcount,rsb,rsg
 c
-      real*4        data(nx_l,ny_l,2)
-      real*4        rline(nx_l,ny_l)
-      real*4        rpix(nx_l,ny_l)
-      real*4        result
-      real*4        xconv,yconv
-      real*4        rch_wvlngth(n_channels)
-      real*4        r_missing_data
-      real*4        rmintime,rmaxtime
-      real*4        rltb,rlte
-      real*4        pct_req_lsr
+      real        data(nx_l,ny_l,2)
+      real        rline(nx_l,ny_l)
+      real        rpix(nx_l,ny_l)
+      real        result
+      real        xconv,yconv
+      real        rch_wvlngth(n_channels)
+      real        r_missing_data
+      real        rmintime,rmaxtime
+      real        rltb,rlte
+      real        pct_req_lsr
 
-      real*4,       allocatable :: sndr_rad(:,:,:)
-      real*4,       allocatable :: scalingBias(:,:)
-      real*4,       allocatable :: scalingGain(:,:)
-      Integer,      allocatable :: isndrdata(:,:,:)
+      real,       allocatable :: sndr_rad(:,:,:)
+      real,       allocatable :: scalingBias(:,:)
+      real,       allocatable :: scalingGain(:,:)
+      Integer,    allocatable :: isndrdata(:,:,:)
 
       Integer     ewCycles,ewIncs
       Integer     nsCycles,nsIncs

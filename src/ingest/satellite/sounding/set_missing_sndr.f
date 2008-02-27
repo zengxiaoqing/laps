@@ -52,8 +52,8 @@ c
         integer imiss_status
         integer image_in(ndimx,ndimy)
         integer image_temp(ndimx,ndimy)
-        real*4    data(125)
-        real*4    ave,adev,sdev,var,skew,curt
+        real      data(125)
+        real      ave,adev,sdev,var,skew,curt
         integer ismsng
         integer i2_missing_data
 c

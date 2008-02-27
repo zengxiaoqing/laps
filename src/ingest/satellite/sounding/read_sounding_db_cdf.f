@@ -40,9 +40,9 @@ c
       Integer   dim_id_y
 
       REAL*8      wavelength      ( nch )
-      Real*4      scalingBias     (jmax,nch)
-      Real*4      scalingGain     (jmax,nch)
-      Real*4      scaling_rec     (irec_max)
+      Real      scalingBias     (jmax,nch)
+      Real      scalingGain     (jmax,nch)
+      Real      scaling_rec     (irec_max)
 
       INTEGER   northwest_sdr_pixel
       INTEGER   northwest_sdr_line
@@ -50,7 +50,7 @@ c
       INTEGER   southeast_sdr_line
       INTEGER   varid
       CHARACTER*1 imc                      (   4)
-      REAL*4      imcEnableTime
+      Real      imcEnableTime
       INTEGER   eastWestCycles                 
       INTEGER   eastWestIncs                   
       INTEGER   northSouthCycles               

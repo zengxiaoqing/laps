@@ -9,16 +9,16 @@ c
       Integer     iprev
       Integer     n,nc
 
-      Real*4        itb
-      Real*4        img_lin
-      Real*4        img_lin_prev
-      Real*4        img_ele
+      Real        itb
+      Real        img_lin
+      Real        img_lin_prev
+      Real        img_ele
 
       Integer     istatus
 
       Logical       eof
 
-      Real*4        xlat,xlon
+      Real        xlat,xlon
 
       Character     c_date*5
       Character     c_time*4

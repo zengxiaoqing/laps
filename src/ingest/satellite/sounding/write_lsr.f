@@ -14,8 +14,8 @@
       integer lvl_lsr(nch)
       integer izero
 
-      real*4 data(nxl,nyl,nch)
-      real*4 wavelength(nch)
+      real   data(nxl,nyl,nch)
+      real   wavelength(nch)
 
       character*125 c_lsr(nch)
       character*10 units_lsr(nch)
