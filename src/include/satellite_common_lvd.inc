@@ -14,15 +14,15 @@
       character c_sat_types(maxtype,maxsat)*3
       character c_channel_types(maxchannel,maxtype,maxsat)*3
 
-      real*4 r_sat_sub_lat(maxsat)
-      real*4 r_sat_sub_lon(maxsat)
-      real*4 sat_range_m(maxsat)
+      real   r_sat_sub_lat(maxsat)
+      real   r_sat_sub_lon(maxsat)
+      real   sat_range_m(maxsat)
 
-      real*4 r_la1(maxtype,maxsat)
-      real*4 r_lo1(maxtype,maxsat)
-      real*4 r_lap(maxtype,maxsat)
-      real*4 r_lov(maxtype,maxsat)
-      real*4 r_latin(maxtype,maxsat)
+      real   r_la1(maxtype,maxsat)
+      real   r_lo1(maxtype,maxsat)
+      real   r_lap(maxtype,maxsat)
+      real   r_lov(maxtype,maxsat)
+      real   r_latin(maxtype,maxsat)
 
       integer i_start_vis(maxtype,maxsat)
       integer i_end_vis(maxtype,maxsat)
@@ -58,14 +58,14 @@
       logical l_national
       logical l_cell_afwa
 
-      real*4  r_resolution_x_vis(maxtype,maxsat)
-      real*4  r_resolution_y_vis(maxtype,maxsat)
-      real*4  r_resolution_x_ir(maxtype,maxsat)
-      real*4  r_resolution_y_ir(maxtype,maxsat)
-      real*4  r_resolution_x_wv(maxtype,maxsat)
-      real*4  r_resolution_y_wv(maxtype,maxsat)
-      real*4  vis_cnt_range_in(2,maxsat)
-      real*4  vis_cnt_range_out(2,maxsat)
+      real    r_resolution_x_vis(maxtype,maxsat)
+      real    r_resolution_y_vis(maxtype,maxsat)
+      real    r_resolution_x_ir(maxtype,maxsat)
+      real    r_resolution_y_ir(maxtype,maxsat)
+      real    r_resolution_x_wv(maxtype,maxsat)
+      real    r_resolution_y_wv(maxtype,maxsat)
+      real    vis_cnt_range_in(2,maxsat)
+      real    vis_cnt_range_out(2,maxsat)
 
 
       common /lvd_namelist_cmn/
