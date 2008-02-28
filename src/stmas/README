@@ -1,0 +1,17 @@
+
+  Tree diagram outlining the source code for 'STMAS3D.exe'
+
+  Subroutine Name                              File Name:
+  ---------------                              ----------
+ 
+program main                                   main.f90
+    BKGRNDOBS                                  input_bg_and_obs.f90
+    MGANALYSS                                  stmas_core.f90
+    OUTPUTANA                                  output_analysis.f90
+        WIND_POST_PROCESS                      src/lib/wind/wind_post_process.f
+        WRITE_TEMP_ANAL                        src/lib/temp/puttmpanal.f
+
+
+
+
+
