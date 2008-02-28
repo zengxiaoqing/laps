@@ -28,6 +28,7 @@ SRC=ingest_sounding.f \
     ingest_drpsnd.f \
     ingest_drpsnd_sub_cwb.f \
     avapsread_sub.f \
+    get_drpsnd_data.f \
     ingest_goessnd.f \
     process_goes_snd.f \
     get_poes_data.f \
