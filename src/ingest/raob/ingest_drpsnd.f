@@ -213,13 +213,13 @@
               if(c8_drpsnd_format(1:6) .eq. 'NIMBUS' .or.
      1           c8_drpsnd_format(1:3) .eq. 'WFO'         )then
 
-                  write(6,*)' dropsonde access routine not yet set up'       
+                  write(6,*)' calling get_drpsnd_data...'
 
-!                 call get_raob_data   (i4time_sys,ilaps_cycle_time
-!    1                ,NX_L,NY_L
-!    1                ,i4time_drpsnd_earliest,i4time_drpsnd_latest
-!    1                ,filename_in,istatus)
-!tt -- Tiziana: Sep, 27
+                  call get_drpsnd_data(i4time_sys,ilaps_cycle_time
+     1                ,NX_L,NY_L
+     1                ,i4time_drpsnd_earliest,i4time_drpsnd_latest
+     1                ,filename_in,lun_out,istatus)
+
               elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
                   call avapsread_sub(filename_in, lun_out
      1                          ,i4time_drpsnd_earliest
