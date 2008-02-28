@@ -49,7 +49,7 @@
        character*150 path_to_raw_poessnd
        character*200 path_to_raw_tower
        character*200 path_to_raw_radiometer
-       character*8 c8_raob_format, c8_project
+       character*8 c8_raob_format, c8_drpsnd_format, c8_project
        character*13 filename13,cvt_i4time_wfo_fname13
 
        call get_snd_parms(path_to_raw_raob,path_to_local_raob
@@ -65,6 +65,8 @@
        lun_out = 21
 
        if(c8_project .ne. 'RSA')then
+
+!          Read RAOB data
            c8_raob_format = c8_project
            write(6,*)
            write(6,*)' Call ingest_raob, format=',c8_raob_format
@@ -74,28 +76,24 @@
            call s_len(c8_project,lenc8)
 
 !          Read Dropsonde data
-           if(c8_project .eq. 'CWB')then       
-               c8_raob_format = c8_project
-               write(6,*)
-               write(6,*)' Call ingest_drpsnd, format=',c8_raob_format       
-               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format
-     1                           ,lun_out)
+           if(c8_project .eq. 'NIMBUS')then       
+               c8_drpsnd_format = c8_project
+
+           elseif(c8_project .eq. 'CWB')then       
+               c8_drpsnd_format = c8_project
 
            elseif(c8_project(1:min(3,lenc8)) .eq. 'AIR')then       
-               c8_raob_format = 'SND'
-               write(6,*)
-               write(6,*)' Call ingest_drpsnd, format=',c8_raob_format       
-               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format
-     1                           ,lun_out)
+               c8_drpsnd_format = 'SND'
 
            else
-               c8_raob_format = 'AVAPS'
-               write(6,*)
-               write(6,*)' Call ingest_drpsnd, format=',c8_raob_format       
-               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format
-     1                           ,lun_out)
+               c8_drpsnd_format = 'AVAPS'
 
            endif
+
+           write(6,*)
+           write(6,*)' Call ingest_drpsnd, format=',c8_drpsnd_format       
+           call ingest_drpsnd(path_to_raw_drpsnd,c8_drpsnd_format
+     1                       ,lun_out)
 
        else ! RSA project
            c8_raob_format = 'WFO'
