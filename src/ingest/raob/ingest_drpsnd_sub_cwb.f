@@ -31,6 +31,7 @@ c
       real  windDir(loopNum,levelNum), windSpeed(loopNum,levelNum)
       real  PrsHtDbtL(loopNum), PrsHtDbtH(loopNum)
       real  PrsTmDbtL(loopNum), PrsTmDbtH(loopNum)
+      real  staelev(loopNum)
 
       integer wmoId(loopNum), layerNum(loopNum)
       integer heightQua(loopNum,levelNum), dewpointQua(loopNum,levelNum)       
@@ -252,12 +253,13 @@ c wen modi         endif
 !            write (*,*) height(i,j), pressure(i,j), temperature(i,j),
 !     ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
 !900   continue
-           do 900 i= 1,inNum
+       do 900 i= 1,inNum
           latitude_out(i,:) = latitude(i)
           longitude_out(i,:) = longitude(i)
           a9time_out(i,:) = a9time(i)
           c8_obstype(i) = 'DROPSND '            ! Note revised spelling
           c5_staid(i) = '     '
+          staelev(i) = -999.                    ! Dummy values
 900   continue
 
 !     Call write_snd routine
