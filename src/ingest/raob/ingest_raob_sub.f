@@ -168,6 +168,7 @@ C
       real topo_a(NX_L,NY_L)
 
       character*9 a9time_syn, a9time_release, a9time_raob, a9time_sys
+      character*8 c8_obstype
 
       call get_r_missing_data(r_missing_data,istatus)
       if (istatus .ne. 1) then
@@ -282,8 +283,11 @@ C
               endif
           endif
 
+          c8_obstype = 'RAOB'
+
           call sort_and_write(i4time_sys,lun_out
      1                       ,recNum,isnd,r_missing_data,a9time_raob
+     1                       ,c8_obstype
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
@@ -305,6 +309,7 @@ C
 
       subroutine sort_and_write(i4time_sys,lun_out
      1                       ,NREC,isnd,r_missing_data,a9time_raob
+     1                       ,c8_obstype
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
@@ -375,8 +380,6 @@ C
 !     Generate info for Sorting/QC, write original mandatory data to log file
       write(6,*)
       n_good_levels = 0
-
-      c8_obstype = 'RAOB'
 
       write(6,*)' Subroutine sort_and_write - initial mandatory data'       
       if(nummand(isnd) .le. manLevel)then
@@ -506,10 +509,10 @@ C
                     tdout(n_good_levels) = tdsigt(ilevel,isnd)
                     wdout(n_good_levels) = r_missing_data
                     wsout(n_good_levels) = r_missing_data
-                endif
-            endif
-          endif
-        enddo
+                endif ! valid height
+            endif ! n_good_z > 0
+          endif ! prsigt in bounds
+        enddo ! ilevel
       else
         write(6,*)' Note: numsigt(isnd) > sigTLevel'
      1                   ,numsigt(isnd),sigTLevel      
@@ -611,6 +614,8 @@ C
       a9time_out_sort = a9time_raob   ! assign entire array for this sounding
 
       call open_ext(lun_out,i4time_sys,'snd',istatus)
+
+      maxlvl = nlvl_out
 
       call write_snd  (lun_out                                    ! I
      1                ,1,maxlvl,1                                 ! I
