@@ -318,6 +318,8 @@ c       include 'satellite_dims_lvd.inc'
         part = 0.9 ! For plotting routines
         igrid = 0
 
+        lagt = 10800
+
         ioffm = 1 ! Don't plot label stuff in conrec
 
 !       Get fdda_model_source from parameter file
@@ -1308,12 +1310,12 @@ c       include 'satellite_dims_lvd.inc'
 !               Read in LI data
                 var_2d = 'LI'
                 ext = 'lst'
-                call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
+                call get_laps_2dgrid(i4time_ref,lagt,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,field_2d,0,istatus)
 
             else
-                call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
+                call get_laps_2dgrid(i4time_ref,lagt,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,field_2d,0,istatus)
 
@@ -1348,7 +1350,7 @@ c       include 'satellite_dims_lvd.inc'
             call upcase(var_2d,var_2d)
 
             level=0
-            call get_laps_2dgrid(i4time_ref,7200
+            call get_laps_2dgrid(i4time_ref,lagt
      1                          ,i4time_nearest
      1                          ,ext,var_2d,units_2d,comment_2d
      1                          ,NX_L,NY_L
@@ -1490,7 +1492,7 @@ c       include 'satellite_dims_lvd.inc'
             var_2d = 'LHE'
             ext = 'lhe'
 
-            call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
+            call get_laps_2dgrid(i4time_ref,lagt,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                  ,field_2d,0,istatus)
 
@@ -1548,7 +1550,7 @@ c       include 'satellite_dims_lvd.inc'
 
             write(6,*)' Getting pregenerated file ',ext(1:3),' ',var_2d       
 
-            call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
+            call get_laps_2dgrid(i4time_ref,lagt,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                  ,field_2d,0,istatus)
 
@@ -2930,7 +2932,7 @@ c
                 enddo ! i
 
             elseif(c_type_i .eq. 't ')then
-                call get_temp_2d(i4time_ref,7200,i4time_nearest
+                call get_temp_2d(i4time_ref,lagt,i4time_nearest
      1                          ,k_mb,NX_L,NY_L,temp_2d,istatus)
 
                 do i = 1,NX_L
@@ -3907,6 +3909,19 @@ c
      1                                 VAR_2d,k_mb,LVL_COORD_2d,
      1                                 UNITS_2d,COMMENT_2d,
      1                                 rh_2d,istat_rh)
+
+!           Test for valid (non-missing) rh
+            if(istat_rh .eq. 1)then
+                istat_rh = 0
+                do i=1,NX_L
+                do j=1,NX_L
+                    if(rh_2d(i,j) .ne. r_missing_data)then
+                        istat_rh = 1
+                    endif
+                enddo ! j
+                enddo ! i
+            endif
+
             if(istat_rh .ne. 1 .and. istat_sh .ne. 1)then
                 print*,' RH/SH not obtained from ',ext(1:3)
                 print*,'no plotting of data for requested time period'
@@ -3937,7 +3952,7 @@ c                   cint = -1.
                     call move(sh_2d,field_2d,NX_L,NY_L) ! supports diff option
 
                 elseif(qtype .eq. 'r')then
-                    if(istat_rh .ne. 1 .and. istat_sh .eq. 1)then
+                    if(istat_sh .eq. 1 .and. istat_rh .ne. 1)then
 
                         write(6,1635)
 1635                    format(10x
