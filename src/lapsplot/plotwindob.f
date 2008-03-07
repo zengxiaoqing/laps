@@ -200,22 +200,26 @@ C
         IF (DIR .LT. 0. .OR. SPD .LT. 0.) RETURN
         IF (DIR .GT. 360. .OR. SPD .GT. 200.) RETURN
 
-        thk_base = 1
+        thk_base = 1.0
 C
 C---DIRECTIONS:
 C
         DR=DIR*DEGRAD+PROJROT
         DR1=(DIR+(60.*sense))*DEGRAD+PROJROT
+        DR90=DR + 90.*DEGRAD
         SIND=SIN(DR)
         SIND1=SIN(DR1)
         COSD=COS(DR)
         COSD1=COS(DR1)
 
-        thk =sqrt(  sind**2          + (cosd *aspect)**2 )
+        thk =sqrt(  sind**2          + (cosd *aspect)**2 ) ! staff
+        call thk_transform(thk_base,aspect,dr,thk)
 
-        thk1=sqrt(  sind1**2         + (cosd1*aspect)**2 )
+        thk1=sqrt(  sind1**2         + (cosd1*aspect)**2 ) ! barbs
+        call thk_transform(thk_base,aspect,dr1,thk1)
 
-        thkf=sqrt( (sind*aspect)**2  + cosd**2)
+        thkf=sqrt( (sind*aspect)**2  + cosd**2)            ! flag
+        call thk_transform(thk_base,aspect,dr90,thkf)
 
 !       write(6,11)aspect,dr*180./3.14159265,dr1*180./3.14159265
 !    1            ,thk,thk1,thkf
@@ -444,5 +448,37 @@ c
             enddo
         endif
 
+        return
+        end
+
+        subroutine thk_transform(t1,aspect,d1,t2)
+
+        real d1     ! direction in radians
+        real t1     ! reference thickness
+        real aspect ! aspect ratio of projection stretching
+        real t2     ! new thickness
+
+        if(sin(d1) .eq. 0.)then
+            t2 = t1 * aspect
+            return
+        endif
+
+        if(cos(d1) .eq. 0)then
+            t2 = t1
+            return
+        endif
+
+        a1 = abs(t1/sin(d1))
+
+        b1 = abs(t1/cos(d1))
+
+        d2 = atan(aspect*tan(d1))
+
+!       a2 = a1
+!       b2 = b1 * aspect
+!       t2 = a2 * sin(d2)
+
+        t2 = abs(a1*sin(d2))
+   
         return
         end
