@@ -36,7 +36,7 @@ include 'lapsparms.for'
         integer vert_rad_prof     
         real silavwt_parm
         real toptwvl_parm
-        integer maxstations
+        integer iwrite_output
 
         character*40  vertical_grid
         character*50  c50_lowres_directory
@@ -85,7 +85,7 @@ include 'lapsparms.for'
         ,vert_rad_meso,vert_rad_sao                          &
         ,vert_rad_pirep,vert_rad_prof                        &
         ,silavwt_parm,toptwvl_parm                           &
-        ,maxstations                                         &
+        ,iwrite_output                                       &
         ,vertical_grid,c50_lowres_directory,c6_maproj        &
         ,radarext_3d,radarext_3d_accum                       &
         ,aircraft_time_window                                &
@@ -212,6 +212,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,vert_rad_meso,vert_rad_sao &
                   ,vert_rad_pirep,vert_rad_prof      &
                   ,silavwt_parm,toptwvl_parm &
+                  ,iwrite_output &
                   ,vertical_grid,c50_lowres_directory,c6_maproj &
                   ,radarext_3d,radarext_3d_accum &
                   ,aircraft_time_window &

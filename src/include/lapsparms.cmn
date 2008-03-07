@@ -37,7 +37,7 @@
         integer vert_rad_prof     
         real silavwt_parm
         real toptwvl_parm
-        integer maxstations
+        integer iwrite_output
         integer num_domains_cmn                             ! wrfsi
         integer lli_orig_cmn, llj_orig_cmn                  ! wrfsi
         integer uri_orig_cmn, urj_orig_cmn                  ! wrfsi
@@ -89,7 +89,7 @@
      &  ,vert_rad_meso,vert_rad_sao
      &  ,vert_rad_pirep,vert_rad_prof     
      &  ,silavwt_parm,toptwvl_parm
-     &  ,maxstations
+     &  ,iwrite_output
      &  ,vertical_grid,c50_lowres_directory,c6_maproj
      &  ,radarext_3d,radarext_3d_accum
      &  ,aircraft_time_window
