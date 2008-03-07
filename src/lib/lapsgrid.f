@@ -520,6 +520,7 @@ c****  --------------------------------------------------------- *****
      1  ,vert_rad_meso,vert_rad_sao
      1  ,vert_rad_pirep,vert_rad_prof     
      1  ,silavwt_parm,toptwvl_parm
+     1  ,iwrite_output
      1  ,vertical_grid,c50_lowres_directory,c6_maproj
      1  ,radarext_3d,radarext_3d_accum
      1  ,aircraft_time_window
