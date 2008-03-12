@@ -1,0 +1,44 @@
+#!/bin/csh
+
+# first argument is INSTALLROOT for GRIB2NetCDF software
+# second argument is DATAROOT for RUC GRIB input and RUC NetCDF output
+
+setenv NCGEN @NETCDF@/bin/ncgen
+setenv TZ GMT
+set installroot=$1
+set dataroot=$2
+
+# Note the $yy$ddd$hhhh$ffff format corresponds to the output file format
+
+# Check installroot
+if (! -e $installroot) then
+    echo "ERROR: GRIB2NetCDF software $installroot directory not found..."
+    exit
+endif
+
+# Check binary file
+if (! -e $installroot/Grib2NetCDF) then
+    echo "ERROR: GRIB2NetCDF software $installroot/Grib2NetCDF binary file not found..."
+    exit
+endif
+
+# Check location of CDL
+if (! -e $installroot/gfs_global-65160_ITS.cdl) then
+    echo "ERROR: file $installroot/gfs_global-65160_ITS.cdl not found..."
+    exit
+endif
+
+# Check location of GRIB input file directory
+if (! -e $dataroot/grib) then
+    echo "ERROR: GRIB input file directory $dataroot/grib not found..."
+    exit
+endif
+
+cd $dataroot/grib 
+mkdir -p $dataroot/netcdf
+mkdir -p $dataroot/netcdf/.tmp
+foreach time ( * )
+   echo "Converting GRIB to NetCDF for time $time"
+   echo "$installroot/Grib2NetCDF -p gfs -l $dataroot -c $installroot/gfs_global-65160_ITS.cdl -f $dataroot/grib/$time -o $dataroot/netcdf -v"	
+   $installroot/Grib2NetCDF -p gfs -l $dataroot -c $installroot/gfs_global-65160_ITS.cdl -f $dataroot/grib/$time -o $dataroot/netcdf -v
+end
