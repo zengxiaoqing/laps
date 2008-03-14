@@ -119,7 +119,15 @@ if (! defined $opt_S) {
     chdir "$public/data/raob/netcdf/";
     system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
     system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
-    system("rm \*\.tar");;;;;;;; 
+    system("rm \*\.tar"); 
+
+
+    print "Get dropsonde\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/dropsonde/netcdf/\* $public/data/dropsonde/netcdf/");
+    chdir "$public/data/dropsonde/netcdf/";
+    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+    system("rm \*\.tar");
 
 
     print "Get pirep\n";
