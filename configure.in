@@ -218,22 +218,7 @@ fi
 dnl  For W3, test for x86_64 compiler and 64-bit build
 if test "$arch" = "x86_64"
 then
-grep 'm32' << EOF
-$CFLAGS
-EOF
-  if test $? -eq 0
-  then
-    W3="-DLINUX"
-  else 
-    W3="-DLINUX -DBIT64"
-  fi  
-grep 'ifort' << EOF
-$FC
-EOF
-  if test $? -eq 0
-  then
-    W3="-DLINUX"
-  fi
+  W3="-DLINUX"
 fi  
 
 dnl  For W3, test SWAPBYTE flag
@@ -406,6 +391,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/putFile_fire1.pl
           etc/recurs_iter.pl
           etc/ruc_grib2netcdf.csh
+          etc/gfs_grib2netcdf.csh
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
           etc/sfc.pl
