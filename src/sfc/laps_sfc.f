@@ -329,8 +329,9 @@ c
             return
         endif
 
-!       Get grid_spacing a la 'rd_laps_static'
-
+!       Compute stats on topo data
+        call stats(topo,ni,nj)
+        write(6,*)' Center terrain height is ',topo(ni/2,nj/2)
 c
 c.....  Read in the obs and calculate a weight based on distance to each
 c.....  station.
