@@ -160,8 +160,11 @@ cdis
 !       Stuff for SFC Winds
 !        real uanl_sfcitrp(NX_L,NY_L),vanl_sfcitrp(NX_L,NY_L)
 
-        real grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS)
-        real grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS)
+        real, allocatable, dimension(:,:,:,:) :: grid_ra_vel
+        real, allocatable, dimension(:,:,:,:) :: grid_ra_nyq
+!       real grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS)
+!       real grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS)
+
         integer idx_radar_a(MAX_RADARS)
         character*31 ext_radar(MAX_RADARS)
 
@@ -174,6 +177,9 @@ cdis
         integer i4_loop_total
         save i4_loop_total
         data i4_loop_total/0/
+
+        allocate ( grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS) )
+        allocate ( grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS) )
 
         NZ_L = nk_laps
         
@@ -320,7 +326,7 @@ cdis
      1          ,istatus)                                      ! Output 
         if(istatus .ne. 1)then
             write(6,*)' Abort LAPS wind analysis - no first guess info'
-            return
+            goto 999
         endif
 #else
         u_mdl_bkg_4d => bgfields%u3
@@ -367,11 +373,11 @@ cdis
 
         if(istatus .ne. 1)then
             write(6,*)' Abort LAPS wind analysis'
-            return
+            goto 999
         endif
 
         if(istatus_remap_pro .ne. 1)then
-            return
+            goto 999
         endif
 
 #ifdef MULTI_EXEC
@@ -467,7 +473,7 @@ cdis
 
         if(istatus .ne. 1)then
                 write(6,*)' Error in Wind Analysis (laps_anl)'
-                return
+                goto 999
         endif
 
         if(l_grid_north .and. .not. l_grid_north_out)then
@@ -538,7 +544,11 @@ cdis
         close(15)
 !sms$serial end
 
- 999    return
+ 999    continue
+   
+        deallocate (grid_ra_vel, grid_ra_nyq)
+
+        return
 
         end
 

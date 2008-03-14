@@ -55,7 +55,8 @@
       integer idx_radar_a(max_radars)                              ! Input
 
 !     Number of unfiltered radar obs associated with each filtered one
-      integer n_superob(imax,jmax,kmax,max_radars)                 ! Local
+!     integer n_superob(imax,jmax,kmax,max_radars)                 ! Local
+      integer, allocatable, dimension(:,:,:,:) :: n_superob        ! Local
 
       integer thresh_2_radarobs_lvl_unfltrd_in                     ! Input
      1         ,thresh_4_radarobs_lvl_unfltrd_in
@@ -73,6 +74,8 @@
 
       data l_multi_doppler_new /.true./ ! Flag for new CWB routine
       data l_first_call /.true./ ! Flag for new CWB routine
+
+      allocate ( n_superob(imax,jmax,kmax,max_radars) )
 
       if(l_first_call)then
           l_write_dxx = .true.
@@ -293,6 +296,8 @@ csms$ignore begin
      1    ,icount_radar_total
 
 csms$ignore end
+      deallocate (n_superob)
+
       return
       end
 
