@@ -63,7 +63,9 @@ c.......... redp_lvl (Pressure reduction):  The main pressure analysis that
 c               LAPS produces is a reduction to this elevation (m).  For 
 c               example, the Colorado LAPS uses 1500 m, about the elevation of
 c               Denver, since it is representative of the elevations in the 
-c               region of interest.
+c               region of interest. In general this reference height should be 
+c               approximately equal to the mean elevation of stations reporting
+c               surface pressure or station pressure.
 c
 c..... comments on del, gam, ak are in the surface code
 c
