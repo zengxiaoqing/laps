@@ -84,8 +84,10 @@
 # -T                   Run with analysis only executables, useful with the
 #                      test dataset that comes with the LAPS software release.
 #
-# -W                   WNI Modification:  Added -W flag to specify WNI product set
-
+# -E                   Select special combinations of executables as follows:
+#                          "WNI" to specify WNI product set
+#                          "LGA" for LGA only (such as in downscaling or model graphics generation)
+#
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
@@ -94,10 +96,10 @@
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_W);
+            $opt_s $opt_l $opt_p $opt_u $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_E);
 use Getopt::Std;
 
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TW');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslu:vp:TE:');
 
 if(defined $opt_u){
     umask $opt_u;
@@ -173,7 +175,7 @@ if(defined $opt_s){ # "surface only"
                   mosaic_radar.x cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe qbalpe.exe lapsprep.exe);
 
-}elsif(defined $opt_W){  # WNI Product Set
+}elsif($opt_E eq "WNI"){  # WNI Product Set
     @LAPS_EXE = qw(lga.exe
                   ingest_pro.exe obs_driver.x sfc_qc.exe
                   ingest_sounding.exe
@@ -182,6 +184,9 @@ if(defined $opt_s){ # "surface only"
                   laps_sfc.x temp.exe
                   cloud.exe lq3driver.x deriv.exe
                   qbalpe.exe lapsprep.exe accum.exe laps2grib.exe);
+
+}elsif($opt_E eq "LGA"){  # LGA only (e.g. for downscaling or model graphics)
+    @LAPS_EXE = qw(lga.exe);
 
 }else{      # Full product set
     @LAPS_EXE = qw(lga.exe 
