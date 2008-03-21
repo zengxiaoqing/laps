@@ -37,9 +37,9 @@ cdis
 cdis   
 cdis
         subroutine plot_obs(k_level,l_ask_questions,asc9_tim
-     1    ,i_radar_start,i_radar_end,namelist_parms
+     1    ,i_radar_start,i_radar_end,namelist_parms,plot_parms
      1    ,imax,jmax,kmax,n_plotted,grid_ra_ref,grid_ra_vel,lat,lon
-     1    ,topo,mode)
+     1    ,topo,grid_spacing_m,mode)
 
 !       Steve A         Nov  1989       Original Version
 !       Steve A         Nov  1991       Adjustable Dimensions
@@ -134,16 +134,18 @@ cdis
      1                + nint(pix_per_km * 3.02 * grid_scale)
         dusmall = dubase * pix_per_km/1.65
 
-        size_factor = float(jmax) / 300.
+        jmax_ref = 209
+        size_factor = (float(jmax_ref-1) / 300.) ! * (5000. / grid_spacing_m) 
+        size_factor = size_factor * plot_parms%contour_line_width 
 
-        size_prof = 3.  * size_factor / zoom
-        size_pirep = 3. * size_factor / zoom
-        size_maps = 2.  * size_factor / zoom
-        size_vad = 2.   * size_factor / zoom
-        size_anl = 0.7  * size_factor / zoom
-        size_suw = 1.   * size_factor / zoom
-        size_radar = 1. * size_factor
-        size_meso = 2.  * size_factor / zoom
+        size_prof = 3.   * size_factor / zoom
+        size_pirep = 3.0 * size_factor / zoom
+        size_maps = 2.   * size_factor / zoom
+        size_vad = 2.    * size_factor / zoom
+        size_anl = 0.7   * size_factor / zoom
+        size_suw = 1.    * size_factor / zoom
+        size_radar = 1.  * size_factor
+        size_meso = 2.   * size_factor / zoom
 
         aspect = 1.0 ! initialize to default value
 
@@ -438,7 +440,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         write(6,*)' Mesonet Data'
 
-        call setusv_dum(2hIN,14)
+        call setusv_dum(2hIN,14) ! RoyalBlue
 
         lun = 32
         ext = 'msg'
@@ -488,7 +490,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 !       Plot Sfc/METAR winds  ***********************************************
 50      write(6,*)' Sfc/METAR Data'
 
-        call setusv_dum(2hIN,14)
+        call setusv_dum(2hIN,14) ! RoyalBlue
 
         lun = 32
         ext = 'sag'
