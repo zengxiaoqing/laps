@@ -570,7 +570,7 @@ C
 
       elseif(colortable .eq. 'tpw')then
           if(.not. l_discrete)then
-              ncols = 60
+              ncols = 79
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
