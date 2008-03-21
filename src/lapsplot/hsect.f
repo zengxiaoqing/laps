@@ -2541,18 +2541,20 @@ c
                     do i_radar = 1,n_radars
                         write(6,*)'         Plotting radar # ',i_radar
                         call plot_obs(k_level,.false.,asc9_tim
-     1                      ,i_radar,i_radar,namelist_parms
+     1                      ,i_radar,i_radar
+     1                      ,namelist_parms,plot_parms
      1                      ,NX_L,NY_L,NZ_L,idum1_array,grid_ra_ref
      1                      ,grid_ra_vel(1,1,1,i_radar)    
-     1                      ,lat,lon,topo,2)
+     1                      ,lat,lon,topo,grid_spacing_m,2)
                     enddo ! i_radar
 
                 else ! single radar
                     call plot_obs(k_level,.false.,asc9_tim
-     1                      ,i_radar,i_radar,namelist_parms
+     1                      ,i_radar,i_radar
+     1                      ,namelist_parms,plot_parms
      1                      ,NX_L,NY_L,NZ_L,idum1_array,grid_ra_ref
      1                      ,grid_ra_vel(1,1,1,i_radar)    
-     1                      ,lat,lon,topo,2)
+     1                      ,lat,lon,topo,grid_spacing_m,2)
 
                 endif
 
@@ -6138,6 +6140,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         logical l_obs
 
+        call get_grid_spacing_cen(grid_spacing_m,istatus)
+
         write(6,1505)c_label,asc_tim_9
 1505    format(2x,a,2x,a9)
 
@@ -6232,9 +6236,11 @@ c             if(cint.eq.0.0)cint=0.1
 
 !                   call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
                     call plot_obs(k_level,.true.,asc_tim_9(1:9)
-     1                  ,i_radar_start,i_radar_end,namelist_parms
+     1                  ,i_radar_start,i_radar_end
+     1                  ,namelist_parms,plot_parms
      1                  ,imax,jmax,kmax,n_plotted
-     1                  ,grid_ra_ref,grid_ra_vel,lat,lon,topo,1)
+     1                  ,grid_ra_ref,grid_ra_vel,lat,lon,topo
+     1                  ,grid_spacing_m,1)
                     return
                 endif
 
