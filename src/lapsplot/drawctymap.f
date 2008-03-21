@@ -109,6 +109,10 @@ c
                   call mpsetr('GR',float(jgrid))
                   call mapgrd()
               endif
+          elseif(mode_supmap .eq. 4)then
+              write(6,*)' Accessing RANGS database...'
+              write(6,*)' Not yet supported - stop' 
+              stop
           endif
           if(ier .ne. 0)write(6,*)' ier = ',ier
 
@@ -149,6 +153,10 @@ c
               call mpsetr('GR',float(jgrid))
               call mapgrd()
           endif
+      elseif(mode_supmap .eq. 4)then
+          write(6,*)' Accessing RANGS database...'
+          write(6,*)' Not yet supported - stop' 
+          stop
       endif
       if(ier .ne. 0)write(6,*)' ier = ',ier
 
@@ -198,7 +206,7 @@ c
      1                       ,c_institution,c_vnt_units
      1                       ,c_units_type,c_pbl_depth_units
      1                       ,l_discrete, l_sphere       
-     1                       ,mode_supmap, iraster
+     1                       ,mode_supmap, iraster, icol_barbs
 
 !      Set defaults
        latlon_int = 0
@@ -210,6 +218,7 @@ c
        mode_supmap = 3
        iraster = 0
        l_sphere = .false.
+       icol_barbs = 0
  
        call get_directory('static',static_dir,len_dir)
 
@@ -235,6 +244,7 @@ c
        namelist_parms%l_sphere = l_sphere
        namelist_parms%mode_supmap = mode_supmap
        namelist_parms%iraster = iraster
+       namelist_parms%icol_barbs = icol_barbs
 
        istatus = 1
        return
