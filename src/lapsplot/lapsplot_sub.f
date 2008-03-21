@@ -146,7 +146,7 @@ cdis
         plot_parms%ycen = 0.5
         plot_parms%zoom_wdw = 1.0
         plot_parms%ncols = 0.
-        plot_parms%icol_barbs = 0
+        plot_parms%icol_barbs = namelist_parms%icol_barbs
 
 1100    write(6,1110)
 1110    format(/////'     [h/hz]  Horizontal Plan View '
