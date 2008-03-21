@@ -630,6 +630,8 @@ c..... Pressure...Station pressure, MSL and altimeter
 c
 	  stn_press = stationPressure(i)
           call sfc_climo_qc_r('stnp_pa',stn_press)
+          if(ltest_madis_qc)
+     1        call madis_qc_r(stn_press,stationPressureDD(i),badflag)
 	  if(stationPressChangeTime(i) .gt. 0.) then
 	     if( abs(observationTime(i) - stationPressChangeTime(i))
      1                               .gt. laps_cycle_time ) then
@@ -639,10 +641,15 @@ c
 	  if(stn_press .ne. badflag) stn_press = stn_press * 0.01 !Pa to mb
 c
           call sfc_climo_qc_r('mslp_pa',seaLevelPressure(i))
+          if(ltest_madis_qc)
+     1        call madis_qc_r(seaLevelPressure(i),seaLevelPressureDD(i)
+     1                                           ,badflag)
 	  if(seaLevelPressure(i) .ne. badflag) seaLevelPressure(i)   
      1                             = seaLevelPressure(i)   * 0.01 !Pa to mb
 
           call sfc_climo_qc_r('alt_pa',altimeter(i))
+          if(ltest_madis_qc)
+     1        call madis_qc_r(altimeter(i),altimeterDD(i),badflag)
 	  if(altimeter(i) .ne. badflag) 
      1                         altimeter(i) = altimeter(i) * 0.01 !Pa to mb
 c
@@ -912,7 +919,11 @@ c
          character*1 DD
          real badflag
 
-         if(DD .eq. 'X')then
+         if(DD .eq. 'X')then ! Automated QC
+             var = badflag
+         endif
+
+         if(DD .eq. 'B')then ! Subjective QC (reject list)
              var = badflag
          endif
  
