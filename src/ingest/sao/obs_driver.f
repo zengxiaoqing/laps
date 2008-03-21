@@ -652,6 +652,8 @@ c
         nmsl_only = 0
         nalt_and_msl = 0
         nalt_or_msl = 0
+        nalt_or_stp = 0
+        sum_alt_or_stp = 0.
         do i = 1,n_obs_b
             if(store_4(i,1) .ne. badflag)then
                 nalt = nalt+1
@@ -675,9 +677,17 @@ c
      1         store_4(i,3) .ne. badflag            )then
                 nalt_or_msl = nalt_or_msl+1
             endif
+            if(store_4(i,1) .ne. badflag .or. 
+     1         store_4(i,2) .ne. badflag            )then
+                nalt_or_stp = nalt_or_stp+1
+                sum_alt_or_stp = sum_alt_or_stp + store_1(i,3)
+            endif
         enddo ! i
 
+        ave_elev_pres = sum_alt_or_stp / float(nalt_or_stp)
+
         write(6,*)
+        write(6,*)' Checking pressure reports in box...'
         write(6,*)' # of stations reporting altimeter         ',nalt
         write(6,*)' # of stations reporting station pressure  ',nstp
         write(6,*)' # of stations reporting MSL pressure      ',nmsl
@@ -687,6 +697,10 @@ c
      1                                                 ,nalt_and_msl    
         write(6,*)' # of stations reporting altimeter or MSLP '
      1                                                 ,nalt_or_msl    
+        write(6,*)' # of stations reporting altimeter or STNP '
+     1                                                 ,nalt_or_stp    
+        write(6,*)' Mean elevation of alt/stnp reports = ' 
+     1                                                 ,ave_elev_pres       
 
 !       Check for no obs
         if(nn .eq. 0 .and. .not. l_allow_empty_lso)then
