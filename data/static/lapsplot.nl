@@ -11,6 +11,7 @@
  l_sphere=.false.,
  mode_supmap=3,
  iraster=0,
+ icol_barbs=0,
  /
 
 c LAPSPLOT PARAMETERS
@@ -47,9 +48,11 @@ c            such as Science On a Sphere (TM)
 c
 c mode_supmap - (1) use map database in 'data/static/ncarg/*'
 c               (3) use ezmap database in 'NCARG_ROOT/lib/ncarg/database'
+c               (4) use rangs database linked into 'data/static/ncarg/rangs/*'
 c
 c iraster - (0)  use default settings for raster image plots (vs contour fill)
 c           (+1) use faster raster image plots whenever possible    
 c           (-1) use contour fill image plots exclusively for better quality
 c
-
+c icol_barbs - (0) use default situation dependent settings for wind barb color
+c              (1) always have colored wind barbs (instead of black)
