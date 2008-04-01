@@ -11,11 +11,11 @@ $ENV{'PATH'} = "/usr/bin:/bin";
 $|=1;  #force flush of buffers after each print
 open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
 
-use lib "/w3/utilities"; # Set this to your path for 'cgi-lib.pl'
-require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www
+use lib "@prefix@/etc/www"; # Set this to your path for 'cgi-lib.pl'
+require "cgi-lib.pl";       # supplied in $LAPSINSTALLROOT/etc/www OR /w3/utilities
 
-use lib "/usr/nfs/lapb/builds/laps/etc"; # Set this to your path for 'laps_tools.pm'
-require "laps_tools.pm";                 # comes from $LAPSINSTALLROOT/etc
+use lib "@prefix@/etc";     # Set this to your path for 'laps_tools.pm'
+require "laps_tools.pm";    # supplied in $LAPSINSTALLROOT/etc
     
 #set up some nice variables
 @month=(Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec);
@@ -365,8 +365,9 @@ if($err == 0) {
             }
 
             if ($out_levels =~ "[0-1,3-9]" || $out_levels =~ "xsect") {                                                    # Primarily 3D fields
-#             print "<h2>Debug: What-got-in options selected for 3D fields $out_levels</h2>";
-              if ($out_fields =~ "wind" || $out_fields =~ "WIND") {                                                    # Wind
+#             print "<h2>Debug: What-got-in options selected for 3D fields $out_levels $out_fields</h2>";
+              if ($out_fields =~ "wind" || $out_fields =~ "WIND" || $out_fields eq "U" || $out_fields eq "u" || $out_fields eq "V" || $out_fields eq "v") {                                                    # Wind
+#               print "<h2>Debug: Match found for $out_fields</h2>";
                 $wgi_file = "$laps_data_root/log/wind\.wgi\.$a9time_wgi";
                 $wgi_file2 = "$laps_data_root/log/wind3d\.wgi\.$a9time_wgi";
                 if( -e "$wgi_file"){
@@ -504,7 +505,7 @@ if($err == 0) {
 
                           $zoom_lapsplot = $zoom_safe * ( $npix/885. );
 
-                          printf LAPSPLOT "$zoom_lapsplot,$density_safe,$thickness_safe,$zoom_safe\n";
+                          printf LAPSPLOT "$zoom_lapsplot,$density_safe,$thickness_safe,$xcen_safe,$ycen_safe,$zoom_safe\n";
                       }
                   }
 
@@ -1764,19 +1765,19 @@ if($err == 0) {
                             printf LAPSPLOT "ALB\n";
 #                           printf LAPSPLOT "n\n";   
 
-                        }elsif("$field" eq "sat_11u" ) { 
-                            printf LAPSPLOT "lv\n"; 
-                            printf LAPSPLOT "$hhmm\n"; 
-                            printf LAPSPLOT "4\n"; 
-                            printf LAPSPLOT "S8A\n"; 
-                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                       }elsif("$field" eq "sat_11u" ) { 
+                           printf LAPSPLOT "lv\n"; 
+                           printf LAPSPLOT "$hhmm\n"; 
+                           printf LAPSPLOT "4\n"; 
+                           printf LAPSPLOT "S8A\n"; 
+                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
 
-                        }elsif("$field" eq "SAT_11U" ) { 
-                            printf LAPSPLOT "lv\n"; 
-                            printf LAPSPLOT "$hhmm\n"; 
-                            printf LAPSPLOT "-4\n"; 
-                            printf LAPSPLOT "S8A\n"; 
-                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+                       }elsif("$field" eq "SAT_11U" ) { 
+                           printf LAPSPLOT "lv\n"; 
+                           printf LAPSPLOT "$hhmm\n"; 
+                           printf LAPSPLOT "-4\n"; 
+                           printf LAPSPLOT "S8A\n"; 
+#                          $obs_sfc = "vsblty";   # This is set to prevent station model overlays
 
                         }elsif("$field" eq "sat_39u" ) { 
                             printf LAPSPLOT "lv\n"; 
@@ -2123,12 +2124,16 @@ if($err == 0) {
                         { printf LAPSPLOT "hii\n"; }
                     elsif("$field" eq "heatindex") 
                         { printf LAPSPLOT "hi\n"; }
-                    elsif("$field" eq "FIREWX"){ 
+                    elsif("$field" eq "FIRE_FBG"){ 
                         printf LAPSPLOT "lfi\n"; 
                         printf LAPSPLOT "fwi\n";}
-                    elsif("$field" eq "firewx"){ 
+                    elsif("$field" eq "fire_fbg"){ 
                         printf LAPSPLOT "lf\n"; 
                         printf LAPSPLOT "fwi\n";}
+                    elsif("$field" eq "FIREWX"){ 
+                        printf LAPSPLOT "fwi\n";}
+                    elsif("$field" eq "firewx"){ 
+                        printf LAPSPLOT "fw\n";}
                     elsif("$field" eq "VENT_INDX"){ 
                         printf LAPSPLOT "lfi\n"; 
                         printf LAPSPLOT "vnt\n";}
@@ -2301,6 +2306,8 @@ if($err == 0) {
                         printf LAPSPLOT "a\n";  
                     }elsif("$field" eq "thetae" ){ 
                         printf LAPSPLOT "ts\n";  
+                    }elsif("$field" eq "THETAE" ){ 
+                        printf LAPSPLOT "tsi\n";  
                     }elsif("$field" eq "CLD_CVR" ){ 
                         printf LAPSPLOT "cf\n"; 
                     }elsif("$field" eq "cld_cvr" ){ 
@@ -2762,6 +2769,11 @@ if($err == 0) {
 
                     }elsif("$field" eq "div" ) { 
                         printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "dv\n"; 
+
+                    }elsif("$field" eq "DIV" ) { 
+                        printf LAPSPLOT "bwi\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "dv\n"; 
 

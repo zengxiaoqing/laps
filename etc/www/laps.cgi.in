@@ -14,11 +14,11 @@ open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
 
 use Cwd 'chdir'; #from the camel book(387): "override chdir; keep PWD up to date"
 
-use lib "/w3/utilities"; # Set this to your path for 'cgi-lib.pl'
-require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www
+use lib "@prefix@/etc/www"; # Set this to your path for 'cgi-lib.pl'
+require "cgi-lib.pl";       # supplied in $LAPSINSTALLROOT/etc/www OR /w3/utilities
 
-use lib "/usr/nfs/lapb/builds/laps/etc"; # Set this to your path for 'laps_tools.pm'
-require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
+use lib "@prefix@/etc";     # Set this to your path for 'laps_tools.pm'
+require "laps_tools.pm";    # supplied in $LAPSINSTALLROOT/etc
 
 ##As per Bill's code, have form expire in 1 hour
 use HTTP::Date;
@@ -349,6 +349,7 @@ print <<"EOF";
 <option $selected{'HELICITY'}> HELICITY
 <option $selected{'HEATINDEX'}> HEATINDEX
 <option $selected{'FIREWX'}> FIREWX
+<option $selected{'FIRE_FBG'}> FIRE_FBG
 <option $selected{'VENT_INDX'}> VENT_INDX
 <option $selected{'HAINES'}> HAINES
 <option $selected{'CLD_CVR'}> <FONT COLOR="#AA0000">CLD_CVR</FONT>
@@ -404,6 +405,7 @@ print <<"EOF";
 <option $selected{'vsblty'}> vsblty
 <option $selected{'heatindex'}> heatindex
 <option $selected{'firewx'}> firewx
+<option $selected{'fire_fbg'}> fire_fbg
 <option $selected{'vent_indx'}> vent_indx
 <option $selected{'haines'}> haines
 <option $selected{'cld_cvr'}> cld_cvr
@@ -543,7 +545,7 @@ print <<"EOF";
 
 
 <br>
-Thick/Size:
+<A HREF="thick.html">Thick/Size:</A>
 <br>
 
 <select name="thickness">
