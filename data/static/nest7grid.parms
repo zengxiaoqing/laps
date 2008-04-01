@@ -13,7 +13,7 @@
  NY_L=209,                         
 
  vertical_grid='PRESSURE',
- nk_laps=21,                         
+ nk_laps=41,                         
 
  laps_cycle_time=3600,           
  max_radar_files_nl=20000,
@@ -59,7 +59,8 @@
  vert_rad_sao=1,      
  vert_rad_pirep=1,    
  vert_rad_prof=1,     
- toptwvl_parm=2.,     
+ toptwvl_parm=2., 
+ iwrite_output=1,    
  silavwt_parm=0.,
  c8_project='NIMBUS', 
  c8_blpfmt='default', 
@@ -167,6 +168,10 @@ c                     to the analyses). Examples are 'mm5', 'eta', etc.
 c                     This corresponds to the available 'lapsprd/fua/*'
 c                     subdirectories. Lapsplot will plot only among those
 c                     listed elements.
+c
+c iwrite_output - flag to write out all little files or just a restricted set
+c                 (1) means write out all little files
+c                 (0) means write out restricted set for single executable
 c
 c TERRAIN SMOOTHING
 c           
