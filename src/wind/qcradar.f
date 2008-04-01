@@ -238,6 +238,7 @@ c    1                  ,rlat_radar,rlon_radar,rheight_radar)
       write(6,*)' # of Output (unfiltered) Radar obs = '
      1                                      ,n_radarobs_tot_unfltrd       
 
+      istatus = 1
       return
       end
 
