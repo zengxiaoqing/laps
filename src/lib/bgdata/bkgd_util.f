@@ -2,6 +2,7 @@
      1,gproj,nx,ny,nz,lon,uw3d,vw3d,uw2d,vw2d)
 
       implicit none
+      include 'lapsparms.cmn'
 
       character fullname*200
       character cmodel*132
@@ -22,7 +23,6 @@
       real    latitude
       real    projrot_latlon
 
-      include 'lapsparms.cmn'
 c
 c reset or restore common projection parameters
 c
@@ -119,6 +119,7 @@ c
 c
 
       implicit none
+      include 'lapsparms.cmn'
 
       integer nx,ny,nz
       integer bgmodel
@@ -143,7 +144,6 @@ c     call get_c6_maproj(c6_maproj,istatus)
 c     call get_standard_longitude(std_lon,istatus)
 c     call get_standard_latitudes(std_lat1,std_lat2,istatus)
 
-      include 'lapsparms.cmn'
 
       print*,'Rotate u/v components'
       print*
@@ -451,6 +451,7 @@ c to use the library projection routines to calculate wind rotation
 c angles for the background.
 c
       implicit none
+      include 'lapsparms.cmn'
 
       character*200 fullname
       character*132 cmodel
@@ -492,7 +493,6 @@ c
       save          isave
 
 
-      include 'lapsparms.cmn'
 
       if(isave.eq.0)then
          if(ldir)then
