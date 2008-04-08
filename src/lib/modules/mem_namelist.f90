@@ -3,7 +3,7 @@ Module mem_namelist
 include 'lapsparms.for'
 
 !       Globally used variables that are independent of the namelists
-        character(len=200) :: generic_data_root, cstaticdir, grid_fnam_common
+!       character(len=200) :: generic_data_root, cstaticdir, grid_fnam_common
 
 !       Declarations for namelist variables
         integer    iflag_lapsparms
@@ -105,35 +105,8 @@ include 'lapsparms.for'
         ,fdda_model_source                                   &
         ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1        
 
-
-! background_nl variables
-character(len=256)   :: bgpaths(MAXBGMODELS)
-integer              :: bgmodels(MAXBGMODELS)
-character(len=132)   :: cmodel
-logical              :: use_analysis
-integer              :: forecast_length   ,itime_inc
-logical              :: smooth_fields     ,luse_sfc_bkgd    ,lgb_only     
-
 ! in surface_analysis also
 real                 :: redp_lvl
-
-
-! obs_driver_nl 
-character(len=100)   :: path_to_metar       ,path_to_local_data
-character(len=200)   :: path_to_buoy_data   ,path_to_gps_data
-character(len=8)     :: metar_format
-logical :: l_allow_empty_lso
-integer :: min_to_wait_for_metars   ,minutes_to_wait_for_metars
-integer :: ick_metar_time           ,itime_before  ,itime_after
-integer :: maxobs                   ,i4wait_local_obs_max
-integer :: local_obs_thresh
-
-
-! snd_nl
-character(len=256)   ::  path_to_raw_raob    ,path_to_local_raob     &  
-                        ,path_to_raw_tower   ,path_to_raw_drpsnd     &  
-                        ,path_to_raw_satsnd  ,path_to_raw_radiometer 
-
 
 ! wind_nl variables
 logical :: l_use_raob, l_use_cdw, l_use_radial_vel
@@ -205,7 +178,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,standard_longitude,NX_L, NY_L, I_PERIMETER &
                   ,l_compress_radar,l_use_tamdar,l_3dvar &
                   ,grid_spacing_m,grid_cen_lat,grid_cen_lon &
-                  ,laps_cycle_time, min_to_wait_for_metars &
+                  ,laps_cycle_time &
                   ,i2_missing_data, r_missing_data, MAX_RADARS &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
@@ -230,21 +203,6 @@ namelist /lapsparms_NL/ iflag_lapsparms &
 
 namelist/pressures_nl/ pressures
 
-namelist/background_nl/ bgpaths,bgmodels,forecast_length  &
-                       ,use_analysis,cmodel,itime_inc,smooth_fields  &
-                       ,luse_sfc_bkgd,lgb_only,redp_lvl    
-                       
-namelist/obs_driver_nl/ path_to_metar,path_to_local_data &
-                       ,path_to_buoy_data,path_to_gps_data    &
-                       ,l_allow_empty_lso,min_to_wait_for_metars  &
-                       ,metar_format,minutes_to_wait_for_metars   &
-                       ,ick_metar_time,itime_before,itime_after   &
-                       ,maxobs,i4wait_local_obs_max,local_obs_thresh
-
-namelist/snd_nl/        path_to_raw_raob,path_to_local_raob  &
-                       ,path_to_raw_tower,path_to_raw_drpsnd    &
-                       ,path_to_raw_satsnd,path_to_raw_radiometer
-                       
 namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
                   ,thresh_2_radarobs_lvl_unfltrd  &
                   ,thresh_4_radarobs_lvl_unfltrd  &
@@ -326,36 +284,6 @@ elseif (namelist_name == 'pressures') then
 elseif (namelist_name == 'lapsparms') then
 
    read (12, lapsparms_nl, err=901)
-   
-   ! QC the input variables if desired
-   !  .
-   !  .
-   !  .
-   !  .
-
-elseif (namelist_name == 'background') then
-
-   read (12, background_nl)
-   
-   ! QC the input variables if desired
-   !  .
-   !  .
-   !  .
-   !  .
-
-elseif (namelist_name == 'obs_driver') then
-
-   read (12, obs_driver_nl)
-   
-   ! QC the input variables if desired
-   !  .
-   !  .
-   !  .
-   !  .
-
-elseif (namelist_name == 'raob_ingest') then
-
-   read (12, snd_nl)
    
    ! QC the input variables if desired
    !  .
