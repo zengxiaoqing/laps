@@ -4,6 +4,8 @@
       subroutine get_static_info(c_vars_req,c_values_req_in,n_vars_req      
      1                                                      ,istatus)
 
+      include 'lapsparms.cmn'
+
 !     This routine accesses the run time variables from the 'nest7grid.parms'
 !     file via the common block or by reading the actual file.
 
@@ -30,8 +32,6 @@
       parameter (max_vars_list = 25)
 
       character*40 c_vars_list(max_vars_list)
-
-      include 'lapsparms.cmn'
 
 ! -----------------------------------------------------------------------------
 
