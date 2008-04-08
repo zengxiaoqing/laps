@@ -1530,20 +1530,22 @@ c read in laps lat/lon and topo
 
                         write(6,*)' Read height field for rfill purpose'
 
-!                       Obtain height field
-                        ext = 'lt1'
-                        var_2d = 'HT'
-                        call get_laps_3dgrid(
-     1                       i4time_radar,10000000,i4time_ht,
-     1                       NX_L,NY_L,NZ_L,ext,var_2d,
-     1                       units_2d,comment_2d,field_3d,istatus)
-                        if(istatus .ne. 1)then
-                            write(6,*)' Error locating height field'
-                            go to 100
-                        endif
+                        l_low_fill = namelist_parms%l_low_fill
+                        l_high_fill = namelist_parms%l_high_fill
 
-                        l_low_fill = .true.                        
-                        l_high_fill = .true.                        
+                        if(l_low_fill .OR. l_high_fill)then
+!                           Obtain height field
+                            ext = 'lt1'
+                            var_2d = 'HT'
+                            call get_laps_3dgrid(
+     1                         i4time_radar,10000000,i4time_ht,
+     1                         NX_L,NY_L,NZ_L,ext,var_2d,
+     1                         units_2d,comment_2d,field_3d,istatus)
+                            if(istatus .ne. 1)then
+                                write(6,*)' Error locating height field'
+                                go to 100
+                            endif
+                        endif ! height field presumably necessary
 
                         i4_tol = 1200
 
