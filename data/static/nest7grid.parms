@@ -129,6 +129,7 @@ c                           at the times 'vrz' is present
 c                     'v01' (radar #1  volume data)
 c                     'v02' (radar #2  volume data)
 c                     'vxx' (radar #xx volume data)
+c                     'non' radar will not be used (i.e. is withheld)
 c
 c path_to_raw_blpprofiler - Path to Boundary Layer wind profiler data. If 
 c                           data is Multi-Agency MADIS then use 'WFO' for 
