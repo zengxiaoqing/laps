@@ -136,7 +136,7 @@ cdis
 
         jmax_ref = 209
         size_factor = (float(jmax_ref-1) / 300.) ! * (5000. / grid_spacing_m) 
-        size_factor = size_factor * plot_parms%contour_line_width 
+        size_factor = size_factor * plot_parms%obs_size
 
         size_prof = 3.   * size_factor / zoom
         size_pirep = 3.0 * size_factor / zoom
