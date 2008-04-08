@@ -6,6 +6,8 @@
 
           logical l_discrete
           logical l_sphere
+          logical l_low_fill
+          logical l_high_fill
 
           real continent_line_width
           real time_zone
@@ -37,6 +39,7 @@
           real xcen
           real ycen
           real zoom_wdw
+          real obs_size
 
           integer contour_line_width
           integer ncols
