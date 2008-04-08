@@ -9,6 +9,8 @@
  c_pbl_depth_units='metric',
  l_discrete=.false.,
  l_sphere=.false.,
+ l_low_fill=.true.,
+ l_high_fill=.true.,
  mode_supmap=3,
  iraster=0,
  icol_barbs=0,
@@ -45,6 +47,12 @@ c
 c l_sphere - apply adjustements and compensating distortions to plots so they
 c            will appear better when viewed on a spherical projection device
 c            such as Science On a Sphere (TM)
+c
+c l_low_fill - do vertical extrapolation of individual 3-D radar reflectivity
+c              plots (vxx files)
+c
+c l_high_fill - do vertical interpolation of individual 3-D radar reflectivity
+c               plots (vxx files)
 c
 c mode_supmap - (1) use map database in 'data/static/ncarg/*'
 c               (3) use ezmap database in 'NCARG_ROOT/lib/ncarg/database'
