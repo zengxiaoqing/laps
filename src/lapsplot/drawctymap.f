@@ -198,14 +198,15 @@ c
        character*6 c_vnt_units
        character*7 c_units_type
        character*7 c_pbl_depth_units
-       logical l_discrete,l_sphere
+       logical l_discrete,l_sphere,l_low_fill,l_high_fill       
        real time_zone
 
        namelist /lapsplot_nl/ latlon_int,continent_line_width
      1                       ,c3_time_zone,time_zone
      1                       ,c_institution,c_vnt_units
      1                       ,c_units_type,c_pbl_depth_units
-     1                       ,l_discrete, l_sphere       
+     1                       ,l_discrete, l_sphere
+     1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
 
 !      Set defaults
@@ -242,6 +243,8 @@ c
        namelist_parms%c_pbl_depth_units = c_pbl_depth_units
        namelist_parms%l_discrete = l_discrete
        namelist_parms%l_sphere = l_sphere
+       namelist_parms%l_low_fill = l_low_fill
+       namelist_parms%l_high_fill = l_high_fill
        namelist_parms%mode_supmap = mode_supmap
        namelist_parms%iraster = iraster
        namelist_parms%icol_barbs = icol_barbs
