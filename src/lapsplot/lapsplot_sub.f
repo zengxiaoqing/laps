@@ -145,6 +145,7 @@ cdis
         plot_parms%xcen = 0.5
         plot_parms%ycen = 0.5
         plot_parms%zoom_wdw = 1.0
+        plot_parms%obs_size = 1.0
         plot_parms%ncols = 0.
         plot_parms%icol_barbs = namelist_parms%icol_barbs
 
@@ -186,6 +187,7 @@ cdis
      1                    ,plot_parms%xcen
      1                    ,plot_parms%ycen
      1                    ,plot_parms%zoom_wdw
+     1                    ,plot_parms%obs_size
 
             else
                 zoom = 1.0
