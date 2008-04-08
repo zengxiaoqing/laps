@@ -484,7 +484,7 @@ c****  --------------------------------------------------------- *****
         return
         end
 
-      subroutine get_laps_config_sub(grid_fnam,istatus)
+        subroutine get_laps_config_sub(grid_fnam,istatus)
 
 !       1992 Steve Albers
 
@@ -493,6 +493,8 @@ c****  --------------------------------------------------------- *****
 !       calls will return these parameters (now stored in common), without
 !       rereading the namelist. This is more efficient if the routine is called
 !       many times.
+
+        include 'lapsparms.cmn'
 
         character*(*) grid_fnam   ! Input (Warning: trailing blanks won't work)
         character*150  directory
@@ -504,7 +506,6 @@ c****  --------------------------------------------------------- *****
         data init/0/
         save init
 
-        include 'lapsparms.cmn'
         include 'grid_fname.cmn'
 
         NAMELIST /lapsparms_NL/ iflag_lapsparms
