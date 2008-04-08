@@ -992,7 +992,7 @@ c     Restore original color table
               if(.not. l_integral .and. .not. l_discrete)then ! Plot Black Line
                   x1   = xlow + frac*xrange 
                   x2   = xlow + frac*xrange 
-                  call setusv_dum(2hIN,0)
+                  call setusv_dum(2hIN,25)                    ! Dark Gray
 
                   y1 = ylow
                   y2 = yhigh
