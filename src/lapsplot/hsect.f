@@ -2228,8 +2228,8 @@ c
      1                                ,i4time_radar)    
 
                     if(ext_radar .ne. 'vrz')then
-                        l_low_fill = .true.                        
-                        l_high_fill = .true.                        
+                        l_low_fill = namelist_parms%l_low_fill
+                        l_high_fill = namelist_parms%l_high_fill
                     else
                         l_low_fill = .false.                        
                         l_high_fill = .false.                        
