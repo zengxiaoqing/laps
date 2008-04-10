@@ -11,10 +11,12 @@ include $(SRCROOT)/src/include/makefile.inc
 LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
            $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
            $(SRCROOT)/src/lib/util/libutil.a  \
+           $(SRCROOT)/src/lib/modules/libmodules.a  
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
              $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
              $(SRCROOT)/src/lib/util/libdebugutil.a  \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
