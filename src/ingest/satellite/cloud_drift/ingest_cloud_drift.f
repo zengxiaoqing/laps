@@ -69,7 +69,7 @@
           elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then
               c_filespec = dir_in(1:len_dir_in)//'/hdsw*.dat'
           elseif(cloud_drift_format(ipath) .eq. 'MADIS')then
-              c_filespec = dir_in(1:len_dir_in)//'*'
+              c_filespec = dir_in(1:len_dir_in)//'/*'
           else 
               c_filespec = dir_in(1:len_dir_in)
           endif
