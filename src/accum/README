@@ -14,7 +14,7 @@ main                                                     laps_accum.f
             get_sfc_preciptype                                  "
             nowrad_virga_correction                             "
             compare_gauge_values                                "
-                read_sfc_precip 
+                read_sfc_precip                          lib/read_surface_obs.f
                 precip_barnes_jacket                     precip_barnes_jacket.f
                     precip_barnes_sfc                           "
                         barnes_multivariate_sfc
