@@ -56,6 +56,7 @@
      1                               ,r_missing_data               ! I
      1                               ,lat,lon                      ! I
      1                               ,pcp_bkg_m                    ! I
+     1                               ,ilaps_cycle_time             ! I
      1                               ,precip_accum)                ! I/O
         endif
 
@@ -719,6 +720,7 @@
      1                                 ,r_missing_data             ! I
      1                                 ,lat,lon                    ! I
      1                                 ,pcp_bkg_m                  ! I
+     1                                 ,ilaps_cycle_time           ! I
      1                                 ,precip_accum)              ! I/O
 
 
@@ -737,6 +739,9 @@
         real lat(ni,nj)
         real lon(ni,nj)
 
+        real pcp_gauge(maxsta)   ! relevant time of accumulation is selected
+        character*5 c_field
+
         integer ilaps(maxsta),jlaps(maxsta)
 
         write(6,*)
@@ -748,10 +753,30 @@
      &           pcp1,pcp3,pcp6,pcp24,
      &           snow,maxsta,jstatus)
 
+        call get_sfc_badflag(badflag,istatus)
+
         n_gauge_noradar = 0
 
 !       Loop through obs and write out precip values (when gauge reports precip)
         do iob = 1,n_obs_b
+
+!           Fill gauge array according to cycle time
+            if(ilaps_cycle_time .eq. 3600)then
+                pcp_gauge(iob) = pcp1(iob)
+                c_field = 'pcp1'
+            elseif(ilaps_cycle_time .eq. 10800)then
+                pcp_gauge(iob) = pcp3(iob)
+                c_field = 'pcp3'
+            elseif(ilaps_cycle_time .eq. 21600)then
+                pcp_gauge(iob) = pcp6(iob)
+                c_field = 'pcp6'
+            elseif(ilaps_cycle_time .eq. 86400)then
+                pcp_gauge(iob) = pcp24(iob)
+                c_field = 'pcp24'
+            else
+                pcp_gauge(iob) = badflag
+                c_field = 'none'
+            endif
 
 !           Obtain LAPS i,j at ob location
             call latlon_to_rlapsgrid(lat_s(iob),lon_s(iob),lat,lon
@@ -775,14 +800,14 @@
                     pcp_laps_in = r_missing_data
                 endif
 
-                if(pcp1(iob) .ge. 0.)then
+                if(pcp_gauge(iob) .ge. 0.)then
                    if(pcp_laps_in .ne. r_missing_data)then
                       write(6,11)iob,stations(iob)(1:10)
-     1                          ,pcp1(iob),pcp_laps     
+     1                          ,pcp_gauge(iob),pcp_laps     
 11                    format(i6,1x,a,2f7.3,' RADAR')             
                    else
                       write(6,12)iob,stations(iob)(1:10)
-     1                          ,pcp1(iob),lat_s(iob),lon_s(iob)
+     1                          ,pcp_gauge(iob),lat_s(iob),lon_s(iob)    
 12                    format(i6,1x,a,f7.3,2f8.2,' NORADAR')             
                       n_gauge_noradar = n_gauge_noradar + 1
                    endif
@@ -801,9 +826,9 @@
             wt_bkg_a = 5e28
             pcp_bkg_in = pcp_bkg_m * in_per_m
 
-            call precip_barnes_jacket(           'pcp1'
+            call precip_barnes_jacket(           c_field              ! I
      1                                           ,ilaps,jlaps         ! I
-     1                                           ,pcp1                ! I
+     1                                           ,pcp_gauge           ! I
      1                                           ,maxsta              ! I
      1                                           ,pcp_bkg_in          ! I
      1                                           ,badflag,ni,nj       ! I

@@ -1,7 +1,7 @@
 
-        subroutine precip_barnes_jacket(          c_field
-     1                                           ,ilaps,jlaps
-     1                                           ,pcp1                ! I
+        subroutine precip_barnes_jacket(          c_field             ! I
+     1                                           ,ilaps,jlaps         ! I
+     1                                           ,pcp_gauge           ! I
      1                                           ,maxsta              ! I
      1                                           ,pcp_bkg_in          ! I
      1                                           ,badflag,ni,nj       ! I
@@ -20,7 +20,7 @@
         real pcp_bkg_in(ni,nj)                        ! Background field
         real pcp_2d_in(ni,nj)                         ! Analyzed field (IN)
         real topo(ni,nj),ldf(ni,nj)                   ! Topo & Landfrac
-        real pcp1(maxsta)
+        real pcp_gauge(maxsta)
         real ob_bkg(maxsta)
         real ob_full(maxsta)
         real ob_diff(maxsta)
@@ -40,8 +40,8 @@
             obs_barnes(i)%i = ista
             obs_barnes(i)%j = jsta
 
-            ob_full(i) = pcp1(i) ! inches
-            if(pcp1(i) .ge. 0.)then
+            ob_full(i) = pcp_gauge(i) ! inches
+            if(pcp_gauge(i) .ge. 0.)then
                 obs_barnes(i)%qc = .true.
             else
                 obs_barnes(i)%qc = .false.
