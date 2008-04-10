@@ -3759,7 +3759,9 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
                         that can be used to initialize a local forecast
                         model (e.g., MM5, RAMS, WRF)
    
-     (author: Brent Shaw)
+   author: Brent Shaw
+
+   contact: Paul Schultz (Paul.J.Schultz@noaa.gov)
 
    This process reformats LAPS data into files suitable for initializing
    a mesoscale forecast model.  The output format is controlled by the
@@ -3875,7 +3877,9 @@ Process: lfmpost.exe - Post-processes MM5/WRF model forecast files into formats
                        that can be used to feed back into LAPS analysis or
                        plotting software.
    
-   (author: Brent Shaw)
+author: Brent Shaw
+
+contact: Paul Schultz (Paul.J.Schultz@noaa.gov)
 
 Source directory: 'laps/src/lfmpost'
 
