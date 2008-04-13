@@ -40,6 +40,7 @@ C
       integer imax,jmax
       integer nf
       integer SoilType(imax,jmax)
+      real    r_missing_data
       real,allocatable::static_stl(:,:)
       character*150 c_dir
       character*256 filename
@@ -79,6 +80,8 @@ C 6. silty clay
 c
 c Mapping between 16 category and 6 category.
 c
+c if type = 0 then type = 5 ! By JRS. Cannot have type = 0;
+c                             default to original setting
 c if type16 = 1 then type6 = 1
 c if type16 = 2 then type6 = 1
 c if type16 = 3 then type6 = 2
@@ -102,6 +105,7 @@ c
       allocate(static_stl(imax,jmax))
       ext='static'
       call get_directory(ext,c_dir,lend)
+      call get_r_missing_data(r_missing_data,istatus)
 
 c     filename=c_dir(1:lend)//'soil/Soils.dat'
 c     open(Unit = 2, File = filename, Status = 'Old',
@@ -128,22 +132,42 @@ c664   write(6,*)'Using Default Soil Types'
       print*,' Using static STL soil texture '
       do J = 1 , Jmax
          do I = 1, Imax
-            if(static_stl(i,j).eq.1.)soiltype(i,j) = 1
-            if(static_stl(i,j).eq.2.)soiltype(i,j) = 1
-            if(static_stl(i,j).eq.3.)soiltype(i,j) = 2
-            if(static_stl(i,j).eq.4.)soiltype(i,j) = 5
-            if(static_stl(i,j).eq.5.)soiltype(i,j) = 4
-            if(static_stl(i,j).eq.6.)soiltype(i,j) = 3
-            if(static_stl(i,j).eq.7.)soiltype(i,j) = 4
-            if(static_stl(i,j).eq.8.)soiltype(i,j) = 5
-            if(static_stl(i,j).eq.9.)soiltype(i,j) = 5
-            if(static_stl(i,j).eq.10.)soiltype(i,j) = 6
-            if(static_stl(i,j).eq.11.)soiltype(i,j) = 6
-            if(static_stl(i,j).eq.12.)soiltype(i,j) = 6
-            if(static_stl(i,j).eq.13.)soiltype(i,j) = 1
-            if(static_stl(i,j).eq.14.)soiltype(i,j) = 5
-            if(static_stl(i,j).eq.15.)soiltype(i,j) = 5
-            if(static_stl(i,j).eq.16.)soiltype(i,j) = 5
+            if(static_stl(i,j).eq.0..or.
+     +         static_stl(i,j).eq.r_missing_data)then
+             soiltype(i,j) = 5. !default to 5 if no type for this grid point
+            elseif(static_stl(i,j).eq.1.)then
+             soiltype(i,j) = 1.
+            elseif(static_stl(i,j).eq.2.)then
+             soiltype(i,j) = 1.
+            elseif(static_stl(i,j).eq.3.)then
+             soiltype(i,j) = 2.
+            elseif(static_stl(i,j).eq.4.)then
+             soiltype(i,j) = 5.
+            elseif(static_stl(i,j).eq.5.)then
+             soiltype(i,j) = 4.
+            elseif(static_stl(i,j).eq.6.)then
+             soiltype(i,j) = 3.
+            elseif(static_stl(i,j).eq.7.)then
+             soiltype(i,j) = 4.
+            elseif(static_stl(i,j).eq.8.)then
+             soiltype(i,j) = 5.
+            elseif(static_stl(i,j).eq.9.)then
+             soiltype(i,j) = 5.
+            elseif(static_stl(i,j).eq.10.)then
+             soiltype(i,j) = 6.
+            elseif(static_stl(i,j).eq.11.)then
+             soiltype(i,j) = 6.
+            elseif(static_stl(i,j).eq.12.)then
+             soiltype(i,j) = 6.
+            elseif(static_stl(i,j).eq.13.)then
+             soiltype(i,j) = 1.
+            elseif(static_stl(i,j).eq.14.)then
+             soiltype(i,j) = 5.
+            elseif(static_stl(i,j).eq.15.)then
+             soiltype(i,j) = 5.
+            elseif(static_stl(i,j).eq.16.)then
+             soiltype(i,j) = 5.
+            endif
          enddo
       enddo
 
@@ -151,6 +175,10 @@ c664   write(6,*)'Using Default Soil Types'
       do i=1,imax
          if(soiltype(i,j).eq.0)then
            print*,'i/j= ',i,j,'soil type = 0 at i/j'
+           print*,'Soil type value = 0 in soil_in5.f'
+           print*,'at i/j = ',i,j
+           print*,'!! Terminating !!'
+           return
          endif
       enddo
       enddo
