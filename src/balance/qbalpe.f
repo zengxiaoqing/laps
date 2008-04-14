@@ -1,4 +1,4 @@
-      program qbalpe_main
+program qbalpe_main
 c
       implicit none
 c
@@ -412,16 +412,17 @@ c an appropriate tau value.
       sumr=0.
       sumv2=0.
 
-c set the resolvable scale based on a quarter wavelength for scaling 
-c purposes. We will use a mean wavelength (largest and smallest 
-c resolvable by the grid) and a data resolving wavelength based on
+c set the resolvable scale based on a wavelength for scaling 
+c purposes. We will use a wavelength 
+c resolvable by the grid (4*grid spacing) 
+c and a data resolving wavelength based on
 c the nyquist interval (4 * data spacing)
 c this should be automated to be computed by the actual number of obs/area
 c guess number of obs over grid, put in sldata for now.
-      sldata=9.  !number of good upper air obs (sonde quality)
+      sldata=120. !number of good upper air obs (sonde quality)
       sldata=sqrt(float((nx-1)*(ny-1))*dx(nx/2,ny/2)**2/sldata)
 c set model scale - a mean wave resolvable by the grid
-      sl=(4.+sqrt(float((nx-1)**2+(ny-1)**2)))*dx(nx/2,ny/2)/8.
+      sl=(4.*dx(nx/2,ny/2)+sldata)/2.
       fo=14.52e-5   !2*omega
 
       allocate (ks(nx,ny),kf(nx,ny),terscl(nx,ny))
@@ -478,8 +479,7 @@ c        terscl(i,j)=terscl(1,1)   !make it constant over domain for now.
 c error terms are the inverse sq error; right now with no
 c horizontal stucture. Only vertical error allowed for now.
          do k=1,nz
-            erru(i,j,k)=(1.0*(1.+float(k-1)*.10))**(-2)
-c           erru(i,j,k)=(1.5*(1.+float(k-1)*.25))**(-2)
+            erru(i,j,k)=(0.1*(1.+float(k-1)*.10))**(-2)
             errub(i,j,k)=(1.5*(1.+float(k-1)*.3))**(-2)
             errphi(i,j,k)=(15.*(1.+float(k-1)*.1)*g)**(-2)
             errphib(i,j,k)=(30.*(1.+float(k-1)*.1)*g)**(-2)
@@ -1512,7 +1512,7 @@ c  set convergence error for relaxation of lamda...set erf to desired
 c  accuracy of wind
        erf=.01 !m/sec
        erf=erf*dx(nx/2,ny/2)
-c apply continuity to input winds
+c apply continuity to input winds over complete domain with no terrain
        call leib_sub(nx,ny,nz,erf,tau,erru
      .,lat,dx,dy,pso,p,dp,uo,u,vo,v,
      . omo,om,omb,l,lmax)
