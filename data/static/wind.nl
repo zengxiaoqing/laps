@@ -2,15 +2,15 @@
  l_use_raob=.true.,
  l_use_cdw=.true.,
  l_use_radial_vel=.true.,
- thresh_2_radarobs_lvl_unfltrd=300,
- thresh_4_radarobs_lvl_unfltrd=600,
- thresh_9_radarobs_lvl_unfltrd=9000,
+ thresh_2_radarobs_lvl_unfltrd=150,
+ thresh_4_radarobs_lvl_unfltrd=300,
+ thresh_9_radarobs_lvl_unfltrd=450,
  weight_bkg_const_wind=5e28,
  weight_radar=0.25,
  rms_thresh_wind=1.0,
  max_pr=1500,
  max_pr_levels=300,
- max_wind_obs=80000,
+ max_wind_obs=110000,
  /
 
 c WIND PARAMETERS
