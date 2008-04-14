@@ -1,4 +1,4 @@
-program qbalpe_main
+      program qbalpe_main
 c
       implicit none
 c
