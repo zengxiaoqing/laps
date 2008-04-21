@@ -71,4 +71,8 @@ c
 c 'i4wait_local_obs_max' - number of seconds (since systime) to wait for a 
 c                          sufficient number of LDAD local obs
 c
-c 'local_obs_thresh' - threshold number of LDAD local obs to trigger wait loop
+c 'local_obs_thresh' - threshold number of LDAD local obs to trigger wait loop.
+c                      A value of zero will disable the threshold. With MADIS
+c                      data the threshold is applied just to the 'mesonet'
+c                      and isn't applied to the 'urbanet'.
+                      
