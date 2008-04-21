@@ -441,59 +441,16 @@ c
      1                          ,max_pr,max_pr_levels,max_wind_obs
      1                          ,istatus)
 
-       include 'grid_fname.cmn'                          !grid_fnam_common
+       write(6,*)' ERROR: get_wind_parms is an obsolete routine'
+       write(6,*)' Please call read_namelist_laps in mem_namelist.f90'       
+       write(6,*)
+     1      ' This is a module with data accessed via use mem_namelist'       
 
-       logical l_use_raob, l_use_cdw, l_use_radial_vel
-       integer thresh_2_radarobs_lvl_unfltrd
-     1          ,thresh_4_radarobs_lvl_unfltrd
-     1          ,thresh_9_radarobs_lvl_unfltrd
-
-       namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel
-     1                   ,thresh_2_radarobs_lvl_unfltrd
-     1                   ,thresh_4_radarobs_lvl_unfltrd
-     1                   ,thresh_9_radarobs_lvl_unfltrd
-     1                   ,weight_bkg_const_wind
-     1                   ,weight_radar
-     1                   ,rms_thresh_wind
-     1                   ,max_pr,max_pr_levels,max_wind_obs
- 
-       character*150 static_dir,filename
- 
-       call get_directory(grid_fnam_common,static_dir,len_dir)
-
-       filename = static_dir(1:len_dir)//'/wind.nl'
- 
-       open(1,file=filename,status='old',err=900)
-       read(1,wind_nl,err=901)
-       close(1)
-
-       if(max_pr .le. 0)then
-           write(6,*)' ERROR: invalid or uninitialized value of '
-     1              ,'max_pr in wind.nl ',max_pr
-           istatus = 0
-           return
-       endif
-
-       if(max_pr_levels .le. 0)then
-           write(6,*)' ERROR: invalid or uninitialized value of '
-     1              ,'max_pr_levels in wind.nl ',max_pr_levels
-           istatus = 0
-           return
-       endif
-
-       istatus = 1
-       return
-
-  900  print*,'error opening file ',filename
-       istatus = 0
-       return
-
-  901  print*,'error reading wind_nl in ',filename
-       write(*,wind_nl)
-       istatus = 0
+       stop
        return
 
        end
+
 c
 c----------------------------------------
 c
