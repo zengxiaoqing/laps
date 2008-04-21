@@ -184,6 +184,7 @@ c
 c
         integer    wmoid(maxsta), jstatus
         integer    dpchar(maxsta), narg, iargc
+        integer    local_obs_thresh_switch(2)
 c
         character  stations(maxsta)*20, provider(maxsta)*11
         character  weather(maxsta)*25 
@@ -206,6 +207,7 @@ c
         character*7   madis_dirs(2)
 
         data madis_dirs /'mesonet','urbanet'/
+        data local_obs_thresh_switch /1,0/
 
         logical l_allow_empty_lso,l_string_contains
         logical l_identical_a(maxsta)
@@ -427,6 +429,10 @@ c
      1                                   //'/'//madis_dirs(imadis)
      1                                   //'/'//'netCDF/'
 
+!                   Wait for 'mesonet' with no waiting for 'urbanet'
+                    local_obs_thresh_madis = local_obs_thresh * 
+     1              local_obs_thresh_switch(imadis)
+
                     write(6,*)' MADIS case: ',path_to_madis_data
 
                     call get_local_obs(maxobs,maxsta,i4time_sys,
@@ -440,7 +446,8 @@ c
      &                      store_5,store_5ea,store_6,store_6ea,
      &                      store_7,store_cldht,store_cldamt,
      &                      provider, laps_cycle_time, 
-     &                      local_obs_thresh, i4wait_local_obs_max, 
+     &                      local_obs_thresh_madis, 
+     &                      i4wait_local_obs_max, 
      &                      jstatus)       
 
 	            if(jstatus .ne. 1) then
