@@ -49,11 +49,10 @@ c
       real        rmetx,rmety
       real        golonsbp,golatsbp,goalpha
       real        grid_spacing_proj_m
-      real        grid_spacing_actual_m
+      real        grid_spacing_actual_mx
+      real        grid_spacing_actual_my
       real        grid_spacing_m
-      real        grid_spacing_km
-      real        gssum1,gssum2
-      real        gspace1,gspace2,gspace3,gspace4
+      real        gssumx,gssumy
       real        mdlat,mdlon
       real        sat_res_m,erad
       real        deltax,deltay
@@ -242,39 +241,34 @@ c
          endif
       endif
 
-c     call get_grid_spacing(grid_spacing_m,istatus)
-c     if(istatus .ne. 1)then
-c         write(6,*)' Error return from get_grid_spacing'     
-c         return
-c     endif
+      call get_grid_spacing(grid_spacing_m,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Error return from get_grid_spacing'     
+          return
+      endif
 
-      gssum1=0
-      gssum2=0
-      do i=1,nx_l
-         call get_grid_spacing_actual(lat(i,1),lon(i,1)
-     1             ,grid_spacing_actual_m,istatus)
-         gssum1=gssum1+grid_spacing_actual_m
-         call get_grid_spacing_actual(lat(i,ny_l),lon(i,ny_l)
-     1             ,grid_spacing_actual_m,istatus)
-         gssum2=gssum2+grid_spacing_actual_m
-      enddo
-      gspace1=gssum1/nx_l
-      gspace2=gssum2/nx_l
+      if(.false.)then
+        gssumx=0
+        gssumy=0
+        do j=1,ny_l
+        do i=1,nx_l
+           call get_grid_spacing_actual_xy(lat(i,j),lon(i,j)
+     1             ,grid_spacing_actual_mx,grid_spacing_actual_my
+     1             ,istatus)
+           gssumx=gssumx+grid_spacing_actual_mx
+           gssumy=gssumy+grid_spacing_actual_my
+        enddo
+        enddo
+        grid_spacing_m=(gssumx/(nx_l*ny_l)+gssumy/(nx_l*ny_l))/2.
+      endif
 
-      gssum1=0
-      gssum2=0
-      do j=1,ny_l
-         call get_grid_spacing_actual(lat(1,j),lon(1,j)
-     1             ,grid_spacing_actual_m,istatus)
-         gssum1=gssum1+grid_spacing_actual_m
-         call get_grid_spacing_actual(lat(nx_l,j),lon(nx_l,j)
-     1             ,grid_spacing_actual_m,istatus)
-         gssum2=gssum1+grid_spacing_actual_m
-      enddo
-      gspace3=gssum1/ny_l
-      gspace4=gssum2/ny_l
+      print*,'Grid spacing (m): ',grid_spacing_m
+      if(grid_spacing_m.le.0.0)then
+        print*,'Oh no, grid spacing = 0'
+        istatus = -1
+        return
+      endif
 
-      grid_spacing_m=(gspace1+gspace2+gspace3+gspace4)/4.0
       sat_res_m=((xres+yres)*1000.)/2.0
 
       r_ratio=sat_res_m/grid_spacing_m
