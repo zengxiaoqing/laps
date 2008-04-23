@@ -341,6 +341,8 @@ cdis
         idiff=0
 
         plot_parms%iraster = -1 ! ensure raster image plots are off
+                                ! there are "background" effects preventing
+                                ! the use of iraster
         plot_parms%l_discrete = namelist_parms%l_discrete
 
         lapsplot_pregen = .true.
@@ -3116,9 +3118,15 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             call set(vxmin, vxmax, vymin, vymax
      1             , rleft, right, rleft, right,1)
-            du=0.4
+
+            barb_factor = float(NX_C) / 249.
+
+            du=(0.4 * barb_factor) / density
             rot = 0.
-            do i = NX_C,1,-3
+
+            iskip_barbs = max(nint( (3.0*barb_factor) / density),1)
+
+            do i = NX_C,1,-iskip_barbs
                 rk_terrain = 
      1          max(height_to_zcoord(terrain_vert1d(i),istatus),1.0)
                 do k = ibottom,NZ_C
@@ -4003,6 +4011,8 @@ c
      1            ,rylow_out,ryhigh_out,rylow_in,ryhigh_in
 
 !       Loop over subset of output (large square) array
+        iytest = ny_out/2
+
         do ixout = ixlow_out, ixhigh_out
         do iyout = iylow_out, iyhigh_out
 
@@ -4011,16 +4021,22 @@ c
             ryout = iyout
 
             arg = rxout
-            call stretch(rxlow_out,rxhigh_out,rxlow_in,rxhigh_in,arg)
+            call stretch2(rxlow_out,rxhigh_out,rxlow_in,rxhigh_in,arg)      
             rxin = arg
 
             arg = ryout
-            call stretch(rylow_out,ryhigh_out,rylow_in,ryhigh_in,arg)
+            call stretch2(rylow_out,ryhigh_out,rylow_in,ryhigh_in,arg)
             ryin = arg
 
 !           Interpolate input array to find value of output field array element
             call bilinear_laps(rxin,ryin,nx_in,ny_in,field_in,result)       
             field_out(ixout,iyout) = result
+
+            if(iyout .eq. iytest .AND. .false.)then
+                write(6,*)ixout,iyout,rxin,nx_in,nx_out
+     1                   ,field_in(nint(rxin),nint(ryin))
+     1                   ,result
+            endif
 
         enddo
         enddo
