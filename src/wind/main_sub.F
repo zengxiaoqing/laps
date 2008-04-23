@@ -42,7 +42,8 @@ cdis
      1              NTMIN,NTMAX,                                     ! I
      1              N_MESO,N_SAO,                                    ! I
      1              lat,lon,topo,                                    ! I
-     1              heights_3d)                                      ! I
+     1              heights_3d,                                      ! I
+     1              istat_wind)                                      ! O
 
 !       1990         Steve Albers  (Original Version)
 !       1992 Apr 30  Steve Albers  (Mod for multi-radar Doppler velocities)
@@ -180,6 +181,8 @@ cdis
 
         allocate ( grid_ra_vel(NX_L,NY_L,nk_laps,MAX_RADARS) )
         allocate ( grid_ra_nyq(NX_L,NY_L,nk_laps,MAX_RADARS) )
+
+        istat_wind = 0
 
         NZ_L = nk_laps
         
@@ -456,6 +459,7 @@ cdis
      1       ,thresh_2_radarobs_lvl_unfltrd                             ! I
      1       ,thresh_4_radarobs_lvl_unfltrd                             ! I
      1       ,thresh_9_radarobs_lvl_unfltrd                             ! I
+     1       ,thresh_25_radarobs_lvl_unfltrd                            ! I
      1       ,u_laps_fg,v_laps_fg                                       ! I/L
      1       ,NX_L,NY_L,NZ_L,lat,lon                                    ! I
      1       ,i4time_sys,grid_spacing_m                                 ! I
@@ -538,6 +542,8 @@ cdis
      1                                           ,i4_loop_total
      1                                           ,i4_elapsed     
      1                                           ,pct_loop_total
+
+        istat_wind = 1
 
         write(6,*)' End of LAPS Wind Analysis'
 
