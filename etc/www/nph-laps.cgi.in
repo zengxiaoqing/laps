@@ -227,6 +227,9 @@ my $thickness_safe;
 $thickness =~ /(.*)/;
 $thickness_safe = $1;
 
+my $size_safe;
+$size_safe = $thickness_safe;
+
 chomp $a9time;
 
 my $a9time_safe;
@@ -489,7 +492,6 @@ if($err == 0) {
                           printf LAPSPLOT "$density_safe,$thickness_safe\n";
                           printf LAPSPLOT "$zoom_safe\n";
                           printf LAPSPLOT "$xcen_safe,$ycen_safe\n";
-
                       }elsif("$level" eq "sndg"){
                           $sect = "sndg";
                           printf LAPSPLOT "s\n";
@@ -505,7 +507,7 @@ if($err == 0) {
 
                           $zoom_lapsplot = $zoom_safe * ( $npix/885. );
 
-                          printf LAPSPLOT "$zoom_lapsplot,$density_safe,$thickness_safe,$xcen_safe,$ycen_safe,$zoom_safe\n";
+                          printf LAPSPLOT "$zoom_lapsplot,$density_safe,$thickness_safe,$xcen_safe,$ycen_safe,$zoom_safe,$size_safe\n";
                       }
                   }
 
@@ -3028,6 +3030,7 @@ EOI
     printf SELECTED "$ycen_safe\n";
     printf SELECTED "$density_safe\n";
     printf SELECTED "$thickness_safe\n";
+#   printf SELECTED "$size_safe\n";
     printf SELECTED "$npix_safe\n";
     close SELECTED;
 
@@ -3077,6 +3080,7 @@ EOI
     $ycen_safe = 0.5;
     $density_safe = 1.0;
     $thickness_safe = 1;
+#   $size_safe = 1;
     $npix_safe = 885;
     $domain_safe = "co";
 
@@ -3095,6 +3099,7 @@ EOI
     printf SELECTED "$ycen_safe\n";
     printf SELECTED "$density_safe\n";
     printf SELECTED "$thickness_safe\n";
+#   printf SELECTED "$size_safe\n";
     printf SELECTED "$npix_safe\n";
     close SELECTED;
 
