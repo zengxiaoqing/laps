@@ -115,7 +115,8 @@ real    :: weight_bkg_const_wind  &
           ,rms_thresh_wind
 integer :: thresh_2_radarobs_lvl_unfltrd  &
           ,thresh_4_radarobs_lvl_unfltrd  &
-          ,thresh_9_radarobs_lvl_unfltrd  
+          ,thresh_9_radarobs_lvl_unfltrd  &
+          ,thresh_25_radarobs_lvl_unfltrd  
 integer :: max_pr,max_pr_levels,max_wind_obs
 
 ! pressures_nl variables
@@ -207,6 +208,7 @@ namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
                   ,thresh_2_radarobs_lvl_unfltrd  &
                   ,thresh_4_radarobs_lvl_unfltrd  &
                   ,thresh_9_radarobs_lvl_unfltrd  &
+                  ,thresh_25_radarobs_lvl_unfltrd  &
                   ,weight_bkg_const_wind  &
                   ,weight_radar  &
                   ,rms_thresh_wind  &
@@ -292,6 +294,8 @@ elseif (namelist_name == 'lapsparms') then
    !  .
 
 elseif (namelist_name == 'wind') then
+
+   thresh_25_radarobs_lvl_unfltrd = 450 ! default used mainly for transition
 
    read (12, wind_nl, err=905)
    
