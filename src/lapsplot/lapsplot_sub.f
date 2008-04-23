@@ -230,7 +230,7 @@ cdis
 
             NXSECT = nint(sqrt(float(NX_L**2 + NY_L**2))) ! 541
 
-            write(6,*)' NXSECT = ',NXSECT
+            write(6,*)' NXSECT (NX_P) = ',NXSECT
 
             NX_C = max(NX_L,NY_L)
 
