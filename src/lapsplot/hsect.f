@@ -813,6 +813,9 @@ c       include 'satellite_dims_lvd.inc'
                     endif
                 enddo ! j
                 enddo ! i
+
+                field_2d = spds ! support for diff option
+
             endif
 
             if(c_field(1:2) .eq. 'di')then
