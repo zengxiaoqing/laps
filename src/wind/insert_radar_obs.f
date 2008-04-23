@@ -9,6 +9,7 @@
      1  ,thresh_2_radarobs_lvl_unfltrd_in           ! Input
      1  ,thresh_4_radarobs_lvl_unfltrd_in           ! Input
      1  ,thresh_9_radarobs_lvl_unfltrd_in           ! Input
+     1  ,thresh_25_radarobs_lvl_unfltrd_in          ! Input
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar                      ! Input
@@ -61,10 +62,12 @@
       integer thresh_2_radarobs_lvl_unfltrd_in                     ! Input
      1         ,thresh_4_radarobs_lvl_unfltrd_in
      1         ,thresh_9_radarobs_lvl_unfltrd_in
+     1         ,thresh_25_radarobs_lvl_unfltrd_in
 
       integer thresh_2_radarobs_lvl_unfltrd                        ! Local
      1         ,thresh_4_radarobs_lvl_unfltrd
      1         ,thresh_9_radarobs_lvl_unfltrd
+     1         ,thresh_25_radarobs_lvl_unfltrd
 
       logical  l_good_multi_doppler_ob(imax,jmax,kmax)               ! Local
       logical  l_analyze(kmax),l_derived_output,l_grid_north
@@ -93,6 +96,7 @@ csms$ignore begin
           thresh_2_radarobs_lvl_unfltrd = 999999 ! disable filtering
           thresh_4_radarobs_lvl_unfltrd = 999999
           thresh_9_radarobs_lvl_unfltrd = 999999
+          thresh_25_radarobs_lvl_unfltrd = 999999
       else ! do filtering when we have single doppler obs
           thresh_2_radarobs_lvl_unfltrd = 
      1    thresh_2_radarobs_lvl_unfltrd_in     
@@ -100,12 +104,15 @@ csms$ignore begin
      1    thresh_4_radarobs_lvl_unfltrd_in     
           thresh_9_radarobs_lvl_unfltrd = 
      1    thresh_9_radarobs_lvl_unfltrd_in     
+          thresh_25_radarobs_lvl_unfltrd = 
+     1    thresh_25_radarobs_lvl_unfltrd_in     
       endif
 
       write(6,*)' Filtering thresholds = ',
      1                  thresh_2_radarobs_lvl_unfltrd, 
      1                  thresh_4_radarobs_lvl_unfltrd, 
      1                  thresh_9_radarobs_lvl_unfltrd
+     1                  thresh_25_radarobs_lvl_unfltrd
 
 !     This routine takes the data from all the radars and adds the derived
 !     radar obs into uobs_diff_spread and vobs_diff_spread
@@ -136,20 +143,21 @@ csms$ignore begin
 
 !             Filter radar at this level to make the filtered ob array sparser
               call filter_radar_obs(
-     1                  imax,jmax,                     ! Input
-     1                  vr_obs_unfltrd(1,1,k,i_radar), ! Input
-     1                  wt_p_radar(1,1,k),weight_radar,! Input
-     1                  thresh_2_radarobs_lvl_unfltrd, ! Input
-     1                  thresh_4_radarobs_lvl_unfltrd, ! Input
-     1                  thresh_9_radarobs_lvl_unfltrd, ! Input
-     1                  r_missing_data,                ! Input
-     1                  vr_obs_fltrd(1,1,i_radar),     ! Input/Output
-     1                  i_radar_reject(i_radar),       ! Input/Output
-     1                  n_superob,                     ! Input/Output
-     1                  n_radarobs_lvl_unfltrd,        ! Output
-     1                  n_radarobs_lvl_fltrd,          ! Output
-     1                  intvl_rad,                     ! Output
-     1                  istatus)                       ! Output
+     1                  imax,jmax,                      ! Input
+     1                  vr_obs_unfltrd(1,1,k,i_radar),  ! Input
+     1                  wt_p_radar(1,1,k),weight_radar, ! Input
+     1                  thresh_2_radarobs_lvl_unfltrd,  ! Input
+     1                  thresh_4_radarobs_lvl_unfltrd,  ! Input
+     1                  thresh_9_radarobs_lvl_unfltrd,  ! Input
+     1                  thresh_25_radarobs_lvl_unfltrd, ! Input
+     1                  r_missing_data,                 ! Input
+     1                  vr_obs_fltrd(1,1,i_radar),      ! Input/Output
+     1                  i_radar_reject(i_radar),        ! Input/Output
+     1                  n_superob,                      ! Input/Output
+     1                  n_radarobs_lvl_unfltrd,         ! Output
+     1                  n_radarobs_lvl_fltrd,           ! Output
+     1                  intvl_rad,                      ! Output
+     1                  istatus)                        ! Output
 
               write(6,503)k,i_radar,intvl_rad,n_radarobs_lvl_unfltrd
      1                                       ,n_radarobs_lvl_fltrd
@@ -304,20 +312,21 @@ csms$ignore end
 
 
       subroutine filter_radar_obs(
-     1                  imax,jmax,                    ! Input
-     1                  vr_obs_unfltrd,               ! Input
-     1                  wt_p_radar,weight_radar,      ! Input
-     1                  thresh_2_radarobs_lvl_unfltrd,! Input
-     1                  thresh_4_radarobs_lvl_unfltrd,! Input
-     1                  thresh_9_radarobs_lvl_unfltrd,! Input
-     1                  r_missing_data,               ! Input
-     1                  vr_obs_fltrd,                 ! Input/Output
-     1                  i_radar_reject,               ! Input/Output
-     1                  n_superob,                    ! Input/Output
-     1                  n_radarobs_lvl_unfltrd,       ! Output
-     1                  n_radarobs_lvl_fltrd,         ! Output
-     1                  intvl_rad,                    ! Output
-     1                  istatus)                      ! Output
+     1                  imax,jmax,                      ! Input
+     1                  vr_obs_unfltrd,                 ! Input
+     1                  wt_p_radar,weight_radar,        ! Input
+     1                  thresh_2_radarobs_lvl_unfltrd,  ! Input
+     1                  thresh_4_radarobs_lvl_unfltrd,  ! Input
+     1                  thresh_9_radarobs_lvl_unfltrd,  ! Input
+     1                  thresh_25_radarobs_lvl_unfltrd, ! Input
+     1                  r_missing_data,                 ! Input
+     1                  vr_obs_fltrd,                   ! Input/Output
+     1                  i_radar_reject,                 ! Input/Output
+     1                  n_superob,                      ! Input/Output
+     1                  n_radarobs_lvl_unfltrd,         ! Output
+     1                  n_radarobs_lvl_fltrd,           ! Output
+     1                  intvl_rad,                      ! Output
+     1                  istatus)                        ! Output
 
 !       Filter to make the filtered ob array more sparse
 
@@ -327,9 +336,7 @@ csms$ignore end
         integer thresh_2_radarobs_lvl_unfltrd
      1           ,thresh_4_radarobs_lvl_unfltrd
      1           ,thresh_9_radarobs_lvl_unfltrd
-!       parameter (thresh_2_radarobs_lvl_unfltrd = 300)
-!       parameter (thresh_4_radarobs_lvl_unfltrd = 600)
-!       parameter (thresh_9_radarobs_lvl_unfltrd = 900)
+     1           ,thresh_25_radarobs_lvl_unfltrd
 
         integer n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
         integer n_krn, n_krn_i_m1, n_krn_j_m1, n_krn_i, n_krn_j
@@ -340,6 +347,7 @@ csms$ignore end
         real wt_p_radar(imax,jmax)
         real vr_obs_fltrd(imax,jmax)
         real r_missing_data, weight_radar
+        real arg, stdev, xbar, sum, sumsq
 
         logical l_found_one, l_imax_odd, l_jmax_odd
         integer i,j,ii,jj,i_radar_reject,n_radarobs_lvl_fltrd
@@ -370,10 +378,15 @@ csms$ignore begin
 !       This logic is supposed to select a sparse subset of the radial
 !       velocities yet retain grid boxes that are isolated
 
-        if(n_radarobs_lvl_unfltrd .gt. thresh_9_radarobs_lvl_unfltrd
+        if(n_radarobs_lvl_unfltrd .gt. thresh_25_radarobs_lvl_unfltrd
      1                                                         )then
            n_krn_i = 5
            n_krn_j = 5
+
+        elseif(n_radarobs_lvl_unfltrd .gt. thresh_9_radarobs_lvl_unfltrd       
+     1                                                         )then
+           n_krn_i = 3
+           n_krn_j = 3
 
         elseif(n_radarobs_lvl_unfltrd .gt. thresh_4_radarobs_lvl_unfltrd
      1                                                         )then
@@ -387,12 +400,11 @@ csms$ignore begin
 
         endif
 
-        if(n_radarobs_lvl_unfltrd .gt. thresh_9_radarobs_lvl_unfltrd
-     1                                                         )then
-           ! Keep only every 25th ob.  Keep one ob out of every 25.
+        if(  n_radarobs_lvl_unfltrd .gt. thresh_25_radarobs_lvl_unfltrd      
+     1  .OR. n_radarobs_lvl_unfltrd .gt. thresh_9_radarobs_lvl_unfltrd       
+     1                                                            )then
+         ! Keep only every intvl_rad ob.  
            vr_obs_fltrd = r_missing_data
-           n_krn_i = 5
-           n_krn_j = 5
            n_krn_i_m1 = n_krn_i - 1
            n_krn_j_m1 = n_krn_j - 1
            intvl_rad = n_krn_i*n_krn_j
@@ -410,6 +422,8 @@ csms$ignore begin
                  if  ( l_found_one ) then
                     if ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data)then
                        n_superob(i,j) = n_superob(i,j) + 1
+                       sum = sum + vr_obs_unfltrd(ii,jj)
+                       sumsq = sumsq + vr_obs_unfltrd(ii,jj)**2
                     endif
 
                  elseif (vr_obs_unfltrd(ii,jj) .ne. r_missing_data
@@ -417,13 +431,30 @@ csms$ignore begin
                     vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(ii,jj)
                     l_found_one = .true.
                     n_superob(i,j) = 1
+                    sum = vr_obs_unfltrd(ii,jj)
+                    sumsq = sum**2
 
                  else ! all missing in the kernel so far
                     continue
 
                  endif
+
               enddo ! ii
               enddo ! jj
+
+!             Calculate standard deviation (here dividing by N)
+              if(n_superob(i,j) .ge. 2)then
+                 xbar = sum / float(n_superob(i,j))
+                 arg = sumsq - (float(n_superob(i,j)) * xbar**2)
+                 if(arg .ge. 0.)then
+                    stdev = sqrt(arg / float(n_superob(i,j)))       
+                 else
+                    write(6,*)' ERROR: stdev arg < 0 ',n_superob(i,j)
+     1                        ,arg,sum,sumsq,xbar
+                    stop
+                 endif
+              endif
+
            enddo ! i
            enddo ! j
 
