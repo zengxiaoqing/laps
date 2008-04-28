@@ -394,17 +394,17 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
      1        ,r_missing_data                             ! Input
      1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
-     1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_9_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_25_radarobs_lvl_unfltrd             ! Input
+!    1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_9_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_25_radarobs_lvl_unfltrd             ! Input
      1        ,i4time                                     ! Input
      1        ,lat,lon                                    ! Input
      1        ,rlat_radar,rlon_radar                      ! Input
      1        ,rheight_radar                              ! Input
      1        ,upass1,vpass1                              ! Input
      1        ,u_laps_bkg,v_laps_bkg                      ! Input
-     1        ,weight_radar                               ! Input
+!    1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_radar                                 ! Input/Output
      1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2) ! I/O
@@ -519,17 +519,17 @@ csms$>                    out>:default=ignore) begin
      1        ,r_missing_data                             ! Input
      1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
-     1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_9_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_25_radarobs_lvl_unfltrd             ! Input
+!    1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_9_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_25_radarobs_lvl_unfltrd             ! Input
      1        ,i4time                                     ! Input
      1        ,lat,lon                                    ! Input
      1        ,rlat_radar,rlon_radar                      ! Input
      1        ,rheight_radar                              ! Input
      1        ,upass1,vpass1                              ! Input
      1        ,u_laps_bkg,v_laps_bkg                      ! Input
-     1        ,weight_radar                               ! Input
+!    1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_radar                                 ! Input/Output
      1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2) ! I/O
@@ -665,17 +665,17 @@ csms$>                                     :default=ignore)  begin
      1        ,r_missing_data                             ! Input
      1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
-     1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_9_radarobs_lvl_unfltrd              ! Input
-     1        ,thresh_25_radarobs_lvl_unfltrd             ! Input
+!    1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_9_radarobs_lvl_unfltrd              ! Input
+!    1        ,thresh_25_radarobs_lvl_unfltrd             ! Input
      1        ,i4time                                     ! Input
      1        ,lat,lon                                    ! Input
      1        ,rlat_radar,rlon_radar                      ! Input
      1        ,rheight_radar                              ! Input
      1        ,uanl,vanl                                  ! Input
      1        ,u_laps_bkg,v_laps_bkg                      ! Input
-     1        ,weight_radar                               ! Input
+!    1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
      1        ,wt_p_radar                                 ! Input/Output
      1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2)  ! I/O
