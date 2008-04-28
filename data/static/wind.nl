@@ -4,7 +4,8 @@
  l_use_radial_vel=.true.,
  thresh_2_radarobs_lvl_unfltrd=150,
  thresh_4_radarobs_lvl_unfltrd=300,
- thresh_9_radarobs_lvl_unfltrd=450,
+ thresh_9_radarobs_lvl_unfltrd=999999,
+ thresh_25_radarobs_lvl_unfltrd=450,
  weight_bkg_const_wind=5e28,
  weight_radar=0.25,
  rms_thresh_wind=1.0,
@@ -33,6 +34,9 @@ c                                 for subsampling by factor of 4
 c
 c thresh_9_radarobs_lvl_unfltrd - threshold number of Doppler obs per level
 c                                 for subsampling by factor of 9
+c
+c thresh_25_radarobs_lvl_unfltrd - threshold number of Doppler obs per level
+c                                  for subsampling by factor of 25
 c
 c weight_bkg_const_wind - Weight for Model Background. 
 c                         Recommended values: 0. < value <= 1e+30.
