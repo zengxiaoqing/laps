@@ -6,17 +6,17 @@
      1  ,r_missing_data                             ! Input
      1  ,heights_3d                                 ! Input
      1  ,vr_obs_unfltrd                             ! Input
-     1  ,thresh_2_radarobs_lvl_unfltrd_in           ! Input
-     1  ,thresh_4_radarobs_lvl_unfltrd_in           ! Input
-     1  ,thresh_9_radarobs_lvl_unfltrd_in           ! Input
-     1  ,thresh_25_radarobs_lvl_unfltrd_in          ! Input
+!    1  ,thresh_2_radarobs_lvl_unfltrd_in           ! Input NL
+!    1  ,thresh_4_radarobs_lvl_unfltrd_in           ! Input NL
+!    1  ,thresh_9_radarobs_lvl_unfltrd_in           ! Input NL
+!    1  ,thresh_25_radarobs_lvl_unfltrd_in          ! Input NL
      1  ,i4time                                     ! Input
      1  ,lat,lon                                    ! Input
      1  ,rlat_radar,rlon_radar                      ! Input
      1  ,rheight_radar                              ! Input
      1  ,upass1,vpass1                              ! Input
      1  ,u_laps_bkg,v_laps_bkg                      ! Input
-     1  ,weight_radar                               ! Input
+!    1  ,weight_radar                               ! Input NL
      1  ,l_derived_output,l_grid_north              ! Input
      1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
@@ -24,6 +24,14 @@
      1  ,n_radarobs_tot_unfltrd                     ! Input
      1  ,istatus                                    ! Input/Output
      1                                                          )
+
+      use mem_namelist, only : 
+     1  thresh_2_radarobs_lvl_unfltrd_in=>thresh_2_radarobs_lvl_unfltrd 
+     1 ,thresh_4_radarobs_lvl_unfltrd_in=>thresh_4_radarobs_lvl_unfltrd
+     1 ,thresh_9_radarobs_lvl_unfltrd_in=>thresh_9_radarobs_lvl_unfltrd
+     1 ,thresh_25_radarobs_lvl_unfltrd_in=>
+     1  thresh_25_radarobs_lvl_unfltrd
+     1                        ,weight_radar       
 
       real   vr_obs_unfltrd(imax,jmax,kmax,max_radars)             ! Input
       real   rlat_radar(max_radars),rlon_radar(max_radars)         ! Input
@@ -59,10 +67,10 @@
 !     integer n_superob(imax,jmax,kmax,max_radars)                 ! Local
       integer, allocatable, dimension(:,:,:,:) :: n_superob        ! Local
 
-      integer thresh_2_radarobs_lvl_unfltrd_in                     ! Input
-     1         ,thresh_4_radarobs_lvl_unfltrd_in
-     1         ,thresh_9_radarobs_lvl_unfltrd_in
-     1         ,thresh_25_radarobs_lvl_unfltrd_in
+!     integer thresh_2_radarobs_lvl_unfltrd_in                     ! Input
+!    1         ,thresh_4_radarobs_lvl_unfltrd_in
+!    1         ,thresh_9_radarobs_lvl_unfltrd_in
+!    1         ,thresh_25_radarobs_lvl_unfltrd_in
 
       integer thresh_2_radarobs_lvl_unfltrd                        ! Local
      1         ,thresh_4_radarobs_lvl_unfltrd
