@@ -715,6 +715,9 @@
         CASE ('wrf ')
           CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
                              lwc, rai, sno, ice, pic,snocov, tskin)
+        CASE ('wps ')
+          CALL output_metgrid_format(p, t, ht, u, v, rh, slp, psfc,&
+                             lwc, rai, sno, ice, pic,snocov, tskin)
      
         CASE ('rams') 
           CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snocov,tskin)
