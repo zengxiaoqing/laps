@@ -34,8 +34,8 @@ if ($opt_h){
 
 my ($model, $localdir, $remotehost, $remotedir) = @ARGV;
 if ( ($model ne 'mm5') and ($model ne 'rams') and ($model ne 'wrf') 
-   and ($model ne 'cdf')){
-  die "Model must be mm5, rams, cdf, or wrf\n";
+   and ($model ne 'wps') and ($model ne 'cdf')){
+  die "Model must be mm5, rams, cdf, wps, or wrf\n";
 }
 
 
@@ -57,7 +57,7 @@ if ($timestr =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)$/ ) {
 my ($filename, $localfile, $remotefile);
 if ($model eq 'mm5'){
   $filename = 'LAPS:'.$year.'-'.$month.'-'.$day.'_'.$hour;
-}elsif($model eq 'wrf'){
+}elsif($model eq 'wrf' or $model eq 'wps'){
   $filename = 'LAPS:'.$year.'-'.$month.'-'.$day.'_'.$hour;
 }elsif($model eq 'rams'){
   $filename = 'LAPS:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
