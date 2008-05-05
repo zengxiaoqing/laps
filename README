@@ -1466,9 +1466,9 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      prompt> perl sched.pl -A dd-mmm-yyyy-hhmm $LAPSINSTALLROOT $LAPS_DATA_ROOT
 
      ...where the inputted 'dd-mmm-yyyy-hhmm' value is the date (for example
-     28-Aug-2002-1200). This date can be inferred from the contents of
+     28-Aug-2007-1500). This date can be inferred from the contents of
      '$LAPS_DATA_ROOT/time/systime.dat'. Best results are obtained when using 
-     a time at or near the latest raw data tarfile times.
+     a time just prior to the latest raw data tarfile time.
 
      One can also initiate individual executables (bin directory) listed in the
      'sched.pl' to run on the test data. This often helps in getting a better
@@ -1547,11 +1547,16 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      output files only. The 'rawdata*' tar files supply much of the "raw" data
      that are inputted to the ingest processes. The times for the raw data 
      match the 'lapsdata*' output approximately but not always exactly
-     (one example being the raw background data files). In many cases, a user
-     could independently generate the intermediate data files (ingest output)
-     and could then compare them with ours. If other "raw" files are needed 
-     as they appear on GSD's NIMBUS system, please let us know and we can
-     try to add them to our test data case or send them separately.
+     (one example being the raw background data files). As a hint with the
+     background data check that the available raw files bracket the systime
+     of interest. If needed one can change the 'use_analysis' flag in 
+     'background.nl' to get 'lga.exe' to work better. 
+
+     In many cases, a user could independently generate the intermediate data 
+     files (ingest output) and then compare them with ours. If other "raw" files
+     are needed as they appear on GSD's NIMBUS & MADIS systems, please let us 
+     know and we can try to add them to our test data case or send them 
+     separately.
 
 ---------------- 2.6 ------ I/O of LAPS gridded files -------------------------
 
