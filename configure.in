@@ -406,6 +406,8 @@ AC_OUTPUT(src/include/trigd.inc
           etc/wrfpost.pl
           etc/xferData.pl
           etc/generate_images.pl
+          etc/www/nph-laps.cgi.in
+          etc/www/laps.cgi.in
           gui/make_gui.pl
           gui/install_perlTk.sh
           gui/guiTk/ui_system_tools.pl)
