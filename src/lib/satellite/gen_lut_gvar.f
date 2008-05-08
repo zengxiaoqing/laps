@@ -38,7 +38,6 @@ c
       real*8        rl_div, rp_div
       real*8        radtodeg, degtorad
       real        r4lat,r4lon
-      real        r_img_res_m
       real        rls,rle,res,ree
       real        jdx,jdy
       real        r_thin
@@ -665,19 +664,24 @@ c    &ri_laps,rj_laps,wstatus)
       if(elemend.gt.nx)elemend=nx
       if(linestart.le.0)linestart=1
       if(lineend.gt.ny)lineend=ny
+
+      print*,' 5-8-08 '
+      print*,'-----------------------------------'
+      print*,'*** NOT USING compute_sat_res_m ***'
+      print*,'-----------------------------------'
 c
 c ------------------------------------------------------------------------
 c compute image resolution in meters. This done with the original line/pix
 c values since we use gimloc here.
 c ------------------------------------------------------------------------
 c
-      if(c_sat_id(isat)(1:4).eq.'goes')then
-         call compute_sat_res_m(rp_div,rl_div,
-     &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
-     &instr,r_img_res_m,istatus)
-      else
-         r_img_res_m=5000.0*decimat
-      endif
+c     if(c_sat_id(isat)(1:4).eq.'goes')then
+c        call compute_sat_res_m(rp_div,rl_div,
+c    &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
+c    &instr,sat_res_m,istatus)
+c     else
+c        sat_res_m=5000.0*decimat
+c     endif
 
       if(indx.eq.1)then
 
@@ -685,8 +689,8 @@ c
          i_end_vis(jtype,isat) = elemend
          j_start_vis(jtype,isat) = linestart
          j_end_vis(jtype,isat) = lineend
-         r_resolution_x_vis(jtype,isat) = r_img_res_m  !float(xres)
-         r_resolution_y_vis(jtype,isat) = r_img_res_m  !float(yres)
+         r_resolution_x_vis(jtype,isat) = sat_res_m  !float(xres)
+         r_resolution_y_vis(jtype,isat) = sat_res_m  !float(yres)
          n_pixels_vis(jtype,isat) = nx
          n_lines_vis(jtype,isat)  = ny
 
@@ -696,8 +700,8 @@ c
          i_end_ir(jtype,isat) = elemend
          j_start_ir(jtype,isat) = linestart
          j_end_ir(jtype,isat) = lineend
-         r_resolution_x_ir(jtype,isat) = r_img_res_m  !float(xres)
-         r_resolution_y_ir(jtype,isat) = r_img_res_m  !float(yres)
+         r_resolution_x_ir(jtype,isat) = sat_res_m  !float(xres)
+         r_resolution_y_ir(jtype,isat) = sat_res_m  !float(yres)
          n_pixels_ir(jtype,isat) = nx
          n_lines_ir(jtype,isat)  = ny
 
@@ -707,8 +711,8 @@ c
          i_end_wv(jtype,isat) = elemend
          j_start_wv(jtype,isat) = linestart
          j_end_wv(jtype,isat) = lineend
-         r_resolution_x_wv(jtype,isat) = r_img_res_m  !float(xres)
-         r_resolution_y_wv(jtype,isat) = r_img_res_m  !float(yres)
+         r_resolution_x_wv(jtype,isat) = sat_res_m  !float(xres)
+         r_resolution_y_wv(jtype,isat) = sat_res_m  !float(yres)
          n_pixels_wv(jtype,isat) = nx
          n_lines_wv(jtype,isat)  = ny
 
