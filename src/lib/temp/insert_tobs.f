@@ -607,6 +607,9 @@ cdis
      1                weight_sfc,                                         ! I  
      1                istatus)                                            ! I/O
 
+        r0_barnes_max_m = 240000.
+        barnes_conv_rate = 0.8
+
         call barnes_multivariate(
      1                      bias_3d                           ! Outputs
      1                     ,n_var,n_obs_valid,obs_barnes      ! Input
@@ -615,7 +618,7 @@ cdis
      1                     ,wt_b_3d,i4_loop_total             ! I/O
      1                     ,wt_3d_dum,fnorm,n_fnorm           ! Inputs
      1                     ,l_analyze,l_not_struct,rms_thresh ! Input
-     1                     ,weight_bkg_const                  ! Input
+     1                     ,r0_barnes_max_m,barnes_conv_rate  ! Input
      1                     ,topo_dum,rland_frac_dum,1,1       ! Input
      1                     ,n_obs_lvl,istatus)                ! Outputs
 
@@ -637,16 +640,19 @@ cdis
       subroutine get_temp_obstype(c_obstype,i_obstype,mode)
 
       integer n_obstypes
-      parameter (n_obstypes = 7)
+      parameter (n_obstypes = 10)
       character*8 c_obstype_a(n_obstypes),c_obstype
 
       data c_obstype_a /
      1     'ACARS   ',
      1     'RADIOMTR',
+     1     'RAOB    ',
+     1     'DROPSND ',
+     1     'RASS    ',
+     1     'TOWER   ',
      1     'GOES11  ',
      1     'GOES12  ',
-     1     'RAOB    ',
-     1     'RASS    ',
+     1     'POESSND ',
      1     'SATSND  '/
      
       if(mode .eq. 1)then ! Convert c_obstype to i_obstype
