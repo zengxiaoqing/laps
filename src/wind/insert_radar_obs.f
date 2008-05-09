@@ -31,6 +31,7 @@
      1 ,thresh_9_radarobs_lvl_unfltrd_in=>thresh_9_radarobs_lvl_unfltrd
      1 ,thresh_25_radarobs_lvl_unfltrd_in=>
      1  thresh_25_radarobs_lvl_unfltrd
+     1                        ,stdev_thresh_radial
      1                        ,weight_radar       
 
       real   vr_obs_unfltrd(imax,jmax,kmax,max_radars)             ! Input
@@ -158,6 +159,7 @@ csms$ignore begin
      1                  thresh_4_radarobs_lvl_unfltrd,  ! Input
      1                  thresh_9_radarobs_lvl_unfltrd,  ! Input
      1                  thresh_25_radarobs_lvl_unfltrd, ! Input
+     1                  stdev_thresh_radial,            ! Input
      1                  r_missing_data,                 ! Input
      1                  vr_obs_fltrd(1,1,i_radar),      ! Input/Output
      1                  i_radar_reject(i_radar),        ! Input/Output
@@ -327,6 +329,7 @@ csms$ignore end
      1                  thresh_4_radarobs_lvl_unfltrd,  ! Input
      1                  thresh_9_radarobs_lvl_unfltrd,  ! Input
      1                  thresh_25_radarobs_lvl_unfltrd, ! Input
+     1                  stdev_thresh_radial,            ! Input
      1                  r_missing_data,                 ! Input
      1                  vr_obs_fltrd,                   ! Input/Output
      1                  i_radar_reject,                 ! Input/Output
@@ -356,9 +359,11 @@ csms$ignore end
         real vr_obs_fltrd(imax,jmax)
         real r_missing_data, weight_radar
         real arg, stdev, xbar, sum, sumsq
+        real stdev_thresh_radial
 
         logical l_found_one, l_imax_odd, l_jmax_odd
         integer i,j,ii,jj,i_radar_reject,n_radarobs_lvl_fltrd
+        integer nbox_rmsl_lvl,nbox_rmsh_lvl
 
 csms$ignore begin
         n_superob = 0 ! initialize array
@@ -416,6 +421,8 @@ csms$ignore begin
            n_krn_i_m1 = n_krn_i - 1
            n_krn_j_m1 = n_krn_j - 1
            intvl_rad = n_krn_i*n_krn_j
+           nbox_rmsl_lvl = 0
+           nbox_rmsh_lvl = 0
 
            do j=1,jmax-n_krn_i_m1,n_krn_i
            do i=1,imax-n_krn_j_m1,n_krn_j
@@ -463,8 +470,23 @@ csms$ignore begin
                  endif
               endif
 
+              if(stdev .gt. stdev_thresh_radial)then ! cancel superobing
+                 nbox_rmsh_lvl = nbox_rmsh_lvl + 1
+                 do jj = j,j+n_krn_i_m1
+                 do ii = i,i+n_krn_j_m1
+                    n_superob(i,j) = 0
+                    vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(ii,jj)
+                 enddo ! ii
+                 enddo ! jj
+              else
+                 nbox_rmsl_lvl = nbox_rmsl_lvl + 1
+              endif
+
            enddo ! i
            enddo ! j
+
+           write(6,*)'nbox_rmsl_lvl,nbox_rmsh_lvl = ',
+     1                nbox_rmsl_lvl,nbox_rmsh_lvl
 
         elseif(n_radarobs_lvl_unfltrd .gt. thresh_4_radarobs_lvl_unfltrd
      1                                                         )then
