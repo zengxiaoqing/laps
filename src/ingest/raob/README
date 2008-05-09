@@ -121,6 +121,8 @@ snd_main                                        ingest_sounding.f
             get_drpsnd_data_cwb                 ingest_drpsnd_sub_cwb.f 
         ingest_satsnd                           ingest_satsnd.f
             get_satsnd_afwa                     ingest_satsnd_af.f
+            get_poes_data                       get_poes_data.f
+            read_poes_netcdf                          "
         ingest_goessnd                          ingest_goessnd.f
             process_goes_snd                    process_goes_snd.f
         tower_driver_sub                        tower_driver.f
