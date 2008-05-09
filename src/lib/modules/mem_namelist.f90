@@ -112,7 +112,10 @@ real                 :: redp_lvl
 logical :: l_use_raob, l_use_cdw, l_use_radial_vel
 real    :: weight_bkg_const_wind  &
           ,weight_radar  &
-          ,rms_thresh_wind
+          ,rms_thresh_wind &
+          ,stdev_thresh_radial &
+          ,r0_barnes_max_m &
+          ,brns_conv_rate_wind
 integer :: thresh_2_radarobs_lvl_unfltrd  &
           ,thresh_4_radarobs_lvl_unfltrd  &
           ,thresh_9_radarobs_lvl_unfltrd  &
@@ -209,10 +212,13 @@ namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
                   ,thresh_4_radarobs_lvl_unfltrd  &
                   ,thresh_9_radarobs_lvl_unfltrd  &
                   ,thresh_25_radarobs_lvl_unfltrd  &
+                  ,stdev_thresh_radial &
                   ,weight_bkg_const_wind  &
                   ,weight_radar  &
                   ,rms_thresh_wind  &
-                  ,max_pr,max_pr_levels,max_wind_obs
+                  ,max_pr,max_pr_levels,max_wind_obs &
+                  ,r0_barnes_max_m &
+                  ,brns_conv_rate_wind
 
 namelist /surface_analysis/  &
                   use_lso_qc,skip_internal_qc, itheta  &
