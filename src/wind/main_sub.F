@@ -454,6 +454,7 @@ cdis
      1       ,n_var                                                     ! I
      1       ,uanl,vanl                                                 ! O
      1       ,grid_laps_wt,weight_bkg_const_wind,rms_thresh_wind        ! I/L
+     1       ,r0_barnes_max_m,brns_conv_rate_wind                       ! I
      1       ,max_radars                                                ! I
      1       ,n_vel_grids,rlat_radar,rlon_radar,rheight_radar           ! I
      1       ,thresh_2_radarobs_lvl_unfltrd                             ! I
