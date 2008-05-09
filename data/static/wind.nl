@@ -6,12 +6,15 @@
  thresh_4_radarobs_lvl_unfltrd=300,
  thresh_9_radarobs_lvl_unfltrd=999999,
  thresh_25_radarobs_lvl_unfltrd=450,
+ stdev_thresh_radial=99999.,
  weight_bkg_const_wind=5e28,
  weight_radar=0.25,
  rms_thresh_wind=1.0,
  max_pr=1500,
  max_pr_levels=300,
  max_wind_obs=110000,
+ r0_barnes_max_m=240000.,
+ brns_conv_rate_wind = 0.8,
  /
 
 c WIND PARAMETERS
@@ -38,6 +41,11 @@ c
 c thresh_25_radarobs_lvl_unfltrd - threshold number of Doppler obs per level
 c                                  for subsampling by factor of 25
 c
+c stdev_thresh_radial - threshold standard deviation in radial velocity window
+c                       (kernel) in meters per second. If measured stdev is 
+c                       greater than this then subsampling will not be done for 
+c                       this region
+c
 c weight_bkg_const_wind - Weight for Model Background. 
 c                         Recommended values: 0. < value <= 1e+30.
 c                         This controls how quickly the output values match the
@@ -60,3 +68,10 @@ c
 c max_pr_levels - Maximum number of levels per wind profile.
 c
 c max_wind_obs - Maximum total number of wind observations
+c
+c r0_barnes_max_m - length scale relating to where obs will start to blend in
+c                   to the background
+c
+c brns_conv_rate_wind - rate of radius reduction for each telescoping Barnes 
+c                       interation
+
