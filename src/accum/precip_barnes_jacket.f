@@ -221,6 +221,9 @@ C
         n_var = 1
         rep_pres_intvl = 5000. ! Hardwire should work for a 2-D analysis
 
+        r0_barnes_max_m = 140000.
+        barnes_conv_rate = 0.5
+
 !       Perform gauge analysis of incremental precip in inches
         call barnes_multivariate(
      1                      pcp_2d_in                             ! Outputs
@@ -232,7 +235,7 @@ C
      1                     ,wt_2d                                 ! Not used
      1                     ,fnorm,n_fnorm                         ! Inputs
      1                     ,l_analyze,l_not_struct_out,rms_thresh ! Input
-     1                     ,weight_bkg_const                      ! Input
+     1                     ,r0_barnes_max_m,barnes_conv_rate      ! Input
      1                     ,topo,ldf,ni,nj                        ! Input
      1                     ,n_obs_lvl,istatus)                    ! Outputs
 
