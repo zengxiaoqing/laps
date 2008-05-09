@@ -120,6 +120,7 @@ C
       integer iwmostanum(recNum)
       real stalatl(maxLevels),stalonl(maxLevels)
       character a9time_ob_r(recNum)*9,a9time_ob_l(maxLevels)*9
+      character staname_o(recNum)*5
       character c8_obstype*8
       real height_m(maxLevels)
       real pressure_mb(maxLevels)
@@ -127,6 +128,10 @@ C
       real dewpoint_c(maxLevels)
       real dir_deg(maxLevels)
       real spd_mps(maxLevels)
+
+      integer iob_tot
+      save iob_tot
+      data iob_tot /0/
 
       logical l_closest_time, l_closest_time_i, l_in_domain
       real lat_a(NX_L,NY_L)
@@ -167,6 +172,11 @@ C
               i4time_ob = idint(validTime(iob))+315619200
               call make_fnam_lp(i4time_ob,a9time_ob_r(iob),istatus)
           endif
+
+!         Create station name from ob count (try hex later if more needed)
+          iob_tot = iob_tot + 1
+          write(staname_o(iob),44) iob_tot
+ 44       format(i5.5)
 
       enddo ! iob
 
