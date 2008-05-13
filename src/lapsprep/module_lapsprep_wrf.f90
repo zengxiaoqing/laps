@@ -261,7 +261,7 @@ CONTAINS
   ENDDO var_ht
 
   ! Terrain height
-  field = 'HGT     '
+  field = 'SOILHGT '
   units = 'm                        '
   desc  = 'Height of topography                          '
   PRINT *, 'FIELD = ', field
@@ -634,7 +634,7 @@ CONTAINS
   ENDDO var_ht
 
   ! Terrain height
-  field = 'HGT     '
+  field = 'SOILHGT '
   units = 'm                        '
   desc  = 'Height of topography                          '
   PRINT *, 'FIELD = ', field
