@@ -1304,11 +1304,11 @@ netcdf static {
   
         float   Dx(nav);
                 Dx:long_name = "x grid increment";
-                Dx:units = "kilometers";
+                Dx:units = "meters";
   
         float   Dy(nav);
                 Dy:long_name = "y grid increment";
-                Dy:units = "kilometers";
+                Dy:units = "meters";
   
         float   La1(nav);
                 La1:long_name = "latitude SW corner";
