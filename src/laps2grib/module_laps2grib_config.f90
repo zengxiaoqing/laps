@@ -65,7 +65,7 @@ CONTAINS
      IF (grid_type(1:4) .EQ. 'merc') THEN
        proj_code = PROJ_MERC 
      ELSEIF((grid_type(1:4) .EQ. 'seca').OR.&
-            (grid_type(1:4) .EQ. 'tagn')) THEN 
+            (grid_type(1:4) .EQ. 'tang')) THEN 
        proj_code = PROJ_LC
      ELSEIF(grid_type(1:4) .EQ. 'pola') THEN
        proj_code = PROJ_PS
