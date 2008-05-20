@@ -35,7 +35,8 @@ cdis
      1                          istat_radar,radar_3d,grid_spacing_cen_m,       
      1                          l_mask_pcptype,
      1                          ibase_array_lwc,itop_array_lwc,
-     1                          iflag_slwc,slwc_3d,cice_3d,thresh_cvr,
+     1                          iflag_slwc,slwc_3d,cice_3d,
+     1                          thresh_cvr_cty_vv,thresh_cvr_lwc,
      1                          l_flag_cloud_type,cldpcp_type_3d,
      1                          l_flag_mvd,mvd_3d,
      1                          l_flag_icing_index,icing_index_3d,
@@ -125,7 +126,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
         parameter (KCLOUD_M1 = KCLOUD - 1)
         parameter (KCLOUD_P1 = KCLOUD + 1)
 
-        real thresh_cvr
+        real thresh_cvr_cty_vv,thresh_cvr_lwc
 !       parameter (THRESH_CVR = 0.65)
 !       parameter (THRESH_CVR = 0.75)
 
@@ -137,8 +138,8 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 
         write(6,*)' Start LWC/Omega/Snow Potential Routine'
 
-        thresh_cvr_cty_vv = thresh_cvr
-        thresh_cvr_lwc = thresh_cvr
+!       thresh_cvr_cty_vv = thresh_cvr
+!       thresh_cvr_lwc = thresh_cvr
 
         zero = 0.
 
