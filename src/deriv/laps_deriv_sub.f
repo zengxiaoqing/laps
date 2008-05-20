@@ -338,11 +338,12 @@ cdis
            stop
         endif
 
-        call get_deriv_parms(mode_evap,l_bogus_radar_w,
-     1                       vv_to_height_ratio_Cu,                  ! I
-     1                       vv_to_height_ratio_Sc,                  ! I
-     1                       vv_for_St,                              ! I
-     1                       istatus)
+        call get_deriv_parms(mode_evap,l_bogus_radar_w,              ! O
+     1                       vv_to_height_ratio_Cu,                  ! O
+     1                       vv_to_height_ratio_Sc,                  ! O
+     1                       vv_for_St,                              ! O
+     1                       thresh_cvr_cty_vv,thresh_cvr_lwc,       ! O
+     1                       istatus)                                ! O
         if (istatus .ne. 1) then
            write (6,*) 'Error calling get_deriv_parms'
            stop
@@ -577,7 +578,8 @@ c read in laps lat/lon and topo
      1                temp_3d,rh_3d_pct,heights_3d,pres_3d,
      1                istat_radar_3dref,radar_ref_3d,grid_spacing_cen_m,       
      1                l_mask_pcptype,ibase_array,itop_array,
-     1                iflag_slwc,slwc,cice,thresh_cvr,
+     1                iflag_slwc,slwc,cice,
+     1                thresh_cvr_cty_vv,thresh_cvr_lwc,
      1                l_flag_cloud_type,cldpcp_type_3d,
      1                l_flag_mvd,mvd_3d,
      1                l_flag_icing_index,icing_index_3d,
