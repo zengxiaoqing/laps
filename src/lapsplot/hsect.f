@@ -486,15 +486,17 @@ c       include 'satellite_dims_lvd.inc'
 
             endif
 
-        else
+        else ! non-difference plot
             if(igrid .eq. 1)then
                 write(6,*)' Copying field_2d to field_buf for diff optn'       
                 call move(field_2d,field_2d_buf,NX_L,NY_L)       
             endif
+
+            scale = 1.0 ! Initialize to default value
+
         endif
 
         igrid = 1
-        scale = 1.0 ! Default value
 
         if(    c_type_i      .eq. 'wd' .or. c_type_i      .eq. 'wb'  ! Wind fields
      1    .or. c_type_i(1:2) .eq. 'co' .or. c_type_i      .eq. 'wr'
@@ -4648,6 +4650,10 @@ c                   cint = -1.
                                                        ! to KT-FT (inverse)
                     units_2d = 'KT-FT x1000'
                 endif
+
+            elseif(var_2d .eq. 'LWO')then ! Temporary fix for FSF inconsistency
+                comment_2d = 'Brightness Temperature'
+                units_2d = 'Deg K'
 
             elseif(units_2d(1:4) .eq. 'NONE')then
                 units_2d = '          '
