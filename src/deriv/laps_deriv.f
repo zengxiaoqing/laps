@@ -314,22 +314,25 @@ cdis
         end
 
  
-       subroutine get_deriv_parms(mode_evap,l_bogus_radar_w,
-     1                            vv_to_height_ratio_Cu,                  ! I
-     1                            vv_to_height_ratio_Sc,                  ! I
-     1                            vv_for_St,                              ! I
-     1                            istatus)
+       subroutine get_deriv_parms(mode_evap,l_bogus_radar_w,              ! O
+     1                            vv_to_height_ratio_Cu,                  ! O
+     1                            vv_to_height_ratio_Sc,                  ! O
+     1                            vv_for_St,                              ! O
+     1                            thresh_cvr_cty_vv,thresh_cvr_lwc,       ! O
+     1                            istatus)                                ! O
 
        Real vv_to_height_ratio_Cu
        Real vv_to_height_ratio_Sc
        Real vv_for_St
+       Real thresh_cvr_cty_vv,thresh_cvr_lwc
 
        logical l_bogus_radar_w
 
        namelist /deriv_nl/ mode_evap, l_bogus_radar_w, 
      1                     vv_to_height_ratio_Cu,
      1                     vv_to_height_ratio_Sc,
-     1                     vv_for_St
+     1                     vv_for_St,
+     1                     thresh_cvr_cty_vv,thresh_cvr_lwc
  
        character*150 static_dir,filename
  
