@@ -502,7 +502,8 @@ C BLACK
 C
 !     CALL GSCR(IWKID,0,0.,0.,0.)
 
-      write(6,*)' subroutine set_image_colortable: ncols = ',ncols
+      write(6,*)' subroutine set_image_colortable: ncols/MREG/NREG = '
+     1         ,ncols,MREG,NREG
 
       if(colortable(1:3) .eq. 'lin')then
           if(colortable .eq. 'linear_reduced')then
@@ -590,10 +591,11 @@ C
           if(.not. l_set_contours)then
               if(.not. l_discrete)then
                   if(            colortable .eq. 'spectralr'     
-     1                      .or. MREG*NREG .gt. 62500)then       
+!    1                      .or. MREG*NREG .gt.  300000)then       
+     1                      .or. MREG*NREG .gt. 2000000)then       
                       ncols = 20
                   else
-                      ncols = 40
+                      ncols = 60
                   endif
               endif
           endif
