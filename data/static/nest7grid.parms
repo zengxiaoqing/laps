@@ -42,8 +42,6 @@
  path_to_raw_profiler='/public/data/profiler/wind/noaanet/netcdf/',
  path_to_raw_blprass='/public/data/profiler/rass/external/netcdf/',
  path_to_raw_blpprofiler='/public/data/profiler/wind/external/netcdf/',
- path_to_wsi_2d_radar='/public/data/radar/wsi/nowrad/netcdf/'
- path_to_wsi_3d_radar='/public/data/radar/wsi/nexrad/netcdf/',
  path_to_qc_acars='/public/data/acars/qc/netcdf/',
 
  i2_missing_data=-99,
@@ -86,6 +84,9 @@ c l_use_tamdar - Flag to decide on the use of TAMDAR ACARS data. This flag
 c                functions only when the NIMBUS database is being used.
 c                For the WFO database, the TAMDAR data is always allowed 
 c                through if it is available.
+c
+c c_raddat_type - selects type of NOWRAD radar data ('wsi', or 'wfo') used by 
+c                 the 'vrc_driver.x' program
 c
 c maxstns - max number of sfc stations you are likely to encounter in the
 c         - LSO file and various analyses, in and near the domain.
