@@ -609,7 +609,7 @@ c
 	   back_vis = 1
 	else
 	   print *,'     No background available for ',var_req
-	   call zero(vis_bk,ni,nj)
+	   vis_bk = 1.0 ! Equivalent to 10 mile visibility
 	endif
 c
 	print *,' '
