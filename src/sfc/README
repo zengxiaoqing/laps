@@ -51,7 +51,8 @@ main                                           laps_sfc.f
             stats                                   "
             vortdiv                            lib/util/windfields.f
             meso_anl                           lib/laps_routines.f
-            lp_fire_danger                          "
+            vlog2vis                           visibility.f
+            lp_fire_danger                     lib/laps_routines.f
             heat_index                              "
             verify                                  "
                 splie2                              "
