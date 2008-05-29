@@ -100,9 +100,7 @@
     REAL    :: rhmod, lwcmod, shmod, icemod
     REAL    :: rhadj
     REAL    :: lwc_limit
-    REAL    :: hydrometeor_scale
-!cj
-    REAL    :: theta_upper,theta_lower
+    REAL    :: hydrometeor_scale_pcp, hydrometeor_scale_cld
 
     ! Some stuff for JAX to handle lga problem
     ! with constant mr above 300 mb
@@ -153,9 +151,11 @@
     ! a grid with radar scaling (approx. 2km)
 
 !beka    hydrometeor_scale = 2./dx  ! dx is in km
-       hydrometeor_scale = hydrometeor_scale_factor/dx  ! dx is in km
+       hydrometeor_scale_pcp = hydrometeor_scale_factor_pcp/dx  ! dx is in km
+       hydrometeor_scale_cld = hydrometeor_scale_factor_cld/dx  ! dx is in km
 
-	print *,'beka',hydrometeor_scale, hydrometeor_scale_factor
+	print *,'beka',hydrometeor_scale_pcp, hydrometeor_scale_factor_pcp
+	print *,'cj',hydrometeor_scale_cld, hydrometeor_scale_factor_cld
 
     !  Loop through each of the requested extensions for this date.  Each of the
     !  extensions has a couple of the variables that we want.
@@ -525,7 +525,7 @@
       IF (MAXVAL(lwc) .LT. 99999.) THEN
 
         ! Scale lwc for grid spacing
-        lwc = lwc*hydrometeor_scale
+        lwc = lwc*hydrometeor_scale_cld
         ! Cap lwc to autoconversion rate for liquid to rain
         WHERE(lwc .GT. autoconv_lwc2rai) lwc = autoconv_lwc2rai
         ! Convert lwc concentration to mixing ratio
@@ -563,8 +563,7 @@
       ENDIF
 
       IF (MAXVAL(rai) .LT. 99999.) THEN
-!        rai(:,:,:) = rai(:,:,:) * hydrometeor_scale
-        rai(:,:,:) = rai(:,:,:) * 0.0
+        rai(:,:,:) = rai(:,:,:) * hydrometeor_scale_pcp
         rai(:,:,:) = rai(:,:,:)/rho(:,:,:)   ! Rain mixing ratio
       ELSE
         PRINT *, 'Missing rain, setting values to 0.0' 
@@ -572,8 +571,7 @@
       ENDIF
 
       IF (MAXVAL(sno) .LT. 99999.) THEN
-!        sno(:,:,:) = sno(:,:,:) * hydrometeor_scale
-        sno(:,:,:) = sno(:,:,:) * 0.0
+        sno(:,:,:) = sno(:,:,:) * hydrometeor_scale_pcp
         sno(:,:,:) = sno(:,:,:)/rho(:,:,:)   ! Snow mixing ratio
       ELSE
         PRINT *, 'Missing snow, setting values to 0.0'    
@@ -583,7 +581,7 @@
       IF (MAXVAL(ice) .LT. 99999.) THEN 
         ! Limit ice to autoconversion threshold
 
-        ice(:,:,:) = ice(:,:,:) * hydrometeor_scale
+        ice(:,:,:) = ice(:,:,:) * hydrometeor_scale_cld
         WHERE(ice .GT. autoconv_ice2sno) ice = autoconv_ice2sno
         ice(:,:,:) = ice(:,:,:)/rho(:,:,:)   ! Ice mixing ratio
       
@@ -616,8 +614,7 @@
       ENDIF
 
       IF (MAXVAL(pic) .LT. 99999.) THEN
-!         pic(:,:,:) = pic(:,:,:)*hydrometeor_scale
-         pic(:,:,:) = pic(:,:,:)*0.0
+         pic(:,:,:) = pic(:,:,:)*hydrometeor_scale_pcp
         pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
       ELSE
         PRINT *, 'Missing pice, setting values to 0.0' 
@@ -640,38 +637,6 @@
 
 
     ENDIF
-
-!cj
-! Sanity check on temperature lapse rates.
-! Any lapse rate that exceeds adiabatic is set to neutral. 
-! The stability is checked from the lowest to highest pressure level, ie from
-! highest to lowest elevation.
-! Instability is diagnosed by dtheta/dp less than zero.
-! A neutral layer is created by setting the theta of the higher pressure level
-! equal to theta of the lower pressure level.
-! Pressure is in mb, and temperature is in K.
-! As k increases, pressure decreases, meaning higher altitude with increasing k.
-!      do k=1,z3-1
-!      do j=1,y
-!      do i=1,x
-!        theta_upper = t(i,j,k)*(1000./p(k))**0.286
-!        theta_lower = t(i,j,k+1)*(1000./p(k+1))**0.286
-!        if (theta_upper .lt. theta_lower) then
-!          print *, ' ' 
-!          print *, ' ' 
-!          print *, 'superadiabatic layer'
-!          print *, i,j,k,z3
-!          print *, 'theta top ',theta_upper,' theta bot',theta_lower
-!          print *, 't top ',t(i,j,k),' t bot ',t(i,j,k+1)
-!          print *, 'p top ',p(k),' p bot ',p(k+1)
-!          t(i,j,k+1) = theta_upper / (1000./p(k+1))**0.286
-!          theta_lower = t(i,j,k+1)*(1000./p(k+1))**0.286
-!          print *, 'new t bot ',t(i,j,k+1)
-!          print *, 'new theta bot ',theta_lower
-!        endif
-!      enddo
-!      enddo
-!      enddo
 
     ! If make_sfc_uv set, then replace surface winds with 
     ! winds interpolated from the 3D field.
