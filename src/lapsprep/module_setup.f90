@@ -51,7 +51,8 @@ MODULE setup
    LOGICAL            :: hotstart,balance,make_sfc_uv
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
-   REAL               :: snow_thresh, lwc2vapor_thresh,hydrometeor_scale_factor
+   REAL               :: snow_thresh, lwc2vapor_thresh
+   REAL               :: hydrometeor_scale_factor_pcp, hydrometeor_scale_factor_cld
    REAL               :: rai_frac, sno_frac
    CHARACTER (LEN=256):: output_prefix
   
@@ -96,7 +97,8 @@ CONTAINS
 
       NAMELIST /lapsprep_nl/ hotstart      , &
                          balance           , &
-	      	hydrometeor_scale_factor   , &
+	    hydrometeor_scale_factor_pcp   , &
+	    hydrometeor_scale_factor_cld   , &
                          make_sfc_uv       , &
                          output_format     , &
                          snow_thresh       , &
@@ -109,7 +111,8 @@ CONTAINS
       output_format(:) = '    '
       ! Set namelist defaults
       balance = .false.
-      hydrometeor_scale_factor = 0.5	
+      hydrometeor_scale_factor_pcp = 0.0	
+      hydrometeor_scale_factor_cld = 0.5	
       snow_thresh = 0.5
       lwc2vapor_thresh = 1.1
       make_sfc_uv = .false.
