@@ -1,7 +1,8 @@
 &lapsprep_nl
   hotstart = .true.,
   balance  = .true., 
-  hydrometeor_scale_factor = 0.5,
+  hydrometeor_scale_factor_pcp = 0.0,
+  hydrometeor_scale_factor_cld = 0.5,
   output_format = 'wrf',
   snow_thresh = 1.1,
   lwc2vapor_thresh = 1.01,
