@@ -176,7 +176,7 @@ c
       real height_grid,range_dum,range_new,azimuth,elevation_dum
       real height_guess
 c
-      integer i,j,k,k_low,ielev,igate_lut,iter
+      integer i,j,k,k_low,ielev,igate_lut,iter,klut
       integer nazi,iran
       integer num_sweeps,n_rays,n_gates,n_obs_vel,n_output_data,nf
       integer igate_max
@@ -416,7 +416,10 @@ c
 
             if(k_eff(i,j) .ne. 0)then
                 k = k_eff(i,j)
-!               k = gate_elev_to_z_lut(igate_lut,ielev)
+                klut = gate_elev_to_z_lut(igate_lut,ielev)
+                if(jray .eq. 1)then
+                    write(6,*)'igate,k,klut',igate,k,klut                    
+                endif
             else
                 k = gate_elev_to_z_lut(igate_lut,ielev)
             endif
