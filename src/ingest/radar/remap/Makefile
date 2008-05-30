@@ -9,10 +9,12 @@ SRCROOT=../../../..
 include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/radar/remap_ftn/libremap_ftn.a  \
-           $(SRCROOT)/src/lib/liblaps.a  
+           $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/modules/libmodules.a  
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
-             $(SRCROOT)/src/lib/libdebuglaps.a  
+             $(SRCROOT)/src/lib/libdebuglaps.a  \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
