@@ -181,8 +181,8 @@ C
      1                     ,i4time_release,i4time_sys
               endif
 
-!             Correction for balloon rise time to mid-troposphere
-              i4time_drpsnd = i4time_release + 1800
+!             Correction for balloon fall time to mid-sounding
+              i4time_drpsnd = i4time_release + 100
 
           else
               i4time_release = 0
@@ -239,6 +239,10 @@ C
 
           staelev(isnd) = -999.
           c8_obstype = 'DROPSND'
+
+          do i = 1,6
+              staname(i,isnd) = ' '
+          enddo 
 
 !         Convert arrays from integer to real
           do ilev = 1,nummand(isnd) 
