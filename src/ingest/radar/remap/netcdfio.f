@@ -57,6 +57,7 @@ cdis
        character*8 radar_subdir, c8_fname_format
        logical l_multi_tilt,l_exist,l_output,l_realtime
        character*13 a9_to_rsa13
+       integer Z_bin, V_bin, radial
 
        save a9_time, i_nbr_files_raw, i_nbr_files_2nd
        save i4times_raw, i4times_lapsprd, i_nbr_lapsprd_files
@@ -283,7 +284,33 @@ c      Determine filename extension
      1                      ,c8_fname_format                        ! I
      1                      ,filename,l_exist)                      ! O     
 
-       if(l_exist)then
+       if(l_exist)then ! these calls will fill the variables in 
+                       ! 'netcdfio_radar_common.inc'
+
+           call get_tilt_netcdf_hdr  (filename
+     1                               ,radarName
+     1                               ,siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,numRadials 
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,nyquist
+     1                               ,radialAzim
+     1                               ,resolutionV
+     1                               ,gateSizeV,gateSizeZ
+     1                               ,firstGateRangeV,firstGateRangeZ
+     1                               ,MAX_VEL_GATES, MAX_REF_GATES ! I
+     1                               ,MAX_RAY_TILT                 ! I
+     1                               ,V_bin,     Z_bin,     radial ! O
+     1                               ,istatus)
+
+!          Equivalent names, particularly in 'netcdfio_radar_common.inc'
+           numRadials = radial
+           ngates_ref_cdf = Z_bin
+           ngates_vel_cdf = V_bin
+
            call get_tilt_netcdf_data(filename
      1                               ,radarName
      1                               ,siteLat                        
@@ -300,8 +327,7 @@ c      Determine filename extension
      1                               ,resolutionV
      1                               ,gateSizeV,gateSizeZ
      1                               ,firstGateRangeV,firstGateRangeZ
-     1                               ,MAX_VEL_GATES, MAX_REF_GATES
-     1                               ,MAX_RAY_TILT
+     1                               ,V_bin,     Z_bin,     radial    ! I
      1                               ,istatus)
 
        elseif(i_tilt_proc .le. 20)then
@@ -538,8 +564,20 @@ c      Determine filename extension
  
        function get_number_of_gates(index)
        integer get_number_of_gates
+
+       include 'remap_dims.inc'
+       include 'netcdfio_radar_common.inc'
  
        get_number_of_gates = 0
+
+       if(index .eq. 1)then
+           get_number_of_gates = ngates_ref_cdf
+       endif
+
+       if(index .eq. 2)then
+           get_number_of_gates = ngates_vel_cdf
+       endif
+
        return
        end
  
