@@ -90,8 +90,8 @@ c
         RETURN
       END IF
 
-      IF (n_vel_gates_cmn .ne. 920) THEN
-        write(6,*)' WARNING: LD_RAY using non-standard # of vel gates'
+      IF (n_vel_gates_cmn .ne. 920 .and. i_ray .eq. 1) THEN
+        write(6,*)' NOTE: LD_RAY using non-standard # of vel gates'
       END IF
 
 !     IF (n_vel_gates_cmn .ne. MAX_VEL_GATES) THEN
@@ -103,8 +103,8 @@ c
 !       RETURN
 !     END IF
 
-      IF (n_ref_gates_cmn .ne. 460) THEN
-        write(6,*)' WARNING: LD_RAY using non-standard # of ref gates'
+      IF (n_ref_gates_cmn .ne. 460 .and. i_ray .eq. 1) THEN
+        write(6,*)' NOTE: LD_RAY using non-standard # of ref gates'
       END IF
 
 !     IF (n_ref_gates_cmn .ne. MAX_REF_GATES) THEN
@@ -167,6 +167,11 @@ c     Reflectivity
 
       ENDDO
 c
+      if(i_ray .eq. 1)then
+          write(6,*)' LD_RAY: ratio_ref = ',ratio_ref
+     1                     ,' ratio_vel = ',ratio_vel
+      endif
+
       istatus = 1
       RETURN
       END

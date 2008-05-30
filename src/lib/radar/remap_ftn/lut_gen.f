@@ -243,6 +243,9 @@ c
      1           ' ERROR: QC check failed after radar_to_latlon call'
               write(6,*)'difflat,difflon,slant_range'
      1                  ,difflat,difflon,slant_range
+              write(6,*)'azimuth,elev,rlat_radar,rlon_radar'
+     1                  ,azimuth,elev,rlat_radar,rlon_radar
+              
               stop
           endif
 
