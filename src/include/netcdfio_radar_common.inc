@@ -23,4 +23,6 @@
      1                       ,firstGateRangeV,firstGateRangeZ
      1                       ,i4time_process
      1                       ,numRadials
+     1                       ,ngates_ref_cdf
+     1                       ,ngates_vel_cdf
      1                       ,radarName
