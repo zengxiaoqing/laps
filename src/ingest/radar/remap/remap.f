@@ -215,6 +215,7 @@ cdis
       integer get_scan
       integer get_tilt
       integer get_num_rays
+      integer get_number_of_gates
       integer get_vcp
       integer get_azi
       integer get_data_field
@@ -228,8 +229,6 @@ cdis
 
       call get_r_missing_data(r_missing_data,istatus)
 
-      n_vel_gates = MAX_VEL_GATES
-      n_ref_gates = MAX_REF_GATES
       b_missing_data = 255. ! flag value (corresponds to an unsigned integer)
 
       i_tilt_proc_curr = 1
@@ -402,9 +401,9 @@ cdis
               endif
 
               if(VERBOSE .eq. 1)then
-                ng_ref = get_number_of_gates(ref_index) 
+                n_ref_gates = get_number_of_gates(ref_index) 
                 call get_first_gate(ref_index,first_ref_m,gsp_ref) 
-                ng_vel = get_number_of_gates(vel_index) 
+                n_vel_gates = get_number_of_gates(vel_index) 
                 call get_first_gate(vel_index,first_vel_m,gsp_vel) 
               endif
 
@@ -415,8 +414,8 @@ cdis
      1                                ,vel_ptr  , MAX_VEL_GATES
      1                                , b_missing_data) 
 
-              ref_ptr = ref_ptr + MAX_REF_GATES 
-              vel_ptr = vel_ptr + MAX_VEL_GATES 
+              ref_ptr = ref_ptr + n_ref_gates 
+              vel_ptr = vel_ptr + n_vel_gates 
 
             else ! end of tilt
 
@@ -430,6 +429,9 @@ cdis
 
               write(6,*)'  n_rays, past_tilt, b_missing_data ',
      1                     n_rays, past_tilt, b_missing_data
+
+              n_ref_gates = get_number_of_gates(ref_index) 
+              n_vel_gates = get_number_of_gates(vel_index) 
 
               if(VERBOSE .eq. 1)then
                 write(6,*)'  n_ref_gates, n_vel_gates ',
