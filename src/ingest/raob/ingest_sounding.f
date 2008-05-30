@@ -39,6 +39,8 @@
 
  999   continue
 
+       write(6,*)' Successful end of ingest_sounding program...'
+
        end
 
        subroutine snd_sub(ni,nj,c8_project,laps_cycle_time,i4time_sys)    ! I
