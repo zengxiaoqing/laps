@@ -51,7 +51,8 @@ cdis
      1                               ,resolutionV
      1                               ,gateSizeV,gateSizeZ
      1                               ,firstGateRangeV,firstGateRangeZ
-     1                               ,V_bin_max, Z_bin_max, radial_max
+     1                               ,V_bin_max, Z_bin_max, radial_max ! I
+     1                               ,V_bin,     Z_bin,     radial     ! O
      1                               ,istatus)
 
 !     Argument List
@@ -165,20 +166,20 @@ C
      1                               ,resolutionV
      1                               ,gateSizeV,gateSizeZ
      1                               ,firstGateRangeV,firstGateRangeZ
-     1                               ,V_bin_max, Z_bin_max, radial_max
+     1                               ,V_bin_in, Z_bin_in, radial_in    ! I
      1                               ,istatus)
 
 !     Argument List
       character*(*) filename
       character*5  radarName
-      integer V_bin_max, Z_bin_max, radial_max
-      integer V(V_bin_max,radial_max), Z(Z_bin_max,radial_max)
-      real radialAzim(radial_max)
+      integer V_bin_in, Z_bin_in, radial_in
+      integer V(V_bin_in,radial_in), Z(Z_bin_in,radial_in)
+      real radialAzim(radial_in)
 
 !     Local
-      real radialElev(radial_max)
+      real radialElev(radial_in)
       character*132 siteName
-      double precision esEndTime, esStartTime, radialTime(radial_max)
+      double precision esEndTime, esStartTime, radialTime(radial_in)
 
 !.............................................................................
 
@@ -189,6 +190,8 @@ C
 !     include 'remap.cmn' ! for debugging only
 
       write(6,*)' get_tilt_netcdf_data: reading ',filename
+      write(6,*)'                       v/z/rad = '
+     1         ,v_bin_in,z_bin_in,radial_in
 C
 C  Open netcdf File for reading
 C
@@ -244,22 +247,22 @@ C
 
 !.....Test whether dimensions of NetCDF file are within bounds...............
 
-      if(V_bin .ne. V_bin_max)then
-          write(6,*)' V_bin != permitted dimensions ',V_bin,V_bin_max
+      if(V_bin .ne. V_bin_in)then
+          write(6,*)' V_bin != permitted dimensions ',V_bin,V_bin_in
           stop
       endif
 
-      if(Z_bin .ne. Z_bin_max)then
-          write(6,*)' Z_bin != permitted dimensions ',Z_bin,Z_bin_max     
+      if(Z_bin .ne. Z_bin_in)then
+          write(6,*)' Z_bin != permitted dimensions ',Z_bin,Z_bin_in     
           stop
       endif
 
-      if(radial .gt. radial_max)then
-          write(6,*)' radial > permitted dimensions ',radial,radial_max       
+      if(radial .ne. radial_in)then
+          write(6,*)' radial != permitted dimensions ',radial,radial_in       
           stop
       endif
 
-      call read_netcdf(nf_fid, V_bin_max, Z_bin_max, radial_max,
+      call read_netcdf(nf_fid, V_bin_in, Z_bin_in, radial_in,        ! I
 !............................................................................
      +     V, VCP, 
      +     Z, elevationNumber, numGatesV, numGatesZ, numRadials, 
