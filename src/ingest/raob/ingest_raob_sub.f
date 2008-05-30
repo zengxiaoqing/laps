@@ -7,7 +7,7 @@
 
       character*170 filename
 
-!.............................................................................
+!...........................................................................
 
       include 'netcdf.inc'
       integer mTropNum, mWndNum, manLevel, recNum, sigTLevel,
@@ -384,8 +384,10 @@ C
       write(6,*)' Subroutine sort_and_write - initial mandatory data'       
       if(nummand(isnd) .le. manLevel)then
         do ilevel = 1,nummand(isnd)
+          call check_nan(htman(ilevel,isnd),istat_nan)
           if(htman(ilevel,isnd) .lt. 90000. .and.
-     1       htman(ilevel,isnd) .ge. staelev(isnd) )then ! valid height AGL
+     1       htman(ilevel,isnd) .ge. staelev(isnd) .and.
+     1       istat_nan .eq. 1                         )then ! valid height AGL
               n_good_levels = n_good_levels + 1
               write(6,*) htman(ilevel,isnd),prman(ilevel,isnd)
      1                  ,tpman(ilevel,isnd),tdman(ilevel,isnd)
@@ -458,8 +460,10 @@ C
       write(6,*)' Subroutine sort_and_write - sig wind data'       
       if(numsigw(isnd) .le. sigWLevel)then
         do ilevel = 1,numsigw(isnd)
+          call check_nan(htsigw(ilevel,isnd),istat_nan)
           if(htsigw(ilevel,isnd) .lt. 90000. .and.
-     1       htsigw(ilevel,isnd) .ne. 0.            )then
+     1       htsigw(ilevel,isnd) .ne. 0.     .and.
+     1       istat_nan .eq. 1                      )then
               n_good_levels = n_good_levels + 1
               write(6,*) htsigw(ilevel,isnd),r_missing_data
      1                  ,r_missing_data,r_missing_data
@@ -490,7 +494,8 @@ C
                 ht_calc = z(prsigt(ilevel,isnd)
      1                     ,prout,tpout_c_z,tdout_c_z,n_good_z)
 
-                if(nanf(ht_calc) .eq. 1)then
+                if(nanf(ht_calc) .eq. 1 
+     1         .or. ht_calc .gt. 99999. .or. ht_calc .lt. -1000.)then
                     ht_calc = -1.0        ! flag value for invalid height
                 endif
 
