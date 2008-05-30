@@ -75,31 +75,47 @@
         call i4time_fname_lp(a9time_ob(isnd,1),i4time_raob,status)
         if(abs(i4time_raob - i4time_sys) .gt. i4_raob_window)then
             write(6,*)a9time_ob(isnd,1),
-     1                ' is outside time window with sounding #',isnd
+     1                ' is outside time window with sounding # ',isnd
             goto 900
+        endif
+
+!       Default QC for 'iwmostanum' and 'c5_staid'
+        call check_nan(iwmostanum(isnd),istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Nan detected for WMOID, set to sounding # ',isnd
+            iwmo_out = isnd
+        else
+            iwmo_out = iwmostanum(isnd)
+        endif
+
+        if(iwmostanum(isnd) .lt. 0 .OR. 
+     1     iwmostanum(isnd) .gt. 99999)then
+            write(6,*)' WMOID out of bounds, set to sounding # ',isnd
+            iwmo_out = isnd
         endif
 
         call s_len(c5_staid(isnd),len_sta)
         if(len_sta .gt. 0)then
             c5_sta = c5_staid(isnd)
-        else
-            if(iwmostanum(isnd) .gt. 0 .and. 
-     1         iwmostanum(isnd) .le. 99999)then
-                write(6,*)' Filling in blank staid with WMOID'
-                write(c5_sta,101)iwmostanum(isnd)
- 101            format(i5)
-            endif
+
+        else 
+            write(6,*)' Filling in blank staid with WMOID # '
+     1               ,isnd,iwmo_out
+
+            write(c5_sta,101)iwmo_out
+ 101        format(i5.5)
+
         endif
 
 !       Write Sounding Header
 
         write(6,511,err=990)
-     1             iwmostanum(isnd),nlvl(isnd)
+     1             iwmo_out,nlvl(isnd)
      1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
      1            ,c5_sta,a9time_ob(isnd,1),c8_obstype(isnd)
 
         write(lun_out,511,err=990)
-     1             iwmostanum(isnd),nlvl(isnd)
+     1             iwmo_out,nlvl(isnd)
      1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
      1            ,c5_sta,a9time_ob(isnd,1),c8_obstype(isnd)
 
