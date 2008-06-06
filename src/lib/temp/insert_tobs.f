@@ -42,7 +42,8 @@ cdis
      1               ,weight_bkg_const              ! Input
      1               ,rms_thresh_norm               ! Input
      1               ,ni,nj,nk                      ! Input
-     1               ,max_snd,max_obs               ! Input
+     1               ,max_snd,max_snd_levels        ! Input
+     1               ,max_obs                       ! Input
      1               ,grid_spacing_m                ! Input
      1               ,istatus)                      ! Output
 
@@ -114,7 +115,7 @@ cdis
      1                   temp_3d,sh_3d,pres_3d,               ! Input
      1                   lat_tsnd,lon_tsnd,                   ! Output
      1                   lat,lon,                             ! Input
-     1                   max_snd,                             ! Input
+     1                   max_snd,max_snd_levels,              ! Input
      1                   tsnd,inst_err_tsnd,                  ! Output
      1                   c5_name,c8_sndtype,                  ! Output
      1                   l_read_raob,l_struct,                ! Input
