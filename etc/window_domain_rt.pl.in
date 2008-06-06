@@ -587,11 +587,11 @@ if( $restore_files eq "true" ) {
 #   }
 
     system("mv $LAPS_DATA_ROOT/$logname/localize_domain.log $LAPS_DATA_ROOT/$logname/$logfilename");
-    print "\nlog file: $LAPS_DATA_ROOT/$logname/$logfilename \n";
     print "\n";
     print "     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    print "     Localization is Incomplete\n";
+    print "     Localization is Incomplete - check the following log file:\n";
     print "     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    print "\n $LAPS_DATA_ROOT/$logname/$logfilename \n";
     exit;
 }
 
