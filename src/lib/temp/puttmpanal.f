@@ -88,6 +88,8 @@ cdis
 
         integer max_snd_grid,max_obs
 
+        integer max_snd_levels
+
         logical l_fill,l_adjust_heights,l_read_raob,l_use_raob
 
         O_K(T_K,P_PA)   =   O( T_K-273.15 , P_PA/100. )  + 273.15
@@ -103,7 +105,7 @@ cdis
         call get_temp_parms(l_read_raob,l_use_raob,l_adjust_heights
      1                     ,weight_bkg_const
      1                     ,rms_thresh,pres_mix_thresh,max_snd_grid
-     1                     ,max_obs,istatus)
+     1                     ,max_snd_levels,max_obs,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error: Bad status return from put_temp_anal'
             return
@@ -206,21 +208,22 @@ cdis
             return
         endif
 
-        call insert_tobs(i4time_needed        ! Input
-     1                  ,lat,lon              ! Input
-     1                  ,heights_3d           ! Input
-     1                  ,sh_3d                ! Input
-     1                  ,pres_3d              ! Input
-     1                  ,temp_3d              ! Input/Output
-     1                  ,ilaps_cycle_time     ! Input
-     1                  ,l_read_raob          ! Input
-     1                  ,l_use_raob           ! Input
-     1                  ,weight_bkg_const     ! Input
-     1                  ,rms_thresh           ! Input
-     1                  ,ni,nj,nk             ! Input
-     1                  ,max_snd_grid,max_obs ! Input
-     1                  ,grid_spacing_m       ! Input
-     1                  ,istatus)             ! Output
+        call insert_tobs(i4time_needed                   ! Input
+     1                  ,lat,lon                         ! Input
+     1                  ,heights_3d                      ! Input
+     1                  ,sh_3d                           ! Input
+     1                  ,pres_3d                         ! Input
+     1                  ,temp_3d                         ! Input/Output
+     1                  ,ilaps_cycle_time                ! Input
+     1                  ,l_read_raob                     ! Input
+     1                  ,l_use_raob                      ! Input
+     1                  ,weight_bkg_const                ! Input
+     1                  ,rms_thresh                      ! Input
+     1                  ,ni,nj,nk                        ! Input
+     1                  ,max_snd_grid,max_snd_levels     ! Input
+     1                  ,max_obs                         ! Input
+     1                  ,grid_spacing_m                  ! Input
+     1                  ,istatus)                        ! Output
         if(istatus .ne. 1)then
             write(6,*)' Error: Bad status returned from insert_tobs'       
             return
@@ -717,13 +720,15 @@ c       1                               j_diff_thmax,k_diff_thmax
        subroutine get_temp_parms(l_read_raob_t,l_use_raob_t
      1                 ,l_adjust_heights
      1                 ,weight_bkg_const_temp,rms_thresh_temp
-     1                 ,pres_mix_thresh,max_snd_grid,max_obs,istatus)       
+     1                 ,pres_mix_thresh,max_snd_grid,max_snd_levels
+     1                 ,max_obs,istatus)       
 
        logical l_read_raob_t,l_use_raob_t,l_adjust_heights
 
        namelist /temp_nl/ l_read_raob_t,l_use_raob_t,l_adjust_heights       
      1                   ,weight_bkg_const_temp,rms_thresh_temp
-     1                   ,pres_mix_thresh,max_snd_grid,max_obs       
+     1                   ,pres_mix_thresh,max_snd_grid,max_snd_levels       
+     1                   ,max_obs
  
        character*150 static_dir,filename
  
