@@ -1730,11 +1730,14 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                          
                 Lambert:
                     This is the latitude at which the grid spacing is exactly 
-                    the nominal value (e.g. 10km). 
+                    the nominal value (e.g. 10km). The projection cone will
+                    intersect the Earth's surface at this latitude.
                    
                 Mercator:
                     This is the latitude at which the grid spacing is exactly 
-                    the nominal value (e.g. 10km). 
+                    the nominal value (e.g. 10km). Equivalently this is the
+                    latitude at which the projection cylinder intersects the 
+                    Earth.
                                      
         6) standard_latitude2:
              
@@ -1747,7 +1750,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                     For a tangent lambert (e.g. CONUS), set this equal to
                     the 'standard_latitude' parameter. For a secant 
                     (two-latitude) lambert, set this to the second true 
-                    latitude.
+                    latitude where the projection cone intersects the surface.
 
                 Mercator:
                     N/A
@@ -2521,7 +2524,9 @@ Also recall the flow chart showing the inputs and outputs for
 
 Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
-Parameter namelist file: 'static/remap.nl'
+Compile time parameters: 'src/include/remap_dims.inc'
+
+Runtime parameter namelist file: 'static/remap.nl'
 
 Sample Input/Output: May be available in the test data case.
 
