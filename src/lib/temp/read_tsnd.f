@@ -34,7 +34,7 @@ cdis
      1                   sh_3d,pres_3d,                           ! Input
      1                   lat_tsnd,lon_tsnd,                       ! Output
      1                   lat,lon,                                 ! Input
-     1                   max_snd,                                 ! Input
+     1                   max_snd,max_snd_levels,                  ! Input
      1                   ob_pr_t,inst_err_tsnd,                   ! Output
      1                   c5_name,c8_sndtype,                      ! Output
      1                   l_read_raob,l_3d,                        ! Input
@@ -64,9 +64,6 @@ c                               not exactly match the LAPS analysis time.
 !                               for rass.
 !       1998 Feb Steve Albers   Added feature to calculate the height from
 !                               the pressure if the height is missing.
-
-        integer max_snd_levels
-        parameter (max_snd_levels = 3000)
 
         real surface_rass_buffer
         parameter (surface_rass_buffer = 30.)
