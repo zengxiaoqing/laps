@@ -180,6 +180,7 @@ then
   if test "$arch" = "i686"
   then
     FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    DBFLAGS="$DBFLAGS -Mbounds"
     LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4"
     FIXED="-Mnofree"
     FREE="-Mfree"
@@ -192,6 +193,7 @@ then
   if test "$arch" = "i386"
   then
     FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    DBFLAGS="$DBFLAGS -Mbounds"
     LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4"
     FIXED="-Mnofree"
     FREE="-Mfree"
@@ -204,6 +206,7 @@ then
   if test "$arch" = "x86_64"
   then
     FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    DBFLAGS="$DBFLAGS -Mbounds"
     LITTLEFLAGS="$LITTLEFLAGS -Mnofree -i4"
     FIXED="-Mnofree"
     FREE="-Mfree"
