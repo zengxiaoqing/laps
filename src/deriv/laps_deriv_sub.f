@@ -672,6 +672,7 @@ c read in laps lat/lon and topo
                 goto700
             endif
 
+            I4_elapsed = ishow_timer()
 
 !           Note that pres_sfc_pa was already read in above
             call get_sfc_preciptype(pres_sfc_pa,t_sfc_k,td_sfc_k
@@ -721,6 +722,8 @@ c read in laps lat/lon and topo
             enddo
             enddo
 
+            I4_elapsed = ishow_timer()
+
 !           Add SAO Drizzle to the thresh sfc precip type (if applicable out
 !           of radar range)
             call sao_drizzle_correction(r_pcp_type_thresh_2d,NX_L,NY_L
@@ -728,6 +731,8 @@ c read in laps lat/lon and topo
      1              ,ri_s,rj_s,lat,lon
      1              ,t_sfc_k
      1              ,cloud_ceiling,r_missing_data)
+
+            I4_elapsed = ishow_timer()
 
 !           Add SAO Rain to the thresh sfc precip type (if applicable out
 !           of radar range)
@@ -738,6 +743,8 @@ c read in laps lat/lon and topo
      1              ,dbz_low_2d
      1              ,cvr_max,r_missing_data)
 
+            I4_elapsed = ishow_timer()
+
 !           Add SAO Snow to the thresh sfc precip type (if applicable out
 !           of radar range)
             call sao_snow_correction(r_pcp_type_thresh_2d,NX_L,NY_L
@@ -747,6 +754,7 @@ c read in laps lat/lon and topo
      1              ,dbz_low_2d
      1              ,cvr_max,r_missing_data)
 
+            I4_elapsed = ishow_timer()
 
 !           Increase radar reflectivity threshold for precip in those areas
 !           where the radar has echo, but the SAO says no precip.
