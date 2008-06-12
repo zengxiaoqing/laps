@@ -83,23 +83,23 @@ c
       integer n_rays
       integer n_gates
       real slant_ranges_m(max_gates)
-      real velocity(max_gates,max_rays)
-      real reflect(max_gates,max_rays)
-      real az_array(max_rays)
+      real velocity(max_gates,MAX_RAY_TILT)
+      real reflect(max_gates,MAX_RAY_TILT)
+      real az_array(MAX_RAY_TILT)
       real v_nyquist_tilt
       integer istatus
 c
 c     Misc local variables
 c
       integer i,i_scan_mode,i_ray
-      real v_nyquist_ray(max_rays)
+      real v_nyquist_ray(MAX_RAY_TILT)
 c
 c     Get housekeeping info for radar scan.
 c
       call get_scandata(
      :          i_tilt,
      :          r_missing_data,
-     :          max_rays,
+     :          MAX_RAY_TILT,
      :          n_rays,
      :          n_gates,
      :          gate_spacing_m_ret,
@@ -119,7 +119,7 @@ c
       END IF
 
       call GET_AZIMUTHS_DEG ( i_tilt,
-     :                  max_rays,
+     :                  MAX_RAY_TILT,
      :                  az_array,
      :                  istatus )
       IF( istatus .ne. 1 )  GO TO 998

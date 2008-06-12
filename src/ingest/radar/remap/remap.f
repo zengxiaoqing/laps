@@ -170,7 +170,7 @@ cdis
 !     Declarations for call to 'Read_data_88d'
       Real  Slant_ranges_m (max_gates),
      :        Elevation_deg,
-     :        Az_array(max_rays) 
+     :        Az_array(MAX_RAY_TILT) 
       real, allocatable, dimension(:,:) :: Velocity
       real, allocatable, dimension(:,:) :: Reflect
 
@@ -495,13 +495,15 @@ cdis
 
 c             Get radar data from the storage area (formerly in remap_process)
 c
-              allocate(Velocity(max_gates,max_rays),STAT=istat_alloc)       
+              allocate(Velocity(max_gates,MAX_RAY_TILT)
+     1                                   ,STAT=istat_alloc)      
               if(istat_alloc .ne. 0)then
                   write(6,*)' ERROR: Could not allocate Velocity'
                   stop
               endif
 
-              allocate(Reflect(max_gates,max_rays), STAT=istat_alloc)       
+              allocate(Reflect(max_gates,MAX_RAY_TILT)
+     1                                  ,STAT=istat_alloc)       
               if(istat_alloc .ne. 0)then
                   write(6,*)' ERROR: Could not allocate Reflect'
                   stop
