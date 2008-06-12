@@ -71,6 +71,8 @@ c
       character*4 c4_radarname
       character*150 static_dir,filename
       character*3 ext
+      logical l_readwrite_lut 
+      data l_readwrite_lut /.true./
 c
 c     Fill arrays with initial values
 c
@@ -119,15 +121,16 @@ c     Put the coords into common so remap_process can access them
 c
 c     Generate Gate/Elev to Projran lut
 c
-!     Try to read lut
-      filename = static_dir(1:len_dir)//'vxx/'
-     1         //'gate_elev_to_projran_lut.'//c4_radarname
-      write(6,*)' Reading file: ',filename
-      open(11,file=filename,form='unformatted',status='old',err=90)
-      read(11,err=90)gate_elev_to_projran_lut
-      close(11)
-      goto 110
-90    write(6,*)' Generating LUT - no valid file exists'
+      if(l_readwrite_lut)then ! Try to read lut
+          filename = static_dir(1:len_dir)//'vxx/'
+     1             //'gate_elev_to_projran_lut.'//c4_radarname
+          write(6,*)' Reading file: ',filename
+          open(11,file=filename,form='unformatted',status='old',err=90)       
+          read(11,err=90)gate_elev_to_projran_lut
+          close(11)
+          goto 110
+90        write(6,*)' Generating LUT - no valid file exists'
+      endif
 
 !     Calculate lut
       write(6,820) lut_gates
@@ -148,24 +151,25 @@ c
         ENDDO
       ENDDO
 
-!     Write lut
-      open(12,file=filename,form='unformatted',status='new')
-      write(12)gate_elev_to_projran_lut
-      close(12)
+      if(l_readwrite_lut)then ! Write lut
+          open(12,file=filename,form='unformatted',status='new')
+          write(12)gate_elev_to_projran_lut
+          close(12)
+      endif
   110 continue 
-
 c
 c     Generate Gate/Elev to Z lut
 c
-!     Try to read lut
-      filename = static_dir(1:len_dir)//'vxx/'
-     1         //'gate_elev_to_z_lut.'//c4_radarname
-      write(6,*)' Reading file: ',filename
-      open(11,file=filename,form='unformatted',status='old',err=190)
-      read(11,err=190)gate_elev_to_z_lut
-      close(11)
-      goto 210
-190   write(6,*)' Generating LUT - no valid file exists'
+      if(l_readwrite_lut)then ! Try to read lut
+          filename = static_dir(1:len_dir)//'vxx/'
+     1             //'gate_elev_to_z_lut.'//c4_radarname
+          write(6,*)' Reading file: ',filename
+          open(11,file=filename,form='unformatted',status='old',err=190)       
+          read(11,err=190)gate_elev_to_z_lut
+          close(11)
+          goto 210
+190       write(6,*)' Generating LUT - no valid file exists'
+      endif
 
 !     Calculate lut
       write(6,830)
@@ -191,24 +195,25 @@ c
   180   CONTINUE
   200 CONTINUE
 
-!     Write lut
-      open(12,file=filename,form='unformatted',status='new')
-      write(12)gate_elev_to_z_lut
-      close(12)
+      if(l_readwrite_lut)then ! Write lut
+          open(12,file=filename,form='unformatted',status='new')
+          write(12)gate_elev_to_z_lut
+          close(12)
+      endif
   210 continue 
-
 c
 c     Generate Az/Ran to i,j lut
 c
-!     Try to read lut
-      filename = static_dir(1:len_dir)//'vxx/'
-     1         //'azran_to_ijgrid_lut.'//c4_radarname
-      write(6,*)' Reading file: ',filename
-      open(11,file=filename,form='unformatted',status='old',err=290)
-      read(11,err=290)azran_to_igrid_lut,azran_to_jgrid_lut
-      close(11)
-      goto 310
-290   write(6,*)' Generating LUT - no valid file exists'
+      if(l_readwrite_lut)then ! Try to read lut
+          filename = static_dir(1:len_dir)//'vxx/'
+     1             //'azran_to_ijgrid_lut.'//c4_radarname
+          write(6,*)' Reading file: ',filename
+          open(11,file=filename,form='unformatted',status='old',err=290)       
+          read(11,err=290)azran_to_igrid_lut,azran_to_jgrid_lut
+          close(11)
+          goto 310
+290       write(6,*)' Generating LUT - no valid file exists'
+      endif
 
 !     Calculate lut
       write(6,840)
@@ -269,10 +274,11 @@ c
   280   CONTINUE
   300 CONTINUE
 
-!     Write lut
-      open(12,file=filename,form='unformatted',status='new')
-      write(12)azran_to_igrid_lut,azran_to_jgrid_lut
-      close(12)
+      if(l_readwrite_lut)then ! Write lut
+          open(12,file=filename,form='unformatted',status='new')
+          write(12)azran_to_igrid_lut,azran_to_jgrid_lut
+          close(12)
+      endif
   310 continue 
 
 !     Debugging output
