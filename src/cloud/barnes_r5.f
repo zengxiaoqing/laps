@@ -71,11 +71,15 @@ cdis
       real cld_snd_in(max_cld_snd,kmax)
       real wt_snd_in(max_cld_snd,kmax)
 
-      real*8 cld_snd(max_cld_snd,kmax)
-      real*8 wt_snd(max_cld_snd,kmax)
+      real*8, allocatable, dimension(:,:) :: cld_snd
+      real*8, allocatable, dimension(:,:) :: wt_snd
+      real*8, allocatable, dimension(:,:) :: cld_snd_diff
+      real*8, allocatable, dimension(:,:) :: wt_snd_diff
+!     real*8 cld_snd(max_cld_snd,kmax)
+!     real*8 wt_snd(max_cld_snd,kmax)
+!     real*8 cld_snd_diff(max_cld_snd,kmax)
+!     real*8 wt_snd_diff(max_cld_snd,kmax)
 
-      real*8 cld_snd_diff(max_cld_snd,kmax)
-      real*8 wt_snd_diff(max_cld_snd,kmax)
       integer i_snd(max_cld_snd)
       integer j_snd(max_cld_snd)
 
@@ -89,6 +93,26 @@ cdis
       logical l_analyze(KCLOUD), l_diff_snd, l_debug
 
       write(6,*)' subroutine barnes_r5...'
+
+      allocate( cld_snd(max_cld_snd,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate cldsnd'
+      endif
+
+      allocate( wt_snd(max_cld_snd,KCLOUD), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate wt_snd'
+      endif
+
+      allocate( cld_snd_diff(max_cld_snd,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate cldsnd_diff'
+      endif
+
+      allocate( wt_snd_diff(max_cld_snd,KCLOUD), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate wt_snd_diff'
+      endif
 
 !     Convert from real to real*8
       cld_snd = cld_snd_in 
@@ -681,6 +705,11 @@ cdis
      15'
           write(6,*)' Try increasing bias_iii'
       endif
+
+      deallocate(cld_snd)
+      deallocate(wt_snd)
+      deallocate(cld_snd_diff)
+      deallocate(wt_snd_diff)
 
       return
       end

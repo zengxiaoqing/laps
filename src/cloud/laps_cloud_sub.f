@@ -171,15 +171,22 @@ cdis
 
         equivalence (cld_hts,cld_hts_new)
 
-        REAL cldcv1(NX_L,NY_L,KCLOUD)
-        REAL cf_modelfg(NX_L,NY_L,KCLOUD)
-        REAL t_modelfg(NX_L,NY_L,KCLOUD)
+        real, allocatable, dimension(:,:,:) :: cldcv1
+        real, allocatable, dimension(:,:,:) :: cf_modelfg
+        real, allocatable, dimension(:,:,:) :: t_modelfg
+!       REAL cldcv1(NX_L,NY_L,KCLOUD)
+!       REAL cf_modelfg(NX_L,NY_L,KCLOUD)
+!       REAL t_modelfg(NX_L,NY_L,KCLOUD)
 
         real clouds_3d(NX_L,NY_L,KCLOUD)
 
         integer ista_snd(max_cld_snd)
-        real cld_snd(max_cld_snd,KCLOUD)
-        real wt_snd(max_cld_snd,KCLOUD)
+
+        real, allocatable, dimension(:,:) :: cld_snd
+        real, allocatable, dimension(:,:) :: wt_snd
+!       real cld_snd(max_cld_snd,KCLOUD)
+!       real wt_snd(max_cld_snd,KCLOUD)
+
         real cvr_snd(max_cld_snd)
         integer i_snd(max_cld_snd)
         integer j_snd(max_cld_snd)
@@ -316,6 +323,31 @@ cdis
 
         character*3 lso_ext        
         data lso_ext /'lso'/
+
+        allocate( cldcv1(NX_L,NY_L,KCLOUD), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate cldcv1'
+        endif
+
+        allocate( cf_modelfg(NX_L,NY_L,KCLOUD), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate cf_modelfg'
+        endif
+
+        allocate( t_modelfg(NX_L,NY_L,KCLOUD), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate t_modelfg'
+        endif
+
+        allocate( cld_snd(max_cld_snd,KCLOUD), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate cld_snd'
+        endif
+
+        allocate( wt_snd(max_cld_snd,KCLOUD), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate wt_snd'
+        endif
 
         ISTAT = INIT_TIMER()
 
@@ -1355,6 +1387,12 @@ C       EW SLICES
         enddo ! i
 
         write(6,*)' End of Cloud Analysis Package'
+
+        deallocate(cldcv1)
+        deallocate(cf_modelfg)
+        deallocate(t_modelfg)
+        deallocate(cld_snd)
+        deallocate(wt_snd)
 
         return
         end
