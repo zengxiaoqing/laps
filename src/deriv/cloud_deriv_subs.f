@@ -253,13 +253,27 @@ cdis
         real lat_s(maxstns), lon_s(maxstns)
         character wx_s(maxstns)*8, obstype(maxstns)*8
 
+        logical l_valid_sta(maxstns)
+
         write(6,*)' Adding drizzle information from SAOs'
+
+        n_valid_sta = 0
 
 !       Set Up I's and J's of the SAOs
         do ista = 1,n_obs_pos_b
             call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista)
      1                   ,lat,lon,ni,nj,ri_s(ista),rj_s(ista),istatus)
+
+            l_valid_sta(ista) = .false.
+
+!           Does this station report precip?
+            if(wx_s(ista)(1:7) .ne. 'UNKNOWN')then
+                l_valid_sta(ista) = .true.
+                n_valid_sta = n_valid_sta + 1
+            endif
         enddo
+
+        write(6,*)' nobs,n_valid = ',n_obs_pos_b,n_valid_sta
 
         n_low_ceil = 0
         n_no_pcp = 0
@@ -280,13 +294,9 @@ cdis
                     ista_nearest = 0
 
                     do ista = 1,n_obs_pos_b
+
 !                       Does this station report precip?
-                        if(      
-!    1                           obstype(ista)(1:4) .ne. 'MESO'
-!    1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
-!    1                     .and. obstype(ista)(7:8) .ne. '1A'
-     1                           wx_s(ista)(1:7)    .ne. 'UNKNOWN'
-     1                                                           )then
+                        if(l_valid_sta(ista))then
 !                           Calculate distance of stations (grid points **2)
                             distsq = (float(i) - ri_s(ista))**2
      1                             + (float(j) - rj_s(ista))**2
@@ -295,6 +305,7 @@ cdis
                                 ista_nearest = ista
                             endif
                         endif
+
                     enddo ! ista
 
                     if(ista_nearest .ne. 0)then ! We found a reporting station
@@ -359,13 +370,34 @@ cdis
         real lat_s(maxstns), lon_s(maxstns)
         character wx_s(maxstns)*8, obstype(maxstns)*8
 
+        logical l_valid_sta(maxstns)
+
         write(6,*)' Adding snow information from SAOs'
+
+        n_valid_sta = 0
 
 !       Set Up I's and J's of the SAOs
         do ista = 1,n_obs_pos_b
             call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista)
      1                   ,lat,lon,ni,nj,ri_s(ista),rj_s(ista),istatus)
+
+            l_valid_sta(ista) = .false.
+
+            i_sta = nint(ri_s(ista))
+            j_sta = nint(rj_s(ista))
+
+            if(    i_sta .ge. 1 .and. i_sta .le. ni
+     1       .and. j_sta .ge. 1 .and. j_sta .le. nj)then
+
+!               Does this station report precip?
+                if(wx_s(ista)(1:7) .ne. 'UNKNOWN')then
+                    l_valid_sta(ista) = .true.
+                    n_valid_sta = n_valid_sta + 1
+                endif
+            endif
         enddo
+
+        write(6,*)' nobs,n_valid = ',n_obs_pos_b,n_valid_sta
 
         n_cvr= 0
         n_moist = 0
@@ -388,29 +420,22 @@ cdis
                     dbz_at_sta = 999.
 
                     do ista = 1,n_obs_pos_b
-                      i_sta = nint(ri_s(ista))
-                      j_sta = nint(rj_s(ista))
 
-                      if(    i_sta .ge. 1 .and. i_sta .le. ni
-     1                 .and. j_sta .ge. 1 .and. j_sta .le. nj)then
+!                       Valid station is in domain and reports precip
+                        if(l_valid_sta(ista))then
 
-!                       Does this station report precip?
-                        if(      
-!    1                           obstype(ista)(1:4) .ne. 'MESO'
-!    1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
-!    1                     .and. obstype(ista)(7:8) .ne. '1A'
-     1                           wx_s(ista)(1:7)    .ne. 'UNKNOWN'
-     1                                                           )then
 !                           Calculate distance of stations (grid points **2)
                             distsq = (float(i) - ri_s(ista))**2
      1                             + (float(j) - rj_s(ista))**2
                             if(distsq .lt. distsq_min)then ! Nearest Station
                                 distsq_min = distsq
                                 ista_nearest = ista
+                                i_sta = nint(ri_s(ista))
+                                j_sta = nint(rj_s(ista))
                                 dbz_at_sta = dbz_low_2d(i_sta,j_sta)
                             endif
-                        endif
-                      endif ! station in domain
+                        endif ! valid station
+
                     enddo ! ista
 
                     if(ista_nearest .ne. 0)then ! We found a reporting station
@@ -474,13 +499,34 @@ cdis
         real lat_s(maxstns), lon_s(maxstns)
         character wx_s(maxstns)*8, obstype(maxstns)*8
 
+        logical l_valid_sta(maxstns)
+
         write(6,*)' Adding rain information from stations'
+
+        n_valid_sta = 0
 
 !       Set Up I's and J's of the SAOs
         do ista = 1,n_obs_pos_b
             call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista)
      1                   ,lat,lon,ni,nj,ri_s(ista),rj_s(ista),istatus)
+
+            l_valid_sta(ista) = .false.
+
+            i_sta = nint(ri_s(ista))
+            j_sta = nint(rj_s(ista))
+
+            if(    i_sta .ge. 1 .and. i_sta .le. ni
+     1       .and. j_sta .ge. 1 .and. j_sta .le. nj)then
+
+!               Does this station report precip?
+                if(wx_s(ista)(1:7) .ne. 'UNKNOWN')then
+                    l_valid_sta(ista) = .true.
+                    n_valid_sta = n_valid_sta + 1
+                endif
+            endif
         enddo
+
+        write(6,*)' nobs,n_valid = ',n_obs_pos_b,n_valid_sta
 
         n_cvr= 0
         n_moist = 0
@@ -505,29 +551,20 @@ cdis
                     dbz_at_sta = 999.
 
                     do ista = 1,n_obs_pos_b
-                      i_sta = nint(ri_s(ista))
-                      j_sta = nint(rj_s(ista))
+!                       Valid station is in domain and reports precip
+                        if(l_valid_sta(ista))then
 
-                      if(    i_sta .ge. 1 .and. i_sta .le. ni
-     1                 .and. j_sta .ge. 1 .and. j_sta .le. nj)then
-
-!                       Does this station report precip?
-                        if(      
-!    1                           obstype(ista)(1:4) .ne. 'MESO'
-!    1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
-!    1                     .and. obstype(ista)(7:8) .ne. '1A'
-     1                           wx_s(ista)(1:7)    .ne. 'UNKNOWN'
-     1                                                           )then
 !                           Calculate distance of stations (grid points **2)
                             distsq = (float(i) - ri_s(ista))**2
      1                             + (float(j) - rj_s(ista))**2
                             if(distsq .lt. distsq_min)then ! Nearest Station
                                 distsq_min = distsq
                                 ista_nearest = ista
+                                i_sta = nint(ri_s(ista))
+                                j_sta = nint(rj_s(ista))
                                 dbz_at_sta = dbz_low_2d(i_sta,j_sta)
                             endif
-                        endif
-                      endif ! station in domain
+                      endif ! valid station
                     enddo ! ista
 
                     if(ista_nearest .ne. 0)then ! We found a reporting station
