@@ -3,7 +3,7 @@
 main 
     get_cloud_parms
     laps_cloud                                           laps_cloud_sub.f
-        get_model_fg                
+        get_modelfg                                      get_fg_cloud.f
         insert_sao                                       insertsao.f
             read_surface_sa                                  
             modify_sounding
