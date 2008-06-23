@@ -463,6 +463,12 @@ csms$ignore begin
                  arg = sumsq - (float(n_superob(i,j)) * xbar**2)
                  if(arg .ge. 0.)then
                     stdev = sqrt(arg / float(n_superob(i,j)))       
+                 elseif(abs(arg/sumsq) .lt. 1e-6)then
+                    write(6,*)' NOTE: stdev arg < 0 ',n_superob(i,j)
+     1                        ,arg,sum,sumsq,xbar
+     1                        ,' within machine epsilon'
+                    arg = 0.
+                    stdev = 0.
                  else
                     write(6,*)' ERROR: stdev arg < 0 ',n_superob(i,j)
      1                        ,arg,sum,sumsq,xbar
