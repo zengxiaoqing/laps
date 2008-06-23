@@ -178,8 +178,8 @@ c
           endif
 
 !         Determine whether we want to analyze cloud layers from this station
-          if(obstype(i)(1:4) .eq. 'MESO')goto125
-          if(obstype(i)(1:4) .eq. 'CDOT')goto125
+          if(obstype(i)(1:4) .eq. 'MESO')goto126
+          if(obstype(i)(1:4) .eq. 'CDOT')goto126
 
           write(6,*)
 
@@ -193,7 +193,7 @@ c place station at proper laps grid point
           if(  ilaps .lt. IX_LOW .or. ilaps .gt. IX_HIGH
      1    .or. jlaps .lt. IY_LOW .or. jlaps .gt. IY_HIGH)then
               write(6,*)' Note: out of bounds ',c_stations(i)
-              goto 125
+              goto 126
           endif
 
           if(n_cloud_layers_ret(i) .eq. 0)then ! Kick out AMOS stations not
@@ -201,7 +201,7 @@ c place station at proper laps grid point
               write(6,*)' No cloud layers reported - '
      1          ,'CLR?/MSG?/AMOS? - goto end of loop '       
      1          ,c_stations(i),' ',obstype(i),' ',atype(i)
-              goto 125
+              goto 126
           endif
 
 !         What is the height limit of the cloud observation? Is obstype valid?
@@ -233,7 +233,7 @@ c place station at proper laps grid point
      1                 ,'cloud layers - reject: ',obstype(i)
      1                 ,' ',c_stations(i)
 
-              goto 125                                 ! Loop to next station
+              goto 126                                 ! Loop to next station
 
 !             if(obstype(i)(5:5) .ne. ' ' .and.
 !    1           obstype(i)(4:7) .ne. 'AMOS')then      ! Automated Station 
@@ -737,6 +737,8 @@ C CLOUDS ARE NOW IN MSL
             endif
           enddo
         endif
+
+ 126    continue
 
         enddo ! i
 
