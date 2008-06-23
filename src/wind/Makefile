@@ -35,7 +35,6 @@ SRC= main_sub.F \
      insert_radar_obs.f \
      multiwind_noZ.f \
      multiwind_yesZ.f \
-     qcradar.f \
      windanal.f
 
 MAIN=main.f
