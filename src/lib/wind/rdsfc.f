@@ -125,20 +125,9 @@ c
 
         n_obs_b = 0
 
-        if(.false.)then
-            call read_surface_old(infile,maxstns,atime,n_meso_g,
-     1           n_meso_pos,
-     1           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
-     1           n_obs_pos_g,
-     1           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
-     1           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
-     1           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
-     1           store_emv,store_amt,store_hgt,vis,obstime,istatus)
-        else
-            call read_sfc_wind(i4time,'lso',n_obs_g,n_obs_b,obstime
-     1                        ,stations,provider,lat_s,lon_s,elev_s
-     1                        ,dd_s,ff_s,dd_ea,ff_ea,maxstns,istatus)
-        endif
+        call read_sfc_wind(i4time,'lso',n_obs_g,n_obs_b,obstime
+     1                    ,stations,provider,lat_s,lon_s,elev_s
+     1                    ,dd_s,ff_s,dd_ea,ff_ea,maxstns,istatus)
 
 100     write(6,*)'n_obs_b=',n_obs_b
 
