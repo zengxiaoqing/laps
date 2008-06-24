@@ -69,7 +69,11 @@
        if(c8_project .ne. 'RSA')then
 
 !          Read RAOB data
-           c8_raob_format = c8_project
+           if(c8_project .eq. 'AFTAC')then
+             c8_raob_format = 'NIMBUS'
+           else
+             c8_raob_format = c8_project
+           endif
            write(6,*)
            write(6,*)' Call ingest_raob, format=',c8_raob_format
            call ingest_raob(path_to_raw_raob,c8_raob_format,i4time_sys
