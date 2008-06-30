@@ -53,56 +53,23 @@ BUFRLIB = $(SRCROOT)/src/var/bufr/libbufr.a
 
 #ANA = ANALYSIS.exe
 ANA = STMAS3D.exe
-ANA_CG=STMAS3D_CG.exe
 
 STMAS= \
-        prmtrs_stmas.f90 \
-        generaltools.f90 \
-        drawcountour.f90 \
-        read_backgrd.f90 \
-        readobserves.f90 \
-        input_bg_obs.f90 \
-        prep_stmas4d.f90 \
-        post_stmas4d.f90 \
+        para_stmas.f90 \
+        general_tools.f90 \
+        input_bg_and_obs.f90 \
+        prep_stmas.f90 \
+        post_stmas.f90 \
         lbfgsb.o \
-        wcompt_gradt.f90 \
-        smcostf_grad.f90 \
-        gsbcost_grad.f90 \
-        hydcost_grad.f90 \
-        costfun_grad.f90 \
-        stmas4d_core_lbfgs.f90 \
-        output_anals.f90 \
+        stmas_core.f90 \
+        output_analysis.f90 \
         main.f90
 
-STMAS_CG= \
-        prmtrs_stmas.f90 \
-        generaltools.f90 \
-        drawcountour.f90 \
-        read_backgrd.f90 \
-        readobserves.f90 \
-        input_bg_obs.f90 \
-        prep_stmas4d.f90 \
-        post_stmas4d.f90 \
-        wcompt_gradt.f90 \
-        smcostf_grad.f90 \
-        gsbcost_grad.f90 \
-        hydcost_grad.f90 \
-        costfun_grad.f90 \
-        cg_descent.o \
-        stmas4d_core_cg.f90 \
-        output_anals.f90 \
-        main.f90
-
-all: $(ANA) $(ANA_CG)
+all: $(ANA) 
 #$(POST)
 
 $(ANA): $(STMAS) $(LAPSLIBS)
 	$(FC) $(FFLAGS) $(FREE) $(STMAS) $(LAPSFC) $(LAPSLIBS) \
-	$(BUFRLIB) $(OTHERLIBS) -o $@
-	rm -f *.o
-
-$(ANA_CG): $(STMAS_CG) $(LAPSLIBS)
-	$(FC) $(FFLAGS) $(FREE) $(STMAS_CG) $(LAPSFC) $(LAPSLIBS) \
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
 
@@ -111,17 +78,16 @@ $(POST): $(GSIPO) $(LAPSLIBS) $(HUMIDLIB)
 	$(BUFRLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-debug: $(STMAS) $(STMAS_CG)
-	$(RM) $(ANA) $(ANA_CG);
+debug: $(STMAS)
+	$(RM) $(ANA);
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS) $(BUFRLIB)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
-install: $(ANA) $(ANA_CG)
+install: $(ANA)
 	$(INSTALL) $(ANA) $(INSTALLROOT)/bin/$(ANA)
-	$(INSTALL) $(ANA_CG) $(INSTALLROOT)/bin/$(ANA_CG)
 
 clean:
-	rm -f $(ANA) $(ANA_CG) $(POST)  *.o *~ *# *.mod
+	rm -f $(ANA) $(POST)  *.o *~ *# *.mod
 
 distclean: clean
 
