@@ -320,13 +320,23 @@ contains
        ! Total the sizes of sections 0 through 5.
        gribsize = (isz0+isz1+isz2+isz3+isz4+isz5) / 8
 
-    else
+    elseif (ied.eq.2) then
+
        ! Grib2
        write(*,'("WARNING - Grib2 data detected. Code expected Grib1;")')
        write(*,'("\t- readgrib can handle both file types.")')
        write(*,'("\t- The Grib2 build might not have been successful.")')
        write(*,'("\t*** stopping gribcode ***")')
        stop
+
+    else
+
+       write(*,'("WARNING - expected Grib1 or Grib2")')
+       write(*,'("\t- There must be a problem because the decoding")')
+       write(*,'("\t- software cannot recognize this file as either.")')
+       write(*,'("\t*** stopping gribcode ***")')
+       stop
+
     endif
   end function gribsize
 !
