@@ -251,6 +251,10 @@ c
            ceil(i) = badflag
 c
            wx(i)(1:8) = wx_in(i)(1:8)
+
+           if(reptype(i)(1:4) .eq. 'LDAD') then
+              wx(i) = 'UNKNOWN'
+           endif
 c
            if(reptype(i)(1:4) .eq. 'LDAD') then
               if(provider(i)(1:4) .eq. 'CDOT') then
