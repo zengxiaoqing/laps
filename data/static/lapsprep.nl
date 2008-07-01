@@ -29,6 +29,7 @@ c    List of character strings, one specifying each output format to
 c    be made per run of lapsprep.  Valid values:
 c      'mm5':  Makes files suitable for ingest into regridder
 c      'wrf':  Makes files for hinterp ingest
+c      'wps':  Tested on WRF/WPS version 3
 c      'rams':  Makes RALPH2 format
 c      'cdf':  Generic netCDF format used by FSL RAMS for hot start.
 c
