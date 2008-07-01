@@ -59,7 +59,7 @@ if ($MODETIME == "realtime") then
     set HR2=$HR1
     @ HR2++
     if ($HR2 == 24) then
-        set HR2=1
+        set HR2=00
     endif
     echo "Processing hours $HR1 and $HR2"
 
