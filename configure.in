@@ -188,7 +188,6 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2"
-    W3="-DLINUX"
   fi
   if test "$arch" = "i386"
   then
@@ -201,7 +200,6 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2"
-    W3="-DLINUX"
   fi
   if test "$arch" = "x86_64"
   then
@@ -214,12 +212,11 @@ then
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     C_OPT="-O2"
     F_OPT="-O2 -fastsse"
-    W3="-DLINUX"
   fi
 fi  
 
-dnl  For W3, test for x86_64 compiler and 64-bit build
-if test "$arch" = "x86_64"
+dnl  For W3, test for LINUX build
+if test "$arch" = "x86_64" || test "$arch" = "i686" || test "$arch" = "i386"
 then
   W3="-DLINUX"
 fi  
@@ -261,6 +258,23 @@ then
     C_OPT=""
     F_OPT=""
   fi
+fi  
+
+
+dnl  Check to see if we are running the ifort
+dnl  compiler. If so, set flags appropriately.
+
+grep 'ifort' << EOF
+$FC
+EOF
+if test $? -eq 0
+then
+    FFLAGS="$FFLAGS -w90 -w95 -cm"
+    LITTLEFLAGS="$LITTLEFLAGS -w90 -w95 -cm"
+    DBFLAGS="$DBFLAGS -O0 -traceback -check all -ftrapuv"
+    FREE="-FR"
+    C_OPT="-O3"
+    F_OPT="-O3"
 fi  
 
 AC_F90_FUNC_TRIGD
