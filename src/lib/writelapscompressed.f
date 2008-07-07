@@ -32,7 +32,6 @@ C
      1               error(2),
      1               i,j,n7g_nx, n7g_ny,
      1               lgfc,
-     1               ldf_len,
      1               fn_length,
      1               var_len,
      1               comm_len,
@@ -58,7 +57,6 @@ C
       character*150  file_name
       character*150  cdl_path
       character*150  static_path
-      character*9    laps_dom_file
       character*24   asctime
       character*20   v_g
 C
@@ -80,24 +78,6 @@ C
         return
       endif
 C
-!     if (imax .ne. n7g_nx) then
-!       if (flag .ne. 1)
-!    1write (6,*) 
-!    1'imax passed in does not match ','laps_dom_file'
-!    1,'...write aborted.'
-!       istatus=error(2)
-!       return
-!     endif
-C
-!     if (jmax .ne. n7g_ny) then
-!       if (flag .ne. 1)
-!    1write (6,*) 
-!    1'jmax passed in does not match, ',laps_dom_file
-!    1,'...write aborted.'
-!       istatus=error(2)
-!       return
-!     endif
-
 C ****  Specify file name
 C
       call make_fnam_lp(i4time,gtime,istatus)
@@ -130,7 +110,6 @@ C
       called_from = 0    !called from FORTRAN
       append = 0         ! only one analysis time allowed per file
 
-      call s_len(laps_dom_file, ldf_len)
       var_len = len(var(1))
       comm_len = len(comment(1))
       lvl_coord_len = len(lvl_coord(1))
@@ -186,8 +165,6 @@ C
 C
 C **** write out compressed file
 C
-      write(6,*) 'laps_dom_file= ',laps_dom_file
-
       lun = 65
       call open_lapsprd_file(lun,i4time,ext,istatus)
       if(istatus .ne. 1)goto 940
@@ -228,16 +205,11 @@ C
 C ****  Error trapping.
 C
 920     IF (FLAG .NE. 1) THEN
-          write(6,*) 'write_laps ABORTED!'
+          write(6,*) ' write_laps_compressed ABORTED!'
           write(6,*) ' LAPS will currently only work on a PRESSURE'
-     1,' vertical grid'
-          if (laps_dom_file(1:lgfc) .eq. 'nest7grid') then
-            write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
-     1,' in nest7grid.parms'
-          else
-            write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
-     1,' in ',laps_dom_file,'.nl'
-          endif
+     1              ,' vertical grid'
+          write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
+     1              ,' in nest7grid.parms'
         ENDIF
         ISTATUS=ERROR(2)
         GOTO 999
