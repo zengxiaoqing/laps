@@ -142,7 +142,32 @@ cdis
      1                    ,lat,lon,topo
      1                    ,istatus)
 
-      include 'remap.inc'
+c
+c     Velocity Obs
+c
+!     real grid_rvel(NX_L,NY_L,NZ_L) 
+!     real grid_rvel_sq(NX_L,NY_L,NZ_L)
+!     real grid_nyq(NX_L,NY_L,NZ_L)
+!     integer ngrids_vel(NX_L,NY_L,NZ_L)
+!     integer n_pot_vel(NX_L,NY_L,NZ_L)
+
+      real, allocatable, dimension(:,:,:) :: grid_rvel ! Radial radar velocities
+      real, allocatable, dimension(:,:,:) :: grid_rvel_sq
+      real, allocatable, dimension(:,:,:) :: grid_nyq
+      integer, allocatable, dimension(:,:,:) :: ngrids_vel
+      integer, allocatable, dimension(:,:,:) :: n_pot_vel
+
+c
+c     Reflectivity Obs
+c
+!     real grid_ref (NX_L,NY_L,NZ_L)  !  Radar reflectivities
+!     integer ngrids_ref (NX_L,NY_L,NZ_L)
+!     integer n_pot_ref (NX_L,NY_L,NZ_L)
+
+      real, allocatable, dimension(:,:,:) :: grid_ref
+      integer, allocatable, dimension(:,:,:) :: ngrids_ref
+      integer, allocatable, dimension(:,:,:) :: n_pot_ref
+
       include 'remap_dims.inc'
       include 'remap_constants.dat'      
 
@@ -295,6 +320,56 @@ cdis
       read_next = 1
       alls_well = 1
 
+!     Allocate Velocity arrays
+      allocate(grid_rvel(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate grid_rvel'
+          stop
+      endif
+
+      allocate(grid_rvel_sq(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate grid_rvel_sq'
+          stop
+      endif
+
+      allocate(grid_nyq(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate grid_nyq'
+          stop
+      endif
+
+      allocate(ngrids_vel(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate ngrids_vel'
+          stop
+      endif
+
+      allocate(n_pot_vel(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate n_pot_vel'
+          stop
+      endif
+
+!     Allocate Reflectivity arrays
+      allocate(grid_ref(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate grid_ref'
+          stop
+      endif
+
+      allocate(ngrids_ref(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate ngrids_ref'
+          stop
+      endif
+
+      allocate(n_pot_ref(NX_L,NY_L,NZ_L),STAT=istat_alloc)      
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate n_pot_ref'
+          stop
+      endif
+
 !     Begin infinite loop to continuously read radar data  
 
       do while(alls_well .eq. 1) 
@@ -332,7 +407,7 @@ cdis
             if(i_angle .eq. i_missing_data)then
                 write(6,*)' Warning: invalid i_angle in remap_sub'
                 istatus = 0
-                return
+                goto 900 ! return
             endif
 
             i_scan = get_scan() 
@@ -341,7 +416,7 @@ cdis
             if(num_rays .lt. 0 .or. num_rays .gt. 10000)then
                 write(6,*)' Warning: num_rays out of bounds',num_rays
                 istatus = 0
-                return
+                goto 900 ! return
             endif
 
             if(n_rays .eq. n_rays/10 * 10)then
@@ -468,7 +543,7 @@ cdis
               call get_grid_spacing_cen(grid_spacing_m, i_status)
               if(i_status .ne. 1)then
                   write(6,*)' Error in obtaining grid_spacing_m'
-                  return
+                  goto 900 ! return
               endif
 
               if(min_ref_samples .eq. -1)then
@@ -538,7 +613,7 @@ c
      :            n_rays_88d,                                            ! I
      :            n_gates_88d,                                           ! I
      1            Velocity,Reflect,                                      ! I
-     1            Az_Array,Elevation_deg,                                ! I
+     1            Az_Array,MAX_RAY_TILT,Elevation_deg,                   ! I
      1            vel_nyquist,                                           ! I
      1            ref_min,min_ref_samples,min_vel_samples,dgr,           ! I
      1            laps_radar_ext,c3_radar_subdir,path_to_vrc,            ! I
@@ -552,13 +627,13 @@ c
               if(istatus .ne. 1)then
                   write(6,*)
      1            ' remap_sub: remap_process returned istatus =',istatus     
-                  return
+                  goto 900 ! return
               endif
 
               if(i_last_scan .eq. 1)then
                   write(6,*)' Volume completed, return from remap_sub'
                   istatus = 1
-                  return
+                  goto 900 ! return
               endif
 
               i_tilt_proc_curr = i_tilt_proc_next
@@ -581,6 +656,20 @@ c
         endif     ! close read_next block
       enddo       ! close infinite while loop    (increment tilt)
 
+ 900  continue
+
+!     Deallocate arrays
+      deallocate (grid_rvel)
+      deallocate (grid_rvel_sq)
+      deallocate (grid_nyq)
+      deallocate (ngrids_vel)
+      deallocate (n_pot_vel)
+
+      deallocate (grid_ref)
+      deallocate (ngrids_ref)
+      deallocate (n_pot_ref)
+
+      return
       end
 
  
