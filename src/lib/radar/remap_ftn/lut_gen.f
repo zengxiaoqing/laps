@@ -59,10 +59,12 @@ c
 c     Functions
 c
       real height_to_zcoord
+      integer ishow_timer
 c
 c     Misc interval variables
 c
       integer i,j,igate_lut,iaz,ielev,iran,iz_grid,istatus,len_dir
+      integer I4_elapsed
       real rlat_grid,rlon_grid,height_grid
       real rlat_radar,rlon_radar,rheight_radar
       real elev,elev_deg,coselev,azimuth,azi_deg
@@ -157,6 +159,8 @@ c
           close(12)
       endif
   110 continue 
+
+      I4_elapsed = ishow_timer()
 c
 c     Generate Gate/Elev to Z lut
 c
@@ -201,6 +205,8 @@ c
           close(12)
       endif
   210 continue 
+
+      I4_elapsed = ishow_timer()
 c
 c     Generate Az/Ran to i,j lut
 c
@@ -289,6 +295,8 @@ c
         write(6,*)iran,slant_range,azran_to_igrid_lut(iaz,iran),
      1                             azran_to_jgrid_lut(iaz,iran)
       enddo ! iran
+
+      I4_elapsed = ishow_timer()
 
 c     Generate DbZ Lookup Table (graduated for each tenth of a dbz)
       do i = -1000,+1000
