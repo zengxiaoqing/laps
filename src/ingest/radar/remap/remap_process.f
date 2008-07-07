@@ -49,7 +49,7 @@ cdis
      :         n_rays,                                     !           (input)
      :         n_gates,                                    !           (input)
      1         Velocity,Reflect,                           !           (input)
-     1         Az_Array,Elevation_deg,                     !           (input)
+     1         Az_Array,MAX_RAY_TILT,Elevation_deg,        !           (input)
      1         vel_nyquist,                                !           (input)
      :         ref_min,min_ref_samples,min_vel_samples,dgr,! Integer (input)
      :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
@@ -101,6 +101,7 @@ c
       integer i_last_scan
       integer i_first_scan
       integer i_product_i4time
+      integer MAX_RAY_TILT
       integer   NX_L,NY_L,NZ_L
 
       integer min_ref_samples,min_vel_samples
@@ -111,7 +112,20 @@ c     LAPS Grid Dimensions
 c
       include 'remap_constants.dat'
       include 'remap.cmn'
-      include 'remap.inc'
+c
+c     Velocity Obs
+c
+      real grid_rvel(NX_L,NY_L,NZ_L)  !  Radial radar velocities
+      real grid_rvel_sq(NX_L,NY_L,NZ_L)
+      real grid_nyq(NX_L,NY_L,NZ_L)
+      integer ngrids_vel(NX_L,NY_L,NZ_L)
+      integer n_pot_vel(NX_L,NY_L,NZ_L)
+c
+c     Reflectivity Obs
+c
+      real grid_ref (NX_L,NY_L,NZ_L)  !  Radar reflectivities
+      integer ngrids_ref (NX_L,NY_L,NZ_L)
+      integer n_pot_ref (NX_L,NY_L,NZ_L)
 c
 c     Output variables
 c
@@ -151,9 +165,9 @@ c
 c
       Real  Slant_ranges_m (max_gates),
      :        Elevation_deg,
-     :        Az_array(max_rays),
-     :        Velocity(max_gates,max_rays),
-     :        Reflect(max_gates,max_rays)
+     :        Az_array(MAX_RAY_TILT),
+     :        Velocity(max_gates,MAX_RAY_TILT),
+     :        Reflect(max_gates,MAX_RAY_TILT)
 
       real, allocatable, dimension(:,:,:,:) :: out_array_4d
 
@@ -298,10 +312,14 @@ c
       
 !     First read domain grid info if needed
       if(.not. l_domain_read)then
+          write(6,*)' REMAP_PROCESS > call get_laps_domain_95'
           call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
      1                           ,dum_2d,grid_spacing_cen_m
      1                           ,istatus)
-          if(istatus .ne. 1)return
+          if(istatus .ne. 1)then
+              write(6,*)' ERROR return from get_laps_domain_95'
+              return
+          endif
           l_domain_read = .true.
       endif
 
@@ -737,12 +755,12 @@ c
 
         if(laps_radar_ext .ne. 'vrc')then ! vxx output
 
-            call get_laps_domain(NX_L,NY_L,'nest7grid'
-     1                          ,lat,lon,topo,istatus)       
-            if(istatus .ne. 1)then
-                write(6,*)' Error calling get_laps_domain'
-                return
-            endif
+!           call get_laps_domain(NX_L,NY_L,'nest7grid'
+!    1                          ,lat,lon,topo,istatus)       
+!           if(istatus .ne. 1)then
+!               write(6,*)' Error calling get_laps_domain'
+!               return
+!           endif
 
             I4_elapsed = ishow_timer()
 
