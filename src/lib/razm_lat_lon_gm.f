@@ -68,9 +68,9 @@ C***Library symbols
 C***Begin RAzm_Lat_Lon_GM ------------------------------------------------------
 
 C***Check input arguments
-        If(Abs(SLat).gt.90..or.Abs(SLon).gt.180..or.
-     1   Range.lt..0.or.
-     1   Azimuth.lt..0.or.Azimuth.gt.360.)Then
+        If(Abs(r4_SLat).gt.90. .or. Abs(r4_SLon).gt.180. .or.
+     1   r4_Range.lt..0   .or.
+     1   r4_Azimuth.lt..0 .or. r4_Azimuth.gt.360.)Then
          Status=0
 !        If(LTest_Diag_GG())Call Output_Diag_GG('RAzm_Lat_Lon_GM',Status)
          Return
