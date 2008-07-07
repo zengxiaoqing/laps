@@ -122,6 +122,11 @@ c      Determine filename extension
 
        if(i_tilt_proc .eq. 1)then
            call s_len(path_to_radar,len_path)
+           if(len_path .le. 0)then
+               write(6,*)' len_path <= 0, return from radar_init'
+               istatus = 0
+               return
+           endif
  
 !          Get filecount of 02 elevation raw files
            c2_tilt = '02'
@@ -287,7 +292,7 @@ c      Determine filename extension
        if(l_exist)then ! these calls will fill the variables in 
                        ! 'netcdfio_radar_common.inc'
 
-           call get_tilt_netcdf_hdr  (filename
+           call get_tilt_netcdf_hdr  (filename,nf_fid
      1                               ,radarName
      1                               ,siteLat                        
      1                               ,siteLon                        
@@ -311,7 +316,8 @@ c      Determine filename extension
            ngates_ref_cdf = Z_bin
            ngates_vel_cdf = V_bin
 
-           call get_tilt_netcdf_data(filename
+!          Note that file remains open from call to 'get_tilt_netcdf_hdr'
+           call get_tilt_netcdf_data(filename,nf_fid
      1                               ,radarName
      1                               ,siteLat                        
      1                               ,siteLon                        
