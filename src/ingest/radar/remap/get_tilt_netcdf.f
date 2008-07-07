@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
 
-      subroutine get_tilt_netcdf_hdr(filename
+      subroutine get_tilt_netcdf_hdr(filename,nf_fid
      1                               ,radarName
      1                               ,siteLat                        
      1                               ,siteLon                        
@@ -150,7 +150,7 @@ C
 
       end
 
-      subroutine get_tilt_netcdf_data(filename
+      subroutine get_tilt_netcdf_data(filename,nf_fid
      1                               ,radarName
      1                               ,siteLat                        
      1                               ,siteLon                        
@@ -195,13 +195,13 @@ C
 C
 C  Open netcdf File for reading
 C
-      nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN ',filename
-        istatus = 0
-        return
-      endif
+!     nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
+!     if(nf_status.ne.NF_NOERR) then
+!       print *, NF_STRERROR(nf_status)
+!       print *,'NF_OPEN ',filename
+!       istatus = 0
+!       return
+!     endif
 C
 C  Fill all dimension values
 C
