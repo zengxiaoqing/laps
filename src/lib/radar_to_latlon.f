@@ -96,6 +96,8 @@ cdoc    of radar echo
         real lon_grid               ! O    (Degrees)
         real height_grid            ! O    (Meters)
 
+        integer i_status
+
         if(rlat_radar .eq. 0.0)then
             write(6,*)' Warning, Radar Coords NOT Initialized'
         endif
@@ -126,18 +128,24 @@ cdoc    of radar echo
      1          azimuth,                                              ! I
      1          lat_grid,                                             ! O
      1          lon_grid,                                             ! O
-     1          i_status )
+     1          i_status )                                            ! O
 
-        difflat = lat_grid - rlat_radar
-        difflon = lon_grid - rlon_radar
-        if(r_range .gt. 10000. .and. abs(difflat) .lt. .01
-     1                         .and. abs(difflon) .lt. .01)then
+        if(i_status .ne. 1)then
             write(6,*)
+     1         ' ERROR: Status check failed after razm_lat_lon_gm call'
+
+            difflat = lat_grid - rlat_radar
+            difflon = lon_grid - rlon_radar
+            if(r_range .gt. 10000. .and. abs(difflat) .lt. .01
+     1                             .and. abs(difflon) .lt. .01)then
+                write(6,*)
      1           ' ERROR: QC check failed after razm_lat_lon_gm call'
-            write(6,*)'difflat,difflon,r_range'
-     1                ,difflat,difflon,r_range
-            write(6,*)'azimuth,rlat_radar,rlon_radar'
-     1                ,azimuth,rlat_radar,rlon_radar
+                write(6,*)'difflat,difflon,r_range'
+     1                    ,difflat,difflon,r_range
+                write(6,*)'azimuth,rlat_radar,rlon_radar'
+     1                    ,azimuth,rlat_radar,rlon_radar
+            endif
+
             stop
         endif
 
