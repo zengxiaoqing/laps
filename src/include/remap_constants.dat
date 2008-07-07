@@ -1,8 +1,7 @@
 c     file: remap_constants.dat
 
 c     Radar Data Look Up Tables
-      integer  MAX_RAYS,MAX_GATES,MAX_GATES_LUT
-      parameter (MAX_RAYS = 400)
+      integer  MAX_GATES,MAX_GATES_LUT
 c
 c     Note that MAX_GATES involves a realigning of reflectivity and Doppler
 c     gates to give them a one-to-one correspondence in gate_spacing and
