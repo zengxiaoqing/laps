@@ -400,6 +400,7 @@ SUBROUTINE LAPSOBSV(m)
 	        (spd(k) .EQ. mising) .OR. &
 		(spd(k) .EQ. badsfc)) THEN
 	      rawobs(1,numobs(j)+k,j) = badsfc
+	      rawobs(1,numobs(j)+k,iwv) = badsfc
 	    ELSE
 	      ! Conversion:
 	      CALL DISP_TO_UV(wdi(k),spd(k),xyt(1),xyt(2))
