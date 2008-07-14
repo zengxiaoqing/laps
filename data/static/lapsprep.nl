@@ -3,7 +3,7 @@
   balance  = .true., 
   hydrometeor_scale_factor_pcp = 0.0,
   hydrometeor_scale_factor_cld = 0.5,
-  output_format = 'wrf',
+  output_format = 'wps','wrf',
   snow_thresh = 1.1,
   lwc2vapor_thresh = 1.01,
   make_sfc_uv = .false.,
@@ -23,13 +23,15 @@ c
 c  hydrometeor_scale_factor:	
 c    A factor which scales the hydrometeor concentrations for a grid
 c    spacing. (hydrometeor_scale = hydrometeor_scale_factor/dx)
+c    Note that dx is in kilometers. This is the scale that LAPS input values
+c    are multiplied by to account for sub-grid scale effects.
 c
 c  output_format:
 c    List of character strings, one specifying each output format to
 c    be made per run of lapsprep.  Valid values:
 c      'mm5':  Makes files suitable for ingest into regridder
-c      'wrf':  Makes files for hinterp ingest
-c      'wps':  Tested on WRF/WPS version 3
+c      'wrf':  Makes files for hinterp ingest (e.g. for WRF/WRFSI version 2)
+c      'wps':  Suggested for WRF/WPS version 3
 c      'rams':  Makes RALPH2 format
 c      'cdf':  Generic netCDF format used by FSL RAMS for hot start.
 c
