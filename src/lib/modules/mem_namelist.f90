@@ -105,9 +105,6 @@ include 'lapsparms.for'
         ,fdda_model_source                                   &
         ,l_compress_radar,l_use_tamdar,l_3dvar,l_pad1        
 
-! in surface_analysis also
-real                 :: redp_lvl
-
 ! wind_nl variables
 logical :: l_use_raob, l_use_cdw, l_use_radial_vel
 real    :: weight_bkg_const_wind  &
@@ -130,11 +127,14 @@ integer              :: nplevs
 ! surface_analysis variables
 integer  ::  use_lso_qc,skip_internal_qc, itheta
 logical  ::  l_require_lso
-real     ::  del, gam, ak, bad_td, bad_mp, bad_u, bad_v  &
-            ,thresh_t, thresh_td, thresh_mslp, rms_wind, rms_temp  &
-            ,rms_dewpoint
-            ! redp_lvl in background_nl also
-            !real :: redp_lvl
+real     ::  redp_lvl, del, gam, ak &
+            ,bad_t, bad_td, bad_u, bad_v, bad_p  &
+            ,bad_mp, bad_th, bad_the &
+            ,bad_tgd_land, bad_tgd_water, bad_vis, bad_tb8  &
+            ,thresh_t, thresh_td, thresh_mslp &
+            ,rms_wind, rms_temp, rms_dewpoint
+
+          !  redp_lvl utilized in background code also
 
 ! temp_nl variables
 logical  :: l_use_raob_t, l_adjust_heights
@@ -198,7 +198,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,path_to_raw_blprass,path_to_raw_blpprofiler &
                   ,path_to_wsi_2d_radar,path_to_wsi_3d_radar &
                   ,path_to_qc_acars &
-                  ,c8_project,c_raddat_type,c80_description &
+                  ,c8_project,c8_blpfmt,c_raddat_type,c80_description &
                   ,path_to_topt30s ,path_to_topt10m &
                   ,path_to_soiltype_top30s, path_to_soiltype_bot30s &
                   ,path_to_landuse30s,path_to_greenfrac &
@@ -223,7 +223,10 @@ namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
 namelist /surface_analysis/  &
                   use_lso_qc,skip_internal_qc, itheta  &
                   ,l_require_lso  &
-                  ,redp_lvl, del, gam, ak, bad_td, bad_mp, bad_u, bad_v  &
+                  ,redp_lvl, del, gam, ak &
+                  ,bad_t, bad_td, bad_u, bad_v, bad_p  &
+                  ,bad_mp, bad_th, bad_the &
+                  ,bad_tgd_land, bad_tgd_water, bad_vis, bad_tb8  &
                   ,thresh_t, thresh_td, thresh_mslp  &
                   ,rms_wind, rms_temp, rms_dewpoint
                   
@@ -245,8 +248,8 @@ namelist/lapsprep_nl/ var_prefix, sfcinf, hotstart, balance  &
                   
 
 print*
-print*,'======> Reading namelist: ',trim(namelist_name),nk_laps
-print*,'======>        File_name: ',trim(filename)
+print*,'======> Read_namelist_laps: ',trim(namelist_name),nk_laps
+print*,'======>          File_name: ',trim(filename)
 print*
 
 
@@ -313,7 +316,7 @@ elseif (namelist_name == 'wind') then
 
 elseif (namelist_name == 'sfc_anal') then
 
-   read (12, surface_analysis)
+   read (12, surface_analysis, err=906)
    
    ! QC the input variables if desired
    !  .
@@ -363,6 +366,10 @@ return
 
 905  print*,'error reading wind_nl'
      write(*,wind_nl)
+     stop
+
+906  print*,'error reading surface_analysis'
+     write(*,surface_analysis)
      stop
 
 end subroutine
