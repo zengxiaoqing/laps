@@ -165,7 +165,7 @@
      SunOS (Solaris) 5.6               Requires f90
      IRIX64          6.5               Requires f90
      DEC (Alpha)
-     LINUX (Intel)                     pgf90 is suggested
+     LINUX (i386,i686,x86_64)          pgf90 is suggested, ifort being tested
      LINUX (Alpha)                     fort is suggested  
 </pre>
 
@@ -232,7 +232,8 @@
 
      For Solaris & HP-UX platforms, 'f90' works well.
 
-     For Linux platforms (Intel chip), 'pgf90' is suggested.
+     For Linux platforms (i386,i686,x86_64), 'pgf90' is suggested
+                                             'ifort' is being tested
 
      For Linux platforms (Alpha chip), 'fort' is suggested (normal serial use).
 
@@ -2761,7 +2762,7 @@ Sample Input/Output: May be available in the test data case. If not, the README
 
 LVD process - lvd_sat_ingest.exe - takes raw sat. data and puts it on LAPS 
               grid.
-        (author: John Smart - John.R.Smart AT noaa.gov)
+      (author: John Smart, contact Kirk Holub - Kirk.L.Holub AT noaa.gov)
 
 Input:
  	 GOES or other satellite data
@@ -3798,6 +3799,23 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
         This causes the program to output a file in the WRF 
         Standard Initialization "grib_prep" format.  These 
         files can be read by the WRF SI "hinterp" process.
+
+      output_format = 'wps'
+        This causes the program to output a file in the WPS format (as needed 
+        for WRF version 3). Note that WPS has a constraint that the vertical 
+        levels of the initial condition (LAPS) be matched with those from the 
+        lateral boundary condition. This matching can be done either when 
+        running LAPS or in the WPS processing steps by at least two methods. 
+
+        1) In an example with the GFS as a lateral boundary condition one can 
+           reduce the levels in the LAPS 'static/pressures.nl' namelist as in 
+           this example: http://laps.noaa.gov/wps/pressures.nl.gfs
+
+        2) In an example with the NAM as a lateral boundary condition and if
+           LAPS has more analysis levels than the NAM one can use the WPS
+           utility 'mod_levs.exe'. It uses the 'namelist.wps' to rip out the 
+           NAM levels not in the namelist. The NAM data has levels from 1000 
+           to 100 at a 25 mb interval plus a surface level.
 
    There are three other namelist entries in the lapsprep.nl
    file:
