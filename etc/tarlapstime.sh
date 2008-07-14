@@ -8,6 +8,8 @@
 LAPS_DATA_ROOT=$1
 time=$2
 
+LOGDIR=$LAPS_DATA_ROOT/log
+
 #Create list of lapsprd output files to be potentially tarred up for Web access
 echo " "
 echo "Create list of lapsprd output files to be potentially tarred up for Web access"
@@ -29,8 +31,8 @@ ls -1 lapsprd/v01/* | tail -1         >> $current_dir/lapstar.txt
 ls -1 lapsprd/rdr/001/vrc/* | tail -1 >> $current_dir/lapstar.txt
 ls -1 lapsprd/*/$time*                >> $current_dir/lapstar.txt
 ls -1 lapsprd/*/*/$time*              >> $current_dir/lapstar.txt
-ls -1 log/*.log.$hour*                >> $current_dir/lapstar.txt
-ls -1 log/*.wgi.$hour*                >> $current_dir/lapstar.txt
+ls -1 $LOGDIR/*.log.$hour*            >> $current_dir/lapstar.txt
+ls -1 $LOGDIR/*.wgi.$hour*            >> $current_dir/lapstar.txt
 ls -1 static/static.nest7grid         >> $current_dir/lapstar.txt
 ls -1 static/*.nl                     >> $current_dir/lapstar.txt
 ls -1 static/www/*                    >> $current_dir/lapstar.txt
