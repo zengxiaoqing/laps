@@ -7,10 +7,16 @@
  del=3.24e6,
  gam=.0001,
  ak=1.e-6, 
+ bad_t=2.5,
  bad_td=1.7,
- bad_mp=5.0,
  bad_u=6.0,
  bad_v=6.0,
+ bad_p=2.5,
+ bad_mp=5.0,
+ bad_th=3.5,
+ bad_the=2.5,
+ bad_vis=500,
+ bad_tb8=5.0,
  bad_tgd_land=3.0,
  bad_tgd_water=3.0,
  thresh_t=30.,
@@ -84,16 +90,16 @@ c      parameters can be added to this namelist to override the default values
 c      set in the code...
 c
 c       QC parms: # of standard deviations 
-c       bad_p  = 2.5 	        ! for reduced pressure
-c       bad_mp = 4.0 	        ! for MSL pressure
-c       bad_t  = 2.5 	        ! for temperature
-c       bad_td = 2.0 	        ! for dewpoint
-c       bad_u  = 4.0 	        ! for u-wind
-c       bad_v  = 4.0 	        ! for v-wind
-c       bad_th = 3.5 	        ! for theta
-c       bad_the = 2.5           ! for theta-e
-c       bad_vis = 500. 	        ! for visibility
-c       bad_tb8 = 5.0 	        ! for tb8 Brightness temps.
+c       bad_t   	        ! for temperature
+c       bad_td  	        ! for dewpoint
+c       bad_u   	        ! for u-wind
+c       bad_v   	        ! for v-wind
+c       bad_p   	        ! for reduced pressure
+c       bad_mp  	        ! for MSL pressure
+c       bad_th  	        ! for theta
+c       bad_the                 ! for theta-e
+c       bad_vis    	        ! for visibility
+c       bad_tb8    	        ! for tb8 Brightness temps.
 c
 c       These parameters should be defined in this namelist as they aren't
 c       initialized in the code
