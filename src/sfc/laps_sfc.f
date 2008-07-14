@@ -32,40 +32,25 @@ cdis
 c
 c
 	program laps_sfc
+
+!       We are using just a subset of the global parameters in this driver
+!       use mem_namelist
+        use mem_namelist, ONLY: read_namelist_laps,
+     &                          NX_L,NY_L,nk_laps,maxstns,
+     &                          laps_cycle_time,grid_spacing_m
+
+        character*150 static_dir,filename
 c
-        call get_grid_dim_xy(NX_L, NY_L, istatus)
-        if (istatus .ne. 1) then
-            write(6,*) 'return get_grid_dim_xy, status: ', istatus
-            stop
-        endif
+!       Read global parameters into module memory structure
+        call get_directory('static',static_dir,len_dir)
+        filename = static_dir(1:len_dir)//'/nest7grid.parms'
+        call read_namelist_laps('lapsparms',filename)
 
-        call get_laps_dimensions(NZ_L,istatus)
-        if (istatus .ne. 1) then
-           write (6,*) 'Error getting vertical domain dimension'
-            stop
-        endif
-c
-        call get_laps_cycle_time(laps_cycle_time,istatus)
-        if(istatus .eq. 1)then
-            write(6,*)' laps_cycle_time = ',laps_cycle_time
-        else
-            write(6,*)' Error getting laps_cycle_time'
-            stop
-        endif
+!       Read surface parameters into module memory structure
+        filename = static_dir(1:len_dir)//'/surface_analysis.nl'
+        call read_namelist_laps('sfc_anal',filename)
 
-        call get_grid_spacing(grid_spacing_m,istatus)
-        if (istatus .ne. 1) then
-            write (6,*) 'Error getting grid spacing'
-            stop
-        endif
-
-        call get_maxstns(maxstns,istatus)
-        if (istatus .ne. 1) then
-            write (6,*) 'Error getting maxstns'
-            stop
-        endif
-
-	call laps_sfc_sub(NX_L,NY_L,NZ_L,maxstns,
+	call laps_sfc_sub(NX_L,NY_L,nk_laps,maxstns,
      &                    laps_cycle_time,grid_spacing_m)
 c
 	end
@@ -279,18 +264,6 @@ c
 c
 	use_lso_qc = 0          ! use normal LSO
 	skip_internal_qc = 0    ! use internal QC routine
-
-c       QC parms: # of standard deviations 
-        bad_p  = 2.5            ! for reduced pressure
-        bad_mp = 4.0            ! for MSL pressure
-        bad_t  = 2.5            ! for temperature
-        bad_td = 2.0            ! for dewpoint
-        bad_u  = 4.0            ! for u-wind
-        bad_v  = 4.0            ! for v-wind
-        bad_th = 3.5            ! for theta
-        bad_the = 2.5           ! for theta-e
-        bad_vis = 500. 	        ! for visibility
-        bad_tb8 = 5.0           ! for tb8 Brightness temps.
 
         call read_sfc_nl(     use_lso_qc,skip_internal_qc 
      1                       ,itheta, redp_lvl, del, gam, ak
