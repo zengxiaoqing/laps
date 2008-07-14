@@ -29,9 +29,6 @@ echo "Start wideband2nc.csh..."
 setenv TZ GMT
 date
 
-#setenv OUTPUTROOT  /scratch/lapb/albers/radar
-#setenv OUTPUTROOT  /data/lapb/ihop_work/raw/wsr88d/wideband
-
 # Check location of 'widebandlist.txt'
 if (! -e $LAPS_DATA_ROOT/static/widebandlist.txt) then
     echo "ERROR: data file $LAPS_DATA_ROOT/static/widebandlist.txt not found..."
@@ -64,7 +61,7 @@ if ($MODETIME == "realtime") then
     echo "Processing hours $HR1 and $HR2"
 
 #   Name of executable that converts from Nexrad format to NetCDF
-    setenv NEXRAD_2_NETCDF ArchiveNexrad2NetCDF
+    setenv NEXRAD_2_NETCDF ArchiveNexrad2NetCDF_latest_static
 
 else # archive case
 
