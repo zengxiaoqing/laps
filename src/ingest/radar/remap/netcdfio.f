@@ -622,16 +622,16 @@ c      Determine filename extension
      1        firstGateRangeV .lt. 1000.)then     
                first_gate_m = firstGateRangeV * 1000.
            else
-               write(6,*)' Warning: firstGateRangeV is outside range'
-     1                  ,firstGateRangeV
+!              write(6,*)' Warning: firstGateRangeV is outside range'
+!    1                  ,firstGateRangeV
                first_gate_m = r_missing_data
            endif
 
            if(gateSizeV .ge. 0. .and. gateSizeV .lt. 1000.)then     
                gate_spacing_m = gateSizeV * 1000.
            else
-               write(6,*)' Warning: gateSizeV is outside range'
-     1                  ,gateSizeV      
+!              write(6,*)' Warning: gateSizeV is outside range'
+!    1                  ,gateSizeV      
                gate_spacing_m = r_missing_data
            endif
 
