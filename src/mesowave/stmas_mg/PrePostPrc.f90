@@ -124,7 +124,7 @@ SUBROUTINE PrPstLSX
   ! Time frame to write out:
   DO itm = numgrd(3)-numfic(3),max0(1,numgrd(3)-numfic(3)-2),-1	! Time frame
 
-  i4t = i4time			! i4time corresponding to itm
+  i4t = i4time-(numgrd(3)-numfic(3)-itm)*lapsdt	! i4time corresponding to itm
   mvr = LSXVAR
   lvl = 0
   crd = 'AGL'
