@@ -856,8 +856,6 @@ c       include 'satellite_dims_lvd.inc'
                 endif
 
                 scale = 1.0
-!               call contour_settings(spds,NX_L,NY_L,clow,chigh,cint
-!    1                               ,zoom,density,scale)
 
                 call plot_field_2d(i4time_3dw,c_field,spds,scale
      1                        ,namelist_parms,plot_parms
@@ -5293,11 +5291,10 @@ c                   cint = -1.
             enddo ! j
             enddo ! i
 
+            field_2d = spds ! support for diff option
+
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-!           call contour_settings(spds,NX_L,NY_L
-!    1                           ,clow,chigh,cint,zoom,density,1.)       
-          
             clow = 0.
             chigh = 50.
             cint = 0.
