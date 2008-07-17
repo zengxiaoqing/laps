@@ -81,11 +81,11 @@ if (-e $SERVER_ROOT/looper) then
 endif
 
 #Set up scripts for pregenerated pages
-if (-e /home/lapb/albers) then
+if (-e ~oplapb/www/laps_anal) then
     echo "updating pregenerated page directory..."
-    echo $DOMAIN_SUFFIX > /home/lapb/albers/www/laps_anal/domain_$DOMAIN_SUFFIX
-    chmod 666 /home/lapb/albers/www/laps_anal/domain_$DOMAIN_SUFFIX
-    ls -l /home/lapb/albers/www/laps_anal/domain_$DOMAIN_SUFFIX
+    echo $DOMAIN_SUFFIX > ~oplapb/www/laps_anal/domain_$DOMAIN_SUFFIX
+    chmod 666 ~oplapb/www/laps_anal/domain_$DOMAIN_SUFFIX
+    ls -l ~oplapb/www/laps_anal/domain_$DOMAIN_SUFFIX
     echo " "
 endif
 
