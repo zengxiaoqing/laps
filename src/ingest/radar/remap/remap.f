@@ -94,6 +94,8 @@ cdis
       endif
 
       do i_radar = 1,n_radars_remap
+          write(6,*)
+          write(6,*)' Obtaining parameters for radar # ',i_radar
           call get_remap_parms(i_radar,n_radars_remap,max_times       ! I/O
      1                  ,path_to_radar                                ! O
      1                  ,laps_radar_ext,radar_subdir_dum              ! O
