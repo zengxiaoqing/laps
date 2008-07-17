@@ -67,7 +67,7 @@ c
       integer I4_elapsed
       real rlat_grid,rlon_grid,height_grid
       real rlat_radar,rlon_radar,rheight_radar
-      real elev,elev_deg,coselev,azimuth,azi_deg
+      real elev,elev_deg,coselev,azimuth,azi_deg,azimuth_interval
       real slant_range,sl_range_m,ri,rj,dbz,z,grid_spacing_cen_m
       real difflat,difflon
       character*4 c4_radarname
@@ -230,6 +230,8 @@ c
           stop
       else
           write(6,*)' range_interval = ',range_interval
+          azimuth_interval = 360. / float(lut_azimuths)
+          write(6,*)' azimuth_interval = ',azimuth_interval
       endif
 
       DO 300 iran = 0,lut_ranges
@@ -238,7 +240,7 @@ c
 
         DO 280 iaz = 0,lut_azimuths
 
-          azimuth = float(iaz)
+          azimuth = float(iaz) * azimuth_interval
           elev = 0.
 
           call radar_to_latlon(rlat_grid,rlon_grid,height_grid
