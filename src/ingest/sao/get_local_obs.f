@@ -40,6 +40,7 @@ c
         subroutine get_local_obs(maxobs,maxsta,i4time_sys,
      &                 path_to_local_data,local_format,
      &                 itime_before,itime_after,
+     &                 ltest_madis_qc,
      &                 lat,lon,ni,nj,grid_spacing,
      &                 nn,n_obs_g,n_obs_b,stations,
      &                 reptype,atype,weather,wmoid,
@@ -155,12 +156,11 @@ c
 c
 c.....  Start.
 c
+        write(6,*)' get_local_obs, ltest_madis_qc = ',ltest_madis_qc       
 c
 c.....	Set jstatus flag for the local data to bad until we find otherwise.
 c
 	jstatus = -1
-
-        ltest_madis_qc = .true.
 
         call get_ibadflag(ibadflag,istatus)
         if(istatus .ne. 1)return
