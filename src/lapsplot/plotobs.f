@@ -316,7 +316,15 @@ cdis
 
                 spd_kt = speed_ms / mspkt
 
-                aspect = aspect_a(nint(ri),nint(rj))
+                if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+
+                    aspect = aspect_a(nint(ri),nint(rj))
+
+                else
+                    aspect = 1.0
+
+                endif
 
                 write(6,*)nint(ri),nint(rj),dir,spd_kt,aspect
 
@@ -375,7 +383,15 @@ cdis
 c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 112             format(1x,f6.1,i4,2f7.0,4x,2f7.0,i4)
 
-                aspect = aspect_a(nint(ri),nint(rj))
+                if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+
+                    aspect = aspect_a(nint(ri),nint(rj))
+
+                else
+                    aspect = 1.0
+
+                endif
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon
      1                          ,imax,jmax,size_suw,aspect,'true')
@@ -424,7 +440,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 write(6,111)alat,alon,max(dir,-99.),spd_kt
 111             format(1x,2f8.1,4x,f7.0,f7.0,i4,2f8.3)
 
-                aspect = aspect_a(nint(ri),nint(rj))
+                if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+
+                    aspect = aspect_a(nint(ri),nint(rj))
+
+                else
+                    aspect = 1.0
+
+                endif
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_vad,aspect,'true')
@@ -464,7 +488,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         if(abs(k - k_level) .le. vert_rad_meso .or. k_level .eq. 0)then
 
-                aspect = aspect_a(nint(ri),nint(rj))
+                if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+
+                    aspect = aspect_a(nint(ri),nint(rj))
+
+                else
+                    aspect = 1.0
+
+                endif
 
                 write(6,111)ri,rj,max(dir,-99.)
      1                  ,speed_ms,k,wt_vert,aspect
@@ -513,7 +545,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         if(abs(k - k_level) .le. vert_rad_sao .or. k_level .eq. 0)then
 
-            aspect = aspect_a(nint(ri),nint(rj))
+            if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1         nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+
+                aspect = aspect_a(nint(ri),nint(rj))
+
+            else
+                aspect = 1.0
+
+            endif
 
             write(6,111)ri,rj,max(dir,-99.)
      1                     ,speed_ms,k,wt_vert,aspect
@@ -573,7 +613,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
-                aspect = aspect_a(nint(ri),nint(rj))
+                if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+
+                    aspect = aspect_a(nint(ri),nint(rj))
+
+                else
+                    aspect = 1.0
+
+                endif
 
                 if(c8_obstype(1:4) .eq. 'RAOB')then
                     call setusv_dum(2hIN,3)  ! Red
@@ -636,7 +684,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
-                aspect = aspect_a(nint(ri),nint(rj))
+                if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+
+                    aspect = aspect_a(nint(ri),nint(rj))
+
+                else
+                    aspect = 1.0
+
+                endif
 
                 write(6,921)ri,rj,rk,max(dir,-99.),spd_kt,c3_obsext
 921             format(1x,3f8.1,4x,f7.0,f7.0,2x,a3)
@@ -687,7 +743,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms / mspkt
 
-                aspect = aspect_a(nint(ri),nint(rj))
+                if(nint(ri) .ge. 1 .AND. nint(ri) .le. imax .AND.
+     1             nint(rj) .ge. 1 .AND. nint(rj) .le. jmax      )then
+
+                    aspect = aspect_a(nint(ri),nint(rj))
+
+                else
+                    aspect = 1.0
+
+                endif
 
 !               write(6,111)alat,alon,max(dir,-99.),spd_kt,aspect
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
