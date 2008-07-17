@@ -13,6 +13,9 @@
  i4wait_local_obs_max=0,
  local_obs_thresh=0,
  l_allow_empty_lso=.false.,
+ ltest_madis_qc=.true.,
+ n_cycles=1,
+ nominal_latency=-1,
  /
 
 c Obs Driver ingest (obs_driver.exe)
@@ -64,10 +67,6 @@ c.....      time_beforeand time_after, respectively.
 c
 c 'maxobs' - max number of surface stations in raw data
 c
-c 'l_allow_empty_lso' - .true. means we will write out an empty LSO file
-c                       even if there are no obs. .false. means no LSO file
-c                       will be written when there are no obs.
-c
 c 'i4wait_local_obs_max' - number of seconds (since systime) to wait for a 
 c                          sufficient number of LDAD local obs
 c
@@ -75,4 +74,17 @@ c 'local_obs_thresh' - threshold number of LDAD local obs to trigger wait loop.
 c                      A value of zero will disable the threshold. With MADIS
 c                      data the threshold is applied just to the 'mesonet'
 c                      and isn't applied to the 'urbanet'.
+c
+c 'l_allow_empty_lso' - .true. means we will write out an empty LSO file
+c                       even if there are no obs. .false. means no LSO file
+c                       will be written when there are no obs.
+c
+c 'ltest_madis_qc' - .true. means we test for MADIS QC flags with local data
+c
+c 'n_cycles' - number of time cycles to process LSO data for, looking back
+c              in time from the current 'systime'
+c
+c 'nominal_latency' - number of seconds after 'systime' we want the 'obs_driver'
+c                     to run with the most recent (current) cycle. This is
+c                     disabled by using a negative number
                       
