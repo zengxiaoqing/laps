@@ -5,6 +5,7 @@
   ---------------                         ----------             ------------
  
 main                                      obs_driver.f
+    get_obs_driver_parms                       "
     obs_driver_sub                             "
         get_metar_obs                     get_metar_obs.f        metar/synop 
             read_metar                    read_metar.f           NIMBUS/WFO
