@@ -85,8 +85,9 @@ c
         character*200 path_to_gps_data
         character*200 path_to_tower_data
         character*8   metar_format, c8_project
+	character     atime*24, filename9*9
 
-        logical l_allow_empty_lso
+        logical l_allow_empty_lso, ltest_madis_qc
 
         ISTAT = INIT_TIMER()
 
@@ -125,9 +126,11 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
+     1                           ,ltest_madis_qc
      1                           ,maxobs
      1                           ,l_allow_empty_lso
      1                           ,local_obs_thresh, i4wait_local_obs_max
+     1                           ,n_cycles,nominal_latency
      1                           ,istatus)
         if(istatus .ne. 1)stop
 
@@ -136,7 +139,28 @@ c
             metar_format = c8_project
         endif
 
-        call obs_driver_sub(      nx,ny
+        call get_systime(i4time_sys,filename9,istatus)
+
+        do i_cycle = n_cycles,1,-1
+            I4_elapsed = ishow_timer()
+
+            if(nominal_latency .ge. 0 .and. i_cycle .eq. 1)then
+                i4time_now = i4time_now_gg()
+                i4_wait = (i4time_sys + nominal_latency) - i4time_now
+                write(6,*)' Waiting for the nominal latency time '
+     1                   ,i4_wait     
+                CALL sleep(i4_wait)
+                I4_elapsed = ishow_timer()
+            endif
+
+            i4time_proc = i4time_sys - ((i_cycle-1) * laps_cycle_time)       
+            call make_fnam_lp(i4time_proc,filename9,istatus)
+            call cv_i4tim_asc_lp(i4time_proc,atime,istatus)
+
+            write(6,*)
+            write(6,*)' calling obs_driver_sub for cycle at ',filename9       
+
+            call obs_driver_sub(  nx,ny
      1                           ,maxobs,laps_cycle_time
      1                           ,path_to_metar
      1                           ,path_to_local_data
@@ -147,10 +171,13 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
+     1                           ,ltest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso
      1                           ,local_obs_thresh, i4wait_local_obs_max
+     1                           ,i4time_proc,filename9,atime
      1                           ,istatus)
+        enddo ! i_cycle
 
         end
 
@@ -165,9 +192,11 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
+     1                           ,ltest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso
      1                           ,local_obs_thresh, i4wait_local_obs_max
+     1                           ,i4time_sys,filename9,atime
      1                           ,istatus)
 c        
         integer ni, nj, maxsta, maxobs 
@@ -211,10 +240,7 @@ c
 
         logical l_allow_empty_lso,l_string_contains
         logical l_identical_a(maxsta)
-c
-        integer cnt
-        data cnt/0/
-c 
+        logical ltest_madis_qc
 c
 c.....	Start here.  
 c
@@ -223,28 +249,6 @@ c
 
         call get_sfc_badflag(badflag,istatus)
         if(istatus .ne. 1)return
-
-c.....  Check to see if this is an interactive run.
-c
-	narg = iargc()
-cc      print *,' narg = ', narg
-
-c.....  Get the time from the scheduler or from the user if interactive.
-c
-	if(narg .eq. 0) then
-           call get_systime(i4time_sys,filename9,istatus)
-	   call cv_i4tim_asc_lp(i4time_sys,atime,istatus)
-c
-	else
-c
- 970	   write(6,973)
- 973	   format(' Enter input filename (yydddhhmm): ',$)
-	   read(5,972) filename9
- 972	   format(a9)
-	   call i4time_fname_lp(filename9(1:9),i4time_sys,istatus)
-	   i4time_sys = i4time_sys / laps_cycle_time * laps_cycle_time        
-	   call cv_i4tim_asc_lp(i4time_sys, atime, istatus) !find the atime
-	endif
 
         write(6,*)' systime = ',filename9
 c
@@ -438,6 +442,7 @@ c
                     call get_local_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_madis_data,metar_format,
      &                      itime_before,itime_after,
+     &                      ltest_madis_qc,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
      &                      reptype,atype,weather,wmoid,
@@ -468,6 +473,7 @@ c
                 call get_local_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
+     &                      ltest_madis_qc,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
      &                      reptype,atype,weather,wmoid,
@@ -745,9 +751,11 @@ c
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
      1                         ,itime_before,itime_after
+     1                         ,ltest_madis_qc
      1                         ,maxobs
      1                         ,l_allow_empty_lso
      1                         ,local_obs_thresh, i4wait_local_obs_max
+     1                         ,n_cycles,nominal_latency
      1                         ,istatus)
 
        character*200 path_to_metar
@@ -757,6 +765,7 @@ c
        character*200 path_to_tower_data
        character*8   metar_format
        logical l_allow_empty_lso
+       logical ltest_madis_qc
 
        namelist /obs_driver_nl/ path_to_metar
      1                         ,path_to_local_data
@@ -771,6 +780,8 @@ c
      1                         ,maxobs
      1                         ,local_obs_thresh
      1                         ,i4wait_local_obs_max
+     1                         ,n_cycles,nominal_latency
+     1                         ,ltest_madis_qc
 
        character*150 static_dir,filename
  
