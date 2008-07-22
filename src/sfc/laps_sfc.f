@@ -34,10 +34,11 @@ c
 	program laps_sfc
 
 !       We are using just a subset of the global parameters in this driver
-!       use mem_namelist
-        use mem_namelist, ONLY: read_namelist_laps,
-     &                          NX_L,NY_L,nk_laps,maxstns,
+        use mem_namelist, ONLY: read_namelist_laps
+        use mem_namelist, ONLY: NX_L,NY_L,nk_laps,maxstns,
      &                          laps_cycle_time,grid_spacing_m
+
+        use mem_sfcanl
 
         character*150 static_dir,filename
 c
@@ -50,8 +51,12 @@ c
         filename = static_dir(1:len_dir)//'/surface_analysis.nl'
         call read_namelist_laps('sfc_anal',filename)
 
+!       call alloc_sfc_arrays(NX_L,NY_L)
+
 	call laps_sfc_sub(NX_L,NY_L,nk_laps,maxstns,
      &                    laps_cycle_time,grid_spacing_m)
+
+!       call deallocate_sfcanl_arrays()
 c
 	end
 c
