@@ -72,10 +72,21 @@ AC_CHECK_PROGS(CSH,csh,,$PATH)
 AC_PATH_PROG(CSH,$CSH )
 AC_PROG_GCC_TRADITIONAL
 
-if test "$GCC" 
+echo "GCC = $GCC"
+#if test "$GCC" 
+#then
+#  CPPFLAGS = "-C"     
+#fi
+
+dnl Set OTHERLIBS to -lgcc only when $CC contains gcc
+echo "CC = $CC"
+grep 'gcc' << EOF
+$CC
+EOF
+
+if test $? -eq 0
 then
   OTHERLIBS="$OTHERLIBS -lgcc"
-  CPPFLAGS = "cc -P"     
 fi
 
 LIBPATHFLAG=-L
@@ -106,6 +117,7 @@ then
   C_OPT="-O3 -qstrict"
   F_OPT="-O3 -qstrict"
   W3="-DIBM4 -DAIX"
+  CPPFLAGS="$CPPFLAGS -C"
 fi
 if test "$arch" = "alpha"
 then
@@ -275,7 +287,22 @@ then
     FREE="-FR"
     C_OPT="-O3"
     F_OPT="-O3"
+
+
+dnl Set DBCFLAGS to smaller set if C compiler is other than 'icc'
+    grep 'icc' << EOF
+    $CC
+EOF
+
+    if test $? -eq 0
+    then
+        DBCFLAGS="$DBFLAGS"
+    else
+        DBCFLAGS="-g"
+    fi  
+
 fi  
+
 
 AC_F90_FUNC_TRIGD
 if test $USE_TRIGD -eq 1 
@@ -338,6 +365,7 @@ INSTALL='$(SRCROOT)/util/install-sh'
 AC_SUBST(INSTALL)
 AC_SUBST(INCLUDE)
 AC_SUBST(DBFLAGS)
+AC_SUBST(DBCFLAGS)
 
 dnl Checks for libraries.
 dnl Replace `main' with a function in -lcurses:
@@ -423,8 +451,8 @@ AC_OUTPUT(src/include/trigd.inc
           etc/wrfpost.pl
           etc/xferData.pl
           etc/generate_images.pl
-          etc/www/nph-laps.cgi.in
-          etc/www/laps.cgi.in
+          etc/www/nph-laps.cgi
+          etc/www/laps.cgi
           gui/make_gui.pl
           gui/install_perlTk.sh
           gui/guiTk/ui_system_tools.pl)
