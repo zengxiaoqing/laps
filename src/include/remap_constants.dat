@@ -40,7 +40,7 @@ c
 
       integer  LUT_RANGES,LUT_AZIMUTHS
       parameter (LUT_RANGES = 460)
-      parameter (LUT_AZIMUTHS = 360) ! This should not be changed
+      parameter (LUT_AZIMUTHS = 720) 
 
       real     ELEV_INTERVAL
       parameter (ELEV_INTERVAL = MAX_ELEV / LUT_ELEVS)
