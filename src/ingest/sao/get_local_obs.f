@@ -40,7 +40,7 @@ c
         subroutine get_local_obs(maxobs,maxsta,i4time_sys,
      &                 path_to_local_data,local_format,
      &                 itime_before,itime_after,
-     &                 ltest_madis_qc,
+     &                 itest_madis_qc,
      &                 lat,lon,ni,nj,grid_spacing,
      &                 nn,n_obs_g,n_obs_b,stations,
      &                 reptype,atype,weather,wmoid,
@@ -156,7 +156,18 @@ c
 c
 c.....  Start.
 c
-        write(6,*)' get_local_obs, ltest_madis_qc = ',ltest_madis_qc       
+        if(itest_madis_qc .gt. 0)then
+            ltest_madis_qc = .true.
+        else
+            ltest_madis_qc = .false.
+        endif
+
+        level_qc = itest_madis_qc
+             
+        write(6,*)
+     1  ' get_local_obs, ltest_madis_qc/itest_madis_qc/level_qc = '
+     1                  ,ltest_madis_qc,itest_madis_qc,level_qc       
+
 c
 c.....	Set jstatus flag for the local data to bad until we find otherwise.
 c
@@ -572,7 +583,7 @@ c
 	  endif
           call sfc_climo_qc_r('t_f',temp_f)
           if(ltest_madis_qc)
-     1        call madis_qc_r(temp_f,temperatureDD(i),badflag)
+     1        call madis_qc_r(temp_f,temperatureDD(i),level_qc,badflag)       
 c       
 	  dewp_k = dewpoint(i)
           call sfc_climo_qc_r('td_k',dewp_k)
@@ -582,7 +593,7 @@ c
 	     dewp_f = k_to_f(dewp_k)
 	  endif
           if(ltest_madis_qc)
-     1        call madis_qc_r(dewp_f,dewpointDD(i),badflag)
+     1        call madis_qc_r(dewp_f,dewpointDD(i),level_qc,badflag)       
 c
 	  rh_p = relHumidity(i) 
 	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
@@ -593,7 +604,7 @@ c
 	     endif
 	  endif
           if(ltest_madis_qc)
-     1        call madis_qc_r(rh_p,relHumidityDD(i),badflag)
+     1        call madis_qc_r(rh_p,relHumidityDD(i),level_qc,badflag)        
 c
 c..... Wind speed and direction
 c
@@ -631,7 +642,8 @@ c
 	  stn_press = stationPressure(i)
           call sfc_climo_qc_r('stnp_pa',stn_press)
           if(ltest_madis_qc)
-     1        call madis_qc_r(stn_press,stationPressureDD(i),badflag)
+     1        call madis_qc_r(stn_press,stationPressureDD(i),level_qc
+     1                                                      ,badflag)
 	  if(stationPressChangeTime(i) .gt. 0.) then
 	     if( abs(observationTime(i) - stationPressChangeTime(i))
      1                               .gt. laps_cycle_time ) then
@@ -643,13 +655,14 @@ c
           call sfc_climo_qc_r('mslp_pa',seaLevelPressure(i))
           if(ltest_madis_qc)
      1        call madis_qc_r(seaLevelPressure(i),seaLevelPressureDD(i)
-     1                                           ,badflag)
+     1                                           ,level_qc,badflag)       
 	  if(seaLevelPressure(i) .ne. badflag) seaLevelPressure(i)   
      1                             = seaLevelPressure(i)   * 0.01 !Pa to mb
 
           call sfc_climo_qc_r('alt_pa',altimeter(i))
           if(ltest_madis_qc)
-     1        call madis_qc_r(altimeter(i),altimeterDD(i),badflag)
+     1        call madis_qc_r(altimeter(i),altimeterDD(i),level_qc
+     1                                                   ,badflag)
 	  if(altimeter(i) .ne. badflag) 
      1                         altimeter(i) = altimeter(i) * 0.01 !Pa to mb
 c
@@ -913,14 +926,24 @@ c
 c
        end
 
-         subroutine madis_qc_r(var,DD,badflag)
+         subroutine madis_qc_r(var,DD,level_qc,badflag)
 
          real var
          character*1 DD
          real badflag
 
-         if(DD .eq. 'X')then ! Automated QC
-             var = badflag
+         if(level_qc .ge. 1)then
+
+             if(DD .eq. 'X')then ! Failed Level 1 QC
+                 var = badflag
+             endif
+
+             if(level_qc .ge. 2)then
+                 if(DD .eq. 'Q')then ! Failed Level 2 or 3 QC
+                     var = badflag
+                 endif
+             endif             
+
          endif
 
          if(DD .eq. 'B')then ! Subjective QC (reject list)
