@@ -114,6 +114,7 @@ then
   LITTLEFLAGS="$LITTLEFLAGS"
   FIXED="-qfixed"
   FREE="-qfree=f90 -qsuffix=f=f90"
+  DBFLAGS="$DBFLAGS -qflttrap=overflow:underflow:zerodivide"
   C_OPT="-O3 -qstrict"
   F_OPT="-O3 -qstrict"
   W3="-DIBM4 -DAIX"
@@ -273,6 +274,9 @@ then
 fi  
 
 
+dnl  Default setting for DBCFLAGS
+DBCFLAGS="-g"
+
 dnl  Check to see if we are running the ifort
 dnl  compiler. If so, set flags appropriately.
 
@@ -302,6 +306,11 @@ EOF
     fi  
 
 fi  
+
+echo "CFLAGS = $CFLAGS"
+echo "DBCFLAGS = $DBCFLAGS"
+echo "FFLAGS = $FFLAGS"
+echo "DBFLAGS = $DBFLAGS"
 
 
 AC_F90_FUNC_TRIGD
