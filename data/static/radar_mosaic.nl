@@ -11,7 +11,7 @@ c
 c  S. Albers / J. Smart
 c 
 c  n_radars_wideband: corresponds to the number of vxx files
-c            if set to -1, then switch over to value of 'max_radars_cmn'
+c            if set to -1, then switch over to value of 'max_radars'
 c 
 c  n_radars_narrowband: corresponds to the number of narrowband radars
 c                       in the 'rdr/xxx/vrc' directories
