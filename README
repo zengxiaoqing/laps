@@ -3805,7 +3805,7 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
         for WRF version 3). Note that WPS has a constraint that the vertical 
         levels of the initial condition (LAPS) be matched with those from the 
         lateral boundary condition. This matching can be done either when 
-        running LAPS or in the WPS processing steps by at least two methods. 
+        running LAPS or in the WPS processing steps by three methods. 
 
         1) In an example with the GFS as a lateral boundary condition one can 
            reduce the levels in the LAPS 'static/pressures.nl' namelist as in 
@@ -3816,6 +3816,16 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
            utility 'mod_levs.exe'. It uses the 'namelist.wps' to rip out the 
            NAM levels not in the namelist. The NAM data has levels from 1000 
            to 100 at a 25 mb interval plus a surface level.
+
+        3) The third method is the most desirable option that we recommend.
+           We first run 'metgrid.exe' for the boundary conditions (e.g. NAM),
+           starting at the initial time and proceeding through the forecast
+           times. We then run 'real.exe' for the boundary conditions over 
+           the entire period. This will produce 'wrfbdy_d01' and 'wrfinput_d01'
+           files. We next run 'metgrid.exe' for LAPS, followed by running 
+           'real.exe' for LAPS only at the initial time. In this way the
+           'wrfinput_d01' (initial time file) will be overwritten by the LAPS
+           initial condition.
 
    There are three other namelist entries in the lapsprep.nl
    file:
