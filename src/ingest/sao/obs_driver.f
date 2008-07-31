@@ -87,7 +87,7 @@ c
         character*8   metar_format, c8_project
 	character     atime*24, filename9*9
 
-        logical l_allow_empty_lso, ltest_madis_qc
+        logical l_allow_empty_lso
 
         ISTAT = INIT_TIMER()
 
@@ -126,7 +126,7 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
-     1                           ,ltest_madis_qc
+     1                           ,itest_madis_qc
      1                           ,maxobs
      1                           ,l_allow_empty_lso
      1                           ,local_obs_thresh, i4wait_local_obs_max
@@ -171,7 +171,7 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
-     1                           ,ltest_madis_qc
+     1                           ,itest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso
      1                           ,local_obs_thresh, i4wait_local_obs_max
@@ -192,7 +192,7 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
-     1                           ,ltest_madis_qc
+     1                           ,itest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso
      1                           ,local_obs_thresh, i4wait_local_obs_max
@@ -240,7 +240,6 @@ c
 
         logical l_allow_empty_lso,l_string_contains
         logical l_identical_a(maxsta)
-        logical ltest_madis_qc
 c
 c.....	Start here.  
 c
@@ -442,7 +441,7 @@ c
                     call get_local_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_madis_data,metar_format,
      &                      itime_before,itime_after,
-     &                      ltest_madis_qc,
+     &                      itest_madis_qc,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
      &                      reptype,atype,weather,wmoid,
@@ -473,7 +472,7 @@ c
                 call get_local_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
-     &                      ltest_madis_qc,
+     &                      itest_madis_qc,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
      &                      reptype,atype,weather,wmoid,
@@ -751,7 +750,7 @@ c
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
      1                         ,itime_before,itime_after
-     1                         ,ltest_madis_qc
+     1                         ,itest_madis_qc
      1                         ,maxobs
      1                         ,l_allow_empty_lso
      1                         ,local_obs_thresh, i4wait_local_obs_max
@@ -765,7 +764,6 @@ c
        character*200 path_to_tower_data
        character*8   metar_format
        logical l_allow_empty_lso
-       logical ltest_madis_qc
 
        namelist /obs_driver_nl/ path_to_metar
      1                         ,path_to_local_data
@@ -781,7 +779,7 @@ c
      1                         ,local_obs_thresh
      1                         ,i4wait_local_obs_max
      1                         ,n_cycles,nominal_latency
-     1                         ,ltest_madis_qc
+     1                         ,itest_madis_qc
 
        character*150 static_dir,filename
  

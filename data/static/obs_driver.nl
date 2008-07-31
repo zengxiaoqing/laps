@@ -13,7 +13,7 @@
  i4wait_local_obs_max=0,
  local_obs_thresh=0,
  l_allow_empty_lso=.false.,
- ltest_madis_qc=.true.,
+ itest_madis_qc=1,
  n_cycles=1,
  nominal_latency=-1,
  /
@@ -79,7 +79,8 @@ c 'l_allow_empty_lso' - .true. means we will write out an empty LSO file
 c                       even if there are no obs. .false. means no LSO file
 c                       will be written when there are no obs.
 c
-c 'ltest_madis_qc' - .true. means we test for MADIS QC flags with local data
+c 'itest_madis_qc' - 0 means we do not test MADIS QC flags
+c                    1 means level 1 test for MADIS QC flags with local data
 c
 c 'n_cycles' - number of time cycles to process LSO data for, looking back
 c              in time from the current 'systime'
