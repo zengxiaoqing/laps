@@ -202,7 +202,7 @@ c
       integer i_purge
       integer init_ref_gate_hyb,init_ref_gate_actual
 
-      real rvel
+      real rvel,azimuth_interval
       real rmax,height_max,rlat_radar,rlon_radar,rheight_radar
       real vknt,rknt,variance,hybrid_range
 
@@ -408,11 +408,14 @@ c
 
       endif
 
+      azimuth_interval = 360. / float(lut_azimuths)
+      write(6,*)' azimuth_interval = ',azimuth_interval
+
       DO 200 jray=1, n_rays
 
         if(az_array(jray) .ne. r_missing_data)then
-            nazi = nint(az_array(jray))
-            nazi = mod(nazi,360)
+            nazi = nint(az_array(jray) / azimuth_interval)
+            nazi = mod(nazi,lut_azimuths)
         else
             goto200
         endif
