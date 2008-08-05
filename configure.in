@@ -118,7 +118,6 @@ then
   C_OPT="-O3 -qstrict"
   F_OPT="-O3 -qstrict"
   W3="-DIBM4 -DAIX"
-  CPPFLAGS="$CPPFLAGS -C"
 fi
 if test "$arch" = "alpha"
 then
