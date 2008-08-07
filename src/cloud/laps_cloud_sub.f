@@ -955,6 +955,7 @@ C INSERT RADAR DATA
      1          ,temp_3d,t_sfc_k,td_sfc_k                            ! I
      1          ,grid_spacing_cen_m,NX_L,NY_L,NZ_L                   ! I
      1          ,KCLOUD,cloud_base,ref_base                          ! I
+!    1          ,topo,solar_alt,r_missing_data                       ! I
      1          ,topo,r_missing_data                                 ! I
      1          ,radar_ref_3d,dbz_max_2d                             ! I/O
      1          ,vis_radar_thresh_dbz                                ! I
@@ -1838,6 +1839,8 @@ C       EW SLICES
 
 !             We have a discrepancy between the VIS and radar
 
+              iblank_radar = 0
+
               if(cvr_max(i,j) .eq. cloud_frac_vis_a(i,j))then ! CVR = VIS
 
                 if(dbz_max_2d(i,j) .lt. vis_radar_thresh_dbz)then
@@ -1859,11 +1862,13 @@ C       EW SLICES
 
                   if(dbz_max_2d(i,j) .lt. vis_radar_thresh_dbz)then
 
-!                     We can potentially block out the radar
+!                     We will block out the radar
                       write(6,2)i,j,cvr_max(i,j),dbz_max_2d(i,j)
      1                       ,cloud_frac_vis_a(i,j)
 2                     format(' CLD_RDR: cvr/dbz/vis <',2i4,f8.2
-     1                                                 ,f8.1,f8.2)
+     1                      ,f8.1,f8.2,' Blank out radar')
+
+                      iblank_radar = 1
 
                   else ! Radar is too strong to block out
 
@@ -1872,20 +1877,21 @@ C       EW SLICES
 3                     format(' CLD_RDR: cvr/dbz/vis >',2i4,f8.2
      1                                                 ,f8.1,f8.2)
 
-                  endif
+                  endif ! ref < vis
 
               elseif(cvr_max(i,j) .gt. cloud_frac_vis_a(i,j))then
 
 !                 Don't know if VIS lowered cloud cover        CVR > VIS
-!                 At least if difference is less than VIS "cushion"
 
                   if(dbz_max_2d(i,j) .lt. vis_radar_thresh_dbz)then
 
-!                     We can potentially block out the radar
+!                     We will block out the radar
                       write(6,4)i,j,cvr_max(i,j),dbz_max_2d(i,j)
      1                       ,cloud_frac_vis_a(i,j)
 4                     format(' ???_RDR: cvr/dbz/vis <',2i4,f8.2
-     1                                                 ,f8.1,f8.2)
+     1                      ,f8.1,f8.2,' Blank out radar')
+
+                      iblank_radar = 1
 
                   else ! Radar is too strong to block out
 
@@ -1894,11 +1900,18 @@ C       EW SLICES
 5                     format(' ???_RDR: cvr/dbz/vis >',2i4,f8.2
      1                                                 ,f8.1,f8.2)
 
-                  endif
+                  endif ! ref < vis
 
+              endif ! cover compare to vis
+
+              if(iblank_radar .eq. 1)then        ! Take action
+                  dbz_max_2d(i,j) = ref_base
+                  do kl = 1,nk
+                      radar_ref_3d(i,j,kl) = ref_base
+                  enddo ! kl
               endif
 
-            endif
+            endif ! radar echo with low cloud cover
         enddo ! j
         enddo ! i
 
