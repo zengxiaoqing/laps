@@ -148,6 +148,24 @@ csms$ignore begin
         write(6,*)' Calling write routine for all grids ',ext(1:3)
      1                                  ,i4time_sys
 
+        call check_nan3(uanl,NX_L,NY_L,NZ_L,istat_lw3)
+        if(istat_lw3 .ne. 1)then
+            write(6,*)' ERROR: Nan Detected in uanl field'
+            return
+        endif
+
+        call check_nan3(vanl,NX_L,NY_L,NZ_L,istat_lw3)
+        if(istat_lw3 .ne. 1)then
+            write(6,*)' ERROR: Nan Detected in vanl field'
+            return
+        endif
+
+        call check_nan3(wanl,NX_L,NY_L,NZ_L,istat_lw3)
+        if(istat_lw3 .ne. 1)then
+            write(6,*)' ERROR: Nan Detected in wanl field'
+            return
+        endif
+
         call put_laps_multi_3d_jacket(i4time_sys,EXT,var_3d
      1                               ,units_3d,comment_3d
      1                               ,uanl,vanl,wanl
