@@ -183,9 +183,17 @@ c                                           Fix error with grid spacing.
 c
 c*****************************************************************************
 c 
+        use mem_namelist, ONLY: iwrite_output
+
+        use mem_sfcanl, ONLY: alloc_sfcanl_arrays, point_sfcanl_arrays       
+
+        use mem_sfcanl, ONLY: u_a,v_a,p_a,t,td,vv,rh,hi,mslp,tadv
+     +                       ,theta,thetae,psfc,vort,q,qcon,div,thadv
+     +                       ,qadv,spd,cssi,vis,fire,tgd_k    
+
 	include 'laps_sfc.inc'
         include 'laps_cloud.inc'
-c
+
 	parameter(                !Expected observation error, ea. var.
      &            obs_error_redp  = 0.1,  ! for reduced pressure
      &            obs_error_t     = 0.1,  ! for temperature
@@ -196,6 +204,8 @@ c
      &            obs_error_vis   = 0.1)  ! for visibility
 c
 	parameter(bad = 1.e6 - 2.)	! larger than 'bad' are.
+
+c
 c
 c.....	LAPS lat/lon and terrain grids, and Coriolis.
 c
@@ -213,29 +223,32 @@ c
 c
 c.....	Grids for the first data's analyses.
 c
-	real u(ni,nj), v(ni,nj)
-	real rp(ni,nj), psfc(ni,nj), vis(ni,nj)
-	real t(ni,nj), theta(ni,nj), thetae(ni,nj), tb8(ni,nj)
-	real td(ni,nj), mslp(ni,nj)
-        real tgd_k(ni,nj)
+ 	real u(ni,nj), v(ni,nj)
+!       real t(ni,nj), td(ni,nj)
+!       real theta(ni,nj), thetae(ni,nj), psfc(ni,nj), vis(ni,nj)
+	real rp(ni,nj)
+        real tb8(ni,nj)
+!       real mslp(ni,nj), tgd_k(ni,nj)
 c
 c.....	Grids for the variational analyses of rp, u, v (grid north)
 c
-	real p_a(ni,nj), u_a(ni,nj), v_a(ni,nj) ! Post Variational Pa & M/S
+!       real p_a(ni,nj), u_a(ni,nj), v_a(ni,nj) ! Post Variational Pa & M/S
 	real p_a_orig(ni,nj), u_a_orig(ni,nj), v_a_orig(ni,nj)   ! Reference
 c                                                                ! Pa & M/S
 c.....	Grids for the derived quantities.
 c
-	real du(ni,nj), dv(ni,nj), spd(ni,nj)
-	real drp(ni,nj), vv(ni,nj)
+	real du(ni,nj), dv(ni,nj)
+	real drp(ni,nj)
+!       real vv(ni,nj), spd(ni,nj)
 	real tt(ni,nj), ttd(ni,nj)
-	real qadv(ni,nj), rh(ni,nj)
-	real cssi(ni,nj), fire(ni,nj), hi(ni,nj)
+!       real qadv(ni,nj)
+!       real rh(ni,nj), hi(ni,nj)
+!	real cssi(ni,nj), fire(ni,nj)
 	real p_1d_pa(nk)
 c
 c.....	Grids for variables derived by the MESO_ANL subroutine.
 c
-	real q(ni,nj), qcon(ni,nj), thadv(ni,nj), tadv(ni,nj)
+!	real q(ni,nj), qcon(ni,nj), thadv(ni,nj), tadv(ni,nj)
 c
 c.....	Grids for the background fields.
 c
@@ -254,8 +267,9 @@ c
 c.....	Grids for other stuff.
 c
         real fnorm(0:ni-1,0:nj-1)
-	real ddiv(ni,nj), vort(ni,nj) 
-	real f(ni,nj), fu(ni,nj), fv(ni,nj), div(ni,nj)
+	real ddiv(ni,nj)
+!       real vort(ni,nj), div(ni,nj)
+	real f(ni,nj), fu(ni,nj), fv(ni,nj)
 	real a(ni,nj), z(ni,nj), dx(ni,nj), dy(ni,nj)
 	real nu(ni,nj),nv(ni,nj), h7(ni,nj)
 	real t5(ni,nj), t7(ni,nj), td7(ni,nj)                     ! Deg K
@@ -303,6 +317,9 @@ c
 c
 c.....	Start...set up constants, initialize arrays, etc.
 c
+        call alloc_sfcanl_arrays(ni,nj)
+        call point_sfcanl_arrays()
+
         I4_elapsed = ishow_timer()
 
 	call tagit('laps_vanl', 19991123)
@@ -1346,11 +1363,13 @@ c
 c
 c.....  Now actually write the LSX file.
 c
-	call get_directory('lsx', dir, len)
-	ext = 'lsx'
-	call write_laps_data(i4time,dir,ext,imax,jmax,num_var,
-     &          num_var,var,lvl,lvl_coord,units,comment,data,istatus)
-        write(6,*)' LSX file write completed, istatus = ',istatus
+        if(iwrite_output .ge. 0)then
+	    call get_directory('lsx', dir, len)
+	    ext = 'lsx'
+	    call write_laps_data(i4time,dir,ext,imax,jmax,num_var,
+     &             num_var,var,lvl,lvl_coord,units,comment,data,istatus)      
+            write(6,*)' LSX file write completed, istatus = ',istatus
+        endif
 c
 	jstatus(3) = 1		! everything ok...
 
