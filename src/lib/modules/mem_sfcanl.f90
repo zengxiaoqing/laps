@@ -11,6 +11,11 @@ end type
 
 type(sfcanl_fields) :: sfcanl
 
+! Pointers for renaming arrays in lapsvanl 
+real, pointer, dimension(:,:) :: &
+         u_a,v_a,p_a,t,td,vv,rh,hi,mslp,tadv,theta,thetae,psfc  &
+        ,vort,q,qcon,div,thadv,qadv,spd,cssi,vis,fire,tgd_k
+
 
 Contains
 
@@ -49,6 +54,41 @@ integer :: nxl, nyl
   
 return
 end subroutine alloc_sfcanl_arrays
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine point_sfcanl_arrays ()
+
+implicit none
+
+u_a   =>  sfcanl%u   
+v_a   =>  sfcanl%v   
+p_a   =>  sfcanl%pr  
+t     =>  sfcanl%t   
+td    =>  sfcanl%td  
+vv    =>  sfcanl%vv  
+rh    =>  sfcanl%rh  
+hi    =>  sfcanl%pm  
+mslp  =>  sfcanl%tad 
+tadv  =>  sfcanl%th  
+theta =>  sfcanl%the 
+thetae=>  sfcanl%hi  
+psfc  =>  sfcanl%ps  
+vort  =>  sfcanl%vor 
+q     =>  sfcanl%qm  
+qcon  =>  sfcanl%qcon
+div   =>  sfcanl%div 
+thadv =>  sfcanl%thad
+qadv  =>  sfcanl%qad 
+spd   =>  sfcanl%spd 
+cssi  =>  sfcanl%css 
+vis   =>  sfcanl%vis 
+fire  =>  sfcanl%fwx 
+tgd_k =>  sfcanl%tgd 
+
+  
+return
+end subroutine point_sfcanl_arrays
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
