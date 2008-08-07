@@ -41,6 +41,7 @@ c
         use mem_sfcanl
 
         character*150 static_dir,filename
+        character*9 a9time
 c
 !       Read global parameters into module memory structure
         call get_directory('static',static_dir,len_dir)
@@ -51,18 +52,21 @@ c
         filename = static_dir(1:len_dir)//'/surface_analysis.nl'
         call read_namelist_laps('sfc_anal',filename)
 
+!       Get System Analysis Time
+        call get_systime(i4time,a9time,istatus)
+
+!       Note these are being allocated later on just before they are filled
 !       call alloc_sfc_arrays(NX_L,NY_L)
+!       call point_sfcanl_arrays(NX_L,NY_L)
 
-	call laps_sfc_sub(NX_L,NY_L,nk_laps,maxstns,
-     &                    laps_cycle_time,grid_spacing_m)
+	call laps_sfc_sub(i4time)
 
-!       call deallocate_sfcanl_arrays()
+        call deallocate_sfcanl_arrays()
 c
 	end
 c
 c
-	subroutine laps_sfc_sub(ni,nj,nk,mxstn,laps_cycle_time,
-     &                          grid_spacing)
+	subroutine laps_sfc_sub(i4time)
 c
 c
 c*****************************************************************************
@@ -130,11 +134,15 @@ c          not currently used.  They are included because they might be in
 c          the future.
 c
 c*****************************************************************************
+        use mem_namelist, ONLY: ni=>NX_L,nj=>NY_L,nk=>nk_laps
+     1                         ,mxstn=>maxstns
+     1                         ,laps_cycle_time
+     1                         ,grid_spacing=>grid_spacing_m
+
 	include 'laps_sfc.inc'
 c
 	real lat(ni,nj), lon(ni,nj), topo(ni,nj), ldf(ni,nj)
 	real x1a(ni), x2a(nj), y2a(ni,nj)
-	real grid_spacing
 c
 	integer i4time
 	integer jstatus(20)		! 20 is standard for prodgen drivers
@@ -224,20 +232,15 @@ c
 	narg = iargc()
 cc	print *,' narg = ', narg
 c
-c.....  Now get the analysis time from the scheduler or the user.
+c.....  Now get the time tendencies
 c
+        call make_fnam_lp(i4time,filename,istatus)
+
 	if(narg .eq. 0) then
 c
 	   ihours = 1	! default # of hrs back for time-tendencies
 c
-	   call get_systime(i4time,filename,istatus)
-c
 	else
-c
- 970	   write(6,973)
- 973	   format(' Enter input filename (yydddhhmm): ',$)
-	   read(5,972) filename
- 972	   format(a)
 c
  974	   write(6,975)
  975	   format(
@@ -250,7 +253,6 @@ c
 	      print *, ' ERROR: Hrs out of bounds.  Try again.'
 	      go to 974
 	   endif
-	   call i4time_fname_lp(filename,i4time,status)
 c
 	endif
 c
