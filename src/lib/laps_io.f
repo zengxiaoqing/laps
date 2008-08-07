@@ -785,9 +785,11 @@ cc        character*3 var_2d
         real field_2d(imax,jmax)
 
         call get_directory(ext,directory,len_dir)
+ 
+        call s_len(ext,len_ext)
 
-        write(6,11)directory,ext,var_2d
-11      format(' Writing 2d ',a50,1x,a5,1x,a3)
+        write(6,11)directory(1:len_dir),ext(1:len_ext),var_2d
+11      format(' Writing 2d ',a,1x,a,1x,a)
 
         call check_nan2(field_2d,imax,jmax,istatus)
         if(istatus .ne. 1)then
@@ -1008,10 +1010,12 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         endif
 
         call get_directory(ext,directory,len_dir)
+        call s_len(ext,len_ext)
 
         do l = 1,nf
-            write(6,11)directory,ext(1:5),var_a(l)
-11          format(' Writing 2d ',a50,1x,a5,1x,a3)
+            write(6,11)directory(1:len_dir),ext(1:len_ext),var_a(l)
+11          format(' Writing 2d ',a,1x,a,1x,a)
+
             call check_nan2(field_2d(1,1,l),ni,nj,istatus)
             if(istatus .ne. 1)then
                 write(6,*)' ERROR: Nan Detected in above 2D field'
