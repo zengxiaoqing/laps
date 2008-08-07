@@ -86,7 +86,13 @@ cdis
 !       1997 Jun     Ken Dritz     Pass r_missing_data to vert_wind.
 !       1998 Feb     Steve Albers  Call rdpirep with cloud drift winds also
 
-        use mem_namelist
+        use mem_namelist ! For these global parameters:
+                         ! NX_L,NY_L,nk_laps,max_radars
+                         ! ,r_missing_data,i2_missing_data
+                         ! ,laps_cycle_time
+                         ! 
+                         ! Plus a set of wind parameters:
+
         use mem_wind
 
 
