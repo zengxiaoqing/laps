@@ -20,6 +20,8 @@ program laps_wind                              main.f
             remap_profiles                     lib/get_wind_obs.f
             rdsfc                              lib/wind/rdsfc.f
             rdpoint                            lib/wind/rdpoint.f
+                read_acars_ob                  lib/read_acars_ob.f
+                read_laps_cdw_wind             lib/wind/rdpoint.f
                 get_time_term                     "
         uvtrue_to_uvgrid
         get_fnorm_max
