@@ -309,10 +309,10 @@ elseif (namelist_name == 'wind') then
    read (12, wind_nl, err=905)
    
    ! QC the input variables if desired
-   !  .
-   !  .
-   !  .
-   !  .
+   if(r0_barnes_max_m .le. 0)then
+       write(6,*)' Error in value of r0_barnes_max_m ',r0_barnes_max_m
+       goto 905
+   endif
 
 elseif (namelist_name == 'sfc_anal') then
 
