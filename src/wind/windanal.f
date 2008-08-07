@@ -292,6 +292,16 @@ csms$serial end
      1        ,n_obs_lvl,istatus)                                     ! O
       if(istatus .ne. 1)return
 
+      do ivar=1,n_var
+          call qc_field_3d('U3',varbuff(1,1,1,ivar),imax,jmax,kmax
+     1                                             ,istatus)       
+          if(istatus .ne. 1)then
+              write(6,*)
+     1        ' ERROR: QC flag in barnes_multivariate output ',ivar       
+              return
+          endif
+      enddo ! ivar
+
       wt_p_radar = wt_p
 
 csms$print_mode(async) begin
