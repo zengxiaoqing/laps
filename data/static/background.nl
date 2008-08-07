@@ -1,8 +1,8 @@
  &background_nl
- bgpaths='/public/data/fsl/13kmruc/ruc_presm20/grib/',
+ bgpaths='/public/data/fsl/13kmruc/ruc_presm/grib/',
 '/public/data/grids/ruc/hyb_A236/netcdf',
 '',
- bgmodels=6,5,0,
+ bgmodels=13,5,0,
  forecast_length=12,
  use_analysis=.false.,
  cmodel='RUC','RUC40_NATIVE','ETA48_CONUS',
