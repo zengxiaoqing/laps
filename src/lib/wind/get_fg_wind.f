@@ -137,6 +137,13 @@ cdis
                 return
             endif
 
+            call qc_field_3d('U3',var_mdl_bkg_4d(1,1,1,NT)
+     1                     ,NX_L,NY_L,NZ_L,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' ERROR: QC flag in background field'
+                return
+            endif
+
           else ! NT = 1
 
             write(6,*)' Bogusing var_mdl_bkg_4d, var/NT= ',var_2d,NT
