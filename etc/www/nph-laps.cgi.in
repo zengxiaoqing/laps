@@ -29,8 +29,18 @@ $thisDir =~ /([a-zA-Z0-9\.\/\~]*)/;
 $thisDir = $1;
 ($basename,$thisURLDir) = fileparse($ENV{'SCRIPT_NAME'});
 
+# $web_root is where the '$web_root/domains/[list of domains]/private_data'
+# soft links (to each $LAPS_DATA_ROOT) should be set up
+
 $web_root = "/w3/lapb";
+#$web_root = "@prefix@/etc/www";
+
+# request_root is where the '$request_root/lapsplot/scratch' directory tree
+# should be set up
+
 $request_root = "$web_root/request"; # current directory of this script
+#$request_root = "$web_root";
+
 $DomainDir = "$web_root/domains";
 #$ScratchDir = "/scratch/frd/laps/www";
 $ScratchDir = "request/lapsplot/scratch";
@@ -201,6 +211,21 @@ $domain_safe = $1;
 my $laps_data_root;
 $laps_data_root = "$DomainDir/$domain_safe/private_data";
 
+#Read desired units
+my $domain_nl;
+my $nl_var;
+my $units;
+my @units_array;
+if(-e "$laps_data_root/static/lapsplot.nl"){
+    $domain_nl = "lapsplot.nl";
+    $nl_var="c_units_type";
+    @units_array=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
+    $units=@units_array[0];
+}
+
+#print "unitsarray = @units_array<br>";
+#print "units1 = $units<br>";
+
 my $xcen_safe;
 $xcen =~ /(.*)/;
 $xcen_safe = $1;
@@ -247,12 +272,12 @@ my $wgi_only = 0;
 chomp $forecast_time;
 print "time = $a9time$forecast_time ";
 
-my $units;
+#Default units is set above as read in from the lapsplot.nl namelist
 if($domain_safe =~ "tw_" || $domain_safe =~ "tai" || $domain_safe =~ "th" || $domain_safe =~ "fmi"){
     $units = "metric";
-}else{
-    $units = "english";
 }
+
+#print "units2 = $units<br>";
 
 if ($domain eq "") {
     $err=1;
@@ -293,7 +318,7 @@ if($err == 0) {
 #   Determine if one of the sources is a forecast, if so obtain $a9time from the $systime
     $fcst=0;
     foreach $source (@sources) {
-        if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "bkgnd"){
+        if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "WRF" || "$source" =~ "bkgnd"){
             $fcst=1;
         }
     }
@@ -514,7 +539,7 @@ if($err == 0) {
                   $overlay = $overlay + 1;
                   $sounding = $sounding + 1;
 
-                  if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf"){
+                  if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "WRF"){
                       if("$level" eq "sfc/2d"){                # fsf sfc forecast
                           if   ("$field" eq "msl_p" ) { 
                               printf LAPSPLOT "bs\n"; 
@@ -1897,6 +1922,14 @@ if($err == 0) {
                         printf LAPSPLOT "y\n"; 
                         printf LAPSPLOT "r\n"; 
 
+                    }elsif("$field" eq "windspd" || "$field" eq "WINDSPD") { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "ob\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "r\n"; 
+
                     }elsif("$field" eq "reflct" ) { 
                         printf LAPSPLOT "rv\n"; 
                         if("$hhmm" =~ "v"){
@@ -1987,6 +2020,9 @@ if($err == 0) {
 
                     }elsif("$field" eq "cld_top" ){ 
                         printf LAPSPLOT "ct\n"; 
+
+                    }elsif("$field" eq "CLD_BASE" ){ 
+                        printf LAPSPLOT "cbi\n"; 
 
                     }elsif("$field" eq "cld_base" ){ 
                         printf LAPSPLOT "cb\n"; 
@@ -2868,8 +2904,7 @@ my $y_hw;
 #Read grid dimensions
 my $xdim;
 my $ydim;
-my $domain_nl = "nest7grid.parms";
-my $nl_var;
+$domain_nl = "nest7grid.parms";
 if(-e "$laps_data_root/static/$domain_nl"){
     $nl_var="NX_L";
     @xdim=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);

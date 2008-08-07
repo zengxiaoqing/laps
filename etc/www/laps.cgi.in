@@ -35,8 +35,18 @@ $returnAddress = ($ENV{'REMOTE_HOST'} || $ENV{REMOTE_ADDR} ||
 $default_title="FSL/LAPS Data Display (Experimental)";
 ###^^^^^^^^^^^^^^^^^^^^^
 
+# $web_root is where the '$web_root/domains/[list of domains]/private_data'
+# soft links (to each $LAPS_DATA_ROOT) should be set up
+
 $web_root = "/w3/lapb";
-$request_root = "/w3/lapb/request";
+#$web_root = "@prefix@/etc/www";
+
+# request_root is where the '$request_root/lapsplot/scratch' directory tree
+# should be set up
+
+$request_root = "$web_root/request";
+#$request_root = "$web_root";
+
 $filename = "$request_root/lapsplot/selected.in";
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
@@ -87,7 +97,7 @@ if($preferred_model eq "" || $preferred_model eq " " || $preferred_model eq " " 
 #print "<br>preferred_model = $preferred_model";
 
 #Read model directories for this domain
-opendir LAPSPRD, "$laps_data_root/lapsprd/fua";
+opendir LAPSPRD, "$laps_data_root/lapsprd/fsf";
 @modellist = readdir LAPSPRD;
 close LAPSPRD;
 @modellist = sort @modellist;
@@ -353,6 +363,7 @@ print <<"EOF";
 <option $selected{'VENT_INDX'}> VENT_INDX
 <option $selected{'HAINES'}> HAINES
 <option $selected{'CLD_CVR'}> <FONT COLOR="#AA0000">CLD_CVR</FONT>
+<option $selected{'CLD_BASE'}> CLD_BASE
 <option $selected{'CLD_TOP'}> CLD_TOP
 <option $selected{'CLD_LIQ'}> CLD_LIQ
 <option $selected{'CLD_ICE'}> CLD_ICE
