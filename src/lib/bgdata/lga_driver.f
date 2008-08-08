@@ -44,6 +44,8 @@ c ht_sfc and td_sfc are passed into subroutine sfcbkgd -> now called sfcbkgd_sfc
 c KML: END
 
 c
+      use mem_namelist, ONLY: read_namelist_laps
+c
       implicit none
       include 'bgdata.inc'
       real     badflag
@@ -75,6 +77,7 @@ c
       character*256 bg_names(max_files)
       character*256 reject_names(max_files)
       character*132 cmodel
+      character*150 static_dir,filename
       
       integer warncnt
 c sfc namelist stuff. for reduced pressure calc
@@ -1122,14 +1125,10 @@ c
 c..... Compute reduced pressure using reduced pressure level from
 c      surface namelist file
 c
-           call read_sfc_nl(use_lso_qc,skip_internal_qc
-     1                     ,itheta, redp_lvl, del, gam, ak
-     1                     ,l_require_lso
-     1                     ,bad_t,bad_td,bad_u,bad_v,bad_p
-     1                     ,bad_mp,bad_th,bad_the
-     1                     ,bad_vis,bad_tb8
-     1                     ,thresh_t,thresh_td,thresh_mslp
-     1                     ,sfc_nl_parms,istatus)
+c          Read surface parameters into module memory structure
+           call get_directory('static',static_dir,len_dir)
+           filename = static_dir(1:len_dir)//'/surface_analysis.nl'
+           call read_namelist_laps('sfc_anal',filename)
 
            allocate (rp_lvl(nx_laps,ny_laps)
      1,rp_tp(nx_laps,ny_laps),rp_sh(nx_laps,ny_laps))
