@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
 
-        subroutine laps_cloud(i4time,
+        subroutine laps_cloud_sub(i4time,
      1                        NX_L,NY_L,
      1                        NZ_L,
      1                        N_PIREP,
@@ -955,8 +955,7 @@ C INSERT RADAR DATA
      1          ,temp_3d,t_sfc_k,td_sfc_k                            ! I
      1          ,grid_spacing_cen_m,NX_L,NY_L,NZ_L                   ! I
      1          ,KCLOUD,cloud_base,ref_base                          ! I
-!    1          ,topo,solar_alt,r_missing_data                       ! I
-     1          ,topo,r_missing_data                                 ! I
+     1          ,topo,solar_alt,r_missing_data                       ! I
      1          ,radar_ref_3d,dbz_max_2d                             ! I/O
      1          ,vis_radar_thresh_dbz                                ! I
      1          ,l_unresolved                                        ! O
