@@ -5020,6 +5020,7 @@ c                   cint = -1.
             cint = 10.
 
             plot_parms%ncols = nint(abs(chigh-clow)/cint)
+            plot_parms%iraster = 1
 
             call plot_field_2d(i4time_pw,c_type,field_2d,1e0
      1                        ,namelist_parms,plot_parms
