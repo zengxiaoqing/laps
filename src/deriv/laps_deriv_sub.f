@@ -50,6 +50,7 @@ cdis
      1                        rh_3d_pct,
      1                        pres_sfc_pa,
      1                        t_sfc_k,
+     1                        twet_snow,                 ! O
      1                        j_status,istatus)
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
@@ -343,6 +344,7 @@ cdis
      1                       vv_to_height_ratio_Sc,                  ! O
      1                       vv_for_St,                              ! O
      1                       thresh_cvr_cty_vv,thresh_cvr_lwc,       ! O
+     1                       twet_snow,                              ! O
      1                       istatus)                                ! O
         if (istatus .ne. 1) then
            write (6,*) 'Error calling get_deriv_parms'
@@ -587,6 +589,7 @@ c read in laps lat/lon and topo
      1                vv_to_height_ratio_Sc,                               ! I
      1                vv_for_St,                                           ! I
      1                l_flag_bogus_w,w_3d,l_bogus_radar_w,
+     1                twet_snow,                                           ! I
      1                istatus)                                             ! O
         if(istatus .ne. 1)then
             write(6,*)' Bad status return from get_cloud_deriv'
@@ -676,7 +679,7 @@ c read in laps lat/lon and topo
 
 !           Note that pres_sfc_pa was already read in above
             call get_sfc_preciptype(pres_sfc_pa,t_sfc_k,td_sfc_k
-     1                             ,cldpcp_type_3d
+     1                             ,cldpcp_type_3d,twet_snow
      1                             ,dbz_low_2d,i2_pcp_type_2d
      1                             ,NX_L,NY_L,NZ_L)
 
