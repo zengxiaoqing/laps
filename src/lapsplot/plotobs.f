@@ -59,6 +59,10 @@ cdis
 
         integer n_plotted(imax,jmax)
 
+        real riob_a(1000000)
+        real rjob_a(1000000)
+        logical l_plot
+
         character*150 directory
         character*31 ext,c3_obsext
         character*10  units_2d
@@ -648,12 +652,15 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 !       Plot Pirep winds  ***********************************************
 911     write(6,*)
         write(6,*)' ACARS/CDW Winds'
-
+         
         lun = 32
         ext = 'pig'
         call get_directory(ext,directory,len_dir)
         open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
      1  ,status='old',err=1011)
+
+        iob = 0 ! initialize for obs density routine
+        dist_plot = namelist_parms%dist_plot_ua ! threshold in grid points
 
         do while (.true.)
             read(32,*,end=51)ri,rj,rk,dir,speed_ms,c3_obsext
@@ -694,10 +701,23 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 endif
 
-                write(6,921)ri,rj,rk,max(dir,-99.),spd_kt,c3_obsext
-921             format(1x,3f8.1,4x,f7.0,f7.0,2x,a3)
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+                call check_ob_density(riob_a,rjob_a,1000000
+     1                               ,iob,ri,rj,dist_plot,l_plot)
+
+                if(l_plot)then
+                    iob = iob + 1
+                    riob_a(iob) = ri
+                    rjob_a(iob) = rj
+
+
+                    write(6,921)ri,rj,rk,max(dir,-99.),spd_kt,c3_obsext
+921                 format(1x,3f8.1,4x,f7.0,f7.0,2x,a3)
+                    call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_pirep,aspect,'true')
+                else
+                    write(6,922)ri,rj,rk,max(dir,-99.),spd_kt,c3_obsext
+922                 format(1x,3f8.1,4x,f7.0,f7.0,2x,a3,' not plotted')
+                endif
 
             endif ! k .eq. k_level
 
@@ -724,7 +744,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         do while (.true.)
 
-            read(32,*,end=922)
+            read(32,*,end=932)
      1          k_grid,dum,dum,i_grid,j_grid,u_grid,v_grid
 
             alat = lat(i_grid,j_grid)
@@ -761,7 +781,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         enddo ! i
 
-922     continue
+932     continue
 
         close(32)
 
@@ -1057,6 +1077,43 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 141     continue
 
         close(32)
+
+        return
+        end
+
+        subroutine check_ob_density(riob_a,rjob_a,maxobs
+     1                             ,iob,ri,rj,dist_plot,l_plot)
+
+!       Determine whether to plot an ob based on its distance to the previously
+!       plotted obs
+
+        real riob_a(maxobs) ! I/O
+        real rjob_a(maxobs) ! I/O
+        real dist_plot    ! I    number of gridpoints allowed between obs
+        integer iob       ! I/O
+        logical l_plot    ! O
+
+        l_plot = .false.
+
+        dist_plot_sq = dist_plot**2
+
+        if(iob .eq. 0)then
+            l_plot = .true.
+        else
+            l_plot = .true.
+            do i = 1,iob
+                dist_sq = (ri - riob_a(i))**2 + (rj - rjob_a(i))**2
+                if(dist_sq .lt. dist_plot_sq)then
+                    l_plot = .false.
+                endif
+            enddo ! i
+        endif        
+
+        if(l_plot)then ! add this ob into the arrays of plotted obs
+            iob = iob + 1
+            riob_a(iob) = ri
+            rjob_a(iob) = rj
+        endif
 
         return
         end
