@@ -40,6 +40,7 @@ cdis
      1          ,rh_3d_pct                       ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
+     1          ,twet_snow                       ! Input
      1          ,td_3d_k                         ! Output
      1          ,istatus)                        ! Output
 
@@ -68,6 +69,7 @@ cdoc    Calculate and write out set of 2-D stability grids
         real k_2d(NX_L,NY_L)
         real lcl_2d(NX_L,NY_L)
         real wb0_2d(NX_L,NY_L)
+        real wb1_2d(NX_L,NY_L)
 
         real li(NX_L,NY_L)
 
@@ -148,11 +150,11 @@ cdoc    Calculate and write out set of 2-D stability grids
         enddo ! j
         enddo ! k            
 
-        call laps_be(NX_L,NY_L,NZ_L
+        call laps_be(NX_L,NY_L,NZ_L,twet_snow
      1              ,temp_sfc_k,td_sfc_k,pres_sfc_pa
      1              ,temp_3d,td_3d_k,heights_3d,topo,blayr_thk_pa
      1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
-     1              ,r_missing_data)
+     1              ,wb1_2d,r_missing_data)
 
 !       Fill pres_sfc_mb
         call move(pres_sfc_pa,pres_sfc_mb,NX_L,NY_L)
@@ -224,10 +226,10 @@ cdoc    Calculate and write out set of 2-D stability grids
         end
 
 
-        subroutine laps_be(ni,nj,nk
+        subroutine laps_be(ni,nj,nk,twet_snow
      1        ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
      1        ,blayr_thk_pa,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
-     1        ,r_missing_data)
+     1        ,wb1_2d,r_missing_data)
 
 !       1991    Steve Albers
 cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
@@ -251,6 +253,7 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
         real k_2d(ni,nj)
         real lcl_2d(ni,nj)
         real wb0_2d(ni,nj)
+        real wb1_2d(ni,nj)
         
         include 'lapsparms.for'
         integer MXL
@@ -315,7 +318,10 @@ c       write(6,*)' i = ',i
 
             IO = 0
 
-            CALL SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0,PLCL,LCL,CCL
+            CALL SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT
+     1                ,twet_snow                                        ! I
+     1                ,HWB0,HWB_snow                                    ! O
+     1                ,PLCL,LCL,CCL
      1                ,TCONV,IO,blayr_thk_pa
      1                ,ICP,ICT,K_INDEX,TMAX,PBENEG,PBEPOS,T500,PBLI
      1                ,VELNEG,WATER,IHOUR,istatus)
@@ -338,9 +344,15 @@ c       write(6,*)' i = ',i
             endif
 
             if(HWB0 .ne. r_missing_data)then
-                wb0_2d(i,j) = HWB0*304.8006 + topo(i,j)  ! KFT AGL to M MSL
+                wb0_2d(i,j) = HWB0*304.8006 + topo(i,j)      ! KFT AGL to M MSL
             else
                 wb0_2d(i,j) = r_missing_data
+            endif
+
+            if(HWB_snow .ne. r_missing_data)then
+                wb1_2d(i,j) = HWB_snow*304.8006 + topo(i,j)  ! KFT AGL to M MSL
+            else
+                wb1_2d(i,j) = r_missing_data
             endif
 
             iwarn = 0
@@ -432,7 +444,8 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC                                       
         END
 
 !
-        SUBROUTINE SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT,HWB0
+        SUBROUTINE SINDX(NLEVEL,LI,SI,BLI,TT,SWEAT
+     1   ,twet_snow,HWB0,HWB_snow
      1   ,PLCL_PBE,LCL_PBE_MSL,CCL  
      1   ,TCONV,IO,blayr_thk_pa,ICP,ICT,K,TMAX,PBENEG,PBEPOS,TMAN50
      1   ,PBLI,VELNEG,WATER,IHOUR,istatus)
@@ -561,82 +574,10 @@ C  CALCULATE TOTAL TOTALS AND SWEAT AND K INDICIES
 
 C                                                                         
 C  CALCULATE WET BULB ZERO LEVEL                                          
- 	IOUT=MIN(IO,1)                                                          
- 	IF(WB(1).GE.0.)GOTO150                                                  
-!	IF(IO.GE.2)WRITE(6,87)                                                  
- 87	format(' SURFACE WETBULB TEMP IS BELOW ZERO')                          
- 	HWB0=0.                                                                 
- 	PWB0=0.                                                                 
- 	GOTO390                                                                 
-C                                                                         
-!       Test for bracketing of the Wet Bulb Zero
- 150	DO 200 N=2,NLEVEL                                                    
- 	    IF(WB(N)*WB(N-1))250,250,200                                            
- 200    CONTINUE                                                           
+        twet0 = 0.       ! Deg C
+        call wtblb_lvl(twet0,P,T,Q,WB,MXL,NLEVEL,PWB0,HWB0)
 
-        write(6,*)' Warning, no WB0 detected in loop'
-        goto390
-
-!       The two levels bracket an occurrence of Wet Bulb Zero
- 250    if(.false.)then                                  ! original method 
- 	    SLOPE=(WB(N)-WB(N-1))/(P(N)-P(N-1))                                
- 	    WTBLB0=WB(N)                                                       
- 	    PWB0=P(N)                                                          
- 	    ITER=0                                                             
- 	    GOTO262                                                            
-C                                                                         
-C	    ENTER NEWTON ITERATION LOOP     
- 260	    CONTINUE        
-
- 	    CALL ITPLV(P, T,NLEVEL,PWB0,TWB0 ,IO,istatus)      
-            if(istatus .ne. 1)goto390
-
- 	    CALL ITPLV(P,TD,NLEVEL,PWB0,TDWB0,IO,istatus)       
-            if(istatus .ne. 1)goto390
-
- 	    QQ=ES(TDWB0)*EPSILN/PWB0       
- 	    WWB0=QQ/(1.-QQ)          
- 	    WTBLB0=WTBLB(PWB0,TWB0,WWB0,IOUT,istatus)      
-            if(istatus .ne. 1)then
-                write(6,*)' Bad istatus return from WTBLB: P,T,W = '
-     1                   ,PWB0,TWB0,WWB0
-                return
-            endif
-
- 262        CONTINUE
-
-!   	    IF(IO.GE.2)WRITE(6,265)N,PWB0,TWB0,TDWB0,WTBLB0,SLOPE,DELTA   
- 265	    format(' WTBLB0 LOOP',I3,F12.3,5F12.5)         
- 	    IF(ABS(WTBLB0).LE..05)GOTO300            
- 	    CALL NEWTN(PWB0,POLD,WTBLB0,WETOLD,SLOPE,ITER,IO,1000.
-     1                                                      ,istatus)
-            if(istatus .ne. 1)then
-                goto390
-            else        
- 	        GOTO260      
-            endif
-C                                                                         
- 300	    CONTINUE       
-
-        else                                     ! new method
-            frac = (0. - WB(N-1)) / (WB(N) - WB(N-1))
-            PWB0 = P(N-1) * (1. - frac) + P(N) * frac
-
-        endif
-
-!       Integrate hydrostatically to get height from pressure
- 	CALL BLAYR(P,T,Q,DUM1,DUM2,DUM3,P(1)-PWB0,NLEVEL,HWB0,1,IO) 
-!	IF(IO.GE.1)WRITE(6,351)PWB0,HWB0                            
- 351	format(' WETBULB ZERO IS AT',F6.1,'MB     OR',F6.2,'KFT  AGL')        
-
-        goto400                      ! Normal condition
-
- 390    HWB0 = r_missing_data        ! Indeterminate condition
-        PWB0 = r_missing_data
-
- 400    CONTINUE
-
-!3      FORMAT(' LVL(',I2,')',3F10.1,F11.6,F10.2)
+        call wtblb_lvl(twet_snow,P,T,Q,WB,MXL,NLEVEL,PWB_snow,HWB_snow)       
 
 !       Calculate theta(e) based on sfc parcel
         THETAE=OE_FAST(T(1),TD(1),P(1)) + 273.15
@@ -2189,3 +2130,50 @@ C   PRESSURE FOR DRY AIR.
         RETURN
         END
 
+
+        subroutine wtblb_lvl(twet_c,P,T,Q,WB,MXL,NLEVEL,PWB0,HWB0)
+
+        real twet_c         ! Input:  wet bulb temperature in degrees C 
+        real P(MXL)         ! Input:  pressure sounding (mb)
+        real T(MXL)         ! Input:  temperature sounding (C)
+        real Q(MXL)         ! Input:  specific humidity sounding
+        real WB(MXL)        ! Input:  wet bulb temperature sounding
+        integer MXL         ! Input:  size of P,T,Q arrays
+        integer nlevel      ! Input:  number of levels in vertical arrays
+        real PWB0           ! Output: pressure of the wet bulb level
+        real HWB0           ! Output: height of the wet bulb level (kft agl)
+
+ 	IOUT=MIN(IO,1)                                                          
+ 	IF(WB(1).GE.twet_c)GOTO150                                                  
+!	IF(IO.GE.2)WRITE(6,87)                                                  
+ 87	format(' SURFACE WETBULB TEMP IS BELOW twet_c')                          
+ 	HWB0=0.                                                                 
+ 	PWB0=0.                                                                 
+ 	GOTO390                                                                 
+C                                                                         
+!       Test for bracketing of the Wet Bulb Zero
+ 150	DO 200 N=2,NLEVEL                                                    
+! 	    IF(WB(N)*WB(N-1))250,250,200                                            
+            if( (wb(n) - twet_c) * (wb(n-1) - twet_c) )250,250,200 
+ 200    CONTINUE                                                           
+
+        write(6,*)' Warning, no wet bulb detected in loop'
+        goto390
+
+ 250    frac = (twet_c - WB(N-1)) / (WB(N) - WB(N-1))
+        PWB0 = P(N-1) * (1. - frac) + P(N) * frac
+
+!       Integrate hydrostatically to get height from pressure
+ 	CALL BLAYR(P,T,Q,DUM1,DUM2,DUM3,P(1)-PWB0,NLEVEL,HWB0,1,IO) 
+!	IF(IO.GE.1)WRITE(6,351)PWB0,HWB0                            
+ 351	format(' WETBULB ZERO IS AT',F6.1,'MB     OR',F6.2,'KFT  AGL')        
+
+        goto400                      ! Normal condition
+
+ 390    HWB0 = r_missing_data        ! Indeterminate condition
+        PWB0 = r_missing_data
+
+ 400    CONTINUE
+
+        return
+        end
