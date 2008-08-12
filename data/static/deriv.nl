@@ -6,6 +6,7 @@
  vv_for_St=.01,
  thresh_cvr_cty_vv=0.65,
  thresh_cvr_lwc=0.65,
+ twet_snow=+1.3,
  /
 
 c DERIV PARAMETERS
@@ -36,3 +37,5 @@ c                     a lower value will increase the extent and magnitude of
 c                     the cloud omega field
 c
 c thresh_cvr_lwc - cloud cover threshold used for cloud liquid/ice
+c
+c twet_snow - wet bulb snow melting threshold (degrees C)
