@@ -40,7 +40,7 @@ cdis
      1         ,temp_3d,temp_sfc_k,td_sfc_k                          ! I
      1         ,grid_spacing_m,ni,nj,nk,kcloud                       ! I
      1         ,cloud_base,ref_base                                  ! I
-     1         ,topo,r_missing_data                                  ! I
+     1         ,topo,solar_alt,r_missing_data                        ! I
      1         ,grid_ra_ref,dbz_max_2d                               ! I/O
      1         ,vis_radar_thresh_dbz                                 ! I
      1         ,l_unresolved                                         ! O
@@ -87,9 +87,11 @@ cdis
         real cloud_base(ni,nj)
         real cloud_base_buf(ni,nj) ! Lowest SAO/IR base within search radius
         real topo(ni,nj)
+        real solar_alt(ni,nj)
 
         real echo_top(ni,nj)           ! L
         real echo_top_agl(ni,nj)       ! L
+        real echo_agl_thr(ni,nj)       ! L
         real lcl_agl(ni,nj)            ! L
 
 !       Cloud not filled in unless radar echo is higher than base calculated
@@ -104,13 +106,20 @@ cdis
         unlimited_ceiling = 200000.
 
 !       Echo top threshold
-        echo_agl_thr = 2000.
+!       echo_agl_thr = 2000.
 
 !       Search radius for cloud bases
         search_radius_m = 120000.
 
         do j = 1,nj
         do i = 1,ni
+            if(solar_alt(i,j) .lt. 15. .and. 
+     1          td_sfc_k(i,j) .gt. 283.15)then ! humid summer evenings
+                echo_agl_thr(i,j) = 4000.
+            else
+                echo_agl_thr(i,j) = 2000.
+            endif
+
             cloud_base(i,j) = unlimited_ceiling
             echo_top(i,j) = r_missing_data
             echo_top_agl(i,j) = r_missing_data
@@ -224,7 +233,8 @@ c                   write(6,*)' khigh = ',kk
 
                             if(cloud_base_buf(i,j) .lt. echo_top(i,j)
      1                                       .AND. 
-     1                         echo_top_agl(i,j) .gt. echo_agl_thr)then       
+     1                         echo_top_agl(i,j) .gt. echo_agl_thr(i,j)
+     1                                                             )then
 
                               isearch_base = isearch_base + 1
                               if(isearch_base .lt. 50)then ! limit log output
@@ -240,7 +250,7 @@ c                   write(6,*)' khigh = ',kk
                                 if(cloud_base(i,j) 
      1                                      .eq. unlimited_ceiling    ! No clds
      1                                      .OR.
-     1                             echo_top_agl(i,j) .lt. echo_agl_thr! Gnd Clut
+     1                          echo_top_agl(i,j) .lt. echo_agl_thr(i,j)! Gnd Clut
      1                                                             )then       
 
 !                                   We will want to reconcile cloud/radar
@@ -319,7 +329,7 @@ c                   write(6,*)' khigh = ',kk
         do i = 1,ni
         do j = 1,nj
             if(echo_top(i,j) .ne. r_missing_data)then
-                if(echo_top_agl(i,j) .lt. echo_agl_thr .and. 
+                if(echo_top_agl(i,j) .lt. echo_agl_thr(i,j) .and. 
      1             .not. l_unresolved(i,j)       )then
 !                   Should we set these to unresolved here or better yet above?
                     write(6,610)i,j       
