@@ -208,6 +208,7 @@ c
      1                       ,l_discrete, l_sphere
      1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
+     1                       ,dist_plot_ua, dist_plot_sfc
 
 !      Set defaults
        latlon_int = 0
@@ -248,6 +249,8 @@ c
        namelist_parms%mode_supmap = mode_supmap
        namelist_parms%iraster = iraster
        namelist_parms%icol_barbs = icol_barbs
+       namelist_parms%dist_plot_ua = dist_plot_ua
+       namelist_parms%dist_plot_sfc = dist_plot_sfc
 
        istatus = 1
        return
