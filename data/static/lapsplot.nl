@@ -14,6 +14,7 @@
  mode_supmap=3,
  iraster=0,
  icol_barbs=0,
+ dist_plot_ua=1.,
  /
 
 c LAPSPLOT PARAMETERS
@@ -64,3 +65,8 @@ c           (-1) use contour fill image plots exclusively for better quality
 c
 c icol_barbs - (0) use default situation dependent settings for wind barb color
 c              (1) always have colored wind barbs (instead of black)
+c
+c dist_plot_ua - used to thin out the plotted upper air (ACARS & Cloud Drift 
+c                Wind) observations and represents the threshold distance in 
+c                grid points between obs. A value of zero will disable the 
+c                thinning to see all the obs.
