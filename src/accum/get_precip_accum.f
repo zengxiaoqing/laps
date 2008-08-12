@@ -139,6 +139,8 @@
 
         data mode_radar/1/
 
+        twet_snow = +1.3
+
         max_radar_gap = float(ilaps_cycle_time) + 1200. ! * 1.33334
 
         im = imax/2 ! 15
@@ -310,7 +312,8 @@
 
                     call cpt_pcp_type_3d(temp_3d,rh_3d,pres_3d
      1                  ,grid_ra_ref,l_mask_pcp,grid_spacing_cen_m
-     1                  ,imax,jmax,kmax,i2_cldpcp_type_3d,istatus)
+     1                  ,imax,jmax,kmax,twet_snow,i2_cldpcp_type_3d
+     1                  ,istatus)
                     if(istatus .ne. 1)then
                         return
                     endif
@@ -319,8 +322,8 @@
 
                     write(6,*)' Compute sfc precip type'
                     call get_sfc_preciptype(pres_sfc_pa,t_sfc_k,td_sfc_k
-     1                                  ,i2_cldpcp_type_3d,dbz_2d
-     1                                  ,i2_pcp_type_2d,imax,jmax,kmax)
+     1                              ,i2_cldpcp_type_3d,twet_snow,dbz_2d
+     1                              ,i2_pcp_type_2d,imax,jmax,kmax)
 
                     I4_elapsed = ishow_timer()
 
@@ -615,14 +618,15 @@
 
         call cpt_pcp_type_3d(temp_3d,rh_3d,pres_3d,grid_ra_ref
      1          ,l_mask_pcp,grid_spacing_cen_m
-     1          ,imax,jmax,kmax,i2_cldpcp_type_3d,istatus)
+     1          ,imax,jmax,kmax,twet_snow,i2_cldpcp_type_3d,istatus)
         if(istatus .ne. 1)then
             return
         endif
 
         write(6,*)' Compute sfc precip type'
         call get_sfc_preciptype(pres_sfc_pa,t_sfc_k,td_sfc_k
-     1        ,i2_cldpcp_type_3d,dbz_2d,i2_pcp_type_2d,imax,jmax,kmax)
+     1        ,i2_cldpcp_type_3d,twet_snow,dbz_2d,i2_pcp_type_2d
+     1        ,imax,jmax,kmax)
 
         write(6,*)' Adding in accumulation for the last period'
 
