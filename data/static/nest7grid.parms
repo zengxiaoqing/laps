@@ -172,8 +172,9 @@ c                     subdirectories. Lapsplot will plot only among those
 c                     listed elements.
 c
 c iwrite_output - flag to write out all little files or just a restricted set
-c                 (1) means write out all little files
-c                 (0) means write out restricted set for single executable
+c                 (1)  means write out all little files
+c                 (0)  means write out restricted set for single executable
+c                 (-1) means doesn't write out any little files
 c
 c TERRAIN SMOOTHING
 c           
