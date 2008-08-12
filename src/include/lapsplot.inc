@@ -11,6 +11,8 @@
 
           real continent_line_width
           real time_zone
+          real dist_plot_ua
+          real dist_plot_sfc
 
           integer latlon_int
           integer mode_supmap
