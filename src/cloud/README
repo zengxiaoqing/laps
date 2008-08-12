@@ -1,8 +1,8 @@
 
 
-main 
-    get_cloud_parms
-    laps_cloud                                           laps_cloud_sub.f
+main                                                     laps_cloud.f
+    get_cloud_parms                                          "
+    laps_cloud_sub                                       laps_cloud_sub.f
         get_modelfg                                      get_fg_cloud.f
         insert_sao                                       insertsao.f
             read_surface_sa                                  
