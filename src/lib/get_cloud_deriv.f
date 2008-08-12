@@ -44,6 +44,7 @@ cdis
      1                          vv_to_height_ratio_Sc,                    ! I
      1                          vv_for_St,                                ! I
      1                          l_flag_bogus_w,omega_3d,l_bogus_radar_w,
+     1                          twet_snow,                                ! I
      1                          istatus)                                  ! O
 
 !       Steve Albers
@@ -592,7 +593,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
             call cpt_pcp_type_3d(temp_3d,rh_3d_pct,pres_3d
      1                  ,radar_3d,l_mask_pcptype,grid_spacing_cen_m       
-     1                  ,ni,nj,nk,cldpcp_type_3d,istatus)
+     1                  ,ni,nj,nk,twet_snow,cldpcp_type_3d,istatus)
             if(istatus .ne. 1)then
                 write(6,*)'Bad status returned from cpt_pcp_type_3d'
                 return
@@ -640,7 +641,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
         subroutine cpt_pcp_type_3d(temp_3d,rh_3d_pct,pres_3d
      1  ,radar_3d,l_mask,grid_spacing_cen_m
-     1  ,ni,nj,nk,cldpcp_type_3d,istatus)
+     1  ,ni,nj,nk,twet_snow,cldpcp_type_3d,istatus)
 
 !       1991    Steve Albers
 !       1997    Steve Albers - Allow for supercooled precip generation
@@ -707,7 +708,7 @@ cdoc    Compute 3D Precip Type given profiles of T, RH, Reflectivity
                     pressure_mb = pres_3d(i,j,k) / 100.
 
                     thresh_melt_c =
-     1                  wb_melting_threshold(t_c,radar_3d(i,j,k))
+     1               wb_melting_threshold(t_c,radar_3d(i,j,k),twet_snow)
 
 !                   This function call here is fast but returns a t_wb_c
 !                   equal to t_c if pres < 500mb. This approximation should
@@ -863,7 +864,7 @@ cdoc    Compute 3D Precip Type given profiles of T, RH, Reflectivity
 
 
         subroutine get_sfc_preciptype(pres_2d,t_sfc_k,td_sfc_k
-     1            ,cldpcp_type_3d
+     1            ,cldpcp_type_3d,twet_snow
      1            ,dbz_2d,pcp_type_2d,ni,nj,nk)
 
 !       Steve Albers 1991
@@ -935,7 +936,7 @@ cdoc    Compute Sfc Precip Type, given both sfc and 3D fields
 
 !               Note that the dbz value has not been passed in yet
                 thresh_melt_c = 
-     1                         wb_melting_threshold(t_sfc_c,dbz_2d(i,j))       
+     1              wb_melting_threshold(t_sfc_c,dbz_2d(i,j),twet_snow)       
 
                 n_precip = n_precip + 1
                 if(iprecip_type .ne. 1)then       ! Not Rain
@@ -1327,12 +1328,13 @@ c
       return
       end
 
-      function wb_melting_threshold(t_c,dbz)
+      function wb_melting_threshold(t_c,dbz,twet_snow)
 
 cdoc  This function calculates the wet-bulb threshold for melting snow into
-cdoc  rain as a function of dbz and t_c.
+cdoc  rain as a function of dbz and t_c. In the absence of radar a default
+cdoc  value is used.
 
-      wb_melting_threshold = 1.3  ! Units are C
+      wb_melting_threshold = twet_snow  ! Units are C
 
       return
       end
