@@ -241,6 +241,7 @@ cdis
      1                  pres_sfc_pa,             ! I
      1                  temp_sfc_k,              ! I
 !    1                  dbz_max_2d,istat_lps,    ! O
+     1                  twet_snow,               ! O
      1                  j_status,                ! O
      1                  istatus1)                ! O
 
@@ -272,6 +273,7 @@ cdis
      1          ,rh_3d_pct                       ! I
      1          ,temp_sfc_k                      ! I
      1          ,pres_sfc_pa                     ! I
+     1          ,twet_snow                       ! I
      1          ,td_3d_k                         ! O
      1          ,istat_lst)                      ! O
         else
@@ -319,12 +321,13 @@ cdis
      1                            vv_to_height_ratio_Sc,                  ! O
      1                            vv_for_St,                              ! O
      1                            thresh_cvr_cty_vv,thresh_cvr_lwc,       ! O
+     1                            twet_snow,                              ! O
      1                            istatus)                                ! O
 
        Real vv_to_height_ratio_Cu
        Real vv_to_height_ratio_Sc
        Real vv_for_St
-       Real thresh_cvr_cty_vv,thresh_cvr_lwc
+       Real thresh_cvr_cty_vv,thresh_cvr_lwc,twet_snow
 
        logical l_bogus_radar_w
 
@@ -332,7 +335,8 @@ cdis
      1                     vv_to_height_ratio_Cu,
      1                     vv_to_height_ratio_Sc,
      1                     vv_for_St,
-     1                     thresh_cvr_cty_vv,thresh_cvr_lwc
+     1                     thresh_cvr_cty_vv,thresh_cvr_lwc,
+     1                     twet_snow
  
        character*150 static_dir,filename
  
