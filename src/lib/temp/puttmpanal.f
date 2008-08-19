@@ -68,7 +68,6 @@ cdis
 
         real temp_3d(ni,nj,nk) ! Output
         real heights_3d(ni,nj,nk) ! Output
-        real output_4d(ni,nj,nk,2)
 
         real sh_3d(ni,nj,nk)     ! Local
         real pres_3d(ni,nj,nk)   ! Output
@@ -660,9 +659,9 @@ c       1                               j_diff_thmax,k_diff_thmax
         enddo ! i
         write(6,*)' Passed QC check of heights against the topo field'
 
-        if(iflag_write .eq. 1)then
+        if(iflag_write .ge. 0)then
             call write_temp_anal(i4time_needed,ni,nj,nk,temp_3d
-     1                  ,heights_3d,output_4d,comment_2d,istatus)
+     1                  ,heights_3d,comment_2d,istatus)
         endif
 
         I4_elapsed = ishow_timer()
@@ -671,7 +670,7 @@ c       1                               j_diff_thmax,k_diff_thmax
         end
 
         subroutine write_temp_anal(i4time,imax,jmax,kmax,temp_3d
-     1                  ,heights_3d,output_4d,comment_2d,istatus)
+     1                  ,heights_3d,comment_2d,istatus)
 
         integer nf
         parameter (nf = 2)
@@ -684,7 +683,7 @@ c       1                               j_diff_thmax,k_diff_thmax
 
         real temp_3d(imax,jmax,kmax)
         real heights_3d(imax,jmax,kmax)
-        real output_4d(imax,jmax,kmax,2)
+        real output_4d(imax,jmax,kmax,2) ! Local
 
         EXT = 'lt1'
 
