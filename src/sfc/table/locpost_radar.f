@@ -31,7 +31,7 @@
         call s_len(cfg_fname,len_fname)
         open(lun,file=cfg_fname(1:len_fname),status='old',err=998)
 
-        radars_fn = static_dir(1:len_dir)//'/radarlist.txt'
+        radars_fn = static_dir(1:len_dir)//'/radarlist.dat'
         call s_len(radars_fn,len_rname)
         open(lun_out,file=radars_fn(1:len_rname),status='unknown'
      1                                          ,err=998)
@@ -98,7 +98,9 @@
             dist_outside_km = dist_outside * grid_spacing_m / 1000.
 
             if(dist_outside_km .le. 100.)then
-                write(lun_out,*)c4_name,dist_outside_km
+                write(lun_out,21)c4_name,dist_outside_km
+     1                          ,nint(ri),nint(rj)
+ 21		format(1x,a4,f9.2,2i7)
             endif
 
         enddo ! il
