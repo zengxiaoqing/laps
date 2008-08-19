@@ -32,7 +32,8 @@
      1 ,thresh_25_radarobs_lvl_unfltrd_in=>
      1  thresh_25_radarobs_lvl_unfltrd
      1                        ,stdev_thresh_radial
-     1                        ,weight_radar       
+     1                        ,weight_radar 
+     1                        ,iwrite_output      
 
       real   vr_obs_unfltrd(imax,jmax,kmax,max_radars)             ! Input
       real   rlat_radar(max_radars),rlon_radar(max_radars)         ! Input
@@ -240,10 +241,12 @@ csms$ignore begin
      1                                di_wind,
      1                                speed)
 
-                      call open_dxx(i_illuminated_last,i4time,lun_dxx
-     1                             ,istatus)
-                      write(lun_dxx,321)i-1,j-1,k-1,di_wind,speed
-321                   format(1x,3i4,2f6.1,2f6.1)
+                      if(iwrite_output .ge. 1)then
+                          call open_dxx(i_illuminated_last,i4time      
+     1                                 ,lun_dxx,istatus)
+                          write(lun_dxx,321)i-1,j-1,k-1,di_wind,speed
+321                       format(1x,3i4,2f6.1,2f6.1)
+                      endif
                   endif
 
                   wt_p_radar(i,j,k) = weight_radar
