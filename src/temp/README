@@ -5,15 +5,16 @@
   ---------------                                ----------
  
 program main                                     puttmpanal_drv.f
-    laps_temp                                         "
-        put_temp_anal                            puttmpanal.f
+    laps_temp                                    laps_temp.f
+        put_temp_anal                            lib/temp/puttmpanal.f
             get_temp_parms                            "
-            insert_tobs                          insert_tobs.f
-                read_tsnd                        read_tsnd.f
-                    interp_tobs_to_laps          interp_tobs.f
+            insert_tobs                          lib/temp/insert_tobs.f
+                read_tsnd                        lib/temp/read_tsnd.f
+                    interp_tobs_to_laps          lib/temp/interp_tobs.f
                 get_meso_sao_pirep
-                rd_acars_t                       read_acars_t.f
-                    interp_tobs_to_laps          interp_tobs.f
-                analyze_tobs                     insert_tobs.f
+                rd_acars_t                       lib/temp/read_acars_t.f
+                    interp_tobs_to_laps          lib/temp/interp_tobs.f
+                analyze_tobs                     lib/temp/insert_tobs.f
                     barnes_univariate_shell           " 
-                        barnes_multivariate         
+                        barnes_multivariate   
+            write_temp_anal                      lib/temp/puttmpanal.f      

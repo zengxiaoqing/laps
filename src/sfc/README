@@ -7,7 +7,7 @@ Subroutine Name                                File Name
 ...............                                .........
 
 main                                           laps_sfc.f
-    laps_sfc_sub                                    "
+    laps_sfc_sub                               laps_sfc_sub.f
         read_sfc_nl                            lib/read_namelist.f
         bkgwts                                 lib/laps_routines.f
         get_bkgwind_sfc                             "
@@ -54,7 +54,8 @@ main                                           laps_sfc.f
             vlog2vis                           visibility.f
             lp_fire_danger                     lib/laps_routines.f
             heat_index                              "
-            verify                                  "
+            write_laps_data                 
+            verify                             lib/laps_routines.f
                 splie2                              "
                 splin2                              "
 
