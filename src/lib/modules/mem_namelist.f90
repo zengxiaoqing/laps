@@ -141,6 +141,12 @@ logical  :: l_use_raob_t, l_adjust_heights
 real     :: weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp
 integer  :: max_snd_grid, max_obs
 
+! cloud_nl variables
+logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 &
+           ,l_use_metars, l_use_radar 
+integer  :: latency_co2,i4_sat_window,i4_sat_window_offset
+real     :: pct_req_lvd_s8a
+
 ! moisture_switch_nl variables
 integer :: print_switch, raob_switch, raob_lookback, endian, goes_switch &
           ,cloud_switch, cloud_d, sounder_switch, tiros_switch, sat_skip &
@@ -234,6 +240,12 @@ namelist /temp_nl/  l_use_raob_t, l_adjust_heights  &
                   ,weight_bkg_const_temp, pres_mix_thresh  &
                   ,rms_thresh_temp,max_snd_grid,max_obs
 
+namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
+                   ,l_use_39, l_use_metars, l_use_radar &
+                   ,latency_co2 &
+                   ,pct_req_lvd_s8a &
+                   ,i4_sat_window,i4_sat_window_offset 
+
 namelist /moisture_switch_nl/ &
                    print_switch, raob_switch, raob_lookback, endian  &
                   ,goes_switch ,cloud_switch, cloud_d, sounder_switch  &
@@ -326,7 +338,18 @@ elseif (namelist_name == 'sfc_anal') then
 
 elseif (namelist_name == 'temp_anal') then
 
-   read (12, temp_nl)
+   read (12, temp_nl, err=907)
+   
+   ! QC the input variables if desired
+   !  .
+   !  .
+   !  .
+   !  .
+
+
+elseif (namelist_name == 'cloud_anal') then
+
+   read (12, cloud_nl, err=908)
    
    ! QC the input variables if desired
    !  .
@@ -370,6 +393,14 @@ return
 
 906  print*,'error reading surface_analysis'
      write(*,surface_analysis)
+     stop
+
+907  print*,'error reading temp_anal'
+     write(*,temp_nl)
+     stop
+
+908  print*,'error reading cloud_anal'
+     write(*,cloud_nl)
      stop
 
 end subroutine
