@@ -629,6 +629,15 @@ C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
             goto999
         endif
 
+        var = 'TD'
+        ext = 'lsx'
+        call get_laps_2d(i4time,ext,var,units,comment
+     1                  ,NX_L,NY_L,td_sfc_k,istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading SFC Td - abort cloud analysis'
+            goto999
+        endif
 
         write(6,*)
         write(6,*)' Call Ingest/Insert SAO routines'
