@@ -43,6 +43,8 @@ cdis
 
 !******************************************************************************
 
+        use mem_namelist, ONLY: iwrite_output
+
         include 'tempobs.inc'
 
 !       LAPS Grid Dimensions
@@ -93,8 +95,10 @@ c
         close(lun_tmg)
 
 !       Open output intermediate graphics file
-        call open_lapsprd_file_append(lun_tmg,i4time,ext,istatus)       
-        if(istatus .ne. 1)go to 888
+        if(iwrite_output .ge. 1)then
+            call open_lapsprd_file_append(lun_tmg,i4time,ext,istatus)       
+            if(istatus .ne. 1)go to 888
+        endif
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
         if(istatus .eq. 1)then
@@ -238,8 +242,10 @@ c
                             return
                         endif
 
-                        write(lun_tmg,*)ri-1.,rj-1.,k_grid-1,t_interp
-     1                                 ,'SFC'
+                        if(iwrite_output .ge. 1)then
+                            write(lun_tmg,*)ri-1.,rj-1.,k_grid-1
+     1                                     ,t_interp,'SFC'
+                        endif
 
 !                       Calculate observation bias
                         bias = t_interp - 

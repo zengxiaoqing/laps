@@ -65,6 +65,8 @@ c                               not exactly match the LAPS analysis time.
 !       1998 Feb Steve Albers   Added feature to calculate the height from
 !                               the pressure if the height is missing.
 
+        use mem_namelist, ONLY: iwrite_output
+
         real surface_rass_buffer
         parameter (surface_rass_buffer = 30.)
 
@@ -130,8 +132,10 @@ c                               not exactly match the LAPS analysis time.
         i4_window_rass_file = 3600
 
         ext = 'tmg'
-        call open_lapsprd_file(32,i4time_sys,ext,istatus)
-        if(istatus .ne. 1)return
+        if(iwrite_output .ge. 1)then
+            call open_lapsprd_file(32,i4time_sys,ext,istatus)
+            if(istatus .ne. 1)return
+        endif
 
 ! ***   Read in rass data from nearest filetime ******************************
 
@@ -266,8 +270,10 @@ c       1                ,heights_3d(i_ob,j_ob,level)
 c       1                ,t_diff
 411                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
-412                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_tsnd,level)       
-     1                        ,c8_sndtype(i_tsnd)
+                    if(iwrite_output .ge. 1)then
+412                     write(32,*)ri-1.,rj-1.,level-1       
+     1                        ,ob_pr_t(i_tsnd,level),c8_sndtype(i_tsnd)       
+                    endif
                 enddo ! level
 
             endif ! # levels > 0 (good rass)
@@ -505,8 +511,10 @@ c       1                ,heights_3d(i_ob,j_ob,level)
 c       1                ,t_diff
 711                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
-712                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_tsnd,level)       
-     1                        ,c8_sndtype(i_tsnd)
+                    if(iwrite_output .ge. 1)then
+712                     write(32,*)ri-1.,rj-1.,level-1       
+     1                        ,ob_pr_t(i_tsnd,level),c8_sndtype(i_tsnd)       
+                    endif
                 enddo ! level
 
             endif ! # levels > 0
