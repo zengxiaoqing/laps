@@ -25,7 +25,8 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/temp/libdebugtemp.a  \
 
 EXE = laps_sfc.x
 
-SRC   = mdatlaps.f \
+SRC   = laps_sfc_sub.f \
+        mdatlaps.f \
 	lapsvanl.f \
 	lapsvanl_sub.f \
         barnes_multivariate_sfc.f \
