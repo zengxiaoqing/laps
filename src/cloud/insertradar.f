@@ -111,10 +111,15 @@ cdis
 !       Search radius for cloud bases
         search_radius_m = 120000.
 
+        call get_ref_base_useable(ref_base_useable,istatus)
+        if(istatus .ne. 1)return
+
+        itest = min(148,ni)
+
         do j = 1,nj
         do i = 1,ni
             if(solar_alt(i,j) .lt. 15. .and. 
-     1          td_sfc_k(i,j) .gt. 283.15)then ! humid summer evenings
+     1          td_sfc_k(i,j) .gt. 281.15)then ! 8 deg C - humid summer evenings
                 echo_agl_thr(i,j) = 4000.
             else
                 echo_agl_thr(i,j) = 2000.
@@ -196,9 +201,9 @@ c                   write(6,*)' khigh = ',kk
                 l_inserted = .false.
 
                 if(temp_3d(i,j,k) .lt. 278.)then
-                    ref_thresh = 0.0
+                    ref_thresh = ref_base_useable
                 else
-                    ref_thresh = 0.0 ! Lowered from 20. and 13. 9/94
+                    ref_thresh = ref_base_useable ! Lowered from 20. and 13. 9/94
                 endif
 
                 if(grid_ra_ref(i,j,k) .gt. ref_thresh)then
@@ -237,7 +242,8 @@ c                   write(6,*)' khigh = ',kk
      1                                                             )then
 
                               isearch_base = isearch_base + 1
-                              if(isearch_base .lt. 50)then ! limit log output
+                              if(isearch_base .lt. 50 .or. 
+     1                           i .eq. itest           )then ! limit log output
                                 write(6,71)i,j,k
      1                                    ,nint(echo_top(i,j))
      1                                    ,nint(cloud_base(i,j))
@@ -258,17 +264,21 @@ c                   write(6,*)' khigh = ',kk
 
                                     write(6,72)i,j,k
      1                                    ,nint(echo_top(i,j))
+     1                                    ,nint(echo_top_agl(i,j))
+     1                                    ,nint(echo_agl_thr(i,j))
      1                                    ,nint(cloud_base(i,j))
      1                                    ,nint(cloud_base_buf(i,j))
-72                                  format(' Rdr Top < Bse ',2i4,i3,3i7
+72                                  format(' Rdr Top < Bse ',2i4,i3,5i7
      1                                    ,' Unresolved      - CLD_RDR')
 
                                 else
                                     write(6,73)i,j,k
      1                                    ,nint(echo_top(i,j))
+     1                                    ,nint(echo_top_agl(i,j))
+     1                                    ,nint(echo_agl_thr(i,j))
      1                                    ,nint(cloud_base(i,j))
      1                                    ,nint(cloud_base_buf(i,j))
-73                                  format(' Rdr Top < Bse ',2i4,i3,3i7
+73                                  format(' Rdr Top < Bse ',2i4,i3,5i7
      1                                    ,' Potl Unresolved - CLD_RDR')
 
                                 endif
@@ -306,7 +316,8 @@ c                   write(6,*)' khigh = ',kk
 
                 endif ! Reflectivity > thresh
 
-                if(l_inserted .and. iwrite_inserted .le. 200)then
+                if( l_inserted .AND. 
+     1             (iwrite_inserted .le. 200 .or. i .eq. itest) )then
                     write(6,591)i,j,k,l_unresolved(i,j)
 591                 format(' Inserted radar',2i4,i3,l2)
                     iwrite_inserted = iwrite_inserted + 1
@@ -334,11 +345,12 @@ c                   write(6,*)' khigh = ',kk
 !                   Should we set these to unresolved here or better yet above?
                     write(6,610)i,j       
      1                        ,nint(echo_top_agl(i,j))
+     1                        ,nint(echo_agl_thr(i,j))
      1                        ,nint(echo_top(i,j))
      1                        ,nint(cloud_base(i,j))
      1                        ,nint(cloud_base_buf(i,j))
  610                format('CLD_RDR - Low echo top yet resolved '
-     1                    ,2i5,' ET',2i5,' Base',2i7)
+     1                    ,3i5,' ET',2i5,' Base',2i7)
                 endif
             endif
 
@@ -351,9 +363,10 @@ c                   write(6,*)' khigh = ',kk
 !                   Blank out radar
                     write(6,601)i,j,dbz_max_2d(i,j)
      1                         ,nint(echo_top_agl(i,j))
+     1                         ,nint(echo_agl_thr(i,j))
 601                 format(' CLD_RDR - insert_radar: '
      1                             ,'Blank out radar < '
-     1                             ,2x,2i4,f6.1,' dbz',i6,' agl')
+     1                             ,2x,2i4,f6.1,' dbz',i6,1x,i6,' agl')       
 
                     if(.true.)then ! Block out the radar
                         do k = 1,nk
@@ -374,9 +387,10 @@ c                   write(6,*)' khigh = ',kk
 
                     write(6,602)i,j,dbz_max_2d(i,j)
      1                         ,nint(echo_top_agl(i,j))       
+     1                         ,nint(echo_agl_thr(i,j))
 602                 format(' CLD_RDR - insert_radar: '
      1                             ,'Blank out radar > *'
-     1                             ,1x,2i4,f6.1,' dbz',i6,' agl')
+     1                             ,1x,2i4,f6.1,' dbz',i6,1x,i6,' agl')   
 
                     if(.true.)then ! Block out the radar
                         do k = 1,nk
@@ -387,7 +401,16 @@ c                   write(6,*)' khigh = ',kk
 
                 endif
 
-            endif
+            else
+                if(i .eq. itest)then
+                    if(echo_top(i,j) .ne. r_missing_data)then
+                        write(6,612)i,j,nint(cloud_base(i,j))
+     1                             ,nint(echo_top(i,j))
+612                     format('Resolved ',2i4,1x,2i6)                    
+                    endif
+                endif
+
+            endif ! l_unresolved
         enddo ! j
         enddo ! i
 
