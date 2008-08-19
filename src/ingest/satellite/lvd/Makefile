@@ -10,12 +10,14 @@ include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/satellite/libsatellite.a \
            $(SRCROOT)/src/lib/liblaps.a \
+           $(SRCROOT)/src/lib/modules/libmodules.a \
            $(SRCROOT)/src/lib/goesinav/libgoesinav.a \
            $(SRCROOT)/src/lib/nav/libnav.a \
            $(SRCROOT)/src/lib/util/libutil.a
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/satellite/libdebugsatellite.a \
              $(SRCROOT)/src/lib/libdebuglaps.a \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a \
              $(SRCROOT)/src/lib/goesinav/libdebuggoesinav.a \
              $(SRCROOT)/src/lib/nav/libdebugnav.a \
              $(SRCROOT)/src/lib/util/libdebugutil.a
