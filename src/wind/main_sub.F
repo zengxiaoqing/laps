@@ -41,7 +41,6 @@ cdis
         subroutine lapswind_anal  (i4time_sys,
      1              NTMIN,NTMAX,                                     ! I
      1              N_MESO,N_SAO,                                    ! I
-     1              lat,lon,topo,                                    ! I
      1              heights_3d,                                      ! I
      1              istat_wind)                                      ! O
 
@@ -93,8 +92,9 @@ cdis
                          ! 
                          ! Plus a set of wind parameters:
 
-        use mem_wind
+        use mem_grid, ONLY: lat,lon,topo
 
+        use mem_wind
 
 #ifdef SINGLE_EXEC
         use mem_background, only: bgfields%u3, bgfields%v3
@@ -107,12 +107,6 @@ cdis
         type (barnesob) :: obs_point(max_wind_obs)                           
 
         include 'windparms.inc'
-
-!       LAPS Grid Dimensions
-
-        real lat(NX_L,NY_L)
-        real lon(NX_L,NY_L)
-        real topo(NX_L,NY_L)
 
 !       Laps Analysis Grids
         real grid_laps_wt(NX_L,NY_L,nk_laps)
