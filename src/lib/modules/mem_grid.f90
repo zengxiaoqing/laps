@@ -1,5 +1,5 @@
 Module mem_grid
 
-real(kind=4), allocatable, dimension(:,:) :: lat, lon, topo
+real, allocatable, dimension(:,:) :: lat, lon, topo, ldf
 
 end Module
