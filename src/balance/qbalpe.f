@@ -31,6 +31,10 @@ c  This subroutine reinstates the staggering in the
 c balance package.  This is critical for maximum 
 c accuracy and adjustment potential
 c
+c*********************
+      use mem_namelist, ONLY: read_namelist_laps
+      use mem_namelist, ONLY: max_pr
+c*********************************edtoll
       include 'trigd.inc'
       implicit none
       include 'bgdata.inc'
@@ -142,6 +146,9 @@ c
       logical setdelo0 !namelist variable that forces delo=0 if
 c                       set = .true.
 
+c************edtoll
+      character*255 filename
+c**************edtoll
       character*255 staticdir,sfcdir
 c     character*255 generic_data_root
       character*125 comment
@@ -419,7 +426,7 @@ c and a data resolving wavelength based on
 c the nyquist interval (4 * data spacing)
 c this should be automated to be computed by the actual number of obs/area
 c guess number of obs over grid, put in sldata for now.
-      sldata=120. !number of good upper air obs (sonde quality)
+      sldata=1200.  !number of good upper air obs (sonde quality)
       sldata=sqrt(float((nx-1)*(ny-1))*dx(nx/2,ny/2)**2/sldata)
 c set model scale - a mean wave resolvable by the grid
       sl=(4.*dx(nx/2,ny/2)+sldata)/2.
@@ -657,7 +664,6 @@ c   Prior to applying boundary subroutine put non-staggered grids back into
 c   u,v,om,t,sh,phi.
 
 c      do k=1,nz/2
-c      print*, 'After destagger level ',k
 c      call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'staggered U')
 c      call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'staggered V')
 c      call diagnose(ubs,nx,ny,nz,nx/2,ny/2,k,7,'unstaggd U ')
@@ -839,8 +845,13 @@ c truth profile and compute an average analysis error
             enddo
          enddo
 
-         call get_wind_parms(l_dum,l_dum,l_dum
-     1,rdum,rdum,rdum,rdum,rdum,max_pr,idum,idum,istatus)
+cedtoll         call get_wind_parms(l_dum,l_dum,l_dum
+cedtoll     1,rdum,rdum,rdum,rdum,rdum,max_pr,idum,idum,istatus)
+c************edtoll
+c     call get_directory(staticext,staticdir,lend)
+      filename=staticdir(1:lend)//'/wind.nl'
+      call read_namelist_laps('wind',filename)
+c*************edtoll
 c
 c ---------------------------------------------------------------------------
 c nsnd = the max number of profiles (soundings); used for array dimensioning
@@ -1308,16 +1319,16 @@ c     write(9,1002) title,' at level ',kk
       if(jnorth.gt.ny) jnorth=ny
       jsouth=jj-ispan/2+1
       if(jsouth.lt.1) jsouth=1
-      ieast=ii-ispan/2+1
-      if(ieast.lt.1) ieast=1
-      iwest=ii+ispan/2+1
-      if(iwest.gt.nx)iwest=nx 
+      iwest=ii-ispan/2+1
+      if(iwest.lt.1) ieast=1
+      ieast=ii+ispan/2+1
+      if(ieast.gt.nx)ieast=nx 
       do j=jnorth,jsouth,-1
-c      write(9,1001)  j,ieast,iwest
+c      write(9,1001)  j,iwest,ieast
  1001  format(1x,3i8)
-       print*,j,ieast,iwest
-       write(6,1000) (a(i,j,kk),i=ieast,iwest)
-c      write(9,1000) (a(i,j,kk),i=ieast,iwest)
+       print*,j,iwest,ieast
+       write(6,1000) (a(i,j,kk),i=iwest,ieast)
+c      write(9,1000) (a(i,j,kk),i=iwest,ieast)
  1000  format(1x,7e11.5)
       enddo
       return
@@ -1490,10 +1501,6 @@ c analz with input fields prior to balcon iterations on lmax
       allocate (fu(nx,ny,nz),fv(nx,ny,nz)
      .         ,nu(nx,ny,nz),nv(nx,ny,nz))
 
-      call analzo(to,to,uo,uo,vo,vo,omo,omo
-     .                ,nu,nv,fu,fv,delo,tau
-     .                ,nx,ny,nz
-     .                ,lat,dx,dy,ps,p,dp,l,lmax)
 
 c create perturbations
 c owing to an artifact of coding the t array is phi
@@ -1519,10 +1526,10 @@ c apply continuity to input winds over complete domain with no terrain
 c
       do k=1,nz/2    
       print*, 'After continuitlevel ',k
-      call diagnose(uo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED U ')
-      call diagnose(vo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED V ')
-      call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'CONTINTY U ')
-      call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'CONTINTY V ')
+      call diagnose(uo,nx,ny,nz,268,87,k,7,'OBSERVED U ')
+      call diagnose(vo,nx,ny,nz,268,87,k,7,'OBSERVED V ')
+      call diagnose(u,nx,ny,nz,268,87,k,7,'CONTINTY U ')
+      call diagnose(v,nx,ny,nz,268,87,k,7,'CONTINTY V ')
       enddo
 
        if(delo.eq.0.) go to 111
@@ -1553,6 +1560,12 @@ c                      boundary values(zero perturbation)
      .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
       call nonlin(nu,nv,uo,vo,ub,vb,om,omb
      .           ,nx,ny,nz,dx,dy,dp,dt,bnd,rod)
+       do k=1,nz/2
+       print*, 'Nonlinear terms at lvl ',k, ' at center of  Dennis' 
+       call diagnose(nu,nx,ny,nz,nx/2,ny/2,k,7,'Nonlinear U terms')
+       call diagnose(nv,nx,ny,nz,nx/2,ny/2,k,7,'Nonlinear V terms')
+       enddo
+
 c *** Compute new phi (t array) using relaxation on eqn. (2).
 c        beta*dldx term is dropped to eliminate coupling with lambda eqn.
 c
@@ -1790,10 +1803,12 @@ c Restore full winds and heights by adding back in background
 
        do k=1,nz/2    
        print*, 'After balance ',k
-       call diagnose(uo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED U ')
-       call diagnose(vo,nx,ny,nz,nx/2,ny/2,k,7,'OBSERVED V ')
-       call diagnose(u,nx,ny,nz,nx/2,ny/2,k,7,'BALANCED U ')
-       call diagnose(v,nx,ny,nz,nx/2,ny/2,k,7,'BALANCED V ')
+       call diagnose(uo,nx,ny,nz,268,87,k,7,'OBSERVED U ')
+       call diagnose(vo,nx,ny,nz,268,87,k,7,'OBSERVED V ')
+       call diagnose(u,nx,ny,nz,268,87,k,7,'BALANCED U ')
+       call diagnose(v,nx,ny,nz,268,87,k,7,'BALANCED V ')
+       call diagnose(to,nx,ny,nz,268,87,k,7,'OBSV HEIGHT')
+       call diagnose(t,nx,ny,nz,268,87,k,7,'ADJUSTED HT')
        enddo
 
        itstatus=ishow_timer()
@@ -2109,8 +2124,8 @@ c    .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
      . /1x,' rms ageostrophic wind:',2e12.5
      . /1x,' implied rossby number:',f6.3 
      . /1x,' momentum resids-u and v eqn:',2e12.4
-     . /1x,' rms friction vector        :',2e12.4 
-     . /1x,' rms nonlinear term value   :',2e12.4)
+     . /1x,' rms friction vector        :', e12.4 
+     . /1x,' rms nonlinear term value   :', e12.4)
 c Write out sample vertical profiles of u, uo, v, vo, phi phio
 c in center of grid
       if(.false.)then
@@ -2597,6 +2612,8 @@ c the u,v,om variables are perturbations
           dudt=0.
           nu(i,j,k)=(dudt+ub(i,j,k)*dudx+vvbu*dudy+ombu*dudp
      &                 +u(i,j,k)*dubdx+vvu*dubdy+omu*dubdp)*rod
+c         nu(i,j,k)=(ub(i,j,k)+u(i,j,k))*(dudx+dubdx)+(vvu+vvbu)*
+c    &              (dudy+dubdy)+ombu*dudp+omu*dubdp 
          endif
          if(v(i,j,k).eq.bnd) then
           nv(i,j,k)=0.
@@ -2616,6 +2633,8 @@ c the u,v,om variables are perturbations
           dvdt=0.           
           nv(i,j,k)=(dvdt+uubv*dvdx+vb(i,j,k)*dvdy+ombv*dvdp
      &                 +uuv*dvbdx+v(i,j,k)*dvbdy+omv*dvbdp)*rod
+c         nv(i,j,k)=(uubv+uuv)*(dvdx+dvbdx)+(vb(i,j,k)+v(i,j,k))*
+c    &                 *(dvdy+dvbdy)+ombv*dvdp+omv*dvbdp
          endif
       enddo
       enddo
