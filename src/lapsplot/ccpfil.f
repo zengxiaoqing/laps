@@ -419,6 +419,7 @@ C
 !     NREG threshold = 9999 means never do raster image 
       if(NREG .ge. 300)then ! set raster default
           l_raster = .true.
+          write(6,*)' Large domain - turn on raster plot'
       else
           l_raster = .false.
       endif
@@ -431,12 +432,14 @@ C
 !     Override default with parameter input
       if(plot_parms%iraster .eq. 1)then
           l_raster = .true.
+          write(6,*)' turn on raster plot for this field'
       elseif(plot_parms%iraster .eq. -1)then
           l_raster = .false.
       endif
 
       if(plot_parms%zoom .gt. 1.0)then
           l_raster = .false.
+          write(6,*)' turn off raster plot for zoomed field'
       endif       
 
       if(l_raster .and. (.not. l_set_contours))then ! do raster image
