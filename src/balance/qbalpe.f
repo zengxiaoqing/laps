@@ -132,7 +132,7 @@ c
       integer   kfirst,klast
       integer   ij
       integer   idum
-      integer   max_pr
+c     integer   max_pr
       integer   n_snd,nsnd,mxz
 c
       logical lrunbal
@@ -3504,7 +3504,7 @@ c
       real, allocatable, dimension(:,:) :: dd,ff
      1,tt,uu,vv
 
-      integer max_pr
+c     integer max_pr
 
       integer ngoodlevs(max_pr)
 
