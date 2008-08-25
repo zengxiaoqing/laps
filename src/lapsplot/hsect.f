@@ -849,10 +849,14 @@ c       include 'satellite_dims_lvd.inc'
                     cint = 10.
                     clow = 0.
                     chigh = 200.
-                else
+                elseif(k_level .gt. 0)then
                     cint = 5.
                     clow = 0.
                     chigh = 100.
+                else ! k_level = 0 (sfc)
+                    cint = 5.
+                    clow = 0.
+                    chigh = 50.
                 endif
 
                 scale = 1.0
@@ -5129,10 +5133,12 @@ c                   cint = -1.
 
             c_label = 'Sfc Rel Vorticity   (1e-5/s)     '
 
-            clow = -100.
-            chigh = +100.
+            clow = -80.
+            chigh = +80.
             cint = 5.
             scale = 1e-5
+
+            plot_parms%iraster = 1
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -5141,12 +5147,6 @@ c                   cint = -1.
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
-
-!           call plot_cont(field_2d,1e-5,clow,chigh,cint,
-!    1             asc9_tim_t,namelist_parms,plot_parms
-!    1            ,c_label,i_overlay,c_display
-!    1            ,lat,lon,jdot,
-!    1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'mr')then
             var_2d = 'MR'
