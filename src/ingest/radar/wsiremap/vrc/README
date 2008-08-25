@@ -68,3 +68,20 @@ is used to transform the wsi data to the laps domain (10 km currently). If the g
 (wsi data resolution/laps domain resolution) is >= 0.5, then vrc uses bi-linear interpolation.
 If the ratio is < 0.5 then pixel averaging is used. Thus, for the "wsi" form of data input we
 use pixel averaging.  Bilinear interpolation is used for the "wfo" form of data.
+
+A second data type is now supported from AOML
+
+...............................................................................
+
+ROUTINE NAME                                      FILE NAME
+------------                                      ---------
+vrc_driver                                        vrc_driver.f
+    vrc_driver_sub                                    "
+        read_vrc_nl                                   
+        NOWRADWSI_to_LAPS                         nowradwsi2laps.f
+        map_aoml_sub                              aoml_radar.f
+            map_aoml_sweep                            "
+                READHEAD                          read_pass_head.f
+                PASSXCMP                              "
+                    UNPAKDBZ2D                        "
+            put_vrc                               put_vrc.f
