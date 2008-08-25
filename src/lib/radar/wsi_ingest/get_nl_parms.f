@@ -41,7 +41,7 @@ c
 c------------------------------------------------------
 c
       subroutine read_vrc_nl(c_rawdata_path,iwsimsng,icheckint
-     +,iwaittime,iagethresh,istatus)
+     +,iwaittime,iagethresh,aoml_path_in,vrc_outdir,istatus)
 
       integer imsngrad
       integer icheckint
@@ -51,11 +51,13 @@ c
 
       character*200 c_rawdata_path
       character nest7grid*150
+      character*200 aoml_path_in
+      character*7 vrc_outdir
 
       include 'grid_fname.cmn'
 
       namelist /vrc_nl/c_rawdata_path,iwsimsng,icheckint
-     +,iwaittime,iagethresh
+     +,iwaittime,iagethresh,aoml_path_in,vrc_outdir
 
       istatus = 0
 
