@@ -83,8 +83,11 @@ cdis
             return
         endif
 
-        thresh_low_fill = 1.5     ! Elevation of echoes used to extrapolate
-                                  ! downward (degress)
+        thresh_low_fill_elev = 1.5     ! Elevation of echoes used to extrapolate
+                                       ! downward (degress)
+
+        thresh_low_fill_ht = 3000.     ! Height of echoes used to extrapolate
+                                       ! downward (meters AGL)
 
 !       Set missing values to ref_base for internal & external processing
 !       write(6,*)' ref_fill_vert: Setting r_missing_data/qc values to '
@@ -283,7 +286,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
                 k_topo = max(int(height_to_zcoord(topo(i,j),istatus)),1)
 
-                topo_buffer = topo(i,j) + 800.
+                topo_buffer = topo(i,j) + thresh_low_fill_ht
                 k_topo_buffer =
      1              max(int(height_to_zcoord(topo_buffer,istatus)),1)
 
@@ -292,7 +295,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                     return
                 endif
 
-                if(k_bottom .gt. k_topo)then ! Echo above ground
+                if(k_bottom .gt. k_topo)then ! Echo base above ground
 
                     height_bottom = height_of_level(k_bottom)
 
@@ -301,9 +304,9 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
                     if(k_bottom .le. k_topo_buffer ! Echo base near ground
-!    1       .or. elev_bottom .lt. (elev_topo + thresh_low_fill) ! Echo below radar horizon
-     1                 .or. elev_bottom .lt. thresh_low_fill ! Echo base near radar horizon
-     1                                                          )then ! Fill in
+!    1         .or. elev_bottom .lt. (elev_topo + thresh_low_fill_elev) ! Echo below radar horizon
+     1                 .or. elev_bottom .lt. thresh_low_fill_elev ! Echo base near radar horizon
+     1                                                      )then ! Fill in
                         do k = k_topo,k_bottom ! -1
                             ref_3d(i,j,k) = ref_3d(i,j,k_bottom)
                         enddo ! k
