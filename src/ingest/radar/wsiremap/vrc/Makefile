@@ -26,7 +26,10 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/radar/wsi_ingest/libdebugwsi.a \
 EXE = vrc_driver.x
 
 SRC= nowradwsi2laps.f \
-     procnowradZ.f
+     procnowradZ.f \
+     aoml_radar.f \
+     read_pass_head.f \
+     put_vrc.f
 
 MAIN=vrc_driver.f
 
