@@ -86,6 +86,8 @@ c
        character*31 ext_vrc
        character*200 dir_static
        character*(*) c_grid_fname
+       character*200 aoml_path_in
+       character*7 vrc_outdir
 
        character*125 comment_ll(2)
        character*125 comment_vrc(2)
@@ -147,7 +149,7 @@ c
 c get vrc runtime parameters
 c
        call read_vrc_nl(wsi_dir_path,msngrad,i4_check_interval,
-     +i4_total_wait,i4_thresh_age,istatus)
+     +i4_total_wait,i4_thresh_age,aoml_path_in,vrc_outdir,istatus)
 
 c
 c set filename. wfo data is 13 character. HOWEVER, if reading from WFO-type
@@ -200,7 +202,11 @@ c
 c
 c convert to fname9 and determine if this time has already been processed
 c
-       call get_directory('vrc',dir_vrc,nd)
+!      call get_directory('vrc',dir_vrc,nd)
+       i_vrc = 1
+       call get_vrc_full_path(i_vrc,vrc_outdir,dir_vrc,nd,istatus)
+       write(6,*)' wsi vrc output path is ',dir_vrc(1:nd)
+
 c       dir_vrc = '../lapsprd/vrc/'    !this also use below for output
 c       nd = index(dir_vrc,' ')-1
        c_filespec = dir_vrc(1:nd)//'*'
@@ -422,8 +428,8 @@ c
 
 25     enddo
 
-990    write(6,*)'Normal completion of vrc_driver'
-       goto 16
+990    write(6,*)'Normal completion of WSI ingest'
+       goto 1001
 
 898    write(6,*)'Error getting raw data path'
        goto 16
@@ -434,7 +440,15 @@ c
 999    write(*,*)'Error reading systime.dat - terminating'
        write(*,*)
        goto 16
-998    write(6,*)'Stopping because no data was found'
+998    write(6,*)'no WSI data was found'
+
+1001   write(6,*)
+       write(6,*)' Call map_aoml_sub'
+       if(.true.)then
+          call map_aoml_sub(nx_l,ny_l,aoml_path_in,vrc_outdir,istatus)       
+       endif
+
+       write(6,*)'Normal completion of vrc_driver'
 
 16     stop
        end
