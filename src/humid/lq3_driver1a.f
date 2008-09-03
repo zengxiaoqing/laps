@@ -181,6 +181,9 @@ c     gps variables
 
       real gps_data (ii,jj)
       real gps_w (ii,jj)
+      integer idotj ! product of ii and jj for dimensioning max array size for valid points
+      real gps_points(ii*jj,3) ! piont data, water, i,j
+      integer gps_count ! number of valid points
       integer istatus_gps
       
 c     
@@ -255,6 +258,7 @@ c     assign local variables to passed in variable to protect them pressure only
       t = gt
       td = gtd
       p_3d = p_3di
+      idotj = ii*jj
 
 
 
@@ -863,7 +867,7 @@ c     gps data inserstion step (bias correction to gvap only)
          write(6,*) 'Initiate bias correction of gps data'
 
          call process_gps (ii,jj,gps_data,gps_w,
-     1        tpw,lat,lon,time_diff,
+     1        tpw,lat,lon,time_diff,gps_points,idotj,gps_count,
      1        path_to_gps,filename,istatus_gps)
          
 c     gvap data insertion step
@@ -1277,8 +1281,19 @@ c     write final 3-d sh field to disk
          
 c     write total precipitable water field
          call write_lh4 (save_i4time,tpw,bias_one,ii,jj,istatus)
-         if(istatus.eq.1) jstatus(3) = 1
-         
+         if(istatus.eq.1) then
+            jstatus(3) = 1
+c     write out material in log for Seth
+            write(6,*) '***GPS gridpoint comparison*****'
+            write (6,*) '****lat,lon,gps water, laps water (cm)****'
+            do i = 1,gps_count
+             write(6,*) lat(int(gps_points(i,2)),int(gps_points(i,3))),
+     1                  lon(int(gps_points(i,2)),int(gps_points(i,3))),
+     1                  gps_points(i,1),
+     1              100.*tpw(int(gps_points(i,2)),int(gps_points(i,3)))
+            enddo
+            write(6,*) '********** end GPS compare **********'
+         endif
          
 c     generate lh3 file (RH true, RH liquid)
          if (t_istatus.eq.1) then

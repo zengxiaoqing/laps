@@ -43,7 +43,8 @@ cdis
 cdis
 cdis
       subroutine analz_gps (lat,lon,wt,nn,glat,glon,
-     1                       data_out,data_weights,ii,jj,istatus)
+     1                       data_out,data_weights,
+     1     gps_points,idotj,gps_count,ii,jj,istatus)
 
       implicit none
 
@@ -63,6 +64,9 @@ c     r50 = radius(meters) from ob where weight drops to 0.5 (50%)
       real data_weights(ii,jj)
       real glat(ii,jj)
       real glon(ii,jj)
+      integer idotj
+      real gps_points(idotj,3)
+      integer gps_count
 
 c     volitile array points
       real points (nn,3)
@@ -125,6 +129,14 @@ c         write(6,*) 'GPSTEMP latloncheck', lat(n),lon(n)
 
 c     now that data_out is as full as it is going to get with the water
 c     process the remainder.
+
+c     fill outbound variables for gps comparison stuff for Seth Gutman
+      gps_count = ncount
+      do i = 1, ncount
+         gps_points(i,1) = points(i,1)
+         gps_points(i,2) = points(i,2)
+         gps_points(i,3) = points(i,3)
+      enddo
 
 c     compute the fraction of data_out that is empty
 

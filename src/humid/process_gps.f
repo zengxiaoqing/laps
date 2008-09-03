@@ -43,7 +43,7 @@ cdis
 cdis
 cdis
       subroutine  process_gps (ii,jj,gps_data_out,gps_data_weights,
-     1     tpw,glat,glon,time_diff,
+     1     tpw,glat,glon,time_diff,gps_points,idotj,gps_count,
      1     path,filetime,istatus)
 
       implicit none
@@ -59,6 +59,9 @@ c     input variables
       integer i4time
       character*256 path
       real gps_data_weights(ii,jj)
+      integer idotj
+      integer gps_count
+      real gps_points(idotj,3)
       
       integer gps_n, gps_num
       parameter (gps_n = 20000)
@@ -92,7 +95,8 @@ c     input variables
 
       call analz_gps (gps_lat,gps_lon,gps_tpw,gps_num,glat,
      1     glon,gps_data_out,
-     1     gps_data_weights,ii,jj,istatus)
+     1     gps_data_weights,
+     1     gps_points,idotj,gps_count,ii,jj,istatus)
       if(istatus.ne.1) then ! failure to get data
          return
       endif
