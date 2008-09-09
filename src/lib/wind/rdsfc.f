@@ -47,6 +47,8 @@ cdis
 
 !****************************************************************************
 
+        use mem_namelist, ONLY: iwrite_output
+
 !	2006 Feb   Yuanfu Xie	Change rk of obs_point to real rk from
 !				sfc_k function and add ri rj values.
 
@@ -109,8 +111,10 @@ c
         n_sfc_obs = 0
 
         ext = 'sag'
-        call open_lapsprd_file(32,i4time,ext,istatus)
-        if(istatus .ne. 1)go to 888
+        if(iwrite_output .ge. 1)then
+            call open_lapsprd_file(32,i4time,ext,istatus)
+            if(istatus .ne. 1)go to 888
+        endif
 
         call make_fnam_lp(i4time,asc_tim_9,istatus)
 
@@ -197,7 +201,9 @@ c
 !               Fix for stations that are to low for the grid
                 if(sfc_k(n_sfc_obs) .eq. 0)sfc_k(n_sfc_obs) = 1
 
-                write(32,*)ri-1.,rj-1.,rk-1.,dd_s(i),ff_s(i)
+                if(iwrite_output .ge. 1)then
+                    write(32,*)ri-1.,rj-1.,rk-1.,dd_s(i),ff_s(i)
+                endif
 
                 k = sfc_k(n_sfc_obs)
 
