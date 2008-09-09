@@ -44,15 +44,17 @@ cdis
 
         use mem_temp
 
-        character*9 a9_time
-
+        character*9 a9time        
         character*150 static_dir,filename
-        character*9 a9time
 c
 !       Read global parameters into module memory structure
         call get_directory('static',static_dir,len_dir)
         filename = static_dir(1:len_dir)//'/nest7grid.parms'
         call read_namelist_laps('lapsparms',filename)
+
+!       Read temp parameters into module memory structure
+        filename = static_dir(1:len_dir)//'/temp.nl'
+        call read_namelist_laps('temp_anal',filename)
 
 !       Allocate static arrays (lat, lon, topo)
         allocate( lat(NX_L,NY_L), STAT=istat_alloc )
@@ -93,9 +95,9 @@ c
         endif
 
 !       Get system time
-        call get_systime(i4time,a9_time,istatus)
+        call get_systime(i4time,a9time,istatus)
         if(istatus .ne. 1)go to 999
-        write(6,*)' systime = ',a9_time
+        write(6,*)' systime = ',a9time
 
         call alloc_temp_arrays(NX_L,NY_L,nk_laps)
         call point_temp_arrays()
