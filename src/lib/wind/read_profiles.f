@@ -69,6 +69,8 @@ c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
 
 !*****************************************************************************
 
+        use mem_namelist, ONLY: iwrite_output
+
         include 'barnesob.inc'
         type (barnesob) :: obs_point(max_obs)                           
 
@@ -147,9 +149,10 @@ c	2006 Yuanfu Xie	      Use of the fraction grid values of obs_point.
         i4time_prg = i4time_sys
 
         ext = 'prg'
-        call open_lapsprd_file(32,i4time_prg,ext,istatus)
-        if(istatus .ne. 1)go to 880
-
+        if(iwrite_output .ge. 1)then
+            call open_lapsprd_file(32,i4time_prg,ext,istatus)
+            if(istatus .ne. 1)go to 880
+        endif
 
 ! ***   Read in profiler data    ***************************************
 
@@ -360,8 +363,10 @@ c
 
                     call uv_to_disp(ob_u,ob_v,ob_di,ob_sp)
 
-312                 write(32,313,err=314)ri,rj,rklaps,ob_di,ob_sp
-     1                                  ,obstype(i_pr)
+                    if(iwrite_output .ge. 1)then
+312                     write(32,313,err=314)ri,rj,rklaps,ob_di,ob_sp       
+     1                                      ,obstype(i_pr)
+                    endif
 313                 format(1x,3f10.5,2f10.3,1x,a8)               
 314                 continue
 
@@ -434,9 +439,11 @@ c
      1                              ,v_diff
 411                 format(1x,i6,2i4,f8.1,6f7.1)
 
-412                 write(32,313,err=414)ri,rj,float(level)
+                    if(iwrite_output .ge. 1)then
+412                     write(32,313,err=414)ri,rj,float(level)
      1                        ,ob_pr_di(i_pr,level),ob_pr_sp(i_pr,level)       
      1                        ,obstype(i_pr)
+                    endif
 414                 continue
 
                 enddo ! level
