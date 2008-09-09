@@ -63,6 +63,8 @@ cdis
 
 !******************************************************************************
 
+        use mem_namelist, ONLY: iwrite_output
+
         include 'barnesob.inc'
         type (barnesob) :: obs_point(max_obs)                           
 
@@ -126,8 +128,10 @@ cdis
 
 !       Open output intermediate data file
         if(ext_in .eq. 'pin')then
-            call open_lapsprd_file(lun_pig,i4time,ext,istatus)
-            if(istatus .ne. 1)go to 888
+            if(iwrite_output .ge. 1)then
+                call open_lapsprd_file(lun_pig,i4time,ext,istatus)
+                if(istatus .ne. 1)go to 888
+            endif
 
             call get_windob_time_window('ACARS',i4_window_ob,istatus)
             if(istatus .eq. 1)then
@@ -138,8 +142,11 @@ cdis
             endif
 
         else ! append
-            call open_lapsprd_file_append(lun_pig,i4time,ext,istatus)       
-            if(istatus .ne. 1)go to 888
+            if(iwrite_output .ge. 1)then
+                call open_lapsprd_file_append(lun_pig,i4time,ext
+     1                                       ,istatus)      
+                if(istatus .ne. 1)go to 888
+            endif
 
             call get_windob_time_window('CDW',i4_window_ob,istatus)
             if(istatus .eq. 1)then
@@ -291,8 +298,11 @@ cdis
                         point_u(n_point_obs) = u_temp - u_diff
                         point_v(n_point_obs) = v_temp - v_diff
 
-                        write(lun_pig,91)ri-1.,rj-1.,rk-1.,dd,ff,ext_in       
- 91                     format(1x,5f8.1,1x,a3)
+                        if(iwrite_output .ge. 1)then
+                            write(lun_pig,91)ri-1.,rj-1.,rk-1.
+     1                                      ,dd,ff,ext_in       
+ 91                         format(1x,5f8.1,1x,a3)
+                        endif
 
                         if(iwrite .eq. 1)write(6,101)xlat,xlon,dd,ff,rk
      1          ,u_temp,v_temp,point_u(n_point_obs),point_v(n_point_obs)
