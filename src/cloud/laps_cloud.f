@@ -48,13 +48,21 @@ cdis
 !       1997 Jul 31 K. Dritz  - Compute max_cld_snd as maxstns + N_PIREP and
 !                               pass to laps_cloud.
 
-        integer j_status(20),iprod_number(20)
-        character*9 a9_time
+        use mem_namelist, ONLY: read_namelist_laps
 
-        call get_systime(i4time,a9_time,istatus)
+        integer j_status(20),iprod_number(20)
+        character*150 static_dir,filename
+        character*9 a9time
+
+!       Read global parameters into module memory structure
+        call get_directory('static',static_dir,len_dir)
+        filename = static_dir(1:len_dir)//'/nest7grid.parms'
+        call read_namelist_laps('lapsparms',filename)
+
+        call get_systime(i4time,a9time,istatus)
         if(istatus .ne. 1)go to 999
 
-        write(6,*)' systime = ',a9_time
+        write(6,*)' systime = ',a9time
 
         isplit = 1
 
