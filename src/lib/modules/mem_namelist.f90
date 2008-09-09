@@ -137,9 +137,9 @@ real     ::  redp_lvl, del, gam, ak &
           !  redp_lvl utilized in background code also
 
 ! temp_nl variables
-logical  :: l_use_raob_t, l_adjust_heights
+logical  :: l_read_raob_t, l_use_raob_t, l_adjust_heights
 real     :: weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp
-integer  :: max_snd_grid, max_obs
+integer  :: max_snd_grid, max_snd_levels, max_obs
 
 ! cloud_nl variables
 logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 &
@@ -236,9 +236,9 @@ namelist /surface_analysis/  &
                   ,thresh_t, thresh_td, thresh_mslp  &
                   ,rms_wind, rms_temp, rms_dewpoint
                   
-namelist /temp_nl/  l_use_raob_t, l_adjust_heights  &
-                  ,weight_bkg_const_temp, pres_mix_thresh  &
-                  ,rms_thresh_temp,max_snd_grid,max_obs
+namelist /temp_nl/ l_read_raob_t, l_use_raob_t, l_adjust_heights  &
+                  ,weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp &
+                  ,max_snd_grid,max_snd_levels,max_obs
 
 namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
                    ,l_use_39, l_use_metars, l_use_radar &
