@@ -203,6 +203,11 @@ c             subdir(n_fdda_models)=bgmodelnames(1:3) #replaces line below (need
 c Here -> reverse the directory order from "model/fua" to "fua/model"
         if(ext_a.ne.'lga'.and.ext_a.ne.'lgb')then
            call s_len(subdir,ld)
+           if(ld .le. 0)then
+               write(6,*)' subdir has zero length in get_modelfg_3d_sub'
+               istatus = 0
+               return
+           endif
            directory = directory(1:lend)//subdir(1:ld)//'/'
            lend=lend+ld+1
         endif
