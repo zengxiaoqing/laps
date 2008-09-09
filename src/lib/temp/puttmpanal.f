@@ -63,6 +63,14 @@ cdis
 !       dealing with lapse rates are calculated using the standard atmosphere.
 !       This should be an acceptable approximation for this application.
 
+        use mem_namelist, ONLY: l_read_raob=>l_read_raob_t 
+     1                         ,l_use_raob=>l_use_raob_t
+     1                         ,l_adjust_heights
+     1                         ,weight_bkg_const=>weight_bkg_const_temp
+     1                         ,pres_mix_thresh
+     1                         ,rms_thresh=>rms_thresh_temp
+     1                         ,max_snd_grid,max_snd_levels,max_obs
+
         character*125 comment_2d
         character*3 var_2d
 
@@ -85,11 +93,7 @@ cdis
         parameter (diff_tol = 25.)
         parameter (cold_thresh = 170.)
 
-        integer max_snd_grid,max_obs
-
-        integer max_snd_levels
-
-        logical l_fill,l_adjust_heights,l_read_raob,l_use_raob
+        logical l_fill
 
         O_K(T_K,P_PA)   =   O( T_K-273.15 , P_PA/100. )  + 273.15
         TDA_K(T_K,P_PA) = TDA( T_K-273.15 , P_PA/100. )  + 273.15
@@ -100,15 +104,6 @@ cdis
 
         icen = ni/2
         jcen = nj/2
-
-        call get_temp_parms(l_read_raob,l_use_raob,l_adjust_heights
-     1                     ,weight_bkg_const
-     1                     ,rms_thresh,pres_mix_thresh,max_snd_grid
-     1                     ,max_snd_levels,max_obs,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error: Bad status return from put_temp_anal'
-            return
-        endif
 
 !       Initialize diagnostic variables
         diff_thmax = 0.
