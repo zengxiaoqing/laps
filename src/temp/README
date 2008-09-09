@@ -5,9 +5,9 @@
   ---------------                                ----------
  
 program main                                     puttmpanal_drv.f
+    read_namelist_laps                           lib/modules/mem_namelist.f90
     laps_temp                                    laps_temp.f
         put_temp_anal                            lib/temp/puttmpanal.f
-            get_temp_parms                            "
             insert_tobs                          lib/temp/insert_tobs.f
                 read_tsnd                        lib/temp/read_tsnd.f
                     interp_tobs_to_laps          lib/temp/interp_tobs.f

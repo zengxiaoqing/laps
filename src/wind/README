@@ -5,8 +5,8 @@
   ---------------                              ----------
  
 program laps_wind                              main.f
+    read_namelist_laps                         lib/modules/mem_namelist.f90
     lapswind_anal                              main_sub.f
-        get_wind_parms                         lib/read_namelist.f
         get_laps_3dgrid
         get_modelfg_3d
         get_multiradar_vel
