@@ -1285,9 +1285,10 @@ c     write total precipitable water field
             jstatus(3) = 1
 c     write out material in log for Seth
             write(6,*) '***GPS gridpoint comparison*****'
-            write (6,*) '****lat,lon,gps water, laps water (cm)****'
+            write (6,*) '****i,j,lat,lon,gps water, laps water (cm)****'
             do i = 1,gps_count
-             write(6,*) lat(int(gps_points(i,2)),int(gps_points(i,3))),
+             write(6,*) int(gps_points(i,2)),int(gps_points(i,3)),
+     1                 lat(int(gps_points(i,2)),int(gps_points(i,3))),
      1                  lon(int(gps_points(i,2)),int(gps_points(i,3))),
      1                  gps_points(i,1),
      1              100.*tpw(int(gps_points(i,2)),int(gps_points(i,3)))
