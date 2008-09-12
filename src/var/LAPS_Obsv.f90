@@ -46,9 +46,9 @@ SUBROUTINE LAPS_Obsv
   REAL :: ulaps(n(1),n(2),n(3)),vlaps(n(1),n(2),n(3))
   REAL :: wt(n(1),n(2),n(3)),weight_prof
 
-  INTEGER :: max_snd
+  INTEGER :: max_snd_grd,max_snd_lvl
   LOGICAL :: l_adj_hgt
-  REAL :: bg_weight,rms_thresh
+  REAL :: bg_weight
 
   ! Profiler Data:
   ntmin = -1
@@ -65,20 +65,19 @@ SUBROUTINE LAPS_Obsv
 	istatus_remap_pro,status)
 
   ! Temperature parameters:
-  CALL get_temp_parms(l_raob,l_use_raob,l_adj_hgt,       &
-                      bg_weight,rms_thresh,              &
-                      pres_mix_thresh,max_snd,maxtobs,   &
-                      status)
+  ! CALL get_temp_parms(l_raob,l_use_raob,l_adj_hgt,       &
+  !                    bg_weight,rms_thresh,              &
+  !                    pres_mix_thresh,max_snd_grd,max_snd_lvl,maxtobs,   &
+  !                    status)
 
-  IF (maxtobs .GT. maxxobs) THEN
-    WRITE(6,*) 'Too many temperature obs'
-    STOP
-  ENDIF
-  CALL get_temp_3d_obs(max_snd,maxtobs)
+  ! Assign temperature parameters using the new temperature module:
+  l_raob = l_read_raob_t	
+  maxtobs = max_obs
+  CALL get_temp_3d_obs(max_snd_grid,max_snd_levels,max_obs)
 
 END SUBROUTINE LAPS_Obsv
 
-SUBROUTINE get_temp_3d_obs(max_snd,max_obs)
+SUBROUTINE get_temp_3d_obs(max_snd_grd,max_snd_lvl,max_obs)
 
 !==========================================================
 !  This routine retrieves 3D temperature observation data.
@@ -91,7 +90,7 @@ SUBROUTINE get_temp_3d_obs(max_snd,max_obs)
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) :: max_snd,max_obs
+  INTEGER, INTENT(IN) :: max_snd_grd,max_snd_lvl,max_obs
 
   INTEGER :: i_obstype
   INTEGER :: status
@@ -99,7 +98,7 @@ SUBROUTINE get_temp_3d_obs(max_snd,max_obs)
   include 'tempobs.inc'
 
   ! Sonde temperature data:
-  CALL get_temp_snd(max_snd,temp_obs,max_obs,status)
+  CALL get_temp_snd(max_snd_grd,max_snd_lvl,temp_obs,max_obs,status)
 
   ! ACAR temperature data:
   CALL get_temp_acar(temp_obs,max_obs,status)
@@ -109,7 +108,7 @@ SUBROUTINE get_temp_3d_obs(max_snd,max_obs)
 
 END SUBROUTINE get_temp_3d_obs
 
-SUBROUTINE get_temp_snd(max_snd,temp_obs,maxaobs,error)
+SUBROUTINE get_temp_snd(max_snd_grd,max_snd_lvl,temp_obs,maxaobs,error)
 
 !==========================================================
 !  This routine retrieves temperature obs from sonde data.
@@ -122,22 +121,22 @@ SUBROUTINE get_temp_snd(max_snd,temp_obs,maxaobs,error)
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) :: max_snd,maxaobs
+  INTEGER, INTENT(IN) :: max_snd_grd,max_snd_lvl,maxaobs
   INTEGER, INTENT(OUT) :: error
   REAL, INTENT(OUT) :: temp_obs(maxaobs,12)	! tempobs.inc
   
   INTEGER :: i4_window_raob
   INTEGER :: status,n_rass,n_snde,n_tsnd
-  REAL :: lattsnd(max_snd),lontsnd(max_snd)
-  REAL :: tsnd(max_snd,n(3))
-  REAL :: inst_err_tsnd(max_snd)
-  REAL :: bias_tsnd(max_snd,n(3)),bias_htlow(max_snd)
-  CHARACTER*5 c5name(max_snd)
-  CHARACTER*8 c8obstype(max_snd)
+  REAL :: lattsnd(max_snd_grd),lontsnd(max_snd_grd)
+  REAL :: tsnd(max_snd_grd,n(3))
+  REAL :: inst_err_tsnd(max_snd_grd)
+  REAL :: bias_tsnd(max_snd_grd,n(3)),bias_htlow(max_snd_grd)
+  CHARACTER*5 c5name(max_snd_grd)
+  CHARACTER*8 c8obstype(max_snd_grd)
   LOGICAL :: l_struct
 
   INTEGER :: k,isnd,n_qc_snd
-  INTEGER :: igrid(max_snd),jgrid(max_snd)
+  INTEGER :: igrid(max_snd_grd),jgrid(max_snd_grd)
   REAL :: ri,rj,p_pa,sh,tvir,tamb,devirt_sh
   LOGICAL :: l_string_contains,l_qc
 
@@ -145,9 +144,9 @@ SUBROUTINE get_temp_snd(max_snd,temp_obs,maxaobs,error)
   l_struct = .true.
 
   ! Read sonde temperature:
-  CALL read_tsnd(i4time,height3d,temptr3d,sphumd3d, &
+   CALL read_tsnd(i4time,height3d,temptr3d,sphumd3d, &
 		 pressr3d,lattsnd,lontsnd,lat,lon, &
-                 max_snd,tsnd,inst_err_tsnd,c5name, &
+                 max_snd_grd,max_snd_lvl,tsnd,inst_err_tsnd,c5name, &
                  c8obstype,l_raob,l_struct, &
                  i4_window_raob,bias_htlow, &
                  n_rass,n_snde,n_tsnd,timelen,n(1), &
