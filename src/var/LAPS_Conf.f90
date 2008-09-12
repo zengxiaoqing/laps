@@ -111,22 +111,13 @@ PRINT*,'Time: ',i4time,a9time,timelen
     STOP
   ENDIF
 
-  ! Observations: wind:
-  ! CALL get_wind_parms(l_raob,l_cdw,l_radial, &
-!		      thresh_2_radarobs_lvl_unfltrd, &
-!		      thresh_4_radarobs_lvl_unfltrd, &
-!		      thresh_9_radarobs_lvl_unfltrd, &
-!		      weight_bkg_const_wind, &
-!                      weight_radar,rms_thresh_wind, &
-!                      max_pr,max_pr_lvls,max_obs,status)
+  ! Get wind parameters:
   CALL GET_DIRECTORY('static',static_dir,len_dir)
-  filename = static_dir(1:len_dir)//'/wind.nl'
+  filename = static_dir(1:len_dir)//'wind.nl'
   CALL READ_NAMELIST_LAPS ('wind',filename)
-  ! CALL READ_NAMELISTS ('wind',filename)
-  ! IF (status .NE. 1) THEN
-  !  PRINT*,'Conf: error: wind parameters'
-  !  STOP
-  ! ENDIF
+  ! Get temperature parameters:
+  filename = static_dir(1:len_dir)//'temp.nl'
+  CALL READ_NAMELIST_LAPS ('temp_anal',filename)
 
   ! Radar info:
   CALL get_max_radars(max_radars,status)
