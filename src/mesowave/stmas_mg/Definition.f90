@@ -45,7 +45,7 @@ MODULE Definition
   ! LAPS Constants:
   !****************
 
-  ! Lapse rates: see LAPS mdatlap.f under sfc:
+  ! Lapse rates: see LAPS mdatlaps.f under sfc:
   ! 1: temperature; 2: Dewpoint
   REAL, PARAMETER :: lapses(2) = (/-0.01167, -0.007/)
 
@@ -109,6 +109,7 @@ MODULE Definition
   INTEGER :: numvar		! Number of Analysis vars
   INTEGER :: needbk(MAXVAR)	! Add background to incements
   INTEGER :: bounds(MAXVAR)	! Bound constraints
+  INTEGER :: radius(MAXVAR)     ! Obs cover grids ! added by min-ken hsieh, used in AddBkgrnd
   INTEGER :: verbal		! Print message option
   INTEGER :: savdat		! Save background and obs
   INTEGER :: saveid		! Index for saving variable
@@ -142,6 +143,13 @@ MODULE Definition
   REAL :: penalt		! Penalty parameter
   REAL, ALLOCATABLE, DIMENSION(:,:,:,:) &
 	:: analys		! Analyzed fields
+  !------------------------
+  !Verification variables:
+  !                             !modified by min-ken hsieh
+  !------------------------
+  CHARACTER*20,ALLOCATABLE, DIMENSION(:,:) &
+	 :: stanam 		!store stn name for each variable
+  INTEGER :: nobbkg(MAXVAR)	!number of obs made by bkgrnd
 
   ! Namelists:
   NAMELIST /STMAS/numfic,numtmf,numgrd,numvar,savdat,saveid,verbal
@@ -150,7 +158,7 @@ MODULE Definition
 
 CONTAINS			! Common utility routines
 
-SUBROUTINE Grid2Obs(indx,coef,obsv,nobs,wght,ngrd,dxyt,domn)
+SUBROUTINE Grid2Obs(indx,coef,obsv,nobs,wght,stna,ngrd,dxyt,domn)
 
 !==========================================================
 !  This routine finds the indices and coefficients for an
@@ -159,6 +167,10 @@ SUBROUTINE Grid2Obs(indx,coef,obsv,nobs,wght,ngrd,dxyt,domn)
 !
 !  HISTORY:
 !	Creation: 9-2005 by YUANFU XIE.
+!       Modification:
+!                 25-08-2008 by min-ken hsieh
+!                 add parameter stna to map each obs its stn name for STMASVer
+!
 !==========================================================
 
   IMPLICIT NONE
@@ -170,6 +182,7 @@ SUBROUTINE Grid2Obs(indx,coef,obsv,nobs,wght,ngrd,dxyt,domn)
   INTEGER, INTENT(INOUT) :: nobs
   REAL, INTENT(OUT) :: coef(6,nobs)
   REAL, INTENT(INOUT) :: obsv(4,nobs),wght(nobs)
+  CHARACTER*20, INTENT(INOUT) :: stna(nobs)		!by min-ken hsieh
 
   ! Local variables:
   INTEGER :: i,ier
@@ -189,6 +202,7 @@ SUBROUTINE Grid2Obs(indx,coef,obsv,nobs,wght,ngrd,dxyt,domn)
       ! Save the obs and its weight:
       obsv(1:4,nib) = obsv(1:4,i)
       wght(nib) = wght(i)
+      stna(nib) = stna(i)
 
       indx(1:6,nib) = indx(1:6,i)
       coef(1:6,nib) = coef(1:6,i)
