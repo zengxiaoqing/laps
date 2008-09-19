@@ -54,6 +54,7 @@ SUBROUTINE LAPSMemo
 	   longrd(numgrd(1),numgrd(2)), &
 	   rawobs(4,numtmf*mxstts,numvar), &
 	   bkgobs(numtmf*mxstts,numvar), &
+	   stanam(numtmf*mxstts,numvar), &		!Added by min-ken.hsieh: stanam for STMASVer
 	   STAT=err)
   IF (err .NE. 0) THEN
     PRINT*,'STMAS>GetMemos: cannot allocate enough memory!'
@@ -74,11 +75,15 @@ SUBROUTINE LAPSRels
 
   INTEGER :: err
 
+!
+! modified by min-ken hsieh
+! because we still need bkgobs for verify
+! we deallocate it in STMASVer subroutine
+!
   DEALLOCATE(i4prev, &
 	     latgrd, &
 	     longrd, &
 	     rawobs, &
-	     bkgobs, &
 	     STAT=err)
 
   IF (err .NE. 0) THEN
