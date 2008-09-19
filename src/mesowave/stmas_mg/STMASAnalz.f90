@@ -32,6 +32,9 @@ MODULE STMASAnalz
 !
 !  HISTORY:
 !	Creation: 9-2005 by YUANFU XIE.
+!       Modification:
+!                 25-08-2008 by min-ken hsieh
+!                 add parameter stna to map each obs its stn name for STMASVer
 !==========================================================
 
   USE Definition
@@ -39,8 +42,8 @@ MODULE STMASAnalz
 CONTAINS
 
 SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
-		    obsv,nobs,wght,ospc,indx,coef, &
-		    bund,ipar,rpar)
+		    obsv,nobs,wght,stna,ospc,indx, &
+		    coef, bund,ipar,rpar)
 		    
 
 !==========================================================
@@ -64,6 +67,8 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   REAL, INTENT(IN) :: bkgd(ngrd(1),ngrd(2),nfrm)
   REAL, INTENT(INOUT) :: obsv(4,nobs)
   REAL, INTENT(INOUT) :: wght(nobs)	! Obs weightings
+  CHARACTER*20, INTENT(INOUT):: stna(nobs)
+					! Obs station name by min-ken hsieh
   REAL, INTENT(IN) :: ospc(3)		! Obs spacing
   REAL, INTENT(IN) :: coef(6,nobs)	! Coeffients
   REAL, INTENT(IN) :: rpar(1)		! Real parameter
@@ -100,8 +105,9 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
     ENDIF
     lvl(i) = MIN0(lvl(i),INT(ALOG(FLOAT(ngrd(i)-1))/ALOG(2.0))-1)
     lvl(i) = MAX0(lvl(i),1)
-    IF (verbal .EQ. 1) WRITE(*,2) lvl(i)
   ENDDO
+  lvl = lvl+1
+  IF (verbal .EQ. 1) WRITE(*,2) lvl(1:3)
 2 FORMAT('STMASAna: Number of levels: ',I3)
 
   ! Leading dimensions:
@@ -141,7 +147,7 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 
       ! Interpolate a multigrid to observations:
       dgd = (domn(2,1:3)-domn(1,1:3))/FLOAT(mgd-1)
-      CALL Grid2Obs(idx,coe,obsv,nobs,wght,mgd,dgd,domn)
+      CALL Grid2Obs(idx,coe,obsv,nobs,wght,stna,mgd,dgd,domn)
 
       ! Initial guesses:
       IF ((l .EQ. 1) .AND. (k .EQ. 1)) &
@@ -620,11 +626,11 @@ SUBROUTINE STMASInc
 	  bkgrnd(1:numgrd(1),1:numgrd(2),k,l)
 
 	! Treat land factor:
-	analys(1:numgrd(1),1:numgrd(2),k,l) = &
-	  lndfac(1:numgrd(1),1:numgrd(2))* &
-	  analys(1:numgrd(1),1:numgrd(2),k,l)+ &
-	  (1.0-lndfac(1:numgrd(1),1:numgrd(2)))* &
-	  bkgrnd(1:numgrd(1),1:numgrd(2),k,l)
+!	analys(1:numgrd(1),1:numgrd(2),k,l) = &
+!	  lndfac(1:numgrd(1),1:numgrd(2))* &
+!	  analys(1:numgrd(1),1:numgrd(2),k,l)+ &
+!	  (1.0-lndfac(1:numgrd(1),1:numgrd(2)))* &
+!	  bkgrnd(1:numgrd(1),1:numgrd(2),k,l)
       ENDDO
     ENDIF
   ENDDO
