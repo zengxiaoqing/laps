@@ -817,7 +817,7 @@ SUBROUTINE STMASVer
 
 	!time loop
 	DO kt = 1,numtmf
-	  write(tmtag,"i1") kt
+	  write(tmtag,'(i1)') kt
           nn= 0
           obstime = domain(1,3)+(kt-1)*lapsdt
           DO j=1,numobs(i)
@@ -846,7 +846,7 @@ SUBROUTINE STMASVer
 
         !time loop
         DO kt = 1,numtmf
-          write(tmtag,"i1") kt
+          write(tmtag,'(i1)') kt
           nn= 0
           obstime = domain(1,3)+(kt-1)*lapsdt
           DO j=1,numobs(i)
@@ -875,7 +875,7 @@ SUBROUTINE STMASVer
 
         !time loop
         DO kt = 1,numtmf
-          write(tmtag,"i1") kt
+          write(tmtag,'(i1)') kt
           nn= 0
           obstime = domain(1,3)+(kt-1)*lapsdt
           DO j=1,numobs(i)
@@ -904,7 +904,7 @@ SUBROUTINE STMASVer
 
         !time loop
         DO kt = 1,numtmf
-          write(tmtag,"i1") kt
+          write(tmtag,'(i1)') kt
           nn= 0
           obstime = domain(1,3)+(kt-1)*lapsdt
           DO j=1,numobs(i)
@@ -939,7 +939,7 @@ SUBROUTINE STMASVer
 	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
 	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
 
-          write(tmtag,"i1") kt
+          write(tmtag,'(i1)') kt
           nn= 0
           obstime = domain(1,3)+(kt-1)*lapsdt
           DO j=1,numobs(i)
@@ -975,7 +975,7 @@ SUBROUTINE STMASVer
 	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
 	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
 
-          write(tmtag,"i1") kt
+          write(tmtag,'(i1)') kt
           nn= 0
           obstime = domain(1,3)+(kt-1)*lapsdt
           DO j=1,numobs(i)
@@ -1080,7 +1080,7 @@ SUBROUTINE AddBkgrd
         ENDDO
 
 	!add time tag on bkg stn name
-	write(tmtag,"i1") kt
+	write(tmtag,'(i1)') kt
         !PRINT*,varnam(i),nn
         !add background to obs
         DO ky=1,numgrd(2),2*radius(i)
