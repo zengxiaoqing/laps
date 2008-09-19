@@ -332,6 +332,8 @@ SUBROUTINE LAPSOBSV(m)
 
       ! Place the observations into right variables:
       DO j=1,numvar
+	stanam(1+numobs(j):nob+numobs(j),j) = stn(1:nob)	!Added by min-ken,hsieh:stanam for STMASVer
+	
 	SELECT CASE (varnam(j))
 	CASE ("TEMP")
 	  rawobs(1,1+numobs(j):nob+numobs(j),j) = tmp(1:nob)
@@ -484,6 +486,7 @@ SUBROUTINE RmvInvld
 	numobs(i) = numobs(i)+1
 	rawobs(1:4,numobs(i),i) = rawobs(1:4,j,i)
 	weight(numobs(i),i) = weight(j,i)
+	stanam(numobs(i),i) = stanam(j,i)		!Added by min-ken,hsieh:stanam for STMASVer
       ENDIF
     ENDDO
   ENDDO
@@ -693,6 +696,7 @@ SUBROUTINE Thrshold
 	  numobs(i) = numobs(i)+1
 	  rawobs(1:4,numobs(i),i) = rawobs(1:4,j,i)
 	  weight(numobs(i),i) = weight(j,i)
+	  stanam(numobs(i),i) = stanam(j,i)		!Added by min-ken,hsieh:stanam for STMASVer
 	  indice(1:6,numobs(i),i) = indice(1:6,j,i)
 	  coeffs(1:6,numobs(i),i) = coeffs(1:6,j,i)
 	  bkgobs(numobs(i),i) = bkgobs(j,i)
@@ -717,6 +721,9 @@ SUBROUTINE LAPSIntp
 !
 !  HISTORY:
 !	Creation: 9-2005 by YUANFU XIE.
+!       Modification:
+!                 25-08-2008 by min-ken hsieh
+!                 pass stanam into Grid2Obs to map each obs its stn name for STMASVer
 !==========================================================
 
   IMPLICIT NONE
@@ -725,7 +732,7 @@ SUBROUTINE LAPSIntp
 
   DO i=1,numvar
     CALL Grid2Obs(indice(1,1,i),coeffs(1,1,i), &
-	rawobs(1,1,i),numobs(i),weight(1,i),numgrd, &
+	rawobs(1,1,i),numobs(i),weight(1,i),stanam(1,i),numgrd, &
 	grdspc,domain)
 
     ! Compute background values at observation sites:
@@ -749,5 +756,357 @@ SUBROUTINE LAPSIntp
   ENDDO
 
 END SUBROUTINE LAPSIntp
+
+SUBROUTINE STMASVer
+!==========================================================
+!  This routine prepare all parameters and pass them to
+!  verify subroutine in src/lib/laps_routine.f.
+!  it will output verify file in log/qc directory, just
+!  like what laps_sfc.x dose.
+!  HISTORY:
+!       Creation: 22-8-2008 by min-ken hsieh.
+!==========================================================
+
+  IMPLICIT NONE
+
+  !Local vaiables
+  INTEGER :: i, j, len, istatus, err
+  INTEGER :: iunit     		 !log file handle
+  INTEGER :: ii(mxstts),jj(mxstts)
+
+  ! since we use bilinear interpolation, these arrays are dummy..
+  REAL :: x1a(numgrd(1)), x2a(numgrd(2)), y2a(numgrd(1),numgrd(2)) 
+  REAL :: ea
+
+  CHARACTER*60  :: title
+  CHARACTER*256 :: ver_file
+  CHARACTER*9   :: a9time
+
+  !for time loop
+  INTEGER :: kt,nn
+  INTEGER :: obstime
+  REAL :: obsOfThisTime(mxstts)
+  CHARACTER*20 :: staOfThisTime(mxstts)
+  CHARACTER*1 :: tmtag
+
+  ! open log file
+  iunit = 11
+  CALL make_fnam_lp(i4time,a9time,istatus)
+  IF(istatus .eq. 0) GOTO 999
+  CALL get_directory('log', ver_file, len)
+  ver_file = ver_file(1:len)//'qc/stmas.ver.'//a9time(6:9)
+  CALL s_len(ver_file, len)
+  !PRINT*, "min-ken",ver_file
+  OPEN(iunit,file=ver_file(1:len),status='unknown',err=999)
+
+  ! variable loop
+  DO i=1,numvar
+    !because we only care about real obs
+    !we do not apply verify to those obs made by bkgrnd
+    !numobs(i) = numobs(i) - nobbkg(i)
+
+    ! qc_obs array actually store obs - obsbkg field (done by CpyQCObs)
+    ! we need to add obsbkg back to qc_obs
+    IF (needbk(i) .EQ. 1) &
+      qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)+bkgobs(1:numobs(i),i)
+
+
+
+    SELECT CASE (varnam(i))
+      CASE ("TEMP")
+
+	!time loop
+	DO kt = 1,numtmf
+	  write(tmtag,"i1") kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+	      obsOfThisTime(nn) = qc_obs(1,j,i)
+	      staOfThisTime(nn) = stanam(j,i)
+	      ii(nn) = qc_obs(2,j,i)
+	      jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+	
+          title = 'Temperature background verification of tmf = '//tmtag//' (deg C)'
+          ea = 1.50*5.0/9.0
+          CALL verify(bkgrnd(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+ 
+          title = 'Temperature verification of tmf = '//tmtag//' (deg C)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+      CASE ("WNDU")
+
+        !time loop
+        DO kt = 1,numtmf
+          write(tmtag,"i1") kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+          title = 'U Wind Component background verification of tmf = '//tmtag//' (m/s)'
+          ea = 2.00*knt2ms
+          CALL verify(bkgrnd(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+
+          title = 'U Wind Component verification of tmf = '//tmtag//' (m/s)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+      CASE ("WNDV")
+
+        !time loop
+        DO kt = 1,numtmf
+          write(tmtag,"i1") kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+          title = 'V Wind Component background verification of tmf = '//tmtag//' (m/s)'
+          ea = 2.00*knt2ms
+          CALL verify(bkgrnd(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+
+          title = 'V Wind Component verification of tmf = '//tmtag//' (m/s)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+      CASE ("DEWP")
+
+        !time loop
+        DO kt = 1,numtmf
+          write(tmtag,"i1") kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+          title = 'Dew Point background verification of tmf = '//tmtag//' (deg C)'
+          ea = 2.00*5.0/9.0
+          CALL verify(bkgrnd(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+ 
+          title = 'Dew Point verification of tmf = '//tmtag//' (deg C)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+      CASE ("REDP")
+	!Convert pascal to mb
+	qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)/mb2pas
+
+        !time loop
+        DO kt = 1,numtmf
+ 	  !Convert pascal to mb
+	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
+	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
+
+          write(tmtag,"i1") kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+          title = 'Reduced pressure background verification of tmf = '//tmtag//' (mb)'
+          ea = 0.68
+          CALL verify(bkgrnd(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+
+          title = 'Reduced pressure verification of tmf = '//tmtag//' (mb)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+
+      CASE ("SFCP")
+	!Convert pascal to mb
+	qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)/mb2pas
+
+        !time loop
+        DO kt = 1,numtmf
+	  !Convert pascal to mb
+	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
+	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
+
+          write(tmtag,"i1") kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+          title = 'SFC pressure background verification of tmf = '//tmtag//' (mb)'
+          ea = 0.68
+          CALL verify(bkgrnd(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+
+          title = 'SFC pressure verification of tmf = '//tmtag//' (mb)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+
+      CASE DEFAULT
+        WRITE(*,22) varnam(i)
+
+    END SELECT
+  ENDDO	! end of variable loop
+
+  CLOSE(iunit)
+
+  !Remember to free memory of bkgobs
+  !
+  DEALLOCATE(bkgobs,STAT=err)
+  IF (err .NE. 0) THEN
+    PRINT*,'STMAS>STMASVer: cannot deallocate bkgobs memory!'
+    STOP
+  ENDIF
+  DEALLOCATE(stanam,STAT=err)
+  IF (err .NE. 0) THEN
+    PRINT*,'STMAS>STMASVer: cannot deallocate stanam memory!'
+    STOP
+  ENDIF
+
+
+  !everything is done.
+  PRINT *,' Normal completion of STMASVer'
+  RETURN 
+
+999  PRINT *,'ERROR opening ',ver_file(1:len)
+  RETURN
+
+22 FORMAT('STMAS>STMASVer: Do not know to verify such var: ',A4)
+
+END SUBROUTINE STMASVer
+
+SUBROUTINE AddBkgrd
+!==========================================================
+!  This routine mask out obs covered area defined by radius 
+!  and then add background grid data into obs vector as if 
+!  we have obs in those areas. 
+!
+!  HISTORY:
+!       Creation: 26-08-2008 by min-ken hsieh
+!==========================================================
+
+  IMPLICIT NONE
+
+  !Local variable
+  INTEGER :: i,j,kx,ky,kt,nn
+  INTEGER :: FirstCoveredGrid(2),LastCoveredGrid(2)
+  INTEGER :: obstime
+  LOGICAL :: uncovered(numgrd(1),numgrd(2))	!mask array
+  CHARACTER*1 :: tmtag
+
+
+  !variable loop
+  DO i=1,numvar
+    IF(needbk(i).EQ.1) THEN
+      ! find out areas have been covered by obs for each time frame
+      nobbkg(i) = 0
+      DO kt=1,numtmf
+	uncovered = .TRUE.
+        nn= 0
+	obstime = domain(1,3)+(kt-1)*lapsdt
+        DO j=1,numobs(i)
+          IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+            nn = nn + 1
+            FirstCoveredGrid(1:2) = MAX0(1,FLOOR(qc_obs(2:3,j,i))-radius(i))
+            LastCoveredGrid(1:2) = MIN0(numgrd(1:2),FLOOR(qc_obs(2:3,j,i))+radius(i)+1)
+
+            ! mask out
+            DO ky=FirstCoveredGrid(2),LastCoveredGrid(2)
+              DO kx=FirstCoveredGrid(1),LastCoveredGrid(1)
+	        uncovered(kx,ky) = .FALSE.
+              ENDDO
+            ENDDO
+    
+          ENDIF
+        ENDDO
+
+	!add time tag on bkg stn name
+	write(tmtag,"i1") kt
+        !PRINT*,varnam(i),nn
+        !add background to obs
+        DO ky=1,numgrd(2),2*radius(i)
+          DO kx=1,numgrd(1),2*radius(i)
+	    IF(uncovered(kx,ky)) THEN
+              nobbkg(i) = nobbkg(i)+1
+              qc_obs(1,numobs(i)+nobbkg(i),i) = 0.0	!because qc_obs = obs - bkgrnd(in CpyQCObs)
+              qc_obs(2,numobs(i)+nobbkg(i),i) = kx
+              qc_obs(3,numobs(i)+nobbkg(i),i) = ky
+              qc_obs(4,numobs(i)+nobbkg(i),i) = FLOAT(obstime)
+	      weight(numobs(i)+nobbkg(i),i) = 1.0
+	      bkgobs(numobs(i)+nobbkg(i),i) = bkgrnd(kx,ky,kt,i)
+              stanam(numobs(i)+nobbkg(i),i) = "BKGRD"
+            ENDIF
+          ENDDO
+        ENDDO
+      ENDDO
+      numobs(i) = numobs(i) + nobbkg(i)
+      WRITE(*,34) varnam(i),nobbkg(i)
+    ENDIF
+
+
+  ENDDO ! end of variable loop
+  RETURN
+34 FORMAT('STMAS>AddBkgrd: NumObs of (BKG) ',A4,': ',I8)
+
+END SUBROUTINE AddBkgrd
 
 END MODULE LAPSDatSrc
