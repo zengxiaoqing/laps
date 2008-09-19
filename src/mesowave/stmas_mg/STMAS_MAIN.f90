@@ -69,6 +69,9 @@ PROGRAM STMAS_MG
   ! STMAS QC:
   CALL LAPS_QCs
 
+  ! Add background to obs where obs is spare !by min-ken hseih
+  CALL AddBkgrd
+
   ! Release memory for LAPS:
   CALL LAPSRels
 
@@ -83,9 +86,12 @@ PROGRAM STMAS_MG
     WRITE(*,*) 'STMAS_MAIN: Start analyzing ',varnam(i)
     ! Check if there is any obs for analysis:
     IF (numobs(i) .GT. 0) THEN
+      ! modified by min-ken hsieh
+      ! pass stanam into STMASAna
+      !
       CALL STMASAna(analys(1,1,1,i),numgrd,grdspc, &
 	domain,bkgrnd(1,1,1,i),numtmf, &
-	qc_obs(1,1,i),numobs(i),weight(1,i), &
+	qc_obs(1,1,i),numobs(i),weight(1,i), stanam(1,i),&
 	obsspc(1,i),indice(1,1,i),coeffs(1,1,i), &
 	bounds(i),stmasi,stmasr)
     ELSE
@@ -104,6 +110,10 @@ PROGRAM STMAS_MG
     WRITE(11,*) analys
   ENDIF
   CALL PrPstLSX
+
+  ! modified by min-ken hsieh
+  ! Verify STMAS Analysis
+  CALL STMASVer
 
   ! Release dynamic memory:
   CALL IntrRels
