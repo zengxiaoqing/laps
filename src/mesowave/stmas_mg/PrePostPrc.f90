@@ -69,7 +69,7 @@ SUBROUTINE PrPstNLs
   dir = dirstc(1:dirlen)//'stmas_mg.vr'
   OPEN(unit=11,file=dir(1:dirlen+12),form='formatted')
   DO nam=1,numvar
-    READ(11,*) varnam(nam),thresh(nam),needbk(nam),bounds(nam)
+    READ(11,*) varnam(nam),thresh(nam),needbk(nam),bounds(nam),radius(nam)
   ENDDO
   CLOSE(11)
 
