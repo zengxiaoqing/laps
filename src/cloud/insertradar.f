@@ -114,12 +114,12 @@ cdis
         call get_ref_base_useable(ref_base_useable,istatus)
         if(istatus .ne. 1)return
 
-        itest = min(148,ni)
+        itest = min(13,ni)
 
         do j = 1,nj
         do i = 1,ni
             if(solar_alt(i,j) .lt. 15. .and. 
-     1          td_sfc_k(i,j) .gt. 281.15)then ! 8 deg C - humid summer evenings
+     1          td_sfc_k(i,j) .gt. 277.15)then ! 4 deg C - warmer evenings
                 echo_agl_thr(i,j) = 4000.
             else
                 echo_agl_thr(i,j) = 2000.
