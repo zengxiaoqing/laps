@@ -232,7 +232,7 @@ C
      +                      ,1,nlevels_snd,1
      +                      ,iwmostanum
      +                      ,stalatl,stalonl,staElev(iob)
-     +                      ,staName(iob)
+     +                      ,staName_o(iob)
      +                      ,a9time_ob_l,c8_obstype
      +                      ,nlevels_snd
      +                      ,height_m
