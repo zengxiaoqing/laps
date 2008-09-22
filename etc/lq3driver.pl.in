@@ -67,6 +67,12 @@ foreach (@greplines) {print "$_";}
 foreach (@greplines) {print "$_";}
 print "\n";
 
+# GPS
+print "GPS:\n";
+@greplines = grep /total avial data used/i, @lines;
+print "$greplines[0]";
+print "\n";
+
 # Satellite
 
 print "Satellite:\n";
