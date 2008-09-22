@@ -366,9 +366,9 @@ c
                     if(iwrite_output .ge. 1)then
 312                     write(32,313,err=314)ri,rj,rklaps,ob_di,ob_sp       
      1                                      ,obstype(i_pr)
+313                     format(1x,3f10.5,2f10.3,1x,a8)               
+314                     continue
                     endif
-313                 format(1x,3f10.5,2f10.3,1x,a8)               
-314                 continue
 
                 enddo ! lvl
 
@@ -439,12 +439,12 @@ c
      1                              ,v_diff
 411                 format(1x,i6,2i4,f8.1,6f7.1)
 
-                    if(iwrite_output .ge. 1)then
-412                     write(32,313,err=414)ri,rj,float(level)
+412                 if(iwrite_output .ge. 1)then
+                        write(32,313,err=414)ri,rj,float(level)
      1                        ,ob_pr_di(i_pr,level),ob_pr_sp(i_pr,level)       
      1                        ,obstype(i_pr)
+414                     continue
                     endif
-414                 continue
 
                 enddo ! level
               
