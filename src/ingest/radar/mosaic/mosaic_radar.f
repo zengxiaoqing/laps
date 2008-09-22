@@ -171,6 +171,7 @@ c
       Real        rlat_radar(n_radars)
       Real        rlon_radar(n_radars)
       Real        rheight_radar(n_radars)
+      Real        dist_multiradar_2d(nx_l,ny_l,n_radars)
       Real        closest_radar_m(nx_l,ny_l)
 
       Real        zcoord_of_level
@@ -235,7 +236,7 @@ c
      +             ,comment_tmp*40
 
       character     units_2d*10
-      character     var_2d*3
+      character     var_2d*3, var_dis*3
       character     comment_2d*125
 
       character     c_radar_id(n_radars)*4
@@ -466,6 +467,7 @@ c ----------------------------------------------------------
           elseif(c_mosaic_type(1:3).eq.'rdr')then ! rd 'vrc' files on LAPS grid
              ext = 'vrc'
              var_2d = 'REF'
+             var_dis = 'DIS'
              ilevel = 0
 
              n_valid_radars = 0 ! being reset for each radar time
@@ -474,6 +476,8 @@ c ----------------------------------------------------------
              do i = 1,i_ra_count
                 path=path_rdr(1:lprdr)//c_ra_ext(i)//'/vrc/'
                 grid_ra_ref(:,:,:,i) = r_missing_data  ! Initialize this 3D ref
+
+                write(6,*)
 
                 call get_2dgrid_dname(path
      1           ,i4_file_closest(i),0,i4time_nearest
@@ -487,10 +491,61 @@ c ----------------------------------------------------------
                 else
                   n_valid_radars = n_valid_radars + 1
 
-                  read(comment_2d(1:9),'(f9.3)')rlat_radar(i)
-                  read(comment_2d(10:18),'(f9.3)')rlon_radar(i)
-                  read(comment_2d(19:26),'(f8.0)')rheight_radar(i)
-                  c_radar_id(i)(1:4)=comment_2d(34:37)
+                  if(comment_2d(1:3) .eq. 'WSI')then
+                      c_radar_id(i)(1:4)='WSI '
+                      rlat_radar(i) = r_missing_data
+                      rlon_radar(i) = r_missing_data
+                      rheight_radar(i) = r_missing_data
+
+                      write(6,*)
+     1                   ' WSI radar data detected, read distance array'      
+
+                      call get_2dgrid_dname(path
+     1                   ,i4_file_closest(i),0,i4time_nearest
+     1                   ,ext,var_dis,units_2d
+     1                   ,comment_2d,nx_l,ny_l,dist_multiradar_2d(1,1,i)     
+     1                   ,ilevel,istatus)
+
+                      if(istatus .ne. 1 .and. istatus.ne.-1)then
+                          write(6,*)' Error reading dis array ',i
+                          istatus = 0
+                          return
+                      endif
+
+                  else
+                      if(comment_2d(1:9)   .eq. '        ' .or. 
+     1                   comment_2d(10:18) .eq. '        '      )then
+                          write(6,*)' lat/lon header missing for radar '
+     1                             ,i     
+                          write(6,*)' reading in distance array instead'
+                          rlat_radar(i) = r_missing_data
+                          rlon_radar(i) = r_missing_data
+                          rheight_radar(i) = r_missing_data
+
+                          call get_2dgrid_dname(path
+     1                   ,i4_file_closest(i),0,i4time_nearest
+     1                   ,ext,var_dis,units_2d
+     1                   ,comment_2d,nx_l,ny_l,dist_multiradar_2d(1,1,i)     
+     1                   ,ilevel,istatus)
+
+                          if(istatus .ne. 1 .and. istatus.ne.-1)then
+                              write(6,*)' Error reading dis array ',i
+                              istatus = 0
+                              return
+                          endif
+
+                      else
+                          read(comment_2d(1:9),'(f9.3)')
+     1                         rlat_radar(i)
+                          read(comment_2d(10:18),'(f9.3)')
+     1                         rlon_radar(i)
+                          read(comment_2d(19:26),'(f8.0)')
+     1                         rheight_radar(i)       
+
+                      endif
+
+                      c_radar_id(i)(1:4)=comment_2d(34:37)
+                  endif
 
                 endif
 
@@ -513,6 +568,7 @@ c this subroutine does not yet use the imosaic_3d parameter.
      &                         rlat_radar,rlon_radar,rheight_radar,       ! I
      &                         topo,rheight_laps,grid_ra_ref,             ! I
      &                         imosaic_3d,                                ! I
+     &                         dist_multiradar_2d,                        ! I  
      &                         grid_mosaic_2dref,grid_mosaic_3dref,       ! I/O
      &                         closest_radar_m,istatus)                   ! O
              if(istatus .ne. 1)return
