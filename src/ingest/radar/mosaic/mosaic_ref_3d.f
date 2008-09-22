@@ -4,6 +4,7 @@
      &                            rlat_radar,rlon_radar,rheight_radar,    ! I
      &                            topo,rheight_laps,grid_ra_ref,          ! I
      &                            imosaic_3d,                             ! I
+     &                            dist_multiradar_2d,                     ! I  
      &                            grid_mosaic_2dref,grid_mosaic_3dref,    ! I/O
      &                            closest_radar_m,istatus)                ! O
 c
@@ -17,6 +18,7 @@ c
       Real    lon(nx,ny)
       Real    grid_ra_ref(nx,ny,nz,maxradars)
       Real    grid_mosaic_2dref(nx,ny)
+      Real    dist_multiradar_2d(nx,ny,maxradars)
       Real    closest_radar_m(nx,ny)
       Real    grid_mosaic_3dref(nx,ny,nz)
       Real    topo(nx,ny)
@@ -31,6 +33,7 @@ c
       Logical   l_low_level
       Logical   found_height
       Logical   l_valid
+      Logical   l_valid_latlon(maxradars)
 
       integer   lr_2d(nx,ny)                     ! closest radar
 
@@ -53,18 +56,29 @@ c
       istatus = 1
       if(i_ra_count .ge. 1)then ! essentially all the time
          do k = 1,i_ra_count
-            call latlon_to_rlapsgrid(rlat_radar(k),
-     &                            rlon_radar(k),
-     &                            lat,lon,
-     &                            nx,ny,
-     &                            ri(k),rj(k),
-     &                            jstatus)
-            if(jstatus.ne.1)then
-               write(6,*)
-     1               'Error computing ri/rj for radar (outside domain)?'       
-               write(6,*)'Name: ',radar_name(k),ri(k),rj(k)
+            if(rlat_radar(k) .eq. r_missing_data .or.
+     1         rlon_radar(k) .eq. r_missing_data      )then
+                write(6,*)' No valid or single lat/lon for radar ',k
+     1                   ,' ',radar_name(k)
+                l_valid_latlon(k) = .false.
+
+            else
+                call latlon_to_rlapsgrid(rlat_radar(k),
+     &                                   rlon_radar(k),
+     &                                   lat,lon,
+     &                                   nx,ny,
+     &                                   ri(k),rj(k),
+     &                                   jstatus)
+                if(jstatus.ne.1)then
+                    write(6,*)
+     1               'Error computing ri/rj for radar (outside domain)?'    
+                endif
+                write(6,*)'Name: ',radar_name(k),ri(k),rj(k),k
+                l_valid_latlon(k) = .true.
+
             endif
-         enddo
+
+         enddo ! radars
 
          icntn=0
          icntp=0
@@ -87,12 +101,16 @@ c
                   endif
                enddo ! k
 
-               ridist = float(i)-ri(l)
-               rjdist = float(j)-rj(l)
+               if(l_valid_latlon(l))then
+                   ridist = float(i)-ri(l)
+                   rjdist = float(j)-rj(l)
+                   rijdist=sqrt(ridist*ridist + rjdist*rjdist)
+                   dist_radar_m(l) = rijdist * grid_spacing_cen_m
 
-               rijdist=sqrt(ridist*ridist + rjdist*rjdist)
+               else ! No valid or single lat/lon, use distance array
+                   dist_radar_m(l) = dist_multiradar_2d(i,j,l)
 
-               dist_radar_m(l) = rijdist * grid_spacing_cen_m
+               endif
 
                if(dist_radar_m(l) .lt. r_min_dist_m .and. l_valid)then       
                   lr=l
