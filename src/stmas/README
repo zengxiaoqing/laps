@@ -6,12 +6,26 @@
  
 program main                                   main.f90
     BKGRNDOBS                                  input_bg_and_obs.f90
+        READNMLST
+        RDLAPSBKG
+        RDBKGTEST
+        GETBKGRND_NEW
+        RDBUFROBS
+        RDLAPSRDR
+        RDOBSTEST
+        ADDBKGRND
+        BKGTOFINE
     MGANALYSS                                  stmas_core.f90
-    OUTPUTANA                                  output_analysis.f90
+    OUTPUTLAPS                                 output_anals.f90
+    OUTPUTANA                                        "
         WIND_POST_PROCESS                      src/lib/wind/wind_post_process.f
         WRITE_TEMP_ANAL                        src/lib/temp/puttmpanal.f
 
 
+  Tree diagram outlining the source code for 'STMAS3D_CG.exe'
+
+  Subroutine Name                              File Name:
+  ---------------                              ----------
 
 
 
