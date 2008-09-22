@@ -48,6 +48,7 @@ c                  'WFO' denotes AWIPS NetCDF format and WFO file timestamp,
 c                        as well as MADIS
 c                  'CWB' is Central Weather Bureau in Taiwan
 c                  'AFWA' is Air Force Weather Agency
+c                  'AOML' is this NOAA agency's CSV format data
 c
 c 'minutes_to_wait_for_metars' - Especially helpful on WFO
 c
