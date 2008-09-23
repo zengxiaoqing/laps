@@ -42,10 +42,10 @@ cdis
      ~           pcp24hr, dd, ff, wgdd, wgff, p, mslp, pcc, pc, sr, st,
      ~           num, istatus )
         
-      integer, parameter :: maxobs = 530
+      integer, parameter :: maxobs = 600
       integer, parameter :: maxAgr =  20
-      integer, parameter :: maxCum = 400
-      integer, parameter :: maxShp = 110
+      integer, parameter :: maxCum = 450
+      integer, parameter :: maxShp = 150
 
       character(*)   stname(maxobs)
       character(*)  inpath
@@ -222,10 +222,15 @@ c               Get the agricultural metadata (station information).
       i4time_file_eat= i4time_sys +8*3600             ! convert GMT to EAT
       a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
 
+c
+c modified by min-ken.hsieh
+c fileanme include mm information
+c to prevent ARG data being read at 15,30,45 analysis
+c
       filename= 'Data.CWB.AGR.'
      ~           //a13time_eat(1:4) //'-' //a13time_eat(5:6)   ! yyyy_mm
      ~           //'-' //a13time_eat(7:8)                      ! dd
-     ~           //'_' //a13time_eat(10:11) //'00.agrsv1'      ! hh
+     ~           //'_' //a13time_eat(10:13) //'.agrsv1'      ! hh
 
       write(6,*) ' agricultural data file ', filename
 
@@ -809,7 +814,7 @@ c     Routine to read the CWB ASCII rain gauge files.
 c     
 c======================================================================
 c
-      integer, parameter :: loopnum = 400 
+      integer, parameter :: loopnum = 450 
       integer, parameter :: num23= 23
 
       real :: lats(maxobs), lons(maxobs), elev(maxobs)
@@ -894,7 +899,6 @@ c   fill the output arrays with something, then open the file to read
 
          filename= 'Data.CWB.CUM_UDD.' //'20' //yy //'-' //mm //'-' 
      ~                                 //dd //'_' //hh //'.cum_hr'      
-
          call s_len ( inpath, len_inpath )
          call s_len ( filename, len_fname )
  
@@ -960,6 +964,7 @@ c  Match data with metadata for this station, then store the metadata in arrays.
             write(6,*) ' No station match ', stn_id(i), stn_id_master(j)
          endif
 
+
 c                               quality control
          if ( dataMin(i) > 60 ) then
             pcp1hr(i)= badflag
@@ -969,19 +974,24 @@ c                               quality control
             if ( pcp1hr(i) < 0 .or. pcp1hrQ(i) /= 'G' ) then
                pcp1hr(i)= badflag
             else
-               pcp1hr(i)= pcp1hr(i) *0.1 *0.03937         ! conv mm to inch
+c              pcp1hr(i)= pcp1hr(i) *0.1 *0.03937         ! conv mm to inch
+c modified by min-ken hsieh
+c mm to inch coeff. changed
+               pcp1hr(i)= pcp1hr(i) *0.03937         ! conv mm to inch
             endif
  
             if ( pcp3hr(i) < 0 .or. pcp3hrQ(i) /= 'G' ) then
                pcp3hr(i)= badflag
             else
-               pcp3hr(i)= pcp3hr(i) *0.1 *0.03937         ! conv mm to inch
+c              pcp3hr(i)= pcp3hr(i) *0.1 *0.03937         ! conv mm to inch
+               pcp3hr(i)= pcp3hr(i) *0.03937         ! conv mm to inch
             endif
  
             if ( pcp6hr(i) < 0 .or. pcp6hrQ(i) /= 'G' ) then
                pcp6hr(i)= badflag
             else
-               pcp6hr(i)= pcp6hr(i) *0.1 *0.03937         ! conv mm to inch
+c              pcp6hr(i)= pcp6hr(i) *0.1 *0.03937         ! conv mm to inch
+               pcp6hr(i)= pcp6hr(i) *0.03937         ! conv mm to inch
             endif
          endif
       enddo 
@@ -994,10 +1004,12 @@ c                     when failing to open rain gauge file
 
 c                      quality control of 24hr precipitation
       pcp_stations : do i= 1,num
+      if (pcp24hr(i) .ne. badflag) then	! Check initial 1 hour pcp before accum.
       pcp_hours    : do j= 1,num23
          if ( stn_id(i) == stn(i,j) .and. dMin(i,j) <= 60 .and.
      ~        p1hr(i,j) >= 0        .and. p1hrQ(i,j) == 'G' ) then
-            p1hr(i,j)= p1hr(i,j) *0.1 *0.03937         ! conv mm to inch
+c           p1hr(i,j)= p1hr(i,j) *0.1 *0.03937         ! conv mm to inch
+            p1hr(i,j)= p1hr(i,j) *0.03937         ! conv mm to inch
             pcp24hr(i)= pcp24hr(i) +p1hr(i,j)    
          else
             p1hr(i,j)=  badflag
@@ -1005,6 +1017,7 @@ c                      quality control of 24hr precipitation
             cycle pcp_stations
          endif
       enddo pcp_hours
+      endif
       enddo pcp_stations
 
 c                               end of file
@@ -1096,7 +1109,7 @@ c     Routine to read the CWB ASCII shp files.
 c     
 c======================================================================
  
-      integer, parameter :: loopnum= 110 
+      integer, parameter :: loopnum= 150 
       real lats(maxobs), lons(maxobs), elev(maxobs)
       real p(maxobs), t(maxobs), dd(maxobs), ff(maxobs)
 
@@ -1108,6 +1121,7 @@ c                         stuff for the shp metadata.
       real  lat_master(maxobs), lon_master(maxobs), elev_master(maxobs)       
       character(5) :: stn_name_master(maxobs)
       character(4) :: stn_id_master(maxobs), stn_id(maxobs)
+      character(4) :: hhmm(maxobs)
  
 c                    Get the shp metadata (station information).
       call read_shp_stntbl (inpath, maxobs, badflag,
@@ -1130,12 +1144,16 @@ c   fill the output arrays with something, then open the file to read
       ff= badflag
 
       i4time_file_eat= i4time_sys +8*3600             ! convert GMT to EAT
-      a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
 
+      a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
+c
+c modified by min-ken.hsieh
+c filename include hhmm information to get each 15 min data
+c
       filename= 'Data.CWB.SHP.'
      ~           //a13time_eat(1:4)//'-'//a13time_eat(5:6)   ! yyyy_mm
      ~           //'-'//a13time_eat(7:8)                     ! dd
-     ~           //'_'//a13time_eat(10:11) //'00.shp'        ! hh
+     ~           //'_'//a13time_eat(10:13) //'.shp'        ! hh
 
       write(6,*) ' Mesonet file ',filename
 
@@ -1149,16 +1167,29 @@ c   fill the output arrays with something, then open the file to read
 
       do i= 1,loopNum
          read (11,511,end=600,err=990) stn_id(i), 
-     ~                                 p(i), t(i), ff(i), dd(i) 
- 511     format (5x, a4, 14x, 4f6.1)
+     ~                                 hhmm(i),p(i), t(i), ff(i), dd(i) 
+ 511     format (5x, a4, 9x,a4,1x, 4f6.1)
          num= num +1
       enddo
 
 c  Match data with metadata for this station, then store the metadata in arrays.
  600  imatch= 0
- 
+c
+c modified by min-ken.hseih
+c filter out data which labeled wrong time
+c and find out how many stns match table
+c 
+      i_match = 0 
+      i_ivalid = 0
       do i= 1,num
- 
+         if (hhmm(i)/=a13time_eat(10:13)) then
+	       i_invalid = i_invalid+1
+	       p(i)= badflag
+	       t(i)= badflag
+               dd(i)= badflag
+               ff(i)= badflag
+         endif
+
          do j= 1,num_master
             if ( stn_id(i) == stn_id_master(j) ) then
                stname(i)= stn_name_master(i)
@@ -1166,6 +1197,7 @@ c  Match data with metadata for this station, then store the metadata in arrays.
                lons(i)= lon_master(j)
                elev(i)= elev_master(j)
                imatch=1
+               i_match = i_match+1
             endif
          enddo
 
@@ -1190,7 +1222,10 @@ c                               quality control
  
       enddo
 c                               end of file
-      write(6,*) ' Found ', num, ' shp stations.'
+      write(6,*) ' Total ', num, ' shp stations.'
+      write(6,*) ' Found ', num - i_invalid, ' shp stations.'
+      write(6,*) ' Found ', i_match - i_invalid,
+     +			 ' shp stations match the table.'
       istatus= 1
       return
  
