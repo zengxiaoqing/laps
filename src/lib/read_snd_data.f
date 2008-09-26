@@ -661,6 +661,8 @@ c
      &       td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
      &       sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,maxsta,       
      &       lat,lon,imax,jmax,kmax,                                     ! I
+     &       MAX_PR,MAX_PR_LEVELS,                                       ! I
+     &       topo,                                                       ! I
      &       istatus)
 
         include 'constants.inc'
@@ -669,8 +671,6 @@ c
 
 !       Declarations for 'read_snd_data' call
         integer MAX_PR,MAX_PR_LEVELS
-        parameter (MAX_PR = 1500)
-        parameter (MAX_PR_LEVELS = 300)
 
         real lat_pr(MAX_PR)
         real lon_pr(MAX_PR)
@@ -703,6 +703,7 @@ c
 
         call get_r_missing_data(r_missing_data,istatus)
         call get_sfc_badflag(badflag,istatus)
+        elev_msg = -999.
 
         n_profiles = 0
         n_good_snd = 0
@@ -736,18 +737,27 @@ c
         do i_pr = 1,n_profiles
             l_good_snd = .false.
 
-            if(nlevels_obs_pr(i_pr) .gt. 0)then
-                rlevel_best_wind_diff = 99999.
-                rlevel_best_wind      = r_missing_data
+            if(nlevels_obs_pr(i_pr) .gt. 0)then 
+              if(elev_pr(i_pr) .ne. elev_msg)then ! assume station elev present
+                height_best_wind_diff = 99999.
+                height_best_wind      = r_missing_data
                 ob_best_wind          = r_missing_data
                 ilevel_best_wind      = 0
 
-                rlevel_best_temp_diff = 99999.
-                rlevel_best_temp      = r_missing_data
+                height_best_temp_diff = 99999.
+                height_best_temp      = r_missing_data
                 ob_best_temp          = r_missing_data
                 ob_best_dwpt          = r_missing_data
                 ilevel_best_temp      = 0
 
+                ob_best_mslp          = r_missing_data
+                ilevel_best_mslp      = 0
+
+                ob_best_stnp          = r_missing_data
+                ilevel_best_stnp      = 0
+
+!               Find closest temp and wind obs to levels to 2m and 10m above
+!               station elevation, respectivtly
                 do il = 1,nlevels_obs_pr(i_pr)
                     rlevel_temp_diff = abs( 
      1                   (ob_pr_ht_obs(i_pr,il)-elev_pr(i_pr)) - 2.0 )
@@ -755,40 +765,87 @@ c
                     rlevel_wind_diff = abs( 
      1                   (ob_pr_ht_obs(i_pr,il)-elev_pr(i_pr)) - 10.0 )
 
-                    if(rlevel_temp_diff .lt. rlevel_best_temp_diff)then
+                    if(rlevel_temp_diff .lt. height_best_temp_diff)then
                       if(ob_pr_t_obs(i_pr,il) .ne. r_missing_data)then
-                        rlevel_best_temp_diff = rlevel_temp_diff
+                        height_best_temp_diff = rlevel_temp_diff
                         ilevel_best_temp      = il
-                        rlevel_best_temp      = ob_pr_ht_obs(i_pr,il)
+                        height_best_temp      = ob_pr_ht_obs(i_pr,il)
                       endif
                     endif
 
-                    if(rlevel_wind_diff .lt. rlevel_best_wind_diff)then       
+                    if(rlevel_wind_diff .lt. height_best_wind_diff)then       
                       if(ob_pr_u_obs(i_pr,il) .ne. r_missing_data
      1             .and. ob_pr_v_obs(i_pr,il) .ne. r_missing_data)then
-                        rlevel_best_wind_diff = rlevel_wind_diff
-                        rlevel_best_wind      = ob_pr_ht_obs(i_pr,il)
+                        height_best_wind_diff = rlevel_wind_diff
+                        height_best_wind      = ob_pr_ht_obs(i_pr,il)
                         ilevel_best_wind      = il
                       endif
                     endif
 
                 enddo ! il
 
-                if(rlevel_best_wind_diff .le. 6.0 .or. 
-     1             rlevel_best_temp_diff .le. 2.0)then
+!               Test whether best diffs represent an overall good level for 
+!               temp/wind measurement
+                if(height_best_wind_diff .le. 6.0 .or. 
+     1             height_best_temp_diff .le. 2.0)then
                     write(6,*)' Good Sounding Elev     ',i_pr
      1                       ,c5_name(i_pr)
-     1                       ,rlevel_best_temp,rlevel_best_temp_diff       
-     1                       ,rlevel_best_wind,rlevel_best_wind_diff
+     1                       ,height_best_temp,height_best_temp_diff       
+     1                       ,height_best_wind,height_best_wind_diff
                     l_good_snd = .true.
                     n_good_snd = n_good_snd + 1
                 elseif(i_pr .le. 100)then
                     write(6,*)' Unusable Sounding Elev ',i_pr
      1                       ,c5_name(i_pr)
-     1                       ,rlevel_best_temp,rlevel_best_temp_diff       
-     1                       ,rlevel_best_wind,rlevel_best_wind_diff
+     1                       ,height_best_temp,height_best_temp_diff       
+     1                       ,height_best_wind,height_best_wind_diff
                 endif
-            endif
+
+              else ! station elevation is missing (e.g. for dropsondes)
+
+!               These steps assume station elevation is -999. (missing value)
+                il = 1
+
+!               Step 2, fill in MSLP if lowest level is near zero
+                if(abs(ob_pr_ht_obs(i_pr,il)) .le. 1.)then
+                    l_good_snd = .true.
+                    n_good_snd = n_good_snd + 1
+                    ilevel_best_mslp = il
+                    ob_best_mslp = ob_pr_pr_obs(i_pr,ilevel_best_mslp)
+                    write(6,*)' Good Sounding for MSLP ',i_pr
+     1                       ,c5_name(i_pr)
+     1                       ,ilevel_best_mslp
+     1                       ,ob_best_mslp
+                endif
+
+!               Step 3, fill in station pressure if lowest level is near topo,
+!                       Topo is being passed in for this
+
+                call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
+     1                                  ,lat,lon       
+     1                                  ,imax,jmax,ri,rj,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)
+     1                     ' Warning, laps grid location not calculated'
+                else
+                    call bilinear_laps(ri,rj,imax,jmax,topo,topo_sta)
+                    if(abs(ob_pr_ht_obs(i_pr,il) - topo_sta) .le. 100.
+     1                                                            )then                    
+                        l_good_snd = .true.
+                        n_good_snd = n_good_snd + 1
+                        ilevel_best_stnp = il
+                        ob_best_stnp = 
+     1                      ob_pr_pr_obs(i_pr,ilevel_best_stnp)     
+                        write(6,*)' Good Sounding for STNP ',i_pr
+     1                       ,c5_name(i_pr)
+     1                       ,ilevel_best_stnp,topo_sta
+     1                       ,ob_best_stnp
+                    endif
+                endif
+
+              endif ! station elevation present
+
+            endif ! nlevels > 0
 
 !           if(.false.)then
             if(l_good_snd)then ! This ob is good enough to append
@@ -844,24 +901,29 @@ c
                 store_hgt(n_obs_b,:) = badflag
 
 !               Add temperature ob into arrays 
-                if(ob_pr_t_obs(i_pr,ilevel_best_temp) 
+                if(ilevel_best_temp .gt. 0)then
+                    if(ob_pr_t_obs(i_pr,ilevel_best_temp) 
      1                                         .ne. r_missing_data)then
-                    t_ob_c = ob_pr_t_obs(i_pr,ilevel_best_temp)     
-                    t_s(n_obs_b) = c_to_f(t_ob_c)
-                    write(6,*)' Good temp ob',t_s(n_obs_b)
-                endif      
+                        t_ob_c = ob_pr_t_obs(i_pr,ilevel_best_temp)     
+                        t_s(n_obs_b) = c_to_f(t_ob_c)
+                        write(6,*)' Good temp ob',t_s(n_obs_b)
+                    endif      
 
-!               Add dewpoint ob into arrays 
-                if(ob_pr_td_obs(i_pr,ilevel_best_temp) 
+!                   Add dewpoint ob into arrays 
+                    if(ob_pr_td_obs(i_pr,ilevel_best_temp) 
      1                                         .ne. r_missing_data)then       
-                    td_ob_c = ob_pr_td_obs(i_pr,ilevel_best_temp)     
-                    td_s(n_obs_b) = c_to_f(td_ob_c)
-                    write(6,*)' Good dwpt ob',td_s(n_obs_b)
-                endif      
+                        td_ob_c = ob_pr_td_obs(i_pr,ilevel_best_temp)     
+                        td_s(n_obs_b) = c_to_f(td_ob_c)
+                        write(6,*)' Good dwpt ob',td_s(n_obs_b)
+                    endif
+                endif ! good temp level determined
 
 !               Add wind ob into arrays
-                if(ob_pr_u_obs(i_pr,ilevel_best_wind).ne.r_missing_data      
-     1       .and. ob_pr_v_obs(i_pr,ilevel_best_wind).ne.r_missing_data
+                if(ilevel_best_wind .gt. 0)then
+                  if(ob_pr_u_obs(i_pr,ilevel_best_wind)
+     1                                          .ne.r_missing_data      
+     1       .and.   ob_pr_v_obs(i_pr,ilevel_best_wind)
+     1                                          .ne.r_missing_data
      1                                                         )then
                     call uv_to_disp(ob_pr_u_obs(i_pr,ilevel_best_wind)
      1                             ,ob_pr_v_obs(i_pr,ilevel_best_wind)
@@ -870,7 +932,34 @@ c
                     ff_s(n_obs_b) = speed_ms / mspkt    
                     write(6,*)' Good wind ob',dd_s(n_obs_b)
      1                                       ,ff_s(n_obs_b)      
-                endif
+                  endif
+
+                endif ! good wind level determined
+
+!               Add MSLP ob into arrays
+                if(ilevel_best_mslp .gt. 0)then
+                  if(ob_pr_pr_obs(i_pr,ilevel_best_mslp)
+     1                                          .ne.r_missing_data      
+     1                                                         )then
+                    pmsl_s(n_obs_b) = 
+     1                  ob_pr_pr_obs(i_pr,ilevel_best_mslp)
+                    write(6,*)' Good mslp ob',pmsl_s(n_obs_b)
+                  endif
+
+                endif ! good MSLP level determined
+
+!               Add STNP ob into arrays
+                if(ilevel_best_stnp .gt. 0)then
+                  if(ob_pr_pr_obs(i_pr,ilevel_best_stnp)
+     1                                          .ne.r_missing_data      
+     1                                                         )then
+                    pstn_s(n_obs_b) = 
+     1                  ob_pr_pr_obs(i_pr,ilevel_best_stnp)
+                    elev_s(n_obs_b) = topo_sta
+                    write(6,*)' Good stnp ob',pstn_s(n_obs_b)
+                  endif
+
+                endif ! good STNP level determined
 
             endif ! good sounding
 
