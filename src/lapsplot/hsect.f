@@ -70,6 +70,8 @@ cdis
 !                                   polar orbiter (lrs).
 !       98-Mar-23        "          Added lvd subdirectory flexibility.
 
+        use mem_namelist, ONLY: MAX_SND_GRID,MAX_SND_LEVELS
+
         include 'trigd.inc'
 
         include 'constants.inc'
@@ -1487,7 +1489,8 @@ c       include 'satellite_dims_lvd.inc'
 
             call plot_stations(a9time,c_label,c_type,i_overlay
      1                        ,namelist_parms,plot_parms
-     1                        ,c_display,lat,lon,c_file,iflag
+     1                        ,MAX_SND_GRID,MAX_SND_LEVELS
+     1                        ,c_display,lat,lon,topo,c_file,iflag
      1                        ,NX_L,NY_L,NZ_L,laps_cycle_time,zoom)
 
         elseif(c_type(1:2) .eq. 'he')then
@@ -6511,8 +6514,8 @@ c             if(cint.eq.0.0)cint=0.1
         end
 
         subroutine plot_stations(asc_tim_9,c_label,c_field,i_overlay
-     1   ,namelist_parms,plot_parms
-     1   ,c_display,lat,lon,c_file,iflag
+     1   ,namelist_parms,plot_parms,MAX_SND_GRID,MAX_SND_LEVELS
+     1   ,c_display,lat,lon,topo,c_file,iflag
      1   ,NX_L,NY_L,NZ_L,laps_cycle_time,zoom)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, laps_cycle_time as
@@ -6525,6 +6528,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
+        real topo(NX_L,NY_L)
 
         integer iarg
 
@@ -6639,9 +6643,10 @@ c             if(cint.eq.0.0)cint=0.1
 
                 write(6,*)' Calling plot_station_locations: 5 '
      1                   ,iflag,c_metacode       
-                call plot_station_locations(i4time_file,lat,lon
+                call plot_station_locations(i4time_file,lat,lon,topo
      1                      ,NX_L,NY_L,NZ_L,iflag,maxstns,c_field,zoom
      1                      ,namelist_parms,plot_parms
+     1                      ,MAX_SND_GRID,MAX_SND_LEVELS                    ! I
      1                      ,asc_tim_24,c_label,i_overlay)       
             endif
 
