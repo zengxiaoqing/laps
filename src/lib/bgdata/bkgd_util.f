@@ -1,7 +1,7 @@
       subroutine rotate_lga_winds(ldir,bgmodel,cmodel,fullname
      1,gproj,nx,ny,nz,lon,uw3d,vw3d,uw2d,vw2d)
 
-      include 'lapsparms.cmn'
+      use mem_namelist
       implicit none
 
       character fullname*200
@@ -118,7 +118,7 @@ c
 c
 c
 
-      include 'lapsparms.cmn'
+      use mem_namelist
       implicit none
 
       integer nx,ny,nz
@@ -450,7 +450,7 @@ c temporarily replace lapsparms parameters. It is then possible
 c to use the library projection routines to calculate wind rotation
 c angles for the background.
 c
-      include 'lapsparms.cmn'
+      use mem_namelist
       implicit none
 
       character*200 fullname
