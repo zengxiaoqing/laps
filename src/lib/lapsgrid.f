@@ -498,6 +498,7 @@ c****  --------------------------------------------------------- *****
 
         character*(*) grid_fnam   ! Input (Warning: trailing blanks won't work)
         character*150  directory
+        character*150 static_dir,filename
         character*31  ext
         character*8 a8
         character*200 tempchar
@@ -507,37 +508,6 @@ c****  --------------------------------------------------------- *****
         save init
 
         include 'grid_fname.cmn'
-
-        NAMELIST /lapsparms_NL/ iflag_lapsparms
-     1  ,max_radar_files_nl,PRESSURE_INTERVAL_L
-     1  ,nk_laps,standard_latitude,standard_latitude2       
-     1  ,standard_longitude,NX_L, NY_L, I_PERIMETER
-     1  ,l_compress_radar,l_use_tamdar,l_3dvar
-     1  ,grid_spacing_m,grid_cen_lat,grid_cen_lon
-     1  ,laps_cycle_time
-     1  ,i2_missing_data, r_missing_data, MAX_RADARS
-     1  ,ref_base,ref_base_useable,r_hybrid_first_gate
-     1  ,maxstns,N_PIREP
-     1  ,vert_rad_meso,vert_rad_sao
-     1  ,vert_rad_pirep,vert_rad_prof     
-     1  ,silavwt_parm,toptwvl_parm
-     1  ,iwrite_output
-     1  ,vertical_grid,c50_lowres_directory,c6_maproj
-     1  ,radarext_3d,radarext_3d_accum
-     1  ,aircraft_time_window
-     1  ,path_to_raw_pirep
-     1  ,path_to_raw_rass,path_to_raw_profiler
-     1  ,path_to_raw_blprass,path_to_raw_blpprofiler
-     1  ,path_to_wsi_2d_radar,path_to_wsi_3d_radar
-     1  ,path_to_qc_acars
-     1  ,c8_project,c8_blpfmt
-     1  ,c_raddat_type,c80_description      
-     1  ,path_to_topt30s ,path_to_topt10m
-     1  ,path_to_soiltype_top30s, path_to_soiltype_bot30s
-     1  ,path_to_landuse30s,path_to_greenfrac
-     1  ,path_to_soiltemp1deg,path_to_albedo,path_to_maxsnoalb
-     1  ,path_to_islope,path_to_sst,fdda_model_source
-
 
         if(init.eq.1 .and. iflag_lapsparms .eq. 1) then ! Data already read in
 !          print *, 'It works'
@@ -579,9 +549,11 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
  
 
         min_to_wait_for_metars=10
-        open(92,file=tempchar(1:len_dir),status='old',err=900)
 
-        read(92,lapsparms_nl,err=910)
+!       Read global parameters into module memory structure
+        call get_directory('static',static_dir,len_dir)
+        filename = static_dir(1:len_dir)//'/nest7grid.parms'
+        call read_namelist_laps('lapsparms',filename)
 
         if(iflag_lapsparms .ne. 1)then                      ! Error Return
             goto910                                    
@@ -593,33 +565,19 @@ c        len_dir = index(grid_fnam_common,'/',.true.)
 
         endif
 
-
-900     write(6,*)                                              ! Error Return
-     1  ' Open error in get_laps_config, parameter file not found'
-        write(6,*)tempchar
-        iflag_lapsparms = 0
-        istatus = 0
-        close(92)
-        return
-
 910     write(6,*)' Read error in get_laps_config'              ! Error Return
         write(6,*)' Check runtime parameter file ',tempchar
-        print*,'Here: dumping lapsparms_nl'
-        print*
-        write(6,lapsparms_nl)
-        close(92)
         iflag_lapsparms = 0
         istatus = 0
         return
 
 920     write(6,*)' Read error in get_laps_config'              ! Error Return
         write(6,*)' Truncated runtime parameter file ',tempchar
-        close(92)
         iflag_lapsparms = 0
         istatus = 0
         return
 
-999     close(92)                                               ! Normal Return
+999     continue                                                ! Normal Return
 
         init = 1
         istatus = 1
