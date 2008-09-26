@@ -235,7 +235,11 @@ C --- Do contouring
           if(FMAX .eq. 100. .and. FMIN .le. 5.0)then ! RH case
               NSD = 3
               NLS = 1
-          else
+          elseif(FMAX .ge. 1000. .and. FMAX .le. 1100.
+     1     .and. FMIN .gt. 500.  .and. FMIN .lt. 1000.)then ! STNP case
+              NSD = 3
+              NLS = 1
+          else ! general case
               NSD = 2
               NLS = 1
           endif
