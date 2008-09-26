@@ -13,7 +13,7 @@
         use mem_namelist, ONLY: NX_L,NY_L,NZ_L=>nk_laps
      1                         ,laps_cycle_time,c6_maproj
      1                         ,grid_spacing_m_parm=>grid_spacing_m
-     1                         ,iflag_write=>iwrite_output
+     1                         ,iwrite_output
 
         use mem_grid, ONLY: lat,lon,topo
  
@@ -103,10 +103,18 @@
      1          ,lat,lon,topo                    ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
-     1          ,iflag_write                     ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,grid_spacing_m                  ! Input
+     1          ,comment_2d                      ! Output
      1          ,temp_3d,pres_3d_pa,istatus)     ! Output
+
+        if(iwrite_output .ge. 0)then
+            call write_temp_anal(i4time_needed,NX_L,NY_L,NZ_L,temp_3d       
+     1                  ,heights_3d,comment_2d,istatus)
+        endif
+
+        I4_elapsed = ishow_timer()
+
 
 !  ******************** PBL SECTION ******************************************
 
@@ -152,20 +160,22 @@
             enddo ! i
 
 !           Write PBL file
-            call move(pbl_top_pa ,field_array(1,1,1),NX_L,NY_L)
-            call move(pbl_depth_m,field_array(1,1,2),NX_L,NY_L)
+            if(iwrite_output .ge. 0)then
+                call move(pbl_top_pa ,field_array(1,1,1),NX_L,NY_L)
+                call move(pbl_depth_m,field_array(1,1,2),NX_L,NY_L)
 
-            ext = 'pbl'
-            var_a(1) = 'PTP'
-            var_a(2) = 'PDM'
-            units_a(1) = 'Pa'
-            units_a(2) = 'M'
-            comment_a(1) = 'PBL Top Pressure'
-            comment_a(2) = 'PBL Depth'
-            call put_laps_multi_2d(i4time_needed,ext,var_a,units_a
-     1                            ,comment_a,field_array,NX_L,NY_L
-     1                            ,2,istatus)
-    
+                ext = 'pbl'
+                var_a(1) = 'PTP'
+                var_a(2) = 'PDM'
+                units_a(1) = 'Pa'
+                units_a(2) = 'M'
+                comment_a(1) = 'PBL Top Pressure'
+                comment_a(2) = 'PBL Depth'
+                call put_laps_multi_2d(i4time_needed,ext,var_a,units_a
+     1                                ,comment_a,field_array,NX_L,NY_L
+     1                                ,2,istatus)
+            endif    
+
         else
             write(6,*)' No PBL calculation done for PBL file'
 
