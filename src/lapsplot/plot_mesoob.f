@@ -39,9 +39,11 @@ cdis
 
 
 
-        subroutine plot_station_locations(i4time,lat,lon,ni,nj,nk,iflag   
+        subroutine plot_station_locations(i4time,lat,lon,topo
+     1                                   ,ni,nj,nk,iflag   
      1                                   ,maxsta,c_field,zoom
      1                                   ,namelist_parms,plot_parms
+     1                                   ,MAX_SND_GRID,MAX_SND_LEVELS      ! I
      1                                   ,atime_s
      1                                   ,c_label,i_overlay)
 
@@ -56,7 +58,7 @@ cdis
 
 !       This routine labels station locations on the H-sect
 
-        real lat(ni,nj),lon(ni,nj)
+        real lat(ni,nj),lon(ni,nj),topo(ni,nj)
 
         character c_label*(*)
         character directory*150,ext*31,ext_lso*6
@@ -190,6 +192,8 @@ cdis
      &        td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
      &        sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
      &        maxsta,lat,lon,ni,nj,nk,                                    ! I
+     &        MAX_SND_GRID,MAX_SND_LEVELS,                                ! I
+     &        topo,                                                       ! I
      &        istatus)
 
             write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       

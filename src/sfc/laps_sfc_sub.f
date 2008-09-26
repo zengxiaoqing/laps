@@ -75,6 +75,7 @@ c*****************************************************************************
      1                         ,mxstn=>maxstns
      1                         ,laps_cycle_time
      1                         ,grid_spacing=>grid_spacing_m
+     1                         ,max_snd_grid,max_snd_levels
 
 !       Surface parameters
         use mem_namelist, ONLY: use_lso_qc,skip_internal_qc 
@@ -282,6 +283,8 @@ c
      &       td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
      &       sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
      &       lat,lon,ni,nj,nk,                                           ! I
+     &       max_snd_grid,max_snd_levels,                                ! I
+     &       topo,                                                       ! I
      &       istatus)
         endif
 
