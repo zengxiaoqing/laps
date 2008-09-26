@@ -5,8 +5,6 @@
  weight_bkg_const_temp=5e28,
  pres_mix_thresh=20000.,
  rms_thresh_temp=1.0,
- max_snd_grid=1500,
- max_snd_levels=300,
  max_obs=100000,
  /
 
@@ -46,10 +44,6 @@ c                   is not allowed to exceed the pre-existing analyzed theta
 c                   at the top of the mixed layer. If the terrain goes above
 c                   the mixed layer top, the sfc analysis is not allowed to
 c                   warm the column.
-c
-c max_snd_grid - Total number of temperature profiles allowed
-c
-c max_snd_levels - Maximum number of temperature sounding levels allowed
 c
 c max_obs - Number of obs allowed in data structure
 
