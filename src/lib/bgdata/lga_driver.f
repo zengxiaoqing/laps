@@ -44,7 +44,7 @@ c ht_sfc and td_sfc are passed into subroutine sfcbkgd -> now called sfcbkgd_sfc
 c KML: END
 
 c
-      use mem_namelist, ONLY: read_namelist_laps
+c     use mem_namelist, ONLY: read_namelist_laps
 c
       implicit none
       include 'bgdata.inc'
@@ -1128,7 +1128,8 @@ c
 c          Read surface parameters into module memory structure
            call get_directory('static',static_dir,len_dir)
            filename = static_dir(1:len_dir)//'/surface_analysis.nl'
-           call read_namelist_laps('sfc_anal',filename)
+c          call read_namelist_laps('sfc_anal',filename)
+           call get_laps_redp(redp_lvl,istatus)
 
            allocate (rp_lvl(nx_laps,ny_laps)
      1,rp_tp(nx_laps,ny_laps),rp_sh(nx_laps,ny_laps))
