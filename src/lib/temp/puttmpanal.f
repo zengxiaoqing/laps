@@ -36,9 +36,9 @@ cdis
      1          ,lat,lon,topo                    ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
-     1          ,iflag_write                     ! Input
      1          ,ilaps_cycle_time                ! Input
      1          ,grid_spacing_m                  ! Input
+     1          ,comment_2d                      ! Output
      1          ,temp_3d,pres_3d,istatus)        ! Output
 
 !              1991     Steve Albers    Original Version
@@ -191,7 +191,7 @@ cdis
 
         i4_filename = i4time_needed
         call make_fnam_lp(i4_filename,asc9_tim,istatus)
-        comment_2d(1:9) = asc9_tim
+        comment_2d = asc9_tim
         write(6,*) ' i4time_needed = ', i4time_needed
         write(6,*) ' i4_filename = ', i4_filename
         write(6,*) ' asc9_tim = ', asc9_tim
@@ -654,13 +654,6 @@ c       1                               j_diff_thmax,k_diff_thmax
         enddo ! i
         write(6,*)' Passed QC check of heights against the topo field'
 
-        if(iflag_write .ge. 0)then
-            call write_temp_anal(i4time_needed,ni,nj,nk,temp_3d
-     1                  ,heights_3d,comment_2d,istatus)
-        endif
-
-        I4_elapsed = ishow_timer()
-
         return
         end
 
@@ -710,40 +703,3 @@ c       1                               j_diff_thmax,k_diff_thmax
         return
         end
 
-
-       subroutine get_temp_parms(l_read_raob_t,l_use_raob_t
-     1                 ,l_adjust_heights
-     1                 ,weight_bkg_const_temp,rms_thresh_temp
-     1                 ,pres_mix_thresh,max_snd_grid,max_snd_levels
-     1                 ,max_obs,istatus)       
-
-       logical l_read_raob_t,l_use_raob_t,l_adjust_heights
-
-       namelist /temp_nl/ l_read_raob_t,l_use_raob_t,l_adjust_heights       
-     1                   ,weight_bkg_const_temp,rms_thresh_temp
-     1                   ,pres_mix_thresh,max_snd_grid,max_snd_levels       
-     1                   ,max_obs
- 
-       character*150 static_dir,filename
- 
-       call get_directory('nest7grid',static_dir,len_dir)
-
-       filename = static_dir(1:len_dir)//'/temp.nl'
- 
-       open(1,file=filename,status='old',err=900)
-       read(1,temp_nl,err=901)
-       close(1)
-
-       istatus = 1
-       return
-
-  900  print*,'error opening file ',filename
-       istatus = 0
-       return
-
-  901  print*,'error reading temp_nl in ',filename
-       write(*,temp_nl)
-       istatus = 0
-       return
-
-       end
