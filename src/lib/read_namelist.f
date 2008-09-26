@@ -429,29 +429,6 @@ cdoc  Reads static/osse.nl file.
       stop
       end
 c
-c ---------------------------------------------------------------
-c
-       subroutine get_wind_parms(l_use_raob,l_use_cdw,l_use_radial_vel
-     1                          ,thresh_2_radarobs_lvl_unfltrd
-     1                          ,thresh_4_radarobs_lvl_unfltrd
-     1                          ,thresh_9_radarobs_lvl_unfltrd
-     1                          ,weight_bkg_const_wind
-     1                          ,weight_radar
-     1                          ,rms_thresh_wind
-     1                          ,max_pr,max_pr_levels,max_wind_obs
-     1                          ,istatus)
-
-       write(6,*)' ERROR: get_wind_parms is an obsolete routine'
-       write(6,*)' Please call read_namelist_laps in mem_namelist.f90'       
-       write(6,*)
-     1      ' This is a module with data accessed via use mem_namelist'       
-
-       stop
-       return
-
-       end
-
-c
 c----------------------------------------
 c
        subroutine get_gridnl(mode)
@@ -549,122 +526,36 @@ c      enddo
        return
 
        end
+
 c
 c --------------------------------------------------------------
 c
-       subroutine read_sfc_nl(use_lso_qc,skip_internal_qc 
-     1                       ,itheta, redp_lvl, del, gam, ak
-     1                       ,l_require_lso
-     1                       ,bad_t,bad_td,bad_u,bad_v,bad_p
-     1                       ,bad_mp,bad_th,bad_the
-     1                       ,bad_vis,bad_tb8
-     1                       ,thresh_t,thresh_td,thresh_mslp
-     1                       ,sfc_nl_parms,istatus)
+       subroutine get_laps_redp(redp_lvl_out,istatus)
 
-       implicit none
+       use mem_namelist, ONLY: read_namelist_laps
+       use mem_namelist, ONLY: redp_lvl
 
-       real    badflag
-       include 'laps_sfc.inc'
+       character*150 static_dir,filename
 
-       include 'grid_fname.cmn'                          !grid_fnam_common
-       integer use_lso_qc, skip_internal_qc, itheta
-       logical l_require_lso
-       real    redp_lvl,del,gam,ak
-       real    bad_t,bad_td,bad_u,bad_v,bad_p
-       real    bad_mp,bad_th,bad_the
-       real    bad_vis,bad_tb8
-       real    bad_tgd_land,bad_tgd_water
-       real    thresh_t,thresh_td,thresh_mslp
-       real    rms_wind, rms_temp, rms_dewpoint
+!      Read 'redp_lvl' from two places so we can catch it whereever it is
+!      located 
 
-       integer istatus
-       
-       namelist /surface_analysis/  use_lso_qc,skip_internal_qc,
-     1                              itheta, redp_lvl, del, gam, ak,       
-     1                              l_require_lso,
-     1                              bad_t,bad_td,bad_u,bad_v,bad_p,
-     1                              bad_mp,bad_th,bad_the,
-     1                              bad_tgd_land,bad_tgd_water,
-     1                              bad_vis,bad_tb8,
-     1                              thresh_t,thresh_td,thresh_mslp,
-     1                              rms_wind, rms_temp, rms_dewpoint
+!      Read global parameters into module memory structure
+       call get_directory('static',static_dir,len_dir)
+       filename = static_dir(1:len_dir)//'/nest7grid.parms'
+       call read_namelist_laps('lapsparms',filename)
 
-       character*150    static_dir,filename
-       integer len_dir
-
-       istatus = 0
-       call get_directory(grid_fnam_common,static_dir,len_dir)
-
+!      Read surface parameters into module memory structure
        filename = static_dir(1:len_dir)//'/surface_analysis.nl'
+       call read_namelist_laps('sfc_anal',filename)
 
-       open(1,file=filename,status='old',err=900)
-       read(1,surface_analysis,err=901)
-       close(1)
-
-       sfc_nl_parms%rms_wind = rms_wind
-       sfc_nl_parms%rms_temp = rms_temp
-       sfc_nl_parms%rms_dewpoint = rms_dewpoint
-       sfc_nl_parms%bad_tgd_land  = bad_tgd_land
-       sfc_nl_parms%bad_tgd_water = bad_tgd_water
-
+       redp_lvl_out = redp_lvl
 
        istatus = 1
        return
 
-  900  print*,'error opening file ',filename
-       return
-
-  901  print*,'error reading verif_nl in ',filename
-       write(*,surface_analysis)
-       return
-
        end
-c
-c --------------------------------------------------------------
-c
-       subroutine get_laps_redp(redp_lvl,istatus)
 
-       implicit none
-       real    badflag
-       include 'laps_sfc.inc'
-       include 'grid_fname.cmn'                          !grid_fnam_common
-       integer use_lso_qc, skip_internal_qc, itheta
-       logical l_require_lso
-       real    redp_lvl,del,gam,ak
-       real    bad_t,bad_td,bad_u,bad_v,bad_p
-       real    bad_mp,bad_th,bad_the
-       real    bad_vis,bad_tb8
-       real    thresh_t,thresh_td,thresh_mslp
-       real    rms_wind, rms_temp, rms_dewpoint
-       integer istatus
-       namelist /surface_analysis/  use_lso_qc,skip_internal_qc,
-     1                              itheta, redp_lvl, del, gam, ak,
-     1                              l_require_lso,
-     1                              bad_t,bad_td,bad_u,bad_v,bad_p,
-     1                              bad_mp,bad_th,bad_the,
-     1                              bad_vis,bad_tb8,
-     1                              thresh_t,thresh_td,thresh_mslp,
-     1                              rms_wind, rms_temp, rms_dewpoint
-       character*150    static_dir,filename
-       integer len_dir
-       istatus = 0
-       call get_directory(grid_fnam_common,static_dir,len_dir)
-       filename = static_dir(1:len_dir)//'/surface_analysis.nl'
-       open(1,file=filename,status='old',err=903)
-       read(1,surface_analysis,err=904)
-       close(1)
-       sfc_nl_parms%rms_wind = rms_wind
-       sfc_nl_parms%rms_temp = rms_temp
-       sfc_nl_parms%rms_dewpoint = rms_dewpoint
-       istatus = 1
-       return
-  903  print*,'error opening file ',filename
-       return
-  904  print*,'error reading sfc_nl in ',filename
-       write(*,surface_analysis)
-       return
-
-       end
 c ------------------------------------------------------------------
 c New routine that configures the satellite information needed in
 c software using a limited satellite lvd namelist file
