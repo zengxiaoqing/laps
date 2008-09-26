@@ -68,10 +68,12 @@ cdis
         Integer k, k1, kbase, ktop
         Real zbase, ztop
 
-        Logical l_bogus_radar_w
+        Logical l_bogus_radar_w, l_deep_vv
 
 !   Cloud Type      /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
 !   Integer Value     0     1    2    3    4    5    6    7    8    9   10
+
+        l_deep_vv = .true.
 
 !Zero out return vector.
         Do k = 1, nk
@@ -89,19 +91,19 @@ cdis
         Go to 100
 
 10      Do k = kbase, nk
-         If(l_bogus_radar_w)then ! We are doing Adan's radar bogus routine
+         If(l_deep_vv)then ! We are using Adan's change
           If (cloud_type(k) .ne. 0) then ! change to the cloudtop by Adan
            ktop = k
           Else
            Go to 20
           End if
-         else ! Not doing Adan's radar bogus routine
+         else ! Older strategy with shallower parabolic profiles
           If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            ktop = k
           Else
            Go to 20
           End if
-         endif ! l_bogus_radar_w
+         endif ! l_deep_vv
         End do
 
 20      k1 = k          ! save our place in the column
