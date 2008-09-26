@@ -25,6 +25,7 @@
  rms_wind=1.0,
  rms_temp=1.0,
  rms_dewpoint=1.2,
+ rms_pres=1.0,
  /
 c..... This is the namelist for the LAPS surface analysis
 c..... process (LSX).  Switches and similar things can go
@@ -79,6 +80,7 @@ c          wse is assumed to be low .50 so that winds are retained and
 c          most adjustment is in p ...
 c          del is sqd error of wind/sqd error in eqn of motion
 c          gam is sqd error of wind/sqd error of press
+c              high values favor the pressure, lower values favor the wind
 c          with mslp error at 50pa,eqn of motion residual (1m/s/hr)^2
 c
 c..... if del=0., then variational section would be skipped for (u,v,p)
@@ -121,3 +123,4 @@ c
 c       rms_wind                ! scaling factor for wind rms threshold
 c       rms_temp                ! scaling factor for temperature rms threshold
 c       rms_dewpoint            ! scaling factor for dewpoint rms threshold
+c       rms_pres                ! scaling factor for MSLP rms threshold
