@@ -183,7 +183,7 @@ c                                           Fix error with grid spacing.
 c
 c*****************************************************************************
 c 
-        use mem_namelist, ONLY: iwrite_output
+        use mem_namelist, ONLY: iwrite_output, rms_pres
 
         use mem_sfcanl, ONLY: alloc_sfcanl_arrays, point_sfcanl_arrays       
 
@@ -812,7 +812,7 @@ cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 	beta = 100.
         name = 'PRESSURE'
 	call spline(mslp,mslp1,mslp_bk,alf,alf2a,beta,zcon,z,cormax,
-     &      err,imax,jmax,rms_thresh_norm,bad_mp,imiss,mxstn,
+     &      err,imax,jmax,rms_pres,bad_mp,imiss,mxstn,
      &      obs_error_mslp,name,topo,ldf,wt_bkg_a)
 C
 C TH: End hack.
