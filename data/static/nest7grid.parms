@@ -52,6 +52,8 @@
  r_hybrid_first_gate=0.,
  maxstns=3600,         
  N_PIREP=3000,         
+ max_snd_grid=1500,
+ max_snd_levels=300,
  aircraft_time_window=0.5,     
  vert_rad_meso=1,     
  vert_rad_sao=1,      
@@ -76,6 +78,10 @@ c                   between successive LAPS analyses and should correspond
 c                   to the interval between cron entries that run the
 c                   'sched.pl' script.
 c
+c path_to_soil_2m - this parameter is not yet active since we do not yet
+c                   supply the soil type database. It is there only for
+c                   software testing at this time.
+c
 c l_compress_radar - Compress "vxx" radar files using run-length encoding.
 c                    Note that this is experimental and departs from the 
 c                    NetCDF file convention
@@ -92,22 +98,9 @@ c maxstns - max number of sfc stations you are likely to encounter in the
 c         - LSO file and various analyses, in and near the domain.
 c         - used in obs_driver.x, sfc_qc.exe, laps_sfc.x, and others?
 c
-c path_to_soil_2m - this parameter is not yet active since we do not yet
-c                   supply the soil type database. It is there only for
-c                   software testing at this time.
+c max_snd_grid - Total number of temperature profiles allowed
 c
-c c8_project - Depends on which "realization" of LAPS you are running.
-c              This sends information to various programs on things
-c              like file formats, filename conventions, etc. Most 
-c              references to 'c8_project' are in the ingest
-c              routines, though it also controls other specialized 
-c              functions for 'AIRDROP'. Allowed values are 'NIMBUS', 
-c              'WFO', 'AFWA', 'CWB', 'RSA', and 'AIRDROP'.
-c
-c c8_blpfmt - Specify the format of boundary layer profiler data
-c             If set to 'default' the software will key off of the
-c             value of 'c8_project'. Otherwise it can be
-c             explicitly set to 'MADIS' as an override.
+c max_snd_levels - Maximum number of temperature sounding levels allowed
 c
 c radarext_3d - Determines input radar source for the cloud analysis.
 c               Intermediate files used are already on the LAPS grid.
@@ -192,4 +185,16 @@ c     between 0-1. A value of zero uses the average terrain instead of the
 c     maximum. Note that a value of 1 may reduce the apparent effect of 
 c     filtering with 'toptwvl_parm'.
 c
+c c8_project - Depends on which "realization" of LAPS you are running.
+c              This sends information to various programs on things
+c              like file formats, filename conventions, etc. Most 
+c              references to 'c8_project' are in the ingest
+c              routines, though it also controls other specialized 
+c              functions for 'AIRDROP'. Allowed values are 'NIMBUS', 
+c              'WFO', 'AFWA', 'CWB', 'RSA', and 'AIRDROP'.
+c
+c c8_blpfmt - Specify the format of boundary layer profiler data
+c             If set to 'default' the software will key off of the
+c             value of 'c8_project'. Otherwise it can be
+c             explicitly set to 'MADIS' as an override.
 
