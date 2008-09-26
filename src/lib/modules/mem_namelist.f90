@@ -30,6 +30,8 @@ include 'lapsparms.for'
         real aircraft_time_window
         integer  maxstns
         integer  N_PIREP
+        integer max_snd_grid
+        integer max_snd_levels
         integer vert_rad_meso
         integer vert_rad_sao
         integer vert_rad_pirep
@@ -82,6 +84,7 @@ include 'lapsparms.for'
         ,i2_missing_data, r_missing_data, MAX_RADARS         &
         ,ref_base,ref_base_useable,r_hybrid_first_gate       &
         ,maxstns,N_PIREP                                     &
+        ,max_snd_grid,max_snd_levels                         &
         ,vert_rad_meso,vert_rad_sao                          &
         ,vert_rad_pirep,vert_rad_prof                        &
         ,silavwt_parm,toptwvl_parm                           &
@@ -132,14 +135,14 @@ real     ::  redp_lvl, del, gam, ak &
             ,bad_mp, bad_th, bad_the &
             ,bad_tgd_land, bad_tgd_water, bad_vis, bad_tb8  &
             ,thresh_t, thresh_td, thresh_mslp &
-            ,rms_wind, rms_temp, rms_dewpoint
+            ,rms_wind, rms_temp, rms_dewpoint, rms_pres
 
           !  redp_lvl utilized in background code also
 
 ! temp_nl variables
 logical  :: l_read_raob_t, l_use_raob_t, l_adjust_heights
 real     :: weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp
-integer  :: max_snd_grid, max_snd_levels, max_obs
+integer  :: max_obs
 
 ! cloud_nl variables
 logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 &
@@ -192,6 +195,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,i2_missing_data, r_missing_data, MAX_RADARS &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
+                  ,max_snd_grid,max_snd_levels &
                   ,vert_rad_meso,vert_rad_sao &
                   ,vert_rad_pirep,vert_rad_prof      &
                   ,silavwt_parm,toptwvl_parm &
@@ -234,11 +238,11 @@ namelist /surface_analysis/  &
                   ,bad_mp, bad_th, bad_the &
                   ,bad_tgd_land, bad_tgd_water, bad_vis, bad_tb8  &
                   ,thresh_t, thresh_td, thresh_mslp  &
-                  ,rms_wind, rms_temp, rms_dewpoint
+                  ,rms_wind, rms_temp, rms_dewpoint, rms_pres
                   
 namelist /temp_nl/ l_read_raob_t, l_use_raob_t, l_adjust_heights  &
                   ,weight_bkg_const_temp, pres_mix_thresh, rms_thresh_temp &
-                  ,max_snd_grid,max_snd_levels,max_obs
+                  ,max_obs
 
 namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
                    ,l_use_39, l_use_metars, l_use_radar &
