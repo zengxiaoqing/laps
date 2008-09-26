@@ -198,7 +198,7 @@ C
 C---RETURN IF MISSING SPEED OR DIRECTION.
 C
         IF (DIR .LT. 0. .OR. SPD .LT. 0.) RETURN
-        IF (DIR .GT. 360. .OR. SPD .GT. 200.) RETURN
+        IF (DIR .GT. 360. .OR. SPD .GT. 300.) RETURN
 
         thk_base = 1.0
 C
