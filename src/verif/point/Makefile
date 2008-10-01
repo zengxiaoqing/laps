@@ -8,6 +8,12 @@ SRCROOT=../../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/modules/libmodules.a
+
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a
+
 RM=rm -f
 
 .SUFFIXES: .o .f .a .exe
@@ -40,16 +46,16 @@ OBJS=$(SRC:.f=.o)
 all:	$(EXE1) $(EXE2)
 
 $(EXE1):$(OBJS)
-	$(FC) -o $(EXE1) $(FFLAGS) $(MAIN1) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIB) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
+	$(FC) -o $(EXE1) $(FFLAGS) $(MAIN1) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIBS) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
 	rm -f *.o
 
 $(EXE2):$(OBJS)
-	$(FC) -o $(EXE2) $(FFLAGS) $(MAIN2) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIB) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
+	$(FC) -o $(EXE2) $(FFLAGS) $(MAIN2) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIBS) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
 	rm -f *.o
 
 debug: $(SRC)
 	$(RM) $(EXE1) $(RM) $(EXE2) ;
-	$(MAKE) LAPSLIBS='$(DBLAPSLIB)' LIB='$(DEBUGLIB)' MTHERMOLIB='$(DBMTHERMOLIB)' UTILLIB='$(DBUTILLIB)' \
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' LIB='$(DEBUGLIB)' MTHERMOLIB='$(DBMTHERMOLIB)' UTILLIB='$(DBUTILLIB)' \
 	FFLAGS='$(DBFLAGS)'
 
 install: all
