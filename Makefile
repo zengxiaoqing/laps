@@ -10,8 +10,8 @@ CWD = $(shell pwd)
 
 MACHDEP = config.log config.status config.cache src/include/config.h
 
-LIBDIRS = src/lib \
-          src/lib/modules \
+LIBDIRS = src/lib/modules \
+          src/lib \
           src/lib/bgdata \
           src/lib/blas \
           src/lib/fm \
@@ -148,6 +148,17 @@ ridds:
 
 install: mkdirs mkdatadirs
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
+	  do \
+	  echo " ";\
+	  echo Making Laps in directory $$dir ;\
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
+	  $(MAKE) install ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
+
+install_ibm: mkdirs mkdatadirs
+	@for dir in $(EXEDIRS);\
 	  do \
 	  echo " ";\
 	  echo Making Laps in directory $$dir ;\
