@@ -119,7 +119,7 @@ cdis
         do j = 1,nj
         do i = 1,ni
             if(solar_alt(i,j) .lt. 15. .and. 
-     1          td_sfc_k(i,j) .gt. 277.15)then ! 4 deg C - warmer evenings
+     1          temp_sfc_k(i,j) .gt. 276.15)then ! 3 deg C - warmer evenings
                 echo_agl_thr(i,j) = 4000.
             else
                 echo_agl_thr(i,j) = 2000.
