@@ -50,6 +50,8 @@ cdis
 
         use mem_namelist, ONLY: read_namelist_laps
 
+        use mem_namelist, ONLY: NX_L, NY_L, nk_laps, maxstns, N_PIREP       
+
         integer j_status(20),iprod_number(20)
         character*150 static_dir,filename
         character*9 a9time
@@ -59,6 +61,10 @@ cdis
         filename = static_dir(1:len_dir)//'/nest7grid.parms'
         call read_namelist_laps('lapsparms',filename)
 
+!       Read cloud parameters into module memory structure
+        filename = static_dir(1:len_dir)//'/cloud.nl'
+        call read_namelist_laps('cloud_anal',filename)
+
         call get_systime(i4time,a9time,istatus)
         if(istatus .ne. 1)go to 999
 
@@ -66,35 +72,11 @@ cdis
 
         isplit = 1
 
-        call get_grid_dim_xy(NX_L,NY_L,istatus)
-        if (istatus .ne. 1) then
-           write (6,*) 'Error getting horizontal domain dimensions'
-           go to 999
-        endif
-
-        call get_laps_dimensions(NZ_L,istatus)
-        if (istatus .ne. 1) then
-           write (6,*) 'Error getting vertical domain dimension'
-           go to 999
-        endif
-
-        call get_meso_sao_pirep(N_MESO,N_SAO,N_PIREP,istatus)
-        if (istatus .ne. 1) then
-           write (6,*) 'Error getting N_PIREP'
-           go to 999
-        endif
-
-        call get_maxstns(maxstns,istatus)
-        if (istatus .ne. 1) then
-           write (6,*) 'Error getting maxstns'
-           go to 999
-        endif
-
         max_cld_snd = maxstns + N_PIREP
           
         call laps_cloud_sub(i4time,
      1                  NX_L,NY_L,
-     1                  NZ_L,
+     1                  nk_laps,
      1                  N_PIREP,
      1                  maxstns,
      1                  max_cld_snd,
@@ -109,59 +91,6 @@ cdis
         end
 
  
-       subroutine get_cloud_parms(l_use_vis,l_use_vis_add                ! O
-     1                           ,l_use_vis_partial                      ! O
-     1                           ,l_use_39,latency_co2                   ! O
-     1                           ,pct_req_lvd_s8a                        ! O
-     1                           ,i4_sat_window,i4_sat_window_offset     ! O
-     1                           ,namelist_parms                         ! O
-     1                           ,istatus)                               ! O
-
-       include 'cloud.inc'
-
-       logical l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39
-       logical l_use_metars, l_use_radar 
-       namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial       
-     1                    ,l_use_39, l_use_metars, l_use_radar
-     1                    ,latency_co2
-     1                    ,pct_req_lvd_s8a
-     1                    ,i4_sat_window,i4_sat_window_offset
- 
-       character*150 static_dir,filename
-
-!      Default value that can be overridden in namelist
-       l_use_vis_add = .false.
-       l_use_vis_partial = .true.
- 
-       call get_directory('static',static_dir,len_dir)
-
-       filename = static_dir(1:len_dir)//'/cloud.nl'
- 
-       open(1,file=filename,status='old',err=900)
-       read(1,cloud_nl,err=901)
-       close(1)
-
-       print*,'success reading cloud_nl in ',filename
-       write(*,cloud_nl)
-
-!      Fill namelist_parms data structure
-       namelist_parms%l_use_metars = l_use_metars
-       namelist_parms%l_use_radar = l_use_radar
-
-       istatus = 1
-       return
-
-  900  print*,'error opening file ',filename
-       istatus = 0
-       return
-
-  901  print*,'error reading cloud_nl in ',filename
-       write(*,cloud_nl)
-       istatus = 0
-       return
-
-       end
-
 
 
 
