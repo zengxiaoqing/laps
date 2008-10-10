@@ -109,7 +109,7 @@ cdis
 
 
         character*1 c_prodtype
-        character*4 fcst_hhmm
+        character*5 fcst_hhmm
 
         character*4 c4_log
         character*4 radar_name
@@ -1545,9 +1545,27 @@ c read in laps lat/lon and topo
      1                         units_2d,comment_2d,field_3d,istatus)
                             if(istatus .ne. 1)then
                                 write(6,*)' Error locating height field'
-                                go to 100
+                                call get_pres_3d(i4time_radar
+     1                                ,NX_L,NY_L,NZ_L,pres_3d,istatus)
+                                if(istatus .ne. 1)then
+                                    write(6,*)
+     1                                 ' Error getting pressure field'      
+                                    goto 100
+                                else
+                                    write(6,*)' Convert pres to ht'
+     1                              ,' - using Standard Atmosphere'     
+                                    do k = 1,NZ_L
+                                    do j = 1,NY_L
+                                    do i = 1,NX_L
+                                        field_3d(i,j,k) = 
+     1                                  psatoz(pres_3d(i,j,k)*.01) 
+                                    enddo ! i
+                                    enddo ! j
+                                    enddo ! k
+                                endif
                             endif
-                        endif ! height field presumably necessary
+
+                        endif ! height field may be necessary
 
                         i4_tol = 1200
 
@@ -3864,7 +3882,7 @@ c
 100     write(6,*)'     n_obs_b',n_obs_b
 
         if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
-            write(6,*)' Too many stations, or no file present'
+            write(6,*)' Warning: too many stations, or no file present'
             istatus = 0
             return
         endif
@@ -4072,9 +4090,8 @@ c
         character*150 c_filenames(1000)
 
         character*1 c_prodtype
-        character*4 fcst_hhmm
+        character*5 fcst_hhmm
         character*9 a9time
-        character*13 a13_time
 
         logical l_parse
 
@@ -4139,7 +4156,7 @@ c
         character*(*) comment_2d,ext,units_2d,c_model
         character*100 c_label
 
-        character*4 fcst_hhmm_in,fcst_hhmm
+        character*5 fcst_hhmm_in,fcst_hhmm
 
 !       call downcase(units_2d,units_2d)
 
@@ -4153,11 +4170,13 @@ c
         call s_len2(c_model,len_model)
         call upcase(c_model,c_model)
 
+        call s_len(fcst_hhmm_in,length_fcst_in)
+
 !        write(c_label,102)k_mb
 !102     format(I5,' hPa ')
 
-        if(fcst_hhmm_in(3:4) .eq. '00')then
-            fcst_hhmm = fcst_hhmm_in(1:2)//'Hr '
+        if(fcst_hhmm_in(length_fcst_in-1:length_fcst_in) .eq. '00')then      
+            fcst_hhmm = fcst_hhmm_in(1:length_fcst_in-2)//'Hr '
         else
             fcst_hhmm = fcst_hhmm_in
         endif
@@ -4173,7 +4192,8 @@ c
         endif
 
 !       Fcst time info
-        c_label(ist:ist+5) = fcst_hhmm(1:4)//' '
+        c_label(ist:ist+length_fcst_in+1) = 
+     1                fcst_hhmm(1:length_fcst_in)//' '
 
 !       Model info
         if(len_model .gt. 0)then
