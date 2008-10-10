@@ -7,6 +7,7 @@
  c_vnt_units='KT-FT',
  c_units_type='english',
  c_pbl_depth_units='metric',
+ chigh_sfcwind=50.,
  l_discrete=.false.,
  l_sphere=.false.,
  l_low_fill=.true.,
@@ -41,6 +42,9 @@ c
 c c_units_type - default type of units ('english' or 'metric')
 c
 c c_pbl_depth_units - PBL depth units ('english' or 'metric')
+c
+c chigh_sfcwind - maximum of colorbar range for surface wind speed plots
+c                 (recommended values are 50., 100., 200.)
 c
 c l_discrete - default type of image colortable, '.false.' means more
 c              continuous colors, '.true.' means fewer more discrete colors
