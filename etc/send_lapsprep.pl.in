@@ -10,12 +10,12 @@
 require 5;
 use strict;
 umask 002;
-use vars qw($opt_h $opt_o);
+use vars qw($opt_h $opt_o $opt_m);
 use Getopt::Std;
 
 
 my $mydir = `pwd`; chomp $mydir ;
-getopts('ho:');
+getopts('ho:m:');
 if ($opt_h){
   print "Usage:  send_lapsprep.pl [options] model localdir remote_host remote_dir
   
@@ -96,11 +96,22 @@ chmod 0777, "$ftpscript";
 
 # Run the script
 print "Executing script...\n";
-system ("./$ftpscript > ../../../log/send_lapsprep.log 2>&1");
+system ("./$ftpscript > ../../../log/send_lapsprep_ftp.log.$hour 2>&1");
 
 # Delete the script
 unlink "$ftpscript";
+
+# Send the lapsprep file to the Mass Store
+if ($opt_m) {
+# open(MSSLOG,">../../../log/send_lapsprep_mss.log.$hour");
+  print "Copying $localfile to MSS path $opt_m\n";
+# close(MSSLOG);
+  system ("/usr/local/share/bin/mssPut $localfile $opt_m");
+  system ("/usr/local/share/bin/mssLs  $opt_m/$filename");
+}
+
 chdir $mydir;
+
 exit;
 #------------------------------------------------------
 
