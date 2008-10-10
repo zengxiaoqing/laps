@@ -40,7 +40,7 @@ c
         subroutine get_local_obs(maxobs,maxsta,i4time_sys,
      &                 path_to_local_data,local_format,
      &                 itime_before,itime_after,
-     &                 itest_madis_qc,
+     &                 itest_madis_qc,l_multiple_reports,
      &                 lat,lon,ni,nj,grid_spacing,
      &                 nn,n_obs_g,n_obs_b,stations,
      &                 reptype,atype,weather,wmoid,
@@ -85,6 +85,7 @@ c
         real  k_to_f
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_reject(maxobs), ltest_madis_qc, l_same_stn
+        logical l_multiple_reports
 c
 	integer  wmoid(maxsta)
 	integer    recNum
@@ -423,8 +424,9 @@ c
 !          End of time check
 
 !          Pick closest station if multiple stations are in time window
-           do k = 1,i-1
-             if(stationId(i) .eq. stationId(k))then ! possibly the same stn
+           if(.not. l_multiple_reports)then
+             do k = 1,i-1
+               if(stationId(i) .eq. stationId(k))then ! possibly the same stn
                  l_same_stn = .true.
                  if(latitude(i)  .ne. latitude(k) .or.
      1              longitude(i) .ne. longitude(k)      )then
@@ -451,9 +453,9 @@ c
                      l_reject(i_reject) = .true.
                    endif ! both weren't rejected
                  endif ! same station
-             endif ! possibly the same stn
-
-           enddo ! k
+               endif ! possibly the same stn
+             enddo ! k
+           endif ! l_multiple_reports
 c
 c
 	   if( nanf( rhChangeTime(i)   ) .eq. 1 ) 
