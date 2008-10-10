@@ -205,6 +205,7 @@ c
      1                       ,c3_time_zone,time_zone
      1                       ,c_institution,c_vnt_units
      1                       ,c_units_type,c_pbl_depth_units
+     1                       ,chigh_sfcwind
      1                       ,l_discrete, l_sphere
      1                       ,l_low_fill, l_high_fill       
      1                       ,mode_supmap, iraster, icol_barbs
@@ -242,6 +243,7 @@ c
        namelist_parms%c_vnt_units = c_vnt_units
        namelist_parms%c_units_type = c_units_type
        namelist_parms%c_pbl_depth_units = c_pbl_depth_units
+       namelist_parms%chigh_sfcwind = chigh_sfcwind
        namelist_parms%l_discrete = l_discrete
        namelist_parms%l_sphere = l_sphere
        namelist_parms%l_low_fill = l_low_fill
