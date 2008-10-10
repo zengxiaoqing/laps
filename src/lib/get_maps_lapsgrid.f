@@ -186,7 +186,7 @@ c             subdir(n_fdda_models)=bgmodelnames(1:3) #replaces line below (need
         character*(*) var_2d
         character*(*) subdir
         character*9 a9_time
-        character*13 a_filename
+        character*14 a_filename
 
         character*125 comment_2d
         character*10 units_2d
@@ -253,7 +253,7 @@ c
      1                      ,EXT,var_2d,units_2d,comment_2d
      1                      ,imax,jmax,kmax,field_3d_laps,istatus)
 
-           elseif(lenf - lend .eq. 13)then
+           elseif(lenf - lend .eq. 13 .OR. lenf - lend .eq. 14)then       
 
                if(kmax.gt.1)then
 c
@@ -331,6 +331,7 @@ c    1         ,comment_2d,imax,jmax,field_3d_laps(1,1,1),0,istatus)
 
         character*(*) a_filename
         character*2 c2_hr, c2_mn
+        character*3 c3_hr
 
         call s_len(a_filename,i_len)
 
@@ -348,6 +349,17 @@ c    1         ,comment_2d,imax,jmax,field_3d_laps(1,1,1),0,istatus)
             read(c2_hr,1)i4_fcst_hr
             read(c2_mn,1)i4_fcst_mn
  1          format(i2)
+            i4_fcst =  i4_fcst_hr * 3600 + i4_fcst_mn * 60
+            i4_valid = i4_initial + i4_fcst
+
+        elseif(i_len .eq. 14)then
+            call cv_asc_i4time(a_filename(1:9),i4_filename)
+            i4_initial = i4_filename
+            c3_hr = a_filename(10:12)
+            c2_mn = a_filename(13:14)
+            read(c3_hr,3)i4_fcst_hr
+            read(c2_mn,1)i4_fcst_mn
+ 3          format(i3)
             i4_fcst =  i4_fcst_hr * 3600 + i4_fcst_mn * 60
             i4_valid = i4_initial + i4_fcst
 

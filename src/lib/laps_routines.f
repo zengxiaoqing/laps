@@ -1302,7 +1302,7 @@ c
 	integer max_files
 	parameter(max_files = MAX_BACKGROUND_FILES)
 	character fnames(max_files)*256
-	character filespec*255, filename13*13
+	character filespec*255
 c
 c
 c.....	Start here.  
@@ -1483,7 +1483,7 @@ c
 	integer max_files
 	parameter(max_files = MAX_BACKGROUND_FILES)
 	character fnames(max_files)*256
-	character filespec*255, filename13*13
+	character filespec*255, filename14*14
 c
 c.....	Start here.  
 c
@@ -1565,8 +1565,8 @@ c	bkg_dir = '../lapsprd/rsf/'
 	do i=1,numfiles
 	   call get_directory_length(fnames(i), lend)
 	   call get_time_length(fnames(i), lenf)
-	   filename13 = fnames(i)(lend+1:lenf)
-	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+	   filename14 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename14,i4init,i4valid,i4fn)
 	   if(i4valid .eq. i4time_in) then
 	      i4_fcst_time = i4valid - i4init
 	      if(i4_fcst_time .lt. i4_ftime_min) then
@@ -1579,8 +1579,8 @@ c
 	if(i_best_file .gt. 0) then !found one
 
 	   i = i_best_file
-	   filename13 = fnames(i)(lend+1:lenf)
-	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+	   filename14 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename14,i4init,i4valid,i4fn)
 c
  110	call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
      &   var_u,lvl_in,lvlc,units,comment,bkg_u,istatus_u)
@@ -1588,7 +1588,7 @@ c
      &   var_v,lvl_in,lvlc,units,comment,bkg_v,istatus_v)
 
   	   if(istatus_u.ne.1 .or. istatus_v.ne.1) then
-	      print *,' ERROR reading SFM file at ', filename13
+	      print *,' ERROR reading SFM file at ', filename14
 	      isfm_bk = 0
 	      go to 200
 	   endif
@@ -1603,7 +1603,7 @@ c
 c
 c.....  Check the field for NaN's and other bad stuff.
 c
-	print *,'  Found SFM background at ',filename13,
+	print *,'  Found SFM background at ',filename14,
      &          '...checking field.'
 	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
 	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
@@ -1638,8 +1638,8 @@ c	bkg_dir = '../lapsprd/lgb/'
 	do i=1,numfiles
 	   call get_directory_length(fnames(i), lend)
 	   call get_time_length(fnames(i), lenf)
-	   filename13 = fnames(i)(lend+1:lenf)
-	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+	   filename14 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename14,i4init,i4valid,i4fn)
 	   if(i4valid .eq. i4time_in) then
 	      i4_fcst_time = i4valid - i4init
 	      if(i4_fcst_time .lt. i4_ftime_min) then
@@ -1652,8 +1652,8 @@ c
 	if(i_best_file .gt. 0) then !found one
 
 	   i = i_best_file
-	   filename13 = fnames(i)(lend+1:lenf)
-	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+	   filename14 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename14,i4init,i4valid,i4fn)
 c
  210	call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
      &   var_u,lvl_in,lvlc,units,comment,bkg_u,istatus_u)
@@ -1661,7 +1661,7 @@ c
      &   var_v,lvl_in,lvlc,units,comment,bkg_v,istatus_v)
 
   	   if(istatus_u.ne.1 .or. istatus_v.ne.1) then
-	      print *,' ERROR reading LGB file at ', filename13
+	      print *,' ERROR reading LGB file at ', filename14
 	      imodel_bk = 0
 	      go to 300
 	   endif
@@ -1676,7 +1676,7 @@ c
 c
 c.....  Check the field for NaN's and other bad stuff.
 c
-	print *,'  Found LGB backgrounds at ',filename13,
+	print *,'  Found LGB backgrounds at ',filename14,
      &          '...checking fields.'
 	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
 	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
