@@ -85,10 +85,11 @@ cdis
         character*1 c_display, qtype, tunits, c_prodtype, clvl_soil
         character*1 cansw
         character*10 c_sat_plot
-        character*13 filename,a13_time
+        character*13 filename
+        character*14 a14_time
         character*3 c3_site
-        character*4 c4_string,fcst_hhmm
-        character*5 c5_string
+        character*4 c4_string
+        character*5 c5_string,fcst_hhmm
         character*4 c4_log
         character*7 c7_string
         character*9 c9_string,a9_start,a9_end
@@ -309,6 +310,9 @@ c       include 'satellite_dims_lvd.inc'
 
         sfctdc_h =  50.
         sfctdc_l = -30.
+
+!       Surface Wind Range
+        chigh_sfcwind = namelist_parms%chigh_sfcwind
 
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus) 
 
@@ -858,7 +862,7 @@ c       include 'satellite_dims_lvd.inc'
                 else ! k_level = 0 (sfc)
                     cint = 5.
                     clow = 0.
-                    chigh = 50.
+                    chigh = chigh_sfcwind
                 endif
 
                 scale = 1.0
@@ -2228,6 +2232,26 @@ c
      1                   i4time_radar,1000000,i4time_ht,
      1                   NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,field_3d,istatus)
+                    if(istatus .ne. 1)then
+                        write(6,*)' Error locating height field'
+                        call get_pres_3d(i4time_radar
+     1                                ,NX_L,NY_L,NZ_L,pres_3d,istatus)
+                        if(istatus .ne. 1)then
+                            write(6,*)' Error getting pressure field'      
+                            goto 1200
+                        else
+                            write(6,*)' Convert pres to ht'
+     1                              ,' - using Standard Atmosphere'     
+                            do k = 1,NZ_L
+                            do j = 1,NY_L
+                            do i = 1,NX_L
+                                field_3d(i,j,k) = 
+     1                                  psatoz(pres_3d(i,j,k)*.01) 
+                            enddo ! i
+                            enddo ! j
+                            enddo ! k
+                        endif
+                    endif ! height field may be necessary
 
                     write(6,*)
 
@@ -5300,7 +5324,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             clow = 0.
-            chigh = 50.
+            chigh = chigh_sfcwind
             cint = 0.
 
             scale = 1.
@@ -6961,9 +6985,9 @@ c             if(cint.eq.0.0)cint=0.1
         character*1   cansw
         character*150 c_filenames(maxfiles)
 
-        character*4 fcst_hhmm
+        character*5 fcst_hhmm
         character*9 asc9_tim_t, a9time
-        character*13 a13_time
+        character*14 a14_time
 
         logical l_parse
 
@@ -7053,14 +7077,15 @@ c             if(cint.eq.0.0)cint=0.1
                i = i_best_file
                call get_directory_length(c_filenames(i),lend)
                call get_time_length(c_filenames(i),lenf)
-               a13_time = c_filenames(i)(lend+1:lenf)
+               a14_time = c_filenames(i)(lend+1:lenf)
 
                write(6,*)' Found file for: ',c_filenames(i)(lend+1:lenf)       
      1                                     ,' ',ext(1:6)
 
-               call get_fcst_times(a13_time,i4_initial,i4_valid,i4_fn)
-               write(6,*)' a13_time = ',a13_time
-               fcst_hhmm = a13_time(10:13)
+               call get_fcst_times(a14_time,i4_initial,i4_valid,i4_fn)
+               write(6,*)' a14_time = ',a14_time
+               call s_len(a14_time,length_fcst)
+               fcst_hhmm = a14_time(10:length_fcst)
                call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
                write(6,*)' Valid time = ',asc9_tim_t
 
@@ -7093,24 +7118,28 @@ c             if(cint.eq.0.0)cint=0.1
      1                             ,i4_valid                ! O
      1                                                            )
 
-        character*4 fcst_hhmm
+        character*5 fcst_hhmm
         character*9 asc9_tim_t, a9time
-        character*13 a13_time
+        character*14 a14_time
 
  1200   write(6,211)
- 211    format(/'  Enter yydddhhmmHHMM or HHMM for file, '
+ 211    format(/'  Enter yydddhhmm[H]HHMM or [H]HHMM for file, '
      1         ,'or blank for best fcst: ',$)
 
-        read(5,221)a13_time
- 221    format(a13)
+        read(5,221)a14_time
+ 221    format(a14)
 
-        call s_len(a13_time,len_time)
+        call s_len(a14_time,len_time)
 
-        if(len_time .eq. 13)then
+        if(len_time .eq. 13 .or. len_time .eq. 14)then ! yydddhhmmHHMM/HHHMM
                 write(6,*)' len_time = ',len_time
-                call get_fcst_times(a13_time,i4_initial,i4_valid,i4_fn)
-                write(6,*)' a13_time = ',a13_time
-                fcst_hhmm = a13_time(10:13)
+                call get_fcst_times(a14_time,i4_initial,i4_valid,i4_fn)
+                write(6,*)' a14_time = ',a14_time
+                if(len_time .eq. 13)then ! yydddhhmmHHMM
+                    fcst_hhmm = a14_time(10:13)
+                else                     ! yydddhhmmHHHMM
+                    fcst_hhmm = a14_time(10:13)
+                endif
                 call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
                 write(6,*)' Valid time = ',asc9_tim_t
 
@@ -7122,18 +7151,18 @@ c             if(cint.eq.0.0)cint=0.1
                 call make_fnam_lp(i4time_plot,asc9_tim_t,istatus)
                 write(6,*)' Valid time = ',asc9_tim_t
 
-                fcst_hhmm = a13_time(1:4)
+                fcst_hhmm = a14_time(1:4)
 
               ! Get fcst interval
-                a13_time = asc9_tim_t//fcst_hhmm
-                call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn) 
+                a14_time = asc9_tim_t//fcst_hhmm
+                call get_fcst_times(a14_time,I4TIME,i4_valid,i4_fn) 
                 i4_interval = i4_valid - I4TIME
                 i4_initial = I4TIME - i4_interval ! Reset initial time
                 i4_valid = i4_valid - i4_interval
                 call make_fnam_lp(i4_initial,a9time,istatus)
 
-                a13_time = a9time//fcst_hhmm
-                write(6,*)' Modified a13_time = ',a13_time
+                a14_time = a9time//fcst_hhmm
+                write(6,*)' Modified a14_time = ',a14_time
 
         elseif(len_time .eq. 0)then
                 write(6,*)' Input fcst time was blank'
@@ -7282,7 +7311,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         character*(*) comment_2d,ext,units_2d,c_model,c_label
 
-        character*4 fcst_hhmm_in,fcst_hhmm
+        character*5 fcst_hhmm_in,fcst_hhmm
 
         c_label = ' '
 
@@ -7295,6 +7324,8 @@ c             if(cint.eq.0.0)cint=0.1
         write(6,*)'units_2d = ',units_2d(1:len_units)
 
         call s_len2(c_model,len_model)
+
+        call s_len(fcst_hhmm_in,length_fcst_in)
 
         if(ext .eq. 'lga' .and. len_model .eq. 0)then
             write(6,*)' c_model has zero length, using lga in label'
@@ -7325,13 +7356,15 @@ c             if(cint.eq.0.0)cint=0.1
             c_label(ic:ic+len_fcst+len_units) = comment_2d(1:len_fcst)
         endif
 
-        c_label(ist:ist+5) = fcst_hhmm(1:4)//' '
+!       Fcst time info
+        c_label(ist:ist+length_fcst_in+1) = 
+     1                fcst_hhmm(1:length_fcst_in)//' '
 
         if(len_model .gt. 0)then
-            c_label(ist+5:ist+ic+len_model) = 
+            c_label(ist+length_fcst_in+1:ist+ic+len_model) = 
      1                            c_model(1:len_model)//' Fcst'       
         else
-            c_label(ist+5:ist+8) = 'Fcst'       
+            c_label(ist+length_fcst_in+1:ist+length_fcst_in+4) = 'Fcst'       
         endif
 
         write(6,*)'c_label = ',c_label
