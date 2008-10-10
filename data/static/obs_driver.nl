@@ -13,6 +13,7 @@
  i4wait_local_obs_max=0,
  local_obs_thresh=0,
  l_allow_empty_lso=.false.,
+ l_multiple_reports=.false.,
  itest_madis_qc=1,
  n_cycles=1,
  nominal_latency=-1,
@@ -79,6 +80,12 @@ c
 c 'l_allow_empty_lso' - .true. means we will write out an empty LSO file
 c                       even if there are no obs. .false. means no LSO file
 c                       will be written when there are no obs.
+c
+c 'l_multiple_reports' - .false. means that for local mesonet data we pick
+c                         only the observation within the time window that is
+c                         closest to the current 'systime' for each station
+c                      - .true. means we will select all reports from a given
+c                         station falling within the time window
 c
 c 'itest_madis_qc' - 0 means we do not test MADIS QC flags
 c                    1 means level 1 test for MADIS QC flags with local data
