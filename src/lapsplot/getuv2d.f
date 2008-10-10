@@ -15,9 +15,9 @@
         character*10 units_2d(2)
         character*3 var(2)
         integer LVL_2d(2)
-        character*4 LVL_COORD_2d(2), fcst_hhmm
+        character*4 LVL_COORD_2d(2)
+        character*5 fcst_hhmm
         character*9 a9time
-        character*13 a13_time
 
         real uv_2d(imax,jmax,2)
 
