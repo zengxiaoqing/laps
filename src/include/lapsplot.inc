@@ -13,6 +13,7 @@
           real time_zone
           real dist_plot_ua
           real dist_plot_sfc
+          real chigh_sfcwind
 
           integer latlon_int
           integer mode_supmap
