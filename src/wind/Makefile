@@ -10,11 +10,13 @@ include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/wind/libwind.a  \
            $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/util/libutil.a  \
            $(SRCROOT)/src/lib/modules/libmodules.a  
 
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/wind/libdebugwind.a  \
              $(SRCROOT)/src/lib/libdebuglaps.a \
+             $(SRCROOT)/src/lib/util/libdebugutil.a  \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
 
