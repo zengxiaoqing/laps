@@ -49,6 +49,14 @@ cdis
      1                        isplit,
      1                        j_status)
 
+!       Obtain cloud parameters
+        use mem_namelist, ONLY: l_use_vis,l_use_vis_add                
+     1                         ,l_use_vis_partial                      
+     1                         ,l_use_39,latency_co2                   
+     1                         ,pct_req_lvd_s8a                        
+     1                         ,i4_sat_window,i4_sat_window_offset     
+     1                         ,l_use_metars,l_use_radar
+
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                sys_abort_prod
 
@@ -139,8 +147,7 @@ cdis
         real solar_alt(NX_L,NY_L)
         real solar_ha(NX_L,NY_L)
 
-        logical l_packed_output, l_use_vis, l_use_vis_add 
-        logical l_use_vis_partial, l_use_39
+        logical l_packed_output 
         logical l_use_co2_mode1, l_use_co2_mode2
         logical l_evap_radar
         logical l_trust_narrowband ! should narrowband be trusted (i.e. not 
@@ -429,16 +436,10 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,l_use_vis_add,l_use_vis_partial ! O     
-     1                      ,l_use_39,latency_co2                      ! O
-     1                      ,pct_req_lvd_s8a                           ! O
-     1                      ,i4_sat_window,i4_sat_window_offset        ! O
-     1                      ,namelist_parms                            ! O
-     1                      ,istatus)                                  ! O
-        if(istatus .ne. 1)then
-            write(6,*)' laps_cloud_sub: Error getting cloud parms'
-            stop
-        endif
+
+!       Fill namelist_parms data structure
+        namelist_parms%l_use_metars = l_use_metars
+        namelist_parms%l_use_radar = l_use_radar
 
         if(latency_co2 .ge. 0)then
             l_use_co2_mode1 = .true.
