@@ -34,13 +34,19 @@
      1          ,snow_accum,precip_accum,frac_sum           ! Outputs
      1          ,istatus)                                   ! Output
 
-!       Read precip first guess (LGB/FSF)
-	var_req = 'r01'
+!       Read precip first guess (LGB/FSF). Try 'R01' and 'PCP' variables
+	var_req = 'R01'
         call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m
      1                     ,istat_bkg)       
+
         if(istat_bkg .ne. 1)then
-            write(6,*)' No model first guess preicp, using zero field'       
-            write(6,*)' HELP - Isidora and Linda - HELP!!!!!!!!!'
+	    var_req = 'PCP'
+            call get_modelfg_2d(i4time_end,var_req,imax,jmax,pcp_bkg_m     
+     1                         ,istat_bkg)       
+        endif
+
+        if(istat_bkg .ne. 1)then
+            write(6,*)' No model first guess precip, using zero field'       
             pcp_bkg_m = 0.
         endif
 
