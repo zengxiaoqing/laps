@@ -1,4 +1,4 @@
-netcdf rsf {
+netcdf fsf {
 
     dimensions:
         record = unlimited,
@@ -393,6 +393,30 @@ netcdf rsf {
             fd:lvl_coord="AGL";
             fd:LAPS_units="NONE";
 
+        //      LAPS Fcst height of wet-bulb=0C   //
+        //      bigfile name = ztw0
+        float
+            tw0(record,z,y,x);
+            tw0:_FillValue = 1.e+37f;
+            tw0:long_name="Height of wet-bulb=0C ";
+            tw0:units="meters";
+            tw0:valid_range= 0.f, 100000.f;
+            tw0:LAPS_var="TW0";
+            tw0:lvl_coord="MSL";
+            tw0:LAPS_units="meters";
+
+        //      LAPS Fcst height of wet-bulb=1.7C   //
+        //      bigfile name = ztw1
+        float
+            tw1(record,z,y,x);
+            tw1:_FillValue = 1.e+37f;
+            tw1:long_name="Height of wet-bulb=1.7C ";
+            tw1:units="meters";
+            tw1:valid_range= 0.f, 100000.f;
+            tw1:LAPS_var="TW1";
+            tw1:lvl_coord="MSL";
+            tw1:LAPS_units="meters";
+
         //      Model Topography                    //
         //      bigfile name = not used
         float
@@ -594,6 +618,8 @@ netcdf rsf {
             hi_comment(record,z,namelen),
             vis_comment(record,z,namelen),
             fd_comment(record,z,namelen),
+            tw0_comment(record,z,namelen),
+            tw1_comment(record,z,namelen),
             ter_comment(record,z,namelen),
             lwo_comment(record,z,namelen),
             swo_comment(record,z,namelen),
@@ -738,6 +764,14 @@ netcdf rsf {
         short
             fd_fcinv(record, z);
             fd_fcinv:_FillValue= 0s;
+
+        short
+            tw0_fcinv(record, z);
+            tw0_fcinv:_FillValue= 0s;
+
+        short
+            tw1_fcinv(record, z);
+            tw1_fcinv:_FillValue= 0s;
 
         short
             ter_fcinv(record, z);
