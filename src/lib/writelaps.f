@@ -104,7 +104,7 @@ C
      1               cdl_levels(max_levels),
      1               bott, top
 C
-      character*4    fcst_hh_mm
+      character*5    fcst_hh_mm
       character*9    gtime
       character*150  file_name
       character*150  cdl_path

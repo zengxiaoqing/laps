@@ -91,7 +91,7 @@ C
      1          units_len
   
 C
-      character*4       fcst_hh_mm
+      character*5       fcst_hh_mm
       character*9       gtime
       character*150     file_name
 C

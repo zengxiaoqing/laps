@@ -52,7 +52,7 @@ C
      1          ext_len
   
 C
-      character*4       fcst_hh_mm
+      character*5       fcst_hh_mm
       character*9       gtime
       character*150     file_name
 C
@@ -88,6 +88,10 @@ C
           call open_lapsprd_file_read(lun,i4time,ext,istatus)
           if(istatus .ne. 1)goto 950
       else            ! new way using 'dir'
+
+C fcst_hh_mm: Hard wired as a place holder - will be used in filename only
+C   if read_laps_compressed is called on lga, lgb, fua, fsf, ram, rsf
+C To fix this, call read_laps instead
           fcst_hh_mm = '0000'
 
           call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,

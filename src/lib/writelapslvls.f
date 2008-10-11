@@ -100,7 +100,7 @@ C
       real         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(n_levels)
 C
-      character*4    fcst_hh_mm
+      character*5    fcst_hh_mm
       character*9    gtime
       character*150 file_name
       character*150  cdl_path
@@ -210,8 +210,6 @@ C
 
       call make_fcst_time(valtime,reftime,
      1                    fcst_hh_mm,istatus)
-
-
 C
 C ****  Create ascii time variables.
 C

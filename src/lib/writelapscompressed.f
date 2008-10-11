@@ -52,7 +52,7 @@ C
 c
       logical l_check_encoding
 C
-      character*4    fcst_hh_mm
+      character*5    fcst_hh_mm
       character*9    gtime
       character*150  file_name
       character*150  cdl_path
@@ -101,6 +101,9 @@ C
 
       call s_len(ext, ext_len)
 
+C fcst_hh_mm: Hard wired as a place holder - will be used in filename  only
+C   if write_laps_compressed is called on lga, lgb, fua, fsf, ram, rsf
+C To fix this, call write_laps instead
       fcst_hh_mm = '0000'
 
       call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,

@@ -83,7 +83,7 @@ C
      1          units_len
   
 C
-      character*4       fcst_hh_mm
+      character*5       fcst_hh_mm
       character*9       gtime
       character*150     file_name
 C
@@ -107,6 +107,9 @@ C
 
       call s_len(ext, ext_len)
 
+C Hard wired as a place holder - will be used in filename only if read_laps_data
+C   is called on lga, lgb, fua, fsf, ram, rsf
+C To fix this, call read_laps instead
       fcst_hh_mm = '0000'
 
       call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,
@@ -213,10 +216,10 @@ C**********************************************************************
       character*(*)     gtime
       character*(*)     ext          !File name ext 
       character*(*)     file_name
-      character*4       fhh
+      character*5       fhh
 
       integer         fn_length,
-     1                  ext_len,
+     1                  ext_len,fhh_len,
      1                  istatus
 
       integer         end_dir, end_ext, error(2)
@@ -245,10 +248,14 @@ C ******  find end of file_name
 C
       fn_length = len(file_name)
 C
+C ******  find end of fhh
+C
+      call s_len(fhh,fhh_len)
+C
 C ****  make fortran file_name
 C
 
-      if (end_dir+end_ext+14 .gt. fn_length) then
+      if (end_dir+end_ext+fhh_len+10 .gt. fn_length) then
         write (6,*) 'Length of dir+file-name exceeds file_name length.'
         istatus = error(2)
         goto 999
@@ -258,7 +265,8 @@ C
      +     ext_dn(1:3).eq.'fsf' .or.
      +     ext_dn(1:3).eq.'ram' .or.
      +     ext_dn(1:3).eq.'rsf') then
-          file_name=dir(1:end_dir)//gtime//fhh//'.'//ext_dn(1:end_ext)
+           file_name=dir(1:end_dir)//gtime//fhh(1:fhh_len)//'.'//
+     +ext_dn(1:end_ext)
         else
           file_name = dir(1:end_dir)//gtime//'.'//ext_dn(1:end_ext)
         endif
@@ -272,7 +280,6 @@ C
         istatus=error(1)
 999     return
         end
-
 C########################################################################
       subroutine make_fcst_time(valtime,reftime,fcst_hh_mm,istatus)
 
@@ -280,14 +287,22 @@ C########################################################################
 
       integer       valtime, reftime, istatus
       integer       fcst_hr, fcst_min, fcst_min_sec, fcst_sec
-      integer       error(3)
-      character*4     fcst_hh_mm
-      character*1     h1, h2, m1, m2
+      integer       error(3), extended, interim_fh
+      character*5   fcst_hh_mm
+      character*1   h1, h2, h3, m1, m2
 
       error(1)=1
       error(2)=0
 
       fcst_sec = valtime - reftime
+
+C see if fcst_sec > 356400 seconds (99 hours)
+      if (fcst_sec .gt. 356400) then
+        extended = 1  ! fcst_hh_mm format is hhhmm if hh > 99
+      else
+        extended = 0  ! fcst_hh_mm format is hhmm if hh <= 99
+      endif
+
       if (fcst_sec .eq. 0) then
         fcst_hh_mm = '0000'
         goto 998
@@ -299,25 +314,33 @@ C ****  fcst_sec > 0 .... create fcst_hh_mm
       fcst_hr = (fcst_sec - fcst_min_sec) / 3600
       fcst_min = fcst_min_sec / 60
 
-C     fcst_hr can be between 0 and 99
+C     fcst_hr can be between 0 and 999
 C     fcst_min can be between 0 and 59
 
-      if ((fcst_hr .lt. 0) .or. (fcst_hr .gt. 99)) then
-        write(6,*) ' Forecast hour in error: ',fcst_hr
+      if ((fcst_hr .lt. 0) .or. (fcst_hr .gt. 999)) then
+       write(6,*) ' Forecast hour cannot exceed 999: ',fcst_hr
         goto 997
       else
         if ((fcst_min .lt. 0) .or. (fcst_min .gt. 59)) then
-          write(6,*) ' Forecast minute in error: ',fcst_min
+          write(6,*) ' Forecast minute cannot exceed 59: ',fcst_min
           goto 997
         endif
       endif
 
-      if (fcst_hr .lt. 10) then
-        h1 = '0'
-        h2 = char(fcst_hr + 48)
-      else
-        h1 = char(((fcst_hr - mod(fcst_hr,10)) / 10) + 48)
-        h2 = char(mod(fcst_hr,10) + 48)
+      if (extended .eq. 1) then  !fcst_hr > 99, so 3 digit hr is valid
+        interim_fh = fcst_hr - mod(fcst_hr,100) 
+        h1 = char((interim_fh/100) + 48)
+        interim_fh = fcst_hr - interim_fh 
+        h2 = char(((interim_fh - mod(interim_fh,10)) / 10) + 48)
+        h3 = char(mod(interim_fh,10) + 48)
+      else ! fcst_hr <= 99, so 2 digit hr is valid
+        if (fcst_hr .lt. 10) then
+          h1 = '0'
+          h2 = char(fcst_hr + 48)
+        else
+          h1 = char(((fcst_hr - mod(fcst_hr,10)) / 10) + 48)
+          h2 = char(mod(fcst_hr,10) + 48)
+        endif
       endif
 
       if (fcst_min .lt. 10) then
@@ -328,7 +351,11 @@ C     fcst_min can be between 0 and 59
         m2 = char(mod(fcst_min,10) + 48)
       endif
 
-      fcst_hh_mm = h1//h2//m1//m2
+      if (extended .eq. 1) then
+        fcst_hh_mm = h1//h2//h3//m1//m2
+      else
+        fcst_hh_mm = h1//h2//m1//m2
+      endif
       goto 998
 C
 C ****  Error Return.

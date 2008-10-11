@@ -101,7 +101,7 @@ C
       real         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(max_levels)
 C
-      character*4    fcst_hh_mm
+      character*5    fcst_hh_mm
       character*9    gtime
       character*150  file_name
       character*150  cdl_path
@@ -234,6 +234,9 @@ C
 
       call s_len(ext, ext_len)
 
+C fcst_hh_mm: Hard wired as a place holder - will be used in filename 
+C   only if write_laps_data is called on lga, lgb, fua, fsf, ram, rsf
+C To fix this, call write_laps instead
       fcst_hh_mm = '0000'
 
       call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,
@@ -414,7 +417,7 @@ C
       real         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(max_levels)
 C
-      character*4    fcst_hh_mm
+      character*5    fcst_hh_mm
       character*9    gtime
       character*128  file_name
       character*128  cdl_path
@@ -554,6 +557,9 @@ C
 
       call s_len(ext, ext_len)
 
+C fcst_hh_mm: Hard wired as a place holder - will be used in filename 
+C   only if write_laps_multi is called on lga, lgb, fua, fsf, ram, rsf
+C To fix this, call write_laps instead
       fcst_hh_mm = '0000'
 
       call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,

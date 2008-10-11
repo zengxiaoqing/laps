@@ -94,7 +94,7 @@ C
         CHARACTER*10    UNITS(200)     ! Output units
         CHARACTER*125   COMMENT(200)   ! Output comments
         CHARACTER*9     GTIME
-        CHARACTER*4     fcst_hh_mm
+        CHARACTER*5     fcst_hh_mm
         CHARACTER*91    FILE_NAME
         CHARACTER*4     MARK
         CHARACTER*4     CIMAX,CJMAX,CKMAX
@@ -138,8 +138,10 @@ C
                 ISTATUS=ERROR(2)
                 RETURN
         ENDIF
-        fcst_hh_mm = '0000'
 
+C fcst_hh_mm: Hard wired as a place holder - will be used in filename 
+C   only if read_laps_header is called on lga, lgb, fua, fsf, ram, rsf
+        fcst_hh_mm = '0000'
 
         CALL UPCASE(EXT,EXT_I)
 
