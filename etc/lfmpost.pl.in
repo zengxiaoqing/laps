@@ -1,0 +1,409 @@
+#!@PERL@
+# @configure_input@
+
+require 5;
+use strict;
+
+my $project = "none";
+my $LAPSROOT;
+
+# Setup command line options:
+#    -l laps_data_root (default = environment variable)
+#    -m model type (default = wrf)
+#    -r model root (default = environment variable)
+#    -d init date (yyyy-mm-dd-hhmm, default = current hour)
+#    -g model grid to process (default = 1, negative value does all grids)
+#    -f number of forecasts (default = 12)
+#    -i forecast increment (minutes, default = 60)
+#    -s start forecast time (hours, default = 0)
+#    -p model prefix (default = model dependent)
+#    -w maximum wait time (seconds, default = 0);
+#    -e clock time hours from init date to stop to not conflict with next model run
+#    -q if *not* set, run lfmpost.exe via qsub 
+#    -P project - only important if project is DWR...will look in DWR specific dirs
+#    -y physics of model...used to make logfile unique when qsub writes it to $USER home directory
+
+use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_P $opt_q);
+use Getopt::Std;
+getopts('l:m:r:d:g:f:i:p:s:w:e:y:P:q');
+
+$project = $opt_P if defined($opt_P);
+
+if ($project eq "DWR") {
+  $LAPSROOT = "/home/oplapb/builds/laps";
+} else {
+  $LAPSROOT = $ENV{LAPSROOT};
+}
+require "$LAPSROOT/etc/oputil.pm";
+
+if (defined ($opt_q)) {
+  print "\n---------------------------------------------------------------------\n";
+  print "Run lfmpost *without* qsub\n";
+  print "---------------------------------------------------------------------\n";
+} else {
+  print "\n---------------------------------------------------------------------\n";
+  print "Submit lfmpost via qsub\n";
+  print "---------------------------------------------------------------------\n";
+}
+
+my $command;
+my $lfmpostlog;
+my $phys = "";
+my $now = `date -u`;
+my $date;
+my $model_output_dir;
+my $endClockTime;
+my $ctime;
+my $currTime;
+my $user;
+$now = substr($now,0,length($now)-1);
+print "*** LFM post script started:  $now ***\n\n";
+
+print "Running parameters:\n";
+# Define model type (default = wrf).
+
+my $model = "wrf";
+$model = $opt_m if defined($opt_m);
+print "model = $model\n";
+
+# Define model prefix.
+
+my %mdlpref;
+$mdlpref{"mm5"}  = "MMOUT_DOMAIN";
+$mdlpref{"wrf"}  = "wrfout";
+$mdlpref{"rams"} = "a";
+$mdlpref{"nmm"}  = "wrfout";
+$mdlpref{$model} = $opt_p if defined ($opt_p);
+print "model prefix = $mdlpref{$model}\n";
+
+# Define model grids (default = 1).
+
+my $ngrid = 1;
+my (@grid,$n);
+$grid[1] = 1;
+$grid[1] = $opt_g if defined ($opt_g);
+if ($grid[1] < 0) {
+   $ngrid = abs($grid[1]);
+   for ($n=1; $n<=$ngrid; $n++) {
+      $grid[$n] = $n;
+   }
+}
+print "Number of nests = $ngrid\n";
+
+# Define model data directories.
+
+my $lapsdataroot;
+$lapsdataroot = $ENV{LAPS_DATA_ROOT} if defined($ENV{LAPS_DATA_ROOT});
+$lapsdataroot = "$opt_l" if defined($opt_l);
+print "lapsdataroot = $lapsdataroot\n";
+
+my $modelroot;
+my $name = uc($model)."_DATAROOT";
+$modelroot = $ENV{"$name"} if defined($ENV{"$name"});
+$modelroot = "$opt_r" if defined($opt_r);
+print "modelroot = $modelroot\n";
+
+if (! defined($lapsdataroot)) {
+  print "LAPS_DATA_ROOT is not defined.\n";
+  exit;
+}
+if (! defined($modelroot)) {
+  print "$name is not defined.\n";
+  exit;
+}
+
+# Determine default init time based on current time.
+
+my $time = time;
+my ($yyyy, $mm, $dd, $hh, $min) = &time::unix_to_time($time);
+my $mn = "00";
+$min = "0$min" while(length($min) < 2);
+
+# Override default time based on command line options, if present.
+
+if ($opt_d) {
+   print "-d date = $opt_d\n";
+   $_ = $opt_d;
+   if (/(\d\d\d\d)-(\d\d)-(\d\d)-(\d\d)(\d\d)/) {
+      $yyyy = $1;
+      $mm = $2;
+      $dd = $3;
+      $hh = $4;
+      $mn = $5;
+   } else {
+      print "   Invalid date: $opt_d\n";
+      print "   Date format is yyyy-mm-dd-hhmm\n";
+      print "   Quit...\n";
+      exit;
+   }
+}
+$mm = "0$mm" while(length($mm) < 2);
+$dd = "0$dd" while(length($dd) < 2);
+
+# set init times for log filename
+my ($inithh, $initmm, $initdd);
+$inithh = "$hh";
+$inithh = "0$hh" while(length($inithh) < 2);
+$initmm = "$mm";
+$initmm = "0$mm" while(length($initmm) < 2);
+$initdd = "$dd";
+$initdd = "0$dd" while(length($initdd) < 2);
+
+# set $endClockTime to stop job when it hits this clock time 
+#   to avoid conflict with next model run
+my @dymon = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+#adjust dymon month 2 for leap year
+if ($yyyy%4 == 0) { 
+  $dymon[2] += 1;
+}
+
+my ($ect_hh, $ect_mm, $ect_dd, $ect_yy, $modEctHr);
+if ($opt_e) {  #set $endClockTime
+  $ect_hh = $hh + $opt_e;
+  if ($ect_hh > 23) {
+    $ect_hh -= 24;
+    $modEctHr = 1;
+  }
+  if ($modEctHr == 1) {
+    $ect_dd = $dd + 1;
+    $ect_yy = $yyyy;
+    $ect_mm = $mm;
+    if ($ect_dd > $dymon[$ect_mm]) {
+      $ect_mm = $mm + 1;
+      if ($ect_mm > 12) {
+        $ect_yy += 1;
+      }
+      $ect_dd = 1;
+    }
+    $ect_hh = "0".$ect_hh while(length($ect_hh)<2);
+    $ect_dd = "0".$ect_dd while(length($ect_dd)<2);
+    $ect_mm = "0".$ect_mm while(length($ect_mm)<2);
+    $endClockTime = "$ect_yy$ect_mm$ect_dd$ect_hh$min";
+  } else {
+    $endClockTime = "$yyyy$mm$dd$ect_hh$min";
+  }
+}
+
+if ($project eq "DWR") {
+  $date = "$yyyy$mm$dd$hh";
+} else {
+  $date = "$yyyy-$mm-$dd-$hh$mn";
+}
+print "date = $date\n";
+
+# Define forecast parameters.
+
+my $nfcst = 12;
+$nfcst = $opt_f if defined ($opt_f);
+my $finc = 60;
+$finc = $opt_i if defined ($opt_i);
+$finc *= 60; #make it seconds
+my $sfcst = 0;
+$sfcst = $opt_s if defined ($opt_s);
+
+# LAPS i4time uses a base year of 1960 while unix time uses a base year of
+#  1970.  Account for this using the following parameter which is the number 
+#  of seconds between 1960 and 1970.
+
+my $decade = 315619200;
+
+# Define wait parameters.
+
+my $elapsed = 0;
+my $waitinc = 60;
+my $maxwait = 0;
+$maxwait = $opt_w if defined ($opt_w);
+
+# Echo input arguments
+
+print "model: $model\n";
+print "lapsdataroot: $lapsdataroot\n";
+print "modelroot: $modelroot\n";
+print "date: $date\n";
+print "nfcst: $nfcst\n";
+print "finc: $finc\n";
+print "maxwait: $maxwait\n";
+
+# make $model_output_dir
+if ($project eq "DWR" ) {
+  $model_output_dir = "$modelroot/$date/wrfprd";
+} else {
+  $model_output_dir = "$modelroot/$date";
+}
+
+# Copy lfmpost.nl into $modelroot/$date/static from $modelroot/static
+if (! -e "$modelroot/$date/static") {
+  mkdir ("$modelroot/$date/static",0775);
+  print "Making directory:  $modelroot/$date/static\n";
+}
+system ("cp $modelroot/static/lfmpost.nl $modelroot/$date/static/lfmpost.nl");
+
+# Loop through each forecast time within each requested grid and
+#  initiate lfmpost.
+
+my $inittime = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + $decade;
+my ($g,$grid,$i4time,$fcst,$fname,$dom,$ss,$mdate,$jday,$yy);
+my $cFcstNum;
+my $FcstNum;
+for ($g=1; $g<=$ngrid; $g++) {
+   $grid = $grid[$g];
+   $i4time = $inittime;
+
+# Make sure the "d$dom/fua" and d$dom/fsf directories exist under $model_output_dir
+#   ..if not, create them
+   if ($model eq "wrf" || $model eq "nmm") {
+     $dom = $grid;
+     $dom = "0$dom" while (length($dom)<2);
+   }
+
+   if (! -e "$model_output_dir/d$dom") {
+     mkdir ("$model_output_dir/d$dom",0775);
+     mkdir ("$model_output_dir/d$dom/fua",0775);
+     mkdir ("$model_output_dir/d$dom/fsf",0775);
+   }
+   if (! -e "$model_output_dir/d$dom/fua") {
+     mkdir ("$model_output_dir/d$dom/fua",0775);
+   }
+   if (! -e "$model_output_dir/d$dom/fsf") {
+     mkdir ("$model_output_dir/d$dom/fsf",0775);
+   }
+
+#LW modified to catch last forecast...don't count analysis as part of $nfcst
+#LW   for ($n=0; $n<$nfcst; $n++) {
+   for ($n=0; $n<=$nfcst; $n++) {
+      $FcstNum = $n * $finc / 3600; #This should get forecast hour
+      $cFcstNum = "$FcstNum";
+      $cFcstNum = "00$cFcstNum" while (length($cFcstNum)<2);
+      $cFcstNum = "0$cFcstNum" while (length($cFcstNum)<3);
+      $i4time = $inittime + $sfcst*3600 + ($n * $finc);
+      if ($model eq "mm5") {
+         $fcst = $sfcst + $n;
+         $fcst = "0$fcst" while (length($fcst)<2);
+         $fname = "$mdlpref{$model}$grid"."_$fcst";
+      } elsif ($model eq "wrf" || $model eq "nmm") {
+         ($yyyy,$mm,$dd,$hh,$mn,$ss) = &time::unix_to_time($i4time-$decade);
+         $mm = "0$mm" while (length($mm)<2);
+         $dd = "0$dd" while (length($dd)<2);
+         $hh = "0$hh" while (length($hh)<2);
+         $mn = "0$mn" while (length($mn)<2);
+         $ss = "0$ss" while (length($ss)<2);
+         $mdate = "$yyyy-$mm-$dd"."_$hh:$mn:$ss";
+         $fname = "$mdlpref{$model}"."_d$dom"."_$mdate";
+      } elsif ($model eq "rams") {
+         ($yyyy,$mm,$dd,$hh,$mn,$ss) = &time::unix_to_time($i4time-$decade);
+         $mm = "0$mm" while (length($mm)<2);
+         $dd = "0$dd" while (length($dd)<2);
+         $hh = "0$hh" while (length($hh)<2);
+         $mn = "0$mn" while (length($mn)<2);
+         $ss = "0$ss" while (length($ss)<2);
+         $mdate = "$yyyy-$mm-$dd-$hh$mn$ss-g$grid".".h5";
+         $fname = "raw/anal/$mdlpref{$model}-A-$mdate";
+      } elsif ($model eq "st4") {
+         my ($hh2);
+         ($yyyy,$mm,$dd,$hh,$mn,$ss) = &time::unix_to_time($i4time-$decade);
+         if ($hh == 18)
+         {
+           $hh2 = $hh-12;
+         } else {
+           $hh2 = $hh+24-12;
+         }
+         ($yyyy,$mm,$dd,$hh,$mn,$ss) = &time::unix_to_time($i4time-$decade-3600*$hh2);
+         if ($yyyy > 1999) {$yy = $yyyy-2000} ;
+         if ($yyyy < 2000) {$yy = $yyyy-1900} ;
+         $hh = "0$hh" while (length($hh)<2);
+         $hh = $hh."00";
+         $hh2 = "0$hh2" while (length($hh2)<2);
+         $yy = "0$yy" while (length($yy)<2);
+         $jday = &time::julian($yyyy,$mm,$dd);
+         $fname = "$yy$jday$hh"."00"."$hh2";
+      }
+      $fcst = $sfcst*3600 + ($n * $finc);
+
+# Wait for model file and make sure file size is greater than zero.
+      print "looking for $model_output_dir/$fname\n";
+      while (! -e "$model_output_dir/$fname" || -s "$model_output_dir/$fname" == 0) { 
+        $ctime = time;
+        my ($cyy, $cmm, $cdd, $chh, $cmin) = &time::unix_to_time($ctime);
+        $cmm = "0$cmm" while(length($cmm) < 2);
+        $cdd = "0$cdd" while(length($cdd) < 2);
+        $chh = "0$chh" while(length($chh) < 2);
+        $cmin = "0$cmin" while(length($cmin) < 2);
+        $currTime = "$cyy$cmm$cdd$chh$cmin";
+
+        if ($opt_e) {
+          if ($currTime > $endClockTime) {
+            print "    LFM post process ran past $endClockTime...conflict with next model run.\n\n";
+            exit;
+          }   
+        }
+        if ($elapsed >= $maxwait) {
+          print "    LFM post process timed out after $elapsed seconds.\n\n";
+          exit;
+        }
+        $elapsed += $waitinc;
+        sleep $waitinc;
+      }
+      print "found it, inittime: $inittime\n";
+
+      if ($opt_y) { #add identifier to logfile from $opt_y
+        $lfmpostlog = "lfmpost_$opt_y"."_";
+      } else {
+        $lfmpostlog = "lfmpost_";
+      }
+      $lfmpostlog = "$lfmpostlog$yyyy$initmm$initdd"."_$inithh"."_$cFcstNum.log";
+
+      if (! $opt_q) {  #run *with* qsub
+        chdir "$modelroot/$date";
+        print "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot\n";
+        $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $lfmpostlog";
+
+#  make .sh script to submit to qsub
+        open (QS, ">qsub_lfmpost_$yyyy$mm$dd$hh.sh");
+        print QS "#!/bin/sh\n";
+        print QS "#\$ -pe wcomp 1\n";
+        print QS "#\$ -l h_rt=05:30:00\n";
+        print QS "#\$ -A wrf\n";
+        print QS "#\$ -N lfmpost\n";
+        print QS "#\$ -S /bin/sh\n";
+        print QS "#\$ -cwd\n";
+        print QS "cd $modelroot/$date\n";
+        print QS "$command\n";
+        print QS "exit\n";
+        close(QS);
+        chmod 0777, "qsub_lfmpost_$yyyy$mm$dd$hh.sh";
+
+        unlink "qsub_lfmpost.sh";
+        symlink "./qsub_lfmpost_$yyyy$mm$dd$hh.sh", "./qsub_lfmpost.sh";
+        unlink "qsub_lfmpost.log";
+        symlink "./lfmpost_$yyyy$mm$dd$hh.log", "./qsub_lfmpost.log";
+        $now = `date -u`;
+        $now = substr($now,0,length($now)-1);
+        print "Submit qsub_wait: $now\n";
+        print "SGESTAT -WHY\n";
+#        system ("/usr/local/esrl/bin/sgestat -why");
+        system ("/bin/sh $modelroot/static/lfmpost_qsub.sh");
+        $now = `date -u`;
+        $now = substr($now,0,length($now)-1);
+        print "Finish qsub_wait: $now\n";
+        
+      } else {  #run without qsub
+        $command = "$LAPSROOT/bin/lfmpost.exe $model $model_output_dir/$fname $grid $inittime $fcst $lapsdataroot > $lfmpostlog";
+        print "$command\n";
+        system ("$command");
+      }
+
+      if ($project eq "DWR") {     # move logfile to wrfprd
+        $user = $ENV{USER};
+        $command = "mv /home/$user/$lfmpostlog $modelroot/$date/wrfprd/$lfmpostlog";
+        system("$command");
+      }
+   }
+}
+
+if ($project eq "DWR") {     # move lfmp_tom.* to wrfprd from $LAPSROOT/etc
+  $phys = $ENV{phys};
+  $command = "mv /home/$user/lfmp_$phys* $modelroot/$date/wrfprd";
+  system("$command");
+}
+
+exit;
