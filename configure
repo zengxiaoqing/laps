@@ -3125,6 +3125,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
 	  etc/laps_monitor.pl
+	  etc/lfmpost.pl
           etc/lq3driver.pl
           etc/sched.pl
           etc/realtime.pl
@@ -3269,6 +3270,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
 	  etc/laps_monitor.pl
+	  etc/lfmpost.pl
           etc/lq3driver.pl
           etc/sched.pl
           etc/realtime.pl
