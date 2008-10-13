@@ -59,7 +59,7 @@ EXEDIRS = src/accum \
           src/ingest/sfc_qc \
 	  src/lapsprep \
 	  src/laps2grib \
-	  src/lfmpost \
+	  src/newlfmp \
           src/wfoprep \
           src/sfc \
           src/sfc/table \
