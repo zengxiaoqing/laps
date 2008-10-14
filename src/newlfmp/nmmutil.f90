@@ -90,11 +90,11 @@ icode=nf_get_var_real(ncid,nid,nmrsig)
 call nmm_height(nx,ny,nz,fld3d,ntsig,nmrsig,nzsfc,npsig,nzsig)
 
 icode=nf_inq_varid(ncid,'U',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nusig)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nusig)
 icode=nf_inq_varid(ncid,'V',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nvsig)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nvsig)
 icode=nf_inq_varid(ncid,'W',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,fld3d)
    do k=1,nz
       nwsig(:,:,k)=(fld3d(:,:,k)+fld3d(:,:,k+1))*0.5
@@ -113,16 +113,16 @@ deallocate(fld3d)
 !   Snow cannot be differentiated from ice in nmm output.
 
 icode=nf_inq_varid(ncid,'CWM',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,ncldicemr_sig)
    icode=nf_inq_varid(ncid,'F_ICE',nid)
-   if (icode .ne. 0) then
+   if (icode .eq. 0) then
       icode=nf_get_var_real(ncid,nid,nsnowmr_sig)
       icode=nf_inq_varid(ncid,'F_RAIN',nid)
-      if (icode .ne. 0) then
+      if (icode .eq. 0) then
          icode=nf_get_var_real(ncid,nid,nrainmr_sig)
          icode=nf_inq_varid(ncid,'F_RIMEF',nid)
-         if (icode .ne. 0) then
+         if (icode .eq. 0) then
             icode=nf_get_var_real(ncid,nid,ngraupelmr_sig)
             ncldliqmr_sig=ncldicemr_sig-ncldicemr_sig*nsnowmr_sig
             nrainmr_sig=ncldliqmr_sig*nrainmr_sig
@@ -143,7 +143,7 @@ endif
 ! Accumulate precip.
 
 !icode=nf_inq_varid(ncid,'CUPREC',nid)
-!if (icode .ne. 0) then
+!if (icode .eq. 0) then
 !   icode=nf_get_var_real(ncid,nid,npcp_tot)
 !else
 !   npcp_tot=0.
@@ -154,33 +154,33 @@ endif
 npcp_tot=0.
 allocate(fld2d(nx,ny))
 icode=nf_inq_varid(ncid,'ACPREC',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,fld2d)
    npcp_tot=npcp_tot+fld2d
 endif
 deallocate(fld2d)
 
 icode=nf_inq_varid(ncid,'PSHLTR',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,npsfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,npsfc)
 icode=nf_inq_varid(ncid,'TSHLTR',nid)
-if ((icode .ne. 0) .and. (minval(npsfc) < rmsg)) then
+if ((icode .eq. 0) .and. (minval(npsfc) < rmsg)) then
    icode=nf_get_var_real(ncid,nid,ntsfc)
    ntsfc=ntsfc*(npsfc/p0)**kappa
 endif
 icode=nf_inq_varid(ncid,'QSHLTR',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nmrsfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nmrsfc)
 icode=nf_inq_varid(ncid,'U10',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nusfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nusfc)
 icode=nf_inq_varid(ncid,'V10',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nvsfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nvsfc)
 icode=nf_inq_varid(ncid,'TGROUND',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nground_t)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nground_t)
 icode=nf_inq_varid(ncid,'SFCSHX',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nshflux)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nshflux)
 icode=nf_inq_varid(ncid,'SFCLHX',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nlhflux)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlhflux)
 icode=nf_inq_varid(ncid,'PBLH',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,npblhgt)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,npblhgt)
 
 if (fcsttime == 0) then
    nshflux=rmsg

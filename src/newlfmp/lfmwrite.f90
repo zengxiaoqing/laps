@@ -29,7 +29,7 @@ character(len=9) :: gtime
 character(len=5) :: fcst_hhmm
 character(len=2) :: domnum_str
 
-! LW assign domnum_in, from calling args, to domnum, declated in lfmgrid module
+! LW assign domnum_in, from calling args, to domnum, declared in lfmgrid module
 domnum = domnum_in
 
 if (verbose) then

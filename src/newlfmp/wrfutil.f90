@@ -94,7 +94,7 @@ allocate(ncon_pcp_tot(nx,ny))
 ! Read model data.
 
 icode=nf_inq_varid(ncid,'U',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    allocate(fld3d(nx+1,ny,nz))
    icode=nf_get_var_real(ncid,nid,fld3d)
       print*,'U: ',icode
@@ -105,7 +105,7 @@ if (icode .ne. 0) then
 endif
 
 icode=nf_inq_varid(ncid,'V',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    allocate(fld3d(nx,ny+1,nz))
    icode=nf_get_var_real(ncid,nid,fld3d)
       print*,'V: ',icode
@@ -116,10 +116,10 @@ if (icode .ne. 0) then
 endif
 
 icode=nf_inq_varid(ncid,'P',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,npsig)
    icode=nf_inq_varid(ncid,'PB',nid)
-   if (icode .ne. 0) then
+   if (icode .eq. 0) then
       allocate(fld3d(nx,ny,nz))
       icode=nf_get_var_real(ncid,nid,fld3d)
       npsig=npsig+fld3d
@@ -130,32 +130,32 @@ if (icode .ne. 0) then
 endif
 
 icode=nf_inq_varid(ncid,'T',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,ntsig)
    ntsig=(ntsig+300.)*(npsig/p0)**kappa
 endif
 
 icode=nf_inq_varid(ncid,'QVAPOR',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nmrsig)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nmrsig)
 
 icode=nf_inq_varid(ncid,'QCLOUD',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,ncldliqmr_sig)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,ncldliqmr_sig)
 
 icode=nf_inq_varid(ncid,'QICE',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,ncldicemr_sig)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,ncldicemr_sig)
 
 icode=nf_inq_varid(ncid,'QRAIN',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nrainmr_sig)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nrainmr_sig)
 
 icode=nf_inq_varid(ncid,'QSNOW',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nsnowmr_sig)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nsnowmr_sig)
 
 icode=nf_inq_varid(ncid,'QGRAUP',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,ngraupelmr_sig)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,ngraupelmr_sig)
 
 allocate(fld3d(nx,ny,nz+1))
 icode=nf_inq_varid(ncid,'W',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,fld3d)
    do k=1,nz
       nwsig(:,:,k)=(fld3d(:,:,k)+fld3d(:,:,k+1))*0.5
@@ -163,13 +163,13 @@ if (icode .ne. 0) then
 endif
 
 icode=nf_inq_varid(ncid,'PH',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,fld3d)
    do k=1,nz
       nzsig(:,:,k)=(fld3d(:,:,k)+fld3d(:,:,k+1))*0.5
    enddo
    icode=nf_inq_varid(ncid,'PHB',nid)
-   if (icode .ne. 0) then
+   if (icode .eq. 0) then
       icode=nf_get_var_real(ncid,nid,fld3d)
       do k=1,nz
          nzsig(:,:,k)=(nzsig(:,:,k)+(fld3d(:,:,k)+fld3d(:,:,k+1))*0.5)/grav
@@ -181,62 +181,62 @@ endif
 deallocate(fld3d)
 
 icode=nf_inq_varid(ncid,'TSK',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nground_t)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nground_t)
 
 icode=nf_inq_varid(ncid,'PSFC',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,npsfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,npsfc)
 
 icode=nf_inq_varid(ncid,'T2',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,ntsfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,ntsfc)
 
 icode=nf_inq_varid(ncid,'Q2',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nmrsfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nmrsfc)
 
 icode=nf_inq_varid(ncid,'U10',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nusfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nusfc)
 
 icode=nf_inq_varid(ncid,'V10',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nvsfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nvsfc)
 
 icode=nf_inq_varid(ncid,'RAINC',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,ncon_pcp_tot)
 else
    ncon_pcp_tot=0.
 endif
 
 icode=nf_inq_varid(ncid,'RAINNC',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,npcp_tot)
 else
    npcp_tot=0.
 endif
 
 icode=nf_inq_varid(ncid,'HGT',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nzsfc)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nzsfc)
 
 icode=nf_inq_varid(ncid,'XLAT',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nlat)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlat)
       print*,'XLAT: ',icode,maxval(nlat)
 
 icode=nf_inq_varid(ncid,'XLONG',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nlon)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlon)
       print*,'XLONG: ',icode,maxval(nlon)
 
 icode=nf_inq_varid(ncid,'SWDOWN',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nswdown)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nswdown)
 
 icode=nf_inq_varid(ncid,'GLW',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nlwdown)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlwdown)
 
 icode=nf_inq_varid(ncid,'LH',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nlhflux)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nlhflux)
 
 icode=nf_inq_varid(ncid,'GRDFLX',nid)
-if (icode .ne. 0) icode=nf_get_var_real(ncid,nid,nshflux)
+if (icode .eq. 0) icode=nf_get_var_real(ncid,nid,nshflux)
 
 icode=nf_inq_varid(ncid,'PBLH',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,npblhgt)
    if (maxval(npblhgt) <= 1.) npblhgt=rmsg
 endif

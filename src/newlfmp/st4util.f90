@@ -95,7 +95,7 @@ enddo
 ! And convert from mm to m.
 
 icode=nf_inq_varid(ncid,'APCP',nid)
-if (icode .ne. 0) then
+if (icode .eq. 0) then
    icode=nf_get_var_real(ncid,nid,npcp_tot)
 endif
 npcp_tot = npcp_tot/1000.
