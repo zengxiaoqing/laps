@@ -33,8 +33,10 @@ MODULE STMASAnalz
 !  HISTORY:
 !	Creation: 9-2005 by YUANFU XIE.
 !       Modification:
-!                 25-08-2008 by min-ken hsieh
-!                 add parameter stna to map each obs its stn name for STMASVer
+!                 10-2008 by min-ken hsieh
+!                 STMASAna
+!                 Functn3D
+!                 Gradnt3D
 !==========================================================
 
   USE Definition
@@ -43,7 +45,7 @@ CONTAINS
 
 SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 		    obsv,nobs,wght,stna,ospc,indx, &
-		    coef, bund,ipar,rpar)
+		    coef, bund,ipar,rpar,vnam,pnlt,slvl)
 		    
 
 !==========================================================
@@ -52,6 +54,14 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 !
 !  HISTORY:
 !	Creation: 9-2005 by YUANFU XIE.
+!       Modification:
+!                 08-2008 by min-ken hsieh
+!                 add parameter stna to map each obs its stn name for STMASVer
+!       Modification:
+!                 10-2008 by min-ken hsieh
+!                 bound option only apply to last level
+!                 pass in penalty for each var
+!                 pass in slevel for each var
 !==========================================================
 
   IMPLICIT NONE
@@ -62,13 +72,16 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   INTEGER, INTENT(IN) :: indx(6,nobs)	! Indices (intepolate)
   INTEGER, INTENT(IN) :: bund		! Bound constraints
   INTEGER, INTENT(IN) :: ipar(1)	! Integer parameter
+  INTEGER, INTENT(IN) :: slvl           ! Level to start analysis. added by min-ken
   REAL, INTENT(IN) :: dxyt(3)		! Grid spacing
   REAL, INTENT(IN) :: domn(2,3)		! Domain
   REAL, INTENT(IN) :: bkgd(ngrd(1),ngrd(2),nfrm)
   REAL, INTENT(INOUT) :: obsv(4,nobs)
   REAL, INTENT(INOUT) :: wght(nobs)	! Obs weightings
+  REAL, INTENT(IN) :: pnlt		! penalty for each variable
   CHARACTER*20, INTENT(INOUT):: stna(nobs)
 					! Obs station name by min-ken hsieh
+  CHARACTER*4, INTENT(IN):: vnam        ! variable name(used in lvl addition and output each level result)
   REAL, INTENT(IN) :: ospc(3)		! Obs spacing
   REAL, INTENT(IN) :: coef(6,nobs)	! Coeffients
   REAL, INTENT(IN) :: rpar(1)		! Real parameter
@@ -84,7 +97,7 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   INTEGER :: mcl			! Number of multigrid cycles
   INTEGER :: mlv			! Maximum number levels
   INTEGER :: idx(6,nobs)		! Indices at a multigrid
-  INTEGER :: i,j,k,l,ier
+  INTEGER :: i,j,k,l,ier,ii,ij,ik
   REAL :: dis,rsz			! Distance and resizes
   REAL :: dgd(3)			! Grid spacing at a multigrid
   REAL :: coe(6,nobs)			! Coefficients at a multigrid
@@ -106,7 +119,7 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
     lvl(i) = MIN0(lvl(i),INT(ALOG(FLOAT(ngrd(i)-1))/ALOG(2.0))-1)
     lvl(i) = MAX0(lvl(i),1)
   ENDDO
-  lvl = lvl+1
+  lvl(1:2) = lvl(1:2)+1
   IF (verbal .EQ. 1) WRITE(*,2) lvl(1:3)
 2 FORMAT('STMASAna: Number of levels: ',I3)
 
@@ -117,8 +130,15 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   ALLOCATE(sln(mld(1),mld(2),mld(3)), STAT=ier)
 
   ! Start multigrid analysis:
-  mgd = 2
-  mlv = MAXVAL(lvl(1:3))
+
+  ! modified by min-ken hsieh
+  ! mgd should be determinated by slvl,
+  ! but it cannot be bigger than mld
+  DO i=1,3
+    mgd(i) = MIN0(2**(slvl-1)+1,mld(i))
+  ENDDO
+  mlv = MAXVAL(lvl(1:3))-slvl+1
+
 
   ! Multigrid cycles:
   DO l=1,mcl*2+1
@@ -131,7 +151,12 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
     ENDIF
 
     ! Through all possible levels:
-    lvc = 0
+    ! modified by min-ken hsieh
+    ! because we start from slvl
+    ! lvc are no longer starting from 0
+    !lvc = 0
+    lvc = slvl - 1
+
     DO k=1,mlv
 
       ! Redefine number of gridpoints:
@@ -151,7 +176,8 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 
       ! Initial guesses:
       IF ((l .EQ. 1) .AND. (k .EQ. 1)) &
-	sln = 0.5*(MAXVAL(obsv(1,1:nobs))-MINVAL(obsv(1,1:nobs)))
+	!sln = 0.5*(MAXVAL(obsv(1,1:nobs))-MINVAL(obsv(1,1:nobs)))
+	sln = 0.0
 
       ! Down and up cycle:
       IF (MOD(l,2) .EQ. 0) THEN
@@ -160,8 +186,17 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 	CALL Interpln(sln,mld,mgd,inc)	! Down cycle
       ENDIF
 
+      ! added by min-ken hsieh
+      ! Smooth:
+      !CALL Smoother(sln,mld,mgd)
+
       ! Analyzing:
-      CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght,bund)
+      !bound the pcp analysis on finest level
+      IF (k.EQ.mlv) THEN
+        CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght,bund,pnlt)
+      ELSE
+        CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght,0,pnlt)
+      ENDIF
 
     ENDDO
   ENDDO
@@ -173,6 +208,37 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   DEALLOCATE(sln,STAT=ier)
 
 END SUBROUTINE STMASAna
+
+SUBROUTINE Smoother(sltn,mlds,ngrd)
+
+!==========================================================
+!  This routine smooth a grid with its neighbor values 
+!
+!  HISTORY:
+!	Creation: 9-2008 by min-ken hsieh
+!==========================================================
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: mlds(3),ngrd(3)
+  REAL, INTENT(INOUT) :: sltn(mlds(1),mlds(2),mlds(3))
+
+
+  ! smooth:
+  ! x-direction
+  sltn(2:ngrd(1)-1,1:ngrd(2),1:ngrd(3)) = &
+    0.5*sltn(1:ngrd(1)-2,1:ngrd(2),1:ngrd(3))+ &
+    0.5*sltn(3:ngrd(1),1:ngrd(2),1:ngrd(3)) 
+  ! y-direction
+  sltn(1:ngrd(1),2:ngrd(2)-1,1:ngrd(3)) = &
+    0.5*sltn(1:ngrd(1),1:ngrd(2)-2,1:ngrd(3))+ &
+    0.5*sltn(1:ngrd(1),3:ngrd(2),1:ngrd(3)) 
+  ! t-direction
+  sltn(1:ngrd(1),1:ngrd(2),2:ngrd(3)-1) = &
+    0.5*sltn(1:ngrd(1),1:ngrd(2),1:ngrd(3)-2)+ &
+    0.5*sltn(1:ngrd(1),1:ngrd(2),3:ngrd(3)) 
+
+END SUBROUTINE Smoother
 
 SUBROUTINE Projectn(sltn,mlds,ngrd,incr)
 
@@ -300,13 +366,15 @@ SUBROUTINE Mul2Grid(sltn,mled,mgrd,anal,ngrd,domn)
 END SUBROUTINE Mul2Grid
 
 SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
-		    wght,bund)
+		    wght,bund,pnlt)
 
 !==========================================================
 !  This routine minimizes the STMAS cost function.
 !
 !  HISTORY:
 !	Creation: 9-2005 by YUANFU XIE.
+!       Modified: 10-2008 by min-ken hsieh.
+!                 pass in penalty for each var
 !==========================================================
 
   IMPLICIT NONE
@@ -315,6 +383,7 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
   INTEGER, INTENT(IN) :: bund
   REAL, INTENT(IN) :: obsv(4,nobs),coef(6,nobs),wght(nobs)
   REAL, INTENT(INOUT) :: sltn(mlds(1),mlds(2),mlds(3))
+  REAL, INTENT(IN) :: pnlt	!penalty for each variable
 
   !** LBFGS_B variables:
   INTEGER, PARAMETER :: msave=7		! Max iter save
@@ -341,6 +410,7 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
   REAL :: gdt(ngrd(1),ngrd(2),ngrd(3))	! Gradients
   REAL :: grd(ngrd(1),ngrd(2),ngrd(3))  ! Grid function
   REAL :: egd(ngrd(1),ngrd(2),ngrd(3))  ! Grid function
+
 
   ! Start LBFGS_B:
   ctask = 'START'
@@ -370,10 +440,10 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
   IF (ctask(1:2) .EQ. 'FG') THEN
 
     ! Function value:
-    CALL Functn3D(fcn,grd,ngrd,obsv,nobs,indx,coef,wght)
+    CALL Functn3D(fcn,grd,ngrd,obsv,nobs,indx,coef,wght,pnlt)
 
     ! Gradient values:
-    CALL Gradnt3D(gdt,grd,ngrd,obsv,nobs,indx,coef,wght)
+    CALL Gradnt3D(gdt,grd,ngrd,obsv,nobs,indx,coef,wght,pnlt)
 
     ! Check gradients:
     ! i=int(0.5*ngrd(1))
@@ -409,13 +479,15 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
 
 END SUBROUTINE Minimize
 
-SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght)
+SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
 
 !==========================================================
 !  This routine evaluates the STMAS cost function.
 !
 !  HISTORY:
 !	Creation: 9-2005 by YUANFU XIE.
+!       Modified: 10-2008 by min-ken hsieh.
+!                 pass in penalty for each var
 !==========================================================
 
   IMPLICIT NONE
@@ -423,6 +495,7 @@ SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght)
   INTEGER, INTENT(IN) :: ngrd(3),nobs,indx(6,nobs)
   REAL, INTENT(IN) :: grid(ngrd(1),ngrd(2),ngrd(3))
   REAL, INTENT(IN) :: coef(6,nobs),obsv(4,nobs),wght(nobs)
+  REAL, INTENT(IN) :: pnlt
   REAL, INTENT(OUT) :: fctn
 
   ! Local variables:
@@ -431,6 +504,7 @@ SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght)
 
   ! Initial:
   fctn = 0.0
+  penalt = pnlt
 
   ! Jo term:
   DO io=1,nobs
@@ -492,13 +566,15 @@ SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght)
 
 END SUBROUTINE Functn3D
 
-SUBROUTINE Gradnt3D(grdt,grid,ngrd,obsv,nobs,indx,coef,wght)
+SUBROUTINE Gradnt3D(grdt,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
 
 !==========================================================
 !  This routine evaluates gradients of STMAS cost function.
 !
 !  HISTORY:
 !	Creation: JUN. 2005 by YUANFU XIE.
+!       Modified: 10-2008 by min-ken hsieh.
+!                 pass in penalty for each var
 !==========================================================
 
   IMPLICIT NONE
@@ -506,6 +582,7 @@ SUBROUTINE Gradnt3D(grdt,grid,ngrd,obsv,nobs,indx,coef,wght)
   INTEGER, INTENT(IN) :: ngrd(3),nobs,indx(6,nobs)
   REAL, INTENT(IN) :: grid(ngrd(1),ngrd(2),ngrd(3))
   REAL, INTENT(IN) :: coef(6,nobs),obsv(4,nobs),wght(nobs)
+  REAL, INTENT(IN) :: pnlt
   REAL, INTENT(OUT) :: grdt(ngrd(1),ngrd(2),ngrd(3))
 
   ! Local variables:
@@ -516,6 +593,7 @@ SUBROUTINE Gradnt3D(grdt,grid,ngrd,obsv,nobs,indx,coef,wght)
 
   ! Initial:
   grdt = 0.0
+  penalt = pnlt
 
   ! Jo term:
   DO io=1,nobs
