@@ -205,8 +205,32 @@ SUBROUTINE LAPSBKGD
 	  numgrd(1),numgrd(2),err)
 	IF (err .EQ. 0) WRITE(*,13) varnam(j),i4prev(i),i,j
       ENDDO
-
-    ! Other fields:
+    !PCP1:
+    ELSE IF (varnam(j) .EQ. 'PCP1') THEN	! precip 1hr bkg	added by min-ken hsieh
+      ! Get pcp1hr fields:
+      DO i=1,numtmf
+        CALL GET_MODELFG_2D(i4prev(i),'PCP',numgrd(1),numgrd(2),bkgrnd(1,1,i,j),err)
+        IF(err .NE. 1)THEN
+          WRITE(6,*)' No model first guess preicp, using zero field'
+          bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
+        ENDIF 
+      ENDDO
+    ELSE IF (varnam(j) .EQ. 'PCP3') THEN	! precip 3hr bkg	added by min-ken hsieh
+      ! assign zero fields:
+      DO i=1,numtmf
+        bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
+      ENDDO
+    ELSE IF (varnam(j) .EQ. 'PCP6') THEN	! precip 6hr bkg	added by min-ken hsieh
+      ! assign zero fields:
+      DO i=1,numtmf
+        bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
+      ENDDO
+    ELSE IF (varnam(j) .EQ. 'PC24') THEN	! precip 24hr bkg	added by min-ken hsieh
+      ! assign zero fields:
+      DO i=1,numtmf
+        bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
+      ENDDO
+    !Other fields:
     ELSE IF ((varnam(j) .NE. 'WNDV') .AND. &	! V in with U
 	     (varnam(j) .NE. 'CEIL')) THEN	! No ceiling bkg
       DO i=1,numtmf
@@ -415,6 +439,18 @@ SUBROUTINE LAPSOBSV(m)
 	  weight(1+numobs(j):nob+numobs(j),iwv) = 1.0
 	CASE ("WNDV")
 	  ! V should be in already. See CASE ("WNDU").
+	CASE ("PCP1")						!added by min-ken hsieh
+	  rawobs(1,1+numobs(j):nob+numobs(j),j) = pc1(1:nob)
+	  weight(1+numobs(j):nob+numobs(j),j) = pcpea(1:nob)
+	CASE ("PCP3")						!added by min-ken hsieh
+	  rawobs(1,1+numobs(j):nob+numobs(j),j) = pc3(1:nob)
+	  weight(1+numobs(j):nob+numobs(j),j) = pcpea(1:nob)
+	CASE ("PCP6")						!added by min-ken hsieh
+	  rawobs(1,1+numobs(j):nob+numobs(j),j) = pc6(1:nob)
+	  weight(1+numobs(j):nob+numobs(j),j) = pcpea(1:nob)
+	CASE ("PC24")						!added by min-ken hsieh
+	  rawobs(1,1+numobs(j):nob+numobs(j),j) = p24(1:nob)
+	  weight(1+numobs(j):nob+numobs(j),j) = pcpea(1:nob)
 	CASE DEFAULT
 	  WRITE(*,22) varnam(j)
 	END SELECT
@@ -614,6 +650,22 @@ SUBROUTINE LAPSUnit
       ! Convert to pascal from mb:
       rawobs(1,1:numobs(i),i) = &
 	rawobs(1,1:numobs(i),i)*mb2pas
+    CASE ("PCP1")
+      ! Convert to meter from inch:
+      rawobs(1,1:numobs(i),i) = &
+	rawobs(1,1:numobs(i),i)*inch2m
+    CASE ("PCP3")
+      ! Convert to meter from inch:
+      rawobs(1,1:numobs(i),i) = &
+	rawobs(1,1:numobs(i),i)*inch2m
+    CASE ("PCP6")
+      ! Convert to meter from inch:
+      rawobs(1,1:numobs(i),i) = &
+	rawobs(1,1:numobs(i),i)*inch2m
+    CASE ("PC24")
+      ! Convert to meter from inch:
+      rawobs(1,1:numobs(i),i) = &
+	rawobs(1,1:numobs(i),i)*inch2m
     END SELECT
   ENDDO
 
@@ -1001,6 +1053,130 @@ SUBROUTINE STMASVer
 	ENDDO
 
 
+      CASE ("PCP1")
+	!Convert meter to mm 
+	qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)*1000.0
+
+        !time loop
+        DO kt = 1,numtmf
+	  !Convert meter to mm
+	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)*1000.0
+	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)*1000.0
+
+          write(tmtag,'(i1)') kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+	  !on precipitation we only verify obs and analysis
+          title = '1hr Precipitation verification of tmf = '//tmtag//' (meter)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+
+      CASE ("PCP3")
+	!Convert meter to mm 
+	qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)*1000.0
+
+        !time loop
+        DO kt = 1,numtmf
+	  !Convert meter to mm
+	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)*1000.0
+	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)*1000.0
+
+          write(tmtag,'(i1)') kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+	  !on precipitation we only verify obs and analysis
+          title = '3hr Precipitation verification of tmf = '//tmtag//' (meter)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+
+      CASE ("PCP6")
+	!Convert meter to mm 
+	qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)*1000.0
+
+        !time loop
+        DO kt = 1,numtmf
+	  !Convert meter to mm
+	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)*1000.0
+	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)*1000.0
+
+          write(tmtag,'(i1)') kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+	  !on precipitation we only verify obs and analysis
+          title = '6hr Precipitation verification of tmf = '//tmtag//' (meter)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+
+      CASE ("PC24")
+	!Convert meter to mm 
+	qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)*1000.0
+
+        !time loop
+        DO kt = 1,numtmf
+	  !Convert meter to mm
+	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)*1000.0
+	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)*1000.0
+
+          write(tmtag,'(i1)') kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+	  !on precipitation we only verify obs and analysis
+          title = '24hr Precipitation verification of tmf = '//tmtag//' (meter)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+
       CASE DEFAULT
         WRITE(*,22) varnam(i)
 
@@ -1051,8 +1227,18 @@ SUBROUTINE AddBkgrd
   INTEGER :: FirstCoveredGrid(2),LastCoveredGrid(2)
   INTEGER :: obstime
   LOGICAL :: uncovered(numgrd(1),numgrd(2))	!mask array
+  LOGICAL :: land(numgrd(1),numgrd(2))		!land mask
+  LOGICAL :: sameAsStn(numgrd(1),numgrd(2))	!grid land/sea is the same as stn
+  LOGICAL :: stnOverLand
+
   CHARACTER*1 :: tmtag
 
+  !initialize land array
+  DO j = 1,numgrd(2)
+    DO i = 1,numgrd(1)
+      land(i,j) = (lndfac(i,j).GT.0.0)
+    ENDDO
+  ENDDO
 
   !variable loop
   DO i=1,numvar
@@ -1069,13 +1255,25 @@ SUBROUTINE AddBkgrd
             FirstCoveredGrid(1:2) = MAX0(1,FLOOR(qc_obs(2:3,j,i))-radius(i))
             LastCoveredGrid(1:2) = MIN0(numgrd(1:2),FLOOR(qc_obs(2:3,j,i))+radius(i)+1)
 
+	    !land/water process
+            IF(lndsea(i).EQ.1) THEN
+              stnOverLand = (lndfac(INT(qc_obs(2,j,i)),INT(qc_obs(3,j,i))).GT.0.0)
+	      DO ky=FirstCoveredGrid(2),LastCoveredGrid(2)
+	        DO kx=FirstCoveredGrid(1),LastCoveredGrid(1)
+                  sameAsStn(kx,ky)= (stnOverLand .EQ. land(kx,ky))
+                ENDDO
+              ENDDO
+            ELSE
+              sameAsStn = .TRUE.
+            ENDIF
+    
             ! mask out
             DO ky=FirstCoveredGrid(2),LastCoveredGrid(2)
               DO kx=FirstCoveredGrid(1),LastCoveredGrid(1)
-	        uncovered(kx,ky) = .FALSE.
+	        uncovered(kx,ky) = .NOT.sameAsStn(kx,ky)
               ENDDO
             ENDDO
-    
+ 
           ENDIF
         ENDDO
 
@@ -1083,8 +1281,8 @@ SUBROUTINE AddBkgrd
 	write(tmtag,'(i1)') kt
         !PRINT*,varnam(i),nn
         !add background to obs
-        DO ky=1,numgrd(2),2*radius(i)
-          DO kx=1,numgrd(1),2*radius(i)
+        DO ky=1,numgrd(2),radius(i)
+          DO kx=1,numgrd(1),radius(i)
 	    IF(uncovered(kx,ky)) THEN
               nobbkg(i) = nobbkg(i)+1
               qc_obs(1,numobs(i)+nobbkg(i),i) = 0.0	!because qc_obs = obs - bkgrnd(in CpyQCObs)
