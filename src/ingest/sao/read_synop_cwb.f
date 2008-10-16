@@ -129,19 +129,35 @@ c                    combine synop data and mesonet data
 
          do j= 1,numSynop
             if ( stnNoMso(i) == stnNo(j) ) then
-               rh(j)=   rhMso(i)
-               dd(j)=   ddMso(i)
-               ff(j)=   ffMso(i)
-               wgdd(j)= wgddMso(i)
-               wgff(j)= wgffMso(i)
-               p(j)=    pMso(i)
-               sr(j)=   srMso(i)
-               st(j)=   stMso(i)
-
+               rh(j)=     rhMso(i)
+               dd(j)=     ddMso(i)
+               ff(j)=     ffMso(i)
+               wgdd(j)=   wgddMso(i)
+               wgff(j)=   wgffMso(i)
+               p(j)=      pMso(i)
+               sr(j)=     srMso(i)
+               st(j)=     stMso(i)
+c
+c modified by min-ken.hsieh
+c must assign timeObsMso here
+c or timeObs will be synop obs time
+c Also, assign mso t/td to synop t/td and tTths/tdTths
+c or we will get t/td carried with synop which only update hourly
+c
+	       t(j)=	  tMso(i)
+	       tTths(j)=  tMso(i)
+	       td(j)=	  tdMso(i)
+	       tdTths(j)= tdMso(i)
+               timeObs(j)=timeObsMso(i)
+	       pcp1hr(j)= pcp1hrMso(i)
+	       pcp3hr(j)= pcp3hrMso(i)
+	       pcp6hr(j)= pcp6hrMso(i)
+	       pcp24hr(j)= pcp24hrMso(i)
                flag= 1
                exit
             endif
          enddo 
+
 
          if ( flag /= 1 ) then
             k= k +1
@@ -640,7 +656,7 @@ c======================================================================
 
 c    larger arrays for istart and iend to read data to make processes smooth
       integer, parameter :: num40 = 40,  num70 = 70
-      integer   :: istart(num70), iend(num70), hh, flag
+      integer   :: istart(num70), iend(num70), hhmm, hh, flag
  
       character(*)  :: inpath
       character(13) :: cvt_i4time_wfo_fname13, a13time_eat
@@ -687,10 +703,17 @@ c    Fill the output arrays with something, then open the file to read.
 
       i4time_file_eat= i4time_sys +8*3600             ! convert GMT to EAT
       a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
+c
+c modified by min-ken,hsieh
+c filename include hh information
+c to read *_m.pri (to get each 15 min data) instead of *_h.pri
+c because of the data format is different
+c modified each field parsing below
+c
 
       filename= 'Data.CWB.MSO.'
      ~           //a13time_eat(1:4)//'-'//a13time_eat(5:6)            ! yyyy_mm
-     ~           //'-'//a13time_eat(7:8) //'_' //'0000' //'_h.pri'    ! dd
+     ~           //'-'//a13time_eat(7:11) //'00' //'_m.pri'    ! dd
       write(6,*) ' Mesonet file ', filename
 
       call s_len ( inpath, len_inpath )
@@ -736,86 +759,64 @@ c                  Parse the string into contiguous characters
 
       if ( istart(num40) /= 0 )  go to 100
 
+c
+c modified by min-ken,hsieh
+c because m.pri file data format is different from h.pri
+c each column means different data
+c
       ivar= 1
-      read (line(istart(ivar):iend(ivar)),'(2i2)',err=399) ihr, imin
+      read (line(istart(ivar):iend(ivar)),'(i4)',err=399) ihrmin
 
+      read (a13time_eat(10:13),'(i4)') hhmm
       read (a13time_eat(10:11),'(i2)') hh
-      if ( ihr /= hh )  go to 100
+      if ( ihrmin /= hhmm )  go to 100
 
       ivar= 2
       read (line(istart(ivar):iend(ivar)),*,err=399) cstn_id
 
-      ivar= 3
+      ivar= 9
       if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
          rstnp= badflag
       else
          read (line(istart(ivar):iend(ivar)),*,err=399) rstnp
       endif
 
-      ivar= 4
+      ivar= 13
       if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
          slp= badflag
       else
          read (line(istart(ivar):iend(ivar)),*,err=399) slp 
       endif
 
-      ivar= 5
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         ipcc= ibadflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) ipcc
-      endif
-
-      ivar= 6
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rpc= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rpc
-      endif
-
-      ivar= 7
+      ivar= 10
       if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
          rt= badflag
       else
          read (line(istart(ivar):iend(ivar)),*,err=399) rt
       endif
 
-      ivar= 10
+      ivar= 11
       if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
          rtd= badflag
       else
          read (line(istart(ivar):iend(ivar)),*,err=399) rtd
       endif
 
-      ivar= 11
+      ivar= 4
       if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
          idir= ibadflag
       else
          read (line(istart(ivar):iend(ivar)),*,err=399) idir
       endif
 
-      ivar= 12
+      ivar= 3
       if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
          rspd= badflag
       else
          read (line(istart(ivar):iend(ivar)),*,err=399) rspd
       endif
 
-      ivar= 13
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rwgff= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rwgff
-      endif
-
-      ivar= 14
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         iwgdd= ibadflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) iwgdd
-      endif
-
-      ivar= 15
+      ivar= 12
       if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
          rpcp= badflag
       elseif ( l_parse(line(istart(ivar):iend(ivar)),'000T') ) then
@@ -824,26 +825,6 @@ c                  Parse the string into contiguous characters
          read (line(istart(ivar):iend(ivar)),*,err=399) rpcp
       endif
 
-      ivar= 21
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rsr= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rsr
-      endif
-
-      ivar= 24
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         irh= ibadflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) irh
-      endif
-
-      ivar= 28
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rst= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rst
-      endif
 
       if ( num == 0 )  go to 400
 
@@ -984,12 +965,28 @@ c                          Go back for the next ob.
      ~     istatus)
 
       if ( istatus == 1 ) then
+c
+c        modified by min-ken hsieh
+c        some stn may not have enough info to calculate t24 and pcp accum.
+c        and mso_t24_pcp will return badsfc here
+c        so let's check return values before unit conversion
+c
          do i= 1,maxobs
-            t24max(i)= t24max(i) +273.15                  ! degC -> degK
-            t24min(i)= t24min(i) +273.15                  ! degC -> degK
-            pcp3hr(i)= pcp3hr(i) *0.001                   ! millimeter -> meter
-            pcp6hr(i)= pcp6hr(i) *0.001                   ! millimeter -> meter
-            pcp24hr(i)= pcp24hr(i) *0.001                 ! millimeter -> meter
+	    if (t24max(i).ne.badflag) then
+               t24max(i)= t24max(i) +273.15                  ! degC -> degK
+	    endif
+	    if (t24min(i).ne.badflag) then
+               t24min(i)= t24min(i) +273.15                  ! degC -> degK
+	    endif
+	    if (pcp3hr(i).ne.badflag) then
+               pcp3hr(i)= pcp3hr(i) *0.001                   ! millimeter -> meter
+	    endif
+	    if (pcp6hr(i).ne.badflag) then
+               pcp6hr(i)= pcp6hr(i) *0.001                   ! millimeter -> meter
+	    endif
+	    if (pcp24hr(i).ne.badflag) then
+               pcp24hr(i)= pcp24hr(i) *0.001                 ! millimeter -> meter
+	    endif
          enddo
       else
          write(6,*) ' Error estimating mso_t24_pcp '
@@ -1148,6 +1145,7 @@ c                 open two files to read data of 24 hours
          call i2a ( id, dd )
          fileDummy= 'Data.CWB.MSO.' //'20' //yy //'-' //mm //'-' //dd
      ~                                          //'_' //'0000_h.pri'     
+
          iy= iy +2000
 
          call s_len ( inpath, len_inpath )
@@ -1155,7 +1153,15 @@ c                 open two files to read data of 24 hours
 
          select case ( l ) 
          case ( 0 )
-            rewind (11)
+c
+c modified by min-ken hsieh
+c we read _m file to get other data in subroutine read_mso_cwb
+c but here we need to get pcp data from _h file
+c
+
+c           rewind (11)
+            open (11,file=inpath(1:len_inpath)//fileDummy(1:len_fname),
+     ~               status='old',err=980)
          case ( 1 )
             open (11,file=inpath(1:len_inpath)//fileDummy(1:len_fname),
      ~               status='old',err=980)
@@ -1316,7 +1322,6 @@ c                         calculate accumulated rain gauge
      ~                 stname(i), ' mesonet station ', j
             exit
          else
-            pcp24hr(i)= pcp24hr(i) +p1hr(i,j)
          endif
       enddo
       enddo
