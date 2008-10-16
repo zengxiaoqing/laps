@@ -138,14 +138,25 @@ c
 !       Ob times contained in each file
         i4_contains_early = 0 
         i4_contains_late = 0 ! 3599
-
+c
+c modified by min-ken.hsieh
+c change file time interval to 900(15min)
+c
+c
         call get_filetime_range(before,after                
      1                         ,i4_contains_early,i4_contains_late       
-     1                         ,3600                                     
+     1                         ,900                                     
      1                         ,i4time_file_b,i4time_file_a)              
 
-        do i4time_file = i4time_file_a, i4time_file_b, -3600
-
+c
+c modified by min-ken.hsieh
+c change file time interval to 900(15min)
+c temporally close this loop
+c so only the exact time-matched data file can be read
+c meanwhile itime_before/itime_after in obs_driver.nl will not be used here
+c
+c       do i4time_file = i4time_file_a, i4time_file_b, -900
+            i4time_file = i4time_sys
             maxobs_in = maxobs-ix+1
 
             write(6,*)
@@ -187,7 +198,11 @@ c    1                 ,num,istatus)                                     ! O
 
 c           ix = ix + n_local_time
 
-        enddo ! i4time_file
+c modified by min-ken,hsieh
+c close loop
+c       enddo ! i4time_file
+
+
 
 !       This might make the lines shorter when reading with 'vi'
 c       n_local_all = ix - 1
