@@ -69,7 +69,7 @@ SUBROUTINE PrPstNLs
   dir = dirstc(1:dirlen)//'stmas_mg.vr'
   OPEN(unit=11,file=dir(1:dirlen+12),form='formatted')
   DO nam=1,numvar
-    READ(11,*) varnam(nam),thresh(nam),needbk(nam),bounds(nam),radius(nam)
+    READ(11,*) varnam(nam),thresh(nam),needbk(nam),bounds(nam),radius(nam),pnlt_v(nam),lndsea(nam),slevel(nam)
   ENDDO
   CLOSE(11)
 
@@ -120,6 +120,18 @@ SUBROUTINE PrPstLSX
   REAL :: dum(numgrd(1),numgrd(2))	! Unused value
   REAL :: mrc(numgrd(1),numgrd(2))
   REAL :: dat(numgrd(1)-2*numfic(1),numgrd(2)-2*numfic(2),LSXVAR)
+
+  ! added by min-ken hsieh
+  ! declare L1S array to store 1 hr and 24 hr precip.
+  ! then output to L1S file via write_laps_data
+  REAL :: L1S(numgrd(1)-2*numfic(1),numgrd(2)-2*numfic(2),2)
+  CHARACTER*125 :: L1S_cmt(2)
+  CHARACTER*3 :: L1S_vnm(2)		! Variable names
+  CHARACTER*3 :: L1S_vun(2)		! Units
+  CHARACTER*3 :: L1S_crd(2)		! Coordinates
+
+  INTEGER :: L1S_lvl(2)			! Number of levels of each field
+
 
   ! Time frame to write out:
   DO itm = numgrd(3)-numfic(3),max0(1,numgrd(3)-numfic(3)-2),-1	! Time frame
@@ -278,6 +290,19 @@ SUBROUTINE PrPstLSX
       ! Extrapolate boundary values:
       CALL Extraplt(dat(1,1,nvr),ngd)
     CASE ("WNDV")	! V wind dealt with U
+    CASE ("PCP1")	! 1 hour precip accumulation		added by min-ken hsieh
+      ! make a copy in L1S array
+      L1S(1:ngd(1),1:ngd(2),1) = &
+        analys(numfic(1)+1:numgrd(1)-numfic(1), &
+               numfic(2)+1:numgrd(2)-numfic(2),itm,i)
+
+    CASE ("PC24")	! 24 hour precip accumulation		added by min-ken hsieh
+      ! make a copy in L1S array
+      L1S(1:ngd(1),1:ngd(2),2) = &
+        analys(numfic(1)+1:numgrd(1)-numfic(1), &
+               numfic(2)+1:numgrd(2)-numfic(2),itm,i)
+    CASE ("PCP3")
+    CASE ("PCP6")
     CASE DEFAULT
       WRITE(*,1) varnam(i)
     END SELECT
@@ -405,6 +430,25 @@ SUBROUTINE PrPstLSX
   ! Write data to a lsx file:
   CALL WRITE_LAPS_DATA(i4t,dir,ext,ngd(1),ngd(2),nvr,nvr, &
      		       vnm,lvl,crd,vun,cmt,dat,sts)
+
+  !====================
+  !  Write to L1S file:
+  !====================
+
+  ! Get the directory for L1S file:
+  ext = 'l1s'
+  CALL GET_DIRECTORY(ext,dir,len)
+  L1S_cmt(1) = 'LAPS 60 Minute Snow Accumulation'
+  L1S_cmt(2) = 'storm total precip. accum.'
+  L1S_vnm(1) = 'R01'
+  L1S_vnm(2) = 'RTO'
+  L1S_vun = 'M'
+  L1S_crd = 'MSL'
+  L1S_lvl = 0
+
+  ! Write data to a lsx file:
+  CALL WRITE_LAPS_DATA(i4t,dir,ext,ngd(1),ngd(2),2,2, &
+     		       L1S_vnm,L1S_lvl,L1S_crd,L1S_vun,L1S_cmt,L1S,sts)
 
   ! End of writing a series of time frames:
   ENDDO
