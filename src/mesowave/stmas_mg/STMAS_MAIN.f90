@@ -87,13 +87,13 @@ PROGRAM STMAS_MG
     ! Check if there is any obs for analysis:
     IF (numobs(i) .GT. 0) THEN
       ! modified by min-ken hsieh
-      ! pass stanam into STMASAna
+      ! pass stanam, varnam into STMASAna
       !
       CALL STMASAna(analys(1,1,1,i),numgrd,grdspc, &
 	domain,bkgrnd(1,1,1,i),numtmf, &
 	qc_obs(1,1,i),numobs(i),weight(1,i), stanam(1,i),&
 	obsspc(1,i),indice(1,1,i),coeffs(1,1,i), &
-	bounds(i),stmasi,stmasr)
+	bounds(i),stmasi,stmasr,varnam(i),pnlt_v(i),slevel(i))
     ELSE
       ! No analysis:
       analys(1:numgrd(1),1:numgrd(2),1:numgrd(3),i) = 0.0
