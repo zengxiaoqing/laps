@@ -140,14 +140,14 @@ if(defined $opt_s){ # "surface only"
 
 }elsif( ($opt_V eq "GSI_Prep")) { # GSI analysis or STMAS 3D analysis
     @LAPS_EXE = qw(lga.exe 
-                  ingest_pro.exe obs_driver.x sfc_qc.exe
-                  ingest_sounding.exe 
+                  obs_driver.x sfc_qc.exe
+                  ingest_pro.exe ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe obs_convert.exe
                   GSI_Prep.exe);
 }elsif( ($opt_V eq "STMAS3D")) { # GSI analysis or STMAS 3D analysis
     @LAPS_EXE = qw(lga.exe 
-                  ingest_pro.exe obs_driver.x sfc_qc.exe
-                  ingest_sounding.exe 
+                  obs_driver.x sfc_qc.exe
+                  ingest_pro.exe ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe obs_convert.exe
                   STMAS3D.exe);
 
@@ -177,8 +177,8 @@ if(defined $opt_s){ # "surface only"
 
 }elsif($opt_E eq "WNI"){  # WNI Product Set
     @LAPS_EXE = qw(lga.exe
-                  ingest_pro.exe obs_driver.x sfc_qc.exe
-                  ingest_sounding.exe
+                  obs_driver.x sfc_qc.exe
+                  ingest_pro.exe ingest_sounding.exe
                   ingest_cloud_drift.exe
                   wind.exe
                   laps_sfc.x temp.exe
@@ -190,8 +190,8 @@ if(defined $opt_s){ # "surface only"
 
 }else{      # Full product set
     @LAPS_EXE = qw(lga.exe 
-                  ingest_pro.exe obs_driver.x sfc_qc.exe
-                  ingest_sounding.exe 
+                  obs_driver.x sfc_qc.exe
+                  ingest_pro.exe ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
 		  wind.exe 
                   ingest_lrs.exe lvd_sat_ingest.exe 
