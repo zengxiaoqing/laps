@@ -2947,16 +2947,16 @@ This reference height should be approximately equal to the mean elevation of
 stations reporting surface pressure or station pressure.
 
 Continuing the pressure analysis the altimeter setting observations are 
-converted to station pressures using the standard atmosphere. Station 
-pressure observations are in turn converted to reduced pressure using 
-Poisson's equation. The (P) analysis uses the (P) background plus the 
-reduced pressure observation increments. The (P) analysis then 
+converted and added to the set of station pressures using the standard 
+atmosphere. Station pressure observations are in turn converted to reduced 
+pressure using Poisson's equation. The (P) analysis uses the (P) background 
+plus the reduced pressure observation increments. The (P) analysis then 
 uses variational techniques to constrain the surface winds and reduced 
 pressures (P) to the full equations on motion. In contrast, mean sea level 
 pressure (MSL) is a direct analysis of the MSLP observation increments 
 together with the model background 'MSL' field. The station pressure analysis
-(PS) is calculated using the model background gridded 'PS' field, together 
-with the deviations of the MSLP analysis from the MSLP background. 
+(PS) is calculated using the model background gridded 'PS' field, multiplied
+by the ratio of the MSLP analysis to the MSLP background. 
 
 Visibility is arrived at by first analyzing the surface visibility 
 observations. A second step is applied to decrease the visibility in areas
