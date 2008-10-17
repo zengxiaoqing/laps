@@ -200,7 +200,7 @@ if( defined $ENV{FXA_DATA} &&  $all_roots_equal eq "F" ) {
 
 #test if first time "data" and link need to be established
    if( ! -d "$FXA_DATA/laps_data"){
-       mkdir "$FXA_DATA/laps_data", 0777 or die "Can't make directory $FXA_DATA/laps_data";
+       mkdir "$FXA_DATA/laps_data", 0777 or die "Can't make directory $FXA_DATA/laps_data: if non-AWIPS run then please unsetenv $FXA_DATA";
        system("cp -pr $LAPS_DATA_ROOT/static $FXA_DATA/laps_data/.");
        system("cp -pr $LAPS_DATA_ROOT/cdl $FXA_DATA/laps_data/.");
        system("rm -f $FXA_DATA/laps_data/static/lvd/goes-llij\*.lut");
