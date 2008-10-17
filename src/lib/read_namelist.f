@@ -537,17 +537,10 @@ c
 
        character*150 static_dir,filename
 
-!      Read 'redp_lvl' from two places so we can catch it whereever it is
-!      located 
-
 !      Read global parameters into module memory structure
        call get_directory('static',static_dir,len_dir)
        filename = static_dir(1:len_dir)//'/nest7grid.parms'
        call read_namelist_laps('lapsparms',filename)
-
-!      Read surface parameters into module memory structure
-       filename = static_dir(1:len_dir)//'/surface_analysis.nl'
-       call read_namelist_laps('sfc_anal',filename)
 
        redp_lvl_out = redp_lvl
 
