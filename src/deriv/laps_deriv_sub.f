@@ -149,7 +149,7 @@ cdis
         logical l_flag_mvd
         logical l_flag_cloud_type
         logical l_flag_icing_index
-        logical l_flag_bogus_w, l_bogus_radar_w
+        logical l_flag_bogus_w, l_bogus_radar_w, l_deep_vv
         logical l_flag_snow_potential
         logical l_parse
 
@@ -340,6 +340,7 @@ cdis
         endif
 
         call get_deriv_parms(mode_evap,l_bogus_radar_w,              ! O
+     1                       l_deep_vv,                              ! O
      1                       vv_to_height_ratio_Cu,                  ! O
      1                       vv_to_height_ratio_Sc,                  ! O
      1                       vv_for_St,                              ! O
@@ -588,7 +589,8 @@ c read in laps lat/lon and topo
      1                vv_to_height_ratio_Cu,                               ! I
      1                vv_to_height_ratio_Sc,                               ! I
      1                vv_for_St,                                           ! I
-     1                l_flag_bogus_w,w_3d,l_bogus_radar_w,
+     1                l_flag_bogus_w,w_3d,l_bogus_radar_w,                 ! I
+     1                l_deep_vv,                                           ! I
      1                twet_snow,                                           ! I
      1                istatus)                                             ! O
         if(istatus .ne. 1)then

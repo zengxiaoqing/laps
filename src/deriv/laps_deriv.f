@@ -317,6 +317,7 @@ cdis
 
  
        subroutine get_deriv_parms(mode_evap,l_bogus_radar_w,              ! O
+     1                            l_deep_vv,                              ! O
      1                            vv_to_height_ratio_Cu,                  ! O
      1                            vv_to_height_ratio_Sc,                  ! O
      1                            vv_for_St,                              ! O
@@ -329,9 +330,9 @@ cdis
        Real vv_for_St
        Real thresh_cvr_cty_vv,thresh_cvr_lwc,twet_snow
 
-       logical l_bogus_radar_w
+       logical l_bogus_radar_w, l_deep_vv
 
-       namelist /deriv_nl/ mode_evap, l_bogus_radar_w, 
+       namelist /deriv_nl/ mode_evap, l_bogus_radar_w, l_deep_vv,
      1                     vv_to_height_ratio_Cu,
      1                     vv_to_height_ratio_Sc,
      1                     vv_for_St,
