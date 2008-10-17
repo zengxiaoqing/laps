@@ -32,6 +32,7 @@ include 'lapsparms.for'
         integer  N_PIREP
         integer max_snd_grid
         integer max_snd_levels
+        real redp_lvl
         integer vert_rad_meso
         integer vert_rad_sao
         integer vert_rad_pirep
@@ -85,6 +86,7 @@ include 'lapsparms.for'
         ,ref_base,ref_base_useable,r_hybrid_first_gate       &
         ,maxstns,N_PIREP                                     &
         ,max_snd_grid,max_snd_levels                         &
+        ,redp_lvl                                            &
         ,vert_rad_meso,vert_rad_sao                          &
         ,vert_rad_pirep,vert_rad_prof                        &
         ,silavwt_parm,toptwvl_parm                           &
@@ -97,9 +99,9 @@ include 'lapsparms.for'
         ,path_to_raw_blprass,path_to_raw_blpprofiler         &
         ,path_to_wsi_2d_radar,path_to_wsi_3d_radar           &
         ,path_to_qc_acars                                    &
-        ,path_to_metar_data,path_to_local_data               &
-        ,path_to_buoy_data,c8_project,c8_blpfmt              &
-        ,c_raddat_type, c80_description, path_to_topt30s     &
+        ,c8_project,c8_blpfmt                                &
+        ,c_raddat_type, c80_description                      &
+        ,path_to_topt30s                                     &
         ,path_to_topt10m, path_to_pctl10m, path_to_soil2m    &
         ,path_to_landuse30s,path_to_soiltype_top30s          &
         ,path_to_soiltype_bot30s,path_to_greenfrac           &
@@ -130,7 +132,7 @@ integer              :: nplevs
 ! surface_analysis variables
 integer  ::  use_lso_qc,skip_internal_qc, itheta
 logical  ::  l_require_lso
-real     ::  redp_lvl, del, gam, ak &
+real     ::  del, gam, ak &
             ,bad_t, bad_td, bad_u, bad_v, bad_p  &
             ,bad_mp, bad_th, bad_the &
             ,bad_tgd_land, bad_tgd_water, bad_vis, bad_tb8  &
@@ -148,7 +150,7 @@ integer  :: max_obs
 logical  :: l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 &
            ,l_use_metars, l_use_radar 
 integer  :: latency_co2,i4_sat_window,i4_sat_window_offset
-real     :: pct_req_lvd_s8a
+real     :: pct_req_lvd_s8a, echotop_thr_a(3)
 
 ! moisture_switch_nl variables
 integer :: print_switch, raob_switch, raob_lookback, endian, goes_switch &
@@ -195,7 +197,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,i2_missing_data, r_missing_data, MAX_RADARS &
                   ,ref_base,ref_base_useable,r_hybrid_first_gate &
                   ,maxstns,N_PIREP &
-                  ,max_snd_grid,max_snd_levels &
+                  ,max_snd_grid,max_snd_levels,redp_lvl &
                   ,vert_rad_meso,vert_rad_sao &
                   ,vert_rad_pirep,vert_rad_prof      &
                   ,silavwt_parm,toptwvl_parm &
@@ -208,7 +210,8 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,path_to_raw_blprass,path_to_raw_blpprofiler &
                   ,path_to_wsi_2d_radar,path_to_wsi_3d_radar &
                   ,path_to_qc_acars &
-                  ,c8_project,c8_blpfmt,c_raddat_type,c80_description &
+                  ,c8_project,c8_blpfmt &
+                  ,c_raddat_type, c80_description &
                   ,path_to_topt30s ,path_to_topt10m &
                   ,path_to_soiltype_top30s, path_to_soiltype_bot30s &
                   ,path_to_landuse30s,path_to_greenfrac &
@@ -233,7 +236,7 @@ namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel  &
 namelist /surface_analysis/  &
                   use_lso_qc,skip_internal_qc, itheta  &
                   ,l_require_lso  &
-                  ,redp_lvl, del, gam, ak &
+                  ,del, gam, ak &
                   ,bad_t, bad_td, bad_u, bad_v, bad_p  &
                   ,bad_mp, bad_th, bad_the &
                   ,bad_tgd_land, bad_tgd_water, bad_vis, bad_tb8  &
@@ -247,7 +250,7 @@ namelist /temp_nl/ l_read_raob_t, l_use_raob_t, l_adjust_heights  &
 namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial &
                    ,l_use_39, l_use_metars, l_use_radar &
                    ,latency_co2 &
-                   ,pct_req_lvd_s8a &
+                   ,pct_req_lvd_s8a, echotop_thr_a &
                    ,i4_sat_window,i4_sat_window_offset 
 
 namelist /moisture_switch_nl/ &
