@@ -38,7 +38,7 @@ MODULE Definition
 !  Define parameters.
 !==========================================================
 
-  INTEGER, PARAMETER :: MAXVAR=11
+  INTEGER, PARAMETER :: MAXVAR=15
   INTEGER, PARAMETER :: LSXVAR=21
 
   !****************
@@ -54,6 +54,7 @@ MODULE Definition
   REAL, PARAMETER :: knt2ms = 0.51444444	! Knot 2 m/s
   REAL, PARAMETER :: mile2m = 1609.0		! Mile to meter
   REAL, PARAMETER :: mb2pas = 100.0		! Mb 2 pascal
+  REAL, PARAMETER :: inch2m = 0.0254		! Inch to meter
   REAL, PARAMETER :: gascnt = 287.0		! Gas constant 
 						! for dry air
   REAL, PARAMETER :: spheat = 1004.0		! Specific heat 
@@ -93,6 +94,7 @@ MODULE Definition
   REAL :: mising		! Laps bad data flag
   REAL   :: badsfc		! Laps bad sfc flag
   REAL   :: thresh(MAXVAR)	! Threshold for obs agaist bkg
+  REAL   :: pnlt_v(MAXVAR)	! Penalty of each variable !added by min-ken hsieh, used in STMASAna
   REAL, ALLOCATABLE, DIMENSION(:,:) &
 	 :: latgrd,longrd	! Grid Lat/Lon
   REAL, ALLOCATABLE, DIMENSION(:,:,:) &
@@ -109,7 +111,9 @@ MODULE Definition
   INTEGER :: numvar		! Number of Analysis vars
   INTEGER :: needbk(MAXVAR)	! Add background to incements
   INTEGER :: bounds(MAXVAR)	! Bound constraints
-  INTEGER :: radius(MAXVAR)     ! Obs cover grids ! added by min-ken hsieh, used in AddBkgrnd
+  INTEGER :: radius(MAXVAR)     ! Obs cover grids ! added by min-ken hsieh, used in AddBkgrd
+  INTEGER :: lndsea(MAXVAR)     ! Land/sea process! added by min-ken hsieh, used in AddBkgrd
+  INTEGER :: slevel(MAXVAR)     ! Starting level of analysis! added by min-ken hsieh, used in STMASAna
   INTEGER :: verbal		! Print message option
   INTEGER :: savdat		! Save background and obs
   INTEGER :: saveid		! Index for saving variable
