@@ -74,6 +74,8 @@ cdis
 
 !       1992 - 2003        Steve Albers
 
+        use mem_namelist, ONLY: echotop_thr_a
+
         real temp_3d(ni,nj,nk)
         real heights_3d(ni,nj,nk)
         real temp_sfc_k(ni,nj)
@@ -119,10 +121,10 @@ cdis
         do j = 1,nj
         do i = 1,ni
             if(solar_alt(i,j) .lt. 15. .and. 
-     1          temp_sfc_k(i,j) .gt. 276.15)then ! 3 deg C - warmer evenings
-                echo_agl_thr(i,j) = 4000.
-            else
-                echo_agl_thr(i,j) = 2000.
+     1          temp_sfc_k(i,j) .gt. echotop_thr_a(3))then ! warmer evenings
+                echo_agl_thr(i,j) = echotop_thr_a(2)
+            else                                           ! colder evenings
+                echo_agl_thr(i,j) = echotop_thr_a(1)
             endif
 
             cloud_base(i,j) = unlimited_ceiling
