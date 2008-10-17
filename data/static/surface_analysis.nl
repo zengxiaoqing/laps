@@ -3,7 +3,6 @@
  skip_internal_qc = 0,
  l_require_lso = .false.,
  itheta=-1,
- redp_lvl=1500.,
  del=3.24e6,
  gam=.0001,
  ak=1.e-6, 
@@ -65,14 +64,6 @@ c..........      5 = Use 500 mb level
 c
 c..........     Recommended:  Use 700 mb most places, 500 mb over higher
 c..........                   terrain areas (like Colorado).
-c
-c.......... redp_lvl (Pressure reduction):  The main pressure analysis that 
-c               LAPS produces is a reduction to this elevation (m).  For 
-c               example, the Colorado LAPS uses 1500 m, about the elevation of
-c               Denver, since it is representative of the elevations in the 
-c               region of interest. In general this reference height should be 
-c               approximately equal to the mean elevation of stations reporting
-c               surface pressure or station pressure.
 c
 c..... comments on del, gam, ak are in the surface code
 c

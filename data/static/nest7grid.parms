@@ -54,6 +54,7 @@
  N_PIREP=3000,         
  max_snd_grid=1500,
  max_snd_levels=300,
+ redp_lvl=0.,
  aircraft_time_window=0.5,     
  vert_rad_meso=1,     
  vert_rad_sao=1,      
@@ -101,6 +102,14 @@ c
 c max_snd_grid - Total number of temperature profiles allowed
 c
 c max_snd_levels - Maximum number of temperature sounding levels allowed
+c
+c redp_lvl (Pressure reduction):  The main pressure analysis that LAPS
+c               produces is a reduction to this elevation (m).  For example,
+c               the Colorado LAPS uses 1500 m, about the elevation of
+c               Denver, since it is representative of the elevations in the 
+c               region of interest. In general this reference height should be 
+c               approximately equal to the mean elevation of stations reporting
+c               surface pressure (altimeter setting) or station pressure.
 c
 c radarext_3d - Determines input radar source for the cloud analysis.
 c               Intermediate files used are already on the LAPS grid.
@@ -197,4 +206,3 @@ c c8_blpfmt - Specify the format of boundary layer profiler data
 c             If set to 'default' the software will key off of the
 c             value of 'c8_project'. Otherwise it can be
 c             explicitly set to 'MADIS' as an override.
-
