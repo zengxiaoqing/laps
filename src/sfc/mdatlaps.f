@@ -418,18 +418,19 @@ c
 c
 c
 c.....  Now, back to the analysis.
-c.....	Convert altimeters to station pressure. Original sta pres is ignored.
+c.....	Convert altimeters to station pressure. Original sta pres is superceded
 c
+        write(6,*)' Original station pressures utilized'
  415	do j=1,n_obs_b
-	  if(alt_s(j) .le. badflag) then
-	    pstn_s(j) = badflag
-	  else
+	  if(alt_s(j) .gt. badflag) then
 	    pstn_s(j) = alt_2_sfc_press(alt_s(j), elev_s(j)) !conv alt to sp
-	  endif
+          elseif(pstn_s(j) .gt. badflag)then
+            write(6,983) j, stn(j)(1:5), pstn_s(j)
+          endif
 	enddo !j
 c
 c       We are now leaving all the original pmsl_s obs in place, regardless
-c       of whether pstn_s (i.e. alt_s) obs are present or not.
+c       of whether pstn_s obs are present or not.
 c
 	sum_diffp = 0.
 	num_diffp = 0
@@ -464,8 +465,9 @@ cc	       pmsl_s(k) = p_msl
             if(i.ge.1 .and. i.le.ni .and. j.ge.1 .and. j.le.nj)then
               diff = pred_s(k) - rp_bk(ii(k),jj(k))
               if(abs(diff) .gt. 10.)then
-                  write(6,981)k,stn(k)(1:5),pred_s(k),elev_s(k),diff
- 981		  format(' Reduced pressure flagged for ',i5,a,3f9.1)  
+                  write(6,981)k,stn(k)(1:5),pred_s(k),rp_bk(ii(k),jj(k))
+     1                       ,diff,elev_s(k)
+ 981		  format(' Reduced pressure flagged for ',i5,2x,a,3f9.1)
                   pred_s(k) = badflag
               endif
             endif
