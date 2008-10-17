@@ -180,6 +180,7 @@ C
 C     ****************************************************************
 C
       SUBROUTINE GETOPS(PLA_r4,PLO_r4,GLAT_r4,GLON_r4,RLAT_r4,WLON1_r4)       
+C                        Out     Out    In      In      In       In
 C
 C     Convert geographical lat/lon coordinates to polar stereographic
 C     ditto with the pol.ste. pole at RLAT,WLON1
@@ -354,8 +355,8 @@ C
 
       pla_r4 = PLA
       plo_r4 = PLO
-      glat_r4 = GLAT
-      glon_r4 = GLON
+!     glat_r4 = GLAT
+!     glon_r4 = GLON
       rlat_r4 = RLAT
       wlon1_r4 = WLON1
 
