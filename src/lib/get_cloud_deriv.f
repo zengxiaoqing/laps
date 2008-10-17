@@ -44,6 +44,7 @@ cdis
      1                          vv_to_height_ratio_Sc,                    ! I
      1                          vv_for_St,                                ! I
      1                          l_flag_bogus_w,omega_3d,l_bogus_radar_w,
+     1                          l_deep_vv,                                ! I
      1                          twet_snow,                                ! I
      1                          istatus)                                  ! O
 
@@ -105,7 +106,7 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 
         integer iflag_slwc
         logical   l_flag_cloud_type,l_flag_mvd,l_flag_icing_index
-     1           ,l_flag_bogus_w,l_cloud,l_bogus_radar_w
+     1           ,l_flag_bogus_w,l_cloud,l_bogus_radar_w,l_deep_vv
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(ni,nj)
@@ -550,7 +551,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
      1                           ,vv_to_height_ratio_Cu            ! I
      1                           ,vv_to_height_ratio_Sc            ! I
      1                           ,vv_for_St                        ! I
-     1                           ,l_bogus_radar_w                  ! I
+     1                           ,l_deep_vv                        ! I
      1                           ,w_1d)                            ! O
 
                   do k = 1,nk ! Transfer the 1D w (M/S) into the output 
