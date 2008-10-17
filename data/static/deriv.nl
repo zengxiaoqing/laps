@@ -1,6 +1,7 @@
  &deriv_nl
  mode_evap=0,
  l_bogus_radar_w=.true.,
+ l_deep_vv=.true.,
  vv_to_height_ratio_Cu=0.5,
  vv_to_height_ratio_Sc=0.05,
  vv_for_St=.01,
@@ -22,8 +23,12 @@ c l_bogus_radar_w - flag for whether to call 'get_radar_deriv' to recalculate
 c                   the cloud omega with consideration of radar data
 c                   'get_radar_deriv' was contributed by Adan Teng from CWB
 c
+c l_deep_vv - flag that allows control of whether to use the newer method in 
+c             'vv.f' that produces deep parabolic profiles spanning the
+c             unstable and more stratiform regions of deep convective clouds
+c             
 c vv_to_height_ratio_Cu - parameter for the cloud omega (vv.f/cloud_bogus_w)
-c                         routine (units are inverse seconds)
+c                         routine (units are 10^-3 inverse seconds)
 c                         This is used in both cloud and radar bogusing
 c
 c vv_to_height_ratio_Sc - parameter for the cloud omega (vv.f/cloud_bogus_w)
