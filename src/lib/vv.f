@@ -33,7 +33,7 @@ cdis
      1                           ,vv_to_height_ratio_Cu            ! I
      1                           ,vv_to_height_ratio_Sc            ! I
      1                           ,vv_for_St                        ! I
-     1                           ,l_bogus_radar_w                  ! I
+     1                           ,l_deep_vv                        ! I
      1                           ,w)                               ! O
 
 !Original version October 1990.
@@ -68,12 +68,10 @@ cdis
         Integer k, k1, kbase, ktop
         Real zbase, ztop
 
-        Logical l_bogus_radar_w, l_deep_vv
+        Logical l_deep_vv
 
 !   Cloud Type      /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
 !   Integer Value     0     1    2    3    4    5    6    7    8    9   10
-
-        l_deep_vv = .true.
 
 !Zero out return vector.
         Do k = 1, nk
