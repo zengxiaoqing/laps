@@ -208,6 +208,12 @@ c       write(6,*)' Doing Column ',j
 
                 if(.not. l_test)goto100 ! No Higher Echo Bottom exists
 
+                if(heights_3d(i,j,k_top) .eq. r_missing_data)then
+                    write(6,*)' ref_fill_vert: height is missing'       
+                    istatus = 0
+                    return
+                endif
+
 !               Fill in gap if it exists and is small enough
                 call latlon_to_radar(lat(i,j),lon(i,j)
      1                  ,heights_3d(i,j,k_top)
