@@ -7,6 +7,7 @@
  l_use_radar=.true.,
  latency_co2=4000,
  pct_req_lvd_s8a=75.,
+ echotop_thr_a=4000.,4000.,276.15,
  i4_sat_window=1270,
  i4_sat_window_offset=-60,
  /
@@ -40,6 +41,11 @@ c                   analysis to produce any output. Valid range is 0.-100.
 c                   A value of 0. means that IR data are not required and 
 c                   the cloud analysis will produce output anyway using the 
 c                   other data sources. 
+c
+c echotop_thr_a - 3 element array for the echo top ground clutter test
+c                 1) height threshold for cold temperatures
+c                 2) height threshold for warm temperatures
+c                 3) surface air temperature cutoff (K)
 c
 c i4_sat_window - half-width of time window for satellite data
 c
