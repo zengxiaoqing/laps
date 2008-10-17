@@ -3125,7 +3125,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
 	  etc/laps_monitor.pl
-	  etc/lfmpost.pl
+          etc/lfmpost.pl
           etc/lq3driver.pl
           etc/sched.pl
           etc/realtime.pl
@@ -3154,6 +3154,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/wrfpost.pl
           etc/xferData.pl
           etc/generate_images.pl
+          etc/models/lfmpost_scp_fuafsf.pl
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
           gui/make_gui.pl
@@ -3270,7 +3271,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/laps_input_from_archive.pl
           etc/laps_driver.pl
 	  etc/laps_monitor.pl
-	  etc/lfmpost.pl
+          etc/lfmpost.pl
           etc/lq3driver.pl
           etc/sched.pl
           etc/realtime.pl
@@ -3299,6 +3300,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/wrfpost.pl
           etc/xferData.pl
           etc/generate_images.pl
+          etc/models/lfmpost_scp_fuafsf.pl
           etc/www/nph-laps.cgi
           etc/www/laps.cgi
           gui/make_gui.pl
