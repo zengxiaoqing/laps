@@ -331,7 +331,8 @@ rdr/wideband
 ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/wps lapsprep/cdf dprep stats 
 balance balance/lt1 balance/lw3 balance/lh3 balance/lq3 balance/lsx balance/air balance/pln
 grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc
-verif verif/noBal verif/Bal verif/Bkgd gr2);
+verif verif/noBal verif/Bal verif/Bkgd 
+verif/radar verif/radar/hist verif/radar/cont gr2);
 
      if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
         print "using LAPS_DATA_ROOT nest7grid.parms for fdda dirs\n";
