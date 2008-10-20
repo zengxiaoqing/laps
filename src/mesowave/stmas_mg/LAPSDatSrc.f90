@@ -1260,7 +1260,7 @@ SUBROUTINE AddBkgrd
               stnOverLand = (lndfac(INT(qc_obs(2,j,i)),INT(qc_obs(3,j,i))).GT.0.0)
 	      DO ky=FirstCoveredGrid(2),LastCoveredGrid(2)
 	        DO kx=FirstCoveredGrid(1),LastCoveredGrid(1)
-                  sameAsStn(kx,ky)= (stnOverLand .EQ. land(kx,ky))
+                  sameAsStn(kx,ky)= (stnOverLand .EQV. land(kx,ky))
                 ENDDO
               ENDDO
             ELSE
