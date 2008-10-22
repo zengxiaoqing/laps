@@ -141,6 +141,7 @@ if ($opt_d) {
 }
 $mm = "0$mm" while(length($mm) < 2);
 $dd = "0$dd" while(length($dd) < 2);
+$hh = "0$hh" while(length($hh) < 2);
 
 # set init times for log filename
 my ($inithh, $initmm, $initdd);
