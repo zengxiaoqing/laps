@@ -13,7 +13,7 @@
       integer ni,nj,nk, istatus, i, j, k
       character*(*) var_2d
       real field_3d(ni,nj,nk), lower_bound, upper_bound, arg
-      real r_missing_data
+      real r_missing_data, arg_max
 
       if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3'.or.
      1   var_2d .eq.'USF' .or. var_2d .eq. 'VSF')then
@@ -95,6 +95,15 @@
       enddo ! i
       enddo ! j
       enddo ! k
+
+      if(var_2d.eq.'SLP')then ! check max value
+          arg_max = maxval(field_3d)
+          if(arg_max .lt. 80000.)then
+              write(6,*)' Max SLP is less than 80000.',arg_max
+              istatus = 0
+              return
+          endif
+      endif
 
       istatus = 1
       return
