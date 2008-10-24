@@ -187,14 +187,21 @@ if ($opt_m eq "ruc") {
     system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
     system("rm \*\.tar");
 
-
     if (defined $opt_g) {
         print "Degrib ruc\n";
         if (! -d $opt_g){ die "$opt_g not found! \n";}
         system ("@CSH@ @prefix@/etc/ruc_grib2netcdf.csh $opt_g $public/data/grids/ruc/hyb_A236");
     }
 
-} else {
+} elsif ($opt_m eq "fim") { # Consider removing forecasts more than 24 hours old?
+    print "Get fim\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/fsl/fim/grib/\* $public/data/gsd/fim/grib/");
+    chdir "$public/data/gsd/fim/grib/";
+    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+    system("rm \*\.tar");
+
+} else { # gfs
 
     print "Get gfs\n";
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\* $public/data/grids/gfs/grib/");
