@@ -206,13 +206,23 @@ foreach $dir (keys(%clean_dirs)){
     print "Purging in $dir $clean_dirs{$dir}\n";
     next if($#filelist < $min_files);
     $i=$#filelist;
-    my($file, $age);
+    my($file, $age,$age_thresh);
     foreach $file (sort @filelist){
         stat("$dir/$file");
         $age = -M _;
 	next if(-d "$dir/$file");
 
-        if($age > $clean_dirs{$dir} && $i >= $min_files){
+        if($file =~ "\.wgi\."){ # exception for wgi files 
+            if($clean_dirs{$dir} > 2.0){
+                $age_thresh = $clean_dirs{$dir};
+            }else{
+                $age_thresh = 2.0;
+            }
+        }else{ # non-WGI file
+            $age_thresh = $clean_dirs{$dir};
+        }
+
+        if($age > $age_thresh && $i >= $min_files){
             $i--;
             print "Removing file $dir/$file $age $clean_dirs{$dir}\n";
             system("rm -f $dir/$file") ;
