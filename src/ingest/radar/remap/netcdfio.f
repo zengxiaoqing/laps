@@ -680,6 +680,12 @@ c      Determine filename extension
 
 !      Convert integer Z count value to dbz
 
+!      From the NetCDF header
+!      Z:valid_range = 2b, -2b ;     (2 through 254)
+!      Z:below_threshold = 0b ;      (0)
+!      Z:range_ambiguous = 1b ;      (1)
+!      Z:_FillValue = -1b ;          (255)
+
        integer zcounts
        real dbz,dbz_hold,b_missing_data                         
 
@@ -694,6 +700,10 @@ c      Determine filename extension
        if(dbz_hold .lt. 0.) then
            dbz_hold = 256. + dbz_hold
        endif
+
+!      if(dbz_hold .eq. 1.)then 
+!          dbz_hold = b_missing_data  ! Range Ambiguous
+!      endif
 
        if(dbz_hold .ne. b_missing_data)then ! Scale
            dbz_hold = (dbz_hold - 2.)/2.0 - 32.
