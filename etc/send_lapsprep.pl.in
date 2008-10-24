@@ -96,14 +96,14 @@ chmod 0777, "$ftpscript";
 
 # Run the script
 print "Executing script...\n";
-system ("./$ftpscript > ../../../log/send_lapsprep_ftp.log.$hour 2>&1");
+system ("./$ftpscript > ../../../log/send_lapsprep_ftp.log.$hour\00 2>&1");
 
 # Delete the script
 unlink "$ftpscript";
 
 # Send the lapsprep file to the Mass Store
 if ($opt_m) {
-# open(MSSLOG,">../../../log/send_lapsprep_mss.log.$hour");
+# open(MSSLOG,">../../../log/send_lapsprep_mss.log.$hour\00");
   print "Copying $localfile to MSS path $opt_m\n";
 # close(MSSLOG);
   system ("/usr/local/share/bin/mssPut $localfile $opt_m");
