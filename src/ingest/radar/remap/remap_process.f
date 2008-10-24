@@ -179,9 +179,12 @@ c
       real dum_2d(NX_L,NY_L)   ! Local
       integer k_eff(NX_L,NY_L) ! Local
 c
-      logical l_unfold, l_compress_output, l_domain_read
+      logical l_unfold, l_compress_output, l_domain_read,l_ppi_mode       
       save l_domain_read
       data l_domain_read /.false./
+
+      save l_ppi_mode
+      data l_ppi_mode /.false./ ! True will map one tilt in each LAPS level
 c 
       real avgvel,vel_nyquist,vel_value,ref_value,lat_dum,lon_dum
       real v_nyquist_tilt(max_tilts)
@@ -190,7 +193,7 @@ c
       real height_grid,range_dum,range_new,azimuth,elevation_dum
       real height_guess
 c
-      integer i,j,k,k_low,ielev,igate_lut,iter,klut
+      integer i,j,k,k_low,ielev,igate_lut,iter,klut,idebug
       integer nazi,iran
       integer num_sweeps,n_rays,n_gates,n_obs_vel,n_output_data,nf
       integer igate_max
@@ -201,6 +204,7 @@ c
       integer ishow_timer,i4_elapsed
       integer i_purge
       integer init_ref_gate_hyb,init_ref_gate_actual
+      integer mingate_valid_ref,maxgate_valid_ref
 
       real rvel,azimuth_interval
       real rmax,height_max,rlat_radar,rlon_radar,rheight_radar
@@ -215,6 +219,8 @@ c
 c
 c     Beginning of executable code
 c
+      idebug = 0 ! more verbose output (0-2 range)
+
       write(6,*)
       write(6,805) i_first_scan,i_last_scan,i_tilt
   805 format(' REMAP_PROCESS > ifirst,ilast,tilt',4i5)
@@ -278,6 +284,10 @@ c       Define Lower Limit of Radar Coverage in LAPS grid
 c
         k_low = int(height_to_zcoord(rheight_radar,i_status))
         k_low = max(k_low,1)
+
+        if(l_ppi_mode)then ! for testing only
+            k_low = 1 
+        endif
 
       END IF ! initialize for 1st scan
 
@@ -411,6 +421,11 @@ c
       azimuth_interval = 360. / float(lut_azimuths)
       write(6,*)' azimuth_interval = ',azimuth_interval
 
+      write(6,*)' first azimuth = ',az_array(1)
+
+      mingate_valid_ref = 99999
+      maxgate_valid_ref = 0
+
       DO 200 jray=1, n_rays
 
         if(az_array(jray) .ne. r_missing_data)then
@@ -438,14 +453,24 @@ c
             if(k_eff(i,j) .ne. 0)then
                 k = k_eff(i,j)
                 klut = gate_elev_to_z_lut(igate_lut,ielev)
-                if(jray .eq. 1)then
-                    write(6,*)'igate,k,klut',igate,k,klut                    
+                if(jray .eq. 1 .and. idebug .ge. 1)then
+                    write(6,*)'igate,k,klut,iran,i,j'
+     1                        ,igate,k,klut,iran,i,j                  
                 endif
             else
                 k = gate_elev_to_z_lut(igate_lut,ielev)
             endif
 
             IF (k .eq. 0) GO TO 180
+
+            IF (k .lt. k_low)then
+                write(6,*)' Error: inconsistent k values - ',k,k_low
+                stop
+            ENDIF
+
+            if(l_ppi_mode)then ! for testing only
+                k = i_tilt 
+            endif
 
             IF( lgate_vel_lut(igate) ) THEN
 
@@ -503,10 +528,18 @@ c
 c               grid_ref(i,j,k) =
 c    :          grid_ref(i,j,k) + ref_value
 
+                if(jray .eq. 1 .and. idebug .ge. 2)then
+                    write(6,170)ref_value
+ 170                format(45x,'Ref = ',f8.2)
+                endif
+
                 ilut_ref = nint(ref_value * 10.) ! tenths of a dbz
                 grid_ref(i,j,k) =
      :          grid_ref(i,j,k) + dbz_to_z_lut(ilut_ref)
                 ngrids_ref(i,j,k) = ngrids_ref(i,j,k) + 1
+
+                mingate_valid_ref = min(mingate_valid_ref,igate)
+                maxgate_valid_ref = max(maxgate_valid_ref,igate)
 
               END IF
 
@@ -517,9 +550,10 @@ c    :          grid_ref(i,j,k) + ref_value
   180   CONTINUE ! igate
   200 CONTINUE ! jray
 
-      write(6,815,err=816) elevation_deg,n_obs_vel
+      write(6,815,err=816)elevation_deg,n_obs_vel
+     1                   ,mingate_valid_ref,maxgate_valid_ref
   815 format(' REMAP_PROCESS > End Ray/Gate Loop: Elev= ',F10.2
-     :      ,'  n_obs_vel = ',I9)
+     :      ,'  n_obs_vel = ',I9,' Min/Max Ref Gates ',2I7)
 
   816 I4_elapsed = ishow_timer()
 
@@ -627,7 +661,7 @@ c
                 IF (grid_ref(i,j,k) .ge. REF_MIN) THEN
 
                   n_ref_grids = n_ref_grids + 1
-                  IF(n_ref_grids .lt. 200)
+                  IF(n_ref_grids .lt. 200 .and. idebug .ge. 1)
      :               write(6,835) i,j,k,grid_ref(i,j,k)
   835                format(' Grid loc: ',3(i4,','),'  Refl: ',f6.1)
 
