@@ -147,9 +147,11 @@ c
             if(nominal_latency .ge. 0 .and. i_cycle .eq. 1)then
                 i4time_now = i4time_now_gg()
                 i4_wait = (i4time_sys + nominal_latency) - i4time_now
-                write(6,*)' Waiting for the nominal latency time '
-     1                   ,i4_wait     
-                CALL sleep(i4_wait)
+                if(i4_wait .gt. 0)then
+                    write(6,*)' Waiting for the nominal latency time '
+     1                       ,i4_wait     
+                    CALL sleep(i4_wait)
+                endif
                 I4_elapsed = ishow_timer()
             endif
 
