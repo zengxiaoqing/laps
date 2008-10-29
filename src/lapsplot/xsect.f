@@ -4158,6 +4158,8 @@ c
 
         character*5 fcst_hhmm_in,fcst_hhmm
 
+        len_model_max = 7
+
 !       call downcase(units_2d,units_2d)
 
         call s_len2(comment_2d,len_fcst)
@@ -4197,6 +4199,7 @@ c
 
 !       Model info
         if(len_model .gt. 0)then
+            len_model = min(len_model,len_model_max) 
             c_label(ist+5:ist+11+len_model) = 
      1                            c_model(1:len_model)//' Fcst'       
         else
