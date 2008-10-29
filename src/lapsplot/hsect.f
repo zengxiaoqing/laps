@@ -4695,39 +4695,18 @@ c                   cint = -1.
 
             call upcase(c_model,c_model)
 
-            ist = 37
-
             if(ext(1:3) .eq. 'fsf')then
                 len_fcst = min(len_fcst,30)
-                if(fcst_hhmm(3:4) .eq. '00')then
-                    if(len_units .gt. 0)then
-                        c_label = comment_2d(1:len_fcst)//' ('
-     1                                       //units_2d(1:len_units)
-     1                                       //')   '
-                    else
-                        c_label = comment_2d(1:len_fcst)
-                    endif
 
-                    c_label(ist:ist+5) = fcst_hhmm(1:2)//'Hr '
-                    c_label(ist+5:ist+11+len_model) = 
-     1                            c_model(1:len_model)//' Fcst'       
-                else
-                    c_label = comment_2d(1:len_fcst)//' '
-                    c_label(ist:ist+5) = fcst_hhmm(1:4)//' '
-                    c_label(ist+5:ist+11+len_model) = 
-     1                            c_model(1:len_model)//' Fcst'       
-                endif
+                call mk_fcst_hlabel(0,comment_2d(1:len_fcst),fcst_hhmm       
+     1                                 ,ext(1:3),units_2d(1:len_units)
+     1                                 ,c_model,c_label)
+
             else ! lgb
                 len_fcst = 25 
-                if(fcst_hhmm(3:4) .eq. '00')then
-                    c_label = comment_2d(1:len_fcst)
-     1                      //' '//var_2d(1:3)//' '
-                    c_label(ist:ist+8) = fcst_hhmm(1:2)//'Hr Fcst'       
-                else
-                    c_label = comment_2d(1:len_fcst)
-     1                      //' '//var_2d(1:3)//' '
-                    c_label(ist:ist+8) = fcst_hhmm(1:4)//' Fcst'       
-                endif
+                call mk_fcst_hlabel(0,comment_2d(1:len_fcst),fcst_hhmm       
+     1                                 ,ext(1:3),units_2d(1:len_units)
+     1                                 ,c_model,c_label)
 
             endif
 
@@ -7138,12 +7117,12 @@ c             if(cint.eq.0.0)cint=0.1
                 if(len_time .eq. 13)then ! yydddhhmmHHMM
                     fcst_hhmm = a14_time(10:13)
                 else                     ! yydddhhmmHHHMM
-                    fcst_hhmm = a14_time(10:13)
+                    fcst_hhmm = a14_time(10:14)
                 endif
                 call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
                 write(6,*)' Valid time = ',asc9_tim_t
 
-        elseif(len_time .eq. 4)then
+        elseif(len_time .eq. 4 .or. len_time .eq. 5)then
                 write(6,*)' len_time = ',len_time
 
                 i4time_plot = i4time_ref ! / laps_cycle_time 
@@ -7151,7 +7130,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call make_fnam_lp(i4time_plot,asc9_tim_t,istatus)
                 write(6,*)' Valid time = ',asc9_tim_t
 
-                fcst_hhmm = a14_time(1:4)
+                fcst_hhmm = a14_time(1:len_time)
 
               ! Get fcst interval
                 a14_time = asc9_tim_t//fcst_hhmm
@@ -7313,9 +7292,9 @@ c             if(cint.eq.0.0)cint=0.1
 
         character*5 fcst_hhmm_in,fcst_hhmm
 
-        c_label = ' '
+        len_model_max = 7
 
-        write(6,*)' mk_fcst_hlabel:'
+        c_label = ' '
 
         call s_len2(comment_2d,len_fcst)
         write(6,*)'comment_2d = ',comment_2d(1:len_fcst)
@@ -7327,6 +7306,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         call s_len(fcst_hhmm_in,length_fcst_in)
 
+        write(6,*)' mk_fcst_hlabel: len_model = ',len_model
+
         if(ext .eq. 'lga' .and. len_model .eq. 0)then
             write(6,*)' c_model has zero length, using lga in label'
             c_model = 'lga'
@@ -7335,18 +7316,20 @@ c             if(cint.eq.0.0)cint=0.1
         call s_len2(c_model,len_model)
         call upcase(c_model,c_model)
 
-        if(k_mb .gt. 0)then
+        if(k_mb .gt. 0)then ! 3D field
             write(c_label,102)k_mb
 102         format(I4,' hPa ')
+            ic = 10  ! Position where comment info should begin
+        else                ! sfc field
+            ic = 1   ! Position where comment info should begin
         endif
 
-        if(fcst_hhmm_in(3:4) .eq. '00')then
-            fcst_hhmm = fcst_hhmm_in(1:2)//'Hr '
+        if(fcst_hhmm_in(length_fcst_in-1:length_fcst_in) .eq. '00')then       
+            fcst_hhmm = fcst_hhmm_in(1:length_fcst_in-2)//'Hr '
         else
             fcst_hhmm = fcst_hhmm_in
         endif
 
-        ic = 10  ! Position where comment info should begin
         ist = 36 ! Position where forecast time should begin
 
         if(len_units .gt. 0)then
@@ -7361,8 +7344,10 @@ c             if(cint.eq.0.0)cint=0.1
      1                fcst_hhmm(1:length_fcst_in)//' '
 
         if(len_model .gt. 0)then
-            c_label(ist+length_fcst_in+1:ist+ic+len_model) = 
-     1                            c_model(1:len_model)//' Fcst'       
+            len_model = min(len_model,len_model_max)
+            ims = ist + length_fcst_in + 1
+            ime = ims + len_model + 4 
+            c_label(ims:ime) = c_model(1:len_model)//' Fcst'       
         else
             c_label(ist+length_fcst_in+1:ist+length_fcst_in+4) = 'Fcst'       
         endif
