@@ -43,6 +43,7 @@
          2.4 ..............  Running LAPS Analyses 
          2.4.1 ..................  Cron timing considerations
          2.4.2 ..................  Purging Output Files
+         2.4.3 ..................  STMAS and other configurations
          2.5 ..............  Test data case
          2.5.1 ..................  Analysis Only Test
          2.5.2 ..................  Ingest + Analysis Test
@@ -336,10 +337,10 @@
      LAPS implementation is working. The LAPB Branch does not have any other 
      plotting or visualization packages available for distribution with LAPS 
      at this time. Many users have interfaced LAPS with their own display 
-     software (e.g. VIS5D, AVS, IDL, NCL, GEMPAK). Feel free to post questions
-     about these to the 'laps-users' bulletin board Web Page. NCAR graphics in 
-     no way is essential to the successful running of LAPS to create output 
-     grids.
+     software (e.g. VIS5D, AVS, IDL, NCL, NCVIEW, GEMPAK). Feel free to post 
+     questions about these to the 'laps-users' bulletin board Web Page. NCAR 
+     graphics in no way is essential to the successful running of LAPS to 
+     create output grids.
       
      Another note of interest is that LAPS is visualized as an integral part of
      the AWIPS system. If you have AWIPS, then LAPS should be running on it
@@ -1438,6 +1439,26 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
  
      3) Simply edit the 'purger.pl' to change it accordingly.
 
+            ----   2.4.3 STMAS and other configurations ---
+
+     Within the LAPS cron the call to 'sched.pl' can have some optional command
+     line arguments that adjust the runtime options. The default is to run
+     both surface and 3-D analyses from the "traditional" version of LAPS.
+     Here are examples of some other alternatives:
+
+     1) STMAS surface analysis only
+
+        perl sched.pl -M stmas_mg.x [other options]
+
+        for this configuration the 'lsx.cdl' file should be replaced with the 
+        contents from 'lsx_mesowave.cdl' (e.g. after localization)
+
+        cp $LAPS_DATA_ROOT/cdl/lsx_mesowave.cdl $LAPS_DATA_ROOT/cdl/lsx.cdl  
+
+     2) "traditional" LAPS surface analysis only
+
+        perl sched.pl -M laps_sfc.x [other options]
+
                ---  2.5  Test data case  ---
 
      Tar files containing test data (called 'lapsdata*') are available that 
@@ -1536,6 +1557,10 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      of 'r' for receipt time) More about NIMBUS is detailed in publications on 
      the web at this URL:
      http://www.fsl.noaa.gov/its/papers/jb_ams94.html
+
+     Note that with the RUC grib data there are two directories. The one with 
+     soft links (and without the ".grib" at the end of the filenames) is the 
+     one to use.
 
      Time information will be needed in the form of 'data/time/systime.dat';
      this can be extracted from the 'lapsdata*' tar file.
@@ -4076,7 +4101,7 @@ Process surface:LSX  U    su       1  Surface wind u (grid north)
 		     HI   hi       1  Heat Index
 
 Process temp:   LT1  T3   t	  21  Temperature
-		     HT   z       21  Height
+		     HT   z       21  Height (geopotential meters)
 
                 PBL  PTP  ptp      1  Boundary Layer Top (pressure)
                      PDM  pdm      1  Boundary Layer Depth (in meters)
@@ -4176,7 +4201,7 @@ Process soil:   LM1  LSM  lsm      3  Soil Moisture
 LAPS Fcst Model:
                 FUA  U3   ru	  21  Fcst Model Wind u (grid north)
 		     V3   rv	  21  Fcst Model Wind v (grid east)
-		     HT	  rz	  21  Fcst Model Height
+		     HT	  rz	  21  Fcst Model Height (geopotential meters)
 		     T3	  rt	  21  Fcst Model Temperature
 		     SH	  rsh	  21  Fcst Model Specific Humidity
 		
@@ -4232,7 +4257,7 @@ Process remap:  V01  REF  refd    21  Radar reflectivity
 
 Process lga.exe (background model):
                 LGA  HT   ht      21  Model isentrop height interp to LAPS 
-                                      isobaric
+                                      isobaric (geopotential meters)
                      T3   t       21  Model isentrop temp interp to LAPS isobaric
                      SH   sh      21  Model specific humidity
                      U3   u       21  Model u wind component (grid north)
