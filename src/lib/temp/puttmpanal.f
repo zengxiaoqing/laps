@@ -65,7 +65,7 @@ cdis
 
         use mem_namelist, ONLY: l_read_raob=>l_read_raob_t 
      1                         ,l_use_raob=>l_use_raob_t
-     1                         ,l_adjust_heights
+     1                         ,mode_adjust_heights
      1                         ,weight_bkg_const=>weight_bkg_const_temp
      1                         ,pres_mix_thresh
      1                         ,rms_thresh=>rms_thresh_temp
@@ -225,7 +225,7 @@ cdis
 
 !       Height Analysis (done prior to surface temp analysis insertion)
         write(6,*)
-        if(l_adjust_heights)then ! Store model fg 500 heights
+        if(mode_adjust_heights .eq. 1)then ! Store model fg 500 heights
             arg = rlevel_of_field(50000.
      1                           ,pres_3d,ni,nj,nk,icen,jcen,istatus)
             if(istatus .ne. 1)return
@@ -254,7 +254,9 @@ cdis
         call get_heights_hydrostatic(temp_3d,pres_sfc_pa,pres_3d,sh_3d
      1                              ,topo,ni,nj,nk,heights_3d,istatus)
 
-        if(l_adjust_heights)then ! Adjust height field to model fg 500 heights
+        if(mode_adjust_heights .eq. 1)then 
+
+!           Adjust height field to model fg 500 heights
             call adjust_heights(temp_3d,heights_3d,bkg_500
      1                         ,ni,nj,nk,k_ref,istatus)
 

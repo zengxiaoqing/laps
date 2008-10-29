@@ -1,7 +1,7 @@
  &temp_nl
  l_read_raob_t=.true.,
  l_use_raob_t=.true.,
- l_adjust_heights=.true.,
+ mode_adjust_heights=1,
  weight_bkg_const_temp=5e28,
  pres_mix_thresh=20000.,
  rms_thresh_temp=1.0,
@@ -17,11 +17,11 @@ c l_use_raob_t - flag to determine whether to utilize RAOB data from the 'snd'
 c                file, given that the data are read in. This is active only 
 c                when 'l_read_raob_t' is set to .true.
 c
-c l_adjust_heights - The height field is computed using a hydrostatic 
-c                    integration of the temperatures. If the flag is .true.,
-c                    the reference level for the integration is the model 
-c                    background 500mb heights. If .false., the reference is 
-c                    the surface pressures ('PS' field) from the LSX file.
+c mode_adjust_heights - The height field is computed using a hydrostatic 
+c                       integration of the temperatures. If the flag is 1,
+c                       the reference level for the integration is the model 
+c                       background 500mb heights. If 0, the reference is 
+c                       the surface pressures ('PS' field) from the LSX file.
 c
 c weight_bkg_const_temp - Weight for Model Background. 
 c                         Recommended values: 0. < value <= 1e+30.
