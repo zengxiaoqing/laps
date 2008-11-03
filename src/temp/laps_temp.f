@@ -33,6 +33,7 @@
         real pres_3d_mb(NX_L,NY_L,NZ_L)
         real temp_sfc_k(NX_L,NY_L)
         real pres_sfc_pa(NX_L,NY_L), pres_sfc_mb(NX_L,NY_L)
+        real pres_msl_pa(NX_L,NY_L)
         real pbl_top_pa(NX_L,NY_L), pbl_top_mb(NX_L,NY_L)
         real pbl_depth_m(NX_L,NY_L)
 
@@ -95,6 +96,20 @@
             go to 999
         endif
 
+!       Read in MSL pressure data
+        var_2d = 'MSL'
+        ext = 'lsx'
+        call get_laps_2dgrid(i4time_needed,laps_cycle_time/2
+     1                      ,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,pres_msl_pa,0,istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' LAPS MSL Pres not available'
+            write(6,*)' Not calling put_temp_anal'
+            go to 999
+        endif
+
 !  ************ UPDATED ARGUMENT LIST ****************************************
 
         call put_temp_anal(i4time_needed
@@ -103,12 +118,13 @@
      1          ,lat,lon,topo                    ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
+     1          ,pres_msl_pa                     ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,grid_spacing_m                  ! Input
      1          ,comment_2d                      ! Output
      1          ,temp_3d,pres_3d_pa,istatus)     ! Output
 
-        if(iwrite_output .ge. 0)then
+        if(iwrite_output .ge. 0 .and. istatus .eq. 1)then
             call write_temp_anal(i4time_needed,NX_L,NY_L,NZ_L,temp_3d       
      1                  ,heights_3d,comment_2d,istatus)
         endif
