@@ -9,7 +9,7 @@ netcdf lw3 {
         namelen = 132;
 		
     variables:
-        //	u wind component
+        //	contingency table for 20 dbz threshold
 
 	float                                  
             t20(record,z,y,x);
@@ -23,7 +23,7 @@ netcdf lw3 {
             t20:lvl_coord="HPA ";
 	    t20:LAPS_units="NONE";
                 	        
-        //	v wind component
+        //	contingency table for 40 dbz threshold
 
 	float                                  
             t40(record,z,y,x);
@@ -37,7 +37,7 @@ netcdf lw3 {
             t40:lvl_coord="HPA ";
 	    t40:LAPS_units="NONE";
 
-        //	wind omega
+        //	contingency table for 60 dbz threshold
 
 	float                                  
             t60(record,z,y,x);
