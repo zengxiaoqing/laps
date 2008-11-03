@@ -18,10 +18,16 @@ c                file, given that the data are read in. This is active only
 c                when 'l_read_raob_t' is set to .true.
 c
 c mode_adjust_heights - The height field is computed using a hydrostatic 
-c                       integration of the temperatures. If the flag is 1,
-c                       the reference level for the integration is the model 
-c                       background 500mb heights. If 0, the reference is 
-c                       the surface pressures ('PS' field) from the LSX file.
+c                       integration of the temperatures. Flag settings:
+c
+c                       0 - the reference is the surface pressures 
+c                           ('PS' field) from the LSX file.
+c
+c                       1 - the reference level for the integration is the 
+c                           model background 500mb heights. 
+c
+c                       2 - the reference is the mean sea level pressures
+c                           ('MSL' field) from the LSX file.
 c
 c weight_bkg_const_temp - Weight for Model Background. 
 c                         Recommended values: 0. < value <= 1e+30.
