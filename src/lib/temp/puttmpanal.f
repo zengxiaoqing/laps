@@ -36,6 +36,7 @@ cdis
      1          ,lat,lon,topo                    ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
+     1          ,pres_msl_pa                     ! Input
      1          ,ilaps_cycle_time                ! Input
      1          ,grid_spacing_m                  ! Input
      1          ,comment_2d                      ! Output
@@ -81,11 +82,14 @@ cdis
         real pres_3d(ni,nj,nk)   ! Output
         real temp_sfc_k(ni,nj)   ! Input
         real pres_sfc_pa(ni,nj)  ! Input
+        real pres_msl_pa(ni,nj)  ! Input
         real theta(nk)
 
         real bkg_500(ni,nj)
 
         real lat(ni,nj),lon(ni,nj),topo(ni,nj)
+
+        real ht_ref(ni,nj),pres_ref(ni,nj)
 
         character*9 asc9_tim
 
@@ -250,11 +254,28 @@ cdis
 !       pressure as a reference. The heights_3d array will now contain the
 !       integrated heights instead of the model background heights.
 
+        if(mode_adjust_heights .eq. 0 .OR. 
+     1     mode_adjust_heights .eq. 1     )then 
+            pres_ref = pres_sfc_pa
+            ht_ref = topo
+        elseif(mode_adjust_heights .eq. 2)then ! use MSLP as a reference
+            write(6,*)' Hydrostatic integration - MSLP reference'
+            pres_ref = pres_msl_pa
+            ht_ref = 0.
+        else
+            write(6,*)' ERROR: mode_adjust_heights = '
+     1                        ,mode_adjust_heights
+            istatus = 0
+            return
+        endif
+
         write(6,*)' Calling get_heights_hydrostatic'
-        call get_heights_hydrostatic(temp_3d,pres_sfc_pa,pres_3d,sh_3d
-     1                              ,topo,ni,nj,nk,heights_3d,istatus)
+        call get_heights_hydrostatic(temp_3d,pres_ref,pres_3d,sh_3d
+     1                              ,ht_ref,ni,nj,nk,heights_3d,istatus)       
 
         if(mode_adjust_heights .eq. 1)then 
+
+            write(6,*)' Hydrostatic integration - 500mb ht reference'
 
 !           Adjust height field to model fg 500 heights
             call adjust_heights(temp_3d,heights_3d,bkg_500
