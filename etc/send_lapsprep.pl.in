@@ -83,12 +83,14 @@ my $ftpscript = "ftp.lapsprep";
 open(FS,">$ftpscript");
 print FS "#!/bin/sh\n";
 print FS "set -x \n";
+print FS "date\n";
 print FS "sftp -v $remotehost << !\n";
 print FS "cd $remotedir/$model\n";
 #print FS "bin\n";
 print FS "put $filename\n";
 print FS "bye \n";
 print FS "!\n";
+print FS "date\n";
 print FS "exit\n";
 
 close(FS);
