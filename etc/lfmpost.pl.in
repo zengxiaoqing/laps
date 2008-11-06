@@ -27,7 +27,7 @@ use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_
 use Getopt::Std;
 getopts('l:m:r:d:g:f:i:p:s:w:e:y:P:q');
 
-my $fileWait_time = 120; #Number of seconds to sleep after file copy for stability
+my $fileWait_time = 20; #Number of seconds to sleep after file copy for stability
 
 $project = $opt_P if defined($opt_P);
 
