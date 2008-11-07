@@ -321,12 +321,12 @@ for ($n=0; $n<$nfcst; $n++) {
   system ("date");
   my $mss_cmd;
 
-  $mss_cmd = "/usr/local/esrl/bin/mssPut $modelroot/$date/wrfprd/d01/fua/$fua_file /mss2/fsl/frd/lapb/hmt_2008/fua/wrf-$opt_a";
+  $mss_cmd = "cp $modelroot/$date/wrfprd/d01/fua/$fua_file /mss/fsl/frd/lapb/hmt_2008/fua/wrf-$opt_a";
   print "Running command: $mss_cmd\n";
   system ($mss_cmd);
   system ("date");
 
-  $mss_cmd = "/usr/local/esrl/bin/mssPut $modelroot/$date/wrfprd/d01/fsf/$fsf_file /mss2/fsl/frd/lapb/hmt_2008/fsf/wrf-$opt_a";
+  $mss_cmd = "cp $modelroot/$date/wrfprd/d01/fsf/$fsf_file /mss/fsl/frd/lapb/hmt_2008/fsf/wrf-$opt_a";
   print "Running command: $mss_cmd\n";
   system ($mss_cmd);
   system ("date");
