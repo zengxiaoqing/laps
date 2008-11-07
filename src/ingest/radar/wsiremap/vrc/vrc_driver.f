@@ -235,19 +235,22 @@ c
 
           n=index(c_filespec,' ')
 
-          write(6,*)'Directory_wait: ',c_filespec(1:n)
-          write(6,*)
-          write(6,*)'Calling wait_for_data'
-          write(6,*)'check-interval, total_wait, thresh age'
-          write(6,*)i4_check_interval,i4_total_wait,i4_thresh_age
+          if(.not. l_archive)then
+              write(6,*)'Directory_wait: ',c_filespec(1:n)
+              write(6,*)
+              write(6,*)'Calling wait_for_data'
+              write(6,*)'check-interval, total_wait, thresh age'
+              write(6,*)i4_check_interval,i4_total_wait,i4_thresh_age
 
-          call wait_for_data(c_filespec,i4time_latest_vrc
+              call wait_for_data(c_filespec,i4time_latest_vrc
      1               ,i4_check_interval,i4_total_wait
      1               ,i4_thresh_age
      1               ,istatus)
-          if(istatus .ne.1)then
-             write(6,*)'wait for data did not find the data'
-             goto 998
+              if(istatus .ne.1)then
+                 write(6,*)'wait for data did not find the data'
+                goto 998
+              endif
+
           endif
 
        elseif(i4time_latest_diff.gt.i4_thresh_age)then
@@ -445,7 +448,9 @@ c
 1001   write(6,*)
        write(6,*)' Call map_aoml_sub'
        if(.true.)then
-          call map_aoml_sub(nx_l,ny_l,aoml_path_in,vrc_outdir,istatus)       
+          call map_aoml_sub(nx_l,ny_l,aoml_path_in,vrc_outdir         ! I
+     1                     ,i4time_sys,laps_cycle_time                ! I
+     1                     ,istatus)                                  ! O
        endif
 
        write(6,*)'Normal completion of vrc_driver'
