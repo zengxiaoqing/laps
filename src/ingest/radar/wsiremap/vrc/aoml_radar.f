@@ -1,7 +1,8 @@
 
 
-      subroutine map_aoml_sub(nilaps,njlaps,aoml_path_in,vrc_outdir
-     1                       ,istatus)
+      subroutine map_aoml_sub(nilaps,njlaps,aoml_path_in,vrc_outdir    ! I
+     1                       ,i4time_sys,laps_cycle_time               ! I
+     1                       ,istatus)                                 ! O
 
       real lat(nilaps,njlaps)
       real lon(nilaps,njlaps)
@@ -37,6 +38,9 @@ c read in laps lat/lon and topo
           istatus = 0
           return
       endif
+
+      i4time_proc_end  = i4time_sys + laps_cycle_time/2 + 1800
+      i4time_proc_strt = i4time_sys - laps_cycle_time/2 - 1800
 
 !     Get times of output files
       i_vrc = 2
@@ -98,30 +102,38 @@ c read in laps lat/lon and topo
           i4time_file_in = cvt_wfo_fname13_i4time(wfo_fname13)
           write(6,*)' i4time_file_in = ',i4time_file_in
 
-!         Check for a match with output file times
-          l_match = .false.
-          do ifile_out = 1,i_nbr_files_out
-              if(i4time_file_in .eq. i4times_out(ifile_out))then
-                  l_match = .true.
-              endif
-          enddo ! ifile_out
+          if(i4time_file_in .ge. i4time_proc_strt .AND.
+     1       i4time_file_in .le. i4time_proc_end        )then 
 
-          if(.not. l_match)then
-              write(6,*)' No output match - processing this time'
-              call map_aoml_sweep(nilaps,njlaps,lat,lon,dbz,fname_in
+!             Check for a match with output file times
+              l_match = .false.
+              do ifile_out = 1,i_nbr_files_out
+                  if(i4time_file_in .eq. i4times_out(ifile_out))then
+                    l_match = .true.
+                  endif
+              enddo ! ifile_out
+
+              if(.not. l_match)then
+                  write(6,*)' No output match - processing this time'
+                  call map_aoml_sweep(nilaps,njlaps,lat,lon,dbz,fname_in
      1                           ,r_missing_data
      1                           ,rlat_radar,rlon_radar)
 
-              write(6,*)' calling put_vrc ',vrc_outdir
+                  write(6,*)' calling put_vrc ',vrc_outdir
 
-              call put_vrc(i4time_file_in,comment_2d 
-     1                    ,rlat_radar,rlon_radar,rheight_radar
-     1                    ,lat,lon,topo
-     1                    ,dbz,nilaps,njlaps,i_vrc
-     1                    ,vrc_outdir,r_missing_data,istatus)
+                  call put_vrc(i4time_file_in,comment_2d 
+     1                        ,rlat_radar,rlon_radar,rheight_radar
+     1                        ,lat,lon,topo
+     1                        ,dbz,nilaps,njlaps,i_vrc
+     1                        ,vrc_outdir,r_missing_data,istatus)
+
+              else
+                  write(6,*)' Output already exists - skip this time'
+
+              endif
 
           else
-              write(6,*)' Output already exists - skip this time'
+              write(6,*)' Outside Time Window'
 
           endif
 
