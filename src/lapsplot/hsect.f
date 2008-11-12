@@ -7030,8 +7030,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         write(6,*)' Available files in ',directory(1:len_dir)
         if(nfiles .ge. 1)then
-            call s_len(c_filenames(1),len_fname)
             do i = 1,nfiles
+                call s_len(c_filenames(i),len_fname)
                 write(6,*)c_filenames(i)(1:len_fname)
             enddo
         endif
