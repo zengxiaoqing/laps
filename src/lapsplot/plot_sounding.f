@@ -12,6 +12,7 @@
         real pres_2d(NX_L,NY_L)
         real t_2d(NX_L,NY_L)
         real td_2d(NX_L,NY_L)
+        real pw_2d(NX_L,NY_L)
         real lat(NX_L,NY_L)
         real lon(NX_L,NY_L)
 
@@ -37,6 +38,7 @@
         character*4 c4_string
         character*33 c33_label
         character*16 c16_latlon
+        character*11 c_pw
 
         integer i_overlay
         save i_overlay
@@ -239,7 +241,7 @@
 
         endif
 
-!       Read in sfc data (pressure, temp, dewpoint)
+!       Read in sfc data (pressure, temp, dewpoint, tpw)
         if(c_prodtype .eq. 'A')then ! Read LSX
             ext = 'lsx'
 
@@ -259,6 +261,13 @@
             call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,td_2d,0,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
+            ext = 'lh4'
+            var_2d = 'TPW'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,pw_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto100
 
         elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
@@ -324,8 +333,10 @@
         logp_sfc = log(p_sfc_pa)
         t_sfc_k  = t_2d(isound,jsound)
         td_sfc_k = td_2d(isound,jsound)
+        pw_sfc   = pw_2d(isound,jsound)
 
         write(6,*)' Sfc P = ', p_sfc_pa
+        write(6,*)' TPW = ', pw_sfc
 
 !       Read Wind (a la xsect)
 
@@ -544,6 +555,14 @@
      1                            ,plot_parms,namelist_parms
      1                            ,i_overlay,'sound')
         endif
+
+!       Plot TPW value
+        ix = 800
+        iy = 180
+        rsize = .010
+        write(c_pw,890)pw_sfc*100. ! convert M to CM
+ 890    format('IWV = ',f5.2)
+        CALL PCHIQU (cpux(ix),cpux(iy),c_pw,rsize,0,-1.0)
 
         write(6,*)' Sounding has been plotted...'
 
