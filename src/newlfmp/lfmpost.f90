@@ -16,9 +16,17 @@ character(len=9) :: a9time
 character(len=4) :: fcst_hhmm
 character(len=2) :: adomnum,domnum_str
 
+!beka 
+integer ISTAT, I4_elapsed, ishow_timer, init_timer
+
 logical :: back
 
 ! Read command line arguments.
+
+!beka
+
+	ISTAT = INIT_TIMER()
+
 
 narg=iargc()
 if (narg /= 6) call usage
@@ -185,7 +193,14 @@ endif
 
 if (trim(mtype) /= 'st4') then
  call alloc_isobaric_grid
+
+!beka
+	I4_elapsed = ishow_timer()
+
  call lfm_vinterp
+
+!beka
+	I4_elapsed = ishow_timer()
 
  if (verbose) then
     print*,' '

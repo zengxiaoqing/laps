@@ -29,6 +29,10 @@ character(len=9) :: gtime
 character(len=5) :: fcst_hhmm
 character(len=2) :: domnum_str
 
+!beka
+integer ISTAT, I4_elapsed, ishow_timer, init_timer
+
+
 ! LW assign domnum_in, from calling args, to domnum, declared in lfmgrid module
 domnum = domnum_in
 
@@ -62,7 +66,10 @@ if (trim(mtype) /= 'st4') then
 
   call cvt_fname_v3(output_dir,gtime,fcst_hhmm,'fua',3,output_file  &
                    ,fnlen,istatus)
+!beka
 
+	I4_elapsed = ishow_timer()
+	
   print*,' '
   print*,'Writing 3d fields to netcdf: ',trim(output_file)
   lvls3d=lvls3d*0.01
@@ -77,6 +84,9 @@ if (trim(mtype) /= 'st4') then
   elseif (verbose) then
      print*,'Done writing 3d netcdf file.'
   endif
+
+!beka
+	I4_elapsed = ishow_timer()
 
   if (realtime .and. istatus == 1 .and. make_donefile) then
      donefile=trim(output_file)//'.done'
