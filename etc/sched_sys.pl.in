@@ -1,0 +1,165 @@
+#!@PERL@
+# This script runs LAPS analyses. The default is for realtime operation.
+#
+# Command line arguments
+#
+# -a                   Run for archive time, specified by number of seconds since
+#                      Jan 1 1970 at 0000 UTC
+#
+# -A                   Run for input analysis time specified as dd-mmm-yyyy-hhmm
+#                      which can also be a substitute input for archive time
+#                      Eg., 28-Aug-2002-1200. Purger is not run unless -r or -t is
+#                      specified.
+#
+# -d                   Delay in hours (lag time or displaced real-time). This generally 
+#                      should be set in cases where the wall clock time of the run will 
+#                      differ from the analysis time by more than the laps cycle time.
+#
+# -e                   Extend time in hours (allow for long runs beyond cycle time)
+#
+#
+# -r -m N              where "N" is the (default) maximum number of files 
+#                      to be kept in each product directory by the purger
+#
+# -t                   override default purge time expressed in days
+#
+# -l                   Write logs in LAPS_DATA_ROOT/log, even if on AWIPS
+#
+# -p T                 Advance analyses by T minutes for balanced output at systime + T
+#
+# -f                   format to print date in, yydddhhmm (default if not specified)
+#                                               mm        (month)
+#
+# second to last arg   $LAPSINSTALLROOT, one level above bin directory
+#
+# last arg             $LAPS_DATA_ROOT, path to data directory
+               
+use strict;
+use English;
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
+            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_W);
+use Getopt::Std;
+
+umask 002;
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslvp:TW');
+
+my $initial_time = time();
+
+my $LAPSROOT=shift || die "LAPS root directory required\n";
+
+$ENV{LAPS_DATA_ROOT} = shift || die "LAPS_DATA_ROOT directory required\n";
+$ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
+my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+
+require "$LAPSROOT/etc/laps_tools.pm";
+require "$LAPSROOT/etc/oputil.pm";
+
+#
+# List here the laps products to be executed in the order that they should 
+# be executed.
+#
+
+
+my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/nest7grid.parms",'laps_cycle_time');
+$cycle_time[0]=~/^(\d+),/;
+my $cycle_time = ($1>0)?$1:3600;
+$cycle_time = $opt_c if($opt_c>0);
+
+my $cycle_time_min = int($cycle_time/60);
+$cycle_time_min="0".$cycle_time_min if(length($cycle_time_min)<2);
+
+my $cycle_time_hr  = int($cycle_time/3600);
+$cycle_time_hr="0".$cycle_time_hr if(length($cycle_time_hr)<2);
+
+my $delay_time = 0;
+$delay_time = $opt_d if($opt_d > 0);
+
+my $extend_time=0;
+if(defined $opt_e){ # allow extend time to be either positive or negative
+    $extend_time = $opt_e;
+}
+
+my $archive_time = 0;
+$archive_time = $opt_a if($opt_a > 0);
+
+my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+
+if(defined $opt_A){
+   if(length($opt_A) != 16){
+      print "USAGE: use -A to input time with the following format\n";
+      print "dd-mmm-yyyy-hhmm. Eg., 28-Aug-2002-1200 \n";
+      exit;
+   }
+   my $mon=0;
+   my ($day, $month, $year, $hoursmin)=split /\-/, $opt_A;
+   my $hours   = substr($hoursmin,0,2);
+   my $minutes = substr($hoursmin,2,2);
+   foreach (@MON){
+       if($_ eq (uc $month)){last;}
+       $mon++;
+   }
+   $mon=$mon+1;
+   $mon="0".$mon if(length($mon)<2);
+
+   $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
+
+#  $archive_time = &seconds_since_1970($opt_A,$LAPSROOT,$LAPS_DATA_ROOT);
+}
+
+#
+#  - The second argument is the time delay in hours to 
+#  set the systime.dat file, if you're data arrives more than 1 hour 
+#  behind it's valid time set this variable to delay the laps cycle.
+#
+#  - The '1' (last input) tells sub systime to write ctime.dat and systime.dat; otherwise, not. 
+#
+#  - If archive time is defined and set to i4time70, then yydddhhmm corresponds exactly to archive_time
+#
+
+my $yydddhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time,'1');
+
+if($opt_f eq "mm"){
+   my $ddd = substr($yydddhhmm,2,3);
+   my $yy  = substr($yydddhhmm,0,2);
+   my @mmmdd=&time::JJJ2MMDD($ddd,$yy);
+   my $mm = @mmmdd[0];
+   $mm="0".$mm if(length($mm)<2);
+   print "$mm\n";
+}else{
+   print "$yydddhhmm\n";
+}
+
+
+#
+#------------------------------------------------------------------------
+#
+sub parse_namelist{
+    my($namelist,@variables) = @_;
+    my(@ans);
+    open(NL,$namelist);
+    my @nl = <NL>;
+    close(NL);
+    my $i;
+    for($i=0;$i<=$#nl;$i++){
+	next if($nl[$i] =~ /^\s*&/);
+	next if($nl[$i] =~ /^\s*\//);
+	next if($nl[$i] =~ /^[\!c]/i);
+
+	my $j;
+	for($j=0;$j<=$#variables;$j++){
+
+#	    print "here $variables[$j] $nl[$i]\n";
+            
+	    if($nl[$i] =~ /^\s+$variables[$j]\s*=\s*(.*)$/i){
+		my $ans = $1;
+		$i++;
+		while($nl[$i++]=~/^\s*([^=]+)$/){
+		    $ans.=$1;
+		}
+		$i--;
+		$ans[$j]=$ans;
+	    }
+	}	
+    }
+    return(@ans);
+}
