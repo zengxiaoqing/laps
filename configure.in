@@ -434,11 +434,13 @@ AC_OUTPUT(src/include/trigd.inc
           etc/lfmpost.pl
           etc/lq3driver.pl
           etc/sched.pl
+          etc/sched_sys.pl
           etc/realtime.pl
           etc/ramrsf.pl
           etc/localize_optran.pl
           etc/localize_domain.pl
           etc/makedatadirs.pl
+          etc/msslaps.csh
           etc/prebuild_sms.pl
           etc/purger.pl
           etc/purge_wideband.pl
