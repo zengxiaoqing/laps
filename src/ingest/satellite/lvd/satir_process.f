@@ -128,7 +128,10 @@ c
           badlow=148.486
           badhigh=291.182
        elseif(c_type.eq.'4u'.or.c_type.eq.'i39')then
-          badlow=205.908
+c per Eric Gregow 22 Aug 2008 -- get the IR channels ingested without any exclusion
+c of points (that were previously set to missing values)
+c         badlow=205.908
+          badlow=185.
           badhigh=341.786
        elseif(c_type.eq.'11u'.or.c_type.eq.'i11')then
           badlow=112.105

@@ -70,7 +70,10 @@ c
       if(smsng.gt.0.0)then
          rhigh=550.  !smsng
       else
-         rhigh=255.
+c per Eric Gregow 22 Aug 2008 -- get the IR channels ingested without any exclusion
+c of points (that were previously set to missing values)
+c        rhigh=255.
+         rhigh=350.
       endif
 
       if(csatid.ne.'gmssat'.and.csatid.ne.'meteos')then
