@@ -67,7 +67,6 @@ install: lib
 clean:
 	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
 
-
 distclean: clean
 
 ifdef USECPP

@@ -13,9 +13,9 @@
       integer ilineend
       integer ielemstart
       integer ielemend
-c     integer*4 i_grid_spacing_2
+c     integer i_grid_spacing_2
       integer istatus
-c     integer*4 jstatus
+c     integer jstatus
 
 c     real grid_spacing
       real r_llij_lut_ri(nxl+idx,nyl+idx)
@@ -63,7 +63,7 @@ c
          rlinestart=0.0
          istatus = 0
       endif
-      if(ilineend.gt.max_lines)then
+      if(ilineend.gt.max_elems)then
          write(6,*)'WARNING: LAPS exceeds sothrn Sat bndry!'
          print*,'lineend = ',ilineend
          istatus = 0
@@ -74,7 +74,7 @@ c
          relemstart=0.0
          istatus = 0
       endif
-      if(ielemend.gt.max_elems)then
+      if(ielemend.gt.max_lines)then
          write(6,*)'WARNING: LAPS exceeds eastrn Sat bndry!'
          print*,'elemend = ',ielemend
          istatus = 0

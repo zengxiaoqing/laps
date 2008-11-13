@@ -73,13 +73,13 @@ cc      INTEGER GOVISMD    !GOES Vis Mode
       Integer GOLATSBPI
       Integer GOALPHAI
 
-cc      REAL*4 GODELTA       !GOES Delta
-cc      REAL*4 GOZETA        !GOES Zeta
-cc      REAL*4 GOETA         !GOES Eta
-cc      REAL*4 GORHO         !GOES Rho
-cc      REAL*4 GOSBSCN       !Scanline of Satellite subpoint
-cc      REAL*4 GOSBSAMP      !Pixel of Satellite subpoint
-cc      REAL*4 GOGEOCAL      !GOES Geoc altitude????     
+cc      REAL GODELTA       !GOES Delta
+cc      REAL GOZETA        !GOES Zeta
+cc      REAL GOETA         !GOES Eta
+cc      REAL GORHO         !GOES Rho
+cc      REAL GOSBSCN       !Scanline of Satellite subpoint
+cc      REAL GOSBSAMP      !Pixel of Satellite subpoint
+cc      REAL GOGEOCAL      !GOES Geoc altitude????     
 cc      INTEGER SPARE2(6)  !Spare Bytes not currently used
 
       INTEGER BEPIXFC    !Begin Pixel First Cell
@@ -118,14 +118,14 @@ cc      REAL*8 MIDTIME       !Midpoint Time
  
 cc      INTEGER STCI       !Start Time of Complete Image
 cc      BYTE CHAN            !Channel 1=IR1, 2=IR2, 3=IR3, 4=Water Vap
-cc      REAL*4 ROTANG        !Rotation Angle between Aries and Greenwich
-cc      REAL*4 ABSMAG        !Absolute Magnitude of craft in inertial 
-                           !reference frame
-cc      REAL*4 SATERTH(3,3)  !Satellite to Earth Tranformation Matrix
-cc      REAL*4 POINTVC       !Pointing Vector Component
-cc      REAL*4 SATVEC(3)     !Satellite Position Vector
-cc      REAL*4 RMA           !Role Misalignment Angle
-cc      REAL*4 PMA           !Pitch Misalignment Angle
+cc      REAL ROTANG        !Rotation Angle between Aries and Greenwich
+cc      REAL ABSMAG        !Absolute Magnitude of craft in inertial 
+                          !reference frame
+cc      REAL SATERTH(3,3)  !Satellite to Earth Tranformation Matrix
+cc      REAL POINTVC       !Pointing Vector Component
+cc      REAL SATVEC(3)     !Satellite Position Vector
+cc      REAL RMA           !Role Misalignment Angle
+cc      REAL PMA           !Pitch Misalignment Angle
 
       real*8   r8dttop
       real*8   r8dtbot
