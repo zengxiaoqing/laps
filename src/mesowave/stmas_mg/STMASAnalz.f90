@@ -34,6 +34,7 @@ MODULE STMASAnalz
 !	Creation: 9-2005 by YUANFU XIE.
 !       Modification:
 !                 10-2008 by min-ken hsieh
+!                 11-2008 by min-ken hsieh
 !                 STMASAna
 !                 Functn3D
 !                 Gradnt3D
@@ -45,7 +46,7 @@ CONTAINS
 
 SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 		    obsv,nobs,wght,stna,ospc,indx, &
-		    coef, bund,ipar,rpar,vnam,pnlt,slvl)
+		    coef, bund,ipar,rpar,vnam,pnlt,slvl,ucvr)
 		    
 
 !==========================================================
@@ -62,6 +63,11 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 !                 bound option only apply to last level
 !                 pass in penalty for each var
 !                 pass in slevel for each var
+!       Modification:
+!                 11-2008 by min-ken hsieh
+!                 pass in uncovr for each var
+!                 call IntplBkg to interpolate bkg to multigrid
+!                 and pass interpolated bkg and uncover (hbg/huc) to Minimize
 !==========================================================
 
   IMPLICIT NONE
@@ -88,6 +94,8 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 
   REAL, INTENT(INOUT) :: anal(ngrd(1),ngrd(2),ngrd(3))
 
+  LOGICAL, INTENT(IN) :: ucvr(ngrd(1),ngrd(2),ngrd(3)) !uncovered array by min-ken
+
   ! Local variables:
   INTEGER :: lvl(3)			! Number of multigrid levels
   INTEGER :: lvc(3)			! Account of the levels
@@ -103,6 +111,9 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   REAL :: coe(6,nobs)			! Coefficients at a multigrid
   REAL, ALLOCATABLE, DIMENSION(:,:,:) &
        :: sln				! Multigrid solutions
+  INTEGER, ALLOCATABLE, DIMENSION(:,:,:) &
+       :: huc				! Interpolated uncover by min-ken
+
 
   ! Number of multigrid V-cycles:
   mcl = 0
@@ -128,7 +139,10 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 
   ! Allocate memory for mutligrid solutions:
   ALLOCATE(sln(mld(1),mld(2),mld(3)), STAT=ier)
-
+  
+  ! Allocate interpolated bkg and uncover
+  ALLOCATE(huc(mld(1),mld(2),mld(3)), STAT=ier)
+  
   ! Start multigrid analysis:
 
   ! modified by min-ken hsieh
@@ -174,6 +188,10 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
       dgd = (domn(2,1:3)-domn(1,1:3))/FLOAT(mgd-1)
       CALL Grid2Obs(idx,coe,obsv,nobs,wght,stna,mgd,dgd,domn)
 
+      ! added by min-ken hsieh
+      ! Interpolate a background to multigrid
+      CALL IntplBkg(ucvr,ngrd,huc,mgd,mld,dgd,dxyt,domn)
+
       ! Initial guesses:
       IF ((l .EQ. 1) .AND. (k .EQ. 1)) &
 	!sln = 0.5*(MAXVAL(obsv(1,1:nobs))-MINVAL(obsv(1,1:nobs)))
@@ -193,9 +211,9 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
       ! Analyzing:
       !bound the pcp analysis on finest level
       IF (k.EQ.mlv) THEN
-        CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght,bund,pnlt)
+        CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght,bund,pnlt,huc)
       ELSE
-        CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght,0,pnlt)
+        CALL Minimize(sln,mld,mgd,obsv,nobs,idx,coe,wght,0,pnlt,huc)
       ENDIF
 
     ENDDO
@@ -206,6 +224,7 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 
   ! Deallocate multigrid:
   DEALLOCATE(sln,STAT=ier)
+  DEALLOCATE(huc,STAT=ier)
 
 END SUBROUTINE STMASAna
 
@@ -366,7 +385,7 @@ SUBROUTINE Mul2Grid(sltn,mled,mgrd,anal,ngrd,domn)
 END SUBROUTINE Mul2Grid
 
 SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
-		    wght,bund,pnlt)
+		    wght,bund,pnlt,huc)
 
 !==========================================================
 !  This routine minimizes the STMAS cost function.
@@ -375,6 +394,8 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
 !	Creation: 9-2005 by YUANFU XIE.
 !       Modified: 10-2008 by min-ken hsieh.
 !                 pass in penalty for each var
+!       Modified: 11-2008 by min-ken hsieh.
+!                 pass in hbg,huc to calcualte Jb
 !==========================================================
 
   IMPLICIT NONE
@@ -384,6 +405,8 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
   REAL, INTENT(IN) :: obsv(4,nobs),coef(6,nobs),wght(nobs)
   REAL, INTENT(INOUT) :: sltn(mlds(1),mlds(2),mlds(3))
   REAL, INTENT(IN) :: pnlt	!penalty for each variable
+
+  INTEGER, INTENT(IN) :: huc(mlds(1),mlds(2),mlds(3))	! interpolated uncover array by min-ken
 
   !** LBFGS_B variables:
   INTEGER, PARAMETER :: msave=7		! Max iter save
@@ -410,6 +433,7 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
   REAL :: gdt(ngrd(1),ngrd(2),ngrd(3))	! Gradients
   REAL :: grd(ngrd(1),ngrd(2),ngrd(3))  ! Grid function
   REAL :: egd(ngrd(1),ngrd(2),ngrd(3))  ! Grid function
+  
 
 
   ! Start LBFGS_B:
@@ -440,10 +464,10 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
   IF (ctask(1:2) .EQ. 'FG') THEN
 
     ! Function value:
-    CALL Functn3D(fcn,grd,ngrd,obsv,nobs,indx,coef,wght,pnlt)
+    CALL Functn3D(fcn,grd,ngrd,obsv,nobs,indx,coef,wght,pnlt,huc,mlds)
 
     ! Gradient values:
-    CALL Gradnt3D(gdt,grd,ngrd,obsv,nobs,indx,coef,wght,pnlt)
+    CALL Gradnt3D(gdt,grd,ngrd,obsv,nobs,indx,coef,wght,pnlt,huc,mlds)
 
     ! Check gradients:
     ! i=int(0.5*ngrd(1))
@@ -479,7 +503,7 @@ SUBROUTINE Minimize(sltn,mlds,ngrd,obsv,nobs,indx,coef, &
 
 END SUBROUTINE Minimize
 
-SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
+SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt,huc,mlds)
 
 !==========================================================
 !  This routine evaluates the STMAS cost function.
@@ -488,15 +512,19 @@ SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
 !	Creation: 9-2005 by YUANFU XIE.
 !       Modified: 10-2008 by min-ken hsieh.
 !                 pass in penalty for each var
+!       Modified: 11-2008 by min-ken hsieh.
+!                 pass in bkg params to calcualte Jb
 !==========================================================
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) :: ngrd(3),nobs,indx(6,nobs)
+  INTEGER, INTENT(IN) :: ngrd(3),mlds(3),nobs,indx(6,nobs)
   REAL, INTENT(IN) :: grid(ngrd(1),ngrd(2),ngrd(3))
   REAL, INTENT(IN) :: coef(6,nobs),obsv(4,nobs),wght(nobs)
   REAL, INTENT(IN) :: pnlt
   REAL, INTENT(OUT) :: fctn
+
+  INTEGER, INTENT(IN) :: huc(mlds(1),mlds(2),mlds(3))	! uncover by min-ken
 
   ! Local variables:
   INTEGER :: i,j,k,io
@@ -505,6 +533,15 @@ SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
   ! Initial:
   fctn = 0.0
   penalt = pnlt
+
+  ! Jb term:
+  DO k=1,ngrd(3)
+    DO j=1,ngrd(2)
+      DO i=1,ngrd(1)
+          fctn = fctn+huc(i,j,k)*(grid(i,j,k)**2)
+      ENDDO
+    ENDDO
+  ENDDO
 
   ! Jo term:
   DO io=1,nobs
@@ -566,7 +603,7 @@ SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
 
 END SUBROUTINE Functn3D
 
-SUBROUTINE Gradnt3D(grdt,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
+SUBROUTINE Gradnt3D(grdt,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt,huc,mlds)
 
 !==========================================================
 !  This routine evaluates gradients of STMAS cost function.
@@ -575,15 +612,19 @@ SUBROUTINE Gradnt3D(grdt,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
 !	Creation: JUN. 2005 by YUANFU XIE.
 !       Modified: 10-2008 by min-ken hsieh.
 !                 pass in penalty for each var
+!       Modified: 11-2008 by min-ken hsieh.
+!                 pass in hbg, huc to calcualte Jb
 !==========================================================
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) :: ngrd(3),nobs,indx(6,nobs)
+  INTEGER, INTENT(IN) :: ngrd(3),mlds(3),nobs,indx(6,nobs)
   REAL, INTENT(IN) :: grid(ngrd(1),ngrd(2),ngrd(3))
   REAL, INTENT(IN) :: coef(6,nobs),obsv(4,nobs),wght(nobs)
   REAL, INTENT(IN) :: pnlt
   REAL, INTENT(OUT) :: grdt(ngrd(1),ngrd(2),ngrd(3))
+
+  INTEGER, INTENT(IN) :: huc(mlds(1),mlds(2),mlds(3))	! uncover array by min-ken
 
   ! Local variables:
   INTEGER :: i,j,k,io
@@ -594,6 +635,17 @@ SUBROUTINE Gradnt3D(grdt,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt)
   ! Initial:
   grdt = 0.0
   penalt = pnlt
+
+  ! Jb term:
+  
+  DO k=1,ngrd(3)
+    DO j=1,ngrd(2)
+      DO i=1,ngrd(1)
+        grdt(i,j,k) = huc(i,j,k)*(grid(i,j,k))
+      ENDDO
+    ENDDO
+  ENDDO
+
 
   ! Jo term:
   DO io=1,nobs
@@ -714,5 +766,71 @@ SUBROUTINE STMASInc
   ENDDO
 
 END SUBROUTINE STMASInc
+
+SUBROUTINE IntplBkg(ucvr,ngrd,huc,mgd,mld,dgd,dxyt,domn)
+
+!==========================================================
+!  This routine interpolate background field and uncover to
+!  multigrid.
+!
+!  HISTORY:
+!	Creation: 11-2008 by min-ken hsieh
+!
+!==========================================================
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: ngrd(3),mgd(3),mld(3)
+  REAL, INTENT(IN) :: dgd(3),dxyt(3),domn(2,3)
+  LOGICAL, INTENT(IN) :: ucvr(ngrd(1),ngrd(2),ngrd(3))
+
+  INTEGER, INTENT(OUT) :: huc(mld(1),mld(2),mld(3))
+
+  ! Local variables:
+  INTEGER :: ier,i,j,k,ix,iy,it
+  REAL :: xyt(3)
+  INTEGER :: idx(6,mgd(1),mgd(2),mgd(3))
+  REAL :: coe(6,mgd(1),mgd(2),mgd(3))
+  LOGICAL :: lhuc(mld(1),mld(2),mld(3))
+
+  ! Interpolation for each background grid:
+  DO k=1,mgd(3)
+    xyt(3) = domn(1,3)+(k-1)*dgd(3)
+    DO j=1,mgd(2)
+      xyt(2) = domn(1,2)+(j-1)*dgd(2)
+      DO i=1,mgd(1)
+        xyt(1) = domn(1,1)+(i-1)*dgd(1)
+        CALL Intplt3D(xyt(1:3),ngrd,dxyt,domn, &
+	    	      idx(1,i,j,k),coe(1,i,j,k),ier)
+
+        ! Check:
+        IF (ier .NE. 0) THEN
+          PRINT*, 'BACKGROUND INTERPOLATION ERROR!!',i,j,k,xyt(1),xyt(2),xyt(3)
+        ELSE
+          ! Evaluate:
+          huc(i,j,k) = 0
+	  lhuc(i,j,k) = .TRUE.
+	  DO it=3,6,3
+	    DO iy=2,5,3
+	      DO ix=1,4,3
+		! see if this grid is uncovered
+		lhuc(i,j,k) = lhuc(i,j,k) .AND. &
+		  ucvr(idx(ix,i,j,k),idx(iy,i,j,k),idx(it,i,j,k))
+		   
+	      ENDDO
+	    ENDDO
+	  ENDDO
+
+          IF(lhuc(i,j,k)) THEN
+            huc(i,j,k) = 1
+          ENDIF
+
+        ENDIF
+        
+      ENDDO
+    ENDDO
+  ENDDO
+
+END SUBROUTINE IntplBkg
 
 END MODULE STMASAnalz
