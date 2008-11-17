@@ -107,7 +107,8 @@ SUBROUTINE IntrMemo
   INTEGER :: err
 
   ALLOCATE(bkgrnd(numgrd(1),numgrd(2),numtmf,numvar), &
-	   lndfac(numgrd(1),numgrd(2)), &
+           uncovr(numgrd(1),numgrd(2),numtmf,numvar), &	!Add by min-ken, uncovered used in 
+	   lndfac(numgrd(1),numgrd(2)), &		!		 AddBkgrd and STMASAna
 	   qc_obs(4,numtmf*mxstts,numvar), &
 	   weight(numtmf*mxstts,numvar), &
 	   indice(6,numtmf*mxstts,numvar), &
@@ -134,6 +135,7 @@ SUBROUTINE IntrRels
   INTEGER :: err
 
   DEALLOCATE(bkgrnd, &
+	     uncovr, &
 	     lndfac, &
 	     qc_obs, &
 	     weight, &
