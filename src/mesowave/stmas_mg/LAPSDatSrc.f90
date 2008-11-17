@@ -199,48 +199,61 @@ SUBROUTINE LAPSBKGD
 12 FORMAT('STMAS>LAPSBKGD: V component of wind is missing!')
 
       ! Get wind fields:
-      DO i=1,numtmf
-	CALL GET_BKGWIND_SFC(i4prev(i),ext,tim, &
-	  bkgrnd(1,1,i,j),bkgrnd(1,1,i,iwv),lapsdt, &
-	  numgrd(1),numgrd(2),err)
-	IF (err .EQ. 0) WRITE(*,13) varnam(j),i4prev(i),i,j
-      ENDDO
+      IF (needbk(j) .EQ. 1) THEN
+        DO i=1,numtmf
+          CALL GET_BKGWIND_SFC(i4prev(i),ext,tim, &
+            bkgrnd(1,1,i,j),bkgrnd(1,1,i,iwv),lapsdt, &
+            numgrd(1),numgrd(2),err)
+          IF (err .EQ. 0) WRITE(*,13) varnam(j),i4prev(i),i,j
+        ENDDO
+      ELSE
+        bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
+        bkgrnd(1:numgrd(1),1:numgrd(2),i,iwv) = 0.0
+      ENDIF
     !PCP1:
-    ELSE IF (varnam(j) .EQ. 'PCP1') THEN	! precip 1hr bkg	added by min-ken hsieh
+    ELSE IF (varnam(j) .EQ. 'PCP1') THEN        ! precip 1hr bkg        added by min-ken hsieh
       ! Get pcp1hr fields:
-      DO i=1,numtmf
-        CALL GET_MODELFG_2D(i4prev(i),'PCP',numgrd(1),numgrd(2),bkgrnd(1,1,i,j),err)
-        IF(err .NE. 1)THEN
-          WRITE(6,*)' No model first guess preicp, using zero field'
-          bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
-        ENDIF 
-      ENDDO
-    ELSE IF (varnam(j) .EQ. 'PCP3') THEN	! precip 3hr bkg	added by min-ken hsieh
+      IF (needbk(j) .EQ. 1) THEN
+        DO i=1,numtmf
+          CALL GET_MODELFG_2D(i4prev(i),'PCP',numgrd(1),numgrd(2),bkgrnd(1,1,i,j),err)
+          IF(err .NE. 1)THEN
+            WRITE(6,*)' No model first guess preicp, using zero field'
+            bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
+          ENDIF
+        ENDDO
+      ELSE
+        bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
+      ENDIF
+    ELSE IF (varnam(j) .EQ. 'PCP3') THEN        ! precip 3hr bkg        added by min-ken hsieh
       ! assign zero fields:
       DO i=1,numtmf
         bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
       ENDDO
-    ELSE IF (varnam(j) .EQ. 'PCP6') THEN	! precip 6hr bkg	added by min-ken hsieh
+    ELSE IF (varnam(j) .EQ. 'PCP6') THEN        ! precip 6hr bkg        added by min-ken hsieh
       ! assign zero fields:
       DO i=1,numtmf
         bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
       ENDDO
-    ELSE IF (varnam(j) .EQ. 'PC24') THEN	! precip 24hr bkg	added by min-ken hsieh
+    ELSE IF (varnam(j) .EQ. 'PC24') THEN        ! precip 24hr bkg       added by min-ken hsieh
       ! assign zero fields:
       DO i=1,numtmf
         bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
       ENDDO
     !Other fields:
-    ELSE IF ((varnam(j) .NE. 'WNDV') .AND. &	! V in with U
-	     (varnam(j) .NE. 'CEIL')) THEN	! No ceiling bkg
-      DO i=1,numtmf
-        CALL GET_BACKGROUND_SFC(i4prev(i),varnam(j),ext,tim, &
-	  bkgrnd(1,1,i,j),lapsdt,numgrd(1),numgrd(2),err)
-	IF (err .EQ. 0) WRITE(*,13) varnam(j),i4prev(i),i,j
-      ENDDO
-    ELSE
-      IF (needbk(j) .EQ. 0) &
+    ELSE IF ((varnam(j) .NE. 'WNDV') .AND. &    ! V in with U
+             (varnam(j) .NE. 'CEIL')) THEN      ! No ceiling bkg
+      IF (needbk(j) .EQ. 1) THEN
+        DO i=1,numtmf
+          CALL GET_BACKGROUND_SFC(i4prev(i),varnam(j),ext,tim, &
+            bkgrnd(1,1,i,j),lapsdt,numgrd(1),numgrd(2),err)
+          IF (err .EQ. 0) THEN
+            WRITE(*,13) varnam(j),i4prev(i),i,j
+            STOP
+          ENDIF
+        ENDDO
+      ELSE
         bkgrnd(1:numgrd(1),1:numgrd(2),1:numtmf,j) = 0.0
+      ENDIF
     ENDIF
   ENDDO
 13 FORMAT('STMAS>LAPSBKGD: Background is not found for: ',A4,i16,2i3)
@@ -337,21 +350,31 @@ SUBROUTINE LAPSOBSV(m)
 		latgrd,longrd,numgrd(1),numgrd(2), &
 		xyt(1),xyt(2),err)
 
-	! T: from LAPS time form: HHMM to seconds
-	hrs = otm(j)/100
-	mns = otm(j)-hrs*100
-	xyt(3) = hrs*3600+mns*60
-	IF (otm(j) .LT. 0) xyt(3) = 2*86400	! Void: Bad data
+        ! Good station locations:
+        IF (err .EQ. 1) THEN
 
-	! Adjust the time when crossing the midnight:
-	IF ((xyt(3)+86400 .GE. domain(1,3)) .AND. &
-	    (xyt(3)+86400 .LE. domain(2,3)) ) &
-	  xyt(3) = xyt(3)+86400
+	  ! T: from LAPS time form: HHMM to seconds
+	  hrs = otm(j)/100
+	  mns = otm(j)-hrs*100
+	  xyt(3) = hrs*3600+mns*60
+	  IF (otm(j) .LT. 0) xyt(3) = 2*86400	! Void: Bad data
 
-	! Pass the location/time to obs arrays:
-        DO k=1,numvar
-	  rawobs(2:4,j+numobs(k),k) = xyt(1:3)
-	ENDDO
+	  ! Adjust the time when crossing the midnight:
+	  IF ((xyt(3)+86400 .GE. domain(1,3)) .AND. &
+	      (xyt(3)+86400 .LE. domain(2,3)) ) &
+	    xyt(3) = xyt(3)+86400
+
+	  ! Pass the location/time to obs arrays:
+          DO k=1,numvar
+	    rawobs(2:4,j+numobs(k),k) = xyt(1:3)
+	  ENDDO
+
+        ELSE  ! Bad station location
+          DO k=1,numvar
+            rawobs(1:4,j+numobs(k),k) = badsfc
+          ENDDO
+        ENDIF
+
       ENDDO
 
       ! Place the observations into right variables:
@@ -855,7 +878,6 @@ SUBROUTINE STMASVer
   DO i=1,numvar
     !because we only care about real obs
     !we do not apply verify to those obs made by bkgrnd
-    !numobs(i) = numobs(i) - nobbkg(i)
 
     ! qc_obs array actually store obs - obsbkg field (done by CpyQCObs)
     ! we need to add obsbkg back to qc_obs
@@ -1218,6 +1240,10 @@ SUBROUTINE AddBkgrd
 !
 !  HISTORY:
 !       Creation: 26-08-2008 by min-ken hsieh
+!       Modification:
+!                 11-2008 by min-ken hsieh
+!                            Using Jb term in STMASAna instead of adding bkg to obs here.
+!                            We only mark uncovered areas here.
 !==========================================================
 
   IMPLICIT NONE
@@ -1226,7 +1252,6 @@ SUBROUTINE AddBkgrd
   INTEGER :: i,j,kx,ky,kt,nn
   INTEGER :: FirstCoveredGrid(2),LastCoveredGrid(2)
   INTEGER :: obstime
-  LOGICAL :: uncovered(numgrd(1),numgrd(2))	!mask array
   LOGICAL :: land(numgrd(1),numgrd(2))		!land mask
   LOGICAL :: sameAsStn(numgrd(1),numgrd(2))	!grid land/sea is the same as stn
   LOGICAL :: stnOverLand
@@ -1242,68 +1267,43 @@ SUBROUTINE AddBkgrd
 
   !variable loop
   DO i=1,numvar
-    IF(needbk(i).EQ.1) THEN
-      ! find out areas have been covered by obs for each time frame
-      nobbkg(i) = 0
-      DO kt=1,numtmf
-	uncovered = .TRUE.
-        nn= 0
-	obstime = domain(1,3)+(kt-1)*lapsdt
-        DO j=1,numobs(i)
-          IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
-            nn = nn + 1
-            FirstCoveredGrid(1:2) = MAX0(1,FLOOR(qc_obs(2:3,j,i))-radius(i))
-            LastCoveredGrid(1:2) = MIN0(numgrd(1:2),FLOOR(qc_obs(2:3,j,i))+radius(i)+1)
+    ! find out areas have been covered by obs for each time frame
+    DO kt=1,numtmf
+      uncovr(:,:,kt,i) = .TRUE.
+      nn= 0
+      obstime = domain(1,3)+(kt-1)*lapsdt
+      DO j=1,numobs(i)
+        IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+          nn = nn + 1
+          FirstCoveredGrid(1:2) = MAX0(1,FLOOR(qc_obs(2:3,j,i))-radius(i))
+          LastCoveredGrid(1:2) = MIN0(numgrd(1:2),FLOOR(qc_obs(2:3,j,i))+radius(i)+1)
 
-	    !land/water process
-            IF(lndsea(i).EQ.1) THEN
-              stnOverLand = (lndfac(INT(qc_obs(2,j,i)),INT(qc_obs(3,j,i))).GT.0.0)
-	      DO ky=FirstCoveredGrid(2),LastCoveredGrid(2)
-	        DO kx=FirstCoveredGrid(1),LastCoveredGrid(1)
-                  sameAsStn(kx,ky)= (stnOverLand .EQV. land(kx,ky))
-                ENDDO
-              ENDDO
-            ELSE
-              sameAsStn = .TRUE.
-            ENDIF
-    
-            ! mask out
+          !land/water process
+          IF(lndsea(i).EQ.1) THEN
+            stnOverLand = (lndfac(INT(qc_obs(2,j,i)),INT(qc_obs(3,j,i))).GT.0.0)
             DO ky=FirstCoveredGrid(2),LastCoveredGrid(2)
-              DO kx=FirstCoveredGrid(1),LastCoveredGrid(1)
-	        uncovered(kx,ky) = .NOT.sameAsStn(kx,ky)
+	      DO kx=FirstCoveredGrid(1),LastCoveredGrid(1)
+                sameAsStn(kx,ky)= (stnOverLand .EQV. land(kx,ky))
               ENDDO
             ENDDO
- 
+          ELSE
+            sameAsStn = .TRUE.
           ENDIF
-        ENDDO
-
-	!add time tag on bkg stn name
-	write(tmtag,'(i1)') kt
-        !PRINT*,varnam(i),nn
-        !add background to obs
-        DO ky=1,numgrd(2),radius(i)
-          DO kx=1,numgrd(1),radius(i)
-	    IF(uncovered(kx,ky)) THEN
-              nobbkg(i) = nobbkg(i)+1
-              qc_obs(1,numobs(i)+nobbkg(i),i) = 0.0	!because qc_obs = obs - bkgrnd(in CpyQCObs)
-              qc_obs(2,numobs(i)+nobbkg(i),i) = kx
-              qc_obs(3,numobs(i)+nobbkg(i),i) = ky
-              qc_obs(4,numobs(i)+nobbkg(i),i) = FLOAT(obstime)
-	      weight(numobs(i)+nobbkg(i),i) = 1.0
-	      bkgobs(numobs(i)+nobbkg(i),i) = bkgrnd(kx,ky,kt,i)
-              stanam(numobs(i)+nobbkg(i),i) = "BKGRD"
-            ENDIF
+    
+          ! mask out
+          DO ky=FirstCoveredGrid(2),LastCoveredGrid(2)
+            DO kx=FirstCoveredGrid(1),LastCoveredGrid(1)
+	      uncovr(kx,ky,kt,i) = .NOT.sameAsStn(kx,ky)
+            ENDDO
           ENDDO
-        ENDDO
+ 
+        ENDIF
       ENDDO
-      numobs(i) = numobs(i) + nobbkg(i)
-      WRITE(*,34) varnam(i),nobbkg(i)
-    ENDIF
 
+    ENDDO
 
   ENDDO ! end of variable loop
   RETURN
-34 FORMAT('STMAS>AddBkgrd: NumObs of (BKG) ',A4,': ',I8)
 
 END SUBROUTINE AddBkgrd
 
