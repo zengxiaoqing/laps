@@ -134,6 +134,8 @@ MODULE Definition
        :: weight		! Observations weights
   REAL, ALLOCATABLE, DIMENSION(:,:,:) &
        :: coeffs		! Interpolation coefficients
+  LOGICAL, ALLOCATABLE, DIMENSION(:,:,:,:) &
+       :: uncovr		! Uncovered grids !added by min-ken hsieh, used in AddBkgrd and STMASAna
 
   !------------------------
   ! Minimization variables:
@@ -153,7 +155,6 @@ MODULE Definition
   !------------------------
   CHARACTER*20,ALLOCATABLE, DIMENSION(:,:) &
 	 :: stanam 		!store stn name for each variable
-  INTEGER :: nobbkg(MAXVAR)	!number of obs made by bkgrnd
 
   ! Namelists:
   NAMELIST /STMAS/numfic,numtmf,numgrd,numvar,savdat,saveid,verbal
