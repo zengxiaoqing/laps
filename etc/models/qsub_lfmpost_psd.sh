@@ -1,5 +1,5 @@
 #!/bin/sh
-#$ -N lfmp_fer
+#$ -N lfmp_psd
 #$ -A hmtb
 #$ -l h_rt=04:30:00
 #$ -S /bin/sh
