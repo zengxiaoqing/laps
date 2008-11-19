@@ -70,7 +70,7 @@ cdis
         character ext*31, ext_in*3
         character*8 c8_acars_type
 
-        logical l_eof
+        logical l_eof, l_geoalt
 
         write(6,*)
         write(6,*)' Subroutine rd_acars_t...'
@@ -129,7 +129,8 @@ cdis
         endif
 
         call read_acars_ob(lun_in,'temp',xlat,xlon,elev_in,temp_ob,arg2       
-     1                                  ,asc9_tim_acars,iwrite,l_eof)
+     1                                  ,asc9_tim_acars,iwrite
+     1                                  ,l_geoalt,l_eof)
 
         if(l_eof)goto900
 
@@ -158,19 +159,26 @@ cdis
 !                   ACARS is in horizontal domain
 
                     if(ext_in .eq. 'pin')then
-!                       Assume ACARS elev is pressure altitude MSL
-                        elev_std = elev_in
 
-                        if(abs(elev_std) .lt. 90000.)then ! Within flag value
-                            pres_mb = ztopsa(elev_std)
-                            pres_pa = pres_mb * 100.
-                            call pressure_to_height(pres_pa,heights_3d       
+                        if(l_geoalt)then ! ACARS elev is geometric altitude MSL
+                            elev_geo = elev_in
+
+                        else !             ACARS elev is pressure altitude MSL
+                            elev_std = elev_in
+
+                            if(abs(elev_std) .lt. 90000.)then ! Within flag value
+                                pres_mb = ztopsa(elev_std)
+                                pres_pa = pres_mb * 100.
+                                call pressure_to_height(pres_pa
+     1                                             ,heights_3d       
      1                                             ,ni,nj,nk
      1                                             ,i_grid,j_grid
      1                                             ,elev_geo
      1                                             ,istatus_rk)      
-                        else
-                            istatus_rk = 0
+                            else
+                                istatus_rk = 0
+                            endif
+
                         endif
 
                         if(istatus_rk .eq. 1)then
