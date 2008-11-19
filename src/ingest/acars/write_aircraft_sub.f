@@ -7,7 +7,7 @@
      1                          ,windDir,windSpeed
      1                          ,l_geoalt)
 
-          character*(*) ext
+          character*(*) ext 
 
           character*9 a9_timeObs,a9_recptTime
 
