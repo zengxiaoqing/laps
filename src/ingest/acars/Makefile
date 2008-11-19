@@ -26,7 +26,10 @@ SRC=ingest_aircraft.f \
     skycover_to_frac.f \
     ingest_acars.f \
     ingest_acars_sub.f \
-    ingest_acars_sub_af.f
+    ingest_acars_sub_af.f \
+    ingest_wisdom.f \
+    get_wisdom_data.f \
+    write_aircraft_sub.f
 
 all: exe
 
