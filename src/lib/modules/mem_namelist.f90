@@ -54,6 +54,7 @@ include 'lapsparms.for'
         character*200 path_to_wsi_2d_radar
         character*200 path_to_wsi_3d_radar
         character*200 path_to_qc_acars
+        character*200 path_to_wisdom
         character*9   fdda_model_source(maxbgmodels)
         character*8   c8_project
         character*8   c8_blpfmt
@@ -98,7 +99,7 @@ include 'lapsparms.for'
         ,path_to_raw_rass,path_to_raw_profiler               &
         ,path_to_raw_blprass,path_to_raw_blpprofiler         &
         ,path_to_wsi_2d_radar,path_to_wsi_3d_radar           &
-        ,path_to_qc_acars                                    &
+        ,path_to_qc_acars,path_to_wisdom                     &
         ,c8_project,c8_blpfmt                                &
         ,c_raddat_type, c80_description                      &
         ,path_to_topt30s                                     &
@@ -209,7 +210,7 @@ namelist /lapsparms_NL/ iflag_lapsparms &
                   ,path_to_raw_rass,path_to_raw_profiler &
                   ,path_to_raw_blprass,path_to_raw_blpprofiler &
                   ,path_to_wsi_2d_radar,path_to_wsi_3d_radar &
-                  ,path_to_qc_acars &
+                  ,path_to_qc_acars,path_to_wisdom &
                   ,c8_project,c8_blpfmt &
                   ,c_raddat_type, c80_description &
                   ,path_to_topt30s ,path_to_topt10m &
