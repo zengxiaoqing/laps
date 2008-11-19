@@ -43,6 +43,7 @@
  path_to_raw_blprass='/public/data/profiler/rass/external/netcdf/',
  path_to_raw_blpprofiler='/public/data/profiler/wind/external/netcdf/',
  path_to_qc_acars='/public/data/acars/qc/netcdf/',
+ path_to_wisdom='/public/data/madis/LDAD/WISDOM/netCDF/',
 
  i2_missing_data=-99,
  r_missing_data=+1e37,
@@ -50,7 +51,7 @@
  ref_base=-10.,       
  ref_base_useable=0., 
  r_hybrid_first_gate=0.,
- maxstns=3600,         
+ maxstns=20000,         
  N_PIREP=3000,         
  max_snd_grid=1500,
  max_snd_levels=300,
