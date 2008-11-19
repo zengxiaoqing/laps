@@ -1,6 +1,7 @@
 
         subroutine read_acars_ob(lun,c_obtype,xlat,xlon,elev,arg1,arg2       
-     1                                   ,asc9_tim_pirep,iwrite,l_eof)       
+     1                                   ,asc9_tim_pirep,iwrite
+     1                                   ,l_geoalt,l_eof)       
 
         real elev ! meters
         real dd   ! degrees (99999. is missing)
@@ -10,7 +11,7 @@
         character*80 string
         character*(*)c_obtype
 
-        logical l_eof
+        logical l_eof,l_geoalt
 
         integer icount
         data icount /0/
@@ -34,6 +35,11 @@
         endif
 
         if(string(2:4) .eq. 'Lat')then
+            if(string(12:14) .eq. 'geo')then
+                l_geoalt = .true.
+            else
+                l_geoalt = .false.
+            endif
             read(lun,201,err=905)xlat,xlon,elev
 201         format(2(f8.3,2x), f6.0,2i5)
         endif
