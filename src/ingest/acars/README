@@ -1,0 +1,12 @@
+
+ingest_aircraft                                   ingest_aircraft.f
+    ingest_pireps
+    ingest_acars                                  ingest_acars.f
+        get_acars_data                            ingest_acars_sub.f
+            acars_sub                                    "
+                read_acars_netcdf                        "
+                read_acars_netcdf_wfo                    "
+        get_acars_afwa
+    ingest_wisdom                                 ingest_wisdom.f
+        get_wisdom_data                           get_wisdom_data.f 
+            write_aircraft_sub                    write_aircraft_sub.f 
