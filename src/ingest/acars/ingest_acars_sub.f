@@ -195,14 +195,16 @@ C
               goto 900        
           endif
 
-          call open_ext(31,i4time_sys,ext(1:3),istatus)       
+          lun = 31
+
+          call open_ext(lun,i4time_sys,ext(1:3),istatus)       
 
           if(l_debug)write(6,1)a9_timeObs,a9_recptTime 
-                     write(31,1)a9_timeObs,a9_recptTime 
+                     write(lun,1)a9_timeObs,a9_recptTime 
  1        format(' Time - prp/rcvd:'/1x,a9,2x,a9) 
 
           if(l_debug)write(6,2)latitude(i),longitude(i),altitude(i)
-          write(31,2)          latitude(i),longitude(i),altitude(i)
+          write(lun,2)          latitude(i),longitude(i),altitude(i)
  2        format(' Lat, lon, altitude'/f8.3,f10.3,f8.0)  
 
 !         Test for bad winds
@@ -225,7 +227,7 @@ C
 
           else ! write out valid wind
               if(l_debug)write(6 ,3)int(windDir(i)),windSpeed(i)
-                         write(31,3)int(windDir(i)),windSpeed(i)
+                         write(lun,3)int(windDir(i)),windSpeed(i)
  3            format(' Wind:'/' ', i3, ' deg @ ', f6.1, ' m/s')
 
           endif
@@ -244,7 +246,7 @@ C
 
           if(abs(temperature(i)) .lt. 400.)then
               if(l_debug)write(6,13)temperature(i)
-                         write(31,13)temperature(i)
+                         write(lun,13)temperature(i)
  13           format(' Temp:'/1x,f10.1)
        
           else
@@ -261,7 +263,7 @@ C
      1       waterVaporQC(i) .ge. 0             )then
               if(l_debug)write(6,23)downlinkedRH(i)
               if(l_debug)write(6,*)' RH QC value = ',waterVaporQC(i)
-              write(31,23)downlinkedRH(i)
+              write(lun,23)downlinkedRH(i)
  23           format(' RH:'/1x,f10.3)
 
           else
