@@ -100,7 +100,7 @@ cdis
         character*9 asc9_tim_point
         character ext*31, ext_in*3
 
-        logical l_eof
+        logical l_eof, l_geoalt
 
         real r_missing_data
 
@@ -174,7 +174,7 @@ cdis
 
         if(ext_in .eq. 'pin')then
             call read_acars_ob(lun_in,'wind',xlat,xlon,elev,dd,ff
-     1                                   ,asc9_tim_point,iwrite2,l_eof)       
+     1                        ,asc9_tim_point,iwrite2,l_geoalt,l_eof)       
             if(elev .eq. 0.)i_qc = 0
         else
             call read_laps_cdw_wind(lun_in,xlat,xlon,pres_pa,dd,ff
@@ -202,7 +202,7 @@ cdis
 !                   Point ob is in horizontal domain
 
                     if(ext_in .eq. 'pin')then
-                       if(.false.)then ! ACARS elev is geometric height MSL
+                       if(l_geoalt)then ! ACARS elev is geometric height MSL
                           rk = height_to_zcoord2(elev,heights_3d
      1                        ,ni,nj,nk,i_grid,j_grid,istatus_rk)
                           if(istatus_rk .ne. 1)then
