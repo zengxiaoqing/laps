@@ -13,5 +13,9 @@
        write(6,*)' Call ingest_acars'
        call ingest_acars(istatus)
 
+       write(6,*)
+       write(6,*)' Call ingest_wisdom'
+       call ingest_wisdom(istatus)
+
        end
 
