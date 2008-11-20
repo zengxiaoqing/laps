@@ -8,7 +8,7 @@
 #exit
 
 export LAPSROOT=/home/oplapb/builds/laps
-export LAPS_DATA_ROOT=/lfs0/projects/hmtb/dwr_domains/laps
+export LAPS_DATA_ROOT=/lfs0/projects/hmtb/dwr_domains/laps_psd
 export WRF_DATAROOT=/lfs0/projects/hmtb/dwr_domains/psd_gfs
 export NETCDF=/opt/netcdf/3.6.2-pgi-7.1-3
 export PATH=$PATH:/opt/netcdf/3.6.2-pgi-7.1-3/bin
