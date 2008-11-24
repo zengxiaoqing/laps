@@ -125,8 +125,31 @@ if($opt_f eq "mm"){
    my $mm = @mmmdd[0];
    $mm="0".$mm if(length($mm)<2);
    print "$mm\n";
+
+}elsif($opt_f eq "yyyymmdd_hhmm"){
+   my $yy  = substr($yydddhhmm,0,2);
+   my $yyyy;
+   if($yy < 60){
+       $yyyy = "20".$yy
+   }else{
+       $yyyy = "19".$yy
+   }
+
+   my $ddd = substr($yydddhhmm,2,3);
+   my @mmmdd=&time::JJJ2MMDD($ddd,$yy);
+   my $mm = @mmmdd[0];
+   $mm="0".$mm if(length($mm)<2);
+
+   my $dd = @mmmdd[1];
+   $dd="0".$dd if(length($dd)<2);
+
+   my $hhmm = substr($yydddhhmm,5,4);
+
+   print "$yyyy$mm$dd"."_"."$hhmm\n";
+
 }else{
    print "$yydddhhmm\n";
+
 }
 
 
