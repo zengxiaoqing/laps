@@ -760,6 +760,12 @@ C READ IN SATELLITE DATA
         enddo
         enddo
 
+        icen = NX_L/2
+        jcen = NY_L/2
+        write(6,*)'solar dec/ha ',solar_dec,solar_ha(icen,jcen),
+     1            ' at lat/lon ',lat(icen,jcen),lon(icen,jcen)
+        write(6,*)'solar altitude = ',solar_alt(icen,jcen)
+
 !       Cloud cover QC check
         call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
