@@ -208,7 +208,7 @@ c          endif
         end
 
         subroutine get_laps_2dgrid(i4time_needed,i4tol,i4time_nearest
-     1         ,EXT,var_2d,units_2d
+     1         ,ext_in,var_2d,units_2d
      1         ,comment_2d,imax,jmax,field_2d,ilevel,istatus)
 
 cdoc    Returns a 2-D grid. Inputs include the extension and time window.
@@ -216,7 +216,8 @@ cdoc    Returns a 2-D grid. Inputs include the extension and time window.
         character*9 asc9_tim
 
         character*150 DIRECTORY
-        character*(*) EXT
+        character*(*) EXT_IN
+        character*31 ext
 
         character*125 comment_2d
         character*10 units_2d
@@ -236,7 +237,15 @@ cdoc    Returns a 2-D grid. Inputs include the extension and time window.
             return
         endif
 
-        call get_directory(ext,directory,len_dir)
+        call get_directory(ext_in,directory,len_dir)
+
+        if(ext_in .eq. 'balance')then
+            directory = directory(1:len_dir)//'lsx/'
+            len_dir = len_dir + 4
+            ext = 'lsx'
+        else
+            ext = ext_in
+        endif
 
         call s_len(ext,lenext)
 
