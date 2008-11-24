@@ -370,6 +370,8 @@ c       include 'satellite_dims_lvd.inc'
             return
         endif
 
+        i_balance = 0
+
 1200    continue
 
         plot_parms%l_discrete = namelist_parms%l_discrete
@@ -436,6 +438,14 @@ c       include 'satellite_dims_lvd.inc'
         else
             i_image = 0
             c_type_i = c_type
+        endif
+
+        if(c_type(1:2) .eq. 'by')then
+            i_balance = 1
+            goto 1200
+        elseif(c_type(1:2) .eq. 'bn')then
+            i_balance = 0
+            goto 1200
         endif
 
         if(c_type(1:2) .eq. 'di')then
@@ -644,22 +654,26 @@ c       include 'satellite_dims_lvd.inc'
                         write(6,*)' Valid time = ',asc9_tim_3dw
 
                     elseif(c_type_i.eq.'bw')then
-                        write(6,*)' Balanced LWM was chosen'
+                        write(6,*)' Balanced LSX was chosen'
 
                         call get_directory('balance',directory,lend)
-                        directory=directory(1:lend)//'lwm/'
+                        directory=directory(1:lend)//'lsx/'
 
-                        var_2d = 'SU'
+                        ext = 'lsx'
+
+                        var_2d = 'U'
                         call get_2dgrid_dname(directory,i4time_3dw
      1                    ,laps_cycle_time*100,i4time_heights,ext,var_2d      
      1                    ,units_2d,comment_2d,NX_L,NY_L,u_2d,0
-     1                    ,istatus)      
+     1                    ,istatus)   
+                        if(istatus .ne. 1)goto 1200   
 
-                        var_2d = 'SV'
+                        var_2d = 'V'
                         call get_2dgrid_dname(directory,i4time_3dw
      1                    ,laps_cycle_time*100,i4time_heights,ext,var_2d      
      1                    ,units_2d,comment_2d,NX_L,NY_L,v_2d,0
      1                    ,istatus)      
+                        if(istatus .ne. 1)goto 1200   
 
                     else ! lwm (unbalanced)
 !                       call get_directory(ext,directory,len_dir)
@@ -1405,7 +1419,13 @@ c       include 'satellite_dims_lvd.inc'
 
 !           Read in surface temp data
             var_2d = 'T'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time,i4time_temp       
      1                          ,ext,var_2d,units_2d,comment_2d
      1                          ,NX_L,NY_L,temp_2d,0,istatus)
@@ -2689,7 +2709,13 @@ c
 
 !           Read in surface temp data
             var_2d = 'T'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(
      1          i4time_radar,laps_cycle_time,i4time_temp
      1         ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
@@ -4292,7 +4318,12 @@ c                   cint = -1.
                 var_2d = 'TGD'
             endif
 
-            ext = 'lsx'
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
@@ -4363,7 +4394,13 @@ c                   cint = -1.
         elseif(c_type(1:2) .eq. 'td' .or. c_type(1:2) .eq. 'df'
      1                               .or. c_type(1:2) .eq. 'dc')then
             var_2d = 'TD'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1             ,i4time_pw
      1             ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
@@ -4425,7 +4462,13 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'hi')then
             var_2d = 'HI'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
@@ -4461,7 +4504,13 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'mc')then
             var_2d = 'MRC'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1             ,i4time_pw,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
@@ -4489,8 +4538,14 @@ c                   cint = -1.
      1                        ,NX_L,NY_L,r_missing_data,'spectralr')
 
         elseif(c_type .eq. 'ws')then ! surface wind
-            ext = 'lsx'
             var_2d = 'U'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L,u_2d,0,istatus)      
@@ -4856,7 +4911,12 @@ c                   cint = -1.
                 var_2d = 'PP'
             endif
 
-            ext = 'lsx'
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L,field_2d,0
@@ -4920,7 +4980,13 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'ps')then ! Surface Pressure
             var_2d = 'PS'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
@@ -4948,7 +5014,13 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'vv')then
             var_2d = 'VV'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1          ,i4time_pw,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                     ,field_2d,0,istatus)
@@ -4973,7 +5045,13 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'hu')then
             var_2d = 'RH'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
@@ -5040,7 +5118,13 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'ta')then
             var_2d = 'TAD'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L,field_2d
@@ -5066,7 +5150,13 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'th')then
             var_2d = 'TH'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1             ,i4time_pw,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
@@ -5098,7 +5188,13 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'te')then
             var_2d = 'THE'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
@@ -5126,7 +5222,13 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'vo')then
             var_2d = 'VOR'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw
      1                          ,ext,var_2d,units_2d,comment_2d
@@ -5156,11 +5258,17 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'mr')then
             var_2d = 'MR'
-            ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
@@ -5182,7 +5290,13 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'dv')then
             var_2d = 'DIV'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
@@ -5211,10 +5325,16 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'ha')then ! Theta Advection
             var_2d = 'THA'
-            ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
      1                                     ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
@@ -5237,10 +5357,16 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'ma')then
             var_2d = 'MRA'
-            ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
      1                                     ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
@@ -5262,7 +5388,13 @@ c                   cint = -1.
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type(1:2) .eq. 'sp')then
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             var_2d = 'U'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
@@ -5322,7 +5454,12 @@ c                   cint = -1.
         elseif(c_type_i .eq. 'u' .or. c_type_i .eq. 'v')then
             call upcase(c_type,c_type)
 
-            ext = 'lsx'
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             var_2d = c_type(1:1)
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
@@ -5334,15 +5471,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c_label = 'Sfc Wind '//c_type(1:1)//'        (kt)        '       
-
-            do i = 1,NX_L
-            do j = 1,NY_L
-                if(field_2d(i,j) .ne. r_missing_data)then
-                    field_2d(i,j) = field_2d(i,j) / mspkt
-                endif
-            enddo ! j
-            enddo ! i
+            c_label = 'Sfc Wind '//c_type(1:1)//'       (m/s)        '       
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -5364,7 +5493,13 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'cs')then
             var_2d = 'CSS'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
@@ -5390,7 +5525,13 @@ c                   cint = -1.
 
         elseif(c_type_i .eq. 'vs')then
             var_2d = 'VIS'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
      1                          ,comment_2d,NX_L,NY_L
@@ -5418,7 +5559,13 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'fw')then
             var_2d = 'FWX'
-            ext = 'lsx'
+
+            if(i_balance .eq. 1)then
+                ext = 'balance'
+            else
+                ext = 'lsx'
+            endif
+
             call get_laps_2dgrid(
      1               i4time_ref,laps_cycle_time*100,i4time_pw,
      1               ext,var_2d,units_2d,comment_2d,NX_L,NY_L,
