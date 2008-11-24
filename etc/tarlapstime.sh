@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# For an hourly cycle a good time to run this would be 110 minutes later
+# For an hourly cycle a good time to run this would be 110 minutes later (at 50 after the hour)
 # with a MINAGE of 48 minutes and a MAXAGE of 112 minutes
 
 # First command line argument is the LAPS_DATA_ROOT
@@ -54,6 +54,10 @@ find ./lapsprd -type f -name "$YYDDDHH??.*"     -print   >> lapstar.txt
 # LGA/LGB files (use MINAGE/MAXAGE)
 find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> lapstar.txt
 
+# Lapsprep files (use MINAGE/MAXAGE)
+# This can be improved to construct the file name LAPS:$YYYY-$MM-$DD_$HH
+find ./lapsprd/lapsprep     -name "LAPS*" ! -cmin +90 -cmin +30 -print >> lapstar.txt
+
 # Log & Wgi files
 find ./log     -type f -name "*.???.$YYDDDHH??" -print   >> lapstar.txt
 
@@ -68,6 +72,8 @@ else
 fi
 
 ls -l $LAPS_DATA_ROOT/lapstar.txt
+
+which tar
 
 if test "$EXPAND" = noexpand; then
     echo "current directory is `pwd`"
