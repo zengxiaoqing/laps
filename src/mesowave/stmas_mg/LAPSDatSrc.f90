@@ -1307,4 +1307,69 @@ SUBROUTINE AddBkgrd
 
 END SUBROUTINE AddBkgrd
 
+SUBROUTINE JbGridpt
+
+!==========================================================
+!  This routine identifies those gridpoints over which the
+!  background are needed for J_b term in the cost function.
+!  Note. 
+!  (1) This intends to improve the efficient of Min-Ken's
+!  AddBkgrd routine which takes 5 minutes over CONUS domain.
+!  (2) Consider spatial only, i.e., no temporal variation
+!  as the namelist, stmas_mg.vr, now provides spatial radius
+!  of data coverage.
+!
+!  HISTORY:
+!       Creation: Nov, 2008 by Yuanfu Xie.
+!==========================================================
+
+  ! Local variables:
+  INTEGER :: i,j,ic,jc,kc,iv,jo,is,ie,js,je
+  LOGICAL :: o,g
+  REAL    :: r2,ol
+
+  uncovr = .TRUE.
+
+  !variable loop:
+  DO iv=1,numvar
+    ! Time frames:
+    r2 = radius(iv)*radius(iv)
+    DO jo=1,numobs(iv)
+
+      ! Center gridpoint:
+      ic = INT(qc_obs(2,jo,iv))
+      jc = INT(qc_obs(3,jo,iv))
+      kc = (INT(qc_obs(4,jo,iv))-domain(1,3))/lapsdt+1
+      IF ((kc .LT. 1) .OR. (kc .GT. numgrd(3))) THEN
+        PRINT*,'Obs out of range: ',iv,jo,qc_obs(4,jo,iv),domain(1,3)
+        CYCLE
+      ENDIF
+      IF (kc .EQ. 1) kc = 2
+      IF (kc .EQ. numgrd(3)) kc = kc-1
+
+      ! Landfactor:
+      ol = lndfac(ic,jc)*lndfac(ic+1,jc)*lndfac(ic,jc+1)*lndfac(ic+1,jc+1)
+      o = .FALSE.
+      IF ((ol .GT. 0.0) .OR. (lndsea(iv) .EQ. 0)) o = .TRUE.
+
+      ! Covered circle:
+      is = MAX0(ic-radius(iv),1)
+      ie = MIN0(ic+radius(iv),numgrd(1))
+      js = MAX0(jc-radius(iv),1)
+      je = MIN0(jc+radius(iv),numgrd(2))
+
+      DO j=js,je
+        DO i=is,ie
+          g = .FALSE.
+          IF ((lndfac(i,j) .GT. 0.0) .OR. (lndsea(iv) .EQ. 0)) g = .TRUE.
+          ! Within the influence radius and landfactors the same:
+          IF (((i-ic)*(i-ic)+(j-jc)*(j-jc) .LT. r2) .AND. (o .EQ. g)) &
+            uncovr(i,j,kc-1:kc+1,iv) = .FALSE.
+        ENDDO
+      ENDDO
+
+    ENDDO
+  ENDDO
+END SUBROUTINE JbGridpt
+
 END MODULE LAPSDatSrc
