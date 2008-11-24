@@ -38,10 +38,14 @@ cdis
 
 cdoc    Convert Omega to W
 
+!       Omega units are Pascals / Second
+!       Pressure units are Pascals
+!       W units are meters / second        
+
         real omega_to_w
 
         real scale_height
-        parameter (scale_height = 8000.)
+        parameter (scale_height = 8000.) ! meters
 
         omega_to_w = - (omega / pressure_pa) * scale_height
 
@@ -52,10 +56,14 @@ cdoc    Convert Omega to W
 
 cdoc    Convert W to Omega
 
+!       Omega units are Pascals / Second
+!       Pressure units are Pascals
+!       W units are meters / second        
+
         real w_to_omega
 
         real scale_height
-        parameter (scale_height = 8000.)
+        parameter (scale_height = 8000.) ! meters
 
         w_to_omega = - (w * pressure_pa) / scale_height
 
