@@ -70,7 +70,8 @@ PROGRAM STMAS_MG
   CALL LAPS_QCs
 
   ! Add background to obs where obs is spare !by min-ken hseih
-  CALL AddBkgrd
+  ! CALL AddBkgrd
+  CALL JbGridpt		! Yuanfu's version of adding bkgrd.
 
   ! Release memory for LAPS:
   CALL LAPSRels
