@@ -242,12 +242,12 @@ for ($n=0; $n<$nfcst; $n++) {
   system ("date");
   my $scp_cmd;
 
-  $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fua/$fua_file $lapsprd/fua/wrf-$opt_a";
+  $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fua/$fua_file $lapsprd/fua/$opt_m-$opt_a";
   print "Running command: $scp_cmd\n";
   system ($scp_cmd);
   system ("date");
 
-  $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $lapsprd/fsf/wrf-$opt_a";
+  $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $lapsprd/fsf/$opt_m-$opt_a";
   print "Running command: $scp_cmd\n";
   system ($scp_cmd);
   system ("date");
@@ -319,14 +319,30 @@ for ($n=0; $n<$nfcst; $n++) {
 
 # Send to remote directory on MSS
   system ("date");
+
+  my $msspath;
+  my $mssfullpath;
+
+# $msspath = "/mss/fsl/frd/lapb/hmt_2008";
+  $msspath = $opt_M;
+  $mssfullpath = "$msspath/$mm/$date_a9";
+
   my $mss_cmd;
 
-  $mss_cmd = "cp $modelroot/$date/wrfprd/d01/fua/$fua_file /mss/fsl/frd/lapb/hmt_2008/fua/wrf-$opt_a";
+  $mss_cmd = "mkdir -p $mssfullpath/fua/$opt_m-$opt_a";
+  print "Running command: $mss_cmd\n";
+  system ($mss_cmd);
+
+  $mss_cmd = "cp $modelroot/$date/wrfprd/d01/fua/$fua_file $mssfullpath/fua/$opt_m-$opt_a";
   print "Running command: $mss_cmd\n";
   system ($mss_cmd);
   system ("date");
 
-  $mss_cmd = "cp $modelroot/$date/wrfprd/d01/fsf/$fsf_file /mss/fsl/frd/lapb/hmt_2008/fsf/wrf-$opt_a";
+  $mss_cmd = "mkdir -p $mssfullpath/fsf/$opt_m-$opt_a";
+  print "Running command: $mss_cmd\n";
+  system ($mss_cmd);
+
+  $mss_cmd = "cp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $mssfullpath/fsf/$opt_m-$opt_a";
   print "Running command: $mss_cmd\n";
   system ($mss_cmd);
   system ("date");
