@@ -182,6 +182,14 @@ if (! defined $opt_S) {
     system("rm \*\.tar"); 
     $t=gmtime(); 
 
+    print $t." Get wisdom\n";
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/madis/LDAD/WISDOM/netCDF/\* $public/data/madis/LDAD/WISDOM/netCDF/");
+    chdir "$public/data/madis/LDAD/WISDOM/netCDF/";
+    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
+    system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\" -exec tar -xvf {} \\;");
+    system("rm \*\.tar"); 
+    $t=gmtime(); 
+
 }
 
 if ($opt_m eq "ruc") {
