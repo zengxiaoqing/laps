@@ -46,7 +46,8 @@ CONTAINS
 
 SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 		    obsv,nobs,wght,stna,ospc,indx, &
-		    coef, bund,ipar,rpar,vnam,pnlt,slvl,ucvr)
+		    coef, bund,ipar,rpar,vnam,pnlt,&
+                    slvl,ucvr,diag)
 		    
 
 !==========================================================
@@ -68,6 +69,9 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 !                 pass in uncovr for each var
 !                 call IntplBkg to interpolate bkg to multigrid
 !                 and pass interpolated bkg and uncover (hbg/huc) to Minimize
+!       Modification:
+!                 12-2008 by Yuanfu Xie
+!                 pass in diag(nol) array for J_b term.
 !==========================================================
 
   IMPLICIT NONE
@@ -91,6 +95,7 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   REAL, INTENT(IN) :: ospc(3)		! Obs spacing
   REAL, INTENT(IN) :: coef(6,nobs)	! Coeffients
   REAL, INTENT(IN) :: rpar(1)		! Real parameter
+  REAL, INTENT(IN) :: diag(ngrd(1),ngrd(2))! Diagnol array for J_b
 
   REAL, INTENT(INOUT) :: anal(ngrd(1),ngrd(2),ngrd(3))
 
@@ -130,9 +135,8 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
     lvl(i) = MIN0(lvl(i),INT(ALOG(FLOAT(ngrd(i)-1))/ALOG(2.0))-1)
     lvl(i) = MAX0(lvl(i),1)
   ENDDO
-  lvl(1:2) = lvl(1:2)+1
   IF (verbal .EQ. 1) WRITE(*,2) lvl(1:3)
-2 FORMAT('STMASAna: Number of levels: ',I3)
+2 FORMAT('STMASAna: Number of levels: ',3I3)
 
   ! Leading dimensions:
   mld = 2**(lvl+1)+1
