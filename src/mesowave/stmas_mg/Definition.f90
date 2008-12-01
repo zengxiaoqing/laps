@@ -73,6 +73,7 @@ MODULE Definition
 !
 !  HISTORY: 
 !	Creation: YUANFU XIE	6-2005
+!       Modified: YUANFU XIE    12-2008 for adding diagnl.
 !==========================================================
 
   !----------------
@@ -134,6 +135,8 @@ MODULE Definition
        :: weight		! Observations weights
   REAL, ALLOCATABLE, DIMENSION(:,:,:) &
        :: coeffs		! Interpolation coefficients
+  REAL, ALLOCATABLE, DIMENSION(:,:,:) &
+       :: diagnl		! Diagonal array of B for J_b term
   LOGICAL, ALLOCATABLE, DIMENSION(:,:,:,:) &
        :: uncovr		! Uncovered grids !added by min-ken hsieh, used in AddBkgrd and STMASAna
 
