@@ -107,8 +107,9 @@ SUBROUTINE IntrMemo
   INTEGER :: err
 
   ALLOCATE(bkgrnd(numgrd(1),numgrd(2),numtmf,numvar), &
-           uncovr(numgrd(1),numgrd(2),numtmf,numvar), &	!Add by min-ken, uncovered used in 
-	   lndfac(numgrd(1),numgrd(2)), &		!		 AddBkgrd and STMASAna
+           uncovr(numgrd(1),numgrd(2),numtmf,numvar), &	! Add by min-ken, uncovered used in 
+	   diagnl(numgrd(1),numgrd(2),numvar), &	! Add B's diagonal array for J_b term
+	   lndfac(numgrd(1),numgrd(2)), &		! AddBkgrd and STMASAna
 	   qc_obs(4,numtmf*mxstts,numvar), &
 	   weight(numtmf*mxstts,numvar), &
 	   indice(6,numtmf*mxstts,numvar), &
@@ -136,6 +137,7 @@ SUBROUTINE IntrRels
 
   DEALLOCATE(bkgrnd, &
 	     uncovr, &
+             diagnl, &
 	     lndfac, &
 	     qc_obs, &
 	     weight, &
