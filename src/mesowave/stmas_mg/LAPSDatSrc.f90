@@ -1363,7 +1363,7 @@ SUBROUTINE JbGridpt
           g = .FALSE.
           IF ((lndfac(i,j) .GT. 0.0) .OR. (lndsea(iv) .EQ. 0)) g = .TRUE.
           ! Within the influence radius and landfactors the same:
-          IF (((i-ic)*(i-ic)+(j-jc)*(j-jc) .LT. r2) .AND. (o .EQ. g)) &
+          IF (((i-ic)*(i-ic)+(j-jc)*(j-jc) .LT. r2) .AND. (o .EQV. g)) &
             uncovr(i,j,kc-1:kc+1,iv) = .FALSE.
         ENDDO
       ENDDO
@@ -1371,5 +1371,74 @@ SUBROUTINE JbGridpt
     ENDDO
   ENDDO
 END SUBROUTINE JbGridpt
+
+
+
+SUBROUTINE JbInGaus
+
+!==========================================================
+!  This routine identifies those gridpoints over which the
+!  background are needed for J_b term in the cost function.
+!  Note. 
+!  This is a modified version of JbGridpt.
+!
+!  HISTORY:
+!       Creation: Nov, 2008 by Yuanfu Xie.
+!==========================================================
+
+  ! Local variables:
+  INTEGER :: i,j,ic,jc,kc,iv,jo,is,ie,js,je,iex
+  LOGICAL :: o,g
+  REAL    :: r2,ol
+
+  diagnl = 1.0
+
+  iex = 10		! Uncover gridpoint with Gaussian decay
+
+  !variable loop:
+  DO iv=1,numvar
+    ! Time frames:
+    r2 = radius(iv)*radius(iv)
+    DO jo=1,numobs(iv)
+
+      ! Center gridpoint:
+      ic = INT(qc_obs(2,jo,iv))
+      jc = INT(qc_obs(3,jo,iv))
+      kc = (INT(qc_obs(4,jo,iv))-domain(1,3))/lapsdt+1
+      IF ((kc .LT. 1) .OR. (kc .GT. numgrd(3))) THEN
+        PRINT*,'Obs out of range: ',iv,jo,qc_obs(4,jo,iv),domain(1,3)
+        CYCLE
+      ENDIF
+      IF (kc .EQ. 1) kc = 2
+      IF (kc .EQ. numgrd(3)) kc = kc-1
+
+      ! Landfactor:
+      ol = lndfac(ic,jc)*lndfac(ic+1,jc)*lndfac(ic,jc+1)*lndfac(ic+1,jc+1)
+      o = .FALSE.
+      IF ((ol .GT. 0.0) .OR. (lndsea(iv) .EQ. 0)) o = .TRUE.
+
+      ! Covered circle:
+      is = MAX0(ic-radius(iv)-iex,1)
+      ie = MIN0(ic+radius(iv)+iex,numgrd(1))
+      js = MAX0(jc-radius(iv)-iex,1)
+      je = MIN0(jc+radius(iv)+iex,numgrd(2))
+
+      DO j=js,je
+        DO i=is,ie
+          g = .FALSE.
+          IF ((lndfac(i,j) .GT. 0.0) .OR. (lndsea(iv) .EQ. 0)) g = .TRUE.
+          ! Within the influence radius and landfactors the same:
+          IF (((i-ic)*(i-ic)+(j-jc)*(j-jc) .LT. r2) .AND. (o .EQV. g)) THEN
+            diagnl(i,j,iv) = 0.0
+          ELSE
+            IF (o .EQV. g) diagnl(i,j,iv) = &
+              1.0-exp(r2-(i-ic)*(i-ic)-(j-jc)*(j-jc))
+          ENDIF
+        ENDDO
+      ENDDO
+
+    ENDDO
+  ENDDO
+END SUBROUTINE JbInGaus
 
 END MODULE LAPSDatSrc
