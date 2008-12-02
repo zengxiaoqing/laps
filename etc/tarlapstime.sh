@@ -7,20 +7,29 @@
 
 # Second command line argument is the laps time in yydddhhmm format
 
-# Third argument is for expanded output [expand,noexpand]
+# Third command line argument is year (YYYY)
 
-# Fourth argument is for static files [static,nostatic]
+# Fourth command line argument is month
 
-# Fifth argument is minimum age (minutes) to keep LGA/LGB files
+# Fifth command line argument is date of the month
 
-# Sixth argument is maximum age (minutes) to keep LGA/LGB files
+# Sixth argument is for expanded output [expand,noexpand]
+
+# Seventh argument is for static files [static,nostatic]
+
+# Eighth argument is minimum age (minutes) to keep LGA/LGB files
+
+# Ninth argument is maximum age (minutes) to keep LGA/LGB files
 
 LAPS_DATA_ROOT=$1
 time=$2
-EXPAND=$3
-STATIC=$4
-MINAGE=$5
-MAXAGE=$6
+YYYY=$3
+MM=$4
+DD=$5
+EXPAND=$6
+STATIC=$7
+MINAGE=$8
+MAXAGE=$9
 
 echo "LAPS_DATA_ROOT = $LAPS_DATA_ROOT"
 echo "time = $time"
@@ -35,7 +44,7 @@ LOGDIR=$LAPS_DATA_ROOT/log
 echo " "
 echo "Create list of lapsprd output files to be potentially tarred up for Web access"
 
-hour=`echo $time  | cut -c6-7`
+HH=`echo $time  | cut -c6-7`
 YYDDDHH=`echo $time  | cut -c1-7`
 
 echo "Tarring up LAPS in $LAPS_DATA_ROOT for $time"
@@ -55,8 +64,8 @@ find ./lapsprd -type f -name "$YYDDDHH??.*"     -print   >> lapstar.txt
 find ./lapsprd/lg?     -name "*.lg?" ! -cmin +$MAXAGE -cmin +$MINAGE -print >> lapstar.txt
 
 # Lapsprep files (use MINAGE/MAXAGE)
-# This can be improved to construct the file name LAPS:$YYYY-$MM-$DD_$HH
-find ./lapsprd/lapsprep     -name "LAPS*" ! -cmin +90 -cmin +30 -print >> lapstar.txt
+#find ./lapsprd/lapsprep    -name "LAPS*" ! -cmin +90 -cmin +30 -print >> lapstar.txt
+find  ./lapsprd/lapsprep    -name "LAPS:$YYYY-$MM-$DD_$HH"      -print >> lapstar.txt
 
 # Log & Wgi files
 find ./log     -type f -name "*.???.$YYDDDHH??" -print   >> lapstar.txt
