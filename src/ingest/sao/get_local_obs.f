@@ -79,16 +79,17 @@ c
 c
 c.....  Local variables/arrays
 c
+	integer    maxobs
 	integer    rtime
         integer  i4time_ob_a(maxobs), before, after
         real    lat(ni,nj), lon(ni,nj)
         real  k_to_f
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
-        logical l_reject(maxobs), ltest_madis_qc, l_same_stn
-        logical l_multiple_reports
+        logical l_reject(maxobs), ltest_madis_qc, ltest_madis_qcb
+        logical l_multiple_reports, l_same_stn
 c
 	integer  wmoid(maxsta)
-	integer    recNum
+        integer  recNum
 c
 	character  save_stn(maxobs)*6
 	character  timech*9, time*4
@@ -103,12 +104,18 @@ c
 c.....  Declarations for call to NetCDF reading routine (from gennet)
 
       include 'netcdf.inc'
-      integer maxSensor, maxobs,nf_fid, nf_vid, nf_status
+      integer maxSensor,nf_fid, nf_vid, nf_status
       parameter (maxSensor=2) ! Manually added
-      integer firstOverflow, globalInventory,
-     +     nStaticIds, numPST, numericWMOid(maxobs), precipIntensity(
-     +     maxSensor, maxobs), precipType( maxSensor, maxobs),
-     +     pressChangeChar(maxobs)
+      integer altimeterQCA(maxobs), dewpointQCA(maxobs),
+     +     firstOverflow, globalInventory, nStaticIds,
+     +     numericWMOid(maxobs), precipAccumQCA(maxobs),
+     +     precipIntensity( maxSensor, maxobs),
+     +     precipRateQCA(maxobs), precipType( maxSensor, maxobs),
+     +     pressChange3HourQCA(maxobs), pressChangeChar(maxobs),
+     +     relHumidityQCA(maxobs), seaLevelPressureQCA(maxobs),
+     +     stationPressureQCA(maxobs), temperatureQCA(maxobs),
+     +     visibilityQCA(maxobs), windDirQCA(maxobs),
+     +     windSpeedQCA(maxobs)
       real altimeter(maxobs), dewpoint(maxobs), elevation(maxobs),
      +     latitude(maxobs), longitude(maxobs),
      +     meanWeightedTemperature(maxobs), precipAccum(maxobs),
@@ -154,20 +161,39 @@ c
      &          store_6(maxsta,5), store_6ea(maxsta,2),
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
+
+        integer ibmask(8)
 c
 c.....  Start.
 c
         if(itest_madis_qc .gt. 0)then
-            ltest_madis_qc = .true.
-        else
-            ltest_madis_qc = .false.
+            if(itest_madis_qc .eq. 15)then  ! call DD & QCA checking routines
+                ltest_madis_qc  = .true.    ! for subjective QC reject list
+                ltest_madis_qcb = .true.
+                ibmask(1) = 0
+                ibmask(2) = 1               ! Validity check applied
+                ibmask(3) = 0
+                ibmask(4) = 0
+                ibmask(5) = 0
+                ibmask(6) = 1               ! Statistical Spatial Consistency check
+                ibmask(7) = 0
+                ibmask(8) = 0
+                level_qc = 0                ! Subjective QC (reject list) only
+            else                            ! values of 1-2 (DD flag check)
+                ltest_madis_qc  = .true.
+                ltest_madis_qcb = .false.
+                level_qc = itest_madis_qc
+            endif
+        else                                ! value of 0 (neither check routine)
+            ltest_madis_qc  = .false.
+            ltest_madis_qcb = .false.
         endif
 
-        level_qc = itest_madis_qc
              
+        write(6,*)' Subroutine get_local_obs:' 
         write(6,*)
-     1  ' get_local_obs, ltest_madis_qc/itest_madis_qc/level_qc = '
-     1                  ,ltest_madis_qc,itest_madis_qc,level_qc       
+     1      ' itest_madis_qc/ltest_madis_qc/ltest_madis_qcb/level_qc = '   
+     1       ,itest_madis_qc,ltest_madis_qc,ltest_madis_qcb,level_qc       
 
 c
 c.....	Set jstatus flag for the local data to bad until we find otherwise.
@@ -265,41 +291,20 @@ c
 c
 c.....  Call the read routine.
 c
-            if(.false.)then
-	      call read_local_obs(nf_fid, recNum, altimeter(ix),
-     &         dataProvider(ix), solarRadiation(ix), 
-     &         seaSurfaceTemp(ix), soilTemperature(ix),        
-     &         dewpoint(ix),        
-     &         elevation(ix), latitude(ix), longitude(ix),       
-     &         observationTime(ix), presWeather(ix), 
-     &         relHumidity(ix), rhChangeTime(ix),       
-     &         seaLevelPressure(ix), stationId(ix), 
-     &         stationPressChangeTime(ix), stationPressure(ix),        
-     &         stationType(ix), tempChangeTime(ix), temperature(ix), 
-     &         visibility(ix),       
-     &         windDir(ix), windDirChangeTime(ix), windDirMax(ix), 
-     &         windGust(ix), windGustChangeTime(ix), 
-     &         windSpeed(ix), windSpeedChangeTime(ix), badflag, istatus)       
- 
-	      if(istatus .ne. 1)then
-                write(6,*)
-     1          '     Warning: bad status return from READ_LOCAL'       
-                n_local_file = 0
-
-              else
-                n_local_file = recNum
-                write(6,*)'     n_local_file = ',n_local_file
-
-              endif
-
-            else
-              call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     firstOverflow, globalInventory, nStaticIds, numericWMOid, 
-     +     precipIntensity, precipType, pressChangeChar, 
-     +     altimeter(ix), dewpoint(ix), elevation(ix), latitude(ix), 
-     +     longitude(ix), meanWeightedTemperature(ix), 
-     +     precipAccum(ix), precipRate(ix), pressChange3Hour(ix), 
-     +     relHumidity(ix), seaLevelPressure(ix), seaSurfaceTemp(ix), 
+            call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
+     +     altimeterQCA(ix), dewpointQCA(ix), firstOverflow, 
+     +     globalInventory, nStaticIds, numericWMOid, 
+     +     precipAccumQCA(ix), precipIntensity, 
+     +     precipRateQCA(ix), precipType, pressChange3HourQCA(ix), 
+     +     pressChangeChar, relHumidityQCA(ix), seaLevelPressureQCA(ix),       
+     +     stationPressureQCA(ix), temperatureQCA(ix), 
+     +     visibilityQCA(ix),       
+     +     windDirQCA(ix), windSpeedQCA(ix), altimeter(ix), 
+     +     dewpoint(ix), 
+     +     elevation(ix), latitude(ix), longitude(ix), 
+     +     meanWeightedTemperature(ix), precipAccum(ix), 
+     +     precipRate(ix), pressChange3Hour(ix), relHumidity(ix), 
+     +     seaLevelPressure(ix), seaSurfaceTemp(ix), 
      +     soilMoisturePercent(ix), soilTemperature(ix), 
      +     solarRadiation(ix), 
      +     stationPressure(ix), temperature(ix), visibility(ix), 
@@ -315,11 +320,8 @@ c
      +     tempChangeTime(ix), windDirChangeTime(ix), 
      +     windGustChangeTime(ix), windSpeedChangeTime(ix),badflag)
 
-              n_local_file = recNum
-              write(6,*)'     n_local_file = ',n_local_file
-
-            endif
-
+            n_local_file = recNum
+            write(6,*)'     n_local_file = ',n_local_file
 
             ix = ix + n_local_file
 
@@ -586,6 +588,8 @@ c
           call sfc_climo_qc_r('t_f',temp_f)
           if(ltest_madis_qc)
      1        call madis_qc_r(temp_f,temperatureDD(i),level_qc,badflag)       
+          if(ltest_madis_qcb)
+     1        call madis_qc_b(temp_f,temperatureQCA(i),ibmask,0,badflag)       
 c       
 	  dewp_k = dewpoint(i)
           call sfc_climo_qc_r('td_k',dewp_k)
@@ -596,6 +600,8 @@ c
 	  endif
           if(ltest_madis_qc)
      1        call madis_qc_r(dewp_f,dewpointDD(i),level_qc,badflag)       
+          if(ltest_madis_qcb)
+     1        call madis_qc_b(dewp_f,dewpointQCA(i),ibmask,0,badflag)       
 c
 	  rh_p = relHumidity(i) 
 	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
@@ -607,6 +613,8 @@ c
 	  endif
           if(ltest_madis_qc)
      1        call madis_qc_r(rh_p,relHumidityDD(i),level_qc,badflag)        
+          if(ltest_madis_qcb)
+     1        call madis_qc_b(rh_p,relHumidityQCA(i),ibmask,0,badflag)        
 c
 c..... Wind speed and direction
 c
@@ -646,24 +654,34 @@ c
           if(ltest_madis_qc)
      1        call madis_qc_r(stn_press,stationPressureDD(i),level_qc
      1                                                      ,badflag)
+          if(ltest_madis_qcb)
+     1        call madis_qc_b(stn_press,stationPressureQCA(i),ibmask
+     1                                                    ,0,badflag)
 	  if(stationPressChangeTime(i) .gt. 0.) then
 	     if( abs(observationTime(i) - stationPressChangeTime(i))
      1                               .gt. laps_cycle_time ) then
 		stn_press = badflag
 	     endif
 	  endif
+
 	  if(stn_press .ne. badflag) stn_press = stn_press * 0.01 !Pa to mb
 c
           call sfc_climo_qc_r('mslp_pa',seaLevelPressure(i))
           if(ltest_madis_qc)
      1        call madis_qc_r(seaLevelPressure(i),seaLevelPressureDD(i)
      1                                           ,level_qc,badflag)       
+          if(ltest_madis_qcb)
+     1        call madis_qc_b(seaLevelPressure(i),seaLevelPressureQCA(i)       
+     1                                           ,ibmask,0,badflag)       
 	  if(seaLevelPressure(i) .ne. badflag) seaLevelPressure(i)   
      1                             = seaLevelPressure(i)   * 0.01 !Pa to mb
 
           call sfc_climo_qc_r('alt_pa',altimeter(i))
           if(ltest_madis_qc)
      1        call madis_qc_r(altimeter(i),altimeterDD(i),level_qc
+     1                                                   ,badflag)
+          if(ltest_madis_qcb)
+     1        call madis_qc_b(altimeter(i),altimeterQCA(i),ibmask,0
      1                                                   ,badflag)
 	  if(altimeter(i) .ne. badflag) 
      1                         altimeter(i) = altimeter(i) * 0.01 !Pa to mb
@@ -928,31 +946,3 @@ c
 c
        end
 
-         subroutine madis_qc_r(var,DD,level_qc,badflag)
-
-         real var
-         character*1 DD
-         real badflag
-
-         if(level_qc .ge. 1)then
-
-             if(DD .eq. 'X')then ! Failed Level 1 QC
-                 var = badflag
-             endif
-
-             if(level_qc .ge. 2)then
-                 if(DD .eq. 'Q')then ! Failed Level 2 or 3 QC
-                     var = badflag
-                 endif
-             endif             
-
-         endif
-
-         if(DD .eq. 'B')then ! Subjective QC (reject list)
-             var = badflag
-         endif
- 
-         return
-         end
-                 
-          
