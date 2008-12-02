@@ -32,7 +32,7 @@ my $fileWait_time = 20; #Number of seconds to sleep after file copy for stabilit
 $project = $opt_P if defined($opt_P);
 
 if ($project eq "DWR") {
-  $LAPSROOT = "/home/oplapb/builds/laps";
+  $LAPSROOT = "@prefix@";
 } else {
   $LAPSROOT = $ENV{LAPSROOT};
 }
@@ -235,10 +235,26 @@ if ($project eq "DWR" ) {
 }
 
 # Copy lfmpost.nl into $modelroot/$date/static from $modelroot/static
+my $wait4dir = 0;
+my $foundDir = 0;
 if (! -e "$modelroot/$date/static") {
+  if (! -e "$modelroot/$date") {
+    while (($foundDir == 0) && ($wait4dir < 10)) {
+      sleep 30;
+      if (! -e "$modelroot/$date") {
+        $wait4dir++;
+      } else {
+        $foundDir = 1;
+      }
+    }
+    if ($foundDir == 0) {
+      die "ERROR: Model directory not found!: $modelroot/$date\n";
+    } 
+  }
   mkdir ("$modelroot/$date/static",0775);
   print "Making directory:  $modelroot/$date/static\n";
 }
+
 system ("cp $modelroot/static/lfmpost.nl $modelroot/$date/static/lfmpost.nl");
 
 # Loop through each forecast time within each requested grid and
