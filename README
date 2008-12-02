@@ -1192,7 +1192,7 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            restrictions. This data, generally in 'WFO/AWIPS' NetCDF format, are
            distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/. The supported MADIS LDAD surface
-           observation dataset is 'mesonet'.
+           observation datasets are 'mesonet' and 'urbanet'.
 
            Note that only observations reasonably near the standard shelter
            height (2 meters, except 10 meters for wind) should be included in 
@@ -2316,7 +2316,7 @@ LSO process - obs_driver.x - Ingest surface data
 Input:
 	METAR/SYNOP data
         Buoy/ship (maritime) data
-	LDAD mesonet data
+	MADIS (or LDAD) mesonet/urbanet data
         GPS (sfc obs - without precipitable water) 
         Profiler surface data (via LDAD)       
 
@@ -2729,6 +2729,9 @@ Inputs:
                 Uses pressure altitude
 
             AFWA ASCII format also allowed for ACARS
+
+        WISDOM Balloon Data
+            NetCDF files using MADIS CDLs
 
 Outputs: (Intermediate output written to the 'pin' file. Feeds cloud.exe, 
           wind.exe, lq3driver.x)
