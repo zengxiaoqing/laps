@@ -27,8 +27,9 @@
 #
 # -p T                 Advance analyses by T minutes for balanced output at systime + T
 #
-# -f                   format to print date in, yydddhhmm (default if not specified)
-#                                               mm        (month)
+# -f                   format to print date in, yydddhhmm     (default if not specified)
+#                                               mm            (month)
+#                                               yyyymmdd_hhmm (13 character date)
 #
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
