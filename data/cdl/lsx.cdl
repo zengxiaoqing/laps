@@ -3,8 +3,8 @@ netcdf lsx {
     dimensions:
         record = unlimited,
         z = 1,
-	x = 125,
-	y = 105,
+	x = 249,
+	y = 209,
         nav = 1,
         namelen = 132;
 		
@@ -303,7 +303,7 @@ netcdf lsx {
             css:lvl_coord="AGL";
             css:LAPS_units="          ";
  
-         //      visability              //
+         //      visibility              //
 
          float
             vis(record,z,y,x);
@@ -342,6 +342,20 @@ netcdf lsx {
             hi:LAPS_var="HI";
             hi:lvl_coord="none";
             hi:LAPS_units="none";
+
+         //      cloud ceiling              //
+
+         float
+            cc(record,z,y,x);
+            cc:navigation_dim = "nav";
+            cc:record = "valtime, reftime";
+            cc:_FillValue = 1.e+37f;
+            cc:long_name="cloud ceiling";
+            cc:units="meters";
+            cc:valid_range= 0.f, 20000.f;
+            cc:LAPS_var="VIS";
+            cc:lvl_coord="AGL";
+            cc:LAPS_units="M";
 
         //      ground temperature
         float
@@ -386,6 +400,7 @@ netcdf lsx {
             spd_comment(record,z,namelen),
             css_comment(record,z,namelen),
             vis_comment(record,z,namelen),
+            cc_comment(record,z,namelen),
             fwx_comment(record,z,namelen),
             hi_comment(record,z,namelen),
             tgd_comment(record,z,namelen),
@@ -481,6 +496,10 @@ netcdf lsx {
         short
             vis_fcinv(record, z);
             vis_fcinv:_FillValue= 0s;
+              	
+        short
+            cc_fcinv(record, z);
+            cc_fcinv:_FillValue= 0s;
               	
         short
             fwx_fcinv(record, z);
