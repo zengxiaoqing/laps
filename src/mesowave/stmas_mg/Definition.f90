@@ -82,6 +82,11 @@ MODULE Definition
   CHARACTER*4 :: varnam(MAXVAR)
   CHARACTER*256 :: dirstc
 
+  character*8 :: date0,date1
+  character*10 :: time0,time1
+  character*5 :: zone0,zone1
+  integer :: timing0(8),timing1(8) 
+
   INTEGER :: dirlen
 
   INTEGER :: lapsdt		! LAPS cycle time (secs)
