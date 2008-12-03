@@ -63,9 +63,16 @@ C
 
       include 'netcdf.inc'
       integer maxSensor, recNum,nf_fid, nf_vid, nf_status
-      integer firstOverflow, globalInventory, nStaticIds,
-     +     numericWMOid(recNum), precipIntensity( maxSensor, recNum),
-     +     precipType( maxSensor, recNum), pressChangeChar(recNum)
+      integer altimeterQCA(recNum), dewpointQCA(recNum),
+     +     firstOverflow, globalInventory, nStaticIds,
+     +     numericWMOid(recNum), precipAccumQCA(recNum),
+     +     precipIntensity( maxSensor, recNum),
+     +     precipRateQCA(recNum), precipType( maxSensor, recNum),
+     +     pressChange3HourQCA(recNum), pressChangeChar(recNum),
+     +     relHumidityQCA(recNum), seaLevelPressureQCA(recNum),
+     +     stationPressureQCA(recNum), temperatureQCA(recNum),
+     +     visibilityQCA(recNum), windDirQCA(recNum),
+     +     windSpeedQCA(recNum)
       real altimeter(recNum), dewpoint(recNum), elevation(recNum),
      +     latitude(recNum), longitude(recNum),
      +     meanWeightedTemperature(recNum), precipAccum(recNum),
@@ -120,12 +127,19 @@ C
       endif
 
       call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     firstOverflow, globalInventory, nStaticIds, numericWMOid, 
-     +     precipIntensity, precipType, pressChangeChar, 
-     +     altimeter(ix), dewpoint(ix), elevation(ix), latitude(ix), 
-     +     longitude(ix), meanWeightedTemperature(ix), 
-     +     precipAccum(ix), precipRate(ix), pressChange3Hour(ix), 
-     +     relHumidity(ix), seaLevelPressure(ix), seaSurfaceTemp(ix), 
+     +     altimeterQCA(ix), dewpointQCA(ix), firstOverflow, 
+     +     globalInventory, nStaticIds, numericWMOid, 
+     +     precipAccumQCA(ix), precipIntensity, 
+     +     precipRateQCA(ix), precipType, pressChange3HourQCA(ix), 
+     +     pressChangeChar, relHumidityQCA(ix), seaLevelPressureQCA(ix),       
+     +     stationPressureQCA(ix), temperatureQCA(ix), 
+     +     visibilityQCA(ix),       
+     +     windDirQCA(ix), windSpeedQCA(ix), altimeter(ix), 
+     +     dewpoint(ix), 
+     +     elevation(ix), latitude(ix), longitude(ix), 
+     +     meanWeightedTemperature(ix), precipAccum(ix), 
+     +     precipRate(ix), pressChange3Hour(ix), relHumidity(ix), 
+     +     seaLevelPressure(ix), seaSurfaceTemp(ix), 
      +     soilMoisture(ix), soilTemperature(ix), solarRadiation(ix), 
      +     stationPressure(ix), temperature(ix), visibility(ix), 
      +     windDir(ix), windDirMax(ix), windGust(ix), windSpeed(ix), 

@@ -2,17 +2,21 @@ C
 C  Subroutine to read the file "LDAD automated mesonet data " 
 C
       subroutine read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     firstOverflow, globalInventory, nStaticIds, numericWMOid, 
-     +     precipIntensity, precipType, pressChangeChar, altimeter, 
-     +     dewpoint, elevation, latitude, longitude, 
-     +     meanWeightedTemperature, precipAccum, precipRate, 
-     +     pressChange3Hour, relHumidity, seaLevelPressure, 
-     +     seaSurfaceTemp, soilMoisturePercent, soilTemperature, 
-     +     solarRadiation, stationPressure, temperature, visibility, 
-     +     windDir, windDirMax, windGust, windSpeed, altimeterDD, 
-     +     dataProvider, dewpointDD, precipAccumDD, precipRateDD, 
-     +     presWeather, pressChange3HourDD, providerId, 
-     +     relHumidityDD, seaLevelPressureDD, stationId, stationName, 
+     +     altimeterQCA, dewpointQCA, firstOverflow, globalInventory, 
+     +     nStaticIds, numericWMOid, precipAccumQCA, precipIntensity, 
+     +     precipRateQCA, precipType, pressChange3HourQCA, 
+     +     pressChangeChar, relHumidityQCA, seaLevelPressureQCA, 
+     +     stationPressureQCA, temperatureQCA, visibilityQCA, 
+     +     windDirQCA, windSpeedQCA, altimeter, dewpoint, elevation, 
+     +     latitude, longitude, meanWeightedTemperature, precipAccum, 
+     +     precipRate, pressChange3Hour, relHumidity, 
+     +     seaLevelPressure, seaSurfaceTemp, soilMoisturePercent, 
+     +     soilTemperature, solarRadiation, stationPressure, 
+     +     temperature, visibility, windDir, windDirMax, windGust, 
+     +     windSpeed, altimeterDD, dataProvider, dewpointDD, 
+     +     precipAccumDD, precipRateDD, presWeather, 
+     +     pressChange3HourDD, providerId, relHumidityDD, 
+     +     seaLevelPressureDD, stationId, stationName, 
      +     stationPressureDD, stationType, temperatureDD, 
      +     visibilityDD, windDirDD, windSpeedDD, observationTime, 
      +     receivedTime, reportTime, rhChangeTime, 
@@ -21,9 +25,16 @@ C
 C
       include 'netcdf.inc'
       integer maxSensor, recNum,nf_fid, nf_vid, nf_status
-      integer firstOverflow, globalInventory, nStaticIds,
-     +     numericWMOid(recNum), precipIntensity( maxSensor, recNum),
-     +     precipType( maxSensor, recNum), pressChangeChar(recNum)
+      integer altimeterQCA(recNum), dewpointQCA(recNum),
+     +     firstOverflow, globalInventory, nStaticIds,
+     +     numericWMOid(recNum), precipAccumQCA(recNum),
+     +     precipIntensity( maxSensor, recNum),
+     +     precipRateQCA(recNum), precipType( maxSensor, recNum),
+     +     pressChange3HourQCA(recNum), pressChangeChar(recNum),
+     +     relHumidityQCA(recNum), seaLevelPressureQCA(recNum),
+     +     stationPressureQCA(recNum), temperatureQCA(recNum),
+     +     visibilityQCA(recNum), windDirQCA(recNum),
+     +     windSpeedQCA(recNum)
       real altimeter(recNum), dewpoint(recNum), elevation(recNum),
      +     latitude(recNum), longitude(recNum),
      +     meanWeightedTemperature(recNum), precipAccum(recNum),
@@ -747,6 +758,36 @@ C   Variables of type INT
 C
 C
 C     Variable        NETCDF Long Name
+C     altimeterQCA  "altimeter setting QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'altimeterQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for altimeterQCA'
+       print *,'Set altimeterQCA to -99'
+       altimeterQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,altimeterQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for altimeterQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     dewpointQCA   "dew point QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'dewpointQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for dewpointQCA'
+       print *,'Set dewpointQCA to -99'
+       dewpointQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,dewpointQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for dewpointQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
 C     firstOverflow 
 C
       nf_status=NF_INQ_VARID(nf_fid,'firstOverflow',nf_vid)
@@ -807,6 +848,21 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
+C     precipAccumQCA"precip amount QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'precipAccumQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for precipAccumQCA'
+       print *,'Set precipAccumQCA to -99'
+       precipAccumQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipAccumQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for precipAccumQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
 C     precipIntensity"precipitation intensity"
 C
       nf_status=NF_INQ_VARID(nf_fid,'precipIntensity',nf_vid)
@@ -818,6 +874,21 @@ C
        nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipIntensity)
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for precipIntensity'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     precipRateQCA "precip rate QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'precipRateQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for precipRateQCA'
+       print *,'Set precipRateQCA to -99'
+       precipRateQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipRateQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for precipRateQCA'
        endif
       endif
 C
@@ -837,6 +908,21 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
+C     pressChange3HourQCA"3h pressure change QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'pressChange3HourQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for pressChange3HourQCA'
+       print *,'Set pressChange3HourQCA to -99'
+       pressChange3HourQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,pressChange3HourQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for pressChange3HourQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
 C     pressChangeChar"character of pressure change"
 C
       nf_status=NF_INQ_VARID(nf_fid,'pressChangeChar',nf_vid)
@@ -848,6 +934,111 @@ C
        nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,pressChangeChar)
        if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status),' for pressChangeChar'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     relHumidityQCA"relative humidity QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'relHumidityQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for relHumidityQCA'
+       print *,'Set relHumidityQCA to -99'
+       relHumidityQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,relHumidityQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for relHumidityQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     seaLevelPressureQCA"sea level pressure QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'seaLevelPressureQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for seaLevelPressureQCA'
+       print *,'Set seaLevelPressureQCA to -99'
+       seaLevelPressureQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,seaLevelPressureQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for seaLevelPressureQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     stationPressureQCA"station pressure QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'stationPressureQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for stationPressureQCA'
+       print *,'Set stationPressureQCA to -99'
+       stationPressureQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,stationPressureQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for stationPressureQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     temperatureQCA"temperature QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'temperatureQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for temperatureQCA'
+       print *,'Set temperatureQCA to -99'
+       temperatureQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,temperatureQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for temperatureQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     visibilityQCA "visibility QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'visibilityQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for visibilityQCA'
+       print *,'Set visibilityQCA to -99'
+       visibilityQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,visibilityQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for visibilityQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     windDirQCA    "wind direction QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'windDirQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for windDirQCA'
+       print *,'Set windDirQCA to -99'
+       windDirQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windDirQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for windDirQCA'
+       endif
+      endif
+C
+C     Variable        NETCDF Long Name
+C     windSpeedQCA  "wind speed QC applied word"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'windSpeedQCA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+       print *, NF_STRERROR(nf_status),' for windSpeedQCA'
+       print *,'Set windSpeedQCA to -99'
+       windSpeedQCA = -99
+      else
+       nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windSpeedQCA)
+       if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status),' for windSpeedQCA'
        endif
       endif
 
