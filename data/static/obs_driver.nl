@@ -1,6 +1,6 @@
  &obs_driver_nl
  path_to_metar='/public/data/metar/netcdf/',
- path_to_local_data='/public/data/ldad/mesonet/netcdf/',
+ path_to_local_data='/public/data/madis/LDAD/',
  path_to_buoy_data='/public/data/maritime/netcdf/',
  path_to_gps_data='/null/public/data/gpsmet/netcdf/',
  path_to_tower_data='/data/fxa/LDAD/mesonet/met-tower/netCDF/',
@@ -87,11 +87,14 @@ c                         closest to the current 'systime' for each station
 c                      - .true. means we will select all reports from a given
 c                         station falling within the time window
 c
-c 'itest_madis_qc' - 0 means we do not test MADIS QC flags
-c                    1 means level 1 test for MADIS QC flags with local data
-c                      along with MADIS subjective black list
-c                    2 means level 1,2,3 tests are all applied along with
-c                      the MADIS subjective black list
+c 'itest_madis_qc' -  0 means we do not test MADIS QC flags
+c                     1 means level 1 test for MADIS QC flags with local data
+c                       along with MADIS subjective black list
+c                     2 means level 1,2,3 tests are all applied along with
+c                       the MADIS subjective black list
+c                    15 means level 1 test for MADIS QC flags and the spatial
+c                       statistical QC check 
+c                       
 c
 c 'n_cycles' - number of time cycles to process LSO data for, looking back
 c              in time from the current 'systime'
