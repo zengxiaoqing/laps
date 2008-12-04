@@ -179,12 +179,9 @@ c
       real dum_2d(NX_L,NY_L)   ! Local
       integer k_eff(NX_L,NY_L) ! Local
 c
-      logical l_unfold, l_compress_output, l_domain_read,l_ppi_mode       
+      logical l_unfold, l_compress_output, l_domain_read
       save l_domain_read
       data l_domain_read /.false./
-
-      save l_ppi_mode
-      data l_ppi_mode /.false./ ! True will map one tilt in each LAPS level
 c 
       real avgvel,vel_nyquist,vel_value,ref_value,lat_dum,lon_dum
       real v_nyquist_tilt(max_tilts)
@@ -285,7 +282,8 @@ c
         k_low = int(height_to_zcoord(rheight_radar,i_status))
         k_low = max(k_low,1)
 
-        if(l_ppi_mode)then ! for testing only
+!       True will map one tilt in each LAPS level (for testing only)
+        if(namelist_parms%l_ppi_mode)then 
             k_low = 1 
         endif
 
@@ -468,7 +466,8 @@ c
                 stop
             ENDIF
 
-            if(l_ppi_mode)then ! for testing only
+!           True will map one tilt in each LAPS level (for testing only)
+            if(namelist_parms%l_ppi_mode)then 
                 k = i_tilt 
             endif
 
