@@ -15,10 +15,10 @@ open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
 use Cwd 'chdir'; #from the camel book(387): "override chdir; keep PWD up to date"
 
 use lib "@prefix@/etc/www"; # Set this to your path for 'cgi-lib.pl'
-require "cgi-lib.pl";       # supplied in $LAPSINSTALLROOT/etc/www OR /w3/utilities
+require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www OR /w3/utilities
 
-use lib "@prefix@/etc";     # Set this to your path for 'laps_tools.pm'
-require "laps_tools.pm";    # supplied in $LAPSINSTALLROOT/etc
+use lib "@prefix@/etc"; # Set this to your path for 'laps_tools.pm'
+require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
 
 ##As per Bill's code, have form expire in 1 hour
 use HTTP::Date;
@@ -37,15 +37,11 @@ $default_title="FSL/LAPS Data Display (Experimental)";
 
 # $web_root is where the '$web_root/domains/[list of domains]/private_data'
 # soft links (to each $LAPS_DATA_ROOT) should be set up
-
 $web_root = "/w3/lapb";
-#$web_root = "@prefix@/etc/www";
 
 # request_root is where the '$request_root/lapsplot/scratch' directory tree
 # should be set up
-
-$request_root = "$web_root/request";
-#$request_root = "$web_root";
+$request_root = "/w3/lapb/request";
 
 $filename = "$request_root/lapsplot/selected.in";
 open(FILE,$filename) or die "Can't open $filename.";
@@ -163,6 +159,10 @@ my $default_npix = @lines[11];
 $default_npix =~ s/ //g;
 chomp $default_npix;
 
+my $default_frames = @lines[12];
+$default_frames =~ s/ //g;
+chomp $default_frames;
+
 $n_choices=8;
 
 &ReadParse(*default);
@@ -223,6 +223,8 @@ close LAPSPRD;
 @thickness_list[2] = "3";
 #print "@thickness_list\n";
 
+@frames_list[0] = "1";
+
 ##Here's new stuff (sort of)------------------
 
 print <<"EOF";
@@ -281,6 +283,27 @@ EOF
   }
 print <<"EOF";
 </select>
+
+
+<p>
+<A HREF="frames.html"># Frames:</A>
+<br>
+
+<select name="frames">
+EOF
+  #display available thicknesses
+
+  foreach $frames (@frames_list) {
+
+    if($frames == $default_frames ) { print "<option selected>$frames\n"; } 
+    else               { print "<option>$frames\n"; } 
+
+  }
+
+print <<"EOF";
+</select>
+
+
 </td>
 
 <td align="left" valign=top>
