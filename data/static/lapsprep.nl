@@ -3,7 +3,7 @@
   balance  = .true., 
   hydrometeor_scale_factor_pcp = 0.0,
   hydrometeor_scale_factor_cld = 0.5,
-  output_format = 'wps','wrf',
+  output_format = 'wps',
   snow_thresh = 1.1,
   lwc2vapor_thresh = 1.01,
   make_sfc_uv = .false.,
