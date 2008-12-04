@@ -102,6 +102,7 @@ c
           logical l_line_ref_qc
           logical l_hybrid_first_gate
           logical l_unfold
+          logical l_ppi_mode
 
       end type namelist_type
 
