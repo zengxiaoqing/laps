@@ -1348,7 +1348,7 @@ SUBROUTINE JbGridpt
       IF (kc .EQ. numgrd(3)) kc = kc-1
 
       ! Landfactor:
-      ol = lndfac(ic,jc)*lndfac(ic+1,jc)*lndfac(ic,jc+1)*lndfac(ic+1,jc+1)
+      ol = lndfac(ic,jc)+lndfac(ic+1,jc)+lndfac(ic,jc+1)+lndfac(ic+1,jc+1)
       o = .FALSE.
       IF ((ol .GT. 0.0) .OR. (lndsea(iv) .EQ. 0)) o = .TRUE.
 
