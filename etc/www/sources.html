@@ -1,0 +1,66 @@
+<h2>Source(s):</h2>
+Click on one or more entries to specify data sources.
+
+<h3>bkgnd:</h3>
+Plot model background fields used as the analysis first guess. These are
+remapped onto the LAPS grid in the LGA/LGB files.
+
+<h3>mm5, etc:</h3>
+Plot model forecast fields that were initialized with LAPS analyses (FUA/FSF
+files)
+
+<p>
+Note: an asterisk after a source indicates it is the preferred background for
+use in the analyses.
+
+<h3>DIFF/diff:</h3>
+
+To difference two fields, click also on the lower-case 'diff' to add an 
+overlay with the difference field. The last two source/field/level overlays will be
+used for the difference. This should work for most fields, except for wind 
+barbs and wind speed. Clicking on the upper-case 'DIFF' will produce a
+difference image. The overlays for the two fields being differenced will
+not be plotted for this image option. When doing differences it is recommended
+to use only lower case "Field" selections.
+<p>
+On some machines (e.g. PCs with windows) you may need to hold down the 
+CTRL key while clicking for multiple choices with the mouse.
+
+
+<h3>obs:</h3>
+
+
+<p>
+Show observation plots (surface or upper level).
+For observation plots at upper levels, here is the color scheme:
+<ul>
+<li>Wind
+<ul>
+<li>Lavender - Profiler, Tower, Dropsonde
+<li>Red - RAOB
+<li>Light Blue - ACARS (at the level)
+<li>Dark Blue - ACARS (near the level)
+<li>Light Blue (small barbs) - Surface Obs (at the level)
+<li>Dark Blue (small barbs) - Surface Obs (near the level)
+<li>Yellow - Cloud Drift Winds (at the level)
+<li>Grey - Cloud Drift Winds (off the level)
+<li>Radar - Radial velocity is shown as red (receding) and green (approaching) grid squares while
+    derived radar vectors are shown as small yellow wind barbs
+</ul>
+</ul><ul>
+
+<li>Temperature
+<ul>
+<li>Aqua - RASS
+<li>Yellow - RAOB, Radiometer
+<li>Deep Blue - Dropsonde
+<li>Magenta - Satellite Soundings (e.g. GOES)
+<li>Violet - POES Satellite Soundings
+<li>Red - ACARS
+</ul>
+</ul>
+
+
+<h3>what-got-in:</h3>
+
+Show a text listing of what data were used for this analysis field
