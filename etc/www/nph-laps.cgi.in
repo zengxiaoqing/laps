@@ -12,10 +12,10 @@ $|=1;  #force flush of buffers after each print
 open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
 
 use lib "@prefix@/etc/www"; # Set this to your path for 'cgi-lib.pl'
-require "cgi-lib.pl";       # supplied in $LAPSINSTALLROOT/etc/www OR /w3/utilities
+require "cgi-lib.pl";    # supplied in $LAPSINSTALLROOT/etc/www OR /w3/utilities
 
-use lib "@prefix@/etc";     # Set this to your path for 'laps_tools.pm'
-require "laps_tools.pm";    # supplied in $LAPSINSTALLROOT/etc
+use lib "@prefix@/etc"; # Set this to your path for 'laps_tools.pm'
+require "laps_tools.pm";                 # supplied in $LAPSINSTALLROOT/etc
     
 #set up some nice variables
 @month=(Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec);
@@ -31,15 +31,11 @@ $thisDir = $1;
 
 # $web_root is where the '$web_root/domains/[list of domains]/private_data'
 # soft links (to each $LAPS_DATA_ROOT) should be set up
-
 $web_root = "/w3/lapb";
-#$web_root = "@prefix@/etc/www";
 
 # request_root is where the '$request_root/lapsplot/scratch' directory tree
 # should be set up
-
 $request_root = "$web_root/request"; # current directory of this script
-#$request_root = "$web_root";
 
 $DomainDir = "$web_root/domains";
 #$ScratchDir = "/scratch/frd/laps/www";
@@ -178,6 +174,7 @@ $ENV{'file_in'} = $file_in;
 $ENV{'plot_file'} = $plotFile;
 $density=$input{'density'};
 $thickness=$input{'thickness'};
+$frames=$input{'frames'};
 #$ENV{'NewZoom'} = $NewZoom;
 $a9time=$input{'a9time'};
 $forecast_time=$input{'forecast_time'};
@@ -196,7 +193,7 @@ $default_minusHours = 3;
     gmtime($time - $default_minusHours*3600);
 $mp1=$mon+1;
 $file_in =~ s/ /+/g;
-$link_prefix="<a href=\"$thisURL/$basename?domain=$file_in&density=$density&thickness=$thickness&a9time=$a9time&CenterLon=$CenterLon&pressure_levels=";
+$link_prefix="<a href=\"$thisURL/$basename?domain=$file_in&density=$density&thickness=$thickness&frames=$frames&a9time=$a9time&CenterLon=$CenterLon&pressure_levels=";
 
 $file = $file_in;
 $domain = $file_in;
@@ -251,6 +248,10 @@ $density_safe = $1;
 my $thickness_safe;
 $thickness =~ /(.*)/;
 $thickness_safe = $1;
+
+my $frames_safe;
+$frames =~ /(.*)/;
+$frames_safe = $1;
 
 my $size_safe;
 $size_safe = $thickness_safe;
@@ -1806,6 +1807,20 @@ if($err == 0) {
                            printf LAPSPLOT "S8A\n"; 
 #                          $obs_sfc = "vsblty";   # This is set to prevent station model overlays
 
+                       }elsif("$field" eq "sat_wv" ) { 
+                           printf LAPSPLOT "lv\n"; 
+                           printf LAPSPLOT "$hhmm\n"; 
+                           printf LAPSPLOT "3\n"; 
+                           printf LAPSPLOT "S4A\n"; 
+                           $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+
+                       }elsif("$field" eq "SAT_WV" ) { 
+                           printf LAPSPLOT "lv\n"; 
+                           printf LAPSPLOT "$hhmm\n"; 
+                           printf LAPSPLOT "-3\n"; 
+                           printf LAPSPLOT "S4A\n"; 
+#                          $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+
                         }elsif("$field" eq "sat_39u" ) { 
                             printf LAPSPLOT "lv\n"; 
                             printf LAPSPLOT "$hhmm\n"; 
@@ -2609,8 +2624,8 @@ if($err == 0) {
             }elsif("$source" eq "balanced"){
                 if("$level" eq "sfc/2d"){
 
-                    if("$field" eq "wind" ) {      # lwm as a placeholder
-                        printf LAPSPLOT "wd\n"; 
+                    if("$field" eq "wind" ) {      # lsx
+                        printf LAPSPLOT "bw\n"; 
                         printf LAPSPLOT "0\n"; 
                         printf LAPSPLOT "vc\n"; 
                     }elsif("$field" eq "u" ) { 
@@ -3021,7 +3036,7 @@ my $exedir;
 my $ncarg_root;
 
 $ncarg_root = "/usr/local/apps/ncarg-4.3.1.LINUX9";
-$exedir = "/usr/nfs/lapb/builds/laps/bin";
+$exedir = "@prefix@/bin";
 
 if ($wgi_only == 0) {
     system("$request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root 8 $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2> $web_root/$ScratchDir/lapsplot.err_$$"); 
@@ -3067,6 +3082,7 @@ EOI
     printf SELECTED "$thickness_safe\n";
 #   printf SELECTED "$size_safe\n";
     printf SELECTED "$npix_safe\n";
+    printf SELECTED "$frames_safe\n";
     close SELECTED;
 
     system("rm -f $request_root/lapsplot/selected.in; ln -s $web_root/$ScratchDir/selected.in_$$ $request_root/lapsplot/selected.in");
@@ -3115,6 +3131,7 @@ EOI
     $ycen_safe = 0.5;
     $density_safe = 1.0;
     $thickness_safe = 1;
+    $frames_safe = 1;
 #   $size_safe = 1;
     $npix_safe = 885;
     $domain_safe = "co";
@@ -3136,6 +3153,7 @@ EOI
     printf SELECTED "$thickness_safe\n";
 #   printf SELECTED "$size_safe\n";
     printf SELECTED "$npix_safe\n";
+    printf SELECTED "$frames_safe\n";
     close SELECTED;
 
     system("rm -f $request_root/lapsplot/selected.in; ln -s $web_root/$ScratchDir/selected.in_$$ $request_root/lapsplot/selected.in");
