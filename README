@@ -1187,8 +1187,8 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            needed modifications. 
 
            Paths to the datasets are specified in the 'obs_driver.nl' file. 
-           The surface data, including many the types mentioned above, over much
-           of the world are available in realtime from GSD with some 
+           The surface data, including many of the types mentioned above, over 
+           much of the world are available in realtime from GSD with some 
            restrictions. This data, generally in 'WFO/AWIPS' NetCDF format, are
            distributed via GSD's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/. The supported MADIS LDAD surface
