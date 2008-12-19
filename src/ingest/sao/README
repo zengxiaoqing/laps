@@ -42,5 +42,5 @@ main                                      obs_driver.f
 
         check_for_dupes                        "
 
-        write_surface_obs                 obs_driver.f
+        write_surface_obs                 lib/sfc_routines.f
 
