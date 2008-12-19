@@ -30,7 +30,7 @@ c                       2 - the reference is the mean sea level pressures
 c                           ('MSL' field) from the LSX file.
 c
 c weight_bkg_const_temp - Weight for Model Background. 
-c                         Recommended values: 0. < value <= 1e+30.
+c                         Recommended values: 0. < value <= 5e+28.
 c                         This controls how quickly the output values match the
 c                         background if far from obs. 
 c
