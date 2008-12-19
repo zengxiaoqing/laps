@@ -31,24 +31,35 @@
 
          integer ibmask(8)
 
-         logical l_bit(8), btest
+         logical l_bit(8), btest, l_pass
 
-         if(iqc .eq. -99)then
+         l_pass = .true.
+
+         if(iqc .eq. -99)then ! missing value of QC word (bit flags)
+             return
+         endif
+
+         if(var .eq. badflag)then ! already missing or flagged as bad
              return
          endif
 
          do i = 1,8
-             l_bit(i) = btest(iqc,i)
+             l_bit(i) = btest(iqc,i-1)
          enddo
 
          do i = 1,8
              if(l_bit(i) .AND. ibmask(i) .eq. 1)then
                  if(idebug .eq. 1)then
-                     write(6,*)' Failed test ',iqc,i
+                     write(6,*)' Failed madis_qc_b test ',iqc,i,var
                  endif
                  var = badflag
+                 l_pass = .false.
              endif
          enddo
+
+         if(l_pass .and. idebug .eq. 1)then
+             write(6,*)' Passed madis_qc_b tests ',iqc,var
+         endif
 
          return
          end          
