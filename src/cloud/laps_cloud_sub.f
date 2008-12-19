@@ -1349,8 +1349,8 @@ C       EW SLICES
 
         call compare_analysis_to_saos(NX_L,NY_L,cvr_sao_max
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
-     1  ,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD,n_cld_snd
-     1  ,c_stations,lat_s,lon_s,elev_s,maxstns)
+     1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
+     1  ,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns)
 
 
 !       Write LCV file
@@ -1602,11 +1602,12 @@ C       EW SLICES
 
         subroutine compare_analysis_to_saos(ni,nj,cvr_sao_max
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
-     1  ,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD,n_cld_snd
-     1  ,c_stations,lat_s,lon_s,elev_s,maxstns)
+     1  ,dbz_max_2d,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD
+     1  ,n_cld_snd,c_stations,lat_s,lon_s,elev_s,maxstns)
 
         real cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
      1        ,t_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
+     1        ,dbz_max_2d(ni,nj)
 
         real cld_snd(max_cld_snd,KCLOUD)
         integer ista_snd(max_cld_snd)
@@ -1657,9 +1658,9 @@ C       EW SLICES
 
                     if(iwrite .eq. iwrite/20*20)then
                         write(6,*)
-                        write(6,*)'Sta  VIS frac tb8_k  '
+                        write(6,*)'Sta   i    j   VIS frac tb8_k  '
      1                  //'t_gnd_k t_sfc_k  cldsnd cv_sa_mx cvr_mx '
-     1                  //'snd-ht        9pt    25pt'
+     1                  //'snd-ht  dbz        9pt    25pt'
                     endif
 
 !                   Calculate 9pt cover
@@ -1777,6 +1778,7 @@ C       EW SLICES
                     endif ! > 12000 AGL type station
 
                     write(6,1111,err=1112)c_stations(ista)(1:3)
+     1                           ,i_i,i_j
      1                           ,cloud_frac_vis_a(i_i,i_j)
      1                           ,tb8_k(i_i,i_j)
      1                           ,t_gnd_k(i_i,i_j)
@@ -1785,12 +1787,13 @@ C       EW SLICES
      1                           ,cvr_sao_max(i_i,i_j)
      1                           ,cvr_max(i_i,i_j)
      1                           ,height_max
+     1                           ,dbz_max_2d(i_i,i_j)
      1                           ,c3_discrep
      1                           ,cvr_9pt
      1                           ,cvr_25pt
      1                           ,c1_c
-1111                format(1x,a3,f8.2,3f8.1,3f8.2,f8.0,a3,f8.2,f7.2
-     1                    ,1x,a1)
+1111                format(1x,a3,2i5,f8.2,3f8.1,3f8.2,f8.0,f5.0       
+     1                    ,a3,f8.2,f7.2,1x,a1)
 
 1112            endif ! ob is in domain
               endif ! ista .ne. 0 (valid value)
