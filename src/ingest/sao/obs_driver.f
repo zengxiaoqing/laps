@@ -86,6 +86,7 @@ c
         character*200 path_to_tower_data
         character*8   metar_format, c8_project
 	character     atime*24, filename9*9
+        character*7   madis_dirs(3)
 
         logical l_allow_empty_lso,l_multiple_reports
 
@@ -126,6 +127,7 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
+     1                           ,madis_dirs
      1                           ,itest_madis_qc
      1                           ,maxobs
      1                           ,l_allow_empty_lso,l_multiple_reports
@@ -173,6 +175,7 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
+     1                           ,madis_dirs
      1                           ,itest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso,l_multiple_reports
@@ -194,6 +197,7 @@ c
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
+     1                           ,madis_dirs
      1                           ,itest_madis_qc
      1                           ,maxsta
      1                           ,l_allow_empty_lso,l_multiple_reports
@@ -215,7 +219,7 @@ c
 c
         integer    wmoid(maxsta), jstatus
         integer    dpchar(maxsta), narg, iargc
-        integer    local_obs_thresh_switch(2)
+        integer    local_obs_thresh_switch(3)
 c
         character  stations(maxsta)*20, provider(maxsta)*11
         character  weather(maxsta)*25 
@@ -235,10 +239,10 @@ c
         character*200 path_to_tower_data
         character*8   metar_format, c8_project
         character*8   a9_to_a8, a8_time
-        character*7   madis_dirs(2)
+        character*7   madis_dirs(3)
 
-        data madis_dirs /'mesonet','urbanet'/
-        data local_obs_thresh_switch /1,0/
+!       data madis_dirs /'mesonet','urbanet','hfmetar'/
+        data local_obs_thresh_switch /1,0,0/
 
         logical l_allow_empty_lso,l_string_contains
         logical l_identical_a(maxsta),l_multiple_reports
@@ -428,7 +432,9 @@ c
      1                                                             )then      
 	        call s_len(path_to_local_data,len_path)
 
-                do imadis = 1,2
+                n_local_g = 0
+
+                do imadis = 1,3
 
 	            path_to_madis_data = path_to_local_data(1:len_path)      
      1                                   //'/'//madis_dirs(imadis)
@@ -445,7 +451,7 @@ c
      &                      itime_before,itime_after,
      &                      itest_madis_qc,l_multiple_reports,
      &                      lat,lon,ni,nj,grid_spacing,
-     &                      nn,n_local_g,n_local_b,stations,
+     &                      nn,n_local_gx,n_local_b,stations,
      &                      reptype,atype,weather,wmoid,
      &                      store_1,store_2,store_2ea,
      &                      store_3,store_3ea,store_4,store_4ea,
@@ -461,6 +467,8 @@ c
      1                  ' WARNING. Bad status return from GET_LOCAL_...'       
 	               print *,' '
 	            endif
+
+                    n_local_g = n_local_g + n_local_gx
 
                     if(nn .gt. maxsta)then
                        write(6,*)' ERROR: nn > maxsta ',nn,maxsta
@@ -752,6 +760,7 @@ c
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
      1                         ,itime_before,itime_after
+     1                         ,madis_dirs
      1                         ,itest_madis_qc
      1                         ,maxobs
      1                         ,l_allow_empty_lso,l_multiple_reports
@@ -765,6 +774,7 @@ c
        character*200 path_to_gps_data
        character*200 path_to_tower_data
        character*8   metar_format
+       character*7   madis_dirs(3)
        logical l_allow_empty_lso,l_multiple_reports
 
        namelist /obs_driver_nl/ path_to_metar
@@ -776,6 +786,7 @@ c
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
      1                         ,itime_before,itime_after
+     1                         ,madis_dirs
      1                         ,l_allow_empty_lso
      1                         ,l_multiple_reports
      1                         ,maxobs
