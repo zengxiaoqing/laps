@@ -106,16 +106,16 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
       include 'netcdf.inc'
       integer maxSensor,nf_fid, nf_vid, nf_status
       parameter (maxSensor=2) ! Manually added
-      integer altimeterQCA(maxobs), dewpointQCA(maxobs),
+      integer altimeterQCR(maxobs), dewpointQCR(maxobs),
      +     firstOverflow, globalInventory, nStaticIds,
-     +     numericWMOid(maxobs), precipAccumQCA(maxobs),
+     +     numericWMOid(maxobs), precipAccumQCR(maxobs),
      +     precipIntensity( maxSensor, maxobs),
-     +     precipRateQCA(maxobs), precipType( maxSensor, maxobs),
-     +     pressChange3HourQCA(maxobs), pressChangeChar(maxobs),
-     +     relHumidityQCA(maxobs), seaLevelPressureQCA(maxobs),
-     +     stationPressureQCA(maxobs), temperatureQCA(maxobs),
-     +     visibilityQCA(maxobs), windDirQCA(maxobs),
-     +     windSpeedQCA(maxobs)
+     +     precipRateQCR(maxobs), precipType( maxSensor, maxobs),
+     +     pressChange3HourQCR(maxobs), pressChangeChar(maxobs),
+     +     relHumidityQCR(maxobs), seaLevelPressureQCR(maxobs),
+     +     stationPressureQCR(maxobs), temperatureQCR(maxobs),
+     +     visibilityQCR(maxobs), windDirQCR(maxobs),
+     +     windSpeedQCR(maxobs)
       real altimeter(maxobs), dewpoint(maxobs), elevation(maxobs),
      +     latitude(maxobs), longitude(maxobs),
      +     meanWeightedTemperature(maxobs), precipAccum(maxobs),
@@ -167,7 +167,7 @@ c
 c.....  Start.
 c
         if(itest_madis_qc .gt. 0)then
-            if(itest_madis_qc .eq. 15)then  ! call DD & QCA checking routines
+            if(itest_madis_qc .eq. 15)then  ! call DD & QCR checking routines
                 ltest_madis_qc  = .true.    ! for subjective QC reject list
                 ltest_madis_qcb = .true.
                 ibmask(1) = 0
@@ -292,14 +292,14 @@ c
 c.....  Call the read routine.
 c
             call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     altimeterQCA(ix), dewpointQCA(ix), firstOverflow, 
+     +     altimeterQCR(ix), dewpointQCR(ix), firstOverflow, 
      +     globalInventory, nStaticIds, numericWMOid, 
-     +     precipAccumQCA(ix), precipIntensity, 
-     +     precipRateQCA(ix), precipType, pressChange3HourQCA(ix), 
-     +     pressChangeChar, relHumidityQCA(ix), seaLevelPressureQCA(ix),       
-     +     stationPressureQCA(ix), temperatureQCA(ix), 
-     +     visibilityQCA(ix),       
-     +     windDirQCA(ix), windSpeedQCA(ix), altimeter(ix), 
+     +     precipAccumQCR(ix), precipIntensity, 
+     +     precipRateQCR(ix), precipType, pressChange3HourQCR(ix), 
+     +     pressChangeChar, relHumidityQCR(ix), seaLevelPressureQCR(ix),       
+     +     stationPressureQCR(ix), temperatureQCR(ix), 
+     +     visibilityQCR(ix),       
+     +     windDirQCR(ix), windSpeedQCR(ix), altimeter(ix), 
      +     dewpoint(ix), 
      +     elevation(ix), latitude(ix), longitude(ix), 
      +     meanWeightedTemperature(ix), precipAccum(ix), 
@@ -589,7 +589,8 @@ c
           if(ltest_madis_qc)
      1        call madis_qc_r(temp_f,temperatureDD(i),level_qc,badflag)       
           if(ltest_madis_qcb)
-     1        call madis_qc_b(temp_f,temperatureQCA(i),ibmask,0,badflag)       
+!    1        call madis_qc_b(temp_f,temperatureQCR(i),ibmask,0,badflag) ! oper
+     1        call madis_qc_b(temp_f,temperatureQCR(i),ibmask,1,badflag) ! test
 c       
 	  dewp_k = dewpoint(i)
           call sfc_climo_qc_r('td_k',dewp_k)
@@ -601,7 +602,7 @@ c
           if(ltest_madis_qc)
      1        call madis_qc_r(dewp_f,dewpointDD(i),level_qc,badflag)       
           if(ltest_madis_qcb)
-     1        call madis_qc_b(dewp_f,dewpointQCA(i),ibmask,0,badflag)       
+     1        call madis_qc_b(dewp_f,dewpointQCR(i),ibmask,0,badflag)       
 c
 	  rh_p = relHumidity(i) 
 	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
@@ -614,7 +615,7 @@ c
           if(ltest_madis_qc)
      1        call madis_qc_r(rh_p,relHumidityDD(i),level_qc,badflag)        
           if(ltest_madis_qcb)
-     1        call madis_qc_b(rh_p,relHumidityQCA(i),ibmask,0,badflag)        
+     1        call madis_qc_b(rh_p,relHumidityQCR(i),ibmask,0,badflag)        
 c
 c..... Wind speed and direction
 c
@@ -655,7 +656,7 @@ c
      1        call madis_qc_r(stn_press,stationPressureDD(i),level_qc
      1                                                      ,badflag)
           if(ltest_madis_qcb)
-     1        call madis_qc_b(stn_press,stationPressureQCA(i),ibmask
+     1        call madis_qc_b(stn_press,stationPressureQCR(i),ibmask
      1                                                    ,0,badflag)
 	  if(stationPressChangeTime(i) .gt. 0.) then
 	     if( abs(observationTime(i) - stationPressChangeTime(i))
@@ -671,7 +672,7 @@ c
      1        call madis_qc_r(seaLevelPressure(i),seaLevelPressureDD(i)
      1                                           ,level_qc,badflag)       
           if(ltest_madis_qcb)
-     1        call madis_qc_b(seaLevelPressure(i),seaLevelPressureQCA(i)       
+     1        call madis_qc_b(seaLevelPressure(i),seaLevelPressureQCR(i)       
      1                                           ,ibmask,0,badflag)       
 	  if(seaLevelPressure(i) .ne. badflag) seaLevelPressure(i)   
      1                             = seaLevelPressure(i)   * 0.01 !Pa to mb
@@ -681,7 +682,7 @@ c
      1        call madis_qc_r(altimeter(i),altimeterDD(i),level_qc
      1                                                   ,badflag)
           if(ltest_madis_qcb)
-     1        call madis_qc_b(altimeter(i),altimeterQCA(i),ibmask,0
+     1        call madis_qc_b(altimeter(i),altimeterQCR(i),ibmask,0
      1                                                   ,badflag)
 	  if(altimeter(i) .ne. badflag) 
      1                         altimeter(i) = altimeter(i) * 0.01 !Pa to mb

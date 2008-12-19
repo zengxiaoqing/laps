@@ -63,16 +63,16 @@ C
 
       include 'netcdf.inc'
       integer maxSensor, recNum,nf_fid, nf_vid, nf_status
-      integer altimeterQCA(recNum), dewpointQCA(recNum),
+      integer altimeterQCR(recNum), dewpointQCR(recNum),
      +     firstOverflow, globalInventory, nStaticIds,
-     +     numericWMOid(recNum), precipAccumQCA(recNum),
+     +     numericWMOid(recNum), precipAccumQCR(recNum),
      +     precipIntensity( maxSensor, recNum),
-     +     precipRateQCA(recNum), precipType( maxSensor, recNum),
-     +     pressChange3HourQCA(recNum), pressChangeChar(recNum),
-     +     relHumidityQCA(recNum), seaLevelPressureQCA(recNum),
-     +     stationPressureQCA(recNum), temperatureQCA(recNum),
-     +     visibilityQCA(recNum), windDirQCA(recNum),
-     +     windSpeedQCA(recNum)
+     +     precipRateQCR(recNum), precipType( maxSensor, recNum),
+     +     pressChange3HourQCR(recNum), pressChangeChar(recNum),
+     +     relHumidityQCR(recNum), seaLevelPressureQCR(recNum),
+     +     stationPressureQCR(recNum), temperatureQCR(recNum),
+     +     visibilityQCR(recNum), windDirQCR(recNum),
+     +     windSpeedQCR(recNum)
       real altimeter(recNum), dewpoint(recNum), elevation(recNum),
      +     latitude(recNum), longitude(recNum),
      +     meanWeightedTemperature(recNum), precipAccum(recNum),
@@ -127,14 +127,14 @@ C
       endif
 
       call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     altimeterQCA(ix), dewpointQCA(ix), firstOverflow, 
+     +     altimeterQCR(ix), dewpointQCR(ix), firstOverflow, 
      +     globalInventory, nStaticIds, numericWMOid, 
-     +     precipAccumQCA(ix), precipIntensity, 
-     +     precipRateQCA(ix), precipType, pressChange3HourQCA(ix), 
-     +     pressChangeChar, relHumidityQCA(ix), seaLevelPressureQCA(ix),       
-     +     stationPressureQCA(ix), temperatureQCA(ix), 
-     +     visibilityQCA(ix),       
-     +     windDirQCA(ix), windSpeedQCA(ix), altimeter(ix), 
+     +     precipAccumQCR(ix), precipIntensity, 
+     +     precipRateQCR(ix), precipType, pressChange3HourQCR(ix), 
+     +     pressChangeChar, relHumidityQCR(ix), seaLevelPressureQCR(ix),       
+     +     stationPressureQCR(ix), temperatureQCR(ix), 
+     +     visibilityQCR(ix),       
+     +     windDirQCR(ix), windSpeedQCR(ix), altimeter(ix), 
      +     dewpoint(ix), 
      +     elevation(ix), latitude(ix), longitude(ix), 
      +     meanWeightedTemperature(ix), precipAccum(ix), 
