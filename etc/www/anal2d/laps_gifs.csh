@@ -122,21 +122,6 @@ echo "Generating Graphical Wind Product"; date -u
 setenv prod wd0
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-if ($LAPS_DATA_ROOT == "/data/lapb/mesowave/dwfe1/rcsv3") then
-    echo "Exiting after wind/pressure product..."
-    exit
-endif
-
-# PBE Graphic Product
-echo "Generating Graphical PBE Product"; date -u
-setenv prod pbe
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# NBE Graphic Product
-echo "Generating Graphical NBE Product"; date -u
-setenv prod nbe
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
 # TT Graphic Product
 echo "Generating Graphical TT Product"; date -u
 setenv prod tt
@@ -147,87 +132,104 @@ echo "Generating Graphical TD Product"; date -u
 setenv prod td
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-# H5 Graphic Product
-echo "Generating Graphical Wind Product"; date -u
-setenv prod h5b
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# Storm Total Graphic Product (Precip or Snow)
-echo "Generating Graphical Storm Total Product (Precip or Snow)"; date -u
-setenv prod sto
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# Analysis Cycle Precip (Rain or Snow)
-echo "Generating Graphical Analysis Cycle Precip Product (Rain or Snow)"; date -u
-setenv prod p01
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# Precip Type Graphic Product
-echo "Generating Graphical Precip Type Product"; date -u
-setenv prod ptt
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# Snow Cover Graphic Product
-echo "Generating Graphical Snow Cover Product"; date -u
-setenv prod sc
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# Total Precipitable Water Product
-echo "Generating Graphical Total Precipitable Water Product"; date -u
-setenv prod pw
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# LI times Omega Product
-echo "Generating Graphical LI times Omega Product"; date -u
-setenv prod liw
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# Low Level Radar Reflectivity Product
-echo "Generating Graphical Low Level Radar Reflectivity Product"; date -u
-setenv prod llr
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
 # Sfc RH
 echo "Generating SFC RH Product"; date -u
 setenv prod rh
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-# Sfc FW
-echo "Generating SFC FW Product"; date -u
-setenv prod fw
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# Sfc FW
-echo "Generating SFC Fosberg Firewx Product"; date -u
-setenv prod fwi
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# PBL
-echo "Generating PBL Product"; date -u
+# DPD
+echo "Generating Dewpoint Depression Product"; date -u
 setenv prod pbl
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-# Ventilation Index & PBL Mean Wind
-echo "Generating Ventilation Index & PBL Mean Wind"; date -u
-setenv prod vnt
+# Sfc Theta(e)
+echo "Generating SFC Theta(e) Product"; date -u
+setenv prod fwi
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-# Haines Mid
-echo "Mid-Level Haines Index"; date -u
-setenv prod ham
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+if ($LAPS_DATA_ROOT != "/data/lapb/projects/stmas/conus_ruc13") then
 
-# Haines High
-echo "High-Level Haines Index"; date -u
-setenv prod hah
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+#   PBE Graphic Product
+    echo "Generating Graphical PBE Product"; date -u
+    setenv prod pbe
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-# X-sect
-echo "Generating X-Sect Product"; date -u
-setenv prod xct
-#$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 732x614
-#$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 792x664
-$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 1056x885
+#   NBE Graphic Product
+    echo "Generating Graphical NBE Product"; date -u
+    setenv prod nbe
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   H5 Graphic Product
+    echo "Generating Graphical Wind Product"; date -u
+    setenv prod h5b
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Storm Total Graphic Product (Precip or Snow)
+    echo "Generating Graphical Storm Total Product (Precip or Snow)"; date -u
+    setenv prod sto
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Analysis Cycle Precip (Rain or Snow)
+    echo "Generating Graphical Analysis Cycle Precip Product (Rain or Snow)"; date -u
+    setenv prod p01
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Precip Type Graphic Product
+    echo "Generating Graphical Precip Type Product"; date -u
+    setenv prod ptt
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Snow Cover Graphic Product
+    echo "Generating Graphical Snow Cover Product"; date -u
+    setenv prod sc
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Total Precipitable Water Product
+    echo "Generating Graphical Total Precipitable Water Product"; date -u
+    setenv prod pw
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   LI times Omega Product
+    echo "Generating Graphical LI times Omega Product"; date -u
+    setenv prod liw
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Low Level Radar Reflectivity Product
+    echo "Generating Graphical Low Level Radar Reflectivity Product"; date -u
+    setenv prod llr
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+ 
+#   Sfc FW
+    echo "Generating SFC FW Product"; date -u
+    setenv prod fw
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Ventilation Index & PBL Mean Wind
+    echo "Generating Ventilation Index & PBL Mean Wind"; date -u
+    setenv prod vnt
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Haines Mid
+    echo "Mid-Level Haines Index"; date -u
+    setenv prod ham
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   Haines High
+    echo "High-Level Haines Index"; date -u
+    setenv prod hah
+    $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+#   X-sect
+    echo "Generating X-Sect Product"; date -u
+    setenv prod xct
+#   $LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 732x614
+#   $LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 792x664
+    $LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 1056x885
+
+else
+    echo "Skipping non-surface based products..."
+
+endif
 
 # Update the date
 echo "Update systime on web directory..."
