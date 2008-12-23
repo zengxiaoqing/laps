@@ -138,7 +138,7 @@ c     correct longitute to negative for west
       endif
 
 c     bias correct GVAP data per 3x3 IHOP correction
-      call correct_gvap_bias (wt,w1,w2,w3,nn)
+c     call correct_gvap_bias (wt,w1,w2,w3,nn) ! removed 12/22/2008 nan?
 
       call analz_gvap (lat,lon,wt,w1,w2,w3,gvap_pres,nn,
      1     glat,glon,sfc_data,data_out,
