@@ -1013,11 +1013,13 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      entry of "fdda_model_source" = 'lga'.
 
      The acceptable models and formats for the background model are listed in
-     'data/static/background.nl'. Many models can be accepted in NetCDF format. 
-     A new capability in LAPS is to process GRIB input without first converting 
-     to NetCDF format. For Grib data to be decoded an associated Vtable.XXX needs 
-     to be found in directory 'data/static/Variable_Tables'. There is no guarentee 
-     that any model specified in background.nl will work.  
+     'data/static/background.nl'. Many models can be accepted in NetCDF format.
+     A new capability in LAPS is to process GRIB input without first converting
+     to NetCDF format. For Grib data to be decoded an associated Vtable.XXX 
+     needs to be found in directory 'data/static/Variable_Tables'. The Vtable
+     can be configured for either GRIB-1 or GRIB-2. However we are unable to 
+     guarentee that any model specified in 'background.nl' will work without
+     some software modification.  
 
      RUC grids are ftp'ed from NCEP to GSD, then converted at GSD from 
      GRIB to NetCDF. This NetCDF file is the input for the LAPS ingest
@@ -1446,18 +1448,17 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      both surface and 3-D analyses from the "traditional" version of LAPS.
      Here are examples of some other alternatives:
 
-     1) STMAS surface analysis only
+     1) STMAS-2D surface analysis only
 
-        perl sched.pl -M stmas_mg.x [other options]
+        prompt> perl sched.pl -M stmas_mg.x [other regular options]
 
-        for this configuration the 'lsx.cdl' file should be replaced with the 
-        contents from 'lsx_mesowave.cdl' (e.g. after localization)
-
-        cp $LAPS_DATA_ROOT/cdl/lsx_mesowave.cdl $LAPS_DATA_ROOT/cdl/lsx.cdl  
+        Note that when running STMAS-2D analyses, the 'lgb_only' parameter
+        in the 'background.nl' namelist can be set to .true. for improved
+        runtime efficiency.
 
      2) "traditional" LAPS surface analysis only
 
-        perl sched.pl -M laps_sfc.x [other options]
+        prompt> perl sched.pl -M laps_sfc.x [other regular options]
 
                ---  2.5  Test data case  ---
 
