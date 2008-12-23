@@ -11,9 +11,9 @@ setenv MSSPATH $2
 
 #setenv LAPSINSTALLROOT /usr/nfs/lapb/builds/laps
 
-setenv YYDDDHHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 1.00 @prefix@ $LAPS_DATA_ROOT`
-setenv MONTH     `@PERL@ @prefix@/etc/sched_sys.pl -d 1.00 -f mm @prefix@ $LAPS_DATA_ROOT`
-setenv YYYYMMDD_HHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 1.00 -f yyyymmdd_hhmm @prefix@ $LAPS_DATA_ROOT`
+setenv YYDDDHHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 1.00 -D $LAPS_DATA_ROOT`
+setenv MONTH     `@PERL@ @prefix@/etc/sched_sys.pl -d 1.00 -f mm -D $LAPS_DATA_ROOT`
+setenv YYYYMMDD_HHMM `@PERL@ @prefix@/etc/sched_sys.pl -d 1.00 -f yyyymmdd_hhmm -D $LAPS_DATA_ROOT`
 
 echo "laps time $YYDDDHHMM"
 
