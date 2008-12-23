@@ -51,21 +51,6 @@ netcdf lsx {
             p:lvl_coord="AGL ";
             p:LAPS_units="PA";
  
-        //      Reference Level Reduced Pressure Change  //
-
-        float
-            pp(record,z,y,x);
-            pp:navigation_dim = "nav";
-            pp:record = "valtime, reftime";
-            pp:_FillValue = 1.e+37f;
-            pp:long_name="reference level reduced pressure change";
-            pp:units="pascals";
-            pp:valid_range= -10000.0f, 10000.f;
-            pp:LAPS_var="PP";
-            pp:lvl_coord="AGL ";
-            pp:LAPS_units="PA";
- 
- 
         //      surface temperature     //
 
         float
@@ -343,20 +328,6 @@ netcdf lsx {
             hi:lvl_coord="none";
             hi:LAPS_units="none";
 
-         //      cloud ceiling              //
-
-         float
-            cc(record,z,y,x);
-            cc:navigation_dim = "nav";
-            cc:record = "valtime, reftime";
-            cc:_FillValue = 1.e+37f;
-            cc:long_name="cloud ceiling";
-            cc:units="meters";
-            cc:valid_range= 0.f, 20000.f;
-            cc:LAPS_var="VIS";
-            cc:lvl_coord="AGL";
-            cc:LAPS_units="M";
-
         //      ground temperature
         float
             tgd(record,z,y,x);
@@ -381,7 +352,6 @@ netcdf lsx {
             u_comment(record,z,namelen),
             v_comment(record,z,namelen),
             p_comment(record,z,namelen),
-            pp_comment(record,z,namelen),
             t_comment(record,z,namelen),
             td_comment(record,z,namelen),
             vv_comment(record,z,namelen),
@@ -400,7 +370,6 @@ netcdf lsx {
             spd_comment(record,z,namelen),
             css_comment(record,z,namelen),
             vis_comment(record,z,namelen),
-            cc_comment(record,z,namelen),
             fwx_comment(record,z,namelen),
             hi_comment(record,z,namelen),
             tgd_comment(record,z,namelen),
@@ -420,10 +389,6 @@ netcdf lsx {
         short
             p_fcinv(record, z);
             p_fcinv:_FillValue= 0s;
-              	
-        short
-            pp_fcinv(record, z);
-            pp_fcinv:_FillValue= 0s;
               	
         short
             t_fcinv(record, z);
@@ -496,10 +461,6 @@ netcdf lsx {
         short
             vis_fcinv(record, z);
             vis_fcinv:_FillValue= 0s;
-              	
-        short
-            cc_fcinv(record, z);
-            cc_fcinv:_FillValue= 0s;
               	
         short
             fwx_fcinv(record, z);
