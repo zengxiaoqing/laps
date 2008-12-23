@@ -137,6 +137,10 @@ if(defined $opt_s){ # "surface only"
 
 }elsif(defined $opt_M){ # Mesowave or other "surface only" LAPS
     @LAPS_EXE = ("obs_driver.x", "lga.exe", "sfc_qc.exe", $opt_M, "laps2grib.exe");
+    if($opt_M eq "stmas_mg.x"){
+        print  "cp $LAPS_DATA_ROOT/cdl/lsx_mesowave.cdl $LAPS_DATA_ROOT/cdl/lsx.cdl\n";
+        system("cp $LAPS_DATA_ROOT/cdl/lsx_mesowave.cdl $LAPS_DATA_ROOT/cdl/lsx.cdl");
+    }
 
 }elsif( ($opt_V eq "GSI_Prep")) { # GSI analysis or STMAS 3D analysis
     @LAPS_EXE = qw(lga.exe 
