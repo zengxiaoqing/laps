@@ -293,6 +293,7 @@ sub mkdatadirs{
   my ($datadirs, $lapsprddirs);
   my (@datadirs, @lapsprddirs);
   my (@fua_dirs, @fsf_dirs);
+  my (@hist_dirs, @cont_dirs);
   my (@fdda_dirs);
   my (@lga_dirs, @lgb_dirs);
   my (@bkgd_dirs);
@@ -334,7 +335,6 @@ grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc
 verif verif/noBal verif/Bal verif/Bkgd 
 verif/radar 
 verif/radar/hist verif/radar/cont 
-verif/radar/hist/wrf verif/radar/cont/wrf
 gr2);
 
      if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
@@ -364,6 +364,20 @@ gr2);
      }
      print "fua dirs: @fua_dirs\n";
      print "fsf dirs: @fsf_dirs\n";
+
+     print "adding fdda_model_source subdirectories to verif hist/cont dirs\n";
+     my $ii = 0;
+     $hist_dirs[$ii] = 'verif/radar/hist';
+     $cont_dirs[$ii] = 'verif/radar/cont';
+     foreach (@fdda_dirs){
+        if($_ ne "lga"){
+              $ii++;
+              $hist_dirs[$ii]=$hist_dirs[0]."/".$_;
+              $cont_dirs[$ii]=$cont_dirs[0]."/".$_;
+        }
+     }
+     print "hist dirs: @hist_dirs\n";
+     print "cont dirs: @cont_dirs\n";
 
      print "adding background model subdirectories to lapsprd dirs\n";
      $lga_dirs[0]='lga';
@@ -405,6 +419,12 @@ gr2);
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
   foreach (@fsf_dirs) {
+     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
+  }
+  foreach (@hist_dirs) {
+     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
+  }
+  foreach (@cont_dirs) {
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
 
