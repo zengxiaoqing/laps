@@ -31,39 +31,42 @@
 #                                               mm            (month)
 #                                               yyyymmdd_hhmm (13 character date)
 #
-# second to last arg   $LAPSINSTALLROOT, one level above bin directory
-#
-# last arg             $LAPS_DATA_ROOT, path to data directory
+# -c                   cycle time to use for rounding purposes (hours)
+# 
+# -D                   $LAPS_DATA_ROOT (optional for accessing cycle time)
                
 use strict;
 use English;
 use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_M $opt_K $opt_t $opt_e $opt_q $opt_Q $opt_n $opt_w 
-            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_W);
+            $opt_s $opt_l $opt_p $opt_v $opt_A $opt_f $opt_F $opt_T $opt_V $opt_W $opt_D);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslvp:TW');
+getopts('d:c:a:rm:t:e:q:Q:KV:M:n:A:f:F:wslvp:TWD:');
 
 my $initial_time = time();
 
-my $LAPSROOT=shift || die "LAPS root directory required\n";
+my $LAPSROOT="@prefix@";
 
-$ENV{LAPS_DATA_ROOT} = shift || die "LAPS_DATA_ROOT directory required\n";
-$ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
-my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+my $LAPS_DATA_ROOT;
 
+if(defined $opt_D){
+    $LAPS_DATA_ROOT = $opt_D;
+}
 require "$LAPSROOT/etc/laps_tools.pm";
 require "$LAPSROOT/etc/oputil.pm";
 
 #
-# List here the laps products to be executed in the order that they should 
-# be executed.
-#
+# Get the cycle time from the namelist if possible, and this is superceded by $opt_c
 
+my $cycle_time;
 
-my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/nest7grid.parms",'laps_cycle_time');
-$cycle_time[0]=~/^(\d+),/;
-my $cycle_time = ($1>0)?$1:3600;
+if(-e "$LAPS_DATA_ROOT/nest7grid.parms"){
+    my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/nest7grid.parms",'laps_cycle_time');
+    $cycle_time[0]=~/^(\d+),/;
+}
+
+$cycle_time = ($1>0)?$1:3600;
 $cycle_time = $opt_c if($opt_c>0);
 
 my $cycle_time_min = int($cycle_time/60);
