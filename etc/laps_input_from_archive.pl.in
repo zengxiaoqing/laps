@@ -236,7 +236,7 @@ if ($opt_m eq "ruc") {
 } else { # gfs
 
     print $t." Get gfs valid in 24 hour interval !!!!!\n";
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*00000000 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*00000000 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*00000003 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*00000006 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*00000009 $public/data/grids/gfs/grib/");
@@ -247,7 +247,7 @@ if ($opt_m eq "ruc") {
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*00000024 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*00000027 $public/data/grids/gfs/grib/");
 
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*03000000 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*03000000 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*03000003 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*03000006 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*03000009 $public/data/grids/gfs/grib/");
@@ -257,7 +257,7 @@ if ($opt_m eq "ruc") {
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*03000021 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*03000024 $public/data/grids/gfs/grib/");
 
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*06000000 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*06000000 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*06000003 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*06000006 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*06000009 $public/data/grids/gfs/grib/");
@@ -266,7 +266,7 @@ if ($opt_m eq "ruc") {
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*06000018 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*06000021 $public/data/grids/gfs/grib/");
 
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*09000000 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*09000000 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*09000003 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*09000006 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*09000009 $public/data/grids/gfs/grib/");
@@ -274,27 +274,30 @@ if ($opt_m eq "ruc") {
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*09000015 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*09000018 $public/data/grids/gfs/grib/");
 
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*12000000 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*12000000 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*12000003 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*12000006 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*12000009 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*12000012 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*12000015 $public/data/grids/gfs/grib/");
 
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*15000000 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*15000000 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*15000003 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*15000006 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*15000009 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*15000012 $public/data/grids/gfs/grib/");
 
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*18000000 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*18000000 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*18000003 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*18000006 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*18000009 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*18000012 $public/data/grids/gfs/grib/");
 
-    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*21000000 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/81/3/\*21000000 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*21000003 $public/data/grids/gfs/grib/");
     system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*21000006 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*21000009 $public/data/grids/gfs/grib/");
+    system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp/7/0/96/3/\*21000012 $public/data/grids/gfs/grib/");
     $t=gmtime(); 
 
 
