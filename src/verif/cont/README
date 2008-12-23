@@ -1,0 +1,8 @@
+
+verif_radar_main                                        verif_cont.f
+    verif_radar                                              "
+        radarhist                                       hist.f
+        contingency_table                               contingency_table.f
+        skill_scores                                    skill_scores.f
+        calc_contable                                   calc_contable.f
+        put_contables                                   put_contables.f
