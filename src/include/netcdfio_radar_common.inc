@@ -21,6 +21,8 @@
      1                       ,resolutionV
      1                       ,gateSizeV,gateSizeZ
      1                       ,firstGateRangeV,firstGateRangeZ
+     1                       ,Z_scale, Z_offset
+     1                       ,V_scale, V_offset
      1                       ,i4time_process
      1                       ,numRadials
      1                       ,ngates_ref_cdf
