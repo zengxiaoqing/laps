@@ -333,8 +333,19 @@ c      Determine filename extension
      1                               ,resolutionV
      1                               ,gateSizeV,gateSizeZ
      1                               ,firstGateRangeV,firstGateRangeZ
+     1                               ,Z_scale, Z_offset
+     1                               ,V_scale, V_offset
      1                               ,V_bin,     Z_bin,     radial    ! I
      1                               ,istatus)
+
+!          Use Default values if needed
+           if(abs(Z_scale ) .gt. 1e10)Z_scale  = 2.0
+           if(abs(Z_offset) .gt. 1e10)Z_offset = 66.
+           if(abs(V_scale ) .gt. 1e10)V_scale  = 2.0
+           if(abs(V_offset) .gt. 1e10)V_offset = 129.
+
+           write(6,*)' Z/V scale/offset = ',Z_scale,Z_offset
+     1                                     ,V_scale,V_offset
 
        elseif(i_tilt_proc .le. 20)then
            i_tilt_proc = i_tilt_proc + 1
@@ -658,15 +669,15 @@ c      Determine filename extension
        if(index .eq. 1)then ! reflectivity
            do i = 1,n_gates
                call counts_to_dbz(Z(n_ptr + (i-1))                       ! I
-     1                           ,b_missing_data                         ! I
+     1                           ,Z_scale,Z_offset,b_missing_data        ! I
      1                           ,data(i))                               ! O
            enddo
 
        elseif(index .eq. 2)then ! velocity
            do i = 1,n_gates
                call counts_to_vel(V(n_ptr + (i-1))                       ! I
-     1                           ,b_missing_data,resolutionV             ! I
-     1                           ,data(i))                               ! O
+     1                           ,b_missing_data,V_scale,V_offset        ! I
+     1                           ,resolutionV,data(i))                   ! O
            enddo
 
        endif
@@ -675,7 +686,7 @@ c      Determine filename extension
        return
        end
  
-       subroutine counts_to_dbz(zcounts,b_missing_data                   ! I
+       subroutine counts_to_dbz(zcounts,Z_scale,Z_offset,b_missing_data  ! I
      1                         ,dbz)                                     ! O
 
 !      Convert integer Z count value to dbz
@@ -706,7 +717,7 @@ c      Determine filename extension
 !      endif
 
        if(dbz_hold .ne. b_missing_data)then ! Scale
-           dbz_hold = (dbz_hold - 2.)/2.0 - 32.
+           dbz_hold = (dbz_hold - Z_offset) / Z_scale
        endif
 
        dbz = dbz_hold
@@ -715,8 +726,8 @@ c      Determine filename extension
        end
 
 
-       subroutine counts_to_vel(vcounts,b_missing_data,resolutionV        ! I
-     1                         ,vel_ms)                                   ! O
+       subroutine counts_to_vel(vcounts,b_missing_data,V_scale          ! I
+     1                         ,V_offset,resolutionV,vel_ms)            ! O
 
 !      Convert integer V count value to radial velocity (meters/sec)
 
@@ -744,7 +755,7 @@ c      Determine filename extension
        endif
 
        if(vel_hold .ne. b_missing_data)then ! Scale valid V
-           vel_hold = (vel_hold - 129.) * resolutionV
+           vel_hold = (vel_hold - V_offset) / V_scale
        endif
 
        vel_ms = vel_hold
