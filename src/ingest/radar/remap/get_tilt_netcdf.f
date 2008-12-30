@@ -166,6 +166,8 @@ C
      1                               ,resolutionV
      1                               ,gateSizeV,gateSizeZ
      1                               ,firstGateRangeV,firstGateRangeZ
+     1                               ,Z_scale, Z_offset
+     1                               ,V_scale, V_offset
      1                               ,V_bin_in, Z_bin_in, radial_in    ! I
      1                               ,istatus)
 
@@ -268,6 +270,7 @@ C
      +     Z, elevationNumber, numGatesV, numGatesZ, numRadials, 
      +     atmosAttenFactor, calibConst, elevationAngle, 
      +     firstGateRangeV, firstGateRangeZ, gateSizeV, gateSizeZ, 
+     +     Z_scale, Z_offset, V_scale, V_offset,
      +     nyquist, powDiffThreshold, radialAzim, radialElev, 
      +     resolutionV, siteAlt, siteLat, siteLon, unambigRange, 
      +     esEndTime, esStartTime, radialTime, radarName, siteName)
@@ -292,6 +295,7 @@ C
      +     Z, elevationNumber, numGatesV, numGatesZ, numRadials, 
      +     atmosAttenFactor, calibConst, elevationAngle, 
      +     firstGateRangeV, firstGateRangeZ, gateSizeV, gateSizeZ, 
+     +     Z_scale, Z_offset, V_scale, V_offset,
      +     nyquist, powDiffThreshold, radialAzim, radialElev, 
      +     resolutionV, siteAlt, siteLat, siteLon, unambigRange, 
      +     esEndTime, esStartTime, radialTime, radarName, siteName)
@@ -413,6 +417,34 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
+C      Z_scale  "Reflectivity scale value"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Z_scale',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Z_scale'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Z_scale)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Z_scale'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      Z_offset  "Reflectivity offset value"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Z_offset',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Z_offset'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Z_offset)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Z_offset'
+      endif
+C
+C     Variable        NETCDF Long Name
 C      nyquist      "Nyquist velocity"
 C
         nf_status = NF_INQ_VARID(nf_fid,'nyquist',nf_vid)
@@ -480,6 +512,34 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var resolutionV'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      V_scale  "Velocity scale value"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'V_scale',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var V_scale'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,V_scale)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var V_scale'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      V_offset  "Velocity offset value"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'V_offset',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var V_offset'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,V_offset)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var V_offset'
       endif
 C
 C     Variable        NETCDF Long Name
