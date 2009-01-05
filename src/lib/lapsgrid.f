@@ -314,12 +314,17 @@ c       2000    Steve Albers
         return
         end
 
-      subroutine force_get_laps_config(grid_fnam,istatus)
+      subroutine force_get_laps_config(new_dataroot,istatus)
+
+!     Update the internal dataroot to supersede what was in $LAPS_DATA_ROOT
+
       include 'lapsparms.cmn'
-      character*(*) grid_fnam
+      include 'grid_fname.cmn'
+      character*(*) new_dataroot
       integer istatus
       iflag_lapsparms=0
-      call get_laps_config(grid_fnam,istatus)
+      generic_data_root = new_dataroot
+      call get_laps_config_sub('nest7grid',istatus)
       return
       end
 
