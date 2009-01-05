@@ -28,6 +28,8 @@ type(temp_fields) :: temp
 real, pointer, dimension(:,:,:) :: &
          temp_3d,heights_3d,pres_3d_pa
 
+integer num_temp_obs
+
 Contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
