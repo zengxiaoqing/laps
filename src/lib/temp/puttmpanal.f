@@ -195,7 +195,12 @@ cdis
 
         i4_filename = i4time_needed
         call make_fnam_lp(i4_filename,asc9_tim,istatus)
-        comment_2d = asc9_tim
+
+        num_temp_obs = 0
+       
+        write(comment_2d,1)asc9_tim,num_temp_obs
+ 1      format(a9,' num_temp_obs = ',i9)
+
         write(6,*) ' i4time_needed = ', i4time_needed
         write(6,*) ' i4_filename = ', i4_filename
         write(6,*) ' asc9_tim = ', asc9_tim
