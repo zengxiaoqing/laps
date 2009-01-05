@@ -96,6 +96,7 @@ cdis
         character*20 colortable
         character infile*255
         character*20 c_model
+        character*200 new_dataroot
 
         character i4_to_byte
 
@@ -445,6 +446,19 @@ c       include 'satellite_dims_lvd.inc'
             goto 1200
         elseif(c_type(1:2) .eq. 'bn')then
             i_balance = 0
+            goto 1200
+        endif
+
+        if(c_type(1:2) .eq. 'fc')then ! force config with new dataroot
+            write(6,*)' Enter new dataroot:'
+            read(lun,17)new_dataroot
+ 17         format(a)
+            call s_len(new_dataroot,lenroot)
+            call force_get_laps_config(new_dataroot(1:lenroot),istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Bad status returned from force_laps_config'
+                return
+            endif
             goto 1200
         endif
 
