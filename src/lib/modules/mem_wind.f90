@@ -8,6 +8,8 @@ end type
 
 type(wind_fields) :: wind
 
+integer num_wind_obs
+
 Contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
