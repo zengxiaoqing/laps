@@ -42,27 +42,27 @@ GRIBLIB=-L$(SRCROOT)/src/lib/grib -lgrib
 DBGRIBLIB=-L$(SRCROOT)/src/lib/grib -ldebuggrib
 GRIB2LIB=-L$(SRCROOT)/src/lib/grib2 -lgrib2
 DBGRIB2LIB=-L$(SRCROOT)/src/lib/grib2 -ldebuggrib2
-NETCDF=/opt/netcdf/3.6.2-pgi-7.1-3
-#OTHERLIBS=-L$(NETCDF)/lib -lnetcdf 
-
-LIBS=$(SRCROOT)/src/lib/modules/libmodules.a $(SRCROOT)/src/lib/liblaps.a $(SRCROOT)/src/lib/grib/libgrib.a $(NETCDF)/lib/libnetcdf.a
+#NETCDF=/opt/netcdf/3.6.2-pgi-7.1-3
+OTHERLIBS=-L$(NETCDF)/lib -lnetcdf 
 
 include $(SRCROOT)/src/include/makefile.inc
 
-FFLAGS=$(DBFLAGS)
+# This can be uncommented if desired for the regular 'make' to have the 
+# optimization turned off. An example is with 'xlf' on the IBM where the
+# -O3 optimization can take very long to compile.
+
+#FFLAGS=$(DBFLAGS)
 
 RM=rm -f 
 
 .SUFFIXES:              .f90 .o
 
+%.o:%.mod
+
 .f90.o:
+			$(RM) $@
 			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.f90
 
-.f90.mod:
-			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.f90
-
-.mod.o:
-#	
 EXE=lfmpost.exe
 FSRC=lfmpost.f90 lfmutil.f90 lfmgrid.f90 interp.f90 metfunc.f90 constants.f90  \
      mm5util.f90 wrfutil.f90 nmmutil.f90 st4util.f90  \
@@ -74,22 +74,28 @@ FOBJS=$(FSRC:.f90=.o)
 
 COBJS=$(CSRC:.c=.o)
 
+
+FMOD = constants.o \
+       lfmgrid.o \
+       mm5util.o \
+       nmmutil.o \
+       st4util.o \
+       wrfutil.o
+
 all:			$(EXE)
 
-# Note: if optimization is needed then change the DBFLAGS to FFLAGS in $(EXE)
-
-$(EXE):			$(FOBJS) $(COBJS)
+$(EXE):			$(FOBJS) $(COBJS) $(FMOD)
 			$(FC) $(FREE) -o $@ $(FFLAGS) $(FOBJS) $(COBJS) \
-			$(EXTMODS) $(GRIBLIB) $(GRIB2LIB) $(LAPSLIB) $(HDF5LIB) $(LIBS) $(INC) -lz -lm
+			$(EXTMODS) $(GRIBLIB) $(GRIB2LIB) $(LAPSLIB) $(HDF5LIB) $(OTHERLIBS) $(EXTMODS) $(INC) -lz -lm
 
 debug:	
-	 $(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
-	"LAPSLIB	=	$(DBLAPSLIB)" 	\
-        "GRIBLIB        =       $(DBGRIBLIB)"    \
-        "GRIB2LIB       =       $(DBGRIB2LIB)"    \
-	"FFLAGS 	=	$(DBFLAGS)"    \
-	"EXTMODS        =       $(DBEXTMODS)" 	 \
-        "LIBS           =       $(NETCDF)/lib/libnetcdf.a 
+	 ($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
+         "FFLAGS        =       $(DBFLAGS)"     \
+ 	 "LAPSLIB	=	$(DBLAPSLIB)" 	\
+         "GRIBLIB       =       $(DBGRIBLIB)"    \
+         "GRIB2LIB      =       $(DBGRIB2LIB)"   \
+         "FFLAGS90 	=	$(DBFLAGS90)"    \
+         "EXTMODS       =       $(DBEXTMODS)" 	 )
 
 lfmpost.o:		lfmgrid.o 
 
