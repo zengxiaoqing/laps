@@ -1,15 +1,26 @@
 
-MODULE diagram for new lfmpost
-------------------------------
+MODULE diagram for new lfmpost               
 
-lfmpost                                         lfmpost.f90
-    get_native_dims                             lfmutil.f90
-        get_wrf_dims                            wrfutil.f90                 
-    fill_native_grid                            lfmutil.f90
-        fill_wrf_grid                           wrfutil.f90
-    lfm_hinterp                                 interp.f90
-        hinterp_nmm                                "
-!       gdtost_lfm                                 "
-        bilinear_laps
-    output_laps                                 lfmwrite.f90
+   ROUTINE NAME                              FILE
+   ------------                              ----
+
+lfmpost                                      lfmpost.f90
+    lfm_namelist
+    get_native_dims                          lfmutil.f90
+        get_wrf_dims                         wrfutil.f90 
+    get_laps_static                          lfmutil.f90                
+    fill_native_grid                         lfmutil.f90
+        fill_wrf_grid                        wrfutil.f90
+        fill_nmm_grid                        nmmutil.f90
+        map_set                              lib/modules/module_map_utils.f90
+    alloc_surface_grid                       lfmgrid.f90
+    lfm_hinterp                              interp.f90
+        latlon_to_ij_nmm                         "
+        hinterp_nmm                              "
+        gdtost_lfm                               "
+            binom_lfm                            "
+    lfm_derived                              lfmutil.f90
+        model_pblhgt                             "
+    lfm_vinterp
+    output_laps                              lfmwrite.f90
 
