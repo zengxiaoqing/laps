@@ -109,6 +109,8 @@ csms$ignore begin
      1                              ,r_missing_data                       ! I
      1                              ,istat_lw3)
 
+        use mem_wind, ONLY: num_wind_obs       
+
 !       Stuff for 3D winds
         real uanl(NX_L,NY_L,NZ_L),vanl(NX_L,NY_L,NZ_L) ! WRT True North ! I
         real wanl(NX_L,NY_L,NZ_L)                                       ! I
@@ -139,9 +141,10 @@ csms$ignore begin
         var_3D(2) = 'V3'
         var_3D(3) = 'OM'
 
-        comment_3D(1) = '3DWIND'
-        comment_3D(2) = '3DWIND'
-        comment_3D(3) = '3DWIND'
+        do i = 1,3
+            write(comment_3D(i),1)num_wind_obs
+ 1          format('3DWIND num_wind_obs = ',i9)
+        enddo ! i
 
         I4_elapsed = ishow_timer()
 
