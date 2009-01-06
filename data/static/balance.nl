@@ -4,6 +4,11 @@
  cpads_type = 'snd',
  incl_clom = .true.,
  setdelo0  = .false.,
+ c_erru=0.1,
+ c_errub=1.5,
+ c_errphi=15.,
+ c_errphib=30.,
+ c_delo=100.,
 /
 c
 c   adv_anal_by_t_min: time in minutes to advance the analyses
