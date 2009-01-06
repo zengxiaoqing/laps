@@ -127,10 +127,11 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   ! Number of multigrid V-cycles:
   mcl = 0
 
+  ! Calculate total multigrid levels needed:
   DO i=1,3
     lvl(i) = 0
-    ! Grid distance: start from gridpoints at level slvl:
-    dis = (domn(2,i)-domn(1,i))/float(2**slvl)
+    ! Initial grid distance 3 gridpoints:
+    dis = (domn(2,i)-domn(1,i))/2.0
 1   CONTINUE
     IF (dis .GT. ospc(i)) THEN
       lvl(i) = lvl(i)+1
@@ -143,7 +144,7 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   IF (verbal .EQ. 1) WRITE(*,2) lvl(1:3)
 2 FORMAT('STMASAna: Number of levels: ',3I3)
 
-  ! Leading dimensions:
+  ! Leading dimensions according to the total levels:
   mld = 2**(lvl+1)+1
 
   ! Allocate memory for mutligrid solutions:
@@ -160,8 +161,8 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
   DO i=1,3
     mgd(i) = MIN0(2**(slvl-1)+1,mld(i))
   ENDDO
+  ! Maximum multigrid levels:
   mlv = MAXVAL(lvl(1:3))-slvl+1
-
 
   ! Multigrid cycles:
   DO l=1,mcl*2+1
