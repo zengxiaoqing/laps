@@ -72,6 +72,10 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 !       Modification:
 !                 12-2008 by Yuanfu Xie
 !                 pass in diag(nol) array for J_b term.
+!       Modification:
+!                 01-2009 by Yuanfu Xie
+!                 calculate number of multigrid levels using slvl
+!                 assuming level 1 with gridpoint 3 3 3.
 !==========================================================
 
   IMPLICIT NONE
@@ -125,7 +129,8 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
 
   DO i=1,3
     lvl(i) = 0
-    dis = 0.5*(domn(2,i)-domn(1,i))	! Start from 3 gridpoints
+    ! Grid distance: start from gridpoints at level slvl:
+    dis = (domn(2,i)-domn(1,i))/float(2**slvl)
 1   CONTINUE
     IF (dis .GT. ospc(i)) THEN
       lvl(i) = lvl(i)+1
