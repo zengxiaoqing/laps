@@ -1,4 +1,4 @@
-      program qbalpe_main
+      program qbalpe_main_sfc  !10/08, E.T.
 c
       implicit none
 c
@@ -35,7 +35,7 @@ c*********************
       use mem_namelist, ONLY: read_namelist_laps
       use mem_namelist, ONLY: max_pr
 c*********************************edtoll
-      include 'trigd.inc'
+c     include 'trigd.inc'
       implicit none
       include 'bgdata.inc'
       include 'grid_fname.cmn'
@@ -65,6 +65,7 @@ c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
 
       real errt(nx,ny,nz),errw(nx,ny,nz)
      .      ,pd8(nz),pd5(nz),kpd8,kpd5
+      real c_errphib,c_delo,c_errphi,c_erru,c_errub
 
       real om(nx,ny,nz)
 c    .      ,omo(nx,ny,nz)
@@ -173,7 +174,9 @@ c_______________________________________________________________________________
 c
 
       call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,
-     .                    incl_clom,setdelo0,istatus)
+     .                    incl_clom,setdelo0,
+     .                    c_erru, c_errub, c_errphi, c_errphib, c_delo,       
+     .                    istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
          stop
@@ -486,10 +489,15 @@ c        terscl(i,j)=terscl(1,1)   !make it constant over domain for now.
 c error terms are the inverse sq error; right now with no
 c horizontal stucture. Only vertical error allowed for now.
          do k=1,nz
-            erru(i,j,k)=(0.1*(1.+float(k-1)*.10))**(-2)
-            errub(i,j,k)=(1.5*(1.+float(k-1)*.3))**(-2)
-            errphi(i,j,k)=(15.*(1.+float(k-1)*.1)*g)**(-2)
-            errphib(i,j,k)=(30.*(1.+float(k-1)*.1)*g)**(-2)
+!           erru(i,j,k)=(0.1*(1.+float(k-1)*.10))**(-2)
+!           errub(i,j,k)=(1.5*(1.+float(k-1)*.3))**(-2)
+!           errphi(i,j,k)=(15.*(1.+float(k-1)*.1)*g)**(-2)
+!           errphib(i,j,k)=(30.*(1.+float(k-1)*.1)*g)**(-2)
+
+            erru(i,j,k)=(c_erru*(1.+float(k-1)*.10))**(-2)
+            errub(i,j,k)=(c_errub*(1.+float(k-1)*.3))**(-2)
+            errphi(i,j,k)=(c_errphi*(1.+float(k-1)*.1)*g)**(-2)
+            errphib(i,j,k)=(c_errphib*(1.+float(k-1)*.1)*g)**(-2)
 c
 c vertical motions in clear areas come in as the missing data parameter.
 c replace missing cloud vv's with background vv's. Unless there is cloud
@@ -515,7 +523,8 @@ c     delo is scaled as 10% of expected eqn of motion residual ro*U**2/L
       rog=sqrt(sumv2)/(sumf*sl)
       if(rog.gt.1.) rog=1.
       if(rod.gt.1.) rod=1.
-      delo=100.*sl**2/sumv2**2/rog**2           
+!     delo=100.*sl**2/sumv2**2/rog**2           
+      delo=c_delo*sl**2/sumv2**2/rog**2           
       sumomt2=sumv2**3*sumt**2*den**2/(sl**2*rog**2*sumdt**2) 
       do j=1,ny
       do i=1,nx
@@ -650,6 +659,14 @@ c    . ,nu,nv,fu,fv
             call array_diagnosis(v(1,1,k),nx,ny,' v-comp   ')
          enddo
       endif
+c ******** 10/08 ***** Ed Tollerud
+c     call put_sfc_bal(i4time,t_bal,ht_bal,u_bal,v_bal         ! Input
+c    1                       ,topo,ni,nj,nk                           ! Input
+c    1                       ,istatus                              )  ! Output
+c     call put_sfc_bal(i4time,tbs,phibs,ubs,vbs,               ! Input
+c    1                       ,ter,nx,ny,nz                           ! Input
+c    1                       ,istatus                              )  ! Output
+c Question: no balancing on ts? is tbs 
 
 c
 c
@@ -798,7 +815,17 @@ c           v(i,j,1:k-1) = v(i,j,k)
 c         ENDIF
 c       enddo
 c     enddo
-c 
+c
+c produce surface balance fields by interpolation to terrain height
+c ******** 10/08 ***** Ed Tollerud
+c     call put_sfc_bal(i4time,t_bal,ht_bal,u_bal,v_bal         ! Input
+c    1                       ,topo,ni,nj,nk                           ! Input
+c    1                       ,istatus                              )  ! Output
+      call put_sfc_bal(i4time_sys,t,phi,u,v               ! Input
+     1                       ,ter,nx,ny,nz                           ! Input
+     1                       ,istatus                              )  ! Output
+c
+c
 c Write balance output (balance/lt1 and balance/lw3).
 c ---------------------------------------------------
 c
@@ -4611,3 +4638,4 @@ c
 c
       return
       end
+
