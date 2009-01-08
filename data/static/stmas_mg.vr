@@ -1,9 +1,9 @@
 TEMP 20.0	1	0	36	0.01	1	1	# vname threshold bkg bound radius penalty landsea startlevel
-WNDU 40.0	1	0	108	0.01	0	1
-WNDV 40.0	1	0	108	0.01	0	1
-VISB 9.99e36	0	1	999	0.01	0	1
-CEIL 9.99e36	0	1	999	0.01	0	1
+WNDU 40.0	1	0	36	0.01	0	1
+WNDV 40.0	1	0	36	0.01	0	1
+VISB 9.99e36	0	1	36	0.01	0	1
+CEIL 9.99e36	0	1	36	0.01	0	1
 DEWP 20.0	1	0	36	0.01	1	1
 REDP 8000.0	1	0	36	0.01	0	1
 SFCP 8000.0	1	0	36	0.01	0	1
-PCP1 9.99e36    0       1       999	0.01	1	1
+PCP1 9.99e36    0       1       36	0.01	1	1
