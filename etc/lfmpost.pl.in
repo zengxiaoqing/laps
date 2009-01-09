@@ -22,12 +22,16 @@ my $LAPSROOT;
 #    -q if *not* set, run lfmpost.exe via qsub 
 #    -P project - only important if project is DWR...will look in DWR specific dirs
 #    -y physics of model...used to make logfile unique when qsub writes it to $USER home directory
+#    -W optional wait time for model file (once it appears in the directory) to be completely written (default is 20sec) 
 
-use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_P $opt_q);
+use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_P $opt_q $opt_W);
 use Getopt::Std;
-getopts('l:m:r:d:g:f:i:p:s:w:e:y:P:q');
+getopts('l:m:r:d:g:f:i:p:s:w:e:y:P:qW:');
 
 my $fileWait_time = 20; #Number of seconds to sleep after file copy for stability
+if (defined ($opt_W)) {
+  $fileWait_time = $opt_W; 
+}
 
 $project = $opt_P if defined($opt_P);
 
