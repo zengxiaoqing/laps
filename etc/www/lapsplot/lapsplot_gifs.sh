@@ -11,6 +11,7 @@ export LAPS_DATA_ROOT=$6
 export NCARG_ROOT=$7
 datetime=$8
 RESOLUTION=$9
+animate=$10
 
 SCRATCH_DIR=$LAPS_GIFS/scratch
 
@@ -102,7 +103,7 @@ CTRANS=$NCARG_ROOT/bin/ctrans
 date -u
 
 #We assume we are running this script in LINUX and convert will not properly do AVS X on LINUX
-if test "$netpbm" = "yes"; then 
+if test "$netpbm" = "yes" && test "$animate" != "yes"; then 
     date
 #   echo "Running $NCARG_ROOT/bin/ctrans | netpbm to make gmeta_$proc.gif file"
     echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta | rasttopnm | ppmtogif > $SCRATCH_DIR/gmeta_$proc.gif"
@@ -113,6 +114,31 @@ if test "$netpbm" = "yes"; then
 #   Cleanup
     echo "Cleanup"
     mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rmdir $SCRATCH_DIR/$proc &
+
+elif test "$netpbm" = "yes" && test "$animate" = "yes"; then 
+    date
+    echo "Running $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun"
+    $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun
+
+#   Convert multiframe raster image to animated gif
+    pushd $SCRATCH_DIR/$proc
+        $NCARG_ROOT/bin/rassplit gmeta_$proc.sun
+
+#       foreach file (gmeta_$proc.*.sun)
+#           ls $file
+#           rasttopnm $file | ppmtogif > $file.gif
+#       end 
+#       convert -delay 50 -loop 0 *.gif $SCRATCHDIR/gmeta_$proc.gif
+
+        convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCHDIR/gmeta_$proc.gif
+
+    popd
+
+    date -u
+
+#   Cleanup
+    echo "Cleanup"
+    mv gmeta $SCRATCH_DIR/gmeta_$proc.gm;  cd ..; rm -f $SCRATCH_DIR/$proc/gmeta*; rmdir $SCRATCH_DIR/$proc &
 
 elif test "$ext2" = "x"; then
     date -u
