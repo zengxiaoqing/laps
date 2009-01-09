@@ -136,6 +136,8 @@ if ($opt_d) {
 my $yy = substr($yyyy,2,2); 
 
 my $jy = &laps_tools::get_julian_day($dd,$mm,$yyyy);
+$jy = "0$jy" while(length($jy) < 3);
+
 $date_a9="$yy$jy$hh$mn"; 
 
 # Define forecast parameters.
