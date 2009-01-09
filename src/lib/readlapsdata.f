@@ -262,6 +262,7 @@ C
       else
         if (ext_dn(1:2) .eq. 'lg' .or.
      +     ext_dn(1:3).eq.'fua' .or.
+     +     ext_dn(1:4).eq.'cont' .or.
      +     ext_dn(1:3).eq.'fsf' .or.
      +     ext_dn(1:3).eq.'ram' .or.
      +     ext_dn(1:3).eq.'rsf') then
