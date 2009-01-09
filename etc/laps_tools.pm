@@ -333,8 +333,8 @@ ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/wps lapsprep/cdf d
 balance balance/lt1 balance/lw3 balance/lh3 balance/lq3 balance/lsx balance/air balance/pln
 grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc
 verif verif/noBal verif/Bal verif/Bkgd 
-verif/radar 
-verif/radar/hist verif/radar/cont 
+verif/REF
+verif/REF/hist verif/REF/cont 
 gr2);
 
      if(-e "$LAPS_DATA_ROOT/static/nest7grid.parms"){
@@ -367,8 +367,8 @@ gr2);
 
      print "adding fdda_model_source subdirectories to verif hist/cont dirs\n";
      my $ii = 0;
-     $hist_dirs[$ii] = 'verif/radar/hist';
-     $cont_dirs[$ii] = 'verif/radar/cont';
+     $hist_dirs[$ii] = 'verif/REF/hist';
+     $cont_dirs[$ii] = 'verif/REF/cont';
      foreach (@fdda_dirs){
         if($_ ne "lga"){
               $ii++;
@@ -842,6 +842,103 @@ sub leapyear_tf {
   return ($ly);
  
 }
+
+# 
+#-------------------------------------------------------------------
+#
+sub a9time_to_i4time {
+ 
+# Convert LAPS a9time (yydddhhmm) to i4time (relative to 1960)
+
+  my ($a9time) = @_;
+ 
+  my ($yyyy) = "20".substr($a9time,0,2);
+  my ($jjj) = substr($a9time,2,3);
+  my (@mmddd) = &JJJ2MMDD($jjj,$yyyy);
+  my ($mon)  = @mmddd[0]; 
+  my ($mday) = @mmddd[1]; 
+  my ($hour) = substr($a9time,5,2);
+  my ($min)  = substr($a9time,7,2);
+  my ($sec)  = 0;
+  my ($unixtime) = &date_to_i4time($yyyy,$mon,$mday,$hour,$min,$sec);
+
+  my ($i4time) = $unixtime + 315619200; # Convert from 1970 to 1960
+
+  return ($i4time);
+ 
+}
+
+# 
+#-------------------------------------------------------------------
+#
+sub i4time_to_a9time {
+ 
+# Convert i4time (relative to 1960) to LAPS a9time (yydddhhmm)
+
+  my ($i4time) = @_;
+
+  my ($unixtime) = $i4time - 315619200; # Convert from 1960 to 1970
+
+  my (@a9time) = &date_to_time($unixtime);
+
+  my ($yy) = @a9time[0];
+  my ($yyyy) = ($yy < 70) ? ($yy + 2000) : ($yy + 1900);
+
+  my ($mon)  = @a9time[1];
+
+  my ($mday) = @a9time[2];
+  $mday = "0".$mday while(length($mday)<2);
+
+  my ($hour) = @a9time[3];
+  $hour = "0".$hour while(length($hour)<2);
+
+  my ($min) = @a9time[4];
+  $min = "0".$min while(length($min)<2);
+
+  my (@mmddd,$jjj); 
+
+  $jjj = &get_julian_day($mday,$mon,$yyyy);
+  $jjj = "0".$jjj while(length($jjj)<3);
+
+  my ($a9time) = $yy.$jjj.$hour.$min;
+ 
+  return ($a9time);
+ 
+}
+
+#===============================================================================
+
+sub JJJ2MMDD {
+   my($jjj,$yy) = @_;
+   my(@daysinmon) = (31,0,31,30,31,30,31,31,30,31,30,31);
+   my(@mmmdd) = (-1,-1);
+   $yy=1900+$yy if($yy<100);
+
+   my($leap) = $yy%4;
+   my($jmax);
+   if($leap==0){
+      $jmax = 366;
+      $daysinmon[1]=29;
+   }else{
+      $jmax = 365;
+      $daysinmon[1]=28;
+   }
+   if($jjj<1 || $jjj > $jmax){
+      print STDERR "Invalid Julian date passed to JJJ2MMDD\n";
+      return @mmmdd;
+   }
+
+# Addition of 0 removes any leading zeros
+
+   $mmmdd[0]=1+0;
+   $mmmdd[1]=$jjj+0;
+   while($mmmdd[1] > $daysinmon[$mmmdd[0]-1]){
+      $mmmdd[1] = $mmmdd[1]-$daysinmon[$mmmdd[0]-1];
+      $mmmdd[0]++;
+   }
+   return @mmmdd;
+}
+
 # 
 #-------------------------------------------------------------------
 #
