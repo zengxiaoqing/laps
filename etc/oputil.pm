@@ -87,40 +87,6 @@ sub time_to_unix {
 
 #===============================================================================
 
-sub JJJ2MMDD {
-   my($jjj,$yy) = @_;
-   my(@daysinmon) = (31,0,31,30,31,30,31,31,30,31,30,31);
-   my(@mmmdd) = (-1,-1);
-   $yy=1900+$yy if($yy<100);
-
-   my($leap) = $yy%4;
-   my($jmax);
-   if($leap==0){
-      $jmax = 366;
-      $daysinmon[1]=29;
-   }else{
-      $jmax = 365;
-      $daysinmon[1]=28;
-   }
-   if($jjj<1 || $jjj > $jmax){
-      print STDERR "Invalid Julian date passed to JJJ2MMDD\n";
-      return @mmmdd;
-   }
-
-# Addition of 0 removes any leading zeros
-
-   $mmmdd[0]=1+0;
-   $mmmdd[1]=$jjj+0;
-   while($mmmdd[1] > $daysinmon[$mmmdd[0]-1]){
-      $mmmdd[1] = $mmmdd[1]-$daysinmon[$mmmdd[0]-1];
-      $mmmdd[0]++;
-   }
-   return @mmmdd;
-}
-1;
-
-#===============================================================================
-
 package oputil;
 use strict;
 
