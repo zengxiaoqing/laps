@@ -904,6 +904,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                     icol_in = 17 ! Lavender
                 elseif(c8_obstype(1:4) .eq. 'POES')then ! POES Satellite
                     icol_in = 16 ! Dark violet
+                elseif(c8_obstype(1:5) .eq. 'METAR')then ! METAR
+                    icol_in = 11 ! Green
                 else                                    ! ACARS
                     icol_in = 3  ! Red
                 endif
