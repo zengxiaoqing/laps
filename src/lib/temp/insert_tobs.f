@@ -45,6 +45,7 @@ cdis
      1               ,max_snd,max_snd_levels        ! Input
      1               ,max_obs                       ! Input
      1               ,grid_spacing_m                ! Input
+     1               ,n_obs                         ! Output
      1               ,istatus)                      ! Output
 
 !       Nov. 1992               Steve Albers

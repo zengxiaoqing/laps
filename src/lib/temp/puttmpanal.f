@@ -196,11 +196,6 @@ cdis
         i4_filename = i4time_needed
         call make_fnam_lp(i4_filename,asc9_tim,istatus)
 
-        num_temp_obs = 0
-       
-        write(comment_2d,1)asc9_tim,num_temp_obs
- 1      format(a9,' num_temp_obs = ',i9)
-
         write(6,*) ' i4time_needed = ', i4time_needed
         write(6,*) ' i4_filename = ', i4_filename
         write(6,*) ' asc9_tim = ', asc9_tim
@@ -226,11 +221,15 @@ cdis
      1                  ,max_snd_grid,max_snd_levels     ! Input
      1                  ,max_obs                         ! Input
      1                  ,grid_spacing_m                  ! Input
+     1                  ,num_temp_obs                    ! Output
      1                  ,istatus)                        ! Output
         if(istatus .ne. 1)then
             write(6,*)' Error: Bad status returned from insert_tobs'       
             return
         endif
+
+        write(comment_2d,1)asc9_tim,num_temp_obs
+ 1      format(a9,' num_temp_obs = ',i9)
 
 !       Height Analysis (done prior to surface temp analysis insertion)
         write(6,*)
