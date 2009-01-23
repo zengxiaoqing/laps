@@ -4309,12 +4309,16 @@ c                   cint = -1.
 
             c_label = 'Total Precipitable Water  cm     '
 
-            clow = 0.00
-            chigh = 7.00
-            cint = 0.25
+!           cint = 0.25
             scale = 1e-2
 
 !           call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
+
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
+     1                           ,zoom,density,scale)       
+
+            clow = 0.00
+            chigh = 7.00
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms,plot_parms
@@ -4373,6 +4377,12 @@ c                   cint = -1.
                 sfct_l = sfctc_l
                 sfct_h = sfctc_h
 
+            endif
+
+!           Add balance to label
+            call s_len2(c_label,len_c_label)
+            if(i_balance .eq. 1)then
+                c_label = c_label(1:len_c_label)//' (Bal)'
             endif
 
             IF(istatus .ne. 1)THEN
