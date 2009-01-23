@@ -707,6 +707,9 @@ c
      1                    ,l_unfold,l_ppi_mode
        character*150 static_dir,filename
 
+!      Default values
+       l_ppi_mode = .false. ! for backwards compatability with the namelist
+
        call get_directory('nest7grid',static_dir,len_dir)
 
        filename = static_dir(1:len_dir)//'/remap.nl'
