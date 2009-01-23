@@ -383,6 +383,8 @@ cdis
             goto 999
         endif
 
+        num_wind_obs = nobs_point
+
 #ifdef MULTI_EXEC
         deallocate (u_mdl_bkg_4d, v_mdl_bkg_4d)
 #endif
