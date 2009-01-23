@@ -95,12 +95,22 @@ c read in laps lat/lon and topo
               return
           endif
 
-!         Obtain i4time corresponding to the basename
+!         Obtain i4time corresponding to the basename, we handle the hours
+!         and minutes separately since AOML can go to more than 24 hours
           wfo_fname13 = '20'//basename(3:8)//'_'//basename(16:19)
           write(6,*)'wfo_fname13 = ',wfo_fname13 
 
+          wfo_fname13 = '20'//basename(3:8)//'_'//'0000'
+
+          read(basename(16:17),*)ihour
+          read(basename(18:19),*)imin
+
           i4time_file_in = cvt_wfo_fname13_i4time(wfo_fname13)
-          write(6,*)' i4time_file_in = ',i4time_file_in
+
+          i4time_file_in = i4time_file_in + ihour*3600 + imin*60
+
+          write(6,*)' ihour/imin/i4time_file_in = '
+     1               ,ihour,imin,i4time_file_in
 
           if(i4time_file_in .ge. i4time_proc_strt .AND.
      1       i4time_file_in .le. i4time_proc_end        )then 
