@@ -929,13 +929,18 @@ c     CHECKING PROCESS OUTPUT
       endif
          
       call check_nan2(gvap_data,ii,jj,istatus)
+
       if(istatus.ne.1) then
          write(6,*) 'Failed in nan after adjust'
          write(6,*) 'var:gsp_data  routine lq3driver'
-         p_3d = p_3d / 0.01     ! convert 3d array to Pa
-         return
+         write(6,*) 'taking new measures 1/25/09'
+         write(6,*) 'killing gvap in variational'
+         gvap_data = 0.0 ! assigned all to zero
+         istatus_gvap = 0 ! remove gvap from variational
+c         p_3d = p_3d / 0.01     ! convert 3d array to Pa
+c         return
       endif
-         
+
       call check_nan3(data,ii,jj,kk,istatus)
       if(istatus.ne.1)then
          write(6,*) 'Nan report from TPW processing'
