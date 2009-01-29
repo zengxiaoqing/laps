@@ -905,6 +905,11 @@ do i=1,nx
       w=max(1.,w)
       refl(i,j,k)=17.8*alog10(w)
 
+      if (refl(i,j,k).eq.0.) then
+          refl(i,j,k)=-10.0
+      endif 	
+
+
 ! Since we are going from the ground up, we can 
 ! check threshold and set echo top.
 
