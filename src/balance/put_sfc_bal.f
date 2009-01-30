@@ -31,6 +31,7 @@
        character*3 var(n_sfc),ext
        character*10 lvl_coord_req(n_sfc)
        character*10 units_req(n_sfc)
+       character*125 comment_req(n_sfc)
        integer lvl_req(n_sfc)
 
        real data(ni,nj,n_sfc)
@@ -99,7 +100,7 @@
        do i = 1,ni
            klow = max(rk_terrain(i,j),1.)
            khigh = klow + 1
-           fraclow = float(khigh) - zlow
+           fraclow = float(khigh) - rk_terrain(i,j)
            frachigh = 1.0 - fraclow
 
            if( u_bal(i,j,klow)  .eq. r_missing_data
@@ -129,7 +130,7 @@
        do i = 1,ni
            klow = max(rk_terrain(i,j),1.)
            khigh = klow + 1
-           fraclow = float(khigh) - zlow
+           fraclow = float(khigh) - rk_terrain(i,j)
            frachigh = 1.0 - fraclow
 
            if( t_bal(i,j,klow)  .eq. r_missing_data
@@ -159,18 +160,18 @@
        do j = 1,nj
        do i = 1,ni
            ht_mslp = 0.
-           ht_redp = redp_level
+           ht_redp = redp_lvl
            ht_stnp = topo(i,j)
 
            pres_1d(:) = pres_3d(i,j,:)
 
-           mslp_bal_sfc(i,j) = height_to_pressure(ht_mslp,heights_3d
+           mslp_bal_sfc(i,j) = height_to_pressure(ht_mslp,ht_bal
      1                                         ,pres_1d,ni,nj,nk,i,j)
 
-           redp_bal_sfc(i,j) = height_to_pressure(ht_redp,heights_3d
+           redp_bal_sfc(i,j) = height_to_pressure(ht_redp,ht_bal
      1                                         ,pres_1d,ni,nj,nk,i,j)
 
-           stnp_bal_sfc(i,j) = height_to_pressure(ht_stnp,heights_3d
+           stnp_bal_sfc(i,j) = height_to_pressure(ht_stnp,ht_bal
      1                                         ,pres_1d,ni,nj,nk,i,j)
 
 
