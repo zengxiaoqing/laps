@@ -97,8 +97,9 @@ close(FS);
 chmod 0777, "$ftpscript";
 
 # Run the script
+my $machine = `uname -n`;
 print "Executing script...\n";
-system ("./$ftpscript > ../../../log/send_lapsprep_ftp.log.$hour\00 2>&1");
+system ("./$ftpscript > ../../../log/send_lapsprep_ftp.$machine.log.$hour\00 2>&1");
 
 # Delete the script
 unlink "$ftpscript";
