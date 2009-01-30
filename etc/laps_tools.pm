@@ -879,10 +879,10 @@ sub i4time_to_a9time {
 
   my ($unixtime) = $i4time - 315619200; # Convert from 1960 to 1970
 
-  my (@a9time) = &date_to_time($unixtime);
+  my (@a9time) = &i4time_to_date($unixtime);
 
-  my ($yy) = @a9time[0];
-  my ($yyyy) = ($yy < 70) ? ($yy + 2000) : ($yy + 1900);
+  my ($yyyy) = @a9time[0];
+  my ($yy) = substr($yyyy,2,2);
 
   my ($mon)  = @a9time[1];
 
