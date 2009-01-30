@@ -9,9 +9,8 @@ LAPSPLOT_IN=$4
 EXE_DIR=$5
 export LAPS_DATA_ROOT=$6
 export NCARG_ROOT=$7
-datetime=$8
+animate=$8
 RESOLUTION=$9
-animate=$10
 
 SCRATCH_DIR=$LAPS_GIFS/scratch
 
@@ -33,6 +32,7 @@ echo "LAPS_DATA_ROOT ="$LAPS_DATA_ROOT
 echo "latest ="$latest
 echo "RESOLUTION ="$RESOLUTION
 echo "LAPSPLOT_IN ="$LAPSPLOT_IN
+echo "animate ="$animate
 
 limit cputime 1000
 
@@ -121,7 +121,7 @@ elif test "$netpbm" = "yes" && test "$animate" = "yes"; then
     $NCARG_ROOT/bin/ctrans -verbose -d sun -window $WINDOW -resolution $RESOLUTION gmeta > $SCRATCH_DIR/$proc/gmeta_$proc.sun
 
 #   Convert multiframe raster image to animated gif
-    pushd $SCRATCH_DIR/$proc
+#   pushd $SCRATCH_DIR/$proc
         $NCARG_ROOT/bin/rassplit gmeta_$proc.sun
 
 #       foreach file (gmeta_$proc.*.sun)
@@ -130,9 +130,10 @@ elif test "$netpbm" = "yes" && test "$animate" = "yes"; then
 #       end 
 #       convert -delay 50 -loop 0 *.gif $SCRATCHDIR/gmeta_$proc.gif
 
-        convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCHDIR/gmeta_$proc.gif
+        echo "convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif"
+        convert -delay 50 -loop 0 gmeta_$proc.*.sun $SCRATCH_DIR/gmeta_$proc.gif
 
-    popd
+#   popd
 
     date -u
 
