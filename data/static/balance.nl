@@ -34,3 +34,14 @@ c which case $DATAROOT/time/systime.dat is not rounded to the
 c
 c setdelo0: When set = .true. then only continuity adjustments are made
 c made and no dynamic balance.
+c
+c The following parameters are coefficients on the balance weights.
+c The default values favor the wind observations. Also mentioned are
+c suggested values to favor the height observations:
+c
+c c_erru    (default=0.1, use 10. to favor heights instead of winds)
+c c_errub   (default=1.5)
+c c_errphi  (default=15., use .15 to favor heights instead of winds)
+c c_errphib (default=30.)
+c c_delo    (default=100.)
+c
