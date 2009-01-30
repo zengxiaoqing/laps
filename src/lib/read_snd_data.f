@@ -353,6 +353,7 @@ cdoc    Returns sounding wind, T, Td data from the SND file
  512    format(1x,' SND #',i4,i6,i5,2f8.2,e10.3,f8.2,1x,a5,3x,a9,1x,a8)       
 
         n_good_levels = 0
+        nlevels_obs_pr(i_pr) = 0
 
         ht_prev = -9999.
 
