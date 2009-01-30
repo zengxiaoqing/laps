@@ -223,9 +223,17 @@ if ($opt_m eq "ruc") {
         print $t." Get ruc hybrid grib\n";
         system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_hyb/7/0/105/236/\* $public/data/grids/ruc/hyb_A236/grib/");
         chdir "$public/data/grids/ruc/hyb_A236/grib/";
-    }else{ # isobaric grib2m 
-        print $t." Get ruc isobaric grib2\n";
-        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_iso/7/0/105/0_67725_30/\* $public/data/grids/ruc/iso/grib2/");
+#   }else{ # isobaric 20km grib2 (from NCEP) 
+#       print $t." Get ruc isobaric 20km grib2 (from NCEP)\n";
+#       system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_iso/7/0/105/0_67725_30/\* $public/data/grids/ruc/iso/grib2/");
+#       chdir "$public/data/grids/ruc/iso/grib2/";
+#   }else{ # isobaric 13km grib2 (from NCEP) [beginning 6/16/08]
+#       print $t." Get ruc isobaric 13km grib2 (from NCEP)\n";
+#       system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_iso/7/0/105/0_151987_30/\* $public/data/grids/ruc/iso/grib2/");
+#       chdir "$public/data/grids/ruc/iso/grib2/";
+    }else{ # isobaric 13km grib1 (from ESRL) [beginning 1/1/2008]
+        print $t." Get ruc isobaric 13km grib1 (from ESRL)\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/fsl/13kmruc/ruc_presm/\* $public/data/grids/ruc/iso/grib1/");
         chdir "$public/data/grids/ruc/iso/grib2/";
     }
 
