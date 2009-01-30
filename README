@@ -1069,24 +1069,24 @@ e) perl window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      forecast hour of product from 00 - 180.
 
      The 1.0 degree GFS uses file identifier 'pgrb' (pressure-based grib) and 
-     is now available in grib2 as well when '.grib2' is present. The 0.5 degree 
+     is now available in grib2 as well when '.grib2' is present. The 0.5 degree
      GFS uses 'pgrb2' (pressure-based) and is only available in grib2.
 
      RUC Model:
      RUC Rapid Update Cycle 40km and 20km pressure data sets can be found at 
-     ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/ruc
+     ftp://ftpprd.ncep.noaa.gov/pub/data/nccf/com/ruc/prod/
      ruc2a.{YYYYMMDDHH}/ruc2.t{CC}z.pgrb{XXX}{.grib2}
      where CC is the model cycle time (i.e. 00, 06, 12, 18) and XXX is the 
      forecast hour of product from 00 - 12 (or more). File identifier 'pgrb' 
      is used for the 40km resolution and 'pgrb20' is used for the 20km.
      
      Additional description of NCEP products can be found at 
-     http://www.nco.ncep.noaa.gov/pmb/products/. A master list of NCEP GRIDS ID 
+     http://www.nco.ncep.noaa.gov/pmb/products/. A master list of NCEP GRIDS ID
      numbers (e.g. 211) and other specifications can be found at 
      http://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html
 
      --- How Do Users Name The GRIB Data Files? ---
-     For LAPS initialization at NOAA/ESRL, we have a process that automatically 
+     For LAPS initialization at NOAA/ESRL, we have a process that automatically
      downloads GRIB files to a designated directory. For example, 
      /data/grid/gfs/global_0p5deg/, /data/grid/gfs/global_1p0deg/, and 
      /data/grid/gfs/conus211/ are three directories for the GFS global 
