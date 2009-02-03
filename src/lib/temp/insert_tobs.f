@@ -330,6 +330,10 @@ cdis
      1                       ,lat,lon,r_missing_data                ! I
      1                       ,temp_obs,max_obs,n_obs                ! I/O
      1                       ,istatus)                              ! O
+        if(istatus .ne. 1)then
+            write(6,*)' bad status return from rd_acars_t'
+            return
+        endif
 
 !       n_obs = n_obs_before   ! Temporary for testing
 
