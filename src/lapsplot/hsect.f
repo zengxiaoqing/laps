@@ -1040,8 +1040,10 @@ c       include 'satellite_dims_lvd.inc'
                 endif
 
                 if(k_level .ne. 0)then ! upper air
+                    nxz = (float(NX_L) /1.2) / sqrt(zoom)
                     nyz = float(NY_L) / sqrt(zoom)
-                    interval = (nyz / 50) + 1
+                    ngz = max(nxz,nyz)
+                    interval = (ngz / 50) + 1
                     size = float(interval) * .11
                 else                   ! sfc
                     nxz = float(NX_L) / zoom
@@ -1058,6 +1060,7 @@ c       include 'satellite_dims_lvd.inc'
                         call make_fnam_lp(I4time_3dw,asc9_tim_3dw
      1                                   ,istatus)
                     endif
+                    write(6,*)' wind barb ob size = ',size
                 endif
 
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom
@@ -4959,6 +4962,12 @@ c                   cint = -1.
                 c_label = 'Perturbation Pressure   (mb)     '
             endif
 
+!           Add balance to label
+            call s_len2(c_label,len_c_label)
+            if(i_balance .eq. 1)then
+                c_label = c_label(1:len_c_label)//' (Bal)'
+            endif
+
             clow = 0.
             chigh = 0.
 !           cint = 1. ! 3.
@@ -5022,6 +5031,12 @@ c                   cint = -1.
             endif
 
             c_label = 'Surface Pressure        (mb)     '
+
+!           Add balance to label
+            call s_len2(c_label,len_c_label)
+            if(i_balance .eq. 1)then
+                c_label = c_label(1:len_c_label)//' (Bal)'
+            endif
 
             scale = 100.
 
@@ -6325,6 +6340,8 @@ c             if(cint.eq.0.0)cint=0.1
         logical l_obs
 
         call get_grid_spacing_cen(grid_spacing_m,istatus)
+
+        write(6,*)' subroutine plot_barbs: size = ',size
 
         write(6,1505)c_label,asc_tim_9
 1505    format(2x,a,2x,a9)
