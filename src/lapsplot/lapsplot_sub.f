@@ -109,14 +109,6 @@ cdis
      1    ' It will be located in ./gmeta'
         endif
 
-!       Supply reference time for matching the data
-        lun = 5
-
-        write(6,*)
-        write(6,*)
-        I4TIME_ref = ASKI4T()
-        i4time_ref = (i4time_ref)/60*60
-
         if(.true.)then       ! testcode
 !           call GOPKS(6,10000)
 !           call GOPWK(1,51,3)
@@ -149,14 +141,24 @@ cdis
         plot_parms%ncols = 0.
         plot_parms%icol_barbs = namelist_parms%icol_barbs
 
+!       Supply reference time for matching the data
+        lun = 5
+1090    write(6,*)
+        write(6,*)
+        I4TIME_ref = ASKI4T()
+        i4time_ref = (i4time_ref)/60*60
+
 1100    write(6,1110)
 1110    format(/////'     [h/hz]  Horizontal Plan View '
      1        ,'   (Const Pressure Level or SFC)'
      1        /'     [x]  Vertical Cross Section'
      1        /'     [s]  Sounding'
+     1        /'     [nt]  New Time'
      1        /' ',60x,'[q] QUIT ? ',$)
         read(lun,1111)c_section
 1111    format(a)
+
+        if(c_section .eq. 'nt')goto1090
 
         if(c_section .eq. 'q' .or. c_section .eq. 'Q')goto999
 
