@@ -11,7 +11,8 @@
         character*80 string
         character*(*)c_obtype
 
-        logical l_eof,l_geoalt
+        logical l_eof
+        logical l_geoalt ! true is geometric altitude, false is pressure alt
 
         integer icount
         data icount /0/
@@ -24,8 +25,8 @@
 
         l_eof = .false.
 
-5       read(lun,101,end=900,err=5)string(1:6)
-101     format(a6)
+5       read(lun,101,end=900,err=5)string
+101     format(a)
 
         if(string(2:5) .eq. 'Time')then
 !           a9time = string(30:39)
