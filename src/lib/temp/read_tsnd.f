@@ -271,7 +271,7 @@ c       1                ,t_diff
 411                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
                     if(iwrite_output .ge. 1)then
-412                     write(32,*)ri-1.,rj-1.,level-1       
+412                     write(32,*)ri,rj,level       
      1                        ,ob_pr_t(i_tsnd,level),c8_sndtype(i_tsnd)       
                     endif
                 enddo ! level
@@ -512,7 +512,7 @@ c       1                ,t_diff
 711                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
                     if(iwrite_output .ge. 1)then
-712                     write(32,*)ri-1.,rj-1.,level-1       
+712                     write(32,*)ri,rj,level       
      1                        ,ob_pr_t(i_tsnd,level),c8_sndtype(i_tsnd)       
                     endif
                 enddo ! level

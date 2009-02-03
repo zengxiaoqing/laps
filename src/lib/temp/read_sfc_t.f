@@ -243,7 +243,7 @@ c
                         endif
 
                         if(iwrite_output .ge. 1)then
-                            write(lun_tmg,*)ri-1.,rj-1.,k_grid-1
+                            write(lun_tmg,*)ri,rj,k_grid
      1                                     ,t_interp,'SFC'
                         endif
 
