@@ -139,8 +139,15 @@ cdis
         dusmall = dubase * pix_per_km/1.65
 
         jmax_ref = 209
-        size_factor = (float(jmax_ref-1) / 300.) ! * (5000. / grid_spacing_m) 
+        size_factor = (float(jmax_ref-1) / 300.) 
+
+        if(imax .gt. jmax)then ! horizontally oriented box
+            size_factor = size_factor / (float(imax)/float(jmax))       
+        endif
+
         size_factor = size_factor * plot_parms%obs_size
+
+        write(6,*)' Subroutine plot_obs: size_factor = ',size_factor
 
         size_prof = 3.   * size_factor / zoom
         size_pirep = 3.0 * size_factor / zoom
@@ -535,10 +542,6 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1  ,status='old',err=811)
 
 55      read(32,*,end=60)ri,rj,rk,dir,speed_ms
-        ri = ri + 1.
-        rj = rj + 1.
-        rk = rk + 1.
-
         k = nint(rk)
 
         if(k_level .gt. 0)then
@@ -597,9 +600,6 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         do while (.true.)
             read(32,*,end=41,err=39)ri,rj,rk,dir,speed_ms,c8_obstype
  33         format(1x,5f10.0,1x,a8)
-            ri = ri ! + 1.
-            rj = rj ! + 1.
-            rk = rk ! + 1.
 
             k = nint(rk)
 !           write(6,*)k,alat,alon,retheight,dir,speed_ms
@@ -664,13 +664,10 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         do while (.true.)
             read(32,*,end=51)ri,rj,rk,dir,speed_ms,c3_obsext
-            ri = ri + 1.
-            rj = rj + 1.
-            rk = rk + 1.
 
             k = nint(rk)
 
-            if(abs(k - k_level) .le. vert_rad_pirep)then
+            if(abs(rk - float(k_level)) .le. float(vert_rad_pirep))then
 
                 if(k .eq. k_level)then
                     if(c3_obsext .eq. 'pin')then
@@ -840,10 +837,6 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
             read(32,*,end=41,err=36)ri,rj,rk,t_k,c8_obstype
  36         continue
 
-            ri = ri + 1.
-            rj = rj + 1.
-            rk = rk + 1.
-
             k = nint(rk)
             k_sfc = 2
 
@@ -870,10 +863,6 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         do while (l_found_file) ! Plot the temp obs
             read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype
 150         continue
-
-            ri = ri + 1.
-            rj = rj + 1.
-            rk = rk + 1.
 
             k = nint(rk)
             k_sfc = 2
@@ -984,13 +973,9 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         nobs_temp = 0
 
-        do while (.true.) ! Count the temperature obs
+        do while (.true.) ! Count the dewpoint obs
             read(32,*,end=41,err=36)ri,rj,rk,t_k,c8_obstype
  36         continue
-
-            ri = ri + 1.
-            rj = rj + 1.
-            rk = rk + 1.
 
             k = nint(rk)
             k_sfc = 2
@@ -1013,15 +998,11 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         rewind(32)
 
-42      write(6,*)' Number of temperature obs = ',nobs_temp
+42      write(6,*)' Number of dewpoint obs = ',nobs_temp
 
-        do while (l_found_file) ! Plot the temp obs
+        do while (l_found_file) ! Plot the dewpoint obs
             read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype
 150         continue
-
-            ri = ri + 1.
-            rj = rj + 1.
-            rk = rk + 1.
 
             k = nint(rk)
             k_sfc = 2
