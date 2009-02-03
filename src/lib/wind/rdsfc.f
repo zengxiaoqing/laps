@@ -202,7 +202,7 @@ c
                 if(sfc_k(n_sfc_obs) .eq. 0)sfc_k(n_sfc_obs) = 1
 
                 if(iwrite_output .ge. 1)then
-                    write(32,*)ri-1.,rj-1.,rk-1.,dd_s(i),ff_s(i)
+                    write(32,*)ri,rj,rk,dd_s(i),ff_s(i)
                 endif
 
                 k = sfc_k(n_sfc_obs)
