@@ -14,6 +14,7 @@ program main                                     puttmpanal_drv.f
                 get_meso_sao_pirep
                 rd_acars_t                       lib/temp/read_acars_t.f
                     interp_tobs_to_laps          lib/temp/interp_tobs.f
+                rd_sfc_t                         lib/temp/read_sfc_t.f
                 analyze_tobs                     lib/temp/insert_tobs.f
                     barnes_univariate_shell           " 
                         barnes_multivariate   
