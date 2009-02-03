@@ -299,8 +299,7 @@ cdis
                         point_v(n_point_obs) = v_temp - v_diff
 
                         if(iwrite_output .ge. 1)then
-                            write(lun_pig,91)ri-1.,rj-1.,rk-1.
-     1                                      ,dd,ff,ext_in       
+                            write(lun_pig,91)ri,rj,rk,dd,ff,ext_in       
  91                         format(1x,5f8.1,1x,a3)
                         endif
 
