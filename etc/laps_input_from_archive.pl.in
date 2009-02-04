@@ -219,14 +219,14 @@ if (! defined $opt_S) {
 
 # Model background data
 if ($opt_m eq "ruc") {
-   if($analysis_yr < 2008){ # isobaric grib files (no need to be converted to NetCDF)
-        print $t." Get ruc isobaric grib\n";
-        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_iso/7/0/105/236/\* $public/data/grids/ruc/ftp_ruc_iso/grib/");
-        chdir "$public/data/grids/ruc/ftp_ruc_iso/grib/";
-#    if($analysis_yr < 2008){ # hybrid grib files (will need to be converted to NetCDF)
-#        print $t." Get ruc hybrid grib\n";
-#        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_hyb/7/0/105/236/\* $public/data/grids/ruc/hyb_A236/grib/");
-#        chdir "$public/data/grids/ruc/hyb_A236/grib/";
+#   if($analysis_yr < 2008){ # isobaric grib files (no need to be converted to NetCDF)
+#        print $t." Get ruc isobaric grib\n";
+#        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_iso/7/0/105/236/\* $public/data/grids/ruc/ftp_ruc_iso/grib/");
+#        chdir "$public/data/grids/ruc/ftp_ruc_iso/grib/";
+    if($analysis_yr < 2008){ # hybrid grib files (will need to be converted to NetCDF)
+        print $t." Get ruc hybrid grib\n";
+        system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_hyb/7/0/105/236/\* $public/data/grids/ruc/hyb_A236/grib/");
+        chdir "$public/data/grids/ruc/hyb_A236/grib/";
 #   }else{ # isobaric 20km grib2 (from NCEP) 
 #       print $t." Get ruc isobaric 20km grib2 (from NCEP)\n";
 #       system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/grib/ftp_ruc_iso/7/0/105/0_67725_30/\* $public/data/grids/ruc/iso/grib2/");
