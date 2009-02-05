@@ -12,6 +12,8 @@ $ENV{PATH}="/opt/netcdf-pgi/bin:$ENV{PATH}";
 #    -l lapsprd (needs machine name and directory)
 #    -m model type (default = mm5)
 #    -a model configuration (e.g. schultz)
+#       NOTE: if -a is set to "noSubDir", files will be written out to 
+#             $lapsprd/fua and $lapsprd/fsf
 #    -r model root (default = environment variable)
 #    -d init date (yyyymmddhh, default = current hour)
 #    -g model grid to process (default = 1, negative value does all grids)
@@ -244,12 +246,20 @@ for ($n=0; $n<$nfcst; $n++) {
   system ("date");
   my $scp_cmd;
 
-  $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fua/$fua_file $lapsprd/fua/$opt_m-$opt_a";
+  if ($opt_a eq "noSubDir") {
+    $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fua/$fua_file $lapsprd/fua";
+  }else {
+    $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fua/$fua_file $lapsprd/fua/$opt_m-$opt_a";
+  }
   print "Running command: $scp_cmd\n";
   system ($scp_cmd);
   system ("date");
 
-  $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $lapsprd/fsf/$opt_m-$opt_a";
+  if ($opt_a eq "noSubDir") {
+    $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $lapsprd/fsf";
+  }else {
+    $scp_cmd = "ssh wfe0 scp $modelroot/$date/wrfprd/d01/fsf/$fsf_file $lapsprd/fsf/$opt_m-$opt_a";
+  }
   print "Running command: $scp_cmd\n";
   system ($scp_cmd);
   system ("date");
