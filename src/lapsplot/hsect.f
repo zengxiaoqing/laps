@@ -5583,7 +5583,7 @@ c                   cint = -1.
 
             c_label = 'Sfc Visibility       (miles)     '
 
-            clow = 100.
+            clow = 50.
             chigh = +0.
             cint = -0.1
             scale = 1600.
