@@ -451,8 +451,8 @@ if (trim(mtype) == 'nmm') then
  pcp_tot = 0.
  pcp_tot = pcp_init + pcp_inc
 else
- print*, 'pcp_inc update: ',trim(mtype)
- pcp_tot = pcp_tot + pcp_inc
+ print*, 'skip pcp_inc update: ',trim(mtype)
+!pcp_tot = pcp_tot + pcp_inc
 endif
 
 ! Write intermediate precip file for future use.
