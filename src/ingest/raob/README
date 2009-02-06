@@ -132,6 +132,6 @@ snd_main                                        ingest_sounding.f
         get_radiometer_data                     get_radiometer_data.f   
             read_radiometer_data                      "
                 read_radiometer_netcdf                "  
-                write_snd                       write_snd.f
+                write_snd                       lib/write_snd.f
 
 

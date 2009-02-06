@@ -54,6 +54,8 @@ main                                           laps_sfc.f
             vortdiv                            lib/util/windfields.f
             meso_anl                           lib/laps_routines.f
             vlog2vis                           visibility.f
+            enhance_vis                             "
+                get_vismods                         "
             lp_fire_danger                     lib/laps_routines.f
             heat_index                              "
             write_laps_data                 
@@ -83,8 +85,6 @@ lapsvanl_sub.f:	subroutine barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
 lapsvanl_sub.f:	subroutine bounds(x,imax,jmax)
 lapsvanl_sub.f:	subroutine make_cssi(t,td,pmsl,u,v,cssi,ni,nj,badflag)
 lapsvanl_sub.f:	subroutine windconvert(uwind,vwind,direction,speed,
-lapsvanl_sub.f:        subroutine enhance_vis(i4time,vis,hum,topo,ni,nj,kcloud)
-lapsvanl_sub.f:        subroutine get_vismods(i4time,hum,topo,vismod,ni,nj,kcloud)
 lapsvanl_sub.f:	subroutine calc_beta(d,obs_error,beta)
 lapsvanl_sub.f:	subroutine reduce_p(temp,dewp,pres,elev,lapse_t,
 lapsvanl_sub.f:      subroutine verify(field,ob,stn,n_obs_b,title,iunit,
