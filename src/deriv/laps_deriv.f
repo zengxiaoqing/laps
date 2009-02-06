@@ -245,9 +245,10 @@ cdis
      1                  j_status,                ! O
      1                  istatus1)                ! O
 
-        istat_lps = 0 ! Temporary until this is wired in
+        istat_lps = 0 ! Temporary until this is wired in'
+        istat_twet_snow = 1 ! if we get this far the read was successful
 
-        if(.true. .and. istatus1 .eq. 1)then
+        if(istat_twet_snow .eq. 1)then
             call get_domain_laps(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo       
      1                          ,grid_spacing_m,istatus)
             if(istatus .ne. 1)then
