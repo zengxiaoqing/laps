@@ -22,7 +22,7 @@ my $LAPSROOT;
 #    -q if *not* set, run lfmpost.exe via qsub 
 #    -P project - only important if project is DWR...will look in DWR specific dirs
 #    -y physics of model...used to make logfile unique when qsub writes it to $USER home directory
-#    -W optional wait time for model file (once it appears in the directory) to be completely written (default is 20sec) 
+#    -W optional wait time for model file (once it appears in the directory) to be completely written (default is 20sec)
 
 use vars qw($opt_l $opt_m $opt_r $opt_d $opt_g $opt_f $opt_i $opt_p $opt_s $opt_w $opt_e $opt_y $opt_P $opt_q $opt_W);
 use Getopt::Std;
@@ -30,7 +30,7 @@ getopts('l:m:r:d:g:f:i:p:s:w:e:y:P:qW:');
 
 my $fileWait_time = 20; #Number of seconds to sleep after file copy for stability
 if (defined ($opt_W)) {
-  $fileWait_time = $opt_W; 
+  $fileWait_time = $opt_W;
 }
 
 $project = $opt_P if defined($opt_P);
@@ -187,6 +187,7 @@ if ($opt_e) {  #set $endClockTime
     $ect_mm = "0".$ect_mm while(length($ect_mm)<2);
     $endClockTime = "$ect_yy$ect_mm$ect_dd$ect_hh$min";
   } else {
+    $ect_hh = "0".$ect_hh while(length($ect_hh)<2);
     $endClockTime = "$yyyy$mm$dd$ect_hh$min";
   }
 }
@@ -268,6 +269,7 @@ my $inittime = &time::time_to_unix($mm,$dd,$yyyy,$hh,$mn,0) + $decade;
 my ($g,$grid,$i4time,$fcst,$fname,$dom,$ss,$mdate,$jday,$yy);
 my $cFcstNum;
 my $FcstNum;
+print "ngrid = $ngrid\n";
 for ($g=1; $g<=$ngrid; $g++) {
    $grid = $grid[$g];
    $i4time = $inittime;
@@ -280,9 +282,21 @@ for ($g=1; $g<=$ngrid; $g++) {
    }
 
    if (! -e "$model_output_dir/d$dom") {
+     print "$model_output_dir/d$dom does not exist...creating\n";
      mkdir ("$model_output_dir/d$dom",0775);
      mkdir ("$model_output_dir/d$dom/fua",0775);
      mkdir ("$model_output_dir/d$dom/fsf",0775);
+     if (! -e "$model_output_dir/d$dom") {
+       print "ERROR...$model_output_dir/d$dom not created!!!!\n";
+     }
+   }
+   if (! -e "$model_output_dir/d$dom") {
+     mkdir ("$model_output_dir/d$dom",0775);
+     if (! -e "$model_output_dir/d$dom") { 
+       print "ERROR: d01 still NOT created in extra pass!!!!!\n";
+     } else {
+       print "NOTE: d01 created in new extra pass.\n";
+     }
    }
    if (! -e "$model_output_dir/d$dom/fua") {
      mkdir ("$model_output_dir/d$dom/fua",0775);
@@ -356,6 +370,7 @@ for ($g=1; $g<=$ngrid; $g++) {
         if ($opt_e) {
           if ($currTime > $endClockTime) {
             print "    LFM post process ran past $endClockTime...conflict with next model run.\n\n";
+            print "        currTime: $currTime\n";
             exit;
           }   
         }
