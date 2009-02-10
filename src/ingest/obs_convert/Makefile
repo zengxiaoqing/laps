@@ -54,6 +54,7 @@ FILES= LAPS_Params.f90 \
        LAPS_Dividr.f90 \
        LAPS_Config.f90 \
        LAPS_Ingest.f90 \
+       Read_RASS_Data.f90 \
        LAPS_Systim.f90 \
        BUFR_Convrt.f90 \
        WRFD_Convrt.f90
