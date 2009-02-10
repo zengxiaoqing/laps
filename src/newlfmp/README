@@ -7,9 +7,12 @@ MODULE diagram for new lfmpost
 lfmpost                                      lfmpost.f90
     lfm_namelist
     get_native_dims                          lfmutil.f90
+        get_mm5_dims                         mm5util.f90 
         get_wrf_dims                         wrfutil.f90 
+        get_nmm_dims                         nmmutil.f90 
     get_laps_static                          lfmutil.f90                
     fill_native_grid                         lfmutil.f90
+        fill_mm5_grid                        mm5util.f90
         fill_wrf_grid                        wrfutil.f90
         fill_nmm_grid                        nmmutil.f90
         map_set                              lib/modules/module_map_utils.f90
@@ -20,7 +23,13 @@ lfmpost                                      lfmpost.f90
         gdtost_lfm                               "
             binom_lfm                            "
     lfm_derived                              lfmutil.f90
+        fill_precip                              " 
+        wintprec                                 "       
+        snowfall                                 "
         model_pblhgt                             "
     lfm_vinterp
     output_laps                              lfmwrite.f90
+        write_laps_lfm                       lib/writelapslfm.f
+    grib_sfc_vars                            lfmwrite.f90
+    grib_ua_vars                                 "
 
