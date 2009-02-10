@@ -48,7 +48,16 @@ open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
 close FILE;
 #print "lines in selected.in = @lines<br>";
-my $default_domain = @lines[0];
+
+#Set default domains to be previous choices
+@domains = split(/ /,@lines[0]);
+foreach $domain (@domains) {
+    $domain =~ s/ //g;
+    chomp $domain;
+    $selected{$domain}="selected";
+}
+
+my $default_domain = @domains[0];
 chomp $default_domain;
 
 #Define laps_data_root
@@ -163,7 +172,7 @@ my $default_frames = @lines[12];
 $default_frames =~ s/ //g;
 chomp $default_frames;
 
-$n_choices=8;
+$n_choices=7;
 
 &ReadParse(*default);
 $default_title=$default{'title'} ||
@@ -190,7 +199,7 @@ foreach $field (@fields) {
     $selected{$field}="selected";
 }
 
-#Set default pressure_levels to be previous choices
+#Set default pressure_levels to be previous choices from selected.in
 @pressure_levels = split(/ /,@lines[3]);
 foreach $pressure_level (@pressure_levels) {
     $pressure_level =~ s/ //g;
@@ -224,6 +233,17 @@ close LAPSPRD;
 #print "@thickness_list\n";
 
 @frames_list[0] = "1";
+@frames_list[1] = "2";
+@frames_list[2] = "3";
+@frames_list[3] = "4";
+@frames_list[4] = "5";
+@frames_list[5] = "6";
+@frames_list[6] = "7";
+@frames_list[7] = "8";
+@frames_list[8] = "9";
+@frames_list[9] = "10";
+@frames_list[10] = "11";
+@frames_list[11] = "12";
 
 ##Here's new stuff (sort of)------------------
 
@@ -238,7 +258,7 @@ select multiple pressure levels.<br>
 -->
 <center>
 
-<table border=0 cellpadding=7>
+<table border=0 cellpadding=$n_choices>
 <tr>
 
 <td valign=top width=105>
@@ -268,15 +288,22 @@ select multiple pressure levels.<br>
 <br>
 
 
-<select name="domain">
+<select name="domains" size=7 multiple>
 EOF
-  #display available domains
+
+# display available domains
   foreach $file (@domainlist) {
 
     if($file ne "anal2d" && $file ne "fcst2d" && $file ne "t2" && $file ne "." && $file ne ".."){
       if(-e "$DomainDir/$file/private_data/lapsprd"){
-        if($file eq $default_domain ) { print "<option selected>$file\n"; } 
-        else               { print "<option>$file\n"; } 
+#      if($file eq $default_domain ) { 
+#          print "<option selected>$file\n"; 
+           print "<option $selected{$file}> $file\n";
+#      } else { 
+#          print "<option>$file\n"; 
+#      } 
+#        $selected{$file}="selected";
+#        print "<option $selected{$file}> $file\n";
       }
     }
 
@@ -284,24 +311,6 @@ EOF
 print <<"EOF";
 </select>
 
-
-<p>
-<A HREF="frames.html"># Frames:</A>
-<br>
-
-<select name="frames">
-EOF
-  #display available thicknesses
-
-  foreach $frames (@frames_list) {
-
-    if($frames == $default_frames ) { print "<option selected>$frames\n"; } 
-    else               { print "<option>$frames\n"; } 
-
-  }
-
-print <<"EOF";
-</select>
 
 
 </td>
@@ -358,7 +367,7 @@ print <<"EOF";
 <br>
 
 <valign=top>
-<select name="fields" size=$n_choices multiple>
+<select name="fields" size=8 multiple>
 <option $selected{'HT'}> HT
 <option $selected{'TEMP'}> TEMP
 <option $selected{'SFCT'}> SFCT
@@ -380,6 +389,7 @@ print <<"EOF";
 <option $selected{'CAPE'}> CAPE
 <option $selected{'CIN'}> CIN
 <option $selected{'HELICITY'}> HELICITY
+<option $selected{'VSBLTY'}> VSBLTY
 <option $selected{'HEATINDEX'}> HEATINDEX
 <option $selected{'FIREWX'}> FIREWX
 <option $selected{'FIRE_FBG'}> FIRE_FBG
@@ -561,6 +571,15 @@ print <<"EOF";
 <td valign=top>
 <input type="hidden" name="title" value="$default_title">
 
+<!--<p>-->
+<center>
+<strong>
+<input type="submit" value="Load">
+<input type="reset" value="Clear">
+</center>
+</strong>
+<br>
+
 Density:
 <br>
 <select name="density">
@@ -596,15 +615,24 @@ EOF
 print <<"EOF";
 </select>
 
-<!--<p>-->
+
 <br>
+<A HREF="frames.html"># Frames:</A>
 <br>
-<center>
-<strong>
-<input type="submit" value="Load">
-<input type="reset" value="Clear">
-</center>
-</strong>
+
+<select name="frames">
+EOF
+  #display available frame counts
+
+  foreach $frames (@frames_list) {
+
+    if($frames == $default_frames ) { print "<option selected>$frames\n"; } 
+    else               { print "<option>$frames\n"; } 
+
+  }
+
+print <<"EOF";
+</select>
 
 </td>
 
