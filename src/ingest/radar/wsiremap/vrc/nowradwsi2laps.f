@@ -110,6 +110,8 @@ c Read data and get navigation info to build lat/lon to i/j table
 c ----------------------------------------------------------------
       istatus=1
 
+      nradars_in = 0 ! initialize this
+
       call read_nowrad_cdf(ctype,filename,nlines,nelems,
      + dlat,dlon,La1,Lo1,La2,Lo2,centerlon,topLat,validTime,
      + dx,dy,Lov, Latin, image, istatus)
