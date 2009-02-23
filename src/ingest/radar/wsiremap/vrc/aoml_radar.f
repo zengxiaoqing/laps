@@ -46,6 +46,10 @@ c read in laps lat/lon and topo
       i_vrc = 2
       call get_vrc_full_path(i_vrc,vrc_outdir
      1                        ,vrc_full_path,lenv,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Return from map_aoml_sub without AOML processing'
+          return
+      endif
 
       call get_file_times(vrc_full_path,max_files,c_fnames_out
      1                   ,i4times_out,i_nbr_files_out,istatus)

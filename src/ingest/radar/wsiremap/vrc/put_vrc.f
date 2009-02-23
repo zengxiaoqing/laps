@@ -132,7 +132,8 @@
 
         else ! 'lapsprd'
             if(i_vrc .gt. 1)then
-                write(6,*)' Error - multiple radars when i_vrc=1'
+                write(6,*)' Warning - lapsprd output when i_vrc > 1'
+                write(6,*)' i_vrc = ',i_vrc
                 istatus = 0
                 return
             endif
