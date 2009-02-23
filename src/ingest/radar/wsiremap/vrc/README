@@ -80,7 +80,8 @@ vrc_driver                                        vrc_driver.f
         read_vrc_nl                                   
         NOWRADWSI_to_LAPS                         nowradwsi2laps.f
         map_aoml_sub                              aoml_radar.f
-            map_aoml_sweep                            "
+            get_vrc_full_path                     put_vrc.f
+            map_aoml_sweep                        aoml_radar.f
                 READHEAD                          read_pass_head.f
                 PASSXCMP                              "
                     UNPAKDBZ2D                        "
