@@ -3946,11 +3946,11 @@ Process: lfmpost.exe - Post-processes MM5/WRF model forecast files into formats
                        that can be used to feed back into LAPS analysis or
                        plotting software.
    
-author: Brent Shaw
+author: Brent Shaw, John Snook
 
 contact: Paul Schultz (Paul.J.Schultz AT noaa.gov)
 
-Source directory: 'laps/src/lfmpost'
+Source directory: 'laps/src/newlfmp'
 
    The lfmpost program consists of a Fortran 90 executable: 
      $LAPSINSTALLROOT/bin/lfmpost.exe
@@ -3959,8 +3959,7 @@ Source directory: 'laps/src/lfmpost'
    following models:
 
      1. MM5 (Version 3 binary output format)
-     2. WRF (NCAR EM core, Version 1.3 netCDF output format)
-     3. WRF (NCAR EM core, Version 2 netCDF output format)
+     3. WRF (NCAR EM core, Version 3 netCDF output format)
    
    It performs the following functions:
    
