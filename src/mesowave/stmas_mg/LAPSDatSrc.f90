@@ -412,6 +412,10 @@ SUBROUTINE LAPSOBSV(m)
 	      CALL REDUCE_P(tmp(k),dew(k),prs,elv(k), &
 		lapses(1),lapses(2), &
 		rawobs(1,numobs(j)+k,j),0.0,badsfc)
+if (abs(prs-945) .lt. 0.6) then
+print*,'Find 945: ',prs,stn(k),spr(k),alt(k)
+print*,'          ',rawobs(1,numobs(j)+k,j),k,i,numobs(j)+k,j
+endif
 	    ELSE
 	      rawobs(1,numobs(j)+k,j) = badsfc
             ENDIF
@@ -1324,7 +1328,7 @@ SUBROUTINE JbGridpt
 !==========================================================
 
   ! Local variables:
-  INTEGER :: i,j,ic,jc,kc,iv,jo,is,ie,js,je
+  INTEGER :: i,j,ic,jc,kc,iv,jo,is,ie,js,je,km,kp
   LOGICAL :: o,g
   REAL    :: r2,ol
 
@@ -1340,6 +1344,8 @@ SUBROUTINE JbGridpt
       ic = INT(qc_obs(2,jo,iv))
       jc = INT(qc_obs(3,jo,iv))
       kc = (INT(qc_obs(4,jo,iv))-domain(1,3))/lapsdt+1
+      km = max0(kc-1,1)
+      kp = min0(kc+1,numgrd(3))
       IF ((kc .LT. 1) .OR. (kc .GT. numgrd(3))) THEN
         PRINT*,'Obs out of range: ',iv,jo,qc_obs(4,jo,iv),domain(1,3)
         CYCLE
@@ -1364,7 +1370,7 @@ SUBROUTINE JbGridpt
           IF ((lndfac(i,j) .GT. 0.0) .OR. (lndsea(iv) .EQ. 0)) g = .TRUE.
           ! Within the influence radius and landfactors the same:
           IF (((i-ic)*(i-ic)+(j-jc)*(j-jc) .LT. r2) .AND. (o .EQV. g)) &
-            uncovr(i,j,kc-1:kc+1,iv) = .FALSE.
+            uncovr(i,j,km:kp,iv) = .FALSE.
         ENDDO
       ENDDO
 
