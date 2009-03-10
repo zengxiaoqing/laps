@@ -91,7 +91,8 @@ MODULE Definition
 
   INTEGER :: lapsdt		! LAPS cycle time (secs)
   INTEGER :: mxstts		! Maximum number obs sites
-  INTEGER :: i4time		! LAPS time frames
+  INTEGER :: i4time		! LAPS analysis time 
+  INTEGER :: i4wndw(2)		! Analysis time window
   INTEGER :: qc_val		! QC flag for threshold check
   INTEGER :: qc_std		! QC flag for standard dev-check
   INTEGER, ALLOCATABLE, DIMENSION(:) &
@@ -102,7 +103,7 @@ MODULE Definition
   REAL   :: thresh(MAXVAR)	! Threshold for obs agaist bkg
   REAL   :: pnlt_v(MAXVAR)	! Penalty of each variable !added by min-ken hsieh, used in STMASAna
   REAL, ALLOCATABLE, DIMENSION(:,:) &
-	 :: latgrd,longrd	! Grid Lat/Lon
+	 :: latgrd,longrd,topogr! Grid Lat/Lon/topo
   REAL, ALLOCATABLE, DIMENSION(:,:,:) &
 	 :: rawobs		! Raw observations
   REAL, ALLOCATABLE, DIMENSION(:,:) &
