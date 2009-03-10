@@ -41,7 +41,7 @@ cdis
      1                  ,standard_longitude
      1                  ,NX_L,NY_L,NZ_L,NX_C,NZ_C,NX_P,NX_T
      1                  ,r_missing_data,laps_cycle_time,maxstns      
-     1                  ,density,plot_parms,namelist_parms)
+     1                  ,density,plot_parms,namelist_parms,ifield_found)       
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added NX_C, NZ_C as dummy arguments
@@ -296,6 +296,8 @@ cdis
      1      -97.43, -93.65, -98.32,-106.87/
 
         O_K(T_K,P_PA)   =   O( T_K-273.15 , P_PA/100. )  + 273.15
+
+        ifield_found = 0
 
         zoom = 1.0
 
@@ -741,6 +743,11 @@ c read in laps lat/lon and topo
      1                 NX_L,NY_L,NX_C,r_missing_data)
 
         if(c_field(1:2) .eq. 'df' .and. idiff .eq. 0)then
+            if(ifield_found .eq. 0)then
+                write(6,*)' Skip difference plot - no field was found'
+                goto100
+            endif
+
             write(6,*)' Plotting difference field of last two entries'       
             call diff(field_vert,field_vert_buf,field_vert ! _diff
      1               ,NX_C,NZ_C)       
@@ -2349,7 +2356,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 call make_fnam_lp(i4time_nearest,a9time,istatus)
 
-                c_label = 'LAPS Specific Humidity    (x1e3) '
+                c_label = 'LAPS Specific Humidity    (g/kg) '
 
             elseif(c_prodtype .eq. 'B' .or. 
      1             c_prodtype .eq. 'F')then
@@ -2361,8 +2368,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                              ,istatus)
                 if(istatus .ne. 1)goto100
 
+                call directory_to_cmodel(directory,c_model)
                 call mk_fcst_xlabel('Specific Humidity',fcst_hhmm
-     1                          ,ext(1:3),'x1e3',c_model,c_label)       
+     1                          ,ext(1:3),'g/kg',c_model,c_label)       
 
             endif
 
@@ -2370,13 +2378,14 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             clow = 0.
-            chigh = +40.
+            chigh = +20.
             cint = 1.0 / density
 !           cint = -1.
             i_contour = 1
             scale = 1e-3
 
-            colortable = 'moist'
+!           colortable = 'moist'
+            colortable = 'tpw'
 
         elseif(c_field(1:2) .eq. 'rh' .or. c_field(1:2) .eq. 'rl')then
             call input_product_info(i4time_ref              ! I
@@ -2436,13 +2445,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                        ,NX_L,NY_L,NZ_L,NX_C,NZ_C
      1                        ,r_missing_data)      
 
-                if(c_prodtype .eq. 'B')then
-                    c_label = 'LAPS  Bkgnd   RH     '//fcst_hhmm
-     1                                                 //'    %   '
-                elseif(c_prodtype .eq. 'F')then
-                    c_label = 'LAPS  FUA     RH     '//fcst_hhmm
-     1                                                 //'    %   '
-                endif
+                call directory_to_cmodel(directory,c_model)
+                call mk_fcst_xlabel('RH',fcst_hhmm
+     1                              ,ext(1:3),'%',c_model,c_label)       
 
                 call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
      1                          ,istatus)
@@ -2816,6 +2821,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         write(6,*)' Plotting, Overlay = ',i_graphics_overlay
      1                                   ,i_label_overlay
      1                                   ,i_image
+
+        ifield_found = 1
 
         if(abs(i_contour) .eq. 1)then
             call set(vxmin, vxmax, vymin, vymax
@@ -3368,7 +3375,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         endif ! l_sta = .true.
 
-        call frame
+!       call frame
 
         return
         end
