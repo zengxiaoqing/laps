@@ -149,6 +149,7 @@ SRC	= machine_dependent.F \
           time_now.c \
           trig_dum.f \
           upcase.f \
+          up_mflux.f \
           vectors.f \
           vis2albedo.f \
           vv.f \
