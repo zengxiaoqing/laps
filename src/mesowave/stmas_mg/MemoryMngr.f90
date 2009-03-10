@@ -52,6 +52,7 @@ SUBROUTINE LAPSMemo
   ALLOCATE(i4prev(numtmf), &
 	   latgrd(numgrd(1),numgrd(2)), &
 	   longrd(numgrd(1),numgrd(2)), &
+	   topogr(numgrd(1),numgrd(2)), &
 	   rawobs(4,numtmf*mxstts,numvar), &
 	   bkgobs(numtmf*mxstts,numvar), &
 	   stanam(numtmf*mxstts,numvar), &		!Added by min-ken.hsieh: stanam for STMASVer
@@ -83,6 +84,7 @@ SUBROUTINE LAPSRels
   DEALLOCATE(i4prev, &
 	     latgrd, &
 	     longrd, &
+	     topogr, &
 	     rawobs, &
 	     STAT=err)
 
