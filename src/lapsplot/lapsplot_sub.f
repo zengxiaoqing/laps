@@ -158,7 +158,11 @@ cdis
         read(lun,1111)c_section
 1111    format(a)
 
-        if(c_section .eq. 'nt')goto1090
+        if(c_section .eq. 'nt')then
+            write(6,*)' Setting namelist_parms%iraster to -1'
+            namelist_parms%iraster = -1
+            goto1090
+        endif
 
         if(c_section .eq. 'q' .or. c_section .eq. 'Q')goto999
 
@@ -172,6 +176,8 @@ cdis
             read(lun,*)plot_parms%rimage_intensity
             go to 1100
         endif
+
+        ifield_found = 1
 
         IF(     c_section .eq. 'h' .or. c_section .eq. 'H' 
      1     .or. c_section .eq. '1'
@@ -209,7 +215,11 @@ cdis
      1                         MAX_RADARS,L_RADARS,r_missing_data,
      1                         laps_cycle_time,zoom,density,
      1                         plot_parms,namelist_parms)
-            call frame
+
+            if(ifield_found .eq. 1)then
+                write(6,*)' Field found - calling frame'
+                call frame
+            endif
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
      1                            .or. c_section .eq. 'xz'
@@ -244,22 +254,31 @@ cdis
      1                ,standard_longitude,NX_L,NY_L,NZ_L
      1                ,NX_C,NZ_L,NXSECT,NX_T      
      1                ,r_missing_data,laps_cycle_time,maxstns
-     1                ,density,plot_parms,namelist_parms)
+     1                ,density,plot_parms,namelist_parms,ifield_found)       
+
+            if(ifield_found .eq. 1)then
+                write(6,*)' Field found - calling frame'
+                call frame
+            endif
 
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
             call plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                        ,r_missing_data,laps_cycle_time,maxstns
      1                        ,plot_parms,namelist_parms)       
 
+            if(ifield_found .eq. 1)then
+                write(6,*)' Field found - calling frame'
+                call frame
+            endif
+
         endif ! c_section
 
         write(6,901)
 901     format(////20x,'   ----   ADD NEW FRAME??    ----')
 
+        goto 1100 ! loop back for user input
 
-        goto 1100
-
-999     continue
+999     continue ! quit/end program
 
         call sflush
 
