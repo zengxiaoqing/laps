@@ -238,7 +238,7 @@ if ($opt_m eq "ruc") {
     }else{ # isobaric 13km grib1 (from ESRL) [beginning 1/1/2008]
         print $t." Get ruc isobaric 13km grib1 (from ESRL)\n";
         system ("mssGet --verbose /mss/fdr/$analysis_yr/$analysis_mo/$analysis_dy/data/fsl/13kmruc/ruc_presm/\* $public/data/grids/ruc/iso/grib1/");
-        chdir "$public/data/grids/ruc/iso/grib2/";
+        chdir "$public/data/grids/ruc/iso/grib1/";
     }
 
     system ("find -mindepth 1 -maxdepth 1 -name \"\*\.tar\.gz\" -exec gunzip {} \\;");
@@ -251,6 +251,22 @@ if ($opt_m eq "ruc") {
         if (! -d $opt_g){ die "$opt_g not found! \n";}
         system ("@CSH@ @prefix@/etc/ruc_grib2netcdf.csh $opt_g $public/data/grids/ruc/hyb_A236");
         $t=gmtime(); 
+
+    } else { # make soft links for .grib files
+        opendir(TEMPDIR, ".");
+        @filelist = readdir TEMPDIR;
+        closedir TEMPDIR;
+        system ("mkdir links");
+        my ($fname,$suffix);
+        chdir "./links";
+        system ("pwd");
+        foreach (@filelist){
+            ($fname,$suffix) = split(".",$_);
+#           symlink "../$_", "$fname";
+            print  ("ln -s ../$_ $fname");
+            system ("ln -s ../$_ $fname");
+        }
+
     }
 
 } elsif ($opt_m eq "fim") { # Consider removing forecasts more than 24 hours old?
