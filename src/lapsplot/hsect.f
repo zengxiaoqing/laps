@@ -3860,7 +3860,7 @@ c    1                                  ,field_3d,istatus) ! q_3d
 
               else
                  clow = 0.
-                 chigh = +40.
+                 chigh = +20.
                  cint = 0.2
 c                cint = -1.
 
@@ -3873,7 +3873,7 @@ c                cint = -1.
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'moist')
+     1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
               endif
 
@@ -4168,14 +4168,15 @@ c                   cint = -1.
      1                          ,r_missing_data)
 
                 range = (rmax-rmin) / scale
-
-                if(range .gt. 40)then
+                range_eff = range / density
+ 
+                if(range_eff .gt. 40)then
                     cint = 6.
-                elseif(range .gt. 20)then
+                elseif(range_eff .gt. 20)then
                     cint = 3.
-                elseif(range .gt. 8)then
+                elseif(range_eff .gt. 8)then
                     cint = 2.
-                else ! range < 8
+                else ! range_eff < 8
                     cint = 1.
                 endif
 
@@ -4277,15 +4278,16 @@ c                   cint = -1.
             call array_range(field_2d,NX_L,NY_L,rmin,rmax
      1                      ,r_missing_data)
 
-            range = (rmax-rmin) / scale
+            range = (rmax-rmin) / scale 
+            range_eff = range / density
 
-            if(range .gt. 40)then
+            if(range_eff .gt. 40)then
                 cint = 6.
-            elseif(range .gt. 20)then
+            elseif(range_eff .gt. 20)then
                 cint = 3.
-            elseif(range .gt. 8)then
+            elseif(range_eff .gt. 8)then
                 cint = 2.
-            else ! range < 8
+            else ! range_eff < 8
                 cint = 1.
             endif
 
