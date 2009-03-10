@@ -34,6 +34,7 @@ MODULE LAPSDatSrc
 !==========================================================
 
   USE Definition
+  USE MEM_NAMELIST
 
 CONTAINS
 
@@ -56,6 +57,10 @@ SUBROUTINE LAPSInfo
   CHARACTER*9 :: fnm
   INTEGER :: err	! Error indicator
   INTEGER :: i
+
+  ! VARIABLES FOR ACCESSING WIND PARAMETERS:
+  CHARACTER*150 :: STATIC,FILENM
+  INTEGER       :: LENGTH
 
   !*********************
   ! LAPS configuration:
@@ -85,13 +90,23 @@ SUBROUTINE LAPSInfo
   CALL GET_MAXSTNS(mxstts,err)
   IF (err .ne. 1) print*, 'STMAS>LAPSInfo: Error getting maxstations'
 
+  ! USE A NEW LAPS WIND PARAMETER SCHEME:
+  CALL GET_DIRECTORY('static',STATIC,LENGTH)
+  FILENM = STATIC(1:LENGTH)//'/wind.nl'
+  CALL READ_NAMELIST_LAPS ('wind',FILENM)
+
+  ! Maximum number of stations includes both surface and SND surface:
+  mxstts = mxstts+max_pr
+
   ! Check:
   IF (verbal .EQ. 1) THEN
-    WRITE(*,2) numgrd(1:3),lapsdt,mxstts,mising,badsfc
+    WRITE(*,2) numgrd(1:3),lapsdt,mxstts,mxstts-max_pr,max_pr,mising,badsfc
   ENDIF
 2 FORMAT('STMAS>LAPSInfo: Num  gridpoints: ',3I6,/, &
 	 'STMAS>LAPSInfo: LAPS cycle time: ',I6,/, &
 	 'STMAS>LAPSInfo: Maxnumber sites: ',I6,/, &
+	 'STMAS>LAPSInfo: Maxnumber surfs: ',I6,/, &
+	 'STMAS>LAPSInfo: Maxnumber sonde: ',I6,/, &
 	 'STMAS>LAPSInfo: Missing/bad ids: ',e16.8,f16.5)
 
 END SUBROUTINE LAPSInfo
@@ -122,6 +137,14 @@ SUBROUTINE LAPSConf
   CALL RD_LAPS_STATIC(dirstc,ext,numgrd(1),numgrd(2),1, &
 		      var,unt,com,longrd,phydxy(2),err)
   IF (err .NE. 1) PRINT*,'STMAS>LAPSInfo: Error getting LON'
+
+  ! Topography:
+  CALL READ_STATIC_GRID(numgrd(1),numgrd(2),'AVG',topogr,err)
+  IF (err .NE. 1) THEN
+    WRITE(6,*) 'LAPSConf: error get LAPS AVG'
+    STOP
+  ENDIF
+
   var = 'LDF'
   CALL RD_LAPS_STATIC(dirstc,ext,numgrd(1),numgrd(2),1, &
 		      var,unt,com,lndfac,grdspc(2),err)
@@ -147,8 +170,14 @@ SUBROUTINE LAPSConf
   ! Analysis domain:
   domain(1,1:2) = 1.0-numfic(1:2)	! X/Y: use grid numbers
   domain(2,1:2) = FLOAT(numgrd(1:2)-numfic(1:2))
-  domain(1,3) = MOD(i4time-(numtmf-1)*lapsdt,86400)
-  domain(2,3) = domain(1,3)+(numtmf-1)*lapsdt
+  ! domain(1,3) = MOD(i4time-(numtmf-1)*lapsdt,86400) 
+  ! domain(2,3) = domain(1,3)+(numtmf-1)*lapsdt
+  ! New time window using i4time instead of HHMM:
+  i4wndw(1) = i4time-(numtmf-1)*lapsdt
+  i4wndw(2) = i4time
+  domain(1,3) = 0.0
+  domain(2,3) = i4wndw(2)-i4wndw(1)
+
   grdspc(1:2) = 1.0			! Based the domain setting
 
 END SUBROUTINE LAPSConf
@@ -292,6 +321,8 @@ SUBROUTINE LAPSOBSV(m)
   CHARACTER :: amt(m,5)*4	! cloud amount
 
   INTEGER :: nog,nob		! Number obs over grid/box
+  INTEGER :: nss		! Sfc sonde data start number = nob+1
+  INTEGER :: nsg,nsb		! Number sfc sonde obs over grid/box
   INTEGER :: wid(m)		! WMO id
   INTEGER :: otm(m)		! Observation time
   INTEGER :: cld(m)		! Number of cloud layers
@@ -321,8 +352,13 @@ SUBROUTINE LAPSOBSV(m)
 	    mxt(m),mnt(m)	! 24-hour maximum/minimum temperature
   REAL :: cht(m,5)		! cloud layer heights
   
-  INTEGER :: i,j,k,err,iwv
-  INTEGER :: hrs,mns,nit	! Time: hours, minutes and mid-night
+  INTEGER :: i,j,k,err,iwv,kmax ! kmax need for reading sonde sfc data
+  ! Old obs time treatment:
+  ! INTEGER :: hrs,mns,nit	! Time: hours, minutes and mid-night
+
+  ! No matter what sts value, get_sfc_obtime converts the obstime:
+  INTEGER :: sts		! Obstime conversion status 
+
   REAL :: xyt(3)		! X, Y and T
   REAL :: prs,ALT_2_SFC_PRESS
 
@@ -337,7 +373,36 @@ SUBROUTINE LAPSOBSV(m)
 	vis,sol,slt,slm,pc1,pc3,pc6,p24,snw,cld,mxt,mnt, &
 	tmpea,dewea,rhdea,wdiea,spdea,altea,prsea,visea, &
 	solea,sltea,slmea,pcpea,snwea,amt,cht,mxstts,err)
+
     IF (err .NE. 1) THEN
+      PRINT*,'LAPSOBSV: error in reading LSO data, check!'
+      STOP
+    ELSE
+      ! Convert LAPS surface obs time to i4time:
+      DO j=1,nob
+        CALL GET_SFC_OBTIME(otm(j),i4prev(i),otm(j),sts)
+      ENDDO
+    ENDIF
+
+    ! Read in surface data from sondes: 
+    ! (LAPS surface data is lso and snd both)
+    nss = nob+1
+    CALL GET_LAPS_DIMENSIONS(kmax,err)
+    CALL READ_SFC_SND(i4prev(i),tim,nsg,nsb, &
+        otm(nss),wid(nss),stn(nss),prd(nss),pwx(nss), &
+        rtp(nss),stp(nss),lat(nss),lon(nss),elv(nss), &
+        tmp(nss),dew(nss),rhd(nss),wdi(nss),spd(nss), &
+        gdi(nss),gsp(nss),alt(nss),spr(nss),msp(nss),pcc(nss),pch(nss), &
+        vis(nss),sol(nss),slt(nss),slm(nss),pc1(nss), &
+        pc3(nss),pc6(nss),p24(nss),snw(nss),cld(nss),mxt(nss),mnt(nss), &
+        tmpea(nss),dewea(nss),rhdea(nss),wdiea(nss),spdea(nss),altea(nss), &
+        prsea(nss),visea(nss),solea(nss),sltea(nss),slmea(nss),pcpea(nss), &
+        snwea(nss),amt(nss,1),cht(nss,1),mxstts,latgrd,longrd, &
+        numgrd(1),numgrd(2),kmax,max_pr,max_pr_levels,topogr,sts)
+    ! Combine surface data together:
+    nob = nob+nsb	! Add snd data to the total
+
+    IF (err .NE. 1 .AND. sts .NE. 1) THEN
       ! LSO data cannot be read in:
       WRITE(*,21) i
     ELSE
@@ -354,10 +419,13 @@ SUBROUTINE LAPSOBSV(m)
         IF (err .EQ. 1) THEN
 
 	  ! T: from LAPS time form: HHMM to seconds
-	  hrs = otm(j)/100
-	  mns = otm(j)-hrs*100
-	  xyt(3) = hrs*3600+mns*60
-	  IF (otm(j) .LT. 0) xyt(3) = 2*86400	! Void: Bad data
+	  ! hrs = otm(j)/100
+	  ! mns = otm(j)-hrs*100
+	  ! xyt(3) = hrs*3600+mns*60
+	  ! IF (otm(j) .LT. 0) xyt(3) = 2*86400	! Void: Bad data
+
+          ! Use i4time to handle obs times:
+          xyt(3) = otm(j)-i4wndw(1)
 
 	  ! Adjust the time when crossing the midnight:
 	  IF ((xyt(3)+86400 .GE. domain(1,3)) .AND. &
@@ -487,7 +555,7 @@ endif
     ! Update frm:
     numobs(1:numvar) = numobs(1:numvar)+nob
   ENDDO
-21 FORMAT('STMAS>LAPSOBS: Cannot read in LSO data: ',i8)
+21 FORMAT('STMAS>LAPSOBS: Cannot read in LSO data and SND data: ',i8)
 22 FORMAT('STMAS>LAPSOBS: No such var in LSO data: ',A4)
 
   ! Check number of obs:
