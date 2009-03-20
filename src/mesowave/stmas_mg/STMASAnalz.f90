@@ -138,8 +138,8 @@ SUBROUTINE STMASAna(anal,ngrd,dxyt,domn,bkgd,nfrm, &
       dis = dis*0.5
       GOTO 1
     ENDIF
+    ! LVL counts addition multigrid levels except the current 3x3x3 level
     lvl(i) = MIN0(lvl(i),INT(ALOG(FLOAT(ngrd(i)-1))/ALOG(2.0))-1)
-    lvl(i) = MAX0(lvl(i),1)
   ENDDO
   IF (verbal .EQ. 1) WRITE(*,2) lvl(1:3)
 2 FORMAT('STMASAna: Number of levels: ',3I3)
@@ -548,7 +548,7 @@ SUBROUTINE Functn3D(fctn,grid,ngrd,obsv,nobs,indx,coef,wght,pnlt,huc,mlds)
   DO k=1,ngrd(3)
     DO j=1,ngrd(2)
       DO i=1,ngrd(1)
-          fctn = fctn+huc(i,j,k)*(grid(i,j,k)**2)
+        fctn = fctn+huc(i,j,k)*(grid(i,j,k)**2)
       ENDDO
     ENDDO
   ENDDO
