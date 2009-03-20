@@ -42,7 +42,8 @@ PROGRAM STMAS_MG
 
   IMPLICIT NONE
 
-  INTEGER :: i
+  INTEGER :: i,j,k,mi,mj,mk,nnn
+  real :: a
 
   ! Namelist:
   CALL PrPstNLs
@@ -67,20 +68,20 @@ PROGRAM STMAS_MG
   CALL LAPSUnit
 
   ! STMAS QC:
-call date_and_time(date0,time0,zone0,timing0)
+  CALL DATE_AND_TIME(date0,time0,zone0,timing0)
   CALL LAPS_QCs
-call date_and_time(date1,time1,zone1,timing1)
-print*,'Time used for LAPS_QCs: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
-print*,'Times used for LAPS_QCs: ',timing1(6),timing0(6),timing1(7),timing0(7)
+  CALL DATE_AND_TIME(date1,time1,zone1,timing1)
+  PRINT*,'Time used for LAPS_QCs: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
+  PRINT*,'Times used for LAPS_QCs: ',timing1(6),timing0(6),timing1(7),timing0(7)
 
   ! Add background to obs where obs is spare !by min-ken hseih
-call date_and_time(date0,time0,zone0,timing0)
+  CALL DATE_AND_TIME(date0,time0,zone0,timing0)
   ! CALL AddBkgrd
   CALL JbGridpt
   ! uncovr = .FALSE.
-call date_and_time(date1,time1,zone1,timing1)
-print*,'Time used for AddBkgrd: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
-print*,'Times used for AddBkgrd: ',timing1(6),timing0(6),timing1(7),timing0(7)
+  CALL DATE_AND_TIME(date1,time1,zone1,timing1)
+  PRINT*,'Time used for AddBkgrd: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
+  PRINT*,'Times used for AddBkgrd: ',timing1(6),timing0(6),timing1(7),timing0(7)
 
   ! Release memory for LAPS:
   CALL LAPSRels
@@ -99,16 +100,16 @@ print*,'Times used for AddBkgrd: ',timing1(6),timing0(6),timing1(7),timing0(7)
       ! modified by min-ken hsieh
       ! pass stanam, varnam into STMASAna
       !
-call date_and_time(date0,time0,zone0,timing0)
+      CALL DATE_AND_TIME(date0,time0,zone0,timing0)
       CALL STMASAna(analys(1,1,1,i),numgrd,grdspc, &
 	domain,bkgrnd(1,1,1,i),numtmf, &
 	qc_obs(1,1,i),numobs(i),weight(1,i), stanam(1,i),&
 	obsspc(1,i),indice(1,1,i),coeffs(1,1,i), &
 	bounds(i),stmasi,stmasr,varnam(i),pnlt_v(i), &
         slevel(i),uncovr(1,1,1,i),diagnl(1,1,i))
-call date_and_time(date1,time1,zone1,timing1)
-print*,'Time used for STMASAna ',i,(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
-print*,'Times used for STMASAna: ',timing1(6),timing0(6),timing1(7),timing0(7)
+      CALL DATE_AND_TIME(date1,time1,zone1,timing1)
+      PRINT*,'Time used for STMASAna ',i,(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
+      PRINT*,'Times used for STMASAna: ',timing1(6),timing0(6),timing1(7),timing0(7)
     ELSE
       ! No analysis:
       analys(1:numgrd(1),1:numgrd(2),1:numgrd(3),i) = 0.0
@@ -116,30 +117,31 @@ print*,'Times used for STMASAna: ',timing1(6),timing0(6),timing1(7),timing0(7)
   ENDDO
 
   ! Add increment to the background:
-call date_and_time(date0,time0,zone0,timing0)
+
+  CALL DATE_AND_TIME(date0,time0,zone0,timing0)
   CALL STMASInc
-call date_and_time(date1,time1,zone1,timing1)
-print*,'Time used for STMASInc: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
-print*,'Times used for STMASInc: ',timing1(6),timing0(6),timing1(7),timing0(7)
+  CALL DATE_AND_TIME(date1,time1,zone1,timing1)
+  PRINT*,'Time used for STMASInc: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
+  PRINT*,'Times used for STMASInc: ',timing1(6),timing0(6),timing1(7),timing0(7)
 
   ! Write analyses to LSX
   IF (savdat .EQ. 1) THEN
     WRITE(*,*) numgrd,numvar
     WRITE(11,*) analys
   ENDIF
-call date_and_time(date0,time0,zone0,timing0)
+  CALL DATE_AND_TIME(date0,time0,zone0,timing0)
   CALL PrPstLSX
-call date_and_time(date1,time1,zone1,timing1)
-print*,'Time used for PrPstLSX: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
-print*,'Times used for PrPstLSX: ',timing1(6),timing0(6),timing1(7),timing0(7)
+  CALL DATE_AND_TIME(date1,time1,zone1,timing1)
+  PRINT*,'Time used for PrPstLSX: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
+  PRINT*,'Times used for PrPstLSX: ',timing1(6),timing0(6),timing1(7),timing0(7)
 
   ! modified by min-ken hsieh
   ! Verify STMAS Analysis
-call date_and_time(date0,time0,zone0,timing0)
+  CALL DATE_AND_TIME(date0,time0,zone0,timing0)
   CALL STMASVer
-call date_and_time(date1,time1,zone1,timing1)
-print*,'Time used for STMASVer: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
-print*,'Times used for STMASVer: ',timing1(6),timing0(6),timing1(7),timing0(7)
+  CALL DATE_AND_TIME(date1,time1,zone1,timing1)
+  PRINT*,'Time used for STMASVer: ',(timing1(6)-timing0(6))+(timing1(7)-timing0(7))/60.0
+  PRINT*,'Times used for STMASVer: ',timing1(6),timing0(6),timing1(7),timing0(7)
 
   ! Release dynamic memory:
   CALL IntrRels
