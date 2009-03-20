@@ -118,6 +118,7 @@ SUBROUTINE PrPstLSX
   REAL :: gdp(numgrd(1),numgrd(2))	! Pressure in mb
   REAL :: gdt(numgrd(1),numgrd(2))	! Theta
   REAL :: dum(numgrd(1),numgrd(2))	! Unused value
+  REAL :: dmm(numgrd(1),numgrd(2))	! Unused value
   REAL :: mrc(numgrd(1),numgrd(2))
   REAL :: dat(numgrd(1)-2*numfic(1),numgrd(2)-2*numfic(2),LSXVAR)
 
@@ -196,6 +197,30 @@ SUBROUTINE PrPstLSX
       vnm(nvr) = 'TD '
       vun(nvr) = 'K  '
       cmt(nvr) = 'Dewpoint'
+      dat(1:ngd(1),1:ngd(2),nvr) = &
+	analys(numfic(1)+1:numgrd(1)-numfic(1), &
+	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)
+    CASE ("TGD ")	! Dew point temperature
+      nvr = nvr+1
+      IF (nvr .GT. LSXVAR) THEN
+	WRITE(*,2)
+        STOP
+      ENDIF
+      vnm(nvr) = 'TGD'
+      vun(nvr) = 'K  '
+      cmt(nvr) = 'Ground Temperature'
+      dat(1:ngd(1),1:ngd(2),nvr) = &
+	analys(numfic(1)+1:numgrd(1)-numfic(1), &
+	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)
+    CASE ("MSLP")	! Dew point temperature
+      nvr = nvr+1
+      IF (nvr .GT. LSXVAR) THEN
+	WRITE(*,2)
+        STOP
+      ENDIF
+      vnm(nvr) = 'MSL'
+      vun(nvr) = 'PA '
+      cmt(nvr) = 'MSL Pressure'
       dat(1:ngd(1),1:ngd(2),nvr) = &
 	analys(numfic(1)+1:numgrd(1)-numfic(1), &
 	       numfic(2)+1:numgrd(2)-numfic(2),itm,i)
@@ -308,7 +333,7 @@ SUBROUTINE PrPstLSX
     END SELECT
   ENDDO
 
-1 FORMAT('PrPstPrc>PrPstLSX: no such variable to write')
+1 FORMAT('PrPstPrc>PrPstLSX: no such variable to write: ',a4)
 2 FORMAT('PrPstPrc>PrPstLSX: too much variables to write; aborts')
 3 FORMAT('PrPstPrc>PrPstLSX: V wind is missing')
 
@@ -353,6 +378,21 @@ SUBROUTINE PrPstLSX
     dat(1:ngd(1),1:ngd(2),nvr) = &
       gdt(numfic(1)+1:numgrd(1)-numfic(1), &
 	  numfic(2)+1:numgrd(2)-numfic(2))
+  ENDIF
+  ! Found necessary variables for relative humidity:
+  IF ((idx(1) .NE. 0) .AND. (idx(2) .NE. 0)) THEN
+    nvr = nvr+1
+    IF (nvr .GT. LSXVAR) THEN
+      WRITE(*,2)
+      STOP
+    ENDIF
+    vnm(nvr) = 'RH '
+    vun(nvr) = 'M  '
+    cmt(nvr) = 'relative humidity'
+    ! RH from T and td: HUM returns RH in [0,1]
+    CALL HUM(analys(1,1,itm,idx(1)),analys(1,1,itm,idx(2)), &
+              dat(1,1,nvr),numgrd(1),numgrd(2),dum,dmm)
+    dat(1:ngd(1),1:ngd(2),nvr) = dat(1:ngd(1),1:ngd(2),nvr)*100		! RH in [0,100]
   ENDIF
   ! Found necessary variables for equivalent potential temperature:
   IF (ncm .EQ. 3) THEN
