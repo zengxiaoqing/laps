@@ -194,9 +194,9 @@ SUBROUTINE LAPSBKGD
   IMPLICIT NONE
 
   CHARACTER*31 :: ext	! extension of bkg file used (LAPS)
-  INTEGER :: i,j,err	! err: 1 normal; 0 file not found
+  INTEGER :: i,j,k,err	! err: 1 normal; 0 file not found
   INTEGER :: tim	! time of bkg file used (LAPS)
-  INTEGER :: iwv	! index for v component of wind
+  INTEGER :: iwv,id,it	! index for v component of wind
 
   ! Set LAPS circle time frames:
   DO i=0,numtmf-1
@@ -268,6 +268,31 @@ SUBROUTINE LAPSBKGD
       DO i=1,numtmf
         bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = 0.0
       ENDDO
+    ELSE IF (varnam(j) .EQ. 'TGD ') THEN	! Ground/Skin temperature added by Yuanfu
+      IF (needbk(j) .EQ. 1) THEN
+        DO i=1,numtmf
+          CALL GET_MODELFG_2D(i4prev(i),varnam(j),numgrd(1),numgrd(2),bkgrnd(1,1,i,j),err)
+          IF (err .NE. 1) THEN
+            ! Use t and td and landfactor as used in LAPS sfc:
+            it = 0	! search temp read in already
+            id = 0	! search dewp read in already
+            DO k=1,j-1
+              IF (varnam(k) .EQ. 'TEMP') it = k
+              IF (varnam(k) .EQ. 'DEWP') id = k
+            ENDDO
+            IF (it .EQ. 0 .AND. id .EQ. 0) THEN
+              PRINT*,'LAPSBKGD: Place skin/ground temperature analysis after TEMP/DEWP in stmas_mg.vr'
+              STOP
+            ENDIF
+            PRINT*,'LAPSBKGD: No background for skin/ground temp; use sfc temp and dewp'
+            bkgrnd(1:numgrd(1),1:numgrd(2),i,j) = &
+              bkgrnd(1:numgrd(1),1:numgrd(2),i,it)*lndfac(1:numgrd(1),1:numgrd(2))+ &
+              bkgrnd(1:numgrd(1),1:numgrd(2),i,id)*(1.0-lndfac(1:numgrd(1),1:numgrd(2)))
+          ENDIF
+        ENDDO
+      ELSE
+        bkgrnd(1:numgrd(1),1:numgrd(2),1:numtmf,j) = 0.0
+      ENDIF
     !Other fields:
     ELSE IF ((varnam(j) .NE. 'WNDV') .AND. &    ! V in with U
              (varnam(j) .NE. 'CEIL')) THEN      ! No ceiling bkg
@@ -357,10 +382,12 @@ SUBROUTINE LAPSOBSV(m)
   ! INTEGER :: hrs,mns,nit	! Time: hours, minutes and mid-night
 
   ! No matter what sts value, get_sfc_obtime converts the obstime:
-  INTEGER :: sts		! Obstime conversion status 
+  INTEGER :: ot,sts		! Obstime conversion status 
 
   REAL :: xyt(3)		! X, Y and T
   REAL :: prs,ALT_2_SFC_PRESS
+
+  REAL :: t_c,d_c,f_to_c,c_to_f,dwpt	! for converting rh to td
 
   ! Read observation data by LAPS time frames:
   numobs = 0
@@ -377,16 +404,13 @@ SUBROUTINE LAPSOBSV(m)
     IF (err .NE. 1) THEN
       PRINT*,'LAPSOBSV: error in reading LSO data, check!'
       STOP
-    ELSE
-      ! Convert LAPS surface obs time to i4time:
-      DO j=1,nob
-        CALL GET_SFC_OBTIME(otm(j),i4prev(i),otm(j),sts)
-      ENDDO
     ENDIF
 
     ! Read in surface data from sondes: 
     ! (LAPS surface data is lso and snd both)
     nss = nob+1
+    nsg = 0	! READ_SFC_SND does not initialize nsg
+    nsb = 0	! READ_SFC_SND does not initialize nsb
     CALL GET_LAPS_DIMENSIONS(kmax,err)
     CALL READ_SFC_SND(i4prev(i),tim,nsg,nsb, &
         otm(nss),wid(nss),stn(nss),prd(nss),pwx(nss), &
@@ -401,6 +425,25 @@ SUBROUTINE LAPSOBSV(m)
         numgrd(1),numgrd(2),kmax,max_pr,max_pr_levels,topogr,sts)
     ! Combine surface data together:
     nob = nob+nsb	! Add snd data to the total
+
+    IF (nob .EQ. 0) THEN
+      PRINT*,'LAPSOBSV: No sfc obs found!'
+      STOP
+    ELSE
+        ! Convert LAPS surface obs time to i4time:
+      DO j=1,nob
+        ot = otm(j)
+        ! OTM from LSO is in HHMM:
+        IF (ot .GE. 0 .AND. ot .LE. 2400) THEN
+          CALL GET_SFC_OBTIME(ot,i4prev(i),otm(j),sts)
+        ELSE
+          ! OBS time error:
+          otm(j) = -100
+          PRINT*,'LAPSOBS: Invalid Obs time: set to bad value: ',ot,j,i
+        ENDIF
+      ENDDO
+
+    ENDIF
 
     IF (err .NE. 1 .AND. sts .NE. 1) THEN
       ! LSO data cannot be read in:
@@ -454,14 +497,41 @@ SUBROUTINE LAPSOBSV(m)
 	  rawobs(1,1+numobs(j):nob+numobs(j),j) = tmp(1:nob)
 	  weight(1+numobs(j):nob+numobs(j),j) = tmpea(1:nob)
 	CASE ("DEWP")
-	  rawobs(1,1+numobs(j):nob+numobs(j),j) = dew(1:nob)
-	  weight(1+numobs(j):nob+numobs(j),j) = dewea(1:nob)
+          ! Use td obs or rh obs if td missing:
+          DO k=1,nob
+            IF (dew(k) .NE. mising .AND. &
+                dew(k) .NE. badsfc) THEN
+              rawobs(1,numobs(j)+k,j) = dew(k)
+	      weight(numobs(j)+k,j) = dewea(k)
+            ELSEIF (rhd(k) .NE. mising .AND. &
+                     rhd(k) .NE. badsfc .AND. &
+                     tmp(k) .NE. mising .AND. &
+                     tmp(k) .NE. badsfc) THEN
+                ! obs value:
+                t_c = f_to_c(tmp(k))
+                d_c = dwpt(t_c,rhd(k))
+                rawobs(1,numobs(j)+k,j) = c_to_f(d_c)
+                ! obs expect accuracy:
+                t_c = f_to_c(tmpea(k))
+                d_c = dwpt(t_c,rhdea(k))
+                weight(numobs(j)+k,j) = c_to_f(d_c)
+            ELSE
+              rawobs(1,numobs(j)+k,j) = badsfc
+	      weight(numobs(j)+k,j) = badsfc
+            ENDIF
+          ENDDO
 	CASE ("VISB")
 	  rawobs(1,1+numobs(j):nob+numobs(j),j) = vis(1:nob)
 	  weight(1+numobs(j):nob+numobs(j),j) = visea(1:nob)
         CASE ("CEIL")
 	  rawobs(1,1+numobs(j):nob+numobs(j),j) = cht(1:nob,1)
 	  weight(1+numobs(j):nob+numobs(j),j) = 1.0
+        CASE ("MSLP")
+	  rawobs(1,1+numobs(j):nob+numobs(j),j) = msp(1:nob)
+	  weight(1+numobs(j):nob+numobs(j),j) = prsea(1:nob)
+        CASE ("TGD ")
+	  rawobs(1,1+numobs(j):nob+numobs(j),j) = slt(1:nob)	! Soil temp
+	  weight(1+numobs(j):nob+numobs(j),j) = sltea(1:nob)
 	CASE ("REDP")
 	  DO k=1,nob
 	    ! Collect either station pressure or altimeter:
@@ -480,10 +550,6 @@ SUBROUTINE LAPSOBSV(m)
 	      CALL REDUCE_P(tmp(k),dew(k),prs,elv(k), &
 		lapses(1),lapses(2), &
 		rawobs(1,numobs(j)+k,j),0.0,badsfc)
-if (abs(prs-945) .lt. 0.6) then
-print*,'Find 945: ',prs,stn(k),spr(k),alt(k)
-print*,'          ',rawobs(1,numobs(j)+k,j),k,i,numobs(j)+k,j
-endif
 	    ELSE
 	      rawobs(1,numobs(j)+k,j) = badsfc
             ENDIF
@@ -726,6 +792,10 @@ SUBROUTINE LAPSUnit
       ! Convert to Kelvin from Fahrenheit:
       rawobs(1,1:numobs(i),i) = &
 	(rawobs(1,1:numobs(i),i)-32.0)*5.0/9.0+temp_0
+    CASE ("TGD ")
+      ! Convert to Kelvin from Fahrenheit:
+      rawobs(1,1:numobs(i),i) = &
+	(rawobs(1,1:numobs(i),i)-32.0)*5.0/9.0+temp_0
     CASE ("WNDU")
       ! Convert to m/s from knots:
       rawobs(1,1:numobs(i),i) = &
@@ -742,6 +812,10 @@ SUBROUTINE LAPSUnit
       rawobs(1,1:numobs(i),i) = &
 	rawobs(1,1:numobs(i),i)*mb2pas
     CASE ("SFCP")
+      ! Convert to pascal from mb:
+      rawobs(1,1:numobs(i),i) = &
+	rawobs(1,1:numobs(i),i)*mb2pas
+    CASE ("MSLP")
       ! Convert to pascal from mb:
       rawobs(1,1:numobs(i),i) = &
 	rawobs(1,1:numobs(i),i)*mb2pas
@@ -847,6 +921,8 @@ SUBROUTINE Thrshold
 	  indice(1:6,numobs(i),i) = indice(1:6,j,i)
 	  coeffs(1:6,numobs(i),i) = coeffs(1:6,j,i)
 	  bkgobs(numobs(i),i) = bkgobs(j,i)
+        ELSE
+          print*,'Thresh out: ',rawobs(1,j,i),bkgobs(j,i),thresh(i),j,i
         ENDIF
       ENDDO
     ENDIF
@@ -1075,6 +1151,35 @@ SUBROUTINE STMASVer
                     numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
 	ENDDO
 
+      CASE ("TGD ")
+
+        !time loop
+        DO kt = 1,numtmf
+          write(tmtag,'(i1)') kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+          title = 'TGD background verification of tmf = '//tmtag//' (deg C)'
+          ea = 2.00*5.0/9.0
+          CALL verify(bkgrnd(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+ 
+          title = 'TDG verification of tmf = '//tmtag//' (deg C)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
       CASE ("REDP")
 	!Convert pascal to mb
 	qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)/mb2pas
@@ -1141,6 +1246,42 @@ SUBROUTINE STMASVer
                     numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
 
           title = 'SFC pressure verification of tmf = '//tmtag//' (mb)'
+          CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+	ENDDO
+
+
+      CASE ("MSLP")
+	!Convert pascal to mb
+	qc_obs(1,1:numobs(i),i) = qc_obs(1,1:numobs(i),i)/mb2pas
+
+        !time loop
+        DO kt = 1,numtmf
+	  !Convert pascal to mb
+	  analys(1:numgrd(1),1:numgrd(2),kt,i) = analys(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
+	  bkgrnd(1:numgrd(1),1:numgrd(2),kt,i) = bkgrnd(1:numgrd(1),1:numgrd(2),kt,i)/mb2pas
+
+          write(tmtag,'(i1)') kt
+          nn= 0
+          obstime = domain(1,3)+(kt-1)*lapsdt
+          DO j=1,numobs(i)
+            IF(INT(qc_obs(4,j,i)).EQ.obstime) THEN
+              nn = nn + 1
+              obsOfThisTime(nn) = qc_obs(1,j,i)
+              staOfThisTime(nn) = stanam(j,i)
+              ii(nn) = qc_obs(2,j,i)
+              jj(nn) = qc_obs(3,j,i)
+            ENDIF
+          ENDDO
+
+          title = 'MSL pressure background verification of tmf = '//tmtag//' (mb)'
+          ea = 0.68
+          CALL verify(bkgrnd(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
+      	    	    staOfThisTime(1:nn),nn,title,iunit,					&
+                    numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
+
+          title = 'MSL pressure verification of tmf = '//tmtag//' (mb)'
           CALL verify(analys(1:numgrd(1),1:numgrd(2),kt,i),obsOfThisTime(1:nn),		&
       	    	    staOfThisTime(1:nn),nn,title,iunit,					&
                     numgrd(1),numgrd(2),mxstts,x1a,x2a,y2a,ii,jj,ea,badsfc)
