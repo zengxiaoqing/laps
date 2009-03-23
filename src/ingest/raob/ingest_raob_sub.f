@@ -161,6 +161,8 @@ C
       double precision relTime(recNum), synTime(recNum)
       character*6 staName(recNum)
       character   staNameFile(staNameLen,recNum)
+
+      REAL      prSigW                         (sigWLevel,recNum)
 !..............................................................................
 
       real lat_a(NX_L,NY_L)
@@ -197,6 +199,8 @@ C
 C The netcdf variables are filled - your code goes here
 C
 !     Write All Raobs to LAPS SND file
+
+      prsigw = r_missing_data
 
       r_nc_missing_data = 1e20
 
@@ -292,7 +296,8 @@ C
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
      1                       ,numsigt,prsigt,tpsigt,tdsigt
-     1                       ,numsigw,htsigw,wdsigw,wssigw,nlvl_out 
+     1                       ,numsigw,prsigw,htsigw,wdsigw,wssigw
+     1                       ,nlvl_out 
      1                       ,manLevel,sigTLevel,sigWLevel,istatus)
 
           go to 999
@@ -314,7 +319,8 @@ C
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
      1                       ,numsigt,prsigt,tpsigt,tdsigt
-     1                       ,numsigw,htsigw,wdsigw,wssigw,nlvl_out
+     1                       ,numsigw,prsigw,htsigw,wdsigw,wssigw
+     1                       ,nlvl_out
      1                       ,manLevel,sigTLevel,sigWLevel,istatus)
 
       integer     NLVL_OUT
@@ -349,6 +355,7 @@ C
 
       INTEGER   numsigw                        (NREC)
       REAL      htSigW                         (sigWLevel,NREC)
+      REAL      prSigW                         (sigWLevel,NREC)
       REAL      wdSigW                         (sigWLevel,NREC)
       REAL      wsSigW                         (sigWLevel,NREC)
 
@@ -388,6 +395,8 @@ C
           if(htman(ilevel,isnd) .lt. 90000. .and.
      1       htman(ilevel,isnd) .ge. staelev(isnd) .and.
      1       istat_nan .eq. 1                         )then ! valid height AGL
+
+            if(prman(ilevel,isnd) .le. prman(1,isnd))then ! pres is <= sfcp 
               n_good_levels = n_good_levels + 1
               write(6,*) htman(ilevel,isnd),prman(ilevel,isnd)
      1                  ,tpman(ilevel,isnd),tdman(ilevel,isnd)
@@ -400,8 +409,15 @@ C
               wdman_good(n_good_levels) = wdman(ilevel,isnd)
               wsman_good(n_good_levels) = wsman(ilevel,isnd)
               indx(n_good_levels) = n_good_levels
+
+            else
+              write(6,*)' Reject pres > sfcp ',ilevel,prman(ilevel,isnd)
+     1                                               ,prman(1,isnd)
+            endif
+
           endif
         enddo
+
       else
         write(6,*)' Note: nummand(isnd) > manLevel'
      1                   ,nummand(isnd),manLevel      
@@ -476,7 +492,38 @@ C
               tdout(n_good_levels) = r_missing_data
               wdout(n_good_levels) = wdsigw(ilevel,isnd)
               wsout(n_good_levels) = wssigw(ilevel,isnd)
-          endif
+
+          elseif(prsigw(ilevel,isnd) .lt. 2000. .and.
+     1           prsigw(ilevel,isnd) .gt. 0.            )then
+
+!           Attempt to calculate height based on good mandatory level data
+            if(n_good_z .gt. 0)then
+                ht_calc = z(prsigw(ilevel,isnd)
+     1                     ,prout,tpout_c_z,tdout_c_z,n_good_z)
+
+                if(nanf(ht_calc) .eq. 1 
+     1         .or. ht_calc .gt. 99999. .or. ht_calc .lt. -1000.)then
+                    ht_calc = -1.0        ! flag value for invalid height
+                endif
+
+                if(ht_calc .ne. -1.0)then ! valid height returned
+                    ht_calc = ht_calc + htout(1)
+
+                    n_good_levels = n_good_levels + 1
+                    write(6,*) ht_calc,prsigw(ilevel,isnd)
+     1                        ,tpsigt(ilevel,isnd),tdsigt(ilevel,isnd)
+     1                        ,r_missing_data,r_missing_data
+
+                    indx(n_good_levels) = n_good_levels
+                    htout(n_good_levels) = ht_calc
+                    prout(n_good_levels) = prsigw(ilevel,isnd)
+                    tpout(n_good_levels) = r_missing_data
+                    tdout(n_good_levels) = r_missing_data
+                    wdout(n_good_levels) = wdsigw(ilevel,isnd)
+                    wsout(n_good_levels) = wssigw(ilevel,isnd)
+                endif ! valid height
+            endif ! n_good_z > 0
+          endif ! htsigw/prsigw in bounds
         enddo
       else
         write(6,*)' Note: numsigw(isnd) > sigWLevel'
@@ -541,8 +588,9 @@ C
       if(iswitch .eq. 1)go to 400
       
 !     Detect and remove duplicate levels
-      i = 2
-      do while(i .le. n_good_levels)
+      do ipass = 1,2
+        i = 2
+        do while(i .le. n_good_levels)
           idupe = 0
           if(htout(indx(i)) .eq. htout(indx(i-1)))then          
               idupe = i
@@ -579,7 +627,8 @@ C
               n_good_levels = n_good_levels - 1
           endif
           i = i+1
-      enddo ! i
+        enddo ! i
+      enddo ! ipass
 
 !     QC and convert units, T and Td are converted to deg C
       do i = 1,n_good_levels
