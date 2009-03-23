@@ -97,6 +97,12 @@ cdis
        call get_laps_cycle_time(laps_cycle_time,istatus)   
        if(istatus .ne. 1)return   
 
+       call get_r_missing_data(r_missing_data,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' Error calling get_r_missing_data'
+           return
+       endif
+
        c8_fname_format = 'UNKNOWN'
 c
 c      Determine filename extension
@@ -315,6 +321,12 @@ c      Determine filename extension
            numRadials = radial
            ngates_ref_cdf = Z_bin
            ngates_vel_cdf = V_bin
+
+!          Initialize in case they aren't present in the NetCDF file
+           Z_scale  = r_missing_data
+           Z_offset = r_missing_data
+           V_scale  = r_missing_data
+           V_offset = r_missing_data
 
 !          Note that file remains open from call to 'get_tilt_netcdf_hdr'
            call get_tilt_netcdf_data(filename,nf_fid
