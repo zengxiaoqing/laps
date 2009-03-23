@@ -2800,9 +2800,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         write(6,1605)c_label,a9time
 1605    format(2x,a33,2x,a9)
 
-        call lib$set_symbol('DATE_LAPSPLOT',a9time)
-        istatus = lib$set_logical('DATE_LAPSPLOT',a9time)
-
         c_metacode = 'c '
 
         call i4time_fname_lp(a9time,i4time_dum,istatus)
