@@ -276,3 +276,23 @@ c
         return
 
         end
+
+        subroutine sfci4_to_sfchhmm(i4time_ob,            ! I
+     1                              hhmm,istatus)         ! O
+
+        ! this routine essentially the reverse operation of 
+        ! get_sfc_obtime. that is, from i4time to hhmm.
+
+        integer hhmm
+
+        call CV_I4TIM_INT_LP (i4time_ob,NYEAR,NMONTH,NDAY,NHOUR,
+     1                     NMIN,NSEC,ISTATUS)
+
+        if(istatus .eq. 1)then
+            hhmm = NHOUR*100 + NMIN
+        else
+            hhmm = -100 ! flag value
+        endif
+
+        return
+        end        
