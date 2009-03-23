@@ -18,6 +18,7 @@
          2.1.6 ..................  Disk Space
          2.1.7 ..................  Memory Etc. (ulimit)
          2.1.8 ..................  Plotting / NCAR graphics library (optional)
+         2.1.8.1 ................  Web Display
          2.1.9 ..................  GRIB2 external libraries (optional)
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
@@ -256,20 +257,19 @@
    
             ---  2.1.8  Plotting / NCAR graphics library (optional)  ---
 
-     To build the lapsplot process, access to an NCAR graphics library is 
-     needed to be able to run the 'ncargf77' command. Lapsplot is an optional 
-     plotting program, thus NCAR graphics is optional. You might wish to check
-     the following World Wide Web location for more info on this now free
-     software...
+     Lapsplot is an optional plotting program, thus NCAR graphics is optional. 
+     If you wish to build the lapsplot process, access to NCAR graphics 
+     libraries is needed so you will be able to run the 'ncargf77' command in
+     the LAPS Makefiles. You can download the free NCAR graphics software at 
+     the URL shown below. Note that NCAR graphics libraries should be built 
+     against the same FORTRAN compiler being used in LAPS.
 
                    http://ngwww.ucar.edu
 
      The 'lapsplot.exe' executable is an interactive program that reads in
      the NetCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
      file can be displayed using other NCAR graphics utilities like 'ctrans'
-     and 'idt'. The 'gmeta' file can be converted into a GIF/JPEG file
-     for web display by using 'ctrans' in conjunction with 'netpbm' or another
-     similar method. 
+     and 'idt'. 
 
      'Lapsplot' is designed to work with version 3.2 (or higher) of NCAR 
      graphics. The environment variable $NCARG_ROOT should be set when
@@ -312,19 +312,7 @@
      'lapsplot', if your machine is expecting little_endian. We will consider 
      automating this in the future. 
 
-     We are starting to put some of our web related scripts (for analyses) 
-     into the repository such as 'etc/www/followup_ncarg.sh'. Web products
-     are defined with some configuration files in 'static/www/lapsplot.*'.
-     Color tables are specified in 'static/www/*.lut'. Other user definable
-     parameters are located in 'static/lapsplot.nl'. These pre-generated
-     web products can be driven by the 'sched.pl -f' command line argument.
-     Please see section 2.4 for more info on 'sched.pl'.
-
-     Another web related script is our "on-the-fly" page that is contained
-     in 'etc/www/nph-laps.cgi'. This can be made to work on your local system
-     and web server with some modifications arrived at by trail and error.
-
-     To run lapsplot you can do the following...
+     To run lapsplot manually you can do the following...
 
      1. setenv LAPS_DATA_ROOT to the correct path
 
@@ -334,17 +322,42 @@
      3. idt gmeta
 
      Please note that 'lapsplot' is provided to help you check out how your
-     LAPS implementation is working. The LAPB Branch does not have any other 
-     plotting or visualization packages available for distribution with LAPS 
-     at this time. Many users have interfaced LAPS with their own display 
-     software (e.g. VIS5D, AVS, IDL, NCL, NCVIEW, GEMPAK). Feel free to post 
-     questions about these to the 'laps-users' bulletin board Web Page. NCAR 
-     graphics in no way is essential to the successful running of LAPS to 
-     create output grids.
+     LAPS implementation is working. Aside from the pre-generated and 
+     "on-the-fly" web products, we do not have any other plotting or 
+     visualization packages available for distribution with LAPS at this time. 
+     Many users have interfaced LAPS with their own display software (e.g. 
+     VIS5D, AVS, IDL, NCL, NCVIEW, GEMPAK). Feel free to post questions about 
+     these to the 'laps-users' bulletin board Web Page. NCAR graphics in no way
+     is essential to the successful running of LAPS to create output grids.
       
      Another note of interest is that LAPS is visualized as an integral part of
      the AWIPS system. If you have AWIPS, then LAPS should be running on it
      and you can view its output on the workstation.
+
+                 ----  2.1.8.1 Web Display  ---
+
+     The 'gmeta' file can be converted into a GIF/JPEG file for web display by 
+     using 'ctrans' in conjunction with the 'netpbm' package of image 
+     conversion programs that can be downloaded at the link just below. Within 
+     this package our web display scripts use the 'rastopnm' and 'ppmtogif' 
+     programs.
+
+                   http://netpbm.sourceforge.net/
+
+     We have the option of making pre-generated GIF images that can be displayed
+     on the web by invoking the 'sched.pl -f' command line argument. Please see
+     section 2.4 for more info on 'sched.pl'. The associated web related scripts 
+     (for analyses) such as 'etc/www/followup_ncarg.sh' are in the repository. 
+     These "wrapper" scripts run 'lapsplot.exe' and output a set of GIF images 
+     in a directory tree that can be accessed via the web. The set of web image
+     products are defined with configuration files in 'static/www/lapsplot.*'.
+     Color tables are specified in 'static/www/*.lut'. Other user definable
+     plotting parameters are located in 'static/lapsplot.nl'. 
+
+     A separate web related script is our "on-the-fly" page that is contained
+     in 'etc/www/nph-laps.cgi'. This CGI/PERL script can be run on a web
+     server with hopefully just a few modifications. This also calls a set
+     of scripts that wrap around 'lapsplot.exe'.
 
                --- 2.1.9  GRIB2 external libraries (optional) ---
 
@@ -2959,6 +2972,12 @@ The analysis innovation is constrained to vary from the background by no more
 than the magnitude of the observation rejection threshold discussed above. This
 helps prevent overshooting (ballooning) of gradients into data sparse areas.
 
+For relative humidity, the RH observations are converted into dew point using
+the station temperature (if the dew point isn't directly reported). The 
+analyzed variable for moisture is dew point. After the analysis is performed 
+the gridded dew point field is converted back into relative humidity using the 
+analyzed temperature.
+
 A land fraction term is factored into the weighting whenever the observation
 and grid point are on either sides of a 0.01 land fraction threshold. This
 helps prevent situations such as heating over the land having undue effects
@@ -3751,6 +3770,8 @@ Outputs:
         lw3          3d grid    in lapsprd/balance/lw3 (u3, v3 and om field)
                                                        (grid north)
         lh3          3d grid    in lapsprd/balance/lh3 (rh field)
+        lq3          3d grid    in lapsprd/balance/lq3 (sh field)
+        lsx          2d grid    in lapsprd/balance/lsx (surface fields)
 </pre>
 Source directory: laps/src/balance
 
@@ -3889,14 +3910,14 @@ Process: lapsprep.exe - Post-processes LAPS analysis files into formats
    condition files, as LAPSPREP does not provide this function.
            
 <pre>
-Inputs:
-      * lw3                 grid       LAPS 3-d wind analysis (grid relative)
-      * lt1                 grid       LAPS 3-d temperature & height analyses
-      * lh3                 grid       LAPS 3-d relative humidity analysis
-      * lq3                 grid       LAPS 3-d specific humidity analysis
-      * lwc                 grid       LAPS 3-d cloud analysis
-      * lsx                 grid       LAPS 2-d surface analyses 
-      * l1s                 grid       LAPS 2-d precip analyses
+Inputs:         '*' = essential input
+      * lw3                 grid      LAPS 3-d wind analysis (grid relative)
+      * lt1                 grid      LAPS 3-d temperature & height analyses
+      * lh3                 grid      LAPS 3-d relative humidity analysis
+        lq3                 grid      LAPS 3-d specific humidity analysis
+        lwc                 grid      LAPS 3-d cloud/precip hydrometeor analyses
+      * lsx                 grid      LAPS 2-d surface analyses 
+        lm2                 grid      LAPS 2-d snow cover analysis
 
 Outputs:
       mm5_init:YYYY-MM-DD_HH    grid   MM5 init. file (pregrid v3 format)
